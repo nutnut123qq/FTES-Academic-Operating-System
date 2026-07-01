@@ -3301,6 +3301,14 @@
             "title": "Quiz",
             "submit": "Submit",
             "result": "{score}/{total} correct"
+        },
+        "assignments": {
+            "title": "Assignments",
+            "status": {
+                "submitted": "Submitted",
+                "pending": "Pending",
+                "overdue": "Overdue"
+            }
         }
     }
 }

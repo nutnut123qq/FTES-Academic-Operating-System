@@ -3301,6 +3301,14 @@
             "title": "Bài trắc nghiệm",
             "submit": "Nộp bài",
             "result": "Đúng {score}/{total} câu"
+        },
+        "assignments": {
+            "title": "Bài tập",
+            "status": {
+                "submitted": "Đã nộp",
+                "pending": "Chưa nộp",
+                "overdue": "Quá hạn"
+            }
         }
     }
 }

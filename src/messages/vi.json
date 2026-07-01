@@ -1,0 +1,3154 @@
+{
+    "community": {
+        "title": "Cộng đồng",
+        "description": "Chia sẻ điều bạn đang làm, hỏi khi gặp khó, cùng nhau học.",
+        "channelTabsAria": "Lọc bài cộng đồng theo kênh",
+        "channel": {
+            "all": "Tất cả",
+            "problems": "Vấn đề",
+            "founderQa": "Hỏi founder",
+            "general": "Chung"
+        },
+        "composerPlaceholder": "Chia sẻ điều gì đó với cộng đồng…",
+        "post": "Đăng",
+        "empty": "Chưa có bài nào. Hãy là người đầu tiên chia sẻ.",
+        "error": "Không tải được bảng tin cộng đồng",
+        "retry": "Thử lại",
+        "loadMore": "Tải thêm",
+        "comments": {
+            "placeholder": "Viết bình luận…",
+            "send": "Bình luận",
+            "loading": "Đang tải bình luận…",
+            "empty": "Chưa có bình luận. Bắt đầu trò chuyện nào.",
+            "error": "Không tải được bình luận",
+            "reply": "Trả lời",
+            "replyPlaceholder": "Viết trả lời…",
+            "viewReplies": "Xem {count} trả lời",
+            "hideReplies": "Ẩn trả lời"
+        },
+        "chat": {
+            "title": "Chat cộng đồng",
+            "description": "Trò chuyện trực tiếp với cộng đồng, hoặc nhắn riêng cho founder.",
+            "tabsAria": "Chuyển cuộc trò chuyện",
+            "communityRoom": "Cộng đồng",
+            "founderDm": "Founder",
+            "placeholder": "Nhập tin nhắn…",
+            "send": "Gửi",
+            "loading": "Đang tải tin nhắn…",
+            "empty": "Chưa có tin nhắn. Chào một câu nào!",
+            "error": "Không tải được tin nhắn",
+            "signInRequired": "Đăng nhập bằng tài khoản có gói member để vào chat."
+        }
+    },
+    "contact": {
+        "title": "Liên hệ",
+        "intro": "StarCi do một người dựng nên — câu hỏi của bạn tới thẳng người làm ra nó. Chọn cách nhanh nhất bên dưới, hoặc gửi tin nhắn.",
+        "responseTime": "Thường phản hồi trong vòng 24 giờ (giờ hỗ trợ T2–T6, 9:00–18:00).",
+        "direct": {
+            "title": "Liên hệ trực tiếp",
+            "emailLabel": "Email",
+            "phoneLabel": "Điện thoại",
+            "hoursLabel": "Giờ hỗ trợ",
+            "hoursValue": "T2–T6, 9:00–18:00"
+        },
+        "founder": {
+            "title": "Người dựng StarCi",
+            "name": "Stacy Nguyen",
+            "role": "Founder · StarCi Academy",
+            "facebook": "Facebook",
+            "linkedin": "LinkedIn",
+            "github": "GitHub"
+        },
+        "form": {
+            "title": "Gửi tin nhắn",
+            "name": "Họ tên",
+            "namePlaceholder": "Nguyễn Văn A",
+            "email": "Email",
+            "emailPlaceholder": "ban@email.com",
+            "category": "Lý do liên hệ",
+            "message": "Nội dung",
+            "messagePlaceholder": "Chúng tôi có thể giúp gì cho bạn?",
+            "submit": "Gửi tin nhắn",
+            "submitting": "Đang gửi…",
+            "successTitle": "Đã gửi!",
+            "successBody": "Cảm ơn bạn. Chúng tôi sẽ phản hồi qua email sớm nhất có thể.",
+            "sendAnother": "Gửi tin khác",
+            "errorTitle": "Không gửi được tin nhắn. Vui lòng thử lại.",
+            "nameRequired": "Vui lòng nhập họ tên.",
+            "emailInvalid": "Email không hợp lệ.",
+            "messageRequired": "Vui lòng nhập nội dung."
+        },
+        "categories": {
+            "course_support": "Hỗ trợ khoá học / tài khoản",
+            "partnership": "Hợp tác / tuyển dụng",
+            "general": "Câu hỏi chung"
+        },
+        "faq": {
+            "title": "Câu hỏi thường gặp",
+            "q1": "Bao lâu tôi được phản hồi?",
+            "a1": "Thường trong vòng 24 giờ, trong giờ hỗ trợ T2–T6 9:00–18:00.",
+            "q2": "Tôi không đăng nhập được hoặc quên mật khẩu?",
+            "a2": "Dùng nút \"Quên mật khẩu\" ở màn đăng nhập để đặt lại. Nếu vẫn kẹt, gửi form kèm email tài khoản của bạn.",
+            "q3": "Vấn đề thanh toán hoặc hoàn tiền?",
+            "a3": "Gửi form với lý do \"Hỗ trợ khoá học / tài khoản\" kèm mã giao dịch, chúng tôi sẽ kiểm tra giúp bạn.",
+            "q4": "Tôi muốn hợp tác hoặc tuyển học viên StarCi?",
+            "a4": "Chọn lý do \"Hợp tác / tuyển dụng\" khi gửi form, hoặc nhắn trực tiếp founder qua LinkedIn.",
+            "q5": "Câu hỏi về khoá học, hoặc StarCi có hợp với tôi không?",
+            "a5": "Xem mục Câu hỏi thường gặp ở trang chủ — phần đó trả lời kỹ về lộ trình, đối tượng và cách học.",
+            "landingLink": "Xem FAQ về khoá học ở trang chủ"
+        }
+    },
+    "profileSettings": {
+        "title": "Cài đặt",
+        "subtitle": "Quản lý tài khoản, AI, nội dung và thành viên.",
+        "loginMethod": "Phương thức đăng nhập",
+        "loginMethodValue": {
+            "github": "GitHub",
+            "google": "Google",
+            "credentials": "Email & mật khẩu"
+        },
+        "collapseMenu": "Thu gọn menu",
+        "expandMenu": "Mở rộng menu",
+        "groups": {
+            "account": "Tài khoản",
+            "learning": "Học tập",
+            "ai": "AI",
+            "content": "Nội dung"
+        },
+        "items": {
+            "editProfile": "Chỉnh sửa hồ sơ",
+            "security": "Bảo mật",
+            "sessions": "Thiết bị",
+            "courseHistory": "Lịch sử học",
+            "submissions": "Bài nộp",
+            "attempts": "Lượt làm milestone",
+            "feedback": "Phản hồi",
+            "aiSettings": "Cài đặt AI",
+            "aiSubscription": "Gói AI",
+            "aiUsage": "Sử dụng AI",
+            "bookmarks": "Đã lưu",
+            "rewards": "Phần thưởng",
+            "blog": "Blog",
+            "talents": "Nhân tài",
+            "membership": "Thành viên"
+        },
+        "learning": {
+            "loadMore": "Tải thêm",
+            "outline": {
+                "back": "Quay lại",
+                "empty": "Chưa có dữ liệu khóa học.",
+                "error": "Không tải được dàn bài khóa học.",
+                "continue": "Tiếp tục",
+                "openCourse": "Mở khóa học",
+                "completion": "Hoàn thành",
+                "lessons": "Nội dung",
+                "challenges": "Challenge",
+                "tasks": "Nhiệm vụ",
+                "milestones": "Dự án",
+                "premium": "Nội dung trả phí",
+                "read": "Đã đọc",
+                "unread": "Chưa đọc",
+                "done": "Đã xong",
+                "notDone": "Chưa xong",
+                "noMatch": "Không có bài học nào khớp với tìm kiếm.",
+                "lessonCount": "{count} bài học",
+                "status": {
+                    "notStarted": "Chưa bắt đầu",
+                    "inProgress": "Đang làm",
+                    "failed": "Chưa đạt",
+                    "completed": "Hoàn thành"
+                },
+                "taskType": {
+                    "design": "Thiết kế",
+                    "techIntegrate": "Tích hợp",
+                    "business": "Nghiệp vụ"
+                },
+                "readCount": "{read}/{total} đã đọc",
+                "taskProgress": "{done}/{total}",
+                "milestonesEmpty": "Khóa này chưa có dự án cá nhân.",
+                "milestoneStatus": {
+                    "done": "Hoàn thành",
+                    "inProgress": "Đang làm",
+                    "todo": "Chưa làm"
+                }
+            },
+            "history": {
+                "title": "Lịch sử học",
+                "subtitle": "Tiến độ các khóa đã tham gia và những bài học gần đây.",
+                "coursesTitle": "Khóa học của bạn",
+                "coursesEmpty": "Bạn chưa tham gia khóa học nào.",
+                "coursesEmptyHint": "Tham gia một khóa học để bắt đầu ghi lại lịch sử học.",
+                "explore": "Khám phá khóa học",
+                "searchCourses": "Tìm khóa học",
+                "noMatch": "Không có khóa học nào khớp với tìm kiếm.",
+                "lessonsTitle": "Bài học gần đây",
+                "lessonsEmpty": "Chưa có bài học nào được đọc gần đây.",
+                "lessonsProgress": "Bài học: {completed}/{total} ({percent}%)",
+                "challengesProgress": "Challenge: {completed}/{total}",
+                "milestonesProgress": "Milestone: {completed}/{total}"
+            },
+            "detail": {
+                "searchLessons": "Tìm bài học",
+                "viewToggle": "Cách xem",
+                "byDay": "Theo ngày",
+                "byChapter": "Theo chương",
+                "contents": "Nội dung",
+                "personalProject": "Dự án cá nhân",
+                "meta": "Đã đọc {lessonsRead}/{lessonsTotal} bài · {challenges} challenge · {milestones} milestone"
+            },
+            "day": {
+                "today": "Hôm nay",
+                "yesterday": "Hôm qua",
+                "empty": "Khóa này chưa có hoạt động học nào.",
+                "emptyHint": "Đọc một bài hoặc vượt qua một challenge thì hoạt động sẽ hiện ở đây.",
+                "noMatch": "Không có hoạt động nào khớp với tìm kiếm.",
+                "eventType": {
+                    "lessonRead": "Đã đọc bài",
+                    "challengePassed": "Vượt qua challenge",
+                    "milestonePassed": "Hoàn thành milestone"
+                }
+            },
+            "submissions": {
+                "title": "Bài nộp challenge",
+                "subtitle": "Tất cả bài nộp challenge của bạn và kết quả chấm.",
+                "empty": "Bạn chưa có bài nộp challenge nào.",
+                "emptyHint": "Tham gia một khóa học và nộp bài tập để xem kết quả chấm ở đây.",
+                "colTitle": "Challenge",
+                "colCourse": "Khóa học",
+                "colStatus": "Trạng thái",
+                "colScore": "Điểm",
+                "colLang": "Ngôn ngữ",
+                "colRepo": "Bài nộp",
+                "colDate": "Đã nộp",
+                "open": "Mở",
+                "status": {
+                    "passed": "Đạt",
+                    "failed": "Chưa đạt",
+                    "pending": "Đang chờ"
+                }
+            },
+            "attempts": {
+                "title": "Lượt làm milestone",
+                "subtitle": "Các lượt làm nhiệm vụ milestone của bạn, kể cả lượt chưa đạt.",
+                "empty": "Bạn chưa có lượt làm milestone nào.",
+                "emptyHint": "Tham gia một khóa học và làm milestone để xem các lượt làm ở đây.",
+                "colTask": "Nhiệm vụ",
+                "colMilestone": "Milestone",
+                "colCourse": "Khóa học",
+                "colResult": "Kết quả",
+                "colScore": "Điểm",
+                "colDate": "Thời điểm làm",
+                "passed": "Đạt",
+                "failed": "Chưa đạt"
+            },
+            "feedback": {
+                "title": "Phản hồi",
+                "subtitle": "Phản hồi bạn nhận được từ challenge, nhiệm vụ và đánh giá CV.",
+                "empty": "Bạn chưa có phản hồi nào.",
+                "source": {
+                    "challenge": "Challenge",
+                    "task": "Nhiệm vụ",
+                    "cv": "CV"
+                }
+            }
+        }
+    },
+    "nav": {
+        "brand": "StarCi Academy",
+        "home": "Trang chủ",
+        "courses": "Khóa học",
+        "community": "Cộng đồng",
+        "practice": "Luyện Code",
+        "contact": "Liên hệ",
+        "logout": "Đăng xuất",
+        "profile": "Hồ sơ",
+        "settings": "Cài đặt",
+        "signIn": "Đăng nhập",
+        "learn": "Học",
+        "toggleLanguage": "Chuyển đổi ngôn ngữ",
+        "appearance": "Giao diện",
+        "mobileMenu": "Điều hướng mobile",
+        "courseMenu": "Mục lục khoá học",
+        "contentOutline": "Nội dung học phần",
+        "collapseLeftRail": "Thu gọn thanh bên trái",
+        "expandLeftRail": "Mở rộng thanh bên trái",
+        "collapseRightRail": "Ẩn thanh bên phải",
+        "expandRightRail": "Hiện thanh bên phải",
+        "dashboard": "Bảng điều khiển",
+        "guestPrompt": "Đăng nhập để theo dõi tiến độ của bạn"
+    },
+    "footer": {
+        "tagline": "Học bằng cách tự tay dựng hệ thống thật — đủ trình cho mọi vòng phỏng vấn kỹ thuật.",
+        "exploreTitle": "Khám phá",
+        "supportTitle": "Hỗ trợ",
+        "links": {
+            "courses": "Khóa học",
+            "blog": "Blog",
+            "talents": "Talents",
+            "community": "Cộng đồng",
+            "contact": "Liên hệ",
+            "terms": "Điều khoản",
+            "privacy": "Bảo mật"
+        },
+        "madeBy": "Được phát triển bởi Nguyễn Văn Tự Cường",
+        "copyright": "© {year} StarCi Academy"
+    },
+    "legal": {
+        "contactNote": "Có câu hỏi về điều khoản hoặc dữ liệu của bạn? Liên hệ cuongnvtse160875@gmail.com.",
+    "lastUpdated": "Cập nhật lần cuối: {date}",
+        "terms": {
+            "title": "Điều khoản sử dụng",
+            "description": "Các điều khoản khi sử dụng StarCi Academy.",
+            "body": "Tài liệu điều khoản đầy đủ đang được hoàn thiện. Khi sử dụng StarCi Academy, bạn đồng ý dùng nền tảng cho mục đích học tập hợp pháp và tôn trọng quyền sở hữu của nội dung khóa học. Phiên bản chi tiết sẽ được cập nhật tại trang này."
+        },
+        "privacy": {
+            "title": "Chính sách bảo mật",
+            "description": "Cách StarCi Academy thu thập và sử dụng dữ liệu của bạn.",
+            "body": "Chính sách bảo mật đầy đủ đang được hoàn thiện. StarCi Academy chỉ thu thập dữ liệu cần thiết để vận hành việc học của bạn (tài khoản, tiến độ, bài nộp) và không bán dữ liệu cho bên thứ ba. Phiên bản chi tiết sẽ được cập nhật tại trang này."
+        }
+    },
+    "search": {
+        "label": "Tìm kiếm",
+        "placeholder": "Tìm kiếm",
+        "filtersAria": "Bộ lọc tìm kiếm",
+        "noResults": "Không tìm thấy kết quả.",
+        "suggestions": {
+            "courses": "Khóa học",
+            "modules": "Học phần",
+            "videos": "Video",
+            "challenges": "Thử thách",
+            "contents": "Nội dung",
+            "lessonVideos": "Bài giảng",
+            "flashcards": "Bộ flashcard",
+            "milestones": "Tiến độ",
+            "milestoneTasks": "Tasks"
+        },
+        "idleHint": "Nhập để tìm khóa học, học phần, bài giảng…",
+        "popular": "Phổ biến",
+        "hint": {
+            "move": "di chuyển",
+            "open": "mở",
+            "close": "esc đóng"
+        }
+    },
+    "cookieConsent": {
+        "title": "Cookie",
+        "body": "Bọn mình dùng cookie cần thiết để bạn đăng nhập và ghi nhớ ngôn ngữ, cùng cookie phân tích (Google Analytics) để cải thiện trải nghiệm. Bạn có thể chấp nhận, từ chối, hoặc tùy chỉnh.",
+        "acceptAll": "Chấp nhận tất cả",
+        "reject": "Từ chối",
+        "customize": "Tùy chỉnh",
+        "modalTitle": "Tùy chỉnh cookie",
+        "modalBody": "Chọn loại cookie bạn cho phép. Cookie cần thiết luôn bật để hệ thống hoạt động.",
+        "necessaryLabel": "Cần thiết",
+        "necessaryHint": "Đăng nhập, bảo mật và ghi nhớ ngôn ngữ. Luôn bật.",
+        "analyticsLabel": "Phân tích",
+        "analyticsHint": "Google Analytics — đo lường ẩn danh để cải thiện sản phẩm.",
+        "save": "Lưu lựa chọn"
+    },
+    "courseContents": {
+        "empty": "Khóa học này chưa có nội dung.",
+        "error": "Không tải được nội dung khóa học.",
+        "retry": "Thử lại",
+        "completion": "Hoàn thành",
+        "progress": "Tiến độ",
+        "contentCount": "{read}/{total}",
+        "resizeRail": "Kéo để đổi độ rộng thanh nội dung",
+        "lessonsStat": "Nội dung {read}/{total}",
+        "challengesStat": "Challenge {done}/{total}",
+        "challengesOptional": "Thử thách {done}/{total} · tùy chọn",
+        "moduleLessons": "{read}/{total} bài",
+        "tasksStat": "Nhiệm vụ {done}/{total}",
+        "resume": "Tiếp tục học",
+        "allDone": "Bạn đã hoàn thành khóa học này 🎉",
+        "searchAria": "Tìm nội dung",
+        "searchPlaceholder": "Tìm nội dung...",
+        "premium": "Nội dung trả phí",
+        "read": "Đã đọc",
+        "unread": "Chưa đọc",
+        "done": "Đã xong",
+        "notDone": "Chưa xong",
+        "noMatch": "Không có nội dung nào khớp với tìm kiếm.",
+        "lessonCount": "{count} nội dung",
+        "milestones": "Dự án",
+        "lessonsLabel": "Nội dung",
+        "challengesLabel": "Challenge",
+        "lessonsHint": "bài đã đọc",
+        "challengesHint": "đã hoàn thành",
+        "continueEyebrow": "Học tiếp",
+        "keepGoing": "Đi tiếp lộ trình",
+        "metaModules": "{count} chương",
+        "metaHours": "~{hours} giờ học",
+        "metaLearners": "{count} học viên",
+        "metaModulesLabel": "chương",
+        "metaHoursLabel": "giờ học",
+        "metaLearnersLabel": "học viên",
+        "capstoneEyebrow": "Đã xong nội dung — tới đồ án cá nhân",
+        "resumeCapstone": "Tiếp tục đồ án",
+        "challengesByDifficulty": "Challenge theo độ khó",
+        "difficulty": {
+            "beginner": "Dễ",
+            "intermediate": "Trung bình",
+            "advanced": "Khó",
+            "insane": "Cực khó"
+        },
+        "status": {
+            "notStarted": "Chưa bắt đầu",
+            "inProgress": "Đang làm",
+            "failed": "Chưa đạt",
+            "completed": "Hoàn thành"
+        },
+        "taskType": {
+            "design": "Thiết kế",
+            "techIntegrate": "Tích hợp",
+            "business": "Nghiệp vụ"
+        }
+    },
+    "onThisPage": {
+        "title": "Trên trang này"
+    },
+    "learnTabs": {
+        "contents": "Mục lục",
+        "lesson": "Bài học",
+        "onThisPage": "Trên trang"
+    },
+    "contentAi": {
+        "title": "Hỏi StarCi AI",
+        "hint": "Hỏi bất cứ điều gì về nội dung này.",
+        "placeholder": "Hỏi về nội dung này...",
+        "ask": "Hỏi AI",
+        "send": "Gửi",
+        "pickModel": "Chọn model",
+        "clear": "Xoá lịch sử",
+        "clearHint": "Xoá toàn bộ hội thoại của bài này.",
+        "clearAction": "Xoá",
+        "settings": "Cài đặt",
+        "modelLabel": "Model trả lời",
+        "thinking": "Đang trả lời…",
+        "error": "Xin lỗi, mình chưa trả lời được. Hãy thử lại sau.",
+        "suggestions": {
+            "summarize": "Tóm tắt bài này trong 3 ý chính",
+            "hardest": "Giải thích phần khó nhất",
+            "example": "Cho mình ví dụ thực tế",
+            "remember": "Mình nên nhớ gì từ bài này?"
+        },
+        "askAboutSelection": "Hỏi AI về đoạn này",
+        "selectionHintTitle": "Hỏi AI về đoạn bất kỳ",
+        "selectionHint": "Bôi đen một đoạn trong bài, nút hỏi AI sẽ hiện ra ngay.",
+        "dismissHint": "Bỏ qua gợi ý",
+        "new": "Mới",
+        "clearSelection": "Bỏ chọn đoạn",
+        "aboutPassage": "Về đoạn “{passage}”:",
+        "selectionSuggestions": {
+            "explain": "Giải thích đoạn này",
+            "example": "Cho ví dụ",
+            "simplify": "Giải thích đơn giản hơn"
+        },
+        "conversations": "Cuộc trò chuyện",
+        "chatHistory": "Lịch sử trò chuyện",
+        "newConversation": "Cuộc trò chuyện mới",
+        "untitled": "Chưa đặt tên",
+        "searchConversations": "Tìm hội thoại…",
+        "noConversations": "Chưa có hội thoại nào",
+        "deleteConversation": "Xoá hội thoại",
+        "turnsCount": "{count} tin nhắn"
+    },
+    "contentActions": {
+        "title": "Hành động"
+    },
+    "lessonRail": {
+        "flashcards": {
+            "title": "Ôn lại bài này",
+            "count": "{decks} bộ · {cards} thẻ",
+            "review": "Ôn tập"
+        },
+        "challenges": {
+            "title": "Luyện tập bài này",
+            "count": "{count} thử thách",
+            "practice": "Làm thử thách"
+        }
+    },
+    "courses": {
+        "featuredTitle": "Khóa học tiêu biểu",
+        "viewCourse": "Xem khóa học",
+        "searchPlaceholder": "Tìm khóa học...",
+        "learners": "{count} học viên",
+        "empty": "Chưa có khóa học nào",
+        "loadError": "Không tải được khóa học",
+        "retry": "Thử lại",
+        "count": "{count} khóa học"
+    },
+    "course": {
+        "enroll": "Đăng ký",
+        "enrolled": "Đã đăng ký",
+        "priceUsdHint": "≈ {amount} khi thanh toán quốc tế",
+        "continueLearning": "Tiếp tục học",
+        "tryLearning": "Học thử",
+        "trial": "Học thử",
+        "paywall": {
+            "title": "Nội dung trả phí",
+            "titleNamed": "Mở khoá {course}",
+            "description": "Bạn đang đọc thử. Đăng ký để học trọn khóa.",
+            "buy": "Đăng ký khóa học",
+            "back": "Quay lại",
+            "unlock": {
+                "content": "Toàn bộ bài học",
+                "challenges": "Tất cả challenge chấm tự động",
+                "project": "Dự án cá nhân + review"
+            }
+        },
+        "prerequisites": "Yêu cầu đầu vào",
+        "usersEnrolled": "{count} người đã đăng ký",
+        "cvTitle": "Lộ trình CV",
+        "cvDescription": "Chuẩn bị và chỉnh sửa CV developer theo hướng dẫn trong khóa học.",
+        "cvPlaceholder": "Công cụ và bài tập CV sẽ hiển thị tại đây.",
+        "finalProjectTitle": "Dự án cá nhân",
+        "finalProjectDescription": "Yêu cầu, milestone và chi tiết nộp dự án cá nhân trong khóa học này.",
+        "finalProjectPlaceholder": "Đề bài và không gian làm việc sẽ hiển thị tại đây."
+    },
+    "courseLanding": {
+        "valueProps": "Bạn sẽ học được gì",
+        "curriculum": "Nội dung khóa học",
+        "prerequisites": "Cần biết trước",
+        "faq": "Câu hỏi thường gặp",
+        "premium": "Trả phí",
+        "currentPhase": "Đang áp dụng",
+        "soldOut": "Hết suất",
+        "slotsLeft": "Còn {count} suất",
+        "slotsLeftPhase": "Còn {count} suất giá {phase}",
+        "currentOpen": "Đang mở",
+        "previewCount": "{count} bài xem trước",
+        "moduleMeta": "{lessons} nội dung · {minutes} phút",
+        "notFound": "Không tìm thấy khóa học.",
+        "errorTitle": "Không tải được dữ liệu.",
+        "retry": "Thử lại",
+        "stats": {
+            "learners": "Học viên",
+            "modules": "Module",
+            "lessons": "Nội dung",
+            "hours": "Giờ học",
+            "challenges": "Bài thực hành"
+        },
+        "tier": {
+            "foundation": "Nền tảng",
+            "intermediate": "Trung cấp",
+            "advanced": "Nâng cao"
+        },
+        "phase": {
+            "pioneer": "Tiên phong",
+            "earlyBird": "Sớm",
+            "regular": "Tiêu chuẩn"
+        }
+    },
+    "settings": {
+        "language": {
+            "title": "Ngôn ngữ",
+            "confirm": "Xác nhận",
+            "cancel": "Hủy",
+            "popular": "Ngôn ngữ phổ biến",
+            "all": "Tất cả ngôn ngữ"
+        }
+    },
+    "programmingLanguage": {
+        "typescript": "TypeScript",
+        "java": "Java",
+        "csharp": "C#",
+        "go": "Go"
+    },
+    "module": {
+        "aria": "Học phần {index}",
+        "pathIntroduction": "Giới thiệu",
+        "numContents": "{count} nội dung",
+        "chipContentsHint": "Số bài đọc trong học phần.",
+        "chipVideosHint": "Số video bài học trong học phần.",
+        "chipChallengesHint": "Số thử thách trong học phần.",
+        "tabListAria": "Các mục trong trang học",
+        "searchPlaceholder": "Tìm học phần...",
+        "searchContentsPlaceholder": "Tìm bài học...",
+        "tier": {
+            "foundation": "Nền tảng",
+            "intermediate": "Trung cấp",
+            "advanced": "Nâng cao"
+        }
+    },
+    "modules": {
+        "title": "Học phần"
+    },
+    "mindMap": {
+        "title": "Sơ đồ tư duy",
+        "fullscreen": "Xem toàn màn hình",
+        "exitFullscreen": "Thoát toàn màn hình",
+        "zoomIn": "Phóng to",
+        "zoomOut": "Thu nhỏ",
+        "fitView": "Vừa khung nhìn",
+        "continue": "Tiếp tục học",
+        "continueAria": "Tiếp tục tới nội dung kế tiếp",
+        "allDone": "Đã học hết nội dung",
+        "overall": "Hoàn thành khóa học",
+        "moduleLessons": "{read}/{total} bài",
+        "signInToTrack": "Đăng nhập để theo dõi tiến độ của bạn",
+        "legend": {
+            "done": "Đã xong",
+            "inProgress": "Đang học",
+            "notStarted": "Chưa bắt đầu",
+            "locked": "Cần nâng cấp",
+            "current": "Đang ở đây"
+        }
+    },
+    "enrollGate": {
+        "title": "Mở khoá {surface}",
+        "description": "Đăng ký khoá học để mở khoá phần này và bắt đầu thực hành.",
+        "cta": "Đăng ký khoá học",
+        "locked": "Cần đăng ký khoá học"
+    },
+    "foundations": {
+        "title": "Nền tảng",
+        "description": "Tài liệu và nguồn tham khảo nền tảng kỹ thuật cho khóa học.",
+        "gridDescription": "Chọn chủ đề để xem tài liệu và nguồn học tập.",
+        "searchPlaceholder": "Tìm chủ đề...",
+        "searchEmpty": "Không có chủ đề nào khớp với \"{query}\".",
+        "searchResourcesPlaceholder": "Tìm tài liệu...",
+        "searchResourcesEmpty": "Không có tài liệu nào khớp với \"{query}\".",
+        "emptyCategories": "Chưa có chủ đề nền tảng nào.",
+        "count": "{count, plural, =0 {Chưa có tài liệu} one {# tài liệu} other {# tài liệu}}",
+        "categoryCount": "{count, plural, =0 {Chưa có chủ đề} one {# chủ đề} other {# chủ đề}}",
+        "empty": "Danh mục này chưa có tài liệu.",
+        "viewDetail": "Xem chi tiết",
+        "selectPrompt": "Chọn một tài liệu trong danh sách để xem nội dung.",
+        "detailTitle": "Tài liệu",
+        "notFound": "Không tìm thấy tài liệu này.",
+        "openLink": "Mở liên kết",
+        "openDocument": "Đọc bài viết",
+        "openVideo": "Xem video",
+        "recommended": "Nên xem",
+        "authorBy": "Tác giả: {author}",
+        "kind": {
+            "external_link": "Liên kết ngoài",
+            "video": "Video",
+            "document": "Bài viết"
+        }
+    },
+    "headhuntings": {
+        "title": "Headhunting",
+        "description": "Đối tác tuyển dụng IT đồng hành cùng học viên StarCI Academy.",
+        "count": "{count, plural, =0 {Chưa có tư vấn viên} one {# tư vấn viên} other {# tư vấn viên}}",
+        "empty": "Chưa có tư vấn viên nào.",
+        "searchPlaceholder": "Tìm tư vấn viên",
+        "companySearchPlaceholder": "Tìm công ty tuyển dụng",
+        "viewProfile": "Xem hồ sơ",
+        "companyLabel": "Công ty",
+        "openCompany": "Xem công ty",
+        "modalTitle": "Hồ sơ headhunter",
+        "linkedin": "LinkedIn",
+        "zalo": "Zalo",
+        "companyNotFound": "Không tìm thấy công ty.",
+        "companyDetailTitle": "Công ty tuyển dụng",
+        "website": "Website",
+        "address": "Địa chỉ",
+        "phone": "Điện thoại",
+        "email": "Email"
+    },
+    "cv": {
+        "title": "CV",
+        "preview": {
+            "title": "Xem trước CV (PDF)",
+            "fullscreen": "Xem toàn màn hình"
+        },
+        "submission": {
+            "fileCardTitle": "Thông tin CV đã nộp",
+            "submittedAtPending": "Chưa có thời gian nộp từ hệ thống.",
+            "download": "Tải xuống",
+            "aiReviewSectionTitle": "Đánh giá bằng AI",
+            "reviewAction": "Chạy đánh giá CV",
+            "reviewActionRerun": "Đánh giá lại CV",
+            "reviewLevelLabel": "Mức đánh giá",
+            "reviewLevelPlaceholder": "Chọn mức rubric",
+            "reviewLevelSectionDescription": "Mức rubric hiện tại: {level}. Bấm Cập nhật để mở danh sách và chọn mức khác.",
+            "reviewLevelUpdate": "Cập nhật",
+            "reviewLevelDetails": {
+                "titleFallback": "Chi tiết mức đánh giá",
+                "selectionTitle": "Chọn mức đánh giá",
+                "subtitle": "Nội dung rubric sẽ được dùng để đánh giá CV của bạn.",
+                "emptyDescription": "Mức đánh giá này chưa có mô tả chi tiết.",
+                "selected": "Đang chọn",
+                "close": "Đóng"
+            },
+            "reviewPlanTitle": "Kế hoạch review (AI)",
+            "feedbackTitle": "Đánh giá CV",
+            "feedbackSummary": "CV của bạn đã được ghi nhận. Mentor sẽ phản hồi chi tiết trong phiên review tiếp theo.",
+            "updateAction": "Cập nhật CV mới",
+            "attemptsTitle": "Các phiên bản CV đã nộp",
+            "defaultCvFileName": "tai-lieu.pdf",
+            "aiBrand": "StarCi AI",
+            "toast": {
+                "errorTitle": "Có lỗi xảy ra",
+                "successTitle": "Thành công",
+                "authTokenMissing": "Bạn cần đăng nhập để tiếp tục.",
+                "submissionNotFound": "Không tìm thấy bản nộp CV cho tài khoản của bạn.",
+                "reviewFailed": "Không thể bắt đầu review CV. Vui lòng thử lại.",
+                "reviewLevelRequired": "Vui lòng chọn mức review trước khi bắt đầu."
+            },
+            "attempts": {
+                "file": "File CV",
+                "submittedAt": "Thời gian nộp",
+                "feedback": "Feedback",
+                "actions": "Hành động",
+                "viewDetails": "Xem chi tiết"
+            },
+            "attemptsDrawer": {
+                "title": "Các bản CV đã tải lên",
+                "openButton": "Xem các bản đã nộp",
+                "empty": "Chưa có phiên bản CV nào.",
+                "loadError": "Không tải được danh sách bản CV. Vui lòng thử lại.",
+                "ariaTable": "Bảng các lần tải CV",
+                "columnVersion": "Phiên bản",
+                "columnStatus": "Trạng thái",
+                "attemptLine": "Lần thử {number}",
+                "feedbackEmpty": "—"
+            },
+            "attemptAnalysis": {
+                "title": "Chi tiết phân tích CV",
+                "titleWithAttempt": "Chi tiết phân tích CV - lần thử {number}",
+                "empty": "Chưa có phân tích chi tiết cho lần thử này.",
+                "openFile": "Mở file CV"
+            }
+        },
+        "form": {
+            "submit": "Tải CV",
+            "cancel": "Hủy",
+            "modal": {
+                "title": "Cập nhật CV mới",
+                "description": "Tải bản CV mới để thay thế phiên bản hiện tại.",
+                "confirm": "Xác nhận nộp"
+            },
+            "cvFile": {
+                "label": "File CV (PDF)",
+                "hint": "Chỉ chấp nhận file PDF, tối đa 10MB."
+            },
+            "errors": {
+                "fileRequired": "Vui lòng chọn file CV.",
+                "fileTypeInvalid": "CV phải là định dạng PDF.",
+                "fileSizeInvalid": "Dung lượng file tối đa là 10MB."
+            }
+        }
+    },
+    "finalProject": {
+        "dashboard": {
+            "title": "Dự án cá nhân",
+            "subtitle": "Xây dựng dự án của bạn theo từng chặng — chấm điểm bằng AI.",
+            "progress": "Tiến độ",
+            "tasksDone": "{done}/{total} nhiệm vụ",
+            "nextTask": "Nhiệm vụ kế tiếp",
+            "continue": "Tiếp tục",
+            "allDone": "Đã hoàn thành tất cả",
+            "github": "GitHub",
+            "connected": "Đã kết nối",
+            "notConnected": "Chưa kết nối",
+            "statDone": "Đã đạt",
+            "statLocked": "Đang khoá",
+            "statAttempts": "Lần nộp",
+            "statAvg": "Điểm TB",
+            "completion": "Hoàn thành",
+            "keepGoing": "Đi tiếp",
+            "statsLine": "{done}/{total} nhiệm vụ · {attempts} lần nộp · {avg} điểm TB",
+            "taskDone": "Đã hoàn thành",
+            "taskTodo": "Chưa làm",
+            "empty": "Chưa có chặng nào trong dự án."
+        },
+        "title": "Dự án cá nhân",
+        "aria": "Cột mốc {index}",
+        "page": {
+            "title": "Dự án cá nhân",
+            "searchTaskPlaceholder": "Tìm task...",
+            "description": "Hiện thực hóa dự án cá nhân qua lộ trình Milestone bài bản. Với sự đồng hành của StarCI AI, mọi dòng code và giải pháp của bạn đều được đánh giá chuyên sâu, giúp tối ưu chất lượng sản phẩm ngay trong quá trình thực hiện.",
+            "submit": {
+                "title": "Nộp ý tưởng dự án",
+                "placeholder": "Dán link repository GitHub của bạn",
+                "ideaPlaceholder": "Mô tả ý tưởng dự án cá nhân của bạn...",
+                "ideaRequired": "Vui lòng nhập ý tưởng trước khi nộp.",
+                "ideaTooShort": "Ý tưởng phải có ít nhất 10 ký tự.",
+                "milestoneMissing": "Không tìm thấy milestone để nộp ý tưởng.",
+                "submitFailed": "Nộp ý tưởng thất bại. Vui lòng thử lại.",
+                "submitOnceNote": "Lưu ý: chỉ được nộp ý tưởng 1 lần.",
+                "submittedOnce": "Bạn đã nộp ý tưởng, không thể nộp lại.",
+                "lastSubmission": "Lần nộp gần nhất: 21/04/2026 20:45",
+                "cta": "Nộp"
+            },
+            "submitGithub": {
+                "title": "Github dự án",
+                "settingsTitle": "Cài đặt chấm điểm",
+                "langFieldTitle": "Ngôn ngữ chấm điểm",
+                "langFieldHint": "Backend của bạn được chấm theo tiêu chí approach của ngôn ngữ này.",
+                "modelFieldTitle": "Model chấm điểm",
+                "modelFieldHint": "Chọn model AI để chấm dự án — từ gói Tiết kiệm trở lên.",
+                "repoFieldTitle": "URL GitHub",
+                "branchFieldTitle": "Nhánh cần đánh giá",
+                "branchPlaceholder": "main",
+                "branchInvalid": "Chỉ dùng chữ, số và các ký tự . _ / -",
+                "branchTooLong": "Tên nhánh quá dài.",
+                "missingRepoForReview": "Nhập và lưu URL GitHub hợp lệ trước.",
+                "placeholder": "https://github.com/your-account/personal-project",
+                "urlRequired": "Vui lòng nhập link GitHub của dự án.",
+                "urlInvalid": "Vui lòng nhập URL hợp lệ.",
+                "urlInvalidGithub": "Vui lòng nhập URL GitHub hợp lệ.",
+                "syncing": "Đang lưu…",
+                "resetButton": "Đặt lại",
+                "ctaEvaluate": "Đánh giá tiến độ",
+                "ctaReEvaluate": "Đánh giá lại tiến độ",
+                "syncFailed": "Đồng bộ thất bại. Vui lòng thử lại.",
+                "privateTokenFieldTitle": "Token GitHub (repo riêng tư)",
+                "privateTokenPlaceholder": "github_pat_… hoặc ghp_…",
+                "privateTokenHint": "Chỉ cần khi repo riêng tư. Tạo fine-grained token (quyền Contents: read) cho đúng repo này — token được mã hóa khi lưu và không hiển thị lại.",
+                "privateTokenSaveButton": "Lưu token",
+                "privateTokenRemoveButton": "Xóa token"
+            },
+            "reviewPreview": {
+                "title": "Kết quả mới nhất",
+                "scoreLabel": "Điểm: {score}",
+                "scorePending": "Chưa có điểm"
+            },
+            "attemptsDrawer": {
+                "title": "Lịch sử đánh giá dự án",
+                "openListButton": "Xem thêm",
+                "feedbackEmpty": "Chưa có feedback tóm tắt.",
+                "loadError": "Không tải được danh sách. Vui lòng thử lại.",
+                "empty": "Chưa có lượt đánh giá nào."
+            },
+            "feedback": {
+                "title": "AI feedback",
+                "content": "Tạm thời: kiến trúc dự án đã rõ ràng, cần bổ sung test cho các luồng chính và tối ưu tài liệu triển khai."
+            },
+            "history": {
+                "title": "Lịch sử feedback",
+                "columns": {
+                    "gitUrl": "Link GitHub",
+                    "submittedAt": "Thời gian nộp",
+                    "feedback": "Feedback"
+                },
+                "viewDetails": "Xem chi tiết",
+                "items": {
+                    "v1": {
+                        "submittedAt": "19/04/2026 09:10",
+                        "feedback": "Cần bổ sung mô tả kiến trúc tổng quan trong README."
+                    },
+                    "v2": {
+                        "submittedAt": "21/04/2026 20:45",
+                        "feedback": "API ổn định hơn, cần thêm test integration cho auth."
+                    }
+                }
+            },
+            "milestones": {
+                "title": "Milestone dự án cá nhân",
+                "week": "Tuần",
+                "items": {
+                    "scope": {
+                        "title": "Milestone 1 - Scope & Design",
+                        "dueAt": "Tuần 1",
+                        "requirements": {
+                            "problem": {
+                                "title": "Xác định bài toán",
+                                "description": "Mô tả rõ vấn đề, user persona và tiêu chí thành công."
+                            },
+                            "architecture": {
+                                "title": "Thiết kế kiến trúc",
+                                "description": "Draft kiến trúc hệ thống, flow dữ liệu và các module chính."
+                            }
+                        }
+                    },
+                    "implementation": {
+                        "title": "Milestone 2 - Implementation",
+                        "dueAt": "Tuần 2",
+                        "requirements": {
+                            "api": {
+                                "title": "Hoàn thiện chức năng lõi",
+                                "description": "Triển khai các API/chức năng chính theo scope đã chốt."
+                            },
+                            "quality": {
+                                "title": "Đảm bảo chất lượng",
+                                "description": "Thêm test cơ bản và xử lý lỗi cho các luồng quan trọng."
+                            }
+                        }
+                    },
+                    "release": {
+                        "title": "Milestone 3 - Release",
+                        "dueAt": "Tuần 3",
+                        "requirements": {
+                            "deploy": {
+                                "title": "Deploy bản demo",
+                                "description": "Triển khai bản demo có thể truy cập công khai."
+                            },
+                            "readme": {
+                                "title": "Hoàn thiện tài liệu",
+                                "description": "Cập nhật README gồm setup, kiến trúc và hướng dẫn chạy."
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "task": {
+        "briefTitle": "Hướng dẫn",
+        "criteriaTitle": "Tiêu chí chấm điểm",
+        "codeImplementationsTitle": "Hướng dẫn triển khai",
+        "codeImplementationsTabsAria": "Hướng dẫn triển khai theo ngôn ngữ",
+        "criteriaScore": "{score} điểm",
+        "criteriaNoHint": "Chưa có hướng dẫn cho tiêu chí này.",
+        "loadErrorTitle": "Không tải được bài tập này",
+        "loadErrorDescription": "Vui lòng kiểm tra kết nối và thử lại.",
+        "loadErrorRetry": "Thử lại",
+        "loadingResults": "Đang tải kết quả chấm điểm...",
+        "resultsTitle": "Kết quả chấm điểm",
+        "previewLockedAlertTitle": "Hoàn thành bài trước trước",
+        "previewLockedAlertDescription": "Bạn vẫn xem được tiêu chí của bài này. Đánh giá AI, xem phản hồi/lịch sử và chỉnh GitHub chỉ được bật sau khi hoàn thành bước trước.",
+        "previewLockedGoToCurrentTaskButton": "Về bài hiện tại",
+        "personalProjectDockerMultiStageIntro": "Đóng gói ứng dụng NestJS của bạn bằng Dockerfile multi-stage để tối ưu hóa dung lượng image. Build image và push lên một container registry như Docker Hub.",
+        "attemptNumber": "Lần #{number}",
+        "attemptScore": "{score} điểm",
+        "loadingFeedback": "Đang tải feedback chi tiết...",
+        "noFeedback": "Chưa có feedback chi tiết.",
+        "openFeedbackDetailsButton": "Xem chi tiết phản hồi",
+        "feedbackDetailsModalTitle": "Chi tiết phản hồi",
+        "feedbackDetailsLoadError": "Không tải được chi tiết phản hồi. Vui lòng thử lại.",
+        "suggestionLabel": "Gợi ý",
+        "jobStatus": {
+            "queued": "Đang chờ chấm điểm...",
+            "processing": "Đang chấm điểm bằng AI...",
+            "completed": "Chấm điểm hoàn tất!",
+            "failed": "Chấm điểm thất bại."
+        }
+    },
+    "lesson": {
+        "videos": "Bài giảng",
+        "videosCount": "{count} bài giảng trong học phần này",
+        "videosAria": "{count} bài giảng trong học phần này",
+        "videoUnavailable": "Không thể phát video này."
+    },
+    "content": {
+        "title": "Nội dung",
+        "language": "Ngôn ngữ",
+        "mindMapAria": "Sơ đồ khóa học và các học phần",
+        "mindMapEmpty": "Chưa có học phần để hiển thị.",
+        "mindMapHelloWorld": "Xin chào thế giới",
+        "mindMapModuleToggleAria": "Hiện hoặc ẩn các bài học của học phần này",
+        "mindMapStartLesson": "Vào học",
+        "mindMapPremium": "Premium",
+        "mindMapClose": "Đóng",
+        "mindMapDetailsEmpty": "Chưa có mô tả cho bài học này.",
+        "count": "{count} nội dung trong học phần này",
+        "empty": "Chưa có nội dung cho học phần này.",
+        "number": "Nội dung {index}",
+        "minutesRead": "{minutes} phút đọc",
+        "minutesShort": "{minutes} phút",
+        "markedRead": "Đã đọc xong bài này, tiến độ đã được lưu.",
+        "position": "Nội dung {position}/{total}",
+        "prevLesson": "Nội dung trước",
+        "nextLesson": "Nội dung tiếp",
+        "challengeCount": "{count} thử thách",
+        "outcomes": "Bạn sẽ nắm được",
+        "codeLessonCount": "{count} mục code",
+        "lessonVideosEmpty": "Chưa có bài giảng cho nội dung này.",
+        "codeLesson": {
+            "empty": "Chưa có giải thích code hoặc triển khai cho bài học này.",
+            "explainingsHeading": "Giải thích code",
+            "implementationsHeading": "Triển khai code",
+            "sectionsTabsAria": "Phần bài giảng code",
+            "explainingsTabsAria": "Các đoạn giải thích code",
+            "implementationsTabsAria": "Ngôn ngữ triển khai"
+        },
+        "codeExplainings": {
+            "empty": "Chưa có đoạn code giải thích cho bài học này.",
+            "indexLabel": "Đoạn {index}"
+        },
+        "codeImplementation": {
+            "empty": "Chưa có hướng dẫn triển khai cho bài học này.",
+            "guideHeading": "Hướng dẫn",
+            "exampleHeading": "Ví dụ"
+        },
+        "tabs": {
+            "content": "Nội dung",
+            "lessonVideos": "Bài giảng",
+            "codeExplainings": "Bài giảng",
+            "challenges": "Thử thách"
+        },
+        "unread": "Chưa đọc",
+        "hasLecture": "Có bài giảng",
+        "advancedKnowledge": "Kiến thức nâng cao",
+        "read": "Đã đọc",
+        "save": "Lưu",
+        "saved": "Đã lưu",
+        "unsave": "Bỏ lưu",
+        "share": "Chia sẻ",
+        "shareTooltip": "Chia sẻ nội dung này",
+        "linkCopied": "Đã sao chép link!",
+        "fullscreen": "Xem toàn màn hình",
+        "scanQr": "Quét mã QR để mở trên điện thoại",
+        "copyLink": "Sao chép link",
+        "mindMapReadDetails": "Đọc chi tiết"
+    },
+    "challenge": {
+        "title": "Thử thách",
+        "do": "Làm",
+        "inProgress": "Đang làm",
+        "progress": {
+            "completed": "Đã hoàn thành · {score}/{maxScore} điểm",
+            "inProgress": "Đang làm · {score}/{maxScore} điểm",
+            "failed": "Chưa đạt · {score}/{maxScore} điểm"
+        },
+        "quota": {
+            "overQuota": "Bạn đã hết quota AI ({used}/{quota} credit). Nâng cấp để tiếp tục chấm bài.",
+            "addQuota": "Thêm quota",
+            "resetAt": "Quota hồi lại lúc {time}",
+            "aiUsage": "AI Usage",
+            "usage": "{used}/{quota} credit",
+            "remaining": "Còn {remaining} credit",
+            "quotaReached": "Hết quota",
+            "laneUsage": {
+                "auto": "Auto • {used}/{quota} credit",
+                "premium": "Premium • {used}/{quota} credit",
+                "byok": "BYOK"
+            }
+        },
+        "viewAttempts": "Xem những lần thử trước",
+        "pass": "Đạt",
+        "fail": "Trượt",
+        "minimumPassRequirement": "(Yêu cầu tối thiểu đạt điểm {score})",
+        "minimumPassRequirementAll": "(Tất cả bài làm phải đạt để qua thử thách)",
+        "lastFeedback": "Phản hồi gần nhất",
+        "noFeedback": "Chưa có phản hồi.",
+        "count": "{count} thử thách trong học phần này",
+        "empty": "Chưa có thử thách cho nội dung này.",
+        "errorTitle": "Không tải được thử thách",
+        "errorDescription": "Đã có lỗi khi lấy danh sách thử thách. Thử lại nhé.",
+        "retry": "Thử lại",
+        "hintTag": "Có gợi ý",
+        "number": "Thử thách {index}",
+        "status": {
+            "notStarted": "Chưa bắt đầu",
+            "inProgress": "Đang làm",
+            "failed": "Chưa đạt",
+            "completed": "Hoàn thành"
+        },
+        "cta": {
+            "start": "Làm",
+            "continue": "Tiếp tục",
+            "retry": "Thử lại",
+            "review": "Xem lại"
+        },
+        "attempts": {
+            "some": "Đã thử {count} lần",
+            "none": "Chưa làm lần nào",
+            "bestScore": "{score}/{maxScore}"
+        },
+        "difficulty": {
+            "easy": "Dễ",
+            "medium": "Trung bình",
+            "hard": "Khó",
+            "insane": "Cực khó",
+            "expert": "Bậc thầy"
+        },
+        "steps": {
+            "title": "Các bước hướng dẫn",
+            "count": "{count} bước",
+            "label": "Bước {index}"
+        },
+        "tabs": {
+            "work": "Bài làm",
+            "steps": "Các bước",
+            "brief": "Đề bài",
+            "submit": "Nộp bài & Kết quả"
+        },
+        "hint": "Gợi ý",
+        "tasks": "Các bước thực hiện",
+        "requirements": "Yêu cầu",
+        "requirement": {
+            "label": "Yêu cầu {index}",
+            "purpose": "Mục tiêu",
+            "technicalConstraints": "Ràng buộc kỹ thuật",
+            "proTipsHints": "Gợi ý & Mẹo",
+            "forbidden": "Không được phép"
+        },
+        "outputs": "Đầu ra mong đợi",
+        "prerequisites": "Điều kiện tiên quyết",
+        "language": "Ngôn ngữ",
+        "gradingSettings": "Cài đặt chấm điểm",
+        "yourScore": "Kết quả của bạn",
+        "score": "{score} điểm",
+        "battle": {
+            "cta": "Chiến đấu"
+        },
+        "submissionModal": {
+            "title": "Nộp bài",
+            "empty": "Chưa có yêu cầu nộp bài cho thử thách này.",
+            "requirement": "Yêu cầu {index}",
+            "yourScore": "Điểm: {score}",
+            "yourScoreLabel": "Điểm của bạn",
+            "scoreFraction": "{earned}/{max}",
+            "attempts": "Số lần thử: {count}",
+            "viewAttempts": "Xem lịch sử nộp bài",
+            "submit": "Nộp bài",
+            "urlLabel": "URL bài nộp",
+            "urlPlaceholder": "Dán URL bài nộp của bạn",
+            "errors": {
+                "urlRequired": "Vui lòng nhập URL bài nộp.",
+                "invalidGithubUrl": "Nhập URL GitHub hợp lệ (https://github.com/owner hoặc https://github.com/owner/repo).",
+                "invalidGoogleDocsUrl": "Nhập URL Google Docs, Sheets hoặc Slides hợp lệ (https://docs.google.com/...)."
+            },
+            "loading": "Đang cập nhật bài nộp…",
+            "lastAttemptScore": "Điểm lần thử gần nhất của bạn là {earned}/{max}",
+            "lastAttemptScoreWithRequirement": "Điểm lần thử gần nhất của bạn là <n>{earned}</n><n>/</n><n>{max}</n>. Yêu cầu tối thiểu <n>{required}</n>.",
+            "jobStatus": {
+                "queued": "Bài của bạn đang nằm trong hàng đợi, chờ chút nhé...",
+                "processing": "StarCi AI đang phân tích bài của bạn, chờ chút nhé...",
+                "completed": "Bài của bạn đã được StarCi AI phân tích hoàn tất.",
+                "failed": "Thất bại"
+            }
+        },
+        "back": "Quay lại bài học"
+    },
+    "submissionAttempts": {
+        "title": "Lịch sử nộp bài",
+        "subtitle": "Các lần thử cho yêu cầu nộp bài này.",
+        "noAttempts": "Chưa có lần nộp bài nào.",
+        "attemptLine": "Lần thử {number}",
+        "viewDetails": "Xem chi tiết",
+        "viewSubmission": "Xem bài nộp"
+    },
+    "submissionResult": {
+        "backToChallenge": "Quay lại thử thách",
+        "title": "Kết quả nộp bài",
+        "passNeeded": "cần {score} để qua",
+        "gradedBy": "chấm bởi",
+        "history": "Lịch sử nộp bài",
+        "resultLabel": "Kết quả",
+        "feedbackLabel": "Góp ý",
+        "attempts": "Các lần thử",
+        "passed": "Đạt",
+        "failed": "Chưa đạt",
+        "emptyAttempts": "Chưa có lần nộp nào",
+        "emptyAttemptsHint": "Nộp bài để xem kết quả chấm điểm ở đây.",
+        "noFeedback": "Không có phản hồi chi tiết cho lần thử này.",
+        "error": "Không tải được kết quả.",
+        "retry": "Thử lại"
+    },
+    "personalProjectResult": {
+        "backToTask": "Quay lại dự án",
+        "title": "Kết quả chấm điểm",
+        "history": "Lịch sử nộp bài",
+        "resultLabel": "Kết quả",
+        "feedbackLabel": "Góp ý",
+        "attempts": "Các lần thử",
+        "passed": "Đạt",
+        "failed": "Chưa đạt",
+        "viewRepo": "Xem repo",
+        "emptyAttempts": "Chưa có lần nộp nào",
+        "emptyAttemptsHint": "Đánh giá tiến độ để xem kết quả chấm điểm ở đây.",
+        "noFeedback": "Không có phản hồi chi tiết cho lần thử này.",
+        "error": "Không tải được kết quả.",
+        "retry": "Thử lại"
+    },
+    "timeAgo": {
+        "justNow": "Vừa xong",
+        "yearsAgo": "{years} năm trước",
+        "monthsAgo": "{months} tháng trước",
+        "daysAgo": "{days} ngày trước",
+        "daysHoursAgo": "{days} ngày {hours} tiếng trước",
+        "hoursAgo": "{hours} tiếng trước",
+        "hoursMinutesAgo": "{hours} tiếng {minutes} phút trước",
+        "minutesAgo": "{minutes} phút trước",
+        "minutesSecondsAgo": "{minutes} phút {seconds} giây trước",
+        "secondsAgo": "{seconds} giây trước"
+    },
+    "feedback": {
+        "detailsTitle": "Chi tiết phản hồi",
+        "empty": "Chưa có phản hồi nào.",
+        "openFileOnGithub": "Mở file trên GitHub",
+        "perfect": "Hoàn hảo",
+        "suggestion": "Gợi ý",
+        "severity": {
+            "high": "Ưu tiên cao",
+            "medium": "Ưu tiên TB",
+            "low": "Ưu tiên thấp",
+            "unknown": "Không rõ"
+        }
+    },
+    "leaderboard": {
+        "title": "Bảng xếp hạng",
+        "topAchievers": "Top người học",
+        "subtitle": "Xếp hạng theo tổng XP: làm challenge, đọc bài và hoàn thành milestone đều được tính.",
+        "yourRank": "Vị trí của bạn",
+        "rankPrefix": "Hạng",
+        "xp": "{xp} XP",
+        "xpLabel": "XP",
+        "you": "Bạn",
+        "refresh": "Làm mới",
+        "champion": "Hạng #1 · đang dẫn đầu khoá",
+        "updatedAt": "Cập nhật {time}",
+        "columns": {
+            "rank": "Hạng",
+            "learner": "Người học",
+            "xp": "XP"
+        },
+        "breakdown": {
+            "title": "Chi tiết XP",
+            "challenge": "Challenge",
+            "reading": "Đọc bài",
+            "milestone": "Milestone",
+            "total": "Tổng"
+        },
+        "stats": {
+            "completedChallenges": "{count} challenge hoàn thành",
+            "lessonsRead": "{count} bài đã đọc",
+            "milestones": "{count} milestone"
+        },
+        "categories": {
+            "label": "Hạng mục",
+            "total": "Tổng XP",
+            "challenge": "Challenge",
+            "reading": "Đọc bài",
+            "milestone": "Milestone",
+            "coding": "Coding",
+            "comingSoon": "Sắp có",
+            "captionChallenge": "{count} bài · ×1",
+            "captionReading": "{count} bài · ×3",
+            "captionMilestone": "{count} task · ×10"
+        },
+        "rankedBy": "Xếp hạng theo {category}",
+        "empty": "Chưa có ai trên bảng xếp hạng. Hãy làm challenge hoặc đọc bài để ghi điểm đầu tiên!",
+        "myRankEmpty": "Bạn chưa có hoạt động nào trong khoá học này. Làm challenge hoặc đọc bài để lên bảng xếp hạng.",
+        "error": "Không tải được bảng xếp hạng. Vui lòng thử lại."
+    },
+    "practice": {
+        "retry": "Thử lại",
+        "cockpit": {
+            "loadError": "Không tải được tiến độ",
+            "byDifficulty": "Theo độ khó",
+            "metric": {
+                "solved": "Đã giải",
+                "points": "Điểm",
+                "rank": "Hạng",
+                "percentile": "Top đầu"
+            }
+        },
+        "filters": {
+            "searchPlaceholder": "Tìm bài theo tên…",
+            "allDifficulties": "Tất cả",
+            "allDomains": "Tất cả chủ đề",
+            "difficultyAria": "Lọc theo độ khó",
+            "statusAria": "Lọc theo trạng thái",
+            "domainAria": "Lọc theo chủ đề",
+            "sortAria": "Sắp xếp",
+            "status": {
+                "all": "Tất cả",
+                "unsolved": "Chưa giải",
+                "attempted": "Đang làm",
+                "solved": "Đã giải"
+            },
+            "sort": {
+                "default": "Mặc định",
+                "difficulty": "Độ khó",
+                "points": "Điểm"
+            },
+            "grouped": "Theo chủ đề",
+            "flat": "Danh sách phẳng"
+        },
+        "row": {
+            "status": {
+                "solved": "Đã giải",
+                "attempted": "Đang làm",
+                "unsolved": "Chưa giải"
+            }
+        },
+        "catalog": {
+            "noMatch": "Không có bài khớp bộ lọc",
+            "clearFilters": "Xoá bộ lọc",
+            "loadError": "Không tải được danh sách bài"
+        },
+        "tabs": {
+            "problems": "Bài tập",
+            "leaderboard": "Bảng xếp hạng"
+        },
+        "rail": {
+            "modeAria": "Chế độ luyện tập",
+            "topicsLabel": "Chủ đề",
+            "topicsAria": "Chọn chủ đề",
+            "searchTopic": "Tìm chủ đề…",
+            "searchTopicEmpty": "Không có chủ đề khớp “{query}”"
+        },
+        "leaderboard": {
+            "you": "Bạn",
+            "solved": "Đã giải {count} bài",
+            "empty": "Chưa có ai trên bảng xếp hạng. Giải một bài để chiếm vị trí đầu tiên!",
+            "error": "Không tải được bảng xếp hạng"
+        }
+    },
+    "codingPractice": {
+        "title": "Luyện thuật toán",
+        "subtitle": "Giải bài tập và được chấm code ngay lập tức",
+        "allDifficulties": "Tất cả",
+        "empty": "Chưa có bài tập nào.",
+        "solved": "Đã giải",
+        "samples": "Ví dụ",
+        "example": "Ví dụ",
+        "input": "Đầu vào",
+        "output": "Đầu ra",
+        "submit": "Nộp bài",
+        "judging": "Đang chấm…",
+        "result": "Kết quả",
+        "passed": "Đạt",
+        "history": "Lịch sử nộp",
+        "hintTitle": "Gợi ý tư duy",
+        "showHint": "Hiện gợi ý",
+        "hideHint": "Ẩn gợi ý",
+        "solutionTitle": "Đáp án tham khảo",
+        "showSolution": "Xem đáp án",
+        "hideSolution": "Ẩn đáp án",
+        "revealConfirm": "Xem đáp án sẽ không được cộng điểm bài này. Tiếp tục?",
+        "points": "+{points} điểm",
+        "totalPoints": "{points} điểm",
+        "emptyHint": "Đang thêm bài phỏng vấn mới — quay lại sau nhé.",
+        "solvedOf": "Đã giải {solved}/{total}",
+        "allLevels": "Tất cả",
+        "filterAria": "Lọc theo cấp độ",
+        "level": {
+            "junior": "Junior",
+            "mid": "Mid",
+            "senior": "Senior"
+        },
+        "difficulty": {
+            "easy": "Cơ bản",
+            "medium": "Nâng cao",
+            "hard": "Enterprise"
+        },
+        "domain": {
+            "arrays": "Mảng",
+            "strings": "Chuỗi",
+            "hashing": "Bảng băm",
+            "twoPointers": "Hai con trỏ",
+            "slidingWindow": "Cửa sổ trượt",
+            "stack": "Ngăn xếp",
+            "queue": "Hàng đợi",
+            "linkedList": "Danh sách liên kết",
+            "trees": "Cây",
+            "heap": "Heap / Hàng đợi ưu tiên",
+            "graph": "Đồ thị",
+            "binarySearch": "Tìm kiếm nhị phân",
+            "sorting": "Sắp xếp",
+            "recursion": "Đệ quy",
+            "backtracking": "Quay lui",
+            "dynamicProgramming": "Quy hoạch động",
+            "greedy": "Tham lam",
+            "math": "Toán",
+            "bitManipulation": "Thao tác bit",
+            "matrix": "Ma trận"
+        },
+        "language": {
+            "python": "Python",
+            "javascript": "JavaScript",
+            "typescript": "TypeScript",
+            "java": "Java",
+            "cpp": "C++"
+        },
+        "verdict": {
+            "pending": "Chờ chấm",
+            "judging": "Đang chấm",
+            "accepted": "Chính xác",
+            "wrongAnswer": "Sai kết quả",
+            "timeLimitExceeded": "Quá thời gian",
+            "memoryLimitExceeded": "Quá bộ nhớ",
+            "runtimeError": "Lỗi thực thi",
+            "compileError": "Lỗi biên dịch",
+            "internalError": "Lỗi hệ thống"
+        }
+    },
+    "flashcard": {
+        "title": "Ôn tập",
+        "subtitle": "Khắc sâu kiến thức bằng lặp lại ngắt quãng, và luyện trả lời phỏng vấn.",
+        "empty": "Khoá học này chưa có Flashcards nào.",
+        "study": "Học",
+        "cardCount": "{count} thẻ",
+        "backToDecks": "← Flashcards",
+        "backToHome": "← Ôn tập",
+        "decksLabel": "Bộ thẻ theo chủ đề",
+        "due": {
+            "label": "Đến hạn hôm nay",
+            "count": "{count} thẻ cần ôn lại",
+            "start": "Ôn {count} thẻ",
+            "allCaught": "Đã ôn hết",
+            "allCaughtHint": "Hiện không có thẻ nào đến hạn. Ôn trước một bộ thẻ bên dưới để đi trước."
+        },
+        "review": {
+            "again": "Quên",
+            "hard": "Khó",
+            "good": "Được",
+            "easy": "Dễ",
+            "rateHint": "Bạn nhớ được tới đâu?",
+            "error": "Không lưu được lượt ôn. Vui lòng thử lại.",
+            "sessionDoneTitle": "Hoàn thành phiên ôn",
+            "sessionDoneDescription": "Bạn đã ôn {count} thẻ. Quay lại khi có thêm thẻ đến hạn.",
+            "backToHome": "Về trang ôn tập",
+            "studyAgain": "Học lại",
+            "intervalDays": "{count} ngày"
+        },
+        "deck": {
+            "due": "{count} đến hạn",
+            "mastered": "Đã thuộc {mastered}/{total}",
+            "found": "Tìm thấy {count} bộ thẻ"
+        },
+        "stats": {
+            "label": "Tiến bộ",
+            "streak": "Chuỗi ngày",
+            "retention": "Tỉ lệ nhớ",
+            "reviewed": "Đã ôn",
+            "masteredLine": "Đã thuộc {mastered}/{total} thẻ",
+            "mastered": "Đã thuộc",
+            "learning": "Đang học",
+            "new": "Chưa học",
+            "streakChip": "{count} ngày",
+            "retentionCaption": "Giữ lại {percent}%",
+            "firstReviewHint": "Ôn thẻ đầu tiên để bắt đầu theo dõi thuộc bài",
+            "barAria": "Đã thuộc {mastered}, đang học {learning}, chưa học {newCount} trên {total} thẻ"
+        },
+        "cardProgress": "Thẻ {current}/{total}",
+        "questionLabel": "Câu hỏi",
+        "answerLabel": "Đáp án",
+        "showAnswer": "Xem đáp án",
+        "showQuestion": "Xem câu hỏi",
+        "flipHint": "Bấm vào thẻ để lật ra đáp án",
+        "flipBackHint": "Bấm vào thẻ để quay lại câu hỏi",
+        "premiumLockedTitle": "Thẻ premium",
+        "premiumLockedHint": "Đăng ký khoá học để mở khoá đáp án các thẻ này.",
+        "premiumCta": "Đăng ký để mở khoá",
+        "noAnswer": "Chưa có đáp án.",
+        "previous": "Trước",
+        "next": "Tiếp",
+        "relatedContents": "Bài học liên quan",
+        "relatedModules": "Học phần liên quan",
+        "searchPlaceholder": "Tìm bộ flashcard...",
+        "searchEmpty": "Không có bộ nào khớp với \"{query}\".",
+        "mode": {
+            "study": "Học thẻ",
+            "interview": "Phỏng vấn thử"
+        },
+        "interview": {
+            "record": "Trả lời bằng giọng nói",
+            "stop": "Dừng",
+            "recording": "Đang nghe…",
+            "yourAnswer": "Câu trả lời của bạn",
+            "transcriptHint": "Bấm “Trả lời bằng giọng nói” và nói câu trả lời — hệ thống tự chuyển thành văn bản.",
+            "unsupported": "Trình duyệt này không hỗ trợ nhập bằng giọng nói. Hãy thử Chrome hoặc Edge.",
+            "micError": "Không truy cập được micro. Kiểm tra quyền và thử lại.",
+            "submit": "Nộp câu trả lời",
+            "grading": "Đang chấm câu trả lời…",
+            "newQuestion": "Câu hỏi khác",
+            "nextQuestion": "Câu tiếp theo",
+            "retry": "Thử lại",
+            "drawError": "Không tải được câu hỏi phỏng vấn cho bộ thẻ này.",
+            "gradeError": "Không chấm được câu trả lời. Vui lòng thử lại.",
+            "pass": "Đạt",
+            "borderline": "Cận đạt",
+            "fail": "Chưa đạt",
+            "score": "Điểm: {score}/100",
+            "strengths": "Điểm bạn làm tốt",
+            "gaps": "Điểm cần cải thiện",
+            "hint": "Gợi ý hướng tới đáp án mẫu",
+            "followUp": "Câu hỏi đào sâu có thể gặp",
+            "start": "Phỏng vấn",
+            "backToTopics": "← Chủ đề",
+            "pickLabel": "Chọn chủ đề để phỏng vấn",
+            "begin": "Bắt đầu phỏng vấn",
+            "levelAll": "Tất cả cấp",
+            "progress": "Câu {current}/{total}",
+            "viewResults": "Xem kết quả phiên",
+            "summaryTitle": "Kết quả phiên",
+            "avgScore": "Điểm trung bình",
+            "bestScore": "Điểm cao nhất",
+            "weakTags": "Chủ đề cần ôn thêm",
+            "replay": "Phỏng vấn lại",
+            "setupTitle": "Sẵn sàng phỏng vấn?",
+            "setupSubtitle": "Câu hỏi ngẫu nhiên trên toàn khóa học.",
+            "setupHint": "Chọn cấp độ (tuỳ chọn), rồi trả lời {total} câu bằng giọng nói.",
+            "expectCount": "{total} câu",
+            "expectVoice": "Trả lời bằng giọng nói",
+            "expectAiGrade": "AI chấm điểm + góp ý",
+            "levelLabel": "Cấp độ câu hỏi",
+            "historyTitle": "Tiến độ phỏng vấn của bạn",
+            "historyAnswered": "Đã luyện {count} câu",
+            "modeLabel": "Kiểu luyện",
+            "modeQuick": "Nhanh · 5 câu",
+            "modeDeep": "Sâu · 10 câu",
+            "modeWeak": "Điểm yếu",
+            "modeLadder": "Leo cấp",
+            "comingSoon": "Sắp có",
+            "readinessTitle": "Độ sẵn sàng",
+            "readinessEmpty": "Phỏng vấn câu đầu tiên để theo dõi độ sẵn sàng.",
+            "pickHint": "Chọn 1 bộ thẻ ở danh sách bên trái để bắt đầu phiên phỏng vấn.",
+            "gateTitle": "Phỏng vấn thử dành cho học viên",
+            "gateDescription": "Đăng ký khóa học để luyện phỏng vấn với AI — chấm điểm và góp ý sau mỗi câu trả lời."
+        },
+        "level": {
+            "junior": "Junior",
+            "middle": "Middle",
+            "senior": "Senior",
+            "staff": "Staff / SA"
+        },
+        "difficulty": {
+            "easy": "Dễ",
+            "medium": "Trung bình",
+            "hard": "Khó",
+            "insane": "Cực khó"
+        },
+        "backToOverview": "Tổng quan"
+    },
+    "aiSettings": {
+        "title": "Cài đặt AI",
+        "subtitle": "Chọn nguồn AI và quản lý khoá API của riêng bạn",
+        "effectiveNow": "Đang dùng",
+        "gradeWith": "Chấm bằng AI",
+        "pickModel": "Chọn mô hình",
+        "subscribeToGrade": "Đăng ký gói trả phí để chấm bài bằng model này",
+        "belowFloorWarning": "Model dưới mức khuyến nghị — có thể trả về kết quả không chính xác",
+        "modelUnavailable": "Model tạm không khả dụng (không có key hoạt động)",
+        "categories": {
+            "free": "Miễn phí",
+            "economy": "Tiết kiệm",
+            "balanced": "Cân bằng",
+            "premium": "Cao cấp",
+            "frontier": "Đỉnh"
+        },
+        "premiumLocked": "Cần gói trả phí",
+        "save": "Lưu thay đổi",
+        "saved": "Đã lưu cài đặt AI",
+        "keyRemoved": "Đã xoá khoá API",
+        "error": "Không thể cập nhật cài đặt AI",
+        "lanes": {
+            "auto": {
+                "title": "Tự động",
+                "desc": "Dùng lượt miễn phí kèm theo khoá học, chỉ với các mô hình cơ bản."
+            },
+            "premium": {
+                "title": "Premium",
+                "desc": "Dùng credit của gói trả phí cho mọi loại mô hình, chất lượng cao hơn."
+            },
+            "byok": {
+                "title": "Dùng khoá riêng (BYOK)",
+                "desc": "Tự cung cấp khoá API của bạn — không bị trừ hạn mức hệ thống."
+            }
+        },
+        "byok": {
+            "heading": "Khoá API của bạn",
+            "provider": "Nhà cung cấp",
+            "apiKey": "Khoá API",
+            "apiKeyPlaceholder": "Dán khoá API của bạn",
+            "apiKeyPlaceholderReplace": "Nhập khoá mới để thay thế khoá hiện tại",
+            "keyOnFile": "Đã lưu một khoá API",
+            "removeKey": "Xoá khoá",
+            "keyHint": "Hãy nhập khoá API để dùng chế độ BYOK.",
+            "upsellCta": "Xem các gói AI",
+            "upsellPrompt": "Bạn muốn dùng model premium mà không cần khóa riêng?",
+            "upsellSubtitle": "ignore"
+        },
+        "byokSubtitle": "Thêm API key của riêng bạn để dùng model từ nhà cung cấp của bạn. Khóa được mã hóa khi lưu và sẽ không hiển thị lại.",
+        "systemDescription": "AI tự động chọn model theo độ khó của bài và gói của bạn — không cần cấu hình. Nâng gói để mở các model mạnh hơn.",
+        "upgradePrompt": "Muốn dùng model mạnh hơn để chấm bài?",
+        "ceil": {
+            "description": "Đặt mức trần model AI cho từng hạng mục để kiểm soát credit. Auto vẫn tự chọn model theo độ khó; trần chỉ giới hạn mức cao nhất.",
+            "defaultLabel": "Mức trần mặc định",
+            "surfacesLabel": "Trần theo hạng mục",
+            "inherit": "Theo mặc định",
+            "creditCaption": "Credit mỗi lượt: Miễn phí 0 · Tiết kiệm 5 · Cân bằng 20 · Cao cấp 50 · Đỉnh 100",
+            "hardStop": "Auto leo tới mức trần rồi dừng, không vượt",
+            "plan": "Gói {tier} · trần tối đa {max}",
+            "planFree": "Gói miễn phí · trần tối đa {max}",
+            "creditLine": "Credit 5h: {used5h}/{limit5h} · tuần: {usedWeek}/{limitWeek}",
+            "error": "Không tải được cài đặt AI",
+            "saving": "Đang lưu…",
+            "surface": {
+                "chatbot": "Hỏi AI khi đọc bài",
+                "grading": "Chấm bài",
+                "interview": "Phỏng vấn thử"
+            }
+        }
+    },
+    "membership": {
+        "title": "Hội viên",
+        "subtitle": "Gia nhập cộng đồng StarCi",
+        "price": "$5",
+        "priceHint": "/ tháng",
+        "cta": "Trở thành hội viên",
+        "card": {
+            "title": "Hội viên cộng đồng StarCi",
+            "desc": "Tất cả những gì bạn cần để học nhanh hơn và có việc — trong một gói hội viên."
+        },
+        "perks": {
+            "blog": "Đọc trọn vẹn blog kỹ thuật premium",
+            "community": "Cộng đồng kín + hỏi đáp cùng founder",
+            "discount": "Giảm 20% mọi khóa học StarCi",
+            "recruitment": "Đưa hồ sơ của bạn đến nhà tuyển dụng đối tác"
+        },
+        "priceApprox": "Khoảng $5/tháng"
+    },
+    "aiSubscription": {
+        "title": "Gói AI",
+        "subtitle": "Nâng cấp để có thêm credit AI mỗi tuần",
+        "perMonth": "/tháng",
+        "priceUsdHint": "≈ {amount} khi thanh toán quốc tế",
+        "popular": "Phổ biến",
+        "currentPlan": "Đang dùng",
+        "buy": "Mua ngay",
+        "creditsPer5h": "{credits} credit / 5 giờ",
+        "creditsPerWeek": "{credits} credit / tuần",
+        "free": {
+            "title": "Miễn phí",
+            "price": "0₫",
+            "desc": "Lượt AI cơ bản kèm theo khoá học",
+            "cta": "Gói mặc định"
+        }
+    },
+    "admin": {
+        "aiBalancer": {
+            "title": "Trạng thái AI Balancer",
+            "subtitle": "Trạng thái key API từ cache ping — key disabled sẽ bị bỏ qua ở lần gọi tiếp theo.",
+            "backToAdmin": "Về trang admin",
+            "uploadVideoTool": "Tải lên video",
+            "refreshing": "Đang làm mới…",
+            "refreshNow": "Làm mới ngay",
+            "empty": "Chưa có pool provider nào.",
+            "error": "Không tải được trạng thái balancer. Vui lòng đăng nhập.",
+            "providers": {
+                "gemini": "Gemini",
+                "openai": "OpenAI",
+                "claude": "Claude",
+                "openrouter": "OpenRouter"
+            },
+            "status": {
+                "active": "Hoạt động",
+                "disabled": "Tắt",
+                "probing": "Thử lại"
+            },
+            "columns": {
+                "suffix": "Hậu tố key",
+                "status": "Trạng thái",
+                "failCount": "Lỗi",
+                "lastPing": "Ping cuối",
+                "lastUsed": "Dùng cuối"
+            },
+            "summary": {
+                "active": "Hoạt động",
+                "disabled": "Tắt",
+                "total": "Tổng"
+            }
+        }
+    },
+    "aiQuota": {
+        "title": "Hạn mức AI",
+        "subtitle": "Credit chấm bài trong 5 giờ và trong tuần",
+        "creditWindows": {
+            "title": "Credit chấm bài (Auto)",
+            "caption": "Giống nhãn Auto trên form nộp bài — tính theo credit, không phải lượt."
+        },
+        "rollingPool": {
+            "overQuota": "Hết credit"
+        },
+        "premiumLimits": {
+            "caption": "Credit Premium — áp dụng cho cả hai cửa sổ bên dưới."
+        },
+        "cardTitle": "Hạn mức AI",
+        "viewDetails": "Xem chi tiết",
+        "fullPageTitle": "Hạn mức & lịch sử AI",
+        "fullPageDescription": "Credit Auto, gói Premium và lịch sử chấm bài.",
+        "remainingSummary": "Còn {remaining} credit trong tuần",
+        "currentLane": "Đang dùng",
+        "window5h": "Trong 5 giờ",
+        "windowWeek": "Trong 7 ngày",
+        "windowResetAt": "Reset lúc {time}",
+        "creditsUnit": "credit",
+        "noPremium": "Chưa có gói trả phí — nâng cấp để mở khoá credit Premium.",
+        "tabsAria": "Phần hạn mức AI",
+        "tabs": {
+            "auto": "Tự động",
+            "subscription": "Gói trả phí",
+            "history": "Lịch sử"
+        },
+        "subscribeCta": "Đăng ký gói trả phí",
+        "subscriptionActive": "Bạn đang dùng gói {tier}.",
+        "subscriptionNone": "Bạn chưa có gói trả phí. Nâng cấp để mở khoá credit Premium và chấm bài bằng model cao cấp.",
+        "history": {
+            "title": "Lịch sử dùng AI",
+            "chartTitle": "Credit tiêu mỗi ngày (14 ngày gần nhất)",
+            "empty": "Chưa có lượt dùng AI nào.",
+            "loading": "Đang tải lịch sử…",
+            "purposeGrade": "Chấm challenge",
+            "autoModel": "Model tự động (miễn phí)",
+            "creditsUnit": "credit",
+            "breakdownTitle": "Theo nhà cung cấp",
+            "lane": {
+                "all": "Tất cả luồng",
+                "auto": "Tự động",
+                "premium": "Premium",
+                "byok": "Khóa của bạn"
+            }
+        },
+        "creditPool": "Quỹ credit",
+        "freeTier": "Miễn phí",
+        "upgradeCta": "Nâng cấp gói",
+        "upgradeWarning": "Bạn đang dùng gói {tier}. Nâng cấp để có thêm credit và chấm bài bằng model mạnh hơn."
+    },
+    "profile": {
+        "signedOut": {
+            "title": "Bạn chưa đăng nhập",
+            "desc": "Đăng nhập để xem hồ sơ và hạn mức AI của bạn."
+        },
+        "followers": "người theo dõi",
+        "following": "đang theo dõi",
+        "points": "điểm",
+        "level": "Cấp {level}",
+        "joined": "Tham gia {date}",
+        "streakLine": "Chuỗi {streak} ngày · dài nhất {longest}",
+        "nav": {
+            "editDesc": "Cập nhật ảnh đại diện, tên và tiểu sử",
+            "sessionsDesc": "Xem thiết bị đang đăng nhập và đăng xuất chúng",
+            "securityDesc": "Xác thực hai lớp",
+            "aiSettingsDesc": "Chọn nguồn AI và quản lý API key của riêng bạn",
+            "aiSubscriptionDesc": "Nâng cấp để có thêm credit AI mỗi tuần",
+            "bookmarks": "Đã lưu",
+            "rewards": "Phần thưởng",
+            "blog": "Blog",
+            "talents": "Nhân tài",
+            "bookmarksDesc": "Nội dung bạn đã lưu"
+        }
+    },
+    "profileEdit": {
+        "title": "Chỉnh sửa hồ sơ",
+        "subtitle": "Cập nhật cách bạn hiển thị trên StarCi Academy.",
+        "displayName": "Tên hiển thị",
+        "bio": "Tiểu sử",
+        "bioPlaceholder": "Giới thiệu đôi nét về bạn",
+        "changeAvatar": "Đổi ảnh đại diện",
+        "avatarHint": "PNG, JPG, WEBP hoặc GIF, tối đa 5 MB.",
+        "save": "Lưu thay đổi",
+        "saved": "Cập nhật hồ sơ thành công.",
+        "error": "Không thể cập nhật hồ sơ. Vui lòng thử lại.",
+        "uploadFailed": "Tải ảnh đại diện thất bại. Vui lòng thử lại.",
+        "lockProfile": "Khóa hồ sơ",
+        "lockProfileHint": "Khi bật, chỉ mình bạn xem được hoạt động, thành tích và khóa học. Người khác chỉ thấy ảnh đại diện và tên.",
+        "openToWork": "Sẵn sàng nhận việc",
+        "openToWorkHint": "Khi bật, hồ sơ hiện huy hiệu “Sẵn sàng nhận việc” để nhà tuyển dụng / headhunter thấy bạn đang tìm việc.",
+        "avatarDropzone": "Thả ảnh vào đây hoặc bấm để tải lên",
+        "linkedinUrl": "LinkedIn",
+        "linkedinUrlPlaceholder": "https://linkedin.com/in/tendangnhap",
+        "location": "Địa điểm",
+        "locationPlaceholder": "Thành phố, Quốc gia",
+        "roleTitle": "Vai trò / chức danh",
+        "roleTitlePlaceholder": "vd: Lập trình viên Frontend",
+        "websiteUrl": "Website",
+        "websiteUrlPlaceholder": "https://trang-cua-ban.com",
+        "workMode": "Hình thức làm việc",
+        "workModeNone": "Chưa xác định"
+    },
+    "sessions": {
+        "title": "Thiết bị",
+        "subtitle": "Các thiết bị đang đăng nhập vào tài khoản của bạn.",
+        "thisDevice": "Thiết bị này",
+        "revoke": "Đăng xuất",
+        "empty": "Không có phiên đăng nhập nào.",
+        "unknownDevice": "Thiết bị không xác định"
+    },
+    "follow": {
+        "follow": "Theo dõi",
+        "following": "Đang theo dõi"
+    },
+    "security": {
+        "title": "Bảo mật",
+        "subtitle": "Bảo vệ tài khoản bằng xác thực hai lớp.",
+        "twoFactor": "Xác thực hai lớp",
+        "enabledLabel": "Đang bật",
+        "disabledLabel": "Đang tắt",
+        "enabledDesc": "Yêu cầu mã từ ứng dụng xác thực ở những nơi bắt buộc 2FA.",
+        "disabledDesc": "Thêm bước xác thực thứ hai bằng ứng dụng authenticator (TOTP).",
+        "enable": "Bật 2FA",
+        "disable": "Tắt 2FA",
+        "confirm": "Xác nhận",
+        "cancel": "Hủy",
+        "scanHint": "Quét mã QR này bằng ứng dụng xác thực (Google Authenticator, Authy…), rồi nhập mã 6 chữ số.",
+        "secretHint": "Hoặc nhập khóa này thủ công:",
+        "codeLabel": "Mã xác thực",
+        "codePlaceholder": "Mã 6 chữ số",
+        "enabledToast": "Đã bật xác thực hai lớp.",
+        "disabledToast": "Đã tắt xác thực hai lớp.",
+        "invalidCode": "Mã không đúng. Vui lòng thử lại.",
+        "error": "Có lỗi xảy ra. Vui lòng thử lại.",
+        "note": "Có thể cấu hình xác thực hai lớp ngay bây giờ; việc bắt buộc khi đăng nhập sẽ bổ sung sau."
+    },
+    "publicProfile": {
+        "title": "Hồ sơ",
+        "notFound": "Không tìm thấy người dùng này.",
+        "notFoundDescription": "Có thể tên người dùng sai hoặc tài khoản đã bị gỡ.",
+        "bioHeading": "Giới thiệu",
+        "openToWork": "Sẵn sàng nhận việc",
+        "locked": {
+            "title": "Hồ sơ này ở chế độ riêng tư",
+            "description": "Người dùng đã khóa hồ sơ. Chỉ chủ hồ sơ mới xem được hoạt động, thành tích và khóa học."
+        },
+        "tabs": {
+            "overview": "Tổng quan",
+            "achievements": "Thành tích",
+            "activity": "Hoạt động",
+            "courses": "Khóa học",
+            "coding": "Lập trình",
+            "capstone": "Dự án",
+            "skills": "Kỹ năng",
+            "projects": "Dự án",
+            "challenges": "Thử thách"
+        },
+        "coding": {
+            "solved": "Đã giải",
+            "attempted": "Đã thử",
+            "points": "Điểm code",
+            "history": "Lịch sử giải bài",
+            "byDifficulty": "Theo độ khó",
+            "byDomain": "Theo chủ đề",
+            "byLanguage": "Theo ngôn ngữ",
+            "showLess": "Thu gọn",
+            "showMore": "Xem thêm {count}",
+            "statsHeading": "Thống kê",
+            "empty": "Chưa giải bài luyện code nào",
+            "emptyHint": "Giải các bài luyện code được chấm điểm để thể hiện kỹ năng lập trình của bạn ở đây.",
+            "metric": {
+                "solved": "Đã giải",
+                "xp": "XP",
+                "percentile": "Top",
+                "rank": "Hạng"
+            }
+        },
+        "capstone": {
+            "score": "Điểm {score}",
+            "tasksHeading": "Dự án / Capstone",
+            "challengesHeading": "Challenge đã giải",
+            "challengesCount": "{count} thử thách đã giải",
+            "hideTasks": "Ẩn milestone & task",
+            "loadErrorDescription": "Đã có lỗi xảy ra khi tải các dự án.",
+            "loadErrorRetry": "Thử lại",
+            "loadErrorTitle": "Không tải được dự án",
+            "more": "+{count} nữa",
+            "projectsHeading": "Dự án",
+            "roadmapSummary": "{completedMilestones}/{totalMilestones} milestone · {completedTasks}/{totalTasks} task",
+            "showLess": "Thu gọn",
+            "showMore": "Xem thêm {count}",
+            "viewTasks": "Xem milestone & task"
+        },
+        "skills": {
+            "byLanguage": "Theo ngôn ngữ",
+            "byDifficulty": "Theo độ khó",
+            "empty": "Chưa giải bài coding nào.",
+            "emptyHint": "Giải các bài lập trình để bắt đầu xây dựng hồ sơ kỹ năng của bạn.",
+            "languageDonutAria": "Ngôn ngữ đã dùng, theo số bài đã giải",
+            "solvedUnit": "đã giải"
+        },
+        "pinnedAchievements": "Thành tích nổi bật",
+        "bioEmpty": "Người dùng này chưa viết phần giới thiệu.",
+        "achievementsEmpty": "Chưa có thành tích nào.",
+        "activityEmpty": "Chưa có hoạt động nào",
+        "activityEmptyHint": "Đọc bài, vượt thử thách hay nộp dự án — hoạt động sẽ hiện ở đây.",
+        "coursesEmpty": "Chưa tham gia khóa học nào.",
+        "capstoneEmpty": "Chưa hoàn thành dự án nào.",
+        "loadMore": "Xem thêm",
+        "bioWrite": "Viết giới thiệu",
+        "contactForHiring": "Liên hệ tuyển dụng",
+        "contributions": {
+            "heading": "Đóng góp"
+        },
+        "courseStart": "Chưa bắt đầu",
+        "challengesCount": "Thử thách đã vượt qua",
+        "loadError": "Không tải được phần này",
+        "loadErrorRetry": "Thử lại",
+        "moreChallenges": "+{count} nữa",
+        "openRepo": "Mở repository của {title}",
+        "rarity": "{percent}% người có",
+        "recentActivity": "Hoạt động gần đây",
+        "repoLink": "Xem repo",
+        "solvedChallengesTitle": "Thử thách đã giải",
+        "featured": {
+            "heading": "Dự án nổi bật",
+            "inBuilding": "Đang làm",
+            "seeAll": "Xem tất cả",
+            "openProject": "Mở dự án"
+        },
+        "share": {
+            "button": "Chia sẻ hồ sơ",
+            "copied": "Đã sao chép liên kết hồ sơ"
+        },
+        "overview": {
+            "challengeSkills": "Kỹ năng qua thử thách",
+            "codeSkills": "Kỹ năng qua lập trình",
+            "courses": "Khóa học",
+            "seeMore": "Xem thêm"
+        },
+        "skillsSnapshot": {
+            "diffEasy": "Dễ",
+            "diffMedium": "Trung bình",
+            "diffHard": "Khó",
+            "languagesLabel": "Ngôn ngữ",
+            "solvedLabel": "Đã giải"
+        },
+        "challengesTab": {
+            "difficultyHeading": "Theo độ khó",
+            "empty": "Chưa vượt qua thử thách nào",
+            "emptyHint": "Vượt qua các thử thách được chấm điểm để chứng minh năng lực của bạn ở đây.",
+            "hideSubmissions": "Ẩn bài nộp",
+            "languageHeading": "Theo ngôn ngữ",
+            "repoHeading": "Bài nộp",
+            "score": "{score} điểm",
+            "showLess": "Thu gọn",
+            "showMore": "Xem thêm {count}",
+            "statsHeading": "Thống kê",
+            "submissionCount": "{count} đã đạt",
+            "submissionProgress": "{passed}/{total} đã đạt",
+            "ungrouped": "Khác",
+            "viewSubmissions": "Xem bài nộp",
+            "metric": {
+                "passed": "Đã đạt",
+                "xp": "XP",
+                "percentile": "Top",
+                "rank": "Hạng"
+            }
+        },
+        "achievementGroups": {
+            "learning": "Học tập",
+            "skills": "Kỹ năng",
+            "community": "Cộng đồng",
+            "course": "Khóa học",
+            "other": "Khác"
+        },
+        "workMode": {
+            "remote": "Làm từ xa",
+            "hybrid": "Kết hợp",
+            "onsite": "Tại văn phòng"
+        }
+    },
+    "talents": {
+        "title": "Ứng viên sẵn sàng làm việc",
+        "description": "Những học viên đang mở cơ hội việc làm. Bấm vào để xem hồ sơ.",
+        "empty": "Chưa có ứng viên nào bật “Sẵn sàng nhận việc”."
+    },
+    "reference": {
+        "title": "Tài liệu tham khảo"
+    },
+    "qna": {
+        "title": "Hỏi & Đáp",
+        "questionAria": "Câu hỏi {index}"
+    },
+    "auth": {
+        "sessionSuperseded": "Phiên đăng nhập đã hết hạn do tài khoản được đăng nhập ở thiết bị khác.",
+        "signIn": {
+            "google": "Đăng nhập với Google",
+            "github": "Đăng nhập với GitHub",
+            "or": "HOẶC",
+            "title": "Đăng nhập",
+            "desc": "Đăng nhập để tiếp tục",
+            "email": {
+                "label": "Email",
+                "placeholder": "Nhập email của bạn",
+                "invalid": "Vui lòng nhập địa chỉ email hợp lệ",
+                "required": "Vui lòng nhập email",
+                "notExists": "Không tìm thấy tài khoản với email này",
+                "checking": "Đang kiểm tra email…"
+            },
+            "password": {
+                "label": "Mật khẩu",
+                "placeholder": "Nhập mật khẩu của bạn",
+                "show": "Hiện mật khẩu",
+                "hide": "Ẩn mật khẩu",
+                "required": "Vui lòng nhập mật khẩu",
+                "minLength": "Mật khẩu phải có ít nhất 8 ký tự"
+            },
+            "rememberMe": "Ghi nhớ đăng nhập",
+            "forgotPassword": "Quên mật khẩu?",
+            "submit": "Đăng nhập",
+            "noAccount": "Chưa có tài khoản?",
+            "signUp": "Đăng ký",
+            "success": "Đăng nhập thành công",
+            "otp": {
+                "title": "Nhập mã OTP",
+                "desc": "Vui lòng kiểm tra hộp thư <emailHighlight>{email}</emailHighlight>, sau đó nhập mã xác nhận bên dưới.",
+                "label": "Mã OTP",
+                "placeholder": "Nhập mã OTP 6 số",
+                "required": "Vui lòng nhập mã OTP",
+                "invalid": "Mã OTP phải gồm 6 chữ số",
+                "sent": "Gửi mã OTP thành công",
+                "resend": "Không nhận được email?",
+                "resendLink": "Gửi lại mã",
+                "submit": "Xác nhận"
+            }
+        },
+        "signUp": {
+            "title": "Đăng ký",
+            "desc": "Tạo tài khoản để tiếp tục",
+            "email": {
+                "label": "Email",
+                "placeholder": "Nhập email của bạn",
+                "invalid": "Vui lòng nhập địa chỉ email hợp lệ",
+                "required": "Vui lòng nhập email",
+                "checking": "Đang kiểm tra email…",
+                "alreadyExists": "Email này đã được đăng ký"
+            },
+            "password": {
+                "label": "Mật khẩu",
+                "placeholder": "Nhập mật khẩu của bạn",
+                "show": "Hiện mật khẩu",
+                "hide": "Ẩn mật khẩu",
+                "required": "Vui lòng nhập mật khẩu",
+                "minLength": "Mật khẩu phải có ít nhất 8 ký tự"
+            },
+            "confirmPassword": {
+                "label": "Xác nhận mật khẩu",
+                "placeholder": "Nhập lại mật khẩu",
+                "show": "Hiện xác nhận mật khẩu",
+                "hide": "Ẩn xác nhận mật khẩu",
+                "required": "Vui lòng xác nhận mật khẩu",
+                "mismatch": "Hai mật khẩu phải trùng khớp"
+            },
+            "agreeToTerms": {
+                "aria": "Tôi đồng ý với điều khoản và điều kiện",
+                "prefix": "Tôi đã đọc và đồng ý với",
+                "terms": "Điều khoản dịch vụ",
+                "and": "và",
+                "privacy": "Chính sách bảo mật",
+                "required": "Bạn phải chấp nhận điều khoản và chính sách bảo mật"
+            },
+            "submit": "Đăng ký",
+            "haveAccount": "Đã có tài khoản?",
+            "signIn": "Đăng nhập",
+            "success": "Đăng ký thành công",
+            "otp": {
+                "title": "Hoàn tất đăng ký",
+                "desc": "Chúng tôi đã gửi mã tới <emailHighlight>{email}</emailHighlight>. Nhập mã bên dưới để hoàn tất tạo tài khoản.",
+                "label": "Mã xác nhận",
+                "placeholder": "Nhập mã 6 số",
+                "required": "Vui lòng nhập mã xác nhận",
+                "invalid": "Mã phải gồm 6 chữ số",
+                "sent": "Đã gửi mã mới",
+                "resend": "Không nhận được email?",
+                "resendLink": "Gửi lại mã",
+                "submit": "Xác nhận và tiếp tục"
+            }
+        },
+        "oauth": {
+            "authenticating": "Đang xác thực…",
+            "signingIn": "Đang đăng nhập…",
+            "signingOut": "Đang đăng xuất…"
+        }
+    },
+    "priceTag": {
+        "breakdownTitle": "Chi tiết giá",
+        "listPrice": "Giá gốc",
+        "phase": "Ưu đãi giai đoạn",
+        "phaseNamed": "Giai đoạn {phase}",
+        "loyalty": "Ưu đãi thành viên",
+        "youPay": "Bạn trả"
+    },
+    "payment": {
+        "title": "Thanh toán",
+        "desc": "Chọn một phương thức để tiếp tục",
+        "currency": {
+            "vnd": "Trong nước · VND",
+            "usd": "Quốc tế · USD"
+        },
+        "priceError": "Không tải được giá",
+        "intlNoUsd": "Phương thức quốc tế chưa khả dụng cho đơn này.",
+        "secure": "Thanh toán được mã hoá & bảo mật.",
+        "noCardStored": "StarCi Academy không lưu thông tin thẻ của bạn",
+        "aiPlanName": "Gói AI",
+        "membershipName": "Hội viên StarCi",
+        "loyalty": {
+            "enrolled": "Bạn đã sở hữu {count} khóa học",
+            "diligent": "Bạn duy trì streak học tập"
+        },
+        "group": {
+            "domestic": "Thanh toán trong nước",
+            "international": "Thanh toán quốc tế"
+        },
+        "payos": {
+            "desc": "Thanh toán qua PayOS"
+        },
+        "stripe": {
+            "desc": "Thanh toán bằng thẻ quốc tế qua Stripe"
+        },
+        "paypal": {
+            "desc": "Thanh toán bằng số dư PayPal hoặc thẻ liên kết"
+        },
+        "crypto": {
+            "desc": "Thanh toán bằng stablecoin (USDT/USDC)"
+        },
+        "sepay": {
+            "desc": "Thanh toán qua Sepay",
+            "instruction": "Quét mã QR bằng ứng dụng ngân hàng để thanh toán.",
+            "bank": "Ngân hàng",
+            "account": "Số tài khoản",
+            "amount": "Số tiền",
+            "content": "Nội dung chuyển khoản",
+            "copy": "Sao chép",
+            "copied": "Đã sao chép vào bộ nhớ tạm!",
+            "waiting": "Đang chờ thanh toán...",
+            "success": "Thanh toán thành công!",
+            "redirecting": "Đang chuyển hướng đến khóa học của bạn...",
+            "checkStatus": "Kiểm tra trạng thái"
+        }
+    },
+    "aiProcessing": {
+        "submitChallenge": {
+            "queued": {
+                "title": "Đang chờ xử lý",
+                "description": "Bài nộp của bạn đang trong hàng đợi và sẽ được xử lý ngay."
+            },
+            "processing": {
+                "title": "StarCI AI đang chấm bài",
+                "description": "StarCI AI đang phân tích bài nộp của bạn. Vui lòng chờ trong giây lát."
+            },
+            "completed": {
+                "title": "Chấm bài hoàn tất",
+                "description": "Bài nộp đã được chấm xong. Bạn có thể xem kết quả ngay."
+            },
+            "failed": {
+                "title": "Chấm bài thất bại",
+                "description": "Đã xảy ra lỗi khi chấm bài. Vui lòng thử lại."
+            }
+        },
+        "judgeCoding": {
+            "queued": {
+                "title": "Đang chờ chấm",
+                "description": "Bài giải của bạn đang trong hàng đợi và sẽ được chấm ngay."
+            },
+            "processing": {
+                "title": "Đang chấm bài giải",
+                "description": "Đang chạy code của bạn qua các test case. Vui lòng chờ trong giây lát."
+            },
+            "completed": {
+                "title": "Chấm xong",
+                "description": "Bài giải đã được chấm. Bạn có thể xem kết quả ngay."
+            },
+            "failed": {
+                "title": "Chấm bài thất bại",
+                "description": "Đã xảy ra lỗi khi chấm bài giải. Vui lòng thử lại."
+            }
+        },
+        "reviewTask": {
+            "queued": {
+                "title": "Đang chờ review",
+                "description": "Dự án của bạn đang trong hàng đợi. StarCI AI sẽ bắt đầu review ngay."
+            },
+            "processing": {
+                "title": "Đang review dự án",
+                "description": "StarCI AI đang review code, kiến trúc và chất lượng dự án của bạn. Quá trình này có thể mất vài phút."
+            },
+            "completed": {
+                "title": "Review dự án hoàn tất",
+                "description": "Dự án đã được review xong. Xem kết quả chấm điểm bên dưới để nhận phản hồi chi tiết."
+            },
+            "failed": {
+                "title": "Đánh giá tiến độ thất bại",
+                "description": "Đã xảy ra lỗi khi đánh giá tiến độ. Vui lòng thử lại."
+            }
+        },
+        "reviewCv": {
+            "queued": {
+                "title": "Đang chờ đánh giá CV",
+                "description": "CV của bạn đang trong hàng đợi. StarCI AI sẽ bắt đầu đánh giá ngay."
+            },
+            "processing": {
+                "title": "StarCI AI đang đánh giá CV",
+                "description": "StarCI AI đang đọc CV và so sánh với rubric đã chọn. Quá trình này có thể mất vài phút."
+            },
+            "completed": {
+                "title": "Đánh giá CV hoàn tất",
+                "description": "Phản hồi chi tiết đã được hiển thị."
+            },
+            "failed": {
+                "title": "Đánh giá CV thất bại",
+                "description": "Đã xảy ra lỗi khi đánh giá CV. Vui lòng thử lại."
+            }
+        }
+    },
+    "common": {
+        "loading": "Đang tải…",
+        "tagsMore": "+{count}",
+        "tagsMenuAria": "Tất cả thẻ",
+        "pagination": {
+            "navAria": "Phân trang",
+            "previous": "Trang trước",
+            "next": "Trang sau"
+        },
+        "disabled": "Tạm tắt",
+        "back": "Quay lại",
+        "cancel": "Hủy",
+        "save": "Lưu",
+        "edit": "Sửa",
+        "delete": "Xóa",
+        "streak": {
+            "current": "Chuỗi hiện tại",
+            "longest": "Chuỗi dài nhất",
+            "count": "{count} ngày"
+        }
+    },
+    "home": {
+        "intro": "Khóa học IT trên mạng tràn lan, nhưng nội dung cô đọng và đi vào tư duy thực chiến lại rất ít.",
+        "intro2": "StarCi Academy được thành lập ra để thay đổi điều đó.",
+        "intro3": "Chúng tớ tập trung xây dựng tư duy lập trình - từ Fullstack, DevOps, Security đến Solution Architect - với lộ trình rõ ràng và thực tế.",
+        "diff": {
+            "title": "Điều gì làm cho StarCi Academy khác biệt?",
+            "des1": "StarCi Academy tập trung vào bản chất của ngành IT. Chúng tớ không chỉ dạy kiến thức mà còn đào tạo tư duy lập trình chuẩn mực và khả năng thiết kế hệ thống - những năng lực cốt lõi giúp bạn phát triển bền vững trong thời đại AI.",
+            "des2": "Tư duy trước stack",
+            "des3": "Công nghệ thay đổi liên tục và kiến thức thì ở khắp nơi. Chúng tớ tập trung dạy bản chất, keyword và tư duy để sau khóa bạn tự research, đọc docs và mở rộng theo bất kỳ stack nào.",
+            "des4": "Chi phí tối thiểu, tiêu chuẩn cao",
+            "des5": "StarCi Academy vận hành theo mô hình tinh gọn, loại bỏ các chi phí không cần thiết để giữ học phí ở mức dễ tiếp cận. Mục tiêu của chúng tớ là tạo ra một môi trường học tập chất lượng cao mà bất kỳ ai nghiêm túc với nghề đều có thể tham gia.",
+            "des6": "Chúng tớ dạy để bạn xây dựng những project có giá trị thực sự và hỗ trợ lâu dài trong quá trình phát triển sự nghiệp."
+        }
+    },
+    "dashboard": {
+        "greeting": "Chào mừng trở lại, {name}",
+        "subtitle": "Tiếp tục từ chỗ bạn đang học dở.",
+        "continueLearning": "Tiếp tục học",
+        "emptyCourses": "Bạn chưa có khóa học nào. Xem danh sách khóa học để bắt đầu.",
+        "xp": "{xp} XP",
+        "rank": "#{rank}",
+        "continue": "Tiếp tục",
+        "title": "Trang chủ",
+        "history": "Bài đã học",
+        "historySearch": "Tìm...",
+        "enrolledCourses": "Khóa học của tôi",
+        "enrolledCoursesEmpty": "Bạn chưa tham gia khóa nào.",
+        "courseProgress": {
+            "content": "Nội dung hoàn thành",
+            "challenge": "Thử thách hoàn thành",
+            "milestone": "Milestone"
+        },
+        "recentContent": "Nội dung gần đây",
+        "recentContentEmpty": "Chưa đọc bài nào.",
+        "inProgressChallenges": "Challenge đang làm",
+        "inProgressChallengesEmpty": "Không có challenge đang làm.",
+        "weekStats": "Tuần này",
+        "streakLabel": "streak",
+        "xpLabel": "XP",
+        "lessonsLabel": "bài",
+        "contributions": {
+            "heading": "Hoạt động học",
+            "title": "{count} hoạt động học trong năm {year}",
+            "cellTitle": "{count} hoạt động",
+            "breakdown": "{contents} bài · {challenges} challenge · {milestones} milestone",
+            "less": "Ít",
+            "more": "Nhiều"
+        },
+        "achievements": {
+            "title": "Thành tích",
+            "earned": "Đã đạt"
+        },
+        "streak": {
+            "current": "Chuỗi {count} ngày",
+            "longest": "Dài nhất {count}",
+            "empty": "Học một nội dung để nhóm lửa chuỗi của bạn",
+            "help": "Học ít nhất một nội dung mỗi ngày để duy trì chuỗi của bạn."
+        },
+        "league": {
+            "resetIn": "Reset sau {days} ngày {hours} giờ",
+            "promote": "Top {count} thăng hạng",
+            "demote": "{count} cuối rớt hạng",
+            "points": "{count} điểm",
+            "globalSubtitle": "Xếp theo tổng điểm thưởng",
+            "help": "Mỗi tuần bạn thi đua cùng một nhóm người học. Kiếm điểm để thăng hạng và tránh bị rớt hạng.",
+            "others": "+{count} người khác",
+            "pageTitle": "Bảng xếp hạng",
+            "seeMore": "Xem bảng đầy đủ",
+            "tabGlobal": "Toàn cầu",
+            "tabWeekly": "Tuần này",
+            "tierHelp": "Hạng league hiện tại của bạn. Lọt top mỗi tuần để thăng hạng.",
+            "title": "League tuần",
+            "yourRank": "Hạng của bạn"
+        },
+        "community": {
+            "globalStanding": {
+                "title": "Vị thế toàn cục",
+                "line": "Hạng #{rank} toàn nền tảng · {points} XP",
+                "seeMore": "Xem bảng xếp hạng"
+            },
+            "topLearners": {
+                "title": "Top học viên tuần",
+                "xp": "{points} XP"
+            }
+        },
+        "sponsored": "Quảng cáo",
+        "sponsoredBy": "Tài trợ bởi {sponsor}",
+        "adModalTitle": "Quảng cáo",
+        "changelog": "Có gì mới",
+        "changelogCategory": {
+            "feature": "Tính năng",
+            "fix": "Sửa lỗi",
+            "announcement": "Thông báo"
+        },
+        "historyEmpty": "Chưa đọc bài nào.",
+        "feedEmpty": "Không có hoạt động nào.",
+        "feedError": "Không tải được hoạt động.",
+        "feedRetry": "Thử lại",
+        "railTrigger": "Thống kê",
+        "railTitle": "Thống kê & bảng tin",
+        "sections": {
+            "continue": "Tiếp tục học",
+            "streak": "Đà học",
+            "goals": "Mục tiêu tuần"
+        },
+        "dailyQuest": {
+            "title": "Nhiệm vụ hôm nay",
+            "claim": "Nhận {count} điểm",
+            "claimed": "Đã nhận thưởng",
+            "completePrompt": "Hoàn thành cả 3 để nhận {count} điểm",
+            "tasks": {
+                "readContent": "Đọc nội dung",
+                "passChallenge": "Pass challenge",
+                "reviewFlashcards": "Ôn flashcard"
+            }
+        },
+        "identityStats": {
+            "streak": "Chuỗi",
+            "credit": "Credit AI",
+            "reward": "Điểm quà",
+            "streakValue": "{count} ngày"
+        },
+        "rewardBalance": "{count} điểm",
+        "dueCount": "{count} đến hạn",
+        "feedTabsAria": "Bảng hoạt động",
+        "feedFilterAria": "Lọc bảng hoạt động",
+        "feedFilter": {
+            "all": "Tất cả",
+            "courses": "Khóa học",
+            "achievements": "Thành tựu",
+            "people": "Người"
+        },
+        "trending": {
+            "title": "Nổi bật tuần này",
+            "reads": "{count} lượt đọc"
+        },
+        "loadMore": "Tải thêm",
+        "tabs": {
+            "forYou": "Khám phá",
+            "overview": "Tổng quan",
+            "explore": "Khám phá",
+            "courses": "Khóa học",
+            "community": "Cộng đồng",
+            "following": "Đang theo dõi"
+        },
+        "loadError": "Không tải được bảng điều khiển. Phiên đăng nhập của bạn có thể đã hết hạn.",
+        "retry": "Thử lại",
+        "goHome": "Về trang chủ",
+        "feed": {
+            "lessonRead": "<actor></actor> đã đọc <target></target>",
+            "lessonBookmarked": "<actor></actor> đã lưu <target></target>",
+            "challengePassed": "<actor></actor> đã vượt qua challenge <target></target>",
+            "codingSolved": "<actor></actor> đã giải xong <target></target>",
+            "milestonePassed": "<actor></actor> đã hoàn thành milestone <target></target>",
+            "aiLabPassed": "<actor></actor> đã qua thử thách AI Lab <target></target>",
+            "courseEnrolled": "<actor></actor> đã tham gia khóa <target></target>",
+            "discussionCommented": "<actor></actor> đã bình luận ở <target></target>",
+            "userFollowed": "<actor></actor> đã theo dõi <target></target>",
+            "lessonReadNoTarget": "<actor></actor> đã đọc một bài học",
+            "lessonBookmarkedNoTarget": "<actor></actor> đã lưu một bài học",
+            "challengePassedNoTarget": "<actor></actor> đã vượt qua một challenge",
+            "codingSolvedNoTarget": "<actor></actor> đã giải xong một bài code",
+            "milestonePassedNoTarget": "<actor></actor> đã hoàn thành một milestone",
+            "aiLabPassedNoTarget": "<actor></actor> đã qua một thử thách AI Lab",
+            "courseEnrolledNoTarget": "<actor></actor> đã tham gia một khóa học",
+            "discussionCommentedNoTarget": "<actor></actor> đã bình luận",
+            "userFollowedNoTarget": "<actor></actor> đã theo dõi một người",
+            "milestonePassedGrouped": "<actor></actor> đã hoàn thành {count} milestone task",
+            "today": "Hôm nay",
+            "yesterday": "Hôm qua"
+        },
+        "quickActions": "Truy cập nhanh",
+        "actions": {
+            "courses": "Xem khóa học",
+            "review": "Ôn tập",
+            "practice": "Luyện code",
+            "league": "Bảng xếp hạng",
+            "bookmarks": "Đã lưu",
+            "rewards": "Phần thưởng",
+            "blog": "Blog",
+            "talents": "Nhân tài",
+            "profile": "Hồ sơ"
+        },
+        "aiQuota": {
+            "title": "Credit AI",
+            "poolCaption": "Cùng một pool credit — làm mới theo từng cửa sổ.",
+            "credits": "Còn {remaining}/{limit}",
+            "upgrade": "Nâng cấp gói",
+            "window5h": "5 giờ gần nhất",
+            "windowWeek": "Tuần này"
+        },
+        "browseCourses": "Khám phá khóa học",
+        "continueResumeEmpty": "Hiện chưa có gì để học tiếp. Bắt đầu một bài học hoặc challenge mới nhé.",
+        "continueKind": {
+            "challenge": "Challenge",
+            "lesson": "Bài học"
+        },
+        "dailyGoal": {
+            "cta": "Học một nội dung",
+            "done": "Hôm nay xong rồi — chuỗi {count} ngày được giữ vững",
+            "nudge": "Học một nội dung hôm nay để giữ chuỗi của bạn"
+        },
+        "kpi": {
+            "clear": "Xóa",
+            "edit": "Sửa",
+            "error": "Không lưu được mục tiêu. Vui lòng thử lại.",
+            "help": "Đặt mục tiêu tuần cho từng chỉ số và theo dõi tiến độ của bạn trong tuần.",
+            "prompt": "Đặt mục tiêu tuần để theo dõi tiến độ",
+            "subtitle": "Chọn mục tiêu tuần cho từng chỉ số để giữ đúng nhịp.",
+            "summary": "{percent}% tuần này · đạt {completed}/{total} mục tiêu",
+            "title": "KPI tuần",
+            "labels": {
+                "lessons": "Nội dung",
+                "studyDays": "Ngày học",
+                "challenges": "Challenge",
+                "coding": "Coding",
+                "flashcards": "Flashcard"
+            }
+        },
+        "myProfile": {
+            "rankLine": "Hạng #{rank} · top {percent}%"
+        },
+        "nearCompletion": {
+            "text": "Chỉ còn {count} nội dung nữa là hoàn thành"
+        },
+        "recommended": {
+            "title": "Khóa học cho bạn",
+            "reason": {
+                "both": "Độc quyền cho bạn — vì chăm chỉ & đã học {count} khóa",
+                "enrolledCount": "Độc quyền cho bạn — vì đã học {count} khóa",
+                "diligent": "Độc quyền cho bạn — vì bạn chăm chỉ"
+            }
+        },
+        "upcomingLive": {
+            "inDays": "sau {days} ngày {hours} giờ",
+            "inHours": "sau {hours} giờ {minutes} phút",
+            "inMinutes": "sau {minutes} phút",
+            "now": "Đang phát trực tiếp",
+            "title": "Buổi live sắp tới"
+        },
+        "weeklyGoal": {
+            "edit": "Sửa",
+            "preset": "{count} bài",
+            "progress": "{lessons}/{goal} bài tuần này",
+            "prompt": "Đặt mục tiêu số bài mỗi tuần",
+            "title": "Mục tiêu tuần"
+        },
+        "whoToFollow": {
+            "openToWork": "Sẵn sàng nhận việc",
+            "title": "Gợi ý theo dõi"
+        }
+    },
+    "languages": {
+        "en": "Tiếng Anh",
+        "vi": "Tiếng Việt"
+    },
+    "videoHostPlatform": {
+        "youtube": "YouTube",
+        "googleDrive": "Google Drive",
+        "vimeo": "Vimeo",
+        "cloudflareStream": "Cloudflare Stream"
+    },
+    "lessonVideoKind": {
+        "rawStream": {
+            "label": "Raw Stream",
+            "tooltip": "Luồng video gốc chưa qua chỉnh sửa. Nội dung đầy đủ nhưng có thể còn thô, lỗi nhỏ hoặc chưa tối ưu trải nghiệm."
+        },
+        "editedStream": {
+            "label": "Edited Stream",
+            "tooltip": "Luồng video đã được chỉnh sửa. Nội dung được cắt gọn, rõ ràng và dễ theo dõi hơn."
+        },
+        "premiumRecord": {
+            "label": "Premium Record",
+            "tooltip": "Phiên bản chất lượng cao nhất. Nội dung được đầu tư kỹ lưỡng về hình ảnh, âm thanh và trải nghiệm học tập."
+        }
+    },
+    "livestream": {
+        "calendar": {
+            "title": "Lịch livestream",
+            "subtitle": "Tham gia các buổi livestream sắp tới",
+            "button": "Xem lịch",
+            "nextSession": "Lần tới: {day} {time}, {date}",
+            "countdown": "Bắt đầu sau {days} ngày {hours} giờ {minutes} phút {seconds} giây",
+            "modalTitle": "Lịch livestream",
+            "modalDescription": "Các khung giờ lặp lại theo tuần. Các ngày có buổi livestream được tô sáng trên lịch.",
+            "empty": "Chưa cấu hình lịch livestream.",
+            "sessionTime": "{start} - {end}",
+            "nextOn": "Lần tới: {date}",
+            "aria": "Lịch livestream khóa học",
+            "days": {
+                "sunday": "Chủ nhật",
+                "monday": "Thứ hai",
+                "tuesday": "Thứ ba",
+                "wednesday": "Thứ tư",
+                "thursday": "Thứ năm",
+                "friday": "Thứ sáu",
+                "saturday": "Thứ bảy"
+            }
+        }
+    },
+    "markdown": {
+        "tableAriaLabel": "Bảng nội dung",
+        "mermaidRendering": "Đang vẽ sơ đồ...",
+        "mermaidExpand": "Phóng to sơ đồ",
+        "mermaidFigureLabel": "Hình",
+        "headingAnchor": "Liên kết tới mục này"
+    },
+    "discussion": {
+        "title": "Thảo luận · {count}",
+        "react": "Bày tỏ cảm xúc",
+        "post": "Đăng",
+        "reply": "Trả lời",
+        "edited": "(đã sửa)",
+        "placeholder": "Đặt câu hỏi hoặc chia sẻ…",
+        "replyPlaceholder": "Viết câu trả lời...",
+        "empty": "Chưa có thảo luận",
+        "emptyHint": "Đặt câu hỏi đầu tiên về bài này",
+        "deletedPlaceholder": "[Bình luận đã bị xóa]",
+        "viewReplies": "Xem {count} câu trả lời",
+        "hideReplies": "Ẩn câu trả lời",
+        "loadMore": "Xem thêm bình luận",
+        "reactions": {
+            "like": "Thích",
+            "love": "Yêu thích",
+            "haha": "Haha",
+            "wow": "Wow",
+            "sad": "Buồn",
+            "angry": "Phẫn nộ"
+        }
+    },
+    "score": {
+        "fraction": "{current}/{max}",
+        "aria": "Điểm {current} trên {max}"
+    },
+    "linkGithub": {
+        "title": "Liên kết GitHub",
+        "description": "Liên kết tài khoản GitHub của bạn để mở khóa toàn quyền truy cập vào kho mã nguồn của StarCi Academy.",
+        "button": "Liên kết tài khoản GitHub"
+    },
+    "githubTeamGate": {
+        "title": "Tham gia team khóa học",
+        "linkFirst": "Trước tiên, hãy liên kết GitHub để chúng tôi có thể mời bạn vào team khóa học.",
+        "linkCta": "Liên kết GitHub",
+        "requestDescription": "Bạn đã ghi danh nhưng chưa ở trong team GitHub của khóa học. Hãy gửi yêu cầu tham gia, sau đó chấp nhận lời mời trên GitHub để tiếp tục.",
+        "requestCta": "Gửi yêu cầu vào team",
+        "sending": "Đang gửi yêu cầu…",
+        "recheckCta": "Tôi đã chấp nhận — kiểm tra lại",
+        "acceptHint": "Sau khi gửi yêu cầu, mở GitHub và chấp nhận lời mời vào team, rồi bấm kiểm tra lại.",
+        "warningTitle": "Bạn chưa vào team GitHub của khóa",
+        "warningBody": "Chưa vào team thì không mở được nội dung premium của khóa — nội dung này nằm trong repo GitHub của khóa.",
+        "openCta": "Vào team",
+        "step1": "Bấm \"Gửi yêu cầu vào team\" bên dưới — chúng tôi sẽ gửi lời mời cho bạn.",
+        "step2": "Mở GitHub và chấp nhận lời mời: từ email mời, hoặc tại github.com/orgs/StarCi-Academy → Invitations.",
+        "step3": "Quay lại đây và bấm \"Tôi đã chấp nhận — kiểm tra lại\".",
+        "state": {
+            "active": "Đã vào team",
+            "pending": "Đang chờ chấp nhận",
+            "none": "Chưa gửi yêu cầu"
+        }
+    },
+    "landing": {
+        "hero": {
+            "eyebrow": "Lộ trình thực chiến cho vòng interview",
+            "solveWith": "Chiến bằng ngôn ngữ của bạn:",
+            "headline": "Kiến thức & Tư duy để chinh phục mọi vòng <accent>phỏng vấn</accent>",
+            "subline": "Ngày xưa, Intern bắt đầu bằng việc vặt: sửa UI, viết CRUD, gõ boilerplate.\nNhưng thời AI, những task đó đã bị giải trong vài giây.\nDoanh nghiệp trả lương cao cho Tư duy & Kiến thức thực chiến — thứ AI chưa thay thế.",
+            "diagramCaption": "Nhìn ra nơi dễ sập. Thiết kế hệ thống không thể bị sập.",
+            "ctaRoadmap": "Xem lộ trình",
+            "ctaFounder": "Gặp người dựng StarCi Academy",
+            "ctaPrimary": "Xem lộ trình",
+            "ctaSecondary": "Đăng nhập"
+        },
+        "stats": {
+            "eyebrow": "Số liệu thật, không phông bạt",
+            "title": "StarCi Academy đang có",
+            "intro": "Số liệu được cập nhật realtime từ hệ thống.",
+            "learners": "Người dùng",
+            "lessons": "Bài học chuyên sâu",
+            "courses": "Lộ trình kiến trúc",
+            "badges": "Huy hiệu thử thách"
+        },
+        "courses": {
+            "eyebrow": "Lộ trình",
+            "title": "Ba lộ trình. Một tư duy chuẩn về ngành.",
+            "intro": "Các lộ trình được xây dựng bài bản, khác nhau theo cấp độ nhưng chung một tư duy chuẩn chỉ, không dắt mũi người học vì tiền. Toàn bộ nội dung đều được biên soạn kỹ lưỡng.",
+            "view": "Vào khóa",
+            "systems": "20 hệ thống",
+            "items": {
+                "fullstack": {
+                    "tag": "FULLSTACK",
+                    "modules": "23 Modules",
+                    "systems": "20 Hệ thống thực chiến",
+                    "title": "Fullstack",
+                    "desc": "API · auth · caching · realtime · payment, kèm frontend trụ được dưới traffic thật."
+                },
+                "systemDesign": {
+                    "tag": "SYSTEM DESIGN",
+                    "modules": "24 Modules",
+                    "systems": "20 Bài toán kiến trúc",
+                    "title": "System Design",
+                    "desc": "Sharding · replication · consensus · idempotency — thiết kế để chịu được sự cố."
+                },
+                "devops": {
+                    "tag": "DEVOPS",
+                    "modules": "35 Modules",
+                    "systems": "20 Đề án chịu tải",
+                    "title": "DevOps & Cloud",
+                    "desc": "CI/CD · Docker · Kubernetes · đa cloud · observability · on-call."
+                }
+            }
+        },
+        "roadmap": {
+            "eyebrow": "Lộ trình",
+            "title": "Ba lộ trình mastery — học có hệ thống",
+            "intro": "Mỗi lộ trình đi từ nền tảng đến ứng dụng (foundation → application), kèm capstone dự án thật. Học tuần tự hoặc chọn đúng track của bạn.",
+            "tracks": {
+                "fullstack": {
+                    "label": "Fullstack",
+                    "caption": "Dựng trọn sản phẩm — backend đến frontend"
+                },
+                "systemDesign": {
+                    "label": "System Design",
+                    "caption": "Xây hệ thống quy mô lớn"
+                },
+                "devops": {
+                    "label": "DevOps",
+                    "caption": "Triển khai & vận hành đa cloud"
+                }
+            }
+        },
+        "systems": {
+            "eyebrow": "Không phải CRUD",
+            "title": "Những hệ thống bạn tự tay dựng",
+            "intro": "Mỗi capstone là một hệ thống chạy thật ở production — không phải app to-do.",
+            "items": {
+                "newsfeed": {
+                    "name": "News Feed",
+                    "tag": "Fanout · cache",
+                    "badge": "FAN-OUT"
+                },
+                "flashSale": {
+                    "name": "Flash Sale",
+                    "tag": "Tồn kho · idempotency",
+                    "badge": "HIGH CONTENTION"
+                },
+                "wallet": {
+                    "name": "Ví điện tử",
+                    "tag": "Ledger · Saga",
+                    "badge": "CONSISTENCY"
+                },
+                "rideHailing": {
+                    "name": "Gọi xe",
+                    "tag": "Geospatial · surge",
+                    "badge": "GEO-MATCHING"
+                },
+                "chat": {
+                    "name": "Chat thời gian thực",
+                    "tag": "WebSocket · ordering",
+                    "badge": "REALTIME"
+                },
+                "deploy": {
+                    "name": "Triển khai K8s",
+                    "tag": "Helm · GitOps",
+                    "badge": "ZERO-DOWNTIME"
+                }
+            }
+        },
+        "founder": {
+            "eyebrow": "Góc khuất nghề code",
+            "title": "Sự thật trần trụi về ngành IT",
+            "name": "Nguyễn Văn Tự Cường",
+            "role": "Founder · StarCi Academy",
+            "titles": "CTO @ Nivo Technology · CTO @ TEDO Technology",
+            "expertise": {
+                "systemDesign": "System Design",
+                "blockchain": "Blockchain",
+                "aiAutomation": "Tự động hóa doanh nghiệp bằng AI"
+            },
+            "quote": "Sếp Cường ơi bình tĩnh thôi, bug em còn fix được.",
+            "body1": "Tôi dạy đúng thứ tôi làm ở production mỗi ngày — không phải slide, mà là hệ thống thật ở tầm CTO.",
+            "body2": "Mọi thứ ở đây đều làm công khai — nền tảng, chương trình, challenge. Đọc các ghi chú kỹ thuật và tự đánh giá chất lượng.",
+            "github": "GitHub",
+            "blog": "Đọc blog",
+            "thesis": "Nhiều nơi dạy lập trình để bạn thấy dễ chịu và nhanh có chứng chỉ. StarCi Academy thì khác, tôi chỉ nói những sự thật trần trụi về ngành và những gì hệ thống thực tế yêu cầu.",
+            "truth1": "Kinh nghiệm dự án lớn không giúp bạn thành công khi phỏng vấn.",
+            "fix1": "Nhiều người làm dự án lớn mỗi ngày nhưng vào phỏng vấn lại không vẽ nổi kiến trúc phân tán mạch lạc. Tôi dạy bạn tư duy và phản biện kiến trúc cho rõ ràng.",
+            "truth2": "Thuộc lý thuyết Microservices vẫn tạch khi bị hỏi tới bản chất.",
+            "fix2": "Người phỏng vấn giỏi không hỏi định nghĩa. Họ xoáy vào nhất quán dữ liệu, sự cố mạng và điểm lỗi đơn. Tôi luyện bạn hiểu tận gốc để đối thoại sòng phẳng.",
+            "truth3": "Mang văn mẫu từ blog đi phỏng vấn là cách nhanh nhất để bị bắt bài.",
+            "fix3": "Kiến trúc \"sách giáo khoa\" thường vỡ trước bài toán thực tế của doanh nghiệp. Tôi dạy bạn tư duy độc lập để xử lý mọi đề biến tấu.",
+            "truth4": "Thị trường hết thời thừa thãi — không ai trả lương Senior cho người chỉ biết chém gió keyword.",
+            "fix4": "Doanh nghiệp đang siết đầu vào rất gắt. Tôi rèn cho bạn năng lực kiến trúc thực chất để tự tin qua các vòng kiểm duyệt khắt khe."
+        },
+        "recruiter": {
+            "eyebrow": "Cho nhà tuyển dụng",
+            "title": "Tuyển kỹ sư đã chứng minh được",
+            "intro": "Những học viên hoàn thành bài thật và bật chế độ sẵn sàng đi làm — được đánh giá bằng thứ họ dựng, không phải bằng CV.",
+            "count": "{count}+ kỹ sư đang sẵn sàng đi làm",
+            "cta": "Xem hồ sơ ứng viên",
+            "partnersLabel": "Đối tác tuyển dụng"
+        },
+        "outcome": {
+            "eyebrow": "Giá trị thực tế",
+            "title": "Đầu ra của StarCi Academy",
+            "items": {
+                "engineer": {
+                    "title": "Cho người dùng",
+                    "body": "Bạn xây portfolio từ dự án thật, chuẩn production và tôi đưa thẳng tới nhà tuyển dụng. Họ gọi bạn vì thứ bạn làm được, không phải vì CV đẹp.",
+                    "cta": "Bắt đầu xây hồ sơ"
+                },
+                "enterprise": {
+                    "title": "Cho doanh nghiệp",
+                    "body": "Bỏ qua CV phông bạt. Tuyển đúng người có đủ tầm về tư duy hệ thống.",
+                    "cta": "Tìm kiếm ứng viên"
+                }
+            },
+            "card": {
+                "sample": "Hồ sơ người dùng",
+                "role": "StarCi Talent",
+                "openToWork": "Sẵn sàng đi làm",
+                "cvScore": "Điểm CV",
+                "challenges": "Thử thách hệ thống",
+                "challengeValue": "{count} · TB {avg}",
+                "xp": "{xp} XP"
+            }
+        },
+        "faq": {
+            "eyebrow": "Góc nhìn thực tế",
+            "title": "Hỏi thẳng, đáp thật",
+            "q1": "Đây có phải một bootcamp nữa hứa lương cao sau 3 tháng?",
+            "a1": "Không. Tôi không bán những lời hứa hẹn về thu nhập hay cam kết việc làm sau vài tháng. StarCi Academy tập trung rèn tư duy hệ thống và cách bạn tự tay giải quyết bài toán khó. Khi năng lực của bạn đạt chuẩn thông qua các thử thách thực tế, thị trường và nhà tuyển dụng sẽ tự tìm đến bạn.",
+            "q2": "AI có làm những kỹ năng này lỗi thời không?",
+            "a2": "Ngược lại, kỹ năng hệ thống là thứ giúp bạn không bị đào thải. Các công cụ tự động hiện tại có thể viết code CRUD rất nhanh, nhưng chúng không thể tự thiết kế một kiến trúc chịu tải triệu user, xử lý bài toán scale, hay đứng ra bảo vệ các quyết định kỹ thuật trước hội đồng phỏng vấn và CTO. Đó mới là những gì bạn được rèn luyện ở đây.",
+            "q3": "Mình mới bắt đầu. Có hợp không?",
+            "a3": "Khóa học này thiết kế riêng cho những bạn đã có nền tảng lập trình cơ bản và muốn bứt phá lên tầm thiết kế kiến trúc hệ thống (System Design/DevOps). Nếu bạn chưa từng gõ dòng code nào, lộ trình này sẽ quá sức — bạn nên tích lũy kinh nghiệm code thực tế trước đã.",
+            "q4": "AI chấm thực sự hoạt động thế nào?",
+            "a4": "Hệ thống sẽ đánh giá bài làm của bạn dựa trên các tiêu chuẩn vận hành thực tế (production-ready). Thay vì chỉ báo Đúng/Sai, bạn sẽ nhận được các nhận xét chi tiết, chỉ rõ lỗ hổng trong logic thiết kế và gợi ý cách tối ưu để bạn tự tay sửa lại cho đến khi hoàn thiện.",
+            "q5": "'Headhunt' ở đây thực sự nghĩa là gì?",
+            "a5": "Khi bạn tự tin với năng lực của mình và bật chế độ tìm việc, các dự án thực chiến bạn đã hoàn thành sẽ được kết nối trực tiếp đến các doanh nghiệp đối tác đang tìm kiếm kỹ sư Senior/Architect. Không có trung gian hay làm màu CV, nhà tuyển dụng đánh giá bạn trực tiếp qua chất lượng sản phẩm bạn đã tự tay dựng."
+        },
+        "closing": {
+            "title": "Không còn thời học cho biết. Đây là lúc dựng hệ thống thật.",
+            "subtitle": "Học để làm được việc, đủ bản lĩnh đi qua mọi vòng phỏng vấn kỹ thuật bằng chính ngôn ngữ bạn đang dùng.",
+            "cta": "Xúc ngay"
+        },
+        "learnLoop": {
+            "eyebrow": "Học kiểu thực chiến",
+            "title": "Học theo phương pháp của tôi.",
+            "intro": "Đi phỏng vấn, thứ người ta quan tâm không phải số năm kinh nghiệm, mà là tư duy giải quyết vấn đề. Tôi đã hệ thống hóa kiến thức của ngành vào đứa con tâm huyết này, đồng thời xây dựng phương pháp học hiệu quả để nhiều người có thể tiếp cận và bứt phá.",
+            "cta": "Vào cày thử",
+            "items": {
+                "read": {
+                    "step": "01",
+                    "title": "Đọc",
+                    "tag": "4 ngôn ngữ",
+                    "desc": "Bài đọc mạch lạc, kèm code ở cả 4 ngôn ngữ."
+                },
+                "grade": {
+                    "step": "02",
+                    "title": "Thử thách chấm AI",
+                    "tag": "Phản hồi tức thì",
+                    "desc": "Tự viết code, AI chấm theo tiêu chí production."
+                },
+                "capstone": {
+                    "step": "03",
+                    "title": "Capstone",
+                    "tag": "Hệ thống thật",
+                    "desc": "Dựng một hệ thống chạy thật ở production — không phải app demo."
+                },
+                "rank": {
+                    "step": "04",
+                    "title": "Leaderboard",
+                    "tag": "Giữ phong độ",
+                    "desc": "Đối chiếu lời giải với người khác, rồi leo bảng xếp hạng."
+                }
+            },
+            "cta": "Vào cày thử"
+        },
+        "treasure": {
+            "eyebrow": "Bản đồ năng lực hệ thống",
+            "title": "Học để giải bài toán thật, không học để thuộc bài.",
+            "intro": "Từ backend đến hạ tầng, bạn luyện tư duy xử lý vấn đề đến nơi đến chốn — thứ quyết định bạn trụ được ở dự án lớn.",
+            "statConcepts": "khái niệm",
+            "statTracks": "lộ trình",
+            "interconnect": "Idempotency học ở System Design → tái dùng ở Payment, Webhooks (Fullstack).",
+            "cta": "Xem khóa",
+            "beaconLabel": "Chạm để xáo lại",
+            "beaconTap": "Tự xáo lại mỗi 10 giây — chạm để xáo ngay",
+            "graph": {
+                "cap": "Đánh đổi nhất quán vs khả dụng khi mạng phân vùng — chọn đúng cho từng hệ.",
+                "sharding": "Chia dữ liệu ra nhiều shard để mở rộng ghi/đọc vượt một node.",
+                "saga": "Giao dịch dài qua nhiều service bằng các bước bù trừ, không cần 2PC.",
+                "idempotency": "Gọi lại nhiều lần vẫn một kết quả — chống trùng khi retry.",
+                "redlock": "Khoá phân tán trên Redis + fencing token chống race nhiều client.",
+                "kafka": "Log append-only làm nguồn sự thật: replay, tách producer/consumer.",
+                "cdc": "Bắt thay đổi DB (Debezium) đẩy ra stream — hết double-write.",
+                "token-bucket": "Giới hạn tần suất mượt bằng token bucket + Redis Lua atomic.",
+                "websocket": "Cổng realtime hai chiều, fan-out sự kiện tới hàng nghìn client.",
+                "tracing": "Lần theo một request xuyên nhiều service để tìm nút thắt (OTel/Jaeger).",
+                "nestjs": "Khung backend module hoá, DI rõ ràng cho API quy mô lớn.",
+                "typeorm": "ORM TypeScript: entity, quan hệ, migration — sát SQL khi cần.",
+                "webhooks": "Nhận sự kiện bên thứ ba an toàn: verify chữ ký + idempotent.",
+                "payment": "Tích hợp cổng thanh toán: idempotency, đối soát, hoàn tiền chuẩn.",
+                "rag": "Tìm ngữ nghĩa bằng pgvector rồi cho LLM trả lời có dẫn nguồn.",
+                "oauth": "Đăng nhập + phân quyền bằng OAuth2/JWT, refresh token an toàn.",
+                "jobs": "Hàng đợi job nền: retry, backoff, lịch chạy — tách khỏi request.",
+                "rsc": "React Server Components: render ở server, gửi ít JS xuống client.",
+                "k8s": "Điều phối container: tự phục hồi, scale, rollout khai báo.",
+                "ingress": "Định tuyến HTTP vào cluster: host/path, TLS, cân tải.",
+                "argocd": "GitOps: trạng thái mong muốn trong Git, ArgoCD đồng bộ vào cluster.",
+                "rollouts": "Canary/blue-green tự phân tích metric trước khi mở 100% traffic.",
+                "prometheus": "Thu thập metric + cảnh báo theo thời gian thực cho hệ đang chạy.",
+                "rbac": "Phân quyền theo vai trò trong K8s: ai làm gì, tối thiểu đặc quyền.",
+                "terraform": "Hạ tầng bằng mã, đa cloud, plan/apply tái lập được.",
+                "falco": "Phát hiện hành vi bất thường runtime trong container theo thời gian thực.",
+                "consistentHashing": "Băm nhất quán: thêm/bớt node ít phải xáo lại key — nền cho sharding co giãn.",
+                "circuitBreaker": "Ngắt mạch khi service phụ thuộc lỗi liên tục — chặn lỗi lan dây chuyền.",
+                "eventSourcing": "Lưu chuỗi sự kiện làm nguồn sự thật; dựng lại state bằng replay.",
+                "readReplica": "Bản sao chỉ-đọc gánh tải đọc — đánh đổi độ trễ replication.",
+                "graphql": "API kiểu hoá: client lấy đúng field cần qua một endpoint.",
+                "redisCache": "Cache-aside trên Redis: TTL, invalidation, chống cache stampede.",
+                "sse": "Server-Sent Events: server đẩy một chiều, nhẹ hơn WebSocket cho stream.",
+                "zodValidation": "Validate + suy kiểu runtime bằng Zod ở biên API.",
+                "helm": "Đóng gói manifest K8s thành chart tái dùng + values theo môi trường.",
+                "autoscaling": "HPA tự co giãn pod theo CPU/metric — bám tải thật.",
+                "serviceMesh": "Lớp mesh lo mTLS, retry, chia traffic giữa service (Istio/Linkerd).",
+                "grafana": "Dashboard + cảnh báo trực quan trên metric Prometheus."
+            }
+        },
+        "backToTop": "Về đầu trang"
+    },
+    "aiLab": {
+        "tabs": {
+            "aiLab": "Phòng thí nghiệm AI"
+        },
+        "playground": {
+            "title": "Sân chơi prompt",
+            "description": "Tinh chỉnh prompt và tham số, chạy thử với mô hình thật và xem phản hồi hiện ra theo thời gian thực.",
+            "systemPrompt": "System prompt",
+            "systemPromptPlaceholder": "Tùy chọn. Thiết lập vai trò và quy tắc cho mô hình.",
+            "userPrompt": "User prompt",
+            "userPromptPlaceholder": "Nhập prompt để gửi cho mô hình.",
+            "params": "Tham số",
+            "temperature": "Độ ngẫu nhiên (temperature)",
+            "topP": "Top-p",
+            "maxTokens": "Số token tối đa",
+            "lane": "Làn",
+            "model": "Mô hình",
+            "run": "Chạy",
+            "abort": "Dừng",
+            "resetToDefault": "Khôi phục mặc định",
+            "output": "Kết quả",
+            "outputEmpty": "Phản hồi sẽ hiển thị ở đây.",
+            "cached": "Đã lưu đệm",
+            "tokens": "{prompt} token prompt / {completion} token phản hồi",
+            "estimatedCost": "≈ {credits} tín dụng",
+            "remainingRuns": "Còn {count} lượt chạy trong cửa sổ này",
+            "quotaExhausted": "Bạn đã dùng hết lượt chạy trong cửa sổ này.",
+            "byokNudge": "Thêm khóa API của riêng bạn để tiếp tục chạy không giới hạn.",
+            "goToAiSettings": "Mở cài đặt AI",
+            "runHistory": "Lịch sử chạy",
+            "runHistoryEmpty": "Chưa có lượt chạy nào.",
+            "failed": "Lượt chạy thất bại. Vui lòng thử lại."
+        },
+        "eval": {
+            "title": "Thử thách đánh giá",
+            "description": "Viết mẫu prompt, nộp lên và chúng tôi chấm kết quả của bạn trên toàn bộ test case ẩn.",
+            "systemPrompt": "System prompt",
+            "systemPromptPlaceholder": "Tùy chọn. Thiết lập vai trò và quy tắc cho mô hình.",
+            "userTemplate": "Mẫu prompt người dùng",
+            "userTemplatePlaceholder": "Dùng {{input}} ở nơi cần chèn nội dung của từng test case.",
+            "templatePlaceholderHint": "Dùng placeholder {{input}} — nó sẽ được thay bằng nội dung của từng test case.",
+            "submit": "Nộp để chấm",
+            "submitting": "Đang nộp…",
+            "grading": "Đang chấm…",
+            "passedSummary": "Đạt {passed}/{total} câu",
+            "score": "Điểm {score}/{max}",
+            "passed": "Đạt",
+            "failed": "Chưa đạt",
+            "caseInput": "Đầu vào",
+            "actualOutput": "Kết quả",
+            "expected": "Mong đợi",
+            "feedback": "Nhận xét",
+            "citationPresent": "Có trích dẫn",
+            "citationMissing": "Thiếu trích dẫn",
+            "viewResult": "Xem kết quả",
+            "caseLabel": "Câu {index}",
+            "empty": "Bài học này chưa có thử thách đánh giá."
+        },
+        "status": {
+            "streaming": "Đang truyền",
+            "completed": "Hoàn tất",
+            "failed": "Thất bại",
+            "cached": "Đã lưu đệm",
+            "pending": "Đang chờ",
+            "grading": "Đang chấm"
+        }
+    },
+    "pinnedProjects": {
+        "course": {
+            "loading": "Đang tải...",
+            "selectLabel": "Dự án capstone",
+            "selectPlaceholder": "Chọn một dự án capstone",
+            "verified": "Đã xác minh",
+            "noCourses": "Bạn chưa tham gia khóa học nào có capstone."
+        },
+        "heading": "Dự án đã ghim",
+        "add": "Thêm dự án",
+        "manage": "Quản lý",
+        "manageTitle": "Quản lý dự án đã ghim",
+        "untitled": "Dự án chưa đặt tên",
+        "verified": "Đã xác minh",
+        "open": "Mở dự án",
+        "remove": "Gỡ",
+        "moveUp": "Lên",
+        "moveDown": "Xuống",
+        "full": "Bạn đã đạt tối đa {max} dự án ghim.",
+        "emptyOwnerTitle": "Chưa có dự án nào được ghim",
+        "emptyOwnerDescription": "Ghim một capstone đã xác minh hoặc dự án bên ngoài để khoe thành quả tốt nhất của bạn.",
+        "emptyManage": "Thêm dự án từ tab Bên ngoài hoặc Capstone.",
+        "errorTitle": "Không tải được dự án đã ghim",
+        "errorDescription": "Đã có lỗi xảy ra. Vui lòng thử lại.",
+        "retry": "Thử lại",
+        "tabs": {
+            "manage": "Đã ghim ({count}/{max})",
+            "external": "Thêm bên ngoài",
+            "course": "Thêm capstone"
+        },
+        "form": {
+            "title": "Tiêu đề",
+            "titlePlaceholder": "Dự án cá nhân của tôi",
+            "titleRequired": "Cần nhập tiêu đề.",
+            "url": "Đường dẫn",
+            "urlPlaceholder": "https://github.com/me/project",
+            "urlInvalid": "Nhập một URL hợp lệ.",
+            "techStack": "Công nghệ",
+            "techStackPlaceholder": "React, Node.js, PostgreSQL",
+            "techStackHint": "Ngăn cách các thẻ bằng dấu phẩy.",
+            "description": "Mô tả",
+            "descriptionPlaceholder": "Dự án này làm gì?",
+            "submit": "Ghim dự án"
+        },
+        "typeCapstone": "Capstone",
+        "typeExternal": "Dự án",
+        "verifiedByStarci": "Được StarCi xác nhận",
+        "openAria": "{title} — mở trong tab mới"
+    },
+    "blog": {
+        "back": "Quay lại blog",
+        "clearFilter": "Xem tất cả",
+        "ctaDefault": "Tìm hiểu thêm",
+        "empty": "Chưa có bài viết nào",
+        "emptyHint": "Hãy quay lại sau để xem các bài viết mới nhé.",
+        "emptyInFilter": "Chưa có bài trong mục này",
+        "emptyInFilterHint": "Thử mục khác, hoặc xem tất cả bài viết.",
+        "errorHint": "Đã có lỗi xảy ra khi tải bài viết.",
+        "errorTitle": "Không tải được bài viết",
+        "latest": "Mới nhất",
+        "loadMore": "Xem thêm",
+        "loading": "Đang tải bài viết…",
+        "lockedBody": "Bài viết này chỉ dành cho thành viên. Hãy trở thành thành viên để đọc toàn bộ nội dung.",
+        "lockedTitle": "Nội dung dành cho thành viên",
+        "notFound": "Không tìm thấy bài viết",
+        "premium": "Premium",
+        "readingMinutes": "Đọc {minutes} phút",
+        "relatedTitle": "Thêm trong mục {category}",
+        "retry": "Thử lại",
+        "subtitle": "Phân tích kỹ thuật chuyên sâu về chính hạ tầng đang chạy StarCi — kiến trúc, đánh đổi, và code thật.",
+        "title": "Hệ thống StarCi, mổ xẻ",
+        "masthead": {
+            "caption": "Kiến trúc thật của backend StarCi — kéo để xoay bản đồ."
+        },
+        "startHere": "Bắt đầu ở đây",
+        "topics": "Chủ đề",
+        "viewSource": "Xem trên GitHub",
+        "categories": {
+            "all": "Tất cả",
+            "DEEP_DIVE": "Chuyên sâu",
+            "BUILD_IN_PUBLIC": "Xây dựng công khai",
+            "CAREER": "Nghề nghiệp",
+            "AI": "AI",
+            "CASE_STUDY": "Câu chuyện thực tế",
+            "CODEBASE": "Mã nguồn"
+        }
+    },
+    "rewards": {
+        "balance": "{count} điểm quà",
+        "balanceNote": "Điểm quà tách biệt với XP tích lũy dùng để xếp hạng giải đấu của bạn.",
+        "cancel": "Hủy",
+        "cannotAfford": "Không đủ điểm",
+        "confirmRedeem": "Xác nhận đổi quà",
+        "cost": "{count} điểm",
+        "noRedemptions": "Bạn chưa đổi phần quà nào.",
+        "redeem": "Đổi quà",
+        "redeemedTitle": "Lịch sử đổi quà",
+        "shipAddress": "Địa chỉ nhận hàng",
+        "shipName": "Tên người nhận",
+        "shipPhone": "Số điện thoại",
+        "title": "Cửa hàng đổi quà",
+        "status": {
+            "granted": "Đã cấp",
+            "pending": "Đang xử lý",
+            "fulfilled": "Đã hoàn tất"
+        }
+    },
+    "flashcardReview": {
+        "backToDashboard": "Về trang tổng quan",
+        "done": "Hoàn thành! Bạn đã ôn hết các thẻ đến hạn.",
+        "due": "{count, plural, other {# thẻ cần ôn tập}}",
+        "empty": "Hiện chưa có thẻ nào đến hạn ôn tập.",
+        "flip": "Lật thẻ",
+        "progress": "{current} / {total}",
+        "start": "Bắt đầu ôn",
+        "again": "Lại",
+        "hard": "Khó",
+        "good": "Tốt",
+        "easy": "Dễ"
+    },
+    "notifications": {
+        "empty": "Bạn chưa có thông báo nào",
+        "loadError": "Không tải được thông báo",
+        "markAllRead": "Đánh dấu tất cả đã đọc",
+        "retry": "Thử lại",
+        "title": "Thông báo"
+    },
+    "streakFreeze": {
+        "buy": "Mua băng bảo vệ ({cost} XP)",
+        "explainer": "Băng bảo vệ giữ chuỗi của bạn khi lỡ một ngày.",
+        "full": "Bạn đã đủ rồi",
+        "owned": "{count} / {max} băng bảo vệ",
+        "title": "Băng bảo vệ chuỗi"
+    },
+    "weeklyChallenge": {
+        "endsIn": "Còn {days} ngày {hours} giờ",
+        "passed": "Đã vượt qua",
+        "passedCount": "{count, plural, other {# người đã vượt qua}}",
+        "title": "Thử thách tuần",
+        "tryNow": "Thử ngay"
+    },
+    "bookmarks": {
+        "noMatch": "Không có mục đã lưu nào khớp với tìm kiếm của bạn.",
+        "searchPlaceholder": "Tìm trong bookmark",
+        "heading": "Bookmark",
+        "subtitle": "Các bài học bạn đã lưu để xem lại",
+        "found": "{count, plural, other {Tìm thấy # bookmark}}",
+        "empty": "Chưa có bookmark",
+        "emptyHint": "Lưu bài học để xem lại ở đây",
+        "errorTitle": "Không tải được bookmark",
+        "premium": "Premium"
+    },
+    "followList": {
+        "title": "Kết nối",
+        "empty": {
+            "followers": "Chưa có người theo dõi nào",
+            "following": "Bạn chưa theo dõi ai"
+        }
+    },
+    "ranks": {
+        "explain": {
+            "why": "Dựa trên {count} huy hiệu bạn đã đạt được.",
+            "next": "Cần thêm {remaining} huy hiệu ở hạng {tier} để lên {next} ({have}/{count}).",
+            "maxed": "Bạn đã đạt hạng cao nhất."
+        },
+        "beginner": "Tập sự",
+        "junior": "Junior",
+        "middle": "Middle",
+        "senior": "Senior"
+    },
+    "autosave": {
+        "saving": "Đang lưu…",
+        "saved": "Đã lưu",
+        "failed": "Lưu thất bại"
+    },
+    "toast": {
+        "successTitle": "Thành công",
+        "errorTitle": "Lỗi",
+        "unauthorizedTitle": "Không có quyền",
+        "unauthorizedDescription": "Bạn không có quyền truy cập tài nguyên này.",
+        "defaultSuccess": "Thao tác hoàn tất.",
+        "defaultError": "Đã có lỗi xảy ra."
+    },
+    "profileMascot": {
+        "pick": "Chọn linh vật",
+        "clear": "Bỏ ghim linh vật",
+        "empty": "Đạt thành tích để ghim linh vật."
+    },
+    "footer": {
+        "tagline": "Học bằng cách tự tay dựng hệ thống thật — đủ trình cho mọi vòng phỏng vấn kỹ thuật.",
+        "exploreTitle": "Khám phá",
+        "supportTitle": "Hỗ trợ",
+        "links": {
+            "courses": "Khóa học",
+            "blog": "Blog",
+            "talents": "Talents",
+            "community": "Cộng đồng",
+            "contact": "Liên hệ",
+            "terms": "Điều khoản",
+            "privacy": "Bảo mật"
+        },
+        "madeBy": "Được phát triển bởi Nguyễn Văn Tự Cường",
+        "copyright": "© {year} StarCi Academy"
+    },
+    "legal": {
+        "contactNote": "Có câu hỏi về điều khoản hoặc dữ liệu của bạn? Liên hệ cuongnvtse160875@gmail.com.",
+        "lastUpdated": "Cập nhật lần cuối: {date}",
+        "terms": {
+            "title": "Điều khoản sử dụng",
+            "description": "Các điều khoản khi sử dụng StarCi Academy.",
+            "body": "Tài liệu điều khoản đầy đủ đang được hoàn thiện. Khi sử dụng StarCi Academy, bạn đồng ý dùng nền tảng cho mục đích học tập hợp pháp và tôn trọng quyền sở hữu của nội dung khóa học. Phiên bản chi tiết sẽ được cập nhật tại trang này."
+        },
+        "privacy": {
+            "title": "Chính sách bảo mật",
+            "description": "Cách StarCi Academy thu thập và sử dụng dữ liệu của bạn.",
+            "body": "Chính sách bảo mật đầy đủ đang được hoàn thiện. StarCi Academy chỉ thu thập dữ liệu cần thiết để vận hành việc học của bạn (tài khoản, tiến độ, bài nộp) và không bán dữ liệu cho bên thứ ba. Phiên bản chi tiết sẽ được cập nhật tại trang này."
+        }
+    },
+    "cookieConsent": {
+        "title": "Cookie",
+        "body": "Bọn mình dùng cookie cần thiết để bạn đăng nhập và ghi nhớ ngôn ngữ, cùng cookie phân tích (Google Analytics) để cải thiện trải nghiệm. Bạn có thể chấp nhận, từ chối, hoặc tùy chỉnh.",
+        "acceptAll": "Chấp nhận tất cả",
+        "reject": "Từ chối",
+        "customize": "Tùy chỉnh",
+        "modalTitle": "Tùy chỉnh cookie",
+        "modalBody": "Chọn loại cookie bạn cho phép. Cookie cần thiết luôn bật để hệ thống hoạt động.",
+        "necessaryLabel": "Cần thiết",
+        "necessaryHint": "Đăng nhập, bảo mật và ghi nhớ ngôn ngữ. Luôn bật.",
+        "analyticsLabel": "Phân tích",
+        "analyticsHint": "Google Analytics — đo lường ẩn danh để cải thiện sản phẩm.",
+        "save": "Lưu lựa chọn"
+    },
+    "socketStatus": {
+        "reconnecting": "Mất kết nối — đang thử lại…",
+        "reconnected": "Đã kết nối lại"
+    },
+    "status": {
+        "title": "Trạng thái hệ thống",
+        "subtitle": "Tình trạng trực tiếp của nền tảng StarCi Academy — làm công khai, không cần đăng nhập.",
+        "refresh": "Làm mới",
+        "overall": "{up}/{total} thành phần khỏe",
+        "infraHeading": "Hạ tầng",
+        "aiKeysHeading": "Khoá AI",
+        "latency": "{ms}ms",
+        "checked": "Kiểm tra {ago}",
+        "noKeys": "Chưa cấu hình khoá.",
+        "aiKeyGroupHeader": "{models} · {provider} · {healthy}/{total} khoá",
+        "componentStatus": {
+            "up": "Hoạt động",
+            "degraded": "Suy giảm",
+            "down": "Ngừng"
+        },
+        "error": {
+            "title": "Không tải được trạng thái",
+            "description": "Không thể kết nối tới endpoint trạng thái. Vui lòng thử lại.",
+            "retry": "Thử lại"
+        },
+        "empty": {
+            "infraTitle": "Chưa có thành phần nào",
+            "infraDescription": "Hiện chưa có thành phần hạ tầng nào được kiểm tra.",
+            "aiTitle": "Chưa có khoá AI nào",
+            "aiDescription": "Hiện chưa cấu hình nhóm khoá AI nào."
+        }
+    }
+}

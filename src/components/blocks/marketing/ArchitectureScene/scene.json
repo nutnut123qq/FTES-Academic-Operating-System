@@ -1,0 +1,28 @@
+{
+  "board": { "cols": [-3, 3], "rows": [-3, 3], "cell": 2.4 },
+  "camera": { "position": [10, 9, 10], "zoom": 25 },
+  "nodes": [
+    { "id": "client", "name": "Client", "sub": "web · mobile", "cell": [0, -3], "kind": "client", "tone": "normal" },
+    { "id": "lb", "name": "Load Balancer", "sub": "nginx", "cell": [0, -2], "kind": "loadBalancer", "tone": "normal" },
+    { "id": "gateway", "name": "API Gateway", "sub": "routing · auth", "cell": [0, -1], "kind": "loadBalancer", "tone": "normal" },
+    { "id": "payment", "name": "Payment", "sub": "service", "cell": [-2, 0], "kind": "container", "tone": "normal" },
+    { "id": "order", "name": "Order", "sub": "service", "cell": [0, 0], "kind": "container", "tone": "normal" },
+    { "id": "inventory", "name": "Inventory", "sub": "service", "cell": [2, 0], "kind": "container", "tone": "normal" },
+    { "id": "redis", "name": "Redis", "sub": "cache", "cell": [-2, 1], "kind": "database", "tone": "normal" },
+    { "id": "pg", "name": "Postgres", "sub": "source of truth", "cell": [0, 1], "kind": "database", "tone": "success" },
+    { "id": "kafka", "name": "Kafka", "sub": "debezium · cdc", "cell": [2, 1], "kind": "broker", "tone": "danger", "status": { "tone": "danger", "text": "cdc lag › stale read" } },
+    { "id": "es", "name": "Elastic Search", "sub": "read model", "cell": [2, 2], "kind": "database", "tone": "normal" }
+  ],
+  "edges": [
+    { "from": "client", "to": "lb", "congested": true },
+    { "from": "lb", "to": "gateway", "flow": true },
+    { "from": "gateway", "to": "payment", "flow": true },
+    { "from": "gateway", "to": "order", "flow": true },
+    { "from": "gateway", "to": "inventory", "flow": true },
+    { "from": "payment", "to": "redis", "flow": true },
+    { "from": "order", "to": "pg", "flow": true },
+    { "from": "inventory", "to": "kafka", "flow": true },
+    { "from": "pg", "to": "kafka", "tone": "success", "flow": true },
+    { "from": "kafka", "to": "es", "congested": true }
+  ]
+}

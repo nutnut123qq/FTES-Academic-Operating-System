@@ -1,0 +1,111 @@
+---
+alwaysApply: true
+---
+
+# StarCI Academy Design Patterns
+
+## 1) Redux Pattern
+
+- Use Redux Toolkit `createSlice` with a tiny, explicit state shape per domain (`tabs`, `course`, `module`, `sidebar`, ...).
+- Keep slice actions focused on one intent (e.g. `setSidebar`, `setLearnTab`, `setCourseDisplayId`), avoid overloaded actions.
+- Prefer enum-based UI state for tabs/modes (`LearnTab`, `SidebarTab`) instead of string literals spread across components.
+- Store identifiers in Redux (`displayId`, `id`) and derive fetched entities via SWR hooks.
+- `store.ts` is the single reducer registry; when adding a slice:
+  1) export reducer/actions in `src/redux/slices/*`
+  2) re-export from `src/redux/slices/index.ts`
+  3) register reducer in `src/redux/store.ts`.
+- Keep serializable values in Redux; if non-serializable is unavoidable, document why near state/action.
+
+## 2) Effect Hook Pattern (`src/hooks/effects`)
+
+- `UseEffects.tsx` is the composition root for global sync effects; add new cross-cutting effects there.
+- Effect hooks should do one sync responsibility:
+  - URL/params -> Redux (`useSyncReduxCourseId`, `useSyncReduxModuleId`)
+  - Redux <-> query string (`useSetTabQuery`)
+  - Redux -> navigation (`useSidebar`)
+- Guard early inside effects (`if (!courseDisplayId) return`, route scope checks, same-path checks) to avoid infinite redirects and noisy rerenders.
+- Depend on stable primitives and state used in the effect body; avoid hidden dependencies.
+- Keep these hooks side-effect only (no UI return, no view logic).
+
+## 3) Data Fetching Pattern (SWR + Redux)
+
+- Query hooks (`useQuery*Swr`) fetch remote data and then hydrate Redux with normalized/current entity.
+- SWR key should be `null` when required identifiers are missing.
+- Throw explicit errors for missing required params or missing response payload.
+- Components read from Redux for rendering; hooks own fetching and cache semantics.
+
+## 3.1) Form Pattern — react-hook-form hook (`src/hooks/rhf`) — STRICT
+
+Forms use **react-hook-form** through a dedicated hook `src/hooks/rhf/useXxxForm.ts`.
+(Formik is removed — the old singleton-Formik / `FormikContext` no longer exists. Don't
+re-introduce it, and don't hand-roll a pile of `useState` for form values in the component.)
+
+- The hook owns the form: `useForm({ resolver: zodResolver(schema), values })`. Seed defaults
+  from redux/SWR via the `values` option (re-seeds on change — replaces formik `enableReinitialize`).
+- Validation = a `zod` schema (`@hookform/resolvers/zod`); messages are i18n keys resolved with `t(...)`.
+- `onSubmit = form.handleSubmit(async (value) => { ... })`; wrap the mutation call in
+  `runGraphQLWithToast(...)` (`@/modules/toast`) for success/error toasts.
+- Any extra state the form needs (e.g. a picked `File` for upload, `fileInputRef`) lives **inside
+  the hook**, not the component. The hook returns `{ ...form, onSubmit, ...extras }`.
+- Export from `src/hooks/rhf/index.ts`.
+- The component ONLY consumes the hook + binds fields (`register`, `watch`, `setValue`,
+  `formState.errors` / `formState.isSubmitting`). **No scattered `useState` for form values.**
+- Examples: `usePersonalProjectIdeaForm`, `useCvReviewForm`, `useEditProfileForm`.
+
+## 3.2) Overlay / Modal Pattern — Zustand overlay store (`src/hooks/zustand/overlay`) — STRICT
+
+Modal/drawer/popover open-state lives in ONE zustand store (`useOverlayStore`) — NOT local page
+state, and NOT the old singleton `OverlayStateContext` (removed: the mega-context re-rendered all
+overlays at once).
+
+- Each overlay has an `OverlayKey` + a `useXxxOverlayState()` accessor returning the HeroUI shape
+  (`isOpen`, `setOpen`, `open`, `close`, `toggle`). A component subscribes by selector to its own
+  key, so opening one overlay does not re-render consumers of the others.
+- Overlays that carry a payload (e.g. payment / ad / mind-map details) stash a `context` in the
+  store and override `open(payload)`.
+- Add a new overlay: add the key to `OverlayKey` + `OVERLAY_KEYS` (`store.ts`), add a
+  `useXxxOverlayState` accessor (`hooks.ts`), put the modal UI under `src/components/modals/XxxModal`
+  and mount it in `ModalContainer` (drawers in `DrawerContainer`), then call `open()` / `close()`
+  from components — never render modal markup inline with local open state.
+
+## 4) Routing Pattern (`pathConfig`)
+
+- Build routes through `pathConfig()` only; avoid hardcoding path strings in components/hooks.
+- Nested route builders should mirror folder structure under `src/app`.
+- For learn flows, route builders stay under `.course(displayId).learn()` (e.g. `mindMap`, `module`, `cv`, `finalProject`, `leaderboard`).
+- When adding a new learn subsection, add builder method in `pathConfig` before wiring UI navigation.
+
+## 5) Component Composition Pattern
+
+- Route files in `src/app/**` stay thin; put UI and behavior in `src/components/**` or route-local component folders when strongly scoped.
+- Split complex UI into focused components:
+  - Container/state orchestration in parent (`Sidebar/index.tsx`)
+  - Reusable presentational branch in child (`Sidebar/Accordion/index.tsx`)
+- Pass explicit props for selected state and callbacks (`selected`, `extraId`, `onSelectSubItem`) instead of reading global state deep in child trees.
+- Derive render lists with `useMemo` when based on Redux/entity data and reused in render maps.
+
+## 6) Sidebar Interaction Pattern (Current Learn Module)
+
+- Sidebar dispatches `setSidebar({ tab, extraId? })` on selection.
+- Parent item click sets `tab` and clears `extraId` when needed.
+- Accordion child click sets both `tab` and `extraId`.
+- Highlight rules:
+  - top-level item active by `sidebar.tab`
+  - accordion parent active only when `tab` matches and `extraId` is empty
+  - accordion child active when child key equals `extraId`.
+- Navigation side effect is centralized in `useSidebar`, not inside rendering components.
+
+## 7) Styling and Layout Pattern
+
+- Prefer Tailwind utility classes colocated with component markup.
+- Use HeroUI state data attributes for active styles (e.g. `data-[selected=true]:text-accent`) when available.
+- Keep sticky/scroll behavior owned by layout wrappers (grid/columns), while inner components only manage local scroll sections.
+
+## 8) Implementation Checklist (for new feature)
+
+- Add/extend Redux slice if UI state must be shared.
+- Add route builder(s) in `pathConfig` first.
+- Add/update effect hook if syncing Redux with router/query is required.
+- Keep page thin; move UI and logic into components/hooks.
+- Wire selected state + callbacks explicitly across component boundaries.
+- Run lints after edits and fix all introduced diagnostics.

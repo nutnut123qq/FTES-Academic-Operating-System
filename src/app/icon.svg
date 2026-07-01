@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="StarCi">
+  <rect x="16" y="16" width="480" height="480" rx="120" fill="#11181C"/>
+  <path d="M 344 184 C 300 168 208 164 190 200 C 176 230 214 250 262 258 C 314 266 340 284 330 312 C 316 348 224 348 168 328" fill="none" stroke="#FB59A7" stroke-width="38" stroke-linecap="round"/>
+  <circle cx="344" cy="184" r="19" fill="#FB59A7"/>
+  <circle cx="168" cy="328" r="13" fill="#11181C" stroke="#FB59A7" stroke-width="12"/>
+</svg>

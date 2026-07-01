@@ -1,0 +1,35 @@
+# Decision — tabs
+
+When & WHY we choose/shape the **tabs** block. A decision log: for a given scenario, which component we
+picked and the reasoning — so next time we design a tabs, we reuse the house's logic instead of guessing.
+Tab bars / segmented switchers.
+
+**StarCi blocks in this family:** `TabsCard`, `ExtendedTabs`
+
+> Grows automatically: at the END of each `/starci-fe-ux-apply`, the decision for this block (scenario →
+> choice → why) is appended below. No manual command.
+
+## Design baseline (from rules + design — 2026-06-21)
+
+Distilled from `starci-navigation.md` (shell shaping) + the `TabsCard` / `ExtendedTabs` block rules already recorded in the drafts (`tabscard-two-secondary-groups`).
+
+**Two tab groups on one toolbar = block `TabsCard` (`blocks/navigation/TabsCard`)** — do NOT hand-assemble loose Tabs/pills inside a feature.
+- API: `<TabsCard leftTabs={group} rightTabs={group?} />`, each `group` = data JSON `{ items: [{ key, label, icon?, isDisabled?, muted? }], selectedKey, ariaLabel, onSelectionChange }`.
+- Feature passes data + `onSelectionChange` only (reads store / dispatches at the feature); the block owns ALL style.
+
+**Both groups secondary (underline), neither primary.**
+- Both sides share the same "skin" → reads as one nav tier, neither louder. The block bakes `data-[selected]:border-b-2 border-accent text-accent` itself — because the global `.extended-tabs` class only removes the baseline, it does NOT draw the underline.
+
+**Spacing / semantics**
+- Gap between the two groups = `justify-between` + `gap-3` (rhythm-3 standard; gap-1.5 is BANNED). Icon+label inside one tab = `gap-2`.
+- Split roles by semantics (tabs-vs-segmented): LEFT group changes the content; RIGHT group (e.g. language TS/Java/C#/Go) keeps the same content but changes how it's presented. Both are "tab groups" in data, but presented merged into one toolbar instead of two tiers (avoid "multiple tab levels").
+
+**Page chrome lives on the feature wrapper, not in the block.**
+- The page's own chrome (full-width `border-b` + `max-w-3xl` cap) goes on the feature wrapper (e.g. `ContentTabBar`), NOT inside `TabsCard` → the block stays reusable elsewhere. `.extended-tabs` deliberately has no baseline so the wrapper owns the edge-to-edge divider.
+- Reference layout: GitHub file header / shadcn preview (tabs left + control right on one bar); language switcher: Stripe / Mintlify (global + persistent).
+
+## Decisions (newest first)
+_(empty — each entry: **scenario** · **chose what** · **WHY** · which page · date)_
+
+## Gotchas
+_(empty)_

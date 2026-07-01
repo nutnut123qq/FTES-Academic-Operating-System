@@ -1,0 +1,3154 @@
+{
+    "community": {
+        "title": "Community",
+        "description": "Share what you're working on, ask for help, and learn together.",
+        "channelTabsAria": "Filter community posts by channel",
+        "channel": {
+            "all": "All",
+            "problems": "Problems",
+            "founderQa": "Ask the founder",
+            "general": "General"
+        },
+        "composerPlaceholder": "Share something with the community…",
+        "post": "Post",
+        "empty": "No posts yet. Be the first to share something.",
+        "error": "Could not load the community feed",
+        "retry": "Retry",
+        "loadMore": "Load more",
+        "comments": {
+            "placeholder": "Write a comment…",
+            "send": "Comment",
+            "loading": "Loading comments…",
+            "empty": "No comments yet. Start the conversation.",
+            "error": "Could not load comments",
+            "reply": "Reply",
+            "replyPlaceholder": "Write a reply…",
+            "viewReplies": "View {count} replies",
+            "hideReplies": "Hide replies"
+        },
+        "chat": {
+            "title": "Community chat",
+            "description": "Chat live with the community, or message the founder directly.",
+            "tabsAria": "Switch chat conversation",
+            "communityRoom": "Community",
+            "founderDm": "Founder",
+            "placeholder": "Type a message…",
+            "send": "Send",
+            "loading": "Loading messages…",
+            "empty": "No messages yet. Say hello!",
+            "error": "Could not load messages",
+            "signInRequired": "Sign in with an active membership to join the chat."
+        }
+    },
+    "contact": {
+        "title": "Contact",
+        "intro": "StarCi is built by one person — your question reaches the person who makes it. Pick the fastest route below, or send a message.",
+        "responseTime": "We usually reply within 24 hours (support hours Mon–Fri, 9:00–18:00).",
+        "direct": {
+            "title": "Reach us directly",
+            "emailLabel": "Email",
+            "phoneLabel": "Phone",
+            "hoursLabel": "Support hours",
+            "hoursValue": "Mon–Fri, 9:00–18:00"
+        },
+        "founder": {
+            "title": "The person behind StarCi",
+            "name": "Stacy Nguyen",
+            "role": "Founder · StarCi Academy",
+            "facebook": "Facebook",
+            "linkedin": "LinkedIn",
+            "github": "GitHub"
+        },
+        "form": {
+            "title": "Send a message",
+            "name": "Full name",
+            "namePlaceholder": "Jane Doe",
+            "email": "Email",
+            "emailPlaceholder": "you@email.com",
+            "category": "Reason",
+            "message": "Message",
+            "messagePlaceholder": "How can we help?",
+            "submit": "Send message",
+            "submitting": "Sending…",
+            "successTitle": "Sent!",
+            "successBody": "Thanks. We'll get back to you by email as soon as we can.",
+            "sendAnother": "Send another",
+            "errorTitle": "Couldn't send your message. Please try again.",
+            "nameRequired": "Please enter your name.",
+            "emailInvalid": "Enter a valid email.",
+            "messageRequired": "Please enter a message."
+        },
+        "categories": {
+            "course_support": "Course / account support",
+            "partnership": "Partnership / hiring",
+            "general": "General question"
+        },
+        "faq": {
+            "title": "Frequently asked",
+            "q1": "How soon will I get a reply?",
+            "a1": "Usually within 24 hours, during support hours Mon–Fri 9:00–18:00.",
+            "q2": "I can't log in or forgot my password?",
+            "a2": "Use \"Forgot password\" on the sign-in screen to reset it. If you're still stuck, send the form with your account email.",
+            "q3": "Payment or refund issue?",
+            "a3": "Send the form with the \"Course / account support\" reason and your transaction id, and we'll look into it.",
+            "q4": "Want to partner or hire StarCi learners?",
+            "a4": "Pick the \"Partnership / hiring\" reason when sending the form, or message the founder directly on LinkedIn.",
+            "q5": "Questions about the courses, or whether StarCi is right for you?",
+            "a5": "See the FAQ on the home page — it covers the roadmap, who it's for, and how learning works in detail.",
+            "landingLink": "See course FAQ on the home page"
+        }
+    },
+    "profileSettings": {
+        "title": "Settings",
+        "subtitle": "Manage your account, AI, content and membership.",
+        "loginMethod": "Login method",
+        "loginMethodValue": {
+            "github": "GitHub",
+            "google": "Google",
+            "credentials": "Email & password"
+        },
+        "collapseMenu": "Collapse menu",
+        "expandMenu": "Expand menu",
+        "groups": {
+            "account": "Account",
+            "learning": "Learning",
+            "ai": "AI",
+            "content": "Content"
+        },
+        "items": {
+            "editProfile": "Edit profile",
+            "security": "Security",
+            "sessions": "Devices",
+            "courseHistory": "Course history",
+            "submissions": "Submissions",
+            "attempts": "Milestone attempts",
+            "feedback": "Feedback",
+            "aiSettings": "AI settings",
+            "aiSubscription": "AI plan",
+            "aiUsage": "AI usage",
+            "bookmarks": "Bookmarks",
+            "rewards": "Rewards",
+            "blog": "Blog",
+            "talents": "Talents",
+            "membership": "Membership"
+        },
+        "learning": {
+            "loadMore": "Load more",
+            "outline": {
+                "back": "Back",
+                "empty": "No course data yet.",
+                "error": "Couldn't load the course outline.",
+                "continue": "Continue",
+                "openCourse": "Open course",
+                "completion": "Completion",
+                "lessons": "Content",
+                "challenges": "Challenges",
+                "tasks": "Tasks",
+                "milestones": "Project",
+                "premium": "Premium",
+                "read": "Read",
+                "unread": "Unread",
+                "done": "Done",
+                "notDone": "Not done",
+                "noMatch": "No lessons match your search.",
+                "lessonCount": "{count} lessons",
+                "status": {
+                    "notStarted": "Not started",
+                    "inProgress": "In progress",
+                    "failed": "Failed",
+                    "completed": "Completed"
+                },
+                "taskType": {
+                    "design": "Design",
+                    "techIntegrate": "Integration",
+                    "business": "Business"
+                },
+                "readCount": "{read}/{total} read",
+                "taskProgress": "{done}/{total}",
+                "milestonesEmpty": "This course has no personal project yet.",
+                "milestoneStatus": {
+                    "done": "Done",
+                    "inProgress": "In progress",
+                    "todo": "Not started"
+                }
+            },
+            "history": {
+                "title": "Course history",
+                "subtitle": "Progress across your joined courses and recent lessons.",
+                "coursesTitle": "Your courses",
+                "coursesEmpty": "You haven't joined any courses yet.",
+                "coursesEmptyHint": "Join a course to start tracking your learning history.",
+                "explore": "Explore courses",
+                "searchCourses": "Search courses",
+                "noMatch": "No courses match your search.",
+                "lessonsTitle": "Recent lessons",
+                "lessonsEmpty": "No lessons read recently.",
+                "lessonsProgress": "Lessons: {completed}/{total} ({percent}%)",
+                "challengesProgress": "Challenges: {completed}/{total}",
+                "milestonesProgress": "Milestones: {completed}/{total}"
+            },
+            "detail": {
+                "searchLessons": "Search lessons",
+                "viewToggle": "View",
+                "byDay": "By day",
+                "byChapter": "By chapter",
+                "contents": "Contents",
+                "personalProject": "Personal project",
+                "meta": "{lessonsRead}/{lessonsTotal} lessons read · {challenges} challenges · {milestones} milestones"
+            },
+            "day": {
+                "today": "Today",
+                "yesterday": "Yesterday",
+                "empty": "No learning activity in this course yet.",
+                "emptyHint": "Read a lesson or pass a challenge and it will show up here.",
+                "noMatch": "No activity matches your search.",
+                "eventType": {
+                    "lessonRead": "Lesson read",
+                    "challengePassed": "Challenge passed",
+                    "milestonePassed": "Milestone passed"
+                }
+            },
+            "submissions": {
+                "title": "Challenge submissions",
+                "subtitle": "All your challenge submissions and their grading.",
+                "empty": "You have no challenge submissions yet.",
+                "emptyHint": "Join a course and submit a challenge to see your grading results here.",
+                "colTitle": "Challenge",
+                "colCourse": "Course",
+                "colStatus": "Status",
+                "colScore": "Score",
+                "colLang": "Language",
+                "colRepo": "Submission",
+                "colDate": "Submitted",
+                "open": "Open",
+                "status": {
+                    "passed": "Passed",
+                    "failed": "Failed",
+                    "pending": "Pending"
+                }
+            },
+            "attempts": {
+                "title": "Milestone attempts",
+                "subtitle": "Your milestone-task attempts, including failed ones.",
+                "empty": "You have no milestone attempts yet.",
+                "emptyHint": "Join a course and work on a milestone to see your attempts here.",
+                "colTask": "Task",
+                "colMilestone": "Milestone",
+                "colCourse": "Course",
+                "colResult": "Result",
+                "colScore": "Score",
+                "colDate": "Attempted",
+                "passed": "Passed",
+                "failed": "Failed"
+            },
+            "feedback": {
+                "title": "Feedback",
+                "subtitle": "Feedback you received from challenges, tasks and CV reviews.",
+                "empty": "You have no feedback yet.",
+                "source": {
+                    "challenge": "Challenge",
+                    "task": "Task",
+                    "cv": "CV"
+                }
+            }
+        }
+    },
+    "nav": {
+        "brand": "StarCi Academy",
+        "home": "Home",
+        "courses": "Courses",
+        "community": "Community",
+        "practice": "Practice",
+        "contact": "Contact",
+        "logout": "Logout",
+        "profile": "Profile",
+        "settings": "Settings",
+        "signIn": "Sign In",
+        "learn": "Learn",
+        "toggleLanguage": "Toggle Language",
+        "appearance": "Appearance",
+        "mobileMenu": "Mobile navigation",
+        "courseMenu": "Course menu",
+        "contentOutline": "Lesson outline",
+        "collapseLeftRail": "Collapse left rail",
+        "expandLeftRail": "Expand left rail",
+        "collapseRightRail": "Hide right rail",
+        "expandRightRail": "Show right rail",
+        "dashboard": "Dashboard",
+        "guestPrompt": "Sign in to track your progress"
+    },
+    "footer": {
+        "tagline": "Learn by building real systems with your own hands — sharp enough for any technical interview.",
+        "exploreTitle": "Explore",
+        "supportTitle": "Support",
+        "links": {
+            "courses": "Courses",
+            "blog": "Blog",
+            "talents": "Talents",
+            "community": "Community",
+            "contact": "Contact",
+            "terms": "Terms",
+            "privacy": "Privacy"
+        },
+        "madeBy": "Built by Nguyễn Văn Tự Cường",
+        "copyright": "© {year} StarCi Academy"
+    },
+    "legal": {
+        "contactNote": "Questions about these terms or your data? Email cuongnvtse160875@gmail.com.",
+    "lastUpdated": "Last updated: {date}",
+        "terms": {
+            "title": "Terms of Service",
+            "description": "The terms for using StarCi Academy.",
+            "body": "The full terms document is being finalized. By using StarCi Academy you agree to use the platform for lawful learning and to respect the ownership of course content. A detailed version will be published on this page."
+        },
+        "privacy": {
+            "title": "Privacy Policy",
+            "description": "How StarCi Academy collects and uses your data.",
+            "body": "The full privacy policy is being finalized. StarCi Academy collects only the data needed to run your learning (account, progress, submissions) and does not sell your data to third parties. A detailed version will be published on this page."
+        }
+    },
+    "search": {
+        "label": "Search",
+        "placeholder": "Search",
+        "filtersAria": "Search filters",
+        "noResults": "No matches found.",
+        "suggestions": {
+            "courses": "Courses",
+            "modules": "Modules",
+            "videos": "Videos",
+            "challenges": "Challenges",
+            "contents": "Contents",
+            "lessonVideos": "Lesson videos",
+            "flashcards": "Flashcard decks",
+            "milestones": "Progress",
+            "milestoneTasks": "Tasks"
+        },
+        "idleHint": "Type to search courses, modules, lessons…",
+        "popular": "Popular",
+        "hint": {
+            "move": "to move",
+            "open": "to open",
+            "close": "esc to close"
+        }
+    },
+    "cookieConsent": {
+        "title": "Cookies",
+        "body": "We use necessary cookies to sign you in and remember your language, plus analytics cookies (Google Analytics) to improve your experience. You can accept, reject, or customize.",
+        "acceptAll": "Accept all",
+        "reject": "Reject",
+        "customize": "Customize",
+        "modalTitle": "Cookie preferences",
+        "modalBody": "Choose which cookies you allow. Necessary cookies are always on so the system works.",
+        "necessaryLabel": "Necessary",
+        "necessaryHint": "Sign-in, security and language. Always on.",
+        "analyticsLabel": "Analytics",
+        "analyticsHint": "Google Analytics — anonymous metrics to improve the product.",
+        "save": "Save choices"
+    },
+    "courseContents": {
+        "empty": "This course has no content yet.",
+        "error": "Couldn't load the course contents.",
+        "retry": "Try again",
+        "completion": "Completed",
+        "progress": "Progress",
+        "contentCount": "{read}/{total}",
+        "resizeRail": "Drag to resize the content rail",
+        "lessonsStat": "Content {read}/{total}",
+        "challengesStat": "Challenges {done}/{total}",
+        "challengesOptional": "Challenges {done}/{total} · optional",
+        "moduleLessons": "{read}/{total} lessons",
+        "tasksStat": "Tasks {done}/{total}",
+        "resume": "Continue learning",
+        "allDone": "You've completed this course 🎉",
+        "searchAria": "Search content",
+        "searchPlaceholder": "Search content...",
+        "premium": "Premium content",
+        "read": "Read",
+        "unread": "Unread",
+        "done": "Done",
+        "notDone": "Not done",
+        "noMatch": "No content matches your search.",
+        "lessonCount": "{count} items",
+        "milestones": "Capstone",
+        "lessonsLabel": "Content",
+        "challengesLabel": "Challenge",
+        "lessonsHint": "lessons read",
+        "challengesHint": "completed",
+        "continueEyebrow": "Pick up where you left off",
+        "keepGoing": "Keep going",
+        "metaModules": "{count} modules",
+        "metaHours": "~{hours}h of reading",
+        "metaLearners": "{count} learners",
+        "metaModulesLabel": "modules",
+        "metaHoursLabel": "h reading",
+        "metaLearnersLabel": "learners",
+        "capstoneEyebrow": "Content done — on to your project",
+        "resumeCapstone": "Continue project",
+        "challengesByDifficulty": "Challenges by difficulty",
+        "difficulty": {
+            "beginner": "Easy",
+            "intermediate": "Medium",
+            "advanced": "Hard",
+            "insane": "Insane"
+        },
+        "status": {
+            "notStarted": "Not started",
+            "inProgress": "In progress",
+            "failed": "Failed",
+            "completed": "Completed"
+        },
+        "taskType": {
+            "design": "Design",
+            "techIntegrate": "Integration",
+            "business": "Business"
+        }
+    },
+    "onThisPage": {
+        "title": "On this page"
+    },
+    "learnTabs": {
+        "contents": "Contents",
+        "lesson": "Lesson",
+        "onThisPage": "On this page"
+    },
+    "contentAi": {
+        "title": "Ask StarCi AI",
+        "hint": "Ask anything about this content.",
+        "placeholder": "Ask about this content...",
+        "ask": "Ask AI",
+        "send": "Send",
+        "pickModel": "Pick model",
+        "clear": "Clear chat",
+        "clearHint": "Delete this lesson's whole conversation.",
+        "clearAction": "Clear",
+        "settings": "Settings",
+        "modelLabel": "Reply model",
+        "thinking": "Thinking…",
+        "error": "Sorry, I couldn't answer that. Please try again.",
+        "suggestions": {
+            "summarize": "Summarize this lesson in 3 key points",
+            "hardest": "Explain the hardest part",
+            "example": "Give me a real-world example",
+            "remember": "What should I remember from this?"
+        },
+        "askAboutSelection": "Ask AI about this",
+        "selectionHintTitle": "Ask AI about any passage",
+        "selectionHint": "Highlight a passage in the lesson and an ask-AI button appears.",
+        "dismissHint": "Dismiss tip",
+        "new": "New",
+        "clearSelection": "Clear selection",
+        "aboutPassage": "About the passage “{passage}”:",
+        "selectionSuggestions": {
+            "explain": "Explain this passage",
+            "example": "Give an example",
+            "simplify": "Explain it more simply"
+        },
+        "conversations": "Conversations",
+        "chatHistory": "Chat history",
+        "newConversation": "New conversation",
+        "untitled": "Untitled",
+        "searchConversations": "Search conversations…",
+        "noConversations": "No conversations yet",
+        "deleteConversation": "Delete conversation",
+        "turnsCount": "{count} messages"
+    },
+    "contentActions": {
+        "title": "Actions"
+    },
+    "lessonRail": {
+        "flashcards": {
+            "title": "Review this lesson",
+            "count": "{decks} decks · {cards} cards",
+            "review": "Review"
+        },
+        "challenges": {
+            "title": "Practice this lesson",
+            "count": "{count} challenges",
+            "practice": "Start challenges"
+        }
+    },
+    "courses": {
+        "featuredTitle": "Featured courses",
+        "viewCourse": "View Course",
+        "searchPlaceholder": "Search courses...",
+        "learners": "{count} learners",
+        "empty": "No courses yet",
+        "loadError": "Couldn't load courses",
+        "retry": "Try again",
+        "count": "{count} courses"
+    },
+    "course": {
+        "enroll": "Enroll",
+        "enrolled": "Enrolled",
+        "priceUsdHint": "≈ {amount} for international payments",
+        "continueLearning": "Continue Learning",
+        "tryLearning": "Try for free",
+        "trial": "Trial",
+        "paywall": {
+            "title": "Premium content",
+            "titleNamed": "Unlock {course}",
+            "description": "You're reading a preview. Enroll to learn the whole course.",
+            "buy": "Enroll in course",
+            "back": "Go back",
+            "unlock": {
+                "content": "All lessons",
+                "challenges": "Every auto-graded challenge",
+                "project": "Personal project + review"
+            }
+        },
+        "prerequisites": "Prerequisites",
+        "usersEnrolled": "{count} users have enrolled",
+        "cvTitle": "CV track",
+        "cvDescription": "Prepare and refine your developer CV with guidance from this course.",
+        "cvPlaceholder": "CV tools and assignments will appear here.",
+        "finalProjectTitle": "Personal project",
+        "finalProjectDescription": "Requirements, milestones, and submission details for your personal project in this course.",
+        "finalProjectPlaceholder": "Project brief and workspace will appear here."
+    },
+    "courseLanding": {
+        "valueProps": "What you'll learn",
+        "curriculum": "Course content",
+        "prerequisites": "Before you start",
+        "faq": "Frequently asked questions",
+        "premium": "Premium",
+        "currentPhase": "Current",
+        "soldOut": "Sold out",
+        "slotsLeft": "{count} seats left",
+        "slotsLeftPhase": "{count} {phase} seats left",
+        "currentOpen": "Open now",
+        "previewCount": "{count} preview",
+        "moduleMeta": "{lessons} lessons · {minutes} min",
+        "notFound": "Course not found.",
+        "errorTitle": "Couldn't load data.",
+        "retry": "Retry",
+        "stats": {
+            "learners": "Learners",
+            "modules": "Modules",
+            "lessons": "Lessons",
+            "hours": "Hours",
+            "challenges": "Challenges"
+        },
+        "tier": {
+            "foundation": "Foundation",
+            "intermediate": "Intermediate",
+            "advanced": "Advanced"
+        },
+        "phase": {
+            "pioneer": "Pioneer",
+            "earlyBird": "Early bird",
+            "regular": "Regular"
+        }
+    },
+    "programmingLanguage": {
+        "typescript": "TypeScript",
+        "java": "Java",
+        "csharp": "C#",
+        "go": "Go"
+    },
+    "module": {
+        "aria": "Module {index}",
+        "pathIntroduction": "Introduction",
+        "numContents": "{count} contents",
+        "chipContentsHint": "Reading items in this module.",
+        "chipVideosHint": "Lesson videos in this module.",
+        "chipChallengesHint": "Challenges in this module.",
+        "tabListAria": "Module learn sections",
+        "searchPlaceholder": "Search modules...",
+        "searchContentsPlaceholder": "Search lessons...",
+        "tier": {
+            "foundation": "Foundation",
+            "intermediate": "Intermediate",
+            "advanced": "Advanced"
+        }
+    },
+    "modules": {
+        "title": "Modules"
+    },
+    "mindMap": {
+        "title": "Mind map",
+        "fullscreen": "View fullscreen",
+        "exitFullscreen": "Exit fullscreen",
+        "zoomIn": "Zoom in",
+        "zoomOut": "Zoom out",
+        "fitView": "Fit to view",
+        "continue": "Continue learning",
+        "continueAria": "Continue to the next content",
+        "allDone": "You've finished all the content",
+        "overall": "Course completion",
+        "moduleLessons": "{read}/{total} lessons",
+        "signInToTrack": "Sign in to track your progress",
+        "legend": {
+            "done": "Done",
+            "inProgress": "In progress",
+            "notStarted": "Not started",
+            "locked": "Upgrade needed",
+            "current": "You are here"
+        }
+    },
+    "enrollGate": {
+        "title": "Unlock {surface}",
+        "description": "Enroll in the course to unlock this section and start practising.",
+        "cta": "Enroll in course",
+        "locked": "Enrollment required"
+    },
+    "foundations": {
+        "title": "Foundations",
+        "description": "Technical foundations and reference materials for the course.",
+        "gridDescription": "Choose a topic to explore reference materials and learning resources.",
+        "searchPlaceholder": "Search topics...",
+        "searchEmpty": "No topics match \"{query}\".",
+        "searchResourcesPlaceholder": "Search resources...",
+        "searchResourcesEmpty": "No resources match \"{query}\".",
+        "emptyCategories": "No foundation topics are available yet.",
+        "count": "{count, plural, =0 {No resources} one {# resource} other {# resources}}",
+        "categoryCount": "{count, plural, =0 {No topics} one {# topic} other {# topics}}",
+        "empty": "No resources in this category yet.",
+        "viewDetail": "View details",
+        "selectPrompt": "Select a resource from the list to view its content.",
+        "detailTitle": "Resource",
+        "notFound": "This resource could not be found.",
+        "openLink": "Open link",
+        "openDocument": "Read article",
+        "openVideo": "Watch video",
+        "recommended": "Recommended",
+        "authorBy": "By {author}",
+        "kind": {
+            "external_link": "External link",
+            "video": "Video",
+            "document": "Article"
+        }
+    },
+    "headhuntings": {
+        "title": "Headhuntings",
+        "description": "IT recruitment partners who support StarCI Academy learners with job opportunities.",
+        "count": "{count, plural, =0 {No consultants} one {# consultant} other {# consultants}}",
+        "empty": "No consultants are listed yet.",
+        "searchPlaceholder": "Search consultants",
+        "companySearchPlaceholder": "Search recruitment companies",
+        "viewProfile": "View profile",
+        "companyLabel": "Company",
+        "openCompany": "View company",
+        "modalTitle": "Headhunter profile",
+        "linkedin": "LinkedIn",
+        "zalo": "Zalo",
+        "companyNotFound": "Company not found.",
+        "companyDetailTitle": "Recruitment company",
+        "website": "Website",
+        "address": "Address",
+        "phone": "Phone",
+        "email": "Email"
+    },
+    "cv": {
+        "title": "CV",
+        "preview": {
+            "title": "CV preview (PDF)",
+            "fullscreen": "View full"
+        },
+        "submission": {
+            "fileCardTitle": "Submitted CV information",
+            "submittedAtPending": "Submission time not available yet.",
+            "download": "Download",
+            "aiReviewSectionTitle": "AI review",
+            "reviewAction": "Run AI review",
+            "reviewActionRerun": "Re-run AI review",
+            "reviewLevelLabel": "Review level",
+            "reviewLevelPlaceholder": "Select a rubric level",
+            "reviewLevelSectionDescription": "Current rubric: {level}. Use Update to open the list and pick another level.",
+            "reviewLevelUpdate": "Update",
+            "reviewLevelDetails": {
+                "titleFallback": "Review level details",
+                "selectionTitle": "Choose review level",
+                "subtitle": "This rubric will be used to review your CV.",
+                "emptyDescription": "This review level does not have a detailed description yet.",
+                "selected": "Selected",
+                "close": "Close"
+            },
+            "reviewPlanTitle": "AI review plan",
+            "feedbackTitle": "CV feedback",
+            "feedbackSummary": "Your CV has been received. Mentor feedback will be provided in the next review session.",
+            "updateAction": "Update CV",
+            "attemptsTitle": "Submitted CV versions",
+            "defaultCvFileName": "document.pdf",
+            "aiBrand": "StarCi AI",
+            "toast": {
+                "errorTitle": "Something went wrong",
+                "successTitle": "Done",
+                "authTokenMissing": "You need to be signed in to continue.",
+                "submissionNotFound": "No CV submission was found for your account.",
+                "reviewFailed": "We could not start CV review. Please try again.",
+                "reviewLevelRequired": "Please choose a review level before starting."
+            },
+            "attempts": {
+                "file": "CV file",
+                "submittedAt": "Submitted at",
+                "feedback": "Feedback",
+                "actions": "Actions",
+                "viewDetails": "View details"
+            },
+            "attemptsDrawer": {
+                "title": "Your CV uploads",
+                "openButton": "View uploads",
+                "empty": "No uploaded versions yet.",
+                "loadError": "We could not load your CV versions. Please try again.",
+                "ariaTable": "Table of your CV upload attempts",
+                "columnVersion": "Version",
+                "columnStatus": "Status",
+                "attemptLine": "Attempt {number}",
+                "feedbackEmpty": "—"
+            },
+            "attemptAnalysis": {
+                "title": "CV analysis details",
+                "titleWithAttempt": "CV analysis details - attempt {number}",
+                "empty": "No detailed analysis is available for this attempt yet.",
+                "openFile": "Open CV file"
+            }
+        },
+        "form": {
+            "submit": "Upload CV",
+            "cancel": "Cancel",
+            "modal": {
+                "title": "Update CV",
+                "description": "Upload a new CV file to replace the current version.",
+                "confirm": "Confirm submission"
+            },
+            "cvFile": {
+                "label": "CV file (PDF)",
+                "hint": "Only PDF files are accepted, up to 10MB."
+            },
+            "errors": {
+                "fileRequired": "CV file is required.",
+                "fileTypeInvalid": "CV file must be a PDF.",
+                "fileSizeInvalid": "File size must be 10MB or less."
+            }
+        }
+    },
+    "finalProject": {
+        "dashboard": {
+            "title": "Personal project",
+            "subtitle": "Build your project milestone by milestone — graded by AI.",
+            "progress": "Progress",
+            "tasksDone": "{done}/{total} tasks",
+            "nextTask": "Next task",
+            "continue": "Continue",
+            "allDone": "All tasks complete",
+            "github": "GitHub",
+            "connected": "Connected",
+            "notConnected": "Not connected",
+            "statDone": "Passed",
+            "statLocked": "Locked",
+            "statAttempts": "Attempts",
+            "statAvg": "Avg score",
+            "completion": "Completed",
+            "keepGoing": "Keep going",
+            "statsLine": "{done}/{total} tasks · {attempts} submissions · {avg} avg",
+            "taskDone": "Completed",
+            "taskTodo": "Not started",
+            "empty": "No milestones in this project yet."
+        },
+        "title": "Personal project",
+        "aria": "Milestone {index}",
+        "page": {
+            "title": "Personal project",
+            "searchTaskPlaceholder": "Search tasks...",
+            "description": "Bring your personal project to life through a structured Milestone roadmap. With StarCI AI by your side, every line of code and solution is deeply evaluated, helping you optimize product quality throughout the process.",
+            "submit": {
+                "title": "Submit project idea",
+                "placeholder": "Paste your GitHub repository link",
+                "ideaPlaceholder": "Describe your personal project idea...",
+                "ideaRequired": "Please enter your idea before submitting.",
+                "ideaTooShort": "Your idea must be at least 10 characters.",
+                "milestoneMissing": "No milestone found for idea submission.",
+                "submitFailed": "Failed to submit idea. Please try again.",
+                "submitOnceNote": "Note: idea can only be submitted once.",
+                "submittedOnce": "You already submitted your idea and cannot submit again.",
+                "lastSubmission": "Latest submission: 21/04/2026 20:45",
+                "cta": "Submit"
+            },
+            "submitGithub": {
+                "title": "Project GitHub",
+                "settingsTitle": "Grading settings",
+                "langFieldTitle": "Grading language",
+                "langFieldHint": "Your backend is graded against this language's approach criteria.",
+                "modelFieldTitle": "Grading model",
+                "modelFieldHint": "Pick the AI model that grades your project — Economy tier and up.",
+                "repoFieldTitle": "GitHub URL",
+                "branchFieldTitle": "Branch to review",
+                "branchPlaceholder": "main",
+                "branchInvalid": "Use only letters, numbers, and . _ / -",
+                "branchTooLong": "Branch name is too long.",
+                "missingRepoForReview": "Enter and save a valid GitHub URL first.",
+                "placeholder": "https://github.com/your-account/personal-project",
+                "urlRequired": "Please enter your GitHub URL.",
+                "urlInvalid": "Please enter a valid URL.",
+                "urlInvalidGithub": "Please enter a valid GitHub URL.",
+                "syncing": "Saving…",
+                "resetButton": "Reset",
+                "ctaEvaluate": "Evaluate progress",
+                "ctaReEvaluate": "Re-evaluate progress",
+                "syncFailed": "Failed to sync. Please try again.",
+                "privateTokenFieldTitle": "GitHub token (private repo)",
+                "privateTokenPlaceholder": "github_pat_… or ghp_…",
+                "privateTokenHint": "Only needed for a private repo. Create a fine-grained token (Contents: read) scoped to this repo — it's encrypted on save and never shown again.",
+                "privateTokenSaveButton": "Save token",
+                "privateTokenRemoveButton": "Remove token"
+            },
+            "reviewPreview": {
+                "title": "Latest result",
+                "scoreLabel": "Score: {score}",
+                "scorePending": "No score yet"
+            },
+            "attemptsDrawer": {
+                "title": "Project review history",
+                "openListButton": "See more",
+                "feedbackEmpty": "No summary feedback yet.",
+                "loadError": "Could not load the list. Please try again.",
+                "empty": "No review attempts yet."
+            },
+            "feedback": {
+                "title": "AI feedback",
+                "content": "Temporary: project architecture is clear, but core-flow tests and deployment documentation should be improved."
+            },
+            "history": {
+                "title": "Feedback history",
+                "columns": {
+                    "gitUrl": "GitHub link",
+                    "submittedAt": "Submitted at",
+                    "feedback": "Feedback"
+                },
+                "viewDetails": "View details",
+                "items": {
+                    "v1": {
+                        "submittedAt": "19/04/2026 09:10",
+                        "feedback": "Add an overall architecture section to the README."
+                    },
+                    "v2": {
+                        "submittedAt": "21/04/2026 20:45",
+                        "feedback": "API is more stable; add integration tests for auth."
+                    }
+                }
+            },
+            "milestones": {
+                "title": "Project milestones",
+                "week": "Week",
+                "items": {
+                    "scope": {
+                        "title": "Milestone 1 - Scope & Design",
+                        "dueAt": "Week 1",
+                        "requirements": {
+                            "problem": {
+                                "title": "Define the problem",
+                                "description": "Describe the target problem, user persona, and success criteria."
+                            },
+                            "architecture": {
+                                "title": "Architecture design",
+                                "description": "Draft system architecture, data flow, and core modules."
+                            }
+                        }
+                    },
+                    "implementation": {
+                        "title": "Milestone 2 - Implementation",
+                        "dueAt": "Week 2",
+                        "requirements": {
+                            "api": {
+                                "title": "Build core features",
+                                "description": "Implement the primary APIs/features from the approved scope."
+                            },
+                            "quality": {
+                                "title": "Quality checks",
+                                "description": "Add baseline tests and error handling for critical flows."
+                            }
+                        }
+                    },
+                    "release": {
+                        "title": "Milestone 3 - Release",
+                        "dueAt": "Week 3",
+                        "requirements": {
+                            "deploy": {
+                                "title": "Deploy demo",
+                                "description": "Ship a publicly accessible demo release."
+                            },
+                            "readme": {
+                                "title": "Complete documentation",
+                                "description": "Update README with setup, architecture, and run guide."
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "task": {
+        "briefTitle": "Instructions",
+        "criteriaTitle": "Grading criteria",
+        "codeImplementationsTitle": "Implementation guides",
+        "codeImplementationsTabsAria": "Implementation guides by language",
+        "criteriaScore": "{score} pts",
+        "criteriaNoHint": "No guidance available for this criterion.",
+        "loadErrorTitle": "Could not load this task",
+        "loadErrorDescription": "Please check your connection and try again.",
+        "loadErrorRetry": "Retry",
+        "loadingResults": "Loading grading results...",
+        "resultsTitle": "Grading results",
+        "previewLockedAlertTitle": "Finish the previous task first",
+        "previewLockedAlertDescription": "You can read this task’s criteria. Grading, feedback history, and GitHub fields stay disabled until you complete the step before this one.",
+        "previewLockedGoToCurrentTaskButton": "Go to current task",
+        "personalProjectDockerMultiStageIntro": "Package your NestJS application with a multi-stage Dockerfile to keep image size small. Build the image and push it to a container registry such as Docker Hub.",
+        "attemptNumber": "Attempt #{number}",
+        "attemptScore": "{score} pts",
+        "loadingFeedback": "Loading detailed feedback...",
+        "noFeedback": "No detailed feedback available.",
+        "openFeedbackDetailsButton": "View feedback details",
+        "feedbackDetailsModalTitle": "Feedback details",
+        "feedbackDetailsLoadError": "Could not load feedback details. Please try again.",
+        "suggestionLabel": "Suggestion",
+        "jobStatus": {
+            "queued": "Waiting for grading...",
+            "processing": "Grading with AI...",
+            "completed": "Grading complete!",
+            "failed": "Grading failed."
+        }
+    },
+    "lesson": {
+        "videos": "Videos",
+        "videosCount": "{count} videos",
+        "videosAria": "{count} videos",
+        "videoUnavailable": "This video is not available."
+    },
+    "content": {
+        "title": "Content",
+        "language": "Language",
+        "mindMapAria": "Course and modules overview",
+        "mindMapEmpty": "No modules to show yet.",
+        "mindMapHelloWorld": "Hello world",
+        "mindMapModuleToggleAria": "Show or hide this module's lessons",
+        "mindMapStartLesson": "Start lesson",
+        "mindMapPremium": "Premium",
+        "mindMapClose": "Close",
+        "mindMapDetailsEmpty": "No description for this lesson yet.",
+        "count": "{count} items",
+        "empty": "No content yet.",
+        "number": "Content {index}",
+        "minutesRead": "{minutes} min read",
+        "minutesShort": "{minutes} min",
+        "markedRead": "Lesson completed — your progress is saved.",
+        "position": "Content {position}/{total}",
+        "prevLesson": "Previous",
+        "nextLesson": "Next",
+        "challengeCount": "{count} challenges",
+        "outcomes": "What you'll learn",
+        "codeLessonCount": "{count} code sections",
+        "lessonVideosEmpty": "No lesson videos available for this content.",
+        "codeLesson": {
+            "empty": "No code explaining or implementation for this lesson yet.",
+            "explainingsHeading": "Code explaining",
+            "implementationsHeading": "Code implementation",
+            "sectionsTabsAria": "Code lesson sections",
+            "explainingsTabsAria": "Code explaining snippets",
+            "implementationsTabsAria": "Implementation languages"
+        },
+        "codeExplainings": {
+            "empty": "No critical code snippets for this lesson yet.",
+            "indexLabel": "Snippet {index}"
+        },
+        "codeImplementation": {
+            "empty": "No implementation guides for this lesson yet.",
+            "guideHeading": "Guide",
+            "exampleHeading": "Example"
+        },
+        "tabs": {
+            "content": "Content",
+            "lessonVideos": "Lesson videos",
+            "codeExplainings": "Code lesson",
+            "challenges": "Challenges"
+        },
+        "unread": "Unread",
+        "hasLecture": "Includes lecture",
+        "advancedKnowledge": "Advanced",
+        "read": "Read",
+        "save": "Save",
+        "saved": "Saved",
+        "unsave": "Remove from saved",
+        "share": "Share",
+        "shareTooltip": "Share this content",
+        "linkCopied": "Link copied to clipboard!",
+        "fullscreen": "View fullscreen",
+        "scanQr": "Scan QR code to open on mobile",
+        "copyLink": "Copy link",
+        "mindMapReadDetails": "Read details"
+    },
+    "challenge": {
+        "title": "Challenges",
+        "do": "Do",
+        "inProgress": "In progress",
+        "progress": {
+            "completed": "Completed · {score}/{maxScore} pts",
+            "inProgress": "In progress · {score}/{maxScore} pts",
+            "failed": "Not passed · {score}/{maxScore} pts"
+        },
+        "quota": {
+            "overQuota": "You've run out of AI quota ({used}/{quota} credits). Upgrade to keep grading.",
+            "addQuota": "Add quota",
+            "resetAt": "Quota recovers at {time}",
+            "aiUsage": "AI Usage",
+            "usage": "{used}/{quota} credits",
+            "remaining": "{remaining} credits left",
+            "quotaReached": "Quota reached",
+            "laneUsage": {
+                "auto": "Auto • {used}/{quota} credits",
+                "premium": "Premium • {used}/{quota} credits",
+                "byok": "BYOK"
+            }
+        },
+        "viewAttempts": "View previous attempts",
+        "pass": "Pass",
+        "fail": "Fail",
+        "minimumPassRequirement": "(Minimum required score is {score})",
+        "minimumPassRequirementAll": "(All requirements must pass to pass the challenge)",
+        "lastFeedback": "Last feedback",
+        "noFeedback": "No feedback yet.",
+        "count": "{count} challenges",
+        "empty": "No challenges yet.",
+        "errorTitle": "Couldn't load challenges",
+        "errorDescription": "Something went wrong fetching the challenges. Try again.",
+        "retry": "Try again",
+        "hintTag": "Has a hint",
+        "number": "Challenge {index}",
+        "status": {
+            "notStarted": "Not started",
+            "inProgress": "In progress",
+            "failed": "Not passed",
+            "completed": "Completed"
+        },
+        "cta": {
+            "start": "Start",
+            "continue": "Continue",
+            "retry": "Retry",
+            "review": "Review"
+        },
+        "attempts": {
+            "some": "Tried {count} times",
+            "none": "Not attempted yet",
+            "bestScore": "{score}/{maxScore}"
+        },
+        "difficulty": {
+            "easy": "Easy",
+            "medium": "Medium",
+            "hard": "Hard",
+            "insane": "Insane",
+            "expert": "Expert"
+        },
+        "steps": {
+            "title": "Steps",
+            "count": "{count} steps",
+            "label": "Step {index}"
+        },
+        "tabs": {
+            "work": "Submission",
+            "steps": "Steps",
+            "brief": "Brief",
+            "submit": "Submit & result"
+        },
+        "hint": "Hint",
+        "tasks": "Tasks",
+        "requirements": "Requirements",
+        "requirement": {
+            "label": "Requirement {index}",
+            "purpose": "Purpose",
+            "technicalConstraints": "Technical Constraints",
+            "proTipsHints": "Pro Tips & Hints",
+            "forbidden": "Forbidden"
+        },
+        "outputs": "Outputs",
+        "prerequisites": "Prerequisites",
+        "language": "Language",
+        "gradingSettings": "Grading settings",
+        "yourScore": "Your result",
+        "score": "{score} pts",
+        "battle": {
+            "cta": "Battle"
+        },
+        "submissionModal": {
+            "title": "Submit",
+            "empty": "No submission requirements for this challenge yet.",
+            "requirement": "Requirement {index}",
+            "yourScore": "Score: {score}",
+            "yourScoreLabel": "Your score",
+            "scoreFraction": "{earned}/{max}",
+            "attempts": "Attempts: {count}",
+            "submit": "Submit",
+            "viewAttempts": "View Attempts",
+            "urlLabel": "Submission URL",
+            "urlPlaceholder": "Paste your submission URL",
+            "errors": {
+                "urlRequired": "A submission URL is required.",
+                "invalidGithubUrl": "Enter a valid GitHub URL (https://github.com/owner or https://github.com/owner/repo).",
+                "invalidGoogleDocsUrl": "Enter a valid Google Docs, Sheets, or Slides URL (https://docs.google.com/...)."
+            },
+            "loading": "Updating submissions…",
+            "lastAttemptScore": "Your last attempt score is {earned}/{max}",
+            "lastAttemptScoreWithRequirement": "Your last attempt score is <n>{earned}</n><n>/</n><n>{max}</n>. Minimum required <n>{required}</n>.",
+            "jobStatus": {
+                "queued": "Your submission is in the queue — hang tight…",
+                "processing": "StarCi AI is analyzing your submission — hang tight...",
+                "completed": "Your submission has been analyzed by StarCi AI.",
+                "failed": "Failed"
+            }
+        },
+        "back": "Back to lesson"
+    },
+    "submissionAttempts": {
+        "title": "Submission attempts",
+        "subtitle": "Attempts for this submission requirement.",
+        "noAttempts": "No submission attempts yet.",
+        "attemptLine": "Attempt {number}",
+        "viewDetails": "View details",
+        "viewSubmission": "View submission"
+    },
+    "submissionResult": {
+        "backToChallenge": "Back to challenge",
+        "title": "Submission result",
+        "passNeeded": "need {score} to pass",
+        "gradedBy": "graded by",
+        "history": "Submission history",
+        "resultLabel": "Result",
+        "feedbackLabel": "Feedback",
+        "attempts": "Attempts",
+        "passed": "Passed",
+        "failed": "Not passed",
+        "emptyAttempts": "No attempts yet",
+        "emptyAttemptsHint": "Submit your work to see the grading result here.",
+        "noFeedback": "No detailed feedback for this attempt.",
+        "error": "Couldn't load the result.",
+        "retry": "Retry"
+    },
+    "personalProjectResult": {
+        "backToTask": "Back to project",
+        "title": "Grading result",
+        "history": "Submission history",
+        "resultLabel": "Result",
+        "feedbackLabel": "Feedback",
+        "attempts": "Attempts",
+        "passed": "Passed",
+        "failed": "Not passed",
+        "viewRepo": "View repo",
+        "emptyAttempts": "No attempts yet",
+        "emptyAttemptsHint": "Evaluate your progress to see the grading result here.",
+        "noFeedback": "No detailed feedback for this attempt.",
+        "error": "Couldn't load the result.",
+        "retry": "Retry"
+    },
+    "timeAgo": {
+        "justNow": "Just now",
+        "yearsAgo": "{years} years ago",
+        "monthsAgo": "{months} months ago",
+        "daysAgo": "{days} days ago",
+        "daysHoursAgo": "{days} days {hours} hours ago",
+        "hoursAgo": "{hours} hours ago",
+        "hoursMinutesAgo": "{hours} hours {minutes} minutes ago",
+        "minutesAgo": "{minutes} minutes ago",
+        "minutesSecondsAgo": "{minutes} minutes {seconds} seconds ago",
+        "secondsAgo": "{seconds} seconds ago"
+    },
+    "feedback": {
+        "detailsTitle": "Feedback details",
+        "empty": "No feedback yet.",
+        "openFileOnGithub": "Open file on GitHub",
+        "perfect": "Perfect",
+        "suggestion": "Suggestion",
+        "severity": {
+            "high": "High priority",
+            "medium": "Medium priority",
+            "low": "Low priority",
+            "unknown": "Unknown"
+        }
+    },
+    "leaderboard": {
+        "title": "Leaderboard",
+        "topAchievers": "Top Achievers",
+        "subtitle": "Ranked by total XP — challenges, lessons read, and completed milestones all count.",
+        "yourRank": "Your rank",
+        "rankPrefix": "Rank",
+        "xp": "{xp} XP",
+        "xpLabel": "XP",
+        "you": "You",
+        "refresh": "Refresh",
+        "champion": "Rank #1 · leading the course",
+        "updatedAt": "Updated {time}",
+        "columns": {
+            "rank": "Rank",
+            "learner": "Learner",
+            "xp": "XP"
+        },
+        "breakdown": {
+            "title": "XP breakdown",
+            "challenge": "Challenges",
+            "reading": "Reading",
+            "milestone": "Milestones",
+            "total": "Total"
+        },
+        "stats": {
+            "completedChallenges": "{count} challenges completed",
+            "lessonsRead": "{count} lessons read",
+            "milestones": "{count} milestones"
+        },
+        "categories": {
+            "label": "Categories",
+            "total": "Total XP",
+            "challenge": "Challenges",
+            "reading": "Reading",
+            "milestone": "Milestones",
+            "coding": "Coding",
+            "comingSoon": "Coming soon",
+            "captionChallenge": "{count} done · ×1",
+            "captionReading": "{count} read · ×3",
+            "captionMilestone": "{count} tasks · ×10"
+        },
+        "rankedBy": "Ranked by {category}",
+        "empty": "No one is on the leaderboard yet. Solve a challenge or read a lesson to score your first points!",
+        "myRankEmpty": "You have no activity in this course yet. Solve a challenge or read a lesson to join the leaderboard.",
+        "error": "Could not load the leaderboard. Please try again."
+    },
+    "practice": {
+        "retry": "Try again",
+        "cockpit": {
+            "loadError": "Couldn't load your progress",
+            "byDifficulty": "By difficulty",
+            "metric": {
+                "solved": "Solved",
+                "points": "Points",
+                "rank": "Rank",
+                "percentile": "Top percentile"
+            }
+        },
+        "filters": {
+            "searchPlaceholder": "Search problems by name…",
+            "allDifficulties": "All",
+            "allDomains": "All topics",
+            "difficultyAria": "Filter by difficulty",
+            "statusAria": "Filter by status",
+            "domainAria": "Filter by topic",
+            "sortAria": "Sort",
+            "status": {
+                "all": "All",
+                "unsolved": "Unsolved",
+                "attempted": "Attempted",
+                "solved": "Solved"
+            },
+            "sort": {
+                "default": "Default",
+                "difficulty": "Difficulty",
+                "points": "Points"
+            },
+            "grouped": "By topic",
+            "flat": "Flat list"
+        },
+        "row": {
+            "status": {
+                "solved": "Solved",
+                "attempted": "Attempted",
+                "unsolved": "Not started"
+            }
+        },
+        "catalog": {
+            "noMatch": "No problems match your filters",
+            "clearFilters": "Clear filters",
+            "loadError": "Couldn't load the problem list"
+        },
+        "tabs": {
+            "problems": "Problems",
+            "leaderboard": "Leaderboard"
+        },
+        "rail": {
+            "modeAria": "Practice mode",
+            "topicsLabel": "Topics",
+            "topicsAria": "Select topic",
+            "searchTopic": "Search topics…",
+            "searchTopicEmpty": "No topics match “{query}”"
+        },
+        "leaderboard": {
+            "you": "You",
+            "solved": "{count} solved",
+            "empty": "No one is on the leaderboard yet. Solve a problem to claim the first spot!",
+            "error": "Couldn't load the leaderboard"
+        }
+    },
+    "codingPractice": {
+        "title": "Algorithm Practice",
+        "subtitle": "Solve problems and get your code judged instantly",
+        "allDifficulties": "All",
+        "empty": "No problems yet.",
+        "solved": "Solved",
+        "samples": "Examples",
+        "example": "Example",
+        "input": "Input",
+        "output": "Output",
+        "submit": "Submit",
+        "judging": "Judging…",
+        "result": "Result",
+        "passed": "Passed",
+        "history": "Submissions",
+        "hintTitle": "Approach hints",
+        "showHint": "Show hint",
+        "hideHint": "Hide hint",
+        "solutionTitle": "Reference solution",
+        "showSolution": "Show answer",
+        "hideSolution": "Hide answer",
+        "revealConfirm": "Viewing the answer forfeits this problem's points. Continue?",
+        "points": "+{points} pts",
+        "totalPoints": "{points} pts",
+        "emptyHint": "New interview problems are being added — check back soon.",
+        "solvedOf": "Solved {solved}/{total}",
+        "allLevels": "All",
+        "filterAria": "Filter by level",
+        "level": {
+            "junior": "Junior",
+            "mid": "Mid",
+            "senior": "Senior"
+        },
+        "difficulty": {
+            "easy": "Basic",
+            "medium": "Advanced",
+            "hard": "Enterprise"
+        },
+        "domain": {
+            "arrays": "Arrays",
+            "strings": "Strings",
+            "hashing": "Hashing",
+            "twoPointers": "Two Pointers",
+            "slidingWindow": "Sliding Window",
+            "stack": "Stack",
+            "queue": "Queue",
+            "linkedList": "Linked List",
+            "trees": "Trees",
+            "heap": "Heap / Priority Queue",
+            "graph": "Graph",
+            "binarySearch": "Binary Search",
+            "sorting": "Sorting",
+            "recursion": "Recursion",
+            "backtracking": "Backtracking",
+            "dynamicProgramming": "Dynamic Programming",
+            "greedy": "Greedy",
+            "math": "Math",
+            "bitManipulation": "Bit Manipulation",
+            "matrix": "Matrix"
+        },
+        "language": {
+            "python": "Python",
+            "javascript": "JavaScript",
+            "typescript": "TypeScript",
+            "java": "Java",
+            "cpp": "C++"
+        },
+        "verdict": {
+            "pending": "Pending",
+            "judging": "Judging",
+            "accepted": "Accepted",
+            "wrongAnswer": "Wrong Answer",
+            "timeLimitExceeded": "Time Limit Exceeded",
+            "memoryLimitExceeded": "Memory Limit Exceeded",
+            "runtimeError": "Runtime Error",
+            "compileError": "Compile Error",
+            "internalError": "Internal Error"
+        }
+    },
+    "flashcard": {
+        "title": "Review",
+        "subtitle": "Lock in what you learned with spaced repetition, and drill interview answers.",
+        "empty": "No flashcards for this course yet.",
+        "study": "Study",
+        "cardCount": "{count} cards",
+        "backToDecks": "← Flashcards",
+        "backToHome": "← Review",
+        "decksLabel": "Decks by topic",
+        "due": {
+            "label": "Due today",
+            "count": "{count} cards due for review",
+            "start": "Review {count} cards",
+            "allCaught": "All caught up",
+            "allCaughtHint": "No cards are due right now. Cram a deck below to get ahead."
+        },
+        "review": {
+            "again": "Again",
+            "hard": "Hard",
+            "good": "Good",
+            "easy": "Easy",
+            "rateHint": "How well did you recall it?",
+            "error": "Could not save your review. Please try again.",
+            "sessionDoneTitle": "Session complete",
+            "sessionDoneDescription": "You reviewed {count} cards. Come back when more are due.",
+            "backToHome": "Back to review",
+            "studyAgain": "Study again",
+            "intervalDays": "{count}d"
+        },
+        "deck": {
+            "due": "{count} due",
+            "mastered": "Mastered {mastered}/{total}",
+            "found": "{count} decks found"
+        },
+        "stats": {
+            "label": "Progress",
+            "streak": "Day streak",
+            "retention": "Retention",
+            "reviewed": "Reviewed",
+            "masteredLine": "{mastered}/{total} cards mastered",
+            "mastered": "Mastered",
+            "learning": "Learning",
+            "new": "New",
+            "streakChip": "{count}-day streak",
+            "retentionCaption": "{percent}% retention",
+            "firstReviewHint": "Review your first card to start tracking mastery",
+            "barAria": "{mastered} mastered, {learning} learning, {newCount} new of {total} cards"
+        },
+        "cardProgress": "Card {current}/{total}",
+        "questionLabel": "Question",
+        "answerLabel": "Answer",
+        "showAnswer": "Show answer",
+        "showQuestion": "Show question",
+        "flipHint": "Tap the card to reveal the answer",
+        "flipBackHint": "Tap the card to go back to the question",
+        "premiumLockedTitle": "Premium card",
+        "premiumLockedHint": "Enrol in the course to unlock these cards' answers.",
+        "premiumCta": "Enrol to unlock",
+        "noAnswer": "No answer yet.",
+        "previous": "Previous",
+        "next": "Next",
+        "relatedContents": "Related lessons",
+        "relatedModules": "Related modules",
+        "searchPlaceholder": "Search flashcard decks...",
+        "searchEmpty": "No decks match \"{query}\".",
+        "mode": {
+            "study": "Study",
+            "interview": "Mock interview"
+        },
+        "interview": {
+            "record": "Answer aloud",
+            "stop": "Stop",
+            "recording": "Listening…",
+            "yourAnswer": "Your answer",
+            "transcriptHint": "Tap “Answer aloud” and speak your answer — it is transcribed live.",
+            "unsupported": "Voice input is not supported in this browser. Try Chrome or Edge.",
+            "micError": "Could not access the microphone. Check the permission and try again.",
+            "submit": "Submit answer",
+            "grading": "Grading your answer…",
+            "newQuestion": "New question",
+            "nextQuestion": "Next question",
+            "retry": "Try again",
+            "drawError": "Could not load an interview question for this deck.",
+            "gradeError": "Could not grade your answer. Please try again.",
+            "pass": "Pass",
+            "borderline": "Borderline",
+            "fail": "Not yet",
+            "score": "Score: {score}/100",
+            "strengths": "What you got right",
+            "gaps": "What to improve",
+            "hint": "Toward the model answer",
+            "followUp": "Likely follow-up",
+            "start": "Start interview",
+            "backToTopics": "← Topics",
+            "pickLabel": "Pick a topic to interview",
+            "begin": "Start interview",
+            "levelAll": "All levels",
+            "progress": "Question {current}/{total}",
+            "viewResults": "See session result",
+            "summaryTitle": "Session result",
+            "avgScore": "Average score",
+            "bestScore": "Best score",
+            "weakTags": "Topics to revisit",
+            "replay": "Interview again",
+            "setupTitle": "Ready to interview?",
+            "setupSubtitle": "Random questions across the whole course.",
+            "setupHint": "Pick a seniority level (optional), then answer {total} questions aloud.",
+            "expectCount": "{total} questions",
+            "expectVoice": "Answer by voice",
+            "expectAiGrade": "AI scores + feedback",
+            "levelLabel": "Question level",
+            "historyTitle": "Your interview progress",
+            "historyAnswered": "{count} questions practiced",
+            "modeLabel": "Practice mode",
+            "modeQuick": "Quick · 5",
+            "modeDeep": "Deep · 10",
+            "modeWeak": "Weak spots",
+            "modeLadder": "Level ladder",
+            "comingSoon": "Coming soon",
+            "readinessTitle": "Your readiness",
+            "readinessEmpty": "Answer your first question to track readiness.",
+            "pickHint": "Pick a deck from the list on the left to start a mock interview.",
+            "gateTitle": "Mock interview is for enrolled learners",
+            "gateDescription": "Enroll in the course to practice with the AI interviewer — a score and feedback after every answer."
+        },
+        "level": {
+            "junior": "Junior",
+            "middle": "Middle",
+            "senior": "Senior",
+            "staff": "Staff / SA"
+        },
+        "difficulty": {
+            "easy": "Easy",
+            "medium": "Medium",
+            "hard": "Hard",
+            "insane": "Insane"
+        },
+        "backToOverview": "Overview"
+    },
+    "aiSettings": {
+        "title": "AI Settings",
+        "subtitle": "Choose your AI source and manage your own API key",
+        "effectiveNow": "Currently using",
+        "gradeWith": "Grade with AI",
+        "pickModel": "Pick a model",
+        "subscribeToGrade": "Subscribe to a paid plan to grade with this model",
+        "belowFloorWarning": "Below the recommended level — may return inaccurate results",
+        "modelUnavailable": "This model is temporarily unavailable (no working key)",
+        "categories": {
+            "free": "Free",
+            "economy": "Economy",
+            "balanced": "Balanced",
+            "premium": "Premium",
+            "frontier": "Frontier"
+        },
+        "premiumLocked": "Paid plan required",
+        "save": "Save changes",
+        "saved": "AI settings saved",
+        "keyRemoved": "API key removed",
+        "error": "Could not update AI settings",
+        "lanes": {
+            "auto": {
+                "title": "Auto",
+                "desc": "Use the free allowance bundled with your course — basic models only."
+            },
+            "premium": {
+                "title": "Premium",
+                "desc": "Spend your paid-plan credits on any model category for higher quality."
+            },
+            "byok": {
+                "title": "Bring your own key (BYOK)",
+                "desc": "Supply your own API key — no system quota is consumed."
+            }
+        },
+        "byok": {
+            "heading": "Your API key",
+            "provider": "Provider",
+            "apiKey": "API key",
+            "apiKeyPlaceholder": "Paste your API key",
+            "apiKeyPlaceholderReplace": "Enter a new key to replace the current one",
+            "keyOnFile": "An API key is on file",
+            "removeKey": "Remove key",
+            "keyHint": "Enter an API key to use BYOK mode.",
+            "upsellCta": "View AI plans",
+            "upsellPrompt": "Want premium models without your own key?",
+            "upsellSubtitle": "ignore"
+        },
+        "byokSubtitle": "Add your own API key to use your provider's models. Your key is stored encrypted and never shown again.",
+        "systemDescription": "The system auto-picks a model by task difficulty and your plan — no setup needed. Upgrade to unlock stronger models.",
+        "upgradePrompt": "Want stronger models for grading?",
+        "ceil": {
+            "description": "Set a ceiling on the AI model per surface to control credits. Auto still picks a model by difficulty; the ceiling only caps the top.",
+            "defaultLabel": "Default ceiling",
+            "surfacesLabel": "Per-surface ceiling",
+            "inherit": "Use default",
+            "creditCaption": "Credit per call: Free 0 · Economy 5 · Balanced 20 · Premium 50 · Frontier 100",
+            "hardStop": "Auto climbs up to the ceiling, then stops",
+            "plan": "{tier} plan · max ceiling {max}",
+            "planFree": "Free plan · max ceiling {max}",
+            "creditLine": "Credit 5h: {used5h}/{limit5h} · week: {usedWeek}/{limitWeek}",
+            "error": "Couldn't load AI settings",
+            "saving": "Saving…",
+            "surface": {
+                "chatbot": "Ask AI while reading",
+                "grading": "Grading",
+                "interview": "Mock interview"
+            }
+        }
+    },
+    "membership": {
+        "title": "Membership",
+        "subtitle": "Join the StarCi community",
+        "price": "$5",
+        "priceHint": "/ month",
+        "cta": "Become a member",
+        "card": {
+            "title": "StarCi Community Membership",
+            "desc": "Everything you need to learn faster and get hired — in one membership."
+        },
+        "perks": {
+            "blog": "Full access to the premium tech blog",
+            "community": "Private community + founder Q&A",
+            "discount": "20% off every StarCi course",
+            "recruitment": "Get your profile in front of hiring partners"
+        },
+        "priceApprox": "Approximately $5/month"
+    },
+    "aiSubscription": {
+        "title": "AI Plans",
+        "subtitle": "Upgrade for more weekly AI credits",
+        "perMonth": "/month",
+        "priceUsdHint": "≈ {amount} for international payments",
+        "popular": "Popular",
+        "currentPlan": "Current plan",
+        "buy": "Buy now",
+        "creditsPer5h": "{credits} credits / 5 hours",
+        "creditsPerWeek": "{credits} credits / week",
+        "free": {
+            "title": "Free",
+            "price": "₫0",
+            "desc": "Basic AI allowance bundled with your course",
+            "cta": "Default plan"
+        }
+    },
+    "admin": {
+        "aiBalancer": {
+            "title": "AI Balancer Health",
+            "subtitle": "Live API key status from the ping cache — keys marked disabled are skipped on the next call.",
+            "backToAdmin": "Back to admin",
+            "uploadVideoTool": "Upload video",
+            "refreshing": "Refreshing…",
+            "refreshNow": "Refresh now",
+            "empty": "No provider pools loaded.",
+            "error": "Could not load balancer health. Check that you are signed in.",
+            "providers": {
+                "gemini": "Gemini",
+                "openai": "OpenAI",
+                "claude": "Claude",
+                "openrouter": "OpenRouter"
+            },
+            "status": {
+                "active": "Active",
+                "disabled": "Disabled",
+                "probing": "Probing"
+            },
+            "columns": {
+                "suffix": "Key suffix",
+                "status": "Status",
+                "failCount": "Fails",
+                "lastPing": "Last ping",
+                "lastUsed": "Last used"
+            },
+            "summary": {
+                "active": "Active",
+                "disabled": "Disabled",
+                "total": "Total"
+            }
+        }
+    },
+    "aiQuota": {
+        "title": "AI quota",
+        "subtitle": "Grading credits within 5 hours and within the week",
+        "creditWindows": {
+            "title": "Grading credits (Auto)",
+            "caption": "Same as the Auto label on the submit form — counted in credits, not runs."
+        },
+        "rollingPool": {
+            "overQuota": "Out of credits"
+        },
+        "premiumLimits": {
+            "caption": "Premium credits — both windows below share this pool."
+        },
+        "cardTitle": "AI quota",
+        "viewDetails": "View details",
+        "fullPageTitle": "AI quota & usage",
+        "fullPageDescription": "Auto credits, Premium plan limits, and grading history.",
+        "remainingSummary": "{remaining} credits left within the week",
+        "currentLane": "Current",
+        "window5h": "Within 5 hours",
+        "windowWeek": "Within 7 days",
+        "windowResetAt": "Resets at {time}",
+        "creditsUnit": "credits",
+        "noPremium": "No active subscription — upgrade to unlock Premium credits.",
+        "tabsAria": "AI quota sections",
+        "tabs": {
+            "auto": "Auto",
+            "subscription": "Subscription",
+            "history": "History"
+        },
+        "subscribeCta": "Subscribe to a plan",
+        "subscriptionActive": "You are on the {tier} plan.",
+        "subscriptionNone": "You don't have a paid plan yet. Upgrade to unlock Premium credits and grade with high-end models.",
+        "history": {
+            "title": "AI usage history",
+            "chartTitle": "Credits spent per day (last 14 days)",
+            "empty": "No AI usage yet.",
+            "loading": "Loading history…",
+            "purposeGrade": "Challenge grading",
+            "autoModel": "Auto model (free)",
+            "creditsUnit": "credits",
+            "breakdownTitle": "By provider",
+            "lane": {
+                "all": "All lanes",
+                "auto": "Auto",
+                "premium": "Premium",
+                "byok": "Your own key"
+            }
+        },
+        "creditPool": "Credit pool",
+        "freeTier": "Free",
+        "upgradeCta": "Upgrade plan",
+        "upgradeWarning": "You are on the {tier} plan. Upgrade for more credits and stronger grading models."
+    },
+    "profile": {
+        "signedOut": {
+            "title": "You are not signed in",
+            "desc": "Sign in to view your profile and AI quota."
+        },
+        "followers": "followers",
+        "following": "following",
+        "points": "points",
+        "level": "Level {level}",
+        "joined": "Joined {date}",
+        "streakLine": "{streak}-day streak · longest {longest}",
+        "nav": {
+            "editDesc": "Update your avatar, name and bio",
+            "sessionsDesc": "See your logged-in devices and log them out",
+            "securityDesc": "Two-factor authentication",
+            "aiSettingsDesc": "Choose your AI lane and manage your own API key",
+            "aiSubscriptionDesc": "Upgrade for more weekly AI credits",
+            "bookmarks": "Bookmarks",
+            "rewards": "Rewards",
+            "blog": "Blog",
+            "talents": "Talents",
+            "bookmarksDesc": "Your saved content"
+        }
+    },
+    "profileEdit": {
+        "title": "Edit profile",
+        "subtitle": "Update how you appear across StarCi Academy.",
+        "displayName": "Display name",
+        "bio": "Bio",
+        "bioPlaceholder": "Tell others a bit about yourself",
+        "changeAvatar": "Change avatar",
+        "avatarHint": "PNG, JPG, WEBP or GIF, up to 5 MB.",
+        "save": "Save changes",
+        "saved": "Profile updated successfully.",
+        "error": "Could not update your profile. Please try again.",
+        "uploadFailed": "Avatar upload failed. Please try again.",
+        "lockProfile": "Lock profile",
+        "lockProfileHint": "When on, only you can see your activity, achievements and courses. Others see just your avatar and name.",
+        "openToWork": "Open to work",
+        "openToWorkHint": "When on, your profile shows an \"Open to work\" badge so recruiters / headhunters can see you're available.",
+        "avatarDropzone": "Drop an image here or click to upload",
+        "roleTitle": "Role / title",
+        "roleTitlePlaceholder": "e.g. Frontend Developer",
+        "location": "Location",
+        "locationPlaceholder": "City, Country",
+        "websiteUrl": "Website",
+        "websiteUrlPlaceholder": "https://your-site.com",
+        "linkedinUrl": "LinkedIn",
+        "linkedinUrlPlaceholder": "https://linkedin.com/in/username",
+        "workMode": "Work mode",
+        "workModeNone": "Not specified"
+    },
+    "sessions": {
+        "title": "Devices",
+        "subtitle": "Devices currently signed in to your account.",
+        "thisDevice": "This device",
+        "revoke": "Log out",
+        "empty": "No active sessions.",
+        "unknownDevice": "Unknown device"
+    },
+    "follow": {
+        "follow": "Follow",
+        "following": "Following"
+    },
+    "security": {
+        "title": "Security",
+        "subtitle": "Protect your account with two-factor authentication.",
+        "twoFactor": "Two-factor authentication",
+        "enabledLabel": "Enabled",
+        "disabledLabel": "Disabled",
+        "enabledDesc": "An authenticator code is required where 2FA is enforced.",
+        "disabledDesc": "Add a second step using an authenticator app (TOTP).",
+        "enable": "Enable 2FA",
+        "disable": "Disable 2FA",
+        "confirm": "Confirm",
+        "cancel": "Cancel",
+        "scanHint": "Scan this QR code with an authenticator app (Google Authenticator, Authy…), then enter the 6-digit code.",
+        "secretHint": "Or enter this key manually:",
+        "codeLabel": "Verification code",
+        "codePlaceholder": "6-digit code",
+        "enabledToast": "Two-factor authentication is now on.",
+        "disabledToast": "Two-factor authentication is now off.",
+        "invalidCode": "Invalid code. Please try again.",
+        "error": "Something went wrong. Please try again.",
+        "note": "Two-factor authentication can be configured now; enforcing it at sign-in will come later."
+    },
+    "publicProfile": {
+        "title": "Profile",
+        "notFound": "This user could not be found.",
+        "notFoundDescription": "The username may be wrong or the account was removed.",
+        "bioHeading": "About",
+        "openToWork": "Open to work",
+        "locked": {
+            "title": "This profile is private",
+            "description": "This user has locked their profile. Only they can see their activity, achievements and courses."
+        },
+        "tabs": {
+            "overview": "Overview",
+            "achievements": "Achievements",
+            "activity": "Activity",
+            "courses": "Courses",
+            "coding": "Coding",
+            "capstone": "Projects",
+            "skills": "Skills",
+            "projects": "Projects",
+            "challenges": "Challenges"
+        },
+        "coding": {
+            "solved": "Solved",
+            "attempted": "Attempted",
+            "points": "Coding pts",
+            "history": "Solved problems",
+            "byDifficulty": "By difficulty",
+            "byDomain": "By topic",
+            "byLanguage": "By language",
+            "showLess": "Show less",
+            "showMore": "Show {count} more",
+            "statsHeading": "Stats",
+            "empty": "No practice problems solved yet",
+            "emptyHint": "Solve scored coding-practice problems to show your programming skills here.",
+            "metric": {
+                "solved": "Solved",
+                "xp": "XP",
+                "percentile": "Top",
+                "rank": "Rank"
+            }
+        },
+        "capstone": {
+            "score": "Score {score}",
+            "tasksHeading": "Capstone tasks",
+            "challengesHeading": "Solved challenges",
+            "challengesCount": "{count} challenges solved",
+            "hideTasks": "Hide milestones & tasks",
+            "loadErrorDescription": "Something went wrong while loading the projects.",
+            "loadErrorRetry": "Try again",
+            "loadErrorTitle": "Couldn't load projects",
+            "more": "+{count} more",
+            "projectsHeading": "Projects",
+            "roadmapSummary": "{completedMilestones}/{totalMilestones} milestones · {completedTasks}/{totalTasks} tasks",
+            "showLess": "Show less",
+            "showMore": "Show {count} more",
+            "viewTasks": "View milestones & tasks"
+        },
+        "skills": {
+            "byLanguage": "By language",
+            "byDifficulty": "By difficulty",
+            "empty": "No coding problems solved yet.",
+            "emptyHint": "Solve coding problems to start building your skills profile.",
+            "languageDonutAria": "Languages used, by number solved",
+            "solvedUnit": "solved"
+        },
+        "pinnedAchievements": "Pinned achievements",
+        "bioEmpty": "This user hasn't written a bio yet.",
+        "achievementsEmpty": "No achievements yet.",
+        "activityEmpty": "No activity yet",
+        "activityEmptyHint": "Read lessons, pass challenges or submit projects — your activity shows up here.",
+        "coursesEmpty": "Not enrolled in any course yet.",
+        "capstoneEmpty": "No projects completed yet.",
+        "loadMore": "Load more",
+        "bioWrite": "Write a bio",
+        "contactForHiring": "Contact for hiring",
+        "contributions": {
+            "heading": "Contributions"
+        },
+        "courseStart": "Not started yet",
+        "challengesCount": "Challenges passed",
+        "loadError": "Couldn't load this section",
+        "loadErrorRetry": "Try again",
+        "moreChallenges": "+{count} more",
+        "openRepo": "Open repository for {title}",
+        "rarity": "{percent}% have this",
+        "recentActivity": "Recent activity",
+        "repoLink": "View repo",
+        "solvedChallengesTitle": "Solved challenges",
+        "featured": {
+            "heading": "Featured projects",
+            "inBuilding": "In progress",
+            "openProject": "Open project",
+            "seeAll": "See all"
+        },
+        "share": {
+            "button": "Share profile",
+            "copied": "Profile link copied to clipboard"
+        },
+        "overview": {
+            "challengeSkills": "Skills from challenges",
+            "codeSkills": "Skills from coding",
+            "courses": "Courses",
+            "seeMore": "See more"
+        },
+        "skillsSnapshot": {
+            "diffEasy": "Easy",
+            "diffMedium": "Medium",
+            "diffHard": "Hard",
+            "languagesLabel": "Languages",
+            "solvedLabel": "Solved"
+        },
+        "challengesTab": {
+            "difficultyHeading": "By difficulty",
+            "empty": "No challenges passed yet",
+            "emptyHint": "Pass graded challenges to show your proof of work here.",
+            "hideSubmissions": "Hide submissions",
+            "languageHeading": "By language",
+            "repoHeading": "Submissions",
+            "score": "{score} pts",
+            "showLess": "Show less",
+            "showMore": "Show {count} more",
+            "statsHeading": "Stats",
+            "submissionCount": "{count} passed",
+            "submissionProgress": "{passed}/{total} passed",
+            "ungrouped": "Other",
+            "viewSubmissions": "View submissions",
+            "metric": {
+                "passed": "Passed",
+                "xp": "XP",
+                "percentile": "Top",
+                "rank": "Rank"
+            }
+        },
+        "achievementGroups": {
+            "learning": "Learning",
+            "skills": "Skills",
+            "community": "Community",
+            "course": "Courses",
+            "other": "Other"
+        },
+        "workMode": {
+            "remote": "Remote",
+            "hybrid": "Hybrid",
+            "onsite": "On-site"
+        }
+    },
+    "talents": {
+        "title": "Talent open to work",
+        "description": "Learners currently open to job opportunities. Click to view a profile.",
+        "empty": "No one has turned on \"Open to work\" yet."
+    },
+    "reference": {
+        "title": "References"
+    },
+    "qna": {
+        "title": "Q&A",
+        "questionAria": "Question {index}"
+    },
+    "auth": {
+        "sessionSuperseded": "Session has been superseded by a newer login on another device.",
+        "signIn": {
+            "google": "Sign In With Google",
+            "github": "Sign In With GitHub",
+            "or": "OR",
+            "title": "Sign In",
+            "desc": "Sign in to your account to continue",
+            "email": {
+                "label": "Email",
+                "placeholder": "Enter your email",
+                "invalid": "Please enter a valid email address",
+                "required": "Email is required",
+                "notExists": "No account found for this email",
+                "checking": "Checking email…"
+            },
+            "password": {
+                "label": "Password",
+                "placeholder": "Enter your password",
+                "show": "Show password",
+                "hide": "Hide password",
+                "required": "Password is required",
+                "minLength": "Password must be at least 8 characters"
+            },
+            "rememberMe": "Remember me",
+            "forgotPassword": "Forgot Password?",
+            "submit": "Sign In",
+            "noAccount": "Don't have an account?",
+            "signUp": "Sign Up",
+            "success": "Signed in successfully",
+            "otp": {
+                "title": "Enter OTP",
+                "desc": "Please check <emailHighlight>{email}</emailHighlight> for an email and enter your code below.",
+                "label": "OTP code",
+                "placeholder": "Enter 6-digit OTP",
+                "required": "OTP is required",
+                "invalid": "OTP must be 6 digits",
+                "sent": "OTP sent successfully",
+                "resend": "Didn't get an email?",
+                "resendLink": "Resend code",
+                "submit": "Verify"
+            }
+        },
+        "signUp": {
+            "title": "Sign Up",
+            "desc": "Create an account to continue",
+            "email": {
+                "label": "Email",
+                "placeholder": "Enter your email",
+                "invalid": "Please enter a valid email address",
+                "required": "Email is required",
+                "checking": "Checking email…",
+                "alreadyExists": "This email is already registered"
+            },
+            "password": {
+                "label": "Password",
+                "placeholder": "Enter your password",
+                "show": "Show password",
+                "hide": "Hide password",
+                "required": "Password is required",
+                "minLength": "Password must be at least 8 characters"
+            },
+            "confirmPassword": {
+                "label": "Confirm password",
+                "placeholder": "Confirm your password",
+                "show": "Show confirm password",
+                "hide": "Hide confirm password",
+                "required": "Please confirm your password",
+                "mismatch": "Passwords must match"
+            },
+            "agreeToTerms": {
+                "aria": "I agree to the terms and conditions",
+                "prefix": "I have read and agree to the",
+                "terms": "Terms of Service",
+                "and": "and",
+                "privacy": "Privacy Policy",
+                "required": "You must accept the terms and privacy policy"
+            },
+            "submit": "Sign Up",
+            "haveAccount": "Already have an account?",
+            "signIn": "Sign In",
+            "success": "Registration successful",
+            "otp": {
+                "title": "Complete sign up",
+                "desc": "We sent a code to <emailHighlight>{email}</emailHighlight>. Enter it below to finish creating your account.",
+                "label": "Verification code",
+                "placeholder": "Enter 6-digit code",
+                "required": "Verification code is required",
+                "invalid": "Code must be 6 digits",
+                "sent": "A new code was sent",
+                "resend": "Didn't get an email?",
+                "resendLink": "Resend code",
+                "submit": "Verify & continue"
+            }
+        },
+        "oauth": {
+            "authenticating": "Authenticating you…",
+            "signingIn": "Signing you in…",
+            "signingOut": "Signing you out…"
+        }
+    },
+    "priceTag": {
+        "breakdownTitle": "Price details",
+        "listPrice": "List price",
+        "phase": "Phase offer",
+        "phaseNamed": "{phase} phase",
+        "loyalty": "Member discount",
+        "youPay": "You pay"
+    },
+    "payment": {
+        "title": "Payment",
+        "desc": "Choose a payment method to continue",
+        "currency": {
+            "vnd": "Domestic · VND",
+            "usd": "International · USD"
+        },
+        "priceError": "Couldn't load the price",
+        "intlNoUsd": "International methods aren't available for this order.",
+        "secure": "Your payment is encrypted and secure.",
+        "noCardStored": "StarCi Academy never stores your card details",
+        "aiPlanName": "AI plan",
+        "membershipName": "StarCi membership",
+        "loyalty": {
+            "enrolled": "You own {count} courses",
+            "diligent": "You keep a learning streak"
+        },
+        "group": {
+            "domestic": "Domestic",
+            "international": "International"
+        },
+        "payos": {
+            "desc": "Pay with PayOS"
+        },
+        "stripe": {
+            "desc": "Pay with cards worldwide via Stripe"
+        },
+        "paypal": {
+            "desc": "Pay with your PayPal balance or linked cards"
+        },
+        "crypto": {
+            "desc": "Pay with stablecoins (USDT/USDC)"
+        },
+        "sepay": {
+            "desc": "Pay with Sepay",
+            "instruction": "Scan the QR code below using your banking app to pay.",
+            "bank": "Bank",
+            "account": "Account Number",
+            "amount": "Amount",
+            "content": "Transfer Content",
+            "copy": "Copy",
+            "copied": "Copied to clipboard!",
+            "waiting": "Waiting for payment...",
+            "success": "Payment Successful!",
+            "redirecting": "Redirecting to your course...",
+            "checkStatus": "Check Status"
+        }
+    },
+    "aiProcessing": {
+        "submitChallenge": {
+            "queued": {
+                "title": "In Queue",
+                "description": "Your submission is queued and will be processed shortly."
+            },
+            "processing": {
+                "title": "StarCI AI is Reviewing",
+                "description": "StarCI AI is analyzing your submission. This may take a moment."
+            },
+            "completed": {
+                "title": "Review Complete",
+                "description": "Your submission has been reviewed. You can now view the results."
+            },
+            "failed": {
+                "title": "Review Failed",
+                "description": "Something went wrong while reviewing your submission. Please try again."
+            }
+        },
+        "judgeCoding": {
+            "queued": {
+                "title": "In Queue",
+                "description": "Your solution is queued for judging and will run shortly."
+            },
+            "processing": {
+                "title": "Judging Your Solution",
+                "description": "Running your code against the test cases. This may take a moment."
+            },
+            "completed": {
+                "title": "Judging Complete",
+                "description": "Your solution has been judged. You can now view the result."
+            },
+            "failed": {
+                "title": "Judging Failed",
+                "description": "Something went wrong while judging your solution. Please try again."
+            }
+        },
+        "reviewTask": {
+            "queued": {
+                "title": "Queued for Review",
+                "description": "Your project is queued. StarCI AI will start reviewing shortly."
+            },
+            "processing": {
+                "title": "Reviewing Your Project",
+                "description": "StarCI AI is reviewing your project code, architecture, and quality. This may take a few minutes."
+            },
+            "completed": {
+                "title": "Project Review Complete",
+                "description": "Your project has been reviewed. Check the grading results below for detailed feedback."
+            },
+            "failed": {
+                "title": "Progress Assessment Failed",
+                "description": "Something went wrong while assessing your progress. Please try again."
+            }
+        },
+        "reviewCv": {
+            "queued": {
+                "title": "Queued for CV Review",
+                "description": "Your CV is queued. StarCI AI will start reviewing shortly."
+            },
+            "processing": {
+                "title": "StarCI AI is Reviewing Your CV",
+                "description": "StarCI AI is reading your CV and comparing it with the selected rubric. This may take a few minutes."
+            },
+            "completed": {
+                "title": "CV Review Complete",
+                "description": "Detailed feedback is displayed."
+            },
+            "failed": {
+                "title": "CV Review Failed",
+                "description": "Something went wrong while reviewing your CV. Please try again."
+            }
+        }
+    },
+    "common": {
+        "loading": "Loading…",
+        "tagsMore": "+{count}",
+        "tagsMenuAria": "All tags",
+        "pagination": {
+            "navAria": "Pagination",
+            "previous": "Previous page",
+            "next": "Next page"
+        },
+        "disabled": "Disabled",
+        "back": "Back",
+        "cancel": "Cancel",
+        "save": "Save",
+        "edit": "Edit",
+        "delete": "Delete",
+        "streak": {
+            "current": "Current Streak",
+            "longest": "Longest Streak",
+            "count": "{count} days"
+        }
+    },
+    "home": {
+        "intro": "IT courses are everywhere online, but content that is concise and focuses on practical thinking is rare.",
+        "intro2": "StarCi Academy was founded to change that.",
+        "intro3": "We focus on building programming thinking - from Fullstack, DevOps, Security to Solution Architect - with a clear and practical roadmap.",
+        "diff": {
+            "title": "What makes StarCi Academy different?",
+            "des1": "StarCi Academy focuses on the essence of the IT industry. We don't just teach knowledge, but also train standard programming thinking and system design skills - core competencies that help you develop sustainably in the AI era.",
+            "des2": "Thinking before stack",
+            "des3": "Technology changes constantly and knowledge is everywhere. We focus on teaching the fundamentals, keywords, and thinking skills so that after the course, you can research, read docs, and expand on any stack you want.",
+            "des4": "Low cost, high standard",
+            "des5": "StarCi Academy operates on a lean model, eliminating unnecessary costs to keep tuition affordable. Our goal is to create a high-quality learning environment that anyone serious about the profession can join.",
+            "des6": "We teach you to build truly valuable projects and provide long-term support throughout your career development."
+        }
+    },
+    "dashboard": {
+        "greeting": "Welcome back, {name}",
+        "subtitle": "Pick up where you left off.",
+        "continueLearning": "Continue learning",
+        "emptyCourses": "You have no courses yet. Browse the catalog to get started.",
+        "xp": "{xp} XP",
+        "rank": "#{rank}",
+        "continue": "Continue",
+        "title": "Home",
+        "history": "Learned lessons",
+        "historySearch": "Search...",
+        "enrolledCourses": "My courses",
+        "enrolledCoursesEmpty": "You haven't joined any course yet.",
+        "courseProgress": {
+            "content": "Content completed",
+            "challenge": "Challenges completed",
+            "milestone": "Milestone"
+        },
+        "recentContent": "Recent content",
+        "recentContentEmpty": "No lessons read yet.",
+        "inProgressChallenges": "Challenges in progress",
+        "inProgressChallengesEmpty": "No challenges in progress.",
+        "weekStats": "This week",
+        "streakLabel": "streak",
+        "xpLabel": "XP",
+        "lessonsLabel": "lessons",
+        "contributions": {
+            "heading": "Learning activity",
+            "title": "{count} learning activities in {year}",
+            "cellTitle": "{count} activities",
+            "breakdown": "{contents} lessons · {challenges} challenges · {milestones} milestones",
+            "less": "Less",
+            "more": "More"
+        },
+        "achievements": {
+            "title": "Achievements",
+            "earned": "Earned"
+        },
+        "streak": {
+            "current": "{count}-day streak",
+            "longest": "Longest {count}",
+            "empty": "Read content to start your streak",
+            "help": "Learn at least one piece of content each day to keep your streak going."
+        },
+        "league": {
+            "resetIn": "Resets in {days}d {hours}h",
+            "promote": "Top {count} promote",
+            "demote": "Bottom {count} demote",
+            "points": "{count} pts",
+            "globalSubtitle": "Ranked by total reward points",
+            "help": "Each week you compete with a cohort of learners. Earn points to climb and avoid demotion.",
+            "others": "+{count} others",
+            "pageTitle": "Leaderboard",
+            "seeMore": "See full board",
+            "tabGlobal": "Global",
+            "tabWeekly": "This week",
+            "tierHelp": "Your current league tier. Climb by finishing in the top each week.",
+            "title": "Weekly league",
+            "yourRank": "Your rank"
+        },
+        "community": {
+            "globalStanding": {
+                "title": "Global standing",
+                "line": "Rank #{rank} platform-wide · {points} XP",
+                "seeMore": "View leaderboard"
+            },
+            "topLearners": {
+                "title": "Top learners",
+                "xp": "{points} XP"
+            }
+        },
+        "sponsored": "Sponsored",
+        "sponsoredBy": "Sponsored by {sponsor}",
+        "adModalTitle": "Advertisement",
+        "changelog": "What's new",
+        "changelogCategory": {
+            "feature": "Feature",
+            "fix": "Fix",
+            "announcement": "Announcement"
+        },
+        "historyEmpty": "No lessons read yet.",
+        "feedEmpty": "No activity yet.",
+        "feedError": "Could not load activity.",
+        "feedRetry": "Retry",
+        "railTrigger": "Stats",
+        "railTitle": "Stats & updates",
+        "sections": {
+            "continue": "Continue learning",
+            "streak": "Streak",
+            "goals": "Weekly goals"
+        },
+        "dailyQuest": {
+            "title": "Today's quest",
+            "claim": "Claim {count} pts",
+            "claimed": "Reward claimed",
+            "completePrompt": "Complete all 3 to earn {count} pts",
+            "tasks": {
+                "readContent": "Read content",
+                "passChallenge": "Pass a challenge",
+                "reviewFlashcards": "Review flashcards"
+            }
+        },
+        "identityStats": {
+            "streak": "Streak",
+            "credit": "AI credit",
+            "reward": "Rewards",
+            "streakValue": "{count} days"
+        },
+        "rewardBalance": "{count} pts",
+        "dueCount": "{count} due",
+        "feedTabsAria": "Activity feed",
+        "feedFilterAria": "Filter activity feed",
+        "feedFilter": {
+            "all": "All",
+            "courses": "Courses",
+            "achievements": "Achievements",
+            "people": "People"
+        },
+        "trending": {
+            "title": "Trending this week",
+            "reads": "{count} reads"
+        },
+        "loadMore": "Load more",
+        "tabs": {
+            "forYou": "Explore",
+            "overview": "Overview",
+            "explore": "Explore",
+            "courses": "Courses",
+            "community": "Community",
+            "following": "Following"
+        },
+        "loadError": "Could not load your dashboard. Your session may have expired.",
+        "retry": "Retry",
+        "goHome": "Go to home",
+        "feed": {
+            "lessonRead": "<actor></actor> read <target></target>",
+            "lessonBookmarked": "<actor></actor> bookmarked <target></target>",
+            "challengePassed": "<actor></actor> passed the challenge <target></target>",
+            "codingSolved": "<actor></actor> solved <target></target>",
+            "milestonePassed": "<actor></actor> completed the milestone <target></target>",
+            "aiLabPassed": "<actor></actor> passed the AI Lab challenge <target></target>",
+            "courseEnrolled": "<actor></actor> enrolled in <target></target>",
+            "discussionCommented": "<actor></actor> commented on <target></target>",
+            "userFollowed": "<actor></actor> started following <target></target>",
+            "lessonReadNoTarget": "<actor></actor> read a lesson",
+            "lessonBookmarkedNoTarget": "<actor></actor> bookmarked a lesson",
+            "challengePassedNoTarget": "<actor></actor> passed a challenge",
+            "codingSolvedNoTarget": "<actor></actor> solved a coding task",
+            "milestonePassedNoTarget": "<actor></actor> completed a milestone",
+            "aiLabPassedNoTarget": "<actor></actor> passed an AI Lab challenge",
+            "courseEnrolledNoTarget": "<actor></actor> enrolled in a course",
+            "discussionCommentedNoTarget": "<actor></actor> commented on a post",
+            "userFollowedNoTarget": "<actor></actor> followed someone",
+            "milestonePassedGrouped": "<actor></actor> completed {count} milestone tasks",
+            "today": "Today",
+            "yesterday": "Yesterday"
+        },
+        "quickActions": "Quick actions",
+        "actions": {
+            "courses": "Browse courses",
+            "review": "Review",
+            "practice": "Coding practice",
+            "league": "Leaderboard",
+            "bookmarks": "Bookmarks",
+            "rewards": "Rewards",
+            "blog": "Blog",
+            "talents": "Talents",
+            "profile": "Profile"
+        },
+        "aiQuota": {
+            "title": "AI credits",
+            "poolCaption": "One shared credit pool — refreshes per window.",
+            "credits": "{remaining}/{limit} left",
+            "upgrade": "Upgrade plan",
+            "window5h": "Last 5 hours",
+            "windowWeek": "This week"
+        },
+        "browseCourses": "Browse courses",
+        "continueResumeEmpty": "Nothing to pick up right now. Start a new lesson or challenge.",
+        "continueKind": {
+            "challenge": "Challenge",
+            "lesson": "Lesson"
+        },
+        "dailyGoal": {
+            "cta": "Learn content",
+            "done": "Today's done — {count}-day streak safe",
+            "nudge": "Learn content today to keep your streak"
+        },
+        "kpi": {
+            "clear": "Clear",
+            "edit": "Edit",
+            "error": "Couldn't save your target. Please try again.",
+            "help": "Set weekly targets for each metric and track your progress through the week.",
+            "prompt": "Set weekly targets to track your progress",
+            "subtitle": "Pick a weekly target for each metric to stay on track.",
+            "summary": "{percent}% this week · {completed}/{total} goals met",
+            "title": "Weekly KPIs",
+            "labels": {
+                "lessons": "Content",
+                "studyDays": "Study days",
+                "challenges": "Challenges",
+                "coding": "Coding",
+                "flashcards": "Flashcards"
+            }
+        },
+        "myProfile": {
+            "rankLine": "Rank #{rank} · top {percent}%"
+        },
+        "nearCompletion": {
+            "text": "Just {count} content left to finish"
+        },
+        "recommended": {
+            "title": "Courses for you",
+            "reason": {
+                "both": "Exclusive for you — diligent & {count} courses in",
+                "enrolledCount": "Exclusive for you — {count} courses in",
+                "diligent": "Exclusive for you — for your diligence"
+            }
+        },
+        "upcomingLive": {
+            "inDays": "in {days}d {hours}h",
+            "inHours": "in {hours}h {minutes}m",
+            "inMinutes": "in {minutes}m",
+            "now": "Live now",
+            "title": "Upcoming live sessions"
+        },
+        "weeklyGoal": {
+            "edit": "Edit",
+            "preset": "{count} lessons",
+            "progress": "{lessons}/{goal} lessons this week",
+            "prompt": "Set a weekly lesson goal",
+            "title": "Weekly goal"
+        },
+        "whoToFollow": {
+            "openToWork": "Open to work",
+            "title": "Who to follow"
+        }
+    },
+    "languages": {
+        "en": "English",
+        "vi": "Vietnamese"
+    },
+    "videoHostPlatform": {
+        "youtube": "YouTube",
+        "googleDrive": "Google Drive",
+        "vimeo": "Vimeo",
+        "cloudflareStream": "Cloudflare Stream"
+    },
+    "lessonVideoKind": {
+        "rawStream": {
+            "label": "Raw Stream",
+            "tooltip": "Original unedited stream. Full content, but may be rough and not fully optimized for viewing."
+        },
+        "editedStream": {
+            "label": "Edited Stream",
+            "tooltip": "Edited version with trimmed content, clearer structure, and improved viewing experience."
+        },
+        "premiumRecord": {
+            "label": "Premium Record",
+            "tooltip": "Highest quality version with polished visuals, audio, and an optimized learning experience."
+        }
+    },
+    "settings": {
+        "language": {
+            "title": "Language",
+            "confirm": "Confirm",
+            "cancel": "Cancel",
+            "popular": "Popular Languages",
+            "all": "All Languages"
+        }
+    },
+    "livestream": {
+        "calendar": {
+            "title": "Livestream calendar",
+            "subtitle": "Join the upcoming livestream sessions",
+            "button": "View schedule",
+            "nextSession": "Next: {day} {time}, {date}",
+            "countdown": "Starts in {days}d {hours}h {minutes}m {seconds}s",
+            "modalTitle": "Livestream schedule",
+            "modalDescription": "Recurring weekly slots. Available weekdays are highlighted in the calendar.",
+            "empty": "No livestream sessions configured.",
+            "sessionTime": "{start} – {end}",
+            "nextOn": "Next: {date}",
+            "aria": "Course livestream calendar",
+            "days": {
+                "sunday": "Sunday",
+                "monday": "Monday",
+                "tuesday": "Tuesday",
+                "wednesday": "Wednesday",
+                "thursday": "Thursday",
+                "friday": "Friday",
+                "saturday": "Saturday"
+            }
+        }
+    },
+    "markdown": {
+        "tableAriaLabel": "Content table",
+        "mermaidRendering": "Rendering diagram...",
+        "mermaidExpand": "Expand diagram",
+        "mermaidFigureLabel": "Figure",
+        "headingAnchor": "Link to this section"
+    },
+    "discussion": {
+        "title": "Discussion · {count}",
+        "react": "React",
+        "post": "Post",
+        "reply": "Reply",
+        "edited": "(edited)",
+        "placeholder": "Ask a question or share…",
+        "replyPlaceholder": "Write a reply...",
+        "empty": "No discussion yet",
+        "emptyHint": "Be the first to ask about this lesson",
+        "deletedPlaceholder": "[Comment deleted]",
+        "viewReplies": "View {count} replies",
+        "hideReplies": "Hide replies",
+        "loadMore": "Load more comments",
+        "reactions": {
+            "like": "Like",
+            "love": "Love",
+            "haha": "Haha",
+            "wow": "Wow",
+            "sad": "Sad",
+            "angry": "Angry"
+        }
+    },
+    "score": {
+        "fraction": "{current}/{max}",
+        "aria": "Score {current} out of {max}"
+    },
+    "linkGithub": {
+        "title": "Link GitHub",
+        "description": "Link your GitHub account to unlock full access to StarCi Academy repositories.",
+        "button": "Link GitHub Account"
+    },
+    "githubTeamGate": {
+        "title": "Join your course team",
+        "linkFirst": "First, link your GitHub account so we can invite you to the course team.",
+        "linkCta": "Link GitHub",
+        "requestDescription": "You're enrolled but not yet in your course GitHub team. Request to join, then accept the invite on GitHub to continue.",
+        "requestCta": "Request to join team",
+        "sending": "Sending request…",
+        "recheckCta": "I've accepted — re-check",
+        "acceptHint": "After requesting, open GitHub and accept the team invitation, then press re-check.",
+        "warningTitle": "You're not in the course GitHub team yet",
+        "warningBody": "Until you join, you can't open the course's premium content — it lives in the course GitHub repo.",
+        "openCta": "Join the team",
+        "step1": "Press \"Request to join team\" below — we'll send you the invite.",
+        "step2": "Open GitHub and accept the invitation: from the invite email, or at github.com/orgs/StarCi-Academy → Invitations.",
+        "step3": "Come back here and press \"I've accepted — re-check\".",
+        "state": {
+            "active": "In team",
+            "pending": "Invite pending",
+            "none": "Not requested"
+        }
+    },
+    "landing": {
+        "hero": {
+            "eyebrow": "A practical roadmap for interviews",
+            "solveWith": "Fight in your own language:",
+            "headline": "Knowledge & Thinking to conquer every <accent>interview</accent>",
+            "subline": "Back then, interns could start with small tasks: fixing UI, writing CRUD APIs, and boilerplate code.\nIn the AI era, those tasks are already solved in seconds.\nCompanies pay top salaries for practical Thinking & Knowledge — the part AI still cannot replace.",
+            "diagramCaption": "Spot where it breaks. Design systems that won’t break.",
+            "ctaRoadmap": "See the roadmap",
+            "ctaFounder": "Meet the founder of StarCi Academy",
+            "ctaPrimary": "See the roadmap",
+            "ctaSecondary": "Sign in"
+        },
+        "stats": {
+            "eyebrow": "Real data, no fluff",
+            "title": "What StarCi Academy has",
+            "intro": "Data is updated in real time from the system.",
+            "learners": "Users",
+            "lessons": "In-depth lessons",
+            "courses": "Architecture tracks",
+            "badges": "Challenge badges"
+        },
+        "courses": {
+            "eyebrow": "Tracks",
+            "title": "Three tracks. One industry-standard mindset.",
+            "intro": "Each track is built with strong structure and differs by level, but they share one disciplined mindset: we do not mislead learners for money. Every piece of content is carefully crafted.",
+            "view": "Open course",
+            "systems": "20 systems",
+            "items": {
+                "fullstack": {
+                    "tag": "FULLSTACK",
+                    "modules": "23 modules",
+                    "systems": "20 battle-tested systems",
+                    "title": "Fullstack",
+                    "desc": "APIs · auth · caching · realtime · payments, plus frontends that survive real traffic."
+                },
+                "systemDesign": {
+                    "tag": "SYSTEM DESIGN",
+                    "modules": "24 modules",
+                    "systems": "20 architecture problems",
+                    "title": "System Design",
+                    "desc": "Sharding · replication · consensus · idempotency — design for failure."
+                },
+                "devops": {
+                    "tag": "DEVOPS",
+                    "modules": "35 modules",
+                    "systems": "20 load-bearing projects",
+                    "title": "DevOps & Cloud",
+                    "desc": "CI/CD · Docker · Kubernetes · multi-cloud · observability · on-call."
+                }
+            }
+        },
+        "roadmap": {
+            "eyebrow": "The path",
+            "title": "Three mastery tracks — learn with structure",
+            "intro": "Each track runs foundation → application with real capstone projects. Follow in order, or pick your track.",
+            "tracks": {
+                "fullstack": {
+                    "label": "Fullstack",
+                    "caption": "Build the whole product — backend to frontend"
+                },
+                "systemDesign": {
+                    "label": "System Design",
+                    "caption": "Design systems at scale"
+                },
+                "devops": {
+                    "label": "DevOps",
+                    "caption": "Ship & operate across clouds"
+                }
+            }
+        },
+        "systems": {
+            "eyebrow": "Not CRUD",
+            "title": "Real systems you build with your own hands",
+            "intro": "Every capstone is a real production system — not a to-do app.",
+            "items": {
+                "newsfeed": {
+                    "name": "News Feed",
+                    "tag": "Fanout · cache",
+                    "badge": "FAN-OUT"
+                },
+                "flashSale": {
+                    "name": "Flash Sale",
+                    "tag": "Inventory · idempotency",
+                    "badge": "HIGH CONTENTION"
+                },
+                "wallet": {
+                    "name": "E-wallet",
+                    "tag": "Ledger · Saga",
+                    "badge": "CONSISTENCY"
+                },
+                "rideHailing": {
+                    "name": "Ride-hailing",
+                    "tag": "Geospatial · surge",
+                    "badge": "GEO-MATCHING"
+                },
+                "chat": {
+                    "name": "Real-time Chat",
+                    "tag": "WebSocket · ordering",
+                    "badge": "REALTIME"
+                },
+                "deploy": {
+                    "name": "K8s Deploy",
+                    "tag": "Helm · GitOps",
+                    "badge": "ZERO-DOWNTIME"
+                }
+            }
+        },
+        "founder": {
+            "eyebrow": "The dark side of coding",
+            "title": "The blunt truth about tech",
+            "name": "Nguyễn Văn Tự Cường",
+            "role": "Founder · StarCi Academy",
+            "titles": "CTO @ Nivo Technology · CTO @ TEDO Technology",
+            "expertise": {
+                "systemDesign": "System Design",
+                "blockchain": "Blockchain",
+                "aiAutomation": "AI business automation"
+            },
+            "quote": "Relax boss — I can still fix the bug.",
+            "body1": "I teach exactly what I ship in production every day — not slides, real systems at CTO scale.",
+            "body2": "Everything here is built in the open — the platform, the curriculum, the challenges. Read the engineering notes and judge the work for yourself.",
+            "github": "GitHub",
+            "blog": "Read the blog",
+            "thesis": "Plenty of places teach coding to make you feel good and earn a certificate fast. StarCi Academy is different — I only tell the blunt truths about this industry and what real systems actually demand.",
+            "truth1": "Big-project experience does not guarantee interview success.",
+            "fix1": "Many people ship large projects daily, yet still cannot draw a clear distributed architecture in interviews. I teach you to reason about architecture and defend it clearly.",
+            "truth2": "Memorizing Microservices theory still gets you rejected when you're pushed on fundamentals.",
+            "fix2": "Strong interviewers do not ask definitions. They drill into data consistency, network failures, and single points of failure. I train you to understand the root so you can hold your ground.",
+            "truth3": "Using template answers from blogs is the fastest way to get exposed in interviews.",
+            "fix3": "Textbook architectures often collapse against real business problems. I teach you independent thinking so you can handle any variation.",
+            "truth4": "The market has no room left for fluff — no one pays Senior salary for keyword name-dropping.",
+            "fix4": "Companies are tightening standards hard. I train you in real architecture capability so you can pass tough screening rounds with confidence."
+        },
+        "recruiter": {
+            "eyebrow": "For hiring teams",
+            "title": "Hire engineers who've proven it",
+            "intro": "Learners who finished the work and opted in to be hired — vetted by what they built, not by a résumé.",
+            "count": "{count}+ engineers open to work right now",
+            "cta": "Browse candidate profiles",
+            "partnersLabel": "Hiring partners"
+        },
+        "outcome": {
+            "eyebrow": "Real outcomes",
+            "title": "StarCi Academy outcomes",
+            "items": {
+                "engineer": {
+                    "title": "For users",
+                    "body": "You build a portfolio from real, production-grade projects, and I take it straight to hiring teams. They call you for what you can do, not for a polished CV.",
+                    "cta": "Start building your portfolio"
+                },
+                "enterprise": {
+                    "title": "For companies",
+                    "body": "Skip inflated CVs. Hire people with real systems-thinking depth.",
+                    "cta": "Find candidates"
+                }
+            },
+            "card": {
+                "sample": "User profile",
+                "role": "StarCi Talent",
+                "openToWork": "Open to work",
+                "cvScore": "CV score",
+                "challenges": "System challenges",
+                "challengeValue": "{count} · avg {avg}",
+                "xp": "{xp} XP"
+            }
+        },
+        "faq": {
+            "eyebrow": "Straight answers",
+            "title": "Questions, answered honestly",
+            "q1": "Is this another bootcamp promising a high salary in 3 months?",
+            "a1": "No. I don't sell a salary number. I train architectural thinking and prove it with graded challenges — the rest is on you and the market.",
+            "q2": "Will AI make these skills obsolete?",
+            "a2": "The opposite. AI writes CRUD already. What it can't do is own trade-offs, design for scale and defend decisions — which is exactly what I train.",
+            "q3": "I'm a beginner. Is this for me?",
+            "a3": "If you can already write basic code and want to level up to designing systems, yes. If you've never coded, start with fundamentals first.",
+            "q4": "How does the AI grading actually work?",
+            "a4": "Each challenge is scored against production-grade criteria with written feedback. You see exactly why you passed or what to fix.",
+            "q5": "What does 'headhunted' really mean here?",
+            "a5": "Opt in as open-to-work and your graded work becomes visible to hiring partners browsing the talent directory. No guarantees — just real signal."
+        },
+        "closing": {
+            "title": "No more learning just to know. Time to build real systems.",
+            "subtitle": "Train to do real work, with enough grit to clear every technical interview in the language you already use.",
+            "cta": "Start now"
+        },
+        "learnLoop": {
+            "eyebrow": "How you actually train",
+            "title": "Learn with my method.",
+            "intro": "In interviews, what matters is not years of experience, but your problem-solving mindset. I systematized the industry's core knowledge into this passion project and built an effective learning method so more people can access it and break through.",
+            "cta": "Jump in",
+            "items": {
+                "read": {
+                    "step": "01",
+                    "title": "Read",
+                    "tag": "4 languages",
+                    "desc": "Structured, diagram-first lessons in 4 languages."
+                },
+                "grade": {
+                    "step": "02",
+                    "title": "AI-graded challenge",
+                    "tag": "Instant feedback",
+                    "desc": "Write code, scored on correctness & design."
+                },
+                "capstone": {
+                    "step": "03",
+                    "title": "Capstone",
+                    "tag": "Real system",
+                    "desc": "Ship a production-grade system, not a toy."
+                },
+                "rank": {
+                    "step": "04",
+                    "title": "Leaderboard",
+                    "tag": "Stay sharp",
+                    "desc": "Compare solutions and climb the ranks."
+                }
+            },
+            "cta": "Jump in"
+        },
+        "treasure": {
+            "eyebrow": "System capability map",
+            "title": "Learn to solve real problems, not to memorize answers.",
+            "intro": "From backend to infrastructure, you train end-to-end problem-solving mindset — the thing that decides whether you survive on large projects.",
+            "statConcepts": "concepts",
+            "statTracks": "tracks",
+            "interconnect": "Idempotency, learned in System Design — reused in Payment, Webhooks (Fullstack).",
+            "cta": "Explore courses",
+            "beaconLabel": "Tap to reshuffle",
+            "beaconTap": "Auto-reshuffles every 10s — tap to reshuffle now",
+            "graph": {
+                "cap": "Trade consistency vs availability under network partitions — choose per system.",
+                "sharding": "Split data across shards to scale writes/reads beyond one node.",
+                "saga": "Long transactions across services via compensating steps, no 2PC.",
+                "idempotency": "Same result no matter how many times a call retries.",
+                "redlock": "Distributed lock on Redis + fencing token to stop client races.",
+                "kafka": "Append-only log as source of truth: replay, decouple producers/consumers.",
+                "cdc": "Capture DB changes (Debezium) to a stream — no dual writes.",
+                "token-bucket": "Smooth rate limiting with token buckets + atomic Redis Lua.",
+                "websocket": "Two-way realtime gateway, fan-out events to thousands of clients.",
+                "tracing": "Follow one request across services to find bottlenecks (OTel/Jaeger).",
+                "nestjs": "Modular backend framework with clean DI for large APIs.",
+                "typeorm": "TypeScript ORM: entities, relations, migrations — close to SQL.",
+                "webhooks": "Receive third-party events safely: verify signature + idempotent.",
+                "payment": "Integrate payment gateways: idempotency, reconciliation, refunds.",
+                "rag": "Semantic search with pgvector, then grounded LLM answers with sources.",
+                "oauth": "Auth and authorization via OAuth2/JWT with safe refresh tokens.",
+                "jobs": "Background job queues: retry, backoff, scheduling — off the request path.",
+                "rsc": "React Server Components: render on the server, ship less JS.",
+                "k8s": "Container orchestration: self-healing, scaling, declarative rollouts.",
+                "ingress": "Route HTTP into the cluster: host/path, TLS, load balancing.",
+                "argocd": "GitOps: desired state in Git, ArgoCD syncs it to the cluster.",
+                "rollouts": "Canary/blue-green deploys that analyze metrics before full traffic.",
+                "prometheus": "Collect metrics and alert in real time for running systems.",
+                "rbac": "Role-based access in K8s: who can do what, least privilege.",
+                "terraform": "Infrastructure as code, multi-cloud, reproducible plan/apply.",
+                "falco": "Detect abnormal container runtime behavior in real time.",
+                "consistentHashing": "Consistent hashing: add/remove nodes with minimal re-keying — the base for elastic sharding.",
+                "circuitBreaker": "Trip the circuit when a dependency keeps failing — stop cascading failures.",
+                "eventSourcing": "Store the event stream as source of truth; rebuild state by replay.",
+                "readReplica": "Read-only replicas absorb read load — at the cost of replication lag.",
+                "graphql": "Typed API: clients fetch exactly the fields they need from one endpoint.",
+                "redisCache": "Cache-aside on Redis: TTL, invalidation, stampede protection.",
+                "sse": "Server-Sent Events: lightweight one-way server push for streams.",
+                "zodValidation": "Runtime validation + inferred types with Zod at the API edge.",
+                "helm": "Package K8s manifests into reusable charts with per-env values.",
+                "autoscaling": "HPA scales pods by CPU/custom metrics — tracks real load.",
+                "serviceMesh": "A mesh layer handling mTLS, retries, and traffic-splitting between services.",
+                "grafana": "Visual dashboards + alerts on top of Prometheus metrics."
+            }
+        },
+        "backToTop": "Back to top"
+    },
+    "aiLab": {
+        "tabs": {
+            "aiLab": "AI Lab"
+        },
+        "playground": {
+            "title": "Prompt playground",
+            "description": "Tweak the prompt and parameters, then run it against a live model and watch the response stream in.",
+            "systemPrompt": "System prompt",
+            "systemPromptPlaceholder": "Optional. Set the model's role and rules.",
+            "userPrompt": "User prompt",
+            "userPromptPlaceholder": "Type the prompt to send to the model.",
+            "params": "Parameters",
+            "temperature": "Temperature",
+            "topP": "Top-p",
+            "maxTokens": "Max tokens",
+            "lane": "Lane",
+            "model": "Model",
+            "run": "Run",
+            "abort": "Abort",
+            "resetToDefault": "Reset to default",
+            "output": "Output",
+            "outputEmpty": "The response will appear here.",
+            "cached": "Cached",
+            "tokens": "{prompt} prompt / {completion} completion tokens",
+            "estimatedCost": "≈ {credits} credits",
+            "remainingRuns": "{count} runs left this window",
+            "quotaExhausted": "You have used all your runs for this window.",
+            "byokNudge": "Add your own API key to keep running without limits.",
+            "goToAiSettings": "Open AI settings",
+            "runHistory": "Run history",
+            "runHistoryEmpty": "No runs yet.",
+            "failed": "The run failed. Please try again."
+        },
+        "eval": {
+            "title": "Evaluation challenge",
+            "description": "Write a prompt template, submit it, and we grade your output across every hidden test case.",
+            "systemPrompt": "System prompt",
+            "systemPromptPlaceholder": "Optional. Set the model's role and rules.",
+            "userTemplate": "User template",
+            "userTemplatePlaceholder": "Use {{input}} where each test case input should go.",
+            "templatePlaceholderHint": "Use the {{input}} placeholder — it is replaced with each test case input.",
+            "submit": "Submit for grading",
+            "submitting": "Submitting…",
+            "grading": "Grading…",
+            "passedSummary": "{passed}/{total} cases passed",
+            "score": "Score {score}/{max}",
+            "passed": "Passed",
+            "failed": "Failed",
+            "caseInput": "Input",
+            "actualOutput": "Output",
+            "expected": "Expected",
+            "feedback": "Feedback",
+            "citationPresent": "Citation present",
+            "citationMissing": "Citation missing",
+            "viewResult": "View result",
+            "caseLabel": "Case {index}",
+            "empty": "This lesson has no evaluation challenge."
+        },
+        "status": {
+            "streaming": "Streaming",
+            "completed": "Completed",
+            "failed": "Failed",
+            "cached": "Cached",
+            "pending": "Pending",
+            "grading": "Grading"
+        }
+    },
+    "pinnedProjects": {
+        "add": "Add a project",
+        "course": {
+            "loading": "Loading...",
+            "noCourses": "You don't have any capstone projects to pin yet.",
+            "selectLabel": "Capstone project",
+            "selectPlaceholder": "Select a capstone project",
+            "verified": "Verified"
+        },
+        "emptyManage": "You haven't pinned any projects yet. Switch to the External or Course tab to add one.",
+        "emptyOwnerDescription": "Showcase your best work by pinning verified course capstones or external projects, GitHub-style.",
+        "emptyOwnerTitle": "No pinned projects yet",
+        "errorDescription": "We couldn't load the pinned projects. Please try again.",
+        "errorTitle": "Failed to load pinned projects",
+        "form": {
+            "description": "Description",
+            "descriptionPlaceholder": "Briefly describe this project",
+            "submit": "Pin project",
+            "techStack": "Tech stack",
+            "techStackHint": "Separate technologies with commas or new lines.",
+            "techStackPlaceholder": "e.g. Next.js, TypeScript, PostgreSQL",
+            "title": "Title",
+            "titlePlaceholder": "Project name",
+            "titleRequired": "Please enter a title.",
+            "url": "URL",
+            "urlInvalid": "Please enter a valid URL.",
+            "urlPlaceholder": "https://example.com"
+        },
+        "full": "You've reached the maximum of {max} pinned projects.",
+        "heading": "Pinned projects",
+        "manage": "Add / manage",
+        "manageTitle": "Manage pinned projects",
+        "moveDown": "Move down",
+        "moveUp": "Move up",
+        "open": "Open link",
+        "remove": "Remove",
+        "retry": "Try again",
+        "tabs": {
+            "course": "Course",
+            "external": "External",
+            "manage": "Pinned ({count}/{max})"
+        },
+        "untitled": "Untitled project",
+        "verified": "Verified",
+        "typeCapstone": "Capstone",
+        "typeExternal": "Project",
+        "verifiedByStarci": "Verified by StarCi",
+        "openAria": "{title} — open in new tab"
+    },
+    "blog": {
+        "back": "Back to blog",
+        "clearFilter": "View all",
+        "ctaDefault": "Learn more",
+        "empty": "No posts yet",
+        "emptyHint": "Check back soon for new articles.",
+        "emptyInFilter": "No posts in this pillar",
+        "emptyInFilterHint": "Try another category, or view all posts.",
+        "errorHint": "Something went wrong while loading articles.",
+        "errorTitle": "Couldn't load articles",
+        "latest": "Latest",
+        "loadMore": "Load more",
+        "loading": "Loading articles…",
+        "lockedBody": "This article is for members only. Become a member to read the full story.",
+        "lockedTitle": "Members-only content",
+        "notFound": "Article not found",
+        "premium": "Premium",
+        "readingMinutes": "{minutes} min read",
+        "relatedTitle": "More in {category}",
+        "retry": "Try again",
+        "subtitle": "Deep technical analysis of the very infrastructure that runs StarCi — architecture, trade-offs, and real code.",
+        "title": "The StarCi backend, taken apart",
+        "masthead": {
+            "caption": "The real StarCi backend architecture — drag to orbit."
+        },
+        "startHere": "Start here",
+        "topics": "Topics",
+        "viewSource": "View on GitHub",
+        "categories": {
+            "all": "All",
+            "DEEP_DIVE": "Deep dive",
+            "BUILD_IN_PUBLIC": "Build in public",
+            "CAREER": "Career",
+            "AI": "AI",
+            "CASE_STUDY": "Case study",
+            "CODEBASE": "Codebase"
+        }
+    },
+    "rewards": {
+        "balance": "{count} reward points",
+        "balanceNote": "Reward points are separate from the lifetime XP that powers your league ranking.",
+        "cancel": "Cancel",
+        "cannotAfford": "Not enough points",
+        "confirmRedeem": "Confirm redemption",
+        "cost": "{count} points",
+        "noRedemptions": "You haven't redeemed any rewards yet.",
+        "redeem": "Redeem",
+        "redeemedTitle": "Redemption history",
+        "shipAddress": "Shipping address",
+        "shipName": "Recipient name",
+        "shipPhone": "Phone number",
+        "title": "Rewards store",
+        "status": {
+            "granted": "Granted",
+            "pending": "Pending",
+            "fulfilled": "Fulfilled"
+        }
+    },
+    "flashcardReview": {
+        "backToDashboard": "Back to dashboard",
+        "done": "All caught up! You've reviewed every due card.",
+        "due": "{count, plural, one {# card due for review} other {# cards due for review}}",
+        "empty": "No cards are due for review right now.",
+        "flip": "Flip card",
+        "progress": "{current} / {total}",
+        "start": "Start review",
+        "again": "Again",
+        "hard": "Hard",
+        "good": "Good",
+        "easy": "Easy"
+    },
+    "notifications": {
+        "empty": "No notifications yet",
+        "loadError": "Couldn't load notifications",
+        "markAllRead": "Mark all as read",
+        "retry": "Try again",
+        "title": "Notifications"
+    },
+    "streakFreeze": {
+        "buy": "Buy a freeze ({cost} XP)",
+        "explainer": "A streak freeze protects your streak for one missed day.",
+        "full": "You're stocked up",
+        "owned": "{count} / {max} freezes",
+        "title": "Streak freeze"
+    },
+    "weeklyChallenge": {
+        "endsIn": "Ends in {days}d {hours}h",
+        "passed": "Passed",
+        "passedCount": "{count, plural, one {# learner passed} other {# learners passed}}",
+        "title": "Weekly challenge",
+        "tryNow": "Try it now"
+    },
+    "bookmarks": {
+        "noMatch": "No bookmarks match your search.",
+        "searchPlaceholder": "Search bookmarks",
+        "heading": "Bookmark",
+        "subtitle": "Lessons you saved to revisit",
+        "found": "{count, plural, one {# bookmark found} other {# bookmarks found}}",
+        "empty": "No bookmarks yet",
+        "emptyHint": "Save a lesson to revisit it here",
+        "errorTitle": "Failed to load bookmarks",
+        "premium": "Premium"
+    },
+    "followList": {
+        "title": "Connections",
+        "empty": {
+            "followers": "No followers yet",
+            "following": "Not following anyone yet"
+        }
+    },
+    "autosave": {
+        "saving": "Saving…",
+        "saved": "Saved",
+        "failed": "Save failed"
+    },
+    "toast": {
+        "successTitle": "Success",
+        "errorTitle": "Error",
+        "unauthorizedTitle": "Unauthorized",
+        "unauthorizedDescription": "You are not authorized to access this resource.",
+        "defaultSuccess": "Operation completed.",
+        "defaultError": "Something went wrong."
+    },
+    "profileMascot": {
+        "pick": "Pick a mascot",
+        "clear": "Unpin mascot",
+        "empty": "Earn achievements to pin a mascot."
+    },
+    "ranks": {
+        "explain": {
+            "why": "Rank is derived from how many badges you've earned and the tiers reached on them. {count} badges earned.",
+            "next": "Reach {next}: need {remaining} more badge(s) at tier {tier} (have {have}/{count}).",
+            "maxed": "This is the top rank — you've reached Senior."
+        },
+        "beginner": "Beginner",
+        "junior": "Junior",
+        "middle": "Mid",
+        "senior": "Senior"
+    },
+    "footer": {
+        "tagline": "Learn by building real systems with your own hands — sharp enough for any technical interview.",
+        "exploreTitle": "Explore",
+        "supportTitle": "Support",
+        "links": {
+            "courses": "Courses",
+            "blog": "Blog",
+            "talents": "Talents",
+            "community": "Community",
+            "contact": "Contact",
+            "terms": "Terms",
+            "privacy": "Privacy"
+        },
+        "madeBy": "Built by Nguyễn Văn Tự Cường",
+        "copyright": "© {year} StarCi Academy"
+    },
+    "legal": {
+        "contactNote": "Questions about these terms or your data? Email cuongnvtse160875@gmail.com.",
+        "lastUpdated": "Last updated: {date}",
+        "terms": {
+            "title": "Terms of Service",
+            "description": "The terms for using StarCi Academy.",
+            "body": "The full terms document is being finalized. By using StarCi Academy you agree to use the platform for lawful learning and to respect the ownership of course content. A detailed version will be published on this page."
+        },
+        "privacy": {
+            "title": "Privacy Policy",
+            "description": "How StarCi Academy collects and uses your data.",
+            "body": "The full privacy policy is being finalized. StarCi Academy collects only the data needed to run your learning (account, progress, submissions) and does not sell your data to third parties. A detailed version will be published on this page."
+        }
+    },
+    "cookieConsent": {
+        "title": "Cookies",
+        "body": "We use necessary cookies to sign you in and remember your language, plus analytics cookies (Google Analytics) to improve your experience. You can accept, reject, or customize.",
+        "acceptAll": "Accept all",
+        "reject": "Reject",
+        "customize": "Customize",
+        "modalTitle": "Cookie preferences",
+        "modalBody": "Choose which cookies you allow. Necessary cookies are always on so the system works.",
+        "necessaryLabel": "Necessary",
+        "necessaryHint": "Sign-in, security and language. Always on.",
+        "analyticsLabel": "Analytics",
+        "analyticsHint": "Google Analytics — anonymous metrics to improve the product.",
+        "save": "Save choices"
+    },
+    "socketStatus": {
+        "reconnecting": "Connection lost — reconnecting…",
+        "reconnected": "Reconnected"
+    },
+    "status": {
+        "title": "System status",
+        "subtitle": "Live health of the StarCi Academy platform — built in public, no login required.",
+        "refresh": "Refresh",
+        "overall": "{up}/{total} components healthy",
+        "infraHeading": "Infrastructure",
+        "aiKeysHeading": "AI keys",
+        "latency": "{ms}ms",
+        "checked": "Checked {ago}",
+        "noKeys": "No keys configured.",
+        "aiKeyGroupHeader": "{models} · {provider} · {healthy}/{total} keys",
+        "componentStatus": {
+            "up": "Operational",
+            "degraded": "Degraded",
+            "down": "Down"
+        },
+        "error": {
+            "title": "Could not load status",
+            "description": "We couldn’t reach the status endpoint. Please try again.",
+            "retry": "Try again"
+        },
+        "empty": {
+            "infraTitle": "No components reported",
+            "infraDescription": "No infrastructure components are being probed right now.",
+            "aiTitle": "No AI keys reported",
+            "aiDescription": "No AI key groups are configured right now."
+        }
+    }
+}

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 150" width="360" height="150" fill="none">
+  <defs>
+    <!-- Teal → cyan vertical gradient for the STARCI wordmark -->
+    <linearGradient id="starciTeal" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#19E0CC"/>
+      <stop offset="48%" stop-color="#00B7A6"/>
+      <stop offset="100%" stop-color="#00897E"/>
+    </linearGradient>
+    <!-- Soft glow used behind the sparkle -->
+    <radialGradient id="sparkGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#5BF0E0" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#5BF0E0" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Sparkle (STAR) accent in the top-right corner, clear of the wordmark -->
+  <circle cx="326" cy="30" r="22" fill="url(#sparkGlow)"/>
+  <path d="M326 12 Q326 30 344 30 Q326 30 326 48 Q326 30 308 30 Q326 30 326 12 Z" fill="#19E0CC"/>
+  <path d="M348 14 Q348 22 356 22 Q348 22 348 30 Q348 22 340 22 Q348 22 348 14 Z" fill="#5BF0E0" opacity="0.85"/>
+
+  <!-- STARCI -->
+  <text x="20" y="86"
+        font-family="'Open Sans','Segoe UI',system-ui,Arial,sans-serif"
+        font-size="76" font-weight="800" letter-spacing="-1"
+        fill="url(#starciTeal)">STARCI</text>
+
+  <!-- ACADEMY -->
+  <text x="22" y="124"
+        font-family="'Open Sans','Segoe UI',system-ui,Arial,sans-serif"
+        font-size="24" font-weight="600" letter-spacing="13"
+        fill="#6C8AA3">ACADEMY</text>
+</svg>

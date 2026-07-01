@@ -1,0 +1,30 @@
+---
+alwaysApply: true
+---
+
+# Component Structure Rule
+
+- Mỗi component phải được đặt trong một thư mục riêng.
+- File triển khai component chính luôn là `index.tsx`.
+- Nếu component có nested component:
+  - Tạo thư mục con cho nested component đó.
+  - File triển khai của nested component vẫn là `index.tsx`.
+  - Ở component cha, tạo `index.ts` để export các nested component cần public.
+- Tránh tạo file component rời tên riêng như `Button.tsx`, `Card.tsx`; ưu tiên cấu trúc thư mục + `index.tsx`.
+- Trong mỗi file `index.tsx`:
+  - Bắt buộc có `interface` props với naming: `XXXProps {}` (ví dụ: `ButtonProps`).
+  - Tên component phải theo format: `export const XXX = (props: XXXProps) =>`.
+  - Bắt buộc có comment chuẩn JSDoc dùng `/** */` ngay trên component để:
+    - Nêu định nghĩa/mục đích component.
+    - Mô tả `@param` cho props truyền vào.
+  - Với danh sách object dùng để render UI (ví dụ `navItems`, `menuItems`, `actions`), bắt buộc khai báo trong `useMemo`.
+  - Nếu object có field icon thì truyền component reference (ví dụ: `icon: HouseIcon` hoặc `Icon: HouseIcon`), không truyền JSX element dạng `<HouseIcon />` trong object data.
+  - Bắt buộc dùng translation cho tất cả text hiển thị ra UI (label, title, description, placeholder, button text, empty text, toast message...).
+  - Không hardcode text trực tiếp trong JSX hoặc object data; phải dùng key translation (ví dụ: `t("nav.home")`).
+  - Bắt buộc có comment cho từng field quan trọng:
+    - Mỗi field trong `interface XXXProps` phải có comment mô tả ý nghĩa.
+    - Các field trong object data dùng để render UI (ví dụ `navItems`) phải có comment ngắn nếu ý nghĩa không tự rõ ràng.
+  - Bắt buộc define type cho object:
+    - Mọi object/object array dùng trong component phải có type tường minh bằng `type` hoặc `interface`.
+    - Không để object suy luận ngầm khi có thể khai báo type rõ ràng.
+  - Với kiểu mảng, bắt buộc dùng `Array<T>` thay vì `T[]` để thống nhất convention.

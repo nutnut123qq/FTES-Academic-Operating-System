@@ -1,0 +1,229 @@
+---
+alwaysApply: true
+---
+# Frontend Conventions (StarCI Academy)
+
+Stack: **Next.js** (App Router), **React 19**, **Tailwind CSS v4**, **HeroUI** (`@heroui/react`), **next-themes**, **SWR**, **Phosphor Icons**, **Framer Motion** where needed.
+
+---
+
+## Folder roles
+
+| Area | Path | Purpose |
+|------|------|--------|
+| Routes & layouts | `src/app/` | `page.tsx`, `layout.tsx`, route segments, route groups. Keep route files thin; move UI into `src/components/`. |
+| UI | `src/components/` | Reusable components, layouts, providers. Feature folders with `index.tsx` or named entry. |
+| Static course / marketing content | `src/data/` | Course modules, copy, structured content (often `.tsx` when content includes JSX). |
+| View / page-level types | `src/types/` | Types shaped for the UI (e.g. course cards, pricing), not API entity mirrors. |
+| Shared API / domain types | `src/modules/types/` | Schemas aligned with backend contracts; import from `@/modules/types` when typing API responses. |
+
+Do **not** put large presentational trees only used in one route under `app/` long-term; prefer `components/` and import.
+
+---
+
+## File splitting (mirror backend Kani) — STRICT
+
+Tách type / enum / constant ra **folder riêng**, đúng tinh thần backend. Áp dụng cho mọi feature folder (component feature, hook feature, module feature, GraphQL op).
+
+- **`types/`** — interface & type. Một file theo **feature** (gom type liên quan vào 1 file, vd `types/ai-settings.ts`), KHÔNG tạo nhiều file vụn. `index.ts` re-export.
+- **`enums/`** — enum. Một file/feature. `index.ts` re-export. Value phải khớp backend `createEnumType` (thường chữ thường).
+- **`constants/`** — hằng số. Một file/feature (vd `constants/ai.ts`). KHÔNG rải magic number/string trong component/hook.
+- **`utils/`** — pure function (parser, formatter, helper stateless). Một file/concern.
+
+**No inline nested object types — STRICT:** KHÔNG viết object type literal `{ ... }` lồng inline ở BẤT KỲ vị trí type nào. Luôn tách thành interface có tên (JSDoc type-level + **từng field**) rồi tham chiếu. Áp cho cả 5 vị trí:
+- **Generic argument** (mirror backend `.getRawOne<{ sum: string }>()`): Sai `useState<{ open: boolean }>()`, `useSWR<{ data: Row }>(...)`, `useMemo<{ a: string }>(...)`, `fn<{ id: string }>()`. Đúng: tách `interface XxxState { open: boolean }` rồi `useState<XxxState>()`.
+- **Nested field trong interface/type:** Sai `interface A { nested?: { prop: string } }`. Đúng `interface Nested { prop: string }` + `interface A { nested?: Nested }`.
+- **Return type:** Sai `const f = (): { total: number } => ...`. Đúng tách `FResult` (mirror `XxxResult`).
+- **Param type:** Sai `(arg: { id: string }) => ...`. Đúng tách `XxxParams` (object param ≥2 field).
+- **Cast shape non-trivial:** `as { ... }` với shape thực sự → tách interface.
+
+KHÔNG tính vi phạm: `Pick`/`Record`/`Partial`/`Omit`/`ReturnType<typeof f>`/`Array<T>`/`Promise<T>`/utility types, và object *value* runtime (chỉ vị trí TYPE mới tính). Ngoại lệ Component Props xem mục Components bên dưới (Props giữ trong `index.tsx`, nhưng sub-type lồng vẫn phải tách).
+
+**Framework/feature files KHÔNG khai type/enum/constant inline:**
+`page.tsx`, `layout.tsx`, hook (`useXxx.ts`), GraphQL op (`query-*.ts` / `mutation-*.ts`), service trong `modules/` — chỉ được **import** type/enum/constant từ `types/`, `enums/`, `constants/`. KHÔNG declare interface/enum/const-catalog ngay trong các file này.
+
+**Ngoại lệ — Component Props:** Component FE (`components/.../index.tsx`) giữ **Props ngay trong `index.tsx`**, đặt tên theo pattern `{ComponentName}Props` (hoặc `Props` nếu folder chỉ 1 component). KHÔNG ép Props ra `types/`. Chỉ tách `types/` khi component có nhiều sub-type/dùng lại.
+- GraphQL `XxxRequest` / `XxxResponse` / `XxxData`: đặt ở `types/` của op (vd `modules/api/graphql/queries/types/`), KHÔNG inline trong file `query-*.ts`. Document `gql\`...\`` giữ trong file op.
+- Enum / constant / shared-type: luôn ra `enums/` `constants/` `types/`.
+- Params hàm reuse: dùng object param đặt tên `XxxParams`, kết quả `XxxResult` (mirror backend).
+
+**Allowed folders ở feature root:** chỉ `types/`, `enums/`, `constants/`, `utils/` (+ folder framework Next như route segments). Bỏ folder lạ, dồn về 4 folder chuẩn.
+
+### Lookup map → `map.ts`
+- Mọi **lookup map / record** (vd `Record<Enum, X>`, icon map, label map, color map) tách ra file riêng **`map.ts`** ở feature folder (hoặc `<name>.map.ts`), KHÔNG khai inline trong component/hook.
+- Map có JSDoc; key dùng enum (không string literal rải rác).
+
+### Shared config → `src/config/`
+- Object cấu hình / catalog tĩnh **dùng chung nhiều nơi** đặt ở **`src/config/`** (1 file/feature, re-export ở `config/index.ts`). Khai `as const`.
+- Khác biệt: `src/config/` = object dùng chung; `resources/constants` = hằng nguyên thuỷ + env/path; `*/map.ts` = lookup map cục bộ của 1 feature.
+- **Khi import object/array từ `config/` (hoặc bất kỳ object tĩnh ngoài) VÀO component → bọc `useMemo(() => ..., [])`** để giữ tham chiếu ổn định.
+
+---
+
+## Hooks — STRICT
+
+- **Ưu tiên `useMemo`** cho mọi giá trị derived (lọc/sort/map list, build object/option, tính toán) dựa trên state/redux/props.
+- **Ưu tiên `useCallback`** cho mọi handler/callback truyền xuống child hoặc dùng trong dependency array.
+- Object/array literal truyền làm prop hoặc dùng trong `useEffect` deps → `useMemo`/`useCallback` để khỏi đổi tham chiếu mỗi render.
+- Dependency array khai đầy đủ + đúng (không bỏ dep ẩn).
+- Hook tách 1 concern/file (`useXxx.ts`), có JSDoc `@param`/`@returns`.
+
+### Actions / Handlers
+- Mọi action/event handler đặt tên theo pattern **`onXXX`** (vd `onPress`, `onSubmit`, `onSelect`, `onConfirm`, `onClose`), KHÔNG `handleXxx`.
+- Tạo handler bằng **`useCallback`** rồi **push (truyền) xuống component/child qua prop** cùng tên `onXXX`. KHÔNG viết arrow inline trong JSX cho action có logic.
+- HeroUI v3 dùng **`onPress`** (không `onClick`) cho control tương tác.
+- Prop callback của component cũng khai theo `onXXX` (vd `interface XProps { onSelect: (id: string) => void }`).
+
+---
+
+## App Router (`src/app/`)
+
+- **`page.tsx` chỉ render 1 component — STRICT.** Route file chỉ được **return component từ `components/`** (vd `return <AiSettingsPage />`). KHÔNG viết UI/JSX phức tạp, KHÔNG logic, KHÔNG hook, KHÔNG fetch inline trong `page.tsx`/`layout.tsx`. Mọi thứ đẩy vào `components/` (layouts) + hook. `layout.tsx` chỉ ráp provider/shell.
+- **`page.tsx`** — Server Component by default unless the file or a child needs `"use client"`.
+- **`layout.tsx`** — Shell, fonts, global providers composition. Prefer wrapping providers from `src/components/providers/`.
+- **Colocate** route-only helpers next to the route (e.g. small `loading.tsx`, `error.tsx`) when used only there.
+- **Dynamic routes** — Use descriptive param names in folders (e.g. `[id]`); type `params` / `searchParams` from Next.js types where applicable.
+
+---
+
+## Components (`src/components/`)
+
+> **Props discipline & Spacing scale → xem `props-and-spacing.mdc`** (SSOT): mọi `*Props`
+> `extends WithClassNames`; container chỉ nhận `className`/`classNames` (+ item-data nếu là
+> list-item), tự đọc store/tự dispatch, KHÔNG nhận data/callback/id props; reuseable giữ props
+> nhưng cấm store/SWR; spacing `gap/space` chỉ `0/1.5/3/6` theo ngữ cảnh.
+
+- **One main concern per folder** — e.g. `layouts/Course/`, `layouts/Navbar/`, `providers/`.
+- **Public API** — Re-export from folder `index.ts` when the folder is a package of related pieces (match existing `layouts`, `providers` pattern).
+- **Casing — STRICT:** **PascalCase = component** (folder + `index.tsx`, vd `ButtonA/index.tsx`); **lowercase = folder gom nhóm/category** (vd `buttons/`, `cards/`, `abc/`). → `reuseable/buttons/ButtonA/index.tsx`: `buttons` (nhóm, thường) chứa `ButtonA` (component, Pascal).
+- **Props** — `interface {ComponentName}Props` giữ **ngay trong `index.tsx`** của component (name pattern `{ComponentName}Props`, hoặc `Props` nếu folder 1 component). **No nested object types inline**: sub-type lồng phải tách interface riêng (vào `types/` nếu dùng lại). Xem section "File splitting".
+- **Default export** — Use default export for the primary page-level or layout component in `app/` if that matches the file; in `components/`, default or named exports are both OK but **stay consistent within a folder**.
+
+### Decomposition & nesting — STRICT
+- **Tách nhỏ, mỗi component 1 chức năng / 1 file.** Component ôm quá nhiều logic/JSX → tách con.
+- **KHÔNG định nghĩa component inline trong body component khác** (không `const Sub = () => (...)` trong render). Phải tách ra file riêng.
+- **Nested ASAP (mặc định):** sub-component chỉ dùng bởi **1 parent** → đặt **lồng trong folder của parent** để lộ rõ chức năng + phạm vi sở hữu:
+  ```
+  Page/
+    index.tsx          # Page
+    Button/
+      index.tsx        # sub-component chỉ Page dùng → nest dưới Page
+  ```
+- **Chỉ promote ra ngoài khi dùng chung:** component được dùng ở **nhiều nơi** mới chuyển ra `components/` thành sibling (ngang hàng), KHÔNG để lồng nữa.
+- **Nhóm theo chức năng (cả `layouts/` lẫn `reuseable/`):** gom component theo category folder `<area>/<category>/<Component>/index.tsx`, vd:
+  ```
+  components/layouts/abc/AAAA/index.tsx
+  components/layouts/bbb/AAAA/index.tsx
+  components/reuseable/buttons/ButtonA/index.tsx
+  components/reuseable/buttons/ButtonB/index.tsx
+  ```
+- **Phân loại theo "có logic hay không":**
+  - **`components/layouts/`** — container: có **logic / hook / state / orchestration** (SWR singleton, redux, action).
+  - **`components/reuseable/`** — presentational, dùng chung. **Được dùng hook UI-cục-bộ** (`useState` hover/toggle, `useDisclosure`, `useId`, `useMemo` format…). **CẤM logic nghiệp vụ**: KHÔNG SWR/redux/fetch/orchestration. Data + business logic ở `layouts/` truyền props xuống.
+- **Container → Presentational:** layouts tính toán + tạo handler `onXXX` rồi truyền props xuống reuseable. Đừng nhét logic vào reuseable.
+- `modals/`, `drawers/` cùng nguyên tắc: state mở/đóng qua singleton overlay hook, UI render tách rõ.
+
+---
+
+## `"use client"` and boundaries
+
+- Add **`"use client"`** only at the boundary that needs browser APIs, state, effects, event handlers, or client-only libraries.
+- Keep **Server Components** as the default for static content, SEO-friendly markup, and data that can be passed as props from the server.
+- Do **not** mark the entire tree as client-only; push `"use client"` down to the smallest subtree.
+
+---
+
+## Styling (Tailwind + HeroUI)
+
+- Use **Tailwind utility classes** for layout, spacing, typography, and responsive behavior.
+- Use **HeroUI** primitives for interactive controls (buttons, inputs, modals, etc.) for consistency with the design system.
+- Theme extension lives in **`src/app/hero.ts`** (HeroUI plugin). Prefer design tokens / component variants over hard-coded one-off colors when HeroUI provides them.
+- Prefer **`cn()` / conditional classes** patterns only if the project already introduces a helper; otherwise use template literals or `clsx`-style utilities if added later—**do not add new deps without need**.
+
+### CSS & base components — STRICT
+- **CSS global / dùng chung để trong `src/app/globals.css`** (Tailwind v4 entry), KHÔNG rải file `.css` riêng rải rác. Style cục bộ ưu tiên Tailwind util class, không tự viết CSS rời.
+- **KHÔNG tự define lại base component đã có ở HeroUI** (Button, Input, Modal, Select…). Dùng thẳng HeroUI; cần biến thể thì compose/wrap HeroUI + variant/token, đừng dựng lại từ đầu.
+- (Ví dụ `buttons/ButtonA` ở trên chỉ minh hoạ cách **nhóm theo chức năng**, KHÔNG có nghĩa là dựng lại Button của HeroUI.)
+
+---
+
+## Data & content (`src/data/`)
+
+- Group by **course or product** (e.g. `fullstack/`, `system-design/`) with **`modules/`** for ordered lessons.
+- **`index.ts`** files re-export the public surface for that course.
+- Keep **IDs and slugs** stable when content is linked from routes or `src/types`.
+
+---
+
+## Types — STRICT
+
+- Đặt type ở folder `types/` (xem "File splitting"). `src/types/` = UI-facing shape (form, card, pricing); `src/modules/types/` = mirror backend entity/enum.
+- **`Array<T>`** cho array (KHÔNG `T[]`), nhất quán toàn repo.
+- **`import type`** cho type-only import trong TS/TSX.
+- **Mọi** interface/type/field PHẢI có JSDoc (mô tả mục đích/đơn vị), không chỉ field "non-obvious". Mirror backend: comment đầy đủ.
+- Object param của hàm reuse đặt tên `XxxParams`; kết quả `XxxResult`. KHÔNG nested object inline (tách interface) — kể cả ở **generic argument** (`useState<{...}>`, `useSWR<{...}>`), return type, param type. Xem "File splitting" → "No inline nested object types".
+
+---
+
+## Imports
+
+- Use the **`@/`** path alias (`@/components/...`, `@/types/...`, `@/modules/...`).
+- Order: external packages → `@/` → relative (group logically). Type-only imports grouped as in the backend rule.
+
+### Layered dependency direction — STRICT (import theo dạng cây)
+- Import **theo dạng cây / phân tầng**: tầng dưới (nền tảng) KHÔNG được import từ tầng trên (tiêu thụ). Chiều phụ thuộc 1 hướng:
+  ```
+  modules/types  ←  modules/utils  ←  modules/api (graphql queries/mutations)  ←  redux/slices  ←  hooks  ←  components
+  ```
+  (mũi tên = "được import bởi". `modules/types` là đáy, không import ai ở trên nó.)
+- **Type dùng chung (shared) phải nằm ở `src/modules/types/`** (entity/domain shape dùng ≥2 nơi). KHÔNG để type dùng chung trong file op GraphQL rồi import ngược lên các tầng khác.
+- ⚠️ **CẤM import ngược (back-import):** vd `redux/slices/*` KHÔNG được `import type { X } from "@/modules/api/..."` nếu `X` là domain/shared type — relocate `X` về `@/modules/types` rồi cả `modules/api` lẫn `redux` cùng import xuống từ đó. `modules/api` được import từ `modules/types` (xuôi chiều), nhưng `modules/types` KHÔNG import từ `modules/api`.
+- GraphQL `XxxRequest/Response/Data` (wrapper riêng của 1 op) vẫn ở `queries/types` | `mutations/types` — chỉ **domain shape thực sự dùng chung** mới lên `modules/types`.
+
+### Barrel exports — STRICT (có giới hạn)
+- **Mọi folder có `index.ts` (component folder dùng `index.tsx`) re-export bằng `export * from "./x"`.** Áp cho `types/ enums/ constants/ utils/ config/ map`, mọi category folder của `components/`, `hooks/`, `redux/slices/`, `modules/...`.
+- **Import qua barrel** ở mức **category** (folder/alias), KHÔNG import sâu vào file con. Vd `import { ButtonA } from "@/components/reuseable/buttons"` (không `.../buttons/ButtonA/index.tsx`).
+- ⚠️ **KHÔNG tạo mega-barrel** gom toàn bộ (vd `@/components/index.ts` re-export hết): gây chậm compile dev, bundle to (kéo cả cây vào 1 route), dễ circular + rò ranh giới `"use client"`. Barrel **dừng ở mức category**, import theo category là đủ.
+- ⚠️ KHÔNG trộn client + server component trong cùng 1 barrel.
+- Tạo file mới → thêm dòng `export *` vào `index.ts` cùng folder ngay.
+
+---
+
+## Icons & motion
+
+- **Icons — STRICT:** dùng **`@phosphor-icons/react`** cho TẤT CẢ icon; import đúng icon dùng (tree-shaking friendly). **CẤM `lucide-react`** (và mọi icon lib khác). Có usage lucide còn sót → thay bằng Phosphor tương đương (vd `Volume2`→`SpeakerHigh`, `VolumeOff`→`SpeakerSlash`, `Settings`→`GearSix`, `Maximize`→`ArrowsOut`, `Flame`→`Fire`, `Radio`→`Broadcast`, `ArrowLeft`→`ArrowLeft`). Icon map (`Record<Enum, Icon>`) để ở `map.tsx`, type icon dùng `Icon` của Phosphor (`@phosphor-icons/react`), KHÔNG `LucideProps`.
+- **Motion:** `framer-motion` only where animation is required; avoid wrapping large static regions.
+
+---
+
+## Data fetching (SWR)
+
+- Configure SWR via **`src/components/providers/SwrProvider.tsx`** (or the project’s single provider). Do not duplicate global SWR config in every hook.
+- Custom hooks that wrap `useSWR` live next to the feature or under a `hooks/` folder if the project introduces one—**one hook per file** for non-trivial logic.
+
+---
+
+## Comments — STRICT (mirror backend)
+
+- **ENGLISH ONLY — no Vietnamese in code.** Every comment, JSDoc, inline note, `TODO`/`FIXME`, and identifier (variable/function/type/file name) MUST be in English. The product is going international; reviewers and contributors may not read Vietnamese. This applies to ALL `.ts`/`.tsx` under `src/`. (User-facing copy stays in i18n message files `src/messages/*.json` — never hardcode Vietnamese strings in components; do not "translate" the `vi.json` content.)
+- **JSDoc cho TẤT CẢ:** mọi component, hook, util, function (kể cả nội bộ không export nếu logic không hiển nhiên), type, interface, field, enum + member, constant, map, config object, GraphQL op. KHÔNG còn "chỉ khi non-obvious".
+- **Hook / util / op:** JSDoc kèm `@param` (mô tả từng param) + `@returns`.
+- **Component:** JSDoc trên export mô tả vai trò + lý do `"use client"`/a11y nếu có.
+- **Handler phức tạp:** comment `//` giữa các bước lớn (validate → call API → update UI state).
+- **Enum/constant:** comment trên enum + từng member/giá trị (đơn vị, ý nghĩa).
+
+---
+
+## Accessibility & semantics
+
+- Prefer **semantic HTML** (`main`, `nav`, `article`, headings in order).
+- Interactive elements must be **keyboard reachable**; use HeroUI/native controls instead of `div` with `onClick` unless there is a clear a11y pattern.
+
+---
+
+## ESLint
+
+1. Read **`eslint.config.mjs`** (or project ESLint config) before large style changes.
+2. Run **`npm run lint`** and fix issues so changes pass the project’s rules.
+
+Code must pass ESLint in addition to the conventions above.

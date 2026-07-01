@@ -1,0 +1,250 @@
+@import "tailwindcss";
+@import "@xyflow/react/dist/style.css";
+@import "@heroui/styles";
+
+/*
+ * Kill the "giật giật" jitter on learn pages: their left rail is exactly
+ * `calc(100dvh - 4rem)` tall, so the document lands right ON the viewport height
+ * and the vertical scrollbar flickers in/out on sub-pixel reflows — each toggle
+ * also shifts the centered `mx-auto` content sideways. Force the document to ALWAYS
+ * own a vertical scrollbar (no appear/disappear) AND reserve its gutter (stable on
+ * overlay-scrollbar OSes + during modal scroll-lock). `overflow-y: scroll` also
+ * pins `html` as the scroll container, so the gutter reserves on the right element.
+ */
+html {
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+}
+
+/* A data "packet" travelling down a vertical wire — the hero architecture diagram's
+   "chảy theo dây" flow effect (orthogonal connectors). */
+@keyframes wireFlow {
+  0% { transform: translate(-50%, -6px); opacity: 0; }
+  20%, 80% { opacity: 1; }
+  100% { transform: translate(-50%, 24px); opacity: 0; }
+}
+
+/*
+ * HeroUI Theme Customization
+ * Add this to your global.css after importing @heroui/styles
+ * Only includes variables users need to customize
+ * @see https://heroui.com/docs/react/getting-started/theming
+ */
+
+ :root,
+.light,
+.default,
+[data-theme="light"],
+[data-theme="default"] {
+  /* Theme Colors (Light Mode) */
+  --accent: oklch(70.03% 0.2092 354.13);
+  --accent-foreground: oklch(100% 0 0);
+  --background: oklch(97.02% 0.0015 354.13);
+  --border: oklch(90.00% 0.0015 354.13);
+  --danger: oklch(65.32% 0.2335 37.78);
+  --danger-foreground: oklch(99.11% 0 0);
+  --default: oklch(94.00% 0.0015 354.13);
+  --default-foreground: oklch(21.03% 0.0059 354.13);
+  --field-background: oklch(100.00% 0.0008 354.13);
+  --field-border: transparent;
+  --field-foreground: oklch(21.03% 0.0015 354.13);
+  --field-placeholder: oklch(55.17% 0.0030 354.13);
+  --focus: oklch(70.03% 0.2092 354.13);
+  --foreground: oklch(21.03% 0.0015 354.13);
+  --muted: oklch(55.17% 0.0030 354.13);
+  --overlay: oklch(100.00% 0.0004 354.13);
+  --overlay-foreground: oklch(21.03% 0.0015 354.13);
+  --scrollbar: oklch(87.10% 0.0015 354.13);
+  --segment: oklch(100.00% 0.0015 354.13);
+  --segment-foreground: oklch(21.03% 0.0015 354.13);
+  --separator: oklch(92.00% 0.0015 354.13);
+  /* Learning-activity heatmap ramp (brand pink, hue 354) — 0 = empty track. */
+  --heat-0: var(--default);
+  --heat-1: oklch(92.00% 0.0500 354.13);
+  --heat-2: oklch(85.00% 0.1000 354.13);
+  --heat-3: oklch(78.00% 0.1600 354.13);
+  --heat-4: oklch(70.03% 0.2092 354.13);
+  --success: oklch(73.29% 0.1941 162.85);
+  --success-foreground: oklch(21.03% 0.0059 162.85);
+  --surface: oklch(100.00% 0.0008 354.13);
+  --surface-foreground: oklch(21.03% 0.0015 354.13);
+  --surface-secondary: oklch(95.24% 0.0012 354.13);
+  --surface-secondary-foreground: oklch(21.03% 0.0015 354.13);
+  --surface-tertiary: oklch(93.73% 0.0012 354.13);
+  --surface-tertiary-foreground: oklch(21.03% 0.0015 354.13);
+  --warning: oklch(78.19% 0.1590 84.37);
+  --warning-foreground: oklch(21.03% 0.0059 84.37);
+
+  /* Border Radius */
+  --radius: 0.5rem;
+  --field-radius: 0.75rem;
+
+  /* Font Family */
+  /* Make sure to load Inter font in your app */
+  --font-sans: var(--font-inter);
+}
+
+.dark,
+[data-theme="dark"] {
+  color-scheme: dark;
+  /* Theme Colors (Dark Mode) */
+  --accent: oklch(70.03% 0.2092 354.13);
+  --accent-foreground: oklch(100% 0 0);
+  --background: oklch(12.00% 0.0015 354.13);
+  --border: oklch(28.00% 0.0015 354.13);
+  --danger: oklch(59.40% 0.1973 36.67);
+  --danger-foreground: oklch(99.11% 0 0);
+  --default: oklch(27.40% 0.0015 354.13);
+  --default-foreground: oklch(99.11% 0 0);
+  --field-background: oklch(21.03% 0.0030 354.13);
+  --field-border: transparent;
+  --field-foreground: oklch(99.11% 0.0015 354.13);
+  --field-placeholder: oklch(70.50% 0.0030 354.13);
+  --focus: oklch(70.03% 0.2092 354.13);
+  --foreground: oklch(99.11% 0.0015 354.13);
+  --muted: oklch(70.50% 0.0030 354.13);
+  --overlay: oklch(21.03% 0.0030 354.13);
+  --overlay-foreground: oklch(99.11% 0.0015 354.13);
+  --scrollbar: oklch(70.50% 0.0015 354.13);
+  --segment: oklch(39.64% 0.0015 354.13);
+  --segment-foreground: oklch(99.11% 0.0015 354.13);
+  --separator: oklch(25.00% 0.0015 354.13);
+  /* Learning-activity heatmap ramp (brand pink, hue 354) — 0 = empty track. */
+  --heat-0: var(--default);
+  --heat-1: oklch(35.00% 0.0600 354.13);
+  --heat-2: oklch(45.00% 0.1100 354.13);
+  --heat-3: oklch(57.00% 0.1600 354.13);
+  --heat-4: oklch(70.03% 0.2092 354.13);
+  --success: oklch(73.29% 0.1941 162.85);
+  --success-foreground: oklch(21.03% 0.0059 162.85);
+  --surface: oklch(21.03% 0.0030 354.13);
+  --surface-foreground: oklch(99.11% 0.0015 354.13);
+  --surface-secondary: oklch(25.70% 0.0023 354.13);
+  --surface-secondary-foreground: oklch(99.11% 0.0015 354.13);
+  --surface-tertiary: oklch(27.21% 0.0023 354.13);
+  --surface-tertiary-foreground: oklch(99.11% 0.0015 354.13);
+  --warning: oklch(82.03% 0.1392 88.38);
+  --warning-foreground: oklch(21.03% 0.0059 88.38);
+}
+
+/* ── Component overrides (UI 2.0) ──────────────────────────────────────── */
+
+/*
+ * Switch — fully round pill with a circular thumb, sized to match the navbar
+ * icon buttons / notification bell (36px tall). Track 4rem × 2.25rem, thumb
+ * 1.75rem circle with a 0.25rem inset; the checked margin slides it flush right.
+ */
+.switch__control {
+    height: 2.25rem !important;
+    width: 4rem !important;
+    border-radius: 9999px !important;
+}
+
+.switch__thumb {
+    height: 1.75rem !important;
+    width: 1.75rem !important;
+    border-radius: 9999px !important;
+    margin-inline-start: 0.25rem !important;
+    align-items: center;
+    justify-content: center;
+}
+
+.switch[data-selected="true"] .switch__thumb,
+.switch[aria-checked="true"] .switch__thumb {
+    margin-inline-start: calc(100% - 1.75rem - 0.25rem) !important;
+}
+
+/*
+ * Checkbox — the global `--field-border` is transparent (borderless inputs), which
+ * leaves the tiny checkbox control invisible (no outline, bg ≈ card). Restore a
+ * visible outline from the `--border` token so the box reads on any surface; the
+ * accent fill on select still comes from the HeroUI default styles.
+ */
+.checkbox__control {
+    border-color: var(--border) !important;
+}
+
+/*
+ * ExtendedTabs (blocks/navigation/ExtendedTabs) — secondary tabs WITHOUT the
+ * built-in `.tabs__list` baseline, so it never doubles up with an outer
+ * separator (e.g. the profile ProfileTabsBar bar border).
+ */
+.extended-tabs .tabs__list {
+    border-bottom-width: 0 !important;
+}
+
+/* Each tab hugs its label (w-fit) with px-3, so the strip packs to the left
+   instead of stretching tabs to equal full width. */
+.extended-tabs .tabs__tab {
+    width: fit-content !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+}
+
+/*
+ * Modal gutter — HeroUI bakes `.modal__dialog { p-6 }` (24px). Standardise the
+ * dialog gutter to p-4 (16px) app-wide so every modal reads tighter; the block
+ * owns the padding (no per-modal `p-*` override on Modal.Body). The body's own
+ * `-m-[3px] p-[3px]` focus-ring breathing is untouched.
+ */
+.modal__dialog {
+    padding: 1rem !important;
+}
+/*
+ * Card — unify on a FULL BORDER, NO shadow (flat surface). HeroUI bakes
+ * `.card { @apply shadow-surface }` with no border, so cards read inconsistently:
+ * a plain <Card> shows a shadow, while cards that manually add `border
+ * border-default` (List Card, prereq, accordion surface) show a border. Flatten
+ * everything to a single bordered look (`--default` = same token the bordered
+ * cards already use); elevation/shadow stays only on true overlays (modal,
+ * popover, tooltip — separate recipes, untouched here). The transparent variant
+ * is intentionally frameless, so it keeps no border.
+ */
+.card {
+    border: 1px solid var(--default) !important;
+    box-shadow: none !important;
+}
+
+.card--transparent {
+    border: none !important;
+}
+
+/*
+ * Ambient ember background (blocks/layout/AmbientBackground) — slow brand-pink
+ * sparks drifting upward behind the whole app. Each spark sets `--drift` (its
+ * horizontal wander) inline; this keyframe rises it a full viewport while fading
+ * in then out. Motion is transform/opacity only (GPU-cheap, no JS loop).
+ */
+@keyframes emberRise {
+    0% { transform: translateY(0) translateX(0); opacity: 0; }
+    10% { opacity: 1; }
+    80% { opacity: 0.8; }
+    100% { transform: translateY(-100vh) translateX(var(--drift, 0)); opacity: 0; }
+}
+
+/*
+ * reactionPop — staggered bounce-in for each emoji of the Facebook-style reaction
+ * selector bar (FacebookReactionSelector). Transform/opacity only; the per-emoji
+ * hover scale lives on an inner span so the two transforms never fight.
+ */
+@keyframes reactionPop {
+    0% { transform: translateY(8px) scale(0.5); opacity: 0; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* appSplashTrickle — the entry splash's 3px brand line creeping toward ~96% while
+   the app boots. Indeterminate (no real load events for a cold start) so it never
+   reaches 100; the splash simply fades out once the client has mounted. The live
+   navigation bar (TopLoader) drives its own width from JS instead. */
+@keyframes appSplashTrickle {
+    0% { width: 0%; }
+    16% { width: 38%; }
+    55% { width: 72%; }
+    82% { width: 90%; }
+    100% { width: 96%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ambient-ember { animation: none !important; opacity: 0 !important; }
+    .app-splash-bar { animation: none !important; width: 40% !important; }
+}

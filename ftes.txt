@@ -1,0 +1,615 @@
+
+FTES Academic Operating System (Enterprise Architecture v2)
+
+1. Identity & Security
+Authentication
+Đăng ký
+Đăng nhập
+Google Login
+OTP Email
+OTP SĐT
+2FA
+Forgot Password
+Reset Password
+Remember Login
+Session Management
+Security
+Device Management
+Active Sessions
+Login History
+Trusted Devices
+Captcha
+Account Verification
+Account Lock
+Security Log
+Authorization
+RBAC
+Permission
+Role
+Moderator
+Admin
+Super Admin
+
+2. Academic Profile
+Personal
+Avatar
+Cover
+Bio
+Contact
+Social Links
+Academic
+University
+Campus
+Major
+Semester
+GPA
+Portfolio
+Projects
+GitHub
+LinkedIn
+Resume
+Certificates
+Achievements
+Community
+Followers
+Following
+Activity Timeline
+Progress
+XP (Display)
+Level (Display)
+FTES Coin (Display)
+Reputation (Display)
+
+3. Subject Workspace ⭐⭐⭐⭐⭐ (Core Domain)
+Mỗi môn học là một Workspace độc lập.
+Ví dụ
+PRF192
+
+Overview
+Description
+Credits
+Lecturer
+Semester
+Difficulty
+Prerequisites
+Related Subjects
+Learning Outcomes
+Roadmap
+
+Learning
+Course
+Lessons
+Progress
+Certificate
+
+Resources
+Slides
+PE
+FE
+Books
+Notes
+Source Code
+Assignments
+Templates
+Learning Packs
+
+Community
+Subject Feed
+Discussion
+Questions
+Tips
+Showcase
+Announcements
+
+Practice
+Quiz
+Flashcards
+Coding Challenge
+Mock Test
+Leaderboard
+
+AI
+AI Tutor
+AI Summary
+AI Quiz
+AI Flashcards
+AI Search
+
+Members
+Students
+Lecturers
+Contributors
+Moderators
+
+Statistics
+Top Students
+Top Contributors
+Popular Resources
+Completion Rate
+
+Career Bridge
+Related Skills
+Related Career
+Suggested StarCI Roadmap
+Suggested Next Subject
+
+4. Course System
+Course
+Enroll
+Section
+Lesson
+Video
+Documents
+Assignments
+Quiz
+Learning
+Progress
+Completion
+Bookmark
+Notes
+Certificate
+Completion
+Verification
+
+5. Resource Hub
+Resource Types
+PDF
+Slide
+Video
+Book
+Source Code
+Assignment
+PE
+FE
+Notes
+Templates
+
+Collections
+Learning Pack
+Resource Collection
+
+Management
+Upload
+Version
+Approval
+Visibility
+License
+
+Interaction
+Rating
+Comment
+Bookmark
+Favorite
+Download
+
+Discovery
+AI Search
+Recommendation
+Related Resources
+Filter
+
+6. Community
+Feed
+For You
+Following
+Campus
+Trending
+
+Posts
+Knowledge Sharing
+Question
+Discussion
+Project Showcase
+Achievement
+Resource Share
+Poll
+
+Editor
+Markdown
+Rich Text
+Images
+Video
+Files
+
+Interaction
+Like
+Comment
+Reply
+Quote
+Share
+Bookmark
+Mention
+Hashtag
+
+Reputation
+Upvote
+Downvote
+Accepted Answer
+Contributor Score
+
+Discovery
+Trending
+Search
+Recommended Posts
+
+Moderation
+AI Moderation
+Human Moderation
+Report
+
+7. Groups
+Group Types
+Public
+Private
+Study Group
+Club
+Project Team
+
+Members
+Owner
+Admin
+Moderator
+Member
+
+Features
+Feed
+Discussion
+Resources
+Event
+Challenge
+Announcement
+
+Management
+Join Request
+Invitation
+Rules
+Pinned Posts
+
+8. Chat
+Direct Chat
+Group Chat
+Features
+Voice Message
+File Sharing
+Mention
+Reply
+Reaction
+Read Receipt
+Typing Indicator
+Online Status
+Search
+Pin Message
+
+9. AI Platform
+AI Student
+Tutor
+Mentor
+Study Planner
+
+AI Learning
+Summary
+Flashcards
+Quiz
+OCR
+
+AI Coding
+Coding
+Debug
+Code Review
+
+AI Career
+CV Review
+Interview
+Career Suggestion
+
+AI Teacher
+Generate Quiz
+Generate Exam
+Lesson Suggestion
+Auto Grading
+Difficulty Analysis
+
+AI Administration
+Duplicate Detection
+Auto Tagging
+Spam Detection
+Smart Search
+Insight Dashboard
+
+10. Challenge
+Challenge Types
+Coding
+SQL
+UI/UX
+AI
+Business
+
+Competition
+Individual
+Team
+
+Features
+Submission
+Scoring
+Leaderboard
+Rewards
+
+11. Gamification
+Progression
+XP
+Level
+Reputation
+
+Learning Habit
+Daily Goal
+Weekly Goal
+Monthly Goal
+Learning Streak
+
+Achievement
+Badge
+Title
+Trophy
+
+Competition
+League
+Season
+Leaderboard
+
+Rewards
+Mystery Box
+Lucky Spin
+
+Subject Mastery ⭐
+Subject Completion
+Skill Progress
+Learning Consistency
+
+12. Wallet & FTES Coin
+Wallet
+Balance
+Transaction History
+
+Transactions
+Receive
+Transfer
+Purchase
+Refund
+
+Rewards
+Redeem
+Gift
+
+13. Marketplace
+Products
+Merchandise
+Premium
+AI Credits
+Voucher
+Course Unlock
+
+Commerce
+Order
+Payment
+Invoice
+Coupon
+
+14. Event
+Types
+Webinar
+Workshop
+Hackathon
+Competition
+Meetup
+
+Features
+Registration
+Check-in
+Attendance
+Livestream
+Recording
+Certificate
+Rewards
+
+15. Notification
+Channels
+In-App
+Push
+Email
+
+Types
+Mention
+Course
+Event
+Deadline
+Challenge
+Coin
+Group
+
+Management
+Read
+Archive
+Preferences
+Mute
+
+16. Search Platform
+Global Search
+User
+Subject
+Topic
+Course
+Resource
+Post
+Group
+Challenge
+Event
+
+AI Search
+Semantic Search
+Natural Language Search
+
+17. Recommendation Engine
+Recommendation
+Subject
+Course
+Resource
+Friend
+Group
+Challenge
+Event
+Mentor
+Study Partner
+StarCI Roadmap
+
+18. Activity Engine ⭐
+Backbone của toàn hệ thống.
+Activities
+User Registered
+Joined Subject
+Course Enrolled
+Lesson Completed
+Resource Uploaded
+Question Posted
+Answer Accepted
+Challenge Completed
+Badge Earned
+Coin Earned
+Event Joined
+Group Joined
+
+Used By
+Feed
+Timeline
+Notification
+Analytics
+Recommendation
+
+19. Workflow Engine
+Content Workflow
+Draft
+AI Review
+Moderator Review
+Approval
+Publish
+Archive
+
+Applied To
+Resource
+Course
+Forum
+Challenge
+Event
+
+20. Analytics
+Learning Analytics
+Subject Analytics
+Community Analytics
+AI Analytics
+Gamification Analytics
+Business Analytics
+Dashboard
+
+21. Career Center ⭐
+Cầu nối giữa FTES và StarCI.
+Skill Graph
+Skills
+Skill Progress
+Skill Assessment
+
+Career Roadmap
+Backend
+Frontend
+Mobile
+AI
+Data
+DevOps
+
+Career
+Internship
+Jobs
+Mentor
+Portfolio Review
+
+Recommendation
+Next Subject
+Next Skill
+StarCI Course
+Career Path
+
+22. Admin CMS
+User Management
+Subject Management
+Course Management
+Resource Management
+Community Management
+Challenge Management
+Event Management
+Marketplace Management
+AI Management
+Workflow Management
+Analytics
+Roles & Permissions
+Banner
+Announcement
+Audit Log
+Feature Toggle
+System Configuration
+
+23. Integration Hub
+Authentication
+Google
+
+Academic
+StarCI Ecosystem
+Unified Profile
+Skill Sync
+Portfolio Sync
+
+Developer
+GitHub
+
+Communication
+Gmail
+Firebase
+
+Payment
+Payment Gateway
+
+AI
+AI Providers
+
+Storage
+Cloud Storage
+
+API
+REST API
+Webhook
+Public API
+
+24. Enterprise Infrastructure (Shared Services)
+Gateway
+API Gateway
+AI Gateway
+Storage
+File Storage
+CDN
+Cache
+Messaging
+Event Bus
+Message Queue
+Background Processing
+Scheduler
+Background Jobs
+Search
+Search Index
+Security
+Logging
+Audit Log
+Rate Limiting
+Operations
+Monitoring
+Observability
+Backup & Restore
+Feature Flags
+Configuration Center
+

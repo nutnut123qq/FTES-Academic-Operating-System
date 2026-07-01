@@ -1,0 +1,101 @@
+---
+alwaysApply: true
+---
+# FE Rules — Props discipline & Spacing scale (StarCI Academy)
+
+SSOT cho 2 quy ước bắt buộc khi viết component FE. Áp cho mọi `.tsx` dưới `src/components/`.
+Bổ trợ cho `starci-academy-fe.mdc` (§ "Components" — phân loại layouts vs reuseable).
+
+---
+
+## 1) Props discipline — `WithClassNames` + tự đọc store — STRICT
+
+Base type: `src/modules/types/base/class-name.ts`
+```ts
+export interface WithClassNames<T> { classNames?: T; className?: string }
+```
+
+### Quy tắc chung
+- **Mọi `*Props` PHẢI `extends WithClassNames<T>`** (T = object các slot `classNames`, hoặc
+  `undefined` nếu không forward classNames). Component **thread `className`** vào element ngoài
+  cùng qua `cn(...)` (`@heroui/react`): `className={cn("...", className)}`.
+- **Interface rỗng → dùng `type`**, KHÔNG để `interface X extends Y {}` (lint
+  `no-empty-object-type`): viết `export type XProps = WithClassNames<undefined>`.
+
+### Container / layout (`components/layouts/**`, có logic, KHÔNG phải list-item/presentational)
+Props **CHỈ** được có `className` / `classNames` (+ `children`). **CẤM**:
+- ❌ data-object props (truyền entity/list từ cha xuống) → **tự đọc store**:
+  `useAppSelector((s) => ...)` (slices ở `src/redux/slices`) hoặc SWR hook
+  (`useQueryXxxSwr`, `src/hooks/.../queries`).
+- ❌ callback props (`onClick`/`onSelect`/`onCopy`…) → component **tự** `dispatch(...)`, tự gọi
+  overlay hook (`useXxxOverlayState`), tự gọi mutation hook ngay trong nó.
+- ❌ `id`/`slug` props → tự lấy bằng `useParams()` / `useAppSelector` / SWR hook đã biết entity.
+
+### Ngoại lệ — VẪN được nhận props
+1. **`children`** + `className`/`classNames` (luôn).
+2. **List-item** (component render trong `.map(...)`): giữ **prop data của chính item**
+   (`content`, `challenge`, `entry`…) vì store không biết "phần tử thứ i". Bên trong item, id lấy
+   từ item; action thì tự dispatch / tự gọi hook.
+3. **Reusable** (`components/reuseable/**`): **GIỮ đủ value props + callback props** — nó là mold
+   presentational, cha (layout) wiring. Vẫn `extends WithClassNames`. **CẤM** redux/SWR/fetch
+   (xem §3). Cha tính toán + tạo `onXXX` rồi truyền xuống.
+4. **Props do thư viện định nghĩa** (vd React Flow `NodeProps<...>`), **provider wrapper**, hoặc
+   component **không có props nào** (`Record<string, never>` / signature `() =>`).
+
+### Mẫu chuẩn trong repo
+- Container tự đọc store: `layouts/Content/ChallengeBody/index.tsx`,
+  `layouts/Dashboard/HistoryRail/index.tsx`, `layouts/PublicProfile/index.tsx`.
+- Presentational nhận props: `layouts/Leaderboard/MyRankCard/index.tsx`,
+  `reuseable/FollowButton/index.tsx` (props-only, cha chạy mutation).
+
+---
+
+## 2) Spacing scale — ngữ nghĩa (`gap` / `space-x` / `space-y`) — STRICT
+
+Chỉ dùng **4 giá trị**: `0` · `1.5` · `3` · `6`. Chọn theo **NGỮ CẢNH quan hệ**, KHÔNG random.
+
+| Giá trị | Ý nghĩa | Ví dụ |
+|---|---|---|
+| `0` | dính liền 1 khối, không cần cách | Name ↔ description xếp chồng trong 1 khối text; nhiều dòng của cùng 1 nhãn |
+| `1.5` | coupled (cặp dính nhau) | icon ↔ text, label ↔ input, avatar ↔ khối-text bên cạnh |
+| `3` | cùng chức năng (same-function group) | heading ↔ nội dung trong 1 card; list item cùng loại |
+| `6` | khác chức năng (different-function) | block text ↔ CTA; các card độc lập; section khác nhau |
+
+- **`gap-0`**: chỉ cho phần *bên trong* 1 khối (Name↔description). Avatar↔khối-text vẫn là 2 mảnh → `1.5`/`3`.
+- **GIỮ** gutter lớn `gap-8/10/12/20` (hero / page-level column gutter) — có chủ đích, KHÔNG ép về scale.
+- **Padding** (`p-*`/`px-*`/`py-*`) là nội bộ component — **ngoài scale này**, đừng ép.
+- KHÔNG dùng `gap-1`, `gap-2`, `gap-4`, `gap-5`, `space-y-4`… (lệch scale) — map về `1.5`/`3`/`6` theo ngữ cảnh.
+
+---
+
+## 3) Placement — `layouts/` vs `reuseable/` (củng cố) — STRICT
+
+- **`reuseable/**` = presentational thuần**: CẤM `useAppSelector`/`useDispatch`/`useQueryXxxSwr`/
+  `useMutateXxxSwr`/fetch. Nếu một "reuseable" đọc store/SWR → **chuyển sang `layouts/`** (hoặc
+  refactor về props-only do cha wiring). Được dùng hook UI-cục-bộ (`useState` hover, `useId`…).
+- **Reusable phải self-contained**: KHÔNG import util/hook đặc thù 1 feature (vd
+  `resolveConsultantAvatarUrl` của headhunting). Nếu phụ thuộc util domain → nó là feature
+  component, để trong `layouts/<feature>/`, KHÔNG promote lên `reuseable/`.
+- **KHÔNG double-nest** `Feature/Feature/index.tsx`: component chính của feature là
+  `Feature/index.tsx` (siblings là `Feature/SubComponent/`). Đừng tạo barrel `Feature/index.ts`
+  chỉ để re-export `./Feature`.
+- **Folder con chỉ 1 parent dùng → nest dưới parent**; chỉ promote ra sibling/`reuseable/` khi
+  **thực sự dùng nhiều nơi**. (Xem `starci-academy-fe.mdc` §Decomposition.)
+
+### `layouts/` gom theo DOMAIN — STRICT
+`components/layouts/` KHÔNG để phẳng 1 đống feature. Gom theo **nhóm chức năng** (folder
+lowercase = nhóm, PascalCase = component feature bên trong):
+```
+layouts/
+  admin/        (AdminAiBalancer, AdminLogin, AdminMpegDashTest, AdminUploadVideo)
+  auth/         (OauthRedirect, GithubLinkGate)
+  marketing/    (LandingPage, Contact)
+  course/       (Course, Courses)
+  checkout/     (SepayCheckout)
+  learn/        (Content, ContentDetail, Module*, *Sidebar, Task, Practice, Flashcard,
+                 Leaderboard, mind-map, Foundations, Learn, …)
+  profile/      (Profile, PublicProfile, AiSettings, CV, Sessions, UserStreak, …)
+  headhunting/  (Headhuntings, HeadhuntingCompany)
+  shell/        (Navbar, Dashboard)
+```
+Feature mới → đặt vào đúng nhóm domain (tạo nhóm mới nếu cần), KHÔNG vứt thẳng `layouts/<Feature>`.

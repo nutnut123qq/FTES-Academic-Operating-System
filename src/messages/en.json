@@ -3188,6 +3188,16 @@
                 "following": "Following",
                 "trending": "Trending"
             }
+        },
+        "members": {
+            "title": "Members",
+            "all": "All",
+            "roles": {
+                "student": "Student",
+                "lecturer": "Lecturer",
+                "contributor": "Contributor",
+                "moderator": "Moderator"
+            }
         }
     }
 }

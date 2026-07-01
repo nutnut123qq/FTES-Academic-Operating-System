@@ -1,9 +1,7 @@
-"use client"
-
 import React from "react"
-import { SubjectTabPlaceholder } from "@/components/features/subject/SubjectTabPlaceholder"
+import { SubjectMembers } from "@/components/features/subject/SubjectMembers"
 
-/** `/subjects/[subjectId]/members` — placeholder until this area gets its own layout. */
-const Page = () => <SubjectTabPlaceholder areaKey="members" />
+/** `/subjects/[subjectId]/members` — the Members tab (§3). */
+const Page = () => <SubjectMembers />
 
 export default Page

@@ -3188,6 +3188,16 @@
                 "following": "Đang theo dõi",
                 "trending": "Xu hướng"
             }
+        },
+        "members": {
+            "title": "Thành viên",
+            "all": "Tất cả",
+            "roles": {
+                "student": "Học viên",
+                "lecturer": "Giảng viên",
+                "contributor": "Cộng tác viên",
+                "moderator": "Điều hành"
+            }
         }
     }
 }

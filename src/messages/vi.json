@@ -3446,6 +3446,15 @@
         "events": {
             "attendees": "{count} tham gia",
             "join": "Tham gia"
+        },
+        "manage": {
+            "title": "Quản lý nhóm",
+            "joinRequests": "Yêu cầu tham gia",
+            "noRequests": "Không có yêu cầu nào.",
+            "accept": "Duyệt",
+            "reject": "Từ chối",
+            "rules": "Nội quy",
+            "pinned": "Bài ghim"
         }
     }
 }

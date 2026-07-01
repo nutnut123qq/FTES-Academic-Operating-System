@@ -3446,6 +3446,15 @@
         "events": {
             "attendees": "{count} attending",
             "join": "Join"
+        },
+        "manage": {
+            "title": "Manage group",
+            "joinRequests": "Join requests",
+            "noRequests": "No requests.",
+            "accept": "Accept",
+            "reject": "Reject",
+            "rules": "Rules",
+            "pinned": "Pinned"
         }
     }
 }

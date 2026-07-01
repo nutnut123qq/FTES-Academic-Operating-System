@@ -3135,6 +3135,23 @@
         },
         "overview": {
             "title": "Tổng quan môn học"
+        },
+        "resources": {
+            "title": "Tài nguyên",
+            "all": "Tất cả",
+            "download": "Tải",
+            "collections": "Bộ sưu tập",
+            "empty": "Chưa có tài nguyên nào cho bộ lọc này.",
+            "itemsCount": "{count} tài nguyên",
+            "types": {
+                "pdf": "PDF",
+                "slide": "Slide",
+                "video": "Video",
+                "pe": "PE",
+                "fe": "FE",
+                "source": "Source code",
+                "notes": "Ghi chú"
+            }
         }
     }
 }

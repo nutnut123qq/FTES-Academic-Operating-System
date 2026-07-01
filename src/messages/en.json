@@ -3135,6 +3135,23 @@
         },
         "overview": {
             "title": "Subject overview"
+        },
+        "resources": {
+            "title": "Resources",
+            "all": "All",
+            "download": "Download",
+            "collections": "Collections",
+            "empty": "No resources for this filter.",
+            "itemsCount": "{count} items",
+            "types": {
+                "pdf": "PDF",
+                "slide": "Slide",
+                "video": "Video",
+                "pe": "PE",
+                "fe": "FE",
+                "source": "Source code",
+                "notes": "Notes"
+            }
         }
     }
 }

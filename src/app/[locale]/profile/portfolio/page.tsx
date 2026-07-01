@@ -1,9 +1,9 @@
 "use client"
 
 import React from "react"
-import { ProfileSectionPlaceholder } from "@/components/features/profile/ProfileSectionPlaceholder"
+import { ProfilePortfolio } from "@/components/features/profile/ProfilePortfolio"
 
-/** `/profile/portfolio` — placeholder until this section is built. */
-const Page = () => <ProfileSectionPlaceholder sectionKey="portfolio" />
+/** `/profile/portfolio` — the Portfolio section (§2). */
+const Page = () => <ProfilePortfolio />
 
 export default Page

@@ -1720,6 +1720,10 @@
                 "semester": "Học kỳ",
                 "gpa": "GPA"
             }
+        },
+        "portfolio": {
+            "projects": "Dự án",
+            "certificates": "Chứng chỉ"
         }
     },
     "profileEdit": {

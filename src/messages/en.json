@@ -1711,6 +1711,10 @@
                 "semester": "Semester",
                 "gpa": "GPA"
             }
+        },
+        "portfolio": {
+            "projects": "Projects",
+            "certificates": "Certificates"
         }
     },
     "profileEdit": {

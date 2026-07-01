@@ -3343,6 +3343,10 @@
             "fe": "FE",
             "source": "Source code",
             "notes": "Ghi chú"
+        },
+        "collections": {
+            "title": "Bộ sưu tập",
+            "itemsCount": "{count} tài nguyên"
         }
     }
 }

@@ -3343,6 +3343,10 @@
             "fe": "FE",
             "source": "Source code",
             "notes": "Notes"
+        },
+        "collections": {
+            "title": "Collections",
+            "itemsCount": "{count} items"
         }
     }
 }

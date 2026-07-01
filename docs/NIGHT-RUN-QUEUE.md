@@ -63,7 +63,7 @@ Loop lấy mục `[ ]` trên cùng → 1 OpenSpec change → build webpack+tsc �
 
 ### §5 Resource Hub (route mới /resources)
 - [x] `resource-hub` — /resources: search + type filter + list. ✓ build xanh.
-- [ ] `resource-collections` — list learning packs (rows + count)
+- [x] `resource-collections` — learning packs list rows. ✓ build xanh.
 - [ ] `resource-detail` — /resources/[resourceId]: preview box + meta + rating/comment/download
 - [ ] `resource-upload` — form upload stub (dropzone giả + fields)
 - [ ] `resource-rating` — section rating (sao) + comment list

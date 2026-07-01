@@ -3347,6 +3347,11 @@
         "collections": {
             "title": "Bộ sưu tập",
             "itemsCount": "{count} tài nguyên"
+        },
+        "detail": {
+            "rating": "{rating}★",
+            "preview": "Xem trước tài liệu (bản mẫu)",
+            "comments": "Bình luận"
         }
     }
 }

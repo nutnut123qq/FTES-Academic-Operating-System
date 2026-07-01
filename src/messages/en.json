@@ -3347,6 +3347,11 @@
         "collections": {
             "title": "Collections",
             "itemsCount": "{count} items"
+        },
+        "detail": {
+            "rating": "{rating}★",
+            "preview": "Document preview (placeholder)",
+            "comments": "Comments"
         }
     }
 }

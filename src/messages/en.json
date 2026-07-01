@@ -3174,6 +3174,11 @@
                     "meta": "{count} participants"
                 }
             }
+        },
+        "learning": {
+            "title": "Lessons",
+            "done": "Done",
+            "progressLabel": "{done}/{total} lessons · {percent}%"
         }
     }
 }

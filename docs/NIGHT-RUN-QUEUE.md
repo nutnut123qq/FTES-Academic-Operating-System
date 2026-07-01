@@ -12,7 +12,7 @@ Mỗi mục = 1 OpenSpec change (propose → apply theo layout đã chốt) → 
 - [x] `subject-workspace-overview` — §3: Overview hub grid (dựng luôn trong shell). ✓
 - [x] `subject-workspace-resources` — §3: tab Resources (filter type + list + Collections). ✓ build xanh.
 - [x] `subject-workspace-practice` — §3: tab Practice (card grid 4 module + CTA). ✓ build xanh.
-- [ ] `subject-workspace-learning` — §3: tab Learning — DEFAULT on-canon: list Section→Lesson (mock) + progress meter + trạng thái hoàn thành. Thay placeholder.
+- [x] `subject-workspace-learning` — §3: tab Learning (progress + Section→Lesson list). ✓ build xanh.
 - [ ] `profile-shell` — §2: **HOÃN** (archetype 2-column cần brainstorm riêng; loop BỎ QUA).
 
 > Các tab content trên KHÔNG có brainstorm riêng → dùng **default on-canon** (đã mô tả), **log rõ** là default để review. Data mock (chưa BE).

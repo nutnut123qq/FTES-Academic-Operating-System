@@ -3174,6 +3174,11 @@
                     "meta": "{count} người tham gia"
                 }
             }
+        },
+        "learning": {
+            "title": "Bài học",
+            "done": "Đã học",
+            "progressLabel": "{done}/{total} bài · {percent}%"
         }
     }
 }

@@ -3406,6 +3406,13 @@
         },
         "poll": {
             "totalVotes": "{count} votes"
+        },
+        "moderation": {
+            "title": "Moderation",
+            "empty": "No reports left.",
+            "reportedBy": "reported by {name}",
+            "keep": "Keep",
+            "remove": "Remove"
         }
     }
 }

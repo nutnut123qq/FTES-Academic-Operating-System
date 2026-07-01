@@ -3406,6 +3406,13 @@
         },
         "poll": {
             "totalVotes": "{count} lượt bình chọn"
+        },
+        "moderation": {
+            "title": "Kiểm duyệt",
+            "empty": "Không còn báo cáo nào.",
+            "reportedBy": "báo cáo bởi {name}",
+            "keep": "Giữ lại",
+            "remove": "Gỡ bỏ"
         }
     }
 }

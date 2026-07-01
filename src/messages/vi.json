@@ -3317,6 +3317,16 @@
             "certificateReady": "Bạn đã đủ điều kiện nhận chứng chỉ.",
             "certificateLocked": "Hoàn thành 100% để mở chứng chỉ.",
             "viewCertificate": "Xem chứng chỉ"
+        },
+        "enroll": {
+            "title": "Đăng ký khóa học",
+            "creditsValue": "{count} tín chỉ",
+            "cta": "Xác nhận đăng ký",
+            "rows": {
+                "course": "Khóa học",
+                "credits": "Tín chỉ",
+                "price": "Học phí"
+            }
         }
     }
 }

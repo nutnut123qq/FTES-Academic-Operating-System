@@ -3317,6 +3317,16 @@
             "certificateReady": "You are eligible for the certificate.",
             "certificateLocked": "Reach 100% to unlock the certificate.",
             "viewCertificate": "View certificate"
+        },
+        "enroll": {
+            "title": "Enroll",
+            "creditsValue": "{count} credits",
+            "cta": "Confirm enrollment",
+            "rows": {
+                "course": "Course",
+                "credits": "Credits",
+                "price": "Price"
+            }
         }
     }
 }

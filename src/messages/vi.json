@@ -3365,6 +3365,9 @@
             "placeholder": "Viết nhận xét của bạn…",
             "submit": "Gửi đánh giá",
             "you": "Bạn"
+        },
+        "recommended": {
+            "title": "Gợi ý cho bạn"
         }
     }
 }

@@ -3365,6 +3365,9 @@
             "placeholder": "Write your review…",
             "submit": "Submit review",
             "you": "You"
+        },
+        "recommended": {
+            "title": "Recommended for you"
         }
     }
 }

@@ -3442,6 +3442,10 @@
             "admin": "Quản trị",
             "moderator": "Điều hành",
             "member": "Thành viên"
+        },
+        "events": {
+            "attendees": "{count} tham gia",
+            "join": "Tham gia"
         }
     }
 }

@@ -1,9 +1,9 @@
 "use client"
 
 import React from "react"
-import { GroupTabPlaceholder } from "@/components/features/group/GroupTabPlaceholder"
+import { GroupEvents } from "@/components/features/group/GroupEvents"
 
-/** `/groups/[groupId]/events` — placeholder until built. */
-const Page = () => <GroupTabPlaceholder tabKey="events" />
+/** `/groups/[groupId]/events` — group events (§7/§14). */
+const Page = () => <GroupEvents />
 
 export default Page

@@ -1,9 +1,9 @@
 "use client"
 
 import React from "react"
-import { GroupTabPlaceholder } from "@/components/features/group/GroupTabPlaceholder"
+import { GroupFeed } from "@/components/features/group/GroupFeed"
 
-/** `/groups/[groupId]` — group feed (placeholder until group-feed fills it). */
-const Page = () => <GroupTabPlaceholder tabKey="feed" />
+/** `/groups/[groupId]` — the group feed (§7). */
+const Page = () => <GroupFeed />
 
 export default Page

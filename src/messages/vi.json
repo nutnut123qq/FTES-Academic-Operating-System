@@ -3198,6 +3198,17 @@
                 "contributor": "Cộng tác viên",
                 "moderator": "Điều hành"
             }
+        },
+        "statistics": {
+            "title": "Thống kê",
+            "topStudents": "Học viên xuất sắc",
+            "score": "{score} điểm",
+            "metrics": {
+                "completion": "Tỉ lệ hoàn thành",
+                "active": "Đang học",
+                "resources": "Tài nguyên",
+                "avgScore": "Điểm TB"
+            }
         }
     }
 }

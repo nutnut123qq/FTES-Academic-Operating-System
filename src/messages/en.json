@@ -3198,6 +3198,17 @@
                 "contributor": "Contributor",
                 "moderator": "Moderator"
             }
+        },
+        "statistics": {
+            "title": "Statistics",
+            "topStudents": "Top students",
+            "score": "{score} pts",
+            "metrics": {
+                "completion": "Completion rate",
+                "active": "Active",
+                "resources": "Resources",
+                "avgScore": "Avg score"
+            }
         }
     }
 }

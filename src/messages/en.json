@@ -3403,6 +3403,9 @@
             "votes": "▲{up} ▼{down}",
             "accepted": "{count} accepted",
             "score": "{score} pts"
+        },
+        "poll": {
+            "totalVotes": "{count} votes"
         }
     }
 }

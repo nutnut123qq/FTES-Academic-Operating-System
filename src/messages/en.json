@@ -1715,6 +1715,11 @@
         "portfolio": {
             "projects": "Projects",
             "certificates": "Certificates"
+        },
+        "communityBoard": {
+            "followers": "Followers",
+            "following": "Following",
+            "activity": "Recent activity"
         }
     },
     "profileEdit": {

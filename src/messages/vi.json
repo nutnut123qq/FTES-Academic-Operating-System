@@ -1724,6 +1724,11 @@
         "portfolio": {
             "projects": "Dự án",
             "certificates": "Chứng chỉ"
+        },
+        "communityBoard": {
+            "followers": "Người theo dõi",
+            "following": "Đang theo dõi",
+            "activity": "Hoạt động gần đây"
         }
     },
     "profileEdit": {

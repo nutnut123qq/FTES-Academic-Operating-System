@@ -3328,5 +3328,21 @@
                 "price": "Price"
             }
         }
+    },
+    "resourceHub": {
+        "title": "Resource Hub",
+        "searchPlaceholder": "Search resources or subject",
+        "all": "All",
+        "download": "Download",
+        "empty": "No matching resources.",
+        "types": {
+            "pdf": "PDF",
+            "slide": "Slide",
+            "video": "Video",
+            "pe": "PE",
+            "fe": "FE",
+            "source": "Source code",
+            "notes": "Notes"
+        }
     }
 }

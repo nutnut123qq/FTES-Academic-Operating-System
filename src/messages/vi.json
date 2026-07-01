@@ -3328,5 +3328,21 @@
                 "price": "Học phí"
             }
         }
+    },
+    "resourceHub": {
+        "title": "Kho tài nguyên",
+        "searchPlaceholder": "Tìm tài nguyên hoặc môn",
+        "all": "Tất cả",
+        "download": "Tải",
+        "empty": "Không có tài nguyên phù hợp.",
+        "types": {
+            "pdf": "PDF",
+            "slide": "Slide",
+            "video": "Video",
+            "pe": "PE",
+            "fe": "FE",
+            "source": "Source code",
+            "notes": "Ghi chú"
+        }
     }
 }

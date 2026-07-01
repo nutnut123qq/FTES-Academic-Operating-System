@@ -62,7 +62,7 @@ Loop lấy mục `[ ]` trên cùng → 1 OpenSpec change → build webpack+tsc �
 - [x] `course-enroll` — enroll summary + CTA. ✓ build xanh. **§4 Course TRỌN (7 mục).**
 
 ### §5 Resource Hub (route mới /resources)
-- [ ] `resource-hub` — /resources: list + type filter + search (mirror subjects Resources)
+- [x] `resource-hub` — /resources: search + type filter + list. ✓ build xanh.
 - [ ] `resource-collections` — list learning packs (rows + count)
 - [ ] `resource-detail` — /resources/[resourceId]: preview box + meta + rating/comment/download
 - [ ] `resource-upload` — form upload stub (dropzone giả + fields)

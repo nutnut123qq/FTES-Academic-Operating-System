@@ -1720,6 +1720,12 @@
             "followers": "Followers",
             "following": "Following",
             "activity": "Recent activity"
+        },
+        "progressBoard": {
+            "xp": "XP",
+            "level": "Level",
+            "coin": "FTES Coin",
+            "reputation": "Reputation"
         }
     },
     "profileEdit": {

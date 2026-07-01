@@ -1,9 +1,9 @@
 "use client"
 
 import React from "react"
-import { ProfileSectionPlaceholder } from "@/components/features/profile/ProfileSectionPlaceholder"
+import { ProfileProgress } from "@/components/features/profile/ProfileProgress"
 
-/** `/profile/progress` — placeholder until this section is built. */
-const Page = () => <ProfileSectionPlaceholder sectionKey="progress" />
+/** `/profile/progress` — the Progress section (§2/§11). */
+const Page = () => <ProfileProgress />
 
 export default Page

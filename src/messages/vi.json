@@ -1729,6 +1729,12 @@
             "followers": "Người theo dõi",
             "following": "Đang theo dõi",
             "activity": "Hoạt động gần đây"
+        },
+        "progressBoard": {
+            "xp": "Điểm XP",
+            "level": "Cấp độ",
+            "coin": "FTES Coin",
+            "reputation": "Uy tín"
         }
     },
     "profileEdit": {

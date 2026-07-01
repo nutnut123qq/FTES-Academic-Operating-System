@@ -3466,6 +3466,9 @@
             "title": "Thử thách nhóm",
             "participants": "{count} tham gia",
             "join": "Tham gia"
+        },
+        "announcements": {
+            "title": "Thông báo"
         }
     }
 }

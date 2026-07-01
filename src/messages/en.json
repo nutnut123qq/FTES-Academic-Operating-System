@@ -3466,6 +3466,9 @@
             "title": "Group challenges",
             "participants": "{count} joined",
             "join": "Join"
+        },
+        "announcements": {
+            "title": "Announcements"
         }
     }
 }

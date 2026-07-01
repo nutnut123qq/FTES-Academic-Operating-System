@@ -3425,6 +3425,14 @@
             "study": "Nhóm học",
             "club": "Câu lạc bộ",
             "team": "Nhóm dự án"
+        },
+        "placeholder": "Nội dung đang được xây dựng.",
+        "tabs": {
+            "feed": "Bảng tin",
+            "discussion": "Thảo luận",
+            "members": "Thành viên",
+            "resources": "Tài nguyên",
+            "events": "Sự kiện"
         }
     }
 }

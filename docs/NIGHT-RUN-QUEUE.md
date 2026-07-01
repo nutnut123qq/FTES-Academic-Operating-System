@@ -81,7 +81,7 @@ Loop lấy mục `[ ]` trên cùng → 1 OpenSpec change → build webpack+tsc �
 
 ### §7 Groups (route mới /groups)
 - [x] `groups-list` — /groups: type filter + group card grid. ✓ build xanh.
-- [ ] `group-detail-shell` — /groups/[groupId]: shell tabs (feed/discussion/resources/events)
+- [x] `group-detail-shell` — /groups/[groupId] header + 5 tab + 5 route. ✓ build xanh.
 - [ ] `group-feed` — feed nhóm
 - [ ] `group-discussion` — list thread thảo luận
 - [ ] `group-members` — list member theo role (Owner/Admin/Mod/Member)

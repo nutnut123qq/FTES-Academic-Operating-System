@@ -3425,6 +3425,14 @@
             "study": "Study",
             "club": "Club",
             "team": "Team"
+        },
+        "placeholder": "This tab is under construction.",
+        "tabs": {
+            "feed": "Feed",
+            "discussion": "Discussion",
+            "members": "Members",
+            "resources": "Resources",
+            "events": "Events"
         }
     }
 }

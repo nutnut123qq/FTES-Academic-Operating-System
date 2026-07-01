@@ -3209,6 +3209,32 @@
                 "resources": "Tài nguyên",
                 "avgScore": "Điểm TB"
             }
+        },
+        "aiTools": {
+            "title": "Trợ lý AI",
+            "cta": "Mở",
+            "tools": {
+                "tutor": {
+                    "title": "Gia sư A",
+                    "desc": "Hỏi đáp theo bài học"
+                },
+                "summary": {
+                    "title": "Tóm tắt",
+                    "desc": "Tóm tắt nội dung nhanh"
+                },
+                "quiz": {
+                    "title": "Tạo quiz",
+                    "desc": "Sinh câu hỏi ôn tập"
+                },
+                "flashcards": {
+                    "title": "Flashcards",
+                    "desc": "Tạo thẻ ghi nhớ"
+                },
+                "ocr": {
+                    "title": "OCR",
+                    "desc": "Trích chữ từ ảnh/PDF"
+                }
+            }
         }
     }
 }

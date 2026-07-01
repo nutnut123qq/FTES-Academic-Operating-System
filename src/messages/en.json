@@ -3209,6 +3209,32 @@
                 "resources": "Resources",
                 "avgScore": "Avg score"
             }
+        },
+        "aiTools": {
+            "title": "AI assistant",
+            "cta": "Open",
+            "tools": {
+                "tutor": {
+                    "title": "AI tutor",
+                    "desc": "Q&A grounded in lessons"
+                },
+                "summary": {
+                    "title": "Summary",
+                    "desc": "Summarize content fast"
+                },
+                "quiz": {
+                    "title": "Quiz",
+                    "desc": "Generate review questions"
+                },
+                "flashcards": {
+                    "title": "Flashcards",
+                    "desc": "Create memory cards"
+                },
+                "ocr": {
+                    "title": "OCR",
+                    "desc": "Extract text from image/PDF"
+                }
+            }
         }
     }
 }

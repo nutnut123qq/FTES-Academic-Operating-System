@@ -40,7 +40,7 @@ Loop lấy mục `[ ]` trên cùng → 1 OpenSpec change → build webpack+tsc �
 - [x] `subject-workspace-community` — feed post rows + scope filter. ✓ build xanh.
 - [x] `subject-workspace-members` — role filter + member rows. ✓ build xanh.
 - [x] `subject-workspace-statistics` — metric cards + top students. ✓ build xanh.
-- [ ] `subject-workspace-ai` — card grid AI tools (Tutor/Summary/Quiz/Flashcards/OCR) + CTA. subjects.aiTools.*
+- [x] `subject-workspace-ai` — card grid AI tools + CTA. ✓ build xanh.
 - [ ] `subject-workspace-career` — chips related skills + list related careers + card suggested next subject. subjects.career.*
 
 ### §2 Profile (route mới /profile)

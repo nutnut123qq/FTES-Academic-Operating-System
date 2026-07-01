@@ -1,9 +1,9 @@
 "use client"
 
 import React from "react"
-import { ProfileSectionPlaceholder } from "@/components/features/profile/ProfileSectionPlaceholder"
+import { ProfileAcademic } from "@/components/features/profile/ProfileAcademic"
 
-/** `/profile/academic` — placeholder until this section is built. */
-const Page = () => <ProfileSectionPlaceholder sectionKey="academic" />
+/** `/profile/academic` — the Academic section (§2). */
+const Page = () => <ProfileAcademic />
 
 export default Page

@@ -1711,6 +1711,15 @@
                 "website": "Website",
                 "email": "Email"
             }
+        },
+        "academic": {
+            "fields": {
+                "university": "Trường",
+                "campus": "Cơ sở",
+                "major": "Chuyên ngành",
+                "semester": "Học kỳ",
+                "gpa": "GPA"
+            }
         }
     },
     "profileEdit": {

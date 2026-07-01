@@ -1702,6 +1702,15 @@
                 "website": "Website",
                 "email": "Email"
             }
+        },
+        "academic": {
+            "fields": {
+                "university": "University",
+                "campus": "Campus",
+                "major": "Major",
+                "semester": "Semester",
+                "gpa": "GPA"
+            }
         }
     },
     "profileEdit": {

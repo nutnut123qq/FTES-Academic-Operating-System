@@ -1,9 +1,9 @@
 "use client"
 
 import React from "react"
-import { CommunityScopePlaceholder } from "@/components/features/community/CommunityScopePlaceholder"
+import { CommunityTrending } from "@/components/features/community/CommunityTrending"
 
-/** `/community/trending` — placeholder until built. */
-const Page = () => <CommunityScopePlaceholder scopeKey="trending" />
+/** `/community/trending` — trending posts (§6). */
+const Page = () => <CommunityTrending />
 
 export default Page

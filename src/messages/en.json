@@ -3289,6 +3289,13 @@
             "credits": "{count} credits",
             "enroll": "Enroll",
             "outline": "Course outline"
+        },
+        "lesson": {
+            "videoPlaceholder": "Lesson video (placeholder)",
+            "documents": "Documents",
+            "open": "Open",
+            "previous": "Previous",
+            "next": "Next"
         }
     }
 }

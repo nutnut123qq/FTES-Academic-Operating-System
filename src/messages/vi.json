@@ -3289,6 +3289,13 @@
             "credits": "{count} tín chỉ",
             "enroll": "Đăng ký học",
             "outline": "Nội dung khóa học"
+        },
+        "lesson": {
+            "videoPlaceholder": "Video bài giảng (bản mẫu)",
+            "documents": "Tài liệu",
+            "open": "Mở",
+            "previous": "Bài trước",
+            "next": "Bài tiếp"
         }
     }
 }

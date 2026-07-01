@@ -295,7 +295,7 @@
     },
     "legal": {
         "contactNote": "Có câu hỏi về điều khoản hoặc dữ liệu của bạn? Liên hệ cuongnvtse160875@gmail.com.",
-    "lastUpdated": "Cập nhật lần cuối: {date}",
+        "lastUpdated": "Cập nhật lần cuối: {date}",
         "terms": {
             "title": "Điều khoản sử dụng",
             "description": "Các điều khoản khi sử dụng FTES AOS.",
@@ -2764,8 +2764,7 @@
                     "tag": "Giữ phong độ",
                     "desc": "Đối chiếu lời giải với người khác, rồi leo bảng xếp hạng."
                 }
-            },
-            "cta": "Vào cày thử"
+            }
         },
         "treasure": {
             "eyebrow": "Bản đồ năng lực hệ thống",
@@ -3075,50 +3074,6 @@
         "clear": "Bỏ ghim linh vật",
         "empty": "Đạt thành tích để ghim linh vật."
     },
-    "footer": {
-        "tagline": "Học bằng cách tự tay dựng hệ thống thật — đủ trình cho mọi vòng phỏng vấn kỹ thuật.",
-        "exploreTitle": "Khám phá",
-        "supportTitle": "Hỗ trợ",
-        "links": {
-            "courses": "Khóa học",
-            "blog": "Blog",
-            "talents": "Talents",
-            "community": "Cộng đồng",
-            "contact": "Liên hệ",
-            "terms": "Điều khoản",
-            "privacy": "Bảo mật"
-        },
-        "madeBy": "Được phát triển bởi Nguyễn Văn Tự Cường",
-        "copyright": "© {year} FTES AOS"
-    },
-    "legal": {
-        "contactNote": "Có câu hỏi về điều khoản hoặc dữ liệu của bạn? Liên hệ cuongnvtse160875@gmail.com.",
-        "lastUpdated": "Cập nhật lần cuối: {date}",
-        "terms": {
-            "title": "Điều khoản sử dụng",
-            "description": "Các điều khoản khi sử dụng FTES AOS.",
-            "body": "Tài liệu điều khoản đầy đủ đang được hoàn thiện. Khi sử dụng FTES AOS, bạn đồng ý dùng nền tảng cho mục đích học tập hợp pháp và tôn trọng quyền sở hữu của nội dung khóa học. Phiên bản chi tiết sẽ được cập nhật tại trang này."
-        },
-        "privacy": {
-            "title": "Chính sách bảo mật",
-            "description": "Cách FTES AOS thu thập và sử dụng dữ liệu của bạn.",
-            "body": "Chính sách bảo mật đầy đủ đang được hoàn thiện. FTES AOS chỉ thu thập dữ liệu cần thiết để vận hành việc học của bạn (tài khoản, tiến độ, bài nộp) và không bán dữ liệu cho bên thứ ba. Phiên bản chi tiết sẽ được cập nhật tại trang này."
-        }
-    },
-    "cookieConsent": {
-        "title": "Cookie",
-        "body": "Bọn mình dùng cookie cần thiết để bạn đăng nhập và ghi nhớ ngôn ngữ, cùng cookie phân tích (Google Analytics) để cải thiện trải nghiệm. Bạn có thể chấp nhận, từ chối, hoặc tùy chỉnh.",
-        "acceptAll": "Chấp nhận tất cả",
-        "reject": "Từ chối",
-        "customize": "Tùy chỉnh",
-        "modalTitle": "Tùy chỉnh cookie",
-        "modalBody": "Chọn loại cookie bạn cho phép. Cookie cần thiết luôn bật để hệ thống hoạt động.",
-        "necessaryLabel": "Cần thiết",
-        "necessaryHint": "Đăng nhập, bảo mật và ghi nhớ ngôn ngữ. Luôn bật.",
-        "analyticsLabel": "Phân tích",
-        "analyticsHint": "Google Analytics — đo lường ẩn danh để cải thiện sản phẩm.",
-        "save": "Lưu lựa chọn"
-    },
     "socketStatus": {
         "reconnecting": "Mất kết nối — đang thử lại…",
         "reconnected": "Đã kết nối lại"
@@ -3149,6 +3104,37 @@
             "infraDescription": "Hiện chưa có thành phần hạ tầng nào được kiểm tra.",
             "aiTitle": "Chưa có khoá AI nào",
             "aiDescription": "Hiện chưa cấu hình nhóm khoá AI nào."
+        }
+    },
+    "subjects": {
+        "collapse": "Thu gọn",
+        "expand": "Mở rộng",
+        "credits": "{count} tín chỉ",
+        "progress": "{percent}% hoàn thành",
+        "placeholder": "Khu vực này đang được xây dựng.",
+        "difficulty": {
+            "basic": "Cơ bản",
+            "intermediate": "Trung cấp",
+            "advanced": "Nâng cao"
+        },
+        "groups": {
+            "learn": "Học",
+            "community": "Cộng đồng",
+            "insight": "Insight"
+        },
+        "nav": {
+            "overview": "Tổng quan",
+            "learning": "Bài học",
+            "resources": "Tài nguyên",
+            "practice": "Luyện tập",
+            "ai": "AI",
+            "community": "Cộng đồng",
+            "members": "Thành viên",
+            "statistics": "Thống kê",
+            "career": "Nghề nghiệp"
+        },
+        "overview": {
+            "title": "Tổng quan môn học"
         }
     }
 }

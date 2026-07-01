@@ -295,7 +295,7 @@
     },
     "legal": {
         "contactNote": "Questions about these terms or your data? Email cuongnvtse160875@gmail.com.",
-    "lastUpdated": "Last updated: {date}",
+        "lastUpdated": "Last updated: {date}",
         "terms": {
             "title": "Terms of Service",
             "description": "The terms for using FTES AOS.",
@@ -2764,8 +2764,7 @@
                     "tag": "Stay sharp",
                     "desc": "Compare solutions and climb the ranks."
                 }
-            },
-            "cta": "Jump in"
+            }
         },
         "treasure": {
             "eyebrow": "System capability map",
@@ -3075,50 +3074,6 @@
         "middle": "Mid",
         "senior": "Senior"
     },
-    "footer": {
-        "tagline": "Learn by building real systems with your own hands — sharp enough for any technical interview.",
-        "exploreTitle": "Explore",
-        "supportTitle": "Support",
-        "links": {
-            "courses": "Courses",
-            "blog": "Blog",
-            "talents": "Talents",
-            "community": "Community",
-            "contact": "Contact",
-            "terms": "Terms",
-            "privacy": "Privacy"
-        },
-        "madeBy": "Built by Nguyễn Văn Tự Cường",
-        "copyright": "© {year} FTES AOS"
-    },
-    "legal": {
-        "contactNote": "Questions about these terms or your data? Email cuongnvtse160875@gmail.com.",
-        "lastUpdated": "Last updated: {date}",
-        "terms": {
-            "title": "Terms of Service",
-            "description": "The terms for using FTES AOS.",
-            "body": "The full terms document is being finalized. By using FTES AOS you agree to use the platform for lawful learning and to respect the ownership of course content. A detailed version will be published on this page."
-        },
-        "privacy": {
-            "title": "Privacy Policy",
-            "description": "How FTES AOS collects and uses your data.",
-            "body": "The full privacy policy is being finalized. FTES AOS collects only the data needed to run your learning (account, progress, submissions) and does not sell your data to third parties. A detailed version will be published on this page."
-        }
-    },
-    "cookieConsent": {
-        "title": "Cookies",
-        "body": "We use necessary cookies to sign you in and remember your language, plus analytics cookies (Google Analytics) to improve your experience. You can accept, reject, or customize.",
-        "acceptAll": "Accept all",
-        "reject": "Reject",
-        "customize": "Customize",
-        "modalTitle": "Cookie preferences",
-        "modalBody": "Choose which cookies you allow. Necessary cookies are always on so the system works.",
-        "necessaryLabel": "Necessary",
-        "necessaryHint": "Sign-in, security and language. Always on.",
-        "analyticsLabel": "Analytics",
-        "analyticsHint": "Google Analytics — anonymous metrics to improve the product.",
-        "save": "Save choices"
-    },
     "socketStatus": {
         "reconnecting": "Connection lost — reconnecting…",
         "reconnected": "Reconnected"
@@ -3149,6 +3104,37 @@
             "infraDescription": "No infrastructure components are being probed right now.",
             "aiTitle": "No AI keys reported",
             "aiDescription": "No AI key groups are configured right now."
+        }
+    },
+    "subjects": {
+        "collapse": "Collapse",
+        "expand": "Expand",
+        "credits": "{count} credits",
+        "progress": "{percent}% complete",
+        "placeholder": "This area is under construction.",
+        "difficulty": {
+            "basic": "Basic",
+            "intermediate": "Intermediate",
+            "advanced": "Advanced"
+        },
+        "groups": {
+            "learn": "Learn",
+            "community": "Community",
+            "insight": "Insight"
+        },
+        "nav": {
+            "overview": "Overview",
+            "learning": "Lessons",
+            "resources": "Resources",
+            "practice": "Practice",
+            "ai": "AI",
+            "community": "Community",
+            "members": "Members",
+            "statistics": "Statistics",
+            "career": "Career"
+        },
+        "overview": {
+            "title": "Subject overview"
         }
     }
 }

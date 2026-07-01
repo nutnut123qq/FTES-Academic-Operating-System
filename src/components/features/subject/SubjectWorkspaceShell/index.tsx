@@ -1,0 +1,147 @@
+"use client"
+
+import React from "react"
+import { Chip, Typography, cn } from "@heroui/react"
+import {
+    SquaresFourIcon,
+    BookOpenIcon,
+    FolderIcon,
+    TargetIcon,
+    SparkleIcon,
+    ChatCircleIcon,
+    UsersIcon,
+    ChartBarIcon,
+    BriefcaseIcon,
+} from "@phosphor-icons/react"
+import { useTranslations } from "next-intl"
+import { usePathname, useRouter } from "@/i18n/navigation"
+import { CollapsibleSidebar } from "@/components/blocks/navigation/CollapsibleSidebar"
+import { SidebarNavGroup } from "@/components/blocks/navigation/SidebarNavGroup"
+import { SidebarNavItem } from "@/components/blocks/navigation/SidebarNavItem"
+import { useQuerySubjectSwr } from "../hooks/useQuerySubjectSwr"
+
+/** Props for {@link SubjectWorkspaceShell}. */
+interface SubjectWorkspaceShellProps {
+    /** The `[subjectId]` route segment. */
+    subjectId: string
+    /** The active tab page. */
+    children: React.ReactNode
+}
+
+/** One nav row: i18n label key, icon, and the path segment (empty = overview root). */
+interface NavItem {
+    key: string
+    icon: React.ReactNode
+    segment: string
+}
+
+/** The 9 workspace areas grouped into 3 clusters (Học · Cộng đồng · Insight). */
+const NAV_GROUPS: Array<{ label: string; items: Array<NavItem> }> = [
+    {
+        label: "learn",
+        items: [
+            { key: "overview", icon: <SquaresFourIcon className="size-5" />, segment: "" },
+            { key: "learning", icon: <BookOpenIcon className="size-5" />, segment: "learning" },
+            { key: "resources", icon: <FolderIcon className="size-5" />, segment: "resources" },
+            { key: "practice", icon: <TargetIcon className="size-5" />, segment: "practice" },
+            { key: "ai", icon: <SparkleIcon className="size-5" />, segment: "ai" },
+        ],
+    },
+    {
+        label: "community",
+        items: [
+            { key: "community", icon: <ChatCircleIcon className="size-5" />, segment: "community" },
+            { key: "members", icon: <UsersIcon className="size-5" />, segment: "members" },
+        ],
+    },
+    {
+        label: "insight",
+        items: [
+            { key: "statistics", icon: <ChartBarIcon className="size-5" />, segment: "statistics" },
+            { key: "career", icon: <BriefcaseIcon className="size-5" />, segment: "career" },
+        ],
+    },
+]
+
+/**
+ * Subject Workspace shell (archetype A · sidebar rail — chosen 2026-07-01). A left
+ * {@link CollapsibleSidebar} lists the 9 workspace areas in 3 separator-divided
+ * clusters; the content region carries the subject identity header + the active
+ * tab. Sticky one-scroll (the body scrolls; the rail sticks under the 4rem navbar).
+ *
+ * Feature owns data (mock subject) + active-route detection + navigation; the
+ * blocks own all styling.
+ *
+ * @param props - {@link SubjectWorkspaceShellProps}
+ */
+export const SubjectWorkspaceShell = ({ subjectId, children }: SubjectWorkspaceShellProps) => {
+    const t = useTranslations("subjects")
+    const router = useRouter()
+    const pathname = usePathname()
+    const { subject } = useQuerySubjectSwr(subjectId)
+
+    const base = `/subjects/${subjectId}`
+    const hrefFor = (segment: string) => (segment ? `${base}/${segment}` : base)
+    const isActive = (segment: string) =>
+        segment ? pathname.startsWith(`${base}/${segment}`) : pathname === base
+
+    return (
+        <div className="flex w-full">
+            <div className="shrink-0 md:sticky md:top-16 md:h-[calc(100dvh-4rem)]">
+                <CollapsibleSidebar
+                    title={subject?.code ?? subjectId.toUpperCase()}
+                    collapseLabel={t("collapse")}
+                    expandLabel={t("expand")}
+                    storageKey="subject-workspace-sidebar-collapsed"
+                    className="h-full"
+                >
+                    {NAV_GROUPS.map((group, index) => (
+                        <SidebarNavGroup
+                            key={group.label}
+                            label={t(`groups.${group.label}`)}
+                            divider={index > 0}
+                        >
+                            {group.items.map((item) => (
+                                <SidebarNavItem
+                                    key={item.key}
+                                    icon={item.icon}
+                                    label={t(`nav.${item.key}`)}
+                                    isActive={isActive(item.segment)}
+                                    onPress={() => router.push(hrefFor(item.segment))}
+                                />
+                            ))}
+                        </SidebarNavGroup>
+                    ))}
+                </CollapsibleSidebar>
+            </div>
+
+            <div className="min-w-0 flex-1">
+                {/* subject identity header — spans the content region top */}
+                <header className={cn("flex flex-col gap-2 border-b border-separator p-6")}>
+                    <div className="flex items-center gap-3">
+                        <div className="flex size-11 shrink-0 items-center justify-center rounded-large bg-accent/10 text-sm font-bold text-accent">
+                            {(subject?.code ?? subjectId).slice(0, 3).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                            <Typography type="h4" weight="bold" truncate>
+                                {subject ? `${subject.code} · ${subject.name}` : subjectId}
+                            </Typography>
+                            <Typography type="body-sm" color="muted">
+                                {subject
+                                    ? `${t("credits", { count: subject.credits })} · ${t(`difficulty.${subject.difficulty}`)} · ${t("progress", { percent: subject.progress })}`
+                                    : ""}
+                            </Typography>
+                        </div>
+                        {subject ? (
+                            <Chip size="sm" variant="soft" color="accent" className="ml-auto hidden sm:flex">
+                                {subject.lecturer}
+                            </Chip>
+                        ) : null}
+                    </div>
+                </header>
+
+                {children}
+            </div>
+        </div>
+    )
+}

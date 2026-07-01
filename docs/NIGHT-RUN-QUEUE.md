@@ -8,7 +8,7 @@ Auth/Phase-0 churn ĐÃ HOÃN (mature strict-canon → làm interactive sau).
 
 Mỗi mục = 1 OpenSpec change (propose → apply theo layout đã chốt) → build webpack + tsc → commit.
 
-- [ ] `subject-workspace-shell` — §3: shell + tab nav (Overview/Learning/Resources/Community/Practice/AI/Members/Stats/Career Bridge). Layout: <chốt qua brainstorm>
+- [x] `subject-workspace-shell` — §3: shell + tab nav (A · sidebar rail). ✓ build xanh, 9 route. commit dưới.
 - [ ] `subject-workspace-overview` — §3: tab Overview (description/credits/lecturer/difficulty/prerequisites/roadmap/outcomes)
 - [ ] `subject-workspace-resources` — §3: tab Resources (types + collections + interaction)
 - [ ] `subject-workspace-practice` — §3: tab Practice (quiz/flashcards/coding challenge/leaderboard shells)

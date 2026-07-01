@@ -3352,6 +3352,13 @@
             "rating": "{rating}★",
             "preview": "Xem trước tài liệu (bản mẫu)",
             "comments": "Bình luận"
+        },
+        "upload": {
+            "title": "Tải lên tài nguyên",
+            "dropzone": "Kéo thả tệp vào đây (bản mẫu)",
+            "titleField": "Tiêu đề tài nguyên",
+            "subjectField": "Mã môn (vd PRF192)",
+            "submit": "Tải lên"
         }
     }
 }

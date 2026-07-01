@@ -3352,6 +3352,13 @@
             "rating": "{rating}★",
             "preview": "Document preview (placeholder)",
             "comments": "Comments"
+        },
+        "upload": {
+            "title": "Upload resource",
+            "dropzone": "Drop files here (placeholder)",
+            "titleField": "Resource title",
+            "subjectField": "Subject code (e.g. PRF192)",
+            "submit": "Upload"
         }
     }
 }

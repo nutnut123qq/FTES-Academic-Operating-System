@@ -1,9 +1,9 @@
 "use client"
 
 import React from "react"
-import { GroupTabPlaceholder } from "@/components/features/group/GroupTabPlaceholder"
+import { GroupMembers } from "@/components/features/group/GroupMembers"
 
-/** `/groups/[groupId]/members` — placeholder until built. */
-const Page = () => <GroupTabPlaceholder tabKey="members" />
+/** `/groups/[groupId]/members` — group members by role (§7). */
+const Page = () => <GroupMembers />
 
 export default Page

@@ -3436,6 +3436,12 @@
         },
         "discussion": {
             "replies": "{count} replies"
+        },
+        "roles": {
+            "owner": "Owner",
+            "admin": "Admin",
+            "moderator": "Moderator",
+            "member": "Member"
         }
     }
 }

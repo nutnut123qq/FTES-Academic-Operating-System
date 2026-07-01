@@ -3436,6 +3436,12 @@
         },
         "discussion": {
             "replies": "{count} phản hồi"
+        },
+        "roles": {
+            "owner": "Chủ nhóm",
+            "admin": "Quản trị",
+            "moderator": "Điều hành",
+            "member": "Thành viên"
         }
     }
 }

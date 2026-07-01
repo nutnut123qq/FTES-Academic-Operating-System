@@ -3152,6 +3152,28 @@
                 "source": "Source code",
                 "notes": "Ghi chú"
             }
+        },
+        "practice": {
+            "title": "Luyện tập",
+            "cta": "Mở",
+            "modules": {
+                "quiz": {
+                    "title": "Trắc nghiệm",
+                    "meta": "{count} bộ đề"
+                },
+                "flashcards": {
+                    "title": "Flashcards",
+                    "meta": "{count} thẻ"
+                },
+                "coding": {
+                    "title": "Thử thách code",
+                    "meta": "{count} bài"
+                },
+                "leaderboard": {
+                    "title": "Bảng xếp hạng",
+                    "meta": "{count} người tham gia"
+                }
+            }
         }
     }
 }

@@ -3152,6 +3152,28 @@
                 "source": "Source code",
                 "notes": "Notes"
             }
+        },
+        "practice": {
+            "title": "Practice",
+            "cta": "Open",
+            "modules": {
+                "quiz": {
+                    "title": "Quiz",
+                    "meta": "{count} sets"
+                },
+                "flashcards": {
+                    "title": "Flashcards",
+                    "meta": "{count} cards"
+                },
+                "coding": {
+                    "title": "Coding challenge",
+                    "meta": "{count} problems"
+                },
+                "leaderboard": {
+                    "title": "Leaderboard",
+                    "meta": "{count} participants"
+                }
+            }
         }
     }
 }

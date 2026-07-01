@@ -1,9 +1,7 @@
-"use client"
-
 import React from "react"
-import { SubjectTabPlaceholder } from "@/components/features/subject/SubjectTabPlaceholder"
+import { SubjectPractice } from "@/components/features/subject/SubjectPractice"
 
-/** `/subjects/[subjectId]/practice` — placeholder until this area gets its own layout. */
-const Page = () => <SubjectTabPlaceholder areaKey="practice" />
+/** `/subjects/[subjectId]/practice` — the Practice tab (§10/§11 in a subject workspace). */
+const Page = () => <SubjectPractice />
 
 export default Page

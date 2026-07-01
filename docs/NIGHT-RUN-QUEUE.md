@@ -11,7 +11,7 @@ Mỗi mục = 1 OpenSpec change (propose → apply theo layout đã chốt) → 
 - [x] `subject-workspace-shell` — §3: shell + tab nav (A · sidebar rail). ✓ build xanh, 9 route (commit 6a90441).
 - [x] `subject-workspace-overview` — §3: Overview hub grid (dựng luôn trong shell). ✓
 - [x] `subject-workspace-resources` — §3: tab Resources (filter type + list + Collections). ✓ build xanh.
-- [ ] `subject-workspace-practice` — §3: tab Practice — DEFAULT on-canon: card grid 4 shells (Quiz/Flashcards/Coding challenge/Leaderboard), mỗi card có meta + CTA. Thay placeholder.
+- [x] `subject-workspace-practice` — §3: tab Practice (card grid 4 module + CTA). ✓ build xanh.
 - [ ] `subject-workspace-learning` — §3: tab Learning — DEFAULT on-canon: list Section→Lesson (mock) + progress meter + trạng thái hoàn thành. Thay placeholder.
 - [ ] `profile-shell` — §2: **HOÃN** (archetype 2-column cần brainstorm riêng; loop BỎ QUA).
 

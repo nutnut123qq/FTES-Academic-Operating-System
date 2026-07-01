@@ -1685,27 +1685,13 @@
         "upgradeWarning": "You are on the {tier} plan. Upgrade for more credits and stronger grading models."
     },
     "profile": {
-        "signedOut": {
-            "title": "You are not signed in",
-            "desc": "Sign in to view your profile and AI quota."
-        },
-        "followers": "followers",
-        "following": "following",
-        "points": "points",
-        "level": "Level {level}",
-        "joined": "Joined {date}",
-        "streakLine": "{streak}-day streak · longest {longest}",
-        "nav": {
-            "editDesc": "Update your avatar, name and bio",
-            "sessionsDesc": "See your logged-in devices and log them out",
-            "securityDesc": "Two-factor authentication",
-            "aiSettingsDesc": "Choose your AI lane and manage your own API key",
-            "aiSubscriptionDesc": "Upgrade for more weekly AI credits",
-            "bookmarks": "Bookmarks",
-            "rewards": "Rewards",
-            "blog": "Blog",
-            "talents": "Talents",
-            "bookmarksDesc": "Your saved content"
+        "placeholder": "This section is under construction.",
+        "sections": {
+            "personal": "Personal",
+            "academic": "Academic",
+            "portfolio": "Portfolio",
+            "community": "Community",
+            "progress": "Progress"
         }
     },
     "profileEdit": {

@@ -1694,27 +1694,13 @@
         "upgradeWarning": "Bạn đang dùng gói {tier}. Nâng cấp để có thêm credit và chấm bài bằng model mạnh hơn."
     },
     "profile": {
-        "signedOut": {
-            "title": "Bạn chưa đăng nhập",
-            "desc": "Đăng nhập để xem hồ sơ và hạn mức AI của bạn."
-        },
-        "followers": "người theo dõi",
-        "following": "đang theo dõi",
-        "points": "điểm",
-        "level": "Cấp {level}",
-        "joined": "Tham gia {date}",
-        "streakLine": "Chuỗi {streak} ngày · dài nhất {longest}",
-        "nav": {
-            "editDesc": "Cập nhật ảnh đại diện, tên và tiểu sử",
-            "sessionsDesc": "Xem thiết bị đang đăng nhập và đăng xuất chúng",
-            "securityDesc": "Xác thực hai lớp",
-            "aiSettingsDesc": "Chọn nguồn AI và quản lý API key của riêng bạn",
-            "aiSubscriptionDesc": "Nâng cấp để có thêm credit AI mỗi tuần",
-            "bookmarks": "Đã lưu",
-            "rewards": "Phần thưởng",
-            "blog": "Blog",
-            "talents": "Nhân tài",
-            "bookmarksDesc": "Nội dung bạn đã lưu"
+        "placeholder": "Phần này đang được xây dựng.",
+        "sections": {
+            "personal": "Cá nhân",
+            "academic": "Học vấn",
+            "portfolio": "Hồ sơ",
+            "community": "Cộng đồng",
+            "progress": "Tiến độ"
         }
     },
     "profileEdit": {

@@ -44,7 +44,7 @@ Loop lấy mục `[ ]` trên cùng → 1 OpenSpec change → build webpack+tsc �
 - [x] `subject-workspace-career` — skills chips + careers list + next-subject card. ✓ build xanh. **§3 TRỌN 9 MẢNG.**
 
 ### §2 Profile (route mới /profile)
-- [ ] `profile-shell` — /profile + shell 2-cột (identity card trái + tab sections phải). profile.*
+- [x] `profile-shell` — /profile 2-cột (identity + section tabs) + 5 route. ✓ build xanh.
 - [ ] `profile-personal` — identity card (avatar initials/cover band/bio/social rows)
 - [ ] `profile-academic` — list academic (university/campus/major/semester/GPA)
 - [ ] `profile-portfolio` — grid projects + rows github/linkedin/resume/certificates

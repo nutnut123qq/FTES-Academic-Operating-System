@@ -3378,6 +3378,10 @@
             "following": "Đang theo dõi",
             "campus": "Cơ sở",
             "trending": "Xu hướng"
+        },
+        "feed": {
+            "likes": "{count} thích",
+            "comments": "{count} bình luận"
         }
     }
 }

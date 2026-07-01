@@ -71,7 +71,7 @@ Loop lấy mục `[ ]` trên cùng → 1 OpenSpec change → build webpack+tsc �
 
 ### §6 Community (route mới /community)
 - [x] `community-shell` — /community scope tabs + 4 route. ✓ build xanh.
-- [ ] `community-feed` — list post rows (author/time/title/snippet/reactions count)
+- [x] `community-feed` — post rows feed (For You). ✓ build xanh.
 - [ ] `community-post-detail` — /community/[postId]: post + thread comments
 - [ ] `community-composer` — form tạo post (textarea + attach chips + submit)
 - [ ] `community-trending` — list trending

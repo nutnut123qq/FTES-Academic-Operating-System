@@ -3378,6 +3378,10 @@
             "following": "Following",
             "campus": "Campus",
             "trending": "Trending"
+        },
+        "feed": {
+            "likes": "{count} likes",
+            "comments": "{count} comments"
         }
     }
 }

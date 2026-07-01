@@ -1,9 +1,9 @@
 "use client"
 
 import React from "react"
-import { CommunityScopePlaceholder } from "@/components/features/community/CommunityScopePlaceholder"
+import { CommunityFeed } from "@/components/features/community/CommunityFeed"
 
-/** `/community` — For You feed (placeholder until community-feed fills it). */
-const Page = () => <CommunityScopePlaceholder scopeKey="forYou" />
+/** `/community` — the For You feed (§6). */
+const Page = () => <CommunityFeed />
 
 export default Page

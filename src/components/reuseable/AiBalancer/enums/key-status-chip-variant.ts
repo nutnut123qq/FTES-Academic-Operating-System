@@ -4,6 +4,6 @@
 export enum KeyStatusChipVariant {
     /** Dark admin dashboard background. */
     Dark = "dark",
-    /** Light StarCi AI learn page background. */
+    /** Light FTES AOS AI learn page background. */
     Light = "light",
 }

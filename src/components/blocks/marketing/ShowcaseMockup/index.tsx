@@ -22,7 +22,7 @@ export interface ShowcaseTheme {
 export const SHOWCASE_THEMES = {
     /** Mono brand glow (subtle). */
     accent: { c1: "var(--accent)", c2: "var(--accent)", c3: "var(--accent)" },
-    /** StarCi triad: pink · amber · teal (matches the architecture diagram). */
+    /** FTES AOS triad: pink · amber · teal (matches the architecture diagram). */
     starci: { c1: "var(--accent)", c2: "var(--warning)", c3: "var(--success)" },
     /** Aqua triad: blue · teal · violet (Uni-Education style). */
     aqua: { c1: "#378ADD", c2: "#1D9E75", c3: "#7F77DD" },
@@ -66,7 +66,7 @@ const OPPOSITE: Record<Tilt, Tilt> = { left: "right", right: "left", none: "none
 /**
  * Reusable "browser window" showcase frame: a chrome-framed card (3 dots + address
  * bar) holding any content, tilted slightly in 3D with a soft coloured glow behind it
- * — the StarCi / Uni-Education hero look, as ONE reusable block.
+ * — the FTES AOS / Uni-Education hero look, as ONE reusable block.
  *
  * Parameterise via props: `theme` (3 accent colours for the glow), `tilt`
  * (left/right/none), `backdrop` (glow/grid/stars/none), `url` + `children`. The card

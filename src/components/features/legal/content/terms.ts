@@ -1,6 +1,6 @@
 /**
  * Terms of Service — structured content rendered natively by {@link import("../LegalPage").LegalPage}
- * with Typography (NO markdown). Grounded in what StarCi Academy actually offers (self-paced courses +
+ * with Typography (NO markdown). Grounded in what FTES AOS actually offers (self-paced courses +
  * challenges + AI grading + capstone projects, paid via gateways) and Vietnamese law. Provided as a
  * starting template — have a lawyer review before relying on it.
  */
@@ -13,12 +13,12 @@ import type {
 export const TERMS_LAST_UPDATED = "2026-06-21"
 
 const vi: LegalDocument = {
-    intro: "Chào mừng bạn đến với StarCi Academy (academy.starci.org). Bằng việc tạo tài khoản hoặc sử dụng nền tảng, bạn đồng ý với các Điều khoản dịch vụ dưới đây.",
+    intro: "Chào mừng bạn đến với FTES AOS (academy.starci.org). Bằng việc tạo tài khoản hoặc sử dụng nền tảng, bạn đồng ý với các Điều khoản dịch vụ dưới đây.",
     sections: [
         {
             heading: "1. Dịch vụ",
             paragraphs: [
-                "StarCi là nền tảng học lập trình tự học theo lộ trình (Fullstack, System Design, DevOps, AI/LLM), gồm nội dung bài học, thử thách (challenge), chấm điểm bằng AI và dự án capstone. Chúng tôi có thể cập nhật, thêm hoặc gỡ tính năng và nội dung theo thời gian.",
+                "FTES AOS là nền tảng học lập trình tự học theo lộ trình (Fullstack, System Design, DevOps, AI/LLM), gồm nội dung bài học, thử thách (challenge), chấm điểm bằng AI và dự án capstone. Chúng tôi có thể cập nhật, thêm hoặc gỡ tính năng và nội dung theo thời gian.",
             ],
         },
         {
@@ -38,7 +38,7 @@ const vi: LegalDocument = {
         {
             heading: "4. Quyền sở hữu trí tuệ",
             items: [
-                { text: "Toàn bộ nội dung khóa học, bài học, challenge và tài liệu thuộc về StarCi (hoặc bên cấp phép). Bạn được dùng cho mục đích học tập cá nhân; không sao chép, phân phối lại, bán hoặc công khai nếu không có sự cho phép." },
+                { text: "Toàn bộ nội dung khóa học, bài học, challenge và tài liệu thuộc về FTES AOS (hoặc bên cấp phép). Bạn được dùng cho mục đích học tập cá nhân; không sao chép, phân phối lại, bán hoặc công khai nếu không có sự cho phép." },
                 { label: "Code và bài làm của bạn vẫn thuộc về bạn.", text: "Khi nộp repo để chấm, bạn cho phép chúng tôi truy cập và xử lý nó (kể cả qua dịch vụ AI) chỉ nhằm mục đích chấm điểm và phản hồi." },
             ],
         },
@@ -57,7 +57,7 @@ const vi: LegalDocument = {
         {
             heading: "7. Giới hạn trách nhiệm",
             paragraphs: [
-                "Dịch vụ được cung cấp \"nguyên trạng\". Trong phạm vi pháp luật cho phép, StarCi không chịu trách nhiệm cho thiệt hại gián tiếp phát sinh từ việc sử dụng (hoặc không thể sử dụng) dịch vụ. Chúng tôi cố gắng duy trì hoạt động ổn định nhưng không cam kết không gián đoạn.",
+                "Dịch vụ được cung cấp \"nguyên trạng\". Trong phạm vi pháp luật cho phép, FTES AOS không chịu trách nhiệm cho thiệt hại gián tiếp phát sinh từ việc sử dụng (hoặc không thể sử dụng) dịch vụ. Chúng tôi cố gắng duy trì hoạt động ổn định nhưng không cam kết không gián đoạn.",
             ],
         },
         {
@@ -88,12 +88,12 @@ const vi: LegalDocument = {
 }
 
 const en: LegalDocument = {
-    intro: "Welcome to StarCi Academy (academy.starci.org). By creating an account or using the platform, you agree to the Terms of Service below.",
+    intro: "Welcome to FTES AOS (academy.starci.org). By creating an account or using the platform, you agree to the Terms of Service below.",
     sections: [
         {
             heading: "1. The service",
             paragraphs: [
-                "StarCi is a self-paced programming learning platform (Fullstack, System Design, DevOps, AI/LLM), including lesson content, challenges, AI grading, and capstone projects. We may update, add, or remove features and content over time.",
+                "FTES AOS is a self-paced programming learning platform (Fullstack, System Design, DevOps, AI/LLM), including lesson content, challenges, AI grading, and capstone projects. We may update, add, or remove features and content over time.",
             ],
         },
         {
@@ -113,7 +113,7 @@ const en: LegalDocument = {
         {
             heading: "4. Intellectual property",
             items: [
-                { text: "All course content, lessons, challenges, and materials belong to StarCi (or its licensors). You may use them for personal learning; do not copy, redistribute, sell, or make them public without permission." },
+                { text: "All course content, lessons, challenges, and materials belong to FTES AOS (or its licensors). You may use them for personal learning; do not copy, redistribute, sell, or make them public without permission." },
                 { label: "Your code and work remain yours.", text: "When you submit a repo for grading, you grant us access to process it (including via AI services) solely for grading and feedback." },
             ],
         },
@@ -132,7 +132,7 @@ const en: LegalDocument = {
         {
             heading: "7. Limitation of liability",
             paragraphs: [
-                "The service is provided \"as is\". To the extent permitted by law, StarCi is not liable for indirect damages arising from use of (or inability to use) the service. We strive for stable operation but do not guarantee uninterrupted availability.",
+                "The service is provided \"as is\". To the extent permitted by law, FTES AOS is not liable for indirect damages arising from use of (or inability to use) the service. We strive for stable operation but do not guarantee uninterrupted availability.",
             ],
         },
         {

@@ -1,6 +1,6 @@
 import type { GraphQLResponse } from "../../types"
 
-/** Reason a visitor is contacting StarCi (wire value matches the i18n key). */
+/** Reason a visitor is contacting FTES AOS (wire value matches the i18n key). */
 export type ContactCategory = "course_support" | "partnership" | "general"
 
 /** GraphQL `SubmitContactRequest` body for the public contact form. */

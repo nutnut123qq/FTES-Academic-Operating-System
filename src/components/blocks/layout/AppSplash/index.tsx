@@ -22,7 +22,7 @@ const FADE_MS = 350
 
 /**
  * AppSplash — the full-screen entry "suspense" screen shown the moment you land
- * on the app (cold load / hard refresh): the StarCi lockup centred over the page
+ * on the app (cold load / hard refresh): the FTES AOS lockup centred over the page
  * background, with the same 3px brand-pink line trickling across the top as
  * {@link TopLoader} (one accent bar, two surfaces).
  *

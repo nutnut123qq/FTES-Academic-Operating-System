@@ -6,7 +6,7 @@ export type ShareType = "website" | "article" | "profile"
 
 /** Input for {@link buildPageMetadata}. */
 export interface BuildPageMetadataInput {
-    /** Page title (the root layout template appends "| StarCi Academy"). Omit to use the site name. */
+    /** Page title (the root layout template appends "| FTES AOS"). Omit to use the site name. */
     title?: string
     /** Meta description; falls back to the site default. */
     description?: string

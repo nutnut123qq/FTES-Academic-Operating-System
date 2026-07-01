@@ -22,14 +22,6 @@ const intlMiddleware = createMiddleware(routing)
 const AUTH_SIGNAL_COOKIE = "session_hint"
 
 /**
- * Matches the marketing root only: `/`, `/vi`, `/en` (with optional trailing
- * slash). These are the paths a logged-in visitor should be bounced away from,
- * GitHub-style. Deeper marketing pages (e.g. `/vi/home`) are intentionally NOT
- * matched, so a signed-in user can still open the landing page on purpose.
- */
-const HOME_ROOT_PATH = /^\/(?:(en|vi)\/?)?$/
-
-/**
  * Strips an optional leading locale segment (`/en` or `/vi`) so a path can be
  * matched against locale-agnostic patterns. `localePrefix` is unset (next-intl
  * default), so the default locale may be unprefixed (`/dashboard`) while `en` is
@@ -57,11 +49,7 @@ const stripLocale = (pathname: string): string =>
  *   practice, talents, headhunting, league/kpi/etc. are intentionally NOT listed.
  */
 const PROTECTED_PATTERNS: RegExp[] = [
-    /^\/dashboard(?:\/|$)/,
     /^\/admin(?:\/|$)/,
-    /^\/checkout(?:\/|$)/,
-    /^\/profile(?:$|\/cv(?:\/|$)|\/settings(?:\/|$))/,
-    /^\/courses\/[^/]+\/learn(?:\/|$)/,
 ]
 
 /**
@@ -104,22 +92,13 @@ const resolveLocale = (request: NextRequest, urlLocale?: string): string =>
 export default function proxy(request: NextRequest) {
     const {pathname} = request.nextUrl
     const isAuthed = request.cookies.has(AUTH_SIGNAL_COOKIE)
-    const homeMatch = pathname.match(HOME_ROOT_PATH)
 
-    // (1) Logged-in → keep away from the marketing root.
-    if (isAuthed && homeMatch) {
-        const locale = resolveLocale(request, homeMatch[1] ?? undefined)
-        const url = request.nextUrl.clone()
-        url.pathname = `/${locale}/dashboard`
-        return NextResponse.redirect(url)
-    }
-
-    // (2) Logged-out → keep out of protected areas.
+    // Logged-out → keep out of protected areas (bounce to the landing root).
     if (!isAuthed && isProtectedPath(pathname)) {
         const urlLocale = pathname.match(/^\/(en|vi)(?=\/|$)/)?.[1]
         const locale = resolveLocale(request, urlLocale)
         const url = request.nextUrl.clone()
-        url.pathname = `/${locale}/home`
+        url.pathname = `/${locale}`
         return NextResponse.redirect(url)
     }
 

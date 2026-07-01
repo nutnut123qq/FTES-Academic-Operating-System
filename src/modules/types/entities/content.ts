@@ -45,7 +45,7 @@ export interface ContentEntity extends AbstractEntity {
     isPremium: boolean
     /** When true, the lecture tab renders a live Sandpack sandbox for React/TSX lessons. */
     isSandbox?: boolean
-    /** Base GitHub repo URL (e.g. https://github.com/StarCi-Academy/fullstack-mastery-module-5-...). */
+    /** Base GitHub repo URL (e.g. https://github.com/FTES AOS-Academy/fullstack-mastery-module-5-...). */
     githubBaseUrl?: string | null
     /** Subdirectory within the repo for this lesson's frontend source (e.g. 1-mutations/frontend). */
     githubDir?: string | null

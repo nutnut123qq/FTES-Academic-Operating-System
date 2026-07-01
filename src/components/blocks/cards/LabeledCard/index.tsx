@@ -54,7 +54,7 @@ export interface LabeledCardProps extends WithClassNames<undefined> {
 }
 
 /**
- * The StarCi section card (UI 2.0): the title is a `Label` that sits OUTSIDE,
+ * The FTES AOS section card (UI 2.0): the title is a `Label` that sits OUTSIDE,
  * above the card, while the `Card` holds only content — `<Label/>` then
  * `<Card>…</Card>`. Optionally shows a right-aligned "see more →" link (the caret
  * slides right on hover). Replaces the legacy in-card header (SectionCard); owns

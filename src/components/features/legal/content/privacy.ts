@@ -1,6 +1,6 @@
 /**
  * Privacy Policy — structured content rendered natively by {@link import("../LegalPage").LegalPage}
- * with Typography (NO markdown). Grounded in what StarCi Academy actually collects/processes (auth,
+ * with Typography (NO markdown). Grounded in what FTES AOS actually collects/processes (auth,
  * learning, payment via gateways, GitHub link + encrypted token, cookies/GA, self-hosted + cloud AI
  * grading) and aligned with Vietnam's Decree 13/2023/ND-CP (PDPD). Provided as a starting template —
  * have a lawyer review before relying on it.
@@ -14,7 +14,7 @@ import type {
 export const PRIVACY_LAST_UPDATED = "2026-06-21"
 
 const vi: LegalDocument = {
-    intro: "StarCi Academy (\"StarCi\", \"chúng tôi\") tôn trọng quyền riêng tư của bạn. Chính sách này mô tả cách chúng tôi thu thập, sử dụng, lưu trữ và bảo vệ dữ liệu cá nhân khi bạn dùng nền tảng tại academy.starci.org, tuân theo Nghị định 13/2023/NĐ-CP về bảo vệ dữ liệu cá nhân.",
+    intro: "FTES AOS (\"FTES AOS\", \"chúng tôi\") tôn trọng quyền riêng tư của bạn. Chính sách này mô tả cách chúng tôi thu thập, sử dụng, lưu trữ và bảo vệ dữ liệu cá nhân khi bạn dùng nền tảng tại academy.starci.org, tuân theo Nghị định 13/2023/NĐ-CP về bảo vệ dữ liệu cá nhân.",
     sections: [
         {
             heading: "1. Dữ liệu chúng tôi thu thập",
@@ -103,7 +103,7 @@ const vi: LegalDocument = {
 }
 
 const en: LegalDocument = {
-    intro: "StarCi Academy (\"StarCi\", \"we\") respects your privacy. This policy explains how we collect, use, store, and protect personal data when you use the platform at academy.starci.org, in line with Vietnam's Decree 13/2023/ND-CP on personal data protection.",
+    intro: "FTES AOS (\"FTES AOS\", \"we\") respects your privacy. This policy explains how we collect, use, store, and protect personal data when you use the platform at academy.starci.org, in line with Vietnam's Decree 13/2023/ND-CP on personal data protection.",
     sections: [
         {
             heading: "1. Data we collect",

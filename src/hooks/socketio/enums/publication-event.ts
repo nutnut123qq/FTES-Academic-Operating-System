@@ -10,7 +10,7 @@ export enum PublicationEvent {
     AbortAiLabRun = "ai_lab.abort_run.publication",
     /** Join a chat conversation's room (must match backend). */
     SubscribeCommunityChat = "community_chat.subscribe.publication",
-    /** Ask StarCi AI about a content and stream the answer (must match backend). */
+    /** Ask FTES AOS AI about a content and stream the answer (must match backend). */
     AskContentAi = "content_ai.ask.publication",
     /** Abort an in-flight content-AI answer stream (must match backend). */
     AbortContentAi = "content_ai.abort.publication",

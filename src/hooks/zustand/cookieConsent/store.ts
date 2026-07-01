@@ -3,7 +3,7 @@
 import { create } from "zustand"
 
 /** First-party cookie that persists the visitor's choice. */
-const CONSENT_COOKIE = "starci-cookie-consent"
+const CONSENT_COOKIE = "ftesaos-cookie-consent"
 /** Remember the choice for a year. */
 const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365
 
@@ -44,7 +44,7 @@ const writeConsentCookie = (value: ConsentValue): void => {
 /**
  * Cookie-consent store (GDPR / VN PDPD). Holds the visitor's committed choice and
  * exposes the imperative commits used by the banner + preferences modal. The
- * choice is persisted in a first-party cookie (`starci-cookie-consent`) read once
+ * choice is persisted in a first-party cookie (`ftesaos-cookie-consent`) read once
  * via {@link CookieConsentStoreState.hydrate}; analytics scripts are gated on
  * `decided && analyticsAllowed` (see AnalyticsGate), so nothing loads before an
  * affirmative choice. `decided` starts `null` so the banner / GA render nothing

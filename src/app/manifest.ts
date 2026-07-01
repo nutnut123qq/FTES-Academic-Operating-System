@@ -7,7 +7,7 @@ import { SEO_CONFIG } from "@/config/seo"
  */
 const manifest = (): MetadataRoute.Manifest => ({
     name: SEO_CONFIG.siteName,
-    short_name: "StarCi",
+    short_name: "FTES AOS",
     description: SEO_CONFIG.defaultDescription,
     start_url: "/",
     display: "standalone",

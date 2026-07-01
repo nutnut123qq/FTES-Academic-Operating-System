@@ -61,7 +61,7 @@ export type GradeModelDropdownProps = WithClassNames<undefined> & {
     selection: GradeModelSelection
     /**
      * Whether higher-tier models are unlocked for this user (paid OR enrolled —
-     * the StarCi rule). Drives the lock on Balanced / Premium / Frontier.
+     * the FTES AOS rule). Drives the lock on Balanced / Premium / Frontier.
      */
     canPremium: boolean
     /** Disables the whole control (e.g. while a grade is in flight). */

@@ -52,7 +52,7 @@ export const SitePreview = () => (
             <div className="flex items-center gap-4">
                 <span className="flex items-center gap-1.5 font-semibold">
                     <span aria-hidden className="size-3.5 rounded-md bg-accent" />
-                    StarCi
+                    FTES AOS
                 </span>
                 <span className="hidden items-center gap-3 text-xs text-muted sm:flex">
                     <span className="text-foreground">Khóa học</span>

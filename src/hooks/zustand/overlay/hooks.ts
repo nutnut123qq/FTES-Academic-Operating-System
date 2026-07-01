@@ -56,7 +56,7 @@ export const useAvatarUploadOverlayState = () => useOverlayHandle("avatarUpload"
 export const useChallengeOverlayState = () => useOverlayHandle("challenge")
 /** Content overlay state. */
 export const useContentOverlayState = () => useOverlayHandle("content")
-/** Content AI chat drawer overlay state (ask StarCi AI about the current content). */
+/** Content AI chat drawer overlay state (ask FTES AOS AI about the current content). */
 export const useContentAiChatOverlayState = () => useOverlayHandle("contentAiChat")
 /** Content AI settings modal overlay state (model picker + clear history). */
 export const useContentAiSettingsOverlayState = () => useOverlayHandle("contentAiSettings")

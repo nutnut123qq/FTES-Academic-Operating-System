@@ -25,7 +25,7 @@ export const publicEnv = () => {
             /** The URL of the Minio server. */
             url: process.env.NEXT_PUBLIC_MINIO_URL || "http://localhost:9000",
             /** The bucket of the Minio server. */
-            bucket: process.env.NEXT_PUBLIC_MINIO_BUCKET || "starci-academy",
+            bucket: process.env.NEXT_PUBLIC_MINIO_BUCKET || "ftesaos",
         },
         computation: {
             /** The amount of fraction digits for computation. */

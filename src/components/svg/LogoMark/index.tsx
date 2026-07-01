@@ -6,7 +6,7 @@ import type { WithClassNames } from "@/modules/types/base/class-name"
 export type LogoMarkProps = WithClassNames<undefined>
 
 /**
- * LogoMark — the square StarCi "S✦" brand mark, rendered as inline SVG.
+ * LogoMark — the square "S✦" brand mark, rendered as inline SVG.
  *
  * Inline (vs `<img src=".svg">`) so it stays crisp at any size and the "S"
  * resolves to the site's Open Sans face instead of an SVG-renderer fallback.
@@ -23,7 +23,7 @@ export const LogoMark = ({ className }: LogoMarkProps) => {
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
             role="img"
-            aria-label="StarCi Academy"
+            aria-label="FTES AOS"
         >
             <defs>
                 <linearGradient id="logoMarkTeal" x1="0" y1="0" x2="0" y2="1">

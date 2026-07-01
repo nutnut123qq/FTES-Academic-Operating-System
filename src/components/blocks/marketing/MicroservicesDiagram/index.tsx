@@ -102,7 +102,7 @@ export const MicroservicesDiagram = ({ caption, className }: MicroservicesDiagra
 
     return (
         // No card/window surface — just the diagram floating over a soft coloured glow
-        // (StarCi triad). The glow is the only "backdrop"; nodes/wires/chips sit on top.
+        // (FTES AOS triad). The glow is the only "backdrop"; nodes/wires/chips sit on top.
         <div className={cn("relative w-full", className)}>
             <div
                 aria-hidden

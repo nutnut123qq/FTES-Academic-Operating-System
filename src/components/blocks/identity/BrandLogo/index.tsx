@@ -9,8 +9,8 @@ import { Logo } from "@/components/blocks/identity/Logo"
 export type BrandLogoProps = WithClassNames<undefined>
 
 /**
- * BrandLogo — the StarCi brand lockup. The wordmark ({@link Logo}) already spells
- * out "StarCi" over "ACADEMY" with the circuit tracing, so this is now a thin
+ * BrandLogo — the FTES AOS brand lockup. The wordmark ({@link Logo}) already spells
+ * out "FTES AOS" over "ACADEMY" with the circuit tracing, so this is now a thin
  * placement wrapper around it (no separate flame mark, no duplicate text label).
  *
  * Kept as the shared identity entry point so callers (navbar, footer, splash)

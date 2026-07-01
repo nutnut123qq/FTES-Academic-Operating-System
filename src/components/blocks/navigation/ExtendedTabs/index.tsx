@@ -17,7 +17,7 @@ export interface ExtendedTabsProps extends WithClassNames<undefined> {
 }
 
 /**
- * The StarCi standard tab strip: a thin wrapper over the HeroUI `Tabs` root that
+ * The FTES AOS standard tab strip: a thin wrapper over the HeroUI `Tabs` root that
  * bakes in the secondary (underline) variant — foreground text on the selected
  * tab + an accent indicator — and drops the built-in `.tabs__list` baseline (so
  * it never doubles up with an outer separator; see `.extended-tabs` in

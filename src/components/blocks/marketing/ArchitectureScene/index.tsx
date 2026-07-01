@@ -30,14 +30,14 @@ import sceneJson from "./scene.json"
  * where every node is a flat-shaded slab centred on its own cell, wired into a small DAG.
  *
  * Fully DATA-DRIVEN: topology (nodes / edges / failures), board layout and camera come from a
- * JSON `data` object (default {@link sceneJson} = StarCi's real backend — the CQRS / CDC
+ * JSON `data` object (default {@link sceneJson} = FTES AOS's real backend — the CQRS / CDC
  * write→read split, taught failure = CDC lag → stale read). Pass a different `data` to render
  * any other diagram. Just THREE tones, read from theme tokens: `normal`→`--foreground`,
  * `success`→`--success`, `danger`→`--danger` (a hot, about-to-burn aura). Pure WebGL, no
  * image; mounted client-only.
  */
 
-/** Default scene (StarCi backend). JSON widens tuples/unions, so assert the schema. */
+/** Default scene (FTES AOS backend). JSON widens tuples/unions, so assert the schema. */
 const DEFAULT_DATA = sceneJson as unknown as ArchitectureSceneData
 
 /** Node FILL token per tone — HeroUI semantic colours (NOT the text `--foreground`, which
@@ -509,7 +509,7 @@ const Scene = ({ data, palette, reduce }: { data: ArchitectureSceneData; palette
 
 /** Props for {@link ArchitectureScene}. */
 export interface ArchitectureSceneProps extends WithClassNames<undefined> {
-    /** Scene topology/layout/camera as data (default = StarCi backend {@link sceneJson}). */
+    /** Scene topology/layout/camera as data (default = FTES AOS backend {@link sceneJson}). */
     data?: ArchitectureSceneData
     /** Caption under the scene (i18n string from the feature). */
     caption?: ReactNode

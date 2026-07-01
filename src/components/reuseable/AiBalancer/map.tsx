@@ -29,7 +29,7 @@ export const AI_BALANCER_KEY_STATUS_DARK_MAP: Record<string, AiBalancerKeyStatus
 }
 
 /**
- * Status chip styles for light learn surfaces (StarCi AI page).
+ * Status chip styles for light learn surfaces (FTES AOS AI page).
  */
 export const AI_BALANCER_KEY_STATUS_LIGHT_MAP: Record<string, AiBalancerKeyStatusVisual> = {
     [AiBalancerKeyStatus.Active]: {

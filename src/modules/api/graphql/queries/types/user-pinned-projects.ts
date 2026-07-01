@@ -9,7 +9,7 @@ export interface QueryUserPinnedProjectsRequest {
 /**
  * Pin kind discriminator. Mirrors the backend `ProjectPinType` enum:
  * - `course` — a pin linked to one of the user's enrollment capstones (may be
- *   "Verified by StarCi"); title/url are derived server-side.
+ *   "Verified by FTES AOS"); title/url are derived server-side.
  * - `external` — a free-form, user-authored project (never verified).
  */
 export type QueryPinnedProjectType = "course" | "external"
@@ -34,7 +34,7 @@ export interface QueryUserPinnedProjectItem {
     techStack: Array<string> | null
     /** Display order within the user's pinned list (ascending). */
     orderIndex: number
-    /** True only for a course pin with a completed capstone ("Verified by StarCi"). */
+    /** True only for a course pin with a completed capstone ("Verified by FTES AOS"). */
     isVerified: boolean
 }
 

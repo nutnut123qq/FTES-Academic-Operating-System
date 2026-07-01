@@ -35,7 +35,7 @@ export const InnerLayout = ({ children }: PropsWithChildren) => {
                 attribute="class" 
                 defaultTheme="dark" 
                 enableSystem={true} 
-                storageKey="starci-academy-theme"
+                storageKey="ftesaos-theme"
             >
                 <HeroUIProvider>
                     <ReduxProvider>

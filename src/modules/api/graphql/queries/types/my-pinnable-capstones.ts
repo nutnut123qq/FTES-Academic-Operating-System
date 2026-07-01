@@ -12,7 +12,7 @@ export interface QueryMyPinnableCapstoneItemData {
     courseTitle: string
     /** Submitted personal-project GitHub URL, or null if none. */
     githubUrl: string | null
-    /** Whether the capstone's task plan is complete ("Verified by StarCi"). */
+    /** Whether the capstone's task plan is complete ("Verified by FTES AOS"). */
     isVerified: boolean
 }
 

@@ -12,7 +12,7 @@
  */
 export const SEO_CONFIG = {
     /** Human-readable site / brand name used in titles + OG. */
-    siteName: "StarCi Academy",
+    siteName: "FTES AOS",
     /** Absolute origin for canonical / OpenGraph / sitemap urls (no trailing slash). */
     siteUrl: (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, ""),
     /** GA4 Measurement Id; empty disables the Google Analytics tag. */
@@ -21,7 +21,7 @@ export const SEO_CONFIG = {
     googleSiteVerification: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ?? "",
     /** Default site description (fallback when a page has none). */
     defaultDescription:
-        "StarCi Academy — học Fullstack, System Design và AI/LLM Engineering qua dự án thật, thực hành chấm điểm và lộ trình rõ ràng.",
+        "FTES AOS — nền tảng khởi tạo dự án.",
     /** Locales the public site is served under (mirrors the `[locale]` segment). */
     locales: ["vi", "en"] as ReadonlyArray<string>,
     /** Default locale — used for `x-default` hreflang + the canonical sitemap url. */

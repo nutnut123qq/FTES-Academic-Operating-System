@@ -42,7 +42,7 @@
     },
     "contact": {
         "title": "Contact",
-        "intro": "StarCi is built by one person — your question reaches the person who makes it. Pick the fastest route below, or send a message.",
+        "intro": "FTES AOS is built by one person — your question reaches the person who makes it. Pick the fastest route below, or send a message.",
         "responseTime": "We usually reply within 24 hours (support hours Mon–Fri, 9:00–18:00).",
         "direct": {
             "title": "Reach us directly",
@@ -52,9 +52,9 @@
             "hoursValue": "Mon–Fri, 9:00–18:00"
         },
         "founder": {
-            "title": "The person behind StarCi",
+            "title": "The person behind FTES AOS",
             "name": "Stacy Nguyen",
-            "role": "Founder · StarCi Academy",
+            "role": "Founder · FTES AOS",
             "facebook": "Facebook",
             "linkedin": "LinkedIn",
             "github": "GitHub"
@@ -91,9 +91,9 @@
             "a2": "Use \"Forgot password\" on the sign-in screen to reset it. If you're still stuck, send the form with your account email.",
             "q3": "Payment or refund issue?",
             "a3": "Send the form with the \"Course / account support\" reason and your transaction id, and we'll look into it.",
-            "q4": "Want to partner or hire StarCi learners?",
+            "q4": "Want to partner or hire FTES AOS learners?",
             "a4": "Pick the \"Partnership / hiring\" reason when sending the form, or message the founder directly on LinkedIn.",
-            "q5": "Questions about the courses, or whether StarCi is right for you?",
+            "q5": "Questions about the courses, or whether FTES AOS is right for you?",
             "a5": "See the FAQ on the home page — it covers the roadmap, who it's for, and how learning works in detail.",
             "landingLink": "See course FAQ on the home page"
         }
@@ -254,7 +254,7 @@
         }
     },
     "nav": {
-        "brand": "StarCi Academy",
+        "brand": "FTES AOS",
         "home": "Home",
         "courses": "Courses",
         "community": "Community",
@@ -291,20 +291,20 @@
             "privacy": "Privacy"
         },
         "madeBy": "Built by Nguyễn Văn Tự Cường",
-        "copyright": "© {year} StarCi Academy"
+        "copyright": "© {year} FTES AOS"
     },
     "legal": {
         "contactNote": "Questions about these terms or your data? Email cuongnvtse160875@gmail.com.",
     "lastUpdated": "Last updated: {date}",
         "terms": {
             "title": "Terms of Service",
-            "description": "The terms for using StarCi Academy.",
-            "body": "The full terms document is being finalized. By using StarCi Academy you agree to use the platform for lawful learning and to respect the ownership of course content. A detailed version will be published on this page."
+            "description": "The terms for using FTES AOS.",
+            "body": "The full terms document is being finalized. By using FTES AOS you agree to use the platform for lawful learning and to respect the ownership of course content. A detailed version will be published on this page."
         },
         "privacy": {
             "title": "Privacy Policy",
-            "description": "How StarCi Academy collects and uses your data.",
-            "body": "The full privacy policy is being finalized. StarCi Academy collects only the data needed to run your learning (account, progress, submissions) and does not sell your data to third parties. A detailed version will be published on this page."
+            "description": "How FTES AOS collects and uses your data.",
+            "body": "The full privacy policy is being finalized. FTES AOS collects only the data needed to run your learning (account, progress, submissions) and does not sell your data to third parties. A detailed version will be published on this page."
         }
     },
     "search": {
@@ -412,7 +412,7 @@
         "onThisPage": "On this page"
     },
     "contentAi": {
-        "title": "Ask StarCi AI",
+        "title": "Ask FTES AI",
         "hint": "Ask anything about this content.",
         "placeholder": "Ask about this content...",
         "ask": "Ask AI",
@@ -669,7 +669,7 @@
             "updateAction": "Update CV",
             "attemptsTitle": "Submitted CV versions",
             "defaultCvFileName": "document.pdf",
-            "aiBrand": "StarCi AI",
+            "aiBrand": "FTES AI",
             "toast": {
                 "errorTitle": "Something went wrong",
                 "successTitle": "Done",
@@ -1089,8 +1089,8 @@
             "lastAttemptScoreWithRequirement": "Your last attempt score is <n>{earned}</n><n>/</n><n>{max}</n>. Minimum required <n>{required}</n>.",
             "jobStatus": {
                 "queued": "Your submission is in the queue — hang tight…",
-                "processing": "StarCi AI is analyzing your submission — hang tight...",
-                "completed": "Your submission has been analyzed by StarCi AI.",
+                "processing": "FTES AI is analyzing your submission — hang tight...",
+                "completed": "Your submission has been analyzed by FTES AI.",
                 "failed": "Failed"
             }
         },
@@ -1562,18 +1562,18 @@
     },
     "membership": {
         "title": "Membership",
-        "subtitle": "Join the StarCi community",
+        "subtitle": "Join the FTES AOS community",
         "price": "$5",
         "priceHint": "/ month",
         "cta": "Become a member",
         "card": {
-            "title": "StarCi Community Membership",
+            "title": "FTES AOS Community Membership",
             "desc": "Everything you need to learn faster and get hired — in one membership."
         },
         "perks": {
             "blog": "Full access to the premium tech blog",
             "community": "Private community + founder Q&A",
-            "discount": "20% off every StarCi course",
+            "discount": "20% off every FTES AOS course",
             "recruitment": "Get your profile in front of hiring partners"
         },
         "priceApprox": "Approximately $5/month"
@@ -1710,7 +1710,7 @@
     },
     "profileEdit": {
         "title": "Edit profile",
-        "subtitle": "Update how you appear across StarCi Academy.",
+        "subtitle": "Update how you appear across FTES AOS.",
         "displayName": "Display name",
         "bio": "Bio",
         "bioPlaceholder": "Tell others a bit about yourself",
@@ -2047,9 +2047,9 @@
         "priceError": "Couldn't load the price",
         "intlNoUsd": "International methods aren't available for this order.",
         "secure": "Your payment is encrypted and secure.",
-        "noCardStored": "StarCi Academy never stores your card details",
+        "noCardStored": "FTES AOS never stores your card details",
         "aiPlanName": "AI plan",
-        "membershipName": "StarCi membership",
+        "membershipName": "FTES AOS membership",
         "loyalty": {
             "enrolled": "You own {count} courses",
             "diligent": "You keep a learning streak"
@@ -2182,15 +2182,15 @@
     },
     "home": {
         "intro": "IT courses are everywhere online, but content that is concise and focuses on practical thinking is rare.",
-        "intro2": "StarCi Academy was founded to change that.",
+        "intro2": "FTES AOS was founded to change that.",
         "intro3": "We focus on building programming thinking - from Fullstack, DevOps, Security to Solution Architect - with a clear and practical roadmap.",
         "diff": {
-            "title": "What makes StarCi Academy different?",
-            "des1": "StarCi Academy focuses on the essence of the IT industry. We don't just teach knowledge, but also train standard programming thinking and system design skills - core competencies that help you develop sustainably in the AI era.",
+            "title": "What makes FTES AOS different?",
+            "des1": "FTES AOS focuses on the essence of the IT industry. We don't just teach knowledge, but also train standard programming thinking and system design skills - core competencies that help you develop sustainably in the AI era.",
             "des2": "Thinking before stack",
             "des3": "Technology changes constantly and knowledge is everywhere. We focus on teaching the fundamentals, keywords, and thinking skills so that after the course, you can research, read docs, and expand on any stack you want.",
             "des4": "Low cost, high standard",
-            "des5": "StarCi Academy operates on a lean model, eliminating unnecessary costs to keep tuition affordable. Our goal is to create a high-quality learning environment that anyone serious about the profession can join.",
+            "des5": "FTES AOS operates on a lean model, eliminating unnecessary costs to keep tuition affordable. Our goal is to create a high-quality learning environment that anyone serious about the profession can join.",
             "des6": "We teach you to build truly valuable projects and provide long-term support throughout your career development."
         }
     },
@@ -2525,7 +2525,7 @@
     },
     "linkGithub": {
         "title": "Link GitHub",
-        "description": "Link your GitHub account to unlock full access to StarCi Academy repositories.",
+        "description": "Link your GitHub account to unlock full access to FTES AOS repositories.",
         "button": "Link GitHub Account"
     },
     "githubTeamGate": {
@@ -2541,7 +2541,7 @@
         "warningBody": "Until you join, you can't open the course's premium content — it lives in the course GitHub repo.",
         "openCta": "Join the team",
         "step1": "Press \"Request to join team\" below — we'll send you the invite.",
-        "step2": "Open GitHub and accept the invitation: from the invite email, or at github.com/orgs/StarCi-Academy → Invitations.",
+        "step2": "Open GitHub and accept the invitation: from the invite email, or at github.com/orgs/FTES AOS-Academy → Invitations.",
         "step3": "Come back here and press \"I've accepted — re-check\".",
         "state": {
             "active": "In team",
@@ -2557,13 +2557,13 @@
             "subline": "Back then, interns could start with small tasks: fixing UI, writing CRUD APIs, and boilerplate code.\nIn the AI era, those tasks are already solved in seconds.\nCompanies pay top salaries for practical Thinking & Knowledge — the part AI still cannot replace.",
             "diagramCaption": "Spot where it breaks. Design systems that won’t break.",
             "ctaRoadmap": "See the roadmap",
-            "ctaFounder": "Meet the founder of StarCi Academy",
+            "ctaFounder": "Meet the founder of FTES AOS",
             "ctaPrimary": "See the roadmap",
             "ctaSecondary": "Sign in"
         },
         "stats": {
             "eyebrow": "Real data, no fluff",
-            "title": "What StarCi Academy has",
+            "title": "What FTES AOS has",
             "intro": "Data is updated in real time from the system.",
             "learners": "Users",
             "lessons": "In-depth lessons",
@@ -2660,7 +2660,7 @@
             "eyebrow": "The dark side of coding",
             "title": "The blunt truth about tech",
             "name": "Nguyễn Văn Tự Cường",
-            "role": "Founder · StarCi Academy",
+            "role": "Founder · FTES AOS",
             "titles": "CTO @ Nivo Technology · CTO @ TEDO Technology",
             "expertise": {
                 "systemDesign": "System Design",
@@ -2672,7 +2672,7 @@
             "body2": "Everything here is built in the open — the platform, the curriculum, the challenges. Read the engineering notes and judge the work for yourself.",
             "github": "GitHub",
             "blog": "Read the blog",
-            "thesis": "Plenty of places teach coding to make you feel good and earn a certificate fast. StarCi Academy is different — I only tell the blunt truths about this industry and what real systems actually demand.",
+            "thesis": "Plenty of places teach coding to make you feel good and earn a certificate fast. FTES AOS is different — I only tell the blunt truths about this industry and what real systems actually demand.",
             "truth1": "Big-project experience does not guarantee interview success.",
             "fix1": "Many people ship large projects daily, yet still cannot draw a clear distributed architecture in interviews. I teach you to reason about architecture and defend it clearly.",
             "truth2": "Memorizing Microservices theory still gets you rejected when you're pushed on fundamentals.",
@@ -2692,7 +2692,7 @@
         },
         "outcome": {
             "eyebrow": "Real outcomes",
-            "title": "StarCi Academy outcomes",
+            "title": "FTES AOS outcomes",
             "items": {
                 "engineer": {
                     "title": "For users",
@@ -2707,7 +2707,7 @@
             },
             "card": {
                 "sample": "User profile",
-                "role": "StarCi Talent",
+                "role": "FTES AOS Talent",
                 "openToWork": "Open to work",
                 "cvScore": "CV score",
                 "challenges": "System challenges",
@@ -2933,7 +2933,7 @@
         "verified": "Verified",
         "typeCapstone": "Capstone",
         "typeExternal": "Project",
-        "verifiedByStarci": "Verified by StarCi",
+        "verifiedByFTES AOS": "Verified by FTES AOS",
         "openAria": "{title} — open in new tab"
     },
     "blog": {
@@ -2956,10 +2956,10 @@
         "readingMinutes": "{minutes} min read",
         "relatedTitle": "More in {category}",
         "retry": "Try again",
-        "subtitle": "Deep technical analysis of the very infrastructure that runs StarCi — architecture, trade-offs, and real code.",
-        "title": "The StarCi backend, taken apart",
+        "subtitle": "Deep technical analysis of the very infrastructure that runs FTES AOS — architecture, trade-offs, and real code.",
+        "title": "The FTES AOS backend, taken apart",
         "masthead": {
-            "caption": "The real StarCi backend architecture — drag to orbit."
+            "caption": "The real FTES AOS backend architecture — drag to orbit."
         },
         "startHere": "Start here",
         "topics": "Topics",
@@ -3089,20 +3089,20 @@
             "privacy": "Privacy"
         },
         "madeBy": "Built by Nguyễn Văn Tự Cường",
-        "copyright": "© {year} StarCi Academy"
+        "copyright": "© {year} FTES AOS"
     },
     "legal": {
         "contactNote": "Questions about these terms or your data? Email cuongnvtse160875@gmail.com.",
         "lastUpdated": "Last updated: {date}",
         "terms": {
             "title": "Terms of Service",
-            "description": "The terms for using StarCi Academy.",
-            "body": "The full terms document is being finalized. By using StarCi Academy you agree to use the platform for lawful learning and to respect the ownership of course content. A detailed version will be published on this page."
+            "description": "The terms for using FTES AOS.",
+            "body": "The full terms document is being finalized. By using FTES AOS you agree to use the platform for lawful learning and to respect the ownership of course content. A detailed version will be published on this page."
         },
         "privacy": {
             "title": "Privacy Policy",
-            "description": "How StarCi Academy collects and uses your data.",
-            "body": "The full privacy policy is being finalized. StarCi Academy collects only the data needed to run your learning (account, progress, submissions) and does not sell your data to third parties. A detailed version will be published on this page."
+            "description": "How FTES AOS collects and uses your data.",
+            "body": "The full privacy policy is being finalized. FTES AOS collects only the data needed to run your learning (account, progress, submissions) and does not sell your data to third parties. A detailed version will be published on this page."
         }
     },
     "cookieConsent": {
@@ -3125,7 +3125,7 @@
     },
     "status": {
         "title": "System status",
-        "subtitle": "Live health of the StarCi Academy platform — built in public, no login required.",
+        "subtitle": "Live health of the FTES AOS platform — built in public, no login required.",
         "refresh": "Refresh",
         "overall": "{up}/{total} components healthy",
         "infraHeading": "Infrastructure",

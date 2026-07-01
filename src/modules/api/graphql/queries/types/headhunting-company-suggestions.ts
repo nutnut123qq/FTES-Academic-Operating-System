@@ -2,7 +2,7 @@ import type { GraphQLResponse } from "../../types"
 
 /** Request for the `headhuntingCompanySuggestions` autocomplete query. */
 export interface QueryHeadhuntingCompanySuggestionsRequest {
-    /** Typed prefix to autocomplete (e.g. "sta" → "StarCi"). */
+    /** Typed prefix to autocomplete (e.g. "sta" → "FTES AOS"). */
     query: string
     /** Max suggestions to return (default 8). */
     limit?: number

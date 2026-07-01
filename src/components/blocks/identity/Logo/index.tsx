@@ -6,9 +6,9 @@ import type { WithClassNames } from "@/modules/types/base/class-name"
 export type LogoProps = WithClassNames<undefined>
 
 /**
- * Logo — the StarCi Academy wordmark, rendered as inline SVG.
+ * Logo — the FTES AOS wordmark, rendered as inline SVG.
  *
- * The mark is already pure text ("StarCi" over a wide-tracked "ACADEMY") with the
+ * The mark is already pure text ("FTES AOS" over a wide-tracked "ACADEMY") with the
  * brand-pink circuit tracing woven around the letters, so it carries the whole
  * lockup on its own — no separate text label is needed beside it.
  *
@@ -32,7 +32,7 @@ export const Logo = ({ className }: LogoProps) => {
             height="383"
             className={cn("h-8 w-auto text-foreground", className)}
             role="img"
-            aria-label="StarCi Academy"
+            aria-label="FTES AOS"
         >
             {/* wordmark — letters inherit currentColor (theme-aware) */}
             <text
@@ -44,7 +44,7 @@ export const Logo = ({ className }: LogoProps) => {
                 letterSpacing="-1.8"
                 fill="currentColor"
             >
-                StarCi
+                FTES
             </text>
             <text
                 x="102"
@@ -56,7 +56,7 @@ export const Logo = ({ className }: LogoProps) => {
                 fill="currentColor"
                 opacity="0.5"
             >
-                ACADEMY
+                AOS
             </text>
 
             {/* circuit tracing — brand accent */}

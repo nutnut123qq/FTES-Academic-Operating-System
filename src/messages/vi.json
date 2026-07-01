@@ -42,7 +42,7 @@
     },
     "contact": {
         "title": "Liên hệ",
-        "intro": "StarCi do một người dựng nên — câu hỏi của bạn tới thẳng người làm ra nó. Chọn cách nhanh nhất bên dưới, hoặc gửi tin nhắn.",
+        "intro": "FTES AOS do một người dựng nên — câu hỏi của bạn tới thẳng người làm ra nó. Chọn cách nhanh nhất bên dưới, hoặc gửi tin nhắn.",
         "responseTime": "Thường phản hồi trong vòng 24 giờ (giờ hỗ trợ T2–T6, 9:00–18:00).",
         "direct": {
             "title": "Liên hệ trực tiếp",
@@ -52,9 +52,9 @@
             "hoursValue": "T2–T6, 9:00–18:00"
         },
         "founder": {
-            "title": "Người dựng StarCi",
+            "title": "Người dựng FTES AOS",
             "name": "Stacy Nguyen",
-            "role": "Founder · StarCi Academy",
+            "role": "Founder · FTES AOS",
             "facebook": "Facebook",
             "linkedin": "LinkedIn",
             "github": "GitHub"
@@ -91,9 +91,9 @@
             "a2": "Dùng nút \"Quên mật khẩu\" ở màn đăng nhập để đặt lại. Nếu vẫn kẹt, gửi form kèm email tài khoản của bạn.",
             "q3": "Vấn đề thanh toán hoặc hoàn tiền?",
             "a3": "Gửi form với lý do \"Hỗ trợ khoá học / tài khoản\" kèm mã giao dịch, chúng tôi sẽ kiểm tra giúp bạn.",
-            "q4": "Tôi muốn hợp tác hoặc tuyển học viên StarCi?",
+            "q4": "Tôi muốn hợp tác hoặc tuyển học viên FTES AOS?",
             "a4": "Chọn lý do \"Hợp tác / tuyển dụng\" khi gửi form, hoặc nhắn trực tiếp founder qua LinkedIn.",
-            "q5": "Câu hỏi về khoá học, hoặc StarCi có hợp với tôi không?",
+            "q5": "Câu hỏi về khoá học, hoặc FTES AOS có hợp với tôi không?",
             "a5": "Xem mục Câu hỏi thường gặp ở trang chủ — phần đó trả lời kỹ về lộ trình, đối tượng và cách học.",
             "landingLink": "Xem FAQ về khoá học ở trang chủ"
         }
@@ -254,7 +254,7 @@
         }
     },
     "nav": {
-        "brand": "StarCi Academy",
+        "brand": "FTES AOS",
         "home": "Trang chủ",
         "courses": "Khóa học",
         "community": "Cộng đồng",
@@ -291,20 +291,20 @@
             "privacy": "Bảo mật"
         },
         "madeBy": "Được phát triển bởi Nguyễn Văn Tự Cường",
-        "copyright": "© {year} StarCi Academy"
+        "copyright": "© {year} FTES AOS"
     },
     "legal": {
         "contactNote": "Có câu hỏi về điều khoản hoặc dữ liệu của bạn? Liên hệ cuongnvtse160875@gmail.com.",
     "lastUpdated": "Cập nhật lần cuối: {date}",
         "terms": {
             "title": "Điều khoản sử dụng",
-            "description": "Các điều khoản khi sử dụng StarCi Academy.",
-            "body": "Tài liệu điều khoản đầy đủ đang được hoàn thiện. Khi sử dụng StarCi Academy, bạn đồng ý dùng nền tảng cho mục đích học tập hợp pháp và tôn trọng quyền sở hữu của nội dung khóa học. Phiên bản chi tiết sẽ được cập nhật tại trang này."
+            "description": "Các điều khoản khi sử dụng FTES AOS.",
+            "body": "Tài liệu điều khoản đầy đủ đang được hoàn thiện. Khi sử dụng FTES AOS, bạn đồng ý dùng nền tảng cho mục đích học tập hợp pháp và tôn trọng quyền sở hữu của nội dung khóa học. Phiên bản chi tiết sẽ được cập nhật tại trang này."
         },
         "privacy": {
             "title": "Chính sách bảo mật",
-            "description": "Cách StarCi Academy thu thập và sử dụng dữ liệu của bạn.",
-            "body": "Chính sách bảo mật đầy đủ đang được hoàn thiện. StarCi Academy chỉ thu thập dữ liệu cần thiết để vận hành việc học của bạn (tài khoản, tiến độ, bài nộp) và không bán dữ liệu cho bên thứ ba. Phiên bản chi tiết sẽ được cập nhật tại trang này."
+            "description": "Cách FTES AOS thu thập và sử dụng dữ liệu của bạn.",
+            "body": "Chính sách bảo mật đầy đủ đang được hoàn thiện. FTES AOS chỉ thu thập dữ liệu cần thiết để vận hành việc học của bạn (tài khoản, tiến độ, bài nộp) và không bán dữ liệu cho bên thứ ba. Phiên bản chi tiết sẽ được cập nhật tại trang này."
         }
     },
     "search": {
@@ -412,7 +412,7 @@
         "onThisPage": "Trên trang"
     },
     "contentAi": {
-        "title": "Hỏi StarCi AI",
+        "title": "Hỏi FTES AI",
         "hint": "Hỏi bất cứ điều gì về nội dung này.",
         "placeholder": "Hỏi về nội dung này...",
         "ask": "Hỏi AI",
@@ -678,7 +678,7 @@
             "updateAction": "Cập nhật CV mới",
             "attemptsTitle": "Các phiên bản CV đã nộp",
             "defaultCvFileName": "tai-lieu.pdf",
-            "aiBrand": "StarCi AI",
+            "aiBrand": "FTES AI",
             "toast": {
                 "errorTitle": "Có lỗi xảy ra",
                 "successTitle": "Thành công",
@@ -1098,8 +1098,8 @@
             "lastAttemptScoreWithRequirement": "Điểm lần thử gần nhất của bạn là <n>{earned}</n><n>/</n><n>{max}</n>. Yêu cầu tối thiểu <n>{required}</n>.",
             "jobStatus": {
                 "queued": "Bài của bạn đang nằm trong hàng đợi, chờ chút nhé...",
-                "processing": "StarCi AI đang phân tích bài của bạn, chờ chút nhé...",
-                "completed": "Bài của bạn đã được StarCi AI phân tích hoàn tất.",
+                "processing": "FTES AI đang phân tích bài của bạn, chờ chút nhé...",
+                "completed": "Bài của bạn đã được FTES AI phân tích hoàn tất.",
                 "failed": "Thất bại"
             }
         },
@@ -1571,18 +1571,18 @@
     },
     "membership": {
         "title": "Hội viên",
-        "subtitle": "Gia nhập cộng đồng StarCi",
+        "subtitle": "Gia nhập cộng đồng FTES AOS",
         "price": "$5",
         "priceHint": "/ tháng",
         "cta": "Trở thành hội viên",
         "card": {
-            "title": "Hội viên cộng đồng StarCi",
+            "title": "Hội viên cộng đồng FTES AOS",
             "desc": "Tất cả những gì bạn cần để học nhanh hơn và có việc — trong một gói hội viên."
         },
         "perks": {
             "blog": "Đọc trọn vẹn blog kỹ thuật premium",
             "community": "Cộng đồng kín + hỏi đáp cùng founder",
-            "discount": "Giảm 20% mọi khóa học StarCi",
+            "discount": "Giảm 20% mọi khóa học FTES AOS",
             "recruitment": "Đưa hồ sơ của bạn đến nhà tuyển dụng đối tác"
         },
         "priceApprox": "Khoảng $5/tháng"
@@ -1719,7 +1719,7 @@
     },
     "profileEdit": {
         "title": "Chỉnh sửa hồ sơ",
-        "subtitle": "Cập nhật cách bạn hiển thị trên StarCi Academy.",
+        "subtitle": "Cập nhật cách bạn hiển thị trên FTES AOS.",
         "displayName": "Tên hiển thị",
         "bio": "Tiểu sử",
         "bioPlaceholder": "Giới thiệu đôi nét về bạn",
@@ -2056,9 +2056,9 @@
         "priceError": "Không tải được giá",
         "intlNoUsd": "Phương thức quốc tế chưa khả dụng cho đơn này.",
         "secure": "Thanh toán được mã hoá & bảo mật.",
-        "noCardStored": "StarCi Academy không lưu thông tin thẻ của bạn",
+        "noCardStored": "FTES AOS không lưu thông tin thẻ của bạn",
         "aiPlanName": "Gói AI",
-        "membershipName": "Hội viên StarCi",
+        "membershipName": "Hội viên FTES AOS",
         "loyalty": {
             "enrolled": "Bạn đã sở hữu {count} khóa học",
             "diligent": "Bạn duy trì streak học tập"
@@ -2191,15 +2191,15 @@
     },
     "home": {
         "intro": "Khóa học IT trên mạng tràn lan, nhưng nội dung cô đọng và đi vào tư duy thực chiến lại rất ít.",
-        "intro2": "StarCi Academy được thành lập ra để thay đổi điều đó.",
+        "intro2": "FTES AOS được thành lập ra để thay đổi điều đó.",
         "intro3": "Chúng tớ tập trung xây dựng tư duy lập trình - từ Fullstack, DevOps, Security đến Solution Architect - với lộ trình rõ ràng và thực tế.",
         "diff": {
-            "title": "Điều gì làm cho StarCi Academy khác biệt?",
-            "des1": "StarCi Academy tập trung vào bản chất của ngành IT. Chúng tớ không chỉ dạy kiến thức mà còn đào tạo tư duy lập trình chuẩn mực và khả năng thiết kế hệ thống - những năng lực cốt lõi giúp bạn phát triển bền vững trong thời đại AI.",
+            "title": "Điều gì làm cho FTES AOS khác biệt?",
+            "des1": "FTES AOS tập trung vào bản chất của ngành IT. Chúng tớ không chỉ dạy kiến thức mà còn đào tạo tư duy lập trình chuẩn mực và khả năng thiết kế hệ thống - những năng lực cốt lõi giúp bạn phát triển bền vững trong thời đại AI.",
             "des2": "Tư duy trước stack",
             "des3": "Công nghệ thay đổi liên tục và kiến thức thì ở khắp nơi. Chúng tớ tập trung dạy bản chất, keyword và tư duy để sau khóa bạn tự research, đọc docs và mở rộng theo bất kỳ stack nào.",
             "des4": "Chi phí tối thiểu, tiêu chuẩn cao",
-            "des5": "StarCi Academy vận hành theo mô hình tinh gọn, loại bỏ các chi phí không cần thiết để giữ học phí ở mức dễ tiếp cận. Mục tiêu của chúng tớ là tạo ra một môi trường học tập chất lượng cao mà bất kỳ ai nghiêm túc với nghề đều có thể tham gia.",
+            "des5": "FTES AOS vận hành theo mô hình tinh gọn, loại bỏ các chi phí không cần thiết để giữ học phí ở mức dễ tiếp cận. Mục tiêu của chúng tớ là tạo ra một môi trường học tập chất lượng cao mà bất kỳ ai nghiêm túc với nghề đều có thể tham gia.",
             "des6": "Chúng tớ dạy để bạn xây dựng những project có giá trị thực sự và hỗ trợ lâu dài trong quá trình phát triển sự nghiệp."
         }
     },
@@ -2525,7 +2525,7 @@
     },
     "linkGithub": {
         "title": "Liên kết GitHub",
-        "description": "Liên kết tài khoản GitHub của bạn để mở khóa toàn quyền truy cập vào kho mã nguồn của StarCi Academy.",
+        "description": "Liên kết tài khoản GitHub của bạn để mở khóa toàn quyền truy cập vào kho mã nguồn của FTES AOS.",
         "button": "Liên kết tài khoản GitHub"
     },
     "githubTeamGate": {
@@ -2541,7 +2541,7 @@
         "warningBody": "Chưa vào team thì không mở được nội dung premium của khóa — nội dung này nằm trong repo GitHub của khóa.",
         "openCta": "Vào team",
         "step1": "Bấm \"Gửi yêu cầu vào team\" bên dưới — chúng tôi sẽ gửi lời mời cho bạn.",
-        "step2": "Mở GitHub và chấp nhận lời mời: từ email mời, hoặc tại github.com/orgs/StarCi-Academy → Invitations.",
+        "step2": "Mở GitHub và chấp nhận lời mời: từ email mời, hoặc tại github.com/orgs/FTES AOS-Academy → Invitations.",
         "step3": "Quay lại đây và bấm \"Tôi đã chấp nhận — kiểm tra lại\".",
         "state": {
             "active": "Đã vào team",
@@ -2557,13 +2557,13 @@
             "subline": "Ngày xưa, Intern bắt đầu bằng việc vặt: sửa UI, viết CRUD, gõ boilerplate.\nNhưng thời AI, những task đó đã bị giải trong vài giây.\nDoanh nghiệp trả lương cao cho Tư duy & Kiến thức thực chiến — thứ AI chưa thay thế.",
             "diagramCaption": "Nhìn ra nơi dễ sập. Thiết kế hệ thống không thể bị sập.",
             "ctaRoadmap": "Xem lộ trình",
-            "ctaFounder": "Gặp người dựng StarCi Academy",
+            "ctaFounder": "Gặp người dựng FTES AOS",
             "ctaPrimary": "Xem lộ trình",
             "ctaSecondary": "Đăng nhập"
         },
         "stats": {
             "eyebrow": "Số liệu thật, không phông bạt",
-            "title": "StarCi Academy đang có",
+            "title": "FTES AOS đang có",
             "intro": "Số liệu được cập nhật realtime từ hệ thống.",
             "learners": "Người dùng",
             "lessons": "Bài học chuyên sâu",
@@ -2660,7 +2660,7 @@
             "eyebrow": "Góc khuất nghề code",
             "title": "Sự thật trần trụi về ngành IT",
             "name": "Nguyễn Văn Tự Cường",
-            "role": "Founder · StarCi Academy",
+            "role": "Founder · FTES AOS",
             "titles": "CTO @ Nivo Technology · CTO @ TEDO Technology",
             "expertise": {
                 "systemDesign": "System Design",
@@ -2672,7 +2672,7 @@
             "body2": "Mọi thứ ở đây đều làm công khai — nền tảng, chương trình, challenge. Đọc các ghi chú kỹ thuật và tự đánh giá chất lượng.",
             "github": "GitHub",
             "blog": "Đọc blog",
-            "thesis": "Nhiều nơi dạy lập trình để bạn thấy dễ chịu và nhanh có chứng chỉ. StarCi Academy thì khác, tôi chỉ nói những sự thật trần trụi về ngành và những gì hệ thống thực tế yêu cầu.",
+            "thesis": "Nhiều nơi dạy lập trình để bạn thấy dễ chịu và nhanh có chứng chỉ. FTES AOS thì khác, tôi chỉ nói những sự thật trần trụi về ngành và những gì hệ thống thực tế yêu cầu.",
             "truth1": "Kinh nghiệm dự án lớn không giúp bạn thành công khi phỏng vấn.",
             "fix1": "Nhiều người làm dự án lớn mỗi ngày nhưng vào phỏng vấn lại không vẽ nổi kiến trúc phân tán mạch lạc. Tôi dạy bạn tư duy và phản biện kiến trúc cho rõ ràng.",
             "truth2": "Thuộc lý thuyết Microservices vẫn tạch khi bị hỏi tới bản chất.",
@@ -2692,7 +2692,7 @@
         },
         "outcome": {
             "eyebrow": "Giá trị thực tế",
-            "title": "Đầu ra của StarCi Academy",
+            "title": "Đầu ra của FTES AOS",
             "items": {
                 "engineer": {
                     "title": "Cho người dùng",
@@ -2707,7 +2707,7 @@
             },
             "card": {
                 "sample": "Hồ sơ người dùng",
-                "role": "StarCi Talent",
+                "role": "FTES AOS Talent",
                 "openToWork": "Sẵn sàng đi làm",
                 "cvScore": "Điểm CV",
                 "challenges": "Thử thách hệ thống",
@@ -2719,7 +2719,7 @@
             "eyebrow": "Góc nhìn thực tế",
             "title": "Hỏi thẳng, đáp thật",
             "q1": "Đây có phải một bootcamp nữa hứa lương cao sau 3 tháng?",
-            "a1": "Không. Tôi không bán những lời hứa hẹn về thu nhập hay cam kết việc làm sau vài tháng. StarCi Academy tập trung rèn tư duy hệ thống và cách bạn tự tay giải quyết bài toán khó. Khi năng lực của bạn đạt chuẩn thông qua các thử thách thực tế, thị trường và nhà tuyển dụng sẽ tự tìm đến bạn.",
+            "a1": "Không. Tôi không bán những lời hứa hẹn về thu nhập hay cam kết việc làm sau vài tháng. FTES AOS tập trung rèn tư duy hệ thống và cách bạn tự tay giải quyết bài toán khó. Khi năng lực của bạn đạt chuẩn thông qua các thử thách thực tế, thị trường và nhà tuyển dụng sẽ tự tìm đến bạn.",
             "q2": "AI có làm những kỹ năng này lỗi thời không?",
             "a2": "Ngược lại, kỹ năng hệ thống là thứ giúp bạn không bị đào thải. Các công cụ tự động hiện tại có thể viết code CRUD rất nhanh, nhưng chúng không thể tự thiết kế một kiến trúc chịu tải triệu user, xử lý bài toán scale, hay đứng ra bảo vệ các quyết định kỹ thuật trước hội đồng phỏng vấn và CTO. Đó mới là những gì bạn được rèn luyện ở đây.",
             "q3": "Mình mới bắt đầu. Có hợp không?",
@@ -2933,7 +2933,7 @@
         },
         "typeCapstone": "Capstone",
         "typeExternal": "Dự án",
-        "verifiedByStarci": "Được StarCi xác nhận",
+        "verifiedByFTES AOS": "Được FTES AOS xác nhận",
         "openAria": "{title} — mở trong tab mới"
     },
     "blog": {
@@ -2956,10 +2956,10 @@
         "readingMinutes": "Đọc {minutes} phút",
         "relatedTitle": "Thêm trong mục {category}",
         "retry": "Thử lại",
-        "subtitle": "Phân tích kỹ thuật chuyên sâu về chính hạ tầng đang chạy StarCi — kiến trúc, đánh đổi, và code thật.",
-        "title": "Hệ thống StarCi, mổ xẻ",
+        "subtitle": "Phân tích kỹ thuật chuyên sâu về chính hạ tầng đang chạy FTES AOS — kiến trúc, đánh đổi, và code thật.",
+        "title": "Hệ thống FTES AOS, mổ xẻ",
         "masthead": {
-            "caption": "Kiến trúc thật của backend StarCi — kéo để xoay bản đồ."
+            "caption": "Kiến trúc thật của backend FTES AOS — kéo để xoay bản đồ."
         },
         "startHere": "Bắt đầu ở đây",
         "topics": "Chủ đề",
@@ -3089,20 +3089,20 @@
             "privacy": "Bảo mật"
         },
         "madeBy": "Được phát triển bởi Nguyễn Văn Tự Cường",
-        "copyright": "© {year} StarCi Academy"
+        "copyright": "© {year} FTES AOS"
     },
     "legal": {
         "contactNote": "Có câu hỏi về điều khoản hoặc dữ liệu của bạn? Liên hệ cuongnvtse160875@gmail.com.",
         "lastUpdated": "Cập nhật lần cuối: {date}",
         "terms": {
             "title": "Điều khoản sử dụng",
-            "description": "Các điều khoản khi sử dụng StarCi Academy.",
-            "body": "Tài liệu điều khoản đầy đủ đang được hoàn thiện. Khi sử dụng StarCi Academy, bạn đồng ý dùng nền tảng cho mục đích học tập hợp pháp và tôn trọng quyền sở hữu của nội dung khóa học. Phiên bản chi tiết sẽ được cập nhật tại trang này."
+            "description": "Các điều khoản khi sử dụng FTES AOS.",
+            "body": "Tài liệu điều khoản đầy đủ đang được hoàn thiện. Khi sử dụng FTES AOS, bạn đồng ý dùng nền tảng cho mục đích học tập hợp pháp và tôn trọng quyền sở hữu của nội dung khóa học. Phiên bản chi tiết sẽ được cập nhật tại trang này."
         },
         "privacy": {
             "title": "Chính sách bảo mật",
-            "description": "Cách StarCi Academy thu thập và sử dụng dữ liệu của bạn.",
-            "body": "Chính sách bảo mật đầy đủ đang được hoàn thiện. StarCi Academy chỉ thu thập dữ liệu cần thiết để vận hành việc học của bạn (tài khoản, tiến độ, bài nộp) và không bán dữ liệu cho bên thứ ba. Phiên bản chi tiết sẽ được cập nhật tại trang này."
+            "description": "Cách FTES AOS thu thập và sử dụng dữ liệu của bạn.",
+            "body": "Chính sách bảo mật đầy đủ đang được hoàn thiện. FTES AOS chỉ thu thập dữ liệu cần thiết để vận hành việc học của bạn (tài khoản, tiến độ, bài nộp) và không bán dữ liệu cho bên thứ ba. Phiên bản chi tiết sẽ được cập nhật tại trang này."
         }
     },
     "cookieConsent": {
@@ -3125,7 +3125,7 @@
     },
     "status": {
         "title": "Trạng thái hệ thống",
-        "subtitle": "Tình trạng trực tiếp của nền tảng StarCi Academy — làm công khai, không cần đăng nhập.",
+        "subtitle": "Tình trạng trực tiếp của nền tảng FTES AOS — làm công khai, không cần đăng nhập.",
         "refresh": "Làm mới",
         "overall": "{up}/{total} thành phần khỏe",
         "infraHeading": "Hạ tầng",

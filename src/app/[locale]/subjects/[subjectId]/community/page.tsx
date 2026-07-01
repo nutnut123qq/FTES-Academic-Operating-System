@@ -1,9 +1,7 @@
-"use client"
-
 import React from "react"
-import { SubjectTabPlaceholder } from "@/components/features/subject/SubjectTabPlaceholder"
+import { SubjectCommunity } from "@/components/features/subject/SubjectCommunity"
 
-/** `/subjects/[subjectId]/community` — placeholder until this area gets its own layout. */
-const Page = () => <SubjectTabPlaceholder areaKey="community" />
+/** `/subjects/[subjectId]/community` — the subject community feed (§6). */
+const Page = () => <SubjectCommunity />
 
 export default Page

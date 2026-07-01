@@ -3179,6 +3179,15 @@
             "title": "Bài học",
             "done": "Đã học",
             "progressLabel": "{done}/{total} bài · {percent}%"
+        },
+        "community": {
+            "title": "Cộng đồng môn học",
+            "reactions": "{count} lượt thích",
+            "scopes": {
+                "forYou": "Dành cho bạn",
+                "following": "Đang theo dõi",
+                "trending": "Xu hướng"
+            }
         }
     }
 }

@@ -3179,6 +3179,15 @@
             "title": "Lessons",
             "done": "Done",
             "progressLabel": "{done}/{total} lessons · {percent}%"
+        },
+        "community": {
+            "title": "Subject community",
+            "reactions": "{count} reactions",
+            "scopes": {
+                "forYou": "For you",
+                "following": "Following",
+                "trending": "Trending"
+            }
         }
     }
 }

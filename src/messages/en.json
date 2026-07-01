@@ -3382,6 +3382,9 @@
         "feed": {
             "likes": "{count} likes",
             "comments": "{count} comments"
+        },
+        "detail": {
+            "comments": "{count} comments"
         }
     }
 }

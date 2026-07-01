@@ -3382,6 +3382,9 @@
         "feed": {
             "likes": "{count} thích",
             "comments": "{count} bình luận"
+        },
+        "detail": {
+            "comments": "{count} bình luận"
         }
     }
 }

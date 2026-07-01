@@ -3433,6 +3433,9 @@
             "members": "Members",
             "resources": "Resources",
             "events": "Events"
+        },
+        "discussion": {
+            "replies": "{count} replies"
         }
     }
 }

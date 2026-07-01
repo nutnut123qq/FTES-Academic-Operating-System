@@ -3433,6 +3433,9 @@
             "members": "Thành viên",
             "resources": "Tài nguyên",
             "events": "Sự kiện"
+        },
+        "discussion": {
+            "replies": "{count} phản hồi"
         }
     }
 }

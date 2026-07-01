@@ -1,9 +1,9 @@
 "use client"
 
 import React from "react"
-import { GroupTabPlaceholder } from "@/components/features/group/GroupTabPlaceholder"
+import { GroupDiscussion } from "@/components/features/group/GroupDiscussion"
 
-/** `/groups/[groupId]/discussion` — placeholder until built. */
-const Page = () => <GroupTabPlaceholder tabKey="discussion" />
+/** `/groups/[groupId]/discussion` — group discussion threads (§7). */
+const Page = () => <GroupDiscussion />
 
 export default Page

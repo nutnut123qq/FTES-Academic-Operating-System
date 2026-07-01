@@ -3385,6 +3385,18 @@
         },
         "detail": {
             "comments": "{count} comments"
+        },
+        "composer": {
+            "title": "Create post",
+            "titleField": "Title",
+            "bodyField": "What do you want to share?",
+            "submit": "Post",
+            "kinds": {
+                "knowledge": "Knowledge",
+                "question": "Question",
+                "showcase": "Showcase",
+                "resource": "Resource"
+            }
         }
     }
 }

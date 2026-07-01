@@ -3385,6 +3385,18 @@
         },
         "detail": {
             "comments": "{count} bình luận"
+        },
+        "composer": {
+            "title": "Tạo bài viết",
+            "titleField": "Tiêu đề",
+            "bodyField": "Bạn muốn chia sẻ điều gì?",
+            "submit": "Đăng bài",
+            "kinds": {
+                "knowledge": "Kiến thức",
+                "question": "Câu hỏi",
+                "showcase": "Khoe dự án",
+                "resource": "Chia sẻ tài nguyên"
+            }
         }
     }
 }

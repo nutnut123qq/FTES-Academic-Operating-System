@@ -3272,5 +3272,18 @@
                 "low": "Nhu cầu thấp"
             }
         }
+    },
+    "courseSystem": {
+        "levels": {
+            "basic": "Cơ bản",
+            "intermediate": "Trung cấp",
+            "advanced": "Nâng cao"
+        },
+        "catalog": {
+            "title": "Khóa học",
+            "searchPlaceholder": "Tìm theo mã hoặc tên môn",
+            "all": "Tất cả",
+            "lessonsCount": "{count} bài"
+        }
     }
 }

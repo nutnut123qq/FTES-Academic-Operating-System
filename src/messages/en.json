@@ -3272,5 +3272,18 @@
                 "low": "Low demand"
             }
         }
+    },
+    "courseSystem": {
+        "levels": {
+            "basic": "Basic",
+            "intermediate": "Intermediate",
+            "advanced": "Advanced"
+        },
+        "catalog": {
+            "title": "Courses",
+            "searchPlaceholder": "Search by code or name",
+            "all": "All",
+            "lessonsCount": "{count} lessons"
+        }
     }
 }

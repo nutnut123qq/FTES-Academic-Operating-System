@@ -70,7 +70,7 @@ Loop lấy mục `[ ]` trên cùng → 1 OpenSpec change → build webpack+tsc �
 - [x] `resource-recommendation` — recommended list rows. ✓ build xanh. **§5 Resource Hub TRỌN (6 mục).**
 
 ### §6 Community (route mới /community)
-- [ ] `community-shell` — /community: tabs ForYou/Following/Campus/Trending + slot feed
+- [x] `community-shell` — /community scope tabs + 4 route. ✓ build xanh.
 - [ ] `community-feed` — list post rows (author/time/title/snippet/reactions count)
 - [ ] `community-post-detail` — /community/[postId]: post + thread comments
 - [ ] `community-composer` — form tạo post (textarea + attach chips + submit)

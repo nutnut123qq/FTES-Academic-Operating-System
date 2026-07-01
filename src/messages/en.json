@@ -3369,5 +3369,15 @@
         "recommended": {
             "title": "Recommended for you"
         }
+    },
+    "communityHub": {
+        "title": "Community",
+        "placeholder": "This feed is under construction.",
+        "tabs": {
+            "forYou": "For you",
+            "following": "Following",
+            "campus": "Campus",
+            "trending": "Trending"
+        }
     }
 }

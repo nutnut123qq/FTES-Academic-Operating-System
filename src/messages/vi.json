@@ -3369,5 +3369,15 @@
         "recommended": {
             "title": "Gợi ý cho bạn"
         }
+    },
+    "communityHub": {
+        "title": "Cộng đồng",
+        "placeholder": "Nội dung đang được xây dựng.",
+        "tabs": {
+            "forYou": "Dành cho bạn",
+            "following": "Đang theo dõi",
+            "campus": "Cơ sở",
+            "trending": "Xu hướng"
+        }
     }
 }

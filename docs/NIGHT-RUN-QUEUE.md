@@ -80,7 +80,7 @@ Loop lấy mục `[ ]` trên cùng → 1 OpenSpec change → build webpack+tsc �
 - [x] `community-moderation` — report queue + keep/remove. ✓ build xanh. **§6 Community TRỌN (8 mục).**
 
 ### §7 Groups (route mới /groups)
-- [ ] `groups-list` — /groups: grid group cards + filter type (Public/Private/Study/Club/Team)
+- [x] `groups-list` — /groups: type filter + group card grid. ✓ build xanh.
 - [ ] `group-detail-shell` — /groups/[groupId]: shell tabs (feed/discussion/resources/events)
 - [ ] `group-feed` — feed nhóm
 - [ ] `group-discussion` — list thread thảo luận

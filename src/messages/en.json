@@ -3414,5 +3414,17 @@
             "keep": "Keep",
             "remove": "Remove"
         }
+    },
+    "groupsHub": {
+        "title": "Groups",
+        "all": "All",
+        "membersCount": "{count} members",
+        "types": {
+            "public": "Public",
+            "private": "Private",
+            "study": "Study",
+            "club": "Club",
+            "team": "Team"
+        }
     }
 }

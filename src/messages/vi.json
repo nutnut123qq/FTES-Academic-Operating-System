@@ -3414,5 +3414,17 @@
             "keep": "Giữ lại",
             "remove": "Gỡ bỏ"
         }
+    },
+    "groupsHub": {
+        "title": "Nhóm",
+        "all": "Tất cả",
+        "membersCount": "{count} thành viên",
+        "types": {
+            "public": "Công khai",
+            "private": "Riêng tư",
+            "study": "Nhóm học",
+            "club": "Câu lạc bộ",
+            "team": "Nhóm dự án"
+        }
     }
 }

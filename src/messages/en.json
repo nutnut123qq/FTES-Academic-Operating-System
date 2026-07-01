@@ -1726,6 +1726,10 @@
             "level": "Level",
             "coin": "FTES Coin",
             "reputation": "Reputation"
+        },
+        "public": {
+            "followers": "{count} followers",
+            "skills": "Skills"
         }
     },
     "profileEdit": {

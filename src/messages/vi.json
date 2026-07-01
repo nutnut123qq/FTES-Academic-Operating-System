@@ -1735,6 +1735,10 @@
             "level": "Cấp độ",
             "coin": "FTES Coin",
             "reputation": "Uy tín"
+        },
+        "public": {
+            "followers": "{count} người theo dõi",
+            "skills": "Kỹ năng"
         }
     },
     "profileEdit": {

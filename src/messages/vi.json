@@ -3397,6 +3397,12 @@
                 "showcase": "Khoe dự án",
                 "resource": "Chia sẻ tài nguyên"
             }
+        },
+        "reputation": {
+            "title": "Bảng uy tín",
+            "votes": "▲{up} ▼{down}",
+            "accepted": "{count} câu trả lời được chấp nhận",
+            "score": "{score} điểm"
         }
     }
 }

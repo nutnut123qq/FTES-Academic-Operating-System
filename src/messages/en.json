@@ -3397,6 +3397,12 @@
                 "showcase": "Showcase",
                 "resource": "Resource"
             }
+        },
+        "reputation": {
+            "title": "Reputation",
+            "votes": "▲{up} ▼{down}",
+            "accepted": "{count} accepted",
+            "score": "{score} pts"
         }
     }
 }

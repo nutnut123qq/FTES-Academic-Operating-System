@@ -8,11 +8,14 @@ Auth/Phase-0 churn ĐÃ HOÃN (mature strict-canon → làm interactive sau).
 
 Mỗi mục = 1 OpenSpec change (propose → apply theo layout đã chốt) → build webpack + tsc → commit.
 
-- [x] `subject-workspace-shell` — §3: shell + tab nav (A · sidebar rail). ✓ build xanh, 9 route. commit dưới.
-- [ ] `subject-workspace-overview` — §3: tab Overview (description/credits/lecturer/difficulty/prerequisites/roadmap/outcomes)
-- [ ] `subject-workspace-resources` — §3: tab Resources (types + collections + interaction)
-- [ ] `subject-workspace-practice` — §3: tab Practice (quiz/flashcards/coding challenge/leaderboard shells)
-- [ ] `profile-shell` — §2: Profile shell (Personal + Academic + Portfolio + Community + Progress). Layout: <chốt qua brainstorm>
+- [x] `subject-workspace-shell` — §3: shell + tab nav (A · sidebar rail). ✓ build xanh, 9 route (commit 6a90441).
+- [x] `subject-workspace-overview` — §3: Overview hub grid (dựng luôn trong shell). ✓
+- [ ] `subject-workspace-resources` — §3: tab Resources — DEFAULT on-canon: list tài nguyên (mock) + filter chip theo type (PDF/Slide/Video/PE/FE/Source/Notes) + section Collections. Thay placeholder.
+- [ ] `subject-workspace-practice` — §3: tab Practice — DEFAULT on-canon: card grid 4 shells (Quiz/Flashcards/Coding challenge/Leaderboard), mỗi card có meta + CTA. Thay placeholder.
+- [ ] `subject-workspace-learning` — §3: tab Learning — DEFAULT on-canon: list Section→Lesson (mock) + progress meter + trạng thái hoàn thành. Thay placeholder.
+- [ ] `profile-shell` — §2: **HOÃN** (archetype 2-column cần brainstorm riêng; loop BỎ QUA).
+
+> Các tab content trên KHÔNG có brainstorm riêng → dùng **default on-canon** (đã mô tả), **log rõ** là default để review. Data mock (chưa BE).
 
 ## Layouts đã chốt
 - **`subject-workspace-shell` → A · Sidebar rail** (chốt 2026-07-01, brainstorm interactive).

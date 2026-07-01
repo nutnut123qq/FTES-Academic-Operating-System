@@ -3461,6 +3461,11 @@
             "nameField": "Group name",
             "descriptionField": "Group description",
             "submit": "Create group"
+        },
+        "challenges": {
+            "title": "Group challenges",
+            "participants": "{count} joined",
+            "join": "Join"
         }
     }
 }

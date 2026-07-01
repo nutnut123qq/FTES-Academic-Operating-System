@@ -1,9 +1,7 @@
-"use client"
-
 import React from "react"
-import { SubjectTabPlaceholder } from "@/components/features/subject/SubjectTabPlaceholder"
+import { SubjectCareer } from "@/components/features/subject/SubjectCareer"
 
-/** `/subjects/[subjectId]/career` — placeholder until this area gets its own layout. */
-const Page = () => <SubjectTabPlaceholder areaKey="career" />
+/** `/subjects/[subjectId]/career` — the Career Bridge tab (§21). */
+const Page = () => <SubjectCareer />
 
 export default Page

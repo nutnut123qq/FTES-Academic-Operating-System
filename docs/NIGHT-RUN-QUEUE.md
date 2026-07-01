@@ -41,7 +41,7 @@ Loop lấy mục `[ ]` trên cùng → 1 OpenSpec change → build webpack+tsc �
 - [x] `subject-workspace-members` — role filter + member rows. ✓ build xanh.
 - [x] `subject-workspace-statistics` — metric cards + top students. ✓ build xanh.
 - [x] `subject-workspace-ai` — card grid AI tools + CTA. ✓ build xanh.
-- [ ] `subject-workspace-career` — chips related skills + list related careers + card suggested next subject. subjects.career.*
+- [x] `subject-workspace-career` — skills chips + careers list + next-subject card. ✓ build xanh. **§3 TRỌN 9 MẢNG.**
 
 ### §2 Profile (route mới /profile)
 - [ ] `profile-shell` — /profile + shell 2-cột (identity card trái + tab sections phải). profile.*

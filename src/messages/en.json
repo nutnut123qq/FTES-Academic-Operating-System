@@ -3235,6 +3235,18 @@
                     "desc": "Extract text from image/PDF"
                 }
             }
+        },
+        "career": {
+            "title": "Career bridge",
+            "skills": "Related skills",
+            "careers": "Related careers",
+            "nextSubject": "Suggested next subject",
+            "nextSubjectHint": "Recommended by roadmap",
+            "demand": {
+                "high": "High demand",
+                "medium": "Medium demand",
+                "low": "Low demand"
+            }
         }
     }
 }

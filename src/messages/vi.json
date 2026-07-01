@@ -3235,6 +3235,18 @@
                     "desc": "Trích chữ từ ảnh/PDF"
                 }
             }
+        },
+        "career": {
+            "title": "Cầu nối nghề nghiệp",
+            "skills": "Kỹ năng liên quan",
+            "careers": "Nghề liên quan",
+            "nextSubject": "Môn học tiếp theo",
+            "nextSubjectHint": "Gợi ý theo lộ trình",
+            "demand": {
+                "high": "Nhu cầu cao",
+                "medium": "Nhu cầu vừa",
+                "low": "Nhu cầu thấp"
+            }
         }
     }
 }

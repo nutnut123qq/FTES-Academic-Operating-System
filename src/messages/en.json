@@ -3359,6 +3359,12 @@
             "titleField": "Resource title",
             "subjectField": "Subject code (e.g. PRF192)",
             "submit": "Upload"
+        },
+        "reviews": {
+            "title": "Reviews",
+            "placeholder": "Write your review…",
+            "submit": "Submit review",
+            "you": "You"
         }
     }
 }

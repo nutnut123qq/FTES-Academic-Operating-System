@@ -3359,6 +3359,12 @@
             "titleField": "Tiêu đề tài nguyên",
             "subjectField": "Mã môn (vd PRF192)",
             "submit": "Tải lên"
+        },
+        "reviews": {
+            "title": "Đánh giá",
+            "placeholder": "Viết nhận xét của bạn…",
+            "submit": "Gửi đánh giá",
+            "you": "Bạn"
         }
     }
 }

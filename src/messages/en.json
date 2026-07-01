@@ -3284,6 +3284,11 @@
             "searchPlaceholder": "Search by code or name",
             "all": "All",
             "lessonsCount": "{count} lessons"
+        },
+        "detail": {
+            "credits": "{count} credits",
+            "enroll": "Enroll",
+            "outline": "Course outline"
         }
     }
 }

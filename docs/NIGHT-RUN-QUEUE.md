@@ -54,7 +54,7 @@ Loop lấy mục `[ ]` trên cùng → 1 OpenSpec change → build webpack+tsc �
 
 ### §4 Course System (route mới /courses)
 - [x] `course-catalog` — /courses: search + level filter + card grid. ✓ build xanh.
-- [ ] `course-detail` — /courses/[courseId]: hero + outline sections/lessons + CTA enroll
+- [x] `course-detail` — /courses/[courseId]: hero + outline + enroll CTA. ✓ build xanh.
 - [ ] `course-lesson` — /courses/[courseId]/lessons/[lessonId]: video placeholder + docs + prev/next
 - [ ] `course-quiz` — trang quiz: list câu hỏi (mock) + submit stub
 - [ ] `course-assignments` — list assignments + trạng thái

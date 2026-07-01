@@ -3284,6 +3284,11 @@
             "searchPlaceholder": "Tìm theo mã hoặc tên môn",
             "all": "Tất cả",
             "lessonsCount": "{count} bài"
+        },
+        "detail": {
+            "credits": "{count} tín chỉ",
+            "enroll": "Đăng ký học",
+            "outline": "Nội dung khóa học"
         }
     }
 }

@@ -3296,6 +3296,11 @@
             "open": "Mở",
             "previous": "Bài trước",
             "next": "Bài tiếp"
+        },
+        "quiz": {
+            "title": "Bài trắc nghiệm",
+            "submit": "Nộp bài",
+            "result": "Đúng {score}/{total} câu"
         }
     }
 }

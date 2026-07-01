@@ -3296,6 +3296,11 @@
             "open": "Open",
             "previous": "Previous",
             "next": "Next"
+        },
+        "quiz": {
+            "title": "Quiz",
+            "submit": "Submit",
+            "result": "{score}/{total} correct"
         }
     }
 }

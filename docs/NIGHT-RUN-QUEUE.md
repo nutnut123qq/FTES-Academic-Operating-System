@@ -45,7 +45,7 @@ Loop lấy mục `[ ]` trên cùng → 1 OpenSpec change → build webpack+tsc �
 
 ### §2 Profile (route mới /profile)
 - [x] `profile-shell` — /profile 2-cột (identity + section tabs) + 5 route. ✓ build xanh.
-- [ ] `profile-personal` — identity card (avatar initials/cover band/bio/social rows)
+- [x] `profile-personal` — about + social links rows. ✓ build xanh.
 - [ ] `profile-academic` — list academic (university/campus/major/semester/GPA)
 - [ ] `profile-portfolio` — grid projects + rows github/linkedin/resume/certificates
 - [ ] `profile-community` — counts followers/following + list activity timeline

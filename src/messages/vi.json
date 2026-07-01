@@ -1701,6 +1701,16 @@
             "portfolio": "Hồ sơ",
             "community": "Cộng đồng",
             "progress": "Tiến độ"
+        },
+        "personal": {
+            "about": "Giới thiệu",
+            "socials": "Liên kết mạng xã hội",
+            "socialLabels": {
+                "github": "GitHub",
+                "linkedin": "LinkedIn",
+                "website": "Website",
+                "email": "Email"
+            }
         }
     },
     "profileEdit": {

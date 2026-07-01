@@ -1692,6 +1692,16 @@
             "portfolio": "Portfolio",
             "community": "Community",
             "progress": "Progress"
+        },
+        "personal": {
+            "about": "About",
+            "socials": "Social links",
+            "socialLabels": {
+                "github": "GitHub",
+                "linkedin": "LinkedIn",
+                "website": "Website",
+                "email": "Email"
+            }
         }
     },
     "profileEdit": {

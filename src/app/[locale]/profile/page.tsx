@@ -1,9 +1,9 @@
 "use client"
 
 import React from "react"
-import { ProfileSectionPlaceholder } from "@/components/features/profile/ProfileSectionPlaceholder"
+import { ProfilePersonal } from "@/components/features/profile/ProfilePersonal"
 
-/** `/profile` — Personal section (placeholder until profile-personal fills it). */
-const Page = () => <ProfileSectionPlaceholder sectionKey="personal" />
+/** `/profile` — the Personal section (§2). */
+const Page = () => <ProfilePersonal />
 
 export default Page

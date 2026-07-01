@@ -58,7 +58,7 @@ Loop lấy mục `[ ]` trên cùng → 1 OpenSpec change → build webpack+tsc �
 - [x] `course-lesson` — lesson view: video placeholder + docs + prev/next. ✓ build xanh.
 - [x] `course-quiz` — quiz: questions + options + submit/score cục bộ. ✓ build xanh.
 - [x] `course-assignments` — assignment rows + status chip. ✓ build xanh.
-- [ ] `course-progress` — progress + completion + certificate stub
+- [x] `course-progress` — progress bar + completion + certificate stub. ✓ build xanh.
 - [ ] `course-enroll` — trang enroll/checkout stub (summary + CTA)
 
 ### §5 Resource Hub (route mới /resources)

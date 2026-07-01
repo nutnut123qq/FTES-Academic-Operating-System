@@ -3309,6 +3309,14 @@
                 "pending": "Chưa nộp",
                 "overdue": "Quá hạn"
             }
+        },
+        "progress": {
+            "title": "Tiến độ khóa học",
+            "completed": "Hoàn thành {done}/{total} bài",
+            "certificate": "Chứng chỉ",
+            "certificateReady": "Bạn đã đủ điều kiện nhận chứng chỉ.",
+            "certificateLocked": "Hoàn thành 100% để mở chứng chỉ.",
+            "viewCertificate": "Xem chứng chỉ"
         }
     }
 }

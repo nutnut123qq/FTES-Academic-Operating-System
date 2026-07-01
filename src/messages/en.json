@@ -3309,6 +3309,14 @@
                 "pending": "Pending",
                 "overdue": "Overdue"
             }
+        },
+        "progress": {
+            "title": "Course progress",
+            "completed": "{done}/{total} lessons done",
+            "certificate": "Certificate",
+            "certificateReady": "You are eligible for the certificate.",
+            "certificateLocked": "Reach 100% to unlock the certificate.",
+            "viewCertificate": "View certificate"
         }
     }
 }

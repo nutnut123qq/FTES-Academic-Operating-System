@@ -3455,6 +3455,12 @@
             "reject": "Từ chối",
             "rules": "Nội quy",
             "pinned": "Bài ghim"
+        },
+        "create": {
+            "title": "Tạo nhóm",
+            "nameField": "Tên nhóm",
+            "descriptionField": "Mô tả nhóm",
+            "submit": "Tạo nhóm"
         }
     }
 }

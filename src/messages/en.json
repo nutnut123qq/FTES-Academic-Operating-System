@@ -3455,6 +3455,12 @@
             "reject": "Reject",
             "rules": "Rules",
             "pinned": "Pinned"
+        },
+        "create": {
+            "title": "Create group",
+            "nameField": "Group name",
+            "descriptionField": "Group description",
+            "submit": "Create group"
         }
     }
 }

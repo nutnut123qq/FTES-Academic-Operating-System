@@ -4,6 +4,30 @@ export type AccentId = "indigo" | "pink" | "teal" | "emerald" | "amber" | "viole
 /** Direction of the ambient background effect: embers rising vs meteors falling. */
 export type EffectDirection = "rise" | "fall"
 
+/** Speed tier of the ambient background effect (multiplies each spark's duration). */
+export type EffectSpeed = "slow" | "normal" | "fast"
+
+/**
+ * Duration multiplier per speed tier, applied to each spark's base animation
+ * duration (`animationDuration = baseDuration * SPEED_FACTOR[speed]`). Lower =
+ * faster. `normal` is the default (×1.0); reduced-motion still fully disables the
+ * effect regardless of speed.
+ */
+export const SPEED_FACTOR: Record<EffectSpeed, number> = {
+    slow: 1.6,
+    normal: 1.0,
+    fast: 0.55,
+}
+
+/** Spark count per direction — fall is denser (~2×) so it reads as a meteor shower. */
+export const SPARK_COUNT: Record<EffectDirection, number> = {
+    rise: 60,
+    fall: 120,
+}
+
+/** Default ambient effect speed when nothing is persisted (`normal`, ×1.0). */
+export const DEFAULT_EFFECT_SPEED: EffectSpeed = "normal"
+
 /**
  * One curated accent preset. The CSS block in `globals.css` is the value that is
  * actually applied app-wide; `swatch` only paints the picker swatch itself.

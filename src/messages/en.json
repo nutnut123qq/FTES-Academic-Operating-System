@@ -2687,7 +2687,8 @@
             "challenge": "Challenge",
             "coin": "Coins",
             "group": "Group"
-        }
+        },
+        "viewAll": "View all"
     },
     "searchPage": {
         "title": "Search",
@@ -3720,7 +3721,25 @@
         "detail": {
             "credits": "{count} credits",
             "enroll": "Enroll",
-            "outline": "Course outline"
+            "outline": "Course outline",
+            "learners": "{count} learners",
+            "instructorLine": "Instructor {name}",
+            "whatYouLearn": "What you'll learn",
+            "outlineMeta": "{sections} sections · {lessons} lessons · {duration}",
+            "premium": "Premium",
+            "reviews": "Learner reviews",
+            "instructor": "Instructor",
+            "tryFree": "Try for free",
+            "loadError": "Couldn't load the course.",
+            "retry": "Try again",
+            "usdApprox": "≈ {price}",
+            "includesTitle": "This course includes",
+            "includes": {
+                "video": "{duration} of video",
+                "lessons": "{count} lessons",
+                "challenge": "End-of-chapter challenge",
+                "certificate": "Certificate of completion"
+            }
         },
         "lesson": {
             "videoPlaceholder": "Lesson video (placeholder)",

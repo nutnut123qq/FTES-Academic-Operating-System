@@ -1,36 +1,14 @@
 "use client"
 
 import React, { useState } from "react"
-import {
-    AtIcon,
-    BellIcon,
-    CalendarDotsIcon,
-    ClockCountdownIcon,
-    CoinIcon,
-    GraduationCapIcon,
-    LightningIcon,
-    UsersThreeIcon,
-} from "@phosphor-icons/react"
+import { BellIcon } from "@phosphor-icons/react"
 import { Button, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
-import {
-    type NotificationType,
-    useQueryNotificationsSwr,
-} from "../hooks/useQueryNotificationsSwr"
+import { useQueryNotificationsSwr } from "../hooks/useQueryNotificationsSwr"
+import { NOTIFICATION_TYPE_ICON } from "../typeIcon"
 
 /** Filter options: everything, or unread only. */
 type Filter = "all" | "unread"
-
-/** Icon per notification type — accent-tinted circle in the row leading slot. */
-const TYPE_ICON: Record<NotificationType, React.ComponentType<{ className?: string }>> = {
-    mention: AtIcon,
-    course: GraduationCapIcon,
-    event: CalendarDotsIcon,
-    deadline: ClockCountdownIcon,
-    challenge: LightningIcon,
-    coin: CoinIcon,
-    group: UsersThreeIcon,
-}
 
 /**
  * Notification center (§15) — the `/notifications` feed. Title + subtitle, an
@@ -95,7 +73,7 @@ export const NotificationCenter = () => {
             ) : (
                 <ul className="flex flex-col gap-2">
                     {filtered.map((item) => {
-                        const Icon = TYPE_ICON[item.type]
+                        const Icon = NOTIFICATION_TYPE_ICON[item.type]
                         return (
                             <li
                                 key={item.id}

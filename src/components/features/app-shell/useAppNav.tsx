@@ -21,7 +21,6 @@ import {
     SparkleIcon,
     BriefcaseIcon,
     MagnifyingGlassIcon,
-    BellIcon,
     PlugIcon,
     ShieldIcon,
 } from "@phosphor-icons/react"
@@ -123,7 +122,6 @@ export const useAppNav = (): Array<AppNavGroup> => {
                 items: [
                     item("activity", p.activity().build(), <PulseIcon className="size-5" />),
                     item("wallet", p.wallet().build(), <WalletIcon className="size-5" />),
-                    item("notifications", p.notifications().build(), <BellIcon className="size-5" />),
                 ],
             },
             {

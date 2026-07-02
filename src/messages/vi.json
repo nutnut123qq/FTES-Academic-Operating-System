@@ -2687,7 +2687,8 @@
             "challenge": "Thử thách",
             "coin": "Xu",
             "group": "Nhóm"
-        }
+        },
+        "viewAll": "Xem tất cả"
     },
     "searchPage": {
         "title": "Tìm kiếm",
@@ -3720,7 +3721,25 @@
         "detail": {
             "credits": "{count} tín chỉ",
             "enroll": "Đăng ký học",
-            "outline": "Nội dung khóa học"
+            "outline": "Nội dung khóa học",
+            "learners": "{count} học viên",
+            "instructorLine": "Giảng viên {name}",
+            "whatYouLearn": "Bạn sẽ học được gì",
+            "outlineMeta": "{sections} chương · {lessons} bài · {duration}",
+            "premium": "Premium",
+            "reviews": "Đánh giá học viên",
+            "instructor": "Giảng viên",
+            "tryFree": "Học thử miễn phí",
+            "loadError": "Không tải được khóa học.",
+            "retry": "Thử lại",
+            "usdApprox": "≈ {price}",
+            "includesTitle": "Khóa học gồm",
+            "includes": {
+                "video": "{duration} video",
+                "lessons": "{count} bài học",
+                "challenge": "Challenge cuối chương",
+                "certificate": "Chứng chỉ hoàn thành"
+            }
         },
         "lesson": {
             "videoPlaceholder": "Video bài giảng (bản mẫu)",

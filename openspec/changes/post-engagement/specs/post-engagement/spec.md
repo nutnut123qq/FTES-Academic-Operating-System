@@ -63,17 +63,23 @@ within the session.
 ### Requirement: Like toggle on group feed posts
 Every group feed post SHALL render a like button with count and liked state behaving identically to
 community feed likes. Because no group-post reaction contract exists on the BE, the interaction
-SHALL be satisfied by a local mock mutation with the assumption noted in code.
+SHALL be satisfied by a local mock mutation with the assumption noted in code. Group posts SHALL
+also support the inline push-down comment expansion via 💬 (backed by a mock comments source —
+no group comments BE contract exists).
 
 #### Scenario: Like a group post
 - **WHEN** a signed-in group member activates the like button on a group feed post
 - **THEN** the liked state applies and the count increments by 1
 
+#### Scenario: Expand comments on a group post
+- **WHEN** a user activates 💬 on a group feed post
+- **THEN** the comment thread expands inline below that post (mock data), with no navigation
+
 ### Requirement: Engagement bar on the workspace Thảo luận feed
 Posts in the subject workspace "Thảo luận" tab feed SHALL render the same shared engagement bar
 (the workspace community tab is renamed to Thảo luận by the `subject-workspace-ia` change) with
-the same behaviors as community feed rows — like toggle with optimistic update, comment count linking
-to the post's comments, share menu, and save toggle — with no workspace-specific variant.
+the same behaviors as community feed rows — like toggle with optimistic update, inline push-down
+comment expansion via 💬, share menu, and save toggle — with no workspace-specific variant.
 
 #### Scenario: Like from the Thảo luận feed
 - **GIVEN** a signed-in user on a subject workspace's Thảo luận tab
@@ -131,7 +137,8 @@ navigation.
 ### Requirement: Guest attempts open the authentication modal
 Like, comment/reply submission, and save SHALL be auth-gated. When a signed-out user attempts any
 of them, the system SHALL open the `AuthenticationModal` and SHALL NOT apply any optimistic change.
-Copy-link and native share SHALL remain available to guests.
+Copy-link, native share, and expanding/reading inline comment threads SHALL remain available to
+guests.
 
 #### Scenario: Guest taps like
 - **GIVEN** a signed-out visitor on the community feed
@@ -146,6 +153,12 @@ Copy-link and native share SHALL remain available to guests.
 #### Scenario: Guest copies the link
 - **WHEN** a signed-out visitor chooses "Sao chép liên kết" from the share menu
 - **THEN** the link is copied and confirmed by toast, with no authentication prompt
+
+#### Scenario: Guest expands and reads comments
+- **GIVEN** a signed-out visitor on a feed
+- **WHEN** they activate 💬 on a post
+- **THEN** the thread expands inline and is readable with no authentication prompt — only
+  submitting a comment triggers the `AuthenticationModal`
 
 ### Requirement: Comment composer on post detail
 The post detail page SHALL provide a comment composer (multi-line input + send action, Enter
@@ -171,15 +184,23 @@ the comment count, and clear the input.
   typed text is restored into the composer
 
 ### Requirement: Composer sticks to the bottom of the viewport on mobile
-The comment composer SHALL remain affixed to the bottom of the viewport, regardless of scroll
-position, while the post detail is open on a mobile viewport (below the `sm` breakpoint), and the
-comments list SHALL reserve enough bottom space that the composer never hides the last comment. On
-`sm` and wider viewports the composer renders in-flow with the comments section.
+On a mobile viewport (below the `sm` breakpoint) the comment composer SHALL remain affixed to the
+bottom of the viewport, regardless of scroll position, in two cases: (a) while the post detail is
+open, and (b) in a feed, for the EXPANDED post's composer while that composer is focused — on
+blur or collapse it returns in-flow. The comments list SHALL reserve enough bottom space that the
+sticky composer never hides the last comment. On `sm` and wider viewports the composer renders
+in-flow with the comments section/thread.
 
 #### Scenario: Composer visible while scrolling on mobile
 - **GIVEN** a mobile-width viewport showing a post detail with a long comment thread
 - **WHEN** the user scrolls anywhere in the post
 - **THEN** the composer stays pinned to the bottom of the viewport, ready for input
+
+#### Scenario: Expanded feed post's composer sticks when focused
+- **GIVEN** a mobile-width viewport with a feed post's comment thread expanded inline
+- **WHEN** the user focuses that post's composer
+- **THEN** the composer affixes to the bottom of the viewport while focused, and returns in-flow
+  on blur or when the thread is collapsed
 
 #### Scenario: Last comment not obscured
 - **GIVEN** the mobile sticky composer is shown
@@ -208,14 +229,94 @@ expose a reply affordance of their own — no nesting beyond one level.
 - **WHEN** a reply is rendered under its parent comment
 - **THEN** the reply itself shows no reply affordance
 
-### Requirement: Feed comment count links to the detail comments section
-The comment count on each community feed row SHALL be an affordance that navigates to
-`/community/[postId]#comments`, landing the user at the comments section with the composer ready.
+### Requirement: Inline push-down comment expansion on feed posts
+Activating the comment button/count (💬) on a feed post SHALL expand the comment thread INLINE
+directly below that post (Threads-style push-down accordion) on ANY feed — community feed, group
+feed, and the workspace Thảo luận feed — revealing the comment list (flat one-level replies) and
+the comment composer, pushing the posts below it down. It SHALL NOT navigate to the post detail page
+or change the route in any way, and the user's scroll position SHALL be preserved. Activating 💬
+again, or an explicit collapse control ("Thu gọn"/"Collapse") in the expanded region, SHALL
+collapse the thread back. The composer inside the expanded region SHALL behave identically to the
+post detail composer (optimistic append, empty-input guard, draft-preserving error handling,
+one-level replies, guest gating).
 
-#### Scenario: Jump from feed to comments
-- **WHEN** the user activates the comment count/icon on a feed row
-- **THEN** the app navigates to that post's detail page anchored at the comments section and the
-  composer receives focus
+#### Scenario: Tap 💬 expands the thread below the post
+- **GIVEN** a user viewing the community feed
+- **WHEN** they activate the 💬 button on a post
+- **THEN** the comment thread (comment list + composer) expands directly below that post, the
+  posts underneath are pushed down, and the route does not change
+
+#### Scenario: Tap 💬 again collapses
+- **GIVEN** a post with its comment thread expanded inline
+- **WHEN** the user activates the 💬 button again (or the "Thu gọn"/"Collapse" control)
+- **THEN** the thread collapses and the posts below move back up, with no navigation
+
+#### Scenario: Scroll position preserved on expand
+- **GIVEN** the user has scrolled partway down the feed
+- **WHEN** they expand a post's comments
+- **THEN** the viewport does not jump — the expansion only pushes content down below the post
+
+#### Scenario: Comment submitted from the inline thread
+- **GIVEN** a signed-in user with a post's thread expanded inline in the feed
+- **WHEN** they type a comment and submit
+- **THEN** the comment appears optimistically in the inline thread, the post's comment count
+  increments, and the feed does not navigate anywhere
+
+### Requirement: Comments lazy-load on first expand
+The comment thread SHALL NOT be fetched with the feed. On a post's FIRST expand the thread SHALL
+be fetched (SWR fetch on expand) while skeleton comment rows render in the expanded region. If the
+fetch fails, the expanded region SHALL show an inline error state with a retry affordance that
+re-attempts the fetch — without collapsing the region. Once loaded, collapsing and re-expanding
+SHALL show the cached thread immediately without a new blocking load.
+
+#### Scenario: Skeleton rows on first expand
+- **WHEN** the user expands a post's comments for the first time
+- **THEN** skeleton comment rows render in the expanded region until the thread loads, then the
+  comments replace them
+
+#### Scenario: Inline error with retry
+- **GIVEN** the comment fetch fails on expand
+- **WHEN** the failure is received
+- **THEN** the expanded region shows a localized inline error with a retry control, and activating
+  retry re-fetches the thread in place
+
+#### Scenario: Re-expand uses the cache
+- **GIVEN** a post whose comments were already loaded once
+- **WHEN** the user collapses and expands it again
+- **THEN** the thread renders immediately from cache, with no skeleton phase
+
+### Requirement: Multiple posts expand independently
+Each post's inline comment expansion SHALL be independent: any number of posts in a feed MAY be
+expanded at the same time, and expanding or collapsing one post SHALL NOT change the expansion
+state of any other post.
+
+#### Scenario: Two posts expanded at once
+- **GIVEN** a user expanded the comments of post A
+- **WHEN** they also expand the comments of post B
+- **THEN** both threads are visible inline under their respective posts
+
+#### Scenario: Collapsing one leaves the other open
+- **GIVEN** posts A and B are both expanded
+- **WHEN** the user collapses post A
+- **THEN** post B's thread remains expanded and untouched
+
+### Requirement: Post detail page remains for deep links only
+The post detail page (`/community/[postId]`) SHALL continue to exist and serve deep links and
+notification targets (including the `#comments` anchor), but feed interactions SHALL never force
+navigation to it: the 💬 button expands inline, and only the post title (row link) navigates to
+the detail page, as before.
+
+#### Scenario: Title click still navigates
+- **WHEN** the user activates a community feed post's title/row link
+- **THEN** the app navigates to `/community/[postId]` as before
+
+#### Scenario: Notification deep link lands on the detail comments
+- **WHEN** the user follows a deep link to `/community/[postId]#comments`
+- **THEN** the detail page opens anchored at the comments section with the composer focused
+
+#### Scenario: 💬 never navigates
+- **WHEN** the user activates the 💬 button on any feed post
+- **THEN** the router does not navigate — the thread expands inline instead
 
 ### Requirement: Share menu with exact options
 The share button (🔁) in the engagement bar SHALL open a share menu containing, in order:
@@ -260,8 +361,9 @@ locale-aware compact notation with at most one fraction digit (e.g. vi: "1,2k"; 
 ### Requirement: Localized engagement copy (vi/en)
 Engagement copy SHALL come from the i18n catalogs in both Vietnamese and English — every label,
 placeholder, and toast (like/unlike, save, reply/replying-to/cancel-reply, comment placeholder and
-send, the two share options, copy confirmation, error messages, "just now"/"you") — with no
-hardcoded strings in components.
+send, the two share options, copy confirmation, error messages, "just now"/"you", and the
+inline-expansion labels: collapse — "Thu gọn"/"Collapse", the expanded region's accessible name,
+the comments load-failure message, and retry) — with no hardcoded strings in components.
 
 #### Scenario: Switching locale switches engagement copy
 - **WHEN** the user switches the app locale from vi to en
@@ -273,11 +375,19 @@ Icon-only engagement controls SHALL carry accessible names: the like button expo
 `aria-pressed` reflecting the liked state and the save button exposes `aria-pressed` reflecting
 the saved state, each with a localized `aria-label`; the comment and share buttons expose
 localized `aria-label`s; the share menu SHALL be keyboard-operable (open, arrow between items,
-Escape closes).
+Escape closes). On feed surfaces the 💬 button SHALL be a disclosure button: it exposes
+`aria-expanded` reflecting the thread's expansion state and `aria-controls` referencing the
+expanded region's id, and when the thread expands, focus SHALL move into the expanded region.
 
 #### Scenario: Like state announced
 - **WHEN** a screen reader focuses the like button on a liked post
 - **THEN** it announces the localized like label with a pressed/true state
+
+#### Scenario: Comment disclosure announced
+- **GIVEN** a feed post with its thread collapsed
+- **WHEN** a screen reader user activates the 💬 button
+- **THEN** the button reports `aria-expanded="true"`, its `aria-controls` region is revealed, and
+  focus moves into the expanded comment region
 
 #### Scenario: Share menu keyboard operation
 - **WHEN** the user opens the share menu with the keyboard

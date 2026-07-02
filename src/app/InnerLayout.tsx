@@ -2,7 +2,7 @@
 import { Navbar } from "@/components/features/navbar/Navbar"
 import { Footer } from "@/components/features/footer/Footer"
 import { ToastProvider } from "@heroui/react"
-import React, { PropsWithChildren, Suspense } from "react"
+import React, { PropsWithChildren, Suspense, useEffect } from "react"
 import { CookieConsentBanner } from "@/components/features/cookie-consent/CookieConsentBanner"
 import { usePathname } from "next/navigation"
 import { HeroUIProvider } from "@/components/providers/HeroUIProvider"
@@ -18,12 +18,23 @@ import { SwrSideEffects } from "@/hooks/swr/SwrSideEffects"
 import { ReduxProvider } from "@/redux/ReduxProvider"
 import { ModalContainer } from "@/components/modals/ModalContainer"
 import { UseEffects } from "@/hooks/effects/UseEffects"
+import { useAppearanceStore } from "@/hooks/zustand/appearance/store"
 
 export const InnerLayout = ({ children }: PropsWithChildren) => {
     // Suppress the drifting ember background on Learn routes — it competes with
     // long-form reading. Keep it on marketing / dashboard / the rest of the app.
     const pathname = usePathname()
     const isLearnRoute = pathname?.includes("/learn") ?? false
+    // Ambient effect config (appearance-settings) — narrow selectors so InnerLayout
+    // only re-renders when these two fields change (a rare user action).
+    const effectEnabled = useAppearanceStore((state) => state.effectEnabled)
+    const effectDirection = useAppearanceStore((state) => state.effectDirection)
+    // The store persists with `skipHydration` (server markup == first client render,
+    // no hydration mismatch); pull the saved config right after mount. The sparks
+    // start at opacity 0 and only fade in after ~1s, so the swap is imperceptible.
+    useEffect(() => {
+        void useAppearanceStore.persist.rehydrate()
+    }, [])
     // Footer hiện ở LANDING — cả locale root ("/", "/vi", "/en") LẪN /home ("/home",
     // "/vi/home"): /home là bản ungated của CÙNG trang landing (user đã login xem ở đây).
     // Mọi trang khác (dashboard / learn / profile / auth / …) KHÔNG có footer — thầy chốt 2026-06-26.
@@ -48,7 +59,9 @@ export const InnerLayout = ({ children }: PropsWithChildren) => {
                             <UseEffects />
                             <AppSplash />
                             <TopLoader />
-                            {!isLearnRoute ? <AmbientBackground /> : null}
+                            {!isLearnRoute && effectEnabled ? (
+                                <AmbientBackground direction={effectDirection} />
+                            ) : null}
                             <Navbar />
                             <SocketConnectionStatus />
                             <ModalContainer />

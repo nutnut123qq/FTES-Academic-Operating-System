@@ -3993,6 +3993,48 @@
         },
         "announcements": {
             "title": "Thông báo"
+        },
+        "identity": {
+            "title": "Nhận diện nhóm",
+            "avatarLabel": "Ảnh đại diện nhóm",
+            "coverLabel": "Ảnh nền nhóm",
+            "avatarHint": "PNG, JPG, WEBP, GIF · tối đa 5 MB",
+            "coverHint": "PNG, JPG, WEBP, GIF · tối đa 5 MB",
+            "invalidType": "Định dạng không hợp lệ — chỉ nhận PNG, JPG, WEBP, GIF.",
+            "tooLarge": "Ảnh vượt quá 5 MB.",
+            "avatarAlt": "Ảnh đại diện của {name}",
+            "coverAlt": "Ảnh nền của {name}",
+            "remove": "Bỏ ảnh",
+            "uploadCta": "Kéo thả ảnh vào đây, hoặc bấm để chọn",
+            "save": "Lưu nhận diện"
+        }
+    },
+    "appearance": {
+        "title": "Giao diện",
+        "mode": {
+            "label": "Chế độ",
+            "light": "Sáng",
+            "dark": "Tối",
+            "system": "Hệ thống"
+        },
+        "accent": {
+            "label": "Màu chủ đạo",
+            "default": "Mặc định",
+            "names": {
+                "indigo": "Xanh indigo",
+                "pink": "Hồng",
+                "teal": "Xanh ngọc",
+                "emerald": "Xanh lục bảo",
+                "amber": "Hổ phách",
+                "violet": "Tím"
+            }
+        },
+        "effect": {
+            "label": "Hiệu ứng nền",
+            "enabled": "Bật hiệu ứng",
+            "direction": "Hướng",
+            "rise": "Bay lên",
+            "fall": "Rơi xuống như sao băng"
         }
     }
 }

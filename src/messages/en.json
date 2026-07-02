@@ -3993,6 +3993,48 @@
         },
         "announcements": {
             "title": "Announcements"
+        },
+        "identity": {
+            "title": "Group identity",
+            "avatarLabel": "Group avatar",
+            "coverLabel": "Group cover",
+            "avatarHint": "PNG, JPG, WEBP, GIF · up to 5 MB",
+            "coverHint": "PNG, JPG, WEBP, GIF · up to 5 MB",
+            "invalidType": "Invalid format — only PNG, JPG, WEBP, GIF are accepted.",
+            "tooLarge": "Image exceeds 5 MB.",
+            "avatarAlt": "{name} avatar",
+            "coverAlt": "{name} cover",
+            "remove": "Remove image",
+            "uploadCta": "Drag an image here, or click to choose",
+            "save": "Save identity"
+        }
+    },
+    "appearance": {
+        "title": "Appearance",
+        "mode": {
+            "label": "Mode",
+            "light": "Light",
+            "dark": "Dark",
+            "system": "System"
+        },
+        "accent": {
+            "label": "Accent color",
+            "default": "Default",
+            "names": {
+                "indigo": "Indigo blue",
+                "pink": "Pink",
+                "teal": "Teal",
+                "emerald": "Emerald",
+                "amber": "Amber",
+                "violet": "Violet"
+            }
+        },
+        "effect": {
+            "label": "Background effect",
+            "enabled": "Enable effect",
+            "direction": "Direction",
+            "rise": "Rise up",
+            "fall": "Fall like meteors"
         }
     }
 }

@@ -14,6 +14,7 @@ import {
 import {
     SidebarSimpleIcon as MenuIcon,
     MagnifyingGlassIcon as SearchIcon,
+    PaletteIcon,
 } from "@phosphor-icons/react"
 import {
     useTranslations,
@@ -42,11 +43,11 @@ import {
 import {
     LanguageDropdown,
 } from "./LanguageDropdown"
-import {
-    DarkLightModeSwitch,
-} from "./AccountMenuDropdown/DarkLightModeSwitch"
 import { useNavbarBottomLayerStore } from "@/hooks/zustand/navbarBottomLayer/store"
-import { useSearchOverlayState } from "@/hooks/zustand/overlay/hooks"
+import {
+    useAppearanceOverlayState,
+    useSearchOverlayState,
+} from "@/hooks/zustand/overlay/hooks"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 
 /**
@@ -60,8 +61,8 @@ export type NavbarProps = WithClassNames<undefined>
  *
  * Container: owns the Ctrl/Cmd+K search shortcut + the mobile drawer state and
  * composes the logo, the 4-module {@link HeaderNav}, search trigger (full field
- * on desktop, icon on mobile), the standalone language dropdown, the theme
- * switch, notifications, the account menu, and a mobile expand button that opens
+ * on desktop, icon on mobile), the standalone language dropdown, the appearance
+ * settings button, notifications, the account menu, and a mobile expand button that opens
  * a navigation drawer mirroring the same 4 modules (Home link + accordion
  * groups from the shared {@link useAppNav} source). `"use client"` for hooks +
  * keyboard handling.
@@ -71,6 +72,7 @@ export const Navbar = ({ className }: NavbarProps) => {
     const t = useTranslations()
     const router = useRouter()
     const { open: openSearch } = useSearchOverlayState()
+    const { open: openAppearance } = useAppearanceOverlayState()
     const [isDrawerOpen, setDrawerOpen] = useState(false)
     // same primary-nav source HeaderNav renders on desktop — no drift
     const modules = useAppNav()
@@ -130,10 +132,17 @@ export const Navbar = ({ className }: NavbarProps) => {
                     >
                         <SearchIcon className="size-5" />
                     </Button>
-                    {/* desktop: language + theme inline; on mobile they move into the drawer */}
+                    {/* desktop: language + appearance settings inline; on mobile they move into the drawer */}
                     <div className="hidden items-center gap-2 md:flex">
                         <LanguageDropdown />
-                        <DarkLightModeSwitch />
+                        <Button
+                            isIconOnly
+                            variant="tertiary"
+                            aria-label={t("appearance.title")}
+                            onPress={openAppearance}
+                        >
+                            <PaletteIcon className="size-5" aria-hidden focusable="false" />
+                        </Button>
                     </div>
                     <NotificationBell />
                     <AccountMenuDropdown />
@@ -253,7 +262,19 @@ export const Navbar = ({ className }: NavbarProps) => {
                                         <Typography type="body-sm">
                                             {t("nav.appearance")}
                                         </Typography>
-                                        <DarkLightModeSwitch />
+                                        {/* close the containing drawer BEFORE opening the
+                                            global modal — never stack overlays */}
+                                        <Button
+                                            isIconOnly
+                                            variant="tertiary"
+                                            aria-label={t("appearance.title")}
+                                            onPress={() => {
+                                                setDrawerOpen(false)
+                                                openAppearance()
+                                            }}
+                                        >
+                                            <PaletteIcon className="size-5" aria-hidden focusable="false" />
+                                        </Button>
                                     </div>
                                 </div>
                             </Drawer.Body>

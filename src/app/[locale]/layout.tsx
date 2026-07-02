@@ -6,11 +6,21 @@ import { InnerLayout } from "../InnerLayout"
 import React, { PropsWithChildren } from "react"
 import { Open_Sans } from "next/font/google"
 import { SEO_CONFIG } from "@/config/seo"
+import { ACCENT_PRESETS, APPEARANCE_STORAGE_KEY } from "@/resources/constants/appearance"
 
 const font = Open_Sans({
     subsets: ["latin"],
     variable: "--font-open-sans",
 })
+
+/**
+ * Pre-paint accent script (appearance-settings) — same strategy next-themes uses
+ * for the `dark` class: read the persisted zustand state from localStorage and set
+ * `data-accent` on `<html>` BEFORE first paint so the stored accent never flashes
+ * the default. Swallows every error (private mode / garbage JSON) → falls back to
+ * the default accent baked into the theme tokens.
+ */
+const accentPrePaintScript = `(function(){try{var raw=localStorage.getItem(${JSON.stringify(APPEARANCE_STORAGE_KEY)});if(!raw)return;var accent=JSON.parse(raw).state.accent;if(${JSON.stringify(ACCENT_PRESETS.map((preset) => preset.id))}.indexOf(accent)>=0){document.documentElement.setAttribute("data-accent",accent)}}catch(e){}})()`
 
 /** Route params for the `[locale]` segment. */
 interface LocaleRouteParams {
@@ -53,6 +63,8 @@ const Layout = async ({
     return (
         <html lang={locale}>
             <body className={`${font.className} ${font.variable} antialiased  bg-background`}>
+                {/* pre-paint accent: must run before any content renders (no flash) */}
+                <script dangerouslySetInnerHTML={{ __html: accentPrePaintScript }} />
                 <NextIntlClientProvider locale={locale} messages={messages}>
                     <InnerLayout>
                         <div>

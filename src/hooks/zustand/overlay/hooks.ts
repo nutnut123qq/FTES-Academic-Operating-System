@@ -48,6 +48,8 @@ export const useAccountMenuOverlayState = () => useOverlayHandle("accountMenu")
 export const useAIProcessingOverlayState = () => useOverlayHandle("aiProcessing")
 /** AI quota overlay state. */
 export const useAiQuotaOverlayState = () => useOverlayHandle("aiQuota")
+/** Appearance settings modal overlay state (mode + accent + ambient effect). */
+export const useAppearanceOverlayState = () => useOverlayHandle("appearance")
 /** Authentication overlay state. */
 export const useAuthenticationOverlayState = () => useOverlayHandle("authentication")
 /** Avatar-upload modal overlay state (edit-profile avatar dropzone). */

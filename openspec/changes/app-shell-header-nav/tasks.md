@@ -1,0 +1,33 @@
+# Tasks — App Shell Header-Only Navigation
+
+## 1. Nav data source (single source of truth)
+
+- [ ] 1.1 Refactor `src/components/features/app-shell/useAppNav.tsx` sang cấu trúc 2 cấp `AppNavModule { key, label, icon, path, isActive, children }` với đúng 4 module Home/Workplace/Course/Community theo bảng D2 của design.md (Home `children: []`)
+- [ ] 1.2 Active-state: child = prefix-match path; module = OR(children) ∪ prefix(path chính); Home chỉ active ở đúng home path
+- [ ] 1.3 Thêm i18n key `nav.workplace`, `nav.course` (+ nhãn con còn thiếu, nhãn section account menu) vào `src/messages/vi.json` và `src/messages/en.json`
+
+## 2. Desktop HeaderNav
+
+- [ ] 2.1 Viết lại `src/components/features/navbar/Navbar/HeaderNav/index.tsx`: 4 module — Home link thuần; Workplace/Course/Community = link + caret trigger mở Popover dropdown 1 cột (icon + label, item active tô accent, chọn item đóng menu)
+- [ ] 2.2 Xoá mega-menu "Explore" và mọi tham chiếu `section.explore` không còn dùng trong HeaderNav
+- [ ] 2.3 Hover-open với close-delay ~150ms (vùng hover gồm trigger + panel); tối đa 1 dropdown mở — mở menu mới đóng menu cũ
+- [ ] 2.4 A11y: `nav` có `aria-label`; trigger có `aria-expanded`/`aria-haspopup`; Enter/Space mở, ArrowUp/Down duyệt item, ESC đóng + trả focus trigger, blur/click-ngoài đóng
+
+## 3. Mobile drawer
+
+- [ ] 3.1 Viết lại body drawer trong `src/components/features/navbar/Navbar/index.tsx`: hàng Home link + 3 nhóm accordion Workplace/Course/Community (link chính của module + children), cùng nguồn `useAppNav`
+- [ ] 3.2 Nhóm chứa route active mặc định mở sẵn; chọn item → navigate + đóng drawer; giữ nguyên rows language/theme cuối drawer
+
+## 4. Account menu (đích di trú)
+
+- [ ] 4.1 Thêm vào `AccountMenuAuthed` hai section có label + divider: "Bạn" (Activity `/activity`, Wallet `/wallet`) và "Hệ thống" (Integrations `/integrations`, Roles `/admin/roles`), giữ nguyên các mục cũ ở đầu
+
+## 5. Guard & rà soát
+
+- [ ] 5.1 Rà soát toàn app KHÔNG còn/không thêm sidebar trái toàn cục nào; xác nhận `SubjectWorkspaceShell` rail không bị sửa (git diff không đụng file)
+- [ ] 5.2 Đối chiếu bảng D2: click-through đủ 21 đích đến từ header/drawer/account menu — không route nào mất đường vào
+
+## 6. Verify
+
+- [ ] 6.1 `npm run build` (webpack) xanh
+- [ ] 6.2 `tsc --noEmit` sạch

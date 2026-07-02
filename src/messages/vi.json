@@ -2092,6 +2092,13 @@
             "authenticating": "Đang xác thực…",
             "signingIn": "Đang đăng nhập…",
             "signingOut": "Đang đăng xuất…"
+        },
+        "context": {
+            "generic": "Đăng nhập để tiếp tục",
+            "like": "Đăng nhập để thích bài viết",
+            "comment": "Đăng nhập để bình luận",
+            "save": "Đăng nhập để lưu nội dung",
+            "enroll": "Đăng nhập để đăng ký khóa học"
         }
     },
     "priceTag": {
@@ -2606,20 +2613,6 @@
         }
     },
     "authFlows": {
-        "register": {
-            "title": "Tạo tài khoản",
-            "subtitle": "Tham gia FTES Academic Operating System",
-            "name": "Họ và tên",
-            "email": "Email",
-            "password": "Mật khẩu",
-            "confirmPassword": "Xác nhận mật khẩu",
-            "submit": "Tạo tài khoản",
-            "success": "Đã tạo tài khoản. Kiểm tra email để xác minh.",
-            "haveAccount": "Đã có tài khoản?",
-            "signIn": "Đăng nhập",
-            "invalidEmail": "Vui lòng nhập email hợp lệ.",
-            "passwordMismatch": "Mật khẩu không khớp."
-        },
         "forgot": {
             "title": "Quên mật khẩu?",
             "subtitle": "Chúng tôi sẽ gửi liên kết để đặt lại mật khẩu.",

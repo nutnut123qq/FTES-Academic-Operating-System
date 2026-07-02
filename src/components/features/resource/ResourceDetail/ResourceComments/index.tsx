@@ -5,9 +5,8 @@ import { Skeleton, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
 
-import { useAppDispatch, useAppSelector } from "@/redux/hooks"
-import { AuthenticationModalTab, setAuthenticationModalTab } from "@/redux/slices/tabs"
-import { useAuthenticationOverlayState } from "@/hooks/zustand/overlay/hooks"
+import { useAppSelector } from "@/redux/hooks"
+import { useRequireAuth } from "@/hooks/useRequireAuth"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Link } from "@/i18n/navigation"
 import type { ResourceCommentItem } from "../../hooks/resource-comments-mock"
@@ -45,10 +44,8 @@ const ResourceCommentsSkeleton = () => (
 export const ResourceComments = () => {
     const t = useTranslations()
     const { resourceId } = useParams<{ resourceId: string }>()
-    const dispatch = useAppDispatch()
-    const authenticated = useAppSelector((state) => state.keycloak.authenticated)
     const user = useAppSelector((state) => state.user.user)
-    const { open: openAuthentication } = useAuthenticationOverlayState()
+    const { requireAuth: requireAuthBase } = useRequireAuth()
 
     const commentsSwr = useQueryResourceCommentsSwr(resourceId)
     const { createComment, isMutating: isCreating } = useMutateCreateResourceCommentSwr(resourceId)
@@ -58,15 +55,12 @@ export const ResourceComments = () => {
     // top-level comment id whose inline reply composer is open (replies retarget here)
     const [replyTargetId, setReplyTargetId] = useState<string | null>(null)
 
-    /** Gate an interaction on auth: guests get the sign-in modal, no action runs. */
-    const requireAuth = useCallback(() => {
-        if (authenticated && user) {
-            return true
-        }
-        dispatch(setAuthenticationModalTab(AuthenticationModalTab.SignIn))
-        openAuthentication()
-        return false
-    }, [authenticated, user, dispatch, openAuthentication])
+    /** Gate an interaction on auth: guests get the sign-in modal (with the comment
+     * context message, via the shared `useRequireAuth` guard), no action runs. */
+    const requireAuth = useCallback(
+        () => requireAuthBase("auth.context.comment") && Boolean(user),
+        [requireAuthBase, user],
+    )
 
     const comments = commentsSwr.comments ?? []
 
@@ -117,12 +111,12 @@ export const ResourceComments = () => {
 
     const handleToggleLike = useCallback(
         (comment: ResourceCommentItem) => {
-            if (!requireAuth()) {
+            if (!requireAuthBase("auth.context.like")) {
                 return
             }
             void toggleLike(comment.id)
         },
-        [requireAuth, toggleLike],
+        [requireAuthBase, toggleLike],
     )
 
     /** Open the reply composer; replying to a reply retargets its top-level parent. */

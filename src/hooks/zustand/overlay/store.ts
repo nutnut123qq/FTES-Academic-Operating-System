@@ -93,6 +93,10 @@ const OVERLAY_KEYS: ReadonlyArray<OverlayKey> = [
 interface OverlayStoreState {
     /** openMap[key] = whether that overlay is open. */
     openMap: Record<OverlayKey, boolean>
+    /** Authentication modal context message — an i18n KEY (serializable string) describing why
+     * sign-in is needed (e.g. `auth.context.enroll`), set by the `useRequireAuth` guard and
+     * rendered above the active section; cleared when the modal closes. */
+    authenticationContext: string | null
     /** Payment overlay payload (flow + tier) — the modal reads it to pick the mutation. */
     paymentContext: PaymentContext | null
     /** Interstitial ad modal payload (the active ad to render). */
@@ -109,6 +113,8 @@ interface OverlayStoreState {
      * sent to the model as HIDDEN grounding so it can reason about a short selection,
      * NOT shown in the chat thread. */
     contentAiSelectionContext: string | null
+    /** Stash (or clear) the authentication modal context message key. */
+    setAuthenticationContext: (context: string | null) => void
     /** Set the open state of an overlay (used by `onOpenChange`). */
     setOpenFor: (key: OverlayKey, isOpen: boolean) => void
     /** Open an overlay. */
@@ -151,6 +157,7 @@ const buildInitialOpenMap = (): Record<OverlayKey, boolean> =>
  */
 export const useOverlayStore = create<OverlayStoreState>((set) => ({
     openMap: buildInitialOpenMap(),
+    authenticationContext: null,
     paymentContext: null,
     adModalContext: null,
     followListContext: null,
@@ -166,6 +173,7 @@ export const useOverlayStore = create<OverlayStoreState>((set) => ({
         set((state) => ({ openMap: { ...state.openMap, [key]: false } })),
     toggleOverlay: (key) =>
         set((state) => ({ openMap: { ...state.openMap, [key]: !state.openMap[key] } })),
+    setAuthenticationContext: (context) => set({ authenticationContext: context }),
     setPaymentContext: (context) => set({ paymentContext: context }),
     setAdModalContext: (context) => set({ adModalContext: context }),
     setFollowListContext: (context) => set({ followListContext: context }),

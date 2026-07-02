@@ -134,7 +134,8 @@ export const RegistrationState = () => {
         ],
     )
 
-    const isSubmitDisabled = !isValid || (publicEnv().captcha.enabled && !values.captchaToken)
+    // pending mock auth also disables the submit — no double submit (spec: modal quality)
+    const isSubmitDisabled = !isValid || (publicEnv().captcha.enabled && !values.captchaToken) || isSubmitting
 
     return (
         <>
@@ -159,6 +160,8 @@ export const RegistrationState = () => {
                     name="password"
                     label={t("auth.signUp.password.label")}
                     placeholder={t("auth.signUp.password.placeholder")}
+                    showToggleLabel={t("auth.signUp.password.show")}
+                    hideToggleLabel={t("auth.signUp.password.hide")}
                     value={values.password}
                     error={errors.password}
                     touched={touched.password}
@@ -171,6 +174,8 @@ export const RegistrationState = () => {
                     name="confirmPassword"
                     label={t("auth.signUp.confirmPassword.label")}
                     placeholder={t("auth.signUp.confirmPassword.placeholder")}
+                    showToggleLabel={t("auth.signUp.confirmPassword.show")}
+                    hideToggleLabel={t("auth.signUp.confirmPassword.hide")}
                     value={values.confirmPassword}
                     error={errors.confirmPassword}
                     touched={touched.confirmPassword}

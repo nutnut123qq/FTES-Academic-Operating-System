@@ -2083,6 +2083,13 @@
             "authenticating": "Authenticating you…",
             "signingIn": "Signing you in…",
             "signingOut": "Signing you out…"
+        },
+        "context": {
+            "generic": "Sign in to continue",
+            "like": "Sign in to like this post",
+            "comment": "Sign in to comment",
+            "save": "Sign in to save this item",
+            "enroll": "Sign in to enroll in this course"
         }
     },
     "priceTag": {
@@ -2606,20 +2613,6 @@
         }
     },
     "authFlows": {
-        "register": {
-            "title": "Create your account",
-            "subtitle": "Join FTES Academic Operating System",
-            "name": "Full name",
-            "email": "Email",
-            "password": "Password",
-            "confirmPassword": "Confirm password",
-            "submit": "Create account",
-            "success": "Account created. Check your email to verify.",
-            "haveAccount": "Already have an account?",
-            "signIn": "Sign in",
-            "invalidEmail": "Please enter a valid email address.",
-            "passwordMismatch": "Passwords do not match."
-        },
         "forgot": {
             "title": "Forgot your password?",
             "subtitle": "We'll send you a link to reset it.",

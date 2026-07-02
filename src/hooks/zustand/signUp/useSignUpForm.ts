@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl"
 import validator from "validator"
 import _ from "lodash"
 import { useSignUpStore } from "./store"
+import { useAuthenticationOverlayState } from "@/hooks/zustand/overlay/hooks"
 import { useMutateSignUpSwr } from "@/hooks/swr/api/graphql/mutations/useMutateSignUpInitSwr"
 import { useMutateSignUpVerifyOtpSwr } from "@/hooks/swr/api/graphql/mutations/useMutateSignUpVerifyOtpSwr"
 import { useQueryCheckEmailExistsSwr } from "@/hooks/swr/api/graphql/queries/useQueryCheckEmailExistsSwr"
@@ -26,6 +27,7 @@ export const useSignUpForm = () => {
     const { trigger: mutateSignUpInit } = useMutateSignUpSwr()
     const { trigger: mutateSignUpVerifyOtp } = useMutateSignUpVerifyOtpSwr()
     const { trigger: queryCheckEmailExists } = useQueryCheckEmailExistsSwr()
+    const { close: onAuthenticationClose } = useAuthenticationOverlayState()
 
     const email = useSignUpStore((state) => state.email)
     const emailExists = useSignUpStore((state) => state.emailExists)
@@ -150,10 +152,13 @@ export const useSignUpForm = () => {
             reset()
             dispatch(resetSignUpState())
             dispatch(setAuthenticationModalTab(AuthenticationModalTab.SignIn))
+            // post-sign-up continuation: verify already authenticated the session —
+            // close the modal and keep the user on the current route (no redirect)
+            onAuthenticationClose()
         } finally {
             setIsSubmitting(false)
         }
-    }, [signUpState, email, password, challengeId, otp, captchaToken, mutateSignUpInit, mutateSignUpVerifyOtp, setValue, dispatch, reset, setIsSubmitting, runGraphQL])
+    }, [signUpState, email, password, challengeId, otp, captchaToken, mutateSignUpInit, mutateSignUpVerifyOtp, setValue, dispatch, reset, onAuthenticationClose, setIsSubmitting, runGraphQL])
 
     useEffect(() => {
         const controller = new AbortController()

@@ -18,6 +18,7 @@ import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
 import { useRouter } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { useRequireAuth } from "@/hooks/useRequireAuth"
 import { SaveButton } from "@/components/blocks/buttons/SaveButton"
 import { PriceTag } from "@/components/blocks/commerce/PriceTag"
 import { ResponsiveBreadcrumb } from "@/components/blocks/navigation/ResponsiveBreadcrumb"
@@ -44,6 +45,8 @@ export const CourseDetail = () => {
     const router = useRouter()
     const { courseId } = useParams<{ courseId: string }>()
     const { course, error, mutate } = useQueryCourseDetailSwr(courseId)
+    // guests pressing the enroll CTA get the auth modal (enroll context) and STAY here
+    const { guard } = useRequireAuth()
 
     return (
         <div className="mx-auto w-full max-w-6xl p-6">
@@ -61,7 +64,7 @@ export const CourseDetail = () => {
                     <CourseDetailView
                         course={course}
                         onCourses={() => router.push("/courses")}
-                        onEnroll={() => router.push(`/courses/${courseId}/enroll`)}
+                        onEnroll={guard(() => router.push(`/courses/${courseId}/enroll`), "auth.context.enroll")}
                     />
                 ) : null}
             </AsyncContent>

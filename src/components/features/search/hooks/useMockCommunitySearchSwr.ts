@@ -18,8 +18,8 @@ const fetchMockCommunity = (query: string, locale: Locale): Record<SearchMockKin
     const echo = query.trim()
     return {
         users: [
-            { id: "mock-u1", kind: "users", title: `${echo} · Nguyễn Văn A`, snippet: "@nguyenvana", href: path.profile("nguyenvana").build() },
-            { id: "mock-u2", kind: "users", title: `${echo} · Trần Thị B`, snippet: "@tranthib", href: path.profile("tranthib").build() },
+            { id: "mock-u1", kind: "users", title: `${echo} · Lê Minh Quân`, snippet: "@leminhquan", href: path.profile("leminhquan").build() },
+            { id: "mock-u2", kind: "users", title: `${echo} · Trần Thu Hà`, snippet: "@tranthuha", href: path.profile("tranthuha").build() },
         ],
         posts: [
             { id: "mock-p1", kind: "posts", title: `Bài viết: ${echo}`, snippet: "Cộng đồng · 42 lượt thích", href: path.community().build() },

@@ -4,6 +4,7 @@ import React from "react"
 import { Button, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
+import { ProgressMeter } from "@/components/blocks/stats/ProgressMeter"
 import { useQueryCourseProgressSwr } from "../hooks/useQueryCourseProgressSwr"
 
 /**
@@ -26,20 +27,12 @@ export const CourseProgress = () => {
                 {t("progress.title")}
             </Typography>
 
-            {/* progress */}
-            <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between gap-3">
-                    <Typography type="body-sm" color="muted">
-                        {t("progress.completed", { done: progress.completedLessons, total: progress.totalLessons })}
-                    </Typography>
-                    <Typography type="body-sm" weight="medium">
-                        {progress.percent}%
-                    </Typography>
-                </div>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-default/40">
-                    <div className="h-full rounded-full bg-accent" style={{ width: `${progress.percent}%` }} />
-                </div>
-            </div>
+            {/* progress — labelled horizontal status bar (ui-polish-pass) */}
+            <ProgressMeter
+                value={progress.percent}
+                label={t("progress.completed", { done: progress.completedLessons, total: progress.totalLessons })}
+                showValue
+            />
 
             {/* certificate */}
             <div className="flex flex-col gap-3 rounded-large border border-separator p-6">

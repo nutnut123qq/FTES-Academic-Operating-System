@@ -11,6 +11,7 @@ import {
     RobotIcon,
     ChartLineIcon,
 } from "@phosphor-icons/react"
+import { ProgressMeter } from "@/components/blocks/stats/ProgressMeter"
 import type { CareerRoadmap } from "../hooks/useQueryCareerSwr"
 import { useQueryCareerSwr } from "../hooks/useQueryCareerSwr"
 
@@ -50,31 +51,15 @@ export const CareerCenter = () => {
                     {t("skills")}
                 </Typography>
                 <div className="flex flex-col gap-4">
-                    {skills.map((skill) => {
-                        const value = Math.round(skill.progress)
-                        return (
-                            <div key={skill.id} className="flex flex-col gap-1.5">
-                                <div className="flex items-center justify-between gap-3">
-                                    <Typography type="body-sm" weight="medium" className="min-w-0" truncate>
-                                        {skill.name}
-                                    </Typography>
-                                    <Typography type="body-xs" className="shrink-0 text-accent" weight="medium">
-                                        {value}%
-                                    </Typography>
-                                </div>
-                                <div
-                                    className="h-2 w-full overflow-hidden rounded-full bg-default/40"
-                                    role="progressbar"
-                                    aria-label={t("progressLabel", { skill: skill.name })}
-                                    aria-valuenow={value}
-                                    aria-valuemin={0}
-                                    aria-valuemax={100}
-                                >
-                                    <div className="h-full rounded-full bg-accent" style={{ width: `${value}%` }} />
-                                </div>
-                            </div>
-                        )
-                    })}
+                    {skills.map((skill) => (
+                        // labelled horizontal status bar (ui-polish-pass)
+                        <ProgressMeter
+                            key={skill.id}
+                            value={Math.round(skill.progress)}
+                            label={skill.name}
+                            showValue
+                        />
+                    ))}
                 </div>
             </section>
 

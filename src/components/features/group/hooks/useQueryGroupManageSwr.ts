@@ -18,7 +18,7 @@ export interface GroupManage {
 // ponytail: mock BE — no group management endpoint yet. Deterministic sample.
 const fetchManageMock = async (): Promise<GroupManage> => ({
     joinRequests: [
-        { id: "jr1", name: "Nguyễn Văn X" },
+        { id: "jr1", name: "Đỗ Hoàng Nam" },
         { id: "jr2", name: "Trần Thị Y" },
     ],
     rules: [

@@ -77,9 +77,9 @@ html {
   --warning: oklch(78.19% 0.1590 84.37);
   --warning-foreground: oklch(21.03% 0.0059 84.37);
 
-  /* Border Radius */
-  --radius: 0.5rem;
-  --field-radius: 0.75rem;
+  /* Border Radius — bumped one notch for softer corners (ui-polish-pass) */
+  --radius: 0.75rem;
+  --field-radius: 1rem;
 
   /* Font Family */
   /* Make sure to load Inter font in your app */

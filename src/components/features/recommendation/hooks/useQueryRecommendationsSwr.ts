@@ -39,8 +39,8 @@ const fetchRecommendationsMock = async (): Promise<RecommendationsByKind> => ({
         { id: "algo-grind", title: "Algorithm Grind", reason: "Because you study CSD201" },
     ],
     mentors: [
-        { id: "mentor-a", title: "Nguyễn Văn A", reason: "Teaches subjects you take" },
-        { id: "mentor-b", title: "Trần Thị B", reason: "Highly rated in Data Structures" },
+        { id: "mentor-a", title: "Lê Minh Quân", reason: "Teaches subjects you take" },
+        { id: "mentor-b", title: "Trần Thu Hà", reason: "Highly rated in Data Structures" },
     ],
     challenges: [
         { id: "two-sum", title: "Two Sum", reason: "Warm-up for CSD201" },

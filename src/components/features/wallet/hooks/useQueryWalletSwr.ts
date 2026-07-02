@@ -31,7 +31,7 @@ const fetchWalletMock = async (): Promise<Wallet> => ({
         { id: "tx-01", kind: "receive", amount: 500, description: "Thưởng hoàn thành khoá CSD201", date: "2026-06-30" },
         { id: "tx-02", kind: "purchase", amount: -300, description: "Mở khoá tài liệu Đồ án phần mềm", date: "2026-06-28" },
         { id: "tx-03", kind: "receive", amount: 200, description: "Điểm danh chuỗi 7 ngày", date: "2026-06-27" },
-        { id: "tx-04", kind: "transfer", amount: -150, description: "Chuyển cho Trần Thị B", date: "2026-06-25" },
+        { id: "tx-04", kind: "transfer", amount: -150, description: "Chuyển cho Trần Thu Hà", date: "2026-06-25" },
         { id: "tx-05", kind: "refund", amount: 300, description: "Hoàn tiền huỷ đăng ký sự kiện", date: "2026-06-23" },
         { id: "tx-06", kind: "purchase", amount: -450, description: "Đổi voucher đồng phục CLB", date: "2026-06-20" },
         { id: "tx-07", kind: "receive", amount: 1000, description: "Nạp FTES Coin qua ví điện tử", date: "2026-06-18" },

@@ -12,10 +12,10 @@ import type { Subject } from "./useQuerySubjectSwr"
 // host to `next.config` `images.remotePatterns`.
 // `accentColor` (OKLCH strings) is carried but not rendered yet — future tinting.
 const fetchSubjectsMock = async (): Promise<Array<Subject>> => [
-    { id: "prf192", code: "PRF192", name: "Lập trình C", credits: 3, difficulty: "basic", lecturer: "Nguyễn Văn A", progress: 62, imageUrl: "/subjects/prf192.png", accentColor: "oklch(60% 0.18 354)", courseIds: ["prf192-course"], isMember: true },
-    { id: "csd201", code: "CSD201", name: "Cấu trúc dữ liệu & Giải thuật", credits: 3, difficulty: "intermediate", lecturer: "Trần Thị B", progress: 38, imageUrl: "/subjects/csd201.png", accentColor: "oklch(60% 0.15 250)", courseIds: ["csd201-course"], isMember: true },
-    { id: "prj301", code: "PRJ301", name: "Lập trình Java Web", credits: 3, difficulty: "intermediate", lecturer: "Lê Văn C", progress: 12, imageUrl: "/subjects/prj301.png", accentColor: "oklch(60% 0.15 40)", courseIds: ["prj301-course"], isMember: true },
-    { id: "dbi202", code: "DBI202", name: "Cơ sở dữ liệu", credits: 3, difficulty: "basic", lecturer: "Phạm Thị D", progress: 80, imageUrl: "/subjects/dbi202.png", accentColor: "oklch(60% 0.14 150)", courseIds: ["dbi202-course"], isMember: true },
+    { id: "prf192", code: "PRF192", name: "Lập trình C", credits: 3, difficulty: "basic", lecturer: "Lê Minh Quân", progress: 62, imageUrl: "/subjects/prf192.png", accentColor: "oklch(60% 0.18 354)", courseIds: ["prf192-course"], isMember: true },
+    { id: "csd201", code: "CSD201", name: "Cấu trúc dữ liệu & Giải thuật", credits: 3, difficulty: "intermediate", lecturer: "Trần Thu Hà", progress: 38, imageUrl: "/subjects/csd201.png", accentColor: "oklch(60% 0.15 250)", courseIds: ["csd201-course"], isMember: true },
+    { id: "prj301", code: "PRJ301", name: "Lập trình Java Web", credits: 3, difficulty: "intermediate", lecturer: "Phạm Gia Bảo", progress: 12, imageUrl: "/subjects/prj301.png", accentColor: "oklch(60% 0.15 40)", courseIds: ["prj301-course"], isMember: true },
+    { id: "dbi202", code: "DBI202", name: "Cơ sở dữ liệu", credits: 3, difficulty: "basic", lecturer: "Vũ Ngọc Ánh", progress: 80, imageUrl: "/subjects/dbi202.png", accentColor: "oklch(60% 0.14 150)", courseIds: ["dbi202-course"], isMember: true },
     { id: "swp391", code: "SWP391", name: "Đồ án phần mềm", credits: 4, difficulty: "advanced", lecturer: "Đỗ Văn E", progress: 5, imageUrl: "/subjects/swp391.png", accentColor: "oklch(60% 0.16 300)", courseIds: [], isMember: false },
     { id: "net1704", code: "NET1704", name: "Mạng máy tính", credits: 3, difficulty: "intermediate", lecturer: "Vũ Thị F", progress: 46, imageUrl: null, accentColor: "oklch(60% 0.13 200)", courseIds: ["net1704-course"], isMember: true },
 ]

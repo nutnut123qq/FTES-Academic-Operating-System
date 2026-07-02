@@ -32,7 +32,7 @@ design-system docs + `rules/main.md`). Siblings: `../ux/` (page layout/flow + we
 - **Color rule:** chips/badges = soft color blocks, NO border (`variant="soft"` / `bg-[c]/10` + same-color text). Categorical colors map to success/warning/danger/accent. Language brand colors are the one valid "no-hex" exception (`modules/utils/language.ts`).
 
 ## Radius & spacing
-- **Radius:** form/modal container `rounded-3xl`; content card `rounded-xl`; code block `rounded-xl`; chip/pill `rounded-full`. Concentric `rounded-2xl` (frame) → `rounded-xl` (field) → `rounded-full`; child < parent; components don't hand-roll frame radius. Tokens: `--radius: 0.5rem`, `--field-radius: 0.75rem`. Shadow is flat (overlay only).
+- **Radius:** form/modal container `rounded-3xl`; content card `rounded-xl`; code block `rounded-xl`; chip/pill `rounded-full`. Concentric `rounded-2xl` (frame) → `rounded-xl` (field) → `rounded-full`; child < parent; components don't hand-roll frame radius. Tokens: `--radius: 0.75rem`, `--field-radius: 1rem` (bumped one notch 2026-07-02, ui-polish-pass — softer corners; pills/avatars stay `rounded-full`). Shadow is flat (overlay only).
 - **Spacing scale `0 / 2 / 3 / 4 / 6`** (4px grid, by **semantic relationship** not size feel). Each property
   has its own grounded file — these are the source of truth (`/starci-fe-layout-apply` reads them):
   - **[`gap.md`](gap.md)** — `gap-0` title↔desc · `gap-2` label↔input/coupled · `gap-3` same function (inside a card) · `gap-6` different function (section↔section, card↔card). Snap `gap-1.5` (194 uses) → `gap-2`.

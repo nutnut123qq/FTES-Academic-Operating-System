@@ -15,6 +15,12 @@ export interface UserCellProps extends WithClassNames<undefined> {
     handle?: string
     /** Visual density of the row; controls the avatar preset. Defaults to `"sm"`. */
     size?: "sm" | "md"
+    /**
+     * Layout: `"row"` (default) = avatar left, name right. `"nameAbove"` =
+     * center-stacked identity card with the NAME above the avatar (mentor /
+     * "bảng vàng" / achiever cards), DOM order name → avatar (no CSS re-order).
+     */
+    layout?: "row" | "nameAbove"
     /** Optional right-aligned slot, e.g. a follow button or status chip. */
     trailing?: React.ReactNode
 }
@@ -36,10 +42,24 @@ export const UserCell = ({
     avatar,
     handle,
     size = "sm",
+    layout = "row",
     trailing,
     className,
 }: UserCellProps) => {
     const name = displayName ?? username
+
+    // name-above-avatar identity card (mentor / bảng vàng / achiever). DOM order is
+    // name → avatar so the accessible reading order matches the visual order.
+    if (layout === "nameAbove") {
+        return (
+            <div className={cn("flex min-w-0 flex-col items-center gap-1 text-center", className)}>
+                <Typography type="body-sm" weight="medium" truncate className="max-w-full leading-5">{name}</Typography>
+                <UserAvatar username={username} avatar={avatar} seed={username} size={size} />
+                {handle ? <Typography type="body-xs" color="muted" truncate className="max-w-full leading-4">{handle}</Typography> : null}
+                {trailing ? <div className="mt-1 shrink-0">{trailing}</div> : null}
+            </div>
+        )
+    }
 
     return (
         <div className={cn("flex min-w-0 items-center gap-2", className)}>

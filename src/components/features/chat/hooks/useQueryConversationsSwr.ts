@@ -23,11 +23,11 @@ export interface ChatMessage {
 // per-conversation thread, all SWR-shaped so the shell can swap to a real query
 // (conversations() / messages(conversationId)) without touching the UI.
 const fetchConversationsMock = async (): Promise<Array<Conversation>> => [
-    { id: "co1", name: "Nguyễn Văn A", lastMessage: "Mai nộp bài PRF192 nhé", unread: 2, avatarInitials: "NA" },
+    { id: "co1", name: "Lê Minh Quân", lastMessage: "Mai nộp bài PRF192 nhé", unread: 2, avatarInitials: "LQ" },
     { id: "co2", name: "Nhóm SWP391", lastMessage: "Đã push nhánh feature/login", unread: 0, avatarInitials: "SW" },
-    { id: "co3", name: "Trần Thị B", lastMessage: "Cảm ơn thầy đã giải đáp!", unread: 0, avatarInitials: "TB" },
+    { id: "co3", name: "Trần Thu Hà", lastMessage: "Cảm ơn thầy đã giải đáp!", unread: 0, avatarInitials: "TH" },
     { id: "co4", name: "Cố vấn học tập", lastMessage: "Lịch đăng ký kỳ tới đã mở", unread: 1, avatarInitials: "CV" },
-    { id: "co5", name: "Lê Văn C", lastMessage: "Bạn xem hộ mình bài DBI202 với", unread: 0, avatarInitials: "LC" },
+    { id: "co5", name: "Phạm Gia Bảo", lastMessage: "Bạn xem hộ mình bài DBI202 với", unread: 0, avatarInitials: "PB" },
     { id: "co6", name: "Nhóm CSD201", lastMessage: "Ai làm xong quiz chương 3 chưa?", unread: 5, avatarInitials: "CS" },
 ]
 

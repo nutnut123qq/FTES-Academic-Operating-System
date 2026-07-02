@@ -85,7 +85,7 @@ const fetchCourseDetailMock = async (courseId: string): Promise<CourseDetail> =>
         "Luyện với đề thi mẫu",
     ],
     instructor: {
-        name: "Nguyễn Văn A",
+        name: "Lê Minh Quân",
         title: "Giảng viên Kỹ thuật phần mềm",
         bio: "10 năm dạy lập trình nền tảng, tác giả nhiều tài liệu ôn thi môn cơ sở.",
     },

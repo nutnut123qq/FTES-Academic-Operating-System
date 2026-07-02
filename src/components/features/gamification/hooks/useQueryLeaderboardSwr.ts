@@ -44,13 +44,13 @@ interface LeaderboardData {
 const fetchLeaderboardMock = async (): Promise<LeaderboardData> => ({
     me: { xp: 4820, level: 12, streak: 7, rank: 3 },
     board: [
-        { id: "u1", name: "Trần Thị B", xp: 6210, level: 15, avatarInitials: "TB" },
-        { id: "u2", name: "Lê Văn C", xp: 5480, level: 13, avatarInitials: "LC" },
+        { id: "u1", name: "Trần Thu Hà", xp: 6210, level: 15, avatarInitials: "TH" },
+        { id: "u2", name: "Phạm Gia Bảo", xp: 5480, level: 13, avatarInitials: "PB" },
         { id: "me", name: "Bạn", xp: 4820, level: 12, avatarInitials: "BN" },
-        { id: "u4", name: "Phạm Thị D", xp: 4310, level: 11, avatarInitials: "PD" },
+        { id: "u4", name: "Vũ Ngọc Ánh", xp: 4310, level: 11, avatarInitials: "VA" },
         { id: "u5", name: "Đỗ Văn E", xp: 3990, level: 11, avatarInitials: "DE" },
         { id: "u6", name: "Vũ Thị F", xp: 3540, level: 10, avatarInitials: "VF" },
-        { id: "u7", name: "Nguyễn Văn A", xp: 3120, level: 9, avatarInitials: "NA" },
+        { id: "u7", name: "Lê Minh Quân", xp: 3120, level: 9, avatarInitials: "LQ" },
         { id: "u8", name: "Hoàng Thị G", xp: 2760, level: 8, avatarInitials: "HG" },
     ],
     badges: [

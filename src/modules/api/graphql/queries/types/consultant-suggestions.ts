@@ -2,7 +2,7 @@ import type { GraphQLResponse } from "../../types"
 
 /** Request for the `consultantSuggestions` autocomplete query. */
 export interface QueryConsultantSuggestionsRequest {
-    /** Typed prefix to autocomplete (e.g. "ng" → "Nguyen Van A"). */
+    /** Typed prefix to autocomplete (e.g. "ng" → "Le Minh Quan"). */
     query: string
     /** Max suggestions to return (default 8). */
     limit?: number

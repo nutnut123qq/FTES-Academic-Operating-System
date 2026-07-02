@@ -59,7 +59,7 @@ const fetchSubjectMock = async (id: string): Promise<Subject> => ({
     name: "Lập trình C",
     credits: 3,
     difficulty: "basic",
-    lecturer: "Nguyễn Văn A",
+    lecturer: "Lê Minh Quân",
     progress: 62,
     imageUrl: id === "net1704" ? null : `/subjects/${id.toLowerCase()}.png`,
     courseIds: id === "swp391" ? [] : [`${id}-course`],

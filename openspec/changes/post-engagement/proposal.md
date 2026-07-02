@@ -9,12 +9,23 @@ piece. User intent: "Các bài đăng cho phép like share comment".
 ## What Changes
 
 - **Threads-style engagement bar** (product owner decision: "Các mục comment, like, lưu xem sau hãy
-  làm như bên Threads"): every post — community feed rows, post detail, group feed posts, **and the
-  subject workspace "Thảo luận" tab feed** (the `subject-workspace-ia` change renames the workspace
-  community tab to Thảo luận) — renders ONE shared action bar directly under the post content:
-  `♥ like-count · 💬 comment-count · 🔁 share · 🔖 save`. Thin icon buttons, NO borders or
+  làm như bên Threads"): every post-like surface — community feed rows, post detail, group feed
+  posts, **articles/blog (bài viết)**, **discussion threads** (group discussion + the subject
+  workspace "Thảo luận" tab) — renders ONE shared action bar directly under the content. The FULL
+  bar is `♥ like-count · 💬 comment-count · 🔁 share · 🔖 save`. Thin icon buttons, NO borders or
   background fills, counts inline next to the icons, single row. Active states: filled red heart
   when liked, filled bookmark when saved.
+- **Per-surface engagement matrix** (product owner decision 2026-07-02, Vietnamese: "Tùy từng mục
+  có cần lưu xem sau và share không — ví dụ discussion thì không cần lưu xem sau và share"): NOT
+  every surface renders every action. The bar takes a config/prop selecting which actions render
+  per surface. Canonical decision (see the matrix table in `design.md`):
+  - **Bài đăng (posts) + Bài viết (articles/blog)** — community feed + detail, group feed,
+    subject-scoped post feeds, `/blog/[slug]` articles: **Like + Comment + Save (🔖) + Share (full
+    bar)**.
+  - **Discussion (group discussion threads + the subject workspace "Thảo luận" tab)**: **Like +
+    Comment ONLY — NO save, NO share.**
+  The engagement bar defaults to the full set; discussion surfaces pass a config that hides the 🔖
+  and 🔁 buttons entirely (not disabled — absent).
 - **Like**: the ♥ button toggles like with optimistic count/state update, rollback + error toast on
   failure.
 - **Comment — inline push-down expansion** (product owner decision 2026-07-02: "Bấm vô xem comment
@@ -32,20 +43,24 @@ piece. User intent: "Các bài đăng cho phép like share comment".
   navigation — only the post title still navigates as before. On mobile the composer **sticks to
   the bottom of the viewport** on the post detail and, in feeds, for the **expanded post's composer
   while focused**.
-- **Share (🔁)**: copy-link + Web Share API only:
+- **Share (🔁)** — only on surfaces the matrix allows (posts + articles, **NOT discussion**):
+  copy-link + Web Share API only:
   1. "Sao chép liên kết" / "Copy link" — always present, copies the post's absolute URL, confirms
      with a success toast.
   2. "Chia sẻ qua…" / "Share via…" — only when the Web Share API (`navigator.share`) is available.
   "Repost to own feed" ("Chia sẻ về trang cá nhân") is **explicitly deferred** — no re-share item.
-- **Save (🔖)**: the save-for-later toggle JOINS the bar. Save *mechanics* (entityType `post`, mock
-  save store, persistence, the `/saved` page) are owned by the `save-for-later` change; this change
-  owns the button's **placement and behavior inside the bar** (position, active state, guest
-  gating).
+- **Save (🔖)** — only on surfaces the matrix allows (posts + articles, **NOT discussion**): the
+  save-for-later toggle JOINS the bar. Save *mechanics* (entityType `post`/`article`, mock save
+  store, persistence, the `/saved` page) are owned by the `save-for-later` change; this change owns
+  the button's **placement and behavior inside the bar** (position, active state, guest gating) —
+  including the decision that discussion items expose **no** 🔖 button, so discussion threads are
+  never saveable.
 - **Guest gating**: like, comment, and save are auth-gated — a signed-out user's attempt opens the
   `AuthenticationModal` instead of mutating. Copy-link/native share stay available to guests.
 - **Counts formatting**: like/comment counts ≥ 1000 render compact ("1k", "1,2k" vi / "1.2k" en).
-- **New reusable block** `PostEngagementBar` shared by community feed, post detail, group feed, and
-  the workspace Thảo luận feed.
+- **New reusable block** `PostEngagementBar` shared by ALL post-like surfaces (community feed +
+  detail, group feed, articles/blog, group discussion, subject "Thảo luận"), taking an `actions`
+  config prop that selects which of like/comment/share/save render per the matrix.
 - **i18n** vi/en for every new label/toast; **a11y**: like/save expose `aria-pressed` + accessible
   names on all icon buttons.
 - Mock SWR hooks extended (`liked` flag, mutable counts, comment + reply append) with SWR-cache
@@ -55,29 +70,39 @@ piece. User intent: "Các bài đăng cho phép like share comment".
 ## Capabilities
 
 ### New Capabilities
-- `post-engagement`: the Threads-style engagement bar (like · comment · share · save) on community
-  posts (feed + detail), group feed posts, and the subject workspace Thảo luận feed — bar
-  composition/order/visual language, optimistic like, **inline push-down comment expansion in
-  feeds** (lazy-load, independent per post, no navigation), flat one-level replies, sticky mobile
-  composer, share menu, save-button placement, guest gating, count formatting, i18n, a11y.
+- `post-engagement`: the Threads-style engagement bar (like · comment · share · save) on ALL
+  post-like surfaces — community posts (feed + detail), group feed posts, articles/blog, group
+  discussion, and the subject workspace "Thảo luận" tab — driven by a **per-surface engagement
+  matrix** (posts + articles = full bar; discussion = like + comment only, NO save/share). Covers
+  the bar's `actions` config prop, composition/order/visual language, optimistic like, **inline
+  push-down comment expansion in feeds** (lazy-load, independent per post, no navigation), flat
+  one-level replies, sticky mobile composer, share menu (posts/articles only), save-button
+  placement (posts/articles only), guest gating per action, count formatting, i18n, a11y.
 
 ### Modified Capabilities
 - (none — no existing spec in `openspec/specs/` covers community/group feeds; those changes are
   pre-archive and their behavior is only extended, not contradicted)
 
 ### Cross-change References
-- `save-for-later` — owns save *mechanics* for entityType `post` (mock save contract
-  `{ entityType: "post", entityId, isFavorite }`, persistence, `/saved` page). This change only
-  places the 🔖 button in the bar and binds it to that contract.
-- `subject-workspace-ia` — renames the subject workspace community tab to **Thảo luận**; this
-  change covers the posts rendered in that tab's feed with the same engagement bar.
+- `save-for-later` — owns save *mechanics* for entityType `post`/`article` (mock save contract
+  `{ entityType, entityId, isFavorite }`, persistence, `/saved` page). This change only places the
+  🔖 button in the bar and binds it to that contract, **and owns the placement decision that
+  discussion threads carry no 🔖 button (never saveable)**. A small cross-reference note is added to
+  that change's spec so it does not claim discussion items are saveable.
+- `subject-workspace-ia` — renames the subject workspace community tab to **Thảo luận**; per the
+  matrix this change treats that tab as a **discussion** surface (like + comment only, no
+  save/share).
 
 ## Impact
 
-- **Components**: `src/components/features/community/CommunityFeed/`,
+- **Components** (posts + articles = full bar): `src/components/features/community/CommunityFeed/`,
   `src/components/features/community/CommunityPostDetail/`,
-  `src/components/features/group/GroupFeed/`, the subject workspace Thảo luận tab feed component;
-  new `src/components/reuseable/PostEngagementBar/` and new
+  `src/components/features/group/GroupFeed/`, and the blog/article surface (`/blog/[slug]`, backed by
+  `query-blog-post(s)` — types exist under `modules/api/graphql/queries/types/blog.ts`; UI is scoped
+  here as long-form article rendering).
+  **Discussion = like + comment only**: `src/components/features/group/GroupDiscussion/` and
+  `src/components/features/subject/SubjectCommunity/` (the `/subjects/[id]/discussion` "Thảo luận"
+  tab). New `src/components/reuseable/PostEngagementBar/` (with the `actions` config prop) and new
   `src/components/reuseable/PostCommentThread/` (the inline expandable comment region: list +
   composer, shared with the post detail page).
 - **Hooks**: `useQueryCommunityFeedSwr`, `useQueryPostDetailSwr`, `useQueryGroupFeedSwr`, the

@@ -30,14 +30,21 @@
 
 ## 2. PostEngagementBar block (Threads style)
 
+- [ ] 2.0 Add the `actions` config prop + presets to `PostEngagementBar`:
+      `actions?: { like?; comment?; share?; save? }` (each flag defaults to `true`); export
+      `POST_ENGAGEMENT_ACTIONS` (all four) and `DISCUSSION_ENGAGEMENT_ACTIONS` (`{ like, comment }`)
+      presets. Share/save buttons render ONLY when their flag is true (absent, not disabled, when
+      false); when both are false the share-URL / save-hook wiring is skipped. Matches the
+      per-surface matrix in `design.md` Decision 0
 - [ ] 2.1 Create `src/components/reuseable/PostEngagementBar/index.tsx` — ONE row in exact order
       `♥ like-count · 💬 comment-count · 🔁 share · 🔖 save`: thin icon buttons, NO borders/
       background fills, counts inline next to icons; like button (`aria-pressed`, localized
       `aria-label`, **filled red heart** when liked / outline otherwise, compact count), comment
       **disclosure button** (count; feeds: `commentsExpanded` + `onToggleComments` with
       `aria-expanded` + `aria-controls={post-comments-${postId}}` — NO `commentHref`, 💬 never
-      navigates; detail: `onCommentClick` focuses the composer), share menu trigger, save button —
-      all buttons `preventDefault` + `stopPropagation`
+      navigates; detail: `onCommentClick` focuses the composer), share menu trigger (gated on
+      `actions.share`), save button (gated on `actions.save`) — all buttons `preventDefault` +
+      `stopPropagation`
 - [ ] 2.1b Create `src/components/reuseable/PostCommentThread/index.tsx` — the inline expandable
       comment region (id `post-comments-${postId}`, `tabIndex={-1}` + localized accessible name,
       focus moved into it on expand): comment list with flat one-level replies + the composer;
@@ -92,34 +99,50 @@
       `PostCommentThread` below the card, backed by the mock `useQueryGroupPostCommentsSwr`
       (lazy on first expand, skeleton + inline retry, independent per post)
 
-## 6. Workspace Thảo luận feed wiring
+## 6. Discussion surfaces wiring (like + comment ONLY)
 
-- [ ] 6.1 Render `PostEngagementBar` under each post in the subject workspace Thảo luận tab feed
-      (tab renamed by `subject-workspace-ia`) — same wiring as community feed rows, including the
-      inline 💬 expansion (`PostCommentThread`, lazy fetch via the post-detail cache, per-postId
-      expansion set); mutate that feed's own SWR cache with the same snapshot/rollback pattern;
-      no workspace-specific variant
+- [ ] 6.1 Render `PostEngagementBar` with `actions={DISCUSSION_ENGAGEMENT_ACTIONS}` in the subject
+      workspace "Thảo luận" tab (`SubjectCommunity`, `/subjects/[id]/discussion`, renamed by
+      `subject-workspace-ia`): like toggle + inline 💬 expansion (`PostCommentThread`, lazy fetch,
+      per-postId expansion set) only; NO share, NO save; mutate that feed's own SWR cache with the
+      snapshot/rollback pattern. Replace the read-only reactions chip
+- [ ] 6.2 Render `PostEngagementBar` with `actions={DISCUSSION_ENGAGEMENT_ACTIONS}` in
+      `GroupDiscussion` thread rows: like toggle + inline 💬 comment expansion only; NO share, NO
+      save; mock like/comment source (`// ponytail: mock BE` — no discussion contract). Replace the
+      reply-count chip with the like/comment controls
+- [ ] 6.3 Assert (manual/type) that discussion surfaces never mount the share or save button and
+      require no post URL / save contract
 
-## 7. i18n + polish
+## 7. Article / blog wiring (FULL bar)
 
-- [ ] 7.1 Add `communityHub.engagement.*` messages (vi + en): like, unlike, comment,
+- [ ] 7.0 Render `PostEngagementBar` (default full `actions`) on the `/blog/[slug]` article surface
+      (backed by `query-blog-post`): like + inline 💬 comment + share + save; save uses the
+      save-for-later contract with entityType `article`; `// ponytail: mock BE` for any missing
+      article-reaction/comment contract
+
+## 8. i18n + polish
+
+- [ ] 8.1 Add `communityHub.engagement.*` messages (vi + en): like, unlike, comment,
       commentPlaceholder, commentSend, reply, replyingTo, cancelReply, share, copyLink, linkCopied,
       shareVia, save, saved, likeFailed, commentFailed, justNow, you, collapse ("Thu gọn" /
       "Collapse"), commentsRegion (accessible name of the expanded region), commentsLoadFailed,
       retry (no reshare keys — repost deferred)
-- [ ] 7.2 Sweep components for hardcoded strings; confirm all toasts use the toast module hooks
-- [ ] 7.3 A11y pass: `aria-pressed` on like AND save, `aria-label` on comment/share icon buttons,
+- [ ] 8.2 Sweep components for hardcoded strings; confirm all toasts use the toast module hooks
+- [ ] 8.3 A11y pass: `aria-pressed` on like AND save, `aria-label` on comment/share icon buttons,
       💬 disclosure semantics (`aria-expanded` + `aria-controls`, focus moves into the expanded
-      region on expand), share menu Escape/arrow-key behavior
+      region on expand), share menu Escape/arrow-key behavior; verify discussion surfaces expose
+      only like + comment in the focus order (no share/save)
 
-## 8. Verify
+## 9. Verify
 
-- [ ] 8.1 Manual sanity in `npm run dev`: like toggle on feed/detail/group/Thảo luận feed, save
-      toggle (filled bookmark + appears on `/saved`), guest → auth modal (like/comment/save; guest
-      CAN expand and read), comment + reply submit/empty/error, sticky composer on mobile width
-      (detail + focused expanded-post composer), 💬 inline expansion on all three feeds (push-down
-      below the post, no route change, scroll preserved, collapse via 💬/"Thu gọn", skeleton on
-      first expand, inline error + retry, cached re-expand, two posts expanded at once, title still
-      navigates), no repost item in share menu, copy-link toast, count formatting at ≥1000
-- [ ] 8.2 `npm run build` (webpack) green
-- [ ] 8.3 `tsc --noEmit` clean
+- [ ] 9.1 Manual sanity in `npm run dev`: like toggle on feed/detail/group/Thảo luận/discussion/
+      article, save toggle on posts + articles (filled bookmark + appears on `/saved`), **confirm
+      discussion surfaces (GroupDiscussion + "Thảo luận") show NO save/share button**, guest → auth
+      modal (like/comment/save; guest CAN expand and read), comment + reply submit/empty/error,
+      sticky composer on mobile width (detail + focused expanded-post composer), 💬 inline expansion
+      on all feeds (push-down below the post, no route change, scroll preserved, collapse via
+      💬/"Thu gọn", skeleton on first expand, inline error + retry, cached re-expand, two posts
+      expanded at once, title still navigates), no repost item in share menu, copy-link toast, count
+      formatting at ≥1000
+- [ ] 9.2 `npm run build` (webpack) green — build orchestrator-verified
+- [ ] 9.3 `npx tsc --noEmit` clean

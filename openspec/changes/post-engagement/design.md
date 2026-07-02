@@ -13,10 +13,18 @@
   helpers for local confirmations), zustand overlay store (`useAuthenticationOverlayState` opens
   `AuthenticationModal`), redux `keycloak` slice holds `accessToken` (truthy ⇒ signed in),
   reuseable blocks live in `src/components/reuseable/`.
+- Surface inventory (confirmed by exploration): **posts** — `CommunityFeed`, `CommunityPostDetail`,
+  `GroupFeed`; **articles** — the `/blog/[slug]` long-form surface (query types exist under
+  `modules/api/graphql/queries/types/blog.ts` / `query-blog-post(s).ts`; no rendered UI component
+  yet, so this change scopes it as long-form article rendering); **discussion** —
+  `GroupDiscussion` (thread list) and `SubjectCommunity` (the `/subjects/[id]/discussion` "Thảo
+  luận" tab). Today none carry engagement controls (`SubjectCommunity` shows a read-only reactions
+  chip; `GroupDiscussion` a reply-count chip).
 - Related changes: `save-for-later` ships the save toggle mechanics (mock save contract
-  `{ entityType, entityId, isFavorite }`, extended with entityType `post`) and the `/saved` page;
-  `subject-workspace-ia` renames the subject workspace community tab to **Thảo luận** — the posts
-  in that tab's feed are a fourth engagement surface.
+  `{ entityType, entityId, isFavorite }`, extended with entityType `post`/`article`) and the
+  `/saved` page; per the matrix (Decision 0) only posts + articles expose 🔖, so discussion items
+  are never saved; `subject-workspace-ia` renames the subject workspace community tab to **Thảo
+  luận** — treated here as a **discussion** surface (like + comment only).
 - Product owner decision (approved): "Các mục comment, like, lưu xem sau hãy làm như bên Threads"
   — Threads-style interactions across all post surfaces.
 - Product owner decision (approved 2026-07-02): "Bấm vô xem comment là đẩy xuống chứ không nhảy
@@ -26,9 +34,11 @@
 ## Goals / Non-Goals
 
 **Goals:**
-- One shared Threads-style engagement bar (`PostEngagementBar`) powering community feed rows, post
-  detail, group feed posts, and the workspace Thảo luận feed — `♥ like · 💬 comment · 🔁 share ·
-  🔖 save` in a single thin row directly under the post content.
+- One shared Threads-style engagement bar (`PostEngagementBar`) powering EVERY post-like surface —
+  community feed rows, post detail, group feed posts, articles/blog, group discussion threads, and
+  the subject "Thảo luận" tab — `♥ like · 💬 comment · 🔁 share · 🔖 save` in a single thin row
+  directly under the content, with an `actions` config prop selecting which buttons render per the
+  per-surface engagement matrix (see Decision 0).
 - Optimistic SWR-cache mutation with snapshot rollback; guest gating via `AuthenticationModal`;
   toasts for share confirmation and mutation errors; compact count formatting; vi/en i18n; a11y.
 - **Inline push-down comment expansion in every feed**: tapping 💬 expands the thread (list +
@@ -53,19 +63,49 @@
 
 ## Decisions
 
+0. **Per-surface engagement matrix + bar `actions` config prop** (product owner 2026-07-02: "Tùy
+   từng mục có cần lưu xem sau và share không — ví dụ discussion thì không cần lưu xem sau và
+   share"). Not every surface renders every action. `PostEngagementBar` takes an
+   `actions?: { like?: boolean; comment?: boolean; share?: boolean; save?: boolean }` prop; **each
+   flag defaults to `true`** (so a bare bar renders the full set), and a surface hides an action by
+   passing `false` — the button is **not rendered at all** (absent, not disabled). Callers pass a
+   named preset rather than raw booleans: `POST_ENGAGEMENT_ACTIONS` (all four) and
+   `DISCUSSION_ENGAGEMENT_ACTIONS` (`{ like, comment }` only). The canonical matrix:
+
+   | Surface | Kind | ♥ Like | 💬 Comment | 🔁 Share | 🔖 Save |
+   | --- | --- | :---: | :---: | :---: | :---: |
+   | Community feed (`CommunityFeed`) | post | ✅ | ✅ | ✅ | ✅ |
+   | Community post detail (`CommunityPostDetail`) | post | ✅ | ✅ | ✅ | ✅ |
+   | Group feed (`GroupFeed`) | post | ✅ | ✅ | ✅ | ✅ |
+   | Article / blog (`/blog/[slug]`) | article | ✅ | ✅ | ✅ | ✅ |
+   | Group discussion (`GroupDiscussion`) | discussion | ✅ | ✅ | ❌ | ❌ |
+   | Subject "Thảo luận" tab (`SubjectCommunity`, `/subjects/[id]/discussion`) | discussion | ✅ | ✅ | ❌ | ❌ |
+
+   **Posts + articles get the FULL bar** (like + comment + share + save). **Discussion surfaces get
+   like + comment ONLY** — no 🔖 save, no 🔁 share. Rationale: discussion threads are ephemeral
+   conversation, not shareable/bookmarkable long-form content; saving/sharing a thread is noise. The
+   save (🔖) button's placement is thereby owned here (never on discussion); the `save-for-later`
+   change owns save *mechanics* and carries a cross-reference note that discussion items are not
+   saveable. Alternative — one always-full bar with per-surface CSS-hiding — rejected: hidden-but-
+   present buttons still take DOM/focus order and leak into a11y traversal; the matrix must be a
+   real render decision, not styling.
+
 1. **New reuseable block `src/components/reuseable/PostEngagementBar/` — Threads visual language.**
    ONE single row directly under the post content, in this exact order:
    `♥ like-count · 💬 comment-count · 🔁 share · 🔖 save`. Thin icon buttons, **no borders, no
    background fills** (ghost buttons), counts rendered inline right next to their icon (like and
    comment only — share/save carry no counts). Active states: **filled red heart** when liked,
    **filled bookmark** when saved; inactive = outline icons in the muted foreground color.
-   Props: `likes`, `liked`, `commentsCount`, `postUrl`, `postId`, `onToggleLike`, plus the comment
+   Props: `actions?` (the matrix config from Decision 0 — share/save render only when their flag is
+   true), `likes`, `liked`, `commentsCount`, `postUrl`, `postId`, `onToggleLike`, plus the comment
    disclosure contract: `commentsExpanded: boolean` + `onToggleComments()` on feed surfaces (the 💬
    button is a **disclosure button** — `aria-expanded={commentsExpanded}`, `aria-controls` pointing
    at the expanded region's id) and `onCommentClick?` on the post detail (comments are already
    visible there — 💬 focuses the composer). The former `commentHref` link variant is **dropped**:
-   💬 never navigates (2026-07-02 decision). Alternative — inline per component — rejected: four
-   surfaces would drift (that is exactly today's bug).
+   💬 never navigates (2026-07-02 decision). Alternative — inline per component — rejected: six
+   surfaces would drift (that is exactly today's bug). When `actions.share`/`actions.save` is false
+   the share-URL / save-hook wiring is skipped entirely so discussion surfaces need no post URL or
+   save contract.
 2. **Feed row nesting**: `CommunityFeed` rows stay a `<Link>` (the title/row click still navigates
    to the detail, unchanged); the bar's buttons call `event.preventDefault()` +
    `event.stopPropagation()` so like/comment/share/save never navigate. The **expanded comment

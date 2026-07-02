@@ -1,9 +1,12 @@
 "use client"
 
-import React, { useRef, useState } from "react"
-import { Button, Typography } from "@heroui/react"
+import React, { useEffect, useRef, useState } from "react"
+import { Button, Spinner, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
+import { useSearchParams } from "next/navigation"
 import { CheckCircleIcon } from "@phosphor-icons/react"
+import { useOtpVerify } from "@/hooks/auth"
+import { useResendCooldown } from "@/hooks/reuseables/useResendCooldown"
 
 const OTP_LENGTH = 6
 
@@ -12,16 +15,26 @@ const BOX_CLASS =
     "size-12 rounded-large border border-separator bg-transparent text-center text-lg text-foreground outline-none focus:border-accent"
 
 /**
- * OtpVerifyForm (§1 Identity) — FE MOCK. Centered auth card: 6 single-char OTP
- * boxes (auto-advance + backspace), Verify enabled only when all 6 filled, and a
- * mock "resend code" link. Submit is a no-op that flips to a local success state.
- * No real auth / Keycloak / fetch. ponytail: local state + refs.
+ * OtpVerifyForm (§1 Identity, spec `auth-otp-verification`). Centered auth card:
+ * 6 single-char OTP boxes (auto-advance + backspace), for the email OR phone
+ * channel (`?channel=phone`), with expiry messaging and resend-with-cooldown.
+ * Verification runs through the mock {@link useOtpVerify} service.
+ * ponytail: mock BE — any 6-digit code verifies.
  */
 export const OtpVerifyForm = () => {
     const t = useTranslations("authFlows")
+    const searchParams = useSearchParams()
+    const isPhoneChannel = searchParams.get("channel") === "phone"
     const [digits, setDigits] = useState<string[]>(() => Array(OTP_LENGTH).fill(""))
     const [done, setDone] = useState(false)
     const inputsRef = useRef<Array<HTMLInputElement | null>>([])
+    const { verify, resend, isVerifying, isResending } = useOtpVerify()
+    const { remaining, isCoolingDown, start } = useResendCooldown()
+
+    // a code was just dispatched when the user landed here — gate the first resend too
+    useEffect(() => {
+        start()
+    }, [start])
 
     const filled = digits.every((digit) => digit !== "")
 
@@ -43,23 +56,37 @@ export const OtpVerifyForm = () => {
         }
     }
 
-    const onSubmit = (event: React.FormEvent) => {
+    const onSubmit = async (event: React.FormEvent) => {
         event.preventDefault()
         if (!filled) {
             return
         }
-        // MOCK: no verification — show success.
-        setDone(true)
+        const ok = await verify(digits.join(""))
+        if (ok) {
+            setDone(true)
+        }
+    }
+
+    const onResend = async () => {
+        if (isCoolingDown || isResending) {
+            return
+        }
+        await resend()
+        setDigits(Array(OTP_LENGTH).fill(""))
+        start()
     }
 
     return (
         <div className="mx-auto flex w-full max-w-md flex-col gap-6 rounded-large border border-separator p-6">
             <div className="flex flex-col gap-1">
                 <Typography type="h4" weight="bold">
-                    {t("otp.title")}
+                    {isPhoneChannel ? t("otp.titlePhone") : t("otp.title")}
                 </Typography>
                 <Typography type="body-sm" color="muted">
-                    {t("otp.subtitle")}
+                    {isPhoneChannel ? t("otp.subtitlePhone") : t("otp.subtitle")}
+                </Typography>
+                <Typography type="body-xs" color="muted">
+                    {t("otp.expiryHint")}
                 </Typography>
             </div>
 
@@ -71,7 +98,7 @@ export const OtpVerifyForm = () => {
                     </Typography>
                 </div>
             ) : (
-                <form className="flex flex-col gap-4" onSubmit={onSubmit} noValidate>
+                <form className="flex flex-col gap-4" onSubmit={(event) => void onSubmit(event)} noValidate>
                     <div className="flex justify-between gap-2" role="group" aria-label={t("otp.title")}>
                         {digits.map((digit, index) => (
                             <input
@@ -91,19 +118,31 @@ export const OtpVerifyForm = () => {
                         ))}
                     </div>
 
-                    <Button type="submit" variant="primary" className="w-full" isDisabled={!filled}>
-                        {t("otp.verify")}
+                    <Button
+                        type="submit"
+                        variant="primary"
+                        className="w-full"
+                        isDisabled={!filled || isVerifying}
+                        isPending={isVerifying}
+                    >
+                        {({ isPending }) => (
+                            <>
+                                {isPending ? <Spinner color="current" size="sm" /> : null}
+                                {t("otp.verify")}
+                            </>
+                        )}
                     </Button>
 
                     <button
                         type="button"
-                        onClick={() => {
-                            // MOCK: no code dispatched.
-                        }}
-                        className="text-center text-accent hover:underline"
+                        onClick={() => void onResend()}
+                        disabled={isCoolingDown || isResending}
+                        className="text-center text-accent enabled:hover:underline disabled:text-muted"
                     >
-                        <Typography type="body-sm" className="text-accent">
-                            {t("otp.resend")}
+                        <Typography type="body-sm" className="text-inherit">
+                            {isCoolingDown
+                                ? t("otp.resendCooldown", { seconds: remaining })
+                                : t("otp.resend")}
                         </Typography>
                     </button>
                 </form>

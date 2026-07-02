@@ -6,6 +6,8 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
 export enum SignInState {
     Credentials = "credentials",
     OTP = "otp",
+    /** TOTP challenge after OTP verify, shown only when the account has 2FA enabled. */
+    TwoFactor = "twoFactor",
 }
 
 /**

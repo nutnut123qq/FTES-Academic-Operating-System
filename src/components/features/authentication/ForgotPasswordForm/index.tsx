@@ -1,10 +1,13 @@
 "use client"
 
 import React, { useState } from "react"
-import { Button, Typography } from "@heroui/react"
+import { Button, Spinner, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { EnvelopeSimpleIcon } from "@phosphor-icons/react"
 import { Link } from "@/i18n/navigation"
+import { usePasswordRecovery } from "@/hooks/auth"
+import { Turnstile } from "@/components/reuseable/Turnstile"
+import { publicEnv } from "@/resources/env/public"
 
 /** House text-input class — plain `<input>`, tokens only (see canon). */
 const INPUT_CLASS =
@@ -14,24 +17,30 @@ const INPUT_CLASS =
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 /**
- * ForgotPasswordForm (§1 Identity) — FE MOCK. Centered auth card: email +
- * "send reset link". On valid submit swaps to a neutral "check your email"
- * confirmation state. No real auth / Keycloak / fetch. ponytail: local state.
+ * ForgotPasswordForm (§1 Identity, spec `auth-password-recovery`). Centered auth
+ * card: email + captcha gate + "send reset link". On valid submit the mock
+ * recovery service runs and the card swaps to a neutral "check your email"
+ * confirmation (no account enumeration). ponytail: mock BE via usePasswordRecovery.
  */
 export const ForgotPasswordForm = () => {
     const t = useTranslations("authFlows")
     const [email, setEmail] = useState("")
     const [error, setError] = useState<string | null>(null)
     const [sent, setSent] = useState(false)
+    const [captchaToken, setCaptchaToken] = useState<string | undefined>(undefined)
+    const { requestReset, isRequesting } = usePasswordRecovery()
 
-    const onSubmit = (event: React.FormEvent) => {
+    const isSubmitDisabled = (publicEnv().captcha.enabled && !captchaToken) || isRequesting
+
+    const onSubmit = async (event: React.FormEvent) => {
         event.preventDefault()
         if (!EMAIL_RE.test(email)) {
             setError(t("forgot.invalidEmail"))
             return
         }
-        // MOCK: no reset dispatch — show neutral confirmation.
         setError(null)
+        await requestReset(email)
+        // neutral confirmation regardless of whether the account exists
         setSent(true)
     }
 
@@ -54,7 +63,7 @@ export const ForgotPasswordForm = () => {
                     </Typography>
                 </div>
             ) : (
-                <form className="flex flex-col gap-4" onSubmit={onSubmit} noValidate>
+                <form className="flex flex-col gap-4" onSubmit={(event) => void onSubmit(event)} noValidate>
                     <div className="flex flex-col gap-1.5">
                         <label htmlFor="forgot-email">
                             <Typography type="body-sm" weight="medium">
@@ -77,8 +86,27 @@ export const ForgotPasswordForm = () => {
                         </Typography>
                     ) : null}
 
-                    <Button type="submit" variant="primary" className="w-full">
-                        {t("forgot.submit")}
+                    {publicEnv().captcha.enabled && (
+                        <Turnstile
+                            onVerify={(token) => setCaptchaToken(token)}
+                            onExpire={() => setCaptchaToken(undefined)}
+                            onError={() => setCaptchaToken(undefined)}
+                        />
+                    )}
+
+                    <Button
+                        type="submit"
+                        variant="primary"
+                        className="w-full"
+                        isDisabled={isSubmitDisabled}
+                        isPending={isRequesting}
+                    >
+                        {({ isPending }) => (
+                            <>
+                                {isPending ? <Spinner color="current" size="sm" /> : null}
+                                {t("forgot.submit")}
+                            </>
+                        )}
                     </Button>
                 </form>
             )}

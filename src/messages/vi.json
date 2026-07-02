@@ -2003,6 +2003,10 @@
     },
     "auth": {
         "sessionSuperseded": "Phiên đăng nhập đã hết hạn do tài khoản được đăng nhập ở thiết bị khác.",
+        "otp": {
+            "expiryHint": "Mã có hiệu lực trong 5 phút.",
+            "resendCooldown": "Gửi lại sau {seconds}s"
+        },
         "signIn": {
             "google": "Đăng nhập với Google",
             "github": "Đăng nhập với GitHub",
@@ -2041,6 +2045,12 @@
                 "sent": "Gửi mã OTP thành công",
                 "resend": "Không nhận được email?",
                 "resendLink": "Gửi lại mã",
+                "submit": "Xác nhận"
+            },
+            "twoFactor": {
+                "title": "Xác thực hai lớp",
+                "desc": "Nhập mã 6 số từ ứng dụng xác thực của bạn.",
+                "invalid": "Mã phải gồm 6 chữ số",
                 "submit": "Xác nhận"
             }
         },
@@ -2639,13 +2649,20 @@
             "submit": "Đặt lại mật khẩu",
             "success": "Mật khẩu của bạn đã được đặt lại.",
             "passwordMismatch": "Mật khẩu không khớp.",
+            "passwordMinLength": "Mật khẩu phải có ít nhất 8 ký tự.",
+            "missingToken": "Liên kết đặt lại không hợp lệ hoặc đã hết hạn. Hãy yêu cầu liên kết mới.",
+            "requestNewLink": "Yêu cầu liên kết mới",
             "backToLogin": "Quay lại đăng nhập"
         },
         "otp": {
             "title": "Xác minh email",
+            "titlePhone": "Xác minh số điện thoại",
             "subtitle": "Nhập mã gồm 6 chữ số chúng tôi đã gửi cho bạn.",
+            "subtitlePhone": "Nhập mã gồm 6 chữ số đã gửi tới điện thoại của bạn.",
+            "expiryHint": "Mã có hiệu lực trong 5 phút.",
             "verify": "Xác minh",
             "resend": "Gửi lại mã",
+            "resendCooldown": "Gửi lại sau {seconds}s",
             "success": "Mã của bạn đã được xác minh.",
             "digitLabel": "Chữ số {index}"
         },
@@ -2653,6 +2670,9 @@
             "title": "Thiết lập xác thực hai lớp",
             "subtitle": "Thêm một lớp bảo mật cho tài khoản của bạn.",
             "scanHint": "Quét mã QR này bằng ứng dụng xác thực của bạn.",
+            "secretLabel": "Hoặc nhập mã này thủ công vào ứng dụng xác thực",
+            "copySecret": "Sao chép mã bí mật",
+            "copied": "Đã sao chép mã bí mật",
             "confirmCode": "Nhập mã 6 chữ số từ ứng dụng của bạn",
             "enable": "Bật 2FA",
             "success": "Xác thực hai lớp đã được bật."

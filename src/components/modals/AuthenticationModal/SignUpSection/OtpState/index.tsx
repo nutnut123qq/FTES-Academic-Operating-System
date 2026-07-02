@@ -5,10 +5,11 @@
  *
  * Submit runs `signUpVerifyOtp` via {@link useSignUpForm} while `signUpState === Otp`.
  */
-import React from "react"
+import React, { useEffect } from "react"
 import { Button, cn, FieldError, InputOTP, Link, Modal, Spinner, TextField } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { useMutateSignUpResendOtpSwr } from "@/hooks/swr/api/graphql/mutations/useMutateSignUpResendOtpSwr"
+import { useResendCooldown } from "@/hooks/reuseables/useResendCooldown"
 import { useSignUpForm } from "@/hooks/zustand/signUp/useSignUpForm"
 import { useGraphQLWithToast } from "@/modules/toast/hooks"
 
@@ -30,12 +31,18 @@ export const OtpState = () => {
         isValid,
     } = useSignUpForm()
 
+    const { remaining, isCoolingDown, start } = useResendCooldown()
+    // a code was just dispatched by signUpInit — gate the first resend too
+    useEffect(() => {
+        start()
+    }, [start])
+
     const onResend = async () => {
         const challengeId = values.challengeId
         if (!challengeId) {
             return
         }
-        await runGraphQL(
+        const ok = await runGraphQL(
             async () => {
                 const apolloResult = await mutateSignUpResendOtp({
                     request: {
@@ -57,6 +64,9 @@ export const OtpState = () => {
                 showSuccessToast: true,
             }
         )
+        if (ok) {
+            start()
+        }
     }
 
     return (
@@ -79,6 +89,7 @@ export const OtpState = () => {
                         )
                     }
                 </div>
+                <div className="text-xs text-muted text-center">{t("auth.otp.expiryHint")}</div>
                 <div className="h-3" />
                 <TextField variant="secondary" isInvalid={!!(touched.otp && errors.otp)}>
                     <InputOTP
@@ -108,14 +119,16 @@ export const OtpState = () => {
                 <div className="flex flex-wrap items-center justify-center gap-1.5 text-center">
                     <span className="text-xs text-muted">{t("auth.signUp.otp.resend")}</span>
                     <Link
-                        className={cn("text-xs text-accent", isResending ? "text-muted" : "")}
-                        data-disabled={isResending ? true : undefined}
+                        className={cn("text-xs text-accent", (isResending || isCoolingDown) ? "text-muted" : "")}
+                        data-disabled={(isResending || isCoolingDown) ? true : undefined}
                         onPress={() => {
-                            if (isResending) return
-                            onResend()
+                            if (isResending || isCoolingDown) return
+                            void onResend()
                         }}
                     >
-                        {t("auth.signUp.otp.resendLink")}
+                        {isCoolingDown
+                            ? t("auth.otp.resendCooldown", { seconds: remaining })
+                            : t("auth.signUp.otp.resendLink")}
                     </Link>
                 </div>
                 <div className="h-3" />

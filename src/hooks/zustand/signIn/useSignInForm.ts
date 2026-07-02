@@ -10,6 +10,8 @@ import { useMutateSignInInitSwr } from "@/hooks/swr/api/graphql/mutations/useMut
 import { useMutateSignInVerifyOtpSwr } from "@/hooks/swr/api/graphql/mutations/useMutateSignInVerifyOtpSwr"
 import { useQueryCheckEmailExistsSwr } from "@/hooks/swr/api/graphql/queries/useQueryCheckEmailExistsSwr"
 import { useGraphQLWithToast } from "@/modules/toast/hooks"
+import { LocalStorage } from "@/modules/storage/local/storage"
+import { LocalStorageId } from "@/modules/storage/local/enums/id"
 import { useAppDispatch, useAppSelector } from "@/redux/hooks"
 import { resetSignInState, setSignInState, SignInState } from "@/redux/slices/state"
 
@@ -143,13 +145,20 @@ export const useSignInForm = () => {
             if (!ok) {
                 return
             }
+            // persist the remember-me preference once sign-in succeeds (spec auth-session-preferences)
+            LocalStorage.setItem(LocalStorageId.AuthRememberMe, rememberMe)
+            // ponytail: 2FA gate is FE-mock — flag lives in local storage until the BE contract exists
+            if (LocalStorage.getItem<boolean>(LocalStorageId.AuthTwoFactorEnabled)) {
+                dispatch(setSignInState(SignInState.TwoFactor))
+                return
+            }
             reset()
             dispatch(resetSignInState())
             onAuthenticationClose()
         } finally {
             setIsSubmitting(false)
         }
-    }, [signInState, email, password, challengeId, otp, captchaToken, mutateSignInInit, mutateSignInVerifyOtp, setValue, dispatch, reset, onAuthenticationClose, setIsSubmitting, runGraphQL])
+    }, [signInState, email, password, challengeId, otp, captchaToken, rememberMe, mutateSignInInit, mutateSignInVerifyOtp, setValue, dispatch, reset, onAuthenticationClose, setIsSubmitting, runGraphQL])
 
     // Debounced bloom-filter email-exists check (same as the old formik core).
     useEffect(() => {

@@ -20,18 +20,21 @@ export interface RememberMeRowProps extends WithClassNames<undefined> {
     isSelected: boolean
     /** Fired with the new checked state. */
     onChangeSelected: (selected: boolean) => void
+    /** Fired when the "forgot password" link is pressed. */
+    onForgotPassword?: () => void
 }
 
 /**
  * "Remember me" checkbox paired with the "forgot password" link.
  *
  * Presentational: checked state is driven by props; the forgot-password link
- * is display-only (no handler in the original). No business logic.
- * @param props - selected state and the change callback
+ * fires the optional callback. No business logic.
+ * @param props - selected state, the change callback and the forgot-password action
  */
 export const RememberMeRow = ({
     isSelected,
     onChangeSelected,
+    onForgotPassword,
     className,
 }: RememberMeRowProps) => {
     const t = useTranslations()
@@ -54,7 +57,10 @@ export const RememberMeRow = ({
                     </Label>
                 </Checkbox.Content>
             </Checkbox>
-            <Link className="text-xs cursor-pointer hover:opacity-80">
+            <Link
+                className="text-xs cursor-pointer hover:opacity-80"
+                onPress={onForgotPassword}
+            >
                 {t("auth.signIn.forgotPassword")}
             </Link>
         </div>

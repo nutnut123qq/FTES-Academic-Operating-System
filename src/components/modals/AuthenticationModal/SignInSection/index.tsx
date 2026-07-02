@@ -31,11 +31,12 @@
 import React from "react"
 import { CredentialsState } from "./CredentialsState"
 import { OtpState } from "./OtpState"
+import { TwoFactorState } from "./TwoFactorState"
 import { useAppSelector } from "@/redux/hooks"
 import { SignInState } from "@/redux/slices/state"
 
 /**
- * Renders the sign-in flow step (`Credentials` or `OTP`) based on `signInState`.
+ * Renders the sign-in flow step (`Credentials`, `OTP` or `TwoFactor`) based on `signInState`.
  */
 export const SignInSection = () => {
     const signInState = useAppSelector((state) => state.state.signInState)
@@ -45,6 +46,8 @@ export const SignInSection = () => {
             return <CredentialsState />
         case SignInState.OTP:
             return <OtpState />
+        case SignInState.TwoFactor:
+            return <TwoFactorState />
         default:
             return null
         }

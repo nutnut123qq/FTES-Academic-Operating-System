@@ -1994,6 +1994,10 @@
     },
     "auth": {
         "sessionSuperseded": "Session has been superseded by a newer login on another device.",
+        "otp": {
+            "expiryHint": "The code is valid for 5 minutes.",
+            "resendCooldown": "Resend in {seconds}s"
+        },
         "signIn": {
             "google": "Sign In With Google",
             "github": "Sign In With GitHub",
@@ -2032,6 +2036,12 @@
                 "sent": "OTP sent successfully",
                 "resend": "Didn't get an email?",
                 "resendLink": "Resend code",
+                "submit": "Verify"
+            },
+            "twoFactor": {
+                "title": "Two-factor authentication",
+                "desc": "Enter the 6-digit code from your authenticator app.",
+                "invalid": "Code must be 6 digits",
                 "submit": "Verify"
             }
         },
@@ -2639,13 +2649,20 @@
             "submit": "Reset password",
             "success": "Your password has been reset.",
             "passwordMismatch": "Passwords do not match.",
+            "passwordMinLength": "Password must be at least 8 characters.",
+            "missingToken": "This reset link is invalid or has expired. Request a new one.",
+            "requestNewLink": "Request a new link",
             "backToLogin": "Back to sign in"
         },
         "otp": {
             "title": "Verify your email",
+            "titlePhone": "Verify your phone",
             "subtitle": "Enter the 6-digit code we sent you.",
+            "subtitlePhone": "Enter the 6-digit code we texted to your phone.",
+            "expiryHint": "The code is valid for 5 minutes.",
             "verify": "Verify",
             "resend": "Resend code",
+            "resendCooldown": "Resend in {seconds}s",
             "success": "Your code has been verified.",
             "digitLabel": "Digit {index}"
         },
@@ -2653,6 +2670,9 @@
             "title": "Set up two-factor authentication",
             "subtitle": "Add an extra layer of security to your account.",
             "scanHint": "Scan this QR code with your authenticator app.",
+            "secretLabel": "Or enter this code manually in your authenticator app",
+            "copySecret": "Copy secret",
+            "copied": "Secret copied to clipboard",
             "confirmCode": "Enter the 6-digit code from your app",
             "enable": "Enable 2FA",
             "success": "Two-factor authentication is now enabled."

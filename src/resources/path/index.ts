@@ -235,8 +235,17 @@ export const pathConfig = () => {
                     build, login, logout,
                 }
             }
+            const forgotPassword = () => {
+                const forgotPasswordPath = `${authenticationPath}/forgot-password`
+                const build = () => {
+                    return forgotPasswordPath
+                }
+                return {
+                    build,
+                }
+            }
             return {
-                build, google, github,
+                build, google, github, forgotPassword,
             }
         }
         const course = (displayId?: string) => {

@@ -11,6 +11,7 @@
  */
 import React, {
     useCallback,
+    useEffect,
     useMemo,
 } from "react"
 import {
@@ -19,7 +20,7 @@ import {
     Separator,
     Spinner,
 } from "@heroui/react"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
 import { OAUTH_BUTTON_ITEMS } from "./map"
 import { OauthButtons } from "./OauthButtons"
@@ -32,12 +33,16 @@ import { AuthenticationModalTab, setAuthenticationModalTab } from "@/redux/slice
 import { useSignInForm } from "@/hooks/zustand/signIn/useSignInForm"
 import { KeycloakIdentityProvider } from "@/modules/api/graphql/mutations/types/exchange-code-for-token"
 import { keycloakRedirect } from "@/modules/api/redirect/keycloak"
+import { LocalStorage } from "@/modules/storage/local/storage"
+import { LocalStorageId } from "@/modules/storage/local/enums/id"
 import { SessionStorage } from "@/modules/storage/session/storage"
 import { SessionStorageId } from "@/modules/storage/session/enums/id"
 import { type SessionStorageOauthIdpHint } from "@/modules/storage/session/types/oauth-idp-hint"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 import { Turnstile } from "@/components/reuseable/Turnstile"
 import { publicEnv } from "@/resources/env/public"
+import { pathConfig } from "@/resources/path"
+import { useAuthenticationOverlayState } from "@/hooks/zustand/overlay/hooks"
 
 /** Props for {@link CredentialsState}; no own props (singleton-driven). */
 export type CredentialsStateProps = WithClassNames<undefined>
@@ -59,6 +64,16 @@ export const CredentialsState = () => {
 
     const router = useRouter()
     const dispatch = useAppDispatch()
+    const locale = useLocale()
+    const { close: onAuthenticationClose } = useAuthenticationOverlayState()
+
+    // pre-check remember-me from the stored preference (spec auth-session-preferences)
+    useEffect(() => {
+        const stored = LocalStorage.getItem<boolean>(LocalStorageId.AuthRememberMe)
+        if (stored !== undefined) {
+            setFieldValue("rememberMe", stored)
+        }
+    }, [setFieldValue])
 
     /** Stable reference to the static OAuth button catalog. */
     const oauthButtons = useMemo(
@@ -154,6 +169,19 @@ export const CredentialsState = () => {
         ],
     )
 
+    /** Close the modal and go to the full-page forgot-password flow. */
+    const onForgotPassword = useCallback(
+        () => {
+            onAuthenticationClose()
+            router.push(pathConfig().locale(locale).authentication().forgotPassword().build())
+        },
+        [
+            onAuthenticationClose,
+            router,
+            locale,
+        ],
+    )
+
     // pending mock auth also disables the submit — no double submit (spec: modal quality)
     const isSubmitDisabled = (publicEnv().captcha.enabled && !values.captchaToken) || isSubmitting
 
@@ -201,6 +229,7 @@ export const CredentialsState = () => {
                 <RememberMeRow
                     isSelected={values.rememberMe}
                     onChangeSelected={onChangeRememberMe}
+                    onForgotPassword={onForgotPassword}
                 />
 
                 {publicEnv().captcha.enabled && (

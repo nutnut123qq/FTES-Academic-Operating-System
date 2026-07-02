@@ -257,7 +257,13 @@
         "brand": "FTES AOS",
         "home": "Trang chủ",
         "courses": "Khóa học",
+        "resources": "Tài nguyên",
         "community": "Cộng đồng",
+        "groups": "Nhóm",
+        "section": {
+            "learn": "Học",
+            "community": "Cộng đồng"
+        },
         "practice": "Luyện Code",
         "contact": "Liên hệ",
         "logout": "Đăng xuất",

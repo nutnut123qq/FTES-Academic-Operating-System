@@ -41,6 +41,34 @@ Distilled from `starci-navigation.md` + `03-layout-archetypes.md`.
 
 ## Decisions (newest first)
 
+### 2026-07-02 — Global app shell = `CollapsibleSidebar` as PRIMARY nav (archetype A), gated per route
+- **Scenario:** app chrome was still the stripped skeleton — top bar with 3 center links (Home→`/home`
+  404 · Courses · Contact→`/contact` 404); Community/Groups/Resources/Profile were all built (200) but
+  unreachable → app looked empty. ROADMAP Phase 0 "App shell mới". User chose direction A (left sidebar +
+  top bar) over B (top dropdowns) / C (GitHub hybrid).
+- **Chose:** a feature `features/app-shell/AppSidebar` composing the house `CollapsibleSidebar` +
+  `SidebarNavGroup` + `SidebarNavItem` as the GLOBAL primary nav, mounted in `InnerLayout` beside content
+  (same sticky one-scroll rail as `SubjectWorkspaceShell`). Groups: (top, no label) Home · "Học" Courses·
+  Resources · "Cộng đồng" Community·Groups.
+- **WHY these rules held:**
+  - **Never ship a dead nav row.** Dropped **Subjects** (its `/subjects` list is 404 until Phase 1) and
+    **Admin** (needs RBAC role state). Nav only lists routes that return 200.
+  - **No 1-item group** ([[sidebar]] baseline) → **Profile stays in the account-menu dropdown**, not a
+    lone sidebar group. Home sits alone in the unlabelled top group (no divider → not a "crumb").
+  - **No double rail.** `InnerLayout` gates the sidebar OFF on landing/home (marketing+footer), auth,
+    learn, and subject-workspace detail (own left rail) — mirrors the existing `showFooter` regex style.
+  - **One nav source, not three.** The skeleton duplicated its item list across NavLinks + MobileNavbar +
+    Navbar drawer → drift + the 404s lived in all three. Extracted `features/app-shell/useAppNav` (groups:
+    key·label·icon·path·isActive) consumed by BOTH `AppSidebar` and the Navbar mobile drawer.
+- **Deleted dead** on the way (deletion over addition): `features/navbar/Navbar/{NavLinks,MobileNavbar,types}`
+  (NavLinks orphaned once the sidebar owned primary nav; MobileNavbar was already only self-referenced).
+  Also noticed `components/layouts/shell/Navbar/*` is a fully-dead duplicate tree — flagged, not deleted
+  (out of this change's scope).
+- **Files:** NEW `features/app-shell/{useAppNav.tsx,AppSidebar/index.tsx}`; edited `app/InnerLayout.tsx`
+  (gate + flex row), `features/navbar/Navbar/index.tsx` (drop NavLinks, drawer→useAppNav),
+  `resources/path/index.ts` (`groups`/`resources` builders), `messages/{en,vi}.json`
+  (`nav.{groups,resources,section.*}`). OpenSpec `app-shell-nav`. tsc/eslint/webpack-build all green.
+
 ### 2026-06-21 — Deleted the "StarCi AI" learn page entirely (meaningless)
 - **Scenario:** `/learn/starci-ai` was a nav row + full route, but the page only rendered the **AI
   balancer key-pool health** (per-provider `totalKeys/activeKeys/disabledKeys` from `aiBalancerHealth`) +

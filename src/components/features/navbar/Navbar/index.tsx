@@ -2,7 +2,6 @@
 
 import React, {
     useEffect,
-    useMemo,
     useState,
 } from "react"
 import {
@@ -16,19 +15,11 @@ import {
     MagnifyingGlassIcon as SearchIcon,
 } from "@phosphor-icons/react"
 import {
-    useLocale,
     useTranslations,
 } from "next-intl"
 import {
-    usePathname,
     useRouter,
 } from "@/i18n/navigation"
-import {
-    pathConfig,
-} from "@/resources/path"
-import type {
-    NavbarItem,
-} from "./types"
 import {
     Logo,
 } from "./Logo"
@@ -36,8 +27,8 @@ import {
     AccountMenuDropdown,
 } from "./AccountMenuDropdown"
 import {
-    NavLinks,
-} from "./NavLinks"
+    useAppNav,
+} from "@/components/features/app-shell/useAppNav"
 import {
     SearchButton,
 } from "./SearchButton"
@@ -71,11 +62,11 @@ export type NavbarProps = WithClassNames<undefined>
  */
 export const Navbar = ({ className }: NavbarProps) => {
     const t = useTranslations()
-    const locale = useLocale()
     const router = useRouter()
-    const pathname = usePathname()
     const { open: openSearch } = useSearchOverlayState()
     const [isDrawerOpen, setDrawerOpen] = useState(false)
+    // same primary-nav source the desktop AppSidebar renders — no drift
+    const navGroups = useAppNav()
     // optional second layer (e.g. profile tabs) a page registered into the navbar
     const bottomLayer = useNavbarBottomLayerStore((state) => state.bottomLayer)
 
@@ -93,35 +84,12 @@ export const Navbar = ({ className }: NavbarProps) => {
         return () => window.removeEventListener("keydown", onKeyDown)
     }, [openSearch])
 
-    // mobile drawer nav entries (same targets as the desktop NavLinks)
-    const mobileNavItems = useMemo<Array<NavbarItem>>(
-        () => [
-            {
-                label: t("nav.home"),
-                path: pathConfig().locale().home().build(),
-                isActive: pathname === "/" || pathname === pathConfig().locale().home().build(),
-            },
-            {
-                label: t("nav.courses"),
-                path: pathConfig().locale().course().build(),
-                isActive: pathname.startsWith(pathConfig().locale(locale).course().build()),
-            },
-            {
-                label: t("nav.contact"),
-                path: pathConfig().locale().contact().build(),
-                isActive: pathname.startsWith(pathConfig().locale(locale).contact().build()),
-            },
-        ],
-        [locale, pathname, t],
-    )
-
     return (
         <nav className={cn("sticky top-0 z-50 border-b border-separator bg-background", className)}>
             {/* primary row — fixed 4rem tall; the nav root owns the single bottom border */}
             <div className="flex h-16 min-h-16 w-full items-center justify-between gap-3 px-3">
                 <div className="flex items-center gap-6">
                     <Logo className="justify-start" />
-                    <NavLinks />
                 </div>
 
                 <div className="flex items-center justify-end gap-2">
@@ -172,22 +140,29 @@ export const Navbar = ({ className }: NavbarProps) => {
                                 <Drawer.Heading>{t("nav.mobileMenu")}</Drawer.Heading>
                             </Drawer.Header>
                             <Drawer.Body className="flex flex-col gap-6">
-                                <div className="flex flex-col gap-2">
-                                    {mobileNavItems.map((item) => (
-                                        <Button
-                                            key={item.path}
-                                            variant={item.isActive ? "secondary" : "ghost"}
-                                            fullWidth
-                                            className="justify-start"
-                                            onPress={() => {
-                                                router.push(item.path)
-                                                setDrawerOpen(false)
-                                            }}
-                                        >
-                                            {item.label}
-                                        </Button>
-                                    ))}
-                                </div>
+                                {navGroups.map((group) => (
+                                    <div key={group.key} className="flex flex-col gap-2">
+                                        {group.label ? (
+                                            <Typography type="body-sm" color="muted" className="px-1">
+                                                {group.label}
+                                            </Typography>
+                                        ) : null}
+                                        {group.items.map((item) => (
+                                            <Button
+                                                key={item.key}
+                                                variant={item.isActive ? "secondary" : "ghost"}
+                                                fullWidth
+                                                className="justify-start"
+                                                onPress={() => {
+                                                    router.push(item.path)
+                                                    setDrawerOpen(false)
+                                                }}
+                                            >
+                                                {item.label}
+                                            </Button>
+                                        ))}
+                                    </div>
+                                ))}
                                 {/* controls hidden from the mobile bar live here: language + theme */}
                                 <div className="flex flex-col gap-3">
                                     <div className="flex items-center justify-between gap-3">

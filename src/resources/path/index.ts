@@ -468,6 +468,26 @@ export const pathConfig = () => {
                 build,
             }
         }
+        const groups = () => {
+            // study groups / clubs / project teams index
+            const groupsPath = `${localePath}/groups`
+            const build = () => {
+                return groupsPath
+            }
+            return {
+                build,
+            }
+        }
+        const resources = () => {
+            // resource hub index (slides, PE/FE, books, source code, …)
+            const resourcesPath = `${localePath}/resources`
+            const build = () => {
+                return resourcesPath
+            }
+            return {
+                build,
+            }
+        }
         const practice = () => {
             const practicePath = `${localePath}/practice`
             const build = () => {
@@ -540,6 +560,8 @@ export const pathConfig = () => {
             talents,
             blog,
             community,
+            groups,
+            resources,
             rewards,
             league,
             kpi,

@@ -257,7 +257,13 @@
         "brand": "FTES AOS",
         "home": "Home",
         "courses": "Courses",
+        "resources": "Resources",
         "community": "Community",
+        "groups": "Groups",
+        "section": {
+            "learn": "Learn",
+            "community": "Community"
+        },
         "practice": "Practice",
         "contact": "Contact",
         "logout": "Logout",

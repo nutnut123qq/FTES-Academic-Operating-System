@@ -1,4 +1,5 @@
 export * from "./categories"
+export * from "./category-icons"
 export * from "./CatalogCourseCard"
 export * from "./CatalogCourseCardSkeleton"
 export * from "./CategoryChipBar"

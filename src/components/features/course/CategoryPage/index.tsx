@@ -18,6 +18,7 @@ import {
     CatalogCourseCard,
     FacetSortBar,
     categoryDescription,
+    categoryIcon,
     categoryName,
     findCategoryBySlug,
 } from "../browse"
@@ -48,6 +49,7 @@ export const CategoryPage = ({ slug }: CategoryPageProps) => {
     const category = findCategoryBySlug(slug)
     // the route already notFound()s unknown slugs — this only guards a stale link
     if (!category) return null
+    const CategoryIcon = categoryIcon(category.slug)
 
     const categoryCourses = coursesByCategory(courses, category.slug)
     const filtered = sortCourses(
@@ -68,7 +70,7 @@ export const CategoryPage = ({ slug }: CategoryPageProps) => {
             {/* header from the static category seed → crawlable in the initial HTML */}
             <div className="flex items-center gap-3">
                 <IconTile
-                    icon={<category.icon aria-hidden focusable="false" />}
+                    icon={<CategoryIcon aria-hidden focusable="false" />}
                     tone={category.accent}
                     size="sm"
                 />

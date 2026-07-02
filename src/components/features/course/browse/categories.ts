@@ -1,16 +1,14 @@
-import type { Icon } from "@phosphor-icons/react"
-import {
-    CodeIcon,
-    MathOperationsIcon,
-    TranslateIcon,
-} from "@phosphor-icons/react"
-
 /**
  * A course category of the browse-by-category catalog (§4). Frontend-defined,
  * BE-ready shape: `slug` is the join key on courses AND the route param
  * (`/courses/category/[slug]`), so it stays stable across the BE swap.
  * `name`/`description` are localized in-data (not i18n keys) because BE will
  * own the taxonomy — the swap replaces this whole list.
+ *
+ * NOTE: this module is imported by the SERVER page (`generateStaticParams` /
+ * `generateMetadata`), so it must stay pure data — no phosphor icon components
+ * here (they call `createContext`, which breaks the react-server bundle).
+ * Icons live in `./category-icons` (client-only), keyed by slug.
  */
 export interface CourseCategory {
     /** Stable id (mirrors what a BE row id will be). */
@@ -21,8 +19,6 @@ export interface CourseCategory {
     name: { vi: string; en: string }
     /** Localized one-line description for the category landing header. */
     description: { vi: string; en: string }
-    /** Phosphor icon shown on chips / shelf headers. */
-    icon: Icon
     /** Semantic tone tinting the category's landing-page icon tile (IconTile tone). */
     accent: "accent" | "success" | "warning"
 }
@@ -39,7 +35,6 @@ export const COURSE_CATEGORIES: Array<CourseCategory> = [
             vi: "Nền tảng toán cao cấp, xác suất thống kê cho kỹ sư.",
             en: "Advanced mathematics and statistics foundations for engineers.",
         },
-        icon: MathOperationsIcon,
         accent: "accent",
     },
     {
@@ -50,7 +45,6 @@ export const COURSE_CATEGORIES: Array<CourseCategory> = [
             vi: "Từ nền tảng C tới web, cơ sở dữ liệu và đồ án phần mềm.",
             en: "From C foundations to web, databases and software capstones.",
         },
-        icon: CodeIcon,
         accent: "success",
     },
     {
@@ -61,7 +55,6 @@ export const COURSE_CATEGORIES: Array<CourseCategory> = [
             vi: "Tiếng Anh học thuật và tiếng Nhật cho môi trường làm việc.",
             en: "Academic English and workplace Japanese.",
         },
-        icon: TranslateIcon,
         accent: "warning",
     },
 ]

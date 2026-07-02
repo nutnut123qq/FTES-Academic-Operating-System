@@ -9,6 +9,7 @@ import type { WithClassNames } from "@/modules/types/base/class-name"
 import { useCarousel } from "../../CourseCatalog/FeaturedSlider/useCarousel"
 import type { Course } from "../../hooks/useQueryCoursesSwr"
 import { categoryName, type CourseCategory } from "../categories"
+import { categoryIcon } from "../category-icons"
 import { CatalogCourseCard } from "../CatalogCourseCard"
 
 /** Props for {@link CategoryShelf}. */
@@ -33,6 +34,7 @@ export const CategoryShelf = ({ category, courses, className }: CategoryShelfPro
     const t = useTranslations()
     const locale = useLocale()
     const name = categoryName(category, locale)
+    const ShelfIcon = categoryIcon(category.slug)
     const { trackRef, next, prev } = useCarousel(courses.length, { autoplay: false })
     // arrows only make sense when the cards actually overflow the track
     const [hasOverflow, setHasOverflow] = useState(false)
@@ -57,7 +59,7 @@ export const CategoryShelf = ({ category, courses, className }: CategoryShelfPro
             {/* label row mirrors the LabeledCard idiom: icon (foreground, size-5) + title,
                 actions pinned right */}
             <div className="flex items-center gap-3">
-                <category.icon aria-hidden focusable="false" className="size-5 shrink-0" />
+                <ShelfIcon aria-hidden focusable="false" className="size-5 shrink-0" />
                 <Typography type="h6" weight="semibold" className="min-w-0 flex-1" truncate>
                     {name}
                 </Typography>

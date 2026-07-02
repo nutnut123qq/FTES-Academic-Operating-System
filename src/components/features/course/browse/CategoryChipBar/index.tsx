@@ -5,6 +5,7 @@ import { cn } from "@heroui/react"
 import { useLocale, useTranslations } from "next-intl"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 import { categoryName, type CourseCategory } from "../categories"
+import { categoryIcon } from "../category-icons"
 
 /** Active selection of the chip bar: "all" or a category slug. */
 export type CategoryChipValue = "all" | string
@@ -58,19 +59,22 @@ export const CategoryChipBar = ({ categories, active, onSelect, className }: Cat
             >
                 {t("courseSystem.categories.all")}
             </button>
-            {categories.map((category) => (
-                <button
-                    key={category.slug}
-                    type="button"
-                    role="tab"
-                    aria-selected={active === category.slug}
-                    onClick={() => onSelect(category.slug)}
-                    className={chipClass(active === category.slug)}
-                >
-                    <category.icon aria-hidden focusable="false" className="size-4" />
-                    {categoryName(category, locale)}
-                </button>
-            ))}
+            {categories.map((category) => {
+                const ChipIcon = categoryIcon(category.slug)
+                return (
+                    <button
+                        key={category.slug}
+                        type="button"
+                        role="tab"
+                        aria-selected={active === category.slug}
+                        onClick={() => onSelect(category.slug)}
+                        className={chipClass(active === category.slug)}
+                    >
+                        <ChipIcon aria-hidden focusable="false" className="size-4" />
+                        {categoryName(category, locale)}
+                    </button>
+                )
+            })}
         </div>
     )
 }

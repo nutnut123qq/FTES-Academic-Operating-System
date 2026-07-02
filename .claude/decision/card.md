@@ -24,6 +24,14 @@ Course/pricing/media/continue cards — the dominant content unit.
 - **"Current plan" indicator = full-width banner, NOT a small chip:** `flex w-full justify-center … bg-accent/10` (or `bg-success/10`) + `text-success` medium; banner radius matches the parent card radius (e.g. `rounded-3xl`). Every plan in a comparison (incl. free/0đ) must state real specs (credit/limit).
 
 ## Decisions (newest first)
+- **Sticky enroll card on a course sales page** · chose a **plain bordered panel**
+  (`rounded-large border border-separator p-4` + `md:sticky md:top-20`), NOT `LabeledCard`
+  / HeroUI `Card` · **WHY:** it's the right rail of a two-column sales layout — a
+  self-contained "buy box" (cover + price + CTA + includes) the eye returns to while the
+  left column scrolls; the course feature family in this repo already hand-rolls bordered
+  panels this way, so matching that idiom keeps the domain consistent and avoids the
+  unverified HeroUI `Card.Content` v3 API. Price via `PriceTag` (VND) + a muted USD line.
+  · course-detail (direction A) · 2026-07-02
 - **Persistent action panel in a split workspace** · chose a single **`Card` + `CardContent` (gap-6)**
   wrapping Label "Github dự án" → submission fields → actions → result (`TaskSubmissionPanel`), NOT
   `LabeledCard` · **WHY:** this is the sticky RIGHT side of a read-left/act-right split — it must read as one

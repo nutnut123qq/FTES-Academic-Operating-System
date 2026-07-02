@@ -62,4 +62,9 @@ the new lesson here at the end of the task.
 | Trust / certificate / serious-dev tone | edX, Frontend Masters, freeCodeCamp |
 
 ### Accumulated lessons
-_(empty — each: pattern · who does it well · the takeaway for StarCi · what NOT to copy · source URL · date)_
+- **Sticky enroll "buy box" on a course detail page** · Coursera/Udemy do it well · takeaway
+  for StarCi: on a course *sales* page, keep price + CTA + "what's included" in a sticky right
+  rail (`col-span-2`) while the pitch (hero, what-you'll-learn, syllabus, reviews, instructor)
+  scrolls on the left (`col-span-3`) — the learner decides without losing the CTA · what NOT to
+  copy: their branding/content, the aggressive countdown-timer urgency; keep CTA = enroll, not
+  buy/VIP · source: coursera.org course pages, udemy course landing · 2026-07-02

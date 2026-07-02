@@ -3,17 +3,45 @@
 import useSWR from "swr"
 import type { CourseLevel } from "./useQueryCoursesSwr"
 
-/** A lesson in a course section. */
+/** A lesson in a course section (syllabus preview row). */
 export interface CourseLesson {
     id: string
     title: string
+    /** Human duration label, e.g. "8:20". */
+    durationLabel: string
+    /** Premium lessons unlock on enroll — shown with a lock in the pre-enroll preview. */
+    isPremium?: boolean
 }
 
-/** A course section. */
+/** A course section (chapter) grouping lessons. */
 export interface CourseSection {
     id: string
     title: string
     lessons: Array<CourseLesson>
+}
+
+/** A single learner review. */
+export interface CourseReview {
+    id: string
+    author: string
+    /** 1–5 stars. */
+    rating: number
+    text: string
+}
+
+/** Course price. VND is the charged currency; USD is a reference figure. */
+export interface CoursePrice {
+    vnd: number
+    usd: number
+    /** Pre-discount VND — struck through by {@link PriceTag} when greater than `vnd`. */
+    originalVnd?: number
+}
+
+/** The course instructor identity shown on the detail page. */
+export interface CourseInstructor {
+    name: string
+    title: string
+    bio: string
 }
 
 /** Full course detail (§4, mock until BE lands). */
@@ -24,43 +52,83 @@ export interface CourseDetail {
     level: CourseLevel
     credits: number
     description: string
+    /** Total learning-time label, e.g. "6 giờ". */
+    durationLabel: string
+    price: CoursePrice
+    rating: { avg: number; count: number }
+    whatYouLearn: Array<string>
+    instructor: CourseInstructor
     sections: Array<CourseSection>
+    reviews: Array<CourseReview>
 }
 
 // ponytail: mock BE — no course endpoint yet. Derives from the id so any course renders.
+// Swap for a real GraphQL query (course(id)) when the contract lands; the hook API + the
+// CourseDetail shape stay identical, so CourseDetail needs no change.
 const fetchCourseDetailMock = async (courseId: string): Promise<CourseDetail> => ({
     id: courseId,
     code: courseId.toUpperCase(),
     name: "Lập trình C",
     level: "basic",
     credits: 3,
-    description: "Nhập môn lập trình với ngôn ngữ C: cú pháp, con trỏ, cấu trúc dữ liệu cơ bản và quản lý bộ nhớ. Có bài tập thực hành và đề thi mẫu.",
+    description:
+        "Nhập môn lập trình với ngôn ngữ C: cú pháp, con trỏ, cấu trúc dữ liệu cơ bản và quản lý bộ nhớ. Có bài tập thực hành và đề thi mẫu.",
+    durationLabel: "6 giờ",
+    price: { vnd: 1_200_000, usd: 49, originalVnd: 1_600_000 },
+    rating: { avg: 4.8, count: 1240 },
+    whatYouLearn: [
+        "Cú pháp C, biến và kiểu dữ liệu",
+        "Con trỏ và quản lý bộ nhớ",
+        "Cấu trúc dữ liệu cơ bản",
+        "Đệ quy và hàm",
+        "Debug và đọc lỗi trình biên dịch",
+        "Luyện với đề thi mẫu",
+    ],
+    instructor: {
+        name: "Nguyễn Văn A",
+        title: "Giảng viên Kỹ thuật phần mềm",
+        bio: "10 năm dạy lập trình nền tảng, tác giả nhiều tài liệu ôn thi môn cơ sở.",
+    },
     sections: [
         {
             id: "s1",
             title: "Chương 1 — Nhập môn",
             lessons: [
-                { id: "l1", title: "Giới thiệu ngôn ngữ C" },
-                { id: "l2", title: "Biến & kiểu dữ liệu" },
+                { id: "l1", title: "Giới thiệu ngôn ngữ C", durationLabel: "8:20" },
+                { id: "l2", title: "Biến & kiểu dữ liệu", durationLabel: "12:05" },
             ],
         },
         {
             id: "s2",
             title: "Chương 2 — Điều khiển & Hàm",
             lessons: [
-                { id: "l3", title: "Câu lệnh điều kiện" },
-                { id: "l4", title: "Vòng lặp" },
-                { id: "l5", title: "Hàm" },
+                { id: "l3", title: "Câu lệnh điều kiện", durationLabel: "10:40" },
+                { id: "l4", title: "Vòng lặp", durationLabel: "6:40" },
+                { id: "l5", title: "Hàm", durationLabel: "14:15", isPremium: true },
             ],
+        },
+    ],
+    reviews: [
+        {
+            id: "r1",
+            author: "Minh",
+            rating: 5,
+            text: "Giải thích con trỏ rất dễ hiểu, bài tập sát đề thi.",
+        },
+        {
+            id: "r2",
+            author: "Lan",
+            rating: 4,
+            text: "Nội dung chắc, mong có thêm bài về cấp phát động.",
         },
     ],
 })
 
 /** Loads a course's detail. Mocked; SWR-shaped for a drop-in BE swap. */
 export const useQueryCourseDetailSwr = (courseId: string) => {
-    const { data, isLoading, error } = useSWR(
+    const { data, isLoading, error, mutate } = useSWR(
         ["course-detail", courseId],
         () => fetchCourseDetailMock(courseId),
     )
-    return { course: data, isLoading, error }
+    return { course: data, isLoading, error, mutate }
 }

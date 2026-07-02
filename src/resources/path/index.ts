@@ -158,6 +158,16 @@ export const pathConfig = () => {
                     build,
                 }
             }
+            const progress = () => {
+                // profile Progress tab (gamification dashboard + skill graph)
+                const progressPath = `${profilePath}/progress`
+                const build = () => {
+                    return progressPath
+                }
+                return {
+                    build,
+                }
+            }
             return {
                 build,
                 bookmarks,
@@ -174,6 +184,7 @@ export const pathConfig = () => {
                 attempts,
                 feedback,
                 cv,
+                progress,
             }
         }
         const authentication = () => {
@@ -473,8 +484,19 @@ export const pathConfig = () => {
             const build = () => {
                 return communityPath
             }
+            const trending = () => {
+                // trending scope of the community feed
+                const trendingPath = `${communityPath}/trending`
+                const build = () => {
+                    return trendingPath
+                }
+                return {
+                    build,
+                }
+            }
             return {
                 build,
+                trending,
             }
         }
         const groups = () => {

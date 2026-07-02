@@ -8,6 +8,7 @@ import {
 } from "@heroui/react"
 import { AccountTrigger } from "./AccountTrigger"
 import { UserSummary } from "./UserSummary"
+import { GamificationStatsRow } from "./GamificationStatsRow"
 import { GuestHeader } from "./GuestHeader"
 import { AccountMenuAuthed } from "./AccountMenuAuthed"
 import { AccountMenuGuest } from "./AccountMenuGuest"
@@ -71,6 +72,8 @@ export const AccountMenuDropdown = (props: AccountMenuDropdownProps) => {
                         {isAuthed ? <UserSummary /> : <GuestHeader />}
                     </AsyncContent>
                 </div>
+                {/* (1b) gamification stats chips — signed-in only, self-loading */}
+                {isAuthed ? <GamificationStatsRow className="px-3 pb-3" /> : null}
                 <Separator />
                 {/* (2) menu — authed actions / guest sign-in (skeleton: 4 rows) */}
                 <AsyncContent

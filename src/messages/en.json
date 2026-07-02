@@ -2129,22 +2129,92 @@
         },
         "portfolio": {
             "projects": "Projects",
-            "certificates": "Certificates"
+            "links": "External links",
+            "addProject": "Add project",
+            "editProject": "Edit project",
+            "addLink": "Add link",
+            "editLink": "Edit link",
+            "openProject": "View project",
+            "remove": "Remove",
+            "confirmRemove": "Remove this item?",
+            "confirm": "Remove",
+            "cancelRemove": "Cancel",
+            "externalHint": "Opens an external link in a new tab",
+            "form": {
+                "title": "Title",
+                "description": "Description",
+                "tags": "Tech (comma-separated)",
+                "url": "URL",
+                "label": "Label",
+                "save": "Save",
+                "cancel": "Cancel"
+            },
+            "empty": {
+                "title": "No projects or links yet",
+                "description": "Add your first project to build out your portfolio.",
+                "cta": "Add your first project"
+            }
         },
-        "communityBoard": {
-            "followers": "Followers",
-            "following": "Following",
-            "activity": "Recent activity"
+        "community": {
+            "reputation": {
+                "title": "Community reputation",
+                "score": "Reputation score",
+                "posts": "Posts",
+                "comments": "Comments",
+                "reactions": "Reactions received"
+            },
+            "recentPosts": {
+                "title": "Recent posts",
+                "engagement": "{likes} likes · {comments} comments"
+            },
+            "empty": {
+                "title": "You haven't posted anything yet.",
+                "browse": "Browse the community"
+            }
         },
-        "progressBoard": {
-            "xp": "XP",
-            "level": "Level",
-            "coin": "FTES Coin",
-            "reputation": "Reputation"
+        "progress": {
+            "xpCard": {
+                "level": "Level {level}",
+                "totalXp": "{xp} XP",
+                "toNext": "{xp} XP to level {level}"
+            },
+            "heatmap": {
+                "title": "Learning activity calendar",
+                "streakLabel": "Current streak: {count} days",
+                "summary": "Activity map of the last 12 weeks — current streak {count} days"
+            },
+            "rank": {
+                "title": "Rank & league",
+                "position": "Rank #{position}",
+                "league": "{league} league",
+                "viewLeaderboard": "View leaderboard"
+            },
+            "badges": {
+                "title": "Badges",
+                "empty": "No badges yet — learn every day to unlock them.",
+                "earnedOn": "Earned {date}"
+            }
         },
         "public": {
             "followers": "{count} followers",
             "skills": "Skills"
+        }
+    },
+    "profileMenu": {
+        "explore": {
+            "title": "Explore",
+            "ai": "AI Assistant",
+            "forYou": "For You",
+            "recommendations": "Recommendations",
+            "trending": "Trending"
+        }
+    },
+    "accountMenu": {
+        "gamification": {
+            "streakLabel": "Learning streak: {count} days",
+            "rankLabel": "Rank: #{position}",
+            "xpLabel": "Experience: {xp} XP",
+            "levelRing": "Level {level} — {percent}% to the next level"
         }
     },
     "profileEdit": {
@@ -2483,7 +2553,8 @@
             "comment": "Sign in to comment",
             "save": "Sign in to save this item",
             "enroll": "Sign in to enroll in this course",
-            "search": "Sign in to search learning content"
+            "search": "Sign in to search learning content",
+            "explore": "Sign in to use the AI assistant and personalized recommendations"
         }
     },
     "priceTag": {

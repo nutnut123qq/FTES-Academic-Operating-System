@@ -2138,22 +2138,92 @@
         },
         "portfolio": {
             "projects": "Dự án",
-            "certificates": "Chứng chỉ"
+            "links": "Liên kết ngoài",
+            "addProject": "Thêm dự án",
+            "editProject": "Sửa dự án",
+            "addLink": "Thêm liên kết",
+            "editLink": "Sửa liên kết",
+            "openProject": "Xem dự án",
+            "remove": "Xoá",
+            "confirmRemove": "Xoá mục này?",
+            "confirm": "Xoá",
+            "cancelRemove": "Huỷ",
+            "externalHint": "Mở liên kết ngoài trong tab mới",
+            "form": {
+                "title": "Tiêu đề",
+                "description": "Mô tả",
+                "tags": "Công nghệ (phân cách bằng dấu phẩy)",
+                "url": "Đường dẫn",
+                "label": "Nhãn",
+                "save": "Lưu",
+                "cancel": "Huỷ"
+            },
+            "empty": {
+                "title": "Chưa có dự án hay liên kết nào",
+                "description": "Thêm dự án đầu tiên để xây hồ sơ năng lực của bạn.",
+                "cta": "Thêm dự án đầu tiên"
+            }
         },
-        "communityBoard": {
-            "followers": "Người theo dõi",
-            "following": "Đang theo dõi",
-            "activity": "Hoạt động gần đây"
+        "community": {
+            "reputation": {
+                "title": "Uy tín cộng đồng",
+                "score": "Điểm uy tín",
+                "posts": "Bài viết",
+                "comments": "Bình luận",
+                "reactions": "Cảm xúc nhận được"
+            },
+            "recentPosts": {
+                "title": "Bài viết gần đây",
+                "engagement": "{likes} thích · {comments} bình luận"
+            },
+            "empty": {
+                "title": "Bạn chưa đăng bài viết nào.",
+                "browse": "Khám phá cộng đồng"
+            }
         },
-        "progressBoard": {
-            "xp": "Điểm XP",
-            "level": "Cấp độ",
-            "coin": "FTES Coin",
-            "reputation": "Uy tín"
+        "progress": {
+            "xpCard": {
+                "level": "Cấp {level}",
+                "totalXp": "{xp} XP",
+                "toNext": "Còn {xp} XP tới cấp {level}"
+            },
+            "heatmap": {
+                "title": "Lịch hoạt động học",
+                "streakLabel": "Chuỗi hiện tại: {count} ngày",
+                "summary": "Bản đồ hoạt động 12 tuần gần đây — chuỗi hiện tại {count} ngày"
+            },
+            "rank": {
+                "title": "Hạng & bậc",
+                "position": "Hạng #{position}",
+                "league": "Bậc {league}",
+                "viewLeaderboard": "Xem bảng xếp hạng"
+            },
+            "badges": {
+                "title": "Huy hiệu",
+                "empty": "Chưa có huy hiệu nào — học đều mỗi ngày để mở khoá.",
+                "earnedOn": "Đạt ngày {date}"
+            }
         },
         "public": {
             "followers": "{count} người theo dõi",
             "skills": "Kỹ năng"
+        }
+    },
+    "profileMenu": {
+        "explore": {
+            "title": "Khám phá",
+            "ai": "Trợ lý AI",
+            "forYou": "Dành cho bạn",
+            "recommendations": "Gợi ý cho bạn",
+            "trending": "Thịnh hành"
+        }
+    },
+    "accountMenu": {
+        "gamification": {
+            "streakLabel": "Chuỗi ngày học: {count} ngày",
+            "rankLabel": "Hạng: #{position}",
+            "xpLabel": "Điểm kinh nghiệm: {xp} XP",
+            "levelRing": "Cấp {level} — {percent}% tới cấp tiếp theo"
         }
     },
     "profileEdit": {
@@ -2492,7 +2562,8 @@
             "comment": "Đăng nhập để bình luận",
             "save": "Đăng nhập để lưu nội dung",
             "enroll": "Đăng nhập để đăng ký khóa học",
-            "search": "Đăng nhập để tìm kiếm nội dung học tập"
+            "search": "Đăng nhập để tìm kiếm nội dung học tập",
+            "explore": "Đăng nhập để dùng trợ lý AI và gợi ý cá nhân hoá"
         }
     },
     "priceTag": {

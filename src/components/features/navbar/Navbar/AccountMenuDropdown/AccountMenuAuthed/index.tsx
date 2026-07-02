@@ -22,18 +22,20 @@ import { useRouter } from "next/navigation"
 import { pathConfig } from "@/resources/path"
 import { useAccountMenuOverlayState } from "@/hooks/zustand/overlay/hooks"
 import { useMutateSignOutSwr } from "@/hooks/swr/api/graphql/mutations/useMutateSignOutSwr"
+import { EXPLORE_SHORTCUTS } from "../explore-shortcuts"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 
 /** Props for {@link AccountMenuAuthed}. */
 export type AccountMenuAuthedProps = WithClassNames<undefined>
 
 /**
- * Account dropdown menu for SIGNED-IN viewers: a primary section (Dashboard ·
- * Profile · CV · Settings), a labeled "You" section (Activity · Wallet), a
- * labeled "System" section (Integrations · Roles) — the personal/system
- * destinations migrated out of the old "Explore" mega-menu — and a separated
- * destructive section (Sign out, danger). Self-contained — owns navigation
- * (closes the menu then pushes) and the sign-out mutation; takes no data props.
+ * Account dropdown menu for SIGNED-IN viewers: a labeled "Khám phá" (Explore)
+ * section (Trợ lý AI · Dành cho bạn · Gợi ý cho bạn · Thịnh hành — the discovery
+ * shortcuts relocated from the header), a primary section (Dashboard · Profile ·
+ * CV · Settings), a labeled "You" section (Activity · Wallet), a labeled
+ * "System" section (Integrations · Roles), and a separated destructive section
+ * (Sign out, danger). Self-contained — owns navigation (closes the menu then
+ * pushes) and the sign-out mutation; takes no data props.
  *
  * @param props - optional className (placement only).
  */
@@ -63,6 +65,22 @@ export const AccountMenuAuthed = ({ className }: AccountMenuAuthedProps) => {
 
     return (
         <Dropdown.Menu className={className}>
+            {/* "Khám phá" — discovery shortcuts relocated out of the header (D8/D9);
+                sits between the gamification stats row above and the account links */}
+            <Dropdown.Section>
+                <Header>{t("profileMenu.explore.title")}</Header>
+                {EXPLORE_SHORTCUTS.map((shortcut) => (
+                    <Dropdown.Item
+                        key={shortcut.id}
+                        id={shortcut.id}
+                        textValue={t(shortcut.labelKey)}
+                        onPress={() => go(shortcut.path())}
+                    >
+                        {shortcut.icon}
+                        <Label>{t(shortcut.labelKey)}</Label>
+                    </Dropdown.Item>
+                ))}
+            </Dropdown.Section>
             <Dropdown.Section>
                 <Dropdown.Item
                     id="dashboard"

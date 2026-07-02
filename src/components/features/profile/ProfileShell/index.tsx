@@ -3,7 +3,10 @@
 import React from "react"
 import { Button, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
+import { FireIcon, TrophyIcon } from "@phosphor-icons/react"
 import { usePathname, useRouter } from "@/i18n/navigation"
+import { GamificationChip } from "@/components/blocks/gamification/GamificationChip"
+import { useQueryMyGamificationSwr } from "@/components/features/gamification/hooks/useQueryMyGamificationSwr"
 import { useQueryProfileSwr } from "../hooks/useQueryProfileSwr"
 
 /** Props for {@link ProfileShell}. */
@@ -28,9 +31,12 @@ const SECTIONS: Array<{ key: string; segment: string }> = [
  */
 export const ProfileShell = ({ children }: ProfileShellProps) => {
     const t = useTranslations("profile")
+    const tChips = useTranslations("accountMenu.gamification")
     const router = useRouter()
     const pathname = usePathname()
     const { profile } = useQueryProfileSwr()
+    // same shared hook as the account dropdown → identical streak/rank everywhere
+    const { data: gamification } = useQueryMyGamificationSwr()
 
     const base = "/profile"
     const hrefFor = (segment: string) => (segment ? `${base}/${segment}` : base)
@@ -53,6 +59,20 @@ export const ProfileShell = ({ children }: ProfileShellProps) => {
                             {profile?.headline ?? ""}
                         </Typography>
                     </div>
+                    {gamification ? (
+                        <div className="flex flex-wrap justify-center gap-2">
+                            <GamificationChip
+                                icon={<FireIcon weight="fill" className="size-4" aria-hidden focusable="false" />}
+                                value={gamification.streak.current}
+                                label={tChips("streakLabel", { count: gamification.streak.current })}
+                            />
+                            <GamificationChip
+                                icon={<TrophyIcon weight="fill" className="size-4" aria-hidden focusable="false" />}
+                                value={`#${gamification.rank.position}`}
+                                label={tChips("rankLabel", { position: gamification.rank.position })}
+                            />
+                        </div>
+                    ) : null}
                     <Typography type="body-sm" color="muted">
                         {profile?.bio ?? ""}
                     </Typography>

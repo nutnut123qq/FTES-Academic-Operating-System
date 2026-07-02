@@ -498,6 +498,20 @@ export const pathConfig = () => {
                 build,
             }
         }
+        // Batch-1 domain shells (§8/§10/§11/§12/§13/§14/§18/§19/§20) — each a top-level route.
+        const makeSimplePath = (segment: string) => () => {
+            const path = `${localePath}/${segment}`
+            return { build: () => path }
+        }
+        const chat = makeSimplePath("chat")
+        const challenges = makeSimplePath("challenges")
+        const leaderboard = makeSimplePath("leaderboard")
+        const wallet = makeSimplePath("wallet")
+        const marketplace = makeSimplePath("marketplace")
+        const events = makeSimplePath("events")
+        const activity = makeSimplePath("activity")
+        const workflow = makeSimplePath("workflow")
+        const analytics = makeSimplePath("analytics")
         const practice = () => {
             const practicePath = `${localePath}/practice`
             const build = () => {
@@ -573,6 +587,15 @@ export const pathConfig = () => {
             groups,
             resources,
             subjects,
+            chat,
+            challenges,
+            leaderboard,
+            wallet,
+            marketplace,
+            events,
+            activity,
+            workflow,
+            analytics,
             rewards,
             league,
             kpi,

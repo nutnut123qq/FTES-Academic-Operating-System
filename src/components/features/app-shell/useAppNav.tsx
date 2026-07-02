@@ -6,8 +6,17 @@ import {
     BookOpenIcon,
     GraduationCapIcon,
     FolderIcon,
+    TrophyIcon,
     ChatCircleIcon,
     UsersThreeIcon,
+    CalendarIcon,
+    ChatsCircleIcon,
+    RankingIcon,
+    StorefrontIcon,
+    PulseIcon,
+    WalletIcon,
+    ChartBarIcon,
+    KanbanIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { usePathname } from "@/i18n/navigation"
@@ -44,15 +53,17 @@ export const useAppNav = (): Array<AppNavGroup> => {
     return useMemo(() => {
         const p = pathConfig().locale()
         const home = p.build()
-        const subjects = p.subjects().build()
-        const courses = p.course().build()
-        const resources = p.resources().build()
-        const community = p.community().build()
-        const groups = p.groups().build()
 
         // active when on the route itself or any child (base + "/") — but NOT "/" as a
         // prefix (it prefixes everything), so home matches only its exact path.
         const under = (base: string) => pathname === base || pathname.startsWith(`${base}/`)
+        const item = (key: string, path: string, icon: React.ReactNode): AppNavItem => ({
+            key,
+            label: t(key),
+            icon,
+            path,
+            isActive: under(path),
+        })
 
         return [
             {
@@ -71,47 +82,38 @@ export const useAppNav = (): Array<AppNavGroup> => {
                 key: "learn",
                 label: t("section.learn"),
                 items: [
-                    {
-                        key: "subjects",
-                        label: t("subjects"),
-                        icon: <BookOpenIcon className="size-5" />,
-                        path: subjects,
-                        isActive: under(subjects),
-                    },
-                    {
-                        key: "courses",
-                        label: t("courses"),
-                        icon: <GraduationCapIcon className="size-5" />,
-                        path: courses,
-                        isActive: under(courses),
-                    },
-                    {
-                        key: "resources",
-                        label: t("resources"),
-                        icon: <FolderIcon className="size-5" />,
-                        path: resources,
-                        isActive: under(resources),
-                    },
+                    item("subjects", p.subjects().build(), <BookOpenIcon className="size-5" />),
+                    item("courses", p.course().build(), <GraduationCapIcon className="size-5" />),
+                    item("resources", p.resources().build(), <FolderIcon className="size-5" />),
+                    item("challenges", p.challenges().build(), <TrophyIcon className="size-5" />),
                 ],
             },
             {
                 key: "community",
                 label: t("section.community"),
                 items: [
-                    {
-                        key: "community",
-                        label: t("community"),
-                        icon: <ChatCircleIcon className="size-5" />,
-                        path: community,
-                        isActive: under(community),
-                    },
-                    {
-                        key: "groups",
-                        label: t("groups"),
-                        icon: <UsersThreeIcon className="size-5" />,
-                        path: groups,
-                        isActive: under(groups),
-                    },
+                    item("community", p.community().build(), <ChatCircleIcon className="size-5" />),
+                    item("groups", p.groups().build(), <UsersThreeIcon className="size-5" />),
+                    item("events", p.events().build(), <CalendarIcon className="size-5" />),
+                    item("chat", p.chat().build(), <ChatsCircleIcon className="size-5" />),
+                ],
+            },
+            {
+                key: "explore",
+                label: t("section.explore"),
+                items: [
+                    item("leaderboard", p.leaderboard().build(), <RankingIcon className="size-5" />),
+                    item("marketplace", p.marketplace().build(), <StorefrontIcon className="size-5" />),
+                    item("activity", p.activity().build(), <PulseIcon className="size-5" />),
+                ],
+            },
+            {
+                key: "system",
+                label: t("section.system"),
+                items: [
+                    item("wallet", p.wallet().build(), <WalletIcon className="size-5" />),
+                    item("analytics", p.analytics().build(), <ChartBarIcon className="size-5" />),
+                    item("workflow", p.workflow().build(), <KanbanIcon className="size-5" />),
                 ],
             },
         ]

@@ -259,11 +259,22 @@
         "subjects": "Môn học",
         "courses": "Khóa học",
         "resources": "Tài nguyên",
+        "challenges": "Thử thách",
         "community": "Cộng đồng",
         "groups": "Nhóm",
+        "events": "Sự kiện",
+        "chat": "Tin nhắn",
+        "leaderboard": "Bảng xếp hạng",
+        "marketplace": "Cửa hàng",
+        "activity": "Hoạt động",
+        "wallet": "Ví",
+        "analytics": "Phân tích",
+        "workflow": "Quy trình",
         "section": {
             "learn": "Học",
-            "community": "Cộng đồng"
+            "community": "Cộng đồng",
+            "explore": "Khám phá",
+            "system": "Hệ thống"
         },
         "practice": "Luyện Code",
         "contact": "Liên hệ",
@@ -2578,6 +2589,162 @@
             "active": "Đã vào team",
             "pending": "Đang chờ chấp nhận",
             "none": "Chưa gửi yêu cầu"
+        }
+    },
+    "chat": {
+        "title": "Tin nhắn",
+        "subtitle": "Nhắn tin với bạn học, nhóm và cố vấn.",
+        "composerPlaceholder": "Nhập tin nhắn…",
+        "send": "Gửi",
+        "empty": "Chọn một cuộc trò chuyện để bắt đầu đọc."
+    },
+    "challengeSystem": {
+        "catalog": {
+            "title": "Thử thách",
+            "subtitle": "Luyện các thử thách lập trình, SQL, UI/UX, AI và kinh doanh để nhận điểm.",
+            "searchPlaceholder": "Tìm thử thách…",
+            "all": "Tất cả",
+            "empty": "Không có thử thách nào khớp bộ lọc."
+        },
+        "types": {
+            "coding": "Lập trình",
+            "sql": "SQL",
+            "uiux": "UI/UX",
+            "ai": "AI",
+            "business": "Kinh doanh"
+        },
+        "difficulty": {
+            "basic": "Cơ bản",
+            "intermediate": "Trung bình",
+            "advanced": "Nâng cao"
+        },
+        "pointsCount": "{count} điểm",
+        "participantsCount": "{count} người tham gia"
+    },
+    "gamification": {
+        "title": "Bảng xếp hạng",
+        "subtitle": "Theo dõi tiến độ và xem thứ hạng của bạn so với mọi người.",
+        "leaderboard": "Bảng xếp hạng",
+        "badges": "Huy hiệu",
+        "badgeLocked": "Chưa mở khóa",
+        "xpValue": "{xp} XP",
+        "stats": {
+            "xp": "Điểm KN",
+            "level": "Cấp độ",
+            "streak": "Chuỗi ngày",
+            "rank": "Hạng"
+        }
+    },
+    "wallet": {
+        "title": "Ví & FTES Coin",
+        "subtitle": "Số dư FTES Coin và lịch sử giao dịch của bạn.",
+        "balanceLabel": "Số dư hiện tại",
+        "coin": "FTES Coin",
+        "actions": {
+            "topup": "Nạp",
+            "transfer": "Chuyển",
+            "redeem": "Đổi"
+        },
+        "history": "Lịch sử giao dịch",
+        "kinds": {
+            "receive": "Nhận",
+            "transfer": "Chuyển",
+            "purchase": "Mua",
+            "refund": "Hoàn tiền"
+        },
+        "empty": "Chưa có giao dịch nào."
+    },
+    "marketplace": {
+        "catalog": {
+            "title": "Cửa hàng",
+            "subtitle": "Dùng FTES Coin để đổi merch, premium và nhiều hơn nữa.",
+            "searchPlaceholder": "Tìm sản phẩm",
+            "all": "Tất cả",
+            "empty": "Không có sản phẩm nào khớp tìm kiếm."
+        },
+        "categories": {
+            "merch": "Merch",
+            "premium": "Premium",
+            "aiCredits": "AI Credits",
+            "voucher": "Voucher",
+            "courseUnlock": "Mở khóa học"
+        },
+        "priceCoin": "{amount} Coin",
+        "buy": "Mua"
+    },
+    "eventSystem": {
+        "catalog": {
+            "title": "Sự kiện",
+            "subtitle": "Khám phá các webinar, workshop, hackathon, cuộc thi và buổi gặp gỡ sắp tới.",
+            "searchPlaceholder": "Tìm sự kiện theo tên hoặc địa điểm…",
+            "all": "Tất cả",
+            "empty": "Không có sự kiện nào khớp bộ lọc."
+        },
+        "types": {
+            "webinar": "Webinar",
+            "workshop": "Workshop",
+            "hackathon": "Hackathon",
+            "competition": "Cuộc thi",
+            "meetup": "Gặp gỡ"
+        },
+        "attendeesCount": "{count} người tham gia",
+        "register": "Đăng ký"
+    },
+    "activity": {
+        "title": "Hoạt động",
+        "subtitle": "Hoạt động gần đây của bạn trên toàn hệ thống.",
+        "empty": "Chưa có hoạt động nào.",
+        "kinds": {
+            "courseEnrolled": "Đăng ký khóa học",
+            "lessonCompleted": "Hoàn thành bài học",
+            "resourceUploaded": "Tải lên tài nguyên",
+            "questionPosted": "Đăng câu hỏi",
+            "badgeEarned": "Nhận huy hiệu",
+            "coinEarned": "Nhận xu",
+            "eventJoined": "Tham gia sự kiện",
+            "groupJoined": "Tham gia nhóm"
+        }
+    },
+    "workflow": {
+        "title": "Bảng quy trình",
+        "subtitle": "Theo dõi nội dung đi qua quy trình duyệt.",
+        "itemsCount": "{count} mục",
+        "emptyColumn": "Chưa có gì ở đây",
+        "stages": {
+            "draft": "Bản nháp",
+            "aiReview": "AI duyệt",
+            "modReview": "Kiểm duyệt",
+            "approved": "Đã duyệt",
+            "published": "Đã xuất bản",
+            "archived": "Đã lưu trữ"
+        },
+        "contentTypes": {
+            "resource": "Tài nguyên",
+            "course": "Khóa học",
+            "forum": "Diễn đàn",
+            "challenge": "Thử thách",
+            "event": "Sự kiện"
+        }
+    },
+    "analytics": {
+        "title": "Phân tích",
+        "subtitle": "Tổng quan sức khỏe nền tảng — học tập, cộng đồng, AI, game hóa và kinh doanh.",
+        "chartSoon": "Biểu đồ sắp ra mắt",
+        "deltaLabel": "Thay đổi so với kỳ trước: {value}%",
+        "metrics": {
+            "learners": "Người học hoạt động",
+            "lessonsCompleted": "Bài học hoàn thành",
+            "activeGroups": "Nhóm hoạt động",
+            "resourcesShared": "Tài nguyên chia sẻ",
+            "avgCompletion": "Hoàn thành trung bình",
+            "coinsCirculating": "Xu đang lưu hành"
+        },
+        "sections": {
+            "learning": "Học tập",
+            "community": "Cộng đồng",
+            "ai": "AI",
+            "gamification": "Game hóa",
+            "business": "Kinh doanh"
         }
     },
     "homeLanding": {

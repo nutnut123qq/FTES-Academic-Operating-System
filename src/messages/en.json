@@ -259,11 +259,22 @@
         "subjects": "Subjects",
         "courses": "Courses",
         "resources": "Resources",
+        "challenges": "Challenges",
         "community": "Community",
         "groups": "Groups",
+        "events": "Events",
+        "chat": "Chat",
+        "leaderboard": "Leaderboard",
+        "marketplace": "Marketplace",
+        "activity": "Activity",
+        "wallet": "Wallet",
+        "analytics": "Analytics",
+        "workflow": "Workflow",
         "section": {
             "learn": "Learn",
-            "community": "Community"
+            "community": "Community",
+            "explore": "Explore",
+            "system": "System"
         },
         "practice": "Practice",
         "contact": "Contact",
@@ -2578,6 +2589,162 @@
             "active": "In team",
             "pending": "Invite pending",
             "none": "Not requested"
+        }
+    },
+    "chat": {
+        "title": "Chat",
+        "subtitle": "Message classmates, groups, and advisors.",
+        "composerPlaceholder": "Type a message…",
+        "send": "Send",
+        "empty": "Select a conversation to start reading."
+    },
+    "challengeSystem": {
+        "catalog": {
+            "title": "Challenges",
+            "subtitle": "Practice coding, SQL, UI/UX, AI, and business challenges to earn points.",
+            "searchPlaceholder": "Search challenges…",
+            "all": "All",
+            "empty": "No challenges match your filters."
+        },
+        "types": {
+            "coding": "Coding",
+            "sql": "SQL",
+            "uiux": "UI/UX",
+            "ai": "AI",
+            "business": "Business"
+        },
+        "difficulty": {
+            "basic": "Basic",
+            "intermediate": "Intermediate",
+            "advanced": "Advanced"
+        },
+        "pointsCount": "{count} pts",
+        "participantsCount": "{count} joined"
+    },
+    "gamification": {
+        "title": "Leaderboard",
+        "subtitle": "Track your progress and see how you rank against your peers.",
+        "leaderboard": "Leaderboard",
+        "badges": "Badges",
+        "badgeLocked": "Locked",
+        "xpValue": "{xp} XP",
+        "stats": {
+            "xp": "XP",
+            "level": "Level",
+            "streak": "Day streak",
+            "rank": "Rank"
+        }
+    },
+    "wallet": {
+        "title": "Wallet & FTES Coin",
+        "subtitle": "Your FTES Coin balance and transaction history.",
+        "balanceLabel": "Current balance",
+        "coin": "FTES Coin",
+        "actions": {
+            "topup": "Top up",
+            "transfer": "Transfer",
+            "redeem": "Redeem"
+        },
+        "history": "Transaction history",
+        "kinds": {
+            "receive": "Received",
+            "transfer": "Transfer",
+            "purchase": "Purchase",
+            "refund": "Refund"
+        },
+        "empty": "No transactions yet."
+    },
+    "marketplace": {
+        "catalog": {
+            "title": "Marketplace",
+            "subtitle": "Spend your FTES Coin on merch, premium, and more.",
+            "searchPlaceholder": "Search products",
+            "all": "All",
+            "empty": "No products match your search."
+        },
+        "categories": {
+            "merch": "Merch",
+            "premium": "Premium",
+            "aiCredits": "AI Credits",
+            "voucher": "Voucher",
+            "courseUnlock": "Course Unlock"
+        },
+        "priceCoin": "{amount} Coin",
+        "buy": "Buy"
+    },
+    "eventSystem": {
+        "catalog": {
+            "title": "Events",
+            "subtitle": "Browse upcoming webinars, workshops, hackathons, competitions and meetups.",
+            "searchPlaceholder": "Search events by title or location…",
+            "all": "All",
+            "empty": "No events match your filters."
+        },
+        "types": {
+            "webinar": "Webinar",
+            "workshop": "Workshop",
+            "hackathon": "Hackathon",
+            "competition": "Competition",
+            "meetup": "Meetup"
+        },
+        "attendeesCount": "{count} attendees",
+        "register": "Register"
+    },
+    "activity": {
+        "title": "Activity",
+        "subtitle": "Your recent activity across the platform.",
+        "empty": "No activity yet.",
+        "kinds": {
+            "courseEnrolled": "Enrolled in a course",
+            "lessonCompleted": "Completed a lesson",
+            "resourceUploaded": "Uploaded a resource",
+            "questionPosted": "Posted a question",
+            "badgeEarned": "Earned a badge",
+            "coinEarned": "Earned coins",
+            "eventJoined": "Joined an event",
+            "groupJoined": "Joined a group"
+        }
+    },
+    "workflow": {
+        "title": "Workflow Board",
+        "subtitle": "Track content moving through the review pipeline.",
+        "itemsCount": "{count} items",
+        "emptyColumn": "Nothing here yet",
+        "stages": {
+            "draft": "Draft",
+            "aiReview": "AI Review",
+            "modReview": "Mod Review",
+            "approved": "Approved",
+            "published": "Published",
+            "archived": "Archived"
+        },
+        "contentTypes": {
+            "resource": "Resource",
+            "course": "Course",
+            "forum": "Forum",
+            "challenge": "Challenge",
+            "event": "Event"
+        }
+    },
+    "analytics": {
+        "title": "Analytics",
+        "subtitle": "Platform health at a glance — learning, community, AI, gamification, and business.",
+        "chartSoon": "Chart coming soon",
+        "deltaLabel": "Change vs. previous period: {value}%",
+        "metrics": {
+            "learners": "Active learners",
+            "lessonsCompleted": "Lessons completed",
+            "activeGroups": "Active groups",
+            "resourcesShared": "Resources shared",
+            "avgCompletion": "Avg. completion",
+            "coinsCirculating": "Coins circulating"
+        },
+        "sections": {
+            "learning": "Learning",
+            "community": "Community",
+            "ai": "AI",
+            "gamification": "Gamification",
+            "business": "Business"
         }
     },
     "homeLanding": {

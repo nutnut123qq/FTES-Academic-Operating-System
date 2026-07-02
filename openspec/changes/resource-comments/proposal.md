@@ -9,7 +9,17 @@ no auth gating, no states). Users cannot discuss a document.
 - Add an interactive comments section to the resource detail page
   (`/resources/[resourceId]`): composer (textarea + submit) + comment list
   (author, avatar, relative time), newest-first, optimistic append.
-- Auth gating: guests are prompted with `AuthenticationModal` instead of posting.
+- **Threads-style interaction pattern** ("comment như bên Threads"): minimal
+  rows (avatar + name + time + text, no bordered/boxed comment cards), thin
+  icon affordances per comment (♥ like with count, reply link), flat
+  **one-level replies** (a reply renders indented one level; replying to a
+  reply attaches to the same top-level parent — no deeper nesting).
+- Comment like: optimistic toggle, filled red heart when liked — lightweight;
+  no share/save affordances on comments.
+- Composer placement: sticky to the bottom of the viewport on mobile; inline
+  at the top of the thread on desktop.
+- Auth gating: guests are prompted with `AuthenticationModal` instead of
+  posting, replying, or liking.
 - Full UI states: loading skeleton, empty state, submit error (rollback + retry),
   character limit (500) with counter, delete-own-comment.
 - Explicit separation of surfaces: **comments = free-form discussion on the detail
@@ -22,9 +32,10 @@ no auth gating, no states). Users cannot discuss a document.
 ## Capabilities
 
 ### New Capabilities
-- `resource-comments`: interactive comments on a resource detail page — composer,
-  list, optimistic append, auth gating, delete-own, states, i18n/a11y, and the
-  comments-vs-reviews surface separation.
+- `resource-comments`: interactive Threads-style comments on a resource detail
+  page — composer (sticky on mobile), minimal-row list, flat one-level replies,
+  per-comment like, optimistic append, auth gating, delete-own, states,
+  i18n/a11y, and the comments-vs-reviews surface separation.
 
 ### Modified Capabilities
 - (none — no main spec exists yet for resource detail; the read-only mock list is

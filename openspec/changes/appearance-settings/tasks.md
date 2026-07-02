@@ -2,9 +2,9 @@
 
 ## 1. Nền tảng: token, store, chống flash
 
-- [x] 1.1 Tạo `src/resources/constants/appearance.ts`: bảng 6 preset accent (`indigo` #3F51B5 đầu tiên/mặc định, `pink` = oklch(70.03% 0.2092 354.13) hiện tại, + 4 màu curated đạt contrast trắng ≥ 4.5:1), export `AccentId`, `EffectDirection`, tên localStorage key `ftesaos-appearance`
+- [x] 1.1 Tạo `src/resources/constants/appearance.ts`: bảng 6 preset accent (`indigo` #3F51B5 đầu tiên/mặc định, `pink` = oklch(70.03% 0.2092 354.13) hiện tại, + 4 màu curated đạt contrast trắng ≥ 4.5:1), export `AccentId`, `EffectDirection`, `EffectSpeed` + `SPEED_FACTOR = { slow: 1.6, normal: 1.0, fast: 0.55 }`, tên localStorage key `ftesaos-appearance`
 - [x] 1.2 `globals.css`: đổi `--accent` gốc ở cả block light lẫn dark sang `#3F51B5`; thêm các block `[data-accent="<id>"] { --accent; --accent-foreground }` cho đủ 6 preset (đặt sau block theme)
-- [x] 1.3 Tạo `src/hooks/zustand/appearance/store.ts`: zustand + `persist` (shape `accent`/`effectEnabled`/`effectDirection` + 3 setter; default `indigo`/`true`/`"fall"`) và effect đồng bộ `document.documentElement.dataset.accent` khi `accent` đổi
+- [ ] 1.3 Tạo `src/hooks/zustand/appearance/store.ts`: zustand + `persist` (shape `accent`/`effectEnabled`/`effectDirection`/`effectSpeed` + 4 setter; default `indigo`/`true`/`"fall"`/`"normal"`) và effect đồng bộ `document.documentElement.dataset.accent` khi `accent` đổi
 - [x] 1.4 `src/app/layout.tsx`: thêm script inline pre-paint đọc `localStorage["ftesaos-appearance"]` (parse `state.accent`, try/catch) và set `data-accent` trên `<html>` trước first paint
 - [x] 1.5 Verify bước nền: `npm run build` xanh + `tsc --noEmit` sạch; mở dev thấy accent xanh mặc định, đổi tay localStorage → reload không flash màu cũ (build: batch-verified by orchestrator; tsc --noEmit sạch)
 
@@ -12,14 +12,17 @@
 
 - [x] 2.1 `globals.css`: thêm `@keyframes meteorFall` (từ -15vh → 110vh, fade in/out, `translateX(var(--drift))`); mở rộng guard `prefers-reduced-motion` cho cả `.ambient-meteor`
 - [x] 2.2 `AmbientBackground/index.tsx`: thêm prop `direction?: "rise" | "fall"` (default `"fall"`); giữ nguyên công thức seed; nhánh fall render vệt (cao `size*7`, gradient accent→transparent hướng đuôi lên trên, nghiêng theo drift, class `ambient-meteor`, animation `meteorFall`, neo `top-0`) + glow radial chuyển lên mép trên; nhánh rise giữ nguyên 100%
-- [x] 2.3 `src/app/InnerLayout.tsx`: đọc `effectEnabled`/`effectDirection` từ appearance store (selector hẹp); render `AmbientBackground` với `direction` khi bật, ẩn hoàn toàn khi tắt; giữ điều kiện loại route learn
-- [x] 2.4 Verify: `npm run build` xanh + `tsc --noEmit` sạch; dev thấy sao băng xanh rơi mặc định, đổi store tay → rise hoạt động như cũ, không cảnh báo hydration (build: batch-verified by orchestrator; tsc --noEmit sạch)
+- [ ] 2.6 **[Tốc độ hiệu ứng]** `AmbientBackground/index.tsx`: thêm prop `speed?: "slow"|"normal"|"fast"` (default `"normal"`); nhân `animationDuration` mỗi spark theo `SPEED_FACTOR` (slow ×1.6, normal ×1.0, fast ×0.55) cho CẢ nhánh rise (`emberRise`) lẫn fall (`meteorFall`); KHÔNG đổi công thức seed. `InnerLayout` đọc thêm `effectSpeed` từ store, truyền `speed`. Reduced-motion guard vẫn thắng
+- [ ] 2.3 `src/app/InnerLayout.tsx`: đọc `effectEnabled`/`effectDirection`/`effectSpeed` từ appearance store (selector hẹp); render `AmbientBackground` với `direction` + `speed` khi bật, ẩn hoàn toàn khi tắt; giữ điều kiện loại route learn
+- [ ] 2.5 **[Delta hướng-mới] Làm `meteorFall` RƠI CHÉO** (thầy: "cho nó rơi chéo, đang rơi thẳng xuống"): sửa keyframe gộp `translateX` (drift ÂM) + `translateY` cho quỹ đạo canonical top-right → bottom-left ~20–35° khỏi phương đứng; thêm CSS var `--tilt` per-spark = `atan2(Δx, Δy)` và áp `rotate(var(--tilt))` suốt keyframe để trục vệt/đuôi trùng phương bay; dời glow radial sang góc trên-phải; verify trực quan qua build (build: batch-verified by orchestrator)
+- [ ] 2.7 **[Mưa sao băng] Tăng mật độ + hạ base-duration cho fall** (thầy: "trông như mưa sao băng" + "chậm quá"): count theo hướng `COUNT = { rise: 60, fall: 120 }` (fall dày gấp ~2×, vẫn seeded theo index — hydration-safe, mỗi vệt có đuôi rõ); hạ base-duration seeded để fall rơi dứt khoát ~4–7s/spark ở `normal` (thay ~8–18s cũ). GIỮ mặc định `effectSpeed=normal` (KHÔNG đổi sang fast). Verify: fall 120 vệt không hydration mismatch, không lag (thuần CSS)
+- [x] 2.4 Verify: `npm run build` xanh + `tsc --noEmit` sạch; dev thấy sao băng xanh rơi CHÉO mặc định, đổi store tay → rise (bay thẳng lên) hoạt động như cũ, không cảnh báo hydration (build: batch-verified by orchestrator; tsc --noEmit sạch)
 
 ## 3. Modal cài đặt giao diện
 
 - [x] 3.1 `src/hooks/zustand/overlay/store.ts` + `hooks.ts`: thêm overlay key `"appearance"` + `useAppearanceOverlayState`
-- [x] 3.2 i18n: thêm cụm `appearance.*` vào `src/messages/vi.json` + `en.json` (title, mode.{label,light,dark,system}, accent.{label,default,names.*}, effect.{label,enabled,direction,rise,fall}); JSON hợp lệ
-- [x] 3.3 Tạo `src/components/modals/AppearanceModal/` theo pattern `LanguageModal`: `index.tsx` + `ModeSection` (radiogroup segmented 3 chế độ, dùng `useTheme`) + `AccentSection` (radiogroup swatch từ bảng preset, aria-label tên màu, ring + check khi chọn, swatch đầu ghi "(mặc định)") + `EffectSection` (Switch bật/tắt + radiogroup rise/fall, disabled khi off); mọi control áp live, không nút lưu
+- [ ] 3.2 i18n: thêm cụm `appearance.*` vào `src/messages/vi.json` + `en.json` (title, mode.{label,light,dark,system}, accent.{label,default,names.*}, effect.{label,enabled,direction,rise,fall}, speed.{label,slow,normal,fast}); JSON hợp lệ
+- [ ] 3.3 Tạo `src/components/modals/AppearanceModal/` theo pattern `LanguageModal`: `index.tsx` + `ModeSection` (radiogroup segmented 3 chế độ, dùng `useTheme`) + `AccentSection` (radiogroup swatch từ bảng preset, aria-label tên màu, ring + check khi chọn, swatch đầu ghi "(mặc định)") + `EffectSection` (Switch bật/tắt + radiogroup rise/fall + radiogroup speed slow/normal/fast mặc định "Vừa", cả hướng lẫn tốc độ disabled khi off); mọi control áp live, không nút lưu
 - [x] 3.4 Mount `AppearanceModal` vào `src/components/modals/ModalContainer.tsx`
 - [x] 3.5 Verify: `npm run build` xanh + `tsc --noEmit` sạch; modal mở được, đổi mode/màu/hiệu ứng áp ngay và giữ sau reload (build: batch-verified by orchestrator; tsc --noEmit sạch)
 
@@ -32,5 +35,5 @@
 
 ## 5. Verify cuối
 
-- [x] 5.1 Chạy đủ kịch bản tay: khách (chưa login) mở modal từ desktop + mobile drawer; đổi màu → reload giữ màu, không flash; tắt hiệu ứng → nền biến mất tức thì; rise ↔ fall live; bật OS reduce-motion → không spark nào hiện; xoá localStorage → mặc định xanh + rơi sao băng; chuyển vi/en đủ nhãn
+- [ ] 5.1 Chạy đủ kịch bản tay: khách (chưa login) mở modal từ desktop + mobile drawer; đổi màu → reload giữ màu, không flash; tắt hiệu ứng → nền biến mất tức thì; rise ↔ fall live (fall rơi CHÉO); đổi tốc độ Chậm/Vừa/Nhanh → spark nhanh/chậm tương ứng, giữ sau reload; bật OS reduce-motion → không spark nào hiện (kể cả tốc độ Nhanh); xoá localStorage → mặc định xanh + rơi sao băng chéo + tốc độ Vừa; chuyển vi/en đủ nhãn
 - [x] 5.2 `npm run build` (webpack) xanh + `tsc --noEmit` sạch lần cuối; `openspec validate appearance-settings` pass (build: batch-verified by orchestrator; tsc --noEmit sạch)

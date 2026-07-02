@@ -2,62 +2,63 @@
 
 ## ADDED Requirements
 
-### Requirement: Header carries exactly four top-level modules
+### Requirement: Header carries exactly four top-level modules as PLAIN LABEL LINKS
 
-The application header SHALL present exactly four top-level navigation modules, in order: **Home** (`/`), **Workplace** (`/subjects`), **Course** (`/courses`), **Community** (`/community`). Home SHALL be a plain link with no dropdown. Workplace, Course, and Community SHALL each be both a navigable link to their module path AND a trigger for a dropdown of nested features. The header SHALL NOT render any other top-level nav item (the "Explore" mega-menu is removed).
+The application header SHALL present exactly four top-level navigation modules, in order: **Home** (`/`), **Workplace** (`/subjects`), **Course** (`/courses`), **Community** (`/community`). Each module SHALL be a **plain label link** that navigates to its module landing route on click. The header SHALL NOT render any dropdown, caret/chevron, hover sub-menu, click sub-menu, or mega-menu for any module (the "Explore" mega-menu is removed, and the previously-designed per-module dropdowns are removed). Nested features are reached from INSIDE each module's own landing page, not from the header.
 
-#### Scenario: Four modules render on desktop
+#### Scenario: Four plain-link modules render on desktop
 
 - **GIVEN** a desktop viewport (≥ md)
 - **WHEN** any page renders
-- **THEN** the header center shows exactly Home, Workplace, Course, Community in that order, and no "Explore" item exists
+- **THEN** the header center shows exactly Home, Workplace, Course, Community in that order as plain label links, with no caret, no dropdown, and no "Explore" item
 
-#### Scenario: Module label navigates
+#### Scenario: Clicking a module navigates to its landing page
 
 - **GIVEN** the user is on any page
-- **WHEN** they click the "Workplace" label (not the caret)
-- **THEN** the router navigates to `/subjects` without requiring the dropdown to open
+- **WHEN** they click the "Workplace" label
+- **THEN** the router navigates to `/subjects` (the Workplace landing page)
+- **AND** no sub-menu or dropdown opens at any point
 
-### Requirement: Module dropdowns nest all remaining features
-
-Each dropdown SHALL contain exactly the following feature links (icon + label): **Workplace ▾** → Subjects (`/subjects`), Resources (`/resources`), Challenges (`/challenges`), Leaderboard (`/leaderboard`), Workflow (`/workflow`), Analytics (`/analytics`), Career (`/career`); **Course ▾** → Catalog (`/courses`), Marketplace (`/marketplace`); **Community ▾** → Feed (`/community`), Groups (`/groups`), Events (`/events`), Chat (`/chat`). The Workplace dropdown SHALL NOT contain an AI Hub item and the Course dropdown SHALL NOT contain a Recommendations item — those discovery shortcuts relocate to the profile/avatar popup (owned by change `profile-avatar-hub`). The Account menu SHALL additionally contain Activity (`/activity`), Wallet (`/wallet`), Integrations (`/integrations`), Roles (`/admin/roles`) grouped under labeled sections. Search SHALL remain reachable via the header search trigger and Ctrl/Cmd+K. Every destination present in the previous navigation SHALL remain reachable from the header or the profile/avatar popup (no orphaned route).
-
-#### Scenario: Workplace dropdown lists its features
-
-- **GIVEN** a desktop viewport
-- **WHEN** the user opens the Workplace dropdown
-- **THEN** it lists Subjects, Resources, Challenges, Leaderboard, Workflow, Analytics, Career, each navigating to its route and closing the dropdown on selection
-- **AND** no AI Hub item is present in the Workplace dropdown
-
-#### Scenario: Community dropdown surfaces Groups and Events on hover
+#### Scenario: Hover shows nothing beyond the label
 
 - **GIVEN** a desktop pointer user on any page
-- **WHEN** they hover the Community module to open its dropdown
-- **THEN** the dropdown reveals Groups and Events (alongside Feed and Chat), each navigating to `/groups` and `/events` respectively and closing the dropdown on selection
+- **WHEN** they hover any header module (Home, Workplace, Course, or Community)
+- **THEN** no dropdown, mega-menu, or sub-menu appears — the module is a plain link only
 
-#### Scenario: Course dropdown omits Recommendations
+### Requirement: Nested features live inside each module's page, not the header
 
-- **GIVEN** a desktop viewport
-- **WHEN** the user opens the Course dropdown
-- **THEN** it lists only Catalog and Marketplace, and no Recommendations item is present
+The header SHALL NOT enumerate any module's nested features. Each module's landing page SHALL be the entry point for its nested features: Workplace features (Resources `/resources`, Challenges `/challenges`, Leaderboard `/leaderboard`, Workflow `/workflow`, Analytics `/analytics`, Career `/career`) are reached from within the Workplace / subject-workspace pages; Community sub-areas (Groups `/groups`, Events `/events`, Chat `/chat`, plus the feed's own tabs) are reached from within the Community page's own tabs/sub-nav; Course sub-areas (Marketplace `/marketplace`, the catalog itself) are reached from within the Course catalog page. The Account menu SHALL contain the personal/admin destinations Activity (`/activity`), Wallet (`/wallet`), Integrations (`/integrations`), Roles (`/admin/roles`) grouped under labeled sections. Search SHALL remain reachable via the header search trigger and Ctrl/Cmd+K. Every destination present in the previous navigation SHALL remain a valid route reachable from within its section page, the Account menu, the profile/avatar popup, or search (no orphaned route).
 
-#### Scenario: Former Explore destinations still reachable
+#### Scenario: Workplace features reached from inside the Workplace page
 
-- **GIVEN** the redesigned header
+- **GIVEN** the header exposes Workplace only as a plain link to `/subjects`
+- **WHEN** the user wants Resources, Challenges, Leaderboard, Workflow, Analytics, or Career
+- **THEN** those features are reached from within the Workplace / subject-workspace pages, and none of them appears as a header dropdown item
+
+#### Scenario: Community sub-areas reached from inside the Community page
+
+- **GIVEN** the header exposes Community only as a plain link to `/community`
+- **WHEN** the user wants Groups, Events, or Chat
+- **THEN** they navigate into the Community page and reach Groups (`/groups`), Events (`/events`), and Chat (`/chat`) from that page's own tabs/sub-nav — the header never surfaces them on hover or click
+
+#### Scenario: Migrated destinations still reachable
+
+- **GIVEN** the redesigned plain-link header
 - **WHEN** the user looks for Activity, Wallet, Integrations, or Roles
 - **THEN** each is available inside the Account menu under a labeled section, navigating to `/activity`, `/wallet`, `/integrations`, `/admin/roles` respectively
+- **AND** every former dropdown destination (resources, challenges, leaderboard, workflow, analytics, career, marketplace, groups, events, chat, feed) remains a valid route reachable from inside its section page
 
 ### Requirement: Discovery shortcuts are not header modules
 
-Discovery shortcuts — global AI hub (`/ai`), "For You" (community For You feed), Recommendations (`/recommendations`), and Trending (community trending) — SHALL NOT appear as header navigation modules or as items in any header module dropdown. They SHALL relocate to the profile/avatar popup, whose ownership belongs to change `profile-avatar-hub`. The routes `/ai` and `/recommendations` SHALL remain valid and reachable via that popup, so that no route is orphaned by their removal from the header.
+Discovery shortcuts — global AI hub (`/ai`), "For You" (community For You feed), Recommendations (`/recommendations`), and Trending (community trending) — SHALL NOT appear as header navigation modules. Because the header has NO dropdowns, they SHALL NOT appear in any header sub-menu either. They SHALL live in the profile/avatar popup, whose ownership belongs to change `profile-avatar-hub`. The routes `/ai` and `/recommendations` SHALL remain valid and reachable ONLY via that popup (and search), so that no route is orphaned by their removal from the header.
 
-#### Scenario: AI and Recommendations absent from header dropdowns
+#### Scenario: AI and Recommendations absent from the header
 
-- **GIVEN** the amended header
-- **WHEN** the user opens the Workplace or Course dropdown
-- **THEN** neither an AI Hub link (`/ai`) nor a Recommendations link (`/recommendations`) appears in any header dropdown
+- **GIVEN** the amended plain-link header
+- **WHEN** the user inspects the header
+- **THEN** neither an AI Hub link (`/ai`) nor a Recommendations link (`/recommendations`) appears in the header, and since there are no dropdowns, they cannot appear in any header sub-menu
 
-#### Scenario: Discovery routes remain reachable
+#### Scenario: Discovery routes remain reachable via the popup
 
 - **GIVEN** `/ai` and `/recommendations` are no longer in the header
 - **WHEN** the user needs the AI hub or recommendations
@@ -65,45 +66,23 @@ Discovery shortcuts — global AI hub (`/ai`), "For You" (community For You feed
 
 ### Requirement: Single source of truth for navigation data
 
-The desktop header, its dropdowns, and the mobile drawer SHALL all consume one shared navigation hook (`useAppNav`) returning a two-level module structure (module → children). No consumer SHALL hardcode its own nav item list.
+The desktop header and the mobile drawer SHALL both consume one shared navigation hook (`useAppNav`) as the source of the four modules. Since the header renders plain links, `useAppNav` SHALL expose, for the header, the four modules with `{ key, label, icon, path }` — the header does NOT consume any per-module `children` list. No consumer SHALL hardcode its own module list.
 
-#### Scenario: Desktop and mobile render the same IA
+#### Scenario: Desktop and mobile render the same four modules
 
-- **GIVEN** the shared nav source defines the four modules and their children
+- **GIVEN** the shared nav source defines the four modules
 - **WHEN** both the desktop header and the mobile drawer render
-- **THEN** both show the same modules with the same children, labels, paths, and order
-
-### Requirement: Desktop dropdown open and close behavior
-
-A module dropdown SHALL open on trigger click, Enter/Space on the trigger, or pointer hover over the module cluster (with a short close delay to prevent flicker). It SHALL close when: an item is selected, ESC is pressed, focus leaves the menu (blur), the user clicks outside, or another module dropdown opens. At most one dropdown SHALL be open at a time.
-
-#### Scenario: Hover opens, moving away closes
-
-- **GIVEN** a desktop pointer user
-- **WHEN** they hover the Course module then move the pointer fully away from trigger and panel
-- **THEN** the dropdown opens on hover and closes after the short delay
-
-#### Scenario: ESC closes and restores focus
-
-- **GIVEN** the Community dropdown is open with an item focused
-- **WHEN** the user presses ESC
-- **THEN** the dropdown closes and focus returns to the Community trigger
-
-#### Scenario: Opening one menu closes another
-
-- **GIVEN** the Workplace dropdown is open
-- **WHEN** the user opens the Course dropdown
-- **THEN** the Workplace dropdown closes and only the Course dropdown remains open
+- **THEN** both show the same four modules (Home, Workplace, Course, Community) with the same labels, paths, and order, as plain links
 
 ### Requirement: Active state highlights by route prefix
 
-The header SHALL highlight the module whose subtree contains the current route: a module is active when the pathname equals or is prefixed by its own path or any of its children's paths (Home is active only on the exact home path). Inside an open dropdown, the child matching the current route prefix SHALL also be visually marked active.
+The header SHALL highlight the module whose subtree contains the current route: a module is active when the pathname equals or is prefixed by its own path (or by a path belonging to a feature that lives inside that module's section). Home SHALL be active only on the exact home path.
 
 #### Scenario: Child route lights up its module
 
-- **GIVEN** the user is on `/resources/some-item`
+- **GIVEN** the user is on `/resources/some-item` (a feature inside the Workplace section)
 - **WHEN** the header renders
-- **THEN** Workplace shows the active style (and Home, Course, Community do not), and opening Workplace ▾ shows Resources marked active
+- **THEN** the Workplace label shows the active style (and Home, Course, Community do not)
 
 #### Scenario: Home active only on exact home
 
@@ -111,35 +90,38 @@ The header SHALL highlight the module whose subtree contains the current route: 
 - **WHEN** the header renders
 - **THEN** Home is NOT active even though `/` prefixes every path
 
-### Requirement: Mobile drawer mirrors the four module groups
+### Requirement: Mobile drawer mirrors the four plain-link modules
 
-On mobile viewports the drawer SHALL present: a Home link row, then three accordion groups (Workplace, Course, Community). Each group SHALL expand to its module's main link plus its nested children; the group containing the active route SHALL be expanded by default. Selecting any item SHALL navigate and close the drawer. Language and theme controls SHALL remain in the drawer.
+On mobile viewports the drawer SHALL present the same four modules (Home, Workplace, Course, Community) as **plain link rows** — no accordion groups, no per-module children list. Tapping a module row SHALL navigate to that module's landing route and close the drawer. Language and theme controls SHALL remain in the drawer.
 
-#### Scenario: Drawer accordion groups
+#### Scenario: Drawer shows four plain links
 
-- **GIVEN** a mobile viewport with the drawer open while on `/groups`
+- **GIVEN** a mobile viewport with the drawer open
 - **WHEN** the drawer renders
-- **THEN** it shows Home + three accordion groups, the Community group is pre-expanded with Groups marked active, and tapping Events navigates to `/events` and closes the drawer
+- **THEN** it shows exactly four plain link rows (Home, Workplace, Course, Community) with no accordion and no nested children
+- **AND** tapping "Community" navigates to `/community` and closes the drawer
+- **AND** the language and theme rows remain present
 
 ### Requirement: Navigation accessibility
 
-The header nav SHALL be an `aria-label`ed `nav` landmark. Each dropdown trigger SHALL expose `aria-expanded` and `aria-haspopup`. Keyboard users SHALL be able to: Tab through module links and triggers, open a menu with Enter/Space, move between items with ArrowUp/ArrowDown, activate with Enter, and dismiss with ESC. All icon-only controls SHALL have accessible names.
+The header nav SHALL be an `aria-label`ed `nav` landmark whose items are plain links. Because there are no dropdowns, no trigger SHALL expose `aria-haspopup`/`aria-expanded`. Keyboard users SHALL be able to Tab through the four module links and activate each with Enter. All icon-only controls SHALL have accessible names.
 
-#### Scenario: Keyboard-only traversal
+#### Scenario: Keyboard-only traversal of plain links
 
-- **GIVEN** a keyboard-only user focused on the Workplace dropdown trigger
-- **WHEN** they press Enter, then ArrowDown twice, then Enter
-- **THEN** the menu opens, focus moves to the second item, and activating it navigates and closes the menu
+- **GIVEN** a keyboard-only user focused on the header nav
+- **WHEN** they Tab across the modules and press Enter on "Course"
+- **THEN** focus moves link-to-link (Home → Workplace → Course → Community) and Enter on Course navigates to `/courses`
+- **AND** no menu opens because none exists
 
 ### Requirement: Navigation labels are localized
 
-All module and feature labels in the header, dropdowns, mobile drawer, and the new Account-menu sections SHALL come from the i18n message catalogs with both Vietnamese and English translations. No nav label SHALL be hardcoded.
+All module labels in the header and mobile drawer, and the new Account-menu section labels, SHALL come from the i18n message catalogs with both Vietnamese and English translations. No nav label SHALL be hardcoded.
 
 #### Scenario: Locale switch relabels nav
 
 - **GIVEN** the header renders in Vietnamese
 - **WHEN** the user switches the language to English
-- **THEN** every module, dropdown item, drawer group, and account-menu section label renders its English translation
+- **THEN** every module link, drawer row, and account-menu section label renders its English translation
 
 ### Requirement: No global left sidebar
 

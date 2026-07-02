@@ -2599,6 +2599,57 @@
             "none": "Not requested"
         }
     },
+    "authFlows": {
+        "register": {
+            "title": "Create your account",
+            "subtitle": "Join FTES Academic Operating System",
+            "name": "Full name",
+            "email": "Email",
+            "password": "Password",
+            "confirmPassword": "Confirm password",
+            "submit": "Create account",
+            "success": "Account created. Check your email to verify.",
+            "haveAccount": "Already have an account?",
+            "signIn": "Sign in",
+            "invalidEmail": "Please enter a valid email address.",
+            "passwordMismatch": "Passwords do not match."
+        },
+        "forgot": {
+            "title": "Forgot your password?",
+            "subtitle": "We'll send you a link to reset it.",
+            "email": "Email",
+            "submit": "Send reset link",
+            "sent": "If that email exists, a reset link is on its way. Check your inbox.",
+            "invalidEmail": "Please enter a valid email address.",
+            "backToLogin": "Back to sign in"
+        },
+        "reset": {
+            "title": "Reset your password",
+            "subtitle": "Choose a new password for your account.",
+            "password": "New password",
+            "confirmPassword": "Confirm password",
+            "submit": "Reset password",
+            "success": "Your password has been reset.",
+            "passwordMismatch": "Passwords do not match.",
+            "backToLogin": "Back to sign in"
+        },
+        "otp": {
+            "title": "Verify your email",
+            "subtitle": "Enter the 6-digit code we sent you.",
+            "verify": "Verify",
+            "resend": "Resend code",
+            "success": "Your code has been verified.",
+            "digitLabel": "Digit {index}"
+        },
+        "twoFactor": {
+            "title": "Set up two-factor authentication",
+            "subtitle": "Add an extra layer of security to your account.",
+            "scanHint": "Scan this QR code with your authenticator app.",
+            "confirmCode": "Enter the 6-digit code from your app",
+            "enable": "Enable 2FA",
+            "success": "Two-factor authentication is now enabled."
+        }
+    },
     "aiPlatform": {
         "title": "AI Platform",
         "subtitle": "Every AI tool in one place — for students, learning, coding, careers, and teachers.",

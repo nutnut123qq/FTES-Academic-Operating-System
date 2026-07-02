@@ -2599,6 +2599,57 @@
             "none": "Chưa gửi yêu cầu"
         }
     },
+    "authFlows": {
+        "register": {
+            "title": "Tạo tài khoản",
+            "subtitle": "Tham gia FTES Academic Operating System",
+            "name": "Họ và tên",
+            "email": "Email",
+            "password": "Mật khẩu",
+            "confirmPassword": "Xác nhận mật khẩu",
+            "submit": "Tạo tài khoản",
+            "success": "Đã tạo tài khoản. Kiểm tra email để xác minh.",
+            "haveAccount": "Đã có tài khoản?",
+            "signIn": "Đăng nhập",
+            "invalidEmail": "Vui lòng nhập email hợp lệ.",
+            "passwordMismatch": "Mật khẩu không khớp."
+        },
+        "forgot": {
+            "title": "Quên mật khẩu?",
+            "subtitle": "Chúng tôi sẽ gửi liên kết để đặt lại mật khẩu.",
+            "email": "Email",
+            "submit": "Gửi liên kết đặt lại",
+            "sent": "Nếu email tồn tại, liên kết đặt lại đang được gửi. Vui lòng kiểm tra hộp thư.",
+            "invalidEmail": "Vui lòng nhập email hợp lệ.",
+            "backToLogin": "Quay lại đăng nhập"
+        },
+        "reset": {
+            "title": "Đặt lại mật khẩu",
+            "subtitle": "Chọn mật khẩu mới cho tài khoản của bạn.",
+            "password": "Mật khẩu mới",
+            "confirmPassword": "Xác nhận mật khẩu",
+            "submit": "Đặt lại mật khẩu",
+            "success": "Mật khẩu của bạn đã được đặt lại.",
+            "passwordMismatch": "Mật khẩu không khớp.",
+            "backToLogin": "Quay lại đăng nhập"
+        },
+        "otp": {
+            "title": "Xác minh email",
+            "subtitle": "Nhập mã gồm 6 chữ số chúng tôi đã gửi cho bạn.",
+            "verify": "Xác minh",
+            "resend": "Gửi lại mã",
+            "success": "Mã của bạn đã được xác minh.",
+            "digitLabel": "Chữ số {index}"
+        },
+        "twoFactor": {
+            "title": "Thiết lập xác thực hai lớp",
+            "subtitle": "Thêm một lớp bảo mật cho tài khoản của bạn.",
+            "scanHint": "Quét mã QR này bằng ứng dụng xác thực của bạn.",
+            "confirmCode": "Nhập mã 6 chữ số từ ứng dụng của bạn",
+            "enable": "Bật 2FA",
+            "success": "Xác thực hai lớp đã được bật."
+        }
+    },
     "aiPlatform": {
         "title": "Nền tảng AI",
         "subtitle": "Mọi công cụ AI trong một nơi — cho học viên, học tập, lập trình, nghề nghiệp và giảng viên.",

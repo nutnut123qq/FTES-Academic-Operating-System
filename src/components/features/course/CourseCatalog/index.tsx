@@ -4,6 +4,7 @@ import React, { useState } from "react"
 import { Button, Chip, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
+import { SaveButton } from "@/components/blocks/buttons/SaveButton"
 import {
     useQueryCoursesSwr,
     type CourseLevel,
@@ -75,7 +76,7 @@ export const CourseCatalog = () => {
                             <div className="flex size-11 shrink-0 items-center justify-center rounded-large bg-accent/10 text-xs font-bold text-accent">
                                 {course.code.slice(0, 3).toUpperCase()}
                             </div>
-                            <div className="min-w-0">
+                            <div className="min-w-0 flex-1">
                                 <Typography type="body-sm" weight="medium" truncate>
                                     {course.code}
                                 </Typography>
@@ -83,6 +84,8 @@ export const CourseCatalog = () => {
                                     {course.name}
                                 </Typography>
                             </div>
+                            {/* toggle must not trigger the card navigation (block swallows the press) */}
+                            <SaveButton entityType="course" entityId={course.id} />
                         </div>
                         <div className="flex items-center gap-2">
                             <Chip size="sm" variant="soft" color="accent">

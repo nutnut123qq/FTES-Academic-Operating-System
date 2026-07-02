@@ -18,6 +18,7 @@ import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
 import { useRouter } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { SaveButton } from "@/components/blocks/buttons/SaveButton"
 import { PriceTag } from "@/components/blocks/commerce/PriceTag"
 import { ResponsiveBreadcrumb } from "@/components/blocks/navigation/ResponsiveBreadcrumb"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
@@ -111,9 +112,12 @@ const CourseDetailView = ({
                 <div className="flex flex-col gap-6 md:col-span-3">
                     {/* hero */}
                     <div className="flex flex-col gap-3">
-                        <Typography type="h4" weight="bold">
-                            {course.code} · {course.name}
-                        </Typography>
+                        <div className="flex items-start gap-3">
+                            <Typography type="h4" weight="bold" className="min-w-0 flex-1">
+                                {course.code} · {course.name}
+                            </Typography>
+                            <SaveButton entityType="course" entityId={course.id} />
+                        </div>
                         <div className="flex flex-wrap items-center gap-2">
                             <Chip size="sm" variant="soft" color="accent">
                                 {t(`levels.${course.level}`)}

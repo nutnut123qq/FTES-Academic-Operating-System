@@ -49,11 +49,11 @@ export const MenuList = ({ className }: MenuListProps) => {
         [locale],
     )
 
-    /** Close the dropdown and navigate to the bookmarks page. */
+    /** Close the dropdown and navigate to the saved-items library (/saved). */
     const onOpenBookmarks = useCallback(
         () => {
             close()
-            router.push(pathConfig().locale().profile().bookmarks().build())
+            router.push(pathConfig().locale().saved().build())
         },
         [close, router],
     )

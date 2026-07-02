@@ -1,3 +1,5 @@
+> **SUPERSEDED by `subject-workspace-ia` (2026-07-02).** The Lessons tab was removed from the workspace rail (domain separation: structured learning lives in the Course module). The `learning` route now redirects to the workspace Overview; the `SubjectLearning` feature, its mock hook, and `subjects.learning.*` i18n keys were deleted in that change.
+
 ## Why
 The Learning tab (§4 in the §3 workspace) was a placeholder. Ship real on-canon content (FE-only, mock).
 

@@ -1,10 +1,10 @@
 "use client"
 
-import React from "react"
+import React, { useState } from "react"
+import Image from "next/image"
 import { Chip, Typography, cn } from "@heroui/react"
 import {
     SquaresFourIcon,
-    BookOpenIcon,
     FolderIcon,
     TargetIcon,
     SparkleIcon,
@@ -35,13 +35,13 @@ interface NavItem {
     segment: string
 }
 
-/** The 9 workspace areas grouped into 3 clusters (Học · Cộng đồng · Insight). */
+/** The 8 workspace areas grouped into 3 clusters (Không gian môn · Cộng đồng · Insight) — rail v2, no Lessons (IA domain separation: learning lives in the Course module). */
 const NAV_GROUPS: Array<{ label: string; items: Array<NavItem> }> = [
     {
-        label: "learn",
+        label: "space",
         items: [
             { key: "overview", icon: <SquaresFourIcon className="size-5" />, segment: "" },
-            { key: "learning", icon: <BookOpenIcon className="size-5" />, segment: "learning" },
+            { key: "discussion", icon: <ChatCircleIcon className="size-5" />, segment: "discussion" },
             { key: "resources", icon: <FolderIcon className="size-5" />, segment: "resources" },
             { key: "practice", icon: <TargetIcon className="size-5" />, segment: "practice" },
             { key: "ai", icon: <SparkleIcon className="size-5" />, segment: "ai" },
@@ -50,7 +50,6 @@ const NAV_GROUPS: Array<{ label: string; items: Array<NavItem> }> = [
     {
         label: "community",
         items: [
-            { key: "community", icon: <ChatCircleIcon className="size-5" />, segment: "community" },
             { key: "members", icon: <UsersIcon className="size-5" />, segment: "members" },
         ],
     },
@@ -65,7 +64,7 @@ const NAV_GROUPS: Array<{ label: string; items: Array<NavItem> }> = [
 
 /**
  * Subject Workspace shell (archetype A · sidebar rail — chosen 2026-07-01). A left
- * {@link CollapsibleSidebar} lists the 9 workspace areas in 3 separator-divided
+ * {@link CollapsibleSidebar} lists the 8 workspace areas in 3 separator-divided
  * clusters; the content region carries the subject identity header + the active
  * tab. Sticky one-scroll (the body scrolls; the rail sticks under the 4rem navbar).
  *
@@ -79,6 +78,11 @@ export const SubjectWorkspaceShell = ({ subjectId, children }: SubjectWorkspaceS
     const router = useRouter()
     const pathname = usePathname()
     const { subject } = useQuerySubjectSwr(subjectId)
+    // broken header image → initials badge (spec: never show a broken glyph);
+    // keyed by src so a subject change retries its own image
+    const [brokenImageUrl, setBrokenImageUrl] = useState<string | null>(null)
+    const imageUrl =
+        subject?.imageUrl && subject.imageUrl !== brokenImageUrl ? subject.imageUrl : null
 
     const base = `/subjects/${subjectId}`
     const hrefFor = (segment: string) => (segment ? `${base}/${segment}` : base)
@@ -119,9 +123,22 @@ export const SubjectWorkspaceShell = ({ subjectId, children }: SubjectWorkspaceS
                 {/* subject identity header — spans the content region top */}
                 <header className={cn("flex flex-col gap-2 border-b border-separator p-6")}>
                     <div className="flex items-center gap-3">
-                        <div className="flex size-11 shrink-0 items-center justify-center rounded-large bg-accent/10 text-sm font-bold text-accent">
-                            {(subject?.code ?? subjectId).slice(0, 3).toUpperCase()}
-                        </div>
+                        {imageUrl !== null && subject ? (
+                            <div className="relative size-11 shrink-0 overflow-hidden rounded-large">
+                                <Image
+                                    src={imageUrl}
+                                    alt={subject.name}
+                                    fill
+                                    sizes="44px"
+                                    className="object-cover"
+                                    onError={() => setBrokenImageUrl(imageUrl)}
+                                />
+                            </div>
+                        ) : (
+                            <div className="flex size-11 shrink-0 items-center justify-center rounded-large bg-accent/10 text-sm font-bold text-accent">
+                                {(subject?.code ?? subjectId).slice(0, 3).toUpperCase()}
+                            </div>
+                        )}
                         <div className="min-w-0">
                             <Typography type="h4" weight="bold" truncate>
                                 {subject ? `${subject.code} · ${subject.name}` : subjectId}

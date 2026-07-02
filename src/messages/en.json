@@ -256,6 +256,12 @@
     "nav": {
         "brand": "FTES AOS",
         "home": "Home",
+        "workplace": "Workplace",
+        "course": "Course",
+        "catalog": "Course catalog",
+        "feed": "Feed",
+        "primary": "Primary navigation",
+        "openModuleMenu": "Open {module} menu",
         "subjects": "Subjects",
         "courses": "Courses",
         "resources": "Resources",
@@ -3488,6 +3494,47 @@
         "errorTitle": "Failed to load bookmarks",
         "premium": "Premium"
     },
+    "savedItems": {
+        "title": "Saved",
+        "save": "Save",
+        "unsave": "Unsave",
+        "tabs": {
+            "all": "All",
+            "resource": "Resources",
+            "course": "Courses",
+            "post": "Posts"
+        },
+        "searchPlaceholder": "Search saved items",
+        "noResults": "No saved items match your search.",
+        "signInTitle": "Sign in to see your saved items",
+        "signInHint": "Resources, courses, and posts you save will show up here.",
+        "signInCta": "Sign in",
+        "source": {
+            "community": "Community"
+        },
+        "empty": {
+            "all": {
+                "title": "Nothing saved yet",
+                "hint": "Press the bookmark icon on a resource, course, or post to save it for later.",
+                "cta": "Browse courses"
+            },
+            "resource": {
+                "title": "No saved resources yet",
+                "hint": "Press the bookmark icon on a resource to save it for later.",
+                "cta": "Browse resources"
+            },
+            "course": {
+                "title": "No saved courses yet",
+                "hint": "Press the bookmark icon on a course to save it for later.",
+                "cta": "Browse courses"
+            },
+            "post": {
+                "title": "No saved posts yet",
+                "hint": "Press the bookmark icon on a post to save it for later.",
+                "cta": "Go to the community"
+            }
+        }
+    },
     "followList": {
         "title": "Connections",
         "empty": {
@@ -3575,23 +3622,27 @@
             "advanced": "Advanced"
         },
         "groups": {
-            "learn": "Learn",
+            "space": "Subject space",
             "community": "Community",
             "insight": "Insight"
         },
         "nav": {
             "overview": "Overview",
-            "learning": "Lessons",
+            "discussion": "Discussion",
             "resources": "Resources",
             "practice": "Practice",
             "ai": "AI",
-            "community": "Community",
             "members": "Members",
             "statistics": "Statistics",
             "career": "Career"
         },
         "overview": {
             "title": "Subject overview",
+            "linkedCourses": "Courses for this subject",
+            "viewCourse": "View course",
+            "viewCourseAria": "View course {code} – {name}",
+            "reactionsAria": "{count} reactions",
+            "commentsAria": "{count} comments",
             "joined": "You've joined this space",
             "statsLine": "{members} members · {moderators} moderators · {resources} resources",
             "compose": "New post",
@@ -3648,13 +3699,8 @@
                 }
             }
         },
-        "learning": {
-            "title": "Lessons",
-            "done": "Done",
-            "progressLabel": "{done}/{total} lessons · {percent}%"
-        },
         "community": {
-            "title": "Subject community",
+            "title": "Subject discussion",
             "reactions": "{count} reactions",
             "scopes": {
                 "forYou": "For you",
@@ -3733,6 +3779,14 @@
             "searchPlaceholder": "Search by code or name",
             "all": "All",
             "lessonsCount": "{count} lessons"
+        },
+        "featured": {
+            "regionLabel": "Featured courses",
+            "slideLabel": "{index} / {total}",
+            "prev": "Previous slide",
+            "next": "Next slide",
+            "goToSlide": "Go to slide {index}",
+            "cta": "View course"
         },
         "detail": {
             "credits": "{count} credits",
@@ -3840,6 +3894,29 @@
             "preview": "Document preview (placeholder)",
             "comments": "Comments"
         },
+        "comments": {
+            "title": "Comments ({count})",
+            "placeholder": "Write a comment…",
+            "submit": "Post comment",
+            "counter": "{count}/{limit}",
+            "empty": "No comments yet — be the first!",
+            "loadError": "Could not load comments.",
+            "submitError": "Could not post your comment. Your draft was kept, try again.",
+            "retry": "Try again",
+            "delete": "Delete",
+            "deleteConfirm": "Delete this comment?",
+            "deleteYes": "Delete",
+            "deleteNo": "Cancel",
+            "deleteError": "Could not delete the comment.",
+            "goToReviews": "Rate this resource",
+            "justNow": "just now",
+            "reply": "Reply",
+            "replyPlaceholder": "Write a reply…",
+            "cancelReply": "Cancel",
+            "like": "Like",
+            "unlike": "Unlike",
+            "likeCount": "{count} likes"
+        },
         "upload": {
             "title": "Upload resource",
             "dropzone": "Drop files here (placeholder)",
@@ -3900,6 +3977,10 @@
             "reportedBy": "reported by {name}",
             "keep": "Keep",
             "remove": "Remove"
+        },
+        "identity": {
+            "coverAlt": "{name} cover",
+            "avatarAlt": "{name} avatar"
         }
     },
     "groupsHub": {
@@ -3956,6 +4037,48 @@
         },
         "announcements": {
             "title": "Announcements"
+        },
+        "identity": {
+            "title": "Group identity",
+            "avatarLabel": "Group avatar",
+            "coverLabel": "Group cover",
+            "avatarHint": "PNG, JPG, WEBP, GIF · up to 5 MB",
+            "coverHint": "PNG, JPG, WEBP, GIF · up to 5 MB",
+            "invalidType": "Invalid format — only PNG, JPG, WEBP, GIF are accepted.",
+            "tooLarge": "Image exceeds 5 MB.",
+            "avatarAlt": "{name} avatar",
+            "coverAlt": "{name} cover",
+            "remove": "Remove image",
+            "uploadCta": "Drag an image here, or click to choose",
+            "save": "Save identity"
+        }
+    },
+    "appearance": {
+        "title": "Appearance",
+        "mode": {
+            "label": "Mode",
+            "light": "Light",
+            "dark": "Dark",
+            "system": "System"
+        },
+        "accent": {
+            "label": "Accent color",
+            "default": "Default",
+            "names": {
+                "indigo": "Indigo blue",
+                "pink": "Pink",
+                "teal": "Teal",
+                "emerald": "Emerald",
+                "amber": "Amber",
+                "violet": "Violet"
+            }
+        },
+        "effect": {
+            "label": "Background effect",
+            "enabled": "Enable effect",
+            "direction": "Direction",
+            "rise": "Rise up",
+            "fall": "Fall like meteors"
         }
     }
 }

@@ -17,11 +17,21 @@ piece. User intent: "Các bài đăng cho phép like share comment".
   when liked, filled bookmark when saved.
 - **Like**: the ♥ button toggles like with optimistic count/state update, rollback + error toast on
   failure.
-- **Comment**: a comment composer on the post detail page (submit button + Enter), optimistic append
-  to the thread, empty-input guard, error handling that preserves the draft. Comments support
-  **flat one-level replies** (Threads-like — no deeper nesting), and on mobile the composer
-  **sticks to the bottom of the viewport** while the post detail is open. Feed rows link their
-  comment count to the detail page's comments section (`#comments`).
+- **Comment — inline push-down expansion** (product owner decision 2026-07-02: "Bấm vô xem comment
+  là đẩy xuống chứ không nhảy sang trang khác như hiện tại"): tapping the 💬 button/count on a post
+  in ANY feed (community feed, group feed, workspace Thảo luận) **expands the comment thread INLINE
+  directly below that post** (Threads-style push-down accordion) — comment list (flat one-level
+  replies) + composer — instead of navigating to the post detail page. Tapping 💬 again (or a
+  collapse control, "Thu gọn"/"Collapse") collapses it. **No route change**, scroll position
+  preserved, posts below are pushed down. Comments **lazy-load on first expand** (SWR fetch on
+  expand, skeleton rows while loading; inline error state with retry). **Multiple posts can be
+  expanded independently.** The composer behaves as before: submit button + Enter, optimistic
+  append, empty-input guard, error handling that preserves the draft; comments support **flat
+  one-level replies** (Threads-like — no deeper nesting). The post detail page **still exists**
+  (deep links, notifications) and keeps its own composer, but feed interactions never force
+  navigation — only the post title still navigates as before. On mobile the composer **sticks to
+  the bottom of the viewport** on the post detail and, in feeds, for the **expanded post's composer
+  while focused**.
 - **Share (🔁)**: copy-link + Web Share API only:
   1. "Sao chép liên kết" / "Copy link" — always present, copies the post's absolute URL, confirms
      with a success toast.
@@ -47,7 +57,8 @@ piece. User intent: "Các bài đăng cho phép like share comment".
 ### New Capabilities
 - `post-engagement`: the Threads-style engagement bar (like · comment · share · save) on community
   posts (feed + detail), group feed posts, and the subject workspace Thảo luận feed — bar
-  composition/order/visual language, optimistic like, flat one-level replies, sticky mobile
+  composition/order/visual language, optimistic like, **inline push-down comment expansion in
+  feeds** (lazy-load, independent per post, no navigation), flat one-level replies, sticky mobile
   composer, share menu, save-button placement, guest gating, count formatting, i18n, a11y.
 
 ### Modified Capabilities
@@ -66,11 +77,15 @@ piece. User intent: "Các bài đăng cho phép like share comment".
 - **Components**: `src/components/features/community/CommunityFeed/`,
   `src/components/features/community/CommunityPostDetail/`,
   `src/components/features/group/GroupFeed/`, the subject workspace Thảo luận tab feed component;
-  new `src/components/reuseable/PostEngagementBar/`.
+  new `src/components/reuseable/PostEngagementBar/` and new
+  `src/components/reuseable/PostCommentThread/` (the inline expandable comment region: list +
+  composer, shared with the post detail page).
 - **Hooks**: `useQueryCommunityFeedSwr`, `useQueryPostDetailSwr`, `useQueryGroupFeedSwr`, the
-  workspace discussion feed hook (extend types + expose optimistic mutators); new engagement
-  mutation hooks under `features/community/hooks/` and `features/group/hooks/`; save state consumed
-  from the `save-for-later` change's post-save hook.
+  workspace discussion feed hook (extend types + expose optimistic mutators); comment threads
+  **lazy-fetched on first expand** (conditional SWR keyed per postId — community/Thảo luận reuse
+  the post-detail cache, group posts get a mock comments hook); new engagement mutation hooks under
+  `features/community/hooks/` and `features/group/hooks/`; save state consumed from the
+  `save-for-later` change's post-save hook.
 - **API layer**: reuse `mutation-react-community-post.ts`, `mutation-create-community-post-comment.ts`
   (already present, currently unwired). No group-post mutation exists — group like is mock-only with
   a logged assumption.

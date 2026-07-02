@@ -8,6 +8,7 @@ import {
     useQueryCoursesSwr,
     type CourseLevel,
 } from "../hooks/useQueryCoursesSwr"
+import { FeaturedSlider } from "./FeaturedSlider"
 
 /** Level filter options: "all" + every level. */
 const LEVELS: Array<CourseLevel | "all"> = ["all", "basic", "intermediate", "advanced"]
@@ -33,6 +34,9 @@ export const CourseCatalog = () => {
 
     return (
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-6">
+            {/* featured hero slider — merchandising surface; catalog below is unchanged */}
+            <FeaturedSlider />
+
             <Typography type="h4" weight="bold">
                 {t("catalog.title")}
             </Typography>

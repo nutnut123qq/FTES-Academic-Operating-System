@@ -6,6 +6,7 @@ import {
     CaretRightIcon,
     ChatCircleIcon,
     FileTextIcon,
+    GraduationCapIcon,
     HeartIcon,
     PushPinIcon,
     TargetIcon,
@@ -22,6 +23,18 @@ import {
     type OverviewPost,
     type SubjectOverview as SubjectOverviewModel,
 } from "../hooks/useQuerySubjectOverviewSwr"
+import { useQuerySubjectSwr } from "../hooks/useQuerySubjectSwr"
+import { getCourseIdentity } from "./course-identity"
+
+/** A linked course resolved for the "Khóa học của môn này" link-out card. */
+interface LinkedCourse {
+    /** Course id — the `/courses/[courseId]` segment. */
+    id: string
+    /** Course code, e.g. `PRF192`. */
+    code: string
+    /** Human course name. */
+    name: string
+}
 
 /** difficulty → chip color. */
 const DIFFICULTY_COLOR: Record<OverviewChallenge["difficulty"], "success" | "warning" | "danger"> = {
@@ -47,13 +60,18 @@ export const SubjectOverview = () => {
     const { subjectId } = useParams<{ subjectId: string }>()
     const router = useRouter()
     const { overview, error, mutate } = useQuerySubjectOverviewSwr(subjectId)
+    const { subject, error: subjectError } = useQuerySubjectSwr(subjectId)
 
     const base = `/subjects/${subjectId}`
+    // linked-course mapping (mock Subject.courseIds → identity); link-out only
+    const linkedCourses: Array<LinkedCourse> = (subject?.courseIds ?? []).map(
+        (courseId) => ({ id: courseId, ...getCourseIdentity(courseId) }),
+    )
 
     return (
         <div className="p-6">
             <AsyncContent
-                isLoading={!overview && !error}
+                isLoading={(!overview && !error) || (!subject && !subjectError)}
                 skeleton={<OverviewSkeleton />}
                 error={!overview ? error : undefined}
                 errorContent={{
@@ -65,7 +83,8 @@ export const SubjectOverview = () => {
                 {overview ? (
                     <OverviewView
                         overview={overview}
-                        onCompose={() => router.push(`${base}/community`)}
+                        linkedCourses={linkedCourses}
+                        onCompose={() => router.push(`${base}/discussion`)}
                         base={base}
                     />
                 ) : null}
@@ -77,10 +96,12 @@ export const SubjectOverview = () => {
 /** Presentation of the loaded overview. */
 const OverviewView = ({
     overview,
+    linkedCourses,
     onCompose,
     base,
 }: {
     overview: SubjectOverviewModel
+    linkedCourses: Array<LinkedCourse>
     onCompose: () => void
     base: string
 }) => {
@@ -112,8 +133,8 @@ const OverviewView = ({
                 {/* feed */}
                 <div className="flex flex-col gap-6 md:col-span-2">
                     {overview.pinnedPost ? (
-                        <div className="flex flex-col gap-1 rounded-large border border-accent/40 bg-accent/5 p-4">
-                            <div className="flex items-center gap-1 text-accent">
+                        <div className="flex flex-col gap-2 rounded-large border border-accent/40 bg-accent/5 p-4">
+                            <div className="flex items-center gap-2 text-accent">
                                 <PushPinIcon aria-hidden focusable="false" className="size-4" />
                                 <Typography type="body-xs" weight="medium" className="text-accent">
                                     {t("overview.pinned")}
@@ -140,6 +161,8 @@ const OverviewView = ({
 
                 {/* shortcut rails */}
                 <div className="flex flex-col gap-6">
+                    <LinkedCoursesCard courses={linkedCourses} />
+
                     <RailCard title={t("overview.newResources")} href={`${base}/resources`} seeAll={t("overview.seeAll")}>
                         {overview.newResources.map((resource) => (
                             <div key={resource.id} className="flex items-center gap-2">
@@ -173,6 +196,8 @@ const OverviewView = ({
                             {overview.activeMembers.map((member, index) => (
                                 <div
                                     key={member.id}
+                                    role="img"
+                                    aria-label={member.name}
                                     className={index > 0 ? "-ml-2 flex size-8 items-center justify-center rounded-full bg-accent/10 text-xs font-bold text-accent ring-2 ring-background" : "flex size-8 items-center justify-center rounded-full bg-accent/10 text-xs font-bold text-accent ring-2 ring-background"}
                                 >
                                     {member.name.slice(0, 1).toUpperCase()}
@@ -198,39 +223,84 @@ const PostRow = ({
 }: {
     post: OverviewPost
     withDivider: boolean
-}) => (
-    <div className={withDivider ? "flex gap-3 border-t border-separator pt-3" : "flex gap-3"}>
-        <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent/10 text-xs font-bold text-accent">
-            {post.author.slice(0, 1).toUpperCase()}
-        </div>
-        <div className="flex min-w-0 flex-col gap-0">
-            <div className="flex items-center gap-2">
+}) => {
+    const t = useTranslations("subjects")
+    return (
+        <div className={withDivider ? "flex gap-3 border-t border-separator pt-3" : "flex gap-3"}>
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent/10 text-xs font-bold text-accent">
+                {post.author.slice(0, 1).toUpperCase()}
+            </div>
+            <div className="flex min-w-0 flex-col gap-0">
+                <div className="flex items-center gap-2">
+                    <Typography type="body-sm" weight="medium">
+                        {post.author}
+                    </Typography>
+                    <Typography type="body-xs" color="muted">
+                        {post.timeLabel}
+                    </Typography>
+                </div>
                 <Typography type="body-sm" weight="medium">
-                    {post.author}
+                    {post.title}
                 </Typography>
-                <Typography type="body-xs" color="muted">
-                    {post.timeLabel}
+                <Typography type="body-sm" color="muted">
+                    {post.snippet}
                 </Typography>
-            </div>
-            <Typography type="body-sm" weight="medium">
-                {post.title}
-            </Typography>
-            <Typography type="body-sm" color="muted">
-                {post.snippet}
-            </Typography>
-            <div className="mt-1 flex items-center gap-3 text-muted">
-                <span className="flex items-center gap-1">
-                    <HeartIcon aria-hidden focusable="false" className="size-4" />
-                    <Typography type="body-xs" color="muted">{post.reactions}</Typography>
-                </span>
-                <span className="flex items-center gap-1">
-                    <ChatCircleIcon aria-hidden focusable="false" className="size-4" />
-                    <Typography type="body-xs" color="muted">{post.comments}</Typography>
-                </span>
+                <div className="mt-2 flex items-center gap-3 text-muted">
+                    <span className="flex items-center gap-2" aria-label={t("overview.reactionsAria", { count: post.reactions })}>
+                        <HeartIcon aria-hidden focusable="false" className="size-4" />
+                        <Typography type="body-xs" color="muted">{post.reactions}</Typography>
+                    </span>
+                    <span className="flex items-center gap-2" aria-label={t("overview.commentsAria", { count: post.comments })}>
+                        <ChatCircleIcon aria-hidden focusable="false" className="size-4" />
+                        <Typography type="body-xs" color="muted">{post.comments}</Typography>
+                    </span>
+                </div>
             </div>
         </div>
-    </div>
-)
+    )
+}
+
+/**
+ * "Khóa học của môn này" — the course link-out card (workspace IA domain
+ * separation: structured learning lives in the Course module; the workspace only
+ * links out). Lists each linked course's identity + a "Xem khóa học" CTA to
+ * `/courses/[courseId]`; renders nothing when the subject has no linked course.
+ * No course content (sections/lessons/video/quiz/progress) is embedded.
+ */
+const LinkedCoursesCard = ({ courses }: { courses: Array<LinkedCourse> }) => {
+    const t = useTranslations("subjects")
+
+    if (courses.length === 0) return null
+
+    return (
+        <div className="flex flex-col gap-3 rounded-large border border-separator p-4">
+            <Typography type="body-sm" weight="medium">
+                {t("overview.linkedCourses")}
+            </Typography>
+            {courses.map((course) => (
+                <div key={course.id} className="flex items-center gap-2">
+                    <GraduationCapIcon aria-hidden focusable="false" className="size-5 shrink-0 text-accent" />
+                    <div className="min-w-0 flex-1">
+                        <Typography type="body-sm" weight="medium" truncate>
+                            {course.code}
+                        </Typography>
+                        <Typography type="body-xs" color="muted" truncate>
+                            {course.name}
+                        </Typography>
+                    </div>
+                    <Link
+                        href={`/courses/${course.id}`}
+                        aria-label={t("overview.viewCourseAria", { code: course.code, name: course.name })}
+                        className="flex shrink-0 items-center gap-2 text-sm text-accent hover:underline"
+                    >
+                        {t("overview.viewCourse")}
+                        <CaretRightIcon aria-hidden focusable="false" className="size-4" />
+                    </Link>
+                </div>
+            ))}
+        </div>
+    )
+}
 
 /** A right-rail shortcut card: a title + "see all" link over a small list. */
 const RailCard = ({
@@ -258,16 +328,23 @@ const RailCard = ({
     </div>
 )
 
-/** Loading skeleton — mirrors the banner + two-column hub. */
+/** Loading skeleton — mirrors the banner + two-column hub: pinned card + heading + post rows on the left, the course link-out card slot + 3 rail cards on the right. */
 const OverviewSkeleton = () => (
     <div className="flex flex-col gap-6">
         <Skeleton className="h-16 w-full rounded-large" />
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            <div className="flex flex-col gap-4 md:col-span-2">
+            <div className="flex flex-col gap-6 md:col-span-2">
                 <Skeleton className="h-24 w-full rounded-large" />
-                <Skeleton className="h-20 w-full rounded-large" />
+                <div className="flex flex-col gap-3">
+                    <Skeleton className="h-5 w-40 rounded-sm" />
+                    <Skeleton className="h-16 w-full rounded-large" />
+                    <Skeleton className="h-16 w-full rounded-large" />
+                    <Skeleton className="h-16 w-full rounded-large" />
+                </div>
             </div>
             <div className="flex flex-col gap-6">
+                <Skeleton className="h-24 w-full rounded-large" />
+                <Skeleton className="h-28 w-full rounded-large" />
                 <Skeleton className="h-28 w-full rounded-large" />
                 <Skeleton className="h-24 w-full rounded-large" />
             </div>

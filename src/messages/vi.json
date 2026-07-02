@@ -256,6 +256,12 @@
     "nav": {
         "brand": "FTES AOS",
         "home": "Trang chủ",
+        "workplace": "Không gian học",
+        "course": "Khóa học",
+        "catalog": "Danh mục khóa học",
+        "feed": "Bảng tin",
+        "primary": "Điều hướng chính",
+        "openModuleMenu": "Mở menu {module}",
         "subjects": "Môn học",
         "courses": "Khóa học",
         "resources": "Tài nguyên",
@@ -3488,6 +3494,47 @@
         "errorTitle": "Không tải được bookmark",
         "premium": "Premium"
     },
+    "savedItems": {
+        "title": "Đã lưu",
+        "save": "Lưu",
+        "unsave": "Bỏ lưu",
+        "tabs": {
+            "all": "Tất cả",
+            "resource": "Tài liệu",
+            "course": "Khoá học",
+            "post": "Bài viết"
+        },
+        "searchPlaceholder": "Tìm trong mục đã lưu",
+        "noResults": "Không có mục đã lưu nào khớp với tìm kiếm của bạn.",
+        "signInTitle": "Đăng nhập để xem mục đã lưu",
+        "signInHint": "Tài liệu, khoá học và bài viết bạn lưu sẽ hiển thị ở đây.",
+        "signInCta": "Đăng nhập",
+        "source": {
+            "community": "Cộng đồng"
+        },
+        "empty": {
+            "all": {
+                "title": "Chưa có mục đã lưu",
+                "hint": "Nhấn biểu tượng bookmark trên tài liệu, khoá học hoặc bài viết để lưu lại xem sau.",
+                "cta": "Khám phá khoá học"
+            },
+            "resource": {
+                "title": "Chưa có tài liệu đã lưu",
+                "hint": "Nhấn biểu tượng bookmark trên một tài liệu để lưu lại xem sau.",
+                "cta": "Khám phá tài liệu"
+            },
+            "course": {
+                "title": "Chưa có khoá học đã lưu",
+                "hint": "Nhấn biểu tượng bookmark trên một khoá học để lưu lại xem sau.",
+                "cta": "Khám phá khoá học"
+            },
+            "post": {
+                "title": "Chưa có bài viết đã lưu",
+                "hint": "Nhấn biểu tượng bookmark trên một bài viết để lưu lại xem sau.",
+                "cta": "Vào cộng đồng"
+            }
+        }
+    },
     "followList": {
         "title": "Kết nối",
         "empty": {
@@ -3575,23 +3622,27 @@
             "advanced": "Nâng cao"
         },
         "groups": {
-            "learn": "Học",
+            "space": "Không gian môn",
             "community": "Cộng đồng",
             "insight": "Insight"
         },
         "nav": {
             "overview": "Tổng quan",
-            "learning": "Bài học",
-            "resources": "Tài nguyên",
+            "discussion": "Thảo luận",
+            "resources": "Tài liệu",
             "practice": "Luyện tập",
             "ai": "AI",
-            "community": "Cộng đồng",
             "members": "Thành viên",
             "statistics": "Thống kê",
             "career": "Nghề nghiệp"
         },
         "overview": {
             "title": "Tổng quan môn học",
+            "linkedCourses": "Khóa học của môn này",
+            "viewCourse": "Xem khóa học",
+            "viewCourseAria": "Xem khóa học {code} – {name}",
+            "reactionsAria": "{count} lượt thích",
+            "commentsAria": "{count} bình luận",
             "joined": "Bạn đã tham gia không gian này",
             "statsLine": "{members} thành viên · {moderators} moderator · {resources} tài liệu",
             "compose": "Đăng bài",
@@ -3648,13 +3699,8 @@
                 }
             }
         },
-        "learning": {
-            "title": "Bài học",
-            "done": "Đã học",
-            "progressLabel": "{done}/{total} bài · {percent}%"
-        },
         "community": {
-            "title": "Cộng đồng môn học",
+            "title": "Thảo luận môn học",
             "reactions": "{count} lượt thích",
             "scopes": {
                 "forYou": "Dành cho bạn",
@@ -3733,6 +3779,14 @@
             "searchPlaceholder": "Tìm theo mã hoặc tên môn",
             "all": "Tất cả",
             "lessonsCount": "{count} bài"
+        },
+        "featured": {
+            "regionLabel": "Khóa học nổi bật",
+            "slideLabel": "{index} / {total}",
+            "prev": "Slide trước",
+            "next": "Slide sau",
+            "goToSlide": "Đến slide {index}",
+            "cta": "Xem khóa học"
         },
         "detail": {
             "credits": "{count} tín chỉ",
@@ -3840,6 +3894,29 @@
             "preview": "Xem trước tài liệu (bản mẫu)",
             "comments": "Bình luận"
         },
+        "comments": {
+            "title": "Bình luận ({count})",
+            "placeholder": "Viết bình luận của bạn…",
+            "submit": "Gửi bình luận",
+            "counter": "{count}/{limit}",
+            "empty": "Chưa có bình luận nào — hãy là người đầu tiên!",
+            "loadError": "Không tải được bình luận.",
+            "submitError": "Không gửi được bình luận. Nội dung đã được giữ lại, thử lại nhé.",
+            "retry": "Thử lại",
+            "delete": "Xóa",
+            "deleteConfirm": "Xóa bình luận này?",
+            "deleteYes": "Xóa",
+            "deleteNo": "Hủy",
+            "deleteError": "Không xóa được bình luận.",
+            "goToReviews": "Đánh giá tài liệu",
+            "justNow": "vừa xong",
+            "reply": "Trả lời",
+            "replyPlaceholder": "Viết trả lời…",
+            "cancelReply": "Hủy",
+            "like": "Thích",
+            "unlike": "Bỏ thích",
+            "likeCount": "{count} lượt thích"
+        },
         "upload": {
             "title": "Tải lên tài nguyên",
             "dropzone": "Kéo thả tệp vào đây (bản mẫu)",
@@ -3900,6 +3977,10 @@
             "reportedBy": "báo cáo bởi {name}",
             "keep": "Giữ lại",
             "remove": "Gỡ bỏ"
+        },
+        "identity": {
+            "coverAlt": "Ảnh nền của {name}",
+            "avatarAlt": "Ảnh đại diện của {name}"
         }
     },
     "groupsHub": {
@@ -3956,6 +4037,48 @@
         },
         "announcements": {
             "title": "Thông báo"
+        },
+        "identity": {
+            "title": "Nhận diện nhóm",
+            "avatarLabel": "Ảnh đại diện nhóm",
+            "coverLabel": "Ảnh nền nhóm",
+            "avatarHint": "PNG, JPG, WEBP, GIF · tối đa 5 MB",
+            "coverHint": "PNG, JPG, WEBP, GIF · tối đa 5 MB",
+            "invalidType": "Định dạng không hợp lệ — chỉ nhận PNG, JPG, WEBP, GIF.",
+            "tooLarge": "Ảnh vượt quá 5 MB.",
+            "avatarAlt": "Ảnh đại diện của {name}",
+            "coverAlt": "Ảnh nền của {name}",
+            "remove": "Bỏ ảnh",
+            "uploadCta": "Kéo thả ảnh vào đây, hoặc bấm để chọn",
+            "save": "Lưu nhận diện"
+        }
+    },
+    "appearance": {
+        "title": "Giao diện",
+        "mode": {
+            "label": "Chế độ",
+            "light": "Sáng",
+            "dark": "Tối",
+            "system": "Hệ thống"
+        },
+        "accent": {
+            "label": "Màu chủ đạo",
+            "default": "Mặc định",
+            "names": {
+                "indigo": "Xanh indigo",
+                "pink": "Hồng",
+                "teal": "Xanh ngọc",
+                "emerald": "Xanh lục bảo",
+                "amber": "Hổ phách",
+                "violet": "Tím"
+            }
+        },
+        "effect": {
+            "label": "Hiệu ứng nền",
+            "enabled": "Bật hiệu ứng",
+            "direction": "Hướng",
+            "rise": "Bay lên",
+            "fall": "Rơi xuống như sao băng"
         }
     }
 }

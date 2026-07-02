@@ -37,7 +37,9 @@ html {
 [data-theme="light"],
 [data-theme="default"] {
   /* Theme Colors (Light Mode) */
-  --accent: oklch(70.03% 0.2092 354.13);
+  /* Default accent = indigo #3F51B5 (appearance-settings default); user presets
+     override via the [data-accent="…"] blocks at the end of this file. */
+  --accent: #3F51B5;
   --accent-foreground: oklch(100% 0 0);
   --background: oklch(97.02% 0.0015 354.13);
   --border: oklch(90.00% 0.0015 354.13);
@@ -88,7 +90,9 @@ html {
 [data-theme="dark"] {
   color-scheme: dark;
   /* Theme Colors (Dark Mode) */
-  --accent: oklch(70.03% 0.2092 354.13);
+  /* Default accent = indigo #3F51B5 (appearance-settings default); user presets
+     override via the [data-accent="…"] blocks at the end of this file. */
+  --accent: #3F51B5;
   --accent-foreground: oklch(100% 0 0);
   --background: oklch(12.00% 0.0015 354.13);
   --border: oklch(28.00% 0.0015 354.13);
@@ -244,7 +248,61 @@ html {
     100% { width: 96%; }
 }
 
+/*
+ * Ambient meteor background (blocks/layout/AmbientBackground, direction="fall") —
+ * accent streaks falling from the top edge like meteors. Each streak sets `--drift`
+ * (horizontal wander) + `--tilt` (its precomputed lean, matching the drift) inline;
+ * this keyframe drops it a full viewport while fading in then out. Motion is
+ * transform/opacity only (GPU-cheap, no JS loop).
+ */
+@keyframes meteorFall {
+    0% { transform: translateY(-15vh) translateX(0) rotate(var(--tilt, 0deg)); opacity: 0; }
+    10% { opacity: 1; }
+    80% { opacity: 0.8; }
+    100% { transform: translateY(110vh) translateX(var(--drift, 0)) rotate(var(--tilt, 0deg)); opacity: 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-    .ambient-ember { animation: none !important; opacity: 0 !important; }
+    /* reduced-motion always wins over the appearance setting — both ambient modes
+       are fully hidden (not just frozen), regardless of the stored config */
+    .ambient-ember, .ambient-meteor { animation: none !important; opacity: 0 !important; }
     .app-splash-bar { animation: none !important; width: 40% !important; }
+}
+
+/*
+ * Appearance accent presets (appearance-settings) — selected via the `data-accent`
+ * attribute on <html> (set pre-paint by the inline script in the locale root layout,
+ * then kept in sync by the appearance zustand store). Declared AFTER the theme
+ * blocks so they win by source order for BOTH light and dark. Every preset is dark
+ * enough for the white foreground to reach >= 4.5:1 contrast (pink kept as the
+ * legacy brand value). The preset table lives in `resources/constants/appearance.ts`.
+ */
+[data-accent="indigo"] {
+    --accent: #3F51B5;
+    --accent-foreground: oklch(100% 0 0);
+}
+
+[data-accent="pink"] {
+    --accent: oklch(70.03% 0.2092 354.13);
+    --accent-foreground: oklch(100% 0 0);
+}
+
+[data-accent="teal"] {
+    --accent: #0F766E;
+    --accent-foreground: oklch(100% 0 0);
+}
+
+[data-accent="emerald"] {
+    --accent: #047857;
+    --accent-foreground: oklch(100% 0 0);
+}
+
+[data-accent="amber"] {
+    --accent: #B45309;
+    --accent-foreground: oklch(100% 0 0);
+}
+
+[data-accent="violet"] {
+    --accent: #7C3AED;
+    --accent-foreground: oklch(100% 0 0);
 }

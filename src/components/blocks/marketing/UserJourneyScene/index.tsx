@@ -6,7 +6,7 @@
 
 import React from "react"
 import { Canvas, useFrame, useThree, invalidate } from "@react-three/fiber"
-import { Html, Line } from "@react-three/drei"
+import { Html, Line, OrbitControls } from "@react-three/drei"
 import * as THREE from "three"
 import type { JourneySceneData, JourneyStationLabel, JourneyStationNode, StationKind } from "./types"
 import sceneJson from "./scene.json"
@@ -276,15 +276,18 @@ const FlowPath = ({ stations, palette, reduce }: { stations: JourneyStationNode[
 }
 
 /** Tween the camera to look at the active station (demand frameloop → invalidate). */
-const CameraRig = ({ target, offset }: { target: THREE.Vector3; offset: THREE.Vector3 }) => {
+const CameraRig = ({ target, offset, tookOver }: { target: THREE.Vector3; offset: THREE.Vector3; tookOver: React.RefObject<boolean> }) => {
     const { camera } = useThree()
     const desired = React.useMemo(() => target.clone().add(offset), [target, offset])
     useFrame(() => {
+        // once the visitor grabs the scene (OrbitControls onStart), hand the camera
+        // over to them completely — no snap-back fight with the auto-tween.
+        if (tookOver.current) return
         camera.position.lerp(desired, 0.08)
         camera.lookAt(target)
         if (camera.position.distanceToSquared(desired) > 0.0004) invalidate()
     })
-    React.useEffect(() => { invalidate() }, [desired])
+    React.useEffect(() => { if (!tookOver.current) invalidate() }, [desired, tookOver])
     return null
 }
 
@@ -302,9 +305,23 @@ const Scene = ({
     const active = DATA.stations[Math.max(0, Math.min(activeIndex, DATA.stations.length - 1))]
     const target = React.useMemo(() => new THREE.Vector3(...active.pos), [active])
     const offset = React.useMemo(() => new THREE.Vector3(...DATA.cameraOffset), [])
+    // once true, the visitor is driving the camera (OrbitControls) — the rig backs off.
+    const userTookOver = React.useRef(false)
     return (
         <group>
-            <CameraRig target={target} offset={offset} />
+            <CameraRig target={target} offset={offset} tookOver={userTookOver} />
+            {/* grab-to-rotate: orbit the journey, no pan/zoom so it stays framed */}
+            <OrbitControls
+                makeDefault
+                enablePan={false}
+                enableZoom={false}
+                enableDamping
+                dampingFactor={0.12}
+                rotateSpeed={0.6}
+                minPolarAngle={Math.PI / 6}
+                maxPolarAngle={Math.PI / 1.9}
+                onStart={() => { userTookOver.current = true }}
+            />
             <FlowPath stations={DATA.stations} palette={palette} reduce={reduce} />
             {DATA.stations.map((node, i) => (
                 <Station

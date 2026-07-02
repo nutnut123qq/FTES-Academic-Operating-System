@@ -1,7 +1,8 @@
 "use client"
 
-import React from "react"
-import { Button, Chip, Typography } from "@heroui/react"
+import React, { useState } from "react"
+import { Button, Chip, Typography, toast } from "@heroui/react"
+import { HeartIcon, ShareNetworkIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
 import { SaveButton } from "@/components/blocks/buttons/SaveButton"
@@ -17,6 +18,17 @@ export const ResourceDetail = () => {
     const t = useTranslations("resourceHub")
     const { resourceId } = useParams<{ resourceId: string }>()
     const { resource } = useQueryResourceDetailSwr(resourceId)
+    // ponytail: like is a session-only mock toggle (no BE); share copies the page link.
+    const [liked, setLiked] = useState(false)
+
+    const onShare = async () => {
+        try {
+            await navigator.clipboard.writeText(window.location.href)
+            toast.success(t("detail.shareCopied"))
+        } catch {
+            // clipboard blocked (insecure context / permission) — no-op
+        }
+    }
 
     if (!resource) {
         return null
@@ -36,7 +48,20 @@ export const ResourceDetail = () => {
                 <Typography type="body-xs" color="muted">
                     {resource.sizeLabel} · {t("detail.rating", { rating: resource.rating.toFixed(1) })}
                 </Typography>
-                <SaveButton entityType="resource" entityId={resource.id} className="ml-auto" />
+                <Button
+                    size="sm"
+                    variant={liked ? "secondary" : "ghost"}
+                    className="ml-auto"
+                    onPress={() => setLiked((v) => !v)}
+                >
+                    <HeartIcon aria-hidden focusable="false" weight={liked ? "fill" : "regular"} className="size-4" />
+                    {t("detail.like")}
+                </Button>
+                <Button size="sm" variant="ghost" onPress={onShare}>
+                    <ShareNetworkIcon aria-hidden focusable="false" className="size-4" />
+                    {t("detail.share")}
+                </Button>
+                <SaveButton entityType="resource" entityId={resource.id} />
                 <Button size="sm" variant="secondary">
                     {t("download")}
                 </Button>

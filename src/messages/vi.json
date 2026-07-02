@@ -4529,7 +4529,10 @@
         "detail": {
             "rating": "{rating}★",
             "preview": "Xem trước tài liệu (bản mẫu)",
-            "comments": "Bình luận"
+            "comments": "Bình luận",
+            "like": "Thích",
+            "share": "Chia sẻ",
+            "shareCopied": "Đã sao chép liên kết"
         },
         "comments": {
             "title": "Bình luận ({count})",

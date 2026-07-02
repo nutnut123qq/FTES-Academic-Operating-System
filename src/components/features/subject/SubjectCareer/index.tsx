@@ -4,6 +4,7 @@ import React from "react"
 import { Chip, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
+import { SkillGraph } from "@/components/features/skill-graph"
 import { useQuerySubjectCareerSwr } from "../hooks/useQuerySubjectCareerSwr"
 
 /**
@@ -58,6 +59,14 @@ export const SubjectCareer = () => {
                         </Chip>
                     </div>
                 ))}
+            </div>
+
+            {/* subject-scoped skill graph (§21) */}
+            <div className="flex flex-col gap-3 border-t border-separator pt-6">
+                <Typography type="h6" weight="bold">
+                    {t("career.skillGraph")}
+                </Typography>
+                <SkillGraph subjectId={subjectId} heightClassName="h-[400px]" />
             </div>
 
             {/* suggested next subject */}

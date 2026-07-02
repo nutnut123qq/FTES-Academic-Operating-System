@@ -256,6 +256,12 @@
     "nav": {
         "brand": "FTES AOS",
         "home": "Home",
+        "workplace": "Workplace",
+        "course": "Course",
+        "catalog": "Course catalog",
+        "feed": "Feed",
+        "primary": "Primary navigation",
+        "openModuleMenu": "Open {module} menu",
         "subjects": "Subjects",
         "courses": "Courses",
         "resources": "Resources",

@@ -256,6 +256,12 @@
     "nav": {
         "brand": "FTES AOS",
         "home": "Trang chủ",
+        "workplace": "Không gian học",
+        "course": "Khóa học",
+        "catalog": "Danh mục khóa học",
+        "feed": "Bảng tin",
+        "primary": "Điều hướng chính",
+        "openModuleMenu": "Mở menu {module}",
         "subjects": "Môn học",
         "courses": "Khóa học",
         "resources": "Tài nguyên",

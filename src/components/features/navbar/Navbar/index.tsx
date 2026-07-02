@@ -5,6 +5,7 @@ import React, {
     useState,
 } from "react"
 import {
+    Accordion,
     Button,
     Drawer,
     Typography,
@@ -54,13 +55,16 @@ import type { WithClassNames } from "@/modules/types/base/class-name"
 export type NavbarProps = WithClassNames<undefined>
 
 /**
- * Navbar — top application navigation bar.
+ * Navbar — top application navigation bar (the ONLY global nav surface — no
+ * global left sidebar exists anywhere).
  *
  * Container: owns the Ctrl/Cmd+K search shortcut + the mobile drawer state and
- * composes the logo, nav links, search trigger (full field on desktop, icon on
- * mobile), the standalone language dropdown, the theme switch, notifications,
- * the account menu, and a mobile expand button that opens a navigation drawer.
- * `"use client"` for hooks + keyboard handling.
+ * composes the logo, the 4-module {@link HeaderNav}, search trigger (full field
+ * on desktop, icon on mobile), the standalone language dropdown, the theme
+ * switch, notifications, the account menu, and a mobile expand button that opens
+ * a navigation drawer mirroring the same 4 modules (Home link + accordion
+ * groups from the shared {@link useAppNav} source). `"use client"` for hooks +
+ * keyboard handling.
  * @param props - optional root class name (placement only)
  */
 export const Navbar = ({ className }: NavbarProps) => {
@@ -69,9 +73,27 @@ export const Navbar = ({ className }: NavbarProps) => {
     const { open: openSearch } = useSearchOverlayState()
     const [isDrawerOpen, setDrawerOpen] = useState(false)
     // same primary-nav source HeaderNav renders on desktop — no drift
-    const navGroups = useAppNav()
+    const modules = useAppNav()
+    // drawer accordion state — seeded with the active module on each open
+    const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set())
     // optional second layer (e.g. profile tabs) a page registered into the navbar
     const bottomLayer = useNavbarBottomLayerStore((state) => state.bottomLayer)
+
+    const homeModule = modules.find((module) => module.children.length === 0)
+    const groupModules = modules.filter((module) => module.children.length > 0)
+
+    /** Open the drawer with the group containing the active route pre-expanded. */
+    const openDrawer = () => {
+        const activeModule = groupModules.find((module) => module.isActive)
+        setExpandedKeys(new Set(activeModule ? [activeModule.key] : []))
+        setDrawerOpen(true)
+    }
+
+    /** Navigate to a drawer destination and dismiss the drawer. */
+    const goFromDrawer = (path: string) => {
+        router.push(path)
+        setDrawerOpen(false)
+    }
 
     // register the global Ctrl/Cmd+K shortcut to open the search overlay
     useEffect(() => {
@@ -88,8 +110,8 @@ export const Navbar = ({ className }: NavbarProps) => {
     }, [openSearch])
 
     return (
-        <nav className={cn("sticky top-0 z-50 border-b border-separator bg-background", className)}>
-            {/* primary row — fixed 4rem tall; the nav root owns the single bottom border */}
+        <header className={cn("sticky top-0 z-50 border-b border-separator bg-background", className)}>
+            {/* primary row — fixed 4rem tall; the header root owns the single bottom border */}
             <div className="flex h-16 min-h-16 w-full items-center justify-between gap-3 px-3">
                 <div className="flex items-center gap-6">
                     <Logo className="justify-start" />
@@ -121,7 +143,7 @@ export const Navbar = ({ className }: NavbarProps) => {
                         variant="ghost"
                         aria-label={t("nav.mobileMenu")}
                         className="md:hidden"
-                        onPress={() => setDrawerOpen(true)}
+                        onPress={openDrawer}
                     >
                         <MenuIcon className="size-5" />
                     </Button>
@@ -129,12 +151,13 @@ export const Navbar = ({ className }: NavbarProps) => {
             </div>
 
             {/* page-registered secondary layer (e.g. profile tabs). It sits flush
-                under the primary row with NO divider of its own — the nav root's
+                under the primary row with NO divider of its own — the header root's
                 single border-b falls under whichever layer is last (single → row,
                 bottomLayer → this), so there is always exactly one navbar border. */}
             {bottomLayer ? <div className="w-full">{bottomLayer}</div> : null}
 
-            {/* mobile navigation drawer (opened by the expand icon) */}
+            {/* mobile navigation drawer (opened by the expand icon) — mirrors the
+                desktop 4 modules: Home link row + one accordion group per module */}
             <Drawer>
                 <Drawer.Backdrop isOpen={isDrawerOpen} onOpenChange={setDrawerOpen}>
                     <Drawer.Content placement="right">
@@ -144,29 +167,80 @@ export const Navbar = ({ className }: NavbarProps) => {
                                 <Drawer.Heading>{t("nav.mobileMenu")}</Drawer.Heading>
                             </Drawer.Header>
                             <Drawer.Body className="flex flex-col gap-6">
-                                {navGroups.map((group) => (
-                                    <div key={group.key} className="flex flex-col gap-2">
-                                        {group.label ? (
-                                            <Typography type="body-sm" color="muted" className="px-1">
-                                                {group.label}
-                                            </Typography>
-                                        ) : null}
-                                        {group.items.map((item) => (
-                                            <Button
-                                                key={item.key}
-                                                variant={item.isActive ? "secondary" : "ghost"}
-                                                fullWidth
-                                                className="justify-start"
-                                                onPress={() => {
-                                                    router.push(item.path)
-                                                    setDrawerOpen(false)
-                                                }}
+                                <div className="flex flex-col gap-2">
+                                    {homeModule ? (
+                                        <Button
+                                            variant={homeModule.isActive ? "secondary" : "ghost"}
+                                            fullWidth
+                                            className="justify-start gap-2"
+                                            onPress={() => goFromDrawer(homeModule.path)}
+                                        >
+                                            <span aria-hidden>{homeModule.icon}</span>
+                                            {homeModule.label}
+                                        </Button>
+                                    ) : null}
+                                    <Accordion
+                                        variant="default"
+                                        className="w-full min-w-0"
+                                        expandedKeys={expandedKeys}
+                                        onExpandedChange={(keys) =>
+                                            setExpandedKeys(new Set([...keys].map(String)))
+                                        }
+                                    >
+                                        {groupModules.map((module) => (
+                                            <Accordion.Item
+                                                key={module.key}
+                                                id={module.key}
+                                                aria-label={module.label}
+                                                className="min-w-0"
                                             >
-                                                {item.label}
-                                            </Button>
+                                                <Accordion.Heading className="min-w-0">
+                                                    <Accordion.Trigger className="w-full min-w-0 px-2 py-2 hover:bg-transparent">
+                                                        <div className="flex w-full min-w-0 items-center gap-2">
+                                                            <span
+                                                                className={cn(
+                                                                    module.isActive ? "text-accent" : "text-muted",
+                                                                )}
+                                                                aria-hidden
+                                                            >
+                                                                {module.icon}
+                                                            </span>
+                                                            <Typography
+                                                                type="body"
+                                                                weight="semibold"
+                                                                className={cn(
+                                                                    "min-w-0 flex-1",
+                                                                    module.isActive && "text-accent",
+                                                                )}
+                                                            >
+                                                                {module.label}
+                                                            </Typography>
+                                                            <Accordion.Indicator className="shrink-0" />
+                                                        </div>
+                                                    </Accordion.Trigger>
+                                                </Accordion.Heading>
+                                                <Accordion.Panel>
+                                                    <Accordion.Body className="px-0 pb-3">
+                                                        <div className="flex flex-col gap-2">
+                                                            {module.children.map((item) => (
+                                                                <Button
+                                                                    key={item.key}
+                                                                    variant={item.isActive ? "secondary" : "ghost"}
+                                                                    fullWidth
+                                                                    className="justify-start gap-2"
+                                                                    onPress={() => goFromDrawer(item.path)}
+                                                                >
+                                                                    <span aria-hidden>{item.icon}</span>
+                                                                    {item.label}
+                                                                </Button>
+                                                            ))}
+                                                        </div>
+                                                    </Accordion.Body>
+                                                </Accordion.Panel>
+                                            </Accordion.Item>
                                         ))}
-                                    </div>
-                                ))}
+                                    </Accordion>
+                                </div>
                                 {/* controls hidden from the mobile bar live here: language + theme */}
                                 <div className="flex flex-col gap-3">
                                     <div className="flex items-center justify-between gap-3">
@@ -187,6 +261,6 @@ export const Navbar = ({ className }: NavbarProps) => {
                     </Drawer.Content>
                 </Drawer.Backdrop>
             </Drawer>
-        </nav>
+        </header>
     )
 }

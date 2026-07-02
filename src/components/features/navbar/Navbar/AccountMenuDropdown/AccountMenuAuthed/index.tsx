@@ -3,6 +3,7 @@
 import React, { useCallback } from "react"
 import {
     Dropdown,
+    Header,
     Label,
 } from "@heroui/react"
 import {
@@ -11,6 +12,10 @@ import {
     FileTextIcon,
     GearIcon,
     SignOutIcon,
+    PulseIcon,
+    WalletIcon,
+    PlugIcon,
+    ShieldIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
@@ -24,9 +29,11 @@ export type AccountMenuAuthedProps = WithClassNames<undefined>
 
 /**
  * Account dropdown menu for SIGNED-IN viewers: a primary section (Dashboard ·
- * Profile · Settings) and a separated destructive section (Sign out, danger).
- * Self-contained — owns navigation (closes the menu then pushes) and the sign-out
- * mutation; takes no data props.
+ * Profile · CV · Settings), a labeled "You" section (Activity · Wallet), a
+ * labeled "System" section (Integrations · Roles) — the personal/system
+ * destinations migrated out of the old "Explore" mega-menu — and a separated
+ * destructive section (Sign out, danger). Self-contained — owns navigation
+ * (closes the menu then pushes) and the sign-out mutation; takes no data props.
  *
  * @param props - optional className (placement only).
  */
@@ -88,6 +95,46 @@ export const AccountMenuAuthed = ({ className }: AccountMenuAuthedProps) => {
                 >
                     <GearIcon className="size-5" />
                     <Label>{t("profileSettings.title")}</Label>
+                </Dropdown.Item>
+            </Dropdown.Section>
+            {/* "You" — personal destinations migrated from the old Explore mega-menu */}
+            <Dropdown.Section>
+                <Header>{t("nav.section.you")}</Header>
+                <Dropdown.Item
+                    id="activity"
+                    textValue={t("nav.activity")}
+                    onPress={() => go(pathConfig().locale().activity().build())}
+                >
+                    <PulseIcon className="size-5" />
+                    <Label>{t("nav.activity")}</Label>
+                </Dropdown.Item>
+                <Dropdown.Item
+                    id="wallet"
+                    textValue={t("nav.wallet")}
+                    onPress={() => go(pathConfig().locale().wallet().build())}
+                >
+                    <WalletIcon className="size-5" />
+                    <Label>{t("nav.wallet")}</Label>
+                </Dropdown.Item>
+            </Dropdown.Section>
+            {/* "System" — admin/system destinations migrated from the old Explore mega-menu */}
+            <Dropdown.Section>
+                <Header>{t("nav.section.system")}</Header>
+                <Dropdown.Item
+                    id="integrations"
+                    textValue={t("nav.integrations")}
+                    onPress={() => go(pathConfig().locale().integrations().build())}
+                >
+                    <PlugIcon className="size-5" />
+                    <Label>{t("nav.integrations")}</Label>
+                </Dropdown.Item>
+                <Dropdown.Item
+                    id="roles"
+                    textValue={t("nav.roles")}
+                    onPress={() => go(pathConfig().locale().roles().build())}
+                >
+                    <ShieldIcon className="size-5" />
+                    <Label>{t("nav.roles")}</Label>
                 </Dropdown.Item>
             </Dropdown.Section>
             <Dropdown.Section>

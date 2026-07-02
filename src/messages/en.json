@@ -258,27 +258,11 @@
         "home": "Home",
         "workplace": "Workplace",
         "course": "Course",
-        "catalog": "Course catalog",
-        "feed": "Feed",
         "primary": "Primary navigation",
-        "openModuleMenu": "Open {module} menu",
-        "subjects": "Subjects",
         "courses": "Courses",
-        "resources": "Resources",
-        "challenges": "Challenges",
         "community": "Community",
-        "groups": "Groups",
-        "events": "Events",
-        "chat": "Chat",
-        "leaderboard": "Leaderboard",
-        "marketplace": "Marketplace",
         "activity": "Activity",
         "wallet": "Wallet",
-        "analytics": "Analytics",
-        "workflow": "Workflow",
-        "ai": "AI",
-        "recommendations": "For you",
-        "career": "Career",
         "search": "Search",
         "notifications": "Notifications",
         "integrations": "Integrations",
@@ -4072,6 +4056,12 @@
             "direction": "Direction",
             "rise": "Rise up",
             "fall": "Fall like meteors"
+        },
+        "speed": {
+            "label": "Speed",
+            "slow": "Slow",
+            "normal": "Normal",
+            "fast": "Fast"
         }
     }
 }

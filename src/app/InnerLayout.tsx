@@ -30,6 +30,7 @@ export const InnerLayout = ({ children }: PropsWithChildren) => {
     // only re-renders when these two fields change (a rare user action).
     const effectEnabled = useAppearanceStore((state) => state.effectEnabled)
     const effectDirection = useAppearanceStore((state) => state.effectDirection)
+    const effectSpeed = useAppearanceStore((state) => state.effectSpeed)
     // The store persists with `skipHydration` (server markup == first client render,
     // no hydration mismatch); pull the saved config right after mount. The sparks
     // start at opacity 0 and only fade in after ~1s, so the swap is imperceptible.
@@ -66,7 +67,7 @@ export const InnerLayout = ({ children }: PropsWithChildren) => {
                             <AppSplash />
                             <TopLoader />
                             {!isLearnRoute && effectEnabled ? (
-                                <AmbientBackground direction={effectDirection} />
+                                <AmbientBackground direction={effectDirection} speed={effectSpeed} />
                             ) : null}
                             <Navbar />
                             <SocketConnectionStatus />

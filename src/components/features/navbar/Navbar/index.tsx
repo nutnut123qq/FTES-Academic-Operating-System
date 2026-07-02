@@ -5,7 +5,6 @@ import React, {
     useState,
 } from "react"
 import {
-    Accordion,
     Button,
     Drawer,
     Typography,
@@ -63,9 +62,9 @@ export type NavbarProps = WithClassNames<undefined>
  * composes the logo, the 4-module {@link HeaderNav}, search trigger (full field
  * on desktop, icon on mobile), the standalone language dropdown, the appearance
  * settings button, notifications, the account menu, and a mobile expand button that opens
- * a navigation drawer mirroring the same 4 modules (Home link + accordion
- * groups from the shared {@link useAppNav} source). `"use client"` for hooks +
- * keyboard handling.
+ * a navigation drawer mirroring the same 4 modules as PLAIN LINK ROWS from the
+ * shared {@link useAppNav} source (no accordion, no nested children). `"use client"`
+ * for hooks + keyboard handling.
  * @param props - optional root class name (placement only)
  */
 export const Navbar = ({ className }: NavbarProps) => {
@@ -76,18 +75,11 @@ export const Navbar = ({ className }: NavbarProps) => {
     const [isDrawerOpen, setDrawerOpen] = useState(false)
     // same primary-nav source HeaderNav renders on desktop — no drift
     const modules = useAppNav()
-    // drawer accordion state — seeded with the active module on each open
-    const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set())
     // optional second layer (e.g. profile tabs) a page registered into the navbar
     const bottomLayer = useNavbarBottomLayerStore((state) => state.bottomLayer)
 
-    const homeModule = modules.find((module) => module.children.length === 0)
-    const groupModules = modules.filter((module) => module.children.length > 0)
-
-    /** Open the drawer with the group containing the active route pre-expanded. */
+    /** Open the mobile navigation drawer. */
     const openDrawer = () => {
-        const activeModule = groupModules.find((module) => module.isActive)
-        setExpandedKeys(new Set(activeModule ? [activeModule.key] : []))
         setDrawerOpen(true)
     }
 
@@ -166,7 +158,7 @@ export const Navbar = ({ className }: NavbarProps) => {
             {bottomLayer ? <div className="w-full">{bottomLayer}</div> : null}
 
             {/* mobile navigation drawer (opened by the expand icon) — mirrors the
-                desktop 4 modules: Home link row + one accordion group per module */}
+                desktop 4 modules as plain link rows (no accordion, no children) */}
             <Drawer>
                 <Drawer.Backdrop isOpen={isDrawerOpen} onOpenChange={setDrawerOpen}>
                     <Drawer.Content placement="right">
@@ -177,78 +169,18 @@ export const Navbar = ({ className }: NavbarProps) => {
                             </Drawer.Header>
                             <Drawer.Body className="flex flex-col gap-6">
                                 <div className="flex flex-col gap-2">
-                                    {homeModule ? (
+                                    {modules.map((module) => (
                                         <Button
-                                            variant={homeModule.isActive ? "secondary" : "ghost"}
+                                            key={module.key}
+                                            variant={module.isActive ? "secondary" : "ghost"}
                                             fullWidth
                                             className="justify-start gap-2"
-                                            onPress={() => goFromDrawer(homeModule.path)}
+                                            onPress={() => goFromDrawer(module.path)}
                                         >
-                                            <span aria-hidden>{homeModule.icon}</span>
-                                            {homeModule.label}
+                                            <span aria-hidden>{module.icon}</span>
+                                            {module.label}
                                         </Button>
-                                    ) : null}
-                                    <Accordion
-                                        variant="default"
-                                        className="w-full min-w-0"
-                                        expandedKeys={expandedKeys}
-                                        onExpandedChange={(keys) =>
-                                            setExpandedKeys(new Set([...keys].map(String)))
-                                        }
-                                    >
-                                        {groupModules.map((module) => (
-                                            <Accordion.Item
-                                                key={module.key}
-                                                id={module.key}
-                                                aria-label={module.label}
-                                                className="min-w-0"
-                                            >
-                                                <Accordion.Heading className="min-w-0">
-                                                    <Accordion.Trigger className="w-full min-w-0 px-2 py-2 hover:bg-transparent">
-                                                        <div className="flex w-full min-w-0 items-center gap-2">
-                                                            <span
-                                                                className={cn(
-                                                                    module.isActive ? "text-accent" : "text-muted",
-                                                                )}
-                                                                aria-hidden
-                                                            >
-                                                                {module.icon}
-                                                            </span>
-                                                            <Typography
-                                                                type="body"
-                                                                weight="semibold"
-                                                                className={cn(
-                                                                    "min-w-0 flex-1",
-                                                                    module.isActive && "text-accent",
-                                                                )}
-                                                            >
-                                                                {module.label}
-                                                            </Typography>
-                                                            <Accordion.Indicator className="shrink-0" />
-                                                        </div>
-                                                    </Accordion.Trigger>
-                                                </Accordion.Heading>
-                                                <Accordion.Panel>
-                                                    <Accordion.Body className="px-0 pb-3">
-                                                        <div className="flex flex-col gap-2">
-                                                            {module.children.map((item) => (
-                                                                <Button
-                                                                    key={item.key}
-                                                                    variant={item.isActive ? "secondary" : "ghost"}
-                                                                    fullWidth
-                                                                    className="justify-start gap-2"
-                                                                    onPress={() => goFromDrawer(item.path)}
-                                                                >
-                                                                    <span aria-hidden>{item.icon}</span>
-                                                                    {item.label}
-                                                                </Button>
-                                                            ))}
-                                                        </div>
-                                                    </Accordion.Body>
-                                                </Accordion.Panel>
-                                            </Accordion.Item>
-                                        ))}
-                                    </Accordion>
+                                    ))}
                                 </div>
                                 {/* controls hidden from the mobile bar live here: language + theme */}
                                 <div className="flex flex-col gap-3">

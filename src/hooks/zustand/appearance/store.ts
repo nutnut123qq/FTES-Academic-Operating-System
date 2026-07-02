@@ -5,10 +5,12 @@ import { persist } from "zustand/middleware"
 import {
     APPEARANCE_STORAGE_KEY,
     DEFAULT_ACCENT,
+    DEFAULT_EFFECT_SPEED,
 } from "@/resources/constants/appearance"
 import type {
     AccentId,
     EffectDirection,
+    EffectSpeed,
 } from "@/resources/constants/appearance"
 
 /** Appearance store shape: persisted preferences + their setters. */
@@ -19,19 +21,24 @@ interface AppearanceState {
     effectEnabled: boolean
     /** Ambient effect direction: embers rising vs meteors falling. */
     effectDirection: EffectDirection
+    /** Ambient effect speed tier (multiplies each spark's animation duration). */
+    effectSpeed: EffectSpeed
     /** Select an accent preset (also syncs `data-accent` on `<html>` immediately). */
     setAccent: (accent: AccentId) => void
     /** Toggle the ambient background effect. */
     setEffectEnabled: (enabled: boolean) => void
     /** Pick the ambient effect direction. */
     setEffectDirection: (direction: EffectDirection) => void
+    /** Pick the ambient effect speed tier. */
+    setEffectSpeed: (speed: EffectSpeed) => void
 }
 
-/** Persisted defaults — indigo #3F51B5, effect ON, falling like meteors. */
+/** Persisted defaults — indigo #3F51B5, effect ON, falling like meteors, normal speed. */
 const initialState = {
     accent: DEFAULT_ACCENT,
     effectEnabled: true,
     effectDirection: "fall" as EffectDirection,
+    effectSpeed: DEFAULT_EFFECT_SPEED,
 }
 
 /**
@@ -66,6 +73,7 @@ export const useAppearanceStore = create<AppearanceState>()(
             },
             setEffectEnabled: (effectEnabled) => set({ effectEnabled }),
             setEffectDirection: (effectDirection) => set({ effectDirection }),
+            setEffectSpeed: (effectSpeed) => set({ effectSpeed }),
         }),
         {
             name: APPEARANCE_STORAGE_KEY,

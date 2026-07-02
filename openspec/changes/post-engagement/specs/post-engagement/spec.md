@@ -1,18 +1,41 @@
 ## ADDED Requirements
 
-### Requirement: Threads-style engagement bar on every post
-Every post SHALL render ONE shared engagement bar directly under its content on all post surfaces
-— community feed rows, the community post detail, group feed posts, and the subject workspace
-"Thảo luận" tab feed (tab renamed by the `subject-workspace-ia` change) — containing exactly, in
-order:
-like button with inline count (♥), comment button with inline count (💬), share button (🔁), and
-save button (🔖). The bar SHALL be a single row of thin icon buttons with NO borders and NO
-background fills, counts rendered inline next to their icons. Active states SHALL render as a
-filled red heart when the post is liked and a filled bookmark when the post is saved; inactive
-icons render as outlines.
+### Requirement: Per-surface engagement matrix
+The engagement bar SHALL render only the actions permitted for each surface, driven by a config
+prop (`actions`) whose per-action flags default to enabled. Post and article surfaces — community
+feed, community post detail, group feed, and articles/blog (`/blog/[slug]`) — SHALL render the FULL
+bar (like, comment, share, save). Discussion surfaces — group discussion threads (`GroupDiscussion`)
+and the subject workspace "Thảo luận" tab (`SubjectCommunity`) — SHALL render like and comment
+ONLY; the share (🔁) and save (🔖) buttons SHALL NOT be rendered on discussion surfaces (absent,
+not merely disabled or hidden).
+
+#### Scenario: Full bar on a post
+- **WHEN** the engagement bar renders on a community feed post, group feed post, or post detail
+- **THEN** it shows like, comment, share, and save
+
+#### Scenario: Full bar on an article
+- **WHEN** the engagement bar renders on a blog/article (`/blog/[slug]`)
+- **THEN** it shows like, comment, share, and save
+
+#### Scenario: Discussion shows like and comment only
+- **GIVEN** a group discussion thread or a subject workspace "Thảo luận" post
+- **WHEN** its engagement bar renders
+- **THEN** only the like and comment buttons appear, and the share and save buttons are absent from
+  the DOM (not rendered)
+
+### Requirement: Threads-style engagement bar on every post-like surface
+Every post-like surface SHALL render ONE shared engagement bar directly under its content —
+community feed rows, the community post detail, group feed posts, articles/blog, group discussion
+threads, and the subject workspace "Thảo luận" tab (tab renamed by the `subject-workspace-ia`
+change). The FULL bar contains exactly, in order: like button with inline count (♥), comment
+button with inline count (💬), share button (🔁), and save button (🔖); which of these render on a
+given surface is governed by the Per-surface engagement matrix requirement. The bar SHALL be a
+single row of thin icon buttons with NO borders and NO background fills, counts rendered inline
+next to their icons. Active states SHALL render as a filled red heart when the item is liked and a
+filled bookmark when it is saved; inactive icons render as outlines.
 
 #### Scenario: Bar composition and order
-- **WHEN** a post is rendered on any of the four surfaces
+- **WHEN** a post or article renders with the full bar
 - **THEN** directly under its content one row shows, left to right: like (with count), comment
   (with count), share, save — and no other actions in the bar
 
@@ -75,21 +98,40 @@ no group comments BE contract exists).
 - **WHEN** a user activates 💬 on a group feed post
 - **THEN** the comment thread expands inline below that post (mock data), with no navigation
 
-### Requirement: Engagement bar on the workspace Thảo luận feed
-Posts in the subject workspace "Thảo luận" tab feed SHALL render the same shared engagement bar
-(the workspace community tab is renamed to Thảo luận by the `subject-workspace-ia` change) with
-the same behaviors as community feed rows — like toggle with optimistic update, inline push-down
-comment expansion via 💬, share menu, and save toggle — with no workspace-specific variant.
+### Requirement: Engagement bar on discussion surfaces (like + comment only)
+Discussion surfaces SHALL render the shared engagement bar configured for discussion — the like
+toggle (with optimistic update) and the 💬 comment control ONLY, with NO share button and NO save
+button — using the same block with no discussion-specific fork beyond the `actions` config. The
+discussion surfaces are group discussion threads (`GroupDiscussion`) and posts in the subject
+workspace "Thảo luận" tab (`SubjectCommunity`, renamed by the `subject-workspace-ia` change).
 
-#### Scenario: Like from the Thảo luận feed
-- **GIVEN** a signed-in user on a subject workspace's Thảo luận tab
-- **WHEN** they activate the like button on a post in that feed
-- **THEN** the liked state applies and the count increments by 1 in that feed
+#### Scenario: Like from a discussion surface
+- **GIVEN** a signed-in user on a group discussion thread or a subject workspace "Thảo luận" tab
+- **WHEN** they activate the like button on a discussion item
+- **THEN** the liked state applies and the count increments by 1
 
-#### Scenario: Save from the Thảo luận feed
-- **WHEN** a signed-in user activates the save button on a Thảo luận feed post
-- **THEN** the bookmark fills and the post is saved via the save-for-later contract, identically
-  to saving from the community feed
+#### Scenario: Comment on a discussion surface
+- **WHEN** a user activates 💬 on a group discussion thread or a "Thảo luận" post
+- **THEN** the comment thread expands inline below it (like other feeds), with no navigation
+
+#### Scenario: No save or share on a discussion surface
+- **WHEN** the engagement bar renders on any discussion surface
+- **THEN** neither the save (🔖) nor the share (🔁) button is present
+
+### Requirement: Engagement bar on articles/blog (full bar)
+Articles / blog posts (`/blog/[slug]`, backed by `query-blog-post(s)`) SHALL render the full
+engagement bar — like, comment, share, and save — with the same behaviors and visual language as
+community posts. Article saves SHALL use the save-for-later contract with entityType `article`.
+
+#### Scenario: Full bar on an article
+- **WHEN** a blog/article page renders its engagement bar
+- **THEN** it shows like, comment, share, and save, matching the post visual language
+
+#### Scenario: Save an article
+- **GIVEN** a signed-in user reading an unsaved article
+- **WHEN** they activate the save button
+- **THEN** the bookmark fills and the article is recorded as saved via the save-for-later contract
+  with entityType `article`
 
 ### Requirement: Optimistic like with rollback
 Like toggles SHALL apply optimistically: the UI updates immediately, before the write settles. If
@@ -111,12 +153,18 @@ state and surface a localized error toast.
 - **THEN** the optimistic state is kept (treated as local success), with no error toast
 
 ### Requirement: Save toggle in the engagement bar
-The save button (🔖) in the engagement bar SHALL toggle save-for-later on the post for a signed-in
-user: not-saved → saved fills the bookmark icon; saved → not-saved returns it to outline. Save
-*mechanics* (the `{ entityType: "post", entityId, isFavorite }` contract, persistence, and the
-`/saved` page) are owned by the `save-for-later` change; this capability owns the button's
-placement in the bar and its states. Inside feed rows, activating save SHALL NOT trigger the row's
-navigation.
+The save button (🔖) SHALL render ONLY on post and article surfaces (never on discussion surfaces,
+per the Per-surface engagement matrix). Where present, it SHALL toggle save-for-later on the item
+for a signed-in user: not-saved → saved fills the bookmark icon; saved → not-saved returns it to
+outline. Save *mechanics* (the `{ entityType: "post" | "article", entityId, isFavorite }` contract,
+persistence, and the `/saved` page) are owned by the `save-for-later` change; this capability owns
+the button's placement in the bar (including its absence on discussion) and its states. Inside feed
+rows, activating save SHALL NOT trigger the row's navigation.
+
+#### Scenario: Save button absent on discussion
+- **GIVEN** a group discussion thread or a subject workspace "Thảo luận" post
+- **WHEN** its engagement bar renders
+- **THEN** no save (🔖) button is present, so the discussion item cannot be saved
 
 #### Scenario: Signed-in user saves a post
 - **GIVEN** a signed-in user viewing a post they have not saved
@@ -319,11 +367,17 @@ the detail page, as before.
 - **THEN** the router does not navigate — the thread expands inline instead
 
 ### Requirement: Share menu with exact options
-The share button (🔁) in the engagement bar SHALL open a share menu containing, in order:
-(1) "Sao chép liên kết"/"Copy link" — always present; (2) "Chia sẻ qua…"/"Share via…" — present
-only when the Web Share API (`navigator.share`) is available. No other items SHALL appear —
+The share button (🔁) SHALL render ONLY on post and article surfaces (never on discussion surfaces,
+per the Per-surface engagement matrix). Where present, it SHALL open a share menu containing, in
+order: (1) "Sao chép liên kết"/"Copy link" — always present; (2) "Chia sẻ qua…"/"Share via…" —
+present only when the Web Share API (`navigator.share`) is available. No other items SHALL appear —
 "repost to own feed" ("Chia sẻ về trang cá nhân") is explicitly deferred and SHALL NOT be
 rendered.
+
+#### Scenario: Share button absent on discussion
+- **GIVEN** a group discussion thread or a subject workspace "Thảo luận" post
+- **WHEN** its engagement bar renders
+- **THEN** no share (🔁) button is present, so the discussion item cannot be shared
 
 #### Scenario: Copy link confirmation toast
 - **WHEN** the user chooses "Sao chép liên kết"
@@ -392,3 +446,9 @@ expanded region's id, and when the thread expands, focus SHALL move into the exp
 #### Scenario: Share menu keyboard operation
 - **WHEN** the user opens the share menu with the keyboard
 - **THEN** items can be traversed with arrow keys, activated with Enter, and the menu closes on Escape
+
+#### Scenario: Discussion bar exposes only like and comment to assistive tech
+- **GIVEN** a discussion surface (group discussion or "Thảo luận")
+- **WHEN** a keyboard/screen-reader user traverses the engagement bar
+- **THEN** only the like and comment controls are reachable — no share or save control is in the
+  focus order or announced

@@ -10,9 +10,9 @@ Người dùng hiện chỉ bật/tắt dark/light bằng một Switch trong nav
 - **Appearance modal** gồm 3 nhóm:
   - *Chế độ*: segmented Sáng / Tối / Hệ thống (giữ next-themes, thêm lựa chọn `system`).
   - *Màu chủ đạo*: lưới 6 swatch preset — swatch ĐẦU = xanh `#3F51B5` (mặc định, lấy từ `blue.primary` của Ftes-frontend cũ), một swatch là màu hồng hiện tại, còn lại là các màu curated; chọn swatch override token `--accent`/`--accent-foreground` toàn app cho cả light + dark.
-  - *Hiệu ứng nền*: toggle bật/tắt + chọn hướng "Bay lên" (hành vi hiện tại) vs "Rơi xuống như sao băng" (rơi từ trên xuống, có vệt đuôi sao chổi, trôi chéo nhẹ). Mặc định = BẬT + rơi xuống.
+  - *Hiệu ứng nền*: toggle bật/tắt + chọn hướng "Bay lên" (hành vi hiện tại) vs "Rơi xuống như sao băng" (rơi CHÉO từ trên-phải xuống dưới-trái, có vệt đuôi sao chổi trùng phương bay) + chọn **tốc độ** "Chậm / Vừa / Nhanh" (map hệ số nhân duration; mặc định "Vừa", áp cho cả hai hướng). Mặc định = BẬT + rơi xuống + tốc độ Vừa.
 - **Persistence**: zustand store mới `appearance` có `persist` (localStorage); accent áp trước khi paint (script inline set `data-accent` trên `<html>` — không flash); reduced-motion luôn thắng (hiệu ứng ép tắt về mặt hiển thị).
-- **AmbientBackground mở rộng**: prop `direction: "rise" | "fall"`; keyframe mới `meteorFall` + style vệt đuôi trong `globals.css`; giữ seeded deterministic layout (hydration-safe), animation thuần CSS (không rAF). `InnerLayout` đọc store để render (enabled/direction).
+- **AmbientBackground mở rộng**: prop `direction: "rise" | "fall"` + `speed: "slow" | "normal" | "fast"` (nhân duration keyframe cho cả hai hướng); keyframe mới `meteorFall` rơi CHÉO (translateX+translateY + rotate vệt trùng phương bay) + style vệt đuôi trong `globals.css`; giữ seeded deterministic layout (hydration-safe), animation thuần CSS (không rAF). `InnerLayout` đọc store để render (enabled/direction/speed).
 - **Đổi mặc định hình ảnh** (không breaking API): accent mặc định hồng → xanh `#3F51B5`; hiệu ứng mặc định bay lên → rơi xuống. Người dùng cũ chưa có localStorage sẽ thấy mặc định mới.
 - **i18n**: cụm khoá `appearance.*` (vi + en) cho tiêu đề modal, nhãn nhóm, tên màu, nhãn hướng, aria-labels.
 - Bản copy navbar legacy (`src/components/layouts/shell/Navbar/**` — không được mount) **không sửa**; chỉ ghi chú là cây chết.

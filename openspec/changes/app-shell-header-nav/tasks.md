@@ -32,10 +32,12 @@
 - [ ] 6.1 `npm run build` (webpack) xanh — build: batch-verified by orchestrator
 - [x] 6.2 `tsc --noEmit` sạch
 
-## 7. Delta amendment — hướng mới của product owner (header đã ship; đây là chỉnh sửa cụ thể)
+## 7. Delta amendment — directive chủ sản phẩm: header = LINK THUẦN, không sub-menu (header đã ship với dropdown; đây là ĐẢO hướng)
 
-- [ ] 7.1 Sửa `src/components/features/app-shell/useAppNav.tsx`: bỏ child `ai` khỏi module Workplace (còn subjects, resources, challenges, leaderboard, workflow, analytics, career)
-- [ ] 7.2 Sửa `src/components/features/app-shell/useAppNav.tsx`: bỏ child `recommendations` khỏi module Course (còn catalog `/courses`, marketplace `/marketplace`)
-- [ ] 7.3 Giữ Community ▾ nguyên (feed/groups/events/chat); xác nhận hover Community lộ **Groups + Events** (không đổi data, chỉ verify contract)
-- [ ] 7.4 Rà soát i18n: `nav.ai` / `nav.recommendations` (và nhãn liên quan) không còn được header dùng — nếu còn key mồ côi trong `nav.*` thì để lại cho popup dùng lại HOẶC dọn; KHÔNG dead-key trong header. `/ai` + `/recommendations` giờ vào profile popup (owner `profile-avatar-hub`), route vẫn hợp lệ
-- [ ] 7.5 Ghi chú coupling: việc gỡ `ai`/`recommendations` khỏi `useAppNav.tsx` được implement CÙNG change `profile-avatar-hub` (header + popup ship chung, không có khoảng route mất đường vào). Xem tasks bên `profile-avatar-hub` §7
+- [x] 7.1 Đơn giản hoá `src/components/features/app-shell/useAppNav.tsx`: header đọc 4 module `{ key, label, icon, path, isActive }`; **bỏ `children` khỏi đường header** (drop dropdown data). Giữ 4 module Home/Workplace/Course/Community với path landing đúng (`/`, `/subjects`, `/courses`, `/community`)
+- [x] 7.2 Viết lại `src/components/features/navbar/Navbar/HeaderNav/index.tsx` thành **4 link nhãn thuần**: gỡ HeroUI `Popover`/caret/chevron, gỡ hover-open + close-delay, gỡ roving-focus/ArrowUp-Down/ESC-đóng logic; mỗi module là `Link` tới landing route; giữ active-state theo prefix; gỡ `aria-haspopup`/`aria-expanded`
+- [x] 7.3 Đơn giản hoá mobile drawer trong `src/components/features/navbar/Navbar/index.tsx`: thay 3 nhóm accordion + children bằng **4 hàng link thuần** (Home, Workplace, Course, Community); tap → điều hướng landing + đóng drawer; giữ rows language/theme
+- [x] 7.4 Bỏ `ai` khỏi Workplace và `recommendations` khỏi Course trong data nav (nếu còn) — discovery shortcuts vào profile popup (owner `profile-avatar-hub`); `/ai` + `/recommendations` vẫn là route hợp lệ, reachable qua popup
+- [x] 7.5 Dọn i18n dropdown chết: gỡ key nhãn con chỉ dùng cho dropdown header nếu không còn consumer nào (`nav.*` con của Workplace/Course/Community dùng trong trang landing thì GIỮ; chỉ dọn key mồ côi thật). KHÔNG dead-key
+- [x] 7.6 Rà soát KHÔNG route mồ côi: resources, challenges, leaderboard, workflow, analytics, career, marketplace, groups, events, chat, feed vẫn reachable từ TRONG trang section tương ứng; search (Ctrl/K) tìm mọi trang; xác nhận `SubjectWorkspaceShell` rail không bị đụng
+- [x] 7.7 Ghi chú: đây là amendment trên header ĐÃ SHIP (bản dropdown). Build được orchestrator verify (batch). `tsc --noEmit` phải sạch sau khi gỡ Popover/hover logic

@@ -1636,6 +1636,156 @@
         }
     },
     "admin": {
+        "config": {
+            "title": "Configuration Center",
+            "subtitle": "Feature flags and system settings — changes apply platform-wide.",
+            "breadcrumbAdmin": "Admin",
+            "loading": "Loading configuration…",
+            "errorTitle": "Could not load configuration",
+            "errorBody": "Something went wrong while loading the configuration data.",
+            "retry": "Try again",
+            "forbidden": {
+                "title": "You do not have access",
+                "body": "The Configuration Center is restricted to Super Admins. If you need this permission, contact your system administrator.",
+                "back": "Back to home"
+            },
+            "scope": {
+                "label": "Scope",
+                "global": "Global",
+                "production": "Production",
+                "staging": "Staging",
+                "comingSoonTitle": "Per-environment configuration coming soon",
+                "comingSoonBody": "Environment scopes are waiting on the backend config-service. Switch back to Global to view and edit configuration."
+            },
+            "nav": {
+                "label": "Configuration categories",
+                "general": "General",
+                "featureFlags": "Feature flags",
+                "appearance": "Appearance",
+                "integrations": "Integrations",
+                "notifications": "Notifications",
+                "security": "Security",
+                "limits": "Limits"
+            },
+            "flags": {
+                "searchPlaceholder": "Search flags by key or description",
+                "filterLabel": "Filter by status",
+                "filterAll": "All",
+                "statusOn": "On",
+                "statusOff": "Off",
+                "statusRollout": "Rollout",
+                "statusLabel": "Status of flag {key}",
+                "rolloutPercent": "Rollout percentage (%)",
+                "lastChanged": "Last changed by {who} at {when}",
+                "confirmTitle": "Confirm flag status change",
+                "confirmBody": "Changing \"{key}\" from {from} to {to} affects real users immediately. Are you sure?",
+                "confirmAction": "Confirm",
+                "emptyTitle": "No flags match",
+                "emptyBody": "Try another keyword or clear the status filter."
+            },
+            "settings": {
+                "save": "Save",
+                "reset": "Reset",
+                "saved": "Configuration saved",
+                "saveError": "Save failed — your changes are kept, try again.",
+                "required": "This field is required",
+                "min": "Minimum value is {min}",
+                "max": "Maximum value is {max}",
+                "pattern": "Value has an invalid format",
+                "invalidNumber": "Must be a number",
+                "hasErrors": "The form has errors — fix the highlighted fields before saving.",
+                "dirtyTitle": "Unsaved changes",
+                "dirtyBody": "Leaving now will discard your unsaved changes.",
+                "dirtyStay": "Stay",
+                "dirtyLeave": "Discard changes",
+                "auditNote": "Last changed by {who} at {when}",
+                "emptyTitle": "No settings in this category yet",
+                "emptyBody": "The category's settings will appear here once defined."
+            },
+            "audit": {
+                "you": "you"
+            },
+            "flagDesc": {
+                "communityPolls": "Polls in community posts",
+                "searchV2": "New search experience (Elasticsearch v2)",
+                "aiTutor": "AI tutor on the lesson reader",
+                "gamificationStreaks": "Learning streaks and rewards",
+                "walletPayments": "Payments via the internal wallet"
+            },
+            "fields": {
+                "general": {
+                    "siteName": {
+                        "label": "Site name",
+                        "help": "Shown in page titles and outgoing emails."
+                    },
+                    "supportEmail": {
+                        "label": "Support email",
+                        "help": "Address that receives learner feedback."
+                    },
+                    "defaultLocale": {
+                        "label": "Default language",
+                        "options": {
+                            "vi": "Tiếng Việt",
+                            "en": "English"
+                        }
+                    },
+                    "maintenanceMode": {
+                        "label": "Maintenance mode",
+                        "help": "Turn on to show the maintenance page to regular users."
+                    }
+                },
+                "appearance": {
+                    "defaultAccent": {
+                        "label": "Default accent color",
+                        "help": "Applied to users who have not picked a color."
+                    },
+                    "defaultEffectEnabled": {
+                        "label": "Default background effect",
+                        "help": "Enable the ambient effect for new sessions."
+                    }
+                },
+                "notifications": {
+                    "emailDigest": {
+                        "label": "Email digest",
+                        "help": "Send a periodic activity summary email."
+                    },
+                    "digestFrequency": {
+                        "label": "Digest frequency",
+                        "options": {
+                            "daily": "Daily",
+                            "weekly": "Weekly"
+                        }
+                    }
+                },
+                "security": {
+                    "allowSelfSignup": {
+                        "label": "Allow self-signup",
+                        "help": "Turn off so only admins can invite new accounts."
+                    },
+                    "sessionTimeoutMinutes": {
+                        "label": "Session timeout (minutes)",
+                        "help": "From 5 to 1440 minutes."
+                    },
+                    "showPermissionMatrix": {
+                        "label": "Show permission matrix",
+                        "help": "Let admins view the permission matrix on the roles page."
+                    }
+                },
+                "limits": {
+                    "maxUploadMb": {
+                        "label": "Max upload size (MB)",
+                        "help": "From 1 to 500 MB."
+                    },
+                    "maxCoursesPerUser": {
+                        "label": "Max courses per user"
+                    },
+                    "apiRateLimitPerMin": {
+                        "label": "API rate limit (requests/min)",
+                        "help": "From 10 to 10000."
+                    }
+                }
+            }
+        },
         "aiBalancer": {
             "title": "AI Balancer Health",
             "subtitle": "Live API key status from the ping cache — keys marked disabled are skipped on the next call.",

@@ -1645,6 +1645,156 @@
         }
     },
     "admin": {
+        "config": {
+            "title": "Trung tâm cấu hình",
+            "subtitle": "Cờ tính năng và cấu hình hệ thống — thay đổi áp dụng cho toàn nền tảng.",
+            "breadcrumbAdmin": "Quản trị",
+            "loading": "Đang tải cấu hình…",
+            "errorTitle": "Không tải được cấu hình",
+            "errorBody": "Đã có lỗi khi tải dữ liệu cấu hình.",
+            "retry": "Thử lại",
+            "forbidden": {
+                "title": "Bạn không có quyền truy cập",
+                "body": "Trung tâm cấu hình chỉ dành cho Super Admin. Nếu bạn cần quyền này, hãy liên hệ quản trị hệ thống.",
+                "back": "Về trang chủ"
+            },
+            "scope": {
+                "label": "Phạm vi",
+                "global": "Toàn hệ thống",
+                "production": "Production",
+                "staging": "Staging",
+                "comingSoonTitle": "Cấu hình theo môi trường sắp có",
+                "comingSoonBody": "Phạm vi theo môi trường đang chờ config-service phía backend. Chuyển về Toàn hệ thống để xem và sửa cấu hình."
+            },
+            "nav": {
+                "label": "Danh mục cấu hình",
+                "general": "Chung",
+                "featureFlags": "Cờ tính năng",
+                "appearance": "Giao diện",
+                "integrations": "Tích hợp",
+                "notifications": "Thông báo",
+                "security": "Bảo mật",
+                "limits": "Giới hạn"
+            },
+            "flags": {
+                "searchPlaceholder": "Tìm cờ theo key hoặc mô tả",
+                "filterLabel": "Lọc theo trạng thái",
+                "filterAll": "Tất cả",
+                "statusOn": "Bật",
+                "statusOff": "Tắt",
+                "statusRollout": "Rollout",
+                "statusLabel": "Trạng thái của cờ {key}",
+                "rolloutPercent": "Tỷ lệ rollout (%)",
+                "lastChanged": "Sửa lần cuối bởi {who} lúc {when}",
+                "confirmTitle": "Xác nhận đổi trạng thái cờ",
+                "confirmBody": "Đổi \"{key}\" từ {from} sang {to} sẽ ảnh hưởng người dùng thật ngay lập tức. Bạn chắc chứ?",
+                "confirmAction": "Xác nhận",
+                "emptyTitle": "Không có cờ nào khớp",
+                "emptyBody": "Thử từ khóa khác hoặc bỏ bộ lọc trạng thái."
+            },
+            "settings": {
+                "save": "Lưu",
+                "reset": "Đặt lại",
+                "saved": "Đã lưu cấu hình",
+                "saveError": "Lưu thất bại — thay đổi của bạn vẫn được giữ, thử lại nhé.",
+                "required": "Trường này là bắt buộc",
+                "min": "Giá trị tối thiểu là {min}",
+                "max": "Giá trị tối đa là {max}",
+                "pattern": "Giá trị không đúng định dạng",
+                "invalidNumber": "Phải là một số",
+                "hasErrors": "Biểu mẫu có lỗi — sửa các trường được đánh dấu trước khi lưu.",
+                "dirtyTitle": "Có thay đổi chưa lưu",
+                "dirtyBody": "Rời đi bây giờ sẽ bỏ các thay đổi chưa lưu.",
+                "dirtyStay": "Ở lại",
+                "dirtyLeave": "Bỏ thay đổi",
+                "auditNote": "Sửa lần cuối bởi {who} lúc {when}",
+                "emptyTitle": "Danh mục này chưa có cấu hình",
+                "emptyBody": "Các setting của danh mục sẽ xuất hiện ở đây khi được định nghĩa."
+            },
+            "audit": {
+                "you": "bạn"
+            },
+            "flagDesc": {
+                "communityPolls": "Bình chọn trong bài viết cộng đồng",
+                "searchV2": "Trải nghiệm tìm kiếm mới (Elasticsearch v2)",
+                "aiTutor": "Trợ giảng AI trong trang đọc bài",
+                "gamificationStreaks": "Chuỗi ngày học (streak) và phần thưởng",
+                "walletPayments": "Thanh toán qua ví nội bộ"
+            },
+            "fields": {
+                "general": {
+                    "siteName": {
+                        "label": "Tên hệ thống",
+                        "help": "Hiển thị ở tiêu đề trang và email gửi đi."
+                    },
+                    "supportEmail": {
+                        "label": "Email hỗ trợ",
+                        "help": "Địa chỉ nhận phản hồi của người học."
+                    },
+                    "defaultLocale": {
+                        "label": "Ngôn ngữ mặc định",
+                        "options": {
+                            "vi": "Tiếng Việt",
+                            "en": "English"
+                        }
+                    },
+                    "maintenanceMode": {
+                        "label": "Chế độ bảo trì",
+                        "help": "Bật để hiển thị trang bảo trì cho người dùng thường."
+                    }
+                },
+                "appearance": {
+                    "defaultAccent": {
+                        "label": "Màu nhấn mặc định",
+                        "help": "Áp cho người dùng chưa tự chọn màu."
+                    },
+                    "defaultEffectEnabled": {
+                        "label": "Hiệu ứng nền mặc định",
+                        "help": "Bật hiệu ứng nền cho phiên mới."
+                    }
+                },
+                "notifications": {
+                    "emailDigest": {
+                        "label": "Email tổng hợp",
+                        "help": "Gửi email tóm tắt hoạt động định kỳ."
+                    },
+                    "digestFrequency": {
+                        "label": "Tần suất tổng hợp",
+                        "options": {
+                            "daily": "Hằng ngày",
+                            "weekly": "Hằng tuần"
+                        }
+                    }
+                },
+                "security": {
+                    "allowSelfSignup": {
+                        "label": "Cho phép tự đăng ký",
+                        "help": "Tắt để chỉ admin mời được tài khoản mới."
+                    },
+                    "sessionTimeoutMinutes": {
+                        "label": "Hết hạn phiên (phút)",
+                        "help": "Từ 5 đến 1440 phút."
+                    },
+                    "showPermissionMatrix": {
+                        "label": "Hiện ma trận quyền",
+                        "help": "Cho phép admin xem ma trận quyền ở trang phân quyền."
+                    }
+                },
+                "limits": {
+                    "maxUploadMb": {
+                        "label": "Dung lượng tải lên tối đa (MB)",
+                        "help": "Từ 1 đến 500 MB."
+                    },
+                    "maxCoursesPerUser": {
+                        "label": "Số khóa học tối đa mỗi người"
+                    },
+                    "apiRateLimitPerMin": {
+                        "label": "Giới hạn API (yêu cầu/phút)",
+                        "help": "Từ 10 đến 10000."
+                    }
+                }
+            }
+        },
         "aiBalancer": {
             "title": "Trạng thái AI Balancer",
             "subtitle": "Trạng thái key API từ cache ping — key disabled sẽ bị bỏ qua ở lần gọi tiếp theo.",

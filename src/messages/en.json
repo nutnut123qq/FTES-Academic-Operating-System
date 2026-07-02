@@ -2579,6 +2579,64 @@
             "none": "Not requested"
         }
     },
+    "homeLanding": {
+        "hero": {
+            "eyebrow": "Your academic operating system",
+            "headline": "Everything for your studies, in <accent>one place</accent>",
+            "subline": "Subject workspaces, courses, resources, community, and career — all connected in one platform built for how students actually learn.",
+            "ctaPrimary": "Explore courses",
+            "ctaSecondary": "Join the community"
+        },
+        "bento": {
+            "eyebrow": "One platform",
+            "title": "Your whole academic life, connected",
+            "subject": {
+                "title": "Subject workspaces",
+                "desc": "Each subject is its own workspace — lessons, resources, practice, community, and an AI tutor in one place."
+            },
+            "courses": {
+                "title": "Courses",
+                "desc": "Structured tracks with lessons, quizzes, and certificates."
+            },
+            "resources": {
+                "title": "Resources",
+                "desc": "Slides, past exams, books, and source code — shared and rated."
+            },
+            "community": {
+                "title": "Community",
+                "desc": "Ask, share, and learn together across your campus."
+            },
+            "groups": {
+                "title": "Groups",
+                "desc": "Study groups, clubs, and project teams."
+            },
+            "gamification": {
+                "title": "XP and streaks",
+                "desc": "Level up as you learn — badges, leagues, and daily goals."
+            }
+        },
+        "pillars": {
+            "title": "Built for how students actually learn",
+            "ai": {
+                "title": "AI tutor",
+                "desc": "Summaries, flashcards, and quizzes generated from your own materials."
+            },
+            "gamification": {
+                "title": "Motivation that sticks",
+                "desc": "XP, streaks, and leaderboards keep you moving day after day."
+            },
+            "career": {
+                "title": "Career bridge",
+                "desc": "Turn what you learn into skills, a portfolio, and job-ready proof."
+            }
+        },
+        "cta": {
+            "title": "Ready to start?",
+            "subline": "Jump into a course or open a subject workspace.",
+            "primary": "Explore courses",
+            "subjectDemo": "See a subject workspace"
+        }
+    },
     "landing": {
         "hero": {
             "eyebrow": "A practical roadmap for interviews",

@@ -2579,6 +2579,64 @@
             "none": "Chưa gửi yêu cầu"
         }
     },
+    "homeLanding": {
+        "hero": {
+            "eyebrow": "Hệ điều hành học tập của bạn",
+            "headline": "Mọi thứ cho việc học, gói gọn <accent>một nơi</accent>",
+            "subline": "Workspace môn học, khóa học, tài nguyên, cộng đồng và nghề nghiệp — tất cả kết nối trong một nền tảng thiết kế cho cách sinh viên thực sự học.",
+            "ctaPrimary": "Khám phá khóa học",
+            "ctaSecondary": "Vào cộng đồng"
+        },
+        "bento": {
+            "eyebrow": "Một nền tảng",
+            "title": "Toàn bộ việc học của bạn, kết nối lại",
+            "subject": {
+                "title": "Workspace môn học",
+                "desc": "Mỗi môn là một workspace riêng — bài học, tài nguyên, luyện tập, cộng đồng và AI tutor trong một chỗ."
+            },
+            "courses": {
+                "title": "Khóa học",
+                "desc": "Lộ trình có cấu trúc: bài học, quiz và chứng chỉ."
+            },
+            "resources": {
+                "title": "Tài nguyên",
+                "desc": "Slide, đề PE/FE, sách và source code — chia sẻ và đánh giá."
+            },
+            "community": {
+                "title": "Cộng đồng",
+                "desc": "Hỏi đáp, chia sẻ và học cùng nhau trong trường."
+            },
+            "groups": {
+                "title": "Nhóm",
+                "desc": "Nhóm học, câu lạc bộ và team dự án."
+            },
+            "gamification": {
+                "title": "XP và streak",
+                "desc": "Lên cấp khi học — huy hiệu, giải đấu và mục tiêu mỗi ngày."
+            }
+        },
+        "pillars": {
+            "title": "Thiết kế cho cách sinh viên thực sự học",
+            "ai": {
+                "title": "AI tutor",
+                "desc": "Tóm tắt, flashcard và quiz tạo từ chính tài liệu của bạn."
+            },
+            "gamification": {
+                "title": "Động lực bền bỉ",
+                "desc": "XP, streak và bảng xếp hạng giữ bạn đi đường dài."
+            },
+            "career": {
+                "title": "Cầu nối nghề nghiệp",
+                "desc": "Biến kiến thức thành kỹ năng, portfolio và bằng chứng sẵn sàng đi làm."
+            }
+        },
+        "cta": {
+            "title": "Sẵn sàng bắt đầu?",
+            "subline": "Nhảy vào một khóa học hoặc mở workspace một môn.",
+            "primary": "Khám phá khóa học",
+            "subjectDemo": "Xem workspace một môn"
+        }
+    },
     "landing": {
         "hero": {
             "eyebrow": "Lộ trình thực chiến cho vòng interview",

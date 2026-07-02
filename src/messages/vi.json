@@ -325,9 +325,10 @@
     },
     "search": {
         "label": "Tìm kiếm",
-        "placeholder": "Tìm kiếm",
+        "placeholder": "Tìm khóa học, học phần, bài giảng…",
         "filtersAria": "Bộ lọc tìm kiếm",
         "noResults": "Không tìm thấy kết quả.",
+        "noResultsFor": "Không có kết quả cho “{query}”.",
         "suggestions": {
             "courses": "Khóa học",
             "modules": "Học phần",
@@ -339,8 +340,31 @@
             "milestones": "Tiến độ",
             "milestoneTasks": "Tasks"
         },
+        "groups": {
+            "courses": "Khóa học",
+            "modules": "Học phần",
+            "contents": "Nội dung",
+            "lessonVideos": "Bài giảng",
+            "challenges": "Thử thách",
+            "milestones": "Cột mốc",
+            "milestoneTasks": "Nhiệm vụ",
+            "flashcardDecks": "Bộ flashcard",
+            "users": "Người dùng",
+            "posts": "Bài viết",
+            "groups": "Nhóm",
+            "resources": "Tài nguyên"
+        },
         "idleHint": "Nhập để tìm khóa học, học phần, bài giảng…",
         "popular": "Phổ biến",
+        "recent": "Tìm gần đây",
+        "clearRecent": "Xóa lịch sử",
+        "clearInput": "Xóa ô tìm kiếm",
+        "seeAll": "Xem tất cả kết quả",
+        "showMore": "Xem thêm {count}",
+        "error": "Không tải được kết quả tìm kiếm.",
+        "retry": "Thử lại",
+        "signInPrompt": "Đăng nhập để tìm kiếm nội dung học tập.",
+        "signIn": "Đăng nhập",
         "hint": {
             "move": "di chuyển",
             "open": "mở",
@@ -2082,7 +2106,8 @@
             "like": "Đăng nhập để thích bài viết",
             "comment": "Đăng nhập để bình luận",
             "save": "Đăng nhập để lưu nội dung",
-            "enroll": "Đăng nhập để đăng ký khóa học"
+            "enroll": "Đăng nhập để đăng ký khóa học",
+            "search": "Đăng nhập để tìm kiếm nội dung học tập"
         }
     },
     "priceTag": {
@@ -2675,16 +2700,12 @@
     },
     "searchPage": {
         "title": "Tìm kiếm",
-        "placeholder": "Tìm người dùng, môn học, khóa học, tài nguyên…",
+        "placeholder": "Tìm khóa học, học phần, bài giảng, người dùng…",
         "empty": "Nhập để tìm kiếm trên toàn FTES AOS.",
         "noResults": "Không tìm thấy kết quả. Thử từ khóa khác.",
-        "groups": {
-            "users": "Người dùng",
-            "subjects": "Môn học",
-            "courses": "Khóa học",
-            "resources": "Tài nguyên",
-            "posts": "Bài viết cộng đồng"
-        }
+        "noResultsFor": "Không có kết quả cho “{query}”. Thử từ khóa khác.",
+        "all": "Tất cả",
+        "signInPrompt": "Đăng nhập để tìm kiếm nội dung học tập. Kết quả cộng đồng vẫn hiển thị bên dưới."
     },
     "recommendation": {
         "title": "Dành cho bạn",
@@ -2805,11 +2826,129 @@
         "badges": "Huy hiệu",
         "badgeLocked": "Chưa mở khóa",
         "xpValue": "{xp} XP",
+        "levelHint": "Còn {xp} XP để lên cấp",
         "stats": {
             "xp": "Điểm KN",
             "level": "Cấp độ",
             "streak": "Chuỗi ngày",
             "rank": "Hạng"
+        },
+        "tiers": {
+            "bronze": "Đồng",
+            "silver": "Bạc",
+            "gold": "Vàng",
+            "platinum": "Bạch Kim",
+            "diamond": "Kim Cương"
+        },
+        "reasons": {
+            "lessonComplete": "Hoàn thành bài học",
+            "quizSubmit": "Nộp quiz",
+            "challengeComplete": "Hoàn thành challenge",
+            "dailyLogin": "Đăng nhập hằng ngày",
+            "postUpvote": "Bài viết được upvote",
+            "commentUpvote": "Bình luận được upvote",
+            "dailyGoal": "Hoàn thành mục tiêu ngày",
+            "weeklyGoal": "Hoàn thành mục tiêu tuần"
+        },
+        "toast": {
+            "xp": "+{xp} XP"
+        },
+        "moment": {
+            "levelUpTitle": "Lên cấp!",
+            "levelUpBody": "Bạn đã đạt cấp {level}",
+            "milestoneTitle": "Đạt mốc streak!",
+            "milestoneReward": "Streak {days} ngày · +{coin} coin"
+        },
+        "demo": {
+            "label": "Thử (mock):",
+            "lesson": "Hoàn thành bài học",
+            "quiz": "Nộp quiz 90%",
+            "challenge": "Xong challenge"
+        },
+        "milestones": {
+            "weekOfFire": { "name": "Tuần Lửa" },
+            "monthOfGrit": { "name": "Tháng Bền Bỉ" },
+            "hundredDays": { "name": "Trăm Ngày Lửa" }
+        },
+        "goals": {
+            "title": "Mục tiêu",
+            "completed": "Đã hoàn thành",
+            "reward": "+{xp} XP",
+            "daily": {
+                "name": "Mục tiêu ngày",
+                "progress": "{current}/{target} hành động"
+            },
+            "weekly": {
+                "name": "Mục tiêu tuần",
+                "progress": "{current}/{target} ngày"
+            }
+        },
+        "heatmap": {
+            "active": "Có hoạt động học",
+            "frozen": "Ngày đóng băng",
+            "empty": "Không hoạt động"
+        },
+        "streak": {
+            "openDetail": "Xem chi tiết chuỗi ngày",
+            "chipLabel": "Chuỗi {count} ngày — xem chi tiết",
+            "daysCount": "{count} ngày",
+            "multiplier": "+{percent}% XP",
+            "heatmapTitle": "12 tuần gần đây",
+            "freezeCount": "{count} Streak Freeze",
+            "buyFreeze": "Đổi ({cost} coin)",
+            "nextMilestone": "Còn {remaining} ngày tới mốc {days}",
+            "lostTitle": "Chuỗi {days} ngày đã mất",
+            "repair": "Khôi phục ({cost} coin)"
+        },
+        "reminder": {
+            "title": "Streak sắp mất",
+            "body": "Streak {count} ngày sắp mất — hoàn thành 1 bài học/quiz để giữ lửa"
+        },
+        "guide": {
+            "link": "Cách tính điểm",
+            "back": "Về bảng xếp hạng",
+            "title": "Cách tính điểm",
+            "subtitle": "Điểm kinh nghiệm, cấp độ, hạng và chuỗi ngày được tính như thế nào.",
+            "xpSection": "Điểm kinh nghiệm (XP)",
+            "actionHeader": "Hành động",
+            "xpHeader": "XP",
+            "quizBanded": "Theo điểm",
+            "quizBand": "≥{min}% → +{xp} XP",
+            "multiplierNote": "Các hành động HỌC (bài học/quiz/challenge) được nhân theo streak; đăng nhập/upvote/mục tiêu thì không.",
+            "actions": {
+                "lessonComplete": "Hoàn thành 1 bài học",
+                "quizSubmit": "Nộp quiz",
+                "challengeComplete": "Hoàn thành 1 challenge",
+                "dailyLogin": "Đăng nhập lần đầu trong ngày",
+                "postUpvote": "Bài viết được upvote (trần +20/ngày)",
+                "commentUpvote": "Bình luận được upvote (trần +10/ngày)",
+                "dailyGoal": "Hoàn thành mục tiêu ngày",
+                "weeklyGoal": "Hoàn thành mục tiêu tuần"
+            },
+            "levelSection": "Cấp độ",
+            "levelFormula": "Tổng XP tối thiểu để đạt cấp L = {factor} × (L − 1)².",
+            "levelExample": "Ví dụ: cần {xp} XP để lên cấp {level}.",
+            "tierSection": "Hạng",
+            "tierHeader": "Hạng",
+            "tierXpHeader": "Tổng XP",
+            "tierFrom": "từ {xp} XP",
+            "streakSection": "Chuỗi ngày (streak)",
+            "streakQualifying": "Ngày streak hợp lệ = có ít nhất 1 hành động học (bài học/quiz/challenge). Chỉ đăng nhập KHÔNG giữ streak.",
+            "streakMultiplier": "Nhân XP +{step}% mỗi ngày liên tiếp, trần +{cap}%.",
+            "streakReset": "Lỡ 1 ngày không học và không có freeze → streak về 0.",
+            "streakFreeze": "Streak Freeze: giữ tối đa {max}, tự cứu 1 ngày lỡ; đổi {cost} coin/cái.",
+            "streakRepair": "Streak Repair: trong {window} giờ sau khi mất, khôi phục với 10 × số ngày (trần {cap} coin).",
+            "streakReminder": "Nhắc lúc {hour}:00 khi streak ≥ {min} mà chưa học hôm nay.",
+            "milestoneRow": "{days} ngày → {name} + {coin} coin",
+            "goalsSection": "Mục tiêu",
+            "dailyGoalRule": "Mục tiêu ngày: hoàn thành {target} hành động học → +{xp} XP.",
+            "weeklyGoalRule": "Mục tiêu tuần: {target} ngày học hợp lệ trong tuần → +{xp} XP.",
+            "comingSoonSection": "Sắp ra mắt",
+            "comingSoon": {
+                "league": "League & Season (giải đấu tuần)",
+                "monthly": "Mục tiêu tháng",
+                "mysteryBox": "Mystery Box & Lucky Spin"
+            }
         }
     },
     "wallet": {
@@ -2927,59 +3066,260 @@
     "homeLanding": {
         "hero": {
             "eyebrow": "Hệ điều hành học tập của bạn",
-            "headline": "Mọi thứ cho việc học, gói gọn <accent>một nơi</accent>",
-            "subline": "Workspace môn học, khóa học, tài nguyên, cộng đồng và nghề nghiệp — tất cả kết nối trong một nền tảng thiết kế cho cách sinh viên thực sự học.",
-            "ctaPrimary": "Khám phá khóa học",
-            "ctaSecondary": "Vào cộng đồng"
+            "headline": "Một hành trình học <accent>rõ ràng</accent>, từ nhà đến thành quả",
+            "subline": "FTES dẫn bạn đi từ trang chủ, vào workplace môn học, qua khóa học, luyện tập cùng AI, và chốt hạ bằng thành quả thật: dự án, vinh danh, sự nghiệp.",
+            "ctaPrimary": "Bắt đầu học",
+            "ctaSecondary": "Khám phá cộng đồng"
         },
-        "bento": {
-            "eyebrow": "Một nền tảng",
-            "title": "Toàn bộ việc học của bạn, kết nối lại",
-            "subject": {
-                "title": "Workspace môn học",
-                "desc": "Mỗi môn là một workspace riêng — bài học, tài nguyên, luyện tập, cộng đồng và AI tutor trong một chỗ."
-            },
-            "courses": {
-                "title": "Khóa học",
-                "desc": "Lộ trình có cấu trúc: bài học, quiz và chứng chỉ."
-            },
-            "resources": {
-                "title": "Tài nguyên",
-                "desc": "Slide, đề PE/FE, sách và source code — chia sẻ và đánh giá."
-            },
-            "community": {
-                "title": "Cộng đồng",
-                "desc": "Hỏi đáp, chia sẻ và học cùng nhau trong trường."
-            },
-            "groups": {
-                "title": "Nhóm",
-                "desc": "Nhóm học, câu lạc bộ và team dự án."
-            },
-            "gamification": {
-                "title": "XP và streak",
-                "desc": "Lên cấp khi học — huy hiệu, giải đấu và mục tiêu mỗi ngày."
+        "journey": {
+            "stepperAria": "Các chặng trong hành trình học",
+            "stations": {
+                "home": {
+                    "label": "Trang chủ",
+                    "caption": "Điểm khởi đầu — chọn hướng đi và bắt nhịp với FTES."
+                },
+                "workplace": {
+                    "label": "Workplace môn học",
+                    "caption": "Không gian làm việc riêng cho từng môn: tài liệu, lộ trình, tiến độ."
+                },
+                "course": {
+                    "label": "Khóa học",
+                    "caption": "Học theo khóa có cấu trúc, bài giảng và bài tập rõ ràng."
+                },
+                "practice": {
+                    "label": "Luyện tập & AI",
+                    "caption": "Luyện tập, hỏi trợ giảng AI và nhận chấm bài, gợi ý cá nhân hóa."
+                },
+                "outcome": {
+                    "label": "Thành quả",
+                    "caption": "Chốt hạ: dự án thực tế, vinh danh và cơ hội nghề nghiệp."
+                }
             }
         },
-        "pillars": {
-            "title": "Thiết kế cho cách sinh viên thực sự học",
-            "ai": {
-                "title": "AI tutor",
-                "desc": "Tóm tắt, flashcard và quiz tạo từ chính tài liệu của bạn."
-            },
-            "gamification": {
-                "title": "Động lực bền bỉ",
-                "desc": "XP, streak và bảng xếp hạng giữ bạn đi đường dài."
-            },
-            "career": {
-                "title": "Cầu nối nghề nghiệp",
-                "desc": "Biến kiến thức thành kỹ năng, portfolio và bằng chứng sẵn sàng đi làm."
+        "stats": {
+            "eyebrow": "Số liệu thật, không phông bạt",
+            "title": "Những con số nói thật về FTES",
+            "users": "Người dùng",
+            "resources": "Tài nguyên học tập",
+            "courses": "Khóa học",
+            "communities": "Cộng đồng",
+            "aiTitle": "Được hỗ trợ bởi AI xuyên suốt",
+            "aiChips": {
+                "tutor": "Trợ giảng AI",
+                "grading": "Chấm bài & phản hồi AI",
+                "recommend": "Gợi ý cá nhân hóa",
+                "roadmap": "Lộ trình học thông minh"
+            }
+        },
+        "modules": {
+            "eyebrow": "Bên trong hành trình",
+            "title": "Mỗi chặng có gì cho bạn",
+            "explore": "Khám phá",
+            "cards": {
+                "workplace": {
+                    "title": "Workplace môn học",
+                    "desc": "Không gian riêng cho từng môn: tài liệu, lộ trình, theo dõi tiến độ và mục tiêu."
+                },
+                "course": {
+                    "title": "Khóa học",
+                    "desc": "Bài giảng có cấu trúc, bài tập và dự án — học tới đâu chắc tới đó."
+                },
+                "community": {
+                    "title": "Cộng đồng",
+                    "desc": "Hỏi đáp, chia sẻ và học cùng nhau với mentor và các bạn học viên."
+                }
+            }
+        },
+        "offers": {
+            "eyebrow": "Quyền lợi khi học tại FTES",
+            "title": "Ưu đãi & chính sách",
+            "tabsAria": "Các nhóm ưu đãi và chính sách",
+            "cta": "Xem các khóa học",
+            "groups": {
+                "newLearner": {
+                    "title": "Học viên mới",
+                    "lines": {
+                        "0": "Combo 800k–1.199k: giảm 100k.",
+                        "1": "Combo 1.200k–1.599k: giảm 200k.",
+                        "2": "Combo trên 1.600k: giảm 300k + tặng Cursor bản quyền."
+                    }
+                },
+                "liveZoom": {
+                    "title": "Lớp Live trên Zoom",
+                    "lines": {
+                        "0": "Học trực tiếp với Mentor.",
+                        "1": "Mentor đồng hành suốt khóa học.",
+                        "2": "Toàn quyền truy cập video lớp Basic trị giá 300k."
+                    }
+                },
+                "group": {
+                    "title": "Đăng ký nhóm",
+                    "lines": {
+                        "0": "Nhóm 2–4 người: giảm 20%/người.",
+                        "1": "Nhóm 5–10 người: giảm 25%/người.",
+                        "2": "Nhóm trên 10 người: giảm 35%/người."
+                    }
+                },
+                "returning": {
+                    "title": "Học viên cũ",
+                    "lines": {
+                        "0": "Giới thiệu học viên mới: tặng 100k + điểm thưởng (người giới thiệu 70đ, người được giới thiệu 30đ).",
+                        "1": "Đăng ký khóa tiếp theo: giảm 5%.",
+                        "2": "Đặt trước khóa tiếp theo ngay trong quá trình học: giảm 10%."
+                    }
+                },
+                "honor": {
+                    "title": "Vinh danh & Học bổng",
+                    "lines": {
+                        "0": "Học Bá (cao điểm nhất toàn FTES): free kì sau + thưởng 2.000.000đ.",
+                        "1": "Học chuyên cần (đủ buổi + đủ bài tập): giảm 10%.",
+                        "2": "Học tốt (cao điểm nhất lớp): free kì sau.",
+                        "3": "Học bổng Tài Năng: 2.000.000đ + free tất cả khóa + cơ hội đào tạo làm dự án từ sau kì 5."
+                    }
+                },
+                "afterCourse": {
+                    "title": "Lộ trình sau khóa học",
+                    "lines": {
+                        "0": "Học xong đủ kiến thức làm dự án → tham gia phỏng vấn để được chọn vào lớp đào tạo dự án."
+                    }
+                },
+                "installment": {
+                    "title": "Trả góp",
+                    "lines": {
+                        "0": "Trả trước 30–50%, phần còn lại hoàn thành trong 1 tháng.",
+                        "1": "Trả trước 50%: truy cập ngay bài giảng cũ + tài liệu.",
+                        "2": "Trả trước 40%: truy cập bài giảng cũ.",
+                        "3": "Trả trước 30%: chưa truy cập trước."
+                    }
+                },
+                "trial": {
+                    "title": "Học thử & ưu đãi theo test",
+                    "lines": {
+                        "0": "2 buổi kiến thức nền miễn phí.",
+                        "1": "Điểm test 6–6.9: giảm 10%.",
+                        "2": "Điểm test 7–8.9: giảm 15%.",
+                        "3": "Điểm test 9–10: giảm 30%."
+                    }
+                }
+            }
+        },
+        "honor": {
+            "title": "Bảng vàng FTES",
+            "subline": "Học viên chúng tôi CHẤT cỡ nào? Đây là những gương mặt tiêu biểu của FTES.",
+            "cta": "Xem bảng xếp hạng",
+            "people": {
+                "kimKhoa": {
+                    "name": "Kim Khoa",
+                    "lines": {
+                        "0": "TOP 100 sinh viên xuất sắc 3 kỳ liên tiếp.",
+                        "1": "Điểm GPA ổn định và ấn tượng: 9.35 – 9.42 – 9.1.",
+                        "2": "Học Bá kì FA25 tại FTES."
+                    }
+                },
+                "hoangBlue": {
+                    "name": "Hoàng Blue",
+                    "lines": {
+                        "0": "Sinh viên xuất sắc học kỳ SP25 & SU25: GPA 9.4.",
+                        "1": "Danh hiệu “Học Tốt FTES” - Học bổng Tài Năng FTES."
+                    }
+                },
+                "hoangDuy": {
+                    "name": "Hoàng Duy",
+                    "lines": {
+                        "0": "Sinh viên giỏi kỳ 1.",
+                        "1": "Top 100 Sinh Viên Xuất Sắc tại FPTU TP.HCM kỳ 2.",
+                        "2": "Top 100 Sinh Viên Xuất Sắc tại FPTU TP.HCM kỳ 3 với GPA 9.6."
+                    }
+                },
+                "hongPhuc": {
+                    "name": "Hồng Phúc",
+                    "lines": {
+                        "0": "Hoàn thành khoá học Data nền tảng.",
+                        "1": "Triển khai dashboard đầu tiên."
+                    }
+                },
+                "chiThong": {
+                    "name": "Phan Chi Thông",
+                    "lines": {
+                        "0": "Top 5 sinh viên kỳ Spring 2025 tại Đại học FPT Quy Nhơn."
+                    }
+                },
+                "tranViet": {
+                    "name": "Trần Việt",
+                    "lines": {
+                        "0": "Sinh viên giỏi kỳ SU25."
+                    }
+                }
+            }
+        },
+        "mentors": {
+            "eyebrow": "Người đồng hành cùng bạn",
+            "title": "Đội ngũ FTES",
+            "prev": "Mentor trước",
+            "next": "Mentor tiếp theo",
+            "people": {
+                "anhKhoa": {
+                    "name": "Mentor Anh Khoa",
+                    "role": "Founder, CEO",
+                    "quote": "Các bạn sinh viên sẽ bị sự nhiệt huyết, kinh nghiệm và câu chuyện hài hước của mình làm cho mê mẩn và hiểu bài tuyệt đối!!"
+                },
+                "ducHai": {
+                    "name": "Mentor Đức Hải",
+                    "role": "Co-Founder, CTO",
+                    "quote": "Mình hướng đến cách dạy vừa nghiêm túc vừa thoải mái: kiến thức thì chắc chắn, giảng giải thì dễ hiểu, lại xen chút hài hước để giờ học luôn vui vẻ và không hề khô khan."
+                },
+                "thanhHuy": {
+                    "name": "Mentor Thanh Huy",
+                    "role": "Co-Founder, COO",
+                    "quote": "Anh không chỉ dạy kiến thức, mà truyền lửa đam mê và chia sẻ những trải nghiệm chân thật của mình trên con đường học vấn, để mỗi buổi học đều là một hành trình khơi dậy tiềm năng trong các bạn."
+                },
+                "nhatHuy": {
+                    "name": "Mentor Nhật Huy",
+                    "role": "Developer",
+                    "quote": "Tôi dạy theo hướng thực hành, lý thuyết ngắn gọn, tập trung giúp học viên hiểu nhanh – làm được ngay – và áp dụng vào dự án thực tế."
+                },
+                "ngocHieu": {
+                    "name": "Mentor Ngọc Hiếu",
+                    "role": "BrSE",
+                    "quote": "Mình dạy theo nhịp vừa phải, giải thích đến đâu là sáng tỏ đến đó, lại xen thêm chuyện văn hoá Nhật Bản và vài pha tấu hài để lớp học lúc nào cũng rộn ràng mà kiến thức thì cứ thấm dần."
+                }
+            }
+        },
+        "faq": {
+            "eyebrow": "Câu hỏi thường gặp",
+            "title": "FAQ về học tại FTES",
+            "items": {
+                "refund": {
+                    "q": "Khóa học ở FTES học không hiểu thì có được hoàn tiền không?",
+                    "a": "Có. Sau buổi học đầu tiên nếu thấy không ổn, bạn được hoàn tiền. FTES hoàn 100% học phí nếu KHÔNG HIỂU / KHÔNG HỢP CÁCH GIẢNG / KHÔNG HIỆU QUẢ — với điều kiện bạn tham gia đủ các buổi và hoàn thành đầy đủ bài tập về nhà (BTVN)."
+                },
+                "trial": {
+                    "q": "Mình có được học thử trước khi đăng ký không?",
+                    "a": "Có. Bạn được học thử 2 buổi kiến thức nền miễn phí. Ngoài ra còn ưu đãi theo điểm test: 6–6.9 giảm 10%, 7–8.9 giảm 15%, 9–10 giảm 30%."
+                },
+                "installment": {
+                    "q": "FTES có hỗ trợ trả góp học phí không?",
+                    "a": "Có. Bạn trả trước 30–50%, phần còn lại hoàn thành trong 1 tháng. Trả trước 50% truy cập ngay bài giảng cũ + tài liệu; 40% truy cập bài giảng cũ; 30% chưa truy cập trước."
+                },
+                "group": {
+                    "q": "Đăng ký theo nhóm có được giảm giá không?",
+                    "a": "Có. Nhóm 2–4 người giảm 20%/người, nhóm 5–10 người giảm 25%/người, nhóm trên 10 người giảm 35%/người."
+                },
+                "scholarship": {
+                    "q": "FTES có học bổng và vinh danh không?",
+                    "a": "Có. Học Bá (cao điểm nhất toàn FTES) được free kì sau + thưởng 2.000.000đ; Học chuyên cần giảm 10%; Học tốt (cao điểm nhất lớp) free kì sau; Học bổng Tài Năng 2.000.000đ + free tất cả khóa + cơ hội đào tạo làm dự án từ sau kì 5."
+                },
+                "afterCourse": {
+                    "q": "Học xong khóa học thì có lộ trình gì tiếp theo?",
+                    "a": "Học xong đủ kiến thức làm dự án, bạn tham gia phỏng vấn để được chọn vào lớp đào tạo dự án — bước đệm để làm dự án thực tế và tiến tới sự nghiệp."
+                }
             }
         },
         "cta": {
-            "title": "Sẵn sàng bắt đầu?",
-            "subline": "Nhảy vào một khóa học hoặc mở workspace một môn.",
-            "primary": "Khám phá khóa học",
-            "subjectDemo": "Xem workspace một môn"
+            "title": "Sẵn sàng bắt đầu hành trình của bạn?",
+            "subline": "Chọn một khóa học, bước vào workplace môn học và để FTES đồng hành tới thành quả.",
+            "primary": "Xem các khóa học",
+            "secondary": "Tham gia cộng đồng"
         }
     },
     "landing": {
@@ -3444,7 +3784,26 @@
         "loadError": "Không tải được thông báo",
         "markAllRead": "Đánh dấu tất cả đã đọc",
         "retry": "Thử lại",
-        "title": "Thông báo"
+        "title": "Thông báo",
+        "mutedHint": "Bạn đã tắt toàn bộ thông báo.",
+        "preferences": {
+            "title": "Tùy chọn thông báo",
+            "subtitle": "Chọn loại thông báo bạn muốn nhận.",
+            "muteAll": "Tắt tất cả thông báo",
+            "muteAllHint": "Ẩn mọi thông báo và huy hiệu chưa đọc.",
+            "browserPush": "Thông báo trên trình duyệt",
+            "browserPushComingSoon": "Sắp ra mắt — hiện chưa khả dụng.",
+            "types": {
+                "system": "Hệ thống",
+                "challengeGraded": "Chấm điểm thử thách",
+                "codingGraded": "Chấm điểm bài code",
+                "milestoneGraded": "Chấm điểm cột mốc",
+                "newFollower": "Người theo dõi mới",
+                "commentReply": "Phản hồi bình luận",
+                "subscriptionGranted": "Kích hoạt gói đăng ký",
+                "announcement": "Thông báo chung"
+            }
+        }
     },
     "streakFreeze": {
         "buy": "Mua băng bảo vệ ({cost} XP)",
@@ -3709,6 +4068,15 @@
         "aiTools": {
             "title": "Trợ lý AI",
             "cta": "Mở",
+            "comingSoon": "Sắp ra mắt",
+            "comingSoonCta": "Sắp có",
+            "lockedHint": "Đăng ký môn học này để mở khóa các công cụ AI.",
+            "join": "Đăng ký môn học",
+            "errorTitle": "Không tải được công cụ AI",
+            "retry": "Thử lại",
+            "errorRetryHint": "Đã có lỗi xảy ra. Vui lòng thử lại.",
+            "pickSource": "Chọn nguồn tài liệu",
+            "goResources": "Mở tab Tài nguyên",
             "tools": {
                 "tutor": {
                     "title": "Gia sư A",
@@ -3730,6 +4098,64 @@
                     "title": "OCR",
                     "desc": "Trích chữ từ ảnh/PDF"
                 }
+            },
+            "tutor": {
+                "placeholder": "Hỏi gia sư AI về môn này...",
+                "send": "Gửi",
+                "settings": "Cài đặt",
+                "conversations": "Cuộc trò chuyện",
+                "newConversation": "Cuộc mới",
+                "searchConversations": "Tìm cuộc trò chuyện",
+                "noConversations": "Chưa có cuộc trò chuyện nào",
+                "untitled": "Chưa đặt tên",
+                "deleteConversation": "Xóa cuộc trò chuyện",
+                "turnsCount": "{count} tin nhắn",
+                "modelLabel": "Mô hình trả lời",
+                "clearHint": "Xóa toàn bộ cuộc trò chuyện của môn này. Hành động không thể hoàn tác.",
+                "clearAction": "Xóa toàn bộ lịch sử",
+                "emptyHint": "Bắt đầu hỏi gia sư AI về môn {subject}.",
+                "thinking": "Đang trả lời...",
+                "streamError": "Không tạo được câu trả lời.",
+                "suggestions": {
+                    "explain": "Giải thích khái niệm cốt lõi của môn {subject}",
+                    "plan": "Gợi ý lộ trình ôn tập môn {subject}",
+                    "example": "Cho một ví dụ minh họa"
+                }
+            },
+            "summary": {
+                "generate": "Tạo tóm tắt",
+                "regenerate": "Tạo lại",
+                "copy": "Sao chép",
+                "copied": "Đã sao chép tóm tắt",
+                "keyPoints": "Ý chính",
+                "errorTitle": "Không tạo được tóm tắt",
+                "emptyTitle": "Chưa có tài liệu để tóm tắt",
+                "emptyDesc": "Thêm tài nguyên ở tab Tài nguyên rồi quay lại."
+            },
+            "quiz": {
+                "generate": "Tạo quiz",
+                "count": "Số câu hỏi",
+                "submit": "Nộp bài",
+                "retry": "Làm lại",
+                "newQuiz": "Tạo quiz mới",
+                "score": "Điểm: {score}/{total}",
+                "errorTitle": "Không tạo được quiz",
+                "emptyTitle": "Chưa có tài liệu để tạo quiz",
+                "emptyDesc": "Thêm tài nguyên ở tab Tài nguyên rồi quay lại."
+            },
+            "flashcards": {
+                "generate": "Tạo flashcards",
+                "regenerate": "Tạo lại",
+                "restart": "Bắt đầu lại",
+                "flip": "Lật thẻ",
+                "prev": "Thẻ trước",
+                "next": "Thẻ sau",
+                "front": "Thuật ngữ",
+                "back": "Định nghĩa",
+                "position": "{current}/{total}",
+                "errorTitle": "Không tạo được flashcards",
+                "emptyTitle": "Chưa có tài liệu để tạo thẻ",
+                "emptyDesc": "Thêm tài nguyên ở tab Tài nguyên rồi quay lại."
             }
         },
         "career": {
@@ -3738,11 +4164,54 @@
             "careers": "Nghề liên quan",
             "nextSubject": "Môn học tiếp theo",
             "nextSubjectHint": "Gợi ý theo lộ trình",
+            "skillGraph": "Bản đồ kỹ năng",
             "demand": {
                 "high": "Nhu cầu cao",
                 "medium": "Nhu cầu vừa",
                 "low": "Nhu cầu thấp"
             }
+        }
+    },
+    "skillGraph": {
+        "title": "Bản đồ kỹ năng",
+        "you": "Bạn",
+        "hint": "Nhấp vào một kỹ năng để xem chi tiết.",
+        "canvasLabel": "Bản đồ kỹ năng mạng nhện — kéo để di chuyển, cuộn để phóng to",
+        "error": "Không tải được bản đồ kỹ năng.",
+        "empty": {
+            "title": "Chưa có kỹ năng nào",
+            "description": "Bắt đầu học để xây dựng bản đồ kỹ năng của bạn."
+        },
+        "filter": {
+            "all": "Tất cả"
+        },
+        "domains": {
+            "be": "Backend",
+            "fe": "Frontend",
+            "mobile": "Mobile",
+            "ai": "AI",
+            "data": "Dữ liệu",
+            "devops": "DevOps"
+        },
+        "statuses": {
+            "locked": "Chưa mở",
+            "learning": "Đang học",
+            "mastered": "Thành thạo"
+        },
+        "edges": {
+            "prerequisite": "Điều kiện tiên quyết",
+            "related": "Liên quan"
+        },
+        "legend": {
+            "domains": "Lĩnh vực",
+            "statuses": "Trạng thái",
+            "edges": "Liên kết"
+        },
+        "panel": {
+            "title": "Chi tiết kỹ năng: {name}",
+            "close": "Đóng",
+            "level": "Mức độ thành thạo",
+            "related": "Môn học & khóa học liên quan"
         }
     },
     "courseSystem": {
@@ -3919,6 +4388,32 @@
             "following": "Đang theo dõi",
             "campus": "Cơ sở",
             "trending": "Xu hướng"
+        },
+        "engagement": {
+            "like": "Thích",
+            "unlike": "Bỏ thích",
+            "comment": "Bình luận",
+            "share": "Chia sẻ",
+            "save": "Lưu xem sau",
+            "saved": "Đã lưu",
+            "copyLink": "Sao chép liên kết",
+            "linkCopied": "Đã sao chép liên kết",
+            "linkCopyFailed": "Không sao chép được liên kết",
+            "shareVia": "Chia sẻ qua…",
+            "reply": "Trả lời",
+            "replyingTo": "Đang trả lời {name}",
+            "cancelReply": "Huỷ",
+            "commentPlaceholder": "Viết bình luận…",
+            "commentSend": "Gửi",
+            "commentFailed": "Không gửi được bình luận",
+            "likeFailed": "Không cập nhật được lượt thích",
+            "justNow": "vừa xong",
+            "you": "Bạn",
+            "collapse": "Thu gọn",
+            "commentsRegion": "Bình luận của bài viết",
+            "commentsLoadFailed": "Không tải được bình luận",
+            "retry": "Thử lại",
+            "commentsEmpty": "Chưa có bình luận nào. Hãy là người đầu tiên!"
         },
         "feed": {
             "likes": "{count} thích",

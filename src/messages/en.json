@@ -325,9 +325,10 @@
     },
     "search": {
         "label": "Search",
-        "placeholder": "Search",
+        "placeholder": "Search courses, modules, lessons…",
         "filtersAria": "Search filters",
         "noResults": "No matches found.",
+        "noResultsFor": "No results for “{query}”.",
         "suggestions": {
             "courses": "Courses",
             "modules": "Modules",
@@ -339,8 +340,31 @@
             "milestones": "Progress",
             "milestoneTasks": "Tasks"
         },
+        "groups": {
+            "courses": "Courses",
+            "modules": "Modules",
+            "contents": "Contents",
+            "lessonVideos": "Lesson videos",
+            "challenges": "Challenges",
+            "milestones": "Milestones",
+            "milestoneTasks": "Tasks",
+            "flashcardDecks": "Flashcard decks",
+            "users": "People",
+            "posts": "Posts",
+            "groups": "Groups",
+            "resources": "Resources"
+        },
         "idleHint": "Type to search courses, modules, lessons…",
         "popular": "Popular",
+        "recent": "Recent",
+        "clearRecent": "Clear history",
+        "clearInput": "Clear search",
+        "seeAll": "See all results",
+        "showMore": "Show {count} more",
+        "error": "Couldn't load search results.",
+        "retry": "Retry",
+        "signInPrompt": "Sign in to search learning content.",
+        "signIn": "Sign in",
         "hint": {
             "move": "to move",
             "open": "to open",
@@ -2073,7 +2097,8 @@
             "like": "Sign in to like this post",
             "comment": "Sign in to comment",
             "save": "Sign in to save this item",
-            "enroll": "Sign in to enroll in this course"
+            "enroll": "Sign in to enroll in this course",
+            "search": "Sign in to search learning content"
         }
     },
     "priceTag": {
@@ -2675,16 +2700,12 @@
     },
     "searchPage": {
         "title": "Search",
-        "placeholder": "Search people, subjects, courses, resources…",
+        "placeholder": "Search courses, modules, lessons, people…",
         "empty": "Type to search across FTES AOS.",
         "noResults": "No results found. Try a different search.",
-        "groups": {
-            "users": "People",
-            "subjects": "Subjects",
-            "courses": "Courses",
-            "resources": "Resources",
-            "posts": "Community posts"
-        }
+        "noResultsFor": "No results for “{query}”. Try a different search.",
+        "all": "All",
+        "signInPrompt": "Sign in to search learning content. Community results still show below."
     },
     "recommendation": {
         "title": "For you",
@@ -2805,11 +2826,129 @@
         "badges": "Badges",
         "badgeLocked": "Locked",
         "xpValue": "{xp} XP",
+        "levelHint": "{xp} XP to next level",
         "stats": {
             "xp": "XP",
             "level": "Level",
             "streak": "Day streak",
             "rank": "Rank"
+        },
+        "tiers": {
+            "bronze": "Bronze",
+            "silver": "Silver",
+            "gold": "Gold",
+            "platinum": "Platinum",
+            "diamond": "Diamond"
+        },
+        "reasons": {
+            "lessonComplete": "Lesson completed",
+            "quizSubmit": "Quiz submitted",
+            "challengeComplete": "Challenge completed",
+            "dailyLogin": "Daily login",
+            "postUpvote": "Post upvoted",
+            "commentUpvote": "Comment upvoted",
+            "dailyGoal": "Daily goal completed",
+            "weeklyGoal": "Weekly goal completed"
+        },
+        "toast": {
+            "xp": "+{xp} XP"
+        },
+        "moment": {
+            "levelUpTitle": "Level up!",
+            "levelUpBody": "You reached level {level}",
+            "milestoneTitle": "Streak milestone!",
+            "milestoneReward": "{days}-day streak · +{coin} coins"
+        },
+        "demo": {
+            "label": "Try (mock):",
+            "lesson": "Complete lesson",
+            "quiz": "Submit quiz 90%",
+            "challenge": "Finish challenge"
+        },
+        "milestones": {
+            "weekOfFire": { "name": "Week of Fire" },
+            "monthOfGrit": { "name": "Month of Grit" },
+            "hundredDays": { "name": "Hundred Days of Fire" }
+        },
+        "goals": {
+            "title": "Goals",
+            "completed": "Completed",
+            "reward": "+{xp} XP",
+            "daily": {
+                "name": "Daily goal",
+                "progress": "{current}/{target} actions"
+            },
+            "weekly": {
+                "name": "Weekly goal",
+                "progress": "{current}/{target} days"
+            }
+        },
+        "heatmap": {
+            "active": "Learning activity",
+            "frozen": "Frozen day",
+            "empty": "No activity"
+        },
+        "streak": {
+            "openDetail": "View streak detail",
+            "chipLabel": "{count}-day streak — view detail",
+            "daysCount": "{count} days",
+            "multiplier": "+{percent}% XP",
+            "heatmapTitle": "Last 12 weeks",
+            "freezeCount": "{count} Streak Freeze",
+            "buyFreeze": "Buy ({cost} coins)",
+            "nextMilestone": "{remaining} days to the {days}-day milestone",
+            "lostTitle": "{days}-day streak lost",
+            "repair": "Repair ({cost} coins)"
+        },
+        "reminder": {
+            "title": "Streak at risk",
+            "body": "Your {count}-day streak is at risk — finish a lesson/quiz to keep it alive"
+        },
+        "guide": {
+            "link": "How points work",
+            "back": "Back to leaderboard",
+            "title": "How points work",
+            "subtitle": "How XP, levels, tiers and streaks are calculated.",
+            "xpSection": "Experience points (XP)",
+            "actionHeader": "Action",
+            "xpHeader": "XP",
+            "quizBanded": "By score",
+            "quizBand": "≥{min}% → +{xp} XP",
+            "multiplierNote": "LEARNING actions (lesson/quiz/challenge) are multiplied by streak; login/upvote/goals are not.",
+            "actions": {
+                "lessonComplete": "Complete a lesson",
+                "quizSubmit": "Submit a quiz",
+                "challengeComplete": "Complete a challenge",
+                "dailyLogin": "First login of the day",
+                "postUpvote": "Post upvoted (cap +20/day)",
+                "commentUpvote": "Comment upvoted (cap +10/day)",
+                "dailyGoal": "Complete the daily goal",
+                "weeklyGoal": "Complete the weekly goal"
+            },
+            "levelSection": "Levels",
+            "levelFormula": "Total XP to reach level L = {factor} × (L − 1)².",
+            "levelExample": "Example: {xp} XP is needed for level {level}.",
+            "tierSection": "Tiers",
+            "tierHeader": "Tier",
+            "tierXpHeader": "Total XP",
+            "tierFrom": "from {xp} XP",
+            "streakSection": "Streaks",
+            "streakQualifying": "A qualifying streak day = at least one learning action (lesson/quiz/challenge). Login alone does NOT hold a streak.",
+            "streakMultiplier": "XP multiplier +{step}% per consecutive day, capped at +{cap}%.",
+            "streakReset": "Miss a day with no learning and no freeze → streak resets to 0.",
+            "streakFreeze": "Streak Freeze: hold up to {max}, auto-saves one missed day; buy for {cost} coins each.",
+            "streakRepair": "Streak Repair: within {window}h of a reset, restore for 10 × days (cap {cap} coins).",
+            "streakReminder": "Reminder at {hour}:00 when streak ≥ {min} and you haven't learned today.",
+            "milestoneRow": "{days} days → {name} + {coin} coins",
+            "goalsSection": "Goals",
+            "dailyGoalRule": "Daily goal: complete {target} learning actions → +{xp} XP.",
+            "weeklyGoalRule": "Weekly goal: {target} qualifying days in a week → +{xp} XP.",
+            "comingSoonSection": "Coming soon",
+            "comingSoon": {
+                "league": "League & Season (weekly competition)",
+                "monthly": "Monthly goal",
+                "mysteryBox": "Mystery Box & Lucky Spin"
+            }
         }
     },
     "wallet": {
@@ -2926,60 +3065,261 @@
     },
     "homeLanding": {
         "hero": {
-            "eyebrow": "Your academic operating system",
-            "headline": "Everything for your studies, in <accent>one place</accent>",
-            "subline": "Subject workspaces, courses, resources, community, and career — all connected in one platform built for how students actually learn.",
-            "ctaPrimary": "Explore courses",
-            "ctaSecondary": "Join the community"
+            "eyebrow": "Your learning operating system",
+            "headline": "One <accent>clear</accent> journey, from home to real outcomes",
+            "subline": "FTES guides you from the home page into a subject workplace, through a course, into practice with AI, and lands on real outcomes: projects, honors, and a career.",
+            "ctaPrimary": "Start learning",
+            "ctaSecondary": "Explore the community"
         },
-        "bento": {
-            "eyebrow": "One platform",
-            "title": "Your whole academic life, connected",
-            "subject": {
-                "title": "Subject workspaces",
-                "desc": "Each subject is its own workspace — lessons, resources, practice, community, and an AI tutor in one place."
-            },
-            "courses": {
-                "title": "Courses",
-                "desc": "Structured tracks with lessons, quizzes, and certificates."
-            },
-            "resources": {
-                "title": "Resources",
-                "desc": "Slides, past exams, books, and source code — shared and rated."
-            },
-            "community": {
-                "title": "Community",
-                "desc": "Ask, share, and learn together across your campus."
-            },
-            "groups": {
-                "title": "Groups",
-                "desc": "Study groups, clubs, and project teams."
-            },
-            "gamification": {
-                "title": "XP and streaks",
-                "desc": "Level up as you learn — badges, leagues, and daily goals."
+        "journey": {
+            "stepperAria": "Stages of the learning journey",
+            "stations": {
+                "home": {
+                    "label": "Home",
+                    "caption": "The starting point — pick a direction and get in sync with FTES."
+                },
+                "workplace": {
+                    "label": "Subject workplace",
+                    "caption": "A dedicated space per subject: materials, roadmap, progress."
+                },
+                "course": {
+                    "label": "Course",
+                    "caption": "Learn through structured courses with clear lessons and exercises."
+                },
+                "practice": {
+                    "label": "Practice & AI",
+                    "caption": "Practice, ask the AI tutor, and get grading and personalized hints."
+                },
+                "outcome": {
+                    "label": "Outcome",
+                    "caption": "The payoff: real projects, honors, and career opportunities."
+                }
             }
         },
-        "pillars": {
-            "title": "Built for how students actually learn",
-            "ai": {
-                "title": "AI tutor",
-                "desc": "Summaries, flashcards, and quizzes generated from your own materials."
-            },
-            "gamification": {
-                "title": "Motivation that sticks",
-                "desc": "XP, streaks, and leaderboards keep you moving day after day."
-            },
-            "career": {
-                "title": "Career bridge",
-                "desc": "Turn what you learn into skills, a portfolio, and job-ready proof."
+        "stats": {
+            "eyebrow": "Real numbers, no fluff",
+            "title": "The numbers that tell the truth about FTES",
+            "users": "Users",
+            "resources": "Learning resources",
+            "courses": "Courses",
+            "communities": "Communities",
+            "aiTitle": "Supported by AI throughout",
+            "aiChips": {
+                "tutor": "AI tutor chat",
+                "grading": "AI grading & feedback",
+                "recommend": "Personalized recommendations",
+                "roadmap": "Smart learning roadmap"
+            }
+        },
+        "modules": {
+            "eyebrow": "Inside the journey",
+            "title": "What each stage gives you",
+            "explore": "Explore",
+            "cards": {
+                "workplace": {
+                    "title": "Subject workplace",
+                    "desc": "A dedicated space per subject: materials, roadmap, progress tracking and goals."
+                },
+                "course": {
+                    "title": "Course",
+                    "desc": "Structured lessons, exercises and projects — solid every step of the way."
+                },
+                "community": {
+                    "title": "Community",
+                    "desc": "Ask, share and learn together with mentors and fellow learners."
+                }
+            }
+        },
+        "offers": {
+            "eyebrow": "What you get at FTES",
+            "title": "Offers & policies",
+            "tabsAria": "Offer and policy groups",
+            "cta": "Browse courses",
+            "groups": {
+                "newLearner": {
+                    "title": "New learners",
+                    "lines": {
+                        "0": "Combo 800k–1,199k: 100k off.",
+                        "1": "Combo 1,200k–1,599k: 200k off.",
+                        "2": "Combo over 1,600k: 300k off + a Cursor license."
+                    }
+                },
+                "liveZoom": {
+                    "title": "Live Zoom classes",
+                    "lines": {
+                        "0": "Learn live with a Mentor.",
+                        "1": "A Mentor accompanies you the whole course.",
+                        "2": "Full access to Basic class videos worth 300k."
+                    }
+                },
+                "group": {
+                    "title": "Group sign-up",
+                    "lines": {
+                        "0": "Group of 2–4: 20% off per person.",
+                        "1": "Group of 5–10: 25% off per person.",
+                        "2": "Group over 10: 35% off per person."
+                    }
+                },
+                "returning": {
+                    "title": "Returning learners",
+                    "lines": {
+                        "0": "Refer a new learner: 100k gift + reward points (referrer 70pts, referee 30pts).",
+                        "1": "Enroll in the next course: 5% off.",
+                        "2": "Pre-book the next course while still studying: 10% off."
+                    }
+                },
+                "honor": {
+                    "title": "Honors & scholarships",
+                    "lines": {
+                        "0": "Top Scholar (highest score across FTES): free next term + 2,000,000đ reward.",
+                        "1": "Diligence (full attendance + all assignments): 10% off.",
+                        "2": "Top of Class (highest score in class): free next term.",
+                        "3": "Talent Scholarship: 2,000,000đ + all courses free + a chance to train on projects from term 5."
+                    }
+                },
+                "afterCourse": {
+                    "title": "After-course path",
+                    "lines": {
+                        "0": "Finish with enough knowledge to build projects → join an interview to be selected into the project training class."
+                    }
+                },
+                "installment": {
+                    "title": "Installments",
+                    "lines": {
+                        "0": "Pay 30–50% upfront, the rest within 1 month.",
+                        "1": "Pay 50%: instant access to past lessons + materials.",
+                        "2": "Pay 40%: access to past lessons.",
+                        "3": "Pay 30%: no early access."
+                    }
+                },
+                "trial": {
+                    "title": "Trial & test-based offers",
+                    "lines": {
+                        "0": "2 free foundational sessions.",
+                        "1": "Test score 6–6.9: 10% off.",
+                        "2": "Test score 7–8.9: 15% off.",
+                        "3": "Test score 9–10: 30% off."
+                    }
+                }
+            }
+        },
+        "honor": {
+            "title": "FTES Hall of Fame",
+            "subline": "Just how good are our learners? Meet some of the standout faces of FTES.",
+            "cta": "View the leaderboard",
+            "people": {
+                "kimKhoa": {
+                    "name": "Kim Khoa",
+                    "lines": {
+                        "0": "TOP 100 outstanding students for 3 consecutive terms.",
+                        "1": "Steady, impressive GPA: 9.35 – 9.42 – 9.1.",
+                        "2": "Top Scholar of term FA25 at FTES."
+                    }
+                },
+                "hoangBlue": {
+                    "name": "Hoang Blue",
+                    "lines": {
+                        "0": "Outstanding student SP25 & SU25: GPA 9.4.",
+                        "1": "“Hoc Tot FTES” title - FTES Talent Scholarship."
+                    }
+                },
+                "hoangDuy": {
+                    "name": "Hoang Duy",
+                    "lines": {
+                        "0": "Distinction, term 1.",
+                        "1": "Top 100 Outstanding Students at FPTU HCMC, term 2.",
+                        "2": "Top 100 Outstanding Students at FPTU HCMC, term 3 with GPA 9.6."
+                    }
+                },
+                "hongPhuc": {
+                    "name": "Hong Phuc",
+                    "lines": {
+                        "0": "Completed the Data fundamentals course.",
+                        "1": "Shipped a first dashboard."
+                    }
+                },
+                "chiThong": {
+                    "name": "Phan Chi Thong",
+                    "lines": {
+                        "0": "Top 5 students, Spring 2025 at FPT University Quy Nhon."
+                    }
+                },
+                "tranViet": {
+                    "name": "Tran Viet",
+                    "lines": {
+                        "0": "Distinction, term SU25."
+                    }
+                }
+            }
+        },
+        "mentors": {
+            "eyebrow": "The people beside you",
+            "title": "The FTES team",
+            "prev": "Previous mentor",
+            "next": "Next mentor",
+            "people": {
+                "anhKhoa": {
+                    "name": "Mentor Anh Khoa",
+                    "role": "Founder, CEO",
+                    "quote": "Students get hooked by my energy, experience and funny stories — and understand every lesson perfectly!!"
+                },
+                "ducHai": {
+                    "name": "Mentor Duc Hai",
+                    "role": "Co-Founder, CTO",
+                    "quote": "I aim for teaching that is both serious and relaxed: the knowledge is solid, the explanations are easy to follow, with a bit of humor so class is always fun and never dry."
+                },
+                "thanhHuy": {
+                    "name": "Mentor Thanh Huy",
+                    "role": "Co-Founder, COO",
+                    "quote": "I don't just teach knowledge — I pass on the fire of passion and share my honest experiences on the learning path, so every session is a journey that awakens your potential."
+                },
+                "nhatHuy": {
+                    "name": "Mentor Nhat Huy",
+                    "role": "Developer",
+                    "quote": "I teach hands-on, with concise theory, focused on helping learners understand fast — do it right away — and apply it to real projects."
+                },
+                "ngocHieu": {
+                    "name": "Mentor Ngoc Hieu",
+                    "role": "BrSE",
+                    "quote": "I teach at a steady pace, making everything crystal clear as I go, sprinkling in Japanese culture and a few jokes so class is always lively while the knowledge quietly sinks in."
+                }
+            }
+        },
+        "faq": {
+            "eyebrow": "Frequently asked questions",
+            "title": "FAQ about studying at FTES",
+            "items": {
+                "refund": {
+                    "q": "If I don't understand a course at FTES, can I get a refund?",
+                    "a": "Yes. After the first session, if it isn't a fit, you get a refund. FTES refunds 100% of tuition if you DON'T UNDERSTAND / the TEACHING STYLE DOESN'T FIT / it ISN'T EFFECTIVE — provided you attend all sessions and complete all homework (BTVN)."
+                },
+                "trial": {
+                    "q": "Can I try before enrolling?",
+                    "a": "Yes. You get 2 free foundational sessions. There are also test-based offers: 6–6.9 gets 10% off, 7–8.9 gets 15% off, 9–10 gets 30% off."
+                },
+                "installment": {
+                    "q": "Does FTES support paying tuition in installments?",
+                    "a": "Yes. Pay 30–50% upfront, the rest within 1 month. Paying 50% grants instant access to past lessons + materials; 40% grants past lessons; 30% has no early access."
+                },
+                "group": {
+                    "q": "Is there a discount for signing up as a group?",
+                    "a": "Yes. Groups of 2–4 get 20% off per person, 5–10 get 25% off per person, over 10 get 35% off per person."
+                },
+                "scholarship": {
+                    "q": "Does FTES offer scholarships and honors?",
+                    "a": "Yes. Top Scholar (highest score across FTES) gets a free next term + 2,000,000đ; Diligence gets 10% off; Top of Class (highest in class) gets a free next term; the Talent Scholarship is 2,000,000đ + all courses free + a chance to train on projects from term 5."
+                },
+                "afterCourse": {
+                    "q": "What's the path after finishing a course?",
+                    "a": "Once you have enough knowledge to build projects, you join an interview to be selected into the project training class — a stepping stone to real projects and a career."
+                }
             }
         },
         "cta": {
-            "title": "Ready to start?",
-            "subline": "Jump into a course or open a subject workspace.",
-            "primary": "Explore courses",
-            "subjectDemo": "See a subject workspace"
+            "title": "Ready to start your journey?",
+            "subline": "Pick a course, step into your subject workplace, and let FTES walk you to real outcomes.",
+            "primary": "Browse courses",
+            "secondary": "Join the community"
         }
     },
     "landing": {
@@ -3444,7 +3784,26 @@
         "loadError": "Couldn't load notifications",
         "markAllRead": "Mark all as read",
         "retry": "Try again",
-        "title": "Notifications"
+        "title": "Notifications",
+        "mutedHint": "You've muted all notifications.",
+        "preferences": {
+            "title": "Notification preferences",
+            "subtitle": "Choose which notifications you want to receive.",
+            "muteAll": "Mute all notifications",
+            "muteAllHint": "Hide every notification and the unread badge.",
+            "browserPush": "Browser push",
+            "browserPushComingSoon": "Coming soon — not available yet.",
+            "types": {
+                "system": "System",
+                "challengeGraded": "Challenge graded",
+                "codingGraded": "Coding graded",
+                "milestoneGraded": "Milestone graded",
+                "newFollower": "New follower",
+                "commentReply": "Comment reply",
+                "subscriptionGranted": "Subscription granted",
+                "announcement": "Announcement"
+            }
+        }
     },
     "streakFreeze": {
         "buy": "Buy a freeze ({cost} XP)",
@@ -3709,6 +4068,15 @@
         "aiTools": {
             "title": "AI assistant",
             "cta": "Open",
+            "comingSoon": "Coming soon",
+            "comingSoonCta": "Soon",
+            "lockedHint": "Enroll in this subject to unlock the AI tools.",
+            "join": "Enroll in subject",
+            "errorTitle": "Couldn't load AI tools",
+            "retry": "Try again",
+            "errorRetryHint": "Something went wrong. Please try again.",
+            "pickSource": "Pick a source",
+            "goResources": "Open Resources tab",
             "tools": {
                 "tutor": {
                     "title": "AI tutor",
@@ -3730,6 +4098,64 @@
                     "title": "OCR",
                     "desc": "Extract text from image/PDF"
                 }
+            },
+            "tutor": {
+                "placeholder": "Ask the AI tutor about this subject...",
+                "send": "Send",
+                "settings": "Settings",
+                "conversations": "Conversations",
+                "newConversation": "New",
+                "searchConversations": "Search conversations",
+                "noConversations": "No conversations yet",
+                "untitled": "Untitled",
+                "deleteConversation": "Delete conversation",
+                "turnsCount": "{count} messages",
+                "modelLabel": "Answering model",
+                "clearHint": "Clear all conversations for this subject. This can't be undone.",
+                "clearAction": "Clear all history",
+                "emptyHint": "Start asking the AI tutor about {subject}.",
+                "thinking": "Answering...",
+                "streamError": "Couldn't generate an answer.",
+                "suggestions": {
+                    "explain": "Explain the core concepts of {subject}",
+                    "plan": "Suggest a study plan for {subject}",
+                    "example": "Give a worked example"
+                }
+            },
+            "summary": {
+                "generate": "Generate summary",
+                "regenerate": "Regenerate",
+                "copy": "Copy",
+                "copied": "Summary copied",
+                "keyPoints": "Key points",
+                "errorTitle": "Couldn't generate the summary",
+                "emptyTitle": "No material to summarize yet",
+                "emptyDesc": "Add resources in the Resources tab, then come back."
+            },
+            "quiz": {
+                "generate": "Generate quiz",
+                "count": "Question count",
+                "submit": "Submit",
+                "retry": "Retry",
+                "newQuiz": "New quiz",
+                "score": "Score: {score}/{total}",
+                "errorTitle": "Couldn't generate the quiz",
+                "emptyTitle": "No material to build a quiz from",
+                "emptyDesc": "Add resources in the Resources tab, then come back."
+            },
+            "flashcards": {
+                "generate": "Generate flashcards",
+                "regenerate": "Regenerate",
+                "restart": "Restart",
+                "flip": "Flip card",
+                "prev": "Previous card",
+                "next": "Next card",
+                "front": "Term",
+                "back": "Definition",
+                "position": "{current}/{total}",
+                "errorTitle": "Couldn't generate flashcards",
+                "emptyTitle": "No material to build cards from",
+                "emptyDesc": "Add resources in the Resources tab, then come back."
             }
         },
         "career": {
@@ -3738,11 +4164,54 @@
             "careers": "Related careers",
             "nextSubject": "Suggested next subject",
             "nextSubjectHint": "Recommended by roadmap",
+            "skillGraph": "Skill map",
             "demand": {
                 "high": "High demand",
                 "medium": "Medium demand",
                 "low": "Low demand"
             }
+        }
+    },
+    "skillGraph": {
+        "title": "Skill graph",
+        "you": "You",
+        "hint": "Click a skill to see its details.",
+        "canvasLabel": "Spider-web skill graph — drag to pan, scroll to zoom",
+        "error": "Could not load the skill graph.",
+        "empty": {
+            "title": "No skills yet",
+            "description": "Start learning to build your skill map."
+        },
+        "filter": {
+            "all": "All"
+        },
+        "domains": {
+            "be": "Backend",
+            "fe": "Frontend",
+            "mobile": "Mobile",
+            "ai": "AI",
+            "data": "Data",
+            "devops": "DevOps"
+        },
+        "statuses": {
+            "locked": "Locked",
+            "learning": "Learning",
+            "mastered": "Mastered"
+        },
+        "edges": {
+            "prerequisite": "Prerequisite",
+            "related": "Related"
+        },
+        "legend": {
+            "domains": "Domains",
+            "statuses": "Statuses",
+            "edges": "Links"
+        },
+        "panel": {
+            "title": "Skill detail: {name}",
+            "close": "Close",
+            "level": "Mastery level",
+            "related": "Related subjects & courses"
         }
     },
     "courseSystem": {
@@ -3919,6 +4388,32 @@
             "following": "Following",
             "campus": "Campus",
             "trending": "Trending"
+        },
+        "engagement": {
+            "like": "Like",
+            "unlike": "Unlike",
+            "comment": "Comment",
+            "share": "Share",
+            "save": "Save for later",
+            "saved": "Saved",
+            "copyLink": "Copy link",
+            "linkCopied": "Link copied",
+            "linkCopyFailed": "Couldn't copy the link",
+            "shareVia": "Share via…",
+            "reply": "Reply",
+            "replyingTo": "Replying to {name}",
+            "cancelReply": "Cancel",
+            "commentPlaceholder": "Write a comment…",
+            "commentSend": "Send",
+            "commentFailed": "Couldn't post your comment",
+            "likeFailed": "Couldn't update the like",
+            "justNow": "just now",
+            "you": "You",
+            "collapse": "Collapse",
+            "commentsRegion": "Post comments",
+            "commentsLoadFailed": "Couldn't load comments",
+            "retry": "Retry",
+            "commentsEmpty": "No comments yet. Be the first!"
         },
         "feed": {
             "likes": "{count} likes",

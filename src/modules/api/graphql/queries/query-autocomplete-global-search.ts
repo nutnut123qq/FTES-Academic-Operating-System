@@ -41,6 +41,13 @@ const query1 = gql`
           texts
           parentPath { course { id displayId } module { id displayId } content { id displayId } challenge { id displayId } }
         }
+        lessonVideos {
+          id
+          displayId
+          title
+          texts
+          parentPath { course { id displayId } module { id displayId } content { id displayId } challenge { id displayId } }
+        }
         flashcardDecks {
           id
           displayId

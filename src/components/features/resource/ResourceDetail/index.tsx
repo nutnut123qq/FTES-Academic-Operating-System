@@ -5,11 +5,12 @@ import { Button, Chip, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
 import { useQueryResourceDetailSwr } from "../hooks/useQueryResourceDetailSwr"
+import { ResourceComments } from "./ResourceComments"
 
 /**
  * Resource detail (§5). DEFAULT on-canon layout: a preview placeholder + meta +
- * rating + download + a comments list. ponytail: preview is a placeholder box;
- * mock data; download/comment are no-ops.
+ * rating + download + an interactive comments section (`ResourceComments`).
+ * ponytail: preview is a placeholder box; mock data; download is a no-op.
  */
 export const ResourceDetail = () => {
     const t = useTranslations("resourceHub")
@@ -46,30 +47,8 @@ export const ResourceDetail = () => {
                 </Typography>
             </div>
 
-            {/* comments */}
-            <div className="flex flex-col gap-3 border-t border-separator pt-6">
-                <Typography type="h6" weight="bold">
-                    {t("detail.comments")}
-                </Typography>
-                {resource.comments.map((comment) => (
-                    <div
-                        key={comment.id}
-                        className="flex items-start gap-3 rounded-large border border-separator p-4"
-                    >
-                        <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent/10 text-xs font-bold text-accent">
-                            {comment.author.slice(0, 1).toUpperCase()}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                            <Typography type="body-sm" weight="medium">
-                                {comment.author}
-                            </Typography>
-                            <Typography type="body-sm" color="muted">
-                                {comment.text}
-                            </Typography>
-                        </div>
-                    </div>
-                ))}
-            </div>
+            {/* comments (Threads-style discussion; rating lives on /reviews) */}
+            <ResourceComments />
         </div>
     )
 }

@@ -11,6 +11,7 @@ import type { Course } from "../../hooks/useQueryCoursesSwr"
 import { categoryName, type CourseCategory } from "../categories"
 import { categoryIcon } from "../category-icons"
 import { CatalogCourseCard } from "../CatalogCourseCard"
+import { CourseHoverPreview } from "../CourseHoverPreview"
 
 /** Props for {@link CategoryShelf}. */
 export interface CategoryShelfProps extends WithClassNames<undefined> {
@@ -104,11 +105,15 @@ export const CategoryShelf = ({ category, courses, className }: CategoryShelfPro
                 className="-mx-1 flex snap-x gap-3 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
                 {courses.map((course) => (
-                    <CatalogCourseCard
+                    // hover-preview wrapper owns the track sizing so the panel
+                    // anchors to the exact card slot; the card fills it
+                    <CourseHoverPreview
                         key={course.id}
                         course={course}
                         className="w-60 shrink-0 snap-start sm:w-64"
-                    />
+                    >
+                        <CatalogCourseCard course={course} className="h-full" />
+                    </CourseHoverPreview>
                 ))}
             </div>
         </section>

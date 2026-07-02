@@ -18,6 +18,7 @@ import {
     CategoryChipBar,
     CategoryShelf,
     CategoryShelfSkeleton,
+    CourseHoverPreview,
     FacetSortBar,
     type CategoryChipValue,
 } from "../browse"
@@ -105,7 +106,9 @@ export const CourseCatalog = () => {
                 ) : (
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                         {filtered.map((course) => (
-                            <CatalogCourseCard key={course.id} course={course} />
+                            <CourseHoverPreview key={course.id} course={course}>
+                                <CatalogCourseCard course={course} className="h-full" />
+                            </CourseHoverPreview>
                         ))}
                     </div>
                 )

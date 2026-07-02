@@ -4409,7 +4409,11 @@
             },
             "empty": "Không có khóa học phù hợp.",
             "ratingCount": "({count})",
-            "hours": "{count} giờ"
+            "hours": "{count} giờ",
+            "preview": {
+                "updated": "Cập nhật {date}",
+                "enroll": "Đăng ký khóa học"
+            }
         },
         "catalog": {
             "title": "Khóa học",

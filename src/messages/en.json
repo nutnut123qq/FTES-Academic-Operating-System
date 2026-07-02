@@ -4409,7 +4409,11 @@
             },
             "empty": "No matching courses.",
             "ratingCount": "({count})",
-            "hours": "{count} hours"
+            "hours": "{count} hours",
+            "preview": {
+                "updated": "Updated {date}",
+                "enroll": "Enroll in this course"
+            }
         },
         "catalog": {
             "title": "Courses",

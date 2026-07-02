@@ -1,9 +1,10 @@
 "use client"
 
 import React, { useState } from "react"
-import { Button, Chip, Typography } from "@heroui/react"
+import { Avatar, AvatarFallback, AvatarImage, Button, Chip, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
+import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { useQueryGroupsSwr, type GroupType } from "../hooks/useQueryGroupsSwr"
 
 /** Filter options: "all" + every group type. */
@@ -11,11 +12,13 @@ const TYPES: Array<GroupType | "all"> = ["all", "public", "private", "study", "c
 
 /**
  * Groups list (§7). DEFAULT on-canon layout: a type filter + a grid of group
- * cards linking to each group. ponytail: cards hand-rolled; mock data.
+ * cards linking to each group. Each card leads with the group avatar (image
+ * when set, initials tile fallback otherwise — same size, so the row never
+ * shifts). ponytail: cards hand-rolled; mock data.
  */
 export const GroupsList = () => {
     const t = useTranslations("groupsHub")
-    const { groups } = useQueryGroupsSwr()
+    const { groups, isLoading } = useQueryGroupsSwr()
     const [type, setType] = useState<GroupType | "all">("all")
 
     const filtered = type === "all" ? groups : groups.filter((group) => group.type === type)
@@ -40,31 +43,64 @@ export const GroupsList = () => {
                 ))}
             </div>
 
-            {/* group grid */}
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {filtered.map((group) => (
-                    <Link
-                        key={group.id}
-                        href={`/groups/${group.id}`}
-                        className="flex flex-col gap-2 rounded-large border border-separator p-4 no-underline transition-colors hover:bg-default/40"
-                    >
-                        <div className="flex items-center gap-2">
-                            <Typography type="body" weight="medium" className="min-w-0 flex-1" truncate>
-                                {group.name}
-                            </Typography>
-                            <Chip size="sm" variant="soft" color="accent">
-                                {t(`types.${group.type}`)}
-                            </Chip>
+            {isLoading ? (
+                /* skeleton grid — mirrors the card layout (avatar circle + text lines) */
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    {Array.from({ length: 4 }).map((_, index) => (
+                        <div
+                            key={index}
+                            className="flex flex-col gap-2 rounded-large border border-separator p-4"
+                        >
+                            <div className="flex items-center gap-2">
+                                <Skeleton.Avatar size="md" className="shrink-0" />
+                                <Skeleton.Typography type="body" width="1/2" />
+                            </div>
+                            <Skeleton.Typography type="body-sm" width="full" />
+                            <Skeleton.Typography type="body-xs" width="1/4" />
                         </div>
-                        <Typography type="body-sm" color="muted">
-                            {group.description}
-                        </Typography>
-                        <Typography type="body-xs" color="muted">
-                            {t("membersCount", { count: group.members })}
-                        </Typography>
-                    </Link>
-                ))}
-            </div>
+                    ))}
+                </div>
+            ) : (
+                /* group grid */
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    {filtered.map((group) => (
+                        <Link
+                            key={group.id}
+                            href={`/groups/${group.id}`}
+                            className="flex flex-col gap-2 rounded-large border border-separator p-4 no-underline transition-colors hover:bg-default/40"
+                        >
+                            <div className="flex items-center gap-2">
+                                {/* group avatar — image when set; initials fallback also
+                                    covers a broken URL (HeroUI Avatar only mounts the img
+                                    once it loads, so errors fall back, no broken glyph) */}
+                                <Avatar size="md" className="shrink-0">
+                                    {group.avatarUrl ? (
+                                        <AvatarImage
+                                            src={group.avatarUrl}
+                                            alt={t("identity.avatarAlt", { name: group.name })}
+                                        />
+                                    ) : null}
+                                    <AvatarFallback className="bg-accent/10 font-bold text-accent">
+                                        {group.name.slice(0, 1).toUpperCase()}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <Typography type="body" weight="medium" className="min-w-0 flex-1" truncate>
+                                    {group.name}
+                                </Typography>
+                                <Chip size="sm" variant="soft" color="accent">
+                                    {t(`types.${group.type}`)}
+                                </Chip>
+                            </div>
+                            <Typography type="body-sm" color="muted">
+                                {group.description}
+                            </Typography>
+                            <Typography type="body-xs" color="muted">
+                                {t("membersCount", { count: group.members })}
+                            </Typography>
+                        </Link>
+                    ))}
+                </div>
+            )}
         </div>
     )
 }

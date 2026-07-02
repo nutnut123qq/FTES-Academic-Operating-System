@@ -18,10 +18,15 @@ const ACCEPT = {
     "image/gif": [],
 }
 
+/** Why a dropped / picked file was rejected by the baked type/size filter. */
+export type ImageDropzoneRejectReason = "invalidType" | "tooLarge"
+
 /** Props for the {@link ImageDropzone} block. */
 export interface ImageDropzoneProps extends WithClassNames<undefined> {
     /** Called with the dropped / picked image file (type + size filtered). */
     onFile: (file: File) => void
+    /** Called when the picked file fails the baked type/size filter (optional). */
+    onReject?: (reason: ImageDropzoneRejectReason) => void
     /** Primary CTA (e.g. "Kéo thả ảnh vào đây, hoặc bấm để chọn"). */
     label: ReactNode
     /** Format/size hint below the CTA (e.g. "PNG, JPG, WEBP, GIF · tối đa 5 MB"). */
@@ -39,15 +44,27 @@ export interface ImageDropzoneProps extends WithClassNames<undefined> {
  *
  * @param props - {@link ImageDropzoneProps}
  */
-export const ImageDropzone = ({ onFile, label, hint, icon, className }: ImageDropzoneProps) => {
+export const ImageDropzone = ({
+    onFile,
+    onReject,
+    label,
+    hint,
+    icon,
+    className,
+}: ImageDropzoneProps) => {
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         accept: ACCEPT,
         maxSize: MAX_SIZE,
         multiple: false,
-        onDrop: (accepted) => {
+        onDrop: (accepted, rejections) => {
             const next = accepted[0]
             if (next) {
                 onFile(next)
+                return
+            }
+            const code = rejections[0]?.errors[0]?.code
+            if (code) {
+                onReject?.(code === "file-too-large" ? "tooLarge" : "invalidType")
             }
         },
     })

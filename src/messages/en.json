@@ -3591,7 +3591,23 @@
             "career": "Career"
         },
         "overview": {
-            "title": "Subject overview"
+            "title": "Subject overview",
+            "joined": "You've joined this space",
+            "statsLine": "{members} members · {moderators} moderators · {resources} resources",
+            "compose": "New post",
+            "pinned": "Pinned by moderator",
+            "discussions": "Recent discussions",
+            "newResources": "New resources",
+            "challenges": "Featured challenges",
+            "activeMembers": "Active members",
+            "seeAll": "See all",
+            "loadError": "Couldn't load the overview.",
+            "retry": "Try again",
+            "difficulty": {
+                "easy": "Easy",
+                "medium": "Medium",
+                "hard": "Hard"
+            }
         },
         "resources": {
             "title": "Resources",

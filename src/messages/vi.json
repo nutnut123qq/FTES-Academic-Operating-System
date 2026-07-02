@@ -3591,7 +3591,23 @@
             "career": "Nghề nghiệp"
         },
         "overview": {
-            "title": "Tổng quan môn học"
+            "title": "Tổng quan môn học",
+            "joined": "Bạn đã tham gia không gian này",
+            "statsLine": "{members} thành viên · {moderators} moderator · {resources} tài liệu",
+            "compose": "Đăng bài",
+            "pinned": "Ghim bởi moderator",
+            "discussions": "Thảo luận gần đây",
+            "newResources": "Tài liệu mới",
+            "challenges": "Challenge nổi bật",
+            "activeMembers": "Thành viên tích cực",
+            "seeAll": "Tất cả",
+            "loadError": "Không tải được tổng quan.",
+            "retry": "Thử lại",
+            "difficulty": {
+                "easy": "Dễ",
+                "medium": "Vừa",
+                "hard": "Khó"
+            }
         },
         "resources": {
             "title": "Tài nguyên",

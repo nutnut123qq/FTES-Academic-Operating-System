@@ -47,14 +47,16 @@ export const SidebarNavGroup = ({
                 inset, not edge-to-edge. */}
             {divider ? <Separator className="mb-3" /> : null}
             {label && !collapsed ? (
-                <Typography
-                    type="body-xs"
-                    weight="medium"
-                    color="muted"
-                    className="tracking-wide"
-                >
-                    <Header>{label}</Header>
-                </Typography>
+                <Header>
+                    <Typography
+                        type="body-xs"
+                        weight="medium"
+                        color="muted"
+                        className="tracking-wide"
+                    >
+                        {label}
+                    </Typography>
+                </Header>
             ) : null}
             {children}
         </div>

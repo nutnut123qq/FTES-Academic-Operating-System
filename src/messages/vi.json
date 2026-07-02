@@ -3803,6 +3803,25 @@
                 "subscriptionGranted": "Kích hoạt gói đăng ký",
                 "announcement": "Thông báo chung"
             }
+        },
+        "mutedHint": "Bạn đã tắt toàn bộ thông báo.",
+        "preferences": {
+            "title": "Tùy chọn thông báo",
+            "subtitle": "Chọn loại thông báo bạn muốn nhận.",
+            "muteAll": "Tắt tất cả thông báo",
+            "muteAllHint": "Ẩn mọi thông báo và huy hiệu chưa đọc.",
+            "browserPush": "Thông báo trên trình duyệt",
+            "browserPushComingSoon": "Sắp ra mắt — hiện chưa khả dụng.",
+            "types": {
+                "system": "Hệ thống",
+                "challengeGraded": "Chấm điểm thử thách",
+                "codingGraded": "Chấm điểm bài code",
+                "milestoneGraded": "Chấm điểm cột mốc",
+                "newFollower": "Người theo dõi mới",
+                "commentReply": "Phản hồi bình luận",
+                "subscriptionGranted": "Kích hoạt gói đăng ký",
+                "announcement": "Thông báo chung"
+            }
         }
     },
     "streakFreeze": {

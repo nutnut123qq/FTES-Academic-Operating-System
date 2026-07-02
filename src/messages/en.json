@@ -3803,6 +3803,25 @@
                 "subscriptionGranted": "Subscription granted",
                 "announcement": "Announcement"
             }
+        },
+        "mutedHint": "You've muted all notifications.",
+        "preferences": {
+            "title": "Notification preferences",
+            "subtitle": "Choose which notifications you want to receive.",
+            "muteAll": "Mute all notifications",
+            "muteAllHint": "Hide every notification and the unread badge.",
+            "browserPush": "Browser push",
+            "browserPushComingSoon": "Coming soon — not available yet.",
+            "types": {
+                "system": "System",
+                "challengeGraded": "Challenge graded",
+                "codingGraded": "Coding graded",
+                "milestoneGraded": "Milestone graded",
+                "newFollower": "New follower",
+                "commentReply": "Comment reply",
+                "subscriptionGranted": "Subscription granted",
+                "announcement": "Announcement"
+            }
         }
     },
     "streakFreeze": {

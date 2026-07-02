@@ -1,27 +1,31 @@
 import {
-    AtIcon,
-    CalendarDotsIcon,
-    ClockCountdownIcon,
-    CoinIcon,
-    GraduationCapIcon,
+    BellIcon,
+    ChatCircleTextIcon,
+    CheckCircleIcon,
+    CodeIcon,
     type Icon,
-    LightningIcon,
-    UsersThreeIcon,
+    MegaphoneIcon,
+    SealCheckIcon,
+    TrophyIcon,
+    UserPlusIcon,
 } from "@phosphor-icons/react"
-import type { NotificationType } from "./hooks/useQueryNotificationsSwr"
+import { NotificationType } from "@/modules/api/graphql/queries/types/notifications"
 
 /**
- * Icon per notification type (§15) — the single source shared by the navbar
- * {@link import("@/components/features/navbar/Navbar/NotificationBell").NotificationBell}
+ * Icon per notification type — the single source shared by the navbar
+ * {@link import("@/components/layouts/shell/Navbar/NotificationBell").NotificationBell}
  * popover and the {@link import("./NotificationCenter").NotificationCenter} page
- * so both render the same glyph for a given type.
+ * so both render the same glyph for a given {@link NotificationType}. Keyed by
+ * the real backend enum (8 values) — every type resolves to a concrete icon, no
+ * fallback gap.
  */
 export const NOTIFICATION_TYPE_ICON: Record<NotificationType, Icon> = {
-    mention: AtIcon,
-    course: GraduationCapIcon,
-    event: CalendarDotsIcon,
-    deadline: ClockCountdownIcon,
-    challenge: LightningIcon,
-    coin: CoinIcon,
-    group: UsersThreeIcon,
+    [NotificationType.System]: BellIcon,
+    [NotificationType.ChallengeGraded]: TrophyIcon,
+    [NotificationType.CodingGraded]: CodeIcon,
+    [NotificationType.MilestoneGraded]: CheckCircleIcon,
+    [NotificationType.NewFollower]: UserPlusIcon,
+    [NotificationType.CommentReply]: ChatCircleTextIcon,
+    [NotificationType.SubscriptionGranted]: SealCheckIcon,
+    [NotificationType.Announcement]: MegaphoneIcon,
 }

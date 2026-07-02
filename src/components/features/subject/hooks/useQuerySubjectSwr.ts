@@ -18,11 +18,33 @@ export interface Subject {
     lecturer: string
     /** Completion percent 0..100. */
     progress: number
+    /**
+     * Cover/identity image path (local `/subjects/<code>.png` while mocked) or
+     * `null` when the subject has no artwork — required-nullable so every row
+     * (and the future BE mapper) makes an explicit decision. `null` (or a load
+     * failure) falls back to the code-initials badge.
+     */
+    imageUrl: string | null
+    /**
+     * Optional per-subject accent color (CSS color string). Carried in the type
+     * + mock only for now — no themed rendering yet (future badge/skeleton tint).
+     */
+    accentColor?: string
+    /**
+     * Ids of the Course-module courses linked to this subject (link-out only —
+     * the workspace never embeds course content). ponytail: mock BE — rides the
+     * real subject query when the contract lands; the hook API stays.
+     */
+    courseIds: Array<string>
 }
 
 // ponytail: mock BE — the FE has no subject endpoint yet. Returns a deterministic
 // subject derived from the id so the shell renders. Wire a real GraphQL query
 // (useQuerySubjectSwr -> subjects(id)) when the contract exists; the hook API stays.
+// `courseIds` is deterministic too: `swp391` maps to no course so the Overview
+// card's absent state stays reachable; every other subject links `<id>-course`.
+// `imageUrl` is deterministic from the id (`/subjects/<id-lowercase>.png`);
+// `net1704` stays null (mirrors the list mock) so the fallback path is exercised.
 const fetchSubjectMock = async (id: string): Promise<Subject> => ({
     id,
     code: id.toUpperCase(),
@@ -31,6 +53,8 @@ const fetchSubjectMock = async (id: string): Promise<Subject> => ({
     difficulty: "basic",
     lecturer: "Nguyễn Văn A",
     progress: 62,
+    imageUrl: id === "net1704" ? null : `/subjects/${id.toLowerCase()}.png`,
+    courseIds: id === "swp391" ? [] : [`${id}-course`],
 })
 
 /**

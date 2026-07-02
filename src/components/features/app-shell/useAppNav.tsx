@@ -3,6 +3,7 @@
 import React, { useMemo } from "react"
 import {
     HouseIcon,
+    BookOpenIcon,
     GraduationCapIcon,
     FolderIcon,
     ChatCircleIcon,
@@ -43,6 +44,7 @@ export const useAppNav = (): Array<AppNavGroup> => {
     return useMemo(() => {
         const p = pathConfig().locale()
         const home = p.build()
+        const subjects = p.subjects().build()
         const courses = p.course().build()
         const resources = p.resources().build()
         const community = p.community().build()
@@ -69,6 +71,13 @@ export const useAppNav = (): Array<AppNavGroup> => {
                 key: "learn",
                 label: t("section.learn"),
                 items: [
+                    {
+                        key: "subjects",
+                        label: t("subjects"),
+                        icon: <BookOpenIcon className="size-5" />,
+                        path: subjects,
+                        isActive: under(subjects),
+                    },
                     {
                         key: "courses",
                         label: t("courses"),

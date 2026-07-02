@@ -256,6 +256,7 @@
     "nav": {
         "brand": "FTES AOS",
         "home": "Trang chủ",
+        "subjects": "Môn học",
         "courses": "Khóa học",
         "resources": "Tài nguyên",
         "community": "Cộng đồng",
@@ -3200,6 +3201,13 @@
         "credits": "{count} tín chỉ",
         "progress": "{percent}% hoàn thành",
         "placeholder": "Khu vực này đang được xây dựng.",
+        "catalog": {
+            "title": "Môn học",
+            "subtitle": "Các workspace môn học của bạn — mở một môn để học tiếp.",
+            "searchPlaceholder": "Tìm môn học",
+            "all": "Tất cả",
+            "empty": "Không có môn nào khớp tìm kiếm."
+        },
         "difficulty": {
             "basic": "Cơ bản",
             "intermediate": "Trung cấp",

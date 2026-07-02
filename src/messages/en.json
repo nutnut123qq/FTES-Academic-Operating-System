@@ -256,6 +256,7 @@
     "nav": {
         "brand": "FTES AOS",
         "home": "Home",
+        "subjects": "Subjects",
         "courses": "Courses",
         "resources": "Resources",
         "community": "Community",
@@ -3200,6 +3201,13 @@
         "credits": "{count} credits",
         "progress": "{percent}% complete",
         "placeholder": "This area is under construction.",
+        "catalog": {
+            "title": "Subjects",
+            "subtitle": "Your subject workspaces — open one to keep learning.",
+            "searchPlaceholder": "Search subjects",
+            "all": "All",
+            "empty": "No subjects match your search."
+        },
         "difficulty": {
             "basic": "Basic",
             "intermediate": "Intermediate",

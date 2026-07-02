@@ -488,6 +488,16 @@ export const pathConfig = () => {
                 build,
             }
         }
+        const subjects = () => {
+            // subject catalog (§3) — the list of subject workspaces
+            const subjectsPath = `${localePath}/subjects`
+            const build = () => {
+                return subjectsPath
+            }
+            return {
+                build,
+            }
+        }
         const practice = () => {
             const practicePath = `${localePath}/practice`
             const build = () => {
@@ -562,6 +572,7 @@ export const pathConfig = () => {
             community,
             groups,
             resources,
+            subjects,
             rewards,
             league,
             kpi,

@@ -29,7 +29,7 @@ interface BentoItem {
 }
 
 const BENTO: Array<BentoItem> = [
-    { key: "subject", icon: <BookOpenIcon className="size-6" />, href: `/subjects/${DEMO_SUBJECT}`, big: true },
+    { key: "subject", icon: <BookOpenIcon className="size-6" />, href: "/subjects", big: true },
     { key: "courses", icon: <GraduationCapIcon className="size-6" />, href: "/courses" },
     { key: "resources", icon: <FolderIcon className="size-6" />, href: "/resources" },
     { key: "community", icon: <ChatCircleIcon className="size-6" />, href: "/community" },

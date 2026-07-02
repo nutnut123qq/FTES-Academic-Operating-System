@@ -18,6 +18,7 @@ import { SwrSideEffects } from "@/hooks/swr/SwrSideEffects"
 import { ReduxProvider } from "@/redux/ReduxProvider"
 import { ModalContainer } from "@/components/modals/ModalContainer"
 import { UseEffects } from "@/hooks/effects/UseEffects"
+import { AuthQueryOpener } from "@/components/layouts/auth/AuthQueryOpener"
 import { useAppearanceStore } from "@/hooks/zustand/appearance/store"
 
 export const InnerLayout = ({ children }: PropsWithChildren) => {
@@ -57,6 +58,11 @@ export const InnerLayout = ({ children }: PropsWithChildren) => {
                             <SwrSideEffects />
                             <SocketIoSideEffects />
                             <UseEffects />
+                            {/* `?auth=signin|signup` deep link → opens the auth modal (needs its
+                                own Suspense: useSearchParams) */}
+                            <Suspense fallback={null}>
+                                <AuthQueryOpener />
+                            </Suspense>
                             <AppSplash />
                             <TopLoader />
                             {!isLearnRoute && effectEnabled ? (

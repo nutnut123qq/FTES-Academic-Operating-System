@@ -9,8 +9,23 @@
 - [ ] 2.1 Build shared `GamificationChip` block (icon + value + accessible label) reused by dropdown and identity card
 - [ ] 2.2 Extend `AccountMenuDropdown` UserSummary with level ring (SVG progress ring + level label, aria-label)
 - [ ] 2.3 Add `GamificationStatsRow` (streak/rank/XP chips) between header and menu links; chips link to profile Progress / `/leaderboard` and close the dropdown
-- [ ] 2.4 Skeleton chips (same dimensions) for loading; omit row on error; verify guest dropdown untouched
+- [ ] 2.4 Skeleton chips (same dimensions) for loading; omit row on error; verify guest dropdown untouched (except Explore section below)
 - [ ] 2.5 i18n `accountMenu.gamification.*` (vi+en); keyboard/tab order + aria-labels on chips
+
+## 2b. Explore "Khám phá" section in the account popup (account-menu-gamification)
+
+- [ ] 2b.1 Build the labeled "Khám phá" (Explore) section in `AccountMenuDropdown`, placed between the stats row and the menu links (divider top/bottom), with 4 shortcut rows (phosphor icon + label): Trợ lý AI (`Robot` → `/ai`), Dành cho bạn / For You (`Newspaper` → community For You feed), Gợi ý cho bạn / Recommendations (`Sparkle` → `/recommendations`), Thịnh hành / Trending (`TrendUp` → community trending)
+- [ ] 2b.2 Logged-in: activating a shortcut closes the popup then navigates
+- [ ] 2b.3 Guest: For You + Trending navigate (public); Trợ lý AI + Recommendations open `AuthenticationModal` (no navigate), resuming to route after login
+- [ ] 2b.4 Mobile parity: Explore renders in the mobile drawer/popup form in the same order (header → stats → Khám phá → links → theme → logout)
+- [ ] 2b.5 i18n `profileMenu.explore.*` (title + 4 labels, vi+en); menu-item a11y semantics, keyboard focus order, aria-labels on icon-only visuals
+
+## 2c. Header coupling — remove discovery shortcuts from `useAppNav` (ships with this change; cross-ref `app-shell-header-nav` §7)
+
+- [ ] 2c.1 Edit `src/components/features/app-shell/useAppNav.tsx`: remove the `ai` child from the Workplace module (leaves subjects, resources, challenges, leaderboard, workflow, analytics, career)
+- [ ] 2c.2 Edit `src/components/features/app-shell/useAppNav.tsx`: remove the `recommendations` child from the Course module (leaves catalog `/courses`, marketplace `/marketplace`)
+- [ ] 2c.3 Verify `/ai` and `/recommendations` remain valid routes reachable via the Explore popup; no orphaned route; no dead `nav.*` i18n keys left in the header path
+- [ ] 2c.4 Confirm coupling: header removal (spec'd in `app-shell-header-nav`) and the Explore popup ship together in this change so there is no window where `/ai` or `/recommendations` is unreachable
 
 ## 3. Profile Progress tab (profile-gamification-dashboard)
 

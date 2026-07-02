@@ -3,6 +3,7 @@
 import React, { useState } from "react"
 import { Button, Chip, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
+import { SaveButton } from "@/components/blocks/buttons/SaveButton"
 import {
     useQueryResourceHubSwr,
     type ResourceType,
@@ -81,6 +82,7 @@ export const ResourceHub = () => {
                             <Chip size="sm" variant="soft" color="accent">
                                 {t(`types.${resource.type}`)}
                             </Chip>
+                            <SaveButton entityType="resource" entityId={resource.id} />
                             <Button size="sm" variant="ghost">
                                 {t("download")}
                             </Button>

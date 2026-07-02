@@ -66,6 +66,7 @@ export const PasswordField = ({
             </Label>
             <div className="relative">
                 <Link
+                    aria-label={showPassword ? t("auth.signIn.password.hide") : t("auth.signIn.password.show")}
                     className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center rounded-md p-1 text-muted outline-none transition-opacity hover:opacity-80"
                     onPress={onToggleVisibility}
                 >

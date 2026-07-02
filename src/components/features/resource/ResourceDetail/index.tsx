@@ -4,6 +4,7 @@ import React from "react"
 import { Button, Chip, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
+import { SaveButton } from "@/components/blocks/buttons/SaveButton"
 import { useQueryResourceDetailSwr } from "../hooks/useQueryResourceDetailSwr"
 import { ResourceComments } from "./ResourceComments"
 
@@ -35,7 +36,8 @@ export const ResourceDetail = () => {
                 <Typography type="body-xs" color="muted">
                     {resource.sizeLabel} · {t("detail.rating", { rating: resource.rating.toFixed(1) })}
                 </Typography>
-                <Button size="sm" variant="secondary" className="ml-auto">
+                <SaveButton entityType="resource" entityId={resource.id} className="ml-auto" />
+                <Button size="sm" variant="secondary">
                     {t("download")}
                 </Button>
             </div>

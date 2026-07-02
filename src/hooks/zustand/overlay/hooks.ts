@@ -50,8 +50,30 @@ export const useAIProcessingOverlayState = () => useOverlayHandle("aiProcessing"
 export const useAiQuotaOverlayState = () => useOverlayHandle("aiQuota")
 /** Appearance settings modal overlay state (mode + accent + ambient effect). */
 export const useAppearanceOverlayState = () => useOverlayHandle("appearance")
-/** Authentication overlay state. */
-export const useAuthenticationOverlayState = () => useOverlayHandle("authentication")
+/**
+ * Authentication overlay state — the base handle plus an optional CONTEXT MESSAGE key.
+ *
+ * `open(contextKey?)` stays backward-compatible with the plain `open()` callers (account
+ * menu, legacy shell, feature gates): with no argument it clears any stale context; the
+ * `useRequireAuth` guard passes an i18n key (e.g. `auth.context.like`) so the modal can
+ * explain WHY sign-in is needed. The modal reads `context` and clears it on close via
+ * `setContext(null)`.
+ * @returns the overlay handle plus `context` and `setContext`.
+ */
+export const useAuthenticationOverlayState = () => {
+    const base = useOverlayHandle("authentication")
+    const context = useOverlayStore((state) => state.authenticationContext)
+    const setContext = useOverlayStore((state) => state.setAuthenticationContext)
+    const openOverlay = useOverlayStore((state) => state.openOverlay)
+    const open = useCallback(
+        (contextKey?: string) => {
+            setContext(typeof contextKey === "string" ? contextKey : null)
+            openOverlay("authentication")
+        },
+        [setContext, openOverlay],
+    )
+    return { ...base, open, context, setContext }
+}
 /** Avatar-upload modal overlay state (edit-profile avatar dropzone). */
 export const useAvatarUploadOverlayState = () => useOverlayHandle("avatarUpload")
 /** Challenge overlay state. */

@@ -56,13 +56,13 @@ Nguồn: 21 đích đến hiện có trong `useAppNav`.
 | Resources | `/resources` | Workplace ▾ |
 | Challenges (Practice) | `/challenges` | Workplace ▾ |
 | Leaderboard | `/leaderboard` | Workplace ▾ |
-| AI Hub | `/ai` | Workplace ▾ |
+| ~~AI Hub~~ | `/ai` | **[Delta]** → Profile/avatar popup, section "Khám phá" (owner: `profile-avatar-hub`) — KHÔNG còn trong Workplace ▾ |
 | Workflow (Kanban) | `/workflow` | Workplace ▾ |
 | Analytics | `/analytics` | Workplace ▾ |
 | Career | `/career` | Workplace ▾ |
 | Courses | `/courses` | **Course** = link chính (Catalog) |
 | Marketplace | `/marketplace` | Course ▾ |
-| Recommendations | `/recommendations` | Course ▾ ("Gợi ý cho bạn") |
+| ~~Recommendations~~ | `/recommendations` | **[Delta]** → Profile/avatar popup, section "Khám phá" (owner: `profile-avatar-hub`) — KHÔNG còn trong Course ▾ |
 | Community | `/community` | **Community** = link chính (Feed) |
 | Groups | `/groups` | Community ▾ |
 | Events | `/events` | Community ▾ |
@@ -73,7 +73,7 @@ Nguồn: 21 đích đến hiện có trong `useAppNav`.
 | Integrations | `/integrations` | AccountMenuDropdown (nhóm "Hệ thống") |
 | Roles | `/admin/roles` | AccountMenuDropdown (nhóm "Hệ thống") |
 
-- Lý do Workplace ôm 8 tính năng: user chốt "workplace nhiều tính năng" — đây là không gian làm việc học tập (môn học, tài nguyên, luyện tập, AI, kanban, số liệu, hướng nghiệp).
+- Lý do Workplace ôm tính năng: user chốt "workplace nhiều tính năng" — đây là không gian làm việc học tập (môn học, tài nguyên, luyện tập, kanban, số liệu, hướng nghiệp). **[Delta]** AI Hub đã bị gỡ khỏi Workplace ▾ (xem D8) → Workplace ▾ còn: Subjects, Resources, Challenges, Leaderboard, Workflow, Analytics, Career.
 - Activity/Wallet/Integrations/Roles là mục cá nhân/quản trị, không thuộc 4 module học — vào Account menu (vẫn là header, đúng intent "nhét hết lên header"). Alternative bị loại: nhét vào Home dropdown → Home thành "Explore" trá hình.
 - "Saved/bookmark": chưa có route riêng trong `pathConfig` — không bịa; các item đã lưu hiển thị bên trong Resources/Profile như hiện trạng. Khi có route thật sẽ nest vào Workplace ▾ (ghi chú cho change sau).
 
@@ -101,11 +101,21 @@ Nguồn: 21 đích đến hiện có trong `useAppNav`.
 
 - Key mới dưới `nav.`: `workplace`, `course` (nếu chưa có), `section.you`/`section.system` tái dùng cho account menu, và nhãn con giữ key hiện có (`subjects`, `resources`, …) — vi + en trong `src/messages/{vi,en}.json`. Không hardcode chuỗi.
 
+### D8 — [Amendment] Community lộ Group + Event khi hover; discovery shortcuts rời header sang profile popup
+
+Bối cảnh: header đã ship theo D1–D7. Product owner đổi hướng: *"Bỏ phần Explore đi. Hover vào Community thì hiện ra Group, Event… Mấy cái Explore như AI, For you… nhét vào chỗ profile popup (avatar dropdown)."* Delta:
+
+- **Community giữ dropdown, hover PHẢI lộ Groups + Events.** Không đổi cấu trúc (feed/groups/events/chat vẫn nguyên) — chỉ khẳng định thành contract: hover/mở Community ▾ → Groups và Events luôn hiển thị (hai đích cộng đồng chính user muốn nhấn).
+- **Gỡ `ai` khỏi Workplace ▾ và `recommendations` khỏi Course ▾.** Đây là các "discovery shortcut" (khám phá) — không thuộc bản chất module học/khoá. Sau delta: Workplace ▾ = subjects, resources, challenges, leaderboard, workflow, analytics, career; Course ▾ = catalog, marketplace.
+- **Discovery shortcuts KHÔNG là header module.** Global AI hub (`/ai`), For You (community For You feed), Recommendations (`/recommendations`), Trending (community trending) chuyển sang **profile/avatar popup**, section "Khám phá" — **owner: change `profile-avatar-hub`** (spec + implement bên đó). Change này chỉ gỡ khỏi header + cross-reference.
+- **Không route mồ côi.** `/ai` và `/recommendations` vẫn là route hợp lệ, vẫn reachable — chỉ đổi entry point từ header dropdown sang profile popup. Search (Ctrl/K) vẫn tìm ra mọi trang.
+- **Coupling ship chung:** việc sửa `useAppNav.tsx` để bỏ `ai` + `recommendations` được thực hiện bởi change `profile-avatar-hub` (header + popup ship cùng lúc để không có khoảng thời gian route mất đường vào). Change này ghi task như delta cụ thể để khớp.
+
 ## Risks / Trade-offs
 
 - [Hover-open dropdown dễ flicker khi lướt chuột] → delay đóng ~100–150ms + vùng hover gồm cả trigger lẫn panel; click vẫn là đường chính.
 - [Workplace ▾ 8 item hơi dài] → 1 cột có icon, thứ tự theo tần suất (Subjects → Resources → Challenges → …); nếu sau này quá dài mới nâng mega-menu 2 cột — ngoài scope.
-- [Người quen "Explore" mất chỗ cũ] → mọi đích vẫn còn, bảng D2 là contract; search overlay (Ctrl/K) tìm được mọi trang.
+- [Người quen "Explore" mất chỗ cũ] → mọi đích vẫn còn, bảng D2 là contract; search overlay (Ctrl/K) tìm được mọi trang. **[Delta]** discovery shortcuts (AI, For You, Recommendations, Trending) nay ở profile/avatar popup (section "Khám phá", owner `profile-avatar-hub`), không mất đường vào.
 - [AccountMenuAuthed thêm 4 mục làm menu dài] → chia section có divider ("Bạn" / "Hệ thống"), giữ thứ tự cũ ở đầu.
 
 ## Migration Plan

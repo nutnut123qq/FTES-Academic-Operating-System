@@ -488,6 +488,18 @@ export const pathConfig = () => {
                 build,
             }
         }
+        const saved = () => {
+            // "Đã lưu" library: saved resources/courses/posts (save-for-later).
+            // NOTE: the legacy profile().bookmarks() builder (/profile/settings/bookmarks)
+            // is a dead route kept only as legacy — new entry points use this one.
+            const savedPath = `${localePath}/saved`
+            const build = () => {
+                return savedPath
+            }
+            return {
+                build,
+            }
+        }
         const subjects = () => {
             // subject catalog (§3) — the list of subject workspaces
             const subjectsPath = `${localePath}/subjects`
@@ -594,6 +606,7 @@ export const pathConfig = () => {
             community,
             groups,
             resources,
+            saved,
             subjects,
             chat,
             challenges,

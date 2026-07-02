@@ -74,6 +74,11 @@ export const CredentialsState = () => {
                 SessionStorageId.OauthIdpHint,
                 { provider },
             )
+            // remember where the user started so the OAuth landing returns them here
+            SessionStorage.setItem<string>(
+                SessionStorageId.AuthReturnTo,
+                window.location.pathname + window.location.search,
+            )
             const url = provider === KeycloakIdentityProvider.Google
                 ? keycloakRedirect.google
                 : keycloakRedirect.github
@@ -149,7 +154,8 @@ export const CredentialsState = () => {
         ],
     )
 
-    const isSubmitDisabled = publicEnv().captcha.enabled && !values.captchaToken
+    // pending mock auth also disables the submit — no double submit (spec: modal quality)
+    const isSubmitDisabled = (publicEnv().captcha.enabled && !values.captchaToken) || isSubmitting
 
     return (
         <>

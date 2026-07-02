@@ -1,12 +1,12 @@
 ## ADDED Requirements
 
 ### Requirement: Logged-in dropdown header with level ring
-The account menu dropdown SHALL, for a logged-in user, render its header block as the user's avatar wrapped in a level progress ring (ring fill = progress toward the next level, current level number labeled) alongside the user's name and email, followed by the stats row, then the existing menu links (Profile, Saved, Settings), theme switch, and logout — in that order.
+The account menu dropdown SHALL, for a logged-in user, render its header block as the user's avatar wrapped in a level progress ring (ring fill = progress toward the next level, current level number labeled) alongside the user's name and email, followed by the stats row, then the "Khám phá" (Explore) section, then the existing menu links (Profile, Saved, Settings), theme switch, and logout — in that order.
 
 #### Scenario: Logged-in dropdown opens
 - **WHEN** a logged-in user clicks their avatar in the navbar
 - **THEN** the dropdown shows avatar + name + email with a level ring around the avatar indicating current level and progress to the next level
-- **AND** below it a stats row, then menu links (Profile, Saved, Settings), theme switch, and logout in unchanged order
+- **AND** below it a stats row, then the Explore section, then menu links (Profile, Saved, Settings), theme switch, and logout in that order
 
 #### Scenario: Guest dropdown unchanged
 - **WHEN** a guest (not logged in) opens the account menu
@@ -44,3 +44,34 @@ All new dropdown strings (chip labels, level label) SHALL be localized in Vietna
 - **WHEN** a screen-reader user focuses a stats chip
 - **THEN** the metric name and value are announced (icon-only visuals carry `aria-label`s)
 - **AND** keyboard users can reach and activate each chip with Tab and Enter
+
+### Requirement: Explore ("Khám phá") shortcuts section in the popup
+The account menu popup SHALL render a labeled "Khám phá" (Explore) section, placed between the gamification stats row and the account menu links (divided from both), containing exactly four discovery shortcuts, each a single row with a phosphor icon + localized label: **Trợ lý AI** (Robot icon → `/ai`), **Dành cho bạn / For You** (Newspaper icon → the community For You feed), **Gợi ý cho bạn / Recommendations** (Sparkle icon → `/recommendations`), and **Thịnh hành / Trending** (TrendUp icon → the community Trending view). Activating any shortcut for a logged-in user SHALL close the popup and navigate to its destination. These shortcuts are the relocated discovery entries removed from the header dropdowns (owned by change `app-shell-header-nav`); the routes `/ai` and `/recommendations` SHALL remain valid.
+
+#### Scenario: Explore section renders in logged-in popup
+- **GIVEN** a logged-in user
+- **WHEN** the account popup opens
+- **THEN** a "Khám phá" section renders between the stats row and the menu links, listing Trợ lý AI, Dành cho bạn, Gợi ý cho bạn, and Thịnh hành, each with its phosphor icon and localized label
+
+#### Scenario: Explore shortcut routes correctly
+- **GIVEN** the logged-in popup is open
+- **WHEN** the user activates the Trợ lý AI shortcut
+- **THEN** the popup closes and the app navigates to `/ai`
+- **AND** activating Gợi ý cho bạn navigates to `/recommendations`, Dành cho bạn navigates to the community For You feed, and Thịnh hành navigates to the community Trending view
+
+#### Scenario: Guest handling of Explore shortcuts
+- **GIVEN** a guest (not logged in) with the account popup open
+- **WHEN** the guest activates the public shortcuts Dành cho bạn (For You) or Thịnh hành (Trending)
+- **THEN** the app navigates to the community feed/trending view without requiring login
+- **AND** activating the auth-gated shortcuts Trợ lý AI or Gợi ý cho bạn opens the AuthenticationModal instead of navigating, resuming to `/ai` or `/recommendations` after successful login
+
+#### Scenario: Explore section mobile parity
+- **GIVEN** a mobile viewport where the account menu renders as its mobile drawer/popup form
+- **WHEN** the account surface opens
+- **THEN** the "Khám phá" section renders with the same four shortcuts in the same order (header → stats → Khám phá → links → theme → logout)
+
+#### Scenario: Explore i18n and accessibility
+- **GIVEN** the locale is vi or en
+- **WHEN** the Explore section renders
+- **THEN** the section title and every shortcut label come from `profileMenu.explore.*` message keys in that locale with no hard-coded copy
+- **AND** each shortcut exposes menu-item semantics with an accessible name, is keyboard-focusable in the popup tab order, and its icon-only visual carries an `aria-label`

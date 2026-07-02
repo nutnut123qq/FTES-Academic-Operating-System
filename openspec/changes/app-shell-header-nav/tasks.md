@@ -31,3 +31,11 @@
 
 - [ ] 6.1 `npm run build` (webpack) xanh — build: batch-verified by orchestrator
 - [x] 6.2 `tsc --noEmit` sạch
+
+## 7. Delta amendment — hướng mới của product owner (header đã ship; đây là chỉnh sửa cụ thể)
+
+- [ ] 7.1 Sửa `src/components/features/app-shell/useAppNav.tsx`: bỏ child `ai` khỏi module Workplace (còn subjects, resources, challenges, leaderboard, workflow, analytics, career)
+- [ ] 7.2 Sửa `src/components/features/app-shell/useAppNav.tsx`: bỏ child `recommendations` khỏi module Course (còn catalog `/courses`, marketplace `/marketplace`)
+- [ ] 7.3 Giữ Community ▾ nguyên (feed/groups/events/chat); xác nhận hover Community lộ **Groups + Events** (không đổi data, chỉ verify contract)
+- [ ] 7.4 Rà soát i18n: `nav.ai` / `nav.recommendations` (và nhãn liên quan) không còn được header dùng — nếu còn key mồ côi trong `nav.*` thì để lại cho popup dùng lại HOẶC dọn; KHÔNG dead-key trong header. `/ai` + `/recommendations` giờ vào profile popup (owner `profile-avatar-hub`), route vẫn hợp lệ
+- [ ] 7.5 Ghi chú coupling: việc gỡ `ai`/`recommendations` khỏi `useAppNav.tsx` được implement CÙNG change `profile-avatar-hub` (header + popup ship chung, không có khoảng route mất đường vào). Xem tasks bên `profile-avatar-hub` §7

@@ -20,19 +20,48 @@ The application header SHALL present exactly four top-level navigation modules, 
 
 ### Requirement: Module dropdowns nest all remaining features
 
-Each dropdown SHALL contain exactly the following feature links (icon + label): **Workplace ▾** → Subjects (`/subjects`), Resources (`/resources`), Challenges (`/challenges`), Leaderboard (`/leaderboard`), AI Hub (`/ai`), Workflow (`/workflow`), Analytics (`/analytics`), Career (`/career`); **Course ▾** → Catalog (`/courses`), Marketplace (`/marketplace`), Recommendations (`/recommendations`); **Community ▾** → Feed (`/community`), Groups (`/groups`), Events (`/events`), Chat (`/chat`). The Account menu SHALL additionally contain Activity (`/activity`), Wallet (`/wallet`), Integrations (`/integrations`), Roles (`/admin/roles`) grouped under labeled sections. Search SHALL remain reachable via the header search trigger and Ctrl/Cmd+K. Every destination present in the previous navigation SHALL remain reachable from the header (no orphaned route).
+Each dropdown SHALL contain exactly the following feature links (icon + label): **Workplace ▾** → Subjects (`/subjects`), Resources (`/resources`), Challenges (`/challenges`), Leaderboard (`/leaderboard`), Workflow (`/workflow`), Analytics (`/analytics`), Career (`/career`); **Course ▾** → Catalog (`/courses`), Marketplace (`/marketplace`); **Community ▾** → Feed (`/community`), Groups (`/groups`), Events (`/events`), Chat (`/chat`). The Workplace dropdown SHALL NOT contain an AI Hub item and the Course dropdown SHALL NOT contain a Recommendations item — those discovery shortcuts relocate to the profile/avatar popup (owned by change `profile-avatar-hub`). The Account menu SHALL additionally contain Activity (`/activity`), Wallet (`/wallet`), Integrations (`/integrations`), Roles (`/admin/roles`) grouped under labeled sections. Search SHALL remain reachable via the header search trigger and Ctrl/Cmd+K. Every destination present in the previous navigation SHALL remain reachable from the header or the profile/avatar popup (no orphaned route).
 
 #### Scenario: Workplace dropdown lists its features
 
 - **GIVEN** a desktop viewport
 - **WHEN** the user opens the Workplace dropdown
-- **THEN** it lists Subjects, Resources, Challenges, Leaderboard, AI Hub, Workflow, Analytics, Career, each navigating to its route and closing the dropdown on selection
+- **THEN** it lists Subjects, Resources, Challenges, Leaderboard, Workflow, Analytics, Career, each navigating to its route and closing the dropdown on selection
+- **AND** no AI Hub item is present in the Workplace dropdown
+
+#### Scenario: Community dropdown surfaces Groups and Events on hover
+
+- **GIVEN** a desktop pointer user on any page
+- **WHEN** they hover the Community module to open its dropdown
+- **THEN** the dropdown reveals Groups and Events (alongside Feed and Chat), each navigating to `/groups` and `/events` respectively and closing the dropdown on selection
+
+#### Scenario: Course dropdown omits Recommendations
+
+- **GIVEN** a desktop viewport
+- **WHEN** the user opens the Course dropdown
+- **THEN** it lists only Catalog and Marketplace, and no Recommendations item is present
 
 #### Scenario: Former Explore destinations still reachable
 
 - **GIVEN** the redesigned header
 - **WHEN** the user looks for Activity, Wallet, Integrations, or Roles
 - **THEN** each is available inside the Account menu under a labeled section, navigating to `/activity`, `/wallet`, `/integrations`, `/admin/roles` respectively
+
+### Requirement: Discovery shortcuts are not header modules
+
+Discovery shortcuts — global AI hub (`/ai`), "For You" (community For You feed), Recommendations (`/recommendations`), and Trending (community trending) — SHALL NOT appear as header navigation modules or as items in any header module dropdown. They SHALL relocate to the profile/avatar popup, whose ownership belongs to change `profile-avatar-hub`. The routes `/ai` and `/recommendations` SHALL remain valid and reachable via that popup, so that no route is orphaned by their removal from the header.
+
+#### Scenario: AI and Recommendations absent from header dropdowns
+
+- **GIVEN** the amended header
+- **WHEN** the user opens the Workplace or Course dropdown
+- **THEN** neither an AI Hub link (`/ai`) nor a Recommendations link (`/recommendations`) appears in any header dropdown
+
+#### Scenario: Discovery routes remain reachable
+
+- **GIVEN** `/ai` and `/recommendations` are no longer in the header
+- **WHEN** the user needs the AI hub or recommendations
+- **THEN** both routes stay valid and are reachable from the profile/avatar popup's "Khám phá" section (owned by change `profile-avatar-hub`)
 
 ### Requirement: Single source of truth for navigation data
 

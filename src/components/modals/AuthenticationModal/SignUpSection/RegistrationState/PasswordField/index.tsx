@@ -35,6 +35,10 @@ export interface PasswordFieldProps extends WithClassNames<undefined> {
     onChangeValue: (value: string) => void
     /** Fired when the field loses focus. */
     onBlurField: () => void
+    /** Accessible label for the visibility toggle while the password is HIDDEN ("show …"). */
+    showToggleLabel: string
+    /** Accessible label for the visibility toggle while the password is SHOWN ("hide …"). */
+    hideToggleLabel: string
 }
 
 /**
@@ -55,6 +59,8 @@ export const PasswordField = ({
     touched,
     onChangeValue,
     onBlurField,
+    showToggleLabel,
+    hideToggleLabel,
     className,
 }: PasswordFieldProps) => {
     // local UI-only state: whether this field is shown as plaintext
@@ -71,6 +77,7 @@ export const PasswordField = ({
             </Label>
             <div className="relative">
                 <Link
+                    aria-label={showPassword ? hideToggleLabel : showToggleLabel}
                     className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center rounded-md p-1 text-muted outline-none transition-opacity hover:opacity-80"
                     onPress={onToggleVisibility}
                 >

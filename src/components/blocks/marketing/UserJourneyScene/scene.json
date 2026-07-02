@@ -1,0 +1,10 @@
+{
+    "stations": [
+        { "id": "home", "kind": "home", "pos": [-6, 0, 1.6] },
+        { "id": "workplace", "kind": "workplace", "pos": [-3, 0, -1.4] },
+        { "id": "course", "kind": "course", "pos": [0, 0, 1.4] },
+        { "id": "practice", "kind": "practice", "pos": [3, 0, -1.4] },
+        { "id": "outcome", "kind": "outcome", "pos": [6, 0, 1.6], "payoff": true }
+    ],
+    "cameraOffset": [3.2, 5.2, 8.5]
+}

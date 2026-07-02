@@ -36,6 +36,14 @@ export interface Subject {
      * real subject query when the contract lands; the hook API stays.
      */
     courseIds: Array<string>
+    /**
+     * Whether the viewer is a member of this workspace (enrolled in the subject).
+     * Gates the AI tools (enroll/join axis — never a separate VIP product). ponytail:
+     * mock BE — real BE resolves this from the enrollment of (user, subject). The
+     * `swp391` subject is deterministically NON-member so the locked hub state stays
+     * reachable in the mock; every other subject is a member.
+     */
+    isMember: boolean
 }
 
 // ponytail: mock BE — the FE has no subject endpoint yet. Returns a deterministic
@@ -55,6 +63,7 @@ const fetchSubjectMock = async (id: string): Promise<Subject> => ({
     progress: 62,
     imageUrl: id === "net1704" ? null : `/subjects/${id.toLowerCase()}.png`,
     courseIds: id === "swp391" ? [] : [`${id}-course`],
+    isMember: id !== "swp391",
 })
 
 /**

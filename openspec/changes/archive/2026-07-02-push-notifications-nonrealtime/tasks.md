@@ -53,9 +53,9 @@
 
 ## 5. Verification
 
-- [ ] 5.1 Manual pass over spec scenarios: badge after poll, tab-hidden pause (no requests
+- [x] 5.1 Manual pass over spec scenarios: badge after poll, tab-hidden pause (no requests
       in devtools while hidden), focus refetch, mark read/all cross-surface, unread filter,
       preference toggle + mute-all effects, push row inert, vi/en strings, keyboard
       operation
-- [ ] 5.2 `npm run build` (webpack) green
+- [x] 5.2 `npm run build` (webpack) green
 - [x] 5.3 `tsc --noEmit` clean

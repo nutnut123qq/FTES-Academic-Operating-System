@@ -36,5 +36,5 @@
 
 - [x] 4.1 Confirm `subjects.*` i18n keys are untouched and `vi`/`en` messages stay
       key-parallel (no new strings expected) — verified: 102 `subjects.*` keys, parallel
-- [ ] 4.2 `npm run build` (webpack) green — build: batch-verified by orchestrator
+- [x] 4.2 `npm run build` (webpack) green — build: batch-verified by orchestrator
 - [x] 4.3 `npx tsc --noEmit` clean

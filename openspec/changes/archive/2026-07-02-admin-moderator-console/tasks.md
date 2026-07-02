@@ -46,5 +46,5 @@
 
 ## 7. Final verification
 
-- [ ] 7.1 Full pass: RBAC gating (moderator vs admin vs superAdmin vs member vs guest), empty/loading/error states, confirm-on-destructive, responsive, i18n vi/en, a11y across all sections
-- [ ] 7.2 `npx tsc --noEmit` clean; `openspec validate admin-moderator-console` reports valid (build orchestrator-verified via `npm run build`)
+- [x] 7.1 Full pass: RBAC gating (moderator vs admin vs superAdmin vs member vs guest), empty/loading/error states, confirm-on-destructive, responsive, i18n vi/en, a11y across all sections
+- [x] 7.2 `npx tsc --noEmit` clean; `openspec validate admin-moderator-console` reports valid (build orchestrator-verified via `npm run build`)

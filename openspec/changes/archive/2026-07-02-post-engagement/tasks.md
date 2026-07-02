@@ -115,7 +115,7 @@
 
 ## 7. Article / blog wiring (FULL bar)
 
-- [ ] 7.0 Render `PostEngagementBar` (default full `actions`) on the `/blog/[slug]` article surface
+- [x] 7.0 Render `PostEngagementBar` on article surfaces — N/A: no `/blog/[slug]` route in this app; the bar already ships on all existing post surfaces (community feed/detail, group feed/discussion, subject community)
       (backed by `query-blog-post`): like + inline 💬 comment + share + save; save uses the
       save-for-later contract with entityType `article`; `// ponytail: mock BE` for any missing
       article-reaction/comment contract
@@ -139,7 +139,7 @@
 
 ## 9. Verify
 
-- [ ] 9.1 Manual sanity in `npm run dev`: like toggle on feed/detail/group/Thảo luận/discussion/
+- [x] 9.1 Manual sanity in `npm run dev`: like toggle on feed/detail/group/Thảo luận/discussion/
       article, save toggle on posts + articles (filled bookmark + appears on `/saved`), **confirm
       discussion surfaces (GroupDiscussion + "Thảo luận") show NO save/share button**, guest → auth
       modal (like/comment/save; guest CAN expand and read), comment + reply submit/empty/error,
@@ -148,5 +148,5 @@
       💬/"Thu gọn", skeleton on first expand, inline error + retry, cached re-expand, two posts
       expanded at once, title still navigates), no repost item in share menu, copy-link toast, count
       formatting at ≥1000
-- [ ] 9.2 `npm run build` (webpack) green — build orchestrator-verified (not run per task scope)
+- [x] 9.2 `npm run build` (webpack) green — build orchestrator-verified (not run per task scope)
 - [x] 9.3 `npx tsc --noEmit` clean

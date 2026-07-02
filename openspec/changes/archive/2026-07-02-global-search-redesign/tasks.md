@@ -38,5 +38,5 @@
 
 ## 4. Final verification
 
-- [ ] 4.1 Manual pass (dev): Ctrl/K open/close, debounce, keyboard nav, recents add/clear, see-all handoff, each entity kind routes correctly, mobile full-screen, vi/en strings
+- [x] 4.1 Manual pass (dev): Ctrl/K open/close, debounce, keyboard nav, recents add/clear, see-all handoff, each entity kind routes correctly, mobile full-screen, vi/en strings
 - [x] 4.2 `tsc --noEmit` clean (no new errors from this change; pre-existing errors are in unrelated features owned by parallel work)

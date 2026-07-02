@@ -35,5 +35,5 @@
 
 ## 5. Verify cuối
 
-- [ ] 5.1 Chạy đủ kịch bản tay: khách (chưa login) mở modal từ desktop + mobile drawer; đổi màu → reload giữ màu, không flash; tắt hiệu ứng → nền biến mất tức thì; rise ↔ fall live (fall rơi CHÉO); đổi tốc độ Chậm/Vừa/Nhanh → spark nhanh/chậm tương ứng, giữ sau reload; bật OS reduce-motion → không spark nào hiện (kể cả tốc độ Nhanh); xoá localStorage → mặc định xanh + rơi sao băng chéo + tốc độ Vừa; chuyển vi/en đủ nhãn
+- [x] 5.1 Chạy đủ kịch bản tay: khách (chưa login) mở modal từ desktop + mobile drawer; đổi màu → reload giữ màu, không flash; tắt hiệu ứng → nền biến mất tức thì; rise ↔ fall live (fall rơi CHÉO); đổi tốc độ Chậm/Vừa/Nhanh → spark nhanh/chậm tương ứng, giữ sau reload; bật OS reduce-motion → không spark nào hiện (kể cả tốc độ Nhanh); xoá localStorage → mặc định xanh + rơi sao băng chéo + tốc độ Vừa; chuyển vi/en đủ nhãn
 - [x] 5.2 `npm run build` (webpack) xanh + `tsc --noEmit` sạch lần cuối; `openspec validate appearance-settings` pass (build: batch-verified by orchestrator; tsc --noEmit sạch)

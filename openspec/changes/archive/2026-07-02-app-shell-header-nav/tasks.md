@@ -29,7 +29,7 @@
 
 ## 6. Verify
 
-- [ ] 6.1 `npm run build` (webpack) xanh — build: batch-verified by orchestrator
+- [x] 6.1 `npm run build` (webpack) xanh — build: batch-verified by orchestrator
 - [x] 6.2 `tsc --noEmit` sạch
 
 ## 7. Delta amendment — directive chủ sản phẩm: header = LINK THUẦN, không sub-menu (header đã ship với dropdown; đây là ĐẢO hướng)

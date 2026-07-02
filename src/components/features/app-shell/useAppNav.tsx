@@ -17,6 +17,13 @@ import {
     WalletIcon,
     ChartBarIcon,
     KanbanIcon,
+    RobotIcon,
+    SparkleIcon,
+    BriefcaseIcon,
+    MagnifyingGlassIcon,
+    BellIcon,
+    PlugIcon,
+    ShieldIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { usePathname } from "@/i18n/navigation"
@@ -102,18 +109,31 @@ export const useAppNav = (): Array<AppNavGroup> => {
                 key: "explore",
                 label: t("section.explore"),
                 items: [
+                    item("ai", p.ai().build(), <RobotIcon className="size-5" />),
+                    item("recommendations", p.recommendations().build(), <SparkleIcon className="size-5" />),
+                    item("career", p.career().build(), <BriefcaseIcon className="size-5" />),
                     item("leaderboard", p.leaderboard().build(), <RankingIcon className="size-5" />),
                     item("marketplace", p.marketplace().build(), <StorefrontIcon className="size-5" />),
+                    item("search", p.search().build(), <MagnifyingGlassIcon className="size-5" />),
+                ],
+            },
+            {
+                key: "you",
+                label: t("section.you"),
+                items: [
                     item("activity", p.activity().build(), <PulseIcon className="size-5" />),
+                    item("wallet", p.wallet().build(), <WalletIcon className="size-5" />),
+                    item("notifications", p.notifications().build(), <BellIcon className="size-5" />),
                 ],
             },
             {
                 key: "system",
                 label: t("section.system"),
                 items: [
-                    item("wallet", p.wallet().build(), <WalletIcon className="size-5" />),
                     item("analytics", p.analytics().build(), <ChartBarIcon className="size-5" />),
                     item("workflow", p.workflow().build(), <KanbanIcon className="size-5" />),
+                    item("integrations", p.integrations().build(), <PlugIcon className="size-5" />),
+                    item("roles", p.roles().build(), <ShieldIcon className="size-5" />),
                 ],
             },
         ]

@@ -270,10 +270,18 @@
         "wallet": "Wallet",
         "analytics": "Analytics",
         "workflow": "Workflow",
+        "ai": "AI",
+        "recommendations": "For you",
+        "career": "Career",
+        "search": "Search",
+        "notifications": "Notifications",
+        "integrations": "Integrations",
+        "roles": "Roles",
         "section": {
             "learn": "Learn",
             "community": "Community",
             "explore": "Explore",
+            "you": "You",
             "system": "System"
         },
         "practice": "Practice",
@@ -2589,6 +2597,140 @@
             "active": "In team",
             "pending": "Invite pending",
             "none": "Not requested"
+        }
+    },
+    "aiPlatform": {
+        "title": "AI Platform",
+        "subtitle": "Every AI tool in one place — for students, learning, coding, careers, and teachers.",
+        "open": "Open",
+        "categories": {
+            "student": "For students",
+            "learning": "Learning",
+            "coding": "Coding",
+            "career": "Career",
+            "teacher": "For teachers"
+        },
+        "tools": {
+            "tutor": { "name": "AI Tutor", "desc": "Ask anything and get step-by-step explanations." },
+            "planner": { "name": "Study Planner", "desc": "Build a personalized study schedule that fits your goals." },
+            "summary": { "name": "Smart Summary", "desc": "Turn long lessons into concise, exam-ready notes." },
+            "flashcards": { "name": "Flashcards", "desc": "Auto-generate flashcards from any lesson." },
+            "quiz": { "name": "Quiz Generator", "desc": "Create practice quizzes to test what you've learned." },
+            "debug": { "name": "Code Debugger", "desc": "Paste your code and get bug fixes with explanations." },
+            "cvReview": { "name": "CV Review", "desc": "Get AI feedback to polish your resume for the job market." },
+            "mentor": { "name": "Teaching Mentor", "desc": "Draft lesson plans and grading rubrics in minutes." }
+        }
+    },
+    "notificationCenter": {
+        "title": "Notifications",
+        "subtitle": "Everything happening across your courses, groups, and challenges.",
+        "all": "All",
+        "unread": "Unread",
+        "markAllRead": "Mark all as read",
+        "empty": "You're all caught up — no notifications here.",
+        "types": {
+            "mention": "Mention",
+            "course": "Course",
+            "event": "Event",
+            "deadline": "Deadline",
+            "challenge": "Challenge",
+            "coin": "Coins",
+            "group": "Group"
+        }
+    },
+    "searchPage": {
+        "title": "Search",
+        "placeholder": "Search people, subjects, courses, resources…",
+        "empty": "Type to search across FTES AOS.",
+        "noResults": "No results found. Try a different search.",
+        "groups": {
+            "users": "People",
+            "subjects": "Subjects",
+            "courses": "Courses",
+            "resources": "Resources",
+            "posts": "Community posts"
+        }
+    },
+    "recommendation": {
+        "title": "For you",
+        "subtitle": "Personalized picks based on what you study",
+        "view": "View",
+        "kinds": {
+            "subjects": "Subjects",
+            "courses": "Courses",
+            "groups": "Study groups",
+            "mentors": "Mentors",
+            "challenges": "Challenges"
+        }
+    },
+    "careerCenter": {
+        "title": "Career Center",
+        "subtitle": "Turn your skills into a career: track your skill graph, follow a roadmap, and find jobs.",
+        "skills": "Skill graph",
+        "roadmaps": "Career roadmaps",
+        "jobs": "Jobs",
+        "viewRoadmap": "View roadmap",
+        "apply": "Apply",
+        "progressLabel": "{skill} progress",
+        "roadmapKeys": {
+            "backend": "Backend Developer",
+            "frontend": "Frontend Developer",
+            "mobile": "Mobile Developer",
+            "ai": "AI / Machine Learning",
+            "data": "Data Engineer",
+            "devops": "DevOps Engineer"
+        },
+        "jobTypes": {
+            "internship": "Internship",
+            "fulltime": "Full-time"
+        }
+    },
+    "rbac": {
+        "title": "Roles & Permissions",
+        "subtitle": "Review the system roles and exactly which permissions each one grants.",
+        "rolesOverview": "Roles overview",
+        "permissionMatrix": "Permission matrix",
+        "memberCount": "{count} members",
+        "granted": "Granted",
+        "notGranted": "Not granted",
+        "roles": {
+            "member": "Member",
+            "moderator": "Moderator",
+            "admin": "Admin",
+            "superAdmin": "Super admin"
+        },
+        "permissions": {
+            "manageUsers": "Manage users",
+            "manageContent": "Manage content",
+            "moderate": "Moderate",
+            "viewAnalytics": "View analytics",
+            "manageRoles": "Manage roles",
+            "publish": "Publish"
+        }
+    },
+    "integration": {
+        "title": "Integration Hub",
+        "subtitle": "Connect FTES AOS to the services you already use.",
+        "connected": "Connected",
+        "notConnected": "Not connected",
+        "connect": "Connect",
+        "disconnect": "Disconnect",
+        "categories": {
+            "auth": "Authentication",
+            "developer": "Developer",
+            "communication": "Communication",
+            "payment": "Payment",
+            "ai": "AI",
+            "storage": "Storage"
+        },
+        "services": {
+            "google": "Google",
+            "github": "GitHub",
+            "gmail": "Gmail",
+            "firebase": "Firebase",
+            "paymentGateway": "Payment Gateway",
+            "aiProviders": "AI Providers",
+            "cloudStorage": "Cloud Storage"
         }
     },
     "chat": {

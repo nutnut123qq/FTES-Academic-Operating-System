@@ -270,10 +270,18 @@
         "wallet": "Ví",
         "analytics": "Phân tích",
         "workflow": "Quy trình",
+        "ai": "AI",
+        "recommendations": "Dành cho bạn",
+        "career": "Nghề nghiệp",
+        "search": "Tìm kiếm",
+        "notifications": "Thông báo",
+        "integrations": "Tích hợp",
+        "roles": "Vai trò",
         "section": {
             "learn": "Học",
             "community": "Cộng đồng",
             "explore": "Khám phá",
+            "you": "Cá nhân",
             "system": "Hệ thống"
         },
         "practice": "Luyện Code",
@@ -2589,6 +2597,140 @@
             "active": "Đã vào team",
             "pending": "Đang chờ chấp nhận",
             "none": "Chưa gửi yêu cầu"
+        }
+    },
+    "aiPlatform": {
+        "title": "Nền tảng AI",
+        "subtitle": "Mọi công cụ AI trong một nơi — cho học viên, học tập, lập trình, nghề nghiệp và giảng viên.",
+        "open": "Mở",
+        "categories": {
+            "student": "Cho học viên",
+            "learning": "Học tập",
+            "coding": "Lập trình",
+            "career": "Nghề nghiệp",
+            "teacher": "Cho giảng viên"
+        },
+        "tools": {
+            "tutor": { "name": "Gia sư AI", "desc": "Hỏi bất cứ điều gì và nhận lời giải từng bước." },
+            "planner": { "name": "Lập kế hoạch học", "desc": "Tạo lịch học cá nhân hóa phù hợp với mục tiêu của bạn." },
+            "summary": { "name": "Tóm tắt thông minh", "desc": "Biến bài học dài thành ghi chú súc tích, sẵn sàng cho kỳ thi." },
+            "flashcards": { "name": "Thẻ ghi nhớ", "desc": "Tự động tạo thẻ ghi nhớ từ bất kỳ bài học nào." },
+            "quiz": { "name": "Tạo câu hỏi", "desc": "Tạo bài kiểm tra luyện tập để ôn lại kiến thức." },
+            "debug": { "name": "Gỡ lỗi mã", "desc": "Dán mã của bạn và nhận cách sửa lỗi kèm giải thích." },
+            "cvReview": { "name": "Đánh giá CV", "desc": "Nhận nhận xét từ AI để hoàn thiện hồ sơ xin việc." },
+            "mentor": { "name": "Trợ lý giảng dạy", "desc": "Soạn giáo án và tiêu chí chấm điểm trong vài phút." }
+        }
+    },
+    "notificationCenter": {
+        "title": "Thông báo",
+        "subtitle": "Mọi hoạt động từ khóa học, nhóm và thử thách của bạn.",
+        "all": "Tất cả",
+        "unread": "Chưa đọc",
+        "markAllRead": "Đánh dấu đã đọc tất cả",
+        "empty": "Bạn đã xem hết — không có thông báo nào.",
+        "types": {
+            "mention": "Nhắc đến",
+            "course": "Khóa học",
+            "event": "Sự kiện",
+            "deadline": "Hạn nộp",
+            "challenge": "Thử thách",
+            "coin": "Xu",
+            "group": "Nhóm"
+        }
+    },
+    "searchPage": {
+        "title": "Tìm kiếm",
+        "placeholder": "Tìm người dùng, môn học, khóa học, tài nguyên…",
+        "empty": "Nhập để tìm kiếm trên toàn FTES AOS.",
+        "noResults": "Không tìm thấy kết quả. Thử từ khóa khác.",
+        "groups": {
+            "users": "Người dùng",
+            "subjects": "Môn học",
+            "courses": "Khóa học",
+            "resources": "Tài nguyên",
+            "posts": "Bài viết cộng đồng"
+        }
+    },
+    "recommendation": {
+        "title": "Dành cho bạn",
+        "subtitle": "Gợi ý cá nhân hóa dựa trên những gì bạn đang học",
+        "view": "Xem",
+        "kinds": {
+            "subjects": "Môn học",
+            "courses": "Khóa học",
+            "groups": "Nhóm học tập",
+            "mentors": "Người hướng dẫn",
+            "challenges": "Thử thách"
+        }
+    },
+    "careerCenter": {
+        "title": "Trung tâm Hướng nghiệp",
+        "subtitle": "Biến kỹ năng thành sự nghiệp: theo dõi biểu đồ kỹ năng, đi theo lộ trình và tìm việc làm.",
+        "skills": "Biểu đồ kỹ năng",
+        "roadmaps": "Lộ trình nghề nghiệp",
+        "jobs": "Việc làm",
+        "viewRoadmap": "Xem lộ trình",
+        "apply": "Ứng tuyển",
+        "progressLabel": "Tiến độ {skill}",
+        "roadmapKeys": {
+            "backend": "Lập trình viên Backend",
+            "frontend": "Lập trình viên Frontend",
+            "mobile": "Lập trình viên Mobile",
+            "ai": "AI / Học máy",
+            "data": "Kỹ sư Dữ liệu",
+            "devops": "Kỹ sư DevOps"
+        },
+        "jobTypes": {
+            "internship": "Thực tập",
+            "fulltime": "Toàn thời gian"
+        }
+    },
+    "rbac": {
+        "title": "Vai trò & Quyền hạn",
+        "subtitle": "Xem các vai trò hệ thống và chính xác những quyền mà mỗi vai trò được cấp.",
+        "rolesOverview": "Tổng quan vai trò",
+        "permissionMatrix": "Ma trận quyền hạn",
+        "memberCount": "{count} thành viên",
+        "granted": "Được cấp",
+        "notGranted": "Không được cấp",
+        "roles": {
+            "member": "Thành viên",
+            "moderator": "Kiểm duyệt viên",
+            "admin": "Quản trị viên",
+            "superAdmin": "Quản trị cấp cao"
+        },
+        "permissions": {
+            "manageUsers": "Quản lý người dùng",
+            "manageContent": "Quản lý nội dung",
+            "moderate": "Kiểm duyệt",
+            "viewAnalytics": "Xem phân tích",
+            "manageRoles": "Quản lý vai trò",
+            "publish": "Xuất bản"
+        }
+    },
+    "integration": {
+        "title": "Trung tâm tích hợp",
+        "subtitle": "Kết nối FTES AOS với các dịch vụ bạn đang dùng.",
+        "connected": "Đã kết nối",
+        "notConnected": "Chưa kết nối",
+        "connect": "Kết nối",
+        "disconnect": "Ngắt",
+        "categories": {
+            "auth": "Xác thực",
+            "developer": "Nhà phát triển",
+            "communication": "Liên lạc",
+            "payment": "Thanh toán",
+            "ai": "AI",
+            "storage": "Lưu trữ"
+        },
+        "services": {
+            "google": "Google",
+            "github": "GitHub",
+            "gmail": "Gmail",
+            "firebase": "Firebase",
+            "paymentGateway": "Cổng thanh toán",
+            "aiProviders": "Nhà cung cấp AI",
+            "cloudStorage": "Lưu trữ đám mây"
         }
     },
     "chat": {

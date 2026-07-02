@@ -512,6 +512,14 @@ export const pathConfig = () => {
         const activity = makeSimplePath("activity")
         const workflow = makeSimplePath("workflow")
         const analytics = makeSimplePath("analytics")
+        // Batch-2 domain shells (§9/§15/§16/§17/§21/§23 + §1 RBAC).
+        const ai = makeSimplePath("ai")
+        const notifications = makeSimplePath("notifications")
+        const search = makeSimplePath("search")
+        const recommendations = makeSimplePath("recommendations")
+        const career = makeSimplePath("career")
+        const integrations = makeSimplePath("integrations")
+        const roles = makeSimplePath("admin/roles")
         const practice = () => {
             const practicePath = `${localePath}/practice`
             const build = () => {
@@ -596,6 +604,13 @@ export const pathConfig = () => {
             activity,
             workflow,
             analytics,
+            ai,
+            notifications,
+            search,
+            recommendations,
+            career,
+            integrations,
+            roles,
             rewards,
             league,
             kpi,

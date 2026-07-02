@@ -24,6 +24,9 @@ import {
     Logo,
 } from "./Logo"
 import {
+    HeaderNav,
+} from "./HeaderNav"
+import {
     AccountMenuDropdown,
 } from "./AccountMenuDropdown"
 import {
@@ -65,7 +68,7 @@ export const Navbar = ({ className }: NavbarProps) => {
     const router = useRouter()
     const { open: openSearch } = useSearchOverlayState()
     const [isDrawerOpen, setDrawerOpen] = useState(false)
-    // same primary-nav source the desktop AppSidebar renders — no drift
+    // same primary-nav source HeaderNav renders on desktop — no drift
     const navGroups = useAppNav()
     // optional second layer (e.g. profile tabs) a page registered into the navbar
     const bottomLayer = useNavbarBottomLayerStore((state) => state.bottomLayer)
@@ -90,6 +93,7 @@ export const Navbar = ({ className }: NavbarProps) => {
             <div className="flex h-16 min-h-16 w-full items-center justify-between gap-3 px-3">
                 <div className="flex items-center gap-6">
                     <Logo className="justify-start" />
+                    <HeaderNav />
                 </div>
 
                 <div className="flex items-center justify-end gap-2">

@@ -18,7 +18,6 @@ import { SwrSideEffects } from "@/hooks/swr/SwrSideEffects"
 import { ReduxProvider } from "@/redux/ReduxProvider"
 import { ModalContainer } from "@/components/modals/ModalContainer"
 import { UseEffects } from "@/hooks/effects/UseEffects"
-import { AppSidebar } from "@/components/features/app-shell/AppSidebar"
 
 export const InnerLayout = ({ children }: PropsWithChildren) => {
     // Suppress the drifting ember background on Learn routes — it competes with
@@ -30,12 +29,9 @@ export const InnerLayout = ({ children }: PropsWithChildren) => {
     // Mọi trang khác (dashboard / learn / profile / auth / …) KHÔNG có footer — thầy chốt 2026-06-26.
     const footerPath = pathname ?? ""
     const showFooter = /^\/(?:[a-z]{2})?\/?$/.test(footerPath) || /^\/(?:[a-z]{2}\/)?home\/?$/.test(footerPath)
-    // Global primary sidebar (archetype A) on app pages. Hidden on: landing/home
-    // (marketing, has footer), auth, learn (own left rail), and subject-workspace
-    // detail (own left rail) — so we never stack two rails.
-    const isAuthRoute = footerPath.includes("/authentication")
-    const isSubjectDetail = /^\/(?:[a-z]{2}\/)?subjects\/[^/]+/.test(footerPath)
-    const showAppSidebar = !showFooter && !isAuthRoute && !isLearnRoute && !isSubjectDetail
+    // Header-first shell (2026-07-02): global nav lives in the top bar (HeaderNav).
+    // The left sidebar is reserved for in-context nav — the subject workspace rail
+    // (its own `SubjectWorkspaceShell`), so InnerLayout renders content full-width.
     return (
         <Suspense>
             <NextThemesProvider 
@@ -57,14 +53,7 @@ export const InnerLayout = ({ children }: PropsWithChildren) => {
                             <SocketConnectionStatus />
                             <ModalContainer />
                             <DrawerContainer />
-                            {showAppSidebar ? (
-                                <div className="flex w-full">
-                                    <AppSidebar />
-                                    <div className="min-w-0 flex-1">{children}</div>
-                                </div>
-                            ) : (
-                                <div>{children}</div>
-                            )}
+                            <div>{children}</div>
                             {showFooter ? <Footer /> : null}
                             <CookieConsentBanner />
                             <ToastProvider />

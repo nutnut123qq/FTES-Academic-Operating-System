@@ -41,6 +41,22 @@ Distilled from `starci-navigation.md` + `03-layout-archetypes.md`.
 
 ## Decisions (newest first)
 
+### 2026-07-02 — Header-first shell: global nav → top bar; sidebar = context-only (reverses the entry below)
+- **Scenario:** the global `AppSidebar` (see next entry) showed on every app page while the header sat
+  near-empty. User: sidebar should appear ONLY inside a subject workspace; the header should carry the
+  important nav.
+- **Chose:** move global nav into the top bar. New `Navbar/HeaderNav` = 3 core links (Subjects · Courses ·
+  Community) + one **"Explore" mega-menu** (HeroUI `Popover`, `grid-cols-3`) holding every other domain
+  grouped by section, read from the SAME `useAppNav`. `InnerLayout` renders content full-width; the only
+  left rail left is the subject workspace's own `SubjectWorkspaceShell`. Deleted the orphaned `AppSidebar`.
+- **WHY:** a persistent global rail duplicated the whole nav and ate 16rem on every page; a "space" product
+  (subject-first) reads better as GitHub-style — top bar global, left rail only *inside* a space. `useAppNav`
+  stays the single source (HeaderNav desktop + mobile drawer) so nothing drifts.
+- **Note:** this REVERSES the 2026-07-02 archetype-A decision below (global CollapsibleSidebar as primary
+  nav). Keep the mobile hamburger drawer + notification bell dropdown as-is.
+- **Files:** NEW `Navbar/HeaderNav/index.tsx`; edited `Navbar/index.tsx`, `app/InnerLayout.tsx`; DELETED
+  `features/app-shell/AppSidebar`. OpenSpec `header-first-shell`. tsc/eslint/webpack build green.
+
 ### 2026-07-02 — Global app shell = `CollapsibleSidebar` as PRIMARY nav (archetype A), gated per route
 - **Scenario:** app chrome was still the stripped skeleton — top bar with 3 center links (Home→`/home`
   404 · Courses · Contact→`/contact` 404); Community/Groups/Resources/Profile were all built (200) but

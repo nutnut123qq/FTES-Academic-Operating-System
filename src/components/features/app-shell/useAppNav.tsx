@@ -46,8 +46,8 @@ export interface AppNavGroup {
 
 /**
  * The single source of the app's primary navigation — the built, 200-status
- * domains grouped for the shell. Consumed by BOTH `AppSidebar` (desktop rail) and
- * the Navbar mobile drawer so the two never drift.
+ * domains grouped for the shell. Consumed by the desktop `HeaderNav` (top-bar
+ * links + "Explore" mega-menu) AND the Navbar mobile drawer so they never drift.
  *
  * Paths are built locale-less via `pathConfig().locale()` because `@/i18n/navigation`
  * strips the locale from `usePathname` and re-adds it on `router.push`.

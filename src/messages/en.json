@@ -4239,6 +4239,30 @@
             "intermediate": "Intermediate",
             "advanced": "Advanced"
         },
+        "categories": {
+            "label": "Course categories",
+            "all": "All",
+            "courseCount": "{count} courses"
+        },
+        "browse": {
+            "seeAll": "See all",
+            "shelfPrev": "Scroll back",
+            "shelfNext": "Scroll forward",
+            "sortLabel": "Sort by",
+            "levelLabel": "Level",
+            "sort": {
+                "popular": "Popular",
+                "newest": "New",
+                "rating": "Rating"
+            },
+            "badge": {
+                "bestseller": "Bestseller",
+                "new": "New"
+            },
+            "empty": "No matching courses.",
+            "ratingCount": "({count})",
+            "hours": "{count} hours"
+        },
         "catalog": {
             "title": "Courses",
             "searchPlaceholder": "Search by code or name",

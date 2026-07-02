@@ -31,6 +31,15 @@ Status/difficulty/language chips.
 - **Accent is for ACTION:** metadata chips (topic/tag/skill) = neutral/`--default`, NOT accent (accent on data is noise).
 
 ## Decisions (newest first)
+- **Category quick-nav on the browse catalog** · chose a **hand-rolled ARIA tablist of
+  pill buttons** (`CategoryChipBar`: "All" + icon+name per category, active =
+  `border-accent bg-accent/10 text-accent`, `overflow-x-auto` no-wrap on mobile), NOT
+  HeroUI `Tabs`/`Chip` · **WHY:** chips must be `role="tab"`+`aria-selected` per the
+  spec while acting as a FILTER over shelves (not routed tabs), need horizontal
+  scroll without wrapping, and HeroUI Chip isn't pressable — a pill button row with
+  tablist semantics is the smallest correct shape (mirrors SegmentedControl's button
+  styling language) · course-catalog browse (`features/course/browse/CategoryChipBar`)
+  · 2026-07-02
 
 ### 2026-06-21 — Chip "nổi" = explicit `bg-success/10 text-success` (not `variant="primary"`)
 - **Scenario:** the "Nên xem" recommended chip used `<Chip variant="primary" color="success">` → a SOLID green

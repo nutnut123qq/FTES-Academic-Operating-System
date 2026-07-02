@@ -62,6 +62,14 @@ the new lesson here at the end of the task.
 | Trust / certificate / serious-dev tone | edX, Frontend Masters, freeCodeCamp |
 
 ### Accumulated lessons
+- **Browse-by-category catalog = hero → chip bar → facet+sort → per-category shelves**
+  · Coursera/Udemy do it well · takeaway for the house: below a featured hero, render one
+  horizontal scroll-snap shelf per non-empty category (header = icon + name + "Xem tất cả"
+  → category landing page), a chip bar for quick category narrowing, and a facet bar
+  (search + level + sort) that flips the shelves into a flat grid when active — search must
+  span ALL categories · what NOT to copy: autoplaying shelves (only the hero autoplays;
+  shelves are manual swipe only) and Udemy's aggressive badge noise (max ONE badge per
+  card) · source: coursera.org/browse, udemy.com/topic pages · 2026-07-02
 - **Sticky enroll "buy box" on a course detail page** · Coursera/Udemy do it well · takeaway
   for StarCi: on a course *sales* page, keep price + CTA + "what's included" in a sticky right
   rail (`col-span-2`) while the pitch (hero, what-you'll-learn, syllabus, reviews, instructor)

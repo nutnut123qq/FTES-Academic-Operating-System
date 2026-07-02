@@ -24,6 +24,18 @@ Course/pricing/media/continue cards — the dominant content unit.
 - **"Current plan" indicator = full-width banner, NOT a small chip:** `flex w-full justify-center … bg-accent/10` (or `bg-success/10`) + `text-success` medium; banner radius matches the parent card radius (e.g. `rounded-3xl`). Every plan in a comparison (incl. free/0đ) must state real specs (credit/limit).
 
 ## Decisions (newest first)
+- **Catalog browse course card (shelf + grid + category page)** · chose a **hand-rolled
+  bordered panel that IS a `Link`** (`rounded-large border border-separator overflow-hidden
+  hover:bg-default/40`, cover 16:9 + gradient fallback, badge chip overlay, rating row,
+  level chip + duration, `PriceTag` sm), named **`CatalogCourseCard`**
+  (`features/course/browse/CatalogCourseCard`) · **WHY:** (a) the course feature family
+  hand-rolls bordered panels (same idiom as the old catalog cards + the sticky enroll
+  card) and this dodges the unverified HeroUI `Card.*` v3 API; (b) whole-card link IS
+  correct here despite the "no whole-card-press with price/chips" gotcha — the spec
+  requires the card to link to detail (Coursera/Udemy convention) and the only inner
+  action (`SaveButton`) already swallows its press; (c) named `CatalogCourseCard` (mock
+  `Course`-bound) to never collide with `blocks/cards/CourseCard` (`CourseEntity`-bound)
+  · course-catalog browse · 2026-07-02
 - **Sticky enroll card on a course sales page** · chose a **plain bordered panel**
   (`rounded-large border border-separator p-4` + `md:sticky md:top-20`), NOT `LabeledCard`
   / HeroUI `Card` · **WHY:** it's the right rail of a two-column sales layout — a

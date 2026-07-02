@@ -30,6 +30,7 @@ const FEATURED_ROWS: Array<FeaturedCourseMockRow> = [
         level: "basic",
         credits: 3,
         lessons: 24,
+        category: "programming",
         priceVnd: 1_200_000,
         coverUrl: "https://picsum.photos/seed/prf192/1200/500",
         pitch: {
@@ -44,6 +45,7 @@ const FEATURED_ROWS: Array<FeaturedCourseMockRow> = [
         level: "intermediate",
         credits: 3,
         lessons: 30,
+        category: "programming",
         priceVnd: 1_500_000,
         coverUrl: "https://picsum.photos/seed/csd201/1200/500",
         pitch: {
@@ -58,6 +60,7 @@ const FEATURED_ROWS: Array<FeaturedCourseMockRow> = [
         level: "intermediate",
         credits: 3,
         lessons: 28,
+        category: "programming",
         priceVnd: 1_500_000,
         coverUrl: "https://picsum.photos/seed/prj301/1200/500",
         pitch: {
@@ -72,6 +75,7 @@ const FEATURED_ROWS: Array<FeaturedCourseMockRow> = [
         level: "advanced",
         credits: 4,
         lessons: 16,
+        category: "programming",
         priceVnd: 1_800_000,
         coverUrl: "https://picsum.photos/seed/swp391/1200/500",
         pitch: {

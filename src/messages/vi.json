@@ -4239,6 +4239,30 @@
             "intermediate": "Trung cấp",
             "advanced": "Nâng cao"
         },
+        "categories": {
+            "label": "Danh mục khóa học",
+            "all": "Tất cả",
+            "courseCount": "{count} khóa học"
+        },
+        "browse": {
+            "seeAll": "Xem tất cả",
+            "shelfPrev": "Cuộn về trước",
+            "shelfNext": "Cuộn tiếp",
+            "sortLabel": "Sắp xếp",
+            "levelLabel": "Trình độ",
+            "sort": {
+                "popular": "Phổ biến",
+                "newest": "Mới",
+                "rating": "Đánh giá"
+            },
+            "badge": {
+                "bestseller": "Bán chạy",
+                "new": "Mới"
+            },
+            "empty": "Không có khóa học phù hợp.",
+            "ratingCount": "({count})",
+            "hours": "{count} giờ"
+        },
         "catalog": {
             "title": "Khóa học",
             "searchPlaceholder": "Tìm theo mã hoặc tên môn",

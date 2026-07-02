@@ -17,9 +17,16 @@ export const AUTOPLAY_INTERVAL_MS = 5_000
  * `prefers-reduced-motion` or with fewer than 2 slides (reduced motion also makes
  * programmatic scrolls instant instead of smooth).
  *
+ * Slides may be full-track-width (hero) or fixed-width cards (category shelves) —
+ * the active index is derived from the child offset nearest the scroll position,
+ * so both work. Pass `{ autoplay: false }` for manual-only tracks (shelves never
+ * auto-advance; only the hero autoplays).
+ *
  * @param slideCount - Number of slides currently in the track.
+ * @param options - Optional behaviour flags (`autoplay` defaults to `true`).
  */
-export const useCarousel = (slideCount: number) => {
+export const useCarousel = (slideCount: number, options?: { autoplay?: boolean }) => {
+    const autoplayEnabled = options?.autoplay ?? true
     const trackRef = useRef<HTMLDivElement | null>(null)
     const [activeIndex, setActiveIndex] = useState(0)
     const [isHovered, setIsHovered] = useState(false)
@@ -44,18 +51,37 @@ export const useCarousel = (slideCount: number) => {
         [slideCount, prefersReducedMotion],
     )
 
-    const next = useCallback(() => scrollToIndex(activeIndex + 1), [scrollToIndex, activeIndex])
+    // next wraps to the start once the track is scrolled to its very end — with
+    // card-width slides the LAST index is never the nearest-to-scrollLeft child
+    // (the viewport shows several cards), so the plain index wrap can't fire there
+    const next = useCallback(() => {
+        const track = trackRef.current
+        if (track && Math.ceil(track.scrollLeft + track.clientWidth) >= track.scrollWidth && activeIndex > 0) {
+            scrollToIndex(0)
+            return
+        }
+        scrollToIndex(activeIndex + 1)
+    }, [scrollToIndex, activeIndex])
     const prev = useCallback(() => scrollToIndex(activeIndex - 1), [scrollToIndex, activeIndex])
 
-    // active index ← scroll position (slides are full-track-width, so index =
-    // scrollLeft / track width; also keeps dots in sync after native swipes)
+    // active index ← scroll position: the child whose left edge is nearest to
+    // scrollLeft (equals scrollLeft / width for full-width hero slides; also keeps
+    // dots in sync after native swipes)
     useEffect(() => {
         const track = trackRef.current
         if (!track || slideCount === 0) return
         const onScroll = () => {
-            if (track.clientWidth === 0) return
-            const index = Math.round(track.scrollLeft / track.clientWidth)
-            setActiveIndex(Math.min(Math.max(index, 0), slideCount - 1))
+            let nearest = 0
+            let nearestDistance = Number.POSITIVE_INFINITY
+            for (let index = 0; index < track.children.length; index += 1) {
+                const child = track.children.item(index) as HTMLElement
+                const distance = Math.abs(child.offsetLeft - track.scrollLeft)
+                if (distance < nearestDistance) {
+                    nearestDistance = distance
+                    nearest = index
+                }
+            }
+            setActiveIndex(Math.min(nearest, slideCount - 1))
         }
         track.addEventListener("scroll", onScroll, { passive: true })
         return () => track.removeEventListener("scroll", onScroll)
@@ -69,6 +95,7 @@ export const useCarousel = (slideCount: number) => {
     }, [])
 
     const isAutoplaying =
+        autoplayEnabled &&
         slideCount >= 2 &&
         !prefersReducedMotion &&
         !isHovered &&

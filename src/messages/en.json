@@ -1134,7 +1134,64 @@
                 "failed": "Failed"
             }
         },
-        "back": "Back to lesson"
+        "back": "Back to lesson",
+        "uiuxEditor": {
+            "codeTabs": {
+                "html": "HTML",
+                "css": "CSS",
+                "js": "JS"
+            },
+            "paneTabs": {
+                "editor": "Code",
+                "preview": "Preview",
+                "brief": "Brief"
+            },
+            "paneTabsLabel": "Switch workspace pane",
+            "editorLabel": "Code editor",
+            "fallbackHint": "Couldn't load the Monaco editor — type your {language} in the box below.",
+            "reset": "Reset",
+            "format": "Format",
+            "draftSaved": "Draft saved",
+            "submit": "Submit",
+            "submitting": "Grading…",
+            "result": {
+                "title": "Result",
+                "score": "{score}/100 pts",
+                "passed": "Passed",
+                "failed": "Not passed",
+                "mockNote": "Mock scoring computed in the browser — official system grading is coming later."
+            },
+            "preview": {
+                "title": "Preview",
+                "iframeTitle": "Live preview of your submission"
+            },
+            "target": {
+                "title": "Target design",
+                "alt": "Target design image for this challenge",
+                "checklist": "Requirement checklist",
+                "checked": "{checked}/{total} requirements"
+            },
+            "brief": {
+                "requirements": "Requirements",
+                "steps": "Guided steps",
+                "hints": "Hints"
+            },
+            "gate": {
+                "title": "Unlock this challenge",
+                "description": "Enroll in the course containing this challenge to start building. You can still view the brief and starter code.",
+                "cta": "Enroll in course"
+            },
+            "comingSoon": {
+                "title": "Coming soon",
+                "description": "The solver for this challenge type is under construction."
+            },
+            "state": {
+                "errorTitle": "Couldn't load the challenge",
+                "retry": "Try again",
+                "notFound": "This challenge could not be found."
+            },
+            "backToCatalog": "Back to challenges"
+        }
     },
     "submissionAttempts": {
         "title": "Submission attempts",

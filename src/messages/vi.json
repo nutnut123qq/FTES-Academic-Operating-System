@@ -1143,7 +1143,64 @@
                 "failed": "Thất bại"
             }
         },
-        "back": "Quay lại bài học"
+        "back": "Quay lại bài học",
+        "uiuxEditor": {
+            "codeTabs": {
+                "html": "HTML",
+                "css": "CSS",
+                "js": "JS"
+            },
+            "paneTabs": {
+                "editor": "Soạn",
+                "preview": "Xem trước",
+                "brief": "Đề bài"
+            },
+            "paneTabsLabel": "Chuyển vùng làm việc",
+            "editorLabel": "Trình soạn mã",
+            "fallbackHint": "Không tải được trình soạn Monaco — nhập {language} vào ô bên dưới.",
+            "reset": "Đặt lại",
+            "format": "Định dạng",
+            "draftSaved": "Đã lưu nháp",
+            "submit": "Nộp bài",
+            "submitting": "Đang chấm…",
+            "result": {
+                "title": "Kết quả",
+                "score": "{score}/100 điểm",
+                "passed": "Đạt",
+                "failed": "Chưa đạt",
+                "mockNote": "Chấm điểm mô phỏng tại trình duyệt — chấm điểm chính thức từ hệ thống sẽ có sau."
+            },
+            "preview": {
+                "title": "Xem trước",
+                "iframeTitle": "Xem trước bài làm của bạn"
+            },
+            "target": {
+                "title": "Thiết kế mục tiêu",
+                "alt": "Ảnh thiết kế mục tiêu của thử thách",
+                "checklist": "Danh sách yêu cầu",
+                "checked": "{checked}/{total} yêu cầu"
+            },
+            "brief": {
+                "requirements": "Yêu cầu",
+                "steps": "Các bước hướng dẫn",
+                "hints": "Gợi ý"
+            },
+            "gate": {
+                "title": "Mở khoá thử thách này",
+                "description": "Đăng ký khoá học chứa thử thách để bắt đầu dựng UI. Bạn vẫn xem được đề bài và mã khởi đầu.",
+                "cta": "Đăng ký khoá học"
+            },
+            "comingSoon": {
+                "title": "Sắp ra mắt",
+                "description": "Trình giải cho loại thử thách này đang được xây dựng."
+            },
+            "state": {
+                "errorTitle": "Không tải được thử thách",
+                "retry": "Thử lại",
+                "notFound": "Không tìm thấy thử thách này."
+            },
+            "backToCatalog": "Về danh sách thử thách"
+        }
     },
     "submissionAttempts": {
         "title": "Lịch sử nộp bài",

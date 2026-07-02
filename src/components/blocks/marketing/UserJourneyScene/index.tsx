@@ -275,19 +275,36 @@ const FlowPath = ({ stations, palette, reduce }: { stations: JourneyStationNode[
     )
 }
 
-/** Tween the camera to look at the active station (demand frameloop → invalidate). */
+/** Tween the camera to look at the active station (demand frameloop → invalidate).
+ *  A manual orbit (OrbitControls onStart) pauses the rig — but only until the NEXT
+ *  stage change: any change of the active station (stepper click or auto-advance)
+ *  re-takes the camera and tweens ONE smooth move from wherever the visitor left it
+ *  to the new station's canonical pose. The orbit pivot (controls target) is lerped
+ *  along too, so the next drag orbits around the active station instead of snapping. */
 const CameraRig = ({ target, offset, tookOver }: { target: THREE.Vector3; offset: THREE.Vector3; tookOver: React.RefObject<boolean> }) => {
-    const { camera } = useThree()
+    const { camera, controls } = useThree()
     const desired = React.useMemo(() => target.clone().add(offset), [target, offset])
     useFrame(() => {
-        // once the visitor grabs the scene (OrbitControls onStart), hand the camera
-        // over to them completely — no snap-back fight with the auto-tween.
+        // the visitor is driving (grabbed since the last stage change) → hands off.
         if (tookOver.current) return
         camera.position.lerp(desired, 0.08)
-        camera.lookAt(target)
-        if (camera.position.distanceToSquared(desired) > 0.0004) invalidate()
+        const orbit = controls as unknown as { target: THREE.Vector3; update: () => void } | null
+        if (orbit) {
+            // keep ONE source of truth for the look-at: move the controls' own pivot
+            // (update() applies the lookAt) so rig and controls never fight.
+            orbit.target.lerp(target, 0.08)
+            orbit.update()
+        } else {
+            camera.lookAt(target)
+        }
+        const remaining = camera.position.distanceToSquared(desired) + (orbit ? orbit.target.distanceToSquared(target) : 0)
+        if (remaining > 0.0004) invalidate()
     })
-    React.useEffect(() => { if (!tookOver.current) invalidate() }, [desired, tookOver])
+    // stage change (stepper click OR auto-advance) → re-take the camera from the visitor
+    React.useEffect(() => {
+        tookOver.current = false
+        invalidate()
+    }, [desired, tookOver])
     return null
 }
 
@@ -305,7 +322,8 @@ const Scene = ({
     const active = DATA.stations[Math.max(0, Math.min(activeIndex, DATA.stations.length - 1))]
     const target = React.useMemo(() => new THREE.Vector3(...active.pos), [active])
     const offset = React.useMemo(() => new THREE.Vector3(...DATA.cameraOffset), [])
-    // once true, the visitor is driving the camera (OrbitControls) — the rig backs off.
+    // true while the visitor drives the camera (OrbitControls grab) — the rig backs
+    // off until the next stage change re-takes it (see CameraRig).
     const userTookOver = React.useRef(false)
     return (
         <group>

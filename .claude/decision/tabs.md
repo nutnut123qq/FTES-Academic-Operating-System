@@ -24,6 +24,15 @@ Distilled from `starci-navigation.md` (shell shaping) + the `TabsCard` / `Extend
 - Gap between the two groups = `justify-between` + `gap-3` (rhythm-3 standard; gap-1.5 is BANNED). Icon+label inside one tab = `gap-2`.
 - Split roles by semantics (tabs-vs-segmented): LEFT group changes the content; RIGHT group (e.g. language TS/Java/C#/Go) keeps the same content but changes how it's presented. Both are "tab groups" in data, but presented merged into one toolbar instead of two tiers (avoid "multiple tab levels").
 
+## Decisions (newest first)
+- **Single in-flow tab strip switching content panels** (learn player: Bài giảng / Tài
+  liệu / Ghi chú) · chose **`ExtendedTabs`** directly (not `TabsCard`) with the HeroUI
+  compound inside (`Tabs.ListContainer > Tabs.List > Tabs.Tab id=…`), panels rendered by
+  the feature's local `selectedKey` · **WHY:** `TabsCard` is for a toolbar of one-or-two
+  tab GROUPS; a lone content-switcher is just the underline strip — `ExtendedTabs` bakes
+  the secondary/underline skin, the feature owns the panel switch. · course-learn-player ·
+  2026-07-02
+
 **Page chrome lives on the feature wrapper, not in the block.**
 - The page's own chrome (full-width `border-b` + `max-w-3xl` cap) goes on the feature wrapper (e.g. `ContentTabBar`), NOT inside `TabsCard` → the block stays reusable elsewhere. `.extended-tabs` deliberately has no baseline so the wrapper owns the edge-to-edge divider.
 - Reference layout: GitHub file header / shadcn preview (tabs left + control right on one bar); language switcher: Stripe / Mintlify (global + persistent).

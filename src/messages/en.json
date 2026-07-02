@@ -3748,6 +3748,26 @@
             "previous": "Previous",
             "next": "Next"
         },
+        "player": {
+            "contents": "Contents",
+            "count": "{done}/{total} lessons",
+            "searchLessons": "Search lessons",
+            "noMatch": "No matching lessons",
+            "empty": "No content yet",
+            "error": "Couldn't load the content",
+            "download": "Download",
+            "notesPlaceholder": "Your notes will appear here.",
+            "markComplete": "Mark as complete",
+            "completed": "Completed",
+            "challengeTitle": "Chapter done — try the challenge",
+            "challengeMeta": "{count} questions",
+            "challengeCta": "Start challenge",
+            "tabs": {
+                "overview": "Lecture",
+                "docs": "Documents",
+                "notes": "Notes"
+            }
+        },
         "quiz": {
             "title": "Quiz",
             "submit": "Submit",

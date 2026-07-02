@@ -1677,6 +1677,231 @@
                 "disabled": "Tắt",
                 "total": "Tổng"
             }
+        },
+        "shell": {
+            "title": "Khu quản trị",
+            "navLabel": "Điều hướng khu quản trị",
+            "openNav": "Mở menu quản trị",
+            "closeNav": "Đóng menu quản trị",
+            "collapse": "Thu gọn thanh điều hướng",
+            "expand": "Mở rộng thanh điều hướng",
+            "breadcrumbRoot": "Quản trị",
+            "groups": {
+                "operate": "Vận hành",
+                "content": "Nội dung",
+                "system": "Hệ thống"
+            },
+            "sections": {
+                "dashboard": "Tổng quan",
+                "users": "Người dùng",
+                "moderation": "Kiểm duyệt",
+                "courses": "Khóa học",
+                "resources": "Tài nguyên",
+                "communities": "Cộng đồng",
+                "events": "Sự kiện",
+                "roles": "Vai trò & quyền",
+                "config": "Cấu hình hệ thống",
+                "tools": "Công cụ"
+            }
+        },
+        "forbidden": {
+            "title": "Không đủ quyền truy cập",
+            "description": "Vai trò của bạn không được phép vào khu vực này.",
+            "backToAllowed": "Về khu vực được phép"
+        },
+        "confirm": {
+            "cancel": "Hủy",
+            "confirm": "Xác nhận"
+        },
+        "roles": {
+            "member": "Thành viên",
+            "moderator": "Điều phối viên",
+            "admin": "Quản trị viên",
+            "superAdmin": "Quản trị viên cấp cao"
+        },
+        "dashboard": {
+            "title": "Tổng quan",
+            "description": "Số liệu vận hành toàn hệ thống.",
+            "cards": {
+                "users": "Tổng người dùng",
+                "courses": "Khóa học",
+                "resources": "Tài nguyên",
+                "communities": "Cộng đồng",
+                "events": "Sự kiện",
+                "pendingReports": "Báo cáo chờ xử lý"
+            },
+            "goTo": "Đi tới {section}",
+            "error": "Không tải được số liệu",
+            "retry": "Thử lại"
+        },
+        "users": {
+            "title": "Quản lý người dùng",
+            "description": "Tìm kiếm, xem và quản lý tài khoản người dùng.",
+            "searchPlaceholder": "Tìm theo tên hoặc email...",
+            "filterRole": "Vai trò",
+            "filterStatus": "Trạng thái",
+            "allRoles": "Mọi vai trò",
+            "allStatuses": "Mọi trạng thái",
+            "caption": "Danh sách người dùng",
+            "columns": {
+                "name": "Tên",
+                "email": "Email",
+                "role": "Vai trò",
+                "status": "Trạng thái"
+            },
+            "status": {
+                "active": "Hoạt động",
+                "suspended": "Tạm khóa",
+                "banned": "Cấm"
+            },
+            "empty": {
+                "title": "Không có người dùng phù hợp",
+                "description": "Thử đổi từ khóa hoặc bộ lọc."
+            },
+            "error": "Không tải được danh sách người dùng",
+            "retry": "Thử lại",
+            "viewDetail": "Xem chi tiết {name}",
+            "detail": {
+                "title": "Chi tiết người dùng",
+                "email": "Email",
+                "role": "Vai trò",
+                "status": "Trạng thái",
+                "joinedAt": "Ngày tham gia",
+                "lastActiveAt": "Hoạt động gần nhất",
+                "notFound": "Không tìm thấy người dùng",
+                "backToList": "Về danh sách"
+            },
+            "actions": {
+                "label": "Hành động",
+                "changeRole": "Đổi vai trò",
+                "changeRoleTo": "Đổi thành {role}",
+                "suspend": "Tạm khóa",
+                "ban": "Cấm vĩnh viễn",
+                "resetPassword": "Đặt lại mật khẩu"
+            },
+            "confirm": {
+                "changeRoleTitle": "Đổi vai trò?",
+                "changeRoleDescription": "{name} sẽ chuyển sang vai trò {role} và nhận toàn bộ quyền của vai trò đó.",
+                "suspendTitle": "Tạm khóa tài khoản?",
+                "suspendDescription": "{name} sẽ không thể đăng nhập cho tới khi được mở khóa.",
+                "banTitle": "Cấm tài khoản?",
+                "banDescription": "{name} sẽ bị chặn vĩnh viễn khỏi hệ thống.",
+                "resetTitle": "Đặt lại mật khẩu?",
+                "resetDescription": "Một liên kết đặt lại mật khẩu sẽ được gửi tới {email}."
+            },
+            "toast": {
+                "roleChanged": "Đã đổi vai trò",
+                "suspended": "Đã tạm khóa tài khoản",
+                "banned": "Đã cấm tài khoản",
+                "resetSent": "Đã gửi liên kết đặt lại mật khẩu",
+                "failed": "Thao tác thất bại — trạng thái được giữ nguyên"
+            }
+        },
+        "moderation": {
+            "title": "Kiểm duyệt nội dung",
+            "description": "Hàng đợi báo cáo toàn hệ thống và nhật ký kiểm duyệt.",
+            "queueTitle": "Báo cáo chờ xử lý",
+            "logTitle": "Nhật ký kiểm duyệt",
+            "target": {
+                "post": "Bài viết",
+                "comment": "Bình luận",
+                "resource": "Tài nguyên"
+            },
+            "reason": {
+                "spam": "Spam",
+                "harassment": "Quấy rối",
+                "copyright": "Vi phạm bản quyền",
+                "offTopic": "Lạc đề",
+                "inappropriate": "Không phù hợp"
+            },
+            "reportedBy": "Báo cáo bởi {name}",
+            "actions": {
+                "approve": "Duyệt",
+                "reject": "Bỏ qua",
+                "remove": "Gỡ nội dung"
+            },
+            "empty": {
+                "title": "Hàng đợi trống",
+                "description": "Không còn báo cáo nào chờ xử lý."
+            },
+            "logEmpty": "Chưa có hành động kiểm duyệt nào",
+            "error": "Không tải được hàng đợi báo cáo",
+            "retry": "Thử lại",
+            "confirmRemove": {
+                "title": "Gỡ nội dung này?",
+                "description": "Nội dung bị gỡ sẽ không còn hiển thị với người dùng. Hành động được ghi vào nhật ký kiểm duyệt."
+            },
+            "toast": {
+                "approved": "Đã duyệt báo cáo",
+                "rejected": "Đã bỏ qua báo cáo",
+                "removed": "Đã gỡ nội dung",
+                "failed": "Thao tác thất bại — báo cáo vẫn ở hàng đợi"
+            },
+            "logEntry": {
+                "approve": "đã duyệt",
+                "reject": "đã bỏ qua",
+                "remove": "đã gỡ"
+            }
+        },
+        "cms": {
+            "domains": {
+                "courses": {
+                    "title": "Quản lý khóa học",
+                    "description": "Trạng thái đăng, ghim và nổi bật các khóa học."
+                },
+                "resources": {
+                    "title": "Quản lý tài nguyên",
+                    "description": "Trạng thái đăng, ghim và nổi bật tài nguyên học tập."
+                },
+                "communities": {
+                    "title": "Quản lý cộng đồng",
+                    "description": "Trạng thái đăng, ghim và nổi bật cộng đồng/nhóm."
+                },
+                "events": {
+                    "title": "Quản lý sự kiện",
+                    "description": "Trạng thái đăng, ghim và nổi bật sự kiện."
+                }
+            },
+            "caption": "Danh sách nội dung",
+            "columns": {
+                "title": "Tiêu đề",
+                "status": "Trạng thái",
+                "flags": "Cờ",
+                "actions": "Hành động"
+            },
+            "status": {
+                "draft": "Nháp",
+                "published": "Đã đăng",
+                "archived": "Lưu trữ"
+            },
+            "actions": {
+                "statusLabel": "Đổi trạng thái",
+                "publish": "Đăng",
+                "unpublish": "Về nháp",
+                "archive": "Lưu trữ",
+                "feature": "Nổi bật",
+                "unfeature": "Bỏ nổi bật",
+                "pin": "Ghim",
+                "unpin": "Bỏ ghim",
+                "viewDetail": "Xem trang chi tiết"
+            },
+            "featured": "Nổi bật",
+            "pinned": "Đã ghim",
+            "empty": {
+                "title": "Chưa có nội dung",
+                "description": "Chưa có mục nào trong khu vực này."
+            },
+            "error": "Không tải được danh sách",
+            "retry": "Thử lại",
+            "confirmArchive": {
+                "title": "Lưu trữ mục này?",
+                "description": "“{title}” sẽ ẩn khỏi người dùng cho tới khi được đăng lại."
+            },
+            "toast": {
+                "statusChanged": "Đã cập nhật trạng thái",
+                "updated": "Đã cập nhật",
+                "failed": "Thao tác thất bại — trạng thái được giữ nguyên"
+            }
         }
     },
     "aiQuota": {
@@ -2690,14 +2915,38 @@
             "teacher": "Cho giảng viên"
         },
         "tools": {
-            "tutor": { "name": "Gia sư AI", "desc": "Hỏi bất cứ điều gì và nhận lời giải từng bước." },
-            "planner": { "name": "Lập kế hoạch học", "desc": "Tạo lịch học cá nhân hóa phù hợp với mục tiêu của bạn." },
-            "summary": { "name": "Tóm tắt thông minh", "desc": "Biến bài học dài thành ghi chú súc tích, sẵn sàng cho kỳ thi." },
-            "flashcards": { "name": "Thẻ ghi nhớ", "desc": "Tự động tạo thẻ ghi nhớ từ bất kỳ bài học nào." },
-            "quiz": { "name": "Tạo câu hỏi", "desc": "Tạo bài kiểm tra luyện tập để ôn lại kiến thức." },
-            "debug": { "name": "Gỡ lỗi mã", "desc": "Dán mã của bạn và nhận cách sửa lỗi kèm giải thích." },
-            "cvReview": { "name": "Đánh giá CV", "desc": "Nhận nhận xét từ AI để hoàn thiện hồ sơ xin việc." },
-            "mentor": { "name": "Trợ lý giảng dạy", "desc": "Soạn giáo án và tiêu chí chấm điểm trong vài phút." }
+            "tutor": {
+                "name": "Gia sư AI",
+                "desc": "Hỏi bất cứ điều gì và nhận lời giải từng bước."
+            },
+            "planner": {
+                "name": "Lập kế hoạch học",
+                "desc": "Tạo lịch học cá nhân hóa phù hợp với mục tiêu của bạn."
+            },
+            "summary": {
+                "name": "Tóm tắt thông minh",
+                "desc": "Biến bài học dài thành ghi chú súc tích, sẵn sàng cho kỳ thi."
+            },
+            "flashcards": {
+                "name": "Thẻ ghi nhớ",
+                "desc": "Tự động tạo thẻ ghi nhớ từ bất kỳ bài học nào."
+            },
+            "quiz": {
+                "name": "Tạo câu hỏi",
+                "desc": "Tạo bài kiểm tra luyện tập để ôn lại kiến thức."
+            },
+            "debug": {
+                "name": "Gỡ lỗi mã",
+                "desc": "Dán mã của bạn và nhận cách sửa lỗi kèm giải thích."
+            },
+            "cvReview": {
+                "name": "Đánh giá CV",
+                "desc": "Nhận nhận xét từ AI để hoàn thiện hồ sơ xin việc."
+            },
+            "mentor": {
+                "name": "Trợ lý giảng dạy",
+                "desc": "Soạn giáo án và tiêu chí chấm điểm trong vài phút."
+            }
         }
     },
     "notificationCenter": {
@@ -2886,9 +3135,15 @@
             "challenge": "Xong challenge"
         },
         "milestones": {
-            "weekOfFire": { "name": "Tuần Lửa" },
-            "monthOfGrit": { "name": "Tháng Bền Bỉ" },
-            "hundredDays": { "name": "Trăm Ngày Lửa" }
+            "weekOfFire": {
+                "name": "Tuần Lửa"
+            },
+            "monthOfGrit": {
+                "name": "Tháng Bền Bỉ"
+            },
+            "hundredDays": {
+                "name": "Trăm Ngày Lửa"
+            }
         },
         "goals": {
             "title": "Mục tiêu",
@@ -3805,25 +4060,6 @@
         "markAllRead": "Đánh dấu tất cả đã đọc",
         "retry": "Thử lại",
         "title": "Thông báo",
-        "mutedHint": "Bạn đã tắt toàn bộ thông báo.",
-        "preferences": {
-            "title": "Tùy chọn thông báo",
-            "subtitle": "Chọn loại thông báo bạn muốn nhận.",
-            "muteAll": "Tắt tất cả thông báo",
-            "muteAllHint": "Ẩn mọi thông báo và huy hiệu chưa đọc.",
-            "browserPush": "Thông báo trên trình duyệt",
-            "browserPushComingSoon": "Sắp ra mắt — hiện chưa khả dụng.",
-            "types": {
-                "system": "Hệ thống",
-                "challengeGraded": "Chấm điểm thử thách",
-                "codingGraded": "Chấm điểm bài code",
-                "milestoneGraded": "Chấm điểm cột mốc",
-                "newFollower": "Người theo dõi mới",
-                "commentReply": "Phản hồi bình luận",
-                "subscriptionGranted": "Kích hoạt gói đăng ký",
-                "announcement": "Thông báo chung"
-            }
-        },
         "mutedHint": "Bạn đã tắt toàn bộ thông báo.",
         "preferences": {
             "title": "Tùy chọn thông báo",

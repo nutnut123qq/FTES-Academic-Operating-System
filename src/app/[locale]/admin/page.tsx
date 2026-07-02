@@ -1,11 +1,7 @@
-"use client"
 import React from "react"
-import { AdminLogin } from "@/components/layouts/admin/AdminLogin"
+import { AdminDashboard } from "@/components/features/admin/AdminDashboard"
 
-const Page = () => {
-    return (
-        <AdminLogin />
-    )
-}
+/** `/admin` — console dashboard overview (guests get the login surface via the layout gate). */
+const Page = () => <AdminDashboard />
 
 export default Page

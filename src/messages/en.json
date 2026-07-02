@@ -1668,6 +1668,231 @@
                 "disabled": "Disabled",
                 "total": "Total"
             }
+        },
+        "shell": {
+            "title": "Admin console",
+            "navLabel": "Admin console navigation",
+            "openNav": "Open admin menu",
+            "closeNav": "Close admin menu",
+            "collapse": "Collapse navigation",
+            "expand": "Expand navigation",
+            "breadcrumbRoot": "Admin",
+            "groups": {
+                "operate": "Operations",
+                "content": "Content",
+                "system": "System"
+            },
+            "sections": {
+                "dashboard": "Overview",
+                "users": "Users",
+                "moderation": "Moderation",
+                "courses": "Courses",
+                "resources": "Resources",
+                "communities": "Communities",
+                "events": "Events",
+                "roles": "Roles & permissions",
+                "config": "System configuration",
+                "tools": "Tools"
+            }
+        },
+        "forbidden": {
+            "title": "Access not permitted",
+            "description": "Your role does not have access to this area.",
+            "backToAllowed": "Back to a permitted section"
+        },
+        "confirm": {
+            "cancel": "Cancel",
+            "confirm": "Confirm"
+        },
+        "roles": {
+            "member": "Member",
+            "moderator": "Moderator",
+            "admin": "Admin",
+            "superAdmin": "Super Admin"
+        },
+        "dashboard": {
+            "title": "Overview",
+            "description": "System-wide operational metrics.",
+            "cards": {
+                "users": "Total users",
+                "courses": "Courses",
+                "resources": "Resources",
+                "communities": "Communities",
+                "events": "Events",
+                "pendingReports": "Pending reports"
+            },
+            "goTo": "Go to {section}",
+            "error": "Could not load metrics",
+            "retry": "Retry"
+        },
+        "users": {
+            "title": "User management",
+            "description": "Search, inspect, and manage user accounts.",
+            "searchPlaceholder": "Search by name or email...",
+            "filterRole": "Role",
+            "filterStatus": "Status",
+            "allRoles": "All roles",
+            "allStatuses": "All statuses",
+            "caption": "User list",
+            "columns": {
+                "name": "Name",
+                "email": "Email",
+                "role": "Role",
+                "status": "Status"
+            },
+            "status": {
+                "active": "Active",
+                "suspended": "Suspended",
+                "banned": "Banned"
+            },
+            "empty": {
+                "title": "No matching users",
+                "description": "Try a different query or filter."
+            },
+            "error": "Could not load the user list",
+            "retry": "Retry",
+            "viewDetail": "View details for {name}",
+            "detail": {
+                "title": "User detail",
+                "email": "Email",
+                "role": "Role",
+                "status": "Status",
+                "joinedAt": "Joined",
+                "lastActiveAt": "Last active",
+                "notFound": "User not found",
+                "backToList": "Back to list"
+            },
+            "actions": {
+                "label": "Actions",
+                "changeRole": "Change role",
+                "changeRoleTo": "Change to {role}",
+                "suspend": "Suspend",
+                "ban": "Ban permanently",
+                "resetPassword": "Reset password"
+            },
+            "confirm": {
+                "changeRoleTitle": "Change role?",
+                "changeRoleDescription": "{name} will become {role} and receive all permissions of that role.",
+                "suspendTitle": "Suspend this account?",
+                "suspendDescription": "{name} will not be able to sign in until unsuspended.",
+                "banTitle": "Ban this account?",
+                "banDescription": "{name} will be permanently blocked from the system.",
+                "resetTitle": "Reset password?",
+                "resetDescription": "A password-reset link will be sent to {email}."
+            },
+            "toast": {
+                "roleChanged": "Role updated",
+                "suspended": "Account suspended",
+                "banned": "Account banned",
+                "resetSent": "Password-reset link sent",
+                "failed": "Action failed — previous state retained"
+            }
+        },
+        "moderation": {
+            "title": "Content moderation",
+            "description": "System-wide report queue and moderation log.",
+            "queueTitle": "Pending reports",
+            "logTitle": "Moderation log",
+            "target": {
+                "post": "Post",
+                "comment": "Comment",
+                "resource": "Resource"
+            },
+            "reason": {
+                "spam": "Spam",
+                "harassment": "Harassment",
+                "copyright": "Copyright violation",
+                "offTopic": "Off topic",
+                "inappropriate": "Inappropriate"
+            },
+            "reportedBy": "Reported by {name}",
+            "actions": {
+                "approve": "Approve",
+                "reject": "Dismiss",
+                "remove": "Remove content"
+            },
+            "empty": {
+                "title": "Queue is empty",
+                "description": "No reports are waiting for review."
+            },
+            "logEmpty": "No moderation actions yet",
+            "error": "Could not load the report queue",
+            "retry": "Retry",
+            "confirmRemove": {
+                "title": "Remove this content?",
+                "description": "Removed content is hidden from users. The action is recorded in the moderation log."
+            },
+            "toast": {
+                "approved": "Report approved",
+                "rejected": "Report dismissed",
+                "removed": "Content removed",
+                "failed": "Action failed — the report stays in the queue"
+            },
+            "logEntry": {
+                "approve": "approved",
+                "reject": "dismissed",
+                "remove": "removed"
+            }
+        },
+        "cms": {
+            "domains": {
+                "courses": {
+                    "title": "Course management",
+                    "description": "Publication status, pin, and feature for courses."
+                },
+                "resources": {
+                    "title": "Resource management",
+                    "description": "Publication status, pin, and feature for learning resources."
+                },
+                "communities": {
+                    "title": "Community management",
+                    "description": "Publication status, pin, and feature for communities/groups."
+                },
+                "events": {
+                    "title": "Event management",
+                    "description": "Publication status, pin, and feature for events."
+                }
+            },
+            "caption": "Content list",
+            "columns": {
+                "title": "Title",
+                "status": "Status",
+                "flags": "Flags",
+                "actions": "Actions"
+            },
+            "status": {
+                "draft": "Draft",
+                "published": "Published",
+                "archived": "Archived"
+            },
+            "actions": {
+                "statusLabel": "Change status",
+                "publish": "Publish",
+                "unpublish": "Back to draft",
+                "archive": "Archive",
+                "feature": "Feature",
+                "unfeature": "Unfeature",
+                "pin": "Pin",
+                "unpin": "Unpin",
+                "viewDetail": "View detail page"
+            },
+            "featured": "Featured",
+            "pinned": "Pinned",
+            "empty": {
+                "title": "No content yet",
+                "description": "This area has no items."
+            },
+            "error": "Could not load the list",
+            "retry": "Retry",
+            "confirmArchive": {
+                "title": "Archive this item?",
+                "description": "“{title}” will be hidden from users until published again."
+            },
+            "toast": {
+                "statusChanged": "Status updated",
+                "updated": "Updated",
+                "failed": "Action failed — previous state retained"
+            }
         }
     },
     "aiQuota": {
@@ -2690,14 +2915,38 @@
             "teacher": "For teachers"
         },
         "tools": {
-            "tutor": { "name": "AI Tutor", "desc": "Ask anything and get step-by-step explanations." },
-            "planner": { "name": "Study Planner", "desc": "Build a personalized study schedule that fits your goals." },
-            "summary": { "name": "Smart Summary", "desc": "Turn long lessons into concise, exam-ready notes." },
-            "flashcards": { "name": "Flashcards", "desc": "Auto-generate flashcards from any lesson." },
-            "quiz": { "name": "Quiz Generator", "desc": "Create practice quizzes to test what you've learned." },
-            "debug": { "name": "Code Debugger", "desc": "Paste your code and get bug fixes with explanations." },
-            "cvReview": { "name": "CV Review", "desc": "Get AI feedback to polish your resume for the job market." },
-            "mentor": { "name": "Teaching Mentor", "desc": "Draft lesson plans and grading rubrics in minutes." }
+            "tutor": {
+                "name": "AI Tutor",
+                "desc": "Ask anything and get step-by-step explanations."
+            },
+            "planner": {
+                "name": "Study Planner",
+                "desc": "Build a personalized study schedule that fits your goals."
+            },
+            "summary": {
+                "name": "Smart Summary",
+                "desc": "Turn long lessons into concise, exam-ready notes."
+            },
+            "flashcards": {
+                "name": "Flashcards",
+                "desc": "Auto-generate flashcards from any lesson."
+            },
+            "quiz": {
+                "name": "Quiz Generator",
+                "desc": "Create practice quizzes to test what you've learned."
+            },
+            "debug": {
+                "name": "Code Debugger",
+                "desc": "Paste your code and get bug fixes with explanations."
+            },
+            "cvReview": {
+                "name": "CV Review",
+                "desc": "Get AI feedback to polish your resume for the job market."
+            },
+            "mentor": {
+                "name": "Teaching Mentor",
+                "desc": "Draft lesson plans and grading rubrics in minutes."
+            }
         }
     },
     "notificationCenter": {
@@ -2886,9 +3135,15 @@
             "challenge": "Finish challenge"
         },
         "milestones": {
-            "weekOfFire": { "name": "Week of Fire" },
-            "monthOfGrit": { "name": "Month of Grit" },
-            "hundredDays": { "name": "Hundred Days of Fire" }
+            "weekOfFire": {
+                "name": "Week of Fire"
+            },
+            "monthOfGrit": {
+                "name": "Month of Grit"
+            },
+            "hundredDays": {
+                "name": "Hundred Days of Fire"
+            }
         },
         "goals": {
             "title": "Goals",
@@ -3805,25 +4060,6 @@
         "markAllRead": "Mark all as read",
         "retry": "Try again",
         "title": "Notifications",
-        "mutedHint": "You've muted all notifications.",
-        "preferences": {
-            "title": "Notification preferences",
-            "subtitle": "Choose which notifications you want to receive.",
-            "muteAll": "Mute all notifications",
-            "muteAllHint": "Hide every notification and the unread badge.",
-            "browserPush": "Browser push",
-            "browserPushComingSoon": "Coming soon — not available yet.",
-            "types": {
-                "system": "System",
-                "challengeGraded": "Challenge graded",
-                "codingGraded": "Coding graded",
-                "milestoneGraded": "Milestone graded",
-                "newFollower": "New follower",
-                "commentReply": "Comment reply",
-                "subscriptionGranted": "Subscription granted",
-                "announcement": "Announcement"
-            }
-        },
         "mutedHint": "You've muted all notifications.",
         "preferences": {
             "title": "Notification preferences",

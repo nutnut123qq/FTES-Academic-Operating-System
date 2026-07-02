@@ -112,6 +112,8 @@ export interface Achiever {
     key: string
     /** Number of achievement lines in i18n (`honor.people.<key>.lines.0..n`). */
     lineCount: number
+    /** Short headline badge (rank / GPA) — language-neutral. */
+    highlight: string
     /** Portrait image URL (legacy CDN). Falls back to initials on error. */
     imageUrl: string
 }
@@ -120,36 +122,42 @@ export interface Achiever {
 export const ACHIEVERS: ReadonlyArray<Achiever> = [
     {
         key: "kimKhoa",
+        highlight: "TOP 100 · 3 kỳ",
         lineCount: 3,
         imageUrl:
             "https://cdn.jsdelivr.net/gh/ftesedu/funnycode-images-1757352873747@main/images/4.png_1757436769364.png?v=1757436772039",
     },
     {
         key: "hoangBlue",
+        highlight: "GPA 9.4",
         lineCount: 2,
         imageUrl:
             "https://cdn.jsdelivr.net/gh/ftesedu/funnycode-images-1757352873747@main/images/1.png_1757436678874.png?v=1757436681722",
     },
     {
         key: "hoangDuy",
+        highlight: "GPA 9.6",
         lineCount: 3,
         imageUrl:
             "https://cdn.jsdelivr.net/gh/ftesedu/funnycode-images-1757352873747@main/images/2.png_1757436714804.png?v=1757436718361",
     },
     {
         key: "hongPhuc",
+        highlight: "Hackathon",
         lineCount: 2,
         imageUrl:
             "https://cdn.jsdelivr.net/gh/ftesedu/funnycode-images-1757352873747@main/images/3.png_1757436740942.png?v=1757436743766",
     },
     {
         key: "chiThong",
+        highlight: "TOP 5 · Spring 2025",
         lineCount: 1,
         imageUrl:
             "https://cdn.jsdelivr.net/gh/ftesedu/funnycode-images-1757352873747@main/images/5.png_1757436795210.png?v=1757436798094",
     },
     {
         key: "tranViet",
+        highlight: "Distinction SU25",
         lineCount: 1,
         imageUrl:
             "https://cdn.jsdelivr.net/gh/ftesedu/funnycode-images-1757352873747@main/images/6.png_1757436830366.png?v=1757436833271",

@@ -31,29 +31,23 @@ import type {
 import { mutateMarkAllNotificationsAsRead } from "@/modules/api/graphql/mutations/mutation-mark-all-notifications-as-read"
 import { mutateMarkNotificationAsRead } from "@/modules/api/graphql/mutations/mutation-mark-notification-as-read"
 import { queryResolveRoute } from "@/modules/api/graphql/queries/query-resolve-route"
-import type { QueryNotificationData, QueryNotificationTargetData } from "@/modules/api/graphql/queries/types/notifications"
+import type { QueryNotificationData } from "@/modules/api/graphql/queries/types/notifications"
 import { useQueryMyNotificationsSwr } from "@/hooks/swr/api/graphql/queries/useQueryMyNotificationsSwr"
+import { useQueryMyNotificationPreferencesSwr } from "@/hooks/swr/api/graphql/queries/useQueryMyNotificationPreferencesSwr"
 import { useAppSelector } from "@/redux/hooks"
 import { useGraphQLWithToast } from "@/modules/toast/hooks"
+import { NOTIFICATION_TYPE_ICON } from "@/components/features/notification/typeIcon"
+import { encodeNotificationGlobalId } from "@/components/features/notification/global-id"
+import {
+    deriveMutedAwareUnreadCount,
+    filterNotificationsByPreferences,
+} from "@/components/features/notification/preferences"
 
 /** Largest unread count rendered verbatim on the badge before showing "9+". */
 const MAX_BADGE = 9
 
 /** Props for {@link NotificationBell}. */
 export type NotificationBellProps = WithClassNames<undefined>
-
-/**
- * Encode a notification target into the opaque global id the route index
- * expects: base64url of `"<entityName>:<id>"`.
- */
-const encodeGlobalId = (target: QueryNotificationTargetData): string => {
-    const raw = `${target.entityName}:${target.id}`
-    // base64 → base64url (route index decodes base64url(`<entityName>:<id>`))
-    return btoa(raw)
-        .replace(/\+/g, "-")
-        .replace(/\//g, "_")
-        .replace(/=+$/, "")
-}
 
 /**
  * NotificationBell — navbar bell with an unread-count badge and a popover list.
@@ -71,11 +65,21 @@ export const NotificationBell = ({ className }: NotificationBellProps) => {
     const router = useRouter()
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
     const { data, isLoading, mutate } = useQueryMyNotificationsSwr()
+    const { data: preferences } = useQueryMyNotificationPreferencesSwr()
     const runGraphQL = useGraphQLWithToast()
     const [isOpen, setOpen] = useState(false)
 
-    const items = data?.items ?? []
-    const unreadCount = data?.unreadCount ?? 0
+    const fetchedItems = data?.items ?? []
+    // hide muted types (or all, when mute-all is on) from the popover list
+    const items = filterNotificationsByPreferences(fetchedItems, preferences)
+    // badge respects preferences: muted unread within the page are subtracted,
+    // mute-all forces zero (page-window approximation — see preferences.ts)
+    const unreadCount = deriveMutedAwareUnreadCount(
+        data?.unreadCount ?? 0,
+        fetchedItems,
+        preferences,
+    )
+    const muteAll = preferences?.muteAll ?? false
 
     /** Locale-aware relative-time formatter for the item timestamps. */
     const relativeFormat = useMemo(
@@ -125,7 +129,7 @@ export const NotificationBell = ({ className }: NotificationBellProps) => {
                 return
             }
             const response = await queryResolveRoute({
-                request: { globalId: encodeGlobalId(target) },
+                request: { globalId: encodeNotificationGlobalId(target) },
             })
             const path = response.data?.resolveRoute?.data?.path
             if (path) {
@@ -197,8 +201,12 @@ export const NotificationBell = ({ className }: NotificationBellProps) => {
                 </div>
                 <Separator />
 
-                {/* body: loading / empty / list */}
-                {isLoading && items.length === 0 ? (
+                {/* body: muted-all hint / loading / empty / list */}
+                {muteAll ? (
+                    <div className="p-6 text-center text-sm text-muted">
+                        {t("notifications.mutedHint")}
+                    </div>
+                ) : isLoading && items.length === 0 ? (
                     <div className="flex items-center justify-center p-6">
                         <Spinner size="sm" />
                     </div>
@@ -208,40 +216,48 @@ export const NotificationBell = ({ className }: NotificationBellProps) => {
                     </div>
                 ) : (
                     <div className="flex max-h-[420px] flex-col overflow-y-auto">
-                        {items.map((notification) => (
-                            <button
-                                key={notification.id}
-                                type="button"
-                                onClick={() => onPressItem(notification)}
-                                className={cn(
-                                    "flex flex-col gap-1.5 px-3 py-3 text-left hover:bg-default/40",
-                                    !notification.isRead && "bg-primary/5",
-                                )}
-                            >
-                                <div className="flex items-center gap-1.5">
-                                    {!notification.isRead ? (
-                                        <span className="size-2 shrink-0 rounded-full bg-primary" />
-                                    ) : null}
-                                    <span className="flex-1 text-sm font-medium text-foreground">
-                                        {t(
-                                            notification.title.key,
-                                            notification.title.params ?? undefined,
-                                        )}
-                                    </span>
-                                </div>
-                                {notification.body ? (
-                                    <span className="text-xs text-muted">
-                                        {t(
-                                            notification.body.key,
-                                            notification.body.params ?? undefined,
-                                        )}
-                                    </span>
-                                ) : null}
-                                <span className="text-[11px] text-muted">
-                                    {formatRelative(notification.createdAt)}
-                                </span>
-                            </button>
-                        ))}
+                        {items.map((notification) => {
+                            const Icon = NOTIFICATION_TYPE_ICON[notification.type]
+                            return (
+                                <button
+                                    key={notification.id}
+                                    type="button"
+                                    onClick={() => onPressItem(notification)}
+                                    className={cn(
+                                        "flex items-start gap-3 px-3 py-3 text-left hover:bg-default/40",
+                                        !notification.isRead && "bg-primary/5",
+                                    )}
+                                >
+                                    <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
+                                        <Icon className="size-5" aria-hidden focusable="false" />
+                                    </div>
+                                    <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                                        <div className="flex items-center gap-1.5">
+                                            {!notification.isRead ? (
+                                                <span className="size-2 shrink-0 rounded-full bg-primary" />
+                                            ) : null}
+                                            <span className="flex-1 text-sm font-medium text-foreground">
+                                                {t(
+                                                    notification.title.key,
+                                                    notification.title.params ?? undefined,
+                                                )}
+                                            </span>
+                                        </div>
+                                        {notification.body ? (
+                                            <span className="text-xs text-muted">
+                                                {t(
+                                                    notification.body.key,
+                                                    notification.body.params ?? undefined,
+                                                )}
+                                            </span>
+                                        ) : null}
+                                        <span className="text-[11px] text-muted">
+                                            {formatRelative(notification.createdAt)}
+                                        </span>
+                                    </div>
+                                </button>
+                            )
+                        })}
                     </div>
                 )}
             </PopoverContent>

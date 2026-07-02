@@ -1,5 +1,6 @@
 export * from "./discussion"
 export * from "./notifications"
+export * from "./notification-preferences"
 export * from "./my-sessions"
 export * from "./user-profile"
 export * from "./user-achievements"

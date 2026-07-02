@@ -3,6 +3,7 @@
 import React from "react"
 import { Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
+import { SkillGraph } from "@/components/features/skill-graph"
 import { useQueryProfileProgressSwr } from "../hooks/useQueryProfileProgressSwr"
 
 /**
@@ -26,21 +27,31 @@ export const ProfileProgress = () => {
     ]
 
     return (
-        <div className="flex flex-col gap-3">
-            <Typography type="h6" weight="bold">
-                {t("sections.progress")}
-            </Typography>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {stats.map((stat) => (
-                    <div key={stat.key} className="flex flex-col gap-1 rounded-large bg-default/40 p-4">
-                        <Typography type="body-xs" color="muted">
-                            {t(`progressBoard.${stat.key}`)}
-                        </Typography>
-                        <Typography type="h4" weight="bold">
-                            {stat.value.toLocaleString()}
-                        </Typography>
-                    </div>
-                ))}
+        <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-3">
+                <Typography type="h6" weight="bold">
+                    {t("sections.progress")}
+                </Typography>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    {stats.map((stat) => (
+                        <div key={stat.key} className="flex flex-col gap-1 rounded-large bg-default/40 p-4">
+                            <Typography type="body-xs" color="muted">
+                                {t(`progressBoard.${stat.key}`)}
+                            </Typography>
+                            <Typography type="h4" weight="bold">
+                                {stat.value.toLocaleString()}
+                            </Typography>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Skill graph — spider-web network of the learner's skills (§21). */}
+            <div className="flex flex-col gap-3 border-t border-separator pt-6">
+                <Typography type="h6" weight="bold">
+                    {t("skillGraph.title")}
+                </Typography>
+                <SkillGraph />
             </div>
         </div>
     )

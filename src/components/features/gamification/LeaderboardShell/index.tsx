@@ -1,61 +1,171 @@
 "use client"
 
-import React from "react"
-import { Chip, Typography } from "@heroui/react"
-import { useTranslations } from "next-intl"
+import React, { useEffect } from "react"
+import { Button, Chip, Typography, toast } from "@heroui/react"
+import { useLocale, useTranslations } from "next-intl"
 import { FireIcon, LightningIcon, RankingIcon, StarIcon, TrophyIcon } from "@phosphor-icons/react"
+import { Link } from "@/i18n/navigation"
+import { pathConfig } from "@/resources/path"
 import { CURRENT_USER_ID, useQueryLeaderboardSwr } from "../hooks/useQueryLeaderboardSwr"
+import {
+    GamificationActionType,
+    STREAK_MILESTONES,
+    tierFromXp,
+    xpToNextLevel,
+} from "../rules"
+import { useGamificationEngine } from "../engine"
+import { StreakPopover } from "../StreakPopover"
+import { GoalsCard } from "../GoalsCard"
+import { GamificationEventHost } from "../GamificationEventHost"
 
 /**
  * Gamification leaderboard + progression surface (§11) — the `/leaderboard` page.
- * A dashboard: top stat cards (XP · Level · Streak · Rank), a ranked leaderboard
- * list with the current user highlighted, and a badges row (earned vs locked).
- * Feature owns data (mock); tokens own the look. ponytail: hand-rolled metric
- * cards + rows, mock data.
+ *
+ * A dashboard driven by the deterministic mock engine (single source of truth in
+ * `rules.ts` + `engine.ts`): stat cards (XP · Level · Streak · Rank+tier) where
+ * the Streak card opens the detail popover; a "Cách tính điểm" guide link; a
+ * ranked board; the Daily/Weekly goals block; and a milestone-badge row wired to
+ * the engine's claimed milestones. A small demo row fires mock learning actions
+ * so the +XP toast / level-up moment / streak increment are observable without a
+ * backend. The engine store is shared, so every surface updates in lockstep.
  */
 export const LeaderboardShell = () => {
     const t = useTranslations("gamification")
-    const { me, board, badges } = useQueryLeaderboardSwr()
+    const locale = useLocale()
+    const { board } = useQueryLeaderboardSwr()
+    const { state, level, recordAction, checkDayRollover } = useGamificationEngine()
+
+    // On mount, roll the day forward (consume freezes / reset) and fire the
+    // 20:00 streak-at-risk reminder once/day — best-effort while the app is open.
+    // A real BE would push this to the notification bell; here it surfaces as a
+    // non-blocking status toast (that shared bell feature is owned elsewhere).
+    useEffect(() => {
+        const { remind, streak } = checkDayRollover()
+        if (remind) {
+            // HeroUI's toast region is an aria-live status landmark, so screen
+            // readers announce this without a per-toast role.
+            toast.warning(t("reminder.title"), {
+                description: t("reminder.body", { count: streak }),
+            })
+        }
+    }, [checkDayRollover, t])
+
+    const { tier } = tierFromXp(state.xp)
+    const toNext = xpToNextLevel(state.xp)
+    // Guide is a child route of /leaderboard. pathConfig has no dedicated
+    // builder for it (shared file, owned elsewhere); derive it from the
+    // leaderboard base rather than hand-templating the whole path.
+    const guideHref = `${pathConfig().locale(locale).leaderboard().build()}/guide`
 
     const stats = [
-        { key: "xp", icon: <LightningIcon className="size-5" />, value: me?.xp ?? 0 },
-        { key: "level", icon: <StarIcon className="size-5" />, value: me?.level ?? 0 },
-        { key: "streak", icon: <FireIcon className="size-5" />, value: me?.streak ?? 0 },
-        { key: "rank", icon: <RankingIcon className="size-5" />, value: me?.rank ?? 0 },
-    ] as const
+        {
+            key: "xp" as const,
+            icon: <LightningIcon className="size-5" aria-hidden focusable="false" />,
+            value: state.xp,
+            hint: undefined as string | undefined,
+        },
+        {
+            key: "level" as const,
+            icon: <StarIcon className="size-5" aria-hidden focusable="false" />,
+            value: level,
+            hint: t("levelHint", { xp: toNext.toLocaleString(locale) }),
+        },
+        {
+            key: "streak" as const,
+            icon: <FireIcon className="size-5" aria-hidden focusable="false" />,
+            value: state.streak,
+            hint: undefined,
+        },
+        {
+            key: "rank" as const,
+            icon: <RankingIcon className="size-5" aria-hidden focusable="false" />,
+            value: board.findIndex((entry) => entry.id === CURRENT_USER_ID) + 1,
+            hint: t(`tiers.${tier.key}`),
+        },
+    ]
 
     return (
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-6">
-            <div className="flex flex-col gap-1">
-                <Typography type="h4" weight="bold">
-                    {t("title")}
-                </Typography>
-                <Typography type="body-sm" color="muted">
-                    {t("subtitle")}
-                </Typography>
+            <GamificationEventHost />
+
+            <div className="flex items-start justify-between gap-3">
+                <div className="flex flex-col gap-1">
+                    <Typography type="h4" weight="bold">
+                        {t("title")}
+                    </Typography>
+                    <Typography type="body-sm" color="muted">
+                        {t("subtitle")}
+                    </Typography>
+                </div>
+                <Link
+                    href={guideHref}
+                    className="shrink-0 text-sm font-medium text-accent no-underline hover:underline"
+                >
+                    {t("guide.link")}
+                </Link>
             </div>
 
-            {/* stat cards */}
+            {/* stat cards — the Streak card opens the detail popover */}
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                {stats.map((stat) => (
-                    <div key={stat.key} className="flex flex-col gap-2 rounded-large bg-default/40 p-4">
-                        <div className="flex items-center gap-2 text-muted">
-                            {stat.icon}
-                            <Typography type="body-xs" color="muted">
-                                {t(`stats.${stat.key}`)}
+                {stats.map((stat) => {
+                    const card = (
+                        <div className="flex h-full flex-col gap-2 rounded-large bg-default/40 p-4 text-left">
+                            <div className="flex items-center gap-2 text-muted">
+                                {stat.icon}
+                                <Typography type="body-xs" color="muted">
+                                    {t(`stats.${stat.key}`)}
+                                </Typography>
+                            </div>
+                            <Typography type="h5" weight="bold">
+                                {Math.round(stat.value).toLocaleString(locale)}
                             </Typography>
+                            {stat.hint ? (
+                                <Typography type="body-xs" color="muted">
+                                    {stat.hint}
+                                </Typography>
+                            ) : null}
                         </div>
-                        <Typography type="h5" weight="bold">
-                            {Math.round(stat.value).toLocaleString()}
-                        </Typography>
-                    </div>
-                ))}
+                    )
+                    if (stat.key === "streak") {
+                        return (
+                            <StreakPopover key={stat.key} placement="bottom start" className="text-left">
+                                <button type="button" className="h-full w-full" aria-label={t("streak.openDetail")}>
+                                    {card}
+                                </button>
+                            </StreakPopover>
+                        )
+                    }
+                    return <React.Fragment key={stat.key}>{card}</React.Fragment>
+                })}
             </div>
+
+            {/* demo: fire mock learning actions to exercise the engine (award/streak/toast) */}
+            <div className="flex flex-wrap items-center gap-2 rounded-large border border-dashed border-separator p-3">
+                <Typography type="body-xs" color="muted" className="mr-1">
+                    {t("demo.label")}
+                </Typography>
+                <Button size="sm" variant="secondary" onPress={() => recordAction(GamificationActionType.LessonComplete)}>
+                    {t("demo.lesson")}
+                </Button>
+                <Button
+                    size="sm"
+                    variant="secondary"
+                    onPress={() => recordAction(GamificationActionType.QuizSubmit, { scorePercent: 90 })}
+                >
+                    {t("demo.quiz")}
+                </Button>
+                <Button size="sm" variant="secondary" onPress={() => recordAction(GamificationActionType.ChallengeComplete)}>
+                    {t("demo.challenge")}
+                </Button>
+            </div>
+
+            {/* goals */}
+            <GoalsCard />
 
             {/* leaderboard list */}
             <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-2">
-                    <TrophyIcon className="size-5 text-accent" />
+                    <TrophyIcon className="size-5 text-accent" aria-hidden focusable="false" />
                     <Typography type="body" weight="medium">
                         {t("leaderboard")}
                     </Typography>
@@ -89,7 +199,7 @@ export const LeaderboardShell = () => {
                                     </Typography>
                                 </div>
                                 <Typography type="body-sm" weight="medium" className="shrink-0">
-                                    {t("xpValue", { xp: Math.round(entry.xp).toLocaleString() })}
+                                    {t("xpValue", { xp: Math.round(entry.xp).toLocaleString(locale) })}
                                 </Typography>
                             </div>
                         )
@@ -97,36 +207,41 @@ export const LeaderboardShell = () => {
                 </div>
             </div>
 
-            {/* badges row */}
+            {/* badges row — streak-milestone badges reflect the engine's claimed set */}
             <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-2">
-                    <StarIcon className="size-5 text-accent" />
+                    <StarIcon className="size-5 text-accent" aria-hidden focusable="false" />
                     <Typography type="body" weight="medium">
                         {t("badges")}
                     </Typography>
                 </div>
                 <div className="flex flex-wrap gap-3">
-                    {badges.map((badge) => (
-                        <div
-                            key={badge.id}
-                            className={`flex flex-col items-center gap-2 rounded-large bg-default/40 p-4 ${
-                                badge.earned ? "" : "opacity-50"
-                            }`}
-                        >
-                            <TrophyIcon
-                                className={`size-6 ${badge.earned ? "text-accent" : "text-muted"}`}
-                                weight={badge.earned ? "fill" : "regular"}
-                            />
-                            <Typography type="body-xs" weight="medium" className="text-center">
-                                {badge.name}
-                            </Typography>
-                            {!badge.earned ? (
-                                <Chip size="sm" variant="soft" color="default">
-                                    {t("badgeLocked")}
-                                </Chip>
-                            ) : null}
-                        </div>
-                    ))}
+                    {STREAK_MILESTONES.map((milestone) => {
+                        const earned = state.claimedMilestones.includes(milestone.days)
+                        return (
+                            <div
+                                key={milestone.days}
+                                className={`flex flex-col items-center gap-2 rounded-large bg-default/40 p-4 ${
+                                    earned ? "" : "opacity-50"
+                                }`}
+                            >
+                                <TrophyIcon
+                                    className={`size-6 ${earned ? "text-accent" : "text-muted"}`}
+                                    weight={earned ? "fill" : "regular"}
+                                    aria-hidden
+                                    focusable="false"
+                                />
+                                <Typography type="body-xs" weight="medium" className="text-center">
+                                    {t(`milestones.${milestone.badgeKey}.name`)}
+                                </Typography>
+                                {!earned ? (
+                                    <Chip size="sm" variant="soft" color="default">
+                                        {t("badgeLocked")}
+                                    </Chip>
+                                ) : null}
+                            </div>
+                        )
+                    })}
                 </div>
             </div>
         </div>

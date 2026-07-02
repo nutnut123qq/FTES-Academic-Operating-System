@@ -1,23 +1,60 @@
 "use client"
 
-import React from "react"
+import React, { useCallback, useEffect, useState } from "react"
 import { Typography } from "@heroui/react"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
+import { PostEngagementBar } from "@/components/reuseable/PostEngagementBar"
+import { PostCommentThread } from "@/components/reuseable/PostCommentThread"
 import { useQueryPostDetailSwr } from "../hooks/useQueryPostDetailSwr"
+import { useMutateReactPostSwr } from "../hooks/useMutateReactPostSwr"
+import { useMutateCreatePostCommentSwr, type SubmitCommentInput } from "../hooks/useMutateCreatePostCommentSwr"
 
 /**
- * Community post detail (§6). DEFAULT on-canon layout: the post (author + title +
- * body + like count) over a comments thread. ponytail: hand-rolled; mock data.
+ * Community post detail (§6). The post (author + title + body) over the shared
+ * engagement bar (like · comment · share · save) and a permanently-expanded
+ * comment thread (list + composer, flat one-level replies). Keeps `id="comments"`
+ * for deep links (`#comments` autofocuses the composer). ponytail: mock data.
  */
 export const CommunityPostDetail = () => {
     const t = useTranslations("communityHub")
+    const locale = useLocale()
     const { postId } = useParams<{ postId: string }>()
     const { post } = useQueryPostDetailSwr(postId)
+    const reactPost = useMutateReactPostSwr()
+    const submitComment = useMutateCreatePostCommentSwr()
+    const [deepLinked, setDeepLinked] = useState(false)
+
+    useEffect(() => {
+        if (typeof window !== "undefined" && window.location.hash === "#comments") {
+            setDeepLinked(true)
+        }
+    }, [])
+
+    const onSubmit = useCallback(
+        async (body: string, parentCommentId?: string): Promise<boolean> => {
+            const input: SubmitCommentInput = {
+                postId,
+                body,
+                authorLabel: locale === "vi" ? "Bạn" : "You",
+                justNowLabel: locale === "vi" ? "vừa xong" : "just now",
+                parentCommentId,
+            }
+            return submitComment(input)
+        },
+        [postId, locale, submitComment],
+    )
 
     if (!post) {
         return null
     }
+
+    const commentsCount = post.comments.reduce(
+        (total, comment) => total + 1 + (comment.replies?.length ?? 0),
+        0,
+    )
+    const postUrl =
+        typeof window !== "undefined" ? `${window.location.origin}/${locale}/community/${postId}` : ""
 
     return (
         <div className="flex flex-col gap-6">
@@ -42,39 +79,35 @@ export const CommunityPostDetail = () => {
                 <Typography type="body-sm" color="muted">
                     {post.body}
                 </Typography>
-                <Typography type="body-xs" color="muted">
-                    {t("feed.likes", { count: post.likes })}
-                </Typography>
+                <PostEngagementBar
+                    likes={post.likes}
+                    liked={post.liked}
+                    commentsCount={commentsCount}
+                    onToggleLike={() => void reactPost(postId, !post.liked)}
+                    onCommentClick={() => {
+                        document.getElementById(`post-comments-${postId}`)?.focus()
+                    }}
+                    postUrl={postUrl}
+                    shareTitle={post.title}
+                    saveEntityType="post"
+                    saveEntityId={postId}
+                    saveSource={{ kind: "community", label: post.author }}
+                />
             </div>
 
             {/* comments */}
-            <div className="flex flex-col gap-3 border-t border-separator pt-6">
+            <div id="comments" className="flex flex-col gap-3 border-t border-separator pt-6">
                 <Typography type="h6" weight="bold">
-                    {t("detail.comments", { count: post.comments.length })}
+                    {t("detail.comments", { count: commentsCount })}
                 </Typography>
-                {post.comments.map((comment) => (
-                    <div
-                        key={comment.id}
-                        className="flex items-start gap-3 rounded-large border border-separator p-4"
-                    >
-                        <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent/10 text-xs font-bold text-accent">
-                            {comment.author.slice(0, 1).toUpperCase()}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2">
-                                <Typography type="body-sm" weight="medium">
-                                    {comment.author}
-                                </Typography>
-                                <Typography type="body-xs" color="muted">
-                                    {comment.timeLabel}
-                                </Typography>
-                            </div>
-                            <Typography type="body-sm" color="muted">
-                                {comment.text}
-                            </Typography>
-                        </div>
-                    </div>
-                ))}
+                <PostCommentThread
+                    regionId={`post-comments-${postId}`}
+                    comments={post.comments}
+                    isLoading={false}
+                    onSubmit={onSubmit}
+                    autoFocus={deepLinked}
+                    stickyComposerOnMobile
+                />
             </div>
         </div>
     )

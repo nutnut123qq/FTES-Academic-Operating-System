@@ -3740,6 +3740,14 @@
             "all": "All",
             "lessonsCount": "{count} lessons"
         },
+        "featured": {
+            "regionLabel": "Featured courses",
+            "slideLabel": "{index} / {total}",
+            "prev": "Previous slide",
+            "next": "Next slide",
+            "goToSlide": "Go to slide {index}",
+            "cta": "View course"
+        },
         "detail": {
             "credits": "{count} credits",
             "enroll": "Enroll",

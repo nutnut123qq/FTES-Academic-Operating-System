@@ -3740,6 +3740,14 @@
             "all": "Tất cả",
             "lessonsCount": "{count} bài"
         },
+        "featured": {
+            "regionLabel": "Khóa học nổi bật",
+            "slideLabel": "{index} / {total}",
+            "prev": "Slide trước",
+            "next": "Slide sau",
+            "goToSlide": "Đến slide {index}",
+            "cta": "Xem khóa học"
+        },
         "detail": {
             "credits": "{count} tín chỉ",
             "enroll": "Đăng ký học",

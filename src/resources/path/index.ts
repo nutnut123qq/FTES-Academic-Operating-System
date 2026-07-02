@@ -563,11 +563,6 @@ export const pathConfig = () => {
         const career = makeSimplePath("career")
         const integrations = makeSimplePath("integrations")
         const roles = makeSimplePath("admin/roles")
-        // Config Center (§22/§24) — /admin/config/<category>, Super Admin gated
-        const adminConfig = (category?: string) => {
-            const path = `${localePath}/admin/config${category ? `/${category}` : ""}`
-            return { build: () => path }
-        }
         const practice = () => {
             const practicePath = `${localePath}/practice`
             const build = () => {
@@ -660,7 +655,6 @@ export const pathConfig = () => {
             career,
             integrations,
             roles,
-            adminConfig,
             rewards,
             league,
             kpi,

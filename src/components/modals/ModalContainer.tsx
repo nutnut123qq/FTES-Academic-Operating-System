@@ -3,6 +3,7 @@ import { AuthenticationModal } from "./AuthenticationModal"
 import { LanguageModal } from "./LanguageModal"
 import { CookieConsentModal } from "./CookieConsentModal"
 import { AppearanceModal } from "./AppearanceModal"
+import { CommunityComposerModal } from "./CommunityComposerModal"
 import { SearchOverlay } from "@/components/features/search/SearchOverlay"
 
 /** Global modal mount point — feature modals stripped for the skeleton; add new ones here. */
@@ -13,6 +14,7 @@ export const ModalContainer = () => {
             <LanguageModal />
             <CookieConsentModal />
             <AppearanceModal />
+            <CommunityComposerModal />
             <SearchOverlay />
         </>
     )

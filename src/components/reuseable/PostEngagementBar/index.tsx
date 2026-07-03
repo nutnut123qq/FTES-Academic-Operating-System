@@ -58,6 +58,12 @@ export interface PostEngagementBarProps extends WithClassNames<undefined> {
     saveEntityId?: string
     /** Post-only save source context captured at save time. */
     saveSource?: SavedPostSource
+    /**
+     * Threads-style zero suppression: a count of 0 renders nothing next to its
+     * icon (the icon stays). Opt-in — default false so existing surfaces keep
+     * showing "0".
+     */
+    hideZeroCounts?: boolean
 }
 
 /**
@@ -95,6 +101,7 @@ export const PostEngagementBar = ({
     saveEntityType,
     saveEntityId,
     saveSource,
+    hideZeroCounts = false,
     className,
 }: PostEngagementBarProps) => {
     const t = useTranslations("communityHub")
@@ -182,9 +189,11 @@ export const PostEngagementBar = ({
                         className={cn("size-5", liked && "text-danger")}
                         weight={liked ? "fill" : "regular"}
                     />
-                    <span className="text-xs tabular-nums text-muted">
-                        {formatCompactCount(likes, locale)}
-                    </span>
+                    {hideZeroCounts && likes === 0 ? null : (
+                        <span className="text-xs tabular-nums text-muted">
+                            {formatCompactCount(likes, locale)}
+                        </span>
+                    )}
                 </Button>
             ) : null}
 
@@ -201,9 +210,11 @@ export const PostEngagementBar = ({
                     onClick={stop}
                 >
                     <ChatCircleIcon aria-hidden focusable="false" className="size-5" />
-                    <span className="text-xs tabular-nums text-muted">
-                        {formatCompactCount(commentsCount, locale)}
-                    </span>
+                    {hideZeroCounts && commentsCount === 0 ? null : (
+                        <span className="text-xs tabular-nums text-muted">
+                            {formatCompactCount(commentsCount, locale)}
+                        </span>
+                    )}
                 </Button>
             ) : null}
 

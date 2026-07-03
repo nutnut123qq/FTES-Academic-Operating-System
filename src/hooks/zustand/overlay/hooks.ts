@@ -78,6 +78,8 @@ export const useAuthenticationOverlayState = () => {
 export const useAvatarUploadOverlayState = () => useOverlayHandle("avatarUpload")
 /** Challenge overlay state. */
 export const useChallengeOverlayState = () => useOverlayHandle("challenge")
+/** Community composer modal overlay state (feed "Có gì mới?" trigger). */
+export const useCommunityComposerOverlayState = () => useOverlayHandle("communityComposer")
 /** Content overlay state. */
 export const useContentOverlayState = () => useOverlayHandle("content")
 /** Content AI chat drawer overlay state (ask FTES AOS AI about the current content). */

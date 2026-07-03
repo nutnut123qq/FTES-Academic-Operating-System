@@ -25,6 +25,12 @@ Distilled from `starci-navigation.md` (shell shaping) + the `TabsCard` / `Extend
 - Split roles by semantics (tabs-vs-segmented): LEFT group changes the content; RIGHT group (e.g. language TS/Java/C#/Go) keeps the same content but changes how it's presented. Both are "tab groups" in data, but presented merged into one toolbar instead of two tiers (avoid "multiple tab levels").
 
 ## Decisions (newest first)
+- **Route-scope switcher trong sticky header (community: 4 scope là route segments)** · chose
+  **`ExtendedTabs`** underline, `selectedKey` derive từ pathname, `onSelectionChange` →
+  `router.push` · **WHY:** thay hàng pill `Button` cũ (vi phạm "1-of-few = Tabs, NEVER pill
+  buttons"); Threads web dùng dropdown tên feed nhưng 4 scope FTES cần discoverability →
+  underline tabs là giao điểm Threads-calm × luật nhà. Tabs nằm TRONG cụm sticky
+  (`top-16 bg-background/85 backdrop-blur`) cùng identity row. · community shell · 2026-07-03
 - **Single in-flow tab strip switching content panels** (learn player: Bài giảng / Tài
   liệu / Ghi chú) · chose **`ExtendedTabs`** directly (not `TabsCard`) with the HeroUI
   compound inside (`Tabs.ListContainer > Tabs.List > Tabs.Tab id=…`), panels rendered by

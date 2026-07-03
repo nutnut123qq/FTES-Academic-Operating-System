@@ -22,14 +22,13 @@ import type {
 export interface AmbientBackgroundProps extends WithClassNames<undefined> {
     /**
      * Override the spark count. When omitted it is derived from `direction`
-     * (`fall` = 120 for a dense meteor shower, `rise` = 60). Lower it on weak
-     * devices.
+     * (`fall` = 40, `rise` = 60). Lower it on weak devices.
      */
     count?: number
     /**
      * Motion direction: `"rise"` = round embers drifting up from the bottom
      * (the original behaviour), `"fall"` = elongated meteor streaks shooting
-     * diagonally (top-right → bottom-left) with a comet tail (default — the new
+     * diagonally (top-left → bottom-right) with a comet tail (default — the new
      * app default).
      */
     direction?: EffectDirection
@@ -53,14 +52,14 @@ interface Spark {
     duration: number
     /** Animation start delay in seconds. */
     delay: number
-    /** Horizontal wander over the travel, px (fed to the `--drift` keyframe var). */
+    /** Horizontal wander over the travel — vw on fall, px on rise (fed to `--drift`). */
     drift: number
 }
 
 /**
  * App-wide ambient background — a faint accent glow hugging one viewport edge plus
- * a field of sparks: embers drifting slowly upward (`direction="rise"`) or a dense
- * meteor shower of comet-tailed streaks shooting diagonally top-right → bottom-left
+ * a field of sparks: embers drifting slowly upward (`direction="rise"`) or a
+ * meteor shower of comet-tailed streaks shooting diagonally top-left → bottom-right
  * (`direction="fall"`, default). `speed` scales every spark's duration.
  * Sits `fixed inset-0` behind everything (negative z-index, non-interactive) so it
  * stays put while the page scrolls.
@@ -91,23 +90,30 @@ export const AmbientBackground = ({
     const sparks = useMemo<Array<Spark>>(
         () =>
             Array.from({ length: sparkCount }).map((_, index) => {
-                // two cheap hash streams → stable pseudo-random per spark
+                // three cheap hash streams → stable pseudo-random per spark
                 const seed = ((index * 2654435761) % 1000) / 1000
                 const seed2 = ((index * 40503) % 997) / 997
+                const seed3 = ((index * 71993) % 1009) / 1009
                 // Fall = a brisk, decisive shooting-star drop (~4–7s base) leaning
-                // hard to the LEFT: drift −500..−900px over ~125vh gives a ~29–45°
-                // diagonal (canonical top-right → bottom-left) that reads as a real
-                // streak, not a near-vertical drop.
-                // Rise keeps its slow upward wander (~8–18s, gentle L/R drift).
+                // to the RIGHT: drift +35..+60vw over ~125vh gives a ~26–40°
+                // diagonal (top-left → bottom-right) that reads as a real streak,
+                // not a near-vertical drop. Rise keeps its slow upward wander
+                // (~8–18s, gentle L/R drift in px).
                 const duration = isFall
                     ? 4 + Math.round(seed * 3)
                     : 8 + Math.round(seed * 10)
                 const drift = isFall
-                    ? -(500 + Math.round(seed * 400))
+                    ? 35 + Math.round(seed * 25)
                     : Math.round((seed - 0.5) * 80)
                 return {
                     index,
-                    left: Math.round(seed * 100),
+                    // Fall starts spread past the LEFT edge (−35..100%) so that after
+                    // the rightward drift the bottom half is covered edge-to-edge —
+                    // 0..100% starts would leave the bottom-left corner empty.
+                    // (seed3 keeps start x decorrelated from drift/size/delay.)
+                    left: isFall
+                        ? Math.round(seed3 * 135) - 35
+                        : Math.round(seed * 100),
                     size: 2 + Math.round(seed2 * 4),
                     duration,
                     delay: Math.round(seed2 * 100) / 10,
@@ -125,7 +131,7 @@ export const AmbientBackground = ({
                 className,
             )}
         >
-            {/* warm glow pooled at the departure corner/edge: top-right for fall
+            {/* warm glow pooled at the departure corner/edge: top-left for fall
                 (the meteor shower's source), bottom for rise */}
             <div
                 className={cn(
@@ -134,7 +140,7 @@ export const AmbientBackground = ({
                 )}
                 style={{
                     background: isFall
-                        ? "radial-gradient(120% 80% at 100% -20%, color-mix(in oklch, var(--accent) 30%, transparent), transparent 70%)"
+                        ? "radial-gradient(120% 80% at 0% -20%, color-mix(in oklch, var(--accent) 30%, transparent), transparent 70%)"
                         : "radial-gradient(120% 80% at 50% 120%, color-mix(in oklch, var(--accent) 30%, transparent), transparent 70%)",
                 }}
             />
@@ -161,12 +167,14 @@ export const AmbientBackground = ({
                     )
                 }
                 // Align the streak's long axis with its real diagonal velocity:
-                // the spark travels (Δx = drift px, Δy ≈ one viewport ≈ 900px) so the
-                // tail must lean by atan2(Δx, Δy). With drift negative (leftward) this
-                // yields a negative angle → head swings toward bottom-left, tail up-right,
-                // matching the top-right → bottom-left path. Deterministic → hydration-safe.
+                // the spark travels Δx ≈ drift vw (×16px on a ~1600px viewport) over
+                // Δy ≈ 125vh (~1125px). CSS rotate(+θ) swings the bar's bottom (the
+                // bright head) to the LEFT, so aligning the head with the rightward
+                // travel needs θ = −atan2(Δx, Δy) — negative angle, head bottom-right,
+                // tail up-left, matching the top-left → bottom-right path.
+                // Deterministic → hydration-safe.
                 const tilt =
-                    Math.round((Math.atan2(spark.drift, 900) * 180 * 10) / Math.PI) / 10
+                    -Math.round((Math.atan2(spark.drift * 16, 1125) * 180 * 10) / Math.PI) / 10
                 return (
                     <span
                         key={spark.index}
@@ -180,7 +188,7 @@ export const AmbientBackground = ({
                             background:
                                 "linear-gradient(to top, var(--accent), transparent)",
                             // wander + precomputed lean consumed by the meteorFall keyframe
-                            ["--drift" as string]: `${spark.drift}px`,
+                            ["--drift" as string]: `${spark.drift}vw`,
                             ["--tilt" as string]: `${tilt}deg`,
                             animation: `meteorFall ${(spark.duration * speedFactor).toFixed(2)}s linear infinite ${spark.delay}s`,
                             opacity: 0,

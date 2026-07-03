@@ -251,18 +251,18 @@ html {
 /*
  * Ambient meteor background (blocks/layout/AmbientBackground, direction="fall") —
  * accent streaks shooting DIAGONALLY across the viewport like real shooting stars.
- * Canonical trajectory is top-right → bottom-left (~20–35° off vertical): the spark
- * travels on `translateX` (negative `--drift`, leftward) + `translateY` (downward)
+ * Trajectory is top-left → bottom-right (~26–40° off vertical): the spark travels
+ * on `translateX` (positive `--drift`, rightward, in vw) + `translateY` (downward)
  * together, and the elongated streak is held `rotate(var(--tilt))` for the whole
  * animation so its long axis + comet tail line up with the slanted travel vector
  * (reads as a shooting star, not a vertical drop). Each streak sets `--drift`,
  * `--tilt` inline. Motion is transform/opacity only (GPU-cheap, no JS loop).
  */
 @keyframes meteorFall {
-    0% { transform: translate3d(0, -15vh, 0) rotate(var(--tilt, -22deg)); opacity: 0; }
+    0% { transform: translate3d(0, -15vh, 0) rotate(var(--tilt, -32deg)); opacity: 0; }
     10% { opacity: 1; }
     80% { opacity: 0.8; }
-    100% { transform: translate3d(var(--drift, -30vw), 110vh, 0) rotate(var(--tilt, -22deg)); opacity: 0; }
+    100% { transform: translate3d(var(--drift, 45vw), 110vh, 0) rotate(var(--tilt, -32deg)); opacity: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -4581,7 +4581,6 @@
     "communityHub": {
         "title": "Community",
         "placeholder": "This feed is under construction.",
-        "members": "{count, number} members",
         "more": "More",
         "menu": {
             "newPost": "New post",
@@ -4662,10 +4661,6 @@
             "reportedBy": "reported by {name}",
             "keep": "Keep",
             "remove": "Remove"
-        },
-        "identity": {
-            "coverAlt": "{name} cover",
-            "avatarAlt": "{name} avatar"
         }
     },
     "groupsHub": {

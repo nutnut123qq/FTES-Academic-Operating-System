@@ -4589,6 +4589,12 @@
             "poll": "Bình chọn",
             "moderation": "Kiểm duyệt"
         },
+        "rail": {
+            "trending": "Xu hướng",
+            "reputation": "Bảng uy tín",
+            "poll": "Bình chọn nhanh",
+            "seeAll": "Xem tất cả"
+        },
         "tabs": {
             "forYou": "Dành cho bạn",
             "following": "Đang theo dõi",

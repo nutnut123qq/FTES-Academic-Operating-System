@@ -22,10 +22,15 @@ import { AuthQueryOpener } from "@/components/layouts/auth/AuthQueryOpener"
 import { useAppearanceStore } from "@/hooks/zustand/appearance/store"
 
 export const InnerLayout = ({ children }: PropsWithChildren) => {
-    // Suppress the drifting ember background on Learn routes — it competes with
-    // long-form reading. Keep it on marketing / dashboard / the rest of the app.
+    // The meteor background is a full-screen fixed layer, so on any content-dense
+    // page its streaks show over/through the (glassmorphism, translucent) cards and
+    // read as painted on top. There's no per-page mask that fits every layout —
+    // content width/position varies (landing = centered max-w-6xl, workspace/
+    // community = full-bleed with rails). So gate it to the SPACIOUS landing pages
+    // only (same set that shows the footer: "/", "/home", per-locale), where the
+    // hero has room for it; every other route (app shells, learn, auth…) gets none.
+    // To let another page show it, add its path test to `isAmbientRoute`.
     const pathname = usePathname()
-    const isLearnRoute = pathname?.includes("/learn") ?? false
     // Ambient effect config (appearance-settings) — narrow selectors so InnerLayout
     // only re-renders when these two fields change (a rare user action).
     const effectEnabled = useAppearanceStore((state) => state.effectEnabled)
@@ -37,11 +42,15 @@ export const InnerLayout = ({ children }: PropsWithChildren) => {
     useEffect(() => {
         void useAppearanceStore.persist.rehydrate()
     }, [])
-    // Footer hiện ở LANDING — cả locale root ("/", "/vi", "/en") LẪN /home ("/home",
-    // "/vi/home"): /home là bản ungated của CÙNG trang landing (user đã login xem ở đây).
-    // Mọi trang khác (dashboard / learn / profile / auth / …) KHÔNG có footer — thầy chốt 2026-06-26.
-    const footerPath = pathname ?? ""
-    const showFooter = /^\/(?:[a-z]{2})?\/?$/.test(footerPath) || /^\/(?:[a-z]{2}\/)?home\/?$/.test(footerPath)
+    // LANDING = locale root ("/", "/vi", "/en") HOẶC /home ("/home", "/vi/home"):
+    // /home là bản ungated của CÙNG trang landing (user đã login xem ở đây).
+    // Footer + ambient meteor CHỈ hiện ở đây; mọi trang app dày nội dung (workspace /
+    // community / course / profile / learn / auth …) không có — thầy chốt 2026-06-26,
+    // ambient gate 2026-07-03. Thêm trang muốn có ambient → thêm test vào đây.
+    const routePath = pathname ?? ""
+    const isLandingRoute =
+        /^\/(?:[a-z]{2})?\/?$/.test(routePath) || /^\/(?:[a-z]{2}\/)?home\/?$/.test(routePath)
+    const showFooter = isLandingRoute
     // Header-first shell (2026-07-02): global nav lives in the top bar (HeaderNav).
     // The left sidebar is reserved for in-context nav — the subject workspace rail
     // (its own `SubjectWorkspaceShell`), so InnerLayout renders content full-width.
@@ -66,7 +75,7 @@ export const InnerLayout = ({ children }: PropsWithChildren) => {
                             </Suspense>
                             <AppSplash />
                             <TopLoader />
-                            {!isLearnRoute && effectEnabled ? (
+                            {isLandingRoute && effectEnabled ? (
                                 <AmbientBackground direction={effectDirection} speed={effectSpeed} />
                             ) : null}
                             <Navbar />

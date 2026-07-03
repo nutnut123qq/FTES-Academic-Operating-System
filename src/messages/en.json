@@ -4581,6 +4581,14 @@
     "communityHub": {
         "title": "Community",
         "placeholder": "This feed is under construction.",
+        "members": "{count, number} members",
+        "more": "More",
+        "menu": {
+            "newPost": "New post",
+            "reputation": "Reputation",
+            "poll": "Poll",
+            "moderation": "Moderation"
+        },
         "tabs": {
             "forYou": "For you",
             "following": "Following",
@@ -4622,6 +4630,7 @@
         },
         "composer": {
             "title": "Create post",
+            "whatsNew": "What's new?",
             "titleField": "Title",
             "bodyField": "What do you want to share?",
             "submit": "Post",

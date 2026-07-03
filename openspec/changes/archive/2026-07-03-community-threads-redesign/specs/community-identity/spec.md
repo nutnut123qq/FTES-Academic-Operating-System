@@ -1,23 +1,6 @@
-# community-identity Specification
+# community-identity — Delta
 
-## Purpose
-TBD - created by archiving change community-group-identity. Update Purpose after archive.
-## Requirements
-### Requirement: Community hub exposes an identity model
-The community hub SHALL expose a mocked identity via a SWR-shaped hook
-(`useQueryCommunityIdentitySwr`) returning `{ name: string, avatarUrl: string | null,
-coverUrl: string | null, members: number }`. Community scopes (For You / Following /
-Campus / Trending) remain route segments; identity lives at the hub level only —
-there is no per-scope banner.
-
-#### Scenario: Identity hook resolves hub identity
-- **WHEN** `useQueryCommunityIdentitySwr` resolves
-- **THEN** it returns the community name, member count, and nullable `avatarUrl`/`coverUrl`
-- **AND** the hook is SWR-shaped (`{ identity, isLoading, error }`) for a drop-in BE swap
-
-#### Scenario: Scopes stay banner-free
-- **WHEN** the user switches between For You, Following, Campus, and Trending
-- **THEN** the identity header does not change and no scope-specific banner renders
+## MODIFIED Requirements
 
 ### Requirement: Community shell renders an identity header
 `CommunityShell` SHALL render a COMPACT sticky identity header instead of a cover
@@ -61,15 +44,3 @@ skeleton, and the feed area continues to manage its own loading state independen
 - **THEN** a circular avatar skeleton and a short text-line skeleton render in the
   sticky row where the identity will be
 - **AND** the scope tabs render normally and remain clickable
-
-### Requirement: Community identity strings are localized and accessible
-New strings SHALL live under `communityHub.identity.*` in both `vi.json` and
-`en.json` (at minimum `coverAlt` and `avatarAlt` templates containing `{name}`).
-Rendered identity images SHALL expose name-derived alt text; the gradient fallback
-is decorative (non-image element, no alt).
-
-#### Scenario: Alt text follows the locale
-- **WHEN** the community avatar and cover images render in locale vi or en
-- **THEN** their alt attributes come from the matching `communityHub.identity.*` template
-- **AND** include the community name
-

@@ -70,6 +70,16 @@ the new lesson here at the end of the task.
   span ALL categories · what NOT to copy: autoplaying shelves (only the hero autoplays;
   shelves are manual swipe only) and Udemy's aggressive badge noise (max ONE badge per
   card) · source: coursera.org/browse, udemy.com/topic pages · 2026-07-02
+- **Social feed = Threads restraint, not card grids** · Threads (threads.com, token
+  `--barcelona-*` đọc trực tiếp 2026-07-03) làm feed tĩnh lặng bằng: 1 cột ~572–620px,
+  hairline divider THAY card/shadow, post = grid `48px + content` (avatar 36px, name+time
+  1 hàng), hàng action đơn sắc với count ẨN khi 0, màu bão hoà duy nhất = tim đỏ khi liked,
+  composer = trigger inline "What's new?" → modal, threadline nối avatar↓replies · takeaway
+  cho nhà: map sang semantic token (separator/muted/danger), giữ underline tabs thay
+  dropdown khi scope cần discoverability · what NOT to copy: hex cứng #101010 (phá light
+  mode + token nhà), left icon-rail 76px (đã có navbar), auto-update stream (chưa có BE)
+  · source: threads.com HTML tokens, ishadeed.com/article/threads-app-css (Part 1+2), Meta
+  newsroom 2025-04 · 2026-07-03
 - **Sticky enroll "buy box" on a course detail page** · Coursera/Udemy do it well · takeaway
   for StarCi: on a course *sales* page, keep price + CTA + "what's included" in a sticky right
   rail (`col-span-2`) while the pitch (hero, what-you'll-learn, syllabus, reviews, instructor)

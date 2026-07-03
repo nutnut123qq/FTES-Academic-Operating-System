@@ -4581,6 +4581,14 @@
     "communityHub": {
         "title": "Cộng đồng",
         "placeholder": "Nội dung đang được xây dựng.",
+        "members": "{count, number} thành viên",
+        "more": "Thêm",
+        "menu": {
+            "newPost": "Đăng bài",
+            "reputation": "Bảng uy tín",
+            "poll": "Bình chọn",
+            "moderation": "Kiểm duyệt"
+        },
         "tabs": {
             "forYou": "Dành cho bạn",
             "following": "Đang theo dõi",
@@ -4622,6 +4630,7 @@
         },
         "composer": {
             "title": "Tạo bài viết",
+            "whatsNew": "Có gì mới?",
             "titleField": "Tiêu đề",
             "bodyField": "Bạn muốn chia sẻ điều gì?",
             "submit": "Đăng bài",

@@ -21,7 +21,22 @@ Activity feed, chat, timeline, reactions.
 - **Activity tab:** drop the "Khóa học" section (already on Overview) — no repeat.
 
 ## Decisions (newest first)
-_(empty — each entry: **scenario** · **chose what** · **WHY** · which page · date)_
+- **Social post feed (community)** · chose **Threads anatomy qua block mới `ThreadsPostRow`**
+  (`blocks/feed/ThreadsPostRow`, props-only): grid `[48px_minmax(0,1fr)]`, avatar 36px cột trái,
+  header line = name semibold + relative time muted CÙNG hàng, rows trong cột
+  `divide-y divide-separator` — KHÔNG hộp border per-post, KHÔNG Card · **WHY:** feed xã hội cần
+  nhịp đọc liền mạch (Threads: hairline thay card, đơn sắc, count ẩn khi 0, đỏ danger chỉ khi
+  liked); hộp border rời từng post đọc như danh sách admin, không phải feed. Baseline
+  "Facebook/LinkedIn style" ở trên vẫn đúng cho ACTIVITY feed (câu actor-verb-target); feed
+  bài viết xã hội dùng ThreadsPostRow. · community feed + post detail · 2026-07-03
+- **Threadline (đường nối avatar ↓ replies)** · chose `div w-0.5 bg-separator rounded-full`
+  absolute-flow trong cột avatar của `ThreadsPostRow` (prop `threadline`), bật khi thread mở
+  (feed) / khi có comment (detail) · **WHY:** signature của Threads, cho người đọc thấy quan hệ
+  post↔replies mà không cần khung; màu = token separator để tự đúng light/dark. · community ·
+  2026-07-03
 
 ## Gotchas
-_(empty)_
+- **Preview headless KHÔNG bắn được press React Aria** (mọi HeroUI Button/Tab im lặng với
+  preview_click, kể cả nút navbar có sẵn; screenshot timeout; viewport có lúc 0×0 → phải
+  preview_resize trước khi đo rect). Verify tương tác HeroUI = tay/browser thật; preview chỉ
+  tin được snapshot/inspect + plain `<button>`. (2026-07-03, community redesign)

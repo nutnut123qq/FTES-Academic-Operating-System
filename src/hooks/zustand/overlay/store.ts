@@ -28,6 +28,7 @@ export type OverlayKey =
     | "appearance"
     | "authentication"
     | "challenge"
+    | "communityComposer"
     | "content"
     | "contentAiChat"
     | "contentAiSettings"
@@ -63,6 +64,7 @@ const OVERLAY_KEYS: ReadonlyArray<OverlayKey> = [
     "appearance",
     "authentication",
     "challenge",
+    "communityComposer",
     "content",
     "contentAiChat",
     "contentAiSettings",

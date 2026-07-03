@@ -11,7 +11,7 @@ const MentorCard = ({ mentorKey, avatarUrl }: { mentorKey: string; avatarUrl: st
     const t = useTranslations("homeLanding")
     const name = t(`mentors.people.${mentorKey}.name`)
     return (
-        <article className="flex min-w-[16rem] max-w-xs shrink-0 snap-start flex-col gap-4 rounded-3xl border border-separator bg-surface p-6 sm:min-w-0 sm:max-w-none">
+        <article className="flex min-w-[16rem] max-w-xs shrink-0 snap-start flex-col gap-4 rounded-2xl border border-separator bg-surface p-6 sm:min-w-0 sm:max-w-none">
             <div className="flex items-center gap-3">
                 <Avatar size="lg" className="shrink-0">
                     {avatarUrl ? <AvatarImage src={avatarUrl} alt={name} /> : null}

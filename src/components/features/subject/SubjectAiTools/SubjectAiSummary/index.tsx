@@ -120,7 +120,7 @@ export const SubjectAiSummary = ({
                             retryLabel={t("subjects.aiTools.retry")}
                         />
                     ) : summarySwr.data ? (
-                        <div className="flex flex-col gap-3 rounded-3xl border border-separator p-4">
+                        <div className="flex flex-col gap-3 rounded-2xl border border-separator p-4">
                             <div className="flex items-center justify-between gap-2">
                                 <Typography type="body" weight="medium">
                                     {t("subjects.aiTools.summary.keyPoints")}

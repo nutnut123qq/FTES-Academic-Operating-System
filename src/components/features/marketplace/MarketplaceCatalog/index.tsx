@@ -106,7 +106,7 @@ const ProductCard = ({ product }: { product: Product }) => {
     const Icon = CATEGORY_ICON[product.category]
 
     return (
-        <div className="flex flex-col gap-3 rounded-3xl border border-separator p-4">
+        <div className="flex flex-col gap-3 rounded-2xl border border-separator p-4">
             <div className="flex items-center gap-3">
                 <div className="flex size-11 shrink-0 items-center justify-center rounded-large bg-accent/10 text-accent">
                     <Icon className="size-6" aria-hidden />

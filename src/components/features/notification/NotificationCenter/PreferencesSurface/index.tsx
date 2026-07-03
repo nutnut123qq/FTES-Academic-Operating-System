@@ -72,7 +72,7 @@ export const PreferencesSurface = () => {
     return (
         <section
             aria-label={t("notifications.preferences.title")}
-            className="flex flex-col gap-3 rounded-3xl border border-separator p-4"
+            className="flex flex-col gap-3 rounded-2xl border border-separator p-4"
         >
             <div className="flex flex-col gap-0">
                 <span className="text-sm font-semibold text-foreground">

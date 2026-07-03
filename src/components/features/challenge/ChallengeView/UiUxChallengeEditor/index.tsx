@@ -145,7 +145,7 @@ export const UiUxChallengeEditor = ({ challenge }: UiUxChallengeEditorProps) => 
                     />
                     {challenge.isLocked ? (
                         <div className="absolute inset-0 z-10 flex items-center justify-center rounded-large bg-background/70 p-6">
-                            <div className="flex max-w-sm flex-col items-center gap-3 rounded-3xl border border-separator bg-surface p-6 text-center">
+                            <div className="flex max-w-sm flex-col items-center gap-3 rounded-2xl border border-separator bg-surface p-6 text-center">
                                 <LockIcon
                                     className="size-8 text-accent"
                                     aria-hidden
@@ -186,7 +186,7 @@ export const UiUxChallengeEditor = ({ challenge }: UiUxChallengeEditorProps) => 
                         sandbox="allow-scripts"
                         srcDoc={srcDoc}
                         title={t("uiuxEditor.preview.iframeTitle")}
-                        className="h-[320px] w-full rounded-3xl border border-separator bg-white lg:h-[360px]"
+                        className="h-[320px] w-full rounded-2xl border border-separator bg-white lg:h-[360px]"
                     />
                 </div>
 
@@ -230,7 +230,7 @@ export const UiUxChallengeEditor = ({ challenge }: UiUxChallengeEditorProps) => 
                         </Button>
                     </div>
                     {result ? (
-                        <div className="flex flex-col gap-2 rounded-3xl border border-separator p-4">
+                        <div className="flex flex-col gap-2 rounded-2xl border border-separator p-4">
                             <div className="flex flex-wrap items-center gap-2">
                                 <Typography type="body-sm" weight="semibold">
                                     {t("uiuxEditor.result.title")}

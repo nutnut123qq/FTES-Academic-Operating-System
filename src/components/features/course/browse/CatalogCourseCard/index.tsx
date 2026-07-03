@@ -38,7 +38,7 @@ export const CatalogCourseCard = ({ course, className }: CatalogCourseCardProps)
         <Link
             href={`/courses/${course.id}`}
             className={cn(
-                "group flex flex-col overflow-hidden rounded-3xl border border-separator no-underline transition-colors hover:bg-default/40",
+                "group flex flex-col overflow-hidden rounded-2xl border border-separator no-underline transition-colors hover:bg-default/40",
                 className,
             )}
         >

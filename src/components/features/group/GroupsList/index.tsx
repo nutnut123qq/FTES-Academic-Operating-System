@@ -49,7 +49,7 @@ export const GroupsList = () => {
                     {Array.from({ length: 4 }).map((_, index) => (
                         <div
                             key={index}
-                            className="flex flex-col gap-2 rounded-3xl border border-separator p-4"
+                            className="flex flex-col gap-2 rounded-2xl border border-separator p-4"
                         >
                             <div className="flex items-center gap-2">
                                 <Skeleton.Avatar size="md" className="shrink-0" />
@@ -67,7 +67,7 @@ export const GroupsList = () => {
                         <Link
                             key={group.id}
                             href={`/groups/${group.id}`}
-                            className="flex flex-col gap-2 rounded-3xl border border-separator p-4 no-underline transition-colors hover:bg-default/40"
+                            className="flex flex-col gap-2 rounded-2xl border border-separator p-4 no-underline transition-colors hover:bg-default/40"
                         >
                             <div className="flex items-center gap-2">
                                 {/* group avatar — image when set; initials fallback also

@@ -46,7 +46,7 @@ export const ResourceRating = () => {
             </Typography>
 
             {/* composer */}
-            <div className="flex flex-col gap-3 rounded-3xl border border-separator p-4">
+            <div className="flex flex-col gap-3 rounded-2xl border border-separator p-4">
                 <div className="flex items-center gap-1 text-lg">
                     {[1, 2, 3, 4, 5].map((star) => (
                         <button
@@ -74,7 +74,7 @@ export const ResourceRating = () => {
             {/* review list */}
             <div className="flex flex-col gap-3">
                 {all.map((review) => (
-                    <div key={review.id} className="flex flex-col gap-1 rounded-3xl border border-separator p-4">
+                    <div key={review.id} className="flex flex-col gap-1 rounded-2xl border border-separator p-4">
                         <div className="flex items-center gap-2">
                             <Typography type="body-sm" weight="medium">
                                 {review.author}

@@ -31,7 +31,7 @@ export const CommunityModeration = () => {
                 pending.map((report) => (
                     <div
                         key={report.id}
-                        className="flex flex-col gap-3 rounded-3xl border border-separator p-4"
+                        className="flex flex-col gap-3 rounded-2xl border border-separator p-4"
                     >
                         <div className="flex flex-col gap-0">
                             <Typography type="body-sm" weight="medium">

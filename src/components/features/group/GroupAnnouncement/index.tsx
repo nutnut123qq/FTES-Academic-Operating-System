@@ -23,7 +23,7 @@ export const GroupAnnouncement = () => {
             {announcements.map((announcement) => (
                 <div
                     key={announcement.id}
-                    className="flex flex-col gap-1 rounded-3xl border border-separator p-4"
+                    className="flex flex-col gap-1 rounded-2xl border border-separator p-4"
                 >
                     <div className="flex items-center justify-between gap-3">
                         <Typography type="body-sm" weight="medium" className="min-w-0" truncate>

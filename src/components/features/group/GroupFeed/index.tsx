@@ -64,7 +64,7 @@ const GroupFeedCard = ({ groupId, post }: { groupId: string; post: GroupPost }) 
     )
 
     return (
-        <div className="flex flex-col rounded-3xl border border-separator">
+        <div className="flex flex-col rounded-2xl border border-separator">
             <div className="flex flex-col gap-2 p-4">
                 <div className="flex items-center gap-3">
                     <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent/10 text-xs font-bold text-accent">

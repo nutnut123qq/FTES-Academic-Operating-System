@@ -101,7 +101,7 @@ export const EventCatalog = () => {
                         return (
                             <div
                                 key={event.id}
-                                className="flex flex-col gap-3 rounded-3xl border border-separator p-4 transition-colors hover:bg-default/40"
+                                className="flex flex-col gap-3 rounded-2xl border border-separator p-4 transition-colors hover:bg-default/40"
                             >
                                 <Link
                                     href={`/events/${event.id}`}

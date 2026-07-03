@@ -37,7 +37,7 @@ export const ChatShell = () => {
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,20rem)_1fr]">
                 {/* conversation list */}
-                <div className="flex flex-col gap-2 rounded-3xl border border-separator p-2">
+                <div className="flex flex-col gap-2 rounded-2xl border border-separator p-2">
                     {conversations.map((conversation) => {
                         const isSelected = conversation.id === selectedId
                         return (
@@ -71,7 +71,7 @@ export const ChatShell = () => {
                 </div>
 
                 {/* message thread + composer */}
-                <div className="flex min-h-[24rem] flex-col rounded-3xl border border-separator">
+                <div className="flex min-h-[24rem] flex-col rounded-2xl border border-separator">
                     {selected === null ? (
                         <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center">
                             <ChatCircleIcon className="size-8 text-muted" />

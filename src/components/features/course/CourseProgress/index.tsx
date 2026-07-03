@@ -35,7 +35,7 @@ export const CourseProgress = () => {
             />
 
             {/* certificate */}
-            <div className="flex flex-col gap-3 rounded-3xl border border-separator p-6">
+            <div className="flex flex-col gap-3 rounded-2xl border border-separator p-6">
                 <Typography type="h6" weight="bold">
                     {t("progress.certificate")}
                 </Typography>

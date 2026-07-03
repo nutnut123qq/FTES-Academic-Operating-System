@@ -24,7 +24,7 @@ export const ResourceRecommendation = () => {
                 <Link
                     key={resource.id}
                     href={`/resources/${resource.id}`}
-                    className="flex flex-col gap-1 rounded-3xl border border-separator p-4 no-underline transition-colors hover:bg-default/40"
+                    className="flex flex-col gap-1 rounded-2xl border border-separator p-4 no-underline transition-colors hover:bg-default/40"
                 >
                     <Typography type="body-sm" weight="medium" truncate>
                         {resource.title}

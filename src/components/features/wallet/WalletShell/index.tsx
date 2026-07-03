@@ -86,7 +86,7 @@ export const WalletShell = () => {
             </div>
 
             {/* balance hero card */}
-            <div className="flex flex-col gap-6 rounded-3xl border border-separator bg-accent/5 p-6">
+            <div className="flex flex-col gap-6 rounded-2xl border border-separator bg-accent/5 p-6">
                 <div className="flex items-start justify-between gap-3">
                     <div className="flex flex-col gap-1">
                         <Typography type="body-sm" color="muted">
@@ -144,7 +144,7 @@ export const WalletShell = () => {
                         </Typography>
                     </div>
                 ) : (
-                    <ul className="flex flex-col divide-y divide-separator rounded-3xl border border-separator px-4">
+                    <ul className="flex flex-col divide-y divide-separator rounded-2xl border border-separator px-4">
                         {transactions.map((tx) => (
                             <TransactionRow key={tx.id} tx={tx} />
                         ))}

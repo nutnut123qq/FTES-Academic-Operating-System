@@ -145,7 +145,7 @@ export const ChallengeView = () => {
             {challenge.type === "uiux" ? (
                 <UiUxChallengeEditor challenge={challenge} />
             ) : (
-                <div className="flex flex-col items-center gap-3 rounded-3xl border border-separator p-6 py-16 text-center">
+                <div className="flex flex-col items-center gap-3 rounded-2xl border border-separator p-6 py-16 text-center">
                     <HammerIcon
                         className="size-8 text-muted"
                         aria-hidden

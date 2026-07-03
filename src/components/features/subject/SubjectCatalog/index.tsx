@@ -117,7 +117,7 @@ const SubjectCard = ({ subject }: SubjectCardProps) => {
     return (
         <Link
             href={`/subjects/${subject.id}`}
-            className="flex flex-col overflow-hidden rounded-3xl border border-separator no-underline transition-colors hover:bg-default/40"
+            className="flex flex-col overflow-hidden rounded-2xl border border-separator no-underline transition-colors hover:bg-default/40"
         >
             {imageUrl !== null ? (
                 <div className="relative aspect-video w-full">
@@ -163,7 +163,7 @@ const SubjectCard = ({ subject }: SubjectCardProps) => {
  * (badge + two text lines), chip-row line — same boxes, same proportions.
  */
 const SubjectCardSkeleton = () => (
-    <div className="flex flex-col overflow-hidden rounded-3xl border border-separator">
+    <div className="flex flex-col overflow-hidden rounded-2xl border border-separator">
         <Skeleton className="aspect-video w-full rounded-none" />
         <div className="flex flex-col gap-3 p-4">
             <div className="flex items-center gap-3">

@@ -78,7 +78,7 @@ const ProjectForm = ({
     const [draft, setDraft] = useState<ProjectDraft>(initial)
     const canSave = draft.title.trim().length > 0 && draft.url.trim().length > 0
     return (
-        <div className="flex flex-col gap-3 rounded-3xl border border-separator p-4">
+        <div className="flex flex-col gap-3 rounded-2xl border border-separator p-4">
             <FieldRow
                 id={`${formId}-title`}
                 label={t("portfolio.form.title")}
@@ -132,7 +132,7 @@ const LinkForm = ({
     const [draft, setDraft] = useState<LinkDraft>(initial)
     const canSave = draft.label.trim().length > 0 && draft.url.trim().length > 0
     return (
-        <div className="flex flex-col gap-3 rounded-3xl border border-separator p-4">
+        <div className="flex flex-col gap-3 rounded-2xl border border-separator p-4">
             <FieldRow
                 id={`${formId}-label`}
                 label={t("portfolio.form.label")}
@@ -316,7 +316,7 @@ export const ProfilePortfolio = () => {
                                         ) : (
                                             <div
                                                 key={project.id}
-                                                className="flex flex-col gap-2 rounded-3xl border border-separator p-4"
+                                                className="flex flex-col gap-2 rounded-2xl border border-separator p-4"
                                             >
                                                 <div className="flex items-start gap-2">
                                                     <Typography type="body" weight="medium" className="min-w-0 flex-1">

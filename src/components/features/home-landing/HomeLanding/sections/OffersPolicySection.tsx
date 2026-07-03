@@ -102,7 +102,7 @@ export const OffersPolicySection = () => {
                                     role="tabpanel"
                                     aria-labelledby={`offer-tab-${group.key}`}
                                     hidden={i !== active}
-                                    className="rounded-3xl border border-separator bg-surface p-6"
+                                    className="rounded-2xl border border-separator bg-surface p-6"
                                 >
                                     <div className="mb-4 flex items-center gap-3">
                                         <div className="flex size-11 items-center justify-center rounded-large bg-accent/10 text-accent">

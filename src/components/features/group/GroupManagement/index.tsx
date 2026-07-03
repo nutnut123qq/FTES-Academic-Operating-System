@@ -94,7 +94,7 @@ export const GroupManagement = () => {
                     {t("manage.rules")}
                 </Typography>
                 {rules.map((rule, index) => (
-                    <div key={index} className="flex gap-3 rounded-3xl border border-separator p-4">
+                    <div key={index} className="flex gap-3 rounded-2xl border border-separator p-4">
                         <Typography type="body-sm" color="muted" className="shrink-0">
                             {index + 1}.
                         </Typography>
@@ -109,7 +109,7 @@ export const GroupManagement = () => {
                     {t("manage.pinned")}
                 </Typography>
                 {pinned.map((post, index) => (
-                    <div key={index} className="rounded-3xl border border-separator p-4">
+                    <div key={index} className="rounded-2xl border border-separator p-4">
                         <Typography type="body-sm" weight="medium" truncate>
                             {post}
                         </Typography>

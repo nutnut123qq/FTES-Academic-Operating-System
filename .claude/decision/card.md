@@ -35,23 +35,22 @@ Course/pricing/media/continue cards — the dominant content unit.
   uses side-card `sm:mt-6`, NOT translate, so the hover-lift transform never fights the
   layout offset; (d) gold strictly accent-only (name/metric/ring/chip) per the
   hall-of-fame lesson in `design/CONTENT.md` · home-landing HonorBoardSection · 2026-07-03
-- **Hand-rolled bordered card panels bumped `rounded-large` → `rounded-3xl`** (match HeroUI
-  `<Card>`) · **repo-wide pass, 71 sites** — first by hand on the screenshot offenders
-  (`MentorTeamSection`, `ModuleShowcaseSection`, `OffersPolicySection`, `HonorBoardSection`,
-  `SubjectCatalog`, `CatalogCourseCard`), then a codemod over `src/` with the rule: bump a line
-  iff it has `rounded-large` + `border border-separator|default` AND is NOT `bg-transparent`
-  (flat input), `size-*` (icon tile), `font-mono` (code chip), `border-dashed` (dropzone/empty
-  strip), `flex-wrap`, or a horizontal row (`items-center|items-start` without `flex-col`)
-  · **WHY:** teacher review of live screenshots — two card families read inconsistently:
-  HeroUI `<Card>` = `rounded-3xl` (~24px, soft) while hand-rolled `border border-separator`
-  panels sat at `rounded-large` (~12px, boxy), so catalog/marketing cards looked "thô" next to
-  the soft HeroUI cards on the same page. Unified the OUTER card container to `rounded-3xl`;
-  **kept** inner icon tiles, flat inputs, compact horizontal list-rows (community
+- **Hand-rolled bordered card panels bumped `rounded-large` → `rounded-2xl`** (softer, NOT
+  `rounded-3xl`) · **repo-wide pass, 69 sites** — codemod over `src/` with the rule: bump the
+  OUTER card container of a hand-rolled panel iff it has `rounded-large` + `border
+  border-separator|default` AND is NOT `bg-transparent` (flat input), `size-*` (icon tile),
+  `font-mono` (code chip), `border-dashed` (dropzone/empty strip), `flex-wrap`, or a horizontal
+  row (`items-center|items-start` without `flex-col`) · **WHY:** teacher review of live
+  screenshots — hand-rolled `border border-separator` panels sat at `rounded-large` (~12px) and
+  read "thô" (boxy). **First tried `rounded-3xl` to match HeroUI `<Card>` — teacher: "bo quá
+  tay" (over-rounded).** Landed on **`rounded-2xl` (~16px)** = gently soft without the pillowy
+  24px. So the target radius for a hand-rolled bordered card panel is **`rounded-2xl`, not
+  `rounded-3xl`** — the HeroUI `<Card>` 24px is its own thing; don't chase it for hand-rolled
+  panels. **Kept** inner icon tiles, flat inputs, compact horizontal list-rows (community
   `Trending/Reputation/Poll`, subject/resource rows), quiz/poll option rows, chat bubbles,
-  media/video frames, and small inner boxes (e.g. `TutorSettings` model box) at `rounded-large`
-  — 3xl on a thin row/small box reads pill-ish. Nested radius smaller than the parent is
-  correct. This supersedes the earlier "course family hand-rolls `rounded-large`" note below.
-  · 2026-07-03
+  media/video frames, and small inner boxes (e.g. `TutorSettings` model box) at `rounded-large`.
+  Nested radius smaller than the parent is correct. This supersedes the earlier "course family
+  hand-rolls `rounded-large`" note below. · 2026-07-03
 - **Catalog browse course card (shelf + grid + category page)** · chose a **hand-rolled
   bordered panel that IS a `Link`** (`rounded-large border border-separator overflow-hidden
   hover:bg-default/40`, cover 16:9 + gradient fallback, badge chip overlay, rating row,

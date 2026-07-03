@@ -31,7 +31,7 @@ export const CourseEnroll = () => {
                 {t("enroll.title")}
             </Typography>
 
-            <div className="flex flex-col gap-3 rounded-3xl border border-separator p-6">
+            <div className="flex flex-col gap-3 rounded-2xl border border-separator p-6">
                 {rows.map((row) => (
                     <div key={row.key} className="flex items-center justify-between gap-3">
                         <Typography type="body-sm" color="muted">

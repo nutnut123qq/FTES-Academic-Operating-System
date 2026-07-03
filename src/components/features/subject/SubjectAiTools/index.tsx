@@ -113,7 +113,7 @@ export const SubjectAiTools = () => {
             </Typography>
 
             {!isMember ? (
-                <div className="flex flex-col gap-3 rounded-3xl border border-separator p-4">
+                <div className="flex flex-col gap-3 rounded-2xl border border-separator p-4">
                     <div className="flex items-center gap-2 text-muted">
                         <LockIcon
                             className="size-5"
@@ -141,7 +141,7 @@ export const SubjectAiTools = () => {
                         {Array.from({ length: 4 }).map((_, i) => (
                             <div
                                 key={i}
-                                className="flex flex-col gap-3 rounded-3xl border border-separator p-4"
+                                className="flex flex-col gap-3 rounded-2xl border border-separator p-4"
                             >
                                 <Skeleton className="size-6 rounded" />
                                 <Skeleton.Typography type="body" width="1/2" />
@@ -169,7 +169,7 @@ export const SubjectAiTools = () => {
                             <div
                                 key={tool.key}
                                 className={cn(
-                                    "flex flex-col gap-3 rounded-3xl border border-separator p-4",
+                                    "flex flex-col gap-3 rounded-2xl border border-separator p-4",
                                     disabled && "opacity-60",
                                 )}
                             >

@@ -47,7 +47,7 @@ export const ProfileShell = ({ children }: ProfileShellProps) => {
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 p-6 md:flex-row">
             {/* identity card (left) */}
             <aside className="shrink-0 md:w-72 md:sticky md:top-20 md:self-start">
-                <div className="flex flex-col items-center gap-3 rounded-3xl border border-separator p-6 text-center">
+                <div className="flex flex-col items-center gap-3 rounded-2xl border border-separator p-6 text-center">
                     <div className="flex size-20 items-center justify-center rounded-full bg-accent/10 text-xl font-bold text-accent">
                         {(profile?.name ?? "?").slice(0, 1).toUpperCase()}
                     </div>

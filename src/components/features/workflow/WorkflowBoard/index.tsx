@@ -64,7 +64,7 @@ export const WorkflowBoard = () => {
                         <section
                             key={stage}
                             aria-label={t(`stages.${stage}`)}
-                            className="flex w-72 shrink-0 flex-col gap-3 rounded-3xl border border-separator bg-default/20 p-3"
+                            className="flex w-72 shrink-0 flex-col gap-3 rounded-2xl border border-separator bg-default/20 p-3"
                         >
                             <div className="flex items-center gap-2">
                                 <StageIcon className="size-4 shrink-0 text-accent" aria-hidden />
@@ -85,7 +85,7 @@ export const WorkflowBoard = () => {
                                     cards.map((item) => (
                                         <article
                                             key={item.id}
-                                            className="flex flex-col gap-2 rounded-3xl border border-separator bg-surface p-3"
+                                            className="flex flex-col gap-2 rounded-2xl border border-separator bg-surface p-3"
                                         >
                                             <Typography type="body-sm" weight="medium">
                                                 {item.title}

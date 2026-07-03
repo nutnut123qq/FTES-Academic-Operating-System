@@ -174,7 +174,7 @@ const CourseDetailView = ({
                                 duration: course.durationLabel,
                             })}
                         </Typography>
-                        <div className="flex flex-col overflow-hidden rounded-3xl border border-separator">
+                        <div className="flex flex-col overflow-hidden rounded-2xl border border-separator">
                             {course.sections.map((section, index) => {
                                 const isOpen = openSections.has(section.id)
                                 return (
@@ -281,7 +281,7 @@ const CourseDetailView = ({
 
                 {/* RIGHT — sticky enroll card */}
                 <div className="md:col-span-2">
-                    <div className="flex flex-col gap-3 rounded-3xl border border-separator p-4 md:sticky md:top-20">
+                    <div className="flex flex-col gap-3 rounded-2xl border border-separator p-4 md:sticky md:top-20">
                         <div className="flex aspect-video w-full items-center justify-center rounded-large bg-default/40">
                             <PlayCircleIcon aria-hidden focusable="false" className="size-10 text-muted" />
                         </div>

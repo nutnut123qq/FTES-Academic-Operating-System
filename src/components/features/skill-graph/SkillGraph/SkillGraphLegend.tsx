@@ -14,7 +14,7 @@ export const SkillGraphLegend = () => {
     const t = useTranslations()
 
     return (
-        <div className="flex flex-col gap-3 rounded-3xl border border-default bg-surface p-4">
+        <div className="flex flex-col gap-3 rounded-2xl border border-default bg-surface p-4">
             <div className="flex flex-col gap-2">
                 <Typography type="body-xs" weight="medium" color="muted">
                     {t("skillGraph.legend.domains")}

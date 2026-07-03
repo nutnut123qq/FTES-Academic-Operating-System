@@ -63,7 +63,7 @@ export const PreferencesSurface = () => {
 
     if (isLoading && !data) {
         return (
-            <div className="flex items-center justify-center rounded-2xl border border-separator p-6">
+            <div className="flex items-center justify-center rounded-large border border-separator p-6">
                 <Spinner size="sm" />
             </div>
         )
@@ -84,7 +84,7 @@ export const PreferencesSurface = () => {
             </div>
 
             {/* master mute-all switch */}
-            <div className="flex items-center justify-between gap-3 rounded-2xl bg-default/40 p-3">
+            <div className="flex items-center justify-between gap-3 rounded-large bg-default/40 p-3">
                 <div className="flex items-center gap-3">
                     <BellSlashIcon
                         className="size-5 text-muted"

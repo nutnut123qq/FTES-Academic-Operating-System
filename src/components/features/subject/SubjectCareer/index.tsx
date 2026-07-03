@@ -49,7 +49,7 @@ export const SubjectCareer = () => {
                 {career.careers.map((item) => (
                     <div
                         key={item.id}
-                        className="flex items-center gap-3 rounded-2xl border border-separator p-4"
+                        className="flex items-center gap-3 rounded-large border border-separator p-4"
                     >
                         <Typography type="body-sm" weight="medium" className="min-w-0 flex-1" truncate>
                             {item.title}
@@ -74,7 +74,7 @@ export const SubjectCareer = () => {
                 <Typography type="h6" weight="bold">
                     {t("career.nextSubject")}
                 </Typography>
-                <div className="flex items-center gap-3 rounded-2xl border border-separator p-4">
+                <div className="flex items-center gap-3 rounded-large border border-separator p-4">
                     <div className="flex size-11 shrink-0 items-center justify-center rounded-large bg-accent/10 text-sm font-bold text-accent">
                         {career.nextSubject.code.slice(0, 3).toUpperCase()}
                     </div>

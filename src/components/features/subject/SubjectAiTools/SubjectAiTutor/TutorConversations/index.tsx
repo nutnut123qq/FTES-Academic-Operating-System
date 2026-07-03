@@ -105,7 +105,7 @@ export const TutorConversations = ({
                         <div
                             key={session.id}
                             className={cn(
-                                "flex items-center gap-2 rounded-2xl border border-default p-3",
+                                "flex items-center gap-2 rounded-large border border-default p-3",
                             )}
                         >
                             <button

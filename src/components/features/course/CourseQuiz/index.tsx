@@ -42,7 +42,7 @@ export const CourseQuiz = () => {
                                         type="button"
                                         onClick={() => !submitted && setAnswers((prev) => ({ ...prev, [question.id]: optionIndex }))}
                                         className={cn(
-                                            "flex items-center gap-3 rounded-2xl border p-4 text-left transition-colors",
+                                            "flex items-center gap-3 rounded-large border p-4 text-left transition-colors",
                                             selected ? "border-accent bg-accent/10" : "border-separator hover:bg-default/40",
                                             isCorrect && "border-accent bg-accent/10",
                                         )}

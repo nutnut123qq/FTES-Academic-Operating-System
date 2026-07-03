@@ -109,7 +109,7 @@ export const LeaderboardShell = () => {
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
                 {stats.map((stat) => {
                     const card = (
-                        <div className="flex h-full flex-col gap-2 rounded-2xl bg-default/40 p-4 text-left">
+                        <div className="flex h-full flex-col gap-2 rounded-large bg-default/40 p-4 text-left">
                             <div className="flex items-center gap-2 text-muted">
                                 {stat.icon}
                                 <Typography type="body-xs" color="muted">
@@ -176,7 +176,7 @@ export const LeaderboardShell = () => {
                         return (
                             <div
                                 key={entry.id}
-                                className={`flex items-center gap-3 rounded-2xl border border-separator p-3 ${
+                                className={`flex items-center gap-3 rounded-large border border-separator p-3 ${
                                     isMe ? "bg-accent/10" : ""
                                 }`}
                             >
@@ -221,7 +221,7 @@ export const LeaderboardShell = () => {
                         return (
                             <div
                                 key={milestone.days}
-                                className={`flex flex-col items-center gap-2 rounded-2xl bg-default/40 p-4 ${
+                                className={`flex flex-col items-center gap-2 rounded-large bg-default/40 p-4 ${
                                     earned ? "" : "opacity-50"
                                 }`}
                             >

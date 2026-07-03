@@ -22,7 +22,7 @@ export const CommunityReputation = () => {
             {contributors.map((contributor, index) => (
                 <div
                     key={contributor.id}
-                    className="flex items-center gap-3 rounded-2xl border border-separator p-4"
+                    className="flex items-center gap-3 rounded-large border border-separator p-4"
                 >
                     <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent/10 text-sm font-bold text-accent">
                         {index + 1}

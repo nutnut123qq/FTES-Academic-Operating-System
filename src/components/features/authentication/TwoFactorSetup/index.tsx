@@ -55,7 +55,7 @@ export const TwoFactorSetup = () => {
     }
 
     return (
-        <div className="mx-auto flex w-full max-w-md flex-col gap-6 rounded-2xl border border-separator p-6">
+        <div className="mx-auto flex w-full max-w-md flex-col gap-6 rounded-3xl border border-separator p-6">
             <div className="flex flex-col gap-1">
                 <Typography type="h4" weight="bold">
                     {t("twoFactor.title")}

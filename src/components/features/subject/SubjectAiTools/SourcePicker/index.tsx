@@ -48,7 +48,7 @@ export const SourcePicker = ({
                             aria-checked={isSelected}
                             onClick={() => onSelect(source.id)}
                             className={cn(
-                                "flex items-center gap-2 rounded-2xl border p-3 text-left outline-none transition-colors",
+                                "flex items-center gap-2 rounded-large border p-3 text-left outline-none transition-colors",
                                 "focus-visible:ring-2 focus-visible:ring-focus",
                                 isSelected
                                     ? "border-accent bg-accent/10 text-accent"

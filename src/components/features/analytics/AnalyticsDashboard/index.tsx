@@ -33,7 +33,7 @@ export const AnalyticsDashboard = () => {
                 {metrics.map((metric) => {
                     const up = metric.delta >= 0
                     return (
-                        <div key={metric.id} className="flex flex-col gap-2 rounded-2xl bg-default/40 p-4">
+                        <div key={metric.id} className="flex flex-col gap-2 rounded-large bg-default/40 p-4">
                             <Typography type="body-xs" color="muted">
                                 {t(`metrics.${metric.key}`)}
                             </Typography>
@@ -64,7 +64,7 @@ export const AnalyticsDashboard = () => {
                 {sections.map((section) => (
                     <div
                         key={section.id}
-                        className="flex flex-col gap-3 rounded-2xl border border-separator p-4"
+                        className="flex flex-col gap-3 rounded-3xl border border-separator p-4"
                     >
                         <div className="flex items-center gap-2 text-muted">
                             <ChartBarIcon className="size-5" aria-hidden />

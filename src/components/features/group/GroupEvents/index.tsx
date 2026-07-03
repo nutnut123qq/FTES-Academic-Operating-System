@@ -20,7 +20,7 @@ export const GroupEvents = () => {
             {events.map((event) => (
                 <div
                     key={event.id}
-                    className="flex items-center gap-3 rounded-2xl border border-separator p-4"
+                    className="flex items-center gap-3 rounded-large border border-separator p-4"
                 >
                     <div className="min-w-0 flex-1">
                         <Typography type="body-sm" weight="medium" truncate>

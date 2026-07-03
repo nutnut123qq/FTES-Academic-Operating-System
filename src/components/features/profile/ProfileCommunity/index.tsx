@@ -61,7 +61,7 @@ export const ProfileCommunity = () => {
                         </Typography>
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                             {tiles.map((tile) => (
-                                <div key={tile.key} className="flex flex-col gap-1 rounded-2xl bg-default/40 p-4">
+                                <div key={tile.key} className="flex flex-col gap-1 rounded-large bg-default/40 p-4">
                                     <Typography type="body-xs" color="muted">
                                         {t(`community.reputation.${tile.key}`)}
                                     </Typography>
@@ -95,7 +95,7 @@ export const ProfileCommunity = () => {
                                 <Link
                                     key={post.id}
                                     href={`/community/${post.id}`}
-                                    className="flex flex-wrap items-center gap-3 rounded-2xl border border-separator p-4 no-underline transition-colors hover:bg-default/40"
+                                    className="flex flex-wrap items-center gap-3 rounded-large border border-separator p-4 no-underline transition-colors hover:bg-default/40"
                                 >
                                     <Typography type="body-sm" weight="medium" className="min-w-0 flex-1" truncate>
                                         {post.title}

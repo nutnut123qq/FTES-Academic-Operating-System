@@ -48,19 +48,10 @@ Course/pricing/media/continue cards — the dominant content unit.
   tay" (over-rounded).** Landed on **`rounded-2xl` (~16px)** = gently soft without the pillowy
   24px. So the target radius for a hand-rolled bordered card panel is **`rounded-2xl`, not
   `rounded-3xl`** — the HeroUI `<Card>` 24px is its own thing; don't chase it for hand-rolled
-  panels. **2nd pass (teacher: "vẫn còn các ô quá vuông" on the Subject Overview):** the first
-  rule only matched `border border-separator|default`, so it SKIPPED accent-tinted banners
-  (`bg-accent/10 p-4`), filled stat/metric tiles (`bg-default/40 p-4`), accent-bordered panels
-  (`border-accent/40`), and compact list-rows (`items-center border p-4`) — those stayed
-  `rounded-large` (12px) and read square next to the 2xl cards. So the rule is now **any PADDED
-  content box → `rounded-2xl`**: bump `rounded-large|rounded-3xl` → `rounded-2xl` on a line with
-  block padding `p-[3-6]`, EXCLUDING `size-*` (icon tile / avatar), `bg-transparent` (flat
-  input), `border-dashed` (dropzone), `aspect-*` (media/video frame), `Skeleton`. **Net rule of
-  the house: every bordered/filled content box — panel, banner, tile, or list-row — is
-  `rounded-2xl` (16px).** Only genuinely small/other things stay smaller: icon tiles & inputs
-  (`rounded-large`), chat bubbles (`px-4 py-2`, no block padding → left `rounded-large`), avatars
-  (`rounded-full`), media frames, skeletons. Nested radius smaller than the parent is correct.
-  This supersedes the earlier "course family
+  panels. **Kept** inner icon tiles, flat inputs, compact horizontal list-rows (community
+  `Trending/Reputation/Poll`, subject/resource rows), quiz/poll option rows, chat bubbles,
+  media/video frames, and small inner boxes (e.g. `TutorSettings` model box) at `rounded-large`.
+  Nested radius smaller than the parent is correct. This supersedes the earlier "course family
   hand-rolls `rounded-large`" note below. · 2026-07-03
 - **Catalog browse course card (shelf + grid + category page)** · chose a **hand-rolled
   bordered panel that IS a `Link`** (`rounded-large border border-separator overflow-hidden

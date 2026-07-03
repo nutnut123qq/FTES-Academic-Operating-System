@@ -36,7 +36,7 @@ export const SubjectStatistics = () => {
             {/* metric cards */}
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {metrics.map((metric) => (
-                    <div key={metric.key} className="flex flex-col gap-1 rounded-2xl bg-default/40 p-4">
+                    <div key={metric.key} className="flex flex-col gap-1 rounded-large bg-default/40 p-4">
                         <Typography type="body-xs" color="muted">
                             {t(`statistics.metrics.${metric.key}`)}
                         </Typography>
@@ -55,7 +55,7 @@ export const SubjectStatistics = () => {
                 {stats.topStudents.map((student, index) => (
                     <div
                         key={student.id}
-                        className="flex items-center gap-3 rounded-2xl border border-separator p-4"
+                        className="flex items-center gap-3 rounded-large border border-separator p-4"
                     >
                         <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent/10 text-sm font-bold text-accent">
                             {index + 1}

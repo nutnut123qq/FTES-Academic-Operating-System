@@ -409,7 +409,7 @@ export const ProfilePortfolio = () => {
                                     ) : (
                                         <div
                                             key={link.id}
-                                            className="flex flex-wrap items-center gap-3 rounded-2xl border border-separator p-4"
+                                            className="flex flex-wrap items-center gap-3 rounded-large border border-separator p-4"
                                         >
                                             <LinkIcon className="size-5 shrink-0 text-muted" aria-hidden focusable="false" />
                                             <Typography type="body-sm" weight="medium" className="shrink-0">

@@ -38,7 +38,7 @@ export const ProfilePersonal = () => {
                 {detail.socials.map((social) => (
                     <div
                         key={social.key}
-                        className="flex items-center gap-3 rounded-2xl border border-separator p-4"
+                        className="flex items-center gap-3 rounded-large border border-separator p-4"
                     >
                         <Typography type="body-sm" color="muted" className="w-24 shrink-0">
                             {t(`personal.socialLabels.${social.key}`)}

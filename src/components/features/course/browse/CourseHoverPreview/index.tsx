@@ -153,7 +153,7 @@ export const CourseHoverPreview = ({ course, children, className }: CourseHoverP
                     style={position ? { left: position.left, top: position.top } : undefined}
                     className={cn(
                         // desktop-only gate: touch/coarse pointers never render the panel
-                        "fixed z-40 hidden w-80 rounded-large border border-separator bg-surface p-4 shadow-lg",
+                        "fixed z-40 hidden w-80 rounded-3xl border border-separator bg-surface p-4 shadow-lg",
                         "[@media(hover:hover)_and_(pointer:fine)]:block",
                         position ? "visible" : "invisible",
                     )}

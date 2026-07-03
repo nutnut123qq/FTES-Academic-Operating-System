@@ -116,7 +116,7 @@ export const SubjectAiFlashcards = ({
                         aria-label={t("subjects.aiTools.flashcards.flip")}
                         aria-pressed={flipped}
                         onClick={() => setFlipped((prev) => !prev)}
-                        className="flex min-h-48 w-full flex-col items-center justify-center gap-2 rounded-large border border-separator p-6 text-center outline-none transition-colors hover:bg-default focus-visible:ring-2 focus-visible:ring-focus"
+                        className="flex min-h-48 w-full flex-col items-center justify-center gap-2 rounded-3xl border border-separator p-6 text-center outline-none transition-colors hover:bg-default focus-visible:ring-2 focus-visible:ring-focus"
                     >
                         <Typography type="body-sm" color="muted">
                             {flipped

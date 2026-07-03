@@ -75,7 +75,7 @@ export const IntegrationHub = () => {
                             {group.items.map((integration) => (
                                 <div
                                     key={integration.id}
-                                    className="flex flex-col gap-3 rounded-large border border-separator p-4"
+                                    className="flex flex-col gap-3 rounded-3xl border border-separator p-4"
                                 >
                                     <div className="flex items-center gap-3">
                                         <div className="flex size-11 shrink-0 items-center justify-center rounded-large bg-accent/10 text-accent">

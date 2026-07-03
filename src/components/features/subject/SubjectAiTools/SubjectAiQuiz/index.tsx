@@ -153,7 +153,7 @@ export const SubjectAiQuiz = ({
                     {Array.from({ length: 3 }).map((_, i) => (
                         <div
                             key={i}
-                            className="flex flex-col gap-2 rounded-large border border-separator p-4"
+                            className="flex flex-col gap-2 rounded-3xl border border-separator p-4"
                         >
                             <Skeleton.Typography type="body-sm" width="2/3" />
                             <Skeleton.RadioGroup items={4} />
@@ -176,7 +176,7 @@ export const SubjectAiQuiz = ({
                     {questions.map((question, qi) => (
                         <fieldset
                             key={question.id}
-                            className="flex flex-col gap-2 rounded-large border border-separator p-4"
+                            className="flex flex-col gap-2 rounded-3xl border border-separator p-4"
                         >
                             <legend className="text-sm font-medium">
                                 {qi + 1}. {question.prompt}

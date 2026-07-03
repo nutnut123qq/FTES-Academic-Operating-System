@@ -39,7 +39,7 @@ export const ModuleShowcaseSection = () => {
                             key={card.key}
                             href={card.href}
                             className={cn(
-                                "group flex flex-col gap-3 rounded-large border border-separator p-6 no-underline transition-colors hover:bg-default/40",
+                                "group flex flex-col gap-3 rounded-3xl border border-separator p-6 no-underline transition-colors hover:bg-default/40",
                             )}
                         >
                             <div className="flex size-11 items-center justify-center rounded-large bg-accent/10 text-accent">

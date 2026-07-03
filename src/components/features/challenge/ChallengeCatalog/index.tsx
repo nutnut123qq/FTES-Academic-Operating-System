@@ -91,7 +91,7 @@ export const ChallengeCatalog = () => {
                         <Link
                             key={challenge.id}
                             href={`/challenges/${challenge.id}`}
-                            className="flex flex-col gap-3 rounded-large border border-separator p-4 no-underline transition-colors hover:bg-default/40"
+                            className="flex flex-col gap-3 rounded-3xl border border-separator p-4 no-underline transition-colors hover:bg-default/40"
                         >
                             <div className="flex items-center gap-3">
                                 <div className="flex size-11 shrink-0 items-center justify-center rounded-large bg-accent/10 text-accent">

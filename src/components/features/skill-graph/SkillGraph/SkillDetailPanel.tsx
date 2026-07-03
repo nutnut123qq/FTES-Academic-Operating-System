@@ -41,7 +41,7 @@ export const SkillDetailPanel = ({ skill, onClose, className }: SkillDetailPanel
             role="dialog"
             aria-label={t("skillGraph.panel.title", { name: skill.name })}
             className={cn(
-                "flex w-full flex-col gap-4 rounded-large border border-default bg-surface p-4 sm:w-72",
+                "flex w-full flex-col gap-4 rounded-3xl border border-default bg-surface p-4 sm:w-72",
                 className,
             )}
         >

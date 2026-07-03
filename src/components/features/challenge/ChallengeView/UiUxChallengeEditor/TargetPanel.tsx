@@ -38,7 +38,7 @@ export const TargetPanel = ({
             <Typography type="body-sm" weight="medium">
                 {t("uiuxEditor.target.title")}
             </Typography>
-            <div className="relative overflow-hidden rounded-large border border-separator">
+            <div className="relative overflow-hidden rounded-3xl border border-separator">
                 {!imageLoaded ? <Skeleton className="absolute inset-0" /> : null}
                 {/* plain <img>: mock data-URI image, next/image optimization not applicable */}
                 <img

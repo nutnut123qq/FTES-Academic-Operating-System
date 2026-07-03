@@ -218,7 +218,7 @@ export const LeaderboardGuideShell = () => {
             </section>
 
             {/* Coming soon */}
-            <section className="flex flex-col gap-2 rounded-large border border-separator p-4">
+            <section className="flex flex-col gap-2 rounded-3xl border border-separator p-4">
                 <Typography.Heading level={2} weight="bold" className="text-lg">
                     {t("guide.comingSoonSection")}
                 </Typography.Heading>

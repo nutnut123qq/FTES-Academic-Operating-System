@@ -64,7 +64,7 @@ export const AnalyticsDashboard = () => {
                 {sections.map((section) => (
                     <div
                         key={section.id}
-                        className="flex flex-col gap-3 rounded-large border border-separator p-4"
+                        className="flex flex-col gap-3 rounded-3xl border border-separator p-4"
                     >
                         <div className="flex items-center gap-2 text-muted">
                             <ChartBarIcon className="size-5" aria-hidden />

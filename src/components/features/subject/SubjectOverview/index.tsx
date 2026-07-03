@@ -273,7 +273,7 @@ const LinkedCoursesCard = ({ courses }: { courses: Array<LinkedCourse> }) => {
     if (courses.length === 0) return null
 
     return (
-        <div className="flex flex-col gap-3 rounded-large border border-separator p-4">
+        <div className="flex flex-col gap-3 rounded-3xl border border-separator p-4">
             <Typography type="body-sm" weight="medium">
                 {t("overview.linkedCourses")}
             </Typography>
@@ -314,7 +314,7 @@ const RailCard = ({
     seeAll: string
     children: React.ReactNode
 }) => (
-    <div className="flex flex-col gap-3 rounded-large border border-separator p-4">
+    <div className="flex flex-col gap-3 rounded-3xl border border-separator p-4">
         <div className="flex items-center gap-2">
             <Typography type="body-sm" weight="medium" className="min-w-0 flex-1">
                 {title}

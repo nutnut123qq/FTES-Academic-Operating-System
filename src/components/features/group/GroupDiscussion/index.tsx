@@ -63,7 +63,7 @@ const GroupDiscussionRow = ({ groupId, thread }: { groupId: string; thread: Grou
     )
 
     return (
-        <div className="flex flex-col rounded-large border border-separator">
+        <div className="flex flex-col rounded-3xl border border-separator">
             <div className="flex flex-col gap-2 p-4">
                 <div className="min-w-0">
                     <Typography type="body-sm" weight="medium" truncate>

@@ -35,7 +35,7 @@ const RecommendationCard = ({
     Icon: typeof BookOpenIcon
     viewLabel: string
 }) => (
-    <div className="flex w-64 shrink-0 flex-col gap-3 rounded-large border border-separator p-4">
+    <div className="flex w-64 shrink-0 flex-col gap-3 rounded-3xl border border-separator p-4">
         <div className="flex size-11 shrink-0 items-center justify-center rounded-large bg-accent/10 text-accent">
             <Icon size={22} aria-hidden />
         </div>

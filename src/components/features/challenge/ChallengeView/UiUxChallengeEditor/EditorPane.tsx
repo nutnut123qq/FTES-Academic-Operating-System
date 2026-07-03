@@ -138,7 +138,7 @@ export const EditorPane = ({
 
             {/* editor surface: Monaco → textarea fallback → loading skeleton */}
             <div
-                className="min-h-0 flex-1 overflow-hidden rounded-large border border-separator"
+                className="min-h-0 flex-1 overflow-hidden rounded-3xl border border-separator"
                 aria-label={t("uiuxEditor.editorLabel")}
             >
                 {MonacoEditor ? (

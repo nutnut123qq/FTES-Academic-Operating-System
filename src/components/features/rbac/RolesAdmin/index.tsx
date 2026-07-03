@@ -45,7 +45,7 @@ export const RolesAdmin = () => {
                     {roles.map((role) => (
                         <div
                             key={role.id}
-                            className="flex flex-col gap-3 rounded-large border border-separator p-4"
+                            className="flex flex-col gap-3 rounded-3xl border border-separator p-4"
                         >
                             <div className="flex size-11 items-center justify-center rounded-large bg-accent/10 text-accent">
                                 <ShieldIcon className="size-5" aria-hidden />
@@ -68,7 +68,7 @@ export const RolesAdmin = () => {
                 <Typography type="body" weight="medium">
                     {t("permissionMatrix")}
                 </Typography>
-                <div className="overflow-x-auto rounded-large border border-separator">
+                <div className="overflow-x-auto rounded-3xl border border-separator">
                     <table className="w-full border-collapse text-left">
                         <caption className="sr-only">{t("permissionMatrix")}</caption>
                         <thead>

@@ -161,7 +161,7 @@ const SkillGraphCanvasInner = ({
 
     return (
         <div
-            className={`w-full overflow-hidden rounded-large border border-default bg-surface ${heightClassName}`}
+            className={`w-full overflow-hidden rounded-3xl border border-default bg-surface ${heightClassName}`}
             role="application"
             aria-label={t("skillGraph.canvasLabel")}
         >

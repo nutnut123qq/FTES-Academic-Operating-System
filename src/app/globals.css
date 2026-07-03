@@ -260,8 +260,8 @@ html {
  */
 @keyframes meteorFall {
     0% { transform: translate3d(0, -15vh, 0) rotate(var(--tilt, -32deg)); opacity: 0; }
-    10% { opacity: 1; }
-    80% { opacity: 0.8; }
+    10% { opacity: 0.3; }
+    80% { opacity: 0.24; }
     100% { transform: translate3d(var(--drift, 45vw), 110vh, 0) rotate(var(--tilt, -32deg)); opacity: 0; }
 }
 

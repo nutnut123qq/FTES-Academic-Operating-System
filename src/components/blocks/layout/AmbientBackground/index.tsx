@@ -123,19 +123,6 @@ export const AmbientBackground = ({
         [sparkCount, isFall],
     )
 
-    // Keep the meteor field OUT of the central content column: the house style is
-    // glassmorphism (bg-surface/60, bg-default/20, border-only cards), so streaks
-    // behind those translucent surfaces show straight through and read as if they
-    // were painted on top of the content. A horizontal mask fades the whole layer
-    // out across the content band (max-w-6xl = 1152px + breathing room) and keeps
-    // it fully visible only in the side margins. px-based around 50% so it tracks
-    // the real centered column, not viewport percentages; on narrow screens the
-    // margins vanish and the effect fades out entirely — accepted trade-off.
-    // Rise (bottom-center glow + full-field embers) keeps its original unmasked look.
-    const fallMask = isFall
-        ? "linear-gradient(to right, black, black calc(50% - 760px), transparent calc(50% - 600px), transparent calc(50% + 600px), black calc(50% + 760px), black)"
-        : undefined
-
     return (
         <div
             aria-hidden="true"
@@ -143,10 +130,6 @@ export const AmbientBackground = ({
                 "pointer-events-none fixed inset-0 -z-10 overflow-hidden",
                 className,
             )}
-            style={{
-                WebkitMaskImage: fallMask,
-                maskImage: fallMask,
-            }}
         >
             {/* warm glow pooled at the departure corner/edge: top-left for fall
                 (the meteor shower's source), bottom for rise */}

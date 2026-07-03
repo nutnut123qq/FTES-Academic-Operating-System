@@ -17,6 +17,7 @@ import {
 import { Button, Typography, cn } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { useRouter } from "@/i18n/navigation"
+import { ShowcaseMockup, SHOWCASE_THEMES } from "@/components/blocks/marketing/ShowcaseMockup"
 import { OFFER_GROUPS } from "../content"
 
 /** Icon per offer group key. */
@@ -90,42 +91,51 @@ export const OffersPolicySection = () => {
                         })}
                     </div>
 
-                    {/* panels — all mounted, inactive ones CSS-hidden (crawlable) */}
+                    {/* panels — bọc CẢ cột trong ShowcaseMockup (chrome + tilt 3D + glow),
+                        đồng bộ hero look. 8 panel VẪN mounted, inactive chỉ `hidden` (không
+                        unmount) → mọi copy ưu đãi vẫn trong HTML server-render (crawlable). */}
                     <div>
-                        {OFFER_GROUPS.map((group, i) => {
-                            const GroupIcon = GROUP_ICON[group.key] ?? GiftIcon
-                            const lines = Array.from({ length: group.lineCount }, (_, li) => li)
-                            return (
-                                <div
-                                    key={group.key}
-                                    id={`offer-panel-${group.key}`}
-                                    role="tabpanel"
-                                    aria-labelledby={`offer-tab-${group.key}`}
-                                    hidden={i !== active}
-                                    className="rounded-2xl border border-separator bg-surface p-6"
-                                >
-                                    <div className="mb-4 flex items-center gap-3">
-                                        <div className="flex size-11 items-center justify-center rounded-large bg-accent/10 text-accent">
-                                            <GroupIcon className="size-6" aria-hidden focusable="false" />
+                        <ShowcaseMockup
+                            url="ftes.edu.vn/uu-dai"
+                            tilt="left"
+                            backdrop="glow"
+                            theme={SHOWCASE_THEMES.accent}
+                            contentClassName="p-6"
+                        >
+                            {OFFER_GROUPS.map((group, i) => {
+                                const GroupIcon = GROUP_ICON[group.key] ?? GiftIcon
+                                const lines = Array.from({ length: group.lineCount }, (_, li) => li)
+                                return (
+                                    <div
+                                        key={group.key}
+                                        id={`offer-panel-${group.key}`}
+                                        role="tabpanel"
+                                        aria-labelledby={`offer-tab-${group.key}`}
+                                        hidden={i !== active}
+                                    >
+                                        <div className="mb-4 flex items-center gap-3">
+                                            <div className="flex size-11 items-center justify-center rounded-large bg-accent/10 text-accent">
+                                                <GroupIcon className="size-6" aria-hidden focusable="false" />
+                                            </div>
+                                            <Typography type="h5" weight="bold">
+                                                {t(`offers.groups.${group.key}.title`)}
+                                            </Typography>
                                         </div>
-                                        <Typography type="h5" weight="bold">
-                                            {t(`offers.groups.${group.key}.title`)}
-                                        </Typography>
+                                        <ul className="flex flex-col gap-3">
+                                            {lines.map((li) => (
+                                                <li key={li} className="flex items-start gap-2">
+                                                    <CheckCircleIcon className="mt-0.5 size-5 shrink-0 text-success" aria-hidden focusable="false" />
+                                                    <Typography type="body" color="muted">
+                                                        {t(`offers.groups.${group.key}.lines.${li}`)}
+                                                    </Typography>
+                                                </li>
+                                            ))}
+                                        </ul>
                                     </div>
-                                    <ul className="flex flex-col gap-3">
-                                        {lines.map((li) => (
-                                            <li key={li} className="flex items-start gap-2">
-                                                <CheckCircleIcon className="mt-0.5 size-5 shrink-0 text-success" aria-hidden focusable="false" />
-                                                <Typography type="body" color="muted">
-                                                    {t(`offers.groups.${group.key}.lines.${li}`)}
-                                                </Typography>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            )
-                        })}
-                        <div className="mt-6 flex justify-start">
+                                )
+                            })}
+                        </ShowcaseMockup>
+                        <div className="mt-8 flex justify-start">
                             <Button variant="primary" onPress={() => router.push("/courses")}>
                                 {t("offers.cta")}
                                 <ArrowRightIcon className="size-4" aria-hidden focusable="false" />

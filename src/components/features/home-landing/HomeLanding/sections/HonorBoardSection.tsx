@@ -1,49 +1,209 @@
 "use client"
 
 import React from "react"
-import { TrophyIcon, StarIcon, ArrowRightIcon } from "@phosphor-icons/react"
-import { Button, Chip, Typography } from "@heroui/react"
+import { TrophyIcon, ArrowRightIcon } from "@phosphor-icons/react"
+import { Button, Chip, Typography, cn } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { useRouter } from "@/i18n/navigation"
 import { ACHIEVERS } from "../content"
+import type { Achiever } from "../content"
+
+/** Gold metallic gradient — built from the theme-aware `warning` token so it lives in both themes. */
+const GOLD_TEXT_GRADIENT =
+    "linear-gradient(100deg, color-mix(in srgb, var(--warning) 60%, var(--foreground)) 0%, var(--warning) 40%, color-mix(in srgb, var(--warning) 55%, white) 62%, var(--warning) 100%)"
+
+/** Observe once: flips true the first time the element enters the viewport, then disconnects. */
+const useInViewOnce = <T extends HTMLElement>() => {
+    const ref = React.useRef<T>(null)
+    const [inView, setInView] = React.useState(false)
+    React.useEffect(() => {
+        const el = ref.current
+        if (!el) return
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    setInView(true)
+                    observer.disconnect()
+                }
+            },
+            { threshold: 0.3 },
+        )
+        observer.observe(el)
+        return () => observer.disconnect()
+    }, [])
+    return { ref, inView }
+}
 
 /**
- * Award cover — the branded "bảng vàng" graphic shown WHOLE (object-contain, no crop
- * of the gold laurel / baked-in name) on a neutral framed panel. On load failure it
- * falls back to a trophy + the name so the identity is never lost.
+ * Hero metric of a podium card — the highlight string ("GPA 9.6", "TOP 100 · 3 kỳ")
+ * with its first number counting up once when the card scrolls into view.
+ * `prefers-reduced-motion` (or no number at all) renders the final text immediately.
  */
-const AchieverCover = ({ src, name }: { src: string; name: string }) => {
-    const [failed, setFailed] = React.useState(false)
-    if (failed || !src) {
+const HighlightMetric = ({ value }: { value: string }) => {
+    const { ref, inView } = useInViewOnce<HTMLSpanElement>()
+    // ponytail: first number in the string is "the" metric — enough for GPA/TOP-N highlights
+    const match = value.match(/\d+(?:\.\d+)?/)
+    const target = match ? Number.parseFloat(match[0]) : 0
+    const decimals = match?.[0].split(".")[1]?.length ?? 0
+    const [display, setDisplay] = React.useState(target)
+    React.useEffect(() => {
+        if (!inView || !match) return
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            setDisplay(target)
+            return
+        }
+        const startedAt = performance.now()
+        let raf = 0
+        const tick = (now: number) => {
+            const progress = Math.min((now - startedAt) / 900, 1)
+            setDisplay(target * (1 - Math.pow(1 - progress, 3)))
+            if (progress < 1) raf = requestAnimationFrame(tick)
+        }
+        raf = requestAnimationFrame(tick)
+        return () => cancelAnimationFrame(raf)
+    }, [inView])
+    // Long highlights ("TOP 100 · 3 kỳ") drop a size so they never wrap inside the card.
+    const sizeClass = value.length > 9 ? "text-2xl" : "text-3xl"
+    if (!match) {
         return (
-            <div className="flex aspect-[4/3] w-full flex-col items-center justify-center gap-2 bg-default/60 text-warning">
-                <TrophyIcon className="size-8" aria-hidden focusable="false" />
-                <Typography type="body-sm" weight="bold">
-                    {name}
-                </Typography>
-            </div>
+            <span ref={ref} className={cn("whitespace-nowrap font-semibold text-warning", sizeClass)}>
+                {value}
+            </span>
         )
     }
+    const prefix = value.slice(0, match.index)
+    const suffix = value.slice((match.index ?? 0) + match[0].length)
     return (
-        <div className="flex aspect-[4/3] w-full items-center justify-center bg-default/60">
-            <img
-                src={src}
-                alt={name}
-                loading="lazy"
-                onError={() => setFailed(true)}
-                className="max-h-full max-w-full object-contain"
+        <span ref={ref} className={cn("whitespace-nowrap font-semibold tabular-nums text-warning", sizeClass)}>
+            {prefix}
+            {display.toFixed(decimals)}
+            {suffix}
+        </span>
+    )
+}
+
+/**
+ * Circular portrait. `zoomFace` handles the legacy award posters (square image with the
+ * name baked in around y≈75%): a scale(2.4) from origin 50% 28% frames just the face —
+ * measured against the real 2480² posters (faces sit at ~47–53% x, ~31% y; baked name
+ * and laurels fall outside the window). On failure (or a missing URL) an initials tile
+ * in the same gold ring keeps the layout intact.
+ */
+const AchieverPortrait = ({
+    src,
+    name,
+    zoomFace,
+    className,
+}: {
+    src: string
+    name: string
+    zoomFace?: boolean
+    className?: string
+}) => {
+    const [failed, setFailed] = React.useState(false)
+    const initials = name
+        .split(/\s+/)
+        .map((word) => word[0])
+        .slice(-2)
+        .join("")
+        .toUpperCase()
+    return (
+        <div className={cn("aspect-square overflow-hidden rounded-full border-2 border-warning/50", className)}>
+            {failed || !src ? (
+                <div className="flex size-full items-center justify-center bg-warning/10">
+                    <span className="text-xl font-semibold text-warning">{initials}</span>
+                </div>
+            ) : (
+                <img
+                    src={src}
+                    alt={name}
+                    loading="lazy"
+                    onError={() => setFailed(true)}
+                    className={cn("size-full object-cover", zoomFace && "origin-[50%_28%] scale-[2.4]")}
+                />
+            )}
+        </div>
+    )
+}
+
+/** Large glass podium card: gold-ringed portrait → gradient name → hero metric → lines. */
+const PodiumCard = ({ achiever, position }: { achiever: Achiever; position: number }) => {
+    const t = useTranslations("homeLanding")
+    const name = t(`honor.people.${achiever.key}.name`)
+    const lines = Array.from({ length: achiever.lineCount }, (_, li) => li)
+    return (
+        <div
+            className={cn(
+                "relative flex flex-col items-center gap-3 rounded-3xl border border-separator bg-surface/60 p-6 text-center backdrop-blur-md",
+                "transition-all duration-300 hover:border-warning/40 hover:shadow-lg hover:shadow-warning/20",
+                position === 0 && "sm:order-2",
+                position === 1 && "sm:order-1 sm:mt-6",
+                position === 2 && "sm:order-3 sm:mt-6",
+            )}
+        >
+            <div className="rounded-full border border-warning/30 p-2">
+                <AchieverPortrait src={achiever.imageUrl} name={name} zoomFace={achiever.poster} className="w-28" />
+            </div>
+            <span
+                className="bg-clip-text text-xl font-bold uppercase tracking-wide text-transparent"
+                style={{ backgroundImage: GOLD_TEXT_GRADIENT }}
+            >
+                {name}
+            </span>
+            <HighlightMetric value={achiever.highlight} />
+            <ul className="flex flex-col gap-2">
+                {lines.map((li) => (
+                    <li key={li}>
+                        <Typography type="body-sm" color="muted">
+                            {t(`honor.people.${achiever.key}.lines.${li}`)}
+                        </Typography>
+                    </li>
+                ))}
+            </ul>
+        </div>
+    )
+}
+
+/** Compact glass row card for the non-featured achievers. */
+const AchieverRowCard = ({ achiever }: { achiever: Achiever }) => {
+    const t = useTranslations("homeLanding")
+    const name = t(`honor.people.${achiever.key}.name`)
+    const lines = Array.from({ length: achiever.lineCount }, (_, li) => li)
+    return (
+        <div className="flex gap-3 rounded-3xl border border-separator bg-surface/60 p-4 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-warning/40 hover:shadow-lg hover:shadow-warning/20">
+            <AchieverPortrait
+                src={achiever.imageUrl}
+                name={name}
+                zoomFace={achiever.poster}
+                className="w-14 shrink-0 self-start"
             />
+            <div className="flex min-w-0 flex-col gap-2">
+                <Typography type="body" weight="semibold">
+                    {name}
+                </Typography>
+                <Chip size="sm" variant="soft" color="warning" className="self-start">
+                    {achiever.highlight}
+                </Chip>
+                <ul className="flex flex-col gap-2">
+                    {lines.map((li) => (
+                        <li key={li}>
+                            <Typography type="body-sm" color="muted">
+                                {t(`honor.people.${achiever.key}.lines.${li}`)}
+                            </Typography>
+                        </li>
+                    ))}
+                </ul>
+            </div>
         </div>
     )
 }
 
 /**
- * "Bảng vàng FTES" — direction A (chosen 2026-07-03): premium honor cards that make the
- * branded gold award graphic the HERO (full-width cover, no crop, name lives in the
- * graphic so it isn't repeated), with a gold highlight chip (rank/GPA) and star-marked
- * achievement lines. Cards stretch to equal height per row; the "gold" accent uses the
- * theme-aware `warning` token so it works in light + dark. Links to `/leaderboard`;
- * hides when there are no achievers.
+ * "Bảng vàng FTES" — direction B+C (chosen 2026-07-03, supersedes direction A): tiered
+ * podium (2-1-3, center elevated) + compact grid, glass cards with a gold hover glow
+ * over ambient gold orbs. All text lives in the DOM (gradient name, count-up hero
+ * metric) — nothing depends on the baked-in poster typography. Gold = the theme-aware
+ * `warning` token, used as an accent only. Links to `/leaderboard`; hides when empty.
  */
 export const HonorBoardSection = () => {
     const t = useTranslations("homeLanding")
@@ -51,8 +211,16 @@ export const HonorBoardSection = () => {
 
     if (ACHIEVERS.length === 0) return null
 
+    const podium = ACHIEVERS.filter((achiever) => achiever.featured)
+    const rest = ACHIEVERS.filter((achiever) => !achiever.featured)
+
     return (
-        <section className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
+        <section className="relative isolate mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
+            <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+                <div className="absolute -top-24 left-1/4 size-96 rounded-full bg-warning/10 blur-3xl" />
+                <div className="absolute right-0 top-1/3 size-80 rounded-full bg-warning/5 blur-3xl" />
+            </div>
+
             <div className="mb-10 flex flex-col items-center gap-2 text-center">
                 <TrophyIcon className="size-6 text-warning" aria-hidden focusable="false" />
                 <Typography type="h3" weight="bold">
@@ -63,40 +231,21 @@ export const HonorBoardSection = () => {
                 </Typography>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {ACHIEVERS.map((achiever) => {
-                    const lines = Array.from({ length: achiever.lineCount }, (_, li) => li)
-                    const name = t(`honor.people.${achiever.key}.name`)
-                    return (
-                        <div
-                            key={achiever.key}
-                            className="flex h-full flex-col overflow-hidden rounded-large border border-separator bg-surface transition-colors hover:border-warning/40"
-                        >
-                            <AchieverCover src={achiever.imageUrl} name={name} />
-                            <div className="flex flex-1 flex-col gap-3 p-4">
-                                <Chip size="sm" variant="soft" color="warning" className="self-start">
-                                    {achiever.highlight}
-                                </Chip>
-                                <ul className="flex flex-1 flex-col gap-2">
-                                    {lines.map((li) => (
-                                        <li key={li} className="flex items-start gap-2">
-                                            <StarIcon
-                                                weight="fill"
-                                                className="mt-0.5 size-4 shrink-0 text-warning"
-                                                aria-hidden
-                                                focusable="false"
-                                            />
-                                            <Typography type="body-sm" color="muted">
-                                                {t(`honor.people.${achiever.key}.lines.${li}`)}
-                                            </Typography>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        </div>
-                    )
-                })}
-            </div>
+            {podium.length > 0 && (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    {podium.map((achiever, position) => (
+                        <PodiumCard key={achiever.key} achiever={achiever} position={position} />
+                    ))}
+                </div>
+            )}
+
+            {rest.length > 0 && (
+                <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {rest.map((achiever) => (
+                        <AchieverRowCard key={achiever.key} achiever={achiever} />
+                    ))}
+                </div>
+            )}
 
             <div className="mt-8 flex justify-center">
                 <Button variant="secondary" onPress={() => router.push("/leaderboard")}>

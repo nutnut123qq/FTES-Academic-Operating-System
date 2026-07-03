@@ -24,6 +24,34 @@ Course/pricing/media/continue cards — the dominant content unit.
 - **"Current plan" indicator = full-width banner, NOT a small chip:** `flex w-full justify-center … bg-accent/10` (or `bg-success/10`) + `text-success` medium; banner radius matches the parent card radius (e.g. `rounded-3xl`). Every plan in a comparison (incl. free/0đ) must state real specs (credit/limit).
 
 ## Decisions (newest first)
+- **Landing honor/award card (Bảng vàng podium + grid)** · chose **hand-rolled glass
+  panels in-feature** (`rounded-3xl border border-separator bg-surface/60
+  backdrop-blur-md`, hover `border-warning/40` + `shadow-warning/20` glow), two shapes:
+  large centered podium card (gold-ringed circular portrait → `bg-clip-text` gold-gradient
+  name → big count-up metric → muted lines) and a compact row card (sm portrait + name +
+  warning chip + lines) · **WHY:** (a) landing = one-off composition in the feature, no
+  new blocks (home-landing 2026-07-02 precedent); (b) glass-over-ambient-orbs needs a
+  translucent bg — HeroUI `Card` bakes opaque `bg-surface`; (c) podium-center elevation
+  uses side-card `sm:mt-6`, NOT translate, so the hover-lift transform never fights the
+  layout offset; (d) gold strictly accent-only (name/metric/ring/chip) per the
+  hall-of-fame lesson in `design/CONTENT.md` · home-landing HonorBoardSection · 2026-07-03
+- **Hand-rolled bordered card panels bumped `rounded-large` → `rounded-3xl`** (match HeroUI
+  `<Card>`) · **repo-wide pass, 71 sites** — first by hand on the screenshot offenders
+  (`MentorTeamSection`, `ModuleShowcaseSection`, `OffersPolicySection`, `HonorBoardSection`,
+  `SubjectCatalog`, `CatalogCourseCard`), then a codemod over `src/` with the rule: bump a line
+  iff it has `rounded-large` + `border border-separator|default` AND is NOT `bg-transparent`
+  (flat input), `size-*` (icon tile), `font-mono` (code chip), `border-dashed` (dropzone/empty
+  strip), `flex-wrap`, or a horizontal row (`items-center|items-start` without `flex-col`)
+  · **WHY:** teacher review of live screenshots — two card families read inconsistently:
+  HeroUI `<Card>` = `rounded-3xl` (~24px, soft) while hand-rolled `border border-separator`
+  panels sat at `rounded-large` (~12px, boxy), so catalog/marketing cards looked "thô" next to
+  the soft HeroUI cards on the same page. Unified the OUTER card container to `rounded-3xl`;
+  **kept** inner icon tiles, flat inputs, compact horizontal list-rows (community
+  `Trending/Reputation/Poll`, subject/resource rows), quiz/poll option rows, chat bubbles,
+  media/video frames, and small inner boxes (e.g. `TutorSettings` model box) at `rounded-large`
+  — 3xl on a thin row/small box reads pill-ish. Nested radius smaller than the parent is
+  correct. This supersedes the earlier "course family hand-rolls `rounded-large`" note below.
+  · 2026-07-03
 - **Catalog browse course card (shelf + grid + category page)** · chose a **hand-rolled
   bordered panel that IS a `Link`** (`rounded-large border border-separator overflow-hidden
   hover:bg-default/40`, cover 16:9 + gradient fallback, badge chip overlay, rating row,

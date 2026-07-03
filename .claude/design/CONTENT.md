@@ -70,9 +70,30 @@ the new lesson here at the end of the task.
   span ALL categories · what NOT to copy: autoplaying shelves (only the hero autoplays;
   shelves are manual swipe only) and Udemy's aggressive badge noise (max ONE badge per
   card) · source: coursera.org/browse, udemy.com/topic pages · 2026-07-02
+- **Social feed = Threads restraint, not card grids** · Threads (threads.com, token
+  `--barcelona-*` đọc trực tiếp 2026-07-03) làm feed tĩnh lặng bằng: 1 cột ~572–620px,
+  hairline divider THAY card/shadow, post = grid `48px + content` (avatar 36px, name+time
+  1 hàng), hàng action đơn sắc với count ẨN khi 0, màu bão hoà duy nhất = tim đỏ khi liked,
+  composer = trigger inline "What's new?" → modal, threadline nối avatar↓replies · takeaway
+  cho nhà: map sang semantic token (separator/muted/danger), giữ underline tabs thay
+  dropdown khi scope cần discoverability · what NOT to copy: hex cứng #101010 (phá light
+  mode + token nhà), left icon-rail 76px (đã có navbar), auto-update stream (chưa có BE)
+  · source: threads.com HTML tokens, ishadeed.com/article/threads-app-css (Part 1+2), Meta
+  newsroom 2025-04 · 2026-07-03
 - **Sticky enroll "buy box" on a course detail page** · Coursera/Udemy do it well · takeaway
   for StarCi: on a course *sales* page, keep price + CTA + "what's included" in a sticky right
   rail (`col-span-2`) while the pitch (hero, what-you'll-learn, syllabus, reviews, instructor)
   scrolls on the left (`col-span-3`) — the learner decides without losing the CTA · what NOT to
   copy: their branding/content, the aggressive countdown-timer urgency; keep CTA = enroll, not
   buy/VIP · source: coursera.org course pages, udemy course landing · 2026-07-02
+- **Honor board / hall of fame: gold is an ACCENT, hierarchy is the design** · takeaway
+  for the house: (1) the less gold, the more premium — near-black bg, gold only on
+  name/metric/ring/thin borders, never flooding backgrounds/decor; (2) 1 card = 1 focal
+  point: portrait treated uniformly + name as REAL text + ONE dominant metric, details
+  small and muted; (3) tier the honorees (podium row bigger than the grid) — equal cards
+  read as a list, tiers read as an honor; (4) never bake names/decor into images — every
+  poster ships its own typography and kills responsiveness/crawlability; (5) prefer subtle
+  micro-interaction (hover glow, one-shot count-up) over static confetti/laurel clutter
+  · what NOT to copy: school touchscreen-kiosk font-size guidance (that's 10-ft viewing,
+  not web) · sources: joekotlan.com (gold on web), halloffamewall.com UX guide,
+  digitalwalloffame.com layouts, speckyboy.com metallic CSS · 2026-07-03

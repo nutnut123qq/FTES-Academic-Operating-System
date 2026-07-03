@@ -17,8 +17,19 @@ import {
 import { Button, Typography, cn } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { useRouter } from "@/i18n/navigation"
-import { ShowcaseMockup, SHOWCASE_THEMES } from "@/components/blocks/marketing/ShowcaseMockup"
+import { ShowcaseMockup, type ShowcaseTheme } from "@/components/blocks/marketing/ShowcaseMockup"
 import { OFFER_GROUPS } from "../content"
+
+/**
+ * Depth tint for the mockup on the LIGHT offers section. The preset accent triad
+ * mixes indigo into the surface → a pink smear on near-white; a foreground-based
+ * neutral instead reads as a soft grey drop behind the card (real depth, no tint).
+ */
+const NEUTRAL_DEPTH: ShowcaseTheme = {
+    c1: "var(--foreground)",
+    c2: "var(--foreground)",
+    c3: "var(--foreground)",
+}
 
 /** Icon per offer group key. */
 const GROUP_ICON: Record<string, Icon> = {
@@ -56,7 +67,7 @@ export const OffersPolicySection = () => {
                     </Typography>
                 </div>
 
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-[16rem_1fr]">
+                <div className="grid grid-cols-1 items-center gap-6 lg:grid-cols-[16rem_1fr] lg:gap-12">
                     {/* tab rail */}
                     <div
                         className="flex flex-row flex-wrap gap-2 lg:flex-col"
@@ -98,9 +109,10 @@ export const OffersPolicySection = () => {
                         <ShowcaseMockup
                             url="ftes.edu.vn/uu-dai"
                             tilt="left"
-                            backdrop="glow"
-                            theme={SHOWCASE_THEMES.accent}
-                            contentClassName="p-6"
+                            aspect="video"
+                            backdrop="none"
+                            theme={NEUTRAL_DEPTH}
+                            contentClassName="flex flex-col justify-center p-6"
                         >
                             {OFFER_GROUPS.map((group, i) => {
                                 const GroupIcon = GROUP_ICON[group.key] ?? GiftIcon

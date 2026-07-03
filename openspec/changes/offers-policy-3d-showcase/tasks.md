@@ -15,3 +15,12 @@
       1 cột. Đổi tab → panel đổi, 8 panel vẫn trong DOM (inactive `hidden`).
 - [x] 3.1 Journal: ghi "reuse ShowcaseMockup cho showcase panel bất kỳ; giữ mounted-
       hidden để không vỡ SEO khi bọc vào wrapper" + link design/home-landing.md.
+- [x] 4.1 Refinement (light-mode fit): effect vốn tune cho nền TỐI → nền SÁNG bị 4 lỗi
+      (khung phình/stretch · card-sau thành vệt hồng · glow tàng hình · nổi kém). Sửa:
+      `aspect="video"` (khoá 16:9, hết phình) + `contentClassName="flex flex-col
+      justify-center p-6"` (căn giữa) + `backdrop="none"` (bỏ glow chết) + `theme`
+      neutral `foreground`-based (khử vệt hồng → soft grey depth) + grid `lg:gap-12`
+      + `items-center` (giãn cột trái, căn giữa card). Block `ShowcaseMockup`: thêm
+      `shadow-xl shadow-foreground/5` cho foreground card (nổi trên nền sáng; vô hại
+      dark). Nguyên tắc: showcase-mockup trên NỀN SÁNG → khoá aspect + depth neutral
+      + shadow, KHÔNG glow/tint accent (glow/tint chỉ đọc được trên nền tối).

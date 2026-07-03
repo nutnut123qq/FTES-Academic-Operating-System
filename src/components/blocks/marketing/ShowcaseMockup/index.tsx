@@ -152,7 +152,7 @@ export const ShowcaseMockup = ({
             {/* the foreground window card — surface follows light/dark tokens, its own tilt */}
             <div
                 className={cn(
-                    "relative w-full origin-center overflow-hidden rounded-3xl border border-default bg-surface transition-transform duration-500 ease-out md:group-hover:[transform:none]",
+                    "relative w-full origin-center overflow-hidden rounded-3xl border border-default bg-surface shadow-xl shadow-foreground/5 transition-transform duration-500 ease-out md:group-hover:[transform:none]",
                     TILT[tilt],
                 )}
             >

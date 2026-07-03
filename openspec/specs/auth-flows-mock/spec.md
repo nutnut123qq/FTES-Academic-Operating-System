@@ -5,18 +5,12 @@ TBD - created by archiving change auth-flows-mock. Update Purpose after archive.
 ## Requirements
 ### Requirement: Mock identity form shells
 The system SHALL present FE-only visual mock forms for the self-service identity
-surfaces (register, forgot password, reset password, OTP verify, two-factor setup) as
+flow surfaces (forgot password, reset password, OTP verify, two-factor setup) as
 centered auth cards. These forms SHALL NOT perform real authentication, contact
 Keycloak, or make network calls; submit is a client-side no-op that flips to a local
-success state.
-
-#### Scenario: Register form validation
-- **WHEN** a visitor submits the register form with a malformed email or mismatched passwords
-- **THEN** an inline validation message is shown and no success state is entered
-
-#### Scenario: Register mock success
-- **WHEN** a visitor submits a valid name, email, and matching passwords
-- **THEN** a mock "account created" success state is shown (no account is created)
+success state. Registration SHALL NOT have a standalone full-page form: sign-up is
+provided exclusively by the `AuthenticationModal` SignUp tab (see `auth-popup-entry`),
+and the standalone `RegisterForm` shell is removed.
 
 #### Scenario: Forgot password confirmation
 - **WHEN** a visitor submits a valid email on the forgot-password form
@@ -35,11 +29,17 @@ success state.
 - **THEN** a mock "2FA enabled" success state is shown
 
 ### Requirement: Reachable auth routes
-The system SHALL expose the mock identity forms at
-`/[locale]/authentication/{register,forgot-password,reset-password,verify-otp,two-factor}`
-as thin route pages that render the corresponding feature component.
+The system SHALL expose the mock identity flow forms at
+`/[locale]/authentication/{forgot-password,reset-password,verify-otp,two-factor}`
+as thin route pages that render the corresponding feature component. The route
+`/[locale]/authentication/register` SHALL NOT render a page; it SHALL redirect to
+the locale home with the `?auth=signup` deep link so the `AuthenticationModal`
+opens on the SignUp tab (legacy links keep working).
 
-#### Scenario: Route renders form
-- **WHEN** a visitor navigates to one of the five authentication routes
+#### Scenario: Flow route renders form
+- **WHEN** a visitor navigates to one of the four flow routes (forgot-password, reset-password, verify-otp, two-factor)
 - **THEN** the page returns 200 and renders the matching centered-card form
 
+#### Scenario: Register route redirects to modal
+- **WHEN** a visitor navigates to `/vi/authentication/register`
+- **THEN** they are redirected to `/vi?auth=signup` and the authentication modal opens on the SignUp tab

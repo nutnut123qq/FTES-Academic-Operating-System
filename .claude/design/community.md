@@ -62,6 +62,16 @@ giữa page-centered với 2 rail, ĐỪNG dùng cột rail width CỐ ĐỊNH L
 → feed lệch tâm + `max-w-1220` chật hơn tổng cột 1236 → nén feed + dịch trái); **dùng 2 cột
 rìa `1fr` bằng nhau** — feed tự ở tâm bất kể nội dung rail (rail lấp đều 2 ô 1fr, ~282px @1440).
 
+**★ Tắt AmbientBackground trên /community (fix "hình chữ nhật trắng" 2026-07-03):** commit
+ambient của session khác (`4c9fb0f`) mask mưa RA KHỎI dải giữa (max-w-6xl 1152px) vì giả
+định vùng đọc có card glassmorphism che. Feed community giờ PHẲNG/trong suốt → lộ vùng giữa
+sạch mưa vs hai bên có mưa = đọc thành "hình chữ nhật" sau feed. Fix: `InnerLayout.tsx` thêm
+`/community` vào điều kiện tắt ambient (đã có sẵn `/learn` — cùng lý do: trang đọc muốn sạch),
+gate `!hideAmbient && effectEnabled`. Verify: community 0 meteor, nền center==margin đồng nhất;
+landing vẫn 40 meteor (không vỡ route khác). **Nguyên tắc: surface đọc PHẲNG/trong suốt +
+ambient có mask theo vùng = mask lộ ra thành hình; trang feed phẳng phải NẰM TRONG danh sách
+tắt ambient như /learn.**
+
 **Backend business:** chưa có BE — toàn bộ mock SWR (`useQueryCommunityFeedSwr`,
 `useQueryPostDetailSwr`, trending/contributors/poll + react/comment mutations optimistic,
 transport error = local success). Swap point: giữ nguyên shape hook. (Identity hook đã xoá

@@ -28,7 +28,12 @@ export const InnerLayout = ({ children }: PropsWithChildren) => {
     // Only suppressed on Learn routes, where any motion competes with long-form
     // reading. Everywhere else it shows behind content.
     const pathname = usePathname()
-    const isLearnRoute = pathname?.includes("/learn") ?? false
+    // Suppress the ambient meteor field on immersive/flat reading surfaces — the learn
+    // player AND the community feed. The field is masked out of the centre content band
+    // (see AmbientBackground), which is invisible behind glassmorphism cards but, behind
+    // the community feed's FLAT transparent column, leaves the masked centre reading as a
+    // bright rectangle against the streaky margins. No ambient → uniform page, no rectangle.
+    const hideAmbient = (pathname?.includes("/learn") || pathname?.includes("/community")) ?? false
     // Ambient effect config (appearance-settings) — narrow selectors so InnerLayout
     // only re-renders when these two fields change (a rare user action).
     const effectEnabled = useAppearanceStore((state) => state.effectEnabled)
@@ -69,7 +74,7 @@ export const InnerLayout = ({ children }: PropsWithChildren) => {
                             </Suspense>
                             <AppSplash />
                             <TopLoader />
-                            {!isLearnRoute && effectEnabled ? (
+                            {!hideAmbient && effectEnabled ? (
                                 <AmbientBackground direction={effectDirection} speed={effectSpeed} />
                             ) : null}
                             <Navbar />

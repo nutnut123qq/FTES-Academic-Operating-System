@@ -1783,6 +1783,9 @@
     },
     "profile": {
         "placeholder": "This section is under construction.",
+        "tabListAria": "Profile sections",
+        "loadingError": "Could not load profile",
+        "retry": "Retry",
         "sections": {
             "personal": "Personal",
             "academic": "Academic",
@@ -1798,6 +1801,10 @@
                 "linkedin": "LinkedIn",
                 "website": "Website",
                 "email": "Email"
+            },
+            "empty": {
+                "aboutTitle": "No introduction yet",
+                "socialsTitle": "No social links yet"
             }
         },
         "academic": {
@@ -1807,6 +1814,9 @@
                 "major": "Major",
                 "semester": "Semester",
                 "gpa": "GPA"
+            },
+            "empty": {
+                "title": "No academic information yet"
             }
         },
         "portfolio": {
@@ -1875,6 +1885,9 @@
                 "title": "Badges",
                 "empty": "No badges yet — learn every day to unlock them.",
                 "earnedOn": "Earned {date}"
+            },
+            "empty": {
+                "title": "No progress data yet"
             }
         },
         "public": {

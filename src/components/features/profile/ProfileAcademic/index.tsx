@@ -1,47 +1,92 @@
 "use client"
 
 import React from "react"
-import { Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
+import {
+    BookBookmarkIcon,
+    BuildingIcon,
+    CalendarBlankIcon,
+    ChartLineUpIcon,
+    MapPinIcon,
+} from "@phosphor-icons/react"
+import { LabeledCard } from "@/components/blocks/cards/LabeledCard"
+import { MetricCard } from "@/components/blocks/stats/MetricCard"
+import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { EmptyContent } from "@/components/blocks/async/EmptyContent"
+import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
+import { useRouter } from "@/i18n/navigation"
 import {
     useQueryProfileAcademicSwr,
     type ProfileAcademic as ProfileAcademicData,
 } from "../hooks/useQueryProfileAcademicSwr"
 
 /** Academic fields, in display order. */
-const FIELDS: Array<keyof ProfileAcademicData> = ["university", "campus", "major", "semester", "gpa"]
+const FIELDS: Array<{
+    key: keyof ProfileAcademicData
+    icon: React.ReactNode
+}> = [
+    { key: "university", icon: <BuildingIcon className="size-5 text-accent" aria-hidden focusable="false" /> },
+    { key: "campus", icon: <MapPinIcon className="size-5 text-accent" aria-hidden focusable="false" /> },
+    { key: "major", icon: <BookBookmarkIcon className="size-5 text-accent" aria-hidden focusable="false" /> },
+    { key: "semester", icon: <CalendarBlankIcon className="size-5 text-accent" aria-hidden focusable="false" /> },
+    { key: "gpa", icon: <ChartLineUpIcon className="size-5 text-accent" aria-hidden focusable="false" /> },
+]
+
+/** Skeleton mirroring the academic metric grid. */
+const AcademicSkeleton = () => (
+    <div className="flex flex-col gap-3">
+        <Skeleton.Typography type="h6" width="1/3" />
+        <div className="grid grid-cols-2 gap-3">
+            <Skeleton.Metric />
+            <Skeleton.Metric />
+            <Skeleton.Metric />
+            <Skeleton.Metric />
+            <Skeleton.Metric className="col-span-2" />
+        </div>
+    </div>
+)
 
 /**
- * Academic section of the profile (§2). DEFAULT on-canon layout: a labelled
- * key/value list of academic fields as bordered rows. ponytail: rows hand-rolled;
- * mock data.
+ * Academic section of the profile (§2). Redesigned as metric tiles inside a
+ * labeled card instead of flat label:value rows.
  */
 export const ProfileAcademic = () => {
-    const t = useTranslations("profile")
-    const { academic } = useQueryProfileAcademicSwr()
-
-    if (!academic) {
-        return null
-    }
+    const t = useTranslations()
+    const router = useRouter()
+    const { academic, isLoading, error } = useQueryProfileAcademicSwr()
 
     return (
-        <div className="flex flex-col gap-3">
-            <Typography type="h6" weight="bold">
-                {t("sections.academic")}
-            </Typography>
-            {FIELDS.map((field) => (
-                <div
-                    key={field}
-                    className="flex items-center gap-3 rounded-2xl border border-separator p-4"
-                >
-                    <Typography type="body-sm" color="muted" className="w-32 shrink-0">
-                        {t(`academic.fields.${field}`)}
-                    </Typography>
-                    <Typography type="body-sm" weight="medium" className="min-w-0 flex-1" truncate>
-                        {academic[field]}
-                    </Typography>
-                </div>
-            ))}
-        </div>
+        <AsyncContent
+            isLoading={isLoading && !academic}
+            skeleton={<AcademicSkeleton />}
+            error={!academic ? error : undefined}
+            errorContent={{
+                title: t("profile.loadingError"),
+                retryLabel: t("profile.retry"),
+                onRetry: () => {
+                    void router.refresh()
+                },
+            }}
+        >
+            {academic ? (
+                <LabeledCard label={t("profile.sections.academic")}>
+                    {FIELDS.every((field) => !academic[field.key]) ? (
+                        <EmptyContent title={t("profile.academic.empty.title")} />
+                    ) : (
+                        <div className="grid grid-cols-2 gap-3">
+                            {FIELDS.map((field) => (
+                                <MetricCard
+                                    key={field.key}
+                                    icon={field.icon}
+                                    value={academic[field.key]}
+                                    label={t(`profile.academic.fields.${field.key}`)}
+                                    className={field.key === "gpa" ? "col-span-2" : undefined}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </LabeledCard>
+            ) : null}
+        </AsyncContent>
     )
 }

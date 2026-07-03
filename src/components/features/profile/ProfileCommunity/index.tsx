@@ -3,21 +3,46 @@
 import React from "react"
 import { Typography } from "@heroui/react"
 import { useLocale, useTranslations } from "next-intl"
-import { Link } from "@/i18n/navigation"
+import {
+    ArticleIcon,
+    CaretRightIcon,
+    ChatCircleTextIcon,
+    HeartIcon,
+    TrophyIcon,
+} from "@phosphor-icons/react"
+import { Link, useRouter } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { EmptyContent } from "@/components/blocks/async/EmptyContent"
+import { LabeledCard } from "@/components/blocks/cards/LabeledCard"
+import { MetricCard } from "@/components/blocks/stats/MetricCard"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { useQueryMyCommunitySummarySwr } from "../hooks/useQueryMyCommunitySummarySwr"
 
-/** Skeleton mirroring the snapshot tiles + posts list. */
+/** Reputation tile definition. */
+const REPUTATION_TILES: Array<{
+    key: "score" | "posts" | "comments" | "reactions"
+    icon: React.ReactNode
+}> = [
+    { key: "score", icon: <TrophyIcon className="size-5 text-accent" aria-hidden focusable="false" /> },
+    { key: "posts", icon: <ArticleIcon className="size-5 text-accent" aria-hidden focusable="false" /> },
+    { key: "comments", icon: <ChatCircleTextIcon className="size-5 text-accent" aria-hidden focusable="false" /> },
+    { key: "reactions", icon: <HeartIcon className="size-5 text-accent" aria-hidden focusable="false" /> },
+]
+
+/** Skeleton mirroring the reputation tiles + posts list. */
 const CommunitySkeleton = () => (
     <div className="flex flex-col gap-6">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <Skeleton className="h-20 rounded-large" />
-            <Skeleton className="h-20 rounded-large" />
-            <Skeleton className="h-20 rounded-large" />
-            <Skeleton className="h-20 rounded-large" />
+        <div className="flex flex-col gap-3">
+            <Skeleton.Typography type="h6" width="1/3" />
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <Skeleton.Metric />
+                <Skeleton.Metric />
+                <Skeleton.Metric />
+                <Skeleton.Metric />
+            </div>
         </div>
         <div className="flex flex-col gap-3">
+            <Skeleton.Typography type="h6" width="1/3" />
             <Skeleton.ListRow />
             <Skeleton.ListRow />
             <Skeleton.ListRow />
@@ -26,24 +51,20 @@ const CommunitySkeleton = () => (
 )
 
 /**
- * Community section of the profile — a READ-ONLY summary fed by
- * `useQueryMyCommunitySummarySwr`: the reputation snapshot (score + post /
- * comment / reaction counts, every number labeled) and the viewer's recent
- * posts, each row a focusable link into its community post route. Authoring
- * lives in the community section — nothing here mutates.
+ * Community section of the profile (§2/§18). Redesigned into a reputation
+ * metric grid and a labeled card of recent posts.
  */
 export const ProfileCommunity = () => {
-    const t = useTranslations("profile")
+    const t = useTranslations()
     const locale = useLocale()
+    const router = useRouter()
     const { data, isLoading, error } = useQueryMyCommunitySummarySwr()
 
-    const tiles: Array<{ key: "score" | "posts" | "comments" | "reactions"; value: number }> = data
-        ? [
-            { key: "score", value: data.reputation.score },
-            { key: "posts", value: data.reputation.posts },
-            { key: "comments", value: data.reputation.comments },
-            { key: "reactions", value: data.reputation.reactions },
-        ]
+    const tiles = data
+        ? REPUTATION_TILES.map((tile) => ({
+            ...tile,
+            value: data.reputation[tile.key],
+        }))
         : []
 
     return (
@@ -51,68 +72,79 @@ export const ProfileCommunity = () => {
             isLoading={isLoading && !data}
             skeleton={<CommunitySkeleton />}
             error={!data ? error : undefined}
+            errorContent={{
+                title: t("profile.loadingError"),
+                retryLabel: t("profile.retry"),
+                onRetry: () => {
+                    void router.refresh()
+                },
+            }}
         >
             {data ? (
                 <div className="flex flex-col gap-6">
-                    {/* reputation snapshot — zeros still render when there is no activity */}
-                    <div className="flex flex-col gap-3">
-                        <Typography type="h6" weight="bold">
-                            {t("community.reputation.title")}
-                        </Typography>
+                    <LabeledCard label={t("profile.community.reputation.title")}>
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                             {tiles.map((tile) => (
-                                <div key={tile.key} className="flex flex-col gap-1 rounded-2xl bg-default/40 p-4">
-                                    <Typography type="body-xs" color="muted">
-                                        {t(`community.reputation.${tile.key}`)}
-                                    </Typography>
-                                    <Typography type="h4" weight="bold">
-                                        {tile.value.toLocaleString(locale)}
-                                    </Typography>
-                                </div>
+                                <MetricCard
+                                    key={tile.key}
+                                    icon={tile.icon}
+                                    value={tile.value.toLocaleString(locale)}
+                                    label={t(`profile.community.reputation.${tile.key}`)}
+                                />
                             ))}
                         </div>
-                    </div>
+                    </LabeledCard>
 
-                    {/* recent posts */}
-                    <div className="flex flex-col gap-3 border-t border-separator pt-6">
-                        <Typography type="h6" weight="bold">
-                            {t("community.recentPosts.title")}
-                        </Typography>
+                    <LabeledCard
+                        label={t("profile.community.recentPosts.title")}
+                        onSeeMore={() => router.push("/community")}
+                        seeMoreLabel={t("profile.community.empty.browse")}
+                    >
                         {data.recentPosts.length === 0 ? (
-                            <div className="flex flex-col items-center gap-2 rounded-large border border-dashed border-separator p-6 text-center">
-                                <Typography type="body-sm" color="muted">
-                                    {t("community.empty.title")}
-                                </Typography>
-                                <Link
-                                    href="/community"
-                                    className="text-sm font-medium text-accent no-underline hover:underline"
-                                >
-                                    {t("community.empty.browse")}
-                                </Link>
-                            </div>
+                            <EmptyContent title={t("profile.community.empty.title")} />
                         ) : (
-                            data.recentPosts.map((post) => (
-                                <Link
-                                    key={post.id}
-                                    href={`/community/${post.id}`}
-                                    className="flex flex-wrap items-center gap-3 rounded-2xl border border-separator p-4 no-underline transition-colors hover:bg-default/40"
-                                >
-                                    <Typography type="body-sm" weight="medium" className="min-w-0 flex-1" truncate>
-                                        {post.title}
-                                    </Typography>
-                                    <Typography type="body-xs" color="muted" className="shrink-0">
-                                        {t("community.recentPosts.engagement", {
-                                            likes: post.likeCount,
-                                            comments: post.commentCount,
-                                        })}
-                                    </Typography>
-                                    <Typography type="body-xs" color="muted" className="shrink-0">
-                                        {post.dateLabel}
-                                    </Typography>
-                                </Link>
-                            ))
+                            <div className="flex flex-col gap-3">
+                                {data.recentPosts.map((post) => (
+                                    <Link
+                                        key={post.id}
+                                        href={`/community/${post.id}`}
+                                        className="group flex items-center gap-3 rounded-2xl border border-separator p-4 no-underline transition-colors hover:bg-surface-secondary"
+                                    >
+                                        <Typography
+                                            type="body-sm"
+                                            weight="medium"
+                                            className="min-w-0 flex-1"
+                                            truncate
+                                        >
+                                            {post.title}
+                                        </Typography>
+                                        <Typography
+                                            type="body-xs"
+                                            color="muted"
+                                            className="hidden shrink-0 sm:block"
+                                        >
+                                            {t("profile.community.recentPosts.engagement", {
+                                                likes: post.likeCount,
+                                                comments: post.commentCount,
+                                            })}
+                                        </Typography>
+                                        <Typography
+                                            type="body-xs"
+                                            color="muted"
+                                            className="shrink-0"
+                                        >
+                                            {post.dateLabel}
+                                        </Typography>
+                                        <CaretRightIcon
+                                            className="size-4 shrink-0 text-muted transition-transform group-hover:translate-x-1"
+                                            aria-hidden
+                                            focusable="false"
+                                        />
+                                    </Link>
+                                ))}
+                            </div>
                         )}
-                    </div>
+                    </LabeledCard>
                 </div>
             ) : null}
         </AsyncContent>

@@ -19,6 +19,8 @@ export interface EmptyContentProps extends WithClassNames<undefined> {
     onRetry?: () => void
     /** Translated label for the retry button (required to render it). */
     retryLabel?: ReactNode
+    /** Optional custom action rendered below the description (e.g. a primary CTA). */
+    action?: ReactNode
 }
 
 /**
@@ -33,6 +35,7 @@ export const EmptyContent = ({
     icon,
     onRetry,
     retryLabel,
+    action,
     className,
 }: EmptyContentProps) => {
     return (
@@ -53,6 +56,7 @@ export const EmptyContent = ({
                     {retryLabel}
                 </Button>
             ) : null}
+            {action ? action : null}
         </div>
     )
 }

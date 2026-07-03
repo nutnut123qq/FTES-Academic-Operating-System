@@ -1792,6 +1792,9 @@
     },
     "profile": {
         "placeholder": "Phần này đang được xây dựng.",
+        "tabListAria": "Các mục hồ sơ",
+        "loadingError": "Không tải được hồ sơ",
+        "retry": "Thử lại",
         "sections": {
             "personal": "Cá nhân",
             "academic": "Học vấn",
@@ -1807,6 +1810,10 @@
                 "linkedin": "LinkedIn",
                 "website": "Website",
                 "email": "Email"
+            },
+            "empty": {
+                "aboutTitle": "Chưa có giới thiệu",
+                "socialsTitle": "Chưa có liên kết mạng xã hội"
             }
         },
         "academic": {
@@ -1816,6 +1823,9 @@
                 "major": "Chuyên ngành",
                 "semester": "Học kỳ",
                 "gpa": "GPA"
+            },
+            "empty": {
+                "title": "Chưa có thông tin học vấn"
             }
         },
         "portfolio": {
@@ -1884,6 +1894,9 @@
                 "title": "Huy hiệu",
                 "empty": "Chưa có huy hiệu nào — học đều mỗi ngày để mở khoá.",
                 "earnedOn": "Đạt ngày {date}"
+            },
+            "empty": {
+                "title": "Chưa có dữ liệu tiến độ"
             }
         },
         "public": {

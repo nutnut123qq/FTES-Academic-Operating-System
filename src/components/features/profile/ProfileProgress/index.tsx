@@ -3,15 +3,17 @@
 import React from "react"
 import { Typography } from "@heroui/react"
 import { useLocale, useTranslations } from "next-intl"
-import { FireIcon, StarIcon, TrophyIcon } from "@phosphor-icons/react"
-import { Link } from "@/i18n/navigation"
+import { FireIcon, TrophyIcon } from "@phosphor-icons/react"
+import { Link, useRouter } from "@/i18n/navigation"
+import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { LabeledCard } from "@/components/blocks/cards/LabeledCard"
+import { MetricCard } from "@/components/blocks/stats/MetricCard"
+import { ProgressMeter } from "@/components/blocks/stats/ProgressMeter"
+import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { SkillGraph } from "@/components/features/skill-graph"
 import { useQueryMyGamificationSwr } from "@/components/features/gamification/hooks/useQueryMyGamificationSwr"
 import { DayStatus, HEATMAP_WEEKS, type HeatmapDay } from "@/components/features/gamification/engine"
 import { StreakHeatmap } from "@/components/features/gamification/StreakHeatmap"
-import { ProgressMeter } from "@/components/blocks/stats/ProgressMeter"
-import { AsyncContent } from "@/components/blocks/async/AsyncContent"
-import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 
 /** ISO `yyyy-mm-dd` for a local date. */
 const toIso = (date: Date): string => {
@@ -34,173 +36,158 @@ const buildCells = (activeDays: Array<string>): Array<HeatmapDay> => {
     return cells
 }
 
-/** Skeleton mirroring the dashboard layout (bar card, heatmap, rank card, badges). */
+/** Skeleton mirroring the redesigned progress dashboard. */
 const ProgressSkeleton = () => (
     <div className="flex flex-col gap-6">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="flex flex-col gap-3 rounded-2xl bg-default/40 p-4">
-                <Skeleton.Typography type="body-sm" />
-                <Skeleton.ProgressBar />
+            <div className="flex flex-col gap-3">
+                <Skeleton.Typography type="h6" width="1/3" />
+                <Skeleton.Card lines={2} />
             </div>
-            <div className="flex flex-col gap-3 rounded-2xl bg-default/40 p-4">
-                <Skeleton.Typography type="body-sm" />
-                <Skeleton.Typography type="h5" />
+            <div className="flex flex-col gap-3">
+                <Skeleton.Typography type="h6" width="1/3" />
+                <Skeleton.Card lines={2} />
             </div>
         </div>
-        <div className="flex flex-col gap-3 rounded-2xl bg-default/40 p-4">
-            <Skeleton.Typography type="body-sm" />
-            <Skeleton className="h-24 w-full rounded-md" />
+        <div className="flex flex-col gap-3">
+            <Skeleton.Typography type="h6" width="1/3" />
+            <Skeleton className="h-32 w-full rounded-2xl" />
         </div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <Skeleton className="h-24 rounded-large" />
-            <Skeleton className="h-24 rounded-large" />
-            <Skeleton className="h-24 rounded-large" />
+        <div className="flex flex-col gap-3">
+            <Skeleton.Typography type="h6" width="1/3" />
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                <Skeleton className="h-24 rounded-2xl" />
+                <Skeleton className="h-24 rounded-2xl" />
+                <Skeleton className="h-24 rounded-2xl" />
+            </div>
         </div>
     </div>
 )
 
 /**
- * Progress section of the profile — the gamification dashboard (§2/§11): an
- * XP/level card with an ARIA progress bar toward the next level, the 12-week
- * streak calendar heatmap, a rank/league card linking to `/leaderboard`, the
- * earned-badges grid, and the embedded {@link SkillGraph} (full, subject-agnostic
- * — internals owned by `skill-graph-spider`). All numbers come from the shared
- * `useQueryMyGamificationSwr` hook, so this tab, the identity card, and the
- * account dropdown never disagree.
+ * Progress section of the profile (§2/§11). Gamification dashboard redesigned
+ * into labeled cards: XP/level, rank/league, streak heatmap, badges, and skill
+ * graph.
  */
 export const ProfileProgress = () => {
-    const t = useTranslations("profile")
-    const tg = useTranslations("gamification")
-    const tSkill = useTranslations("skillGraph")
+    const t = useTranslations()
     const locale = useLocale()
+    const router = useRouter()
     const { data, isLoading, error } = useQueryMyGamificationSwr()
 
-    /** Localized accessible label for one heatmap cell (date + status). */
     const cellLabel = (day: HeatmapDay): string => {
         const date = new Date(`${day.date}T00:00:00`).toLocaleDateString(locale)
-        return `${date} — ${tg(day.status === DayStatus.Active ? "heatmap.active" : "heatmap.empty")}`
+        return `${date} — ${t(`gamification.heatmap.${day.status === DayStatus.Active ? "active" : "empty"}`)}`
     }
 
     return (
-        <div className="flex flex-col gap-6">
-            <AsyncContent
-                isLoading={isLoading && !data}
-                skeleton={<ProgressSkeleton />}
-                isEmpty={!data}
-                error={!data ? error : undefined}
-            >
-                {data ? (
-                    <div className="flex flex-col gap-6">
-                        {/* XP/level + rank/league cards */}
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            <div className="flex flex-col gap-3 rounded-2xl bg-default/40 p-4">
-                                <div className="flex items-center gap-2">
-                                    <StarIcon className="size-5 text-accent" aria-hidden focusable="false" />
-                                    <Typography type="body" weight="medium">
-                                        {t("progress.xpCard.level", { level: data.level })}
-                                    </Typography>
-                                    <Typography type="body-xs" color="muted" className="ml-auto">
-                                        {t("progress.xpCard.totalXp", { xp: data.xp.toLocaleString(locale) })}
-                                    </Typography>
-                                </div>
-                                <ProgressMeter
-                                    value={data.levelProgress.current}
-                                    max={data.levelProgress.nextThreshold}
-                                    label={t("progress.xpCard.toNext", {
-                                        xp: (data.levelProgress.nextThreshold - data.levelProgress.current).toLocaleString(locale),
-                                        level: data.level + 1,
-                                    })}
-                                    showValue
-                                />
-                            </div>
-                            <div className="flex flex-col gap-2 rounded-2xl bg-default/40 p-4">
-                                <div className="flex items-center gap-2">
-                                    <TrophyIcon className="size-5 text-accent" aria-hidden focusable="false" />
-                                    <Typography type="body" weight="medium">
-                                        {t("progress.rank.title")}
-                                    </Typography>
-                                </div>
-                                <Typography type="h5" weight="bold">
-                                    {t("progress.rank.position", { position: data.rank.position })}
-                                </Typography>
-                                <Typography type="body-sm" color="muted">
-                                    {t("progress.rank.league", { league: tg(`tiers.${data.rank.league}`) })}
-                                </Typography>
+        <AsyncContent
+            isLoading={isLoading && !data}
+            skeleton={<ProgressSkeleton />}
+            isEmpty={!data}
+            emptyContent={{ title: t("profile.progress.empty.title") }}
+            error={!data ? error : undefined}
+            errorContent={{
+                title: t("profile.loadingError"),
+                retryLabel: t("profile.retry"),
+                onRetry: () => {
+                    void router.refresh()
+                },
+            }}
+        >
+            {data ? (
+                <div className="flex flex-col gap-6">
+                    {/* XP/level + rank/league cards */}
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <LabeledCard
+                            label={t("profile.progress.xpCard.level", { level: data.level })}
+                            labelEnd={t("profile.progress.xpCard.totalXp", { xp: data.xp.toLocaleString(locale) })}
+                        >
+                            <ProgressMeter
+                                value={data.levelProgress.current}
+                                max={data.levelProgress.nextThreshold}
+                                label={t("profile.progress.xpCard.toNext", {
+                                    xp: (data.levelProgress.nextThreshold - data.levelProgress.current).toLocaleString(
+                                        locale,
+                                    ),
+                                    level: data.level + 1,
+                                })}
+                                showValue
+                            />
+                        </LabeledCard>
+
+                        <MetricCard
+                            icon={<TrophyIcon className="size-5 text-accent" aria-hidden focusable="false" />}
+                            value={t("profile.progress.rank.position", { position: data.rank.position })}
+                            label={t("profile.progress.rank.league", {
+                                league: t(`gamification.tiers.${data.rank.league}`),
+                            })}
+                            hint={
                                 <Link
                                     href="/leaderboard"
                                     className="text-sm font-medium text-accent no-underline hover:underline"
                                 >
-                                    {t("progress.rank.viewLeaderboard")}
+                                    {t("profile.progress.rank.viewLeaderboard")}
                                 </Link>
-                            </div>
-                        </div>
-
-                        {/* streak calendar heatmap */}
-                        <div className="flex flex-col gap-3 rounded-2xl bg-default/40 p-4">
-                            <div className="flex flex-wrap items-center gap-2">
-                                <FireIcon className="size-5 text-accent" weight="fill" aria-hidden focusable="false" />
-                                <Typography type="body" weight="medium">
-                                    {t("progress.heatmap.title")}
-                                </Typography>
-                                <Typography type="body-sm" color="muted" className="ml-auto">
-                                    {t("progress.heatmap.streakLabel", { count: data.streak.current })}
-                                </Typography>
-                            </div>
-                            {/* horizontal scroll below sm — cells stay tappable, never shrink */}
-                            <div
-                                className="overflow-x-auto"
-                                aria-label={t("progress.heatmap.summary", { count: data.streak.current })}
-                            >
-                                <StreakHeatmap days={buildCells(data.streak.days)} cellLabel={cellLabel} />
-                            </div>
-                        </div>
-
-                        {/* badges grid */}
-                        <div className="flex flex-col gap-3">
-                            <Typography type="h6" weight="bold">
-                                {t("progress.badges.title")}
-                            </Typography>
-                            {data.badges.length === 0 ? (
-                                <Typography type="body-sm" color="muted">
-                                    {t("progress.badges.empty")}
-                                </Typography>
-                            ) : (
-                                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                                    {data.badges.map((badge) => (
-                                        <div
-                                            key={badge.id}
-                                            className="flex flex-col items-center gap-2 rounded-2xl bg-default/40 p-4 text-center"
-                                        >
-                                            <TrophyIcon
-                                                className="size-6 text-accent"
-                                                weight="fill"
-                                                aria-hidden
-                                                focusable="false"
-                                            />
-                                            <Typography type="body-xs" weight="medium">
-                                                {tg(`milestones.${badge.badgeKey}.name`)}
-                                            </Typography>
-                                            <Typography type="body-xs" color="muted">
-                                                {t("progress.badges.earnedOn", {
-                                                    date: new Date(`${badge.earnedDate}T00:00:00`).toLocaleDateString(locale),
-                                                })}
-                                            </Typography>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+                            }
+                        />
                     </div>
-                ) : null}
-            </AsyncContent>
 
-            {/* Skill graph — spider-web network of the learner's skills (§21). */}
-            <div className="flex flex-col gap-3 border-t border-separator pt-6">
-                <Typography type="h6" weight="bold">
-                    {tSkill("title")}
-                </Typography>
-                <SkillGraph />
-            </div>
-        </div>
+                    {/* streak calendar heatmap */}
+                    <LabeledCard
+                        label={t("profile.progress.heatmap.title")}
+                        labelEnd={t("profile.progress.heatmap.streakLabel", { count: data.streak.current })}
+                        icon={<FireIcon className="size-5 text-accent" weight="fill" aria-hidden focusable="false" />}
+                    >
+                        <div
+                            className="overflow-x-auto"
+                            aria-label={t("profile.progress.heatmap.summary", { count: data.streak.current })}
+                        >
+                            <StreakHeatmap days={buildCells(data.streak.days)} cellLabel={cellLabel} />
+                        </div>
+                    </LabeledCard>
+
+                    {/* badges grid */}
+                    <LabeledCard label={t("profile.progress.badges.title")} frameless>
+                        {data.badges.length === 0 ? (
+                            <Typography type="body-sm" color="muted">
+                                {t("profile.progress.badges.empty")}
+                            </Typography>
+                        ) : (
+                            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                                {data.badges.map((badge) => (
+                                    <div
+                                        key={badge.id}
+                                        className="flex flex-col items-center gap-2 rounded-2xl border border-separator p-4 text-center"
+                                    >
+                                        <TrophyIcon
+                                            className="size-6 text-accent"
+                                            weight="fill"
+                                            aria-hidden
+                                            focusable="false"
+                                        />
+                                        <Typography type="body-xs" weight="medium">
+                                            {t(`gamification.milestones.${badge.badgeKey}.name`)}
+                                        </Typography>
+                                        <Typography type="body-xs" color="muted">
+                                            {t("profile.progress.badges.earnedOn", {
+                                                date: new Date(`${badge.earnedDate}T00:00:00`).toLocaleDateString(
+                                                    locale,
+                                                ),
+                                            })}
+                                        </Typography>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </LabeledCard>
+
+                    {/* skill graph */}
+                    <LabeledCard label={t("skillGraph.title")} frameless>
+                        <SkillGraph />
+                    </LabeledCard>
+                </div>
+            ) : null}
+        </AsyncContent>
     )
 }

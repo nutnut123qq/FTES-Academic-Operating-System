@@ -22,7 +22,7 @@ export interface CommunityPromo {
 // placement contract is ready.
 const fetchCommunityPromoMock = async (): Promise<CommunityPromo> => ({
     imageUrl: "https://picsum.photos/seed/ftes-promo/640/360",
-    title: "Khám phá khoá học mới trên StarCi",
+    title: "Khám phá khoá học mới trên FTES",
     ctaText: "Tìm hiểu ngay",
     linkUrl: "/marketplace",
     sponsorName: null,

@@ -4589,6 +4589,12 @@
             "poll": "Poll",
             "moderation": "Moderation"
         },
+        "rail": {
+            "trending": "Trending",
+            "reputation": "Reputation",
+            "poll": "Quick poll",
+            "seeAll": "See all"
+        },
         "tabs": {
             "forYou": "For you",
             "following": "Following",

@@ -32,6 +32,18 @@ reputation/poll/moderation/new không có lối vào. Threads essence = calm col
 suppress zero, composer modal. Tabs giữ underline (không dropdown như Threads web) vì 4 scope
 cần discoverability + đúng luật nhà "1-of-few = Tabs, NEVER pill buttons".
 
+## Side rails (2026-07-03 — change `community-side-rails`)
+
+Thầy: *"2 bên trống đang thiếu"* → từ `xl` (1280px) shell thành grid
+`[240px_minmax(0,620px)_280px] justify-center gap-6`, hai aside `sticky top-20`,
+`hidden` dưới `xl` (menu ⋯ vẫn là lối vào). **Rail trái = NavRail** (lối tắt: Đăng bài
+mở overlay composer + 3 Link Uy tín/Bình chọn/Kiểm duyệt, hàng icon+label). **Rail
+phải = DiscoveryRail** — 3 panel cùng idiom `rounded-3xl border-separator bg-surface`
+như feed panel, TÁI DÙNG nguyên 3 hook mock (trending top 4 → link post · contributors
+top 3 · poll vote-tại-chỗ hiện % như trang poll) + "Xem tất cả" accent caret. Nguyên
+tắc: rail = pure composition trên data có sẵn, KHÔNG hook/data mới; không lặp scope
+tabs ở rail (đã ở header).
+
 **Backend business:** chưa có BE — toàn bộ mock SWR (`useQueryCommunityIdentitySwr`,
 `useQueryCommunityFeedSwr`, `useQueryPostDetailSwr` + react/comment mutations optimistic,
 transport error = local success). Swap point: giữ nguyên shape hook.

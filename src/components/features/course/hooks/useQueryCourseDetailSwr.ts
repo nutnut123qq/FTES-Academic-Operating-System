@@ -37,11 +37,44 @@ export interface CoursePrice {
     originalVnd?: number
 }
 
+/** A single instructor credential or achievement line. */
+export interface CourseInstructorAchievement {
+    id: string
+    /** Phosphor icon key mapped to an icon component in the UI. */
+    icon: string
+    text: string
+}
+
+/** Instructor headline stats. */
+export interface CourseInstructorStats {
+    /** Number of courses taught. */
+    courses: number
+    /** Total learners across all courses. */
+    students: number
+    /** Average rating (0–5). */
+    rating: number
+}
+
+/** Optional instructor social / contact links. */
+export interface CourseInstructorLinks {
+    github?: string
+    linkedin?: string
+    website?: string
+}
+
 /** The course instructor identity shown on the detail page. */
 export interface CourseInstructor {
     name: string
+    /** Formal title, e.g. "Giảng viên Kỹ thuật phần mềm". */
     title: string
+    /** Display role line, e.g. degree + affiliation. */
+    role: string
     bio: string
+    /** Uploaded avatar URL; empty → fallback to generated avatar / initials. */
+    avatarUrl?: string
+    stats: CourseInstructorStats
+    achievements: Array<CourseInstructorAchievement>
+    links?: CourseInstructorLinks
 }
 
 /** Full course detail (§4, mock until BE lands). */
@@ -87,7 +120,20 @@ const fetchCourseDetailMock = async (courseId: string): Promise<CourseDetail> =>
     instructor: {
         name: "Lê Minh Quân",
         title: "Giảng viên Kỹ thuật phần mềm",
-        bio: "10 năm dạy lập trình nền tảng, tác giả nhiều tài liệu ôn thi môn cơ sở.",
+        role: "Thạc sĩ · Đại học FPT",
+        bio: "Hơn 10 năm dạy lập trình nền tảng cho sinh viên ngành CNTT. Từng làm việc tại nhiều công ty phần mềm và hiện tập trung vào phương pháp dạy lập trình thực hành, giúp người mới vượt qua nỗi sợ code và xây dựng tư duy giải quyết vấn đề bền vững.",
+        avatarUrl: "",
+        stats: { courses: 12, students: 3400, rating: 4.8 },
+        achievements: [
+            { id: "a1", icon: "certificate", text: "Chứng chỉ AWS Certified Developer" },
+            { id: "a2", icon: "trophy", text: "12 năm kinh nghiệm dạy lập trình nền tảng" },
+            { id: "a3", icon: "book", text: "Tác giả bộ tài liệu ôn thi PRF192 / PRO192" },
+        ],
+        links: {
+            github: "https://github.com/lmquan",
+            linkedin: "https://linkedin.com/in/lmquan",
+            website: "https://lmquan.dev",
+        },
     },
     sections: [
         {

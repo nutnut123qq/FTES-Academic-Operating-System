@@ -1,18 +1,25 @@
 "use client"
 
 import React, { useState } from "react"
-import { Button, Chip, Typography, cn } from "@heroui/react"
+import { Button, Chip, Link, Typography, cn } from "@heroui/react"
 import {
+    BookIcon,
     CaretDownIcon,
     CaretRightIcon,
     CertificateIcon,
     CheckIcon,
     ClockIcon,
     FileTextIcon,
+    GithubLogoIcon,
+    GlobeIcon,
+    GraduationCapIcon,
+    LinkedinLogoIcon,
     LockIcon,
     PlayCircleIcon,
     StarIcon,
     TargetIcon,
+    TrophyIcon,
+    UsersIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
@@ -23,7 +30,150 @@ import { SaveButton } from "@/components/blocks/buttons/SaveButton"
 import { PriceTag } from "@/components/blocks/commerce/PriceTag"
 import { ResponsiveBreadcrumb } from "@/components/blocks/navigation/ResponsiveBreadcrumb"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
-import { useQueryCourseDetailSwr, type CourseDetail as CourseDetailModel } from "../hooks/useQueryCourseDetailSwr"
+import { FollowButton } from "@/components/reuseable/FollowButton"
+import { StatRibbon } from "@/components/reuseable/StatRibbon"
+import { UserAvatar } from "@/components/reuseable/UserAvatar"
+import { useQueryCourseDetailSwr, type CourseDetail as CourseDetailModel, type CourseInstructor } from "../hooks/useQueryCourseDetailSwr"
+import type { Icon } from "@phosphor-icons/react"
+
+const ACHIEVEMENT_ICONS: Record<string, Icon> = {
+    certificate: CertificateIcon,
+    trophy: TrophyIcon,
+    book: BookIcon,
+}
+
+/** Rich instructor profile card for the course detail page.
+ *
+ * A presentational feature sub-component: it receives the instructor data and
+ * owns the follow toggle's local FE-only state. All styling is delegated to
+ * existing reuseable primitives and HeroUI components.
+ */
+const InstructorCard = ({ instructor }: { instructor: CourseInstructor }) => {
+    const t = useTranslations("courseSystem")
+    const [following, setFollowing] = useState(false)
+    const links = instructor.links
+    const hasLinks = links && (links.github || links.linkedin || links.website)
+
+    return (
+        <div className="flex flex-col gap-3 border-t border-separator pt-6">
+            <Typography type="h6" weight="bold">
+                {t("detail.instructor.title")}
+            </Typography>
+            <div className="flex flex-col gap-4 rounded-2xl border border-separator p-4">
+                <div className="flex items-start gap-3">
+                    <UserAvatar
+                        username={instructor.name}
+                        avatar={instructor.avatarUrl}
+                        seed={instructor.name}
+                        size="lg"
+                    />
+                    <div className="flex min-w-0 flex-1 flex-col gap-0">
+                        <Typography type="body" weight="semibold">
+                            {instructor.name}
+                        </Typography>
+                        <Typography type="body-sm" color="muted">
+                            {instructor.title}
+                        </Typography>
+                        <Typography type="body-xs" color="muted">
+                            {instructor.role}
+                        </Typography>
+                    </div>
+                    <FollowButton following={following} onToggle={() => setFollowing((prev) => !prev)} />
+                </div>
+
+                <StatRibbon
+                    items={[
+                        {
+                            key: "courses",
+                            icon: <GraduationCapIcon aria-hidden focusable="false" className="size-4" />,
+                            value: instructor.stats.courses,
+                            label: t("detail.instructor.stats.courses", { count: instructor.stats.courses }),
+                        },
+                        {
+                            key: "students",
+                            icon: <UsersIcon aria-hidden focusable="false" className="size-4" />,
+                            value: instructor.stats.students.toLocaleString(),
+                            label: t("detail.instructor.stats.students", { count: instructor.stats.students }),
+                        },
+                        {
+                            key: "rating",
+                            icon: <StarIcon aria-hidden focusable="false" className="size-4" weight="fill" />,
+                            value: instructor.stats.rating.toFixed(1),
+                            label: t("detail.instructor.stats.rating", { rating: instructor.stats.rating }),
+                        },
+                    ]}
+                />
+
+                <Typography type="body-sm" color="muted">
+                    {instructor.bio}
+                </Typography>
+
+                <div className="flex flex-col gap-2">
+                    <Typography type="body-sm" weight="medium">
+                        {t("detail.instructor.achievements")}
+                    </Typography>
+                    <ul className="flex flex-col gap-2">
+                        {instructor.achievements.map((achievement) => {
+                            const IconComponent = ACHIEVEMENT_ICONS[achievement.icon]
+                            return (
+                                <li key={achievement.id} className="flex items-start gap-2">
+                                    {IconComponent ? (
+                                        <IconComponent
+                                            aria-hidden
+                                            focusable="false"
+                                            className="mt-0.5 size-4 shrink-0 text-accent"
+                                        />
+                                    ) : null}
+                                    <Typography type="body-sm" color="muted">
+                                        {achievement.text}
+                                    </Typography>
+                                </li>
+                            )
+                        })}
+                    </ul>
+                </div>
+
+                {hasLinks ? (
+                    <div className="flex items-center gap-3">
+                        {links?.github ? (
+                            <Link
+                                href={links.github}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label={t("detail.instructor.social.github", { name: instructor.name })}
+                                className="text-muted hover:text-accent"
+                            >
+                                <GithubLogoIcon aria-hidden focusable="false" className="size-5" />
+                            </Link>
+                        ) : null}
+                        {links?.linkedin ? (
+                            <Link
+                                href={links.linkedin}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label={t("detail.instructor.social.linkedin", { name: instructor.name })}
+                                className="text-muted hover:text-accent"
+                            >
+                                <LinkedinLogoIcon aria-hidden focusable="false" className="size-5" />
+                            </Link>
+                        ) : null}
+                        {links?.website ? (
+                            <Link
+                                href={links.website}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label={t("detail.instructor.social.website", { name: instructor.name })}
+                                className="text-muted hover:text-accent"
+                            >
+                                <GlobeIcon aria-hidden focusable="false" className="size-5" />
+                            </Link>
+                        ) : null}
+                    </div>
+                ) : null}
+            </div>
+        </div>
+    )
+}
 
 /**
  * Course detail / sales page (§4) — direction A (chosen 2026-07-02): a two-column
@@ -263,20 +413,7 @@ const CourseDetailView = ({
                     </div>
 
                     {/* instructor */}
-                    <div className="flex flex-col gap-2 border-t border-separator pt-6">
-                        <Typography type="h6" weight="bold">
-                            {t("detail.instructor")}
-                        </Typography>
-                        <Typography type="body-sm" weight="medium">
-                            {course.instructor.name}
-                        </Typography>
-                        <Typography type="body-xs" color="muted">
-                            {course.instructor.title}
-                        </Typography>
-                        <Typography type="body-sm" color="muted">
-                            {course.instructor.bio}
-                        </Typography>
-                    </div>
+                    <InstructorCard instructor={course.instructor} />
                 </div>
 
                 {/* RIGHT — sticky enroll card */}

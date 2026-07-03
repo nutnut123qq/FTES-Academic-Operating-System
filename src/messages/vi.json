@@ -4452,7 +4452,20 @@
             "outlineMeta": "{sections} chương · {lessons} bài · {duration}",
             "premium": "Premium",
             "reviews": "Đánh giá học viên",
-            "instructor": "Giảng viên",
+            "instructor": {
+                "title": "Giảng viên",
+                "stats": {
+                    "courses": "{count} khóa",
+                    "students": "{count} học viên",
+                    "rating": "{rating}★"
+                },
+                "achievements": "Thành tích & chứng chỉ",
+                "social": {
+                    "github": "GitHub của {name}",
+                    "linkedin": "LinkedIn của {name}",
+                    "website": "Website của {name}"
+                }
+            },
             "tryFree": "Học thử miễn phí",
             "loadError": "Không tải được khóa học.",
             "retry": "Thử lại",

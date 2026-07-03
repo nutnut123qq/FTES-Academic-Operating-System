@@ -4452,7 +4452,20 @@
             "outlineMeta": "{sections} sections · {lessons} lessons · {duration}",
             "premium": "Premium",
             "reviews": "Learner reviews",
-            "instructor": "Instructor",
+            "instructor": {
+                "title": "Instructor",
+                "stats": {
+                    "courses": "{count} courses",
+                    "students": "{count} students",
+                    "rating": "{rating}★"
+                },
+                "achievements": "Achievements & credentials",
+                "social": {
+                    "github": "{name}'s GitHub",
+                    "linkedin": "{name}'s LinkedIn",
+                    "website": "{name}'s website"
+                }
+            },
             "tryFree": "Try for free",
             "loadError": "Couldn't load the course.",
             "retry": "Try again",

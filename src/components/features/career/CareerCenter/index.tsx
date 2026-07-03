@@ -74,7 +74,7 @@ export const CareerCenter = () => {
                         return (
                             <div
                                 key={roadmap.id}
-                                className="flex flex-col gap-3 rounded-3xl border border-separator p-4"
+                                className="flex flex-col gap-3 rounded-2xl border border-separator p-4"
                             >
                                 <div className="flex items-center gap-3">
                                     <div
@@ -105,7 +105,7 @@ export const CareerCenter = () => {
                     {jobs.map((job) => (
                         <div
                             key={job.id}
-                            className="flex flex-wrap items-center gap-3 rounded-large border border-separator p-4"
+                            className="flex flex-wrap items-center gap-3 rounded-2xl border border-separator p-4"
                         >
                             <div className="min-w-0 flex-1">
                                 <Typography type="body-sm" weight="medium" truncate>

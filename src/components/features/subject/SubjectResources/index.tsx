@@ -59,7 +59,7 @@ export const SubjectResources = () => {
                         <div
                             key={resource.id}
                             className={cn(
-                                "flex items-center gap-3 rounded-large border border-separator p-4",
+                                "flex items-center gap-3 rounded-2xl border border-separator p-4",
                             )}
                         >
                             <div className="min-w-0 flex-1">
@@ -89,7 +89,7 @@ export const SubjectResources = () => {
                 {collections.map((collection) => (
                     <div
                         key={collection.id}
-                        className="flex items-center gap-3 rounded-large border border-separator p-4"
+                        className="flex items-center gap-3 rounded-2xl border border-separator p-4"
                     >
                         <span className="text-accent">
                             <FolderIcon className="size-5" />

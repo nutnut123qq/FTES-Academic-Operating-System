@@ -32,7 +32,7 @@ export const ProfileAcademic = () => {
             {FIELDS.map((field) => (
                 <div
                     key={field}
-                    className="flex items-center gap-3 rounded-large border border-separator p-4"
+                    className="flex items-center gap-3 rounded-2xl border border-separator p-4"
                 >
                     <Typography type="body-sm" color="muted" className="w-32 shrink-0">
                         {t(`academic.fields.${field}`)}

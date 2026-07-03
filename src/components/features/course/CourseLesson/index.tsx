@@ -211,7 +211,7 @@ export const CourseLesson = () => {
                                         {lesson.docs.map((doc) => (
                                             <div
                                                 key={doc.id}
-                                                className="flex items-center gap-3 rounded-large border border-separator p-4"
+                                                className="flex items-center gap-3 rounded-2xl border border-separator p-4"
                                             >
                                                 <FileTextIcon aria-hidden focusable="false" className="size-5 shrink-0 text-accent" />
                                                 <div className="min-w-0 flex-1">
@@ -237,7 +237,7 @@ export const CourseLesson = () => {
 
                                 {/* end-of-chapter challenge */}
                                 {lesson.challenge ? (
-                                    <div className="flex items-center gap-3 rounded-large bg-accent/10 p-4">
+                                    <div className="flex items-center gap-3 rounded-2xl bg-accent/10 p-4">
                                         <TargetIcon aria-hidden focusable="false" className="size-6 shrink-0 text-accent" />
                                         <div className="min-w-0 flex-1">
                                             <Typography type="body-sm" weight="medium" className="text-accent">

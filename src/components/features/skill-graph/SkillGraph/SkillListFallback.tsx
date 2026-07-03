@@ -49,7 +49,7 @@ export const SkillListFallback = ({ nodes, activeDomains, onSelect }: SkillListF
                                         type="button"
                                         onClick={() => onSelect(skill)}
                                         className={cn(
-                                            "flex w-full items-center gap-3 rounded-large border border-default p-3 text-left",
+                                            "flex w-full items-center gap-3 rounded-2xl border border-default p-3 text-left",
                                             "hover:bg-surface-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-accent",
                                         )}
                                     >

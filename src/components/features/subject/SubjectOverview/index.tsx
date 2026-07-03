@@ -110,7 +110,7 @@ const OverviewView = ({
     return (
         <div className="flex flex-col gap-6">
             {/* join banner */}
-            <div className="flex flex-wrap items-center gap-3 rounded-large bg-accent/10 p-4">
+            <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-accent/10 p-4">
                 <UsersIcon aria-hidden focusable="false" className="size-6 shrink-0 text-accent" />
                 <div className="min-w-0">
                     <Typography type="body-sm" weight="medium" className="text-accent">
@@ -133,7 +133,7 @@ const OverviewView = ({
                 {/* feed */}
                 <div className="flex flex-col gap-6 md:col-span-2">
                     {overview.pinnedPost ? (
-                        <div className="flex flex-col gap-2 rounded-large border border-accent/40 bg-accent/5 p-4">
+                        <div className="flex flex-col gap-2 rounded-2xl border border-accent/40 bg-accent/5 p-4">
                             <div className="flex items-center gap-2 text-accent">
                                 <PushPinIcon aria-hidden focusable="false" className="size-4" />
                                 <Typography type="body-xs" weight="medium" className="text-accent">

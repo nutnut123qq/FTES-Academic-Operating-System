@@ -237,7 +237,7 @@ export const NotificationCenter = () => {
                             {Array.from({ length: 5 }).map((_, index) => (
                                 <div
                                     key={index}
-                                    className="flex items-start gap-3 rounded-large border border-separator p-4"
+                                    className="flex items-start gap-3 rounded-2xl border border-separator p-4"
                                 >
                                     <Skeleton className="size-10 shrink-0 rounded-large" />
                                     <div className="flex min-w-0 flex-1 flex-col gap-2">
@@ -272,7 +272,7 @@ export const NotificationCenter = () => {
                                             item.title.params ?? undefined,
                                         )}
                                         className={cn(
-                                            "flex w-full items-start gap-3 rounded-large border border-separator p-4 text-left transition-colors hover:bg-default/40 focus-visible:bg-default/40 focus-visible:outline-none",
+                                            "flex w-full items-start gap-3 rounded-2xl border border-separator p-4 text-left transition-colors hover:bg-default/40 focus-visible:bg-default/40 focus-visible:outline-none",
                                             !item.isRead && "bg-default/40",
                                         )}
                                     >

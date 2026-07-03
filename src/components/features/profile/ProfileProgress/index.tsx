@@ -38,16 +38,16 @@ const buildCells = (activeDays: Array<string>): Array<HeatmapDay> => {
 const ProgressSkeleton = () => (
     <div className="flex flex-col gap-6">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="flex flex-col gap-3 rounded-large bg-default/40 p-4">
+            <div className="flex flex-col gap-3 rounded-2xl bg-default/40 p-4">
                 <Skeleton.Typography type="body-sm" />
                 <Skeleton.ProgressBar />
             </div>
-            <div className="flex flex-col gap-3 rounded-large bg-default/40 p-4">
+            <div className="flex flex-col gap-3 rounded-2xl bg-default/40 p-4">
                 <Skeleton.Typography type="body-sm" />
                 <Skeleton.Typography type="h5" />
             </div>
         </div>
-        <div className="flex flex-col gap-3 rounded-large bg-default/40 p-4">
+        <div className="flex flex-col gap-3 rounded-2xl bg-default/40 p-4">
             <Skeleton.Typography type="body-sm" />
             <Skeleton className="h-24 w-full rounded-md" />
         </div>
@@ -93,7 +93,7 @@ export const ProfileProgress = () => {
                     <div className="flex flex-col gap-6">
                         {/* XP/level + rank/league cards */}
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            <div className="flex flex-col gap-3 rounded-large bg-default/40 p-4">
+                            <div className="flex flex-col gap-3 rounded-2xl bg-default/40 p-4">
                                 <div className="flex items-center gap-2">
                                     <StarIcon className="size-5 text-accent" aria-hidden focusable="false" />
                                     <Typography type="body" weight="medium">
@@ -113,7 +113,7 @@ export const ProfileProgress = () => {
                                     showValue
                                 />
                             </div>
-                            <div className="flex flex-col gap-2 rounded-large bg-default/40 p-4">
+                            <div className="flex flex-col gap-2 rounded-2xl bg-default/40 p-4">
                                 <div className="flex items-center gap-2">
                                     <TrophyIcon className="size-5 text-accent" aria-hidden focusable="false" />
                                     <Typography type="body" weight="medium">
@@ -136,7 +136,7 @@ export const ProfileProgress = () => {
                         </div>
 
                         {/* streak calendar heatmap */}
-                        <div className="flex flex-col gap-3 rounded-large bg-default/40 p-4">
+                        <div className="flex flex-col gap-3 rounded-2xl bg-default/40 p-4">
                             <div className="flex flex-wrap items-center gap-2">
                                 <FireIcon className="size-5 text-accent" weight="fill" aria-hidden focusable="false" />
                                 <Typography type="body" weight="medium">
@@ -169,7 +169,7 @@ export const ProfileProgress = () => {
                                     {data.badges.map((badge) => (
                                         <div
                                             key={badge.id}
-                                            className="flex flex-col items-center gap-2 rounded-large bg-default/40 p-4 text-center"
+                                            className="flex flex-col items-center gap-2 rounded-2xl bg-default/40 p-4 text-center"
                                         >
                                             <TrophyIcon
                                                 className="size-6 text-accent"

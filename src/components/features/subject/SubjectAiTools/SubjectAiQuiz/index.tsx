@@ -163,7 +163,7 @@ export const SubjectAiQuiz = ({
             ) : (
                 <div className="flex flex-col gap-3">
                     {submitted ? (
-                        <div className="rounded-large border border-accent/40 bg-accent/5 p-4">
+                        <div className="rounded-2xl border border-accent/40 bg-accent/5 p-4">
                             <Typography type="body" weight="bold">
                                 {t("subjects.aiTools.quiz.score", {
                                     score,
@@ -205,7 +205,7 @@ export const SubjectAiQuiz = ({
                                                 }))
                                             }
                                             className={cn(
-                                                "flex items-center gap-2 rounded-large border p-3 text-left text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-focus",
+                                                "flex items-center gap-2 rounded-2xl border p-3 text-left text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-focus",
                                                 showMark && isCorrect
                                                     ? "border-success bg-success/10 text-success"
                                                     : showMark && isPicked

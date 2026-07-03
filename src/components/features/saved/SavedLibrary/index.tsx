@@ -261,7 +261,7 @@ const SavedRowItem = ({ row, showType }: { row: SavedRow; showType: boolean }) =
     return (
         <Link
             href={row.href}
-            className="flex items-center gap-3 rounded-large border border-separator p-4 no-underline transition-colors hover:bg-default/40"
+            className="flex items-center gap-3 rounded-2xl border border-separator p-4 no-underline transition-colors hover:bg-default/40"
         >
             {entry.entityType === "post" && row.author ? (
                 <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent/10 text-xs font-bold text-accent">
@@ -305,7 +305,7 @@ const SavedLibrarySkeleton = () => (
         {[0, 1, 2, 3].map((rowIndex) => (
             <div
                 key={rowIndex}
-                className="flex items-center gap-3 rounded-large border border-separator p-4"
+                className="flex items-center gap-3 rounded-2xl border border-separator p-4"
             >
                 <div className="flex min-w-0 flex-1 flex-col gap-2">
                     <Skeleton className="h-4 w-2/3 rounded-full" />

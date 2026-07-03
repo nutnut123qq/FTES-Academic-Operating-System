@@ -40,7 +40,7 @@ export const CommunityPoll = () => {
                             type="button"
                             onClick={() => !revealed && setVotedId(option.id)}
                             className={cn(
-                                "relative overflow-hidden rounded-large border p-3 text-left transition-colors",
+                                "relative overflow-hidden rounded-2xl border p-3 text-left transition-colors",
                                 votedId === option.id ? "border-accent" : "border-separator",
                                 !revealed && "hover:bg-default/40",
                             )}

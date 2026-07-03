@@ -24,7 +24,7 @@ export const ProfilePublic = () => {
     return (
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-6">
             {/* identity header */}
-            <div className="flex items-center gap-4 rounded-large border border-separator p-6">
+            <div className="flex items-center gap-4 rounded-2xl border border-separator p-6">
                 <div className="flex size-16 shrink-0 items-center justify-center rounded-full bg-accent/10 text-xl font-bold text-accent">
                     {profile.name.slice(0, 1).toUpperCase()}
                 </div>

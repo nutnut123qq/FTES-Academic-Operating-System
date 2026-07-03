@@ -2,9 +2,11 @@
 
 import React, { useState } from "react"
 import { Typography, cn } from "@heroui/react"
-import { CaretRightIcon } from "@phosphor-icons/react"
+import { CaretRightIcon, HeartIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
+import { useQueryTrendingSwr } from "../hooks/useQueryTrendingSwr"
+import { useQueryContributorsSwr } from "../hooks/useQueryContributorsSwr"
 import { useQueryPollSwr } from "../hooks/useQueryPollSwr"
 
 /** One discovery panel shell: title row (+ optional see-all link) over content. */
@@ -94,15 +96,69 @@ const QuickPoll = () => {
 }
 
 /**
- * Right community rail (`xl`+): surfaces the community poll with in-place
- * voting next to the feed, reusing the EXISTING mock hook (no new data).
- * ponytail: pure composition.
+ * Right community rail (`xl`+): surfaces the buried community features next to
+ * the feed — top trending posts, top contributors, and the community poll with
+ * in-place voting — reusing the EXISTING mock hooks (no new data). Each panel
+ * links to its full page. ponytail: pure composition; top-N slices.
  */
 export const DiscoveryRail = () => {
     const t = useTranslations("communityHub")
+    const { trending } = useQueryTrendingSwr()
+    const { contributors } = useQueryContributorsSwr()
 
     return (
         <div className="flex flex-col gap-3">
+            <RailPanel
+                title={t("rail.trending")}
+                seeAllHref="/community/trending"
+                seeAllLabel={t("rail.seeAll")}
+            >
+                <div className="flex flex-col">
+                    {trending.slice(0, 4).map((post, index) => (
+                        <Link
+                            key={post.id}
+                            href={`/community/${post.id}`}
+                            className="flex items-center gap-2 rounded-large px-2 py-2 no-underline transition-colors hover:bg-default/40"
+                        >
+                            <Typography type="body-xs" color="muted" className="shrink-0">
+                                {index + 1}
+                            </Typography>
+                            <Typography type="body-xs" className="min-w-0 flex-1 truncate">
+                                {post.title}
+                            </Typography>
+                            <span className="flex shrink-0 items-center gap-0.5 text-xs text-muted">
+                                <HeartIcon aria-hidden focusable="false" className="size-3.5" />
+                                {post.likes}
+                            </span>
+                        </Link>
+                    ))}
+                </div>
+            </RailPanel>
+
+            <RailPanel
+                title={t("rail.reputation")}
+                seeAllHref="/community/reputation"
+                seeAllLabel={t("rail.seeAll")}
+            >
+                <div className="flex flex-col">
+                    {contributors.slice(0, 3).map((contributor, index) => (
+                        <div key={contributor.id} className="flex items-center gap-2 px-2 py-2">
+                            <Typography type="body-xs" color="muted" className="shrink-0">
+                                {index + 1}
+                            </Typography>
+                            <Typography type="body-xs" className="min-w-0 flex-1 truncate">
+                                {contributor.name}
+                            </Typography>
+                            <Typography type="body-xs" color="muted" className="shrink-0">
+                                {t("reputation.score", {
+                                    score: contributor.upvotes - contributor.downvotes,
+                                })}
+                            </Typography>
+                        </div>
+                    ))}
+                </div>
+            </RailPanel>
+
             <RailPanel
                 title={t("rail.poll")}
                 seeAllHref="/community/poll"

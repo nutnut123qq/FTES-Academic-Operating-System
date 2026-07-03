@@ -144,7 +144,7 @@ export const UiUxChallengeEditor = ({ challenge }: UiUxChallengeEditorProps) => 
                         className="h-full"
                     />
                     {challenge.isLocked ? (
-                        <div className="absolute inset-0 z-10 flex items-center justify-center rounded-large bg-background/70 p-6">
+                        <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-background/70 p-6">
                             <div className="flex max-w-sm flex-col items-center gap-3 rounded-2xl border border-separator bg-surface p-6 text-center">
                                 <LockIcon
                                     className="size-8 text-accent"

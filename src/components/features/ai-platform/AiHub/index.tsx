@@ -72,7 +72,7 @@ export const AiHub = () => {
                         {group.tools.map((tool: AiTool) => (
                             <div
                                 key={tool.id}
-                                className="flex flex-col gap-3 rounded-3xl border border-separator p-4"
+                                className="flex flex-col gap-3 rounded-2xl border border-separator p-4"
                             >
                                 <span
                                     aria-hidden

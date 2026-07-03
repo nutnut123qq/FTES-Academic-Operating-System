@@ -49,7 +49,7 @@ export const SubjectMembers = () => {
                 {filtered.map((member) => (
                     <div
                         key={member.id}
-                        className="flex items-center gap-3 rounded-large border border-separator p-4"
+                        className="flex items-center gap-3 rounded-2xl border border-separator p-4"
                     >
                         <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent/10 text-sm font-bold text-accent">
                             {member.name.slice(0, 1).toUpperCase()}

@@ -62,7 +62,7 @@ export const GoalsCard = ({ className }: WithClassNames<undefined>) => {
                         target: goal.target,
                     })
                     return (
-                        <div key={goal.key} className="flex flex-col gap-2 rounded-large bg-default/40 p-4">
+                        <div key={goal.key} className="flex flex-col gap-2 rounded-2xl bg-default/40 p-4">
                             <div className="flex items-center gap-2">
                                 <Typography type="body-sm" weight="medium">
                                     {t(`goals.${goal.key}.name`)}

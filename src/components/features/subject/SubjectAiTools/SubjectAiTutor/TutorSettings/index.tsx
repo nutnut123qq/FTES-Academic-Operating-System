@@ -50,7 +50,7 @@ export const TutorSettings = ({
                 <Typography type="body-sm" weight="medium" color="muted">
                     {t("subjects.aiTools.tutor.modelLabel")}
                 </Typography>
-                <div className="rounded-large border border-separator p-3">
+                <div className="rounded-2xl border border-separator p-3">
                     <Typography type="body-sm">{model}</Typography>
                 </div>
             </div>

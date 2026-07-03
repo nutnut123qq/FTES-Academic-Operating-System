@@ -45,7 +45,7 @@ export const ChatShell = () => {
                                 key={conversation.id}
                                 type="button"
                                 onClick={() => setSelectedId(conversation.id)}
-                                className={`flex items-center gap-3 rounded-large p-3 text-left transition-colors ${
+                                className={`flex items-center gap-3 rounded-2xl p-3 text-left transition-colors ${
                                     isSelected ? "bg-accent/10" : "hover:bg-default/40"
                                 }`}
                             >

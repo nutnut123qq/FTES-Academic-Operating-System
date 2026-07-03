@@ -25,16 +25,18 @@ Course/pricing/media/continue cards — the dominant content unit.
 
 ## Decisions (newest first)
 - **Landing honor/award card (Bảng vàng podium + grid)** · chose **hand-rolled glass
-  panels in-feature** (`rounded-3xl border border-separator bg-surface/60
-  backdrop-blur-md`, hover `border-warning/40` + `shadow-warning/20` glow), two shapes:
-  large centered podium card (gold-ringed circular portrait → `bg-clip-text` gold-gradient
-  name → big count-up metric → muted lines) and a compact row card (sm portrait + name +
-  warning chip + lines) · **WHY:** (a) landing = one-off composition in the feature, no
-  new blocks (home-landing 2026-07-02 precedent); (b) glass-over-ambient-orbs needs a
-  translucent bg — HeroUI `Card` bakes opaque `bg-surface`; (c) podium-center elevation
-  uses side-card `sm:mt-6`, NOT translate, so the hover-lift transform never fights the
-  layout offset; (d) gold strictly accent-only (name/metric/ring/chip) per the
-  hall-of-fame lesson in `design/CONTENT.md` · home-landing HonorBoardSection · 2026-07-03
+  panels in-feature** (`rounded-2xl border border-separator bg-surface/60
+  backdrop-blur-md`, hover `border-accent/40` + `shadow-accent/20` glow), two shapes:
+  large centered podium card (accent-ringed circular portrait → `bg-clip-text` metallic
+  accent-gradient name → big count-up metric → muted lines) and a compact row card (sm
+  portrait + name + accent chip + lines) · **WHY:** (a) landing = one-off composition in
+  the feature, no new blocks (home-landing 2026-07-02 precedent); (b) glass-over-ambient-
+  orbs needs a translucent bg — HeroUI `Card` bakes opaque `bg-surface`; (c) podium-center
+  elevation uses side-card `sm:mt-6`, NOT translate, so the hover-lift transform never
+  fights the layout offset; (d) **first shipped GOLD (`warning`) — user vetoed same day:
+  an award card's color follows the THEME accent, honor is conveyed by hierarchy
+  (tiering/metric/ring/glow), not by a gold palette** · home-landing HonorBoardSection ·
+  2026-07-03
 - **Hand-rolled bordered card panels bumped `rounded-large` → `rounded-2xl`** (softer, NOT
   `rounded-3xl`) · **repo-wide pass, 69 sites** — codemod over `src/` with the rule: bump the
   OUTER card container of a hand-rolled panel iff it has `rounded-large` + `border

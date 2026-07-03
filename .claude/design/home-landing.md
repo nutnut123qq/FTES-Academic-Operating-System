@@ -2,6 +2,18 @@
 
 Page-level UX decisions for the academic-OS landing. Grows each `/starci-fe-ux-apply`.
 
+## 2026-07-03 (b) — Bảng vàng recolor: gold → theme `accent` (user correction)
+- **User veto on the gold palette:** the section shipped with `warning`-token gold
+  (classic "bảng vàng" motif) but on the live page it clashed — the site's primary is
+  the accent color, and a lone gold section read off-palette. Corrected same day:
+  every highlight (name gradient, hero metric, portrait ring, chip, hover glow,
+  ambient orbs, trophy icon) now derives from `var(--accent)`; the metallic gradient
+  keeps its structure, just swaps the token. Also synced the two hand-rolled cards to
+  `rounded-2xl` per the repo-wide radius decision (decision/card.md 2026-07-03).
+- **Lesson:** an "award" section does NOT get an automatic gold palette — honor is
+  conveyed by hierarchy (podium/tiering, metric dominance, ring, glow), the COLOR must
+  stay the theme accent. OpenSpec `honor-board-theme-accent`.
+
 ## 2026-07-03 — Bảng vàng = Podium + Grid, glass + gold-accent (direction B+C)
 - **The fork:** old honor board rendered the legacy award POSTERS whole (name/laurel/
   confetti baked into the image) in 3 equal cards → inconsistent typography, gold noise,

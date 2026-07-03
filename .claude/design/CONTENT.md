@@ -97,3 +97,8 @@ the new lesson here at the end of the task.
   · what NOT to copy: school touchscreen-kiosk font-size guidance (that's 10-ft viewing,
   not web) · sources: joekotlan.com (gold on web), halloffamewall.com UX guide,
   digitalwalloffame.com layouts, speckyboy.com metallic CSS · 2026-07-03
+  · **ĐÍNH CHÍNH (same day, user veto):** "gold is an accent" đúng về LIỀU LƯỢNG nhưng
+  sai về MÀU khi theme của trang có accent riêng — bảng vinh danh KHÔNG auto-gold; màu
+  nhấn phải là token `accent` của theme, sự "vinh danh" nằm ở hierarchy (podium/tiering,
+  metric to, ring, glow), không nằm ở màu vàng. Gold chỉ hợp khi cả trang theo palette
+  gold/dark (như poster gốc). Ref `HonorBoardSection` recolor · 2026-07-03

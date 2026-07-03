@@ -8,6 +8,7 @@ import { usePathname, useRouter } from "@/i18n/navigation"
 import { ExtendedTabs } from "@/components/blocks/navigation/ExtendedTabs"
 import { NavRail } from "./NavRail"
 import { DiscoveryRail } from "./DiscoveryRail"
+import { PromoBanner } from "./PromoBanner"
 
 /** Props for {@link CommunityShell}. */
 interface CommunityShellProps {
@@ -23,12 +24,12 @@ const TABS: Array<{ key: string; segment: string }> = [
     { key: "trending", segment: "trending" },
 ]
 
-/** ⋯ menu entries: i18n key under `communityHub.menu.*` + route segment. */
-const MENU_ITEMS: Array<{ key: string; segment: string }> = [
-    { key: "newPost", segment: "new" },
-    { key: "reputation", segment: "reputation" },
-    { key: "poll", segment: "poll" },
-    { key: "moderation", segment: "moderation" },
+/** ⋯ menu entries: i18n key under `communityHub.menu.*` + absolute href. */
+const MENU_ITEMS: Array<{ key: string; href: string }> = [
+    { key: "groups", href: "/groups" },
+    { key: "reputation", href: "/community/reputation" },
+    { key: "poll", href: "/community/poll" },
+    { key: "moderation", href: "/community/moderation" },
 ]
 
 /**
@@ -57,7 +58,10 @@ export const CommunityShell = ({ children }: CommunityShellProps) => {
         <div className="mx-auto w-full xl:grid xl:max-w-[1280px] xl:grid-cols-[minmax(0,1fr)_minmax(0,620px)_minmax(0,1fr)] xl:items-start xl:gap-6 xl:px-6">
             {/* left nav rail — xl+ only; the ⋯ menu stays the entry point below xl */}
             <aside className="hidden pt-3 xl:sticky xl:top-20 xl:block xl:self-start">
-                <NavRail />
+                <div className="flex flex-col gap-3">
+                    <NavRail />
+                    <PromoBanner />
+                </div>
             </aside>
             <div className="mx-auto flex w-full max-w-[620px] flex-col">
                 {/* flat sticky header — scope tabs blended into the page: OPAQUE page-color
@@ -101,7 +105,7 @@ export const CommunityShell = ({ children }: CommunityShellProps) => {
                                                 key={item.key}
                                                 id={item.key}
                                                 textValue={t(`menu.${item.key}`)}
-                                                onPress={() => router.push(hrefFor(item.segment))}
+                                                onPress={() => router.push(item.href)}
                                             >
                                                 <Label>{t(`menu.${item.key}`)}</Label>
                                             </Dropdown.Item>

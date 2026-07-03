@@ -4583,7 +4583,7 @@
         "placeholder": "Nội dung đang được xây dựng.",
         "more": "Thêm",
         "menu": {
-            "newPost": "Đăng bài",
+            "groups": "Nhóm",
             "reputation": "Bảng uy tín",
             "poll": "Bình chọn",
             "moderation": "Kiểm duyệt"
@@ -4593,6 +4593,9 @@
             "reputation": "Bảng uy tín",
             "poll": "Bình chọn nhanh",
             "seeAll": "Xem tất cả"
+        },
+        "promo": {
+            "sponsored": "Được tài trợ"
         },
         "tabs": {
             "forYou": "Dành cho bạn",

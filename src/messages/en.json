@@ -4583,7 +4583,7 @@
         "placeholder": "This feed is under construction.",
         "more": "More",
         "menu": {
-            "newPost": "New post",
+            "groups": "Groups",
             "reputation": "Reputation",
             "poll": "Poll",
             "moderation": "Moderation"
@@ -4593,6 +4593,9 @@
             "reputation": "Reputation",
             "poll": "Quick poll",
             "seeAll": "See all"
+        },
+        "promo": {
+            "sponsored": "Sponsored"
         },
         "tabs": {
             "forYou": "For you",

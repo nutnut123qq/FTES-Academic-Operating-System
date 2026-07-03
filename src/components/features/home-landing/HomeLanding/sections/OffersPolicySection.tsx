@@ -67,10 +67,10 @@ export const OffersPolicySection = () => {
                     </Typography>
                 </div>
 
-                <div className="grid grid-cols-1 items-center gap-6 lg:grid-cols-[16rem_1fr] lg:gap-12">
+                <div className="mx-auto grid max-w-4xl grid-cols-1 items-center gap-6 lg:grid-cols-[15rem_1fr] lg:gap-10">
                     {/* tab rail */}
                     <div
-                        className="flex flex-row flex-wrap gap-2 lg:flex-col"
+                        className="flex flex-row flex-wrap gap-1 lg:flex-col"
                         role="tablist"
                         aria-label={t("offers.tabsAria")}
                     >
@@ -87,14 +87,19 @@ export const OffersPolicySection = () => {
                                     id={`offer-tab-${group.key}`}
                                     onClick={() => setActive(i)}
                                     className={cn(
-                                        "flex items-center gap-2 rounded-large border px-3 py-2 text-left transition-colors",
-                                        isActive
-                                            ? "border-accent bg-accent/10 text-accent"
-                                            : "border-separator text-foreground hover:bg-default/40",
+                                        "group flex items-center gap-3 rounded-xl px-4 py-2.5 text-left transition-colors",
+                                        isActive ? "bg-accent/10" : "hover:bg-accent/10",
                                     )}
                                 >
-                                    <GroupIcon className="size-5 shrink-0" aria-hidden focusable="false" />
-                                    <span className="hidden text-sm font-medium sm:inline">
+                                    <GroupIcon
+                                        className={cn(
+                                            "size-5 shrink-0 transition-colors",
+                                            isActive ? "text-accent" : "text-muted group-hover:text-accent",
+                                        )}
+                                        aria-hidden
+                                        focusable="false"
+                                    />
+                                    <span className="hidden text-sm font-medium text-foreground sm:inline">
                                         {t(`offers.groups.${group.key}.title`)}
                                     </span>
                                 </button>

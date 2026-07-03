@@ -5,11 +5,15 @@
 **Archetype: Threads single-column.** Cột đọc đơn `max-w-[620px] mx-auto` (đúng content-width
 572–620px của Threads), KHÔNG rail phụ trong làn đọc. Cấu trúc:
 
-1. **Sticky header mỏng** (`sticky top-16 z-10 bg-background/85 backdrop-blur border-b
-   border-separator`): identity row (Avatar sm + tên semibold + `{count, number} thành viên`
-   ẩn `<sm` + Dropdown ⋯ [Đăng bài / Bảng uy tín / Bình chọn / Kiểm duyệt]) + `ExtendedTabs`
-   underline (Dành cho bạn / Đang theo dõi / Cơ sở / Xu hướng). **Cover banner bỏ hẳn** —
-   `coverUrl` giữ trong model cho trang giới thiệu sau này.
+1. **Header phẳng CHÌM vào trang** (`sticky top-16 z-10 bg-background/70 backdrop-blur`,
+   KHÔNG viền dưới, KHÔNG nền card — đính chính `community-flat-header` 2026-07-03): thầy
+   chốt trang này là **feed xã hội CHUNG** (mini social network kiểu Threads), **KHÔNG phải
+   một cộng đồng cụ thể** → **bỏ HẲN identity** (avatar + tên "Cộng đồng FTES" + members) +
+   xoá hook `useQueryCommunityIdentitySwr` + i18n `identity.*`/`members`. Header giờ chỉ còn
+   1 hàng `justify-between`: `ExtendedTabs` underline (Dành cho bạn / Đang theo dõi / Cơ sở /
+   Xu hướng) bên trái + Dropdown ⋯ bên phải `xl:hidden` (desktop dùng NavRail, ẩn ⋯ cho khỏi
+   trùng). Blur nhẹ `/70` giữ để post cuộn dưới không lòi qua tabs; bỏ viền = hết cạnh "card"
+   → tabs chìm vào trang. `capability community-identity` retire.
 2. **Composer trigger** đầu feed: avatar + prompt "Có gì mới?" (plain button, `cursor-text`) +
    Button Đăng bài → mở modal `communityComposer` (overlay store + ModalContainer), form dùng
    chung với `/community/new` (`CommunityComposerForm`).

@@ -4581,7 +4581,6 @@
     "communityHub": {
         "title": "Cộng đồng",
         "placeholder": "Nội dung đang được xây dựng.",
-        "members": "{count, number} thành viên",
         "more": "Thêm",
         "menu": {
             "newPost": "Đăng bài",
@@ -4662,10 +4661,6 @@
             "reportedBy": "báo cáo bởi {name}",
             "keep": "Giữ lại",
             "remove": "Gỡ bỏ"
-        },
-        "identity": {
-            "coverAlt": "Ảnh nền của {name}",
-            "avatarAlt": "Ảnh đại diện của {name}"
         }
     },
     "groupsHub": {

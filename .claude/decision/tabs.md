@@ -29,8 +29,13 @@ Distilled from `starci-navigation.md` (shell shaping) + the `TabsCard` / `Extend
   **`ExtendedTabs`** underline, `selectedKey` derive từ pathname, `onSelectionChange` →
   `router.push` · **WHY:** thay hàng pill `Button` cũ (vi phạm "1-of-few = Tabs, NEVER pill
   buttons"); Threads web dùng dropdown tên feed nhưng 4 scope FTES cần discoverability →
-  underline tabs là giao điểm Threads-calm × luật nhà. Tabs nằm TRONG cụm sticky
-  (`top-16 bg-background/85 backdrop-blur`) cùng identity row. · community shell · 2026-07-03
+  underline tabs là giao điểm Threads-calm × luật nhà. · community shell · 2026-07-03
+  **(cập nhật `community-flat-header` 2026-07-03):** feed xã hội CHUNG → bỏ identity row;
+  header giờ là **dải tab PHẲNG CHÌM vào trang** (`sticky top-16 bg-background/70
+  backdrop-blur`, **KHÔNG viền dưới, KHÔNG nền card**) = tabs bên trái + ⋯ bên phải
+  `xl:hidden`. **Nguyên tắc: một dải sticky "chìm vào trang" = bỏ `border-b` (cạnh card) +
+  nền cùng màu trang mờ nhẹ (`bg-background/70`) đủ giữ legible khi cuộn** — đừng để nền đặc
+  + viền (đọc thành thanh/card nổi).
 - **Single in-flow tab strip switching content panels** (learn player: Bài giảng / Tài
   liệu / Ghi chú) · chose **`ExtendedTabs`** directly (not `TabsCard`) with the HeroUI
   compound inside (`Tabs.ListContainer > Tabs.List > Tabs.Tab id=…`), panels rendered by

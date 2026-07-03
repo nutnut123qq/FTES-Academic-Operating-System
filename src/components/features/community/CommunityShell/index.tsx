@@ -54,14 +54,17 @@ export const CommunityShell = ({ children }: CommunityShellProps) => {
         "forYou"
 
     return (
-        <div className="mx-auto w-full xl:grid xl:max-w-[1220px] xl:grid-cols-[240px_minmax(0,620px)_280px] xl:justify-center xl:gap-6 xl:px-6">
+        <div className="mx-auto w-full xl:grid xl:max-w-[1280px] xl:grid-cols-[minmax(0,1fr)_minmax(0,620px)_minmax(0,1fr)] xl:items-start xl:gap-6 xl:px-6">
             {/* left nav rail — xl+ only; the ⋯ menu stays the entry point below xl */}
             <aside className="hidden pt-3 xl:sticky xl:top-20 xl:block xl:self-start">
                 <NavRail />
             </aside>
             <div className="mx-auto flex w-full max-w-[620px] flex-col">
-                {/* flat sticky header — scope tabs blended into the page (no card fill / border) */}
-                <div className="sticky top-16 z-10 flex items-center justify-between gap-2 bg-background/70 px-4 pt-3 backdrop-blur">
+                {/* flat sticky header — scope tabs blended into the page: OPAQUE page-color
+                    fill (same as the app navbar) so it's invisible against the page and cleanly
+                    masks content on scroll — no translucent/blur (that read as a frosted card),
+                    no border */}
+                <div className="sticky top-16 z-10 flex items-center justify-between gap-2 bg-background px-4 pt-3">
                     <ExtendedTabs
                         selectedKey={selectedTab}
                         onSelectionChange={(key) => {

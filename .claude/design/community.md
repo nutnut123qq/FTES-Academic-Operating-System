@@ -5,8 +5,10 @@
 **Archetype: Threads single-column.** Cột đọc đơn `max-w-[620px] mx-auto` (đúng content-width
 572–620px của Threads), KHÔNG rail phụ trong làn đọc. Cấu trúc:
 
-1. **Header phẳng CHÌM vào trang** (`sticky top-16 z-10 bg-background/70 backdrop-blur`,
-   KHÔNG viền dưới, KHÔNG nền card — đính chính `community-flat-header` 2026-07-03): thầy
+1. **Header phẳng CHÌM vào trang** (`sticky top-16 z-10 bg-background` ĐẶC, KHÔNG blur,
+   KHÔNG viền dưới, KHÔNG nền card — đính chính `community-flat-header` 2026-07-03; fix
+   sượng: bỏ `/70`+`backdrop-blur` vì cho mưa ambient lòi qua, dùng nền đặc trùng màu trang
+   như app navbar): thầy
    chốt trang này là **feed xã hội CHUNG** (mini social network kiểu Threads), **KHÔNG phải
    một cộng đồng cụ thể** → **bỏ HẲN identity** (avatar + tên "Cộng đồng FTES" + members) +
    xoá hook `useQueryCommunityIdentitySwr` + i18n `identity.*`/`members`. Header giờ chỉ còn
@@ -38,8 +40,8 @@ cần discoverability + đúng luật nhà "1-of-few = Tabs, NEVER pill buttons"
 
 ## Side rails (2026-07-03 — change `community-side-rails`)
 
-Thầy: *"2 bên trống đang thiếu"* → từ `xl` (1280px) shell thành grid
-`[240px_minmax(0,620px)_280px] justify-center gap-6`, hai aside `sticky top-20`,
+Thầy: *"2 bên trống đang thiếu"* → từ `xl` (1280px) shell thành grid 3 cột, hai aside
+`sticky top-20`,
 `hidden` dưới `xl` (menu ⋯ vẫn là lối vào). **Rail trái = NavRail** (lối tắt: Đăng bài
 mở overlay composer + 3 Link Uy tín/Bình chọn/Kiểm duyệt, hàng icon+label). **Rail
 phải = DiscoveryRail** — 3 panel cùng idiom `rounded-3xl border-separator bg-surface`
@@ -48,6 +50,15 @@ top 3 · poll vote-tại-chỗ hiện % như trang poll) + "Xem tất cả" acce
 tắc: rail = pure composition trên data có sẵn, KHÔNG hook/data mới; không lặp scope
 tabs ở rail (đã ở header).
 
-**Backend business:** chưa có BE — toàn bộ mock SWR (`useQueryCommunityIdentitySwr`,
-`useQueryCommunityFeedSwr`, `useQueryPostDetailSwr` + react/comment mutations optimistic,
-transport error = local success). Swap point: giữ nguyên shape hook.
+**★ Canh giữa feed (fix "lệch trái dữ quá" 2026-07-03):** grid cột dùng
+`[minmax(0,1fr)_minmax(0,620px)_minmax(0,1fr)]` (hai cột rìa `1fr` ĐỐI XỨNG, cap
+`max-w-[1280px] mx-auto`) → feed 620px luôn nằm ĐÚNG TÂM grid → feed vào chính giữa page
+ở mọi độ rộng (đo offset -7px = nửa scrollbar, ở 1024/1440/1920). **Nguyên tắc: muốn cột
+giữa page-centered với 2 rail, ĐỪNG dùng cột rail width CỐ ĐỊNH LỆCH nhau** (`240px…280px`
+→ feed lệch tâm + `max-w-1220` chật hơn tổng cột 1236 → nén feed + dịch trái); **dùng 2 cột
+rìa `1fr` bằng nhau** — feed tự ở tâm bất kể nội dung rail (rail lấp đều 2 ô 1fr, ~282px @1440).
+
+**Backend business:** chưa có BE — toàn bộ mock SWR (`useQueryCommunityFeedSwr`,
+`useQueryPostDetailSwr`, trending/contributors/poll + react/comment mutations optimistic,
+transport error = local success). Swap point: giữ nguyên shape hook. (Identity hook đã xoá
+ở `community-flat-header` — feed xã hội chung, không identity.)

@@ -31,11 +31,16 @@ Distilled from `starci-navigation.md` (shell shaping) + the `TabsCard` / `Extend
   buttons"); Threads web dùng dropdown tên feed nhưng 4 scope FTES cần discoverability →
   underline tabs là giao điểm Threads-calm × luật nhà. · community shell · 2026-07-03
   **(cập nhật `community-flat-header` 2026-07-03):** feed xã hội CHUNG → bỏ identity row;
-  header giờ là **dải tab PHẲNG CHÌM vào trang** (`sticky top-16 bg-background/70
-  backdrop-blur`, **KHÔNG viền dưới, KHÔNG nền card**) = tabs bên trái + ⋯ bên phải
-  `xl:hidden`. **Nguyên tắc: một dải sticky "chìm vào trang" = bỏ `border-b` (cạnh card) +
-  nền cùng màu trang mờ nhẹ (`bg-background/70`) đủ giữ legible khi cuộn** — đừng để nền đặc
-  + viền (đọc thành thanh/card nổi).
+  header giờ là **dải tab PHẲNG CHÌM vào trang** = tabs bên trái + ⋯ bên phải `xl:hidden`.
+  **★ FIX (thầy: "vẫn thấy card sau tabs, sượng"): dùng `bg-background` ĐẶC (KHÔNG `/70`,
+  KHÔNG `backdrop-blur`), KHÔNG viền.** Gốc lỗi: `bg-background/70 + backdrop-blur` = kính
+  mờ 70% → 30% AmbientBackground (mưa) lọt qua + blur thành vệt sau tabs = đọc thành card
+  sượng. `--background` CHÍNH là màu body/trang (đo: header `bg-background` === `bodyBg` ===
+  `lab(1.55)`), nên nền ĐẶC cùng token = tàng hình khi tĩnh + che sạch content khi cuộn.
+  **Nguyên tắc: sticky header "chìm vào trang" trên nền có ambient = `bg-background` ĐẶC
+  (đúng như app navbar `sticky top-0 bg-background`), KHÔNG translucent+blur.** Translucent/
+  blur = glassmorphism → luôn đọc thành panel kính nổi + cho ambient lòi qua. Chỉ bỏ
+  `border-b` so với navbar để không có cạnh.
 - **Single in-flow tab strip switching content panels** (learn player: Bài giảng / Tài
   liệu / Ghi chú) · chose **`ExtendedTabs`** directly (not `TabsCard`) with the HeroUI
   compound inside (`Tabs.ListContainer > Tabs.List > Tabs.Tab id=…`), panels rendered by

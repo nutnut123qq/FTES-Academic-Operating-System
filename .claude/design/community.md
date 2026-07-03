@@ -13,20 +13,24 @@
    một cộng đồng cụ thể** → **bỏ HẲN identity** (avatar + tên "Cộng đồng FTES" + members) +
    xoá hook `useQueryCommunityIdentitySwr` + i18n `identity.*`/`members`. Header giờ chỉ còn
    1 hàng `justify-between`: `ExtendedTabs` underline (Dành cho bạn / Đang theo dõi / Cơ sở /
-   Xu hướng) bên trái + Dropdown ⋯ bên phải `xl:hidden` (desktop dùng NavRail, ẩn ⋯ cho khỏi
-   trùng). Blur nhẹ `/70` giữ để post cuộn dưới không lòi qua tabs; bỏ viền = hết cạnh "card"
-   → tabs chìm vào trang. `capability community-identity` retire.
+   Xu hướng) CANH GIỮA (`justify-center`, ⋯ `absolute inset-y-0 right-4` nên không đẩy lệch
+   tabs) + Dropdown ⋯ `xl:hidden` (desktop dùng NavRail). Header `bg-background` ĐẶC (bỏ
+   `/70`+blur — xem decision/tabs.md), KHÔNG viền → chìm khít màu trang.
+   `capability community-identity` retire.
 2. **Composer trigger** đầu feed: avatar + prompt "Có gì mới?" (plain button, `cursor-text`) +
    Button Đăng bài → mở modal `communityComposer` (overlay store + ModalContainer), form dùng
    chung với `/community/new` (`CommunityComposerForm`).
-3. **Feed body = MỘT panel bo góc** (`rounded-3xl border border-separator bg-surface
-   overflow-hidden`, đúng column-panel của Threads — thầy đính chính 2026-07-03 với
-   screenshot Threads thật: body phải là 1 khối panel, không phải rows trần trên nền):
-   composer trigger + mọi post row nằm TRONG panel, chia `divide-y divide-separator`,
-   row `px-4 py-3` + hover wash `hover:bg-default/40`; link CHỈ phủ title+snippet (không
-   bọc cả row — tránh nested interactive); engagement bar `hideZeroCounts`. **Text bài =
-   chữ CHÍNH (foreground)**, title là dòng đầu weight medium, snippet KHÔNG muted —
-   Threads đọc post như 1 khối text, không phải "tiêu đề + mô tả mờ" kiểu danh sách.
+3. **Feed body = PHẲNG trên nền trang** (chỉ `flex flex-col divide-y divide-separator`,
+   KHÔNG `bg-surface`/viền/bo góc — ĐÍNH CHÍNH 2026-07-03 lần 2): thầy chốt cuối cùng
+   *"bỏ phần màu của card để chìm vào nền trang"*. **★ Gốc:** panel `bg-surface` ở LIGHT
+   mode = trắng tinh `lab(99.99)` trên nền `bg-background` off-white `lab(96.5)` → nổi thành
+   "card trắng vô duyên", bo góc 36px lòi dưới tabs (dark mode tương phản nhẹ nên bản panel
+   trước lọt). Bỏ hẳn card → composer trigger + post rows nằm phẳng trên trang, chỉ hairline
+   `divide-separator` ngăn. **Nguyên tắc: `bg-surface` vs `bg-background` chênh MẠNH ở light
+   mode — feed đọc-liền-mạch nên nằm TRỰC TIẾP trên `bg-background`, hairline phân post, KHÔNG
+   bọc `bg-surface` (để dành surface cho rail/card đứng riêng).** Row `px-4 py-3` + hover
+   `hover:bg-default/40`; link CHỈ phủ title+snippet; engagement bar `hideZeroCounts`. **Text
+   bài = foreground** (title dòng đầu weight medium, snippet KHÔNG muted).
 4. **Detail** cùng anatomy + threadline xuống vùng comments.
 
 **Map Threads → token nhà (không chép hex):** nền `bg-background` · hairline

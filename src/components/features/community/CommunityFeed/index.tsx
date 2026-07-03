@@ -124,19 +124,20 @@ const CommunityFeedRow = ({ post }: { post: CommunityPost }) => {
 }
 
 /**
- * Community feed (§6), Threads-style. The whole body (composer trigger row
- * "Có gì mới?" → modal composer, then post rows) sits in ONE rounded hairline
- * panel — Threads' column panel — with rows separated by hairline dividers
- * inside it, never per-post boxes. Each row uses the `ThreadsPostRow`
- * anatomy (48px avatar column + content column) with the shared engagement
- * bar (zero counts suppressed) and inline push-down comment expansion; a
- * threadline connects the avatar to the expanded thread. ponytail: mock data.
+ * Community feed (§6), Threads-style. The composer trigger row ("Có gì mới?" →
+ * modal composer) and post rows sit FLAT on the page — no card fill, no border,
+ * no rounding — separated only by hairline dividers (`divide-separator`), so the
+ * whole feed sinks into the page instead of reading as a white panel. Each row
+ * uses the `ThreadsPostRow` anatomy (48px avatar column + content column) with
+ * the shared engagement bar (zero counts suppressed) and inline push-down
+ * comment expansion; a threadline connects the avatar to the expanded thread.
+ * ponytail: mock data.
  */
 export const CommunityFeed = () => {
     const { posts } = useQueryCommunityFeedSwr()
 
     return (
-        <div className="flex flex-col divide-y divide-separator overflow-hidden rounded-3xl border border-separator bg-surface">
+        <div className="flex flex-col divide-y divide-separator">
             <ComposerTrigger />
             {posts.map((post) => (
                 <CommunityFeedRow key={post.id} post={post} />

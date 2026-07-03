@@ -68,7 +68,7 @@ export const CommunityShell = ({ children }: CommunityShellProps) => {
                     fill (same as the app navbar) so it's invisible against the page and cleanly
                     masks content on scroll — no translucent/blur (that read as a frosted card),
                     no border */}
-                <div className="sticky top-16 z-10 flex items-center justify-between gap-2 bg-background px-4 pt-3">
+                <div className="sticky top-16 z-10 relative flex items-center justify-center bg-background px-4 pt-3">
                     <ExtendedTabs
                         selectedKey={selectedTab}
                         onSelectionChange={(key) => {
@@ -86,8 +86,9 @@ export const CommunityShell = ({ children }: CommunityShellProps) => {
                             </Tabs.List>
                         </Tabs.ListContainer>
                     </ExtendedTabs>
-                    {/* actions live in the nav rail on xl+, so the ⋯ menu is mobile/tablet only */}
-                    <div className="shrink-0 xl:hidden">
+                    {/* actions live in the nav rail on xl+, so the ⋯ menu is mobile/tablet only;
+                        absolute so it never offsets the centered tabs */}
+                    <div className="absolute inset-y-0 right-4 flex items-center xl:hidden">
                         <Dropdown>
                             <Button isIconOnly size="sm" variant="ghost" aria-label={t("more")}>
                                 <DotsThreeIcon

@@ -19,10 +19,10 @@ export const SPEED_FACTOR: Record<EffectSpeed, number> = {
     fast: 0.55,
 }
 
-/** Spark count per direction — fall is denser (~2×) so it reads as a meteor shower. */
+/** Spark count per direction — fall stays sparse so streaks read as a meteor shower, not noise. */
 export const SPARK_COUNT: Record<EffectDirection, number> = {
     rise: 60,
-    fall: 120,
+    fall: 40,
 }
 
 /** Default ambient effect speed when nothing is persisted (`normal`, ×1.0). */

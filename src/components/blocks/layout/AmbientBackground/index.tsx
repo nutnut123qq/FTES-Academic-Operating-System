@@ -95,13 +95,15 @@ export const AmbientBackground = ({
                 const seed = ((index * 2654435761) % 1000) / 1000
                 const seed2 = ((index * 40503) % 997) / 997
                 // Fall = a brisk, decisive shooting-star drop (~4–7s base) leaning
-                // hard to the LEFT (canonical top-right → bottom-left diagonal).
+                // hard to the LEFT: drift −500..−900px over ~125vh gives a ~29–45°
+                // diagonal (canonical top-right → bottom-left) that reads as a real
+                // streak, not a near-vertical drop.
                 // Rise keeps its slow upward wander (~8–18s, gentle L/R drift).
                 const duration = isFall
                     ? 4 + Math.round(seed * 3)
                     : 8 + Math.round(seed * 10)
                 const drift = isFall
-                    ? -(120 + Math.round(seed * 200))
+                    ? -(500 + Math.round(seed * 400))
                     : Math.round((seed - 0.5) * 80)
                 return {
                     index,

@@ -87,8 +87,14 @@ export interface CourseDetail {
     description: string
     /** Total learning-time label, e.g. "6 giờ". */
     durationLabel: string
+    /** Numeric total learning hours — optional until the BE course contract lands. */
+    durationHours?: number
     price: CoursePrice
     rating: { avg: number; count: number }
+    /** Total learners enrolled — optional until the BE course contract lands. */
+    enrollmentCount?: number
+    /** Total challenges in the course — optional until the BE course contract lands. */
+    challengeCount?: number
     whatYouLearn: Array<string>
     instructor: CourseInstructor
     sections: Array<CourseSection>
@@ -107,6 +113,10 @@ const fetchCourseDetailMock = async (courseId: string): Promise<CourseDetail> =>
     description:
         "Nhập môn lập trình với ngôn ngữ C: cú pháp, con trỏ, cấu trúc dữ liệu cơ bản và quản lý bộ nhớ. Có bài tập thực hành và đề thi mẫu.",
     durationLabel: "6 giờ",
+    // mock: chờ BE durationHours / challengeCount / enrollmentCount
+    durationHours: 33,
+    challengeCount: 348,
+    enrollmentCount: 49,
     price: { vnd: 1_200_000, usd: 49, originalVnd: 1_600_000 },
     rating: { avg: 4.8, count: 1240 },
     whatYouLearn: [

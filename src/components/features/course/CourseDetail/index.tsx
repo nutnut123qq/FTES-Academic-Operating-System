@@ -4,6 +4,7 @@ import React, { useState } from "react"
 import { Button, Chip, Link, Typography, cn } from "@heroui/react"
 import {
     BookIcon,
+    BookOpenIcon,
     CaretDownIcon,
     CaretRightIcon,
     CertificateIcon,
@@ -16,6 +17,8 @@ import {
     LinkedinLogoIcon,
     LockIcon,
     PlayCircleIcon,
+    PuzzlePieceIcon,
+    StackIcon,
     StarIcon,
     TargetIcon,
     TrophyIcon,
@@ -27,6 +30,7 @@ import { useRouter } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
 import { SaveButton } from "@/components/blocks/buttons/SaveButton"
+import { HighlightChip } from "@/components/blocks/chips/HighlightChip"
 import { PriceTag } from "@/components/blocks/commerce/PriceTag"
 import { ResponsiveBreadcrumb } from "@/components/blocks/navigation/ResponsiveBreadcrumb"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
@@ -250,6 +254,11 @@ const CourseDetailView = ({
         })
 
     const totalLessons = course.sections.reduce((sum, section) => sum + section.lessons.length, 0)
+    const moduleCount = course.sections.length
+    // Fields below are optional in the CourseDetail contract; render TODO when absent.
+    const enrollmentCount = course.enrollmentCount ?? null
+    const hoursValue = course.durationHours ?? null
+    const challengeCountValue = course.challengeCount ?? null
 
     return (
         <div className="flex flex-col gap-6">
@@ -272,16 +281,54 @@ const CourseDetailView = ({
                             <SaveButton entityType="course" entityId={course.id} />
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
-                            <Chip size="sm" variant="soft" color="accent">
+                            <Chip size="sm" variant="soft" color="default" className="font-semibold text-accent">
                                 {t(`levels.${course.level}`)}
                             </Chip>
-                            <Chip size="sm" variant="soft" color="accent">
+                            <Chip size="sm" variant="soft" color="default" className="font-semibold text-accent">
                                 {t("detail.credits", { count: course.credits })}
                             </Chip>
                             <span className="flex items-center gap-1 text-sm text-muted">
                                 <StarIcon aria-hidden focusable="false" weight="fill" className="size-4 text-accent" />
-                                {course.rating.avg.toFixed(1)} · {t("detail.learners", { count: course.rating.count })}
+                                {course.rating.avg.toFixed(1)} · {t("detail.ratings", { count: course.rating.count })}
                             </span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                            {enrollmentCount !== null ? (
+                                <HighlightChip
+                                    tone="neutral"
+                                    icon={<UsersIcon aria-hidden focusable="false" className="size-4" />}
+                                    value={enrollmentCount}
+                                    label={t("detail.stats.learners")}
+                                />
+                            ) : null}
+                            <HighlightChip
+                                tone="neutral"
+                                icon={<StackIcon aria-hidden focusable="false" className="size-4" />}
+                                value={moduleCount}
+                                label={t("detail.stats.modules")}
+                            />
+                            <HighlightChip
+                                tone="neutral"
+                                icon={<BookOpenIcon aria-hidden focusable="false" className="size-4" />}
+                                value={totalLessons}
+                                label={t("detail.stats.lessons")}
+                            />
+                            {hoursValue !== null ? (
+                                <HighlightChip
+                                    tone="neutral"
+                                    icon={<ClockIcon aria-hidden focusable="false" className="size-4" />}
+                                    value={hoursValue}
+                                    label={t("detail.stats.hours")}
+                                />
+                            ) : null}
+                            {challengeCountValue !== null ? (
+                                <HighlightChip
+                                    tone="neutral"
+                                    icon={<PuzzlePieceIcon aria-hidden focusable="false" className="size-4" />}
+                                    value={challengeCountValue}
+                                    label={t("detail.stats.challenges")}
+                                />
+                            ) : null}
                         </div>
                         <Typography type="body-sm" color="muted">
                             {course.description}
@@ -482,7 +529,14 @@ const CourseDetailSkeleton = () => (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-5">
             <div className="flex flex-col gap-4 md:col-span-3">
                 <Skeleton className="h-8 w-2/3 rounded-large" />
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
+                    <Skeleton.Chip />
+                    <Skeleton.Chip />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                    <Skeleton.Chip />
+                    <Skeleton.Chip />
+                    <Skeleton.Chip />
                     <Skeleton.Chip />
                     <Skeleton.Chip />
                 </div>

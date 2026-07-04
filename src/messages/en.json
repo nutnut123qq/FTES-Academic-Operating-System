@@ -4446,7 +4446,14 @@
             "credits": "{count} credits",
             "enroll": "Enroll",
             "outline": "Course outline",
-            "learners": "{count} learners",
+            "ratings": "{count} ratings",
+            "stats": {
+                "learners": "learners",
+                "modules": "modules",
+                "lessons": "lessons",
+                "hours": "hours",
+                "challenges": "challenges"
+            },
             "instructorLine": "Instructor {name}",
             "whatYouLearn": "What you'll learn",
             "outlineMeta": "{sections} sections · {lessons} lessons · {duration}",

@@ -4446,7 +4446,14 @@
             "credits": "{count} tín chỉ",
             "enroll": "Đăng ký học",
             "outline": "Nội dung khóa học",
-            "learners": "{count} học viên",
+            "ratings": "{count} đánh giá",
+            "stats": {
+                "learners": "học viên",
+                "modules": "chương",
+                "lessons": "bài",
+                "hours": "giờ",
+                "challenges": "challenge"
+            },
             "instructorLine": "Giảng viên {name}",
             "whatYouLearn": "Bạn sẽ học được gì",
             "outlineMeta": "{sections} chương · {lessons} bài · {duration}",

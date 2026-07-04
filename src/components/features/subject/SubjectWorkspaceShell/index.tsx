@@ -2,7 +2,7 @@
 
 import React, { useState } from "react"
 import Image from "next/image"
-import { Chip, Typography, cn } from "@heroui/react"
+import { Typography, cn } from "@heroui/react"
 import {
     SquaresFourIcon,
     FolderIcon,
@@ -18,6 +18,7 @@ import { usePathname, useRouter } from "@/i18n/navigation"
 import { CollapsibleSidebar } from "@/components/blocks/navigation/CollapsibleSidebar"
 import { SidebarNavGroup } from "@/components/blocks/navigation/SidebarNavGroup"
 import { SidebarNavItem } from "@/components/blocks/navigation/SidebarNavItem"
+import { ProgressMeter } from "@/components/blocks/stats/ProgressMeter"
 import { useQuerySubjectSwr } from "../hooks/useQuerySubjectSwr"
 
 /** Props for {@link SubjectWorkspaceShell}. */
@@ -145,15 +146,17 @@ export const SubjectWorkspaceShell = ({ subjectId, children }: SubjectWorkspaceS
                             </Typography>
                             <Typography type="body-sm" color="muted">
                                 {subject
-                                    ? `${t("credits", { count: subject.credits })} · ${t(`difficulty.${subject.difficulty}`)} · ${t("progress", { percent: subject.progress })}`
+                                    ? `${t("credits", { count: subject.credits })} · ${t(`difficulty.${subject.difficulty}`)}`
                                     : ""}
                             </Typography>
+                            {subject ? (
+                                <ProgressMeter
+                                    value={subject.progress}
+                                    aria-label={t("progressLabel")}
+                                    className="mt-1"
+                                />
+                            ) : null}
                         </div>
-                        {subject ? (
-                            <Chip size="sm" variant="soft" color="accent" className="ml-auto hidden sm:flex">
-                                {subject.lecturer}
-                            </Chip>
-                        ) : null}
                     </div>
                 </header>
 

@@ -33,6 +33,12 @@ export interface ProgressMeterProps extends WithClassNames<undefined> {
      * the top row. Defaults to `false`.
      */
     showValue?: boolean
+    /**
+     * Optional accessible label for the progress bar.
+     * If omitted, the label prop is used when it is a string; otherwise
+     * the underlying HeroUI ProgressBar falls back to its default label.
+     */
+    "aria-label"?: string
 }
 
 /**
@@ -53,6 +59,7 @@ export const ProgressMeter = ({
     label,
     showValue = false,
     className,
+    "aria-label": ariaLabel,
 }: ProgressMeterProps) => {
     const safeMax = max > 0 ? max : 1
     const percent = Math.round((value / safeMax) * 100)
@@ -69,7 +76,7 @@ export const ProgressMeter = ({
                 </div>
             ) : null}
             <ProgressBar
-                aria-label={typeof label === "string" ? label : "Progress"}
+                aria-label={ariaLabel ?? (typeof label === "string" ? label : "Progress")}
                 value={value}
                 maxValue={safeMax}
                 color="accent"

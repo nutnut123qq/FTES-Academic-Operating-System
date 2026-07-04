@@ -4176,7 +4176,7 @@
         "collapse": "Thu gọn",
         "expand": "Mở rộng",
         "credits": "{count} tín chỉ",
-        "progress": "{percent}% hoàn thành",
+        "progressLabel": "Tiến độ hoàn thành",
         "placeholder": "Khu vực này đang được xây dựng.",
         "catalog": {
             "title": "Môn học",

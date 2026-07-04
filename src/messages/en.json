@@ -4176,7 +4176,7 @@
         "collapse": "Collapse",
         "expand": "Expand",
         "credits": "{count} credits",
-        "progress": "{percent}% complete",
+        "progressLabel": "Completion progress",
         "placeholder": "This area is under construction.",
         "catalog": {
             "title": "Subjects",

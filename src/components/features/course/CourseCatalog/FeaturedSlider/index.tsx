@@ -60,7 +60,7 @@ export const FeaturedSlider = () => {
                     ref={trackRef}
                     // announce slide changes only when the user drives them
                     aria-live={isAutoplaying ? "off" : "polite"}
-                    className="flex w-full snap-x snap-mandatory overflow-x-auto rounded-large [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                    className="flex w-full snap-x snap-mandatory overflow-x-auto rounded-2xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                 >
                     {featured.map((course, index) => (
                         <FeaturedSlide

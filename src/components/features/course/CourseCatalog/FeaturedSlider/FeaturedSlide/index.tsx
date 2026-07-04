@@ -40,7 +40,7 @@ export const FeaturedSlide = ({ course, index, total, onOpen }: FeaturedSlidePro
             role="group"
             aria-roledescription="slide"
             aria-label={`${t("featured.slideLabel", { index: index + 1, total })} — ${course.name}`}
-            className="relative w-full shrink-0 snap-center overflow-hidden rounded-large"
+            className="relative w-full shrink-0 snap-center overflow-hidden rounded-2xl"
         >
             <div className="relative aspect-video w-full md:aspect-[21/9] md:max-h-96">
                 {/* gradient fallback behind the cover */}

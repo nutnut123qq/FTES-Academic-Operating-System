@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
  */
 export const FeaturedSliderSkeleton = () => (
     <div className="flex flex-col gap-3">
-        <Skeleton className="aspect-video w-full rounded-large md:aspect-[21/9] md:max-h-96" />
+        <Skeleton className="aspect-video w-full rounded-2xl md:aspect-[21/9] md:max-h-96" />
         <div className="flex items-center justify-center gap-2">
             {[0, 1, 2, 3].map((dot) => (
                 <Skeleton key={dot} className="size-2.5 rounded-full" />

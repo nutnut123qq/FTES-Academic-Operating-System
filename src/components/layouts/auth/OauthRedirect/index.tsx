@@ -9,7 +9,7 @@ import type { WithClassNames } from "@/modules/types/base/class-name"
 
 import { OauthAction } from "./enums"
 import { OAUTH_ACTION_MESSAGE_KEY_MAP } from "./map"
-import { LogoMark } from "@/components/svg"
+import { BrandLogo } from "@/components/blocks/identity/BrandLogo"
 import { Spacer } from "@/components/reuseable/Spacer"
 import { SessionStorage } from "@/modules/storage/session/storage"
 import { SessionStorageId } from "@/modules/storage/session/enums/id"
@@ -70,7 +70,7 @@ export const OauthRedirect = ({ action, className }: OauthRedirectProps) => {
             <div
                 className="flex flex-col items-center gap-3"
             >
-                <LogoMark className="size-10" />
+                <BrandLogo />
                 <Spinner
                     color="accent"
                     size="lg"

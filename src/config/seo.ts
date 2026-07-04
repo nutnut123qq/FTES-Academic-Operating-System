@@ -27,5 +27,5 @@ export const SEO_CONFIG = {
     /** Default locale — used for `x-default` hreflang + the canonical sitemap url. */
     defaultLocale: "vi",
     /** Default share image (relative to {@link siteUrl}); per-entity pages override with a real cover. */
-    ogImage: "/logo-lockup.png",
+    ogImage: "/logo/FTES_original.png",
 } as const

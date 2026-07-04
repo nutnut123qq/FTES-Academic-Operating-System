@@ -13,7 +13,7 @@ import {
 import {
     useRouter,
 } from "@/i18n/navigation"
-import { LogoMark } from "@/components/svg/LogoMark"
+import { BrandLogo } from "@/components/blocks/identity/BrandLogo"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 
 /**
@@ -42,7 +42,7 @@ export const Logo = ({ className }: LogoProps) => {
             onPress={onPress}
             className={cn(className)}
         >
-            <LogoMark className="size-10" />
+            <BrandLogo />
         </Link>
     )
 }

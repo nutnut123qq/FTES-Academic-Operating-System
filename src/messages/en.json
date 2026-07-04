@@ -314,12 +314,12 @@
         "lastUpdated": "Last updated: {date}",
         "terms": {
             "title": "Terms of Service",
-            "description": "The terms for using FTES AOS.",
+            "description": "AI-Learning FTES — terms and conditions of use.",
             "body": "The full terms document is being finalized. By using FTES AOS you agree to use the platform for lawful learning and to respect the ownership of course content. A detailed version will be published on this page."
         },
         "privacy": {
             "title": "Privacy Policy",
-            "description": "How FTES AOS collects and uses your data.",
+            "description": "AI-Learning FTES is committed to protecting your personal information.",
             "body": "The full privacy policy is being finalized. FTES AOS collects only the data needed to run your learning (account, progress, submissions) and does not sell your data to third parties. A detailed version will be published on this page."
         }
     },

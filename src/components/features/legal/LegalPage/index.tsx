@@ -6,6 +6,24 @@ import {
     Typography,
 } from "@heroui/react"
 import {
+    BankIcon,
+    BookOpenIcon,
+    BuildingsIcon,
+    CheckCircleIcon,
+    ClipboardTextIcon,
+    DesktopIcon,
+    DotsThreeIcon,
+    EnvelopeSimpleIcon,
+    MapPinIcon,
+    PencilSimpleIcon,
+    PhoneIcon,
+    QrCodeIcon,
+    QuestionIcon,
+    UserCircleIcon,
+    WalletIcon,
+} from "@phosphor-icons/react"
+import type { Icon } from "@phosphor-icons/react"
+import {
     useLocale,
     useTranslations,
 } from "next-intl"
@@ -24,6 +42,7 @@ import {
 import type {
     LegalSection,
 } from "../content"
+import { Callout } from "@/components/blocks/feedback/Callout"
 import { PageContainer } from "@/components/blocks/layout/PageContainer"
 import { PageHeader } from "@/components/blocks/layout/PageHeader"
 
@@ -37,41 +56,160 @@ export interface LegalPageProps {
 }
 
 /**
- * Renders one numbered section: heading + body paragraphs + an optional bullet
- * list whose items may carry a bold lead label. Plain Typography — no markdown.
+ * Icon-key → Phosphor icon map. Content files stay pure data (a small string key);
+ * the renderer owns the JSX/import. Unknown/absent keys render no icon.
  */
-const Section = ({ section }: { section: LegalSection }) => (
+const ICONS: Record<string, Icon> = {
+    qr: QrCodeIcon,
+    bank: BankIcon,
+    wallet: WalletIcon,
+    person: UserCircleIcon,
+    learning: BookOpenIcon,
+    technical: DesktopIcon,
+    other: DotsThreeIcon,
+    edit: PencilSimpleIcon,
+    "no-marketing": EnvelopeSimpleIcon,
+    explain: QuestionIcon,
+    benefit: CheckCircleIcon,
+    responsibility: ClipboardTextIcon,
+}
+
+/** Bullet list — items may carry a bold lead label. */
+const ItemList = ({ items }: { items: NonNullable<LegalSection["items"]> }) => (
+    <ul className="flex flex-col gap-2">
+        {items.map((item) => (
+            <li key={item.label ?? item.text} className="flex gap-2.5">
+                <span className="mt-2 size-1.5 shrink-0 rounded-full bg-default-400" aria-hidden />
+                <Typography type="body" color="muted" className="leading-relaxed">
+                    {item.label ? (
+                        <span className="font-semibold text-foreground">{`${item.label} `}</span>
+                    ) : null}
+                    {item.text}
+                </Typography>
+            </li>
+        ))}
+    </ul>
+)
+
+/** Term-anchored glossary: bold term, muted definition, optional italic example line. */
+const DefinitionList = ({ definitions }: { definitions: NonNullable<LegalSection["definitions"]> }) => (
+    <ul className="flex flex-col gap-3">
+        {definitions.map((entry) => (
+            <li key={entry.term} className="border-l-2 border-accent/40 pl-4">
+                <Typography type="body" color="muted" className="leading-relaxed">
+                    <span className="font-semibold text-foreground">{`${entry.term} — `}</span>
+                    {entry.definition}
+                </Typography>
+                {entry.example ? (
+                    <Typography type="body-sm" color="muted" className="mt-1 italic leading-relaxed">
+                        {entry.example}
+                    </Typography>
+                ) : null}
+            </li>
+        ))}
+    </ul>
+)
+
+/** Responsive card grid — icon + label + text per card. */
+const CardGrid = ({ cards }: { cards: NonNullable<LegalSection["cards"]> }) => (
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {cards.map((card) => {
+            const Ico = card.icon ? ICONS[card.icon] : undefined
+            return (
+                <div key={card.label} className="flex flex-col gap-2 rounded-2xl border border-default p-4">
+                    {Ico ? <Ico className="size-5 text-accent" weight="duotone" aria-hidden /> : null}
+                    <Typography type="body" weight="semibold" className="text-foreground">
+                        {card.label}
+                    </Typography>
+                    <Typography type="body-sm" color="muted" className="leading-relaxed">
+                        {card.text}
+                    </Typography>
+                </div>
+            )
+        })}
+    </div>
+)
+
+/** Ordered list rendered with accent number badges. */
+const StepList = ({ steps }: { steps: NonNullable<LegalSection["steps"]> }) => (
+    <ol className="flex flex-col gap-2.5">
+        {steps.map((step, index) => (
+            <li key={step} className="flex items-start gap-3">
+                <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-accent/10 text-xs font-medium text-accent">
+                    {index + 1}
+                </span>
+                <Typography type="body" color="muted" className="leading-relaxed">
+                    {step}
+                </Typography>
+            </li>
+        ))}
+    </ol>
+)
+
+/** Bordered company contact panel. */
+const ContactPanel = ({ contact }: { contact: NonNullable<LegalSection["contact"]> }) => (
+    <div className="flex flex-col gap-2 rounded-2xl border border-default p-4">
+        <div className="flex items-center gap-2.5">
+            <BuildingsIcon className="size-5 shrink-0 text-accent" weight="duotone" aria-hidden />
+            <Typography type="body" weight="semibold" className="text-foreground">
+                {contact.company}
+            </Typography>
+        </div>
+        <div className="flex items-start gap-2.5">
+            <MapPinIcon className="mt-0.5 size-5 shrink-0 text-muted" aria-hidden />
+            <Typography type="body-sm" color="muted" className="leading-relaxed">
+                {contact.address}
+            </Typography>
+        </div>
+        <div className="flex items-center gap-2.5">
+            <PhoneIcon className="size-5 shrink-0 text-muted" aria-hidden />
+            <Typography type="body-sm" color="muted">
+                {contact.phone}
+            </Typography>
+        </div>
+    </div>
+)
+
+/**
+ * Renders one numbered section: heading + any declared blocks in a stable order —
+ * paragraphs, bullet list, callout, definitions, card grid, numbered steps, contact
+ * panel, then nested subsections (recursed with a smaller heading). Plain Typography —
+ * no markdown. Every block is `?`-guarded, so a section shows only what it declares.
+ */
+const Section = ({ section, level = 4 }: { section: LegalSection; level?: 4 | 5 }) => (
     <section className="flex flex-col gap-3">
-        <Typography.Heading level={4} weight="semibold">{section.heading}</Typography.Heading>
+        <Typography.Heading level={level} weight="semibold">{section.heading}</Typography.Heading>
         {section.paragraphs?.map((paragraph) => (
             <Typography key={paragraph} type="body" color="muted" className="leading-relaxed">
                 {paragraph}
             </Typography>
         ))}
-        {section.items ? (
-            <ul className="flex flex-col gap-2">
-                {section.items.map((item) => (
-                    <li key={item.label ?? item.text} className="flex gap-2.5">
-                        <span className="mt-2 size-1.5 shrink-0 rounded-full bg-default-400" aria-hidden />
-                        <Typography type="body" color="muted" className="leading-relaxed">
-                            {item.label ? (
-                                <span className="font-semibold text-foreground">{`${item.label} `}</span>
-                            ) : null}
-                            {item.text}
-                        </Typography>
-                    </li>
-                ))}
-            </ul>
+        {section.items ? <ItemList items={section.items} /> : null}
+        {section.callout ? (
+            <Callout
+                status={section.callout.tone ?? "warning"}
+                title={section.callout.title}
+                description={section.callout.text}
+            />
         ) : null}
+        {section.definitions ? <DefinitionList definitions={section.definitions} /> : null}
+        {section.cards ? <CardGrid cards={section.cards} /> : null}
+        {section.steps ? <StepList steps={section.steps} /> : null}
+        {section.contact ? <ContactPanel contact={section.contact} /> : null}
+        {section.subsections?.map((sub) => (
+            <Section key={sub.heading} section={sub} level={5} />
+        ))}
     </section>
 )
 
 /**
- * Shared legal document page (`/terms`, `/privacy`): a 3-tier reading column —
+ * Shared legal document page (`/terms`, `/privacy`): a reading column —
  * breadcrumb → `PageHeader` (title + description + last-updated) → the document
- * rendered NATIVELY from structured content (numbered sections of paragraphs and
- * bullet lists) with Typography. No markdown. Document picked by `kind` + the
- * active locale (falls back to `vi`); copy lives in `legal/content/{privacy,terms}.ts`.
+ * rendered NATIVELY from structured content (numbered sections that may mix
+ * paragraphs, bullet lists, callouts, definitions, card grids, numbered steps,
+ * a contact panel, and nested subsections) with Typography. No markdown. Document
+ * picked by `kind` + the active locale (falls back to `vi`); copy lives in
+ * `legal/content/{privacy,terms}.ts`.
  *
  * @param props - {@link LegalPageProps}
  */

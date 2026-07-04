@@ -3469,34 +3469,10 @@
         "mentors": {
             "eyebrow": "Người đồng hành cùng bạn",
             "title": "Đội ngũ FTES",
-            "prev": "Mentor trước",
-            "next": "Mentor tiếp theo",
-            "people": {
-                "anhKhoa": {
-                    "name": "Mentor Anh Khoa",
-                    "role": "Founder, CEO",
-                    "quote": "Các bạn sinh viên sẽ bị sự nhiệt huyết, kinh nghiệm và câu chuyện hài hước của mình làm cho mê mẩn và hiểu bài tuyệt đối!!"
-                },
-                "ducHai": {
-                    "name": "Mentor Đức Hải",
-                    "role": "Co-Founder, CTO",
-                    "quote": "Mình hướng đến cách dạy vừa nghiêm túc vừa thoải mái: kiến thức thì chắc chắn, giảng giải thì dễ hiểu, lại xen chút hài hước để giờ học luôn vui vẻ và không hề khô khan."
-                },
-                "thanhHuy": {
-                    "name": "Mentor Thanh Huy",
-                    "role": "Co-Founder, COO",
-                    "quote": "Anh không chỉ dạy kiến thức, mà truyền lửa đam mê và chia sẻ những trải nghiệm chân thật của mình trên con đường học vấn, để mỗi buổi học đều là một hành trình khơi dậy tiềm năng trong các bạn."
-                },
-                "nhatHuy": {
-                    "name": "Mentor Nhật Huy",
-                    "role": "Developer",
-                    "quote": "Tôi dạy theo hướng thực hành, lý thuyết ngắn gọn, tập trung giúp học viên hiểu nhanh – làm được ngay – và áp dụng vào dự án thực tế."
-                },
-                "ngocHieu": {
-                    "name": "Mentor Ngọc Hiếu",
-                    "role": "BrSE",
-                    "quote": "Mình dạy theo nhịp vừa phải, giải thích đến đâu là sáng tỏ đến đó, lại xen thêm chuyện văn hoá Nhật Bản và vài pha tấu hài để lớp học lúc nào cũng rộn ràng mà kiến thức thì cứ thấm dần."
-                }
+            "founder": {
+                "name": "Nguyễn Anh Khoa",
+                "role": "Founder & CEO @ FTES Education · CEO TEDO Technology",
+                "quote": "Các bạn sinh viên sẽ bị sự nhiệt huyết, kinh nghiệm và câu chuyện hài hước của mình làm cho mê mẩn và hiểu bài tuyệt đối!!"
             }
         },
         "faq": {

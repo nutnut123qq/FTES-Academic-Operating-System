@@ -3469,34 +3469,10 @@
         "mentors": {
             "eyebrow": "The people beside you",
             "title": "The FTES team",
-            "prev": "Previous mentor",
-            "next": "Next mentor",
-            "people": {
-                "anhKhoa": {
-                    "name": "Mentor Anh Khoa",
-                    "role": "Founder, CEO",
-                    "quote": "Students get hooked by my energy, experience and funny stories — and understand every lesson perfectly!!"
-                },
-                "ducHai": {
-                    "name": "Mentor Duc Hai",
-                    "role": "Co-Founder, CTO",
-                    "quote": "I aim for teaching that is both serious and relaxed: the knowledge is solid, the explanations are easy to follow, with a bit of humor so class is always fun and never dry."
-                },
-                "thanhHuy": {
-                    "name": "Mentor Thanh Huy",
-                    "role": "Co-Founder, COO",
-                    "quote": "I don't just teach knowledge — I pass on the fire of passion and share my honest experiences on the learning path, so every session is a journey that awakens your potential."
-                },
-                "nhatHuy": {
-                    "name": "Mentor Nhat Huy",
-                    "role": "Developer",
-                    "quote": "I teach hands-on, with concise theory, focused on helping learners understand fast — do it right away — and apply it to real projects."
-                },
-                "ngocHieu": {
-                    "name": "Mentor Ngoc Hieu",
-                    "role": "BrSE",
-                    "quote": "I teach at a steady pace, making everything crystal clear as I go, sprinkling in Japanese culture and a few jokes so class is always lively while the knowledge quietly sinks in."
-                }
+            "founder": {
+                "name": "Nguyễn Anh Khoa",
+                "role": "Founder & CEO @ FTES Education · CEO TEDO Technology",
+                "quote": "Students get hooked by my energy, experience and funny stories — and understand every lesson perfectly!!"
             }
         },
         "faq": {

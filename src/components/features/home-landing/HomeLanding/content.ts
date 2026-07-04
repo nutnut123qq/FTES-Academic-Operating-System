@@ -62,49 +62,14 @@ export const OFFER_GROUPS: ReadonlyArray<OfferGroup> = [
     { key: "trial", lineCount: 4 },
 ] as const
 
-/** A mentor of the FTES team — real people from the legacy home view. */
-export interface Mentor {
-    /** i18n key suffix under `homeLanding.mentors.people.*` (name / role / quote). */
-    key: string
-    /** Avatar CDN URL (legacy FE). House avatar-fallback covers load failure. */
-    avatarUrl: string
-    /** Public FTES profile link (opens in a new tab). */
-    profileUrl: string
-}
-
-/** Five real mentors, ordered founders-first (spec "Đội ngũ FTES"). */
-export const MENTORS: ReadonlyArray<Mentor> = [
-    {
-        key: "anhKhoa",
-        avatarUrl:
-            "https://cdn.jsdelivr.net/gh/ftesedu/funnycode-images-1755118228915@main/images/inbound3495336968961600058.jpg_1755149863087.jpg?v=1755149865389",
-        profileUrl: "https://ftes.vn/vi/profiles/detail/khoana71",
-    },
-    {
-        key: "ducHai",
-        avatarUrl:
-            "https://cdn.jsdelivr.net/gh/ftesedu/funnycode-images-1755118228915@main/images/NTC_7861.JPG_1755370693669.JPG?v=1755370696709",
-        profileUrl: "https://ftes.vn/vi/profiles/detail/haitthcs",
-    },
-    {
-        key: "thanhHuy",
-        avatarUrl:
-            "https://cdn.jsdelivr.net/gh/ftesedu/funnycode-images-1755118228915@main/images/avata_thanh_huy.jpg_1755134964229.jpg?v=1755134965957",
-        profileUrl: "https://ftes.vn/vi/profiles/detail/huybk",
-    },
-    {
-        key: "nhatHuy",
-        avatarUrl:
-            "https://cdn.jsdelivr.net/gh/ftesedu/funnycode-images-1757352873747@main/images/z7011459834968_c3b2808b021d68c3455b96b8f881c71f.jpg_1758015271900.jpg?v=1758015274883",
-        profileUrl: "https://ftes.vn/vi/profiles/detail/NhatHuyDev",
-    },
-    {
-        key: "ngocHieu",
-        avatarUrl:
-            "http://res.cloudinary.com/dnt5cqzjy/image/upload/v1744559602/soewnzobl40pqextcipr.jpg",
-        profileUrl: "https://ftes.vn/vi/profiles/detail/ngochieu3165",
-    },
-] as const
+/** The FTES founder — real person; copy (name/role/quote) lives in i18n `mentors.founder.*`. */
+export const FOUNDER = {
+    avatarUrl:
+        "https://cdn.jsdelivr.net/gh/ftesedu/funnycode-images-1755118228915@main/images/inbound3495336968961600058.jpg_1755149863087.jpg?v=1755149865389",
+    github: "https://github.com/khoa070104",
+    linkedin: "https://www.linkedin.com/in/khoana-dev/",
+    facebook: "https://www.facebook.com/khoaak71.vip",
+} as const
 
 /** An honored achiever — real FTES learners (legacy home "Bảng vàng"). */
 export interface Achiever {

@@ -1,10 +1,19 @@
 "use client"
 
-import React, { useCallback, useRef, useState } from "react"
+import React, { useCallback, useMemo, useRef, useState } from "react"
 import { Button, Skeleton, Typography, cn } from "@heroui/react"
 import { ArrowClockwiseIcon, CaretUpIcon, XIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { UserAvatar } from "@/components/reuseable/UserAvatar"
+import { parseStickerFromText } from "./parse-sticker"
+import {
+    EmojiPicker,
+    StickerChip,
+    StickerPicker,
+    STICKER_CATALOG,
+    localizeStickers,
+} from "@/components/reuseable/CommentComposerTools"
+import type { Sticker } from "@/components/reuseable/CommentComposerTools"
 import type { PostComment } from "@/components/features/community/hooks/useQueryPostDetailSwr"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 
@@ -35,7 +44,7 @@ export interface PostCommentThreadProps extends WithClassNames<undefined> {
 }
 
 /** One comment row (avatar + author + time + body + optional reply affordance). */
-const CommentRow = ({
+export const CommentRow = ({
     comment,
     onReply,
     replyLabel,
@@ -45,34 +54,49 @@ const CommentRow = ({
     onReply?: (comment: PostComment) => void
     replyLabel: string
     isReply?: boolean
-}) => (
-    <div className={cn("flex items-start gap-3", isReply && "ml-9")}>
-        <UserAvatar username={comment.author} seed={comment.author} size="sm" />
-        <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-                <Typography type="body-sm" weight="medium">
-                    {comment.author}
-                </Typography>
-                <Typography type="body-xs" color="muted">
-                    {comment.timeLabel}
-                </Typography>
+}) => {
+    const { plainText, stickerFile, stickerAlt } = parseStickerFromText(comment.text)
+
+    return (
+        <div className={cn("flex items-start gap-3", isReply && "ml-9")}>
+            <UserAvatar username={comment.author} seed={comment.author} size="sm" />
+            <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                    <Typography type="body-sm" weight="medium">
+                        {comment.author}
+                    </Typography>
+                    <Typography type="body-xs" color="muted">
+                        {comment.timeLabel}
+                    </Typography>
+                </div>
+                <div className="flex flex-col gap-2">
+                    {plainText ? (
+                        <Typography type="body-sm" color="muted">
+                            {plainText}
+                        </Typography>
+                    ) : null}
+                    {stickerFile ? (
+                        <img
+                            src={`/stickers/${stickerFile}`}
+                            alt={stickerAlt ?? ""}
+                            className="size-20 object-contain"
+                        />
+                    ) : null}
+                </div>
+                {!isReply && onReply ? (
+                    <Button
+                        size="sm"
+                        variant="ghost"
+                        className="mt-1 h-auto px-0 text-xs"
+                        onPress={() => onReply(comment)}
+                    >
+                        {replyLabel}
+                    </Button>
+                ) : null}
             </div>
-            <Typography type="body-sm" color="muted">
-                {comment.text}
-            </Typography>
-            {!isReply && onReply ? (
-                <Button
-                    size="sm"
-                    variant="ghost"
-                    className="mt-1 h-auto px-0 text-xs"
-                    onPress={() => onReply(comment)}
-                >
-                    {replyLabel}
-                </Button>
-            ) : null}
         </div>
-    </div>
-)
+    )
+}
 
 /**
  * Inline expandable comment region shared by every feed's push-down expansion
@@ -110,17 +134,45 @@ export const PostCommentThread = ({
     const [replyTo, setReplyTo] = useState<PostComment | null>(null)
     const [isSubmitting, setSubmitting] = useState(false)
     const [isFocused, setFocused] = useState(false)
+    const [selectedSticker, setSelectedSticker] = useState<Sticker | null>(null)
+    const [cursorPosition, setCursorPosition] = useState(0)
     const textareaRef = useRef<HTMLTextAreaElement>(null)
+    const stickers = useMemo(() => localizeStickers(STICKER_CATALOG, t), [t])
 
     const onReply = useCallback((comment: PostComment) => {
         setReplyTo(comment)
         textareaRef.current?.focus()
     }, [])
 
+    const canSubmit = draft.trim().length > 0 || !!selectedSticker
+
+    const insertEmojiAtCursor = useCallback(
+        (emoji: string) => {
+            const pos = cursorPosition
+            const next = draft.slice(0, pos) + emoji + draft.slice(pos)
+            setDraft(next)
+            const nextPos = pos + Array.from(emoji).length
+            requestAnimationFrame(() => {
+                textareaRef.current?.focus()
+                textareaRef.current?.setSelectionRange(nextPos, nextPos)
+                setCursorPosition(nextPos)
+            })
+        },
+        [cursorPosition, draft],
+    )
+
+    const handleTextareaSelect = (event: React.SyntheticEvent<HTMLTextAreaElement>) => {
+        setCursorPosition(event.currentTarget.selectionStart ?? draft.length)
+    }
+
     const submit = useCallback(async () => {
-        const body = draft.trim()
-        if (!body || isSubmitting) {
+        if (!canSubmit || isSubmitting) {
             return
+        }
+        let body = draft.trim()
+        if (selectedSticker) {
+            const stickerMarkdown = `![${selectedSticker.label}](/stickers/${selectedSticker.file})`
+            body = body ? `${body}\n\n${stickerMarkdown}` : stickerMarkdown
         }
         setSubmitting(true)
         const ok = await onSubmit(body, replyTo?.id)
@@ -128,8 +180,9 @@ export const PostCommentThread = ({
         if (ok) {
             setDraft("")
             setReplyTo(null)
+            setSelectedSticker(null)
         }
-    }, [draft, isSubmitting, onSubmit, replyTo])
+    }, [canSubmit, draft, isSubmitting, onSubmit, replyTo, selectedSticker])
 
     const onKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (event.key === "Enter" && !event.shiftKey) {
@@ -223,6 +276,15 @@ export const PostCommentThread = ({
                                 </Button>
                             </div>
                         ) : null}
+
+                        {selectedSticker ? (
+                            <StickerChip
+                                sticker={selectedSticker}
+                                removeLabel={t("engagement.removeSticker")}
+                                onRemove={() => setSelectedSticker(null)}
+                            />
+                        ) : null}
+
                         <div className="flex items-end gap-2">
                             <textarea
                                 ref={textareaRef}
@@ -232,19 +294,34 @@ export const PostCommentThread = ({
                                 onKeyDown={onKeyDown}
                                 onFocus={() => setFocused(true)}
                                 onBlur={() => setFocused(false)}
+                                onSelect={handleTextareaSelect}
+                                onKeyUp={handleTextareaSelect}
+                                onClick={handleTextareaSelect}
                                 rows={1}
                                 placeholder={t("engagement.commentPlaceholder")}
-                                className="min-h-9 flex-1 resize-none rounded-large border border-separator bg-transparent px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted focus:border-accent"
+                                className="min-h-9 flex-1 resize-none rounded-2xl border border-separator bg-transparent px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted focus:border-accent"
                             />
                             <Button
                                 variant="primary"
                                 size="sm"
-                                isDisabled={!draft.trim() || isSubmitting}
+                                isDisabled={!canSubmit || isSubmitting}
                                 isPending={isSubmitting}
                                 onPress={() => void submit()}
                             >
                                 {t("engagement.commentSend")}
                             </Button>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <EmojiPicker
+                                emojiLabel={t("engagement.emojiPickerLabel")}
+                                onEmojiSelect={insertEmojiAtCursor}
+                            />
+                            <StickerPicker
+                                stickerLabel={t("engagement.stickerPickerLabel")}
+                                stickers={stickers}
+                                onStickerSelect={setSelectedSticker}
+                            />
                         </div>
                     </div>
 

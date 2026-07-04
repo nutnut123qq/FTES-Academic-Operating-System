@@ -4709,7 +4709,29 @@
             "commentsRegion": "Bình luận của bài viết",
             "commentsLoadFailed": "Không tải được bình luận",
             "retry": "Thử lại",
-            "commentsEmpty": "Chưa có bình luận nào. Hãy là người đầu tiên!"
+            "commentsEmpty": "Chưa có bình luận nào. Hãy là người đầu tiên!",
+            "emojiPickerLabel": "Chèn emoji",
+            "stickerPickerLabel": "Chèn sticker",
+            "removeSticker": "Gỡ sticker",
+            "stickerAlt": "Sticker {name}",
+            "stickers": {
+                "heart": "Yêu thích",
+                "thumbsUp": "Thích",
+                "thumbsDown": "Không thích",
+                "fire": "Tuyệt vời",
+                "star": "Ngôi sao",
+                "partyPopper": "Chúc mừng",
+                "laugh": "Cười",
+                "smile": "Cười nhẹ",
+                "angry": "Tức giận",
+                "sunglasses": "Ngầu",
+                "robotFaceHappy": "Robot vui",
+                "gift": "Quà",
+                "coffee": "Cà phê",
+                "music": "Âm nhạc",
+                "zap": "Sét",
+                "trophy": "Cúp"
+            }
         },
         "feed": {
             "likes": "{count} thích",

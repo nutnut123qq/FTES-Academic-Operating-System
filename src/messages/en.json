@@ -4709,7 +4709,29 @@
             "commentsRegion": "Post comments",
             "commentsLoadFailed": "Couldn't load comments",
             "retry": "Retry",
-            "commentsEmpty": "No comments yet. Be the first!"
+            "commentsEmpty": "No comments yet. Be the first!",
+            "emojiPickerLabel": "Insert emoji",
+            "stickerPickerLabel": "Insert sticker",
+            "removeSticker": "Remove sticker",
+            "stickerAlt": "{name} sticker",
+            "stickers": {
+                "heart": "Love",
+                "thumbsUp": "Like",
+                "thumbsDown": "Dislike",
+                "fire": "Fire",
+                "star": "Star",
+                "partyPopper": "Celebrate",
+                "laugh": "Laugh",
+                "smile": "Smile",
+                "angry": "Angry",
+                "sunglasses": "Cool",
+                "robotFaceHappy": "Happy robot",
+                "gift": "Gift",
+                "coffee": "Coffee",
+                "music": "Music",
+                "zap": "Zap",
+                "trophy": "Trophy"
+            }
         },
         "feed": {
             "likes": "{count} likes",

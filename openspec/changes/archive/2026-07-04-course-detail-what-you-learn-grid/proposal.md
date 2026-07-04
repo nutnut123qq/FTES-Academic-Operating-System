@@ -5,10 +5,10 @@ The "What you'll learn" section on the course detail page (`/courses/[courseId]`
 ## What Changes
 
 - Restructure the `whatYouLearn` block in `CourseDetail` to match the Starci reference:
-  - Wrap the section in the existing `LabeledCard` block, `frameless`, with a leading `SealCheck` icon and the existing `detail.whatYouLearn` title.
+  - Keep the existing `Typography type="h6" weight="bold"` section header so it stays consistent with the syllabus/reviews/instructor sections.
   - Render items as a **responsive 2-column grid** (`grid-cols-1 md:grid-cols-2`) of outline check-circle icons + one-line labels.
 - Use existing FTES tokens only:
-  - `SealCheckIcon` / `CheckCircleIcon` from `@phosphor-icons/react`.
+  - `CheckCircleIcon` from `@phosphor-icons/react`.
   - `text-accent` for icons; `body-sm` muted text for labels.
 - Self-hide the whole section when `course.whatYouLearn` is empty — no empty card, no standalone heading.
 - Update the `CourseDetailSkeleton` so the loading state mirrors the new section layout (section heading + 2-column grid of placeholder rows).

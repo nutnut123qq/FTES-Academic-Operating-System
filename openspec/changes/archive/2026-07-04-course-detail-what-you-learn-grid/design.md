@@ -1,13 +1,13 @@
 ## Context
 
-`CourseDetail` (`src/components/features/course/CourseDetail/index.tsx`) renders the course detail/sales page. The "What you'll learn" section is currently an inline `<div>` with a `Typography h6` heading and a `CheckIcon`-led grid. Starci's `CourseValueProps` implements the desired section pattern using the shared `LabeledCard` and `CheckCircleIcon` blocks, so we will port that structural pattern rather than invent a new component.
+`CourseDetail` (`src/components/features/course/CourseDetail/index.tsx`) renders the course detail/sales page. The "What you'll learn" section currently uses a plain `CheckIcon`-led grid under a `Typography h6` header. The Starci reference keeps the same header style as neighbouring sections and renders the value props as a concise check-list grid, so we adopt that layout while preserving FTES's existing section header convention.
 
 ## Goals / Non-Goals
 
 **Goals:**
-- Match the Starci reference: icon-led section label + check-list grid.
+- Match the Starci reference: consistent section header + 2-column check-list grid.
 - Keep the existing two-column sales layout and section ordering intact.
-- Reuse existing primitives (`LabeledCard`, `Typography`, Phosphor icons).
+- Reuse existing primitives (`Typography`, Phosphor icons).
 - Preserve the `whatYouLearn: Array<string>` contract.
 - Hide the section entirely when the list is empty.
 
@@ -19,15 +19,14 @@
 
 ## Decisions
 
-1. **Section wrapper — reuse `LabeledCard` with `frameless`**
-   - Rationale: `LabeledCard` is the canonical FTES section header block. `frameless` avoids card-in-card because the body is itself a layout (a grid), not content that needs an inner card.
-   - The block renders the label as a `Label` and accepts an `icon` slot; we pass `SealCheckIcon` to match the Starci header pattern.
+1. **Section header — keep `Typography type="h6" weight="bold"`**
+   - Rationale: The syllabus, reviews, and instructor sections all use the same plain `Typography h6` header. Keeping the header identical preserves visual rhythm and avoids introducing a one-off `LabeledCard` style for this section alone.
 
 2. **Body layout — inline 2-column grid, not `CheckListCard`**
    - Rationale: `CheckListCard`/`CheckListItem` are built for a single-column surface list with inset row separators. The requested layout is a grid, so a small inline `<ul>` grid is the simplest, correct structure. We still reuse the same `CheckCircleIcon` and `Typography` primitives used by `CheckListItem`.
 
 3. **Check icon — `CheckCircleIcon` outline, `text-accent`**
-   - Rationale: The reference shows a circular outline tick. `CheckCircleIcon` (default Phosphor weight) provides that shape. `text-accent` is the current FTES accent token, already used for the existing `CheckIcon` and star ratings, so no new color is introduced.
+   - Rationale: The reference shows a circular outline tick. `CheckCircleIcon` (default Phosphor weight) provides that shape. `text-accent` is the current FTES accent token, already used for the previous `CheckIcon` and star ratings, so no new color is introduced.
 
 4. **Empty state — return `null` for the whole section**
    - Rationale: The Starci pattern hides the entire block when the value-prop list is empty. Guarding with `course.whatYouLearn.length > 0` avoids an orphan heading or empty card.

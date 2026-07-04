@@ -18,7 +18,6 @@ import {
     LockIcon,
     PlayCircleIcon,
     PuzzlePieceIcon,
-    SealCheckIcon,
     StackIcon,
     StarIcon,
     TargetIcon,
@@ -32,7 +31,6 @@ import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
 import { SaveButton } from "@/components/blocks/buttons/SaveButton"
 import { HighlightChip } from "@/components/blocks/chips/HighlightChip"
-import { LabeledCard } from "@/components/blocks/cards/LabeledCard"
 import { PriceTag } from "@/components/blocks/commerce/PriceTag"
 import { ResponsiveBreadcrumb } from "@/components/blocks/navigation/ResponsiveBreadcrumb"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
@@ -342,18 +340,10 @@ const CourseDetailView = ({
 
                     {/* what you'll learn */}
                     {course.whatYouLearn.length > 0 ? (
-                        <LabeledCard
-                            className="border-t border-separator pt-6"
-                            label={t("detail.whatYouLearn")}
-                            icon={(
-                                <SealCheckIcon
-                                    aria-hidden
-                                    focusable="false"
-                                    className="size-5 text-accent"
-                                />
-                            )}
-                            frameless
-                        >
+                        <div className="flex flex-col gap-3 border-t border-separator pt-6">
+                            <Typography type="h6" weight="bold">
+                                {t("detail.whatYouLearn")}
+                            </Typography>
                             <ul className="grid grid-cols-1 gap-x-6 gap-y-3 md:grid-cols-2">
                                 {course.whatYouLearn.map((item) => (
                                     <li key={item} className="flex items-start gap-2">
@@ -368,7 +358,7 @@ const CourseDetailView = ({
                                     </li>
                                 ))}
                             </ul>
-                        </LabeledCard>
+                        </div>
                     ) : null}
 
                     {/* syllabus */}

@@ -1,16 +1,11 @@
 ## 1. Update imports in `CourseDetail/index.tsx`
 
-- [ ] 1.1 Replace `CheckIcon` with `CheckCircleIcon` in the `@phosphor-icons/react` import block and add `SealCheckIcon`.
-- [ ] 1.2 Add `import { LabeledCard } from "@/components/blocks/cards/LabeledCard"`.
+- [ ] 1.1 Replace `CheckIcon` with `CheckCircleIcon` in the `@phosphor-icons/react` import block. Không thêm `SealCheckIcon`.
 
 ## 2. Refactor the "What you'll learn" section
 
 - [ ] 2.1 Guard the entire section with `course.whatYouLearn.length > 0` so it returns `null` when empty.
-- [ ] 2.2 Wrap the section in `LabeledCard` with:
-  - `frameless`
-  - `label={t("detail.whatYouLearn")}`
-  - `icon={<SealCheckIcon aria-hidden focusable="false" className="size-5 text-accent" />}`
-  - `className="border-t border-separator pt-6"` to preserve the section separator.
+- [ ] 2.2 Keep the section header as `<Typography type="h6" weight="bold">{t("detail.whatYouLearn")}</Typography>` inside the existing `border-t border-separator pt-6` wrapper.
 - [ ] 2.3 Render the list as `<ul className="grid grid-cols-1 gap-x-6 gap-y-3 md:grid-cols-2">`.
 - [ ] 2.4 Each item is a `<li className="flex items-start gap-2">` containing:
   - `CheckCircleIcon` with `className="mt-0.5 size-5 shrink-0 text-accent"` and `aria-hidden focusable="false"`.

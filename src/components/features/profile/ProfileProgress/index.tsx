@@ -3,8 +3,10 @@
 import React from "react"
 import { Typography } from "@heroui/react"
 import { useLocale, useTranslations } from "next-intl"
-import { FireIcon, TrophyIcon } from "@phosphor-icons/react"
+import { CoinsIcon, FireIcon, TrophyIcon } from "@phosphor-icons/react"
 import { Link, useRouter } from "@/i18n/navigation"
+import { useQueryWalletSwr } from "@/components/features/wallet/hooks/useQueryWalletSwr"
+import { useQueryMyCommunitySummarySwr } from "../hooks/useQueryMyCommunitySummarySwr"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { LabeledCard } from "@/components/blocks/cards/LabeledCard"
 import { MetricCard } from "@/components/blocks/stats/MetricCard"
@@ -40,6 +42,10 @@ const buildCells = (activeDays: Array<string>): Array<HeatmapDay> => {
 const ProgressSkeleton = () => (
     <div className="flex flex-col gap-6">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Skeleton.Metric />
+            <Skeleton.Metric />
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-3">
                 <Skeleton.Typography type="h6" width="1/3" />
                 <Skeleton.Card lines={2} />
@@ -74,6 +80,9 @@ export const ProfileProgress = () => {
     const locale = useLocale()
     const router = useRouter()
     const { data, isLoading, error } = useQueryMyGamificationSwr()
+    const { balance } = useQueryWalletSwr()
+    const { data: communitySummary } = useQueryMyCommunitySummarySwr()
+    const reputationScore = communitySummary?.reputation.score ?? 0
 
     const cellLabel = (day: HeatmapDay): string => {
         const date = new Date(`${day.date}T00:00:00`).toLocaleDateString(locale)
@@ -97,6 +106,49 @@ export const ProfileProgress = () => {
         >
             {data ? (
                 <div className="flex flex-col gap-6">
+                    {/* FTES Coin + Reputation snapshot */}
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <MetricCard
+                            icon={
+                                <CoinsIcon
+                                    className="size-5 text-accent"
+                                    weight="fill"
+                                    aria-hidden
+                                    focusable="false"
+                                />
+                            }
+                            value={balance.toLocaleString(locale)}
+                            label={t("profile.progress.wallet.coin")}
+                            hint={
+                                <Link
+                                    href="/wallet"
+                                    className="text-sm font-medium text-accent no-underline hover:underline"
+                                >
+                                    {t("profile.progress.wallet.viewWallet")}
+                                </Link>
+                            }
+                        />
+                        <MetricCard
+                            icon={
+                                <TrophyIcon
+                                    className="size-5 text-accent"
+                                    aria-hidden
+                                    focusable="false"
+                                />
+                            }
+                            value={reputationScore.toLocaleString(locale)}
+                            label={t("profile.progress.wallet.reputation")}
+                            hint={
+                                <Link
+                                    href="/community"
+                                    className="text-sm font-medium text-accent no-underline hover:underline"
+                                >
+                                    {t("profile.progress.wallet.viewCommunity")}
+                                </Link>
+                            }
+                        />
+                    </div>
+
                     {/* XP/level + rank/league cards */}
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <LabeledCard

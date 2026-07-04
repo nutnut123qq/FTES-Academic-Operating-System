@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { Avatar, AvatarFallback, Button, Tabs, Typography } from "@heroui/react"
+import { Avatar, AvatarFallback, AvatarImage, Button, Tabs, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { FireIcon, MapPinIcon, TrophyIcon } from "@phosphor-icons/react"
 import { usePathname, useRouter } from "@/i18n/navigation"
@@ -27,10 +27,15 @@ const SECTIONS: Array<{ key: string; segment: string }> = [
     { key: "progress", segment: "progress" },
 ]
 
-/** Skeleton mirroring the bare identity sidebar. */
+/** Skeleton mirroring the identity sidebar with cover + avatar. */
 const IdentitySkeleton = () => (
     <div className="flex flex-col items-center gap-4 text-center">
-        <Skeleton className="size-24 rounded-full md:size-28" />
+        <div className="flex w-full flex-col gap-0">
+            <Skeleton className="h-32 w-full rounded-2xl" />
+            <div className="relative -mt-10 flex justify-center">
+                <Skeleton.Avatar size="lg" className="size-20 md:size-24" />
+            </div>
+        </div>
         <div className="flex w-full flex-col gap-0">
             <Skeleton.Typography type="h4" width="2/3" />
         </div>
@@ -81,17 +86,33 @@ export const ProfileShell = ({ children }: ProfileShellProps) => {
                 >
                     {profile ? (
                         <div className="flex flex-col items-center gap-4 text-center">
-                            <div
-                                className="rounded-full p-[3px]"
-                                style={{
-                                    background: "linear-gradient(to top right, var(--accent), var(--success))",
-                                }}
-                            >
-                                <Avatar className="size-24 rounded-full border-2 border-background md:size-28">
-                                    <AvatarFallback className="bg-accent/10 text-xl font-bold text-accent md:text-2xl">
-                                        {(profile.name ?? "?").slice(0, 1).toUpperCase()}
-                                    </AvatarFallback>
-                                </Avatar>
+                            <div className="flex w-full flex-col gap-0">
+                                {profile.coverUrl ? (
+                                    <img
+                                        src={profile.coverUrl}
+                                        alt={t("profile.hero.coverAlt")}
+                                        className="h-32 w-full rounded-2xl object-cover"
+                                    />
+                                ) : (
+                                    <div className="h-32 w-full rounded-2xl bg-gradient-to-tr from-accent/20 to-success/20" />
+                                )}
+                                <div className="relative -mt-10 flex justify-center">
+                                    <div
+                                        className="rounded-full p-[3px]"
+                                        style={{
+                                            background: "linear-gradient(to top right, var(--accent), var(--success))",
+                                        }}
+                                    >
+                                        <Avatar className="size-20 rounded-full border-2 border-background md:size-24">
+                                            {profile.avatarUrl ? (
+                                                <AvatarImage src={profile.avatarUrl} alt={profile.name} />
+                                            ) : null}
+                                            <AvatarFallback className="bg-accent/10 text-xl font-bold text-accent md:text-2xl">
+                                                {(profile.name ?? "?").slice(0, 1).toUpperCase()}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                    </div>
+                                </div>
                             </div>
                             <div className="flex flex-col gap-0">
                                 <Typography type="h4" weight="bold">

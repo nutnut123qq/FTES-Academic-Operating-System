@@ -8,10 +8,15 @@ import {
     LinkIcon,
     PencilSimpleIcon,
     PlusIcon,
+    PushPinIcon,
     TrashIcon,
 } from "@phosphor-icons/react"
+import { ProfileAchievements } from "./ProfileAchievements"
+import { ProfileCertificates } from "./ProfileCertificates"
+import { ProfileResumeCard } from "./ProfileResumeCard"
 import { useRouter } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { EmptyContent } from "@/components/blocks/async/EmptyContent"
 import { LabeledCard } from "@/components/blocks/cards/LabeledCard"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import {
@@ -185,14 +190,30 @@ const RemoveConfirm = ({ onConfirm, onCancel }: { onConfirm: () => void; onCance
     )
 }
 
-/** Skeleton mirroring the projects grid + links list. */
+/** Skeleton mirroring resume + projects + certificates + achievements + links. */
 const PortfolioSkeleton = () => (
     <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-3">
+            <Skeleton.Typography type="h6" width="1/3" />
+            <Skeleton.Card lines={2} />
+        </div>
         <div className="flex flex-col gap-3">
             <Skeleton.Typography type="h6" width="1/3" />
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <Skeleton className="h-32 rounded-2xl" />
                 <Skeleton className="h-32 rounded-2xl" />
+            </div>
+        </div>
+        <div className="flex flex-col gap-3">
+            <Skeleton.Typography type="h6" width="1/3" />
+            <Skeleton.ListRow />
+            <Skeleton.ListRow />
+        </div>
+        <div className="flex flex-col gap-3">
+            <Skeleton.Typography type="h6" width="1/3" />
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Skeleton className="h-24 rounded-2xl" />
+                <Skeleton className="h-24 rounded-2xl" />
             </div>
         </div>
         <div className="flex flex-col gap-3">
@@ -232,12 +253,14 @@ export const ProfilePortfolio = () => {
 
     const saveProject = (draft: ProjectDraft, id?: string) => {
         if (!portfolio) return
+        const existing = id ? portfolio.projects.find((item) => item.id === id) : undefined
         const project: MyPortfolioProject = {
             id: id ?? `pr-${Date.now()}`,
             title: draft.title.trim(),
             description: draft.description.trim(),
             tags: parseTags(draft.tags),
             url: draft.url.trim(),
+            pinned: existing?.pinned ?? false,
         }
         patch({
             projects: id
@@ -245,6 +268,11 @@ export const ProfilePortfolio = () => {
                 : [...portfolio.projects, project],
         })
     }
+
+    const sortedProjects = React.useMemo(
+        () => [...(portfolio?.projects ?? [])].sort((a, b) => Number(b.pinned) - Number(a.pinned)),
+        [portfolio?.projects],
+    )
 
     const saveLink = (draft: LinkDraft, id?: string) => {
         if (!portfolio) return
@@ -306,6 +334,15 @@ export const ProfilePortfolio = () => {
                         </div>
                     ) : (
                         <>
+                            {/* resume */}
+                            <LabeledCard label={t("profile.portfolio.resume.title")}>
+                                {portfolio.resume ? (
+                                    <ProfileResumeCard resume={portfolio.resume} />
+                                ) : (
+                                    <EmptyContent title={t("profile.portfolio.resume.empty")} />
+                                )}
+                            </LabeledCard>
+
                             {/* projects */}
                             <LabeledCard
                                 label={t("profile.portfolio.projects")}
@@ -330,7 +367,7 @@ export const ProfilePortfolio = () => {
                                         />
                                     ) : null}
                                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                        {portfolio.projects.map((project) =>
+                                        {sortedProjects.map((project) =>
                                             editing?.kind === "editProject" && editing.id === project.id ? (
                                                 <ProjectForm
                                                     key={project.id}
@@ -344,13 +381,23 @@ export const ProfilePortfolio = () => {
                                                     className="flex flex-col gap-2 rounded-2xl border border-separator p-4"
                                                 >
                                                     <div className="flex items-start gap-2">
-                                                        <Typography
-                                                            type="body"
-                                                            weight="medium"
-                                                            className="min-w-0 flex-1"
-                                                        >
-                                                            {project.title}
-                                                        </Typography>
+                                                        <div className="flex min-w-0 flex-1 items-center gap-2">
+                                                            {project.pinned ? (
+                                                                <PushPinIcon
+                                                                    className="size-4 shrink-0 text-accent"
+                                                                    aria-hidden
+                                                                    focusable="false"
+                                                                />
+                                                            ) : null}
+                                                            <Typography
+                                                                type="body"
+                                                                weight="medium"
+                                                                className="min-w-0"
+                                                                truncate
+                                                            >
+                                                                {project.title}
+                                                            </Typography>
+                                                        </div>
                                                         <Button
                                                             isIconOnly
                                                             size="sm"
@@ -424,6 +471,24 @@ export const ProfilePortfolio = () => {
                                         )}
                                     </div>
                                 </div>
+                            </LabeledCard>
+
+                            {/* certificates */}
+                            <LabeledCard label={t("profile.portfolio.certificates.title")}>
+                                {portfolio.certificates.length === 0 ? (
+                                    <EmptyContent title={t("profile.portfolio.certificates.empty")} />
+                                ) : (
+                                    <ProfileCertificates certificates={portfolio.certificates} />
+                                )}
+                            </LabeledCard>
+
+                            {/* achievements */}
+                            <LabeledCard label={t("profile.portfolio.achievements.title")} frameless>
+                                {portfolio.achievements.length === 0 ? (
+                                    <EmptyContent title={t("profile.portfolio.achievements.empty")} />
+                                ) : (
+                                    <ProfileAchievements achievements={portfolio.achievements} />
+                                )}
                             </LabeledCard>
 
                             {/* external links */}

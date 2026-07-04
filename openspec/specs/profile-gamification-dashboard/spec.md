@@ -3,26 +3,16 @@
 ## Purpose
 TBD - created by archiving change profile-avatar-hub. Update Purpose after archive.
 ## Requirements
-
 ### Requirement: Progress tab gamification dashboard
-The profile Progress tab SHALL replace its placeholder with a gamification dashboard fed by `useQueryMyGamificationSwr`, containing: an XP/level card with a progress bar toward the next level, a streak calendar heatmap of roughly the last 12 weeks (day cells shaded active/inactive, current streak count labeled), a rank/league card (position + league name linking to `/leaderboard`), and a badges grid (earned badges with name and date).
+The profile Progress tab SHALL replace its placeholder with a gamification dashboard fed by `useQueryMyGamificationSwr`, containing: an XP/level card with a progress bar toward the next level, a streak calendar heatmap of roughly the last 12 weeks, a rank/league card, and a badges grid.
 
 #### Scenario: Dashboard renders
 - **WHEN** a logged-in user opens the profile Progress tab with loaded data
 - **THEN** the XP/level progress bar, streak heatmap, rank/league card, and badges grid all render with the shared hook's values
 
-#### Scenario: Streak heatmap marks active days
-- **WHEN** the heatmap renders
-- **THEN** each day cell for a date in the streak data is visually filled and other days are muted
-- **AND** the current streak count is labeled next to the heatmap
-
 #### Scenario: Dashboard loading state
 - **WHEN** the Progress tab opens while data is loading
-- **THEN** a skeleton mirroring the dashboard layout (bar card, heatmap grid, rank card, badges grid) renders instead of the content
-
-#### Scenario: No badges yet
-- **WHEN** the snapshot contains zero badges
-- **THEN** the badges section shows a localized empty state instead of an empty grid
+- **THEN** a skeleton mirroring the dashboard layout renders instead of the content
 
 ### Requirement: Embedded skill graph section
 The Progress tab SHALL include a skill-graph section below the gamification dashboard that embeds the `SkillGraph` feature component from change `skill-graph-spider` in full-graph (subject-agnostic) mode. This capability MUST NOT redefine graph internals (layout, interactions, mobile fallback) — those requirements belong to `skill-graph-view`.
@@ -50,3 +40,15 @@ On viewports below `sm`, dashboard cards SHALL stack in one column and the heatm
 - **WHEN** the locale is vi or en
 - **THEN** every dashboard string renders localized
 - **AND** the XP progress bar exposes current/max via ARIA and the heatmap has a text summary of the streak
+
+### Requirement: Progress tab displays wallet and reputation snapshot
+The Progress tab SHALL display FTES Coin balance and Reputation score as top-level metric cards above the existing gamification dashboard.
+
+#### Scenario: Wallet and reputation load
+- **WHEN** the Progress tab renders with wallet and community summary data
+- **THEN** FTES Coin and Reputation metric cards appear before the XP/level row
+
+#### Scenario: Wallet or reputation missing
+- **WHEN** either data source is empty
+- **THEN** the corresponding metric card renders `0` or an empty state
+

@@ -1793,8 +1793,14 @@
             "community": "Community",
             "progress": "Progress"
         },
+        "hero": {
+            "coverAlt": "Profile cover"
+        },
         "personal": {
             "about": "About",
+            "contact": {
+                "title": "Contact"
+            },
             "socials": "Social links",
             "socialLabels": {
                 "github": "GitHub",
@@ -1804,6 +1810,7 @@
             },
             "empty": {
                 "aboutTitle": "No introduction yet",
+                "contactTitle": "No contact info yet",
                 "socialsTitle": "No social links yet"
             }
         },
@@ -1832,6 +1839,31 @@
             "confirm": "Remove",
             "cancelRemove": "Cancel",
             "externalHint": "Opens an external link in a new tab",
+            "resume": {
+                "title": "Resume / CV",
+                "view": "View",
+                "download": "Download",
+                "uploaded": "Uploaded {date}",
+                "empty": "No resume uploaded yet"
+            },
+            "certificates": {
+                "title": "Certificates",
+                "verify": "Verify certificate",
+                "meta": "{issuer} · {date}",
+                "empty": "No certificates yet"
+            },
+            "achievements": {
+                "title": "Achievements",
+                "earnedOn": "Earned {date}",
+                "categories": {
+                    "learning": "Learning",
+                    "skills": "Skills",
+                    "community": "Community",
+                    "course": "Course",
+                    "other": "Other"
+                },
+                "empty": "No achievements yet"
+            },
             "form": {
                 "title": "Title",
                 "description": "Description",
@@ -1855,6 +1887,21 @@
                 "comments": "Comments",
                 "reactions": "Reactions received"
             },
+            "connections": {
+                "title": "Connections",
+                "followers": "Followers",
+                "following": "Following",
+                "viewFollowers": "View followers",
+                "viewFollowing": "View following",
+                "hide": "Hide",
+                "empty": {
+                    "followers": "No followers yet",
+                    "following": "Not following anyone yet"
+                }
+            },
+            "activity": {
+                "title": "Activity timeline"
+            },
             "recentPosts": {
                 "title": "Recent posts",
                 "engagement": "{likes} likes · {comments} comments"
@@ -1865,6 +1912,12 @@
             }
         },
         "progress": {
+            "wallet": {
+                "coin": "FTES Coin",
+                "viewWallet": "View wallet",
+                "reputation": "Reputation",
+                "viewCommunity": "View community"
+            },
             "xpCard": {
                 "level": "Level {level}",
                 "totalXp": "{xp} XP",

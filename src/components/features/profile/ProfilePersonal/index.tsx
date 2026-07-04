@@ -8,6 +8,8 @@ import {
     CaretRightIcon,
     EnvelopeIcon,
     GlobeIcon,
+    MapPinIcon,
+    PhoneIcon,
 } from "@phosphor-icons/react"
 import { FaGithub, FaLinkedin } from "react-icons/fa6"
 import { LabeledCard } from "@/components/blocks/cards/LabeledCard"
@@ -64,12 +66,26 @@ const buildSocialMeta = (social: SocialLink): SocialMeta => {
     }
 }
 
-/** Skeleton mirroring the About + Social links cards. */
+/** One contact row: icon + value + optional href. */
+interface ContactRow {
+    key: "email" | "phone" | "address"
+    icon: React.ReactNode
+    value: string
+    href?: string
+}
+
+/** Skeleton mirroring the About + Contact + Social links cards. */
 const PersonalSkeleton = () => (
     <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-3">
             <Skeleton.Typography type="h6" width="1/3" />
             <Skeleton.Card lines={3} />
+        </div>
+        <div className="flex flex-col gap-3">
+            <Skeleton.Typography type="h6" width="1/3" />
+            <Skeleton.ListRow />
+            <Skeleton.ListRow />
+            <Skeleton.ListRow />
         </div>
         <div className="flex flex-col gap-3">
             <Skeleton.Typography type="h6" width="1/3" />
@@ -90,6 +106,35 @@ export const ProfilePersonal = () => {
     const { detail, isLoading, error } = useQueryProfilePersonalSwr()
 
     const socials = useMemo(() => (detail?.socials ?? []).map(buildSocialMeta), [detail?.socials])
+
+    const contactRows: Array<ContactRow> = useMemo(() => {
+        if (!detail) return []
+        const rows: Array<ContactRow> = []
+        if (detail.contact.email) {
+            rows.push({
+                key: "email",
+                icon: <EnvelopeIcon className="size-5" aria-hidden focusable="false" />,
+                value: detail.contact.email,
+                href: `mailto:${detail.contact.email}`,
+            })
+        }
+        if (detail.contact.phone) {
+            rows.push({
+                key: "phone",
+                icon: <PhoneIcon className="size-5" aria-hidden focusable="false" />,
+                value: detail.contact.phone,
+                href: `tel:${detail.contact.phone.replace(/\s/g, "")}`,
+            })
+        }
+        if (detail.contact.address) {
+            rows.push({
+                key: "address",
+                icon: <MapPinIcon className="size-5" aria-hidden focusable="false" />,
+                value: detail.contact.address,
+            })
+        }
+        return rows
+    }, [detail])
 
     return (
         <AsyncContent
@@ -113,6 +158,35 @@ export const ProfilePersonal = () => {
                             </Typography>
                         ) : (
                             <EmptyContent title={t("profile.personal.empty.aboutTitle")} />
+                        )}
+                    </LabeledCard>
+
+                    <LabeledCard label={t("profile.personal.contact.title")}>
+                        {contactRows.length === 0 ? (
+                            <EmptyContent title={t("profile.personal.empty.contactTitle")} />
+                        ) : (
+                            <div className="flex flex-col gap-3">
+                                {contactRows.map((row) => (
+                                    <div
+                                        key={row.key}
+                                        className="flex items-center gap-3 rounded-2xl border border-separator p-4"
+                                    >
+                                        <span className="text-muted">{row.icon}</span>
+                                        {row.href ? (
+                                            <a
+                                                href={row.href}
+                                                className="text-sm font-medium text-accent no-underline hover:underline"
+                                            >
+                                                {row.value}
+                                            </a>
+                                        ) : (
+                                            <Typography type="body-sm" className="text-foreground">
+                                                {row.value}
+                                            </Typography>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
                         )}
                     </LabeledCard>
 

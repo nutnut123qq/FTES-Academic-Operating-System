@@ -1802,8 +1802,14 @@
             "community": "Cộng đồng",
             "progress": "Tiến độ"
         },
+        "hero": {
+            "coverAlt": "Ảnh bìa hồ sơ"
+        },
         "personal": {
             "about": "Giới thiệu",
+            "contact": {
+                "title": "Liên hệ"
+            },
             "socials": "Liên kết mạng xã hội",
             "socialLabels": {
                 "github": "GitHub",
@@ -1813,6 +1819,7 @@
             },
             "empty": {
                 "aboutTitle": "Chưa có giới thiệu",
+                "contactTitle": "Chưa có thông tin liên hệ",
                 "socialsTitle": "Chưa có liên kết mạng xã hội"
             }
         },
@@ -1841,6 +1848,31 @@
             "confirm": "Xoá",
             "cancelRemove": "Huỷ",
             "externalHint": "Mở liên kết ngoài trong tab mới",
+            "resume": {
+                "title": "Sơ yếu lý lịch / CV",
+                "view": "Xem",
+                "download": "Tải xuống",
+                "uploaded": "Tải lên {date}",
+                "empty": "Chưa tải lên CV"
+            },
+            "certificates": {
+                "title": "Chứng chỉ",
+                "verify": "Xác minh chứng chỉ",
+                "meta": "{issuer} · {date}",
+                "empty": "Chưa có chứng chỉ nào"
+            },
+            "achievements": {
+                "title": "Thành tích",
+                "earnedOn": "Đạt ngày {date}",
+                "categories": {
+                    "learning": "Học tập",
+                    "skills": "Kỹ năng",
+                    "community": "Cộng đồng",
+                    "course": "Môn học",
+                    "other": "Khác"
+                },
+                "empty": "Chưa có thành tích nào"
+            },
             "form": {
                 "title": "Tiêu đề",
                 "description": "Mô tả",
@@ -1864,6 +1896,21 @@
                 "comments": "Bình luận",
                 "reactions": "Cảm xúc nhận được"
             },
+            "connections": {
+                "title": "Kết nối",
+                "followers": "Người theo dõi",
+                "following": "Đang theo dõi",
+                "viewFollowers": "Xem người theo dõi",
+                "viewFollowing": "Xem đang theo dõi",
+                "hide": "Ẩn",
+                "empty": {
+                    "followers": "Chưa có người theo dõi",
+                    "following": "Chưa theo dõi ai"
+                }
+            },
+            "activity": {
+                "title": "Dòng thời gian hoạt động"
+            },
             "recentPosts": {
                 "title": "Bài viết gần đây",
                 "engagement": "{likes} thích · {comments} bình luận"
@@ -1874,6 +1921,12 @@
             }
         },
         "progress": {
+            "wallet": {
+                "coin": "FTES Coin",
+                "viewWallet": "Xem ví",
+                "reputation": "Uy tín",
+                "viewCommunity": "Xem cộng đồng"
+            },
             "xpCard": {
                 "level": "Cấp {level}",
                 "totalXp": "{xp} XP",

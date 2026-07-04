@@ -1,14 +1,12 @@
 "use client"
 
-import React from "react"
-import { Typography } from "@heroui/react"
-import { useLocale, useTranslations } from "next-intl"
+import React, { useState } from "react"
+import { Button, Typography } from "@heroui/react"
+import { useTranslations } from "next-intl"
 import {
-    ArticleIcon,
     CaretRightIcon,
-    ChatCircleTextIcon,
-    HeartIcon,
-    TrophyIcon,
+    UserPlusIcon,
+    UsersThreeIcon,
 } from "@phosphor-icons/react"
 import { Link, useRouter } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
@@ -17,29 +15,23 @@ import { LabeledCard } from "@/components/blocks/cards/LabeledCard"
 import { MetricCard } from "@/components/blocks/stats/MetricCard"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { useQueryMyCommunitySummarySwr } from "../hooks/useQueryMyCommunitySummarySwr"
+import { CommunityUserRow, ProfileActivity, ProfileActivitySkeleton } from "./ProfileActivity"
 
-/** Reputation tile definition. */
-const REPUTATION_TILES: Array<{
-    key: "score" | "posts" | "comments" | "reactions"
-    icon: React.ReactNode
-}> = [
-    { key: "score", icon: <TrophyIcon className="size-5 text-accent" aria-hidden focusable="false" /> },
-    { key: "posts", icon: <ArticleIcon className="size-5 text-accent" aria-hidden focusable="false" /> },
-    { key: "comments", icon: <ChatCircleTextIcon className="size-5 text-accent" aria-hidden focusable="false" /> },
-    { key: "reactions", icon: <HeartIcon className="size-5 text-accent" aria-hidden focusable="false" /> },
-]
+type RelationTab = "followers" | "following"
 
-/** Skeleton mirroring the reputation tiles + posts list. */
+/** Skeleton mirroring the followers/following + activity + posts layout. */
 const CommunitySkeleton = () => (
     <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-3">
             <Skeleton.Typography type="h6" width="1/3" />
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <Skeleton.Metric />
-                <Skeleton.Metric />
+            <div className="grid grid-cols-2 gap-3">
                 <Skeleton.Metric />
                 <Skeleton.Metric />
             </div>
+        </div>
+        <div className="flex flex-col gap-3">
+            <Skeleton.Typography type="h6" width="1/3" />
+            <ProfileActivitySkeleton />
         </div>
         <div className="flex flex-col gap-3">
             <Skeleton.Typography type="h6" width="1/3" />
@@ -51,21 +43,16 @@ const CommunitySkeleton = () => (
 )
 
 /**
- * Community section of the profile (§2/§18). Redesigned into a reputation
- * metric grid and a labeled card of recent posts.
+ * Community section of the profile (§2/§18). Shows followers/following,
+ * an activity timeline, and recent community posts.
  */
 export const ProfileCommunity = () => {
     const t = useTranslations()
-    const locale = useLocale()
     const router = useRouter()
     const { data, isLoading, error } = useQueryMyCommunitySummarySwr()
+    const [relationTab, setRelationTab] = useState<RelationTab | null>(null)
 
-    const tiles = data
-        ? REPUTATION_TILES.map((tile) => ({
-            ...tile,
-            value: data.reputation[tile.key],
-        }))
-        : []
+    const relationList = relationTab ? (data?.[relationTab] ?? []) : []
 
     return (
         <AsyncContent
@@ -82,19 +69,82 @@ export const ProfileCommunity = () => {
         >
             {data ? (
                 <div className="flex flex-col gap-6">
-                    <LabeledCard label={t("profile.community.reputation.title")}>
-                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                            {tiles.map((tile) => (
+                    {/* followers / following */}
+                    <LabeledCard label={t("profile.community.connections.title")}>
+                        <div className="flex flex-col gap-3">
+                            <div className="grid grid-cols-2 gap-3">
                                 <MetricCard
-                                    key={tile.key}
-                                    icon={tile.icon}
-                                    value={tile.value.toLocaleString(locale)}
-                                    label={t(`profile.community.reputation.${tile.key}`)}
+                                    icon={
+                                        <UsersThreeIcon
+                                            className="size-5 text-accent"
+                                            aria-hidden
+                                            focusable="false"
+                                        />
+                                    }
+                                    value={data.followers.length.toLocaleString()}
+                                    label={t("profile.community.connections.followers")}
                                 />
-                            ))}
+                                <MetricCard
+                                    icon={
+                                        <UserPlusIcon
+                                            className="size-5 text-accent"
+                                            aria-hidden
+                                            focusable="false"
+                                        />
+                                    }
+                                    value={data.following.length.toLocaleString()}
+                                    label={t("profile.community.connections.following")}
+                                />
+                            </div>
+                            <div className="flex gap-2">
+                                <Button
+                                    size="sm"
+                                    variant={relationTab === "followers" ? "primary" : "secondary"}
+                                    onPress={() => setRelationTab("followers")}
+                                >
+                                    {t("profile.community.connections.viewFollowers")}
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant={relationTab === "following" ? "primary" : "secondary"}
+                                    onPress={() => setRelationTab("following")}
+                                >
+                                    {t("profile.community.connections.viewFollowing")}
+                                </Button>
+                                {relationTab ? (
+                                    <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onPress={() => setRelationTab(null)}
+                                    >
+                                        {t("profile.community.connections.hide")}
+                                    </Button>
+                                ) : null}
+                            </div>
+                            {relationTab ? (
+                                <div className="flex flex-col gap-3">
+                                    {relationList.length === 0 ? (
+                                        <EmptyContent
+                                            title={t(
+                                                `profile.community.connections.empty.${relationTab}`,
+                                            )}
+                                        />
+                                    ) : (
+                                        relationList.map((user) => (
+                                            <CommunityUserRow key={user.id} user={user} />
+                                        ))
+                                    )}
+                                </div>
+                            ) : null}
                         </div>
                     </LabeledCard>
 
+                    {/* activity timeline */}
+                    <LabeledCard label={t("profile.community.activity.title")}>
+                        <ProfileActivity />
+                    </LabeledCard>
+
+                    {/* recent posts */}
                     <LabeledCard
                         label={t("profile.community.recentPosts.title")}
                         onSeeMore={() => router.push("/community")}

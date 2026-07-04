@@ -1,10 +1,11 @@
 "use client"
 
 import React from "react"
-import { QuotesIcon } from "@phosphor-icons/react"
+import { ArrowRightIcon, QuotesIcon } from "@phosphor-icons/react"
 import { Avatar, AvatarFallback, AvatarImage, Link, Typography } from "@heroui/react"
 import { FaFacebook, FaGithub, FaLinkedin } from "react-icons/fa6"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
+import { pathConfig } from "@/resources/path"
 import { FOUNDER } from "../content"
 
 /** Founder social proof links (brand-icon row in the byline). */
@@ -21,6 +22,7 @@ const FOUNDER_SOCIALS = [
  */
 export const MentorTeamSection = () => {
     const t = useTranslations("homeLanding")
+    const locale = useLocale()
     const name = t("mentors.founder.name")
 
     return (
@@ -70,6 +72,14 @@ export const MentorTeamSection = () => {
                                     <Icon aria-hidden className="size-5" />
                                 </Link>
                             ))}
+                            {/* blog = "go read + judge the quality yourself" CTA */}
+                            <Link
+                                href={pathConfig().locale(locale).blog().build()}
+                                className="inline-flex items-center gap-2 text-accent"
+                            >
+                                {t("mentors.blog")}
+                                <ArrowRightIcon aria-hidden focusable="false" className="size-4" />
+                            </Link>
                         </div>
                     </div>
                 </div>

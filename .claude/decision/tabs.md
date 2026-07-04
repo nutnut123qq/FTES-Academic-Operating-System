@@ -25,6 +25,12 @@ Distilled from `starci-navigation.md` (shell shaping) + the `TabsCard` / `Extend
 - Split roles by semantics (tabs-vs-segmented): LEFT group changes the content; RIGHT group (e.g. language TS/Java/C#/Go) keeps the same content but changes how it's presented. Both are "tab groups" in data, but presented merged into one toolbar instead of two tiers (avoid "multiple tab levels").
 
 ## Decisions (newest first)
+- **Sticky header trên nền có ambient (community header)** · chose **`backdrop-blur` THUẦN**
+  (bỏ `bg-background`, KHÔNG thêm `bg-*`, KHÔNG viền) · **WHY:** header đặc `bg-background`
+  tạo ra vùng chữ nhật KHÔNG có mưa sao băng (40 sao băng toàn trang, 0 lọt vào header),
+  nổi khối dù màu trùng nền. Blur thuần cho mưa xuyên qua + mờ nhẹ (Threads-like), tabs vẫn
+  nét, vẫn dính đầu khi cuộn, không thành card kính như lần `bg-background/70 + blur` bị
+  bác. · community shell · 2026-07-04
 - **Route-scope switcher trong sticky header (community: 4 scope là route segments)** · chose
   **`ExtendedTabs`** underline, `selectedKey` derive từ pathname, `onSelectionChange` →
   `router.push` · **WHY:** thay hàng pill `Button` cũ (vi phạm "1-of-few = Tabs, NEVER pill

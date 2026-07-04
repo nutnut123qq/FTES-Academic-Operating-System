@@ -9,6 +9,7 @@ import {
     CaretRightIcon,
     CertificateIcon,
     CheckCircleIcon,
+    CircleIcon,
     ClockIcon,
     GithubLogoIcon,
     GlobeIcon,
@@ -36,7 +37,7 @@ import { StatRibbon } from "@/components/reuseable/StatRibbon"
 import { UserAvatar } from "@/components/reuseable/UserAvatar"
 import { useQueryCourseDetailSwr, type CourseDetail as CourseDetailModel, type CourseEnrollmentPlan, type CourseInstructor } from "../hooks/useQueryCourseDetailSwr"
 import { useCourseEnrollment } from "../hooks/useCourseEnrollment"
-import { SegmentedControl } from "@/components/blocks/navigation/SegmentedControl"
+import { SelectableCardGroup } from "@/components/blocks/navigation/SelectableCardGroup"
 import type { Icon } from "@phosphor-icons/react"
 
 const ACHIEVEMENT_ICONS: Record<string, Icon> = {
@@ -506,7 +507,7 @@ const EnrollCard = ({
     onTryLearning,
 }: EnrollCardProps) => {
     const t = useTranslations("courseSystem")
-    const [selectedTier, setSelectedTier] = useState<"free" | "premium">("premium")
+    const [selectedTier, setSelectedTier] = useState<"free" | "premium">("free")
     const activePlan: CourseEnrollmentPlan = course.plans[selectedTier]
 
     return (
@@ -526,37 +527,45 @@ const EnrollCard = ({
                 </>
             ) : (
                 <>
-                    <div className="flex flex-col gap-0">
-                        {selectedTier === "free" ? (
-                            <Typography type="h4" weight="bold">
-                                {t("detail.planNames.free")}
-                            </Typography>
-                        ) : (
-                            <>
-                                <PriceTag
-                                    discounted={activePlan.priceVnd}
-                                    original={activePlan.originalPriceVnd}
-                                    currency="VND"
-                                    size="lg"
-                                />
-                                <Typography type="body-xs" color="muted">
-                                    {t("detail.usdApprox", {
-                                        price: course.price.usd.toLocaleString("en-US", { style: "currency", currency: "USD" }),
-                                    })}
-                                </Typography>
-                            </>
-                        )}
-                    </div>
-
-                    <SegmentedControl
+                    <SelectableCardGroup
                         ariaLabel={t("detail.planSelectorAria")}
+                        columns={1}
                         value={selectedTier}
-                        onChange={(value) => setSelectedTier(value as "free" | "premium")}
-                        items={[
-                            { value: "free", label: t(`detail.planNames.${course.plans.free.name}`) },
-                            { value: "premium", label: t(`detail.planNames.${course.plans.premium.name}`) },
-                        ]}
+                        onChange={setSelectedTier}
+                        items={(["free", "premium"] as const).map((key) => {
+                            const plan = course.plans[key]
+                            const isSelected = selectedTier === key
+                            return {
+                                value: key,
+                                icon: isSelected ? (
+                                    <CircleIcon aria-hidden focusable="false" weight="fill" className="size-[18px] text-accent" />
+                                ) : (
+                                    <CircleIcon aria-hidden focusable="false" className="size-[18px] text-muted" />
+                                ),
+                                label: t(`detail.planNames.${plan.name}`),
+                                badge: plan.priceVnd > 0 ? (
+                                    <PriceTag
+                                        discounted={plan.priceVnd}
+                                        original={plan.originalPriceVnd}
+                                        currency="VND"
+                                        size="sm"
+                                    />
+                                ) : (
+                                    <Typography type="body-sm" weight="medium">
+                                        {t("detail.planNames.free")}
+                                    </Typography>
+                                ),
+                            }
+                        })}
                     />
+
+                    {selectedTier === "premium" ? (
+                        <Typography type="body-xs" color="muted">
+                            {t("detail.usdApprox", {
+                                price: course.price.usd.toLocaleString("en-US", { style: "currency", currency: "USD" }),
+                            })}
+                        </Typography>
+                    ) : null}
 
                     {selectedTier === "free" ? (
                         <Button variant="primary" fullWidth onPress={onTryLearning}>

@@ -29,7 +29,6 @@ import { useRouter } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { SaveButton } from "@/components/blocks/buttons/SaveButton"
 import { HighlightChip } from "@/components/blocks/chips/HighlightChip"
-import { PriceTag } from "@/components/blocks/commerce/PriceTag"
 import { ResponsiveBreadcrumb } from "@/components/blocks/navigation/ResponsiveBreadcrumb"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { FollowButton } from "@/components/reuseable/FollowButton"
@@ -543,17 +542,22 @@ const EnrollCard = ({
                                     <CircleIcon aria-hidden focusable="false" className="size-[18px] text-muted" />
                                 ),
                                 label: t(`detail.planNames.${plan.name}`),
-                                badge: plan.priceVnd > 0 ? (
-                                    <PriceTag
-                                        discounted={plan.priceVnd}
-                                        original={plan.originalPriceVnd}
-                                        currency="VND"
-                                        size="sm"
-                                    />
-                                ) : (
-                                    <Typography type="body-sm" weight="medium">
-                                        {t("detail.planNames.free")}
-                                    </Typography>
+                                // ponytail: price rendered as PLAIN spans, not PriceTag/Typography —
+                                // those wrap React-Aria `Text`, which throws "slot prop required" when
+                                // nested inside the RadioGroup's Text context.
+                                badge: (
+                                    <span className="flex items-center gap-1.5 text-sm">
+                                        {plan.originalPriceVnd && plan.originalPriceVnd > plan.priceVnd ? (
+                                            <span className="text-xs text-muted line-through">
+                                                {plan.originalPriceVnd.toLocaleString("vi-VN")}₫
+                                            </span>
+                                        ) : null}
+                                        <span className="font-medium text-foreground">
+                                            {plan.priceVnd > 0
+                                                ? `${plan.priceVnd.toLocaleString("vi-VN")}₫`
+                                                : t("detail.planNames.free")}
+                                        </span>
+                                    </span>
                                 ),
                             }
                         })}

@@ -37,6 +37,38 @@ export interface CoursePrice {
     originalVnd?: number
 }
 
+/** One line item in a tier's "what's included" list. */
+export interface CourseEnrollmentPlanInclude {
+    /** i18n key under `courseSystem.detail.planIncludes`. */
+    key: string
+    /** Optional interpolation values for the i18n message. */
+    params?: Record<string, string | number>
+}
+
+/** A single enrollment tier (Free / Premium) shown in the purchase card. */
+export interface CourseEnrollmentPlan {
+    /** i18n key for the tier name under `courseSystem.detail.planNames`. */
+    name: string
+    /** Optional i18n key for a badge (e.g. "Phổ biến"). */
+    badge?: string
+    /** Price of this tier in VND (0 for Free). */
+    priceVnd: number
+    /** Optional pre-discount price for this tier. */
+    originalPriceVnd?: number
+    /** Benefit rows rendered under the tier. */
+    includes: Array<CourseEnrollmentPlanInclude>
+}
+
+/** Enrollment state of the current viewer for this course.
+ *
+ * ponytail: mock-only until the BE course enrollment contract lands. */
+export interface CourseEnrollmentState {
+    /** True when the viewer has any enrollment (free or paid). */
+    isEnrolled: boolean
+    /** True only for a purchased (premium) enrollment. */
+    isPurchased: boolean
+}
+
 /** A single instructor credential or achievement line. */
 export interface CourseInstructorAchievement {
     id: string
@@ -95,6 +127,13 @@ export interface CourseDetail {
     enrollmentCount?: number
     /** Total challenges in the course — optional until the BE course contract lands. */
     challengeCount?: number
+    /** Enrollment state of the current viewer. Optional / mock until BE lands. */
+    enrollment?: CourseEnrollmentState
+    /** Free and Premium enrollment tiers shown in the purchase card. Mock until BE lands. */
+    plans: {
+        free: CourseEnrollmentPlan
+        premium: CourseEnrollmentPlan
+    }
     whatYouLearn: Array<string>
     instructor: CourseInstructor
     sections: Array<CourseSection>
@@ -118,6 +157,33 @@ const fetchCourseDetailMock = async (courseId: string): Promise<CourseDetail> =>
     challengeCount: 348,
     enrollmentCount: 49,
     price: { vnd: 1_200_000, usd: 49, originalVnd: 1_600_000 },
+    // ponytail: mock enrollment state. Default false so the sales card shows the Free/Premium selector.
+    // Toggle isEnrolled to true to test the "Continue learning" state.
+    enrollment: { isEnrolled: false, isPurchased: false },
+    // ponytail: mock Free / Premium tiers. BE will eventually own this shape.
+    plans: {
+        free: {
+            name: "free",
+            priceVnd: 0,
+            includes: [
+                { key: "previewVideo", params: { duration: "6 giờ" } },
+                { key: "previewLessons", params: { count: 2 } },
+                { key: "freeChallenge" },
+            ],
+        },
+        premium: {
+            name: "premium",
+            badge: "recommended",
+            priceVnd: 1_200_000,
+            originalPriceVnd: 1_600_000,
+            includes: [
+                { key: "fullVideo", params: { duration: "6 giờ" } },
+                { key: "allLessons", params: { count: 5 } },
+                { key: "allChallenges" },
+                { key: "certificate" },
+            ],
+        },
+    },
     rating: { avg: 4.8, count: 1240 },
     whatYouLearn: [
         "Cú pháp C, biến và kiểu dữ liệu",

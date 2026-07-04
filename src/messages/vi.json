@@ -4527,6 +4527,25 @@
                 }
             },
             "tryFree": "Học thử miễn phí",
+            "continueLearning": "Tiếp tục học",
+            "enrolledHint": "Bạn đã đăng ký khóa này.",
+            "planSelectorAria": "Chọn gói học",
+            "planNames": {
+                "free": "Miễn phí",
+                "premium": "Premium"
+            },
+            "planBadges": {
+                "recommended": "Phổ biến"
+            },
+            "planIncludes": {
+                "previewVideo": "{duration} video xem trước",
+                "previewLessons": "{count} bài học xem trước",
+                "freeChallenge": "Challenge miễn phí",
+                "fullVideo": "{duration} video toàn khóa",
+                "allLessons": "{count} bài học",
+                "allChallenges": "Tất cả challenge",
+                "certificate": "Chứng chỉ hoàn thành"
+            },
             "loadError": "Không tải được khóa học.",
             "retry": "Thử lại",
             "usdApprox": "≈ {price}",

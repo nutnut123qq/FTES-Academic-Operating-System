@@ -10,7 +10,6 @@ import {
     CertificateIcon,
     CheckCircleIcon,
     ClockIcon,
-    FileTextIcon,
     GithubLogoIcon,
     GlobeIcon,
     GraduationCapIcon,
@@ -20,7 +19,6 @@ import {
     PuzzlePieceIcon,
     StackIcon,
     StarIcon,
-    TargetIcon,
     TrophyIcon,
     UsersIcon,
 } from "@phosphor-icons/react"
@@ -28,7 +26,6 @@ import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
 import { useRouter } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
-import { useRequireAuth } from "@/hooks/useRequireAuth"
 import { SaveButton } from "@/components/blocks/buttons/SaveButton"
 import { HighlightChip } from "@/components/blocks/chips/HighlightChip"
 import { PriceTag } from "@/components/blocks/commerce/PriceTag"
@@ -37,7 +34,9 @@ import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { FollowButton } from "@/components/reuseable/FollowButton"
 import { StatRibbon } from "@/components/reuseable/StatRibbon"
 import { UserAvatar } from "@/components/reuseable/UserAvatar"
-import { useQueryCourseDetailSwr, type CourseDetail as CourseDetailModel, type CourseInstructor } from "../hooks/useQueryCourseDetailSwr"
+import { useQueryCourseDetailSwr, type CourseDetail as CourseDetailModel, type CourseEnrollmentPlan, type CourseInstructor } from "../hooks/useQueryCourseDetailSwr"
+import { useCourseEnrollment } from "../hooks/useCourseEnrollment"
+import { SegmentedControl } from "@/components/blocks/navigation/SegmentedControl"
 import type { Icon } from "@phosphor-icons/react"
 
 const ACHIEVEMENT_ICONS: Record<string, Icon> = {
@@ -190,17 +189,16 @@ const InstructorCard = ({ instructor }: { instructor: CourseInstructor }) => {
  * (charged, via {@link PriceTag}) with a muted USD reference below.
  *
  * Feature owns data + routing + i18n; blocks (PriceTag, ResponsiveBreadcrumb,
- * AsyncContent, Skeleton) own their styling. ponytail: enroll/try CTAs are no-ops
- * (no BE); the syllabus expander is hand-rolled (swap to HeroUI Accordion once its
- * v3 API is confirmed in this repo).
+ * AsyncContent, Skeleton) own their styling. ponytail: data is FE-mocked until the
+ * BE course contract lands; the "Học thử" CTA is wired to `useMutateStartTrialSwr`
+ * best-effort. The syllabus expander is hand-rolled (swap to HeroUI Accordion once
+ * its v3 API is confirmed).
  */
 export const CourseDetail = () => {
     const t = useTranslations("courseSystem")
     const router = useRouter()
     const { courseId } = useParams<{ courseId: string }>()
     const { course, error, mutate } = useQueryCourseDetailSwr(courseId)
-    // guests pressing the enroll CTA get the auth modal (enroll context) and STAY here
-    const { guard } = useRequireAuth()
 
     return (
         <div className="mx-auto w-full max-w-6xl p-6">
@@ -218,7 +216,6 @@ export const CourseDetail = () => {
                     <CourseDetailView
                         course={course}
                         onCourses={() => router.push("/courses")}
-                        onEnroll={guard(() => router.push(`/courses/${courseId}/enroll`), "auth.context.enroll")}
                     />
                 ) : null}
             </AsyncContent>
@@ -226,17 +223,19 @@ export const CourseDetail = () => {
     )
 }
 
-/** Presentation of a loaded course. Owns only the syllabus expand/collapse UI state. */
+/** Presentation of a loaded course. Owns the syllabus expand/collapse UI state. */
 const CourseDetailView = ({
     course,
     onCourses,
-    onEnroll,
 }: {
     course: CourseDetailModel
     onCourses: () => void
-    onEnroll: () => void
 }) => {
     const t = useTranslations("courseSystem")
+    const { isEnrolled, onEnroll, onContinueLearning, onTryLearning } = useCourseEnrollment(
+        course.id,
+        course.enrollment,
+    )
     // ponytail: hand-rolled accordion state — first chapter open. Set, not boolean-per-row,
     // so multiple chapters can be open. Swap to HeroUI Accordion when its API is confirmed.
     const [openSections, setOpenSections] = useState<Set<string>>(
@@ -467,49 +466,138 @@ const CourseDetailView = ({
 
                 {/* RIGHT — sticky enroll card */}
                 <div className="md:col-span-2">
-                    <div className="flex flex-col gap-3 rounded-2xl border border-separator p-4 md:sticky md:top-20">
-                        <div className="flex aspect-video w-full items-center justify-center rounded-large bg-default/40">
-                            <PlayCircleIcon aria-hidden focusable="false" className="size-10 text-muted" />
-                        </div>
-                        <div className="flex flex-col gap-0">
-                            <PriceTag
-                                discounted={course.price.vnd}
-                                original={course.price.originalVnd}
-                                currency="VND"
-                                size="lg"
-                            />
-                            <Typography type="body-xs" color="muted">
-                                {t("detail.usdApprox", {
-                                    price: course.price.usd.toLocaleString("en-US", { style: "currency", currency: "USD" }),
-                                })}
+                    <EnrollCard
+                        course={course}
+                        isEnrolled={isEnrolled}
+                        onEnroll={onEnroll}
+                        onContinueLearning={onContinueLearning}
+                        onTryLearning={onTryLearning}
+                    />
+                </div>
+            </div>
+        </div>
+    )
+}
+
+type EnrollCardProps = {
+    course: CourseDetailModel
+    isEnrolled: boolean
+    onEnroll: () => void
+    onContinueLearning: () => void
+    onTryLearning: () => void
+}
+
+/**
+ * The sticky purchase/enroll card on the course detail right column.
+ *
+ * - Not enrolled: shows a Free/Premium tier switcher, the selected tier's price,
+ *   a primary "Đăng ký học" CTA and a secondary "Học thử miễn phí" CTA.
+ * - Enrolled: collapses to a single "Tiếp tục học" primary CTA.
+ *
+ * ponytail: plan data, prices, and benefits are mock until the BE course contract
+ * lands. The "continue" / "try" routes use the canonical `/learn` path which is
+ * currently a FE placeholder.
+ */
+const EnrollCard = ({
+    course,
+    isEnrolled,
+    onEnroll,
+    onContinueLearning,
+    onTryLearning,
+}: EnrollCardProps) => {
+    const t = useTranslations("courseSystem")
+    const [selectedTier, setSelectedTier] = useState<"free" | "premium">("premium")
+    const activePlan: CourseEnrollmentPlan = course.plans[selectedTier]
+
+    return (
+        <div className="flex flex-col gap-3 rounded-2xl border border-separator p-4 md:sticky md:top-20">
+            <div className="flex aspect-video w-full items-center justify-center rounded-large bg-default/40">
+                <PlayCircleIcon aria-hidden focusable="false" className="size-10 text-muted" />
+            </div>
+
+            {isEnrolled ? (
+                <>
+                    <Button variant="primary" fullWidth onPress={onContinueLearning}>
+                        {t("detail.continueLearning")}
+                    </Button>
+                    <Typography type="body-xs" color="muted" align="center">
+                        {t("detail.enrolledHint")}
+                    </Typography>
+                </>
+            ) : (
+                <>
+                    <div className="flex flex-col gap-0">
+                        {selectedTier === "free" ? (
+                            <Typography type="h4" weight="bold">
+                                {t("detail.planNames.free")}
                             </Typography>
-                        </div>
-                        <Button variant="primary" fullWidth onPress={onEnroll}>
-                            {t("detail.enroll")}
-                        </Button>
-                        <Button variant="secondary" fullWidth>
+                        ) : (
+                            <>
+                                <PriceTag
+                                    discounted={activePlan.priceVnd}
+                                    original={activePlan.originalPriceVnd}
+                                    currency="VND"
+                                    size="lg"
+                                />
+                                <Typography type="body-xs" color="muted">
+                                    {t("detail.usdApprox", {
+                                        price: course.price.usd.toLocaleString("en-US", { style: "currency", currency: "USD" }),
+                                    })}
+                                </Typography>
+                            </>
+                        )}
+                    </div>
+
+                    <SegmentedControl
+                        ariaLabel={t("detail.planSelectorAria")}
+                        value={selectedTier}
+                        onChange={(value) => setSelectedTier(value as "free" | "premium")}
+                        items={[
+                            { value: "free", label: t(`detail.planNames.${course.plans.free.name}`) },
+                            { value: "premium", label: t(`detail.planNames.${course.plans.premium.name}`) },
+                        ]}
+                    />
+
+                    {selectedTier === "free" ? (
+                        <Button variant="primary" fullWidth onPress={onTryLearning}>
                             {t("detail.tryFree")}
                         </Button>
-                        <div className="flex flex-col gap-2 border-t border-separator pt-3">
+                    ) : (
+                        <>
+                            <Button variant="primary" fullWidth onPress={onEnroll}>
+                                {t("detail.enroll")}
+                            </Button>
+                            <Button variant="secondary" fullWidth onPress={onTryLearning}>
+                                {t("detail.tryFree")}
+                            </Button>
+                        </>
+                    )}
+
+                    <div className="flex flex-col gap-2 border-t border-separator pt-3">
+                        <div className="flex items-center justify-between">
                             <Typography type="body-xs" weight="medium" color="muted">
                                 {t("detail.includesTitle")}
                             </Typography>
-                            <IncludeRow icon={<ClockIcon aria-hidden focusable="false" className="size-4 text-muted" />}>
-                                {t("detail.includes.video", { duration: course.durationLabel })}
-                            </IncludeRow>
-                            <IncludeRow icon={<FileTextIcon aria-hidden focusable="false" className="size-4 text-muted" />}>
-                                {t("detail.includes.lessons", { count: totalLessons })}
-                            </IncludeRow>
-                            <IncludeRow icon={<TargetIcon aria-hidden focusable="false" className="size-4 text-muted" />}>
-                                {t("detail.includes.challenge")}
-                            </IncludeRow>
-                            <IncludeRow icon={<CertificateIcon aria-hidden focusable="false" className="size-4 text-muted" />}>
-                                {t("detail.includes.certificate")}
-                            </IncludeRow>
+                            {activePlan.badge ? (
+                                <Chip size="sm" variant="soft" color="accent">
+                                    {t(`detail.planBadges.${activePlan.badge}`)}
+                                </Chip>
+                            ) : null}
                         </div>
+                        {activePlan.includes.map((item) => {
+                            const params = item.params ?? {}
+                            return (
+                                <IncludeRow
+                                    key={item.key}
+                                    icon={<CheckCircleIcon aria-hidden focusable="false" className="size-4 text-accent" />}
+                                >
+                                    {t(`detail.planIncludes.${item.key}`, params)}
+                                </IncludeRow>
+                            )
+                        })}
                     </div>
-                </div>
-            </div>
+                </>
+            )}
         </div>
     )
 }

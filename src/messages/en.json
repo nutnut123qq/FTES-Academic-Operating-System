@@ -4527,6 +4527,25 @@
                 }
             },
             "tryFree": "Try for free",
+            "continueLearning": "Continue learning",
+            "enrolledHint": "You're enrolled in this course.",
+            "planSelectorAria": "Select a learning plan",
+            "planNames": {
+                "free": "Free",
+                "premium": "Premium"
+            },
+            "planBadges": {
+                "recommended": "Recommended"
+            },
+            "planIncludes": {
+                "previewVideo": "{duration} preview video",
+                "previewLessons": "{count} preview lessons",
+                "freeChallenge": "Free challenge",
+                "fullVideo": "{duration} full course video",
+                "allLessons": "{count} lessons",
+                "allChallenges": "All challenges",
+                "certificate": "Certificate of completion"
+            },
             "loadError": "Couldn't load the course.",
             "retry": "Try again",
             "usdApprox": "≈ {price}",

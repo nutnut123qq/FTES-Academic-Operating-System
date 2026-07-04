@@ -8,7 +8,7 @@ import {
     CaretDownIcon,
     CaretRightIcon,
     CertificateIcon,
-    CheckIcon,
+    CheckCircleIcon,
     ClockIcon,
     FileTextIcon,
     GithubLogoIcon,
@@ -18,6 +18,7 @@ import {
     LockIcon,
     PlayCircleIcon,
     PuzzlePieceIcon,
+    SealCheckIcon,
     StackIcon,
     StarIcon,
     TargetIcon,
@@ -31,6 +32,7 @@ import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
 import { SaveButton } from "@/components/blocks/buttons/SaveButton"
 import { HighlightChip } from "@/components/blocks/chips/HighlightChip"
+import { LabeledCard } from "@/components/blocks/cards/LabeledCard"
 import { PriceTag } from "@/components/blocks/commerce/PriceTag"
 import { ResponsiveBreadcrumb } from "@/components/blocks/navigation/ResponsiveBreadcrumb"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
@@ -339,25 +341,35 @@ const CourseDetailView = ({
                     </div>
 
                     {/* what you'll learn */}
-                    <div className="flex flex-col gap-3 border-t border-separator pt-6">
-                        <Typography type="h6" weight="bold">
-                            {t("detail.whatYouLearn")}
-                        </Typography>
-                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                            {course.whatYouLearn.map((item) => (
-                                <div key={item} className="flex items-start gap-2">
-                                    <CheckIcon
-                                        aria-hidden
-                                        focusable="false"
-                                        className="mt-0.5 size-5 shrink-0 text-accent"
-                                    />
-                                    <Typography type="body-sm" color="muted">
-                                        {item}
-                                    </Typography>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+                    {course.whatYouLearn.length > 0 ? (
+                        <LabeledCard
+                            className="border-t border-separator pt-6"
+                            label={t("detail.whatYouLearn")}
+                            icon={(
+                                <SealCheckIcon
+                                    aria-hidden
+                                    focusable="false"
+                                    className="size-5 text-accent"
+                                />
+                            )}
+                            frameless
+                        >
+                            <ul className="grid grid-cols-1 gap-x-6 gap-y-3 md:grid-cols-2">
+                                {course.whatYouLearn.map((item) => (
+                                    <li key={item} className="flex items-start gap-2">
+                                        <CheckCircleIcon
+                                            aria-hidden
+                                            focusable="false"
+                                            className="mt-0.5 size-5 shrink-0 text-accent"
+                                        />
+                                        <Typography type="body-sm" color="muted">
+                                            {item}
+                                        </Typography>
+                                    </li>
+                                ))}
+                            </ul>
+                        </LabeledCard>
+                    ) : null}
 
                     {/* syllabus */}
                     <div className="flex flex-col gap-3 border-t border-separator pt-6">
@@ -541,7 +553,17 @@ const CourseDetailSkeleton = () => (
                     <Skeleton.Chip />
                 </div>
                 <Skeleton.Paragraph lines={2} />
-                <Skeleton className="h-40 w-full rounded-large" />
+                <div className="flex flex-col gap-3 border-t border-separator pt-6">
+                    <Skeleton.Typography type="h6" width="1/3" />
+                    <div className="grid grid-cols-1 gap-x-6 gap-y-3 md:grid-cols-2">
+                        {Array.from({ length: 4 }).map((_, index) => (
+                            <div key={index} className="flex items-center gap-2">
+                                <Skeleton className="size-5 shrink-0 rounded-full" />
+                                <Skeleton.Typography type="body-sm" className="min-w-0 flex-1" />
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </div>
             <div className="md:col-span-2">
                 <Skeleton className="h-80 w-full rounded-large" />

@@ -23,6 +23,8 @@ const query = gql`
   }
 `
 
+// ponytail: mock BE — swap fetcher về queryUserHovercard khi BE có userProfile.
+
 /**
  * Fetches a minimal public user profile for the hovercard card.
  * Reuses the same `userProfile` resolver as {@link queryUserProfile} but asks

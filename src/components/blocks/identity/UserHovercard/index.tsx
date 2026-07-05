@@ -152,7 +152,10 @@ export const UserHovercard = ({
             {trigger}
             <Popover.Content
                 data-testid="user-hovercard"
-                className={cn("w-80 max-w-[calc(100vw-2rem)] p-0", classNames?.content)}
+                className={cn(
+                    "popover w-80 max-w-[calc(100vw-2rem)] border border-default p-0",
+                    classNames?.content,
+                )}
                 placement={placement}
                 triggerRef={triggerRef}
                 isOpen={isOpen}

@@ -38,6 +38,9 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+
+# local scratch / screenshots
+.tmp-screenshot/
 next-env.d.ts
 
 # local render artifact

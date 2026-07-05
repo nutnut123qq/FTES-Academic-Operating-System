@@ -17,6 +17,8 @@ export interface SubmitCommentInput {
     body: string
     /** Author label for the optimistic node ("Bạn"/"You"). */
     authorLabel: string
+    /** URL-facing username for the optimistic node's profile link + hovercard. */
+    authorUsername: string
     /** Localized "just now" time label for the optimistic node. */
     justNowLabel: string
     /** When replying, the parent top-level comment id (one level only). */
@@ -50,6 +52,7 @@ export const useMutateCreatePostCommentSwr = () => {
             const optimistic: PostComment = {
                 id: tempId,
                 author: input.authorLabel,
+                authorUsername: input.authorUsername,
                 text: input.body,
                 timeLabel: input.justNowLabel,
             }

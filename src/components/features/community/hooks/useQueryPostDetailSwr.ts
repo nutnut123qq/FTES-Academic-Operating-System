@@ -5,7 +5,10 @@ import useSWR from "swr"
 /** A comment on a post. Replies are flat, one level deep (Threads-like). */
 export interface PostComment {
     id: string
+    /** Display name of the author. */
     author: string
+    /** URL-facing username for profile link + hovercard. */
+    authorUsername: string
     text: string
     timeLabel: string
     /** One-level replies under this top-level comment (absent on replies). */
@@ -15,7 +18,10 @@ export interface PostComment {
 /** Full post detail (§6, mock until BE lands). */
 export interface PostDetail {
     id: string
+    /** Display name of the author. */
     author: string
+    /** URL-facing username for profile link + hovercard. */
+    authorUsername: string
     timeLabel: string
     title: string
     body: string
@@ -33,6 +39,7 @@ export const postDetailKey = (postId: string) => ["post-detail", postId]
 const fetchPostDetailMock = async (postId: string): Promise<PostDetail> => ({
     id: postId,
     author: "Minh Trần",
+    authorUsername: "minh-tran" /* mock */,
     timeLabel: "1 giờ trước",
     title: "Chia sẻ lộ trình học Backend",
     body: "Mình tổng hợp lộ trình 6 tháng từ con số 0: tháng 1-2 nền tảng ngôn ngữ, tháng 3-4 database + API, tháng 5-6 dự án thật. Ai cần chi tiết comment nhé!",
@@ -42,14 +49,15 @@ const fetchPostDetailMock = async (postId: string): Promise<PostDetail> => ({
         {
             id: "pc1",
             author: "An",
+            authorUsername: "an-nguyen" /* mock */,
             text: "Cảm ơn bạn, rất hữu ích!",
             timeLabel: "45 phút trước",
             replies: [
-                { id: "pc1r1", author: "Minh Trần", text: "Không có gì, chúc bạn học tốt!", timeLabel: "40 phút trước" },
+                { id: "pc1r1", author: "Minh Trần", authorUsername: "minh-tran" /* mock */, text: "Không có gì, chúc bạn học tốt!", timeLabel: "40 phút trước" },
             ],
         },
-        { id: "pc2", author: "Hoa", text: "Cho mình xin thêm tài liệu phần API với.", timeLabel: "20 phút trước" },
-        { id: "pc3", author: "Bình", text: "Đỉnh ![Yêu thích](/stickers/heart.svg)", timeLabel: "5 phút trước" }, // demo: sticker render
+        { id: "pc2", author: "Hoa", authorUsername: "hoa-le" /* mock */, text: "Cho mình xin thêm tài liệu phần API với.", timeLabel: "20 phút trước" },
+        { id: "pc3", author: "Bình", authorUsername: "binh-pham" /* mock */, text: "Đỉnh ![Yêu thích](/stickers/heart.svg)", timeLabel: "5 phút trước" }, // demo: sticker render
     ],
 })
 

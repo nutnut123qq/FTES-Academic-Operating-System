@@ -26,8 +26,8 @@ export const groupPostCommentsKey = (groupId: string, postId: string) => [
 const fetchGroupPostCommentsMock = async (postId: string): Promise<GroupPostThread> => ({
     id: postId,
     comments: [
-        { id: `${postId}-c1`, author: "An", text: "Để mình đăng ký tham gia nhé!", timeLabel: "1 giờ trước" },
-        { id: `${postId}-c2`, author: "Hoa", text: "Có ghi hình lại không mọi người?", timeLabel: "30 phút trước" },
+        { id: `${postId}-c1`, author: "An", authorUsername: "an-nguyen" /* mock */, text: "Để mình đăng ký tham gia nhé!", timeLabel: "1 giờ trước" },
+        { id: `${postId}-c2`, author: "Hoa", authorUsername: "hoa-le" /* mock */, text: "Có ghi hình lại không mọi người?", timeLabel: "30 phút trước" },
     ],
 })
 

@@ -93,6 +93,7 @@ export const ResourceComments = () => {
                     parentId,
                     author: {
                         id: user.id,
+                        username: user.username,
                         name: user.displayName ?? user.username,
                         avatarUrl: user.avatar,
                     },

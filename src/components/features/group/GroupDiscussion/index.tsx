@@ -4,6 +4,7 @@ import React, { useCallback, useState } from "react"
 import { Typography } from "@heroui/react"
 import { useLocale } from "next-intl"
 import { useParams } from "next/navigation"
+import { useAppSelector } from "@/redux/hooks"
 import {
     PostEngagementBar,
     DISCUSSION_ENGAGEMENT_ACTIONS,
@@ -16,6 +17,7 @@ import { useMutateReactGroupThreadSwr } from "../hooks/useMutateReactGroupThread
 /** One discussion thread row + inline (lazy, mock) comment thread. Like + comment ONLY. */
 const GroupDiscussionRow = ({ groupId, thread }: { groupId: string; thread: GroupThread }) => {
     const locale = useLocale()
+    const currentUser = useAppSelector((state) => state.user.user)
     const [expanded, setExpanded] = useState(false)
     const [hasOpened, setHasOpened] = useState(false)
     const reactThread = useMutateReactGroupThreadSwr(groupId)
@@ -42,6 +44,7 @@ const GroupDiscussionRow = ({ groupId, thread }: { groupId: string; thread: Grou
                 const optimistic = {
                     id: `tmp-${Date.now()}`,
                     author: locale === "vi" ? "Bạn" : "You",
+                    authorUsername: currentUser?.username ?? "you",
                     text: body,
                     timeLabel: locale === "vi" ? "vừa xong" : "just now",
                 }

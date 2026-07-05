@@ -4,11 +4,12 @@ import React, { useState } from "react"
 import { Link, cn } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { getTimeAgoLabel, getTimeAgoMessage } from "@/modules/dayjs"
-import { UserAvatar } from "../UserAvatar"
-import { ReactionBar } from "./ReactionBar"
-import { CommentComposer } from "./CommentComposer"
-import { ReactionType, type CommentNode } from "@/modules/api/graphql/queries/types/discussion"
+import type { CommentNode } from "@/modules/api/graphql/queries/types/discussion"
+import type { ReactionType } from "@/modules/api/graphql/queries/types"
 import type { WithClassNames } from "@/modules/types/base/class-name"
+import { UserLink } from "@/components/features/identity"
+import { CommentComposer } from "./CommentComposer"
+import { ReactionBar } from "./ReactionBar"
 
 /** Callbacks shared down the comment tree. */
 export interface CommentItemCallbacks {
@@ -84,18 +85,23 @@ export const CommentItem = ({
             )}
         >
             <div className="flex gap-3">
-                <UserAvatar
-                    size="sm"
+                <UserLink
                     username={comment.author.username}
                     avatar={comment.author.avatar}
+                    size="sm"
+                    hideName
                     className="mt-0.5 shrink-0"
+                    classNames={{ avatar: "size-8" }}
                 />
                 <div className="flex min-w-0 flex-1 flex-col gap-2">
                     {/* author + timestamp header */}
                     <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-sm font-semibold text-foreground">
-                            {comment.author.username}
-                        </span>
+                        <UserLink
+                            username={comment.author.username}
+                            avatar={comment.author.avatar}
+                            size="sm"
+                            showAvatar={false}
+                        />
                         <span className="text-xs text-muted">
                             {getTimeAgoLabel(getTimeAgoMessage(comment.createdAt), t)}
                         </span>

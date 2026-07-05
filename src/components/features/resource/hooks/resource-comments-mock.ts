@@ -13,6 +13,8 @@
 export interface ResourceCommentAuthor {
     /** The author's user id (owner check: `author.id === currentUser.id`). */
     id: string
+    /** URL-facing username for profile link + hovercard. */
+    username: string
     /** Display name shown on the row. */
     name: string
     /** Optional avatar URL (initial fallback when absent). */
@@ -64,7 +66,7 @@ const seedResourceComments = (resourceId: string): Array<ResourceCommentItem> =>
         {
             id: `${resourceId}-c1`,
             parentId: null,
-            author: { id: "user-minh", name: "Minh" },
+            author: { id: "user-minh", username: "minh" /* mock */, name: "Minh" },
             text: "Tài liệu rất đầy đủ, cảm ơn!",
             createdAt: minutesAgo(90),
             likeCount: 3,
@@ -73,7 +75,7 @@ const seedResourceComments = (resourceId: string): Array<ResourceCommentItem> =>
         {
             id: `${resourceId}-c2`,
             parentId: `${resourceId}-c1`,
-            author: { id: "user-an", name: "An" },
+            author: { id: "user-an", username: "an" /* mock */, name: "An" },
             text: "Đồng ý, phần con trỏ giải thích dễ hiểu.",
             createdAt: minutesAgo(45),
             likeCount: 1,
@@ -82,7 +84,7 @@ const seedResourceComments = (resourceId: string): Array<ResourceCommentItem> =>
         {
             id: `${resourceId}-c3`,
             parentId: null,
-            author: { id: "user-hoa", name: "Hoa" },
+            author: { id: "user-hoa", username: "hoa" /* mock */, name: "Hoa" },
             text: "Có bạn nào tóm tắt chương 3 chưa? Cho mình xin với.",
             createdAt: minutesAgo(20),
             likeCount: 0,

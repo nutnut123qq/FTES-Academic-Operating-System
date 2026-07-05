@@ -26,8 +26,8 @@ export const subjectPostCommentsKey = (subjectId: string, postId: string) => [
 const fetchSubjectPostCommentsMock = async (postId: string): Promise<SubjectPostThread> => ({
     id: postId,
     comments: [
-        { id: `${postId}-c1`, author: "An", text: "Chuẩn luôn, mình cũng hay bị chỗ này.", timeLabel: "1 giờ trước" },
-        { id: `${postId}-c2`, author: "Hoa", text: "Cảm ơn bạn đã chia sẻ nhé!", timeLabel: "45 phút trước" },
+        { id: `${postId}-c1`, author: "An", authorUsername: "an-nguyen" /* mock */, text: "Chuẩn luôn, mình cũng hay bị chỗ này.", timeLabel: "1 giờ trước" },
+        { id: `${postId}-c2`, author: "Hoa", authorUsername: "hoa-le" /* mock */, text: "Cảm ơn bạn đã chia sẻ nhé!", timeLabel: "45 phút trước" },
     ],
 })
 

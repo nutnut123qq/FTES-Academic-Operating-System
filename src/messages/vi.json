@@ -2884,14 +2884,38 @@
             "teacher": "Cho giảng viên"
         },
         "tools": {
-            "tutor": { "name": "Gia sư AI", "desc": "Hỏi bất cứ điều gì và nhận lời giải từng bước." },
-            "planner": { "name": "Lập kế hoạch học", "desc": "Tạo lịch học cá nhân hóa phù hợp với mục tiêu của bạn." },
-            "summary": { "name": "Tóm tắt thông minh", "desc": "Biến bài học dài thành ghi chú súc tích, sẵn sàng cho kỳ thi." },
-            "flashcards": { "name": "Thẻ ghi nhớ", "desc": "Tự động tạo thẻ ghi nhớ từ bất kỳ bài học nào." },
-            "quiz": { "name": "Tạo câu hỏi", "desc": "Tạo bài kiểm tra luyện tập để ôn lại kiến thức." },
-            "debug": { "name": "Gỡ lỗi mã", "desc": "Dán mã của bạn và nhận cách sửa lỗi kèm giải thích." },
-            "cvReview": { "name": "Đánh giá CV", "desc": "Nhận nhận xét từ AI để hoàn thiện hồ sơ xin việc." },
-            "mentor": { "name": "Trợ lý giảng dạy", "desc": "Soạn giáo án và tiêu chí chấm điểm trong vài phút." }
+            "tutor": {
+                "name": "Gia sư AI",
+                "desc": "Hỏi bất cứ điều gì và nhận lời giải từng bước."
+            },
+            "planner": {
+                "name": "Lập kế hoạch học",
+                "desc": "Tạo lịch học cá nhân hóa phù hợp với mục tiêu của bạn."
+            },
+            "summary": {
+                "name": "Tóm tắt thông minh",
+                "desc": "Biến bài học dài thành ghi chú súc tích, sẵn sàng cho kỳ thi."
+            },
+            "flashcards": {
+                "name": "Thẻ ghi nhớ",
+                "desc": "Tự động tạo thẻ ghi nhớ từ bất kỳ bài học nào."
+            },
+            "quiz": {
+                "name": "Tạo câu hỏi",
+                "desc": "Tạo bài kiểm tra luyện tập để ôn lại kiến thức."
+            },
+            "debug": {
+                "name": "Gỡ lỗi mã",
+                "desc": "Dán mã của bạn và nhận cách sửa lỗi kèm giải thích."
+            },
+            "cvReview": {
+                "name": "Đánh giá CV",
+                "desc": "Nhận nhận xét từ AI để hoàn thiện hồ sơ xin việc."
+            },
+            "mentor": {
+                "name": "Trợ lý giảng dạy",
+                "desc": "Soạn giáo án và tiêu chí chấm điểm trong vài phút."
+            }
         }
     },
     "notificationCenter": {
@@ -3080,9 +3104,15 @@
             "challenge": "Xong challenge"
         },
         "milestones": {
-            "weekOfFire": { "name": "Tuần Lửa" },
-            "monthOfGrit": { "name": "Tháng Bền Bỉ" },
-            "hundredDays": { "name": "Trăm Ngày Lửa" }
+            "weekOfFire": {
+                "name": "Tuần Lửa"
+            },
+            "monthOfGrit": {
+                "name": "Tháng Bền Bỉ"
+            },
+            "hundredDays": {
+                "name": "Trăm Ngày Lửa"
+            }
         },
         "goals": {
             "title": "Mục tiêu",
@@ -3994,25 +4024,6 @@
                 "subscriptionGranted": "Kích hoạt gói đăng ký",
                 "announcement": "Thông báo chung"
             }
-        },
-        "mutedHint": "Bạn đã tắt toàn bộ thông báo.",
-        "preferences": {
-            "title": "Tùy chọn thông báo",
-            "subtitle": "Chọn loại thông báo bạn muốn nhận.",
-            "muteAll": "Tắt tất cả thông báo",
-            "muteAllHint": "Ẩn mọi thông báo và huy hiệu chưa đọc.",
-            "browserPush": "Thông báo trên trình duyệt",
-            "browserPushComingSoon": "Sắp ra mắt — hiện chưa khả dụng.",
-            "types": {
-                "system": "Hệ thống",
-                "challengeGraded": "Chấm điểm thử thách",
-                "codingGraded": "Chấm điểm bài code",
-                "milestoneGraded": "Chấm điểm cột mốc",
-                "newFollower": "Người theo dõi mới",
-                "commentReply": "Phản hồi bình luận",
-                "subscriptionGranted": "Kích hoạt gói đăng ký",
-                "announcement": "Thông báo chung"
-            }
         }
     },
     "streakFreeze": {
@@ -4873,5 +4884,14 @@
             "normal": "Vừa",
             "fast": "Nhanh"
         }
+    },
+    "hovercard": {
+        "follow": "Theo dõi",
+        "unfollow": "Đang theo dõi",
+        "followers": "{count} ngườii theo dõi",
+        "following": "Đang theo dõi {count}",
+        "loading": "Đang tải…",
+        "error": "Không tải được thông tin.",
+        "errorRetry": "Thử lại"
     }
 }

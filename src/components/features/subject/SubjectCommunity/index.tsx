@@ -4,6 +4,8 @@ import React, { useCallback, useState } from "react"
 import { Button, Typography } from "@heroui/react"
 import { useLocale, useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
+import { useAppSelector } from "@/redux/hooks"
+import { UserLink } from "@/components/features/identity"
 import {
     PostEngagementBar,
     DISCUSSION_ENGAGEMENT_ACTIONS,
@@ -31,6 +33,7 @@ const SubjectPostRow = ({
     post: SubjectPost
 }) => {
     const locale = useLocale()
+    const currentUser = useAppSelector((state) => state.user.user)
     const [expanded, setExpanded] = useState(false)
     const [hasOpened, setHasOpened] = useState(false)
     const reactPost = useMutateReactSubjectPostSwr(subjectId, scope)
@@ -57,6 +60,7 @@ const SubjectPostRow = ({
                 const optimistic = {
                     id: `tmp-${Date.now()}`,
                     author: locale === "vi" ? "Bạn" : "You",
+                    authorUsername: currentUser?.username ?? "you",
                     text: body,
                     timeLabel: locale === "vi" ? "vừa xong" : "just now",
                 }
@@ -81,12 +85,14 @@ const SubjectPostRow = ({
         <div className="flex flex-col rounded-2xl border border-separator">
             <div className="flex flex-col gap-2 p-4">
                 <div className="flex items-center gap-3">
-                    <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent/10 text-xs font-bold text-accent">
-                        {post.author.slice(0, 1).toUpperCase()}
-                    </div>
-                    <Typography type="body-sm" weight="medium">
-                        {post.author}
-                    </Typography>
+                    <UserLink
+                        username={post.authorUsername}
+                        displayName={post.author}
+                        hideName
+                        size="sm"
+                        classNames={{ avatar: "size-8" }}
+                    />
+                    <UserLink username={post.authorUsername} displayName={post.author} showAvatar={false} />
                     <Typography type="body-xs" color="muted">
                         {post.timeLabel}
                     </Typography>

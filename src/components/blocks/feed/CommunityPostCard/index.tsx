@@ -3,7 +3,6 @@
 import React from "react"
 import {
     Card,
-    CardContent,
     Typography,
 } from "@heroui/react"
 import {
@@ -11,19 +10,22 @@ import {
     PushPinIcon,
     SealCheckIcon,
 } from "@phosphor-icons/react"
-import { useTranslations } from "next-intl"
-import { getTimeAgoLabel, getTimeAgoMessage } from "@/modules/dayjs"
+
 import { ReactionBar } from "../ReactionBar"
-import { ReactionType } from "@/modules/api/graphql/queries/types/discussion"
+import type { ReactionType } from "@/modules/api/graphql/queries/types"
 import type { QueryCommunityFeedItemData } from "@/modules/api/graphql/queries/types/community-feed"
 import type { WithClassNames } from "@/modules/types/base/class-name"
-import { UserAvatar } from "@/components/reuseable/UserAvatar"
+import { UserLink } from "@/components/features/identity"
 import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
 
 /** Props for the {@link CommunityPostCard} block. */
 export interface CommunityPostCardProps extends WithClassNames<undefined> {
     /** The post to render (author relation already loaded). */
     post: QueryCommunityFeedItemData
+    /** Localized relative time label (e.g. "2 giờ trước"). */
+    timeAgoLabel: string
+    /** Localized channel label (e.g. "Chung"). */
+    channelLabel: string
     /**
      * React handler — `(postId, emotion | null)`. Omit to render the reaction bar
      * READ-ONLY (e.g. when the viewer is signed out).
@@ -46,31 +48,28 @@ export interface CommunityPostCardProps extends WithClassNames<undefined> {
  */
 export const CommunityPostCard = ({
     post,
+    timeAgoLabel,
+    channelLabel,
     onReact,
     onToggleComments,
     children,
     className,
 }: CommunityPostCardProps) => {
-    const t = useTranslations()
-    // resolve the display name, falling back to the username when unset
-    const displayName = post.author.displayName || post.author.username
-    // relative "x minutes ago" label, localized via the shared timeAgo keys
-    const timeAgo = getTimeAgoLabel(getTimeAgoMessage(post.createdAt), t)
+    // Identity is rendered by UserLink (avatar + name + hovercard + profile link).
+    // relative "x minutes ago" label is supplied by the owning feature.
 
     return (
         <Card className={className}>
-            <CardContent>
+            <Card.Content>
                 <div className="flex flex-col gap-3">
                     <div className="flex items-center gap-3">
-                        <UserAvatar
+                        <UserLink
                             username={post.author.username}
+                            displayName={post.author.displayName}
                             avatar={post.author.avatar}
                         />
                         <div className="flex min-w-0 flex-1 flex-col">
                             <div className="flex items-center gap-1">
-                                <Typography type="body-sm" weight="semibold" truncate>
-                                    {displayName}
-                                </Typography>
                                 {post.isFounderAuthor ? (
                                     <SealCheckIcon
                                         weight="fill"
@@ -86,10 +85,10 @@ export const CommunityPostCard = ({
                                     {"·"}
                                 </Typography>
                                 <Typography type="body-xs" color="muted">
-                                    {timeAgo}
+                                    {timeAgoLabel}
                                 </Typography>
                                 <Typography type="body-xs" className="text-accent">
-                                    {t(`community.channel.${post.channel}`)}
+                                    {channelLabel}
                                 </Typography>
                             </div>
                         </div>
@@ -121,7 +120,7 @@ export const CommunityPostCard = ({
 
                     {children}
                 </div>
-            </CardContent>
+            </Card.Content>
         </Card>
     )
 }

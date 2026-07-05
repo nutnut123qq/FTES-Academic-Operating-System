@@ -8,7 +8,10 @@ export type FeedScope = "forYou" | "following" | "trending"
 /** A subject community post (mock until BE lands). */
 export interface SubjectPost {
     id: string
+    /** Display name of the author. */
     author: string
+    /** URL-facing username for profile link + hovercard. */
+    authorUsername: string
     timeLabel: string
     title: string
     snippet: string
@@ -30,9 +33,9 @@ export const subjectFeedKey = (subjectId: string, scope: FeedScope) => [
 // arg is accepted so the real query is a drop-in.
 const fetchFeedMock = async (scope: FeedScope): Promise<Array<SubjectPost>> => {
     const base: Array<SubjectPost> = [
-        { id: "p1", author: "Minh Trần", timeLabel: "2 giờ trước", title: "Mẹo debug con trỏ trong C", snippet: "Chia sẻ vài cách mình hay dùng khi bị segfault…", reactions: 12, liked: false, comments: 4 },
-        { id: "p2", author: "An Nguyễn", timeLabel: "hôm qua", title: "Hỏi về đề PE tuần này", snippet: "Có ai làm câu 3 phần mảng 2 chiều chưa nhỉ?", reactions: 5, liked: false, comments: 2 },
-        { id: "p3", author: "Hoa Lê", timeLabel: "3 ngày trước", title: "Tổng hợp tài liệu ôn cuối kỳ", snippet: "Mình gom slide + đề mẫu vào một chỗ cho tiện…", reactions: 34, liked: true, comments: 9 },
+        { id: "p1", author: "Minh Trần", authorUsername: "minh-tran" /* mock */, timeLabel: "2 giờ trước", title: "Mẹo debug con trỏ trong C", snippet: "Chia sẻ vài cách mình hay dùng khi bị segfault…", reactions: 12, liked: false, comments: 4 },
+        { id: "p2", author: "An Nguyễn", authorUsername: "an-nguyen" /* mock */, timeLabel: "hôm qua", title: "Hỏi về đề PE tuần này", snippet: "Có ai làm câu 3 phần mảng 2 chiều chưa nhỉ?", reactions: 5, liked: false, comments: 2 },
+        { id: "p3", author: "Hoa Lê", authorUsername: "hoa-le" /* mock */, timeLabel: "3 ngày trước", title: "Tổng hợp tài liệu ôn cuối kỳ", snippet: "Mình gom slide + đề mẫu vào một chỗ cho tiện…", reactions: 34, liked: true, comments: 9 },
     ]
     if (scope === "trending") return [...base].sort((a, b) => b.reactions - a.reactions)
     return base

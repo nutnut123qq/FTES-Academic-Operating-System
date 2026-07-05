@@ -15,6 +15,7 @@ export default defineConfig([
             "**/out/**",
             "**/.turbo/**",
             "**/coverage/**",
+            "**/.tmp-screenshot/**",
         ],
     },
     { 

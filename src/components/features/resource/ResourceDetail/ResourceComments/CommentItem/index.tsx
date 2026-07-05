@@ -6,7 +6,7 @@ import { HeartIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 
 import { getTimeAgoLabel, getTimeAgoMessage } from "@/modules/dayjs"
-import { UserAvatar } from "@/components/reuseable/UserAvatar"
+import { UserLink } from "@/components/features/identity"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 import type { ResourceCommentItem } from "../../../hooks/resource-comments-mock"
 import { CommentComposer } from "../CommentComposer"
@@ -94,20 +94,28 @@ export const CommentItem = ({
 
     return (
         <div className={cn("flex items-start gap-3", className)}>
-            <UserAvatar
-                size="sm"
-                username={comment.author.name}
+            <UserLink
+                username={comment.author.username}
+                displayName={comment.author.name}
                 avatar={comment.author.avatarUrl}
                 seed={comment.author.id}
+                size="sm"
+                hideName
                 className="mt-0.5 shrink-0"
+                classNames={{ avatar: "size-8" }}
             />
             <div className="flex min-w-0 flex-1 flex-col gap-2">
                 <div className="flex flex-col gap-0">
                     {/* header line: name · relative time */}
                     <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-sm font-medium text-foreground">
-                            {comment.author.name}
-                        </span>
+                        <UserLink
+                            username={comment.author.username}
+                            displayName={comment.author.name}
+                            avatar={comment.author.avatarUrl}
+                            seed={comment.author.id}
+                            size="sm"
+                            showAvatar={false}
+                        />
                         <TimeAgo createdAt={comment.createdAt} />
                     </div>
                     <p className="whitespace-pre-wrap break-words text-sm text-foreground">

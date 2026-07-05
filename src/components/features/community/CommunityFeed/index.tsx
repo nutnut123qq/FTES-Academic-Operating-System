@@ -3,7 +3,9 @@
 import React, { useCallback, useState } from "react"
 import { Button, Typography } from "@heroui/react"
 import { useLocale, useTranslations } from "next-intl"
+import { useAppSelector } from "@/redux/hooks"
 import { Link } from "@/i18n/navigation"
+import { UserLink } from "@/components/features/identity"
 import { ThreadsPostRow } from "@/components/blocks/feed/ThreadsPostRow"
 import { PostEngagementBar } from "@/components/reuseable/PostEngagementBar"
 import { PostCommentThread } from "@/components/reuseable/PostCommentThread"
@@ -41,6 +43,7 @@ const ComposerTrigger = () => {
 /** One community feed row + its inline (lazy) comment thread. */
 const CommunityFeedRow = ({ post }: { post: CommunityPost }) => {
     const locale = useLocale()
+    const currentUser = useAppSelector((state) => state.user.user)
     const [expanded, setExpanded] = useState(false)
     const [hasOpened, setHasOpened] = useState(false)
     const reactPost = useMutateReactPostSwr()
@@ -62,6 +65,7 @@ const CommunityFeedRow = ({ post }: { post: CommunityPost }) => {
                 postId: post.id,
                 body,
                 authorLabel: locale === "vi" ? "Bạn" : "You",
+                authorUsername: currentUser?.username ?? "you",
                 justNowLabel: locale === "vi" ? "vừa xong" : "just now",
                 parentCommentId,
             }
@@ -74,11 +78,16 @@ const CommunityFeedRow = ({ post }: { post: CommunityPost }) => {
         <div className="px-4 py-3 transition-colors hover:bg-default/40">
             <ThreadsPostRow
                 avatar={
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent/10 text-sm font-bold text-accent">
-                        {post.author.slice(0, 1).toUpperCase()}
-                    </div>
+                    <UserLink
+                        username={post.authorUsername}
+                        displayName={post.author}
+                        hideName
+                        size="sm"
+                        className="size-9"
+                        classNames={{ avatar: "size-9" }}
+                    />
                 }
-                authorName={post.author}
+                author={<UserLink username={post.authorUsername} displayName={post.author} showAvatar={false} />}
                 timeLabel={post.timeLabel}
                 threadline={expanded}
             >

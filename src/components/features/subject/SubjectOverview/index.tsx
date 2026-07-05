@@ -15,6 +15,7 @@ import {
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
 import { Link, useRouter } from "@/i18n/navigation"
+import { UserLink } from "@/components/features/identity"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import {
@@ -194,14 +195,15 @@ const OverviewView = ({
                     <RailCard title={t("overview.activeMembers")} href={`${base}/members`} seeAll={t("overview.seeAll")}>
                         <div className="flex items-center">
                             {overview.activeMembers.map((member, index) => (
-                                <div
+                                <UserLink
                                     key={member.id}
-                                    role="img"
-                                    aria-label={member.name}
-                                    className={index > 0 ? "-ml-2 flex size-8 items-center justify-center rounded-full bg-accent/10 text-xs font-bold text-accent ring-2 ring-background" : "flex size-8 items-center justify-center rounded-full bg-accent/10 text-xs font-bold text-accent ring-2 ring-background"}
-                                >
-                                    {member.name.slice(0, 1).toUpperCase()}
-                                </div>
+                                    username={member.username}
+                                    displayName={member.name}
+                                    hideName
+                                    size="sm"
+                                    className={index > 0 ? "-ml-2" : undefined}
+                                    classNames={{ avatar: "size-8 ring-2 ring-background" }}
+                                />
                             ))}
                             {overview.activeOverflow > 0 ? (
                                 <div className="-ml-2 flex size-8 items-center justify-center rounded-full bg-default/40 text-xs text-muted ring-2 ring-background">
@@ -227,14 +229,16 @@ const PostRow = ({
     const t = useTranslations("subjects")
     return (
         <div className={withDivider ? "flex gap-3 border-t border-separator pt-3" : "flex gap-3"}>
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent/10 text-xs font-bold text-accent">
-                {post.author.slice(0, 1).toUpperCase()}
-            </div>
-            <div className="flex min-w-0 flex-col gap-0">
+            <UserLink
+                username={post.authorUsername}
+                displayName={post.author}
+                hideName
+                size="sm"
+                classNames={{ avatar: "size-8" }}
+            />
+            <div className="flex min-w-0 flex-1 flex-col gap-0">
                 <div className="flex items-center gap-2">
-                    <Typography type="body-sm" weight="medium">
-                        {post.author}
-                    </Typography>
+                    <UserLink username={post.authorUsername} displayName={post.author} showAvatar={false} />
                     <Typography type="body-xs" color="muted">
                         {post.timeLabel}
                     </Typography>

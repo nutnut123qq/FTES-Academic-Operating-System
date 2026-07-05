@@ -8,7 +8,12 @@ export interface ThreadsPostRowProps extends WithClassNames<undefined> {
     /** Avatar element rendered in the fixed leading column (36px circle expected). */
     avatar: ReactNode
     /** Author display name (semibold, first on the header line). */
-    authorName: string
+    authorName?: string
+    /**
+     * Custom author node rendered in place of `authorName`. Use this when the
+     * author needs to be a link/hovercard instead of plain text.
+     */
+    author?: ReactNode
     /** Relative time label rendered muted right after the name. */
     timeLabel: string
     /**
@@ -32,6 +37,7 @@ export interface ThreadsPostRowProps extends WithClassNames<undefined> {
 export const ThreadsPostRow = ({
     avatar,
     authorName,
+    author,
     timeLabel,
     threadline = false,
     children,
@@ -47,9 +53,13 @@ export const ThreadsPostRow = ({
             </div>
             <div className="flex min-w-0 flex-col gap-2">
                 <div className="flex min-w-0 items-baseline gap-2">
-                    <Typography type="body-sm" weight="semibold" truncate>
-                        {authorName}
-                    </Typography>
+                    {author ? (
+                        <span className="min-w-0">{author}</span>
+                    ) : (
+                        <Typography type="body-sm" weight="semibold" truncate>
+                            {authorName}
+                        </Typography>
+                    )}
                     <Typography type="body-xs" color="muted" className="shrink-0">
                         {timeLabel}
                     </Typography>

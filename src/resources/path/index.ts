@@ -23,9 +23,9 @@ export const pathConfig = () => {
         }
         const profile = (username?: string) => {
             // when a username is given, point at that user's public profile
-            // (`/profile/<username>`, GitHub-style); otherwise the viewer's own hub.
+            // (`/u/<username>`); otherwise the viewer's own hub.
             const profilePath = username
-                ? `${localePath}/profile/${username}`
+                ? `${localePath}/u/${username}`
                 : `${localePath}/profile`
             const build = () => {
                 return profilePath
@@ -662,7 +662,17 @@ export const pathConfig = () => {
             privacy,
         }
     }
+    /** Profile link WITHOUT locale prefix — intended for `next-intl` `Link`/`useRouter`
+     *  which add the locale segment automatically. Use `locale().profile(...)` when
+     *  you need an absolute path (e.g. raw `<a>` or external share URL). */
+    const profile = (username?: string) => {
+        const profilePath = username ? `/u/${username}` : "/profile"
+        const build = () => profilePath
+        return { build }
+    }
+
     return {
         locale,
+        profile,
     }
 }

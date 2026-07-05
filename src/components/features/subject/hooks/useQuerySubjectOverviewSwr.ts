@@ -12,7 +12,10 @@ export interface OverviewStats {
 /** A community post shown on the overview (pinned or recent). */
 export interface OverviewPost {
     id: string
+    /** Display name of the author. */
     author: string
+    /** URL-facing username for profile link + hovercard. */
+    authorUsername: string
     timeLabel: string
     title: string
     snippet: string
@@ -40,6 +43,9 @@ export interface OverviewChallenge {
 /** An active member (initials avatar). */
 export interface OverviewMember {
     id: string
+    /** URL-facing username for profile link + hovercard. */
+    username: string
+    /** Display name shown in the avatar stack. */
     name: string
 }
 
@@ -63,6 +69,7 @@ const fetchOverviewMock = async (): Promise<SubjectOverview> => ({
     pinnedPost: {
         id: "p0",
         author: "Moderator",
+        authorUsername: "moderator" /* mock */,
         timeLabel: "hôm nay",
         title: "Đề ôn giữa kỳ + lời giải đã lên",
         snippet: "Tải ở mục Tài liệu, làm thử ở Challenge tuần này.",
@@ -73,6 +80,7 @@ const fetchOverviewMock = async (): Promise<SubjectOverview> => ({
         {
             id: "p1",
             author: "Hùng",
+            authorUsername: "hung-pham" /* mock */,
             timeLabel: "2 giờ trước",
             title: "Cây AVL xoay kép mọi người giải sao?",
             snippet: "Mình rối phần cân bằng sau khi chèn, ai giải thích giúp với.",
@@ -82,6 +90,7 @@ const fetchOverviewMock = async (): Promise<SubjectOverview> => ({
         {
             id: "p2",
             author: "Lan",
+            authorUsername: "lan-tran" /* mock */,
             timeLabel: "hôm qua",
             title: "Chia sẻ note Big-O ôn thi",
             snippet: "Tổng hợp độ phức tạp các thuật toán sắp xếp, có ví dụ.",
@@ -99,9 +108,9 @@ const fetchOverviewMock = async (): Promise<SubjectOverview> => ({
         { id: "c2", title: "Duyệt cây nhị phân", difficulty: "hard" },
     ],
     activeMembers: [
-        { id: "m1", name: "Hùng" },
-        { id: "m2", name: "Lan" },
-        { id: "m3", name: "Minh" },
+        { id: "m1", username: "hung-pham" /* mock */, name: "Hùng" },
+        { id: "m2", username: "lan-tran" /* mock */, name: "Lan" },
+        { id: "m3", username: "minh-le" /* mock */, name: "Minh" },
     ],
     activeOverflow: 9,
 })

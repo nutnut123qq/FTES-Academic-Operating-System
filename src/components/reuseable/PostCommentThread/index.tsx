@@ -4,7 +4,7 @@ import React, { useCallback, useMemo, useRef, useState } from "react"
 import { Button, Skeleton, Typography, cn } from "@heroui/react"
 import { ArrowClockwiseIcon, CaretUpIcon, XIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
-import { UserAvatar } from "@/components/reuseable/UserAvatar"
+import { UserLink } from "@/components/features/identity"
 import { parseStickerFromText } from "./parse-sticker"
 import {
     EmojiPicker,
@@ -59,12 +59,16 @@ export const CommentRow = ({
 
     return (
         <div className={cn("flex items-start gap-3", isReply && "ml-9")}>
-            <UserAvatar username={comment.author} seed={comment.author} size="sm" />
+            <UserLink
+                username={comment.authorUsername}
+                displayName={comment.author}
+                hideName
+                size="sm"
+                classNames={{ avatar: "size-8" }}
+            />
             <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                    <Typography type="body-sm" weight="medium">
-                        {comment.author}
-                    </Typography>
+                    <UserLink username={comment.authorUsername} displayName={comment.author} showAvatar={false} />
                     <Typography type="body-xs" color="muted">
                         {comment.timeLabel}
                     </Typography>

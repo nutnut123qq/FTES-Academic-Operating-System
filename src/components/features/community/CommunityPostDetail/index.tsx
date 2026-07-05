@@ -4,6 +4,8 @@ import React, { useCallback, useEffect, useState } from "react"
 import { Typography } from "@heroui/react"
 import { useLocale, useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
+import { useAppSelector } from "@/redux/hooks"
+import { UserLink } from "@/components/features/identity"
 import { ThreadsPostRow } from "@/components/blocks/feed/ThreadsPostRow"
 import { PostEngagementBar } from "@/components/reuseable/PostEngagementBar"
 import { PostCommentThread } from "@/components/reuseable/PostCommentThread"
@@ -28,6 +30,7 @@ export const CommunityPostDetail = () => {
     const reactPost = useMutateReactPostSwr()
     const submitComment = useMutateCreatePostCommentSwr()
     const [deepLinked, setDeepLinked] = useState(false)
+    const currentUser = useAppSelector((state) => state.user.user)
 
     useEffect(() => {
         if (typeof window !== "undefined" && window.location.hash === "#comments") {
@@ -41,6 +44,7 @@ export const CommunityPostDetail = () => {
                 postId,
                 body,
                 authorLabel: locale === "vi" ? "Bạn" : "You",
+                authorUsername: currentUser?.username ?? "you",
                 justNowLabel: locale === "vi" ? "vừa xong" : "just now",
                 parentCommentId,
             }
@@ -64,11 +68,16 @@ export const CommunityPostDetail = () => {
         <div className="flex flex-col gap-3 py-3">
             <ThreadsPostRow
                 avatar={
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent/10 text-sm font-bold text-accent">
-                        {post.author.slice(0, 1).toUpperCase()}
-                    </div>
+                    <UserLink
+                        username={post.authorUsername}
+                        displayName={post.author}
+                        hideName
+                        size="sm"
+                        className="size-9"
+                        classNames={{ avatar: "size-9" }}
+                    />
                 }
-                authorName={post.author}
+                author={<UserLink username={post.authorUsername} displayName={post.author} showAvatar={false} />}
                 timeLabel={post.timeLabel}
                 threadline={commentsCount > 0}
             >

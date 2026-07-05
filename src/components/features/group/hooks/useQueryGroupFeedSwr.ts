@@ -5,7 +5,10 @@ import useSWR from "swr"
 /** A group post (§7, mock until BE lands). */
 export interface GroupPost {
     id: string
+    /** Display name of the author. */
     author: string
+    /** URL-facing username for profile link + hovercard. */
+    authorUsername: string
     timeLabel: string
     text: string
     /** Seeded like count (no group-post reaction contract on the BE yet). */
@@ -21,9 +24,9 @@ export const groupFeedKey = (groupId: string) => ["group-feed", groupId]
 
 // ponytail: mock BE — no group feed endpoint yet. Deterministic sample.
 const fetchGroupFeedMock = async (): Promise<Array<GroupPost>> => [
-    { id: "gp1", author: "Ban chủ nhiệm", timeLabel: "2 giờ trước", text: "Tuần này CLB có workshop về Git lúc 19h thứ 6 nhé!", likes: 15, liked: false, comments: 4 },
-    { id: "gp2", author: "Minh", timeLabel: "hôm qua", text: "Ai có tài liệu ôn thuật toán cho mình xin với ạ.", likes: 3, liked: false, comments: 2 },
-    { id: "gp3", author: "Hoa", timeLabel: "2 ngày trước", text: "Mình vừa share bộ slide buổi trước trong tab Tài nguyên.", likes: 21, liked: true, comments: 6 },
+    { id: "gp1", author: "Ban chủ nhiệm", authorUsername: "ban-chu-nhiem" /* mock */, timeLabel: "2 giờ trước", text: "Tuần này CLB có workshop về Git lúc 19h thứ 6 nhé!", likes: 15, liked: false, comments: 4 },
+    { id: "gp2", author: "Minh", authorUsername: "minh-nguyen" /* mock */, timeLabel: "hôm qua", text: "Ai có tài liệu ôn thuật toán cho mình xin với ạ.", likes: 3, liked: false, comments: 2 },
+    { id: "gp3", author: "Hoa", authorUsername: "hoa-le" /* mock */, timeLabel: "2 ngày trước", text: "Mình vừa share bộ slide buổi trước trong tab Tài nguyên.", likes: 21, liked: true, comments: 6 },
 ]
 
 /** Loads a group's feed. Mocked; SWR-shaped for a drop-in BE swap. */

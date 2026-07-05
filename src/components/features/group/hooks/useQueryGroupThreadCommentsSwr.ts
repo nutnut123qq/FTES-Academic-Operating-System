@@ -22,8 +22,8 @@ export const groupThreadCommentsKey = (groupId: string, threadId: string) => [
 const fetchGroupThreadCommentsMock = async (threadId: string): Promise<GroupThreadComments> => ({
     id: threadId,
     comments: [
-        { id: `${threadId}-c1`, author: "An", text: "Theo mình thì nên bắt đầu với Spring Boot.", timeLabel: "2 giờ trước" },
-        { id: `${threadId}-c2`, author: "Hoa", text: "Node.js dễ vào hơn cho người mới nè.", timeLabel: "1 giờ trước" },
+        { id: `${threadId}-c1`, author: "An", authorUsername: "an-nguyen" /* mock */, text: "Theo mình thì nên bắt đầu với Spring Boot.", timeLabel: "2 giờ trước" },
+        { id: `${threadId}-c2`, author: "Hoa", authorUsername: "hoa-le" /* mock */, text: "Node.js dễ vào hơn cho người mới nè.", timeLabel: "1 giờ trước" },
     ],
 })
 

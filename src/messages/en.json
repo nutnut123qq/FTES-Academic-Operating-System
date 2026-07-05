@@ -2884,14 +2884,38 @@
             "teacher": "For teachers"
         },
         "tools": {
-            "tutor": { "name": "AI Tutor", "desc": "Ask anything and get step-by-step explanations." },
-            "planner": { "name": "Study Planner", "desc": "Build a personalized study schedule that fits your goals." },
-            "summary": { "name": "Smart Summary", "desc": "Turn long lessons into concise, exam-ready notes." },
-            "flashcards": { "name": "Flashcards", "desc": "Auto-generate flashcards from any lesson." },
-            "quiz": { "name": "Quiz Generator", "desc": "Create practice quizzes to test what you've learned." },
-            "debug": { "name": "Code Debugger", "desc": "Paste your code and get bug fixes with explanations." },
-            "cvReview": { "name": "CV Review", "desc": "Get AI feedback to polish your resume for the job market." },
-            "mentor": { "name": "Teaching Mentor", "desc": "Draft lesson plans and grading rubrics in minutes." }
+            "tutor": {
+                "name": "AI Tutor",
+                "desc": "Ask anything and get step-by-step explanations."
+            },
+            "planner": {
+                "name": "Study Planner",
+                "desc": "Build a personalized study schedule that fits your goals."
+            },
+            "summary": {
+                "name": "Smart Summary",
+                "desc": "Turn long lessons into concise, exam-ready notes."
+            },
+            "flashcards": {
+                "name": "Flashcards",
+                "desc": "Auto-generate flashcards from any lesson."
+            },
+            "quiz": {
+                "name": "Quiz Generator",
+                "desc": "Create practice quizzes to test what you've learned."
+            },
+            "debug": {
+                "name": "Code Debugger",
+                "desc": "Paste your code and get bug fixes with explanations."
+            },
+            "cvReview": {
+                "name": "CV Review",
+                "desc": "Get AI feedback to polish your resume for the job market."
+            },
+            "mentor": {
+                "name": "Teaching Mentor",
+                "desc": "Draft lesson plans and grading rubrics in minutes."
+            }
         }
     },
     "notificationCenter": {
@@ -3080,9 +3104,15 @@
             "challenge": "Finish challenge"
         },
         "milestones": {
-            "weekOfFire": { "name": "Week of Fire" },
-            "monthOfGrit": { "name": "Month of Grit" },
-            "hundredDays": { "name": "Hundred Days of Fire" }
+            "weekOfFire": {
+                "name": "Week of Fire"
+            },
+            "monthOfGrit": {
+                "name": "Month of Grit"
+            },
+            "hundredDays": {
+                "name": "Hundred Days of Fire"
+            }
         },
         "goals": {
             "title": "Goals",
@@ -3994,25 +4024,6 @@
                 "subscriptionGranted": "Subscription granted",
                 "announcement": "Announcement"
             }
-        },
-        "mutedHint": "You've muted all notifications.",
-        "preferences": {
-            "title": "Notification preferences",
-            "subtitle": "Choose which notifications you want to receive.",
-            "muteAll": "Mute all notifications",
-            "muteAllHint": "Hide every notification and the unread badge.",
-            "browserPush": "Browser push",
-            "browserPushComingSoon": "Coming soon — not available yet.",
-            "types": {
-                "system": "System",
-                "challengeGraded": "Challenge graded",
-                "codingGraded": "Coding graded",
-                "milestoneGraded": "Milestone graded",
-                "newFollower": "New follower",
-                "commentReply": "Comment reply",
-                "subscriptionGranted": "Subscription granted",
-                "announcement": "Announcement"
-            }
         }
     },
     "streakFreeze": {
@@ -4873,5 +4884,14 @@
             "normal": "Normal",
             "fast": "Fast"
         }
+    },
+    "hovercard": {
+        "follow": "Follow",
+        "unfollow": "Following",
+        "followers": "{count} followers",
+        "following": "Following {count}",
+        "loading": "Loading…",
+        "error": "Could not load user info.",
+        "errorRetry": "Retry"
     }
 }

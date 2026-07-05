@@ -4,6 +4,7 @@ import React, { useState } from "react"
 import { Button, Chip, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
+import { UserLink } from "@/components/features/identity/UserLink"
 import {
     useQuerySubjectMembersSwr,
     type MemberRole,
@@ -51,12 +52,13 @@ export const SubjectMembers = () => {
                         key={member.id}
                         className="flex items-center gap-3 rounded-2xl border border-separator p-4"
                     >
-                        <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent/10 text-sm font-bold text-accent">
-                            {member.name.slice(0, 1).toUpperCase()}
-                        </div>
-                        <Typography type="body-sm" weight="medium" className="min-w-0 flex-1" truncate>
-                            {member.name}
-                        </Typography>
+                        <UserLink
+                            username={member.username}
+                            displayName={member.name}
+                            size="sm"
+                            className="min-w-0 flex-1"
+                            classNames={{ avatar: "size-9" }}
+                        />
                         <Chip size="sm" variant="soft" color="accent">
                             {t(`members.roles.${member.role}`)}
                         </Chip>

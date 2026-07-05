@@ -4,6 +4,8 @@ import React, { useCallback, useState } from "react"
 import { Typography } from "@heroui/react"
 import { useLocale } from "next-intl"
 import { useParams } from "next/navigation"
+import { useAppSelector } from "@/redux/hooks"
+import { UserLink } from "@/components/features/identity"
 import { PostEngagementBar } from "@/components/reuseable/PostEngagementBar"
 import { PostCommentThread } from "@/components/reuseable/PostCommentThread"
 import { useQueryGroupFeedSwr, type GroupPost } from "../hooks/useQueryGroupFeedSwr"
@@ -13,6 +15,7 @@ import { useMutateReactGroupPostSwr } from "../hooks/useMutateReactGroupPostSwr"
 /** One group feed post card + its inline (lazy, mock) comment thread. */
 const GroupFeedCard = ({ groupId, post }: { groupId: string; post: GroupPost }) => {
     const locale = useLocale()
+    const currentUser = useAppSelector((state) => state.user.user)
     const [expanded, setExpanded] = useState(false)
     const [hasOpened, setHasOpened] = useState(false)
     const reactPost = useMutateReactGroupPostSwr(groupId)
@@ -43,6 +46,7 @@ const GroupFeedCard = ({ groupId, post }: { groupId: string; post: GroupPost }) 
                 const optimistic = {
                     id: `tmp-${Date.now()}`,
                     author: locale === "vi" ? "Bạn" : "You",
+                    authorUsername: currentUser?.username ?? "you",
                     text: body,
                     timeLabel: locale === "vi" ? "vừa xong" : "just now",
                 }
@@ -67,12 +71,14 @@ const GroupFeedCard = ({ groupId, post }: { groupId: string; post: GroupPost }) 
         <div className="flex flex-col rounded-2xl border border-separator">
             <div className="flex flex-col gap-2 p-4">
                 <div className="flex items-center gap-3">
-                    <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent/10 text-xs font-bold text-accent">
-                        {post.author.slice(0, 1).toUpperCase()}
-                    </div>
-                    <Typography type="body-sm" weight="medium">
-                        {post.author}
-                    </Typography>
+                    <UserLink
+                        username={post.authorUsername}
+                        displayName={post.author}
+                        hideName
+                        size="sm"
+                        classNames={{ avatar: "size-8" }}
+                    />
+                    <UserLink username={post.authorUsername} displayName={post.author} showAvatar={false} />
                     <Typography type="body-xs" color="muted">
                         {post.timeLabel}
                     </Typography>

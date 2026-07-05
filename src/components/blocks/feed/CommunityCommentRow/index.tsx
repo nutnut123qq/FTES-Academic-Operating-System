@@ -5,12 +5,12 @@ import { Typography } from "@heroui/react"
 import { SealCheckIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { getTimeAgoLabel, getTimeAgoMessage } from "@/modules/dayjs"
-import { ReactionBar } from "../ReactionBar"
-import { ReactionType } from "@/modules/api/graphql/queries/types/discussion"
+import type { ReactionType } from "@/modules/api/graphql/queries/types"
 import type { QueryCommunityCommentNode } from "@/modules/api/graphql/queries/types/community-comments"
 import type { WithClassNames } from "@/modules/types/base/class-name"
+import { UserLink } from "@/components/features/identity"
 import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
-import { UserAvatar } from "@/components/reuseable/UserAvatar"
+import { ReactionBar } from "../ReactionBar"
 
 /** Props for the {@link CommunityCommentRow} block. */
 export interface CommunityCommentRowProps extends WithClassNames<undefined> {
@@ -42,21 +42,25 @@ export const CommunityCommentRow = ({
     className,
 }: CommunityCommentRowProps) => {
     const t = useTranslations()
-    // resolve the display name, falling back to the username when unset
-    const displayName = comment.author.displayName || comment.author.username
 
     return (
         <div className={className}>
             <div className="flex gap-3">
-                <UserAvatar
+                <UserLink
                     username={comment.author.username}
+                    displayName={comment.author.displayName}
                     avatar={comment.author.avatar}
+                    hideName
+                    classNames={{ avatar: "size-8" }}
                 />
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
                     <div className="flex items-center gap-1">
-                        <Typography type="body-xs" weight="semibold" truncate>
-                            {displayName}
-                        </Typography>
+                        <UserLink
+                            username={comment.author.username}
+                            displayName={comment.author.displayName}
+                            avatar={comment.author.avatar}
+                            showAvatar={false}
+                        />
                         {comment.isFounderAuthor ? (
                             <SealCheckIcon
                                 weight="fill"

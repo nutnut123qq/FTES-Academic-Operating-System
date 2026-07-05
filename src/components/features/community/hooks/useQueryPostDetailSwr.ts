@@ -57,7 +57,13 @@ const fetchPostDetailMock = async (postId: string): Promise<PostDetail> => ({
             ],
         },
         { id: "pc2", author: "Hoa", authorUsername: "hoa-le" /* mock */, text: "Cho mình xin thêm tài liệu phần API với.", timeLabel: "20 phút trước" },
-        { id: "pc3", author: "Bình", authorUsername: "binh-pham" /* mock */, text: "Đỉnh ![Yêu thích](/stickers/heart.svg)", timeLabel: "5 phút trước" }, // demo: sticker render
+        {
+            id: "pc3",
+            author: "Bình",
+            authorUsername: "binh-pham" /* mock */,
+            text: "**Đỉnh** bạn ơi! Lộ trình rõ ràng:\n- Tháng 1-2: ngôn ngữ\n- Tháng 3-4: DB + API\nXem thêm [tại đây](/community/abc)\n![Yêu thích](/stickers/heart.svg)",
+            timeLabel: "5 phút trước",
+        }, // demo: rich markdown + sticker render
     ],
 })
 

@@ -1,8 +1,14 @@
 # community-comment-composer-tools Specification
 
 ## Purpose
-TBD - created by archiving change upgrade-community-comment-composer. Update Purpose after archive.
-## Requirements
+Shared comment composer tools: emoji picker, sticker picker, và rich text editor integration cho community comment composer.
+
+## ADDED Requirements
+
+*None — modifications only.*
+
+## MODIFIED Requirements
+
 ### Requirement: Textarea border radius
 The community comment composer SHALL render with `rounded-2xl` as part of the composer-in-box.
 
@@ -86,3 +92,6 @@ All toolbar accessible labels and sticker alt text SHALL come from the next-intl
 - **WHEN** the active locale changes
 - **THEN** the toolbar button labels and sticker alt text render in the active language
 
+## REMOVED Requirements
+
+*None.*

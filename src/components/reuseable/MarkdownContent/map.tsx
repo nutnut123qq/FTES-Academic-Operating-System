@@ -238,10 +238,20 @@ export const buildMarkdownRenderers = ({
             </MarkdownTable>
         ),
         thead: MarkdownTableHead,
-        img: ({ src, alt }) => (
+        img: ({ src, alt }) => {
+            // Sticker images in comments render inline at a small, fixed size.
+            if (typeof src === "string" && src.startsWith("/stickers/")) {
+                return (
+                    <img
+                        src={src}
+                        alt={alt ?? ""}
+                        className="inline-block size-20 object-contain"
+                    />
+                )
+            }
             // Markdown `![caption](src)`: a non-empty alt doubles as a real figure caption;
             // an empty alt renders a bare (decorative) image.
-            alt ? (
+            return alt ? (
                 <figure className={reading ? "my-4" : undefined}>
                     <img src={src} alt={alt} className="w-full rounded-xl border border-default" />
                     <figcaption className="mt-2 text-center text-sm italic text-muted">{alt}</figcaption>
@@ -249,7 +259,7 @@ export const buildMarkdownRenderers = ({
             ) : (
                 <img src={src} alt="" className={`${reading ? "my-4 " : ""}w-full rounded-xl border border-default`} />
             )
-        ),
+        },
         tbody: MarkdownTableBody,
         th: MarkdownTableColumn,
         td: ({ children }) => <Table.Cell>{children}</Table.Cell>,
@@ -327,6 +337,10 @@ export const buildMarkdownRenderers = ({
         a: ({ href, children }) => {
         // Internal links (e.g. related-problem `/practice/<slug>`) navigate in-app
         // (same tab, locale-aware) via the next-intl Link; external links open a new tab.
+        // Reject dangerous schemes to keep user-generated markdown safe.
+            if (typeof href === "string" && href.trim().toLowerCase().startsWith("javascript:")) {
+                return <span className="!inline text-muted line-through">{children}</span>
+            }
             const isInternal = typeof href === "string" && href.startsWith("/")
             if (isInternal) {
                 return (

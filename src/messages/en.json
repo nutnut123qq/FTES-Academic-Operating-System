@@ -4742,7 +4742,21 @@
                 "music": "Music",
                 "zap": "Zap",
                 "trophy": "Trophy"
-            }
+            },
+            "bold": "Bold",
+            "italic": "Italic",
+            "underline": "Underline",
+            "strikethrough": "Strikethrough",
+            "link": "Link",
+            "addLink": "Add link",
+            "removeLink": "Remove link",
+            "bulletList": "Bullet list",
+            "orderedList": "Numbered list",
+            "blockquote": "Quote",
+            "codeInline": "Inline code",
+            "codeBlock": "Code block",
+            "mention": "Mention",
+            "mentionPlaceholder": "Find a user…"
         },
         "feed": {
             "likes": "{count} likes",

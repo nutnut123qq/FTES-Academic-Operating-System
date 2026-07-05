@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-07-05
+goal: Nâng cấp composer comment thành rich text editor với định dạng đầy đủ,
+  mention mock, sticker inline, không đổi backend.

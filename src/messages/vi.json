@@ -4742,7 +4742,21 @@
                 "music": "Âm nhạc",
                 "zap": "Sét",
                 "trophy": "Cúp"
-            }
+            },
+            "bold": "Đậm",
+            "italic": "Nghiêng",
+            "underline": "Gạch chân",
+            "strikethrough": "Gạch ngang",
+            "link": "Liên kết",
+            "addLink": "Thêm liên kết",
+            "removeLink": "Gỡ liên kết",
+            "bulletList": "Danh sách đạn",
+            "orderedList": "Danh sách số",
+            "blockquote": "Trích dẫn",
+            "codeInline": "Code inline",
+            "codeBlock": "Khối code",
+            "mention": "Nhắc đến",
+            "mentionPlaceholder": "Tìm ngườidùng…"
         },
         "feed": {
             "likes": "{count} thích",

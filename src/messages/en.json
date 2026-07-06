@@ -3317,7 +3317,8 @@
                 "review": "Review",
                 "practice": "Practice",
                 "league": "Leaderboard",
-                "rewards": "Rewards"
+                "rewards": "Rewards",
+                "blog": "Blog"
             },
             "streakDays": "{count}-day streak",
             "points": "{count, number} points",
@@ -3331,16 +3332,26 @@
             },
             "continue": {
                 "empty": "No courses to resume yet",
-                "resume": "Resume"
+                "resume": "Resume",
+                "resumeEmpty": "Nothing to resume yet",
+                "browse": "Browse courses",
+                "kind": {
+                    "lesson": "Lesson",
+                    "challenge": "Challenge"
+                }
             },
             "quest": {
                 "tasks": {
                     "readLesson": "Read a lesson",
                     "passChallenge": "Pass a challenge",
                     "reviewFlashcards": "Review flashcards",
-                    "askAi": "Ask the AI tutor"
+                    "askAi": "Ask the AI tutor",
+                    "readContent": "Read a lesson"
                 },
-                "summary": "{done}/{total} tasks done"
+                "summary": "{done}/{total} tasks done",
+                "claim": "Claim {count} coins",
+                "claimed": "Reward claimed",
+                "completePrompt": "Complete every task to claim {count} coins"
             },
             "streakCurrent": "{count}-day streak",
             "goals": {
@@ -3348,9 +3359,39 @@
                     "lessons": "Lessons",
                     "studyDays": "Study days",
                     "challenges": "Challenges",
-                    "flashcards": "Flashcards"
+                    "flashcards": "Flashcards",
+                    "coding": "Coding"
                 },
-                "progress": "{label} · {current}/{target}"
+                "progress": "{label} · {current}/{target}",
+                "summary": "{percent}% of weekly goals · {completed}/{total} done"
+            },
+            "rewardBalance": "{count, number} coins",
+            "identityStats": {
+                "streak": "Streak",
+                "streakValue": "{count} days",
+                "credit": "AI credit",
+                "reward": "Rewards"
+            },
+            "streak": {
+                "label": "Streak",
+                "help": "The number of days you've studied in a row.",
+                "current": "{count}-day streak",
+                "longest": "Best {count} days",
+                "empty": "No streak yet"
+            },
+            "dailyGoal": {
+                "nudge": "You haven't studied today — keep your streak alive!",
+                "cta": "Study now"
+            },
+            "weeklyChallenge": {
+                "title": "Weekly challenge",
+                "endsIn": "{days}d {hours}h left",
+                "passed": "Passed",
+                "tryNow": "Try now",
+                "passedCount": "{count} people passed"
+            },
+            "contributions": {
+                "heading": "Learning activity"
             }
         }
     },
@@ -4348,6 +4389,39 @@
                     "allDifficulties": "All difficulties",
                     "allStatuses": "All statuses"
                 }
+            },
+            "flashcards": {
+                "title": "Flashcard review",
+                "flip": "Flip card",
+                "previous": "Previous card",
+                "questionLabel": "Question",
+                "answerLabel": "Answer",
+                "cardProgress": "Card {current}/{total}",
+                "showAnswer": "Show answer",
+                "flipHint": "Tap to reveal the answer",
+                "flipBackHint": "Tap to see the question again",
+                "rateHint": "How well did you recall this card?",
+                "rating": {
+                    "again": "Again",
+                    "hard": "Hard",
+                    "good": "Good",
+                    "easy": "Easy"
+                },
+                "intervalNow": "<1 min",
+                "intervalDays": "{count}d",
+                "sessionDoneTitle": "Deck reviewed",
+                "sessionDoneDesc": "You reviewed {count} cards this session.",
+                "studyAgain": "Study again",
+                "empty": "No cards to review yet",
+                "error": "Couldn't load the deck"
+            },
+            "leaderboard": {
+                "title": "Leaderboard",
+                "subtitle": "Ranked by the subject's experience points (XP).",
+                "xp": "{xp} XP",
+                "you": "You",
+                "empty": "No one on the leaderboard yet",
+                "error": "Couldn't load the leaderboard"
             }
         },
         "community": {
@@ -4487,7 +4561,24 @@
                 "reviewDoneHint": "Review again to retain longer, or generate a new deck.",
                 "errorTitle": "Couldn't generate flashcards",
                 "emptyTitle": "No material to build cards from",
-                "emptyDesc": "Add resources in the Resources tab, then come back."
+                "emptyDesc": "Add resources in the Resources tab, then come back.",
+                "studyAgain": "Study again",
+                "previous": "Previous card",
+                "questionLabel": "Question",
+                "answerLabel": "Answer",
+                "flipHint": "Tap to reveal the answer",
+                "flipBackHint": "Tap to see the question again",
+                "rateHint": "How well did you recall this card?",
+                "intervalNow": "<1 min",
+                "intervalDays": "{count}d",
+                "sessionDoneTitle": "Deck reviewed",
+                "sessionDoneDesc": "You reviewed {count} cards this session.",
+                "stats": {
+                    "mastered": "Mastered",
+                    "learning": "Learning",
+                    "new": "New",
+                    "barAria": "{mastered} mastered, {learning} learning, {newCount} new out of {total} cards"
+                }
             }
         },
         "career": {
@@ -5021,7 +5112,9 @@
     },
     "learn": {
         "common": {
-            "retry": "Retry"
+            "retry": "Retry",
+            "loading": "Loading…",
+            "back": "Back"
         },
         "nav": {
             "label": "Course navigation",
@@ -5049,7 +5142,19 @@
             "lessonsTitle": "Lessons",
             "metaModules": "{count} modules",
             "metaHours": "~{count}h",
-            "metaLearners": "{count} learners"
+            "metaLearners": "{count} learners",
+            "tabs": {
+                "content": "Content",
+                "challenges": "Challenges"
+            },
+            "language": "Language",
+            "minutesRead": "{minutes} min read",
+            "challengeCount": "{count} challenges",
+            "outcomes": "What you'll learn",
+            "empty2": "This lesson has no content yet.",
+            "prevLesson": "Previous",
+            "nextLesson": "Next",
+            "moduleTitle": "Module"
         },
         "reader": {
             "error": "Failed to load lesson.",
@@ -5085,8 +5190,25 @@
                     "explain": "Explain this passage",
                     "example": "Give an example",
                     "simplify": "Explain more simply"
+                },
+                "hint": "Suggested questions",
+                "thinking": "Composing an answer…",
+                "new": "New",
+                "selectionHintTitle": "Tip: ask AI about any passage",
+                "selectionHint": "Highlight a passage in the lesson, then press \"Ask AI about this\" to ask about it directly.",
+                "dismissHint": "Got it",
+                "suggestions": {
+                    "summarize": "Summarize this lesson",
+                    "hardest": "What's the hardest part?",
+                    "example": "Give a real-world example",
+                    "remember": "What should I remember?"
                 }
-            }
+            },
+            "prevLesson": "Previous",
+            "nextLesson": "Next",
+            "tabListAria": "Lesson sections",
+            "reactionAria": "React",
+            "views2": "view"
         },
         "comments": {
             "title": "Comments ({count})",
@@ -5095,7 +5217,9 @@
             "you": "You",
             "now": "just now",
             "empty": "No comments yet. Be the first!",
-            "error": "Failed to load comments."
+            "error": "Failed to load comments.",
+            "reply": "Reply",
+            "loadMore": "Load more comments"
         },
         "mindMap": {
             "title": "Course mind map",
@@ -5104,8 +5228,16 @@
             "legend": {
                 "done": "Completed",
                 "current": "In progress",
-                "locked": "Locked"
-            }
+                "locked": "Locked",
+                "inProgress": "In progress",
+                "notStarted": "Not started"
+            },
+            "empty": "This course has no modules yet",
+            "continue": "Continue learning",
+            "allDone": "You've finished the course!",
+            "moduleLessons": "{read}/{total} lessons",
+            "zoomIn": "Zoom in",
+            "zoomOut": "Zoom out"
         },
         "leaderboard": {
             "title": "Leaderboard",
@@ -5115,11 +5247,18 @@
                 "total": "Total XP",
                 "challenges": "Challenges",
                 "reading": "Reading",
-                "milestones": "Milestones"
+                "milestones": "Milestones",
+                "label": "Category"
             },
             "xp": "{value} XP",
             "empty": "No leaderboard data yet.",
-            "error": "Failed to load the leaderboard."
+            "error": "Failed to load the leaderboard.",
+            "rankedBy": "Ranked by {category}",
+            "updatedAt": "Updated {time}",
+            "refresh": "Refresh",
+            "xpLabel": "XP",
+            "you": "You",
+            "champion": "Course champion"
         },
         "submission": {
             "title": "Submit your work",
@@ -5138,7 +5277,51 @@
             "attempts": "{count} attempts",
             "mockFeedback": "Submission passed. Good structure — consider adding tests for edge cases.",
             "noResult": "You haven't submitted yet. Paste your URL and press Submit to be graded.",
-            "error": "Failed to load the submission page."
+            "error": "Failed to load the submission page.",
+            "back": "Back to lesson",
+            "gradingSettings": "Grading settings",
+            "urlPlaceholder": "https://github.com/you/your-solution",
+            "pickModel": "Pick a model",
+            "attemptLine": "Attempt {number}",
+            "pass": "Pass",
+            "fail": "Fail",
+            "passNeeded": "{score} pts needed to pass",
+            "lastFeedback": "Latest feedback",
+            "feedbackLabel": "Feedback",
+            "noFeedback": "No feedback for this attempt.",
+            "processing": "AI is grading…",
+            "requirementsTitle": "Requirements",
+            "servedBy": "Graded by {model}",
+            "severity": {
+                "high": "High",
+                "medium": "Medium",
+                "low": "Low"
+            },
+            "suggestion": "Suggestion",
+            "quotaReached": "Quota reached. Upgrade to keep grading.",
+            "history": "Submission history"
+        },
+        "contentMap": {
+            "title": "Course content",
+            "searchPlaceholder": "Search lessons…",
+            "resizeRail": "Drag to resize the content rail",
+            "empty": "No content yet",
+            "noMatch": "No lessons match",
+            "moduleLabel": "Module {order}: {title}",
+            "lessonCount": "{done}/{total} lessons",
+            "continue": "Continue learning",
+            "overallProgress": "Overall progress",
+            "collapse": "Collapse content rail",
+            "expand": "Expand content rail"
+        },
+        "onThisPage": {
+            "title": "On this page"
+        },
+        "lessonRail": {
+            "challenges": {
+                "title": "Practice this lesson",
+                "practice": "Open challenges"
+            }
         }
     }
 }

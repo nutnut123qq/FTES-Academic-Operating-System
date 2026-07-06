@@ -3317,7 +3317,8 @@
                 "review": "Ôn tập",
                 "practice": "Luyện tập",
                 "league": "Bảng xếp hạng",
-                "rewards": "Phần thưởng"
+                "rewards": "Phần thưởng",
+                "blog": "Bài viết"
             },
             "streakDays": "{count} ngày liên tiếp",
             "points": "{count, number} điểm",
@@ -3331,16 +3332,26 @@
             },
             "continue": {
                 "empty": "Chưa có khóa học nào để tiếp tục",
-                "resume": "Học tiếp"
+                "resume": "Học tiếp",
+                "resumeEmpty": "Chưa có nội dung nào để học tiếp",
+                "browse": "Khám phá khóa học",
+                "kind": {
+                    "lesson": "Bài học",
+                    "challenge": "Thử thách"
+                }
             },
             "quest": {
                 "tasks": {
                     "readLesson": "Đọc một bài học",
                     "passChallenge": "Vượt qua một thử thách",
                     "reviewFlashcards": "Ôn tập thẻ ghi nhớ",
-                    "askAi": "Hỏi trợ giảng AI"
+                    "askAi": "Hỏi trợ giảng AI",
+                    "readContent": "Đọc một bài học"
                 },
-                "summary": "Đã hoàn thành {done}/{total} nhiệm vụ"
+                "summary": "Đã hoàn thành {done}/{total} nhiệm vụ",
+                "claim": "Nhận {count} xu",
+                "claimed": "Đã nhận thưởng",
+                "completePrompt": "Hoàn thành mọi nhiệm vụ để nhận {count} xu"
             },
             "streakCurrent": "Chuỗi {count} ngày",
             "goals": {
@@ -3348,9 +3359,39 @@
                     "lessons": "Bài học",
                     "studyDays": "Ngày học",
                     "challenges": "Thử thách",
-                    "flashcards": "Thẻ ghi nhớ"
+                    "flashcards": "Thẻ ghi nhớ",
+                    "coding": "Lập trình"
                 },
-                "progress": "{label} · {current}/{target}"
+                "progress": "{label} · {current}/{target}",
+                "summary": "Đạt {percent}% mục tiêu tuần · {completed}/{total} hoàn thành"
+            },
+            "rewardBalance": "{count, number} xu",
+            "identityStats": {
+                "streak": "Chuỗi ngày",
+                "streakValue": "{count} ngày",
+                "credit": "Tín dụng AI",
+                "reward": "Phần thưởng"
+            },
+            "streak": {
+                "label": "Chuỗi ngày",
+                "help": "Số ngày bạn học liên tiếp không gián đoạn.",
+                "current": "Chuỗi {count} ngày",
+                "longest": "Kỷ lục {count} ngày",
+                "empty": "Chưa có chuỗi ngày nào"
+            },
+            "dailyGoal": {
+                "nudge": "Hôm nay bạn chưa học — giữ chuỗi ngày nhé!",
+                "cta": "Học ngay"
+            },
+            "weeklyChallenge": {
+                "title": "Thử thách tuần",
+                "endsIn": "Còn {days} ngày {hours} giờ",
+                "passed": "Đã hoàn thành",
+                "tryNow": "Thử ngay",
+                "passedCount": "{count} người đã vượt qua"
+            },
+            "contributions": {
+                "heading": "Hoạt động học"
             }
         }
     },
@@ -4348,6 +4389,39 @@
                     "allDifficulties": "Mọi độ khó",
                     "allStatuses": "Mọi trạng thái"
                 }
+            },
+            "flashcards": {
+                "title": "Ôn tập flashcards",
+                "flip": "Lật thẻ",
+                "previous": "Thẻ trước",
+                "questionLabel": "Câu hỏi",
+                "answerLabel": "Đáp án",
+                "cardProgress": "Thẻ {current}/{total}",
+                "showAnswer": "Xem đáp án",
+                "flipHint": "Nhấn để xem đáp án",
+                "flipBackHint": "Nhấn để xem lại câu hỏi",
+                "rateHint": "Bạn nhớ thẻ này thế nào?",
+                "rating": {
+                    "again": "Quên",
+                    "hard": "Khó",
+                    "good": "Được",
+                    "easy": "Dễ"
+                },
+                "intervalNow": "<1 phút",
+                "intervalDays": "{count} ngày",
+                "sessionDoneTitle": "Đã ôn xong bộ thẻ",
+                "sessionDoneDesc": "Bạn đã ôn {count} thẻ trong phiên này.",
+                "studyAgain": "Ôn lại",
+                "empty": "Chưa có thẻ nào để ôn",
+                "error": "Không tải được bộ thẻ"
+            },
+            "leaderboard": {
+                "title": "Bảng xếp hạng",
+                "subtitle": "Xếp hạng theo điểm kinh nghiệm (XP) của môn học.",
+                "xp": "{xp} XP",
+                "you": "Bạn",
+                "empty": "Chưa có ai trên bảng xếp hạng",
+                "error": "Không tải được bảng xếp hạng"
             }
         },
         "community": {
@@ -4487,7 +4561,24 @@
                 "reviewDoneHint": "Ôn lại để nhớ lâu hơn, hoặc tạo bộ thẻ mới.",
                 "errorTitle": "Không tạo được flashcards",
                 "emptyTitle": "Chưa có tài liệu để tạo thẻ",
-                "emptyDesc": "Thêm tài nguyên ở tab Tài nguyên rồi quay lại."
+                "emptyDesc": "Thêm tài nguyên ở tab Tài nguyên rồi quay lại.",
+                "studyAgain": "Ôn lại",
+                "previous": "Thẻ trước",
+                "questionLabel": "Câu hỏi",
+                "answerLabel": "Đáp án",
+                "flipHint": "Nhấn để xem đáp án",
+                "flipBackHint": "Nhấn để xem lại câu hỏi",
+                "rateHint": "Bạn nhớ thẻ này thế nào?",
+                "intervalNow": "<1 phút",
+                "intervalDays": "{count} ngày",
+                "sessionDoneTitle": "Đã ôn xong bộ thẻ",
+                "sessionDoneDesc": "Bạn đã ôn {count} thẻ trong phiên này.",
+                "stats": {
+                    "mastered": "Đã thuộc",
+                    "learning": "Đang học",
+                    "new": "Thẻ mới",
+                    "barAria": "Đã thuộc {mastered}, đang học {learning}, thẻ mới {newCount} trên tổng {total} thẻ"
+                }
             }
         },
         "career": {
@@ -5021,7 +5112,9 @@
     },
     "learn": {
         "common": {
-            "retry": "Thử lại"
+            "retry": "Thử lại",
+            "loading": "Đang tải…",
+            "back": "Quay lại"
         },
         "nav": {
             "label": "Điều hướng khóa học",
@@ -5049,7 +5142,19 @@
             "lessonsTitle": "Các bài học",
             "metaModules": "{count} học phần",
             "metaHours": "~{count} giờ",
-            "metaLearners": "{count} người học"
+            "metaLearners": "{count} người học",
+            "tabs": {
+                "content": "Nội dung",
+                "challenges": "Thử thách"
+            },
+            "language": "Ngôn ngữ",
+            "minutesRead": "{minutes} phút đọc",
+            "challengeCount": "{count} thử thách",
+            "outcomes": "Bạn sẽ học được gì",
+            "empty2": "Bài học chưa có nội dung.",
+            "prevLesson": "Bài trước",
+            "nextLesson": "Bài sau",
+            "moduleTitle": "Học phần"
         },
         "reader": {
             "error": "Không tải được bài học.",
@@ -5085,8 +5190,25 @@
                     "explain": "Giải thích đoạn này",
                     "example": "Cho ví dụ",
                     "simplify": "Giải thích đơn giản hơn"
+                },
+                "hint": "Gợi ý câu hỏi",
+                "thinking": "Đang soạn câu trả lời…",
+                "new": "Mới",
+                "selectionHintTitle": "Mẹo: hỏi AI về một đoạn bất kỳ",
+                "selectionHint": "Bôi đen một đoạn trong bài rồi bấm \"Hỏi AI về đoạn này\" để hỏi riêng về đoạn đó.",
+                "dismissHint": "Đã hiểu",
+                "suggestions": {
+                    "summarize": "Tóm tắt bài học này",
+                    "hardest": "Phần nào khó nhất?",
+                    "example": "Cho một ví dụ thực tế",
+                    "remember": "Mình nên ghi nhớ điều gì?"
                 }
-            }
+            },
+            "prevLesson": "Bài trước",
+            "nextLesson": "Bài sau",
+            "tabListAria": "Các mục của bài học",
+            "reactionAria": "Bày tỏ cảm xúc",
+            "views2": "xem"
         },
         "comments": {
             "title": "Bình luận ({count})",
@@ -5095,7 +5217,9 @@
             "you": "Bạn",
             "now": "vừa xong",
             "empty": "Chưa có bình luận nào. Hãy là người đầu tiên!",
-            "error": "Không tải được bình luận."
+            "error": "Không tải được bình luận.",
+            "reply": "Trả lời",
+            "loadMore": "Xem thêm bình luận"
         },
         "mindMap": {
             "title": "Sơ đồ tư duy khóa học",
@@ -5104,8 +5228,16 @@
             "legend": {
                 "done": "Hoàn thành",
                 "current": "Đang học",
-                "locked": "Chưa mở"
-            }
+                "locked": "Chưa mở",
+                "inProgress": "Đang làm",
+                "notStarted": "Chưa bắt đầu"
+            },
+            "empty": "Khóa học chưa có học phần",
+            "continue": "Tiếp tục học",
+            "allDone": "Bạn đã hoàn thành khóa học!",
+            "moduleLessons": "{read}/{total} bài",
+            "zoomIn": "Phóng to",
+            "zoomOut": "Thu nhỏ"
         },
         "leaderboard": {
             "title": "Bảng xếp hạng",
@@ -5115,11 +5247,18 @@
                 "total": "Tổng XP",
                 "challenges": "Thử thách",
                 "reading": "Đọc bài",
-                "milestones": "Cột mốc"
+                "milestones": "Cột mốc",
+                "label": "Danh mục"
             },
             "xp": "{value} XP",
             "empty": "Chưa có dữ liệu xếp hạng.",
-            "error": "Không tải được bảng xếp hạng."
+            "error": "Không tải được bảng xếp hạng.",
+            "rankedBy": "Xếp hạng theo {category}",
+            "updatedAt": "Cập nhật lúc {time}",
+            "refresh": "Làm mới",
+            "xpLabel": "XP",
+            "you": "Bạn",
+            "champion": "Nhà vô địch khóa học"
         },
         "submission": {
             "title": "Nộp bài",
@@ -5138,7 +5277,51 @@
             "attempts": "{count} lần nộp",
             "mockFeedback": "Bài nộp đạt yêu cầu. Cấu trúc tốt, có thể bổ sung thêm test cho các trường hợp biên.",
             "noResult": "Bạn chưa nộp bài. Dán đường dẫn và nhấn Nộp bài để được chấm điểm.",
-            "error": "Không tải được trang nộp bài."
+            "error": "Không tải được trang nộp bài.",
+            "back": "Quay lại bài học",
+            "gradingSettings": "Thiết lập chấm điểm",
+            "urlPlaceholder": "https://github.com/ban/loi-giai",
+            "pickModel": "Chọn mô hình",
+            "attemptLine": "Lần {number}",
+            "pass": "Đạt",
+            "fail": "Chưa đạt",
+            "passNeeded": "Cần {score} điểm để đạt",
+            "lastFeedback": "Góp ý gần nhất",
+            "feedbackLabel": "Góp ý",
+            "noFeedback": "Không có góp ý cho lần nộp này.",
+            "processing": "AI đang chấm bài…",
+            "requirementsTitle": "Yêu cầu",
+            "servedBy": "Chấm bởi {model}",
+            "severity": {
+                "high": "Nghiêm trọng",
+                "medium": "Trung bình",
+                "low": "Nhẹ"
+            },
+            "suggestion": "Gợi ý",
+            "quotaReached": "Đã hết hạn mức. Nâng cấp để chấm tiếp.",
+            "history": "Lịch sử nộp bài"
+        },
+        "contentMap": {
+            "title": "Nội dung khóa học",
+            "searchPlaceholder": "Tìm bài học…",
+            "resizeRail": "Kéo để đổi độ rộng thanh nội dung",
+            "empty": "Chưa có nội dung",
+            "noMatch": "Không tìm thấy bài học nào",
+            "moduleLabel": "Học phần {order}: {title}",
+            "lessonCount": "{done}/{total} bài",
+            "continue": "Tiếp tục học",
+            "overallProgress": "Tiến độ tổng",
+            "collapse": "Thu gọn thanh nội dung",
+            "expand": "Mở thanh nội dung"
+        },
+        "onThisPage": {
+            "title": "Trên trang này"
+        },
+        "lessonRail": {
+            "challenges": {
+                "title": "Luyện tập bài này",
+                "practice": "Vào thử thách"
+            }
         }
     }
 }

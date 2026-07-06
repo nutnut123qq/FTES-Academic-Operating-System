@@ -15,8 +15,8 @@ import type { WithClassNames } from "@/modules/types/base/class-name"
  */
 export const CourseCardSkeleton = ({ className }: WithClassNames<undefined>) => {
     return (
-        <Card className={cn("flex flex-col overflow-hidden", className)}>
-            <Card.Content className="flex flex-col gap-3 p-0">
+        <Card className={cn("flex flex-col overflow-hidden rounded-3xl", className)}>
+            <Card.Content className="flex flex-col gap-3">
                 <Skeleton className="aspect-video w-full rounded-2xl" />
                 <div className="flex flex-col gap-2">
                     <Skeleton className="h-5 w-2/3 rounded" />

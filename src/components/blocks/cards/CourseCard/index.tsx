@@ -48,6 +48,12 @@ export interface CourseCardProps extends WithClassNames<undefined> {
     loyaltyPriceVnd?: number | null
     /** List/original VND price struck through under the loyalty price. */
     loyaltyOriginalVnd?: number | null
+    /**
+     * Layout: a roomy `"grid"` card (default — cover + outcomes + price) or a
+     * compact `"line"` row (thumbnail + title + price + CTA on one line). Lets the
+     * catalog offer a grid ⇆ list view toggle without a second card component.
+     */
+    layout?: "grid" | "line"
 }
 
 /**
@@ -62,6 +68,7 @@ export const CourseCard = ({
     course,
     loyaltyPriceVnd,
     loyaltyOriginalVnd,
+    layout = "grid",
     className,
 }: CourseCardProps) => {
     const locale = useLocale()
@@ -126,11 +133,84 @@ export const CourseCard = ({
         ? loyaltyOriginalVnd ?? null
         : (course.originalPrice != null ? toVnd(course.originalPrice) : null)
 
+    // compact LINE row (catalog list view): thumbnail + title/description, with the
+    // price + view CTA on the right — one course per row for fast scanning.
+    if (layout === "line") {
+        return (
+            <Card className={cn("overflow-hidden rounded-3xl", className)}>
+                {/* plain div, NOT Card.Content — `.card__content` bakes flex-col
+                    (unlayered), so `items-center` on it centers vertically instead of
+                    laying the row out horizontally. The card root already insets its
+                    children (baked `p-4`), so this row carries no padding of its own. */}
+                <div className="flex items-center gap-4">
+                    {/* thumbnail 16:9 (branded fallback); hidden on the narrowest screens.
+                        rounded-2xl = the "inner" step under the card's rounded-3xl. */}
+                    <div className="relative hidden aspect-video w-36 shrink-0 overflow-hidden rounded-2xl bg-surface sm:block">
+                        {showCover ? (
+                            <img
+                                src={course.coverImageUrl ?? undefined}
+                                alt={course.title}
+                                className="size-full object-cover"
+                                onError={() => setCoverFailed(true)}
+                            />
+                        ) : (
+                            <div className="flex size-full items-center justify-center bg-gradient-to-br from-accent/25 to-accent/5">
+                                <BookOpenIcon aria-hidden className="size-8 text-accent" />
+                            </div>
+                        )}
+                    </div>
+                    {/* title + one-line description */}
+                    <div className="flex min-w-0 flex-1 flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                            <Typography type="body" weight="bold" truncate>
+                                {course.title}
+                            </Typography>
+                            {course.enrollmentCount > 0 ? (
+                                <Chip variant="secondary" color="accent" size="sm" className="shrink-0">
+                                    <UsersIcon aria-hidden className="size-4" />
+                                    <Chip.Label>
+                                        {t("courses.learners", { count: course.enrollmentCount })}
+                                    </Chip.Label>
+                                </Chip>
+                            ) : null}
+                        </div>
+                        <Typography type="body-sm" color="muted" className="line-clamp-1">
+                            {course.description}
+                        </Typography>
+                    </div>
+                    {/* price + see-more CTA */}
+                    <div className="flex shrink-0 flex-col items-end gap-1">
+                        {displayPrice != null ? (
+                            <PriceTag
+                                discounted={displayPrice}
+                                original={displayOriginal}
+                                size="sm"
+                            />
+                        ) : null}
+                        <Link
+                            onPress={onView}
+                            className="group inline-flex w-fit items-center gap-1 text-accent"
+                        >
+                            {t("courses.viewCourse")}
+                            <CaretRightIcon
+                                aria-hidden
+                                focusable="false"
+                                className="size-4 transition-transform group-hover:translate-x-1"
+                            />
+                        </Link>
+                    </div>
+                </div>
+            </Card>
+        )
+    }
+
     return (
-        <Card className={cn("group flex flex-col overflow-hidden", className)}>
-            <Card.Content className="flex flex-col gap-3 p-0">
-                {/* cover 16:9 — full-bleed (card rounds the top); branded gradient fallback when missing/broken */}
-                <div className="relative aspect-video w-full overflow-hidden bg-surface">
+        <Card className={cn("group flex flex-col overflow-hidden rounded-3xl", className)}>
+            <Card.Content className="flex flex-col gap-3">
+                {/* cover 16:9 — rounded-2xl = the "inner" step under the card's
+                    rounded-3xl; the card root already insets its children (baked `p-4`);
+                    branded gradient fallback when missing/broken */}
+                <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-surface">
                     {showCover ? (
                         <img
                             src={course.coverImageUrl ?? undefined}
@@ -148,7 +228,7 @@ export const CourseCard = ({
                     )}
                 </div>
 
-                <div className="flex flex-col gap-2 px-3">
+                <div className="flex flex-col gap-2">
                     <div className="flex items-center justify-between gap-2">
                         <Typography type="h6" weight="bold" truncate>
                             {course.title}

@@ -1,0 +1,20 @@
+## 1. Bootstrap module
+
+- [x] 1.1 Create `src/modules/api/rest/admin/` directory
+- [x] 1.2 Create `src/modules/api/rest/admin/types.ts` with prefixed `Admin*` DTOs
+- [x] 1.3 Create `src/modules/api/rest/admin/admin.ts` with REST call functions
+- [x] 1.4 Create `src/modules/api/rest/admin/index.ts` to export public API
+
+## 2. Wire top-level barrel
+
+- [x] 2.1 Add `export * from "./admin"` to `src/modules/api/rest/index.ts`
+
+## 3. Add SWR hooks
+
+- [x] 3.1 Create query hooks in `src/hooks/swr/api/rest/queries/` for public admin content and analytics
+- [x] 3.2 Create mutation hooks in `src/hooks/swr/api/rest/mutations/` for admin console commands and bulk operations
+
+## 4. Verify
+
+- [x] 4.1 Run `npx tsc --noEmit` and ensure no errors
+- [x] 4.2 Run `npm run build -- --webpack` and ensure exit code 0

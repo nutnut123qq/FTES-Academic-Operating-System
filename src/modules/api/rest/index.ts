@@ -1,4 +1,5 @@
 export * from "./client"
+export * from "./blog"
 export * from "./challenges"
 export * from "./course"
 export * from "./subject"

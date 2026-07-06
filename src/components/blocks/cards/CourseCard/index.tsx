@@ -127,7 +127,7 @@ export const CourseCard = ({
         : (course.originalPrice != null ? toVnd(course.originalPrice) : null)
 
     return (
-        <Card className={cn("flex flex-col overflow-hidden", className)}>
+        <Card className={cn("group flex flex-col overflow-hidden", className)}>
             <Card.Content className="flex flex-col gap-3 p-0">
                 {/* cover 16:9 — full-bleed (card rounds the top); branded gradient fallback when missing/broken */}
                 <div className="relative aspect-video w-full overflow-hidden bg-surface">
@@ -135,7 +135,7 @@ export const CourseCard = ({
                         <img
                             src={course.coverImageUrl ?? undefined}
                             alt={course.title}
-                            className="size-full object-cover"
+                            className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
                             onError={() => setCoverFailed(true)}
                         />
                     ) : (

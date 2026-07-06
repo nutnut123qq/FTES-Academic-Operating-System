@@ -32,7 +32,7 @@ const FEATURED_ROWS: Array<FeaturedCourseMockRow> = [
         lessons: 24,
         category: "programming",
         priceVnd: 1_200_000,
-        coverUrl: "https://picsum.photos/seed/prf192/1200/500",
+        coverUrl: "https://picsum.photos/seed/prf192/1600/668",
         pitch: {
             vi: "Nền tảng lập trình đầu tiên: cú pháp C, con trỏ và bộ nhớ — học chắc để đi xa.",
             en: "Your first programming foundation: C syntax, pointers and memory — learn it right.",
@@ -47,7 +47,7 @@ const FEATURED_ROWS: Array<FeaturedCourseMockRow> = [
         lessons: 30,
         category: "programming",
         priceVnd: 1_500_000,
-        coverUrl: "https://picsum.photos/seed/csd201/1200/500",
+        coverUrl: "https://picsum.photos/seed/csd201/1600/668",
         pitch: {
             vi: "Tư duy giải thuật bài bản với bài tập sát đề thi — môn xương sống của lập trình viên.",
             en: "Structured algorithmic thinking with exam-grade practice — the backbone course.",
@@ -62,7 +62,7 @@ const FEATURED_ROWS: Array<FeaturedCourseMockRow> = [
         lessons: 28,
         category: "programming",
         priceVnd: 1_500_000,
-        coverUrl: "https://picsum.photos/seed/prj301/1200/500",
+        coverUrl: "https://picsum.photos/seed/prj301/1600/668",
         pitch: {
             vi: "Dựng ứng dụng web hoàn chỉnh với Java: servlet, JSP và kết nối cơ sở dữ liệu.",
             en: "Build complete web apps with Java: servlets, JSP and database integration.",
@@ -77,7 +77,7 @@ const FEATURED_ROWS: Array<FeaturedCourseMockRow> = [
         lessons: 16,
         category: "programming",
         priceVnd: 1_800_000,
-        coverUrl: "https://picsum.photos/seed/swp391/1200/500",
+        coverUrl: "https://picsum.photos/seed/swp391/1600/668",
         pitch: {
             vi: "Làm đồ án như một team thật: quy trình, review code và bàn giao sản phẩm.",
             en: "Ship a capstone like a real team: process, code review and product delivery.",

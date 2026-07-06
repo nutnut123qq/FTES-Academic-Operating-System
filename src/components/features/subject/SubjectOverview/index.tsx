@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react"
+import React, { useEffect, useState } from "react"
 import { Button, Chip, Typography } from "@heroui/react"
 import {
     CaretRightIcon,
@@ -11,6 +11,7 @@ import {
     PushPinIcon,
     TargetIcon,
     UsersIcon,
+    XIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
@@ -108,27 +109,48 @@ const OverviewView = ({
 }) => {
     const t = useTranslations("subjects")
 
+    // "Đã tham gia" giờ chỉ là 1 thông báo tắt được (STT 29C) — nhớ trạng thái tắt
+    // theo từng workspace qua localStorage (key = base, duy nhất theo subjectId).
+    const dismissKey = `ftes:subject-joined-dismissed:${base}`
+    const [joinedDismissed, setJoinedDismissed] = useState(false)
+    useEffect(() => {
+        setJoinedDismissed(localStorage.getItem(dismissKey) === "1")
+    }, [dismissKey])
+    const dismissJoined = () => {
+        localStorage.setItem(dismissKey, "1")
+        setJoinedDismissed(true)
+    }
+
     return (
         <div className="flex flex-col gap-6">
-            {/* join banner */}
-            <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-accent/10 p-4">
-                <UsersIcon aria-hidden focusable="false" className="size-6 shrink-0 text-accent" />
-                <div className="min-w-0">
-                    <Typography type="body-sm" weight="medium" className="text-accent">
+            {/* stats line — moved up, sits directly under the workspace name header */}
+            <Typography type="body-sm" color="muted">
+                {t("overview.statsLine", {
+                    members: overview.stats.members,
+                    moderators: overview.stats.moderators,
+                    resources: overview.stats.resources,
+                })}
+            </Typography>
+
+            {/* "đã tham gia" — a dismissible notice only (no stats, no compose action) */}
+            {!joinedDismissed ? (
+                <div className="flex items-center gap-3 rounded-2xl bg-accent/10 p-4">
+                    <UsersIcon aria-hidden focusable="false" className="size-6 shrink-0 text-accent" />
+                    <Typography type="body-sm" weight="medium" className="min-w-0 flex-1 text-accent">
                         {t("overview.joined")}
                     </Typography>
-                    <Typography type="body-xs" color="muted">
-                        {t("overview.statsLine", {
-                            members: overview.stats.members,
-                            moderators: overview.stats.moderators,
-                            resources: overview.stats.resources,
-                        })}
-                    </Typography>
+                    <Button
+                        isIconOnly
+                        variant="tertiary"
+                        size="sm"
+                        className="shrink-0"
+                        aria-label={t("overview.dismiss")}
+                        onPress={dismissJoined}
+                    >
+                        <XIcon aria-hidden focusable="false" className="size-4" />
+                    </Button>
                 </div>
-                <Button variant="primary" className="ml-auto" onPress={onCompose}>
-                    {t("overview.compose")}
-                </Button>
-            </div>
+            ) : null}
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                 {/* feed */}
@@ -151,11 +173,21 @@ const OverviewView = ({
                     ) : null}
 
                     <div className="flex flex-col gap-3">
-                        <Typography type="h6" weight="bold">
-                            {t("overview.discussions")}
-                        </Typography>
+                        <div className="flex items-center gap-2">
+                            <Typography type="h6" weight="bold" className="min-w-0 flex-1">
+                                {t("overview.discussions")}
+                            </Typography>
+                            <Button size="sm" variant="primary" className="shrink-0" onPress={onCompose}>
+                                {t("overview.compose")}
+                            </Button>
+                        </div>
                         {overview.posts.map((post, index) => (
-                            <PostRow key={post.id} post={post} withDivider={index > 0} />
+                            <PostRow
+                                key={post.id}
+                                post={post}
+                                withDivider={index > 0}
+                                discussionHref={`${base}/discussion`}
+                            />
                         ))}
                     </div>
                 </div>
@@ -222,9 +254,13 @@ const OverviewView = ({
 const PostRow = ({
     post,
     withDivider,
+    discussionHref,
 }: {
     post: OverviewPost
     withDivider: boolean
+    /** Where the like / comment affordances lead — the full discussion tab, which
+     *  owns the real react + comment interactions (checklist STT 21). */
+    discussionHref: string
 }) => {
     const t = useTranslations("subjects")
     return (
@@ -250,14 +286,22 @@ const PostRow = ({
                     {post.snippet}
                 </Typography>
                 <div className="mt-2 flex items-center gap-3 text-muted">
-                    <span className="flex items-center gap-2" aria-label={t("overview.reactionsAria", { count: post.reactions })}>
+                    <Link
+                        href={discussionHref}
+                        className="flex items-center gap-2 text-muted no-underline transition-colors hover:text-danger"
+                        aria-label={t("overview.reactionsAria", { count: post.reactions })}
+                    >
                         <HeartIcon aria-hidden focusable="false" className="size-4" />
                         <Typography type="body-xs" color="muted">{post.reactions}</Typography>
-                    </span>
-                    <span className="flex items-center gap-2" aria-label={t("overview.commentsAria", { count: post.comments })}>
+                    </Link>
+                    <Link
+                        href={discussionHref}
+                        className="flex items-center gap-2 text-muted no-underline transition-colors hover:text-accent"
+                        aria-label={t("overview.commentsAria", { count: post.comments })}
+                    >
                         <ChatCircleIcon aria-hidden focusable="false" className="size-4" />
                         <Typography type="body-xs" color="muted">{post.comments}</Typography>
-                    </span>
+                    </Link>
                 </div>
             </div>
         </div>

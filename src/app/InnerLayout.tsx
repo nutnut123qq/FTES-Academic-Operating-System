@@ -25,10 +25,12 @@ export const InnerLayout = ({ children }: PropsWithChildren) => {
     // Ambient meteor background runs app-wide as a FAINT backdrop texture (its
     // opacity is low enough — see `meteorFall` in globals.css — that the streaks
     // read as ambient light behind the glassmorphism cards, not painted on top).
-    // Only suppressed on Learn routes, where any motion competes with long-form
-    // reading. Everywhere else it shows behind content.
+    // Suppressed on CONTENT-DENSE routes — Learn, Community and the Subject
+    // workspace — where the moving streaks cross the reading area and read as
+    // "painted on top of" the info cards (checklist STT 2). Everywhere else
+    // (landing / home / decorative pages) it still shows behind content.
     const pathname = usePathname()
-    const isLearnRoute = pathname?.includes("/learn") ?? false
+    const isContentRoute = /\/(?:learn|community|subjects)(?:\/|$)/.test(pathname ?? "")
     // Ambient effect config (appearance-settings) — narrow selectors so InnerLayout
     // only re-renders when these two fields change (a rare user action).
     const effectEnabled = useAppearanceStore((state) => state.effectEnabled)
@@ -69,7 +71,7 @@ export const InnerLayout = ({ children }: PropsWithChildren) => {
                             </Suspense>
                             <AppSplash />
                             <TopLoader />
-                            {!isLearnRoute && effectEnabled ? (
+                            {!isContentRoute && effectEnabled ? (
                                 <AmbientBackground direction={effectDirection} speed={effectSpeed} />
                             ) : null}
                             <Navbar />

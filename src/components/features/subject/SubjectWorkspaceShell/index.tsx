@@ -150,11 +150,20 @@ export const SubjectWorkspaceShell = ({ subjectId, children }: SubjectWorkspaceS
                                     : ""}
                             </Typography>
                             {subject ? (
-                                <ProgressMeter
-                                    value={subject.progress}
-                                    aria-label={t("progressLabel")}
-                                    className="mt-1"
-                                />
+                                <div className="mt-1 flex items-center gap-2">
+                                    <ProgressMeter
+                                        value={subject.progress}
+                                        aria-label={t("progressLabel")}
+                                        className="min-w-0 flex-1"
+                                    />
+                                    <Typography
+                                        type="body-xs"
+                                        color="muted"
+                                        className="shrink-0 tabular-nums"
+                                    >
+                                        {Math.round(subject.progress)}%
+                                    </Typography>
+                                </div>
                             ) : null}
                         </div>
                     </div>

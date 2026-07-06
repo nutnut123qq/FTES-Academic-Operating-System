@@ -12,17 +12,20 @@ import {
 } from "../hooks/useQuerySubjectPracticeSwr"
 import { PracticeHub } from "./PracticeHub"
 import { CodingChallengeList } from "./CodingChallengeList"
+import { PracticeFlashcards } from "./PracticeFlashcards"
+import { PracticeLeaderboard } from "./PracticeLeaderboard"
 
 /** The in-panel view: the hub, or one opened module. */
 type PracticeView = "hub" | PracticeModuleKey
 
 /**
  * Practice tab (§3 → §9 checklist). A practice HUB whose module cards open their own
- * in-panel sub-view (view-state navigation — no dead buttons). The Coding module is the
- * built-out one: a LeetCode-style problem bank ({@link CodingChallengeList}) with filters
- * + a problem detail/attempt surface. The other three modules (Quiz · Flashcards ·
- * Leaderboard) open a "coming soon" placeholder for now — a coherent first version, the
- * foundation for a future PE exam bank. Mock data via `useQuerySubjectPracticeSwr`.
+ * in-panel sub-view (view-state navigation — no dead buttons). Three modules are
+ * built out: Coding (a LeetCode-style problem bank — {@link CodingChallengeList} —
+ * with filters + a problem detail/attempt surface), Flashcards (a compact StarCI
+ * flashcard reviewer — {@link PracticeFlashcards}) and Leaderboard (a compact port
+ * of StarCI's leaderboard — {@link PracticeLeaderboard}). Quiz stays a "coming soon"
+ * placeholder — StarCI has no quiz feature to port. Mock data via the subject hooks.
  */
 export const SubjectPractice = () => {
     const t = useTranslations("subjects")
@@ -39,7 +42,18 @@ export const SubjectPractice = () => {
         )
     }
 
-    // quiz / flashcards / leaderboard — placeholder sub-views (clickable, not dead)
+    // flashcards — a compact StarCI flashcard reviewer (owns its whole panel)
+    if (view === "flashcards") {
+        return <PracticeFlashcards subjectId={subjectId} onBack={() => setView("hub")} />
+    }
+
+    // leaderboard — a compact StarCI leaderboard (podium + ranked list + XP bars)
+    if (view === "leaderboard") {
+        return <PracticeLeaderboard subjectId={subjectId} onBack={() => setView("hub")} />
+    }
+
+    // quiz — StarCI has NO quiz feature to port, so it stays a "coming soon"
+    // placeholder (clickable, not dead)
     if (view !== "hub") {
         return (
             <div className="flex flex-col gap-4 p-6">

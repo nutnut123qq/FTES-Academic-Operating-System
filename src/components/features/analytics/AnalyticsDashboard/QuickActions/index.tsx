@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { Label, cn } from "@heroui/react"
+import { Chip, cn } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import {
     GraduationCapIcon,
@@ -9,10 +9,12 @@ import {
     CodeIcon,
     TrophyIcon,
     GiftIcon,
+    ArticleIcon,
     type Icon,
 } from "@phosphor-icons/react"
 import { useRouter } from "@/i18n/navigation"
 import type { WithClassNames } from "@/modules/types/base/class-name"
+import { useQueryRewardWalletSwr } from "../../hooks/useQueryRewardWalletSwr"
 
 /** Props for {@link QuickActions}. */
 export type QuickActionsProps = WithClassNames<undefined>
@@ -31,21 +33,29 @@ const ACTIONS: Array<QuickAction> = [
     { key: "practice", Icon: CodeIcon, href: "/challenges" },
     { key: "league", Icon: TrophyIcon, href: "/leaderboard" },
     { key: "rewards", Icon: GiftIcon, href: "/wallet" },
+    { key: "blog", Icon: ArticleIcon, href: "/blog" },
 ]
 
 /**
- * Left-rail "quick actions" list — one-tap navigational shortcuts to the surfaces
- * a learner reaches for most. Pure navigation (static rows, no data). Rows are
- * flush-left, aligned with the heading; hover underlines the label (go-there).
- * @param props - optional root class name (placement only)
+ * Left-rail "quick access" list — one-tap shortcuts to the surfaces a learner
+ * reaches for most (catalog, practice, leaderboard, rewards). Pure navigation;
+ * rows are flush-left (aligned with the heading + identity stats above), hover
+ * underlines the label (go-there). Surfaces the spendable reward balance as a
+ * chip on the rewards row. `"use client"` for the router + reward leaf query.
+ * @param props - optional className for the root element.
  */
 export const QuickActions = ({ className }: QuickActionsProps) => {
     const t = useTranslations("analytics")
     const router = useRouter()
+    // spendable reward balance — surfaced as a chip on the rewards shortcut
+    const { data: wallet } = useQueryRewardWalletSwr()
 
     return (
         <div className={cn("flex flex-col gap-3", className)}>
-            <Label>{t("overview.quickActions")}</Label>
+            <div className="text-base font-semibold text-foreground">
+                {t("overview.quickActions")}
+            </div>
+            {/* flush list (no ListBox indent): each row aligns left with the heading */}
             <div className="flex flex-col">
                 {ACTIONS.map(({ key, Icon, href }) => (
                     <button
@@ -58,6 +68,13 @@ export const QuickActions = ({ className }: QuickActionsProps) => {
                         <span className="truncate text-sm transition-colors group-hover:text-foreground group-hover:underline">
                             {t(`overview.actions.${key}`)}
                         </span>
+                        {key === "rewards" && wallet ? (
+                            <Chip className="ml-auto" size="sm" variant="soft" color="warning">
+                                <Chip.Label>
+                                    {t("overview.rewardBalance", { count: wallet.balance })}
+                                </Chip.Label>
+                            </Chip>
+                        ) : null}
                     </button>
                 ))}
             </div>

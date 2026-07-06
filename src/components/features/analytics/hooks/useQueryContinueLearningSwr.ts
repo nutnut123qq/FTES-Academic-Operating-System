@@ -2,47 +2,64 @@
 
 import useSWR from "swr"
 
-/** A "continue where you left off" item — a course + the viewer's progress in it. */
-export interface ContinueLearningItem {
+/** Kind of resume target — drives the chip icon + label. */
+export type ResumeKind = "challenge" | "lesson"
+
+/**
+ * One "pick up where you left off" resume item — CONTENT-FIRST (recently-read
+ * lessons lead, mixed with at most one in-progress challenge as a nudge).
+ */
+export interface ResumeItem {
+    /** Stable id (would be an opaque global id against a real BE). */
     id: string
-    /** Course / module title. */
-    title: string
-    /** Secondary line — e.g. the next lesson to resume. */
-    subtitle: string
-    /** Completed lessons so far. */
-    current: number
-    /** Total lessons in the course. */
-    total: number
-    /** Destination when the learner presses "Resume". */
+    /** Title to show. */
+    label: string
+    /** Challenge vs lesson (chip styling + kind caption). */
+    kind: ResumeKind
+    /** Destination when the learner presses "Continue". */
     href: string
 }
 
-// ponytail: mock BE — no resume endpoint yet. Deterministic sample courses,
-// SWR-shaped for a drop-in swap (myContinueLearning()) later.
-const fetchContinueLearningMock = async (): Promise<Array<ContinueLearningItem>> => [
+/** Max number of resume cards shown. */
+export const RESUME_LIMIT = 3
+
+// ponytail: mock BE — no resume endpoint yet. Deterministic sample, content-first
+// (lessons lead, one challenge nudge), SWR-shaped for a drop-in swap later.
+const fetchResumeItemsMock = async (): Promise<Array<ResumeItem>> => [
     {
         id: "algorithms",
-        title: "Cấu trúc dữ liệu & Giải thuật",
-        subtitle: "Bài 8 · Cây nhị phân tìm kiếm",
-        current: 7,
-        total: 20,
+        label: "Cây nhị phân tìm kiếm",
+        kind: "lesson",
         href: "/courses",
     },
     {
         id: "systemdesign",
-        title: "System Design cơ bản",
-        subtitle: "Bài 4 · Caching & CDN",
-        current: 3,
-        total: 12,
+        label: "Caching & CDN",
+        kind: "lesson",
         href: "/courses",
+    },
+    {
+        id: "two-sum",
+        label: "Two Sum",
+        kind: "challenge",
+        href: "/challenges",
     },
 ]
 
-/** Loads the viewer's continue-learning items. Mocked; SWR-shaped. */
+/**
+ * Loads the viewer's continue-learning resume items + a `hasCourses` flag so the
+ * widget can show an onboarding CTA instead of an empty void. Mocked; SWR-shaped.
+ */
 export const useQueryContinueLearningSwr = () => {
     const { data, isLoading, error, mutate } = useSWR(
         ["analytics", "overview", "continue"],
-        () => fetchContinueLearningMock(),
+        () => fetchResumeItemsMock(),
     )
-    return { items: data ?? [], isLoading, error, mutate }
+    return {
+        resumeItems: (data ?? []).slice(0, RESUME_LIMIT),
+        hasCourses: true,
+        isLoading,
+        error,
+        mutate,
+    }
 }

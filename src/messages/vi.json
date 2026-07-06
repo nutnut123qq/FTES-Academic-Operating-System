@@ -3305,6 +3305,53 @@
             "ai": "AI",
             "gamification": "Game hóa",
             "business": "Kinh doanh"
+        },
+        "overview": {
+            "title": "Tổng quan",
+            "subtitle": "Bảng điều khiển học tập của bạn — tiến độ, nhiệm vụ và mục tiêu trong tuần.",
+            "loadError": "Không tải được dữ liệu",
+            "retry": "Thử lại",
+            "quickActions": "Truy cập nhanh",
+            "actions": {
+                "courses": "Khóa học",
+                "review": "Ôn tập",
+                "practice": "Luyện tập",
+                "league": "Bảng xếp hạng",
+                "rewards": "Phần thưởng"
+            },
+            "streakDays": "{count} ngày liên tiếp",
+            "points": "{count, number} điểm",
+            "aiCredit": "Tín dụng AI",
+            "aiCreditValue": "Tín dụng AI · {remaining}/{limit}",
+            "sections": {
+                "continue": "Tiếp tục học",
+                "quest": "Nhiệm vụ hôm nay",
+                "streak": "Chuỗi tuần này",
+                "goals": "Mục tiêu tuần"
+            },
+            "continue": {
+                "empty": "Chưa có khóa học nào để tiếp tục",
+                "resume": "Học tiếp"
+            },
+            "quest": {
+                "tasks": {
+                    "readLesson": "Đọc một bài học",
+                    "passChallenge": "Vượt qua một thử thách",
+                    "reviewFlashcards": "Ôn tập thẻ ghi nhớ",
+                    "askAi": "Hỏi trợ giảng AI"
+                },
+                "summary": "Đã hoàn thành {done}/{total} nhiệm vụ"
+            },
+            "streakCurrent": "Chuỗi {count} ngày",
+            "goals": {
+                "labels": {
+                    "lessons": "Bài học",
+                    "studyDays": "Ngày học",
+                    "challenges": "Thử thách",
+                    "flashcards": "Thẻ ghi nhớ"
+                },
+                "progress": "{label} · {current}/{target}"
+            }
         }
     },
     "homeLanding": {
@@ -3509,6 +3556,8 @@
         "faq": {
             "eyebrow": "Câu hỏi thường gặp",
             "title": "FAQ về học tại FTES",
+            "showMore": "Xem thêm câu hỏi",
+            "showLess": "Thu gọn",
             "items": {
                 "refund": {
                     "q": "Khóa học ở FTES học không hiểu thì có được hoàn tiền không?",
@@ -4201,6 +4250,7 @@
             "reactionsAria": "{count} lượt thích",
             "commentsAria": "{count} bình luận",
             "joined": "Bạn đã tham gia không gian này",
+            "dismiss": "Ẩn thông báo",
             "statsLine": "{members} thành viên · {moderators} moderator · {resources} tài liệu",
             "compose": "Đăng bài",
             "pinned": "Ghim bởi moderator",
@@ -4253,6 +4303,50 @@
                 "leaderboard": {
                     "title": "Bảng xếp hạng",
                     "meta": "{count} người tham gia"
+                }
+            },
+            "backToHub": "Về trang luyện tập",
+            "comingSoon": "Tính năng này sẽ sớm ra mắt.",
+            "difficulty": {
+                "easy": "Dễ",
+                "medium": "Trung bình",
+                "hard": "Khó"
+            },
+            "coding": {
+                "backToList": "Về danh sách bài",
+                "acceptance": "Tỉ lệ chấp nhận {rate}%",
+                "examples": "Ví dụ",
+                "exampleN": "Ví dụ {n}",
+                "input": "Đầu vào",
+                "output": "Đầu ra",
+                "expected": "Mong đợi",
+                "got": "Nhận được",
+                "constraints": "Ràng buộc",
+                "solution": "Lời giải",
+                "language": "Ngôn ngữ",
+                "editorPlaceholder": "// Viết lời giải của bạn ở đây...",
+                "run": "Chạy thử",
+                "submit": "Nộp bài",
+                "allPassed": "Tất cả test case đã qua",
+                "someFailed": "Qua {passed}/{total} test case",
+                "testN": "Test {n}",
+                "pass": "Đạt",
+                "fail": "Sai",
+                "searchPlaceholder": "Tìm bài theo tên hoặc chủ đề",
+                "loadError": "Không tải được danh sách bài",
+                "retry": "Thử lại",
+                "empty": "Không có bài nào khớp bộ lọc",
+                "status": {
+                    "solved": "Đã giải",
+                    "unsolved": "Chưa giải"
+                },
+                "resultKind": {
+                    "run": "Chạy thử",
+                    "submit": "Nộp bài"
+                },
+                "filters": {
+                    "allDifficulties": "Mọi độ khó",
+                    "allStatuses": "Mọi trạng thái"
                 }
             }
         },
@@ -4374,6 +4468,23 @@
                 "front": "Thuật ngữ",
                 "back": "Định nghĩa",
                 "position": "{current}/{total}",
+                "cardProgress": "Thẻ {current}/{total}",
+                "showAnswer": "Xem đáp án",
+                "selfRatePrompt": "Bạn nhớ thẻ này thế nào?",
+                "rating": {
+                    "again": "Quên",
+                    "hard": "Khó",
+                    "good": "Được",
+                    "easy": "Dễ"
+                },
+                "interval": {
+                    "again": "<1 phút",
+                    "hard": "1 ngày",
+                    "good": "3 ngày",
+                    "easy": "5 ngày"
+                },
+                "reviewDone": "Đã ôn xong {total} thẻ",
+                "reviewDoneHint": "Ôn lại để nhớ lâu hơn, hoặc tạo bộ thẻ mới.",
                 "errorTitle": "Không tạo được flashcards",
                 "emptyTitle": "Chưa có tài liệu để tạo thẻ",
                 "emptyDesc": "Thêm tài nguyên ở tab Tài nguyên rồi quay lại."
@@ -4907,5 +5018,127 @@
         "loading": "Đang tải…",
         "error": "Không tải được thông tin.",
         "errorRetry": "Thử lại"
+    },
+    "learn": {
+        "common": {
+            "retry": "Thử lại"
+        },
+        "nav": {
+            "label": "Điều hướng khóa học",
+            "sections": {
+                "mind-map": "Sơ đồ tư duy",
+                "content": "Học phần",
+                "foundations": "Nền tảng",
+                "review": "Ôn tập",
+                "leaderboard": "Bảng xếp hạng"
+            }
+        },
+        "content": {
+            "modulesTitle": "Học phần",
+            "progressCount": "{done}/{total} bài",
+            "searchPlaceholder": "Tìm bài học…",
+            "moduleLabel": "{order}. {title}",
+            "lessonCount": "{done}/{total} bài",
+            "premium": "Premium",
+            "empty": "Chưa có học phần nào.",
+            "noMatch": "Không tìm thấy bài học phù hợp.",
+            "error": "Không tải được nội dung khóa học.",
+            "continue": "Tiếp tục học",
+            "overallProgress": "Tổng tiến độ",
+            "percent": "{value}%",
+            "lessonsTitle": "Các bài học",
+            "metaModules": "{count} học phần",
+            "metaHours": "~{count} giờ",
+            "metaLearners": "{count} người học"
+        },
+        "reader": {
+            "error": "Không tải được bài học.",
+            "onThisPage": "Trên trang này",
+            "viewSwitcher": "Chế độ xem",
+            "views": {
+                "content": "Nội dung",
+                "challenges": "Thử thách"
+            },
+            "languageSwitcher": "Ngôn ngữ",
+            "hasChallenge": "Có thử thách",
+            "previous": "Bài trước",
+            "next": "Bài sau",
+            "askAboutThis": "Hỏi AI về đoạn này",
+            "lockedTitle": "Nội dung premium",
+            "lockedBody": "Đăng ký khóa học để mở khóa bài học này và toàn bộ nội dung còn lại.",
+            "enrollCta": "Đăng ký khóa học",
+            "noChallenge": "Bài học này chưa có thử thách.",
+            "challengeTitle": "Thử thách chấm tự động",
+            "challengeBody": "Nộp bài để hệ thống chấm điểm tự động và nhận phản hồi.",
+            "openChallenge": "Mở thử thách",
+            "ai": {
+                "open": "Mở trợ giảng AI",
+                "close": "Đóng",
+                "title": "Hỏi AI",
+                "intro": "Bôi đen một đoạn trong bài để hỏi, hoặc gõ câu hỏi bên dưới.",
+                "placeholder": "Hỏi về bài học…",
+                "send": "Gửi",
+                "clearSelection": "Bỏ chọn đoạn",
+                "aboutPassage": "Về đoạn “{passage}”:",
+                "stubReply": "Đây là câu trả lời mẫu của trợ giảng AI. Khi backend sẵn sàng, câu trả lời sẽ được tạo dựa trên nội dung bài học và đoạn bạn chọn.",
+                "quickAsks": {
+                    "explain": "Giải thích đoạn này",
+                    "example": "Cho ví dụ",
+                    "simplify": "Giải thích đơn giản hơn"
+                }
+            }
+        },
+        "comments": {
+            "title": "Bình luận ({count})",
+            "placeholder": "Viết bình luận…",
+            "send": "Gửi",
+            "you": "Bạn",
+            "now": "vừa xong",
+            "empty": "Chưa có bình luận nào. Hãy là người đầu tiên!",
+            "error": "Không tải được bình luận."
+        },
+        "mindMap": {
+            "title": "Sơ đồ tư duy khóa học",
+            "youAreHere": "Bạn ở đây",
+            "error": "Không tải được sơ đồ.",
+            "legend": {
+                "done": "Hoàn thành",
+                "current": "Đang học",
+                "locked": "Chưa mở"
+            }
+        },
+        "leaderboard": {
+            "title": "Bảng xếp hạng",
+            "subtitle": "Xếp hạng người học theo XP trong khóa này.",
+            "categoryLabel": "Phân loại",
+            "categories": {
+                "total": "Tổng XP",
+                "challenges": "Thử thách",
+                "reading": "Đọc bài",
+                "milestones": "Cột mốc"
+            },
+            "xp": "{value} XP",
+            "empty": "Chưa có dữ liệu xếp hạng.",
+            "error": "Không tải được bảng xếp hạng."
+        },
+        "submission": {
+            "title": "Nộp bài",
+            "subtitle": "Nộp bài để chấm điểm tự động.",
+            "settingsTitle": "Cài đặt chấm điểm",
+            "settingsHint": "Chọn bộ chấm và kiểm tra tín dụng còn lại.",
+            "graderCredits": "{grader} · {credits}",
+            "taskHeading": "{order}. {title}",
+            "points": "{points} điểm",
+            "urlLabel": "Đường dẫn bài nộp",
+            "pickGrader": "Chọn bộ chấm",
+            "submit": "Nộp bài",
+            "viewAttempts": "Xem lịch sử nộp",
+            "resultTitle": "Kết quả của bạn",
+            "score": "{score}/{total} điểm",
+            "attempts": "{count} lần nộp",
+            "mockFeedback": "Bài nộp đạt yêu cầu. Cấu trúc tốt, có thể bổ sung thêm test cho các trường hợp biên.",
+            "noResult": "Bạn chưa nộp bài. Dán đường dẫn và nhấn Nộp bài để được chấm điểm.",
+            "error": "Không tải được trang nộp bài."
+        }
     }
 }

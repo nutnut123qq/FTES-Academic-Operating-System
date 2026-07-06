@@ -3305,6 +3305,53 @@
             "ai": "AI",
             "gamification": "Gamification",
             "business": "Business"
+        },
+        "overview": {
+            "title": "Overview",
+            "subtitle": "Your learning cockpit — progress, quests and goals for the week.",
+            "loadError": "Couldn't load data",
+            "retry": "Try again",
+            "quickActions": "Quick actions",
+            "actions": {
+                "courses": "Courses",
+                "review": "Review",
+                "practice": "Practice",
+                "league": "Leaderboard",
+                "rewards": "Rewards"
+            },
+            "streakDays": "{count}-day streak",
+            "points": "{count, number} points",
+            "aiCredit": "AI credit",
+            "aiCreditValue": "AI credit · {remaining}/{limit}",
+            "sections": {
+                "continue": "Continue learning",
+                "quest": "Today's quest",
+                "streak": "This week's streak",
+                "goals": "Weekly goals"
+            },
+            "continue": {
+                "empty": "No courses to resume yet",
+                "resume": "Resume"
+            },
+            "quest": {
+                "tasks": {
+                    "readLesson": "Read a lesson",
+                    "passChallenge": "Pass a challenge",
+                    "reviewFlashcards": "Review flashcards",
+                    "askAi": "Ask the AI tutor"
+                },
+                "summary": "{done}/{total} tasks done"
+            },
+            "streakCurrent": "{count}-day streak",
+            "goals": {
+                "labels": {
+                    "lessons": "Lessons",
+                    "studyDays": "Study days",
+                    "challenges": "Challenges",
+                    "flashcards": "Flashcards"
+                },
+                "progress": "{label} · {current}/{target}"
+            }
         }
     },
     "homeLanding": {
@@ -3509,6 +3556,8 @@
         "faq": {
             "eyebrow": "Frequently asked questions",
             "title": "FAQ about studying at FTES",
+            "showMore": "Show more questions",
+            "showLess": "Show less",
             "items": {
                 "refund": {
                     "q": "If I don't understand a course at FTES, can I get a refund?",
@@ -4201,6 +4250,7 @@
             "reactionsAria": "{count} reactions",
             "commentsAria": "{count} comments",
             "joined": "You've joined this space",
+            "dismiss": "Dismiss notice",
             "statsLine": "{members} members · {moderators} moderators · {resources} resources",
             "compose": "New post",
             "pinned": "Pinned by moderator",
@@ -4253,6 +4303,50 @@
                 "leaderboard": {
                     "title": "Leaderboard",
                     "meta": "{count} participants"
+                }
+            },
+            "backToHub": "Back to practice",
+            "comingSoon": "This module is coming soon.",
+            "difficulty": {
+                "easy": "Easy",
+                "medium": "Medium",
+                "hard": "Hard"
+            },
+            "coding": {
+                "backToList": "Back to problems",
+                "acceptance": "{rate}% acceptance",
+                "examples": "Examples",
+                "exampleN": "Example {n}",
+                "input": "Input",
+                "output": "Output",
+                "expected": "Expected",
+                "got": "Got",
+                "constraints": "Constraints",
+                "solution": "Solution",
+                "language": "Language",
+                "editorPlaceholder": "// Write your solution here...",
+                "run": "Run",
+                "submit": "Submit",
+                "allPassed": "All test cases passed",
+                "someFailed": "Passed {passed}/{total} test cases",
+                "testN": "Test {n}",
+                "pass": "Pass",
+                "fail": "Fail",
+                "searchPlaceholder": "Search problems by title or tag",
+                "loadError": "Couldn't load the problems",
+                "retry": "Retry",
+                "empty": "No problems match your filters",
+                "status": {
+                    "solved": "Solved",
+                    "unsolved": "Unsolved"
+                },
+                "resultKind": {
+                    "run": "Run",
+                    "submit": "Submit"
+                },
+                "filters": {
+                    "allDifficulties": "All difficulties",
+                    "allStatuses": "All statuses"
                 }
             }
         },
@@ -4374,6 +4468,23 @@
                 "front": "Term",
                 "back": "Definition",
                 "position": "{current}/{total}",
+                "cardProgress": "Card {current}/{total}",
+                "showAnswer": "Show answer",
+                "selfRatePrompt": "How well did you remember this?",
+                "rating": {
+                    "again": "Again",
+                    "hard": "Hard",
+                    "good": "Good",
+                    "easy": "Easy"
+                },
+                "interval": {
+                    "again": "<1 min",
+                    "hard": "1 day",
+                    "good": "3 days",
+                    "easy": "5 days"
+                },
+                "reviewDone": "Reviewed {total} cards",
+                "reviewDoneHint": "Review again to retain longer, or generate a new deck.",
                 "errorTitle": "Couldn't generate flashcards",
                 "emptyTitle": "No material to build cards from",
                 "emptyDesc": "Add resources in the Resources tab, then come back."
@@ -4907,5 +5018,127 @@
         "loading": "Loading…",
         "error": "Could not load user info.",
         "errorRetry": "Retry"
+    },
+    "learn": {
+        "common": {
+            "retry": "Retry"
+        },
+        "nav": {
+            "label": "Course navigation",
+            "sections": {
+                "mind-map": "Mind map",
+                "content": "Modules",
+                "foundations": "Foundations",
+                "review": "Review",
+                "leaderboard": "Leaderboard"
+            }
+        },
+        "content": {
+            "modulesTitle": "Modules",
+            "progressCount": "{done}/{total} lessons",
+            "searchPlaceholder": "Search lessons…",
+            "moduleLabel": "{order}. {title}",
+            "lessonCount": "{done}/{total} lessons",
+            "premium": "Premium",
+            "empty": "No modules yet.",
+            "noMatch": "No lessons match your search.",
+            "error": "Failed to load course content.",
+            "continue": "Continue learning",
+            "overallProgress": "Overall progress",
+            "percent": "{value}%",
+            "lessonsTitle": "Lessons",
+            "metaModules": "{count} modules",
+            "metaHours": "~{count}h",
+            "metaLearners": "{count} learners"
+        },
+        "reader": {
+            "error": "Failed to load lesson.",
+            "onThisPage": "On this page",
+            "viewSwitcher": "View",
+            "views": {
+                "content": "Content",
+                "challenges": "Challenges"
+            },
+            "languageSwitcher": "Language",
+            "hasChallenge": "Has challenge",
+            "previous": "Previous",
+            "next": "Next",
+            "askAboutThis": "Ask AI about this",
+            "lockedTitle": "Premium content",
+            "lockedBody": "Enroll in the course to unlock this lesson and the rest of the content.",
+            "enrollCta": "Enroll in course",
+            "noChallenge": "This lesson has no challenge yet.",
+            "challengeTitle": "Auto-graded challenge",
+            "challengeBody": "Submit your work for automatic grading and feedback.",
+            "openChallenge": "Open challenge",
+            "ai": {
+                "open": "Open AI tutor",
+                "close": "Close",
+                "title": "Ask AI",
+                "intro": "Select a passage in the lesson to ask about it, or type a question below.",
+                "placeholder": "Ask about this lesson…",
+                "send": "Send",
+                "clearSelection": "Clear selection",
+                "aboutPassage": "About “{passage}”:",
+                "stubReply": "This is a sample AI tutor reply. Once the backend is ready, answers will be grounded in the lesson content and the passage you selected.",
+                "quickAsks": {
+                    "explain": "Explain this passage",
+                    "example": "Give an example",
+                    "simplify": "Explain more simply"
+                }
+            }
+        },
+        "comments": {
+            "title": "Comments ({count})",
+            "placeholder": "Write a comment…",
+            "send": "Send",
+            "you": "You",
+            "now": "just now",
+            "empty": "No comments yet. Be the first!",
+            "error": "Failed to load comments."
+        },
+        "mindMap": {
+            "title": "Course mind map",
+            "youAreHere": "You are here",
+            "error": "Failed to load the map.",
+            "legend": {
+                "done": "Completed",
+                "current": "In progress",
+                "locked": "Locked"
+            }
+        },
+        "leaderboard": {
+            "title": "Leaderboard",
+            "subtitle": "Learners ranked by XP in this course.",
+            "categoryLabel": "Category",
+            "categories": {
+                "total": "Total XP",
+                "challenges": "Challenges",
+                "reading": "Reading",
+                "milestones": "Milestones"
+            },
+            "xp": "{value} XP",
+            "empty": "No leaderboard data yet.",
+            "error": "Failed to load the leaderboard."
+        },
+        "submission": {
+            "title": "Submit your work",
+            "subtitle": "Submit for automatic grading.",
+            "settingsTitle": "Grading settings",
+            "settingsHint": "Pick a grader and check remaining credits.",
+            "graderCredits": "{grader} · {credits}",
+            "taskHeading": "{order}. {title}",
+            "points": "{points} pts",
+            "urlLabel": "Submission URL",
+            "pickGrader": "Pick a grader",
+            "submit": "Submit",
+            "viewAttempts": "View Attempts",
+            "resultTitle": "Your result",
+            "score": "{score}/{total} pts",
+            "attempts": "{count} attempts",
+            "mockFeedback": "Submission passed. Good structure — consider adding tests for edge cases.",
+            "noResult": "You haven't submitted yet. Paste your URL and press Submit to be graded.",
+            "error": "Failed to load the submission page."
+        }
     }
 }

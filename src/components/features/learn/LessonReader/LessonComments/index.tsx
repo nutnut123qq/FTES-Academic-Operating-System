@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
-import { Button, Input, TextField, Typography } from "@heroui/react"
+import { Button, Input, TextField, Typography, cn } from "@heroui/react"
 import { ChatCircleIcon, PaperPlaneTiltIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
@@ -14,6 +14,8 @@ import type { LessonComment } from "../../hooks/useQueryLessonCommentsSwr"
 export interface LessonCommentsProps {
     courseId: string
     contentId: string
+    /** Extra classes on the section root (e.g. the reading-width cap). */
+    className?: string
 }
 
 /**
@@ -26,7 +28,7 @@ export interface LessonCommentsProps {
  * self-contained (own i18n namespace) rather than reusing `PostCommentThread`,
  * which couples to the community-hub i18n + rich editor.
  */
-export const LessonComments = ({ courseId, contentId }: LessonCommentsProps) => {
+export const LessonComments = ({ courseId, contentId, className }: LessonCommentsProps) => {
     const t = useTranslations("learn")
     const { comments, isLoading, error, mutate } = useQueryLessonCommentsSwr(courseId, contentId)
 
@@ -55,7 +57,7 @@ export const LessonComments = ({ courseId, contentId }: LessonCommentsProps) => 
     }
 
     return (
-        <section className="flex flex-col gap-4 border-t border-separator pt-6">
+        <section className={cn("flex flex-col gap-4 border-t border-separator pt-6", className)}>
             <div className="flex items-center gap-2">
                 <ChatCircleIcon aria-hidden focusable="false" className="size-5 text-muted" />
                 <Typography type="body" weight="semibold">

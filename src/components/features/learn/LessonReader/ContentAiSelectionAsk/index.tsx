@@ -6,6 +6,7 @@ import { Button } from "@heroui/react"
 import { SparkleIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { useContentAiChatOverlayState, useContentAiSelection } from "@/hooks/zustand/overlay/hooks"
+import { useSelectionHintStore } from "./hintStore"
 
 /** Screen position + text of an active passage selection. */
 interface Anchor {
@@ -37,6 +38,11 @@ export const ContentAiSelectionAsk = () => {
     const [anchor, setAnchor] = useState<Anchor | null>(null)
     const { setSelection } = useContentAiSelection()
     const { open } = useContentAiChatOverlayState()
+    // first-discovery flag: the button wears a "Mới" tag until first use / dismiss
+    const seen = useSelectionHintStore((state) => state.seen)
+    const hydrate = useSelectionHintStore((state) => state.hydrate)
+    const markSeen = useSelectionHintStore((state) => state.markSeen)
+    useEffect(() => hydrate(), [hydrate])
 
     useEffect(() => {
         const article = () => document.getElementById("lesson-article")
@@ -104,6 +110,7 @@ export const ContentAiSelectionAsk = () => {
 
     const onAsk = () => {
         setSelection(anchor.text, anchor.context)
+        markSeen()
         open()
         window.getSelection()?.removeAllRanges()
         setAnchor(null)
@@ -115,9 +122,14 @@ export const ContentAiSelectionAsk = () => {
             // keep the selection alive through the click
             onMouseDown={(event) => event.preventDefault()}
         >
-            <Button size="sm" variant="primary" onPress={onAsk}>
+            <Button size="sm" variant="primary" onPress={onAsk} className="shadow-lg">
                 <SparkleIcon aria-hidden focusable="false" weight="fill" className="size-4" />
                 {t("reader.askAboutThis")}
+                {!seen ? (
+                    <span className="rounded-full bg-surface px-1.5 py-0.5 text-[11px] font-medium text-accent">
+                        {t("reader.ai.new")}
+                    </span>
+                ) : null}
             </Button>
         </div>,
         document.body,

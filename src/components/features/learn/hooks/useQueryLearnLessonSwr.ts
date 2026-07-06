@@ -24,13 +24,29 @@ export interface LessonBlock {
     level?: 2 | 3
 }
 
+/** A learning outcome bullet ("What you'll learn"). */
+export interface LessonOutcome {
+    id: string
+    text: string
+}
+
 /** The lesson currently open in the reader (§4, mock until BE lands). */
 export interface LearnLessonView {
     id: string
+    /** Owning module id (for the prev/next route + breadcrumb). */
+    moduleId: string
     title: string
+    /** Short description under the title. */
+    description: string
     moduleTitle: string
     /** Read/watch time label. */
     readTimeLabel: string
+    /** Estimated reading minutes (for the meta chip). */
+    minutesRead: number
+    /** Number of challenges attached (meta chip). */
+    challengeCount: number
+    /** "What you'll learn" bullets (empty → the callout is hidden). */
+    outcomes: Array<LessonOutcome>
     /** Languages this lesson has content for (subset of TS/Java/C#/Go). */
     availableLangs: Array<string>
     /** Body blocks keyed by language. */
@@ -38,6 +54,9 @@ export interface LearnLessonView {
     /** Prev/next content ids for the pager. */
     prevId: string | null
     nextId: string | null
+    /** Previous / next lesson titles (for the pager cards). */
+    prevTitle: string | null
+    nextTitle: string | null
     isCompleted: boolean
     /** True → this lesson has an auto-graded challenge (shows the submission entry). */
     hasChallenge: boolean
@@ -106,17 +125,31 @@ const fetchLearnLessonMock = async (courseId: string, contentId: string): Promis
     const nextId = lessonNo < 4 ? `m${moduleNo}-l${lessonNo + 1}` : `m${moduleNo + 1}-l1`
     // Premium: the 4th lesson of modules ≥ 3 (matches useQueryLearnCourseSwr).
     const isPremium = moduleNo >= 3 && lessonNo === 4
+    const minutesRead = 5 + ((moduleNo + lessonNo) % 8)
+    const hasChallenge = lessonNo === 4
     return {
         id: contentId,
+        moduleId: `m${moduleNo}`,
         title: `Lesson ${moduleNo}.${lessonNo}`,
+        description:
+            "A short, focused lesson. Read the passages, try the worked example, then apply it in the challenge at the end of the module.",
         moduleTitle: `Module ${moduleNo}`,
-        readTimeLabel: `${5 + ((moduleNo + lessonNo) % 8)} min`,
+        readTimeLabel: `${minutesRead} min`,
+        minutesRead,
+        challengeCount: hasChallenge ? 1 : 0,
+        outcomes: [
+            { id: "o1", text: "Explain the runtime call model and where local state lives" },
+            { id: "o2", text: "Trace a worked example step by step" },
+            { id: "o3", text: "Spot the common edge cases before they bite" },
+        ],
         availableLangs: LANGS,
         bodyByLang,
         prevId,
         nextId,
+        prevTitle: prevId ? `Lesson ${moduleNo}.${lessonNo - 1}` : null,
+        nextTitle: nextId ? (lessonNo < 4 ? `Lesson ${moduleNo}.${lessonNo + 1}` : `Lesson ${moduleNo + 1}.1`) : null,
         isCompleted: moduleNo === 1,
-        hasChallenge: lessonNo === 4,
+        hasChallenge,
         // ponytail: mock viewer is free-enrolled → premium body is gated.
         isLocked: isPremium,
     }

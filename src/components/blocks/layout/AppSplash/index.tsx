@@ -72,7 +72,7 @@ export const AppSplash = () => {
                     style={{ animation: "appSplashTrickle 2.4s ease-in-out infinite" }}
                 />
             </div>
-            <BrandLogo />
+            <BrandLogo className="h-14" />
             <Typography type="body-sm" color="muted">
                 {t("loading")}
             </Typography>

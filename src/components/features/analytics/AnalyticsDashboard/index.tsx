@@ -3,82 +3,79 @@
 import React from "react"
 import { Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
-import { ChartBarIcon, TrendDownIcon, TrendUpIcon } from "@phosphor-icons/react"
-import { useQueryAnalyticsSwr } from "../hooks/useQueryAnalyticsSwr"
+import {
+    BookOpenIcon,
+    ListChecksIcon,
+    FireIcon,
+    TargetIcon,
+} from "@phosphor-icons/react"
+import { LabeledCard } from "@/components/blocks/cards/LabeledCard"
+import { IdentityCard } from "./IdentityCard"
+import { QuickActions } from "./QuickActions"
+import { ContinueLearning } from "./ContinueLearning"
+import { DailyQuest } from "./DailyQuest"
+import { StreakStrip } from "./StreakStrip"
+import { WeeklyGoals } from "./WeeklyGoals"
 
 /**
- * Analytics dashboard (§20) — the `/analytics` page. A metrics dashboard: a grid of
- * headline metric cards (label + big number + colored delta) over a row of category
- * tiles (placeholder "chart coming soon" cards per domain). Feature owns data (mock);
- * tokens own the look. Mirrors the house dashboard archetype (`LeaderboardShell`).
- * ponytail: hand-rolled metric cards + placeholder tiles, mock data.
+ * Dashboard overview (§24) — the `/analytics` cockpit. A 2-column layout: a LEFT
+ * identity card (avatar · streak · AI-credit meter · reward points) + a quick-
+ * actions list, and a RIGHT column of activity widgets — "Continue learning"
+ * (resume cards), "Today's quest" (toggleable checklist), a weekly streak strip,
+ * and "Weekly goals" (progress bars). Stacks to one column on mobile. Each widget
+ * self-fetches its own MOCK leaf query + owns its loading/error states.
+ * ponytail: FE-only + mock hooks; swap the hooks for real queries when BE lands.
  */
 export const AnalyticsDashboard = () => {
     const t = useTranslations("analytics")
-    const { metrics, sections } = useQueryAnalyticsSwr()
 
     return (
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-6">
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-2">
                 <Typography type="h4" weight="bold">
-                    {t("title")}
+                    {t("overview.title")}
                 </Typography>
                 <Typography type="body-sm" color="muted">
-                    {t("subtitle")}
+                    {t("overview.subtitle")}
                 </Typography>
             </div>
 
-            {/* metric cards */}
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {metrics.map((metric) => {
-                    const up = metric.delta >= 0
-                    return (
-                        <div key={metric.id} className="flex flex-col gap-2 rounded-2xl bg-default/40 p-4">
-                            <Typography type="body-xs" color="muted">
-                                {t(`metrics.${metric.key}`)}
-                            </Typography>
-                            <Typography type="h4" weight="bold">
-                                {Math.round(metric.value).toLocaleString()}
-                            </Typography>
-                            <div
-                                className={`flex items-center gap-1 ${up ? "text-success" : "text-danger"}`}
-                                aria-label={t("deltaLabel", { value: metric.delta.toFixed(1) })}
-                            >
-                                {up ? (
-                                    <TrendUpIcon className="size-4" aria-hidden />
-                                ) : (
-                                    <TrendDownIcon className="size-4" aria-hidden />
-                                )}
-                                <Typography type="body-xs" weight="medium" className="text-inherit">
-                                    {up ? "+" : ""}
-                                    {metric.delta.toFixed(1)}%
-                                </Typography>
-                            </div>
-                        </div>
-                    )
-                })}
-            </div>
+            {/* 2-column cockpit — identity+actions left, activity widgets right; stacks on mobile */}
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[20rem_1fr]">
+                {/* LEFT: identity + quick actions */}
+                <div className="flex flex-col gap-6">
+                    <IdentityCard />
+                    <QuickActions />
+                </div>
 
-            {/* category tiles — placeholder charts */}
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {sections.map((section) => (
-                    <div
-                        key={section.id}
-                        className="flex flex-col gap-3 rounded-2xl border border-separator p-4"
+                {/* RIGHT: activity widgets */}
+                <div className="flex flex-col gap-6">
+                    <LabeledCard
+                        label={t("overview.sections.continue")}
+                        icon={<BookOpenIcon aria-hidden focusable="false" className="size-5" />}
+                        frameless
                     >
-                        <div className="flex items-center gap-2 text-muted">
-                            <ChartBarIcon className="size-5" aria-hidden />
-                            <Typography type="body-sm" weight="medium" className="text-foreground">
-                                {t(`sections.${section.key}`)}
-                            </Typography>
-                        </div>
-                        <div className="flex h-24 items-center justify-center rounded-large bg-default/40">
-                            <Typography type="body-xs" color="muted">
-                                {t("chartSoon")}
-                            </Typography>
-                        </div>
-                    </div>
-                ))}
+                        <ContinueLearning />
+                    </LabeledCard>
+                    <LabeledCard
+                        label={t("overview.sections.quest")}
+                        icon={<ListChecksIcon aria-hidden focusable="false" className="size-5" />}
+                    >
+                        <DailyQuest />
+                    </LabeledCard>
+                    <LabeledCard
+                        label={t("overview.sections.streak")}
+                        icon={<FireIcon aria-hidden focusable="false" className="size-5" />}
+                    >
+                        <StreakStrip />
+                    </LabeledCard>
+                    <LabeledCard
+                        label={t("overview.sections.goals")}
+                        icon={<TargetIcon aria-hidden focusable="false" className="size-5" />}
+                    >
+                        <WeeklyGoals />
+                    </LabeledCard>
+                </div>
             </div>
         </div>
     )

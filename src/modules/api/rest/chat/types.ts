@@ -38,7 +38,7 @@ export interface AttachmentInput {
     durationSeconds?: number
 }
 
-export interface SendMessageRequest {
+export interface ChatSendMessageRequest {
     clientMessageId: string
     type?: string
     content?: string

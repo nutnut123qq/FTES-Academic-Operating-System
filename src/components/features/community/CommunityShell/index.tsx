@@ -64,11 +64,11 @@ export const CommunityShell = ({ children }: CommunityShellProps) => {
                 </div>
             </aside>
             <div className="mx-auto flex w-full max-w-[620px] flex-col">
-                {/* transparent sticky header — meteors pass through (slightly diffused by
-                    backdrop-blur) so the strip never becomes a solid no-meteor rectangle; tabs
-                    stay sharp on top, posts blur underneath on scroll; NO background fill and
-                    NO border so it does not read as a card */}
-                <div className="sticky top-16 z-10 relative flex items-center justify-center backdrop-blur px-4 pt-3">
+                {/* opaque sticky tab strip — pinned below the h-16 site header; background
+                    matches the site header (`bg-background`) so scrolled posts are hidden
+                    behind it instead of showing through; backdrop-blur is kept but is now
+                    decorative because the solid background provides the actual cover */}
+                <div className="sticky top-16 z-10 flex items-center justify-center bg-background backdrop-blur px-4 pt-3">
                     <ExtendedTabs
                         selectedKey={selectedTab}
                         onSelectionChange={(key) => {

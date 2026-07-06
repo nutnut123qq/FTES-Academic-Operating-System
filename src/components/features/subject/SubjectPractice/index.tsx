@@ -1,66 +1,67 @@
 "use client"
 
-import React from "react"
+import React, { useState } from "react"
 import { Button, Typography } from "@heroui/react"
-import {
-    TargetIcon,
-    BookOpenIcon,
-    SparkleIcon,
-    ChartBarIcon,
-} from "@phosphor-icons/react"
+import { ArrowLeftIcon, SparkleIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
+import { EmptyContent } from "@/components/blocks/async/EmptyContent"
 import {
     useQuerySubjectPracticeSwr,
     type PracticeModuleKey,
 } from "../hooks/useQuerySubjectPracticeSwr"
+import { PracticeHub } from "./PracticeHub"
+import { CodingChallengeList } from "./CodingChallengeList"
 
-// ponytail: icons are provisional (confirmed-compiling set) — refine per-module when
-// the Practice tab gets its own brainstorm.
-const ICONS: Record<PracticeModuleKey, React.ReactNode> = {
-    quiz: <TargetIcon className="size-6" />,
-    flashcards: <BookOpenIcon className="size-6" />,
-    coding: <SparkleIcon className="size-6" />,
-    leaderboard: <ChartBarIcon className="size-6" />,
-}
+/** The in-panel view: the hub, or one opened module. */
+type PracticeView = "hub" | PracticeModuleKey
 
 /**
- * Practice tab (§3 → §10/§11). DEFAULT on-canon layout (no dedicated brainstorm):
- * a card grid of 4 module shells (quiz · flashcards · coding · leaderboard), each
- * with a headline count + an Open CTA. Mock data; cards hand-rolled for the
- * scaffold (swap to a card block when this tab gets its own brainstorm).
+ * Practice tab (§3 → §9 checklist). A practice HUB whose module cards open their own
+ * in-panel sub-view (view-state navigation — no dead buttons). The Coding module is the
+ * built-out one: a LeetCode-style problem bank ({@link CodingChallengeList}) with filters
+ * + a problem detail/attempt surface. The other three modules (Quiz · Flashcards ·
+ * Leaderboard) open a "coming soon" placeholder for now — a coherent first version, the
+ * foundation for a future PE exam bank. Mock data via `useQuerySubjectPracticeSwr`.
  */
 export const SubjectPractice = () => {
     const t = useTranslations("subjects")
     const { subjectId } = useParams<{ subjectId: string }>()
     const { modules } = useQuerySubjectPracticeSwr(subjectId)
+    const [view, setView] = useState<PracticeView>("hub")
+
+    // the coding bank owns its whole panel (list + detail)
+    if (view === "coding") {
+        return (
+            <div className="p-6">
+                <CodingChallengeList subjectId={subjectId} onBack={() => setView("hub")} />
+            </div>
+        )
+    }
+
+    // quiz / flashcards / leaderboard — placeholder sub-views (clickable, not dead)
+    if (view !== "hub") {
+        return (
+            <div className="flex flex-col gap-4 p-6">
+                <Button size="sm" variant="tertiary" className="self-start" onPress={() => setView("hub")}>
+                    <ArrowLeftIcon aria-hidden focusable="false" className="size-4" />
+                    {t("practice.backToHub")}
+                </Button>
+                <EmptyContent
+                    icon={<SparkleIcon aria-hidden focusable="false" className="size-8 text-muted" />}
+                    title={t(`practice.modules.${view}.title`)}
+                    description={t("practice.comingSoon")}
+                />
+            </div>
+        )
+    }
 
     return (
         <div className="flex flex-col gap-3 p-6">
             <Typography type="h5" weight="bold">
                 {t("practice.title")}
             </Typography>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {modules.map((module) => (
-                    <div
-                        key={module.key}
-                        className="flex flex-col gap-3 rounded-2xl border border-separator p-4"
-                    >
-                        <span className="text-accent">{ICONS[module.key]}</span>
-                        <div className="flex flex-col gap-0">
-                            <Typography type="body" weight="medium">
-                                {t(`practice.modules.${module.key}.title`)}
-                            </Typography>
-                            <Typography type="body-sm" color="muted">
-                                {t(`practice.modules.${module.key}.meta`, { count: module.count })}
-                            </Typography>
-                        </div>
-                        <Button size="sm" variant="secondary" className="self-start">
-                            {t("practice.cta")}
-                        </Button>
-                    </div>
-                ))}
-            </div>
+            <PracticeHub modules={modules} onOpen={(key) => setView(key)} />
         </div>
     )
 }

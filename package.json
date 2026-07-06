@@ -11,6 +11,7 @@
   "dependencies": {
     "@apollo/client": "^4.1.6",
     "@codesandbox/sandpack-react": "^2.20.0",
+    "dompurify": "^3.4.0",
     "@emotion/is-prop-valid": "^1.4.0",
     "@fingerprintjs/fingerprintjs": "^5.2.0",
     "@gravity-ui/icons": "^2.18.0",

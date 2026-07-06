@@ -1,0 +1,216 @@
+/**
+ * Request/response DTOs for the commerce REST controllers.
+ *
+ * Mirrors the backend records in `vn.ftes.aos.commerce.web.dto.CommerceDtos`
+ * plus `CommerceAdminController.ReconciliationRunView`.
+ */
+
+// ------------------------------------------------------------------ views
+
+/** One product in the marketplace catalog. */
+export interface ProductView {
+    /** Product id (UUID). */
+    id: string
+    /** Product type, e.g. "COURSE", "SUBSCRIPTION", "MERCHANDISE", "AI_CREDITS", "VOUCHER". */
+    type: string
+    /** Display name. */
+    name: string
+    /** URL-friendly slug. */
+    slug: string
+    /** Human-readable description. */
+    description?: string
+    /** Price in VND. */
+    priceVnd?: number
+    /** Price in platform coins. */
+    priceCoin?: number
+    /** Available stock; null when not applicable. */
+    stockQuantity?: number
+    /** Product status, e.g. "ACTIVE" or "ARCHIVED". */
+    status: string
+}
+
+/** One item in the shopping cart. */
+export interface CartItemView {
+    /** Cart item id. */
+    id: string
+    /** Product id. */
+    productId: string
+    /** Quantity. */
+    quantity: number
+    /** Unit price at the time the item was added. */
+    unitPrice?: number
+}
+
+/** Shopping cart aggregate. */
+export interface CartView {
+    /** Cart line items. */
+    items: Array<CartItemView>
+    /** Subtotal before discounts. */
+    subtotal?: number
+}
+
+/** One line item inside an order. */
+export interface OrderItemView {
+    /** Order item id. */
+    id: string
+    /** Product id. */
+    productId: string
+    /** Unit pay amount (VND). */
+    unitPayAmount?: number
+    /** Quantity. */
+    quantity: number
+    /** Fulfillment status, e.g. "PENDING" or "FULFILLED". */
+    fulfillmentStatus: string
+}
+
+/** Order summary/detail. */
+export interface OrderView {
+    /** Order id. */
+    orderId: string
+    /** Order status, e.g. "PENDING", "PAID", "CANCELLED". */
+    status: string
+    /** Total price in VND. */
+    totalPrice?: number
+    /** Discount amount in VND. */
+    discountAmount?: number
+    /** Total price in coins. */
+    totalCoin?: number
+    /** Payment method, e.g. "VIETQR" or "COIN". */
+    payMethod: string
+    /** QR code payload/image URL for VietQR payment. */
+    qrCode?: string
+    /** Order line items (populated in detail view). */
+    items: Array<OrderItemView>
+    /** Order creation timestamp (ISO-8601). */
+    createdAt?: string
+}
+
+/** Checkout result returned after creating an order. */
+export interface CheckoutResult {
+    /** Created order id. */
+    orderId: string
+    /** Amount to pay in VND. */
+    amount?: number
+    /** Amount to pay in coins. */
+    amountCoin?: number
+    /** QR code for VietQR payment. */
+    qrCode?: string
+    /** Order status. */
+    status: string
+}
+
+/** Paginated view used by several commerce endpoints. */
+export interface PageView<T> {
+    /** Page content. */
+    items: Array<T>
+    /** Current page number (0-based). */
+    page: number
+    /** Total element count across all pages. */
+    totalElements: number
+}
+
+/** Coupon discount preview. */
+export interface CouponPreview {
+    /** Discount amount in VND. */
+    discount: number
+}
+
+/** Invoice metadata and download URL. */
+export interface InvoiceView {
+    /** Invoice number. */
+    invoiceNumber: string
+    /** Presigned URL to download the invoice PDF. */
+    presignedUrl: string
+}
+
+/** Refund request summary. */
+export interface RefundRequestView {
+    /** Refund request id (UUID). */
+    id: string
+    /** Order id. */
+    orderId: string
+    /** Refund status, e.g. "PENDING", "APPROVED", "REJECTED". */
+    status: string
+    /** Reason provided by the user. */
+    reason: string
+    /** Refund amount in VND. */
+    amount?: number
+    /** Refund channel, e.g. "ORIGINAL" or "WALLET". */
+    channel: string
+}
+
+/** One reconciliation run. */
+export interface ReconciliationRunView {
+    /** Run id (UUID). */
+    id: string
+    /** Number of mismatched transactions detected. */
+    mismatchCount: number
+    /** Run timestamp (ISO-8601). */
+    ranAt: string
+}
+
+// ------------------------------------------------------------------ requests
+
+/** Body sent to `POST /api/v1/commerce/admin/products` and `PUT /api/v1/commerce/admin/products/{id}`. */
+export interface ProductUpsertRequest {
+    /** Product type. */
+    type: string
+    /** Display name. */
+    name: string
+    /** URL-friendly slug. */
+    slug: string
+    /** Human-readable description. */
+    description?: string
+    /** Price in VND. */
+    priceVnd?: number
+    /** Price in coins. */
+    priceCoin?: number
+    /** Fulfillment config JSON/string. */
+    fulfillmentConfig: string
+    /** Available stock; null when not applicable. */
+    stockQuantity?: number
+    /** Product status; defaults may apply server-side. */
+    status?: string
+}
+
+/** Body sent to `POST /api/v1/commerce/cart/items`. */
+export interface AddCartItemRequest {
+    /** Product id to add. */
+    productId: string
+    /** Quantity (>= 1). */
+    quantity: number
+}
+
+/** Body sent to `POST /api/v1/commerce/checkout`. */
+export interface CheckoutRequest {
+    /** Cart item ids to checkout. */
+    itemIds: Array<string>
+    /** Optional coupon code. */
+    couponName?: string
+    /** Payment method: "VIETQR" or "COIN". */
+    payMethod: string
+    /** Idempotency key to avoid duplicate orders. */
+    idempotencyKey: string
+}
+
+/** Body sent to `POST /api/v1/commerce/coupons/validate`. */
+export interface CouponValidateRequest {
+    /** Coupon code. */
+    couponName: string
+    /** Order amount in VND. */
+    orderAmount: number
+}
+
+/** Body sent to `POST /api/v1/commerce/orders/{orderId}/refund-requests`. */
+export interface RefundCreateRequest {
+    /** Reason for the refund. */
+    reason: string
+    /** Refund channel; optional depending on policy. */
+    channel?: string
+}
+
+/** Body sent to `POST /api/v1/commerce/admin/refund-requests/{id}/reject`. */
+export interface RefundReviewRequest {
+    /** Rejection note. */
+    note?: string
+}

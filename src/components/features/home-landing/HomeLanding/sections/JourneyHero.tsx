@@ -166,7 +166,7 @@ export const JourneyHero = () => {
                                 aria-selected={isActive}
                                 onClick={() => selectStage(i)}
                                 className={cn(
-                                    "flex items-start gap-3 rounded-large border px-3 py-2 text-left transition-colors",
+                                    "flex items-start gap-3 rounded-2xl border px-3 py-2 text-left transition-colors",
                                     isActive
                                         ? isPayoff
                                             ? "border-success bg-success/10"

@@ -24,6 +24,7 @@ export const getMyWallet = async (): Promise<WalletView> => {
     return restRequest<WalletView>({
         method: "GET",
         url: "/wallet/me",
+        authenticated: true,
     })
 }
 
@@ -42,6 +43,7 @@ export const getMyTransactions = async (params?: {
     return restRequest<WalletPageView<TransactionView>>({
         method: "GET",
         url: "/wallet/me/transactions",
+        authenticated: true,
         params: {
             type: params?.type ?? undefined,
             from: params?.from ?? undefined,
@@ -128,6 +130,7 @@ export const getMyReferral = async (): Promise<ReferralView> => {
     return restRequest<ReferralView>({
         method: "GET",
         url: "/wallet/referrals/me",
+        authenticated: true,
     })
 }
 
@@ -157,6 +160,7 @@ export const getUserWallet = async (userId: string): Promise<WalletView> => {
     return restRequest<WalletView>({
         method: "GET",
         url: `/wallet/admin/wallets/${userId}`,
+        authenticated: true,
     })
 }
 
@@ -175,6 +179,7 @@ export const listAdminTransactions = async (params?: {
     return restRequest<WalletPageView<TransactionView>>({
         method: "GET",
         url: "/wallet/admin/transactions",
+        authenticated: true,
         params: {
             type: params?.type ?? undefined,
             from: params?.from ?? undefined,

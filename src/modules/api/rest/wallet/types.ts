@@ -26,7 +26,8 @@ export interface TransactionView {
     amount: number
     direction: string
     counterparty: string
-    memo: string
+    /** Free-text note; `null` when the BE has none (e.g. system-generated entries). */
+    memo: string | null
     createdAt: string
 }
 

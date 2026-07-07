@@ -1,39 +1,68 @@
 "use client"
 
 import React from "react"
-import { Button, Skeleton, Typography } from "@heroui/react"
-import { useTranslations } from "next-intl"
+import { Button, Chip, Skeleton, Typography } from "@heroui/react"
+import { useLocale, useTranslations } from "next-intl"
 import {
     ArrowClockwiseIcon,
     ArrowDownIcon,
     ArrowsLeftRightIcon,
     ArrowUpIcon,
     CoinsIcon,
+    GiftIcon,
     PlusIcon,
     ShoppingBagIcon,
+    SlidersHorizontalIcon,
+    TicketIcon,
+    TrophyIcon,
     WalletIcon,
 } from "@phosphor-icons/react"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
-import {
-    useQueryWalletSwr,
-    type WalletTransaction,
-    type WalletTxKind,
-} from "../hooks/useQueryWalletSwr"
+import { useQueryWalletSwr, type WalletTransaction } from "../hooks/useQueryWalletSwr"
 
-/** Icon per transaction kind — mirrors the semantic of the ledger row. */
-const KIND_ICON: Record<WalletTxKind, React.ComponentType<{ className?: string }>> = {
-    receive: ArrowDownIcon,
-    transfer: ArrowsLeftRightIcon,
-    purchase: ShoppingBagIcon,
-    refund: ArrowClockwiseIcon,
+/** Icon per BE `TransactionType` — mirrors the semantic of the ledger row. */
+const TYPE_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
+    RECEIVE: ArrowDownIcon,
+    TRANSFER: ArrowsLeftRightIcon,
+    PURCHASE: ShoppingBagIcon,
+    REFUND: ArrowClockwiseIcon,
+    REDEEM_VOUCHER: TicketIcon,
+    GIFT: GiftIcon,
+    REWARD_CREDIT: TrophyIcon,
+    REFERRAL_BONUS: GiftIcon,
+    ADMIN_ADJUST: SlidersHorizontalIcon,
+    OPENING_BALANCE: WalletIcon,
 }
 
-/** One ledger row: kind icon + description/date + signed, colored amount. */
+/** BE `TransactionType` names with a localized `txTypes.*` label; others fall back to `UNKNOWN`. */
+const KNOWN_TYPES = new Set(Object.keys(TYPE_ICON))
+
+/** Formats an ISO timestamp to a locale date, degrading to the raw date slice on parse failure. */
+const formatTxDate = (iso: string, locale: string): string => {
+    const date = new Date(iso)
+    if (Number.isNaN(date.getTime())) {
+        return iso.slice(0, 10)
+    }
+    return date.toLocaleDateString(locale === "vi" ? "vi-VN" : "en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+    })
+}
+
+/** One ledger row: type icon + note/label/date + signed, colored amount. */
 const TransactionRow = ({ tx }: { tx: WalletTransaction }) => {
     const t = useTranslations("wallet")
-    const Icon = KIND_ICON[tx.kind]
+    const locale = useLocale()
+    const Icon = TYPE_ICON[tx.type] ?? (tx.direction === "OUT" ? ArrowUpIcon : ArrowDownIcon)
     const isCredit = tx.amount >= 0
     const sign = isCredit ? "+" : "−"
+    const typeLabel = t(`txTypes.${KNOWN_TYPES.has(tx.type) ? tx.type : "UNKNOWN"}`)
+    const dateLabel = formatTxDate(tx.createdAt, locale)
+    // Primary line: the human note when present, else the type label. Secondary keeps the
+    // type visible (with date) whenever the note took the headline.
+    const primary = tx.description || typeLabel
+    const secondary = tx.description ? `${typeLabel} · ${dateLabel}` : dateLabel
 
     return (
         <li className="flex items-center gap-3 py-3">
@@ -46,11 +75,18 @@ const TransactionRow = ({ tx }: { tx: WalletTransaction }) => {
                 <Icon className="size-5" />
             </div>
             <div className="min-w-0 flex-1">
-                <Typography type="body-sm" weight="medium" className="truncate">
-                    {tx.description}
-                </Typography>
+                <div className="flex items-center gap-2">
+                    <Typography type="body-sm" weight="medium" className="truncate">
+                        {primary}
+                    </Typography>
+                    {tx.status === "PENDING" && (
+                        <Chip size="sm" variant="soft" color="warning">
+                            {t("pending")}
+                        </Chip>
+                    )}
+                </div>
                 <Typography type="body-xs" color="muted">
-                    {t(`kinds.${tx.kind}`)} · {tx.date}
+                    {secondary}
                 </Typography>
             </div>
             <Typography
@@ -83,9 +119,9 @@ const HistorySkeleton = () => (
 
 /**
  * Wallet & FTES Coin shell (§12) — the `/wallet` surface. A hero balance card
- * (FTES Coin, accent) + mock action buttons (top-up / transfer / redeem) + a
- * signed, colored transaction history. Feature owns data (mock) + formatting;
- * tokens own the look. ponytail: hand-rolled cards + mock ledger, no real money logic.
+ * (FTES Coin, accent) + action buttons (top-up / transfer / redeem — payment out of
+ * scope) + a signed, colored transaction history. Data comes from the real BE wallet
+ * REST endpoints (`GET /wallet/me` + `/wallet/me/transactions`); tokens own the look.
  */
 export const WalletShell = () => {
     const t = useTranslations("wallet")
@@ -127,7 +163,7 @@ export const WalletShell = () => {
                     </div>
                 </div>
 
-                {/* mock actions — no logic */}
+                {/* actions — payment (top-up/withdraw) out of scope; buttons left as-is */}
                 <div className="flex flex-wrap gap-2">
                     <Button size="sm" variant="primary">
                         <PlusIcon className="size-4" />

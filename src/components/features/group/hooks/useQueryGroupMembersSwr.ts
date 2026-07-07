@@ -26,6 +26,6 @@ const fetchGroupMembersMock = async (): Promise<Array<GroupMember>> => [
 
 /** Loads a group's members. Mocked; SWR-shaped for a drop-in BE swap. */
 export const useQueryGroupMembersSwr = (groupId: string) => {
-    const { data, isLoading, error } = useSWR(["group-members", groupId], () => fetchGroupMembersMock())
-    return { members: data ?? [], isLoading, error }
+    const { data, isLoading, error, mutate } = useSWR(["group-members", groupId], () => fetchGroupMembersMock())
+    return { members: data ?? [], isLoading, error, mutate }
 }

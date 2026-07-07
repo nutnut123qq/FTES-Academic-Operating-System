@@ -2,9 +2,11 @@
 
 import React, { useCallback, useState } from "react"
 import { Typography } from "@heroui/react"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
 import { useAppSelector } from "@/redux/hooks"
+import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import {
     PostEngagementBar,
     DISCUSSION_ENGAGEMENT_ACTIONS,
@@ -66,7 +68,7 @@ const GroupDiscussionRow = ({ groupId, thread }: { groupId: string; thread: Grou
     )
 
     return (
-        <div className="flex flex-col rounded-2xl border border-separator">
+        <div className="flex flex-col rounded-2xl border border-separator transition-colors hover:bg-default/40">
             <div className="flex flex-col gap-2 p-4">
                 <div className="min-w-0">
                     <Typography type="body-sm" weight="medium" truncate>
@@ -107,20 +109,47 @@ const GroupDiscussionRow = ({ groupId, thread }: { groupId: string; thread: Grou
     )
 }
 
+/** Loading skeleton — mirrors a discussion row (title + author + action row). */
+const GroupDiscussionSkeleton = () => (
+    <div className="flex flex-col gap-3">
+        {[0, 1, 2].map((index) => (
+            <div key={index} className="flex flex-col gap-2 rounded-2xl border border-separator p-4">
+                <Skeleton.Typography type="body-sm" width="3/4" />
+                <Skeleton.Typography type="body-xs" width="1/4" />
+                <Skeleton.Typography type="body-xs" width="1/3" />
+            </div>
+        ))}
+    </div>
+)
+
 /**
  * Group discussion (§7). Discussion thread rows with the shared engagement bar
  * configured for DISCUSSION (like + comment ONLY — no share, no save) and inline
  * push-down comment expansion (mock comments). ponytail: mock data.
  */
 export const GroupDiscussion = () => {
+    const t = useTranslations("groupsHub")
     const { groupId } = useParams<{ groupId: string }>()
-    const { threads } = useQueryGroupThreadsSwr(groupId)
+    const { threads, isLoading, error, mutate } = useQueryGroupThreadsSwr(groupId)
 
     return (
-        <div className="flex flex-col gap-3">
-            {threads.map((thread) => (
-                <GroupDiscussionRow key={thread.id} groupId={groupId} thread={thread} />
-            ))}
-        </div>
+        <AsyncContent
+            isLoading={isLoading && threads.length === 0}
+            skeleton={<GroupDiscussionSkeleton />}
+            isEmpty={threads.length === 0}
+            emptyContent={{ title: t("discussion.empty") }}
+            error={threads.length === 0 ? error : undefined}
+            errorContent={{
+                title: t("discussion.error"),
+                onRetry: () => void mutate(),
+                retryLabel: t("states.retry"),
+            }}
+        >
+            <div className="flex flex-col gap-3">
+                {threads.map((thread) => (
+                    <GroupDiscussionRow key={thread.id} groupId={groupId} thread={thread} />
+                ))}
+            </div>
+        </AsyncContent>
     )
 }

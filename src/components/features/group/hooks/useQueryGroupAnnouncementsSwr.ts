@@ -18,6 +18,6 @@ const fetchAnnouncementsMock = async (): Promise<Array<GroupAnnouncement>> => [
 
 /** Loads a group's announcements. Mocked; SWR-shaped for a drop-in BE swap. */
 export const useQueryGroupAnnouncementsSwr = (groupId: string) => {
-    const { data, isLoading, error } = useSWR(["group-announcements", groupId], () => fetchAnnouncementsMock())
-    return { announcements: data ?? [], isLoading, error }
+    const { data, isLoading, error, mutate } = useSWR(["group-announcements", groupId], () => fetchAnnouncementsMock())
+    return { announcements: data ?? [], isLoading, error, mutate }
 }

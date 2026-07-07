@@ -34,12 +34,14 @@ const fetchManageMock = async (): Promise<GroupManage> => ({
 
 /** Loads a group's management data. Mocked; SWR-shaped for a drop-in BE swap. */
 export const useQueryGroupManageSwr = (groupId: string) => {
-    const { data, isLoading, error } = useSWR(["group-manage", groupId], () => fetchManageMock())
+    const { data, isLoading, error, mutate } = useSWR(["group-manage", groupId], () => fetchManageMock())
     return {
         joinRequests: data?.joinRequests ?? [],
         rules: data?.rules ?? [],
         pinned: data?.pinned ?? [],
+        hasData: data != null,
         isLoading,
         error,
+        mutate,
     }
 }

@@ -4,8 +4,25 @@ import React, { useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage, Button, Chip, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
+import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { useQueryGroupsSwr, type GroupType } from "../hooks/useQueryGroupsSwr"
+
+/** Loading skeleton — mirrors the group card grid (avatar + text lines). */
+const GroupsListSkeleton = () => (
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} className="flex flex-col gap-2 rounded-2xl border border-separator p-4">
+                <div className="flex items-center gap-2">
+                    <Skeleton.Avatar size="md" className="shrink-0" />
+                    <Skeleton.Typography type="body" width="1/2" />
+                </div>
+                <Skeleton.Typography type="body-sm" width="full" />
+                <Skeleton.Typography type="body-xs" width="1/4" />
+            </div>
+        ))}
+    </div>
+)
 
 /** Filter options: "all" + every group type. */
 const TYPES: Array<GroupType | "all"> = ["all", "public", "private", "study", "club", "team"]
@@ -18,18 +35,18 @@ const TYPES: Array<GroupType | "all"> = ["all", "public", "private", "study", "c
  */
 export const GroupsList = () => {
     const t = useTranslations("groupsHub")
-    const { groups, isLoading } = useQueryGroupsSwr()
+    const { groups, isLoading, error, mutate } = useQueryGroupsSwr()
     const [type, setType] = useState<GroupType | "all">("all")
 
     const filtered = type === "all" ? groups : groups.filter((group) => group.type === type)
 
     return (
-        <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 p-6">
+        <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 p-6">
             <Typography type="h4" weight="bold">
                 {t("title")}
             </Typography>
 
-            {/* type filter */}
+            {/* type filter — static chrome, stays outside the skeleton */}
             <div className="flex flex-wrap gap-2">
                 {TYPES.map((option) => (
                     <Button
@@ -43,25 +60,19 @@ export const GroupsList = () => {
                 ))}
             </div>
 
-            {isLoading ? (
-                /* skeleton grid — mirrors the card layout (avatar circle + text lines) */
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    {Array.from({ length: 4 }).map((_, index) => (
-                        <div
-                            key={index}
-                            className="flex flex-col gap-2 rounded-2xl border border-separator p-4"
-                        >
-                            <div className="flex items-center gap-2">
-                                <Skeleton.Avatar size="md" className="shrink-0" />
-                                <Skeleton.Typography type="body" width="1/2" />
-                            </div>
-                            <Skeleton.Typography type="body-sm" width="full" />
-                            <Skeleton.Typography type="body-xs" width="1/4" />
-                        </div>
-                    ))}
-                </div>
-            ) : (
-                /* group grid */
+            <AsyncContent
+                isLoading={isLoading && groups.length === 0}
+                skeleton={<GroupsListSkeleton />}
+                isEmpty={filtered.length === 0}
+                emptyContent={{ title: t("groupsList.empty") }}
+                error={groups.length === 0 ? error : undefined}
+                errorContent={{
+                    title: t("groupsList.error"),
+                    onRetry: () => void mutate(),
+                    retryLabel: t("states.retry"),
+                }}
+            >
+                {/* group grid */}
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     {filtered.map((group) => (
                         <Link
@@ -100,7 +111,7 @@ export const GroupsList = () => {
                         </Link>
                     ))}
                 </div>
-            )}
+            </AsyncContent>
         </div>
     )
 }

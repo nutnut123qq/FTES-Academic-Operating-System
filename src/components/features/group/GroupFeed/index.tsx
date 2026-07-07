@@ -2,10 +2,12 @@
 
 import React, { useCallback, useState } from "react"
 import { Typography } from "@heroui/react"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
 import { useAppSelector } from "@/redux/hooks"
 import { UserLink } from "@/components/features/identity"
+import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { PostEngagementBar } from "@/components/reuseable/PostEngagementBar"
 import { PostCommentThread } from "@/components/reuseable/PostCommentThread"
 import { useQueryGroupFeedSwr, type GroupPost } from "../hooks/useQueryGroupFeedSwr"
@@ -68,7 +70,7 @@ const GroupFeedCard = ({ groupId, post }: { groupId: string; post: GroupPost }) 
     )
 
     return (
-        <div className="flex flex-col rounded-2xl border border-separator">
+        <div className="flex flex-col rounded-2xl border border-separator transition-colors hover:bg-default/40">
             <div className="flex flex-col gap-2 p-4">
                 <div className="flex items-center gap-3">
                     <UserLink
@@ -120,20 +122,51 @@ const GroupFeedCard = ({ groupId, post }: { groupId: string; post: GroupPost }) 
     )
 }
 
+/** Loading skeleton — mirrors the feed card (avatar + author + body + action row). */
+const GroupFeedSkeleton = () => (
+    <div className="flex flex-col gap-3">
+        {[0, 1, 2].map((index) => (
+            <div key={index} className="flex flex-col gap-2 rounded-2xl border border-separator p-4">
+                <div className="flex items-center gap-3">
+                    <Skeleton.Avatar size="sm" className="shrink-0" />
+                    <Skeleton.Typography type="body-sm" width="1/4" />
+                </div>
+                <Skeleton.Typography type="body-sm" width="full" />
+                <Skeleton.Typography type="body-sm" width="3/4" />
+                <Skeleton.Typography type="body-xs" width="1/4" />
+            </div>
+        ))}
+    </div>
+)
+
 /**
  * Group feed (§7). Group post cards with the shared engagement bar (full bar:
  * like · comment · share · save) and inline push-down comment expansion (mock
  * comments — no group-post BE contract). ponytail: mock data.
  */
 export const GroupFeed = () => {
+    const t = useTranslations("groupsHub")
     const { groupId } = useParams<{ groupId: string }>()
-    const { posts } = useQueryGroupFeedSwr(groupId)
+    const { posts, isLoading, error, mutate } = useQueryGroupFeedSwr(groupId)
 
     return (
-        <div className="flex flex-col gap-3">
-            {posts.map((post) => (
-                <GroupFeedCard key={post.id} groupId={groupId} post={post} />
-            ))}
-        </div>
+        <AsyncContent
+            isLoading={isLoading && posts.length === 0}
+            skeleton={<GroupFeedSkeleton />}
+            isEmpty={posts.length === 0}
+            emptyContent={{ title: t("feed.empty") }}
+            error={posts.length === 0 ? error : undefined}
+            errorContent={{
+                title: t("feed.error"),
+                onRetry: () => void mutate(),
+                retryLabel: t("states.retry"),
+            }}
+        >
+            <div className="flex flex-col gap-3">
+                {posts.map((post) => (
+                    <GroupFeedCard key={post.id} groupId={groupId} post={post} />
+                ))}
+            </div>
+        </AsyncContent>
     )
 }

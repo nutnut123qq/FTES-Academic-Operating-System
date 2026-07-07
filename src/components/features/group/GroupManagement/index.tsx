@@ -4,10 +4,28 @@ import React, { useState } from "react"
 import { Button, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
+import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { GroupIdentityFields } from "../GroupIdentityFields"
 import { useIdentityImagePicker } from "../hooks/useIdentityImagePicker"
 import { useQueryGroupManageSwr } from "../hooks/useQueryGroupManageSwr"
 import { useQueryGroupSwr } from "../hooks/useQueryGroupSwr"
+
+/** Loading skeleton — mirrors the three management sections (heading + rows). */
+const GroupManageSkeleton = () => (
+    <div className="flex flex-col gap-6">
+        {[0, 1, 2].map((section) => (
+            <div key={section} className="flex flex-col gap-3">
+                <Skeleton.Typography type="h6" width="1/3" />
+                {[0, 1].map((row) => (
+                    <div key={row} className="rounded-2xl border border-separator p-4">
+                        <Skeleton.Typography type="body-sm" width="1/2" />
+                    </div>
+                ))}
+            </div>
+        ))}
+    </div>
+)
 
 /**
  * Group management (§7). DEFAULT on-canon layout: group identity (avatar +
@@ -19,7 +37,8 @@ import { useQueryGroupSwr } from "../hooks/useQueryGroupSwr"
 export const GroupManagement = () => {
     const t = useTranslations("groupsHub")
     const { groupId } = useParams<{ groupId: string }>()
-    const { joinRequests, rules, pinned } = useQueryGroupManageSwr(groupId)
+    const { joinRequests, rules, pinned, hasData, isLoading, error, mutate } =
+        useQueryGroupManageSwr(groupId)
     const { group } = useQueryGroupSwr(groupId)
     const avatar = useIdentityImagePicker(group?.avatarUrl ?? null)
     const cover = useIdentityImagePicker(group?.coverUrl ?? null)
@@ -43,7 +62,9 @@ export const GroupManagement = () => {
     }
 
     return (
-        <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-6">
+        // renders inside the group shell (which owns the container + padding);
+        // stays flat like the sibling tabs — no self max-w / p-6 wrapper
+        <div className="flex flex-col gap-6">
             <Typography type="h4" weight="bold">
                 {t("manage.title")}
             </Typography>
@@ -59,62 +80,76 @@ export const GroupManagement = () => {
                 </Button>
             </div>
 
-            {/* join requests */}
-            <div className="flex flex-col gap-3 border-t border-separator pt-6">
-                <Typography type="h6" weight="bold">
-                    {t("manage.joinRequests")}
-                </Typography>
-                {pendingRequests.length === 0 ? (
-                    <Typography type="body-sm" color="muted">
-                        {t("manage.noRequests")}
-                    </Typography>
-                ) : (
-                    pendingRequests.map((request) => (
-                        <div
-                            key={request.id}
-                            className="flex items-center gap-3 rounded-2xl border border-separator p-4"
-                        >
-                            <Typography type="body-sm" weight="medium" className="min-w-0 flex-1" truncate>
-                                {request.name}
+            {/* management data (join requests · rules · pinned) — one async region */}
+            <div className="flex flex-col gap-6 border-t border-separator pt-6">
+                <AsyncContent
+                    isLoading={isLoading && !hasData}
+                    skeleton={<GroupManageSkeleton />}
+                    error={!hasData ? error : undefined}
+                    errorContent={{
+                        title: t("manage.error"),
+                        onRetry: () => void mutate(),
+                        retryLabel: t("states.retry"),
+                    }}
+                >
+                    {/* join requests */}
+                    <div className="flex flex-col gap-3">
+                        <Typography type="h6" weight="bold">
+                            {t("manage.joinRequests")}
+                        </Typography>
+                        {pendingRequests.length === 0 ? (
+                            <Typography type="body-sm" color="muted">
+                                {t("manage.noRequests")}
                             </Typography>
-                            <Button size="sm" variant="ghost" onPress={() => resolve(request.id)}>
-                                {t("manage.reject")}
-                            </Button>
-                            <Button size="sm" variant="secondary" onPress={() => resolve(request.id)}>
-                                {t("manage.accept")}
-                            </Button>
-                        </div>
-                    ))
-                )}
-            </div>
-
-            {/* rules */}
-            <div className="flex flex-col gap-3 border-t border-separator pt-6">
-                <Typography type="h6" weight="bold">
-                    {t("manage.rules")}
-                </Typography>
-                {rules.map((rule, index) => (
-                    <div key={index} className="flex gap-3 rounded-2xl border border-separator p-4">
-                        <Typography type="body-sm" color="muted" className="shrink-0">
-                            {index + 1}.
-                        </Typography>
-                        <Typography type="body-sm">{rule}</Typography>
+                        ) : (
+                            pendingRequests.map((request) => (
+                                <div
+                                    key={request.id}
+                                    className="flex items-center gap-3 rounded-2xl border border-separator p-4"
+                                >
+                                    <Typography type="body-sm" weight="medium" className="min-w-0 flex-1" truncate>
+                                        {request.name}
+                                    </Typography>
+                                    <Button size="sm" variant="ghost" onPress={() => resolve(request.id)}>
+                                        {t("manage.reject")}
+                                    </Button>
+                                    <Button size="sm" variant="secondary" onPress={() => resolve(request.id)}>
+                                        {t("manage.accept")}
+                                    </Button>
+                                </div>
+                            ))
+                        )}
                     </div>
-                ))}
-            </div>
 
-            {/* pinned */}
-            <div className="flex flex-col gap-3 border-t border-separator pt-6">
-                <Typography type="h6" weight="bold">
-                    {t("manage.pinned")}
-                </Typography>
-                {pinned.map((post, index) => (
-                    <div key={index} className="rounded-2xl border border-separator p-4">
-                        <Typography type="body-sm" weight="medium" truncate>
-                            {post}
+                    {/* rules */}
+                    <div className="flex flex-col gap-3 border-t border-separator pt-6">
+                        <Typography type="h6" weight="bold">
+                            {t("manage.rules")}
                         </Typography>
+                        {rules.map((rule, index) => (
+                            <div key={index} className="flex gap-3 rounded-2xl border border-separator p-4">
+                                <Typography type="body-sm" color="muted" className="shrink-0">
+                                    {index + 1}.
+                                </Typography>
+                                <Typography type="body-sm">{rule}</Typography>
+                            </div>
+                        ))}
                     </div>
-                ))}
+
+                    {/* pinned */}
+                    <div className="flex flex-col gap-3 border-t border-separator pt-6">
+                        <Typography type="h6" weight="bold">
+                            {t("manage.pinned")}
+                        </Typography>
+                        {pinned.map((post, index) => (
+                            <div key={index} className="rounded-2xl border border-separator p-4">
+                                <Typography type="body-sm" weight="medium" truncate>
+                                    {post}
+                                </Typography>
+                            </div>
+                        ))}
+                    </div>
+                </AsyncContent>
             </div>
         </div>
     )

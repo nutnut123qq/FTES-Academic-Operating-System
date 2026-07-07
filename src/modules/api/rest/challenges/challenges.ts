@@ -22,7 +22,8 @@ export const listChallenges = async (): Promise<Array<ChallengeView>> => {
     return restRequest<Array<ChallengeView>>({
         method: "GET",
         url: "/challenges",
-        authenticated: false,
+        // BE gates the list behind auth (anon → 401); attach the bearer token.
+        authenticated: true,
     })
 }
 
@@ -106,7 +107,8 @@ export const getChallengeBySlug = async (slug: string): Promise<ChallengeView> =
     return restRequest<ChallengeView>({
         method: "GET",
         url: `/challenges/${slug}`,
-        authenticated: false,
+        // BE gates challenge reads behind auth (anon → 401); attach the bearer token.
+        authenticated: true,
     })
 }
 

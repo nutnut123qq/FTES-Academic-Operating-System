@@ -2,7 +2,7 @@
 
 import React from "react"
 import { Accordion, Button, Chip, Skeleton, Typography } from "@heroui/react"
-import { ArrowLeftIcon, HammerIcon, MagnifyingGlassIcon, TrophyIcon } from "@phosphor-icons/react"
+import { ArrowLeftIcon, HammerIcon, MagnifyingGlassIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
 import { Link, useRouter } from "@/i18n/navigation"
@@ -12,8 +12,11 @@ import { useQueryChallengeSwr } from "../hooks/useQueryChallengeSwr"
 import type { ChallengeDetail } from "../hooks/useQueryChallengeSwr"
 import { UiUxChallengeEditor } from "./UiUxChallengeEditor"
 
-/** Brief accordion sections, mapped from the challenge mock. */
+/** Brief accordion sections, mapped from the challenge detail. */
 const BRIEF_SECTIONS = ["requirements", "steps", "hints"] as const
+
+/** BE lifecycle statuses that have an i18n label (`challengeSystem.status.*`). */
+const KNOWN_STATUSES = new Set(["PUBLISHED", "RUNNING", "CLOSED"])
 
 /** Loading skeleton mirroring the solve layout: header + brief + editor split. */
 const ChallengeViewSkeleton = () => (
@@ -134,21 +137,40 @@ export const ChallengeView = () => {
                             <Chip size="sm" variant="soft" color="accent">
                                 {tSystem(`types.${challenge.type}`)}
                             </Chip>
-                            <Chip size="sm" variant="soft">
-                                {tSystem(`difficulty.${challenge.difficulty}`)}
+                            <Chip
+                                size="sm"
+                                variant="soft"
+                                color={challenge.status === "RUNNING" ? "success" : undefined}
+                            >
+                                {KNOWN_STATUSES.has(challenge.status)
+                                    ? tSystem(`status.${challenge.status}`)
+                                    : challenge.status}
                             </Chip>
-                            <span className="flex items-center gap-2 text-muted">
-                                <TrophyIcon className="size-4" aria-hidden focusable="false" />
-                                <Typography type="body-xs" color="muted">
-                                    {tSystem("pointsCount", { count: challenge.points })}
-                                </Typography>
-                            </span>
                         </div>
                     </div>
 
-                    <ChallengeBrief challenge={challenge} />
+                    {challenge.description ? (
+                        <Typography
+                            type="body-sm"
+                            color="muted"
+                            className="whitespace-pre-line"
+                        >
+                            {challenge.description}
+                        </Typography>
+                    ) : null}
 
-                    {challenge.type === "uiux" ? (
+                    {/* Structured brief (requirements/steps/hints) — only when the BE
+                        challenge actually carries any; the public view carries none today. */}
+                    {challenge.requirements.length > 0
+                        || challenge.steps.length > 0
+                        || challenge.hints.length > 0 ? (
+                        <ChallengeBrief challenge={challenge} />
+                    ) : null}
+
+                    {/* The interactive UI/UX solver needs a starter + target asset the BE
+                        public view does not expose → fall back to the coming-soon panel
+                        unless those assets are present. */}
+                    {challenge.type === "uiux" && challenge.targetImageUrl ? (
                         <UiUxChallengeEditor challenge={challenge} />
                     ) : (
                         <div className="flex flex-col items-center gap-3 rounded-2xl border border-separator p-6 py-16 text-center">

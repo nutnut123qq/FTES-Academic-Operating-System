@@ -9,7 +9,6 @@ import {
     SparkleIcon,
     BriefcaseIcon,
     TrophyIcon,
-    UsersIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
@@ -19,6 +18,9 @@ import { useQueryChallengesSwr, type Challenge } from "../hooks/useQueryChalleng
 
 /** Type filter options: "all" + every challenge type. */
 const TYPES: Array<Challenge["type"] | "all"> = ["all", "coding", "sql", "uiux", "ai", "business"]
+
+/** BE lifecycle statuses that have an i18n label (`challengeSystem.status.*`). */
+const KNOWN_STATUSES = new Set(["PUBLISHED", "RUNNING", "CLOSED"])
 
 /** Per-type icon for the card badge (confirmed-compiling phosphor set). */
 const TYPE_ICONS: Record<Challenge["type"], React.ReactNode> = {
@@ -133,23 +135,15 @@ export const ChallengeCatalog = () => {
                                 <Chip size="sm" variant="soft" color="accent">
                                     {t(`types.${challenge.type}`)}
                                 </Chip>
-                                <Chip size="sm" variant="soft">
-                                    {t(`difficulty.${challenge.difficulty}`)}
+                                <Chip
+                                    size="sm"
+                                    variant="soft"
+                                    color={challenge.status === "RUNNING" ? "success" : undefined}
+                                >
+                                    {KNOWN_STATUSES.has(challenge.status)
+                                        ? t(`status.${challenge.status}`)
+                                        : challenge.status}
                                 </Chip>
-                            </div>
-                            <div className="flex items-center gap-4">
-                                <span className="flex items-center gap-2 text-muted">
-                                    <TrophyIcon className="size-4" aria-hidden focusable="false" />
-                                    <Typography type="body-xs" color="muted">
-                                        {t("pointsCount", { count: challenge.points })}
-                                    </Typography>
-                                </span>
-                                <span className="flex items-center gap-2 text-muted">
-                                    <UsersIcon className="size-4" aria-hidden focusable="false" />
-                                    <Typography type="body-xs" color="muted">
-                                        {t("participantsCount", { count: challenge.participants })}
-                                    </Typography>
-                                </span>
                             </div>
                         </Link>
                     ))}

@@ -3097,7 +3097,12 @@
             "advanced": "Advanced"
         },
         "pointsCount": "{count} pts",
-        "participantsCount": "{count} joined"
+        "participantsCount": "{count} joined",
+        "status": {
+            "PUBLISHED": "Published",
+            "RUNNING": "Running",
+            "CLOSED": "Closed"
+        }
     },
     "gamification": {
         "title": "Leaderboard",

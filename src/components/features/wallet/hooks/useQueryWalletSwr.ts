@@ -1,49 +1,83 @@
 "use client"
 
 import useSWR from "swr"
+import { getMyTransactions, getMyWallet } from "@/modules/api/rest/wallet"
+import type { TransactionView } from "@/modules/api/rest/wallet"
 
-/** A transaction kind — drives the icon + amount sign in the history list. */
-export type WalletTxKind = "receive" | "transfer" | "purchase" | "refund"
+/**
+ * Direction of a ledger entry relative to the current user's wallet:
+ * `IN` = the user received coins (credit), `OUT` = the user sent coins (debit).
+ */
+export type WalletTxDirection = "IN" | "OUT"
 
-/** One ledger row in the FTES Coin wallet. `amount` is signed (see kind). */
+/** One ledger row in the FTES Coin wallet, mapped from the BE `TransactionView`. */
 export interface WalletTransaction {
     id: string
-    kind: WalletTxKind
-    /** Signed FTES Coin delta: receive/refund > 0, transfer/purchase < 0. */
+    /** Raw BE `TransactionType` (e.g. `RECEIVE`, `REFERRAL_BONUS`). Drives icon + label. */
+    type: string
+    /** Settlement status (`PENDING`, `COMPLETED`, `CANCELLED`, `EXPIRED`). */
+    status: string
+    direction: WalletTxDirection
+    /** Signed FTES Coin delta: IN > 0, OUT < 0. */
     amount: number
+    /** BE `memo`, or `""` when the entry has no note. */
     description: string
-    /** ISO date string. */
-    date: string
+    /** ISO timestamp from the BE (`createdAt`). Formatted for display by the view. */
+    createdAt: string
 }
 
 export interface Wallet {
-    /** Current FTES Coin balance. */
+    /** Current FTES Coin balance (whole coins). */
     balance: number
+    /** Wallet status (`ACTIVE`, `FROZEN`, `CLOSED`). */
+    status: string
     transactions: Array<WalletTransaction>
 }
 
-// ponytail: mock BE — no wallet endpoint yet. Deterministic sample ledger, SWR-shaped
-// so the shell swaps to a real GraphQL query (wallet()) later without touching the hook
-// API. Amounts are pre-signed by kind (receive/refund +, transfer/purchase -).
-const fetchWalletMock = async (): Promise<Wallet> => ({
-    balance: 2450,
-    transactions: [
-        { id: "tx-01", kind: "receive", amount: 500, description: "Thưởng hoàn thành khoá CSD201", date: "2026-06-30" },
-        { id: "tx-02", kind: "purchase", amount: -300, description: "Mở khoá tài liệu Đồ án phần mềm", date: "2026-06-28" },
-        { id: "tx-03", kind: "receive", amount: 200, description: "Điểm danh chuỗi 7 ngày", date: "2026-06-27" },
-        { id: "tx-04", kind: "transfer", amount: -150, description: "Chuyển cho Trần Thu Hà", date: "2026-06-25" },
-        { id: "tx-05", kind: "refund", amount: 300, description: "Hoàn tiền huỷ đăng ký sự kiện", date: "2026-06-23" },
-        { id: "tx-06", kind: "purchase", amount: -450, description: "Đổi voucher đồng phục CLB", date: "2026-06-20" },
-        { id: "tx-07", kind: "receive", amount: 1000, description: "Nạp FTES Coin qua ví điện tử", date: "2026-06-18" },
-        { id: "tx-08", kind: "transfer", amount: -100, description: "Góp quỹ nhóm SWP391", date: "2026-06-15" },
-    ],
-})
+/** Shared SWR key so the wallet page + profile-progress tile dedupe the same fetch. */
+export const WALLET_KEY = ["wallet", "me"] as const
 
-/** Loads the FTES Coin wallet (balance + ledger). Mocked; SWR-shaped for a BE swap. */
+/** History page size — the shell shows a single recent page (no pager yet). */
+const HISTORY_PAGE_SIZE = 20
+
+/** Maps a BE `TransactionView` to the FE ledger row, signing the amount by direction. */
+const toTransaction = (t: TransactionView): WalletTransaction => {
+    const direction: WalletTxDirection = t.direction === "OUT" ? "OUT" : "IN"
+    const magnitude = Math.abs(t.amount)
+    return {
+        id: t.id,
+        type: t.type,
+        status: t.status,
+        direction,
+        amount: direction === "OUT" ? -magnitude : magnitude,
+        description: t.memo ?? "",
+        createdAt: t.createdAt,
+    }
+}
+
+/**
+ * Fetches the FTES Coin wallet + recent ledger from the real BE:
+ * `GET /api/v1/wallet/me` (balance/status) + `GET /api/v1/wallet/me/transactions`
+ * (history). Both require the caller's JWT; the id ví is resolved from the principal.
+ */
+const fetchWallet = async (): Promise<Wallet> => {
+    const [wallet, history] = await Promise.all([
+        getMyWallet(),
+        getMyTransactions({ page: 0, size: HISTORY_PAGE_SIZE }),
+    ])
+    return {
+        balance: wallet.balance,
+        status: wallet.status,
+        transactions: history.items.map(toTransaction),
+    }
+}
+
+/** Loads the FTES Coin wallet (balance + ledger) from the BE wallet REST endpoints. */
 export const useQueryWalletSwr = () => {
-    const { data, isLoading, error, mutate } = useSWR(["wallet"], () => fetchWalletMock())
+    const { data, isLoading, error, mutate } = useSWR(WALLET_KEY, fetchWallet)
     return {
         balance: data?.balance ?? 0,
+        status: data?.status,
         transactions: data?.transactions ?? [],
         isLoading,
         error,

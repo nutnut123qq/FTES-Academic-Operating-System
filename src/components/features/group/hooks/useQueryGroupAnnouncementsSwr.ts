@@ -1,8 +1,11 @@
 "use client"
 
+import { useLocale } from "next-intl"
 import useSWR from "swr"
+import { listAnnouncements } from "@/modules/api/rest/group"
+import { formatRelativeTime } from "@/components/features/community/hooks/relativeTime"
 
-/** A group announcement (§7, mock until BE lands). */
+/** A group announcement (§7). */
 export interface GroupAnnouncement {
     id: string
     title: string
@@ -10,14 +13,23 @@ export interface GroupAnnouncement {
     timeLabel: string
 }
 
-// ponytail: mock BE — no announcement endpoint yet. Deterministic sample.
-const fetchAnnouncementsMock = async (): Promise<Array<GroupAnnouncement>> => [
-    { id: "an1", title: "Lịch sinh hoạt tháng 7", body: "CLB sinh hoạt vào tối thứ 6 hằng tuần tại phòng lab A.", timeLabel: "2 ngày trước" },
-    { id: "an2", title: "Tuyển thành viên ban nội dung", body: "Đăng ký qua form trong tab Tài nguyên trước 15/07.", timeLabel: "5 ngày trước" },
-]
-
-/** Loads a group's announcements. Mocked; SWR-shaped for a drop-in BE swap. */
+/** Loads a group's announcements from the real group REST API (pinned first). */
 export const useQueryGroupAnnouncementsSwr = (groupId: string) => {
-    const { data, isLoading, error, mutate } = useSWR(["group-announcements", groupId], () => fetchAnnouncementsMock())
+    const locale = useLocale()
+    const { data, isLoading, error, mutate } = useSWR(
+        groupId ? ["GET_GROUP_ANNOUNCEMENTS", groupId] : null,
+        async (): Promise<Array<GroupAnnouncement>> => {
+            const items = await listAnnouncements(groupId, { limit: 50 })
+            return (items ?? [])
+                .slice()
+                .sort((a, b) => Number(b.pinned) - Number(a.pinned))
+                .map((dto) => ({
+                    id: dto.id,
+                    title: dto.title,
+                    body: dto.content,
+                    timeLabel: formatRelativeTime(dto.createdAt, locale),
+                }))
+        },
+    )
     return { announcements: data ?? [], isLoading, error, mutate }
 }

@@ -1,9 +1,10 @@
 "use client"
 
 import useSWR from "swr"
+import { getGroup, type GroupResponse } from "@/modules/api/rest/group"
 import type { GroupType } from "./useQueryGroupsSwr"
 
-/** A group's identity (§7, mock until BE lands). */
+/** A group's identity (§7). */
 export interface GroupHeader {
     id: string
     name: string
@@ -15,19 +16,35 @@ export interface GroupHeader {
     coverUrl: string | null
 }
 
-// ponytail: mock BE — no group endpoint yet. Derives from the id; picsum URLs
-// are seeded by the group id so the header images are deterministic.
-const fetchGroupMock = async (groupId: string): Promise<GroupHeader> => ({
-    id: groupId,
-    name: "CLB Lập trình FPT",
-    type: "club",
-    members: 320,
-    avatarUrl: `https://picsum.photos/seed/${groupId}-avatar/200/200`,
-    coverUrl: `https://picsum.photos/seed/${groupId}-cover/1200/400`,
-})
+/** Maps BE group kind + visibility onto the FE `type` axis (see useQueryGroupsSwr). */
+const toGroupType = (dto: GroupResponse): GroupType => {
+    switch (dto.groupType) {
+        case "STUDY_GROUP":
+            return "study"
+        case "CLUB":
+            return "club"
+        case "PROJECT_TEAM":
+            return "team"
+        default:
+            return dto.visibility === "PRIVATE" ? "private" : "public"
+    }
+}
 
-/** Loads a group's header. Mocked; SWR-shaped for a drop-in BE swap. */
+/** Loads a group's header from the real group REST API (BE has no avatar/cover → null). */
 export const useQueryGroupSwr = (groupId: string) => {
-    const { data, isLoading, error } = useSWR(["group", groupId], () => fetchGroupMock(groupId))
+    const { data, isLoading, error } = useSWR(
+        groupId ? ["GET_GROUP", groupId] : null,
+        async (): Promise<GroupHeader> => {
+            const dto = await getGroup(groupId)
+            return {
+                id: dto.id,
+                name: dto.name,
+                type: toGroupType(dto),
+                members: dto.memberCount ?? 0,
+                avatarUrl: null,
+                coverUrl: null,
+            }
+        },
+    )
     return { group: data, isLoading, error }
 }

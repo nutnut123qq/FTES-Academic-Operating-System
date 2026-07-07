@@ -41,11 +41,12 @@ const fetchWalletMock = async (): Promise<Wallet> => ({
 
 /** Loads the FTES Coin wallet (balance + ledger). Mocked; SWR-shaped for a BE swap. */
 export const useQueryWalletSwr = () => {
-    const { data, isLoading, error } = useSWR(["wallet"], () => fetchWalletMock())
+    const { data, isLoading, error, mutate } = useSWR(["wallet"], () => fetchWalletMock())
     return {
         balance: data?.balance ?? 0,
         transactions: data?.transactions ?? [],
         isLoading,
         error,
+        mutate,
     }
 }

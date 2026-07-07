@@ -3665,29 +3665,49 @@
             "showMore": "Show more questions",
             "showLess": "Show less",
             "items": {
-                "refund": {
-                    "q": "If I don't understand a course at FTES, can I get a refund?",
-                    "a": "Yes. After the first session, if it isn't a fit, you get a refund. FTES refunds 100% of tuition if you DON'T UNDERSTAND / the TEACHING STYLE DOESN'T FIT / it ISN'T EFFECTIVE — provided you attend all sessions and complete all homework (BTVN)."
+                "newStudentOffer": {
+                    "q": "What offers does FTES have for new students?",
+                    "a": "New students get an offer based on total course value: combos of 800,000đ–1,199,000đ get 100,000đ off; combos of 1,200,000đ–1,599,000đ get 200,000đ off; combos from 1,600,000đ get 300,000đ off plus a licensed copy of Cursor (subject to the running program)."
                 },
-                "trial": {
-                    "q": "Can I try before enrolling?",
-                    "a": "Yes. You get 2 free foundational sessions. There are also test-based offers: 6–6.9 gets 10% off, 7–8.9 gets 15% off, 9–10 gets 30% off."
+                "liveClass": {
+                    "q": "What do I get when I enroll in a Live class on Zoom?",
+                    "a": "In a Live class you learn directly with a Mentor, get the Mentor's support throughout the course, and access all Basic class lecture videos (worth 300,000đ) to review anytime."
+                },
+                "group": {
+                    "q": "Is there a discount for enrolling as a group?",
+                    "a": "Yes. FTES applies offers by group size: groups of 2–4 get 20% off per student; groups of 5–10 get 25% off per student; groups over 10 get 35% off per student."
+                },
+                "returningStudent": {
+                    "q": "What offers do returning students get?",
+                    "a": "Refer a new student successfully: get 100,000đ per student, the referrer earns 70 reward points and the referred student earns 30 points. Enrolling in your next course gets 5% off; pre-ordering your next course while still studying gets 10% off."
+                },
+                "scholarship": {
+                    "q": "Does FTES offer scholarships or student honors?",
+                    "a": "Yes. Top Scholar of FTES (highest score across the center): free next term + 2,000,000đ. Top of Class (highest score in class): free next course. Diligence (full attendance + all assignments completed): 10% off tuition. Talent Scholarship: worth 2,000,000đ + all FTES courses free + a chance to be trained on and join real projects right after term 5."
+                },
+                "afterCourse": {
+                    "q": "After finishing a course, can I join real projects?",
+                    "a": "Yes. Once you finish the courses and meet the professional level required, you join an interview to be selected into FTES's real-project training class."
                 },
                 "installment": {
                     "q": "Does FTES support paying tuition in installments?",
-                    "a": "Yes. Pay 30–50% upfront, the rest within 1 month. Paying 50% grants instant access to past lessons + materials; 40% grants past lessons; 30% has no early access."
+                    "a": "Yes. You can pay 30%, 40% or 50% upfront, with the rest completed within 1 month. Pay 50%: instant access to past lecture videos + all materials; pay 40%: instant access to past lecture videos; pay 30%: no early access to videos and materials."
                 },
-                "group": {
-                    "q": "Is there a discount for signing up as a group?",
-                    "a": "Yes. Groups of 2–4 get 20% off per person, 5–10 get 25% off per person, over 10 get 35% off per person."
+                "refund": {
+                    "q": "In what cases does FTES refund 100% of tuition?",
+                    "a": "FTES commits to refunding 100% of tuition if you don't understand the lessons, the teaching method doesn't fit, or you feel the course isn't effective — provided you attend all sessions and complete all required homework."
                 },
-                "scholarship": {
-                    "q": "Does FTES offer scholarships and honors?",
-                    "a": "Yes. Top Scholar (highest score across FTES) gets a free next term + 2,000,000đ; Diligence gets 10% off; Top of Class (highest in class) gets a free next term; the Talent Scholarship is 2,000,000đ + all courses free + a chance to train on projects from term 5."
+                "trial": {
+                    "q": "Can I try before officially enrolling?",
+                    "a": "Yes. You get 2 free foundational sessions to try before deciding to enroll."
                 },
-                "afterCourse": {
-                    "q": "What's the path after finishing a course?",
-                    "a": "Once you have enough knowledge to build projects, you join an interview to be selected into the project training class — a stepping stone to real projects and a career."
+                "trialTest": {
+                    "q": "After the trial, do I get a tuition discount?",
+                    "a": "Yes. After the 2 trial sessions, you take a placement test and get an offer based on the result: 6.0–6.9 gets 10% off; 7.0–8.9 gets 15% off; 9.0–10 gets 30% off."
+                },
+                "combineOffers": {
+                    "q": "Can I combine multiple offers at once?",
+                    "a": "Whether offers can be stacked depends on the policy in effect at the time. Please contact the FTES advisory team for guidance on the most beneficial program for you."
                 }
             }
         },

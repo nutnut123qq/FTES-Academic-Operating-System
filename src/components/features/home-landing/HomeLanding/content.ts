@@ -147,12 +147,20 @@ export const ACHIEVERS: ReadonlyArray<Achiever> = [
     },
 ] as const
 
-/** FAQ item keys — copy under `homeLanding.faq.items.<key>.{q,a}`. `refund` is mandatory. */
+/**
+ * FAQ item keys — copy under `homeLanding.faq.items.<key>.{q,a}`. `refund` is mandatory.
+ * Order mirrors the official FTES FAQ sheet (offers → honors → policies → trial).
+ */
 export const FAQ_KEYS = [
-    "refund",
-    "trial",
-    "installment",
+    "newStudentOffer",
+    "liveClass",
     "group",
+    "returningStudent",
     "scholarship",
     "afterCourse",
+    "installment",
+    "refund",
+    "trial",
+    "trialTest",
+    "combineOffers",
 ] as const

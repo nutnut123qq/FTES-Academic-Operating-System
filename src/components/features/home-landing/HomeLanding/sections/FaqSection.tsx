@@ -13,8 +13,8 @@ const FAQ_VISIBLE = 5
 /**
  * FTES FAQ — real questions & answers derived from the offer/policy content, rendered
  * with the {@link TruthList} accordion shape (HeroUI `variant="surface"`, no indicator).
- * The mandatory refund Q&A leads. Every question AND answer is passed as text, so the
- * copy exists in the DOM regardless of expanded state (crawlable).
+ * Order follows the official FTES FAQ sheet. Every question AND answer is passed as text,
+ * so the copy exists in the DOM regardless of expanded state (crawlable).
  */
 export const FaqSection = () => {
     const t = useTranslations("homeLanding")

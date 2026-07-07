@@ -3665,29 +3665,49 @@
             "showMore": "Xem thêm câu hỏi",
             "showLess": "Thu gọn",
             "items": {
-                "refund": {
-                    "q": "Khóa học ở FTES học không hiểu thì có được hoàn tiền không?",
-                    "a": "Có. Sau buổi học đầu tiên nếu thấy không ổn, bạn được hoàn tiền. FTES hoàn 100% học phí nếu KHÔNG HIỂU / KHÔNG HỢP CÁCH GIẢNG / KHÔNG HIỆU QUẢ — với điều kiện bạn tham gia đủ các buổi và hoàn thành đầy đủ bài tập về nhà (BTVN)."
+                "newStudentOffer": {
+                    "q": "FTES có ưu đãi gì dành cho học viên mới?",
+                    "a": "Học viên mới nhận ưu đãi theo tổng giá trị khóa học: Combo từ 800.000đ–1.199.000đ giảm 100.000đ; Combo từ 1.200.000đ–1.599.000đ giảm 200.000đ; Combo từ 1.600.000đ trở lên giảm 300.000đ và tặng Cursor bản quyền (tùy chương trình áp dụng)."
                 },
-                "trial": {
-                    "q": "Mình có được học thử trước khi đăng ký không?",
-                    "a": "Có. Bạn được học thử 2 buổi kiến thức nền miễn phí. Ngoài ra còn ưu đãi theo điểm test: 6–6.9 giảm 10%, 7–8.9 giảm 15%, 9–10 giảm 30%."
+                "liveClass": {
+                    "q": "Khi đăng ký lớp học Live trên Zoom, tôi nhận được những quyền lợi gì?",
+                    "a": "Khi tham gia lớp Live, bạn được học trực tiếp cùng Mentor, được Mentor đồng hành và hỗ trợ trong suốt quá trình học, và truy cập toàn bộ video bài giảng của lớp Basic (trị giá 300.000đ) để ôn tập bất cứ lúc nào."
+                },
+                "group": {
+                    "q": "FTES có ưu đãi khi đăng ký học theo nhóm không?",
+                    "a": "Có. FTES áp dụng ưu đãi theo số lượng học viên: nhóm từ 2–4 người giảm 20% cho mỗi học viên; nhóm từ 5–10 người giảm 25% cho mỗi học viên; nhóm trên 10 người giảm 35% cho mỗi học viên."
+                },
+                "returningStudent": {
+                    "q": "Học viên cũ được hưởng những ưu đãi nào?",
+                    "a": "Giới thiệu học viên mới thành công: nhận 100.000đ cho mỗi học viên, người giới thiệu nhận 70 điểm thưởng, người được giới thiệu nhận 30 điểm thưởng. Đăng ký khóa học tiếp theo giảm 5%; đặt trước khóa học tiếp theo trong khi đang học giảm 10%."
+                },
+                "scholarship": {
+                    "q": "FTES có chương trình học bổng hoặc vinh danh học viên không?",
+                    "a": "Có. Học Bá FTES (điểm cao nhất toàn trung tâm): miễn phí học kỳ tiếp theo + thưởng 2.000.000đ. Học tốt (điểm cao nhất trong lớp): miễn phí khóa học tiếp theo. Học chuyên cần (tham gia đầy đủ các buổi và hoàn thành toàn bộ bài tập): giảm 10% học phí. Học bổng Tài năng: trị giá 2.000.000đ + miễn phí toàn bộ khóa học tại FTES + cơ hội được đào tạo và tham gia dự án thực tế ngay sau học kỳ 5."
+                },
+                "afterCourse": {
+                    "q": "Sau khi hoàn thành khóa học, tôi có cơ hội tham gia dự án thực tế không?",
+                    "a": "Có. Sau khi hoàn thành các khóa học và đáp ứng đủ năng lực chuyên môn, bạn sẽ được tham gia phỏng vấn để xét tuyển vào lớp đào tạo dự án thực tế của FTES."
                 },
                 "installment": {
                     "q": "FTES có hỗ trợ trả góp học phí không?",
-                    "a": "Có. Bạn trả trước 30–50%, phần còn lại hoàn thành trong 1 tháng. Trả trước 50% truy cập ngay bài giảng cũ + tài liệu; 40% truy cập bài giảng cũ; 30% chưa truy cập trước."
+                    "a": "Có. Bạn có thể lựa chọn thanh toán trước 30%, 40% hoặc 50% học phí, phần còn lại hoàn thành trong vòng 1 tháng. Trả trước 50%: truy cập ngay video bài giảng cũ + toàn bộ tài liệu; trả trước 40%: truy cập ngay video bài giảng cũ; trả trước 30%: chưa được truy cập trước video bài giảng và tài liệu."
                 },
-                "group": {
-                    "q": "Đăng ký theo nhóm có được giảm giá không?",
-                    "a": "Có. Nhóm 2–4 người giảm 20%/người, nhóm 5–10 người giảm 25%/người, nhóm trên 10 người giảm 35%/người."
+                "refund": {
+                    "q": "Trong trường hợp nào FTES hoàn trả 100% học phí?",
+                    "a": "FTES cam kết hoàn trả 100% học phí nếu bạn không hiểu bài, không phù hợp với phương pháp giảng dạy, hoặc cảm thấy khóa học không mang lại hiệu quả — với điều kiện tham gia đầy đủ tất cả các buổi học và hoàn thành đầy đủ bài tập về nhà theo yêu cầu."
                 },
-                "scholarship": {
-                    "q": "FTES có học bổng và vinh danh không?",
-                    "a": "Có. Học Bá (cao điểm nhất toàn FTES) được free kì sau + thưởng 2.000.000đ; Học chuyên cần giảm 10%; Học tốt (cao điểm nhất lớp) free kì sau; Học bổng Tài Năng 2.000.000đ + free tất cả khóa + cơ hội đào tạo làm dự án từ sau kì 5."
+                "trial": {
+                    "q": "Tôi có thể học thử trước khi đăng ký chính thức không?",
+                    "a": "Có. Bạn được học thử miễn phí 2 buổi kiến thức nền tảng trước khi quyết định đăng ký khóa học."
                 },
-                "afterCourse": {
-                    "q": "Học xong khóa học thì có lộ trình gì tiếp theo?",
-                    "a": "Học xong đủ kiến thức làm dự án, bạn tham gia phỏng vấn để được chọn vào lớp đào tạo dự án — bước đệm để làm dự án thực tế và tiến tới sự nghiệp."
+                "trialTest": {
+                    "q": "Sau khi học thử, tôi có được giảm học phí không?",
+                    "a": "Có. Sau 2 buổi học thử, bạn sẽ làm bài đánh giá năng lực và nhận ưu đãi theo kết quả: điểm 6.0–6.9 giảm 10%; điểm 7.0–8.9 giảm 15%; điểm 9.0–10 giảm 30%."
+                },
+                "combineOffers": {
+                    "q": "Tôi có thể kết hợp nhiều chương trình ưu đãi cùng lúc không?",
+                    "a": "Việc cộng dồn các chương trình ưu đãi sẽ phụ thuộc vào chính sách áp dụng tại từng thời điểm. Vui lòng liên hệ đội ngũ tư vấn FTES để được hướng dẫn chương trình có lợi nhất cho bạn."
                 }
             }
         },

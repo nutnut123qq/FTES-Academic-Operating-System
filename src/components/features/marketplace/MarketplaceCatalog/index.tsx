@@ -146,10 +146,22 @@ const ProductCard = ({ product }: { product: Product }) => {
 
             <div className="mt-auto flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 text-accent">
-                    <CoinsIcon className="size-4" aria-hidden />
-                    <Typography type="body-sm" weight="bold" className="text-accent">
-                        {t("priceCoin", { amount: format.number(product.priceCoin) })}
-                    </Typography>
+                    {product.priceCoin !== null ? (
+                        <>
+                            <CoinsIcon className="size-4" aria-hidden />
+                            <Typography type="body-sm" weight="bold" className="text-accent">
+                                {t("priceCoin", { amount: format.number(product.priceCoin) })}
+                            </Typography>
+                        </>
+                    ) : product.priceVnd !== null ? (
+                        <Typography type="body-sm" weight="bold" className="text-accent">
+                            {t("priceVnd", { amount: format.number(product.priceVnd) })}
+                        </Typography>
+                    ) : (
+                        <Typography type="body-sm" color="muted">
+                            {t("priceUnavailable")}
+                        </Typography>
+                    )}
                 </div>
                 <Button size="sm" variant="secondary">
                     {t("buy")}

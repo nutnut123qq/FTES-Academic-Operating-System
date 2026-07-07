@@ -1,74 +1,75 @@
 "use client"
 
-import { useCallback, useMemo, useRef, useState } from "react"
+import { useCallback, useMemo, useRef, useState, type ChangeEvent } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { useTranslations } from "next-intl"
-import axios from "axios"
-import { useAppDispatch, useAppSelector } from "@/redux/hooks"
-import { setUser } from "@/redux/slices/user"
-import { useMutateGenerateAvatarPresignUrlSwr } from "@/hooks/swr/api/graphql/mutations/useMutateGenerateAvatarPresignUrlSwr"
-import { useMutateUpdateProfileSwr } from "@/hooks/swr/api/graphql/mutations/useMutateUpdateProfileSwr"
-import { useMutateVerifyAvatarPresignUrlSwr } from "@/hooks/swr/api/graphql/mutations/useMutateVerifyAvatarPresignUrlSwr"
-import { useGraphQLWithToast, useRestWithToast } from "@/modules/toast/hooks"
-import { WorkMode } from "@/modules/types/enums/work-mode"
+import useSWR from "swr"
+import {
+    getSelfProfile,
+    replaceSocialLinks,
+    updateSelfProfile,
+    uploadAvatar,
+} from "@/modules/api/rest/profile"
+import type { ProfileSocialLinkInput, SelfProfile } from "@/modules/api/rest/profile"
+import { SELF_PROFILE_KEY } from "@/components/features/profile/hooks/useQueryProfileSwr"
+import { useRestWithToast } from "@/modules/toast/hooks"
 
-/** Max length of the display name (mirrors the `display_name` column). */
+/** Max length of the display name (mirrors the BE `display_name` column). */
 const DISPLAY_NAME_MAX = 100
-/** Max length of the bio (mirrors the `bio` column). */
+/** Max length of the bio (mirrors the BE `bio` column). */
 const BIO_MAX = 280
-/** Max length of the role title (mirrors the `role_title` column). */
+/** Max length of the role title (maps to the BE `job_title` column). */
 const ROLE_TITLE_MAX = 80
-/** Max length of the location (mirrors the `location` column). */
+/** Max length of the location (maps to the BE `address` column). */
 const LOCATION_MAX = 100
-/** Max length of a URL field (mirrors the `linkedin_url` / `website_url` columns). */
+/** Max length of a URL social link. */
 const URL_MAX = 255
 
-/** Editable profile form values. */
+/** Editable profile form values (each maps 1:1 onto a BE profile field / social link). */
 export interface EditProfileFormValues {
-    /** Display name (empty string = clear → falls back to username). */
+    /** Display name (empty = clear → BE falls back to username). */
     displayName: string
-    /** Short bio / tagline (empty string = clear). */
+    /** Short bio / tagline (empty = clear). */
     bio: string
-    /** Lock profile (FB-style): when on, only the owner sees full content. */
-    profileLocked: boolean
-    /** Open to work: when on, the profile shows a hiring badge. */
-    openToWork: boolean
-    /** Professional headline / role title (empty string = clear). */
+    /** Professional headline → BE `jobTitle` (empty = clear). */
     roleTitle: string
-    /** Free-text location (empty string = clear). */
+    /** Free-text location → BE `address` (empty = clear). */
     location: string
-    /** Preferred work mode (empty string = no preference → clear). */
-    workMode: WorkMode | ""
-    /** Public LinkedIn URL (empty string = clear). */
+    /** Public LinkedIn URL → BE social link `linkedin` (empty = clear). */
     linkedinUrl: string
-    /** Personal website URL (empty string = clear). */
+    /** Personal website URL → BE social link `website` (empty = clear). */
     websiteUrl: string
 }
 
+/** True when a BE social-link platform matches the "linkedin" slot. */
+const isLinkedin = (platform: string): boolean => platform.toLowerCase().includes("linkedin")
+/** True when a BE social-link platform matches the "website" slot. */
+const isWebsite = (platform: string): boolean => {
+    const p = platform.toLowerCase()
+    return p === "website" || p.includes("web")
+}
+
+/** Reads the first URL of a matching social-link slot from a profile. */
+const findLink = (profile: SelfProfile | undefined, match: (platform: string) => boolean): string =>
+    profile?.socialLinks?.find((link) => match(link.platform))?.url ?? ""
+
 /**
- * react-hook-form for the edit-profile form. Seeds values from the redux user
- * (re-seeds via `values`), owns the picked-avatar file state, and on submit runs
- * the avatar presigned-upload flow (when a new file is chosen) then the
- * `updateProfile` mutation, pushing the fresh user into redux so the header /
- * navbar update instantly. Toasts the result via `useGraphQLWithToast`.
+ * react-hook-form for the edit-profile form, wired to the real BE REST profile
+ * endpoints. Seeds values from `GET /api/v1/profiles/me`, owns the picked-avatar
+ * file state, and on submit runs (1) the avatar multipart upload (when a new file
+ * is chosen), (2) `PATCH /me` for the text fields, then (3) `PUT /me/social-links`
+ * (replace-all, preserving non-linkedin/website links). Revalidates the shared
+ * self-profile SWR cache on success so the profile pages reflect the change.
  *
  * @returns the RHF methods + `onSubmit` and the avatar helpers (`fileInputRef`,
  * `onPickAvatar`, `onAvatarChange`, `shownAvatar`).
  */
 export const useEditProfileForm = () => {
-    const t = useTranslations()
-    const dispatch = useAppDispatch()
-    const user = useAppSelector((state) => state.user.user)
-
-    const runGraphQL = useGraphQLWithToast()
     const runRest = useRestWithToast()
 
-    const updateProfileSwr = useMutateUpdateProfileSwr()
-    // avatar upload is a presigned-URL flow: generate → PUT to MinIO → verify
-    const generateAvatarPresignSwr = useMutateGenerateAvatarPresignUrlSwr()
-    const verifyAvatarPresignSwr = useMutateVerifyAvatarPresignUrlSwr()
+    // shared key → dedupes with the profile pages' `GET /profiles/me` fetch
+    const { data: profile, mutate } = useSWR(SELF_PROFILE_KEY, getSelfProfile)
 
     // hidden <input type=file>, opened by the avatar button
     const fileInputRef = useRef<HTMLInputElement>(null)
@@ -80,12 +81,9 @@ export const useEditProfileForm = () => {
         () => z.object({
             displayName: z.string().trim().max(DISPLAY_NAME_MAX),
             bio: z.string().trim().max(BIO_MAX),
-            profileLocked: z.boolean(),
-            openToWork: z.boolean(),
             roleTitle: z.string().trim().max(ROLE_TITLE_MAX),
             location: z.string().trim().max(LOCATION_MAX),
-            workMode: z.union([z.nativeEnum(WorkMode), z.literal("")]),
-            // empty = clear; otherwise must be a real URL within the column cap
+            // empty = clear; otherwise must be a real URL within the length cap
             linkedinUrl: z.union([z.literal(""), z.string().trim().url().max(URL_MAX)]),
             websiteUrl: z.union([z.literal(""), z.string().trim().url().max(URL_MAX)]),
         }),
@@ -94,38 +92,29 @@ export const useEditProfileForm = () => {
 
     const form = useForm<EditProfileFormValues>({
         resolver: zodResolver(schema),
-        // re-seed when the redux user changes (replaces formik enableReinitialize)
+        // re-seed when the fetched profile changes (RHF `values` = controlled reinit)
         values: {
-            displayName: user?.displayName ?? "",
-            bio: user?.bio ?? "",
-            profileLocked: user?.profileLocked ?? false,
-            openToWork: user?.openToWork ?? false,
-            roleTitle: user?.roleTitle ?? "",
-            location: user?.location ?? "",
-            workMode: user?.workMode ?? "",
-            linkedinUrl: user?.linkedinUrl ?? "",
-            websiteUrl: user?.websiteUrl ?? "",
+            displayName: profile?.displayName ?? "",
+            bio: profile?.bio ?? "",
+            roleTitle: profile?.jobTitle ?? "",
+            location: profile?.address ?? "",
+            linkedinUrl: findLink(profile, isLinkedin),
+            websiteUrl: findLink(profile, isWebsite),
         },
     })
 
     /** Open the native file picker. */
-    const onPickAvatar = useCallback(
-        () => fileInputRef.current?.click(),
-        [],
-    )
+    const onPickAvatar = useCallback(() => fileInputRef.current?.click(), [])
 
     /** Stage an avatar file + build a local preview URL (shared by picker + dropzone). */
-    const onAvatarFile = useCallback(
-        (next: File) => {
-            setFile(next)
-            setPreview(URL.createObjectURL(next))
-        },
-        [],
-    )
+    const onAvatarFile = useCallback((next: File) => {
+        setFile(next)
+        setPreview(URL.createObjectURL(next))
+    }, [])
 
     /** Capture the chosen file from the native picker. */
     const onAvatarChange = useCallback(
-        (event: React.ChangeEvent<HTMLInputElement>) => {
+        (event: ChangeEvent<HTMLInputElement>) => {
             const next = event.target.files?.[0]
             // ignore an empty pick (user cancelled the dialog)
             if (!next) {
@@ -137,76 +126,50 @@ export const useEditProfileForm = () => {
     )
 
     // the face shown: local preview while a new file is staged, else the saved avatar
-    const shownAvatar = preview ?? user?.avatar ?? null
+    const shownAvatar = preview ?? profile?.avatarUrl ?? null
 
     const onSubmit = form.handleSubmit(async (value) => {
-        await runGraphQL(
+        const result = await runRest(
             async () => {
-                // 1) upload the new avatar first (presigned-URL flow) so the BE has
-                // the URL persisted before re-reading the user
+                // 1) upload the new avatar first (multipart PUT /me/avatar) so the URL
+                // is persisted before the pages re-read the profile
                 if (file) {
-                    // 1a) mint a presigned PUT URL for the picked image's type
-                    const presign = await generateAvatarPresignSwr.trigger({
-                        request: {
-                            contentType: file.type,
-                        },
-                    })
-                    const presignData = presign?.data?.generateAvatarPresignUrl?.data
-                    if (!presignData?.url) {
-                        throw new Error(t("profileEdit.uploadFailed"))
-                    }
-                    // 1b) upload the bytes straight to MinIO; Content-Type must match.
-                    // the profile update toasts on success, so this upload toasts only on error
-                    await runRest(
-                        () => axios.put(presignData.url, file, {
-                            headers: {
-                                "Content-Type": file.type,
-                            },
-                        }),
-                        { showSuccessToast: false },
-                    )
-                    // 1c) confirm → BE validates the key owner + persists the avatar URL
-                    const verify = await verifyAvatarPresignSwr.trigger({
-                        request: {
-                            key: presignData.key,
-                        },
-                    })
-                    if (!verify?.data?.verifyAvatarPresignUrl?.data?.uploaded) {
-                        throw new Error(t("profileEdit.uploadFailed"))
-                    }
+                    await uploadAvatar(file)
                 }
-
-                // 2) persist the text fields + lock flag; empty string clears the column
-                const result = await updateProfileSwr.trigger({
+                // 2) persist the editable text fields; empty string clears the column
+                await updateSelfProfile({
                     displayName: value.displayName.trim() ? value.displayName.trim() : null,
                     bio: value.bio.trim() ? value.bio.trim() : null,
-                    profileLocked: value.profileLocked,
-                    openToWork: value.openToWork,
-                    roleTitle: value.roleTitle.trim() ? value.roleTitle.trim() : null,
-                    location: value.location.trim() ? value.location.trim() : null,
-                    workMode: value.workMode === "" ? null : value.workMode,
-                    linkedinUrl: value.linkedinUrl.trim() ? value.linkedinUrl.trim() : null,
-                    websiteUrl: value.websiteUrl.trim() ? value.websiteUrl.trim() : null,
+                    jobTitle: value.roleTitle.trim() ? value.roleTitle.trim() : null,
+                    address: value.location.trim() ? value.location.trim() : null,
                 })
-                const env = result?.data?.updateProfile
-                if (!env) {
-                    throw new Error(t("profileEdit.error"))
+                // 3) social links (replace-all): keep any non-linkedin/website links the
+                // BE already stores, then re-add the two the form controls
+                const preserved: Array<ProfileSocialLinkInput> = (profile?.socialLinks ?? [])
+                    .filter((link) => !isLinkedin(link.platform) && !isWebsite(link.platform))
+                    .map((link) => ({ platform: link.platform, url: link.url, sortOrder: link.sortOrder }))
+                const edited: Array<ProfileSocialLinkInput> = []
+                if (value.linkedinUrl.trim()) {
+                    edited.push({ platform: "linkedin", url: value.linkedinUrl.trim(), sortOrder: preserved.length })
                 }
-                // 3) on success push the fresh user into redux so the header + navbar
-                // reflect changes instantly, and clear the staged avatar
-                if (env.success && env.data) {
-                    dispatch(setUser(env.data))
-                    setFile(null)
-                    setPreview(null)
+                if (value.websiteUrl.trim()) {
+                    edited.push({ platform: "website", url: value.websiteUrl.trim(), sortOrder: preserved.length + 1 })
                 }
-                // returned envelope drives the success / error toast
-                return env
+                const nextLinks = [...preserved, ...edited]
+                // only touch social links when there is something to write or clear
+                if (nextLinks.length > 0 || (profile?.socialLinks?.length ?? 0) > 0) {
+                    await replaceSocialLinks({ links: nextLinks })
+                }
+                return true
             },
-            {
-                showErrorToast: true,
-                showSuccessToast: true,
-            },
+            { showSuccessToast: true, showErrorToast: true },
         )
+        // on success clear the staged avatar + revalidate the shared profile cache
+        if (result) {
+            setFile(null)
+            setPreview(null)
+            await mutate()
+        }
     })
 
     return {

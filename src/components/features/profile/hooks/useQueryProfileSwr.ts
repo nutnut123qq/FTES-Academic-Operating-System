@@ -1,8 +1,13 @@
 "use client"
 
 import useSWR from "swr"
+import { getSelfProfile } from "@/modules/api/rest/profile"
+import type { SelfProfile } from "@/modules/api/rest/profile"
 
-/** A user's profile identity (mock until BE lands). */
+/** SWR key shared by every self-profile reader so `GET /profiles/me` is fetched once. */
+export const SELF_PROFILE_KEY = ["profiles", "me"] as const
+
+/** A user's profile identity (consumed by the profile shell sidebar). */
 export interface Profile {
     name: string
     /** Short headline / role line. */
@@ -10,25 +15,30 @@ export interface Profile {
     bio: string
     /** Campus / school line. */
     campus: string
-    /** Uploaded avatar image URL (optional). */
+    /** Uploaded avatar image URL (empty when unset). */
     avatarUrl: string
-    /** Uploaded cover/banner image URL (optional). */
+    /** Uploaded cover/banner image URL (empty when unset). */
     coverUrl: string
 }
 
-// ponytail: mock BE — no profile endpoint yet. Deterministic sample.
-// Contract preview: BE will expose avatarUrl + coverUrl for the viewer's profile.
-const fetchProfileMock = async (): Promise<Profile> => ({
-    name: "Nguyễn Văn Học",
-    headline: "Sinh viên · Kỹ thuật phần mềm",
-    bio: "Thích lập trình hệ thống và giải thuật. Đang học Fullstack.",
-    campus: "FPT University · HN",
-    avatarUrl: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&h=400&fit=crop",
-    coverUrl: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&h=200&fit=crop",
+/**
+ * Adapts the BE `SelfProfile` DTO (`GET /api/v1/profiles/me`) into the shell's
+ * identity model. Missing fields degrade to empty strings — the sidebar guards
+ * each with a truthiness check, so an empty value simply hides its row.
+ */
+export const toShellProfile = (profile: SelfProfile): Profile => ({
+    name: profile.displayName ?? profile.username,
+    headline: profile.jobTitle ?? "",
+    bio: profile.bio ?? "",
+    campus: [profile.academic?.campus, profile.academic?.university]
+        .filter(Boolean)
+        .join(" · "),
+    avatarUrl: profile.avatarUrl ?? "",
+    coverUrl: profile.coverUrl ?? "",
 })
 
-/** Loads the viewer's profile. Mocked; SWR-shaped for a drop-in BE swap. */
+/** Loads the viewer's profile identity from the real BE (`GET /profiles/me`). */
 export const useQueryProfileSwr = () => {
-    const { data, isLoading, error, mutate } = useSWR(["profile", "me"], () => fetchProfileMock())
-    return { profile: data, isLoading, error, mutate }
+    const { data, isLoading, error, mutate } = useSWR(SELF_PROFILE_KEY, getSelfProfile)
+    return { profile: data ? toShellProfile(data) : undefined, isLoading, error, mutate }
 }

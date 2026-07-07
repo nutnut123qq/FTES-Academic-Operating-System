@@ -1,8 +1,10 @@
 "use client"
 
 import useSWR from "swr"
+import { getPublicProfile } from "@/modules/api/rest/profile"
+import type { PublicProfile as PublicProfileDto } from "@/modules/api/rest/profile"
 
-/** A public (read-only) profile view (mock until BE lands). */
+/** A public (read-only) profile view for the `/u/[username]` page. */
 export interface PublicProfile {
     username: string
     name: string
@@ -13,23 +15,27 @@ export interface PublicProfile {
     followers: number
 }
 
-// ponytail: mock BE — no profile endpoint yet. Derives a deterministic profile
-// from the username so any /u/<name> renders.
-const fetchPublicProfileMock = async (username: string): Promise<PublicProfile> => ({
-    username,
-    name: username.charAt(0).toUpperCase() + username.slice(1),
-    headline: "Sinh viên · Kỹ thuật phần mềm",
-    about: "Đang học Fullstack và System Design. Thích chia sẻ kiến thức trong cộng đồng.",
-    campus: "FPT University · HN",
-    skills: ["C", "JavaScript", "React", "SQL", "Git"],
-    followers: 96,
+/**
+ * Adapts the BE public-profile DTO (`GET /api/v1/profiles/{username}`) into the
+ * `/u/[username]` view model. The BE exposes no free-form "skills" list, so it
+ * degrades to an empty array (the skills card renders its empty state rather
+ * than fabricating tags). Missing headline/campus/about degrade to empty.
+ */
+export const toPublicProfile = (dto: PublicProfileDto): PublicProfile => ({
+    username: dto.username,
+    name: dto.displayName ?? dto.username,
+    headline: dto.jobTitle ?? "",
+    about: dto.bio ?? "",
+    campus: [dto.academic?.campus, dto.academic?.university].filter(Boolean).join(" · "),
+    skills: [],
+    followers: dto.counters?.followers ?? 0,
 })
 
-/** Loads a public profile by username. Mocked; SWR-shaped for a drop-in BE swap. */
+/** Loads a public profile by username from the real BE (`GET /profiles/{username}`). */
 export const useQueryPublicProfileSwr = (username: string) => {
     const { data, isLoading, error, mutate } = useSWR(
-        ["public-profile", username],
-        () => fetchPublicProfileMock(username),
+        username ? ["public-profile", username] : null,
+        () => getPublicProfile(username).then(toPublicProfile),
     )
     return { profile: data, isLoading, error, mutate }
 }

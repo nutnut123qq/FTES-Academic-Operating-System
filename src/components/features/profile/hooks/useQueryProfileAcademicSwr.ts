@@ -1,8 +1,11 @@
 "use client"
 
 import useSWR from "swr"
+import { getSelfProfile } from "@/modules/api/rest/profile"
+import type { SelfProfile } from "@/modules/api/rest/profile"
+import { SELF_PROFILE_KEY } from "./useQueryProfileSwr"
 
-/** Academic info fields (mock until BE lands). */
+/** Academic info fields (all rendered as strings in the metric grid). */
 export interface ProfileAcademic {
     university: string
     campus: string
@@ -11,17 +14,25 @@ export interface ProfileAcademic {
     gpa: string
 }
 
-// ponytail: mock BE — no profile endpoint yet. Deterministic sample.
-const fetchAcademicMock = async (): Promise<ProfileAcademic> => ({
-    university: "FPT University",
-    campus: "Hà Nội",
-    major: "Kỹ thuật phần mềm",
-    semester: "Kỳ 5",
-    gpa: "8.2 / 10",
-})
+/**
+ * Adapts the BE `SelfProfile.academic` section into the Academic-tab model.
+ * Every field degrades to an empty string when the BE has no value (the tab
+ * shows an empty-state card only when all fields are blank). `gpa` may be null
+ * BE-side when the viewer's privacy hides it.
+ */
+export const toAcademic = (profile: SelfProfile): ProfileAcademic => {
+    const academic = profile.academic
+    return {
+        university: academic?.university ?? "",
+        campus: academic?.campus ?? "",
+        major: academic?.major ?? "",
+        semester: academic?.currentSemester != null ? String(academic.currentSemester) : "",
+        gpa: academic?.gpa != null ? String(academic.gpa) : "",
+    }
+}
 
-/** Loads the viewer's academic info. Mocked; SWR-shaped for a drop-in BE swap. */
+/** Loads the viewer's academic info from the real BE (`GET /profiles/me`). */
 export const useQueryProfileAcademicSwr = () => {
-    const { data, isLoading, error, mutate } = useSWR(["profile-academic", "me"], () => fetchAcademicMock())
-    return { academic: data, isLoading, error, mutate }
+    const { data, isLoading, error, mutate } = useSWR(SELF_PROFILE_KEY, getSelfProfile)
+    return { academic: data ? toAcademic(data) : undefined, isLoading, error, mutate }
 }

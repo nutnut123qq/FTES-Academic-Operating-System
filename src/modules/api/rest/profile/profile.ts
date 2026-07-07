@@ -2,6 +2,7 @@ import { restRequest } from "@/modules/api/rest/client"
 import type {
     AssetView,
     CursorPage,
+    FollowEntry,
     ProfileAchievementRequest,
     ProfilePrivacySettings,
     ProfileProjectCreateRequest,
@@ -10,6 +11,7 @@ import type {
     ProfileUpdateRequest,
     ProjectView,
     AchievementView,
+    PublicProfile,
     SelfProfile,
     TimelineEntry,
 } from "./types"
@@ -26,6 +28,23 @@ export const getSelfProfile = async (): Promise<SelfProfile> => {
     return restRequest<SelfProfile>({
         method: "GET",
         url: "/profiles/me",
+        authenticated: true,
+    })
+}
+
+/**
+ * Updates the current user's editable profile fields (null fields are ignored).
+ * Returns the fresh self profile.
+ *
+ * `PATCH /api/v1/profiles/me` (authenticated).
+ */
+export const updateSelfProfile = async (
+    request: ProfileUpdateRequest,
+): Promise<SelfProfile> => {
+    return restRequest<SelfProfile>({
+        method: "PATCH",
+        url: "/profiles/me",
+        data: request,
         authenticated: true,
     })
 }
@@ -213,6 +232,57 @@ export const deleteAchievement = async (id: string): Promise<void> => {
 }
 
 // ---------------------------------------------------------------- PublicProfileController
+
+/**
+ * Returns a user's public profile by username (privacy-masked by the BE).
+ *
+ * `GET /api/v1/profiles/{username}` (public — no auth required).
+ */
+export const getPublicProfile = async (username: string): Promise<PublicProfile> => {
+    return restRequest<PublicProfile>({
+        method: "GET",
+        url: `/profiles/${encodeURIComponent(username)}`,
+        authenticated: false,
+    })
+}
+
+/**
+ * Returns a page of a user's followers.
+ *
+ * `GET /api/v1/profiles/{username}/followers?cursor=&limit=`
+ */
+export const getProfileFollowers = async (
+    username: string,
+    params?: { cursor?: string | null; limit?: number },
+): Promise<CursorPage<FollowEntry>> => {
+    return restRequest<CursorPage<FollowEntry>>({
+        method: "GET",
+        url: `/profiles/${encodeURIComponent(username)}/followers`,
+        params: {
+            cursor: params?.cursor ?? undefined,
+            limit: params?.limit ?? undefined,
+        },
+    })
+}
+
+/**
+ * Returns a page of the users a given user follows.
+ *
+ * `GET /api/v1/profiles/{username}/following?cursor=&limit=`
+ */
+export const getProfileFollowing = async (
+    username: string,
+    params?: { cursor?: string | null; limit?: number },
+): Promise<CursorPage<FollowEntry>> => {
+    return restRequest<CursorPage<FollowEntry>>({
+        method: "GET",
+        url: `/profiles/${encodeURIComponent(username)}/following`,
+        params: {
+            cursor: params?.cursor ?? undefined,
+            limit: params?.limit ?? undefined,
+        },
+    })
+}
 
 /**
  * Returns the activity timeline for a public profile.

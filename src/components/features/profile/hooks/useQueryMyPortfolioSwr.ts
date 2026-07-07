@@ -1,8 +1,11 @@
 "use client"
 
 import useSWR from "swr"
+import { getSelfProfile } from "@/modules/api/rest/profile"
+import type { SelfProfile } from "@/modules/api/rest/profile"
+import { SELF_PROFILE_KEY } from "./useQueryProfileSwr"
 
-/** A portfolio project (mock until BE lands). */
+/** A portfolio project. */
 export interface MyPortfolioProject {
     id: string
     title: string
@@ -67,88 +70,43 @@ export interface MyPortfolio {
     achievements: Array<MyPortfolioAchievement>
 }
 
-// ponytail: mock BE — no portfolio endpoint yet. Deterministic seed; the tab's
-// CRUD-lite mutates local component state only, so a reload returns to this.
-// Contract preview: BE will expose resume, certificates, and achievements arrays.
-const fetchMyPortfolioMock = async (): Promise<MyPortfolio> => ({
-    projects: [
-        {
-            id: "pr1",
-            title: "CLI todo manager",
-            description: "Công cụ quản lý việc trên terminal, lưu SQLite.",
-            tags: ["Go", "SQLite"],
-            url: "https://github.com/example/cli-todo",
-            pinned: true,
-        },
-        {
-            id: "pr2",
-            title: "Mini HTTP server",
-            description: "Web server tối giản viết từ socket thuần.",
-            tags: ["C", "POSIX"],
-            url: "https://github.com/example/mini-http",
-            pinned: true,
-        },
-        {
-            id: "pr3",
-            title: "Trang blog cá nhân",
-            description: "Blog tĩnh, dark mode, tối ưu SEO.",
-            tags: ["Next.js"],
-            url: "https://example.dev",
-            pinned: false,
-        },
-    ],
-    links: [
-        { id: "li1", label: "GitHub", url: "https://github.com/example" },
-        { id: "li2", label: "LinkedIn", url: "https://linkedin.com/in/example" },
-    ],
-    resume: {
-        url: "https://example.com/cv-nguyenvanhoc.pdf",
-        filename: "CV_NguyenVanHoc.pdf",
-        uploadedAt: "2026-06-20",
-    },
-    certificates: [
-        {
-            id: "cert1",
-            name: "AWS Cloud Practitioner",
-            issuer: "Amazon Web Services",
-            date: "2024-03-15",
-            url: "https://www.credly.com/badges/example",
-        },
-        {
-            id: "cert2",
-            name: "IELTS 7.5",
-            issuer: "British Council",
-            date: "2023-08-10",
-            url: "https://ielts.britishcouncil.org/example",
-        },
-    ],
-    achievements: [
-        {
-            id: "ach1",
-            title: "Top contributor",
-            description: "Đóng góp nhiều nhất cộng đồng tháng 6/2026",
-            earnedDate: "2026-06-30",
-            category: "community",
-        },
-        {
-            id: "ach2",
-            title: "Streak master",
-            description: "Học 30 ngày liên tục",
-            earnedDate: "2026-06-15",
-            category: "learning",
-        },
-        {
-            id: "ach3",
-            title: "Project champion",
-            description: "Hoàn thành đồ án xuất sắc SWP391",
-            earnedDate: "2026-05-20",
-            category: "course",
-        },
-    ],
+/**
+ * Adapts the BE `SelfProfile` DTO into the Portfolio-tab model. Projects, social
+ * links, and achievements come straight from `GET /api/v1/profiles/me`. The BE
+ * self profile carries no resume and no certificates (certificates live on the
+ * public profile only), so those degrade to empty — the tab renders their empty
+ * states rather than fabricating rows.
+ */
+export const toPortfolio = (profile: SelfProfile): MyPortfolio => ({
+    projects: (profile.projects ?? []).map((project) => ({
+        id: project.id,
+        title: project.title,
+        description: project.description ?? "",
+        tags: project.techStack ?? [],
+        url: project.repoUrl ?? project.demoUrl ?? "",
+        pinned: project.highlighted,
+    })),
+    links: (profile.socialLinks ?? []).map((link) => ({
+        id: link.id,
+        label: link.platform,
+        url: link.url,
+    })),
+    // BE self profile has no resume attachment.
+    resume: null,
+    // Certificates are exposed on the public profile only, not on /me.
+    certificates: [],
+    achievements: (profile.achievements ?? []).map((achievement) => ({
+        id: achievement.id,
+        title: achievement.title,
+        description: achievement.description ?? "",
+        earnedDate: achievement.achievedAt ?? "",
+        // The BE achievement `source` is not one of the FE grouping buckets.
+        category: "other",
+    })),
 })
 
-/** Loads the viewer's portfolio seed. Mocked; SWR-shaped for a BE swap. */
+/** Loads the viewer's portfolio from the real BE (`GET /profiles/me`). */
 export const useQueryMyPortfolioSwr = () => {
-    const { data, isLoading, error, mutate } = useSWR(["my-portfolio"], () => fetchMyPortfolioMock())
-    return { data, isLoading, error, mutate }
+    const { data, isLoading, error, mutate } = useSWR(SELF_PROFILE_KEY, getSelfProfile)
+    return { data: data ? toPortfolio(data) : undefined, isLoading, error, mutate }
 }

@@ -9,7 +9,6 @@ import {
     FieldError,
     Input,
     Label,
-    Switch,
     TextField,
     Typography,
 } from "@heroui/react"
@@ -17,7 +16,6 @@ import { useTranslations } from "next-intl"
 import { Controller, type Control } from "react-hook-form"
 import { CameraIcon } from "@phosphor-icons/react"
 import { useEditProfileForm, type EditProfileFormValues } from "@/hooks/rhf/useEditProfileForm"
-import { WorkMode } from "@/modules/types/enums/work-mode"
 
 /** The plain-text fields of the edit form (all seed/clear as strings). */
 type TextFieldName = "displayName" | "bio" | "roleTitle" | "location" | "linkedinUrl" | "websiteUrl"
@@ -57,48 +55,11 @@ const TextRow = ({
     />
 )
 
-/** A labeled toggle row for a boolean form field. */
-const SwitchRow = ({
-    control,
-    name,
-    label,
-    hint,
-}: {
-    control: Control<EditProfileFormValues>
-    name: "profileLocked" | "openToWork"
-    label: string
-    hint: string
-}) => (
-    <Controller
-        control={control}
-        name={name}
-        render={({ field }) => (
-            <div className="flex items-start justify-between gap-4 rounded-2xl border border-separator p-4">
-                <div className="flex min-w-0 flex-col gap-1">
-                    <Typography type="body-sm" weight="medium">
-                        {label}
-                    </Typography>
-                    <Typography type="body-xs" color="muted">
-                        {hint}
-                    </Typography>
-                </div>
-                <Switch isSelected={field.value} onChange={field.onChange} aria-label={label}>
-                    <Switch.Control>
-                        <Switch.Thumb />
-                    </Switch.Control>
-                </Switch>
-            </div>
-        )}
-    />
-)
-
-const WORK_MODES: ReadonlyArray<WorkMode> = [WorkMode.Remote, WorkMode.Hybrid, WorkMode.Onsite]
-
 /**
  * `/profile/edit` — edit-profile form. Reuses {@link useEditProfileForm} (the
- * real `updateProfile` GraphQL + avatar presigned-upload flow, seeded from the
- * redux auth user). FE surface only: without a signed-in user + backend the
- * fields seed empty and Save cannot persist.
+ * real REST profile flow: seeds from `GET /api/v1/profiles/me`, saves via
+ * `PATCH /me` + multipart avatar upload + `PUT /me/social-links`). Only fields
+ * the BE profile contract carries are shown.
  */
 const EditProfilePage = () => {
     const t = useTranslations()
@@ -161,35 +122,6 @@ const EditProfilePage = () => {
                 placeholder={t("profileEdit.locationPlaceholder")}
             />
 
-            {/* work mode */}
-            <Controller
-                control={control}
-                name="workMode"
-                render={({ field }) => (
-                    <div className="flex flex-col gap-1.5">
-                        <Label htmlFor="edit-workMode" className="text-sm">
-                            {t("profileEdit.workMode")}
-                        </Label>
-                        <select
-                            id="edit-workMode"
-                            name={field.name}
-                            ref={field.ref}
-                            value={field.value}
-                            onChange={(event) => field.onChange(event.target.value)}
-                            onBlur={field.onBlur}
-                            className="rounded-xl border border-separator bg-transparent px-3 py-2 text-sm text-foreground outline-none focus:border-accent"
-                        >
-                            <option value="">{t("profileEdit.workModeNone")}</option>
-                            {WORK_MODES.map((mode) => (
-                                <option key={mode} value={mode}>
-                                    {t(`publicProfile.workMode.${mode}`)}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                )}
-            />
-
             <TextRow
                 control={control}
                 name="linkedinUrl"
@@ -201,20 +133,6 @@ const EditProfilePage = () => {
                 name="websiteUrl"
                 label={t("profileEdit.websiteUrl")}
                 placeholder={t("profileEdit.websiteUrlPlaceholder")}
-            />
-
-            {/* toggles */}
-            <SwitchRow
-                control={control}
-                name="openToWork"
-                label={t("profileEdit.openToWork")}
-                hint={t("profileEdit.openToWorkHint")}
-            />
-            <SwitchRow
-                control={control}
-                name="profileLocked"
-                label={t("profileEdit.lockProfile")}
-                hint={t("profileEdit.lockProfileHint")}
             />
 
             <div className="flex justify-end">

@@ -1,6 +1,9 @@
 "use client"
 
 import useSWR from "swr"
+import { getSelfProfile } from "@/modules/api/rest/profile"
+import type { SelfProfile } from "@/modules/api/rest/profile"
+import { SELF_PROFILE_KEY } from "./useQueryProfileSwr"
 
 /** A social link entry. */
 export interface SocialLink {
@@ -15,32 +18,43 @@ export interface ProfileContact {
     address: string
 }
 
-/** Personal-section detail (mock until BE lands). */
+/** Personal-section detail. */
 export interface ProfilePersonalDetail {
     about: string
     contact: ProfileContact
     socials: Array<SocialLink>
 }
 
-// ponytail: mock BE — no profile endpoint yet. Deterministic sample.
-// Contract preview: BE will expose a contact object with email/phone/address.
-const fetchPersonalMock = async (): Promise<ProfilePersonalDetail> => ({
-    about: "Sinh viên năm 3 ngành Kỹ thuật phần mềm. Quan tâm lập trình hệ thống, giải thuật và DevOps. Đang xây vài dự án cá nhân về công cụ CLI.",
+/** Maps a BE social-link `platform` string onto the FE's icon key set. */
+const toSocialKey = (platform: string): SocialLink["key"] => {
+    const normalized = platform.toLowerCase()
+    if (normalized.includes("github")) return "github"
+    if (normalized.includes("linkedin")) return "linkedin"
+    if (normalized.includes("mail")) return "email"
+    return "website"
+}
+
+/**
+ * Adapts the BE `SelfProfile` DTO into the Personal-tab model: bio → about, the
+ * flat contact fields → a contact object, and the BE social links → the FE's
+ * keyed link list. Missing values degrade to empty (the tab renders empty-state
+ * cards for each blank section).
+ */
+export const toPersonalDetail = (profile: SelfProfile): ProfilePersonalDetail => ({
+    about: profile.bio ?? "",
     contact: {
-        email: "vanhoc@example.com",
-        phone: "+84 912 345 678",
-        address: "FPT University · Hòa Lạc, Hà Nội",
+        email: profile.contactEmail ?? "",
+        phone: profile.phone ?? "",
+        address: profile.address ?? "",
     },
-    socials: [
-        { key: "github", value: "github.com/vanhoc" },
-        { key: "linkedin", value: "linkedin.com/in/vanhoc" },
-        { key: "website", value: "vanhoc.dev" },
-        { key: "email", value: "vanhoc@example.com" },
-    ],
+    socials: (profile.socialLinks ?? []).map((link) => ({
+        key: toSocialKey(link.platform),
+        value: link.url,
+    })),
 })
 
-/** Loads the viewer's personal detail. Mocked; SWR-shaped for a drop-in BE swap. */
+/** Loads the viewer's personal detail from the real BE (`GET /profiles/me`). */
 export const useQueryProfilePersonalSwr = () => {
-    const { data, isLoading, error, mutate } = useSWR(["profile-personal", "me"], () => fetchPersonalMock())
-    return { detail: data, isLoading, error, mutate }
+    const { data, isLoading, error, mutate } = useSWR(SELF_PROFILE_KEY, getSelfProfile)
+    return { detail: data ? toPersonalDetail(data) : undefined, isLoading, error, mutate }
 }

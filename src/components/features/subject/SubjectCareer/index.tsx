@@ -4,8 +4,13 @@ import React from "react"
 import { Chip, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
+import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { SkillGraph } from "@/components/features/skill-graph"
-import { useQuerySubjectCareerSwr } from "../hooks/useQuerySubjectCareerSwr"
+import {
+    useQuerySubjectCareerSwr,
+    type SubjectCareer as SubjectCareerModel,
+} from "../hooks/useQuerySubjectCareerSwr"
 
 /**
  * Career Bridge tab (§3 → §21). DEFAULT on-canon layout (no dedicated brainstorm):
@@ -15,11 +20,7 @@ import { useQuerySubjectCareerSwr } from "../hooks/useQuerySubjectCareerSwr"
 export const SubjectCareer = () => {
     const t = useTranslations("subjects")
     const { subjectId } = useParams<{ subjectId: string }>()
-    const { career } = useQuerySubjectCareerSwr(subjectId)
-
-    if (!career) {
-        return null
-    }
+    const { career, isLoading, error, mutate } = useQuerySubjectCareerSwr(subjectId)
 
     return (
         <div className="flex flex-col gap-6 p-6">
@@ -27,6 +28,34 @@ export const SubjectCareer = () => {
                 {t("career.title")}
             </Typography>
 
+            <AsyncContent
+                isLoading={isLoading && !career}
+                skeleton={<CareerSkeleton />}
+                error={!career ? error : undefined}
+                errorContent={{
+                    title: t("career.loadError"),
+                    onRetry: () => { void mutate() },
+                    retryLabel: t("career.retry"),
+                }}
+            >
+                {career ? <CareerView career={career} subjectId={subjectId} /> : null}
+            </AsyncContent>
+        </div>
+    )
+}
+
+/** Presentation of the loaded career bridge. */
+const CareerView = ({
+    career,
+    subjectId,
+}: {
+    career: SubjectCareerModel
+    subjectId: string
+}) => {
+    const t = useTranslations("subjects")
+
+    return (
+        <div className="flex flex-col gap-6">
             {/* related skills */}
             <div className="flex flex-col gap-3">
                 <Typography type="h6" weight="bold">
@@ -91,3 +120,27 @@ export const SubjectCareer = () => {
         </div>
     )
 }
+
+/** Loading skeleton — mirrors skill chips + careers list + graph block + next-subject card. */
+const CareerSkeleton = () => (
+    <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-3">
+            <Skeleton className="h-5 w-32 rounded-sm" />
+            <div className="flex flex-wrap gap-2">
+                {Array.from({ length: 5 }).map((_, index) => (
+                    <Skeleton.Chip key={index} />
+                ))}
+            </div>
+        </div>
+        <div className="flex flex-col gap-3 border-t border-separator pt-6">
+            <Skeleton className="h-5 w-32 rounded-sm" />
+            {Array.from({ length: 3 }).map((_, index) => (
+                <Skeleton key={index} className="h-[60px] w-full rounded-2xl" />
+            ))}
+        </div>
+        <div className="flex flex-col gap-3 border-t border-separator pt-6">
+            <Skeleton className="h-5 w-32 rounded-sm" />
+            <Skeleton className="h-[400px] w-full rounded-2xl" />
+        </div>
+    </div>
+)

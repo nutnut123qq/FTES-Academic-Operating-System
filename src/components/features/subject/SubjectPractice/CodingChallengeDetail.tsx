@@ -193,7 +193,7 @@ export const CodingChallengeDetail = ({ challenge, onBack }: CodingChallengeDeta
                             onChange={(event) =>
                                 setLanguage(event.target.value as (typeof LANGUAGES)[number])
                             }
-                            className="rounded-medium border border-default bg-surface px-3 py-1.5 text-sm text-foreground outline-none focus:border-accent"
+                            className="rounded-large border border-default bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-accent"
                         >
                             {LANGUAGES.map((lang) => (
                                 <option key={lang} value={lang}>

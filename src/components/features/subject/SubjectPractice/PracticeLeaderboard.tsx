@@ -121,7 +121,7 @@ export const PracticeLeaderboard = ({ subjectId, onBack }: PracticeLeaderboardPr
                                 if (!entry) return null
                                 const isLeader = rank === 1
                                 return (
-                                    <div key={rank} className="flex w-24 flex-col items-center gap-1.5">
+                                    <div key={rank} className="flex w-24 flex-col items-center gap-2">
                                         <div className="relative">
                                             {isLeader ? (
                                                 <CrownIcon

@@ -1,10 +1,12 @@
 "use client"
 
 import React, { useState } from "react"
-import { Button, Chip, Typography, cn } from "@heroui/react"
+import { Button, Chip, Typography } from "@heroui/react"
 import { FolderIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
+import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import {
     useQuerySubjectResourcesSwr,
     type ResourceType,
@@ -22,14 +24,15 @@ const TYPES: Array<ResourceType | "all"> = ["all", "pdf", "slide", "video", "pe"
 export const SubjectResources = () => {
     const t = useTranslations("subjects")
     const { subjectId } = useParams<{ subjectId: string }>()
-    const { resources, collections } = useQuerySubjectResourcesSwr(subjectId)
+    const { resources, collections, isLoading, error, mutate } =
+        useQuerySubjectResourcesSwr(subjectId)
     const [active, setActive] = useState<ResourceType | "all">("all")
 
     const filtered = active === "all" ? resources : resources.filter((r) => r.type === active)
 
     return (
         <div className="flex flex-col gap-6 p-6">
-            {/* type filter */}
+            {/* type filter — static chrome, stays outside the skeleton */}
             <div className="flex flex-col gap-3">
                 <Typography type="h5" weight="bold">
                     {t("resources.title")}
@@ -49,18 +52,23 @@ export const SubjectResources = () => {
             </div>
 
             {/* resource list */}
-            <div className="flex flex-col gap-3">
-                {filtered.length === 0 ? (
-                    <Typography type="body-sm" color="muted">
-                        {t("resources.empty")}
-                    </Typography>
-                ) : (
-                    filtered.map((resource) => (
+            <AsyncContent
+                isLoading={isLoading && resources.length === 0}
+                skeleton={<ResourceListSkeleton />}
+                isEmpty={filtered.length === 0}
+                emptyContent={{ title: t("resources.empty") }}
+                error={resources.length === 0 ? error : undefined}
+                errorContent={{
+                    title: t("resources.loadError"),
+                    onRetry: () => { void mutate() },
+                    retryLabel: t("resources.retry"),
+                }}
+            >
+                <div className="flex flex-col gap-3">
+                    {filtered.map((resource) => (
                         <div
                             key={resource.id}
-                            className={cn(
-                                "flex items-center gap-3 rounded-2xl border border-separator p-4",
-                            )}
+                            className="flex items-center gap-3 rounded-2xl border border-separator p-4 transition-colors hover:border-accent/50 hover:bg-accent/5"
                         >
                             <div className="min-w-0 flex-1">
                                 <Typography type="body-sm" weight="medium" truncate>
@@ -77,32 +85,41 @@ export const SubjectResources = () => {
                                 {t("resources.download")}
                             </Button>
                         </div>
-                    ))
-                )}
-            </div>
+                    ))}
+                </div>
+            </AsyncContent>
 
             {/* collections */}
-            <div className="flex flex-col gap-3 border-t border-separator pt-6">
-                <Typography type="h6" weight="bold">
-                    {t("resources.collections")}
-                </Typography>
-                {collections.map((collection) => (
-                    <div
-                        key={collection.id}
-                        className="flex items-center gap-3 rounded-2xl border border-separator p-4"
-                    >
-                        <span className="text-accent">
-                            <FolderIcon className="size-5" />
-                        </span>
-                        <Typography type="body-sm" weight="medium" className="min-w-0 flex-1" truncate>
-                            {collection.title}
-                        </Typography>
-                        <Chip size="sm" variant="soft" color="accent">
-                            {t("resources.itemsCount", { count: collection.count })}
-                        </Chip>
-                    </div>
-                ))}
-            </div>
+            {collections.length > 0 ? (
+                <div className="flex flex-col gap-3 border-t border-separator pt-6">
+                    <Typography type="h6" weight="bold">
+                        {t("resources.collections")}
+                    </Typography>
+                    {collections.map((collection) => (
+                        <div
+                            key={collection.id}
+                            className="flex items-center gap-3 rounded-2xl border border-separator p-4"
+                        >
+                            <FolderIcon aria-hidden focusable="false" className="size-5 shrink-0 text-accent" />
+                            <Typography type="body-sm" weight="medium" className="min-w-0 flex-1" truncate>
+                                {collection.title}
+                            </Typography>
+                            <Chip size="sm" variant="soft" color="accent">
+                                {t("resources.itemsCount", { count: collection.count })}
+                            </Chip>
+                        </div>
+                    ))}
+                </div>
+            ) : null}
         </div>
     )
 }
+
+/** Loading skeleton — mirrors the resource rows (title/meta text + chip + button). */
+const ResourceListSkeleton = () => (
+    <div className="flex flex-col gap-3">
+        {Array.from({ length: 5 }).map((_, index) => (
+            <Skeleton key={index} className="h-[68px] w-full rounded-2xl" />
+        ))}
+    </div>
+)

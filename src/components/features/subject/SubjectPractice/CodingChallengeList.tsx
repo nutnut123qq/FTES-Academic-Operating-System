@@ -191,7 +191,7 @@ const CodingChallengeRow = ({
                 <Typography type="body-sm" weight="medium" truncate>
                     {challenge.title}
                 </Typography>
-                <div className="flex flex-wrap items-center gap-1.5">
+                <div className="flex flex-wrap items-center gap-2">
                     {challenge.tags.map((tag) => (
                         <Chip key={tag} size="sm" variant="soft" color="default">
                             {tag}

@@ -30,9 +30,9 @@ const fetchCareerMock = async (): Promise<SubjectCareer> => ({
 
 /** Loads a subject's career bridge. Mocked; SWR-shaped for a drop-in BE swap. */
 export const useQuerySubjectCareerSwr = (subjectId: string) => {
-    const { data, isLoading, error } = useSWR(
+    const { data, isLoading, error, mutate } = useSWR(
         ["subject-career", subjectId],
         () => fetchCareerMock(),
     )
-    return { career: data, isLoading, error }
+    return { career: data, isLoading, error, mutate }
 }

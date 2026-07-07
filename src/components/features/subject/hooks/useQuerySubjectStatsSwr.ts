@@ -35,9 +35,9 @@ const fetchStatsMock = async (): Promise<SubjectStats> => ({
 
 /** Loads a subject's statistics. Mocked; SWR-shaped for a drop-in BE swap. */
 export const useQuerySubjectStatsSwr = (subjectId: string) => {
-    const { data, isLoading, error } = useSWR(
+    const { data, isLoading, error, mutate } = useSWR(
         ["subject-stats", subjectId],
         () => fetchStatsMock(),
     )
-    return { stats: data, isLoading, error }
+    return { stats: data, isLoading, error, mutate }
 }

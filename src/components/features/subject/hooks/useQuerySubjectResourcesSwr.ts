@@ -46,7 +46,7 @@ const fetchResourcesMock = async (): Promise<{
 
 /** Loads a subject's resources + collections. Mocked; SWR-shaped for a drop-in BE swap. */
 export const useQuerySubjectResourcesSwr = (subjectId: string) => {
-    const { data, isLoading, error } = useSWR(
+    const { data, isLoading, error, mutate } = useSWR(
         ["subject-resources", subjectId],
         () => fetchResourcesMock(),
     )
@@ -55,5 +55,6 @@ export const useQuerySubjectResourcesSwr = (subjectId: string) => {
         collections: data?.collections ?? [],
         isLoading,
         error,
+        mutate,
     }
 }

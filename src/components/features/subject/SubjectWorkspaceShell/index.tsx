@@ -41,24 +41,24 @@ const NAV_GROUPS: Array<{ label: string; items: Array<NavItem> }> = [
     {
         label: "space",
         items: [
-            { key: "overview", icon: <SquaresFourIcon className="size-5" />, segment: "" },
-            { key: "discussion", icon: <ChatCircleIcon className="size-5" />, segment: "discussion" },
-            { key: "resources", icon: <FolderIcon className="size-5" />, segment: "resources" },
-            { key: "practice", icon: <TargetIcon className="size-5" />, segment: "practice" },
-            { key: "ai", icon: <SparkleIcon className="size-5" />, segment: "ai" },
+            { key: "overview", icon: <SquaresFourIcon className="size-5" aria-hidden focusable="false" />, segment: "" },
+            { key: "discussion", icon: <ChatCircleIcon className="size-5" aria-hidden focusable="false" />, segment: "discussion" },
+            { key: "resources", icon: <FolderIcon className="size-5" aria-hidden focusable="false" />, segment: "resources" },
+            { key: "practice", icon: <TargetIcon className="size-5" aria-hidden focusable="false" />, segment: "practice" },
+            { key: "ai", icon: <SparkleIcon className="size-5" aria-hidden focusable="false" />, segment: "ai" },
         ],
     },
     {
         label: "community",
         items: [
-            { key: "members", icon: <UsersIcon className="size-5" />, segment: "members" },
+            { key: "members", icon: <UsersIcon className="size-5" aria-hidden focusable="false" />, segment: "members" },
         ],
     },
     {
         label: "insight",
         items: [
-            { key: "statistics", icon: <ChartBarIcon className="size-5" />, segment: "statistics" },
-            { key: "career", icon: <BriefcaseIcon className="size-5" />, segment: "career" },
+            { key: "statistics", icon: <ChartBarIcon className="size-5" aria-hidden focusable="false" />, segment: "statistics" },
+            { key: "career", icon: <BriefcaseIcon className="size-5" aria-hidden focusable="false" />, segment: "career" },
         ],
     },
 ]

@@ -6,6 +6,8 @@ import { useLocale, useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
 import { useAppSelector } from "@/redux/hooks"
 import { UserLink } from "@/components/features/identity"
+import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import {
     PostEngagementBar,
     DISCUSSION_ENGAGEMENT_ACTIONS,
@@ -144,10 +146,11 @@ export const SubjectCommunity = () => {
     const t = useTranslations("subjects")
     const { subjectId } = useParams<{ subjectId: string }>()
     const [scope, setScope] = useState<FeedScope>("forYou")
-    const { posts } = useQuerySubjectFeedSwr(subjectId, scope)
+    const { posts, isLoading, error, mutate } = useQuerySubjectFeedSwr(subjectId, scope)
 
     return (
         <div className="flex flex-col gap-6 p-6">
+            {/* scope filter — static chrome, stays outside the skeleton */}
             <div className="flex flex-col gap-3">
                 <Typography type="h5" weight="bold">
                     {t("community.title")}
@@ -166,16 +169,38 @@ export const SubjectCommunity = () => {
                 </div>
             </div>
 
-            <div className="flex flex-col gap-3">
-                {posts.map((post) => (
-                    <SubjectPostRow
-                        key={post.id}
-                        subjectId={subjectId}
-                        scope={scope}
-                        post={post}
-                    />
-                ))}
-            </div>
+            <AsyncContent
+                isLoading={isLoading && posts.length === 0}
+                skeleton={<FeedSkeleton />}
+                isEmpty={posts.length === 0}
+                emptyContent={{ title: t("community.empty") }}
+                error={posts.length === 0 ? error : undefined}
+                errorContent={{
+                    title: t("community.loadError"),
+                    onRetry: () => { void mutate() },
+                    retryLabel: t("community.retry"),
+                }}
+            >
+                <div className="flex flex-col gap-3">
+                    {posts.map((post) => (
+                        <SubjectPostRow
+                            key={post.id}
+                            subjectId={subjectId}
+                            scope={scope}
+                            post={post}
+                        />
+                    ))}
+                </div>
+            </AsyncContent>
         </div>
     )
 }
+
+/** Loading skeleton — mirrors the discussion post rows. */
+const FeedSkeleton = () => (
+    <div className="flex flex-col gap-3">
+        {Array.from({ length: 3 }).map((_, index) => (
+            <Skeleton key={index} className="h-32 w-full rounded-2xl" />
+        ))}
+    </div>
+)

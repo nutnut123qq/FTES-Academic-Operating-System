@@ -27,9 +27,9 @@ const fetchMembersMock = async (): Promise<Array<SubjectMember>> => [
 
 /** Loads a subject's members. Mocked; SWR-shaped for a drop-in BE swap. */
 export const useQuerySubjectMembersSwr = (subjectId: string) => {
-    const { data, isLoading, error } = useSWR(
+    const { data, isLoading, error, mutate } = useSWR(
         ["subject-members", subjectId],
         () => fetchMembersMock(),
     )
-    return { members: data ?? [], isLoading, error }
+    return { members: data ?? [], isLoading, error, mutate }
 }

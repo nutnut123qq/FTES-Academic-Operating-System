@@ -12,6 +12,16 @@ export const metadata: Metadata = {
     },
     description: SEO_CONFIG.defaultDescription,
     applicationName: SEO_CONFIG.siteName,
+    // Theme-aware browser-tab favicon: the light mark on light OS themes, the
+    // dark-mobile mark on dark. Browsers pick by the `media` query natively.
+    // (Overrides the file-convention app/icon.* — those are removed so the tab
+    // isn't left showing the old StarCi "S".)
+    icons: {
+        icon: [
+            { url: "/logo/LogoFtestMini.png", media: "(prefers-color-scheme: light)" },
+            { url: "/logo/ftesMiniDarkMobile.png", media: "(prefers-color-scheme: dark)" },
+        ],
+    },
     alternates: {
         canonical: "/",
     },

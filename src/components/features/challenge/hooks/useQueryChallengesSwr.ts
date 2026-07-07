@@ -35,6 +35,6 @@ const fetchChallengesMock = async (): Promise<Array<Challenge>> => CHALLENGES_MO
 
 /** Loads the challenge catalog. Mocked; SWR-shaped for a drop-in BE swap. */
 export const useQueryChallengesSwr = () => {
-    const { data, isLoading, error } = useSWR(["challenges"], () => fetchChallengesMock())
-    return { challenges: data ?? [], isLoading, error }
+    const { data, isLoading, error, mutate } = useSWR(["challenges"], () => fetchChallengesMock())
+    return { challenges: data ?? [], isLoading, error, mutate }
 }

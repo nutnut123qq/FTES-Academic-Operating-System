@@ -3025,7 +3025,11 @@
     "error": "Không tải được vai trò",
     "states": {
       "retry": "Thử lại"
-    }
+    },
+    "permissionColumn": "Quyền",
+    "grantCount": "{count} lượt cấp",
+    "permissionCount": "{count} quyền",
+    "systemRole": "Hệ thống"
   },
   "integration": {
     "title": "Trung tâm tích hợp",
@@ -3276,6 +3280,12 @@
     "errorTitle": "Không tải được lịch sử giao dịch.",
     "states": {
       "retry": "Thử lại"
+    },
+    "kinds": {
+      "receive": "Nhận",
+      "transfer": "Chuyển",
+      "purchase": "Mua",
+      "refund": "Hoàn tiền"
     }
   },
   "marketplace": {
@@ -5500,6 +5510,41 @@
       "challenges": {
         "title": "Luyện tập bài này",
         "practice": "Vào thử thách"
+      }
+    }
+  },
+  "adminConsole": {
+    "title": "Bảng điều khiển quản trị",
+    "subtitle": "Quyền truy cập của bạn và tổng quan vai trò trên nền tảng.",
+    "error": "Không tải được dữ liệu quản trị",
+    "retry": "Thử lại",
+    "myAccess": {
+      "heading": "Quyền của bạn",
+      "superAdmin": "Quản trị cấp cao",
+      "noRoles": "Chưa được gán vai trò nào",
+      "permissions": "Quyền hiệu lực",
+      "domains": "Nhóm quyền",
+      "unavailable": "Không tải được quyền của bạn."
+    },
+    "roles": {
+      "heading": "Vai trò & lượt cấp",
+      "manage": "Quản lý vai trò",
+      "total": "Tổng vai trò",
+      "system": "Vai trò hệ thống",
+      "active": "Vai trò đang dùng",
+      "grants": "Tổng lượt cấp"
+    },
+    "tools": {
+      "heading": "Công cụ media & AI",
+      "keySet": "Đã cấu hình khóa",
+      "keySetHint": "Khóa API công cụ đã sẵn sàng cho phiên này.",
+      "keyLabel": "Khóa API công cụ",
+      "keyPlaceholder": "Nhập khóa API quản trị",
+      "keySubmit": "Lưu & mở công cụ",
+      "links": {
+        "uploadVideo": "Tải video lên",
+        "aiBalancer": "Cân bằng khóa AI",
+        "mpegDash": "Kiểm thử MPEG-DASH"
       }
     }
   }

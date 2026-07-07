@@ -3025,7 +3025,11 @@
     "error": "Couldn't load roles",
     "states": {
       "retry": "Try again"
-    }
+    },
+    "permissionColumn": "Permission",
+    "grantCount": "{count} grants",
+    "permissionCount": "{count} permissions",
+    "systemRole": "System"
   },
   "integration": {
     "title": "Integration Hub",
@@ -3276,6 +3280,12 @@
     "errorTitle": "Couldn't load transaction history.",
     "states": {
       "retry": "Try again"
+    },
+    "kinds": {
+      "receive": "Received",
+      "transfer": "Transfer",
+      "purchase": "Purchase",
+      "refund": "Refund"
     }
   },
   "marketplace": {
@@ -5500,6 +5510,41 @@
       "challenges": {
         "title": "Practice this lesson",
         "practice": "Open challenges"
+      }
+    }
+  },
+  "adminConsole": {
+    "title": "Admin console",
+    "subtitle": "Your access and a platform-wide roles overview.",
+    "error": "Couldn't load admin data",
+    "retry": "Try again",
+    "myAccess": {
+      "heading": "Your access",
+      "superAdmin": "Super admin",
+      "noRoles": "No roles assigned yet",
+      "permissions": "Effective permissions",
+      "domains": "Permission domains",
+      "unavailable": "Couldn't load your permissions."
+    },
+    "roles": {
+      "heading": "Roles & grants",
+      "manage": "Manage roles",
+      "total": "Total roles",
+      "system": "System roles",
+      "active": "Roles in use",
+      "grants": "Total grants"
+    },
+    "tools": {
+      "heading": "Media & AI tools",
+      "keySet": "Key configured",
+      "keySetHint": "The tools API key is ready for this session.",
+      "keyLabel": "Tools API key",
+      "keyPlaceholder": "Enter your admin API key",
+      "keySubmit": "Save & open tools",
+      "links": {
+        "uploadVideo": "Upload video",
+        "aiBalancer": "AI key balancer",
+        "mpegDash": "MPEG-DASH test"
       }
     }
   }

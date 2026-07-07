@@ -23,12 +23,14 @@ export const listRbacRoles = async (): Promise<RbacRoleSummary[]> =>
     restRequest<RbacRoleSummary[]>({
         method: "GET",
         url: "/identity/roles",
+        authenticated: true,
     })
 
 export const getRbacRole = async (id: string): Promise<RbacRoleView> =>
     restRequest<RbacRoleView>({
         method: "GET",
         url: `/identity/roles/${id}`,
+        authenticated: true,
     })
 
 export const createRbacRole = async (
@@ -79,6 +81,7 @@ export const getRbacPermissionCatalog = async (
         params: {
             domain,
         },
+        authenticated: true,
     })
 
 // ---------------- GrantController: role grants ----------------
@@ -89,6 +92,7 @@ export const listRbacUserRoleGrants = async (
     restRequest<RbacRoleGrantView[]>({
         method: "GET",
         url: `/identity/users/${userId}/roles`,
+        authenticated: true,
     })
 
 export const grantRbacRoleToUser = async (
@@ -118,6 +122,7 @@ export const listRbacUserPermissionGrants = async (
     restRequest<RbacPermissionGrantView[]>({
         method: "GET",
         url: `/identity/users/${userId}/permissions`,
+        authenticated: true,
     })
 
 export const grantRbacPermissionToUser = async (
@@ -145,6 +150,7 @@ export const getMyRbacPermissions = async (): Promise<RbacMePermissionsResponse>
     restRequest<RbacMePermissionsResponse>({
         method: "GET",
         url: "/identity/me/permissions",
+        authenticated: true,
     })
 
 export const checkMyRbacPermissions = async (

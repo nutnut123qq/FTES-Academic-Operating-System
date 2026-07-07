@@ -218,7 +218,7 @@ export const CourseHoverPreview = ({ course, children, className }: CourseHoverP
                                 ))}
                             </ul>
                         ) : null}
-                        <div className="flex items-center gap-2 pt-1">
+                        <div className="flex items-center gap-2">
                             <Button className="flex-1" onPress={onEnroll}>
                                 {t("courseSystem.browse.preview.enroll")}
                             </Button>

@@ -4,7 +4,7 @@ import React, { useState } from "react"
 import { Typography } from "@heroui/react"
 import { MagnifyingGlassIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
-import { EmptyState } from "@/components/blocks/feedback/EmptyState"
+import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import {
     coursesByCategory,
     sortCourses,
@@ -16,6 +16,7 @@ import { useQueryCourseCategoriesSwr } from "../hooks/useQueryCourseCategoriesSw
 import {
     CatalogCourseCard,
     CategoryChipBar,
+    CategoryGridSkeleton,
     CategoryShelf,
     CategoryShelfSkeleton,
     CourseHoverPreview,
@@ -37,7 +38,7 @@ import { FeaturedSlider } from "./FeaturedSlider"
 export const CourseCatalog = () => {
     const t = useTranslations()
     const { categories } = useQueryCourseCategoriesSwr()
-    const { courses, isLoading } = useQueryCoursesSwr()
+    const { courses, isLoading, error, mutate } = useQueryCoursesSwr()
     const [query, setQuery] = useState("")
     const [level, setLevel] = useState<CourseLevel | "all">("all")
     const [sort, setSort] = useState<CourseSort>("popular")
@@ -91,19 +92,32 @@ export const CourseCatalog = () => {
                 />
             </div>
 
-            {loading ? (
-                <div className="flex flex-col gap-6">
-                    {[0, 1, 2].map((shelf) => (
-                        <CategoryShelfSkeleton key={shelf} />
-                    ))}
-                </div>
-            ) : isFiltering ? (
-                filtered.length === 0 ? (
-                    <EmptyState
-                        icon={<MagnifyingGlassIcon aria-hidden focusable="false" />}
-                        title={t("courseSystem.browse.empty")}
-                    />
+            {/* skeleton mirrors the active view (grid when filtering, shelves otherwise)
+                so the catalog doesn't jump on resolve; empty/error via AsyncContent */}
+            <AsyncContent
+                isLoading={loading}
+                skeleton={isFiltering ? (
+                    <CategoryGridSkeleton />
                 ) : (
+                    <div className="flex flex-col gap-6">
+                        {[0, 1, 2].map((shelf) => (
+                            <CategoryShelfSkeleton key={shelf} />
+                        ))}
+                    </div>
+                )}
+                error={courses.length === 0 ? error : undefined}
+                errorContent={{
+                    title: t("courseSystem.catalog.loadError"),
+                    onRetry: () => { void mutate() },
+                    retryLabel: t("courseSystem.detail.retry"),
+                }}
+                isEmpty={isFiltering && filtered.length === 0}
+                emptyContent={{
+                    icon: <MagnifyingGlassIcon aria-hidden focusable="false" className="size-8 text-muted" />,
+                    title: t("courseSystem.browse.empty"),
+                }}
+            >
+                {isFiltering ? (
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                         {filtered.map((course) => (
                             <CourseHoverPreview key={course.id} course={course}>
@@ -111,26 +125,26 @@ export const CourseCatalog = () => {
                             </CourseHoverPreview>
                         ))}
                     </div>
-                )
-            ) : (
-                <div className="flex flex-col gap-6">
-                    {visibleCategories.map((category) => {
-                        const categoryCourses = sortCourses(
-                            coursesByCategory(courses, category.slug),
-                            sort,
-                        )
-                        // empty categories render no shelf (and no placeholder)
-                        if (categoryCourses.length === 0) return null
-                        return (
-                            <CategoryShelf
-                                key={category.slug}
-                                category={category}
-                                courses={categoryCourses}
-                            />
-                        )
-                    })}
-                </div>
-            )}
+                ) : (
+                    <div className="flex flex-col gap-6">
+                        {visibleCategories.map((category) => {
+                            const categoryCourses = sortCourses(
+                                coursesByCategory(courses, category.slug),
+                                sort,
+                            )
+                            // empty categories render no shelf (and no placeholder)
+                            if (categoryCourses.length === 0) return null
+                            return (
+                                <CategoryShelf
+                                    key={category.slug}
+                                    category={category}
+                                    courses={categoryCourses}
+                                />
+                            )
+                        })}
+                    </div>
+                )}
+            </AsyncContent>
         </div>
     )
 }

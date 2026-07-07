@@ -280,13 +280,13 @@ const CourseDetailView = ({
                             <SaveButton entityType="course" entityId={course.id} />
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
-                            <Chip size="sm" variant="soft" color="default" className="font-semibold text-accent">
+                            <Chip size="sm" variant="soft" color="accent">
                                 {t(`levels.${course.level}`)}
                             </Chip>
-                            <Chip size="sm" variant="soft" color="default" className="font-semibold text-accent">
+                            <Chip size="sm" variant="soft" color="default">
                                 {t("detail.credits", { count: course.credits })}
                             </Chip>
-                            <span className="flex items-center gap-1 text-sm text-muted">
+                            <span className="flex items-center gap-2 text-sm text-muted">
                                 <StarIcon aria-hidden focusable="false" weight="fill" className="size-4 text-accent" />
                                 {course.rating.avg.toFixed(1)} · {t("detail.ratings", { count: course.rating.count })}
                             </span>
@@ -537,16 +537,16 @@ const EnrollCard = ({
                             return {
                                 value: key,
                                 icon: isSelected ? (
-                                    <CircleIcon aria-hidden focusable="false" weight="fill" className="size-[18px] text-accent" />
+                                    <CircleIcon aria-hidden focusable="false" weight="fill" className="size-5 text-accent" />
                                 ) : (
-                                    <CircleIcon aria-hidden focusable="false" className="size-[18px] text-muted" />
+                                    <CircleIcon aria-hidden focusable="false" className="size-5 text-muted" />
                                 ),
                                 label: t(`detail.planNames.${plan.name}`),
                                 // ponytail: price rendered as PLAIN spans, not PriceTag/Typography —
                                 // those wrap React-Aria `Text`, which throws "slot prop required" when
                                 // nested inside the RadioGroup's Text context.
                                 badge: (
-                                    <span className="flex items-center gap-1.5 text-sm">
+                                    <span className="flex items-center gap-2 text-sm">
                                         {plan.originalPriceVnd && plan.originalPriceVnd > plan.priceVnd ? (
                                             <span className="text-xs text-muted line-through">
                                                 {plan.originalPriceVnd.toLocaleString("vi-VN")}₫
@@ -630,7 +630,7 @@ const CourseDetailSkeleton = () => (
     <div className="flex flex-col gap-6">
         <Skeleton.Breadcrumbs />
         <div className="grid grid-cols-1 gap-6 md:grid-cols-5">
-            <div className="flex flex-col gap-4 md:col-span-3">
+            <div className="flex flex-col gap-3 md:col-span-3">
                 <Skeleton className="h-8 w-2/3 rounded-large" />
                 <div className="flex flex-wrap gap-2">
                     <Skeleton.Chip />

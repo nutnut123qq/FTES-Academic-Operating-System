@@ -38,7 +38,7 @@ export const CatalogCourseCard = ({ course, className }: CatalogCourseCardProps)
         <Link
             href={`/courses/${course.id}`}
             className={cn(
-                "group flex flex-col overflow-hidden rounded-2xl border border-separator no-underline transition-colors hover:bg-default/40",
+                "group flex flex-col overflow-hidden rounded-3xl border border-separator no-underline transition-colors hover:bg-default/40",
                 className,
             )}
         >
@@ -72,7 +72,7 @@ export const CatalogCourseCard = ({ course, className }: CatalogCourseCardProps)
                 ) : null}
             </div>
 
-            <div className="flex flex-1 flex-col gap-2 p-3">
+            <div className="flex flex-1 flex-col gap-3 p-4">
                 <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
                         <Typography type="body-xs" color="muted">
@@ -118,7 +118,7 @@ export const CatalogCourseCard = ({ course, className }: CatalogCourseCardProps)
                 </div>
 
                 {course.priceVnd != null ? (
-                    <div className="mt-auto pt-2">
+                    <div className="mt-auto">
                         <PriceTag discounted={course.priceVnd} size="sm" />
                     </div>
                 ) : null}

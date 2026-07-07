@@ -87,6 +87,6 @@ export const sortCourses = (courses: Array<Course>, sort: CourseSort): Array<Cou
 
 /** Loads the course catalog. Mocked; SWR-shaped for a drop-in BE swap. */
 export const useQueryCoursesSwr = () => {
-    const { data, isLoading, error } = useSWR(["courses"], () => fetchCoursesMock())
-    return { courses: data ?? [], isLoading, error }
+    const { data, isLoading, error, mutate } = useSWR(["courses"], () => fetchCoursesMock())
+    return { courses: data ?? [], isLoading, error, mutate }
 }

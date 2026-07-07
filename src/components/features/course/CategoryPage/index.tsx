@@ -4,7 +4,7 @@ import React, { useState } from "react"
 import { Typography } from "@heroui/react"
 import { MagnifyingGlassIcon } from "@phosphor-icons/react"
 import { useLocale, useTranslations } from "next-intl"
-import { EmptyState } from "@/components/blocks/feedback/EmptyState"
+import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { IconTile } from "@/components/blocks/identity/IconTile"
 import {
     coursesByCategory,
@@ -42,7 +42,7 @@ export interface CategoryPageProps {
 export const CategoryPage = ({ slug }: CategoryPageProps) => {
     const t = useTranslations()
     const locale = useLocale()
-    const { courses, isLoading } = useQueryCoursesSwr()
+    const { courses, isLoading, error, mutate } = useQueryCoursesSwr()
     const [query, setQuery] = useState("")
     const [level, setLevel] = useState<CourseLevel | "all">("all")
     const [sort, setSort] = useState<CourseSort>("popular")
@@ -101,14 +101,21 @@ export const CategoryPage = ({ slug }: CategoryPageProps) => {
                 onSortChange={setSort}
             />
 
-            {isLoading ? (
-                <CategoryGridSkeleton />
-            ) : filtered.length === 0 ? (
-                <EmptyState
-                    icon={<MagnifyingGlassIcon aria-hidden focusable="false" />}
-                    title={t("courseSystem.browse.empty")}
-                />
-            ) : (
+            <AsyncContent
+                isLoading={isLoading}
+                skeleton={<CategoryGridSkeleton />}
+                error={courses.length === 0 ? error : undefined}
+                errorContent={{
+                    title: t("courseSystem.catalog.loadError"),
+                    onRetry: () => { void mutate() },
+                    retryLabel: t("courseSystem.detail.retry"),
+                }}
+                isEmpty={filtered.length === 0}
+                emptyContent={{
+                    icon: <MagnifyingGlassIcon aria-hidden focusable="false" className="size-8 text-muted" />,
+                    title: t("courseSystem.browse.empty"),
+                }}
+            >
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     {filtered.map((course) => (
                         <CourseHoverPreview key={course.id} course={course}>
@@ -116,7 +123,7 @@ export const CategoryPage = ({ slug }: CategoryPageProps) => {
                         </CourseHoverPreview>
                     ))}
                 </div>
-            )}
+            </AsyncContent>
         </div>
     )
 }

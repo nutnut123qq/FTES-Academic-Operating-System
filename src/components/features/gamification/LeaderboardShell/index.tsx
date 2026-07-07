@@ -7,7 +7,7 @@ import { FireIcon, LightningIcon, RankingIcon, StarIcon, TrophyIcon } from "@pho
 import { Link } from "@/i18n/navigation"
 import { pathConfig } from "@/resources/path"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
-import { CURRENT_USER_ID, useQueryLeaderboardSwr } from "../hooks/useQueryLeaderboardSwr"
+import { useQueryLeaderboardSwr } from "../hooks/useQueryLeaderboardSwr"
 import {
     GamificationActionType,
     STREAK_MILESTONES,
@@ -53,7 +53,7 @@ const LeaderboardSkeleton = () => (
 export const LeaderboardShell = () => {
     const t = useTranslations("gamification")
     const locale = useLocale()
-    const { board, isLoading, error, mutate } = useQueryLeaderboardSwr()
+    const { board, myUserId, isLoading, error, mutate } = useQueryLeaderboardSwr()
     const { state, level, recordAction, checkDayRollover } = useGamificationEngine()
 
     // On mount, roll the day forward (consume freezes / reset) and fire the
@@ -100,7 +100,7 @@ export const LeaderboardShell = () => {
         {
             key: "rank" as const,
             icon: <RankingIcon className="size-5" aria-hidden focusable="false" />,
-            value: board.findIndex((entry) => entry.id === CURRENT_USER_ID) + 1,
+            value: board.findIndex((entry) => entry.id === myUserId) + 1,
             hint: t(`tiers.${tier.key}`),
         },
     ]
@@ -145,7 +145,11 @@ export const LeaderboardShell = () => {
                                 </Typography>
                             </div>
                             <Typography type="h5" weight="bold">
-                                {Math.round(stat.value).toLocaleString(locale)}
+                                {/* Rank rides the real BE board — show "—" when the viewer is
+                                    unranked (e.g. the board is empty / unseeded) instead of "0". */}
+                                {stat.key === "rank" && stat.value < 1
+                                    ? "—"
+                                    : Math.round(stat.value).toLocaleString(locale)}
                             </Typography>
                             {stat.hint ? (
                                 <Typography type="body-xs" color="muted">
@@ -215,8 +219,8 @@ export const LeaderboardShell = () => {
                     }}
                 >
                     <div className="flex flex-col gap-2">
-                        {board.map((entry, index) => {
-                            const isMe = entry.id === CURRENT_USER_ID
+                        {board.map((entry) => {
+                            const isMe = entry.id === myUserId
                             return (
                                 <div
                                     key={entry.id}
@@ -229,7 +233,7 @@ export const LeaderboardShell = () => {
                                         weight="bold"
                                         className={`w-6 shrink-0 text-center ${isMe ? "text-accent" : "text-muted"}`}
                                     >
-                                        {index + 1}
+                                        {entry.rank}
                                     </Typography>
                                     <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent/10 text-sm font-bold text-accent">
                                         {entry.avatarInitials}
@@ -238,9 +242,12 @@ export const LeaderboardShell = () => {
                                         <Typography type="body-sm" weight="medium" truncate>
                                             {entry.name}
                                         </Typography>
-                                        <Typography type="body-xs" color="muted">
-                                            {t("stats.level")} {Math.round(entry.level)}
-                                        </Typography>
+                                        {/* BE leaderboard carries no per-user level → hide the line rather than fabricate it. */}
+                                        {entry.level != null ? (
+                                            <Typography type="body-xs" color="muted">
+                                                {t("stats.level")} {Math.round(entry.level)}
+                                            </Typography>
+                                        ) : null}
                                     </div>
                                     <Typography type="body-sm" weight="medium" className="shrink-0">
                                         {t("xpValue", { xp: Math.round(entry.xp).toLocaleString(locale) })}

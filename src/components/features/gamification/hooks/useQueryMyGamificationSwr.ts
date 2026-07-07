@@ -4,7 +4,7 @@ import { useMemo } from "react"
 import { useAppSelector } from "@/redux/hooks"
 import { DayStatus, useGamificationEngine } from "../engine"
 import { STREAK_MILESTONES, tierFromXp, xpForLevel } from "../rules"
-import { CURRENT_USER_ID, useQueryLeaderboardSwr } from "./useQueryLeaderboardSwr"
+import { useQueryLeaderboardSwr } from "./useQueryLeaderboardSwr"
 
 /** One earned badge in the viewer's gamification snapshot. */
 export interface MyGamificationBadge {
@@ -43,12 +43,14 @@ export interface MyGamification {
 export const useQueryMyGamificationSwr = () => {
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
     const { state, level, heatmap } = useGamificationEngine()
-    // ponytail: rank rides the leaderboard mock query (the only async part) so the
-    // position always matches the /leaderboard board ordering.
-    const { board, isLoading, error } = useQueryLeaderboardSwr()
+    // Rank rides the real-BE leaderboard board (the only async part) so the position
+    // matches the /leaderboard ordering. xp/level/streak/badges come from the engine
+    // and are independent of the board, so the snapshot renders even when the board is
+    // empty (unseeded) — the viewer is simply reported as unranked (position 0) then.
+    const { board, isLoading, error, myUserId } = useQueryLeaderboardSwr()
 
     const data = useMemo<MyGamification | undefined>(() => {
-        if (!authenticated || board.length === 0) return undefined
+        if (!authenticated) return undefined
         const levelFloor = xpForLevel(level)
         /** Mock earned date: the day the streak first hit `days` (relative to today). */
         const earnedDate = (days: number): string => {
@@ -73,7 +75,7 @@ export const useQueryMyGamificationSwr = () => {
                     .map((day) => day.date),
             },
             rank: {
-                position: board.findIndex((entry) => entry.id === CURRENT_USER_ID) + 1,
+                position: board.findIndex((entry) => entry.id === myUserId) + 1,
                 league: tierFromXp(state.xp).tier.key,
             },
             badges: STREAK_MILESTONES.filter((milestone) =>
@@ -84,7 +86,7 @@ export const useQueryMyGamificationSwr = () => {
                 earnedDate: earnedDate(milestone.days),
             })),
         }
-    }, [authenticated, board, state, level, heatmap])
+    }, [authenticated, board, myUserId, state, level, heatmap])
 
     return {
         data,

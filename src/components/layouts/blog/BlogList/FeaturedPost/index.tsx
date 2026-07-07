@@ -47,12 +47,12 @@ export const FeaturedPost = ({ post, formattedDate }: FeaturedPostProps) => {
                 <img
                     src={post.coverImageUrl}
                     alt=""
-                    className="aspect-[16/9] w-full rounded-large object-cover"
+                    className="aspect-[16/9] w-full rounded-2xl object-cover"
                 />
             )}
 
             {/* serif display title — the page's visual hero */}
-            <h2 className="text-3xl font-semibold leading-tight text-foreground group-hover:underline">
+            <h2 className="text-3xl font-bold leading-tight text-foreground group-hover:underline">
                 {post.title}
             </h2>
             {post.excerpt && <p className="text-base text-muted">{post.excerpt}</p>}

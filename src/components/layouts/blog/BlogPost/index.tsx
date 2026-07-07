@@ -84,7 +84,7 @@ export const BlogPost = () => {
                                         </Chip>
                                     )}
                                 </div>
-                                <h1 className="text-4xl font-semibold leading-tight text-foreground">
+                                <h1 className="text-4xl font-bold leading-tight text-foreground">
                                     {data.title}
                                 </h1>
                                 <div className="flex items-center gap-2 text-sm text-muted">
@@ -103,7 +103,7 @@ export const BlogPost = () => {
                                 <img
                                     src={data.coverImageUrl}
                                     alt=""
-                                    className="aspect-[16/9] w-full rounded-large object-cover"
+                                    className="aspect-[16/9] w-full rounded-2xl object-cover"
                                 />
                             )}
 

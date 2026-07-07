@@ -1,6 +1,12 @@
 "use client"
 
 import useSWR from "swr"
+import {
+    getCourseDetail,
+    readLessonContent,
+    type CourseDetail,
+    type LessonContentView,
+} from "@/modules/api/rest/course"
 
 /** A heading anchor for the "On this page" TOC. */
 export interface LessonHeading {
@@ -12,7 +18,7 @@ export interface LessonHeading {
     level: 2 | 3
 }
 
-/** One prose block in the lesson body (mock content, per selected language). */
+/** One prose block in the lesson body. */
 export interface LessonBlock {
     /** Stable key. */
     id: string
@@ -30,7 +36,7 @@ export interface LessonOutcome {
     text: string
 }
 
-/** The lesson currently open in the reader (§4, mock until BE lands). */
+/** The lesson currently open in the reader (§4). */
 export interface LearnLessonView {
     id: string
     /** Owning module id (for the prev/next route + breadcrumb). */
@@ -47,7 +53,7 @@ export interface LearnLessonView {
     challengeCount: number
     /** "What you'll learn" bullets (empty → the callout is hidden). */
     outcomes: Array<LessonOutcome>
-    /** Languages this lesson has content for (subset of TS/Java/C#/Go). */
+    /** Languages this lesson has content for. */
     availableLangs: Array<string>
     /** Body blocks keyed by language. */
     bodyByLang: Record<string, Array<LessonBlock>>
@@ -64,102 +70,145 @@ export interface LearnLessonView {
     isLocked: boolean
 }
 
-const LANGS = ["typescript", "java", "csharp", "go"]
+// The BE serves lesson bodies as one markdown string (no per-language variants),
+// so the reader renders a single body under a single lang key (its switcher hides
+// when availableLangs has one entry).
+const BODY_LANG = "typescript"
 
-const buildBody = (lang: string): Array<LessonBlock> => {
-    const langLabel: Record<string, string> = {
-        typescript: "TypeScript",
-        java: "Java",
-        csharp: "C#",
-        go: "Go",
+/** Minimal markdown → typed-block parser: headings (# / ###), fenced code, paragraphs. */
+const parseMarkdownToBlocks = (markdown: string): Array<LessonBlock> => {
+    const blocks: Array<LessonBlock> = []
+    let paragraph: Array<string> = []
+    let codeLines: Array<string> | null = null
+
+    const flushParagraph = () => {
+        if (paragraph.length > 0) {
+            blocks.push({ id: `p-${blocks.length}`, kind: "para", text: paragraph.join(" ").trim() })
+            paragraph = []
+        }
     }
-    const label = langLabel[lang] ?? lang
-    return [
-        { id: "h-intro", kind: "heading", level: 2, text: "Overview" },
-        {
-            id: "p-intro-1",
-            kind: "para",
-            text: `In this lesson we walk through the core idea in ${label}. Read the passage below, then try the exercise. Select any passage to ask the AI tutor about it.`,
-        },
-        {
-            id: "p-intro-2",
-            kind: "para",
-            text: "The runtime keeps a call stack of active frames. Each function call pushes a frame; returning pops it. Understanding this model explains both recursion limits and where local state lives.",
-        },
-        { id: "h-example", kind: "heading", level: 2, text: "A worked example" },
-        {
-            id: "c-example",
-            kind: "code",
-            text: `// ${label}\nfunction greet(name) {\n  return "Hello, " + name\n}`,
-        },
-        {
-            id: "p-example-1",
-            kind: "para",
-            text: "Notice how the argument is bound at call time. The function body only sees the parameter name, never the caller's variable — this is why pass-by-value is the default mental model.",
-        },
-        { id: "h-edge", kind: "heading", level: 3, text: "Edge cases" },
-        {
-            id: "p-edge-1",
-            kind: "para",
-            text: "Empty input, very large input, and concurrent access each break naive implementations differently. We handle the first two here and revisit concurrency in a later module.",
-        },
-        { id: "h-recap", kind: "heading", level: 2, text: "Recap" },
-        {
-            id: "p-recap-1",
-            kind: "para",
-            text: "You learned the call model, saw a worked example, and identified the common edge cases. The challenge at the end of this module asks you to apply all three.",
-        },
-    ]
+
+    for (const line of markdown.split(/\r?\n/)) {
+        if (codeLines !== null) {
+            if (/^```/.test(line)) {
+                blocks.push({ id: `c-${blocks.length}`, kind: "code", text: codeLines.join("\n") })
+                codeLines = null
+            } else {
+                codeLines.push(line)
+            }
+            continue
+        }
+        if (/^```/.test(line)) {
+            flushParagraph()
+            codeLines = []
+            continue
+        }
+        const heading = /^(#{1,6})\s+(.*)$/.exec(line)
+        if (heading) {
+            flushParagraph()
+            const level: 2 | 3 = heading[1]!.length <= 2 ? 2 : 3
+            blocks.push({ id: `h-${blocks.length}`, kind: "heading", level, text: heading[2]!.trim() })
+            continue
+        }
+        if (line.trim() === "") {
+            flushParagraph()
+            continue
+        }
+        paragraph.push(line.trim())
+    }
+    if (codeLines !== null && codeLines.length > 0) {
+        blocks.push({ id: `c-${blocks.length}`, kind: "code", text: codeLines.join("\n") })
+    }
+    flushParagraph()
+    return blocks
 }
 
-const fetchLearnLessonMock = async (courseId: string, contentId: string): Promise<LearnLessonView> => {
-    const bodyByLang: Record<string, Array<LessonBlock>> = {}
-    for (const lang of LANGS) {
-        bodyByLang[lang] = buildBody(lang)
-    }
-    // Derive a stable prev/next from the mock id shape "m<n>-l<k>".
-    const match = /^m(\d+)-l(\d+)$/.exec(contentId)
-    const moduleNo = match ? Number(match[1]) : 1
-    const lessonNo = match ? Number(match[2]) : 1
-    const prevId = lessonNo > 1 ? `m${moduleNo}-l${lessonNo - 1}` : null
-    const nextId = lessonNo < 4 ? `m${moduleNo}-l${lessonNo + 1}` : `m${moduleNo + 1}-l1`
-    // Premium: the 4th lesson of modules ≥ 3 (matches useQueryLearnCourseSwr).
-    const isPremium = moduleNo >= 3 && lessonNo === 4
-    const minutesRead = 5 + ((moduleNo + lessonNo) % 8)
-    const hasChallenge = lessonNo === 4
+/** A curriculum lesson flattened with its owning module, for title/nav resolution. */
+interface FlatLesson {
+    id: string
+    name: string
+    description: string
+    moduleId: string
+    moduleTitle: string
+}
+
+/** Flattens the course detail into an ordered lesson list (module order → lesson order). */
+const flattenCurriculum = (detail: CourseDetail): Array<FlatLesson> =>
+    (detail.sections ?? [])
+        .slice()
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .flatMap((section) =>
+            (section.lessons ?? [])
+                .slice()
+                .sort((a, b) => a.sortOrder - b.sortOrder)
+                .map((lesson) => ({
+                    id: lesson.id,
+                    name: lesson.name,
+                    description: lesson.description,
+                    moduleId: section.id,
+                    moduleTitle: section.name,
+                })),
+        )
+
+const buildLessonView = (
+    contentId: string,
+    content: LessonContentView,
+    curriculum: Array<FlatLesson>,
+): LearnLessonView => {
+    const index = curriculum.findIndex((lesson) => lesson.id === contentId)
+    const current = index >= 0 ? curriculum[index] : undefined
+    const prev = index > 0 ? curriculum[index - 1] : undefined
+    const next = index >= 0 && index < curriculum.length - 1 ? curriculum[index + 1] : undefined
+    const minutes = content.readingMinutes ?? 0
+
     return {
         id: contentId,
-        moduleId: `m${moduleNo}`,
-        title: `Lesson ${moduleNo}.${lessonNo}`,
-        description:
-            "A short, focused lesson. Read the passages, try the worked example, then apply it in the challenge at the end of the module.",
-        moduleTitle: `Module ${moduleNo}`,
-        readTimeLabel: `${minutesRead} min`,
-        minutesRead,
-        challengeCount: hasChallenge ? 1 : 0,
-        outcomes: [
-            { id: "o1", text: "Explain the runtime call model and where local state lives" },
-            { id: "o2", text: "Trace a worked example step by step" },
-            { id: "o3", text: "Spot the common edge cases before they bite" },
-        ],
-        availableLangs: LANGS,
-        bodyByLang,
-        prevId,
-        nextId,
-        prevTitle: prevId ? `Lesson ${moduleNo}.${lessonNo - 1}` : null,
-        nextTitle: nextId ? (lessonNo < 4 ? `Lesson ${moduleNo}.${lessonNo + 1}` : `Lesson ${moduleNo + 1}.1`) : null,
-        isCompleted: moduleNo === 1,
-        hasChallenge,
-        // ponytail: mock viewer is free-enrolled → premium body is gated.
-        isLocked: isPremium,
+        moduleId: current?.moduleId ?? "",
+        title: current?.name ?? "",
+        description: current?.description ?? "",
+        moduleTitle: current?.moduleTitle ?? "",
+        readTimeLabel: content.readingMinutes ? `${content.readingMinutes} min` : "",
+        minutesRead: minutes,
+        challengeCount: 0,
+        outcomes: [],
+        availableLangs: [BODY_LANG],
+        bodyByLang: { [BODY_LANG]: parseMarkdownToBlocks(content.bodyMd ?? "") },
+        prevId: prev?.id ?? null,
+        nextId: next?.id ?? null,
+        prevTitle: prev?.name ?? null,
+        nextTitle: next?.name ?? null,
+        isCompleted: false,
+        hasChallenge: false,
+        isLocked: content.locked,
     }
 }
 
-/** Loads a single lesson's body + nav. Mocked; SWR-shaped for a BE swap. */
+/**
+ * Loads a single lesson's body + nav from the real REST API: the document content
+ * (`GET /lessons/{id}/content`, markdown → typed blocks) joined against the course
+ * curriculum (`GET /courses/{slug}`) for the title, owning module and prev/next.
+ */
 export const useQueryLearnLessonSwr = (courseId: string, contentId: string) => {
     const { data, isLoading, error, mutate } = useSWR(
-        ["learn-lesson", courseId, contentId],
-        () => fetchLearnLessonMock(courseId, contentId),
+        courseId && contentId ? ["GET_LEARN_LESSON", courseId, contentId] : null,
+        async (): Promise<LearnLessonView> => {
+            // Migrated lessons often carry no document body yet (`GET …/content` 404s
+            // "Lesson has no content"). Treat that as an empty body so the reader still
+            // renders the real title/module/nav from the curriculum instead of erroring.
+            const [content, detail] = await Promise.all([
+                readLessonContent(contentId).catch(
+                    (): LessonContentView => ({
+                        lessonId: contentId,
+                        bodyMd: "",
+                        readingMinutes: null,
+                        locked: false,
+                        teaser: null,
+                    }),
+                ),
+                getCourseDetail(courseId),
+            ])
+            return buildLessonView(contentId, content, flattenCurriculum(detail))
+        },
     )
     return { lesson: data, isLoading, error, mutate }
 }

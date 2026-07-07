@@ -1,12 +1,13 @@
 "use client"
 
 import React, { useCallback, useState } from "react"
-import { Button, Typography } from "@heroui/react"
+import { Button, Skeleton, Typography } from "@heroui/react"
 import { useLocale, useTranslations } from "next-intl"
 import { useAppSelector } from "@/redux/hooks"
 import { Link } from "@/i18n/navigation"
 import { UserLink } from "@/components/features/identity"
 import { ThreadsPostRow } from "@/components/blocks/feed/ThreadsPostRow"
+import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { PostEngagementBar } from "@/components/reuseable/PostEngagementBar"
 import { PostCommentThread } from "@/components/reuseable/PostCommentThread"
 import { useCommunityComposerOverlayState } from "@/hooks/zustand/overlay/hooks"
@@ -39,6 +40,25 @@ const ComposerTrigger = () => {
         </div>
     )
 }
+
+/** Loading skeleton — mirrors the Threads post-row anatomy so the feed never jumps. */
+const FeedSkeleton = () => (
+    <div className="flex flex-col divide-y divide-separator">
+        {[0, 1, 2].map((index) => (
+            <div key={index} className="px-4 py-3">
+                <div className="grid grid-cols-[48px_minmax(0,1fr)] gap-x-2">
+                    <Skeleton className="size-9 rounded-full" />
+                    <div className="flex min-w-0 flex-col gap-2">
+                        <Skeleton className="h-3 w-32 rounded-full" />
+                        <Skeleton className="h-3 w-full rounded-full" />
+                        <Skeleton className="h-3 w-3/4 rounded-full" />
+                        <Skeleton className="h-4 w-24 rounded-full" />
+                    </div>
+                </div>
+            </div>
+        ))}
+    </div>
+)
 
 /** One community feed row + its inline (lazy) comment thread. */
 const CommunityFeedRow = ({ post }: { post: CommunityPost }) => {
@@ -94,7 +114,7 @@ const CommunityFeedRow = ({ post }: { post: CommunityPost }) => {
                 {/* only the title + snippet navigate; actions keep their own press */}
                 {/* Threads reads as ONE text block: title = first emphasized line, body
                     continues in foreground (not muted snippet) */}
-                <Link href={`/community/${post.id}`} className="flex flex-col gap-0.5 no-underline">
+                <Link href={`/community/${post.id}`} className="flex flex-col gap-0 no-underline">
                     <Typography type="body-sm" weight="medium">
                         {post.title}
                     </Typography>
@@ -143,14 +163,30 @@ const CommunityFeedRow = ({ post }: { post: CommunityPost }) => {
  * ponytail: mock data.
  */
 export const CommunityFeed = () => {
-    const { posts } = useQueryCommunityFeedSwr()
+    const t = useTranslations("communityHub")
+    const { posts, isLoading, error, mutate } = useQueryCommunityFeedSwr()
 
     return (
         <div className="flex flex-col divide-y divide-separator">
             <ComposerTrigger />
-            {posts.map((post) => (
-                <CommunityFeedRow key={post.id} post={post} />
-            ))}
+            <AsyncContent
+                isLoading={isLoading && posts.length === 0}
+                skeleton={<FeedSkeleton />}
+                isEmpty={posts.length === 0}
+                emptyContent={{ title: t("feed.empty") }}
+                error={posts.length === 0 ? error : undefined}
+                errorContent={{
+                    title: t("feed.error"),
+                    onRetry: () => void mutate(),
+                    retryLabel: t("states.retry"),
+                }}
+            >
+                <div className="flex flex-col divide-y divide-separator">
+                    {posts.map((post) => (
+                        <CommunityFeedRow key={post.id} post={post} />
+                    ))}
+                </div>
+            </AsyncContent>
         </div>
     )
 }

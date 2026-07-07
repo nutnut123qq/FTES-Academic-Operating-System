@@ -61,14 +61,14 @@ export const CommunityComposerForm = ({
                 autoFocus={autoFocusTitle}
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder={t("composer.titleField")}
-                className="w-full rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none placeholder:text-muted focus:border-accent"
+                className="w-full rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted focus:border-accent"
             />
             <textarea
                 value={body}
                 onChange={(event) => setBody(event.target.value)}
                 placeholder={t("composer.bodyField")}
                 rows={6}
-                className="w-full resize-none rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none placeholder:text-muted focus:border-accent"
+                className="w-full resize-none rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted focus:border-accent"
             />
 
             <Button

@@ -21,6 +21,6 @@ const fetchContributorsMock = async (): Promise<Array<Contributor>> => [
 
 /** Loads top contributors by reputation. Mocked; SWR-shaped for a drop-in BE swap. */
 export const useQueryContributorsSwr = () => {
-    const { data, isLoading, error } = useSWR(["contributors"], () => fetchContributorsMock())
-    return { contributors: data ?? [], isLoading, error }
+    const { data, isLoading, error, mutate } = useSWR(["contributors"], () => fetchContributorsMock())
+    return { contributors: data ?? [], isLoading, error, mutate }
 }

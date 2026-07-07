@@ -14,8 +14,8 @@ interface CommunityScopePlaceholderProps {
 export const CommunityScopePlaceholder = ({ scopeKey }: CommunityScopePlaceholderProps) => {
     const t = useTranslations("communityHub")
     return (
-        <div className="flex flex-col gap-2">
-            <Typography type="h6" weight="bold">
+        <div className="flex flex-col gap-0">
+            <Typography type="h5" weight="bold">
                 {t(`tabs.${scopeKey}`)}
             </Typography>
             <Typography type="body-sm" color="muted">

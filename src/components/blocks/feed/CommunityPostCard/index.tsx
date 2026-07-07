@@ -68,15 +68,13 @@ export const CommunityPostCard = ({
                             displayName={post.author.displayName}
                             avatar={post.author.avatar}
                         />
+                        {post.isFounderAuthor ? (
+                            <SealCheckIcon
+                                weight="fill"
+                                className="size-4 shrink-0 text-accent"
+                            />
+                        ) : null}
                         <div className="flex min-w-0 flex-1 flex-col">
-                            <div className="flex items-center gap-1">
-                                {post.isFounderAuthor ? (
-                                    <SealCheckIcon
-                                        weight="fill"
-                                        className="size-4 shrink-0 text-accent"
-                                    />
-                                ) : null}
-                            </div>
                             <div className="flex items-center gap-2">
                                 <Typography type="body-xs" color="muted" truncate>
                                     {`@${post.author.username}`}

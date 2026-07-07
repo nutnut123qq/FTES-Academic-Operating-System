@@ -20,6 +20,6 @@ const fetchTrendingMock = async (): Promise<Array<TrendingPost>> => [
 
 /** Loads trending posts. Mocked; SWR-shaped for a drop-in BE swap. */
 export const useQueryTrendingSwr = () => {
-    const { data, isLoading, error } = useSWR(["trending"], () => fetchTrendingMock())
-    return { trending: data ?? [], isLoading, error }
+    const { data, isLoading, error, mutate } = useSWR(["trending"], () => fetchTrendingMock())
+    return { trending: data ?? [], isLoading, error, mutate }
 }

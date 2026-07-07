@@ -19,6 +19,6 @@ const fetchReportsMock = async (): Promise<Array<ModerationReport>> => [
 
 /** Loads the moderation queue. Mocked; SWR-shaped for a drop-in BE swap. */
 export const useQueryReportsSwr = () => {
-    const { data, isLoading, error } = useSWR(["reports"], () => fetchReportsMock())
-    return { reports: data ?? [], isLoading, error }
+    const { data, isLoading, error, mutate } = useSWR(["reports"], () => fetchReportsMock())
+    return { reports: data ?? [], isLoading, error, mutate }
 }

@@ -28,6 +28,6 @@ const fetchPollMock = async (): Promise<Poll> => ({
 
 /** Loads a community poll. Mocked; SWR-shaped for a drop-in BE swap. */
 export const useQueryPollSwr = () => {
-    const { data, isLoading, error } = useSWR(["poll"], () => fetchPollMock())
-    return { poll: data, isLoading, error }
+    const { data, isLoading, error, mutate } = useSWR(["poll"], () => fetchPollMock())
+    return { poll: data, isLoading, error, mutate }
 }

@@ -1,9 +1,31 @@
 "use client"
 
 import React, { useState } from "react"
-import { Button, Typography } from "@heroui/react"
+import { Button, Skeleton, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
+import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { useQueryReportsSwr } from "../hooks/useQueryReportsSwr"
+
+/** Loading skeleton — mirrors the reported-item rows so the layout never jumps. */
+const ModerationSkeleton = () => (
+    <div className="flex flex-col gap-3">
+        {[0, 1, 2].map((index) => (
+            <div
+                key={index}
+                className="flex flex-col gap-3 rounded-2xl border border-separator p-4"
+            >
+                <div className="flex flex-col gap-2">
+                    <Skeleton className="h-3 w-48 rounded-full" />
+                    <Skeleton className="h-3 w-64 rounded-full" />
+                </div>
+                <div className="flex gap-2">
+                    <Skeleton className="h-8 w-20 rounded-full" />
+                    <Skeleton className="h-8 w-20 rounded-full" />
+                </div>
+            </div>
+        ))}
+    </div>
+)
 
 /**
  * Community moderation queue (§6). DEFAULT on-canon layout: a list of reported
@@ -12,7 +34,7 @@ import { useQueryReportsSwr } from "../hooks/useQueryReportsSwr"
  */
 export const CommunityModeration = () => {
     const t = useTranslations("communityHub")
-    const { reports } = useQueryReportsSwr()
+    const { reports, isLoading, error, mutate } = useQueryReportsSwr()
     const [resolved, setResolved] = useState<Array<string>>([])
 
     const pending = reports.filter((report) => !resolved.includes(report.id))
@@ -23,35 +45,44 @@ export const CommunityModeration = () => {
             <Typography type="h5" weight="bold">
                 {t("moderation.title")}
             </Typography>
-            {pending.length === 0 ? (
-                <Typography type="body-sm" color="muted">
-                    {t("moderation.empty")}
-                </Typography>
-            ) : (
-                pending.map((report) => (
-                    <div
-                        key={report.id}
-                        className="flex flex-col gap-3 rounded-2xl border border-separator p-4"
-                    >
-                        <div className="flex flex-col gap-0">
-                            <Typography type="body-sm" weight="medium">
-                                {report.target}
-                            </Typography>
-                            <Typography type="body-xs" color="muted">
-                                {report.reason} · {t("moderation.reportedBy", { name: report.reporter })}
-                            </Typography>
+            <AsyncContent
+                isLoading={isLoading && reports.length === 0}
+                skeleton={<ModerationSkeleton />}
+                isEmpty={pending.length === 0}
+                emptyContent={{ title: t("moderation.empty") }}
+                error={reports.length === 0 ? error : undefined}
+                errorContent={{
+                    title: t("moderation.error"),
+                    onRetry: () => void mutate(),
+                    retryLabel: t("states.retry"),
+                }}
+            >
+                <div className="flex flex-col gap-3">
+                    {pending.map((report) => (
+                        <div
+                            key={report.id}
+                            className="flex flex-col gap-3 rounded-2xl border border-separator p-4"
+                        >
+                            <div className="flex flex-col gap-0">
+                                <Typography type="body-sm" weight="medium">
+                                    {report.target}
+                                </Typography>
+                                <Typography type="body-xs" color="muted">
+                                    {report.reason} · {t("moderation.reportedBy", { name: report.reporter })}
+                                </Typography>
+                            </div>
+                            <div className="flex gap-2">
+                                <Button size="sm" variant="ghost" onPress={() => resolve(report.id)}>
+                                    {t("moderation.keep")}
+                                </Button>
+                                <Button size="sm" variant="secondary" onPress={() => resolve(report.id)}>
+                                    {t("moderation.remove")}
+                                </Button>
+                            </div>
                         </div>
-                        <div className="flex gap-2">
-                            <Button size="sm" variant="ghost" onPress={() => resolve(report.id)}>
-                                {t("moderation.keep")}
-                            </Button>
-                            <Button size="sm" variant="secondary" onPress={() => resolve(report.id)}>
-                                {t("moderation.remove")}
-                            </Button>
-                        </div>
-                    </div>
-                ))
-            )}
+                    ))}
+                </div>
+            </AsyncContent>
         </div>
     )
 }

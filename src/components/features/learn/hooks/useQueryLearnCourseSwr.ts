@@ -1,12 +1,13 @@
 "use client"
 
 import useSWR from "swr"
+import { getCourseDetail, type CourseDetail, type LessonView } from "@/modules/api/rest/course"
 
 /** One lesson (content) inside a module. */
 export interface LearnLesson {
     id: string
     title: string
-    /** Estimated read/watch time, e.g. "6 min". */
+    /** Estimated read/watch time, e.g. "6 min" — empty when the BE doesn't provide it. */
     readTimeLabel: string
     isCompleted: boolean
     /** Premium lessons unlock by enrolling the course (rule premium-unlock-is-enroll-not-vip). */
@@ -47,7 +48,7 @@ export interface LearnCourseHeader {
     continueLessonId: string | null
 }
 
-/** The full learn shape for a course (§4, mock until BE lands). */
+/** The full learn shape for a course (§4). */
 export interface LearnCourse {
     id: string
     header: LearnCourseHeader
@@ -64,75 +65,56 @@ const NAV_SECTIONS: Array<LearnNavSection> = [
     { key: "leaderboard", icon: "trophy" },
 ]
 
-/** A deterministic module/lesson tree so every view renders from one shape. */
-const buildModules = (): Array<LearnModule> => {
-    const titles = [
-        "Getting started",
-        "Variables & types",
-        "Control flow",
-        "Functions & scope",
-        "Collections",
-        "Error handling",
-        "Modules & packages",
-        "Async foundations",
-        "Testing basics",
-        "Working with APIs",
-        "Data modeling",
-        "Persistence & DB",
-        "Auth & sessions",
-        "Caching",
-        "Background jobs",
-        "Observability",
-        "Performance",
-        "Security essentials",
-        "Deployment",
-        "Scaling patterns",
-        "Capstone",
-    ]
-    return titles.map((title, moduleIndex) => {
-        const order = moduleIndex + 1
-        const lessonCount = 4
-        const lessons: Array<LearnLesson> = Array.from({ length: lessonCount }).map((_, lessonIndex) => {
-            // First module fully done; module 2 half done; the rest untouched.
-            const isCompleted = order === 1 || (order === 2 && lessonIndex < 2)
-            return {
-                id: `m${order}-l${lessonIndex + 1}`,
-                title: `${title} · part ${lessonIndex + 1}`,
-                readTimeLabel: `${5 + ((moduleIndex + lessonIndex) % 8)} min`,
-                isCompleted,
-                isPremium: order > 2 && lessonIndex === lessonCount - 1,
-                hasChallenge: lessonIndex === lessonCount - 1,
-            }
-        })
-        return { id: `m${order}`, order, title, lessons }
-    })
-}
+/**
+ * Maps a BE lesson to the learn-tree lesson. The public course detail carries no
+ * per-viewer progress or reading-time, so `isCompleted`/`readTimeLabel` stay empty
+ * (honest defaults — the UI degrades cleanly); `isPremium` reflects the real
+ * `free` flag (premium unlocks by enrolling).
+ */
+const toLearnLesson = (lesson: LessonView): LearnLesson => ({
+    id: lesson.id,
+    title: lesson.name,
+    readTimeLabel: "",
+    isCompleted: false,
+    isPremium: !lesson.free,
+    hasChallenge: false,
+})
 
-const fetchLearnCourseMock = async (courseId: string): Promise<LearnCourse> => {
-    const modules = buildModules()
-    const flat = modules.flatMap((module) => module.lessons)
-    const done = flat.filter((lesson) => lesson.isCompleted).length
-    const firstIncomplete = flat.find((lesson) => !lesson.isCompleted) ?? null
+/** Builds the learn tree from the real public course detail (sections → lessons). */
+const toLearnCourse = (courseId: string, detail: CourseDetail): LearnCourse => {
+    const modules: Array<LearnModule> = (detail.sections ?? [])
+        .slice()
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map((section, index) => ({
+            id: section.id,
+            order: index + 1,
+            title: section.name,
+            lessons: (section.lessons ?? [])
+                .slice()
+                .sort((a, b) => a.sortOrder - b.sortOrder)
+                .map(toLearnLesson),
+        }))
+    const firstLessonId = modules.find((m) => m.lessons.length > 0)?.lessons[0]?.id ?? null
     return {
-        id: courseId,
+        id: detail.course?.id ?? courseId,
         header: {
-            title: "Fullstack Mastery",
+            title: detail.course?.title ?? "",
             moduleCount: modules.length,
-            durationHours: 42,
-            learnerCount: 1280,
-            progressPercent: Math.round((done / flat.length) * 100),
-            continueLessonId: firstIncomplete?.id ?? null,
+            durationHours: 0,
+            learnerCount: detail.course?.totalUser ?? 0,
+            progressPercent: 0,
+            continueLessonId: firstLessonId,
         },
         navSections: NAV_SECTIONS,
         modules,
     }
 }
 
-/** Loads the whole learn tree for a course. Mocked; SWR-shaped for a BE swap. */
+/** Loads the whole learn tree for a course from the real course-detail REST API. */
 export const useQueryLearnCourseSwr = (courseId: string) => {
     const { data, isLoading, error, mutate } = useSWR(
-        ["learn-course", courseId],
-        () => fetchLearnCourseMock(courseId),
+        courseId ? ["GET_LEARN_COURSE", courseId] : null,
+        async () => toLearnCourse(courseId, await getCourseDetail(courseId)),
     )
     return {
         course: data,

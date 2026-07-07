@@ -10,7 +10,6 @@ import type { WithClassNames } from "@/modules/types/base/class-name"
 import { OauthAction } from "./enums"
 import { OAUTH_ACTION_MESSAGE_KEY_MAP } from "./map"
 import { BrandLogo } from "@/components/blocks/identity/BrandLogo"
-import { Spacer } from "@/components/reuseable/Spacer"
 import { SessionStorage } from "@/modules/storage/session/storage"
 import { SessionStorageId } from "@/modules/storage/session/enums/id"
 import { sleep } from "@/modules/utils/misc"
@@ -75,7 +74,6 @@ export const OauthRedirect = ({ action, className }: OauthRedirectProps) => {
                     color="accent"
                     size="lg"
                 />
-                <Spacer y={3} />
                 <div
                     className="text-sm text-muted"
                     role="status"

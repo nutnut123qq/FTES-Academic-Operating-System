@@ -50,7 +50,7 @@ export const LevelRing = ({ progress, level, label, children, className }: Level
             {level !== undefined ? (
                 <span
                     aria-hidden
-                    className="absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-full bg-accent px-1 text-[10px] font-bold leading-4 text-accent-foreground"
+                    className="absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-full bg-accent px-1 text-xs font-bold leading-4 text-accent-foreground"
                 >
                     {level}
                 </span>

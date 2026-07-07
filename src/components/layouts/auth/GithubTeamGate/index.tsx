@@ -143,7 +143,7 @@ export const GithubTeamGate = () => {
                 <Alert.Indicator>
                     <GithubIcon className="size-5" />
                 </Alert.Indicator>
-                <Alert.Content className="gap-1">
+                <Alert.Content className="gap-0">
                     <Alert.Title>{t("githubTeamGate.warningTitle")}</Alert.Title>
                     <Alert.Description>{t("githubTeamGate.warningBody")}</Alert.Description>
                 </Alert.Content>
@@ -169,7 +169,7 @@ export const GithubTeamGate = () => {
                             <Modal.Body className="flex flex-col gap-4 pb-6">
                                 {!linked ? (
                                     <>
-                                        <p className="text-sm text-default-500">
+                                        <p className="text-sm text-muted">
                                             {t("githubTeamGate.linkFirst")}
                                         </p>
                                         <Button

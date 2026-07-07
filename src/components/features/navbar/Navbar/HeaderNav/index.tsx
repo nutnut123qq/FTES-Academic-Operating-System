@@ -30,7 +30,7 @@ export const HeaderNav = ({ className }: HeaderNavProps) => {
     return (
         <nav
             aria-label={t("nav.primary")}
-            className={cn("hidden items-center gap-1 md:flex", className)}
+            className={cn("hidden items-center gap-2 md:flex", className)}
         >
             {modules.map((module) => (
                 <Link

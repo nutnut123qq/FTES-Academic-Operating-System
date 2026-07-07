@@ -16,7 +16,6 @@ import {
     Popover,
     PopoverContent,
     Separator,
-    Spinner,
     Typography,
     cn,
 } from "@heroui/react"
@@ -43,6 +42,8 @@ import {
     filterNotificationsByPreferences,
 } from "@/components/features/notification/preferences"
 import { ListRow } from "@/components/blocks/lists/ListRow"
+import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 
 /** Largest unread count rendered verbatim on the badge before showing "9+". */
@@ -73,7 +74,7 @@ export const NotificationBell = ({ className }: NotificationBellProps) => {
     const locale = useLocale()
     const router = useRouter()
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
-    const { data, isLoading, mutate } = useQueryMyNotificationsSwr()
+    const { data, isLoading, error, mutate } = useQueryMyNotificationsSwr()
     const { data: preferences } = useQueryMyNotificationPreferencesSwr()
     const runGraphQL = useGraphQLWithToast()
     const [isOpen, setOpen] = useState(false)
@@ -206,7 +207,8 @@ export const NotificationBell = ({ className }: NotificationBellProps) => {
                             </Button>
                         ) : null}
                     </div>
-                    {/* body: muted hint / loading / newest items / empty */}
+                    {/* body: muted hint is a distinct informational state; otherwise the
+                        standard async switch (skeleton mirrors the ListRow list → empty → error) */}
                     {muteAll ? (
                         <Typography
                             type="body-sm"
@@ -215,56 +217,63 @@ export const NotificationBell = ({ className }: NotificationBellProps) => {
                         >
                             {t("notifications.mutedHint")}
                         </Typography>
-                    ) : isLoading && recent.length === 0 ? (
-                        <div className="flex items-center justify-center px-2 py-6">
-                            <Spinner size="sm" />
-                        </div>
-                    ) : recent.length === 0 ? (
-                        <Typography
-                            type="body-sm"
-                            color="muted"
-                            className="px-2 py-6 text-center"
-                        >
-                            {t("notificationCenter.empty")}
-                        </Typography>
                     ) : (
-                        <div className="flex flex-col px-2">
-                            {recent.map((item, index) => {
-                                const Icon = NOTIFICATION_TYPE_ICON[item.type]
-                                const unread = !item.isRead
-                                return (
-                                    <ListRow
-                                        key={item.id}
-                                        onPress={() => onPressItem(item)}
-                                        leading={(
-                                            <div className="flex size-9 items-center justify-center rounded-large bg-accent/10 text-accent">
-                                                <Icon className="size-5" aria-hidden focusable="false" />
-                                            </div>
-                                        )}
-                                        title={t(
-                                            item.title.key,
-                                            item.title.params ?? undefined,
-                                        )}
-                                        meta={(
-                                            <div className="flex items-center gap-2">
-                                                <Typography type="body-xs" color="muted">
-                                                    {formatRelative(item.createdAt)}
-                                                </Typography>
-                                                {unread ? (
-                                                    <CircleIcon
-                                                        weight="fill"
-                                                        aria-hidden
-                                                        focusable="false"
-                                                        className="size-2 text-accent"
-                                                    />
-                                                ) : null}
-                                            </div>
-                                        )}
-                                        divider={index < recent.length - 1}
-                                    />
-                                )
-                            })}
-                        </div>
+                        <AsyncContent
+                            isLoading={isLoading && recent.length === 0}
+                            skeleton={(
+                                <div className="flex flex-col px-2">
+                                    {[0, 1, 2].map((row) => (
+                                        <Skeleton.ListRow key={row} withSubtitle={false} />
+                                    ))}
+                                </div>
+                            )}
+                            isEmpty={recent.length === 0}
+                            emptyContent={{ title: t("notificationCenter.empty") }}
+                            error={error}
+                            errorContent={{
+                                title: t("notifications.loadError"),
+                                onRetry: () => { void mutate() },
+                                retryLabel: t("notifications.retry"),
+                            }}
+                        >
+                            <div className="flex flex-col px-2">
+                                {recent.map((item, index) => {
+                                    const Icon = NOTIFICATION_TYPE_ICON[item.type]
+                                    const unread = !item.isRead
+                                    return (
+                                        <ListRow
+                                            key={item.id}
+                                            onPress={() => onPressItem(item)}
+                                            leading={(
+                                                <div className="flex size-9 items-center justify-center rounded-large bg-accent/10 text-accent">
+                                                    <Icon className="size-5" aria-hidden focusable="false" />
+                                                </div>
+                                            )}
+                                            title={t(
+                                                item.title.key,
+                                                item.title.params ?? undefined,
+                                            )}
+                                            meta={(
+                                                <div className="flex items-center gap-2">
+                                                    <Typography type="body-xs" color="muted">
+                                                        {formatRelative(item.createdAt)}
+                                                    </Typography>
+                                                    {unread ? (
+                                                        <CircleIcon
+                                                            weight="fill"
+                                                            aria-hidden
+                                                            focusable="false"
+                                                            className="size-2 text-accent"
+                                                        />
+                                                    ) : null}
+                                                </div>
+                                            )}
+                                            divider={index < recent.length - 1}
+                                        />
+                                    )
+                                })}
+                            </div>
+                        </AsyncContent>
                     )}
                     <Separator />
                     {/* footer: view the full center */}

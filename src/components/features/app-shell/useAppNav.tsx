@@ -56,22 +56,24 @@ export const useAppNav = (): Array<AppNavModule> => {
             key: AppNavModule["key"],
             path: string,
             icon: React.ReactNode,
+            // Home is active on its exact route only (never as a prefix, since "/"
+            // prefixes everything); other modules match their route + descendants.
+            isActive: boolean = under(path),
         ): AppNavModule => ({
             key,
             label: t(key),
             icon,
             path,
-            isActive: under(path),
+            isActive,
         })
 
         return [
-            {
-                key: "home",
-                label: t("home"),
-                icon: <HouseIcon className="size-5" />,
-                path: home,
-                isActive: pathname === "/" || pathname === home,
-            },
+            makeModule(
+                "home",
+                home,
+                <HouseIcon className="size-5" />,
+                pathname === "/" || pathname === home,
+            ),
             makeModule("workplace", p.subjects().build(), <SquaresFourIcon className="size-5" />),
             makeModule("course", p.course().build(), <GraduationCapIcon className="size-5" />),
             makeModule("community", p.community().build(), <ChatCircleIcon className="size-5" />),

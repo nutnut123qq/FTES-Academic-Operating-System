@@ -18,12 +18,12 @@ export interface SearchOverlayFooterProps {
 export const SearchOverlayFooter = ({ onSeeAll, canSeeAll }: SearchOverlayFooterProps) => {
     const t = useTranslations()
     return (
-        <div className="flex items-center justify-between gap-2 pt-1">
+        <div className="flex items-center justify-between gap-2 pt-2">
             <button
                 type="button"
                 onClick={onSeeAll}
                 disabled={!canSeeAll}
-                className="inline-flex items-center gap-1 text-sm text-accent underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:text-muted disabled:no-underline"
+                className="inline-flex items-center gap-1 rounded-md text-sm text-accent underline-offset-2 transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:text-muted disabled:no-underline"
             >
                 {t("search.seeAll")}
                 <ArrowRightIcon className="size-4" aria-hidden focusable="false" />

@@ -1,8 +1,8 @@
 "use client"
 
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
-import { Button, Modal, Typography, cn } from "@heroui/react"
-import { SignInIcon, WarningCircleIcon } from "@phosphor-icons/react"
+import { Button, Modal, cn } from "@heroui/react"
+import { MagnifyingGlassIcon, SignInIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
 import { pathConfig } from "@/resources/path"
@@ -18,6 +18,8 @@ import { SearchOverlayInput } from "./SearchOverlayInput"
 import { SearchOverlayResults } from "./SearchOverlayResults"
 import { SearchRecentQueries } from "./SearchRecentQueries"
 import { SearchOverlayFooter } from "./SearchOverlayFooter"
+import { EmptyContent } from "@/components/blocks/async/EmptyContent"
+import { ErrorContent } from "@/components/blocks/async/ErrorContent"
 
 /**
  * The global command-palette search overlay (Ctrl/Cmd+K or navbar button).
@@ -171,15 +173,15 @@ export const SearchOverlay = ({ className }: WithClassNames<undefined>) => {
     const body = useMemo(() => {
         if (!authenticated && hasMinChars) {
             return (
-                <div className="flex flex-col items-center gap-3 px-2 py-8 text-center">
-                    <SignInIcon className="size-8 text-muted" aria-hidden focusable="false" />
-                    <Typography type="body-sm" color="muted">
-                        {t("search.signInPrompt")}
-                    </Typography>
-                    <Button variant="primary" size="sm" onPress={() => openAuth("auth.context.search")}>
-                        {t("search.signIn")}
-                    </Button>
-                </div>
+                <EmptyContent
+                    icon={<SignInIcon className="size-8 text-muted" aria-hidden focusable="false" />}
+                    title={t("search.signInPrompt")}
+                    action={
+                        <Button variant="primary" size="sm" onPress={() => openAuth("auth.context.search")}>
+                            {t("search.signIn")}
+                        </Button>
+                    }
+                />
             )
         }
         if (!hasMinChars) {
@@ -196,15 +198,11 @@ export const SearchOverlay = ({ className }: WithClassNames<undefined>) => {
         }
         if (error) {
             return (
-                <div className="flex flex-col items-center gap-3 px-2 py-8 text-center">
-                    <WarningCircleIcon className="size-8 text-danger" aria-hidden focusable="false" />
-                    <Typography type="body-sm" color="muted">
-                        {t("search.error")}
-                    </Typography>
-                    <Button variant="outline" size="sm" onPress={retry}>
-                        {t("search.retry")}
-                    </Button>
-                </div>
+                <ErrorContent
+                    title={t("search.error")}
+                    onRetry={retry}
+                    retryLabel={t("search.retry")}
+                />
             )
         }
         if (showResults) {
@@ -222,9 +220,10 @@ export const SearchOverlay = ({ className }: WithClassNames<undefined>) => {
         }
         if (!isLoading) {
             return (
-                <Typography type="body-sm" color="muted" className="px-2 py-8 text-center">
-                    {t("search.noResultsFor", { query: trimmedRaw })}
-                </Typography>
+                <EmptyContent
+                    icon={<MagnifyingGlassIcon className="size-8 text-muted" aria-hidden focusable="false" />}
+                    title={t("search.noResultsFor", { query: trimmedRaw })}
+                />
             )
         }
         return null

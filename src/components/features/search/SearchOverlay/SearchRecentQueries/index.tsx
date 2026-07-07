@@ -29,15 +29,15 @@ export const SearchRecentQueries = ({ recent, onSelect, onClear }: SearchRecentQ
     }
 
     return (
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between px-2">
-                <Typography type="body-xs" weight="bold" color="muted" className="uppercase">
+                <Typography type="body-xs" weight="bold" color="muted">
                     {t("search.recent")}
                 </Typography>
                 <button
                     type="button"
                     onClick={onClear}
-                    className="text-xs text-muted underline-offset-2 hover:text-foreground hover:underline"
+                    className="rounded-md text-xs text-muted underline-offset-2 transition-colors hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 >
                     {t("search.clearRecent")}
                 </button>
@@ -48,7 +48,7 @@ export const SearchRecentQueries = ({ recent, onSelect, onClear }: SearchRecentQ
                         key={item}
                         type="button"
                         onClick={() => onSelect(item)}
-                        className="flex items-center gap-3 rounded-large p-2 text-left transition-colors hover:bg-accent/10"
+                        className="flex items-center gap-3 rounded-large p-2 text-left transition-colors hover:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                     >
                         <ClockCounterClockwiseIcon className="size-5 shrink-0 text-muted" aria-hidden focusable="false" />
                         <Typography type="body-sm" truncate>

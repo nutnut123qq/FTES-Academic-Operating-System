@@ -78,7 +78,7 @@ export const SearchOverlayInput = ({
                 type="button"
                 aria-label={clearLabel}
                 onClick={() => onValueChange("")}
-                className="shrink-0 rounded-full p-1 text-muted transition-colors hover:bg-default hover:text-foreground"
+                className="shrink-0 rounded-full p-1 text-muted transition-colors hover:bg-default hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             >
                 <XIcon className="size-4" aria-hidden focusable="false" />
             </button>

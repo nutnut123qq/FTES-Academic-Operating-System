@@ -30,7 +30,7 @@ export const SearchHighlight = ({ text, query, className }: SearchHighlightProps
     return (
         <span className={className}>
             {text.slice(0, start)}
-            <mark className="rounded bg-accent/20 px-0.5 text-accent">{text.slice(start, end)}</mark>
+            <mark className="rounded-md bg-accent/20 px-0.5 text-accent">{text.slice(start, end)}</mark>
             {text.slice(end)}
         </span>
     )

@@ -51,7 +51,7 @@ export const SearchCategoryTabs = ({ tabs, active, onSelect, allLabel, labelFor 
                         disabled={disabled}
                         onClick={() => onSelect(tab.kind)}
                         className={cn(
-                            "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors",
+                            "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
                             selected
                                 ? "border-accent bg-accent/10 text-accent"
                                 : "border-default text-muted hover:bg-default",

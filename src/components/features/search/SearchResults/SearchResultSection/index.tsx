@@ -37,7 +37,7 @@ export const SearchResultSection = ({ kind, rows, query }: SearchResultSectionPr
 
     return (
         <section className="flex flex-col gap-2" aria-label={t(SEARCH_CATEGORY_MAP[kind].labelKey)}>
-            <Typography type="body-sm" weight="bold" color="muted" className="uppercase">
+            <Typography type="body-xs" weight="bold" color="muted">
                 {t(SEARCH_CATEGORY_MAP[kind].labelKey)}
             </Typography>
             <div className="flex flex-col" role="listbox" aria-label={t(SEARCH_CATEGORY_MAP[kind].labelKey)}>
@@ -54,7 +54,7 @@ export const SearchResultSection = ({ kind, rows, query }: SearchResultSectionPr
                 <button
                     type="button"
                     onClick={() => setExpanded(true)}
-                    className="self-start text-sm text-accent underline-offset-2 hover:underline"
+                    className="self-start rounded-md text-sm text-accent underline-offset-2 transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 >
                     {t("search.showMore", { count: remainder })}
                 </button>

@@ -42,8 +42,8 @@ export const SearchOverlayResults = ({
     return (
         <div id={listboxId} role="listbox" className="flex flex-col gap-4">
             {groups.map((group) => (
-                <section key={group.kind} className="flex flex-col gap-1">
-                    <Typography type="body-xs" weight="bold" color="muted" className="px-2 uppercase">
+                <section key={group.kind} className="flex flex-col gap-2">
+                    <Typography type="body-xs" weight="bold" color="muted" className="px-2">
                         {t(SEARCH_CATEGORY_MAP[group.kind].labelKey)}
                     </Typography>
                     <div className="flex flex-col">

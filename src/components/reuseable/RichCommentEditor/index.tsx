@@ -14,7 +14,6 @@ import { Markdown, type MarkdownStorage } from "tiptap-markdown"
 import type { MarkdownSerializerState } from "prosemirror-markdown"
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model"
 import {
-    At as MentionIcon,
     Code as CodeIcon,
     CodeBlock as CodeBlockIcon,
     Link as LinkIcon,
@@ -246,8 +245,8 @@ export const RichCommentEditor = ({
             )}
         >
             <EditorContent editor={editor} />
-            <div className="flex items-center gap-2">
-                <div className="flex flex-wrap items-center gap-1">
+            <div className="flex items-center gap-1">
+                <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
                     {toolbarButton(
                         t("engagement.bold"),
                         <BoldIcon aria-hidden focusable="false" className="size-4" />,
@@ -317,14 +316,10 @@ export const RichCommentEditor = ({
                         () => editor.chain().focus().toggleCodeBlock().run(),
                         editor.isActive("codeBlock"),
                     )}
-                    {toolbarButton(
-                        t("engagement.mention"),
-                        <MentionIcon aria-hidden focusable="false" className="size-4" />,
-                        () => editor.chain().focus().insertContent("@").run(),
-                    )}
                 </div>
-                <div className="flex-1" />
-                <EmojiPicker
+                <div className="flex shrink-0 items-center gap-1">
+                    <span className="mx-1 h-5 w-px bg-default" aria-hidden />
+                    <EmojiPicker
                     emojiLabel={t("engagement.emojiPickerLabel")}
                     onEmojiSelect={(emoji) => editor.chain().focus().insertContent(emoji).run()}
                 />
@@ -344,6 +339,7 @@ export const RichCommentEditor = ({
                 >
                     <SendIcon aria-hidden focusable="false" className="size-4" />
                 </Button>
+                </div>
             </div>
         </div>
     )

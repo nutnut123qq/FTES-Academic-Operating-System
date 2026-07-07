@@ -1,16 +1,17 @@
 "use client"
 
 import useSWR from "swr"
+import { getMyEnrollments } from "@/modules/api/rest/course"
 
 /** Kind of resume target — drives the chip icon + label. */
 export type ResumeKind = "challenge" | "lesson"
 
 /**
- * One "pick up where you left off" resume item — CONTENT-FIRST (recently-read
- * lessons lead, mixed with at most one in-progress challenge as a nudge).
+ * One "pick up where you left off" resume item — a course the learner is enrolled
+ * in but hasn't finished.
  */
 export interface ResumeItem {
-    /** Stable id (would be an opaque global id against a real BE). */
+    /** Stable id. */
     id: string
     /** Title to show. */
     label: string
@@ -23,41 +24,32 @@ export interface ResumeItem {
 /** Max number of resume cards shown. */
 export const RESUME_LIMIT = 3
 
-// ponytail: mock BE — no resume endpoint yet. Deterministic sample, content-first
-// (lessons lead, one challenge nudge), SWR-shaped for a drop-in swap later.
-const fetchResumeItemsMock = async (): Promise<Array<ResumeItem>> => [
-    {
-        id: "algorithms",
-        label: "Cây nhị phân tìm kiếm",
-        kind: "lesson",
-        href: "/courses",
-    },
-    {
-        id: "systemdesign",
-        label: "Caching & CDN",
-        kind: "lesson",
-        href: "/courses",
-    },
-    {
-        id: "two-sum",
-        label: "Two Sum",
-        kind: "challenge",
-        href: "/challenges",
-    },
-]
-
 /**
- * Loads the viewer's continue-learning resume items + a `hasCourses` flag so the
- * widget can show an onboarding CTA instead of an empty void. Mocked; SWR-shaped.
+ * Loads the viewer's continue-learning resume items from the real course
+ * enrollments (`GET /courses/me/enrollments`) + a `hasCourses` flag so the widget
+ * can show onboarding instead of an empty void. Unfinished courses lead (lowest
+ * completion first); the destination is each course's learn shell.
  */
 export const useQueryContinueLearningSwr = () => {
     const { data, isLoading, error, mutate } = useSWR(
         ["analytics", "overview", "continue"],
-        () => fetchResumeItemsMock(),
+        async (): Promise<Array<ResumeItem>> => {
+            const enrollments = await getMyEnrollments()
+            return enrollments
+                .filter((enrollment) => enrollment.active)
+                .slice()
+                .sort((a, b) => Number(a.completionPercent ?? 0) - Number(b.completionPercent ?? 0))
+                .map((enrollment) => ({
+                    id: enrollment.courseId,
+                    label: enrollment.courseTitle,
+                    kind: "lesson" as const,
+                    href: `/courses/${enrollment.slugName}/learn`,
+                }))
+        },
     )
     return {
         resumeItems: (data ?? []).slice(0, RESUME_LIMIT),
-        hasCourses: true,
+        hasCourses: (data ?? []).length > 0,
         isLoading,
         error,
         mutate,

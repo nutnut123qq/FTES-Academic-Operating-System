@@ -17,6 +17,7 @@ import type {
     CreateQuizRequest,
     CreateSectionRequest,
     EnrollResponse,
+    EnrollmentView,
     EntitlementView,
     IdResponse,
     LessonAiChatLimitRequest,
@@ -278,6 +279,19 @@ export const completeCourseVideoUpload = async (
 }
 
 // ---------------------------------------------------------------- enrollment / packages
+
+/**
+ * Lists the current user's course enrollments.
+ *
+ * `GET /api/v1/courses/me/enrollments`
+ */
+export const getMyEnrollments = async (): Promise<Array<EnrollmentView>> => {
+    return restRequest<Array<EnrollmentView>>({
+        method: "GET",
+        url: "/courses/me/enrollments",
+        authenticated: true,
+    })
+}
 
 /**
  * Directly enrolls the current user in a course.

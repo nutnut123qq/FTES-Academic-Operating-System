@@ -1,6 +1,7 @@
 "use client"
 
 import useSWR from "swr"
+import { getMyWallet } from "@/modules/api/rest/wallet"
 
 /** The viewer's reward wallet. */
 export interface RewardWallet {
@@ -8,17 +9,14 @@ export interface RewardWallet {
     balance: number
 }
 
-// ponytail: mock BE — no reward-wallet endpoint yet. Deterministic sample;
-// SWR-shaped for a drop-in swap (myRewardWallet()) later.
-const fetchRewardWalletMock = async (): Promise<RewardWallet> => ({
-    balance: 1840,
-})
-
-/** Loads the viewer's reward-point balance. Mocked; SWR-shaped. */
+/** Loads the viewer's spendable balance from the real wallet REST API (`GET /wallet/me`). */
 export const useQueryRewardWalletSwr = () => {
     const { data, isLoading, error, mutate } = useSWR(
         ["analytics", "overview", "reward"],
-        () => fetchRewardWalletMock(),
+        async (): Promise<RewardWallet> => {
+            const wallet = await getMyWallet()
+            return { balance: wallet.balance ?? 0 }
+        },
     )
     return { data, isLoading, error, mutate }
 }

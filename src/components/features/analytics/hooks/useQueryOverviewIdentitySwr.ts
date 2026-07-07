@@ -1,6 +1,6 @@
 "use client"
 
-import useSWR from "swr"
+import { useAppSelector } from "@/redux/hooks"
 
 /** The viewer's identity shown in the dashboard identity anchor. */
 export interface OverviewIdentity {
@@ -11,19 +11,19 @@ export interface OverviewIdentity {
     avatar: string | null
 }
 
-// ponytail: mock BE — no identity endpoint yet. Deterministic sample, SWR-shaped so
-// it can drop-in swap for a real query (myProfile()) later.
-const fetchOverviewIdentityMock = async (): Promise<OverviewIdentity> => ({
-    username: "minh_dev",
-    name: "Minh Nguyen",
-    avatar: null,
-})
-
-/** Loads the viewer's dashboard identity anchor. Mocked; SWR-shaped. */
+/**
+ * Reads the dashboard identity anchor straight from the resolved viewer in the
+ * Redux `user` slice (populated by the app-shell `me` query) — no extra round-trip.
+ * Returns `undefined` until the viewer resolves so the widget keeps its skeleton.
+ */
 export const useQueryOverviewIdentitySwr = () => {
-    const { data, isLoading, error, mutate } = useSWR(
-        ["analytics", "overview", "identity"],
-        () => fetchOverviewIdentityMock(),
-    )
-    return { data, isLoading, error, mutate }
+    const user = useAppSelector((state) => state.user.user)
+    const data: OverviewIdentity | undefined = user
+        ? {
+              username: user.username,
+              name: user.displayName?.trim() || user.username,
+              avatar: user.avatar ?? null,
+          }
+        : undefined
+    return { data, isLoading: !user, error: undefined, mutate: () => {} }
 }

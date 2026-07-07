@@ -1,13 +1,12 @@
 "use client"
 
-import { ArrowUpFromLine as UploadIcon, Filmstrip as FilmSlateIcon, Gear as GearIcon, Link as LinkIcon } from "@gravity-ui/icons"
+import { FilmSlateIcon, GearIcon, LinkSimpleIcon, UploadSimpleIcon } from "@phosphor-icons/react"
 import React, {
     useCallback,
 } from "react"
 import {
     Button,
     Card,
-    CardContent,
     Input,
     Label,
     TextField,
@@ -92,13 +91,17 @@ export const FileSelectionCard = ({
     )
     return (
         <Card className="bg-white/5 border border-white/10 backdrop-blur-xl shadow-2xl shadow-indigo-500/5">
-            <CardContent className="space-y-6 p-6">
+            <Card.Content className="flex flex-col gap-6 p-6">
                 {/* Section header */}
-                <div className="flex items-center gap-1.5 pb-2">
-                    <div className="rounded-lg bg-indigo-500/10 p-2">
-                        <FilmSlateIcon className="h-5 w-5 text-indigo-400" />
+                <div className="flex items-center gap-2 pb-2">
+                    <div className="rounded-xl bg-indigo-500/10 p-2">
+                        <FilmSlateIcon
+                            className="size-5 text-indigo-400"
+                            aria-hidden="true"
+                            focusable="false"
+                        />
                     </div>
-                    <div>
+                    <div className="flex flex-col gap-0">
                         <h2 className="text-base font-semibold text-white">
                             Video File
                         </h2>
@@ -123,7 +126,11 @@ export const FileSelectionCard = ({
                         Object Key (S3 Path)
                     </Label>
                     <div className="relative">
-                        <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 pointer-events-none" />
+                        <LinkSimpleIcon
+                            className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-slate-400 pointer-events-none"
+                            aria-hidden="true"
+                            focusable="false"
+                        />
                         <Input
                             id="admin-object-key-input"
                             placeholder="videos/my-lecture.mp4"
@@ -150,7 +157,13 @@ export const FileSelectionCard = ({
                     >
                         {({isPending}) => (
                             <>
-                                {!isPending && <UploadIcon className="h-5 w-5" />}
+                                {!isPending && (
+                                    <UploadSimpleIcon
+                                        className="size-5"
+                                        aria-hidden="true"
+                                        focusable="false"
+                                    />
+                                )}
                                 {isPending
                                     ? "Getting URLs…"
                                     : isUploading
@@ -170,7 +183,13 @@ export const FileSelectionCard = ({
                     >
                         {({isPending}) => (
                             <>
-                                {!isPending && <GearIcon className="h-5 w-5" />}
+                                {!isPending && (
+                                    <GearIcon
+                                        className="size-5"
+                                        aria-hidden="true"
+                                        focusable="false"
+                                    />
+                                )}
                                 {isPending
                                     ? "Processing…"
                                     : processResult
@@ -182,7 +201,7 @@ export const FileSelectionCard = ({
                 </div>
 
                 <ProcessResultBanner processResult={processResult} />
-            </CardContent>
+            </Card.Content>
         </Card>
     )
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowLeft as ArrowLeftIcon, Cpu as CpuIcon } from "@gravity-ui/icons"
+import { ArrowLeftIcon, CpuIcon } from "@phosphor-icons/react"
 import React, {
     useCallback,
 } from "react"
@@ -60,7 +60,11 @@ export const TopBar = ({
                 className="text-slate-400 hover:text-white"
                 onPress={onBack}
             >
-                <ArrowLeftIcon className="h-5 w-5" />
+                <ArrowLeftIcon
+                    className="size-5"
+                    aria-hidden="true"
+                    focusable="false"
+                />
                 {t("backToAdmin")}
             </Button>
             <Button
@@ -69,7 +73,11 @@ export const TopBar = ({
                 className="text-slate-400 hover:text-white"
                 onPress={onOpenAiBalancer}
             >
-                <CpuIcon className="h-5 w-5" />
+                <CpuIcon
+                    className="size-5"
+                    aria-hidden="true"
+                    focusable="false"
+                />
                 {t("title")}
             </Button>
         </div>

@@ -1,10 +1,9 @@
 "use client"
-import { ArrowRight as ArrowRightIcon, Key as KeyIcon, Lock as LockIcon, ShieldCheck as ShieldCheckIcon } from "@gravity-ui/icons"
+import { ArrowRightIcon, KeyIcon, LockIcon, ShieldCheckIcon } from "@phosphor-icons/react"
 import React from "react"
 import {
     Button,
     Card,
-    CardContent,
     cn,
     FieldError,
     Input,
@@ -40,8 +39,12 @@ export const AdminLogin = ({ className }: AdminLoginProps) => {
             <div className="relative flex w-full max-w-md flex-col gap-6">
                 {/* Header */}
                 <div className="text-center flex flex-col gap-3">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/20 mx-auto mb-2">
-                        <ShieldCheckIcon className="h-8 w-8 text-indigo-400" />
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/20 mx-auto">
+                        <ShieldCheckIcon
+                            className="size-8 text-indigo-400"
+                            aria-hidden="true"
+                            focusable="false"
+                        />
                     </div>
                     <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-indigo-200 to-purple-300 bg-clip-text text-transparent">
                         Admin Access
@@ -53,13 +56,17 @@ export const AdminLogin = ({ className }: AdminLoginProps) => {
 
                 {/* API Key Card */}
                 <Card className="bg-white/5 border border-white/10 backdrop-blur-xl shadow-2xl shadow-indigo-500/5">
-                    <CardContent className="flex flex-col gap-3 p-6">
+                    <Card.Content className="flex flex-col gap-3 p-6">
                         {/* Section header */}
-                        <div className="flex items-center gap-1.5 pb-1">
-                            <div className="rounded-lg bg-amber-500/10 p-2">
-                                <KeyIcon className="h-5 w-5 text-amber-400" />
+                        <div className="flex items-center gap-2 pb-2">
+                            <div className="rounded-xl bg-amber-500/10 p-2">
+                                <KeyIcon
+                                    className="size-5 text-amber-400"
+                                    aria-hidden="true"
+                                    focusable="false"
+                                />
                             </div>
-                            <div>
+                            <div className="flex flex-col gap-0">
                                 <h2 className="text-base font-semibold text-white">
                                     Authentication
                                 </h2>
@@ -82,7 +89,11 @@ export const AdminLogin = ({ className }: AdminLoginProps) => {
                                             API Key
                                         </Label>
                                         <div className="relative">
-                                            <LockIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 pointer-events-none" />
+                                            <LockIcon
+                                                className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-slate-400 pointer-events-none"
+                                                aria-hidden="true"
+                                                focusable="false"
+                                            />
                                             <Input
                                                 id="admin-api-key-input"
                                                 placeholder="Enter your admin API key"
@@ -115,12 +126,18 @@ export const AdminLogin = ({ className }: AdminLoginProps) => {
                                 {({isPending}) => (
                                     <>
                                         Continue to Admin Tools
-                                        {!isPending && <ArrowRightIcon className="h-5 w-5" />}
+                                        {!isPending && (
+                                            <ArrowRightIcon
+                                                className="size-5"
+                                                aria-hidden="true"
+                                                focusable="false"
+                                            />
+                                        )}
                                     </>
                                 )}
                             </Button>
                         </form>
-                    </CardContent>
+                    </Card.Content>
                 </Card>
 
                 {/* Footer note */}

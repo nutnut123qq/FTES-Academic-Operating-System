@@ -1,6 +1,6 @@
 "use client"
 
-import { Copy as CopyIcon } from "@gravity-ui/icons"
+import { CopyIcon } from "@phosphor-icons/react"
 import React, {
     useCallback,
 } from "react"
@@ -50,9 +50,9 @@ export const ProviderUploadRow = ({
         ],
     )
     return (
-        <div className="rounded-xl border border-white/5 bg-white/[0.02] p-4 space-y-3">
+        <div className="rounded-xl border border-white/5 bg-white/[0.02] p-4 flex flex-col gap-3">
             <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2">
                     <Chip
                         size="sm"
                         variant="secondary"
@@ -62,7 +62,7 @@ export const ProviderUploadRow = ({
                     </Chip>
                     {UPLOAD_STATUS_ICON_MAP[upload.status]}
                 </div>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2">
                     <span className="text-xs font-mono text-slate-400">
                         {upload.progress}%
                     </span>
@@ -74,7 +74,11 @@ export const ProviderUploadRow = ({
                         onPress={onPressCopy}
                         className="text-slate-400 hover:text-white"
                     >
-                        <CopyIcon className="h-3.5 w-3.5" />
+                        <CopyIcon
+                            className="size-4"
+                            aria-hidden="true"
+                            focusable="false"
+                        />
                     </Button>
                 </div>
             </div>
@@ -94,11 +98,11 @@ export const ProviderUploadRow = ({
                 </ProgressBar.Track>
             </ProgressBar>
             {upload.error && (
-                <p className="text-xs text-red-400">
+                <p className="text-xs text-rose-400">
                     Error: {upload.error}
                 </p>
             )}
-            <p className="text-[10px] text-slate-600 font-mono break-all">
+            <p className="text-xs text-slate-600 font-mono break-all">
                 {upload.url.substring(0, 120)}…
             </p>
         </div>

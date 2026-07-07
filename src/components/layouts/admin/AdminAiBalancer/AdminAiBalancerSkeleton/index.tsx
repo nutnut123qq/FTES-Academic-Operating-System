@@ -3,7 +3,6 @@
 import React from "react"
 import {
     Card,
-    CardContent,
     Skeleton,
     cn,
 } from "@heroui/react"
@@ -31,29 +30,29 @@ export const AdminAiBalancerSkeleton = ({
                     key={cardIndex}
                     className="border border-white/10 bg-white/5 backdrop-blur-xl"
                 >
-                    <CardContent className="gap-3 p-5">
+                    <Card.Content className="gap-3 px-4 py-3">
                         {/* provider heading + summary pills */}
                         <div className="flex flex-wrap items-start justify-between gap-3">
-                            <div className="flex flex-col gap-1.5">
+                            <div className="flex flex-col gap-2">
                                 <Skeleton className="h-5 w-32 rounded" />
-                                <Skeleton className="h-3 w-48 rounded-sm" />
+                                <Skeleton className="h-3 w-48 rounded" />
                             </div>
-                            <div className="flex flex-wrap gap-1.5">
+                            <div className="flex flex-wrap gap-2">
                                 <Skeleton className="h-6 w-20 rounded-full" />
                                 <Skeleton className="h-6 w-20 rounded-full" />
                                 <Skeleton className="h-6 w-20 rounded-full" />
                             </div>
                         </div>
                         {/* key table */}
-                        <div className="flex flex-col gap-1.5 rounded-lg border border-white/5 p-3">
+                        <div className="flex flex-col gap-2 rounded-xl border border-white/5 p-3">
                             {Array.from({ length: 3 }).map((_unusedRow, rowIndex) => (
                                 <Skeleton
                                     key={rowIndex}
-                                    className="h-8 w-full rounded-lg"
+                                    className="h-8 w-full rounded-xl"
                                 />
                             ))}
                         </div>
-                    </CardContent>
+                    </Card.Content>
                 </Card>
             ))}
         </div>

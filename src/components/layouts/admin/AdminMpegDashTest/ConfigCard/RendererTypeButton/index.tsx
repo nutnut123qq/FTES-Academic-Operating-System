@@ -37,17 +37,17 @@ export const RendererTypeButton = ({
         <button
             onClick={onPress}
             className={cn(
-                "flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-medium transition-all",
+                "flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/60",
                 className,
                 isActive
                     ? `bg-gradient-to-r ${option.color} text-white shadow-lg`
-                    : "bg-slate-700/50 text-slate-300 hover:bg-slate-700",
+                    : "bg-white/5 text-slate-300 hover:bg-white/10",
             )}
         >
             {option.icon}
             <div className="text-left">
                 <div>{option.label}</div>
-                <div className="text-[10px] opacity-70">
+                <div className="text-xs opacity-70">
                     {option.description}
                 </div>
             </div>

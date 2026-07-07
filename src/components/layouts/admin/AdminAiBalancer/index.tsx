@@ -9,6 +9,10 @@ import {
     Button,
 } from "@heroui/react"
 import {
+    CpuIcon,
+    WarningCircleIcon,
+} from "@phosphor-icons/react"
+import {
     useTranslations,
 } from "next-intl"
 import {
@@ -77,7 +81,7 @@ export const AdminAiBalancer = () => {
         <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 p-4 pb-12">
             <div className="mx-auto flex max-w-5xl flex-col gap-6">
                 <TopBar />
-                <div className="space-y-1.5">
+                <div className="flex flex-col gap-0">
                     <h1 className="text-2xl font-bold text-white">
                         {t("title")}
                     </h1>
@@ -101,16 +105,46 @@ export const AdminAiBalancer = () => {
                             />
                         ))}
                         {sortedProviders.length === 0 ? (
-                            <p className="text-center text-sm text-slate-400">
-                                {t("empty")}
-                            </p>
+                            <div className="flex flex-col items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-8 text-center backdrop-blur-xl">
+                                <CpuIcon
+                                    className="size-8 text-slate-500"
+                                    aria-hidden="true"
+                                    focusable="false"
+                                />
+                                <p className="text-sm text-slate-400">
+                                    {t("empty")}
+                                </p>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-indigo-300"
+                                    onPress={onRefresh}
+                                >
+                                    {t("refreshNow")}
+                                </Button>
+                            </div>
                         ) : null}
                     </div>
                 )}
                 {error ? (
-                    <p className="text-center text-sm text-rose-300">
-                        {t("error")}
-                    </p>
+                    <div className="flex flex-col items-center gap-3 rounded-xl border border-rose-500/20 bg-rose-500/5 p-8 text-center backdrop-blur-xl">
+                        <WarningCircleIcon
+                            className="size-8 text-rose-400"
+                            aria-hidden="true"
+                            focusable="false"
+                        />
+                        <p className="text-sm text-rose-300">
+                            {t("error")}
+                        </p>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-indigo-300"
+                            onPress={onRefresh}
+                        >
+                            {t("refreshNow")}
+                        </Button>
+                    </div>
                 ) : null}
                 <Button
                     variant="ghost"

@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowLeft as ArrowLeftIcon, Filmstrip as FilmStripIcon } from "@gravity-ui/icons"
+import { ArrowLeftIcon, FilmStripIcon } from "@phosphor-icons/react"
 import React, {
     useCallback,
 } from "react"
@@ -49,7 +49,11 @@ export const TopBar = () => {
                 className="text-slate-400 hover:text-white"
                 onPress={onBack}
             >
-                <ArrowLeftIcon className="h-5 w-5" />
+                <ArrowLeftIcon
+                    className="size-5"
+                    aria-hidden="true"
+                    focusable="false"
+                />
                 {t("backToAdmin")}
             </Button>
             <Button
@@ -58,7 +62,11 @@ export const TopBar = () => {
                 className="text-slate-400 hover:text-white"
                 onPress={onOpenUploadVideo}
             >
-                <FilmStripIcon className="h-5 w-5" />
+                <FilmStripIcon
+                    className="size-5"
+                    aria-hidden="true"
+                    focusable="false"
+                />
                 {t("uploadVideoTool")}
             </Button>
         </div>

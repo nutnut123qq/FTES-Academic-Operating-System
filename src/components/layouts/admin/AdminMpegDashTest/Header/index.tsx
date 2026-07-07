@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowLeft as ArrowLeftIcon } from "@gravity-ui/icons"
+import { ArrowLeftIcon } from "@phosphor-icons/react"
 import React, { useCallback } from "react"
 import { Button, cn } from "@heroui/react"
 import { useRouter } from "next/navigation"
@@ -30,15 +30,19 @@ export const AdminMpegDashTestHeader = ({ className }: WithClassNames<undefined>
                 className="text-slate-400 hover:text-white"
                 onPress={onBack}
             >
-                <ArrowLeftIcon className="h-5 w-5 mr-1" />
-            Back
+                <ArrowLeftIcon
+                    className="size-5"
+                    aria-hidden="true"
+                    focusable="false"
+                />
+                Back
             </Button>
-            <div>
+            <div className="flex flex-col gap-0">
                 <h1 className="text-2xl font-bold text-white">
-                Video Renderer Test
+                    Video Renderer Test
                 </h1>
                 <p className="text-sm text-slate-400">
-                Enter a URL and select a renderer type to preview
+                    Enter a URL and select a renderer type to preview
                 </p>
             </div>
         </div>

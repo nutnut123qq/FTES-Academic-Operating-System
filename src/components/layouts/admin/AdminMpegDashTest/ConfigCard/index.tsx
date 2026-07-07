@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { Card, CardContent, Input, cn } from "@heroui/react"
+import { Card, Input, cn } from "@heroui/react"
 import { RENDERER_TYPE_OPTIONS } from "../map"
 import { RendererTypeButton } from "./RendererTypeButton"
 import type { VideoRendererType } from "@/modules/types/enums/video-renderer-type"
@@ -32,8 +32,8 @@ export const ConfigCard = ({
     onSelectType,
     className,
 }: ConfigCardProps) => (
-    <Card className={cn("border-slate-700/50 bg-slate-800/50 backdrop-blur-xl", className)}>
-        <CardContent className="space-y-3 p-6">
+    <Card className={cn("border border-white/10 bg-white/5 backdrop-blur-xl", className)}>
+        <Card.Content className="flex flex-col gap-3 p-6">
             <h2 className="text-lg font-semibold text-white">
                 Configuration
             </h2>
@@ -46,7 +46,7 @@ export const ConfigCard = ({
                 className="text-white"
             />
 
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-2">
                 {RENDERER_TYPE_OPTIONS.map((option) => (
                     <RendererTypeButton
                         key={option.type}
@@ -56,6 +56,6 @@ export const ConfigCard = ({
                     />
                 ))}
             </div>
-        </CardContent>
+        </Card.Content>
     </Card>
 )

@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { Card, CardContent, cn } from "@heroui/react"
+import { Card, cn } from "@heroui/react"
 import { QUICK_TEST_URLS } from "../constants"
 import { QuickTestUrlButton } from "./QuickTestUrlButton"
 import type { QuickTestUrl } from "../types"
@@ -17,12 +17,12 @@ export interface QuickTestUrlsProps extends WithClassNames<undefined> {
  * @param props.onSelect - Called with the chosen preset.
  */
 export const QuickTestUrls = ({ onSelect, className }: QuickTestUrlsProps) => (
-    <Card className={cn("border-slate-700/50 bg-slate-800/50 backdrop-blur-xl", className)}>
-        <CardContent className="space-y-3 p-6">
+    <Card className={cn("border border-white/10 bg-white/5 backdrop-blur-xl", className)}>
+        <Card.Content className="flex flex-col gap-3 p-6">
             <h2 className="text-sm font-medium text-slate-400">
                 Quick Test URLs
             </h2>
-            <div className="space-y-1.5">
+            <div className="flex flex-col gap-2">
                 {QUICK_TEST_URLS.map((item) => (
                     <QuickTestUrlButton
                         key={item.url}
@@ -31,6 +31,6 @@ export const QuickTestUrls = ({ onSelect, className }: QuickTestUrlsProps) => (
                     />
                 ))}
             </div>
-        </CardContent>
+        </Card.Content>
     </Card>
 )

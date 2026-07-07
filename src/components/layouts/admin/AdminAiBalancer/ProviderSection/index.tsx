@@ -5,7 +5,6 @@ import React, {
 } from "react"
 import {
     Card,
-    CardContent,
 } from "@heroui/react"
 import {
     useTranslations,
@@ -86,17 +85,17 @@ export const ProviderSection = ({
 
     return (
         <Card className="border border-white/10 bg-white/5 backdrop-blur-xl">
-            <CardContent className="gap-3 p-5">
+            <Card.Content className="gap-3 px-4 py-3">
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
+                    <div className="flex flex-col gap-0">
                         <h2 className="text-lg font-semibold text-white">
                             {providerLabel}
                         </h2>
-                        <p className="mt-1 font-mono text-xs text-slate-500">
+                        <p className="font-mono text-xs text-slate-500">
                             {providerHealth.keysFilePath}
                         </p>
                     </div>
-                    <div className="flex flex-wrap gap-1.5 text-xs">
+                    <div className="flex flex-wrap gap-2 text-xs">
                         <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-emerald-300">
                             {summaryLabels.active}: {providerHealth.activeKeys}
                         </span>
@@ -108,7 +107,7 @@ export const ProviderSection = ({
                         </span>
                     </div>
                 </div>
-                <div className="overflow-x-auto rounded-lg border border-white/5">
+                <div className="overflow-x-auto rounded-xl border border-white/5">
                     <table className="min-w-full text-left">
                         <thead className="bg-white/5 text-xs uppercase tracking-wide text-slate-400">
                             <tr>
@@ -139,7 +138,7 @@ export const ProviderSection = ({
                         </tbody>
                     </table>
                 </div>
-            </CardContent>
+            </Card.Content>
         </Card>
     )
 }

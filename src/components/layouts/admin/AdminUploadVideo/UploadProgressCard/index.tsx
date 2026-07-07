@@ -1,10 +1,9 @@
 "use client"
 
-import { ArrowUpFromLine as UploadIcon, CircleCheck as CheckCircleIcon } from "@gravity-ui/icons"
+import { CheckCircleIcon, UploadSimpleIcon } from "@phosphor-icons/react"
 import React from "react"
 import {
     Card,
-    CardContent,
     Chip,
 } from "@heroui/react"
 import type {
@@ -39,13 +38,17 @@ export const UploadProgressCard = ({
 }: UploadProgressCardProps) => {
     return (
         <Card className="bg-white/5 border border-white/10 backdrop-blur-xl shadow-2xl shadow-indigo-500/5">
-            <CardContent className="space-y-6 p-6">
+            <Card.Content className="flex flex-col gap-6 p-6">
                 {/* Section header */}
-                <div className="flex items-center gap-1.5 pb-2">
-                    <div className="rounded-lg bg-purple-500/10 p-2">
-                        <UploadIcon className="h-5 w-5 text-purple-400" />
+                <div className="flex items-center gap-2 pb-2">
+                    <div className="rounded-xl bg-purple-500/10 p-2">
+                        <UploadSimpleIcon
+                            className="size-5 text-purple-400"
+                            aria-hidden="true"
+                            focusable="false"
+                        />
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 flex flex-col gap-0">
                         <h2 className="text-base font-semibold text-white">
                             Upload Progress
                         </h2>
@@ -61,7 +64,11 @@ export const UploadProgressCard = ({
                             color="success"
                             variant="secondary"
                         >
-                            <CheckCircleIcon className="h-3 w-3" />
+                            <CheckCircleIcon
+                                className="size-3"
+                                aria-hidden="true"
+                                focusable="false"
+                            />
                             <Chip.Label>Done</Chip.Label>
                         </Chip>
                     )}
@@ -75,7 +82,7 @@ export const UploadProgressCard = ({
                         onCopyUrl={onCopyUrl}
                     />
                 ))}
-            </CardContent>
+            </Card.Content>
         </Card>
     )
 }

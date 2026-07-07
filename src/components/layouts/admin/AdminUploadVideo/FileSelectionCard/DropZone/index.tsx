@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowUpFromLine as UploadIcon, Video as VideoIcon } from "@gravity-ui/icons"
+import { UploadSimpleIcon, VideoCameraIcon } from "@phosphor-icons/react"
 import React from "react"
 import {
     Chip,
@@ -48,17 +48,21 @@ export const DropZone = ({
             onClick={onClickZone}
             onDragOver={onDragOver}
             onDrop={onDrop}
-            className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-white/10 bg-white/[0.02] p-8 transition-all hover:border-indigo-400/40 hover:bg-indigo-500/5"
+            className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-white/10 bg-white/[0.02] p-8 transition-all hover:border-indigo-400/40 hover:bg-indigo-500/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/60"
         >
             {file ? (
-                <div className="flex flex-col items-center gap-1.5">
+                <div className="flex flex-col items-center gap-2">
                     <div className="rounded-full bg-emerald-500/10 p-3">
-                        <VideoIcon className="h-8 w-8 text-emerald-400" />
+                        <VideoCameraIcon
+                            className="size-8 text-emerald-400"
+                            aria-hidden="true"
+                            focusable="false"
+                        />
                     </div>
                     <p className="text-sm font-medium text-white">
                         {file.name}
                     </p>
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-2">
                         <Chip
                             size="sm"
                             variant="secondary"
@@ -81,13 +85,17 @@ export const DropZone = ({
             ) : (
                 <div className="flex flex-col items-center gap-3">
                     <div className="rounded-full bg-indigo-500/10 p-3">
-                        <UploadIcon className="h-8 w-8 text-indigo-400" />
+                        <UploadSimpleIcon
+                            className="size-8 text-indigo-400"
+                            aria-hidden="true"
+                            focusable="false"
+                        />
                     </div>
-                    <div className="text-center">
+                    <div className="text-center flex flex-col gap-0">
                         <p className="text-sm font-medium text-white">
                             Click to select or drag & drop
                         </p>
-                        <p className="text-xs text-slate-500 mt-1">
+                        <p className="text-xs text-slate-500">
                             MP4, MOV, WebM, AVI — any size
                         </p>
                     </div>

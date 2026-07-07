@@ -1,4 +1,4 @@
-import { BroadcastSignal as BroadcastIcon, Play as PlayIcon } from "@gravity-ui/icons"
+import { BroadcastIcon, PlayIcon } from "@phosphor-icons/react"
 import React from "react"
 import type { RendererTypeOption } from "./types"
 import { VideoRendererType } from "@/modules/types/enums/video-renderer-type"
@@ -13,21 +13,21 @@ export const RENDERER_TYPE_OPTION_MAP: Record<VideoRendererType, RendererTypeOpt
         label: "MPEG-DASH",
         description: "dashjs adaptive streaming (.mpd)",
         color: "from-emerald-600 to-teal-600",
-        icon: <BroadcastIcon className="h-5 w-5" />,
+        icon: <BroadcastIcon className="size-5" aria-hidden="true" focusable="false" />,
     },
     [VideoRendererType.Standard]: {
         type: VideoRendererType.Standard,
         label: "Standard",
         description: "Native <video> (mp4, webm)",
         color: "from-indigo-600 to-purple-600",
-        icon: <PlayIcon className="h-5 w-5" />,
+        icon: <PlayIcon className="size-5" aria-hidden="true" focusable="false" />,
     },
     [VideoRendererType.Youtube]: {
         type: VideoRendererType.Youtube,
         label: "YouTube",
         description: "Iframe embed",
         color: "from-red-600 to-rose-600",
-        icon: <PlayIcon className="h-5 w-5" />,
+        icon: <PlayIcon className="size-5" aria-hidden="true" focusable="false" />,
     },
 }
 

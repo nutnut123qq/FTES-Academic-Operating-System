@@ -1954,7 +1954,8 @@
         },
         "public": {
             "followers": "{count} người theo dõi",
-            "skills": "Kỹ năng"
+            "skills": "Kỹ năng",
+            "emptySkills": "Chưa có kỹ năng nào."
         }
     },
     "profileMenu": {
@@ -3040,7 +3041,10 @@
             "subtitle": "Luyện các thử thách lập trình, SQL, UI/UX, AI và kinh doanh để nhận điểm.",
             "searchPlaceholder": "Tìm thử thách…",
             "all": "Tất cả",
-            "empty": "Không có thử thách nào khớp bộ lọc."
+            "empty": "Không có thử thách nào khớp bộ lọc.",
+            "errorTitle": "Không tải được thử thách",
+            "errorDescription": "Đã có lỗi khi lấy danh sách thử thách. Thử lại nhé.",
+            "retry": "Thử lại"
         },
         "types": {
             "coding": "Lập trình",
@@ -3193,7 +3197,12 @@
                 "monthly": "Mục tiêu tháng",
                 "mysteryBox": "Mystery Box & Lucky Spin"
             }
-        }
+        },
+        "states": {
+            "retry": "Thử lại"
+        },
+        "leaderboardEmpty": "Chưa có ai trên bảng xếp hạng.",
+        "leaderboardError": "Không tải được bảng xếp hạng. Vui lòng thử lại."
     },
     "wallet": {
         "title": "Ví & FTES Coin",
@@ -3212,7 +3221,11 @@
             "purchase": "Mua",
             "refund": "Hoàn tiền"
         },
-        "empty": "Chưa có giao dịch nào."
+        "empty": "Chưa có giao dịch nào.",
+        "errorTitle": "Không tải được lịch sử giao dịch.",
+        "states": {
+            "retry": "Thử lại"
+        }
     },
     "marketplace": {
         "catalog": {
@@ -4323,7 +4336,9 @@
                 "fe": "FE",
                 "source": "Source code",
                 "notes": "Ghi chú"
-            }
+            },
+            "loadError": "Không tải được tài nguyên.",
+            "retry": "Thử lại"
         },
         "practice": {
             "title": "Luyện tập",
@@ -4431,7 +4446,10 @@
                 "forYou": "Dành cho bạn",
                 "following": "Đang theo dõi",
                 "trending": "Xu hướng"
-            }
+            },
+            "empty": "Chưa có bài thảo luận nào.",
+            "loadError": "Không tải được thảo luận.",
+            "retry": "Thử lại"
         },
         "members": {
             "title": "Thành viên",
@@ -4441,7 +4459,10 @@
                 "lecturer": "Giảng viên",
                 "contributor": "Cộng tác viên",
                 "moderator": "Điều hành"
-            }
+            },
+            "empty": "Chưa có thành viên nào.",
+            "loadError": "Không tải được danh sách thành viên.",
+            "retry": "Thử lại"
         },
         "statistics": {
             "title": "Thống kê",
@@ -4452,7 +4473,9 @@
                 "active": "Đang học",
                 "resources": "Tài nguyên",
                 "avgScore": "Điểm TB"
-            }
+            },
+            "loadError": "Không tải được thống kê.",
+            "retry": "Thử lại"
         },
         "aiTools": {
             "title": "Trợ lý AI",
@@ -4592,7 +4615,9 @@
                 "high": "Nhu cầu cao",
                 "medium": "Nhu cầu vừa",
                 "low": "Nhu cầu thấp"
-            }
+            },
+            "loadError": "Không tải được thông tin nghề nghiệp.",
+            "retry": "Thử lại"
         }
     },
     "skillGraph": {
@@ -4824,7 +4849,9 @@
         },
         "collections": {
             "title": "Bộ sưu tập",
-            "itemsCount": "{count} tài nguyên"
+            "itemsCount": "{count} tài nguyên",
+            "empty": "Chưa có bộ sưu tập nào.",
+            "loadError": "Không tải được bộ sưu tập."
         },
         "detail": {
             "rating": "{rating}★",
@@ -4832,7 +4859,8 @@
             "comments": "Bình luận",
             "like": "Thích",
             "share": "Chia sẻ",
-            "shareCopied": "Đã sao chép liên kết"
+            "shareCopied": "Đã sao chép liên kết",
+            "loadError": "Không tải được tài nguyên."
         },
         "comments": {
             "title": "Bình luận ({count})",
@@ -4862,16 +4890,28 @@
             "dropzone": "Kéo thả tệp vào đây (bản mẫu)",
             "titleField": "Tiêu đề tài nguyên",
             "subjectField": "Mã môn (vd PRF192)",
-            "submit": "Tải lên"
+            "submit": "Tải lên",
+            "titleLabel": "Tiêu đề",
+            "typeLabel": "Loại tài nguyên",
+            "subjectLabel": "Mã môn"
         },
         "reviews": {
             "title": "Đánh giá",
             "placeholder": "Viết nhận xét của bạn…",
             "submit": "Gửi đánh giá",
-            "you": "Bạn"
+            "you": "Bạn",
+            "empty": "Chưa có đánh giá nào — hãy là người đầu tiên!",
+            "loadError": "Không tải được đánh giá."
         },
         "recommended": {
-            "title": "Gợi ý cho bạn"
+            "title": "Gợi ý cho bạn",
+            "empty": "Chưa có gợi ý nào.",
+            "loadError": "Không tải được gợi ý."
+        },
+        "filterLabel": "Lọc theo loại",
+        "hub": {
+            "loadError": "Không tải được tài nguyên.",
+            "retry": "Thử lại"
         }
     },
     "communityHub": {
@@ -5031,7 +5071,9 @@
             "events": "Sự kiện"
         },
         "discussion": {
-            "replies": "{count} phản hồi"
+            "replies": "{count} phản hồi",
+            "empty": "Chưa có chủ đề thảo luận nào. Hãy bắt đầu một chủ đề!",
+            "error": "Không tải được thảo luận. Vui lòng thử lại."
         },
         "roles": {
             "owner": "Chủ nhóm",
@@ -5041,7 +5083,9 @@
         },
         "events": {
             "attendees": "{count} tham gia",
-            "join": "Tham gia"
+            "join": "Tham gia",
+            "empty": "Chưa có sự kiện sắp tới.",
+            "error": "Không tải được sự kiện. Vui lòng thử lại."
         },
         "manage": {
             "title": "Quản lý nhóm",
@@ -5050,7 +5094,8 @@
             "accept": "Duyệt",
             "reject": "Từ chối",
             "rules": "Nội quy",
-            "pinned": "Bài ghim"
+            "pinned": "Bài ghim",
+            "error": "Không tải được dữ liệu quản lý. Vui lòng thử lại."
         },
         "create": {
             "title": "Tạo nhóm",
@@ -5061,10 +5106,14 @@
         "challenges": {
             "title": "Thử thách nhóm",
             "participants": "{count} tham gia",
-            "join": "Tham gia"
+            "join": "Tham gia",
+            "empty": "Chưa có thử thách nào đang diễn ra.",
+            "error": "Không tải được thử thách. Vui lòng thử lại."
         },
         "announcements": {
-            "title": "Thông báo"
+            "title": "Thông báo",
+            "empty": "Chưa có thông báo nào.",
+            "error": "Không tải được thông báo. Vui lòng thử lại."
         },
         "identity": {
             "title": "Nhận diện nhóm",
@@ -5079,6 +5128,21 @@
             "remove": "Bỏ ảnh",
             "uploadCta": "Kéo thả ảnh vào đây, hoặc bấm để chọn",
             "save": "Lưu nhận diện"
+        },
+        "states": {
+            "retry": "Thử lại"
+        },
+        "feed": {
+            "empty": "Chưa có bài viết nào trong nhóm. Hãy là người đầu tiên chia sẻ!",
+            "error": "Không tải được bảng tin nhóm. Vui lòng thử lại."
+        },
+        "members": {
+            "empty": "Chưa có thành viên nào phù hợp.",
+            "error": "Không tải được danh sách thành viên. Vui lòng thử lại."
+        },
+        "groupsList": {
+            "empty": "Chưa có nhóm nào. Hãy tạo nhóm đầu tiên!",
+            "error": "Không tải được danh sách nhóm. Vui lòng thử lại."
         }
     },
     "appearance": {

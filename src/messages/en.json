@@ -1945,7 +1945,8 @@
         },
         "public": {
             "followers": "{count} followers",
-            "skills": "Skills"
+            "skills": "Skills",
+            "emptySkills": "No skills listed yet."
         }
     },
     "profileMenu": {
@@ -3040,7 +3041,10 @@
             "subtitle": "Practice coding, SQL, UI/UX, AI, and business challenges to earn points.",
             "searchPlaceholder": "Search challenges…",
             "all": "All",
-            "empty": "No challenges match your filters."
+            "empty": "No challenges match your filters.",
+            "errorTitle": "Couldn't load challenges",
+            "errorDescription": "Something went wrong while fetching the challenge list. Please try again.",
+            "retry": "Try again"
         },
         "types": {
             "coding": "Coding",
@@ -3193,7 +3197,12 @@
                 "monthly": "Monthly goal",
                 "mysteryBox": "Mystery Box & Lucky Spin"
             }
-        }
+        },
+        "states": {
+            "retry": "Try again"
+        },
+        "leaderboardEmpty": "No one is on the leaderboard yet.",
+        "leaderboardError": "Couldn't load the leaderboard. Please try again."
     },
     "wallet": {
         "title": "Wallet & FTES Coin",
@@ -3212,7 +3221,11 @@
             "purchase": "Purchase",
             "refund": "Refund"
         },
-        "empty": "No transactions yet."
+        "empty": "No transactions yet.",
+        "errorTitle": "Couldn't load transaction history.",
+        "states": {
+            "retry": "Try again"
+        }
     },
     "marketplace": {
         "catalog": {
@@ -4323,7 +4336,9 @@
                 "fe": "FE",
                 "source": "Source code",
                 "notes": "Notes"
-            }
+            },
+            "loadError": "Couldn't load resources.",
+            "retry": "Try again"
         },
         "practice": {
             "title": "Practice",
@@ -4431,7 +4446,10 @@
                 "forYou": "For you",
                 "following": "Following",
                 "trending": "Trending"
-            }
+            },
+            "empty": "No discussions yet.",
+            "loadError": "Couldn't load discussions.",
+            "retry": "Try again"
         },
         "members": {
             "title": "Members",
@@ -4441,7 +4459,10 @@
                 "lecturer": "Lecturer",
                 "contributor": "Contributor",
                 "moderator": "Moderator"
-            }
+            },
+            "empty": "No members yet.",
+            "loadError": "Couldn't load the member list.",
+            "retry": "Try again"
         },
         "statistics": {
             "title": "Statistics",
@@ -4452,7 +4473,9 @@
                 "active": "Active",
                 "resources": "Resources",
                 "avgScore": "Avg score"
-            }
+            },
+            "loadError": "Couldn't load statistics.",
+            "retry": "Try again"
         },
         "aiTools": {
             "title": "AI assistant",
@@ -4592,7 +4615,9 @@
                 "high": "High demand",
                 "medium": "Medium demand",
                 "low": "Low demand"
-            }
+            },
+            "loadError": "Couldn't load career info.",
+            "retry": "Try again"
         }
     },
     "skillGraph": {
@@ -4824,7 +4849,9 @@
         },
         "collections": {
             "title": "Collections",
-            "itemsCount": "{count} items"
+            "itemsCount": "{count} items",
+            "empty": "No collections yet.",
+            "loadError": "Could not load collections."
         },
         "detail": {
             "rating": "{rating}★",
@@ -4832,7 +4859,8 @@
             "comments": "Comments",
             "like": "Like",
             "share": "Share",
-            "shareCopied": "Link copied"
+            "shareCopied": "Link copied",
+            "loadError": "Could not load the resource."
         },
         "comments": {
             "title": "Comments ({count})",
@@ -4862,16 +4890,28 @@
             "dropzone": "Drop files here (placeholder)",
             "titleField": "Resource title",
             "subjectField": "Subject code (e.g. PRF192)",
-            "submit": "Upload"
+            "submit": "Upload",
+            "titleLabel": "Title",
+            "typeLabel": "Resource type",
+            "subjectLabel": "Subject code"
         },
         "reviews": {
             "title": "Reviews",
             "placeholder": "Write your review…",
             "submit": "Submit review",
-            "you": "You"
+            "you": "You",
+            "empty": "No reviews yet — be the first!",
+            "loadError": "Could not load reviews."
         },
         "recommended": {
-            "title": "Recommended for you"
+            "title": "Recommended for you",
+            "empty": "No recommendations yet.",
+            "loadError": "Could not load recommendations."
+        },
+        "filterLabel": "Filter by type",
+        "hub": {
+            "loadError": "Could not load resources.",
+            "retry": "Try again"
         }
     },
     "communityHub": {
@@ -5031,7 +5071,9 @@
             "events": "Events"
         },
         "discussion": {
-            "replies": "{count} replies"
+            "replies": "{count} replies",
+            "empty": "No discussion threads yet. Start one!",
+            "error": "Couldn't load discussions. Please try again."
         },
         "roles": {
             "owner": "Owner",
@@ -5041,7 +5083,9 @@
         },
         "events": {
             "attendees": "{count} attending",
-            "join": "Join"
+            "join": "Join",
+            "empty": "No upcoming events.",
+            "error": "Couldn't load events. Please try again."
         },
         "manage": {
             "title": "Manage group",
@@ -5050,7 +5094,8 @@
             "accept": "Accept",
             "reject": "Reject",
             "rules": "Rules",
-            "pinned": "Pinned"
+            "pinned": "Pinned",
+            "error": "Couldn't load management data. Please try again."
         },
         "create": {
             "title": "Create group",
@@ -5061,10 +5106,14 @@
         "challenges": {
             "title": "Group challenges",
             "participants": "{count} joined",
-            "join": "Join"
+            "join": "Join",
+            "empty": "No active challenges yet.",
+            "error": "Couldn't load challenges. Please try again."
         },
         "announcements": {
-            "title": "Announcements"
+            "title": "Announcements",
+            "empty": "No announcements yet.",
+            "error": "Couldn't load announcements. Please try again."
         },
         "identity": {
             "title": "Group identity",
@@ -5079,6 +5128,21 @@
             "remove": "Remove image",
             "uploadCta": "Drag an image here, or click to choose",
             "save": "Save identity"
+        },
+        "states": {
+            "retry": "Try again"
+        },
+        "feed": {
+            "empty": "No posts in this group yet. Be the first to share!",
+            "error": "Couldn't load the group feed. Please try again."
+        },
+        "members": {
+            "empty": "No members match this filter.",
+            "error": "Couldn't load members. Please try again."
+        },
+        "groupsList": {
+            "empty": "No groups yet. Create the first one!",
+            "error": "Couldn't load groups. Please try again."
         }
     },
     "appearance": {

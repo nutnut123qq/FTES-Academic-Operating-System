@@ -1,30 +1,27 @@
-import type { 
-    KeycloakLoginRequest, 
-    KeycloakLoginResponse 
+import type {
+    KeycloakLoginRequest,
+    KeycloakLoginResponse
 } from "./types"
-import axios from "axios"
-import { publicEnv } from "@/resources/env/public"
+import { restRequest } from "@/modules/api/rest/client"
 
 /**
- * Calls the login endpoint and returns token data.
+ * Logs a user in against the backend auth API.
  *
- * @param request - Email + password credentials.
+ * `POST /api/v1/auth/login` with body `{identifier, password, ...}`. The backend
+ * wraps the result in the standard `{code, message, data}` envelope; `restRequest`
+ * unwraps it and returns the `TokenResponse` payload (throws on non-200).
+ *
+ * @param request - Identifier (email or username) + password credentials.
  * @returns Access / refresh tokens on success; throws on failure.
  */
 export const keycloakLogin = async (
     request: KeycloakLoginRequest,
 ): Promise<KeycloakLoginResponse> => {
-    /** The URL of the login endpoint. */
-    const url = `${publicEnv().api.http}/keycloak/auth/login`
-    /** The axios instance. */
-    const axiosInstance = axios.create(
-        {
-            baseURL: publicEnv().api.http,
-            headers: { "Content-Type": "application/json" },
-        }
-    )
-    /** The response from the login endpoint. */
-    const response = await axiosInstance.post<KeycloakLoginResponse>(url, request)
-    /** The data from the response. */
-    return response.data
+    return restRequest<KeycloakLoginResponse>({
+        method: "POST",
+        url: "/auth/login",
+        data: request,
+        // Public endpoint — do not attach a (possibly stale) bearer token.
+        authenticated: false,
+    })
 }

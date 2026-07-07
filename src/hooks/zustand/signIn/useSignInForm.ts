@@ -1,34 +1,34 @@
 "use client"
 
-import { useCallback, useEffect, useMemo } from "react"
+import { useCallback, useMemo } from "react"
 import { useTranslations } from "next-intl"
 import validator from "validator"
-import _ from "lodash"
 import { useSignInStore } from "./store"
 import { useAuthenticationOverlayState } from "@/hooks/zustand/overlay/hooks"
-import { useMutateSignInInitSwr } from "@/hooks/swr/api/graphql/mutations/useMutateSignInInitSwr"
-import { useMutateSignInVerifyOtpSwr } from "@/hooks/swr/api/graphql/mutations/useMutateSignInVerifyOtpSwr"
-import { useQueryCheckEmailExistsSwr } from "@/hooks/swr/api/graphql/queries/useQueryCheckEmailExistsSwr"
-import { useGraphQLWithToast } from "@/modules/toast/hooks"
+import { usePostKeycloakLoginSwr } from "@/hooks/swr/api/rest/mutations/usePostKeycloakLoginSwr"
+import { useRestWithToast } from "@/modules/toast/hooks"
 import { LocalStorage } from "@/modules/storage/local/storage"
 import { LocalStorageId } from "@/modules/storage/local/enums/id"
 import { useAppDispatch, useAppSelector } from "@/redux/hooks"
-import { resetSignInState, setSignInState, SignInState } from "@/redux/slices/state"
+import { resetSignInState, SignInState } from "@/redux/slices/state"
 
 /**
  * Sign-in form hook (replaces the formik singleton) — state SHARED via {@link useSignInStore} so it
- * survives the Credentials→OTP step transition. Returns a formik-compatible shape (`values/errors/
- * touched/submitForm/setFieldValue/setFieldTouched/isSubmitting`) so consumers need no changes. The
- * current step comes from redux `state.signInState`. Includes a debounced email-exists check (bloom filter).
+ * survives any step transition. Returns a formik-compatible shape (`values/errors/touched/submitForm/
+ * setFieldValue/setFieldTouched/isSubmitting`) so consumers need no changes.
+ *
+ * Login is a SINGLE-STEP REST call (`POST /api/v1/auth/login`) via {@link usePostKeycloakLoginSwr}:
+ * the backend exposes no GraphQL auth mutations and returns the access token directly (no email-OTP,
+ * `mfaRequired: null`). The old 2-step GraphQL init/verify-OTP flow and the debounced
+ * `checkEmailExists` bloom-filter gate (also GraphQL-only) have been removed. `SignInState.OTP` is no
+ * longer reached for sign-in; its components stay build-safe but unused.
  */
 export const useSignInForm = () => {
     const t = useTranslations()
-    const runGraphQL = useGraphQLWithToast()
+    const runRest = useRestWithToast()
     const dispatch = useAppDispatch()
     const signInState = useAppSelector((state) => state.state.signInState)
-    const { trigger: mutateSignInInit } = useMutateSignInInitSwr()
-    const { trigger: mutateSignInVerifyOtp } = useMutateSignInVerifyOtpSwr()
-    const { trigger: queryCheckEmailExists } = useQueryCheckEmailExistsSwr()
+    const { trigger: keycloakLogin } = usePostKeycloakLoginSwr()
     const { close: onAuthenticationClose } = useAuthenticationOverlayState()
 
     const email = useSignInStore((state) => state.email)
@@ -50,7 +50,10 @@ export const useSignInForm = () => {
         [signInState, email, emailExists, password, otp, challengeId, captchaToken, rememberMe],
     )
 
-    /** Errors computed live, conditional on the step (replaces the old Yup `.when`). */
+    /**
+     * Errors computed live. Email is validated for format only (required + `isEmail`) — the old
+     * `checkEmailExists` "notExists" gate is gone (backend has no such endpoint; it blocked login).
+     */
     const errors = useMemo(() => {
         const result: { email?: string, password?: string, otp?: string } = {}
         const trimmedEmail = email.trim()
@@ -58,8 +61,6 @@ export const useSignInForm = () => {
             result.email = t("auth.signIn.email.required")
         } else if (!validator.isEmail(trimmedEmail)) {
             result.email = t("auth.signIn.email.invalid")
-        } else if (!emailExists) {
-            result.email = t("auth.signIn.email.notExists")
         }
         if (signInState === SignInState.Credentials) {
             if (!password) {
@@ -68,6 +69,7 @@ export const useSignInForm = () => {
                 result.password = t("auth.signIn.password.minLength")
             }
         }
+        // OTP validation is retained for build-safety; the OTP step is no longer reached for sign-in.
         if (signInState === SignInState.OTP) {
             if (!otp) {
                 result.otp = t("auth.signIn.otp.required")
@@ -76,7 +78,7 @@ export const useSignInForm = () => {
             }
         }
         return result
-    }, [email, emailExists, password, otp, signInState, t])
+    }, [email, password, otp, signInState, t])
 
     const setFieldValue = useCallback(
         // 3rd arg `shouldValidate` (formik-compat) is ignored — errors are always computed live.
@@ -97,88 +99,36 @@ export const useSignInForm = () => {
         [setTouchedStore],
     )
 
+    /**
+     * Single-step REST sign-in. Calls the fixed login hook with `{identifier, password}`; on success
+     * the hook has already persisted the access token to LocalStorage + redux
+     * (`setAccessToken`/`setAuthenticated`). We then persist the remember-me preference, reset the
+     * form, clear the step machine and close the auth modal. Failures surface via the REST toast.
+     */
     const submitForm = useCallback(async () => {
         setIsSubmitting(true)
         try {
-            if (signInState === SignInState.Credentials) {
-                let nextChallengeId: string | undefined
-                const ok = await runGraphQL(
-                    async () => {
-                        const apolloResult = await mutateSignInInit({
-                            request: { email, password },
-                            headers: captchaToken ? { "x-captcha-token": captchaToken } : undefined,
-                        })
-                        const env = apolloResult.data?.signInInit
-                        if (!env) {
-                            throw new Error("signIn init failed")
-                        }
-                        nextChallengeId = env.data?.challengeId
-                        if (!env.success || !nextChallengeId) {
-                            throw new Error(env.error ?? env.message ?? "signIn init failed")
-                        }
-                        return env
-                    },
-                    { showErrorToast: true, showSuccessToast: true },
-                )
-                if (!ok) {
-                    return
-                }
-                setValue("challengeId", nextChallengeId)
-                setValue("otp", "")
-                dispatch(setSignInState(SignInState.OTP))
-                return
-            }
-            const ok = await runGraphQL(
-                async () => {
-                    if (!challengeId) {
-                        throw new Error("challengeId is required")
-                    }
-                    const apolloResult = await mutateSignInVerifyOtp({ request: { challengeId, otp } })
-                    const verifyEnv = apolloResult.data?.signInVerifyOtp
-                    if (!verifyEnv) {
-                        throw new Error("signInVerifyOtp failed")
-                    }
-                    return verifyEnv
-                },
+            const result = await runRest(
+                () => keycloakLogin({
+                    identifier: email.trim(),
+                    password,
+                    captchaToken: captchaToken || undefined,
+                }),
                 { showErrorToast: true, showSuccessToast: true },
             )
-            if (!ok) {
+            // `null` → login threw (toast already shown); no token means MFA/edge case — keep modal open.
+            if (!result?.accessToken) {
                 return
             }
             // persist the remember-me preference once sign-in succeeds (spec auth-session-preferences)
             LocalStorage.setItem(LocalStorageId.AuthRememberMe, rememberMe)
-            // ponytail: 2FA gate is FE-mock — flag lives in local storage until the BE contract exists
-            if (LocalStorage.getItem<boolean>(LocalStorageId.AuthTwoFactorEnabled)) {
-                dispatch(setSignInState(SignInState.TwoFactor))
-                return
-            }
             reset()
             dispatch(resetSignInState())
             onAuthenticationClose()
         } finally {
             setIsSubmitting(false)
         }
-    }, [signInState, email, password, challengeId, otp, captchaToken, rememberMe, mutateSignInInit, mutateSignInVerifyOtp, setValue, dispatch, reset, onAuthenticationClose, setIsSubmitting, runGraphQL])
-
-    // Debounced bloom-filter email-exists check (same as the old formik core).
-    useEffect(() => {
-        const controller = new AbortController()
-        const debounced = _.debounce(async () => {
-            const trimmed = email.trim()
-            if (!trimmed || !validator.isEmail(trimmed)) {
-                return
-            }
-            const result = await queryCheckEmailExists({ request: { email: trimmed }, signal: controller.signal })
-            if (result.isBloomFilterReady) {
-                setValue("emailExists", result.exists)
-            }
-        }, 300)
-        debounced()
-        return () => {
-            controller.abort()
-            debounced.cancel()
-        }
-    }, [email, queryCheckEmailExists, setValue])
+    }, [email, password, captchaToken, rememberMe, keycloakLogin, runRest, dispatch, reset, onAuthenticationClose, setIsSubmitting])
 
     return { values, errors, touched, submitForm, setFieldValue, setFieldTouched, isSubmitting }
 }

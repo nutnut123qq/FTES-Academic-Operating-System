@@ -1,30 +1,29 @@
-import type { 
-    KeycloakRegisterRequest, 
-    KeycloakRegisterResponse 
+import type {
+    KeycloakRegisterRequest,
+    KeycloakRegisterResponse
 } from "./types"
-import axios from "axios"
-import { publicEnv } from "@/resources/env/public"
+import { restRequest } from "@/modules/api/rest/client"
 
 /**
- * Calls the register endpoint to create a new Keycloak user.
+ * Registers a new user against the backend auth API.
  *
- * @param request - Registration payload (username, email, password, etc.).
- * @returns Created user ID on success; throws on failure.
+ * `POST /api/v1/auth/register` with body `{username, email, password}` (any extra
+ * FE-only fields are dropped at this boundary). `restRequest` unwraps the
+ * `{code, message, data}` envelope and returns the `MessageResponse` payload
+ * (throws on non-200).
+ *
+ * @param request - Registration payload (username, email, password).
+ * @returns Acknowledgement status on success; throws on failure.
  */
 export const keycloakRegister = async (
     request: KeycloakRegisterRequest,
 ): Promise<KeycloakRegisterResponse> => {
-    /** The URL of the register endpoint. */
-    const url = `${publicEnv().api.http}/keycloak/auth/register`
-    /** The axios instance. */
-    const axiosInstance = axios.create(
-        {
-            baseURL: publicEnv().api.http,
-            headers: { "Content-Type": "application/json" },
-        }
-    )
-    /** The response from the register endpoint. */
-    const response = await axiosInstance.post<KeycloakRegisterResponse>(url, request)
-    /** The data from the response. */
-    return response.data
+    const { username, email, password } = request
+    return restRequest<KeycloakRegisterResponse>({
+        method: "POST",
+        url: "/auth/register",
+        data: { username, email, password },
+        // Public endpoint — do not attach a (possibly stale) bearer token.
+        authenticated: false,
+    })
 }

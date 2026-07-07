@@ -1,19 +1,20 @@
-import axios from "axios"
-import { publicEnv } from "@/resources/env/public"
+import { restRequest } from "@/modules/api/rest/client"
+import { LocalStorage } from "@/modules/storage/local/storage"
+import { LocalStorageId } from "@/modules/storage/local/enums/id"
 
 /**
- * Calls the logout endpoint to clear the server-side session (refresh cookie).
+ * Logs the current user out.
  *
- * This endpoint is expected to clear HttpOnly cookies; therefore `withCredentials: true`
- * is required.
+ * `POST /api/v1/auth/logout` — the backend revokes the server-side session using
+ * the `sid` claim of the bearer access token, so this call MUST be authenticated.
+ * On success the locally-stored access token is cleared so subsequent requests are
+ * anonymous.
  */
 export const keycloakLogout = async (): Promise<void> => {
-    const url = `${publicEnv().api.http}/keycloak/auth/logout`
-    const axiosInstance = axios.create({
-        baseURL: publicEnv().api.http,
-        headers: { "Content-Type": "application/json" },
-        withCredentials: true,
+    await restRequest<void>({
+        method: "POST",
+        url: "/auth/logout",
+        authenticated: true,
     })
-    await axiosInstance.post(url)
+    LocalStorage.removeItem(LocalStorageId.KeycloakAccessToken)
 }
-

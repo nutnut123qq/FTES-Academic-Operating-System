@@ -283,9 +283,11 @@ const CourseDetailView = ({
                             <Chip size="sm" variant="soft" color="accent">
                                 {t(`levels.${course.level}`)}
                             </Chip>
-                            <Chip size="sm" variant="soft" color="default">
-                                {t("detail.credits", { count: course.credits })}
-                            </Chip>
+                            {course.credits > 0 ? (
+                                <Chip size="sm" variant="soft" color="default">
+                                    {t("detail.credits", { count: course.credits })}
+                                </Chip>
+                            ) : null}
                             <span className="flex items-center gap-2 text-sm text-muted">
                                 <StarIcon aria-hidden focusable="false" weight="fill" className="size-4 text-accent" />
                                 {course.rating.avg.toFixed(1)} · {t("detail.ratings", { count: course.rating.count })}
@@ -332,9 +334,11 @@ const CourseDetailView = ({
                         <Typography type="body-sm" color="muted">
                             {course.description}
                         </Typography>
-                        <Typography type="body-sm" color="muted">
-                            {t("detail.instructorLine", { name: course.instructor.name })}
-                        </Typography>
+                        {course.instructor ? (
+                            <Typography type="body-sm" color="muted">
+                                {t("detail.instructorLine", { name: course.instructor.name })}
+                            </Typography>
+                        ) : null}
                     </div>
 
                     {/* what you'll learn */}
@@ -431,7 +435,8 @@ const CourseDetailView = ({
                         </div>
                     </div>
 
-                    {/* reviews */}
+                    {/* reviews — hidden when the BE detail carries none */}
+                    {course.reviews.length > 0 ? (
                     <div className="flex flex-col gap-3 border-t border-separator pt-6">
                         <Typography type="h6" weight="bold">
                             {t("detail.reviews")}
@@ -459,9 +464,12 @@ const CourseDetailView = ({
                             </div>
                         ))}
                     </div>
+                    ) : null}
 
-                    {/* instructor */}
-                    <InstructorCard instructor={course.instructor} />
+                    {/* instructor — hidden when the BE detail carries none */}
+                    {course.instructor ? (
+                        <InstructorCard instructor={course.instructor} />
+                    ) : null}
                 </div>
 
                 {/* RIGHT — sticky enroll card */}
@@ -563,7 +571,7 @@ const EnrollCard = ({
                         })}
                     />
 
-                    {selectedTier === "premium" ? (
+                    {selectedTier === "premium" && course.price.usd > 0 ? (
                         <Typography type="body-xs" color="muted">
                             {t("detail.usdApprox", {
                                 price: course.price.usd.toLocaleString("en-US", { style: "currency", currency: "USD" }),

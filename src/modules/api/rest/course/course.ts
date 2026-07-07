@@ -6,6 +6,9 @@ import type {
     CertificateVerifyView,
     CertificateView,
     CompleteResponse,
+    CourseDetail,
+    CourseListParams,
+    CourseSummary,
     CreateAssignmentRequest,
     CreateCourseRequest,
     CreateLessonRequest,
@@ -42,7 +45,48 @@ import type {
     UpsertContentRequest,
 } from "./types"
 
-// ---------------------------------------------------------------- catalog
+// ---------------------------------------------------------------- public catalog
+
+/**
+ * Lists published courses for the public catalog.
+ *
+ * `GET /api/v1/courses` (public). Returns the flat `CourseSummary` array the
+ * BE envelope wraps; supports `categoryId` / `level` / `q` filters and paging.
+ */
+export const getCourses = async (
+    params?: CourseListParams,
+): Promise<Array<CourseSummary>> => {
+    return restRequest<Array<CourseSummary>>({
+        method: "GET",
+        url: "/courses",
+        authenticated: false,
+        params: {
+            categoryId: params?.categoryId ?? undefined,
+            level: params?.level ?? undefined,
+            q: params?.q ?? undefined,
+            page: params?.page ?? undefined,
+            size: params?.size ?? undefined,
+        },
+    })
+}
+
+/**
+ * Reads one published course's public detail by slug name.
+ *
+ * `GET /api/v1/courses/{slugName}` (public). NOTE the path variable is the
+ * `slugName` (a uuid returns 404) — route with the slug the list returns.
+ */
+export const getCourseDetail = async (
+    slugName: string,
+): Promise<CourseDetail> => {
+    return restRequest<CourseDetail>({
+        method: "GET",
+        url: `/courses/${slugName}`,
+        authenticated: false,
+    })
+}
+
+// ---------------------------------------------------------------- catalog admin
 
 /**
  * Creates a new course.

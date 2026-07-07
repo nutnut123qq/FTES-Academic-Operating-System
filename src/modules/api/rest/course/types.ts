@@ -87,6 +87,20 @@ export interface LessonView {
     accessLevel: string | null
 }
 
+/** Query params for the public catalog list `GET /api/v1/courses`. */
+export interface CourseListParams {
+    /** Filter by opaque category id. */
+    categoryId?: string | null
+    /** Filter by course level. */
+    level?: string | null
+    /** Full-text search over title/description. */
+    q?: string | null
+    /** Zero-based page index (BE default 0). */
+    page?: number
+    /** Page size (BE default 20). */
+    size?: number
+}
+
 /** Body sent to `POST /api/v1/courses/{id}/sections`. */
 export interface CreateSectionRequest {
     name: string

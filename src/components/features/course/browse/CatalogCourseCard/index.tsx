@@ -154,12 +154,16 @@ export const CatalogCourseCard = ({ course, className }: CatalogCourseCardProps)
                     <Chip size="sm" variant="soft" color="accent">
                         {t(`courseSystem.levels.${course.level}`)}
                     </Chip>
-                    <ClockIcon aria-hidden focusable="false" className="size-4 text-muted" />
-                    <Typography type="body-xs" color="muted">
-                        {course.durationHours != null
-                            ? t("courseSystem.browse.hours", { count: course.durationHours })
-                            : t("courseSystem.detail.credits", { count: course.credits })}
-                    </Typography>
+                    {course.durationHours != null || course.credits > 0 ? (
+                        <>
+                            <ClockIcon aria-hidden focusable="false" className="size-4 text-muted" />
+                            <Typography type="body-xs" color="muted">
+                                {course.durationHours != null
+                                    ? t("courseSystem.browse.hours", { count: course.durationHours })
+                                    : t("courseSystem.detail.credits", { count: course.credits })}
+                            </Typography>
+                        </>
+                    ) : null}
                 </div>
 
                 {/* footer: price + view-course affordance (whole card is the link, so this

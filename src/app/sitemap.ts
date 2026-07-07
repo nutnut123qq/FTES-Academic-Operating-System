@@ -51,15 +51,22 @@ const fetchGraphql = async (
     }
 }
 
-/** All course displayIds (empty on any failure → sitemap degrades to static). */
+/** All published course slugs from the public REST catalog (empty on any failure → sitemap degrades to static). */
 const fetchCourseSlugs = async (): Promise<string[]> => {
-    const payload = await fetchGraphql(
-        "query($request:CoursesRequest!){courses(request:$request){data{data{displayId}}}}",
-        { request: {} },
-    ) as { data?: { courses?: { data?: { data?: Array<{ displayId?: string }> } } } } | null
-    return (payload?.data?.courses?.data?.data ?? [])
-        .map((course) => course.displayId)
-        .filter((id): id is string => Boolean(id))
+    try {
+        const response = await fetch(`${publicEnv().api.http}/courses?size=1000`, {
+            cache: "no-store",
+            signal: AbortSignal.timeout(5000),
+        })
+        const payload = (await response.json()) as {
+            data?: Array<{ slugName?: string }> | null
+        } | null
+        return (payload?.data ?? [])
+            .map((course) => course?.slugName)
+            .filter((slug): slug is string => Boolean(slug))
+    } catch {
+        return []
+    }
 }
 
 /** All published blog posts (slug + publishedAt); empty on any failure. */

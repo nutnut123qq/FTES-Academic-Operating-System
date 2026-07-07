@@ -1,6 +1,8 @@
 "use client"
 
 import useSWR from "swr"
+import { getCourses } from "@/modules/api/rest/course"
+import type { CourseSummary } from "@/modules/api/rest/course"
 
 /** Course level. */
 export type CourseLevel = "basic" | "intermediate" | "advanced"
@@ -8,7 +10,7 @@ export type CourseLevel = "basic" | "intermediate" | "advanced"
 /** Merchandising badge on a catalog card (mock flag; BE defines real criteria later). */
 export type CourseBadge = "bestseller" | "new"
 
-/** A course in the catalog (§4, mock until BE lands). */
+/** A course in the catalog (§4). */
 export interface Course {
     id: string
     code: string
@@ -40,28 +42,82 @@ export interface Course {
     updatedAt?: string
 }
 
-// ponytail: mock BE — no course endpoint yet. Deterministic sample; every course
-// carries exactly one category slug + Coursera/Udemy card-anatomy fields.
-const fetchCoursesMock = async (): Promise<Array<Course>> => [
-    { id: "prf192", code: "PRF192", name: "Lập trình C", level: "basic", credits: 3, lessons: 24, category: "programming", rating: 4.8, ratingCount: 1240, enrollmentCount: 3100, durationHours: 32, priceVnd: 1_200_000, coverUrl: "https://picsum.photos/seed/prf192/960/540", badge: "bestseller", updatedAt: "2026-06-01", description: "Nền tảng lập trình với ngôn ngữ C: cú pháp, con trỏ, quản lý bộ nhớ và tư duy giải quyết vấn đề.", learnOutcomes: ["Nắm vững cú pháp C và con trỏ", "Tự viết chương trình quản lý bộ nhớ an toàn", "Tư duy thuật toán qua bài tập thực hành"] },
-    { id: "csd201", code: "CSD201", name: "Cấu trúc dữ liệu & Giải thuật", level: "intermediate", credits: 3, lessons: 30, category: "programming", rating: 4.7, ratingCount: 980, enrollmentCount: 2450, durationHours: 40, priceVnd: 1_500_000, coverUrl: "https://picsum.photos/seed/csd201/960/540", badge: "bestseller", updatedAt: "2026-05-01", description: "Cấu trúc dữ liệu cốt lõi (list, tree, graph, hash) và các giải thuật kinh điển cho phỏng vấn.", learnOutcomes: ["Phân tích độ phức tạp Big-O", "Cài đặt list/tree/graph/hash từ đầu", "Giải bài phỏng vấn thuật toán tự tin hơn"] },
-    { id: "prj301", code: "PRJ301", name: "Lập trình Java Web", level: "intermediate", credits: 3, lessons: 28, category: "programming", rating: 4.6, ratingCount: 720, enrollmentCount: 1800, durationHours: 36, priceVnd: 1_500_000, coverUrl: "https://picsum.photos/seed/prj301/960/540", updatedAt: "2026-04-01", description: "Xây dựng ứng dụng web Java: Servlet/JSP, MVC, JDBC và triển khai một dự án hoàn chỉnh.", learnOutcomes: ["Dựng web app theo mô hình MVC", "Kết nối CSDL qua JDBC", "Hoàn thiện dự án web end-to-end"] },
-    { id: "dbi202", code: "DBI202", name: "Cơ sở dữ liệu", level: "basic", credits: 3, lessons: 22, category: "programming", rating: 4.5, ratingCount: 640, enrollmentCount: 1600, durationHours: 28, priceVnd: 1_200_000, coverUrl: "https://picsum.photos/seed/dbi202/960/540", updatedAt: "2026-03-01", description: "Thiết kế CSDL quan hệ, chuẩn hóa và thành thạo SQL từ truy vấn cơ bản đến nâng cao.", learnOutcomes: ["Thiết kế schema chuẩn hóa", "Viết SQL join/aggregate thành thạo", "Tối ưu truy vấn cơ bản"] },
-    { id: "swp391", code: "SWP391", name: "Đồ án phần mềm", level: "advanced", credits: 4, lessons: 16, category: "programming", rating: 4.9, ratingCount: 310, enrollmentCount: 780, durationHours: 24, priceVnd: 1_800_000, coverUrl: "https://picsum.photos/seed/swp391/960/540", badge: "new", updatedAt: "2026-06-15", description: "Làm việc nhóm theo quy trình thực tế: từ yêu cầu, thiết kế đến bàn giao một sản phẩm phần mềm.", learnOutcomes: ["Quản lý dự án theo Scrum", "Thiết kế kiến trúc cho sản phẩm thật", "Bàn giao sản phẩm chạy được"] },
-    { id: "net1704", code: "NET1704", name: "Mạng máy tính", level: "intermediate", credits: 3, lessons: 26, category: "programming", rating: 4.4, ratingCount: 450, enrollmentCount: 1120, durationHours: 30, priceVnd: 1_300_000, coverUrl: "https://picsum.photos/seed/net1704/960/540", updatedAt: "2026-02-01", description: "Mô hình OSI/TCP-IP, định tuyến, DNS/HTTP và thực hành phân tích gói tin thực tế.", learnOutcomes: ["Hiểu sâu TCP/IP và OSI", "Phân tích gói tin với Wireshark", "Cấu hình mạng LAN cơ bản"] },
-    { id: "mae101", code: "MAE101", name: "Toán cao cấp", level: "basic", credits: 3, lessons: 20, category: "math", rating: 4.6, ratingCount: 830, enrollmentCount: 2080, durationHours: 26, priceVnd: 1_000_000, coverUrl: "https://picsum.photos/seed/mae101/960/540", badge: "bestseller", updatedAt: "2026-05-15", description: "Giải tích một biến: giới hạn, đạo hàm, tích phân và ứng dụng cho các môn kỹ thuật.", learnOutcomes: ["Thành thạo đạo hàm và tích phân", "Ứng dụng giải tích vào bài toán kỹ thuật", "Nền tảng cho xác suất và AI"] },
-    { id: "mas291", code: "MAS291", name: "Xác suất thống kê", level: "intermediate", credits: 3, lessons: 22, category: "math", rating: 4.5, ratingCount: 520, enrollmentCount: 1300, durationHours: 28, priceVnd: 1_100_000, coverUrl: "https://picsum.photos/seed/mas291/960/540", updatedAt: "2026-01-15", description: "Xác suất, biến ngẫu nhiên, ước lượng và kiểm định giả thuyết với ví dụ dữ liệu thật.", learnOutcomes: ["Mô hình hóa bằng biến ngẫu nhiên", "Kiểm định giả thuyết đúng cách", "Đọc hiểu kết quả thống kê"] },
-    { id: "jpd113", code: "JPD113", name: "Tiếng Nhật sơ cấp", level: "basic", credits: 3, lessons: 30, category: "foreign-languages", rating: 4.7, ratingCount: 610, enrollmentCount: 1520, durationHours: 34, priceVnd: 1_400_000, coverUrl: "https://picsum.photos/seed/jpd113/960/540", badge: "new", updatedAt: "2026-06-20", description: "Tiếng Nhật từ con số 0: bảng chữ, ngữ pháp N5 và hội thoại giao tiếp hằng ngày.", learnOutcomes: ["Đọc viết hiragana/katakana", "Giao tiếp tình huống cơ bản", "Sẵn sàng cho kỳ thi JLPT N5"] },
-    { id: "enw492", code: "ENW492", name: "Viết học thuật tiếng Anh", level: "intermediate", credits: 2, lessons: 18, category: "foreign-languages", rating: 4.3, ratingCount: 290, enrollmentCount: 720, durationHours: 20, priceVnd: 900_000, coverUrl: "https://picsum.photos/seed/enw492/960/540", updatedAt: "2026-03-15", description: "Kỹ năng viết học thuật: cấu trúc đoạn, lập luận, trích dẫn và hoàn thiện một bài luận chuẩn.", learnOutcomes: ["Viết đoạn văn lập luận chặt chẽ", "Trích dẫn nguồn đúng chuẩn", "Hoàn thiện essay học thuật"] },
-]
+/**
+ * Single catalog bucket slug. The BE list carries an opaque `categoryId` (uuid)
+ * with no public name taxonomy yet, so every course maps to one honest
+ * "all courses" shelf rather than fabricating category membership. Matches the
+ * lone category returned by `useQueryCourseCategoriesSwr` (BE-swap point).
+ */
+export const CATALOG_CATEGORY_SLUG = "all"
+
+/**
+ * Maps the BE course level string onto the catalog's three-level facet. The BE
+ * currently only seeds `UNIVERSITY`, which has no direct facet equivalent → it
+ * (and any unknown value) degrades to `intermediate` for display; a wrong facet
+ * label is preferable to a broken i18n key.
+ *
+ * @param level - The raw BE `level` string (nullable).
+ * @returns The closest catalog {@link CourseLevel}.
+ */
+export const mapCourseLevel = (level: string | null | undefined): CourseLevel => {
+    const value = (level ?? "").toUpperCase()
+    if (value.includes("BASIC") || value.includes("BEGIN") || value.includes("FOUND")) {
+        return "basic"
+    }
+    if (value.includes("ADVANC") || value.includes("EXPERT")) {
+        return "advanced"
+    }
+    return "intermediate"
+}
+
+/**
+ * Adapts a BE {@link CourseSummary} into the catalog card {@link Course}. Fields
+ * the BE summary lacks (credits, lesson count, ratingCount, description,
+ * learnOutcomes) stay `undefined` so each card row degrades gracefully. The
+ * routing id is the `slugName` because the detail endpoint keys on it.
+ *
+ * @param summary - One BE course summary row.
+ * @returns The catalog card model.
+ */
+const toCourse = (summary: CourseSummary): Course => {
+    const sale = Number(summary.salePrice)
+    const total = Number(summary.totalPrice)
+    const priceVnd =
+        Number.isFinite(sale) && sale > 0
+            ? sale
+            : Number.isFinite(total) && total > 0
+                ? total
+                : undefined
+    const star = Number(summary.avgStar)
+    return {
+        id: summary.slugName,
+        code: summary.courseCode,
+        name: summary.title,
+        level: mapCourseLevel(summary.level),
+        credits: 0,
+        lessons: 0,
+        category: CATALOG_CATEGORY_SLUG,
+        rating: Number.isFinite(star) && star > 0 ? star : undefined,
+        ratingCount: undefined,
+        enrollmentCount: summary.totalUser ?? undefined,
+        durationHours: undefined,
+        priceVnd,
+        coverUrl: summary.imageHeader || undefined,
+        badge: undefined,
+        description: undefined,
+        learnOutcomes: undefined,
+        updatedAt: undefined,
+    }
+}
 
 /** Sort orders of the browse facet bar. */
 export type CourseSort = "popular" | "newest" | "rating"
 
-// ponytail: mock comparators — popular ranks by rating count, newest by the "new"
-// badge (mock has no createdAt); swap both for real signals when BE lands.
+// Comparators over the mapped card fields. `popular` ranks by learners (the
+// only real popularity signal on the summary), `newest` keeps curated order
+// (no createdAt on the summary), `rating` by avg star.
 const COURSE_COMPARATORS: Record<CourseSort, (a: Course, b: Course) => number> = {
-    popular: (a, b) => (b.ratingCount ?? 0) - (a.ratingCount ?? 0),
+    popular: (a, b) => (b.enrollmentCount ?? 0) - (a.enrollmentCount ?? 0),
     newest: (a, b) => Number(b.badge === "new") - Number(a.badge === "new"),
     rating: (a, b) => (b.rating ?? 0) - (a.rating ?? 0),
 }
@@ -78,7 +134,7 @@ export const coursesByCategory = (courses: Array<Course>, slug: string): Array<C
 
 /**
  * Returns a new array sorted by the given browse sort order (stable — ties keep
- * the curated mock order).
+ * the incoming order).
  *
  * @param courses - The courses to sort.
  * @param sort - The active sort order.
@@ -87,8 +143,15 @@ export const coursesByCategory = (courses: Array<Course>, slug: string): Array<C
 export const sortCourses = (courses: Array<Course>, sort: CourseSort): Array<Course> =>
     [...courses].sort(COURSE_COMPARATORS[sort])
 
-/** Loads the course catalog. Mocked; SWR-shaped for a drop-in BE swap. */
+/**
+ * Loads the course catalog from the public REST endpoint
+ * (`GET /api/v1/courses`) and adapts each row to the catalog card model.
+ * SWR-cached under a stable key; `courses` defaults to `[]` while loading.
+ */
 export const useQueryCoursesSwr = () => {
-    const { data, isLoading, error, mutate } = useSWR(["courses"], () => fetchCoursesMock())
+    const { data, isLoading, error, mutate } = useSWR(["rest-courses"], async () => {
+        const list = await getCourses({ size: 100 })
+        return list.map(toCourse)
+    })
     return { courses: data ?? [], isLoading, error, mutate }
 }

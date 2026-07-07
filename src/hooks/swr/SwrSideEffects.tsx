@@ -6,7 +6,6 @@ import {
     useQueryChallengeSwr,
     useQueryContentsSwr,
     useQueryCourseEnrollmentStatusSwr,
-    useQueryCoursesSwr,
     useQueryIncompleteJobsSwr,
     useQueryLessonVideoSwr,
     useQuerySystemConfigSwr,
@@ -28,8 +27,6 @@ export const SwrSideEffects = () => {
     useQueryUserSwr()
     // System config used app-wide.
     useQuerySystemConfigSwr()
-    // Course list (the courses page reads it from redux).
-    useQueryCoursesSwr()
     // Enrollment status — sets app-wide `user.enrolled` (gates challenges, personal project, premium).
     // Gated by course?.id, so it only fetches once a course is active; needed on every course page
     // (the learn pages have no EnrollCard consumer of their own).

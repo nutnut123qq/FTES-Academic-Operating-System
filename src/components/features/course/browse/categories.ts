@@ -23,39 +23,22 @@ export interface CourseCategory {
     accent: "accent" | "success" | "warning"
 }
 
-// ponytail: mock BE — no category endpoint yet. This list is THE swap point:
-// when the BE category endpoint lands, replace it (and the fetcher in
-// useQueryCourseCategoriesSwr) with the real data; slugs are the stable contract.
+// The BE catalog exposes only an opaque `categoryId` (uuid) per course with no
+// public, named category taxonomy yet. Rather than fabricate category
+// membership, the catalog presents every published course under one honest
+// "all courses" bucket. THIS list stays THE swap point: when the BE category
+// endpoint lands, replace it (and the fetcher in `useQueryCourseCategoriesSwr`)
+// with the real data; slugs are the stable contract.
 export const COURSE_CATEGORIES: Array<CourseCategory> = [
     {
-        id: "cat-math",
-        slug: "math",
-        name: { vi: "Toán", en: "Math" },
+        id: "all",
+        slug: "all",
+        name: { vi: "Tất cả khóa học", en: "All courses" },
         description: {
-            vi: "Nền tảng toán cao cấp, xác suất thống kê cho kỹ sư.",
-            en: "Advanced mathematics and statistics foundations for engineers.",
+            vi: "Toàn bộ khóa học đang mở trên FTES.",
+            en: "Every course currently published on FTES.",
         },
         accent: "accent",
-    },
-    {
-        id: "cat-programming",
-        slug: "programming",
-        name: { vi: "Lập trình", en: "Programming" },
-        description: {
-            vi: "Từ nền tảng C tới web, cơ sở dữ liệu và đồ án phần mềm.",
-            en: "From C foundations to web, databases and software capstones.",
-        },
-        accent: "success",
-    },
-    {
-        id: "cat-foreign-languages",
-        slug: "foreign-languages",
-        name: { vi: "Ngoại ngữ", en: "Foreign Languages" },
-        description: {
-            vi: "Tiếng Anh học thuật và tiếng Nhật cho môi trường làm việc.",
-            en: "Academic English and workplace Japanese.",
-        },
-        accent: "warning",
     },
 ]
 

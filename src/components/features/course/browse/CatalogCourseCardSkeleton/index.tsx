@@ -5,17 +5,34 @@ import type { WithClassNames } from "@/modules/types/base/class-name"
 
 /**
  * Loading placeholder for one {@link CatalogCourseCard} — mirrors the real box
- * (16:9 cover + code/title/rating/meta/price rows) per the house skeleton rule.
+ * (16:9 cover + code/title, rating+learners, description, 3 value-props, meta,
+ * and the price/view-course footer) per the house skeleton rule.
  */
 export const CatalogCourseCardSkeleton = ({ className }: WithClassNames<undefined>) => (
     <div className={cn("flex flex-col overflow-hidden rounded-3xl border border-separator", className)}>
         <Skeleton className="aspect-video w-full rounded-none" />
         <div className="flex flex-col gap-3 p-4">
+            {/* code + title */}
             <Skeleton className="h-3 w-16 rounded-large" />
             <Skeleton className="h-4 w-full rounded-large" />
-            <Skeleton className="h-3 w-24 rounded-large" />
+            {/* rating + learners */}
+            <Skeleton className="h-3 w-40 rounded-large" />
+            {/* description (2 lines) */}
+            <Skeleton className="h-3 w-full rounded-large" />
+            <Skeleton className="h-3 w-4/5 rounded-large" />
+            {/* 3 value propositions */}
+            <div className="flex flex-col gap-2">
+                <Skeleton className="h-3 w-11/12 rounded-large" />
+                <Skeleton className="h-3 w-10/12 rounded-large" />
+                <Skeleton className="h-3 w-9/12 rounded-large" />
+            </div>
+            {/* meta */}
             <Skeleton className="h-5 w-32 rounded-large" />
-            <Skeleton className="h-5 w-24 rounded-large" />
+            {/* footer: price + view-course */}
+            <div className="mt-1 flex items-center justify-between border-t border-separator pt-3">
+                <Skeleton className="h-5 w-24 rounded-large" />
+                <Skeleton className="h-4 w-24 rounded-large" />
+            </div>
         </div>
     </div>
 )

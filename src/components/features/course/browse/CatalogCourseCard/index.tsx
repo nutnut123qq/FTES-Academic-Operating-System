@@ -3,7 +3,13 @@
 import React, { useState } from "react"
 import Image from "next/image"
 import { Chip, Typography, cn } from "@heroui/react"
-import { ClockIcon, StarIcon } from "@phosphor-icons/react"
+import {
+    CaretRightIcon,
+    CheckCircleIcon,
+    ClockIcon,
+    StarIcon,
+    UsersIcon,
+} from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
 import { PriceTag } from "@/components/blocks/commerce/PriceTag"
@@ -86,25 +92,64 @@ export const CatalogCourseCard = ({ course, className }: CatalogCourseCardProps)
                     <SaveButton entityType="course" entityId={course.id} />
                 </div>
 
-                {course.rating != null ? (
-                    <div className="flex items-center gap-2">
-                        <StarIcon
-                            aria-hidden
-                            focusable="false"
-                            weight="fill"
-                            className="size-4 text-warning"
-                        />
-                        <Typography type="body-xs" weight="medium">
-                            {course.rating.toFixed(1)}
-                        </Typography>
-                        {course.ratingCount != null ? (
-                            <Typography type="body-xs" color="muted">
-                                {t("courseSystem.browse.ratingCount", { count: course.ratingCount })}
-                            </Typography>
+                {/* rating + learners */}
+                {course.rating != null || (course.enrollmentCount ?? 0) > 0 ? (
+                    <div className="flex flex-wrap items-center gap-3">
+                        {course.rating != null ? (
+                            <div className="flex items-center gap-2">
+                                <StarIcon
+                                    aria-hidden
+                                    focusable="false"
+                                    weight="fill"
+                                    className="size-4 text-warning"
+                                />
+                                <Typography type="body-xs" weight="medium">
+                                    {course.rating.toFixed(1)}
+                                </Typography>
+                                {course.ratingCount != null ? (
+                                    <Typography type="body-xs" color="muted">
+                                        {t("courseSystem.browse.ratingCount", { count: course.ratingCount })}
+                                    </Typography>
+                                ) : null}
+                            </div>
+                        ) : null}
+                        {(course.enrollmentCount ?? 0) > 0 ? (
+                            <div className="flex items-center gap-2">
+                                <UsersIcon aria-hidden focusable="false" className="size-4 text-muted" />
+                                <Typography type="body-xs" color="muted">
+                                    {t("courses.learners", { count: course.enrollmentCount ?? 0 })}
+                                </Typography>
+                            </div>
                         ) : null}
                     </div>
                 ) : null}
 
+                {/* short description */}
+                {course.description ? (
+                    <Typography type="body-sm" color="muted" className="line-clamp-2">
+                        {course.description}
+                    </Typography>
+                ) : null}
+
+                {/* top 3 value propositions ("what you'll learn") */}
+                {course.learnOutcomes && course.learnOutcomes.length > 0 ? (
+                    <ul className="flex flex-col gap-2">
+                        {course.learnOutcomes.slice(0, 3).map((outcome, index) => (
+                            <li key={index} className="flex items-start gap-2">
+                                <CheckCircleIcon
+                                    aria-hidden
+                                    focusable="false"
+                                    className="mt-0.5 size-4 shrink-0 text-success"
+                                />
+                                <Typography type="body-xs" color="muted" className="line-clamp-1">
+                                    {outcome}
+                                </Typography>
+                            </li>
+                        ))}
+                    </ul>
+                ) : null}
+
+                {/* meta: level + duration */}
                 <div className="flex flex-wrap items-center gap-2">
                     <Chip size="sm" variant="soft" color="accent">
                         {t(`courseSystem.levels.${course.level}`)}
@@ -117,11 +162,23 @@ export const CatalogCourseCard = ({ course, className }: CatalogCourseCardProps)
                     </Typography>
                 </div>
 
-                {course.priceVnd != null ? (
-                    <div className="mt-auto">
+                {/* footer: price + view-course affordance (whole card is the link, so this
+                    is a decorative cue — the caret slides on card hover) */}
+                <div className="mt-auto flex items-center justify-between gap-2 border-t border-separator pt-3">
+                    {course.priceVnd != null ? (
                         <PriceTag discounted={course.priceVnd} size="sm" />
-                    </div>
-                ) : null}
+                    ) : (
+                        <span />
+                    )}
+                    <span className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-accent">
+                        {t("courses.viewCourse")}
+                        <CaretRightIcon
+                            aria-hidden
+                            focusable="false"
+                            className="size-4 transition-transform group-hover:translate-x-0.5"
+                        />
+                    </span>
+                </div>
             </div>
         </Link>
     )

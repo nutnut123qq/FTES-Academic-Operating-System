@@ -4675,7 +4675,8 @@
             "title": "Khóa học",
             "searchPlaceholder": "Tìm theo mã hoặc tên môn",
             "all": "Tất cả",
-            "lessonsCount": "{count} bài"
+            "lessonsCount": "{count} bài",
+            "loadError": "Không tải được danh sách khóa học."
         },
         "featured": {
             "regionLabel": "Khóa học nổi bật",
@@ -4962,7 +4963,9 @@
         },
         "feed": {
             "likes": "{count} thích",
-            "comments": "{count} bình luận"
+            "comments": "{count} bình luận",
+            "empty": "Chưa có bài viết nào. Hãy là người đầu tiên chia sẻ!",
+            "error": "Không tải được bảng tin. Vui lòng thử lại."
         },
         "detail": {
             "comments": "{count} bình luận"
@@ -4984,17 +4987,28 @@
             "title": "Bảng uy tín",
             "votes": "▲{up} ▼{down}",
             "accepted": "{count} câu trả lời được chấp nhận",
-            "score": "{score} điểm"
+            "score": "{score} điểm",
+            "empty": "Chưa có người đóng góp nào.",
+            "error": "Không tải được bảng uy tín. Vui lòng thử lại."
         },
         "poll": {
-            "totalVotes": "{count} lượt bình chọn"
+            "totalVotes": "{count} lượt bình chọn",
+            "error": "Không tải được bình chọn. Vui lòng thử lại."
         },
         "moderation": {
             "title": "Kiểm duyệt",
             "empty": "Không còn báo cáo nào.",
             "reportedBy": "báo cáo bởi {name}",
             "keep": "Giữ lại",
-            "remove": "Gỡ bỏ"
+            "remove": "Gỡ bỏ",
+            "error": "Không tải được hàng chờ kiểm duyệt. Vui lòng thử lại."
+        },
+        "states": {
+            "retry": "Thử lại"
+        },
+        "trending": {
+            "empty": "Chưa có bài viết nổi bật nào.",
+            "error": "Không tải được xu hướng. Vui lòng thử lại."
         }
     },
     "groupsHub": {

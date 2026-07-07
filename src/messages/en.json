@@ -4675,7 +4675,8 @@
             "title": "Courses",
             "searchPlaceholder": "Search by code or name",
             "all": "All",
-            "lessonsCount": "{count} lessons"
+            "lessonsCount": "{count} lessons",
+            "loadError": "Couldn't load courses."
         },
         "featured": {
             "regionLabel": "Featured courses",
@@ -4962,7 +4963,9 @@
         },
         "feed": {
             "likes": "{count} likes",
-            "comments": "{count} comments"
+            "comments": "{count} comments",
+            "empty": "No posts yet. Be the first to share!",
+            "error": "Couldn't load the feed. Please try again."
         },
         "detail": {
             "comments": "{count} comments"
@@ -4984,17 +4987,28 @@
             "title": "Reputation",
             "votes": "▲{up} ▼{down}",
             "accepted": "{count} accepted",
-            "score": "{score} pts"
+            "score": "{score} pts",
+            "empty": "No contributors yet.",
+            "error": "Couldn't load the reputation board. Please try again."
         },
         "poll": {
-            "totalVotes": "{count} votes"
+            "totalVotes": "{count} votes",
+            "error": "Couldn't load the poll. Please try again."
         },
         "moderation": {
             "title": "Moderation",
             "empty": "No reports left.",
             "reportedBy": "reported by {name}",
             "keep": "Keep",
-            "remove": "Remove"
+            "remove": "Remove",
+            "error": "Couldn't load the moderation queue. Please try again."
+        },
+        "states": {
+            "retry": "Try again"
+        },
+        "trending": {
+            "empty": "No trending posts yet.",
+            "error": "Couldn't load trending. Please try again."
         }
     },
     "groupsHub": {

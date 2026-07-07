@@ -1,9 +1,11 @@
 "use client"
 
 import React, { useState } from "react"
-import { Button, Chip, Typography } from "@heroui/react"
+import { Button, Chip, Skeleton, Typography, cn } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { SaveButton } from "@/components/blocks/buttons/SaveButton"
+import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { SearchInput } from "@/components/reuseable/SearchInput"
 import {
     useQueryResourceHubSwr,
     type ResourceType,
@@ -12,14 +14,29 @@ import {
 /** Filter options: "all" + every resource type. */
 const TYPES: Array<ResourceType | "all"> = ["all", "pdf", "slide", "video", "pe", "fe", "source", "notes"]
 
+/** Loading skeleton — mirrors the resource-row anatomy (title/meta + trailing chip). */
+const ResourceHubSkeleton = () => (
+    <div className="flex flex-col gap-3">
+        {[0, 1, 2, 3].map((row) => (
+            <div key={row} className="flex items-center gap-3 rounded-2xl border border-separator px-4 py-3">
+                <div className="flex min-w-0 flex-1 flex-col gap-2">
+                    <Skeleton className="h-3 w-48 rounded-full" />
+                    <Skeleton className="h-3 w-32 rounded-full" />
+                </div>
+                <Skeleton className="h-6 w-14 rounded-full" />
+            </div>
+        ))}
+    </div>
+)
+
 /**
  * Global Resource Hub (§5). DEFAULT on-canon layout: a text search + type filter +
  * a dense resource list (mirrors the subject Resources tab, standalone at /resources).
- * ponytail: plain search input + hand-rolled rows; mock data.
+ * ponytail: mock data.
  */
 export const ResourceHub = () => {
     const t = useTranslations("resourceHub")
-    const { resources } = useQueryResourceHubSwr()
+    const { resources, isLoading, error, mutate } = useQueryResourceHubSwr()
     const [query, setQuery] = useState("")
     const [type, setType] = useState<ResourceType | "all">("all")
 
@@ -39,37 +56,56 @@ export const ResourceHub = () => {
 
             {/* search + type filter */}
             <div className="flex flex-col gap-3">
-                <input
+                <SearchInput
                     value={query}
-                    onChange={(event) => setQuery(event.target.value)}
+                    onValueChange={setQuery}
                     placeholder={t("searchPlaceholder")}
-                    className="w-full rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none placeholder:text-muted focus:border-accent"
+                    className="sm:max-w-none"
                 />
-                <div className="flex flex-wrap gap-2">
+                {/* quick-narrowing chip bar (mirrors the browse catalog CategoryChipBar idiom) */}
+                <div
+                    role="tablist"
+                    aria-label={t("filterLabel")}
+                    className="flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                >
                     {TYPES.map((option) => (
-                        <Button
+                        <button
                             key={option}
-                            size="sm"
-                            variant={type === option ? "secondary" : "ghost"}
-                            onPress={() => setType(option)}
+                            type="button"
+                            role="tab"
+                            aria-selected={type === option}
+                            onClick={() => setType(option)}
+                            className={cn(
+                                "flex shrink-0 cursor-pointer items-center rounded-full border px-3 py-2 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-accent",
+                                type === option
+                                    ? "border-accent bg-accent/10 font-medium text-accent"
+                                    : "border-separator text-muted hover:text-foreground",
+                            )}
                         >
                             {option === "all" ? t("all") : t(`types.${option}`)}
-                        </Button>
+                        </button>
                     ))}
                 </div>
             </div>
 
             {/* resource list */}
-            <div className="flex flex-col gap-3">
-                {filtered.length === 0 ? (
-                    <Typography type="body-sm" color="muted">
-                        {t("empty")}
-                    </Typography>
-                ) : (
-                    filtered.map((resource) => (
+            <AsyncContent
+                isLoading={isLoading && resources.length === 0}
+                skeleton={<ResourceHubSkeleton />}
+                isEmpty={filtered.length === 0}
+                emptyContent={{ title: t("empty") }}
+                error={resources.length === 0 ? error : undefined}
+                errorContent={{
+                    title: t("hub.loadError"),
+                    onRetry: () => void mutate(),
+                    retryLabel: t("hub.retry"),
+                }}
+            >
+                <div className="flex flex-col gap-3">
+                    {filtered.map((resource) => (
                         <div
                             key={resource.id}
-                            className="flex items-center gap-3 rounded-2xl border border-separator p-4"
+                            className="flex items-center gap-3 rounded-2xl border border-separator px-4 py-3 transition-colors hover:bg-default/40"
                         >
                             <div className="min-w-0 flex-1">
                                 <Typography type="body-sm" weight="medium" truncate>
@@ -87,9 +123,9 @@ export const ResourceHub = () => {
                                 {t("download")}
                             </Button>
                         </div>
-                    ))
-                )}
-            </div>
+                    ))}
+                </div>
+            </AsyncContent>
         </div>
     )
 }

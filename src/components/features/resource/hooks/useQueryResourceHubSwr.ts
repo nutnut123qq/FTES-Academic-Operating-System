@@ -26,6 +26,6 @@ const fetchResourceHubMock = async (): Promise<Array<HubResource>> => [
 
 /** Loads the global resource hub. Mocked; SWR-shaped for a drop-in BE swap. */
 export const useQueryResourceHubSwr = () => {
-    const { data, isLoading, error } = useSWR(["resource-hub"], () => fetchResourceHubMock())
-    return { resources: data ?? [], isLoading, error }
+    const { data, isLoading, error, mutate } = useSWR(["resource-hub"], () => fetchResourceHubMock())
+    return { resources: data ?? [], isLoading, error, mutate }
 }

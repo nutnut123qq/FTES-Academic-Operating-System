@@ -19,6 +19,6 @@ const fetchCollectionsMock = async (): Promise<Array<ResourceCollection>> => [
 
 /** Loads resource collections. Mocked; SWR-shaped for a drop-in BE swap. */
 export const useQueryCollectionsSwr = () => {
-    const { data, isLoading, error } = useSWR(["collections"], () => fetchCollectionsMock())
-    return { collections: data ?? [], isLoading, error }
+    const { data, isLoading, error, mutate } = useSWR(["collections"], () => fetchCollectionsMock())
+    return { collections: data ?? [], isLoading, error, mutate }
 }

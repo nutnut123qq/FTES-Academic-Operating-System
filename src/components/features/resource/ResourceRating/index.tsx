@@ -1,9 +1,10 @@
 "use client"
 
 import React, { useState } from "react"
-import { Button, Typography, cn } from "@heroui/react"
+import { Button, Input, Skeleton, TextField, Typography, cn } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
+import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { useQueryReviewsSwr, type Review } from "../hooks/useQueryReviewsSwr"
 
 /** Renders a star row (filled ★ up to `value`, out of 5). */
@@ -15,6 +16,18 @@ const Stars = ({ value }: { value: number }) => (
     </span>
 )
 
+/** Loading skeleton — mirrors a review row (name + star line + text). */
+const ReviewsSkeleton = () => (
+    <div className="flex flex-col gap-3">
+        {[0, 1, 2].map((row) => (
+            <div key={row} className="flex flex-col gap-2 rounded-2xl border border-separator p-4">
+                <Skeleton className="h-4 w-40 rounded-full" />
+                <Skeleton className="h-3 w-full rounded-full" />
+            </div>
+        ))}
+    </div>
+)
+
 /**
  * Resource reviews (§5). DEFAULT on-canon layout: an interactive star rating + a
  * comment composer + a review list. ponytail: stars are text (icon-free);
@@ -23,7 +36,7 @@ const Stars = ({ value }: { value: number }) => (
 export const ResourceRating = () => {
     const t = useTranslations("resourceHub")
     const { resourceId } = useParams<{ resourceId: string }>()
-    const { reviews } = useQueryReviewsSwr(resourceId)
+    const { reviews, isLoading, error, mutate } = useQueryReviewsSwr(resourceId)
     const [myRating, setMyRating] = useState(0)
     const [text, setText] = useState("")
     const [added, setAdded] = useState<Array<Review>>([])
@@ -47,46 +60,66 @@ export const ResourceRating = () => {
 
             {/* composer */}
             <div className="flex flex-col gap-3 rounded-2xl border border-separator p-4">
-                <div className="flex items-center gap-1 text-lg">
+                <div className="flex items-center gap-2 text-lg">
                     {[1, 2, 3, 4, 5].map((star) => (
                         <button
                             key={star}
                             type="button"
                             aria-label={`${star}`}
+                            aria-pressed={star <= myRating}
                             onClick={() => setMyRating(star)}
-                            className={cn(star <= myRating ? "text-accent" : "text-muted")}
+                            className={cn(
+                                "cursor-pointer rounded-full outline-none transition-colors focus-visible:ring-2 focus-visible:ring-accent",
+                                star <= myRating ? "text-accent" : "text-muted hover:text-accent",
+                            )}
                         >
                             {star <= myRating ? "★" : "☆"}
                         </button>
                     ))}
                 </div>
-                <input
-                    value={text}
-                    onChange={(event) => setText(event.target.value)}
-                    placeholder={t("reviews.placeholder")}
-                    className="w-full rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none placeholder:text-muted focus:border-accent"
-                />
+                <TextField variant="secondary" className="w-full">
+                    <Input
+                        variant="secondary"
+                        value={text}
+                        onChange={(event) => setText(event.target.value)}
+                        placeholder={t("reviews.placeholder")}
+                        aria-label={t("reviews.placeholder")}
+                    />
+                </TextField>
                 <Button size="sm" variant="secondary" className="self-start" onPress={submit} isDisabled={myRating === 0 || text.trim() === ""}>
                     {t("reviews.submit")}
                 </Button>
             </div>
 
             {/* review list */}
-            <div className="flex flex-col gap-3">
-                {all.map((review) => (
-                    <div key={review.id} className="flex flex-col gap-1 rounded-2xl border border-separator p-4">
-                        <div className="flex items-center gap-2">
-                            <Typography type="body-sm" weight="medium">
-                                {review.author}
+            <AsyncContent
+                isLoading={isLoading && reviews.length === 0}
+                skeleton={<ReviewsSkeleton />}
+                isEmpty={all.length === 0}
+                emptyContent={{ title: t("reviews.empty") }}
+                error={reviews.length === 0 ? error : undefined}
+                errorContent={{
+                    title: t("reviews.loadError"),
+                    onRetry: () => void mutate(),
+                    retryLabel: t("hub.retry"),
+                }}
+            >
+                <div className="flex flex-col gap-3">
+                    {all.map((review) => (
+                        <div key={review.id} className="flex flex-col gap-2 rounded-2xl border border-separator p-4">
+                            <div className="flex items-center gap-2">
+                                <Typography type="body-sm" weight="medium">
+                                    {review.author}
+                                </Typography>
+                                <Stars value={review.rating} />
+                            </div>
+                            <Typography type="body-sm" color="muted">
+                                {review.text}
                             </Typography>
-                            <Stars value={review.rating} />
                         </div>
-                        <Typography type="body-sm" color="muted">
-                            {review.text}
-                        </Typography>
-                    </div>
-                ))}
-            </div>
+                    ))}
+                </div>
+            </AsyncContent>
         </div>
     )
 }

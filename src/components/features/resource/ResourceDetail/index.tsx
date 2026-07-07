@@ -1,13 +1,26 @@
 "use client"
 
 import React, { useState } from "react"
-import { Button, Chip, Typography, toast } from "@heroui/react"
+import { Button, Chip, Skeleton, Typography, toast } from "@heroui/react"
 import { HeartIcon, ShareNetworkIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
 import { SaveButton } from "@/components/blocks/buttons/SaveButton"
+import { ErrorContent } from "@/components/blocks/async/ErrorContent"
 import { useQueryResourceDetailSwr } from "../hooks/useQueryResourceDetailSwr"
 import { ResourceComments } from "./ResourceComments"
+
+/** Skeleton mirroring the detail header (title + meta chips + preview box). */
+const ResourceDetailSkeleton = () => (
+    <div className="flex flex-col gap-6">
+        <Skeleton className="h-8 w-2/3 rounded-large" />
+        <div className="flex flex-wrap items-center gap-2">
+            <Skeleton className="h-6 w-20 rounded-full" />
+            <Skeleton className="h-4 w-32 rounded-full" />
+        </div>
+        <Skeleton className="h-48 w-full rounded-large" />
+    </div>
+)
 
 /**
  * Resource detail (§5). DEFAULT on-canon layout: a preview placeholder + meta +
@@ -17,7 +30,7 @@ import { ResourceComments } from "./ResourceComments"
 export const ResourceDetail = () => {
     const t = useTranslations("resourceHub")
     const { resourceId } = useParams<{ resourceId: string }>()
-    const { resource } = useQueryResourceDetailSwr(resourceId)
+    const { resource, isLoading, error, mutate } = useQueryResourceDetailSwr(resourceId)
     // ponytail: like is a session-only mock toggle (no BE); share copies the page link.
     const [liked, setLiked] = useState(false)
 
@@ -30,52 +43,60 @@ export const ResourceDetail = () => {
         }
     }
 
-    if (!resource) {
-        return null
-    }
-
     return (
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-6">
-            <Typography type="h4" weight="bold">
-                {resource.title}
-            </Typography>
+            {isLoading && !resource ? (
+                <ResourceDetailSkeleton />
+            ) : error && !resource ? (
+                <ErrorContent
+                    title={t("detail.loadError")}
+                    onRetry={() => void mutate()}
+                    retryLabel={t("hub.retry")}
+                />
+            ) : resource ? (
+                <>
+                    <Typography type="h4" weight="bold">
+                        {resource.title}
+                    </Typography>
 
-            {/* meta + actions */}
-            <div className="flex flex-wrap items-center gap-2">
-                <Chip size="sm" variant="soft" color="accent">
-                    {resource.subject}
-                </Chip>
-                <Typography type="body-xs" color="muted">
-                    {resource.sizeLabel} · {t("detail.rating", { rating: resource.rating.toFixed(1) })}
-                </Typography>
-                <Button
-                    size="sm"
-                    variant={liked ? "secondary" : "ghost"}
-                    className="ml-auto"
-                    onPress={() => setLiked((v) => !v)}
-                >
-                    <HeartIcon aria-hidden focusable="false" weight={liked ? "fill" : "regular"} className="size-4" />
-                    {t("detail.like")}
-                </Button>
-                <Button size="sm" variant="ghost" onPress={onShare}>
-                    <ShareNetworkIcon aria-hidden focusable="false" className="size-4" />
-                    {t("detail.share")}
-                </Button>
-                <SaveButton entityType="resource" entityId={resource.id} />
-                <Button size="sm" variant="secondary">
-                    {t("download")}
-                </Button>
-            </div>
+                    {/* meta + actions */}
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Chip size="sm" variant="soft" color="accent">
+                            {resource.subject}
+                        </Chip>
+                        <Typography type="body-xs" color="muted">
+                            {resource.sizeLabel} · {t("detail.rating", { rating: resource.rating.toFixed(1) })}
+                        </Typography>
+                        <Button
+                            size="sm"
+                            variant={liked ? "secondary" : "ghost"}
+                            className="ml-auto"
+                            onPress={() => setLiked((v) => !v)}
+                        >
+                            <HeartIcon aria-hidden focusable="false" weight={liked ? "fill" : "regular"} className="size-4" />
+                            {t("detail.like")}
+                        </Button>
+                        <Button size="sm" variant="ghost" onPress={onShare}>
+                            <ShareNetworkIcon aria-hidden focusable="false" className="size-4" />
+                            {t("detail.share")}
+                        </Button>
+                        <SaveButton entityType="resource" entityId={resource.id} />
+                        <Button size="sm" variant="secondary">
+                            {t("download")}
+                        </Button>
+                    </div>
 
-            {/* preview placeholder */}
-            <div className="flex h-48 w-full items-center justify-center rounded-large bg-default/40">
-                <Typography type="body-sm" color="muted">
-                    {t("detail.preview")}
-                </Typography>
-            </div>
+                    {/* preview placeholder */}
+                    <div className="flex h-48 w-full items-center justify-center rounded-large bg-default/40">
+                        <Typography type="body-sm" color="muted">
+                            {t("detail.preview")}
+                        </Typography>
+                    </div>
 
-            {/* comments (Threads-style discussion; rating lives on /reviews) */}
-            <ResourceComments />
+                    {/* comments (Threads-style discussion; rating lives on /reviews) */}
+                    <ResourceComments />
+                </>
+            ) : null}
         </div>
     )
 }

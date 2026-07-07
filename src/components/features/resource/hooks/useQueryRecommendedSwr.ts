@@ -18,6 +18,6 @@ const fetchRecommendedMock = async (): Promise<Array<RecommendedResource>> => [
 
 /** Loads recommended resources. Mocked; SWR-shaped for a drop-in BE swap. */
 export const useQueryRecommendedSwr = () => {
-    const { data, isLoading, error } = useSWR(["recommended"], () => fetchRecommendedMock())
-    return { recommended: data ?? [], isLoading, error }
+    const { data, isLoading, error, mutate } = useSWR(["recommended"], () => fetchRecommendedMock())
+    return { recommended: data ?? [], isLoading, error, mutate }
 }

@@ -18,9 +18,9 @@ const fetchReviewsMock = async (resourceId: string): Promise<Array<Review>> => [
 
 /** Loads a resource's reviews. Mocked; SWR-shaped for a drop-in BE swap. */
 export const useQueryReviewsSwr = (resourceId: string) => {
-    const { data, isLoading, error } = useSWR(
+    const { data, isLoading, error, mutate } = useSWR(
         ["reviews", resourceId],
         () => fetchReviewsMock(resourceId),
     )
-    return { reviews: data ?? [], isLoading, error }
+    return { reviews: data ?? [], isLoading, error, mutate }
 }

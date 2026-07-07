@@ -34,9 +34,9 @@ const fetchResourceDetailMock = async (resourceId: string): Promise<ResourceDeta
 
 /** Loads a resource's detail. Mocked; SWR-shaped for a drop-in BE swap. */
 export const useQueryResourceDetailSwr = (resourceId: string) => {
-    const { data, isLoading, error } = useSWR(
+    const { data, isLoading, error, mutate } = useSWR(
         ["resource-detail", resourceId],
         () => fetchResourceDetailMock(resourceId),
     )
-    return { resource: data, isLoading, error }
+    return { resource: data, isLoading, error, mutate }
 }

@@ -3307,7 +3307,12 @@
             "meetup": "Gặp gỡ"
         },
         "attendeesCount": "{count} người tham gia",
-        "register": "Đăng ký"
+        "register": "Đăng ký",
+        "locationTypes": {
+            "onsite": "Tại địa điểm",
+            "online": "Trực tuyến",
+            "hybrid": "Kết hợp"
+        }
     },
     "activity": {
         "title": "Hoạt động",

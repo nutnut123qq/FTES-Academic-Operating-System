@@ -41,8 +41,8 @@ const TYPE_ICON: Record<Event["type"], typeof CalendarIcon> = {
 /**
  * Event catalog (§14) — the `/events` list. Mirrors the house catalog archetype
  * (see `SubjectCatalog`): text search + type filter + a grid of event cards linking
- * into each event page. Feature owns data (mock) + filtering; tokens own the look.
- * ponytail: plain search input + hand-rolled cards, mock data.
+ * into each event page. Feature owns data (REST `GET /api/v1/events`) + filtering;
+ * tokens own the look. Meta rows the list DTO omits (venue, exact attendee count) are hidden.
  */
 export const EventCatalog = () => {
     const t = useTranslations("eventSystem")
@@ -52,9 +52,10 @@ export const EventCatalog = () => {
 
     const filtered = events.filter((event) => {
         const matchesType = type === "all" || event.type === type
+        const locationLabel = event.locationType ? t(`locationTypes.${event.locationType}`) : ""
         const matchesQuery =
             query.trim() === "" ||
-            `${event.title} ${event.location}`.toLowerCase().includes(query.trim().toLowerCase())
+            `${event.title} ${locationLabel}`.toLowerCase().includes(query.trim().toLowerCase())
         return matchesType && matchesQuery
     })
 
@@ -138,7 +139,7 @@ interface EventCardProps {
  */
 const EventCard = ({ event }: EventCardProps) => {
     const t = useTranslations("eventSystem")
-    const TypeIcon = TYPE_ICON[event.type]
+    const TypeIcon = TYPE_ICON[event.type] ?? CalendarIcon
 
     return (
         <div className="flex flex-col gap-3 rounded-2xl border border-separator p-4 transition-colors hover:bg-default/40">
@@ -159,32 +160,40 @@ const EventCard = ({ event }: EventCardProps) => {
                 </div>
             </Link>
 
+            {/* meta — each row hidden when the list DTO omits its field (no fabricated values) */}
             <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2">
-                    <CalendarIcon size={16} className="shrink-0 text-muted" aria-hidden />
-                    <Typography type="body-xs" color="muted" className="truncate">
-                        {event.date}
-                    </Typography>
-                </div>
-                <div className="flex items-center gap-2">
-                    <MapPinIcon size={16} className="shrink-0 text-muted" aria-hidden />
-                    <Typography type="body-xs" color="muted" className="truncate">
-                        {event.location}
-                    </Typography>
-                </div>
-                <div className="flex items-center gap-2">
-                    <UsersIcon size={16} className="shrink-0 text-muted" aria-hidden />
-                    <Typography type="body-xs" color="muted">
-                        {t("attendeesCount", { count: event.attendees })}
-                    </Typography>
-                </div>
+                {event.date && (
+                    <div className="flex items-center gap-2">
+                        <CalendarIcon size={16} className="shrink-0 text-muted" aria-hidden />
+                        <Typography type="body-xs" color="muted" className="truncate">
+                            {event.date}
+                        </Typography>
+                    </div>
+                )}
+                {event.locationType && (
+                    <div className="flex items-center gap-2">
+                        <MapPinIcon size={16} className="shrink-0 text-muted" aria-hidden />
+                        <Typography type="body-xs" color="muted" className="truncate">
+                            {t(`locationTypes.${event.locationType}`)}
+                        </Typography>
+                    </div>
+                )}
+                {event.attendees != null && (
+                    <div className="flex items-center gap-2">
+                        <UsersIcon size={16} className="shrink-0 text-muted" aria-hidden />
+                        <Typography type="body-xs" color="muted">
+                            {t("attendeesCount", { count: event.attendees })}
+                        </Typography>
+                    </div>
+                )}
             </div>
 
             <Button
                 size="sm"
                 variant="secondary"
                 className="mt-auto self-start"
-                // ponytail: mock CTA — no enrol/register endpoint yet.
+                // Registration (POST /event/events/{id}/registrations, auth + waitlist) is a
+                // separate vertical; the list rewire leaves the CTA unwired for now.
                 onPress={() => {}}
             >
                 {t("register")}

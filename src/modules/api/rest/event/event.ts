@@ -14,10 +14,15 @@ import type {
 
 // ---------------- EventController ----------------
 
+/**
+ * Public event catalog. Hits the FE-facing alias `GET /api/v1/events`
+ * (`EventCatalogAliasController`), which delegates to `EventController.list`
+ * (`/api/v1/event/events`) — same payload, the path the events page is meant to call.
+ */
 export const getEvents = async (): Promise<EventView[]> =>
     restRequest<EventView[]>({
         method: "GET",
-        url: "/event/events",
+        url: "/events",
     })
 
 export const getEventDetail = async (slug: string): Promise<EventView> =>

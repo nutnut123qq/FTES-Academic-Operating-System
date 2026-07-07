@@ -2923,7 +2923,8 @@
       "empty": "Chưa có công cụ AI nào.",
       "error": "Không tải được danh sách công cụ AI. Vui lòng thử lại.",
       "retry": "Thử lại"
-    }
+    },
+    "quotaRemaining": "Còn {count} lượt"
   },
   "notificationCenter": {
     "title": "Thông báo",

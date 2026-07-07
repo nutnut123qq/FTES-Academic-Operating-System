@@ -129,9 +129,14 @@ export const AiHub = () => {
                                                 {t(`tools.${tool.key}.desc`)}
                                             </Typography>
                                         </div>
-                                        <Button size="sm" variant="secondary" className="self-start">
-                                            {t("open")}
-                                        </Button>
+                                        <div className="flex items-center gap-3">
+                                            <Button size="sm" variant="secondary">
+                                                {t("open")}
+                                            </Button>
+                                            <Typography type="body-xs" color="muted">
+                                                {t("quotaRemaining", { count: tool.remaining })}
+                                            </Typography>
+                                        </div>
                                     </div>
                                 ))}
                             </div>

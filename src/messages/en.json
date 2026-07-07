@@ -2923,7 +2923,8 @@
       "empty": "No AI tools yet.",
       "error": "Couldn't load the AI tools. Please try again.",
       "retry": "Try again"
-    }
+    },
+    "quotaRemaining": "{count} uses left"
   },
   "notificationCenter": {
     "title": "Notifications",

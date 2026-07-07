@@ -291,7 +291,8 @@
         "collapseRightRail": "Hide right rail",
         "expandRightRail": "Show right rail",
         "dashboard": "Dashboard",
-        "guestPrompt": "Sign in to track your progress"
+        "guestPrompt": "Sign in to track your progress",
+        "systemTheme": "System theme"
     },
     "footer": {
         "tagline": "Learn by building real systems with your own hands — sharp enough for any technical interview.",
@@ -3019,6 +3020,11 @@
             "viewAnalytics": "View analytics",
             "manageRoles": "Manage roles",
             "publish": "Publish"
+        },
+        "empty": "No roles yet",
+        "error": "Couldn't load roles",
+        "states": {
+            "retry": "Try again"
         }
     },
     "integration": {

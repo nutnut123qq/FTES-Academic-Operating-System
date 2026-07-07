@@ -291,7 +291,8 @@
         "collapseRightRail": "Ẩn thanh bên phải",
         "expandRightRail": "Hiện thanh bên phải",
         "dashboard": "Bảng điều khiển",
-        "guestPrompt": "Đăng nhập để theo dõi tiến độ của bạn"
+        "guestPrompt": "Đăng nhập để theo dõi tiến độ của bạn",
+        "systemTheme": "Theo hệ thống"
     },
     "footer": {
         "tagline": "Học bằng cách tự tay dựng hệ thống thật — đủ trình cho mọi vòng phỏng vấn kỹ thuật.",
@@ -3019,6 +3020,11 @@
             "viewAnalytics": "Xem phân tích",
             "manageRoles": "Quản lý vai trò",
             "publish": "Xuất bản"
+        },
+        "empty": "Chưa có vai trò nào",
+        "error": "Không tải được vai trò",
+        "states": {
+            "retry": "Thử lại"
         }
     },
     "integration": {

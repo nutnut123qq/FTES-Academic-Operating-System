@@ -4562,7 +4562,9 @@
                 "completion": "Tỉ lệ hoàn thành",
                 "active": "Đang học",
                 "resources": "Tài nguyên",
-                "avgScore": "Điểm TB"
+                "avgScore": "Điểm TB",
+                "members": "Thành viên",
+                "posts": "Bài đăng"
             },
             "loadError": "Không tải được thống kê.",
             "retry": "Thử lại"

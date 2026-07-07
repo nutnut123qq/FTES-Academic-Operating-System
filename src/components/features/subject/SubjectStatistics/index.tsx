@@ -48,10 +48,10 @@ const StatisticsView = ({ stats }: { stats: SubjectStats }) => {
     const t = useTranslations("subjects")
 
     const metrics: Array<{ key: string; value: string }> = [
-        { key: "completion", value: `${stats.completionRate}%` },
-        { key: "active", value: String(stats.activeStudents) },
-        { key: "resources", value: String(stats.resources) },
-        { key: "avgScore", value: stats.avgScore.toFixed(1) },
+        { key: "completion", value: `${Math.round(stats.completionRate)}%` },
+        { key: "members", value: String(stats.memberCount) },
+        { key: "resources", value: String(stats.resourceCount) },
+        { key: "posts", value: String(stats.postCount) },
     ]
 
     return (

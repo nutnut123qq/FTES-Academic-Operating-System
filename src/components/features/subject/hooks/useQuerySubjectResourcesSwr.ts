@@ -1,11 +1,12 @@
 "use client"
 
 import useSWR from "swr"
+import { getSubjectWorkspace } from "@/modules/api/rest/subject/subject"
 
 /** Resource type — mirrors §5 Resource Hub types. */
 export type ResourceType = "pdf" | "slide" | "video" | "pe" | "fe" | "source" | "notes"
 
-/** A single resource in a subject's Resource tab (mock shape until BE lands). */
+/** A single resource in a subject's Resource tab. */
 export interface SubjectResource {
     id: string
     title: string
@@ -23,32 +24,34 @@ export interface SubjectCollection {
     count: number
 }
 
-// ponytail: mock BE — no resource endpoint yet. Deterministic sample so the tab
-// renders. Wire subjects(id).resources when the contract exists; hook API stays.
-const fetchResourcesMock = async (): Promise<{
-    resources: Array<SubjectResource>
-    collections: Array<SubjectCollection>
-}> => ({
-    resources: [
-        { id: "r1", title: "Slide chương 1 — Nhập môn C", type: "slide", sizeLabel: "1.2 MB", updatedLabel: "2 ngày trước" },
-        { id: "r2", title: "Giáo trình PRF192 (bản đầy đủ)", type: "pdf", sizeLabel: "8.4 MB", updatedLabel: "1 tuần trước" },
-        { id: "r3", title: "Đề thi thực hành mẫu (PE)", type: "pe", sizeLabel: "540 KB", updatedLabel: "3 ngày trước" },
-        { id: "r4", title: "Đề thi cuối kỳ mẫu (FE)", type: "fe", sizeLabel: "620 KB", updatedLabel: "3 ngày trước" },
-        { id: "r5", title: "Source code bài giảng buổi 5", type: "source", sizeLabel: "310 KB", updatedLabel: "5 ngày trước" },
-        { id: "r6", title: "Video ôn tập con trỏ", type: "video", sizeLabel: "126 MB", updatedLabel: "hôm qua" },
-        { id: "r7", title: "Ghi chú nhanh — mảng & chuỗi", type: "notes", sizeLabel: "48 KB", updatedLabel: "hôm nay" },
-    ],
-    collections: [
-        { id: "c1", title: "Learning pack — Ôn thi PE", count: 6 },
-        { id: "c2", title: "Bộ tài liệu nhập môn", count: 4 },
-    ],
-})
-
-/** Loads a subject's resources + collections. Mocked; SWR-shaped for a drop-in BE swap. */
+/**
+ * Loads a subject's resources from the real BE workspace aggregate
+ * (`GET /api/v1/subjects/{code}/workspace` → `resources`). The workspace resource
+ * links carry only `{id, title}` (no type/size/updated facet), so those degrade to a
+ * neutral `notes` type + empty labels. The seeded subjects have no resources yet, so
+ * the tab renders its empty state. Collections have no BE source and stay empty.
+ */
 export const useQuerySubjectResourcesSwr = (subjectId: string) => {
+    const code = subjectId ? subjectId.toUpperCase() : ""
     const { data, isLoading, error, mutate } = useSWR(
-        ["subject-resources", subjectId],
-        () => fetchResourcesMock(),
+        code ? (["subject-resources", code] as const) : null,
+        async (): Promise<{
+            resources: Array<SubjectResource>
+            collections: Array<SubjectCollection>
+        }> => {
+            const ws = await getSubjectWorkspace(code)
+            const links = ws.resources.data?.links ?? []
+            return {
+                resources: links.map((link) => ({
+                    id: link.id,
+                    title: link.title,
+                    type: "notes" as const,
+                    sizeLabel: "",
+                    updatedLabel: "",
+                })),
+                collections: [],
+            }
+        },
     )
     return {
         resources: data?.resources ?? [],

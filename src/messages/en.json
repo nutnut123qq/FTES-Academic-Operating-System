@@ -4562,7 +4562,9 @@
                 "completion": "Completion rate",
                 "active": "Active",
                 "resources": "Resources",
-                "avgScore": "Avg score"
+                "avgScore": "Avg score",
+                "members": "Members",
+                "posts": "Posts"
             },
             "loadError": "Couldn't load statistics.",
             "retry": "Try again"

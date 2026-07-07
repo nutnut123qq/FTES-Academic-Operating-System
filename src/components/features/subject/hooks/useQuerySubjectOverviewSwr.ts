@@ -1,6 +1,7 @@
 "use client"
 
 import useSWR from "swr"
+import { getSubjectWorkspace } from "@/modules/api/rest/subject/subject"
 
 /** Headline counts for the subject-workspace join banner. */
 export interface OverviewStats {
@@ -61,65 +62,57 @@ export interface SubjectOverview {
     activeOverflow: number
 }
 
-// ponytail: mock BE — no subject-overview endpoint yet. One curated payload feeding the
-// hub (join banner + feed + resource/challenge/member shortcuts). Swap for a real
-// GraphQL query (subjectOverview(subjectId)) when the contract lands; shape stays.
-const fetchOverviewMock = async (): Promise<SubjectOverview> => ({
-    stats: { members: 342, moderators: 3, resources: 128 },
-    pinnedPost: {
-        id: "p0",
-        author: "Moderator",
-        authorUsername: "moderator" /* mock */,
-        timeLabel: "hôm nay",
-        title: "Đề ôn giữa kỳ + lời giải đã lên",
-        snippet: "Tải ở mục Tài liệu, làm thử ở Challenge tuần này.",
-        reactions: 42,
-        comments: 6,
-    },
-    posts: [
-        {
-            id: "p1",
-            author: "Hùng",
-            authorUsername: "hung-pham" /* mock */,
-            timeLabel: "2 giờ trước",
-            title: "Cây AVL xoay kép mọi người giải sao?",
-            snippet: "Mình rối phần cân bằng sau khi chèn, ai giải thích giúp với.",
-            reactions: 12,
-            comments: 8,
-        },
-        {
-            id: "p2",
-            author: "Lan",
-            authorUsername: "lan-tran" /* mock */,
-            timeLabel: "hôm qua",
-            title: "Chia sẻ note Big-O ôn thi",
-            snippet: "Tổng hợp độ phức tạp các thuật toán sắp xếp, có ví dụ.",
-            reactions: 20,
-            comments: 3,
-        },
-    ],
-    newResources: [
-        { id: "r1", title: "Slide chương 4 — Cây", type: "slide" },
-        { id: "r2", title: "Bài giải BST.c", type: "source" },
-        { id: "r3", title: "Note ôn tập giữa kỳ", type: "notes" },
-    ],
-    challenges: [
-        { id: "c1", title: "Sắp xếp trộn", difficulty: "medium" },
-        { id: "c2", title: "Duyệt cây nhị phân", difficulty: "hard" },
-    ],
-    activeMembers: [
-        { id: "m1", username: "hung-pham" /* mock */, name: "Hùng" },
-        { id: "m2", username: "lan-tran" /* mock */, name: "Lan" },
-        { id: "m3", username: "minh-le" /* mock */, name: "Minh" },
-    ],
-    activeOverflow: 9,
-})
+/**
+ * Builds the overview from the real BE workspace aggregate
+ * (`GET /api/v1/subjects/{code}/workspace`). Only figures the BE can honestly back
+ * are surfaced: member/moderator counts (from the `members` tab) and the resource
+ * count (from the `resources` tab). The community feed lives in a separate module
+ * (not in the subject workspace payload), so `posts`/`pinnedPost`/`activeMembers`
+ * degrade to empty — the hub renders its heading rows with no fabricated content.
+ * Resource/challenge shortcut rows are mapped straight from the (empty today)
+ * workspace link lists.
+ */
+const fetchOverview = async (code: string): Promise<SubjectOverview> => {
+    const ws = await getSubjectWorkspace(code)
+    const members = ws.members.data
+    const resources = ws.resources.data
+    const practice = ws.practice.data
 
-/** Loads the subject-workspace overview. Mocked; SWR-shaped for a drop-in BE swap. */
+    const resourceCount = resources
+        ? Object.values(resources.categoryCounts).reduce((sum, n) => sum + n, 0)
+        : 0
+
+    return {
+        stats: {
+            members: members?.totalActive ?? 0,
+            moderators: members?.countsByRole?.MODERATOR ?? 0,
+            resources: resourceCount,
+        },
+        pinnedPost: null,
+        posts: [],
+        newResources: (resources?.links ?? []).map((link) => ({
+            id: link.id,
+            title: link.title,
+            // the workspace link carries no resource-type facet → default label
+            type: "notes" as const,
+        })),
+        challenges: (practice?.links ?? []).map((link) => ({
+            id: link.id,
+            title: link.title,
+            // the workspace link carries no difficulty facet → default label
+            difficulty: "medium" as const,
+        })),
+        activeMembers: [],
+        activeOverflow: 0,
+    }
+}
+
+/** Loads the subject-workspace overview from the real BE workspace aggregate. */
 export const useQuerySubjectOverviewSwr = (subjectId: string) => {
+    const code = subjectId ? subjectId.toUpperCase() : ""
     const { data, isLoading, error, mutate } = useSWR(
-        ["subject-overview", subjectId],
-        () => fetchOverviewMock(),
+        code ? (["subject-overview", code] as const) : null,
+        () => fetchOverview(code),
     )
     return { overview: data, isLoading, error, mutate }
 }

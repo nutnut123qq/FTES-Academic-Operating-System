@@ -98,25 +98,27 @@ const CareerView = ({
                 <SkillGraph subjectId={subjectId} heightClassName="h-[400px]" />
             </div>
 
-            {/* suggested next subject */}
-            <div className="flex flex-col gap-3 border-t border-separator pt-6">
-                <Typography type="h6" weight="bold">
-                    {t("career.nextSubject")}
-                </Typography>
-                <div className="flex items-center gap-3 rounded-2xl border border-separator p-4">
-                    <div className="flex size-11 shrink-0 items-center justify-center rounded-large bg-accent/10 text-sm font-bold text-accent">
-                        {career.nextSubject.code.slice(0, 3).toUpperCase()}
-                    </div>
-                    <div className="min-w-0">
-                        <Typography type="body-sm" weight="medium" truncate>
-                            {career.nextSubject.code} · {career.nextSubject.name}
-                        </Typography>
-                        <Typography type="body-xs" color="muted">
-                            {t("career.nextSubjectHint")}
-                        </Typography>
+            {/* suggested next subject — hidden when the BE lists none */}
+            {career.nextSubject ? (
+                <div className="flex flex-col gap-3 border-t border-separator pt-6">
+                    <Typography type="h6" weight="bold">
+                        {t("career.nextSubject")}
+                    </Typography>
+                    <div className="flex items-center gap-3 rounded-2xl border border-separator p-4">
+                        <div className="flex size-11 shrink-0 items-center justify-center rounded-large bg-accent/10 text-sm font-bold text-accent">
+                            {career.nextSubject.code.slice(0, 3).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                            <Typography type="body-sm" weight="medium" truncate>
+                                {career.nextSubject.code} · {career.nextSubject.name}
+                            </Typography>
+                            <Typography type="body-xs" color="muted">
+                                {t("career.nextSubjectHint")}
+                            </Typography>
+                        </div>
                     </div>
                 </div>
-            </div>
+            ) : null}
         </div>
     )
 }

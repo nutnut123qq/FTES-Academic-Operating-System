@@ -149,7 +149,7 @@ export const SubjectWorkspaceShell = ({ subjectId, children }: SubjectWorkspaceS
                                     ? `${t("credits", { count: subject.credits })} · ${t(`difficulty.${subject.difficulty}`)}`
                                     : ""}
                             </Typography>
-                            {subject ? (
+                            {subject && subject.progress !== null ? (
                                 <div className="mt-1 flex items-center gap-2">
                                     <ProgressMeter
                                         value={subject.progress}

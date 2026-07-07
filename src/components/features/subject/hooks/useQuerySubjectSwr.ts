@@ -1,81 +1,111 @@
 "use client"
 
 import useSWR from "swr"
+import { getSubjectDetail } from "@/modules/api/rest/subject/subject"
+import type { SubjectDetail, SubjectSummary } from "@/modules/api/rest/subject/types"
 
-/** A subject workspace's identity + progress (mock shape until the BE contract lands). */
+/** A subject workspace's identity, mapped from the real BE subject module. */
 export interface Subject {
-    /** Opaque id from the route (`[subjectId]`). */
+    /**
+     * Route id (`[subjectId]`). The BE keys detail/workspace on the **course code**
+     * (uuid → 404), so the id carried by every card + link is the code (`PRF192`).
+     */
     id: string
     /** Course code shown as the mark, e.g. `PRF192`. */
     code: string
-    /** Human name, e.g. "Lập trình C". */
+    /** Human name — prefers the Vietnamese title (`nameVi`) for the VN UI. */
     name: string
     /** Credit count. */
     credits: number
-    /** Difficulty label key suffix (`basic` | `intermediate` | `advanced`). */
+    /** FE difficulty facet, bucketed from the BE `Difficulty` enum. */
     difficulty: "basic" | "intermediate" | "advanced"
-    /** Lecturer display name. */
-    lecturer: string
-    /** Completion percent 0..100. */
-    progress: number
     /**
-     * Cover/identity image path (local `/subjects/<code>.png` while mocked) or
-     * `null` when the subject has no artwork — required-nullable so every row
-     * (and the future BE mapper) makes an explicit decision. `null` (or a load
-     * failure) falls back to the code-initials badge.
+     * Completion percent 0..100, or `null` when no per-user progress is available.
+     * The public catalog/detail endpoints carry no per-viewer completion (that lives
+     * on the auth-scoped `subjectMastery` GraphQL op), so this is `null` today and the
+     * header progress meter is hidden rather than showing a fabricated figure.
+     */
+    progress: number | null
+    /**
+     * Cover/identity image, or `null` when the subject has no artwork. Every seeded
+     * subject has `thumbnailUrl: null` today, so this exercises the initials-badge
+     * fallback. Wire the host into `next.config` `images.remotePatterns` if the BE
+     * ever serves remote thumbnails.
      */
     imageUrl: string | null
     /**
-     * Optional per-subject accent color (CSS color string). Carried in the type
-     * + mock only for now — no themed rendering yet (future badge/skeleton tint).
-     */
-    accentColor?: string
-    /**
-     * Ids of the Course-module courses linked to this subject (link-out only —
-     * the workspace never embeds course content). ponytail: mock BE — rides the
-     * real subject query when the contract lands; the hook API stays.
+     * Ids of Course-module courses linked to this subject (link-out only). The BE
+     * subject detail carries no course links (they live on the workspace `learning`
+     * tab, empty today), so this is `[]` and the Overview link-out card stays hidden.
      */
     courseIds: Array<string>
     /**
-     * Whether the viewer is a member of this workspace (enrolled in the subject).
-     * Gates the AI tools (enroll/join axis — never a separate VIP product). ponytail:
-     * mock BE — real BE resolves this from the enrollment of (user, subject). The
-     * `swp391` subject is deterministically NON-member so the locked hub state stays
-     * reachable in the mock; every other subject is a member.
+     * Whether the viewer is a member of this workspace. The public detail endpoint
+     * carries no caller membership (the workspace `callerMembership` is `null` for a
+     * non-member), so this is `false` — the AI hub renders its honest locked state.
      */
     isMember: boolean
 }
 
-// ponytail: mock BE — the FE has no subject endpoint yet. Returns a deterministic
-// subject derived from the id so the shell renders. Wire a real GraphQL query
-// (useQuerySubjectSwr -> subjects(id)) when the contract exists; the hook API stays.
-// `courseIds` is deterministic too: `swp391` maps to no course so the Overview
-// card's absent state stays reachable; every other subject links `<id>-course`.
-// `imageUrl` is deterministic from the id (`/subjects/<id-lowercase>.png`);
-// `net1704` stays null (mirrors the list mock) so the fallback path is exercised.
-const fetchSubjectMock = async (id: string): Promise<Subject> => ({
-    id,
-    code: id.toUpperCase(),
-    name: "Lập trình C",
-    credits: 3,
-    difficulty: "basic",
-    lecturer: "Lê Minh Quân",
-    progress: 62,
-    imageUrl: id === "net1704" ? null : `/subjects/${id.toLowerCase()}.png`,
-    courseIds: id === "swp391" ? [] : [`${id}-course`],
-    isMember: id !== "swp391",
+/** Maps the BE `Difficulty` enum (EASY|MEDIUM|HARD|VERY_HARD) to the FE 3-bucket facet. */
+export const mapSubjectDifficulty = (
+    be: string | null | undefined,
+): Subject["difficulty"] => {
+    switch (be) {
+        case "EASY":
+            return "basic"
+        case "MEDIUM":
+            return "intermediate"
+        case "HARD":
+        case "VERY_HARD":
+            return "advanced"
+        default:
+            return "intermediate"
+    }
+}
+
+/** Maps a catalog summary row (`GET /subjects`) to the FE {@link Subject}. */
+export const toSubjectFromSummary = (summary: SubjectSummary): Subject => ({
+    id: summary.code,
+    code: summary.code,
+    name: summary.nameVi || summary.name,
+    credits: summary.credits,
+    difficulty: mapSubjectDifficulty(summary.difficulty),
+    progress: null,
+    imageUrl: summary.thumbnailUrl || null,
+    courseIds: [],
+    isMember: false,
+})
+
+/** Maps the full detail (`GET /subjects/{code}`) to the FE {@link Subject}. */
+export const toSubjectFromDetail = (detail: SubjectDetail): Subject => ({
+    id: detail.code,
+    code: detail.code,
+    name: detail.nameVi || detail.name,
+    credits: detail.credits,
+    difficulty: mapSubjectDifficulty(detail.difficulty),
+    progress: null,
+    imageUrl: detail.thumbnailUrl || null,
+    courseIds: [],
+    isMember: false,
 })
 
 /**
- * Loads the subject for a workspace. Mocked for now (see note above) but shaped
- * like the real SWR query hooks so callers don't change when the BE lands.
+ * Loads the subject for a workspace from the real BE (`GET /subjects/{code}`).
+ * The BE keys on the uppercase course code, so the route segment is normalised
+ * before the fetch.
  *
- * @param subjectId - the `[subjectId]` route segment.
+ * @param subjectId - the `[subjectId]` route segment (a subject code).
  */
 export const useQuerySubjectSwr = (subjectId: string) => {
+    const code = subjectId ? subjectId.toUpperCase() : ""
     const { data, isLoading, error } = useSWR(
-        ["subject", subjectId],
-        () => fetchSubjectMock(subjectId),
+        code ? (["subject", code] as const) : null,
+        () => getSubjectDetail(code),
     )
-    return { subject: data, isLoading, error }
+    return {
+        subject: data ? toSubjectFromDetail(data) : undefined,
+        isLoading,
+        error,
+    }
 }

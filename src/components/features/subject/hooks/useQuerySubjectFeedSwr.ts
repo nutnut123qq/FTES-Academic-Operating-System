@@ -5,7 +5,7 @@ import useSWR from "swr"
 /** Feed filter scope. */
 export type FeedScope = "forYou" | "following" | "trending"
 
-/** A subject community post (mock until BE lands). */
+/** A subject community post. */
 export interface SubjectPost {
     id: string
     /** Display name of the author. */
@@ -29,23 +29,20 @@ export const subjectFeedKey = (subjectId: string, scope: FeedScope) => [
     scope,
 ]
 
-// ponytail: mock BE — no community endpoint yet. Deterministic sample; the scope
-// arg is accepted so the real query is a drop-in.
-const fetchFeedMock = async (scope: FeedScope): Promise<Array<SubjectPost>> => {
-    const base: Array<SubjectPost> = [
-        { id: "p1", author: "Minh Trần", authorUsername: "minh-tran" /* mock */, timeLabel: "2 giờ trước", title: "Mẹo debug con trỏ trong C", snippet: "Chia sẻ vài cách mình hay dùng khi bị segfault…", reactions: 12, liked: false, comments: 4 },
-        { id: "p2", author: "An Nguyễn", authorUsername: "an-nguyen" /* mock */, timeLabel: "hôm qua", title: "Hỏi về đề PE tuần này", snippet: "Có ai làm câu 3 phần mảng 2 chiều chưa nhỉ?", reactions: 5, liked: false, comments: 2 },
-        { id: "p3", author: "Hoa Lê", authorUsername: "hoa-le" /* mock */, timeLabel: "3 ngày trước", title: "Tổng hợp tài liệu ôn cuối kỳ", snippet: "Mình gom slide + đề mẫu vào một chỗ cho tiện…", reactions: 34, liked: true, comments: 9 },
-    ]
-    if (scope === "trending") return [...base].sort((a, b) => b.reactions - a.reactions)
-    return base
-}
-
-/** Loads a subject's community feed for a scope. Mocked; SWR-shaped for a drop-in BE swap. */
+/**
+ * Loads a subject's community feed for a scope.
+ *
+ * The subject **workspace** aggregate only exposes a community `feedRef`/`endpoint`
+ * pointer (`/api/v1/community/feed?subjectId=…`) — the posts themselves are owned by
+ * the separate community module, which this subject vertical does not wire. Rather
+ * than fabricate posts, the feed returns empty and the tab renders its honest empty
+ * state until the community feed is integrated. Shape is unchanged so the like +
+ * comment interactions remain a drop-in once the real feed lands.
+ */
 export const useQuerySubjectFeedSwr = (subjectId: string, scope: FeedScope) => {
     const { data, isLoading, error, mutate } = useSWR(
         subjectFeedKey(subjectId, scope),
-        () => fetchFeedMock(scope),
+        async (): Promise<Array<SubjectPost>> => [],
     )
     return { posts: data ?? [], isLoading, error, mutate }
 }

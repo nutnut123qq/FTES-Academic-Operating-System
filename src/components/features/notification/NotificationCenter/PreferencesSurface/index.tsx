@@ -2,7 +2,7 @@
 
 import React, { useMemo } from "react"
 import { BellSlashIcon, DeviceMobileIcon } from "@phosphor-icons/react"
-import { Spinner, Switch } from "@heroui/react"
+import { Spinner, Switch, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import type { NotificationType } from "@/modules/api/graphql/queries/types/notifications"
 import type { QueryNotificationPreferencesData } from "@/modules/api/graphql/queries/types/notification-preferences"
@@ -75,16 +75,16 @@ export const PreferencesSurface = () => {
             className="flex flex-col gap-3 rounded-2xl border border-separator p-4"
         >
             <div className="flex flex-col gap-0">
-                <span className="text-sm font-semibold text-foreground">
+                <Typography type="body-sm" weight="semibold">
                     {t("notifications.preferences.title")}
-                </span>
-                <span className="text-xs text-muted">
+                </Typography>
+                <Typography type="body-xs" color="muted">
                     {t("notifications.preferences.subtitle")}
-                </span>
+                </Typography>
             </div>
 
             {/* master mute-all switch */}
-            <div className="flex items-center justify-between gap-3 rounded-2xl bg-default/40 p-3">
+            <div className="flex items-center justify-between gap-3 rounded-large bg-default/40 p-3">
                 <div className="flex items-center gap-3">
                     <BellSlashIcon
                         className="size-5 text-muted"
@@ -92,12 +92,12 @@ export const PreferencesSurface = () => {
                         focusable="false"
                     />
                     <div className="flex flex-col gap-0">
-                        <span className="text-sm font-medium text-foreground">
+                        <Typography type="body-sm" weight="medium">
                             {t("notifications.preferences.muteAll")}
-                        </span>
-                        <span className="text-xs text-muted">
+                        </Typography>
+                        <Typography type="body-xs" color="muted">
                             {t("notifications.preferences.muteAllHint")}
-                        </span>
+                        </Typography>
                     </div>
                 </div>
                 <Switch
@@ -113,7 +113,7 @@ export const PreferencesSurface = () => {
             </div>
 
             {/* per-type toggles */}
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-0">
                 {NOTIFICATION_TYPES.map((type) => {
                     const Icon = NOTIFICATION_TYPE_ICON[type]
                     const enabled = !mutedSet.has(type)
@@ -121,7 +121,7 @@ export const PreferencesSurface = () => {
                     return (
                         <div
                             key={type}
-                            className="flex items-center justify-between gap-3 py-1.5"
+                            className="flex items-center justify-between gap-3 py-2"
                         >
                             <div className="flex items-center gap-3">
                                 <Icon
@@ -129,7 +129,7 @@ export const PreferencesSurface = () => {
                                     aria-hidden
                                     focusable="false"
                                 />
-                                <span className="text-sm text-foreground">{label}</span>
+                                <Typography type="body-sm">{label}</Typography>
                             </div>
                             <Switch
                                 isSelected={enabled}
@@ -155,12 +155,12 @@ export const PreferencesSurface = () => {
                         focusable="false"
                     />
                     <div className="flex flex-col gap-0">
-                        <span className="text-sm font-medium text-foreground">
+                        <Typography type="body-sm" weight="medium">
                             {t("notifications.preferences.browserPush")}
-                        </span>
-                        <span className="text-xs text-muted">
+                        </Typography>
+                        <Typography type="body-xs" color="muted">
                             {t("notifications.preferences.browserPushComingSoon")}
-                        </span>
+                        </Typography>
                     </div>
                 </div>
                 <Switch

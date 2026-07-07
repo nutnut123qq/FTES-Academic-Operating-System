@@ -1,26 +1,40 @@
 "use client"
 
 import useSWR from "swr"
+import {
+    getCareerOpportunities,
+    getCareerRoadmaps,
+    getCareerSkills,
+    getMyCareerSkills,
+    type CareerOpportunity,
+    type CareerRoadmap as CareerRoadmapDto,
+    type CareerSkillGraph,
+    type CareerSkillProgress,
+} from "@/modules/api/rest/career"
 
-/** A skill node in the graph, with the student's mock mastery %. */
+/** A skill node in the graph, with the student's mastery % derived from the BE level. */
 export interface CareerSkill {
     id: string
     name: string
     progress: number
 }
 
-/** A career roadmap track; `key` maps to a localized label + icon. */
+/**
+ * A published career roadmap (track). `track` picks the icon; `title` is the BE label.
+ */
 export interface CareerRoadmap {
     id: string
-    key: "backend" | "frontend" | "mobile" | "ai" | "data" | "devops"
+    slug: string
+    title: string
+    track: string
 }
 
-/** A job opening surfaced by the Career Center. */
+/** A career opportunity surfaced by the Career Center. `type` is the raw BE enum. */
 export interface CareerJob {
     id: string
     title: string
     company: string
-    type: "internship" | "fulltime"
+    type: string
 }
 
 export interface CareerCenterData {
@@ -29,38 +43,92 @@ export interface CareerCenterData {
     jobs: Array<CareerJob>
 }
 
-// ponytail: mock BE — no career endpoint yet. Deterministic sample so the shell is
-// deterministic. Wire a real GraphQL query (careerCenter()) when the contract lands;
-// the hook API (return shape) stays, only the fetcher swaps.
-const fetchCareerMock = async (): Promise<CareerCenterData> => ({
-    skills: [
-        { id: "js", name: "JavaScript / TypeScript", progress: 72 },
-        { id: "react", name: "React", progress: 58 },
-        { id: "node", name: "Node.js", progress: 44 },
-        { id: "sql", name: "SQL & Databases", progress: 63 },
-        { id: "algo", name: "Data Structures & Algorithms", progress: 51 },
-        { id: "git", name: "Git & CI/CD", progress: 39 },
-    ],
-    roadmaps: [
-        { id: "rm-backend", key: "backend" },
-        { id: "rm-frontend", key: "frontend" },
-        { id: "rm-mobile", key: "mobile" },
-        { id: "rm-ai", key: "ai" },
-        { id: "rm-data", key: "data" },
-        { id: "rm-devops", key: "devops" },
-    ],
-    jobs: [
-        { id: "job-1", title: "Frontend Developer", company: "FPT Software", type: "fulltime" },
-        { id: "job-2", title: "Backend Intern", company: "VNG", type: "internship" },
-        { id: "job-3", title: "Mobile Developer (Flutter)", company: "MoMo", type: "fulltime" },
-        { id: "job-4", title: "Data Analyst Intern", company: "Tiki", type: "internship" },
-        { id: "job-5", title: "DevOps Engineer", company: "Shopee", type: "fulltime" },
-    ],
+/**
+ * Parses the skill's `levels` jsonb (`[{level, name, threshold}, …]`) and returns the
+ * highest defined level, so a student `level` can be expressed as a percentage of mastery.
+ * Falls back to 5 (the BE mentor-assessment ceiling) when the column is empty/unparseable.
+ */
+const parseMaxLevel = (levelsJson: string | undefined): number => {
+    if (!levelsJson) return 5
+    try {
+        const levels = JSON.parse(levelsJson) as Array<{ level?: number }>
+        const max = Math.max(...levels.map((l) => Number(l.level ?? 0)))
+        return Number.isFinite(max) && max > 0 ? max : 5
+    } catch {
+        return 5
+    }
+}
+
+/** Maps a BE skill-progress row + the skill graph to the section's `{id, name, progress}`. */
+const toSkill = (
+    progress: CareerSkillProgress,
+    graph: CareerSkillGraph | null,
+): CareerSkill => {
+    const skill = graph?.skills.find((s) => s.id === progress.skillId)
+    const maxLevel = parseMaxLevel(skill?.levels)
+    const pct = Math.round((Number(progress.level) / maxLevel) * 100)
+    return {
+        id: progress.skillId,
+        // Degrade to the id when the graph lacks the skill — never fabricate a name.
+        name: skill?.name ?? progress.skillId,
+        progress: Math.min(100, Math.max(0, Number.isFinite(pct) ? pct : 0)),
+    }
+}
+
+const toRoadmap = (roadmap: CareerRoadmapDto): CareerRoadmap => ({
+    id: roadmap.id,
+    slug: roadmap.slug,
+    title: roadmap.title,
+    track: roadmap.track ?? "",
 })
 
-/** Loads the Career Center (§21). Mocked; SWR-shaped for a drop-in BE swap. */
+const toJob = (opportunity: CareerOpportunity): CareerJob => ({
+    id: opportunity.id,
+    title: opportunity.title,
+    company: opportunity.company ?? "",
+    type: opportunity.type,
+})
+
+/**
+ * Loads the Career Center (§21) from the real backend REST API.
+ *
+ * Each section is fetched independently and degraded to an empty list on failure, so a
+ * blocked/empty section never breaks the others:
+ * - roadmaps  → `GET /career/roadmaps` (public, published tracks)
+ * - jobs      → `GET /career/opportunities?status=OPEN` (public)
+ * - skills    → `GET /career/me/skills` joined with `GET /career/skills` (skill names).
+ *   The `me/*` endpoints currently 403 backend-side (`CareerAccess.currentUserId` cannot
+ *   resolve the platform principal to a `users.id`), so the skill graph section renders its
+ *   graceful empty-state until that BE auth gap is fixed — the mapping is already in place.
+ */
+const fetchCareerCenter = async (): Promise<CareerCenterData> => {
+    const [roadmapsResult, jobsResult, skillsResult, graphResult] =
+        await Promise.allSettled([
+            getCareerRoadmaps(),
+            getCareerOpportunities({ status: "OPEN" }),
+            getMyCareerSkills(),
+            getCareerSkills(),
+        ])
+
+    const roadmaps =
+        roadmapsResult.status === "fulfilled"
+            ? roadmapsResult.value.map(toRoadmap)
+            : []
+    const jobs =
+        jobsResult.status === "fulfilled" ? jobsResult.value.map(toJob) : []
+    const progress =
+        skillsResult.status === "fulfilled" ? skillsResult.value : []
+    const graph = graphResult.status === "fulfilled" ? graphResult.value : null
+    const skills = progress.map((p) => toSkill(p, graph))
+
+    return { skills, roadmaps, jobs }
+}
+
+/** Loads the Career Center (§21) from the backend REST API, SWR-shaped. */
 export const useQueryCareerSwr = () => {
-    const { data, isLoading, error, mutate } = useSWR(["career"], () => fetchCareerMock())
+    const { data, isLoading, error, mutate } = useSWR(["career-center"], () =>
+        fetchCareerCenter(),
+    )
     return {
         skills: data?.skills ?? [],
         roadmaps: data?.roadmaps ?? [],

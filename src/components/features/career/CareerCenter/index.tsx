@@ -5,6 +5,7 @@ import { Button, Chip, Skeleton, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import {
     BracketsCurlyIcon,
+    BriefcaseIcon,
     BrowserIcon,
     CloudIcon,
     DeviceMobileIcon,
@@ -13,17 +14,28 @@ import {
 } from "@phosphor-icons/react"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { ProgressMeter } from "@/components/blocks/stats/ProgressMeter"
-import type { CareerRoadmap } from "../hooks/useQueryCareerSwr"
+import { useRestWithToast } from "@/modules/toast/hooks"
+import { usePostApplyCareerOpportunitySwr } from "@/hooks/swr/api/rest/mutations/usePostApplyCareerOpportunitySwr"
 import { useQueryCareerSwr } from "../hooks/useQueryCareerSwr"
 
-/** Icon per roadmap key — Phosphor `*Icon`, rendered in a bg-accent/10 tile. */
-const ROADMAP_ICON: Record<CareerRoadmap["key"], React.ComponentType<{ className?: string }>> = {
+/**
+ * Icon per roadmap track — Phosphor `*Icon`, rendered in a bg-accent/10 tile.
+ * Keyed by the lowercased BE `track`; unknown tracks fall back to a neutral icon.
+ */
+const ROADMAP_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
     backend: BracketsCurlyIcon,
     frontend: BrowserIcon,
     mobile: DeviceMobileIcon,
     ai: RobotIcon,
     data: ChartLineIcon,
     devops: CloudIcon,
+}
+
+/** Maps a BE opportunity `type` to a `jobTypes.*` i18n key (fallback: full-time). */
+const JOB_TYPE_KEY: Record<string, "internship" | "fulltime"> = {
+    INTERNSHIP: "internship",
+    JOB: "fulltime",
+    PORTFOLIO_REVIEW: "fulltime",
 }
 
 /** Loading skeleton — mirrors the labelled skill status bars (label row + bar). */
@@ -83,6 +95,20 @@ const JobsSkeleton = () => (
 export const CareerCenter = () => {
     const t = useTranslations("careerCenter")
     const { skills, roadmaps, jobs, isLoading, error, mutate } = useQueryCareerSwr()
+    const runRest = useRestWithToast()
+    const { trigger: applyToJob, isMutating: isApplying } =
+        usePostApplyCareerOpportunitySwr()
+    const [applyingId, setApplyingId] = React.useState<string | null>(null)
+
+    /** Apply to an opportunity via `POST /career/opportunities/{id}/apply` (toasted). */
+    const onApply = React.useCallback(
+        async (id: string) => {
+            setApplyingId(id)
+            await runRest(() => applyToJob({ id, request: {} }))
+            setApplyingId(null)
+        },
+        [runRest, applyToJob],
+    )
 
     return (
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-6">
@@ -145,7 +171,8 @@ export const CareerCenter = () => {
                 >
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                         {roadmaps.map((roadmap) => {
-                            const Icon = ROADMAP_ICON[roadmap.key]
+                            const Icon =
+                                ROADMAP_ICON[roadmap.track.toLowerCase()] ?? BriefcaseIcon
                             return (
                                 <div
                                     key={roadmap.id}
@@ -159,7 +186,7 @@ export const CareerCenter = () => {
                                             <Icon className="size-5" />
                                         </div>
                                         <Typography type="body-sm" weight="medium" className="min-w-0" truncate>
-                                            {t(`roadmapKeys.${roadmap.key}`)}
+                                            {roadmap.title}
                                         </Typography>
                                     </div>
                                     <Button size="sm" variant="ghost">
@@ -199,14 +226,22 @@ export const CareerCenter = () => {
                                     <Typography type="body-sm" weight="medium" truncate>
                                         {job.title}
                                     </Typography>
-                                    <Typography type="body-xs" color="muted" className="truncate">
-                                        {job.company}
-                                    </Typography>
+                                    {job.company ? (
+                                        <Typography type="body-xs" color="muted" className="truncate">
+                                            {job.company}
+                                        </Typography>
+                                    ) : null}
                                 </div>
                                 <Chip size="sm" variant="soft" color="accent">
-                                    {t(`jobTypes.${job.type}`)}
+                                    {t(`jobTypes.${JOB_TYPE_KEY[job.type] ?? "fulltime"}`)}
                                 </Chip>
-                                <Button size="sm" variant="secondary">
+                                <Button
+                                    size="sm"
+                                    variant="secondary"
+                                    isPending={isApplying && applyingId === job.id}
+                                    isDisabled={isApplying}
+                                    onPress={() => void onApply(job.id)}
+                                >
                                     {t("apply")}
                                 </Button>
                             </div>

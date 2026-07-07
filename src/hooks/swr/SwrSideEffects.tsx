@@ -1,7 +1,6 @@
 "use client"
 
 import {
-    useAutocompleteGlobalSearchSwr,
     useQueryChallengeSubmissionsSwr,
     useQueryChallengeSwr,
     useQueryContentsSwr,
@@ -37,6 +36,5 @@ export const SwrSideEffects = () => {
     useQueryContentsSwr()
     useQueryLessonVideoSwr()
     useQueryIncompleteJobsSwr()
-    useAutocompleteGlobalSearchSwr()
     return null
 }

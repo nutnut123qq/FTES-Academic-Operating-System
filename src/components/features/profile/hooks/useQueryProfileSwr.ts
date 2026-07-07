@@ -29,6 +29,6 @@ const fetchProfileMock = async (): Promise<Profile> => ({
 
 /** Loads the viewer's profile. Mocked; SWR-shaped for a drop-in BE swap. */
 export const useQueryProfileSwr = () => {
-    const { data, isLoading, error } = useSWR(["profile", "me"], () => fetchProfileMock())
-    return { profile: data, isLoading, error }
+    const { data, isLoading, error, mutate } = useSWR(["profile", "me"], () => fetchProfileMock())
+    return { profile: data, isLoading, error, mutate }
 }

@@ -22,6 +22,6 @@ const fetchAcademicMock = async (): Promise<ProfileAcademic> => ({
 
 /** Loads the viewer's academic info. Mocked; SWR-shaped for a drop-in BE swap. */
 export const useQueryProfileAcademicSwr = () => {
-    const { data, isLoading, error } = useSWR(["profile-academic", "me"], () => fetchAcademicMock())
-    return { academic: data, isLoading, error }
+    const { data, isLoading, error, mutate } = useSWR(["profile-academic", "me"], () => fetchAcademicMock())
+    return { academic: data, isLoading, error, mutate }
 }

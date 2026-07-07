@@ -58,7 +58,7 @@ export const ProfileShell = ({ children }: ProfileShellProps) => {
     const t = useTranslations()
     const router = useRouter()
     const pathname = usePathname()
-    const { profile, isLoading, error } = useQueryProfileSwr()
+    const { profile, isLoading, error, mutate } = useQueryProfileSwr()
     const { data: gamification } = useQueryMyGamificationSwr()
 
     const base = "/profile"
@@ -78,9 +78,7 @@ export const ProfileShell = ({ children }: ProfileShellProps) => {
                     error={!profile ? error : undefined}
                     errorContent={{
                         title: t("profile.loadingError"),
-                        onRetry: () => {
-                            void router.refresh()
-                        },
+                        onRetry: () => void mutate(),
                         retryLabel: t("profile.retry"),
                     }}
                 >
@@ -97,12 +95,7 @@ export const ProfileShell = ({ children }: ProfileShellProps) => {
                                     <div className="h-32 w-full rounded-2xl bg-gradient-to-tr from-accent/20 to-success/20" />
                                 )}
                                 <div className="relative -mt-10 flex justify-center">
-                                    <div
-                                        className="rounded-full p-[3px]"
-                                        style={{
-                                            background: "linear-gradient(to top right, var(--accent), var(--success))",
-                                        }}
-                                    >
+                                    <div className="rounded-full bg-gradient-to-tr from-accent to-success p-0.5">
                                         <Avatar className="size-20 rounded-full border-2 border-background md:size-24">
                                             {profile.avatarUrl ? (
                                                 <AvatarImage src={profile.avatarUrl} alt={profile.name} />

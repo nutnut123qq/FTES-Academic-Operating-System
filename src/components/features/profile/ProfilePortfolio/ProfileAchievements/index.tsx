@@ -43,7 +43,7 @@ export const ProfileAchievements = ({ achievements, className }: ProfileAchievem
         <div className={`flex flex-col gap-6 ${className ?? ""}`}>
             {Array.from(grouped.entries()).map(([category, list]) => (
                 <section key={category} className="flex flex-col gap-3">
-                    <Typography type="body-xs" weight="medium" color="muted" className="uppercase">
+                    <Typography type="body-xs" weight="medium" color="muted">
                         {t(`profile.portfolio.achievements.categories.${category}`)}
                     </Typography>
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -55,7 +55,7 @@ export const ProfileAchievements = ({ achievements, className }: ProfileAchievem
                                     key={achievement.id}
                                     className="flex items-start gap-3 rounded-2xl border border-separator p-4"
                                 >
-                                    <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
+                                    <div className="flex size-10 shrink-0 items-center justify-center rounded-large bg-accent/10 text-accent">
                                         <Icon className="size-5" aria-hidden focusable="false" />
                                     </div>
                                     <div className="flex min-w-0 flex-1 flex-col gap-0">

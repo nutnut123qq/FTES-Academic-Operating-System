@@ -41,6 +41,6 @@ const fetchPersonalMock = async (): Promise<ProfilePersonalDetail> => ({
 
 /** Loads the viewer's personal detail. Mocked; SWR-shaped for a drop-in BE swap. */
 export const useQueryProfilePersonalSwr = () => {
-    const { data, isLoading, error } = useSWR(["profile-personal", "me"], () => fetchPersonalMock())
-    return { detail: data, isLoading, error }
+    const { data, isLoading, error, mutate } = useSWR(["profile-personal", "me"], () => fetchPersonalMock())
+    return { detail: data, isLoading, error, mutate }
 }

@@ -25,7 +25,7 @@ export const ProfileResumeCard = ({ resume, className }: ProfileResumeCardProps)
         <div
             className={`flex flex-col gap-3 rounded-2xl border border-separator p-4 sm:flex-row sm:items-center sm:gap-4 ${className ?? ""}`}
         >
-            <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-accent/10 text-accent">
+            <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent">
                 <FileTextIcon className="size-6" aria-hidden focusable="false" />
             </div>
             <div className="flex min-w-0 flex-1 flex-col gap-0">

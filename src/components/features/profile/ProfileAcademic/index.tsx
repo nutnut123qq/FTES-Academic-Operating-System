@@ -14,7 +14,6 @@ import { MetricCard } from "@/components/blocks/stats/MetricCard"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { EmptyContent } from "@/components/blocks/async/EmptyContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
-import { useRouter } from "@/i18n/navigation"
 import {
     useQueryProfileAcademicSwr,
     type ProfileAcademic as ProfileAcademicData,
@@ -52,8 +51,7 @@ const AcademicSkeleton = () => (
  */
 export const ProfileAcademic = () => {
     const t = useTranslations()
-    const router = useRouter()
-    const { academic, isLoading, error } = useQueryProfileAcademicSwr()
+    const { academic, isLoading, error, mutate } = useQueryProfileAcademicSwr()
 
     return (
         <AsyncContent
@@ -63,9 +61,7 @@ export const ProfileAcademic = () => {
             errorContent={{
                 title: t("profile.loadingError"),
                 retryLabel: t("profile.retry"),
-                onRetry: () => {
-                    void router.refresh()
-                },
+                onRetry: () => void mutate(),
             }}
         >
             {academic ? (

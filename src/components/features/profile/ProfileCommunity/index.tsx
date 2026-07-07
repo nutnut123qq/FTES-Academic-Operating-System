@@ -49,7 +49,7 @@ const CommunitySkeleton = () => (
 export const ProfileCommunity = () => {
     const t = useTranslations()
     const router = useRouter()
-    const { data, isLoading, error } = useQueryMyCommunitySummarySwr()
+    const { data, isLoading, error, mutate } = useQueryMyCommunitySummarySwr()
     const [relationTab, setRelationTab] = useState<RelationTab | null>(null)
 
     const relationList = relationTab ? (data?.[relationTab] ?? []) : []
@@ -62,9 +62,7 @@ export const ProfileCommunity = () => {
             errorContent={{
                 title: t("profile.loadingError"),
                 retryLabel: t("profile.retry"),
-                onRetry: () => {
-                    void router.refresh()
-                },
+                onRetry: () => void mutate(),
             }}
         >
             {data ? (
@@ -158,7 +156,7 @@ export const ProfileCommunity = () => {
                                     <Link
                                         key={post.id}
                                         href={`/community/${post.id}`}
-                                        className="group flex items-center gap-3 rounded-2xl border border-separator p-4 no-underline transition-colors hover:bg-surface-secondary"
+                                        className="group flex items-center gap-3 rounded-2xl border border-separator p-4 no-underline transition-colors hover:bg-default/40"
                                     >
                                         <Typography
                                             type="body-sm"

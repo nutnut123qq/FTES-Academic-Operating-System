@@ -14,7 +14,6 @@ import {
 import { ProfileAchievements } from "./ProfileAchievements"
 import { ProfileCertificates } from "./ProfileCertificates"
 import { ProfileResumeCard } from "./ProfileResumeCard"
-import { useRouter } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { EmptyContent } from "@/components/blocks/async/EmptyContent"
 import { LabeledCard } from "@/components/blocks/cards/LabeledCard"
@@ -230,8 +229,7 @@ const PortfolioSkeleton = () => (
  */
 export const ProfilePortfolio = () => {
     const t = useTranslations()
-    const router = useRouter()
-    const { data, isLoading, error } = useQueryMyPortfolioSwr()
+    const { data, isLoading, error, mutate } = useQueryMyPortfolioSwr()
 
     const [local, setLocal] = useState<MyPortfolio | null>(null)
     const portfolio = local ?? data
@@ -305,9 +303,7 @@ export const ProfilePortfolio = () => {
             errorContent={{
                 title: t("profile.loadingError"),
                 retryLabel: t("profile.retry"),
-                onRetry: () => {
-                    void router.refresh()
-                },
+                onRetry: () => void mutate(),
             }}
         >
             {portfolio ? (

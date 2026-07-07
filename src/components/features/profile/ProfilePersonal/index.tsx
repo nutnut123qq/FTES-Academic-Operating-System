@@ -3,7 +3,6 @@
 import React, { useMemo } from "react"
 import { Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
-import { useRouter } from "@/i18n/navigation"
 import {
     CaretRightIcon,
     EnvelopeIcon,
@@ -102,8 +101,7 @@ const PersonalSkeleton = () => (
  */
 export const ProfilePersonal = () => {
     const t = useTranslations()
-    const router = useRouter()
-    const { detail, isLoading, error } = useQueryProfilePersonalSwr()
+    const { detail, isLoading, error, mutate } = useQueryProfilePersonalSwr()
 
     const socials = useMemo(() => (detail?.socials ?? []).map(buildSocialMeta), [detail?.socials])
 
@@ -144,9 +142,7 @@ export const ProfilePersonal = () => {
             errorContent={{
                 title: t("profile.loadingError"),
                 retryLabel: t("profile.retry"),
-                onRetry: () => {
-                    void router.refresh()
-                },
+                onRetry: () => void mutate(),
             }}
         >
             {detail ? (
@@ -203,7 +199,7 @@ export const ProfilePersonal = () => {
                                             href={social.href}
                                             target="_blank"
                                             rel="noreferrer noopener"
-                                            className="group flex items-center gap-3 rounded-2xl border border-separator p-4 no-underline transition-colors hover:bg-surface-secondary"
+                                            className="group flex items-center gap-3 rounded-2xl border border-separator p-4 no-underline transition-colors hover:bg-default/40"
                                             aria-label={social.href}
                                         >
                                             <span className="text-muted">{social.icon}</span>

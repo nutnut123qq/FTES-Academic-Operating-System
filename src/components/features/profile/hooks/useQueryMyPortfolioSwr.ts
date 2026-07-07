@@ -149,6 +149,6 @@ const fetchMyPortfolioMock = async (): Promise<MyPortfolio> => ({
 
 /** Loads the viewer's portfolio seed. Mocked; SWR-shaped for a BE swap. */
 export const useQueryMyPortfolioSwr = () => {
-    const { data, isLoading, error } = useSWR(["my-portfolio"], () => fetchMyPortfolioMock())
-    return { data, isLoading, error }
+    const { data, isLoading, error, mutate } = useSWR(["my-portfolio"], () => fetchMyPortfolioMock())
+    return { data, isLoading, error, mutate }
 }

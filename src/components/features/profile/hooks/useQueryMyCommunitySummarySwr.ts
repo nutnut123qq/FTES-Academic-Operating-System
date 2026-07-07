@@ -105,6 +105,6 @@ const fetchMyCommunitySummaryMock = async (): Promise<MyCommunitySummary> => ({
 
 /** Loads the viewer's community summary. Mocked; SWR-shaped for a drop-in BE swap. */
 export const useQueryMyCommunitySummarySwr = () => {
-    const { data, isLoading, error } = useSWR(["my-community-summary"], () => fetchMyCommunitySummaryMock())
-    return { data, isLoading, error }
+    const { data, isLoading, error, mutate } = useSWR(["my-community-summary"], () => fetchMyCommunitySummaryMock())
+    return { data, isLoading, error, mutate }
 }

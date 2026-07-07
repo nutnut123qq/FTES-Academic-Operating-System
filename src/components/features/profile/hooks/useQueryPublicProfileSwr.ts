@@ -27,9 +27,9 @@ const fetchPublicProfileMock = async (username: string): Promise<PublicProfile> 
 
 /** Loads a public profile by username. Mocked; SWR-shaped for a drop-in BE swap. */
 export const useQueryPublicProfileSwr = (username: string) => {
-    const { data, isLoading, error } = useSWR(
+    const { data, isLoading, error, mutate } = useSWR(
         ["public-profile", username],
         () => fetchPublicProfileMock(username),
     )
-    return { profile: data, isLoading, error }
+    return { profile: data, isLoading, error, mutate }
 }

@@ -3097,7 +3097,12 @@
             "advanced": "Nâng cao"
         },
         "pointsCount": "{count} điểm",
-        "participantsCount": "{count} người tham gia"
+        "participantsCount": "{count} người tham gia",
+        "status": {
+            "PUBLISHED": "Đã xuất bản",
+            "RUNNING": "Đang diễn ra",
+            "CLOSED": "Đã đóng"
+        }
     },
     "gamification": {
         "title": "Bảng xếp hạng",

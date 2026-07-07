@@ -2,39 +2,63 @@
 
 import useSWR from "swr"
 
-/** A challenge in the catalog (§10). Mock shape until the BE contract lands. */
+import { listChallenges } from "@/modules/api/rest/challenges/challenges"
+import type { ChallengeView } from "@/modules/api/rest/challenges/types"
+
+/** Domain of a challenge (drives the icon + type chip). */
+export type ChallengeType = "coding" | "sql" | "uiux" | "ai" | "business"
+
+/**
+ * A challenge in the catalog (§10). Maps the BE `ChallengeView`
+ * (`GET /api/v1/challenges`). Fields the BE view does not carry (difficulty,
+ * points, participant count) are intentionally absent — the UI hides them
+ * rather than fabricate values.
+ */
 export interface Challenge {
-    /** Opaque id from the route (`[challengeId]`). */
+    /** Routing id — the BE `slug`. The detail endpoint keys on slug, NOT the uuid. */
     id: string
     /** Human title, e.g. "Two Sum". */
     title: string
     /** Domain of the challenge (drives the icon + type chip). */
-    type: "coding" | "sql" | "uiux" | "ai" | "business"
-    /** Difficulty label key suffix. */
-    difficulty: "basic" | "intermediate" | "advanced"
-    /** Points awarded on completion. */
-    points: number
-    /** How many learners have attempted it. */
-    participants: number
+    type: ChallengeType
+    /** Lifecycle status from the BE (`PUBLISHED` | `RUNNING` | `CLOSED`). */
+    status: string
 }
 
-// ponytail: mock BE — no challenges endpoint yet. Deterministic sample list, same
-// shape the catalog + solve view (`useQueryChallengeSwr`) share. Wire a real GraphQL
-// query (challenges()) when the contract lands; the hook API stays.
-export const CHALLENGES_MOCK: Array<Challenge> = [
-    { id: "two-sum", title: "Two Sum", type: "coding", difficulty: "basic", points: 100, participants: 1240 },
-    { id: "top-customers", title: "Top Khách Hàng Theo Doanh Thu", type: "sql", difficulty: "intermediate", points: 200, participants: 640 },
-    { id: "landing-redesign", title: "Thiết Kế Lại Landing Page", type: "uiux", difficulty: "intermediate", points: 250, participants: 312 },
-    { id: "checkout-form", title: "Thiết Kế Form Thanh Toán", type: "uiux", difficulty: "advanced", points: 300, participants: 148 },
-    { id: "prompt-tuning", title: "Tối Ưu Prompt Cho Chatbot", type: "ai", difficulty: "advanced", points: 400, participants: 187 },
-    { id: "pricing-model", title: "Xây Mô Hình Định Giá SaaS", type: "business", difficulty: "advanced", points: 350, participants: 96 },
-    { id: "binary-search", title: "Binary Search", type: "coding", difficulty: "basic", points: 120, participants: 980 },
-]
+/**
+ * Maps a BE challenge `type` string (`CODING`, `SQL`, `UI_UX`, `AI`, `BUSINESS`)
+ * onto the FE domain union. Unknown/unset → `coding` (a reachable facet beats a
+ * broken icon/label lookup).
+ */
+export const mapChallengeType = (raw: string | null | undefined): ChallengeType => {
+    switch ((raw ?? "").toUpperCase().replace(/[\s_-]/g, "")) {
+        case "SQL":
+            return "sql"
+        case "UIUX":
+            return "uiux"
+        case "AI":
+            return "ai"
+        case "BUSINESS":
+            return "business"
+        case "CODING":
+        default:
+            return "coding"
+    }
+}
 
-const fetchChallengesMock = async (): Promise<Array<Challenge>> => CHALLENGES_MOCK
+/** Maps one BE `ChallengeView` onto the catalog `Challenge` model. */
+export const toChallenge = (view: ChallengeView): Challenge => ({
+    id: view.slug,
+    title: view.title,
+    type: mapChallengeType(view.type),
+    status: view.status,
+})
 
-/** Loads the challenge catalog. Mocked; SWR-shaped for a drop-in BE swap. */
+/** Loads the challenge catalog from the real BE (`GET /api/v1/challenges`). */
 export const useQueryChallengesSwr = () => {
-    const { data, isLoading, error, mutate } = useSWR(["challenges"], () => fetchChallengesMock())
+    const { data, isLoading, error, mutate } = useSWR(["challenges"], async () => {
+        const views = await listChallenges()
+        return views.map(toChallenge)
+    })
     return { challenges: data ?? [], isLoading, error, mutate }
 }

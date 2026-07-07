@@ -1,10 +1,9 @@
-import type { Locale } from "next-intl"
 import type { Icon } from "@phosphor-icons/react"
-import type { AutocompleteGlobalSearchItem } from "@/modules/api/graphql/queries/types/autocomplete-global-search"
 
 /**
- * Canonical order + identity of every searchable entity group returned by the real
- * `autocompleteGlobalSearch` contract. The union value is also the `data` field key.
+ * Canonical order + identity of the learning-entity search categories. Kept as a full
+ * union so category icons/labels stay exhaustive; the live `/search` maps the BE `search`
+ * buckets (COURSE→courses, CHALLENGE→challenges) onto this set.
  */
 export type SearchEntityKind =
     | "courses"
@@ -16,19 +15,15 @@ export type SearchEntityKind =
     | "milestoneTasks"
     | "flashcardDecks"
 
-/**
- * Community-domain groups the backend does NOT index yet (assumption A1). Served by
- * a clearly-marked FE mock provider shaped like a future BE response; swap = replace
- * the mock hook internals only.
- */
+/** Community-domain categories, mapped from the BE `search` buckets (USER/POST/GROUP/RESOURCE). */
 export type SearchMockKind = "users" | "posts" | "groups" | "resources"
 
-/** Any category rendered on the `/search` page (real entity groups + mock community groups). */
+/** Any category rendered on the `/search` page (learning-entity groups + community groups). */
 export type SearchCategoryKind = SearchEntityKind | SearchMockKind
 
 /**
- * One presentational row — the shared shape both the real autocomplete contract and
- * the mock providers map into, consumed identically by the overlay and `/search`.
+ * One presentational row — the shared shape the BE `search` buckets map into, consumed
+ * identically by the overlay and `/search`.
  */
 export interface SearchRow {
     /** Stable id for React keys + aria option ids. */
@@ -53,14 +48,4 @@ export interface SearchEntityDescriptor {
     icon: Icon
     /** i18n key (under the `search` namespace) for the localized group heading. */
     labelKey: string
-}
-
-/** Locale-prefixed href builder input for {@link SearchEntityKind} rows. */
-export interface BuildSearchHrefParams {
-    /** The entity kind. */
-    kind: SearchEntityKind
-    /** The raw autocomplete item. */
-    item: AutocompleteGlobalSearchItem
-    /** Active locale for the URL prefix. */
-    locale: Locale
 }

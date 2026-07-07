@@ -1,21 +1,25 @@
 "use client"
 
 import { useMemo } from "react"
+import useSWR from "swr"
 import { useLocale } from "next-intl"
 import { useAppSelector } from "@/redux/hooks"
-import {
-    useAutocompleteGlobalSearchSwr,
-    SEARCH_MIN_CHARS,
-} from "@/hooks/swr/api/graphql/queries/useAutocompleteGlobalSearchSwr"
+import { useSearchOverlayState } from "@/hooks/zustand/overlay/hooks"
 import { useDebouncedValue } from "@/hooks/reuseables/useDebouncedValue"
-import type { SearchEntityKind, SearchRow } from "../types"
-import { mapEntityRows } from "../utils/map-entity-rows"
-import { SEARCH_ENTITY_KINDS } from "../utils/build-search-href"
+import { querySearch } from "@/modules/api/graphql/queries/query-search"
+import type { SearchCategoryKind, SearchRow } from "../types"
+import { mapSearchGroups, SEARCH_RESULT_KINDS } from "../utils/map-search-result"
+
+/** Minimum trimmed characters before a fetch is issued (shared with the /search page + overlay). */
+export const SEARCH_MIN_CHARS = 2
+
+/** Overlay quick-jump size; the `/search` page overrides with a larger page. */
+const DEFAULT_SIZE = 8
 
 /** One non-empty group of real entity rows, in canonical order. */
 export interface SearchRowGroup {
     /** The entity kind. */
-    kind: SearchEntityKind
+    kind: SearchCategoryKind
     /** Its rows. */
     rows: Array<SearchRow>
 }
@@ -43,29 +47,40 @@ export interface UseGlobalSearchResult {
 }
 
 /**
- * Shared real-entity search state for both the overlay and `/search`. Reads the
- * Redux query, debounces + gates via {@link useAutocompleteGlobalSearchSwr}, and
- * maps the payload into grouped + flattened {@link SearchRow}s (with resolved deep
- * links). `enabled` should be `true` on the `/search` page (the overlay relies on
- * its own open state).
- * @param enabled - extra gate ORed with the overlay-open state inside the SWR hook.
- * @param size - results per group (overlay 8, page 24).
+ * Shared real-entity search state for both the overlay and `/search`. Reads the Redux
+ * query, debounces + gates on auth/overlay-open/min-chars, then runs the real BE
+ * `search(q, types, page)` query and maps its buckets into grouped + flattened
+ * {@link SearchRow}s (with resolved deep links). SWR dedupes the overlay and the page by
+ * key. `enabled` is ORed with the overlay-open state so the page always fetches.
+ * @param enabled - extra gate ORed with the overlay-open state (pass `true` on `/search`).
+ * @param size - results per bucket (overlay 8, page 24).
  * @returns grouped rows, flat rows, and async state.
  */
-export const useGlobalSearch = (enabled: boolean, size?: number): UseGlobalSearchResult => {
+export const useGlobalSearch = (enabled: boolean, size: number = DEFAULT_SIZE): UseGlobalSearchResult => {
     const locale = useLocale()
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const { isOpen } = useSearchOverlayState()
     const rawQuery = useAppSelector((state) => state.search.query)
     const query = useDebouncedValue(rawQuery, 300).trim()
     const hasMinChars = query.length >= SEARCH_MIN_CHARS
 
-    const swr = useAutocompleteGlobalSearchSwr({ enabled, size })
+    // The BE `search` requires auth; the overlay only fetches while open, the page always.
+    const canFetch = authenticated && (isOpen || enabled) && hasMinChars
 
-    const grouped = useMemo(() => mapEntityRows(swr.data, locale), [swr.data, locale])
+    const swr = useSWR(
+        canFetch ? ["QUERY_GLOBAL_SEARCH_SWR", query, size, authenticated] : null,
+        async () => {
+            const response = await querySearch({ q: query, page: { page: 0, size } })
+            return response.data?.search?.groups ?? []
+        },
+        { keepPreviousData: true },
+    )
+
+    const grouped = useMemo(() => mapSearchGroups(swr.data, locale), [swr.data, locale])
 
     const groups = useMemo(
         () =>
-            SEARCH_ENTITY_KINDS.map((kind) => ({ kind, rows: grouped[kind] })).filter(
+            SEARCH_RESULT_KINDS.map((kind) => ({ kind, rows: grouped[kind] })).filter(
                 (group) => group.rows.length > 0,
             ),
         [grouped],
@@ -76,7 +91,7 @@ export const useGlobalSearch = (enabled: boolean, size?: number): UseGlobalSearc
         [groups],
     )
 
-    const isLoading = Boolean(hasMinChars && authenticated && enabled) && !swr.data && !swr.error
+    const isLoading = canFetch && !swr.data && !swr.error
 
     return {
         query,

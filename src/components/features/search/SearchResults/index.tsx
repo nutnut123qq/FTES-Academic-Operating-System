@@ -12,27 +12,21 @@ import { useAuthenticationOverlayState } from "@/hooks/zustand/overlay/hooks"
 import { EmptyContent } from "@/components/blocks/async/EmptyContent"
 import { ErrorContent } from "@/components/blocks/async/ErrorContent"
 import { useDebouncedValue } from "@/hooks/reuseables/useDebouncedValue"
-import { SEARCH_MIN_CHARS } from "@/hooks/swr/api/graphql/queries/useAutocompleteGlobalSearchSwr"
-import { useGlobalSearch } from "../hooks/useGlobalSearch"
-import { useMockCommunitySearchSwr } from "../hooks/useMockCommunitySearchSwr"
+import { useGlobalSearch, SEARCH_MIN_CHARS } from "../hooks/useGlobalSearch"
 import { SEARCH_CATEGORY_MAP } from "../map"
-import type { SearchCategoryKind, SearchMockKind, SearchRow } from "../types"
+import type { SearchCategoryKind, SearchRow } from "../types"
 import { SearchOverlayInput } from "../SearchOverlay/SearchOverlayInput"
 import { SearchCategoryTabs, type SearchCategoryTab } from "./SearchCategoryTabs"
 import { SearchResultSection } from "./SearchResultSection"
 
-/** Community mock categories in display order (assumption A1 — BE does not index these yet). */
-const MOCK_KINDS: ReadonlyArray<SearchMockKind> = ["users", "posts", "groups", "resources"]
-
 /**
- * `/search` — the unified global search page. Runs the query against the real
- * `autocompleteGlobalSearch` contract for learning entities (size 24) AND against a
- * clearly-marked FE mock provider for community categories (users/posts/groups/
- * resources) the backend does not index yet. URL-driven (`?q=`): the param seeds
- * Redux on load and is `router.replace`d on debounced typing. Renders filter tabs
- * (All + per-category with count badges), grouped sections with breadcrumbs +
- * highlighting + per-category "show more", and loading/error/empty/unauthenticated
- * states (auth gates real categories only; mock categories always render).
+ * `/search` — the unified global search page. Runs the query against the real BE
+ * `search(q, types, page)` read-gateway (size 24), which returns matches grouped by
+ * entity type (courses/challenges/users/posts/groups/resources). URL-driven (`?q=`):
+ * the param seeds Redux on load and is `router.replace`d on debounced typing. Renders
+ * filter tabs (All + per-category with count badges), grouped sections with highlighting
+ * + per-category "show more", and loading/error/empty/unauthenticated states (the BE
+ * search requires auth, so unauthenticated visitors get a sign-in prompt).
  */
 export const SearchResults = () => {
     const t = useTranslations()
@@ -56,7 +50,6 @@ export const SearchResults = () => {
         error,
         retry,
     } = useGlobalSearch(true, 24)
-    const { groups: mockGroups } = useMockCommunitySearchSwr(trimmed, locale, hasMinChars)
 
     // Seed Redux from ?q= on first load / when the URL param changes externally.
     const urlQuery = searchParams.get("q") ?? ""
@@ -79,16 +72,12 @@ export const SearchResults = () => {
 
     const onValueChange = useCallback((next: string) => dispatch(setSearchQuery(next)), [dispatch])
 
-    // Merge real + mock into one ordered category → rows map.
+    // The real BE `search` already returns every mapped category; index them by kind.
     const allGroups = useMemo(() => {
         const map = new Map<SearchCategoryKind, Array<SearchRow>>()
         for (const group of entityGroups) map.set(group.kind, group.rows)
-        for (const kind of MOCK_KINDS) {
-            const rows = mockGroups[kind]
-            if (rows.length > 0) map.set(kind, rows)
-        }
         return map
-    }, [entityGroups, mockGroups])
+    }, [entityGroups])
 
     const orderedKinds = useMemo(
         () => Array.from(allGroups.keys()),

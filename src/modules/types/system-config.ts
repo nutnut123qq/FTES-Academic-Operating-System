@@ -39,3 +39,26 @@ export interface SystemConfigData {
     /** AI quota caps (Auto lane). */
     ai: SystemConfigAiData
 }
+
+/**
+ * FE-side defaults for `systemConfig`.
+ *
+ * The real BE (FTES) has NO public `systemConfig` query — only an admin-scoped
+ * `systemConfigurations`. So these values are served locally instead of hitting the
+ * BE. `passThreshold` mirrors the 0.8 default already used by the challenge
+ * submission flow; the AI Auto-lane caps are sane placeholders (no consumer reads
+ * them yet). Update here (not via a BE call) when real values are needed.
+ */
+export const DEFAULT_SYSTEM_CONFIG: SystemConfigData = {
+    challenge: { passThreshold: 0.8 },
+    task: { passThreshold: 0.8 },
+    ai: {
+        auto: {
+            usesPer5h: 5,
+            usesPerWeek: 20,
+            creditsPer5h: 50,
+            creditsPerWeek: 200,
+            creditCost: 10,
+        },
+    },
+}

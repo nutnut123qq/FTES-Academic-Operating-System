@@ -3,32 +3,32 @@ import { type QueryParams } from "../types"
 import { DocumentNode, gql } from "@apollo/client"
 import type { QueryMeResponse } from "./types"
 
+/**
+ * Real BE `me: Viewer!` — returns the Viewer object directly (NO envelope).
+ * `PublicUser` is non-PII only (id/username/displayName/avatarUrl); rich profile
+ * fields (email/bio/…) come from REST `GET /api/v1/profiles/me`, merged in the hook.
+ */
 const query1 = gql`
   query Me {
     me {
-      success
-      message
-      error
-      data {
+      user {
         id
-        email
-        avatar
         username
         displayName
-        bio
-        githubUsername
-        authenticationType
-        followerCount
-        followingCount
-        twoFactorEnabled
-        openToWork
-        profileLocked
-        featuredAchievementSlug
-        roleTitle
-        location
-        workMode
-        linkedinUrl
-        websiteUrl
+        avatarUrl
+      }
+      progression {
+        totalXp
+        level
+        levelTitle
+        reputation
+      }
+      permissions
+      scopedGrants {
+        roleCode
+        scopeType
+        scopeId
+        expiresAt
       }
     }
   }
@@ -43,10 +43,10 @@ const queryMap: Record<QueryMe, DocumentNode> = {
 }
 
 /**
- * Fetches the current user via Apollo.
+ * Fetches the current viewer via Apollo.
  *
  * @param params - Document key, GraphQL variables
- * @returns Apollo query result; entity at `data.me.data.data`
+ * @returns Apollo query result; the viewer is at `data.me` (returned directly, no envelope)
  */
 export const queryMe = async ({
     query = QueryMe.Query1,

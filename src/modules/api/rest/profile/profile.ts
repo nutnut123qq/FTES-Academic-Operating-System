@@ -17,6 +17,20 @@ import type {
 // ---------------------------------------------------------------- MeProfileController
 
 /**
+ * Returns the current user's full self profile (rich fields not present on the
+ * GraphQL `Viewer`: email, bio, jobTitle, address, social links, academic, …).
+ *
+ * `GET /api/v1/profiles/me` (authenticated).
+ */
+export const getSelfProfile = async (): Promise<SelfProfile> => {
+    return restRequest<SelfProfile>({
+        method: "GET",
+        url: "/profiles/me",
+        authenticated: true,
+    })
+}
+
+/**
  * Uploads a new avatar image for the current user.
  *
  * `PUT /api/v1/profiles/me/avatar`

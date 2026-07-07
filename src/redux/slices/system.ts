@@ -5,7 +5,8 @@ import {
 import type { SystemConfigData } from "@/modules/types/system-config"
 
 /**
- * App-wide system settings from the API (`querySystemConfig` / mounted `app.json`).
+ * App-wide system settings. The FTES BE has no public `systemConfig` query, so this
+ * is hydrated with FE-side `DEFAULT_SYSTEM_CONFIG` (see `useQuerySystemConfigSwr`).
  */
 export interface SystemSlice {
     /**

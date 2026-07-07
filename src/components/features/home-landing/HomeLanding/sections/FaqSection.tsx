@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
-import { Button, Typography } from "@heroui/react"
+import { Button, cn, Typography } from "@heroui/react"
 import { CaretDownIcon, CaretUpIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { TruthList } from "@/components/blocks/marketing/TruthList"
@@ -9,6 +9,24 @@ import { FAQ_KEYS } from "../content"
 
 /** How many questions show before "show more" reveals the rest (checklist STT 27). */
 const FAQ_VISIBLE = 5
+
+/**
+ * Render an FAQ answer. Plain prose passes through unchanged; a multi-line answer
+ * (lead sentence + "- " tier lines, joined by "\n" in the copy) becomes a hanging-indent
+ * bulleted list. ponytail: block-span list, not <ul> — TruthList wraps `fix` in a <p>
+ * (body-sm), and <ul>/<li> inside <p> is invalid HTML; a display:block <span> is valid.
+ */
+const renderAnswer = (text: string): React.ReactNode => {
+    if (!text.includes("\n")) return text
+    return text.split("\n").map((line, index) => {
+        const isBullet = line.startsWith("- ")
+        return (
+            <span key={index} className={cn("block", isBullet && "mt-2 pl-4 -indent-4")}>
+                {isBullet ? `• ${line.slice(2)}` : line}
+            </span>
+        )
+    })
+}
 
 /**
  * FTES FAQ — real questions & answers derived from the offer/policy content, rendered
@@ -21,7 +39,7 @@ export const FaqSection = () => {
     const [expanded, setExpanded] = useState(false)
     const items = FAQ_KEYS.map((key) => ({
         truth: t(`faq.items.${key}.q`),
-        fix: t(`faq.items.${key}.a`),
+        fix: renderAnswer(t(`faq.items.${key}.a`)),
     }))
     // Show a representative few by default; "show more" reveals the full set.
     const hasMore = items.length > FAQ_VISIBLE

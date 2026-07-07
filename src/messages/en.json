@@ -3667,23 +3667,23 @@
             "items": {
                 "newStudentOffer": {
                     "q": "What offers does FTES have for new students?",
-                    "a": "New students get an offer based on total course value: combos of 800,000đ–1,199,000đ get 100,000đ off; combos of 1,200,000đ–1,599,000đ get 200,000đ off; combos from 1,600,000đ get 300,000đ off plus a licensed copy of Cursor (subject to the running program)."
+                    "a": "New students get an offer based on total course value:\n- Combos of 800,000đ–1,199,000đ: 100,000đ off\n- Combos of 1,200,000đ–1,599,000đ: 200,000đ off\n- Combos from 1,600,000đ: 300,000đ off plus a licensed copy of Cursor (subject to the running program)"
                 },
                 "liveClass": {
                     "q": "What do I get when I enroll in a Live class on Zoom?",
-                    "a": "In a Live class you learn directly with a Mentor, get the Mentor's support throughout the course, and access all Basic class lecture videos (worth 300,000đ) to review anytime."
+                    "a": "In a Live class you get:\n- To learn directly with a Mentor\n- The Mentor's support throughout the course\n- Access to all Basic class lecture videos (worth 300,000đ) to review anytime"
                 },
                 "group": {
                     "q": "Is there a discount for enrolling as a group?",
-                    "a": "Yes. FTES applies offers by group size: groups of 2–4 get 20% off per student; groups of 5–10 get 25% off per student; groups over 10 get 35% off per student."
+                    "a": "Yes. FTES applies offers by group size:\n- Groups of 2–4: 20% off per student\n- Groups of 5–10: 25% off per student\n- Groups over 10: 35% off per student"
                 },
                 "returningStudent": {
                     "q": "What offers do returning students get?",
-                    "a": "Refer a new student successfully: get 100,000đ per student, the referrer earns 70 reward points and the referred student earns 30 points. Enrolling in your next course gets 5% off; pre-ordering your next course while still studying gets 10% off."
+                    "a": "Returning students get several perks:\n- Refer a new student successfully: 100,000đ per student (referrer +70 reward points, referred student +30 points)\n- Enroll in your next course: 5% off\n- Pre-order your next course while still studying: 10% off"
                 },
                 "scholarship": {
                     "q": "Does FTES offer scholarships or student honors?",
-                    "a": "Yes. Top Scholar of FTES (highest score across the center): free next term + 2,000,000đ. Top of Class (highest score in class): free next course. Diligence (full attendance + all assignments completed): 10% off tuition. Talent Scholarship: worth 2,000,000đ + all FTES courses free + a chance to be trained on and join real projects right after term 5."
+                    "a": "Yes. FTES runs several programs to encourage learning:\n- Top Scholar of FTES (highest score across the center): free next term + 2,000,000đ\n- Top of Class (highest score in class): free next course\n- Diligence (full attendance + all assignments completed): 10% off tuition\n- Talent Scholarship: 2,000,000đ + all FTES courses free + a chance to be trained on and join real projects right after term 5"
                 },
                 "afterCourse": {
                     "q": "After finishing a course, can I join real projects?",
@@ -3691,7 +3691,7 @@
                 },
                 "installment": {
                     "q": "Does FTES support paying tuition in installments?",
-                    "a": "Yes. You can pay 30%, 40% or 50% upfront, with the rest completed within 1 month. Pay 50%: instant access to past lecture videos + all materials; pay 40%: instant access to past lecture videos; pay 30%: no early access to videos and materials."
+                    "a": "Yes. You can pay 30%, 40% or 50% upfront, with the rest completed within 1 month:\n- Pay 50%: instant access to past lecture videos + all materials\n- Pay 40%: instant access to past lecture videos\n- Pay 30%: no early access to videos and materials"
                 },
                 "refund": {
                     "q": "In what cases does FTES refund 100% of tuition?",
@@ -3703,7 +3703,7 @@
                 },
                 "trialTest": {
                     "q": "After the trial, do I get a tuition discount?",
-                    "a": "Yes. After the 2 trial sessions, you take a placement test and get an offer based on the result: 6.0–6.9 gets 10% off; 7.0–8.9 gets 15% off; 9.0–10 gets 30% off."
+                    "a": "Yes. After the 2 trial sessions, you take a placement test and get an offer based on the result:\n- 6.0–6.9: 10% off\n- 7.0–8.9: 15% off\n- 9.0–10: 30% off"
                 },
                 "combineOffers": {
                     "q": "Can I combine multiple offers at once?",

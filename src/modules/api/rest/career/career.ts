@@ -37,6 +37,9 @@ export const getCareerRoadmaps = async (params?: {
         method: "GET",
         url: "/career/roadmaps",
         params: { ...params },
+        // Career endpoints sit behind platform auth (401 PLATFORM_UNAUTHORIZED without a
+        // bearer token) — unlike the public courses catalog. Attach the token for reads.
+        authenticated: true,
     })
 
 export const getCareerRoadmapDetail = async (
@@ -45,6 +48,7 @@ export const getCareerRoadmapDetail = async (
     restRequest<CareerRoadmapDetail>({
         method: "GET",
         url: `/career/roadmaps/${slug}`,
+        authenticated: true,
     })
 
 export const createCareerRoadmap = async (
@@ -92,6 +96,7 @@ export const getCareerOpportunities = async (params?: {
         method: "GET",
         url: "/career/opportunities",
         params: { ...params },
+        authenticated: true,
     })
 
 export const createCareerOpportunity = async (
@@ -203,6 +208,7 @@ export const getCareerSkills = async (params?: {
         method: "GET",
         url: "/career/skills",
         params: { ...params },
+        authenticated: true,
     })
 
 export const createCareerSkill = async (

@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import {
     useQueryConversationMessagesSwr,
     useQueryConversationsSwr,
+    useSendChatMessage,
 } from "../hooks/useQueryConversationsSwr"
 
 /** Loading skeleton for the conversation list — mirrors the row anatomy. */
@@ -61,8 +62,18 @@ export const ChatShell = () => {
         error: messagesError,
         mutate: mutateMessages,
     } = useQueryConversationMessagesSwr(selectedId)
+    const { send, isSending } = useSendChatMessage(selectedId)
+    const [draft, setDraft] = useState("")
 
     const selected = conversations.find((conversation) => conversation.id === selectedId) ?? null
+
+    // Real send → clear composer, then refetch the thread + list (last-message/unread).
+    const handleSend = async () => {
+        const ok = await send(draft)
+        if (!ok) return
+        setDraft("")
+        await Promise.all([mutateMessages(), mutate()])
+    }
 
     return (
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-6">
@@ -179,16 +190,30 @@ export const ChatShell = () => {
                                     ))}
                                 </div>
                             </AsyncContent>
-                            {/* composer — mock, no real send */}
-                            <div className="flex items-center gap-2 border-t border-separator p-3">
+                            {/* composer — real send via chat REST */}
+                            <form
+                                className="flex items-center gap-2 border-t border-separator p-3"
+                                onSubmit={(event) => {
+                                    event.preventDefault()
+                                    void handleSend()
+                                }}
+                            >
                                 <input
+                                    value={draft}
+                                    onChange={(event) => setDraft(event.target.value)}
                                     placeholder={t("composerPlaceholder")}
                                     className="w-full rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none placeholder:text-muted focus:border-accent"
                                 />
-                                <Button isIconOnly aria-label={t("send")} variant="primary">
+                                <Button
+                                    type="submit"
+                                    isIconOnly
+                                    aria-label={t("send")}
+                                    variant="primary"
+                                    isDisabled={isSending || draft.trim().length === 0}
+                                >
                                     <PaperPlaneTiltIcon className="size-5" />
                                 </Button>
-                            </div>
+                            </form>
                         </>
                     )}
                 </div>

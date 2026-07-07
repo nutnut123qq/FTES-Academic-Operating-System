@@ -1,12 +1,14 @@
 import { restRequest } from "@/modules/api/rest/client"
 import type {
     AddParticipantRequest,
+    ChatSendMessageRequest,
     ConversationResponse,
     CreateConversationRequest,
     EditMessageRequest,
     ChatMessageResponse,
     Page,
     PresenceResponse,
+    ReadRequest,
 } from "./types"
 
 // ---------------- Conversation endpoints ----------------
@@ -58,6 +60,37 @@ export const removeParticipant = async (
     })
 
 // ---------------- Message endpoints ----------------
+
+export const getMessages = async (
+    conversationId: string,
+    params?: { cursor?: string; limit?: number },
+): Promise<Page<ChatMessageResponse>> =>
+    restRequest<Page<ChatMessageResponse>>({
+        method: "GET",
+        url: `/chat/conversations/${conversationId}/messages`,
+        params: { ...params },
+        authenticated: true,
+    })
+
+export const sendMessage = async (
+    conversationId: string,
+    request: ChatSendMessageRequest,
+): Promise<ChatMessageResponse> =>
+    restRequest<ChatMessageResponse>({
+        method: "POST",
+        url: `/chat/conversations/${conversationId}/messages`,
+        data: request,
+    })
+
+export const markConversationRead = async (
+    conversationId: string,
+    request: ReadRequest,
+): Promise<void> =>
+    restRequest<void>({
+        method: "PUT",
+        url: `/chat/conversations/${conversationId}/read`,
+        data: request,
+    })
 
 export const editMessage = async (
     messageId: string,

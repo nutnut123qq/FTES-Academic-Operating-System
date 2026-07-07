@@ -1,6 +1,15 @@
 "use client"
 
+import { useCallback, useState } from "react"
 import useSWR from "swr"
+import {
+    getConversations,
+    getMessages,
+    sendMessage,
+    type ChatMessageResponse,
+    type ConversationResponse,
+} from "@/modules/api/rest/chat"
+import { useAppSelector } from "@/redux/hooks"
 
 /** One row in the conversation list (left pane). */
 export interface Conversation {
@@ -19,41 +28,94 @@ export interface ChatMessage {
     time: string
 }
 
-// ponytail: mock BE — no messaging endpoint yet. Deterministic sample list + a
-// per-conversation thread, all SWR-shaped so the shell can swap to a real query
-// (conversations() / messages(conversationId)) without touching the UI.
-const fetchConversationsMock = async (): Promise<Array<Conversation>> => [
-    { id: "co1", name: "Lê Minh Quân", lastMessage: "Mai nộp bài PRF192 nhé", unread: 2, avatarInitials: "LQ" },
-    { id: "co2", name: "Nhóm SWP391", lastMessage: "Đã push nhánh feature/login", unread: 0, avatarInitials: "SW" },
-    { id: "co3", name: "Trần Thu Hà", lastMessage: "Cảm ơn thầy đã giải đáp!", unread: 0, avatarInitials: "TH" },
-    { id: "co4", name: "Cố vấn học tập", lastMessage: "Lịch đăng ký kỳ tới đã mở", unread: 1, avatarInitials: "CV" },
-    { id: "co5", name: "Phạm Gia Bảo", lastMessage: "Bạn xem hộ mình bài DBI202 với", unread: 0, avatarInitials: "PB" },
-    { id: "co6", name: "Nhóm CSD201", lastMessage: "Ai làm xong quiz chương 3 chưa?", unread: 5, avatarInitials: "CS" },
-]
+/** Two-letter initials from a conversation title (fallback "?" when untitled). */
+const toInitials = (title: string | undefined): string => {
+    const words = (title ?? "").trim().split(/\s+/).filter(Boolean)
+    if (words.length === 0) return "?"
+    if (words.length === 1) return words[0]!.slice(0, 2).toUpperCase()
+    return (words[0]![0]! + words[words.length - 1]![0]!).toUpperCase()
+}
 
-const fetchMessagesMock = async (conversationId: string): Promise<Array<ChatMessage>> => [
-    { id: `${conversationId}-m1`, fromMe: false, text: "Chào bạn, bài tập tuần này bạn làm tới đâu rồi?", time: "09:12" },
-    { id: `${conversationId}-m2`, fromMe: true, text: "Mình xong phần lý thuyết, đang làm phần code.", time: "09:14" },
-    { id: `${conversationId}-m3`, fromMe: false, text: "Chỗ đệ quy khó phết, mình bí câu 3.", time: "09:15" },
-    { id: `${conversationId}-m4`, fromMe: true, text: "Câu 3 dùng vòng lặp cũng được mà, đỡ tràn stack.", time: "09:17" },
-    { id: `${conversationId}-m5`, fromMe: false, text: "Ừ đúng rồi, để mình thử lại xem.", time: "09:18" },
-    { id: `${conversationId}-m6`, fromMe: true, text: "Ok, xong thì gửi mình review cho nhé.", time: "09:20" },
-]
+/** Maps a BE conversation to the list-row shape the shell renders. */
+const toConversation = (dto: ConversationResponse): Conversation => ({
+    id: dto.id,
+    name: dto.title?.trim() || "Cuộc trò chuyện",
+    lastMessage: dto.lastMessagePreview ?? "",
+    unread: dto.unreadCount ?? 0,
+    avatarInitials: toInitials(dto.title),
+})
 
-/** Loads the conversation list. Mocked; SWR-shaped for a drop-in BE swap. */
+/** Formats an ISO timestamp to a short HH:mm label; empty when unparseable. */
+const toTimeLabel = (iso: string | undefined): string => {
+    if (!iso) return ""
+    const date = new Date(iso)
+    if (Number.isNaN(date.getTime())) return ""
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+}
+
+/** Maps a BE message to the bubble shape, resolving `fromMe` against the viewer. */
+const toChatMessage = (dto: ChatMessageResponse, viewerId: string | undefined): ChatMessage => ({
+    id: dto.id,
+    fromMe: Boolean(viewerId) && dto.senderId === viewerId,
+    text: dto.content ?? "",
+    time: toTimeLabel(dto.createdAt),
+})
+
+/** Loads the conversation list from the real chat REST API (BE returns [] when empty). */
 export const useQueryConversationsSwr = () => {
-    const { data, isLoading, error, mutate } = useSWR(["conversations"], () => fetchConversationsMock())
+    const { data, isLoading, error, mutate } = useSWR(["GET_CHAT_CONVERSATIONS"], async () => {
+        const page = await getConversations({ limit: 50 })
+        return (page.items ?? []).map(toConversation)
+    })
     return { conversations: data ?? [], isLoading, error, mutate }
 }
 
 /**
- * Loads the thread for one conversation. Mocked; SWR-shaped. Keyed by id so it
- * refetches when the selected conversation changes (drop-in BE swap point).
+ * Loads the thread for one conversation from the real chat REST API. Keyed by id
+ * so it refetches on selection change; messages are sorted oldest→newest for the
+ * bubble column. `fromMe` is resolved against the signed-in viewer id.
  */
 export const useQueryConversationMessagesSwr = (conversationId: string | null) => {
+    const viewerId = useAppSelector((state) => state.user.user?.id)
     const { data, isLoading, error, mutate } = useSWR(
-        conversationId ? ["conversation-messages", conversationId] : null,
-        () => fetchMessagesMock(conversationId as string),
+        conversationId ? ["GET_CHAT_MESSAGES", conversationId, viewerId] : null,
+        async () => {
+            const page = await getMessages(conversationId as string, { limit: 50 })
+            return (page.items ?? [])
+                .map((message) => toChatMessage(message, viewerId))
+                .sort((a, b) => a.time.localeCompare(b.time))
+        },
     )
     return { messages: data ?? [], isLoading, error, mutate }
+}
+
+/**
+ * Sends a message to a conversation via the real chat REST API. Generates a
+ * `clientMessageId` per send (BE idempotency key) and exposes a pending flag so
+ * the composer can disable while in flight.
+ */
+export const useSendChatMessage = (conversationId: string | null) => {
+    const [isSending, setIsSending] = useState(false)
+
+    const send = useCallback(
+        async (content: string): Promise<boolean> => {
+            const trimmed = content.trim()
+            if (!conversationId || trimmed.length === 0) return false
+            setIsSending(true)
+            try {
+                await sendMessage(conversationId, {
+                    clientMessageId: crypto.randomUUID(),
+                    content: trimmed,
+                })
+                return true
+            } catch {
+                return false
+            } finally {
+                setIsSending(false)
+            }
+        },
+        [conversationId],
+    )
+
+    return { send, isSending }
 }

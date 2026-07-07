@@ -2971,6 +2971,14 @@
     "error": {
       "title": "Không tải được gợi ý",
       "retry": "Thử lại"
+    },
+    "reasons": {
+      "default": "Gợi ý dành cho bạn",
+      "POPULAR": "Đang được quan tâm",
+      "SIMILAR_USERS": "Người học giống bạn đã chọn",
+      "FRIENDS_ENROLLED": "Bạn bè bạn đã tham gia",
+      "COURSE_ENROLLED": "Dựa trên khóa bạn đã đăng ký",
+      "LESSON_COMPLETED": "Dựa trên bài bạn đã hoàn thành"
     }
   },
   "careerCenter": {

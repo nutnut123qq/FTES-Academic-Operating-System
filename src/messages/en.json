@@ -2971,6 +2971,14 @@
     "error": {
       "title": "Couldn't load recommendations",
       "retry": "Try again"
+    },
+    "reasons": {
+      "default": "Suggested for you",
+      "POPULAR": "Trending now",
+      "SIMILAR_USERS": "Learners like you picked this",
+      "FRIENDS_ENROLLED": "Friends of yours joined",
+      "COURSE_ENROLLED": "Based on a course you enrolled in",
+      "LESSON_COMPLETED": "Based on a lesson you completed"
     }
   },
   "careerCenter": {

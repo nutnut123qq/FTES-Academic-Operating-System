@@ -1,6 +1,8 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import useSWR from "swr"
+import { getRecommendations, type RecommendationItem } from "@/modules/api/rest/recommendation"
 
 /** One recommendation item — the smallest "for you" suggestion card. */
 export interface Recommendation {
@@ -8,7 +10,7 @@ export interface Recommendation {
     id: string
     /** What is being recommended (subject name, mentor name, challenge title…). */
     title: string
-    /** Why it surfaced, e.g. "Because you study PRF192" — shown as the card caption. */
+    /** Why it surfaced — a localized caption. */
     reason: string
 }
 
@@ -21,40 +23,60 @@ export interface RecommendationsByKind {
     challenges: Array<Recommendation>
 }
 
-// ponytail: mock BE — §17 Recommendation Engine has no endpoint yet. Deterministic
-// per-kind sample lists so the "for you" feed renders. Wire a real GraphQL query
-// (recommendations()) when the contract lands; the hook API + shape stay put.
-const fetchRecommendationsMock = async (): Promise<RecommendationsByKind> => ({
-    subjects: [
-        { id: "csd201", title: "CSD201 — Cấu trúc dữ liệu & Giải thuật", reason: "Because you study PRF192" },
-        { id: "dbi202", title: "DBI202 — Cơ sở dữ liệu", reason: "Popular with your cohort" },
-        { id: "prj301", title: "PRJ301 — Lập trình Java Web", reason: "Next in your roadmap" },
-    ],
-    courses: [
-        { id: "react-fundamentals", title: "React Fundamentals", reason: "Matches your frontend interest" },
-        { id: "clean-architecture", title: "Clean Architecture", reason: "Because you completed OOP" },
-    ],
-    groups: [
-        { id: "prf192-study", title: "PRF192 Study Group", reason: "Classmates you follow are here" },
-        { id: "algo-grind", title: "Algorithm Grind", reason: "Because you study CSD201" },
-    ],
-    mentors: [
-        { id: "mentor-a", title: "Lê Minh Quân", reason: "Teaches subjects you take" },
-        { id: "mentor-b", title: "Trần Thu Hà", reason: "Highly rated in Data Structures" },
-    ],
-    challenges: [
-        { id: "two-sum", title: "Two Sum", reason: "Warm-up for CSD201" },
-        { id: "sql-joins", title: "SQL Joins Practice", reason: "Because you study DBI202" },
-        { id: "rest-api", title: "Build a REST API", reason: "Reinforces PRJ301" },
-    ],
-})
+/** FE kind → BE RecType (the `type` query param on GET /recommendations). */
+const KIND_TO_REC_TYPE: Record<keyof RecommendationsByKind, string> = {
+    subjects: "SUBJECT",
+    courses: "COURSE",
+    groups: "GROUP",
+    mentors: "MENTOR",
+    challenges: "CHALLENGE",
+}
+
+/** Reason codes we have a localized label for; everything else → the default caption. */
+const KNOWN_REASON_CODES = new Set([
+    "POPULAR",
+    "SIMILAR_USERS",
+    "FRIENDS_ENROLLED",
+    "COURSE_ENROLLED",
+    "LESSON_COMPLETED",
+])
 
 /**
- * Loads the "for you" recommendation feed grouped by kind. Mocked for now (see note
- * above) but shaped like the real SWR query hooks so callers don't change when the
- * BE lands.
+ * Loads the "for you" recommendation feed grouped by kind from the real §17
+ * Recommendation Engine REST API (`GET /recommendations?type=…`, one call per
+ * kind). Title comes from the BE display snapshot; the reason caption is the first
+ * structured reason code, localized (generic default when unknown). Empty per-kind
+ * lists render the shared empty-state.
  */
 export const useQueryRecommendationsSwr = () => {
-    const { data, isLoading, error, mutate } = useSWR(["recommendations"], () => fetchRecommendationsMock())
+    const t = useTranslations("recommendation")
+
+    const toReason = (item: RecommendationItem): string => {
+        const code = item.reasons?.[0]?.["code"]
+        return typeof code === "string" && KNOWN_REASON_CODES.has(code)
+            ? t(`reasons.${code}`)
+            : t("reasons.default")
+    }
+
+    const toRecommendation = (item: RecommendationItem): Recommendation => ({
+        id: item.id ?? item.itemId,
+        title: item.snapshot?.title?.trim() || item.itemId,
+        reason: toReason(item),
+    })
+
+    const { data, isLoading, error, mutate } = useSWR(
+        ["GET_RECOMMENDATIONS"],
+        async (): Promise<RecommendationsByKind> => {
+            const keys = Object.keys(KIND_TO_REC_TYPE) as Array<keyof RecommendationsByKind>
+            const lists = await Promise.all(
+                keys.map((key) => getRecommendations({ type: KIND_TO_REC_TYPE[key], limit: 10 })),
+            )
+            const byKind = {} as RecommendationsByKind
+            keys.forEach((key, index) => {
+                byKind[key] = (lists[index] ?? []).map(toRecommendation)
+            })
+            return byKind
+        },
+    )
     return { recommendations: data, isLoading, error, mutate }
 }

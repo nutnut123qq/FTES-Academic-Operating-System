@@ -5,23 +5,23 @@ import { BellIcon, CircleIcon, GearSixIcon } from "@phosphor-icons/react"
 import { Button, Spinner, Typography, cn } from "@heroui/react"
 import { useLocale, useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
-import { mutateMarkAllNotificationsAsRead } from "@/modules/api/graphql/mutations/mutation-mark-all-notifications-as-read"
-import { mutateMarkNotificationAsRead } from "@/modules/api/graphql/mutations/mutation-mark-notification-as-read"
-import { queryResolveRoute } from "@/modules/api/graphql/queries/query-resolve-route"
-import type { QueryNotificationData } from "@/modules/api/graphql/queries/types/notifications"
+import {
+    markAllNotificationsRead,
+    markNotificationRead,
+} from "@/modules/api/rest/notification/notification"
+import type { NotificationItem } from "@/modules/api/rest/notification/types"
 import {
     NOTIFICATION_LIST_PAGE_LIMIT,
     useQueryMyNotificationsInfiniteSwr,
 } from "@/hooks/swr/api/graphql/queries/useQueryMyNotificationsInfiniteSwr"
 import { useQueryMyNotificationsSwr } from "@/hooks/swr/api/graphql/queries/useQueryMyNotificationsSwr"
 import { useQueryMyNotificationPreferencesSwr } from "@/hooks/swr/api/graphql/queries/useQueryMyNotificationPreferencesSwr"
-import { useGraphQLWithToast } from "@/modules/toast/hooks"
+import { useRestWithToast } from "@/modules/toast/hooks"
 import { mutate as globalMutate } from "swr"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { InfiniteScrollSentinel } from "@/components/blocks/async/InfiniteScrollSentinel"
-import { NOTIFICATION_TYPE_ICON } from "../typeIcon"
-import { encodeNotificationGlobalId } from "../global-id"
+import { resolveNotificationIcon } from "../typeIcon"
 import { filterNotificationsByPreferences } from "../preferences"
 import { PreferencesSurface } from "./PreferencesSurface"
 
@@ -32,26 +32,24 @@ type Filter = "all" | "unread"
 const BADGE_SWR_KEY = "QUERY_MY_NOTIFICATIONS_SWR"
 
 /**
- * NotificationCenter — the `/notifications` page, backed by the SAME real
- * `myNotifications` GraphQL query the navbar bell uses (no more FE mock).
+ * NotificationCenter — the `/notifications` page, backed by the SAME real BE
+ * REST notifications API the navbar bell uses (`GET /api/v1/notifications`).
  *
- * Renders a paginated, infinite-scroll list (server `limit`/`offset`), a
- * server-backed all/unread filter (`unreadOnly`, pagination reset on switch),
+ * Renders a paginated, infinite-scroll list (server `page`/`size`), a
+ * server-backed all/unread filter (`status=UNREAD`, pagination reset on switch),
  * per-type icons, relative timestamps and unread indicators. Rows are
  * keyboard-activatable buttons: activating one marks it read
- * (`markNotificationAsRead`) and, when it carries a target, resolves the route
- * (`resolveRoute`) and navigates locale-prefixed; targetless rows only mark
- * read. "Mark all read" calls `markAllNotificationsAsRead`. Every mutation
- * revalidates both the infinite list and the shared badge key so the bell badge
- * tracks the change without a reload. A header gear opens the preferences
- * surface (per-type mute + mute-all + reserved browser-push slot). Muted types
- * are filtered out of the list and, with mute-all, the list shows a muted hint.
+ * (`POST /notifications/{id}/read`) and, when it carries a `deepLink`, navigates
+ * locale-prefixed; targetless rows only mark read. "Mark all read" calls
+ * `POST /notifications/read-all`. Every mutation revalidates both the infinite
+ * list and the shared badge key so the bell badge tracks the change without a
+ * reload. A header gear opens the (mock) preferences surface.
  */
 export const NotificationCenter = () => {
     const t = useTranslations()
     const locale = useLocale()
     const router = useRouter()
-    const runGraphQL = useGraphQLWithToast()
+    const runRest = useRestWithToast()
 
     const [filter, setFilter] = useState<Filter>("all")
     const [showPreferences, setShowPreferences] = useState(false)
@@ -122,49 +120,31 @@ export const NotificationCenter = () => {
         [setSize],
     )
 
-    /** Mark a row read (optimistic) and navigate to its resolved target. */
+    /** Mark a row read (optimistic) and navigate to its deep link. */
     const onPressItem = useCallback(
-        async (notification: QueryNotificationData) => {
+        async (notification: NotificationItem) => {
             if (!notification.isRead) {
-                await runGraphQL(
-                    async () => {
-                        const env = await mutateMarkNotificationAsRead({
-                            request: { notificationId: notification.id },
-                        })
-                        return env.data!.markNotificationAsRead
-                    },
-                    { showSuccessToast: false, showErrorToast: false },
-                )
+                await runRest(() => markNotificationRead(notification.id), {
+                    showSuccessToast: false,
+                    showErrorToast: false,
+                })
                 await revalidateAll()
             }
-            const { target } = notification
-            if (!target) {
-                return
-            }
-            const response = await queryResolveRoute({
-                request: { globalId: encodeNotificationGlobalId(target) },
-            })
-            const path = response.data?.resolveRoute?.data?.path
-            if (path) {
-                router.push(`/${locale}${path}`)
+            if (notification.deepLink) {
+                router.push(`/${locale}${notification.deepLink}`)
             }
         },
-        [locale, revalidateAll, router, runGraphQL],
+        [locale, revalidateAll, router, runRest],
     )
 
     /** Mark every unread notification read in one bulk action. */
     const onMarkAllRead = useCallback(async () => {
-        await runGraphQL(
-            async () => {
-                const env = await mutateMarkAllNotificationsAsRead({
-                    request: undefined,
-                })
-                return env.data!.markAllNotificationsAsRead
-            },
-            { showSuccessToast: false, showErrorToast: true },
-        )
+        await runRest(() => markAllNotificationsRead(), {
+            showSuccessToast: false,
+            showErrorToast: true,
+        })
         await revalidateAll()
-    }, [revalidateAll, runGraphQL])
+    }, [revalidateAll, runRest])
 
     return (
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-6">
@@ -261,16 +241,13 @@ export const NotificationCenter = () => {
                 >
                     <ul className="flex flex-col gap-2">
                         {items.map((item) => {
-                            const Icon = NOTIFICATION_TYPE_ICON[item.type]
+                            const Icon = resolveNotificationIcon(item.type)
                             return (
                                 <li key={item.id}>
                                     <button
                                         type="button"
                                         onClick={() => onPressItem(item)}
-                                        aria-label={t(
-                                            item.title.key,
-                                            item.title.params ?? undefined,
-                                        )}
+                                        aria-label={item.title}
                                         className={cn(
                                             "flex w-full items-start gap-3 rounded-2xl border border-separator px-4 py-3 text-left transition-colors hover:bg-default/40 focus-visible:bg-default/40 focus-visible:outline-none",
                                             !item.isRead && "bg-default/40",
@@ -288,10 +265,7 @@ export const NotificationCenter = () => {
                                                 type="body-sm"
                                                 className="line-clamp-2"
                                             >
-                                                {t(
-                                                    item.title.key,
-                                                    item.title.params ?? undefined,
-                                                )}
+                                                {item.title}
                                             </Typography>
                                             {item.body ? (
                                                 <Typography
@@ -299,10 +273,7 @@ export const NotificationCenter = () => {
                                                     color="muted"
                                                     className="line-clamp-2"
                                                 >
-                                                    {t(
-                                                        item.body.key,
-                                                        item.body.params ?? undefined,
-                                                    )}
+                                                    {item.body}
                                                 </Typography>
                                             ) : null}
                                             <Typography type="body-xs" color="muted">

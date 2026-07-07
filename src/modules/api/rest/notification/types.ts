@@ -28,6 +28,61 @@ export interface NotificationView {
     readAt: string | null
 }
 
+/**
+ * FE-facing notification row, mapped from {@link NotificationView}. Server renders
+ * `title`/`body` as plain localized strings (no i18n key/params) and snapshots the
+ * click destination as a ready `deepLink` route. Read state is derived from the
+ * `status` enum (UNREAD/READ/ARCHIVED).
+ */
+export interface NotificationItem {
+    /** Notification row id (UUID). */
+    id: string
+    /** Backend {@link vn.ftes.aos.notification.domain.NotificationType} name (e.g. `COURSE`). */
+    type: string
+    /** Server-rendered headline (plain text). */
+    title: string
+    /** Server-rendered supporting line; null/empty when the title is enough. */
+    body: string | null
+    /** Whether the recipient has read it (status !== UNREAD). */
+    isRead: boolean
+    /** Ready app-relative click destination; null for targetless messages. */
+    deepLink: string | null
+    /** When the notification was created (ISO). */
+    createdAt: string
+}
+
+/** Mapped page for the notification center list. */
+export interface NotificationListPage {
+    /** Notification rows for the requested page, newest first. */
+    items: Array<NotificationItem>
+    /** 0-based page index echoed by the backend. */
+    page: number
+    /** Total rows matching the filter (across all pages). */
+    total: number
+    /** Total page count for the filter. */
+    totalPages: number
+}
+
+/** Query params for `GET /api/v1/notifications`. */
+export interface NotificationListParams {
+    /** Status filter (`UNREAD` / `READ` / `ARCHIVED`); omitted = all. */
+    status?: string
+    /** Type filter (backend `NotificationType` name); omitted = all. */
+    type?: string
+    /** 0-based page index (server default 0). */
+    page?: number
+    /** Page size (server default 20). */
+    size?: number
+}
+
+/** Badge payload: the recent page plus the unread count (bell + badge). */
+export interface NotificationBadge {
+    /** Recent notification rows (newest first, page 0). */
+    items: Array<NotificationItem>
+    /** Unread notification count for the user (badge value). */
+    unreadCount: number
+}
+
 /** One cell in the notification preference matrix. */
 export interface PreferenceCell {
     type: string

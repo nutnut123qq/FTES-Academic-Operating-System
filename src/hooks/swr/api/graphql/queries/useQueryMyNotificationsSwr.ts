@@ -1,18 +1,19 @@
 import useSWR from "swr"
-import { queryMyNotifications } from "@/modules/api/graphql/queries/query-my-notifications"
-import type { QueryMyNotificationsData } from "@/modules/api/graphql/queries/types/notifications"
+import { getNotificationBadge } from "@/modules/api/rest/notification/notification"
+import type { NotificationBadge } from "@/modules/api/rest/notification/types"
 import { useAppSelector } from "@/redux/hooks"
-
-/** How many recent notifications the badge/bell page fetches at once. */
-const BELL_LIMIT = 20
 
 /** Throttle window (ms) for on-focus revalidation, so tab-switching isn't chatty. */
 const FOCUS_THROTTLE_MS = 5_000
 
 /**
- * SWR wrapper for {@link queryMyNotifications}. `data` is the viewer's recent
- * notification page (newest first, page 0) plus the `unreadCount` for the badge,
- * or `null`. User-scoped — only runs once authenticated.
+ * SWR wrapper for the bell/badge. `data` is the viewer's recent notification
+ * page (newest first, page 0) plus the `unreadCount` for the badge, or `null`.
+ * User-scoped — only runs once authenticated.
+ *
+ * Backed by the real BE REST notifications API
+ * (`GET /api/v1/notifications` + `/unread-count`) — no more `MyNotifications`
+ * GraphQL op (the FTES BE has no notifications GraphQL field).
  *
  * **Polling is THE delivery mechanism for notifications** (non-realtime, by
  * product decision — no Socket.io subscription is wired). This hook owns the
@@ -25,17 +26,9 @@ const FOCUS_THROTTLE_MS = 5_000
  */
 export const useQueryMyNotificationsSwr = () => {
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
-    return useSWR<QueryMyNotificationsData | null>(
+    return useSWR<NotificationBadge | null>(
         authenticated ? ["QUERY_MY_NOTIFICATIONS_SWR"] : null,
-        async () => {
-            // unwrap the standard API envelope; null when absent
-            const result = await queryMyNotifications({
-                request: {
-                    limit: BELL_LIMIT,
-                },
-            })
-            return result.data?.myNotifications?.data ?? null
-        },
+        () => getNotificationBadge(),
         {
             // polling = delivery: 60s cadence, paused while the tab is hidden
             refreshInterval: 60_000,

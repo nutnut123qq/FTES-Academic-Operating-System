@@ -1,10 +1,13 @@
 import { NotificationType } from "@/modules/api/graphql/queries/types/notifications"
-import type { QueryNotificationData } from "@/modules/api/graphql/queries/types/notifications"
+import type { NotificationItem } from "@/modules/api/rest/notification/types"
 import type { QueryNotificationPreferencesData } from "@/modules/api/graphql/queries/types/notification-preferences"
 
 /**
- * The eight real {@link NotificationType} values, in display order — the source
- * list rendered as per-type toggles in the preferences surface.
+ * The (mock) preferences {@link NotificationType} values, in display order — the
+ * source list rendered as per-type toggles in the preferences surface. NOTE: the
+ * preferences store is a FE-only mock whose key space is distinct from the
+ * delivered notifications' backend types, so per-type muting is cosmetic until a
+ * real REST preferences integration lands; `muteAll` is the effective control.
  */
 export const NOTIFICATION_TYPES: Array<NotificationType> = [
     NotificationType.System,
@@ -29,9 +32,9 @@ export const NOTIFICATION_TYPES: Array<NotificationType> = [
  * @returns the visible subset of `items`.
  */
 export const filterNotificationsByPreferences = (
-    items: Array<QueryNotificationData>,
+    items: Array<NotificationItem>,
     preferences: QueryNotificationPreferencesData | null | undefined,
-): Array<QueryNotificationData> => {
+): Array<NotificationItem> => {
     if (!preferences) {
         return items
     }
@@ -41,7 +44,7 @@ export const filterNotificationsByPreferences = (
     if (preferences.mutedTypes.length === 0) {
         return items
     }
-    const muted = new Set(preferences.mutedTypes)
+    const muted = new Set<string>(preferences.mutedTypes)
     return items.filter((item) => !muted.has(item.type))
 }
 
@@ -62,7 +65,7 @@ export const filterNotificationsByPreferences = (
  */
 export const deriveMutedAwareUnreadCount = (
     rawUnreadCount: number,
-    fetchedItems: Array<QueryNotificationData>,
+    fetchedItems: Array<NotificationItem>,
     preferences: QueryNotificationPreferencesData | null | undefined,
 ): number => {
     if (!preferences) {
@@ -74,7 +77,7 @@ export const deriveMutedAwareUnreadCount = (
     if (preferences.mutedTypes.length === 0) {
         return rawUnreadCount
     }
-    const muted = new Set(preferences.mutedTypes)
+    const muted = new Set<string>(preferences.mutedTypes)
     const mutedUnread = fetchedItems.filter(
         (item) => !item.isRead && muted.has(item.type),
     ).length

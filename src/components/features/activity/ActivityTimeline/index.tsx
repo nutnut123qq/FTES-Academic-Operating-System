@@ -29,6 +29,7 @@ const KIND_ICON: Record<ActivityKind, Icon> = {
     coinEarned: CoinsIcon,
     eventJoined: CalendarCheckIcon,
     groupJoined: UsersThreeIcon,
+    other: PulseIcon,
 }
 
 /** Coarse relative-time formatter — mins / hours / days ago, no i18n plural fuss. */

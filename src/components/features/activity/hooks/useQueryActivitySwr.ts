@@ -38,6 +38,6 @@ const fetchActivityMock = async (): Promise<Array<ActivityItem>> => [
 
 /** Loads the user activity timeline. Mocked; SWR-shaped for a drop-in BE swap. */
 export const useQueryActivitySwr = () => {
-    const { data, isLoading, error } = useSWR(["activity"], () => fetchActivityMock())
-    return { activity: data ?? [], isLoading, error }
+    const { data, isLoading, error, mutate } = useSWR(["activity"], () => fetchActivityMock())
+    return { activity: data ?? [], isLoading, error, mutate }
 }

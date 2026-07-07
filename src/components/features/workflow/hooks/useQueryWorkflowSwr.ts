@@ -32,6 +32,6 @@ const fetchWorkflowMock = async (): Promise<Array<WorkflowItem>> => [
 
 /** Loads the content-workflow board items (§19). Mocked; SWR-shaped for a drop-in BE swap. */
 export const useQueryWorkflowSwr = () => {
-    const { data, isLoading, error } = useSWR(["workflow"], () => fetchWorkflowMock())
-    return { items: data ?? [], isLoading, error }
+    const { data, isLoading, error, mutate } = useSWR(["workflow"], () => fetchWorkflowMock())
+    return { items: data ?? [], isLoading, error, mutate }
 }

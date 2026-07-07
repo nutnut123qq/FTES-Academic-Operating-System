@@ -64,6 +64,6 @@ const fetchProductsMock = async (): Promise<Array<Product>> => [
 
 /** Loads the marketplace product catalog. Mocked; SWR-shaped for a drop-in BE swap. */
 export const useQueryProductsSwr = () => {
-    const { data, isLoading, error } = useSWR(["products"], () => fetchProductsMock())
-    return { products: data ?? [], isLoading, error }
+    const { data, isLoading, error, mutate } = useSWR(["products"], () => fetchProductsMock())
+    return { products: data ?? [], isLoading, error, mutate }
 }

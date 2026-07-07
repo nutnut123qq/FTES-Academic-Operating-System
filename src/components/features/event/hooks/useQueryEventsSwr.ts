@@ -32,6 +32,6 @@ const fetchEventsMock = async (): Promise<Array<Event>> => [
 
 /** Loads the event catalog. Mocked; SWR-shaped for a drop-in BE swap. */
 export const useQueryEventsSwr = () => {
-    const { data, isLoading, error } = useSWR(["events"], () => fetchEventsMock())
-    return { events: data ?? [], isLoading, error }
+    const { data, isLoading, error, mutate } = useSWR(["events"], () => fetchEventsMock())
+    return { events: data ?? [], isLoading, error, mutate }
 }

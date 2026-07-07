@@ -11,9 +11,12 @@ import {
     CoinsIcon,
     CalendarCheckIcon,
     UsersThreeIcon,
+    PulseIcon,
     type Icon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
+import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { useQueryActivitySwr, type ActivityKind } from "../hooks/useQueryActivitySwr"
 
 /** Kind → phosphor icon. Each row's badge uses the accent-tinted token pair. */
@@ -40,20 +43,36 @@ const relativeTime = (iso: string): string => {
     return `${days}d`
 }
 
+/** Loading skeleton — mirrors the timeline row anatomy (badge + label/text + time). */
+const TimelineSkeleton = () => (
+    <ul className="flex flex-col divide-y divide-separator">
+        {[0, 1, 2, 3, 4].map((index) => (
+            <li key={index} className="flex items-start gap-4 py-4">
+                <Skeleton className="size-10 shrink-0 rounded-large" />
+                <div className="flex min-w-0 flex-1 flex-col gap-0">
+                    <Skeleton.Typography type="body-xs" width="1/3" />
+                    <Skeleton.Typography type="body-sm" width="3/4" />
+                </div>
+                <Skeleton.Typography type="body-xs" className="w-8 shrink-0" />
+            </li>
+        ))}
+    </ul>
+)
+
 /**
  * Activity timeline (§18) — the FE surface of the Activity Engine backbone (which is
  * BE). A vertical feed of the user's recent actions: each row is an accent-tinted
  * icon badge (by kind) + the event text + a relative timestamp, separated by rows.
  * Feature owns data (mock) + kind→icon map; tokens own the look. ponytail: plain
- * bordered rows, coarse relative time, mock feed — no BE contract yet.
+ * divided rows, coarse relative time, mock feed — no BE contract yet.
  */
 export const ActivityTimeline = () => {
     const t = useTranslations("activity")
-    const { activity } = useQueryActivitySwr()
+    const { activity, isLoading, error, mutate } = useQueryActivitySwr()
 
     return (
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-6">
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-0">
                 <Typography type="h4" weight="bold">
                     {t("title")}
                 </Typography>
@@ -62,11 +81,22 @@ export const ActivityTimeline = () => {
                 </Typography>
             </div>
 
-            {activity.length === 0 ? (
-                <Typography type="body-sm" color="muted">
-                    {t("empty")}
-                </Typography>
-            ) : (
+            <AsyncContent
+                isLoading={isLoading && activity.length === 0}
+                skeleton={<TimelineSkeleton />}
+                isEmpty={activity.length === 0}
+                emptyContent={{
+                    icon: <PulseIcon aria-hidden focusable="false" className="size-8 text-muted" />,
+                    title: t("empty"),
+                    description: t("emptyDescription"),
+                }}
+                error={activity.length === 0 ? error : undefined}
+                errorContent={{
+                    title: t("error"),
+                    onRetry: () => void mutate(),
+                    retryLabel: t("retry"),
+                }}
+            >
                 <ul className="flex flex-col divide-y divide-separator">
                     {activity.map((item) => {
                         const Icon = KIND_ICON[item.kind]
@@ -75,11 +105,11 @@ export const ActivityTimeline = () => {
                                 <div className="flex size-10 shrink-0 items-center justify-center rounded-large bg-accent/10 text-accent">
                                     <Icon className="size-5" aria-hidden />
                                 </div>
-                                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                                <div className="flex min-w-0 flex-1 flex-col gap-0">
                                     <Typography type="body-xs" weight="medium" className="text-accent">
                                         {t(`kinds.${item.kind}`)}
                                     </Typography>
-                                    <Typography type="body-sm" className="text-foreground">
+                                    <Typography type="body-sm" className="line-clamp-2 text-foreground">
                                         {item.text}
                                     </Typography>
                                 </div>
@@ -90,7 +120,7 @@ export const ActivityTimeline = () => {
                         )
                     })}
                 </ul>
-            )}
+            </AsyncContent>
         </div>
     )
 }

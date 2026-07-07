@@ -22,7 +22,9 @@ import {
     type SavedItem,
 } from "@/hooks/zustand/savedItems"
 import { SaveButton } from "@/components/blocks/buttons/SaveButton"
-import { EmptyState } from "@/components/blocks/feedback/EmptyState"
+import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { EmptyContent } from "@/components/blocks/async/EmptyContent"
+import { SearchInput } from "@/components/reuseable/SearchInput"
 import { ExtendedTabs } from "@/components/blocks/navigation/ExtendedTabs"
 import { useQueryResourceHubSwr } from "@/components/features/resource/hooks/useQueryResourceHubSwr"
 import { useQueryCoursesSwr } from "@/components/features/course/hooks/useQueryCoursesSwr"
@@ -84,11 +86,11 @@ export const SavedLibrary = () => {
     const [query, setQuery] = useState("")
 
     // mock datasets the saved ids join against
-    const { resources, isLoading: resourcesLoading } = useQueryResourceHubSwr()
-    const { courses, isLoading: coursesLoading } = useQueryCoursesSwr()
-    const { posts: communityPosts, isLoading: communityLoading } = useQueryCommunityFeedSwr()
-    const { posts: groupPosts, isLoading: groupLoading } = useQueryGroupFeedSwr("saved-library")
-    const { posts: subjectPosts, isLoading: subjectLoading } = useQuerySubjectFeedSwr("saved-library", "forYou")
+    const { resources, isLoading: resourcesLoading, error: resourcesError, mutate: mutateResources } = useQueryResourceHubSwr()
+    const { courses, isLoading: coursesLoading, error: coursesError, mutate: mutateCourses } = useQueryCoursesSwr()
+    const { posts: communityPosts, isLoading: communityLoading, error: communityError, mutate: mutateCommunity } = useQueryCommunityFeedSwr()
+    const { posts: groupPosts, isLoading: groupLoading, error: groupError, mutate: mutateGroup } = useQueryGroupFeedSwr("saved-library")
+    const { posts: subjectPosts, isLoading: subjectLoading, error: subjectError, mutate: mutateSubject } = useQuerySubjectFeedSwr("saved-library", "forYou")
 
     const isJoining =
         !isHydrated ||
@@ -97,6 +99,16 @@ export const SavedLibrary = () => {
         communityLoading ||
         groupLoading ||
         subjectLoading
+
+    // any join dataset failing → the library can't resolve rows: show one error + retry all
+    const joinError = resourcesError || coursesError || communityError || groupError || subjectError
+    const retryJoins = () => {
+        void mutateResources()
+        void mutateCourses()
+        void mutateCommunity()
+        void mutateGroup()
+        void mutateSubject()
+    }
 
     /** Saved entries resolved against the datasets, newest-saved first. */
     const rows = useMemo<Array<SavedRow>>(() => {
@@ -186,8 +198,8 @@ export const SavedLibrary = () => {
             </Typography>
 
             {!authenticated ? (
-                <EmptyState
-                    icon={<SignInIcon aria-hidden focusable="false" />}
+                <EmptyContent
+                    icon={<SignInIcon aria-hidden focusable="false" className="size-8 text-muted" />}
                     title={t("savedItems.signInTitle")}
                     description={t("savedItems.signInHint")}
                     action={
@@ -214,39 +226,48 @@ export const SavedLibrary = () => {
                         </Tabs.ListContainer>
                     </ExtendedTabs>
 
-                    <input
+                    <SearchInput
                         value={query}
-                        onChange={(event) => setQuery(event.target.value)}
+                        onValueChange={setQuery}
                         placeholder={t("savedItems.searchPlaceholder")}
-                        aria-label={t("savedItems.searchPlaceholder")}
-                        className="w-full rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none placeholder:text-muted focus:border-accent"
+                        className="sm:max-w-none"
                     />
 
-                    {isJoining ? (
-                        <SavedLibrarySkeleton />
-                    ) : tabRows.length === 0 ? (
-                        <EmptyState
-                            icon={<BookmarkSimpleIcon aria-hidden focusable="false" />}
-                            title={t(`savedItems.empty.${tab}.title`)}
-                            description={t(`savedItems.empty.${tab}.hint`)}
-                            action={
-                                <Button size="sm" variant="secondary" onPress={onBrowse}>
-                                    {t(`savedItems.empty.${tab}.cta`)}
-                                </Button>
-                            }
-                        />
-                    ) : visibleRows.length === 0 ? (
-                        <EmptyState
-                            icon={<BookmarkSimpleIcon aria-hidden focusable="false" />}
-                            title={t("savedItems.noResults")}
-                        />
-                    ) : (
+                    <AsyncContent
+                        isLoading={isJoining}
+                        skeleton={<SavedLibrarySkeleton />}
+                        error={joinError}
+                        errorContent={{
+                            title: t("savedItems.error.title"),
+                            description: t("savedItems.error.hint"),
+                            onRetry: retryJoins,
+                            retryLabel: t("savedItems.error.retry"),
+                        }}
+                        isEmpty={tabRows.length === 0 || visibleRows.length === 0}
+                        emptyContent={
+                            tabRows.length === 0
+                                ? {
+                                    icon: <BookmarkSimpleIcon aria-hidden focusable="false" className="size-8 text-muted" />,
+                                    title: t(`savedItems.empty.${tab}.title`),
+                                    description: t(`savedItems.empty.${tab}.hint`),
+                                    action: (
+                                        <Button size="sm" variant="secondary" onPress={onBrowse}>
+                                            {t(`savedItems.empty.${tab}.cta`)}
+                                        </Button>
+                                    ),
+                                }
+                                : {
+                                    icon: <BookmarkSimpleIcon aria-hidden focusable="false" className="size-8 text-muted" />,
+                                    title: t("savedItems.noResults"),
+                                }
+                        }
+                    >
                         <div className="flex flex-col gap-3">
                             {visibleRows.map((row) => (
                                 <SavedRowItem key={`${row.entry.entityType}:${row.entry.entityId}`} row={row} showType={tab === "all"} />
                             ))}
                         </div>
-                    )}
+                    </AsyncContent>
                 </>
             )}
         </div>
@@ -261,7 +282,7 @@ const SavedRowItem = ({ row, showType }: { row: SavedRow; showType: boolean }) =
     return (
         <Link
             href={row.href}
-            className="flex items-center gap-3 rounded-2xl border border-separator p-4 no-underline transition-colors hover:bg-default/40"
+            className="flex items-center gap-3 rounded-2xl border border-separator px-4 py-3 no-underline transition-colors hover:bg-default/40"
         >
             {entry.entityType === "post" && row.author ? (
                 <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent/10 text-xs font-bold text-accent">
@@ -305,13 +326,15 @@ const SavedLibrarySkeleton = () => (
         {[0, 1, 2, 3].map((rowIndex) => (
             <div
                 key={rowIndex}
-                className="flex items-center gap-3 rounded-2xl border border-separator p-4"
+                className="flex items-center gap-3 rounded-2xl border border-separator px-4 py-3"
             >
                 <div className="flex min-w-0 flex-1 flex-col gap-2">
                     <Skeleton className="h-4 w-2/3 rounded-full" />
                     <Skeleton className="h-3 w-1/3 rounded-full" />
                 </div>
-                <Skeleton className="size-8 rounded-large" />
+                {/* trailing type-chip + unsave bookmark, mirroring the real row */}
+                <Skeleton className="h-6 w-16 rounded-full" />
+                <Skeleton className="size-8 rounded-full" />
             </div>
         ))}
     </div>

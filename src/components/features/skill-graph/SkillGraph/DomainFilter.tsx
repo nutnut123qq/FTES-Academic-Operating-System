@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { Button, cn } from "@heroui/react"
+import { Button } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { SKILL_DOMAINS } from "../hooks/useQuerySkillGraphSwr"
 import type { SkillDomain } from "../hooks/useQuerySkillGraphSwr"
@@ -40,7 +40,7 @@ export const DomainFilter = ({ active, onToggle, onClear }: DomainFilterProps) =
                         aria-pressed={isActive}
                     >
                         <span
-                            className={cn("size-2.5 shrink-0 rounded-full")}
+                            className="size-3 shrink-0 rounded-full"
                             style={{ backgroundColor: domainVar(domain) }}
                             aria-hidden
                         />

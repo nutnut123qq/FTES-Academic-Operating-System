@@ -31,6 +31,6 @@ const fetchAiToolsMock = async (): Promise<Array<AiTool>> => [
 
 /** Loads the AI tools hub list. Mocked; SWR-shaped for a drop-in BE swap. */
 export const useQueryAiToolsSwr = () => {
-    const { data, isLoading, error } = useSWR(["ai-tools"], () => fetchAiToolsMock())
-    return { tools: data ?? [], isLoading, error }
+    const { data, isLoading, error, mutate } = useSWR(["ai-tools"], () => fetchAiToolsMock())
+    return { tools: data ?? [], isLoading, error, mutate }
 }

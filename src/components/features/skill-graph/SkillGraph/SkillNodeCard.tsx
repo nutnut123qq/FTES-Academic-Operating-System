@@ -53,7 +53,7 @@ const SkillNodeCardBase = ({ data }: NodeProps) => {
                 ) : skill.status === "mastered" ? (
                     <GraduationCapIcon aria-hidden focusable="false" className="size-4 text-foreground" weight="fill" />
                 ) : null}
-                <span className="line-clamp-2 text-[10px] font-medium leading-tight text-foreground">
+                <span className="line-clamp-2 text-xs font-medium leading-tight text-foreground">
                     {skill.name}
                 </span>
             </span>

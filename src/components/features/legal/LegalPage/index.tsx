@@ -78,8 +78,8 @@ const ICONS: Record<string, Icon> = {
 const ItemList = ({ items }: { items: NonNullable<LegalSection["items"]> }) => (
     <ul className="flex flex-col gap-2">
         {items.map((item) => (
-            <li key={item.label ?? item.text} className="flex gap-2.5">
-                <span className="mt-2 size-1.5 shrink-0 rounded-full bg-default-400" aria-hidden />
+            <li key={item.label ?? item.text} className="flex gap-2">
+                <span className="mt-2 size-1.5 shrink-0 rounded-full bg-muted" aria-hidden />
                 <Typography type="body" color="muted" className="leading-relaxed">
                     {item.label ? (
                         <span className="font-semibold text-foreground">{`${item.label} `}</span>
@@ -95,13 +95,13 @@ const ItemList = ({ items }: { items: NonNullable<LegalSection["items"]> }) => (
 const DefinitionList = ({ definitions }: { definitions: NonNullable<LegalSection["definitions"]> }) => (
     <ul className="flex flex-col gap-3">
         {definitions.map((entry) => (
-            <li key={entry.term} className="border-l-2 border-accent/40 pl-4">
+            <li key={entry.term} className="flex flex-col gap-2 border-l-2 border-accent/40 pl-4">
                 <Typography type="body" color="muted" className="leading-relaxed">
                     <span className="font-semibold text-foreground">{`${entry.term} — `}</span>
                     {entry.definition}
                 </Typography>
                 {entry.example ? (
-                    <Typography type="body-sm" color="muted" className="mt-1 italic leading-relaxed">
+                    <Typography type="body-sm" color="muted" className="italic leading-relaxed">
                         {entry.example}
                     </Typography>
                 ) : null}
@@ -132,7 +132,7 @@ const CardGrid = ({ cards }: { cards: NonNullable<LegalSection["cards"]> }) => (
 
 /** Ordered list rendered with accent number badges. */
 const StepList = ({ steps }: { steps: NonNullable<LegalSection["steps"]> }) => (
-    <ol className="flex flex-col gap-2.5">
+    <ol className="flex flex-col gap-3">
         {steps.map((step, index) => (
             <li key={step} className="flex items-start gap-3">
                 <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-accent/10 text-xs font-medium text-accent">
@@ -149,19 +149,19 @@ const StepList = ({ steps }: { steps: NonNullable<LegalSection["steps"]> }) => (
 /** Bordered company contact panel. */
 const ContactPanel = ({ contact }: { contact: NonNullable<LegalSection["contact"]> }) => (
     <div className="flex flex-col gap-2 rounded-2xl border border-default p-4">
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
             <BuildingsIcon className="size-5 shrink-0 text-accent" weight="duotone" aria-hidden />
             <Typography type="body" weight="semibold" className="text-foreground">
                 {contact.company}
             </Typography>
         </div>
-        <div className="flex items-start gap-2.5">
+        <div className="flex items-start gap-2">
             <MapPinIcon className="mt-0.5 size-5 shrink-0 text-muted" aria-hidden />
             <Typography type="body-sm" color="muted" className="leading-relaxed">
                 {contact.address}
             </Typography>
         </div>
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
             <PhoneIcon className="size-5 shrink-0 text-muted" aria-hidden />
             <Typography type="body-sm" color="muted">
                 {contact.phone}
@@ -227,7 +227,7 @@ export const LegalPage = ({ kind }: LegalPageProps) => {
     )
     return (
         <PageContainer>
-            <div className="mx-auto flex max-w-3xl flex-col gap-10">
+            <div className="mx-auto flex max-w-3xl flex-col gap-6">
                 <PageHeader
                     breadcrumb={(
                         <Breadcrumbs>
@@ -247,7 +247,7 @@ export const LegalPage = ({ kind }: LegalPageProps) => {
                         </Typography>
                     )}
                 />
-                <div className="flex flex-col gap-8">
+                <div className="flex flex-col gap-6">
                     <Typography type="body" className="leading-relaxed">
                         {doc.intro}
                     </Typography>

@@ -55,6 +55,6 @@ const fetchRecommendationsMock = async (): Promise<RecommendationsByKind> => ({
  * BE lands.
  */
 export const useQueryRecommendationsSwr = () => {
-    const { data, isLoading, error } = useSWR(["recommendations"], () => fetchRecommendationsMock())
-    return { recommendations: data, isLoading, error }
+    const { data, isLoading, error, mutate } = useSWR(["recommendations"], () => fetchRecommendationsMock())
+    return { recommendations: data, isLoading, error, mutate }
 }

@@ -21,8 +21,8 @@ export const SkillGraphSkeleton = ({ heightClassName = "h-[480px]" }: SkillGraph
             ))}
         </div>
         <div className="flex flex-col gap-3 sm:flex-row">
-            <Skeleton className={`w-full flex-1 rounded-large ${heightClassName}`} />
-            <Skeleton className="h-40 w-full rounded-large sm:w-56" />
+            <Skeleton className={`w-full flex-1 rounded-3xl ${heightClassName}`} />
+            <Skeleton className="h-40 w-full rounded-3xl sm:w-72" />
         </div>
     </div>
 )

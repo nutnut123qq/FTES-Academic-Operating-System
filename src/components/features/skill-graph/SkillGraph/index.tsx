@@ -35,7 +35,7 @@ export const SkillGraph = ({ subjectId, heightClassName = "h-[480px]", className
     const t = useTranslations()
     const { isMobile } = useSmViewpoint()
     const scope = useMemo(() => (subjectId ? { subjectId } : undefined), [subjectId])
-    const { graph, isLoading, error } = useQuerySkillGraphSwr(scope)
+    const { graph, error, mutate } = useQuerySkillGraphSwr(scope)
 
     const [activeDomains, setActiveDomains] = useState<Set<SkillDomain>>(new Set())
     const [selected, setSelected] = useState<SkillNode | null>(null)
@@ -61,6 +61,8 @@ export const SkillGraph = ({ subjectId, heightClassName = "h-[480px]", className
                 error={!graph ? error : undefined}
                 errorContent={{
                     title: t("skillGraph.error"),
+                    onRetry: () => void mutate(),
+                    retryLabel: t("skillGraph.retry"),
                 }}
                 isEmpty={isEmpty}
                 emptyContent={{

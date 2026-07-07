@@ -25,6 +25,6 @@ const fetchIntegrationsMock = async (): Promise<Array<Integration>> => [
 
 /** Loads connected/available integrations (§23). Mocked; SWR-shaped for a drop-in BE swap. */
 export const useQueryIntegrationsSwr = () => {
-    const { data, isLoading, error } = useSWR(["integrations"], () => fetchIntegrationsMock())
-    return { integrations: data ?? [], isLoading, error }
+    const { data, isLoading, error, mutate } = useSWR(["integrations"], () => fetchIntegrationsMock())
+    return { integrations: data ?? [], isLoading, error, mutate }
 }

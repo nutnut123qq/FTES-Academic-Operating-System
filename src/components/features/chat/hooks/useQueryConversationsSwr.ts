@@ -42,8 +42,8 @@ const fetchMessagesMock = async (conversationId: string): Promise<Array<ChatMess
 
 /** Loads the conversation list. Mocked; SWR-shaped for a drop-in BE swap. */
 export const useQueryConversationsSwr = () => {
-    const { data, isLoading, error } = useSWR(["conversations"], () => fetchConversationsMock())
-    return { conversations: data ?? [], isLoading, error }
+    const { data, isLoading, error, mutate } = useSWR(["conversations"], () => fetchConversationsMock())
+    return { conversations: data ?? [], isLoading, error, mutate }
 }
 
 /**
@@ -51,9 +51,9 @@ export const useQueryConversationsSwr = () => {
  * refetches when the selected conversation changes (drop-in BE swap point).
  */
 export const useQueryConversationMessagesSwr = (conversationId: string | null) => {
-    const { data, isLoading, error } = useSWR(
+    const { data, isLoading, error, mutate } = useSWR(
         conversationId ? ["conversation-messages", conversationId] : null,
         () => fetchMessagesMock(conversationId as string),
     )
-    return { messages: data ?? [], isLoading, error }
+    return { messages: data ?? [], isLoading, error, mutate }
 }

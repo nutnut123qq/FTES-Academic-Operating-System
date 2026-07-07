@@ -11,6 +11,8 @@ import {
     TShirtIcon,
     TicketIcon,
 } from "@phosphor-icons/react"
+import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { useQueryProductsSwr, type Product, type ProductCategory } from "../hooks/useQueryProductsSwr"
 
 /** Category filter options: "all" + every product category. */
@@ -34,7 +36,7 @@ const CATEGORY_ICON: Record<ProductCategory, React.ComponentType<{ className?: s
  */
 export const MarketplaceCatalog = () => {
     const t = useTranslations("marketplace")
-    const { products } = useQueryProductsSwr()
+    const { products, isLoading, error, mutate } = useQueryProductsSwr()
     const [query, setQuery] = useState("")
     const [category, setCategory] = useState<ProductCategory | "all">("all")
 
@@ -48,7 +50,7 @@ export const MarketplaceCatalog = () => {
 
     return (
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-6">
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-0">
                 <div className="flex items-center gap-2">
                     <StorefrontIcon className="size-6 text-accent" aria-hidden />
                     <Typography type="h4" weight="bold">
@@ -60,14 +62,14 @@ export const MarketplaceCatalog = () => {
                 </Typography>
             </div>
 
-            {/* search + category filter */}
+            {/* search + category filter — static chrome, stays outside the skeleton */}
             <div className="flex flex-col gap-3">
                 <input
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
                     placeholder={t("catalog.searchPlaceholder")}
                     aria-label={t("catalog.searchPlaceholder")}
-                    className="w-full rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none placeholder:text-muted focus:border-accent"
+                    className="w-full rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted focus:border-accent"
                 />
                 <div className="flex flex-wrap gap-2">
                     {CATEGORIES.map((option) => (
@@ -83,18 +85,35 @@ export const MarketplaceCatalog = () => {
                 </div>
             </div>
 
-            {/* product grid */}
-            {filtered.length === 0 ? (
-                <Typography type="body-sm" color="muted">
-                    {t("catalog.empty")}
-                </Typography>
-            ) : (
+            {/* product grid — skeleton while loading, error/empty via house states */}
+            <AsyncContent
+                isLoading={isLoading}
+                skeleton={
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        {Array.from({ length: 6 }, (_, index) => (
+                            <ProductCardSkeleton key={index} />
+                        ))}
+                    </div>
+                }
+                error={error}
+                errorContent={{
+                    title: t("catalog.errorTitle"),
+                    description: t("catalog.errorDescription"),
+                    onRetry: () => void mutate(),
+                    retryLabel: t("catalog.retry"),
+                }}
+                isEmpty={filtered.length === 0}
+                emptyContent={{
+                    title: t("catalog.empty"),
+                    icon: <StorefrontIcon aria-hidden focusable="false" className="size-8 text-muted" />,
+                }}
+            >
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     {filtered.map((product) => (
                         <ProductCard key={product.id} product={product} />
                     ))}
                 </div>
-            )}
+            </AsyncContent>
         </div>
     )
 }
@@ -115,7 +134,7 @@ const ProductCard = ({ product }: { product: Product }) => {
                     <Typography type="body-sm" weight="medium" truncate>
                         {product.name}
                     </Typography>
-                    <Chip size="sm" variant="soft" color="accent" className="mt-1">
+                    <Chip size="sm" variant="soft" color="accent" className="mt-2">
                         {t(`categories.${product.category}`)}
                     </Chip>
                 </div>
@@ -126,7 +145,7 @@ const ProductCard = ({ product }: { product: Product }) => {
             </Typography>
 
             <div className="mt-auto flex items-center justify-between gap-2">
-                <div className="flex items-center gap-1 text-accent">
+                <div className="flex items-center gap-2 text-accent">
                     <CoinsIcon className="size-4" aria-hidden />
                     <Typography type="body-sm" weight="bold" className="text-accent">
                         {t("priceCoin", { amount: format.number(product.priceCoin) })}
@@ -139,3 +158,28 @@ const ProductCard = ({ product }: { product: Product }) => {
         </div>
     )
 }
+
+/**
+ * Skeleton mirroring {@link ProductCard}: identity row (badge + name line + chip),
+ * two description lines, and the price/action footer row — same boxes, same
+ * proportions, same `rounded-2xl` frame.
+ */
+const ProductCardSkeleton = () => (
+    <div className="flex flex-col gap-3 rounded-2xl border border-separator p-4">
+        <div className="flex items-center gap-3">
+            <Skeleton className="size-11 shrink-0 rounded-large" />
+            <div className="flex min-w-0 flex-1 flex-col gap-2">
+                <Skeleton.Typography type="body-sm" width="1/2" />
+                <Skeleton.Chip />
+            </div>
+        </div>
+        <div className="flex flex-col">
+            <Skeleton.Typography type="body-xs" width="full" />
+            <Skeleton.Typography type="body-xs" width="2/3" />
+        </div>
+        <div className="mt-auto flex items-center justify-between gap-2">
+            <Skeleton.Typography type="body-sm" width="1/4" />
+            <Skeleton.Button width="w-16" />
+        </div>
+    </div>
+)

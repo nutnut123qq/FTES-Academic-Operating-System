@@ -14,14 +14,14 @@ export const SkillGraphLegend = () => {
     const t = useTranslations()
 
     return (
-        <div className="flex flex-col gap-3 rounded-2xl border border-default bg-surface p-4">
+        <div className="flex flex-col gap-3 rounded-3xl border border-separator bg-surface p-4">
             <div className="flex flex-col gap-2">
                 <Typography type="body-xs" weight="medium" color="muted">
                     {t("skillGraph.legend.domains")}
                 </Typography>
                 <div className="flex flex-wrap gap-2">
                     {SKILL_DOMAINS.map((domain) => (
-                        <span key={domain} className="flex items-center gap-1.5">
+                        <span key={domain} className="flex items-center gap-2">
                             <span
                                 className="size-3 shrink-0 rounded-full"
                                 style={{ backgroundColor: domainVar(domain) }}
@@ -39,9 +39,9 @@ export const SkillGraphLegend = () => {
                 </Typography>
                 <div className="flex flex-wrap gap-3">
                     {STATUSES.map((status) => (
-                        <span key={status} className="flex items-center gap-1.5">
+                        <span key={status} className="flex items-center gap-2">
                             <span
-                                className="size-3 shrink-0 rounded-full border border-default"
+                                className="size-3 shrink-0 rounded-full border border-separator"
                                 style={{
                                     backgroundColor:
                                         status === "mastered"
@@ -63,13 +63,13 @@ export const SkillGraphLegend = () => {
                     {t("skillGraph.legend.edges")}
                 </Typography>
                 <div className="flex flex-wrap gap-3">
-                    <span className="flex items-center gap-1.5">
+                    <span className="flex items-center gap-2">
                         <svg width="20" height="6" aria-hidden focusable="false">
                             <line x1="0" y1="3" x2="20" y2="3" stroke="var(--muted)" strokeWidth="2" />
                         </svg>
                         <Typography type="body-xs">{t("skillGraph.edges.prerequisite")}</Typography>
                     </span>
-                    <span className="flex items-center gap-1.5">
+                    <span className="flex items-center gap-2">
                         <svg width="20" height="6" aria-hidden focusable="false">
                             <line
                                 x1="0"

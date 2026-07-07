@@ -169,11 +169,11 @@ const fetchSkillGraphMock = async (scope?: SkillGraphScope): Promise<SkillGraphD
 /**
  * Loads the learner's skill graph. Mocked; SWR-shaped for a drop-in BE swap.
  * @param scope - Optional `{ subjectId }` to return a subject-scoped subgraph (skills + 1-hop neighbors).
- * @returns `{ graph, isLoading, error }`.
+ * @returns `{ graph, isLoading, error, mutate }` — `mutate` re-runs the fetch (error-state retry).
  */
 export const useQuerySkillGraphSwr = (scope?: SkillGraphScope) => {
-    const { data, isLoading, error } = useSWR(["skill-graph", scope?.subjectId ?? "full"], () =>
+    const { data, isLoading, error, mutate } = useSWR(["skill-graph", scope?.subjectId ?? "full"], () =>
         fetchSkillGraphMock(scope),
     )
-    return { graph: data, isLoading, error }
+    return { graph: data, isLoading, error, mutate }
 }

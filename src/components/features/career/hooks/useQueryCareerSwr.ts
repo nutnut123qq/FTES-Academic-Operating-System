@@ -60,12 +60,13 @@ const fetchCareerMock = async (): Promise<CareerCenterData> => ({
 
 /** Loads the Career Center (§21). Mocked; SWR-shaped for a drop-in BE swap. */
 export const useQueryCareerSwr = () => {
-    const { data, isLoading, error } = useSWR(["career"], () => fetchCareerMock())
+    const { data, isLoading, error, mutate } = useSWR(["career"], () => fetchCareerMock())
     return {
         skills: data?.skills ?? [],
         roadmaps: data?.roadmaps ?? [],
         jobs: data?.jobs ?? [],
         isLoading,
         error,
+        mutate,
     }
 }

@@ -41,7 +41,7 @@ export const SkillDetailPanel = ({ skill, onClose, className }: SkillDetailPanel
             role="dialog"
             aria-label={t("skillGraph.panel.title", { name: skill.name })}
             className={cn(
-                "flex w-full flex-col gap-4 rounded-2xl border border-default bg-surface p-4 sm:w-72",
+                "flex w-full flex-col gap-4 rounded-3xl border border-separator bg-surface p-4 sm:w-72",
                 className,
             )}
         >
@@ -90,13 +90,12 @@ export const SkillDetailPanel = ({ skill, onClose, className }: SkillDetailPanel
 
             <ProgressMeter value={skill.level} label={t("skillGraph.panel.level")} showValue />
 
-
             {(skill.subjectIds.length > 0 || skill.courseIds.length > 0) && (
                 <div className="flex flex-col gap-2 border-t border-separator pt-3">
                     <Typography type="body-xs" weight="medium" color="muted">
                         {t("skillGraph.panel.related")}
                     </Typography>
-                    <div className="flex flex-col gap-1.5">
+                    <div className="flex flex-col gap-2">
                         {skill.subjectIds.map((subjectId) => (
                             <Link
                                 key={subjectId}

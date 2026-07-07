@@ -11,6 +11,8 @@ import {
     ShieldCheckIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
+import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import {
     useQueryWorkflowSwr,
     type WorkflowStage,
@@ -30,6 +32,35 @@ const STAGE_ICON: Record<WorkflowStage, React.ComponentType<{ className?: string
     archived: ArchiveIcon,
 }
 
+/** Loading skeleton — mirrors the kanban columns (header row + a couple of cards). */
+const WorkflowBoardSkeleton = () => (
+    <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-3">
+        {STAGES.map((stage) => (
+            <div
+                key={stage}
+                className="flex w-72 shrink-0 flex-col gap-3 rounded-3xl border border-separator bg-default/40 p-3"
+            >
+                <div className="flex items-center gap-2">
+                    <Skeleton className="size-4 shrink-0 rounded-full" />
+                    <Skeleton.Typography type="body-sm" width="1/2" />
+                    <Skeleton.Chip className="ms-auto" />
+                </div>
+                <div className="flex flex-col gap-2">
+                    {Array.from({ length: 2 }).map((_, index) => (
+                        <div
+                            key={index}
+                            className="flex flex-col gap-2 rounded-2xl border border-separator bg-surface p-3"
+                        >
+                            <Skeleton.Typography type="body-sm" width="3/4" />
+                            <Skeleton.Chip className="self-start" />
+                        </div>
+                    ))}
+                </div>
+            </div>
+        ))}
+    </div>
+)
+
 /**
  * Workflow board (§19) — a read-only kanban of content moving through the review
  * pipeline (Draft → AI Review → Mod Review → Approved → Published → Archived). One
@@ -39,14 +70,14 @@ const STAGE_ICON: Record<WorkflowStage, React.ComponentType<{ className?: string
  */
 export const WorkflowBoard = () => {
     const t = useTranslations("workflow")
-    const { items } = useQueryWorkflowSwr()
+    const { items, isLoading, error, mutate } = useQueryWorkflowSwr()
 
     const byStage = (stage: WorkflowStage): Array<WorkflowItem> =>
         items.filter((item) => item.stage === stage)
 
     return (
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-6">
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-0">
                 <Typography type="h4" weight="bold">
                     {t("title")}
                 </Typography>
@@ -55,52 +86,69 @@ export const WorkflowBoard = () => {
                 </Typography>
             </div>
 
-            {/* kanban columns — horizontal scroll on small screens */}
-            <div className="-mx-1 flex gap-4 overflow-x-auto px-1 pb-2">
-                {STAGES.map((stage) => {
-                    const cards = byStage(stage)
-                    const StageIcon = STAGE_ICON[stage]
-                    return (
-                        <section
-                            key={stage}
-                            aria-label={t(`stages.${stage}`)}
-                            className="flex w-72 shrink-0 flex-col gap-3 rounded-2xl border border-separator bg-default/20 p-3"
-                        >
-                            <div className="flex items-center gap-2">
-                                <StageIcon className="size-4 shrink-0 text-accent" aria-hidden />
-                                <Typography type="body-sm" weight="medium" className="min-w-0 truncate">
-                                    {t(`stages.${stage}`)}
-                                </Typography>
-                                <Chip size="sm" variant="soft" color="default" className="ms-auto">
-                                    {t("itemsCount", { count: cards.length })}
-                                </Chip>
-                            </div>
-
-                            <div className="flex flex-col gap-2">
-                                {cards.length === 0 ? (
-                                    <Typography type="body-xs" color="muted" className="px-1 py-4 text-center">
-                                        {t("emptyColumn")}
+            <AsyncContent
+                isLoading={isLoading && items.length === 0}
+                skeleton={<WorkflowBoardSkeleton />}
+                isEmpty={items.length === 0}
+                emptyContent={{ title: t("states.empty") }}
+                error={items.length === 0 ? error : undefined}
+                errorContent={{
+                    title: t("states.error"),
+                    onRetry: () => void mutate(),
+                    retryLabel: t("states.retry"),
+                }}
+            >
+                {/* kanban columns — horizontal scroll on small screens */}
+                <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-3">
+                    {STAGES.map((stage) => {
+                        const cards = byStage(stage)
+                        const StageIcon = STAGE_ICON[stage]
+                        return (
+                            <section
+                                key={stage}
+                                aria-label={t(`stages.${stage}`)}
+                                className="flex w-72 shrink-0 flex-col gap-3 rounded-3xl border border-separator bg-default/40 p-3"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <StageIcon className="size-4 shrink-0 text-accent" aria-hidden />
+                                    <Typography type="body-sm" weight="medium" className="min-w-0 truncate">
+                                        {t(`stages.${stage}`)}
                                     </Typography>
-                                ) : (
-                                    cards.map((item) => (
-                                        <article
-                                            key={item.id}
-                                            className="flex flex-col gap-2 rounded-2xl border border-separator bg-surface p-3"
-                                        >
-                                            <Typography type="body-sm" weight="medium">
-                                                {item.title}
-                                            </Typography>
-                                            <Chip size="sm" variant="soft" color="accent" className="self-start">
-                                                {t(`contentTypes.${item.contentType}`)}
-                                            </Chip>
-                                        </article>
-                                    ))
-                                )}
-                            </div>
-                        </section>
-                    )
-                })}
-            </div>
+                                    <Chip size="sm" variant="soft" color="default" className="ms-auto">
+                                        {t("itemsCount", { count: cards.length })}
+                                    </Chip>
+                                </div>
+
+                                <div className="flex flex-col gap-2">
+                                    {cards.length === 0 ? (
+                                        <Typography type="body-xs" color="muted" className="px-1 py-4 text-center">
+                                            {t("emptyColumn")}
+                                        </Typography>
+                                    ) : (
+                                        cards.map((item) => (
+                                            <article
+                                                key={item.id}
+                                                className="flex flex-col gap-2 rounded-2xl border border-separator bg-surface p-3"
+                                            >
+                                                <Typography
+                                                    type="body-sm"
+                                                    weight="medium"
+                                                    className="line-clamp-2"
+                                                >
+                                                    {item.title}
+                                                </Typography>
+                                                <Chip size="sm" variant="soft" color="accent" className="self-start">
+                                                    {t(`contentTypes.${item.contentType}`)}
+                                                </Chip>
+                                            </article>
+                                        ))
+                                    )}
+                                </div>
+                            </section>
+                        )
+                    })}
+                </div>
+            </AsyncContent>
         </div>
     )
 }

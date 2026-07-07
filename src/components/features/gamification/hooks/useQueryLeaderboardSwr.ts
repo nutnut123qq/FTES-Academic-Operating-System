@@ -1,77 +1,77 @@
 "use client"
 
 import useSWR from "swr"
+import { queryLeaderboard } from "@/modules/api/graphql/queries/query-leaderboard"
+import type { LeaderboardEntryData } from "@/modules/api/graphql/queries/types/leaderboard"
+import { useAppSelector } from "@/redux/hooks"
 
-/** The current user's progression snapshot shown in the stat cards. */
-export interface LeaderboardMe {
-    /** Total experience points. */
-    xp: number
-    /** Current level. */
-    level: number
-    /** Consecutive-day streak. */
-    streak: number
-    /** Rank on the board (1-based). */
-    rank: number
-}
-
-/** A single ranked competitor row on the leaderboard. */
+/** A single ranked competitor row on the leaderboard, mapped from the BE `LeaderboardEntry`. */
 export interface LeaderboardEntry {
+    /** The ranked user's public id (matches `state.user.user.id` for the viewer). */
     id: string
+    /** 1-based rank on the board (BE `LeaderboardEntry.rank`). */
+    rank: number
+    /** Display name — `displayName ?? username`, or an anonymous fallback. */
     name: string
+    /** Season XP for this user (BE `LeaderboardEntry.score`). */
     xp: number
-    level: number
-    /** Uppercase initials used for the avatar tile. */
+    /**
+     * Level — the BE leaderboard carries NO per-user level, so this is always
+     * undefined; the row hides its level sub-line when absent (never fabricated).
+     */
+    level?: number
+    /** Uppercase initials derived from {@link name} for the avatar tile. */
     avatarInitials: string
 }
 
-/** A badge in the achievements row (earned vs locked). */
-export interface LeaderboardBadge {
-    id: string
-    name: string
-    earned: boolean
+/** Anonymous fallback name when the BE `PublicUser` has neither displayName nor username. */
+const ANONYMOUS_NAME = "Ẩn danh"
+
+/** Two-letter uppercase initials from a display name (first + last word, or first two chars). */
+const initialsFrom = (name: string): string => {
+    const parts = name.trim().split(/\s+/).filter(Boolean)
+    if (parts.length === 0) return "?"
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
 }
 
-interface LeaderboardData {
-    me: LeaderboardMe
-    board: Array<LeaderboardEntry>
-    badges: Array<LeaderboardBadge>
-}
-
-// ponytail: mock BE — no gamification endpoint yet. Deterministic snapshot so the
-// leaderboard shell renders. `me.id` matches a `board` row so the shell can
-// highlight the current user. Wire a real GraphQL query (leaderboard()) when the
-// contract lands; the hook API stays.
-const fetchLeaderboardMock = async (): Promise<LeaderboardData> => ({
-    me: { xp: 4820, level: 12, streak: 7, rank: 3 },
-    board: [
-        { id: "u1", name: "Trần Thu Hà", xp: 6210, level: 15, avatarInitials: "TH" },
-        { id: "u2", name: "Phạm Gia Bảo", xp: 5480, level: 13, avatarInitials: "PB" },
-        { id: "me", name: "Bạn", xp: 4820, level: 12, avatarInitials: "BN" },
-        { id: "u4", name: "Vũ Ngọc Ánh", xp: 4310, level: 11, avatarInitials: "VA" },
-        { id: "u5", name: "Đỗ Văn E", xp: 3990, level: 11, avatarInitials: "DE" },
-        { id: "u6", name: "Vũ Thị F", xp: 3540, level: 10, avatarInitials: "VF" },
-        { id: "u7", name: "Lê Minh Quân", xp: 3120, level: 9, avatarInitials: "LQ" },
-        { id: "u8", name: "Hoàng Thị G", xp: 2760, level: 8, avatarInitials: "HG" },
-    ],
-    badges: [
-        { id: "b1", name: "First Steps", earned: true },
-        { id: "b2", name: "Week Streak", earned: true },
-        { id: "b3", name: "Quiz Master", earned: true },
-        { id: "b4", name: "Top 3", earned: false },
-        { id: "b5", name: "Century Club", earned: false },
-    ],
-})
-
-/** ID of the current user's row in `board` (mirrors `me`). */
-export const CURRENT_USER_ID = "me"
-
-/** Loads the leaderboard + progression snapshot. Mocked; SWR-shaped for a drop-in BE swap. */
-export const useQueryLeaderboardSwr = () => {
-    const { data, isLoading, error, mutate } = useSWR(["leaderboard"], () => fetchLeaderboardMock())
+/** Maps a real BE `LeaderboardEntry` onto the FE row model. `level` is intentionally omitted. */
+const toBoardEntry = (entry: LeaderboardEntryData): LeaderboardEntry => {
+    const name = entry.user.displayName ?? entry.user.username ?? ANONYMOUS_NAME
     return {
-        me: data?.me,
-        board: data?.board ?? [],
-        badges: data?.badges ?? [],
+        id: entry.user.id,
+        rank: entry.rank,
+        name,
+        xp: entry.score,
+        avatarInitials: initialsFrom(name),
+    }
+}
+
+/**
+ * Loads the global gamification leaderboard from the real BE
+ * (`leaderboard(scope: GLOBAL, limit: 20)` — returns the entry list directly, no envelope).
+ *
+ * The query is auth-only, so it runs only once the viewer is authenticated; guests get an
+ * empty board. The board is fed by a per-season Redis ZSET that is empty until XP is awarded
+ * in a running season, so `board` is legitimately `[]` today — the shell renders its clean
+ * empty-state. `myUserId` (the viewer's public id) lets the shell highlight the viewer's row.
+ */
+export const useQueryLeaderboardSwr = () => {
+    const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const myUserId = useAppSelector((state) => state.user.user?.id ?? null)
+
+    const { data, isLoading, error, mutate } = useSWR(
+        authenticated ? ["leaderboard", "GLOBAL"] : null,
+        async () => {
+            const result = await queryLeaderboard({})
+            return (result.data?.leaderboard ?? []).map(toBoardEntry)
+        },
+    )
+
+    return {
+        board: data ?? [],
+        /** The viewer's own public id (or `null`) — consumers use it to highlight the self row. */
+        myUserId,
         isLoading,
         error,
         mutate,

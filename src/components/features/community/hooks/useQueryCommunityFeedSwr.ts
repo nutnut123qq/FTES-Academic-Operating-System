@@ -1,12 +1,19 @@
 "use client"
 
 import useSWR from "swr"
+import { useLocale } from "next-intl"
+import {
+    FeedTab,
+    queryCommunityFeed,
+    type FeedPost,
+} from "@/modules/api/graphql/queries/query-community-feed"
+import { formatRelativeTime } from "./relativeTime"
 
-/** A community post (§6, mock until BE lands). */
+/** A community post (BE `Post` mapped to the feed card contract). */
 export interface CommunityPost {
     id: string
     author: string
-    /** URL-facing username (mock until BE lands). */
+    /** URL-facing username for the profile link + hovercard. */
     authorUsername: string
     timeLabel: string
     title: string
@@ -17,18 +24,68 @@ export interface CommunityPost {
     comments: number
 }
 
-/** SWR cache key for the community feed (shared with the like mutation hook). */
+/** Feed scope selectable by the shell tabs. CAMPUS is unsupported by the BE `feed` (needs a campus arg). */
+export type CommunityFeedTab = "forYou" | "following" | "trending"
+
+/** SWR cache key for the DEFAULT (For You) community feed — shared with the like/comment mutations. */
 export const COMMUNITY_FEED_KEY = ["community-feed"]
 
-// ponytail: mock BE — no community endpoint yet. Deterministic sample.
-const fetchFeedMock = async (): Promise<Array<CommunityPost>> => [
-    { id: "cp1", author: "Minh Trần", authorUsername: "minh-tran" /* mock */, timeLabel: "1 giờ trước", title: "Chia sẻ lộ trình học Backend", snippet: "Mình tổng hợp lộ trình 6 tháng từ con số 0…", likes: 42, liked: false, comments: 12 },
-    { id: "cp2", author: "An Nguyễn", authorUsername: "an-nguyen" /* mock */, timeLabel: "3 giờ trước", title: "Hỏi về đồ án SWP391", snippet: "Nhóm mình đang phân vân chọn đề tài, mọi người tư vấn với…", likes: 8, liked: false, comments: 5 },
-    { id: "cp3", author: "Hoa Lê", authorUsername: "hoa-le" /* mock */, timeLabel: "hôm qua", title: "Khoe chứng chỉ AWS đầu tiên", snippet: "Sau 2 tháng ôn cuối cùng cũng pass, cảm ơn cộng đồng…", likes: 130, liked: true, comments: 24 },
-]
+/** Map the shell tab to the BE `FeedTab` enum literal (inlined into the query, not a variable). */
+const toFeedTab = (tab: CommunityFeedTab): FeedTab => {
+    switch (tab) {
+        case "following":
+            return FeedTab.Following
+        case "trending":
+            return FeedTab.Trending
+        case "forYou":
+        default:
+            return FeedTab.ForYou
+    }
+}
 
-/** Loads the community feed. Mocked; SWR-shaped for a drop-in BE swap. */
-export const useQueryCommunityFeedSwr = () => {
-    const { data, isLoading, error, mutate } = useSWR(COMMUNITY_FEED_KEY, () => fetchFeedMock())
+/**
+ * Map a BE `Post` to the feed card contract. The BE feed carries NO body, likes, or
+ * comment counts — those degrade to "" / 0 (the engagement bar suppresses zero counts,
+ * and an empty snippet renders nothing), so the row shows author · time · title honestly
+ * without inventing engagement data.
+ */
+const toCommunityPost = (post: FeedPost, locale: string): CommunityPost => ({
+    id: post.id,
+    author: post.author.displayName ?? post.author.username ?? "",
+    authorUsername: post.author.username ?? post.author.id,
+    timeLabel: formatRelativeTime(post.createdAt, locale),
+    title: post.title ?? "",
+    snippet: "",
+    likes: 0,
+    liked: false,
+    comments: 0,
+})
+
+/** Items per feed page (BE `CursorInput.limit`). */
+const PAGE_LIMIT = 20
+
+/**
+ * Loads the community feed for a scope from the real BE GraphQL `feed(tab, page)`.
+ * Requires auth (viewer-scoped visibility); a guest / error surfaces via `error`
+ * and the feed renders its empty/error state. Keyed on the tab so switching tabs
+ * refetches; the default (For You) uses `COMMUNITY_FEED_KEY` so the optimistic
+ * like/comment mutations keep patching the right cache.
+ */
+export const useQueryCommunityFeedSwr = (tab: CommunityFeedTab = "forYou") => {
+    const locale = useLocale()
+    const key = tab === "forYou" ? COMMUNITY_FEED_KEY : [...COMMUNITY_FEED_KEY, tab]
+
+    const { data, isLoading, error, mutate } = useSWR<Array<CommunityPost>>(
+        key,
+        async () => {
+            const result = await queryCommunityFeed({
+                tab: toFeedTab(tab),
+                page: { limit: PAGE_LIMIT },
+            })
+            const connection = result.data?.feed
+            return (connection?.items ?? []).map((item) => toCommunityPost(item, locale))
+        },
+    )
+
     return { posts: data ?? [], isLoading, error, mutate }
 }

@@ -11,7 +11,11 @@ import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { PostEngagementBar } from "@/components/reuseable/PostEngagementBar"
 import { PostCommentThread } from "@/components/reuseable/PostCommentThread"
 import { useCommunityComposerOverlayState } from "@/hooks/zustand/overlay/hooks"
-import { useQueryCommunityFeedSwr, type CommunityPost } from "../hooks/useQueryCommunityFeedSwr"
+import {
+    useQueryCommunityFeedSwr,
+    type CommunityFeedTab,
+    type CommunityPost,
+} from "../hooks/useQueryCommunityFeedSwr"
 import { useQueryPostCommentsSwr } from "../hooks/useQueryPostDetailSwr"
 import { useMutateReactPostSwr } from "../hooks/useMutateReactPostSwr"
 import { useMutateCreatePostCommentSwr, type SubmitCommentInput } from "../hooks/useMutateCreatePostCommentSwr"
@@ -162,9 +166,9 @@ const CommunityFeedRow = ({ post }: { post: CommunityPost }) => {
  * comment expansion; a threadline connects the avatar to the expanded thread.
  * ponytail: mock data.
  */
-export const CommunityFeed = () => {
+export const CommunityFeed = ({ tab = "forYou" }: { tab?: CommunityFeedTab } = {}) => {
     const t = useTranslations("communityHub")
-    const { posts, isLoading, error, mutate } = useQueryCommunityFeedSwr()
+    const { posts, isLoading, error, mutate } = useQueryCommunityFeedSwr(tab)
 
     return (
         <div className="flex flex-col divide-y divide-separator">

@@ -1,4 +1,3 @@
-export * from "./useQueryCommunityFeedSwr"
 export * from "./useQueryCommunityPostCommentsSwr"
 export * from "./useQueryCommunityChatConversationSwr"
 export * from "./useQueryMyFounderConversationSwr"

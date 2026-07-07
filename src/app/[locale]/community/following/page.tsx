@@ -1,9 +1,9 @@
 "use client"
 
 import React from "react"
-import { CommunityScopePlaceholder } from "@/components/features/community/CommunityScopePlaceholder"
+import { CommunityFeed } from "@/components/features/community/CommunityFeed"
 
-/** `/community/following` — placeholder until built. */
-const Page = () => <CommunityScopePlaceholder scopeKey="following" />
+/** `/community/following` — the Following feed (BE `feed(tab: FOLLOWING)`). */
+const Page = () => <CommunityFeed tab="following" />
 
 export default Page

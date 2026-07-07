@@ -1,62 +1,119 @@
 import { createAuthApolloClient } from "../clients"
-import { type QueryParams } from "../types"
+import { type GraphQLOperationContext, type GraphQLHeaders } from "../types"
 import { DocumentNode, gql } from "@apollo/client"
-import type { CommunityFeedRequest, QueryCommunityFeedResponse } from "./types"
 
-const query1 = gql`
-  query CommunityFeed($request: CommunityFeedRequest!) {
-    communityFeed(request: $request) {
-      success
-      message
-      error
-      data {
-        items {
-          id
-          body
-          channel
-          isPinned
-          editedAt
-          createdAt
-          author {
-            id
-            username
-            displayName
-            avatar
-          }
-          commentCount
-          reactions {
-            total
-            myReaction
-          }
-          isMine
-          isFounderAuthor
-        }
-        nextCursor
-      }
-    }
-  }
-`
+/**
+ * Real BE community feed — GraphQL `feed(tab: FeedTab!, page: CursorInput): PostConnection!`
+ * (schema.graphqls). Returns the `PostConnection` directly (NO `{success,message,error,data}`
+ * envelope). `Post` is intentionally minimal (id/kind/title/createdAt + batched `author`);
+ * the BE feed carries NO body/likes/comment counts — those are degraded/hidden by the consumer.
+ *
+ * ⚠️ Gateway quirk (verified against apitest): the pre-GraphQL security filter rejects ANY
+ * operation that declares a NON-NULL variable (`$x: T!`) with a top-level 401
+ * `PLATFORM_UNAUTHORIZED`. So `tab` (which the schema types `FeedTab!`) is INLINED as an enum
+ * literal per tab, and only the nullable `$page: CursorInput` is passed as a variable.
+ */
 
-export enum QueryCommunityFeed {
-    Query1 = "query1",
+/** Feed scope (mirrors BE `enum FeedTab`). CAMPUS needs a campus arg the resolver does not pass. */
+export enum FeedTab {
+    ForYou = "FOR_YOU",
+    Following = "FOLLOWING",
+    Campus = "CAMPUS",
+    Trending = "TRENDING",
 }
 
-const queryMap: Record<QueryCommunityFeed, DocumentNode> = {
-    [QueryCommunityFeed.Query1]: query1,
+/** Author attached to a feed post (BE `PublicUser`; non-PII by policy). */
+export interface FeedPostAuthor {
+    id: string
+    username: string | null
+    displayName: string | null
+    avatarUrl: string | null
+}
+
+/** One feed post (BE `Post`). Minimal: no body/likes/comment counts exist here. */
+export interface FeedPost {
+    id: string
+    /** Post type / kind (BE `kind`, e.g. DISCUSSION/QUESTION). */
+    kind: string
+    title: string | null
+    /** ISO timestamp (BE `DateTime`), or null. */
+    createdAt: string | null
+    author: FeedPostAuthor
+}
+
+/** Cursor-paginated page of posts (BE `PostConnection`). */
+export interface FeedConnection {
+    items: Array<FeedPost>
+    nextCursor: string | null
+}
+
+/** Apollo response shape for `feed` (returned directly — no envelope). */
+export interface QueryCommunityFeedResponse {
+    feed: FeedConnection
+}
+
+/** Post/author selection shared by every per-tab document. */
+const FEED_SELECTION = `
+  items {
+    id
+    kind
+    title
+    createdAt
+    author {
+      id
+      username
+      displayName
+      avatarUrl
+    }
+  }
+  nextCursor
+`
+
+/** Build a feed document with the `tab` enum INLINED (see the non-null-variable quirk above). */
+const feedDocument = (tab: FeedTab): DocumentNode =>
+    gql(
+        `query CommunityFeed($page: CursorInput) {\n` +
+            `  feed(tab: ${tab}, page: $page) {${FEED_SELECTION}}\n` +
+            `}`,
+    )
+
+/** Pre-built documents per tab (enum inlined; only FOR_YOU/FOLLOWING/TRENDING are usable). */
+const queryMap: Record<FeedTab, DocumentNode> = {
+    [FeedTab.ForYou]: feedDocument(FeedTab.ForYou),
+    [FeedTab.Following]: feedDocument(FeedTab.Following),
+    [FeedTab.Campus]: feedDocument(FeedTab.Campus),
+    [FeedTab.Trending]: feedDocument(FeedTab.Trending),
+}
+
+/** Optional cursor page (BE `CursorInput`); nullable so the filter never 401s. */
+export interface FeedCursorInput {
+    cursor?: string | null
+    limit?: number | null
+}
+
+/** Params for {@link queryCommunityFeed}. */
+export interface QueryCommunityFeedParams extends GraphQLOperationContext {
+    /** Feed scope; defaults to FOR_YOU. */
+    tab?: FeedTab
+    /** Cursor page; `{ limit }` for page 1, `{ cursor }` for the next page. */
+    page?: FeedCursorInput
+    headers?: GraphQLHeaders
+    debug?: boolean
 }
 
 /**
- * Cursor-paginated community feed (optionally scoped to a channel). Mirrors
- * `communityFeed` (queries/community/community-feed). Open to everyone; the
- * viewer's own reaction + `isMine` are only populated when authenticated.
+ * Fetches one page of the community feed for a tab. The BE `feed` requires auth
+ * (viewer-scoped visibility); guests get a 401 which surfaces as an Apollo error.
+ *
+ * @returns Apollo query result; the page is at `data.feed` (returned directly, no envelope).
  */
 export const queryCommunityFeed = async ({
-    query = QueryCommunityFeed.Query1,
-    request,
+    tab = FeedTab.ForYou,
+    page,
     headers,
     debug,
     signal,
-}: QueryParams<QueryCommunityFeed, CommunityFeedRequest>) => {
+}: QueryCommunityFeedParams) => {
     const apollo = createAuthApolloClient({
         cache: false,
         headers,
@@ -64,7 +121,7 @@ export const queryCommunityFeed = async ({
         signal,
     })
     return apollo.query<QueryCommunityFeedResponse>({
-        query: queryMap[query],
-        variables: { request },
+        query: queryMap[tab],
+        variables: { page: page ?? null },
     })
 }

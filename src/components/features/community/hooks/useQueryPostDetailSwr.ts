@@ -1,6 +1,10 @@
 "use client"
 
 import useSWR from "swr"
+import { useLocale } from "next-intl"
+import { queryCommunityPost } from "@/modules/api/graphql/queries/query-community-post"
+import type { FeedPost } from "@/modules/api/graphql/queries/query-community-feed"
+import { formatRelativeTime } from "./relativeTime"
 
 /** A comment on a post. Replies are flat, one level deep (Threads-like). */
 export interface PostComment {
@@ -15,7 +19,7 @@ export interface PostComment {
     replies?: Array<PostComment>
 }
 
-/** Full post detail (§6, mock until BE lands). */
+/** Full post detail (BE `Post` mapped to the detail view). */
 export interface PostDetail {
     id: string
     /** Display name of the author. */
@@ -35,43 +39,40 @@ export interface PostDetail {
  * comment thread, and the like/comment mutation hooks (ONE source of truth). */
 export const postDetailKey = (postId: string) => ["post-detail", postId]
 
-// ponytail: mock BE — no community endpoint yet. Derives from the id.
-const fetchPostDetailMock = async (postId: string): Promise<PostDetail> => ({
-    id: postId,
-    author: "Minh Trần",
-    authorUsername: "minh-tran" /* mock */,
-    timeLabel: "1 giờ trước",
-    title: "Chia sẻ lộ trình học Backend",
-    body: "Mình tổng hợp lộ trình 6 tháng từ con số 0: tháng 1-2 nền tảng ngôn ngữ, tháng 3-4 database + API, tháng 5-6 dự án thật. Ai cần chi tiết comment nhé!",
-    likes: 42,
+/**
+ * Map a BE `Post` to the detail view contract. The BE GraphQL `post(id)` is minimal:
+ * it carries NO body, likes, or comments (those live behind the community REST module,
+ * which is not reachable with the current token). They degrade to "" / 0 / [] rather
+ * than being fabricated — the detail shows author · time · title honestly.
+ */
+const toPostDetail = (post: FeedPost, locale: string): PostDetail => ({
+    id: post.id,
+    author: post.author.displayName ?? post.author.username ?? "",
+    authorUsername: post.author.username ?? post.author.id,
+    timeLabel: formatRelativeTime(post.createdAt, locale),
+    title: post.title ?? "",
+    body: "",
+    likes: 0,
     liked: false,
-    comments: [
-        {
-            id: "pc1",
-            author: "An",
-            authorUsername: "an-nguyen" /* mock */,
-            text: "Cảm ơn bạn, rất hữu ích!",
-            timeLabel: "45 phút trước",
-            replies: [
-                { id: "pc1r1", author: "Minh Trần", authorUsername: "minh-tran" /* mock */, text: "Không có gì, chúc bạn học tốt!", timeLabel: "40 phút trước" },
-            ],
-        },
-        { id: "pc2", author: "Hoa", authorUsername: "hoa-le" /* mock */, text: "Cho mình xin thêm tài liệu phần API với.", timeLabel: "20 phút trước" },
-        {
-            id: "pc3",
-            author: "Bình",
-            authorUsername: "binh-pham" /* mock */,
-            text: "**Đỉnh** bạn ơi! Lộ trình rõ ràng:\n- Tháng 1-2: ngôn ngữ\n- Tháng 3-4: DB + API\nXem thêm [tại đây](/community/abc)\n![Yêu thích](/stickers/heart.svg)",
-            timeLabel: "5 phút trước",
-        }, // demo: rich markdown + sticker render
-    ],
+    comments: [],
 })
 
-/** Loads a post's detail. Mocked; SWR-shaped for a drop-in BE swap. */
+/** Fetch + map a single post; a not-found / not-visible id throws (Apollo error) → caller degrades. */
+const fetchPostDetail = async (postId: string, locale: string): Promise<PostDetail> => {
+    const result = await queryCommunityPost({ id: postId })
+    const post = result.data?.post
+    if (!post) {
+        throw new Error("post not found")
+    }
+    return toPostDetail(post, locale)
+}
+
+/** Loads a post's detail from the real BE GraphQL `post(id)`. */
 export const useQueryPostDetailSwr = (postId: string) => {
+    const locale = useLocale()
     const { data, isLoading, error, mutate } = useSWR(
         postDetailKey(postId),
-        () => fetchPostDetailMock(postId),
+        () => fetchPostDetail(postId, locale),
     )
     return { post: data, isLoading, error, mutate }
 }
@@ -86,9 +87,10 @@ export const useQueryPostDetailSwr = (postId: string) => {
  * @param enabled - true once the post has been expanded at least once.
  */
 export const useQueryPostCommentsSwr = (postId: string, enabled: boolean) => {
+    const locale = useLocale()
     const { data, isLoading, error, mutate } = useSWR(
         enabled ? postDetailKey(postId) : null,
-        () => fetchPostDetailMock(postId),
+        () => fetchPostDetail(postId, locale),
     )
     return { post: data, isLoading, error, mutate }
 }

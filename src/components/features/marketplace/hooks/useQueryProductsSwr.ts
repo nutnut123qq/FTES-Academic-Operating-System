@@ -1,69 +1,67 @@
 "use client"
 
 import useSWR from "swr"
+import { listProducts, type ProductView } from "@/modules/api/rest/commerce"
 
 /** Product categories in the §13 Marketplace catalog. */
 export type ProductCategory = "merch" | "premium" | "aiCredits" | "voucher" | "courseUnlock"
 
-/** A single catalog product, priced in FTES Coin. */
+/** A single catalog product mapped from the commerce BE `ProductView`. */
 export interface Product {
+    /** Product id (UUID from the BE). */
     id: string
+    /** Display name. */
     name: string
+    /** Catalog category, derived from the BE product `type`. */
     category: ProductCategory
-    priceCoin: number
+    /** Price in FTES Coin; `null` when the product is priced only in VND. */
+    priceCoin: number | null
+    /** Price in VND; `null` when the product is priced only in Coin. */
+    priceVnd: number | null
+    /** Human-readable description; `""` when the BE omits it. */
     description: string
 }
 
-// ponytail: mock BE — no marketplace endpoint yet. Deterministic sample catalog,
-// SWR-shaped so the catalog can swap to a real GraphQL query (products()) later
-// without touching the hook API.
-const fetchProductsMock = async (): Promise<Array<Product>> => [
-    {
-        id: "tee-ftes",
-        name: "Áo thun FTES AOS",
-        category: "merch",
-        priceCoin: 1200,
-        description: "Áo thun cotton in logo FTES Academic Operating System.",
-    },
-    {
-        id: "premium-30d",
-        name: "Premium 30 ngày",
-        category: "premium",
-        priceCoin: 3500,
-        description: "Mở toàn bộ tính năng cao cấp trong 30 ngày.",
-    },
-    {
-        id: "ai-credits-500",
-        name: "Gói 500 AI Credits",
-        category: "aiCredits",
-        priceCoin: 900,
-        description: "Nạp 500 credits cho trợ giảng AI và chấm bài tự động.",
-    },
-    {
-        id: "voucher-100k",
-        name: "Voucher học phí 100K",
-        category: "voucher",
-        priceCoin: 2000,
-        description: "Giảm 100.000đ khi đăng ký bất kỳ khóa học nào.",
-    },
-    {
-        id: "unlock-swp391",
-        name: "Mở khóa SWP391",
-        category: "courseUnlock",
-        priceCoin: 4800,
-        description: "Mở toàn bộ nội dung khóa Đồ án phần mềm SWP391.",
-    },
-    {
-        id: "sticker-pack",
-        name: "Bộ sticker FTES",
-        category: "merch",
-        priceCoin: 400,
-        description: "Bộ 12 sticker dán laptop chủ đề lập trình.",
-    },
-]
+/**
+ * Maps a BE `ProductType` enum value onto the catalog's `ProductCategory`.
+ * The five BE types map 1:1 to the five FE categories; an unexpected value
+ * degrades to "merch" (a real category with an icon) so a card never renders
+ * without its badge/icon.
+ */
+const TYPE_TO_CATEGORY: Record<string, ProductCategory> = {
+    MERCHANDISE: "merch",
+    PREMIUM_SUBSCRIPTION: "premium",
+    AI_CREDITS: "aiCredits",
+    VOUCHER: "voucher",
+    COURSE_UNLOCK: "courseUnlock",
+}
 
-/** Loads the marketplace product catalog. Mocked; SWR-shaped for a drop-in BE swap. */
+const toCategory = (type: string): ProductCategory => TYPE_TO_CATEGORY[type] ?? "merch"
+
+/** Maps a BE `ProductView` onto the catalog's `Product` model. */
+const toProduct = (view: ProductView): Product => ({
+    id: view.id,
+    name: view.name,
+    category: toCategory(view.type),
+    priceCoin: view.priceCoin ?? null,
+    priceVnd: view.priceVnd ?? null,
+    description: view.description ?? "",
+})
+
+/**
+ * Loads the marketplace product catalog from the commerce BE
+ * (`GET /api/v1/commerce/products`, public — active products only). The list may
+ * be empty when nothing is seeded, in which case the catalog shows its empty
+ * state. Fetches a single large page so client-side search/category filtering
+ * keeps working exactly as before.
+ */
 export const useQueryProductsSwr = () => {
-    const { data, isLoading, error, mutate } = useSWR(["products"], () => fetchProductsMock())
+    const { data, isLoading, error, mutate } = useSWR(
+        ["commerce", "products"],
+        async () => {
+            const result = await listProducts({ size: 100 })
+            return result.items.map(toProduct)
+        },
+    )
     return { products: data ?? [], isLoading, error, mutate }
 }

@@ -3284,6 +3284,8 @@
             "courseUnlock": "Course Unlock"
         },
         "priceCoin": "{amount} Coin",
+        "priceVnd": "{amount}₫",
+        "priceUnavailable": "Contact us",
         "buy": "Buy"
     },
     "eventSystem": {

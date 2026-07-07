@@ -3284,6 +3284,8 @@
             "courseUnlock": "Mở khóa học"
         },
         "priceCoin": "{amount} Coin",
+        "priceVnd": "{amount}₫",
+        "priceUnavailable": "Liên hệ",
         "buy": "Mua"
     },
     "eventSystem": {

@@ -2917,6 +2917,11 @@
                 "name": "Teaching Mentor",
                 "desc": "Draft lesson plans and grading rubrics in minutes."
             }
+        },
+        "states": {
+            "empty": "No AI tools yet.",
+            "error": "Couldn't load the AI tools. Please try again.",
+            "retry": "Try again"
         }
     },
     "notificationCenter": {
@@ -2956,6 +2961,14 @@
             "groups": "Study groups",
             "mentors": "Mentors",
             "challenges": "Challenges"
+        },
+        "empty": {
+            "title": "No picks for you yet",
+            "description": "Study a few more subjects or courses so we can personalize your recommendations."
+        },
+        "error": {
+            "title": "Couldn't load recommendations",
+            "retry": "Try again"
         }
     },
     "careerCenter": {
@@ -2978,7 +2991,12 @@
         "jobTypes": {
             "internship": "Internship",
             "fulltime": "Full-time"
-        }
+        },
+        "loadError": "Couldn't load career data.",
+        "retry": "Try again",
+        "skillsEmpty": "No skills are being tracked yet.",
+        "roadmapsEmpty": "No career roadmaps yet.",
+        "jobsEmpty": "No matching jobs yet."
     },
     "rbac": {
         "title": "Roles & Permissions",
@@ -3026,6 +3044,15 @@
             "paymentGateway": "Payment Gateway",
             "aiProviders": "AI Providers",
             "cloudStorage": "Cloud Storage"
+        },
+        "empty": {
+            "title": "No integrations yet",
+            "description": "Available services will show up here once they're ready."
+        },
+        "loadError": {
+            "title": "Couldn't load integrations",
+            "description": "Something went wrong while loading the list. Please try again.",
+            "retry": "Try again"
         }
     },
     "chat": {
@@ -3033,7 +3060,12 @@
         "subtitle": "Message classmates, groups, and advisors.",
         "composerPlaceholder": "Type a message…",
         "send": "Send",
-        "empty": "Select a conversation to start reading."
+        "empty": "Select a conversation to start reading.",
+        "conversationsEmpty": "No conversations yet.",
+        "conversationsError": "Couldn't load conversations",
+        "messagesEmpty": "No messages yet. Say hi to get started!",
+        "messagesError": "Couldn't load messages",
+        "retry": "Try again"
     },
     "challengeSystem": {
         "catalog": {
@@ -3233,7 +3265,10 @@
             "subtitle": "Spend your FTES Coin on merch, premium, and more.",
             "searchPlaceholder": "Search products",
             "all": "All",
-            "empty": "No products match your search."
+            "empty": "No products match your search.",
+            "errorTitle": "Couldn't load the store",
+            "errorDescription": "Something went wrong. Please try again.",
+            "retry": "Try again"
         },
         "categories": {
             "merch": "Merch",
@@ -3251,7 +3286,10 @@
             "subtitle": "Browse upcoming webinars, workshops, hackathons, competitions and meetups.",
             "searchPlaceholder": "Search events by title or location…",
             "all": "All",
-            "empty": "No events match your filters."
+            "empty": "No events match your filters.",
+            "emptyDescription": "Try a different search term or event type.",
+            "loadError": "Couldn't load events.",
+            "retry": "Try again"
         },
         "types": {
             "webinar": "Webinar",
@@ -3276,7 +3314,10 @@
             "coinEarned": "Earned coins",
             "eventJoined": "Joined an event",
             "groupJoined": "Joined a group"
-        }
+        },
+        "emptyDescription": "As you learn, post, and take part, your activity will show up here.",
+        "error": "Couldn't load activity.",
+        "retry": "Try again"
     },
     "workflow": {
         "title": "Workflow Board",
@@ -3297,6 +3338,11 @@
             "forum": "Forum",
             "challenge": "Challenge",
             "event": "Event"
+        },
+        "states": {
+            "empty": "No content in the workflow yet",
+            "error": "Couldn't load the workflow board",
+            "retry": "Try again"
         }
     },
     "analytics": {
@@ -4193,6 +4239,11 @@
                 "hint": "Press the bookmark icon on a post to save it for later.",
                 "cta": "Go to the community"
             }
+        },
+        "error": {
+            "title": "Couldn't load your saved items",
+            "hint": "Something went wrong while loading the list. Please try again.",
+            "retry": "Try again"
         }
     },
     "followList": {
@@ -4660,7 +4711,8 @@
             "close": "Close",
             "level": "Mastery level",
             "related": "Related subjects & courses"
-        }
+        },
+        "retry": "Try again"
     },
     "courseSystem": {
         "levels": {

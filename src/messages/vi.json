@@ -2917,6 +2917,11 @@
                 "name": "Trợ lý giảng dạy",
                 "desc": "Soạn giáo án và tiêu chí chấm điểm trong vài phút."
             }
+        },
+        "states": {
+            "empty": "Chưa có công cụ AI nào.",
+            "error": "Không tải được danh sách công cụ AI. Vui lòng thử lại.",
+            "retry": "Thử lại"
         }
     },
     "notificationCenter": {
@@ -2956,6 +2961,14 @@
             "groups": "Nhóm học tập",
             "mentors": "Người hướng dẫn",
             "challenges": "Thử thách"
+        },
+        "empty": {
+            "title": "Chưa có gợi ý cho bạn",
+            "description": "Học thêm vài môn hoặc khóa học để chúng tôi cá nhân hóa gợi ý cho bạn."
+        },
+        "error": {
+            "title": "Không tải được gợi ý",
+            "retry": "Thử lại"
         }
     },
     "careerCenter": {
@@ -2978,7 +2991,12 @@
         "jobTypes": {
             "internship": "Thực tập",
             "fulltime": "Toàn thời gian"
-        }
+        },
+        "loadError": "Không tải được dữ liệu hướng nghiệp.",
+        "retry": "Thử lại",
+        "skillsEmpty": "Chưa có kỹ năng nào được theo dõi.",
+        "roadmapsEmpty": "Chưa có lộ trình nghề nghiệp nào.",
+        "jobsEmpty": "Chưa có việc làm phù hợp."
     },
     "rbac": {
         "title": "Vai trò & Quyền hạn",
@@ -3026,6 +3044,15 @@
             "paymentGateway": "Cổng thanh toán",
             "aiProviders": "Nhà cung cấp AI",
             "cloudStorage": "Lưu trữ đám mây"
+        },
+        "empty": {
+            "title": "Chưa có tích hợp nào",
+            "description": "Khi có dịch vụ khả dụng, chúng sẽ xuất hiện ở đây."
+        },
+        "loadError": {
+            "title": "Không tải được tích hợp",
+            "description": "Đã có lỗi khi tải danh sách. Vui lòng thử lại.",
+            "retry": "Thử lại"
         }
     },
     "chat": {
@@ -3033,7 +3060,12 @@
         "subtitle": "Nhắn tin với bạn học, nhóm và cố vấn.",
         "composerPlaceholder": "Nhập tin nhắn…",
         "send": "Gửi",
-        "empty": "Chọn một cuộc trò chuyện để bắt đầu đọc."
+        "empty": "Chọn một cuộc trò chuyện để bắt đầu đọc.",
+        "conversationsEmpty": "Chưa có cuộc trò chuyện nào.",
+        "conversationsError": "Không tải được danh sách trò chuyện",
+        "messagesEmpty": "Chưa có tin nhắn nào. Gửi lời chào để bắt đầu nhé!",
+        "messagesError": "Không tải được tin nhắn",
+        "retry": "Thử lại"
     },
     "challengeSystem": {
         "catalog": {
@@ -3233,7 +3265,10 @@
             "subtitle": "Dùng FTES Coin để đổi merch, premium và nhiều hơn nữa.",
             "searchPlaceholder": "Tìm sản phẩm",
             "all": "Tất cả",
-            "empty": "Không có sản phẩm nào khớp tìm kiếm."
+            "empty": "Không có sản phẩm nào khớp tìm kiếm.",
+            "errorTitle": "Không tải được cửa hàng",
+            "errorDescription": "Đã có lỗi xảy ra. Vui lòng thử lại.",
+            "retry": "Thử lại"
         },
         "categories": {
             "merch": "Merch",
@@ -3251,7 +3286,10 @@
             "subtitle": "Khám phá các webinar, workshop, hackathon, cuộc thi và buổi gặp gỡ sắp tới.",
             "searchPlaceholder": "Tìm sự kiện theo tên hoặc địa điểm…",
             "all": "Tất cả",
-            "empty": "Không có sự kiện nào khớp bộ lọc."
+            "empty": "Không có sự kiện nào khớp bộ lọc.",
+            "emptyDescription": "Thử đổi từ khóa tìm kiếm hoặc chọn loại sự kiện khác.",
+            "loadError": "Không tải được danh sách sự kiện.",
+            "retry": "Thử lại"
         },
         "types": {
             "webinar": "Webinar",
@@ -3276,7 +3314,10 @@
             "coinEarned": "Nhận xu",
             "eventJoined": "Tham gia sự kiện",
             "groupJoined": "Tham gia nhóm"
-        }
+        },
+        "emptyDescription": "Khi bạn học, đăng bài hay tham gia hoạt động, chúng sẽ xuất hiện tại đây.",
+        "error": "Không tải được hoạt động.",
+        "retry": "Thử lại"
     },
     "workflow": {
         "title": "Bảng quy trình",
@@ -3297,6 +3338,11 @@
             "forum": "Diễn đàn",
             "challenge": "Thử thách",
             "event": "Sự kiện"
+        },
+        "states": {
+            "empty": "Chưa có nội dung nào trong quy trình",
+            "error": "Không tải được bảng quy trình",
+            "retry": "Thử lại"
         }
     },
     "analytics": {
@@ -4193,6 +4239,11 @@
                 "hint": "Nhấn biểu tượng bookmark trên một bài viết để lưu lại xem sau.",
                 "cta": "Vào cộng đồng"
             }
+        },
+        "error": {
+            "title": "Không tải được mục đã lưu",
+            "hint": "Đã có lỗi khi tải danh sách. Vui lòng thử lại.",
+            "retry": "Thử lại"
         }
     },
     "followList": {
@@ -4660,7 +4711,8 @@
             "close": "Đóng",
             "level": "Mức độ thành thạo",
             "related": "Môn học & khóa học liên quan"
-        }
+        },
+        "retry": "Thử lại"
     },
     "courseSystem": {
         "levels": {

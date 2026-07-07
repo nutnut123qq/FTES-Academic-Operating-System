@@ -67,12 +67,13 @@ export const CURRENT_USER_ID = "me"
 
 /** Loads the leaderboard + progression snapshot. Mocked; SWR-shaped for a drop-in BE swap. */
 export const useQueryLeaderboardSwr = () => {
-    const { data, isLoading, error } = useSWR(["leaderboard"], () => fetchLeaderboardMock())
+    const { data, isLoading, error, mutate } = useSWR(["leaderboard"], () => fetchLeaderboardMock())
     return {
         me: data?.me,
         board: data?.board ?? [],
         badges: data?.badges ?? [],
         isLoading,
         error,
+        mutate,
     }
 }

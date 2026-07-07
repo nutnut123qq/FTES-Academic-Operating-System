@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { Button, Popover, Typography, cn } from "@heroui/react"
+import { Button, Chip, Popover, Typography, cn } from "@heroui/react"
 import { useLocale, useTranslations } from "next-intl"
 import { FireIcon, LightningIcon, SnowflakeIcon } from "@phosphor-icons/react"
 import type { WithClassNames } from "@/modules/types/base/class-name"
@@ -66,9 +66,9 @@ export const StreakPopover = ({ children, placement = "bottom", className }: Str
                         <Typography type="h6" weight="bold">
                             {t("streak.daysCount", { count: state.streak })}
                         </Typography>
-                        <span className="ml-auto rounded-full bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">
+                        <Chip size="sm" variant="soft" color="accent" className="ml-auto">
                             {t("streak.multiplier", { percent: Math.round(multiplier * 100) })}
-                        </span>
+                        </Chip>
                     </div>
 
                     {/* 12-week calendar heatmap */}

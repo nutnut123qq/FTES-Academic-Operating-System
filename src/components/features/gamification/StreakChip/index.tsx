@@ -32,7 +32,7 @@ export const StreakChip = ({ placement = "bottom end", className }: StreakChipPr
                 type="button"
                 aria-label={t("streak.chipLabel", { count: state.streak })}
                 className={cn(
-                    "inline-flex items-center gap-1 rounded-full bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent",
+                    "inline-flex items-center gap-1 rounded-full bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent transition-colors hover:bg-accent/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
                     className,
                 )}
             >

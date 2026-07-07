@@ -64,12 +64,14 @@ export const LeaderboardGuideShell = () => {
                     <ArrowLeftIcon className="size-4" aria-hidden focusable="false" />
                     {t("guide.back")}
                 </Link>
-                <Typography.Heading level={1} weight="bold" className="text-2xl">
-                    {t("guide.title")}
-                </Typography.Heading>
-                <Typography type="body-sm" color="muted">
-                    {t("guide.subtitle")}
-                </Typography>
+                <div className="flex flex-col gap-0">
+                    <Typography.Heading level={1} weight="bold" className="text-2xl">
+                        {t("guide.title")}
+                    </Typography.Heading>
+                    <Typography type="body-sm" color="muted">
+                        {t("guide.subtitle")}
+                    </Typography>
+                </div>
             </div>
 
             {/* XP table */}
@@ -171,7 +173,7 @@ export const LeaderboardGuideShell = () => {
                 <Typography.Heading level={2} weight="bold" className="text-lg">
                     {t("guide.streakSection")}
                 </Typography.Heading>
-                <ul className="flex list-disc flex-col gap-1.5 pl-5 text-sm">
+                <ul className="flex list-disc flex-col gap-2 pl-5 text-sm">
                     <li>{t("guide.streakQualifying")}</li>
                     <li>
                         {t("guide.streakMultiplier", {
@@ -191,7 +193,7 @@ export const LeaderboardGuideShell = () => {
                     <li>{t("guide.streakReminder", { hour: REMINDER.hour, min: REMINDER.minStreak })}</li>
                 </ul>
                 {/* Milestones */}
-                <div className="mt-1 flex flex-col gap-1.5">
+                <div className="mt-2 flex flex-col gap-2">
                     {STREAK_MILESTONES.map((milestone) => (
                         <Typography key={milestone.days} type="body-sm" color="muted">
                             {t("guide.milestoneRow", {
@@ -222,7 +224,7 @@ export const LeaderboardGuideShell = () => {
                 <Typography.Heading level={2} weight="bold" className="text-lg">
                     {t("guide.comingSoonSection")}
                 </Typography.Heading>
-                <ul className="flex list-disc flex-col gap-1.5 pl-5 text-sm text-muted">
+                <ul className="flex list-disc flex-col gap-2 pl-5 text-sm text-muted">
                     <li>{t("guide.comingSoon.league")}</li>
                     <li>{t("guide.comingSoon.monthly")}</li>
                     <li>{t("guide.comingSoon.mysteryBox")}</li>

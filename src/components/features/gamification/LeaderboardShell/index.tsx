@@ -1,11 +1,12 @@
 "use client"
 
 import React, { useEffect } from "react"
-import { Button, Chip, Typography, toast } from "@heroui/react"
+import { Button, Chip, Skeleton, Typography, toast } from "@heroui/react"
 import { useLocale, useTranslations } from "next-intl"
 import { FireIcon, LightningIcon, RankingIcon, StarIcon, TrophyIcon } from "@phosphor-icons/react"
 import { Link } from "@/i18n/navigation"
 import { pathConfig } from "@/resources/path"
+import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { CURRENT_USER_ID, useQueryLeaderboardSwr } from "../hooks/useQueryLeaderboardSwr"
 import {
     GamificationActionType,
@@ -17,6 +18,26 @@ import { useGamificationEngine } from "../engine"
 import { StreakPopover } from "../StreakPopover"
 import { GoalsCard } from "../GoalsCard"
 import { GamificationEventHost } from "../GamificationEventHost"
+
+/** Loading skeleton — mirrors the ranked leaderboard rows so the list never jumps. */
+const LeaderboardSkeleton = () => (
+    <div className="flex flex-col gap-2">
+        {[0, 1, 2, 3, 4].map((index) => (
+            <div
+                key={index}
+                className="flex items-center gap-3 rounded-2xl border border-separator p-4"
+            >
+                <Skeleton className="h-4 w-6 shrink-0 rounded-full" />
+                <Skeleton className="size-9 shrink-0 rounded-full" />
+                <div className="flex min-w-0 flex-1 flex-col gap-2">
+                    <Skeleton className="h-3 w-32 rounded-full" />
+                    <Skeleton className="h-3 w-20 rounded-full" />
+                </div>
+                <Skeleton className="h-4 w-16 shrink-0 rounded-full" />
+            </div>
+        ))}
+    </div>
+)
 
 /**
  * Gamification leaderboard + progression surface (§11) — the `/leaderboard` page.
@@ -32,7 +53,7 @@ import { GamificationEventHost } from "../GamificationEventHost"
 export const LeaderboardShell = () => {
     const t = useTranslations("gamification")
     const locale = useLocale()
-    const { board } = useQueryLeaderboardSwr()
+    const { board, isLoading, error, mutate } = useQueryLeaderboardSwr()
     const { state, level, recordAction, checkDayRollover } = useGamificationEngine()
 
     // On mount, roll the day forward (consume freezes / reset) and fire the
@@ -89,7 +110,7 @@ export const LeaderboardShell = () => {
             <GamificationEventHost />
 
             <div className="flex items-start justify-between gap-3">
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-0">
                     <Typography type="h4" weight="bold">
                         {t("title")}
                     </Typography>
@@ -108,8 +129,15 @@ export const LeaderboardShell = () => {
             {/* stat cards — the Streak card opens the detail popover */}
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
                 {stats.map((stat) => {
+                    // The streak card is clickable (opens the detail popover) → it
+                    // gets the house interactive hover; the other three are static.
+                    const interactive = stat.key === "streak"
                     const card = (
-                        <div className="flex h-full flex-col gap-2 rounded-2xl bg-default/40 p-4 text-left">
+                        <div
+                            className={`flex h-full flex-col gap-2 rounded-2xl bg-default/40 p-4 text-left ${
+                                interactive ? "transition-colors group-hover:bg-default/60" : ""
+                            }`}
+                        >
                             <div className="flex items-center gap-2 text-muted">
                                 {stat.icon}
                                 <Typography type="body-xs" color="muted">
@@ -126,10 +154,14 @@ export const LeaderboardShell = () => {
                             ) : null}
                         </div>
                     )
-                    if (stat.key === "streak") {
+                    if (interactive) {
                         return (
                             <StreakPopover key={stat.key} placement="bottom start" className="text-left">
-                                <button type="button" className="h-full w-full" aria-label={t("streak.openDetail")}>
+                                <button
+                                    type="button"
+                                    className="group h-full w-full rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                                    aria-label={t("streak.openDetail")}
+                                >
                                     {card}
                                 </button>
                             </StreakPopover>
@@ -170,41 +202,54 @@ export const LeaderboardShell = () => {
                         {t("leaderboard")}
                     </Typography>
                 </div>
-                <div className="flex flex-col gap-2">
-                    {board.map((entry, index) => {
-                        const isMe = entry.id === CURRENT_USER_ID
-                        return (
-                            <div
-                                key={entry.id}
-                                className={`flex items-center gap-3 rounded-2xl border border-separator p-3 ${
-                                    isMe ? "bg-accent/10" : ""
-                                }`}
-                            >
-                                <Typography
-                                    type="body-sm"
-                                    weight="bold"
-                                    className={`w-6 shrink-0 text-center ${isMe ? "text-accent" : "text-muted"}`}
+                <AsyncContent
+                    isLoading={isLoading && board.length === 0}
+                    skeleton={<LeaderboardSkeleton />}
+                    isEmpty={board.length === 0}
+                    emptyContent={{ title: t("leaderboardEmpty") }}
+                    error={board.length === 0 ? error : undefined}
+                    errorContent={{
+                        title: t("leaderboardError"),
+                        onRetry: () => void mutate(),
+                        retryLabel: t("states.retry"),
+                    }}
+                >
+                    <div className="flex flex-col gap-2">
+                        {board.map((entry, index) => {
+                            const isMe = entry.id === CURRENT_USER_ID
+                            return (
+                                <div
+                                    key={entry.id}
+                                    className={`flex items-center gap-3 rounded-2xl border border-separator p-4 ${
+                                        isMe ? "bg-accent/10" : ""
+                                    }`}
                                 >
-                                    {index + 1}
-                                </Typography>
-                                <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent/10 text-xs font-bold text-accent">
-                                    {entry.avatarInitials}
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                    <Typography type="body-sm" weight="medium" truncate>
-                                        {entry.name}
+                                    <Typography
+                                        type="body-sm"
+                                        weight="bold"
+                                        className={`w-6 shrink-0 text-center ${isMe ? "text-accent" : "text-muted"}`}
+                                    >
+                                        {index + 1}
                                     </Typography>
-                                    <Typography type="body-xs" color="muted">
-                                        {t("stats.level")} {Math.round(entry.level)}
+                                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent/10 text-sm font-bold text-accent">
+                                        {entry.avatarInitials}
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <Typography type="body-sm" weight="medium" truncate>
+                                            {entry.name}
+                                        </Typography>
+                                        <Typography type="body-xs" color="muted">
+                                            {t("stats.level")} {Math.round(entry.level)}
+                                        </Typography>
+                                    </div>
+                                    <Typography type="body-sm" weight="medium" className="shrink-0">
+                                        {t("xpValue", { xp: Math.round(entry.xp).toLocaleString(locale) })}
                                     </Typography>
                                 </div>
-                                <Typography type="body-sm" weight="medium" className="shrink-0">
-                                    {t("xpValue", { xp: Math.round(entry.xp).toLocaleString(locale) })}
-                                </Typography>
-                            </div>
-                        )
-                    })}
-                </div>
+                            )
+                        })}
+                    </div>
+                </AsyncContent>
             </div>
 
             {/* badges row — streak-milestone badges reflect the engine's claimed set */}

@@ -27,16 +27,16 @@ import {
     useRouter,
 } from "@/i18n/navigation"
 import { pathConfig } from "@/resources/path"
-import { mutateMarkAllNotificationsAsRead } from "@/modules/api/graphql/mutations/mutation-mark-all-notifications-as-read"
-import { mutateMarkNotificationAsRead } from "@/modules/api/graphql/mutations/mutation-mark-notification-as-read"
-import { queryResolveRoute } from "@/modules/api/graphql/queries/query-resolve-route"
-import type { QueryNotificationData } from "@/modules/api/graphql/queries/types/notifications"
+import {
+    markAllNotificationsRead,
+    markNotificationRead,
+} from "@/modules/api/rest/notification/notification"
+import type { NotificationItem } from "@/modules/api/rest/notification/types"
 import { useQueryMyNotificationsSwr } from "@/hooks/swr/api/graphql/queries/useQueryMyNotificationsSwr"
 import { useQueryMyNotificationPreferencesSwr } from "@/hooks/swr/api/graphql/queries/useQueryMyNotificationPreferencesSwr"
 import { useAppSelector } from "@/redux/hooks"
-import { useGraphQLWithToast } from "@/modules/toast/hooks"
-import { NOTIFICATION_TYPE_ICON } from "@/components/features/notification/typeIcon"
-import { encodeNotificationGlobalId } from "@/components/features/notification/global-id"
+import { useRestWithToast } from "@/modules/toast/hooks"
+import { resolveNotificationIcon } from "@/components/features/notification/typeIcon"
 import {
     deriveMutedAwareUnreadCount,
     filterNotificationsByPreferences,
@@ -58,15 +58,15 @@ export type NotificationBellProps = WithClassNames<undefined>
  * NotificationBell — navbar bell with an unread-count badge and a preview
  * popover.
  *
- * Reads the SAME real `myNotifications` query as the `/notifications` center
+ * Reads the SAME real BE REST notifications API as the `/notifications` center
  * (shared badge SWR key {@link useQueryMyNotificationsSwr}) so the two never
  * diverge — polling drives freshness (non-realtime). Shows an unread badge
  * (hidden at zero), a header with a working "mark all read" action, the
- * {@link PREVIEW_COUNT} newest items (per-type icon + i18n text + relative time
- * + unread dot), and a footer link to the full center. Clicking an item marks
- * it read and routes to its resolved target. Muted types (and mute-all) are
- * filtered out and reflected in the badge. `"use client"` for the SWR hooks,
- * popover state and navigation.
+ * {@link PREVIEW_COUNT} newest items (per-type icon + text + relative time +
+ * unread dot), and a footer link to the full center. Clicking an item marks it
+ * read and routes to its deep link. Muted types (and mute-all) are filtered out
+ * and reflected in the badge. `"use client"` for the SWR hooks, popover state
+ * and navigation.
  * @param props - optional root class name (placement only)
  */
 export const NotificationBell = ({ className }: NotificationBellProps) => {
@@ -76,7 +76,7 @@ export const NotificationBell = ({ className }: NotificationBellProps) => {
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
     const { data, isLoading, error, mutate } = useQueryMyNotificationsSwr()
     const { data: preferences } = useQueryMyNotificationPreferencesSwr()
-    const runGraphQL = useGraphQLWithToast()
+    const runRest = useRestWithToast()
     const [isOpen, setOpen] = useState(false)
 
     const fetchedItems = useMemo(() => data?.items ?? [], [data])
@@ -119,50 +119,32 @@ export const NotificationBell = ({ className }: NotificationBellProps) => {
         [relativeFormat],
     )
 
-    /** Mark a single notification read and navigate to its resolved target. */
+    /** Mark a single notification read and navigate to its deep link. */
     const onPressItem = useCallback(
-        async (notification: QueryNotificationData) => {
+        async (notification: NotificationItem) => {
             setOpen(false)
             if (!notification.isRead) {
-                await runGraphQL(
-                    async () => {
-                        const env = await mutateMarkNotificationAsRead({
-                            request: { notificationId: notification.id },
-                        })
-                        return env.data!.markNotificationAsRead
-                    },
-                    { showSuccessToast: false, showErrorToast: false },
-                )
+                await runRest(() => markNotificationRead(notification.id), {
+                    showSuccessToast: false,
+                    showErrorToast: false,
+                })
                 await mutate()
             }
-            const { target } = notification
-            if (!target) {
-                return
-            }
-            const response = await queryResolveRoute({
-                request: { globalId: encodeNotificationGlobalId(target) },
-            })
-            const path = response.data?.resolveRoute?.data?.path
-            if (path) {
-                router.push(`/${locale}${path}`)
+            if (notification.deepLink) {
+                router.push(notification.deepLink)
             }
         },
-        [locale, mutate, router, runGraphQL],
+        [mutate, router, runRest],
     )
 
     /** Mark every unread notification read in one bulk action. */
     const onMarkAllRead = useCallback(async () => {
-        await runGraphQL(
-            async () => {
-                const env = await mutateMarkAllNotificationsAsRead({
-                    request: undefined,
-                })
-                return env.data!.markAllNotificationsAsRead
-            },
-            { showSuccessToast: false, showErrorToast: true },
-        )
+        await runRest(() => markAllNotificationsRead(), {
+            showSuccessToast: false,
+            showErrorToast: true,
+        })
         await mutate()
-    }, [mutate, runGraphQL])
+    }, [mutate, runRest])
 
     // the bell is only meaningful for an authenticated viewer
     if (!authenticated) {
@@ -238,7 +220,7 @@ export const NotificationBell = ({ className }: NotificationBellProps) => {
                         >
                             <div className="flex flex-col px-2">
                                 {recent.map((item, index) => {
-                                    const Icon = NOTIFICATION_TYPE_ICON[item.type]
+                                    const Icon = resolveNotificationIcon(item.type)
                                     const unread = !item.isRead
                                     return (
                                         <ListRow
@@ -249,10 +231,7 @@ export const NotificationBell = ({ className }: NotificationBellProps) => {
                                                     <Icon className="size-5" aria-hidden focusable="false" />
                                                 </div>
                                             )}
-                                            title={t(
-                                                item.title.key,
-                                                item.title.params ?? undefined,
-                                            )}
+                                            title={item.title}
                                             meta={(
                                                 <div className="flex items-center gap-2">
                                                     <Typography type="body-xs" color="muted">

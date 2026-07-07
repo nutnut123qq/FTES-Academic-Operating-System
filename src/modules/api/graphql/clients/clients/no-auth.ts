@@ -1,11 +1,12 @@
 import { ApolloClient, ApolloLink, InMemoryCache } from "@apollo/client"
 import { 
-    createRetryLink, 
+    createRetryLink,
     defaultOptions,
     createErrorLink,
     createTimeoutLink,
     createHttpLink,
     createAttachDeviceFingerprintLink,
+    createAttachAccessTokenLink,
 } from "../links"
 import { type GraphQLHeaders } from "../../types"
 
@@ -72,6 +73,9 @@ export const createNoAuthApolloClient = ({
             createErrorLink(debug),
             createTimeoutLink(),
             createAttachDeviceFingerprintLink(debug),
+            // BE gates ALL GraphQL behind auth (401 without a token), so attach the access
+            // token when one exists. Anonymous callers still send none (link is a no-op then).
+            createAttachAccessTokenLink(debug),
             createHttpLink({
                 uri,
                 withCredentials,

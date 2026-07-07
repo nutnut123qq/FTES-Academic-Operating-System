@@ -1,37 +1,93 @@
 "use client"
 
 import useSWR from "swr"
+import { getEvents, type EventView } from "@/modules/api/rest/event"
 
-/** A catalog event's identity + logistics (mock shape until the BE contract lands). */
+/** Event kind — the BE `event.events.type` CHECK set, lowercased to a label key. */
+export type EventType = "webinar" | "workshop" | "hackathon" | "competition" | "meetup"
+
+/** Location modality — the BE `location_type` CHECK set (`ONSITE|ONLINE|HYBRID`), lowercased. */
+export type EventLocationType = "onsite" | "online" | "hybrid"
+
+/** A catalog event's identity + logistics, mapped from the BE {@link EventView}. */
 export interface Event {
-    /** Opaque id from the route (`[eventId]`). */
+    /** Slug — the card's route id + React key (the BE detail endpoint keys on slug, not the uuid). */
     id: string
-    /** Event title, e.g. "Xây API với NestJS". */
+    /** Event title. */
     title: string
     /** Event kind — label key suffix. */
-    type: "webinar" | "workshop" | "hackathon" | "competition" | "meetup"
-    /** Display date, e.g. "12/07/2026". */
-    date: string
-    /** Venue or platform, e.g. "Online (Zoom)". */
-    location: string
-    /** Registered attendee count. */
-    attendees: number
+    type: EventType
+    /** Formatted start date+time, or `null` when the BE omits it (row hidden). */
+    date: string | null
+    /** Location modality; `null` when the BE omits it. The exact venue is not in the list DTO. */
+    locationType: EventLocationType | null
+    /** Confirmed attendee count (`capacity − seatsLeft`); `null` when capacity is unbounded (row hidden). */
+    attendees: number | null
 }
 
-// ponytail: mock BE — no events endpoint yet. Deterministic sample list, same shape
-// the catalog renders against. Wire a real GraphQL query (events()) when the contract
-// lands; the hook API stays the same so callers don't change.
-const fetchEventsMock = async (): Promise<Array<Event>> => [
-    { id: "evt-nestjs-api", title: "Xây REST API với NestJS", type: "webinar", date: "12/07/2026", location: "Online (Zoom)", attendees: 214 },
-    { id: "evt-react-workshop", title: "Workshop React Server Components", type: "workshop", date: "19/07/2026", location: "Hà Nội — FTES Lab", attendees: 48 },
-    { id: "evt-ai-hackathon", title: "Hackathon AI 48h", type: "hackathon", date: "02/08/2026", location: "TP. HCM — Innovation Hub", attendees: 132 },
-    { id: "evt-algo-contest", title: "Đấu trường thuật toán mùa 3", type: "competition", date: "10/08/2026", location: "Online (Codeforces)", attendees: 386 },
-    { id: "evt-devs-meetup", title: "Meetup lập trình viên FTES", type: "meetup", date: "24/08/2026", location: "Đà Nẵng — The Hub", attendees: 76 },
-    { id: "evt-cloud-webinar", title: "Webinar Kiến trúc Cloud-native", type: "webinar", date: "05/09/2026", location: "Online (YouTube Live)", attendees: 158 },
-]
+const KNOWN_TYPES: ReadonlySet<string> = new Set<EventType>([
+    "webinar",
+    "workshop",
+    "hackathon",
+    "competition",
+    "meetup",
+])
+const KNOWN_LOCATIONS: ReadonlySet<string> = new Set<EventLocationType>([
+    "onsite",
+    "online",
+    "hybrid",
+])
 
-/** Loads the event catalog. Mocked; SWR-shaped for a drop-in BE swap. */
+/**
+ * Normalise the BE uppercase `type` into a label key. The DB CHECK constrains it to the
+ * five known kinds; the fallback only guards an impossible unseen value from crashing the card.
+ */
+const toEventType = (raw: string): EventType => {
+    const lower = (raw ?? "").toLowerCase()
+    return (KNOWN_TYPES.has(lower) ? lower : "webinar") as EventType
+}
+
+const toLocationType = (raw: string | null | undefined): EventLocationType | null => {
+    const lower = raw?.toLowerCase()
+    return lower && KNOWN_LOCATIONS.has(lower) ? (lower as EventLocationType) : null
+}
+
+const dateFormatter = new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+})
+
+const toEventDate = (iso: string | null | undefined): string | null => {
+    if (!iso) return null
+    const parsed = new Date(iso)
+    return Number.isNaN(parsed.getTime()) ? null : dateFormatter.format(parsed)
+}
+
+/** Confirmed registrations = `capacity − seatsLeft`; only known when capacity is bounded. */
+const toAttendees = (capacity?: number, seatsLeft?: number): number | null => {
+    if (capacity == null || seatsLeft == null) return null
+    return Math.max(0, capacity - seatsLeft)
+}
+
+/** Map one BE {@link EventView} to the card model, degrading the fields the list DTO omits. */
+const toEvent = (view: EventView): Event => ({
+    id: view.slug,
+    title: view.title,
+    type: toEventType(view.type),
+    date: toEventDate(view.startAt),
+    locationType: toLocationType(view.locationType),
+    attendees: toAttendees(view.capacity, view.seatsLeft),
+})
+
+/**
+ * Loads the public event catalog from `GET /api/v1/events` (REST) and maps each
+ * {@link EventView} to the card {@link Event}. SWR-shaped; renders clean on an empty list.
+ */
 export const useQueryEventsSwr = () => {
-    const { data, isLoading, error, mutate } = useSWR(["events"], () => fetchEventsMock())
-    return { events: data ?? [], isLoading, error, mutate }
+    const { data, isLoading, error, mutate } = useSWR(["events"], getEvents)
+    const events = (data ?? []).map(toEvent)
+    return { events, isLoading, error, mutate }
 }

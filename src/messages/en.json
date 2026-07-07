@@ -3305,7 +3305,12 @@
             "meetup": "Meetup"
         },
         "attendeesCount": "{count} attendees",
-        "register": "Register"
+        "register": "Register",
+        "locationTypes": {
+            "onsite": "On-site",
+            "online": "Online",
+            "hybrid": "Hybrid"
+        }
     },
     "activity": {
         "title": "Activity",

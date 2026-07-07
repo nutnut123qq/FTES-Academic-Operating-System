@@ -1,6 +1,6 @@
 "use client"
 
-import { Magnifier as MagnifyingGlassIcon } from "@gravity-ui/icons"
+import { MagnifyingGlassIcon } from "@phosphor-icons/react"
 import React, {
     useCallback,
     useEffect,
@@ -139,7 +139,7 @@ export const SearchInput = ({
         <div className={cn("relative w-full sm:max-w-sm", className)}>
             <TextField aria-label={resolvedPlaceholder} className="w-full">
                 <div className="relative">
-                    <MagnifyingGlassIcon className="text-muted pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" />
+                    <MagnifyingGlassIcon aria-hidden focusable="false" className="text-muted pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2" />
                     <Input
                         type="search"
                         variant={variant}
@@ -159,7 +159,7 @@ export const SearchInput = ({
                         // HeroUI-style popover surface: rounded, bordered, elevated, padded.
                         // `bg-surface` is the opaque surface token (bg-content1 is translucent
                         // in this theme, which let the cards bleed through the dropdown).
-                        className="bg-surface border-divider/60 absolute z-30 mt-2 max-h-72 w-full overflow-y-auto rounded-2xl border p-1.5 shadow-xl"
+                        className="bg-surface border-divider/60 absolute z-30 mt-2 max-h-72 w-full overflow-y-auto rounded-2xl border p-2 shadow-xl"
                         // subtle pop-in / pop-out, matching HeroUI popover motion
                         initial={{ opacity: 0, y: -6, scale: 0.98 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -255,14 +255,14 @@ const SearchInputSuggestionRow = ({
                 ref={rowRef}
                 type="button"
                 className={cn(
-                    "flex w-full items-center gap-1.5 rounded-xl px-3 py-2.5 text-left text-sm transition-colors",
+                    "flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm transition-colors",
                     // hover + keyboard-active share the same soft accent fill (HeroUI listbox feel)
                     active ? "bg-accent/10" : "hover:bg-accent/10",
                 )}
                 onMouseDown={onMouseDown}
                 onMouseEnter={onHover}
             >
-                <MagnifyingGlassIcon className="text-muted h-5 w-5 shrink-0" />
+                <MagnifyingGlassIcon aria-hidden focusable="false" className="text-muted size-5 shrink-0" />
                 {/* Google-style: the typed part stays light, the completion is bold.
                     `min-w-0 flex-1` lets the span shrink inside the flex row so a long
                     label truncates with an ellipsis instead of overflowing the dropdown. */}

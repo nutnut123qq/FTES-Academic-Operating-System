@@ -64,7 +64,13 @@ export const SidebarNavItem = ({
                 className,
             )}
         >
-            {icon}
+            {/* icon is decorative — the Link's aria-label carries the name. The block
+                enforces aria-hidden here so callers don't each have to remember it. */}
+            {icon ? (
+                <span aria-hidden="true" className="flex shrink-0">
+                    {icon}
+                </span>
+            ) : null}
             {!collapsed ? (
                 <Typography
                     type="body-sm"

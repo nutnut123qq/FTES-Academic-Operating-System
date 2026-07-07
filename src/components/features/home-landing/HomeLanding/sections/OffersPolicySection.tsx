@@ -67,10 +67,10 @@ export const OffersPolicySection = () => {
                     </Typography>
                 </div>
 
-                <div className="mx-auto grid max-w-4xl grid-cols-1 items-center gap-6 lg:grid-cols-[15rem_1fr] lg:gap-10">
+                <div className="mx-auto grid max-w-4xl grid-cols-1 items-center gap-6 lg:grid-cols-[15rem_1fr] lg:gap-8">
                     {/* tab rail */}
                     <div
-                        className="flex flex-row flex-wrap gap-1 lg:flex-col"
+                        className="flex flex-row flex-wrap gap-2 lg:flex-col"
                         role="tablist"
                         aria-label={t("offers.tabsAria")}
                     >
@@ -87,7 +87,7 @@ export const OffersPolicySection = () => {
                                     id={`offer-tab-${group.key}`}
                                     onClick={() => setActive(i)}
                                     className={cn(
-                                        "group flex items-center gap-3 rounded-xl px-4 py-2.5 text-left transition-colors",
+                                        "group flex items-center gap-3 rounded-xl px-4 py-2 text-left transition-colors",
                                         isActive ? "bg-accent/10" : "hover:bg-accent/10",
                                     )}
                                 >
@@ -99,7 +99,12 @@ export const OffersPolicySection = () => {
                                         aria-hidden
                                         focusable="false"
                                     />
-                                    <span className="hidden text-sm font-medium text-foreground sm:inline">
+                                    <span
+                                        className={cn(
+                                            "hidden text-sm font-medium sm:inline",
+                                            isActive ? "text-accent" : "text-foreground",
+                                        )}
+                                    >
                                         {t(`offers.groups.${group.key}.title`)}
                                     </span>
                                 </button>
@@ -130,7 +135,7 @@ export const OffersPolicySection = () => {
                                         aria-labelledby={`offer-tab-${group.key}`}
                                         hidden={i !== active}
                                     >
-                                        <div className="mb-4 flex items-center gap-3">
+                                        <div className="mb-6 flex items-center gap-3">
                                             <div className="flex size-11 items-center justify-center rounded-large bg-accent/10 text-accent">
                                                 <GroupIcon className="size-6" aria-hidden focusable="false" />
                                             </div>
@@ -152,7 +157,7 @@ export const OffersPolicySection = () => {
                                 )
                             })}
                         </ShowcaseMockup>
-                        <div className="mt-8 flex justify-start">
+                        <div className="mt-6 flex justify-start">
                             <Button variant="primary" onPress={() => router.push("/courses")}>
                                 {t("offers.cta")}
                                 <ArrowRightIcon className="size-4" aria-hidden focusable="false" />

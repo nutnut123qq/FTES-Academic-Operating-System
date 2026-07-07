@@ -31,7 +31,7 @@ export const ModuleShowcaseSection = () => {
                     {t("modules.title")}
                 </Typography>
             </div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
                 {MODULE_CARDS.map((card) => {
                     const ModuleIcon = MODULE_ICON[card.key] ?? BriefcaseIcon
                     return (
@@ -40,18 +40,19 @@ export const ModuleShowcaseSection = () => {
                             href={card.href}
                             className={cn(
                                 "group flex flex-col gap-3 rounded-2xl border border-separator p-6 no-underline transition-colors hover:bg-default/40",
+                                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
                             )}
                         >
                             <div className="flex size-11 items-center justify-center rounded-large bg-accent/10 text-accent">
                                 <ModuleIcon className="size-6" aria-hidden focusable="false" />
                             </div>
-                            <Typography type="h6" weight="bold">
+                            <Typography type="h5" weight="bold">
                                 {t(`modules.cards.${card.key}.title`)}
                             </Typography>
                             <Typography type="body-sm" color="muted">
                                 {t(`modules.cards.${card.key}.desc`)}
                             </Typography>
-                            <span className="mt-auto flex items-center gap-1 pt-2 text-sm font-medium text-accent">
+                            <span className="mt-auto flex items-center gap-2 text-sm font-medium text-accent">
                                 {t("modules.explore")}
                                 <ArrowRightIcon className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden focusable="false" />
                             </span>

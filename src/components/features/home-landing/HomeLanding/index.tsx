@@ -46,14 +46,16 @@ export const HomeLanding = () => {
             <FaqSection />
 
             {/* closing CTA */}
-            <section className="mx-auto flex w-full max-w-6xl flex-col items-center gap-4 px-4 py-20 text-center sm:px-6">
-                <Typography type="h3" weight="bold">
-                    {t("cta.title")}
-                </Typography>
-                <Typography type="body" color="muted" className="max-w-xl">
-                    {t("cta.subline")}
-                </Typography>
-                <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
+            <section className="mx-auto flex w-full max-w-6xl flex-col items-center gap-6 px-4 py-20 text-center sm:px-6">
+                <div className="flex flex-col items-center gap-3">
+                    <Typography type="h3" weight="bold">
+                        {t("cta.title")}
+                    </Typography>
+                    <Typography type="body" color="muted" className="max-w-xl">
+                        {t("cta.subline")}
+                    </Typography>
+                </div>
+                <div className="flex flex-wrap items-center justify-center gap-3">
                     <Button variant="primary" onPress={() => router.push("/courses")}>
                         {t("cta.primary")}
                         <ArrowRightIcon className="size-4" aria-hidden focusable="false" />

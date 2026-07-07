@@ -139,8 +139,8 @@ export const PlatformStatsSection = () => {
                     <div className="flex flex-wrap items-center justify-center gap-2">
                         {AI_CHIP_KEYS.map((key) => (
                             <Chip key={key} variant="soft" color="accent" size="sm">
-                                <span className="flex items-center gap-1">
-                                    <SparkleIcon className="size-3.5" aria-hidden focusable="false" />
+                                <span className="flex items-center gap-2">
+                                    <SparkleIcon className="size-4" aria-hidden focusable="false" />
                                     {t(`stats.aiChips.${key}`)}
                                 </span>
                             </Chip>

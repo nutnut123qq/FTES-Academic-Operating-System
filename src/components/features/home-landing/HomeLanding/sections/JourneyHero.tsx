@@ -122,9 +122,9 @@ export const JourneyHero = () => {
     const useCanvas = canWebgl && inView
 
     return (
-        <section className="mx-auto grid w-full max-w-6xl grid-cols-1 items-center gap-10 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:py-24">
+        <section className="mx-auto grid w-full max-w-6xl grid-cols-1 items-center gap-6 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:py-24">
             {/* text column */}
-            <div className="flex flex-col items-start gap-5 text-left">
+            <div className="flex flex-col items-start gap-6 text-left">
                 <Chip variant="soft" color="accent" size="sm">
                     {t("hero.eyebrow")}
                 </Chip>
@@ -136,7 +136,7 @@ export const JourneyHero = () => {
                 <Typography type="body" color="muted" className="max-w-xl">
                     {t("hero.subline")}
                 </Typography>
-                <div className="mt-1 flex flex-wrap items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                     <Button variant="primary" onPress={() => router.push("/courses")}>
                         {t("hero.ctaPrimary")}
                     </Button>
@@ -147,7 +147,7 @@ export const JourneyHero = () => {
 
                 {/* stage stepper — the guided journey control (keyboard-operable). */}
                 <div
-                    className="mt-4 flex w-full flex-col gap-2"
+                    className="flex w-full flex-col gap-2"
                     role="tablist"
                     aria-label={t("journey.stepperAria")}
                     onMouseEnter={() => setPaused(true)}
@@ -179,14 +179,14 @@ export const JourneyHero = () => {
                                         "mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold",
                                         isActive
                                             ? isPayoff
-                                                ? "bg-success text-white"
-                                                : "bg-accent text-white"
+                                                ? "bg-success text-success-foreground"
+                                                : "bg-accent text-accent-foreground"
                                             : "bg-default text-muted",
                                     )}
                                 >
                                     {i + 1}
                                 </span>
-                                <span className="flex flex-col gap-0.5">
+                                <span className="flex flex-col gap-0">
                                     <Typography type="body-sm" weight="bold" className={cn(isPayoff && "text-success")}>
                                         {station.label}
                                     </Typography>

@@ -36,6 +36,7 @@ import { useQueryMyNotificationsSwr } from "@/hooks/swr/api/graphql/queries/useQ
 import { useQueryMyNotificationPreferencesSwr } from "@/hooks/swr/api/graphql/queries/useQueryMyNotificationPreferencesSwr"
 import { useAppSelector } from "@/redux/hooks"
 import { useGraphQLWithToast } from "@/modules/toast/hooks"
+import { ErrorContent } from "@/components/blocks/async/ErrorContent"
 import { NOTIFICATION_TYPE_ICON } from "@/components/features/notification/typeIcon"
 import { encodeNotificationGlobalId } from "@/components/features/notification/global-id"
 import {
@@ -64,7 +65,7 @@ export const NotificationBell = ({ className }: NotificationBellProps) => {
     const locale = useLocale()
     const router = useRouter()
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
-    const { data, isLoading, mutate } = useQueryMyNotificationsSwr()
+    const { data, isLoading, error, mutate } = useQueryMyNotificationsSwr()
     const { data: preferences } = useQueryMyNotificationPreferencesSwr()
     const runGraphQL = useGraphQLWithToast()
     const [isOpen, setOpen] = useState(false)
@@ -192,7 +193,7 @@ export const NotificationBell = ({ className }: NotificationBellProps) => {
                             size="sm"
                             variant="tertiary"
                             onPress={onMarkAllRead}
-                            className="gap-1.5"
+                            className="gap-2"
                         >
                             <CheckDoubleIcon className="size-5" />
                             <span className="text-xs">{t("notifications.markAllRead")}</span>
@@ -201,7 +202,7 @@ export const NotificationBell = ({ className }: NotificationBellProps) => {
                 </div>
                 <Separator />
 
-                {/* body: muted-all hint / loading / empty / list */}
+                {/* body: muted-all hint / loading / error / empty / list */}
                 {muteAll ? (
                     <div className="p-6 text-center text-sm text-muted">
                         {t("notifications.mutedHint")}
@@ -210,6 +211,12 @@ export const NotificationBell = ({ className }: NotificationBellProps) => {
                     <div className="flex items-center justify-center p-6">
                         <Spinner size="sm" />
                     </div>
+                ) : error && items.length === 0 ? (
+                    <ErrorContent
+                        title={t("notifications.loadError")}
+                        onRetry={() => { void mutate() }}
+                        retryLabel={t("notifications.retry")}
+                    />
                 ) : items.length === 0 ? (
                     <div className="p-6 text-center text-sm text-muted">
                         {t("notifications.empty")}
@@ -225,16 +232,16 @@ export const NotificationBell = ({ className }: NotificationBellProps) => {
                                     onClick={() => onPressItem(notification)}
                                     className={cn(
                                         "flex items-start gap-3 px-3 py-3 text-left hover:bg-default/40",
-                                        !notification.isRead && "bg-primary/5",
+                                        !notification.isRead && "bg-accent/5",
                                     )}
                                 >
                                     <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
                                         <Icon className="size-5" aria-hidden focusable="false" />
                                     </div>
-                                    <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                                        <div className="flex items-center gap-1.5">
+                                    <div className="flex min-w-0 flex-1 flex-col gap-2">
+                                        <div className="flex items-center gap-2">
                                             {!notification.isRead ? (
-                                                <span className="size-2 shrink-0 rounded-full bg-primary" />
+                                                <span className="size-2 shrink-0 rounded-full bg-accent" />
                                             ) : null}
                                             <span className="flex-1 text-sm font-medium text-foreground">
                                                 {t(
@@ -251,7 +258,7 @@ export const NotificationBell = ({ className }: NotificationBellProps) => {
                                                 )}
                                             </span>
                                         ) : null}
-                                        <span className="text-[11px] text-muted">
+                                        <span className="text-xs text-muted">
                                             {formatRelative(notification.createdAt)}
                                         </span>
                                     </div>

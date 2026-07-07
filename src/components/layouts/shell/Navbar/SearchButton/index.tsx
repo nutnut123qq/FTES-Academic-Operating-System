@@ -31,11 +31,11 @@ export const SearchButton = ({ className }: SearchButtonProps) => {
     const { open: onOpenSearch } = useSearchOverlayState()
     return (
         <Button className={cn("w-[300px] justify-between px-3", className)} variant="outline" onPress={onOpenSearch}>
-            <span className="inline-flex items-center gap-1.5">
+            <span className="inline-flex items-center gap-2">
                 <MagnifyingGlassIcon className="h-5 w-5" />
                 <span className="text-sm">{t("search.label")}</span>
             </span>
-            <div className="flex items-center gap-1.5 hidden md:inline-flex">
+            <div className="flex items-center gap-2 hidden md:inline-flex">
                 <Kbd>
                     <Kbd.Content>Ctrl</Kbd.Content>
                 </Kbd>

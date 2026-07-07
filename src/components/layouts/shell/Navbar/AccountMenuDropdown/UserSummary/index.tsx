@@ -28,7 +28,7 @@ export const UserSummary = ({ className }: UserSummaryProps) => {
     const user = useAppSelector((state) => state.user.user)
     return (
         <div className={cn("flex items-center justify-between gap-6", className)}>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
                 <UserAvatar
                     className="cursor-pointer"
                     username={user?.username}

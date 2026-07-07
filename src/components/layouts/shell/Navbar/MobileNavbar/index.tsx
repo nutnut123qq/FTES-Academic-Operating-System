@@ -83,15 +83,15 @@ export const MobileNavbar = ({ className }: MobileNavbarProps) => {
             className={cn("backdrop-blur-xl bg-background/80 flex flex-col h-[calc(100vh-64px)] pb-10", className)}
             aria-label={t("nav.mobileMenu")}
         >
-            <div className="flex flex-col gap-1.5 mt-4 flex-grow">
+            <div className="flex flex-col gap-2 mt-4 flex-grow">
                 {navItems.map((item, index) => (
                     <div key={`${item.path}-${index}`} className="w-full">
                         <Link
                             className={cn(
-                                "w-full flex items-center gap-3 p-4 rounded-2xl transition-all duration-300",
+                                "w-full flex items-center gap-3 p-4 rounded-2xl transition-colors",
                                 item.isActive
-                                    ? "bg-primary/10 text-primary shadow-sm"
-                                    : "hover:bg-default-100",
+                                    ? "bg-accent/10 text-accent"
+                                    : "text-muted hover:bg-default/40 hover:text-foreground",
                             )}
                             onPress={() => {
                                 router.push(item.path)
@@ -99,7 +99,7 @@ export const MobileNavbar = ({ className }: MobileNavbarProps) => {
                             }}
                         >
                             <item.icon className="size-6" />
-                            <span className="font-bold tracking-tight">{item.label}</span>
+                            <span className="text-sm font-semibold">{item.label}</span>
                         </Link>
                     </div>
                 ))}
@@ -108,13 +108,13 @@ export const MobileNavbar = ({ className }: MobileNavbarProps) => {
             <div className="mt-auto flex flex-col gap-6 pt-6 border-t">
                 <div className="flex items-center justify-between px-2">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-xl bg-default-100 flex items-center justify-center">
+                        <div className="p-2 rounded-xl bg-default/40 flex items-center justify-center">
                             <PaintBrushIcon className="size-5" />
                         </div>
                         <div className="flex flex-col gap-0">
-                            <span className="text-sm font-bold">{t("nav.appearance")}</span>
-                            <span className="text-xs font-semibold uppercase tracking-wide text-muted">
-                                System theme
+                            <span className="text-sm font-semibold text-foreground">{t("nav.appearance")}</span>
+                            <span className="text-xs text-muted">
+                                {t("nav.systemTheme")}
                             </span>
                         </div>
                     </div>
@@ -122,14 +122,14 @@ export const MobileNavbar = ({ className }: MobileNavbarProps) => {
                 </div>
                 <div className="flex items-center justify-between px-2">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-xl bg-default-100 flex items-center justify-center">
+                        <div className="p-2 rounded-xl bg-default/40 flex items-center justify-center">
                             <TranslateIcon className="size-5" />
                         </div>
                         <div className="flex flex-col gap-0">
-                            <span className="text-sm font-bold">
+                            <span className="text-sm font-semibold text-foreground">
                                 {t("nav.toggleLanguage")}
                             </span>
-                            <span className="text-xs font-semibold uppercase tracking-wide text-muted">
+                            <span className="text-xs text-muted">
                                 {locale === "en" ? "English" : "Tiếng Việt"}
                             </span>
                         </div>

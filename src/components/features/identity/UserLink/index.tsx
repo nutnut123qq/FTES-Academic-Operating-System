@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useCallback, useMemo, useState } from "react"
-import { Button, Skeleton, Typography, cn } from "@heroui/react"
+import { Button, Skeleton, Spinner, Typography, cn } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
 import { useAppSelector } from "@/redux/hooks"
@@ -205,9 +205,7 @@ export const UserLink = ({
                 >
                     {({ isPending }) => (
                         <>
-                            {isPending ? (
-                                <span className="inline-block size-4 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden="true" />
-                            ) : null}
+                            {isPending ? <Spinner color="current" size="sm" /> : null}
                             {t(profile.isFollowedByMe ? "hovercard.unfollow" : "hovercard.follow")}
                         </>
                     )}

@@ -59,12 +59,13 @@ const fetchRolesMock = async (): Promise<RolesData> => ({
 
 /** Loads the RBAC roles + permission matrix. Mocked; SWR-shaped for a drop-in BE swap. */
 export const useQueryRolesSwr = () => {
-    const { data, isLoading, error } = useSWR(["rbac", "roles"], () => fetchRolesMock())
+    const { data, isLoading, error, mutate } = useSWR(["rbac", "roles"], () => fetchRolesMock())
     return {
         roles: data?.roles ?? [],
         permissions: data?.permissions ?? [],
         grants: data?.grants,
         isLoading,
         error,
+        mutate,
     }
 }

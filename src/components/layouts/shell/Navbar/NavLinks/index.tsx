@@ -73,7 +73,7 @@ export const NavLinks = ({ className }: NavLinksProps) => {
     )
 
     return (
-        <div className={cn("hidden flex-1 items-center justify-center gap-1.5 md:flex", className)}>
+        <div className={cn("hidden flex-1 items-center justify-center gap-2 md:flex", className)}>
             {items.map((item) => (
                 <Link key={item.path} onPress={() => router.push(item.path)}>
                     <span

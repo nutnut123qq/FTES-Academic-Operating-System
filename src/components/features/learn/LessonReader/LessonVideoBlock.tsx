@@ -1,6 +1,7 @@
 "use client"
 
 import { Card, CardContent } from "@heroui/react"
+import { LessonHlsPlayer } from "./LessonHlsPlayer"
 
 /** Extracts a YouTube video id from a watch / share / embed / shorts URL. */
 const youtubeId = (ref: string): string | null => {
@@ -11,17 +12,23 @@ const youtubeId = (ref: string): string | null => {
 }
 
 /**
- * Lesson video player. Migrated lessons carry their source in `videoRef`: most are
- * YouTube links (rendered as an embed). Anything else — HTML notes, Drive links,
- * unsupported refs — hides the player. Only mounted when the lesson has a READY
- * video (`videoStatus === "READY"`).
+ * Lesson video player. Migrated lessons carry their source in `videoRef`:
+ *  - YouTube links → embed iframe.
+ *  - internal `video_*` tokens → HLS via {@link LessonHlsPlayer} (stream.ftes.vn).
+ *  - anything else (HTML notes, Drive links) → hidden.
  *
- * ponytail: internal `video_*` HLS refs (a minority of migrated courses) are not
- * handled yet — they self-hide. Add a stream.ftes.vn HLS branch when one surfaces.
+ * `videoRef` is null when the lesson is locked (BE strips it behind the paywall),
+ * so a non-accessible lesson renders nothing here. Only mounted when the lesson
+ * has a READY video (`videoStatus === "READY"`).
  */
 export const LessonVideoBlock = ({ videoRef }: { videoRef: string | null }) => {
-    const ytId = videoRef ? youtubeId(videoRef) : null
-    if (!ytId) return null
+    if (!videoRef) return null
+
+    const ytId = youtubeId(videoRef)
+    if (!ytId) {
+        // internal streaming token → HLS; other refs (HTML/Drive) self-hide inside the trim.
+        return /^\s*video_/.test(videoRef) ? <LessonHlsPlayer videoRef={videoRef.trim()} /> : null
+    }
 
     return (
         <div className="mx-auto w-full max-w-3xl">

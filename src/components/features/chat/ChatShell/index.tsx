@@ -1,11 +1,12 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { Button, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { ChatCircleIcon, PaperPlaneTiltIcon } from "@phosphor-icons/react"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
+import { markConversationRead } from "@/modules/api/rest/chat"
 import {
     useQueryConversationMessagesSwr,
     useQueryConversationsSwr,
@@ -66,6 +67,24 @@ export const ChatShell = () => {
     const [draft, setDraft] = useState("")
 
     const selected = conversations.find((conversation) => conversation.id === selectedId) ?? null
+
+    // Mark the open conversation read once its thread has loaded and it still has unread —
+    // clears the badge (and undoes the self-send bump). Deps are primitives so this can't loop;
+    // after `mutate()` refetches, `selectedUnread` drops to 0 and the effect early-returns.
+    const lastMessageId = messages.length > 0 ? messages[messages.length - 1]?.id ?? null : null
+    const selectedUnread = selected?.unread ?? 0
+    const markedReadRef = useRef<string | null>(null)
+    useEffect(() => {
+        if (!selectedId || !lastMessageId || selectedUnread === 0) return
+        const key = `${selectedId}:${lastMessageId}`
+        if (markedReadRef.current === key) return
+        markedReadRef.current = key
+        void markConversationRead(selectedId, { lastReadMessageId: lastMessageId })
+            .then(() => mutate())
+            .catch(() => {
+                markedReadRef.current = null
+            })
+    }, [selectedId, lastMessageId, selectedUnread, mutate])
 
     // Real send → clear composer, then refetch the thread + list (last-message/unread).
     const handleSend = async () => {

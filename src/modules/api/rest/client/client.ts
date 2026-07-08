@@ -10,22 +10,10 @@ import type { RestApiResponse, RestErrorBody, RestRequestConfig } from "./types"
  * @returns The bearer token, or `undefined` if none is stored.
  */
 const getAccessToken = (): string | undefined => {
+    // SSR guard: now that GETs also auth by default, a server-side restRequest must not touch
+    // localStorage (would ReferenceError). No token exists server-side anyway.
+    if (typeof window === "undefined") return undefined
     return LocalStorage.getItemAsString(LocalStorageId.KeycloakAccessToken) ?? undefined
-}
-
-/**
- * Determines whether a request should be authenticated by default.
- *
- * Mutating methods require authentication; read methods do not unless explicitly
- * requested.
- *
- * @param method - The HTTP method (case-insensitive).
- * @returns `true` when the request should attach an auth header by default.
- */
-const isMutatingMethod = (method?: string): boolean => {
-    if (!method) return false
-    const normalized = method.toUpperCase()
-    return normalized === "POST" || normalized === "PUT" || normalized === "PATCH" || normalized === "DELETE"
 }
 
 /**
@@ -47,8 +35,10 @@ export const createRestAxiosInstance = () => {
  * Executes a single REST request against the backend and unwraps the standard
  * `{code,message,data}` envelope.
  *
- * - Attaches `Authorization: Bearer <token>` when `authenticated` resolves to `true`
- *   and a token exists in local storage.
+ * - Attaches `Authorization: Bearer <token>` whenever a token exists in local storage
+ *   (any method), unless a call explicitly opts out with `authenticated: false`. Public
+ *   endpoints ignore a stale/invalid token, so always sending it is safe and prevents
+ *   authenticated GETs (streak, lesson content, /me/*, admin reads) from silently 401ing.
  * - Creates a fresh axios instance per call.
  * - Throws an `Error` when the HTTP status is not 2xx or when the backend envelope
  *   `code` is not 200.
@@ -58,7 +48,7 @@ export const createRestAxiosInstance = () => {
  */
 export const restRequest = async <T>(config: RestRequestConfig): Promise<T> => {
     const axiosInstance = createRestAxiosInstance()
-    const shouldAuthenticate = config.authenticated ?? isMutatingMethod(config.method)
+    const shouldAuthenticate = config.authenticated ?? true
 
     if (shouldAuthenticate) {
         const accessToken = getAccessToken()

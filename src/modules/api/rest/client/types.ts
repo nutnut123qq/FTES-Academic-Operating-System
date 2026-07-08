@@ -41,9 +41,10 @@ export interface RestApiResponse<T> {
  */
 export interface RestRequestConfig extends AxiosRequestConfig {
     /**
-     * When `true`, the Keycloak access token is read from local storage and
-     * attached as `Authorization: Bearer <token>`. Defaults to `true` for
-     * mutating methods (`POST`, `PUT`, `PATCH`, `DELETE`).
+     * When `true` (the default), the Keycloak access token — if present in local storage — is
+     * attached as `Authorization: Bearer <token>` for ANY method. Public endpoints ignore a
+     * stale/invalid token, so this is safe and keeps authenticated GETs (streak, lesson content,
+     * `/me/*`, admin reads) working. Pass `false` to force an unauthenticated request.
      */
     authenticated?: boolean
 }

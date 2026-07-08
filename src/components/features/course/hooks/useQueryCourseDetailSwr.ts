@@ -1,8 +1,8 @@
 "use client"
 
 import useSWR from "swr"
-import { getCourseDetail } from "@/modules/api/rest/course"
-import type { CourseDetail as CourseDetailDto } from "@/modules/api/rest/course"
+import { getCourseDetail, getMyEnrollments } from "@/modules/api/rest/course"
+import type { CourseDetail as CourseDetailDto, EnrollmentView } from "@/modules/api/rest/course"
 import { mapCourseLevel, type CourseLevel } from "./useQueryCoursesSwr"
 
 /** A lesson in a course section (syllabus preview row). */
@@ -19,6 +19,8 @@ export interface CourseLesson {
 export interface CourseSection {
     id: string
     title: string
+    /** Optional section blurb — rendered as "Title: description" in the outline. */
+    description?: string
     lessons: Array<CourseLesson>
 }
 
@@ -159,6 +161,7 @@ const toCourseDetail = (dto: CourseDetailDto): CourseDetail => {
     const sections: Array<CourseSection> = (dto.sections ?? []).map((section) => ({
         id: section.id,
         title: section.name,
+        description: section.description?.trim() ? section.description.trim() : undefined,
         lessons: (section.lessons ?? []).map((lesson) => ({
             id: lesson.id,
             title: lesson.name,
@@ -246,5 +249,27 @@ export const useQueryCourseDetailSwr = (courseId: string) => {
         courseId ? ["course-detail", courseId] : null,
         () => getCourseDetail(courseId).then(toCourseDetail),
     )
-    return { course: data, isLoading, error, mutate }
+    // Real viewer enrollment: mark this course enrolled when it appears in the
+    // viewer's active enrollments (`GET /courses/me/enrollments`). Auth-gated —
+    // anon or a 401 degrades silently to the sales card.
+    const hasToken =
+        typeof window !== "undefined" &&
+        !!window.localStorage.getItem("keycloak:access_token")
+    const { data: enrollments } = useSWR(
+        hasToken && courseId ? ["my-enrollments", courseId] : null,
+        () => getMyEnrollments().catch(() => [] as Array<EnrollmentView>),
+    )
+    const course =
+        data && enrollments
+            ? {
+                  ...data,
+                  enrollment: {
+                      isEnrolled: enrollments.some((e) => e.slugName === courseId && e.active),
+                      // BE `EnrollmentView` carries no paid flag — nothing reads
+                      // `isPurchased` today, so leave it false (unknown).
+                      isPurchased: false,
+                  },
+              }
+            : data
+    return { course, isLoading, error, mutate }
 }

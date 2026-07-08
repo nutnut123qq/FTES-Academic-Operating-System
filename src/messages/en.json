@@ -4809,6 +4809,9 @@
         "bestseller": "Bestseller",
         "new": "New"
       },
+      "saleMode": {
+        "package": "Combo"
+      },
       "empty": "No matching courses.",
       "ratingCount": "({count})",
       "hours": "{count} hours",

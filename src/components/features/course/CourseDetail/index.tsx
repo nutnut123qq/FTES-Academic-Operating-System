@@ -395,10 +395,17 @@ const CourseDetailView = ({
                                             ) : (
                                                 <CaretRightIcon aria-hidden focusable="false" className="size-4 shrink-0 text-muted" />
                                             )}
-                                            <Typography type="body-sm" weight="medium" className="min-w-0 flex-1 truncate">
-                                                {section.title}
-                                            </Typography>
-                                            <Typography type="body-xs" color="muted">
+                                            <div className="min-w-0 flex-1">
+                                                <Typography type="body-sm" weight="medium" className="truncate">
+                                                    {section.title}
+                                                </Typography>
+                                                {section.description ? (
+                                                    <Typography type="body-xs" color="muted" className="line-clamp-1">
+                                                        {section.description}
+                                                    </Typography>
+                                                ) : null}
+                                            </div>
+                                            <Typography type="body-xs" color="muted" className="shrink-0">
                                                 {t("catalog.lessonsCount", { count: section.lessons.length })}
                                             </Typography>
                                         </button>

@@ -29,6 +29,8 @@ import { Button } from "@heroui/react"
 import { useQueryLearnLessonSwr } from "../hooks/useQueryLearnLessonSwr"
 import type { LessonBlock } from "../hooks/useQueryLearnLessonSwr"
 import { LessonComments } from "./LessonComments"
+import { LessonVideoBlock } from "./LessonVideoBlock"
+import { LessonDocumentsBlock } from "./LessonDocumentsBlock"
 import { SelectionHintCallout } from "./ContentAiSelectionAsk/SelectionHintCallout"
 
 /** The two content views (reading vs challenges). */
@@ -188,6 +190,10 @@ export const LessonReader = () => {
                 {lesson ? (
                     view === "content" ? (
                         <>
+                            {/* video player (VIDEO lessons) + document attachments — above the article */}
+                            {lesson.hasVideo ? <LessonVideoBlock lessonId={contentId} /> : null}
+                            <LessonDocumentsBlock lessonId={contentId} />
+
                             {/* reading card — the "paper" surface with the anchored article */}
                             <div className="mx-auto w-full max-w-3xl">
                                 <Card>

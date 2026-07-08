@@ -221,6 +221,16 @@ export interface StreamViewResponse {
     cheapestPackage: CheapestPackage | null
 }
 
+/** A document/slide attachment of a lesson, with a signed read URL for embedding. */
+export interface LessonDocumentView {
+    id: string
+    title: string
+    /** Signed read URL (TTL-limited) — embed in an iframe (PDF/slide). */
+    url: string
+    mimeType: string | null
+    sizeBytes: number | null
+}
+
 // ---------------------------------------------------------------- enrollment / packages
 
 /** Response from `POST /api/v1/courses/{id}/enroll`. */

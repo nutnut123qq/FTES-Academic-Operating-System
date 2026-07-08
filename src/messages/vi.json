@@ -4809,6 +4809,9 @@
         "bestseller": "Bán chạy",
         "new": "Mới"
       },
+      "saleMode": {
+        "package": "Combo"
+      },
       "empty": "Không có khóa học phù hợp.",
       "ratingCount": "({count})",
       "hours": "{count} giờ",

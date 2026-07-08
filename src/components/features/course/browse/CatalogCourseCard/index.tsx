@@ -76,6 +76,11 @@ export const CatalogCourseCard = ({ course, className }: CatalogCourseCardProps)
                         {t(`courseSystem.browse.badge.${course.badge}`)}
                     </Chip>
                 ) : null}
+                {course.saleMode === "PACKAGE" ? (
+                    <Chip size="sm" variant="soft" color="accent" className="absolute right-2 top-2">
+                        {t("courseSystem.browse.saleMode.package")}
+                    </Chip>
+                ) : null}
             </div>
 
             <div className="flex flex-1 flex-col gap-3 p-4">

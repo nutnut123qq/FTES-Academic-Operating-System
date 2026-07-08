@@ -68,6 +68,8 @@ export interface LearnLessonView {
     hasChallenge: boolean
     /** Premium + not enrolled → body is gated (select-none, AI ask suppressed). */
     isLocked: boolean
+    /** True → this lesson has a READY video → the reader renders the HLS player. */
+    hasVideo: boolean
 }
 
 // The BE serves lesson bodies as one markdown string (no per-language variants),
@@ -130,6 +132,8 @@ interface FlatLesson {
     description: string
     moduleId: string
     moduleTitle: string
+    /** BE video processing state — "READY" means a playable HLS stream exists. */
+    videoStatus: string
 }
 
 /** Flattens the course detail into an ordered lesson list (module order → lesson order). */
@@ -147,6 +151,7 @@ const flattenCurriculum = (detail: CourseDetail): Array<FlatLesson> =>
                     description: lesson.description,
                     moduleId: section.id,
                     moduleTitle: section.name,
+                    videoStatus: lesson.videoStatus ?? "",
                 })),
         )
 
@@ -180,6 +185,7 @@ const buildLessonView = (
         isCompleted: false,
         hasChallenge: false,
         isLocked: content.locked,
+        hasVideo: current?.videoStatus === "READY",
     }
 }
 

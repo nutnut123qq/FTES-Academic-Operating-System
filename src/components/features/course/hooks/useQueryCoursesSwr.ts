@@ -34,6 +34,8 @@ export interface Course {
     coverUrl?: string
     /** Optional merchandising badge (Bán chạy / Mới). */
     badge?: CourseBadge
+    /** Sale mode — "LEGACY" (whole-course price) or "PACKAGE" (sold via packages/combo). */
+    saleMode?: string
     /** Short summary shown by the hover preview; assumed on the future BE list endpoint. */
     description?: string
     /** "What you'll learn" bullets for the hover preview; assumed on the future BE list endpoint. */
@@ -104,6 +106,7 @@ const toCourse = (summary: CourseSummary): Course => {
         priceVnd,
         coverUrl: summary.imageHeader || undefined,
         badge: undefined,
+        saleMode: summary.saleMode,
         description: undefined,
         learnOutcomes: undefined,
         updatedAt: undefined,

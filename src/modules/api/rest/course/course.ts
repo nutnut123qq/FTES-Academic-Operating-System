@@ -22,6 +22,7 @@ import type {
     IdResponse,
     LessonAiChatLimitRequest,
     LessonContentView,
+    LessonDocumentView,
     NoteRequest,
     NoteView,
     PackageView,
@@ -275,6 +276,32 @@ export const completeCourseVideoUpload = async (
     return restRequest<void>({
         method: "POST",
         url: `/courses/videos/${videoId}/complete-upload`,
+    })
+}
+
+/**
+ * Signed stream URL (3-level FULL/PREVIEW/NONE) for a lesson's video.
+ *
+ * `GET /api/v1/courses/lessons/{lessonId}/stream`
+ */
+export const getLessonStreamUrl = async (lessonId: string): Promise<StreamViewResponse> => {
+    return restRequest<StreamViewResponse>({
+        method: "GET",
+        url: `/courses/lessons/${lessonId}/stream`,
+        authenticated: true,
+    })
+}
+
+/**
+ * Lists a lesson's document/slide attachments with signed read URLs (for iframe embed).
+ *
+ * `GET /api/v1/lessons/{lessonId}/documents`
+ */
+export const getLessonDocuments = async (lessonId: string): Promise<Array<LessonDocumentView>> => {
+    return restRequest<Array<LessonDocumentView>>({
+        method: "GET",
+        url: `/lessons/${lessonId}/documents`,
+        authenticated: true,
     })
 }
 

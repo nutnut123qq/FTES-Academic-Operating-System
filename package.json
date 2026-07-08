@@ -53,6 +53,7 @@
     "framer-motion": "^12.38.0",
     "graphql": "^16.14.1",
     "graphql-ws": "^6.0.8",
+    "hls.js": "^1.6.16",
     "i18next": "^26.0.3",
     "jsonwebtoken": "^9.0.3",
     "keycloak-js": "^26.2.3",

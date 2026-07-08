@@ -5385,6 +5385,8 @@
         "clearSelection": "Bỏ chọn đoạn",
         "aboutPassage": "Về đoạn “{passage}”:",
         "stubReply": "Đây là câu trả lời mẫu của trợ giảng AI. Khi backend sẵn sàng, câu trả lời sẽ được tạo dựa trên nội dung bài học và đoạn bạn chọn.",
+        "error": "Xin lỗi, mình chưa trả lời được. Vui lòng thử lại.",
+        "quotaHit": "Bạn đã dùng hết lượt hỏi AI cho hôm nay.",
         "quickAsks": {
           "explain": "Giải thích đoạn này",
           "example": "Cho ví dụ",

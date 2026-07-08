@@ -5385,6 +5385,8 @@
         "clearSelection": "Clear selection",
         "aboutPassage": "About “{passage}”:",
         "stubReply": "This is a sample AI tutor reply. Once the backend is ready, answers will be grounded in the lesson content and the passage you selected.",
+        "error": "Sorry, I couldn't answer that. Please try again.",
+        "quotaHit": "You've used up your AI questions for today.",
         "quickAsks": {
           "explain": "Explain this passage",
           "example": "Give an example",

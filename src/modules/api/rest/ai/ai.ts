@@ -1,4 +1,7 @@
 import { restRequest } from "@/modules/api/rest/client"
+import { publicEnv } from "@/resources/env/public"
+import { LocalStorage } from "@/modules/storage/local/storage"
+import { LocalStorageId } from "@/modules/storage/local/enums/id"
 import type {
     AiInsights,
     CareerSuggestionView,
@@ -19,6 +22,94 @@ export const createSession = async (request: CreateSessionRequest): Promise<AiSe
         url: "/ai/sessions",
         data: request,
     })
+
+/** Callbacks for the SSE stream of {@link sendSessionMessageStream}. */
+export interface SessionStreamHandlers {
+    /** Fired for each streamed chunk of the assistant answer. */
+    onDelta: (text: string) => void
+    /** Fired once when the stream completes successfully (payload = {messageId, usage}). */
+    onDone?: (data: unknown) => void
+    /** Fired on a generation/error event (code) or a non-2xx response. */
+    onError?: (code: string) => void
+    /** Fired when the request is rejected by a quota/lesson-limit gate. */
+    onQuota?: (data: unknown) => void
+    /** Abort the in-flight stream (BE releases its Redis lock on client disconnect). */
+    signal?: AbortSignal
+}
+
+const safeJson = (raw: string): unknown => {
+    try {
+        return JSON.parse(raw)
+    } catch {
+        return raw
+    }
+}
+
+/**
+ * Streams a message into an AI chat session over SSE
+ * (`POST /api/v1/ai/sessions/{id}/messages`, `text/event-stream`). The BE emits named events —
+ * `delta` (answer chunk), `done` ({messageId, usage}), `error` ({code}), `quota` (gate hit).
+ *
+ * Uses `fetch` + a `ReadableStream` reader (NOT `EventSource`, which cannot POST or send an
+ * `Authorization` header). The bearer token is read from local storage.
+ */
+export const sendSessionMessageStream = async (
+    sessionId: string,
+    content: string,
+    handlers: SessionStreamHandlers,
+): Promise<void> => {
+    const token = LocalStorage.getItemAsString(LocalStorageId.KeycloakAccessToken) ?? ""
+    const response = await fetch(
+        `${publicEnv().api.http.replace(/\/$/, "")}/ai/sessions/${sessionId}/messages`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "text/event-stream",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ content }),
+            signal: handlers.signal,
+        },
+    )
+    if (!response.ok || !response.body) {
+        handlers.onError?.(`HTTP_${response.status}`)
+        return
+    }
+
+    // Parse one SSE event block: an `event:` name + one/more `data:` lines (joined with newlines).
+    const dispatch = (block: string) => {
+        let name = "message"
+        const dataLines: Array<string> = []
+        for (const line of block.split("\n")) {
+            if (line.startsWith("event:")) name = line.slice(6).trim()
+            else if (line.startsWith("data:")) dataLines.push(line.slice(5))
+        }
+        const data = dataLines.join("\n")
+        if (name === "delta") handlers.onDelta(data)
+        else if (name === "done") handlers.onDone?.(safeJson(data))
+        else if (name === "error") handlers.onError?.(String((safeJson(data) as { code?: unknown })?.code ?? data))
+        else if (name === "quota") handlers.onQuota?.(safeJson(data))
+    }
+
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ""
+    for (;;) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+        // Events are separated by a blank line.
+        let sep = buffer.indexOf("\n\n")
+        while (sep !== -1) {
+            const block = buffer.slice(0, sep)
+            buffer = buffer.slice(sep + 2)
+            if (block.trim()) dispatch(block)
+            sep = buffer.indexOf("\n\n")
+        }
+    }
+    if (buffer.trim()) dispatch(buffer)
+}
 
 export const getSessions = async (params?: {
     feature?: string

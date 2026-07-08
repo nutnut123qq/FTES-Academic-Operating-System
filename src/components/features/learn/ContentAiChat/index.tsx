@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useCallback, useEffect, useRef, useState } from "react"
+import { useParams } from "next/navigation"
 import {
     Button,
     CloseButton,
@@ -13,6 +14,7 @@ import { useTranslations } from "next-intl"
 import { ChatBubble } from "@/components/blocks/feed/ChatBubble"
 import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
 import { useContentAiSelection } from "@/hooks/zustand/overlay/hooks"
+import { createSession, sendSessionMessageStream } from "@/modules/api/rest/ai"
 
 /** Generic starter questions in the empty chat (keys under reader.ai.suggestions). */
 const SUGGESTION_KEYS = ["summarize", "hardest", "example", "remember"] as const
@@ -53,12 +55,16 @@ const truncate = (text: string) => (text.length > 120 ? `${text.slice(0, 120)}â€
 export const ContentAiChat = ({ className }: ContentAiChatProps) => {
     const t = useTranslations("learn")
     const { selection, setSelection } = useContentAiSelection()
+    const { contentId } = useParams<{ contentId?: string }>()
 
     const [messages, setMessages] = useState<Array<ChatMessage>>([])
     const [input, setInput] = useState("")
     const [isStreaming, setIsStreaming] = useState(false)
     const scrollRef = useRef<HTMLDivElement>(null)
-    const streamTimerRef = useRef<number | null>(null)
+    /** Reused TUTOR_CHAT session id â€” created lazily on the first send. */
+    const sessionIdRef = useRef<string | null>(null)
+    /** Aborts the in-flight SSE stream on unmount. */
+    const abortRef = useRef<AbortController | null>(null)
 
     // follow the thread to the bottom as turns append / the answer streams
     useEffect(() => {
@@ -68,15 +74,12 @@ export const ContentAiChat = ({ className }: ContentAiChatProps) => {
         }
     }, [messages])
 
-    useEffect(() => () => {
-        if (streamTimerRef.current) {
-            window.clearInterval(streamTimerRef.current)
-        }
-    }, [])
+    // abort any in-flight stream on unmount (BE releases its Redis lock on client disconnect)
+    useEffect(() => () => abortRef.current?.abort(), [])
 
-    /** Send a question; mock-stream the tutor reply token-by-token. */
+    /** Send a question; stream the real AI tutor answer over SSE (TUTOR_CHAT session). */
     const onSend = useCallback(
-        (preset?: string) => {
+        async (preset?: string) => {
             const raw = (preset ?? input).trim()
             if (!raw || isStreaming) {
                 return
@@ -92,32 +95,56 @@ export const ContentAiChat = ({ className }: ContentAiChatProps) => {
             setSelection(null)
             setIsStreaming(true)
 
-            // MOCK streaming: reveal the canned reply a few words at a time. Swap this
-            // block for the socket `onDelta` handler when the BE lands.
-            const reply = t("reader.ai.stubReply")
-            const words = reply.split(" ")
-            let index = 0
-            streamTimerRef.current = window.setInterval(() => {
-                index += 1
-                const chunk = words.slice(0, index).join(" ")
+            // append each streamed chunk to the (last) assistant turn
+            const appendDelta = (delta: string) => {
                 setMessages((prev) => {
                     const next = [...prev]
                     const last = next[next.length - 1]
                     if (last && last.role === "assistant") {
-                        next[next.length - 1] = { ...last, content: chunk, display: chunk }
+                        const content = last.content + delta
+                        next[next.length - 1] = { ...last, content, display: content }
                     }
                     return next
                 })
-                if (index >= words.length) {
-                    if (streamTimerRef.current) {
-                        window.clearInterval(streamTimerRef.current)
-                        streamTimerRef.current = null
-                    }
-                    setIsStreaming(false)
+            }
+            // finish the turn; surface a fallback only when nothing streamed
+            const finish = (fallback?: string) => {
+                if (fallback) {
+                    setMessages((prev) => {
+                        const next = [...prev]
+                        const last = next[next.length - 1]
+                        if (last && last.role === "assistant" && !last.content) {
+                            next[next.length - 1] = { ...last, content: fallback, display: fallback }
+                        }
+                        return next
+                    })
                 }
-            }, 40)
+                setIsStreaming(false)
+            }
+
+            try {
+                // Lazy TUTOR_CHAT session, grounded on the lesson when a contentId is present.
+                if (!sessionIdRef.current) {
+                    const session = await createSession({
+                        feature: "TUTOR_CHAT",
+                        ...(contentId ? { contextRef: { lessonId: contentId } } : {}),
+                    })
+                    sessionIdRef.current = session.id
+                }
+                const controller = new AbortController()
+                abortRef.current = controller
+                await sendSessionMessageStream(sessionIdRef.current, raw, {
+                    onDelta: appendDelta,
+                    onError: () => finish(t("reader.ai.error")),
+                    onQuota: () => finish(t("reader.ai.quotaHit")),
+                    signal: controller.signal,
+                })
+                finish()
+            } catch {
+                finish(t("reader.ai.error"))
+            }
         },
-        [input, isStreaming, selection, setSelection, t],
+        [input, isStreaming, selection, setSelection, t, contentId],
     )
 
     return (
@@ -136,7 +163,7 @@ export const ContentAiChat = ({ className }: ContentAiChatProps) => {
                                     variant="secondary"
                                     size="sm"
                                     className="justify-start text-start"
-                                    onPress={() => onSend(t(`reader.ai.suggestions.${key}`))}
+                                    onPress={() => void onSend(t(`reader.ai.suggestions.${key}`))}
                                 >
                                     {t(`reader.ai.suggestions.${key}`)}
                                 </Button>
@@ -182,7 +209,7 @@ export const ContentAiChat = ({ className }: ContentAiChatProps) => {
                                 key={key}
                                 variant="secondary"
                                 size="sm"
-                                onPress={() => onSend(t(`reader.ai.quickAsks.${key}`))}
+                                onPress={() => void onSend(t(`reader.ai.quickAsks.${key}`))}
                             >
                                 {t(`reader.ai.quickAsks.${key}`)}
                             </Button>
@@ -203,7 +230,7 @@ export const ContentAiChat = ({ className }: ContentAiChatProps) => {
                     onKeyDown={(event) => {
                         if (event.key === "Enter" && !event.shiftKey) {
                             event.preventDefault()
-                            onSend()
+                            void onSend()
                         }
                     }}
                 />
@@ -214,7 +241,7 @@ export const ContentAiChat = ({ className }: ContentAiChatProps) => {
                     isPending={isStreaming}
                     aria-label={t("reader.ai.send")}
                     isDisabled={input.trim() === ""}
-                    onPress={() => onSend()}
+                    onPress={() => void onSend()}
                 >
                     <PaperPlaneTiltIcon aria-hidden focusable="false" className="size-5" />
                 </Button>

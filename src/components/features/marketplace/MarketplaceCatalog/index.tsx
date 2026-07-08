@@ -11,8 +11,11 @@ import {
     TShirtIcon,
     TicketIcon,
 } from "@phosphor-icons/react"
+import { useSWRConfig } from "swr"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
+import { usePostAddCartItemSwr } from "@/hooks/swr/api/rest/mutations/usePostAddCartItemSwr"
+import { usePaymentOverlayState } from "@/hooks/zustand/overlay/hooks"
 import { useQueryProductsSwr, type Product, type ProductCategory } from "../hooks/useQueryProductsSwr"
 
 /** Category filter options: "all" + every product category. */
@@ -118,11 +121,40 @@ export const MarketplaceCatalog = () => {
     )
 }
 
-/** One product card: icon badge, name, category chip, coin price + mock buy. */
+/** One product card: icon badge, name, category chip, price + add-to-cart / buy-now. */
 const ProductCard = ({ product }: { product: Product }) => {
     const t = useTranslations("marketplace")
     const format = useFormatter()
     const Icon = CATEGORY_ICON[product.category]
+    const { mutate } = useSWRConfig()
+    const addCart = usePostAddCartItemSwr()
+    const payment = usePaymentOverlayState()
+
+    /** Add to cart then open the payment modal for just this product. */
+    const onBuyNow = async () => {
+        try {
+            const item = await addCart.trigger({ productId: product.id, quantity: 1 })
+            void mutate("GET_CART_SWR")
+            payment.open({
+                itemIds: [item.id],
+                title: product.name,
+                amountVnd: product.priceVnd ?? 0,
+                amountCoin: product.priceCoin ?? undefined,
+            })
+        } catch {
+            // add-to-cart failed → leave the button idle; SWR surfaces the error
+        }
+    }
+
+    /** Add to cart and refresh the cart cache (no checkout). */
+    const onAddToCart = async () => {
+        try {
+            await addCart.trigger({ productId: product.id, quantity: 1 })
+            void mutate("GET_CART_SWR")
+        } catch {
+            // ignore — nothing added
+        }
+    }
 
     return (
         <div className="flex flex-col gap-3 rounded-2xl border border-separator p-4">
@@ -163,9 +195,14 @@ const ProductCard = ({ product }: { product: Product }) => {
                         </Typography>
                     )}
                 </div>
-                <Button size="sm" variant="secondary">
-                    {t("buy")}
-                </Button>
+                <div className="flex shrink-0 gap-2">
+                    <Button size="sm" variant="ghost" onPress={onAddToCart} isDisabled={addCart.isMutating}>
+                        {t("addToCart")}
+                    </Button>
+                    <Button size="sm" variant="secondary" onPress={onBuyNow} isDisabled={addCart.isMutating}>
+                        {t("buyNow")}
+                    </Button>
+                </div>
             </div>
         </div>
     )

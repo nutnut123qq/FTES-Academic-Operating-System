@@ -1,42 +1,20 @@
 /**
- * Discriminated-union context that tells the shared payment modal which
- * purchase action to run when the user picks a payment method.
+ * Payload the payment overlay carries to the shared {@link PaymentModal}.
  *
- * The opener (course enroll card / AI subscription tier card) passes this to
- * `usePaymentOverlayState().open(context)`; the modal reads it to decide which
- * SWR mutation to trigger and what payload to send.
+ * Every purchase entry point (marketplace "buy now", cart checkout) resolves the
+ * cart-item ids to pay for, then calls `usePaymentOverlayState().open(context)`.
+ * The modal reads this to run `POST /commerce/checkout` and render the summary.
+ *
+ * The checkout endpoint keys off cart-item ids (not product ids), so callers add
+ * the product(s) to the cart first and pass the resulting item ids here.
  */
-export type PaymentContext =
-    | CoursePaymentContext
-    | AiSubscriptionPaymentContext
-    | MembershipPaymentContext
-
-/** Discriminator for the {@link PaymentContext} union. */
-export enum PaymentFlow {
-    /** Enrolling in (paying for) a course. */
-    CourseEnroll = "courseEnroll",
-    /** Purchasing an AI subscription tier. */
-    AiSubscription = "aiSubscription",
-    /** Purchasing community membership. */
-    Membership = "membership",
-}
-
-/** Payment context for the course-enroll flow. */
-export interface CoursePaymentContext {
-    /** Marks this as the course-enroll flow. */
-    flow: PaymentFlow.CourseEnroll
-}
-
-/** Payment context for the AI subscription flow. */
-export interface AiSubscriptionPaymentContext {
-    /** Marks this as the AI subscription flow. */
-    flow: PaymentFlow.AiSubscription
-    /** Slug of the subscription tier the user is purchasing. */
-    tier: string
-}
-
-/** Payment context for the community membership flow. */
-export interface MembershipPaymentContext {
-    /** Marks this as the membership flow (single product, no tier). */
-    flow: PaymentFlow.Membership
+export interface PaymentContext {
+    /** Cart-item ids to check out (one for buy-now, many for a cart). */
+    itemIds: Array<string>
+    /** Human-readable summary shown at the top of the modal (product or cart label). */
+    title: string
+    /** Amount payable in VND — drives the VietQR flow. `0` when the item is coin-only. */
+    amountVnd: number
+    /** Amount payable in FTES Coin — enables the "pay with coins" (COIN) flow when set. */
+    amountCoin?: number
 }

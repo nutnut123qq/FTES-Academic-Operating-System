@@ -214,3 +214,39 @@ export interface RefundReviewRequest {
     /** Rejection note. */
     note?: string
 }
+
+// ------------------------------------------------------------------ order status
+
+/** Lifecycle status of an order (mirrors backend `OrderStatus`). */
+export type OrderStatus =
+    | "PENDING"
+    | "AWAITING_PAYMENT"
+    | "PAID"
+    | "FULFILLING"
+    | "SUCCESS"
+    | "FAILED"
+    | "CANCELLED"
+    | "EXPIRED"
+    | "REFUNDED"
+
+/**
+ * Statuses at which polling should stop: the order is settled (paid) or dead
+ * (failed/cancelled/expired/refunded). `AWAITING_PAYMENT`/`PENDING`/`FULFILLING`
+ * are still in flight.
+ */
+const TERMINAL_ORDER_STATUSES: ReadonlyArray<string> = [
+    "PAID",
+    "SUCCESS",
+    "FAILED",
+    "CANCELLED",
+    "EXPIRED",
+    "REFUNDED",
+]
+
+/** True when the order has reached a settled/dead status → stop polling. */
+export const isTerminalOrderStatus = (status?: string): boolean =>
+    status != null && TERMINAL_ORDER_STATUSES.includes(status)
+
+/** True when the order is successfully paid (or fulfilled). */
+export const isPaidOrderStatus = (status?: string): boolean =>
+    status === "PAID" || status === "SUCCESS" || status === "FULFILLING"

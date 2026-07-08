@@ -2370,6 +2370,34 @@
       "success": "Thanh toán thành công!",
       "redirecting": "Đang chuyển hướng đến khóa học của bạn...",
       "checkStatus": "Kiểm tra trạng thái"
+    },
+    "checkout": {
+      "title": "Thanh toán",
+      "amountVnd": "{amount}₫",
+      "amountCoin": "{amount} Coin",
+      "method": {
+        "vietqr": "Chuyển khoản QR",
+        "coin": "Trả bằng Xu"
+      },
+      "coupon": {
+        "label": "Mã giảm giá",
+        "placeholder": "Nhập mã giảm giá",
+        "apply": "Áp dụng",
+        "clear": "Bỏ mã",
+        "invalid": "Mã không hợp lệ hoặc đã hết hạn."
+      },
+      "discount": "Giảm {amount}₫",
+      "coinBalance": "Số dư ví",
+      "insufficient": "Số dư xu không đủ để thanh toán.",
+      "pay": "Thanh toán",
+      "scanHint": "Quét mã QR bằng ứng dụng ngân hàng để thanh toán.",
+      "awaiting": "Đang chờ thanh toán...",
+      "success": "Thanh toán thành công!",
+      "done": "Hoàn tất",
+      "failed": "Thanh toán thất bại",
+      "failedHint": "Không thể xử lý thanh toán. Vui lòng thử lại.",
+      "retry": "Thử lại",
+      "close": "Đóng"
     }
   },
   "aiProcessing": {
@@ -3318,7 +3346,9 @@
     "priceCoin": "{amount} Coin",
     "priceVnd": "{amount}₫",
     "priceUnavailable": "Liên hệ",
-    "buy": "Mua"
+    "buy": "Mua",
+    "buyNow": "Mua ngay",
+    "addToCart": "Thêm giỏ"
   },
   "eventSystem": {
     "catalog": {
@@ -5562,5 +5592,19 @@
         "mpegDash": "Kiểm thử MPEG-DASH"
       }
     }
+  },
+  "cart": {
+    "title": "Giỏ hàng",
+    "item": "Sản phẩm",
+    "quantity": "Số lượng: {count}",
+    "summary": "Giỏ hàng ({count} sản phẩm)",
+    "subtotal": "Tạm tính",
+    "remove": "Xoá",
+    "checkout": "Thanh toán",
+    "priceVnd": "{amount}₫",
+    "empty": "Giỏ hàng trống.",
+    "errorTitle": "Không tải được giỏ hàng",
+    "errorDescription": "Đã có lỗi xảy ra. Vui lòng thử lại.",
+    "retry": "Thử lại"
   }
 }

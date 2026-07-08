@@ -2361,6 +2361,34 @@
       "success": "Payment Successful!",
       "redirecting": "Redirecting to your course...",
       "checkStatus": "Check Status"
+    },
+    "checkout": {
+      "title": "Checkout",
+      "amountVnd": "₫{amount}",
+      "amountCoin": "{amount} Coin",
+      "method": {
+        "vietqr": "Bank QR",
+        "coin": "Pay with Coins"
+      },
+      "coupon": {
+        "label": "Coupon code",
+        "placeholder": "Enter coupon code",
+        "apply": "Apply",
+        "clear": "Remove",
+        "invalid": "Coupon is invalid or expired."
+      },
+      "discount": "−₫{amount}",
+      "coinBalance": "Wallet balance",
+      "insufficient": "Not enough coins to pay.",
+      "pay": "Pay",
+      "scanHint": "Scan the QR code with your banking app to pay.",
+      "awaiting": "Waiting for payment...",
+      "success": "Payment successful!",
+      "done": "Done",
+      "failed": "Payment failed",
+      "failedHint": "Could not process the payment. Please try again.",
+      "retry": "Try again",
+      "close": "Close"
     }
   },
   "aiProcessing": {
@@ -3318,7 +3346,9 @@
     "priceCoin": "{amount} Coin",
     "priceVnd": "{amount}₫",
     "priceUnavailable": "Contact us",
-    "buy": "Buy"
+    "buy": "Buy",
+    "buyNow": "Buy now",
+    "addToCart": "Add to cart"
   },
   "eventSystem": {
     "catalog": {
@@ -5562,5 +5592,19 @@
         "mpegDash": "MPEG-DASH test"
       }
     }
+  },
+  "cart": {
+    "title": "Cart",
+    "item": "Product",
+    "quantity": "Qty: {count}",
+    "summary": "Cart ({count} items)",
+    "subtotal": "Subtotal",
+    "remove": "Remove",
+    "checkout": "Checkout",
+    "priceVnd": "₫{amount}",
+    "empty": "Your cart is empty.",
+    "errorTitle": "Couldn't load your cart",
+    "errorDescription": "Something went wrong. Please try again.",
+    "retry": "Try again"
   }
 }

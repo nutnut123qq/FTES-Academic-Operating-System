@@ -191,7 +191,7 @@ export const LessonReader = () => {
                     view === "content" ? (
                         <>
                             {/* video player (VIDEO lessons) + document attachments — above the article */}
-                            {lesson.hasVideo ? <LessonVideoBlock lessonId={contentId} /> : null}
+                            {lesson.hasVideo ? <LessonVideoBlock videoRef={lesson.videoRef} /> : null}
                             <LessonDocumentsBlock lessonId={contentId} />
 
                             {/* reading card — the "paper" surface with the anchored article */}

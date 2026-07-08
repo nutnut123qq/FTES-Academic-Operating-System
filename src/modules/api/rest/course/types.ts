@@ -82,6 +82,8 @@ export interface LessonView {
     free: boolean
     locked: boolean
     videoStatus: string
+    /** Legacy streaming ref (YouTube URL or `video_*` token) from the migrated video. */
+    videoRef: string | null
     previewSeconds: number
     hasContent: boolean
     accessLevel: string | null

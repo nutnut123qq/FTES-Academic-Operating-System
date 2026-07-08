@@ -24,6 +24,12 @@ export interface UserSlice {
     permissions: Array<string>
     /** Scoped role grants from `me.scopedGrants`. */
     scopedGrants: Array<ViewerScopedGrant>
+    /**
+     * Whether the viewer's RBAC access (permissions) has been hydrated at least once. `permissions`
+     * starts `[]` and is `[]` both "not loaded yet" and "loaded, holds none" — this flag disambiguates
+     * so permission gates don't act (e.g. redirect) during the load window.
+     */
+    accessLoaded: boolean
     /** Whether the user is enrolled in the course. */
     enrolled: boolean
     /** The user's enrollment. */
@@ -40,6 +46,8 @@ const initialState: UserSlice = {
     permissions: [],
     /** The viewer's scoped role grants. */
     scopedGrants: [],
+    /** RBAC access not hydrated yet. */
+    accessLoaded: false,
     /** Whether the user is enrolled in the course. */
     enrolled: false,
     /** The user's enrollment. */
@@ -67,6 +75,7 @@ export const userSlice = createSlice(
                 if (action.payload === null) {
                     state.permissions = []
                     state.scopedGrants = []
+                    state.accessLoaded = false
                 }
             },
             /** Store the viewer's RBAC access (permissions + scoped grants) from `me`. */
@@ -76,6 +85,7 @@ export const userSlice = createSlice(
             ) => {
                 state.permissions = action.payload.permissions
                 state.scopedGrants = action.payload.scopedGrants
+                state.accessLoaded = true
             },
             /** The action to set the enrolled state. */
             setEnrolled: (

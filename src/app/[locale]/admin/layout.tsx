@@ -12,8 +12,9 @@ import { useHasPermissions } from "@/hooks/useHasPermission"
  * to the landing — defense-in-depth on top of the BE's own 403 (the real gate).
  *
  * "any" of these signals ⇒ admin-area access (avoids blocking a partial-admin who lacks `role.view`
- * but holds another admin permission). Empty until `me` resolves, so we wait for the viewer
- * (`state.user.user !== null`) before deciding — otherwise we'd bounce a real admin mid-load.
+ * but holds another admin permission). We wait for RBAC access to be HYDRATED
+ * (`state.user.accessLoaded`) before deciding — NOT for `state.user.user`, which can resolve before
+ * `permissions` (e.g. the `me` query 401s then refreshes), bouncing a real admin mid-load.
  */
 const ADMIN_SIGNAL_PERMISSIONS = [
     "role.view",
@@ -25,18 +26,18 @@ const ADMIN_SIGNAL_PERMISSIONS = [
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter()
-    const viewerResolved = useAppSelector((state) => state.user.user !== null)
+    const accessLoaded = useAppSelector((state) => state.user.accessLoaded)
     const isAdmin = useHasPermissions(ADMIN_SIGNAL_PERMISSIONS, "any")
 
     React.useEffect(() => {
-        if (viewerResolved && !isAdmin) {
+        if (accessLoaded && !isAdmin) {
             router.replace("/")
         }
-    }, [viewerResolved, isAdmin, router])
+    }, [accessLoaded, isAdmin, router])
 
-    // Render admin content only once the viewer has resolved AND holds an admin permission.
+    // Render admin content only once RBAC access has hydrated AND holds an admin permission.
     // Before that (loading, or a non-admin about to be redirected) render nothing.
-    if (!viewerResolved || !isAdmin) return null
+    if (!accessLoaded || !isAdmin) return null
 
     return <>{children}</>
 }

@@ -52,12 +52,16 @@ const hrefForHit = (kind: SearchCategoryKind, slug: string | null, locale: Local
     }
 }
 
+/** BE snippet/highlight wraps matches in `<mark>` (ts_headline); strip to plain text — the row
+ *  re-highlights the query client-side via SearchHighlight, so raw tags must not reach the DOM. */
+const stripMarks = (value: string): string => value.replace(/<\/?mark>/gi, "")
+
 /** Map one BE hit into the shared presentational {@link SearchRow}. */
 const toRow = (kind: SearchCategoryKind, hit: SearchHit, locale: Locale): SearchRow => ({
     id: `${kind}-${hit.docId}`,
     kind,
     title: hit.title ?? hit.slug ?? hit.docId,
-    snippet: hit.snippet ?? undefined,
+    snippet: hit.snippet ? stripMarks(hit.snippet) : undefined,
     href: hrefForHit(kind, hit.slug, locale),
 })
 

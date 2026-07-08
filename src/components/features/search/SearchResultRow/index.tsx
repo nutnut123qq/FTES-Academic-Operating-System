@@ -64,7 +64,7 @@ export const SearchResultRow = ({
                 </Typography>
                 {support ? (
                     <Typography type="body-xs" color="muted" className="truncate">
-                        {support}
+                        <SearchHighlight text={support} query={query} />
                     </Typography>
                 ) : null}
             </div>

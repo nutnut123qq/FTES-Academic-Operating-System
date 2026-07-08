@@ -204,6 +204,20 @@ export const getProductBySlug = async (slug: string): Promise<ProductView> => {
 }
 
 /**
+ * Returns the ACTIVE COURSE_UNLOCK product that unlocks a given course, or
+ * throws 404 when the course isn't on sale.
+ *
+ * `GET /api/v1/commerce/products/for-course/{courseId}`
+ */
+export const getProductForCourse = async (courseId: string): Promise<ProductView> => {
+    return restRequest<ProductView>({
+        method: "GET",
+        url: `/commerce/products/for-course/${courseId}`,
+        authenticated: false,
+    })
+}
+
+/**
  * Creates a new product (requires `commerce.product.manage`).
  *
  * `POST /api/v1/commerce/admin/products`

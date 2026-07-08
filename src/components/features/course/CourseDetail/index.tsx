@@ -25,7 +25,11 @@ import {
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
+import { useSWRConfig } from "swr"
 import { useRouter } from "@/i18n/navigation"
+import { useGetCourseProductSwr } from "@/hooks/swr/api/rest/queries/useGetCourseProductSwr"
+import { usePostAddCartItemSwr } from "@/hooks/swr/api/rest/mutations/usePostAddCartItemSwr"
+import { usePaymentOverlayState } from "@/hooks/zustand/overlay/hooks"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { SaveButton } from "@/components/blocks/buttons/SaveButton"
 import { HighlightChip } from "@/components/blocks/chips/HighlightChip"
@@ -236,6 +240,29 @@ const CourseDetailView = ({
         course.id,
         course.enrollment,
     )
+    // Resolve this course's COURSE_UNLOCK product (null when not on sale). When it
+    // exists, the "Đăng ký học" CTA becomes a real buy: add to cart → payment modal
+    // (VietQR / coin), reusing the shared commerce checkout. Otherwise the CTA keeps
+    // its existing enroll-route behaviour.
+    const { data: product } = useGetCourseProductSwr(course.rawId)
+    const addCart = usePostAddCartItemSwr()
+    const payment = usePaymentOverlayState()
+    const { mutate: mutateSwr } = useSWRConfig()
+    const onBuy = async () => {
+        if (!product) return
+        try {
+            const item = await addCart.trigger({ productId: product.id, quantity: 1 })
+            void mutateSwr("GET_CART_SWR")
+            payment.open({
+                itemIds: [item.id],
+                title: course.name,
+                amountVnd: product.priceVnd ?? 0,
+                amountCoin: product.priceCoin ?? undefined,
+            })
+        } catch {
+            // add-to-cart failed → SWR surfaces the error; leave the CTA idle
+        }
+    }
     // ponytail: hand-rolled accordion state — first chapter open. Set, not boolean-per-row,
     // so multiple chapters can be open. Swap to HeroUI Accordion when its API is confirmed.
     const [openSections, setOpenSections] = useState<Set<string>>(
@@ -484,7 +511,7 @@ const CourseDetailView = ({
                     <EnrollCard
                         course={course}
                         isEnrolled={isEnrolled}
-                        onEnroll={onEnroll}
+                        onEnroll={product ? onBuy : onEnroll}
                         onContinueLearning={onContinueLearning}
                         onTryLearning={onTryLearning}
                     />

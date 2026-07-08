@@ -116,6 +116,8 @@ export interface CourseInstructor {
 /** Full course detail (§4, mock until BE lands). */
 export interface CourseDetail {
     id: string
+    /** The BE course UUID (routing id above is the slug) — used to resolve the commerce product. */
+    rawId: string
     code: string
     name: string
     level: CourseLevel
@@ -189,6 +191,7 @@ const toCourseDetail = (dto: CourseDetailDto): CourseDetail => {
 
     return {
         id: course.slugName,
+        rawId: course.id,
         code: course.courseCode,
         name: course.title,
         level: mapCourseLevel(course.level),

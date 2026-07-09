@@ -207,12 +207,25 @@ export const getProductBySlug = async (slug: string): Promise<ProductView> => {
  * Returns the ACTIVE COURSE_UNLOCK product that unlocks a given course, or
  * throws 404 when the course isn't on sale.
  *
- * `GET /api/v1/commerce/products/for-course/{courseId}`
+ * `GET /api/v1/commerce/products/for-course/{courseId}?packageId={packageId}`
+ *
+ * `packageId` is OPTIONAL and backward compatible: when omitted the endpoint
+ * behaves as before (the single/arbitrary latest COURSE_UNLOCK for the course).
+ * When a PACKAGE course exposes N distinct COURSE_UNLOCK products (one per
+ * package, each carrying its own `fulfillment_config.packageId`), pass the chosen
+ * package's id so the BE resolves THAT package's product instead of collapsing to
+ * an arbitrary one. Depends on the BE extending `ProductController.forCourse` with
+ * the `packageId` query param + `findActiveCourseUnlockByPackage` repo query; until
+ * that ships, the param is ignored server-side and the arbitrary product returns.
  */
-export const getProductForCourse = async (courseId: string): Promise<ProductView> => {
+export const getProductForCourse = async (
+    courseId: string,
+    packageId?: string,
+): Promise<ProductView> => {
     return restRequest<ProductView>({
         method: "GET",
         url: `/commerce/products/for-course/${courseId}`,
+        params: packageId ? { packageId } : undefined,
         authenticated: false,
     })
 }

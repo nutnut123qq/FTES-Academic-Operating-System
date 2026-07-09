@@ -120,6 +120,14 @@ export interface CourseDetail {
     rawId: string
     code: string
     name: string
+    /**
+     * BE sale mode, upper-cased: `"PACKAGE"` (the course sells N distinct
+     * packages, each its own COURSE_UNLOCK product) or `"LEGACY"` (single
+     * enroll/buy). Empty when the BE detail omits it. Drives the enroll card:
+     * PACKAGE renders the real package picker, everything else keeps the
+     * legacy Free/Premium tiers.
+     */
+    saleMode: string
     level: CourseLevel
     credits: number
     description: string
@@ -194,6 +202,9 @@ const toCourseDetail = (dto: CourseDetailDto): CourseDetail => {
         rawId: course.id,
         code: course.courseCode,
         name: course.title,
+        // Normalise to upper-case so the enroll card can compare against "PACKAGE"
+        // without re-casing at every call site.
+        saleMode: (course.saleMode ?? "").toUpperCase(),
         level: mapCourseLevel(course.level),
         // BE detail carries no credits/duration — hidden by the view when absent/zero.
         credits: 0,

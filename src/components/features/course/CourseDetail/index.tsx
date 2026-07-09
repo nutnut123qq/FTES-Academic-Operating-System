@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useMemo, useState } from "react"
 import { Button, Chip, Link, Typography, cn } from "@heroui/react"
 import {
     BookIcon,
@@ -28,6 +28,7 @@ import { useParams } from "next/navigation"
 import { useSWRConfig } from "swr"
 import { useRouter } from "@/i18n/navigation"
 import { useGetCourseProductSwr } from "@/hooks/swr/api/rest/queries/useGetCourseProductSwr"
+import { useGetCoursePackageProductSwr } from "@/hooks/swr/api/rest/queries/useGetCoursePackageProductSwr"
 import { usePostAddCartItemSwr } from "@/hooks/swr/api/rest/mutations/usePostAddCartItemSwr"
 import { usePaymentOverlayState } from "@/hooks/zustand/overlay/hooks"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
@@ -40,8 +41,11 @@ import { StatRibbon } from "@/components/reuseable/StatRibbon"
 import { UserAvatar } from "@/components/reuseable/UserAvatar"
 import { useQueryCourseDetailSwr, type CourseDetail as CourseDetailModel, type CourseEnrollmentPlan, type CourseInstructor } from "../hooks/useQueryCourseDetailSwr"
 import { useCourseEnrollment } from "../hooks/useCourseEnrollment"
+import { useQueryCoursePackagesSwr } from "../hooks/useQueryCoursePackagesSwr"
 import { CourseRatings } from "./CourseRatings"
 import { SelectableCardGroup } from "@/components/blocks/navigation/SelectableCardGroup"
+import { PriceTag } from "@/components/blocks/commerce/PriceTag"
+import type { PackageView } from "@/modules/api/rest/course"
 import type { Icon } from "@phosphor-icons/react"
 
 const ACHIEVEMENT_ICONS: Record<string, Icon> = {
@@ -241,11 +245,16 @@ const CourseDetailView = ({
         course.id,
         course.enrollment,
     )
+    // PACKAGE courses sell N distinct packages (each its own COURSE_UNLOCK product),
+    // so they render the dedicated package picker (PackageEnrollCard) which resolves
+    // per-package. Everything else (LEGACY / absent saleMode) keeps the legacy card.
+    const isPackage = course.saleMode === "PACKAGE"
     // Resolve this course's COURSE_UNLOCK product (null when not on sale). When it
     // exists, the "Đăng ký học" CTA becomes a real buy: add to cart → payment modal
     // (VietQR / coin), reusing the shared commerce checkout. Otherwise the CTA keeps
-    // its existing enroll-route behaviour.
-    const { data: product } = useGetCourseProductSwr(course.rawId)
+    // its existing enroll-route behaviour. Skipped for PACKAGE courses (resolved
+    // per-package instead) so we never add an arbitrary product to the cart.
+    const { data: product } = useGetCourseProductSwr(isPackage ? undefined : course.rawId)
     const addCart = usePostAddCartItemSwr()
     const payment = usePaymentOverlayState()
     const { mutate: mutateSwr } = useSWRConfig()
@@ -479,15 +488,25 @@ const CourseDetailView = ({
                     ) : null}
                 </div>
 
-                {/* RIGHT — sticky enroll card */}
+                {/* RIGHT — sticky enroll card. PACKAGE courses get the real package
+                    picker; LEGACY / absent saleMode keep the Free/Premium tiers. */}
                 <div className="md:col-span-2">
-                    <EnrollCard
-                        course={course}
-                        isEnrolled={isEnrolled}
-                        onEnroll={product ? onBuy : onEnroll}
-                        onContinueLearning={onContinueLearning}
-                        onTryLearning={onTryLearning}
-                    />
+                    {isPackage ? (
+                        <PackageEnrollCard
+                            course={course}
+                            isEnrolled={isEnrolled}
+                            onContinueLearning={onContinueLearning}
+                            onTryLearning={onTryLearning}
+                        />
+                    ) : (
+                        <EnrollCard
+                            course={course}
+                            isEnrolled={isEnrolled}
+                            onEnroll={product ? onBuy : onEnroll}
+                            onContinueLearning={onContinueLearning}
+                            onTryLearning={onTryLearning}
+                        />
+                    )}
                 </div>
             </div>
         </div>
@@ -637,6 +656,217 @@ const IncludeRow = ({ icon, children }: { icon: React.ReactNode; children: React
         <Typography type="body-sm" color="muted">
             {children}
         </Typography>
+    </div>
+)
+
+/** A package's charged (discounted) amount + the pre-discount `original` PriceTag
+ * strikes through (null when there's no real saving). BE prices are strings. */
+const packagePrice = (pkg: PackageView): { discounted: number; original: number | null } => {
+    const sale = Number(pkg.salePrice) || 0
+    const original = Number(pkg.originalPrice) || 0
+    const discounted = sale > 0 ? sale : original
+    return { discounted, original: original > discounted ? original : null }
+}
+
+type PackageEnrollCardProps = {
+    course: CourseDetailModel
+    isEnrolled: boolean
+    onContinueLearning: () => void
+    onTryLearning: () => void
+}
+
+/**
+ * The sticky enroll card for a PACKAGE course: a real package picker built from the
+ * course's `GET /courses/{id}/packages` list (instead of the fabricated Free/Premium
+ * tiers). Each option shows the package name, its price, and a short entitlement
+ * summary; selecting one + pressing "Đăng ký gói" resolves THAT package's
+ * COURSE_UNLOCK productId (via the packageId-scoped for-course endpoint) and runs the
+ * exact same cart + PaymentModal checkout as the legacy buy.
+ *
+ * Degrades gracefully: a loading skeleton while packages resolve, and an
+ * "Đang cập nhật gói" panel (never a crash) when the list errors or is empty.
+ * Enrolled viewers collapse to a single "Tiếp tục học" CTA, matching {@link EnrollCard}.
+ */
+const PackageEnrollCard = ({
+    course,
+    isEnrolled,
+    onContinueLearning,
+    onTryLearning,
+}: PackageEnrollCardProps) => {
+    const t = useTranslations("courseSystem")
+    const { packages, isLoading, isError, isEmpty } = useQueryCoursePackagesSwr(course.rawId, {
+        enabled: !isEnrolled,
+    })
+
+    // Default selection = the flagged default package, else the lowest sortOrder.
+    // Derived (not effect-synced) so it settles the moment packages arrive and a
+    // mount-time reset can never clobber the viewer's own pick.
+    const defaultId = useMemo(() => {
+        if (packages.length === 0) return undefined
+        const sorted = [...packages].sort((a, b) => a.sortOrder - b.sortOrder)
+        return (sorted.find((pkg) => pkg.defaultPackage) ?? sorted[0]).id
+    }, [packages])
+    const [chosenId, setChosenId] = useState<string | undefined>(undefined)
+    const selectedId = chosenId ?? defaultId
+    const selectedPackage = packages.find((pkg) => pkg.id === selectedId)
+
+    // Resolve the chosen package's COURSE_UNLOCK product id for the cart. Gated on a
+    // real selection and skipped entirely once enrolled.
+    const { data: product } = useGetCoursePackageProductSwr(
+        isEnrolled ? undefined : course.rawId,
+        isEnrolled ? undefined : selectedId,
+    )
+    const addCart = usePostAddCartItemSwr()
+    const payment = usePaymentOverlayState()
+    const { mutate: mutateSwr } = useSWRConfig()
+
+    // Same cart + PaymentModal checkout as the legacy onBuy, for the resolved
+    // per-package product. Idle when the product hasn't resolved (buy CTA disabled).
+    const onBuyPackage = async () => {
+        if (!product || !selectedPackage) return
+        try {
+            const item = await addCart.trigger({ productId: product.id, quantity: 1 })
+            void mutateSwr("GET_CART_SWR")
+            payment.open({
+                itemIds: [item.id],
+                title: `${course.name} · ${selectedPackage.name}`,
+                amountVnd: product.priceVnd ?? 0,
+                amountCoin: product.priceCoin ?? undefined,
+            })
+        } catch {
+            // add-to-cart failed → SWR surfaces the error; leave the CTA idle
+        }
+    }
+
+    return (
+        <div className="flex flex-col gap-3 rounded-2xl border border-separator p-4 md:sticky md:top-20">
+            <div className="flex aspect-video w-full items-center justify-center rounded-large bg-default/40">
+                <PlayCircleIcon aria-hidden focusable="false" className="size-10 text-muted" />
+            </div>
+
+            {isEnrolled ? (
+                <>
+                    <Button variant="primary" fullWidth onPress={onContinueLearning}>
+                        {t("detail.continueLearning")}
+                    </Button>
+                    <Typography type="body-xs" color="muted" align="center">
+                        {t("detail.enrolledHint")}
+                    </Typography>
+                </>
+            ) : isLoading ? (
+                <PackagePickerSkeleton />
+            ) : isError || isEmpty || packages.length === 0 ? (
+                <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-1 rounded-xl border border-separator bg-default/40 p-4 text-center">
+                        <Typography type="body-sm" weight="medium">
+                            {t("detail.package.updatingTitle")}
+                        </Typography>
+                        <Typography type="body-xs" color="muted">
+                            {t("detail.package.updatingHint")}
+                        </Typography>
+                    </div>
+                    <Button variant="secondary" fullWidth onPress={onTryLearning}>
+                        {t("detail.tryFree")}
+                    </Button>
+                </div>
+            ) : (
+                <>
+                    <Typography type="body-xs" weight="medium" color="muted">
+                        {t("detail.package.title")}
+                    </Typography>
+                    <SelectableCardGroup
+                        ariaLabel={t("detail.package.selectorAria")}
+                        columns={1}
+                        value={selectedId ?? ""}
+                        onChange={setChosenId}
+                        items={packages.map((pkg) => {
+                            const { discounted, original } = packagePrice(pkg)
+                            const count = pkg.entitlements?.length ?? 0
+                            return {
+                                value: pkg.id,
+                                label: pkg.name,
+                                description: t("detail.package.entitlementSummary", { count }),
+                                // ponytail: price as PLAIN spans, not PriceTag — PriceTag wraps
+                                // React-Aria Text, which throws "slot prop required" when nested
+                                // in the RadioGroup's Text context. The full PriceTag renders
+                                // below the group, in a normal context.
+                                badge: (
+                                    <span className="flex items-center gap-2 text-sm">
+                                        {original ? (
+                                            <span className="text-xs text-muted line-through">
+                                                {original.toLocaleString("vi-VN")}₫
+                                            </span>
+                                        ) : null}
+                                        <span className="font-medium text-foreground">
+                                            {discounted > 0
+                                                ? `${discounted.toLocaleString("vi-VN")}₫`
+                                                : t("detail.planNames.free")}
+                                        </span>
+                                    </span>
+                                ),
+                            }
+                        })}
+                    />
+
+                    {selectedPackage ? (
+                        <div className="flex flex-col gap-2 border-t border-separator pt-3">
+                            <PriceTag
+                                discounted={packagePrice(selectedPackage).discounted}
+                                original={packagePrice(selectedPackage).original}
+                                size="md"
+                            />
+                            {selectedPackage.descriptions?.trim() ? (
+                                <Typography type="body-sm" color="muted">
+                                    {selectedPackage.descriptions}
+                                </Typography>
+                            ) : null}
+                            <IncludeRow
+                                icon={<StackIcon aria-hidden focusable="false" className="size-4 text-accent" />}
+                            >
+                                {t("detail.package.entitlementSummary", {
+                                    count: selectedPackage.entitlements?.length ?? 0,
+                                })}
+                            </IncludeRow>
+                        </div>
+                    ) : null}
+
+                    <Button
+                        variant="primary"
+                        fullWidth
+                        onPress={onBuyPackage}
+                        isDisabled={!product}
+                        isPending={addCart.isMutating}
+                    >
+                        {t("detail.package.buy")}
+                    </Button>
+                    <Button variant="secondary" fullWidth onPress={onTryLearning}>
+                        {t("detail.tryFree")}
+                    </Button>
+                    {!product ? (
+                        <Typography type="body-xs" color="muted" align="center">
+                            {t("detail.package.resolving")}
+                        </Typography>
+                    ) : null}
+                </>
+            )}
+        </div>
+    )
+}
+
+/** Loading skeleton for the package picker — mirrors the picker's card rows + CTAs. */
+const PackagePickerSkeleton = () => (
+    <div className="flex flex-col gap-3">
+        <Skeleton.Typography type="body-xs" width="1/3" />
+        <div className="flex flex-col gap-2">
+            {Array.from({ length: 3 }).map((_, index) => (
+                <Skeleton key={index} className="h-16 w-full rounded-xl" />
+            ))}
+        </div>
+        <div className="border-t border-separator pt-3">
+            <Skeleton className="h-7 w-1/2 rounded-large" />
+        </div>
+        <Skeleton className="h-10 w-full rounded-large" />
+        <Skeleton className="h-10 w-full rounded-large" />
     </div>
 )
 

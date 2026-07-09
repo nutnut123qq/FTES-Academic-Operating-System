@@ -4944,6 +4944,15 @@
         "lessons": "{count} lessons",
         "challenge": "End-of-chapter challenge",
         "certificate": "Certificate of completion"
+      },
+      "package": {
+        "title": "Choose a package",
+        "selectorAria": "Choose a package",
+        "entitlementSummary": "{count} parts included",
+        "buy": "Get this package",
+        "resolving": "Fetching package details…",
+        "updatingTitle": "Packages are being updated",
+        "updatingHint": "This course's packages are being updated. Please check back soon."
       }
     },
     "lesson": {

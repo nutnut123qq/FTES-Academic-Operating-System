@@ -9,7 +9,6 @@ import {
     coursesByCategory,
     sortCourses,
     useQueryCoursesSwr,
-    type CourseLevel,
     type CourseSort,
 } from "../hooks/useQueryCoursesSwr"
 import { useQueryCourseCategoriesSwr } from "../hooks/useQueryCourseCategoriesSwr"
@@ -30,7 +29,7 @@ import { FeaturedSlider } from "./FeaturedSlider"
  * change `course-catalog-category-browse`, direction A): the featured hero
  * slider stays on top, then a category chip bar (filters which shelves show),
  * a facet + sort bar, and one horizontal {@link CategoryShelf} per non-empty
- * category. Typing a search or picking a level switches the shelves to a flat
+ * category. Typing a search switches the shelves to a flat
  * filtered grid of shared cards (search spans ALL categories per the spec, so
  * the grid ignores the category chip). Loading gates shelf-shaped skeletons;
  * the title + facet bar are static chrome and stay out of the skeleton.
@@ -40,24 +39,21 @@ export const CourseCatalog = () => {
     const { categories } = useQueryCourseCategoriesSwr()
     const { courses, isLoading, error, mutate } = useQueryCoursesSwr()
     const [query, setQuery] = useState("")
-    const [level, setLevel] = useState<CourseLevel | "all">("all")
     const [sort, setSort] = useState<CourseSort>("popular")
     const [activeCategory, setActiveCategory] = useState<CategoryChipValue>("all")
 
     const loading = isLoading || !categories
-    // a live search or level facet switches the browse view to the flat grid
-    const isFiltering = query.trim() !== "" || level !== "all"
+    // a live search switches the browse view from the shelves to the flat grid
+    const isFiltering = query.trim() !== ""
 
     const filtered = sortCourses(
-        courses.filter((course) => {
-            const matchesLevel = level === "all" || course.level === level
-            const matchesQuery =
+        courses.filter(
+            (course) =>
                 query.trim() === "" ||
                 `${course.code} ${course.name}`
                     .toLowerCase()
-                    .includes(query.trim().toLowerCase())
-            return matchesLevel && matchesQuery
-        }),
+                    .includes(query.trim().toLowerCase()),
+        ),
         sort,
     )
 
@@ -85,8 +81,6 @@ export const CourseCatalog = () => {
                 <FacetSortBar
                     query={query}
                     onQueryChange={setQuery}
-                    level={level}
-                    onLevelChange={setLevel}
                     sort={sort}
                     onSortChange={setSort}
                 />

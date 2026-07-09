@@ -4830,7 +4830,6 @@
       "shelfPrev": "Scroll back",
       "shelfNext": "Scroll forward",
       "sortLabel": "Sort by",
-      "levelLabel": "Level",
       "sort": {
         "popular": "Popular",
         "newest": "New",

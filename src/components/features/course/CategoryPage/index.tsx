@@ -10,7 +10,6 @@ import {
     coursesByCategory,
     sortCourses,
     useQueryCoursesSwr,
-    type CourseLevel,
     type CourseSort,
 } from "../hooks/useQueryCoursesSwr"
 import {
@@ -44,7 +43,6 @@ export const CategoryPage = ({ slug }: CategoryPageProps) => {
     const locale = useLocale()
     const { courses, isLoading, error, mutate } = useQueryCoursesSwr()
     const [query, setQuery] = useState("")
-    const [level, setLevel] = useState<CourseLevel | "all">("all")
     const [sort, setSort] = useState<CourseSort>("popular")
 
     const category = findCategoryBySlug(slug)
@@ -54,15 +52,13 @@ export const CategoryPage = ({ slug }: CategoryPageProps) => {
 
     const categoryCourses = coursesByCategory(courses, category.slug)
     const filtered = sortCourses(
-        categoryCourses.filter((course) => {
-            const matchesLevel = level === "all" || course.level === level
-            const matchesQuery =
+        categoryCourses.filter(
+            (course) =>
                 query.trim() === "" ||
                 `${course.code} ${course.name}`
                     .toLowerCase()
-                    .includes(query.trim().toLowerCase())
-            return matchesLevel && matchesQuery
-        }),
+                    .includes(query.trim().toLowerCase()),
+        ),
         sort,
     )
 
@@ -95,8 +91,6 @@ export const CategoryPage = ({ slug }: CategoryPageProps) => {
             <FacetSortBar
                 query={query}
                 onQueryChange={setQuery}
-                level={level}
-                onLevelChange={setLevel}
                 sort={sort}
                 onSortChange={setSort}
             />

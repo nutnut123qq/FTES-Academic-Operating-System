@@ -8,6 +8,9 @@ import type {
     CompleteResponse,
     CourseDetail,
     CourseListParams,
+    CourseRatingItem,
+    CourseRatingRequest,
+    CourseRatingSummary,
     CourseSummary,
     CreateAssignmentRequest,
     CreateCourseRequest,
@@ -21,9 +24,12 @@ import type {
     EntitlementView,
     IdResponse,
     LessonAiChatLimitRequest,
+    LessonCommentsPage,
+    LessonCommentView,
     LessonContentView,
     LessonDocumentView,
     NoteRequest,
+    PostLessonCommentRequest,
     NoteView,
     PackageView,
     PreviewLimitRequest,
@@ -749,5 +755,156 @@ export const revokeCertificate = async (id: string): Promise<void> => {
     return restRequest<void>({
         method: "POST",
         url: `/courses/certificates/${id}/revoke`,
+    })
+}
+
+// ---------------------------------------------------------------- course ratings
+
+/**
+ * Reads a course's aggregate rating + a page of reviews.
+ *
+ * `GET /api/v1/courses/{courseId}/ratings?page=&size=` (public). `courseId` is the
+ * course UUID (`course.rawId`), NOT the slug.
+ */
+export const getCourseRatings = async (
+    courseId: string,
+    params?: { page?: number; size?: number },
+): Promise<CourseRatingSummary> => {
+    return restRequest<CourseRatingSummary>({
+        method: "GET",
+        url: `/courses/${courseId}/ratings`,
+        params: {
+            page: params?.page ?? 1,
+            size: params?.size ?? 10,
+        },
+        authenticated: false,
+    })
+}
+
+/**
+ * Reads the current user's own rating for a course, or `null` when they have not
+ * rated it yet (BE returns `data: null` on success).
+ *
+ * `GET /api/v1/courses/{courseId}/ratings/me`
+ */
+export const getMyCourseRating = async (
+    courseId: string,
+): Promise<CourseRatingItem | null> => {
+    return restRequest<CourseRatingItem | null>({
+        method: "GET",
+        url: `/courses/${courseId}/ratings/me`,
+        authenticated: true,
+    })
+}
+
+/**
+ * Creates or updates (upsert) the current user's rating for a course.
+ *
+ * `POST /api/v1/courses/{courseId}/ratings`. Returns 403 `COURSE_ACCESS_DENIED`
+ * when the viewer lacks FULL access (not enrolled/bought).
+ */
+export const rateCourse = async (
+    courseId: string,
+    request: CourseRatingRequest,
+): Promise<CourseRatingItem> => {
+    return restRequest<CourseRatingItem>({
+        method: "POST",
+        url: `/courses/${courseId}/ratings`,
+        data: request,
+    })
+}
+
+/**
+ * Deletes the current user's rating for a course.
+ *
+ * `DELETE /api/v1/courses/{courseId}/ratings`
+ */
+export const deleteCourseRating = async (courseId: string): Promise<void> => {
+    return restRequest<void>({
+        method: "DELETE",
+        url: `/courses/${courseId}/ratings`,
+    })
+}
+
+// ---------------------------------------------------------------- lesson comments
+
+/**
+ * Reads a page of a lesson's threaded discussion (top-level newest first, one level
+ * of nested replies oldest first).
+ *
+ * `GET /api/v1/courses/lessons/{lessonId}/comments?page=&size=` (auth + FULL access).
+ */
+export const getLessonComments = async (
+    lessonId: string,
+    params?: { page?: number; size?: number },
+): Promise<LessonCommentsPage> => {
+    return restRequest<LessonCommentsPage>({
+        method: "GET",
+        url: `/courses/lessons/${lessonId}/comments`,
+        params: {
+            page: params?.page ?? 1,
+            size: params?.size ?? 20,
+        },
+        authenticated: true,
+    })
+}
+
+/**
+ * Posts a comment (or a reply, via `parentId`) on a lesson. A reply-of-reply is
+ * auto-reparented to the root by the BE.
+ *
+ * `POST /api/v1/courses/lessons/{lessonId}/comments`
+ */
+export const postLessonComment = async (
+    lessonId: string,
+    request: PostLessonCommentRequest,
+): Promise<LessonCommentView> => {
+    return restRequest<LessonCommentView>({
+        method: "POST",
+        url: `/courses/lessons/${lessonId}/comments`,
+        data: request,
+    })
+}
+
+/**
+ * Deletes a lesson comment (owner or course manager). The comment returns as a
+ * tombstone (`status: "DELETED"`) with its replies preserved.
+ *
+ * `DELETE /api/v1/courses/comments/{commentId}`
+ */
+export const deleteLessonComment = async (commentId: string): Promise<void> => {
+    return restRequest<void>({
+        method: "DELETE",
+        url: `/courses/comments/${commentId}`,
+    })
+}
+
+/**
+ * Adds an emoji reaction to a lesson comment (e.g. `"LIKE"`).
+ *
+ * `POST /api/v1/courses/comments/{commentId}/reactions/{emoji}`
+ */
+export const reactLessonComment = async (
+    commentId: string,
+    emoji: string,
+): Promise<void> => {
+    return restRequest<void>({
+        method: "POST",
+        url: `/courses/comments/${commentId}/reactions/${emoji}`,
+    })
+}
+
+/**
+ * Removes an emoji reaction from a lesson comment.
+ *
+ * `DELETE /api/v1/courses/comments/{commentId}/reactions/{emoji}`
+ */
+export const unreactLessonComment = async (
+    commentId: string,
+    emoji: string,
+): Promise<void> => {
+    return restRequest<void>({
+        method: "DELETE",
+        url: `/courses/comments/${commentId}/reactions/${emoji}`,
     })
 }

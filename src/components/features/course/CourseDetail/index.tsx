@@ -40,6 +40,7 @@ import { StatRibbon } from "@/components/reuseable/StatRibbon"
 import { UserAvatar } from "@/components/reuseable/UserAvatar"
 import { useQueryCourseDetailSwr, type CourseDetail as CourseDetailModel, type CourseEnrollmentPlan, type CourseInstructor } from "../hooks/useQueryCourseDetailSwr"
 import { useCourseEnrollment } from "../hooks/useCourseEnrollment"
+import { CourseRatings } from "./CourseRatings"
 import { SelectableCardGroup } from "@/components/blocks/navigation/SelectableCardGroup"
 import type { Icon } from "@phosphor-icons/react"
 
@@ -469,36 +470,8 @@ const CourseDetailView = ({
                         </div>
                     </div>
 
-                    {/* reviews — hidden when the BE detail carries none */}
-                    {course.reviews.length > 0 ? (
-                    <div className="flex flex-col gap-3 border-t border-separator pt-6">
-                        <Typography type="h6" weight="bold">
-                            {t("detail.reviews")}
-                        </Typography>
-                        {course.reviews.map((review) => (
-                            <div key={review.id} className="flex gap-3">
-                                <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent/10 text-xs font-bold text-accent">
-                                    {review.author.slice(0, 1).toUpperCase()}
-                                </div>
-                                <div className="flex min-w-0 flex-col gap-0">
-                                    <div className="flex items-center gap-2">
-                                        <Typography type="body-sm" weight="medium">
-                                            {review.author}
-                                        </Typography>
-                                        <span className="flex items-center gap-0.5 text-accent" aria-label={`${review.rating}/5`}>
-                                            {Array.from({ length: review.rating }).map((_, i) => (
-                                                <StarIcon key={i} aria-hidden focusable="false" weight="fill" className="size-3" />
-                                            ))}
-                                        </span>
-                                    </div>
-                                    <Typography type="body-sm" color="muted">
-                                        {review.text}
-                                    </Typography>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                    ) : null}
+                    {/* reviews — real BE-wired ratings (aggregate + list + composer) */}
+                    <CourseRatings courseId={course.rawId} />
 
                     {/* instructor — hidden when the BE detail carries none */}
                     {course.instructor ? (

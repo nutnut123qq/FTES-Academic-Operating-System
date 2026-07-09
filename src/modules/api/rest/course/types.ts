@@ -52,6 +52,8 @@ export interface CourseSummary {
     totalUser: number
     imageHeader: string
     categoryId: string
+    /** Total number of ratings this course has received. */
+    ratingCount: number
 }
 
 /** Full public course detail. */
@@ -478,4 +480,70 @@ export interface CertificateVerifyView {
     courseTitle: string
     issueDate: string
     active: boolean
+}
+
+// ---------------------------------------------------------------- course ratings
+
+/** Body sent to `POST` / `PUT /api/v1/courses/{courseId}/ratings`. */
+export interface CourseRatingRequest {
+    /** 1–5 star score. */
+    stars: number
+    /** Optional free-text review. */
+    review?: string
+}
+
+/** One course rating/review row. */
+export interface CourseRatingItem {
+    id: string
+    userId: string
+    stars: number
+    review?: string
+    createdAt: string
+    updatedAt: string
+}
+
+/** Aggregate + paged reviews for a course (`GET /api/v1/courses/{courseId}/ratings`). */
+export interface CourseRatingSummary {
+    avgStar: number
+    ratingCount: number
+    items: Array<CourseRatingItem>
+    page: number
+    size: number
+    total: number
+}
+
+// ---------------------------------------------------------------- lesson comments
+
+/**
+ * A threaded lesson-discussion comment. Top-level comments carry one level of
+ * nested `replies`; reply rows carry an empty `replies` array. A deleted comment
+ * comes back as a tombstone (`status: "DELETED"`, `content: "[bình luận đã xoá]"`,
+ * `userId: null`) with its replies preserved.
+ */
+export interface LessonCommentView {
+    id: string
+    userId: string | null
+    parentId: string | null
+    content: string
+    status: string
+    createdAt: string
+    reactionCount: number
+    /** Reaction emoji strings the current viewer has applied (e.g. `["LIKE"]`). */
+    myReactions: Array<string>
+    replies: Array<LessonCommentView>
+}
+
+/** Body sent to `POST /api/v1/courses/lessons/{lessonId}/comments`. */
+export interface PostLessonCommentRequest {
+    /** Parent comment id when replying; omit/null for a top-level comment. */
+    parentId?: string | null
+    content: string
+}
+
+/** Paged lesson comments (`GET /api/v1/courses/lessons/{lessonId}/comments`). */
+export interface LessonCommentsPage {
+    items: Array<LessonCommentView>
+    page: number
+    size: number
+    total: number
 }

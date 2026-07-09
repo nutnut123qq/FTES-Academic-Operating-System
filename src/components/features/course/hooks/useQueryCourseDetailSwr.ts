@@ -201,8 +201,8 @@ const toCourseDetail = (dto: CourseDetailDto): CourseDetail => {
         durationLabel: "",
         durationHours: undefined,
         price: { vnd: priceVnd, usd: 0, originalVnd: originalPriceVnd },
-        // Only avg star is exposed (no rating count) — the count row shows "0".
-        rating: { avg: Number.isFinite(star) ? star : 0, count: 0 },
+        // Real aggregate: avg star + rating count from the BE CourseSummary.
+        rating: { avg: Number.isFinite(star) ? star : 0, count: course.ratingCount ?? 0 },
         enrollmentCount: course.totalUser ?? undefined,
         challengeCount: undefined,
         // Viewer enrollment state is a separate contract — default to the sales card.

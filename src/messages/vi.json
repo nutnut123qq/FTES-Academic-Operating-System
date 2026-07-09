@@ -4848,7 +4848,8 @@
       "hours": "{count} giờ",
       "preview": {
         "updated": "Cập nhật {date}",
-        "enroll": "Đăng ký khóa học"
+        "enroll": "Đăng ký khóa học",
+        "includesTitle": "Khoá học này bao gồm"
       }
     },
     "catalog": {

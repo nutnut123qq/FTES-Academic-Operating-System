@@ -28,6 +28,28 @@ export interface CourseHoverPreviewProps extends WithClassNames<undefined> {
 
 /** Delay before the preview opens, so grazing the grid doesn't flash popups. */
 const OPEN_DELAY_MS = 300
+
+/**
+ * Parses the "what this course includes" bullets out of the BE `infoCourse`
+ * JSON string (`{"additionalProp1": "...", ...}`). Keeps the additionalProp1..N
+ * order and drops blanks; returns [] for missing/malformed JSON (degrades clean).
+ */
+const parseIncludes = (infoCourse: string | null | undefined): Array<string> => {
+    if (!infoCourse) return []
+    try {
+        const parsed = JSON.parse(infoCourse) as Record<string, unknown>
+        return Object.entries(parsed)
+            .sort(([a], [b]) => {
+                const na = Number(a.replace(/\D/g, "")) || 0
+                const nb = Number(b.replace(/\D/g, "")) || 0
+                return na - nb
+            })
+            .map(([, value]) => (typeof value === "string" ? value.trim() : ""))
+            .filter(Boolean)
+    } catch {
+        return []
+    }
+}
 /** Grace period to travel from the card into the panel without it closing. */
 const CLOSE_DELAY_MS = 100
 /** Gap between the card edge and the panel. */
@@ -141,15 +163,13 @@ export const CourseHoverPreview = ({ course, children, className }: CourseHoverP
     const lessonCount = detail
         ? detail.sections.reduce((sum, section) => sum + (section.lessons?.length ?? 0), 0)
         : course.lessons
-    const description = detail?.description || course.description
-    // BE detail lists the course's key topics as a comma-joined string
-    // (`contentCourse`) — the closest thing to "what you'll learn"; the summary
-    // has none. ponytail: split on comma, no NLP.
-    const outcomes = (
-        detail?.contentCourse
-            ? detail.contentCourse.split(",").map((topic) => topic.trim()).filter(Boolean)
-            : course.learnOutcomes ?? []
-    ).slice(0, 3)
+    // "Khoá học này bao gồm" — the per-course selling points the BE keeps in
+    // `infoCourse` (already in this detail payload). Fall back to the summary's
+    // learn-outcomes only when infoCourse is absent, so the panel never empties.
+    const includes = (() => {
+        const parsed = parseIncludes(detail?.infoCourse)
+        return parsed.length > 0 ? parsed : (course.learnOutcomes ?? [])
+    })()
     const metaLine = [
         course.durationHours != null ? t("courseSystem.browse.hours", { count: course.durationHours }) : null,
         t(`courseSystem.levels.${course.level}`),
@@ -216,26 +236,26 @@ export const CourseHoverPreview = ({ course, children, className }: CourseHoverP
                         <Typography type="body-xs" color="muted">
                             {metaLine}
                         </Typography>
-                        {description ? (
-                            <Typography type="body-sm" color="muted" className="line-clamp-4">
-                                {description}
-                            </Typography>
-                        ) : null}
-                        {outcomes.length > 0 ? (
-                            <ul className="flex flex-col gap-2">
-                                {outcomes.map((outcome, index) => (
-                                    <li key={index} className="flex items-start gap-2">
-                                        <CheckIcon
-                                            aria-hidden
-                                            focusable="false"
-                                            className="mt-0.5 size-4 shrink-0 text-success"
-                                        />
-                                        <Typography type="body-xs" color="muted">
-                                            {outcome}
-                                        </Typography>
-                                    </li>
-                                ))}
-                            </ul>
+                        {includes.length > 0 ? (
+                            <div className="flex flex-col gap-2">
+                                <Typography type="body-sm" weight="semibold">
+                                    {t("courseSystem.browse.preview.includesTitle")}
+                                </Typography>
+                                <ul className="flex flex-col gap-2">
+                                    {includes.map((item, index) => (
+                                        <li key={index} className="flex items-start gap-2">
+                                            <CheckIcon
+                                                aria-hidden
+                                                focusable="false"
+                                                className="mt-0.5 size-4 shrink-0 text-success"
+                                            />
+                                            <Typography type="body-xs" color="muted">
+                                                {item}
+                                            </Typography>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
                         ) : null}
                         <div className="flex items-center gap-2">
                             <Button className="flex-1" onPress={onEnroll}>

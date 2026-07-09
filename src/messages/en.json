@@ -4848,7 +4848,8 @@
       "hours": "{count} hours",
       "preview": {
         "updated": "Updated {date}",
-        "enroll": "Enroll in this course"
+        "enroll": "Enroll in this course",
+        "includesTitle": "This course includes"
       }
     },
     "catalog": {

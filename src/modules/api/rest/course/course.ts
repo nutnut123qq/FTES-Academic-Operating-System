@@ -73,10 +73,16 @@ export const getCourses = async (
 }
 
 /**
- * Reads one published course's public detail by slug name.
+ * Reads one published course's detail by slug name.
  *
- * `GET /api/v1/courses/{slugName}` (public). NOTE the path variable is the
- * `slugName` (a uuid returns 404) — route with the slug the list returns.
+ * `GET /api/v1/courses/{slugName}`. NOTE the path variable is the `slugName`
+ * (a uuid returns 404) — route with the slug the list returns.
+ *
+ * Sent AUTHENTICATED (token attached when present): the endpoint is public, but
+ * for an enrolled viewer the BE unlocks the curriculum — real `videoRef`s,
+ * `locked: false`. Anonymous callers (no token) get the public/locked view
+ * unchanged. Forcing anon here stripped `videoRef` to null for enrolled users,
+ * so the learn reader rendered no video on lessons the viewer had paid for.
  */
 export const getCourseDetail = async (
     slugName: string,
@@ -84,7 +90,6 @@ export const getCourseDetail = async (
     return restRequest<CourseDetail>({
         method: "GET",
         url: `/courses/${slugName}`,
-        authenticated: false,
     })
 }
 

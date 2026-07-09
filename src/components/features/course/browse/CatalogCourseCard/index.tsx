@@ -12,7 +12,6 @@ import {
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
-import { PriceTag } from "@/components/blocks/commerce/PriceTag"
 import { SaveButton } from "@/components/blocks/buttons/SaveButton"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 import type { Course } from "../../hooks/useQueryCoursesSwr"
@@ -176,10 +175,10 @@ export const CatalogCourseCard = ({ course, className }: CatalogCourseCardProps)
                     ) : null}
                 </div>
 
-                {/* footer: enrolled → a single "Tiếp tục học" cue (no price); otherwise
-                    price + view-course affordance. Whole card is the link, so these are
-                    decorative cues — the caret slides on card hover. */}
-                <div className="mt-auto flex items-center justify-between gap-2 border-t border-separator pt-3">
+                {/* footer: a single CTA cue — enrolled → "Tiếp tục học", else "View Course".
+                    No price on the card (it lives on the detail page); the whole card is the
+                    link, so the caret just slides on hover. */}
+                <div className="mt-auto flex items-center justify-end gap-2 border-t border-separator pt-3">
                     {isEnrolled ? (
                         <span className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-success">
                             <CheckCircleIcon aria-hidden focusable="false" weight="fill" className="size-4" />
@@ -191,21 +190,14 @@ export const CatalogCourseCard = ({ course, className }: CatalogCourseCardProps)
                             />
                         </span>
                     ) : (
-                        <>
-                            {course.priceVnd != null ? (
-                                <PriceTag discounted={course.priceVnd} size="sm" />
-                            ) : (
-                                <span />
-                            )}
-                            <span className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-accent">
-                                {t("courses.viewCourse")}
-                                <CaretRightIcon
-                                    aria-hidden
-                                    focusable="false"
-                                    className="size-4 transition-transform group-hover:translate-x-0.5"
-                                />
-                            </span>
-                        </>
+                        <span className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-accent">
+                            {t("courses.viewCourse")}
+                            <CaretRightIcon
+                                aria-hidden
+                                focusable="false"
+                                className="size-4 transition-transform group-hover:translate-x-0.5"
+                            />
+                        </span>
                     )}
                 </div>
             </div>

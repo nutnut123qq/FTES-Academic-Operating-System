@@ -516,7 +516,8 @@
     "empty": "Chưa có khóa học nào",
     "loadError": "Không tải được khóa học",
     "retry": "Thử lại",
-    "count": "{count} khóa học"
+    "count": "{count} khóa học",
+    "continueLearning": "Tiếp tục học"
   },
   "course": {
     "enroll": "Đăng ký",

@@ -16,6 +16,7 @@ import { PriceTag } from "@/components/blocks/commerce/PriceTag"
 import { SaveButton } from "@/components/blocks/buttons/SaveButton"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 import type { Course } from "../../hooks/useQueryCoursesSwr"
+import { useQueryMyEnrolledSlugsSwr } from "../../hooks/useQueryMyEnrolledSlugsSwr"
 
 /** Props for {@link CatalogCourseCard}. */
 export interface CatalogCourseCardProps extends WithClassNames<undefined> {
@@ -39,10 +40,14 @@ export const CatalogCourseCard = ({ course, className }: CatalogCourseCardProps)
     const t = useTranslations()
     // hide the mock cover if it 404s (offline) — the gradient behind it takes over
     const [coverFailed, setCoverFailed] = useState(false)
+    // Already enrolled → the card jumps straight into the learn shell and the
+    // footer swaps its price + "View Course" cue for a "Tiếp tục học" one.
+    const { enrolledSlugs } = useQueryMyEnrolledSlugsSwr()
+    const isEnrolled = enrolledSlugs.has(course.id)
 
     return (
         <Link
-            href={`/courses/${course.id}`}
+            href={isEnrolled ? `/courses/${course.id}/learn` : `/courses/${course.id}`}
             className={cn(
                 "group flex flex-col overflow-hidden rounded-3xl border border-separator no-underline transition-colors hover:bg-default/40",
                 className,
@@ -171,22 +176,37 @@ export const CatalogCourseCard = ({ course, className }: CatalogCourseCardProps)
                     ) : null}
                 </div>
 
-                {/* footer: price + view-course affordance (whole card is the link, so this
-                    is a decorative cue — the caret slides on card hover) */}
+                {/* footer: enrolled → a single "Tiếp tục học" cue (no price); otherwise
+                    price + view-course affordance. Whole card is the link, so these are
+                    decorative cues — the caret slides on card hover. */}
                 <div className="mt-auto flex items-center justify-between gap-2 border-t border-separator pt-3">
-                    {course.priceVnd != null ? (
-                        <PriceTag discounted={course.priceVnd} size="sm" />
+                    {isEnrolled ? (
+                        <span className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-success">
+                            <CheckCircleIcon aria-hidden focusable="false" weight="fill" className="size-4" />
+                            {t("courses.continueLearning")}
+                            <CaretRightIcon
+                                aria-hidden
+                                focusable="false"
+                                className="size-4 transition-transform group-hover:translate-x-0.5"
+                            />
+                        </span>
                     ) : (
-                        <span />
+                        <>
+                            {course.priceVnd != null ? (
+                                <PriceTag discounted={course.priceVnd} size="sm" />
+                            ) : (
+                                <span />
+                            )}
+                            <span className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-accent">
+                                {t("courses.viewCourse")}
+                                <CaretRightIcon
+                                    aria-hidden
+                                    focusable="false"
+                                    className="size-4 transition-transform group-hover:translate-x-0.5"
+                                />
+                            </span>
+                        </>
                     )}
-                    <span className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-accent">
-                        {t("courses.viewCourse")}
-                        <CaretRightIcon
-                            aria-hidden
-                            focusable="false"
-                            className="size-4 transition-transform group-hover:translate-x-0.5"
-                        />
-                    </span>
                 </div>
             </div>
         </Link>

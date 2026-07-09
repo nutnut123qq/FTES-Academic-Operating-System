@@ -516,7 +516,8 @@
     "empty": "No courses yet",
     "loadError": "Couldn't load courses",
     "retry": "Try again",
-    "count": "{count} courses"
+    "count": "{count} courses",
+    "continueLearning": "Continue learning"
   },
   "course": {
     "enroll": "Enroll",

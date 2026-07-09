@@ -9,6 +9,8 @@ import { mapCourseLevel, type CourseLevel } from "./useQueryCoursesSwr"
 export interface CourseLesson {
     id: string
     title: string
+    /** Short lesson blurb shown under the title in the syllabus outline (absent → hidden). */
+    description?: string
     /** Human duration label, e.g. "8:20". */
     durationLabel: string
     /** Premium lessons unlock on enroll — shown with a lock in the pre-enroll preview. */
@@ -175,6 +177,7 @@ const toCourseDetail = (dto: CourseDetailDto): CourseDetail => {
         lessons: (section.lessons ?? []).map((lesson) => ({
             id: lesson.id,
             title: lesson.name,
+            description: lesson.description?.trim() ? lesson.description.trim() : undefined,
             // BE carries no per-lesson duration on the public detail.
             durationLabel: "",
             // Non-free lessons unlock on enroll — shown with a lock pre-enroll.

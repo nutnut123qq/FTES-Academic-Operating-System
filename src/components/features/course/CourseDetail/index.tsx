@@ -458,9 +458,16 @@ const CourseDetailView = ({
                                                         ) : (
                                                             <PlayCircleIcon aria-hidden focusable="false" className="size-4 shrink-0 text-accent" />
                                                         )}
-                                                        <Typography type="body-sm" color="muted" className="min-w-0 flex-1 truncate">
-                                                            {lesson.title}
-                                                        </Typography>
+                                                        <div className="min-w-0 flex-1">
+                                                            <Typography type="body-sm" color="muted" className="truncate">
+                                                                {lesson.title}
+                                                            </Typography>
+                                                            {lesson.description ? (
+                                                                <Typography type="body-xs" color="muted" className="line-clamp-1 opacity-70">
+                                                                    {lesson.description}
+                                                                </Typography>
+                                                            ) : null}
+                                                        </div>
                                                         {lesson.isPremium ? (
                                                             <Chip size="sm" variant="soft" color="accent">
                                                                 {t("detail.premium")}

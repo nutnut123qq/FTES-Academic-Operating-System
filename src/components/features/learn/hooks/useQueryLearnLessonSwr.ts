@@ -18,18 +18,6 @@ export interface LessonHeading {
     level: 2 | 3
 }
 
-/** One prose block in the lesson body. */
-export interface LessonBlock {
-    /** Stable key. */
-    id: string
-    /** "heading" renders an anchored H2/H3; "para" a paragraph; "code" a code sample. */
-    kind: "heading" | "para" | "code"
-    /** Text content (heading text / paragraph / code). */
-    text: string
-    /** For headings only — the TOC level. */
-    level?: 2 | 3
-}
-
 /** A learning outcome bullet ("What you'll learn"). */
 export interface LessonOutcome {
     id: string
@@ -55,8 +43,8 @@ export interface LearnLessonView {
     outcomes: Array<LessonOutcome>
     /** Languages this lesson has content for. */
     availableLangs: Array<string>
-    /** Body blocks keyed by language. */
-    bodyByLang: Record<string, Array<LessonBlock>>
+    /** Raw markdown body keyed by language (rendered by MarkdownContent). */
+    bodyByLang: Record<string, string>
     /** Prev/next content ids for the pager. */
     prevId: string | null
     nextId: string | null
@@ -72,60 +60,18 @@ export interface LearnLessonView {
     hasVideo: boolean
     /** Streaming ref (YouTube URL or `video_*` token) for the video player. */
     videoRef: string | null
+    /**
+     * Author-authored HTML body for migrated attachment lessons (type "1": notes,
+     * Drive links). These store their content in `videoRef` as HTML — not a video —
+     * and have no `/content` markdown, so the reader renders this string instead.
+     */
+    documentHtml: string | null
 }
 
 // The BE serves lesson bodies as one markdown string (no per-language variants),
 // so the reader renders a single body under a single lang key (its switcher hides
 // when availableLangs has one entry).
 const BODY_LANG = "typescript"
-
-/** Minimal markdown → typed-block parser: headings (# / ###), fenced code, paragraphs. */
-const parseMarkdownToBlocks = (markdown: string): Array<LessonBlock> => {
-    const blocks: Array<LessonBlock> = []
-    let paragraph: Array<string> = []
-    let codeLines: Array<string> | null = null
-
-    const flushParagraph = () => {
-        if (paragraph.length > 0) {
-            blocks.push({ id: `p-${blocks.length}`, kind: "para", text: paragraph.join(" ").trim() })
-            paragraph = []
-        }
-    }
-
-    for (const line of markdown.split(/\r?\n/)) {
-        if (codeLines !== null) {
-            if (/^```/.test(line)) {
-                blocks.push({ id: `c-${blocks.length}`, kind: "code", text: codeLines.join("\n") })
-                codeLines = null
-            } else {
-                codeLines.push(line)
-            }
-            continue
-        }
-        if (/^```/.test(line)) {
-            flushParagraph()
-            codeLines = []
-            continue
-        }
-        const heading = /^(#{1,6})\s+(.*)$/.exec(line)
-        if (heading) {
-            flushParagraph()
-            const level: 2 | 3 = heading[1]!.length <= 2 ? 2 : 3
-            blocks.push({ id: `h-${blocks.length}`, kind: "heading", level, text: heading[2]!.trim() })
-            continue
-        }
-        if (line.trim() === "") {
-            flushParagraph()
-            continue
-        }
-        paragraph.push(line.trim())
-    }
-    if (codeLines !== null && codeLines.length > 0) {
-        blocks.push({ id: `c-${blocks.length}`, kind: "code", text: codeLines.join("\n") })
-    }
-    flushParagraph()
-    return blocks
-}
 
 /** A curriculum lesson flattened with its owning module, for title/nav resolution. */
 interface FlatLesson {
@@ -171,6 +117,13 @@ const buildLessonView = (
     const next = index >= 0 && index < curriculum.length - 1 ? curriculum[index + 1] : undefined
     const minutes = content.readingMinutes ?? 0
 
+    // A migrated video ref is a YouTube link or an internal `video_*` token. Anything
+    // else in `videoRef` (Drive links, notes) is authored HTML for an attachment
+    // lesson (type "1") — render it as the body, not as a (broken) video player.
+    const ref = current?.videoRef ?? null
+    const isVideoRef = !!ref && (/youtu\.?be|youtube\.com/.test(ref) || /^\s*video_/.test(ref))
+    const documentHtml = ref && !isVideoRef && /^\s*</.test(ref) ? ref : null
+
     return {
         id: contentId,
         moduleId: current?.moduleId ?? "",
@@ -182,7 +135,7 @@ const buildLessonView = (
         challengeCount: 0,
         outcomes: [],
         availableLangs: [BODY_LANG],
-        bodyByLang: { [BODY_LANG]: parseMarkdownToBlocks(content.bodyMd ?? "") },
+        bodyByLang: { [BODY_LANG]: content.bodyMd ?? "" },
         prevId: prev?.id ?? null,
         nextId: next?.id ?? null,
         prevTitle: prev?.name ?? null,
@@ -190,8 +143,9 @@ const buildLessonView = (
         isCompleted: false,
         hasChallenge: false,
         isLocked: content.locked,
-        hasVideo: current?.videoStatus === "READY",
-        videoRef: current?.videoRef ?? null,
+        hasVideo: current?.videoStatus === "READY" && isVideoRef,
+        videoRef: ref,
+        documentHtml,
     }
 }
 

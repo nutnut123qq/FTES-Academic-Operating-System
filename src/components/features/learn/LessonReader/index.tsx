@@ -27,9 +27,10 @@ import {
 } from "@phosphor-icons/react"
 import { Button } from "@heroui/react"
 import { useQueryLearnLessonSwr } from "../hooks/useQueryLearnLessonSwr"
-import type { LessonBlock } from "../hooks/useQueryLearnLessonSwr"
+import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
 import { LessonComments } from "./LessonComments"
 import { LessonVideoBlock } from "./LessonVideoBlock"
+import { LessonDocumentHtml } from "./LessonDocumentHtml"
 import { LessonDocumentsBlock } from "./LessonDocumentsBlock"
 import { SelectionHintCallout } from "./ContentAiSelectionAsk/SelectionHintCallout"
 
@@ -63,7 +64,7 @@ export const LessonReader = () => {
     const [lang, setLang] = useState("typescript")
 
     const activeLang = resolveActiveProgrammingLang(lang, lesson?.availableLangs ?? [])
-    const blocks = lesson?.bodyByLang[activeLang] ?? []
+    const bodyMd = lesson?.bodyByLang[activeLang] ?? ""
     const isLocked = lesson?.isLocked ?? false
 
     /** Tier-1 breadcrumb (Courses › <course> › Modules › <lesson>). */
@@ -201,9 +202,12 @@ export const LessonReader = () => {
                                         {!isLocked ? <SelectionHintCallout /> : null}
                                         <div className="relative">
                                             <div id="lesson-article" className={cn("flex flex-col gap-4", isLocked && "select-none")}>
-                                                {blocks.map((block) => (
-                                                    <LessonBodyBlock key={block.id} block={block} />
-                                                ))}
+                                                {bodyMd ? (
+                                                    <MarkdownContent reading markdown={bodyMd} />
+                                                ) : lesson.documentHtml ? (
+                                                    // Fallback for un-migrated lessons whose body still lives as HTML in `videoRef`.
+                                                    <LessonDocumentHtml html={lesson.documentHtml} />
+                                                ) : null}
                                             </div>
                                             {/* Medium-style teaser fade behind the paywall */}
                                             {isLocked ? (
@@ -255,38 +259,6 @@ export const LessonReader = () => {
                 ) : null}
             </AsyncContent>
         </div>
-    )
-}
-
-/** One rendered body block — anchored heading (data-toc), paragraph, or code. */
-const LessonBodyBlock = ({ block }: { block: LessonBlock }) => {
-    if (block.kind === "heading") {
-        const level = block.level ?? 2
-        return (
-            <Typography
-                id={block.id}
-                data-toc
-                data-toc-level={level}
-                data-toc-label={block.text}
-                type={level === 3 ? "h6" : "h5"}
-                weight="bold"
-                className="scroll-mt-24"
-            >
-                {block.text}
-            </Typography>
-        )
-    }
-    if (block.kind === "code") {
-        return (
-            <pre className="overflow-x-auto rounded-2xl bg-default/60 p-4">
-                <code className="text-sm">{block.text}</code>
-            </pre>
-        )
-    }
-    return (
-        <Typography type="body-sm" color="muted" className="leading-relaxed">
-            {block.text}
-        </Typography>
     )
 }
 

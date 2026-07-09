@@ -8,9 +8,11 @@ import React, {
     useState,
 } from "react"
 import { createPortal } from "react-dom"
+import useSWR from "swr"
 import { Button, Chip, Typography, cn } from "@heroui/react"
 import { CheckIcon } from "@phosphor-icons/react"
 import { useFormatter, useTranslations } from "next-intl"
+import { getCourseDetail } from "@/modules/api/rest/course"
 import { useRouter } from "@/i18n/navigation"
 import { SaveButton } from "@/components/blocks/buttons/SaveButton"
 import type { WithClassNames } from "@/modules/types/base/class-name"
@@ -130,11 +132,28 @@ export const CourseHoverPreview = ({ course, children, className }: CourseHoverP
         [router, course.id],
     )
 
-    const outcomes = (course.learnOutcomes ?? []).slice(0, 3)
+    // Lazy-fetch the course detail once the panel opens (the list summary carries
+    // no description/lessons/topics) — SWR-cached per course so re-hover is free.
+    const { data: detail } = useSWR(
+        open ? ["course-hover-detail", course.id] : null,
+        () => getCourseDetail(course.id),
+    )
+    const lessonCount = detail
+        ? detail.sections.reduce((sum, section) => sum + (section.lessons?.length ?? 0), 0)
+        : course.lessons
+    const description = detail?.description || course.description
+    // BE detail lists the course's key topics as a comma-joined string
+    // (`contentCourse`) — the closest thing to "what you'll learn"; the summary
+    // has none. ponytail: split on comma, no NLP.
+    const outcomes = (
+        detail?.contentCourse
+            ? detail.contentCourse.split(",").map((topic) => topic.trim()).filter(Boolean)
+            : course.learnOutcomes ?? []
+    ).slice(0, 3)
     const metaLine = [
         course.durationHours != null ? t("courseSystem.browse.hours", { count: course.durationHours }) : null,
         t(`courseSystem.levels.${course.level}`),
-        t("courseSystem.catalog.lessonsCount", { count: course.lessons }),
+        t("courseSystem.catalog.lessonsCount", { count: lessonCount }),
     ].filter(Boolean).join(" · ")
 
     return (
@@ -197,9 +216,9 @@ export const CourseHoverPreview = ({ course, children, className }: CourseHoverP
                         <Typography type="body-xs" color="muted">
                             {metaLine}
                         </Typography>
-                        {course.description ? (
-                            <Typography type="body-sm" color="muted">
-                                {course.description}
+                        {description ? (
+                            <Typography type="body-sm" color="muted" className="line-clamp-4">
+                                {description}
                             </Typography>
                         ) : null}
                         {outcomes.length > 0 ? (

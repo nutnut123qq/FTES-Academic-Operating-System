@@ -1,7 +1,13 @@
 "use client"
 
 import useSWR from "swr"
-import { getCourseDetail, type CourseDetail, type LessonView } from "@/modules/api/rest/course"
+import {
+    getCourseDetail,
+    getCourseProgress,
+    type CourseDetail,
+    type CourseProgressView,
+    type LessonView,
+} from "@/modules/api/rest/course"
 
 /** One lesson (content) inside a module. */
 export interface LearnLesson {
@@ -119,12 +125,61 @@ const toLearnCourse = (courseId: string, detail: CourseDetail): LearnCourse => {
     }
 }
 
-/** Loads the whole learn tree for a course from the real course-detail REST API. */
+/**
+ * Overlays the viewer's progress onto the base tree: marks each COMPLETED lesson,
+ * counts done/total for the percent, and resumes at the first incomplete lesson.
+ * `progress` is undefined for anon / not-yet-enrolled viewers → tree stays at 0%.
+ */
+const withProgress = (base: LearnCourse, progress: CourseProgressView | undefined): LearnCourse => {
+    const completed = new Set(
+        (progress?.lessons ?? []).filter((row) => row.status === "COMPLETED").map((row) => row.lessonId),
+    )
+    if (completed.size === 0) {
+        return base
+    }
+    let done = 0
+    let total = 0
+    let resumeId: string | null = null
+    const modules = base.modules.map((module) => ({
+        ...module,
+        lessons: module.lessons.map((lesson) => {
+            const isCompleted = completed.has(lesson.id)
+            total += 1
+            if (isCompleted) done += 1
+            else if (resumeId === null) resumeId = lesson.id
+            return { ...lesson, isCompleted }
+        }),
+    }))
+    return {
+        ...base,
+        modules,
+        header: {
+            ...base.header,
+            progressPercent: total > 0 ? Math.round((done / total) * 100) : 0,
+            continueLessonId: resumeId ?? base.header.continueLessonId,
+        },
+    }
+}
+
+/**
+ * Loads the whole learn tree (public course detail) and overlays the viewer's
+ * per-lesson completion from `GET /courses/{id}/me/progress`. Progress is a
+ * separate, auth-gated call keyed on the resolved course id, so it refetches
+ * after the tree resolves and fails soft for anon viewers.
+ */
 export const useQueryLearnCourseSwr = (courseId: string) => {
-    const { data, isLoading, error, mutate } = useSWR(
+    const { data: base, isLoading, error, mutate } = useSWR(
         courseId ? ["GET_LEARN_COURSE", courseId] : null,
         async () => toLearnCourse(courseId, await getCourseDetail(courseId)),
     )
+    const realId = base?.id
+    const { data: progress, mutate: mutateProgress } = useSWR(
+        realId ? ["GET_COURSE_PROGRESS", realId] : null,
+        async () => getCourseProgress(realId as string),
+        { shouldRetryOnError: false },
+    )
+
+    const data = base ? withProgress(base, progress) : undefined
     return {
         course: data,
         modules: data?.modules ?? [],
@@ -132,6 +187,8 @@ export const useQueryLearnCourseSwr = (courseId: string) => {
         navSections: data?.navSections ?? [],
         isLoading,
         error,
-        mutate,
+        mutate: async () => {
+            await Promise.all([mutate(), mutateProgress()])
+        },
     }
 }

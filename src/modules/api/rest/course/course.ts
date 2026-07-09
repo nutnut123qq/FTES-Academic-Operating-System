@@ -8,6 +8,7 @@ import type {
     CompleteResponse,
     CourseDetail,
     CourseListParams,
+    CourseProgressView,
     CourseRatingItem,
     CourseRatingRequest,
     CourseRatingSummary,
@@ -375,6 +376,22 @@ export const createCoursePackage = async (
 }
 
 // ---------------------------------------------------------------- learning
+
+/**
+ * The current viewer's whole-course progress — overall percent + per-lesson rows.
+ * Returns empty rows when the viewer has no progress yet (or isn't enrolled).
+ *
+ * `GET /api/v1/courses/{courseId}/me/progress`
+ */
+export const getCourseProgress = async (
+    courseId: string,
+): Promise<CourseProgressView> => {
+    return restRequest<CourseProgressView>({
+        method: "GET",
+        url: `/courses/${courseId}/me/progress`,
+        authenticated: true,
+    })
+}
 
 /**
  * Reports video watch progress for a lesson.

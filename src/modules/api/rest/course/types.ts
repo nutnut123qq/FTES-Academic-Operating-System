@@ -433,6 +433,23 @@ export interface CompleteResponse {
     courseCompletionPercent: string
 }
 
+/** One per-lesson progress row inside {@link CourseProgressView}. */
+export interface LessonProgressItem {
+    lessonId: string
+    /** "IN_PROGRESS" | "COMPLETED". */
+    status: string
+    watchedSeconds: number
+    videoDurationSeconds: number | null
+}
+
+/** The viewer's whole-course progress — overall percent + per-lesson rows. */
+export interface CourseProgressView {
+    courseId: string
+    /** 0–100, 2-decimal string (envelope serializes BigDecimal as string). */
+    completionPercent: string
+    lessons: Array<LessonProgressItem>
+}
+
 /** Body sent to bookmark endpoints. */
 export interface BookmarkRequest {
     positionSeconds: number

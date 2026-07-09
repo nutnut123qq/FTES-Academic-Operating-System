@@ -7,6 +7,8 @@ import { getCourseDetail, type CourseDetail, type LessonView } from "@/modules/a
 export interface LearnLesson {
     id: string
     title: string
+    /** One-line lesson blurb (shown under the title in the content-map) — empty when absent. */
+    description: string
     /** Estimated read/watch time, e.g. "6 min" — empty when the BE doesn't provide it. */
     readTimeLabel: string
     isCompleted: boolean
@@ -22,6 +24,8 @@ export interface LearnModule {
     /** 1-based ordinal shown on the mind map cards. */
     order: number
     title: string
+    /** Section blurb (shown under the module title, mirrors the public outline) — empty when absent. */
+    description: string
     lessons: Array<LearnLesson>
 }
 
@@ -36,6 +40,8 @@ export interface LearnNavSection {
 /** Course header meta shown on the right rail of the content page. */
 export interface LearnCourseHeader {
     title: string
+    /** Course description (course-home body) — empty when the BE omits it. */
+    description: string
     /** Total module count. */
     moduleCount: number
     /** Total learning hours (approx). */
@@ -74,6 +80,7 @@ const NAV_SECTIONS: Array<LearnNavSection> = [
 const toLearnLesson = (lesson: LessonView): LearnLesson => ({
     id: lesson.id,
     title: lesson.name,
+    description: lesson.description ?? "",
     readTimeLabel: "",
     isCompleted: false,
     isPremium: !lesson.free,
@@ -89,6 +96,7 @@ const toLearnCourse = (courseId: string, detail: CourseDetail): LearnCourse => {
             id: section.id,
             order: index + 1,
             title: section.name,
+            description: section.description ?? "",
             lessons: (section.lessons ?? [])
                 .slice()
                 .sort((a, b) => a.sortOrder - b.sortOrder)
@@ -99,6 +107,7 @@ const toLearnCourse = (courseId: string, detail: CourseDetail): LearnCourse => {
         id: detail.course?.id ?? courseId,
         header: {
             title: detail.course?.title ?? "",
+            description: detail.description ?? "",
             moduleCount: modules.length,
             durationHours: 0,
             learnerCount: detail.course?.totalUser ?? 0,

@@ -1,10 +1,8 @@
 "use client"
 
-import React, { useMemo } from "react"
+import React from "react"
 import { Button, Chip, Typography } from "@heroui/react"
 import {
-    CheckCircleIcon,
-    CircleIcon,
     ClockIcon,
     PlayCircleIcon,
     StackIcon,
@@ -17,7 +15,7 @@ import { PageHeader } from "@/components/blocks/layout/PageHeader"
 import { ProgressMeter } from "@/components/blocks/stats/ProgressMeter"
 import { LabeledCard } from "@/components/blocks/cards/LabeledCard"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
-import { Link, useRouter } from "@/i18n/navigation"
+import { useRouter } from "@/i18n/navigation"
 import { useQueryLearnCourseSwr } from "../hooks/useQueryLearnCourseSwr"
 
 /** Build the reader route for a lesson id shaped "m<n>-l<k>". */
@@ -35,14 +33,7 @@ export const LearnContentPage = () => {
     const t = useTranslations("learn")
     const router = useRouter()
     const { courseId } = useParams<{ courseId: string }>()
-    const { modules, header, course, error, mutate } = useQueryLearnCourseSwr(courseId)
-
-    const flatLessons = useMemo(() => modules.flatMap((module) => module.lessons), [modules])
-    const upNext = useMemo(() => {
-        const firstIncompleteIndex = flatLessons.findIndex((lesson) => !lesson.isCompleted)
-        const start = firstIncompleteIndex === -1 ? 0 : firstIncompleteIndex
-        return flatLessons.slice(start, start + 6)
-    }, [flatLessons])
+    const { header, course, error, mutate } = useQueryLearnCourseSwr(courseId)
 
     const openLesson = (lessonId: string) => router.push(lessonHref(courseId, lessonId))
 
@@ -67,9 +58,11 @@ export const LearnContentPage = () => {
                                     <MetaChip icon={<StackIcon aria-hidden focusable="false" className="size-3" />}>
                                         {t("content.metaModules", { count: header.moduleCount })}
                                     </MetaChip>
-                                    <MetaChip icon={<ClockIcon aria-hidden focusable="false" className="size-3" />}>
-                                        {t("content.metaHours", { count: header.durationHours })}
-                                    </MetaChip>
+                                    {header.durationHours > 0 ? (
+                                        <MetaChip icon={<ClockIcon aria-hidden focusable="false" className="size-3" />}>
+                                            {t("content.metaHours", { count: header.durationHours })}
+                                        </MetaChip>
+                                    ) : null}
                                     <MetaChip icon={<UsersIcon aria-hidden focusable="false" className="size-3" />}>
                                         {t("content.metaLearners", { count: header.learnerCount })}
                                     </MetaChip>
@@ -101,31 +94,15 @@ export const LearnContentPage = () => {
                             </div>
                         </div>
 
-                        {/* up next */}
-                        <LabeledCard frameless label={t("content.lessonsTitle")}>
-                            <ul className="flex flex-col">
-                                {upNext.map((lesson) => (
-                                    <li key={lesson.id}>
-                                        <Link
-                                            href={lessonHref(courseId, lesson.id)}
-                                            className="flex items-center gap-2 rounded-xl px-2 py-2 hover:bg-default/60"
-                                        >
-                                            {lesson.isCompleted ? (
-                                                <CheckCircleIcon aria-hidden focusable="false" weight="fill" className="size-4 shrink-0 text-accent" />
-                                            ) : (
-                                                <CircleIcon aria-hidden focusable="false" className="size-4 shrink-0 text-muted" />
-                                            )}
-                                            <Typography type="body-sm" truncate className="min-w-0 flex-1">
-                                                {lesson.title}
-                                            </Typography>
-                                            <Typography type="body-xs" color="muted" className="shrink-0">
-                                                {lesson.readTimeLabel}
-                                            </Typography>
-                                        </Link>
-                                    </li>
-                                ))}
-                            </ul>
-                        </LabeledCard>
+                        {/* about — the module→lesson tree lives in the LEFT content-map rail,
+                            so the home body describes the course instead of repeating it. */}
+                        {header.description ? (
+                            <LabeledCard frameless label={t("content.aboutTitle")}>
+                                <Typography type="body-sm" color="muted" className="whitespace-pre-line">
+                                    {header.description}
+                                </Typography>
+                            </LabeledCard>
+                        ) : null}
                     </>
                 ) : null}
             </AsyncContent>

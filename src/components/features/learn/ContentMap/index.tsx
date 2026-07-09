@@ -116,14 +116,16 @@ export const ContentMap = ({ className }: ContentMapProps) => {
                                 <Accordion.Heading>
                                     <Accordion.Trigger className="text-sm font-semibold">
                                         <div className="flex w-full min-w-0 items-center gap-2">
-                                            <Typography
-                                                type="body-sm"
-                                                weight="semibold"
-                                                truncate
-                                                className="min-w-0 flex-1 text-left"
-                                            >
-                                                {t("contentMap.moduleLabel", { order: module.order, title: module.title })}
-                                            </Typography>
+                                            <div className="min-w-0 flex-1 text-left">
+                                                <Typography type="body-sm" weight="semibold" truncate>
+                                                    {module.title}
+                                                </Typography>
+                                                {module.description ? (
+                                                    <Typography type="body-xs" color="muted" className="line-clamp-1">
+                                                        {module.description}
+                                                    </Typography>
+                                                ) : null}
+                                            </div>
                                             <Chip size="sm" variant="soft" className="shrink-0">
                                                 {t("contentMap.lessonCount", {
                                                     done: module.lessons.filter((lesson) => lesson.isCompleted).length,
@@ -184,9 +186,16 @@ const ContentMapLessonRow = ({
         ) : (
             <PlayCircleIcon aria-hidden focusable="false" className="size-4 shrink-0 text-muted" />
         )}
-        <Typography type="body-sm" truncate className="min-w-0 flex-1">
-            {lesson.title}
-        </Typography>
+        <div className="min-w-0 flex-1">
+            <Typography type="body-sm" truncate>
+                {lesson.title}
+            </Typography>
+            {lesson.description ? (
+                <Typography type="body-xs" color="muted" className="line-clamp-1 opacity-70">
+                    {lesson.description}
+                </Typography>
+            ) : null}
+        </div>
         {lesson.isPremium ? (
             <Chip size="sm" variant="soft" color="warning" className="shrink-0">
                 <span className="flex items-center gap-1">

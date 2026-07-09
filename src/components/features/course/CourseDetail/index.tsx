@@ -669,10 +669,12 @@ const IncludeRow = ({ icon, children }: { icon: React.ReactNode; children: React
 /** A package's charged (discounted) amount + the pre-discount `original` PriceTag
  * strikes through (null when there's no real saving). BE prices are strings. */
 const packagePrice = (pkg: PackageView): { discounted: number; original: number | null } => {
-    const sale = Number(pkg.salePrice) || 0
+    // salePrice is the CHARGED amount (0 = a genuinely free package); originalPrice is
+    // only a strike-through reference, shown on a real paid discount. Do NOT fall back
+    // to originalPrice when salePrice is 0 — that made a "FREE" package read as 100.000₫.
+    const discounted = Number(pkg.salePrice) || 0
     const original = Number(pkg.originalPrice) || 0
-    const discounted = sale > 0 ? sale : original
-    return { discounted, original: original > discounted ? original : null }
+    return { discounted, original: discounted > 0 && original > discounted ? original : null }
 }
 
 type PackageEnrollCardProps = {
@@ -817,11 +819,17 @@ const PackageEnrollCard = ({
 
                     {selectedPackage ? (
                         <div className="flex flex-col gap-2 border-t border-separator pt-3">
-                            <PriceTag
-                                discounted={packagePrice(selectedPackage).discounted}
-                                original={packagePrice(selectedPackage).original}
-                                size="md"
-                            />
+                            {packagePrice(selectedPackage).discounted > 0 ? (
+                                <PriceTag
+                                    discounted={packagePrice(selectedPackage).discounted}
+                                    original={packagePrice(selectedPackage).original}
+                                    size="md"
+                                />
+                            ) : (
+                                <Typography type="h4" weight="bold">
+                                    {t("detail.planNames.free")}
+                                </Typography>
+                            )}
                             {selectedPackage.descriptions?.trim() ? (
                                 <Typography type="body-sm" color="muted">
                                     {selectedPackage.descriptions}

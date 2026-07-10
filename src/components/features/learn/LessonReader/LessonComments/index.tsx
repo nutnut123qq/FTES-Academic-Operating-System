@@ -2,8 +2,10 @@
 
 import React, { useState } from "react"
 import { Button, TextArea, TextField, Typography, cn } from "@heroui/react"
-import { ChatCircleIcon, PaperPlaneTiltIcon, ThumbsUpIcon, TrashIcon } from "@phosphor-icons/react"
+import { ChatCircleIcon, LockSimpleIcon, PaperPlaneTiltIcon, ThumbsUpIcon, TrashIcon } from "@phosphor-icons/react"
 import { useLocale, useTranslations } from "next-intl"
+import { useRouter } from "@/i18n/navigation"
+import { RestError } from "@/modules/api/rest/client"
 import { useAppSelector } from "@/redux/hooks"
 import { useGetLessonCommentsSwr } from "@/hooks/swr/api/rest/queries/useGetLessonCommentsSwr"
 import { usePostLessonCommentSwr } from "@/hooks/swr/api/rest/mutations/usePostLessonCommentSwr"
@@ -223,9 +225,10 @@ const CommentNode = ({
  * but a 403 still degrades to the AsyncContent error state. Self-contained under
  * the `learn.*` i18n namespace (does not reuse the community thread).
  */
-export const LessonComments = ({ contentId, className }: LessonCommentsProps) => {
+export const LessonComments = ({ courseId, contentId, className }: LessonCommentsProps) => {
     const t = useTranslations("learn")
     const locale = useLocale()
+    const router = useRouter()
     const viewerId = useAppSelector((state) => state.user.user?.id)
     const runRest = useRestWithToast()
 
@@ -242,6 +245,13 @@ export const LessonComments = ({ contentId, className }: LessonCommentsProps) =>
     const items = data?.items ?? []
     const total = data?.total ?? 0
     const pageCount = Math.max(1, Math.ceil(total / COMMENTS_PAGE_SIZE))
+
+    // A logged-in-but-not-entitled viewer (FULL access required) gets a 401/403 here.
+    // That is not a transient failure a retry can fix — invite them to enroll instead of
+    // dead-ending on an error+retry. Genuine 5xx/network still shows the error state.
+    const authDenied =
+        !data && commentsSwr.error instanceof RestError &&
+        (commentsSwr.error.status === 401 || commentsSwr.error.status === 403)
 
     const revalidate = () => {
         void commentsSwr.mutate()
@@ -293,19 +303,38 @@ export const LessonComments = ({ contentId, className }: LessonCommentsProps) =>
                 </Typography>
             </div>
 
-            <CommentComposer
-                placeholder={t("comments.placeholder")}
-                submitLabel={t("comments.send")}
-                isSubmitting={post.isMutating && replyingTo === null}
-                onSubmit={(text) => submitComment(text)}
-            />
+            {!authDenied ? (
+                <CommentComposer
+                    placeholder={t("comments.placeholder")}
+                    submitLabel={t("comments.send")}
+                    isSubmitting={post.isMutating && replyingTo === null}
+                    onSubmit={(text) => submitComment(text)}
+                />
+            ) : null}
 
             <AsyncContent
                 isLoading={!commentsSwr.data && !commentsSwr.error}
                 skeleton={<CommentsSkeleton />}
-                isEmpty={items.length === 0}
-                emptyContent={{ title: t("comments.empty") }}
-                error={!commentsSwr.data ? commentsSwr.error : undefined}
+                isEmpty={authDenied || items.length === 0}
+                emptyContent={
+                    authDenied
+                        ? {
+                            title: t("comments.enrollInvite.title"),
+                            description: t("comments.enrollInvite.body"),
+                            icon: <LockSimpleIcon aria-hidden focusable="false" className="size-8 text-accent" />,
+                            action: (
+                                <Button
+                                    variant="primary"
+                                    size="sm"
+                                    onPress={() => router.push(`/courses/${courseId}/enroll`)}
+                                >
+                                    {t("reader.enrollCta")}
+                                </Button>
+                            ),
+                        }
+                        : { title: t("comments.empty") }
+                }
+                error={!commentsSwr.data && !authDenied ? commentsSwr.error : undefined}
                 errorContent={{
                     title: t("comments.error"),
                     onRetry: () => { void commentsSwr.mutate() },

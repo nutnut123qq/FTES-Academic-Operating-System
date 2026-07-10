@@ -196,7 +196,7 @@ const ContentMapLessonRow = ({
                 </Typography>
             ) : null}
         </div>
-        {lesson.isPremium ? (
+        {lesson.isLocked ? (
             <Chip size="sm" variant="soft" color="warning" className="shrink-0">
                 <span className="flex items-center gap-1">
                     <LockSimpleIcon aria-hidden focusable="false" className="size-3" />

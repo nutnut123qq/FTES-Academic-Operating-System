@@ -5438,6 +5438,9 @@
       "challengeTitle": "Auto-graded challenge",
       "challengeBody": "Submit your work for automatic grading and feedback.",
       "openChallenge": "Open challenge",
+      "videoUnavailable": "This video can't be played.",
+      "markComplete": "Mark as complete",
+      "completed": "Completed",
       "ai": {
         "open": "Open AI tutor",
         "close": "Close",
@@ -5493,7 +5496,11 @@
       "prev": "Previous",
       "next": "Next",
       "pageOf": "Page {page}/{total}",
-      "loadMore": "Load more comments"
+      "loadMore": "Load more comments",
+      "enrollInvite": {
+        "title": "Enroll to join the discussion",
+        "body": "Enroll in the course to ask questions and chat with other learners."
+      }
     },
     "mockInterview": {
       "title": "Mock interview",

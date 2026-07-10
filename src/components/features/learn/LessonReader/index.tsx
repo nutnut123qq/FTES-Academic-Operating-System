@@ -1,11 +1,14 @@
 "use client"
 
-import React, { useMemo, useState, type Key } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState, type Key } from "react"
 import { Card, CardContent, Chip, Typography, cn } from "@heroui/react"
-import { ClockIcon, FlameIcon } from "@phosphor-icons/react"
+import { CheckCircleIcon, ClockIcon, FlameIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
+import { mutate as globalMutate } from "swr"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { EmptyContent } from "@/components/blocks/async/EmptyContent"
+import { usePostMarkLessonCompleteSwr } from "@/hooks/swr/api/rest/mutations/usePostMarkLessonCompleteSwr"
 import { PageHeader } from "@/components/blocks/layout/PageHeader"
 import { ResponsiveBreadcrumb } from "@/components/blocks/navigation/ResponsiveBreadcrumb"
 import type { ResponsiveBreadcrumbItem } from "@/components/blocks/navigation/ResponsiveBreadcrumb"
@@ -66,6 +69,8 @@ export const LessonReader = () => {
     const activeLang = resolveActiveProgrammingLang(lang, lesson?.availableLangs ?? [])
     const bodyMd = lesson?.bodyByLang[activeLang] ?? ""
     const isLocked = lesson?.isLocked ?? false
+    /** A readable lesson whose reading card would be blank (no body, no HTML, no video). */
+    const isReadingEmpty = !!lesson && !isLocked && !bodyMd && !lesson.documentHtml && !lesson.hasVideo
 
     /** Tier-1 breadcrumb (Courses › <course> › Modules › <lesson>). */
     const breadcrumbItems = useMemo<Array<ResponsiveBreadcrumbItem>>(
@@ -118,22 +123,26 @@ export const LessonReader = () => {
                                 breadcrumb={<ResponsiveBreadcrumb items={breadcrumbItems} />}
                                 title={lesson.title}
                                 description={lesson.description}
-                                meta={(
+                                meta={lesson.minutesRead > 0 || lesson.challengeCount > 0 ? (
                                     <div className="flex flex-wrap items-center gap-2">
-                                        <Chip size="sm" variant="soft">
-                                            <span className="flex items-center gap-1">
-                                                <ClockIcon aria-hidden focusable="false" className="size-3" />
-                                                {t("content.minutesRead", { minutes: lesson.minutesRead })}
-                                            </span>
-                                        </Chip>
-                                        <Chip size="sm" variant="soft" color="accent">
-                                            <span className="flex items-center gap-1">
-                                                <FlameIcon aria-hidden focusable="false" className="size-3" />
-                                                {t("content.challengeCount", { count: lesson.challengeCount })}
-                                            </span>
-                                        </Chip>
+                                        {lesson.minutesRead > 0 ? (
+                                            <Chip size="sm" variant="soft">
+                                                <span className="flex items-center gap-1">
+                                                    <ClockIcon aria-hidden focusable="false" className="size-3" />
+                                                    {t("content.minutesRead", { minutes: lesson.minutesRead })}
+                                                </span>
+                                            </Chip>
+                                        ) : null}
+                                        {lesson.challengeCount > 0 ? (
+                                            <Chip size="sm" variant="soft" color="accent">
+                                                <span className="flex items-center gap-1">
+                                                    <FlameIcon aria-hidden focusable="false" className="size-3" />
+                                                    {t("content.challengeCount", { count: lesson.challengeCount })}
+                                                </span>
+                                            </Chip>
+                                        ) : null}
                                     </div>
-                                )}
+                                ) : undefined}
                             />
                             {lesson.outcomes.length > 0 ? (
                                 <LabeledCard frameless label={t("content.outcomes")}>
@@ -199,7 +208,7 @@ export const LessonReader = () => {
                             <div className="mx-auto w-full max-w-3xl">
                                 <Card>
                                     <CardContent>
-                                        {!isLocked ? <SelectionHintCallout /> : null}
+                                        {!isLocked && !isReadingEmpty ? <SelectionHintCallout /> : null}
                                         <div className="relative">
                                             <div id="lesson-article" className={cn("flex flex-col gap-4", isLocked && "select-none")}>
                                                 {bodyMd ? (
@@ -207,6 +216,11 @@ export const LessonReader = () => {
                                                 ) : lesson.documentHtml ? (
                                                     // Fallback for un-migrated lessons whose body still lives as HTML in `videoRef`.
                                                     <LessonDocumentHtml html={lesson.documentHtml} />
+                                                ) : isReadingEmpty ? (
+                                                    <EmptyContent
+                                                        icon={<BookOpenIcon aria-hidden focusable="false" className="size-8 text-muted" />}
+                                                        title={t("content.empty2")}
+                                                    />
                                                 ) : null}
                                             </div>
                                             {/* Medium-style teaser fade behind the paywall */}
@@ -235,6 +249,7 @@ export const LessonReader = () => {
                             {/* engagement + navigation OUTSIDE the reading card (hidden while locked) */}
                             {!isLocked ? (
                                 <div className="flex flex-col gap-6 pb-6">
+                                    <LessonCompletion key={contentId} contentId={contentId} className="mx-auto w-full max-w-3xl" />
                                     <LessonComments courseId={courseId} contentId={contentId} className="mx-auto w-full max-w-3xl" />
                                     <LessonPager
                                         className="mx-auto w-full max-w-3xl"
@@ -258,6 +273,77 @@ export const LessonReader = () => {
                     )
                 ) : null}
             </AsyncContent>
+        </div>
+    )
+}
+
+/**
+ * Lesson completion control. Marks the lesson complete when the learner reaches the
+ * end of the article (a bottom sentinel scrolls into view) or presses the button,
+ * then revalidates every course-progress key so the rail meter + n/m counter advance.
+ *
+ * Keyed on `contentId` by the caller so it remounts (resetting its once-guard) per
+ * lesson. The mark-complete mutation is idempotent (BE upsert); an auto-fire that
+ * errors resets the guard so the manual button can retry, and never toasts.
+ */
+const LessonCompletion = ({ contentId, className }: { contentId: string; className?: string }) => {
+    const t = useTranslations("learn")
+    const mark = usePostMarkLessonCompleteSwr()
+    const [completed, setCompleted] = useState(false)
+    const firedRef = useRef(false)
+    const sentinelRef = useRef<HTMLDivElement>(null)
+
+    const fire = useCallback(async () => {
+        if (firedRef.current || completed) {
+            return
+        }
+        firedRef.current = true
+        try {
+            await mark.trigger(contentId)
+            setCompleted(true)
+            // Revalidate any mounted course-progress query (the rail lives in another tree).
+            await globalMutate((key) => Array.isArray(key) && key[0] === "GET_COURSE_PROGRESS")
+        } catch {
+            firedRef.current = false
+        }
+    }, [completed, contentId, mark])
+
+    useEffect(() => {
+        const el = sentinelRef.current
+        if (!el || completed) {
+            return
+        }
+        const io = new IntersectionObserver(
+            (entries) => {
+                if (entries.some((entry) => entry.isIntersecting)) {
+                    void fire()
+                }
+            },
+            { rootMargin: "0px 0px -20% 0px" },
+        )
+        io.observe(el)
+        return () => io.disconnect()
+    }, [completed, fire])
+
+    return (
+        <div className={cn("flex flex-col items-center gap-3", className)}>
+            <div ref={sentinelRef} aria-hidden className="h-px w-full" />
+            <Button
+                variant={completed ? "secondary" : "primary"}
+                isDisabled={completed || mark.isMutating}
+                isPending={mark.isMutating}
+                onPress={() => void fire()}
+            >
+                <span className="flex items-center gap-2">
+                    <CheckCircleIcon
+                        aria-hidden
+                        focusable="false"
+                        weight={completed ? "fill" : "regular"}
+                        className="size-5"
+                    />
+                    {completed ? t("reader.completed") : t("reader.markComplete")}
+                </span>
+            </Button>
         </div>
     )
 }

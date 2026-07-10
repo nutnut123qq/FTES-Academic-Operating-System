@@ -5,6 +5,28 @@ import { LocalStorageId } from "@/modules/storage/local/enums/id"
 import type { RestApiResponse, RestErrorBody, RestRequestConfig } from "./types"
 
 /**
+ * Error thrown by {@link restRequest} on any non-2xx / non-`code:200` response.
+ *
+ * A plain `Error` subclass — `.message` is identical to the legacy throw, so every
+ * existing `catch`/`.message` consumer keeps working — augmented with the HTTP
+ * `status` and backend `errorCode` so callers can branch (e.g. `401/403` →
+ * entitlement invitation vs `5xx`/network → transient error).
+ */
+export class RestError extends Error {
+    /** HTTP status code (0 when no response reached, e.g. a network failure). */
+    readonly status: number
+    /** Backend domain error code (e.g. `COURSE_FORBIDDEN`), when present. */
+    readonly errorCode?: string
+
+    constructor(message: string, status: number, errorCode?: string) {
+        super(message)
+        this.name = "RestError"
+        this.status = status
+        this.errorCode = errorCode
+    }
+}
+
+/**
  * Reads the active Keycloak access token from local storage.
  *
  * @returns The bearer token, or `undefined` if none is stored.
@@ -74,19 +96,27 @@ export const restRequest = async <T>(config: RestRequestConfig): Promise<T> => {
             const errorBody = envelope.data as unknown as RestErrorBody | undefined
             const errorCode = errorBody?.errorCode
             const message = [envelope.message, errorCode].filter(Boolean).join(" — ")
-            throw new Error(message || "REST request failed")
+            throw new RestError(message || "REST request failed", envelope.code, errorCode)
         }
 
         // data có thể null hợp lệ (endpoint void) — caller khai T=void cho các call đó.
         return envelope.data as T
     } catch (error) {
+        if (error instanceof RestError) {
+            throw error
+        }
         if (axios.isAxiosError(error) && error.response) {
             const envelope = error.response.data as RestApiResponse<RestErrorBody> | undefined
             const errorBody = envelope?.data
-            const message = [envelope?.message, errorBody?.errorCode, errorBody?.traceId]
+            const errorCode = errorBody?.errorCode
+            const message = [envelope?.message, errorCode, errorBody?.traceId]
                 .filter(Boolean)
                 .join(" — ")
-            throw new Error(message || error.message || "REST request failed")
+            throw new RestError(
+                message || error.message || "REST request failed",
+                error.response.status,
+                errorCode,
+            )
         }
 
         throw error instanceof Error ? error : new Error(String(error))

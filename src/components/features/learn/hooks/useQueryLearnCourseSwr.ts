@@ -20,6 +20,12 @@ export interface LearnLesson {
     isCompleted: boolean
     /** Premium lessons unlock by enrolling the course (rule premium-unlock-is-enroll-not-vip). */
     isPremium?: boolean
+    /**
+     * Locked FOR THE CURRENT VIEWER (per-viewer `LessonView.locked`): premium and not
+     * yet enrolled. A premium lesson the viewer owns is `isPremium` but NOT `isLocked`,
+     * so it must not show a lock marker.
+     */
+    isLocked: boolean
     /** True when this lesson carries an auto-graded challenge. */
     hasChallenge?: boolean
 }
@@ -80,8 +86,9 @@ const NAV_SECTIONS: Array<LearnNavSection> = [
 /**
  * Maps a BE lesson to the learn-tree lesson. The public course detail carries no
  * per-viewer progress or reading-time, so `isCompleted`/`readTimeLabel` stay empty
- * (honest defaults — the UI degrades cleanly); `isPremium` reflects the real
- * `free` flag (premium unlocks by enrolling).
+ * (honest defaults — the UI degrades cleanly). `isPremium` reflects the static `free`
+ * flag; `isLocked` reflects the PER-VIEWER `locked` flag so a premium lesson the
+ * viewer already owns shows no lock marker (premium unlocks by enrolling).
  */
 const toLearnLesson = (lesson: LessonView): LearnLesson => ({
     id: lesson.id,
@@ -90,6 +97,7 @@ const toLearnLesson = (lesson: LessonView): LearnLesson => ({
     readTimeLabel: "",
     isCompleted: false,
     isPremium: !lesson.free,
+    isLocked: lesson.locked ?? false,
     hasChallenge: false,
 })
 

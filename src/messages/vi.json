@@ -5438,6 +5438,9 @@
       "challengeTitle": "Thử thách chấm tự động",
       "challengeBody": "Nộp bài để hệ thống chấm điểm tự động và nhận phản hồi.",
       "openChallenge": "Mở thử thách",
+      "videoUnavailable": "Không thể phát video này.",
+      "markComplete": "Đánh dấu hoàn thành",
+      "completed": "Đã hoàn thành",
       "ai": {
         "open": "Mở trợ giảng AI",
         "close": "Đóng",
@@ -5493,7 +5496,11 @@
       "prev": "Trước",
       "next": "Sau",
       "pageOf": "Trang {page}/{total}",
-      "loadMore": "Xem thêm bình luận"
+      "loadMore": "Xem thêm bình luận",
+      "enrollInvite": {
+        "title": "Đăng ký để tham gia thảo luận",
+        "body": "Đăng ký khóa học để đặt câu hỏi và trao đổi cùng cộng đồng học viên."
+      }
     },
     "mockInterview": {
       "title": "Luyện phỏng vấn",

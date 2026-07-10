@@ -288,6 +288,15 @@ export const pathConfig = () => {
                         build,
                     }
                 }
+                const mockInterview = () => {
+                    const mockInterviewPath = `${learnPath}/mock-interview`
+                    const build = () => {
+                        return mockInterviewPath
+                    }
+                    return {
+                        build,
+                    }
+                }
                 const cv = () => {
                     const cvPath = `${learnPath}/cv`
                     const build = () => {
@@ -392,6 +401,7 @@ export const pathConfig = () => {
                     build,
                     content,
                     mindMap,
+                    mockInterview,
                     cv,
                     personalProject,
                     leaderboard,

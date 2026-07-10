@@ -24,6 +24,7 @@ import {
     UsersIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
+import Image from "next/image"
 import { useParams } from "next/navigation"
 import { useSWRConfig } from "swr"
 import { useRouter } from "@/i18n/navigation"
@@ -552,9 +553,7 @@ const EnrollCard = ({
 
     return (
         <div className="flex flex-col gap-3 rounded-2xl border border-separator p-4 md:sticky md:top-20">
-            <div className="flex aspect-video w-full items-center justify-center rounded-large bg-default/40">
-                <PlayCircleIcon aria-hidden focusable="false" className="size-10 text-muted" />
-            </div>
+            <CardCover coverUrl={course.coverUrl} alt={course.name} />
 
             {isEnrolled ? (
                 <>
@@ -650,11 +649,28 @@ const EnrollCard = ({
                             )
                         })}
                     </div>
+                    {course.enrollmentCount ? (
+                        <Typography type="body-xs" color="muted" align="center">
+                            {t("detail.enrolledCount", { count: course.enrollmentCount })}
+                        </Typography>
+                    ) : null}
                 </>
             )}
         </div>
     )
 }
+
+/** The enroll card's 16:9 cover — the real course image, else a play-icon placeholder. */
+const CardCover = ({ coverUrl, alt }: { coverUrl?: string; alt: string }) => (
+    <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-large bg-default/40">
+        {coverUrl ? (
+            // ponytail: `unoptimized` skips the Next optimizer (no remotePatterns needed)
+            <Image src={coverUrl} alt={alt} fill unoptimized className="object-cover" />
+        ) : (
+            <PlayCircleIcon aria-hidden focusable="false" className="size-10 text-muted" />
+        )}
+    </div>
+)
 
 /** One "what's included" row: a muted icon + label. */
 const IncludeRow = ({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) => (
@@ -707,13 +723,12 @@ const PackageEnrollCard = ({
         enabled: !isEnrolled,
     })
 
-    // Default selection = the flagged default package, else the lowest sortOrder.
-    // Derived (not effect-synced) so it settles the moment packages arrive and a
-    // mount-time reset can never clobber the viewer's own pick.
+    // Default selection = the flagged default package, else the first (the hook
+    // already sorts by sortOrder). Derived (not effect-synced) so it settles the
+    // moment packages arrive and a mount-time reset can never clobber the viewer's pick.
     const defaultId = useMemo(() => {
         if (packages.length === 0) return undefined
-        const sorted = [...packages].sort((a, b) => a.sortOrder - b.sortOrder)
-        return (sorted.find((pkg) => pkg.defaultPackage) ?? sorted[0]).id
+        return (packages.find((pkg) => pkg.defaultPackage) ?? packages[0]).id
     }, [packages])
     const [chosenId, setChosenId] = useState<string | undefined>(undefined)
     const selectedId = chosenId ?? defaultId
@@ -749,9 +764,7 @@ const PackageEnrollCard = ({
 
     return (
         <div className="flex flex-col gap-3 rounded-2xl border border-separator p-4 md:sticky md:top-20">
-            <div className="flex aspect-video w-full items-center justify-center rounded-large bg-default/40">
-                <PlayCircleIcon aria-hidden focusable="false" className="size-10 text-muted" />
-            </div>
+            <CardCover coverUrl={course.coverUrl} alt={course.name} />
 
             {isEnrolled ? (
                 <>
@@ -780,25 +793,50 @@ const PackageEnrollCard = ({
                 </div>
             ) : (
                 <>
+                    {/* headline: the selected package's price — one price, one place */}
+                    {selectedPackage ? (
+                        packagePrice(selectedPackage).discounted > 0 ? (
+                            <PriceTag
+                                discounted={packagePrice(selectedPackage).discounted}
+                                original={packagePrice(selectedPackage).original}
+                                size="lg"
+                            />
+                        ) : (
+                            <Typography type="h3" weight="bold">
+                                {t("detail.planNames.free")}
+                            </Typography>
+                        )
+                    ) : null}
+
                     <Typography type="body-xs" weight="medium" color="muted">
                         {t("detail.package.title")}
                     </Typography>
                     <SelectableCardGroup
                         ariaLabel={t("detail.package.selectorAria")}
-                        columns={1}
+                        variant="list"
                         value={selectedId ?? ""}
                         onChange={setChosenId}
                         items={packages.map((pkg) => {
                             const { discounted, original } = packagePrice(pkg)
                             const count = pkg.entitlements?.length ?? 0
+                            const isSelected = pkg.id === selectedId
                             return {
                                 value: pkg.id,
+                                // radio affordance (matches the legacy EnrollCard)
+                                icon: isSelected ? (
+                                    <CircleIcon aria-hidden focusable="false" weight="fill" className="size-5 text-accent" />
+                                ) : (
+                                    <CircleIcon aria-hidden focusable="false" className="size-5 text-muted" />
+                                ),
                                 label: pkg.name,
-                                description: t("detail.package.entitlementSummary", { count }),
+                                // hide "Gồm 0 phần" when the compact list carries no entitlements
+                                description: count > 0
+                                    ? t("detail.package.entitlementSummary", { count })
+                                    : undefined,
                                 // ponytail: price as PLAIN spans, not PriceTag — PriceTag wraps
                                 // React-Aria Text, which throws "slot prop required" when nested
-                                // in the RadioGroup's Text context. The full PriceTag renders
-                                // below the group, in a normal context.
+                                // in the RadioGroup's Text context. The headline PriceTag above
+                                // renders the selected package's price in a normal context.
                                 badge: (
                                     <span className="flex items-center gap-2 text-sm">
                                         {original ? (
@@ -817,34 +855,6 @@ const PackageEnrollCard = ({
                         })}
                     />
 
-                    {selectedPackage ? (
-                        <div className="flex flex-col gap-2 border-t border-separator pt-3">
-                            {packagePrice(selectedPackage).discounted > 0 ? (
-                                <PriceTag
-                                    discounted={packagePrice(selectedPackage).discounted}
-                                    original={packagePrice(selectedPackage).original}
-                                    size="md"
-                                />
-                            ) : (
-                                <Typography type="h4" weight="bold">
-                                    {t("detail.planNames.free")}
-                                </Typography>
-                            )}
-                            {selectedPackage.descriptions?.trim() ? (
-                                <Typography type="body-sm" color="muted">
-                                    {selectedPackage.descriptions}
-                                </Typography>
-                            ) : null}
-                            <IncludeRow
-                                icon={<StackIcon aria-hidden focusable="false" className="size-4 text-accent" />}
-                            >
-                                {t("detail.package.entitlementSummary", {
-                                    count: selectedPackage.entitlements?.length ?? 0,
-                                })}
-                            </IncludeRow>
-                        </div>
-                    ) : null}
-
                     <Button
                         variant="primary"
                         fullWidth
@@ -860,6 +870,11 @@ const PackageEnrollCard = ({
                     {!product ? (
                         <Typography type="body-xs" color="muted" align="center">
                             {t("detail.package.resolving")}
+                        </Typography>
+                    ) : null}
+                    {course.enrollmentCount ? (
+                        <Typography type="body-xs" color="muted" align="center">
+                            {t("detail.enrolledCount", { count: course.enrollmentCount })}
                         </Typography>
                     ) : null}
                 </>

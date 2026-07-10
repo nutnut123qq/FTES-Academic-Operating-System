@@ -132,6 +132,8 @@ export interface CourseDetail {
     saleMode: string
     level: CourseLevel
     credits: number
+    /** Course cover image (BE `imageHeader`) — absent → the card shows a placeholder. */
+    coverUrl?: string
     description: string
     /** Total learning-time label, e.g. "6 giờ". */
     durationLabel: string
@@ -211,6 +213,7 @@ const toCourseDetail = (dto: CourseDetailDto): CourseDetail => {
         level: mapCourseLevel(course.level),
         // BE detail carries no credits/duration — hidden by the view when absent/zero.
         credits: 0,
+        coverUrl: course.imageHeader || undefined,
         description: dto.description ?? "",
         durationLabel: "",
         durationHours: undefined,
@@ -246,8 +249,13 @@ const toCourseDetail = (dto: CourseDetailDto): CourseDetail => {
                 ],
             },
         },
-        // BE has no structured outcomes / instructor / reviews → hidden sections.
-        whatYouLearn: [],
+        // "What you'll learn" = the BE's key topics (`contentCourse`, a
+        // comma-joined string) — the same source the hover preview reads.
+        // ponytail: split on comma, no NLP. Empty string → [] hides the section.
+        whatYouLearn: (dto.contentCourse ?? "")
+            .split(",")
+            .map((topic) => topic.trim())
+            .filter(Boolean),
         instructor: undefined,
         sections,
         reviews: [],

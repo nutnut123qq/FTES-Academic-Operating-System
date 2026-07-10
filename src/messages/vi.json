@@ -4919,6 +4919,7 @@
       "tryFree": "Học thử miễn phí",
       "continueLearning": "Tiếp tục học",
       "enrolledHint": "Bạn đã đăng ký khóa này.",
+      "enrolledCount": "{count} người đã đăng ký",
       "planSelectorAria": "Chọn gói học",
       "planNames": {
         "free": "Miễn phí",

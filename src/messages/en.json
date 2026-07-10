@@ -4919,6 +4919,7 @@
       "tryFree": "Try for free",
       "continueLearning": "Continue learning",
       "enrolledHint": "You're enrolled in this course.",
+      "enrolledCount": "{count} enrolled",
       "planSelectorAria": "Select a learning plan",
       "planNames": {
         "free": "Free",

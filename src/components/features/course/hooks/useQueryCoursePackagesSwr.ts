@@ -40,7 +40,11 @@ export const useQueryCoursePackagesSwr = (
         () => getCoursePackages(rawId as string),
         { shouldRetryOnError: false },
     )
-    const packages = data ?? []
+    // Sort once here so every consumer (picker + default pick) renders a stable
+    // order — the BE list order is arbitrary. sortOrder asc, then price asc.
+    const packages = [...(data ?? [])].sort(
+        (a, b) => a.sortOrder - b.sortOrder || Number(a.salePrice) - Number(b.salePrice),
+    )
     return {
         packages,
         isLoading: active && isLoading,

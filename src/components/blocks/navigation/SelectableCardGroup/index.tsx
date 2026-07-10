@@ -31,8 +31,14 @@ export interface SelectableCardGroupProps<T extends string> extends WithClassNam
     onChange: (value: T) => void
     /** Accessible label for the group. */
     ariaLabel: string
-    /** Grid column count. Defaults to `2`. */
+    /** Grid column count (only for `variant="card"`). Defaults to `2`. */
     columns?: 1 | 2 | 3
+    /**
+     * `"card"` (default): each option is its own bordered surface card, gapped.
+     * `"list"`: one bordered container of connected rows split by dividers (no
+     * per-row border/gap) — a single object, not a stack of cards.
+     */
+    variant?: "card" | "list"
 }
 
 /** Tailwind grid-template class per supported column count. */
@@ -65,24 +71,36 @@ export const SelectableCardGroup = <T extends string>({
     onChange,
     ariaLabel,
     columns = 2,
+    variant = "card",
     className,
 }: SelectableCardGroupProps<T>) => (
         <RadioGroup
             aria-label={ariaLabel}
             value={value}
             onChange={(next) => onChange(next as T)}
-            className={cn("grid gap-2", COLUMNS_CLASS[columns], className)}
+            className={cn(
+                variant === "list"
+                    ? "flex flex-col divide-y divide-separator overflow-hidden rounded-2xl border border-default"
+                    : cn("grid gap-2", COLUMNS_CLASS[columns]),
+                className,
+            )}
         >
             {items.map((item) => (
                 <Radio key={item.value} value={item.value} isDisabled={item.isDisabled} className="w-full">
                     {({ isSelected, isDisabled, isFocusVisible }) => (
                         <div
                             className={cn(
-                                "flex w-full items-center gap-2 rounded-xl border bg-surface px-3 py-3 text-sm text-foreground transition-colors",
-                                isSelected ? "border-accent bg-accent/10 font-medium" : "border-default",
+                                "flex w-full items-center gap-2 px-3 py-3 text-sm text-foreground transition-colors",
+                                // card: standalone bordered surface; list: flat connected row
+                                variant === "list"
+                                    ? cn(isSelected && "bg-accent/10 font-medium")
+                                    : cn(
+                                        "rounded-xl border bg-surface",
+                                        isSelected ? "border-accent bg-accent/10 font-medium" : "border-default",
+                                    ),
                                 !isSelected && !isDisabled && "hover:bg-default",
                                 isDisabled && "opacity-60",
-                                isFocusVisible && "ring-2 ring-accent",
+                                isFocusVisible && (variant === "list" ? "ring-2 ring-inset ring-accent" : "ring-2 ring-accent"),
                             )}
                         >
                             {item.icon ? (

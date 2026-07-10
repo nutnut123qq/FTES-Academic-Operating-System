@@ -5,7 +5,9 @@ TBD - created by archiving change course-learn-player. Update Purpose after arch
 ## Requirements
 ### Requirement: Course learn player
 The lesson route `/courses/[courseId]/lessons/[lessonId]` SHALL render a learn player:
-a curriculum rail plus a content area. Data is FE-mocked until the BE contract lands.
+a curriculum rail plus a content area. Its state surfaces (empty / loading / error), the
+mark-complete progress loop, and the premium lock marker SHALL reflect real per-viewer
+data rather than static placeholders.
 
 #### Scenario: Curriculum rail with active lesson and progress
 - **WHEN** a lesson opens
@@ -18,21 +20,153 @@ a curriculum rail plus a content area. Data is FE-mocked until the BE contract l
 - **THEN** it shows a video area, the lesson title, and tabs for lecture / documents / notes
 - **AND** a mark-complete action, a previous action (disabled at the first lesson), and a next action (disabled at the last lesson)
 
+#### Scenario: Header meta chips gated on value
+- **WHEN** the lesson header renders its meta chips
+- **THEN** the "min read" chip is shown only when the read-time value is greater than zero
+- **AND** the "challenges" chip is shown only when the challenge count is greater than zero
+
+#### Scenario: Content-less lesson shows an invitation
+- **WHEN** the reading view is active, the lesson is not locked, and it has no markdown body, no HTML fallback, no video and no documents
+- **THEN** an empty-state invitation is shown instead of a blank bordered reading card
+
+#### Scenario: Video slot communicates its state
+- **WHEN** the lesson video source is still resolving
+- **THEN** an aspect-ratio skeleton occupies the video slot
+- **WHEN** the video fails with a fatal playback error
+- **THEN** a compact "video unavailable" placeholder with a retry action is shown instead of an empty slot
+
 #### Scenario: Mark a lesson complete
-- **WHEN** the user presses mark-complete
-- **THEN** the action reflects the completed state and the rail marker + progress update
+- **WHEN** the user reads a lesson to the end (a bottom sentinel becomes visible) or presses the manual mark-complete action
+- **THEN** the completion is persisted for the viewer
+- **AND** the action reflects the completed state and the rail marker + progress header update
 
 #### Scenario: End-of-chapter challenge
 - **WHEN** the lesson has a chapter challenge
 - **THEN** a challenge callout is shown with a CTA into the challenge
 
-#### Scenario: Premium lesson lock
-- **WHEN** a lesson is premium
-- **THEN** the rail shows it with a lock marker (it unlocks by enrolling, never by a separate VIP purchase)
+#### Scenario: Premium lesson lock from per-viewer entitlement
+- **WHEN** the rail renders a lesson marker
+- **THEN** a lesson locked for the current viewer shows a lock marker
+- **AND** a premium lesson the viewer already owns shows no lock marker
+- **AND** the lock unlocks by enrolling, never by a separate VIP purchase
 
 #### Scenario: Loading and error states
 - **WHEN** the outline or lesson is loading
 - **THEN** the rail and content each show a skeleton
 - **WHEN** loading fails with no cached data
 - **THEN** an error state with a retry action is shown
+
+#### Scenario: Discussion entitlement state
+- **WHEN** the lesson discussion request is denied for the viewer (HTTP 401 or 403)
+- **THEN** an "enroll to join the discussion" invitation is shown instead of an error with a retry
+- **WHEN** the discussion request fails transiently (5xx or network)
+- **THEN** an error state with a retry action is shown
+
+### Requirement: Mobile rail access
+The learn player SHALL provide, on viewports below `lg` where the desktop content-map and
+on-this-page rails are hidden, a fixed bottom bar that opens those rails as drawers so a
+phone learner can jump modules and read the outline. The reading column SHALL reserve bottom
+space so the bar never covers content.
+
+#### Scenario: Content-map reachable on mobile
+- **WHEN** the lesson reader is viewed below `lg`
+- **THEN** a fixed bottom bar shows a control that opens the course content-map in a drawer
+- **AND** the reading column reserves bottom padding so the bar never overlaps the content tail
+
+#### Scenario: Outline reachable on mobile
+- **WHEN** the lesson being read has an on-this-page outline and is viewed below `lg`
+- **THEN** the bottom bar shows a control that opens the outline as a full-width panel in a drawer
+
+#### Scenario: Bar absent where it has no rails
+- **WHEN** a learn surface without a content rail is viewed below `lg`
+- **THEN** the bottom bar is not shown
+
+### Requirement: Lesson body rendering quality
+The learn player SHALL render migrated HTML lesson bodies with a full typography ladder
+(headings, code, preformatted blocks, blockquotes, images, tables), and SHALL render code
+blocks with horizontal scrolling rather than wrapping that shatters long tokens.
+
+#### Scenario: HTML lesson typography
+- **WHEN** a migrated HTML lesson body renders
+- **THEN** its headings, inline code, code blocks, blockquotes and images are styled to match the markdown reading experience
+
+#### Scenario: Long code does not shatter
+- **WHEN** a code block contains a line longer than the reading column
+- **THEN** the block scrolls horizontally instead of wrapping mid-token
+
+### Requirement: Content-map continue action
+The content-map rail SHALL offer a one-tap action to resume at the learner's next lesson.
+
+#### Scenario: Continue from the rail
+- **WHEN** the content-map rail renders and a resume target is known
+- **THEN** a "continue learning" action is shown that opens the resume-target lesson
+
+### Requirement: Dynamic challenges tab
+The reader's content/challenges tab list SHALL omit the challenges tab when the current
+lesson has no challenge, so it never presents a permanent dead-end tab.
+
+#### Scenario: No-challenge lesson hides the tab
+- **WHEN** the current lesson has no challenge
+- **THEN** the challenges tab is not shown in the reader tab list
+
+#### Scenario: Challenge lesson shows the tab
+- **WHEN** the current lesson has a challenge
+- **THEN** the challenges tab is shown
+
+### Requirement: Discussion composer is collapsible
+The learn player's top-level discussion composer SHALL render as a slim collapsed pill
+(avatar + placeholder) that expands to the full textarea on interaction, so an empty
+textarea never dominates the discussion zone above the thread.
+
+#### Scenario: Collapsed until used
+- **WHEN** the discussion renders and the viewer has not started a comment
+- **THEN** the top-level composer shows a slim avatar + "write a comment" pill
+- **WHEN** the viewer activates the pill
+- **THEN** it expands to a textarea with submit / cancel controls
+
+### Requirement: Optimistic comment reaction
+The learn player SHALL reflect a comment like/unlike immediately in the UI (heart + count)
+via an optimistic update, rolling back if the request fails, instead of blocking on a
+full refetch.
+
+#### Scenario: Instant like
+- **WHEN** the viewer likes a comment
+- **THEN** the heart and count update immediately without waiting for the request
+- **WHEN** the request fails
+- **THEN** the like is rolled back to its prior state
+
+### Requirement: Movable AI entry
+On desktop the AI entry point SHALL be draggable vertically (with a drag-vs-click threshold)
+and SHALL persist its position, so the learner can park it clear of the reading column.
+
+#### Scenario: Drag and persist
+- **WHEN** the learner drags the AI FAB vertically past the drag threshold
+- **THEN** the FAB moves and the click that opens the chat is suppressed for that gesture
+- **AND** the new position is restored on the next visit
+
+### Requirement: Contextual learn nudges
+The content home SHALL surface a contextual nudges strip (e.g. rank / next step) computed
+from existing learn data, with each nudge self-hiding when it has nothing to say.
+
+#### Scenario: Nudge shows when meaningful
+- **WHEN** the viewer has a computable rank or next step on the content home
+- **THEN** a nudge for it is shown
+
+#### Scenario: Nudge hides when empty
+- **WHEN** a nudge has no meaningful value (e.g. zero rank)
+- **THEN** that nudge is not shown
+
+### Requirement: Lesson reaction footer
+The learn player SHALL show a one-tap reaction bar and a view count in the reading card foot,
+so a finished reader has a lowest-friction way to react to the lesson itself.
+
+#### Scenario: React to the lesson
+- **WHEN** the reader finishes a readable lesson
+- **THEN** a reaction bar with a view count is shown in the reading card foot
+- **WHEN** the learner picks a reaction
+- **THEN** the reaction reflects immediately and persists on the next visit
+
+#### Scenario: Toggle the reaction off
+- **WHEN** the learner picks the reaction they already selected
+- **THEN** the reaction is removed
 

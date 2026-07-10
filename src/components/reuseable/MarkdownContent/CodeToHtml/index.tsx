@@ -85,12 +85,12 @@ export const CodeToHtml = ({ code, language, theme, className }: CodeToHtmlProps
             </div>
             {html ? (
                 <div
-                    className="p-3 text-sm [&_code]:!whitespace-pre-wrap [&_pre]:!whitespace-pre-wrap [&_pre]:!break-words [&_pre]:!bg-transparent [&_pre]:!p-0"
+                    className="overflow-x-auto p-3 text-sm [&_pre]:!whitespace-pre [&_pre]:!bg-transparent [&_pre]:!p-0"
                     dangerouslySetInnerHTML={{ __html: html }}
                 />
             ) : (
                 /* Fallback: always show raw code while Shiki hasn't finished / on error (avoids an empty box). */
-                <pre className="overflow-x-auto p-3 text-sm whitespace-pre-wrap break-words">
+                <pre className="overflow-x-auto p-3 text-sm">
                     <code>{code}</code>
                 </pre>
             )}

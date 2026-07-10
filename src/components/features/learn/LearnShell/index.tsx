@@ -2,6 +2,7 @@
 
 import React, { PropsWithChildren, ReactNode } from "react"
 import { cn } from "@heroui/react"
+import { LearnMobileBar } from "./LearnMobileBar"
 
 /** Props for {@link LearnShell}. */
 export interface LearnShellProps extends PropsWithChildren {
@@ -50,13 +51,18 @@ export const LearnShell = ({
         {/* persistent left content rail supplied by the layout (self-sizing) */}
         {leftRail}
         {/* reading column — the shell owns the canonical p-6 for every learn page
-            (features supply only max-w + mx-auto + gap), except full-bleed routes */}
+            (features supply only max-w + mx-auto + gap), except full-bleed routes.
+            `max-lg:pb-16` reserves room for the fixed mobile bar so it never covers
+            the content tail. */}
         <div
             className={cn(
                 "min-h-0 w-full min-w-0 flex-1 lg:w-auto",
-                !fullBleed && "p-6",
+                !fullBleed && "p-6 max-lg:pb-16",
             )}
         >
+            {/* mobile-only bottom bar: opens the content-map + on-this-page as drawers
+                (self-hides on non-content routes and from lg up) */}
+            <LearnMobileBar />
             {children}
         </div>
         {/* right outline rail (on-this-page) supplied by the layout */}

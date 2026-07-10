@@ -11,6 +11,11 @@ import { useTableOfContents } from "./hooks/useTableOfContents"
 export interface OnThisPageProps {
     /** Extra classes on the rail root. */
     className?: string
+    /**
+     * Mobile mode: render a plain full-width panel (for the mobile drawer) instead
+     * of the sticky `w-64` desktop aside. The rail body is identical either way.
+     */
+    mobile?: boolean
 }
 
 /** Build the challenge route for the active lesson. */
@@ -28,7 +33,7 @@ const challengeHref = (courseId: string, contentId: string) =>
  *
  * @param props - {@link OnThisPageProps}
  */
-export const OnThisPage = ({ className }: OnThisPageProps) => {
+export const OnThisPage = ({ className, mobile = false }: OnThisPageProps) => {
     const t = useTranslations("learn")
     const router = useRouter()
     const { courseId, contentId } = useParams<{ courseId: string; contentId?: string }>()
@@ -39,6 +44,50 @@ export const OnThisPage = ({ className }: OnThisPageProps) => {
         return null
     }
 
+    const sections = (
+        <>
+            {/* in-article outline — only when the active body has headings */}
+            {headings.length > 0 && (
+                <nav className="flex flex-col gap-3">
+                    <Label>{t("onThisPage.title")}</Label>
+                    <div className="flex flex-col gap-2">
+                        {headings.map((heading) => (
+                            <Link
+                                key={heading.id}
+                                onPress={() => onJump(heading.id)}
+                                className={cn(
+                                    "cursor-pointer text-start text-sm",
+                                    heading.level >= 3 && "pl-3",
+                                    heading.id === activeId ? "text-accent" : "text-muted",
+                                )}
+                            >
+                                {heading.text}
+                            </Link>
+                        ))}
+                    </div>
+                </nav>
+            )}
+
+            {/* "practice this lesson" — closes the read → practice loop */}
+            <div className="flex flex-col gap-2">
+                <Label>{t("lessonRail.challenges.title")}</Label>
+                <Button
+                    size="sm"
+                    variant="primary"
+                    className="self-start"
+                    onPress={() => router.push(challengeHref(courseId, contentId))}
+                >
+                    {t("lessonRail.challenges.practice")}
+                </Button>
+            </div>
+        </>
+    )
+
+    // mobile: a plain full-width panel for the drawer (no sticky aside chrome)
+    if (mobile) {
+        return <div className={cn("flex flex-col gap-6 p-6", className)}>{sections}</div>
+    }
+
     return (
         <aside
             className={cn(
@@ -47,42 +96,7 @@ export const OnThisPage = ({ className }: OnThisPageProps) => {
             )}
         >
             <ScrollShadow hideScrollBar className="lg:max-h-[calc(100dvh-4rem)] lg:overflow-y-auto">
-                <div className="flex flex-col gap-6 p-6 pl-0">
-                    {/* in-article outline — only when the active body has headings */}
-                    {headings.length > 0 && (
-                        <nav className="flex flex-col gap-3">
-                            <Label>{t("onThisPage.title")}</Label>
-                            <div className="flex flex-col gap-2">
-                                {headings.map((heading) => (
-                                    <Link
-                                        key={heading.id}
-                                        onPress={() => onJump(heading.id)}
-                                        className={cn(
-                                            "cursor-pointer text-start text-sm",
-                                            heading.level >= 3 && "pl-3",
-                                            heading.id === activeId ? "text-accent" : "text-muted",
-                                        )}
-                                    >
-                                        {heading.text}
-                                    </Link>
-                                ))}
-                            </div>
-                        </nav>
-                    )}
-
-                    {/* "practice this lesson" — closes the read → practice loop */}
-                    <div className="flex flex-col gap-2">
-                        <Label>{t("lessonRail.challenges.title")}</Label>
-                        <Button
-                            size="sm"
-                            variant="primary"
-                            className="self-start"
-                            onPress={() => router.push(challengeHref(courseId, contentId))}
-                        >
-                            {t("lessonRail.challenges.practice")}
-                        </Button>
-                    </div>
-                </div>
+                <div className="flex flex-col gap-6 p-6 pl-0">{sections}</div>
             </ScrollShadow>
         </aside>
     )

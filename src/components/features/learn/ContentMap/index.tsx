@@ -1,8 +1,9 @@
 "use client"
 
 import React, { useMemo, useState } from "react"
-import { Accordion, Chip, Label, ScrollShadow, Typography, cn } from "@heroui/react"
+import { Accordion, Button, Chip, Label, ScrollShadow, Typography, cn } from "@heroui/react"
 import {
+    ArrowRightIcon,
     CheckCircleIcon,
     LockSimpleIcon,
     PlayCircleIcon,
@@ -69,6 +70,7 @@ export const ContentMap = ({ className }: ContentMapProps) => {
     )
 
     const openLesson = (lessonId: string) => router.push(lessonHref(courseId, lessonId))
+    const continueLessonId = header?.continueLessonId ?? null
 
     return (
         <div className={cn("flex min-h-0 flex-col gap-4 p-4", className)}>
@@ -81,6 +83,19 @@ export const ContentMap = ({ className }: ContentMapProps) => {
                     </Typography>
                 </div>
                 <ProgressMeter value={doneCount} max={totalCount || 1} />
+                {continueLessonId ? (
+                    <Button
+                        size="sm"
+                        variant="primary"
+                        className="w-full"
+                        onPress={() => openLesson(continueLessonId)}
+                    >
+                        <span className="flex items-center gap-1">
+                            {t("content.continue")}
+                            <ArrowRightIcon aria-hidden focusable="false" className="size-4" />
+                        </span>
+                    </Button>
+                ) : null}
                 <SearchInput
                     value={query}
                     onValueChange={setQuery}

@@ -81,7 +81,12 @@ export const LessonReader = () => {
         [t, router, courseId, lesson?.moduleTitle],
     )
 
-    /** Left tab group: Content / Challenges (Challenges locked on premium). */
+    const hasChallenge = lesson?.hasChallenge ?? false
+
+    /**
+     * Left tab group: Content, plus Challenges only when the lesson actually has one
+     * (an always-present challenges tab that dead-ends trains distrust — omit it).
+     */
     const leftTabs = useMemo<TabsCardGroup>(
         () => ({
             ariaLabel: t("reader.tabListAria"),
@@ -93,14 +98,16 @@ export const LessonReader = () => {
                     label: t("content.tabs.content"),
                     icon: <BookOpenIcon aria-hidden focusable="false" className="size-4 shrink-0" />,
                 },
-                {
-                    key: "challenges",
-                    label: t("content.tabs.challenges"),
-                    icon: <PuzzlePieceIcon aria-hidden focusable="false" className="size-4 shrink-0" />,
-                },
+                ...(hasChallenge
+                    ? [{
+                        key: "challenges",
+                        label: t("content.tabs.challenges"),
+                        icon: <PuzzlePieceIcon aria-hidden focusable="false" className="size-4 shrink-0" />,
+                    }]
+                    : []),
             ],
         }),
-        [t, view],
+        [t, view, hasChallenge],
     )
 
     return (
@@ -118,7 +125,7 @@ export const LessonReader = () => {
                     }}
                 >
                     {lesson ? (
-                        <div className="flex flex-col gap-10">
+                        <div className="flex flex-col gap-6">
                             <PageHeader
                                 breadcrumb={<ResponsiveBreadcrumb items={breadcrumbItems} />}
                                 title={lesson.title}
@@ -163,7 +170,9 @@ export const LessonReader = () => {
             {/* tab bar — static chrome; shows immediately. Content tab carries a language switcher on the right. */}
             {lesson ? (
                 <div className="mx-auto w-full max-w-3xl">
-                    <TabsCard leftTabs={leftTabs} />
+                    {/* only render the tab bar when there is a second (Challenges) tab —
+                        a lone Content tab is noise */}
+                    {hasChallenge ? <TabsCard leftTabs={leftTabs} /> : null}
                     {view === "content" && lesson.availableLangs.length > 1 ? (
                         <div className="mt-3">
                             <ProgrammingLanguageTabs

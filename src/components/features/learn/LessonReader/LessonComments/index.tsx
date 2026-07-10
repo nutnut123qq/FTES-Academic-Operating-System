@@ -16,8 +16,34 @@ import { useRestWithToast } from "@/modules/toast/hooks"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton as SkeletonBlock } from "@/components/blocks/skeleton/Skeleton"
 import { UserAvatar } from "@/components/reuseable/UserAvatar"
+import { CommentComposer as CollapsibleComposer } from "@/components/reuseable/Discussion/CommentComposer"
 import { formatRelativeTime } from "@/components/features/community/hooks/relativeTime"
-import type { LessonCommentView } from "@/modules/api/rest/course"
+import type { LessonCommentView, LessonCommentsPage } from "@/modules/api/rest/course"
+
+/**
+ * Pure optimistic toggle of the LIKE reaction for one comment inside a page —
+ * walks top-level items and one level of replies. Fed to SWR `optimisticData` so
+ * the heart + count flip instantly; SWR rolls it back if the request fails.
+ */
+const toggleLikeInPage = (page: LessonCommentsPage, commentId: string): LessonCommentsPage => {
+    const toggle = (comment: LessonCommentView): LessonCommentView => {
+        if (comment.id === commentId) {
+            const liked = comment.myReactions.includes(LIKE_EMOJI)
+            return {
+                ...comment,
+                myReactions: liked
+                    ? comment.myReactions.filter((emoji) => emoji !== LIKE_EMOJI)
+                    : [...comment.myReactions, LIKE_EMOJI],
+                reactionCount: Math.max(0, comment.reactionCount + (liked ? -1 : 1)),
+            }
+        }
+        if (comment.replies.length > 0) {
+            return { ...comment, replies: comment.replies.map(toggle) }
+        }
+        return comment
+    }
+    return { ...page, items: page.items.map(toggle) }
+}
 
 /** Emoji key used for the simple like toggle. */
 const LIKE_EMOJI = "LIKE"
@@ -229,7 +255,9 @@ export const LessonComments = ({ courseId, contentId, className }: LessonComment
     const t = useTranslations("learn")
     const locale = useLocale()
     const router = useRouter()
-    const viewerId = useAppSelector((state) => state.user.user?.id)
+    const viewer = useAppSelector((state) => state.user.user)
+    const viewerId = viewer?.id
+    const currentUser = viewer ? { username: viewer.username, avatar: viewer.avatar } : null
     const runRest = useRestWithToast()
 
     const [page, setPage] = useState(1)
@@ -275,13 +303,32 @@ export const LessonComments = ({ courseId, contentId, className }: LessonComment
     }
 
     const onLike = async (comment: LessonCommentView) => {
+        const page = commentsSwr.data
+        if (!page) {
+            return
+        }
         const liked = comment.myReactions.includes(LIKE_EMOJI)
-        const action = liked
+        const request = liked
             ? () => unreact.trigger({ commentId: comment.id, emoji: LIKE_EMOJI })
             : () => react.trigger({ commentId: comment.id, emoji: LIKE_EMOJI })
-        const ok = await runRest(action, { showSuccessToast: false })
-        if (ok !== null) {
-            revalidate()
+        try {
+            // flip the heart + count instantly, then revalidate to reconcile; SWR rolls
+            // the optimistic flip back if the request fails
+            await commentsSwr.mutate(
+                async () => {
+                    await request()
+                    return undefined
+                },
+                {
+                    optimisticData: (current?: LessonCommentsPage) =>
+                        toggleLikeInPage(current ?? page, comment.id),
+                    populateCache: false,
+                    rollbackOnError: true,
+                    revalidate: true,
+                },
+            )
+        } catch {
+            // rollback already reverted the optimistic flip — a like failure stays silent
         }
     }
 
@@ -304,11 +351,13 @@ export const LessonComments = ({ courseId, contentId, className }: LessonComment
             </div>
 
             {!authDenied ? (
-                <CommentComposer
+                <CollapsibleComposer
+                    collapsible
+                    currentUser={currentUser}
                     placeholder={t("comments.placeholder")}
                     submitLabel={t("comments.send")}
-                    isSubmitting={post.isMutating && replyingTo === null}
-                    onSubmit={(text) => submitComment(text)}
+                    busy={post.isMutating && replyingTo === null}
+                    onSubmit={(text) => { void submitComment(text) }}
                 />
             ) : null}
 

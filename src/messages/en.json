@@ -5418,6 +5418,9 @@
       "nextLesson": "Next",
       "moduleTitle": "Module"
     },
+    "nudges": {
+      "rank": "You're ranked #{rank} on the leaderboard"
+    },
     "reader": {
       "error": "Failed to load lesson.",
       "onThisPage": "On this page",

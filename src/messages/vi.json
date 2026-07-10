@@ -5418,6 +5418,9 @@
       "nextLesson": "Bài sau",
       "moduleTitle": "Học phần"
     },
+    "nudges": {
+      "rank": "Bạn đang xếp hạng #{rank} trên bảng xếp hạng"
+    },
     "reader": {
       "error": "Không tải được bài học.",
       "onThisPage": "Trên trang này",

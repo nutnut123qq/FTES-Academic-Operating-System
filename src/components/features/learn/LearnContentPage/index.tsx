@@ -17,6 +17,7 @@ import { LabeledCard } from "@/components/blocks/cards/LabeledCard"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { useRouter } from "@/i18n/navigation"
 import { useQueryLearnCourseSwr } from "../hooks/useQueryLearnCourseSwr"
+import { LearnNudges } from "./LearnNudges"
 
 /** Build the reader route for a lesson id shaped "m<n>-l<k>". */
 const lessonHref = (courseId: string, lessonId: string) =>
@@ -93,6 +94,9 @@ export const LearnContentPage = () => {
                                 <ProgressMeter value={header.progressPercent} max={100} />
                             </div>
                         </div>
+
+                        {/* contextual nudges — surfaces the (built-but-hidden) leaderboard rank */}
+                        <LearnNudges />
 
                         {/* mock interview entry (§9 AI) — the surface itself has no live nav */}
                         <div className="flex flex-col gap-3 rounded-3xl border border-default bg-surface p-4">

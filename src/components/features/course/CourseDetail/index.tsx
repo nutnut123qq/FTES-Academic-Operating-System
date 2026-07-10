@@ -211,7 +211,7 @@ export const CourseDetail = () => {
     const { course, error, mutate } = useQueryCourseDetailSwr(courseId)
 
     return (
-        <div className="mx-auto w-full max-w-6xl p-6">
+        <div className="mx-auto w-full max-w-7xl p-6">
             <AsyncContent
                 isLoading={!course && !error}
                 skeleton={<CourseDetailSkeleton />}

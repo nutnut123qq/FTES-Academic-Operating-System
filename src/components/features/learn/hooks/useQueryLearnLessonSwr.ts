@@ -84,6 +84,8 @@ interface FlatLesson {
     videoStatus: string
     /** Streaming ref (YouTube URL or `video_*` token). */
     videoRef: string | null
+    /** Per-viewer lock (premium + not entitled) — the RELIABLE lock signal. */
+    locked: boolean
 }
 
 /** Flattens the course detail into an ordered lesson list (module order → lesson order). */
@@ -103,6 +105,7 @@ const flattenCurriculum = (detail: CourseDetail): Array<FlatLesson> =>
                     moduleTitle: section.name,
                     videoStatus: lesson.videoStatus ?? "",
                     videoRef: lesson.videoRef ?? null,
+                    locked: lesson.locked ?? false,
                 })),
         )
 
@@ -142,7 +145,10 @@ const buildLessonView = (
         nextTitle: next?.name ?? null,
         isCompleted: false,
         hasChallenge: false,
-        isLocked: content.locked,
+        // Trust the per-viewer curriculum lock — `content.locked` comes from
+        // `GET /lessons/{id}/content`, which 401s for an unentitled viewer and is
+        // caught into a `locked: false` fallback (a lie that hides the paywall).
+        isLocked: current?.locked ?? content.locked,
         hasVideo: current?.videoStatus === "READY" && isVideoRef,
         videoRef: ref,
         documentHtml,

@@ -5421,6 +5421,32 @@
     "nudges": {
       "rank": "You're ranked #{rank} on the leaderboard"
     },
+    "courseQa": {
+      "title": "Course Q&A",
+      "description": "Every learner question across the course — search, filter and ask.",
+      "filter": {
+        "unanswered": "Unanswered",
+        "answered": "Answered",
+        "mine": "Mine",
+        "all": "All"
+      },
+      "filterAria": "Filter questions",
+      "searchPlaceholder": "Search questions…",
+      "searchEmpty": "No matching questions.",
+      "count": "{count} questions",
+      "loadError": "Failed to load questions.",
+      "empty": {
+        "title": "No questions yet",
+        "hint": "Be the first to ask a question about this course."
+      },
+      "emptyCta": "Start learning",
+      "composerPlaceholder": "Ask a course-wide question…",
+      "composerSubmit": "Post question",
+      "answerCount": "{count} answers",
+      "answerPlaceholder": "Write an answer…",
+      "answerSubmit": "Answer",
+      "founder": "Instructor"
+    },
     "reader": {
       "error": "Failed to load lesson.",
       "onThisPage": "On this page",
@@ -5500,6 +5526,7 @@
       "next": "Next",
       "pageOf": "Page {page}/{total}",
       "loadMore": "Load more comments",
+      "seeAllQuestions": "See all questions",
       "enrollInvite": {
         "title": "Enroll to join the discussion",
         "body": "Enroll in the course to ask questions and chat with other learners."

@@ -5421,6 +5421,32 @@
     "nudges": {
       "rank": "Bạn đang xếp hạng #{rank} trên bảng xếp hạng"
     },
+    "courseQa": {
+      "title": "Hỏi đáp khóa học",
+      "description": "Mọi câu hỏi của học viên trong khóa — tìm, lọc và đặt câu hỏi chung.",
+      "filter": {
+        "unanswered": "Chưa trả lời",
+        "answered": "Đã trả lời",
+        "mine": "Của tôi",
+        "all": "Tất cả"
+      },
+      "filterAria": "Lọc câu hỏi",
+      "searchPlaceholder": "Tìm câu hỏi…",
+      "searchEmpty": "Không tìm thấy câu hỏi phù hợp.",
+      "count": "{count} câu hỏi",
+      "loadError": "Không tải được câu hỏi.",
+      "empty": {
+        "title": "Chưa có câu hỏi nào",
+        "hint": "Hãy là người đầu tiên đặt câu hỏi cho khóa học này."
+      },
+      "emptyCta": "Vào học ngay",
+      "composerPlaceholder": "Đặt câu hỏi chung cho khóa học…",
+      "composerSubmit": "Đăng câu hỏi",
+      "answerCount": "{count} câu trả lời",
+      "answerPlaceholder": "Viết câu trả lời…",
+      "answerSubmit": "Trả lời",
+      "founder": "Giảng viên"
+    },
     "reader": {
       "error": "Không tải được bài học.",
       "onThisPage": "Trên trang này",
@@ -5500,6 +5526,7 @@
       "next": "Sau",
       "pageOf": "Trang {page}/{total}",
       "loadMore": "Xem thêm bình luận",
+      "seeAllQuestions": "Xem tất cả câu hỏi",
       "enrollInvite": {
         "title": "Đăng ký để tham gia thảo luận",
         "body": "Đăng ký khóa học để đặt câu hỏi và trao đổi cùng cộng đồng học viên."

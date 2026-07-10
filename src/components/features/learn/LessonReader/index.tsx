@@ -31,6 +31,8 @@ import {
 import { Button } from "@heroui/react"
 import { useQueryLearnLessonSwr } from "../hooks/useQueryLearnLessonSwr"
 import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
+import { InteractionBar } from "@/components/reuseable/Discussion/InteractionBar"
+import { useLessonReactionMock } from "./useLessonReactionMock"
 import { LessonComments } from "./LessonComments"
 import { LessonVideoBlock } from "./LessonVideoBlock"
 import { LessonDocumentHtml } from "./LessonDocumentHtml"
@@ -237,6 +239,10 @@ export const LessonReader = () => {
                                                 <div className="pointer-events-none absolute inset-x-0 bottom-0 h-72 bg-gradient-to-b from-transparent via-surface/70 to-surface" />
                                             ) : null}
                                         </div>
+                                        {/* one-tap reaction + view count for a finished, readable lesson */}
+                                        {!isLocked && !isReadingEmpty ? (
+                                            <LessonReactionFooter contentId={contentId} />
+                                        ) : null}
                                         {isLocked ? (
                                             <div className="mt-6 flex flex-col items-start gap-3 border-t border-default pt-6">
                                                 <LockSimpleIcon aria-hidden focusable="false" className="size-8 text-accent" />
@@ -282,6 +288,16 @@ export const LessonReader = () => {
                     )
                 ) : null}
             </AsyncContent>
+        </div>
+    )
+}
+
+/** Lesson-level reaction + view count in the reading card foot (mock-backed). */
+const LessonReactionFooter = ({ contentId }: { contentId: string }) => {
+    const { summary, react } = useLessonReactionMock(contentId)
+    return (
+        <div className="mt-6 border-t border-default pt-4">
+            <InteractionBar summary={summary} onReact={react} viewCount={summary.viewCount} />
         </div>
     )
 }

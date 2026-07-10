@@ -343,11 +343,20 @@ export const LessonComments = ({ courseId, contentId, className }: LessonComment
 
     return (
         <section className={cn("flex flex-col gap-4 border-t border-separator pt-6", className)}>
-            <div className="flex items-center gap-2">
-                <ChatCircleIcon aria-hidden focusable="false" className="size-5 text-muted" />
-                <Typography type="body" weight="semibold">
-                    {t("comments.title", { count: total })}
-                </Typography>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                    <ChatCircleIcon aria-hidden focusable="false" className="size-5 text-muted" />
+                    <Typography type="body" weight="semibold">
+                        {t("comments.title", { count: total })}
+                    </Typography>
+                </div>
+                <button
+                    type="button"
+                    onClick={() => router.push(`/courses/${courseId}/learn/qa`)}
+                    className="cursor-pointer rounded-full text-xs text-muted outline-none transition-colors hover:text-accent hover:underline focus-visible:ring-2 focus-visible:ring-accent"
+                >
+                    {t("comments.seeAllQuestions")}
+                </button>
             </div>
 
             {!authDenied ? (

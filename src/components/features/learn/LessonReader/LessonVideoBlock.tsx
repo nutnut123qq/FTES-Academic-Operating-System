@@ -31,7 +31,7 @@ export const LessonVideoBlock = ({ videoRef }: { videoRef: string | null }) => {
     }
 
     return (
-        <div className="mx-auto w-full max-w-3xl">
+        <div className="mx-auto w-full max-w-5xl">
             <Card>
                 <CardContent className="p-0">
                     <iframe

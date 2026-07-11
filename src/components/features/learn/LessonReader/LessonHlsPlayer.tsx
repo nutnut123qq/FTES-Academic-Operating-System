@@ -96,7 +96,7 @@ export const LessonHlsPlayer = ({ videoRef }: { videoRef: string }) => {
 
     if (failed) {
         return (
-            <div className="mx-auto w-full max-w-3xl">
+            <div className="mx-auto w-full max-w-5xl">
                 <Card>
                     <CardContent className="flex aspect-video flex-col items-center justify-center gap-3 text-center">
                         <VideoCameraSlashIcon aria-hidden focusable="false" className="size-8 text-muted" />
@@ -120,7 +120,7 @@ export const LessonHlsPlayer = ({ videoRef }: { videoRef: string }) => {
     }
 
     return (
-        <div className="mx-auto w-full max-w-3xl">
+        <div className="mx-auto w-full max-w-5xl">
             <Card>
                 <CardContent className="p-0">
                     <div className="relative aspect-video w-full">

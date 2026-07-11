@@ -13,8 +13,17 @@ export interface CourseLesson {
     description?: string
     /** Human duration label, e.g. "8:20". */
     durationLabel: string
-    /** Premium lessons unlock on enroll — shown with a lock in the pre-enroll preview. */
+    /** Non-free lesson (`!free`) — drives the "Premium" tag ONLY, never the lock. */
     isPremium?: boolean
+    /**
+     * Locked FOR THE CURRENT VIEWER (per-viewer `LessonView.locked`): premium and not
+     * yet entitled. A premium lesson the viewer already owns is `isPremium` but NOT
+     * `isLocked`, so the syllabus shows it clickable (no lock). The LOCK decision must
+     * use this, never `!free`.
+     */
+    isLocked: boolean
+    /** BE per-viewer access level (FULL | PREVIEW | NONE) — carried through for callers. */
+    accessLevel?: string
 }
 
 /** A course section (chapter) grouping lessons. */
@@ -182,8 +191,12 @@ const toCourseDetail = (dto: CourseDetailDto): CourseDetail => {
             description: lesson.description?.trim() ? lesson.description.trim() : undefined,
             // BE carries no per-lesson duration on the public detail.
             durationLabel: "",
-            // Non-free lessons unlock on enroll — shown with a lock pre-enroll.
+            // `!free` is the "Premium" TAG only — never the lock (an enrolled viewer
+            // owns premium lessons: free=false but locked=false).
             isPremium: !lesson.free,
+            // Per-viewer lock from the enrollment-aware BE detail — the ONLY lock signal.
+            isLocked: lesson.locked === true,
+            accessLevel: lesson.accessLevel ?? undefined,
         })),
     }))
     const totalLessons = sections.reduce((sum, section) => sum + section.lessons.length, 0)

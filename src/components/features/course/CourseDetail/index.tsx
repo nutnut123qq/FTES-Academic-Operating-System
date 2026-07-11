@@ -54,6 +54,16 @@ const ACHIEVEMENT_ICONS: Record<string, Icon> = {
     book: BookIcon,
 }
 
+/**
+ * Build the reader route for a syllabus lesson — mirrors the learn rail's
+ * `lessonHref` (`ContentMap`) so a syllabus click lands on the exact same reader
+ * URL. The `[moduleId]` segment is cosmetic (the reader resolves purely from
+ * `[contentId]`), so the rail derives it from the lesson id's first UUID segment;
+ * we replicate that verbatim. `courseId` here is the slug (`course.id`).
+ */
+const lessonReaderHref = (courseId: string, lessonId: string) =>
+    `/courses/${courseId}/learn/content/modules/${lessonId.split("-")[0]}/contents/${lessonId}`
+
 /** Rich instructor profile card for the course detail page.
  *
  * A presentational feature sub-component: it receives the instructor data and
@@ -241,6 +251,11 @@ const CourseDetailView = ({
     onCourses: () => void
 }) => {
     const t = useTranslations("courseSystem")
+    const router = useRouter()
+    // Open a non-locked syllabus lesson in the reader (same route the learn rail uses).
+    // Fallback to the reader entry when a lesson id is somehow absent.
+    const openLesson = (lessonId: string) =>
+        router.push(lessonId ? lessonReaderHref(course.id, lessonId) : `/courses/${course.id}/learn`)
     // PACKAGE courses sell N distinct packages (each its own COURSE_UNLOCK product),
     // so they render the dedicated package picker (PackageEnrollCard) which resolves
     // per-package. Everything else (LEGACY / absent saleMode) keeps the legacy card.
@@ -429,36 +444,56 @@ const CourseDetailView = ({
                                         </button>
                                         {isOpen ? (
                                             <div className="flex flex-col">
-                                                {section.lessons.map((lesson) => (
-                                                    <div
-                                                        key={lesson.id}
-                                                        className="flex items-center gap-3 border-t border-separator px-4 py-3 pl-10"
-                                                    >
-                                                        {lesson.isPremium ? (
-                                                            <LockIcon aria-hidden focusable="false" className="size-4 shrink-0 text-muted" />
-                                                        ) : (
-                                                            <PlayCircleIcon aria-hidden focusable="false" className="size-4 shrink-0 text-accent" />
-                                                        )}
-                                                        <div className="min-w-0 flex-1">
-                                                            <Typography type="body-sm" color="muted" className="truncate">
-                                                                {lesson.title}
-                                                            </Typography>
-                                                            {lesson.description ? (
-                                                                <Typography type="body-xs" color="muted" className="line-clamp-1 opacity-70">
-                                                                    {lesson.description}
+                                                {section.lessons.map((lesson) => {
+                                                    // Lock is the per-viewer `isLocked` (NOT `!free`): an enrolled
+                                                    // viewer's premium lessons are unlocked → clickable into the reader.
+                                                    const rowContent = (
+                                                        <>
+                                                            {lesson.isLocked ? (
+                                                                <LockIcon aria-hidden focusable="false" className="size-4 shrink-0 text-muted" />
+                                                            ) : (
+                                                                <PlayCircleIcon aria-hidden focusable="false" className="size-4 shrink-0 text-accent" />
+                                                            )}
+                                                            <div className="min-w-0 flex-1">
+                                                                <Typography type="body-sm" color="muted" className="truncate">
+                                                                    {lesson.title}
                                                                 </Typography>
+                                                                {lesson.description ? (
+                                                                    <Typography type="body-xs" color="muted" className="line-clamp-1 opacity-70">
+                                                                        {lesson.description}
+                                                                    </Typography>
+                                                                ) : null}
+                                                            </div>
+                                                            {lesson.isPremium ? (
+                                                                <Chip size="sm" variant="soft" color="accent">
+                                                                    {t("detail.premium")}
+                                                                </Chip>
                                                             ) : null}
+                                                            <Typography type="body-xs" color="muted">
+                                                                {lesson.durationLabel}
+                                                            </Typography>
+                                                        </>
+                                                    )
+                                                    // Locked rows stay non-navigating (the sticky enroll card on this
+                                                    // very page is the buy flow); unlocked rows open the reader.
+                                                    return lesson.isLocked ? (
+                                                        <div
+                                                            key={lesson.id}
+                                                            className="flex items-center gap-3 border-t border-separator px-4 py-3 pl-10"
+                                                        >
+                                                            {rowContent}
                                                         </div>
-                                                        {lesson.isPremium ? (
-                                                            <Chip size="sm" variant="soft" color="accent">
-                                                                {t("detail.premium")}
-                                                            </Chip>
-                                                        ) : null}
-                                                        <Typography type="body-xs" color="muted">
-                                                            {lesson.durationLabel}
-                                                        </Typography>
-                                                    </div>
-                                                ))}
+                                                    ) : (
+                                                        <button
+                                                            key={lesson.id}
+                                                            type="button"
+                                                            onClick={() => openLesson(lesson.id)}
+                                                            className="flex w-full items-center gap-3 border-t border-separator px-4 py-3 pl-10 text-left transition-colors hover:bg-default/40"
+                                                        >
+                                                            {rowContent}
+                                                        </button>
+                                                    )
+                                                })}
                                             </div>
                                         ) : null}
                                     </div>

@@ -384,7 +384,7 @@ export const LessonComments = ({ courseId, contentId, className }: LessonComment
                                 <Button
                                     variant="primary"
                                     size="sm"
-                                    onPress={() => router.push(`/courses/${courseId}/enroll`)}
+                                    onPress={() => router.push(`/courses/${courseId}`)}
                                 >
                                     {t("reader.enrollCta")}
                                 </Button>

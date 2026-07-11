@@ -28,7 +28,6 @@ import Image from "next/image"
 import { useParams } from "next/navigation"
 import { useSWRConfig } from "swr"
 import { useRouter } from "@/i18n/navigation"
-import { useGetCourseProductSwr } from "@/hooks/swr/api/rest/queries/useGetCourseProductSwr"
 import { useGetCoursePackageProductSwr } from "@/hooks/swr/api/rest/queries/useGetCoursePackageProductSwr"
 import { usePostAddCartItemSwr } from "@/hooks/swr/api/rest/mutations/usePostAddCartItemSwr"
 import { usePaymentOverlayState } from "@/hooks/zustand/overlay/hooks"
@@ -242,38 +241,19 @@ const CourseDetailView = ({
     onCourses: () => void
 }) => {
     const t = useTranslations("courseSystem")
-    const { isEnrolled, onEnroll, onContinueLearning, onTryLearning } = useCourseEnrollment(
-        course.id,
-        course.enrollment,
-    )
     // PACKAGE courses sell N distinct packages (each its own COURSE_UNLOCK product),
     // so they render the dedicated package picker (PackageEnrollCard) which resolves
     // per-package. Everything else (LEGACY / absent saleMode) keeps the legacy card.
     const isPackage = course.saleMode === "PACKAGE"
-    // Resolve this course's COURSE_UNLOCK product (null when not on sale). When it
-    // exists, the "Đăng ký học" CTA becomes a real buy: add to cart → payment modal
-    // (VietQR / coin), reusing the shared commerce checkout. Otherwise the CTA keeps
-    // its existing enroll-route behaviour. Skipped for PACKAGE courses (resolved
-    // per-package instead) so we never add an arbitrary product to the cart.
-    const { data: product } = useGetCourseProductSwr(isPackage ? undefined : course.rawId)
-    const addCart = usePostAddCartItemSwr()
-    const payment = usePaymentOverlayState()
-    const { mutate: mutateSwr } = useSWRConfig()
-    const onBuy = async () => {
-        if (!product) return
-        try {
-            const item = await addCart.trigger({ productId: product.id, quantity: 1 })
-            void mutateSwr("GET_CART_SWR")
-            payment.open({
-                itemIds: [item.id],
-                title: course.name,
-                amountVnd: product.priceVnd ?? 0,
-                amountCoin: product.priceCoin ?? undefined,
-            })
-        } catch {
-            // add-to-cart failed → SWR surfaces the error; leave the CTA idle
-        }
-    }
+    // The legacy "Đăng ký học" CTA is a real buy: the enrollment hook resolves this
+    // course's COURSE_UNLOCK product, adds it to the cart, and opens the shared
+    // PaymentModal (VietQR / coin). The buy context is withheld for PACKAGE courses
+    // (resolved per-package by PackageEnrollCard) so we never add an arbitrary product.
+    const { isEnrolled, onEnroll, isEnrolling, onContinueLearning, onTryLearning } = useCourseEnrollment(
+        course.id,
+        course.enrollment,
+        isPackage ? undefined : { rawId: course.rawId, title: course.name },
+    )
     // ponytail: hand-rolled accordion state — first chapter open. Set, not boolean-per-row,
     // so multiple chapters can be open. Swap to HeroUI Accordion when its API is confirmed.
     const [openSections, setOpenSections] = useState<Set<string>>(
@@ -510,7 +490,8 @@ const CourseDetailView = ({
                         <EnrollCard
                             course={course}
                             isEnrolled={isEnrolled}
-                            onEnroll={product ? onBuy : onEnroll}
+                            onEnroll={onEnroll}
+                            isEnrolling={isEnrolling}
                             onContinueLearning={onContinueLearning}
                             onTryLearning={onTryLearning}
                         />
@@ -525,6 +506,8 @@ type EnrollCardProps = {
     course: CourseDetailModel
     isEnrolled: boolean
     onEnroll: () => void
+    /** Add-to-cart in flight — drives the enroll CTA's pending state. */
+    isEnrolling?: boolean
     onContinueLearning: () => void
     onTryLearning: () => void
 }
@@ -544,6 +527,7 @@ const EnrollCard = ({
     course,
     isEnrolled,
     onEnroll,
+    isEnrolling,
     onContinueLearning,
     onTryLearning,
 }: EnrollCardProps) => {
@@ -617,7 +601,7 @@ const EnrollCard = ({
                         </Button>
                     ) : (
                         <>
-                            <Button variant="primary" fullWidth onPress={onEnroll}>
+                            <Button variant="primary" fullWidth onPress={onEnroll} isPending={isEnrolling}>
                                 {t("detail.enroll")}
                             </Button>
                             <Button variant="secondary" fullWidth onPress={onTryLearning}>

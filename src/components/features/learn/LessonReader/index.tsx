@@ -286,7 +286,7 @@ export const LessonReader = () => {
                                                     <Typography type="body-sm" color="muted">
                                                         {t("reader.lockedBody")}
                                                     </Typography>
-                                                    <Button variant="primary" onPress={() => router.push(`/courses/${courseId}/enroll`)}>
+                                                    <Button variant="primary" onPress={() => router.push(`/courses/${courseId}`)}>
                                                         {t("reader.enrollCta")}
                                                     </Button>
                                                 </div>

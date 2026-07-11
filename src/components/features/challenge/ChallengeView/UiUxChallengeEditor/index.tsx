@@ -161,7 +161,7 @@ export const UiUxChallengeEditor = ({ challenge }: UiUxChallengeEditorProps) => 
                                     variant="primary"
                                     size="sm"
                                     onPress={() =>
-                                        router.push(`/courses/${challenge.courseId}/enroll`)
+                                        router.push(`/courses/${challenge.courseId}`)
                                     }
                                 >
                                     {t("uiuxEditor.gate.cta")}

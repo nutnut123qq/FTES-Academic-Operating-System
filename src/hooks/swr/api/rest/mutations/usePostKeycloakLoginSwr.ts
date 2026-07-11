@@ -28,6 +28,11 @@ export const usePostKeycloakLoginSwr = () => {
             const response = await keycloakLogin(arg)
             if (response.accessToken) {
                 LocalStorage.setItem(LocalStorageId.KeycloakAccessToken, response.accessToken)
+                // Persist the refresh token so the proactive refresh link can mint a new
+                // access token via REST `/auth/refresh` (BE GraphQL gateway is query-only).
+                if (response.refreshToken) {
+                    LocalStorage.setItem(LocalStorageId.KeycloakRefreshToken, response.refreshToken)
+                }
                 dispatch(setAccessToken(response.accessToken))
                 dispatch(setAuthenticated(true))
             }

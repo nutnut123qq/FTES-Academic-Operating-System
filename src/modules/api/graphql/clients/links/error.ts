@@ -15,8 +15,9 @@ const SESSION_SUPERSEDED_MARKER = "superseded"
 const handleSessionSuperseded = (): void => {
     // only act in the browser — the error link can also run during SSR
     if (typeof window === "undefined") return
-    // remove the now-invalid access token so the app treats us as logged out
+    // remove the now-invalid access + refresh tokens so the app treats us as logged out
     LocalStorage.removeItem(LocalStorageId.KeycloakAccessToken)
+    LocalStorage.removeItem(LocalStorageId.KeycloakRefreshToken)
     // flag in sessionStorage so we can show a toast after hard reload
     try {
         sessionStorage.setItem("superseded_toast", "true")

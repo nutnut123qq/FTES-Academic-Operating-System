@@ -17,4 +17,5 @@ export const keycloakLogout = async (): Promise<void> => {
         authenticated: true,
     })
     LocalStorage.removeItem(LocalStorageId.KeycloakAccessToken)
+    LocalStorage.removeItem(LocalStorageId.KeycloakRefreshToken)
 }

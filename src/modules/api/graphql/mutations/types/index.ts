@@ -48,6 +48,5 @@ export * from "./contact"
 export * from "./ask-content-ai"
 
 export * from "./request-to-team"
-export * from "./community"
 export * from "./community-comments"
 export * from "./chat"

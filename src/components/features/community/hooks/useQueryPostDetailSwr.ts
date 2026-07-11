@@ -2,8 +2,12 @@
 
 import useSWR from "swr"
 import { useLocale } from "next-intl"
-import { queryCommunityPost } from "@/modules/api/graphql/queries/query-community-post"
-import type { FeedPost } from "@/modules/api/graphql/queries/query-community-feed"
+import {
+    queryCommunityPost,
+    type CommunityPostCommentNode,
+    type CommunityPostNode,
+    type CommunityPostReplyNode,
+} from "@/modules/api/graphql/queries/query-community-post"
 import { formatRelativeTime } from "./relativeTime"
 
 /** A comment on a post. Replies are flat, one level deep (Threads-like). */
@@ -39,22 +43,36 @@ export interface PostDetail {
  * comment thread, and the like/comment mutation hooks (ONE source of truth). */
 export const postDetailKey = (postId: string) => ["post-detail", postId]
 
+/** Map a BE comment reply node to the flat `PostComment` reply contract. */
+const toReply = (reply: CommunityPostReplyNode, locale: string): PostComment => ({
+    id: reply.id,
+    author: reply.author.displayName ?? reply.author.username ?? "",
+    authorUsername: reply.author.username ?? reply.author.id,
+    text: reply.body,
+    timeLabel: formatRelativeTime(reply.createdAt, locale),
+})
+
+/** Map a BE top-level comment node (with its one-level replies) to `PostComment`. */
+const toComment = (comment: CommunityPostCommentNode, locale: string): PostComment => ({
+    ...toReply(comment, locale),
+    replies: comment.replies.map((reply) => toReply(reply, locale)),
+})
+
 /**
- * Map a BE `Post` to the detail view contract. The BE GraphQL `post(id)` is minimal:
- * it carries NO body, likes, or comments (those live behind the community REST module,
- * which is not reachable with the current token). They degrade to "" / 0 / [] rather
- * than being fabricated — the detail shows author · time · title honestly.
+ * Map a BE `Post` to the detail view contract. The gateway now returns the full `body`,
+ * the `likeCount`/`likedByMe` engagement and the `comments` thread, so the detail renders
+ * real content and a live comment list instead of the previous "" / 0 / [] placeholders.
  */
-const toPostDetail = (post: FeedPost, locale: string): PostDetail => ({
+const toPostDetail = (post: CommunityPostNode, locale: string): PostDetail => ({
     id: post.id,
     author: post.author.displayName ?? post.author.username ?? "",
     authorUsername: post.author.username ?? post.author.id,
     timeLabel: formatRelativeTime(post.createdAt, locale),
     title: post.title ?? "",
-    body: "",
-    likes: 0,
-    liked: false,
-    comments: [],
+    body: post.body ?? "",
+    likes: post.likeCount,
+    liked: post.likedByMe,
+    comments: post.comments.map((comment) => toComment(comment, locale)),
 })
 
 /** Fetch + map a single post; a not-found / not-visible id throws (Apollo error) → caller degrades. */

@@ -3,8 +3,10 @@ import type {
     GroupAnnouncement,
     GroupAnnouncementRequest,
     GroupAnnouncementUpdateRequest,
+    GroupChallengeSummary,
     GroupCreateGroupRequest,
     GroupDecisionRequest,
+    GroupEvent,
     GroupFeedSlice,
     GroupInviteRequest,
     GroupJoinRequest,
@@ -277,6 +279,34 @@ export const listLinkedResources = async (
     restRequest<GroupResourceLink[]>({
         method: "GET",
         url: `/groups/${id}/resources`,
+        authenticated: true,
+    })
+
+// ---------------- Group events ----------------
+
+export const listGroupEvents = async (
+    id: string,
+    request?: {
+        limit?: number
+    },
+): Promise<GroupEvent[]> =>
+    restRequest<GroupEvent[]>({
+        method: "GET",
+        url: `/groups/${id}/events`,
+        params: {
+            limit: request?.limit,
+        },
+        authenticated: true,
+    })
+
+// ---------------- Group challenges (read-only bridge) ----------------
+
+export const getGroupChallenges = async (
+    id: string,
+): Promise<GroupChallengeSummary[]> =>
+    restRequest<GroupChallengeSummary[]>({
+        method: "GET",
+        url: `/groups/${id}/challenges`,
         authenticated: true,
     })
 

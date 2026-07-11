@@ -5,7 +5,7 @@ import { useSWRConfig } from "swr"
 import { useTranslations } from "next-intl"
 import { toast } from "@heroui/react"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
-import { mutateCreateCommunityPostComment } from "@/modules/api/graphql/mutations/mutation-create-community-post-comment"
+import { addComment } from "@/modules/api/rest/community"
 import { COMMUNITY_FEED_KEY, type CommunityPost } from "./useQueryCommunityFeedSwr"
 import { postDetailKey, type PostComment, type PostDetail } from "./useQueryPostDetailSwr"
 
@@ -93,28 +93,25 @@ export const useMutateCreatePostCommentSwr = () => {
             )
 
             try {
-                const result = await mutateCreateCommunityPostComment({
-                    request: {
-                        postId: input.postId,
-                        parentCommentId: input.parentCommentId ?? null,
-                        body: input.body,
-                    },
+                await addComment(input.postId, {
+                    body: input.body,
+                    parentId: input.parentCommentId,
                 })
-                const envelope = result?.data?.createCommunityPostComment
-                if (envelope && envelope.success === false) {
-                    throw new Error(envelope.error ?? envelope.message ?? "comment failed")
-                }
-                return true
-            } catch (error) {
-                if (error instanceof Error && error.message === "comment failed") {
-                    await mutate(postDetailKey(input.postId), detailSnapshot, { revalidate: false })
-                    await mutate(COMMUNITY_FEED_KEY, feedSnapshot, { revalidate: false })
-                    toast.danger(t("engagement.commentFailed"))
-                    return false
-                }
-                // Missing BE (transport reject) → keep the optimistic comment.
-                return true
+            } catch {
+                // Only a failure of the WRITE (transport reject OR RestError envelope)
+                // rolls back the optimistic node + feed count and tells the caller to
+                // keep the draft.
+                await mutate(postDetailKey(input.postId), detailSnapshot, { revalidate: false })
+                await mutate(COMMUNITY_FEED_KEY, feedSnapshot, { revalidate: false })
+                toast.danger(t("engagement.commentFailed"))
+                return false
             }
+
+            // The comment is created → revalidate the shared post-detail cache so the
+            // optimistic node is replaced by the server comment (real id + ordering).
+            // A revalidation refetch error must NOT report a failed write.
+            await mutate(postDetailKey(input.postId)).catch(() => {})
+            return true
         },
         [mutate, requireAuth, t],
     )

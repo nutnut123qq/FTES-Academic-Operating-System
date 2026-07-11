@@ -61,9 +61,6 @@ export const CommunityTrending = () => {
                             <Typography type="body-sm" weight="medium" truncate>
                                 {post.title}
                             </Typography>
-                            <Typography type="body-xs" color="muted">
-                                {post.author}
-                            </Typography>
                         </div>
                         <Chip size="sm" variant="soft" color="accent">
                             {t("feed.likes", { count: post.likes })}

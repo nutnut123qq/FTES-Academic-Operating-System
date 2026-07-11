@@ -2,21 +2,25 @@
 
 import { useCallback } from "react"
 import { useSWRConfig } from "swr"
+import { useLocale, useTranslations } from "next-intl"
+import { toast } from "@heroui/react"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
-import { subjectFeedKey, type FeedScope, type SubjectPost } from "./useQuerySubjectFeedSwr"
+import { reactToPost, unreactPost } from "@/modules/api/rest/community"
+import { subjectFeedKey, type SubjectPost } from "./useQuerySubjectFeedSwr"
 
 /**
- * Toggles the current user's like on a subject "Thảo luận" post. No BE contract
- * exists, so this is a LOCAL-ONLY optimistic mutation of the
- * `["subject-feed", subjectId, scope]` cache. Guests get the
- * `AuthenticationModal` and nothing toggles.
- *
- * // ponytail: mock BE — no subject reaction contract yet.
+ * Toggles the current user's like on a subject "Thảo luận" post. These are REAL
+ * community posts (scoped to the subject via `subjectWorkspace.community`), so the
+ * write REUSES the community REST reactions API (`PUT`/`DELETE
+ * /community/reactions`) with an optimistic update over the
+ * `["subject-feed", subjectId, locale]` cache and rollback on failure. Guests get
+ * the `AuthenticationModal` and nothing toggles.
  *
  * @param subjectId - the owning subject id.
- * @param scope - the active feed scope (part of the cache key).
  */
-export const useMutateReactSubjectPostSwr = (subjectId: string, scope: FeedScope) => {
+export const useMutateReactSubjectPostSwr = (subjectId: string) => {
+    const t = useTranslations("subjects")
+    const locale = useLocale()
     const { mutate } = useSWRConfig()
     const { requireAuth } = useRequireAuth()
 
@@ -25,23 +29,42 @@ export const useMutateReactSubjectPostSwr = (subjectId: string, scope: FeedScope
             if (!requireAuth("auth.context.like")) {
                 return
             }
+            const key = subjectFeedKey(subjectId, locale)
+
+            // snapshot for rollback + capture the intended next state for the write
+            let snapshot: Array<SubjectPost> | undefined
+            let nextLiked = false
             await mutate<Array<SubjectPost>>(
-                subjectFeedKey(subjectId, scope),
-                (current) =>
-                    current?.map((post) => {
+                key,
+                (current) => {
+                    snapshot = current
+                    return current?.map((post) => {
                         if (post.id !== postId) {
                             return post
                         }
-                        const nextLiked = !post.liked
+                        nextLiked = !post.liked
                         return {
                             ...post,
                             liked: nextLiked,
                             reactions: Math.max(0, post.reactions + (nextLiked ? 1 : -1)),
                         }
-                    }),
+                    })
+                },
                 { revalidate: false },
             )
+
+            try {
+                if (nextLiked) {
+                    await reactToPost(postId, { reactionType: "LIKE" })
+                } else {
+                    await unreactPost(postId)
+                }
+            } catch {
+                // WRITE failed (transport reject OR non-2xx envelope) → roll back.
+                await mutate(key, snapshot, { revalidate: false })
+                toast.danger(t("community.likeFailed"))
+            }
         },
-        [subjectId, scope, mutate, requireAuth],
+        [subjectId, locale, mutate, requireAuth, t],
     )
 }

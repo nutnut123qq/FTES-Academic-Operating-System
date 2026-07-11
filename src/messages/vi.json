@@ -2362,7 +2362,8 @@
       "enroll": "Đăng nhập để đăng ký khóa học",
       "search": "Đăng nhập để tìm kiếm nội dung học tập",
       "explore": "Đăng nhập để dùng trợ lý AI và gợi ý cá nhân hoá",
-      "join": "Đăng nhập để tham gia nhóm"
+      "join": "Đăng nhập để tham gia nhóm",
+      "vote": "Đăng nhập để bình chọn"
     }
   },
   "priceTag": {
@@ -4651,7 +4652,8 @@
       },
       "empty": "Chưa có bài thảo luận nào.",
       "loadError": "Không tải được thảo luận.",
-      "retry": "Thử lại"
+      "retry": "Thử lại",
+      "likeFailed": "Không cập nhật được lượt thích. Vui lòng thử lại."
     },
     "members": {
       "title": "Thành viên",
@@ -5253,6 +5255,7 @@
       "titleField": "Tiêu đề",
       "bodyField": "Bạn muốn chia sẻ điều gì?",
       "submit": "Đăng bài",
+      "createFailed": "Không đăng được bài viết. Vui lòng thử lại.",
       "kinds": {
         "knowledge": "Kiến thức",
         "question": "Câu hỏi",
@@ -5275,10 +5278,14 @@
     "moderation": {
       "title": "Kiểm duyệt",
       "empty": "Không còn báo cáo nào.",
-      "reportedBy": "báo cáo bởi {name}",
+      "restricted": "Bạn không có quyền kiểm duyệt cộng đồng.",
+      "targetLabel": "{type} bị báo cáo",
+      "source": "Nguồn: {source}",
+      "priority": "Ưu tiên {priority}",
       "keep": "Giữ lại",
       "remove": "Gỡ bỏ",
-      "error": "Không tải được hàng chờ kiểm duyệt. Vui lòng thử lại."
+      "error": "Không tải được hàng chờ kiểm duyệt. Vui lòng thử lại.",
+      "decisionFailed": "Không áp dụng được quyết định. Vui lòng thử lại."
     },
     "states": {
       "retry": "Thử lại"
@@ -5356,7 +5363,18 @@
       "participants": "{count} tham gia",
       "join": "Tham gia",
       "empty": "Chưa có thử thách nào đang diễn ra.",
-      "error": "Không tải được thử thách. Vui lòng thử lại."
+      "error": "Không tải được thử thách. Vui lòng thử lại.",
+      "type": {
+        "CODING": "Lập trình",
+        "PROJECT": "Dự án",
+        "QUIZ": "Trắc nghiệm"
+      },
+      "status": {
+        "ACTIVE": "Đang diễn ra",
+        "UPCOMING": "Sắp diễn ra",
+        "CLOSED": "Đã đóng",
+        "ENDED": "Đã kết thúc"
+      }
     },
     "announcements": {
       "title": "Thông báo",

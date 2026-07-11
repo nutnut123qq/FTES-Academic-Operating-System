@@ -1,11 +1,10 @@
 import { restRequest } from "@/modules/api/rest/client"
 import type {
     AcceptedAnswerRequest,
+    CommentResponse,
     ContributorScoreResponse,
+    CreatePostRequest,
     CreateReportRequest,
-    FeedPage,
-    MediaInput,
-    MediaOutput,
     ModerationDecisionRequest,
     ModerationQueueResponse,
     PollVoteRequest,
@@ -16,6 +15,39 @@ import type {
 } from "./types"
 
 // ---------------------------------------------------------------- PostController (non-GraphQL)
+
+/**
+ * Creates a new community post.
+ *
+ * `POST /api/v1/community/posts`
+ */
+export const createPost = async (
+    request: CreatePostRequest,
+): Promise<PostResponse> => {
+    return restRequest<PostResponse>({
+        method: "POST",
+        url: "/community/posts",
+        data: request,
+    })
+}
+
+/**
+ * Adds a comment (top-level, or a one-level reply when `parentId` is set) to a post.
+ * The BE `CreateCommentRequest` names the text field `content`, so the FE-friendly
+ * `body` is mapped onto it here.
+ *
+ * `POST /api/v1/community/posts/{postId}/comments`
+ */
+export const addComment = async (
+    postId: string,
+    request: { body: string; parentId?: string },
+): Promise<CommentResponse> => {
+    return restRequest<CommentResponse>({
+        method: "POST",
+        url: `/community/posts/${postId}/comments`,
+        data: { content: request.body, parentId: request.parentId },
+    })
+}
 
 /**
  * Returns the detail of a single community post.
@@ -111,6 +143,41 @@ export const getTrending = async (params?: {
 }
 
 // ---------------------------------------------------------------- InteractionController (non-GraphQL)
+
+/**
+ * Adds/replaces the current user's reaction on a post. The BE reaction API is target-typed;
+ * for a post the target is `{ targetType: "POST", targetId: postId }` and the reaction defaults
+ * to `LIKE` when omitted.
+ *
+ * `PUT /api/v1/community/reactions`
+ */
+export const reactToPost = async (
+    postId: string,
+    request?: { reactionType?: string },
+): Promise<void> => {
+    return restRequest<void>({
+        method: "PUT",
+        url: "/community/reactions",
+        data: {
+            targetType: "POST",
+            targetId: postId,
+            reaction: request?.reactionType ?? "LIKE",
+        },
+    })
+}
+
+/**
+ * Removes the current user's reaction from a post.
+ *
+ * `DELETE /api/v1/community/reactions`
+ */
+export const unreactPost = async (postId: string): Promise<void> => {
+    return restRequest<void>({
+        method: "DELETE",
+        url: "/community/reactions",
+        data: { targetType: "POST", targetId: postId },
+    })
+}
 
 /**
  * Casts an upvote/downvote on a target.

@@ -2353,7 +2353,8 @@
       "enroll": "Sign in to enroll in this course",
       "search": "Sign in to search learning content",
       "explore": "Sign in to use the AI assistant and personalized recommendations",
-      "join": "Sign in to join this group"
+      "join": "Sign in to join this group",
+      "vote": "Sign in to vote in this poll"
     }
   },
   "priceTag": {
@@ -4651,7 +4652,8 @@
       },
       "empty": "No discussions yet.",
       "loadError": "Couldn't load discussions.",
-      "retry": "Try again"
+      "retry": "Try again",
+      "likeFailed": "Couldn't update your like. Please try again."
     },
     "members": {
       "title": "Members",
@@ -5276,10 +5278,14 @@
     "moderation": {
       "title": "Moderation",
       "empty": "No reports left.",
-      "reportedBy": "reported by {name}",
+      "restricted": "You don't have permission to moderate the community.",
+      "targetLabel": "{type} reported",
+      "source": "Source: {source}",
+      "priority": "Priority {priority}",
       "keep": "Keep",
       "remove": "Remove",
-      "error": "Couldn't load the moderation queue. Please try again."
+      "error": "Couldn't load the moderation queue. Please try again.",
+      "decisionFailed": "Couldn't apply the decision. Please try again."
     },
     "states": {
       "retry": "Try again"
@@ -5357,7 +5363,18 @@
       "participants": "{count} joined",
       "join": "Join",
       "empty": "No active challenges yet.",
-      "error": "Couldn't load challenges. Please try again."
+      "error": "Couldn't load challenges. Please try again.",
+      "type": {
+        "CODING": "Coding",
+        "PROJECT": "Project",
+        "QUIZ": "Quiz"
+      },
+      "status": {
+        "ACTIVE": "Active",
+        "UPCOMING": "Upcoming",
+        "CLOSED": "Closed",
+        "ENDED": "Ended"
+      }
     },
     "announcements": {
       "title": "Announcements",

@@ -1,14 +1,14 @@
 "use client"
 
 import React from "react"
-import { Button, Typography } from "@heroui/react"
+import { Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { useQueryGroupEventsSwr } from "../hooks/useQueryGroupEventsSwr"
 
-/** Loading skeleton — mirrors an event row (title + meta + join button). */
+/** Loading skeleton — mirrors an event row (title + date/location meta). */
 const GroupEventsSkeleton = () => (
     <div className="flex flex-col gap-3">
         {[0, 1, 2].map((index) => (
@@ -20,15 +20,15 @@ const GroupEventsSkeleton = () => (
                     <Skeleton.Typography type="body-sm" width="1/2" />
                     <Skeleton.Typography type="body-xs" width="1/3" />
                 </div>
-                <Skeleton.Button width="w-16" className="shrink-0" />
             </div>
         ))}
     </div>
 )
 
 /**
- * Group events (§7/§14). DEFAULT on-canon layout: a list of upcoming events with a
- * join action. ponytail: rows hand-rolled; mock data; join is a no-op.
+ * Group events (§7/§14). DEFAULT on-canon layout: a list of upcoming events.
+ * Wired to the real group REST API. There is intentionally NO join/RSVP action —
+ * the BE tracks no attendance (attendeeCount is always 0).
  */
 export const GroupEvents = () => {
     const t = useTranslations("groupsHub")
@@ -59,12 +59,12 @@ export const GroupEvents = () => {
                                 {event.title}
                             </Typography>
                             <Typography type="body-xs" color="muted">
-                                {event.dateLabel} · {t("events.attendees", { count: event.attendees })}
+                                {event.location
+                                    ? `${event.dateLabel} · ${event.location}`
+                                    : event.dateLabel}
                             </Typography>
                         </div>
-                        <Button size="sm" variant="secondary">
-                            {t("events.join")}
-                        </Button>
+                        {/* mock BE - no RSVP: attendeeCount is always 0 and there is no join endpoint. */}
                     </div>
                 ))}
             </div>

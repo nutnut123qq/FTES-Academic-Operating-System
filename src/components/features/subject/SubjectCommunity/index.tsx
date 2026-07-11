@@ -27,18 +27,16 @@ const SCOPES: Array<FeedScope> = ["forYou", "following", "trending"]
 /** One "Thảo luận" post row + inline (lazy, mock) comment thread. Like + comment ONLY. */
 const SubjectPostRow = ({
     subjectId,
-    scope,
     post,
 }: {
     subjectId: string
-    scope: FeedScope
     post: SubjectPost
 }) => {
     const locale = useLocale()
     const currentUser = useAppSelector((state) => state.user.user)
     const [expanded, setExpanded] = useState(false)
     const [hasOpened, setHasOpened] = useState(false)
-    const reactPost = useMutateReactSubjectPostSwr(subjectId, scope)
+    const reactPost = useMutateReactSubjectPostSwr(subjectId)
     const { thread, isLoading, error, mutate } = useQuerySubjectPostCommentsSwr(
         subjectId,
         post.id,
@@ -52,7 +50,10 @@ const SubjectPostRow = ({
         setExpanded((prev) => !prev)
     }, [])
 
-    // ponytail: mock BE — no subject comment write contract. Append locally.
+    // mock BE — subject post comment thread is NOT wired. The community REST
+    // addComment(postId) exists, but the per-post thread READ has no dedicated
+    // shaped endpoint (comments arrive via GraphQL post detail), so read + write
+    // stay local-optimistic here. Out of primary scope (feed read + like are real).
     const onSubmit = useCallback(
         async (body: string, parentCommentId?: string): Promise<boolean> => {
             await mutate((current) => {
@@ -140,13 +141,15 @@ const SubjectPostRow = ({
  * Subject workspace "Thảo luận" tab (renamed by subject-workspace-ia). A scope
  * filter over post rows carrying the shared engagement bar configured for
  * DISCUSSION (like + comment ONLY — no share, no save) with inline push-down
- * comment expansion. ponytail: mock feed until the BE community query exists.
+ * comment expansion. The feed read + like are wired to the real BE
+ * (`subjectWorkspace.community` + community REST reactions); the comment thread
+ * stays mock (see the row's onSubmit note).
  */
 export const SubjectCommunity = () => {
     const t = useTranslations("subjects")
     const { subjectId } = useParams<{ subjectId: string }>()
     const [scope, setScope] = useState<FeedScope>("forYou")
-    const { posts, isLoading, error, mutate } = useQuerySubjectFeedSwr(subjectId, scope)
+    const { posts, isLoading, error, mutate } = useQuerySubjectFeedSwr(subjectId)
 
     return (
         <div className="flex flex-col gap-6 p-6">
@@ -186,7 +189,6 @@ export const SubjectCommunity = () => {
                         <SubjectPostRow
                             key={post.id}
                             subjectId={subjectId}
-                            scope={scope}
                             post={post}
                         />
                     ))}

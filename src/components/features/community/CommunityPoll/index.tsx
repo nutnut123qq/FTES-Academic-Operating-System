@@ -5,6 +5,7 @@ import { Skeleton, Typography, cn } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { useQueryPollSwr } from "../hooks/useQueryPollSwr"
+import { useMutatePollVoteSwr } from "../hooks/useMutatePollVoteSwr"
 
 /** Loading skeleton — mirrors the question + option bars so the layout never jumps. */
 const PollSkeleton = () => (
@@ -27,7 +28,21 @@ const PollSkeleton = () => (
 export const CommunityPoll = () => {
     const t = useTranslations("communityHub")
     const { poll, isLoading, error, mutate } = useQueryPollSwr()
+    const submitVote = useMutatePollVoteSwr()
     const [votedId, setVotedId] = useState<string | null>(null)
+
+    /** Reveal results optimistically; undo the reveal only if the viewer is a guest (vote is local-only). */
+    const onVote = (optionId: string) => {
+        if (!poll || votedId !== null) {
+            return
+        }
+        setVotedId(optionId)
+        void submitVote(poll.postId, optionId).then((ok) => {
+            if (!ok) {
+                setVotedId(null)
+            }
+        })
+    }
 
     const extra = votedId ? 1 : 0
     const total = (poll?.options ?? []).reduce((sum, option) => sum + option.votes, 0) + extra
@@ -59,7 +74,7 @@ export const CommunityPoll = () => {
                                 <button
                                     key={option.id}
                                     type="button"
-                                    onClick={() => !revealed && setVotedId(option.id)}
+                                    onClick={() => onVote(option.id)}
                                     className={cn(
                                         "relative overflow-hidden rounded-2xl border p-3 text-left transition-colors",
                                         votedId === option.id ? "border-accent" : "border-separator",

@@ -2,7 +2,7 @@
 
 import useSWR from "swr"
 
-/** A contributor's reputation summary (§6, mock until BE lands). */
+/** A contributor's reputation summary (§6, mock — see note below). */
 export interface Contributor {
     id: string
     name: string
@@ -11,7 +11,10 @@ export interface Contributor {
     accepted: number
 }
 
-// ponytail: mock BE — no reputation endpoint yet. Deterministic sample.
+// mock BE - no reputation-list endpoint. The BE only exposes a PER-USER score
+// (`GET /community/users/{id}/contributor-score`), NOT a leaderboard/list, so
+// this ranked board stays mock until a list endpoint exists. Do NOT invent one.
+// Deterministic sample.
 const fetchContributorsMock = async (): Promise<Array<Contributor>> => [
     { id: "u1", name: "Hoa Lê", upvotes: 320, downvotes: 8, accepted: 24 },
     { id: "u2", name: "Minh Trần", upvotes: 210, downvotes: 5, accepted: 18 },

@@ -8,7 +8,7 @@ import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { useQueryGroupChallengesSwr } from "../hooks/useQueryGroupChallengesSwr"
 
-/** Loading skeleton — mirrors a challenge row (title + deadline + chip + join). */
+/** Loading skeleton — mirrors a challenge row (title + type + status chip + join). */
 const GroupChallengeSkeleton = () => (
     <div className="flex flex-col gap-3">
         {[0, 1, 2].map((index) => (
@@ -30,13 +30,20 @@ const GroupChallengeSkeleton = () => (
 /**
  * Group challenges (§7/§10). DEFAULT on-canon layout: a list of active challenges
  * with a join action. Renders inside the group shell (which owns the container +
- * padding + group header), so this body stays flat like its sibling tabs.
- * ponytail: rows hand-rolled; mock data; join is a no-op.
+ * padding + group header), so this body stays flat like its sibling tabs. The
+ * list is wired to the real group REST API (read-only bridge to challenge.api).
  */
 export const GroupChallenge = () => {
     const t = useTranslations("groupsHub")
     const { groupId } = useParams<{ groupId: string }>()
     const { challenges, isLoading, error, mutate } = useQueryGroupChallengesSwr(groupId)
+
+    // Map raw BE enum tokens (type/status) through i18n, falling back to the token
+    // when the BE emits an enum value we don't yet have a translation for.
+    const typeLabel = (type: string) =>
+        t.has(`challenges.type.${type}`) ? t(`challenges.type.${type}`) : type
+    const statusLabel = (status: string) =>
+        t.has(`challenges.status.${status}`) ? t(`challenges.status.${status}`) : status
 
     return (
         <div className="flex flex-col gap-3">
@@ -66,12 +73,14 @@ export const GroupChallenge = () => {
                                     {challenge.title}
                                 </Typography>
                                 <Typography type="body-xs" color="muted">
-                                    {challenge.deadlineLabel}
+                                    {typeLabel(challenge.type)}
                                 </Typography>
                             </div>
                             <Chip size="sm" variant="soft" color="accent">
-                                {t("challenges.participants", { count: challenge.participants })}
+                                {statusLabel(challenge.status)}
                             </Chip>
+                            {/* mock BE — the real challenge "join" lives in the challenge module,
+                                not this read-only group bridge. Out of scope; left as a no-op. */}
                             <Button size="sm" variant="secondary">
                                 {t("challenges.join")}
                             </Button>

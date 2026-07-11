@@ -120,6 +120,34 @@ export interface GroupResourceLink {
     note: string
 }
 
+// ---------------- Group events ----------------
+
+/** Mirrors BE `GroupDtos.EventDto`. `attendeeCount` is ALWAYS 0 — no RSVP contract. */
+export interface GroupEvent {
+    id: string
+    groupId: string
+    createdBy: string
+    title: string
+    description: string
+    location?: string
+    startsAt: string
+    endsAt?: string
+    /** Always 0 — the BE tracks no RSVP/attendance. */
+    attendeeCount: number
+    createdAt: string
+}
+
+// ---------------- Group challenges (read-only bridge) ----------------
+
+/** Mirrors BE `GroupDtos.ChallengeSummaryDto` (read-only bridge to challenge.api). */
+export interface GroupChallengeSummary {
+    id: string
+    title: string
+    slug: string
+    type: string
+    status: string
+}
+
 // ---------------- CommunityApi feed/pinned types ----------------
 
 export interface GroupPostSummary {

@@ -1,10 +1,12 @@
 "use client"
 
-import React, { useState } from "react"
-import { Button, Skeleton, Typography } from "@heroui/react"
+import React from "react"
+import { Button, Chip, Skeleton, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { useHasPermission } from "@/hooks/useHasPermission"
 import { useQueryReportsSwr } from "../hooks/useQueryReportsSwr"
+import { useMutateModerationDecisionSwr } from "../hooks/useMutateModerationDecisionSwr"
 
 /** Loading skeleton — mirrors the reported-item rows so the layout never jumps. */
 const ModerationSkeleton = () => (
@@ -28,17 +30,19 @@ const ModerationSkeleton = () => (
 )
 
 /**
- * Community moderation queue (§6). DEFAULT on-canon layout: a list of reported
- * items with keep / remove actions. ponytail: rows hand-rolled; actions resolve
- * the row locally (dismiss from the list); mock data.
+ * Community moderation queue (§6). Wired to the real BE
+ * `GET /community/moderation/queue` (list) + `POST
+ * /community/moderation/queue/{id}/decision` (keep = APPROVE / remove = REMOVE).
+ *
+ * The queue requires the `community.moderate` permission: without it the fetch
+ * is gated off (no 403 spam) and the empty state is shown. Decisions
+ * optimistically drop the row and roll back on failure.
  */
 export const CommunityModeration = () => {
     const t = useTranslations("communityHub")
-    const { reports, isLoading, error, mutate } = useQueryReportsSwr()
-    const [resolved, setResolved] = useState<Array<string>>([])
-
-    const pending = reports.filter((report) => !resolved.includes(report.id))
-    const resolve = (id: string) => setResolved((prev) => [...prev, id])
+    const canModerate = useHasPermission("community.moderate")
+    const { reports, isLoading, error, mutate } = useQueryReportsSwr(canModerate)
+    const decide = useMutateModerationDecisionSwr()
 
     return (
         <div className="flex flex-col gap-3">
@@ -48,8 +52,10 @@ export const CommunityModeration = () => {
             <AsyncContent
                 isLoading={isLoading && reports.length === 0}
                 skeleton={<ModerationSkeleton />}
-                isEmpty={pending.length === 0}
-                emptyContent={{ title: t("moderation.empty") }}
+                isEmpty={reports.length === 0}
+                emptyContent={{
+                    title: canModerate ? t("moderation.empty") : t("moderation.restricted"),
+                }}
                 error={reports.length === 0 ? error : undefined}
                 errorContent={{
                     title: t("moderation.error"),
@@ -58,24 +64,42 @@ export const CommunityModeration = () => {
                 }}
             >
                 <div className="flex flex-col gap-3">
-                    {pending.map((report) => (
+                    {reports.map((report) => (
                         <div
                             key={report.id}
                             className="flex flex-col gap-3 rounded-2xl border border-separator p-4"
                         >
-                            <div className="flex flex-col gap-0">
-                                <Typography type="body-sm" weight="medium">
-                                    {report.target}
+                            <div className="flex flex-col gap-1">
+                                <div className="flex items-center gap-2">
+                                    <Typography type="body-sm" weight="medium">
+                                        {t("moderation.targetLabel", { type: report.targetType })}
+                                    </Typography>
+                                    {typeof report.priority === "number" ? (
+                                        <Chip size="sm" variant="soft" color="warning">
+                                            {t("moderation.priority", { priority: report.priority })}
+                                        </Chip>
+                                    ) : null}
+                                </div>
+                                <Typography type="body-xs" color="muted" truncate>
+                                    {report.targetId}
                                 </Typography>
                                 <Typography type="body-xs" color="muted">
-                                    {report.reason} · {t("moderation.reportedBy", { name: report.reporter })}
+                                    {t("moderation.source", { source: report.source })}
                                 </Typography>
                             </div>
                             <div className="flex gap-2">
-                                <Button size="sm" variant="ghost" onPress={() => resolve(report.id)}>
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onPress={() => void decide(report.id, "APPROVE")}
+                                >
                                     {t("moderation.keep")}
                                 </Button>
-                                <Button size="sm" variant="secondary" onPress={() => resolve(report.id)}>
+                                <Button
+                                    size="sm"
+                                    variant="secondary"
+                                    onPress={() => void decide(report.id, "REMOVE")}
+                                >
                                     {t("moderation.remove")}
                                 </Button>
                             </div>

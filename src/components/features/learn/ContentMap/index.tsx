@@ -65,7 +65,8 @@ export const ContentMap = ({ className }: ContentMapProps) => {
                         (lesson) => normalized === "" || lesson.title.toLowerCase().includes(normalized),
                     ),
                 }))
-                .filter((module) => normalized === "" || module.lessons.length > 0),
+                // drop sections with no (matching) lessons — an empty "0/0 bài" section is clutter
+                .filter((module) => module.lessons.length > 0),
         [modules, normalized],
     )
 

@@ -34,6 +34,7 @@ import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
 import { InteractionBar } from "@/components/reuseable/Discussion/InteractionBar"
 import { useLessonReactionMock } from "./useLessonReactionMock"
 import { LessonComments } from "./LessonComments"
+import { LessonResourceLinks } from "./LessonResourceLinks"
 import { LessonVideoBlock } from "./LessonVideoBlock"
 import { LessonDocumentHtml } from "./LessonDocumentHtml"
 import { LessonDocumentsBlock } from "./LessonDocumentsBlock"
@@ -47,6 +48,26 @@ const readerHref = (courseId: string, lessonId: string) =>
     `/courses/${courseId}/learn/content/modules/${lessonId.split("-")[0]}/contents/${lessonId}`
 const challengeHref = (courseId: string, contentId: string) =>
     `/courses/${courseId}/learn/content/modules/${contentId.split("-")[0]}/contents/${contentId}/challenges/${contentId}-c`
+
+/**
+ * Extracts external links when a lesson body is essentially JUST link(s) — a URL (or
+ * a few) with almost no other prose, the shape most migrated "Tài liệu / Link / Submit"
+ * lessons take. Returns the URLs to render as resource cards, or an empty array for a
+ * real written body (rendered as markdown as usual).
+ */
+const extractResourceLinks = (markdown: string): Array<string> => {
+    const urls = markdown.match(/https?:\/\/[^\s)\]<>"']+/g) ?? []
+    if (urls.length === 0) {
+        return []
+    }
+    const prose = markdown
+        .replace(/https?:\/\/[^\s)\]<>"']+/g, " ")
+        .replace(/[[\]()`*_#>~|-]/g, " ")
+        .replace(/\b(links?|tài liệu|tai lieu|submit|nộp bài|nop bai)\b/gi, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+    return prose.length <= 24 ? urls : []
+}
 
 /**
  * Lesson reader (StarCI port). Owns lesson data + the tab navigation, then
@@ -73,6 +94,13 @@ export const LessonReader = () => {
     const isLocked = lesson?.isLocked ?? false
     /** A readable lesson whose reading card would be blank (no body, no HTML, no video). */
     const isReadingEmpty = !!lesson && !isLocked && !bodyMd && !lesson.documentHtml && !lesson.hasVideo
+    /** External links when the body is essentially just link(s) → render as resource cards. */
+    const resourceLinks = bodyMd ? extractResourceLinks(bodyMd) : []
+    const isLinkOnly = resourceLinks.length > 0
+    /** True when the lesson has real reading content (written body / HTML / resource links). */
+    const hasWrittenBody = !!bodyMd || !!lesson?.documentHtml
+    /** Draw the reading card only when there is something to put in it (else e.g. video-only). */
+    const showReadingCard = !!lesson && (isLocked || hasWrittenBody || isReadingEmpty)
 
     /** Tier-1 breadcrumb (Courses › <course> › Modules › <lesson>). */
     const breadcrumbItems = useMemo<Array<ResponsiveBreadcrumbItem>>(
@@ -215,51 +243,63 @@ export const LessonReader = () => {
                             {lesson.hasVideo ? <LessonVideoBlock videoRef={lesson.videoRef} /> : null}
                             <LessonDocumentsBlock lessonId={contentId} />
 
-                            {/* reading card — the "paper" surface with the anchored article */}
-                            <div className="mx-auto w-full max-w-3xl">
-                                <Card>
-                                    <CardContent>
-                                        {!isLocked && !isReadingEmpty ? <SelectionHintCallout /> : null}
-                                        <div className="relative">
-                                            <div id="lesson-article" className={cn("flex flex-col gap-4", isLocked && "select-none")}>
-                                                {bodyMd ? (
-                                                    <MarkdownContent reading markdown={bodyMd} />
-                                                ) : lesson.documentHtml ? (
-                                                    // Fallback for un-migrated lessons whose body still lives as HTML in `videoRef`.
-                                                    <LessonDocumentHtml html={lesson.documentHtml} />
-                                                ) : isReadingEmpty ? (
-                                                    <EmptyContent
-                                                        icon={<BookOpenIcon aria-hidden focusable="false" className="size-8 text-muted" />}
-                                                        title={t("content.empty2")}
-                                                    />
+                            {/* reading card — only when there is something to read (written body,
+                                resource links, paywall, or the empty-state invitation). A video-only
+                                lesson skips the card and shows just the reaction bar below. */}
+                            {showReadingCard ? (
+                                <div className="mx-auto w-full max-w-3xl">
+                                    <Card>
+                                        <CardContent>
+                                            {/* selection-hint only where there is real selectable text */}
+                                            {!isLocked && hasWrittenBody && !isLinkOnly ? <SelectionHintCallout /> : null}
+                                            <div className="relative">
+                                                <div id="lesson-article" className={cn("flex flex-col gap-4", isLocked && "select-none")}>
+                                                    {isLinkOnly ? (
+                                                        <LessonResourceLinks urls={resourceLinks} />
+                                                    ) : bodyMd ? (
+                                                        <MarkdownContent reading markdown={bodyMd} />
+                                                    ) : lesson.documentHtml ? (
+                                                        // Fallback for un-migrated lessons whose body still lives as HTML in `videoRef`.
+                                                        <LessonDocumentHtml html={lesson.documentHtml} />
+                                                    ) : isReadingEmpty ? (
+                                                        <EmptyContent
+                                                            icon={<BookOpenIcon aria-hidden focusable="false" className="size-8 text-muted" />}
+                                                            title={t("content.empty2")}
+                                                        />
+                                                    ) : null}
+                                                </div>
+                                                {/* Medium-style teaser fade behind the paywall */}
+                                                {isLocked ? (
+                                                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-72 bg-gradient-to-b from-transparent via-surface/70 to-surface" />
                                                 ) : null}
                                             </div>
-                                            {/* Medium-style teaser fade behind the paywall */}
-                                            {isLocked ? (
-                                                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-72 bg-gradient-to-b from-transparent via-surface/70 to-surface" />
+                                            {/* one-tap reaction + view count for a finished, readable lesson */}
+                                            {!isLocked && !isReadingEmpty ? (
+                                                <LessonReactionFooter contentId={contentId} />
                                             ) : null}
-                                        </div>
-                                        {/* one-tap reaction + view count for a finished, readable lesson */}
-                                        {!isLocked && !isReadingEmpty ? (
-                                            <LessonReactionFooter contentId={contentId} />
-                                        ) : null}
-                                        {isLocked ? (
-                                            <div className="mt-6 flex flex-col items-start gap-3 border-t border-default pt-6">
-                                                <LockSimpleIcon aria-hidden focusable="false" className="size-8 text-accent" />
-                                                <Typography type="body" weight="semibold">
-                                                    {t("reader.lockedTitle")}
-                                                </Typography>
-                                                <Typography type="body-sm" color="muted">
-                                                    {t("reader.lockedBody")}
-                                                </Typography>
-                                                <Button variant="primary" onPress={() => router.push(`/courses/${courseId}/enroll`)}>
-                                                    {t("reader.enrollCta")}
-                                                </Button>
-                                            </div>
-                                        ) : null}
-                                    </CardContent>
-                                </Card>
-                            </div>
+                                            {isLocked ? (
+                                                <div className="mt-6 flex flex-col items-start gap-3 border-t border-default pt-6">
+                                                    <LockSimpleIcon aria-hidden focusable="false" className="size-8 text-accent" />
+                                                    <Typography type="body" weight="semibold">
+                                                        {t("reader.lockedTitle")}
+                                                    </Typography>
+                                                    <Typography type="body-sm" color="muted">
+                                                        {t("reader.lockedBody")}
+                                                    </Typography>
+                                                    <Button variant="primary" onPress={() => router.push(`/courses/${courseId}/enroll`)}>
+                                                        {t("reader.enrollCta")}
+                                                    </Button>
+                                                </div>
+                                            ) : null}
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                            ) : !isLocked ? (
+                                // video-only lesson: no empty paper — just the reaction bar
+                                <div className="mx-auto w-full max-w-3xl">
+                                    <LessonReactionFooter contentId={contentId} />
+                                </div>
+                            ) : null}
 
                             {/* engagement + navigation OUTSIDE the reading card (hidden while locked) */}
                             {!isLocked ? (

@@ -5421,6 +5421,10 @@
     "nudges": {
       "rank": "You're ranked #{rank} on the leaderboard"
     },
+    "resource": {
+      "title": "Attached resource",
+      "open": "Open"
+    },
     "courseQa": {
       "title": "Course Q&A",
       "description": "Every learner question across the course — search, filter and ask.",

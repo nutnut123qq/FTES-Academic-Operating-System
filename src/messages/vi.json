@@ -5421,6 +5421,10 @@
     "nudges": {
       "rank": "Bạn đang xếp hạng #{rank} trên bảng xếp hạng"
     },
+    "resource": {
+      "title": "Tài liệu đính kèm",
+      "open": "Mở"
+    },
     "courseQa": {
       "title": "Hỏi đáp khóa học",
       "description": "Mọi câu hỏi của học viên trong khóa — tìm, lọc và đặt câu hỏi chung.",

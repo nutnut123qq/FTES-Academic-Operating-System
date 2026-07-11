@@ -423,11 +423,23 @@ export const pathConfig = () => {
                     build,
                 }
             }
+            // "Khóa học của tôi" — the viewer's enrolled courses. A fixed group-level
+            // route (`/courses/me`), independent of any `displayId` passed to course().
+            const mine = () => {
+                const minePath = `${localePath}/courses/me`
+                const build = () => {
+                    return minePath
+                }
+                return {
+                    build,
+                }
+            }
 
             return {
                 build,
                 learn,
                 headhuntingCompanies,
+                mine,
             }
         }
         const contact = () => {

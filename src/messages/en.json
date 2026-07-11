@@ -291,6 +291,7 @@
     "collapseRightRail": "Hide right rail",
     "expandRightRail": "Show right rail",
     "dashboard": "Dashboard",
+    "myCourses": "My courses",
     "guestPrompt": "Sign in to track your progress",
     "systemTheme": "System theme"
   },
@@ -517,7 +518,14 @@
     "loadError": "Couldn't load courses",
     "retry": "Try again",
     "count": "{count} courses",
-    "continueLearning": "Continue learning"
+    "continueLearning": "Continue learning",
+    "percentComplete": "{percent}% complete",
+    "mine": {
+      "title": "My courses",
+      "subtitle": "Pick up where you left off.",
+      "empty": "You haven't enrolled in any course yet",
+      "browse": "Browse courses"
+    }
   },
   "course": {
     "enroll": "Enroll",
@@ -2305,7 +2313,8 @@
       "save": "Sign in to save this item",
       "enroll": "Sign in to enroll in this course",
       "search": "Sign in to search learning content",
-      "explore": "Sign in to use the AI assistant and personalized recommendations"
+      "explore": "Sign in to use the AI assistant and personalized recommendations",
+      "join": "Sign in to join this group"
     }
   },
   "priceTag": {
@@ -2499,6 +2508,11 @@
       "des4": "Low cost, high standard",
       "des5": "FTES AOS operates on a lean model, eliminating unnecessary costs to keep tuition affordable. Our goal is to create a high-quality learning environment that anyone serious about the profession can join.",
       "des6": "We teach you to build truly valuable projects and provide long-term support throughout your career development."
+    },
+    "myCourses": {
+      "eyebrow": "Your journey",
+      "title": "Continue learning",
+      "seeAll": "See all"
     }
   },
   "dashboard": {
@@ -5249,10 +5263,18 @@
     "placeholder": "This tab is under construction.",
     "tabs": {
       "feed": "Feed",
+      "announcements": "Announcements",
       "discussion": "Discussion",
       "members": "Members",
       "resources": "Resources",
-      "events": "Events"
+      "events": "Events",
+      "challenges": "Challenges",
+      "manage": "Manage"
+    },
+    "join": {
+      "action": "Join",
+      "joined": "Joined",
+      "pending": "Pending approval"
     },
     "discussion": {
       "replies": "{count} replies",
@@ -5279,13 +5301,16 @@
       "reject": "Reject",
       "rules": "Rules",
       "pinned": "Pinned",
+      "noPinned": "No pinned posts.",
+      "unpin": "Unpin",
       "error": "Couldn't load management data. Please try again."
     },
     "create": {
       "title": "Create group",
       "nameField": "Group name",
       "descriptionField": "Group description",
-      "submit": "Create group"
+      "submit": "Create group",
+      "created": "Group created."
     },
     "challenges": {
       "title": "Group challenges",
@@ -5318,7 +5343,8 @@
     },
     "feed": {
       "empty": "No posts in this group yet. Be the first to share!",
-      "error": "Couldn't load the group feed. Please try again."
+      "error": "Couldn't load the group feed. Please try again.",
+      "pin": "Pin post"
     },
     "members": {
       "empty": "No members match this filter.",

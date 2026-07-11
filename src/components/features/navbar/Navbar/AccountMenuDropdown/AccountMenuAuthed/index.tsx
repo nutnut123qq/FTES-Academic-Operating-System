@@ -7,6 +7,7 @@ import {
     Label,
 } from "@heroui/react"
 import {
+    GraduationCapIcon,
     SquaresFourIcon,
     UserIcon,
     FileTextIcon,
@@ -65,6 +66,18 @@ export const AccountMenuAuthed = ({ className }: AccountMenuAuthedProps) => {
 
     return (
         <Dropdown.Menu className={className}>
+            {/* "Khóa học của tôi" — the learner's own enrolled courses, first for
+                one-tap resume (ahead of the discovery shortcuts) */}
+            <Dropdown.Section>
+                <Dropdown.Item
+                    id="my-courses"
+                    textValue={t("nav.myCourses")}
+                    onPress={() => go(pathConfig().locale().course().mine().build())}
+                >
+                    <GraduationCapIcon className="size-5" />
+                    <Label>{t("nav.myCourses")}</Label>
+                </Dropdown.Item>
+            </Dropdown.Section>
             {/* "Khám phá" — discovery shortcuts relocated out of the header (D8/D9);
                 sits between the gamification stats row above and the account links */}
             <Dropdown.Section>

@@ -291,6 +291,7 @@
     "collapseRightRail": "Ẩn thanh bên phải",
     "expandRightRail": "Hiện thanh bên phải",
     "dashboard": "Bảng điều khiển",
+    "myCourses": "Khóa học của tôi",
     "guestPrompt": "Đăng nhập để theo dõi tiến độ của bạn",
     "systemTheme": "Theo hệ thống"
   },
@@ -517,7 +518,14 @@
     "loadError": "Không tải được khóa học",
     "retry": "Thử lại",
     "count": "{count} khóa học",
-    "continueLearning": "Tiếp tục học"
+    "continueLearning": "Tiếp tục học",
+    "percentComplete": "Hoàn thành {percent}%",
+    "mine": {
+      "title": "Khóa học của tôi",
+      "subtitle": "Tiếp tục hành trình học của bạn.",
+      "empty": "Bạn chưa đăng ký khóa học nào",
+      "browse": "Khám phá khóa học"
+    }
   },
   "course": {
     "enroll": "Đăng ký",
@@ -2314,7 +2322,8 @@
       "save": "Đăng nhập để lưu nội dung",
       "enroll": "Đăng nhập để đăng ký khóa học",
       "search": "Đăng nhập để tìm kiếm nội dung học tập",
-      "explore": "Đăng nhập để dùng trợ lý AI và gợi ý cá nhân hoá"
+      "explore": "Đăng nhập để dùng trợ lý AI và gợi ý cá nhân hoá",
+      "join": "Đăng nhập để tham gia nhóm"
     }
   },
   "priceTag": {
@@ -2508,6 +2517,11 @@
       "des4": "Chi phí tối thiểu, tiêu chuẩn cao",
       "des5": "FTES AOS vận hành theo mô hình tinh gọn, loại bỏ các chi phí không cần thiết để giữ học phí ở mức dễ tiếp cận. Mục tiêu của chúng tớ là tạo ra một môi trường học tập chất lượng cao mà bất kỳ ai nghiêm túc với nghề đều có thể tham gia.",
       "des6": "Chúng tớ dạy để bạn xây dựng những project có giá trị thực sự và hỗ trợ lâu dài trong quá trình phát triển sự nghiệp."
+    },
+    "myCourses": {
+      "eyebrow": "Hành trình của bạn",
+      "title": "Tiếp tục học",
+      "seeAll": "Xem tất cả"
     }
   },
   "dashboard": {
@@ -5249,10 +5263,18 @@
     "placeholder": "Nội dung đang được xây dựng.",
     "tabs": {
       "feed": "Bảng tin",
+      "announcements": "Thông báo",
       "discussion": "Thảo luận",
       "members": "Thành viên",
       "resources": "Tài nguyên",
-      "events": "Sự kiện"
+      "events": "Sự kiện",
+      "challenges": "Thử thách",
+      "manage": "Quản lý"
+    },
+    "join": {
+      "action": "Tham gia",
+      "joined": "Đã tham gia",
+      "pending": "Đang chờ duyệt"
     },
     "discussion": {
       "replies": "{count} phản hồi",
@@ -5279,13 +5301,16 @@
       "reject": "Từ chối",
       "rules": "Nội quy",
       "pinned": "Bài ghim",
+      "noPinned": "Chưa có bài ghim nào.",
+      "unpin": "Bỏ ghim",
       "error": "Không tải được dữ liệu quản lý. Vui lòng thử lại."
     },
     "create": {
       "title": "Tạo nhóm",
       "nameField": "Tên nhóm",
       "descriptionField": "Mô tả nhóm",
-      "submit": "Tạo nhóm"
+      "submit": "Tạo nhóm",
+      "created": "Đã tạo nhóm."
     },
     "challenges": {
       "title": "Thử thách nhóm",
@@ -5318,7 +5343,8 @@
     },
     "feed": {
       "empty": "Chưa có bài viết nào trong nhóm. Hãy là người đầu tiên chia sẻ!",
-      "error": "Không tải được bảng tin nhóm. Vui lòng thử lại."
+      "error": "Không tải được bảng tin nhóm. Vui lòng thử lại.",
+      "pin": "Ghim bài viết"
     },
     "members": {
       "empty": "Chưa có thành viên nào phù hợp.",

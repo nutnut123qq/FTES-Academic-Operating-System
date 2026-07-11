@@ -6,6 +6,7 @@ import { ArrowRightIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { useRouter } from "@/i18n/navigation"
 import { JourneyHero } from "./sections/JourneyHero"
+import { MyCoursesSection } from "./sections/MyCoursesSection"
 import { PlatformStatsSection } from "./sections/PlatformStatsSection"
 import { ModuleShowcaseSection } from "./sections/ModuleShowcaseSection"
 import { OffersPolicySection } from "./sections/OffersPolicySection"
@@ -38,6 +39,8 @@ export const HomeLanding = () => {
     return (
         <main className="flex w-full flex-col items-center">
             <JourneyHero />
+            {/* signed-in + has-enrollments only; self-hides otherwise (no layout jump) */}
+            <MyCoursesSection />
             <PlatformStatsSection />
             <ModuleShowcaseSection />
             <OffersPolicySection />

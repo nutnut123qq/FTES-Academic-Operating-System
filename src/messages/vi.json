@@ -5253,6 +5253,7 @@
       "titleField": "Tiêu đề",
       "bodyField": "Bạn muốn chia sẻ điều gì?",
       "submit": "Đăng bài",
+      "createFailed": "Không đăng được bài viết. Vui lòng thử lại.",
       "kinds": {
         "knowledge": "Kiến thức",
         "question": "Câu hỏi",

@@ -44,10 +44,9 @@ const toFeedTab = (tab: CommunityFeedTab): FeedTab => {
 }
 
 /**
- * Map a BE `Post` to the feed card contract. The BE feed carries NO body, likes, or
- * comment counts — those degrade to "" / 0 (the engagement bar suppresses zero counts,
- * and an empty snippet renders nothing), so the row shows author · time · title honestly
- * without inventing engagement data.
+ * Map a BE `Post` to the feed card contract. The gateway now enriches every feed row
+ * with `snippet`, `likeCount`, `likedByMe` and `commentCount`, so the card renders the
+ * real excerpt and engagement instead of the previous "" / 0 / false placeholders.
  */
 const toCommunityPost = (post: FeedPost, locale: string): CommunityPost => ({
     id: post.id,
@@ -55,10 +54,10 @@ const toCommunityPost = (post: FeedPost, locale: string): CommunityPost => ({
     authorUsername: post.author.username ?? post.author.id,
     timeLabel: formatRelativeTime(post.createdAt, locale),
     title: post.title ?? "",
-    snippet: "",
-    likes: 0,
-    liked: false,
-    comments: 0,
+    snippet: post.snippet ?? "",
+    likes: post.likeCount,
+    liked: post.likedByMe,
+    comments: post.commentCount,
 })
 
 /** Items per feed page (BE `CursorInput.limit`). */

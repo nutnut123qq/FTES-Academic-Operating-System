@@ -5253,6 +5253,7 @@
       "titleField": "Title",
       "bodyField": "What do you want to share?",
       "submit": "Post",
+      "createFailed": "Couldn't publish your post. Please try again.",
       "kinds": {
         "knowledge": "Knowledge",
         "question": "Question",

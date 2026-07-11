@@ -1,12 +1,14 @@
 import { createAuthApolloClient } from "../clients"
 import { type GraphQLOperationContext, type GraphQLHeaders } from "../types"
 import { DocumentNode, gql } from "@apollo/client"
-import type { FeedPost } from "./query-community-feed"
+import type { FeedPostAuthor } from "./query-community-feed"
 
 /**
  * Real BE `post(id: ID!): Post` (schema.graphqls) — a single community post, returned
- * directly (NO envelope). Same minimal `Post` shape as the feed: id/kind/title/createdAt +
- * batched `author`, with NO body/likes/comments (those degrade in the detail view).
+ * directly (NO envelope). Unlike the feed's minimal row, this selection is the enriched
+ * detail `Post`: id/kind/title/createdAt + batched `author`, PLUS the full `body`, the
+ * `likeCount`/`likedByMe`/`commentCount` engagement, and the batch-resolved `comments`
+ * thread (top-level + one reply level) — mirroring the {@link CommunityPostNode} shape.
  *
  * ⚠️ Gateway quirk (verified against apitest): the pre-GraphQL security filter 401s ANY
  * operation that declares a NON-NULL variable (`$id: ID!`). But `post`'s arg is `ID!`, so a
@@ -23,13 +25,57 @@ const postDocument = (id: string): DocumentNode =>
         `query CommunityPost {\n` +
             `  post(id: ${JSON.stringify(id)}) {\n` +
             `    id\n    kind\n    title\n    createdAt\n` +
+            `    body\n    likeCount\n    likedByMe\n    commentCount\n` +
             `    author { id username displayName avatarUrl }\n` +
+            `    comments {\n` +
+            `      id\n      body\n      createdAt\n      parentCommentId\n` +
+            `      author { id username displayName avatarUrl }\n` +
+            `      replies {\n` +
+            `        id\n        body\n        createdAt\n` +
+            `        author { id username displayName avatarUrl }\n` +
+            `      }\n` +
+            `    }\n` +
             `  }\n}`,
     )
 
+/**
+ * A one-level reply under a top-level comment (BE `PostComment.replies`, capped at 2
+ * levels server-side so replies carry no further `replies`).
+ */
+export interface CommunityPostReplyNode {
+    id: string
+    author: FeedPostAuthor
+    body: string
+    createdAt: string | null
+}
+
+/** A top-level comment on a post (BE `PostComment`) with its one-level replies. */
+export interface CommunityPostCommentNode extends CommunityPostReplyNode {
+    parentCommentId: string | null
+    replies: Array<CommunityPostReplyNode>
+}
+
+/**
+ * A single community post with the READ-only detail enrichment: full `body`, the
+ * `likeCount`/`likedByMe`/`commentCount` engagement, and the batch-resolved `comments`
+ * thread (top-level + one reply level).
+ */
+export interface CommunityPostNode {
+    id: string
+    kind: string
+    title: string | null
+    createdAt: string | null
+    author: FeedPostAuthor
+    body: string | null
+    likeCount: number
+    likedByMe: boolean
+    commentCount: number
+    comments: Array<CommunityPostCommentNode>
+}
+
 /** Apollo response shape for `post` (returned directly — no envelope; null when not found). */
 export interface QueryCommunityPostResponse {
-    post: FeedPost | null
+    post: CommunityPostNode | null
 }
 
 /** Params for {@link queryCommunityPost}. */

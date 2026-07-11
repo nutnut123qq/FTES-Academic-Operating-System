@@ -30,7 +30,11 @@ export interface FeedPostAuthor {
     avatarUrl: string | null
 }
 
-/** One feed post (BE `Post`). Minimal: no body/likes/comment counts exist here. */
+/**
+ * One feed post (BE `Post`). Carries the READ-only engagement enrichment the gateway
+ * now denormalizes onto every feed row: `snippet` (short excerpt derived from body),
+ * `likeCount`/`commentCount` (denorm counters) and `likedByMe` (viewer reacted?).
+ */
 export interface FeedPost {
     id: string
     /** Post type / kind (BE `kind`, e.g. DISCUSSION/QUESTION). */
@@ -39,6 +43,14 @@ export interface FeedPost {
     /** ISO timestamp (BE `DateTime`), or null. */
     createdAt: string | null
     author: FeedPostAuthor
+    /** Short excerpt for the feed card (BE `snippet`, derived from body); null when empty. */
+    snippet: string | null
+    /** Denormalized like counter (BE `likeCount`). */
+    likeCount: number
+    /** Whether the current viewer has reacted to this post (BE `likedByMe`). */
+    likedByMe: boolean
+    /** Denormalized comment counter (BE `commentCount`). */
+    commentCount: number
 }
 
 /** Cursor-paginated page of posts (BE `PostConnection`). */
@@ -59,6 +71,10 @@ const FEED_SELECTION = `
     kind
     title
     createdAt
+    snippet
+    likeCount
+    likedByMe
+    commentCount
     author {
       id
       username

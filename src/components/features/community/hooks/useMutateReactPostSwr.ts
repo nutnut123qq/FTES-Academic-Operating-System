@@ -5,8 +5,7 @@ import { useSWRConfig } from "swr"
 import { useTranslations } from "next-intl"
 import { toast } from "@heroui/react"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
-import { mutateReactCommunityPost } from "@/modules/api/graphql/mutations/mutation-react-community-post"
-import { ReactionType } from "@/modules/api/graphql/queries/types/discussion"
+import { reactToPost, unreactPost } from "@/modules/api/rest/community"
 import { COMMUNITY_FEED_KEY, type CommunityPost } from "./useQueryCommunityFeedSwr"
 import { postDetailKey, type PostDetail } from "./useQueryPostDetailSwr"
 
@@ -28,9 +27,10 @@ const applyLike = <T extends { id: string; likes: number; liked: boolean }>(
  * detail cache (`["post-detail", postId]`) so the feed row and detail page stay
  * consistent. Guests get the `AuthenticationModal` and nothing toggles.
  *
- * The write reuses the pre-existing `mutateReactCommunityPost`; a mock-transport
- * error (no BE in this skeleton) is treated as success so the optimistic state
- * sticks. Only an explicit `success: false` envelope rolls back.
+ * The write hits the community REST reactions API (`PUT`/`DELETE
+ * /community/reactions`). ANY failure — transport reject OR a non-2xx envelope
+ * (`RestError`) — rolls the optimistic state back; on success the post-detail
+ * cache is revalidated so its authoritative `likeCount`/`likedByMe` reconcile.
  */
 export const useMutateReactPostSwr = () => {
     const t = useTranslations("communityHub")
@@ -65,23 +65,23 @@ export const useMutateReactPostSwr = () => {
             )
 
             try {
-                const result = await mutateReactCommunityPost({
-                    request: { postId, type: nextLiked ? ReactionType.Like : null },
-                })
-                const envelope = result?.data?.reactToCommunityPost
-                // explicit failure envelope → rollback; transport/mock errors are success
-                if (envelope && envelope.success === false) {
-                    throw new Error(envelope.error ?? envelope.message ?? "react failed")
+                if (nextLiked) {
+                    await reactToPost(postId, { reactionType: "LIKE" })
+                } else {
+                    await unreactPost(postId)
                 }
-            } catch (error) {
-                // Only roll back on an explicit failure envelope (thrown above);
-                // a missing BE (network reject) keeps the optimistic state.
-                if (error instanceof Error && error.message === "react failed") {
-                    await mutate(COMMUNITY_FEED_KEY, feedSnapshot, { revalidate: false })
-                    await mutate(postDetailKey(postId), detailSnapshot, { revalidate: false })
-                    toast.danger(t("engagement.likeFailed"))
-                }
+            } catch {
+                // Only a failure of the WRITE (transport reject OR RestError envelope)
+                // rolls back the optimistic state.
+                await mutate(COMMUNITY_FEED_KEY, feedSnapshot, { revalidate: false })
+                await mutate(postDetailKey(postId), detailSnapshot, { revalidate: false })
+                toast.danger(t("engagement.likeFailed"))
+                return
             }
+
+            // The reaction is committed → reconcile the detail cache's authoritative
+            // counts. A revalidation refetch error here must NOT undo the like.
+            await mutate(postDetailKey(postId)).catch(() => {})
         },
         [mutate, requireAuth, t],
     )

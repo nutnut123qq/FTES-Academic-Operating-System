@@ -29,14 +29,41 @@ interface PlaylistResponse {
  * The slot always communicates its state: an aspect-ratio skeleton while the source
  * resolves, and a compact "video unavailable" + retry placeholder on a fatal error
  * (retry re-runs the resolve). A failure here is a genuine stream error, not a paywall.
+ *
+ * `onHalfWatched` fires once the first time playback crosses 50% of the duration —
+ * the reader uses it to auto-mark the lesson complete.
  */
-export const LessonHlsPlayer = ({ videoRef }: { videoRef: string }) => {
+export const LessonHlsPlayer = ({
+    videoRef,
+    onHalfWatched,
+}: {
+    videoRef: string
+    onHalfWatched?: () => void
+}) => {
     const t = useTranslations("learn")
     const videoEl = useRef<HTMLVideoElement>(null)
     const [failed, setFailed] = useState(false)
     const [loading, setLoading] = useState(true)
     /** Bumped by the retry button to re-run the resolve effect. */
     const [attempt, setAttempt] = useState(0)
+    /** Once-guard so ≥50% only reports a single time per source. */
+    const halfFiredRef = useRef(false)
+    // Keep the callback fresh without re-binding the media element listeners.
+    const halfWatchedRef = useRef(onHalfWatched)
+    halfWatchedRef.current = onHalfWatched
+
+    /** Reports the ≥50% watch threshold once, from the native `timeupdate` event. */
+    const handleTimeUpdate = () => {
+        const el = videoEl.current
+        if (!el || halfFiredRef.current) {
+            return
+        }
+        const duration = el.duration
+        if (Number.isFinite(duration) && duration > 0 && el.currentTime / duration >= 0.5) {
+            halfFiredRef.current = true
+            halfWatchedRef.current?.()
+        }
+    }
 
     useEffect(() => {
         const el = videoEl.current
@@ -45,6 +72,8 @@ export const LessonHlsPlayer = ({ videoRef }: { videoRef: string }) => {
         let cancelled = false
         setFailed(false)
         setLoading(true)
+        // New source → allow the ≥50% report to fire again.
+        halfFiredRef.current = false
 
         const onReady = () => {
             if (!cancelled) setLoading(false)
@@ -128,6 +157,7 @@ export const LessonHlsPlayer = ({ videoRef }: { videoRef: string }) => {
                             ref={videoEl}
                             controls
                             playsInline
+                            onTimeUpdate={handleTimeUpdate}
                             className="aspect-video w-full rounded-2xl"
                         />
                         {loading ? (

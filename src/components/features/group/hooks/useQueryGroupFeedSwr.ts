@@ -1,8 +1,11 @@
 "use client"
 
+import { useLocale } from "next-intl"
 import useSWR from "swr"
+import { getGroupFeed, type GroupPostSummary } from "@/modules/api/rest/group"
+import { formatRelativeTime } from "@/components/features/community/hooks/relativeTime"
 
-/** A group post (§7, mock until BE lands). */
+/** A group post (§7). */
 export interface GroupPost {
     id: string
     /** Display name of the author. */
@@ -11,26 +14,57 @@ export interface GroupPost {
     authorUsername: string
     timeLabel: string
     text: string
-    /** Seeded like count (no group-post reaction contract on the BE yet). */
+    /** Like count. mock BE - endpoint pending: no group-post reaction contract → seeded 0. */
     likes: number
-    /** Whether the current user has liked this post. */
+    /** Whether the current user has liked this post. mock BE - endpoint pending. */
     liked: boolean
-    /** Seeded comment count for the engagement bar. */
+    /** Comment count. mock BE - endpoint pending: no group-post comment contract → seeded 0. */
     comments: number
 }
 
 /** SWR cache key for a group's feed (shared with the group like mutation hook). */
 export const groupFeedKey = (groupId: string) => ["group-feed", groupId]
 
-// ponytail: mock BE — no group feed endpoint yet. Deterministic sample.
-const fetchGroupFeedMock = async (): Promise<Array<GroupPost>> => [
-    { id: "gp1", author: "Ban chủ nhiệm", authorUsername: "ban-chu-nhiem" /* mock */, timeLabel: "2 giờ trước", text: "Tuần này CLB có workshop về Git lúc 19h thứ 6 nhé!", likes: 15, liked: false, comments: 4 },
-    { id: "gp2", author: "Minh", authorUsername: "minh-nguyen" /* mock */, timeLabel: "hôm qua", text: "Ai có tài liệu ôn thuật toán cho mình xin với ạ.", likes: 3, liked: false, comments: 2 },
-    { id: "gp3", author: "Hoa", authorUsername: "hoa-le" /* mock */, timeLabel: "2 ngày trước", text: "Mình vừa share bộ slide buổi trước trong tab Tài nguyên.", likes: 21, liked: true, comments: 6 },
-]
+/**
+ * Matches every locale variant of a group's feed cache key. The live key carries
+ * the locale (see {@link useQueryGroupFeedSwr}), so mutation hooks must revalidate
+ * with this key-filter rather than the bare {@link groupFeedKey}, which no longer
+ * matches the cached entry exactly.
+ */
+export const matchesGroupFeedKey =
+    (groupId: string) =>
+    (key: unknown): boolean => {
+        const base = groupFeedKey(groupId)
+        return Array.isArray(key) && key[0] === base[0] && key[1] === base[1]
+    }
 
-/** Loads a group's feed. Mocked; SWR-shaped for a drop-in BE swap. */
+/**
+ * Maps a BE community post summary to the feed-card shape. The community feed
+ * contract only carries author id + post title + timestamp, so the author's
+ * display name / username fall back to the author id, and the card body shows
+ * the post title. mock BE - endpoint pending: reactions (likes/liked) and
+ * comment counts have no group-post contract yet → seeded to 0/false.
+ */
+const toGroupPost = (dto: GroupPostSummary, locale: string): GroupPost => ({
+    id: dto.id,
+    author: dto.authorId,
+    authorUsername: dto.authorId,
+    timeLabel: formatRelativeTime(dto.createdAt, locale),
+    text: dto.title,
+    likes: 0,
+    liked: false,
+    comments: 0,
+})
+
+/** Loads a group's feed from the real group REST API (community feed slice). */
 export const useQueryGroupFeedSwr = (groupId: string) => {
-    const { data, isLoading, error, mutate } = useSWR(groupFeedKey(groupId), () => fetchGroupFeedMock())
+    const locale = useLocale()
+    const { data, isLoading, error, mutate } = useSWR(
+        groupId ? [...groupFeedKey(groupId), locale] : null,
+        async (): Promise<Array<GroupPost>> => {
+            const slice = await getGroupFeed(groupId, { limit: 50 })
+            return (slice.items ?? []).map((dto) => toGroupPost(dto, locale))
+        },
+    )
     return { posts: data ?? [], isLoading, error, mutate }
 }

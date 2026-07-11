@@ -1,11 +1,15 @@
 "use client"
 
 import useSWR from "swr"
+import {
+    listGroupMembers,
+    type GroupMember as GroupMemberDto,
+} from "@/modules/api/rest/group"
 
 /** Group member role (§7). */
 export type GroupMemberRole = "owner" | "admin" | "moderator" | "member"
 
-/** A group member (mock until BE lands). */
+/** A group member. */
 export interface GroupMember {
     id: string
     /** URL-facing username (used for profile link + hovercard). */
@@ -15,17 +19,43 @@ export interface GroupMember {
     role: GroupMemberRole
 }
 
-// ponytail: mock BE — no group members endpoint yet. Deterministic sample.
-const fetchGroupMembersMock = async (): Promise<Array<GroupMember>> => [
-    { id: "gm1", username: "nguyen-chu-nhiem" /* mock */, name: "Nguyễn Chủ Nhiệm", role: "owner" },
-    { id: "gm2", username: "tran-pho-cn" /* mock */, name: "Trần Phó CN", role: "admin" },
-    { id: "gm3", username: "le-kiem-duyet" /* mock */, name: "Lê Kiểm Duyệt", role: "moderator" },
-    { id: "gm4", username: "pham-thanh-vien" /* mock */, name: "Phạm Thành Viên", role: "member" },
-    { id: "gm5", username: "hoang-thanh-vien" /* mock */, name: "Hoàng Thành Viên", role: "member" },
-]
+/**
+ * Maps the BE member role (OWNER/ADMIN/MODERATOR/MEMBER) onto the FE role axis;
+ * anything unrecognized falls back to "member".
+ */
+const toRole = (role: string): GroupMemberRole => {
+    switch (role.toUpperCase()) {
+        case "OWNER":
+            return "owner"
+        case "ADMIN":
+            return "admin"
+        case "MODERATOR":
+            return "moderator"
+        default:
+            return "member"
+    }
+}
 
-/** Loads a group's members. Mocked; SWR-shaped for a drop-in BE swap. */
+/**
+ * Maps a BE membership record to the member-row shape. The membership contract
+ * only carries the user id (no display name / username), so both fall back to
+ * the user id until a profile-join contract lands.
+ */
+const toGroupMember = (dto: GroupMemberDto): GroupMember => ({
+    id: dto.userId,
+    username: dto.userId,
+    name: dto.userId,
+    role: toRole(dto.role),
+})
+
+/** Loads a group's members from the real group REST API. */
 export const useQueryGroupMembersSwr = (groupId: string) => {
-    const { data, isLoading, error, mutate } = useSWR(["group-members", groupId], () => fetchGroupMembersMock())
+    const { data, isLoading, error, mutate } = useSWR(
+        groupId ? ["group-members", groupId] : null,
+        async (): Promise<Array<GroupMember>> => {
+            const members = await listGroupMembers(groupId, { limit: 100 })
+            return (members ?? []).map(toGroupMember)
+        },
+    )
     return { members: data ?? [], isLoading, error, mutate }
 }

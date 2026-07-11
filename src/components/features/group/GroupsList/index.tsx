@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
+import { GroupJoinButton } from "../GroupJoinButton"
 import { useQueryGroupsSwr, type GroupType } from "../hooks/useQueryGroupsSwr"
 
 /** Loading skeleton — mirrors the group card grid (avatar + text lines). */
@@ -75,12 +76,22 @@ export const GroupsList = () => {
                 {/* group grid */}
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     {filtered.map((group) => (
-                        <Link
+                        // Card wrapper: the whole surface links to the group via an
+                        // absolute Link overlay, so the join <button> can live OUTSIDE
+                        // the anchor's subtree (a <button> inside an <a> is invalid HTML
+                        // → hydration error). Non-interactive content is pointer-events-
+                        // none so clicks fall through to the overlay; the join button
+                        // re-enables pointer events and handles its own press.
+                        <div
                             key={group.id}
-                            href={`/groups/${group.id}`}
-                            className="flex flex-col gap-2 rounded-2xl border border-separator p-4 no-underline transition-colors hover:bg-default/40"
+                            className="relative flex flex-col gap-2 rounded-2xl border border-separator p-4 transition-colors hover:bg-default/40"
                         >
-                            <div className="flex items-center gap-2">
+                            <Link
+                                href={`/groups/${group.id}`}
+                                aria-label={group.name}
+                                className="absolute inset-0 rounded-2xl no-underline"
+                            />
+                            <div className="pointer-events-none flex items-center gap-2">
                                 {/* group avatar — image when set; initials fallback also
                                     covers a broken URL (HeroUI Avatar only mounts the img
                                     once it loads, so errors fall back, no broken glyph) */}
@@ -102,13 +113,22 @@ export const GroupsList = () => {
                                     {t(`types.${group.type}`)}
                                 </Chip>
                             </div>
-                            <Typography type="body-sm" color="muted">
+                            <Typography type="body-sm" color="muted" className="pointer-events-none">
                                 {group.description}
                             </Typography>
-                            <Typography type="body-xs" color="muted">
-                                {t("membersCount", { count: group.members })}
-                            </Typography>
-                        </Link>
+                            <div className="pointer-events-none flex items-center justify-between gap-2">
+                                <Typography type="body-xs" color="muted">
+                                    {t("membersCount", { count: group.members })}
+                                </Typography>
+                                {/* join action — sibling of the Link (not nested in the
+                                    anchor); re-enable pointer events so it's clickable
+                                    above the overlay. join-only, no leave BE */}
+                                <GroupJoinButton
+                                    groupId={group.id}
+                                    className="pointer-events-auto relative"
+                                />
+                            </div>
+                        </div>
                     ))}
                 </div>
             </AsyncContent>

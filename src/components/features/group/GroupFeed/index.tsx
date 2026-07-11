@@ -1,7 +1,8 @@
 "use client"
 
 import React, { useCallback, useState } from "react"
-import { Typography } from "@heroui/react"
+import { Button, Typography } from "@heroui/react"
+import { PushPinIcon } from "@phosphor-icons/react"
 import { useLocale, useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
 import { useAppSelector } from "@/redux/hooks"
@@ -10,17 +11,29 @@ import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { PostEngagementBar } from "@/components/reuseable/PostEngagementBar"
 import { PostCommentThread } from "@/components/reuseable/PostCommentThread"
+import { useQueryGroupSwr } from "../hooks/useQueryGroupSwr"
 import { useQueryGroupFeedSwr, type GroupPost } from "../hooks/useQueryGroupFeedSwr"
 import { useQueryGroupPostCommentsSwr } from "../hooks/useQueryGroupPostCommentsSwr"
 import { useMutateReactGroupPostSwr } from "../hooks/useMutateReactGroupPostSwr"
+import { useMutateGroupPinnedSwr } from "../hooks/useMutateGroupPinnedSwr"
 
 /** One group feed post card + its inline (lazy, mock) comment thread. */
-const GroupFeedCard = ({ groupId, post }: { groupId: string; post: GroupPost }) => {
+const GroupFeedCard = ({
+    groupId,
+    post,
+    canPin,
+}: {
+    groupId: string
+    post: GroupPost
+    canPin: boolean
+}) => {
+    const t = useTranslations("groupsHub")
     const locale = useLocale()
     const currentUser = useAppSelector((state) => state.user.user)
     const [expanded, setExpanded] = useState(false)
     const [hasOpened, setHasOpened] = useState(false)
     const reactPost = useMutateReactGroupPostSwr(groupId)
+    const { pin } = useMutateGroupPinnedSwr(groupId)
     const { thread, isLoading, error, mutate } = useQueryGroupPostCommentsSwr(
         groupId,
         post.id,
@@ -84,6 +97,21 @@ const GroupFeedCard = ({ groupId, post }: { groupId: string; post: GroupPost }) 
                     <Typography type="body-xs" color="muted">
                         {post.timeLabel}
                     </Typography>
+                    {/* pin this post (real endpoint, idempotent PUT) — surfaces in the
+                        Manage tab's Pinned section. Owner-only: pinPost is an admin
+                        endpoint, so hide the affordance from non-owner viewers. */}
+                    {canPin ? (
+                        <Button
+                            isIconOnly
+                            size="sm"
+                            variant="ghost"
+                            aria-label={t("feed.pin")}
+                            className="ml-auto shrink-0"
+                            onPress={() => void pin(post.id)}
+                        >
+                            <PushPinIcon className="size-4" />
+                        </Button>
+                    ) : null}
                 </div>
                 <Typography type="body-sm" color="muted">
                     {post.text}
@@ -148,6 +176,10 @@ export const GroupFeed = () => {
     const t = useTranslations("groupsHub")
     const { groupId } = useParams<{ groupId: string }>()
     const { posts, isLoading, error, mutate } = useQueryGroupFeedSwr(groupId)
+    const { group } = useQueryGroupSwr(groupId)
+    const currentUserId = useAppSelector((state) => state.user.user?.id)
+    // pinPost is an admin endpoint — only the group owner may pin
+    const canPin = group != null && currentUserId != null && group.ownerId === currentUserId
 
     return (
         <AsyncContent
@@ -164,7 +196,7 @@ export const GroupFeed = () => {
         >
             <div className="flex flex-col gap-3">
                 {posts.map((post) => (
-                    <GroupFeedCard key={post.id} groupId={groupId} post={post} />
+                    <GroupFeedCard key={post.id} groupId={groupId} post={post} canPin={canPin} />
                 ))}
             </div>
         </AsyncContent>

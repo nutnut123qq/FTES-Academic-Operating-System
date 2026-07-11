@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
-import { Button, Modal, cn } from "@heroui/react"
+import { Button, Drawer, cn } from "@heroui/react"
 import { MagnifyingGlassIcon, SignInIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
@@ -24,7 +24,7 @@ import { ErrorContent } from "@/components/blocks/async/ErrorContent"
 /**
  * The global command-palette search overlay (Ctrl/Cmd+K or navbar button).
  *
- * Top-aligned modal on `sm:` and up, full-screen sheet below `sm`. Owns: the
+ * Right-anchored slide-in drawer (full-width sheet below `sm`). Owns: the
  * debounced real-entity search (via {@link useGlobalSearch}), keyboard navigation
  * across grouped rows (↑↓ wrap · Enter open · Esc close), recent searches
  * (device-local), the "See all results" handoff to `/search?q=…`, the aria combobox
@@ -234,46 +234,46 @@ export const SearchOverlay = ({ className }: WithClassNames<undefined>) => {
     ])
 
     return (
-        <Modal isOpen={isOpen} onOpenChange={(next) => (next ? setOpen(true) : closeOverlay())}>
-            <Modal.Backdrop>
-                <Modal.Container className="items-start pt-0 sm:pt-[12vh]">
-                    <Modal.Dialog
-                        data-search-overlay
-                        className={cn(
-                            "flex h-full max-h-full w-full max-w-full flex-col gap-3 rounded-none p-3",
-                            "sm:h-auto sm:max-h-[70vh] sm:max-w-xl sm:rounded-3xl sm:p-4",
-                            className,
-                        )}
-                    >
-                        <div className="flex items-center gap-2">
-                            <SearchOverlayInput
-                                inputRef={inputRef}
-                                value={rawQuery}
-                                onValueChange={onValueChange}
-                                placeholder={t("search.placeholder")}
-                                ariaLabel={t("search.label")}
-                                clearLabel={t("search.clearInput")}
-                                isLoading={isLoading}
-                                onKeyDown={onInputKeyDown}
-                                listboxId={listboxId}
-                                isExpanded={showResults}
-                                activeDescendantId={activeRowId ? optionId(activeRowId) : undefined}
-                                className="flex-1"
-                            />
-                            <Button
-                                variant="tertiary"
-                                size="sm"
-                                className="shrink-0 sm:hidden"
-                                onPress={closeOverlay}
-                            >
-                                {t("common.cancel")}
-                            </Button>
-                        </div>
-                        <div className="min-h-0 flex-1 overflow-y-auto">{body}</div>
-                        <SearchOverlayFooter onSeeAll={goToSearchPage} canSeeAll={Boolean(trimmedRaw)} />
-                    </Modal.Dialog>
-                </Modal.Container>
-            </Modal.Backdrop>
-        </Modal>
+        <Drawer.Backdrop
+            isOpen={isOpen}
+            onOpenChange={(next) => (next ? setOpen(true) : closeOverlay())}
+        >
+            <Drawer.Content placement="right">
+                <Drawer.Dialog
+                    data-search-overlay
+                    className={cn(
+                        "flex h-full w-full max-w-md flex-col gap-3 rounded-none p-3 sm:p-4",
+                        className,
+                    )}
+                >
+                    <div className="flex items-center gap-2">
+                        <SearchOverlayInput
+                            inputRef={inputRef}
+                            value={rawQuery}
+                            onValueChange={onValueChange}
+                            placeholder={t("search.placeholder")}
+                            ariaLabel={t("search.label")}
+                            clearLabel={t("search.clearInput")}
+                            isLoading={isLoading}
+                            onKeyDown={onInputKeyDown}
+                            listboxId={listboxId}
+                            isExpanded={showResults}
+                            activeDescendantId={activeRowId ? optionId(activeRowId) : undefined}
+                            className="flex-1"
+                        />
+                        <Button
+                            variant="tertiary"
+                            size="sm"
+                            className="shrink-0 sm:hidden"
+                            onPress={closeOverlay}
+                        >
+                            {t("common.cancel")}
+                        </Button>
+                    </div>
+                    <div className="min-h-0 flex-1 overflow-y-auto">{body}</div>
+                    <SearchOverlayFooter onSeeAll={goToSearchPage} canSeeAll={Boolean(trimmedRaw)} />
+                </Drawer.Dialog>
+            </Drawer.Content>
+        </Drawer.Backdrop>
     )
 }

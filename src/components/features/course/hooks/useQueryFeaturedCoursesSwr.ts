@@ -2,6 +2,9 @@
 
 import useSWR from "swr"
 import { useLocale } from "next-intl"
+import { useGetAdminPublicBannersSwr } from "@/hooks/swr/api/rest/queries/useGetAdminPublicBannersSwr"
+import type { AdminBannerView } from "@/modules/api/rest/admin"
+import { CATALOG_CATEGORY_SLUG } from "./useQueryCoursesSwr"
 import type { Course } from "./useQueryCoursesSwr"
 
 /** A featured course promoted in the catalog hero slider (§4, mock until BE lands). */
@@ -12,6 +15,11 @@ export interface FeaturedCourse extends Course {
     priceVnd: number
     /** Cover image URL; a CSS gradient renders behind it as a fallback. */
     coverUrl: string
+    /**
+     * Destination for the slide CTA. A real banner carries its own `linkUrl`
+     * here; mock course rows leave it unset and fall back to `/courses/[id]`.
+     */
+    href?: string
 }
 
 /** Raw mock row — pitch per locale; the hook flattens it for the active locale. */
@@ -92,15 +100,63 @@ const fetchFeaturedCoursesMock = async (locale: string): Promise<Array<FeaturedC
         pitch: locale === "en" ? row.pitch.en : row.pitch.vi,
     }))
 
+/** Public banner placement queried for the catalog hero (real BE endpoint). */
+const FEATURED_BANNER_PLACEMENT = "courses"
+
 /**
- * Loads the featured courses for the catalog hero slider. Mocked; SWR-shaped for a
- * drop-in BE swap. Key includes the locale so pitches never bleed across locales.
- * `featured` stays `undefined` while loading so callers can gate a skeleton on `!data`.
+ * Adapts a real public banner into the slide model. A banner only carries an
+ * image, title and optional link, so the course-only fields (code, level, pitch,
+ * price) stay empty/zero — {@link FeaturedSlide} hides those, degrading to a clean
+ * cover + title + CTA. The CTA points at the banner's own `linkUrl` via `href`.
+ */
+const toFeaturedFromBanner = (banner: AdminBannerView): FeaturedCourse => ({
+    id: banner.id,
+    code: "",
+    name: banner.title,
+    level: "intermediate",
+    credits: 0,
+    lessons: 0,
+    category: CATALOG_CATEGORY_SLUG,
+    priceVnd: 0,
+    coverUrl: banner.imageUrl,
+    pitch: "",
+    href: banner.linkUrl,
+})
+
+/**
+ * Loads the featured slides for the catalog hero slider. Prefers the REAL public
+ * banners endpoint (`GET /admin-content/banners?placement=courses`) and falls back
+ * to the mock {@link FEATURED_ROWS} whenever that endpoint is empty or errors —
+ * so the slider is never blank and quietly upgrades the moment BE seeds a banner.
+ *
+ * The decision waits for the banner request to settle (never flashing mock→real),
+ * and `featured` stays `undefined` while it is in flight so callers can gate a
+ * skeleton on `!data`.
  */
 export const useQueryFeaturedCoursesSwr = () => {
     const locale = useLocale()
-    const { data, isLoading, error } = useSWR(["featured-courses", locale], () =>
+
+    const {
+        data: banners,
+        isLoading: bannersLoading,
+        error: bannersError,
+    } = useGetAdminPublicBannersSwr(FEATURED_BANNER_PLACEMENT)
+
+    const { data: mock } = useSWR(["featured-courses", locale], () =>
         fetchFeaturedCoursesMock(locale),
     )
-    return { featured: data, isLoading, error }
+
+    // Only decide once the banner request has resolved (or errored). A non-empty
+    // list wins; empty or errored → the mock rows.
+    const bannersSettled = !bannersLoading
+    const realBanners =
+        bannersSettled && !bannersError && banners && banners.length > 0 ? banners : null
+
+    const featured = !bannersSettled
+        ? undefined
+        : realBanners
+            ? realBanners.map(toFeaturedFromBanner)
+            : mock
+
+    return { featured, isLoading: !featured, error: undefined }
 }

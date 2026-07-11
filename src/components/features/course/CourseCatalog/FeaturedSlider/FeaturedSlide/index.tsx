@@ -65,24 +65,31 @@ export const FeaturedSlide = ({ course, index, total, onOpen }: FeaturedSlidePro
                 {/* bottom-left overlay with the merchandising content */}
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-4 pt-12 sm:p-6 sm:pt-12">
                     <div className="flex max-w-2xl flex-col gap-2">
-                        <div className="flex flex-wrap items-center gap-2">
-                            <Chip size="sm" variant="soft" color="accent">
-                                {t(`levels.${course.level}`)}
-                            </Chip>
-                            <Typography type="body-xs" className="text-white/80">
-                                {course.code}
-                            </Typography>
-                        </div>
+                        {/* course-only meta (level + code) — absent on real banner slides */}
+                        {course.code ? (
+                            <div className="flex flex-wrap items-center gap-2">
+                                <Chip size="sm" variant="soft" color="accent">
+                                    {t(`levels.${course.level}`)}
+                                </Chip>
+                                <Typography type="body-xs" className="text-white/80">
+                                    {course.code}
+                                </Typography>
+                            </div>
+                        ) : null}
                         <Typography type="h5" weight="bold" className="text-white">
                             {course.name}
                         </Typography>
-                        <Typography type="body-sm" className="line-clamp-2 text-white/80">
-                            {course.pitch}
-                        </Typography>
-                        <div className="flex flex-wrap items-center gap-3">
-                            <Typography type="body" weight="bold" className="text-white">
-                                {formatVnd(course.priceVnd)}
+                        {course.pitch ? (
+                            <Typography type="body-sm" className="line-clamp-2 text-white/80">
+                                {course.pitch}
                             </Typography>
+                        ) : null}
+                        <div className="flex flex-wrap items-center gap-3">
+                            {course.priceVnd > 0 ? (
+                                <Typography type="body" weight="bold" className="text-white">
+                                    {formatVnd(course.priceVnd)}
+                                </Typography>
+                            ) : null}
                             <Button size="sm" variant="primary" onPress={onOpen}>
                                 {t("featured.cta")}
                             </Button>

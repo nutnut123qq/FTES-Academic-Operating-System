@@ -493,7 +493,45 @@
     "searchConversations": "Tìm hội thoại…",
     "noConversations": "Chưa có hội thoại nào",
     "deleteConversation": "Xoá hội thoại",
-    "turnsCount": "{count} tin nhắn"
+    "turnsCount": "{count} tin nhắn",
+    "quotaHit": "Bạn đã dùng hết lượt hỏi AI cho hôm nay.",
+    "studyTools": {
+      "title": "Học với AI",
+      "description": "Dùng AI để tóm tắt bài học hoặc tạo thẻ ghi nhớ dựa trên chính nội dung bài này.",
+      "back": "Quay lại"
+    },
+    "note": {
+      "title": "Ghi chú AI",
+      "description": "Tạo ghi chú tóm tắt bài học này bằng AI, rồi lưu lại để ôn.",
+      "generate": "Tạo ghi chú AI",
+      "regenerate": "Tạo lại",
+      "save": "Lưu ghi chú",
+      "saved": "Đã lưu ghi chú",
+      "saveError": "Không lưu được ghi chú. Vui lòng thử lại.",
+      "error": "Không tạo được ghi chú. Vui lòng thử lại.",
+      "empty": "Chưa có ghi chú. Bấm “Tạo ghi chú AI” để bắt đầu.",
+      "prompt": "Hãy tóm tắt bài học hiện tại thành một ghi chú học tập ngắn gọn bằng tiếng Việt. Trình bày bằng Markdown gồm: một đoạn tổng quan 2–3 câu, danh sách gạch đầu dòng các ý chính, và mục “Cần ghi nhớ”. Chỉ dựa trên nội dung của bài học này."
+    },
+    "flashcard": {
+      "title": "Thẻ ghi nhớ AI",
+      "description": "Tạo bộ thẻ hỏi – đáp từ bài học này để tự kiểm tra.",
+      "generate": "Tạo thẻ ghi nhớ",
+      "regenerate": "Tạo lại",
+      "error": "Không tạo được thẻ ghi nhớ. Vui lòng thử lại.",
+      "empty": "Chưa có thẻ. Bấm “Tạo thẻ ghi nhớ” để bắt đầu.",
+      "questionLabel": "Câu hỏi",
+      "answerLabel": "Đáp án",
+      "flip": "Lật thẻ",
+      "flipHint": "Bấm để xem đáp án",
+      "flipBackHint": "Bấm để xem câu hỏi",
+      "showAnswer": "Xem đáp án",
+      "previous": "Thẻ trước",
+      "next": "Thẻ sau",
+      "cardProgress": "Thẻ {current}/{total}",
+      "done": "Đã xem hết thẻ",
+      "studyAgain": "Ôn lại",
+      "prompt": "Dựa trên nội dung bài học hiện tại, hãy tạo 8 thẻ ghi nhớ (flashcard) hỏi – đáp bằng tiếng Việt để tự kiểm tra. CHỈ trả về JSON hợp lệ là một mảng, mỗi phần tử có dạng {\"q\":\"câu hỏi\",\"a\":\"đáp án ngắn gọn\"}. Không thêm bất kỳ chữ nào ngoài JSON."
+    }
   },
   "contentActions": {
     "title": "Hành động"

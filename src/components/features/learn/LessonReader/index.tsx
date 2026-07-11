@@ -39,6 +39,7 @@ import { LessonVideoBlock } from "./LessonVideoBlock"
 import { LessonDocumentHtml } from "./LessonDocumentHtml"
 import { LessonDocumentsBlock } from "./LessonDocumentsBlock"
 import { SelectionHintCallout } from "./ContentAiSelectionAsk/SelectionHintCallout"
+import { LessonAiStudy } from "./LessonAiStudy"
 
 /** The two content views (reading vs challenges). */
 type ContentView = "content" | "challenges"
@@ -326,6 +327,11 @@ export const LessonReader = () => {
                                         registerFire={registerFire}
                                         className="mx-auto w-full max-w-3xl"
                                     />
+                                    {/* on-demand AI study tools (note + flashcards) grounded on
+                                        this lesson — unlocked, non-empty lessons only */}
+                                    {!isReadingEmpty ? (
+                                        <LessonAiStudy contentId={contentId} className="mx-auto w-full max-w-3xl" />
+                                    ) : null}
                                     <LessonComments courseId={courseId} contentId={contentId} className="mx-auto w-full max-w-3xl" />
                                     <LessonPager
                                         className="mx-auto w-full max-w-3xl"

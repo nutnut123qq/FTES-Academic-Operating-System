@@ -493,7 +493,45 @@
     "searchConversations": "Search conversations…",
     "noConversations": "No conversations yet",
     "deleteConversation": "Delete conversation",
-    "turnsCount": "{count} messages"
+    "turnsCount": "{count} messages",
+    "quotaHit": "You've used up your AI questions for today.",
+    "studyTools": {
+      "title": "Study with AI",
+      "description": "Use AI to summarize this lesson or generate flashcards based on its content.",
+      "back": "Back"
+    },
+    "note": {
+      "title": "AI Note",
+      "description": "Generate an AI summary of this lesson, then save it as a note to review.",
+      "generate": "Generate AI note",
+      "regenerate": "Regenerate",
+      "save": "Save note",
+      "saved": "Note saved",
+      "saveError": "Couldn't save the note. Please try again.",
+      "error": "Couldn't generate the note. Please try again.",
+      "empty": "No note yet. Tap “Generate AI note” to start.",
+      "prompt": "Summarize the current lesson into a concise study note. Format it in Markdown with: a 2–3 sentence overview, a bullet list of the key points, and a “Remember” section. Base it only on this lesson's content. Answer in the same language as the lesson."
+    },
+    "flashcard": {
+      "title": "AI Flashcards",
+      "description": "Generate a Q&A flashcard deck from this lesson to test yourself.",
+      "generate": "Generate flashcards",
+      "regenerate": "Regenerate",
+      "error": "Couldn't generate flashcards. Please try again.",
+      "empty": "No cards yet. Tap “Generate flashcards” to start.",
+      "questionLabel": "Question",
+      "answerLabel": "Answer",
+      "flip": "Flip card",
+      "flipHint": "Tap to see the answer",
+      "flipBackHint": "Tap to see the question",
+      "showAnswer": "Show answer",
+      "previous": "Previous",
+      "next": "Next",
+      "cardProgress": "Card {current}/{total}",
+      "done": "You've reviewed all cards",
+      "studyAgain": "Study again",
+      "prompt": "Based on the current lesson, generate 8 Q&A flashcards to test the learner, in the same language as the lesson. Return ONLY a valid JSON array where each item is {\"q\":\"question\",\"a\":\"short answer\"}. Do not add any text outside the JSON."
+    }
   },
   "contentActions": {
     "title": "Actions"

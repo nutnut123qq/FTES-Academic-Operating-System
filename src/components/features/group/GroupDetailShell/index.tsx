@@ -4,7 +4,9 @@ import React, { useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage, Button, Chip, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { usePathname, useRouter } from "@/i18n/navigation"
+import { useAppSelector } from "@/redux/hooks"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
+import { GroupJoinButton } from "../GroupJoinButton"
 import { useQueryGroupSwr } from "../hooks/useQueryGroupSwr"
 
 /** Props for {@link GroupDetailShell}. */
@@ -15,13 +17,20 @@ interface GroupDetailShellProps {
     children: React.ReactNode
 }
 
-/** Group tabs: i18n key + relative segment ("" = feed root). */
-const TABS: Array<{ key: string; segment: string }> = [
+/**
+ * Group tabs: i18n key + relative segment ("" = feed root). Every segment has a
+ * route. `ownerOnly` tabs surface admin-only views (join-request approvals,
+ * unpin) and are hidden from non-owner viewers.
+ */
+const TABS: Array<{ key: string; segment: string; ownerOnly?: boolean }> = [
     { key: "feed", segment: "" },
+    { key: "announcements", segment: "announcements" },
     { key: "discussion", segment: "discussion" },
     { key: "members", segment: "members" },
     { key: "resources", segment: "resources" },
     { key: "events", segment: "events" },
+    { key: "challenges", segment: "challenges" },
+    { key: "manage", segment: "manage", ownerOnly: true },
 ]
 
 /**
@@ -38,6 +47,11 @@ export const GroupDetailShell = ({ groupId, children }: GroupDetailShellProps) =
     const router = useRouter()
     const pathname = usePathname()
     const { group, isLoading } = useQueryGroupSwr(groupId)
+    const currentUserId = useAppSelector((state) => state.user.user?.id)
+    // owner-only affordances (e.g. the Manage tab) stay hidden until we know the
+    // viewer owns this group
+    const isOwner = group != null && currentUserId != null && group.ownerId === currentUserId
+    const visibleTabs = isOwner ? TABS : TABS.filter((tab) => !tab.ownerOnly)
     // cover URL that failed to load — compared against the current URL so the
     // error state self-resets when the group (and its cover) changes
     const [failedCoverUrl, setFailedCoverUrl] = useState<string | null>(null)
@@ -108,13 +122,16 @@ export const GroupDetailShell = ({ groupId, children }: GroupDetailShellProps) =
                                 </Typography>
                             </div>
                         </div>
+                        {/* join action — join-only (no leave endpoint on the BE); owners
+                            are already members, so it renders a disabled "Joined" state */}
+                        <GroupJoinButton groupId={groupId} isOwner={isOwner} className="mb-1 shrink-0" />
                     </div>
                 </div>
             )}
 
             {/* tab nav — static chrome, stays outside the skeleton */}
             <div className="flex flex-wrap gap-2 border-b border-separator pb-3">
-                {TABS.map((tab) => (
+                {visibleTabs.map((tab) => (
                     <Button
                         key={tab.key}
                         size="sm"

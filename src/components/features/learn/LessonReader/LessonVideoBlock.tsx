@@ -2,6 +2,7 @@
 
 import { Card, CardContent } from "@heroui/react"
 import { LessonHlsPlayer } from "./LessonHlsPlayer"
+import { LessonYouTubePlayer } from "./LessonYouTubePlayer"
 
 /** Extracts a YouTube video id from a watch / share / embed / shorts URL. */
 const youtubeId = (ref: string): string | null => {
@@ -20,27 +21,32 @@ const youtubeId = (ref: string): string | null => {
  * `videoRef` is null when the lesson is locked (BE strips it behind the paywall),
  * so a non-accessible lesson renders nothing here. Only mounted when the lesson
  * has a READY video (`videoStatus === "READY"`).
+ *
+ * `onHalfWatched` fires once when the learner has watched ≥ 50% of the video — the
+ * reader uses it to auto-mark the lesson complete. Both player variants report it.
  */
-export const LessonVideoBlock = ({ videoRef }: { videoRef: string | null }) => {
+export const LessonVideoBlock = ({
+    videoRef,
+    onHalfWatched,
+}: {
+    videoRef: string | null
+    onHalfWatched?: () => void
+}) => {
     if (!videoRef) return null
 
     const ytId = youtubeId(videoRef)
     if (!ytId) {
         // internal streaming token → HLS; other refs (HTML/Drive) self-hide inside the trim.
-        return /^\s*video_/.test(videoRef) ? <LessonHlsPlayer videoRef={videoRef.trim()} /> : null
+        return /^\s*video_/.test(videoRef) ? (
+            <LessonHlsPlayer videoRef={videoRef.trim()} onHalfWatched={onHalfWatched} />
+        ) : null
     }
 
     return (
-        <div className="mx-auto w-full max-w-3xl">
+        <div className="mx-auto w-full max-w-5xl">
             <Card>
                 <CardContent className="p-0">
-                    <iframe
-                        src={`https://www.youtube.com/embed/${ytId}`}
-                        title="Lesson video"
-                        className="aspect-video w-full rounded-2xl"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                        allowFullScreen
-                    />
+                    <LessonYouTubePlayer videoId={ytId} onHalfWatched={onHalfWatched} />
                 </CardContent>
             </Card>
         </div>

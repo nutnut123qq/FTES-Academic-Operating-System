@@ -265,6 +265,7 @@
     "wallet": "Wallet",
     "search": "Search",
     "notifications": "Notifications",
+    "cart": "Cart",
     "integrations": "Integrations",
     "roles": "Roles",
     "section": {
@@ -291,6 +292,7 @@
     "collapseRightRail": "Hide right rail",
     "expandRightRail": "Show right rail",
     "dashboard": "Dashboard",
+    "myCourses": "My courses",
     "guestPrompt": "Sign in to track your progress",
     "systemTheme": "System theme"
   },
@@ -491,7 +493,45 @@
     "searchConversations": "Search conversations…",
     "noConversations": "No conversations yet",
     "deleteConversation": "Delete conversation",
-    "turnsCount": "{count} messages"
+    "turnsCount": "{count} messages",
+    "quotaHit": "You've used up your AI questions for today.",
+    "studyTools": {
+      "title": "Study with AI",
+      "description": "Use AI to summarize this lesson or generate flashcards based on its content.",
+      "back": "Back"
+    },
+    "note": {
+      "title": "AI Note",
+      "description": "Generate an AI summary of this lesson, then save it as a note to review.",
+      "generate": "Generate AI note",
+      "regenerate": "Regenerate",
+      "save": "Save note",
+      "saved": "Note saved",
+      "saveError": "Couldn't save the note. Please try again.",
+      "error": "Couldn't generate the note. Please try again.",
+      "empty": "No note yet. Tap “Generate AI note” to start.",
+      "prompt": "Summarize the current lesson into a concise study note. Format it in Markdown with: a 2–3 sentence overview, a bullet list of the key points, and a “Remember” section. Base it only on this lesson's content. Answer in the same language as the lesson."
+    },
+    "flashcard": {
+      "title": "AI Flashcards",
+      "description": "Generate a Q&A flashcard deck from this lesson to test yourself.",
+      "generate": "Generate flashcards",
+      "regenerate": "Regenerate",
+      "error": "Couldn't generate flashcards. Please try again.",
+      "empty": "No cards yet. Tap “Generate flashcards” to start.",
+      "questionLabel": "Question",
+      "answerLabel": "Answer",
+      "flip": "Flip card",
+      "flipHint": "Tap to see the answer",
+      "flipBackHint": "Tap to see the question",
+      "showAnswer": "Show answer",
+      "previous": "Previous",
+      "next": "Next",
+      "cardProgress": "Card {current}/{total}",
+      "done": "You've reviewed all cards",
+      "studyAgain": "Study again",
+      "prompt": "Based on the current lesson, generate 8 Q&A flashcards to test the learner, in the same language as the lesson. Return ONLY a valid JSON array where each item is {\"q\":\"question\",\"a\":\"short answer\"}. Do not add any text outside the JSON."
+    }
   },
   "contentActions": {
     "title": "Actions"
@@ -517,7 +557,14 @@
     "loadError": "Couldn't load courses",
     "retry": "Try again",
     "count": "{count} courses",
-    "continueLearning": "Continue learning"
+    "continueLearning": "Continue learning",
+    "percentComplete": "{percent}% complete",
+    "mine": {
+      "title": "My courses",
+      "subtitle": "Pick up where you left off.",
+      "empty": "You haven't enrolled in any course yet",
+      "browse": "Browse courses"
+    }
   },
   "course": {
     "enroll": "Enroll",
@@ -2305,7 +2352,8 @@
       "save": "Sign in to save this item",
       "enroll": "Sign in to enroll in this course",
       "search": "Sign in to search learning content",
-      "explore": "Sign in to use the AI assistant and personalized recommendations"
+      "explore": "Sign in to use the AI assistant and personalized recommendations",
+      "join": "Sign in to join this group"
     }
   },
   "priceTag": {
@@ -2499,6 +2547,11 @@
       "des4": "Low cost, high standard",
       "des5": "FTES AOS operates on a lean model, eliminating unnecessary costs to keep tuition affordable. Our goal is to create a high-quality learning environment that anyone serious about the profession can join.",
       "des6": "We teach you to build truly valuable projects and provide long-term support throughout your career development."
+    },
+    "myCourses": {
+      "eyebrow": "Your journey",
+      "title": "Continue learning",
+      "seeAll": "See all"
     }
   },
   "dashboard": {
@@ -5249,10 +5302,18 @@
     "placeholder": "This tab is under construction.",
     "tabs": {
       "feed": "Feed",
+      "announcements": "Announcements",
       "discussion": "Discussion",
       "members": "Members",
       "resources": "Resources",
-      "events": "Events"
+      "events": "Events",
+      "challenges": "Challenges",
+      "manage": "Manage"
+    },
+    "join": {
+      "action": "Join",
+      "joined": "Joined",
+      "pending": "Pending approval"
     },
     "discussion": {
       "replies": "{count} replies",
@@ -5279,13 +5340,16 @@
       "reject": "Reject",
       "rules": "Rules",
       "pinned": "Pinned",
+      "noPinned": "No pinned posts.",
+      "unpin": "Unpin",
       "error": "Couldn't load management data. Please try again."
     },
     "create": {
       "title": "Create group",
       "nameField": "Group name",
       "descriptionField": "Group description",
-      "submit": "Create group"
+      "submit": "Create group",
+      "created": "Group created."
     },
     "challenges": {
       "title": "Group challenges",
@@ -5318,7 +5382,8 @@
     },
     "feed": {
       "empty": "No posts in this group yet. Be the first to share!",
-      "error": "Couldn't load the group feed. Please try again."
+      "error": "Couldn't load the group feed. Please try again.",
+      "pin": "Pin post"
     },
     "members": {
       "empty": "No members match this filter.",

@@ -28,7 +28,6 @@ import Image from "next/image"
 import { useParams } from "next/navigation"
 import { useSWRConfig } from "swr"
 import { useRouter } from "@/i18n/navigation"
-import { useGetCourseProductSwr } from "@/hooks/swr/api/rest/queries/useGetCourseProductSwr"
 import { useGetCoursePackageProductSwr } from "@/hooks/swr/api/rest/queries/useGetCoursePackageProductSwr"
 import { usePostAddCartItemSwr } from "@/hooks/swr/api/rest/mutations/usePostAddCartItemSwr"
 import { usePaymentOverlayState } from "@/hooks/zustand/overlay/hooks"
@@ -54,6 +53,16 @@ const ACHIEVEMENT_ICONS: Record<string, Icon> = {
     trophy: TrophyIcon,
     book: BookIcon,
 }
+
+/**
+ * Build the reader route for a syllabus lesson — mirrors the learn rail's
+ * `lessonHref` (`ContentMap`) so a syllabus click lands on the exact same reader
+ * URL. The `[moduleId]` segment is cosmetic (the reader resolves purely from
+ * `[contentId]`), so the rail derives it from the lesson id's first UUID segment;
+ * we replicate that verbatim. `courseId` here is the slug (`course.id`).
+ */
+const lessonReaderHref = (courseId: string, lessonId: string) =>
+    `/courses/${courseId}/learn/content/modules/${lessonId.split("-")[0]}/contents/${lessonId}`
 
 /** Rich instructor profile card for the course detail page.
  *
@@ -242,38 +251,24 @@ const CourseDetailView = ({
     onCourses: () => void
 }) => {
     const t = useTranslations("courseSystem")
-    const { isEnrolled, onEnroll, onContinueLearning, onTryLearning } = useCourseEnrollment(
-        course.id,
-        course.enrollment,
-    )
+    const router = useRouter()
+    // Open a non-locked syllabus lesson in the reader (same route the learn rail uses).
+    // Fallback to the reader entry when a lesson id is somehow absent.
+    const openLesson = (lessonId: string) =>
+        router.push(lessonId ? lessonReaderHref(course.id, lessonId) : `/courses/${course.id}/learn`)
     // PACKAGE courses sell N distinct packages (each its own COURSE_UNLOCK product),
     // so they render the dedicated package picker (PackageEnrollCard) which resolves
     // per-package. Everything else (LEGACY / absent saleMode) keeps the legacy card.
     const isPackage = course.saleMode === "PACKAGE"
-    // Resolve this course's COURSE_UNLOCK product (null when not on sale). When it
-    // exists, the "Đăng ký học" CTA becomes a real buy: add to cart → payment modal
-    // (VietQR / coin), reusing the shared commerce checkout. Otherwise the CTA keeps
-    // its existing enroll-route behaviour. Skipped for PACKAGE courses (resolved
-    // per-package instead) so we never add an arbitrary product to the cart.
-    const { data: product } = useGetCourseProductSwr(isPackage ? undefined : course.rawId)
-    const addCart = usePostAddCartItemSwr()
-    const payment = usePaymentOverlayState()
-    const { mutate: mutateSwr } = useSWRConfig()
-    const onBuy = async () => {
-        if (!product) return
-        try {
-            const item = await addCart.trigger({ productId: product.id, quantity: 1 })
-            void mutateSwr("GET_CART_SWR")
-            payment.open({
-                itemIds: [item.id],
-                title: course.name,
-                amountVnd: product.priceVnd ?? 0,
-                amountCoin: product.priceCoin ?? undefined,
-            })
-        } catch {
-            // add-to-cart failed → SWR surfaces the error; leave the CTA idle
-        }
-    }
+    // The legacy "Đăng ký học" CTA is a real buy: the enrollment hook resolves this
+    // course's COURSE_UNLOCK product, adds it to the cart, and opens the shared
+    // PaymentModal (VietQR / coin). The buy context is withheld for PACKAGE courses
+    // (resolved per-package by PackageEnrollCard) so we never add an arbitrary product.
+    const { isEnrolled, onEnroll, isEnrolling, onContinueLearning, onTryLearning } = useCourseEnrollment(
+        course.id,
+        course.enrollment,
+        isPackage ? undefined : { rawId: course.rawId, title: course.name },
+    )
     // ponytail: hand-rolled accordion state — first chapter open. Set, not boolean-per-row,
     // so multiple chapters can be open. Swap to HeroUI Accordion when its API is confirmed.
     const [openSections, setOpenSections] = useState<Set<string>>(
@@ -449,36 +444,56 @@ const CourseDetailView = ({
                                         </button>
                                         {isOpen ? (
                                             <div className="flex flex-col">
-                                                {section.lessons.map((lesson) => (
-                                                    <div
-                                                        key={lesson.id}
-                                                        className="flex items-center gap-3 border-t border-separator px-4 py-3 pl-10"
-                                                    >
-                                                        {lesson.isPremium ? (
-                                                            <LockIcon aria-hidden focusable="false" className="size-4 shrink-0 text-muted" />
-                                                        ) : (
-                                                            <PlayCircleIcon aria-hidden focusable="false" className="size-4 shrink-0 text-accent" />
-                                                        )}
-                                                        <div className="min-w-0 flex-1">
-                                                            <Typography type="body-sm" color="muted" className="truncate">
-                                                                {lesson.title}
-                                                            </Typography>
-                                                            {lesson.description ? (
-                                                                <Typography type="body-xs" color="muted" className="line-clamp-1 opacity-70">
-                                                                    {lesson.description}
+                                                {section.lessons.map((lesson) => {
+                                                    // Lock is the per-viewer `isLocked` (NOT `!free`): an enrolled
+                                                    // viewer's premium lessons are unlocked → clickable into the reader.
+                                                    const rowContent = (
+                                                        <>
+                                                            {lesson.isLocked ? (
+                                                                <LockIcon aria-hidden focusable="false" className="size-4 shrink-0 text-muted" />
+                                                            ) : (
+                                                                <PlayCircleIcon aria-hidden focusable="false" className="size-4 shrink-0 text-accent" />
+                                                            )}
+                                                            <div className="min-w-0 flex-1">
+                                                                <Typography type="body-sm" color="muted" className="truncate">
+                                                                    {lesson.title}
                                                                 </Typography>
+                                                                {lesson.description ? (
+                                                                    <Typography type="body-xs" color="muted" className="line-clamp-1 opacity-70">
+                                                                        {lesson.description}
+                                                                    </Typography>
+                                                                ) : null}
+                                                            </div>
+                                                            {lesson.isPremium ? (
+                                                                <Chip size="sm" variant="soft" color="accent">
+                                                                    {t("detail.premium")}
+                                                                </Chip>
                                                             ) : null}
+                                                            <Typography type="body-xs" color="muted">
+                                                                {lesson.durationLabel}
+                                                            </Typography>
+                                                        </>
+                                                    )
+                                                    // Locked rows stay non-navigating (the sticky enroll card on this
+                                                    // very page is the buy flow); unlocked rows open the reader.
+                                                    return lesson.isLocked ? (
+                                                        <div
+                                                            key={lesson.id}
+                                                            className="flex items-center gap-3 border-t border-separator px-4 py-3 pl-10"
+                                                        >
+                                                            {rowContent}
                                                         </div>
-                                                        {lesson.isPremium ? (
-                                                            <Chip size="sm" variant="soft" color="accent">
-                                                                {t("detail.premium")}
-                                                            </Chip>
-                                                        ) : null}
-                                                        <Typography type="body-xs" color="muted">
-                                                            {lesson.durationLabel}
-                                                        </Typography>
-                                                    </div>
-                                                ))}
+                                                    ) : (
+                                                        <button
+                                                            key={lesson.id}
+                                                            type="button"
+                                                            onClick={() => openLesson(lesson.id)}
+                                                            className="flex w-full items-center gap-3 border-t border-separator px-4 py-3 pl-10 text-left transition-colors hover:bg-default/40"
+                                                        >
+                                                            {rowContent}
+                                                        </button>
+                                                    )
+                                                })}
                                             </div>
                                         ) : null}
                                     </div>
@@ -510,7 +525,8 @@ const CourseDetailView = ({
                         <EnrollCard
                             course={course}
                             isEnrolled={isEnrolled}
-                            onEnroll={product ? onBuy : onEnroll}
+                            onEnroll={onEnroll}
+                            isEnrolling={isEnrolling}
                             onContinueLearning={onContinueLearning}
                             onTryLearning={onTryLearning}
                         />
@@ -525,6 +541,8 @@ type EnrollCardProps = {
     course: CourseDetailModel
     isEnrolled: boolean
     onEnroll: () => void
+    /** Add-to-cart in flight — drives the enroll CTA's pending state. */
+    isEnrolling?: boolean
     onContinueLearning: () => void
     onTryLearning: () => void
 }
@@ -544,6 +562,7 @@ const EnrollCard = ({
     course,
     isEnrolled,
     onEnroll,
+    isEnrolling,
     onContinueLearning,
     onTryLearning,
 }: EnrollCardProps) => {
@@ -617,7 +636,7 @@ const EnrollCard = ({
                         </Button>
                     ) : (
                         <>
-                            <Button variant="primary" fullWidth onPress={onEnroll}>
+                            <Button variant="primary" fullWidth onPress={onEnroll} isPending={isEnrolling}>
                                 {t("detail.enroll")}
                             </Button>
                             <Button variant="secondary" fullWidth onPress={onTryLearning}>

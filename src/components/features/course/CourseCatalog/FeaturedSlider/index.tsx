@@ -68,7 +68,7 @@ export const FeaturedSlider = () => {
                             course={course}
                             index={index}
                             total={slideCount}
-                            onOpen={() => router.push(`/courses/${course.id}`)}
+                            onOpen={() => router.push(course.href ?? `/courses/${course.id}`)}
                         />
                     ))}
                 </div>

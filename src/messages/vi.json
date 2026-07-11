@@ -265,6 +265,7 @@
     "wallet": "Ví",
     "search": "Tìm kiếm",
     "notifications": "Thông báo",
+    "cart": "Giỏ hàng",
     "integrations": "Tích hợp",
     "roles": "Vai trò",
     "section": {
@@ -291,6 +292,7 @@
     "collapseRightRail": "Ẩn thanh bên phải",
     "expandRightRail": "Hiện thanh bên phải",
     "dashboard": "Bảng điều khiển",
+    "myCourses": "Khóa học của tôi",
     "guestPrompt": "Đăng nhập để theo dõi tiến độ của bạn",
     "systemTheme": "Theo hệ thống"
   },
@@ -491,7 +493,45 @@
     "searchConversations": "Tìm hội thoại…",
     "noConversations": "Chưa có hội thoại nào",
     "deleteConversation": "Xoá hội thoại",
-    "turnsCount": "{count} tin nhắn"
+    "turnsCount": "{count} tin nhắn",
+    "quotaHit": "Bạn đã dùng hết lượt hỏi AI cho hôm nay.",
+    "studyTools": {
+      "title": "Học với AI",
+      "description": "Dùng AI để tóm tắt bài học hoặc tạo thẻ ghi nhớ dựa trên chính nội dung bài này.",
+      "back": "Quay lại"
+    },
+    "note": {
+      "title": "Ghi chú AI",
+      "description": "Tạo ghi chú tóm tắt bài học này bằng AI, rồi lưu lại để ôn.",
+      "generate": "Tạo ghi chú AI",
+      "regenerate": "Tạo lại",
+      "save": "Lưu ghi chú",
+      "saved": "Đã lưu ghi chú",
+      "saveError": "Không lưu được ghi chú. Vui lòng thử lại.",
+      "error": "Không tạo được ghi chú. Vui lòng thử lại.",
+      "empty": "Chưa có ghi chú. Bấm “Tạo ghi chú AI” để bắt đầu.",
+      "prompt": "Hãy tóm tắt bài học hiện tại thành một ghi chú học tập ngắn gọn bằng tiếng Việt. Trình bày bằng Markdown gồm: một đoạn tổng quan 2–3 câu, danh sách gạch đầu dòng các ý chính, và mục “Cần ghi nhớ”. Chỉ dựa trên nội dung của bài học này."
+    },
+    "flashcard": {
+      "title": "Thẻ ghi nhớ AI",
+      "description": "Tạo bộ thẻ hỏi – đáp từ bài học này để tự kiểm tra.",
+      "generate": "Tạo thẻ ghi nhớ",
+      "regenerate": "Tạo lại",
+      "error": "Không tạo được thẻ ghi nhớ. Vui lòng thử lại.",
+      "empty": "Chưa có thẻ. Bấm “Tạo thẻ ghi nhớ” để bắt đầu.",
+      "questionLabel": "Câu hỏi",
+      "answerLabel": "Đáp án",
+      "flip": "Lật thẻ",
+      "flipHint": "Bấm để xem đáp án",
+      "flipBackHint": "Bấm để xem câu hỏi",
+      "showAnswer": "Xem đáp án",
+      "previous": "Thẻ trước",
+      "next": "Thẻ sau",
+      "cardProgress": "Thẻ {current}/{total}",
+      "done": "Đã xem hết thẻ",
+      "studyAgain": "Ôn lại",
+      "prompt": "Dựa trên nội dung bài học hiện tại, hãy tạo 8 thẻ ghi nhớ (flashcard) hỏi – đáp bằng tiếng Việt để tự kiểm tra. CHỈ trả về JSON hợp lệ là một mảng, mỗi phần tử có dạng {\"q\":\"câu hỏi\",\"a\":\"đáp án ngắn gọn\"}. Không thêm bất kỳ chữ nào ngoài JSON."
+    }
   },
   "contentActions": {
     "title": "Hành động"
@@ -517,7 +557,14 @@
     "loadError": "Không tải được khóa học",
     "retry": "Thử lại",
     "count": "{count} khóa học",
-    "continueLearning": "Tiếp tục học"
+    "continueLearning": "Tiếp tục học",
+    "percentComplete": "Hoàn thành {percent}%",
+    "mine": {
+      "title": "Khóa học của tôi",
+      "subtitle": "Tiếp tục hành trình học của bạn.",
+      "empty": "Bạn chưa đăng ký khóa học nào",
+      "browse": "Khám phá khóa học"
+    }
   },
   "course": {
     "enroll": "Đăng ký",
@@ -2314,7 +2361,8 @@
       "save": "Đăng nhập để lưu nội dung",
       "enroll": "Đăng nhập để đăng ký khóa học",
       "search": "Đăng nhập để tìm kiếm nội dung học tập",
-      "explore": "Đăng nhập để dùng trợ lý AI và gợi ý cá nhân hoá"
+      "explore": "Đăng nhập để dùng trợ lý AI và gợi ý cá nhân hoá",
+      "join": "Đăng nhập để tham gia nhóm"
     }
   },
   "priceTag": {
@@ -2508,6 +2556,11 @@
       "des4": "Chi phí tối thiểu, tiêu chuẩn cao",
       "des5": "FTES AOS vận hành theo mô hình tinh gọn, loại bỏ các chi phí không cần thiết để giữ học phí ở mức dễ tiếp cận. Mục tiêu của chúng tớ là tạo ra một môi trường học tập chất lượng cao mà bất kỳ ai nghiêm túc với nghề đều có thể tham gia.",
       "des6": "Chúng tớ dạy để bạn xây dựng những project có giá trị thực sự và hỗ trợ lâu dài trong quá trình phát triển sự nghiệp."
+    },
+    "myCourses": {
+      "eyebrow": "Hành trình của bạn",
+      "title": "Tiếp tục học",
+      "seeAll": "Xem tất cả"
     }
   },
   "dashboard": {
@@ -5249,10 +5302,18 @@
     "placeholder": "Nội dung đang được xây dựng.",
     "tabs": {
       "feed": "Bảng tin",
+      "announcements": "Thông báo",
       "discussion": "Thảo luận",
       "members": "Thành viên",
       "resources": "Tài nguyên",
-      "events": "Sự kiện"
+      "events": "Sự kiện",
+      "challenges": "Thử thách",
+      "manage": "Quản lý"
+    },
+    "join": {
+      "action": "Tham gia",
+      "joined": "Đã tham gia",
+      "pending": "Đang chờ duyệt"
     },
     "discussion": {
       "replies": "{count} phản hồi",
@@ -5279,13 +5340,16 @@
       "reject": "Từ chối",
       "rules": "Nội quy",
       "pinned": "Bài ghim",
+      "noPinned": "Chưa có bài ghim nào.",
+      "unpin": "Bỏ ghim",
       "error": "Không tải được dữ liệu quản lý. Vui lòng thử lại."
     },
     "create": {
       "title": "Tạo nhóm",
       "nameField": "Tên nhóm",
       "descriptionField": "Mô tả nhóm",
-      "submit": "Tạo nhóm"
+      "submit": "Tạo nhóm",
+      "created": "Đã tạo nhóm."
     },
     "challenges": {
       "title": "Thử thách nhóm",
@@ -5318,7 +5382,8 @@
     },
     "feed": {
       "empty": "Chưa có bài viết nào trong nhóm. Hãy là người đầu tiên chia sẻ!",
-      "error": "Không tải được bảng tin nhóm. Vui lòng thử lại."
+      "error": "Không tải được bảng tin nhóm. Vui lòng thử lại.",
+      "pin": "Ghim bài viết"
     },
     "members": {
       "empty": "Chưa có thành viên nào phù hợp.",

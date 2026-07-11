@@ -39,6 +39,7 @@ import { LessonVideoBlock } from "./LessonVideoBlock"
 import { LessonDocumentHtml } from "./LessonDocumentHtml"
 import { LessonDocumentsBlock } from "./LessonDocumentsBlock"
 import { SelectionHintCallout } from "./ContentAiSelectionAsk/SelectionHintCallout"
+import { LessonAiStudy } from "./LessonAiStudy"
 
 /** The two content views (reading vs challenges). */
 type ContentView = "content" | "challenges"
@@ -88,6 +89,18 @@ export const LessonReader = () => {
 
     const [view, setView] = useState<ContentView>("content")
     const [lang, setLang] = useState("typescript")
+
+    // Auto-completion wiring. The video player reports ≥50% watched via
+    // `handleHalfWatched`; the per-lesson (keyed) <LessonCompletion> registers its
+    // guarded fire into `fireRef`, so watching a video and leaving a document both
+    // route through the same idempotent mark-complete.
+    const fireRef = useRef<(() => void) | null>(null)
+    const registerFire = useCallback((fn: (() => void) | null) => {
+        fireRef.current = fn
+    }, [])
+    const handleHalfWatched = useCallback(() => {
+        fireRef.current?.()
+    }, [])
 
     const activeLang = resolveActiveProgrammingLang(lang, lesson?.availableLangs ?? [])
     const bodyMd = lesson?.bodyByLang[activeLang] ?? ""
@@ -240,7 +253,9 @@ export const LessonReader = () => {
                     view === "content" ? (
                         <>
                             {/* video player (VIDEO lessons) + document attachments — above the article */}
-                            {lesson.hasVideo ? <LessonVideoBlock videoRef={lesson.videoRef} /> : null}
+                            {lesson.hasVideo ? (
+                                <LessonVideoBlock videoRef={lesson.videoRef} onHalfWatched={handleHalfWatched} />
+                            ) : null}
                             <LessonDocumentsBlock lessonId={contentId} />
 
                             {/* reading card — only when there is something to read (written body,
@@ -286,7 +301,7 @@ export const LessonReader = () => {
                                                     <Typography type="body-sm" color="muted">
                                                         {t("reader.lockedBody")}
                                                     </Typography>
-                                                    <Button variant="primary" onPress={() => router.push(`/courses/${courseId}/enroll`)}>
+                                                    <Button variant="primary" onPress={() => router.push(`/courses/${courseId}`)}>
                                                         {t("reader.enrollCta")}
                                                     </Button>
                                                 </div>
@@ -304,7 +319,19 @@ export const LessonReader = () => {
                             {/* engagement + navigation OUTSIDE the reading card (hidden while locked) */}
                             {!isLocked ? (
                                 <div className="flex flex-col gap-6 pb-6">
-                                    <LessonCompletion key={contentId} contentId={contentId} className="mx-auto w-full max-w-3xl" />
+                                    <LessonCompletion
+                                        key={contentId}
+                                        contentId={contentId}
+                                        hasVideo={lesson.hasVideo}
+                                        isCompleted={lesson.isCompleted}
+                                        registerFire={registerFire}
+                                        className="mx-auto w-full max-w-3xl"
+                                    />
+                                    {/* on-demand AI study tools (note + flashcards) grounded on
+                                        this lesson — unlocked, non-empty lessons only */}
+                                    {!isReadingEmpty ? (
+                                        <LessonAiStudy contentId={contentId} className="mx-auto w-full max-w-3xl" />
+                                    ) : null}
                                     <LessonComments courseId={courseId} contentId={contentId} className="mx-auto w-full max-w-3xl" />
                                     <LessonPager
                                         className="mx-auto w-full max-w-3xl"
@@ -343,72 +370,106 @@ const LessonReactionFooter = ({ contentId }: { contentId: string }) => {
 }
 
 /**
- * Lesson completion control. Marks the lesson complete when the learner reaches the
- * end of the article (a bottom sentinel scrolls into view) or presses the button,
- * then revalidates every course-progress key so the rail meter + n/m counter advance.
+ * Lesson completion — now fully automatic (no manual "Mark as complete" CTA).
  *
- * Keyed on `contentId` by the caller so it remounts (resetting its once-guard) per
- * lesson. The mark-complete mutation is idempotent (BE upsert); an auto-fire that
- * errors resets the guard so the manual button can retry, and never toasts.
+ *  - VIDEO lessons complete when the learner has watched ≥ 50% of the video: the
+ *    player reports that through the parent's `onHalfWatched`, which the parent
+ *    routes to this component's guarded `fire` via `registerFire`.
+ *  - DOCUMENT lessons (no video) complete on EXIT — leaving the lesson (this keyed
+ *    instance unmounts on a contentId change / route change) or closing the tab
+ *    (`beforeunload`, best-effort).
+ *
+ * Idempotency: `completed` is SEEDED from the server (`isCompleted`), so a reload of
+ * an already-complete lesson starts completed and never fires. `fire` is guarded by
+ * both the seeded/live completed flag (via ref) and a per-session once-flag, then
+ * revalidates every course-progress key so the rail meter + n/m counter advance.
+ * Keyed on `contentId` by the caller, so each lesson gets its own guard + refs.
  */
-const LessonCompletion = ({ contentId, className }: { contentId: string; className?: string }) => {
+const LessonCompletion = ({
+    contentId,
+    hasVideo,
+    isCompleted,
+    registerFire,
+    className,
+}: {
+    contentId: string
+    hasVideo: boolean
+    isCompleted: boolean
+    registerFire: (fn: (() => void) | null) => void
+    className?: string
+}) => {
     const t = useTranslations("learn")
     const mark = usePostMarkLessonCompleteSwr()
-    const [completed, setCompleted] = useState(false)
+    const [completed, setCompleted] = useState(isCompleted)
+    /** Per-session once-guard: never send twice for this lesson instance. */
     const firedRef = useRef(false)
-    const sentinelRef = useRef<HTMLDivElement>(null)
+    /** Latest known already-complete state — read inside fire / cleanup handlers. */
+    const completedRef = useRef(isCompleted)
+    completedRef.current = isCompleted || completed
+    /** Stable trigger handle so `fire` doesn't churn while the mutation runs. */
+    const triggerRef = useRef(mark.trigger)
+    triggerRef.current = mark.trigger
 
     const fire = useCallback(async () => {
-        if (firedRef.current || completed) {
+        // NEVER send if the lesson is already complete (server-seeded) or we already sent.
+        if (completedRef.current || firedRef.current) {
             return
         }
         firedRef.current = true
         try {
-            await mark.trigger(contentId)
+            await triggerRef.current(contentId)
             setCompleted(true)
             // Revalidate any mounted course-progress query (the rail lives in another tree).
             await globalMutate((key) => Array.isArray(key) && key[0] === "GET_COURSE_PROGRESS")
         } catch {
             firedRef.current = false
         }
-    }, [completed, contentId, mark])
+    }, [contentId])
 
+    // Register this lesson's guarded fire so the video player's ≥50% signal reaches it.
     useEffect(() => {
-        const el = sentinelRef.current
-        if (!el || completed) {
+        registerFire(() => void fire())
+        return () => registerFire(null)
+    }, [registerFire, fire])
+
+    // Late server progress (query resolves after mount) flips us to completed.
+    useEffect(() => {
+        if (isCompleted) {
+            setCompleted(true)
+        }
+    }, [isCompleted])
+
+    // Document lessons: complete on exit. This instance is keyed on contentId, so the
+    // cleanup runs when the learner navigates to another lesson / leaves the reader
+    // ("next lesson", prev, rail, breadcrumb). `beforeunload` covers a tab close.
+    useEffect(() => {
+        if (hasVideo) {
             return
         }
-        const io = new IntersectionObserver(
-            (entries) => {
-                if (entries.some((entry) => entry.isIntersecting)) {
-                    void fire()
-                }
-            },
-            { rootMargin: "0px 0px -20% 0px" },
-        )
-        io.observe(el)
-        return () => io.disconnect()
-    }, [completed, fire])
+        const mountedAt = Date.now()
+        const onExit = () => void fire()
+        window.addEventListener("beforeunload", onExit)
+        return () => {
+            window.removeEventListener("beforeunload", onExit)
+            // Only treat this as a real "left the lesson" exit after a brief dwell — this
+            // skips React StrictMode's immediate dev remount (whose cleanup runs within a
+            // tick) and a sub-second glance-and-leave (no meaningful engagement).
+            if (Date.now() - mountedAt > 800) {
+                onExit()
+            }
+        }
+    }, [hasVideo, fire])
 
+    // No manual CTA — just a small, unobtrusive "already completed" indicator.
+    if (!completed) {
+        return null
+    }
     return (
-        <div className={cn("flex flex-col items-center gap-3", className)}>
-            <div ref={sentinelRef} aria-hidden className="h-px w-full" />
-            <Button
-                variant={completed ? "secondary" : "primary"}
-                isDisabled={completed || mark.isMutating}
-                isPending={mark.isMutating}
-                onPress={() => void fire()}
-            >
-                <span className="flex items-center gap-2">
-                    <CheckCircleIcon
-                        aria-hidden
-                        focusable="false"
-                        weight={completed ? "fill" : "regular"}
-                        className="size-5"
-                    />
-                    {completed ? t("reader.completed") : t("reader.markComplete")}
-                </span>
-            </Button>
+        <div className={cn("flex items-center justify-center gap-2 text-success", className)}>
+            <CheckCircleIcon aria-hidden focusable="false" weight="fill" className="size-5" />
+            <Typography type="body-sm" weight="medium">
+                {t("reader.completed")}
+            </Typography>
         </div>
     )
 }

@@ -3,8 +3,10 @@
 import useSWR from "swr"
 import {
     getCourseDetail,
+    getCourseProgress,
     readLessonContent,
     type CourseDetail,
+    type CourseProgressView,
     type LessonContentView,
 } from "@/modules/api/rest/course"
 
@@ -29,6 +31,11 @@ export interface LearnLessonView {
     id: string
     /** Owning module id (for the prev/next route + breadcrumb). */
     moduleId: string
+    /**
+     * Resolved course UUID (`detail.course.id`) — the same id the rail keys its
+     * progress query on, so the per-lesson progress overlay shares its SWR cache.
+     */
+    courseRawId: string
     title: string
     /** Short description under the title. */
     description: string
@@ -113,6 +120,7 @@ const buildLessonView = (
     contentId: string,
     content: LessonContentView,
     curriculum: Array<FlatLesson>,
+    courseRawId: string,
 ): LearnLessonView => {
     const index = curriculum.findIndex((lesson) => lesson.id === contentId)
     const current = index >= 0 ? curriculum[index] : undefined
@@ -130,6 +138,7 @@ const buildLessonView = (
     return {
         id: contentId,
         moduleId: current?.moduleId ?? "",
+        courseRawId,
         title: current?.name ?? "",
         description: current?.description ?? "",
         moduleTitle: current?.moduleTitle ?? "",
@@ -143,6 +152,8 @@ const buildLessonView = (
         nextId: next?.id ?? null,
         prevTitle: prev?.name ?? null,
         nextTitle: next?.name ?? null,
+        // Base default — the hook overlays the REAL completed state from the
+        // viewer's course-progress query (shared with the rail) before returning.
         isCompleted: false,
         hasChallenge: false,
         // Trust the per-viewer curriculum lock — `content.locked` comes from
@@ -179,8 +190,45 @@ export const useQueryLearnLessonSwr = (courseId: string, contentId: string) => {
                 ),
                 getCourseDetail(courseId),
             ])
-            return buildLessonView(contentId, content, flattenCurriculum(detail))
+            return buildLessonView(
+                contentId,
+                content,
+                flattenCurriculum(detail),
+                detail.course?.id ?? courseId,
+            )
         },
     )
-    return { lesson: data, isLoading, error, mutate }
+
+    // Overlay the viewer's REAL per-lesson completion from the course-progress query.
+    // Keyed on the resolved course UUID — the SAME key the rail uses — so a mark-complete
+    // that revalidates `GET_COURSE_PROGRESS` refreshes both the rail meter and this seed,
+    // and a reload of an already-complete lesson starts already completed (never re-fires).
+    const courseRawId = data?.courseRawId
+    const { data: progress, mutate: mutateProgress } = useSWR(
+        courseRawId ? ["GET_COURSE_PROGRESS", courseRawId] : null,
+        async () => getCourseProgress(courseRawId as string),
+        { shouldRetryOnError: false },
+    )
+
+    const lesson = data
+        ? { ...data, isCompleted: isLessonCompleted(progress, contentId) || data.isCompleted }
+        : undefined
+
+    return {
+        lesson,
+        isLoading,
+        error,
+        mutate: async () => {
+            await Promise.all([mutate(), mutateProgress()])
+        },
+    }
 }
+
+/** True when the viewer's course progress marks this lesson COMPLETED. */
+const isLessonCompleted = (
+    progress: CourseProgressView | undefined,
+    contentId: string,
+): boolean =>
+    (progress?.lessons ?? []).some(
+        (row) => row.lessonId === contentId && row.status === "COMPLETED",
+    )

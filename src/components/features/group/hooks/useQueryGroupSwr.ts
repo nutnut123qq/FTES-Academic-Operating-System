@@ -14,6 +14,8 @@ export interface GroupHeader {
     avatarUrl: string | null
     /** Group cover/banner URL; null = no cover yet (UI falls back to a gradient). */
     coverUrl: string | null
+    /** Internal user id of the group owner — the only ownership signal on the read contract. */
+    ownerId: string
 }
 
 /** Maps BE group kind + visibility onto the FE `type` axis (see useQueryGroupsSwr). */
@@ -43,6 +45,7 @@ export const useQueryGroupSwr = (groupId: string) => {
                 members: dto.memberCount ?? 0,
                 avatarUrl: null,
                 coverUrl: null,
+                ownerId: dto.ownerId,
             }
         },
     )

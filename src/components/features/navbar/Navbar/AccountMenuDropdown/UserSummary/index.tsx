@@ -40,15 +40,15 @@ export const UserSummary = ({ className }: UserSummaryProps) => {
                 label={t("accountMenu.gamification.levelRing", { level: data?.level ?? 1, percent })}
             >
                 <UserAvatar
-                    username={user?.username ?? ""}
+                    username={user?.displayName || user?.username || ""}
                     avatar={user?.avatar}
-                    seed={user?.username ?? ""}
+                    seed={user?.displayName || user?.username || ""}
                     size="sm"
                 />
             </LevelRing>
             <div className="flex min-w-0 flex-col gap-0">
                 <Typography type="body-sm" weight="medium" truncate className="leading-5">
-                    {user?.username ?? ""}
+                    {user?.displayName || user?.username || ""}
                 </Typography>
                 {user?.email ? (
                     <Typography type="body-xs" color="muted" truncate className="leading-4">

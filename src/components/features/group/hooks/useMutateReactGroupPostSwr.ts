@@ -3,7 +3,7 @@
 import { useCallback } from "react"
 import { useSWRConfig } from "swr"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
-import { groupFeedKey, type GroupPost } from "./useQueryGroupFeedSwr"
+import { matchesGroupFeedKey, type GroupPost } from "./useQueryGroupFeedSwr"
 
 /**
  * Toggles the current user's like on a group feed post. No group-post reaction
@@ -26,7 +26,7 @@ export const useMutateReactGroupPostSwr = (groupId: string) => {
                 return
             }
             await mutate<Array<GroupPost>>(
-                groupFeedKey(groupId),
+                matchesGroupFeedKey(groupId),
                 (current) =>
                     current?.map((post) => {
                         if (post.id !== postId) {

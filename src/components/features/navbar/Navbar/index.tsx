@@ -40,6 +40,9 @@ import {
     NotificationBell,
 } from "./NotificationBell"
 import {
+    CartButton,
+} from "./CartButton"
+import {
     LanguageDropdown,
 } from "./LanguageDropdown"
 import { useNavbarBottomLayerStore } from "@/hooks/zustand/navbarBottomLayer/store"
@@ -136,6 +139,7 @@ export const Navbar = ({ className }: NavbarProps) => {
                             <PaletteIcon className="size-5" aria-hidden focusable="false" />
                         </Button>
                     </div>
+                    <CartButton />
                     <NotificationBell />
                     <AccountMenuDropdown />
                     {/* mobile: expand icon → navigation drawer */}

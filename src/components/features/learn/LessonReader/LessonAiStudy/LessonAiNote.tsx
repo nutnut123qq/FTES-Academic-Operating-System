@@ -27,6 +27,9 @@ export interface LessonAiNoteProps {
  * persists like any hand-written note). Generation kicks off automatically when the
  * panel opens ("on demand" = opening the tool); a Regenerate button re-runs it.
  *
+ * This component is mounted by {@link LessonAiStudy} for UNLOCKED VIDEO lessons
+ * only; document/link lessons never render it.
+ *
  * @param props - {@link LessonAiNoteProps}
  */
 export const LessonAiNote = ({ lessonId }: LessonAiNoteProps) => {

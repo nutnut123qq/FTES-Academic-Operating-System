@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useCallback, useEffect, useState, type Key } from "react"
+import React, { useCallback, useEffect, useRef, useState, type Key } from "react"
 import { Button, Card, Typography } from "@heroui/react"
 import { ArrowRightIcon, ChatsCircleIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
@@ -32,13 +32,27 @@ const FILTER_ORDER: ReadonlyArray<CourseQuestionFilter> = [
 const parseFilter = (raw: string | null): CourseQuestionFilter =>
     FILTER_ORDER.find((value) => value === raw) ?? CourseQuestionFilter.Unanswered
 
+/** Props for {@link CourseQa}. */
+export interface CourseQaProps {
+    /**
+     * When true, the component renders without its page chrome (`PageHeader`, outer
+     * `max-w-3xl mx-auto`) so it can compose inline inside another surface such as
+     * the lesson-reader discussion area.
+     */
+    embedded?: boolean
+}
+
 /**
  * Course-wide Q&A roll-up (lean FTES port of starci CourseQa, mock-backed): every
- * top-level question across the course's lessons with filter tabs (URL-synced),
- * debounced search, a course-general composer, an answers thread per row, and an
- * invitation empty-state that funnels into the course content.
+ * top-level question across the course's lessons with filter tabs (URL-synced on the
+ * dedicated `/learn/qa` route, in-memory when `embedded`), debounced search, a
+ * course-general composer, an answers thread per row, and an invitation empty-state
+ * that funnels into the course content.
+ *
+ * Pagination is progressive: pressing "See more" appends the next page inline and
+ * scrolls the new block into view, keeping the learner on the same surface.
  */
-export const CourseQa = () => {
+export const CourseQa = ({ embedded = false }: CourseQaProps) => {
     const t = useTranslations("learn")
     const router = useRouter()
     const pathname = usePathname()
@@ -49,7 +63,12 @@ export const CourseQa = () => {
     const currentUserId = viewer?.id ?? null
 
     const [isPosting, setIsPosting] = useState(false)
-    const filter = parseFilter(searchParams.get("filter"))
+
+    // Embedded mode keeps filter/search in local state so the reader URL stays clean.
+    // The dedicated `/learn/qa` route still syncs the active filter to `?filter=`.
+    const [embeddedFilter, setEmbeddedFilter] = useState(CourseQuestionFilter.Unanswered)
+    const urlFilter = parseFilter(searchParams.get("filter"))
+    const filter = embedded ? embeddedFilter : urlFilter
 
     const [searchInput, setSearchInput] = useState("")
     const [debouncedSearch, setDebouncedSearch] = useState("")
@@ -59,9 +78,11 @@ export const CourseQa = () => {
     }, [searchInput])
 
     const [page, setPage] = useState(1)
-    useEffect(() => { setPage(1) }, [filter, debouncedSearch])
+    useEffect(() => {
+        setPage(1)
+    }, [filter, debouncedSearch])
 
-    const { data, isLoading, error, mutate } = useQueryCourseQuestionsSwr({
+    const { data, isLoading, isValidating, error, mutate } = useQueryCourseQuestionsSwr({
         courseId,
         filter,
         search: debouncedSearch,
@@ -69,22 +90,50 @@ export const CourseQa = () => {
         currentUserId,
     })
 
-    const questions = data?.questions ?? []
     const total = data?.total ?? 0
     const totalPages = Math.max(1, Math.ceil(total / QUESTIONS_PER_PAGE))
 
+    // Accumulate rows across pages for the progressive "See more" UX.
+    const [allQuestions, setAllQuestions] = useState(data?.questions ?? [])
+    const lastAppendedPageRef = useRef(0)
+    const appendedBlockRef = useRef<HTMLDivElement>(null)
+    useEffect(() => {
+        if (!data) {
+            return
+        }
+        if (page === 1) {
+            setAllQuestions(data.questions)
+            lastAppendedPageRef.current = 1
+            return
+        }
+        if (page > lastAppendedPageRef.current) {
+            setAllQuestions((prev) => [...prev, ...data.questions])
+            lastAppendedPageRef.current = page
+            appendedBlockRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" })
+        }
+    }, [data, page])
+
     const onSelectFilter = useCallback(
         (key: Key) => {
+            const next = key as CourseQuestionFilter
+            if (embedded) {
+                setEmbeddedFilter(next)
+                return
+            }
             const params = new URLSearchParams(searchParams.toString())
             params.set("filter", String(key))
             router.replace(`${pathname}?${params.toString()}`, { scroll: false })
         },
-        [pathname, router, searchParams],
+        [embedded, pathname, router, searchParams],
     )
 
     const goToContent = useCallback(() => {
+        if (embedded) {
+            router.push(`/courses/${courseId}/learn/content`)
+            return
+        }
         router.push(pathname.replace(/\/qa$/, "/content"))
-    }, [pathname, router])
+    }, [embedded, pathname, router, courseId])
 
     const onSubmitQuestion = useCallback((body: string) => {
         if (!viewer) {
@@ -120,9 +169,13 @@ export const CourseQa = () => {
 
     const filterTabs = FILTER_ORDER.map((value) => ({ key: value, label: t(`courseQa.filter.${value}`) }))
 
+    const chromeClass = embedded ? "flex w-full flex-col gap-6" : "mx-auto flex w-full max-w-3xl flex-col gap-6"
+
     return (
-        <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-            <PageHeader title={t("courseQa.title")} description={t("courseQa.description")} />
+        <div className={chromeClass}>
+            {embedded ? null : (
+                <PageHeader title={t("courseQa.title")} description={t("courseQa.description")} />
+            )}
 
             {isInvitationEmpty ? (
                 <Card>
@@ -174,19 +227,19 @@ export const CourseQa = () => {
                     </div>
 
                     <AsyncContent
-                        isLoading={isLoading && questions.length === 0}
+                        isLoading={isLoading && allQuestions.length === 0}
                         skeleton={<CourseQaSkeleton />}
-                        isEmpty={questions.length === 0}
+                        isEmpty={allQuestions.length === 0}
                         emptyContent={{ title: t("courseQa.searchEmpty") }}
-                        error={questions.length === 0 ? error : undefined}
+                        error={allQuestions.length === 0 ? error : undefined}
                         errorContent={{
                             title: t("courseQa.loadError"),
                             onRetry: () => { void mutate() },
                             retryLabel: t("common.retry"),
                         }}
                     >
-                        <div className="flex flex-col gap-3">
-                            {questions.map((question) => (
+                        <div ref={appendedBlockRef} className="flex flex-col gap-3">
+                            {allQuestions.map((question) => (
                                 <QuestionRow
                                     key={question.id}
                                     question={question}
@@ -195,16 +248,16 @@ export const CourseQa = () => {
                                 />
                             ))}
 
-                            {totalPages > 1 ? (
-                                <div className="flex items-center justify-center gap-3">
-                                    <Button size="sm" variant="tertiary" isDisabled={page <= 1} onPress={() => setPage((p) => Math.max(1, p - 1))}>
-                                        {t("comments.prev")}
-                                    </Button>
-                                    <Typography type="body-xs" color="muted">
-                                        {t("comments.pageOf", { page, total: totalPages })}
-                                    </Typography>
-                                    <Button size="sm" variant="tertiary" isDisabled={page >= totalPages} onPress={() => setPage((p) => Math.min(totalPages, p + 1))}>
-                                        {t("comments.next")}
+                            {page < totalPages ? (
+                                <div className="flex items-center justify-center">
+                                    <Button
+                                        size="sm"
+                                        variant="tertiary"
+                                        isPending={isValidating}
+                                        isDisabled={isValidating}
+                                        onPress={() => setPage((p) => p + 1)}
+                                    >
+                                        {t("courseQa.seeMore")}
                                     </Button>
                                 </div>
                             ) : null}

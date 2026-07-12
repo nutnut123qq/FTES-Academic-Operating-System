@@ -32,8 +32,8 @@ type Tool = "none" | "note" | "flashcard"
  * is no dedicated lesson-scoped note/flashcard endpoint on the API today.
  *
  * Mounted by {@link import("../index").LessonReader} inside the reading (content)
- * view only for UNLOCKED lessons — never rendered for a locked/premium lesson,
- * matching the reader's `#lesson-article select-none` gate.
+ * view only for UNLOCKED VIDEO lessons — never rendered for a locked/premium lesson
+ * or a non-video lesson, matching the reader's content-type gate.
  *
  * @param props - {@link LessonAiStudyProps}
  */

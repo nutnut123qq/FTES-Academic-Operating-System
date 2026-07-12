@@ -62,6 +62,9 @@ const parseFlashcards = (raw: string): Array<Flashcard> => {
  * front↔back, a "Card i/total" meter, prev/next, and a done summary). Generation
  * runs when the panel opens; Regenerate re-runs it.
  *
+ * This component is mounted by {@link LessonAiStudy} for UNLOCKED VIDEO lessons
+ * only; document/link lessons never render it.
+ *
  * @param props - {@link LessonAiFlashcardsProps}
  */
 export const LessonAiFlashcards = ({ lessonId }: LessonAiFlashcardsProps) => {

@@ -10,6 +10,7 @@ import { LeaderboardCategoryRail } from "@/components/features/learn/Leaderboard
 import { ContentAiFab } from "@/components/features/learn/ContentAiFab"
 import { ContentAiSelectionAsk } from "@/components/features/learn/LessonReader/ContentAiSelectionAsk"
 import { ResizableRail } from "@/components/blocks/layout/ResizableRail"
+import { useLearnSidebarStore } from "@/hooks/zustand/learnSidebar/store"
 
 /**
  * Learn shell layout (StarCI port). Owns the 3-rail composition so every learn
@@ -33,6 +34,7 @@ const LearnLayout = ({ children }: PropsWithChildren) => {
     const t = useTranslations("learn")
     const { courseId } = useParams<{ courseId: string }>()
     const segments = useSelectedLayoutSegments()
+    const { collapsed } = useLearnSidebarStore()
 
     const isContent = segments[0] === "content"
     const isModules = segments.includes("modules")
@@ -48,7 +50,10 @@ const LearnLayout = ({ children }: PropsWithChildren) => {
     const railClass =
         "relative hidden shrink-0 lg:sticky lg:top-16 lg:flex lg:h-[calc(100dvh-4rem)] lg:flex-col lg:self-start lg:border-r lg:border-default"
 
-    const leftRail = (isContent || isModules) ? (
+    // Collapsing the content-map rail on the lesson reader widens the reading column.
+    // The toggle lives in the reader header; the layout simply reads the shared store.
+    const showContentMap = (isContent || isModules) && !(collapsed && isLessonReader)
+    const leftRail = showContentMap ? (
         <ResizableRail
             className={railClass}
             storageKey="ftes.learn.contentMap.width"

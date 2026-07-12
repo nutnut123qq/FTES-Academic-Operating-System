@@ -1,10 +1,11 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useRef, useState } from "react"
 import { Button, TextArea, TextField, Typography, cn } from "@heroui/react"
 import { ChatCircleIcon, LockSimpleIcon, PaperPlaneTiltIcon, ThumbsUpIcon, TrashIcon } from "@phosphor-icons/react"
 import { useLocale, useTranslations } from "next-intl"
 import { useRouter } from "@/i18n/navigation"
+import { CourseQa } from "../../CourseQa"
 import { RestError } from "@/modules/api/rest/client"
 import { useAppSelector } from "@/redux/hooks"
 import { useGetLessonCommentsSwr } from "@/hooks/swr/api/rest/queries/useGetLessonCommentsSwr"
@@ -261,6 +262,8 @@ export const LessonComments = ({ courseId, contentId, className }: LessonComment
     const runRest = useRestWithToast()
 
     const [page, setPage] = useState(1)
+    const [showAllQuestions, setShowAllQuestions] = useState(false)
+    const allQuestionsRef = useRef<HTMLDivElement>(null)
     const commentsSwr = useGetLessonCommentsSwr(contentId, page)
     const post = usePostLessonCommentSwr()
     const remove = useDeleteLessonCommentSwr()
@@ -352,7 +355,15 @@ export const LessonComments = ({ courseId, contentId, className }: LessonComment
                 </div>
                 <button
                     type="button"
-                    onClick={() => router.push(`/courses/${courseId}/learn/qa`)}
+                    onClick={() => {
+                        const next = !showAllQuestions
+                        setShowAllQuestions(next)
+                        if (next) {
+                            window.setTimeout(() => {
+                                allQuestionsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+                            }, 0)
+                        }
+                    }}
                     className="cursor-pointer rounded-full text-xs text-muted outline-none transition-colors hover:text-accent hover:underline focus-visible:ring-2 focus-visible:ring-accent"
                 >
                     {t("comments.seeAllQuestions")}
@@ -471,6 +482,12 @@ export const LessonComments = ({ courseId, contentId, className }: LessonComment
                     ) : null}
                 </div>
             </AsyncContent>
+
+            {showAllQuestions ? (
+                <div ref={allQuestionsRef} className="pt-2">
+                    <CourseQa embedded />
+                </div>
+            ) : null}
         </section>
     )
 }

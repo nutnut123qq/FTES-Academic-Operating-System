@@ -25,11 +25,14 @@ import {
     BookOpenIcon,
     CaretLeftIcon,
     CaretRightIcon,
+    ListIcon,
     LockSimpleIcon,
     PuzzlePieceIcon,
 } from "@phosphor-icons/react"
 import { Button } from "@heroui/react"
 import { useQueryLearnLessonSwr } from "../hooks/useQueryLearnLessonSwr"
+import { useLearnSidebarStore } from "@/hooks/zustand/learnSidebar/store"
+import { useCourseEnrollment } from "@/components/features/course/hooks/useCourseEnrollment"
 import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
 import { InteractionBar } from "@/components/reuseable/Discussion/InteractionBar"
 import { useLessonReactionMock } from "./useLessonReactionMock"
@@ -86,6 +89,12 @@ export const LessonReader = () => {
     const router = useRouter()
     const { courseId, contentId } = useParams<{ courseId: string; contentId: string }>()
     const { lesson, error, mutate } = useQueryLearnLessonSwr(courseId, contentId)
+    const { toggle: toggleSidebar } = useLearnSidebarStore()
+    const { onEnroll, isEnrolling } = useCourseEnrollment(
+        courseId,
+        undefined,
+        lesson ? { rawId: lesson.courseRawId, title: lesson.title } : undefined,
+    )
 
     const [view, setView] = useState<ContentView>("content")
     const [lang, setLang] = useState("typescript")
@@ -173,6 +182,31 @@ export const LessonReader = () => {
                                 breadcrumb={<ResponsiveBreadcrumb items={breadcrumbItems} />}
                                 title={lesson.title}
                                 description={lesson.description}
+                                actions={(
+                                    <div className="flex items-center gap-2">
+                                        {lesson.nextId ? (
+                                            <Button
+                                                size="sm"
+                                                variant="secondary"
+                                                onPress={() => router.push(readerHref(courseId, lesson.nextId!))}
+                                            >
+                                                <span className="flex items-center gap-1">
+                                                    {t("reader.nextLesson")}
+                                                    <CaretRightIcon aria-hidden focusable="false" className="size-4" />
+                                                </span>
+                                            </Button>
+                                        ) : null}
+                                        <Button
+                                            isIconOnly
+                                            size="sm"
+                                            variant="tertiary"
+                                            aria-label={t("reader.toggleSidebar")}
+                                            onPress={toggleSidebar}
+                                        >
+                                            <ListIcon aria-hidden focusable="false" className="size-5" />
+                                        </Button>
+                                    </div>
+                                )}
                                 meta={lesson.minutesRead > 0 || lesson.challengeCount > 0 ? (
                                     <div className="flex flex-wrap items-center gap-2">
                                         {lesson.minutesRead > 0 ? (
@@ -301,7 +335,7 @@ export const LessonReader = () => {
                                                     <Typography type="body-sm" color="muted">
                                                         {t("reader.lockedBody")}
                                                     </Typography>
-                                                    <Button variant="primary" onPress={() => router.push(`/courses/${courseId}`)}>
+                                                    <Button variant="primary" isPending={isEnrolling} onPress={() => onEnroll()}>
                                                         {t("reader.enrollCta")}
                                                     </Button>
                                                 </div>
@@ -328,8 +362,8 @@ export const LessonReader = () => {
                                         className="mx-auto w-full max-w-3xl"
                                     />
                                     {/* on-demand AI study tools (note + flashcards) grounded on
-                                        this lesson — unlocked, non-empty lessons only */}
-                                    {!isReadingEmpty ? (
+                                        this lesson — VIDEO-lesson-only, still behind the lock gate */}
+                                    {lesson.isVideoLesson ? (
                                         <LessonAiStudy contentId={contentId} className="mx-auto w-full max-w-3xl" />
                                     ) : null}
                                     <LessonComments courseId={courseId} contentId={contentId} className="mx-auto w-full max-w-3xl" />

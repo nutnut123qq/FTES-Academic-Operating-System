@@ -5529,6 +5529,7 @@
       "emptyCta": "Vào học ngay",
       "composerPlaceholder": "Đặt câu hỏi chung cho khóa học…",
       "composerSubmit": "Đăng câu hỏi",
+      "seeMore": "Xem thêm câu hỏi",
       "answerCount": "{count} câu trả lời",
       "answerPlaceholder": "Viết câu trả lời…",
       "answerSubmit": "Trả lời",
@@ -5589,6 +5590,7 @@
       },
       "prevLesson": "Bài trước",
       "nextLesson": "Bài sau",
+      "toggleSidebar": "Thu gọn/ mở rộng bảng học phần",
       "tabListAria": "Các mục của bài học",
       "reactionAria": "Bày tỏ cảm xúc",
       "views2": "xem"

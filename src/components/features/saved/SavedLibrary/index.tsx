@@ -90,7 +90,7 @@ export const SavedLibrary = () => {
     const { courses, isLoading: coursesLoading, error: coursesError, mutate: mutateCourses } = useQueryCoursesSwr()
     const { posts: communityPosts, isLoading: communityLoading, error: communityError, mutate: mutateCommunity } = useQueryCommunityFeedSwr()
     const { posts: groupPosts, isLoading: groupLoading, error: groupError, mutate: mutateGroup } = useQueryGroupFeedSwr("saved-library")
-    const { posts: subjectPosts, isLoading: subjectLoading, error: subjectError, mutate: mutateSubject } = useQuerySubjectFeedSwr("saved-library", "forYou")
+    const { posts: subjectPosts, isLoading: subjectLoading, error: subjectError, mutate: mutateSubject } = useQuerySubjectFeedSwr("saved-library")
 
     const isJoining =
         !isHydrated ||

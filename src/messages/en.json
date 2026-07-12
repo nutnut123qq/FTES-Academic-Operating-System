@@ -5529,6 +5529,7 @@
       "emptyCta": "Start learning",
       "composerPlaceholder": "Ask a course-wide question…",
       "composerSubmit": "Post question",
+      "seeMore": "See more questions",
       "answerCount": "{count} answers",
       "answerPlaceholder": "Write an answer…",
       "answerSubmit": "Answer",
@@ -5589,6 +5590,7 @@
       },
       "prevLesson": "Previous",
       "nextLesson": "Next",
+      "toggleSidebar": "Collapse/expand module sidebar",
       "tabListAria": "Lesson sections",
       "reactionAria": "React",
       "views2": "view"

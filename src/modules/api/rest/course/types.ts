@@ -188,6 +188,8 @@ export interface LessonContentView {
     readingMinutes: number | null
     locked: boolean
     teaser: TeaserInfo | null
+    /** True when a PUBLISHED challenge is linked to this lesson (additive, defaults false). */
+    hasChallenge?: boolean
 }
 
 /** Body sent to `PUT /api/v1/lessons/{lessonId}/content`. */

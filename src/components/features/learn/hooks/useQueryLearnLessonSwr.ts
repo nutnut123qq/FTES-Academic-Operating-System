@@ -59,6 +59,10 @@ export interface LearnLessonView {
     prevTitle: string | null
     nextTitle: string | null
     isCompleted: boolean
+    /** The BE lesson content-type (`LessonView.type`), e.g. "VIDEO" or "DOCUMENT". */
+    contentType: string
+    /** Derived: true when this lesson is a VIDEO lesson (authoritative content-type). */
+    isVideoLesson: boolean
     /** True → this lesson has an auto-graded challenge (shows the submission entry). */
     hasChallenge: boolean
     /** Premium + not enrolled → body is gated (select-none, AI ask suppressed). */
@@ -87,6 +91,8 @@ interface FlatLesson {
     description: string
     moduleId: string
     moduleTitle: string
+    /** BE lesson content-type (`LessonView.type`). */
+    type: string
     /** BE video processing state — "READY" means a playable video exists. */
     videoStatus: string
     /** Streaming ref (YouTube URL or `video_*` token). */
@@ -110,6 +116,7 @@ const flattenCurriculum = (detail: CourseDetail): Array<FlatLesson> =>
                     description: lesson.description,
                     moduleId: section.id,
                     moduleTitle: section.name,
+                    type: lesson.type ?? "",
                     videoStatus: lesson.videoStatus ?? "",
                     videoRef: lesson.videoRef ?? null,
                     locked: lesson.locked ?? false,
@@ -127,6 +134,10 @@ const buildLessonView = (
     const prev = index > 0 ? curriculum[index - 1] : undefined
     const next = index >= 0 && index < curriculum.length - 1 ? curriculum[index + 1] : undefined
     const minutes = content.readingMinutes ?? 0
+    const contentType = current?.type ?? ""
+    const isVideoLesson = contentType === "VIDEO"
+    // TODO: remove fallback once `GET /lessons/{id}/content` reliably returns `hasChallenge`.
+    const hasChallenge = content.hasChallenge ?? false
 
     // A migrated video ref is a YouTube link or an internal `video_*` token. Anything
     // else in `videoRef` (Drive links, notes) is authored HTML for an attachment
@@ -155,7 +166,9 @@ const buildLessonView = (
         // Base default — the hook overlays the REAL completed state from the
         // viewer's course-progress query (shared with the rail) before returning.
         isCompleted: false,
-        hasChallenge: false,
+        contentType,
+        isVideoLesson,
+        hasChallenge,
         // Trust the per-viewer curriculum lock — `content.locked` comes from
         // `GET /lessons/{id}/content`, which 401s for an unentitled viewer and is
         // caught into a `locked: false` fallback (a lie that hides the paywall).

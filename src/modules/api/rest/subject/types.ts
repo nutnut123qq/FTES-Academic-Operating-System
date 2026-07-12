@@ -134,6 +134,9 @@ export interface MemberView {
     userId: string
     role: string
     joinedAt: string
+    username?: string | null
+    displayName?: string | null
+    avatarUrl?: string | null
 }
 
 /** My membership row. */

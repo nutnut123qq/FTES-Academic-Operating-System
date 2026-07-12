@@ -6,19 +6,20 @@ import { useLocale, useTranslations } from "next-intl"
 import { toast } from "@heroui/react"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
 import { reactToPost, unreactPost } from "@/modules/api/rest/community"
-import { subjectFeedKey, type SubjectPost } from "./useQuerySubjectFeedSwr"
+import { subjectFeedKey, type FeedScope, type SubjectPost } from "./useQuerySubjectFeedSwr"
 
 /**
  * Toggles the current user's like on a subject "Thảo luận" post. These are REAL
  * community posts (scoped to the subject via `subjectWorkspace.community`), so the
  * write REUSES the community REST reactions API (`PUT`/`DELETE
  * /community/reactions`) with an optimistic update over the
- * `["subject-feed", subjectId, locale]` cache and rollback on failure. Guests get
+ * `["subject-feed", subjectId, locale, scope]` cache and rollback on failure. Guests get
  * the `AuthenticationModal` and nothing toggles.
  *
  * @param subjectId - the owning subject id.
+ * @param scope - the current feed scope so the optimistic update targets the right cache.
  */
-export const useMutateReactSubjectPostSwr = (subjectId: string) => {
+export const useMutateReactSubjectPostSwr = (subjectId: string, scope: FeedScope) => {
     const t = useTranslations("subjects")
     const locale = useLocale()
     const { mutate } = useSWRConfig()
@@ -29,7 +30,7 @@ export const useMutateReactSubjectPostSwr = (subjectId: string) => {
             if (!requireAuth("auth.context.like")) {
                 return
             }
-            const key = subjectFeedKey(subjectId, locale)
+            const key = subjectFeedKey(subjectId, locale, scope)
 
             // snapshot for rollback + capture the intended next state for the write
             let snapshot: Array<SubjectPost> | undefined
@@ -65,6 +66,6 @@ export const useMutateReactSubjectPostSwr = (subjectId: string) => {
                 toast.danger(t("community.likeFailed"))
             }
         },
-        [subjectId, locale, mutate, requireAuth, t],
+        [subjectId, scope, locale, mutate, requireAuth, t],
     )
 }

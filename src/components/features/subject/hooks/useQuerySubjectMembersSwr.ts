@@ -14,6 +14,8 @@ export interface SubjectMember {
     username: string
     /** Display name shown in the member list. */
     name: string
+    /** Uploaded avatar URL. */
+    avatarUrl?: string | null
     role: MemberRole
 }
 
@@ -31,16 +33,12 @@ const mapRole = (role: string): MemberRole => {
     }
 }
 
-/**
- * Maps a BE member row to the FE {@link SubjectMember}. The BE `MemberView` carries
- * only `{userId, role, joinedAt}` — no display name or username — so the id is used
- * as a best-effort stand-in (a profile join would be needed to resolve names). The
- * seeded subjects have zero members today, so this feeds the tab's empty state.
- */
+/** Maps a BE member row to the FE {@link SubjectMember}. */
 const toMember = (member: MemberView): SubjectMember => ({
     id: member.userId,
-    username: member.userId,
-    name: member.userId,
+    username: member.username ?? member.userId,
+    name: member.displayName ?? member.userId,
+    avatarUrl: member.avatarUrl,
     role: mapRole(member.role),
 })
 

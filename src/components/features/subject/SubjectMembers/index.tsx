@@ -70,6 +70,7 @@ export const SubjectMembers = () => {
                             <UserLink
                                 username={member.username}
                                 displayName={member.name}
+                                avatar={member.avatarUrl}
                                 size="sm"
                                 className="min-w-0 flex-1"
                                 classNames={{ avatar: "size-9" }}

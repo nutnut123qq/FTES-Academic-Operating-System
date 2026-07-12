@@ -5706,6 +5706,47 @@
         "send": "Gửi câu trả lời",
         "streamError": "Giám khảo chưa thể phản hồi. Vui lòng thử lại.",
         "quotaError": "Bạn đã dùng hết lượt hỏi AI cho hôm nay."
+      },
+      "manage": {
+        "title": "Quản lý phỏng vấn",
+        "subtitle": "Tạo hoặc tạo lại bộ câu hỏi phỏng vấn AI cho khóa học này.",
+        "defaultTitle": "Phỏng vấn khóa học",
+        "titleField": "Tiêu đề",
+        "titlePlaceholder": "vd. Phỏng vấn cuối khóa",
+        "counts": {
+          "oral": "Vấn đáp",
+          "mcq": "Trắc nghiệm",
+          "essay": "Luận"
+        },
+        "difficultyField": "Độ khó",
+        "difficulty": {
+          "EASY": "Dễ",
+          "MEDIUM": "Trung bình",
+          "HARD": "Khó"
+        },
+        "languageField": "Ngôn ngữ",
+        "language": {
+          "vi": "Tiếng Việt",
+          "en": "Tiếng Anh"
+        },
+        "contextField": "Ngữ cảnh (tùy chọn)",
+        "contextPlaceholder": "Hướng dẫn thêm, chủ đề cần tập trung, nội dung cần tránh...",
+        "generate": "Tạo bộ câu hỏi",
+        "generateFailed": "Không tạo được bộ câu hỏi. Vui lòng thử lại.",
+        "forbiddenTitle": "Không phải giảng viên khóa học này",
+        "forbiddenBody": "Chỉ giảng viên của khóa học mới có thể tạo bộ câu hỏi phỏng vấn AI.",
+        "statusLabel": "Trạng thái",
+        "status": {
+          "GENERATING": "Đang tạo",
+          "READY": "Sẵn sàng",
+          "FAILED": "Thất bại",
+          "UNKNOWN": "Không xác định"
+        },
+        "failedHint": "Tạo bộ câu hỏi thất bại. Hãy điều chỉnh cài đặt và thử lại.",
+        "showPreview": "Xem trước câu hỏi",
+        "hidePreview": "Ẩn xem trước",
+        "answerKey": "Đáp án",
+        "rubric": "Thang điểm"
       }
     },
     "mindMap": {

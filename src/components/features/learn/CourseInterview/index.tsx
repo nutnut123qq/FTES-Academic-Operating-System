@@ -4,7 +4,9 @@ import React, { useState } from "react"
 import { Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
+import { useHasPermission } from "@/hooks/useHasPermission"
 import type { FinishAttemptView, StartAttemptView, SubmitAnswerView } from "@/modules/api/rest/interview"
+import { CourseInterviewManage } from "./CourseInterviewManage"
 import { GreenRoom } from "./GreenRoom"
 import { SessionRunner } from "./SessionRunner"
 import { Scorecard } from "./Scorecard"
@@ -26,6 +28,7 @@ export interface ActiveAttempt {
 export const CourseInterview = () => {
     const t = useTranslations("learn")
     const { courseId } = useParams<{ courseId: string }>()
+    const isLecturer = useHasPermission("ai.teacher.use")
     const [phase, setPhase] = useState<Phase>("greenroom")
     const [active, setActive] = useState<ActiveAttempt | null>(null)
     const [scorecard, setScorecard] = useState<FinishAttemptView | null>(null)
@@ -61,6 +64,8 @@ export const CourseInterview = () => {
                 <Typography type="h4">{t("courseInterview.title")}</Typography>
                 <Typography type="body-sm" color="muted">{t("courseInterview.subtitle")}</Typography>
             </div>
+
+            {isLecturer ? <CourseInterviewManage courseId={courseId} /> : null}
 
             {phase === "greenroom" ? (
                 <GreenRoom courseId={courseId} onStarted={handleStarted} />

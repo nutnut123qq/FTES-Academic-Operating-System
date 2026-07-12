@@ -1,7 +1,9 @@
 import { restRequest } from "@/modules/api/rest/client"
 import type {
     FinishAttemptView,
-    InterviewTemplateView,
+    GenerateInterviewTemplateRequest,
+    GenerateInterviewTemplateView,
+    InterviewTemplateFullView,
     StartAttemptRequest,
     StartAttemptView,
     SubmitAnswerParams,
@@ -13,15 +15,33 @@ const BASE = "/ai/interview"
 
 // ---------------- reads ----------------
 
-/** Fetch the course interview template and current question set (student view). */
-export const getInterviewTemplate = async (courseRef: string): Promise<InterviewTemplateView> =>
-    restRequest<InterviewTemplateView>({
+/**
+ * Fetch the course interview template and current question set.
+ * The backend returns a stripped student view or a full lecturer view depending
+ * on the caller's permissions; the FE type keeps all fields optional so both
+ * shapes degrade gracefully.
+ */
+export const getInterviewTemplate = async (courseRef: string): Promise<InterviewTemplateFullView> =>
+    restRequest<InterviewTemplateFullView>({
         method: "GET",
         url: `${BASE}/templates/${courseRef}`,
         authenticated: true,
     })
 
 // ---------------- writes ----------------
+
+/**
+ * Generate a new interview template + question set for a course.
+ * Requires `ai.teacher.use` and lecturer-of-course permissions on the backend.
+ */
+export const generateInterviewTemplate = async (
+    request: GenerateInterviewTemplateRequest,
+): Promise<GenerateInterviewTemplateView> =>
+    restRequest<GenerateInterviewTemplateView>({
+        method: "POST",
+        url: `${BASE}/templates`,
+        data: request,
+    })
 
 /** Start a new attempt for the given question set. */
 export const startInterviewAttempt = async (request: StartAttemptRequest): Promise<StartAttemptView> =>

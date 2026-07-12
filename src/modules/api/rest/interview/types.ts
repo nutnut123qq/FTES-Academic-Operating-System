@@ -17,6 +17,12 @@ export interface InterviewQuestionView {
     options?: string[]
 }
 
+/** Lecturer-only full view of a generated question (includes grading material). */
+export interface InterviewQuestionFullView extends InterviewQuestionView {
+    answerKey?: string
+    rubric?: string
+}
+
 /** The generated question set for a course. */
 export interface InterviewQuestionSetView {
     id: string
@@ -24,10 +30,48 @@ export interface InterviewQuestionSetView {
     questions?: InterviewQuestionView[]
 }
 
+/** Lecturer-only full view of the generated question set. */
+export interface InterviewQuestionSetFullView {
+    id: string
+    status: string
+    questions?: InterviewQuestionFullView[]
+}
+
 /** Template + question set returned by the intake endpoint. */
 export interface InterviewTemplateView {
     template: unknown // TODO: define if the backend exposes structured config
     questionSet: InterviewQuestionSetView
+}
+
+/** Lecturer-only template + full question set view. */
+export interface InterviewTemplateFullView {
+    template: unknown // TODO: define if the backend exposes structured config
+    questionSet: InterviewQuestionSetFullView
+}
+
+/** Question counts by type for a new interview template. */
+export interface InterviewTemplateCounts {
+    oral: number
+    mcq: number
+    essay: number
+}
+
+/** Body for generating a new interview template / question set. */
+export interface GenerateInterviewTemplateRequest {
+    courseRef: string
+    title: string
+    counts: InterviewTemplateCounts
+    difficulty?: "EASY" | "MEDIUM" | "HARD"
+    language?: "vi" | "en"
+    context?: string
+    model?: string
+}
+
+/** Response after enqueueing a new interview generation job. */
+export interface GenerateInterviewTemplateView {
+    templateId: string
+    questionSetId: string
+    status: "GENERATING" | "READY" | "FAILED"
 }
 
 /** Start a new attempt against a ready question set. */
@@ -74,3 +118,6 @@ export interface SubmitAnswerParams {
     attemptId: string
     request: SubmitAnswerRequest
 }
+
+/** Short status values returned for a question set. */
+export type InterviewQuestionSetStatus = "GENERATING" | "READY" | "FAILED"

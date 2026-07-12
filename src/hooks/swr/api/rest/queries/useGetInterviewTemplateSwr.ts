@@ -1,15 +1,20 @@
 "use client"
 
 import useSWR from "swr"
-import { getInterviewTemplate, type InterviewTemplateView } from "@/modules/api/rest/interview"
+import type { SWRConfiguration } from "swr"
+import { getInterviewTemplate, type InterviewTemplateFullView } from "@/modules/api/rest/interview"
 
 /**
  * SWR query wrapper for {@link getInterviewTemplate}.
  */
-export const useGetInterviewTemplateSwr = (courseRef: string) => {
-    const swr = useSWR<InterviewTemplateView, Error>(
+export const useGetInterviewTemplateSwr = (
+    courseRef: string,
+    options?: SWRConfiguration<InterviewTemplateFullView, Error>,
+) => {
+    const swr = useSWR<InterviewTemplateFullView, Error>(
         courseRef ? ["GET_INTERVIEW_TEMPLATE_SWR", courseRef] : null,
         () => getInterviewTemplate(courseRef),
+        options,
     )
 
     return swr

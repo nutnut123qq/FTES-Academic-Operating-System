@@ -5706,6 +5706,47 @@
         "send": "Send reply",
         "streamError": "The examiner couldn't respond. Please try again.",
         "quotaError": "You've used up your AI questions for today."
+      },
+      "manage": {
+        "title": "Manage interview",
+        "subtitle": "Generate or regenerate the AI interview question set for this course.",
+        "defaultTitle": "Course interview",
+        "titleField": "Title",
+        "titlePlaceholder": "e.g. Final interview",
+        "counts": {
+          "oral": "Oral",
+          "mcq": "MCQ",
+          "essay": "Essay"
+        },
+        "difficultyField": "Difficulty",
+        "difficulty": {
+          "EASY": "Easy",
+          "MEDIUM": "Medium",
+          "HARD": "Hard"
+        },
+        "languageField": "Language",
+        "language": {
+          "vi": "Vietnamese",
+          "en": "English"
+        },
+        "contextField": "Context (optional)",
+        "contextPlaceholder": "Extra instructions, topics to focus on, materials to avoid...",
+        "generate": "Generate question set",
+        "generateFailed": "Couldn't generate the question set. Please try again.",
+        "forbiddenTitle": "Not this course's lecturer",
+        "forbiddenBody": "Only the course lecturer can generate the AI interview question set.",
+        "statusLabel": "Status",
+        "status": {
+          "GENERATING": "Generating",
+          "READY": "Ready",
+          "FAILED": "Failed",
+          "UNKNOWN": "Unknown"
+        },
+        "failedHint": "Generation failed. Adjust the settings and try again.",
+        "showPreview": "Show question preview",
+        "hidePreview": "Hide question preview",
+        "answerKey": "Answer key",
+        "rubric": "Rubric"
       }
     },
     "mindMap": {

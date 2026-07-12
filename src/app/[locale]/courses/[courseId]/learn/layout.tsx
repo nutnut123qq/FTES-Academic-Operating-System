@@ -42,6 +42,7 @@ const LearnLayout = ({ children }: PropsWithChildren) => {
     const isLeaderboard = segments[0] === "leaderboard"
     const isMindMap = segments[0] === "mind-map"
     const isMockInterview = segments[0] === "mock-interview"
+    const isInterview = segments[0] === "interview"
     // the lesson reader is a real `contents/<id>` route (not the challenge sub-route)
     const isLessonReader = isModules && segments.includes("contents") && !isChallenge
 
@@ -84,7 +85,7 @@ const LearnLayout = ({ children }: PropsWithChildren) => {
             {/* floating "Ask FTES AI" mascot + selection-anchored ask (self-hide when no lesson) */}
             <ContentAiFab />
             <ContentAiSelectionAsk />
-            <LearnShell leftRail={leftRail} rightRail={rightRail} fullBleed={isMindMap || isMockInterview}>
+            <LearnShell leftRail={leftRail} rightRail={rightRail} fullBleed={isMindMap || isMockInterview || isInterview}>
                 {children}
             </LearnShell>
         </>

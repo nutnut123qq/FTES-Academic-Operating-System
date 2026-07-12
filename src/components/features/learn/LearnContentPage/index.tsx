@@ -117,6 +117,25 @@ export const LearnContentPage = () => {
                             </Button>
                         </div>
 
+                        {/* course AI interview entry */}
+                        <div className="flex flex-col gap-3 rounded-3xl border border-default bg-surface p-4">
+                            <div className="flex flex-col gap-1">
+                                <Typography type="body-sm" weight="semibold">
+                                    {t("courseInterview.entryTitle")}
+                                </Typography>
+                                <Typography type="body-xs" color="muted">
+                                    {t("courseInterview.entrySubtitle")}
+                                </Typography>
+                            </div>
+                            <Button
+                                variant="secondary"
+                                className="self-start"
+                                onPress={() => router.push(`/courses/${courseId}/learn/interview`)}
+                            >
+                                {t("courseInterview.title")}
+                            </Button>
+                        </div>
+
                         {/* about — the module→lesson tree lives in the LEFT content-map rail,
                             so the home body describes the course instead of repeating it. */}
                         {header.description ? (

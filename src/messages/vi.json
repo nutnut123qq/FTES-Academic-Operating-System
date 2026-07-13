@@ -5659,6 +5659,17 @@
       "avgScore": "Điểm trung bình",
       "attemptCount": "Số lượt",
       "verdictBreakdown": "Phân bố kết quả",
+      "attributesTitle": "Phân tích kỹ năng",
+      "attribute": {
+        "communication": "Giao tiếp",
+        "structured_thinking": "Tư duy có cấu trúc",
+        "tradeoff_awareness": "Nhận thức đánh đổi"
+      },
+      "gaps": "Điểm cần cải thiện",
+      "trendTitle": "Xu hướng điểm",
+      "trendAttemptN": "Lượt {n}",
+      "scorecardEmptyTitle": "Chưa chấm điểm",
+      "scorecardEmptyBody": "Phiên này chưa được chấm. Quay lại luyện tập để nộp bài.",
       "entryTitle": "Luyện phỏng vấn",
       "entrySubtitle": "Luyện phỏng vấn mô phỏng có AI chấm điểm"
     },

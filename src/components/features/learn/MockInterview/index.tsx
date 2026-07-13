@@ -4,6 +4,7 @@ import React, { useState } from "react"
 import { Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
+import { useRouter } from "@/i18n/navigation"
 import { SegmentedControl } from "@/components/blocks/navigation/SegmentedControl"
 import type { ScorecardView, SessionDrawView, SessionView } from "@/modules/api/rest/mockinterview"
 import { GreenRoom } from "./GreenRoom"
@@ -31,6 +32,7 @@ export interface ActiveSession {
  */
 export const MockInterview = () => {
     const t = useTranslations("learn")
+    const router = useRouter()
     const { courseId } = useParams<{ courseId: string }>()
     const [tab, setTab] = useState<Tab>("practice")
     const [phase, setPhase] = useState<Phase>("greenroom")
@@ -62,6 +64,11 @@ export const MockInterview = () => {
     }
 
     const handleGraded = (card: ScorecardView) => {
+        // Push the session id into the URL so the scorecard is refresh-safe / shareable.
+        if (active?.sessionId) {
+            router.push(`/courses/${courseId}/learn/mock-interview/${active.sessionId}`)
+        }
+        // Keep local state for the brief transition and as a fallback.
         setScorecard(card)
         setPhase("scorecard")
     }

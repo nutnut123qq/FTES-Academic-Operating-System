@@ -5659,6 +5659,17 @@
       "avgScore": "Average score",
       "attemptCount": "Attempts",
       "verdictBreakdown": "Verdict breakdown",
+      "attributesTitle": "Skill breakdown",
+      "attribute": {
+        "communication": "Communication",
+        "structured_thinking": "Structured thinking",
+        "tradeoff_awareness": "Trade-off awareness"
+      },
+      "gaps": "Gaps",
+      "trendTitle": "Score trend",
+      "trendAttemptN": "Attempt {n}",
+      "scorecardEmptyTitle": "Not graded yet",
+      "scorecardEmptyBody": "This session hasn't been graded. Return to practice to submit answers.",
       "entryTitle": "Mock interview",
       "entrySubtitle": "AI-graded mock interview practice"
     },

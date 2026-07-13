@@ -1,8 +1,16 @@
 "use client"
 
-import React from "react"
+import React, { useId } from "react"
 import { Typography, cn } from "@heroui/react"
 import { useTranslations } from "next-intl"
+import {
+    Area,
+    AreaChart,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
+} from "recharts"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { useGetMockInterviewStatsSwr } from "@/hooks/swr/api/rest/queries/useGetMockInterviewStatsSwr"
@@ -14,7 +22,8 @@ export interface StatsPanelProps {
 }
 
 /**
- * Progress stats: average score, attempt count, and a pass/borderline/fail breakdown.
+ * Progress stats: average score, attempt count, verdict breakdown, and an overall-score
+ * trend chart over time.
  *
  * @param props - {@link StatsPanelProps}
  */
@@ -23,6 +32,17 @@ export const StatsPanel = ({ courseRef }: StatsPanelProps) => {
     const swr = useGetMockInterviewStatsSwr(courseRef)
     const stats = swr.data
     const insufficient = !stats || stats.insufficientData
+    const gradientId = useId()
+
+    const trendData = stats && stats.trend.length > 0
+        ? stats.trend.map((point, index) => ({
+            index,
+            label: t("mockInterview.trendAttemptN", { n: index + 1 }),
+            score: point.score,
+            verdict: point.verdict,
+            at: point.at,
+        }))
+        : []
 
     return (
         <AsyncContent
@@ -79,6 +99,39 @@ export const StatsPanel = ({ courseRef }: StatsPanelProps) => {
                             )
                         })}
                     </div>
+
+                    {trendData.length > 0 ? (
+                        <div className="flex flex-col gap-2">
+                            <Typography type="body-sm" weight="semibold">{t("mockInterview.trendTitle")}</Typography>
+                            <div className="h-44 w-full rounded-2xl border border-default p-4 text-accent">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={trendData} margin={{ top: 4, right: 4, bottom: 4, left: 4 }}>
+                                        <defs>
+                                            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="currentColor" stopOpacity={0.25} />
+                                                <stop offset="95%" stopColor="currentColor" stopOpacity={0.02} />
+                                            </linearGradient>
+                                        </defs>
+                                        <XAxis dataKey="label" hide />
+                                        <YAxis domain={[0, 100]} hide />
+                                        <Tooltip
+                                            formatter={(value) => [String(value), t("mockInterview.scoreLabel")]}
+                                            labelFormatter={(label) => label}
+                                        />
+                                        <Area
+                                            type="monotone"
+                                            dataKey="score"
+                                            stroke="currentColor"
+                                            strokeWidth={2}
+                                            fill={`url(#${gradientId})`}
+                                            dot={{ r: 3, strokeWidth: 2, fill: "currentColor" }}
+                                            activeDot={{ r: 5 }}
+                                        />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+                    ) : null}
                 </div>
             ) : null}
         </AsyncContent>

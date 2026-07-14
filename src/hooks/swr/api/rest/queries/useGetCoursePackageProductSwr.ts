@@ -1,7 +1,7 @@
 "use client"
 
 import useSWR from "swr"
-import { getProductForCourse, type ProductView } from "@/modules/api/rest/commerce"
+import { getProductForCourse, type ProductForCourseView } from "@/modules/api/rest/commerce"
 
 /**
  * Resolves the COURSE_UNLOCK product for ONE chosen package of a PACKAGE course,
@@ -18,7 +18,7 @@ export const useGetCoursePackageProductSwr = (
     courseId: string | undefined,
     packageId: string | undefined,
 ) => {
-    return useSWR<ProductView | null>(
+    return useSWR<ProductForCourseView | null>(
         courseId && packageId
             ? ["GET_COURSE_PACKAGE_PRODUCT_SWR", courseId, packageId]
             : null,

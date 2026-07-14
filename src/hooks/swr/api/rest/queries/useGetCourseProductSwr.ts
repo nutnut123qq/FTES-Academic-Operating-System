@@ -1,7 +1,7 @@
 "use client"
 
 import useSWR from "swr"
-import { getProductForCourse, type ProductView } from "@/modules/api/rest/commerce"
+import { getProductForCourse, type ProductForCourseView } from "@/modules/api/rest/commerce"
 
 /**
  * Resolves the COURSE_UNLOCK product that unlocks a course, for the detail-page
@@ -10,7 +10,7 @@ import { getProductForCourse, type ProductView } from "@/modules/api/rest/commer
  * UUID) — an empty id issues no request.
  */
 export const useGetCourseProductSwr = (courseId: string | undefined) => {
-    return useSWR<ProductView | null>(
+    return useSWR<ProductForCourseView | null>(
         courseId ? ["GET_COURSE_PRODUCT_SWR", courseId] : null,
         () => getProductForCourse(courseId as string).catch(() => null),
         { shouldRetryOnError: false },

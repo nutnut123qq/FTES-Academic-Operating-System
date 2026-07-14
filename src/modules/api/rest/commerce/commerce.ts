@@ -10,6 +10,8 @@ import type {
     InvoiceView,
     OrderView,
     PageView,
+    ProductForCourseView,
+    ProductsForCourseResponse,
     ProductUpsertRequest,
     ProductView,
     RefundCreateRequest,
@@ -221,13 +223,31 @@ export const getProductBySlug = async (slug: string): Promise<ProductView> => {
 export const getProductForCourse = async (
     courseId: string,
     packageId?: string,
-): Promise<ProductView> => {
-    return restRequest<ProductView>({
+): Promise<ProductForCourseView | null> => {
+    // The endpoint returns a WRAPPED shape `{ products, cheapest }` with NO top-level
+    // product id — reading `data.id` gives undefined, which then posts an empty
+    // `productId` to the cart and 400s. Resolve a concrete `products[]` entry here.
+    const res = await restRequest<ProductsForCourseResponse>({
         method: "GET",
         url: `/commerce/products/for-course/${courseId}`,
         params: packageId ? { packageId } : undefined,
         authenticated: false,
     })
+    const products = res?.products ?? []
+    if (products.length === 0) return null
+    // PACKAGE course: return the product whose fulfillment targets the chosen package.
+    // No match (BE hasn't seeded `fulfillment_config.packageId` yet) → null so the caller
+    // keeps the buy CTA DISABLED rather than adding an arbitrary/wrong package.
+    if (packageId) {
+        return products.find((p) => p.packageId === packageId) ?? null
+    }
+    // Non-package: prefer the cheapest, matched back to its full `products[]` entry BY
+    // `productId` (the `cheapest` summary keys on `productId`, NOT `id`); else the first.
+    if (res.cheapest) {
+        const matched = products.find((p) => p.id === res.cheapest?.productId)
+        if (matched) return matched
+    }
+    return products[0]
 }
 
 /**

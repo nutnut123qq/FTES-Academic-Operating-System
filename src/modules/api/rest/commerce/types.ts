@@ -29,6 +29,46 @@ export interface ProductView {
     status: string
 }
 
+/**
+ * One COURSE_UNLOCK product inside `GET /commerce/products/for-course/{courseId}`'s
+ * `products[]` list. Carries `id` (the productId to add to the cart), pricing, and the
+ * per-package `packageId` (null for a non-package course).
+ */
+export interface ProductForCourseView {
+    /** Product id (UUID) — the id to add to the cart. */
+    id: string
+    /** Display name. */
+    name?: string
+    /** Price in VND. */
+    priceVnd?: number
+    /** Price in platform coins. */
+    priceCoin?: number
+    /** The package this product unlocks, or null for a non-package course. */
+    packageId?: string | null
+}
+
+/**
+ * The `cheapest` summary inside the for-course response. NOTE: it keys the product by
+ * **`productId`** (NOT `id` like `products[]`) — resolving it means matching `productId`
+ * back to a `products[]` entry.
+ */
+export interface CheapestProductView {
+    /** Product id of the cheapest option (matches a `products[].id`). */
+    productId: string
+    /** Price in VND. */
+    priceVnd?: number
+}
+
+/**
+ * Wrapped response of `GET /commerce/products/for-course/{courseId}`: a `products[]`
+ * list (one per package for a PACKAGE course, else one) plus a `cheapest` summary.
+ * There is NO top-level product id — a concrete product must be resolved from `products[]`.
+ */
+export interface ProductsForCourseResponse {
+    products: ProductForCourseView[]
+    cheapest: CheapestProductView | null
+}
+
 /** One item in the shopping cart. */
 export interface CartItemView {
     /** Cart item id. */

@@ -55,6 +55,25 @@ const ACHIEVEMENT_ICONS: Record<string, Icon> = {
 }
 
 /**
+ * Fallback tier labels for the known package slugs — used only while the course's
+ * package list is still loading (the real `PackageView.name` is the source of truth).
+ */
+const TIER_LABEL_FALLBACK: Record<string, string> = {
+    free: "Miễn phí",
+    basic: "Cơ bản",
+    premium: "Premium",
+    master: "Master",
+    "on-tap-thuc-chien": "Ôn tập thực chiến",
+}
+
+/** Title-case a slug (`on-tap-thuc-chien` → `On Tap Thuc Chien`) as a last-resort label. */
+const titleCaseSlug = (slug: string) =>
+    slug
+        .split("-")
+        .map((word) => (word ? word.charAt(0).toUpperCase() + word.slice(1) : word))
+        .join(" ")
+
+/**
  * Build the reader route for a syllabus lesson — mirrors the learn rail's
  * `lessonHref` (`ContentMap`) so a syllabus click lands on the exact same reader
  * URL. The `[moduleId]` segment is cosmetic (the reader resolves purely from
@@ -260,6 +279,16 @@ const CourseDetailView = ({
     // so they render the dedicated package picker (PackageEnrollCard) which resolves
     // per-package. Everything else (LEGACY / absent saleMode) keeps the legacy card.
     const isPackage = course.saleMode === "PACKAGE"
+    // Package names for the syllabus tier badge: map `lesson.packageSlugs[0]` → the
+    // admin-authored `PackageView.name`. Same SWR key as PackageEnrollCard's call →
+    // deduped; gated on `isPackage` so it never fires for a LEGACY course.
+    const { packages } = useQueryCoursePackagesSwr(course.rawId, { enabled: isPackage })
+    const packageNameBySlug = useMemo(
+        () => new Map(packages.map((pkg) => [pkg.slug, pkg.name])),
+        [packages],
+    )
+    const resolveTierLabel = (slug: string) =>
+        packageNameBySlug.get(slug) ?? TIER_LABEL_FALLBACK[slug] ?? titleCaseSlug(slug)
     // The legacy "Đăng ký học" CTA is a real buy: the enrollment hook resolves this
     // course's COURSE_UNLOCK product, adds it to the cart, and opens the shared
     // PaymentModal (VietQR / coin). The buy context is withheld for PACKAGE courses
@@ -464,11 +493,29 @@ const CourseDetailView = ({
                                                                     </Typography>
                                                                 ) : null}
                                                             </div>
-                                                            {lesson.isPremium ? (
-                                                                <Chip size="sm" variant="soft" color="accent">
-                                                                    {t("detail.premium")}
-                                                                </Chip>
-                                                            ) : null}
+                                                            {(() => {
+                                                                // Tier badge = the minimum package that unlocks the lesson
+                                                                // (`packageSlugs[0]`), labelled by the package name. The
+                                                                // "free" tier is free-access → no tag.
+                                                                const tierSlug = lesson.packageSlugs[0]
+                                                                if (tierSlug && tierSlug !== "free") {
+                                                                    return (
+                                                                        <Chip size="sm" variant="soft" color="accent" className="shrink-0">
+                                                                            {resolveTierLabel(tierSlug)}
+                                                                        </Chip>
+                                                                    )
+                                                                }
+                                                                // LEGACY course (no packageSlugs) still locked for the
+                                                                // viewer → keep the old generic "Premium" tag.
+                                                                if (lesson.packageSlugs.length === 0 && lesson.isLocked) {
+                                                                    return (
+                                                                        <Chip size="sm" variant="soft" color="accent" className="shrink-0">
+                                                                            {t("detail.premium")}
+                                                                        </Chip>
+                                                                    )
+                                                                }
+                                                                return null
+                                                            })()}
                                                             <Typography type="body-xs" color="muted">
                                                                 {lesson.durationLabel}
                                                             </Typography>

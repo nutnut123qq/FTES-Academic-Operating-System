@@ -24,6 +24,11 @@ export interface CourseLesson {
     isLocked: boolean
     /** BE per-viewer access level (FULL | PREVIEW | NONE) — carried through for callers. */
     accessLevel?: string
+    /**
+     * Slugs of the packages that unlock this lesson (BE-ordered lowest→highest tier).
+     * `[0]` = the minimum tier and drives the syllabus tier badge; empty on LEGACY courses.
+     */
+    packageSlugs: string[]
 }
 
 /** A course section (chapter) grouping lessons. */
@@ -197,6 +202,7 @@ const toCourseDetail = (dto: CourseDetailDto): CourseDetail => {
             // Per-viewer lock from the enrollment-aware BE detail — the ONLY lock signal.
             isLocked: lesson.locked === true,
             accessLevel: lesson.accessLevel ?? undefined,
+            packageSlugs: lesson.packageSlugs ?? [],
         })),
     }))
     const totalLessons = sections.reduce((sum, section) => sum + section.lessons.length, 0)

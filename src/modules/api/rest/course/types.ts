@@ -89,6 +89,8 @@ export interface LessonView {
     previewSeconds: number
     hasContent: boolean
     accessLevel: string | null
+    /** Slugs of the packages that unlock this lesson, ordered lowest→highest tier by the BE; `[0]` is the minimum tier. */
+    packageSlugs?: string[]
 }
 
 /** Query params for the public catalog list `GET /api/v1/courses`. */

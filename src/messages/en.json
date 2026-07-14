@@ -5683,6 +5683,8 @@
       "questionCount": "{count} questions",
       "notReadyTitle": "Interview not ready",
       "notReadyBody": "This course's interview question set is not ready yet. Please check back later.",
+      "emptyTitle": "No interview yet",
+      "emptyBody": "The instructor hasn't created an AI interview for this course yet. Please check back later.",
       "forbiddenTitle": "You are not enrolled in this course",
       "forbiddenBody": "Enroll in the course to unlock the AI interview.",
       "startFailed": "Couldn't start the interview. Please try again.",

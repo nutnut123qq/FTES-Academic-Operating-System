@@ -5683,6 +5683,8 @@
       "questionCount": "{count} câu hỏi",
       "notReadyTitle": "Phỏng vấn chưa sẵn sàng",
       "notReadyBody": "Bộ câu hỏi phỏng vấn của khóa học này chưa được chuẩn bị xong. Vui lòng quay lại sau.",
+      "emptyTitle": "Chưa có bài phỏng vấn",
+      "emptyBody": "Giảng viên chưa tạo bài phỏng vấn AI cho khóa học này. Vui lòng quay lại sau.",
       "forbiddenTitle": "Bạn chưa ghi danh khóa học này",
       "forbiddenBody": "Đăng ký khóa học để mở tính năng phỏng vấn AI.",
       "startFailed": "Không bắt đầu được phỏng vấn. Vui lòng thử lại.",

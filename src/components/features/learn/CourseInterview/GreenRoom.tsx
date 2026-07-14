@@ -2,11 +2,14 @@
 
 import React, { useState } from "react"
 import { Button, Typography } from "@heroui/react"
+import { ExamIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { EmptyState } from "@/components/blocks/feedback/EmptyState"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { useGetInterviewTemplateSwr } from "@/hooks/swr/api/rest/queries/useGetInterviewTemplateSwr"
 import { usePostStartInterviewAttemptSwr } from "@/hooks/swr/api/rest/mutations/usePostStartInterviewAttemptSwr"
+import { RestError } from "@/modules/api/rest/client"
 import type { StartAttemptView } from "@/modules/api/rest/interview"
 
 /** Props for {@link GreenRoom}. */
@@ -32,6 +35,13 @@ export const GreenRoom = ({ courseId, onStarted }: GreenRoomProps) => {
     const questionSetId = questionSet?.id
     const questionCount = questionSet?.questions?.length ?? 0
 
+    // Course has no interview template yet (lecturer hasn't created one): a 404 is an
+    // EXPECTED empty state, not a failure — show a friendly empty-state instead of the
+    // generic error/retry surface. Any other error still flows to AsyncContent below.
+    const error = template.error instanceof RestError ? template.error : undefined
+    const isNoTemplate = !template.data
+        && (error?.errorCode === "AI_INTERVIEW_TEMPLATE_NOT_FOUND" || error?.status === 404)
+
     const handleStart = async () => {
         if (!questionSetId) return
         setForbidden(false)
@@ -47,6 +57,16 @@ export const GreenRoom = ({ courseId, onStarted }: GreenRoomProps) => {
                 setFailed(true)
             }
         }
+    }
+
+    if (isNoTemplate) {
+        return (
+            <EmptyState
+                icon={<ExamIcon />}
+                title={t("courseInterview.emptyTitle")}
+                description={t("courseInterview.emptyBody")}
+            />
+        )
     }
 
     const skeleton = (

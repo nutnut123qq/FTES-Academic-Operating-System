@@ -4332,14 +4332,14 @@
       "browserPush": "Thông báo trên trình duyệt",
       "browserPushComingSoon": "Sắp ra mắt — hiện chưa khả dụng.",
       "types": {
-        "system": "Hệ thống",
-        "challengeGraded": "Chấm điểm thử thách",
-        "codingGraded": "Chấm điểm bài code",
-        "milestoneGraded": "Chấm điểm cột mốc",
-        "newFollower": "Người theo dõi mới",
-        "commentReply": "Phản hồi bình luận",
-        "subscriptionGranted": "Kích hoạt gói đăng ký",
-        "announcement": "Thông báo chung"
+        "MENTION": "Nhắc đến bạn",
+        "COURSE": "Khóa học",
+        "EVENT": "Sự kiện",
+        "DEADLINE": "Hạn chót",
+        "CHALLENGE": "Thử thách",
+        "COIN": "Xu thưởng",
+        "GROUP": "Nhóm",
+        "SYSTEM": "Hệ thống"
       }
     }
   },

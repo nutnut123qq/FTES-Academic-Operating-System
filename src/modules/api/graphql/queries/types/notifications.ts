@@ -1,30 +1,27 @@
 /**
- * Notification-type key space for the FE-only preferences mock
- * (`query-my-notification-preferences.ts` + the preferences surface).
+ * Mirror of the backend `vn.ftes.aos.notification.domain.NotificationType`
+ * enum — the 8 business notification types.
  *
- * NOTE: the delivered in-app notifications now come from the real BE REST API
- * (`GET /api/v1/notifications`), whose `type` is the backend
- * `vn.ftes.aos.notification.domain.NotificationType` enum
- * (`MENTION`/`COURSE`/`EVENT`/`DEADLINE`/`CHALLENGE`/`COIN`/`GROUP`) handled as a
- * plain string + {@link resolveNotificationIcon}. This enum survives only to key
- * the client-side preferences mock; there is no `MyNotifications` GraphQL op (the
- * FTES GraphQL schema has no notifications field).
+ * Delivered in-app rows (`GET /api/v1/notifications`) carry these names in
+ * `item.type`, and the preference matrix (`GET/PUT
+ * /api/v1/notifications/preferences`) keys its cells by them, so the per-type
+ * preference toggles and the delivered-list filter share one key space.
  */
 export enum NotificationType {
+    /** Someone mentioned the recipient (comments, threads). */
+    Mention = "MENTION",
+    /** Course activity for an enrolled course (new content, updates). */
+    Course = "COURSE",
+    /** Event activity (invites, reminders, changes). */
+    Event = "EVENT",
+    /** An upcoming or missed deadline. */
+    Deadline = "DEADLINE",
+    /** Challenge activity (grading results, new challenges). */
+    Challenge = "CHALLENGE",
+    /** Coin / wallet activity (earned, spent, granted). */
+    Coin = "COIN",
+    /** Group activity (membership, posts, replies). */
+    Group = "GROUP",
     /** Generic system message with no specific domain target. */
-    System = "system",
-    /** A challenge submission finished grading (passed or failed). */
-    ChallengeGraded = "challengeGraded",
-    /** A coding submission finished judging (a verdict is available). */
-    CodingGraded = "codingGraded",
-    /** A personal-project milestone task finished grading. */
-    MilestoneGraded = "milestoneGraded",
-    /** Another user started following the recipient. */
-    NewFollower = "newFollower",
-    /** Someone replied to one of the recipient's discussion comments. */
-    CommentReply = "commentReply",
-    /** A paid AI subscription / membership tier was granted to the recipient. */
-    SubscriptionGranted = "subscriptionGranted",
-    /** A broadcast announcement fanned out to the recipient. */
-    Announcement = "announcement",
+    System = "SYSTEM",
 }

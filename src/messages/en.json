@@ -4332,14 +4332,14 @@
       "browserPush": "Browser push",
       "browserPushComingSoon": "Coming soon — not available yet.",
       "types": {
-        "system": "System",
-        "challengeGraded": "Challenge graded",
-        "codingGraded": "Coding graded",
-        "milestoneGraded": "Milestone graded",
-        "newFollower": "New follower",
-        "commentReply": "Comment reply",
-        "subscriptionGranted": "Subscription granted",
-        "announcement": "Announcement"
+        "MENTION": "Mentions",
+        "COURSE": "Courses",
+        "EVENT": "Events",
+        "DEADLINE": "Deadlines",
+        "CHALLENGE": "Challenges",
+        "COIN": "Coins",
+        "GROUP": "Groups",
+        "SYSTEM": "System"
       }
     }
   },

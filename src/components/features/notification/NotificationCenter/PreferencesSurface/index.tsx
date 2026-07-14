@@ -6,8 +6,9 @@ import { Spinner, Switch, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import type { NotificationType } from "@/modules/api/graphql/queries/types/notifications"
 import type { QueryNotificationPreferencesData } from "@/modules/api/graphql/queries/types/notification-preferences"
-import { useQueryMyNotificationPreferencesSwr } from "@/hooks/swr/api/graphql/queries/useQueryMyNotificationPreferencesSwr"
-import { useMutateUpdateNotificationPreferencesSwr } from "@/hooks/swr/api/graphql/mutations/useMutateUpdateNotificationPreferencesSwr"
+import { useGetNotificationPreferencesSwr } from "@/hooks/swr/api/rest/queries/useGetNotificationPreferencesSwr"
+import { usePostPutNotificationPreferencesSwr } from "@/hooks/swr/api/rest/mutations/usePostPutNotificationPreferencesSwr"
+import { useRestWithToast } from "@/modules/toast/hooks"
 import { NOTIFICATION_TYPES } from "../../preferences"
 import { NOTIFICATION_TYPE_ICON } from "../../typeIcon"
 
@@ -18,14 +19,16 @@ import { NOTIFICATION_TYPE_ICON } from "../../typeIcon"
  * while mute-all is on), and a reserved-but-disabled "browser push — coming
  * soon" row (Web Push is deferred: no service worker, no permission prompt, no
  * subscription — see the change design D6). Preferences are read + written
- * through the (mock) preferences query/mutation; every write persists the full
- * `{ mutedTypes, muteAll }` state and revalidates the read hook so the bell,
- * center and badge react on the next render.
+ * through the real BE REST API (`GET/PUT /api/v1/notifications/preferences`,
+ * IN_APP column of the matrix); every write is OPTIMISTIC — the shared SWR
+ * cache flips immediately (bell, center and badge react at once) and rolls
+ * back with an error toast when the PUT fails.
  */
 export const PreferencesSurface = () => {
     const t = useTranslations()
-    const { data, isLoading, mutate } = useQueryMyNotificationPreferencesSwr()
-    const { trigger, isMutating } = useMutateUpdateNotificationPreferencesSwr()
+    const runRest = useRestWithToast()
+    const { data, isLoading, mutate } = useGetNotificationPreferencesSwr()
+    const { trigger, isMutating } = usePostPutNotificationPreferencesSwr()
 
     const preferences: QueryNotificationPreferencesData = useMemo(
         () => data ?? { mutedTypes: [], muteAll: false },
@@ -36,10 +39,22 @@ export const PreferencesSurface = () => {
         [preferences.mutedTypes],
     )
 
-    /** Persist a new preferences state and revalidate the read hook. */
+    /**
+     * Persist a new preferences state optimistically: the shared cache flips to
+     * `next` right away, is repopulated with the PUT response on success, and
+     * rolls back to the previous state (with an error toast) on failure.
+     */
     const save = async (next: QueryNotificationPreferencesData) => {
-        await trigger(next)
-        await mutate()
+        await runRest(
+            () =>
+                mutate(() => trigger(next), {
+                    optimisticData: next,
+                    populateCache: true,
+                    rollbackOnError: true,
+                    revalidate: false,
+                }),
+            { showSuccessToast: false, showErrorToast: true },
+        )
     }
 
     /** Flip a single type's muted state (a type is "on" when NOT muted). */

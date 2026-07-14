@@ -34,7 +34,7 @@ import {
 } from "@/modules/api/rest/notification/notification"
 import type { NotificationItem } from "@/modules/api/rest/notification/types"
 import { useQueryMyNotificationsSwr } from "@/hooks/swr/api/graphql/queries/useQueryMyNotificationsSwr"
-import { useQueryMyNotificationPreferencesSwr } from "@/hooks/swr/api/graphql/queries/useQueryMyNotificationPreferencesSwr"
+import { useGetNotificationPreferencesSwr } from "@/hooks/swr/api/rest/queries/useGetNotificationPreferencesSwr"
 import { useAppSelector } from "@/redux/hooks"
 import { useRestWithToast } from "@/modules/toast/hooks"
 import { ErrorContent } from "@/components/blocks/async/ErrorContent"
@@ -67,7 +67,7 @@ export const NotificationBell = ({ className }: NotificationBellProps) => {
     const router = useRouter()
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
     const { data, isLoading, error, mutate } = useQueryMyNotificationsSwr()
-    const { data: preferences } = useQueryMyNotificationPreferencesSwr()
+    const { data: preferences } = useGetNotificationPreferencesSwr()
     const runRest = useRestWithToast()
     const [isOpen, setOpen] = useState(false)
 

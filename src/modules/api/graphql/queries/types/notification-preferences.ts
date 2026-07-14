@@ -1,21 +1,20 @@
-import type { GraphQLResponse } from "../../types"
 import type { NotificationType } from "./notifications"
 
 /**
  * The current user's notification preferences: the set of muted types plus a
- * master "mute all" switch. Applied client-side as a filter over the delivered
- * notification list (bell + center + badge) until a real backend filters
- * server-side.
+ * master "mute all" switch.
+ *
+ * Derived from the real BE preference matrix
+ * (`GET /api/v1/notifications/preferences`): a type is muted ⇔ its
+ * `(type, IN_APP)` cell is disabled, and `muteAll` ⇔ every type's IN_APP cell
+ * is disabled (see `modules/api/rest/notification/preferences.ts`). The BE
+ * enforces these preferences at dispatch time (`PreferenceMuteResolver`), so
+ * the client-side filter over the bell/center/badge only hides notifications
+ * delivered BEFORE the user muted their type.
  */
 export interface QueryNotificationPreferencesData {
     /** Notification types the user has muted (hidden + excluded from the badge). */
     mutedTypes: Array<NotificationType>
     /** When true, every notification surface is silenced regardless of type. */
     muteAll: boolean
-}
-
-/** Apollo response shape for the `myNotificationPreferences` query. */
-export interface QueryNotificationPreferencesResponse {
-    /** Top-level `myNotificationPreferences` field wrapping the standard envelope. */
-    myNotificationPreferences: GraphQLResponse<QueryNotificationPreferencesData>
 }

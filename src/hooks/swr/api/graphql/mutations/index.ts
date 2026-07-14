@@ -1,5 +1,4 @@
 export * from "./useMutateStartTrialSwr"
-export * from "./useMutateUpdateNotificationPreferencesSwr"
 export * from "./useMutateReactCommunityPostCommentSwr"
 export * from "./useMutateSendChatMessageSwr"
 export * from "./useMutateCourseEnrollSwr"

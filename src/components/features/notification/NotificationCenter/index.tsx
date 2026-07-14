@@ -15,7 +15,7 @@ import {
     useQueryMyNotificationsInfiniteSwr,
 } from "@/hooks/swr/api/graphql/queries/useQueryMyNotificationsInfiniteSwr"
 import { useQueryMyNotificationsSwr } from "@/hooks/swr/api/graphql/queries/useQueryMyNotificationsSwr"
-import { useQueryMyNotificationPreferencesSwr } from "@/hooks/swr/api/graphql/queries/useQueryMyNotificationPreferencesSwr"
+import { useGetNotificationPreferencesSwr } from "@/hooks/swr/api/rest/queries/useGetNotificationPreferencesSwr"
 import { useRestWithToast } from "@/modules/toast/hooks"
 import { mutate as globalMutate } from "swr"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
@@ -43,7 +43,8 @@ const BADGE_SWR_KEY = "QUERY_MY_NOTIFICATIONS_SWR"
  * locale-prefixed; targetless rows only mark read. "Mark all read" calls
  * `POST /notifications/read-all`. Every mutation revalidates both the infinite
  * list and the shared badge key so the bell badge tracks the change without a
- * reload. A header gear opens the (mock) preferences surface.
+ * reload. A header gear opens the preferences surface (real BE preferences —
+ * `GET/PUT /api/v1/notifications/preferences` — shared with the bell filter).
  */
 export const NotificationCenter = () => {
     const t = useTranslations()
@@ -57,7 +58,7 @@ export const NotificationCenter = () => {
     const unreadOnly = filter === "unread"
     const infinite = useQueryMyNotificationsInfiniteSwr(unreadOnly)
     const badge = useQueryMyNotificationsSwr()
-    const { data: preferences } = useQueryMyNotificationPreferencesSwr()
+    const { data: preferences } = useGetNotificationPreferencesSwr()
 
     const { data: pages, size, setSize, isValidating, error, mutate } = infinite
 

@@ -122,6 +122,7 @@ export const getNotificationPreferences = async (): Promise<
     return restRequest<Array<PreferenceCell>>({
         method: "GET",
         url: "/notifications/preferences",
+        authenticated: true,
     })
 }
 
@@ -137,6 +138,7 @@ export const putNotificationPreferences = async (
         method: "PUT",
         url: "/notifications/preferences",
         data: request,
+        authenticated: true,
     })
 }
 

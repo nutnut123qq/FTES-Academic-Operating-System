@@ -4262,6 +4262,9 @@
     "premium": "Premium",
     "readingMinutes": "{minutes} min read",
     "relatedTitle": "More in {category}",
+    "relatedFallbackTitle": "Related articles",
+    "searchPlaceholder": "Search articles",
+    "views": "{count} views",
     "retry": "Try again",
     "subtitle": "Deep technical analysis of the very infrastructure that runs FTES AOS — architecture, trade-offs, and real code.",
     "title": "The FTES AOS backend, taken apart",
@@ -4932,6 +4935,9 @@
       "prev": "Previous slide",
       "next": "Next slide",
       "goToSlide": "Go to slide {index}",
+      "cta": "View course"
+    },
+    "slider": {
       "cta": "View course"
     },
     "detail": {

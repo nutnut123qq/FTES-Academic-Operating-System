@@ -4262,6 +4262,9 @@
     "premium": "Premium",
     "readingMinutes": "Đọc {minutes} phút",
     "relatedTitle": "Thêm trong mục {category}",
+    "relatedFallbackTitle": "Bài viết liên quan",
+    "searchPlaceholder": "Tìm bài viết",
+    "views": "{count} lượt xem",
     "retry": "Thử lại",
     "subtitle": "Phân tích kỹ thuật chuyên sâu về chính hạ tầng đang chạy FTES AOS — kiến trúc, đánh đổi, và code thật.",
     "title": "Hệ thống FTES AOS, mổ xẻ",
@@ -4932,6 +4935,9 @@
       "prev": "Slide trước",
       "next": "Slide sau",
       "goToSlide": "Đến slide {index}",
+      "cta": "Xem khóa học"
+    },
+    "slider": {
       "cta": "Xem khóa học"
     },
     "detail": {

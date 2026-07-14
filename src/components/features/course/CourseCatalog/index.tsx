@@ -37,10 +37,19 @@ import { FeaturedSlider } from "./FeaturedSlider"
 export const CourseCatalog = () => {
     const t = useTranslations()
     const { categories } = useQueryCourseCategoriesSwr()
-    const { courses, isLoading, error, mutate } = useQueryCoursesSwr()
     const [query, setQuery] = useState("")
     const [sort, setSort] = useState<CourseSort>("popular")
     const [activeCategory, setActiveCategory] = useState<CategoryChipValue>("all")
+
+    // resolve the active chip slug → opaque categoryId so the fetch filters
+    // SERVER-side (empty for "all"); the id keys the SWR cache in the hook
+    const activeCategoryId =
+        activeCategory === "all"
+            ? undefined
+            : (categories ?? []).find((category) => category.slug === activeCategory)?.id
+    const { courses, isLoading, error, mutate } = useQueryCoursesSwr({
+        categoryId: activeCategoryId,
+    })
 
     const loading = isLoading || !categories
     // a live search switches the browse view from the shelves to the flat grid
@@ -123,7 +132,7 @@ export const CourseCatalog = () => {
                     <div className="flex flex-col gap-6">
                         {visibleCategories.map((category) => {
                             const categoryCourses = sortCourses(
-                                coursesByCategory(courses, category.slug),
+                                coursesByCategory(courses, category.id),
                                 sort,
                             )
                             // empty categories render no shelf (and no placeholder)

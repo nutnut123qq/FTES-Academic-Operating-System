@@ -32,8 +32,14 @@ export interface AdminBanner {
 export interface AdminBannerView {
     id: string
     title: string
+    /** One-line marketing pitch rendered under the title on the slide. */
+    subtitle?: string
     imageUrl: string
     linkUrl?: string
+    /** CTA button label; falls back to the localized default when absent. */
+    ctaText?: string
+    /** CSS color / gradient string painted behind the cover (e.g. `linear-gradient(...)`). */
+    theme?: string
     placement: string
     sortOrder: number
 }

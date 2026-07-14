@@ -2,9 +2,9 @@
 
 import React from "react"
 import { cn } from "@heroui/react"
-import { useLocale, useTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import type { WithClassNames } from "@/modules/types/base/class-name"
-import { categoryName, type CourseCategory } from "../categories"
+import type { CourseCategory } from "../categories"
 import { categoryIcon } from "../category-icons"
 
 /** Active selection of the chip bar: "all" or a category slug. */
@@ -31,7 +31,6 @@ export interface CategoryChipBarProps extends WithClassNames<undefined> {
  */
 export const CategoryChipBar = ({ categories, active, onSelect, className }: CategoryChipBarProps) => {
     const t = useTranslations()
-    const locale = useLocale()
 
     const chipClass = (selected: boolean) =>
         cn(
@@ -71,7 +70,7 @@ export const CategoryChipBar = ({ categories, active, onSelect, className }: Cat
                         className={chipClass(active === category.slug)}
                     >
                         <ChipIcon aria-hidden focusable="false" className="size-4" />
-                        {categoryName(category, locale)}
+                        {category.name}
                     </button>
                 )
             })}

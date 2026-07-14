@@ -3,12 +3,12 @@
 import React, { useEffect, useState } from "react"
 import { Button, Typography, cn } from "@heroui/react"
 import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react"
-import { useLocale, useTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 import { useCarousel } from "../../CourseCatalog/FeaturedSlider/useCarousel"
 import type { Course } from "../../hooks/useQueryCoursesSwr"
-import { categoryName, type CourseCategory } from "../categories"
+import type { CourseCategory } from "../categories"
 import { categoryIcon } from "../category-icons"
 import { CatalogCourseCard } from "../CatalogCourseCard"
 import { CourseHoverPreview } from "../CourseHoverPreview"
@@ -33,8 +33,7 @@ export interface CategoryShelfProps extends WithClassNames<undefined> {
  */
 export const CategoryShelf = ({ category, courses, className }: CategoryShelfProps) => {
     const t = useTranslations()
-    const locale = useLocale()
-    const name = categoryName(category, locale)
+    const name = category.name
     const ShelfIcon = categoryIcon(category.slug)
     const { trackRef, next, prev } = useCarousel(courses.length, { autoplay: false })
     // arrows only make sense when the cards actually overflow the track

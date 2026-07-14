@@ -1,42 +1,71 @@
 "use client"
 
-import React, { useMemo, useState } from "react"
+import React, { useState } from "react"
 import useSWR from "swr"
+import useSWRInfinite from "swr/infinite"
 import { Button } from "@heroui/react"
 import { useLocale, useTranslations } from "next-intl"
 import { PageHeader } from "@/components/blocks/layout/PageHeader"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { SearchInput } from "@/components/reuseable/SearchInput"
 import { TopicsStrip } from "./TopicsStrip"
 import { CategoryFilter } from "./CategoryFilter"
 import { FeaturedPost } from "./FeaturedPost"
 import { PostRow } from "../shared/PostRow"
 import { BlogListSkeleton } from "./BlogListSkeleton"
-import { fetchMockBlogPosts } from "../mock"
-import { BlogCategory } from "@/modules/api/graphql/queries/types/blog"
+import { buildCategoryLookup } from "../shared/category"
+import {
+    getBlogCategories,
+    getBlogPosts,
+    searchBlogPosts,
+    type BlogPostPage,
+} from "@/modules/api/rest/blog"
 
-/** Posts fetched per page / "load more" step (mirrors the backend default). */
+/** Posts fetched per page / "load more" step (0-based paging; BE caps at 50). */
 const PAGE_SIZE = 12
 
 /**
- * Public `/blog` — reframed as FTES AOS's engineering publication ("the backend,
- * taken apart"): a reframed header → a real-subsystem topics strip → editorial
- * lead → text-first list. The pillar filter only appears once more than one
- * pillar actually has posts (never a dead bucket). Cover images are used only
- * when present.
+ * Public `/blog` — FTES AOS's engineering publication. Reads REAL posts from the
+ * backend: a category chip bar (from `getBlogCategories`) + a search box switch
+ * between `getBlogPosts({ categorySlug })` and `searchBlogPosts({ q })`; results
+ * paginate with `useSWRInfinite` keyed to the BE `hasNext`. The editorial lead is
+ * the newest post; the rest render as a text-first list.
  */
 export const BlogList = () => {
     const t = useTranslations("blog")
     const locale = useLocale()
-    // active editorial-pillar filter (null = all)
-    const [category, setCategory] = useState<BlogCategory | null>(null)
-    // grows by PAGE_SIZE on "load more"; reset when the filter changes
-    const [limit, setLimit] = useState(PAGE_SIZE)
+    // active category slug (null = all) and the search query
+    const [categorySlug, setCategorySlug] = useState<string | null>(null)
+    const [search, setSearch] = useState("")
+    const trimmedQuery = search.trim()
+    const isSearching = trimmedQuery.length > 0
 
-    // keepPreviousData → old posts stay visible while the next page/filter loads,
-    // so the skeleton only ever shows on the very first paint
-    const { data, isLoading, isValidating, error, mutate } = useSWR(
-        ["blog-posts", category, limit],
-        async () => fetchMockBlogPosts({ ...(category ? { category } : {}), limit, offset: 0 }),
+    // real blog categories drive the chip bar + the categoryId → name lookup
+    const { data: categories } = useSWR(["blog-categories"], () => getBlogCategories())
+    const lookup = buildCategoryLookup(categories)
+
+    // paginated posts: search mode ignores the category (search spans all), list
+    // mode filters by the selected category slug. `hasNext` from the BE gates the
+    // next page; keepPreviousData avoids a skeleton flash on filter/search change.
+    const getKey = (index: number, previous: BlogPostPage | null) => {
+        if (previous && !previous.hasNext) return null
+        return [
+            "blog-posts",
+            isSearching ? "search" : "list",
+            isSearching ? trimmedQuery : categorySlug ?? "",
+            index,
+        ] as const
+    }
+    const { data, error, isLoading, isValidating, size, setSize, mutate } = useSWRInfinite(
+        getKey,
+        async ([, , , index]) =>
+            isSearching
+                ? searchBlogPosts({ q: trimmedQuery, page: index, size: PAGE_SIZE })
+                : getBlogPosts({
+                    categorySlug: categorySlug ?? undefined,
+                    page: index,
+                    size: PAGE_SIZE,
+                }),
         { keepPreviousData: true },
     )
 
@@ -48,25 +77,26 @@ export const BlogList = () => {
             day: "numeric",
         })
 
-    const posts = data ?? []
-
+    const pages = data ?? []
+    const posts = pages.flatMap((page) => page.items)
     const [featured, ...rest] = posts
 
-    // a full page came back → there may be more to load
-    const hasMore = posts.length >= limit
+    // the last loaded page still reports more → a "load more" step is available
+    const hasMore = pages.length > 0 && pages[pages.length - 1].hasNext
+    // the filter row is worth showing once the backend has any categories
+    const showFilter = (categories ?? []).length >= 1
 
-    // only the pillars that actually have posts — never render a filter into an empty
-    // bucket. With a single pillar present the row is pointless, so the caller hides it.
-    const availableCategories = useMemo(
-        () => Array.from(new Set(posts.map((post) => post.category))),
-        [posts],
-    )
-    const showFilter = availableCategories.length >= 2
+    // switching category clears the search and resets pagination to the first page
+    const changeCategory = (next: string | null) => {
+        setCategorySlug(next)
+        setSearch("")
+        void setSize(1)
+    }
 
-    // switching pillar resets pagination back to the first page
-    const changeCategory = (next: BlogCategory | null) => {
-        setCategory(next)
-        setLimit(PAGE_SIZE)
+    // typing a search resets pagination; an empty box falls back to list mode
+    const changeSearch = (next: string) => {
+        setSearch(next)
+        void setSize(1)
     }
 
     return (
@@ -74,22 +104,30 @@ export const BlogList = () => {
             {/* identity — reframed as an engineering publication */}
             <PageHeader title={t("title")} description={t("subtitle")} />
 
-            {/* browse — topics framing + (optional) filter + results, one cluster */}
+            {/* browse — topics framing + search + (optional) filter + results */}
             <div className="flex flex-col gap-3">
                 <TopicsStrip />
 
-                {showFilter && (
+                <SearchInput
+                    value={search}
+                    onValueChange={changeSearch}
+                    placeholder={t("searchPlaceholder")}
+                    variant="secondary"
+                    className="sm:max-w-none"
+                />
+
+                {showFilter && !isSearching && (
                     <CategoryFilter
-                        value={category}
+                        value={categorySlug}
                         onChange={changeCategory}
-                        categories={availableCategories}
+                        categories={categories ?? []}
                     />
                 )}
 
                 <AsyncContent
                     isLoading={isLoading && posts.length === 0}
                     skeleton={<BlogListSkeleton />}
-                    error={error}
+                    error={posts.length === 0 ? error : undefined}
                     errorContent={{
                         title: t("errorTitle"),
                         description: t("errorHint"),
@@ -100,24 +138,33 @@ export const BlogList = () => {
                     }}
                     isEmpty={posts.length === 0}
                     emptyContent={
-                        category
+                        isSearching
                             ? {
                                 title: t("emptyInFilter"),
                                 description: t("emptyInFilterHint"),
-                                onRetry: () => changeCategory(null),
+                                onRetry: () => changeSearch(""),
                                 retryLabel: t("clearFilter"),
                             }
-                            : {
-                                title: t("empty"),
-                                description: t("emptyHint"),
-                            }
+                            : categorySlug
+                                ? {
+                                    title: t("emptyInFilter"),
+                                    description: t("emptyInFilterHint"),
+                                    onRetry: () => changeCategory(null),
+                                    retryLabel: t("clearFilter"),
+                                }
+                                : {
+                                    title: t("empty"),
+                                    description: t("emptyHint"),
+                                }
                     }
                 >
                     <div className="flex flex-col gap-3">
                         {featured && (
                             <FeaturedPost
                                 post={featured}
-                                formattedDate={formatDate(featured.publishedAt)}
+                                categoryLabel={lookup.nameOf(featured.categoryId)}
+                                categorySlug={lookup.slugOf(featured.categoryId)}
+                                formattedDate={formatDate(featured.publishedAt ?? featured.createdAt)}
                             />
                         )}
                         {rest.length > 0 && (
@@ -126,7 +173,8 @@ export const BlogList = () => {
                                     <PostRow
                                         key={post.id}
                                         post={post}
-                                        formattedDate={formatDate(post.publishedAt)}
+                                        categoryLabel={lookup.nameOf(post.categoryId)}
+                                        formattedDate={formatDate(post.publishedAt ?? post.createdAt)}
                                     />
                                 ))}
                             </div>
@@ -137,7 +185,7 @@ export const BlogList = () => {
                                     variant="secondary"
                                     size="md"
                                     isPending={isValidating}
-                                    onPress={() => setLimit((current) => current + PAGE_SIZE)}
+                                    onPress={() => void setSize(size + 1)}
                                 >
                                     {t("loadMore")}
                                 </Button>

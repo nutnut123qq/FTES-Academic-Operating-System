@@ -564,6 +564,18 @@
       "subtitle": "Tiếp tục hành trình học của bạn.",
       "empty": "Bạn chưa đăng ký khóa học nào",
       "browse": "Khám phá khóa học"
+    },
+    "teaching": {
+      "title": "Khóa tôi dạy",
+      "subtitle": "Các khóa của bạn — nháp hoặc đã xuất bản. Mở một khóa để quản lý bài phỏng vấn AI.",
+      "empty": "Bạn chưa sở hữu khóa học nào",
+      "browse": "Khám phá khóa học",
+      "manageHint": "Mở để quản lý bài phỏng vấn AI →"
+    },
+    "status": {
+      "PUBLISHED": "Đã xuất bản",
+      "DRAFT": "Bản nháp",
+      "ARCHIVED": "Đã lưu trữ"
     }
   },
   "course": {

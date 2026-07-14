@@ -564,6 +564,18 @@
       "subtitle": "Pick up where you left off.",
       "empty": "You haven't enrolled in any course yet",
       "browse": "Browse courses"
+    },
+    "teaching": {
+      "title": "Courses I teach",
+      "subtitle": "Your courses — draft or published. Open one to manage its AI interview.",
+      "empty": "You don't own any course yet",
+      "browse": "Browse courses",
+      "manageHint": "Open to manage the AI interview →"
+    },
+    "status": {
+      "PUBLISHED": "Published",
+      "DRAFT": "Draft",
+      "ARCHIVED": "Archived"
     }
   },
   "course": {

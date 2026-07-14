@@ -80,6 +80,29 @@ export const getCourses = async (
 }
 
 /**
+ * Lists the courses the signed-in instructor OWNS — every status (DRAFT / PUBLISHED
+ * / ARCHIVED), newest-updated first.
+ *
+ * `GET /api/v1/courses/teaching` (authenticated). The public catalog only returns
+ * PUBLISHED courses, so a lecturer can't otherwise reach their own DRAFT/ARCHIVED
+ * courses to manage them (generate an interview, add lessons…). The BE scopes the
+ * query to the caller's `instructorId`, so this never leaks other people's courses.
+ */
+export const getTeachingCourses = async (
+    params?: { page?: number; size?: number },
+): Promise<Array<CourseSummary>> => {
+    return restRequest<Array<CourseSummary>>({
+        method: "GET",
+        url: "/courses/teaching",
+        authenticated: true,
+        params: {
+            page: params?.page ?? undefined,
+            size: params?.size ?? undefined,
+        },
+    })
+}
+
+/**
  * Reads one published course's detail by slug name.
  *
  * `GET /api/v1/courses/{slugName}`. NOTE the path variable is the `slugName`

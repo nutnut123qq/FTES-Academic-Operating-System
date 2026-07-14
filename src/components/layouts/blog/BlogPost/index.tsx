@@ -109,7 +109,7 @@ export const BlogPost = () => {
                             )}
 
                             {/* body (markdown, safely rendered) */}
-                            <MarkdownContent markdown={data.contentMd} reading />
+                            <MarkdownContent markdown={data.contentMd} reading allowHtml />
 
                             {/* more in this category (self-hiding) */}
                             <RelatedPosts

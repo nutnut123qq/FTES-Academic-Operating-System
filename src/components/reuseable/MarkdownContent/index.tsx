@@ -4,6 +4,8 @@ import React, { useMemo } from "react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import remarkDirective from "remark-directive"
+import rehypeRaw from "rehype-raw"
+import rehypeSanitize from "rehype-sanitize"
 import { cn } from "@heroui/react"
 import { useTheme } from "next-themes"
 import { useTranslations } from "next-intl"
@@ -171,6 +173,15 @@ const remarkAccordion = () => (tree: unknown): void => {
 
 const REMARK_PLUGINS = [remarkGfm, remarkDirective, remarkMuted, remarkTab, remarkChip, remarkAccordion]
 
+/**
+ * Rehype plugins bật khi `allowHtml` — cho nội dung LƯU DẠNG HTML (bài blog legacy migrate từ
+ * FTES cũ) render đúng thay vì hiện thẻ dạng text. `rehype-raw` parse HTML thô trong tree,
+ * `rehype-sanitize` (chạy SAU) loại XSS. Thuần AST → an toàn SSR (không cần DOM). Module-level
+ * hằng để không tạo mảng mới mỗi render. Nội dung markdown thường (bài admin soạn mới) không bị
+ * ảnh hưởng — không có HTML thô thì rehype-raw là no-op.
+ */
+const RAW_HTML_REHYPE_PLUGINS = [rehypeRaw, rehypeSanitize]
+
 // Matches each ```mermaid fence and the figure caption paragraph that follows it.
 // Group 1 = diagram source; group 2 = the first non-blank line after the fence.
 const MERMAID_CAPTION_REGEX = /```mermaid[ \t]*\r?\n([\s\S]*?)\r?\n```[ \t]*\r?\n+[ \t]*([^\r\n]+)/g
@@ -226,6 +237,12 @@ export interface MarkdownContentProps extends WithClassNames<undefined> {
      * cards, chat, flashcards and modals).
      */
     reading?: boolean
+    /**
+     * Cho phép render HTML thô nhúng trong nguồn (qua rehype-raw + rehype-sanitize). Bật cho nội
+     * dung blog legacy vốn lưu dạng HTML; markdown thuần không bị ảnh hưởng. Mặc định off để các
+     * nơi khác (lesson/community/chat) giữ nguyên hành vi không render HTML người dùng nhập.
+     */
+    allowHtml?: boolean
 }
 
 /**
@@ -236,7 +253,7 @@ export interface MarkdownContentProps extends WithClassNames<undefined> {
  * theme hook and client-side markdown rendering.
  * @param props - {@link MarkdownContentProps}
  */
-export const MarkdownContent = ({ markdown, reading = false, className }: MarkdownContentProps) => {
+export const MarkdownContent = ({ markdown, reading = false, allowHtml = false, className }: MarkdownContentProps) => {
     const theme = useTheme()
     const t = useTranslations()
     const mermaidCaptions = useMemo(() => extractMermaidCaptions(markdown), [markdown])
@@ -273,6 +290,7 @@ export const MarkdownContent = ({ markdown, reading = false, className }: Markdo
         >
             <ReactMarkdown
                 remarkPlugins={REMARK_PLUGINS}
+                rehypePlugins={allowHtml ? RAW_HTML_REHYPE_PLUGINS : undefined}
                 components={components}
             >
                 {renderedMarkdown}

@@ -444,12 +444,24 @@ export const pathConfig = () => {
                     build,
                 }
             }
+            // "Khoá tôi dạy" — the signed-in instructor's owned courses (all statuses).
+            // A fixed group-level route (`/courses/teaching`), independent of `displayId`.
+            const teaching = () => {
+                const teachingPath = `${localePath}/courses/teaching`
+                const build = () => {
+                    return teachingPath
+                }
+                return {
+                    build,
+                }
+            }
 
             return {
                 build,
                 learn,
                 headhuntingCompanies,
                 mine,
+                teaching,
             }
         }
         const contact = () => {

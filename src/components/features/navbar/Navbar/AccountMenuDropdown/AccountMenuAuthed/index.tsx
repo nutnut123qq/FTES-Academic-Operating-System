@@ -8,6 +8,7 @@ import {
 } from "@heroui/react"
 import {
     GraduationCapIcon,
+    ChalkboardTeacherIcon,
     SquaresFourIcon,
     UserIcon,
     FileTextIcon,
@@ -21,6 +22,7 @@ import {
 import { useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
 import { pathConfig } from "@/resources/path"
+import { useHasPermission } from "@/hooks/useHasPermission"
 import { useAccountMenuOverlayState } from "@/hooks/zustand/overlay/hooks"
 import { useMutateSignOutSwr } from "@/hooks/swr/api/graphql/mutations/useMutateSignOutSwr"
 import { EXPLORE_SHORTCUTS } from "../explore-shortcuts"
@@ -45,6 +47,9 @@ export const AccountMenuAuthed = ({ className }: AccountMenuAuthedProps) => {
     const router = useRouter()
     const { close } = useAccountMenuOverlayState()
     const signOut = useMutateSignOutSwr()
+    // Lecturer-only "Khoá tôi dạy" entry — same gate as the interview manage panel
+    // (`ai.teacher.use`); a non-lecturer never sees the teaching link.
+    const isLecturer = useHasPermission("ai.teacher.use")
 
     /** Close the menu, then navigate. */
     const go = useCallback(
@@ -77,6 +82,16 @@ export const AccountMenuAuthed = ({ className }: AccountMenuAuthedProps) => {
                     <GraduationCapIcon className="size-5" />
                     <Label>{t("nav.myCourses")}</Label>
                 </Dropdown.Item>
+                {isLecturer ? (
+                    <Dropdown.Item
+                        id="teaching"
+                        textValue={t("nav.teaching")}
+                        onPress={() => go(pathConfig().locale().course().teaching().build())}
+                    >
+                        <ChalkboardTeacherIcon className="size-5" />
+                        <Label>{t("nav.teaching")}</Label>
+                    </Dropdown.Item>
+                ) : null}
             </Dropdown.Section>
             {/* "Khám phá" — discovery shortcuts relocated out of the header (D8/D9);
                 sits between the gamification stats row above and the account links */}

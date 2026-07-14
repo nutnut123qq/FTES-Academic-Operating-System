@@ -5,6 +5,7 @@ import type {
     BlogCommentPage,
     BlogCommentResponse,
     BlogPostDetail,
+    BlogPostPage,
     BlogReactionResult,
     CreateBlogCommentRequest,
     CreateBlogPostRequest,
@@ -12,6 +13,61 @@ import type {
     UpdateBlogCommentRequest,
     UpdateBlogPostRequest,
 } from "./types"
+
+// ---------------- BlogPostController (public read) ----------------
+
+/**
+ * Lists published posts for the public blog (`GET /api/v1/blog/posts`, public).
+ * Optionally filtered by `categorySlug`; `page` is 0-based and the BE reports
+ * `hasNext` on the returned {@link BlogPostPage} (true when a full page came back).
+ */
+export const getBlogPosts = async (params?: {
+    categorySlug?: string
+    page?: number
+    size?: number
+}): Promise<BlogPostPage> =>
+    restRequest<BlogPostPage>({
+        method: "GET",
+        url: "/blog/posts",
+        authenticated: false,
+        params: {
+            categorySlug: params?.categorySlug ?? undefined,
+            page: params?.page ?? undefined,
+            size: params?.size ?? undefined,
+        },
+    })
+
+/**
+ * Full-text search over published posts (`GET /api/v1/blog/posts/search`, public).
+ * `q` is required; paging + `hasNext` mirror {@link getBlogPosts}.
+ */
+export const searchBlogPosts = async (params: {
+    q: string
+    page?: number
+    size?: number
+}): Promise<BlogPostPage> =>
+    restRequest<BlogPostPage>({
+        method: "GET",
+        url: "/blog/posts/search",
+        authenticated: false,
+        params: {
+            q: params.q,
+            page: params.page ?? undefined,
+            size: params.size ?? undefined,
+        },
+    })
+
+/**
+ * Reads one published post by slug (`GET /api/v1/blog/posts/{slug}`, public). The
+ * BE records a deduped view server-side and 404s an unknown/unpublished slug (the
+ * REST envelope surfaces that as a thrown error the caller renders as not-found).
+ */
+export const getBlogPostBySlug = async (slug: string): Promise<BlogPostDetail> =>
+    restRequest<BlogPostDetail>({
+        method: "GET",
+        url: `/blog/posts/${slug}`,
+        authenticated: false,
+    })
 
 // ---------------- BlogPostController (editorial only) ----------------
 

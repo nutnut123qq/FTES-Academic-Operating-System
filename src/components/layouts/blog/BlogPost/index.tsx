@@ -2,23 +2,25 @@
 
 import React from "react"
 import useSWR from "swr"
-import { Button, Card, CardContent, Chip } from "@heroui/react"
+import { Chip } from "@heroui/react"
 import { useLocale, useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
 import { Link } from "@/i18n/navigation"
 import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
-import { CATEGORY_COLOR } from "../shared/category"
+import { blogCategoryColor, buildCategoryLookup } from "../shared/category"
 import { ReadingProgress } from "./ReadingProgress"
 import { RelatedPosts } from "./RelatedPosts"
 import { BlogPostSkeleton } from "./BlogPostSkeleton"
-import { fetchMockBlogPost } from "../mock"
+import { getBlogCategories, getBlogPostBySlug } from "@/modules/api/rest/blog"
 
 /**
- * Public `/blog/[slug]` article. Reads the slug from the route, fetches the
- * article via SWR, and renders a reading-progress bar, a serif header, the
- * markdown body, the members-only gate (when `isLocked`), the GitHub source +
- * funnel CTAs, and a "More in {pillar}" strip.
+ * Public `/blog/[slug]` article. Reads the slug from the route, fetches the REAL
+ * post via SWR (`getBlogPostBySlug`), and renders a reading-progress bar, a header
+ * (category chip + title + meta), the optional cover, and the post's markdown
+ * content through the sanitizing {@link MarkdownContent} renderer (react-markdown
+ * escapes raw HTML — no unsanitized injection), then a "More in {category}" strip.
+ * An unknown slug surfaces the not-found state.
  */
 export const BlogPost = () => {
     const t = useTranslations("blog")
@@ -29,13 +31,19 @@ export const BlogPost = () => {
 
     // fetch the article; re-keys when the slug changes
     const { data, isLoading, error, mutate } = useSWR(
-        ["blog-post", slug],
-        async () => fetchMockBlogPost(slug),
+        slug ? ["blog-post", slug] : null,
+        async () => getBlogPostBySlug(slug),
     )
+
+    // resolve the post's category id → name/slug for the chip + related strip
+    const { data: categories } = useSWR(["blog-categories"], () => getBlogCategories())
+    const lookup = buildCategoryLookup(categories)
+    const categoryLabel = data ? lookup.nameOf(data.categoryId) : undefined
+    const categorySlug = data ? lookup.slugOf(data.categoryId) : undefined
 
     // localized publish-date formatter (long, article style)
     const publishedAt = data
-        ? new Date(data.publishedAt).toLocaleDateString(locale, {
+        ? new Date(data.publishedAt ?? data.createdAt).toLocaleDateString(locale, {
             year: "numeric",
             month: "long",
             day: "numeric",
@@ -72,76 +80,43 @@ export const BlogPost = () => {
                 >
                     {data && (
                         <article className="flex flex-col gap-6">
-                            {/* header: chips, serif title, meta */}
+                            {/* header: category chip, title, meta */}
                             <header className="flex flex-col gap-3">
-                                <div className="flex flex-wrap items-center gap-2">
-                                    <Chip size="sm" variant="soft" color={CATEGORY_COLOR[data.category]}>
-                                        {t(`categories.${data.category}`)}
-                                    </Chip>
-                                    {data.isPremium && (
-                                        <Chip size="sm" variant="soft" color="warning">
-                                            {t("premium")}
+                                {categoryLabel && (
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <Chip size="sm" variant="soft" color={blogCategoryColor(categorySlug ?? data.categoryId)}>
+                                            {categoryLabel}
                                         </Chip>
-                                    )}
-                                </div>
+                                    </div>
+                                )}
                                 <h1 className="text-4xl font-bold leading-tight text-foreground">
                                     {data.title}
                                 </h1>
                                 <div className="flex items-center gap-2 text-sm text-muted">
                                     <span>{publishedAt}</span>
-                                    {data.readingMinutes != null && (
-                                        <>
-                                            <span aria-hidden>·</span>
-                                            <span>{t("readingMinutes", { minutes: data.readingMinutes })}</span>
-                                        </>
-                                    )}
+                                    <span aria-hidden>·</span>
+                                    <span>{t("views", { count: data.viewCount })}</span>
                                 </div>
                             </header>
 
                             {/* cover image (optional) */}
-                            {data.coverImageUrl && (
+                            {data.thumbnailUrl && (
                                 <img
-                                    src={data.coverImageUrl}
+                                    src={data.thumbnailUrl}
                                     alt=""
                                     className="aspect-[16/9] w-full rounded-2xl object-cover"
                                 />
                             )}
 
-                            {/* body (markdown) */}
-                            <MarkdownContent markdown={data.body} reading />
+                            {/* body (markdown, safely rendered) */}
+                            <MarkdownContent markdown={data.contentMd} reading />
 
-                            {/* members-only gate when the body was truncated server-side */}
-                            {data.isLocked && (
-                                <Card className="w-full border border-warning/40">
-                                    <CardContent className="flex flex-col items-center gap-2 py-8 text-center">
-                                        <p className="font-semibold">{t("lockedTitle")}</p>
-                                        <p className="text-sm text-muted">{t("lockedBody")}</p>
-                                    </CardContent>
-                                </Card>
-                            )}
-
-                            {/* end-of-article actions: GitHub source (secondary) + funnel CTA (primary) */}
-                            {(data.sourceUrl || data.ctaUrl) && (
-                                <div className="flex flex-col gap-3">
-                                    {data.sourceUrl && (
-                                        <a href={data.sourceUrl} target="_blank" rel="noopener noreferrer">
-                                            <Button variant="outline" size="lg" className="w-full">
-                                                {t("viewSource")}
-                                            </Button>
-                                        </a>
-                                    )}
-                                    {data.ctaUrl && (
-                                        <Link href={data.ctaUrl}>
-                                            <Button variant="primary" size="lg" className="w-full">
-                                                {data.ctaLabel ?? t("ctaDefault")}
-                                            </Button>
-                                        </Link>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* more in this pillar (self-hiding) */}
-                            <RelatedPosts category={data.category} currentSlug={data.slug} />
+                            {/* more in this category (self-hiding) */}
+                            <RelatedPosts
+                                categorySlug={categorySlug}
+                                categoryLabel={categoryLabel}
+                                currentSlug={data.slug}
+                            />
                         </article>
                     )}
                 </AsyncContent>

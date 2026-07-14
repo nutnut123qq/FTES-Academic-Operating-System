@@ -2,9 +2,13 @@ import React, { cache } from "react"
 import type { Metadata } from "next"
 import { SEO_CONFIG } from "@/config/seo"
 import { BlogPost } from "@/components/layouts/blog/BlogPost"
-import { fetchMockBlogPost } from "@/components/layouts/blog/mock"
+import { getBlogPostBySlug, type BlogPostDetail } from "@/modules/api/rest/blog"
 import { JsonLd, articleSchema } from "@/modules/seo/jsonLd"
 import { buildPageMetadata } from "@/modules/seo/buildMetadata"
+
+// Rendered per-request: the detail fetch hits the live blog endpoint and records a
+// view server-side, so it must not be prerendered/cached at build time.
+export const dynamic = "force-dynamic"
 
 /** Route params for `/[locale]/blog/[slug]`. */
 interface BlogParams {
@@ -16,15 +20,28 @@ interface BlogParams {
 
 /**
  * Blog-post fetch by slug, memoized per request so `generateMetadata` and the
- * page body share one round-trip. Returns null when unknown so SEO degrades
- * gracefully (the client {@link BlogPost} renders its own state regardless).
- *
- * MOCK: reads from `fetchMockBlogPost`; swap for the real `queryBlogPost` when
- * the blog backend exists (the detail shape already matches).
+ * page body share one round-trip. Returns null when the slug is unknown (the BE
+ * 404s → the client {@link BlogPost} renders its own not-found state regardless).
  */
-const getPost = cache(async (slug: string) => fetchMockBlogPost(slug))
+const getPost = cache(async (slug: string): Promise<BlogPostDetail | null> => {
+    try {
+        return await getBlogPostBySlug(slug)
+    } catch {
+        return null
+    }
+})
 
-/** Per-post SEO metadata (title/excerpt/canonical/hreflang/OG cover, article type). */
+/** Strips markdown to a plain-text meta description (~160 chars). */
+const toDescription = (markdown: string): string => {
+    const plain = markdown
+        .replace(/```[\s\S]*?```/g, " ")
+        .replace(/[#>*_`~[\]()!-]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+    return plain.length > 160 ? `${plain.slice(0, 157)}…` : plain
+}
+
+/** Per-post SEO metadata (title/description/canonical/hreflang/OG cover, article type). */
 export const generateMetadata = async ({
     params,
 }: {
@@ -40,8 +57,8 @@ export const generateMetadata = async ({
         locale,
         type: "article",
         title: post.title,
-        description: post.excerpt ?? undefined,
-        images: post.coverImageUrl ? [post.coverImageUrl] : undefined,
+        description: toDescription(post.contentMd),
+        images: post.thumbnailUrl ? [post.thumbnailUrl] : undefined,
     })
 }
 
@@ -65,13 +82,11 @@ const Page = async ({
                 <JsonLd
                     data={articleSchema({
                         headline: post.title,
-                        description: post.excerpt ?? undefined,
+                        description: toDescription(post.contentMd),
                         url: `${SEO_CONFIG.siteUrl}/${locale}/blog/${slug}`,
-                        image: post.coverImageUrl ?? undefined,
+                        image: post.thumbnailUrl ?? undefined,
                         datePublished: post.publishedAt ?? undefined,
                         inLanguage: locale,
-                        timeRequiredMinutes: post.readingMinutes ?? undefined,
-                        isFree: post.isPremium != null ? !post.isPremium : undefined,
                     })}
                 />
             ) : null}

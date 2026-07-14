@@ -43,10 +43,13 @@ export const FeaturedSlide = ({ course, index, total, onOpen }: FeaturedSlidePro
             className="relative w-full shrink-0 snap-center overflow-hidden rounded-2xl"
         >
             <div className="relative aspect-video w-full md:aspect-[21/9] md:max-h-96">
-                {/* gradient fallback behind the cover */}
+                {/* background behind the cover: the banner's own `theme` (a CSS color/gradient
+                    string, rendered verbatim — never interpolated as HTML) when present, else a
+                    neutral brand gradient. Degrades cleanly for banners without a theme. */}
                 <div
                     aria-hidden
-                    className="absolute inset-0 bg-gradient-to-br from-accent/60 via-accent/30 to-accent/10"
+                    className={course.theme ? "absolute inset-0" : "absolute inset-0 bg-gradient-to-br from-accent/60 via-accent/30 to-accent/10"}
+                    style={course.theme ? { background: course.theme } : undefined}
                 />
                 {coverFailed ? null : (
                     // ponytail: mock picsum cover — `unoptimized` skips the Next optimizer
@@ -91,7 +94,7 @@ export const FeaturedSlide = ({ course, index, total, onOpen }: FeaturedSlidePro
                                 </Typography>
                             ) : null}
                             <Button size="sm" variant="primary" onPress={onOpen}>
-                                {t("featured.cta")}
+                                {course.ctaLabel || t("slider.cta")}
                             </Button>
                         </div>
                     </div>

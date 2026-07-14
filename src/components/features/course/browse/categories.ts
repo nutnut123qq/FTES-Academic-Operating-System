@@ -1,72 +1,71 @@
+import type { CourseCategoryDto } from "@/modules/api/rest/course"
+
 /**
- * A course category of the browse-by-category catalog (§4). Frontend-defined,
- * BE-ready shape: `slug` is the join key on courses AND the route param
- * (`/courses/category/[slug]`), so it stays stable across the BE swap.
- * `name`/`description` are localized in-data (not i18n keys) because BE will
- * own the taxonomy — the swap replaces this whole list.
+ * A course category of the browse-by-category catalog (§4). Backend-owned
+ * taxonomy: the shape is populated from `GET /api/v1/courses/categories` (see
+ * {@link import("../hooks/useQueryCourseCategoriesSwr")}). `slug` is the route
+ * param (`/courses/category/[slug]`) and stable identity; `id` is the opaque
+ * `categoryId` the course list filters on. `name`/`description` are plain strings
+ * (locale-resolved by the BE, or a single language) — NOT i18n keys, since the BE
+ * owns the content.
  *
- * NOTE: this module is imported by the SERVER page (`generateStaticParams` /
- * `generateMetadata`), so it must stay pure data — no phosphor icon components
- * here (they call `createContext`, which breaks the react-server bundle).
- * Icons live in `./category-icons` (client-only), keyed by slug.
+ * NOTE: this module is imported by the SERVER page (`generateMetadata` /
+ * notFound), so it must stay pure data — no phosphor icon components here (they
+ * call `createContext`, which breaks the react-server bundle). Icons live in
+ * `./category-icons` (client-only), keyed by slug. `accent` is a presentation-only
+ * tone derived from the slug (see {@link accentForSlug}).
  */
 export interface CourseCategory {
-    /** Stable id (mirrors what a BE row id will be). */
+    /** Opaque backend id — the `categoryId` filter on the course list. */
     id: string
-    /** URL slug + join key on `Course.category`. */
+    /** URL slug + stable route/identity key. */
     slug: string
-    /** Localized display name. */
-    name: { vi: string; en: string }
-    /** Localized one-line description for the category landing header. */
-    description: { vi: string; en: string }
+    /** Display name (locale-resolved by the BE). */
+    name: string
+    /** One-line description for the category landing header, when the BE has one. */
+    description?: string
+    /** Number of published courses in the category, when the BE reports it. */
+    courseCount?: number
     /** Semantic tone tinting the category's landing-page icon tile (IconTile tone). */
-    accent: "accent" | "success" | "warning"
+    accent: CategoryAccent
 }
 
-// The BE catalog exposes only an opaque `categoryId` (uuid) per course with no
-// public, named category taxonomy yet. Rather than fabricate category
-// membership, the catalog presents every published course under one honest
-// "all courses" bucket. THIS list stays THE swap point: when the BE category
-// endpoint lands, replace it (and the fetcher in `useQueryCourseCategoriesSwr`)
-// with the real data; slugs are the stable contract.
-export const COURSE_CATEGORIES: Array<CourseCategory> = [
-    {
-        id: "all",
-        slug: "all",
-        name: { vi: "Tất cả khóa học", en: "All courses" },
-        description: {
-            vi: "Toàn bộ khóa học đang mở trên FTES.",
-            en: "Every course currently published on FTES.",
-        },
-        accent: "accent",
-    },
-]
+/** IconTile tone options a category can be tinted with. */
+export type CategoryAccent = "accent" | "success" | "warning"
+
+/** The accent tones a category can cycle through (presentation-only). */
+const ACCENTS: Array<CategoryAccent> = ["accent", "success", "warning"]
 
 /**
- * Finds a category by its URL slug.
+ * Derives a stable presentation-only accent tone from a category slug. Pure and
+ * deterministic (same slug → same tone) so the landing tile tint never flickers
+ * across renders. This is the taxonomy-independent "accent helper" the browse UI
+ * keeps after the BE swap.
  *
- * @param slug - The category slug from the route / course row.
- * @returns The matching category, or `undefined` for an unknown slug.
+ * @param slug - The category slug.
+ * @returns One of the {@link CategoryAccent} tones.
  */
-export const findCategoryBySlug = (slug: string): CourseCategory | undefined =>
-    COURSE_CATEGORIES.find((category) => category.slug === slug)
+export const accentForSlug = (slug: string): CategoryAccent => {
+    let hash = 0
+    for (let index = 0; index < slug.length; index += 1) {
+        hash = (hash * 31 + slug.charCodeAt(index)) | 0
+    }
+    return ACCENTS[Math.abs(hash) % ACCENTS.length]
+}
 
 /**
- * Picks the localized category name for the active locale.
+ * Adapts a public {@link CourseCategoryDto} into the browse-view
+ * {@link CourseCategory}, attaching the derived presentation accent. Used by both
+ * the client hook and the server category page so the shape stays identical.
  *
- * @param category - The category to name.
- * @param locale - The active locale ("vi" | "en").
- * @returns The category name in that locale.
+ * @param dto - One BE category row.
+ * @returns The browse-view category.
  */
-export const categoryName = (category: CourseCategory, locale: string): string =>
-    locale === "en" ? category.name.en : category.name.vi
-
-/**
- * Picks the localized category description for the active locale.
- *
- * @param category - The category to describe.
- * @param locale - The active locale ("vi" | "en").
- * @returns The category description in that locale.
- */
-export const categoryDescription = (category: CourseCategory, locale: string): string =>
-    locale === "en" ? category.description.en : category.description.vi
+export const toCourseCategory = (dto: CourseCategoryDto): CourseCategory => ({
+    id: dto.id,
+    slug: dto.slug,
+    name: dto.name,
+    description: dto.description,
+    courseCount: dto.courseCount,
+    accent: accentForSlug(dto.slug),
+})

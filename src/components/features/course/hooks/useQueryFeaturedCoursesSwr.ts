@@ -4,10 +4,9 @@ import useSWR from "swr"
 import { useLocale } from "next-intl"
 import { useGetAdminPublicBannersSwr } from "@/hooks/swr/api/rest/queries/useGetAdminPublicBannersSwr"
 import type { AdminBannerView } from "@/modules/api/rest/admin"
-import { CATALOG_CATEGORY_SLUG } from "./useQueryCoursesSwr"
 import type { Course } from "./useQueryCoursesSwr"
 
-/** A featured course promoted in the catalog hero slider (§4, mock until BE lands). */
+/** A featured course promoted in the catalog hero slider (§4). */
 export interface FeaturedCourse extends Course {
     /** One-line marketing pitch shown on the slide (localized). */
     pitch: string
@@ -20,6 +19,13 @@ export interface FeaturedCourse extends Course {
      * here; mock course rows leave it unset and fall back to `/courses/[id]`.
      */
     href?: string
+    /** CTA button label from the banner; the slide falls back to the i18n default when absent. */
+    ctaLabel?: string
+    /**
+     * CSS color / gradient string painted behind the cover (banner `theme`). Rendered
+     * verbatim via `style.background` (never interpolated as HTML); absent → neutral gradient.
+     */
+    theme?: string
 }
 
 /** Raw mock row — pitch per locale; the hook flattens it for the active locale. */
@@ -104,10 +110,11 @@ const fetchFeaturedCoursesMock = async (locale: string): Promise<Array<FeaturedC
 const FEATURED_BANNER_PLACEMENT = "courses"
 
 /**
- * Adapts a real public banner into the slide model. A banner only carries an
- * image, title and optional link, so the course-only fields (code, level, pitch,
- * price) stay empty/zero — {@link FeaturedSlide} hides those, degrading to a clean
- * cover + title + CTA. The CTA points at the banner's own `linkUrl` via `href`.
+ * Adapts a real public banner into the slide model. A banner carries an image,
+ * title, and now an optional `subtitle` (pitch), `ctaText`, and `theme`; the
+ * course-only fields (code, level, price) stay empty/zero — {@link FeaturedSlide}
+ * hides those, degrading to a clean themed cover + title + pitch + CTA. The CTA
+ * points at the banner's own `linkUrl` via `href`.
  */
 const toFeaturedFromBanner = (banner: AdminBannerView): FeaturedCourse => ({
     id: banner.id,
@@ -116,18 +123,21 @@ const toFeaturedFromBanner = (banner: AdminBannerView): FeaturedCourse => ({
     level: "intermediate",
     credits: 0,
     lessons: 0,
-    category: CATALOG_CATEGORY_SLUG,
+    category: "",
     priceVnd: 0,
     coverUrl: banner.imageUrl,
-    pitch: "",
+    pitch: banner.subtitle ?? "",
     href: banner.linkUrl,
+    ctaLabel: banner.ctaText,
+    theme: banner.theme,
 })
 
 /**
- * Loads the featured slides for the catalog hero slider. Prefers the REAL public
- * banners endpoint (`GET /admin-content/banners?placement=courses`) and falls back
- * to the mock {@link FEATURED_ROWS} whenever that endpoint is empty or errors —
- * so the slider is never blank and quietly upgrades the moment BE seeds a banner.
+ * Loads the featured slides for the catalog hero slider from the REAL public
+ * banners endpoint (`GET /admin-content/banners?placement=courses`). Real banners
+ * are the primary source — an EMPTY (but successful) response renders the slider's
+ * own empty/hidden state, NOT the mock. The mock {@link FEATURED_ROWS} is used
+ * ONLY when the banner request actually ERRORS, so the page still renders.
  *
  * The decision waits for the banner request to settle (never flashing mock→real),
  * and `featured` stays `undefined` while it is in flight so callers can gate a
@@ -142,21 +152,20 @@ export const useQueryFeaturedCoursesSwr = () => {
         error: bannersError,
     } = useGetAdminPublicBannersSwr(FEATURED_BANNER_PLACEMENT)
 
+    // Mock is only ever consulted on error, so it stays a lazy fallback.
     const { data: mock } = useSWR(["featured-courses", locale], () =>
         fetchFeaturedCoursesMock(locale),
     )
 
-    // Only decide once the banner request has resolved (or errored). A non-empty
-    // list wins; empty or errored → the mock rows.
+    // Wait for the banner request to settle before deciding (no mock→real flash).
+    // Success (even empty) → the real banners; error → the mock rows.
     const bannersSettled = !bannersLoading
-    const realBanners =
-        bannersSettled && !bannersError && banners && banners.length > 0 ? banners : null
 
     const featured = !bannersSettled
         ? undefined
-        : realBanners
-            ? realBanners.map(toFeaturedFromBanner)
-            : mock
+        : bannersError
+            ? mock
+            : (banners ?? []).map(toFeaturedFromBanner)
 
     return { featured, isLoading: !featured, error: undefined }
 }

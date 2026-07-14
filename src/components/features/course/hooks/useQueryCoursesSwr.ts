@@ -18,7 +18,7 @@ export interface Course {
     level: CourseLevel
     credits: number
     lessons: number
-    /** Category slug — joins `CourseCategory.slug` (exactly one per course). */
+    /** Opaque category id — joins `CourseCategory.id` (exactly one per course). */
     category: string
     /** Average rating 0–5; absent → the card hides its rating row. */
     rating?: number
@@ -43,14 +43,6 @@ export interface Course {
     /** ISO date of the last content update; assumed on the future BE list endpoint. */
     updatedAt?: string
 }
-
-/**
- * Single catalog bucket slug. The BE list carries an opaque `categoryId` (uuid)
- * with no public name taxonomy yet, so every course maps to one honest
- * "all courses" shelf rather than fabricating category membership. Matches the
- * lone category returned by `useQueryCourseCategoriesSwr` (BE-swap point).
- */
-export const CATALOG_CATEGORY_SLUG = "all"
 
 /**
  * Maps the BE course level string onto the catalog's three-level facet. The BE
@@ -98,7 +90,7 @@ const toCourse = (summary: CourseSummary): Course => {
         level: mapCourseLevel(summary.level),
         credits: 0,
         lessons: 0,
-        category: CATALOG_CATEGORY_SLUG,
+        category: summary.categoryId,
         rating: Number.isFinite(star) && star > 0 ? star : undefined,
         ratingCount: undefined,
         enrollmentCount: summary.totalUser ?? undefined,
@@ -126,14 +118,15 @@ const COURSE_COMPARATORS: Record<CourseSort, (a: Course, b: Course) => number> =
 }
 
 /**
- * Filters courses down to one category.
+ * Filters courses down to one category by its opaque `categoryId`.
  *
- * @param courses - The full course list.
- * @param slug - The category slug to keep.
- * @returns The courses whose `category` matches `slug`.
+ * @param courses - The course list (already server-filtered when a category is
+ *   active, so this is a safe no-op then; still used to group the "all" view).
+ * @param categoryId - The category id to keep (`CourseCategory.id`).
+ * @returns The courses whose `category` matches `categoryId`.
  */
-export const coursesByCategory = (courses: Array<Course>, slug: string): Array<Course> =>
-    courses.filter((course) => course.category === slug)
+export const coursesByCategory = (courses: Array<Course>, categoryId: string): Array<Course> =>
+    courses.filter((course) => course.category === categoryId)
 
 /**
  * Returns a new array sorted by the given browse sort order (stable — ties keep
@@ -146,15 +139,33 @@ export const coursesByCategory = (courses: Array<Course>, slug: string): Array<C
 export const sortCourses = (courses: Array<Course>, sort: CourseSort): Array<Course> =>
     [...courses].sort(COURSE_COMPARATORS[sort])
 
+/** Filters for {@link useQueryCoursesSwr} (server-driven). */
+export interface UseQueryCoursesParams {
+    /**
+     * Opaque `categoryId` to filter by server-side (`GET /courses?categoryId=`).
+     * Omit / `undefined` for the whole catalog. Part of the SWR key so each
+     * category caches independently.
+     */
+    categoryId?: string
+}
+
 /**
  * Loads the course catalog from the public REST endpoint
- * (`GET /api/v1/courses`) and adapts each row to the catalog card model.
- * SWR-cached under a stable key; `courses` defaults to `[]` while loading.
+ * (`GET /api/v1/courses`) and adapts each row to the catalog card model. Category
+ * filtering is SERVER-driven: passing `categoryId` refetches that category's
+ * courses (the id is part of the SWR key, so views cache independently) rather
+ * than filtering the full list client-side. `courses` defaults to `[]` while loading.
+ *
+ * @param params - Optional server-side filters (currently `categoryId`).
  */
-export const useQueryCoursesSwr = () => {
-    const { data, isLoading, error, mutate } = useSWR(["rest-courses"], async () => {
-        const list = await getCourses({ size: 100 })
-        return list.map(toCourse)
-    })
+export const useQueryCoursesSwr = (params?: UseQueryCoursesParams) => {
+    const categoryId = params?.categoryId
+    const { data, isLoading, error, mutate } = useSWR(
+        ["rest-courses", categoryId ?? null],
+        async () => {
+            const list = await getCourses({ size: 100, categoryId })
+            return list.map(toCourse)
+        },
+    )
     return { courses: data ?? [], isLoading, error, mutate }
 }

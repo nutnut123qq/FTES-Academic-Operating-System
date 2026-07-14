@@ -79,6 +79,38 @@ export const getCourses = async (
     })
 }
 
+/** One public course category row (`GET /api/v1/courses/categories`). */
+export interface CourseCategoryDto {
+    /** Opaque category id — the `categoryId` filter on {@link getCourses}. */
+    id: string
+    /** Display name (locale-resolved by the BE, or a single language). */
+    name: string
+    /** URL slug — the stable `/courses/category/[slug]` route key. */
+    slug: string
+    /** Optional one-line description for the category landing header. */
+    description?: string
+    /** Number of published courses in the category. */
+    courseCount: number
+}
+
+/**
+ * Lists the public course categories for the browse taxonomy.
+ *
+ * `GET /api/v1/courses/categories` (public). `nonEmpty` (default `true`) asks the
+ * BE to omit categories with no published courses, so the chip bar never renders
+ * a dead bucket. `slug` is the stable identifier the routes and filters key on.
+ */
+export const getCourseCategories = async (
+    nonEmpty = true,
+): Promise<Array<CourseCategoryDto>> => {
+    return restRequest<Array<CourseCategoryDto>>({
+        method: "GET",
+        url: "/courses/categories",
+        authenticated: false,
+        params: { nonEmpty },
+    })
+}
+
 /**
  * Lists the courses the signed-in instructor OWNS — every status (DRAFT / PUBLISHED
  * / ARCHIVED), newest-updated first.

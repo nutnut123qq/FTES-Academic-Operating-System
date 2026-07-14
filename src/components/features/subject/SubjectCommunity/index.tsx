@@ -20,6 +20,7 @@ import {
 } from "../hooks/useQuerySubjectFeedSwr"
 import { useQuerySubjectPostCommentsSwr } from "../hooks/useQuerySubjectPostCommentsSwr"
 import { useMutateReactSubjectPostSwr } from "../hooks/useMutateReactSubjectPostSwr"
+import { useQuerySubjectSwr } from "../hooks/useQuerySubjectSwr"
 
 /** Feed scope tabs. */
 const SCOPES: Array<FeedScope> = ["forYou", "following", "trending"]
@@ -149,9 +150,14 @@ const SubjectPostRow = ({
  */
 export const SubjectCommunity = () => {
     const t = useTranslations("subjects")
-    const { subjectId } = useParams<{ subjectId: string }>()
+    const { subjectId: code } = useParams<{ subjectId: string }>()
     const [scope, setScope] = useState<FeedScope>("forYou")
-    const { posts, isLoading, error, mutate } = useQuerySubjectFeedSwr(subjectId, scope)
+    // The route segment is the course code, but `subjectWorkspace.community` (GraphQL)
+    // keys on the subject UUID — resolve it via the detail fetch before querying the feed.
+    const { subject, isLoading: subjectLoading } = useQuerySubjectSwr(code)
+    const subjectId = subject?.uuid ?? ""
+    const { posts, isLoading: feedLoading, error, mutate } = useQuerySubjectFeedSwr(subjectId, scope)
+    const isLoading = subjectLoading || feedLoading
 
     return (
         <div className="flex flex-col gap-6 p-6">

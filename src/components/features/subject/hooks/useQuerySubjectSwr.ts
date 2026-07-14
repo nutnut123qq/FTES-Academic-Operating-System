@@ -11,6 +11,12 @@ export interface Subject {
      * (uuid → 404), so the id carried by every card + link is the code (`PRF192`).
      */
     id: string
+    /**
+     * Real subject UUID. The REST detail/workspace endpoints key on the code, but the
+     * GraphQL `subjectWorkspace(subjectId: ID!)` op requires the UUID (a code inlined
+     * there 500s "Internal error"), so the discussion feed reads this instead of `id`.
+     */
+    uuid: string
     /** Course code shown as the mark, e.g. `PRF192`. */
     code: string
     /** Human name — prefers the Vietnamese title (`nameVi`) for the VN UI. */
@@ -67,6 +73,7 @@ export const mapSubjectDifficulty = (
 /** Maps a catalog summary row (`GET /subjects`) to the FE {@link Subject}. */
 export const toSubjectFromSummary = (summary: SubjectSummary): Subject => ({
     id: summary.code,
+    uuid: summary.id,
     code: summary.code,
     name: summary.nameVi || summary.name,
     credits: summary.credits,
@@ -80,6 +87,7 @@ export const toSubjectFromSummary = (summary: SubjectSummary): Subject => ({
 /** Maps the full detail (`GET /subjects/{code}`) to the FE {@link Subject}. */
 export const toSubjectFromDetail = (detail: SubjectDetail): Subject => ({
     id: detail.code,
+    uuid: detail.id,
     code: detail.code,
     name: detail.nameVi || detail.name,
     credits: detail.credits,

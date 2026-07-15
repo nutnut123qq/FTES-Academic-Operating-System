@@ -3,6 +3,7 @@ import type {
     ChangePasswordRequest,
     ForgotPasswordRequest,
     GoogleLoginRequest,
+    MessageResponse,
     MfaActivateRequest,
     MfaActivateResponse,
     MfaDisableRequest,
@@ -11,6 +12,8 @@ import type {
     MfaVerifyRequest,
     OtpRequestRequest,
     OtpVerifyRequest,
+    RegisterRequest,
+    RegisterVerifyRequest,
     ResendVerificationRequest,
     ResetPasswordRequest,
     SessionView,
@@ -19,6 +22,41 @@ import type {
 } from "./types"
 
 // ---------------------------------------------------------------- AuthController (public flows)
+
+/**
+ * Registers a new account and dispatches a 6-digit OTP email.
+ *
+ * Behavior: new email => account `PENDING_VERIFICATION` + OTP email (TTL 5m, cooldown 60s);
+ * email exists UNVERIFIED => 200 idempotent OTP resend (so "resend OTP" = call this again);
+ * email exists ACTIVE => 409 `IDENTITY_EMAIL_TAKEN`.
+ *
+ * `POST /api/v1/auth/register`
+ */
+export const register = async (request: RegisterRequest): Promise<MessageResponse> => {
+    return restRequest<MessageResponse>({
+        method: "POST",
+        url: "/auth/register",
+        data: request,
+    })
+}
+
+/**
+ * Verifies the registration OTP and activates the account.
+ *
+ * On success the response is IDENTICAL to `POST /auth/login` (token pair + session),
+ * so the user is signed in immediately.
+ *
+ * `POST /api/v1/auth/register/verify`
+ */
+export const verifyRegistration = async (
+    request: RegisterVerifyRequest,
+): Promise<TokenResponse> => {
+    return restRequest<TokenResponse>({
+        method: "POST",
+        url: "/auth/register/verify",
+        data: request,
+    })
+}
 
 /**
  * Verifies a user's email address using the token from the verification email.

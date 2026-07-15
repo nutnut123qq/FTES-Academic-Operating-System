@@ -17,4 +17,9 @@ export interface PaymentContext {
     amountVnd: number
     /** Amount payable in FTES Coin — enables the "pay with coins" (COIN) flow when set. */
     amountCoin?: number
+    /**
+     * Optional callback fired when the payment reaches a successful settled status.
+     * Use this to revalidate gated data (e.g. lesson content/stream) without a reload.
+     */
+    onSuccess?: () => void
 }

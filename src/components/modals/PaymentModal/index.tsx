@@ -84,6 +84,7 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
             setPhase("success")
             void mutate("GET_CART_SWR")
             void mutate(["GET_MY_WALLET_SWR"])
+            context?.onSuccess?.()
         } else if (
             polledStatus === "FAILED" ||
             polledStatus === "CANCELLED" ||
@@ -91,7 +92,7 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
         ) {
             setPhase("failed")
         }
-    }, [phase, polledStatus, mutate])
+    }, [phase, polledStatus, mutate, context])
 
     if (!context) return null
 
@@ -131,6 +132,7 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
                     setPhase("success")
                     void mutate(["GET_MY_WALLET_SWR"])
                     void mutate("GET_CART_SWR")
+                    context?.onSuccess?.()
                 } else {
                     setPayError(t("checkout.failedHint"))
                 }

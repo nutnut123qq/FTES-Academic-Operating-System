@@ -26,6 +26,13 @@ export interface LearnLesson {
      * so it must not show a lock marker.
      */
     isLocked: boolean
+    /**
+     * BE access level for this viewer: "FULL" | "PREVIEW" | "NONE".
+     * Mirrors `LessonView.accessLevel` from the curriculum.
+     */
+    accessLevel: string | null
+    /** Slugs of the packages that unlock this lesson (for package-gate filtering). */
+    packageSlugs: Array<string>
     /** True when this lesson carries an auto-graded challenge. */
     hasChallenge?: boolean
 }
@@ -98,6 +105,8 @@ const toLearnLesson = (lesson: LessonView): LearnLesson => ({
     isCompleted: false,
     isPremium: !lesson.free,
     isLocked: lesson.locked ?? false,
+    accessLevel: lesson.accessLevel ?? null,
+    packageSlugs: lesson.packageSlugs ?? [],
     hasChallenge: false,
 })
 

@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState, type Key } from "react"
 import { Card, CardContent, Chip, Typography, cn } from "@heroui/react"
 import { CheckCircleIcon, ClockIcon, FlameIcon } from "@phosphor-icons/react"
-import { useTranslations } from "next-intl"
+import { useFormatter, useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
 import { mutate as globalMutate } from "swr"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
@@ -32,7 +32,7 @@ import {
 import { Button } from "@heroui/react"
 import { useQueryLearnLessonSwr } from "../hooks/useQueryLearnLessonSwr"
 import { useLearnSidebarStore } from "@/hooks/zustand/learnSidebar/store"
-import { useCourseEnrollment } from "@/components/features/course/hooks/useCourseEnrollment"
+
 import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
 import { InteractionBar } from "@/components/reuseable/Discussion/InteractionBar"
 import { useLessonReactionMock } from "./useLessonReactionMock"
@@ -43,6 +43,8 @@ import { LessonDocumentHtml } from "./LessonDocumentHtml"
 import { LessonDocumentsBlock } from "./LessonDocumentsBlock"
 import { SelectionHintCallout } from "./ContentAiSelectionAsk/SelectionHintCallout"
 import { LessonAiStudy } from "./LessonAiStudy"
+import { PackageGateModal } from "@/components/features/course/PackageGateModal"
+import { DocumentReader } from "@/components/features/learn/DocumentReader"
 
 /** The two content views (reading vs challenges). */
 type ContentView = "content" | "challenges"
@@ -86,18 +88,14 @@ const extractResourceLinks = (markdown: string): Array<string> => {
  */
 export const LessonReader = () => {
     const t = useTranslations("learn")
+    const format = useFormatter()
     const router = useRouter()
     const { courseId, contentId } = useParams<{ courseId: string; contentId: string }>()
     const { lesson, error, mutate } = useQueryLearnLessonSwr(courseId, contentId)
     const { toggle: toggleSidebar } = useLearnSidebarStore()
-    const { onEnroll, isEnrolling } = useCourseEnrollment(
-        courseId,
-        undefined,
-        lesson ? { rawId: lesson.courseRawId, title: lesson.title } : undefined,
-    )
-
     const [view, setView] = useState<ContentView>("content")
     const [lang, setLang] = useState("typescript")
+    const [gateOpen, setGateOpen] = useState(false)
 
     // Auto-completion wiring. The video player reports ≥50% watched via
     // `handleHalfWatched`; the per-lesson (keyed) <LessonCompletion> registers its
@@ -114,6 +112,8 @@ export const LessonReader = () => {
     const activeLang = resolveActiveProgrammingLang(lang, lesson?.availableLangs ?? [])
     const bodyMd = lesson?.bodyByLang[activeLang] ?? ""
     const isLocked = lesson?.isLocked ?? false
+    const accessLevel = lesson?.accessLevel ?? null
+    const isPreview = accessLevel === "PREVIEW"
     /** A readable lesson whose reading card would be blank (no body, no HTML, no video). */
     const isReadingEmpty = !!lesson && !isLocked && !bodyMd && !lesson.documentHtml && !lesson.hasVideo
     /** External links when the body is essentially just link(s) → render as resource cards. */
@@ -288,14 +288,39 @@ export const LessonReader = () => {
                         <>
                             {/* video player (VIDEO lessons) + document attachments — above the article */}
                             {lesson.hasVideo ? (
-                                <LessonVideoBlock videoRef={lesson.videoRef} onHalfWatched={handleHalfWatched} />
+                                <LessonVideoBlock
+                                    courseId={courseId}
+                                    lessonId={contentId}
+                                    courseRawId={lesson.courseRawId}
+                                    courseTitle={lesson.courseTitle}
+                                    lessonTitle={lesson.title}
+                                    packageSlugs={lesson.packageSlugs}
+                                    videoRef={lesson.videoRef}
+                                    onHalfWatched={handleHalfWatched}
+                                    onPurchased={() => { void mutate() }}
+                                />
                             ) : null}
                             <LessonDocumentsBlock lessonId={contentId} />
 
-                            {/* reading card — only when there is something to read (written body,
-                                resource links, paywall, or the empty-state invitation). A video-only
-                                lesson skips the card and shows just the reaction bar below. */}
-                            {showReadingCard ? (
+                            {/* reading card — DOCUMENT lessons get the dedicated DocumentReader
+                                (markdown/HTML/links + teaser fade + paywall). VIDEO lessons and
+                                mixed-content lessons keep the legacy reading card path. */}
+                            {lesson.contentType === "DOCUMENT" ? (
+                                <DocumentReader
+                                    bodyMd={bodyMd}
+                                    documentHtml={lesson.documentHtml}
+                                    locked={isLocked}
+                                    teaser={lesson.teaser}
+                                    accessLevel={accessLevel}
+                                    courseId={courseId}
+                                    courseRawId={lesson.courseRawId}
+                                    courseTitle={lesson.courseTitle}
+                                    lessonId={contentId}
+                                    lessonTitle={lesson.title}
+                                    packageSlugs={lesson.packageSlugs}
+                                    onPurchased={() => { void mutate() }}
+                                />
+                            ) : showReadingCard ? (
                                 <div className="mx-auto w-full max-w-3xl">
                                     <Card>
                                         <CardContent>
@@ -330,12 +355,22 @@ export const LessonReader = () => {
                                                 <div className="mt-6 flex flex-col items-start gap-3 border-t border-default pt-6">
                                                     <LockSimpleIcon aria-hidden focusable="false" className="size-8 text-accent" />
                                                     <Typography type="body" weight="semibold">
-                                                        {t("reader.lockedTitle")}
+                                                        {isPreview ? t("reader.previewTitle") : t("reader.lockedTitle")}
                                                     </Typography>
                                                     <Typography type="body-sm" color="muted">
-                                                        {t("reader.lockedBody")}
+                                                        {isPreview
+                                                            ? t("reader.previewBody")
+                                                            : t("reader.lockedBody")}
                                                     </Typography>
-                                                    <Button variant="primary" isPending={isEnrolling} onPress={() => onEnroll()}>
+                                                    {isPreview && lesson?.teaser?.cheapestPackage ? (
+                                                        <Typography type="body-sm" color="muted">
+                                                            {t("reader.previewCheapest", {
+                                                                name: lesson.teaser.cheapestPackage.name,
+                                                                price: format.number(Number(lesson.teaser.cheapestPackage.salePrice)),
+                                                            })}
+                                                        </Typography>
+                                                    ) : null}
+                                                    <Button variant="primary" onPress={() => setGateOpen(true)}>
                                                         {t("reader.enrollCta")}
                                                     </Button>
                                                 </div>
@@ -380,8 +415,6 @@ export const LessonReader = () => {
                     ) : (
                         <div className="mx-auto w-full max-w-3xl">
                             <ChallengesView
-                                courseId={courseId}
-                                contentId={contentId}
                                 hasChallenge={lesson.hasChallenge}
                                 onOpen={() => router.push(challengeHref(courseId, contentId))}
                             />
@@ -389,6 +422,22 @@ export const LessonReader = () => {
                     )
                 ) : null}
             </AsyncContent>
+
+            {lesson ? (
+                <PackageGateModal
+                    isOpen={gateOpen}
+                    onClose={() => setGateOpen(false)}
+                    courseId={courseId}
+                    courseRawId={lesson.courseRawId}
+                    courseTitle={lesson.courseTitle}
+                    lessonId={contentId}
+                    lessonTitle={lesson.title}
+                    packageSlugs={lesson.packageSlugs}
+                    cheapestPackage={lesson.teaser?.cheapestPackage}
+                    context={lesson.isVideoLesson ? "video" : "document"}
+                    onPurchased={() => { void mutate() }}
+                />
+            ) : null}
         </div>
     )
 }
@@ -568,13 +617,9 @@ const LessonPager = ({
 
 /** The Challenges view — a link into the auto-grading submission surface. */
 const ChallengesView = ({
-    courseId: _courseId,
-    contentId: _contentId,
     hasChallenge,
     onOpen,
 }: {
-    courseId: string
-    contentId: string
     hasChallenge: boolean
     onOpen: () => void
 }) => {

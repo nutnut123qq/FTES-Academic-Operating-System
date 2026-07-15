@@ -5118,6 +5118,23 @@
         "credits": "Credits",
         "price": "Price"
       }
+    },
+    "preview": {
+      "chip": "Preview remaining {time}",
+      "price": "{price}đ",
+      "discount": "-{percent}%",
+      "modal": {
+        "titleDocument": "Subscribe to continue reading {lesson}",
+        "titleVideo": "Your preview for {lesson} has ended",
+        "cheapestHint": "Unlock from {name}",
+        "emptyTitle": "No matching packages",
+        "emptyHint": "This course's packages are being updated.",
+        "dismiss": "Maybe later",
+        "recommended": "Popular",
+        "cta": "Choose this package",
+        "resolving": "Resolving…",
+        "processing": "Processing…"
+      }
     }
   },
   "resourceHub": {
@@ -5544,6 +5561,7 @@
       "language": "Language",
       "minutesRead": "{minutes} min read",
       "challengeCount": "{count} challenges",
+      "previewBadge": "Preview",
       "outcomes": "What you'll learn",
       "empty2": "This lesson has no content yet.",
       "prevLesson": "Previous",
@@ -5599,6 +5617,9 @@
       "askAboutThis": "Ask AI about this",
       "lockedTitle": "Premium content",
       "lockedBody": "Enroll in the course to unlock this lesson and the rest of the content.",
+      "previewTitle": "You're viewing the preview",
+      "previewBody": "Subscribe to a package to read the full lesson.",
+      "previewCheapest": "Unlock from {name} — {price}đ",
       "enrollCta": "Enroll in course",
       "noChallenge": "This lesson has no challenge yet.",
       "challengeTitle": "Auto-graded challenge",

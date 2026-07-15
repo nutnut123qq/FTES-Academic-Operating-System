@@ -1,11 +1,13 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 
 /** Minimal shape of the YouTube IFrame Player API surface we use. */
 interface YouTubePlayer {
     getCurrentTime?: () => number
     getDuration?: () => number
+    seekTo?: (seconds: number, allowSeekAhead: boolean) => void
+    pauseVideo?: () => void
     destroy?: () => void
 }
 interface YouTubePlayerStateEvent {
@@ -22,6 +24,7 @@ interface YouTubeNamespace {
             playerVars?: Record<string, string | number>
             events?: {
                 onStateChange?: (event: YouTubePlayerStateEvent) => void
+                onReady?: () => void
             }
         },
     ) => YouTubePlayer
@@ -37,11 +40,6 @@ declare global {
 /** YT.PlayerState.PLAYING. */
 const YT_STATE_PLAYING = 1
 
-/**
- * Loads the YouTube IFrame Player API exactly once (a shared promise), resolving
- * when `window.YT.Player` is ready. Rejects on script load error / timeout so the
- * caller can fall back to a plain embed rather than hang.
- */
 let ytApiPromise: Promise<void> | null = null
 const loadYouTubeApi = (): Promise<void> => {
     if (typeof window === "undefined") {
@@ -74,26 +72,34 @@ const loadYouTubeApi = (): Promise<void> => {
 }
 
 /**
- * YouTube lesson player wired for auto-completion. A plain iframe cannot report
- * playback time, so this mounts a real `YT.Player` and polls
- * `getCurrentTime() / getDuration()` once per second while playing; the first time
- * the ratio crosses 50% it calls `onHalfWatched` once and stops polling.
+ * YouTube lesson player wired for auto-completion and freemium preview limits.
  *
- * If the IFrame API can't load, it degrades to a plain embed (same size wrapper)
- * with no auto-completion rather than crashing.
+ * Polls playback time once per second while playing. The first time the ratio crosses
+ * 50% it calls `onHalfWatched`. In PREVIEW mode it pauses and opens the package gate
+ * when playback reaches `previewSeconds`, and clamps seeking past the limit.
  */
 export const LessonYouTubePlayer = ({
     videoId,
+    previewSeconds,
+    onOpenGate,
+    onCountdownTick,
     onHalfWatched,
 }: {
     videoId: string
+    previewSeconds?: number
+    onOpenGate: () => void
+    onCountdownTick?: (remaining: number) => void
     onHalfWatched?: () => void
 }) => {
     const hostRef = useRef<HTMLDivElement>(null)
     const [apiFailed, setApiFailed] = useState(false)
-    // Keep the callback in a ref so a new identity never rebuilds the player.
     const halfWatchedRef = useRef(onHalfWatched)
     halfWatchedRef.current = onHalfWatched
+    const tickRef = useRef(onCountdownTick)
+    tickRef.current = onCountdownTick
+    const gateFiredRef = useRef(false)
+    const previewLimitRef = useRef(previewSeconds ?? 0)
+    previewLimitRef.current = previewSeconds ?? 0
 
     useEffect(() => {
         let player: YouTubePlayer | null = null
@@ -108,13 +114,32 @@ export const LessonYouTubePlayer = ({
             }
         }
 
+        const fireGate = () => {
+            if (gateFiredRef.current) return
+            gateFiredRef.current = true
+            clearPoll()
+            try {
+                player?.pauseVideo?.()
+            } catch {
+                // ignore player errors
+            }
+            onOpenGate()
+        }
+
+        const clampSeek = () => {
+            const limit = previewLimitRef.current
+            if (!limit || !player?.getCurrentTime) return
+            const current = player.getCurrentTime()
+            if (current > limit) {
+                player.seekTo?.(limit, true)
+            }
+        }
+
         loadYouTubeApi()
             .then(() => {
                 if (cancelled || !hostRef.current || !window.YT) {
                     return
                 }
-                // YT replaces the target node with an iframe, so give it a throwaway
-                // child (not a React-owned node) to avoid an unmount DOM conflict.
                 const target = document.createElement("div")
                 target.className = "size-full"
                 hostRef.current.appendChild(target)
@@ -124,6 +149,10 @@ export const LessonYouTubePlayer = ({
                     height: "100%",
                     playerVars: { rel: 0, modestbranding: 1, playsinline: 1 },
                     events: {
+                        onReady: () => {
+                            // Initial seek clamp in case the player resumes mid-video.
+                            clampSeek()
+                        },
                         onStateChange: (event) => {
                             if (event.data !== YT_STATE_PLAYING) {
                                 clearPoll()
@@ -135,6 +164,20 @@ export const LessonYouTubePlayer = ({
                             interval = window.setInterval(() => {
                                 const duration = player?.getDuration?.() ?? 0
                                 const current = player?.getCurrentTime?.() ?? 0
+
+                                const limit = previewLimitRef.current
+                                if (limit > 0) {
+                                    const remaining = Math.max(0, limit - current)
+                                    tickRef.current?.(remaining)
+                                    if (current >= limit - 0.5 || remaining <= 0) {
+                                        fireGate()
+                                        return
+                                    }
+                                    if (current > limit) {
+                                        player?.seekTo?.(limit, true)
+                                    }
+                                }
+
                                 if (duration > 0 && current / duration >= 0.5) {
                                     fired = true
                                     clearPoll()
@@ -156,10 +199,9 @@ export const LessonYouTubePlayer = ({
             clearPoll()
             player?.destroy?.()
         }
-    }, [videoId])
+    }, [videoId, onOpenGate])
 
     if (apiFailed) {
-        // Fallback: plain embed, no watch tracking (no auto-complete).
         return (
             <iframe
                 src={`https://www.youtube.com/embed/${videoId}`}

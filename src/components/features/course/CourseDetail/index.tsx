@@ -494,20 +494,36 @@ const CourseDetailView = ({
                                                                 ) : null}
                                                             </div>
                                                             {(() => {
-                                                                // Tier badge = the minimum package that unlocks the lesson
-                                                                // (`packageSlugs[0]`), labelled by the package name. The
-                                                                // "free" tier is free-access → no tag.
-                                                                const tierSlug = lesson.packageSlugs[0]
-                                                                if (tierSlug && tierSlug !== "free") {
+                                                                // Render ALL paid packages that unlock this lesson (except
+                                                                // the pseudo "free" slug). Sort cheapest-first by salePrice.
+                                                                const paidSlugs = (lesson.packageSlugs ?? [])
+                                                                    .filter((slug) => slug !== "free")
+                                                                const slugPrice = new Map(
+                                                                    packages.map((pkg) => [pkg.slug, Number(pkg.salePrice)]),
+                                                                )
+                                                                const sortedSlugs = [...paidSlugs].sort(
+                                                                    (a, b) => (slugPrice.get(a) ?? Infinity) - (slugPrice.get(b) ?? Infinity),
+                                                                )
+                                                                if (sortedSlugs.length > 0) {
                                                                     return (
-                                                                        <Chip size="sm" variant="soft" color="accent" className="shrink-0">
-                                                                            {resolveTierLabel(tierSlug)}
-                                                                        </Chip>
+                                                                        <div className="flex flex-wrap items-center justify-end gap-1">
+                                                                            {sortedSlugs.map((slug) => (
+                                                                                <Chip
+                                                                                    key={slug}
+                                                                                    size="sm"
+                                                                                    variant="soft"
+                                                                                    color="accent"
+                                                                                    className="shrink-0"
+                                                                                >
+                                                                                    {resolveTierLabel(slug)}
+                                                                                </Chip>
+                                                                            ))}
+                                                                        </div>
                                                                     )
                                                                 }
                                                                 // LEGACY course (no packageSlugs) still locked for the
                                                                 // viewer → keep the old generic "Premium" tag.
-                                                                if (lesson.packageSlugs.length === 0 && lesson.isLocked) {
+                                                                if (paidSlugs.length === 0 && lesson.isLocked) {
                                                                     return (
                                                                         <Chip size="sm" variant="soft" color="accent" className="shrink-0">
                                                                             {t("detail.premium")}

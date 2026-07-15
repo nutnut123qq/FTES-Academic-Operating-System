@@ -15,8 +15,10 @@ import { ProgressMeter } from "@/components/blocks/stats/ProgressMeter"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { SearchInput } from "@/components/reuseable/SearchInput"
 import { useRouter } from "@/i18n/navigation"
+import { mutate as globalMutate } from "swr"
+import { PackageGateModal } from "@/components/features/course/PackageGateModal"
 import { useQueryLearnCourseSwr } from "../hooks/useQueryLearnCourseSwr"
-import type { LearnLesson, LearnModule } from "../hooks/useQueryLearnCourseSwr"
+import type { LearnLesson } from "../hooks/useQueryLearnCourseSwr"
 
 /** Build the reader route for a lesson id shaped "m<n>-l<k>". */
 const lessonHref = (courseId: string, lessonId: string) =>
@@ -33,18 +35,12 @@ export interface ContentMapProps {
  * tree lives here as its single home: overall progress + a search box + per-module
  * accordions, each lesson a row that links to its reader and marks the active
  * lesson. Pins its header + search, scrolling only the list.
- *
- * Rendered by the route layout inside the resizable rail for the content /
- * modules routes, so the reader and the content dashboard share one navigation
- * tree instead of each redrawing it.
- *
- * @param props - {@link ContentMapProps}
  */
 export const ContentMap = ({ className }: ContentMapProps) => {
     const t = useTranslations("learn")
     const router = useRouter()
     const { courseId, contentId } = useParams<{ courseId: string; contentId?: string }>()
-    const { modules, header, error, mutate } = useQueryLearnCourseSwr(courseId)
+    const { course, modules, header, error, mutate } = useQueryLearnCourseSwr(courseId)
 
     const [query, setQuery] = useState("")
 
@@ -158,6 +154,9 @@ export const ContentMap = ({ className }: ContentMapProps) => {
                                             {module.lessons.map((lesson) => (
                                                 <ContentMapLessonRow
                                                     key={lesson.id}
+                                                    courseId={courseId}
+                                                    courseRawId={course?.id}
+                                                    courseTitle={course?.header.title ?? ""}
                                                     lesson={lesson}
                                                     isActive={lesson.id === contentId}
                                                     onOpen={() => openLesson(lesson.id)}
@@ -176,56 +175,109 @@ export const ContentMap = ({ className }: ContentMapProps) => {
     )
 }
 
-/** One lesson row — status icon, title, premium chip, active tint. */
+/** One lesson row — status icon, title, preview/lock badge, active tint. */
 const ContentMapLessonRow = ({
+    courseId,
+    courseRawId,
+    courseTitle,
     lesson,
     isActive,
     onOpen,
     lockedLabel,
 }: {
+    courseId: string
+    courseRawId: string | undefined
+    courseTitle: string
     lesson: LearnLesson
     isActive: boolean
     onOpen: () => void
     lockedLabel: string
-}) => (
-    <button
-        type="button"
-        onClick={onOpen}
-        aria-current={isActive ? "page" : undefined}
-        className={cn(
-            "flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left transition-colors",
-            isActive ? "bg-accent/10 text-accent" : "hover:bg-default/60",
-        )}
-    >
-        {lesson.isCompleted ? (
-            <CheckCircleIcon aria-hidden focusable="false" weight="fill" className="size-4 shrink-0 text-accent" />
-        ) : (
-            <PlayCircleIcon aria-hidden focusable="false" className="size-4 shrink-0 text-muted" />
-        )}
-        <div className="min-w-0 flex-1">
-            <Typography type="body-sm" truncate>
-                {lesson.title}
-            </Typography>
-            {lesson.description ? (
-                <Typography type="body-xs" color="muted" className="line-clamp-1 opacity-70">
-                    {lesson.description}
-                </Typography>
+}) => {
+    const t = useTranslations("learn")
+    const [gateOpen, setGateOpen] = useState(false)
+
+    const accessLevel = lesson.accessLevel
+    const isLocked = lesson.isLocked
+    const isPreview = accessLevel === "PREVIEW"
+    const isFullyLocked = accessLevel === "NONE"
+
+    const handleClick = () => {
+        if (isFullyLocked) {
+            setGateOpen(true)
+            return
+        }
+        onOpen()
+    }
+
+    return (
+        <>
+            <button
+                type="button"
+                onClick={handleClick}
+                aria-current={isActive ? "page" : undefined}
+                className={cn(
+                    "flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left transition-colors",
+                    isActive ? "bg-accent/10 text-accent" : "hover:bg-default/60",
+                )}
+            >
+                {lesson.isCompleted ? (
+                    <CheckCircleIcon aria-hidden focusable="false" weight="fill" className="size-4 shrink-0 text-accent" />
+                ) : isFullyLocked ? (
+                    <LockSimpleIcon aria-hidden focusable="false" className="size-4 shrink-0 text-muted" />
+                ) : (
+                    <PlayCircleIcon aria-hidden focusable="false" className="size-4 shrink-0 text-muted" />
+                )}
+                <div className="min-w-0 flex-1">
+                    <Typography type="body-sm" truncate>
+                        {lesson.title}
+                    </Typography>
+                    {lesson.description ? (
+                        <Typography type="body-xs" color="muted" className="line-clamp-1 opacity-70">
+                            {lesson.description}
+                        </Typography>
+                    ) : null}
+                </div>
+                {isPreview ? (
+                    <Chip size="sm" variant="soft" color="accent" className="shrink-0">
+                        {t("content.previewBadge")}
+                    </Chip>
+                ) : isLocked ? (
+                    <Chip size="sm" variant="soft" color="warning" className="shrink-0">
+                        <span className="flex items-center gap-1">
+                            <LockSimpleIcon aria-hidden focusable="false" className="size-3" />
+                            {lockedLabel}
+                        </span>
+                    </Chip>
+                ) : (
+                    <Typography type="body-xs" color="muted" className="shrink-0">
+                        {lesson.readTimeLabel}
+                    </Typography>
+                )}
+            </button>
+            {courseRawId && isFullyLocked ? (
+                <PackageGateModal
+                    isOpen={gateOpen}
+                    onClose={() => setGateOpen(false)}
+                    courseId={courseId}
+                    courseRawId={courseRawId}
+                    courseTitle={courseTitle}
+                    lessonId={lesson.id}
+                    lessonTitle={lesson.title}
+                    packageSlugs={lesson.packageSlugs}
+                    context="document"
+                    onPurchased={() => { void revalidateLearnData(courseId) }}
+                />
             ) : null}
-        </div>
-        {lesson.isLocked ? (
-            <Chip size="sm" variant="soft" color="warning" className="shrink-0">
-                <span className="flex items-center gap-1">
-                    <LockSimpleIcon aria-hidden focusable="false" className="size-3" />
-                    {lockedLabel}
-                </span>
-            </Chip>
-        ) : (
-            <Typography type="body-xs" color="muted" className="shrink-0">
-                {lesson.readTimeLabel}
-            </Typography>
-        )}
-    </button>
-)
+        </>
+    )
+}
+
+/** Revalidates the learn course + lesson queries after a purchase from the outline. */
+const revalidateLearnData = async (courseId: string) => {
+    await globalMutate((key) => Array.isArray(key) && key[0] === "GET_LEARN_COURSE" && key[1] === courseId)
+    await globalMutate((key) => Array.isArray(key) && key[0] === "GET_LEARN_LESSON")
+    await globalMutate((key) => Array.isArray(key) && key[0] === "GET_COURSE_PROGRESS")
+}
 
 /** Content-map skeleton — mirrors a few accordion rows. */
 const ContentMapSkeleton = () => (

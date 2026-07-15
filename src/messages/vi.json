@@ -5118,6 +5118,23 @@
         "credits": "Tín chỉ",
         "price": "Học phí"
       }
+    },
+    "preview": {
+      "chip": "Xem thử còn {time}",
+      "price": "{price}đ",
+      "discount": "-{percent}%",
+      "modal": {
+        "titleDocument": "Đăng ký để đọc tiếp {lesson}",
+        "titleVideo": "Bạn đã xem hết thờ igian học thử {lesson}",
+        "cheapestHint": "Mở khoá chỉ từ {name}",
+        "emptyTitle": "Không có gói phù hợp",
+        "emptyHint": "Các gói của khóa học này chưa được cập nhật.",
+        "dismiss": "Để sau",
+        "recommended": "Phổ biến",
+        "cta": "Chọn gói này",
+        "resolving": "Đang lấy thông tin…",
+        "processing": "Đang xử lý…"
+      }
     }
   },
   "resourceHub": {
@@ -5544,6 +5561,7 @@
       "language": "Ngôn ngữ",
       "minutesRead": "{minutes} phút đọc",
       "challengeCount": "{count} thử thách",
+      "previewBadge": "Học thử",
       "outcomes": "Bạn sẽ học được gì",
       "empty2": "Bài học chưa có nội dung.",
       "prevLesson": "Bài trước",
@@ -5599,6 +5617,9 @@
       "askAboutThis": "Hỏi AI về đoạn này",
       "lockedTitle": "Nội dung premium",
       "lockedBody": "Đăng ký khóa học để mở khóa bài học này và toàn bộ nội dung còn lại.",
+      "previewTitle": "Bạn đang xem bản học thử",
+      "previewBody": "Đăng ký gói học để đọc toàn bộ nội dung bài học này.",
+      "previewCheapest": "Mở khoá chỉ từ {name} — {price}đ",
       "enrollCta": "Đăng ký khóa học",
       "noChallenge": "Bài học này chưa có thử thách.",
       "challengeTitle": "Thử thách chấm tự động",

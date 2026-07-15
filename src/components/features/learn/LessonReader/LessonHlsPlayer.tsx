@@ -1,11 +1,12 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { Button, Card, CardContent, Typography } from "@heroui/react"
 import { ArrowClockwiseIcon, VideoCameraSlashIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import Hls from "hls.js"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
+import { usePreviewGate } from "./hooks/usePreviewGate"
 
 /** Legacy Funnycode stream gateway that resolves `video_*` refs to an HLS manifest. */
 const STREAM_BASE = "https://stream.ftes.vn"
@@ -26,44 +27,77 @@ interface PlaylistResponse {
  * is enforced upstream: the BE only ships `videoRef` when the lesson is accessible
  * (free or FULL) — a locked lesson never reaches this component.
  *
- * The slot always communicates its state: an aspect-ratio skeleton while the source
- * resolves, and a compact "video unavailable" + retry placeholder on a fatal error
- * (retry re-runs the resolve). A failure here is a genuine stream error, not a paywall.
- *
- * `onHalfWatched` fires once the first time playback crosses 50% of the duration —
- * the reader uses it to auto-mark the lesson complete.
+ * In PREVIEW mode the player hard-pauses at `previewSeconds`, clamps seeking before
+ * the limit, fires the package gate modal, and reports the limit once per session.
  */
 export const LessonHlsPlayer = ({
     videoRef,
+    lessonId,
+    mode,
+    previewSeconds,
+    onOpenGate,
+    onCountdownTick,
     onHalfWatched,
 }: {
     videoRef: string
+    lessonId: string
+    mode?: string
+    previewSeconds?: number
+    onOpenGate: () => void
+    onCountdownTick?: (remaining: number) => void
     onHalfWatched?: () => void
 }) => {
     const t = useTranslations("learn")
     const videoEl = useRef<HTMLVideoElement>(null)
     const [failed, setFailed] = useState(false)
     const [loading, setLoading] = useState(true)
-    /** Bumped by the retry button to re-run the resolve effect. */
     const [attempt, setAttempt] = useState(0)
-    /** Once-guard so ≥50% only reports a single time per source. */
     const halfFiredRef = useRef(false)
-    // Keep the callback fresh without re-binding the media element listeners.
     const halfWatchedRef = useRef(onHalfWatched)
     halfWatchedRef.current = onHalfWatched
+    const tickRef = useRef(onCountdownTick)
+    tickRef.current = onCountdownTick
 
-    /** Reports the ≥50% watch threshold once, from the native `timeupdate` event. */
+    const { isGated, onTimeUpdate, onEnded } = usePreviewGate(
+        lessonId,
+        mode,
+        previewSeconds,
+        onOpenGate,
+    )
+
+    const clampSeek = () => {
+        const el = videoEl.current
+        if (!el || !previewSeconds) return
+        if (el.currentTime > previewSeconds) {
+            el.currentTime = previewSeconds
+        }
+    }
+
     const handleTimeUpdate = () => {
         const el = videoEl.current
-        if (!el || halfFiredRef.current) {
-            return
-        }
+        if (!el) return
+
+        clampSeek()
+        onTimeUpdate(el.currentTime)
+
+        if (halfFiredRef.current) return
         const duration = el.duration
         if (Number.isFinite(duration) && duration > 0 && el.currentTime / duration >= 0.5) {
             halfFiredRef.current = true
             halfWatchedRef.current?.()
         }
     }
+
+    const handleEnded = () => {
+        onEnded()
+    }
+
+    // Hard-pause whenever the gate fires while the video is still mounted.
+    useEffect(() => {
+        if (isGated) {
+            videoEl.current?.pause()
+        }
+    }, [isGated])
 
     useEffect(() => {
         const el = videoEl.current
@@ -72,7 +106,6 @@ export const LessonHlsPlayer = ({
         let cancelled = false
         setFailed(false)
         setLoading(true)
-        // New source → allow the ≥50% report to fire again.
         halfFiredRef.current = false
 
         const onReady = () => {
@@ -88,7 +121,6 @@ export const LessonHlsPlayer = ({
                 const data = (await res.json()) as PlaylistResponse
                 const src = data.cdnPlaylistUrl ?? data.presignedUrl
                 if (!src || cancelled) throw new Error("no playlist url")
-                // Safari plays HLS natively; other browsers need hls.js.
                 if (el.canPlayType("application/vnd.apple.mpegurl")) {
                     el.addEventListener("loadedmetadata", onReady, { once: true })
                     el.src = src
@@ -158,6 +190,9 @@ export const LessonHlsPlayer = ({
                             controls
                             playsInline
                             onTimeUpdate={handleTimeUpdate}
+                            onEnded={handleEnded}
+                            onSeeking={clampSeek}
+                            onSeeked={clampSeek}
                             className="aspect-video w-full rounded-2xl"
                         />
                         {loading ? (

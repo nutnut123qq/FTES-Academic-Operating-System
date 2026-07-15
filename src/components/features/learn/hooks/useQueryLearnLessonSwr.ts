@@ -8,6 +8,7 @@ import {
     type CourseDetail,
     type CourseProgressView,
     type LessonContentView,
+    type TeaserInfo,
 } from "@/modules/api/rest/course"
 
 /** A heading anchor for the "On this page" TOC. */
@@ -36,6 +37,8 @@ export interface LearnLessonView {
      * progress query on, so the per-lesson progress overlay shares its SWR cache.
      */
     courseRawId: string
+    /** Human course title (shown in package gate modal header). */
+    courseTitle: string
     title: string
     /** Short description under the title. */
     description: string
@@ -67,6 +70,15 @@ export interface LearnLessonView {
     hasChallenge: boolean
     /** Premium + not enrolled → body is gated (select-none, AI ask suppressed). */
     isLocked: boolean
+    /**
+     * BE access level for this viewer: "FULL" | "PREVIEW" | "NONE".
+     * Mirrors `LessonView.accessLevel` from the curriculum.
+     */
+    accessLevel: string | null
+    /** Slugs of the packages that unlock this lesson (for package-gate filtering). */
+    packageSlugs: Array<string>
+    /** Teaser metadata when the lesson is locked in PREVIEW mode (cheapest package, reason). */
+    teaser: TeaserInfo | null
     /** True → this lesson has a READY video → the reader renders the player. */
     hasVideo: boolean
     /** Streaming ref (YouTube URL or `video_*` token) for the video player. */
@@ -99,6 +111,10 @@ interface FlatLesson {
     videoRef: string | null
     /** Per-viewer lock (premium + not entitled) — the RELIABLE lock signal. */
     locked: boolean
+    /** BE access level for this viewer. */
+    accessLevel: string | null
+    /** Slugs of packages that unlock this lesson. */
+    packageSlugs: Array<string>
 }
 
 /** Flattens the course detail into an ordered lesson list (module order → lesson order). */
@@ -120,6 +136,8 @@ const flattenCurriculum = (detail: CourseDetail): Array<FlatLesson> =>
                     videoStatus: lesson.videoStatus ?? "",
                     videoRef: lesson.videoRef ?? null,
                     locked: lesson.locked ?? false,
+                    accessLevel: lesson.accessLevel ?? null,
+                    packageSlugs: lesson.packageSlugs ?? [],
                 })),
         )
 
@@ -128,6 +146,7 @@ const buildLessonView = (
     content: LessonContentView,
     curriculum: Array<FlatLesson>,
     courseRawId: string,
+    courseTitle: string,
 ): LearnLessonView => {
     const index = curriculum.findIndex((lesson) => lesson.id === contentId)
     const current = index >= 0 ? curriculum[index] : undefined
@@ -136,6 +155,8 @@ const buildLessonView = (
     const minutes = content.readingMinutes ?? 0
     const contentType = current?.type ?? ""
     const isVideoLesson = contentType === "VIDEO"
+    const accessLevel = current?.accessLevel ?? null
+    const packageSlugs = current?.packageSlugs ?? []
     // TODO: remove fallback once `GET /lessons/{id}/content` reliably returns `hasChallenge`.
     const hasChallenge = content.hasChallenge ?? false
 
@@ -150,6 +171,7 @@ const buildLessonView = (
         id: contentId,
         moduleId: current?.moduleId ?? "",
         courseRawId,
+        courseTitle,
         title: current?.name ?? "",
         description: current?.description ?? "",
         moduleTitle: current?.moduleTitle ?? "",
@@ -173,6 +195,9 @@ const buildLessonView = (
         // `GET /lessons/{id}/content`, which 401s for an unentitled viewer and is
         // caught into a `locked: false` fallback (a lie that hides the paywall).
         isLocked: current?.locked ?? content.locked,
+        accessLevel,
+        packageSlugs,
+        teaser: content.teaser ?? null,
         hasVideo: current?.videoStatus === "READY" && isVideoRef,
         videoRef: ref,
         documentHtml,
@@ -208,6 +233,7 @@ export const useQueryLearnLessonSwr = (courseId: string, contentId: string) => {
                 content,
                 flattenCurriculum(detail),
                 detail.course?.id ?? courseId,
+                detail.course?.title ?? "",
             )
         },
     )

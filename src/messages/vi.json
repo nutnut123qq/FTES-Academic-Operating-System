@@ -5880,6 +5880,66 @@
       "quotaReached": "Đã hết hạn mức. Nâng cấp để chấm tiếp.",
       "history": "Lịch sử nộp bài"
     },
+    "codeGrading": {
+      "yourCode": "Bài làm của bạn",
+      "codePlaceholder": "Dán code lời giải của bạn vào đây…",
+      "pickLanguage": "Chọn ngôn ngữ",
+      "languages": {
+        "python": "Python",
+        "java": "Java",
+        "cpp": "C++",
+        "c": "C"
+      },
+      "testCases": "Test case",
+      "testCasesHint": "Nhập input và output kỳ vọng — hệ thống chạy code của bạn với từng case (khách quan, không phụ thuộc model).",
+      "inputPlaceholder": "Input",
+      "outputPlaceholder": "Output kỳ vọng",
+      "addCase": "Thêm test case",
+      "removeCase": "Xoá test case",
+      "pickModel": "Chọn model chấm",
+      "defaultModel": "Model mặc định",
+      "defaultModelWith": "Mặc định ({model})",
+      "modelHint": "Mỗi model chấm khác nhau — kết quả test case là khách quan, phần nhận xét/điểm phụ thuộc model.",
+      "gradeWithAi": "Chấm bằng AI",
+      "regrade": "Chấm lại",
+      "regradeHint": "Đổi model rồi chấm lại để so sánh — kết quả test case được giữ nguyên khi code không đổi.",
+      "runOnly": "Chạy thử",
+      "runningTests": "Đang chạy test case…",
+      "gradingWith": "Đang chấm bằng {model}…",
+      "executionTitle": "Kết quả test case",
+      "passedBadge": "{passed}/{total} test PASS",
+      "casePassed": "Đạt",
+      "caseFailed": "Sai",
+      "columns": {
+        "input": "Input",
+        "expected": "Kỳ vọng",
+        "actual": "Thực tế",
+        "status": "Trạng thái"
+      },
+      "score": "{score}/{max} điểm",
+      "verdict": {
+        "PASS": "Đạt",
+        "PARTIAL": "Đạt một phần",
+        "FAIL": "Chưa đạt"
+      },
+      "gradedBy": "Chấm bởi {model}",
+      "criteria": "Tiêu chí",
+      "criteriaScore": "Điểm",
+      "criteriaComment": "Nhận xét",
+      "feedback": "Nhận xét chung",
+      "improvements": "Gợi ý cải thiện",
+      "sqlStaticOnly": "SQL được chấm bằng phân tích tĩnh — không chạy test case.",
+      "sqlNoExecution": "SQL chấm static analysis (không chạy test).",
+      "retry": "Thử lại",
+      "errors": {
+        "forbidden": "Gói của bạn chưa có quyền chấm code bằng AI. Nâng cấp gói để dùng tính năng này.",
+        "down": "Hệ thống chấm đang bảo trì. Vui lòng thử lại sau ít phút — code của bạn vẫn được giữ nguyên.",
+        "failed": "Chấm code thất bại. Thử lại nhé — code của bạn vẫn được giữ nguyên.",
+        "invalid": "Bài gửi chưa hợp lệ — kiểm tra lại code và ngôn ngữ.",
+        "modelNotAllowed": "Model này không nằm trong danh sách cho phép — đã chuyển về model mặc định, hãy chấm lại.",
+        "generic": "Có lỗi xảy ra khi chấm code. Vui lòng thử lại."
+      }
+    },
     "contentMap": {
       "title": "Nội dung khóa học",
       "searchPlaceholder": "Tìm bài học…",

@@ -10,6 +10,7 @@ import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 
 import { useQueryChallengeSwr } from "../hooks/useQueryChallengeSwr"
 import type { ChallengeDetail } from "../hooks/useQueryChallengeSwr"
+import { GradeCodePanel } from "./GradeCodePanel"
 import { UiUxChallengeEditor } from "./UiUxChallengeEditor"
 
 /** Brief accordion sections, mapped from the challenge detail. */
@@ -164,14 +165,17 @@ export const ChallengeView = () => {
                     {challenge.requirements.length > 0
                         || challenge.steps.length > 0
                         || challenge.hints.length > 0 ? (
-                        <ChallengeBrief challenge={challenge} />
-                    ) : null}
+                            <ChallengeBrief challenge={challenge} />
+                        ) : null}
 
                     {/* The interactive UI/UX solver needs a starter + target asset the BE
                         public view does not expose → fall back to the coming-soon panel
-                        unless those assets are present. */}
+                        unless those assets are present. Coding/SQL get the real AI
+                        code-grading surface (Judge0 + LLM via /api/v1/ai/coding/*). */}
                     {challenge.type === "uiux" && challenge.targetImageUrl ? (
                         <UiUxChallengeEditor challenge={challenge} />
+                    ) : challenge.type === "coding" || challenge.type === "sql" ? (
+                        <GradeCodePanel challenge={challenge} />
                     ) : (
                         <div className="flex flex-col items-center gap-3 rounded-2xl border border-separator p-6 py-16 text-center">
                             <HammerIcon

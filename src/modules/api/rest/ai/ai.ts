@@ -4,8 +4,13 @@ import { LocalStorage } from "@/modules/storage/local/storage"
 import { LocalStorageId } from "@/modules/storage/local/enums/id"
 import type {
     AiInsights,
+    AiModelCatalog,
     CareerSuggestionView,
+    CodeExecuteResult,
+    CodeGradeResult,
     CreateSessionRequest,
+    ExecuteCodeRequest,
+    GradeCodeRequest,
     JobRef,
     JobView,
     ModelConfigView,
@@ -213,6 +218,56 @@ export const getTranscript = async (lessonId: string): Promise<TranscriptRef> =>
         method: "GET",
         url: `/ai/learning/transcript/${lessonId}`,
         authenticated: true,
+    })
+
+// ---------------- ModelsController ----------------
+
+/**
+ * Lists the AI model catalog for model pickers (chat / code grading / …).
+ *
+ * `GET /api/v1/ai/models` — authenticated (any signed-in role).
+ */
+export const listAiCatalogModels = async (): Promise<AiModelCatalog> =>
+    restRequest<AiModelCatalog>({
+        method: "GET",
+        url: "/ai/models",
+        authenticated: true,
+    })
+
+// ---------------- CodeGradeController ----------------
+
+/**
+ * Grading is synchronous BE-side (Judge0 + LLM, 10–60s; BE read-timeout 180s)
+ * → long axios timeout so the FE does not abort a slow grade.
+ */
+const CODE_GRADE_TIMEOUT_MS = 180_000
+
+/**
+ * Grades code with AI (Judge0 test cases + LLM criteria, model selectable).
+ *
+ * `POST /api/v1/ai/coding/grade-code` — permission `ai.coding.use` (STUDENT+).
+ */
+export const gradeCode = async (body: GradeCodeRequest): Promise<CodeGradeResult> =>
+    restRequest<CodeGradeResult>({
+        method: "POST",
+        url: "/ai/coding/grade-code",
+        data: body,
+        authenticated: true,
+        timeout: CODE_GRADE_TIMEOUT_MS,
+    })
+
+/**
+ * Runs code against test cases only (Judge0, no LLM — no AI quota spent).
+ *
+ * `POST /api/v1/ai/coding/execute-code` — permission `ai.coding.use` (STUDENT+).
+ */
+export const executeCode = async (body: ExecuteCodeRequest): Promise<CodeExecuteResult> =>
+    restRequest<CodeExecuteResult>({
+        method: "POST",
+        url: "/ai/coding/execute-code",
+        data: body,
+        authenticated: true,
+        timeout: CODE_GRADE_TIMEOUT_MS,
     })
 
 // ---------------- AdminController ----------------

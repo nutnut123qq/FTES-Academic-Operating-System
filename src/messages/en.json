@@ -5880,6 +5880,66 @@
       "quotaReached": "Quota reached. Upgrade to keep grading.",
       "history": "Submission history"
     },
+    "codeGrading": {
+      "yourCode": "Your solution",
+      "codePlaceholder": "Paste your solution code here…",
+      "pickLanguage": "Pick a language",
+      "languages": {
+        "python": "Python",
+        "java": "Java",
+        "cpp": "C++",
+        "c": "C"
+      },
+      "testCases": "Test cases",
+      "testCasesHint": "Enter input and expected output — your code runs against each case (objective, model-independent).",
+      "inputPlaceholder": "Input",
+      "outputPlaceholder": "Expected output",
+      "addCase": "Add test case",
+      "removeCase": "Remove test case",
+      "pickModel": "Pick a grading model",
+      "defaultModel": "Default model",
+      "defaultModelWith": "Default ({model})",
+      "modelHint": "Each model grades differently — test-case results are objective, the score/feedback depends on the model.",
+      "gradeWithAi": "Grade with AI",
+      "regrade": "Grade again",
+      "regradeHint": "Switch model and grade again to compare — test-case results are kept while your code is unchanged.",
+      "runOnly": "Run tests",
+      "runningTests": "Running test cases…",
+      "gradingWith": "Grading with {model}…",
+      "executionTitle": "Test-case results",
+      "passedBadge": "{passed}/{total} tests PASS",
+      "casePassed": "Passed",
+      "caseFailed": "Failed",
+      "columns": {
+        "input": "Input",
+        "expected": "Expected",
+        "actual": "Actual",
+        "status": "Status"
+      },
+      "score": "{score}/{max} points",
+      "verdict": {
+        "PASS": "Pass",
+        "PARTIAL": "Partial",
+        "FAIL": "Fail"
+      },
+      "gradedBy": "Graded by {model}",
+      "criteria": "Criteria",
+      "criteriaScore": "Score",
+      "criteriaComment": "Comment",
+      "feedback": "Overall feedback",
+      "improvements": "Suggested improvements",
+      "sqlStaticOnly": "SQL is graded by static analysis — test cases are not executed.",
+      "sqlNoExecution": "SQL is graded statically (no test execution).",
+      "retry": "Retry",
+      "errors": {
+        "forbidden": "Your plan does not include AI code grading yet. Upgrade your plan to use this feature.",
+        "down": "The grading service is under maintenance. Please try again in a few minutes — your code is kept as-is.",
+        "failed": "Grading failed. Try again — your code is kept as-is.",
+        "invalid": "The submission is invalid — check your code and language.",
+        "modelNotAllowed": "This model is not on the allowlist — switched back to the default model, please grade again.",
+        "generic": "Something went wrong while grading. Please try again."
+      }
+    },
     "contentMap": {
       "title": "Course content",
       "searchPlaceholder": "Search lessons…",

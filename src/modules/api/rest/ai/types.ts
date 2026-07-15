@@ -90,3 +90,104 @@ export interface AiInsights {
     totalTokens: number
     estimatedCostUsd: number
 }
+
+// ---------------- ModelsController (GET /api/v1/ai/models) ----------------
+
+/** One selectable model from the ftes-ai-service catalog. */
+export interface AiCatalogModel {
+    id: string
+    label?: string
+    provider?: string
+    vision?: boolean
+    pricing_hint?: string
+}
+
+/**
+ * Model catalog proxied verbatim from ftes-ai-service `GET /v2/models` —
+ * `{models[], defaults{chat,…}}`. `defaults.chat` is the model the BE grades
+ * with when the request carries no explicit `model`.
+ */
+export interface AiModelCatalog {
+    models?: Array<AiCatalogModel>
+    defaults?: Record<string, string>
+}
+
+// ---------------- CodeGradeController (POST /api/v1/ai/coding/*) ----------------
+
+/** One test case sent to Judge0 (snake_case — ftes-ai-service contract). */
+export interface CodeGradeTestCase {
+    input: string
+    output: string
+}
+
+/**
+ * Body of `POST /api/v1/ai/coding/grade-code`. Field names are snake_case —
+ * the BE passes the body through verbatim to ftes-ai-service `/v2/code/grade`.
+ */
+export interface GradeCodeRequest {
+    exercise_question: string
+    code: string
+    language: string
+    test_cases?: Array<CodeGradeTestCase>
+    /** `false` on a re-grade with an unchanged code to skip Judge0 (execution is model-independent). */
+    run_code_execution?: boolean
+    /** Model id from the catalog; omit → BE grades with `defaults.chat`. */
+    model?: string
+    rubric?: Array<Record<string, unknown>>
+    course_context?: string
+    language_output?: string
+}
+
+/** Body of `POST /api/v1/ai/coding/execute-code` (Judge0 only, no LLM). */
+export interface ExecuteCodeRequest {
+    code: string
+    language: string
+    test_cases?: Array<CodeGradeTestCase>
+}
+
+/** One Judge0 test-case run (objective — model-independent). */
+export interface ExecutionCaseResult {
+    input?: string
+    expected?: string
+    actual?: string
+    status?: string
+    passed?: boolean
+    time?: number | string
+}
+
+/** Judge0 execution block of a grade/execute response. */
+export interface CodeExecutionSummary {
+    results?: Array<ExecutionCaseResult>
+    passed?: number
+    total?: number
+}
+
+/** One LLM-graded criterion row. */
+export interface CodeGradeCriterion {
+    name?: string
+    score?: number
+    max?: number
+    comment?: string
+}
+
+/**
+ * Response of `POST /api/v1/ai/coding/grade-code` (raw ftes-ai-service JSON).
+ * `model` + `model_note` MUST be surfaced — each model grades differently.
+ * `execution` is null for static-only languages (SQL).
+ */
+export interface CodeGradeResult {
+    score?: number
+    max?: number
+    verdict?: string
+    criteria?: Array<CodeGradeCriterion>
+    feedback?: string
+    improvements?: Array<string>
+    model?: string
+    model_note?: string
+    execution?: CodeExecutionSummary | null
+}
+
+/** Response of `POST /api/v1/ai/coding/execute-code`. */
+export interface CodeExecuteResult {
+    execution?: CodeExecutionSummary | null
+}

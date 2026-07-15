@@ -15,7 +15,7 @@ export type IdentityStatsProps = WithClassNames<undefined>
 /**
  * Viewer "standing" stat rows for the identity column — `icon + label + value`
  * lines so each metric reads clearly in the narrow sidebar: current streak,
- * remaining weekly AI credit, reward balance. Bare (mirrors profile meta rows);
+ * remaining AI chat calls today, reward balance. Bare (mirrors profile meta rows);
  * each row self-hides until its leaf resolves. Self-fetches; no data props.
  * @param props - optional className for the root list.
  */
@@ -45,7 +45,9 @@ export const IdentityStats = ({ className }: IdentityStatsProps) => {
                         {t("overview.identityStats.credit")}
                     </Typography>
                     <Typography type="body-sm" weight="medium">
-                        {quota.credit.remainingWeek}/{quota.credit.limitWeek}
+                        {t("overview.identityStats.creditValue", {
+                            count: quota.chatRemainingToday,
+                        })}
                     </Typography>
                 </div>
             ) : null}

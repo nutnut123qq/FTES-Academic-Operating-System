@@ -3591,6 +3591,7 @@
         "streak": "Streak",
         "streakValue": "{count} days",
         "credit": "AI credit",
+        "creditValue": "{count} left today",
         "reward": "Rewards"
       },
       "streak": {

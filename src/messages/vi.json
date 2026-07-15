@@ -3591,6 +3591,7 @@
         "streak": "Chuỗi ngày",
         "streakValue": "{count} ngày",
         "credit": "Tín dụng AI",
+        "creditValue": "{count} lượt hôm nay",
         "reward": "Phần thưởng"
       },
       "streak": {

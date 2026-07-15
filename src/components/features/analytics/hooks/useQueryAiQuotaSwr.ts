@@ -1,41 +1,32 @@
 "use client"
 
 import useSWR from "swr"
+import { getMyAiQuota } from "@/modules/api/rest/ai"
 
-/** The viewer's AI-credit pool seen through two rolling windows. */
+/**
+ * The viewer's AI quota — per-feature remaining calls TODAY, as reported by
+ * `GET /ai/quotas/me` (BE `QuotaController`: `Map<AiFeature, remainingDay>`).
+ * The BE has no windowed credit pool (5h/week) nor paid tiers — that earlier
+ * mock concept is gone; the sidebar headlines the tutor-chat feature.
+ */
 export interface AiQuota {
-    /** Single credit pool viewed through a 5-hour and a weekly window. */
-    credit: {
-        used5h: number
-        limit5h: number
-        remaining5h: number
-        usedWeek: number
-        limitWeek: number
-        remainingWeek: number
-    }
-    /** Paid tier label when subscribed (null → free). */
-    tier: "plus" | "pro" | "max" | null
+    /** Remaining calls today keyed by BE `AiFeature` name (e.g. `TUTOR_CHAT`). */
+    byFeature: Record<string, number>
+    /** Remaining `TUTOR_CHAT` calls today — the headline sidebar number. */
+    chatRemainingToday: number
 }
 
-// ponytail: mock BE — no AI-quota endpoint yet. Deterministic sample; SWR-shaped
-// for a drop-in swap (myAiQuota()) later.
-const fetchAiQuotaMock = async (): Promise<AiQuota> => ({
-    credit: {
-        used5h: 18,
-        limit5h: 50,
-        remaining5h: 32,
-        usedWeek: 140,
-        limitWeek: 250,
-        remainingWeek: 110,
-    },
-    tier: null,
-})
-
-/** Loads the viewer's AI credit quota. Mocked; SWR-shaped. */
+/** Loads the viewer's per-feature daily AI quota from the real AI REST API. */
 export const useQueryAiQuotaSwr = () => {
     const { data, isLoading, error, mutate } = useSWR(
         ["analytics", "overview", "aiQuota"],
-        () => fetchAiQuotaMock(),
+        async (): Promise<AiQuota> => {
+            const byFeature = await getMyAiQuota()
+            return {
+                byFeature,
+                chatRemainingToday: byFeature.TUTOR_CHAT ?? 0,
+            }
+        },
     )
     return { data, isLoading, error, mutate }
 }

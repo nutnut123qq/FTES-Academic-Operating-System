@@ -7,15 +7,17 @@ import { DashboardIdentity } from "./DashboardIdentity"
 import { OverviewTab } from "./OverviewTab"
 
 /**
- * Dashboard (§24) — the `/analytics` cockpit, a FAITHFUL PORT of StarCI's dashboard.
+ * Dashboard (§24) — the `/analytics` cockpit, ported from StarCI's dashboard.
  * A centered 2-column body: LEFT = the viewer's identity + standing (bare, no card:
  * profile anchor · standing stats · quick actions), RIGHT = the Overview cockpit —
- * "Tiếp tục học" (resume cards), "Nhiệm vụ hôm nay" (daily quest), "Đà học" (streak
- * strip), "Mục tiêu tuần" (weekly goals), the weekly-challenge event, and the
- * GitHub-style contribution heatmap. Stacks to one column on mobile. Each widget
- * self-fetches its own MOCK leaf query + owns its loading/error states.
+ * "Tiếp tục học" (resume cards) and "Đà học" (streak strip). Stacks to one column
+ * on mobile. Every rendered widget self-fetches REAL BE data + owns its
+ * loading/error states: resume/streak/wallet via gamification+wallet REST, the
+ * sidebar AI-quota row via `GET /ai/quotas/me`.
  *
- * ponytail: FE-only + mock hooks; swap the hooks for real queries when BE lands.
+ * Widgets HIDDEN chờ BE (components kept, render removed — see OverviewTab):
+ * daily quest, weekly goals, weekly challenge (no gamification endpoints yet) and
+ * the contribution heatmap (no per-user contributions endpoint in analytics).
  * Not ported from StarCI: the Explore/Courses/Community tabs + the navbar
  * bottom-layer tab strip (need FTES tab-store + navbar infra that isn't present).
  */

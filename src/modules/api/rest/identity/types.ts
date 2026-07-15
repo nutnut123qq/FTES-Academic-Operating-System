@@ -8,12 +8,29 @@
 
 /** Body sent to `POST /api/v1/auth/register`. */
 export interface RegisterRequest {
-    /** Display username (3-64 chars). */
-    username: string
-    /** User email address. */
+    /** User email address (required, valid email, <=255). */
     email: string
-    /** Plain-text password (policy is enforced server-side). */
+    /** Plain-text password (required, >=8 chars, must contain letter+digit). */
     password: string
+    /** Optional display name (<=128) — becomes the profile displayName. */
+    fullName?: string
+    /** Optional legacy username (3-64); omitted => derived from the email local-part. */
+    username?: string
+}
+
+/**
+ * Body sent to `POST /api/v1/auth/register/verify`.
+ *
+ * On success the endpoint returns the exact same {@link TokenResponse} as
+ * `POST /auth/login` (account activated + session created).
+ */
+export interface RegisterVerifyRequest {
+    /** Email the OTP was sent to. */
+    email: string
+    /** Six-digit OTP code from the email (max 5 wrong attempts). */
+    otp: string
+    /** Optional human-readable device description (shown in the session list). */
+    deviceInfo?: string
 }
 
 /** Body sent to `POST /api/v1/auth/verify-email`. */

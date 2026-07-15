@@ -4,12 +4,12 @@
  * Sign-up section inside {@link AuthenticationModal}.
  *
  * Mirrors {@link SignInSection}: router on Redux `state.signUpState`.
- * Flow: **Registration** (`signUpInit`) → **Otp** (`signUpVerifyOtp`).
+ * Flow: **Registration** (`POST /auth/register`) → **Otp** (`POST /auth/register/verify`).
  *
  * ### Data layer
- * - {@link useMutateSignUpSwr} — GraphQL `signUpInit` (SWR singleton).
- * - {@link useMutateSignUpVerifyOtpSwr} — GraphQL `signUpVerifyOtp`.
- * - {@link useSignUpForm} — submit branches + `challengeId` / `otp` values.
+ * - {@link usePostRegisterSwr} — REST register (also the idempotent OTP resend).
+ * - {@link usePostVerifyRegistrationSwr} — REST verify; returns a login token pair.
+ * - {@link useSignUpForm} — submit branches + `email` / `otp` values.
  */
 import React from "react"
 import { RegistrationState } from "./RegistrationState"

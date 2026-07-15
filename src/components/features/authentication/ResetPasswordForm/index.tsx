@@ -18,8 +18,9 @@ const PASSWORD_MIN_LENGTH = 8
 /**
  * ResetPasswordForm (§1 Identity, spec `auth-password-recovery`). Centered auth
  * card: new password + confirm, completed against the `?token=` from the reset
- * email. Without a token the card shows an invalid-link notice instead of the
- * form. ponytail: mock BE via usePasswordRecovery (any present token is valid).
+ * email via `POST /auth/reset-password`. Without a token the card shows an
+ * invalid-link notice instead of the form; an invalid/expired token surfaces
+ * the same notice after submit.
  */
 export const ResetPasswordForm = () => {
     const t = useTranslations("authFlows")

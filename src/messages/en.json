@@ -2938,6 +2938,7 @@
       "email": "Email",
       "submit": "Send reset link",
       "sent": "If that email exists, a reset link is on its way. Check your inbox.",
+      "failed": "Something went wrong. Please try again.",
       "invalidEmail": "Please enter a valid email address.",
       "backToLogin": "Back to sign in"
     },
@@ -2964,7 +2965,10 @@
       "resend": "Resend code",
       "resendCooldown": "Resend in {seconds}s",
       "success": "Your code has been verified.",
-      "digitLabel": "Digit {index}"
+      "digitLabel": "Digit {index}",
+      "invalidCode": "The code is incorrect or has expired. Try again or resend a new code.",
+      "missingTarget": "This verification link is incomplete. Restart the flow that sent you here.",
+      "resendFailed": "Could not resend the code right now. Please wait a moment and try again."
     },
     "twoFactor": {
       "title": "Set up two-factor authentication",
@@ -2975,7 +2979,13 @@
       "copied": "Secret copied to clipboard",
       "confirmCode": "Enter the 6-digit code from your app",
       "enable": "Enable 2FA",
-      "success": "Two-factor authentication is now enabled."
+      "success": "Two-factor authentication is now enabled.",
+      "invalidCode": "The code is incorrect. Check your authenticator app and try again.",
+      "enrolFailed": "Could not start 2FA setup. Make sure you are signed in and try again.",
+      "alreadyEnabled": "Two-factor authentication is enabled for your account.",
+      "disable": "Disable 2FA",
+      "disabledSuccess": "Two-factor authentication has been disabled.",
+      "recoveryCodesHint": "Save these recovery codes somewhere safe — each can be used once if you lose access to your authenticator app. They will not be shown again."
     }
   },
   "aiPlatform": {

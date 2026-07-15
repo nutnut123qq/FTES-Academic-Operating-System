@@ -13,14 +13,14 @@ import { publicEnv } from "@/resources/env/public"
 const INPUT_CLASS =
     "w-full rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none placeholder:text-muted focus:border-accent"
 
-/** Minimal client-side email shape check (mock validation only). */
+/** Minimal client-side email shape check (backend validates for real). */
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 /**
  * ForgotPasswordForm (§1 Identity, spec `auth-password-recovery`). Centered auth
- * card: email + captcha gate + "send reset link". On valid submit the mock
- * recovery service runs and the card swaps to a neutral "check your email"
- * confirmation (no account enumeration). ponytail: mock BE via usePasswordRecovery.
+ * card: email + captcha gate + "send reset link". On valid submit
+ * `POST /auth/forgot-password` runs and the card swaps to a neutral "check your
+ * email" confirmation (no account enumeration — the backend answers neutrally).
  */
 export const ForgotPasswordForm = () => {
     const t = useTranslations("authFlows")
@@ -39,8 +39,12 @@ export const ForgotPasswordForm = () => {
             return
         }
         setError(null)
-        await requestReset(email)
-        // neutral confirmation regardless of whether the account exists
+        const ok = await requestReset(email)
+        if (!ok) {
+            // transport/server failure only — account existence never leaks (neutral confirmation)
+            setError(t("forgot.failed"))
+            return
+        }
         setSent(true)
     }
 

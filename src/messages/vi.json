@@ -2938,6 +2938,7 @@
       "email": "Email",
       "submit": "Gửi liên kết đặt lại",
       "sent": "Nếu email tồn tại, liên kết đặt lại đang được gửi. Vui lòng kiểm tra hộp thư.",
+      "failed": "Đã có lỗi xảy ra. Vui lòng thử lại.",
       "invalidEmail": "Vui lòng nhập email hợp lệ.",
       "backToLogin": "Quay lại đăng nhập"
     },
@@ -2964,7 +2965,10 @@
       "resend": "Gửi lại mã",
       "resendCooldown": "Gửi lại sau {seconds}s",
       "success": "Mã của bạn đã được xác minh.",
-      "digitLabel": "Chữ số {index}"
+      "digitLabel": "Chữ số {index}",
+      "invalidCode": "Mã không đúng hoặc đã hết hạn. Thử lại hoặc yêu cầu gửi mã mới.",
+      "missingTarget": "Liên kết xác minh không đầy đủ. Hãy bắt đầu lại từ luồng đã đưa bạn tới đây.",
+      "resendFailed": "Chưa thể gửi lại mã lúc này. Vui lòng đợi một lát rồi thử lại."
     },
     "twoFactor": {
       "title": "Thiết lập xác thực hai lớp",
@@ -2975,7 +2979,13 @@
       "copied": "Đã sao chép mã bí mật",
       "confirmCode": "Nhập mã 6 chữ số từ ứng dụng của bạn",
       "enable": "Bật 2FA",
-      "success": "Xác thực hai lớp đã được bật."
+      "success": "Xác thực hai lớp đã được bật.",
+      "invalidCode": "Mã không đúng. Kiểm tra ứng dụng xác thực rồi thử lại.",
+      "enrolFailed": "Chưa thể bắt đầu thiết lập 2FA. Hãy chắc chắn bạn đã đăng nhập rồi thử lại.",
+      "alreadyEnabled": "Xác thực hai lớp đang được bật cho tài khoản của bạn.",
+      "disable": "Tắt 2FA",
+      "disabledSuccess": "Xác thực hai lớp đã được tắt.",
+      "recoveryCodesHint": "Lưu các mã khôi phục này ở nơi an toàn — mỗi mã dùng được một lần nếu bạn mất quyền truy cập ứng dụng xác thực. Chúng sẽ không hiển thị lại."
     }
   },
   "aiPlatform": {

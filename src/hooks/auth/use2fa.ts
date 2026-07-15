@@ -1,71 +1,71 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
-import { LocalStorage } from "@/modules/storage/local/storage"
-import { LocalStorageId } from "@/modules/storage/local/enums/id"
+import { useCallback } from "react"
+import { useGetMfaStatusSwr } from "@/hooks/swr/api/rest/queries/useGetMfaStatusSwr"
+import { usePostEnrollMfaTotpSwr } from "@/hooks/swr/api/rest/mutations/usePostEnrollMfaTotpSwr"
+import { usePostActivateMfaTotpSwr } from "@/hooks/swr/api/rest/mutations/usePostActivateMfaTotpSwr"
+import { usePostDisableMfaTotpSwr } from "@/hooks/swr/api/rest/mutations/usePostDisableMfaTotpSwr"
 
-/** Mock TOTP enrolment payload (client-generated — demo only; the real secret comes from BE). */
+/** TOTP enrolment payload returned by `POST /api/v1/identity/mfa/totp/enroll`. */
 export interface TwoFactorEnrolment {
     /** Base32 shared secret for manual entry in an authenticator app. */
     secret: string
-    /** `otpauth://` provisioning URL (what a real QR code would encode). */
+    /** `otpauth://` provisioning URL (what a QR code would encode). */
     otpauthUrl: string
 }
 
-/** Base32 alphabet used by TOTP secrets. */
-const SECRET_CHARSET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
-
-/** Simulated network latency for the mock auth services (ms). */
-const MOCK_LATENCY_MS = 600
-
 /**
- * TOTP two-factor service: enrolment (secret generation + confirm) and the
- * login challenge. The enabled flag persists in local storage so the sign-in
- * flow can gate on it.
- * @returns enrolment/challenge actions, the `isEnabled` flag and pending state.
+ * TOTP two-factor service backed by the real identity MFA REST endpoints
+ * (`/api/v1/identity/mfa/**`, access token required): status, enrolment
+ * (server-generated secret), activation (returns single-use recovery codes)
+ * and disable (requires a valid TOTP code as proof).
+ *
+ * The sign-in TOTP challenge is NOT here — it verifies through
+ * `usePostVerifyMfaChallengeSwr` (`POST /api/v1/auth/mfa/verify`).
+ * @returns enrolment/disable actions, the `isEnabled` flag and pending state.
  */
-// ponytail: mock BE — secret is client-generated and any 6-digit code verifies;
-// wire setupTwoFactor/confirmTwoFactor GraphQL mutations when the BE flow exists
 export const use2fa = () => {
-    const [isEnabled, setIsEnabled] = useState(false)
-    const [isVerifying, setIsVerifying] = useState(false)
+    const statusSwr = useGetMfaStatusSwr()
+    const { trigger: triggerEnroll, isMutating: isEnrolling } = usePostEnrollMfaTotpSwr()
+    const { trigger: triggerActivate, isMutating: isVerifying } = usePostActivateMfaTotpSwr()
+    const { trigger: triggerDisable, isMutating: isDisabling } = usePostDisableMfaTotpSwr()
 
-    // hydrate after mount — local storage is unavailable during SSR
-    useEffect(() => {
-        setIsEnabled(LocalStorage.getItem<boolean>(LocalStorageId.AuthTwoFactorEnabled) ?? false)
-    }, [])
+    const isEnabled = statusSwr.data?.totpEnabled ?? false
+    const isStatusLoading = statusSwr.isLoading
+    const mutateStatus = statusSwr.mutate
 
-    const enrol = useCallback((): TwoFactorEnrolment => {
-        const secret = Array.from(
-            crypto.getRandomValues(new Uint8Array(16)),
-            (byte) => SECRET_CHARSET[byte % SECRET_CHARSET.length],
-        ).join("")
-        const otpauthUrl = `otpauth://totp/FTES%20AOS?secret=${secret}&issuer=FTES%20AOS`
-        return { secret, otpauthUrl }
-    }, [])
-
-    const verifyEnrolment = useCallback(async (code: string): Promise<boolean> => {
-        setIsVerifying(true)
+    const enrol = useCallback(async (): Promise<TwoFactorEnrolment | null> => {
         try {
-            await new Promise((resolve) => setTimeout(resolve, MOCK_LATENCY_MS))
-            if (!/^\d{6}$/.test(code)) return false
-            LocalStorage.setItem(LocalStorageId.AuthTwoFactorEnabled, true)
-            setIsEnabled(true)
+            const response = await triggerEnroll()
+            return { secret: response.secret, otpauthUrl: response.otpauthUri }
+        } catch {
+            return null
+        }
+    }, [triggerEnroll])
+
+    /**
+     * Confirms enrolment with a TOTP code.
+     * @returns The single-use recovery codes on success, `null` when the code is rejected.
+     */
+    const verifyEnrolment = useCallback(async (code: string): Promise<Array<string> | null> => {
+        try {
+            const response = await triggerActivate({ code })
+            await mutateStatus()
+            return response.recoveryCodes
+        } catch {
+            return null
+        }
+    }, [triggerActivate, mutateStatus])
+
+    const disable = useCallback(async (code: string): Promise<boolean> => {
+        try {
+            await triggerDisable({ code })
+            await mutateStatus()
             return true
-        } finally {
-            setIsVerifying(false)
+        } catch {
+            return false
         }
-    }, [])
+    }, [triggerDisable, mutateStatus])
 
-    const verifyChallenge = useCallback(async (code: string): Promise<boolean> => {
-        setIsVerifying(true)
-        try {
-            await new Promise((resolve) => setTimeout(resolve, MOCK_LATENCY_MS))
-            return /^\d{6}$/.test(code)
-        } finally {
-            setIsVerifying(false)
-        }
-    }, [])
-
-    return { isEnabled, enrol, verifyEnrolment, verifyChallenge, isVerifying }
+    return { isEnabled, isStatusLoading, enrol, verifyEnrolment, disable, isEnrolling, isVerifying, isDisabling }
 }

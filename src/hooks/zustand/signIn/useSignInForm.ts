@@ -10,18 +10,20 @@ import { useRestWithToast } from "@/modules/toast/hooks"
 import { LocalStorage } from "@/modules/storage/local/storage"
 import { LocalStorageId } from "@/modules/storage/local/enums/id"
 import { useAppDispatch, useAppSelector } from "@/redux/hooks"
-import { resetSignInState, SignInState } from "@/redux/slices/state"
+import { resetSignInState, setSignInState, SignInState } from "@/redux/slices/state"
 
 /**
  * Sign-in form hook (replaces the formik singleton) — state SHARED via {@link useSignInStore} so it
  * survives any step transition. Returns a formik-compatible shape (`values/errors/touched/submitForm/
  * setFieldValue/setFieldTouched/isSubmitting`) so consumers need no changes.
  *
- * Login is a SINGLE-STEP REST call (`POST /api/v1/auth/login`) via {@link usePostKeycloakLoginSwr}:
- * the backend exposes no GraphQL auth mutations and returns the access token directly (no email-OTP,
- * `mfaRequired: null`). The old 2-step GraphQL init/verify-OTP flow and the debounced
- * `checkEmailExists` bloom-filter gate (also GraphQL-only) have been removed. `SignInState.OTP` is no
- * longer reached for sign-in; its components stay build-safe but unused.
+ * Login is a REST call (`POST /api/v1/auth/login`) via {@link usePostKeycloakLoginSwr}: the backend
+ * exposes no GraphQL auth mutations and returns the access token directly. When the account has TOTP
+ * 2FA enabled the backend returns `{mfaRequired: true, challengeId}` instead of tokens — the form
+ * then advances to `SignInState.TwoFactor` where `POST /auth/mfa/verify` completes the login. The
+ * old 2-step GraphQL init/verify-OTP flow and the debounced `checkEmailExists` bloom-filter gate
+ * (also GraphQL-only) have been removed. `SignInState.OTP` is no longer reached for sign-in; its
+ * components stay build-safe but unused.
  */
 export const useSignInForm = () => {
     const t = useTranslations()
@@ -116,7 +118,15 @@ export const useSignInForm = () => {
                 }),
                 { showErrorToast: true, showSuccessToast: true },
             )
-            // `null` → login threw (toast already shown); no token means MFA/edge case — keep modal open.
+            // MFA-gated account: no token yet — stash the challengeId and advance to the TOTP step
+            // (spec auth-two-factor, login challenge scenario). TwoFactorState completes the login
+            // via `POST /auth/mfa/verify`.
+            if (result?.mfaRequired && result.challengeId) {
+                setValue("challengeId", result.challengeId)
+                dispatch(setSignInState(SignInState.TwoFactor))
+                return
+            }
+            // `null` → login threw (toast already shown); no token means an edge case — keep modal open.
             if (!result?.accessToken) {
                 return
             }
@@ -128,7 +138,7 @@ export const useSignInForm = () => {
         } finally {
             setIsSubmitting(false)
         }
-    }, [email, password, captchaToken, rememberMe, keycloakLogin, runRest, dispatch, reset, onAuthenticationClose, setIsSubmitting])
+    }, [email, password, captchaToken, rememberMe, keycloakLogin, runRest, dispatch, reset, setValue, onAuthenticationClose, setIsSubmitting])
 
     return { values, errors, touched, submitForm, setFieldValue, setFieldTouched, isSubmitting }
 }

@@ -1,17 +1,19 @@
 "use client"
 
 /**
- * **Sign-in step 3** — TOTP challenge shown after OTP verify when the account
- * has 2FA enabled (spec `auth-two-factor`, login challenge scenario).
+ * **Sign-in step 3** — TOTP challenge shown when login returns
+ * `{mfaRequired: true, challengeId}` (spec `auth-two-factor`, login challenge
+ * scenario).
  *
  * The code is step-local state (it never survives the step), verified through
- * the {@link use2fa} mock service; success finalises sign-in exactly like the
- * OTP step (reset store + flow state, close the modal).
+ * the real `POST /api/v1/auth/mfa/verify` endpoint via
+ * {@link usePostVerifyMfaChallengeSwr} — the hook persists the returned token
+ * pair; success finalises sign-in (reset store + flow state, close the modal).
  */
 import React, { useState } from "react"
 import { Button, FieldError, InputOTP, Modal, Spinner, TextField } from "@heroui/react"
 import { useTranslations } from "next-intl"
-import { use2fa } from "@/hooks/auth"
+import { usePostVerifyMfaChallengeSwr } from "@/hooks/swr/api/rest/mutations/usePostVerifyMfaChallengeSwr"
 import { useAuthenticationOverlayState } from "@/hooks/zustand/overlay/hooks"
 import { useSignInStore } from "@/hooks/zustand/signIn/store"
 import { useAppDispatch } from "@/redux/hooks"
@@ -25,13 +27,24 @@ export const TwoFactorState = () => {
     const dispatch = useAppDispatch()
     const { close } = useAuthenticationOverlayState()
     const reset = useSignInStore((state) => state.reset)
-    const { verifyChallenge, isVerifying } = use2fa()
+    const challengeId = useSignInStore((state) => state.challengeId)
+    const { trigger: verifyChallenge, isMutating: isVerifying } = usePostVerifyMfaChallengeSwr()
     const [code, setCode] = useState("")
     const [isInvalid, setIsInvalid] = useState(false)
 
     const onSubmit = async () => {
-        const ok = await verifyChallenge(code)
-        if (!ok) {
+        if (!challengeId) {
+            setIsInvalid(true)
+            return
+        }
+        try {
+            const result = await verifyChallenge({ challengeId, code })
+            if (!result?.accessToken) {
+                setIsInvalid(true)
+                return
+            }
+        } catch {
+            // wrong/expired TOTP code — the backend rejects the challenge
             setIsInvalid(true)
             return
         }

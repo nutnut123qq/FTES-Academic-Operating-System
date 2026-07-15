@@ -1861,8 +1861,16 @@
       "personal": "Cá nhân",
       "academic": "Học vấn",
       "portfolio": "Hồ sơ",
+      "certificates": "Chứng chỉ",
       "community": "Cộng đồng",
       "progress": "Tiến độ"
+    },
+    "certificates": {
+      "title": "Chứng chỉ của tôi",
+      "empty": "Chưa có chứng chỉ nào — hoàn thành 100% một khóa học để được cấp chứng chỉ.",
+      "meta": "Cấp ngày {date} · Mã xác minh {code}",
+      "view": "Xem trang xác minh",
+      "revoked": "Đã thu hồi"
     },
     "hero": {
       "coverAlt": "Ảnh bìa hồ sơ"
@@ -4884,6 +4892,17 @@
       "related": "Môn học & khóa học liên quan"
     },
     "retry": "Thử lại"
+  },
+  "certificateVerify": {
+    "title": "Xác minh chứng chỉ",
+    "valid": "Hợp lệ",
+    "revoked": "Đã thu hồi",
+    "holder": "Người nhận",
+    "course": "Khóa học",
+    "issueDate": "Ngày cấp",
+    "code": "Mã chứng chỉ",
+    "notFound": "Không tìm thấy chứng chỉ",
+    "notFoundDescription": "Không có chứng chỉ nào khớp mã {code}. Kiểm tra lại mã in trên chứng chỉ."
   },
   "courseSystem": {
     "levels": {

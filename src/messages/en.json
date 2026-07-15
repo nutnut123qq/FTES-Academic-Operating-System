@@ -1852,8 +1852,16 @@
       "personal": "Personal",
       "academic": "Academic",
       "portfolio": "Portfolio",
+      "certificates": "Certificates",
       "community": "Community",
       "progress": "Progress"
+    },
+    "certificates": {
+      "title": "My certificates",
+      "empty": "No certificates yet — complete 100% of a course to earn one.",
+      "meta": "Issued {date} · Verify code {code}",
+      "view": "Open verification page",
+      "revoked": "Revoked"
     },
     "hero": {
       "coverAlt": "Profile cover"
@@ -4884,6 +4892,17 @@
       "related": "Related subjects & courses"
     },
     "retry": "Try again"
+  },
+  "certificateVerify": {
+    "title": "Verify certificate",
+    "valid": "Valid",
+    "revoked": "Revoked",
+    "holder": "Issued to",
+    "course": "Course",
+    "issueDate": "Issue date",
+    "code": "Certificate code",
+    "notFound": "Certificate not found",
+    "notFoundDescription": "No certificate matches the code {code}. Double-check the code printed on the certificate."
   },
   "courseSystem": {
     "levels": {

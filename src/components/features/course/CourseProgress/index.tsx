@@ -4,16 +4,18 @@ import React from "react"
 import { Button, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
+import { useRouter } from "@/i18n/navigation"
 import { ProgressMeter } from "@/components/blocks/stats/ProgressMeter"
 import { useQueryCourseProgressSwr } from "../hooks/useQueryCourseProgressSwr"
 
 /**
- * Course progress + certificate (§4). DEFAULT on-canon layout: an overall progress
- * bar + a completion summary + a certificate stub (enabled at 100%). ponytail:
- * progress bar hand-rolled; mock data; certificate CTA is a no-op.
+ * Course progress + certificate (§4). An overall progress bar + a completion
+ * summary + the certificate card: at 100% the CTA deep-links to the real
+ * auto-issued certificate's public verify page; below 100% it is hidden.
  */
 export const CourseProgress = () => {
     const t = useTranslations("courseSystem")
+    const router = useRouter()
     const { courseId } = useParams<{ courseId: string }>()
     const { progress } = useQueryCourseProgressSwr(courseId)
 
@@ -42,13 +44,17 @@ export const CourseProgress = () => {
                 <Typography type="body-sm" color="muted">
                     {progress.certificateAvailable ? t("progress.certificateReady") : t("progress.certificateLocked")}
                 </Typography>
-                <Button
-                    variant="secondary"
-                    className="self-start"
-                    isDisabled={!progress.certificateAvailable}
-                >
-                    {t("progress.viewCertificate")}
-                </Button>
+                {progress.certificateAvailable && progress.certificateCode ? (
+                    <Button
+                        variant="secondary"
+                        className="self-start"
+                        onPress={() =>
+                            router.push(`/certificates/verify/${progress.certificateCode}`)
+                        }
+                    >
+                        {t("progress.viewCertificate")}
+                    </Button>
+                ) : null}
             </div>
         </div>
     )

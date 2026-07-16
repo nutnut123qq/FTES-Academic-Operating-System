@@ -63,7 +63,9 @@ export const PackageGateModal = ({
 
     const filteredPackages = useMemo(() => {
         const slugSet = new Set(packageSlugs)
-        const eligible = packages.filter((pkg) => slugSet.has(pkg.slug))
+        const eligible = packages.filter(
+            (pkg) => slugSet.has(pkg.slug) && pkg.slug !== "free" && Number(pkg.salePrice) > 0
+        )
         return [...eligible].sort((a, b) => Number(a.salePrice) - Number(b.salePrice))
     }, [packages, packageSlugs])
 

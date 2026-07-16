@@ -27,6 +27,12 @@ export interface SearchOverlayInputProps extends WithClassNames<undefined> {
     clearLabel: string
     /** Ref to focus the input on open. */
     inputRef?: React.Ref<HTMLInputElement>
+    /** Optional trailing content shown before the spinner/clear (e.g. a Ctrl+K hint). */
+    suffix?: React.ReactNode
+    /** Fired when the input gains focus. */
+    onFocus?: () => void
+    /** Fired when the input loses focus. */
+    onBlur?: (event: React.FocusEvent<HTMLInputElement>) => void
 }
 
 /**
@@ -47,6 +53,9 @@ export const SearchOverlayInput = ({
     ariaLabel,
     clearLabel,
     inputRef,
+    suffix,
+    onFocus,
+    onBlur,
     className,
 }: SearchOverlayInputProps) => (
     <div
@@ -69,9 +78,12 @@ export const SearchOverlayInput = ({
             value={value}
             onChange={(event) => onValueChange(event.target.value)}
             onKeyDown={onKeyDown}
+            onFocus={onFocus}
+            onBlur={onBlur}
             placeholder={placeholder}
             className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted"
         />
+        {suffix ? <span className="flex shrink-0 items-center gap-1">{suffix}</span> : null}
         {isLoading ? <Spinner className="size-4 shrink-0" aria-hidden /> : null}
         {value ? (
             <button

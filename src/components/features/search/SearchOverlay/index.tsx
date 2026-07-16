@@ -36,7 +36,7 @@ export const SearchOverlay = ({ className }: WithClassNames<undefined>) => {
     const locale = useLocale()
     const router = useRouter()
     const dispatch = useAppDispatch()
-    const { isOpen, setOpen, open, close } = useSearchOverlayState()
+    const { isOpen, setOpen, close } = useSearchOverlayState()
     const { open: openAuth } = useAuthenticationOverlayState()
     const rawQuery = useAppSelector((state) => state.search.query)
     const { recent, add: addRecent, clear: clearRecent } = useRecentSearches()
@@ -78,25 +78,9 @@ export const SearchOverlay = ({ className }: WithClassNames<undefined>) => {
         }
     }, [isOpen])
 
-    // Global Ctrl/Cmd+K to open (skip when another overlay is on top — the modal owns Esc).
-    useEffect(() => {
-        const onKeyDown = (event: KeyboardEvent) => {
-            const isPaletteShortcut = (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k"
-            if (!isPaletteShortcut) return
-            // Skip when some OTHER overlay is already on top (and ours is closed) so Ctrl/K
-            // never steals focus from an open modal/drawer.
-            if (!isOpen) {
-                const foreignOverlay = Array.from(
-                    document.querySelectorAll(".modal__dialog, .drawer__dialog"),
-                ).some((node) => !node.hasAttribute("data-search-overlay"))
-                if (foreignOverlay) return
-            }
-            event.preventDefault()
-            open()
-        }
-        window.addEventListener("keydown", onKeyDown)
-        return () => window.removeEventListener("keydown", onKeyDown)
-    }, [open, isOpen])
+    // The Ctrl/Cmd+K shortcut is registered in exactly one place — the navbar container
+    // (single source). On desktop it focuses the inline navbar field; below `md` it opens
+    // this overlay. The overlay therefore no longer registers its own duplicate listener.
 
     const onValueChange = useCallback(
         (next: string) => {

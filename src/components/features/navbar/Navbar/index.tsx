@@ -2,6 +2,7 @@
 
 import React, {
     useEffect,
+    useRef,
     useState,
 } from "react"
 import {
@@ -34,8 +35,8 @@ import {
     useAppNav,
 } from "@/components/features/app-shell/useAppNav"
 import {
-    SearchButton,
-} from "./SearchButton"
+    SearchInline,
+} from "./SearchInline"
 import {
     NotificationBell,
 } from "./NotificationBell"
@@ -62,10 +63,10 @@ export type NavbarProps = WithClassNames<undefined>
  * global left sidebar exists anywhere).
  *
  * Container: owns the Ctrl/Cmd+K search shortcut + the mobile drawer state and
- * composes the logo, the 4-module {@link HeaderNav}, search trigger (full field
+ * composes the logo, the 5-module {@link HeaderNav}, search trigger (full field
  * on desktop, icon on mobile), the standalone language dropdown, the appearance
  * settings button, notifications, the account menu, and a mobile expand button that opens
- * a navigation drawer mirroring the same 4 modules as PLAIN LINK ROWS from the
+ * a navigation drawer mirroring the same 5 modules as PLAIN LINK ROWS from the
  * shared {@link useAppNav} source (no accordion, no nested children). `"use client"`
  * for hooks + keyboard handling.
  * @param props - optional root class name (placement only)
@@ -76,6 +77,8 @@ export const Navbar = ({ className }: NavbarProps) => {
     const { open: openSearch } = useSearchOverlayState()
     const { open: openAppearance } = useAppearanceOverlayState()
     const [isDrawerOpen, setDrawerOpen] = useState(false)
+    // ref to the desktop inline search field so Ctrl/Cmd+K can focus it (≥ md)
+    const searchInputRef = useRef<HTMLInputElement>(null)
     // same primary-nav source HeaderNav renders on desktop — no drift
     const modules = useAppNav()
     // optional second layer (e.g. profile tabs) a page registered into the navbar
@@ -92,7 +95,10 @@ export const Navbar = ({ className }: NavbarProps) => {
         setDrawerOpen(false)
     }
 
-    // register the global Ctrl/Cmd+K shortcut to open the search overlay
+    // Single source of the global Ctrl/Cmd+K shortcut (the overlay no longer registers
+    // its own). Desktop (≥ md) focuses the inline navbar field; below md — where the
+    // inline field is hidden and the full-screen overlay is the search surface — it
+    // opens the overlay instead.
     useEffect(() => {
         const onKeyDown = (event: KeyboardEvent) => {
             // some keydown events (IME composition, autofill) fire with no `key`
@@ -100,7 +106,12 @@ export const Navbar = ({ className }: NavbarProps) => {
             if (!isK) return
             if (!(event.ctrlKey || event.metaKey)) return
             event.preventDefault()
-            openSearch()
+            const isDesktop = window.matchMedia("(min-width: 768px)").matches
+            if (isDesktop && searchInputRef.current) {
+                searchInputRef.current.focus()
+            } else {
+                openSearch()
+            }
         }
         window.addEventListener("keydown", onKeyDown)
         return () => window.removeEventListener("keydown", onKeyDown)
@@ -116,8 +127,8 @@ export const Navbar = ({ className }: NavbarProps) => {
                 </div>
 
                 <div className="flex items-center justify-end gap-2">
-                    {/* desktop: full input-style search; mobile: just an icon */}
-                    <SearchButton className="hidden w-[260px] md:flex" />
+                    {/* desktop: real inline search field + results dropdown; mobile: just an icon */}
+                    <SearchInline inputRef={searchInputRef} />
                     <Button
                         isIconOnly
                         variant="tertiary"
@@ -162,7 +173,7 @@ export const Navbar = ({ className }: NavbarProps) => {
             {bottomLayer ? <div className="w-full">{bottomLayer}</div> : null}
 
             {/* mobile navigation drawer (opened by the expand icon) — mirrors the
-                desktop 4 modules as plain link rows (no accordion, no children) */}
+                desktop 5 modules as plain link rows (no accordion, no children) */}
             <Drawer>
                 <Drawer.Backdrop isOpen={isDrawerOpen} onOpenChange={setDrawerOpen}>
                     <Drawer.Content placement="right">

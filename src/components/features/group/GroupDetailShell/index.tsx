@@ -40,7 +40,7 @@ const TABS: Array<{ key: string; segment: string; ownerOnly?: boolean }> = [
  * `aspect-[2/1]` on mobile, `aspect-[3/1]` from `sm`; when the group has no
  * cover (or it fails to load) an accent gradient stands in, and a missing
  * avatar falls back to the group's initial. ponytail: header + tabs
- * hand-rolled; tabs are nested routes; mock data.
+ * hand-rolled; tabs are nested routes.
  */
 export const GroupDetailShell = ({ groupId, children }: GroupDetailShellProps) => {
     const t = useTranslations("groupsHub")

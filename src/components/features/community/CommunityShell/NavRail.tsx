@@ -3,6 +3,7 @@
 import React from "react"
 import { Typography } from "@heroui/react"
 import {
+    BookmarkSimpleIcon,
     ChartBarIcon,
     ShieldCheckIcon,
     TrophyIcon,
@@ -31,6 +32,10 @@ export const NavRail = () => {
             <Link href="/groups" className={ROW_CLASS}>
                 <UsersThreeIcon aria-hidden focusable="false" className="size-5" />
                 <Typography type="body-sm">{t("menu.groups")}</Typography>
+            </Link>
+            <Link href="/community/saved" className={ROW_CLASS}>
+                <BookmarkSimpleIcon aria-hidden focusable="false" className="size-5" />
+                <Typography type="body-sm">{t("menu.saved")}</Typography>
             </Link>
             <Link href="/community/reputation" className={ROW_CLASS}>
                 <TrophyIcon aria-hidden focusable="false" className="size-5" />

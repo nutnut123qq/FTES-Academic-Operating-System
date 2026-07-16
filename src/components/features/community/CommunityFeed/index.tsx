@@ -164,11 +164,16 @@ const CommunityFeedRow = ({ post }: { post: CommunityPost }) => {
  * uses the `ThreadsPostRow` anatomy (48px avatar column + content column) with
  * the shared engagement bar (zero counts suppressed) and inline push-down
  * comment expansion; a threadline connects the avatar to the expanded thread.
- * ponytail: mock data.
+ * Data is the real BE GraphQL `feed(tab, page, campus)`.
  */
 export const CommunityFeed = ({ tab = "forYou" }: { tab?: CommunityFeedTab } = {}) => {
     const t = useTranslations("communityHub")
     const { posts, isLoading, error, mutate } = useQueryCommunityFeedSwr(tab)
+
+    // CAMPUS tab is scoped to the viewer's campus (BE falls back to the profile campus).
+    // When empty it usually means the viewer hasn't set a campus on their profile, so the
+    // empty state guides them there instead of showing the generic "be the first to post".
+    const isCampus = tab === "campus"
 
     return (
         <div className="flex flex-col divide-y divide-separator">
@@ -177,7 +182,10 @@ export const CommunityFeed = ({ tab = "forYou" }: { tab?: CommunityFeedTab } = {
                 isLoading={isLoading && posts.length === 0}
                 skeleton={<FeedSkeleton />}
                 isEmpty={posts.length === 0}
-                emptyContent={{ title: t("feed.empty") }}
+                emptyContent={{
+                    title: isCampus ? t("feed.campusEmpty") : t("feed.empty"),
+                    description: isCampus ? t("feed.campusEmptyHint") : undefined,
+                }}
                 error={posts.length === 0 ? error : undefined}
                 errorContent={{
                     title: t("feed.error"),

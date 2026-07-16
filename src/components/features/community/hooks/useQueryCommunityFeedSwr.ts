@@ -24,8 +24,8 @@ export interface CommunityPost {
     comments: number
 }
 
-/** Feed scope selectable by the shell tabs. CAMPUS is unsupported by the BE `feed` (needs a campus arg). */
-export type CommunityFeedTab = "forYou" | "following" | "trending"
+/** Feed scope selectable by the shell tabs. */
+export type CommunityFeedTab = "forYou" | "following" | "campus" | "trending"
 
 /** SWR cache key for the DEFAULT (For You) community feed — shared with the like/comment mutations. */
 export const COMMUNITY_FEED_KEY = ["community-feed"]
@@ -35,6 +35,8 @@ const toFeedTab = (tab: CommunityFeedTab): FeedTab => {
     switch (tab) {
         case "following":
             return FeedTab.Following
+        case "campus":
+            return FeedTab.Campus
         case "trending":
             return FeedTab.Trending
         case "forYou":
@@ -64,15 +66,20 @@ const toCommunityPost = (post: FeedPost, locale: string): CommunityPost => ({
 const PAGE_LIMIT = 20
 
 /**
- * Loads the community feed for a scope from the real BE GraphQL `feed(tab, page)`.
+ * Loads the community feed for a scope from the real BE GraphQL `feed(tab, page, campus)`.
  * Requires auth (viewer-scoped visibility); a guest / error surfaces via `error`
- * and the feed renders its empty/error state. Keyed on the tab so switching tabs
- * refetches; the default (For You) uses `COMMUNITY_FEED_KEY` so the optimistic
- * like/comment mutations keep patching the right cache.
+ * and the feed renders its empty/error state. Keyed on the tab (and `campus` when given)
+ * so switching scope refetches; the default (For You) uses `COMMUNITY_FEED_KEY` so the
+ * optimistic like/comment mutations keep patching the right cache.
+ *
+ * `campus` scopes the CAMPUS tab; omit it and the BE falls back to the viewer's profile
+ * campus (empty connection when the viewer has no campus). Ignored for other tabs.
  */
-export const useQueryCommunityFeedSwr = (tab: CommunityFeedTab = "forYou") => {
+export const useQueryCommunityFeedSwr = (tab: CommunityFeedTab = "forYou", campus?: string) => {
     const locale = useLocale()
-    const key = tab === "forYou" ? COMMUNITY_FEED_KEY : [...COMMUNITY_FEED_KEY, tab]
+    const scopedCampus = tab === "campus" ? campus : undefined
+    const baseKey = tab === "forYou" ? COMMUNITY_FEED_KEY : [...COMMUNITY_FEED_KEY, tab]
+    const key = scopedCampus ? [...baseKey, scopedCampus] : baseKey
 
     const { data, isLoading, error, mutate } = useSWR<Array<CommunityPost>>(
         key,
@@ -80,6 +87,7 @@ export const useQueryCommunityFeedSwr = (tab: CommunityFeedTab = "forYou") => {
             const result = await queryCommunityFeed({
                 tab: toFeedTab(tab),
                 page: { limit: PAGE_LIMIT },
+                campus: scopedCampus,
             })
             const connection = result.data?.feed
             return (connection?.items ?? []).map((item) => toCommunityPost(item, locale))

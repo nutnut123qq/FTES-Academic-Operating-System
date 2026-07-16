@@ -1,29 +1,55 @@
 "use client"
 
 import useSWR from "swr"
+import { getLeaderboard } from "@/modules/api/rest/community"
+import type { LeaderboardEntryResponse } from "@/modules/api/rest/community"
 
-/** A contributor's reputation summary (§6, mock — see note below). */
+/** A contributor's reputation summary (mapped from the BE leaderboard row). */
 export interface Contributor {
+    /** The user's id (the BE leaderboard is non-PII: id + public tallies only). */
     id: string
-    name: string
+    /**
+     * Display name, or null when unresolved. The BE deliberately returns no PII and
+     * exposes no profile-by-userId lookup (profiles key on username), so the name
+     * stays null and the row hides its name line — same policy as the trending list,
+     * which omits the author rather than surfacing a raw UUID.
+     */
+    name: string | null
+    /** Upvotes received (BE `upvotesReceived`). */
     upvotes: number
+    /** Downvotes — the BE tracks no downvote tally, fixed 0. */
     downvotes: number
+    /** Accepted answers (BE `acceptedAnswers`). */
     accepted: number
+    /** Contributor score computed by the BE (floored at 0 server-side). */
+    score: number
+    /** Absolute rank across pages (BE `rank`). */
+    rank: number
 }
 
-// mock BE - no reputation-list endpoint. The BE only exposes a PER-USER score
-// (`GET /community/users/{id}/contributor-score`), NOT a leaderboard/list, so
-// this ranked board stays mock until a list endpoint exists. Do NOT invent one.
-// Deterministic sample.
-const fetchContributorsMock = async (): Promise<Array<Contributor>> => [
-    { id: "u1", name: "Hoa Lê", upvotes: 320, downvotes: 8, accepted: 24 },
-    { id: "u2", name: "Minh Trần", upvotes: 210, downvotes: 5, accepted: 18 },
-    { id: "u3", name: "Đức Phạm", upvotes: 140, downvotes: 12, accepted: 9 },
-    { id: "u4", name: "An Nguyễn", upvotes: 96, downvotes: 3, accepted: 6 },
-]
+/** How many leaderboard rows to load (BE `leaderboard?size=`). */
+const LEADERBOARD_SIZE = 20
 
-/** Loads top contributors by reputation. Mocked; SWR-shaped for a drop-in BE swap. */
+/** Map a BE leaderboard row to the board's row contract. */
+const toContributor = (entry: LeaderboardEntryResponse): Contributor => ({
+    id: entry.userId,
+    name: null,
+    upvotes: entry.upvotesReceived,
+    downvotes: 0,
+    accepted: entry.acceptedAnswers,
+    score: entry.score,
+    rank: entry.rank,
+})
+
+/**
+ * Loads top contributors from the real BE `GET /api/v1/community/leaderboard`
+ * (first page, sorted score desc — requires `community.leaderboard.read`, granted
+ * to STUDENT and up).
+ */
 export const useQueryContributorsSwr = () => {
-    const { data, isLoading, error, mutate } = useSWR(["contributors"], () => fetchContributorsMock())
+    const { data, isLoading, error, mutate } = useSWR(["contributors"], async () => {
+        const page = await getLeaderboard({ page: 0, size: LEADERBOARD_SIZE })
+        return page.items.map(toContributor)
+    })
     return { contributors: data ?? [], isLoading, error, mutate }
 }

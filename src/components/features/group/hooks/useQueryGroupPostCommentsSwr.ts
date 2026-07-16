@@ -1,17 +1,22 @@
 "use client"
 
+import { useLocale } from "next-intl"
 import useSWR from "swr"
+import { addComment, getPostComments } from "@/modules/api/rest/community"
 import type { PostComment } from "@/components/features/community/hooks/useQueryPostDetailSwr"
+import { buildCommentTree } from "./groupComments"
 
 /**
- * Comment thread for a group post. Group posts have no BE comment contract, so
- * this is a mock-only source keyed per (groupId, postId). Shaped like the
- * community post-comment thread so `PostCommentThread` consumes it uniformly.
+ * Comment thread for a group post. A group post IS a community post, so comments
+ * are read from the real community endpoint (`GET /community/posts/{postId}/comments`)
+ * and composed with `POST /community/posts/{postId}/comments` — change
+ * group-social-engagement §5.2. Shaped like the community post-comment thread so
+ * `PostCommentThread` consumes it uniformly.
  */
 export interface GroupPostThread {
     /** The group post id. */
     id: string
-    /** Flat one-level comment list. */
+    /** Nested one-level comment list. */
     comments: Array<PostComment>
 }
 
@@ -22,20 +27,12 @@ export const groupPostCommentsKey = (groupId: string, postId: string) => [
     postId,
 ]
 
-// ponytail: mock BE — no group comments endpoint exists. Deterministic sample.
-const fetchGroupPostCommentsMock = async (postId: string): Promise<GroupPostThread> => ({
-    id: postId,
-    comments: [
-        { id: `${postId}-c1`, author: "An", authorUsername: "an-nguyen" /* mock */, text: "Để mình đăng ký tham gia nhé!", timeLabel: "1 giờ trước" },
-        { id: `${postId}-c2`, author: "Hoa", authorUsername: "hoa-le" /* mock */, text: "Có ghi hình lại không mọi người?", timeLabel: "30 phút trước" },
-    ],
-})
-
 /**
- * Lazily loads a group post's comment thread (only once expanded). Mock-only —
- * mirrors the community thread cache pattern for a drop-in BE swap.
+ * Lazily loads a group post's comment thread (only once expanded). Reads the real
+ * community comments endpoint and maps the flat BE list into the nested
+ * `PostComment` tree.
  *
- * @param groupId - the owning group id.
+ * @param groupId - the owning group id (cache scoping only).
  * @param postId - the group post whose comments to load.
  * @param enabled - true once the post has been expanded at least once.
  */
@@ -44,9 +41,34 @@ export const useQueryGroupPostCommentsSwr = (
     postId: string,
     enabled: boolean,
 ) => {
+    const locale = useLocale()
     const { data, isLoading, error, mutate } = useSWR(
-        enabled ? groupPostCommentsKey(groupId, postId) : null,
-        () => fetchGroupPostCommentsMock(postId),
+        enabled ? [...groupPostCommentsKey(groupId, postId), locale] : null,
+        async (): Promise<GroupPostThread> => {
+            const page = await getPostComments(postId, { limit: 50 })
+            return { id: postId, comments: buildCommentTree(page.items ?? [], locale) }
+        },
     )
     return { thread: data, isLoading, error, mutate }
 }
+
+/**
+ * Composes a comment (or one-level reply) on a group post via the community
+ * comment endpoint, then revalidates the thread cache to pull server truth.
+ *
+ * @returns a submit fn compatible with `PostCommentThread.onSubmit`.
+ */
+export const useComposeGroupPostComment = (
+    groupId: string,
+    postId: string,
+    mutate: () => Promise<unknown>,
+) =>
+    async (body: string, parentCommentId?: string): Promise<boolean> => {
+        try {
+            await addComment(postId, { body, parentId: parentCommentId })
+            await mutate()
+            return true
+        } catch {
+            return false
+        }
+    }

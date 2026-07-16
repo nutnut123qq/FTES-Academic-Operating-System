@@ -5225,9 +5225,19 @@
     "more": "Thêm",
     "menu": {
       "groups": "Nhóm",
+      "saved": "Đã lưu",
       "reputation": "Bảng uy tín",
       "poll": "Bình chọn",
       "moderation": "Kiểm duyệt"
+    },
+    "saved": {
+      "title": "Bài đã lưu",
+      "empty": "Bạn chưa lưu bài viết nào.",
+      "emptyHint": "Nhấn biểu tượng đánh dấu trên một bài viết để lưu lại xem sau.",
+      "error": "Không tải được bài đã lưu. Vui lòng thử lại.",
+      "unsave": "Bỏ lưu",
+      "unsaveFailed": "Không bỏ lưu được. Vui lòng thử lại.",
+      "member": "Thành viên"
     },
     "rail": {
       "trending": "Xu hướng",
@@ -5310,7 +5320,9 @@
       "likes": "{count} thích",
       "comments": "{count} bình luận",
       "empty": "Chưa có bài viết nào. Hãy là người đầu tiên chia sẻ!",
-      "error": "Không tải được bảng tin. Vui lòng thử lại."
+      "error": "Không tải được bảng tin. Vui lòng thử lại.",
+      "campusEmpty": "Cơ sở của bạn chưa có bài viết nào.",
+      "campusEmptyHint": "Cập nhật cơ sở trong hồ sơ để xem bài viết từ cộng đồng cơ sở của bạn."
     },
     "detail": {
       "comments": "{count} bình luận"
@@ -5339,7 +5351,9 @@
     },
     "poll": {
       "totalVotes": "{count} lượt bình chọn",
-      "error": "Không tải được bình chọn. Vui lòng thử lại."
+      "error": "Không tải được bình chọn. Vui lòng thử lại.",
+      "empty": "Chưa có bình chọn nào trong bảng tin của bạn.",
+      "voteFailed": "Không gửi được bình chọn. Vui lòng thử lại."
     },
     "moderation": {
       "title": "Kiểm duyệt",
@@ -5391,7 +5405,13 @@
     "discussion": {
       "replies": "{count} phản hồi",
       "empty": "Chưa có chủ đề thảo luận nào. Hãy bắt đầu một chủ đề!",
-      "error": "Không tải được thảo luận. Vui lòng thử lại."
+      "error": "Không tải được thảo luận. Vui lòng thử lại.",
+      "newThread": "Tạo chủ đề mới",
+      "titleField": "Tiêu đề chủ đề",
+      "contentField": "Nội dung thảo luận",
+      "post": "Đăng",
+      "cancel": "Huỷ",
+      "created": "Đã tạo chủ đề thảo luận."
     },
     "roles": {
       "owner": "Chủ nhóm",
@@ -5402,6 +5422,7 @@
     "events": {
       "attendees": "{count} tham gia",
       "join": "Tham gia",
+      "leave": "Huỷ tham gia",
       "empty": "Chưa có sự kiện sắp tới.",
       "error": "Không tải được sự kiện. Vui lòng thử lại."
     },
@@ -5412,6 +5433,12 @@
       "accept": "Duyệt",
       "reject": "Từ chối",
       "rules": "Nội quy",
+      "noRules": "Chưa có nội quy nào.",
+      "rulePlaceholder": "Nhập một nội quy…",
+      "addRule": "Thêm nội quy",
+      "removeRule": "Xoá nội quy",
+      "saveRules": "Lưu nội quy",
+      "rulesSaved": "Đã lưu nội quy.",
       "pinned": "Bài ghim",
       "noPinned": "Chưa có bài ghim nào.",
       "unpin": "Bỏ ghim",
@@ -5459,7 +5486,11 @@
       "coverAlt": "Ảnh nền của {name}",
       "remove": "Bỏ ảnh",
       "uploadCta": "Kéo thả ảnh vào đây, hoặc bấm để chọn",
-      "save": "Lưu nhận diện"
+      "save": "Lưu nhận diện",
+      "saved": "Đã cập nhật ảnh nhóm.",
+      "presignFailed": "Không tạo được liên kết tải lên. Vui lòng thử lại.",
+      "uploadFailed": "Tải ảnh lên thất bại. Vui lòng thử lại.",
+      "verifyFailed": "Không xác nhận được ảnh đã tải lên. Vui lòng thử lại."
     },
     "states": {
       "retry": "Thử lại"

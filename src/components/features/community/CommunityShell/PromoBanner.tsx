@@ -32,9 +32,11 @@ export const PromoBanner = () => {
                 <Typography type="body-sm" weight="semibold" className="line-clamp-2">
                     {promo.title}
                 </Typography>
-                <Typography type="body-xs" className="text-accent">
-                    {promo.ctaText}
-                </Typography>
+                {promo.ctaText ? (
+                    <Typography type="body-xs" className="text-accent">
+                        {promo.ctaText}
+                    </Typography>
+                ) : null}
             </div>
         </>
     )

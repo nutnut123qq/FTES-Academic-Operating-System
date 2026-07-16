@@ -6,8 +6,8 @@ import type { QueryActiveAdvertisementRequest } from "@/modules/api/graphql/quer
  * SWR query wrapper for {@link queryActiveAdvertisement}. `data` is the active
  * banner for the given placement (defaults to the dashboard right rail), or
  * `null` when none is active. The result is already null for ad-free viewers
- * (active members, or — when `courseId` is passed — viewers enrolled in that
- * course), so callers only need `data ? render : hide`.
+ * (when `courseId` is passed, viewers enrolled in that course are exempted for
+ * lesson placements), so callers only need `data ? render : hide`.
  *
  * The cache key includes the placement + course so each slot caches separately.
  */
@@ -21,10 +21,11 @@ export const useQueryActiveAdvertisementSwr = (
             request?.courseId ?? null,
         ],
         async () => {
-            const data = await queryActiveAdvertisement({
+            const result = await queryActiveAdvertisement({
                 request,
             })
-            return data.data?.activeAdvertisement?.data ?? null
+            // BE trả Advertisement TRỰC TIẾP (không envelope); null = không có ad / miễn trừ.
+            return result.data?.activeAdvertisement ?? null
         },
     )
 }

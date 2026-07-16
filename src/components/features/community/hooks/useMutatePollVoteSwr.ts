@@ -1,30 +1,39 @@
 "use client"
 
 import { useCallback } from "react"
+import { useSWRConfig } from "swr"
+import { votePoll } from "@/modules/api/rest/community"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
+import { pollSwrKey } from "./useQueryPollSwr"
 
 /**
- * Casts a poll vote. The vote is auth-gated (guests get the `AuthenticationModal`).
+ * Casts a poll vote. The vote is auth-gated (guests get the `AuthenticationModal`),
+ * then written to the real BE `POST /api/v1/community/posts/{postId}/poll-votes`
+ * with the option's genuine UUID. On success both poll cache keys (explicit post +
+ * the "latest" discovery key) are revalidated so `myOptionId`/`voteCount` reflect
+ * the server tally.
  *
- * NOTE: the poll DATA is still mock — there is no BE poll-read endpoint, so no real
- * post/option UUID exists to write against. The vote is therefore kept LOCAL (the
- * caller's optimistic reveal stands) rather than wired to
- * `POST /api/v1/community/posts/{id}/poll-votes`, which would `400` on the placeholder
- * ids and revert-then-error on every click. Wire the live write only once a real poll
- * post flows through with genuine UUIDs.
+ * The caller owns the optimistic reveal; a thrown error (guests return `false`
+ * instead) means the write failed and the caller should roll back.
  *
- * @returns `true` when the (local) vote is accepted, `false` for guests.
+ * @returns `true` when the vote was accepted, `false` for guests.
  */
 export const useMutatePollVoteSwr = () => {
     const { requireAuth } = useRequireAuth()
+    const { mutate } = useSWRConfig()
 
     return useCallback(
-        async (_postId: string, _optionId: string): Promise<boolean> => {
+        async (postId: string, optionId: string): Promise<boolean> => {
             if (!requireAuth("auth.context.vote")) {
                 return false
             }
+            await votePoll(postId, { optionId })
+            await Promise.all([
+                mutate(pollSwrKey(postId)),
+                mutate(pollSwrKey()),
+            ])
             return true
         },
-        [requireAuth],
+        [requireAuth, mutate],
     )
 }

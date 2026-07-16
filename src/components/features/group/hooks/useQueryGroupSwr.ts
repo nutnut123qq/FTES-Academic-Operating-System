@@ -32,10 +32,17 @@ const toGroupType = (dto: GroupResponse): GroupType => {
     }
 }
 
-/** Loads a group's header from the real group REST API (BE has no avatar/cover → null). */
+/** SWR cache key for a group's header (shared with the media mutation hook). */
+export const groupHeaderKey = (groupId: string) => ["GET_GROUP", groupId]
+
+/**
+ * Loads a group's header from the real group REST API. `avatarUrl`/`coverUrl` are
+ * the signed read URLs the BE returns (change group-identity-media-rules-rsvp); null
+ * when unset (UI falls back to initials / gradient).
+ */
 export const useQueryGroupSwr = (groupId: string) => {
-    const { data, isLoading, error } = useSWR(
-        groupId ? ["GET_GROUP", groupId] : null,
+    const { data, isLoading, error, mutate } = useSWR(
+        groupId ? groupHeaderKey(groupId) : null,
         async (): Promise<GroupHeader> => {
             const dto = await getGroup(groupId)
             return {
@@ -43,11 +50,11 @@ export const useQueryGroupSwr = (groupId: string) => {
                 name: dto.name,
                 type: toGroupType(dto),
                 members: dto.memberCount ?? 0,
-                avatarUrl: null,
-                coverUrl: null,
+                avatarUrl: dto.avatarUrl ?? null,
+                coverUrl: dto.coverUrl ?? null,
                 ownerId: dto.ownerId,
             }
         },
     )
-    return { group: data, isLoading, error }
+    return { group: data, isLoading, error, mutate }
 }

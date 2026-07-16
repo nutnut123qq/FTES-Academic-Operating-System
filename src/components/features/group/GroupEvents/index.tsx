@@ -1,12 +1,13 @@
 "use client"
 
 import React from "react"
-import { Typography } from "@heroui/react"
+import { Button, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
-import { useQueryGroupEventsSwr } from "../hooks/useQueryGroupEventsSwr"
+import { useQueryGroupEventsSwr, type GroupEvent } from "../hooks/useQueryGroupEventsSwr"
+import { useMutateAttendGroupEventSwr } from "../hooks/useMutateAttendGroupEventSwr"
 
 /** Loading skeleton — mirrors an event row (title + date/location meta). */
 const GroupEventsSkeleton = () => (
@@ -25,10 +26,39 @@ const GroupEventsSkeleton = () => (
     </div>
 )
 
+/** One event row + RSVP toggle (join/leave), optimistic with rollback. */
+const GroupEventRow = ({ groupId, event }: { groupId: string; event: GroupEvent }) => {
+    const t = useTranslations("groupsHub")
+    const attend = useMutateAttendGroupEventSwr(groupId)
+    const meta = event.location ? `${event.dateLabel} · ${event.location}` : event.dateLabel
+
+    return (
+        <div className="flex items-center gap-3 rounded-2xl border border-separator p-4">
+            <div className="min-w-0 flex-1">
+                <Typography type="body-sm" weight="medium" truncate>
+                    {event.title}
+                </Typography>
+                <Typography type="body-xs" color="muted">
+                    {meta ? `${meta} · ` : ""}
+                    {t("events.attendees", { count: event.attendeeCount })}
+                </Typography>
+            </div>
+            <Button
+                size="sm"
+                variant={event.attending ? "ghost" : "secondary"}
+                className="shrink-0"
+                onPress={() => void attend(event.id)}
+            >
+                {event.attending ? t("events.leave") : t("events.join")}
+            </Button>
+        </div>
+    )
+}
+
 /**
- * Group events (§7/§14). DEFAULT on-canon layout: a list of upcoming events.
- * Wired to the real group REST API. There is intentionally NO join/RSVP action —
- * the BE tracks no attendance (attendeeCount is always 0).
+ * Group events (§7/§14). DEFAULT on-canon layout: a list of upcoming events with a
+ * live RSVP toggle (join/leave) + real attendee count — change
+ * group-identity-media-rules-rsvp.
  */
 export const GroupEvents = () => {
     const t = useTranslations("groupsHub")
@@ -50,22 +80,7 @@ export const GroupEvents = () => {
         >
             <div className="flex flex-col gap-3">
                 {events.map((event) => (
-                    <div
-                        key={event.id}
-                        className="flex items-center gap-3 rounded-2xl border border-separator p-4"
-                    >
-                        <div className="min-w-0 flex-1">
-                            <Typography type="body-sm" weight="medium" truncate>
-                                {event.title}
-                            </Typography>
-                            <Typography type="body-xs" color="muted">
-                                {event.location
-                                    ? `${event.dateLabel} · ${event.location}`
-                                    : event.dateLabel}
-                            </Typography>
-                        </div>
-                        {/* mock BE - no RSVP: attendeeCount is always 0 and there is no join endpoint. */}
-                    </div>
+                    <GroupEventRow key={event.id} groupId={groupId} event={event} />
                 ))}
             </div>
         </AsyncContent>

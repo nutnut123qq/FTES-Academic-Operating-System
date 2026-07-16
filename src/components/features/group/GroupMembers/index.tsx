@@ -35,8 +35,7 @@ const ROLES: Array<GroupMemberRole | "all"> = ["all", "owner", "admin", "moderat
 
 /**
  * Group members (§7). DEFAULT on-canon layout: a role filter + a member list
- * (initials avatar + name + role chip). ponytail: rows hand-rolled, icon-free;
- * mock data.
+ * (initials avatar + name + role chip). ponytail: rows hand-rolled, icon-free.
  */
 export const GroupMembers = () => {
     const t = useTranslations("groupsHub")

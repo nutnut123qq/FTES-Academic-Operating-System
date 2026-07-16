@@ -1,36 +1,61 @@
 import { createAuthApolloClient } from "../clients"
-import { type QueryParams } from "../types"
+import { type GraphQLOperationContext, type GraphQLHeaders } from "../types"
 import { DocumentNode, gql } from "@apollo/client"
-import type {
-    QueryActiveAdvertisementRequest,
-    QueryActiveAdvertisementResponse,
+import {
+    AdvertisementPlacement,
+    type QueryActiveAdvertisementRequest,
+    type QueryActiveAdvertisementResponse,
 } from "./types"
 
-const query1 = gql`
-  query ActiveAdvertisement($placement: AdvertisementPlacement, $courseId: String) {
-    activeAdvertisement(placement: $placement, courseId: $courseId) {
-      success
-      message
-      error
-      data {
-        id
-        mediaType
-        media
-        title
-        ctaText
-        linkUrl
-        sponsorName
-      }
-    }
-  }
+/**
+ * Real BE `activeAdvertisement(placement: AdvertisementPlacement!, courseId: String):
+ * Advertisement` (schema.graphqls). Returns the `Advertisement` DIRECTLY (NO
+ * `{success,message,error,data}` envelope); `null` when no ad is active for the slot
+ * or the viewer is exempt (enrolled, for lesson placements with a `courseId`).
+ *
+ * ⚠️ Gateway quirk (same as `query-community-feed.ts`, verified against apitest): the
+ * pre-GraphQL security filter rejects ANY operation that declares a NON-NULL variable
+ * (`$x: T!`) with a top-level 401 `PLATFORM_UNAUTHORIZED`. The schema types `placement`
+ * as `AdvertisementPlacement!`, so the enum literal is INLINED per placement and only
+ * the nullable `$courseId: String` is passed as a variable.
+ */
+
+/** Field selection of the BE `Advertisement` type (display fields only). */
+const AD_SELECTION = `
+  id
+  mediaType
+  media
+  title
+  ctaText
+  linkUrl
+  sponsorName
 `
 
-export enum QueryActiveAdvertisement {
-    Query1 = "query1",
+/** Build a document with the `placement` enum INLINED (see the non-null-variable quirk above). */
+const advertisementDocument = (placement: AdvertisementPlacement): DocumentNode =>
+    gql(
+        "query ActiveAdvertisement($courseId: String) {\n" +
+            `  activeAdvertisement(placement: ${placement}, courseId: $courseId) {${AD_SELECTION}}\n` +
+            "}",
+    )
+
+/** Pre-built documents per placement (enum inlined). */
+const queryMap: Record<AdvertisementPlacement, DocumentNode> = {
+    [AdvertisementPlacement.DashboardRight]: advertisementDocument(AdvertisementPlacement.DashboardRight),
+    [AdvertisementPlacement.LessonInterstitial]: advertisementDocument(AdvertisementPlacement.LessonInterstitial),
+    [AdvertisementPlacement.CourseDetail]: advertisementDocument(AdvertisementPlacement.CourseDetail),
+    [AdvertisementPlacement.LessonInline]: advertisementDocument(AdvertisementPlacement.LessonInline),
+    [AdvertisementPlacement.PracticeRail]: advertisementDocument(AdvertisementPlacement.PracticeRail),
+    [AdvertisementPlacement.LeaderboardRail]: advertisementDocument(AdvertisementPlacement.LeaderboardRail),
+    [AdvertisementPlacement.CommunityRail]: advertisementDocument(AdvertisementPlacement.CommunityRail),
 }
 
-const queryMap: Record<QueryActiveAdvertisement, DocumentNode> = {
-    [QueryActiveAdvertisement.Query1]: query1,
+/** Params for {@link queryActiveAdvertisement}. */
+export interface QueryActiveAdvertisementParams extends GraphQLOperationContext {
+    /** Placement + optional course context; placement defaults to the dashboard right rail. */
+    request?: QueryActiveAdvertisementRequest
+    headers?: GraphQLHeaders
+    debug?: boolean
 }
 
 /**
@@ -39,17 +64,17 @@ const queryMap: Record<QueryActiveAdvertisement, DocumentNode> = {
  * to the dashboard right rail); `request.courseId` gives lesson placements their
  * course context so enrolled viewers are exempted server-side.
  *
- * Mirrors `activeAdvertisement` (queries/dashboard/active-advertisement).
+ * The BE gateway requires an authenticated session (unlike the public REST mirror
+ * `GET /api/v1/advertisements/active`); community pages sit behind sign-in.
+ *
+ * @returns Apollo query result; the ad is at `data.activeAdvertisement` (direct, no envelope).
  */
 export const queryActiveAdvertisement = async ({
-    query = QueryActiveAdvertisement.Query1,
     request,
     headers,
     debug,
     signal,
-}: Omit<QueryParams<QueryActiveAdvertisement, QueryActiveAdvertisementRequest>, "request"> & {
-    request?: QueryActiveAdvertisementRequest
-}) => {
+}: QueryActiveAdvertisementParams) => {
     const apollo = createAuthApolloClient({
         cache: false,
         headers,
@@ -57,10 +82,9 @@ export const queryActiveAdvertisement = async ({
         signal,
     })
     return apollo.query<QueryActiveAdvertisementResponse>({
-        query: queryMap[query],
+        query: queryMap[request?.placement ?? AdvertisementPlacement.DashboardRight],
         variables: {
-            placement: request?.placement,
-            courseId: request?.courseId,
+            courseId: request?.courseId ?? null,
         },
     })
 }

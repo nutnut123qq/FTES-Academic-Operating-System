@@ -3038,7 +3038,174 @@
       "error": "Không tải được danh sách công cụ AI. Vui lòng thử lại.",
       "retry": "Thử lại"
     },
-    "quotaRemaining": "Còn {count} lượt"
+    "quotaRemaining": "Còn {count} lượt",
+    "toolPages": {
+      "back": "Quay lại công cụ AI",
+      "run": "Chạy",
+      "running": "Đang tạo…",
+      "modelLabel": "Mô hình: {model}",
+      "input": {
+        "modeText": "Dán văn bản",
+        "modeLesson": "Chọn bài học",
+        "textPlaceholder": "Dán nội dung bài học hoặc ghi chú bạn muốn xử lý…",
+        "lessonPlaceholder": "Chọn một bài bạn đã học",
+        "noLessons": "Chưa có bài đã học — hãy dán văn bản."
+      },
+      "states": {
+        "running": "AI đang xử lý — thường mất vài giây.",
+        "failed": "Tác vụ AI thất bại. Vui lòng thử lại.",
+        "quota": "Bạn đã dùng hết lượt cho công cụ này. Vui lòng thử lại sau.",
+        "stale": "Việc này mất nhiều thời gian hơn bình thường.",
+        "retry": "Thử lại"
+      },
+      "summary": {
+        "tldr": "Tóm tắt nhanh",
+        "keyPoints": "Ý chính",
+        "glossary": "Thuật ngữ",
+        "readMin": "Đọc {count} phút"
+      },
+      "flashcards": {
+        "count": "Số thẻ",
+        "flipHint": "Chạm vào thẻ để lật",
+        "cardsCount": "{count} thẻ",
+        "frontLabel": "Câu hỏi",
+        "backLabel": "Trả lời",
+        "hint": "Gợi ý: {hint}"
+      },
+      "quiz": {
+        "count": "Số câu hỏi",
+        "difficulty": "Độ khó",
+        "difficulties": {
+          "easy": "Dễ",
+          "medium": "Trung bình",
+          "hard": "Khó"
+        },
+        "correct": "Chính xác!",
+        "incorrect": "Chưa đúng.",
+        "score": "Bạn đạt {correct}/{total}"
+      },
+      "debug": {
+        "codeLabel": "Mã của bạn",
+        "codePlaceholder": "Dán đoạn mã bạn muốn được review…",
+        "language": "Ngôn ngữ",
+        "question": "Vấn đề là gì?",
+        "questionPlaceholder": "Mô tả lỗi hoặc điều bạn mong đợi…"
+      },
+      "cvReview": {
+        "tabsLabel": "Nguồn CV để đánh giá",
+        "tabBuilder": "CV của tôi",
+        "tabUpload": "Tải file lên",
+        "sections": {
+          "header": "Thông tin cá nhân",
+          "summary": "Tóm tắt",
+          "education": "Học vấn",
+          "experience": "Kinh nghiệm",
+          "projects": "Dự án",
+          "skills": "Kỹ năng",
+          "awards": "Giải thưởng"
+        },
+        "fields": {
+          "title": "Tiêu đề CV",
+          "titlePlaceholder": "VD: CV Lập trình viên Backend",
+          "fullName": "Họ và tên",
+          "email": "Email",
+          "phone": "Số điện thoại",
+          "location": "Địa điểm",
+          "linkLabel": "Nhãn liên kết",
+          "linkUrl": "Đường dẫn",
+          "summaryPlaceholder": "Tóm tắt nghề nghiệp ngắn gọn (2-3 dòng).",
+          "school": "Trường",
+          "degree": "Bằng cấp",
+          "major": "Chuyên ngành",
+          "gpa": "GPA",
+          "start": "Bắt đầu",
+          "end": "Kết thúc",
+          "highlights": "Điểm nổi bật",
+          "lineHint": "Mỗi dòng một mục",
+          "company": "Công ty",
+          "jobTitle": "Vị trí",
+          "bullets": "Điểm nổi bật",
+          "projectName": "Tên dự án",
+          "role": "Vai trò",
+          "link": "Liên kết",
+          "tech": "Công nghệ",
+          "skillGroup": "Nhóm",
+          "skillItems": "Kỹ năng",
+          "awardName": "Giải thưởng",
+          "awardBy": "Nơi trao",
+          "awardYear": "Năm"
+        },
+        "actions": {
+          "remove": "Xóa",
+          "addLink": "Thêm liên kết",
+          "addEducation": "Thêm học vấn",
+          "addExperience": "Thêm kinh nghiệm",
+          "addProject": "Thêm dự án",
+          "addSkill": "Thêm nhóm kỹ năng",
+          "addAward": "Thêm giải thưởng"
+        },
+        "headerRequired": "Cần họ tên và email hợp lệ.",
+        "saved": "Đã lưu CV.",
+        "save": "Lưu",
+        "reviewThisCv": "Đưa CV này đi review",
+        "exportPdf": "Xuất PDF",
+        "pdfUntitled": "CV của tôi",
+        "uploadCta": "Chọn hoặc kéo thả file",
+        "uploadHint": "PDF hoặc DOCX, tối đa 10MB",
+        "uploadError": {
+          "type": "Chỉ chấp nhận file PDF hoặc DOCX.",
+          "size": "File vượt quá giới hạn 10MB."
+        },
+        "reviewUpload": "Tải lên và đánh giá",
+        "strengths": "Điểm mạnh",
+        "improvements": "Cần cải thiện",
+        "sectionFeedback": "Nhận xét theo từng mục"
+      },
+      "planner": {
+        "myPlans": "Lộ trình của tôi",
+        "newPlan": "Tạo lộ trình",
+        "backToPlans": "Lộ trình của tôi",
+        "percentComplete": "{percent}%",
+        "goalLabel": "Bạn muốn học gì?",
+        "goalPlaceholder": "vd: Thành thạo Spring Boot để phỏng vấn backend",
+        "deadlineLabel": "Thời hạn",
+        "hoursLabel": "Số giờ mỗi tuần",
+        "days": "{count} ngày",
+        "hours": "{count} giờ/tuần",
+        "levelLabel": "Trình độ hiện tại (tuỳ chọn)",
+        "levelPlaceholder": "vd: Biết Java cơ bản",
+        "knownLabel": "Chủ đề bạn đã biết (tuỳ chọn)",
+        "targetLabel": "Chủ đề muốn đạt (tuỳ chọn)",
+        "topicHint": "Nhập chủ đề rồi nhấn Enter",
+        "modelLabel": "Model AI (tuỳ chọn)",
+        "generate": "Tạo lộ trình",
+        "generating": "Đang tạo lộ trình…",
+        "progressLabel": "Tiến độ tổng",
+        "week": "Tuần {number}",
+        "milestone": "Cột mốc: {milestone}",
+        "estHours": "{count} giờ",
+        "tips": "Mẹo học",
+        "archive": "Lưu trữ",
+        "archiveConfirmTitle": "Lưu trữ lộ trình này?",
+        "archiveConfirmBody": "\"{goal}\" sẽ được gỡ khỏi các lộ trình đang hoạt động. Không thể hoàn tác tại đây.",
+        "cancel": "Huỷ",
+        "createError": "Không tạo được lộ trình. Vui lòng thử lại.",
+        "quotaError": "Bạn đã dùng hết lượt tạo lộ trình. Vui lòng thử lại sau.",
+        "loadError": "Không tải được lộ trình học của bạn.",
+        "toggleError": "Không cập nhật được task. Vui lòng thử lại.",
+        "archiveError": "Không lưu trữ được lộ trình. Vui lòng thử lại.",
+        "retry": "Thử lại"
+      }
+    },
+    "tutorPicker": {
+      "title": "Học tiếp",
+      "subtitle": "Tiếp tục từ chỗ bạn đang dở.",
+      "emptyHint": "Bạn chưa đăng ký khóa học nào.",
+      "emptyTitle": "Chưa có khóa học",
+      "browse": "Khám phá khóa học",
+      "close": "Đóng",
+      "progress": "Hoàn thành {percent}%"
+    }
   },
   "notificationCenter": {
     "title": "Thông báo",

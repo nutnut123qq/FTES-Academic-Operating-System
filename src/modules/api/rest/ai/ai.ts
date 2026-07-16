@@ -9,12 +9,15 @@ import type {
     CodeExecuteResult,
     CodeGradeResult,
     CreateSessionRequest,
+    CreateStudyPlanRequest,
     ExecuteCodeRequest,
     GradeCodeRequest,
     JobRef,
     JobView,
     ModelConfigView,
     AiSessionView,
+    StudyPlanProgressRequest,
+    StudyPlanView,
     TranscriptRef,
     UpdateModelConfigRequest,
 } from "./types"
@@ -57,11 +60,14 @@ const safeJson = (raw: string): unknown => {
  *
  * Uses `fetch` + a `ReadableStream` reader (NOT `EventSource`, which cannot POST or send an
  * `Authorization` header). The bearer token is read from local storage.
+ *
+ * @param model - Optional catalog model id; omitted from the body → BE answers with `defaults.chat`.
  */
 export const sendSessionMessageStream = async (
     sessionId: string,
     content: string,
     handlers: SessionStreamHandlers,
+    model?: string,
 ): Promise<void> => {
     const token = LocalStorage.getItemAsString(LocalStorageId.KeycloakAccessToken) ?? ""
     const response = await fetch(
@@ -73,7 +79,7 @@ export const sendSessionMessageStream = async (
                 Accept: "text/event-stream",
                 Authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify({ content }),
+            body: JSON.stringify({ content, ...(model ? { model } : {}) }),
             signal: handlers.signal,
         },
     )
@@ -190,6 +196,75 @@ export const getJob = async (id: string): Promise<JobView> =>
     restRequest<JobView>({
         method: "GET",
         url: `/ai/jobs/${id}`,
+        authenticated: true,
+    })
+
+// ---------------- StudyPlanController ----------------
+
+/**
+ * Plan generation is synchronous BE-side (calls ftes-ai-service and blocks until the
+ * plan is generated, ~20–40s) → a long axios timeout so the FE does not abort a slow
+ * generation before the plan returns.
+ */
+const STUDY_PLAN_TIMEOUT_MS = 120_000
+
+/**
+ * Generates a personalized study plan and returns the full saved plan.
+ *
+ * `POST /api/v1/ai/learning/study-plan` — permission `ai.learning.use` (STUDENT+).
+ * Synchronous + long-running; spends the `STUDY_PLANNER` quota (refunded on provider
+ * failure). Over quota → 429; bad input → 400 `STUDY_PLAN_INPUT_INVALID`.
+ */
+export const createStudyPlan = async (body: CreateStudyPlanRequest): Promise<StudyPlanView> =>
+    restRequest<StudyPlanView>({
+        method: "POST",
+        url: "/ai/learning/study-plan",
+        data: body,
+        authenticated: true,
+        timeout: STUDY_PLAN_TIMEOUT_MS,
+    })
+
+/** Lists the caller's ACTIVE study plans (owner-scoped, newest first). */
+export const getStudyPlans = async (params?: {
+    page?: number
+    size?: number
+}): Promise<StudyPlanView[]> =>
+    restRequest<StudyPlanView[]>({
+        method: "GET",
+        url: "/ai/learning/study-plans",
+        params: { ...params },
+        authenticated: true,
+    })
+
+/** One study plan by id (owner-only, incl. ARCHIVED); unknown → 404 `STUDY_PLAN_NOT_FOUND`. */
+export const getStudyPlan = async (id: string): Promise<StudyPlanView> =>
+    restRequest<StudyPlanView>({
+        method: "GET",
+        url: `/ai/learning/study-plans/${id}`,
+        authenticated: true,
+    })
+
+/**
+ * Checks-off / un-checks one task and returns the plan with a recomputed
+ * `percentDone`. `PATCH /api/v1/ai/learning/study-plans/{id}/progress` — idempotent;
+ * an unknown `taskKey` → 400 `STUDY_PLAN_INPUT_INVALID`.
+ */
+export const patchStudyPlanProgress = async (
+    id: string,
+    body: StudyPlanProgressRequest,
+): Promise<StudyPlanView> =>
+    restRequest<StudyPlanView>({
+        method: "PATCH",
+        url: `/ai/learning/study-plans/${id}/progress`,
+        data: body,
+        authenticated: true,
+    })
+
+/** Soft-archives a plan (status → ARCHIVED) and returns the archived view. Owner-only (404). */
+export const archiveStudyPlan = async (id: string): Promise<StudyPlanView> =>
+    restRequest<StudyPlanView>({
+        method: "DELETE",
+        url: `/ai/learning/study-plans/${id}`,
         authenticated: true,
     })
 

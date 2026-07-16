@@ -10,6 +10,8 @@ export type AiFeature = string
 export interface CreateSessionRequest {
     feature: AiFeature
     contextRef?: unknown
+    /** Model id from the catalog; omit → BE answers with `defaults.chat`. */
+    model?: string
 }
 
 export interface AiSessionView {
@@ -190,4 +192,91 @@ export interface CodeGradeResult {
 /** Response of `POST /api/v1/ai/coding/execute-code`. */
 export interface CodeExecuteResult {
     execution?: CodeExecutionSummary | null
+}
+
+// ---------------- StudyPlanController (/api/v1/ai/learning/study-plan[s]) ----------------
+
+/**
+ * One task inside a study-plan week. Field names are snake_case — the `plan` jsonb
+ * is passed through verbatim from ftes-ai-service (see BE `StudyPlanView.plan`).
+ */
+export interface StudyPlanTask {
+    title?: string
+    est_hours?: number
+    resource_hint?: string | null
+}
+
+/** One week of a generated study plan (`plan.weeks[]`). */
+export interface StudyPlanWeek {
+    /** 1-based week number — the `w{week}` half of a task key. */
+    week: number
+    focus?: string
+    milestone?: string
+    tasks?: Array<StudyPlanTask>
+}
+
+/** The generated plan body (`plan` jsonb). */
+export interface StudyPlanContent {
+    weeks?: Array<StudyPlanWeek>
+    tips?: Array<string>
+}
+
+/** The creation input echoed back on a plan (`input` jsonb). */
+export interface StudyPlanInput {
+    goal?: string
+    deadlineDays?: number
+    hoursPerWeek?: number
+    currentLevel?: string
+    knownTopics?: Array<string>
+    targetTopics?: Array<string>
+    language?: string
+}
+
+/** Progress record (`progress` jsonb) — the list of checked-off task keys. */
+export interface StudyPlanProgress {
+    /** Done task keys, each `w{week}:{index}`. */
+    done?: Array<string>
+}
+
+/**
+ * A study plan row (`StudyPlanView`). `input` / `plan` / `progress` are jsonb blobs;
+ * `percentDone` is computed BE-side (`|done ∩ valid task keys| / total`, 0..100).
+ * `status` is `ACTIVE` or `ARCHIVED`.
+ */
+export interface StudyPlanView {
+    id: string
+    goal: string
+    input?: StudyPlanInput | null
+    plan?: StudyPlanContent | null
+    progress?: StudyPlanProgress | null
+    modelUsed?: string
+    status: string
+    createdAt?: string
+    updatedAt?: string
+    percentDone: number
+}
+
+/**
+ * Body of `POST /api/v1/ai/learning/study-plan`. Only `goal` is required; the BE
+ * defaults the rest (`deadlineDays` 28, `hoursPerWeek` 8, `language` "vi").
+ */
+export interface CreateStudyPlanRequest {
+    goal: string
+    deadlineDays?: number
+    hoursPerWeek?: number
+    currentLevel?: string
+    knownTopics?: Array<string>
+    targetTopics?: Array<string>
+    language?: string
+    /** Optional catalog model id; omit → BE picks the configured default. */
+    model?: string
+}
+
+/**
+ * Body of `PATCH /api/v1/ai/learning/study-plans/{id}/progress`. `taskKey` must
+ * exist in the saved plan (`w{week}:{index}`); `done` toggles it (idempotent).
+ */
+export interface StudyPlanProgressRequest {
+    taskKey: string
+    done: boolean
 }

@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useEffect, useRef, useState } from "react"
+import { useWatchPositionReporter } from "./hooks/useWatchPositionReporter"
 
 /** Minimal shape of the YouTube IFrame Player API surface we use. */
 interface YouTubePlayer {
@@ -80,12 +81,14 @@ const loadYouTubeApi = (): Promise<void> => {
  */
 export const LessonYouTubePlayer = ({
     videoId,
+    lessonId,
     previewSeconds,
     onOpenGate,
     onCountdownTick,
     onHalfWatched,
 }: {
     videoId: string
+    lessonId: string
     previewSeconds?: number
     onOpenGate: () => void
     onCountdownTick?: (remaining: number) => void
@@ -93,6 +96,22 @@ export const LessonYouTubePlayer = ({
 }) => {
     const hostRef = useRef<HTMLDivElement>(null)
     const [apiFailed, setApiFailed] = useState(false)
+    /** Live player handle so the reporter can read position/duration on demand. */
+    const playerRef = useRef<YouTubePlayer | null>(null)
+    const reporter = useWatchPositionReporter({
+        lessonId,
+        getSnapshot: () => {
+            const p = playerRef.current
+            if (!p?.getCurrentTime) return null
+            const duration = p.getDuration?.() ?? 0
+            return {
+                positionSeconds: p.getCurrentTime(),
+                durationSeconds: duration > 0 ? duration : null,
+            }
+        },
+    })
+    const reporterRef = useRef(reporter)
+    reporterRef.current = reporter
     const halfWatchedRef = useRef(onHalfWatched)
     halfWatchedRef.current = onHalfWatched
     const tickRef = useRef(onCountdownTick)
@@ -156,8 +175,12 @@ export const LessonYouTubePlayer = ({
                         onStateChange: (event) => {
                             if (event.data !== YT_STATE_PLAYING) {
                                 clearPoll()
+                                // Non-playing (pause / end / buffer) → flush watch position.
+                                reporterRef.current.onPaused()
                                 return
                             }
+                            // Playing → start the 30s watch-position cadence.
+                            reporterRef.current.onPlaying()
                             if (fired || interval) {
                                 return
                             }
@@ -187,6 +210,7 @@ export const LessonYouTubePlayer = ({
                         },
                     },
                 })
+                playerRef.current = player
             })
             .catch(() => {
                 if (!cancelled) {
@@ -197,6 +221,7 @@ export const LessonYouTubePlayer = ({
         return () => {
             cancelled = true
             clearPoll()
+            playerRef.current = null
             player?.destroy?.()
         }
     }, [videoId, onOpenGate])

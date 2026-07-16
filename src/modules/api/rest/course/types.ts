@@ -190,8 +190,16 @@ export interface LessonContentView {
     readingMinutes: number | null
     locked: boolean
     teaser: TeaserInfo | null
+    /** The BE lesson content-type ("VIDEO" | "DOCUMENT" | ...), additive. */
+    contentType?: string
     /** True when a PUBLISHED challenge is linked to this lesson (additive, defaults false). */
     hasChallenge?: boolean
+    /** Id of the linked PUBLISHED challenge (present when `hasChallenge`). */
+    challengeId?: string | null
+    /** True when a PUBLISHED quiz is linked to this lesson (additive, defaults false). */
+    hasQuiz?: boolean
+    /** Id of the linked PUBLISHED quiz (present when `hasQuiz`). */
+    quizId?: string | null
 }
 
 /** Body sent to `PUT /api/v1/lessons/{lessonId}/content`. */
@@ -255,6 +263,27 @@ export interface EnrollmentView {
     slugName: string
     active: boolean
     completionPercent: string
+    /**
+     * True only for a PAID enrollment (the viewer bought a package covering this
+     * course). Wire key is `isPurchased` — the BE record component is is-prefixed
+     * (`EnrollmentView.isPurchased()`), unlike {@link CourseAccessStateView.purchased}.
+     */
+    isPurchased: boolean
+}
+
+/**
+ * The caller's own access state on a course (`GET /api/v1/courses/{id}/me/access`,
+ * where `{id}` is the course UUID). Everyone-false for a stranger (never 403 — it's
+ * the caller's own state); the course not existing / not being published → 404.
+ */
+export interface CourseAccessStateView {
+    courseId: string
+    /** Has an active enrollment (free or paid). */
+    enrolled: boolean
+    /** Holds a paid package purchase covering this course. Wire key is `purchased`. */
+    purchased: boolean
+    /** Resolves to FULL access (bought, free-owned, or otherwise entitled). */
+    fullAccess: boolean
 }
 
 /** Course package view. */
@@ -413,6 +442,37 @@ export interface QuizAttemptResultView {
     passed: boolean
 }
 
+/**
+ * Taker-safe quiz summary for a lesson (`GET /courses/lessons/{lessonId}/quizzes`).
+ * No questions / correctKeys. `status` is only set on the manager (`?includeDrafts`)
+ * branch; the `my*` fields are the caller's own attempt stats (null for a manager).
+ */
+export interface QuizSummaryView {
+    id: string
+    lessonId: string
+    title: string
+    description: string | null
+    passScorePercent: number
+    timeLimitSeconds: number | null
+    maxAttempts: number | null
+    questionCount: number
+    status: string | null
+    myAttemptCount: number | null
+    myBestPercent: string | null
+    myPassed: boolean | null
+}
+
+/** One of the caller's own attempts on a quiz (`GET /courses/quizzes/{quizId}/attempts/me`). */
+export interface QuizAttemptHistoryView {
+    attemptId: string
+    attemptNo: number
+    startedAt: string
+    submittedAt: string | null
+    scorePoints: number | null
+    scorePercent: string | null
+    passed: boolean | null
+}
+
 // ---------------------------------------------------------------- progress / learning
 
 /** Body sent to `PUT /api/v1/courses/lessons/{lessonId}/progress`. */
@@ -567,4 +627,21 @@ export interface LessonCommentsPage {
     page: number
     size: number
     total: number
+}
+
+/**
+ * Lesson-level reaction + view summary
+ * (`GET/PUT/DELETE /api/v1/courses/lessons/{lessonId}/reactions[/{reaction}]`).
+ *
+ * The first iteration only supports the `"LIKE"` reaction, so {@link myReaction} is
+ * `"LIKE"` when the viewer has liked the lesson and `null` otherwise. `viewCount` is
+ * the distinct-viewer counter kept on the lesson row; `likeCount` counts the reaction
+ * rows.
+ */
+export interface LessonReactionSummaryView {
+    lessonId: string
+    viewCount: number
+    likeCount: number
+    /** `"LIKE"` when the viewer has liked this lesson, else `null`. */
+    myReaction: string | null
 }

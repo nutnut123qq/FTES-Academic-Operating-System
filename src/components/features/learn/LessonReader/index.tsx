@@ -35,7 +35,11 @@ import { useLearnSidebarStore } from "@/hooks/zustand/learnSidebar/store"
 
 import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
 import { InteractionBar } from "@/components/reuseable/Discussion/InteractionBar"
-import { useLessonReactionMock } from "./useLessonReactionMock"
+import { ReactionType, type ReactionSummary } from "@/modules/api/graphql/queries/types/discussion"
+import { useGetLessonReactionsSwr } from "@/hooks/swr/api/rest/queries/useGetLessonReactionsSwr"
+import { usePutLessonReactionSwr } from "@/hooks/swr/api/rest/mutations/usePutLessonReactionSwr"
+import { useDeleteLessonReactionSwr } from "@/hooks/swr/api/rest/mutations/useDeleteLessonReactionSwr"
+import { LESSON_REACTION_LIKE, type LessonReactionSummaryView } from "@/modules/api/rest/course"
 import { LessonComments } from "./LessonComments"
 import { LessonResourceLinks } from "./LessonResourceLinks"
 import { LessonVideoBlock } from "./LessonVideoBlock"
@@ -43,6 +47,8 @@ import { LessonDocumentHtml } from "./LessonDocumentHtml"
 import { LessonDocumentsBlock } from "./LessonDocumentsBlock"
 import { SelectionHintCallout } from "./ContentAiSelectionAsk/SelectionHintCallout"
 import { LessonAiStudy } from "./LessonAiStudy"
+import { LessonAssignmentBlock } from "./LessonAssignmentBlock"
+import { LessonQuizBlock } from "./LessonQuizBlock"
 import { PackageGateModal } from "@/components/features/course/PackageGateModal"
 import { DocumentReader } from "@/components/features/learn/DocumentReader"
 
@@ -52,8 +58,9 @@ type ContentView = "content" | "challenges"
 /** Build the reader / challenge route for a lesson id shaped "m<n>-l<k>". */
 const readerHref = (courseId: string, lessonId: string) =>
     `/courses/${courseId}/learn/content/modules/${lessonId.split("-")[0]}/contents/${lessonId}`
-const challengeHref = (courseId: string, contentId: string) =>
-    `/courses/${courseId}/learn/content/modules/${contentId.split("-")[0]}/contents/${contentId}/challenges/${contentId}-c`
+/** Build the route to the lesson's linked challenge from the REAL ids (no `-c` mock). */
+const challengeHref = (courseId: string, moduleId: string, contentId: string, challengeId: string) =>
+    `/courses/${courseId}/learn/content/modules/${moduleId}/contents/${contentId}/challenges/${challengeId}`
 
 /**
  * Extracts external links when a lesson body is essentially JUST link(s) — a URL (or
@@ -133,7 +140,9 @@ export const LessonReader = () => {
         [t, router, courseId, lesson?.moduleTitle],
     )
 
-    const hasChallenge = lesson?.hasChallenge ?? false
+    // Gate every challenge entry point on a REAL linked challenge id (no `-c` mock):
+    // BE only sets `hasChallenge` + `challengeId` for an ACTIVE (PUBLISHED/RUNNING) challenge.
+    const hasChallenge = (lesson?.hasChallenge ?? false) && Boolean(lesson?.challengeId)
 
     /**
      * Left tab group: Content, plus Challenges only when the lesson actually has one
@@ -349,7 +358,7 @@ export const LessonReader = () => {
                                             </div>
                                             {/* one-tap reaction + view count for a finished, readable lesson */}
                                             {!isLocked && !isReadingEmpty ? (
-                                                <LessonReactionFooter contentId={contentId} />
+                                                <LessonReactionFooter contentId={contentId} accessLevel={accessLevel} />
                                             ) : null}
                                             {isLocked ? (
                                                 <div className="mt-6 flex flex-col items-start gap-3 border-t border-default pt-6">
@@ -381,13 +390,25 @@ export const LessonReader = () => {
                             ) : !isLocked ? (
                                 // video-only lesson: no empty paper — just the reaction bar
                                 <div className="mx-auto w-full max-w-3xl">
-                                    <LessonReactionFooter contentId={contentId} />
+                                    <LessonReactionFooter contentId={contentId} accessLevel={accessLevel} />
                                 </div>
                             ) : null}
 
                             {/* engagement + navigation OUTSIDE the reading card (hidden while locked) */}
                             {!isLocked ? (
                                 <div className="flex flex-col gap-6 pb-6">
+                                    {/* real assignments for this lesson (renders only when a
+                                        non-empty list comes back) — GitHub URL submit + grading history */}
+                                    <LessonAssignmentBlock lessonId={contentId} className="mx-auto w-full max-w-3xl" />
+                                    {/* quiz block — real taker contract; only for lessons that
+                                        carry a PUBLISHED quiz (no request otherwise) */}
+                                    {lesson.hasQuiz ? (
+                                        <LessonQuizBlock
+                                            lessonId={contentId}
+                                            courseId={courseId}
+                                            className="mx-auto w-full max-w-3xl"
+                                        />
+                                    ) : null}
                                     <LessonCompletion
                                         key={contentId}
                                         contentId={contentId}
@@ -415,8 +436,12 @@ export const LessonReader = () => {
                     ) : (
                         <div className="mx-auto w-full max-w-3xl">
                             <ChallengesView
-                                hasChallenge={lesson.hasChallenge}
-                                onOpen={() => router.push(challengeHref(courseId, contentId))}
+                                hasChallenge={lesson.hasChallenge && Boolean(lesson.challengeId)}
+                                onOpen={() => {
+                                    if (lesson.challengeId) {
+                                        router.push(challengeHref(courseId, lesson.moduleId, contentId, lesson.challengeId))
+                                    }
+                                }}
                             />
                         </div>
                     )
@@ -442,12 +467,94 @@ export const LessonReader = () => {
     )
 }
 
-/** Lesson-level reaction + view count in the reading card foot (mock-backed). */
-const LessonReactionFooter = ({ contentId }: { contentId: string }) => {
-    const { summary, react } = useLessonReactionMock(contentId)
+/**
+ * Maps the backend `{viewCount, likeCount, myReaction}` onto the shared discussion
+ * {@link ReactionSummary} the {@link InteractionBar} renders. The lesson endpoint only
+ * supports LIKE today, so the single bucket is `Like` and `myReaction` collapses to
+ * `Like | null`.
+ */
+const toReactionSummary = (view: LessonReactionSummaryView): ReactionSummary => ({
+    counts: view.likeCount > 0 ? [{ type: ReactionType.Like, count: view.likeCount }] : [],
+    total: view.likeCount,
+    myReaction: view.myReaction === LESSON_REACTION_LIKE ? ReactionType.Like : null,
+    viewCount: view.viewCount,
+})
+
+/**
+ * Lesson-level reaction + view count in the reading card foot — wired to the real
+ * `GET/PUT/DELETE /courses/lessons/{id}/reactions` endpoints via SWR. Liking is optimistic:
+ * the summary flips instantly (like ±1, active state) while the PUT/DELETE runs in the
+ * background, and rolls back to the server truth if the request fails.
+ *
+ * PREVIEW viewers can read the counts (GET only needs PREVIEW) but cannot like (PUT needs
+ * FULL access) — the control is disabled with an enroll tooltip so no doomed PUT is fired.
+ */
+const LessonReactionFooter = ({
+    contentId,
+    accessLevel,
+}: {
+    contentId: string
+    accessLevel: string | null
+}) => {
+    const t = useTranslations("learn")
+    const reactionsSwr = useGetLessonReactionsSwr(contentId)
+    const { trigger: like } = usePutLessonReactionSwr()
+    const { trigger: unlike } = useDeleteLessonReactionSwr()
+
+    // Only FULL access may like; PREVIEW (or unknown) can still read the counts.
+    const canLike = accessLevel === "FULL"
+    const view = reactionsSwr.data
+
+    const toggle = useCallback(
+        async (next: boolean) => {
+            if (!canLike || !view) {
+                return
+            }
+            const optimistic: LessonReactionSummaryView = {
+                ...view,
+                myReaction: next ? LESSON_REACTION_LIKE : null,
+                likeCount: Math.max(0, view.likeCount + (next ? 1 : -1)),
+            }
+            try {
+                await reactionsSwr.mutate(
+                    async () =>
+                        next
+                            ? like({ lessonId: contentId })
+                            : unlike({ lessonId: contentId }),
+                    {
+                        optimisticData: optimistic,
+                        rollbackOnError: true,
+                        revalidate: false,
+                        populateCache: true,
+                    },
+                )
+            } catch {
+                // rollbackOnError already restored the previous summary; swallow so the
+                // rejected mutate promise doesn't surface as an unhandled rejection.
+            }
+        },
+        [canLike, view, reactionsSwr, like, unlike, contentId],
+    )
+
+    // The picker toggles: a non-null pick means "like", null means "remove like".
+    const handleReact = useCallback(
+        (type: ReactionType | null) => {
+            void toggle(type !== null)
+        },
+        [toggle],
+    )
+
+    const summary = view ? toReactionSummary(view) : undefined
+
     return (
         <div className="mt-6 border-t border-default pt-4">
-            <InteractionBar summary={summary} onReact={react} viewCount={summary.viewCount} />
+            <InteractionBar
+                summary={summary}
+                onReact={handleReact}
+                viewCount={view?.viewCount}
+                disabled={!canLike}
+                disabledReason={!canLike ? t("reactions.likeGated") : undefined}
+            />
         </div>
     )
 }

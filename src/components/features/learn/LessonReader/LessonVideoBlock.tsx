@@ -75,6 +75,7 @@ export const LessonVideoBlock = ({
     const player = ytId ? (
         <LessonYouTubePlayer
             videoId={ytId}
+            lessonId={lessonId}
             previewSeconds={previewSeconds}
             onOpenGate={openGate}
             onCountdownTick={setCountdown}

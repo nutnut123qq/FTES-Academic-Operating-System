@@ -8,8 +8,11 @@ import { usePathname, useRouter, useSearchParams, useParams } from "next/navigat
 import { QuestionRow } from "./QuestionRow"
 import { CourseQaSkeleton } from "./CourseQaSkeleton"
 import { useQueryCourseQuestionsSwr } from "./useQueryCourseQuestionsSwr"
-import { addCourseAnswer, addCourseQuestion, QUESTIONS_PER_PAGE } from "./mock"
-import { CourseQuestionFilter } from "./types"
+import { QUESTIONS_PER_PAGE } from "./rollup"
+import { CourseQuestionFilter, type CourseQuestion } from "./types"
+import { useQueryLearnCourseSwr } from "../hooks/useQueryLearnCourseSwr"
+import { usePostLessonCommentSwr } from "@/hooks/swr/api/rest/mutations/usePostLessonCommentSwr"
+import { useRestWithToast } from "@/modules/toast/hooks"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { PageHeader } from "@/components/blocks/layout/PageHeader"
 import { TabsCard } from "@/components/blocks/navigation/TabsCard"
@@ -62,7 +65,23 @@ export const CourseQa = ({ embedded = false }: CourseQaProps) => {
     const currentUser = viewer ? { username: viewer.username, avatar: viewer.avatar } : null
     const currentUserId = viewer?.id ?? null
 
+    const runRest = useRestWithToast()
+    const post = usePostLessonCommentSwr()
     const [isPosting, setIsPosting] = useState(false)
+
+    // Asking a Q&A question posts a real lesson comment, so the composer must pick a
+    // target lesson (spec: Ask routes to a lesson comment). Options come from the tree.
+    const { modules } = useQueryLearnCourseSwr(courseId)
+    const lessonOptions = React.useMemo(
+        () => modules.flatMap((module) => module.lessons.map((lesson) => ({ id: lesson.id, title: lesson.title }))),
+        [modules],
+    )
+    const [targetLessonId, setTargetLessonId] = useState("")
+    useEffect(() => {
+        if (!targetLessonId && lessonOptions.length > 0) {
+            setTargetLessonId(lessonOptions[0].id)
+        }
+    }, [lessonOptions, targetLessonId])
 
     // Embedded mode keeps filter/search in local state so the reader URL stays clean.
     // The dedicated `/learn/qa` route still syncs the active filter to `?filter=`.
@@ -135,34 +154,34 @@ export const CourseQa = ({ embedded = false }: CourseQaProps) => {
         router.push(pathname.replace(/\/qa$/, "/content"))
     }, [embedded, pathname, router, courseId])
 
-    const onSubmitQuestion = useCallback((body: string) => {
-        if (!viewer) {
+    const onSubmitQuestion = useCallback(async (body: string) => {
+        if (!viewer || !targetLessonId) {
             return
         }
         setIsPosting(true)
-        addCourseQuestion({
-            courseId,
-            body,
-            authorId: viewer.id,
-            authorName: viewer.displayName ?? viewer.username,
-            authorUsername: viewer.username,
-        })
-        void mutate().finally(() => setIsPosting(false))
-    }, [courseId, viewer, mutate])
+        const ok = await runRest(
+            () => post.trigger({ lessonId: targetLessonId, request: { content: body } }),
+            { successMessage: t("comments.posted") },
+        )
+        setIsPosting(false)
+        if (ok !== null) {
+            void mutate()
+        }
+    }, [viewer, targetLessonId, post, runRest, t, mutate])
 
-    const onAnswer = useCallback((questionId: string, body: string) => {
+    // Answering a question posts a reply on the SAME lesson comment (parentId = question.id).
+    const onAnswer = useCallback(async (question: CourseQuestion, body: string) => {
         if (!viewer) {
             return
         }
-        addCourseAnswer({
-            courseId,
-            questionId,
-            body,
-            authorName: viewer.displayName ?? viewer.username,
-            authorUsername: viewer.username,
-        })
-        void mutate()
-    }, [courseId, viewer, mutate])
+        const ok = await runRest(
+            () => post.trigger({ lessonId: question.lessonId, request: { parentId: question.id, content: body } }),
+            { successMessage: t("comments.posted") },
+        )
+        if (ok !== null) {
+            void mutate()
+        }
+    }, [viewer, post, runRest, t, mutate])
 
     const hasQuery = filter !== CourseQuestionFilter.All || debouncedSearch.trim().length > 0
     const isInvitationEmpty = !isLoading && !error && total === 0 && !hasQuery
@@ -195,14 +214,36 @@ export const CourseQa = ({ embedded = false }: CourseQaProps) => {
                 </Card>
             ) : (
                 <div className="flex flex-col gap-6">
-                    <CommentComposer
-                        collapsible
-                        currentUser={currentUser}
-                        placeholder={t("courseQa.composerPlaceholder")}
-                        submitLabel={t("courseQa.composerSubmit")}
-                        busy={isPosting}
-                        onSubmit={(body) => onSubmitQuestion(body)}
-                    />
+                    <div className="flex flex-col gap-2">
+                        {viewer && lessonOptions.length > 0 ? (
+                            <label className="flex flex-wrap items-center gap-2">
+                                <Typography type="body-sm" color="muted" className="shrink-0">
+                                    {t("courseQa.targetLessonLabel")}
+                                </Typography>
+                                {/* plain select — no HeroUI Select dependency (see BACKLOG) */}
+                                <select
+                                    aria-label={t("courseQa.targetLessonLabel")}
+                                    value={targetLessonId}
+                                    onChange={(event) => setTargetLessonId(event.target.value)}
+                                    className="min-w-0 max-w-full rounded-large border border-default bg-surface px-3 py-1.5 text-sm text-foreground outline-none focus:border-accent"
+                                >
+                                    {lessonOptions.map((option) => (
+                                        <option key={option.id} value={option.id}>
+                                            {option.title}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+                        ) : null}
+                        <CommentComposer
+                            collapsible
+                            currentUser={currentUser}
+                            placeholder={t("courseQa.composerPlaceholder")}
+                            submitLabel={t("courseQa.composerSubmit")}
+                            busy={isPosting}
+                            onSubmit={(body) => { void onSubmitQuestion(body) }}
+                        />
+                    </div>
 
                     <div className="flex flex-col gap-3">
                         <TabsCard
@@ -244,7 +285,7 @@ export const CourseQa = ({ embedded = false }: CourseQaProps) => {
                                     key={question.id}
                                     question={question}
                                     currentUser={currentUser}
-                                    onAnswer={(body) => onAnswer(question.id, body)}
+                                    onAnswer={(body) => { void onAnswer(question, body) }}
                                 />
                             ))}
 

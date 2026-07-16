@@ -11,6 +11,7 @@ import type {
     CourseProgressView,
     CourseRatingItem,
     CourseRatingRequest,
+    CourseAccessStateView,
     CourseRatingSummary,
     CourseSummary,
     CreateAssignmentRequest,
@@ -27,6 +28,7 @@ import type {
     LessonAiChatLimitRequest,
     LessonCommentsPage,
     LessonCommentView,
+    LessonReactionSummaryView,
     LessonContentView,
     LessonDocumentView,
     NoteRequest,
@@ -36,8 +38,10 @@ import type {
     PreviewLimitRequest,
     ProgressRequest,
     ProgressView,
+    QuizAttemptHistoryView,
     QuizAttemptResultView,
     QuizAttemptStartView,
+    QuizSummaryView,
     ReorderRequest,
     StreamResponse,
     StreamViewResponse,
@@ -388,6 +392,26 @@ export const getMyEnrollments = async (): Promise<Array<EnrollmentView>> => {
 }
 
 /**
+ * Reads the caller's own access state on a course — `{courseId, enrolled,
+ * purchased, fullAccess}`.
+ *
+ * `GET /api/v1/courses/{id}/me/access` (authenticated). The path variable is the
+ * course UUID (`course.rawId`), NOT the slug. Used as the purchase-flag fallback
+ * when a viewer holds a package purchase without an active enrollment row in
+ * `GET /courses/me/enrollments`. A stranger gets everyone-false (never 403); a
+ * missing/unpublished course → 404.
+ */
+export const getMyCourseAccess = async (
+    courseId: string,
+): Promise<CourseAccessStateView> => {
+    return restRequest<CourseAccessStateView>({
+        method: "GET",
+        url: `/courses/${courseId}/me/access`,
+        authenticated: true,
+    })
+}
+
+/**
  * Directly enrolls the current user in a course.
  *
  * `POST /api/v1/courses/{id}/enroll`
@@ -716,6 +740,36 @@ export const getMyAssignmentSubmissions = async (
 }
 
 /**
+ * Lists the taker-safe quizzes of a lesson (no questions / correctKeys).
+ *
+ * `GET /api/v1/courses/lessons/{lessonId}/quizzes`
+ *
+ * FULL access required — a viewer without it gets a 403 `COURSE_ACCESS_DENIED`.
+ */
+export const getLessonQuizzes = async (
+    lessonId: string,
+): Promise<Array<QuizSummaryView>> => {
+    return restRequest<Array<QuizSummaryView>>({
+        method: "GET",
+        url: `/courses/lessons/${lessonId}/quizzes`,
+    })
+}
+
+/**
+ * Lists the caller's own attempt history for a quiz.
+ *
+ * `GET /api/v1/courses/quizzes/{quizId}/attempts/me`
+ */
+export const getMyQuizAttempts = async (
+    quizId: string,
+): Promise<Array<QuizAttemptHistoryView>> => {
+    return restRequest<Array<QuizAttemptHistoryView>>({
+        method: "GET",
+        url: `/courses/quizzes/${quizId}/attempts/me`,
+    })
+}
+
+/**
  * Creates a quiz inside a lesson.
  *
  * `POST /api/v1/courses/lessons/{lessonId}/quizzes`
@@ -978,5 +1032,54 @@ export const unreactLessonComment = async (
     return restRequest<void>({
         method: "DELETE",
         url: `/courses/comments/${commentId}/reactions/${emoji}`,
+    })
+}
+
+/** Default (and, for now, only) lesson reaction kind supported by the backend. */
+export const LESSON_REACTION_LIKE = "LIKE"
+
+/**
+ * Reads the lesson-level reaction + view summary (`{viewCount, likeCount, myReaction}`).
+ * Requires at least PREVIEW access; a viewer without it gets a 403 surfaced as an error.
+ *
+ * `GET /api/v1/courses/lessons/{lessonId}/reactions`
+ */
+export const getLessonReactions = async (
+    lessonId: string,
+): Promise<LessonReactionSummaryView> => {
+    return restRequest<LessonReactionSummaryView>({
+        method: "GET",
+        url: `/courses/lessons/${lessonId}/reactions`,
+    })
+}
+
+/**
+ * Sets the viewer's reaction on a lesson (idempotent). Requires FULL access; returns the
+ * refreshed summary. Defaults to `"LIKE"` — the only reaction the backend accepts today.
+ *
+ * `PUT /api/v1/courses/lessons/{lessonId}/reactions/{reaction}`
+ */
+export const putLessonReaction = async (
+    lessonId: string,
+    reaction: string = LESSON_REACTION_LIKE,
+): Promise<LessonReactionSummaryView> => {
+    return restRequest<LessonReactionSummaryView>({
+        method: "PUT",
+        url: `/courses/lessons/${lessonId}/reactions/${reaction}`,
+    })
+}
+
+/**
+ * Removes the viewer's reaction from a lesson (idempotent). Returns the refreshed summary.
+ *
+ * `DELETE /api/v1/courses/lessons/{lessonId}/reactions/{reaction}`
+ */
+export const deleteLessonReaction = async (
+    lessonId: string,
+    reaction: string = LESSON_REACTION_LIKE,
+): Promise<LessonReactionSummaryView> => {
+    return restRequest<LessonReactionSummaryView>({
+        method: "DELETE",
+        url: `/courses/lessons/${lessonId}/reactions/${reaction}`,
     })
 }

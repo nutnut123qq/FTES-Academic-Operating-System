@@ -4,6 +4,7 @@ import React, { useState } from "react"
 import { Card, CardContent, Chip, Typography, cn } from "@heroui/react"
 import { CaretDownIcon, CheckCircleIcon, ChatCircleIcon } from "@phosphor-icons/react"
 import { useLocale, useTranslations } from "next-intl"
+import { Link } from "@/i18n/navigation"
 import { UserAvatar } from "@/components/reuseable/UserAvatar"
 import { CommentComposer } from "@/components/reuseable/Discussion/CommentComposer"
 import { formatRelativeTime } from "@/components/features/community/hooks/relativeTime"
@@ -37,7 +38,17 @@ export const QuestionRow = ({ question, currentUser, onAnswer }: QuestionRowProp
                         <div className="flex flex-wrap items-center gap-2">
                             <Typography type="body-sm" weight="medium">{question.authorName}</Typography>
                             <Typography type="body-xs" color="muted">{formatRelativeTime(question.createdAt, locale)}</Typography>
-                            {question.lessonTitle ? (
+                            {question.lessonTitle && question.lessonHref ? (
+                                <Link
+                                    href={question.lessonHref}
+                                    aria-label={t("courseQa.viewLesson", { lesson: question.lessonTitle })}
+                                    className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                                >
+                                    <Chip size="sm" variant="soft" className="cursor-pointer hover:bg-accent/10">
+                                        {question.lessonTitle}
+                                    </Chip>
+                                </Link>
+                            ) : question.lessonTitle ? (
                                 <Chip size="sm" variant="soft">{question.lessonTitle}</Chip>
                             ) : null}
                         </div>

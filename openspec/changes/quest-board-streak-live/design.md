@@ -35,6 +35,19 @@ Hooks mới trong `src/hooks/swr/api/rest/queries/` (mirror `useGetMyStreakSwr`)
 (key `["GET_MY_PROGRESSION_SWR"]`); export ở `queries/index.ts`. Mọi hook gate theo
 `state.keycloak.authenticated` (guest → không fetch, `data === undefined`).
 
+**Revalidation (QUAN TRỌNG):** `SwrProvider` GLOBAL đã tắt `revalidateOnFocus` +
+`revalidateOnReconnect` (dedupe 60s) để chặn refetch-storm. Vì thế mọi hook `/me/*`
+"live" phải **tự opt-in `refreshInterval: 60_000` cục bộ** — nếu không, khi mount bền
+(compose vào snapshot §4.1) dữ liệu đóng băng ở lần fetch đầu (XP/level/heatmap chết,
+level-up không bao giờ bắn lại). Đã đặt `refreshInterval: 60_000` cho
+`useGetMyQuestsSwr` + `useGetMyProgressionSwr` + `useGetMyActivityDaysSwr`. XP auto-credit
+từ worker BE (không socket) → polling là đường revalidate duy nhất.
+
+**Sibling gate:** các hook `/me/*` mà board/streak/snapshot dùng chung
+(`useGetMyStreakSwr`, `useGetMyWalletSwr`, `useGetMyGoalsSwr`, `useGetMyBadgesSwr`) CŨNG
+gate `authenticated` (guest → key `null`) — cùng pattern, để guest không bắn 401 (+retry)
+lên `/me/streak` `/me/wallet`… khi wire vào StreakChip/navbar/header ví.
+
 ## 2. Trang /quests — QuestBoard
 
 - Route: `src/app/[locale]/quests/page.tsx` → render
@@ -52,7 +65,8 @@ Hooks mới trong `src/hooks/swr/api/rest/queries/` (mirror `useGetMyStreakSwr`)
   /profile/progress`, `DAILY_LOGIN → không CTA (tự hoàn thành)`. Code lạ (admin thêm) → không CTA.
 - Guest: gate như các trang me-khác — hiện empty-state kêu đăng nhập.
 - SWR revalidate: `refreshInterval: 60_000` trên `useGetMyQuestsSwr` (xu auto-credit từ worker,
-  không có socket) + revalidateOnFocus mặc định.
+  không có socket). KHÔNG dựa `revalidateOnFocus` — `SwrProvider` global đã tắt nó (xem §1
+  "Revalidation"); progression + activity-days cũng poll 60s cục bộ vì lý do đó.
 
 ## 3. Swap mock engine → REST (per surface)
 

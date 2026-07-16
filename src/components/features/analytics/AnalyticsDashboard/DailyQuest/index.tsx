@@ -1,10 +1,12 @@
 "use client"
 
 import React from "react"
-import { Button, Chip, Typography, cn } from "@heroui/react"
-import { CheckCircleIcon, CircleIcon } from "@phosphor-icons/react"
-import { useTranslations } from "next-intl"
-import { DAILY_QUEST_ICON_MAP } from "./map"
+import { Chip, Typography, cn } from "@heroui/react"
+import { ArrowRightIcon, CheckCircleIcon, CircleIcon, CoinsIcon } from "@phosphor-icons/react"
+import { useLocale, useTranslations } from "next-intl"
+import { Link } from "@/i18n/navigation"
+import { pathConfig } from "@/resources/path"
+import { dailyQuestIcon } from "./map"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import type { WithClassNames } from "@/modules/types/base/class-name"
@@ -13,21 +15,28 @@ import { useQueryDailyQuestSwr } from "../../hooks/useQueryDailyQuestSwr"
 /** Props for {@link DailyQuest}. */
 export type DailyQuestProps = WithClassNames<undefined>
 
+/** How many quest rows the compact overview widget shows before "view all". */
+const PREVIEW_ROWS = 4
+
 /**
- * "Nhiệm vụ hôm nay" content — today's daily-quest checklist (read content · pass
- * challenge · review flashcards), each row showing today's progress, plus a claim
- * action that grants the reward once all tasks are done. Content only (the parent
- * `LabeledCard` frames it). Self-fetches the daily-quest leaf query; claiming is a
- * local mock (flips to "claimed").
+ * "Nhiệm vụ hôm nay" content — today's live quests from the quest board
+ * (`useGetMyQuestsSwr`, the SAME cache the `/quests` page reads), each row showing
+ * its progress toward the day's ceiling and a done marker, plus today's coin total
+ * and a link to the full board. Content only (the parent `LabeledCard` frames it).
+ * No mock and no local claim — coins auto-credit on the backend worker.
  * @param props - optional root class name (placement only)
  */
 export const DailyQuest = ({ className }: DailyQuestProps) => {
     const t = useTranslations("analytics")
-    const { data, claim, isLoading, error, mutate } = useQueryDailyQuestSwr()
+    const locale = useLocale()
+    const { data, isLoading, error, mutate } = useQueryDailyQuestSwr()
+    const questsHref = pathConfig().locale(locale).quests().build()
 
     return (
         <AsyncContent
-            isLoading={isLoading || !data}
+            isLoading={isLoading && !data}
+            isEmpty={data ? data.rows.length === 0 : false}
+            emptyContent={{ title: t("overview.quest.empty") }}
             error={!data ? error : undefined}
             errorContent={{
                 title: t("overview.loadError"),
@@ -47,45 +56,40 @@ export const DailyQuest = ({ className }: DailyQuestProps) => {
         >
             {data ? (
                 <div className={cn("flex flex-col gap-3", className)}>
-                    {data.tasks.map((task) => {
-                        const done = task.current >= task.target
-                        return (
-                            <div key={task.key} className="flex items-center gap-2">
-                                {done ? (
-                                    <CheckCircleIcon aria-hidden focusable="false" className="size-5 shrink-0 text-success" />
-                                ) : (
-                                    <CircleIcon aria-hidden focusable="false" className="size-5 shrink-0 text-muted" />
-                                )}
-                                {DAILY_QUEST_ICON_MAP[task.key]}
-                                <Typography type="body-sm" className="flex-1 truncate">
-                                    {t(`overview.quest.tasks.${task.key}`)}
-                                </Typography>
-                                <Typography type="body-xs" color="muted">
-                                    {task.current}/{task.target}
-                                </Typography>
-                            </div>
-                        )
-                    })}
-
-                    {/* claim state: already claimed · ready to claim · still in progress */}
-                    {data.claimed ? (
-                        <Chip color="success" variant="soft" size="sm" className="self-start">
-                            <Chip.Label>{t("overview.quest.claimed")}</Chip.Label>
-                        </Chip>
-                    ) : data.allDone ? (
-                        <Button
-                            variant="primary"
-                            size="sm"
-                            className="self-start"
-                            onPress={claim}
-                        >
-                            {t("overview.quest.claim", { count: data.reward })}
-                        </Button>
-                    ) : (
-                        <Typography type="body-xs" color="muted">
-                            {t("overview.quest.completePrompt", { count: data.reward })}
+                    <div className="flex items-center justify-between gap-2">
+                        <Typography type="body-sm" weight="medium">
+                            {t("overview.quest.summary", { done: data.doneCount, total: data.totalCount })}
                         </Typography>
-                    )}
+                        <Chip color="warning" variant="soft" size="sm" className="shrink-0">
+                            <CoinsIcon className="size-4" weight="fill" aria-hidden focusable="false" />
+                            <Chip.Label>{t("overview.quest.coinToday", { coin: data.totalCoinToday })}</Chip.Label>
+                        </Chip>
+                    </div>
+
+                    {data.rows.slice(0, PREVIEW_ROWS).map((row) => (
+                        <div key={row.code} className="flex items-center gap-2">
+                            {row.isDone ? (
+                                <CheckCircleIcon aria-hidden focusable="false" className="size-5 shrink-0 text-success" />
+                            ) : (
+                                <CircleIcon aria-hidden focusable="false" className="size-5 shrink-0 text-muted" />
+                            )}
+                            {dailyQuestIcon(row.code)}
+                            <Typography type="body-sm" className="flex-1 truncate">
+                                {row.title}
+                            </Typography>
+                            <Typography type="body-xs" color="muted">
+                                {row.current}/{row.total}
+                            </Typography>
+                        </div>
+                    ))}
+
+                    <Link
+                        href={questsHref}
+                        className="inline-flex items-center gap-1 self-start text-sm font-medium text-accent no-underline hover:underline"
+                    >
+                        {t("overview.quest.viewAll")}
+                        <ArrowRightIcon className="size-4" aria-hidden focusable="false" />
+                    </Link>
                 </div>
             ) : null}
         </AsyncContent>

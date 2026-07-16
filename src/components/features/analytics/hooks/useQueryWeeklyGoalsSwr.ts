@@ -1,36 +1,34 @@
 "use client"
 
-import useSWR from "swr"
+import { useMemo } from "react"
+import { useGetMyGoalsSwr } from "@/hooks/swr/api/rest/queries/useGetMyGoalsSwr"
 
-/** Weekly-goal (KPI) key — drives the row icon + label. */
-export type KpiKey = "lessons" | "studyDays" | "challenges" | "coding" | "flashcards"
-
-/** A single weekly goal — progress toward a target for one metric. */
-export interface WeeklyGoal {
-    /** i18n key under `analytics.overview.goals.labels.*`. */
-    key: KpiKey
-    /** Amount achieved this week. */
-    current: number
-    /** Target for the week (the learner's custom goal, when set). */
-    target: number | null
+/** A single weekly goal row — the metric and the target the learner set. */
+export interface WeeklyGoalRow {
+    /** Backend metric (`XP` | `LESSONS` | `MINUTES`) — drives the row icon/label. */
+    metric: string
+    /** The learner's weekly target for this metric. */
+    target: number
 }
 
-// ponytail: mock BE — no KPI endpoint yet. Deterministic weekly goals; a couple of
-// targets left null so the widget's "effective target" default path is exercised.
-// SWR-shaped for a drop-in swap (myKpis()) later.
-const fetchWeeklyGoalsMock = async (): Promise<Array<WeeklyGoal>> => [
-    { key: "lessons", current: 6, target: 10 },
-    { key: "studyDays", current: 4, target: 5 },
-    { key: "challenges", current: 2, target: null },
-    { key: "coding", current: 1, target: 3 },
-    { key: "flashcards", current: 45, target: null },
-]
-
-/** Loads the viewer's weekly goals. Mocked; SWR-shaped. */
+/**
+ * Analytics-overview view of the learner's WEEKLY goals, mapped from the live
+ * goals endpoint (`useGetMyGoalsSwr` → `GET /gamification/me/goals`). Only goals
+ * with `period === "WEEKLY"` surface here; a metric the learner has not set is
+ * simply absent (the widget renders no row for it). The backend returns no
+ * per-goal progress, so this exposes the target only — the widget never
+ * fabricates a "current" value or completion percentage.
+ */
 export const useQueryWeeklyGoalsSwr = () => {
-    const { data, isLoading, error, mutate } = useSWR(
-        ["analytics", "overview", "goals"],
-        () => fetchWeeklyGoalsMock(),
+    const { data, isLoading, error, mutate } = useGetMyGoalsSwr()
+
+    const goals = useMemo<Array<WeeklyGoalRow>>(
+        () =>
+            (data ?? [])
+                .filter((goal) => goal.period === "WEEKLY")
+                .map((goal) => ({ metric: goal.metric, target: goal.target })),
+        [data],
     )
-    return { goals: data ?? [], isLoading, error, mutate }
+
+    return { goals, isLoading, error, mutate }
 }

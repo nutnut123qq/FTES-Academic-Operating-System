@@ -30,6 +30,48 @@ export interface StreakView {
     freezeAvailable: number
 }
 
+/** A single quest row on the daily quest board. */
+export interface QuestItemView {
+    code: string
+    title: string
+    description: string | null
+    rewardCoin: number
+    targetCount: number
+    dailyLimit: number
+    eventCount: number
+    completedCount: number
+    coinEarnedToday: number
+    sortOrder: number
+}
+
+/** The current user's quest board for the active Vietnam day. */
+export interface QuestBoardView {
+    dateVn: string
+    totalCoinToday: number
+    quests: Array<QuestItemView>
+}
+
+/** XP earned on a single Vietnam-day date, used by the streak heatmap. */
+export interface ActivityDayView {
+    date: string
+    xp: number
+}
+
+/** A window of activity days (default 12 weeks). */
+export interface ActivityDaysView {
+    weeks: number
+    days: Array<ActivityDayView>
+}
+
+/** XP/level progression snapshot for the current user. */
+export interface ProgressionView {
+    totalXp: number
+    level: number
+    levelTitle: string
+    nextLevelXp: number | null
+    reputation: number
+}
+
 /** A configured user goal. */
 export interface GoalView {
     id: string

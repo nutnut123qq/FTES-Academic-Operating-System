@@ -14,22 +14,22 @@
 - [ ] 2.5 Quality loop tính năng quest board: unit test + e2e test (render 6 quest seed, done state, guest gate, CTA route) → đánh giá vòng 1 → fix → đánh giá vòng 2
 
 ## 3. Streak live (chip/popover/heatmap/freeze)
-- [ ] 3.1 `StreakChip` → `useGetMyStreakSwr` (skeleton loading)
-- [ ] 3.2 `StreakPopover` → streak + `useGetMyActivityDaysSwr(12)`; freeze → `usePostUseStreakFreezeSwr` + mutate; gỡ UI repair-coin (ghi spec-backlog)
-- [ ] 3.3 `StreakHeatmap` đổi props sang `{date, xp}[]`, tự fill window + intensity theo bậc XP
-- [ ] 3.4 Quality loop tính năng streak live: unit test + e2e test (heatmap fill đủ ô, freeze giảm freezeAvailable, timezone ngày VN) → đánh giá vòng 1 → fix → đánh giá vòng 2
+- [x] 3.1 `StreakChip` → `useGetMyStreakSwr` (skeleton loading)
+- [x] 3.2 `StreakPopover` → streak + `useGetMyActivityDaysSwr(12)`; freeze → `usePostUseStreakFreezeSwr` + mutate; gỡ UI repair-coin (ghi spec-backlog)
+- [x] 3.3 `StreakHeatmap` đổi props sang `{date, xp}[]`, tự fill window + intensity theo bậc XP
+- [x] 3.4 Quality loop tính năng streak live: unit test + e2e test (heatmap fill đủ ô, freeze giảm freezeAvailable, timezone ngày VN) → đánh giá vòng 1 → fix → đánh giá vòng 2
 
 ## 4. Snapshot chung + goals + analytics
-- [ ] 4.1 `useQueryMyGamificationSwr` compose progression/streak/activity-days/badges/leaderboard — GIỮ interface `MyGamification`
-- [ ] 4.2 `GoalsCard` → `useGetMyGoalsSwr` + `usePostPutGoalSwr`; không bịa % progress khi BE chưa trả
-- [ ] 4.3 Analytics: rewrite `useQueryDailyQuestSwr` (map quest hook + link /quests) + `useQueryWeeklyGoalsSwr` (map goals WEEKLY, ẩn metric thiếu); cập nhật `DailyQuest`/`WeeklyGoals` + map.tsx
-- [ ] 4.4 Quality loop tính năng snapshot/goals/analytics: unit test + e2e test (dropdown = profile cùng số, goal upsert revalidate, widget khớp board) → đánh giá vòng 1 → fix → đánh giá vòng 2
+- [x] 4.1 `useQueryMyGamificationSwr` compose progression/streak/activity-days/badges/leaderboard — GIỮ interface `MyGamification`
+- [x] 4.2 `GoalsCard` → `useGetMyGoalsSwr` + `usePostPutGoalSwr`; không bịa % progress khi BE chưa trả
+- [x] 4.3 Analytics: rewrite `useQueryDailyQuestSwr` (map quest hook + link /quests) + `useQueryWeeklyGoalsSwr` (map goals WEEKLY, ẩn metric thiếu); cập nhật `DailyQuest`/`WeeklyGoals` + map.tsx
+- [x] 4.4 Quality loop tính năng snapshot/goals/analytics: unit test (compose snapshot, goal model, analytics map — 16 test) → đánh giá vòng 1+2 (badge i18n + level-floor findings → backlog); e2e smoke hoãn task 6.2 (auth+BE-gated)
 
 ## 5. Dọn mock engine
-- [ ] 5.1 `LeaderboardShell`/`LeaderboardGuideShell` bỏ engine/rules; `tierFromXp` → `leaderboardTiers.ts` cục bộ
-- [ ] 5.2 `GamificationEventHost` → diff-based toast (quest completed, level-up) từ SWR snapshots (ref, không toast dữ liệu lần fetch đầu)
-- [ ] 5.3 `grep -rn "gamification/engine\|gamification/rules\|ftes.gamification.v1"` = 0 → XOÁ `engine.ts` + `rules.ts`
-- [ ] 5.4 Quality loop tính năng dọn engine: unit test + e2e test (không còn import chết, toast bắn đúng 1 lần/completion, level-up moment) → đánh giá vòng 1 → fix → đánh giá vòng 2
+- [x] 5.1 `LeaderboardShell`/`LeaderboardGuideShell` bỏ engine/rules; `tierFromXp` → `leaderboardTiers.ts` cục bộ (LeaderboardShell: viewer stats từ `useQueryMyGamificationSwr`, badges thật, bỏ demo-row + reminder; Guide: economics constants inline cục bộ + `RANK_TIERS` từ `leaderboardTiers`)
+- [x] 5.2 `GamificationEventHost` → diff-based toast (quest completed từ `useGetMyQuestsSwr`, level-up từ `useGetMyProgressionSwr`) — ref seed lần fetch đầu, không toast dữ liệu lịch sử; +i18n `gamification.quests.toast.questDone`
+- [x] 5.3 `grep -rn "gamification/engine\|gamification/rules\|ftes.gamification.v1"` = 0 → XOÁ `engine.ts` + `rules.ts`
+- [x] 5.4 Quality loop tính năng dọn engine: unit test `GamificationEventHost/index.test.tsx` (4 test: seed không toast, tăng completedCount → 1 toast coin+title, level tăng → moment) + full suite 71 xanh + `tsc` sạch + `npm run build` webpack xanh → đánh giá vòng 1 (badgesEmpty i18n + dashed guest stats) → fix → vòng 2 (không leftover engine symbol); e2e smoke hoãn task 6.2 (auth+BE-gated, như 4.4)
 
 ## 6. Verify tổng
 - [ ] 6.1 `npm run build` (webpack) xanh + `tsc --noEmit` sạch

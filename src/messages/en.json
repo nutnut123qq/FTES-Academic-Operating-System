@@ -3232,11 +3232,32 @@
     }
   },
   "gamification": {
+    "quests": {
+      "title": "Daily quests",
+      "subtitle": "Complete quests each day to earn FTES Coin.",
+      "todayEarned": "Coins today",
+      "todayEarnedLabel": "Coins earned today: {coin}",
+      "walletBalance": "Wallet balance",
+      "walletBalanceLabel": "Wallet balance: {coin} coin",
+      "perClaim": "+{coin} coin/claim",
+      "progressLabel": "{current}/{total}",
+      "claimedOfLimit": "Claimed {claimed}/{limit} today",
+      "done": "Completed",
+      "goDo": "Go do it",
+      "signInPrompt": "Sign in to see your daily quests and earn coins.",
+      "signIn": "Sign in",
+      "empty": "No quests today yet.",
+      "loadError": "Could not load quests",
+      "retry": "Try again",
+      "toast": {
+        "questDone": "+{coin} coins — {title}"
+      }
+    },
     "title": "Leaderboard",
     "subtitle": "Track your progress and see how you rank against your peers.",
     "leaderboard": "Leaderboard",
     "badges": "Badges",
-    "badgeLocked": "Locked",
+    "badgesEmpty": "No badges yet. Keep learning to unlock them.",
     "xpValue": "{xp} XP",
     "levelHint": "{xp} XP to next level",
     "stats": {
@@ -3290,33 +3311,48 @@
     },
     "goals": {
       "title": "Goals",
-      "completed": "Completed",
-      "reward": "+{xp} XP",
-      "daily": {
-        "name": "Daily goal",
-        "progress": "{current}/{target} actions"
+      "empty": "No goals set yet. Add one below.",
+      "loadError": "Couldn't load goals",
+      "retry": "Retry",
+      "targetValue": "Target: {target}",
+      "saved": "Goal saved",
+      "saveError": "Couldn't save the goal",
+      "periods": {
+        "DAILY": "Daily",
+        "WEEKLY": "Weekly",
+        "MONTHLY": "Monthly"
       },
-      "weekly": {
-        "name": "Weekly goal",
-        "progress": "{current}/{target} days"
+      "metrics": {
+        "XP": "XP",
+        "LESSONS": "Lessons",
+        "MINUTES": "Study minutes"
+      },
+      "form": {
+        "legend": "Add / update a goal",
+        "periodLabel": "Period",
+        "metricLabel": "Metric",
+        "targetLabel": "Target",
+        "targetPlaceholder": "e.g. 5",
+        "submit": "Save",
+        "submitting": "Saving..."
       }
     },
     "heatmap": {
       "active": "Learning activity",
-      "frozen": "Frozen day",
-      "empty": "No activity"
+      "empty": "No activity",
+      "less": "Less",
+      "more": "More",
+      "xpLabel": "{xp} XP"
     },
     "streak": {
       "openDetail": "View streak detail",
       "chipLabel": "{count}-day streak — view detail",
       "daysCount": "{count} days",
-      "multiplier": "+{percent}% XP",
+      "longest": "Longest {count} days",
       "heatmapTitle": "Last 12 weeks",
       "freezeCount": "{count} Streak Freeze",
-      "buyFreeze": "Buy ({cost} coins)",
-      "nextMilestone": "{remaining} days to the {days}-day milestone",
-      "lostTitle": "{days}-day streak lost",
-      "repair": "Repair ({cost} coins)"
+      "useFreeze": "Use freeze",
+      "freezeUsed": "Used one Streak Freeze to keep your streak."
     },
     "reminder": {
       "title": "Streak at risk",
@@ -3572,7 +3608,10 @@
         "summary": "{done}/{total} tasks done",
         "claim": "Claim {count} coins",
         "claimed": "Reward claimed",
-        "completePrompt": "Complete every task to claim {count} coins"
+        "completePrompt": "Complete every task to claim {count} coins",
+        "coinToday": "+{coin} coins today",
+        "viewAll": "View all quests",
+        "empty": "No quests today yet"
       },
       "streakCurrent": "{count}-day streak",
       "goals": {
@@ -3583,6 +3622,13 @@
           "flashcards": "Flashcards",
           "coding": "Coding"
         },
+        "metrics": {
+          "XP": "XP",
+          "LESSONS": "Lessons",
+          "MINUTES": "Study minutes"
+        },
+        "targetValue": "Target {target}",
+        "empty": "No weekly goals set yet",
         "progress": "{label} · {current}/{target}",
         "summary": "{percent}% of weekly goals · {completed}/{total} done"
       },

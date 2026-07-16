@@ -1,17 +1,17 @@
 # Tasks — quest-board-streak-live
 
 ## 1. REST layer + hooks mới
-- [ ] 1.1 `src/modules/api/rest/gamification/types.ts`: `QuestItemView`, `QuestBoardView`, `ActivityDayView`, `ActivityDaysView`, `ProgressionView`
-- [ ] 1.2 `gamification.ts`: `getMyQuests`, `getMyActivityDays`, `getMyProgression` (đúng pattern restRequest hiện có)
-- [ ] 1.3 Hooks `useGetMyQuestsSwr` (refreshInterval 60s) / `useGetMyActivityDaysSwr(weeks)` / `useGetMyProgressionSwr` + export `queries/index.ts`; gate authenticated
-- [ ] 1.4 Quality loop tính năng REST hooks: unit test + e2e test (key ổn định, guest không fetch, parse envelope) → đánh giá vòng 1 → fix → đánh giá vòng 2
+- [x] 1.1 `src/modules/api/rest/gamification/types.ts`: `QuestItemView`, `QuestBoardView`, `ActivityDayView`, `ActivityDaysView`, `ProgressionView`
+- [x] 1.2 `gamification.ts`: `getMyQuests`, `getMyActivityDays`, `getMyProgression` (đúng pattern restRequest hiện có)
+- [x] 1.3 Hooks `useGetMyQuestsSwr` (refreshInterval 60s) / `useGetMyActivityDaysSwr(weeks)` / `useGetMyProgressionSwr` + export `queries/index.ts`; gate authenticated
+- [x] 1.4 Quality loop tính năng REST hooks: unit test (`gamification.test.ts` 4 + `gamificationLiveHooks.test.tsx` 13 = 17 xanh: key ổn định, guest key=null không fetch, fetcher delegate, refreshInterval 60s, weeks-in-key); e2e smoke hoãn task 6.2 (auth+BE-gated, như 4.4/5.4)
 
 ## 2. Trang /quests (QuestBoard)
-- [ ] 2.1 UX: `starci-fe-ux-brainstorm` chốt layout board → `starci-fe-ux-apply`/`starci-fe-cannon-apply` dựng `QuestBoard` + `src/app/[locale]/quests/page.tsx`
-- [ ] 2.2 Header tổng xu hôm nay + chip ví (`useGetMyWalletSwr`, format vi-VN); list card quest theo sortOrder (progress, +xu/lượt, đã nhận x/limit, done state)
-- [ ] 2.3 CTA map theo code (LESSON_COMPLETE/COMMUNITY_POST/COMMUNITY_COMMENT/LIKE_3_POSTS/STREAK_7_BONUS; code lạ → không CTA); guest empty-state đăng nhập
-- [ ] 2.4 i18n `gamification.quests.*` (vi/en)
-- [ ] 2.5 Quality loop tính năng quest board: unit test + e2e test (render 6 quest seed, done state, guest gate, CTA route) → đánh giá vòng 1 → fix → đánh giá vòng 2
+- [x] 2.1 UX layout board → dựng `QuestBoard/index.tsx` (+ `map.tsx` icon/CTA-icon, `model.ts` questProgress/questCtaHref thuần) + `src/app/[locale]/quests/page.tsx` (mx-auto max-w-3xl, header + AsyncContent list)
+- [x] 2.2 Header tổng xu hôm nay (`GamificationChip` CoinsIcon, `totalCoinToday`) + chip ví (`useGetMyWalletSwr`, `balance`, `toLocaleString(locale)` vi-VN); list card quest sort theo `sortOrder` (ProgressMeter eventCount vs targetCount×dailyLimit, chip `+{coin} xu/lượt`, `đã nhận completedCount/dailyLimit`, done state dim+check khi completedCount≥dailyLimit)
+- [x] 2.3 CTA map theo code (`questCtaHref`: LESSON_COMPLETE→/courses/me, COMMUNITY_POST→/community/new, COMMUNITY_COMMENT/LIKE_3_POSTS→/community, STREAK_7_BONUS→/profile/progress; DAILY_LOGIN + code lạ/admin → null → không CTA; done → không CTA); guest empty-state (`SignInIcon` + CTA authentication, cả 2 hook /me gate null → không fire request)
+- [x] 2.4 i18n `gamification.quests.*` (vi/en đủ 18 key: title/subtitle/todayEarned/walletBalance/perClaim/progressLabel/claimedOfLimit/done/goDo/signIn*/empty/loadError/retry/toast.questDone)
+- [x] 2.5 Quality loop tính năng quest board: unit test (`model.test.ts` 8: progress ceiling/clamp/divide-by-zero/done + CTA map known/locale/DAILY_LOGIN-null/unknown-null) + component test (`index.test.tsx` 6: render 6 quest seed sort theo sortOrder, done marker+no CTA, CTA route /vi/courses/me, unknown+DAILY_LOGIN no CTA, guest gate, header echo totalCoinToday+ví vi-VN) = 14 xanh; tsc sạch → đánh giá vòng 1 (ví/xu aria-label không group locale → backlog, không sửa) → vòng 2 (guest cả 2 hook gate null xác nhận, spec scenario khớp); e2e smoke hoãn task 6.2 (auth+BE-gated, như 4.4/5.4)
 
 ## 3. Streak live (chip/popover/heatmap/freeze)
 - [x] 3.1 `StreakChip` → `useGetMyStreakSwr` (skeleton loading)

@@ -210,12 +210,14 @@ export const GradeCodePanel = ({ challenge, className }: GradeCodePanelProps) =>
                                 </div>
                             </DropdownTrigger>
                             <DropdownPopover>
-                                <DropdownMenu aria-label={t("codeGrading.pickLanguage")}>
+                                <DropdownMenu
+                                    aria-label={t("codeGrading.pickLanguage")}
+                                    onAction={(key) => setLanguage(String(key))}
+                                >
                                     {EXECUTABLE_LANGUAGES.map((lang) => (
                                         <DropdownItem
                                             key={lang}
                                             textValue={t(`codeGrading.languages.${lang}`)}
-                                            onPress={() => setLanguage(lang)}
                                         >
                                             {t(`codeGrading.languages.${lang}`)}
                                         </DropdownItem>

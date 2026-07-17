@@ -467,7 +467,7 @@ const CourseDetailView = ({
                                                     Tài Liệu"); the real section name (e.g. "Phần 0") is a small
                                                     muted tag below. No description → the name becomes the title
                                                     and the tag line is dropped (avoid an empty/duplicate label). */}
-                                                <Typography type="body-sm" weight="semibold" className="line-clamp-2">
+                                                <Typography type="body-sm" weight="medium" className="line-clamp-2">
                                                     {section.description || section.title}
                                                 </Typography>
                                                 {section.description ? (
@@ -971,8 +971,7 @@ const PackageEnrollCard = ({
 
                     <SelectableCardGroup
                         ariaLabel={t("detail.package.selectorAria")}
-                        variant="list"
-                        compact
+                        variant="plain"
                         value={selectedId ?? ""}
                         onChange={setChosenId}
                         items={packages.map((pkg) => {
@@ -1018,7 +1017,7 @@ const PackageEnrollCard = ({
                                                 {original.toLocaleString("vi-VN")}₫
                                             </span>
                                         ) : null}
-                                        <span className="font-medium text-foreground">
+                                        <span className={cn("font-medium", isSelected ? "text-accent" : "text-foreground")}>
                                             {discounted > 0
                                                 ? `${discounted.toLocaleString("vi-VN")}₫`
                                                 : t("detail.planNames.free")}

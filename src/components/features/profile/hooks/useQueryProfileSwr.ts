@@ -10,6 +10,8 @@ export const SELF_PROFILE_KEY = ["profiles", "me"] as const
 /** A user's profile identity (consumed by the profile shell sidebar). */
 export interface Profile {
     name: string
+    /** Login handle (`@username`), shown under the name. */
+    username: string
     /** Short headline / role line. */
     headline: string
     bio: string
@@ -19,6 +21,8 @@ export interface Profile {
     avatarUrl: string
     /** Uploaded cover/banner image URL (empty when unset). */
     coverUrl: string
+    /** Account creation date (ISO), rendered as the "Joined" line — empty when unset. */
+    joinedAt: string
 }
 
 /**
@@ -28,6 +32,7 @@ export interface Profile {
  */
 export const toShellProfile = (profile: SelfProfile): Profile => ({
     name: profile.displayName ?? profile.username,
+    username: profile.username,
     headline: profile.jobTitle ?? "",
     bio: profile.bio ?? "",
     campus: [profile.academic?.campus, profile.academic?.university]
@@ -35,6 +40,7 @@ export const toShellProfile = (profile: SelfProfile): Profile => ({
         .join(" · "),
     avatarUrl: profile.avatarUrl ?? "",
     coverUrl: profile.coverUrl ?? "",
+    joinedAt: profile.createdAt ?? "",
 })
 
 /** Loads the viewer's profile identity from the real BE (`GET /profiles/me`). */

@@ -9,12 +9,16 @@ import {
     GlobeIcon,
     MapPinIcon,
     PhoneIcon,
+    SparkleIcon,
+    TrendUpIcon,
 } from "@phosphor-icons/react"
 import { FaGithub, FaLinkedin } from "react-icons/fa6"
 import { LabeledCard } from "@/components/blocks/cards/LabeledCard"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { EmptyContent } from "@/components/blocks/async/EmptyContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
+import { ProfileCourses } from "../ProfileCourses"
+import { ProfileContributions } from "../ProfileContributions"
 import { useQueryProfilePersonalSwr, type SocialLink } from "../hooks/useQueryProfilePersonalSwr"
 
 /** Social link presentation: icon + display URL + full href. */
@@ -135,95 +139,116 @@ export const ProfilePersonal = () => {
     }, [detail])
 
     return (
-        <AsyncContent
-            isLoading={isLoading && !detail}
-            skeleton={<PersonalSkeleton />}
-            error={!detail ? error : undefined}
-            errorContent={{
-                title: t("profile.loadingError"),
-                retryLabel: t("profile.retry"),
-                onRetry: () => void mutate(),
-            }}
-        >
-            {detail ? (
-                <div className="flex flex-col gap-6">
-                    <LabeledCard label={t("profile.personal.about")}>
-                        {detail.about ? (
-                            <Typography type="body-sm" color="muted">
-                                {detail.about}
-                            </Typography>
-                        ) : (
-                            <EmptyContent title={t("profile.personal.empty.aboutTitle")} />
-                        )}
-                    </LabeledCard>
+        <div className="flex flex-col gap-6">
+            {/* gamification overview — real data; each section self-fetches + guards */}
+            <ProfileCourses />
+            <ProfileContributions />
 
-                    <LabeledCard label={t("profile.personal.contact.title")}>
-                        {contactRows.length === 0 ? (
-                            <EmptyContent title={t("profile.personal.empty.contactTitle")} />
-                        ) : (
-                            <div className="flex flex-col gap-3">
-                                {contactRows.map((row) => (
-                                    <div
-                                        key={row.key}
-                                        className="flex items-center gap-3 rounded-2xl border border-separator p-4"
-                                    >
-                                        <span className="text-muted">{row.icon}</span>
-                                        {row.href ? (
-                                            <a
-                                                href={row.href}
-                                                className="text-sm font-medium text-accent no-underline hover:underline"
-                                            >
-                                                {row.value}
-                                            </a>
-                                        ) : (
-                                            <Typography type="body-sm" className="text-foreground">
-                                                {row.value}
-                                            </Typography>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </LabeledCard>
+            {/* Job readiness + Skills — no real data source yet → tasteful empty states
+                (no fabricated figures, per §4.4). */}
+            <LabeledCard label={t("profile.jobReadiness.title")}>
+                <EmptyContent
+                    title={t("profile.empty.jobReadiness")}
+                    icon={<TrendUpIcon aria-hidden focusable="false" className="size-8 text-muted" />}
+                />
+            </LabeledCard>
+            <LabeledCard label={t("profile.skills.title")}>
+                <EmptyContent
+                    title={t("profile.empty.skills")}
+                    icon={<SparkleIcon aria-hidden focusable="false" className="size-8 text-muted" />}
+                />
+            </LabeledCard>
 
-                    <LabeledCard label={t("profile.personal.socials")}>
-                        {socials.length === 0 ? (
-                            <EmptyContent title={t("profile.personal.empty.socialsTitle")} />
-                        ) : (
-                            <div className="flex flex-col gap-3">
-                                {socials.map((social, index) => {
-                                    const key = `${detail.socials[index]?.key}-${index}`
-                                    return (
-                                        <a
-                                            key={key}
-                                            href={social.href}
-                                            target="_blank"
-                                            rel="noreferrer noopener"
-                                            className="group flex items-center gap-3 rounded-2xl border border-separator p-4 no-underline transition-colors hover:bg-default/40"
-                                            aria-label={social.href}
+            <AsyncContent
+                isLoading={isLoading && !detail}
+                skeleton={<PersonalSkeleton />}
+                error={!detail ? error : undefined}
+                errorContent={{
+                    title: t("profile.loadingError"),
+                    retryLabel: t("profile.retry"),
+                    onRetry: () => void mutate(),
+                }}
+            >
+                {detail ? (
+                    <div className="flex flex-col gap-6">
+                        <LabeledCard label={t("profile.personal.about")}>
+                            {detail.about ? (
+                                <Typography type="body-sm" color="muted">
+                                    {detail.about}
+                                </Typography>
+                            ) : (
+                                <EmptyContent title={t("profile.personal.empty.aboutTitle")} />
+                            )}
+                        </LabeledCard>
+
+                        <LabeledCard label={t("profile.personal.contact.title")}>
+                            {contactRows.length === 0 ? (
+                                <EmptyContent title={t("profile.personal.empty.contactTitle")} />
+                            ) : (
+                                <div className="flex flex-col gap-3">
+                                    {contactRows.map((row) => (
+                                        <div
+                                            key={row.key}
+                                            className="flex items-center gap-3 rounded-2xl border border-separator p-4"
                                         >
-                                            <span className="text-muted">{social.icon}</span>
-                                            <Typography
-                                                type="body-sm"
-                                                weight="medium"
-                                                className="min-w-0 flex-1"
-                                                truncate
+                                            <span className="text-muted">{row.icon}</span>
+                                            {row.href ? (
+                                                <a
+                                                    href={row.href}
+                                                    className="text-sm font-medium text-accent no-underline hover:underline"
+                                                >
+                                                    {row.value}
+                                                </a>
+                                            ) : (
+                                                <Typography type="body-sm" className="text-foreground">
+                                                    {row.value}
+                                                </Typography>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </LabeledCard>
+
+                        <LabeledCard label={t("profile.personal.socials")}>
+                            {socials.length === 0 ? (
+                                <EmptyContent title={t("profile.personal.empty.socialsTitle")} />
+                            ) : (
+                                <div className="flex flex-col gap-3">
+                                    {socials.map((social, index) => {
+                                        const key = `${detail.socials[index]?.key}-${index}`
+                                        return (
+                                            <a
+                                                key={key}
+                                                href={social.href}
+                                                target="_blank"
+                                                rel="noreferrer noopener"
+                                                className="group flex items-center gap-3 rounded-2xl border border-separator p-4 no-underline transition-colors hover:bg-default/40"
+                                                aria-label={social.href}
                                             >
-                                                {social.label}
-                                            </Typography>
-                                            <CaretRightIcon
-                                                className="size-4 shrink-0 text-muted transition-transform group-hover:translate-x-1"
-                                                aria-hidden
-                                                focusable="false"
-                                            />
-                                        </a>
-                                    )
-                                })}
-                            </div>
-                        )}
-                    </LabeledCard>
-                </div>
-            ) : null}
-        </AsyncContent>
+                                                <span className="text-muted">{social.icon}</span>
+                                                <Typography
+                                                    type="body-sm"
+                                                    weight="medium"
+                                                    className="min-w-0 flex-1"
+                                                    truncate
+                                                >
+                                                    {social.label}
+                                                </Typography>
+                                                <CaretRightIcon
+                                                    className="size-4 shrink-0 text-muted transition-transform group-hover:translate-x-1"
+                                                    aria-hidden
+                                                    focusable="false"
+                                                />
+                                            </a>
+                                        )
+                                    })}
+                                </div>
+                            )}
+                        </LabeledCard>
+                    </div>
+                ) : null}
+            </AsyncContent>
+        </div>
     )
 }

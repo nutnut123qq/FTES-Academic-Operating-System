@@ -1,39 +1,40 @@
 "use client"
 
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
-import { Button, Drawer, cn } from "@heroui/react"
+import { Button, Kbd, Modal, Typography, cn } from "@heroui/react"
 import { MagnifyingGlassIcon, SignInIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
-import { pathConfig } from "@/resources/path"
-import { useLocale } from "next-intl"
 import { useSearchOverlayState, useAuthenticationOverlayState } from "@/hooks/zustand/overlay/hooks"
 import { useAppDispatch, useAppSelector } from "@/redux/hooks"
 import { setSearchQuery, clearSearchQuery } from "@/redux/slices/search"
 import { useRecentSearches } from "@/hooks/reuseables/useRecentSearches"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 import { useGlobalSearch } from "../hooks/useGlobalSearch"
+import { usePopularSearchRows } from "../hooks/usePopularSearchRows"
 import type { SearchRow } from "../types"
 import { SearchOverlayInput } from "./SearchOverlayInput"
 import { SearchOverlayResults } from "./SearchOverlayResults"
+import { SearchPopular } from "./SearchPopular"
 import { SearchRecentQueries } from "./SearchRecentQueries"
 import { SearchOverlayFooter } from "./SearchOverlayFooter"
 import { EmptyContent } from "@/components/blocks/async/EmptyContent"
 import { ErrorContent } from "@/components/blocks/async/ErrorContent"
 
 /**
- * The global command-palette search overlay (Ctrl/Cmd+K or navbar button).
+ * The global command-palette search (Ctrl/Cmd+K or the navbar search trigger).
  *
- * Right-anchored slide-in drawer (full-width sheet below `sm`). Owns: the
- * debounced real-entity search (via {@link useGlobalSearch}), keyboard navigation
- * across grouped rows (↑↓ wrap · Enter open · Esc close), recent searches
- * (device-local), the "See all results" handoff to `/search?q=…`, the aria combobox
- * pattern, and the states (loading / error / empty / unauthenticated). Mounted once
- * in the shell overlay container, driven by the `search` overlay key.
+ * A CENTERED, rounded modal popup (`rounded-2xl`, flush padding) — NOT a right
+ * drawer and NOT an inline dropdown. Owns: the debounced real-entity search (via
+ * {@link useGlobalSearch}), the idle "Popular" suggestions (via
+ * {@link usePopularSearchRows}), keyboard navigation across the active row set
+ * (↑↓ wrap · Enter open · Esc close), device-local recent searches, the aria
+ * combobox pattern, and the state matrix (loading / error / empty / guest).
+ * Selecting a row navigates DIRECTLY to the entity — no `/search` interstitial.
+ * Mounted once in the shell modal container, driven by the `search` overlay key.
  */
 export const SearchOverlay = ({ className }: WithClassNames<undefined>) => {
     const t = useTranslations()
-    const locale = useLocale()
     const router = useRouter()
     const dispatch = useAppDispatch()
     const { isOpen, setOpen, close } = useSearchOverlayState()
@@ -53,6 +54,8 @@ export const SearchOverlay = ({ className }: WithClassNames<undefined>) => {
         retry,
     } = useGlobalSearch(false, 8)
 
+    const popular = usePopularSearchRows()
+
     const [activeIndex, setActiveIndex] = useState(-1)
     const inputRef = useRef<HTMLInputElement>(null)
     const restoreFocusRef = useRef<HTMLElement | null>(null)
@@ -61,13 +64,22 @@ export const SearchOverlay = ({ className }: WithClassNames<undefined>) => {
     const optionId = useCallback((rowId: string) => `${baseId}-opt-${rowId}`, [baseId])
 
     const trimmedRaw = rawQuery.trim()
+    const idle = !hasMinChars
     const showResults = hasMinChars && authenticated && hasResults
-    const activeRowId = activeIndex >= 0 && activeIndex < flatRows.length ? flatRows[activeIndex].id : null
+    const showPopular = idle && popular.rows.length > 0
 
-    // Reset the active option whenever the result set changes.
+    // The single row set keyboard navigation + Enter operate over: popular rows while
+    // idle, live results once a query is entered.
+    const navRows = useMemo<Array<SearchRow>>(
+        () => (idle ? popular.rows : flatRows),
+        [idle, popular.rows, flatRows],
+    )
+    const activeRowId = activeIndex >= 0 && activeIndex < navRows.length ? navRows[activeIndex].id : null
+
+    // Reset the active option whenever the navigable row set changes.
     useEffect(() => {
         setActiveIndex(-1)
-    }, [flatRows])
+    }, [navRows])
 
     // Focus the input on open; remember the previously focused element to restore on close.
     useEffect(() => {
@@ -79,8 +91,7 @@ export const SearchOverlay = ({ className }: WithClassNames<undefined>) => {
     }, [isOpen])
 
     // The Ctrl/Cmd+K shortcut is registered in exactly one place — the navbar container
-    // (single source). On desktop it focuses the inline navbar field; below `md` it opens
-    // this overlay. The overlay therefore no longer registers its own duplicate listener.
+    // (single source) — so the overlay does not register its own duplicate listener.
 
     const onValueChange = useCallback(
         (next: string) => {
@@ -99,20 +110,13 @@ export const SearchOverlay = ({ className }: WithClassNames<undefined>) => {
     const activateRow = useCallback(
         (row: SearchRow) => {
             if (!row.href) return
-            addRecent(trimmedRaw)
+            // Only a real typed query is worth remembering; popular picks carry none.
+            if (trimmedRaw) addRecent(trimmedRaw)
             closeOverlay()
             router.push(row.href)
         },
         [addRecent, trimmedRaw, closeOverlay, router],
     )
-
-    const goToSearchPage = useCallback(() => {
-        if (!trimmedRaw) return
-        addRecent(trimmedRaw)
-        const base = pathConfig().locale(locale).search().build()
-        closeOverlay()
-        router.push(`${base}?q=${encodeURIComponent(trimmedRaw)}`)
-    }, [trimmedRaw, addRecent, locale, closeOverlay, router])
 
     const onInputKeyDown = useCallback(
         (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -121,37 +125,29 @@ export const SearchOverlay = ({ className }: WithClassNames<undefined>) => {
                 closeOverlay()
                 return
             }
-            if (flatRows.length === 0) {
-                if (event.key === "Enter") {
-                    event.preventDefault()
-                    goToSearchPage()
-                }
-                return
-            }
+            if (navRows.length === 0) return
             if (event.key === "ArrowDown") {
                 event.preventDefault()
-                setActiveIndex((prev) => (prev + 1) % flatRows.length)
+                setActiveIndex((prev) => (prev + 1) % navRows.length)
             } else if (event.key === "ArrowUp") {
                 event.preventDefault()
-                setActiveIndex((prev) => (prev <= 0 ? flatRows.length - 1 : prev - 1))
+                setActiveIndex((prev) => (prev <= 0 ? navRows.length - 1 : prev - 1))
             } else if (event.key === "Enter") {
                 event.preventDefault()
-                if (activeIndex >= 0 && activeIndex < flatRows.length) {
-                    activateRow(flatRows[activeIndex])
-                } else {
-                    goToSearchPage()
-                }
+                // Open the active row, or the top hit when none is highlighted yet.
+                const target = activeIndex >= 0 && activeIndex < navRows.length ? navRows[activeIndex] : navRows[0]
+                activateRow(target)
             }
         },
-        [flatRows, activeIndex, activateRow, goToSearchPage, closeOverlay],
+        [navRows, activeIndex, activateRow, closeOverlay],
     )
 
     const onHoverRow = useCallback(
         (rowId: string) => {
-            const index = flatRows.findIndex((row) => row.id === rowId)
+            const index = navRows.findIndex((row) => row.id === rowId)
             if (index >= 0) setActiveIndex(index)
         },
-        [flatRows],
+        [navRows],
     )
 
     const body = useMemo(() => {
@@ -168,16 +164,38 @@ export const SearchOverlay = ({ className }: WithClassNames<undefined>) => {
                 />
             )
         }
-        if (!hasMinChars) {
+        if (idle) {
+            if (!showPopular && recent.length === 0) {
+                if (popular.isLoading) return null
+                return (
+                    <Typography type="body-sm" color="muted" className="px-2 py-6 text-center">
+                        {t("search.idleHint")}
+                    </Typography>
+                )
+            }
             return (
-                <SearchRecentQueries
-                    recent={recent}
-                    onSelect={(item) => {
-                        dispatch(setSearchQuery(item))
-                        inputRef.current?.focus()
-                    }}
-                    onClear={clearRecent}
-                />
+                <div className="flex flex-col gap-4">
+                    {showPopular ? (
+                        <SearchPopular
+                            rows={popular.rows}
+                            activeRowId={activeRowId}
+                            optionId={optionId}
+                            onActivate={activateRow}
+                            onHover={onHoverRow}
+                            listboxId={listboxId}
+                        />
+                    ) : null}
+                    {recent.length > 0 ? (
+                        <SearchRecentQueries
+                            recent={recent}
+                            onSelect={(item) => {
+                                dispatch(setSearchQuery(item))
+                                inputRef.current?.focus()
+                            }}
+                            onClear={clearRecent}
+                        />
+                    ) : null}
+                </div>
             )
         }
         if (error) {
@@ -212,25 +230,19 @@ export const SearchOverlay = ({ className }: WithClassNames<undefined>) => {
         }
         return null
     }, [
-        authenticated, hasMinChars, error, showResults, isLoading, recent, groups, debouncedQuery,
-        activeRowId, optionId, activateRow, onHoverRow, listboxId, retry, t, openAuth, dispatch,
-        clearRecent, trimmedRaw,
+        authenticated, hasMinChars, idle, showPopular, popular, recent, error, showResults, isLoading,
+        groups, debouncedQuery, activeRowId, optionId, activateRow, onHoverRow, listboxId, retry, t,
+        openAuth, dispatch, clearRecent, trimmedRaw,
     ])
 
     return (
-        <Drawer.Backdrop
-            isOpen={isOpen}
-            onOpenChange={(next) => (next ? setOpen(true) : closeOverlay())}
-        >
-            <Drawer.Content placement="right">
-                <Drawer.Dialog
-                    data-search-overlay
-                    className={cn(
-                        "flex h-full w-full max-w-md flex-col gap-3 rounded-none p-3 sm:p-4",
-                        className,
-                    )}
-                >
-                    <div className="flex items-center gap-2">
+        <Modal isOpen={isOpen} onOpenChange={(next) => (next ? setOpen(true) : closeOverlay())}>
+            <Modal.Backdrop>
+                <Modal.Container size="lg" className="p-0">
+                    <Modal.Dialog
+                        data-search-overlay
+                        className={cn("flex max-h-[80vh] flex-col overflow-hidden rounded-2xl p-0", className)}
+                    >
                         <SearchOverlayInput
                             inputRef={inputRef}
                             value={rawQuery}
@@ -241,23 +253,16 @@ export const SearchOverlay = ({ className }: WithClassNames<undefined>) => {
                             isLoading={isLoading}
                             onKeyDown={onInputKeyDown}
                             listboxId={listboxId}
-                            isExpanded={showResults}
+                            isExpanded={showResults || showPopular}
                             activeDescendantId={activeRowId ? optionId(activeRowId) : undefined}
-                            className="flex-1"
+                            className="w-full rounded-none border-x-0 border-t-0 border-default bg-transparent px-4 py-3"
+                            suffix={<Kbd><Kbd.Content>Esc</Kbd.Content></Kbd>}
                         />
-                        <Button
-                            variant="tertiary"
-                            size="sm"
-                            className="shrink-0 sm:hidden"
-                            onPress={closeOverlay}
-                        >
-                            {t("common.cancel")}
-                        </Button>
-                    </div>
-                    <div className="min-h-0 flex-1 overflow-y-auto">{body}</div>
-                    <SearchOverlayFooter onSeeAll={goToSearchPage} canSeeAll={Boolean(trimmedRaw)} />
-                </Drawer.Dialog>
-            </Drawer.Content>
-        </Drawer.Backdrop>
+                        <div className="min-h-0 flex-1 overflow-y-auto p-2">{body}</div>
+                        <SearchOverlayFooter />
+                    </Modal.Dialog>
+                </Modal.Container>
+            </Modal.Backdrop>
+        </Modal>
     )
 }

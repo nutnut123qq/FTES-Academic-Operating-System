@@ -1,17 +1,15 @@
 import React from "react"
-import { cleanup, fireEvent, render, screen } from "@testing-library/react"
+import { cleanup, fireEvent, render } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 /**
  * Unit — the navbar's single-source Ctrl/Cmd+K handler (change
- * `blog-nav-and-engagement`, task 4.5). The shortcut is registered in exactly one
- * place (the navbar container): at or above `md` it focuses the inline search field;
- * below `md` — where the inline field is hidden and the full-screen overlay is the
- * search surface — it opens the overlay instead. `window.matchMedia` is stubbed per
- * test to pick the viewport branch.
+ * `fe-starci-ui-refinements`, capability `search-command-palette`). The shortcut is
+ * registered in exactly one place (the navbar container) and always opens the centered
+ * search command palette, on every viewport — it never focuses an inline field (the
+ * inline dropdown was retired). It is suppressed while a FOREIGN overlay is on top.
  *
- * Every child is a passthrough mock so the container renders in happy-dom; the mocked
- * `SearchInline` attaches the forwarded ref to a real `<input>` so we can assert focus.
+ * Every child is a passthrough mock so the container renders in happy-dom.
  */
 
 const h = vi.hoisted(() => ({
@@ -48,9 +46,7 @@ vi.mock("./CartButton", () => ({ CartButton: () => <div /> }))
 vi.mock("./LanguageDropdown", () => ({ LanguageDropdown: () => <div /> }))
 
 vi.mock("./SearchInline", () => ({
-    SearchInline: ({ inputRef }: { inputRef?: React.RefObject<HTMLInputElement | null> }) => (
-        <input ref={inputRef} data-testid="inline-input" />
-    ),
+    SearchInline: () => <div data-testid="search-trigger" />,
 }))
 
 vi.mock("@phosphor-icons/react", () => {
@@ -119,20 +115,16 @@ afterEach(() => {
 })
 
 describe("Navbar — Ctrl/Cmd+K single source", () => {
-    it("focuses the inline field on desktop (≥ md) and does NOT open the overlay", () => {
-        h.matches = true
+    it("opens the search command palette on Ctrl+K", () => {
         render(<Navbar />)
         fireEvent.keyDown(window, { key: "k", ctrlKey: true })
-        expect(document.activeElement).toBe(screen.getByTestId("inline-input"))
-        expect(h.openSearch).not.toHaveBeenCalled()
+        expect(h.openSearch).toHaveBeenCalledTimes(1)
     })
 
-    it("opens the overlay below md instead of focusing the (hidden) inline field", () => {
-        h.matches = false
+    it("opens the search command palette on Cmd+K", () => {
         render(<Navbar />)
         fireEvent.keyDown(window, { key: "k", metaKey: true })
         expect(h.openSearch).toHaveBeenCalledTimes(1)
-        expect(document.activeElement).not.toBe(screen.getByTestId("inline-input"))
     })
 
     it("ignores plain 'k' without a modifier", () => {
@@ -142,7 +134,6 @@ describe("Navbar — Ctrl/Cmd+K single source", () => {
     })
 
     it("skips the shortcut while a foreign overlay (modal/drawer) is open", () => {
-        h.matches = false
         render(<Navbar />)
         // simulate an unrelated dialog on top (auth/confirm) — NOT the search overlay
         const foreign = document.createElement("div")
@@ -151,7 +142,6 @@ describe("Navbar — Ctrl/Cmd+K single source", () => {
         try {
             fireEvent.keyDown(window, { key: "k", ctrlKey: true })
             expect(h.openSearch).not.toHaveBeenCalled()
-            expect(document.activeElement).not.toBe(screen.getByTestId("inline-input"))
         } finally {
             document.body.removeChild(foreign)
         }

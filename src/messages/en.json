@@ -361,6 +361,7 @@
     },
     "idleHint": "Type to search courses, modules, lessons…",
     "popular": "Popular",
+    "free": "Free",
     "recent": "Recent",
     "clearRecent": "Clear history",
     "clearInput": "Clear search",
@@ -2018,6 +2019,36 @@
       "followers": "{count} followers",
       "skills": "Skills",
       "emptySkills": "No skills listed yet."
+    },
+    "joined": "Joined {date}",
+    "level": "Level {level}",
+    "followers": "{count} followers",
+    "following": "{count} following",
+    "shareProfile": "Share profile",
+    "shareCopied": "Profile link copied",
+    "courses": {
+      "title": "Courses",
+      "trial": "Trial",
+      "enrolled": "Enrolled",
+      "empty": "You haven't enrolled in any course yet.",
+      "progressAria": "{title} · {percent}%"
+    },
+    "contributions": {
+      "title": "Activity",
+      "yearAria": "Select year",
+      "streakLine": "{streak}-day streak · longest {longest}",
+      "cellLabel": "{date}: {xp} XP",
+      "loadError": "Couldn't load activity."
+    },
+    "jobReadiness": {
+      "title": "Job readiness"
+    },
+    "skills": {
+      "title": "Skills"
+    },
+    "empty": {
+      "jobReadiness": "Coming soon — your job readiness will appear here.",
+      "skills": "Coming soon — your skills will appear here."
     }
   },
   "profileMenu": {
@@ -5191,6 +5222,7 @@
       "credits": "{count} credits",
       "enroll": "Enroll",
       "outline": "Course outline",
+      "partLabel": "Part {index}",
       "ratings": "{count} ratings",
       "stats": {
         "learners": "learners",
@@ -5241,6 +5273,8 @@
       "continueLearning": "Continue learning",
       "enrolledHint": "You're enrolled in this course.",
       "enrolledCount": "{count} enrolled",
+      "inCart": "In cart",
+      "earlyBirdSlots": "{count} Early bird slots left",
       "planSelectorAria": "Select a learning plan",
       "planNames": {
         "free": "Free",
@@ -5271,6 +5305,7 @@
       "package": {
         "title": "Choose a package",
         "selectorAria": "Choose a package",
+        "active": "Open",
         "entitlementSummary": "{count} parts included",
         "buy": "Get this package",
         "resolving": "Fetching package details…",
@@ -6334,6 +6369,7 @@
     "contentMap": {
       "title": "Course content",
       "searchPlaceholder": "Search lessons…",
+      "partLabel": "Part {index}",
       "resizeRail": "Drag to resize the content rail",
       "empty": "No content yet",
       "noMatch": "No lessons match",

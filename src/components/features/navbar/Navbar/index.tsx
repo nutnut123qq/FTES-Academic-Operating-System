@@ -2,7 +2,6 @@
 
 import React, {
     useEffect,
-    useRef,
     useState,
 } from "react"
 import {
@@ -77,8 +76,6 @@ export const Navbar = ({ className }: NavbarProps) => {
     const { open: openSearch } = useSearchOverlayState()
     const { open: openAppearance } = useAppearanceOverlayState()
     const [isDrawerOpen, setDrawerOpen] = useState(false)
-    // ref to the desktop inline search field so Ctrl/Cmd+K can focus it (≥ md)
-    const searchInputRef = useRef<HTMLInputElement>(null)
     // same primary-nav source HeaderNav renders on desktop — no drift
     const modules = useAppNav()
     // optional second layer (e.g. profile tabs) a page registered into the navbar
@@ -96,9 +93,7 @@ export const Navbar = ({ className }: NavbarProps) => {
     }
 
     // Single source of the global Ctrl/Cmd+K shortcut (the overlay no longer registers
-    // its own). Desktop (≥ md) focuses the inline navbar field; below md — where the
-    // inline field is hidden and the full-screen overlay is the search surface — it
-    // opens the overlay instead.
+    // its own) — it always opens the centered search command palette, on every viewport.
     useEffect(() => {
         const onKeyDown = (event: KeyboardEvent) => {
             // some keydown events (IME composition, autofill) fire with no `key`
@@ -106,19 +101,14 @@ export const Navbar = ({ className }: NavbarProps) => {
             if (!isK) return
             if (!(event.ctrlKey || event.metaKey)) return
             // Skip when some OTHER overlay (auth/confirm modal, a drawer…) is on top so the
-            // shortcut never steals focus into the inline field or stacks the search overlay
-            // over an open dialog. The search overlay's own dialog carries `data-search-overlay`.
+            // shortcut never stacks the search popup over an open dialog. The search
+            // popup's own dialog carries `data-search-overlay`.
             const foreignOverlay = Array.from(
                 document.querySelectorAll(".modal__dialog, .drawer__dialog"),
             ).some((node) => !node.hasAttribute("data-search-overlay"))
             if (foreignOverlay) return
             event.preventDefault()
-            const isDesktop = window.matchMedia("(min-width: 768px)").matches
-            if (isDesktop && searchInputRef.current) {
-                searchInputRef.current.focus()
-            } else {
-                openSearch()
-            }
+            openSearch()
         }
         window.addEventListener("keydown", onKeyDown)
         return () => window.removeEventListener("keydown", onKeyDown)
@@ -134,8 +124,8 @@ export const Navbar = ({ className }: NavbarProps) => {
                 </div>
 
                 <div className="flex items-center justify-end gap-2">
-                    {/* desktop: real inline search field + results dropdown; mobile: just an icon */}
-                    <SearchInline inputRef={searchInputRef} />
+                    {/* desktop: field-shaped trigger that opens the command palette; mobile: just an icon */}
+                    <SearchInline />
                     <Button
                         isIconOnly
                         variant="tertiary"

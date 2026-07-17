@@ -15,6 +15,8 @@ export interface MyCourse {
     completionPercent: number
     /** Destination — the course learn shell. */
     href: string
+    /** True for a PAID enrollment (bought a package) — drives the Enrolled vs Trial badge. */
+    isPurchased: boolean
 }
 
 /**
@@ -51,6 +53,7 @@ export const useQueryMyCoursesSwr = () => {
                         Math.min(100, Math.round(Number(enrollment.completionPercent ?? 0))),
                     ),
                     href: `/courses/${enrollment.slugName}/learn`,
+                    isPurchased: Boolean(enrollment.isPurchased),
                 }))
         },
     )

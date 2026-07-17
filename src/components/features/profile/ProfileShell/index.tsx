@@ -1,9 +1,16 @@
 "use client"
 
-import React from "react"
-import { Avatar, AvatarFallback, AvatarImage, Button, Tabs, Typography } from "@heroui/react"
-import { useTranslations } from "next-intl"
-import { FireIcon, MapPinIcon, TrophyIcon } from "@phosphor-icons/react"
+import React, { useCallback } from "react"
+import { Avatar, AvatarFallback, AvatarImage, Button, Tabs, Typography, toast } from "@heroui/react"
+import { useLocale, useTranslations } from "next-intl"
+import {
+    CalendarBlankIcon,
+    FireIcon,
+    MapPinIcon,
+    MedalIcon,
+    ShareNetworkIcon,
+    TrophyIcon,
+} from "@phosphor-icons/react"
 import { usePathname, useRouter } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { GamificationChip } from "@/components/blocks/gamification/GamificationChip"
@@ -11,6 +18,7 @@ import { ExtendedTabs } from "@/components/blocks/navigation/ExtendedTabs"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { useQueryMyGamificationSwr } from "@/components/features/gamification/hooks/useQueryMyGamificationSwr"
 import { useQueryProfileSwr } from "../hooks/useQueryProfileSwr"
+import { useQueryPublicProfileSwr } from "../hooks/useQueryPublicProfileSwr"
 
 /** Props for {@link ProfileShell}. */
 interface ProfileShellProps {
@@ -57,10 +65,44 @@ const IdentitySkeleton = () => (
  */
 export const ProfileShell = ({ children }: ProfileShellProps) => {
     const t = useTranslations()
+    const locale = useLocale()
     const router = useRouter()
     const pathname = usePathname()
     const { profile, isLoading, error, mutate } = useQueryProfileSwr()
     const { data: gamification } = useQueryMyGamificationSwr()
+    // real follower/following counters (public-profile view of the signed-in user);
+    // keyed on the username so it only fires once the self profile has loaded.
+    const { profile: social } = useQueryPublicProfileSwr(profile?.username ?? "")
+
+    /** Joined line — full month + year (per the time-rendering rule), or null when unset. */
+    const joinedLabel = profile?.joinedAt
+        ? t("profile.joined", {
+            date: new Date(profile.joinedAt).toLocaleDateString(locale, {
+                month: "long",
+                year: "numeric",
+            }),
+        })
+        : null
+
+    /** Share the public profile URL — native sheet when present, clipboard fallback. */
+    const onShare = useCallback(async () => {
+        if (typeof window === "undefined" || !profile) return
+        const url = `${window.location.origin}/${locale}/u/${profile.username}`
+        if (navigator.share) {
+            try {
+                await navigator.share({ title: profile.name, url })
+                return
+            } catch {
+                // sheet dismissed / failed → fall through to clipboard copy
+            }
+        }
+        try {
+            await navigator.clipboard.writeText(url)
+            toast.success(t("profile.shareCopied"))
+        } catch {
+            // clipboard blocked → nothing actionable to surface
+        }
+    }, [profile, locale, t])
 
     const base = "/profile"
     const hrefFor = (segment: string) => (segment ? `${base}/${segment}` : base)
@@ -117,7 +159,22 @@ export const ProfileShell = ({ children }: ProfileShellProps) => {
                                         {profile.headline}
                                     </Typography>
                                 ) : null}
+                                {profile.username ? (
+                                    <Typography type="body-sm" color="muted">
+                                        @{profile.username}
+                                    </Typography>
+                                ) : null}
                             </div>
+                            {social && (social.followers > 0 || social.following > 0) ? (
+                                <div className="flex items-center gap-3">
+                                    <Typography type="body-sm" color="muted">
+                                        {t("profile.followers", { count: social.followers })}
+                                    </Typography>
+                                    <Typography type="body-sm" color="muted">
+                                        {t("profile.following", { count: social.following })}
+                                    </Typography>
+                                </div>
+                            ) : null}
                             {profile.campus ? (
                                 <div className="flex items-center gap-2">
                                     <MapPinIcon
@@ -132,6 +189,18 @@ export const ProfileShell = ({ children }: ProfileShellProps) => {
                             ) : null}
                             {gamification ? (
                                 <div className="flex flex-wrap justify-center gap-2">
+                                    <GamificationChip
+                                        icon={
+                                            <MedalIcon
+                                                weight="fill"
+                                                className="size-4"
+                                                aria-hidden
+                                                focusable="false"
+                                            />
+                                        }
+                                        value={gamification.level}
+                                        label={t("profile.level", { level: gamification.level })}
+                                    />
                                     <GamificationChip
                                         icon={
                                             <FireIcon
@@ -162,18 +231,66 @@ export const ProfileShell = ({ children }: ProfileShellProps) => {
                                     />
                                 </div>
                             ) : null}
+                            {gamification && gamification.badges.length > 0 ? (
+                                <div className="flex flex-wrap justify-center gap-2">
+                                    {gamification.badges.slice(0, 6).map((badge) => (
+                                        <span
+                                            key={badge.id}
+                                            title={t(`gamification.milestones.${badge.badgeKey}.name`)}
+                                            className="flex size-8 items-center justify-center rounded-full bg-accent/10 text-accent"
+                                        >
+                                            <TrophyIcon
+                                                weight="fill"
+                                                className="size-4"
+                                                aria-hidden
+                                                focusable="false"
+                                            />
+                                            <span className="sr-only">
+                                                {t(`gamification.milestones.${badge.badgeKey}.name`)}
+                                            </span>
+                                        </span>
+                                    ))}
+                                    {gamification.badges.length > 6 ? (
+                                        <span className="flex size-8 items-center justify-center rounded-full bg-default text-xs font-medium text-muted">
+                                            +{gamification.badges.length - 6}
+                                        </span>
+                                    ) : null}
+                                </div>
+                            ) : null}
                             {profile.bio ? (
                                 <Typography type="body-sm" color="muted">
                                     {profile.bio}
                                 </Typography>
                             ) : null}
-                            <Button
-                                variant="secondary"
-                                fullWidth
-                                onPress={() => router.push("/profile/edit")}
-                            >
-                                {t("profileSettings.items.editProfile")}
-                            </Button>
+                            <div className="flex w-full flex-col gap-2">
+                                <Button
+                                    variant="secondary"
+                                    fullWidth
+                                    onPress={() => router.push("/profile/edit")}
+                                >
+                                    {t("profileSettings.items.editProfile")}
+                                </Button>
+                                <Button variant="tertiary" fullWidth onPress={() => void onShare()}>
+                                    <ShareNetworkIcon
+                                        aria-hidden
+                                        focusable="false"
+                                        className="size-5"
+                                    />
+                                    {t("profile.shareProfile")}
+                                </Button>
+                            </div>
+                            {joinedLabel ? (
+                                <div className="flex items-center gap-2">
+                                    <CalendarBlankIcon
+                                        className="size-4 text-muted"
+                                        aria-hidden
+                                        focusable="false"
+                                    />
+                                    <Typography type="body-xs" color="muted">
+                                        {joinedLabel}
+                                    </Typography>
+                                </div>
+                            ) : null}
                         </div>
                     ) : null}
                 </AsyncContent>

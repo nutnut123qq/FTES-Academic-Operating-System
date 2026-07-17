@@ -361,6 +361,7 @@
     },
     "idleHint": "Nhập để tìm khóa học, học phần, bài giảng…",
     "popular": "Phổ biến",
+    "free": "Miễn phí",
     "recent": "Tìm gần đây",
     "clearRecent": "Xóa lịch sử",
     "clearInput": "Xóa ô tìm kiếm",
@@ -2027,6 +2028,36 @@
       "followers": "{count} người theo dõi",
       "skills": "Kỹ năng",
       "emptySkills": "Chưa có kỹ năng nào."
+    },
+    "joined": "Tham gia {date}",
+    "level": "Cấp {level}",
+    "followers": "{count} người theo dõi",
+    "following": "{count} đang theo dõi",
+    "shareProfile": "Chia sẻ hồ sơ",
+    "shareCopied": "Đã sao chép liên kết hồ sơ",
+    "courses": {
+      "title": "Khoá học",
+      "trial": "Học thử",
+      "enrolled": "Đã ghi danh",
+      "empty": "Bạn chưa ghi danh khoá học nào.",
+      "progressAria": "{title} · {percent}%"
+    },
+    "contributions": {
+      "title": "Hoạt động",
+      "yearAria": "Chọn năm",
+      "streakLine": "Chuỗi {streak} ngày · dài nhất {longest} ngày",
+      "cellLabel": "{date}: {xp} XP",
+      "loadError": "Không tải được hoạt động."
+    },
+    "jobReadiness": {
+      "title": "Mức sẵn sàng nghề nghiệp"
+    },
+    "skills": {
+      "title": "Kỹ năng"
+    },
+    "empty": {
+      "jobReadiness": "Sắp ra mắt — mức sẵn sàng nghề nghiệp của bạn sẽ xuất hiện ở đây.",
+      "skills": "Sắp ra mắt — kỹ năng của bạn sẽ xuất hiện ở đây."
     }
   },
   "profileMenu": {
@@ -5191,6 +5222,7 @@
       "credits": "{count} tín chỉ",
       "enroll": "Đăng ký học",
       "outline": "Nội dung khóa học",
+      "partLabel": "Phần {index}",
       "ratings": "{count} đánh giá",
       "stats": {
         "learners": "học viên",
@@ -5241,6 +5273,8 @@
       "continueLearning": "Tiếp tục học",
       "enrolledHint": "Bạn đã đăng ký khóa này.",
       "enrolledCount": "{count} người đã đăng ký",
+      "inCart": "Đã thêm vào giỏ",
+      "earlyBirdSlots": "Còn {count} suất Early bird",
       "planSelectorAria": "Chọn gói học",
       "planNames": {
         "free": "Miễn phí",
@@ -5271,6 +5305,7 @@
       "package": {
         "title": "Chọn gói học",
         "selectorAria": "Chọn gói học",
+        "active": "Đang mở",
         "entitlementSummary": "Gồm {count} phần",
         "buy": "Đăng ký gói",
         "resolving": "Đang lấy thông tin gói…",
@@ -6334,6 +6369,7 @@
     "contentMap": {
       "title": "Nội dung khóa học",
       "searchPlaceholder": "Tìm bài học…",
+      "partLabel": "Phần {index}",
       "resizeRail": "Kéo để đổi độ rộng thanh nội dung",
       "empty": "Chưa có nội dung",
       "noMatch": "Không tìm thấy bài học nào",

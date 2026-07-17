@@ -127,14 +127,14 @@ export const ContentMap = ({ className }: ContentMapProps) => {
                             return (
                                 <Accordion.Item key={module.id} id={module.id} aria-label={module.title}>
                                     <Accordion.Heading>
-                                        <Accordion.Trigger className="text-sm font-semibold">
+                                        <Accordion.Trigger className="text-sm font-medium">
                                             <div className="flex w-full min-w-0 items-center gap-2">
                                                 <div className="min-w-0 flex-1 text-left">
                                                     {/* Description is the prominent title on top (e.g. "Tổng hợp
                                                         Tài Liệu"); the real module name (e.g. "Phần 0") is a small
                                                         muted tag below. No description → the name becomes the title
                                                         and the tag line is dropped (avoid an empty/duplicate label). */}
-                                                    <Typography type="body-sm" weight="semibold" className="line-clamp-2">
+                                                    <Typography type="body-sm" weight="medium" className="line-clamp-2">
                                                         {module.description || module.title}
                                                     </Typography>
                                                     {module.description ? (
@@ -234,7 +234,7 @@ const ContentMapLessonRow = ({
                     <PlayCircleIcon aria-hidden focusable="false" className="size-4 shrink-0 text-muted" />
                 )}
                 <div className="min-w-0 flex-1">
-                    <Typography type="body-sm" weight="semibold" className="line-clamp-2">
+                    <Typography type="body-sm" weight="medium" className="line-clamp-2">
                         {lesson.description || lesson.title}
                     </Typography>
                     {lesson.description ? (

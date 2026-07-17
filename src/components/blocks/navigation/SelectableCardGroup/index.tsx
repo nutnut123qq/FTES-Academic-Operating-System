@@ -37,8 +37,11 @@ export interface SelectableCardGroupProps<T extends string> extends WithClassNam
      * `"card"` (default): each option is its own bordered surface card, gapped.
      * `"list"`: one bordered container of connected rows split by dividers (no
      * per-row border/gap) — a single object, not a stack of cards.
+     * `"plain"`: bare rows with NO container border, NO per-row box/fill — the
+     * selected row is signalled by ACCENT TEXT only (radio + label go accent).
+     * Tightest option; use for a pricing/package ladder.
      */
-    variant?: "card" | "list"
+    variant?: "card" | "list" | "plain"
     /**
      * Tightens each row's vertical padding (`py-2.5` instead of `py-3`) so a
      * `"list"` group reads as a compact one-line ladder (e.g. a pricing/package
@@ -88,7 +91,9 @@ export const SelectableCardGroup = <T extends string>({
             className={cn(
                 variant === "list"
                     ? "flex flex-col divide-y divide-separator overflow-hidden rounded-2xl border border-default"
-                    : cn("grid gap-2", COLUMNS_CLASS[columns]),
+                    : variant === "plain"
+                        ? "flex flex-col"
+                        : cn("grid gap-2", COLUMNS_CLASS[columns]),
                 className,
             )}
         >
@@ -97,18 +102,25 @@ export const SelectableCardGroup = <T extends string>({
                     {({ isSelected, isDisabled, isFocusVisible }) => (
                         <div
                             className={cn(
-                                "flex w-full items-center gap-2 px-3 text-sm text-foreground transition-colors",
-                                compact && variant === "list" ? "py-2.5" : "py-3",
-                                // card: standalone bordered surface; list: flat connected row
+                                "flex w-full items-center gap-2 text-sm transition-colors",
+                                variant === "plain" ? "px-1" : "px-3",
+                                variant === "plain" ? "py-1.5" : compact && variant === "list" ? "py-2.5" : "py-3",
+                                // card: standalone bordered surface; list: flat connected row with
+                                // an accent fill; plain: NO box — selected row is signalled by accent
+                                // text only (label inherits currentColor → turns accent).
                                 variant === "list"
-                                    ? cn(isSelected && "bg-accent/10 font-medium")
-                                    : cn(
-                                        "rounded-xl border bg-surface",
-                                        isSelected ? "border-accent bg-accent/10 font-medium" : "border-default",
-                                    ),
-                                !isSelected && !isDisabled && "hover:bg-default",
+                                    ? cn(isSelected ? "bg-accent/10 font-medium" : "text-foreground")
+                                    : variant === "plain"
+                                        ? cn(isSelected ? "font-semibold text-accent" : "text-foreground")
+                                        : cn(
+                                            "rounded-xl border bg-surface text-foreground",
+                                            isSelected ? "border-accent bg-accent/10 font-medium" : "border-default",
+                                        ),
+                                !isSelected && !isDisabled && (variant === "plain" ? "hover:text-foreground/70" : "hover:bg-default"),
                                 isDisabled && "opacity-60",
-                                isFocusVisible && (variant === "list" ? "ring-2 ring-inset ring-accent" : "ring-2 ring-accent"),
+                                isFocusVisible && (variant === "plain"
+                                    ? "rounded-lg ring-2 ring-accent"
+                                    : variant === "list" ? "ring-2 ring-inset ring-accent" : "ring-2 ring-accent"),
                             )}
                         >
                             {item.icon ? (

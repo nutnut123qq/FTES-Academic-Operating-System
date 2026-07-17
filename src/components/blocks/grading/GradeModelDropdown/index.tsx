@@ -133,17 +133,38 @@ export const GradeModelDropdown = ({
             >
                 <DropdownMenu
                     aria-label={t("aiSettings.pickModel")}
+                    onAction={(rawKey) => {
+                        const key = String(rawKey)
+                        // Auto lane — balancer picks (no pinned model).
+                        if (key === "auto") {
+                            onSelect({ mode: AiMode.Auto, model: null, provider: null })
+                            return
+                        }
+                        const model = models.find((m) => `${m.provider}:${m.model}` === key)
+                        // Unknown key or an unavailable model → no-op (matches the old
+                        // no-op onPress on disabled/unavailable rows).
+                        if (!model || !model.available) {
+                            return
+                        }
+                        // Balanced/Premium/Frontier without an unlock → route to plans.
+                        if (PLAN_CATEGORIES.includes(model.category) && !canPremium) {
+                            onUpgrade()
+                            return
+                        }
+                        // Normal + below-floor share the same selection action (below-floor
+                        // only flags a warning icon, it stays selectable).
+                        onSelect({
+                            mode: canPremium ? AiMode.Premium : AiMode.Auto,
+                            model: model.model,
+                            provider: model.provider,
+                        })
+                    }}
                 >
                     {/* Auto lane — balancer picks a model on the floor→climb chain */}
                     {showAutoLane ? (
                         <DropdownSection>
                             <DropdownItem
                                 key="auto"
-                                onPress={() => onSelect({
-                                    mode: AiMode.Auto,
-                                    model: null,
-                                    provider: null,
-                                })}
                             >
                                 <div className="flex items-center gap-2">
                                     <span>{t("aiSettings.lanes.auto.title")}</span>
@@ -154,111 +175,101 @@ export const GradeModelDropdown = ({
                     {/* One entry per catalog model. Below-floor = warning (selectable,
                         risky); Balanced/Premium/Frontier = locked without an unlock. */}
                     <DropdownSection className={showAutoLane ? "border-t border-divider pt-1 mt-1" : undefined}>
-                        {models.map((model) => {
-                            const key = `${model.provider}:${model.model}`
-                            const categoryChip = <AiCategoryChip category={model.category} />
-                            const requiresPlan = PLAN_CATEGORIES.includes(model.category)
-                            // below the recommended floor → flag danger (grading: Free is
-                            // below Economy). No floor → never flagged (chatbot runs Free).
-                            const belowFloor = floor !== undefined
+                        {models
+                            .filter((model) => !!model.provider && !!model.model)
+                            .map((model) => {
+                                const key = `${model.provider}:${model.model}`
+                                const categoryChip = <AiCategoryChip category={model.category} />
+                                const requiresPlan = PLAN_CATEGORIES.includes(model.category)
+                                // below the recommended floor → flag danger (grading: Free is
+                                // below Economy). No floor → never flagged (chatbot runs Free).
+                                const belowFloor = floor !== undefined
                                 && CATEGORY_ORDER.indexOf(model.category) < CATEGORY_ORDER.indexOf(floor)
-                            if (!model.available) {
+                                if (!model.available) {
                                 // DISABLED (not locked): model/provider tạm không khả dụng
                                 // (key không hợp lệ / provider down) → icon CẢNH BÁO.
-                                return (
-                                    <DropdownItem
-                                        key={key}
-                                        textValue={model.model}
-                                        onPress={() => undefined}
-                                    >
-                                        <Tooltip>
-                                            <Tooltip.Trigger>
-                                                <div className="flex w-full items-center justify-between gap-2 text-muted">
-                                                    <span className="flex min-w-0 items-center gap-2">
-                                                        <WarningCircleIcon className="size-5 shrink-0" />
-                                                        <span className="truncate">{model.model}</span>
-                                                    </span>
-                                                    {categoryChip}
-                                                </div>
-                                            </Tooltip.Trigger>
-                                            <Tooltip.Content>{t("aiSettings.modelUnavailable")}</Tooltip.Content>
-                                        </Tooltip>
-                                    </DropdownItem>
-                                )
-                            }
-                            if (requiresPlan && !canPremium) {
+                                    return (
+                                        <DropdownItem
+                                            key={key}
+                                            textValue={model.model}
+                                        >
+                                            <Tooltip>
+                                                <Tooltip.Trigger>
+                                                    <div className="flex w-full items-center justify-between gap-2 text-muted">
+                                                        <span className="flex min-w-0 items-center gap-2">
+                                                            <WarningCircleIcon className="size-5 shrink-0" />
+                                                            <span className="truncate">{model.model}</span>
+                                                        </span>
+                                                        {categoryChip}
+                                                    </div>
+                                                </Tooltip.Trigger>
+                                                <Tooltip.Content>{t("aiSettings.modelUnavailable")}</Tooltip.Content>
+                                            </Tooltip>
+                                        </DropdownItem>
+                                    )
+                                }
+                                if (requiresPlan && !canPremium) {
                                 // LOCKED: cần nâng gói HOẶC enroll khoá để mở tier cao.
-                                return (
-                                    <DropdownItem
-                                        key={key}
-                                        textValue={model.model}
-                                        onPress={onUpgrade}
-                                    >
-                                        <Tooltip>
-                                            <Tooltip.Trigger>
-                                                <div className="flex w-full items-center justify-between gap-2 text-muted">
-                                                    <span className="flex min-w-0 items-center gap-2">
-                                                        <LockIcon className="size-5 shrink-0" />
-                                                        <span className="truncate">{model.model}</span>
-                                                    </span>
-                                                    {categoryChip}
-                                                </div>
-                                            </Tooltip.Trigger>
-                                            <Tooltip.Content>
-                                                <Typography type="body-sm">{t("aiSettings.subscribeToGrade")}</Typography>
-                                            </Tooltip.Content>
-                                        </Tooltip>
-                                    </DropdownItem>
-                                )
-                            }
-                            if (belowFloor) {
+                                    return (
+                                        <DropdownItem
+                                            key={key}
+                                            textValue={model.model}
+                                        >
+                                            <Tooltip>
+                                                <Tooltip.Trigger>
+                                                    <div className="flex w-full items-center justify-between gap-2 text-muted">
+                                                        <span className="flex min-w-0 items-center gap-2">
+                                                            <LockIcon className="size-5 shrink-0" />
+                                                            <span className="truncate">{model.model}</span>
+                                                        </span>
+                                                        {categoryChip}
+                                                    </div>
+                                                </Tooltip.Trigger>
+                                                <Tooltip.Content>
+                                                    <Typography type="body-sm">{t("aiSettings.subscribeToGrade")}</Typography>
+                                                </Tooltip.Content>
+                                            </Tooltip>
+                                        </DropdownItem>
+                                    )
+                                }
+                                if (belowFloor) {
                                 // WARNING: dưới mức khuyến nghị — vẫn chọn được nhưng có thể chấm KHÔNG chính xác.
+                                    return (
+                                        <DropdownItem
+                                            key={key}
+                                            textValue={model.model}
+                                        >
+                                            <Tooltip>
+                                                <Tooltip.Trigger>
+                                                    <div className="flex w-full items-center justify-between gap-2">
+                                                        <span className="flex min-w-0 items-center gap-2">
+                                                            <WarningIcon className="size-5 shrink-0 text-warning" />
+                                                            <span className="truncate">{model.model}</span>
+                                                        </span>
+                                                        {categoryChip}
+                                                    </div>
+                                                </Tooltip.Trigger>
+                                                <Tooltip.Content>
+                                                    <Typography type="body-sm" className="text-warning">
+                                                        {t("aiSettings.belowFloorWarning")}
+                                                    </Typography>
+                                                </Tooltip.Content>
+                                            </Tooltip>
+                                        </DropdownItem>
+                                    )
+                                }
                                 return (
                                     <DropdownItem
                                         key={key}
                                         textValue={model.model}
-                                        onPress={() => onSelect({
-                                            mode: canPremium ? AiMode.Premium : AiMode.Auto,
-                                            model: model.model,
-                                            provider: model.provider,
-                                        })}
                                     >
-                                        <Tooltip>
-                                            <Tooltip.Trigger>
-                                                <div className="flex w-full items-center justify-between gap-2">
-                                                    <span className="flex min-w-0 items-center gap-2">
-                                                        <WarningIcon className="size-5 shrink-0 text-warning" />
-                                                        <span className="truncate">{model.model}</span>
-                                                    </span>
-                                                    {categoryChip}
-                                                </div>
-                                            </Tooltip.Trigger>
-                                            <Tooltip.Content>
-                                                <Typography type="body-sm" className="text-warning">
-                                                    {t("aiSettings.belowFloorWarning")}
-                                                </Typography>
-                                            </Tooltip.Content>
-                                        </Tooltip>
+                                        <div className="flex items-center justify-between gap-2">
+                                            <span className="truncate">{model.model}</span>
+                                            {categoryChip}
+                                        </div>
                                     </DropdownItem>
                                 )
-                            }
-                            return (
-                                <DropdownItem
-                                    key={key}
-                                    textValue={model.model}
-                                    onPress={() => onSelect({
-                                        mode: canPremium ? AiMode.Premium : AiMode.Auto,
-                                        model: model.model,
-                                        provider: model.provider,
-                                    })}
-                                >
-                                    <div className="flex items-center justify-between gap-2">
-                                        <span className="truncate">{model.model}</span>
-                                        {categoryChip}
-                                    </div>
-                                </DropdownItem>
-                            )
-                        })}
+                            })}
                     </DropdownSection>
                 </DropdownMenu>
             </DropdownPopover>

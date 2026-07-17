@@ -315,12 +315,12 @@ export const SubjectAiTutor = ({
                         <DropdownPopover placement="top start">
                             <DropdownMenu
                                 aria-label={t("subjects.aiTools.tutor.modelLabel")}
+                                onAction={(key) => setModel(String(key) as SubjectAiModel)}
                             >
                                 {MODELS.map((option) => (
                                     <DropdownItem
                                         key={option}
                                         textValue={option}
-                                        onPress={() => setModel(option)}
                                     >
                                         {option}
                                     </DropdownItem>

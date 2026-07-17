@@ -70,11 +70,13 @@ export const AiModelPicker = ({
                 </div>
             </DropdownTrigger>
             <DropdownPopover className="min-w-64">
-                <DropdownMenu aria-label={t("codeGrading.pickModel")}>
+                <DropdownMenu
+                    aria-label={t("codeGrading.pickModel")}
+                    onAction={(key) => onChange(key === "__default" ? null : String(key))}
+                >
                     <DropdownItem
                         key="__default"
                         textValue={t("codeGrading.defaultModel")}
-                        onPress={() => onChange(null)}
                     >
                         <div className="flex flex-col">
                             <span>{t("codeGrading.defaultModel")}</span>
@@ -85,22 +87,23 @@ export const AiModelPicker = ({
                             ) : null}
                         </div>
                     </DropdownItem>
-                    {models.map((model) => (
-                        <DropdownItem
-                            key={model.id}
-                            textValue={model.label ?? model.id}
-                            onPress={() => onChange(model.id)}
-                        >
-                            <div className="flex items-center justify-between gap-3">
-                                <span>{model.label ?? model.id}</span>
-                                {model.pricing_hint ? (
-                                    <Typography type="body-xs" color="muted">
-                                        {model.pricing_hint}
-                                    </Typography>
-                                ) : null}
-                            </div>
-                        </DropdownItem>
-                    ))}
+                    {models
+                        .filter((model) => !!model.id)
+                        .map((model) => (
+                            <DropdownItem
+                                key={String(model.id)}
+                                textValue={model.label ?? model.id}
+                            >
+                                <div className="flex items-center justify-between gap-3">
+                                    <span>{model.label ?? model.id}</span>
+                                    {model.pricing_hint ? (
+                                        <Typography type="body-xs" color="muted">
+                                            {model.pricing_hint}
+                                        </Typography>
+                                    ) : null}
+                                </div>
+                            </DropdownItem>
+                        ))}
                 </DropdownMenu>
             </DropdownPopover>
         </Dropdown>

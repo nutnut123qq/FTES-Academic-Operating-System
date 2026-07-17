@@ -333,23 +333,27 @@ export const ContentAiChat = ({ className }: ContentAiChatProps) => {
                                 </div>
                             </DropdownTrigger>
                             <DropdownPopover placement="top start" className="min-w-56">
-                                <DropdownMenu aria-label={t("reader.ai.modelLabel")}>
-                                    {catalogModels.map((catalogModel) => (
-                                        <DropdownItem
-                                            key={catalogModel.id}
-                                            textValue={catalogModel.label ?? catalogModel.id}
-                                            onPress={() => setSelectedModel(catalogModel.id)}
-                                        >
-                                            <div className="flex items-center justify-between gap-3">
-                                                <span>{catalogModel.label ?? shortModelName(catalogModel.id)}</span>
-                                                {catalogModel.pricing_hint ? (
-                                                    <Typography type="body-xs" color="muted">
-                                                        {catalogModel.pricing_hint}
-                                                    </Typography>
-                                                ) : null}
-                                            </div>
-                                        </DropdownItem>
-                                    ))}
+                                <DropdownMenu
+                                    aria-label={t("reader.ai.modelLabel")}
+                                    onAction={(key) => setSelectedModel(String(key))}
+                                >
+                                    {catalogModels
+                                        .filter((catalogModel) => !!catalogModel.id)
+                                        .map((catalogModel) => (
+                                            <DropdownItem
+                                                key={String(catalogModel.id)}
+                                                textValue={catalogModel.label ?? catalogModel.id}
+                                            >
+                                                <div className="flex items-center justify-between gap-3">
+                                                    <span>{catalogModel.label ?? shortModelName(catalogModel.id)}</span>
+                                                    {catalogModel.pricing_hint ? (
+                                                        <Typography type="body-xs" color="muted">
+                                                            {catalogModel.pricing_hint}
+                                                        </Typography>
+                                                    ) : null}
+                                                </div>
+                                            </DropdownItem>
+                                        ))}
                                 </DropdownMenu>
                             </DropdownPopover>
                         </Dropdown>

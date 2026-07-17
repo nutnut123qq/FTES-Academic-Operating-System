@@ -78,12 +78,14 @@ export const DebugTool = () => {
                             <CaretDownIcon aria-hidden focusable="false" className="size-4" />
                         </DropdownTrigger>
                         <DropdownPopover className="min-w-40">
-                            <DropdownMenu aria-label={t("debug.language")}>
+                            <DropdownMenu
+                                aria-label={t("debug.language")}
+                                onAction={(key) => setLanguage(String(key))}
+                            >
                                 {LANGUAGES.map((lang) => (
                                     <DropdownItem
                                         key={lang}
                                         textValue={lang}
-                                        onPress={() => setLanguage(lang)}
                                     >
                                         {lang}
                                     </DropdownItem>

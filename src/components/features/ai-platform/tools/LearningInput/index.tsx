@@ -133,22 +133,29 @@ export const LearningInput = ({ value, onChange, isDisabled }: LearningInputProp
                                 <CaretDownIcon aria-hidden focusable="false" className="size-4 shrink-0" />
                             </DropdownTrigger>
                             <DropdownPopover className="min-w-72 max-w-96">
-                                <DropdownMenu aria-label={t("lessonPlaceholder")}>
-                                    {(lessons ?? []).map((lesson) => (
-                                        <DropdownItem
-                                            key={lesson.globalId}
-                                            textValue={lesson.label}
-                                            onPress={() =>
-                                                onChange({
-                                                    ...value,
-                                                    lessonId: fromGlobalId(lesson.globalId)?.id ?? null,
-                                                    lessonLabel: lesson.label,
-                                                })
-                                            }
-                                        >
-                                            <span className="line-clamp-2">{lesson.label}</span>
-                                        </DropdownItem>
-                                    ))}
+                                <DropdownMenu
+                                    aria-label={t("lessonPlaceholder")}
+                                    onAction={(key) => {
+                                        const globalId = String(key)
+                                        const lesson = (lessons ?? []).find((item) => item.globalId === globalId)
+                                        if (!lesson) return
+                                        onChange({
+                                            ...value,
+                                            lessonId: fromGlobalId(lesson.globalId)?.id ?? null,
+                                            lessonLabel: lesson.label,
+                                        })
+                                    }}
+                                >
+                                    {(lessons ?? [])
+                                        .filter((lesson) => !!lesson.globalId)
+                                        .map((lesson) => (
+                                            <DropdownItem
+                                                key={lesson.globalId}
+                                                textValue={lesson.label}
+                                            >
+                                                <span className="line-clamp-2">{lesson.label}</span>
+                                            </DropdownItem>
+                                        ))}
                                 </DropdownMenu>
                             </DropdownPopover>
                         </Dropdown>

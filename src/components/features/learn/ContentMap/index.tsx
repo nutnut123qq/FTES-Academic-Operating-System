@@ -45,6 +45,12 @@ export const ContentMap = ({ className }: ContentMapProps) => {
     const [query, setQuery] = useState("")
 
     const flatLessons = useMemo(() => modules.flatMap((module) => module.lessons), [modules])
+    // Stable 1-based "Phần N" index keyed on the FULL module order, so filtering
+    // out empty modules never renumbers the eyebrow.
+    const modulePartIndex = useMemo(
+        () => new Map(modules.map((module, index) => [module.id, index + 1])),
+        [modules],
+    )
     const doneCount = flatLessons.filter((lesson) => lesson.isCompleted).length
     const totalCount = flatLessons.length
 
@@ -123,51 +129,63 @@ export const ContentMap = ({ className }: ContentMapProps) => {
                         className="overflow-hidden border border-default"
                         defaultExpandedKeys={activeModuleId ? [activeModuleId] : undefined}
                     >
-                        {filteredModules.map((module) => (
-                            <Accordion.Item key={module.id} id={module.id} aria-label={module.title}>
-                                <Accordion.Heading>
-                                    <Accordion.Trigger className="text-sm font-semibold">
-                                        <div className="flex w-full min-w-0 items-center gap-2">
-                                            <div className="min-w-0 flex-1 text-left">
-                                                <Typography type="body-sm" weight="semibold" truncate>
-                                                    {module.title}
-                                                </Typography>
-                                                {module.description ? (
-                                                    <Typography type="body-xs" color="muted" className="line-clamp-1">
-                                                        {module.description}
+                        {filteredModules.map((module) => {
+                            const partIndex = modulePartIndex.get(module.id)
+                            return (
+                                <Accordion.Item key={module.id} id={module.id} aria-label={module.title}>
+                                    <Accordion.Heading>
+                                        <Accordion.Trigger className="text-sm font-semibold">
+                                            <div className="flex w-full min-w-0 items-center gap-2">
+                                                <div className="min-w-0 flex-1 text-left">
+                                                    {partIndex != null ? (
+                                                        <Typography
+                                                            type="body-xs"
+                                                            color="muted"
+                                                            className="uppercase tracking-wide"
+                                                        >
+                                                            {t("contentMap.partLabel", { index: partIndex })}
+                                                        </Typography>
+                                                    ) : null}
+                                                    <Typography type="body-sm" weight="semibold" className="line-clamp-2">
+                                                        {module.title}
                                                     </Typography>
-                                                ) : null}
+                                                    {module.description ? (
+                                                        <Typography type="body-xs" color="muted" className="line-clamp-1">
+                                                            {module.description}
+                                                        </Typography>
+                                                    ) : null}
+                                                </div>
+                                                <Chip size="sm" variant="soft" className="shrink-0">
+                                                    {t("contentMap.lessonCount", {
+                                                        done: module.lessons.filter((lesson) => lesson.isCompleted).length,
+                                                        total: module.lessons.length,
+                                                    })}
+                                                </Chip>
+                                                <Accordion.Indicator className="shrink-0" />
                                             </div>
-                                            <Chip size="sm" variant="soft" className="shrink-0">
-                                                {t("contentMap.lessonCount", {
-                                                    done: module.lessons.filter((lesson) => lesson.isCompleted).length,
-                                                    total: module.lessons.length,
-                                                })}
-                                            </Chip>
-                                            <Accordion.Indicator className="shrink-0" />
-                                        </div>
-                                    </Accordion.Trigger>
-                                </Accordion.Heading>
-                                <Accordion.Panel>
-                                    <Accordion.Body>
-                                        <div className="flex flex-col gap-1">
-                                            {module.lessons.map((lesson) => (
-                                                <ContentMapLessonRow
-                                                    key={lesson.id}
-                                                    courseId={courseId}
-                                                    courseRawId={course?.id}
-                                                    courseTitle={course?.header.title ?? ""}
-                                                    lesson={lesson}
-                                                    isActive={lesson.id === contentId}
-                                                    onOpen={() => openLesson(lesson.id)}
-                                                    lockedLabel={t("content.premium")}
-                                                />
-                                            ))}
-                                        </div>
-                                    </Accordion.Body>
-                                </Accordion.Panel>
-                            </Accordion.Item>
-                        ))}
+                                        </Accordion.Trigger>
+                                    </Accordion.Heading>
+                                    <Accordion.Panel>
+                                        <Accordion.Body>
+                                            <div className="flex flex-col gap-1">
+                                                {module.lessons.map((lesson) => (
+                                                    <ContentMapLessonRow
+                                                        key={lesson.id}
+                                                        courseId={courseId}
+                                                        courseRawId={course?.id}
+                                                        courseTitle={course?.header.title ?? ""}
+                                                        lesson={lesson}
+                                                        isActive={lesson.id === contentId}
+                                                        onOpen={() => openLesson(lesson.id)}
+                                                        lockedLabel={t("content.premium")}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </Accordion.Body>
+                                    </Accordion.Panel>
+                                </Accordion.Item>
+                            )
+                        })}
                     </Accordion>
                 </AsyncContent>
             </ScrollShadow>

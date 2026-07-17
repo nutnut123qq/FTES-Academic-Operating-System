@@ -36,6 +36,11 @@ export interface SearchRow {
     snippet?: string
     /** Optional breadcrumb line (course › module › content) for learning entities. */
     breadcrumb?: string
+    /**
+     * Optional pre-formatted price/subtitle pinned to the trailing edge of the row
+     * (e.g. a course price on a "Popular" suggestion). Purely presentational.
+     */
+    price?: string
     /** Deep-link route (locale-prefixed). `null` → row renders non-interactive. */
     href: string | null
 }

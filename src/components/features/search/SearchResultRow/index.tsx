@@ -68,6 +68,11 @@ export const SearchResultRow = ({
                     </Typography>
                 ) : null}
             </div>
+            {row.price ? (
+                <Typography type="body-sm" weight="semibold" className="shrink-0 text-accent">
+                    {row.price}
+                </Typography>
+            ) : null}
         </div>
     )
 }

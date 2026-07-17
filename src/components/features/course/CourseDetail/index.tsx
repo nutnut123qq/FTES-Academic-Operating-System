@@ -9,6 +9,7 @@ import {
     CaretRightIcon,
     CertificateIcon,
     CheckCircleIcon,
+    CheckIcon,
     CircleIcon,
     ClockIcon,
     GithubLogoIcon,
@@ -20,6 +21,7 @@ import {
     PuzzlePieceIcon,
     StackIcon,
     StarIcon,
+    TrashIcon,
     TrophyIcon,
     UsersIcon,
 } from "@phosphor-icons/react"
@@ -29,7 +31,9 @@ import { useParams } from "next/navigation"
 import { useSWRConfig } from "swr"
 import { useRouter } from "@/i18n/navigation"
 import { useGetCoursePackageProductSwr } from "@/hooks/swr/api/rest/queries/useGetCoursePackageProductSwr"
+import { useGetCartSwr } from "@/hooks/swr/api/rest/queries/useGetCartSwr"
 import { usePostAddCartItemSwr } from "@/hooks/swr/api/rest/mutations/usePostAddCartItemSwr"
+import { usePostRemoveCartItemSwr } from "@/hooks/swr/api/rest/mutations/usePostRemoveCartItemSwr"
 import { usePaymentOverlayState } from "@/hooks/zustand/overlay/hooks"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { SaveButton } from "@/components/blocks/buttons/SaveButton"
@@ -458,7 +462,14 @@ const CourseDetailView = ({
                                                 <CaretRightIcon aria-hidden focusable="false" className="size-4 shrink-0 text-muted" />
                                             )}
                                             <div className="min-w-0 flex-1">
-                                                <Typography type="body-sm" weight="medium" className="truncate">
+                                                <Typography
+                                                    type="body-xs"
+                                                    color="muted"
+                                                    className="uppercase tracking-wide"
+                                                >
+                                                    {t("detail.partLabel", { index: index + 1 })}
+                                                </Typography>
+                                                <Typography type="body" weight="semibold" className="line-clamp-2">
                                                     {section.title}
                                                 </Typography>
                                                 {section.description ? (
@@ -744,7 +755,7 @@ const EnrollCard = ({
 
 /** The enroll card's 16:9 cover — the real course image, else a play-icon placeholder. */
 const CardCover = ({ coverUrl, alt }: { coverUrl?: string; alt: string }) => (
-    <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-large bg-default/40">
+    <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-2xl bg-default/40">
         {coverUrl ? (
             // ponytail: `unoptimized` skips the Next optimizer (no remotePatterns needed)
             <Image src={coverUrl} alt={alt} fill unoptimized className="object-cover" />
@@ -773,6 +784,19 @@ const packagePrice = (pkg: PackageView): { discounted: number; original: number 
     const discounted = Number(pkg.salePrice) || 0
     const original = Number(pkg.originalPrice) || 0
     return { discounted, original: discounted > 0 && original > discounted ? original : null }
+}
+
+/**
+ * A package's remaining scarcity/slot figure, when the contract carries one.
+ *
+ * ponytail: today's `PackageView` exposes NO slot/scarcity field, so this always
+ * returns `null` and the orange scarcity line stays hidden — we NEVER fabricate a
+ * number (see tasks Findings). The read is intentionally tolerant so the line lights
+ * up the moment BE adds a real `slotAvailable` figure, without a contract change here.
+ */
+const packageSlots = (pkg: PackageView): number | null => {
+    const slot = (pkg as { slotAvailable?: number | null }).slotAvailable
+    return typeof slot === "number" && slot >= 0 ? slot : null
 }
 
 type PackageEnrollCardProps = {
@@ -823,8 +847,16 @@ const PackageEnrollCard = ({
         isEnrolled ? undefined : selectedId,
     )
     const addCart = usePostAddCartItemSwr()
+    const removeCart = usePostRemoveCartItemSwr()
     const payment = usePaymentOverlayState()
     const { mutate: mutateSwr } = useSWRConfig()
+
+    // Cart membership for the resolved product → drives the primary CTA's
+    // "Đăng ký gói" ↔ "Đã thêm vào giỏ" (remove) toggle. Signed-in only, and
+    // skipped once enrolled (no re-buy) so a guest never fires the authed call.
+    const { data: cart } = useGetCartSwr(!isEnrolled)
+    const cartItem = product ? cart?.items.find((item) => item.productId === product.id) : undefined
+    const inCart = Boolean(cartItem)
 
     // Same cart + PaymentModal checkout as the legacy onBuy, for the resolved
     // per-package product. Idle when the product hasn't resolved (buy CTA disabled).
@@ -841,6 +873,17 @@ const PackageEnrollCard = ({
             })
         } catch {
             // add-to-cart failed → SWR surfaces the error; leave the CTA idle
+        }
+    }
+
+    // Remove the resolved product from the cart (reachable only once it IS in cart).
+    const onRemovePackage = async () => {
+        if (!cartItem) return
+        try {
+            await removeCart.trigger(cartItem.id)
+            void mutateSwr("GET_CART_SWR")
+        } catch {
+            // remove failed → SWR surfaces the error; leave the item in place
         }
     }
 
@@ -875,19 +918,36 @@ const PackageEnrollCard = ({
                 </div>
             ) : (
                 <>
-                    {/* headline: the selected package's price — one price, one place */}
+                    {/* headline: the selected package's price (big) + struck original +
+                        −% badge (all via PriceTag), plus ONE orange scarcity line when the
+                        contract exposes a slot figure. Free package → the free label. */}
                     {selectedPackage ? (
-                        packagePrice(selectedPackage).discounted > 0 ? (
-                            <PriceTag
-                                discounted={packagePrice(selectedPackage).discounted}
-                                original={packagePrice(selectedPackage).original}
-                                size="lg"
-                            />
-                        ) : (
-                            <Typography type="h3" weight="bold">
-                                {t("detail.planNames.free")}
-                            </Typography>
-                        )
+                        (() => {
+                            const slots = packageSlots(selectedPackage)
+                            return (
+                                <div className="flex flex-col gap-2">
+                                    {packagePrice(selectedPackage).discounted > 0 ? (
+                                        <PriceTag
+                                            discounted={packagePrice(selectedPackage).discounted}
+                                            original={packagePrice(selectedPackage).original}
+                                            size="lg"
+                                        />
+                                    ) : (
+                                        <Typography type="h3" weight="bold">
+                                            {t("detail.planNames.free")}
+                                        </Typography>
+                                    )}
+                                    {/* scarcity: hidden today — `PackageView` carries no slot
+                                        figure (see tasks Findings); lights up the moment BE
+                                        sends one. Never a fabricated number. */}
+                                    {slots != null ? (
+                                        <Typography type="body-sm" className="text-warning">
+                                            {t("detail.earlyBirdSlots", { count: slots })}
+                                        </Typography>
+                                    ) : null}
+                                </div>
+                            )
+                        })()
                     ) : null}
 
                     <Typography type="body-xs" weight="medium" color="muted">
@@ -910,7 +970,19 @@ const PackageEnrollCard = ({
                                 ) : (
                                     <CircleIcon aria-hidden focusable="false" className="size-5 text-muted" />
                                 ),
-                                label: pkg.name,
+                                // name on the left; the open/selected package carries an
+                                // accent "Đang mở" label (the row itself is accent-highlighted
+                                // by SelectableCardGroup's list variant).
+                                label: (
+                                    <span className="flex items-center gap-1.5">
+                                        <span className="truncate">{pkg.name}</span>
+                                        {isSelected ? (
+                                            <Chip size="sm" variant="soft" color="accent" className="shrink-0">
+                                                {t("detail.package.active")}
+                                            </Chip>
+                                        ) : null}
+                                    </span>
+                                ),
                                 // hide "Gồm 0 phần" when the compact list carries no entitlements
                                 description: count > 0
                                     ? t("detail.package.entitlementSummary", { count })
@@ -937,15 +1009,31 @@ const PackageEnrollCard = ({
                         })}
                     />
 
-                    <Button
-                        variant="primary"
-                        fullWidth
-                        onPress={onBuyPackage}
-                        isDisabled={!product}
-                        isPending={addCart.isMutating}
-                    >
-                        {t("detail.package.buy")}
-                    </Button>
+                    {/* CTA tier 1: Enroll → once the package is in the cart the primary
+                        flips to an "In cart" state whose press REMOVES the item (trash icon). */}
+                    {inCart ? (
+                        <Button
+                            variant="primary"
+                            fullWidth
+                            onPress={onRemovePackage}
+                            isPending={removeCart.isMutating}
+                        >
+                            <CheckIcon aria-hidden focusable="false" className="size-5" />
+                            {t("detail.inCart")}
+                            <TrashIcon aria-hidden focusable="false" className="size-4" />
+                        </Button>
+                    ) : (
+                        <Button
+                            variant="primary"
+                            fullWidth
+                            onPress={onBuyPackage}
+                            isDisabled={!product}
+                            isPending={addCart.isMutating}
+                        >
+                            {t("detail.package.buy")}
+                        </Button>
+                    )}
+                    {/* CTA tier 2: try free (acquisition entry for a non-payer) */}
                     <Button variant="secondary" fullWidth onPress={onTryLearning}>
                         {t("detail.tryFree")}
                     </Button>

@@ -13,6 +13,8 @@ export interface PublicProfile {
     campus: string
     skills: Array<string>
     followers: number
+    /** Users this profile follows (from `counters.following`). */
+    following: number
 }
 
 /**
@@ -29,6 +31,7 @@ export const toPublicProfile = (dto: PublicProfileDto): PublicProfile => ({
     campus: [dto.academic?.campus, dto.academic?.university].filter(Boolean).join(" · "),
     skills: [],
     followers: dto.counters?.followers ?? 0,
+    following: dto.counters?.following ?? 0,
 })
 
 /** Loads a public profile by username from the real BE (`GET /profiles/{username}`). */

@@ -1,9 +1,20 @@
-"use client"
+import { redirect } from "next/navigation"
 
-import React from "react"
-import { CourseLesson } from "@/components/features/course/CourseLesson"
+/** Route params for the legacy lesson route. */
+interface LegacyLessonRouteParams {
+    locale: string
+    courseId: string
+    lessonId: string
+}
 
-/** `/courses/[courseId]/lessons/[lessonId]` — lesson view (§4). */
-const Page = () => <CourseLesson />
+/**
+ * Legacy `/courses/[courseId]/lessons/[lessonId]` — the standalone lesson view has
+ * moved into the learn shell. Redirect old deep-links to the content dashboard so
+ * bookmarks keep working instead of 404-ing.
+ */
+const Page = async ({ params }: { params: Promise<LegacyLessonRouteParams> }) => {
+    const { locale, courseId } = await params
+    redirect(`/${locale}/courses/${courseId}/learn/content`)
+}
 
 export default Page

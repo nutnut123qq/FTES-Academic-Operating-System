@@ -68,6 +68,12 @@ export interface LearnLessonView {
     isVideoLesson: boolean
     /** True → this lesson has an auto-graded challenge (shows the submission entry). */
     hasChallenge: boolean
+    /** Id of the linked ACTIVE challenge (null when `hasChallenge` is false). */
+    challengeId: string | null
+    /** True → this lesson has a PUBLISHED quiz (shows the quiz block). */
+    hasQuiz: boolean
+    /** Id of the linked PUBLISHED quiz (null when `hasQuiz` is false). */
+    quizId: string | null
     /** Premium + not enrolled → body is gated (select-none, AI ask suppressed). */
     isLocked: boolean
     /**
@@ -157,8 +163,12 @@ const buildLessonView = (
     const isVideoLesson = contentType === "VIDEO"
     const accessLevel = current?.accessLevel ?? null
     const packageSlugs = current?.packageSlugs ?? []
-    // TODO: remove fallback once `GET /lessons/{id}/content` reliably returns `hasChallenge`.
     const hasChallenge = content.hasChallenge ?? false
+    // BE `/lessons/{id}/content` carries the linked ACTIVE challenge id (course-learn-contract-gaps).
+    const challengeId = content.challengeId ?? null
+    // BE `/lessons/{id}/content` carries the linked PUBLISHED quiz (course-learn-contract-gaps).
+    const hasQuiz = content.hasQuiz ?? false
+    const quizId = content.quizId ?? null
 
     // A migrated video ref is a YouTube link or an internal `video_*` token. Anything
     // else in `videoRef` (Drive links, notes) is authored HTML for an attachment
@@ -191,6 +201,9 @@ const buildLessonView = (
         contentType,
         isVideoLesson,
         hasChallenge,
+        challengeId,
+        hasQuiz,
+        quizId,
         // Trust the per-viewer curriculum lock — `content.locked` comes from
         // `GET /lessons/{id}/content`, which 401s for an unentitled viewer and is
         // caught into a `locked: false` fallback (a lie that hides the paywall).

@@ -1,6 +1,11 @@
 import React from "react"
+import { MiniCartDrawer } from "@/components/drawers/MiniCartDrawer"
 
-/** Drawer mount point — feature drawers stripped for the skeleton; add new ones here. */
+/** Drawer mount point — global feature drawers are mounted here (add new ones below). */
 export const DrawerContainer = () => {
-    return <></>
+    return (
+        <>
+            <MiniCartDrawer />
+        </>
+    )
 }

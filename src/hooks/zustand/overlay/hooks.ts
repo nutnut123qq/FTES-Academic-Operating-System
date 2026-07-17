@@ -112,6 +112,8 @@ export const useLessonVideoOverlayState = () => useOverlayHandle("lessonVideo")
 export const useLinkGithubOverlayState = () => useOverlayHandle("linkGithub")
 /** Livestream calendar overlay state. */
 export const useLivestreamCalendarOverlayState = () => useOverlayHandle("livestreamCalendar")
+/** Mini-cart drawer overlay state (nav cart button → slide-out cart preview). */
+export const useMiniCartOverlayState = () => useOverlayHandle("miniCart")
 /**
  * Payment overlay state — UNLIKE the other overlays: it carries a {@link PaymentContext} payload.
  * `open(context)` stashes the payload then opens (one modal serves multiple flows: course enroll /

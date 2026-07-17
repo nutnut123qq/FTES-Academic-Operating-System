@@ -5222,7 +5222,6 @@
       "credits": "{count} credits",
       "enroll": "Enroll",
       "outline": "Course outline",
-      "partLabel": "Part {index}",
       "ratings": "{count} ratings",
       "stats": {
         "learners": "learners",
@@ -5306,7 +5305,7 @@
         "title": "Choose a package",
         "selectorAria": "Choose a package",
         "active": "Open",
-        "entitlementSummary": "{count} parts included",
+        "entitlementSummary": "{count} parts",
         "buy": "Get this package",
         "resolving": "Fetching package details…",
         "updatingTitle": "Packages are being updated",
@@ -6369,7 +6368,6 @@
     "contentMap": {
       "title": "Course content",
       "searchPlaceholder": "Search lessons…",
-      "partLabel": "Part {index}",
       "resizeRail": "Drag to resize the content rail",
       "empty": "No content yet",
       "noMatch": "No lessons match",
@@ -6436,6 +6434,7 @@
     "empty": "Your cart is empty.",
     "errorTitle": "Couldn't load your cart",
     "errorDescription": "Something went wrong. Please try again.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "viewFullCart": "View full cart"
   }
 }

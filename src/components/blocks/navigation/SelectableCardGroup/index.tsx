@@ -104,7 +104,7 @@ export const SelectableCardGroup = <T extends string>({
                             className={cn(
                                 "flex w-full items-center gap-2 text-sm transition-colors",
                                 variant === "plain" ? "px-1" : "px-3",
-                                variant === "plain" ? "py-1.5" : compact && variant === "list" ? "py-2.5" : "py-3",
+                                variant === "plain" ? "py-1" : compact && variant === "list" ? "py-2.5" : "py-3",
                                 // card: standalone bordered surface; list: flat connected row with
                                 // an accent fill; plain: NO box — selected row is signalled by accent
                                 // text only (label inherits currentColor → turns accent).

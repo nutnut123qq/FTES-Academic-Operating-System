@@ -493,7 +493,7 @@ const CourseDetailView = ({
                                                                 <PlayCircleIcon aria-hidden focusable="false" className="size-4 shrink-0 text-accent" />
                                                             )}
                                                             <div className="min-w-0 flex-1">
-                                                                <Typography type="body-sm" weight="semibold" className="line-clamp-2">
+                                                                <Typography type="body-sm" weight="medium" className="line-clamp-2">
                                                                     {lesson.description || lesson.title}
                                                                 </Typography>
                                                                 {lesson.description ? (
@@ -643,7 +643,7 @@ const EnrollCard = ({
     const activePlan: CourseEnrollmentPlan = course.plans[selectedTier]
 
     return (
-        <div className="flex flex-col gap-3 rounded-2xl border border-separator p-4 md:sticky md:top-20">
+        <div className="flex flex-col gap-2.5 rounded-2xl border border-separator p-4 md:sticky md:top-20">
             <CardCover coverUrl={course.coverUrl} alt={course.name} />
 
             {isEnrolled ? (
@@ -907,7 +907,7 @@ const PackageEnrollCard = ({
     }
 
     return (
-        <div className="flex flex-col gap-3 rounded-2xl border border-separator p-4 md:sticky md:top-20">
+        <div className="flex flex-col gap-2.5 rounded-2xl border border-separator p-4 md:sticky md:top-20">
             <CardCover coverUrl={course.coverUrl} alt={course.name} />
 
             {isEnrolled ? (

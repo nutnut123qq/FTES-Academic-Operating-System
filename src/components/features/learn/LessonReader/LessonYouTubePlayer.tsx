@@ -40,6 +40,10 @@ declare global {
 
 /** YT.PlayerState.PLAYING. */
 const YT_STATE_PLAYING = 1
+/** YT.PlayerState.ENDED. */
+const YT_STATE_ENDED = 0
+/** YT.PlayerState.PAUSED. */
+const YT_STATE_PAUSED = 2
 
 let ytApiPromise: Promise<void> | null = null
 const loadYouTubeApi = (): Promise<void> => {
@@ -173,40 +177,43 @@ export const LessonYouTubePlayer = ({
                             clampSeek()
                         },
                         onStateChange: (event) => {
-                            if (event.data !== YT_STATE_PLAYING) {
+                            if (event.data === YT_STATE_PLAYING) {
+                                // Playing → start the 30s watch-position cadence.
+                                reporterRef.current.onPlaying()
+                                if (fired || interval) {
+                                    return
+                                }
+                                interval = window.setInterval(() => {
+                                    const duration = player?.getDuration?.() ?? 0
+                                    const current = player?.getCurrentTime?.() ?? 0
+
+                                    const limit = previewLimitRef.current
+                                    if (limit > 0) {
+                                        const remaining = Math.max(0, limit - current)
+                                        tickRef.current?.(remaining)
+                                        if (current >= limit - 0.5 || remaining <= 0) {
+                                            fireGate()
+                                            return
+                                        }
+                                        if (current > limit) {
+                                            player?.seekTo?.(limit, true)
+                                        }
+                                    }
+
+                                    if (duration > 0 && current / duration >= 0.5) {
+                                        fired = true
+                                        clearPoll()
+                                        halfWatchedRef.current?.()
+                                    }
+                                }, 1000)
+                                return
+                            }
+                            // Chỉ PAUSED/ENDED mới dừng cadence + flush vị trí. BUFFERING(3)/CUED(5)/
+                            // UNSTARTED(-1) — khựng mạng giữa lúc phát — KHÔNG flush để tránh PUT force thừa.
+                            if (event.data === YT_STATE_PAUSED || event.data === YT_STATE_ENDED) {
                                 clearPoll()
-                                // Non-playing (pause / end / buffer) → flush watch position.
                                 reporterRef.current.onPaused()
-                                return
                             }
-                            // Playing → start the 30s watch-position cadence.
-                            reporterRef.current.onPlaying()
-                            if (fired || interval) {
-                                return
-                            }
-                            interval = window.setInterval(() => {
-                                const duration = player?.getDuration?.() ?? 0
-                                const current = player?.getCurrentTime?.() ?? 0
-
-                                const limit = previewLimitRef.current
-                                if (limit > 0) {
-                                    const remaining = Math.max(0, limit - current)
-                                    tickRef.current?.(remaining)
-                                    if (current >= limit - 0.5 || remaining <= 0) {
-                                        fireGate()
-                                        return
-                                    }
-                                    if (current > limit) {
-                                        player?.seekTo?.(limit, true)
-                                    }
-                                }
-
-                                if (duration > 0 && current / duration >= 0.5) {
-                                    fired = true
-                                    clearPoll()
-                                    halfWatchedRef.current?.()
-                                }
-                            }, 1000)
                         },
                     },
                 })

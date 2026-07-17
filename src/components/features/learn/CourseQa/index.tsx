@@ -46,7 +46,7 @@ export interface CourseQaProps {
 }
 
 /**
- * Course-wide Q&A roll-up (lean FTES port of starci CourseQa, mock-backed): every
+ * Course-wide Q&A roll-up (REST roll-up of lesson comments via `fetchCourseRollup`): every
  * top-level question across the course's lessons with filter tabs (URL-synced on the
  * dedicated `/learn/qa` route, in-memory when `embedded`), debounced search, a
  * course-general composer, an answers thread per row, and an invitation empty-state

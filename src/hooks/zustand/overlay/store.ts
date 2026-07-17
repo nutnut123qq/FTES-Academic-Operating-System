@@ -16,6 +16,21 @@ export interface FollowListContext {
 }
 
 /**
+ * Serializable snapshot of a selection rect (viewport coordinates), captured
+ * BEFORE the browser selection is cleared. Drives where the desktop
+ * selection-anchored AI panel is placed (right of the rect → flip left → under).
+ * A plain object (not a live `DOMRect`) so it lives safely in the store.
+ */
+export interface AnchorRect {
+    top: number
+    left: number
+    right: number
+    bottom: number
+    width: number
+    height: number
+}
+
+/**
  * Identifier for each overlay (modal/drawer/popover) in the app. Each key holds an independent
  * open state in {@link useOverlayStore}.
  */
@@ -31,6 +46,7 @@ export type OverlayKey =
     | "communityComposer"
     | "content"
     | "contentAiChat"
+    | "contentAiAnchored"
     | "contentAiSettings"
     | "cookiePreferences"
     | "cvPreview"
@@ -67,6 +83,7 @@ const OVERLAY_KEYS: ReadonlyArray<OverlayKey> = [
     "communityComposer",
     "content",
     "contentAiChat",
+    "contentAiAnchored",
     "contentAiSettings",
     "cookiePreferences",
     "cvPreview",
@@ -115,6 +132,9 @@ interface OverlayStoreState {
      * sent to the model as HIDDEN grounding so it can reason about a short selection,
      * NOT shown in the chat thread. */
     contentAiSelectionContext: string | null
+    /** Snapshot of the selection rect the desktop anchored AI panel is placed against
+     * (captured before the browser selection is cleared). Null when no anchored panel. */
+    contentAiAnchorRect: AnchorRect | null
     /** Stash (or clear) the authentication modal context message key. */
     setAuthenticationContext: (context: string | null) => void
     /** Set the open state of an overlay (used by `onOpenChange`). */
@@ -137,6 +157,8 @@ interface OverlayStoreState {
     signalContentAiCleared: () => void
     /** Set (or clear) the highlighted passage + its surrounding context (hidden grounding). */
     setContentAiSelection: (passage: string | null, context?: string | null) => void
+    /** Set (or clear) the selection rect the desktop anchored AI panel anchors to. */
+    setContentAiAnchorRect: (rect: AnchorRect | null) => void
 }
 
 /** Initial open map — every overlay closed. */
@@ -167,6 +189,7 @@ export const useOverlayStore = create<OverlayStoreState>((set) => ({
     contentAiClearNonce: 0,
     contentAiSelection: null,
     contentAiSelectionContext: null,
+    contentAiAnchorRect: null,
     setOpenFor: (key, isOpen) =>
         set((state) => ({ openMap: { ...state.openMap, [key]: isOpen } })),
     openOverlay: (key) =>
@@ -186,4 +209,5 @@ export const useOverlayStore = create<OverlayStoreState>((set) => ({
         contentAiSelection: passage,
         contentAiSelectionContext: passage ? (context ?? null) : null,
     }),
+    setContentAiAnchorRect: (rect) => set({ contentAiAnchorRect: rect }),
 }))

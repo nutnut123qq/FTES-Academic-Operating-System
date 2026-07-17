@@ -8,6 +8,7 @@ import { ContentMap } from "@/components/features/learn/ContentMap"
 import { OnThisPage } from "@/components/features/learn/OnThisPage"
 import { LeaderboardCategoryRail } from "@/components/features/learn/Leaderboard/LeaderboardCategoryRail"
 import { ContentAiFab } from "@/components/features/learn/ContentAiFab"
+import { ContentAiAnchoredChat } from "@/components/features/learn/ContentAiChat/ContentAiAnchoredChat"
 import { ContentAiSelectionAsk } from "@/components/features/learn/LessonReader/ContentAiSelectionAsk"
 import { ResizableRail } from "@/components/blocks/layout/ResizableRail"
 import { useLearnSidebarStore } from "@/hooks/zustand/learnSidebar/store"
@@ -82,9 +83,11 @@ const LearnLayout = ({ children }: PropsWithChildren) => {
 
     return (
         <>
-            {/* floating "Ask FTES AI" mascot + selection-anchored ask (self-hide when no lesson) */}
+            {/* floating "Ask FTES AI" mascot + selection-anchored ask (self-hide when no lesson).
+                On desktop the ask opens the anchored panel; mobile keeps the FAB bottom-sheet. */}
             <ContentAiFab />
             <ContentAiSelectionAsk />
+            <ContentAiAnchoredChat />
             <LearnShell leftRail={leftRail} rightRail={rightRail} fullBleed={isMindMap || isMockInterview || isInterview}>
                 {children}
             </LearnShell>

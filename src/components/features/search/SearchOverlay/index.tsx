@@ -1,11 +1,11 @@
 "use client"
 
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
-import { Button, Kbd, Modal, Typography, cn } from "@heroui/react"
-import { MagnifyingGlassIcon, SignInIcon } from "@phosphor-icons/react"
+import { Kbd, Modal, Typography, cn } from "@heroui/react"
+import { MagnifyingGlassIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
-import { useSearchOverlayState, useAuthenticationOverlayState } from "@/hooks/zustand/overlay/hooks"
+import { useSearchOverlayState } from "@/hooks/zustand/overlay/hooks"
 import { useAppDispatch, useAppSelector } from "@/redux/hooks"
 import { setSearchQuery, clearSearchQuery } from "@/redux/slices/search"
 import { useRecentSearches } from "@/hooks/reuseables/useRecentSearches"
@@ -38,14 +38,12 @@ export const SearchOverlay = ({ className }: WithClassNames<undefined>) => {
     const router = useRouter()
     const dispatch = useAppDispatch()
     const { isOpen, setOpen, close } = useSearchOverlayState()
-    const { open: openAuth } = useAuthenticationOverlayState()
     const rawQuery = useAppSelector((state) => state.search.query)
     const { recent, add: addRecent, clear: clearRecent } = useRecentSearches()
 
     const {
         query: debouncedQuery,
         hasMinChars,
-        authenticated,
         groups,
         flatRows,
         isLoading,
@@ -65,7 +63,7 @@ export const SearchOverlay = ({ className }: WithClassNames<undefined>) => {
 
     const trimmedRaw = rawQuery.trim()
     const idle = !hasMinChars
-    const showResults = hasMinChars && authenticated && hasResults
+    const showResults = hasMinChars && hasResults
     const showPopular = idle && popular.rows.length > 0
 
     // The single row set keyboard navigation + Enter operate over: popular rows while
@@ -151,19 +149,6 @@ export const SearchOverlay = ({ className }: WithClassNames<undefined>) => {
     )
 
     const body = useMemo(() => {
-        if (!authenticated && hasMinChars) {
-            return (
-                <EmptyContent
-                    icon={<SignInIcon className="size-8 text-muted" aria-hidden focusable="false" />}
-                    title={t("search.signInPrompt")}
-                    action={
-                        <Button variant="primary" size="sm" onPress={() => openAuth("auth.context.search")}>
-                            {t("search.signIn")}
-                        </Button>
-                    }
-                />
-            )
-        }
         if (idle) {
             if (!showPopular && recent.length === 0) {
                 if (popular.isLoading) return null
@@ -230,9 +215,9 @@ export const SearchOverlay = ({ className }: WithClassNames<undefined>) => {
         }
         return null
     }, [
-        authenticated, hasMinChars, idle, showPopular, popular, recent, error, showResults, isLoading,
+        idle, showPopular, popular, recent, error, showResults, isLoading,
         groups, debouncedQuery, activeRowId, optionId, activateRow, onHoverRow, listboxId, retry, t,
-        openAuth, dispatch, clearRecent, trimmedRaw,
+        dispatch, clearRecent, trimmedRaw,
     ])
 
     return (

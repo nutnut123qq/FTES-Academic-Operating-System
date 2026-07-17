@@ -1,14 +1,14 @@
 import type { Locale } from "next-intl"
 import { pathConfig } from "@/resources/path"
-import type { SearchGroup, SearchHit, SearchType } from "@/modules/api/graphql/queries/query-search"
+import type { SearchDocTypeName, SearchGroupView, SearchHitView } from "@/modules/api/rest/search"
 import type { SearchCategoryKind, SearchRow } from "../types"
 
 /**
- * BE `SearchType` → FE category kind. Only the buckets with an existing FE surface are
- * mapped; SUBJECT/TOPIC/EVENT are dropped (no category), matching the requested types in
- * {@link import("@/modules/api/graphql/queries/query-search").querySearch}.
+ * BE `DocType` name → FE category kind. Only the buckets with an existing FE surface are
+ * mapped; SUBJECT/TOPIC/EVENT/BLOG_POST are dropped (no category), matching the requested
+ * types in {@link REQUESTED_SEARCH_TYPES}.
  */
-const TYPE_TO_KIND: Partial<Record<SearchType, SearchCategoryKind>> = {
+const TYPE_TO_KIND: Partial<Record<SearchDocTypeName, SearchCategoryKind>> = {
     COURSE: "courses",
     CHALLENGE: "challenges",
     USER: "users",
@@ -28,11 +28,30 @@ export const SEARCH_RESULT_KINDS: ReadonlyArray<SearchCategoryKind> = [
 ]
 
 /**
+ * The `types` filter sent to `GET /api/v1/search` — only the buckets that map to an FE
+ * category. Lower-cased request form (the BE upper-cases before parsing); excludes
+ * SUBJECT/TOPIC/EVENT (no FE surface) and BLOG_POST (surfaced elsewhere). Restricting the
+ * request avoids fetching + serializing buckets the palette never renders.
+ */
+export const REQUESTED_SEARCH_TYPES = [
+    "course",
+    "challenge",
+    "user",
+    "post",
+    "group",
+    "resource",
+] as const
+
+/**
  * Best-effort deep link for a hit from its `slug`. Uses the real detail route where a slug
  * resolves it (course, user); otherwise the section landing. `null` when a hit can't be routed
  * (e.g. a user hit with no slug) so the row renders non-interactive rather than a broken link.
  */
-const hrefForHit = (kind: SearchCategoryKind, slug: string | null, locale: Locale): string | null => {
+const hrefForHit = (
+    kind: SearchCategoryKind,
+    slug: string | null | undefined,
+    locale: Locale,
+): string | null => {
     const path = pathConfig().locale(locale)
     switch (kind) {
         case "courses":
@@ -57,7 +76,7 @@ const hrefForHit = (kind: SearchCategoryKind, slug: string | null, locale: Local
 const stripMarks = (value: string): string => value.replace(/<\/?mark>/gi, "")
 
 /** Map one BE hit into the shared presentational {@link SearchRow}. */
-const toRow = (kind: SearchCategoryKind, hit: SearchHit, locale: Locale): SearchRow => ({
+const toRow = (kind: SearchCategoryKind, hit: SearchHitView, locale: Locale): SearchRow => ({
     id: `${kind}-${hit.docId}`,
     kind,
     title: hit.title ?? hit.slug ?? hit.docId,
@@ -74,7 +93,7 @@ const toRow = (kind: SearchCategoryKind, hit: SearchHit, locale: Locale): Search
  * @returns a record of FE kind → rows (only the mapped kinds are populated).
  */
 export const mapSearchGroups = (
-    groups: Array<SearchGroup> | undefined,
+    groups: Array<SearchGroupView> | undefined,
     locale: Locale,
 ): Record<SearchCategoryKind, Array<SearchRow>> => {
     const byKind = {} as Record<SearchCategoryKind, Array<SearchRow>>

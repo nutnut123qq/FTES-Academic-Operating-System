@@ -1,14 +1,13 @@
 "use client"
 
 import React, { useCallback, useEffect, useMemo, useState } from "react"
-import { Button, Skeleton, Typography } from "@heroui/react"
-import { MagnifyingGlassIcon, SignInIcon } from "@phosphor-icons/react"
+import { Skeleton, Typography } from "@heroui/react"
+import { MagnifyingGlassIcon } from "@phosphor-icons/react"
 import { useLocale, useTranslations } from "next-intl"
 import { useRouter, useSearchParams } from "next/navigation"
 import { pathConfig } from "@/resources/path"
 import { useAppDispatch, useAppSelector } from "@/redux/hooks"
 import { setSearchQuery } from "@/redux/slices/search"
-import { useAuthenticationOverlayState } from "@/hooks/zustand/overlay/hooks"
 import { EmptyContent } from "@/components/blocks/async/EmptyContent"
 import { ErrorContent } from "@/components/blocks/async/ErrorContent"
 import { useDebouncedValue } from "@/hooks/reuseables/useDebouncedValue"
@@ -25,8 +24,8 @@ import { SearchResultSection } from "./SearchResultSection"
  * entity type (courses/challenges/users/posts/groups/resources). URL-driven (`?q=`):
  * the param seeds Redux on load and is `router.replace`d on debounced typing. Renders
  * filter tabs (All + per-category with count badges), grouped sections with highlighting
- * + per-category "show more", and loading/error/empty/unauthenticated states (the BE
- * search requires auth, so unauthenticated visitors get a sign-in prompt).
+ * + per-category "show more", and loading/error/empty states. Runs against the PUBLIC REST
+ * search endpoint, so guests get real results (PUBLIC docs) with no sign-in prompt.
  */
 export const SearchResults = () => {
     const t = useTranslations()
@@ -34,7 +33,6 @@ export const SearchResults = () => {
     const router = useRouter()
     const searchParams = useSearchParams()
     const dispatch = useAppDispatch()
-    const { open: openAuth } = useAuthenticationOverlayState()
 
     const rawQuery = useAppSelector((state) => state.search.query)
     const debouncedRaw = useDebouncedValue(rawQuery, 300)
@@ -44,7 +42,6 @@ export const SearchResults = () => {
 
     const {
         query,
-        authenticated,
         groups: entityGroups,
         isLoading,
         error,
@@ -126,20 +123,7 @@ export const SearchResults = () => {
                         />
                     ) : null}
 
-                    {/* Auth gate for real categories (mock still renders below). */}
-                    {!authenticated ? (
-                        <div className="rounded-3xl border border-default">
-                            <EmptyContent
-                                icon={<SignInIcon className="size-8 text-muted" aria-hidden focusable="false" />}
-                                title={t("searchPage.signInPrompt")}
-                                action={
-                                    <Button variant="primary" size="sm" onPress={() => openAuth("auth.context.search")}>
-                                        {t("search.signIn")}
-                                    </Button>
-                                }
-                            />
-                        </div>
-                    ) : error ? (
+                    {error ? (
                         <div className="rounded-3xl border border-default">
                             <ErrorContent
                                 title={t("search.error")}
@@ -173,7 +157,7 @@ export const SearchResults = () => {
                                 />
                             ))}
                         </div>
-                    ) : !isLoading && authenticated && !error ? (
+                    ) : !isLoading && !error ? (
                         <EmptyContent
                             icon={<MagnifyingGlassIcon className="size-8 text-muted" aria-hidden focusable="false" />}
                             title={t("searchPage.noResultsFor", { query: trimmed })}

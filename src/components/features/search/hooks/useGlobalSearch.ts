@@ -6,9 +6,10 @@ import { useLocale } from "next-intl"
 import { useAppSelector } from "@/redux/hooks"
 import { useSearchOverlayState } from "@/hooks/zustand/overlay/hooks"
 import { useDebouncedValue } from "@/hooks/reuseables/useDebouncedValue"
-import { querySearch } from "@/modules/api/graphql/queries/query-search"
+import { search } from "@/modules/api/rest/search"
+import type { SearchDocType } from "@/modules/api/rest/search"
 import type { SearchCategoryKind, SearchRow } from "../types"
-import { mapSearchGroups, SEARCH_RESULT_KINDS } from "../utils/map-search-result"
+import { mapSearchGroups, REQUESTED_SEARCH_TYPES, SEARCH_RESULT_KINDS } from "../utils/map-search-result"
 
 /** Minimum trimmed characters before a fetch is issued (shared with the /search page + overlay). */
 export const SEARCH_MIN_CHARS = 2
@@ -30,8 +31,6 @@ export interface UseGlobalSearchResult {
     query: string
     /** True once the trimmed query meets the minimum length. */
     hasMinChars: boolean
-    /** Whether the user is authenticated (real fetch requires it). */
-    authenticated: boolean
     /** Non-empty real entity groups (canonical order). */
     groups: Array<SearchRowGroup>
     /** All routable rows flattened (canonical order) for keyboard navigation. */
@@ -48,30 +47,41 @@ export interface UseGlobalSearchResult {
 
 /**
  * Shared real-entity search state for both the overlay and `/search`. Reads the Redux
- * query, debounces + gates on auth/overlay-open/min-chars, then runs the real BE
- * `search(q, types, page)` query and maps its buckets into grouped + flattened
+ * query, debounces + gates on overlay-open/min-chars, then runs the real BE search via the
+ * PUBLIC REST endpoint `GET /api/v1/search` and maps its buckets into grouped + flattened
  * {@link SearchRow}s (with resolved deep links). SWR dedupes the overlay and the page by
  * key. `enabled` is ORed with the overlay-open state so the page always fetches.
+ *
+ * The REST endpoint is guest-readable (SecurityConfig permitAll): an anonymous viewer sees
+ * only `Visibility.PUBLIC` documents; a signed-in viewer's Bearer token — attached
+ * automatically by {@link restRequest} when present — widens visibility to
+ * AUTHENTICATED/GROUP. This is why we use REST here rather than the GraphQL `search` op,
+ * whose gateway 401s guests. One code path serves both viewer states.
  * @param enabled - extra gate ORed with the overlay-open state (pass `true` on `/search`).
  * @param size - results per bucket (overlay 8, page 24).
  * @returns grouped rows, flat rows, and async state.
  */
 export const useGlobalSearch = (enabled: boolean, size: number = DEFAULT_SIZE): UseGlobalSearchResult => {
     const locale = useLocale()
-    const authenticated = useAppSelector((state) => state.keycloak.authenticated)
     const { isOpen } = useSearchOverlayState()
     const rawQuery = useAppSelector((state) => state.search.query)
     const query = useDebouncedValue(rawQuery, 300).trim()
     const hasMinChars = query.length >= SEARCH_MIN_CHARS
 
-    // The BE `search` requires auth; the overlay only fetches while open, the page always.
-    const canFetch = authenticated && (isOpen || enabled) && hasMinChars
+    // Guest-readable: the overlay only fetches while open, the page always. No auth gate —
+    // the REST endpoint returns PUBLIC docs for guests and widens for signed-in viewers.
+    const canFetch = (isOpen || enabled) && hasMinChars
 
     const swr = useSWR(
-        canFetch ? ["QUERY_GLOBAL_SEARCH_SWR", query, size, authenticated] : null,
+        canFetch ? ["QUERY_GLOBAL_SEARCH_SWR", query, size] : null,
         async () => {
-            const response = await querySearch({ q: query, page: { page: 0, size } })
-            return response.data?.search?.groups ?? []
+            const response = await search({
+                q: query,
+                types: REQUESTED_SEARCH_TYPES as unknown as SearchDocType[],
+                page: 0,
+                size,
+            })
+            return response.groups
         },
         { keepPreviousData: true },
     )
@@ -96,7 +106,6 @@ export const useGlobalSearch = (enabled: boolean, size: number = DEFAULT_SIZE): 
     return {
         query,
         hasMinChars,
-        authenticated,
         groups,
         flatRows,
         isLoading,

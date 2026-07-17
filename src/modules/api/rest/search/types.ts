@@ -25,6 +25,23 @@ export type SearchDocType =
     | "blog_post"
 
 /**
+ * UPPER-CASED `DocType` enum names as they appear in the RESPONSE. The backend serializes
+ * a hit/group `type` with `DocType.name()` (see `SearchController.toGroup/toHit`), so the
+ * response carries `"COURSE"`, `"USER"`, … — NOT the lower-cased request form above.
+ */
+export type SearchDocTypeName =
+    | "USER"
+    | "SUBJECT"
+    | "TOPIC"
+    | "COURSE"
+    | "RESOURCE"
+    | "POST"
+    | "GROUP"
+    | "CHALLENGE"
+    | "EVENT"
+    | "BLOG_POST"
+
+/**
  * Per-type filter object encoded as a JSON string by the client.
  * Shape on the backend: `{"TYPE":{"key": value}}`.
  */
@@ -42,8 +59,10 @@ export interface SearchRequest {
 
 export interface SearchHitView {
     docId: string
-    type: SearchDocType
-    title: string
+    /** UPPER-CASED `DocType` name (BE serializes `DocType.name()`). */
+    type: SearchDocTypeName
+    /** Nullable on the backend (`HitView.title`); falls back to slug/docId when absent. */
+    title?: string
     highlight?: string
     snippet?: string
     slug?: string
@@ -53,7 +72,8 @@ export interface SearchHitView {
 }
 
 export interface SearchGroupView {
-    type: SearchDocType
+    /** UPPER-CASED `DocType` name (BE serializes `DocType.name()`). */
+    type: SearchDocTypeName
     total: number
     hits: SearchHitView[]
 }

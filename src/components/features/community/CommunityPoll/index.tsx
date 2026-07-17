@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { Skeleton, Typography, cn, toast } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
@@ -38,6 +38,13 @@ export const CommunityPoll = ({ postId }: CommunityPollProps) => {
     const { poll, isLoading, error, mutate } = useQueryPollSwr(postId)
     const submitVote = useMutatePollVoteSwr()
     const [localVotedId, setLocalVotedId] = useState<string | null>(null)
+
+    // On the standalone page the SWR key is fixed (["poll","latest"]) and revalidate can
+    // surface a NEWER poll post. Reset the optimistic id when the poll identity changes,
+    // otherwise a stale localVotedId would mark an unvoted new poll as "voted" (+1 ghost).
+    useEffect(() => {
+        setLocalVotedId(null)
+    }, [poll?.postId])
 
     // Server truth wins once it lands (myOptionId after revalidate); the local id
     // only covers the optimistic window between click and revalidate.

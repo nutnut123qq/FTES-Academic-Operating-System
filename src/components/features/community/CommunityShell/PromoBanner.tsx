@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react"
+import React, { useState } from "react"
 import { Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
@@ -10,8 +10,11 @@ import { useQueryCommunityPromoSwr } from "../hooks/useQueryCommunityPromoSwr"
 export const PromoBanner = () => {
     const t = useTranslations("communityHub")
     const { promo } = useQueryCommunityPromoSwr()
+    // Hide the whole panel if the ad's image URL is dead (404/broken) — the image is the
+    // panel's only media, so a broken <img> inside the card link is worse than no ad.
+    const [imageFailed, setImageFailed] = useState(false)
 
-    if (!promo) {
+    if (!promo || imageFailed) {
         return null
     }
 
@@ -21,6 +24,7 @@ export const PromoBanner = () => {
             <img
                 src={promo.imageUrl}
                 alt={promo.title}
+                onError={() => setImageFailed(true)}
                 className="aspect-video w-full object-cover"
             />
             <div className="flex flex-col gap-1 p-3">

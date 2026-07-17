@@ -54,11 +54,16 @@ const GroupRulesEditor = ({
     const [draft, setDraft] = useState<Array<string>>(rules)
     const [isSaving, setIsSaving] = useState(false)
 
-    // re-seed when server rules change (join key on content so an edit-in-flight
-    // isn't clobbered by the same list coming back)
+    // Re-seed only when the server rules CONTENT changes, not on every new array ref.
+    // The manage-key fetcher returns a fresh `rules` array on any unrelated revalidate
+    // (a failed join decision, focus refetch, …); keying the effect on the serialized
+    // content keeps an edit-in-flight from being clobbered by the same list coming back.
+    const rulesKey = JSON.stringify(rules)
     useEffect(() => {
         setDraft(rules)
-    }, [rules])
+        // Intentionally keyed on rulesKey (content) only, not the `rules` ref, so an
+        // unrelated revalidate returning identical content does not reset an in-flight edit.
+    }, [rulesKey])
 
     const onEdit = (index: number, value: string) =>
         setDraft((current) => current.map((rule, i) => (i === index ? value : rule)))

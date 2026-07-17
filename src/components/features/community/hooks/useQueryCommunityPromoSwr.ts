@@ -1,35 +1,70 @@
 "use client"
 
-import useSWR from "swr"
+import { useQueryActiveAdvertisementSwr } from "@/hooks/swr/api/graphql/queries/useQueryActiveAdvertisementSwr"
+import {
+    AdvertisementMediaType,
+    AdvertisementPlacement,
+    type AdvertisementCarouselMedia,
+    type AdvertisementImageMedia,
+    type AdvertisementVideoMedia,
+    type QueryActiveAdvertisementData,
+} from "@/modules/api/graphql/queries/types/active-advertisement"
 
 /** A promotional card surfaced in the community nav rail. */
 export interface CommunityPromo {
-    /** Promo image — fixed seed so it is deterministic in mock mode. */
+    /** Promo image (the ad media resolved to a poster URL). */
     imageUrl: string
     /** Promo title. */
     title: string
-    /** CTA link label. */
-    ctaText: string
+    /** CTA link label, or null when the ad has none. */
+    ctaText: string | null
     /** Destination when the panel is clicked. */
     linkUrl: string
     /** Sponsor name, or null for house promos. */
     sponsorName: string | null
 }
 
-// ponytail: mock BE — no community promo endpoint yet. Deterministic sample.
-// Swap point: replace with useQueryActiveAdvertisementSwr({ placement: "community-rail" })
-// from src/hooks/swr/api/graphql/queries/useQueryActiveAdvertisementSwr.ts once the
-// placement contract is ready.
-const fetchCommunityPromoMock = async (): Promise<CommunityPromo> => ({
-    imageUrl: "https://picsum.photos/seed/ftes-promo/640/360",
-    title: "Khám phá khoá học mới trên FTES",
-    ctaText: "Tìm hiểu ngay",
-    linkUrl: "/marketplace",
-    sponsorName: null,
-})
+/** Resolve the ad `media` payload to a single poster URL (null when none usable). */
+const toImageUrl = (ad: QueryActiveAdvertisementData): string | null => {
+    switch (ad.mediaType) {
+    case AdvertisementMediaType.Image:
+        return (ad.media as AdvertisementImageMedia).url ?? null
+    case AdvertisementMediaType.Video:
+        return (ad.media as AdvertisementVideoMedia).poster ?? null
+    case AdvertisementMediaType.Carousel:
+        return (ad.media as AdvertisementCarouselMedia).slides?.[0]?.url ?? null
+    default:
+        return null
+    }
+}
 
-/** Loads the active community rail promo. Mocked; SWR-shaped for a drop-in BE swap. */
+/** Map the BE `Advertisement` to the promo panel contract (null when not renderable). */
+const toPromo = (ad: QueryActiveAdvertisementData | null | undefined): CommunityPromo | null => {
+    if (!ad) {
+        return null
+    }
+    const imageUrl = toImageUrl(ad)
+    if (!imageUrl) {
+        return null
+    }
+    return {
+        imageUrl,
+        title: ad.title,
+        ctaText: ad.ctaText,
+        linkUrl: ad.linkUrl,
+        sponsorName: ad.sponsorName,
+    }
+}
+
+/**
+ * Loads the active community rail promo from the real BE — GraphQL
+ * `activeAdvertisement(placement: COMMUNITY_RAIL)` via
+ * {@link useQueryActiveAdvertisementSwr}. `promo` is `null` when no ad is active
+ * (the panel hides itself).
+ */
 export const useQueryCommunityPromoSwr = () => {
-    const { data, isLoading, error } = useSWR(["community-promo"], () => fetchCommunityPromoMock())
-    return { promo: data ?? null, isLoading, error }
+    const { data, isLoading, error } = useQueryActiveAdvertisementSwr({
+        placement: AdvertisementPlacement.CommunityRail,
+    })
+    return { promo: toPromo(data), isLoading, error }
 }

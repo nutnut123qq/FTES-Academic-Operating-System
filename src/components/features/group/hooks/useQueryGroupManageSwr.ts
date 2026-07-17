@@ -3,6 +3,7 @@
 import { useLocale } from "next-intl"
 import useSWR from "swr"
 import {
+    getGroupRules,
     listJoinRequests,
     listPinnedPosts,
     type GroupJoinRequest,
@@ -30,6 +31,8 @@ export interface PinnedPost {
 export interface GroupManage {
     joinRequests: Array<JoinRequest>
     pinned: Array<PinnedPost>
+    /** Group rules read from `GET /groups/{id}/rules` (change group-identity-media-rules-rsvp). */
+    rules: Array<string>
 }
 
 /** SWR cache key for a group's management data (join requests + pinned posts). */
@@ -48,18 +51,6 @@ export const matchesGroupManageKey =
         return Array.isArray(key) && key[0] === base[0] && key[1] === base[1]
     }
 
-/**
- * mock BE - endpoint pending: no group-rules read/write contract on the backend
- * (GroupUpdateGroupRequest carries a `rules` field but there is no editor UI and
- * no rules-fetch endpoint). Kept as a local placeholder list so the section
- * still renders. Swap for a real rules fetch when the contract lands.
- */
-export const MOCK_GROUP_RULES: Array<string> = [
-    "Tôn trọng thành viên, không spam.",
-    "Chia sẻ tài nguyên có bản quyền hợp lệ.",
-    "Đặt câu hỏi rõ ràng, đúng chủ đề.",
-]
-
 const toJoinRequest = (dto: GroupJoinRequest): JoinRequest => ({
     id: dto.id,
     name: dto.userId,
@@ -74,28 +65,29 @@ const toPinnedPost = (dto: GroupPostSummary, locale: string): PinnedPost => ({
 
 /**
  * Loads a group's management data from the real group REST API: pending join
- * requests + pinned posts fetched in parallel. Rules stay local (see
- * {@link MOCK_GROUP_RULES}) until a BE contract lands.
+ * requests, pinned posts, and rules fetched in parallel (change
+ * group-identity-media-rules-rsvp — rules are now live).
  */
 export const useQueryGroupManageSwr = (groupId: string) => {
     const locale = useLocale()
     const { data, isLoading, error, mutate } = useSWR(
         groupId ? [...groupManageKey(groupId), locale] : null,
         async (): Promise<GroupManage> => {
-            const [requests, pinned] = await Promise.all([
+            const [requests, pinned, rules] = await Promise.all([
                 listJoinRequests(groupId, { status: "PENDING", limit: 50 }),
                 listPinnedPosts(groupId),
+                getGroupRules(groupId),
             ])
             return {
                 joinRequests: (requests ?? []).map(toJoinRequest),
                 pinned: (pinned ?? []).map((dto) => toPinnedPost(dto, locale)),
+                rules: rules?.rules ?? [],
             }
         },
     )
     return {
         joinRequests: data?.joinRequests ?? [],
-        // mock BE - endpoint pending: local rules placeholder (no BE rules contract)
-        rules: MOCK_GROUP_RULES,
+        rules: data?.rules ?? [],
         pinned: data?.pinned ?? [],
         hasData: data != null,
         isLoading,

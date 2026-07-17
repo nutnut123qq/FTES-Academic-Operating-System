@@ -5275,9 +5275,19 @@
     "more": "More",
     "menu": {
       "groups": "Groups",
+      "saved": "Saved",
       "reputation": "Reputation",
       "poll": "Poll",
       "moderation": "Moderation"
+    },
+    "saved": {
+      "title": "Saved posts",
+      "empty": "You haven't saved any posts yet.",
+      "emptyHint": "Tap the bookmark icon on a post to save it for later.",
+      "error": "Couldn't load your saved posts. Please try again.",
+      "unsave": "Remove bookmark",
+      "unsaveFailed": "Couldn't remove the bookmark. Please try again.",
+      "member": "Member"
     },
     "rail": {
       "trending": "Trending",
@@ -5360,7 +5370,9 @@
       "likes": "{count} likes",
       "comments": "{count} comments",
       "empty": "No posts yet. Be the first to share!",
-      "error": "Couldn't load the feed. Please try again."
+      "error": "Couldn't load the feed. Please try again.",
+      "campusEmpty": "No posts from your campus yet.",
+      "campusEmptyHint": "Set your campus in your profile to see posts from your campus community."
     },
     "detail": {
       "comments": "{count} comments"
@@ -5389,7 +5401,9 @@
     },
     "poll": {
       "totalVotes": "{count} votes",
-      "error": "Couldn't load the poll. Please try again."
+      "error": "Couldn't load the poll. Please try again.",
+      "empty": "No poll in your feed yet.",
+      "voteFailed": "Couldn't submit your vote. Please try again."
     },
     "moderation": {
       "title": "Moderation",
@@ -5441,7 +5455,13 @@
     "discussion": {
       "replies": "{count} replies",
       "empty": "No discussion threads yet. Start one!",
-      "error": "Couldn't load discussions. Please try again."
+      "error": "Couldn't load discussions. Please try again.",
+      "newThread": "New thread",
+      "titleField": "Thread title",
+      "contentField": "Discussion content",
+      "post": "Post",
+      "cancel": "Cancel",
+      "created": "Discussion thread created."
     },
     "roles": {
       "owner": "Owner",
@@ -5452,6 +5472,7 @@
     "events": {
       "attendees": "{count} attending",
       "join": "Join",
+      "leave": "Leave",
       "empty": "No upcoming events.",
       "error": "Couldn't load events. Please try again."
     },
@@ -5462,6 +5483,12 @@
       "accept": "Accept",
       "reject": "Reject",
       "rules": "Rules",
+      "noRules": "No rules yet.",
+      "rulePlaceholder": "Enter a rule…",
+      "addRule": "Add rule",
+      "removeRule": "Remove rule",
+      "saveRules": "Save rules",
+      "rulesSaved": "Rules saved.",
       "pinned": "Pinned",
       "noPinned": "No pinned posts.",
       "unpin": "Unpin",
@@ -5509,7 +5536,11 @@
       "coverAlt": "{name} cover",
       "remove": "Remove image",
       "uploadCta": "Drag an image here, or click to choose",
-      "save": "Save identity"
+      "save": "Save identity",
+      "saved": "Group image updated.",
+      "presignFailed": "Couldn't create the upload link. Please try again.",
+      "uploadFailed": "Image upload failed. Please try again.",
+      "verifyFailed": "Couldn't confirm the uploaded image. Please try again."
     },
     "states": {
       "retry": "Try again"

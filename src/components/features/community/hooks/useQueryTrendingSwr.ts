@@ -9,6 +9,14 @@ export interface TrendingPost {
     id: string
     title: string
     likes: number
+    /** Author display name, or `undefined` when the BE could not resolve the author card. */
+    authorName?: string
+    /** URL-facing username of the author (absent when unresolved). */
+    authorUsername?: string
+    /** Uploaded author avatar URL (absent when unresolved). */
+    authorAvatarUrl?: string
+    /** Stable seed for the generated fallback avatar (the author id). */
+    authorSeed: string
 }
 
 /** How many trending rows to load (BE `trending?limit=`). */
@@ -31,16 +39,21 @@ const toTitle = (post: PostResponse): string => {
 /**
  * Map a BE `PostResponse` to the ranked trending row.
  *
- * Note: `GET /community/trending` returns the raw `PostResponse` (no author
- * enrichment — unlike the GraphQL feed, which batch-resolves the author). Since
- * only the raw `authorId` UUID is available here, the author line is omitted
- * rather than surfacing an unreadable UUID; it can return once name enrichment
- * exists. `title` falls back to the first line of content for title-less kinds.
+ * `GET /community/trending` batch-resolves the author card onto each
+ * `PostResponse.author` (one profile call for the whole page, no N+1); the row
+ * surfaces the display name + avatar when present. When the author card is
+ * unresolved (`author == null`) the name/avatar are omitted and the component
+ * drops the author line rather than showing a raw UUID. `title` falls back to
+ * the first line of content for title-less kinds.
  */
 const toTrendingPost = (post: PostResponse): TrendingPost => ({
     id: post.id,
     title: toTitle(post),
     likes: post.likeCount,
+    authorName: post.author?.displayName ?? post.author?.username ?? undefined,
+    authorUsername: post.author?.username,
+    authorAvatarUrl: post.author?.avatarUrl,
+    authorSeed: post.author?.userId ?? post.authorId,
 })
 
 /**

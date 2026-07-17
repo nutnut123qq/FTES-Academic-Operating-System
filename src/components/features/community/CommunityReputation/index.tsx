@@ -27,8 +27,9 @@ const ReputationSkeleton = () => (
 
 /**
  * Community reputation (§6). DEFAULT on-canon layout: a contributor leaderboard
- * showing upvotes / downvotes / accepted-answers. ponytail: rows hand-rolled with
- * a rank badge; mock data. Score = upvotes − downvotes.
+ * showing upvotes / accepted-answers with a rank badge. Data is REAL
+ * (`GET /community/leaderboard`): rank + score come from the BE; the name line is
+ * hidden while the BE returns non-PII rows only (userId, no display name).
  */
 export const CommunityReputation = () => {
     const t = useTranslations("communityHub")
@@ -52,24 +53,26 @@ export const CommunityReputation = () => {
                 }}
             >
                 <div className="flex flex-col gap-3">
-                    {contributors.map((contributor, index) => (
+                    {contributors.map((contributor) => (
                         <div
                             key={contributor.id}
                             className="flex items-center gap-3 rounded-2xl border border-separator p-4"
                         >
                             <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent/10 text-sm font-bold text-accent">
-                                {index + 1}
+                                {contributor.rank}
                             </div>
                             <div className="min-w-0 flex-1">
-                                <Typography type="body-sm" weight="medium" truncate>
-                                    {contributor.name}
-                                </Typography>
+                                {contributor.name ? (
+                                    <Typography type="body-sm" weight="medium" truncate>
+                                        {contributor.name}
+                                    </Typography>
+                                ) : null}
                                 <Typography type="body-xs" color="muted">
                                     {t("reputation.votes", { up: contributor.upvotes, down: contributor.downvotes })} · {t("reputation.accepted", { count: contributor.accepted })}
                                 </Typography>
                             </div>
                             <Chip size="sm" variant="soft" color="accent">
-                                {t("reputation.score", { score: contributor.upvotes - contributor.downvotes })}
+                                {t("reputation.score", { score: contributor.score })}
                             </Chip>
                         </div>
                     ))}

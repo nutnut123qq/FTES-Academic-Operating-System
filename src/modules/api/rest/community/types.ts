@@ -43,6 +43,14 @@ export interface UpdatePostRequest {
     content?: string
 }
 
+/** Author card enriched onto a post (BE `PostAuthor`) — present on bookmarks/trending rows. */
+export interface PostAuthor {
+    userId: string
+    username?: string
+    displayName?: string
+    avatarUrl?: string
+}
+
 /** One community post. */
 export interface PostResponse {
     id: string
@@ -68,11 +76,32 @@ export interface PostResponse {
     myVote?: number
     bookmarkedByMe?: boolean
     media?: Array<MediaOutput>
+    /** Enriched author card (present on `/bookmarks/posts` + trending); null when unresolved. */
+    author?: PostAuthor | null
 }
 
 /** Body sent to `POST /api/v1/community/posts/{id}/poll-votes`. */
 export interface PollVoteRequest {
     optionId: string
+}
+
+/** One poll option (BE `PollOptionResponse`) — `voteCount` is the denormalized tally. */
+export interface PollOptionResponse {
+    id: string
+    label: string
+    voteCount: number
+}
+
+/** Poll of a POLL post (BE `PollResponse`, `GET /api/v1/community/posts/{postId}/poll`). */
+export interface PollResponse {
+    postId: string
+    question: string
+    /** ISO close timestamp, or absent when the poll has no deadline. */
+    closesAt?: string
+    /** Options in `sortOrder`. */
+    options: Array<PollOptionResponse>
+    /** The caller's voted option id, or absent when the caller has not voted. */
+    myOptionId?: string
 }
 
 /** Body sent to `POST /api/v1/community/posts/{postId}/accepted-answer`. */
@@ -133,6 +162,25 @@ export interface ContributorScoreResponse {
     upvotesReceived: number
     acceptedAnswers: number
     postsCount: number
+}
+
+/** One leaderboard row (BE `LeaderboardEntryResponse`) — non-PII: `userId` + public tallies only. */
+export interface LeaderboardEntryResponse {
+    userId: string
+    score: number
+    upvotesReceived: number
+    acceptedAnswers: number
+    postsCount: number
+    /** Absolute rank across pages (`page*size + index + 1`). */
+    rank: number
+}
+
+/** Ranked contributor page (BE `LeaderboardResponse`, `GET /api/v1/community/leaderboard`). */
+export interface LeaderboardResponse {
+    items: Array<LeaderboardEntryResponse>
+    total: number
+    page: number
+    size: number
 }
 
 /** Body sent to `POST /api/v1/community/reports`. */

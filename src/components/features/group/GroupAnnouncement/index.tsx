@@ -31,7 +31,7 @@ const GroupAnnouncementSkeleton = () => (
  * Group announcements (§7). DEFAULT on-canon layout: a list of announcement cards
  * (title + body + time). Renders inside the group shell (which owns the container
  * + padding + group header), so this body stays flat like its sibling tabs.
- * ponytail: rows hand-rolled; mock data.
+ * ponytail: rows hand-rolled.
  */
 export const GroupAnnouncement = () => {
     const t = useTranslations("groupsHub")

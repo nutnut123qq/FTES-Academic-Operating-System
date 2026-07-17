@@ -10,7 +10,8 @@ export { CommunityComposerForm } from "./CommunityComposerForm"
 /**
  * Community post composer page (§6, `/community/new`) — the full-page surface
  * around the shared {@link CommunityComposerForm} (the modal composer reuses
- * the same form). ponytail: submit is a no-op mock (no BE).
+ * the same form). ponytail: submit POSTs the draft via the community REST API
+ * (see {@link CommunityComposerForm}).
  */
 export const CommunityComposer = () => {
     const t = useTranslations("communityHub")

@@ -4,7 +4,13 @@ import React, { useState } from "react"
 import { Button, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { useRouter } from "@/i18n/navigation"
-import { createGroup, type GroupCreateGroupRequest } from "@/modules/api/rest/group"
+import {
+    createGroup,
+    presignGroupMedia,
+    uploadGroupMediaFile,
+    verifyGroupMedia,
+    type GroupCreateGroupRequest,
+} from "@/modules/api/rest/group"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
 import { useRestWithToast } from "@/modules/toast/hooks"
 import { GroupIdentityFields } from "../GroupIdentityFields"
@@ -40,11 +46,29 @@ const toCreatePayload = (
 }
 
 /**
+ * Uploads one picked identity image for a freshly created group via presign →
+ * upload → verify. Best-effort: throws on any step so the caller can toast, but the
+ * caller does not block the redirect on an image failure.
+ */
+const uploadGroupIdentity = async (
+    groupId: string,
+    kind: "AVATAR" | "COVER",
+    file: File,
+): Promise<void> => {
+    const presign = await presignGroupMedia(groupId, {
+        kind,
+        contentType: file.type,
+        sizeBytes: file.size,
+    })
+    await uploadGroupMediaFile(presign.uploadUrl, file)
+    await verifyGroupMedia(groupId, { kind, storageKey: presign.storageKey })
+}
+
+/**
  * Create group form (§7). DEFAULT on-canon layout: name + type + description +
- * identity pickers (avatar + cover, local preview) + submit. Submit calls the
- * real `createGroup` endpoint and redirects to the created group's detail route.
- * The avatar/cover stay local preview only — mock BE - endpoint pending: no group
- * identity presign contract yet (see the swap-point in {@link GroupCreate}).
+ * identity pickers (avatar + cover) + submit. Submit calls the real `createGroup`
+ * endpoint, then (if an image was picked) uploads avatar/cover via
+ * presign→upload→verify, and redirects to the created group's detail route.
  */
 export const GroupCreate = () => {
     const t = useTranslations("groupsHub")
@@ -65,15 +89,25 @@ export const GroupCreate = () => {
         if (!requireAuth("auth.context.generic")) {
             return
         }
-        // mock BE - endpoint pending: no group identity presign contract. When it
-        // lands, upload avatar.file / cover.file here (generate presign → PUT to
-        // storage → verify) and attach the resulting keys to the payload. Do NOT
-        // reuse the PROFILE avatar mutation for a group.
         setIsSubmitting(true)
         const created = await runRest(
             () => createGroup(toCreatePayload(name, type, description)),
             { successMessage: t("create.created") },
         )
+        if (created) {
+            // upload identity images (presign→upload→verify) — best-effort, per-image
+            // toast on failure but never block the redirect to the created group
+            if (avatar.file) {
+                await runRest(() => uploadGroupIdentity(created.id, "AVATAR", avatar.file as File), {
+                    showSuccessToast: false,
+                })
+            }
+            if (cover.file) {
+                await runRest(() => uploadGroupIdentity(created.id, "COVER", cover.file as File), {
+                    showSuccessToast: false,
+                })
+            }
+        }
         setIsSubmitting(false)
         if (created) {
             router.push(`/groups/${created.id}`)

@@ -32,7 +32,7 @@ const TYPES: Array<GroupType | "all"> = ["all", "public", "private", "study", "c
  * Groups list (§7). DEFAULT on-canon layout: a type filter + a grid of group
  * cards linking to each group. Each card leads with the group avatar (image
  * when set, initials tile fallback otherwise — same size, so the row never
- * shifts). ponytail: cards hand-rolled; mock data.
+ * shifts). ponytail: cards hand-rolled.
  */
 export const GroupsList = () => {
     const t = useTranslations("groupsHub")

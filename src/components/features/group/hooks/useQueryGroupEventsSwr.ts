@@ -12,7 +12,26 @@ export interface GroupEvent {
     dateLabel: string
     /** Optional venue/location. */
     location?: string
+    /** Real count of members who RSVP'd GOING. */
+    attendeeCount: number
+    /** Whether the current caller has RSVP'd GOING. */
+    attending: boolean
 }
+
+/** SWR cache key for a group's events (shared with the RSVP mutation hook). */
+export const groupEventsKey = (groupId: string) => ["GET_GROUP_EVENTS", groupId]
+
+/**
+ * Matches every locale variant of a group's events cache key. The live key carries
+ * the locale (rows hold locale-formatted `dateLabel`s), so the RSVP mutation hook
+ * revalidates with this key-filter.
+ */
+export const matchesGroupEventsKey =
+    (groupId: string) =>
+    (key: unknown): boolean => {
+        const base = groupEventsKey(groupId)
+        return Array.isArray(key) && key[0] === base[0] && key[1] === base[1]
+    }
 
 /** Locale-aware "Fri, 05/07 · 19:00"-style label from an ISO start timestamp. */
 const formatEventDate = (iso: string, locale: string): string => {
@@ -31,15 +50,13 @@ const formatEventDate = (iso: string, locale: string): string => {
 
 /**
  * Loads a group's events from the real group REST API
- * (`GET /api/v1/groups/{id}/events`). `attendeeCount` is dropped from the mapped
- * shape because the BE always returns 0 (no RSVP contract — see the row UI).
+ * (`GET /api/v1/groups/{id}/events`). Rows now carry live RSVP state
+ * (`attendeeCount` + `attending`) — change group-identity-media-rules-rsvp.
  */
 export const useQueryGroupEventsSwr = (groupId: string) => {
     const locale = useLocale()
     const { data, isLoading, error, mutate } = useSWR(
-        // `locale` keys the cache because the mapped rows carry locale-formatted
-        // `dateLabel`s — an in-place locale switch must re-derive them.
-        groupId ? ["GET_GROUP_EVENTS", groupId, locale] : null,
+        groupId ? [...groupEventsKey(groupId), locale] : null,
         async (): Promise<Array<GroupEvent>> => {
             const items = await listGroupEvents(groupId, { limit: 50 })
             return (items ?? []).map((dto: GroupEventDto) => ({
@@ -47,6 +64,8 @@ export const useQueryGroupEventsSwr = (groupId: string) => {
                 title: dto.title,
                 dateLabel: formatEventDate(dto.startsAt, locale),
                 location: dto.location || undefined,
+                attendeeCount: dto.attendeeCount ?? 0,
+                attending: dto.attending ?? false,
             }))
         },
     )

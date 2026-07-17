@@ -13,11 +13,14 @@ import { PostEngagementBar } from "@/components/reuseable/PostEngagementBar"
 import { PostCommentThread } from "@/components/reuseable/PostCommentThread"
 import { useQueryGroupSwr } from "../hooks/useQueryGroupSwr"
 import { useQueryGroupFeedSwr, type GroupPost } from "../hooks/useQueryGroupFeedSwr"
-import { useQueryGroupPostCommentsSwr } from "../hooks/useQueryGroupPostCommentsSwr"
+import {
+    useComposeGroupPostComment,
+    useQueryGroupPostCommentsSwr,
+} from "../hooks/useQueryGroupPostCommentsSwr"
 import { useMutateReactGroupPostSwr } from "../hooks/useMutateReactGroupPostSwr"
 import { useMutateGroupPinnedSwr } from "../hooks/useMutateGroupPinnedSwr"
 
-/** One group feed post card + its inline (lazy, mock) comment thread. */
+/** One group feed post card + its inline (lazy) comment thread. */
 const GroupFeedCard = ({
     groupId,
     post,
@@ -29,7 +32,6 @@ const GroupFeedCard = ({
 }) => {
     const t = useTranslations("groupsHub")
     const locale = useLocale()
-    const currentUser = useAppSelector((state) => state.user.user)
     const [expanded, setExpanded] = useState(false)
     const [hasOpened, setHasOpened] = useState(false)
     const reactPost = useMutateReactGroupPostSwr(groupId)
@@ -51,36 +53,8 @@ const GroupFeedCard = ({
         setExpanded((prev) => !prev)
     }, [])
 
-    // ponytail: mock BE — no group comment write contract. Append locally.
-    const onSubmit = useCallback(
-        async (body: string, parentCommentId?: string): Promise<boolean> => {
-            await mutate((current) => {
-                if (!current) {
-                    return current
-                }
-                const optimistic = {
-                    id: `tmp-${Date.now()}`,
-                    author: locale === "vi" ? "Bạn" : "You",
-                    authorUsername: currentUser?.username ?? "you",
-                    text: body,
-                    timeLabel: locale === "vi" ? "vừa xong" : "just now",
-                }
-                if (parentCommentId) {
-                    return {
-                        ...current,
-                        comments: current.comments.map((comment) =>
-                            comment.id === parentCommentId
-                                ? { ...comment, replies: [...(comment.replies ?? []), optimistic] }
-                                : comment,
-                        ),
-                    }
-                }
-                return { ...current, comments: [...current.comments, optimistic] }
-            }, { revalidate: false })
-            return true
-        },
-        [mutate, locale],
-    )
+    // real compose: POST /community/posts/{postId}/comments then revalidate the thread
+    const onSubmit = useComposeGroupPostComment(groupId, post.id, mutate)
 
     return (
         <div className="flex flex-col rounded-2xl border border-separator transition-colors hover:bg-default/40">
@@ -169,8 +143,10 @@ const GroupFeedSkeleton = () => (
 
 /**
  * Group feed (§7). Group post cards with the shared engagement bar (full bar:
- * like · comment · share · save) and inline push-down comment expansion (mock
- * comments — no group-post BE contract). ponytail: mock data.
+ * like · comment · share · save) and inline push-down comment expansion. Engagement
+ * (likes/comments) + comment thread are wired to the real BE (change
+ * group-social-engagement): the feed slice carries live counters and comments go
+ * through the community comment endpoints.
  */
 export const GroupFeed = () => {
     const t = useTranslations("groupsHub")

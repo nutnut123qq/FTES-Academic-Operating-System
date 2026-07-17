@@ -37,15 +37,15 @@ const toGroupType = (dto: GroupResponse): GroupType => {
     }
 }
 
-/** Maps a BE group to the list-card shape (BE has no avatar/cover → null fallbacks). */
+/** Maps a BE group to the list-card shape; avatar/cover fall back to null when unset. */
 const toGroup = (dto: GroupResponse): Group => ({
     id: dto.id,
     name: dto.name,
     type: toGroupType(dto),
     members: dto.memberCount ?? 0,
     description: dto.description ?? "",
-    avatarUrl: null,
-    coverUrl: null,
+    avatarUrl: dto.avatarUrl ?? null,
+    coverUrl: dto.coverUrl ?? null,
 })
 
 /** Loads the discoverable groups list from the real group REST API. */

@@ -27,6 +27,7 @@ const TABS: Array<{ key: string; segment: string }> = [
 /** ⋯ menu entries: i18n key under `communityHub.menu.*` + absolute href. */
 const MENU_ITEMS: Array<{ key: string; href: string }> = [
     { key: "groups", href: "/groups" },
+    { key: "saved", href: "/community/saved" },
     { key: "reputation", href: "/community/reputation" },
     { key: "poll", href: "/community/poll" },
     { key: "moderation", href: "/community/moderation" },
@@ -41,7 +42,8 @@ const MENU_ITEMS: Array<{ key: string; href: string }> = [
  * a ⋯ menu (below `xl` only; desktop uses the nav rail) for the buried actions.
  * Content is a single centered reading column capped at 620px; from `xl` two
  * sticky rails flank it — NavRail (shortcuts) left, DiscoveryRail (trending · uy
- * tín · quick poll) right — both absent below `xl`. ponytail: mock data.
+ * tín · quick poll) right — both absent below `xl`. ponytail: pure layout
+ * chrome; each rail + the routed children own their own live data.
  */
 export const CommunityShell = ({ children }: CommunityShellProps) => {
     const t = useTranslations("communityHub")

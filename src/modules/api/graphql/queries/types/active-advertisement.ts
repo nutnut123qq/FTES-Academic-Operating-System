@@ -1,22 +1,27 @@
-import type { GraphQLResponse } from "../../types"
-
-/** UI slot an ad banner is shown in (mirrors backend `AdvertisementPlacement`). */
+/**
+ * UI slot an ad banner is shown in. Values are the BE `enum AdvertisementPlacement`
+ * literals (schema.graphqls) — they are INLINED into the query document (see the
+ * non-null-variable gateway quirk in `query-active-advertisement.ts`), so they must
+ * match the schema spelling exactly.
+ */
 export enum AdvertisementPlacement {
     /** The right rail of the logged-in dashboard. */
-    DashboardRight = "dashboard_right",
+    DashboardRight = "DASHBOARD_RIGHT",
     /** Interstitial modal shown when a non-enrolled viewer opens a lesson. */
-    LessonInterstitial = "lesson_interstitial",
+    LessonInterstitial = "LESSON_INTERSTITIAL",
     /** Banner on the public course detail page (below the enroll card). */
-    CourseDetail = "course_detail",
+    CourseDetail = "COURSE_DETAIL",
     /** Inline banner inside the lesson reader (below the paywall fade). */
-    LessonInline = "lesson_inline",
+    LessonInline = "LESSON_INLINE",
     /** Right rail of the coding practice list. */
-    PracticeRail = "practice_rail",
+    PracticeRail = "PRACTICE_RAIL",
     /** Right rail of the course leaderboard. */
-    LeaderboardRail = "leaderboard_rail",
+    LeaderboardRail = "LEADERBOARD_RAIL",
+    /** Promo panel under the community nav rail. */
+    CommunityRail = "COMMUNITY_RAIL",
 }
 
-/** Variables for the `activeAdvertisement` query (both optional). */
+/** Variables for the `activeAdvertisement` query (placement defaults in the client). */
 export interface QueryActiveAdvertisementRequest {
     /** UI slot to fetch the banner for (defaults to the dashboard right rail). */
     placement?: AdvertisementPlacement
@@ -24,14 +29,14 @@ export interface QueryActiveAdvertisementRequest {
     courseId?: string
 }
 
-/** Media kind of an ad banner (mirrors backend `AdvertisementMediaType`). */
+/** Media kind of an ad banner (BE `enum AdvertisementMediaType` literals). */
 export enum AdvertisementMediaType {
     /** A single poster image. */
-    Image = "image",
+    Image = "IMAGE",
     /** A video clip. */
-    Video = "video",
+    Video = "VIDEO",
     /** An auto-advancing slideshow. */
-    Carousel = "carousel",
+    Carousel = "CAROUSEL",
 }
 
 /** `media` payload for an image ad. */
@@ -76,7 +81,7 @@ export type AdvertisementMedia =
     | AdvertisementVideoMedia
     | AdvertisementCarouselMedia
 
-/** Payload inside `activeAdvertisement.data` (null when no active ad). */
+/** BE `type Advertisement` (returned directly — no envelope; null when no active ad). */
 export interface QueryActiveAdvertisementData {
     /** Advertisement id. */
     id: string
@@ -94,8 +99,8 @@ export interface QueryActiveAdvertisementData {
     sponsorName: string | null
 }
 
-/** Apollo response shape for `activeAdvertisement`. */
+/** Apollo response shape for `activeAdvertisement` (returned directly — no envelope). */
 export interface QueryActiveAdvertisementResponse {
-    /** Top-level field wrapping the standard API response. */
-    activeAdvertisement: GraphQLResponse<QueryActiveAdvertisementData | null>
+    /** The active banner for the placement, or null (none / viewer exempt). */
+    activeAdvertisement: QueryActiveAdvertisementData | null
 }

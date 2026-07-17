@@ -1,11 +1,12 @@
 "use client"
 
 import React, { useState } from "react"
-import { Typography, cn } from "@heroui/react"
+import { Typography, cn, toast } from "@heroui/react"
 import { CaretRightIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
 import { useQueryPollSwr } from "../hooks/useQueryPollSwr"
+import { useMutatePollVoteSwr } from "../hooks/useMutatePollVoteSwr"
 
 /** One discovery panel shell: title row (+ optional see-all link) over content. */
 const RailPanel = ({
@@ -40,19 +41,42 @@ const RailPanel = ({
     </section>
 )
 
-/** Compact in-place poll — same local-vote reveal behavior as the poll page. */
+/** Compact in-place poll — REAL read + vote, mirroring `CommunityPoll` (server truth wins). */
 const QuickPoll = () => {
+    const t = useTranslations("communityHub")
     const { poll } = useQueryPollSwr()
-    const [votedId, setVotedId] = useState<string | null>(null)
+    const submitVote = useMutatePollVoteSwr()
+    const [localVotedId, setLocalVotedId] = useState<string | null>(null)
 
     if (!poll) {
         return null
     }
 
-    const extra = votedId ? 1 : 0
+    // Server truth wins once revalidate lands; local id only covers the optimistic window.
+    const votedId = poll.myOptionId ?? localVotedId
+    const pending = localVotedId !== null && !poll.myOptionId
+
+    const onVote = (optionId: string) => {
+        if (votedId !== null) {
+            return
+        }
+        setLocalVotedId(optionId)
+        submitVote(poll.postId, optionId)
+            .then((ok) => {
+                if (!ok) {
+                    setLocalVotedId(null)
+                }
+            })
+            .catch(() => {
+                setLocalVotedId(null)
+                toast.danger(t("poll.voteFailed"))
+            })
+    }
+
+    const extra = pending ? 1 : 0
     const total = poll.options.reduce((sum, option) => sum + option.votes, 0) + extra
     const percentOf = (option: { id: string; votes: number }) => {
-        const votes = option.votes + (votedId === option.id ? 1 : 0)
+        const votes = option.votes + (pending && localVotedId === option.id ? 1 : 0)
         return total === 0 ? 0 : Math.round((votes / total) * 100)
     }
     const revealed = votedId !== null
@@ -64,7 +88,7 @@ const QuickPoll = () => {
                 <button
                     key={option.id}
                     type="button"
-                    onClick={() => !revealed && setVotedId(option.id)}
+                    onClick={() => onVote(option.id)}
                     className={cn(
                         "relative overflow-hidden rounded-large border p-2 text-left transition-colors",
                         votedId === option.id ? "border-accent" : "border-separator",
@@ -95,8 +119,8 @@ const QuickPoll = () => {
 
 /**
  * Right community rail (`xl`+): surfaces the community poll with in-place
- * voting next to the feed, reusing the EXISTING mock hook (no new data).
- * ponytail: pure composition.
+ * voting next to the feed. Poll data and votes are REAL (`useQueryPollSwr` +
+ * `useMutatePollVoteSwr`); pure composition otherwise.
  */
 export const DiscoveryRail = () => {
     const t = useTranslations("communityHub")

@@ -6,19 +6,20 @@ import {
     GraduationCapIcon,
     ChatCircleIcon,
     SquaresFourIcon,
+    NewspaperIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { usePathname } from "@/i18n/navigation"
 import { pathConfig } from "@/resources/path"
 
 /**
- * One of the four top-level header modules, rendered as a PLAIN LABEL LINK.
+ * One of the five top-level header modules, rendered as a PLAIN LABEL LINK.
  * Per product directive (design D9), the header carries no dropdowns/sub-menus,
  * so a module no longer exposes any nested `children` — nested features are
  * reached from inside each module's own landing page.
  */
 export interface AppNavModule {
-    key: "home" | "workplace" | "course" | "community"
+    key: "home" | "workplace" | "course" | "community" | "blog"
     label: string
     icon: React.ReactNode
     /** Destination when the module label is clicked (its landing route). */
@@ -28,8 +29,8 @@ export interface AppNavModule {
 }
 
 /**
- * The single source of the app's primary navigation — exactly four top-level
- * modules (Home · Workplace · Course · Community), each a PLAIN LABEL LINK to
+ * The single source of the app's primary navigation — exactly five top-level
+ * modules (Home · Workplace · Course · Community · Blog), each a PLAIN LABEL LINK to
  * its landing route. Consumed by the desktop {@link "../navbar/Navbar/HeaderNav"}
  * and the Navbar mobile drawer so the two surfaces never drift. The header does
  * NOT render sub-menus; nested features (resources, challenges, leaderboard,
@@ -77,6 +78,7 @@ export const useAppNav = (): Array<AppNavModule> => {
             makeModule("workplace", p.subjects().build(), <SquaresFourIcon className="size-5" />),
             makeModule("course", p.course().build(), <GraduationCapIcon className="size-5" />),
             makeModule("community", p.community().build(), <ChatCircleIcon className="size-5" />),
+            makeModule("blog", p.blog().build(), <NewspaperIcon className="size-5" />),
         ]
     }, [pathname, t])
 }

@@ -12,6 +12,10 @@ import type {
     GroupJoinRequest,
     GroupJoinRequestDto,
     GroupJoinResult,
+    GroupMediaPresignRequest,
+    GroupMediaPresignResponse,
+    GroupMediaRef,
+    GroupMediaVerifyRequest,
     GroupMember,
     GroupPage,
     GroupPostSummary,
@@ -20,6 +24,11 @@ import type {
     GroupRespondInviteRequest,
     GroupResponse,
     GroupRoleChangeRequest,
+    GroupRulesResponse,
+    GroupThreadCommentDto,
+    GroupThreadCommentRequest,
+    GroupThreadDto,
+    GroupThreadRequest,
     GroupTransferOwnershipRequest,
     GroupUpdateGroupRequest,
 } from "./types"
@@ -308,6 +317,205 @@ export const getGroupChallenges = async (
         method: "GET",
         url: `/groups/${id}/challenges`,
         authenticated: true,
+    })
+
+// ---------------- Group event RSVP (change group-identity-media-rules-rsvp) ----------------
+
+/** RSVP GOING to a group event. Returns the fresh EventDto (count+1, attending=true). */
+export const attendGroupEvent = async (
+    id: string,
+    eventId: string,
+): Promise<GroupEvent> =>
+    restRequest<GroupEvent>({
+        method: "POST",
+        url: `/groups/${id}/events/${eventId}/attend`,
+    })
+
+/** Cancel RSVP. Returns the fresh EventDto (count−1, attending=false). */
+export const unattendGroupEvent = async (
+    id: string,
+    eventId: string,
+): Promise<GroupEvent> =>
+    restRequest<GroupEvent>({
+        method: "DELETE",
+        url: `/groups/${id}/events/${eventId}/attend`,
+    })
+
+// ---------------- Group rules (GET/PUT whole list) ----------------
+
+/** Reads a group's rules. Member-gated (PUBLIC: authenticated). */
+export const getGroupRules = async (id: string): Promise<GroupRulesResponse> =>
+    restRequest<GroupRulesResponse>({
+        method: "GET",
+        url: `/groups/${id}/rules`,
+        authenticated: true,
+    })
+
+/** Replaces a group's entire rules list (≤ 30 items, ≤ 300 chars each). `group.manage`. */
+export const updateGroupRules = async (
+    id: string,
+    rules: Array<string>,
+): Promise<GroupRulesResponse> =>
+    restRequest<GroupRulesResponse>({
+        method: "PUT",
+        url: `/groups/${id}/rules`,
+        data: { rules },
+    })
+
+// ---------------- Group media (avatar/cover) presign → upload → verify ----------------
+
+/** Step 1: mint a presigned upload for a group avatar/cover. `group.manage`. */
+export const presignGroupMedia = async (
+    id: string,
+    request: GroupMediaPresignRequest,
+): Promise<GroupMediaPresignResponse> =>
+    restRequest<GroupMediaPresignResponse>({
+        method: "POST",
+        url: `/groups/${id}/media/presign`,
+        data: request,
+    })
+
+/**
+ * Step 2: POST the raw file to the presigned `uploadUrl` as multipart/form-data
+ * (field `file`, mirroring the upload.ftes.vn `/api/images` contract). `uploadUrl`
+ * is an absolute URL to the storage service, so this bypasses `restRequest`
+ * (which targets the API base + envelope) and uses a bare `fetch`.
+ *
+ * @throws Error when the upload responds non-2xx.
+ */
+export const uploadGroupMediaFile = async (
+    uploadUrl: string,
+    file: File,
+): Promise<void> => {
+    const form = new FormData()
+    form.append("file", file)
+    const response = await fetch(uploadUrl, { method: "POST", body: form })
+    if (!response.ok) {
+        throw new Error(`group media upload failed (${response.status})`)
+    }
+}
+
+/** Step 3: confirm the object landed and set it on the group. Returns the signed URL. */
+export const verifyGroupMedia = async (
+    id: string,
+    request: GroupMediaVerifyRequest,
+): Promise<GroupMediaRef> =>
+    restRequest<GroupMediaRef>({
+        method: "POST",
+        url: `/groups/${id}/media/verify`,
+        data: request,
+    })
+
+// ---------------- Group discussion threads (change group-social-engagement §2.2) ----------------
+
+export const listGroupThreads = async (
+    id: string,
+    request?: { cursor?: string; limit?: number },
+): Promise<GroupPage<GroupThreadDto>> =>
+    restRequest<GroupPage<GroupThreadDto>>({
+        method: "GET",
+        url: `/groups/${id}/discussion/threads`,
+        params: { cursor: request?.cursor, limit: request?.limit },
+        authenticated: true,
+    })
+
+export const createGroupThread = async (
+    id: string,
+    request: GroupThreadRequest,
+): Promise<GroupThreadDto> =>
+    restRequest<GroupThreadDto>({
+        method: "POST",
+        url: `/groups/${id}/discussion/threads`,
+        data: request,
+    })
+
+export const getGroupThread = async (
+    id: string,
+    threadId: string,
+): Promise<GroupThreadDto> =>
+    restRequest<GroupThreadDto>({
+        method: "GET",
+        url: `/groups/${id}/discussion/threads/${threadId}`,
+        authenticated: true,
+    })
+
+export const deleteGroupThread = async (
+    id: string,
+    threadId: string,
+): Promise<void> =>
+    restRequest<void>({
+        method: "DELETE",
+        url: `/groups/${id}/discussion/threads/${threadId}`,
+    })
+
+export const listGroupThreadComments = async (
+    id: string,
+    threadId: string,
+    request?: { cursor?: string; limit?: number },
+): Promise<GroupPage<GroupThreadCommentDto>> =>
+    restRequest<GroupPage<GroupThreadCommentDto>>({
+        method: "GET",
+        url: `/groups/${id}/discussion/threads/${threadId}/comments`,
+        params: { cursor: request?.cursor, limit: request?.limit },
+        authenticated: true,
+    })
+
+export const createGroupThreadComment = async (
+    id: string,
+    threadId: string,
+    request: GroupThreadCommentRequest,
+): Promise<GroupThreadCommentDto> =>
+    restRequest<GroupThreadCommentDto>({
+        method: "POST",
+        url: `/groups/${id}/discussion/threads/${threadId}/comments`,
+        data: request,
+    })
+
+export const deleteGroupThreadComment = async (
+    id: string,
+    commentId: string,
+): Promise<void> =>
+    restRequest<void>({
+        method: "DELETE",
+        url: `/groups/${id}/discussion/comments/${commentId}`,
+    })
+
+/** Toggle-on LIKE on a discussion thread (idempotent). */
+export const likeGroupThread = async (
+    id: string,
+    threadId: string,
+): Promise<void> =>
+    restRequest<void>({
+        method: "PUT",
+        url: `/groups/${id}/discussion/threads/${threadId}/reactions`,
+    })
+
+export const unlikeGroupThread = async (
+    id: string,
+    threadId: string,
+): Promise<void> =>
+    restRequest<void>({
+        method: "DELETE",
+        url: `/groups/${id}/discussion/threads/${threadId}/reactions`,
+    })
+
+/** Toggle-on LIKE on a discussion thread comment (idempotent). */
+export const likeGroupThreadComment = async (
+    id: string,
+    commentId: string,
+): Promise<void> =>
+    restRequest<void>({
+        method: "PUT",
+        url: `/groups/${id}/discussion/comments/${commentId}/reactions`,
+    })
+
+export const unlikeGroupThreadComment = async (
+    id: string,
+    commentId: string,
+): Promise<void> =>
+    restRequest<void>({
+        method: "DELETE",
+        url: `/groups/${id}/discussion/comments/${commentId}/reactions`,
     })
 
 // ---------------- InvitationController ----------------

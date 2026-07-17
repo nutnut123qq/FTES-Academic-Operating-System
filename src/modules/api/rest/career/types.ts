@@ -241,3 +241,99 @@ export interface CareerSkillAssessment {
     evidenceRef?: string
     createdAt: string
 }
+
+// ---- CV Builder (Harvard) ----
+//
+// Mirrors the jsonb `career.cv_profiles.sections` shape validated in the backend
+// `CvProfileService` (change ai-cv-review-and-builder). Every field is optional so
+// a half-built CV round-trips: the BE only checks that each PRESENT top-level
+// section matches the declared JSON type (header=object, summary=string, the rest
+// arrays) and rejects unknown keys — it does not require any field to be filled.
+
+/** A labelled external link in the CV header (portfolio, GitHub, LinkedIn…). */
+export interface CvHeaderLink {
+    label?: string
+    url?: string
+}
+
+/** CV header block (`sections.header`). */
+export interface CvHeader {
+    fullName?: string
+    email?: string
+    phone?: string
+    location?: string
+    links?: CvHeaderLink[]
+}
+
+/** One education entry (`sections.education[]`). */
+export interface CvEducationItem {
+    school?: string
+    degree?: string
+    major?: string
+    start?: string
+    end?: string
+    gpa?: string
+    highlights?: string[]
+}
+
+/** One work-experience entry (`sections.experience[]`). */
+export interface CvExperienceItem {
+    company?: string
+    title?: string
+    start?: string
+    end?: string
+    bullets?: string[]
+}
+
+/** One project entry (`sections.projects[]`). */
+export interface CvProjectItem {
+    name?: string
+    role?: string
+    tech?: string[]
+    bullets?: string[]
+    link?: string
+}
+
+/** One grouped skill list (`sections.skills[]`). */
+export interface CvSkillGroup {
+    group?: string
+    items?: string[]
+}
+
+/** One award entry (`sections.awards[]`). */
+export interface CvAwardItem {
+    name?: string
+    by?: string
+    year?: string
+}
+
+/** The full Harvard-shape `sections` object stored per CV. */
+export interface CvSections {
+    header?: CvHeader
+    summary?: string
+    education?: CvEducationItem[]
+    experience?: CvExperienceItem[]
+    projects?: CvProjectItem[]
+    skills?: CvSkillGroup[]
+    awards?: CvAwardItem[]
+}
+
+/** CV lifecycle status. */
+export type CvStatus = "DRAFT" | "FINAL"
+
+/** Response of `GET /career/cv/me` and `GET /career/cv/{id}` (`CvProfileView`). */
+export interface CvProfileView {
+    id: string
+    title: string
+    sections: CvSections
+    status: CvStatus
+    createdAt: string
+    updatedAt: string
+}
+
+/** Body of `PUT /career/cv/me` (`UpsertCvBody`). */
+export interface UpsertCvRequest {
+    title?: string
+    sections: CvSections
+    status?: CvStatus
+}

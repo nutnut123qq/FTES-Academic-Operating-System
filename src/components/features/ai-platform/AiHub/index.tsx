@@ -1,7 +1,7 @@
 "use client"
 
-import React from "react"
-import { Button, Skeleton, Typography } from "@heroui/react"
+import React, { useState } from "react"
+import { Button, Modal, Skeleton, Typography } from "@heroui/react"
 import {
     SparkleIcon,
     CalendarCheckIcon,
@@ -10,11 +10,14 @@ import {
     QuestionIcon,
     BugIcon,
     BriefcaseIcon,
-    ChalkboardTeacherIcon,
     GraduationCapIcon,
+    CaretRightIcon,
+    BookOpenIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { Link, useRouter } from "@/i18n/navigation"
+import { useQueryMyCoursesSwr } from "@/components/features/course/hooks/useQueryMyCoursesSwr"
 import {
     useQueryAiToolsSwr,
     type AiTool,
@@ -22,7 +25,7 @@ import {
 } from "../hooks/useQueryAiToolsSwr"
 
 /** Category render order for the hub sections. */
-const CATEGORY_ORDER: Array<AiToolCategory> = ["student", "learning", "coding", "career", "teacher"]
+const CATEGORY_ORDER: Array<AiToolCategory> = ["student", "learning", "coding", "career"]
 
 // ponytail: static icon-per-slug map (confirmed-compiling Phosphor set). Refine when
 // §9 gets its own brainstorm; falls back to a generic sparkle for unknown keys.
@@ -34,8 +37,10 @@ const TOOL_ICONS: Record<string, React.ReactNode> = {
     quiz: <QuestionIcon className="size-6" />,
     debug: <BugIcon className="size-6" />,
     cvReview: <BriefcaseIcon className="size-6" />,
-    mentor: <ChalkboardTeacherIcon className="size-6" />,
 }
+
+/** The one intent-driven tile whose action is resolved from enrollments, not a URL. */
+const TUTOR_KEY = "tutor"
 
 /** Loading skeleton — mirrors the category sections + tool-card grid so the layout never jumps. */
 const AiHubSkeleton = () => (
@@ -67,17 +72,38 @@ const AiHubSkeleton = () => (
 /**
  * §9 AI Platform — the AI tools hub. Mirrors the house catalog archetype
  * (see `SubjectCatalog`): title + subtitle + a card grid, here grouped by category.
- * Each card = accent icon badge + tool name + short desc + a mock "Open" CTA.
- * Feature owns data (mock); tokens own the look. ponytail: hand-rolled cards +
- * static icon map, mock list, CTAs are no-ops.
+ * Each card = accent icon badge + tool name + short desc + a real CTA.
+ *
+ * Tile wiring: every rendered tile drives somewhere real. Job/tool tiles navigate to
+ * their `/ai/tools/*` surface via `href`; the `tutor` tile resolves "continue
+ * learning" from the viewer's enrollments at press time (1 course → its learn shell;
+ * several → a picker modal; none → a browse-catalog CTA). Any tile with neither an
+ * `href` nor the tutor action is dead and is filtered out — no no-op CTA renders.
  */
 export const AiHub = () => {
     const t = useTranslations("aiPlatform")
+    const router = useRouter()
     const { tools, isLoading, error, mutate } = useQueryAiToolsSwr()
+    const { courses, isLoading: coursesLoading } = useQueryMyCoursesSwr()
+    const [isPickerOpen, setIsPickerOpen] = useState(false)
+
+    // "Continue learning": one course → straight into it; otherwise let the modal
+    // handle both the several-courses pick and the no-courses catalog CTA.
+    const handleTutor = () => {
+        if (courses.length === 1) {
+            router.push(courses[0].href)
+            return
+        }
+        setIsPickerOpen(true)
+    }
+
+    // Drop dead tiles — a tile renders only if it has a real destination (an `href`)
+    // or is the tutor tile (intent-driven action).
+    const liveTools = tools.filter((tool) => tool.key === TUTOR_KEY || !!tool.href)
 
     const byCategory = CATEGORY_ORDER.map((category) => ({
         category,
-        tools: tools.filter((tool) => tool.category === category),
+        tools: liveTools.filter((tool) => tool.category === category),
     })).filter((group) => group.tools.length > 0)
 
     return (
@@ -92,11 +118,11 @@ export const AiHub = () => {
             </div>
 
             <AsyncContent
-                isLoading={isLoading && tools.length === 0}
+                isLoading={isLoading && liveTools.length === 0}
                 skeleton={<AiHubSkeleton />}
-                isEmpty={tools.length === 0}
+                isEmpty={liveTools.length === 0}
                 emptyContent={{ title: t("states.empty") }}
-                error={tools.length === 0 ? error : undefined}
+                error={liveTools.length === 0 ? error : undefined}
                 errorContent={{
                     title: t("states.error"),
                     onRetry: () => void mutate(),
@@ -130,9 +156,24 @@ export const AiHub = () => {
                                             </Typography>
                                         </div>
                                         <div className="flex items-center gap-3">
-                                            <Button size="sm" variant="secondary">
-                                                {t("open")}
-                                            </Button>
+                                            {tool.href ? (
+                                                <Button
+                                                    size="sm"
+                                                    variant="secondary"
+                                                    onPress={() => router.push(tool.href as string)}
+                                                >
+                                                    {t("open")}
+                                                </Button>
+                                            ) : (
+                                                <Button
+                                                    size="sm"
+                                                    variant="secondary"
+                                                    isPending={coursesLoading}
+                                                    onPress={handleTutor}
+                                                >
+                                                    {t("open")}
+                                                </Button>
+                                            )}
                                             <Typography type="body-xs" color="muted">
                                                 {t("quotaRemaining", { count: tool.remaining })}
                                             </Typography>
@@ -144,6 +185,117 @@ export const AiHub = () => {
                     ))}
                 </div>
             </AsyncContent>
+
+            <TutorContinueModal
+                isOpen={isPickerOpen}
+                onClose={() => setIsPickerOpen(false)}
+                courses={courses}
+            />
         </div>
+    )
+}
+
+/** Props for {@link TutorContinueModal}. */
+interface TutorContinueModalProps {
+    /** Whether the picker is open. */
+    isOpen: boolean
+    /** Close the picker. */
+    onClose: () => void
+    /** The viewer's resumable enrolled courses (may be empty). */
+    courses: ReturnType<typeof useQueryMyCoursesSwr>["courses"]
+}
+
+/**
+ * The tutor "continue learning" picker. With several enrolled courses it lists them
+ * (each a go-there row into that course's learn shell); with none it shows a
+ * browse-catalog CTA so the tile is never a dead end.
+ */
+const TutorContinueModal = ({ isOpen, onClose, courses }: TutorContinueModalProps) => {
+    const t = useTranslations("aiPlatform.tutorPicker")
+    const router = useRouter()
+    const hasCourses = courses.length > 0
+
+    return (
+        <Modal isOpen={isOpen} onOpenChange={(open) => { if (!open) onClose() }}>
+            <Modal.Backdrop>
+                <Modal.Container>
+                    <Modal.Dialog className="w-full max-w-md">
+                        <Modal.Header>
+                            <div className="flex items-start gap-3">
+                                <div className="rounded-xl bg-accent/10 p-2 text-accent">
+                                    <SparkleIcon aria-hidden focusable="false" className="size-5" />
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                    <Typography type="body" weight="bold">
+                                        {t("title")}
+                                    </Typography>
+                                    <Typography type="body-sm" color="muted">
+                                        {hasCourses ? t("subtitle") : t("emptyHint")}
+                                    </Typography>
+                                </div>
+                            </div>
+                        </Modal.Header>
+                        <Modal.Body className="flex flex-col gap-2">
+                            {hasCourses ? (
+                                <div className="flex flex-col divide-y divide-separator">
+                                    {courses.map((course) => (
+                                        <Link
+                                            key={course.courseId}
+                                            href={course.href}
+                                            onClick={onClose}
+                                            className="group flex items-center gap-3 py-3"
+                                        >
+                                            <BookOpenIcon
+                                                aria-hidden
+                                                focusable="false"
+                                                className="size-5 shrink-0 text-muted"
+                                            />
+                                            <div className="flex min-w-0 flex-1 flex-col">
+                                                <Typography
+                                                    type="body-sm"
+                                                    weight="semibold"
+                                                    truncate
+                                                    className="transition-colors group-hover:underline"
+                                                >
+                                                    {course.title}
+                                                </Typography>
+                                                <Typography type="body-xs" color="muted">
+                                                    {t("progress", { percent: course.completionPercent })}
+                                                </Typography>
+                                            </div>
+                                            <CaretRightIcon
+                                                aria-hidden
+                                                focusable="false"
+                                                className="size-4 shrink-0 text-muted transition-transform group-hover:translate-x-1"
+                                            />
+                                        </Link>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center gap-3 py-4 text-center">
+                                    <Typography type="body" weight="semibold">
+                                        {t("emptyTitle")}
+                                    </Typography>
+                                    <Button
+                                        variant="primary"
+                                        onPress={() => {
+                                            onClose()
+                                            router.push("/courses")
+                                        }}
+                                    >
+                                        {t("browse")}
+                                    </Button>
+                                </div>
+                            )}
+                        </Modal.Body>
+                        <Modal.Footer className="justify-end">
+                            <Button variant="ghost" onPress={onClose}>
+                                {t("close")}
+                            </Button>
+                        </Modal.Footer>
+                    </Modal.Dialog>
+                </Modal.Container>
+            </Modal.Backdrop>
+        </Modal>
     )
 }

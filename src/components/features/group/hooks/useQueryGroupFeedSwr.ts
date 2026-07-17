@@ -14,11 +14,11 @@ export interface GroupPost {
     authorUsername: string
     timeLabel: string
     text: string
-    /** Like count. mock BE - endpoint pending: no group-post reaction contract → seeded 0. */
+    /** Like count (change group-social-engagement — hydrated by the group feed DTO). */
     likes: number
-    /** Whether the current user has liked this post. mock BE - endpoint pending. */
+    /** Whether the current user has liked this post. */
     liked: boolean
-    /** Comment count. mock BE - endpoint pending: no group-post comment contract → seeded 0. */
+    /** Comment count. */
     comments: number
 }
 
@@ -39,11 +39,10 @@ export const matchesGroupFeedKey =
     }
 
 /**
- * Maps a BE community post summary to the feed-card shape. The community feed
- * contract only carries author id + post title + timestamp, so the author's
- * display name / username fall back to the author id, and the card body shows
- * the post title. mock BE - endpoint pending: reactions (likes/liked) and
- * comment counts have no group-post contract yet → seeded to 0/false.
+ * Maps a BE group post summary to the feed-card shape. The group feed slice now
+ * carries live engagement (`likeCount`/`commentCount`/`likedByMe`, hydrated by the
+ * BE via `community.getPostEngagement`). The feed DTO still only carries the author
+ * id (no profile join), so the author display name / username fall back to it.
  */
 const toGroupPost = (dto: GroupPostSummary, locale: string): GroupPost => ({
     id: dto.id,
@@ -51,9 +50,9 @@ const toGroupPost = (dto: GroupPostSummary, locale: string): GroupPost => ({
     authorUsername: dto.authorId,
     timeLabel: formatRelativeTime(dto.createdAt, locale),
     text: dto.title,
-    likes: 0,
-    liked: false,
-    comments: 0,
+    likes: dto.likeCount ?? 0,
+    liked: dto.likedByMe ?? false,
+    comments: dto.commentCount ?? 0,
 })
 
 /** Loads a group's feed from the real group REST API (community feed slice). */

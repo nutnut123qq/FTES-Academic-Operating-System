@@ -5,8 +5,11 @@ import type {
     ContributorScoreResponse,
     CreatePostRequest,
     CreateReportRequest,
+    FeedPage,
+    LeaderboardResponse,
     ModerationDecisionRequest,
     ModerationQueueResponse,
+    PollResponse,
     PollVoteRequest,
     PostResponse,
     ShareRequest,
@@ -50,6 +53,25 @@ export const addComment = async (
 }
 
 /**
+ * Lists a post's comments as a flat, cursor-paginated thread (top-level comments
+ * plus their one-level replies carry `parentId`/`rootId`/`depth`). Group posts are
+ * community posts, so the group discussion UI reuses this endpoint.
+ *
+ * `GET /api/v1/community/posts/{postId}/comments`
+ */
+export const getPostComments = async (
+    postId: string,
+    params?: { cursor?: string; limit?: number },
+): Promise<FeedPage<CommentResponse>> => {
+    return restRequest<FeedPage<CommentResponse>>({
+        method: "GET",
+        url: `/community/posts/${postId}/comments`,
+        params: { cursor: params?.cursor || undefined, limit: params?.limit ?? 20 },
+        authenticated: true,
+    })
+}
+
+/**
  * Returns the detail of a single community post.
  *
  * `GET /api/v1/community/posts/{id}`
@@ -87,6 +109,21 @@ export const deletePost = async (id: string): Promise<void> => {
     return restRequest<void>({
         method: "DELETE",
         url: `/community/posts/${id}`,
+    })
+}
+
+/**
+ * Returns the poll of a POLL post: options with `voteCount` plus the caller's
+ * `myOptionId`. Visibility is enforced by the BE (a private-group poll the caller
+ * cannot read 404s, indistinguishable from not-found).
+ *
+ * `GET /api/v1/community/posts/{postId}/poll`
+ */
+export const getPoll = async (postId: string): Promise<PollResponse> => {
+    return restRequest<PollResponse>({
+        method: "GET",
+        url: `/community/posts/${postId}/poll`,
+        authenticated: true,
     })
 }
 
@@ -247,6 +284,24 @@ export const getBookmarks = async (limit = 50): Promise<Array<string>> => {
 }
 
 /**
+ * Lists the caller's bookmarked posts as full, author-enriched cards (newest-saved
+ * first), cursor-paginated. Backs the `/community/saved` page.
+ *
+ * `GET /api/v1/community/bookmarks/posts?cursor=&limit=`
+ */
+export const getBookmarkedPosts = async (
+    cursor?: string,
+    limit = 20,
+): Promise<FeedPage<PostResponse>> => {
+    return restRequest<FeedPage<PostResponse>>({
+        method: "GET",
+        url: "/community/bookmarks/posts",
+        params: { cursor: cursor || undefined, limit },
+        authenticated: true,
+    })
+}
+
+/**
  * Returns the contributor score for a user.
  *
  * `GET /api/v1/community/users/{id}/contributor-score`
@@ -257,6 +312,27 @@ export const getContributorScore = async (
     return restRequest<ContributorScoreResponse>({
         method: "GET",
         url: `/community/users/${userId}/contributor-score`,
+        authenticated: true,
+    })
+}
+
+/**
+ * Returns one page of the global contributor leaderboard (sorted score desc,
+ * `userId` asc tie-break; non-PII — rows carry `userId` + public tallies only).
+ *
+ * `GET /api/v1/community/leaderboard?page=&size=`
+ */
+export const getLeaderboard = async (params?: {
+    page?: number
+    size?: number
+}): Promise<LeaderboardResponse> => {
+    return restRequest<LeaderboardResponse>({
+        method: "GET",
+        url: "/community/leaderboard",
+        params: {
+            page: params?.page ?? 0,
+            size: params?.size ?? 20,
+        },
         authenticated: true,
     })
 }

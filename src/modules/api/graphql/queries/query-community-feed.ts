@@ -3,18 +3,24 @@ import { type GraphQLOperationContext, type GraphQLHeaders } from "../types"
 import { DocumentNode, gql } from "@apollo/client"
 
 /**
- * Real BE community feed — GraphQL `feed(tab: FeedTab!, page: CursorInput): PostConnection!`
- * (schema.graphqls). Returns the `PostConnection` directly (NO `{success,message,error,data}`
- * envelope). `Post` is intentionally minimal (id/kind/title/createdAt + batched `author`);
- * the BE feed carries NO body/likes/comment counts — those are degraded/hidden by the consumer.
+ * Real BE community feed — GraphQL `feed(tab: FeedTab!, page: CursorInput, campus: String):
+ * PostConnection!` (schema.graphqls). Returns the `PostConnection` directly (NO
+ * `{success,message,error,data}` envelope). `Post` is intentionally minimal
+ * (id/kind/title/createdAt + batched `author`) plus the denormalized read enrichment
+ * (`snippet`/`likeCount`/`commentCount`/`likedByMe`).
  *
  * ⚠️ Gateway quirk (verified against apitest): the pre-GraphQL security filter rejects ANY
  * operation that declares a NON-NULL variable (`$x: T!`) with a top-level 401
  * `PLATFORM_UNAUTHORIZED`. So `tab` (which the schema types `FeedTab!`) is INLINED as an enum
- * literal per tab, and only the nullable `$page: CursorInput` is passed as a variable.
+ * literal per tab, and only the nullable `$page: CursorInput` / `$campus: String` are passed
+ * as variables.
+ *
+ * CAMPUS tab: pass `campus` to scope the feed to a campus; omit it and the BE resolver falls
+ * back to the viewer's profile campus (change `community-completion-v2` §4.4) and returns an
+ * EMPTY connection when the viewer has no campus (not an error). Other tabs ignore `campus`.
  */
 
-/** Feed scope (mirrors BE `enum FeedTab`). CAMPUS needs a campus arg the resolver does not pass. */
+/** Feed scope (mirrors BE `enum FeedTab`). */
 export enum FeedTab {
     ForYou = "FOR_YOU",
     Following = "FOLLOWING",
@@ -85,15 +91,19 @@ const FEED_SELECTION = `
   nextCursor
 `
 
-/** Build a feed document with the `tab` enum INLINED (see the non-null-variable quirk above). */
+/**
+ * Build a feed document with the `tab` enum INLINED (see the non-null-variable quirk above).
+ * `$campus` stays a nullable variable (safe under the quirk) so the CAMPUS tab can scope the
+ * feed; other tabs pass `null` and the resolver ignores it.
+ */
 const feedDocument = (tab: FeedTab): DocumentNode =>
     gql(
-        `query CommunityFeed($page: CursorInput) {\n` +
-            `  feed(tab: ${tab}, page: $page) {${FEED_SELECTION}}\n` +
+        `query CommunityFeed($page: CursorInput, $campus: String) {\n` +
+            `  feed(tab: ${tab}, page: $page, campus: $campus) {${FEED_SELECTION}}\n` +
             `}`,
     )
 
-/** Pre-built documents per tab (enum inlined; only FOR_YOU/FOLLOWING/TRENDING are usable). */
+/** Pre-built documents per tab (enum inlined; all four tabs are usable). */
 const queryMap: Record<FeedTab, DocumentNode> = {
     [FeedTab.ForYou]: feedDocument(FeedTab.ForYou),
     [FeedTab.Following]: feedDocument(FeedTab.Following),
@@ -113,6 +123,11 @@ export interface QueryCommunityFeedParams extends GraphQLOperationContext {
     tab?: FeedTab
     /** Cursor page; `{ limit }` for page 1, `{ cursor }` for the next page. */
     page?: FeedCursorInput
+    /**
+     * Campus scope for the CAMPUS tab; omit to let the BE fall back to the viewer's
+     * profile campus. Ignored by other tabs.
+     */
+    campus?: string | null
     headers?: GraphQLHeaders
     debug?: boolean
 }
@@ -126,6 +141,7 @@ export interface QueryCommunityFeedParams extends GraphQLOperationContext {
 export const queryCommunityFeed = async ({
     tab = FeedTab.ForYou,
     page,
+    campus,
     headers,
     debug,
     signal,
@@ -138,6 +154,6 @@ export const queryCommunityFeed = async ({
     })
     return apollo.query<QueryCommunityFeedResponse>({
         query: queryMap[tab],
-        variables: { page: page ?? null },
+        variables: { page: page ?? null, campus: campus ?? null },
     })
 }

@@ -33,6 +33,31 @@ export interface CreateChallengeRequest {
     rewardConfig: string
 }
 
+/** One selectable option of an MCQ question (taker-safe — no `correctKeys`). */
+export interface OptionItem {
+    /** Stable option key, e.g. `"A"`. */
+    key: string
+    /** Option text shown to the learner. */
+    text: string
+}
+
+/**
+ * A taker-safe MCQ question on a `MULTIPLE_CHOICE` challenge (BE `McqQuestionView`).
+ * Correct keys are NOT exposed to the taker — grading happens server-side.
+ */
+export interface McqQuestionView {
+    /** Question id (UUID). */
+    id: string
+    /** Question prompt. */
+    question: string
+    /** Selectable options. */
+    options: Array<OptionItem>
+    /** Points awarded for this question. */
+    points: number
+    /** Display order. */
+    orderNo: number
+}
+
 /** Challenge summary returned by list/detail endpoints. */
 export interface ChallengeView {
     /** Challenge id (UUID). */
@@ -43,12 +68,14 @@ export interface ChallengeView {
     slug: string
     /** Full description. */
     description: string
-    /** Challenge type. */
+    /** Challenge type, e.g. `MULTIPLE_CHOICE`, `CODE`, `ESSAY`. */
     type: string
     /** Competition mode. */
     mode: string
     /** Subject id. */
     subjectId: string
+    /** Linked lesson id, when the challenge is attached to a lesson. */
+    lessonId?: string | null
     /** Lifecycle status, e.g. `DRAFT`, `PUBLISHED`, `RUNNING`, `CLOSED`. */
     status: string
     /** Start time (ISO-8601). */
@@ -59,6 +86,17 @@ export interface ChallengeView {
     maxSubmissions: number
     /** Maximum team size; nullable. */
     maxTeamSize: number | null
+    /** Opaque JSON grading configuration (present on detail). */
+    gradingConfig?: string | null
+    /** Taker-safe MCQ questions (present when `type` is `MULTIPLE_CHOICE`). */
+    mcqQuestions?: Array<McqQuestionView> | null
+    /**
+     * Owning course id when the challenge is course-bank scoped
+     * (BE `course-challenge-bank`); optional so old BEs don't break.
+     */
+    courseId?: string | null
+    /** Visibility: `COURSE_ONLY` | `WORKSPACE_PUBLIC` (course-challenge-bank). */
+    visibility?: string | null
 }
 
 /** Wrapper for a batch test-case upsert. */
@@ -125,16 +163,23 @@ export interface TeamView {
 
 /** Body sent to `POST /api/v1/challenges/{id}/submissions`. */
 export interface SubmitRequest {
-    /** Payload discriminator, e.g. `CODE`, `STORAGE`, `URL`. */
+    /** Payload discriminator, e.g. `MCQ`, `CODE`, `ESSAY`, `STORAGE`, `URL`. */
     payloadType: string
     /** Source code when payload type is `CODE`. */
-    code: string
+    code?: string
     /** Programming language identifier. */
-    language: string
+    language?: string
     /** Storage object key when payload type is `STORAGE`. */
-    storageKey: string
+    storageKey?: string
     /** External URL when payload type is `URL`. */
-    url: string
+    url?: string
+    /**
+     * Selected option keys per MCQ question (`{ questionId: ["A", ...] }`) when
+     * payload type is `MCQ`. Mirrors BE `Map<String, List<String>> answers`.
+     */
+    answers?: Record<string, Array<string>>
+    /** Essay body when payload type is `ESSAY`. */
+    essayText?: string
 }
 
 /** Submission summary returned on submit / list. */

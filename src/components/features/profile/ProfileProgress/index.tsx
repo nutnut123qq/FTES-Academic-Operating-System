@@ -14,29 +14,16 @@ import { ProgressMeter } from "@/components/blocks/stats/ProgressMeter"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { SkillGraph } from "@/components/features/skill-graph"
 import { useQueryMyGamificationSwr } from "@/components/features/gamification/hooks/useQueryMyGamificationSwr"
-import { DayStatus, HEATMAP_WEEKS, type HeatmapDay } from "@/components/features/gamification/engine"
-import { StreakHeatmap } from "@/components/features/gamification/StreakHeatmap"
+import { StreakHeatmap, type HeatmapCell } from "@/components/features/gamification/StreakHeatmap"
 
-/** ISO `yyyy-mm-dd` for a local date. */
-const toIso = (date: Date): string => {
-    const y = date.getFullYear()
-    const m = `${date.getMonth() + 1}`.padStart(2, "0")
-    const d = `${date.getDate()}`.padStart(2, "0")
-    return `${y}-${m}-${d}`
-}
+/** Nominal XP for an active day, so the heatmap shades it (the profile snapshot
+ * exposes only the active-day list, not per-day XP; the streak popover uses the
+ * real `/me/activity-days` window). */
+const ACTIVE_DAY_XP = 50
 
-/** Build the 12-week heatmap cells (oldest → newest) from the active-day list. */
-const buildCells = (activeDays: Array<string>): Array<HeatmapDay> => {
-    const active = new Set(activeDays)
-    const cells: Array<HeatmapDay> = []
-    for (let i = HEATMAP_WEEKS * 7 - 1; i >= 0; i -= 1) {
-        const date = new Date()
-        date.setDate(date.getDate() - i)
-        const iso = toIso(date)
-        cells.push({ date: iso, status: active.has(iso) ? DayStatus.Active : DayStatus.Empty })
-    }
-    return cells
-}
+/** Map the active-day list to sparse heatmap cells; the heatmap fills the window. */
+const toHeatmapCells = (activeDays: Array<string>): Array<HeatmapCell> =>
+    activeDays.map((date) => ({ date, xp: ACTIVE_DAY_XP }))
 
 /** Skeleton mirroring the redesigned progress dashboard. */
 const ProgressSkeleton = () => (
@@ -84,9 +71,9 @@ export const ProfileProgress = () => {
     const { data: communitySummary } = useQueryMyCommunitySummarySwr()
     const reputationScore = communitySummary?.reputation.score ?? 0
 
-    const cellLabel = (day: HeatmapDay): string => {
-        const date = new Date(`${day.date}T00:00:00`).toLocaleDateString(locale)
-        return `${date} — ${t(`gamification.heatmap.${day.status === DayStatus.Active ? "active" : "empty"}`)}`
+    const cellLabel = (cell: HeatmapCell): string => {
+        const date = new Date(`${cell.date}T00:00:00`).toLocaleDateString(locale)
+        return `${date} — ${t(`gamification.heatmap.${cell.xp > 0 ? "active" : "empty"}`)}`
     }
 
     return (
@@ -184,7 +171,7 @@ export const ProfileProgress = () => {
                                 className="overflow-x-auto"
                                 aria-label={t("profile.progress.heatmap.summary", { count: data.streak.current })}
                             >
-                                <StreakHeatmap days={buildCells(data.streak.days)} cellLabel={cellLabel} />
+                                <StreakHeatmap days={toHeatmapCells(data.streak.days)} cellLabel={cellLabel} />
                             </div>
                         </LabeledCard>
 

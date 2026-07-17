@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useEffect, useRef, useState } from "react"
+import { useWatchPositionReporter } from "./hooks/useWatchPositionReporter"
 
 /** Minimal shape of the YouTube IFrame Player API surface we use. */
 interface YouTubePlayer {
@@ -39,6 +40,10 @@ declare global {
 
 /** YT.PlayerState.PLAYING. */
 const YT_STATE_PLAYING = 1
+/** YT.PlayerState.ENDED. */
+const YT_STATE_ENDED = 0
+/** YT.PlayerState.PAUSED. */
+const YT_STATE_PAUSED = 2
 
 let ytApiPromise: Promise<void> | null = null
 const loadYouTubeApi = (): Promise<void> => {
@@ -80,12 +85,14 @@ const loadYouTubeApi = (): Promise<void> => {
  */
 export const LessonYouTubePlayer = ({
     videoId,
+    lessonId,
     previewSeconds,
     onOpenGate,
     onCountdownTick,
     onHalfWatched,
 }: {
     videoId: string
+    lessonId: string
     previewSeconds?: number
     onOpenGate: () => void
     onCountdownTick?: (remaining: number) => void
@@ -93,6 +100,22 @@ export const LessonYouTubePlayer = ({
 }) => {
     const hostRef = useRef<HTMLDivElement>(null)
     const [apiFailed, setApiFailed] = useState(false)
+    /** Live player handle so the reporter can read position/duration on demand. */
+    const playerRef = useRef<YouTubePlayer | null>(null)
+    const reporter = useWatchPositionReporter({
+        lessonId,
+        getSnapshot: () => {
+            const p = playerRef.current
+            if (!p?.getCurrentTime) return null
+            const duration = p.getDuration?.() ?? 0
+            return {
+                positionSeconds: p.getCurrentTime(),
+                durationSeconds: duration > 0 ? duration : null,
+            }
+        },
+    })
+    const reporterRef = useRef(reporter)
+    reporterRef.current = reporter
     const halfWatchedRef = useRef(onHalfWatched)
     halfWatchedRef.current = onHalfWatched
     const tickRef = useRef(onCountdownTick)
@@ -154,39 +177,47 @@ export const LessonYouTubePlayer = ({
                             clampSeek()
                         },
                         onStateChange: (event) => {
-                            if (event.data !== YT_STATE_PLAYING) {
+                            if (event.data === YT_STATE_PLAYING) {
+                                // Playing → start the 30s watch-position cadence.
+                                reporterRef.current.onPlaying()
+                                if (fired || interval) {
+                                    return
+                                }
+                                interval = window.setInterval(() => {
+                                    const duration = player?.getDuration?.() ?? 0
+                                    const current = player?.getCurrentTime?.() ?? 0
+
+                                    const limit = previewLimitRef.current
+                                    if (limit > 0) {
+                                        const remaining = Math.max(0, limit - current)
+                                        tickRef.current?.(remaining)
+                                        if (current >= limit - 0.5 || remaining <= 0) {
+                                            fireGate()
+                                            return
+                                        }
+                                        if (current > limit) {
+                                            player?.seekTo?.(limit, true)
+                                        }
+                                    }
+
+                                    if (duration > 0 && current / duration >= 0.5) {
+                                        fired = true
+                                        clearPoll()
+                                        halfWatchedRef.current?.()
+                                    }
+                                }, 1000)
+                                return
+                            }
+                            // Chỉ PAUSED/ENDED mới dừng cadence + flush vị trí. BUFFERING(3)/CUED(5)/
+                            // UNSTARTED(-1) — khựng mạng giữa lúc phát — KHÔNG flush để tránh PUT force thừa.
+                            if (event.data === YT_STATE_PAUSED || event.data === YT_STATE_ENDED) {
                                 clearPoll()
-                                return
+                                reporterRef.current.onPaused()
                             }
-                            if (fired || interval) {
-                                return
-                            }
-                            interval = window.setInterval(() => {
-                                const duration = player?.getDuration?.() ?? 0
-                                const current = player?.getCurrentTime?.() ?? 0
-
-                                const limit = previewLimitRef.current
-                                if (limit > 0) {
-                                    const remaining = Math.max(0, limit - current)
-                                    tickRef.current?.(remaining)
-                                    if (current >= limit - 0.5 || remaining <= 0) {
-                                        fireGate()
-                                        return
-                                    }
-                                    if (current > limit) {
-                                        player?.seekTo?.(limit, true)
-                                    }
-                                }
-
-                                if (duration > 0 && current / duration >= 0.5) {
-                                    fired = true
-                                    clearPoll()
-                                    halfWatchedRef.current?.()
-                                }
-                            }, 1000)
                         },
                     },
                 })
+                playerRef.current = player
             })
             .catch(() => {
                 if (!cancelled) {
@@ -197,6 +228,7 @@ export const LessonYouTubePlayer = ({
         return () => {
             cancelled = true
             clearPoll()
+            playerRef.current = null
             player?.destroy?.()
         }
     }, [videoId, onOpenGate])

@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl"
 import Hls from "hls.js"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { usePreviewGate } from "./hooks/usePreviewGate"
+import { useWatchPositionReporter } from "./hooks/useWatchPositionReporter"
 
 /** Legacy Funnycode stream gateway that resolves `video_*` refs to an HLS manifest. */
 const STREAM_BASE = "https://stream.ftes.vn"
@@ -65,6 +66,20 @@ export const LessonHlsPlayer = ({
         onOpenGate,
     )
 
+    // Watch-position reporting (resume + analytics) — independent of the 50% mark-complete
+    // above. Reads live position from the same <video> element.
+    const reporter = useWatchPositionReporter({
+        lessonId,
+        getSnapshot: () => {
+            const el = videoEl.current
+            if (!el) return null
+            return {
+                positionSeconds: el.currentTime,
+                durationSeconds: Number.isFinite(el.duration) ? el.duration : null,
+            }
+        },
+    })
+
     const clampSeek = () => {
         const el = videoEl.current
         if (!el || !previewSeconds) return
@@ -88,8 +103,26 @@ export const LessonHlsPlayer = ({
         }
     }
 
+    /** Timestamp of the last pause-driven flush — used to dedupe the pause→ended double-flush. */
+    const lastPauseFlushRef = useRef(0)
+
+    const handlePause = () => {
+        lastPauseFlushRef.current = Date.now()
+        reporter.onPaused()
+    }
+
     const handleEnded = () => {
         onEnded()
+        // Chrome bắn `pause` ngay trước `ended` ở cuối video → onPause đã flush; chỉ flush lại
+        // khi `pause` KHÔNG vừa chạy (trình duyệt spec-compliant không bắn pause lúc ended).
+        if (Date.now() - lastPauseFlushRef.current > 500) {
+            reporter.onPaused()
+        }
+    }
+
+    const handleSeeked = () => {
+        clampSeek()
+        reporter.onSeeked()
     }
 
     // Hard-pause whenever the gate fires while the video is still mounted.
@@ -191,8 +224,10 @@ export const LessonHlsPlayer = ({
                             playsInline
                             onTimeUpdate={handleTimeUpdate}
                             onEnded={handleEnded}
+                            onPlay={reporter.onPlaying}
+                            onPause={handlePause}
                             onSeeking={clampSeek}
-                            onSeeked={clampSeek}
+                            onSeeked={handleSeeked}
                             className="aspect-video w-full rounded-2xl"
                         />
                         {loading ? (

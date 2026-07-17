@@ -23,8 +23,9 @@ interface GroupIdentityFieldsProps {
  * that turns into a banner-ratio preview once a file is accepted. Both show
  * inline i18n errors on rejected type/size and a remove action. Used by the
  * create form and the management identity section (which pre-seeds the
- * handles from the group's saved images). Upload itself is mock FE — the
- * owning form documents the presign swap-point.
+ * handles from the group's saved images). This component only picks + previews;
+ * the owning form uploads for real (presign → PUT → verify via
+ * `useMutateGroupMediaSwr`).
  */
 export const GroupIdentityFields = ({ name, avatar, cover }: GroupIdentityFieldsProps) => {
     const t = useTranslations("groupsHub")

@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback } from "react"
-import { useOverlayStore, type OverlayKey, type FollowListContext } from "./store"
+import { useOverlayStore, type OverlayKey, type FollowListContext, type AnchorRect } from "./store"
 import type { PaymentContext } from "@/modules/types/payment"
 import type { QueryActiveAdvertisementData } from "@/modules/api/graphql/queries/types/active-advertisement"
 
@@ -174,6 +174,33 @@ export const useFollowListOverlayState = () => {
         [setContext, openOverlay],
     )
     return { ...base, open, context }
+}
+
+/**
+ * Desktop selection-anchored AI panel overlay state. Like {@link useAdModalOverlayState},
+ * overrides `open` to accept the {@link AnchorRect} snapshot (captured before the browser
+ * selection is cleared) so the panel can place itself next to the highlighted passage.
+ * `close` also clears the stored rect. Mobile keeps the FAB bottom-sheet (`contentAiChat`).
+ * @returns the overlay handle plus `anchorRect`, `open(rect)`, and a rect-clearing `close()`.
+ */
+export const useContentAiAnchoredPanel = () => {
+    const base = useOverlayHandle("contentAiAnchored")
+    const anchorRect = useOverlayStore((state) => state.contentAiAnchorRect)
+    const setAnchorRect = useOverlayStore((state) => state.setContentAiAnchorRect)
+    const openOverlay = useOverlayStore((state) => state.openOverlay)
+    const closeOverlay = useOverlayStore((state) => state.closeOverlay)
+    const open = useCallback(
+        (rect: AnchorRect) => {
+            setAnchorRect(rect)
+            openOverlay("contentAiAnchored")
+        },
+        [setAnchorRect, openOverlay],
+    )
+    const close = useCallback(() => {
+        closeOverlay("contentAiAnchored")
+        setAnchorRect(null)
+    }, [closeOverlay, setAnchorRect])
+    return { ...base, open, close, anchorRect }
 }
 
 /** Personal project task attempts drawer overlay state. */

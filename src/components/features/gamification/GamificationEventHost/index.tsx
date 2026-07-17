@@ -1,96 +1,130 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { Modal, Typography, toast } from "@heroui/react"
 import { useTranslations } from "next-intl"
-import { ConfettiIcon, LightningIcon, StarIcon } from "@phosphor-icons/react"
+import { StarIcon } from "@phosphor-icons/react"
 import type { WithClassNames } from "@/modules/types/base/class-name"
-import { subscribeGamificationEvents, type GamificationEvent } from "../engine"
-
-/** A pending "moment" (level-up or milestone) to render as a dismissible overlay. */
-type Moment =
-    | { kind: "levelUp"; level: number }
-    | { kind: "milestone"; days: number; badgeKey: string; coin: number }
+import { useGetMyQuestsSwr } from "@/hooks/swr/api/rest/queries/useGetMyQuestsSwr"
+import { useGetMyProgressionSwr } from "@/hooks/swr/api/rest/queries/useGetMyProgressionSwr"
 
 /**
- * Listens to mock-engine events and surfaces them: a non-blocking `+XP` toast
- * (role="status", auto-queued by HeroUI so awards never overlap) for every XP
- * award, and a celebratory MOMENT overlay for level-ups and streak milestones.
+ * Fire a "+{coin} xu — {title}" toast the moment a quest's claimed count grows.
+ *
+ * Diff-based over the shared `useGetMyQuestsSwr` cache (no engine, no event bus):
+ * a ref holds the last-seen `completedCount` per quest `code`. The FIRST fetch
+ * only seeds the baseline — completions from before this mount are never toasted;
+ * only an increase observed on a later 60s poll (coins auto-credit on a backend
+ * worker) surfaces. Because every surface reads the ONE quest cache, mounting
+ * this host once announces completions app-wide.
+ */
+const useQuestCompletionToasts = (): void => {
+    const t = useTranslations("gamification")
+    const { data } = useGetMyQuestsSwr()
+    const seen = useRef<Map<string, number> | null>(null)
+
+    useEffect(() => {
+        // Sign-out / auth-gate flushes the cache to `undefined` — drop the baseline
+        // so a NEXT user's first fetch reseeds silently instead of diffing against
+        // the previous user's counts (would raise phantom "+xu" toasts).
+        if (!data) {
+            seen.current = null
+            return
+        }
+        const counts = new Map(data.quests.map((quest) => [quest.code, quest.completedCount]))
+        // First fetch → seed the baseline silently (no toast for history).
+        if (seen.current === null) {
+            seen.current = counts
+            return
+        }
+        for (const quest of data.quests) {
+            const previous = seen.current.get(quest.code) ?? 0
+            if (quest.completedCount > previous) {
+                // A `dailyLimit>1` quest can claim ≥2 lượt between two polls — credit
+                // every newly-claimed lượt, not just one reward.
+                const coin = (quest.completedCount - previous) * quest.rewardCoin
+                toast.success(t("quests.toast.questDone", { coin, title: quest.title }))
+            }
+        }
+        seen.current = counts
+    }, [data, t])
+}
+
+/**
+ * Track the progression level and expose the new level once it increases, so the
+ * caller can raise a celebratory moment.
+ *
+ * Diff-based over the shared `useGetMyProgressionSwr` cache: a ref holds the
+ * last-seen level; the first fetch seeds it silently (an already-high level on
+ * mount is not a "level-up"). A later increase (level accrues on the backend, the
+ * hook polls 60s) sets the pending level; the caller clears it when the moment
+ * closes.
+ *
+ * @returns The pending level-up level (or null) and a clear callback.
+ */
+const useLevelUpMoment = (): { level: number | null; clear: () => void } => {
+    const { data } = useGetMyProgressionSwr()
+    const previous = useRef<number | null>(null)
+    const [level, setLevel] = useState<number | null>(null)
+
+    useEffect(() => {
+        // Flush on sign-out resets data to `undefined` — clear the baseline so a
+        // next user isn't diffed against the previous user's level (phantom level-up).
+        if (!data) {
+            previous.current = null
+            return
+        }
+        if (previous.current === null) {
+            previous.current = data.level
+            return
+        }
+        if (data.level > previous.current) setLevel(data.level)
+        previous.current = data.level
+    }, [data])
+
+    return { level, clear: () => setLevel(null) }
+}
+
+/**
+ * Surfaces live gamification feedback from the REST snapshots — a non-blocking
+ * "+{coin} xu — {title}" toast whenever a quest is completed, and a celebratory
+ * MOMENT overlay when the viewer levels up. Both are pure feedback derived by
+ * diffing the shared SWR caches (no mock engine, no localStorage): quests from
+ * `useGetMyQuestsSwr`, level from `useGetMyProgressionSwr`. Guests fetch nothing,
+ * so neither diff ever fires.
  *
  * The moment is a HeroUI `Modal` — it closes on Esc / backdrop / the close
- * trigger (keyboard-dismissable per spec). Purely feedback: no data, no engine
- * mutation. Mount once alongside any gamification surface (LeaderboardShell,
- * guide) so awards fired there are shown.
+ * trigger (keyboard-dismissable per spec). Mount once alongside any gamification
+ * surface (LeaderboardShell) so completions observed there are shown.
  *
  * @param props - Optional className.
  */
 export const GamificationEventHost = ({ className }: WithClassNames<undefined>) => {
     const t = useTranslations("gamification")
-    const [moment, setMoment] = useState<Moment | null>(null)
-
-    useEffect(() => {
-        const handle = (event: GamificationEvent) => {
-            if (event.kind === "xp") {
-                // Non-blocking +XP toast. HeroUI queues toasts so rapid awards
-                // stack rather than overlap; the toast region is an aria-live
-                // status landmark so screen readers announce each award.
-                toast.success(t("toast.xp", { xp: event.amount }), {
-                    description: t(event.reasonKey),
-                })
-                return
-            }
-            if (event.kind === "levelUp") {
-                setMoment({ kind: "levelUp", level: event.level })
-                return
-            }
-            setMoment({ kind: "milestone", days: event.days, badgeKey: event.badgeKey, coin: event.coin })
-        }
-        return subscribeGamificationEvents(handle)
-    }, [t])
+    useQuestCompletionToasts()
+    const { level, clear } = useLevelUpMoment()
 
     return (
         <div className={className}>
-            <Modal isOpen={moment !== null} onOpenChange={(open) => !open && setMoment(null)}>
+            <Modal isOpen={level !== null} onOpenChange={(open) => !open && clear()}>
                 <Modal.Backdrop>
                     <Modal.Container>
                         <Modal.Dialog>
                             <Modal.CloseTrigger />
                             <Modal.Body className="flex flex-col items-center gap-3 py-8 text-center">
-                                {moment?.kind === "levelUp" ? (
-                                    <>
-                                        <StarIcon
-                                            className="size-10 text-accent"
-                                            weight="fill"
-                                            aria-hidden
-                                            focusable="false"
-                                        />
-                                        <Typography type="h5" weight="bold">
-                                            {t("moment.levelUpTitle")}
-                                        </Typography>
-                                        <Typography type="body" color="muted">
-                                            {t("moment.levelUpBody", { level: moment.level })}
-                                        </Typography>
-                                    </>
-                                ) : null}
-                                {moment?.kind === "milestone" ? (
-                                    <>
-                                        <ConfettiIcon
-                                            className="size-10 text-accent"
-                                            weight="fill"
-                                            aria-hidden
-                                            focusable="false"
-                                        />
-                                        <Typography type="h5" weight="bold">
-                                            {t("moment.milestoneTitle")}
-                                        </Typography>
-                                        <Typography type="body" weight="medium">
-                                            {t(`milestones.${moment.badgeKey}.name`)}
-                                        </Typography>
-                                        <Typography type="body-sm" color="muted" className="flex items-center gap-1">
-                                            <LightningIcon className="size-4" aria-hidden focusable="false" />
-                                            {t("moment.milestoneReward", { days: moment.days, coin: moment.coin })}
-                                        </Typography>
-                                    </>
+                                <StarIcon
+                                    className="size-10 text-accent"
+                                    weight="fill"
+                                    aria-hidden
+                                    focusable="false"
+                                />
+                                <Typography type="h5" weight="bold">
+                                    {t("moment.levelUpTitle")}
+                                </Typography>
+                                {level !== null ? (
+                                    <Typography type="body" color="muted">
+                                        {t("moment.levelUpBody", { level })}
+                                    </Typography>
                                 ) : null}
                             </Modal.Body>
                         </Modal.Dialog>

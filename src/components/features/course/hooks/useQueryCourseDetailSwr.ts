@@ -3,6 +3,7 @@
 import useSWR from "swr"
 import { getCourseDetail, getMyEnrollments } from "@/modules/api/rest/course"
 import type { CourseDetail as CourseDetailDto, EnrollmentView } from "@/modules/api/rest/course"
+import { useGetMyCourseAccessSwr } from "@/hooks/swr/api/rest/queries"
 import { mapCourseLevel, type CourseLevel } from "./useQueryCoursesSwr"
 
 /** A lesson in a course section (syllabus preview row). */
@@ -81,11 +82,13 @@ export interface CourseEnrollmentPlan {
 
 /** Enrollment state of the current viewer for this course.
  *
- * ponytail: mock-only until the BE course enrollment contract lands. */
+ * Resolved from the real BE contract: `EnrollmentView.isPurchased` on the
+ * viewer's `me/enrollments` row, with `me/access` as the fallback when a package
+ * purchase grants access without a matching enrollment row. */
 export interface CourseEnrollmentState {
-    /** True when the viewer has any enrollment (free or paid). */
+    /** True when the viewer has any active enrollment (free or paid). */
     isEnrolled: boolean
-    /** True only for a purchased (premium) enrollment. */
+    /** True only for a purchased (premium/package) enrollment. */
     isPurchased: boolean
 }
 
@@ -303,15 +306,29 @@ export const useQueryCourseDetailSwr = (courseId: string) => {
         hasToken && courseId ? ["my-enrollments", courseId] : null,
         () => getMyEnrollments().catch(() => [] as Array<EnrollmentView>),
     )
+    // The viewer's active enrollment for THIS course, if any. It carries the real
+    // paid flag (`EnrollmentView.isPurchased`) straight from the BE, so an
+    // enrolled viewer needs no extra call.
+    const matched = enrollments?.find((e) => e.slugName === courseId && e.active)
+    // Fallback: a viewer who bought a package can hold FULL access without an
+    // active enrollment row in `me/enrollments`. When signed in, the detail has
+    // loaded (we need the course UUID for the path), and no enrollment matched,
+    // ask `GET /courses/{rawId}/me/access` to recover `purchased`/`enrolled`.
+    const needAccessFallback =
+        hasToken && enrollments !== undefined && !matched
+    const { data: access } = useGetMyCourseAccessSwr(
+        needAccessFallback ? data?.rawId : undefined,
+    )
     const course =
         data && enrollments
             ? {
                   ...data,
                   enrollment: {
-                      isEnrolled: enrollments.some((e) => e.slugName === courseId && e.active),
-                      // BE `EnrollmentView` carries no paid flag — nothing reads
-                      // `isPurchased` today, so leave it false (unknown).
-                      isPurchased: false,
+                      isEnrolled: !!matched || access?.enrolled === true,
+                      // Real paid flag: from the matched enrollment, else the
+                      // access-state fallback. Anonymous / neither → false.
+                      isPurchased:
+                          matched?.isPurchased === true || access?.purchased === true,
                   },
               }
             : data

@@ -20,7 +20,8 @@ import { useMutateCreatePostCommentSwr, type SubmitCommentInput } from "../hooks
  * engagement bar (zero counts suppressed) and a permanently-expanded comment
  * thread; a threadline runs from the author avatar toward the comments when
  * the post has any. Keeps `id="comments"` for deep links (`#comments`
- * autofocuses the composer). ponytail: mock data.
+ * autofocuses the composer). Post + comments load live via
+ * {@link useQueryPostDetailSwr}.
  */
 export const CommunityPostDetail = () => {
     const t = useTranslations("communityHub")

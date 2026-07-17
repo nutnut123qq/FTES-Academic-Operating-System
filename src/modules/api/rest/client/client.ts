@@ -5,7 +5,7 @@ import { LocalStorageId } from "@/modules/storage/local/enums/id"
 import type { RestApiResponse, RestErrorBody, RestRequestConfig } from "./types"
 
 /**
- * Error thrown by {@link restRequest} on any non-2xx / non-`code:200` response.
+ * Error thrown by {@link restRequest} on any non-2xx / non-`code:{200,1002}` response.
  *
  * A plain `Error` subclass — `.message` is identical to the legacy throw, so every
  * existing `catch`/`.message` consumer keeps working — augmented with the HTTP
@@ -63,7 +63,7 @@ export const createRestAxiosInstance = () => {
  *   authenticated GETs (streak, lesson content, /me/*, admin reads) from silently 401ing.
  * - Creates a fresh axios instance per call.
  * - Throws an `Error` when the HTTP status is not 2xx or when the backend envelope
- *   `code` is not 200.
+ *   `code` is neither 200 nor 1002 (1002 = "Accepted" async-job submit, data = JobRef).
  *
  * @param config - Axios request config plus optional `authenticated` override.
  * @returns The unwrapped `data` payload on success.
@@ -91,8 +91,11 @@ export const restRequest = async <T>(config: RestRequestConfig): Promise<T> => {
         const envelope = response.data
 
         // BE envelope: code=200 = thành công; data nullable NGAY CẢ khi thành công
-        // (vd close/join/manual-scores trả ApiResponse.ok(null)). Chỉ code khác 200 mới là lỗi.
-        if (envelope.code !== 200) {
+        // (vd close/join/manual-scores trả ApiResponse.ok(null)). code=1002 = "Accepted"
+        // (async job submit — JobController.job trả `ApiResponse.of(1002, "Accepted", JobRef)`;
+        // cũng dùng ở TranscriptController + PersonalizeController). Mọi job submit của AI trả
+        // 1002 → coi là thành công, data = JobRef. Chỉ code khác {200,1002} mới là lỗi.
+        if (envelope.code !== 200 && envelope.code !== 1002) {
             const errorBody = envelope.data as unknown as RestErrorBody | undefined
             const errorCode = errorBody?.errorCode
             const message = [envelope.message, errorCode].filter(Boolean).join(" — ")

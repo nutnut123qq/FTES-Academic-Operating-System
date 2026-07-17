@@ -12,15 +12,15 @@ export type HeaderNavProps = WithClassNames<undefined>
 
 /**
  * HeaderNav — desktop global navigation in the top bar (header-first shell,
- * NO global left sidebar anywhere). Exactly four top-level modules from
- * {@link useAppNav} (Home · Workplace · Course · Community), each a PLAIN LABEL
+ * NO global left sidebar anywhere). Exactly five top-level modules from
+ * {@link useAppNav} (Home · Workplace · Course · Community · Blog), each a PLAIN LABEL
  * LINK to its landing route. Per product directive (design D9) there are NO
  * dropdowns, carets, hover sub-menus, or mega-menus — nested features are
  * reached from inside each module's own landing page.
  *
  * A11y: `nav` landmark with an accessible name; items are plain links. Because
  * nothing opens, no trigger exposes `aria-haspopup`/`aria-expanded`; Tab walks
- * the four links and Enter navigates. Hidden on mobile (the hamburger drawer
+ * the five links and Enter navigates. Hidden on mobile (the hamburger drawer
  * covers small screens).
  */
 export const HeaderNav = ({ className }: HeaderNavProps) => {

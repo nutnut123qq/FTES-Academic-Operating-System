@@ -1,11 +1,17 @@
 "use client"
 
-import React, { useState } from "react"
-import { Skeleton, Typography, cn } from "@heroui/react"
+import React, { useEffect, useState } from "react"
+import { Skeleton, Typography, cn, toast } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { useQueryPollSwr } from "../hooks/useQueryPollSwr"
 import { useMutatePollVoteSwr } from "../hooks/useMutatePollVoteSwr"
+
+/** Props for {@link CommunityPoll}. */
+export interface CommunityPollProps {
+    /** POLL post to render; omitted → the latest poll from the viewer's feed. */
+    postId?: string
+}
 
 /** Loading skeleton — mirrors the question + option bars so the layout never jumps. */
 const PollSkeleton = () => (
@@ -22,37 +28,60 @@ const PollSkeleton = () => (
 
 /**
  * Community poll (§6). DEFAULT on-canon layout: a question + options with vote
- * percentage bars; voting reveals the result. ponytail: options are buttons with
- * a div percentage bar; vote adds locally; mock data.
+ * percentage bars; voting reveals the result. Data and votes are REAL: the poll
+ * loads from `GET /community/posts/{postId}/poll` and a vote writes to
+ * `POST /community/posts/{postId}/poll-votes` (optimistic reveal, rollback+toast
+ * on failure, revalidate on success).
  */
-export const CommunityPoll = () => {
+export const CommunityPoll = ({ postId }: CommunityPollProps) => {
     const t = useTranslations("communityHub")
-    const { poll, isLoading, error, mutate } = useQueryPollSwr()
+    const { poll, isLoading, error, mutate } = useQueryPollSwr(postId)
     const submitVote = useMutatePollVoteSwr()
-    const [votedId, setVotedId] = useState<string | null>(null)
+    const [localVotedId, setLocalVotedId] = useState<string | null>(null)
 
-    /** Reveal results optimistically; undo the reveal only if the viewer is a guest (vote is local-only). */
+    // On the standalone page the SWR key is fixed (["poll","latest"]) and revalidate can
+    // surface a NEWER poll post. Reset the optimistic id when the poll identity changes,
+    // otherwise a stale localVotedId would mark an unvoted new poll as "voted" (+1 ghost).
+    useEffect(() => {
+        setLocalVotedId(null)
+    }, [poll?.postId])
+
+    // Server truth wins once it lands (myOptionId after revalidate); the local id
+    // only covers the optimistic window between click and revalidate.
+    const votedId = poll?.myOptionId ?? localVotedId
+    // While optimistic (server tallies do not include the click yet) add the +1
+    // locally; after revalidate the server voteCount already carries it.
+    const pending = localVotedId !== null && !poll?.myOptionId
+
     const onVote = (optionId: string) => {
         if (!poll || votedId !== null) {
             return
         }
-        setVotedId(optionId)
-        void submitVote(poll.postId, optionId).then((ok) => {
-            if (!ok) {
-                setVotedId(null)
-            }
-        })
+        setLocalVotedId(optionId)
+        submitVote(poll.postId, optionId)
+            .then((ok) => {
+                if (!ok) {
+                    // Guest — the auth modal opened; undo the reveal.
+                    setLocalVotedId(null)
+                }
+            })
+            .catch(() => {
+                setLocalVotedId(null)
+                toast.danger(t("poll.voteFailed"))
+            })
     }
 
-    const extra = votedId ? 1 : 0
+    const extra = pending ? 1 : 0
     const total = (poll?.options ?? []).reduce((sum, option) => sum + option.votes, 0) + extra
-    const votesOf = (id: string, base: number) => base + (votedId === id ? 1 : 0)
+    const votesOf = (id: string, base: number) => base + (pending && localVotedId === id ? 1 : 0)
     const percentOf = (votes: number) => (total === 0 ? 0 : Math.round((votes / total) * 100))
 
     return (
         <AsyncContent
             isLoading={isLoading && !poll}
             skeleton={<PollSkeleton />}
+            isEmpty={!isLoading && !error && !poll}
+            emptyContent={{ title: t("poll.empty") }}
             error={!poll ? error : undefined}
             errorContent={{
                 title: t("poll.error"),

@@ -261,6 +261,7 @@
     "primary": "Primary navigation",
     "courses": "Courses",
     "community": "Community",
+    "blog": "Blog",
     "activity": "Activity",
     "wallet": "Wallet",
     "search": "Search",
@@ -3038,7 +3039,174 @@
       "error": "Couldn't load the AI tools. Please try again.",
       "retry": "Try again"
     },
-    "quotaRemaining": "{count} uses left"
+    "quotaRemaining": "{count} uses left",
+    "toolPages": {
+      "back": "Back to AI tools",
+      "run": "Run",
+      "running": "Generating…",
+      "modelLabel": "Model: {model}",
+      "input": {
+        "modeText": "Paste text",
+        "modeLesson": "Pick a lesson",
+        "textPlaceholder": "Paste the lesson text or notes you want to work with…",
+        "lessonPlaceholder": "Choose a lesson you've studied",
+        "noLessons": "No studied lessons yet — paste text instead."
+      },
+      "states": {
+        "running": "The AI is working on it — this usually takes a few seconds.",
+        "failed": "The AI job failed. Please try again.",
+        "quota": "You've used all your runs for this tool. Please try again later.",
+        "stale": "This is taking longer than usual.",
+        "retry": "Try again"
+      },
+      "summary": {
+        "tldr": "TL;DR",
+        "keyPoints": "Key points",
+        "glossary": "Glossary",
+        "readMin": "{count} min read"
+      },
+      "flashcards": {
+        "count": "Number of cards",
+        "flipHint": "Tap a card to flip",
+        "cardsCount": "{count} cards",
+        "frontLabel": "Prompt",
+        "backLabel": "Answer",
+        "hint": "Hint: {hint}"
+      },
+      "quiz": {
+        "count": "Number of questions",
+        "difficulty": "Difficulty",
+        "difficulties": {
+          "easy": "Easy",
+          "medium": "Medium",
+          "hard": "Hard"
+        },
+        "correct": "Correct!",
+        "incorrect": "Not quite.",
+        "score": "You scored {correct}/{total}"
+      },
+      "debug": {
+        "codeLabel": "Your code",
+        "codePlaceholder": "Paste the code you want reviewed…",
+        "language": "Language",
+        "question": "What's the problem?",
+        "questionPlaceholder": "Describe the bug or what you expected to happen…"
+      },
+      "cvReview": {
+        "tabsLabel": "CV review source",
+        "tabBuilder": "My CV",
+        "tabUpload": "Upload file",
+        "sections": {
+          "header": "Personal details",
+          "summary": "Summary",
+          "education": "Education",
+          "experience": "Experience",
+          "projects": "Projects",
+          "skills": "Skills",
+          "awards": "Awards"
+        },
+        "fields": {
+          "title": "CV title",
+          "titlePlaceholder": "e.g. Backend Developer CV",
+          "fullName": "Full name",
+          "email": "Email",
+          "phone": "Phone",
+          "location": "Location",
+          "linkLabel": "Link label",
+          "linkUrl": "URL",
+          "summaryPlaceholder": "A short professional summary (2-3 lines).",
+          "school": "School",
+          "degree": "Degree",
+          "major": "Major",
+          "gpa": "GPA",
+          "start": "Start",
+          "end": "End",
+          "highlights": "Highlights",
+          "lineHint": "One item per line",
+          "company": "Company",
+          "jobTitle": "Title",
+          "bullets": "Highlights",
+          "projectName": "Project name",
+          "role": "Role",
+          "link": "Link",
+          "tech": "Tech stack",
+          "skillGroup": "Group",
+          "skillItems": "Skills",
+          "awardName": "Award",
+          "awardBy": "Awarded by",
+          "awardYear": "Year"
+        },
+        "actions": {
+          "remove": "Remove",
+          "addLink": "Add link",
+          "addEducation": "Add education",
+          "addExperience": "Add experience",
+          "addProject": "Add project",
+          "addSkill": "Add skill group",
+          "addAward": "Add award"
+        },
+        "headerRequired": "Full name and a valid email are required.",
+        "saved": "CV saved.",
+        "save": "Save",
+        "reviewThisCv": "Review this CV",
+        "exportPdf": "Export PDF",
+        "pdfUntitled": "My CV",
+        "uploadCta": "Choose or drop a file",
+        "uploadHint": "PDF or DOCX, up to 10MB",
+        "uploadError": {
+          "type": "Only PDF or DOCX files are accepted.",
+          "size": "The file exceeds the 10MB limit."
+        },
+        "reviewUpload": "Upload and review",
+        "strengths": "Strengths",
+        "improvements": "Improvements",
+        "sectionFeedback": "Section-by-section feedback"
+      },
+      "planner": {
+        "myPlans": "My study plans",
+        "newPlan": "New plan",
+        "backToPlans": "My plans",
+        "percentComplete": "{percent}%",
+        "goalLabel": "What do you want to learn?",
+        "goalPlaceholder": "e.g. Master Spring Boot for backend interviews",
+        "deadlineLabel": "Deadline",
+        "hoursLabel": "Hours per week",
+        "days": "{count} days",
+        "hours": "{count} h/week",
+        "levelLabel": "Current level (optional)",
+        "levelPlaceholder": "e.g. I know basic Java",
+        "knownLabel": "What you already know (optional)",
+        "targetLabel": "Topics you want to reach (optional)",
+        "topicHint": "Type a topic and press Enter",
+        "modelLabel": "AI model (optional)",
+        "generate": "Generate plan",
+        "generating": "Generating your plan…",
+        "progressLabel": "Overall progress",
+        "week": "Week {number}",
+        "milestone": "Milestone: {milestone}",
+        "estHours": "{count}h",
+        "tips": "Tips",
+        "archive": "Archive",
+        "archiveConfirmTitle": "Archive this plan?",
+        "archiveConfirmBody": "\"{goal}\" will be removed from your active plans. This can't be undone here.",
+        "cancel": "Cancel",
+        "createError": "Couldn't generate the plan. Please try again.",
+        "quotaError": "You've used all your study-plan generations for now. Please try again later.",
+        "loadError": "Couldn't load your study plans.",
+        "toggleError": "Couldn't update the task. Please try again.",
+        "archiveError": "Couldn't archive the plan. Please try again.",
+        "retry": "Try again"
+      }
+    },
+    "tutorPicker": {
+      "title": "Continue learning",
+      "subtitle": "Pick up where you left off.",
+      "emptyHint": "You're not enrolled in any course yet.",
+      "emptyTitle": "No courses yet",
+      "browse": "Explore courses",
+      "close": "Close",
+      "progress": "{percent}% complete"
+    }
   },
   "notificationCenter": {
     "title": "Notifications",
@@ -3232,11 +3400,32 @@
     }
   },
   "gamification": {
+    "quests": {
+      "title": "Daily quests",
+      "subtitle": "Complete quests each day to earn FTES Coin.",
+      "todayEarned": "Coins today",
+      "todayEarnedLabel": "Coins earned today: {coin}",
+      "walletBalance": "Wallet balance",
+      "walletBalanceLabel": "Wallet balance: {coin} coin",
+      "perClaim": "+{coin} coin/claim",
+      "progressLabel": "{current}/{total}",
+      "claimedOfLimit": "Claimed {claimed}/{limit} today",
+      "done": "Completed",
+      "goDo": "Go do it",
+      "signInPrompt": "Sign in to see your daily quests and earn coins.",
+      "signIn": "Sign in",
+      "empty": "No quests today yet.",
+      "loadError": "Could not load quests",
+      "retry": "Try again",
+      "toast": {
+        "questDone": "+{coin} coins — {title}"
+      }
+    },
     "title": "Leaderboard",
     "subtitle": "Track your progress and see how you rank against your peers.",
     "leaderboard": "Leaderboard",
     "badges": "Badges",
-    "badgeLocked": "Locked",
+    "badgesEmpty": "No badges yet. Keep learning to unlock them.",
     "xpValue": "{xp} XP",
     "levelHint": "{xp} XP to next level",
     "stats": {
@@ -3252,30 +3441,9 @@
       "platinum": "Platinum",
       "diamond": "Diamond"
     },
-    "reasons": {
-      "lessonComplete": "Lesson completed",
-      "quizSubmit": "Quiz submitted",
-      "challengeComplete": "Challenge completed",
-      "dailyLogin": "Daily login",
-      "postUpvote": "Post upvoted",
-      "commentUpvote": "Comment upvoted",
-      "dailyGoal": "Daily goal completed",
-      "weeklyGoal": "Weekly goal completed"
-    },
-    "toast": {
-      "xp": "+{xp} XP"
-    },
     "moment": {
       "levelUpTitle": "Level up!",
-      "levelUpBody": "You reached level {level}",
-      "milestoneTitle": "Streak milestone!",
-      "milestoneReward": "{days}-day streak · +{coin} coins"
-    },
-    "demo": {
-      "label": "Try (mock):",
-      "lesson": "Complete lesson",
-      "quiz": "Submit quiz 90%",
-      "challenge": "Finish challenge"
+      "levelUpBody": "You reached level {level}"
     },
     "milestones": {
       "weekOfFire": {
@@ -3290,37 +3458,48 @@
     },
     "goals": {
       "title": "Goals",
-      "completed": "Completed",
-      "reward": "+{xp} XP",
-      "daily": {
-        "name": "Daily goal",
-        "progress": "{current}/{target} actions"
+      "empty": "No goals set yet. Add one below.",
+      "loadError": "Couldn't load goals",
+      "retry": "Retry",
+      "targetValue": "Target: {target}",
+      "saved": "Goal saved",
+      "saveError": "Couldn't save the goal",
+      "periods": {
+        "DAILY": "Daily",
+        "WEEKLY": "Weekly",
+        "MONTHLY": "Monthly"
       },
-      "weekly": {
-        "name": "Weekly goal",
-        "progress": "{current}/{target} days"
+      "metrics": {
+        "XP": "XP",
+        "LESSONS": "Lessons",
+        "MINUTES": "Study minutes"
+      },
+      "form": {
+        "legend": "Add / update a goal",
+        "periodLabel": "Period",
+        "metricLabel": "Metric",
+        "targetLabel": "Target",
+        "targetPlaceholder": "e.g. 5",
+        "submit": "Save",
+        "submitting": "Saving..."
       }
     },
     "heatmap": {
       "active": "Learning activity",
-      "frozen": "Frozen day",
-      "empty": "No activity"
+      "empty": "No activity",
+      "less": "Less",
+      "more": "More",
+      "xpLabel": "{xp} XP"
     },
     "streak": {
       "openDetail": "View streak detail",
       "chipLabel": "{count}-day streak — view detail",
       "daysCount": "{count} days",
-      "multiplier": "+{percent}% XP",
+      "longest": "Longest {count} days",
       "heatmapTitle": "Last 12 weeks",
       "freezeCount": "{count} Streak Freeze",
-      "buyFreeze": "Buy ({cost} coins)",
-      "nextMilestone": "{remaining} days to the {days}-day milestone",
-      "lostTitle": "{days}-day streak lost",
-      "repair": "Repair ({cost} coins)"
-    },
-    "reminder": {
-      "title": "Streak at risk",
-      "body": "Your {count}-day streak is at risk — finish a lesson/quiz to keep it alive"
+      "useFreeze": "Use freeze",
+      "freezeUsed": "Used one Streak Freeze to keep your streak."
     },
     "guide": {
       "link": "How points work",
@@ -3572,7 +3751,10 @@
         "summary": "{done}/{total} tasks done",
         "claim": "Claim {count} coins",
         "claimed": "Reward claimed",
-        "completePrompt": "Complete every task to claim {count} coins"
+        "completePrompt": "Complete every task to claim {count} coins",
+        "coinToday": "+{coin} coins today",
+        "viewAll": "View all quests",
+        "empty": "No quests today yet"
       },
       "streakCurrent": "{count}-day streak",
       "goals": {
@@ -3583,6 +3765,13 @@
           "flashcards": "Flashcards",
           "coding": "Coding"
         },
+        "metrics": {
+          "XP": "XP",
+          "LESSONS": "Lessons",
+          "MINUTES": "Study minutes"
+        },
+        "targetValue": "Target {target}",
+        "empty": "No weekly goals set yet",
         "progress": "{label} · {current}/{target}",
         "summary": "{percent}% of weekly goals · {completed}/{total} done"
       },
@@ -4289,6 +4478,34 @@
     "title": "The FTES AOS backend, taken apart",
     "masthead": {
       "caption": "The real FTES AOS backend architecture — drag to orbit."
+    },
+    "engagement": {
+      "likesLabel": "Like this post",
+      "unlikeLabel": "Unlike this post",
+      "likeCount": "{count} likes",
+      "commentsTitle": "Comments ({count})",
+      "commentPlaceholder": "Write a comment…",
+      "counter": "{count}/{limit}",
+      "submit": "Send",
+      "loadMore": "Load more comments",
+      "loadingMore": "Loading…",
+      "empty": "No comments yet. Be the first to share your thoughts.",
+      "loadError": "Couldn't load comments",
+      "retry": "Try again",
+      "signInToComment": "Sign in to comment",
+      "anonymous": "FTES learner",
+      "edited": "edited",
+      "edit": "Edit",
+      "delete": "Delete",
+      "save": "Save",
+      "cancel": "Cancel",
+      "commentLike": "Like this comment",
+      "commentUnlike": "Unlike this comment",
+      "submitError": "Couldn't send, please try again.",
+      "deleteError": "Couldn't delete, please try again.",
+      "confirmDeleteTitle": "Delete comment?",
+      "confirmDeleteBody": "This comment will be permanently deleted. This can't be undone.",
+      "confirmDelete": "Delete"
     },
     "startHere": "Start here",
     "topics": "Topics",
@@ -5225,9 +5442,19 @@
     "more": "More",
     "menu": {
       "groups": "Groups",
+      "saved": "Saved",
       "reputation": "Reputation",
       "poll": "Poll",
       "moderation": "Moderation"
+    },
+    "saved": {
+      "title": "Saved posts",
+      "empty": "You haven't saved any posts yet.",
+      "emptyHint": "Tap the bookmark icon on a post to save it for later.",
+      "error": "Couldn't load your saved posts. Please try again.",
+      "unsave": "Remove bookmark",
+      "unsaveFailed": "Couldn't remove the bookmark. Please try again.",
+      "member": "Member"
     },
     "rail": {
       "trending": "Trending",
@@ -5310,7 +5537,9 @@
       "likes": "{count} likes",
       "comments": "{count} comments",
       "empty": "No posts yet. Be the first to share!",
-      "error": "Couldn't load the feed. Please try again."
+      "error": "Couldn't load the feed. Please try again.",
+      "campusEmpty": "No posts from your campus yet.",
+      "campusEmptyHint": "Set your campus in your profile to see posts from your campus community."
     },
     "detail": {
       "comments": "{count} comments"
@@ -5339,7 +5568,9 @@
     },
     "poll": {
       "totalVotes": "{count} votes",
-      "error": "Couldn't load the poll. Please try again."
+      "error": "Couldn't load the poll. Please try again.",
+      "empty": "No poll in your feed yet.",
+      "voteFailed": "Couldn't submit your vote. Please try again."
     },
     "moderation": {
       "title": "Moderation",
@@ -5391,7 +5622,13 @@
     "discussion": {
       "replies": "{count} replies",
       "empty": "No discussion threads yet. Start one!",
-      "error": "Couldn't load discussions. Please try again."
+      "error": "Couldn't load discussions. Please try again.",
+      "newThread": "New thread",
+      "titleField": "Thread title",
+      "contentField": "Discussion content",
+      "post": "Post",
+      "cancel": "Cancel",
+      "created": "Discussion thread created."
     },
     "roles": {
       "owner": "Owner",
@@ -5402,6 +5639,7 @@
     "events": {
       "attendees": "{count} attending",
       "join": "Join",
+      "leave": "Leave",
       "empty": "No upcoming events.",
       "error": "Couldn't load events. Please try again."
     },
@@ -5412,6 +5650,12 @@
       "accept": "Accept",
       "reject": "Reject",
       "rules": "Rules",
+      "noRules": "No rules yet.",
+      "rulePlaceholder": "Enter a rule…",
+      "addRule": "Add rule",
+      "removeRule": "Remove rule",
+      "saveRules": "Save rules",
+      "rulesSaved": "Rules saved.",
       "pinned": "Pinned",
       "noPinned": "No pinned posts.",
       "unpin": "Unpin",
@@ -5459,7 +5703,11 @@
       "coverAlt": "{name} cover",
       "remove": "Remove image",
       "uploadCta": "Drag an image here, or click to choose",
-      "save": "Save identity"
+      "save": "Save identity",
+      "saved": "Group image updated.",
+      "presignFailed": "Couldn't create the upload link. Please try again.",
+      "uploadFailed": "Image upload failed. Please try again.",
+      "verifyFailed": "Couldn't confirm the uploaded image. Please try again."
     },
     "states": {
       "retry": "Try again"
@@ -5522,6 +5770,88 @@
     "errorRetry": "Retry"
   },
   "learn": {
+    "exercises": {
+      "assignment": {
+        "title": "Assignments",
+        "submissionsCount": "{used}/{max} submissions",
+        "urlLabel": "GitHub URL",
+        "urlPlaceholder": "https://github.com/you/your-solution",
+        "urlInvalid": "The URL must start with https://",
+        "submit": "Submit",
+        "submitted": "Submitted — waiting to be graded.",
+        "maxReached": "You've used all {max} submissions.",
+        "historyTitle": "Submission history",
+        "attemptLine": "Attempt {number}",
+        "aiScore": "AI score: {score}",
+        "pendingHint": "The AI is grading your work — the result updates automatically.",
+        "status": {
+          "submitted": "Pending",
+          "grading": "Grading",
+          "graded": "Graded",
+          "failed": "Grading failed"
+        }
+      },
+      "quiz": {
+        "title": "Quiz",
+        "questionsCount": "{count} questions",
+        "passScore": "Pass {percent}%",
+        "timeLimit": "{value} time limit",
+        "bestScore": "Best {percent}%",
+        "attemptsUsed": "{count, plural, one {# attempt} other {# attempts}}",
+        "maxReached": "You've used all {max} attempts.",
+        "passed": "Passed",
+        "notPassed": "Not passed",
+        "start": "Start quiz",
+        "retake": "Retake quiz",
+        "timeRemaining": "Time left {value}",
+        "questionLine": "Question {number}",
+        "multipleHint": "Select all that apply",
+        "submit": "Submit quiz",
+        "submitting": "Submitting…",
+        "autoSubmitted": "Time's up — your answers were submitted automatically.",
+        "resultTitle": "Your result",
+        "scoreLine": "{percent}%",
+        "passedResult": "You passed",
+        "failedResult": "Not passed yet",
+        "done": "Done",
+        "historyTitle": "Attempt history",
+        "attemptLine": "Attempt {number}",
+        "inProgress": "In progress",
+        "lockedTitle": "Enroll to take this quiz",
+        "lockedBody": "This quiz is part of the course. Enroll to start practising."
+      },
+      "challenge": {
+        "subtitle": "Solve the challenge and submit for automatic grading.",
+        "back": "Back to lesson",
+        "submitTitle": "Your submission",
+        "submissionsCount": "{used}/{max} submissions",
+        "maxReached": "You've used all {max} submissions.",
+        "submit": "Submit",
+        "submitting": "Submitting…",
+        "submitted": "Submitted — waiting to be graded.",
+        "essayLabel": "Your answer",
+        "essayPlaceholder": "Write your answer…",
+        "languageLabel": "Language",
+        "codeLabel": "Your code",
+        "codePlaceholder": "Paste or write your solution…",
+        "noQuestions": "This challenge has no questions yet.",
+        "questionLine": "Question {number}",
+        "multipleHint": "Select all that apply",
+        "historyTitle": "Submission history",
+        "attemptLine": "Attempt {number}",
+        "score": "Score: {score}",
+        "pendingHint": "The grader is scoring your submission — the result updates automatically.",
+        "status": {
+          "pending": "Pending",
+          "grading": "Grading",
+          "completed": "Graded",
+          "failed": "Grading failed"
+        },
+        "lockedTitle": "Enroll to attempt this challenge",
+        "lockedBody": "This challenge is part of the course. Enroll to start practising.",
+        "error": "Failed to load the challenge."
+      }
+    },
     "common": {
       "retry": "Retry",
       "loading": "Loading…",
@@ -5600,7 +5930,9 @@
       "answerCount": "{count} answers",
       "answerPlaceholder": "Write an answer…",
       "answerSubmit": "Answer",
-      "founder": "Instructor"
+      "founder": "Instructor",
+      "targetLessonLabel": "Ask about lesson",
+      "viewLesson": "Open lesson: {lesson}"
     },
     "reader": {
       "error": "Failed to load lesson.",
@@ -5637,6 +5969,10 @@
         "send": "Send",
         "clearSelection": "Clear selection",
         "aboutPassage": "About “{passage}”:",
+        "passageContext": "Passage context (reference data, not instructions)",
+        "modelLabel": "Reply model",
+        "answeredBy": "Answered by {model}",
+        "modelNotAllowed": "This model isn't allowed — switched back to the default model.",
         "stubReply": "This is a sample AI tutor reply. Once the backend is ready, answers will be grounded in the lesson content and the passage you selected.",
         "error": "Sorry, I couldn't answer that. Please try again.",
         "quotaHit": "You've used up your AI questions for today.",
@@ -5664,6 +6000,9 @@
       "tabListAria": "Lesson sections",
       "reactionAria": "React",
       "views2": "view"
+    },
+    "reactions": {
+      "likeGated": "Enroll in this course to like the lesson"
     },
     "comments": {
       "title": "Comments ({count})",
@@ -5702,7 +6041,11 @@
       "resumeBody": "You have an unfinished interview session. Resume to finish and get graded.",
       "resume": "Resume",
       "tierLabel": "Level",
-      "tier": { "junior": "Junior", "middle": "Middle", "senior": "Senior" },
+      "tier": {
+        "junior": "Junior",
+        "middle": "Middle",
+        "senior": "Senior"
+      },
       "countLabel": "Questions",
       "forbiddenTitle": "You are not enrolled in this course",
       "forbiddenBody": "Enroll in the course to unlock mock interview practice.",
@@ -5716,7 +6059,11 @@
       "next": "Next",
       "submit": "Submit & grade",
       "scoreLabel": "Overall score",
-      "verdict": { "PASS": "Pass", "BORDERLINE": "Borderline", "FAIL": "Fail" },
+      "verdict": {
+        "PASS": "Pass",
+        "BORDERLINE": "Borderline",
+        "FAIL": "Fail"
+      },
       "reviewsTitle": "Per-question feedback",
       "questionN": "Question {n}",
       "strengths": "Strengths",
@@ -5767,7 +6114,11 @@
       "next": "Next",
       "submit": "Submit & finish",
       "scoreLabel": "Overall score",
-      "verdict": { "PASS": "Pass", "BORDERLINE": "Borderline", "FAIL": "Fail" },
+      "verdict": {
+        "PASS": "Pass",
+        "BORDERLINE": "Borderline",
+        "FAIL": "Fail"
+      },
       "reviewsTitle": "Per-question feedback",
       "questionN": "Question {n}",
       "pendingGrade": "Pending grading",

@@ -5,16 +5,36 @@ import { useParams } from "next/navigation"
 import {
     Button,
     CloseButton,
+    Dropdown,
+    DropdownItem,
+    DropdownMenu,
+    DropdownPopover,
+    DropdownTrigger,
     ScrollShadow,
     Typography,
     cn,
 } from "@heroui/react"
-import { PaperPlaneTiltIcon, QuotesIcon } from "@phosphor-icons/react"
+import {
+    CaretUpIcon,
+    PaperPlaneTiltIcon,
+    QuotesIcon,
+    SparkleIcon,
+} from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { ChatBubble } from "@/components/blocks/feed/ChatBubble"
 import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
-import { useContentAiSelection } from "@/hooks/zustand/overlay/hooks"
+import { useGetAiCatalogModelsSwr } from "@/hooks/swr/api/rest/queries/useGetAiCatalogModelsSwr"
+import { useContentAiSelectedModel, useContentAiSelection } from "@/hooks/zustand/overlay/hooks"
 import { createSession, sendSessionMessageStream } from "@/modules/api/rest/ai"
+
+/** BE default chat model when the catalog omits `defaults.chat`. */
+const FALLBACK_CHAT_MODEL = "openai/gpt-oss-120b"
+
+/** Short display name for a model id (`openai/gpt-oss-120b` → `gpt-oss-120b`). */
+const shortModelName = (id: string): string => {
+    const slash = id.lastIndexOf("/")
+    return slash === -1 ? id : id.slice(slash + 1)
+}
 
 /** Generic starter questions in the empty chat (keys under reader.ai.suggestions). */
 const SUGGESTION_KEYS = ["summarize", "hardest", "example", "remember"] as const
@@ -29,6 +49,8 @@ interface ChatMessage {
     content: string
     /** What to show in the bubble (user turns hide the prepended quote context). */
     display: string
+    /** Model that served this assistant answer (from the SSE `done` event); rendered as a caption. */
+    modelUsed?: string
 }
 
 /** Props for {@link ContentAiChat}. */
@@ -45,8 +67,9 @@ const truncate = (text: string) => (text.length > 120 ? `${text.slice(0, 120)}�
  * context banner with scoped quick-asks, a ChatBubble thread and a composer.
  *
  * When a passage is selected (via {@link import("../LessonReader/ContentAiSelectionAsk").ContentAiSelectionAsk}),
- * the question is PREPENDED with the quote so the thread stays coherent while the
- * bubble shows only the question. The answer is a mocked reply (a real BE streams
+ * the message SENT to the BE carries the full selected passage plus the containing
+ * paragraph as a marked reference-data block, while the user bubble keeps showing only
+ * the truncated-quote label + question. The answer is a mocked reply (a real BE streams
  * token-by-token over a socket — see the content-ai rules); the streaming UI is
  * wired to an obvious mock so the swap is a one-liner.
  *
@@ -54,8 +77,18 @@ const truncate = (text: string) => (text.length > 120 ? `${text.slice(0, 120)}�
  */
 export const ContentAiChat = ({ className }: ContentAiChatProps) => {
     const t = useTranslations("learn")
-    const { selection, setSelection } = useContentAiSelection()
+    const { selection, selectionContext, setSelection } = useContentAiSelection()
+    const { selectedModel, setSelectedModel } = useContentAiSelectedModel()
     const { contentId } = useParams<{ contentId?: string }>()
+
+    // Model catalog (GET /ai/models). The picker hides on empty/errored catalog while
+    // chat keeps working with no `model` field sent (BE grades with its own default).
+    const modelsSwr = useGetAiCatalogModelsSwr()
+    const catalogModels = modelsSwr.data?.models ?? []
+    const hasCatalog = !modelsSwr.error && catalogModels.length > 0
+    const defaultChatModel = modelsSwr.data?.defaults?.chat ?? FALLBACK_CHAT_MODEL
+    /** The model to actually send: the picked one, else the catalog default (when a catalog exists). */
+    const activeModel = hasCatalog ? (selectedModel ?? defaultChatModel) : undefined
 
     const [messages, setMessages] = useState<Array<ChatMessage>>([])
     const [input, setInput] = useState("")
@@ -84,11 +117,21 @@ export const ContentAiChat = ({ className }: ContentAiChatProps) => {
             if (!raw || isStreaming) {
                 return
             }
-            // when a passage is selected, prepend the quote (shown in the bubble too)
+            // When a passage is selected, two forms diverge:
+            //  - `display` (the user bubble): the truncated-quote label + question — unchanged UI.
+            //  - `sent` (the message that actually reaches the BE): the FULL selected passage
+            //    (already capped at 600 chars by ContentAiSelectionAsk) + question, plus the
+            //    containing paragraph as a clearly-marked REFERENCE-DATA block (not an
+            //    instruction) so the model can ground a short selection without weakening the
+            //    BE prompt-injection posture.
             const display = selection ? `${t("reader.ai.aboutPassage", { passage: truncate(selection) })} ${raw}` : raw
+            const sent = selection
+                ? `${t("reader.ai.aboutPassage", { passage: selection })} ${raw}` +
+                  (selectionContext ? `\n\n[${t("reader.ai.passageContext")}: ${selectionContext}]` : "")
+                : raw
             setMessages((prev) => [
                 ...prev,
-                { role: "user", content: display, display },
+                { role: "user", content: sent, display },
                 { role: "assistant", content: "", display: "" },
             ])
             setInput("")
@@ -121,6 +164,30 @@ export const ContentAiChat = ({ className }: ContentAiChatProps) => {
                 }
                 setIsStreaming(false)
             }
+            // stamp the serving model onto the (last) assistant turn from the `done` event
+            const onDone = (data: unknown) => {
+                const modelUsed = (data as { modelUsed?: unknown } | null)?.modelUsed
+                if (typeof modelUsed !== "string" || !modelUsed) {
+                    return
+                }
+                setMessages((prev) => {
+                    const next = [...prev]
+                    const last = next[next.length - 1]
+                    if (last && last.role === "assistant") {
+                        next[next.length - 1] = { ...last, modelUsed }
+                    }
+                    return next
+                })
+            }
+            // a rejected model resets the picker to the default and shows a translated notice
+            const onError = (code: string) => {
+                if (code === "AI_MODEL_NOT_ALLOWED") {
+                    setSelectedModel(null)
+                    finish(t("reader.ai.modelNotAllowed"))
+                } else {
+                    finish(t("reader.ai.error"))
+                }
+            }
 
             try {
                 // Lazy TUTOR_CHAT session, grounded on the lesson when a contentId is present.
@@ -128,23 +195,30 @@ export const ContentAiChat = ({ className }: ContentAiChatProps) => {
                     const session = await createSession({
                         feature: "TUTOR_CHAT",
                         ...(contentId ? { contextRef: { lessonId: contentId } } : {}),
+                        ...(activeModel ? { model: activeModel } : {}),
                     })
                     sessionIdRef.current = session.id
                 }
                 const controller = new AbortController()
                 abortRef.current = controller
-                await sendSessionMessageStream(sessionIdRef.current, raw, {
-                    onDelta: appendDelta,
-                    onError: () => finish(t("reader.ai.error")),
-                    onQuota: () => finish(t("reader.ai.quotaHit")),
-                    signal: controller.signal,
-                })
+                await sendSessionMessageStream(
+                    sessionIdRef.current,
+                    sent,
+                    {
+                        onDelta: appendDelta,
+                        onDone,
+                        onError,
+                        onQuota: () => finish(t("reader.ai.quotaHit")),
+                        signal: controller.signal,
+                    },
+                    activeModel,
+                )
                 finish()
             } catch {
                 finish(t("reader.ai.error"))
             }
         },
-        [input, isStreaming, selection, setSelection, t, contentId],
+        [input, isStreaming, selection, selectionContext, setSelection, t, contentId, activeModel, setSelectedModel],
     )
 
     return (
@@ -178,7 +252,16 @@ export const ContentAiChat = ({ className }: ContentAiChatProps) => {
                                             {t("reader.ai.thinking")}
                                         </Typography>
                                     ) : (
-                                        <MarkdownContent markdown={message.content} />
+                                        <div className="flex flex-col gap-1">
+                                            <MarkdownContent markdown={message.content} />
+                                            {message.modelUsed ? (
+                                                <Typography type="body-xs" color="muted">
+                                                    {t("reader.ai.answeredBy", {
+                                                        model: message.modelUsed,
+                                                    })}
+                                                </Typography>
+                                            ) : null}
+                                        </div>
                                     )
                                 ) : (
                                     <Typography type="body-sm">{message.display}</Typography>
@@ -218,15 +301,16 @@ export const ContentAiChat = ({ className }: ContentAiChatProps) => {
                 </div>
             ) : null}
 
-            {/* composer — a single bounded box: flat input + a send control */}
-            <div className="flex items-end gap-2 rounded-2xl bg-default px-3 py-2 focus-within:ring-2 focus-within:ring-accent">
+            {/* composer — a single bounded box: flat input on top, a controls row
+                (model picker · send) BELOW, all inside the one box (composer-in-box rule) */}
+            <div className="flex flex-col gap-2 rounded-2xl bg-default px-3 py-2 focus-within:ring-2 focus-within:ring-accent">
                 <textarea
                     rows={1}
                     value={input}
                     onChange={(event) => setInput(event.target.value)}
                     placeholder={t("reader.ai.placeholder")}
                     aria-label={t("reader.ai.placeholder")}
-                    className="max-h-24 min-h-6 w-full flex-1 resize-none bg-transparent text-sm text-foreground outline-none placeholder:text-muted"
+                    className="max-h-24 min-h-6 w-full resize-none bg-transparent text-sm text-foreground outline-none placeholder:text-muted"
                     onKeyDown={(event) => {
                         if (event.key === "Enter" && !event.shiftKey) {
                             event.preventDefault()
@@ -234,17 +318,55 @@ export const ContentAiChat = ({ className }: ContentAiChatProps) => {
                         }
                     }}
                 />
-                <Button
-                    isIconOnly
-                    size="sm"
-                    variant="primary"
-                    isPending={isStreaming}
-                    aria-label={t("reader.ai.send")}
-                    isDisabled={input.trim() === ""}
-                    onPress={() => void onSend()}
-                >
-                    <PaperPlaneTiltIcon aria-hidden focusable="false" className="size-5" />
-                </Button>
+                <div className="flex items-center gap-2">
+                    {/* model picker — opens UPWARD (composer sits at the panel bottom);
+                        hidden while the catalog is empty/errored (chat still works, no model sent) */}
+                    {hasCatalog ? (
+                        <Dropdown>
+                            <DropdownTrigger className="cursor-pointer">
+                                <div className="flex items-center gap-1 text-sm text-muted">
+                                    <SparkleIcon aria-hidden focusable="false" className="size-4 text-accent" />
+                                    <span className="max-w-40 truncate">
+                                        {shortModelName(activeModel ?? defaultChatModel)}
+                                    </span>
+                                    <CaretUpIcon aria-hidden focusable="false" className="size-4" />
+                                </div>
+                            </DropdownTrigger>
+                            <DropdownPopover placement="top start" className="min-w-56">
+                                <DropdownMenu aria-label={t("reader.ai.modelLabel")}>
+                                    {catalogModels.map((catalogModel) => (
+                                        <DropdownItem
+                                            key={catalogModel.id}
+                                            textValue={catalogModel.label ?? catalogModel.id}
+                                            onPress={() => setSelectedModel(catalogModel.id)}
+                                        >
+                                            <div className="flex items-center justify-between gap-3">
+                                                <span>{catalogModel.label ?? shortModelName(catalogModel.id)}</span>
+                                                {catalogModel.pricing_hint ? (
+                                                    <Typography type="body-xs" color="muted">
+                                                        {catalogModel.pricing_hint}
+                                                    </Typography>
+                                                ) : null}
+                                            </div>
+                                        </DropdownItem>
+                                    ))}
+                                </DropdownMenu>
+                            </DropdownPopover>
+                        </Dropdown>
+                    ) : null}
+                    <div className="flex-1" />
+                    <Button
+                        isIconOnly
+                        size="sm"
+                        variant="primary"
+                        isPending={isStreaming}
+                        aria-label={t("reader.ai.send")}
+                        isDisabled={input.trim() === ""}
+                        onPress={() => void onSend()}
+                    >
+                        <PaperPlaneTiltIcon aria-hidden focusable="false" className="size-5" />
+                    </Button>
+                </div>
             </div>
         </div>
     )

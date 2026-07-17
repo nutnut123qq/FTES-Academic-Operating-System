@@ -1,20 +1,15 @@
 "use client"
 
-import React, { useEffect } from "react"
-import { Button, Chip, Skeleton, Typography, toast } from "@heroui/react"
+import React from "react"
+import { Skeleton, Typography } from "@heroui/react"
 import { useLocale, useTranslations } from "next-intl"
 import { FireIcon, LightningIcon, RankingIcon, StarIcon, TrophyIcon } from "@phosphor-icons/react"
 import { Link } from "@/i18n/navigation"
 import { pathConfig } from "@/resources/path"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { useQueryLeaderboardSwr } from "../hooks/useQueryLeaderboardSwr"
-import {
-    GamificationActionType,
-    STREAK_MILESTONES,
-    tierFromXp,
-    xpToNextLevel,
-} from "../rules"
-import { useGamificationEngine } from "../engine"
+import { useQueryMyGamificationSwr } from "../hooks/useQueryMyGamificationSwr"
+import { tierFromXp } from "../leaderboardTiers"
 import { StreakPopover } from "../StreakPopover"
 import { GoalsCard } from "../GoalsCard"
 import { GamificationEventHost } from "../GamificationEventHost"
@@ -42,66 +37,57 @@ const LeaderboardSkeleton = () => (
 /**
  * Gamification leaderboard + progression surface (§11) — the `/leaderboard` page.
  *
- * A dashboard driven by the deterministic mock engine (single source of truth in
- * `rules.ts` + `engine.ts`): stat cards (XP · Level · Streak · Rank+tier) where
- * the Streak card opens the detail popover; a "Cách tính điểm" guide link; a
- * ranked board; the Daily/Weekly goals block; and a milestone-badge row wired to
- * the engine's claimed milestones. A small demo row fires mock learning actions
- * so the +XP toast / level-up moment / streak increment are observable without a
- * backend. The engine store is shared, so every surface updates in lockstep.
+ * A dashboard driven by the live REST snapshots (`useQueryMyGamificationSwr`
+ * composes the `/me/*` progression / streak / activity / badge endpoints, the
+ * ranked board comes from `useQueryLeaderboardSwr`): stat cards (XP · Level ·
+ * Streak · Rank+tier) where the Streak card opens the detail popover; a "Cách
+ * tính điểm" guide link; a ranked board; the Daily/Weekly goals block; and the
+ * viewer's earned badges. Quest-completion toasts and the level-up moment are
+ * raised by the mounted {@link GamificationEventHost}, which diffs the same SWR
+ * caches. Guests see the public board with dashed viewer stats (no `/me/*` call
+ * fires). The mock engine has been removed — every number is real backend data.
  */
 export const LeaderboardShell = () => {
     const t = useTranslations("gamification")
     const locale = useLocale()
     const { board, myUserId, isLoading, error, mutate } = useQueryLeaderboardSwr()
-    const { state, level, recordAction, checkDayRollover } = useGamificationEngine()
+    const { data: my } = useQueryMyGamificationSwr()
 
-    // On mount, roll the day forward (consume freezes / reset) and fire the
-    // 20:00 streak-at-risk reminder once/day — best-effort while the app is open.
-    // A real BE would push this to the notification bell; here it surfaces as a
-    // non-blocking status toast (that shared bell feature is owned elsewhere).
-    useEffect(() => {
-        const { remind, streak } = checkDayRollover()
-        if (remind) {
-            // HeroUI's toast region is an aria-live status landmark, so screen
-            // readers announce this without a per-toast role.
-            toast.warning(t("reminder.title"), {
-                description: t("reminder.body", { count: streak }),
-            })
-        }
-    }, [checkDayRollover, t])
-
-    const { tier } = tierFromXp(state.xp)
-    const toNext = xpToNextLevel(state.xp)
+    const { tier } = tierFromXp(my?.xp ?? 0)
+    // XP still needed to reach the next level — the BE exposes only the next
+    // threshold, so this is `nextThreshold − total` (0 while there is no snapshot).
+    const toNext = my ? my.levelProgress.nextThreshold - my.levelProgress.current : 0
     // Guide is a child route of /leaderboard. pathConfig has no dedicated
     // builder for it (shared file, owned elsewhere); derive it from the
     // leaderboard base rather than hand-templating the whole path.
     const guideHref = `${pathConfig().locale(locale).leaderboard().build()}/guide`
 
-    const stats = [
+    // Viewer stats come from the composed snapshot; `null` (no snapshot yet /
+    // guest) renders as an em-dash instead of a misleading zero.
+    const stats: Array<{ key: "xp" | "level" | "streak" | "rank"; icon: React.ReactNode; value: number | null; hint: string | undefined }> = [
         {
-            key: "xp" as const,
+            key: "xp",
             icon: <LightningIcon className="size-5" aria-hidden focusable="false" />,
-            value: state.xp,
-            hint: undefined as string | undefined,
-        },
-        {
-            key: "level" as const,
-            icon: <StarIcon className="size-5" aria-hidden focusable="false" />,
-            value: level,
-            hint: t("levelHint", { xp: toNext.toLocaleString(locale) }),
-        },
-        {
-            key: "streak" as const,
-            icon: <FireIcon className="size-5" aria-hidden focusable="false" />,
-            value: state.streak,
+            value: my ? my.xp : null,
             hint: undefined,
         },
         {
-            key: "rank" as const,
+            key: "level",
+            icon: <StarIcon className="size-5" aria-hidden focusable="false" />,
+            value: my ? my.level : null,
+            hint: my ? t("levelHint", { xp: toNext.toLocaleString(locale) }) : undefined,
+        },
+        {
+            key: "streak",
+            icon: <FireIcon className="size-5" aria-hidden focusable="false" />,
+            value: my ? my.streak.current : null,
+            hint: undefined,
+        },
+        {
+            key: "rank",
             icon: <RankingIcon className="size-5" aria-hidden focusable="false" />,
             value: board.findIndex((entry) => entry.id === myUserId) + 1,
-            hint: t(`tiers.${tier.key}`),
+            hint: my ? t(`tiers.${tier.key}`) : undefined,
         },
     ]
 
@@ -146,8 +132,8 @@ export const LeaderboardShell = () => {
                             </div>
                             <Typography type="h5" weight="bold">
                                 {/* Rank rides the real BE board — show "—" when the viewer is
-                                    unranked (e.g. the board is empty / unseeded) instead of "0". */}
-                                {stat.key === "rank" && stat.value < 1
+                                    unranked (board empty/unseeded) or has no snapshot, not "0". */}
+                                {stat.value == null || (stat.key === "rank" && stat.value < 1)
                                     ? "—"
                                     : Math.round(stat.value).toLocaleString(locale)}
                             </Typography>
@@ -173,26 +159,6 @@ export const LeaderboardShell = () => {
                     }
                     return <React.Fragment key={stat.key}>{card}</React.Fragment>
                 })}
-            </div>
-
-            {/* demo: fire mock learning actions to exercise the engine (award/streak/toast) */}
-            <div className="flex flex-wrap items-center gap-2 rounded-large border border-dashed border-separator p-3">
-                <Typography type="body-xs" color="muted" className="mr-1">
-                    {t("demo.label")}
-                </Typography>
-                <Button size="sm" variant="secondary" onPress={() => recordAction(GamificationActionType.LessonComplete)}>
-                    {t("demo.lesson")}
-                </Button>
-                <Button
-                    size="sm"
-                    variant="secondary"
-                    onPress={() => recordAction(GamificationActionType.QuizSubmit, { scorePercent: 90 })}
-                >
-                    {t("demo.quiz")}
-                </Button>
-                <Button size="sm" variant="secondary" onPress={() => recordAction(GamificationActionType.ChallengeComplete)}>
-                    {t("demo.challenge")}
-                </Button>
             </div>
 
             {/* goals */}
@@ -259,7 +225,7 @@ export const LeaderboardShell = () => {
                 </AsyncContent>
             </div>
 
-            {/* badges row — streak-milestone badges reflect the engine's claimed set */}
+            {/* badges row — the viewer's earned badges from the real snapshot */}
             <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-2">
                     <StarIcon className="size-5 text-accent" aria-hidden focusable="false" />
@@ -267,34 +233,30 @@ export const LeaderboardShell = () => {
                         {t("badges")}
                     </Typography>
                 </div>
-                <div className="flex flex-wrap gap-3">
-                    {STREAK_MILESTONES.map((milestone) => {
-                        const earned = state.claimedMilestones.includes(milestone.days)
-                        return (
+                {my && my.badges.length > 0 ? (
+                    <div className="flex flex-wrap gap-3">
+                        {my.badges.map((badge) => (
                             <div
-                                key={milestone.days}
-                                className={`flex flex-col items-center gap-2 rounded-2xl bg-default/40 p-4 ${
-                                    earned ? "" : "opacity-50"
-                                }`}
+                                key={badge.id}
+                                className="flex flex-col items-center gap-2 rounded-2xl bg-default/40 p-4"
                             >
                                 <TrophyIcon
-                                    className={`size-6 ${earned ? "text-accent" : "text-muted"}`}
-                                    weight={earned ? "fill" : "regular"}
+                                    className="size-6 text-accent"
+                                    weight="fill"
                                     aria-hidden
                                     focusable="false"
                                 />
                                 <Typography type="body-xs" weight="medium" className="text-center">
-                                    {t(`milestones.${milestone.badgeKey}.name`)}
+                                    {t(`milestones.${badge.badgeKey}.name`)}
                                 </Typography>
-                                {!earned ? (
-                                    <Chip size="sm" variant="soft" color="default">
-                                        {t("badgeLocked")}
-                                    </Chip>
-                                ) : null}
                             </div>
-                        )
-                    })}
-                </div>
+                        ))}
+                    </div>
+                ) : (
+                    <Typography type="body-sm" color="muted">
+                        {t("badgesEmpty")}
+                    </Typography>
+                )}
             </div>
         </div>
     )

@@ -19,11 +19,13 @@ import type {
     CreateCareerRoadmapRequest,
     CareerMentorAssessmentRequest,
     CreateCareerSkillRequest,
+    CvProfileView,
     PatchCareerApplicationStatusRequest,
     PatchCareerOpportunityRequest,
     PatchCareerRoadmapRequest,
     PatchCareerSkillRequest,
     RequestCareerMentorRequest,
+    UpsertCvRequest,
 } from "./types"
 
 // ---------------- CareerController ----------------
@@ -256,4 +258,46 @@ export const submitCareerMentorAssessment = async (
         method: "POST",
         url: `/career/skills/${slug}/assessments/${userId}`,
         data: request,
+    })
+
+// ---------------- CvProfileController (Harvard CV builder) ----------------
+
+/**
+ * The caller's CV, or `null` when they have never built one.
+ *
+ * `GET /api/v1/career/cv/me` — authenticated. The backend answers `data: null`
+ * (envelope code 200) for a first-time user, which {@link restRequest} unwraps to
+ * `null`, so the builder shows an empty form rather than erroring.
+ */
+export const getMyCv = async (): Promise<CvProfileView | null> =>
+    restRequest<CvProfileView | null>({
+        method: "GET",
+        url: "/career/cv/me",
+        authenticated: true,
+    })
+
+/**
+ * Upserts the caller's CV (create on first save, update thereafter — one CV/user).
+ *
+ * `PUT /api/v1/career/cv/me`. The backend validates `sections` against the Harvard
+ * shape and a 64KB cap, rejecting violations with 400 `CV_PROFILE_INVALID`.
+ */
+export const putMyCv = async (request: UpsertCvRequest): Promise<CvProfileView> =>
+    restRequest<CvProfileView>({
+        method: "PUT",
+        url: "/career/cv/me",
+        data: request,
+    })
+
+/**
+ * A CV by id, owner-only.
+ *
+ * `GET /api/v1/career/cv/{id}` — 404 `CV_PROFILE_NOT_FOUND` both when the id does
+ * not exist and when it belongs to another user (existence is not leaked).
+ */
+export const getCv = async (id: string): Promise<CvProfileView> =>
+    restRequest<CvProfileView>({
+        method: "GET",
+        url: `/career/cv/${id}`,
+        authenticated: true,
     })

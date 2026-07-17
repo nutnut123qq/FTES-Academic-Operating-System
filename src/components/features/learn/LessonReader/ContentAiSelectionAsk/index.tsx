@@ -5,7 +5,13 @@ import { createPortal } from "react-dom"
 import { Button } from "@heroui/react"
 import { SparkleIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
-import { useContentAiChatOverlayState, useContentAiSelection } from "@/hooks/zustand/overlay/hooks"
+import { useSmViewpoint } from "@/hooks/reuseables/useSmViewpoint"
+import {
+    useContentAiAnchoredPanel,
+    useContentAiChatOverlayState,
+    useContentAiSelection,
+} from "@/hooks/zustand/overlay/hooks"
+import type { AnchorRect } from "@/hooks/zustand/overlay/store"
 import { useSelectionHintStore } from "./hintStore"
 
 /** Screen position + text of an active passage selection. */
@@ -15,6 +21,8 @@ interface Anchor {
     text: string
     /** Containing paragraph — hidden grounding for the AI. */
     context: string
+    /** Full selection rect snapshot — anchors the desktop chat panel to the passage. */
+    rect: AnchorRect
 }
 
 /** Minimum selected characters before the button appears. */
@@ -38,6 +46,8 @@ export const ContentAiSelectionAsk = () => {
     const [anchor, setAnchor] = useState<Anchor | null>(null)
     const { setSelection } = useContentAiSelection()
     const { open } = useContentAiChatOverlayState()
+    const { open: openAnchored } = useContentAiAnchoredPanel()
+    const { isMobile } = useSmViewpoint()
     // first-discovery flag: the button wears a "Mới" tag until first use / dismiss
     const seen = useSelectionHintStore((state) => state.seen)
     const hydrate = useSelectionHintStore((state) => state.hydrate)
@@ -79,6 +89,16 @@ export const ContentAiSelectionAsk = () => {
                 y: rect.top,
                 text: text.slice(0, MAX_CHARS),
                 context: container?.textContent?.trim().slice(0, MAX_CHARS) ?? text,
+                // snapshot the rect NOW — the desktop panel anchors to it after the
+                // browser selection (and its live rect) is cleared on ask.
+                rect: {
+                    top: rect.top,
+                    left: rect.left,
+                    right: rect.right,
+                    bottom: rect.bottom,
+                    width: rect.width,
+                    height: rect.height,
+                },
             })
         }
 
@@ -111,7 +131,13 @@ export const ContentAiSelectionAsk = () => {
     const onAsk = () => {
         setSelection(anchor.text, anchor.context)
         markSeen()
-        open()
+        // Desktop (≥ sm) → a panel anchored beside the passage; mobile keeps the
+        // existing FAB bottom-sheet (a floating panel is too cramped on a phone).
+        if (isMobile) {
+            open()
+        } else {
+            openAnchored(anchor.rect)
+        }
         window.getSelection()?.removeAllRanges()
         setAnchor(null)
     }

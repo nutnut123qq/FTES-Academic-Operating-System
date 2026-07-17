@@ -19,6 +19,7 @@ import {
     LockIcon,
     PlayCircleIcon,
     PuzzlePieceIcon,
+    ShoppingCartIcon,
     StackIcon,
     StarIcon,
     TrashIcon,
@@ -462,22 +463,18 @@ const CourseDetailView = ({
                                                 <CaretRightIcon aria-hidden focusable="false" className="size-4 shrink-0 text-muted" />
                                             )}
                                             <div className="min-w-0 flex-1">
-                                                {/* Eyebrow = the real section name (e.g. "Phần 0"); the bold
-                                                    title is the section's own description (e.g. "Tổng hợp Tài
-                                                    Liệu"). No description → the name becomes the bold title and
-                                                    the eyebrow is dropped (avoid an empty/duplicate label). */}
+                                                {/* Description is the prominent title on top (e.g. "Tổng hợp
+                                                    Tài Liệu"); the real section name (e.g. "Phần 0") is a small
+                                                    muted tag below. No description → the name becomes the title
+                                                    and the tag line is dropped (avoid an empty/duplicate label). */}
+                                                <Typography type="body-sm" weight="semibold" className="line-clamp-2">
+                                                    {section.description || section.title}
+                                                </Typography>
                                                 {section.description ? (
-                                                    <Typography
-                                                        type="body-xs"
-                                                        color="muted"
-                                                        className="uppercase tracking-wide"
-                                                    >
+                                                    <Typography type="body-xs" color="muted" className="line-clamp-1">
                                                         {section.title}
                                                     </Typography>
                                                 ) : null}
-                                                <Typography type="body" weight="semibold" className="line-clamp-2">
-                                                    {section.description ?? section.title}
-                                                </Typography>
                                             </div>
                                             <Typography type="body-xs" color="muted" className="shrink-0">
                                                 {t("catalog.lessonsCount", { count: section.lessons.length })}
@@ -496,12 +493,12 @@ const CourseDetailView = ({
                                                                 <PlayCircleIcon aria-hidden focusable="false" className="size-4 shrink-0 text-accent" />
                                                             )}
                                                             <div className="min-w-0 flex-1">
-                                                                <Typography type="body-sm" color="muted" className="truncate">
-                                                                    {lesson.title}
+                                                                <Typography type="body-sm" weight="semibold" className="line-clamp-2">
+                                                                    {lesson.description || lesson.title}
                                                                 </Typography>
                                                                 {lesson.description ? (
-                                                                    <Typography type="body-xs" color="muted" className="line-clamp-1 opacity-70">
-                                                                        {lesson.description}
+                                                                    <Typography type="body-xs" color="muted" className="line-clamp-1">
+                                                                        {lesson.title}
                                                                     </Typography>
                                                                 ) : null}
                                                             </div>
@@ -842,8 +839,10 @@ const PackageEnrollCard = ({
     const selectedPackage = packages.find((pkg) => pkg.id === selectedId)
 
     // Resolve the chosen package's COURSE_UNLOCK product id for the cart. Gated on a
-    // real selection and skipped entirely once enrolled.
-    const { data: product } = useGetCoursePackageProductSwr(
+    // real selection and skipped entirely once enrolled. `productLoading` is true only
+    // during an actual fetch → the "resolving" caption shows transiently, never as a
+    // permanent line once the product settles (or is unresolvable).
+    const { data: product, isLoading: productLoading } = useGetCoursePackageProductSwr(
         isEnrolled ? undefined : course.rawId,
         isEnrolled ? undefined : selectedId,
     )
@@ -861,17 +860,36 @@ const PackageEnrollCard = ({
 
     // Same cart + PaymentModal checkout as the legacy onBuy, for the resolved
     // per-package product. Idle when the product hasn't resolved (buy CTA disabled).
+    // If the package is ALREADY in the cart (added via the secondary CTA), reuse that
+    // line instead of adding a duplicate before opening checkout.
     const onBuyPackage = async () => {
         if (!product || !selectedPackage) return
         try {
-            const item = await addCart.trigger({ productId: product.id, quantity: 1 })
-            void mutateSwr("GET_CART_SWR")
+            let itemId = cartItem?.id
+            if (!itemId) {
+                const item = await addCart.trigger({ productId: product.id, quantity: 1 })
+                itemId = item.id
+                void mutateSwr("GET_CART_SWR")
+            }
             payment.open({
-                itemIds: [item.id],
+                itemIds: [itemId],
                 title: `${course.name} · ${selectedPackage.name}`,
                 amountVnd: product.priceVnd ?? 0,
                 amountCoin: product.priceCoin ?? undefined,
             })
+        } catch {
+            // add-to-cart failed → SWR surfaces the error; leave the CTA idle
+        }
+    }
+
+    // Secondary CTA: add the resolved product to the cart WITHOUT opening checkout
+    // (the StarCI "Thêm vào giỏ" peer action). Same add-cart trigger as buy; no-op
+    // once it's already in the cart (the button flips to the remove state then).
+    const onAddToCartPackage = async () => {
+        if (!product || inCart) return
+        try {
+            await addCart.trigger({ productId: product.id, quantity: 1 })
+            void mutateSwr("GET_CART_SWR")
         } catch {
             // add-to-cart failed → SWR surfaces the error; leave the CTA idle
         }
@@ -954,6 +972,7 @@ const PackageEnrollCard = ({
                     <SelectableCardGroup
                         ariaLabel={t("detail.package.selectorAria")}
                         variant="list"
+                        compact
                         value={selectedId ?? ""}
                         onChange={setChosenId}
                         items={packages.map((pkg) => {
@@ -975,23 +994,24 @@ const PackageEnrollCard = ({
                                     <span className="flex items-baseline gap-1.5">
                                         <span className="truncate">{pkg.name}</span>
                                         {count > 0 ? (
-                                            <span className="shrink-0 text-xs text-muted">
+                                            <span className="shrink-0 text-[11px] leading-none text-muted">
                                                 {t("detail.package.entitlementSummary", { count })}
                                             </span>
                                         ) : null}
                                     </span>
                                 ),
-                                // right cluster: the open package carries an accent "Đang mở"
-                                // label, then the price. Prices are PLAIN spans, not PriceTag —
+                                // right cluster: the open package carries a compact accent
+                                // "Đang mở" text label (not a Chip — a chip bloats the row
+                                // height), then the price. Prices are PLAIN spans, not PriceTag —
                                 // PriceTag wraps React-Aria Text, which throws "slot prop
                                 // required" when nested in the RadioGroup's Text context; the
                                 // headline PriceTag above renders the selected price normally.
                                 badge: (
                                     <span className="flex items-center gap-2 text-sm">
                                         {isSelected ? (
-                                            <Chip size="sm" variant="soft" color="accent" className="shrink-0">
+                                            <span className="shrink-0 text-[11px] font-medium text-accent">
                                                 {t("detail.package.active")}
-                                            </Chip>
+                                            </span>
                                         ) : null}
                                         {original ? (
                                             <span className="text-xs text-muted line-through">
@@ -1009,36 +1029,49 @@ const PackageEnrollCard = ({
                         })}
                     />
 
-                    {/* CTA tier 1: Enroll → once the package is in the cart the primary
-                        flips to an "In cart" state whose press REMOVES the item (trash icon). */}
-                    {inCart ? (
-                        <Button
-                            variant="primary"
-                            fullWidth
-                            onPress={onRemovePackage}
-                            isPending={removeCart.isMutating}
-                        >
-                            <CheckIcon aria-hidden focusable="false" className="size-5" />
-                            {t("detail.inCart")}
-                            <TrashIcon aria-hidden focusable="false" className="size-4" />
-                        </Button>
-                    ) : (
+                    {/* CTA cluster (StarCI shape): one dominant primary "Nhận gói này"
+                        (buy → checkout), a secondary "Thêm vào giỏ" peer that flips to an
+                        "Đã ở trong giỏ" remove state, and a quiet tertiary "Học thử miễn phí". */}
+                    <div className="flex flex-col gap-2">
                         <Button
                             variant="primary"
                             fullWidth
                             onPress={onBuyPackage}
                             isDisabled={!product}
-                            isPending={addCart.isMutating}
+                            isPending={addCart.isMutating && !inCart}
                         >
                             {t("detail.package.buy")}
                         </Button>
-                    )}
-                    {/* CTA tier 2: try free — the lowest-priority action (tertiary) so the
-                        primary "Đăng ký gói" stays visually dominant. */}
-                    <Button variant="tertiary" fullWidth onPress={onTryLearning}>
-                        {t("detail.tryFree")}
-                    </Button>
-                    {!product ? (
+                        {inCart ? (
+                            <Button
+                                variant="secondary"
+                                fullWidth
+                                onPress={onRemovePackage}
+                                isPending={removeCart.isMutating}
+                            >
+                                <CheckIcon aria-hidden focusable="false" className="size-5" />
+                                {t("detail.inCart")}
+                                <TrashIcon aria-hidden focusable="false" className="size-4" />
+                            </Button>
+                        ) : (
+                            <Button
+                                variant="secondary"
+                                fullWidth
+                                onPress={onAddToCartPackage}
+                                isDisabled={!product}
+                                isPending={addCart.isMutating}
+                            >
+                                <ShoppingCartIcon aria-hidden focusable="false" className="size-5" />
+                                {t("detail.package.addToCart")}
+                            </Button>
+                        )}
+                        <Button variant="tertiary" size="sm" fullWidth onPress={onTryLearning}>
+                            {t("detail.tryFree")}
+                        </Button>
+                    </div>
+                    {/* resolving caption: only while the product id is ACTUALLY being
+                        fetched — never a permanent line once it settles/can't resolve. */}
+                    {productLoading ? (
                         <Typography type="body-xs" color="muted" align="center">
                             {t("detail.package.resolving")}
                         </Typography>
@@ -1066,8 +1099,12 @@ const PackagePickerSkeleton = () => (
         <div className="border-t border-separator pt-3">
             <Skeleton className="h-7 w-1/2 rounded-large" />
         </div>
-        <Skeleton className="h-10 w-full rounded-large" />
-        <Skeleton className="h-10 w-full rounded-large" />
+        {/* CTA cluster: primary + secondary (add-to-cart) + smaller tertiary (try free) */}
+        <div className="flex flex-col gap-2">
+            <Skeleton className="h-10 w-full rounded-large" />
+            <Skeleton className="h-10 w-full rounded-large" />
+            <Skeleton className="h-8 w-full rounded-large" />
+        </div>
     </div>
 )
 

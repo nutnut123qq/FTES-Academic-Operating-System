@@ -5306,8 +5306,9 @@
         "selectorAria": "Chọn gói học",
         "active": "Đang mở",
         "entitlementSummary": "{count} phần",
-        "buy": "Đăng ký gói",
-        "resolving": "Đang lấy thông tin gói…",
+        "buy": "Nhận gói này",
+        "addToCart": "Thêm vào giỏ",
+        "resolving": "Đang tải chi tiết gói…",
         "updatingTitle": "Đang cập nhật gói",
         "updatingHint": "Các gói của khóa này đang được cập nhật. Vui lòng quay lại sau."
       }

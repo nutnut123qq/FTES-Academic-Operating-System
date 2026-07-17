@@ -105,6 +105,13 @@ export const Navbar = ({ className }: NavbarProps) => {
             const isK = event.key?.toLowerCase() === "k"
             if (!isK) return
             if (!(event.ctrlKey || event.metaKey)) return
+            // Skip when some OTHER overlay (auth/confirm modal, a drawer…) is on top so the
+            // shortcut never steals focus into the inline field or stacks the search overlay
+            // over an open dialog. The search overlay's own dialog carries `data-search-overlay`.
+            const foreignOverlay = Array.from(
+                document.querySelectorAll(".modal__dialog, .drawer__dialog"),
+            ).some((node) => !node.hasAttribute("data-search-overlay"))
+            if (foreignOverlay) return
             event.preventDefault()
             const isDesktop = window.matchMedia("(min-width: 768px)").matches
             if (isDesktop && searchInputRef.current) {

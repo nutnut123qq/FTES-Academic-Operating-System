@@ -140,4 +140,20 @@ describe("Navbar — Ctrl/Cmd+K single source", () => {
         fireEvent.keyDown(window, { key: "k" })
         expect(h.openSearch).not.toHaveBeenCalled()
     })
+
+    it("skips the shortcut while a foreign overlay (modal/drawer) is open", () => {
+        h.matches = false
+        render(<Navbar />)
+        // simulate an unrelated dialog on top (auth/confirm) — NOT the search overlay
+        const foreign = document.createElement("div")
+        foreign.className = "modal__dialog"
+        document.body.appendChild(foreign)
+        try {
+            fireEvent.keyDown(window, { key: "k", ctrlKey: true })
+            expect(h.openSearch).not.toHaveBeenCalled()
+            expect(document.activeElement).not.toBe(screen.getByTestId("inline-input"))
+        } finally {
+            document.body.removeChild(foreign)
+        }
+    })
 })

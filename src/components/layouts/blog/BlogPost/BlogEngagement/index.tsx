@@ -203,7 +203,7 @@ export const BlogEngagement = ({ postId, initialEmojiCount }: BlogEngagementProp
                     <HeartIcon
                         aria-hidden
                         focusable="false"
-                        className={cn("size-5", postReacted === true && "text-accent")}
+                        className={cn("size-5", postReacted === true && "text-danger")}
                         weight={postReacted === true ? "fill" : "regular"}
                     />
                     <span>{postCount}</span>

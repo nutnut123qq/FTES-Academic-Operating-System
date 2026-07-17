@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { usePostReportPreviewLimitSwr } from "@/hooks/swr/api/rest/mutations/usePostReportPreviewLimitSwr"
 
 /** Preview gate state exposed by {@link usePreviewGate}. */
@@ -34,6 +34,13 @@ export const usePreviewGate = (
     const [isGated, setIsGated] = useState(false)
     const gateFiredRef = useRef(false)
     const reportLimit = usePostReportPreviewLimitSwr()
+
+    // The stream (and therefore `previewSeconds`) resolves after mount, so seed the
+    // countdown once it arrives — but never clobber the running countdown after the
+    // gate has fired (would flash the full time back onto the lock chip).
+    useEffect(() => {
+        if (!gateFiredRef.current) setTimeRemaining(limit)
+    }, [limit])
 
     const reportOnce = useCallback(() => {
         if (!lessonId || typeof window === "undefined") return

@@ -1,10 +1,13 @@
 "use client"
 
 import React, { useCallback, useEffect, useState } from "react"
-import { Card, CardContent, Chip, Typography } from "@heroui/react"
+import { Button, Card, CardContent, Chip, Typography } from "@heroui/react"
+import { LockSimpleIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { PackageGateModal } from "@/components/features/course/PackageGateModal"
+import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { useLessonStreamSwr } from "./hooks/useLessonStreamSwr"
+import { usePreviewGate } from "./hooks/usePreviewGate"
 import { LessonHlsPlayer } from "./LessonHlsPlayer"
 import { LessonYouTubePlayer } from "./LessonYouTubePlayer"
 
@@ -25,11 +28,50 @@ const formatCountdown = (seconds: number): string => {
 }
 
 /**
+ * Full-cover lock shown once the preview limit is hit and the package modal has been
+ * dismissed. Blurs the video and BLOCKS pointer events to the iframe/video beneath
+ * (no `pointer-events-none`), so a locked YouTube embed can no longer be clicked to
+ * resume. The CTA re-opens the package gate modal (premium-unlock = enroll the course).
+ */
+const PreviewLockOverlay = ({
+    title,
+    body,
+    cta,
+    onReopen,
+}: {
+    title: string
+    body: string | null
+    cta: string
+    onReopen: () => void
+}) => (
+    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 rounded-2xl bg-surface/85 px-6 text-center backdrop-blur-sm">
+        <LockSimpleIcon aria-hidden focusable="false" className="size-8 text-accent" />
+        <Typography type="body" className="font-semibold text-foreground">
+            {title}
+        </Typography>
+        {body ? (
+            <Typography type="body-sm" color="muted">
+                {body}
+            </Typography>
+        ) : null}
+        <Button variant="primary" size="sm" onPress={onReopen}>
+            {cta}
+        </Button>
+    </div>
+)
+
+/**
  * Lesson video player with freemium preview support.
  *
- * Resolves the stream manifest to determine `mode`/`previewSeconds`/`cheapestPackage`,
- * then mounts the correct player (HLS for internal `video_*` tokens, YouTube embed
- * otherwise). A countdown chip and a hard pause/seek guard are applied in PREVIEW mode.
+ * Resolves the stream manifest to determine `mode`/`previewSeconds`/`cheapestPackage`
+ * (and, on the `freemium-youtube-preview-gate` BE, a PREVIEW `videoRef`), then mounts
+ * the correct player (HLS for internal `video_*` tokens, YouTube embed otherwise).
+ *
+ * The preview gate is a PERSISTENT state owned here (single source of truth): the
+ * shared `usePreviewGate` hook fires once at `previewSeconds` → opens the package modal
+ * and flips `gated`; while `gated`, every player resume is hard-paused/seeked back, and
+ * once the modal is dismissed a full-cover lock overlay replaces interaction with the
+ * video. Buying the course flips `mode` to FULL and clears the gate.
  */
 export const LessonVideoBlock = ({
     courseId,
@@ -53,47 +95,76 @@ export const LessonVideoBlock = ({
     onPurchased?: () => void
 }) => {
     const t = useTranslations("courseSystem.preview")
-    const { stream } = useLessonStreamSwr(lessonId)
+    const { stream, isLoading } = useLessonStreamSwr(lessonId)
     const [gateOpen, setGateOpen] = useState(false)
-    const [countdown, setCountdown] = useState(stream?.previewSeconds ?? 0)
-    const openGate = useCallback(() => setGateOpen(true), [])
-
-    // Keep the countdown chip in sync with the async stream response.
-    useEffect(() => {
-        if (stream?.previewSeconds != null) {
-            setCountdown(stream.previewSeconds)
-        }
-    }, [stream?.previewSeconds])
-
-    if (!videoRef) return null
+    /** Persistent "preview limit reached" state — drives the lock overlay + player pause. */
+    const [gated, setGated] = useState(false)
 
     const mode = stream?.mode
     const previewSeconds = stream?.previewSeconds
-    const isPreview = mode === "PREVIEW" && previewSeconds && previewSeconds > 0
 
-    const ytId = youtubeId(videoRef)
+    // Reaching the preview limit = pause + auto-open the package modal AND latch `gated`
+    // so the overlay/pause survive the user dismissing the modal.
+    const openGate = useCallback(() => {
+        setGated(true)
+        setGateOpen(true)
+    }, [])
+
+    const previewGate = usePreviewGate(lessonId, mode, previewSeconds, openGate)
+
+    // Purchase completed (stream mutates to FULL) → drop the gate, play the full video.
+    useEffect(() => {
+        if (mode === "FULL") setGated(false)
+    }, [mode])
+
+    // Catalog ref (free/FULL) wins; PREVIEW YouTube arrives via the stream response.
+    const effectiveRef = videoRef ?? stream?.videoRef ?? null
+
+    if (!effectiveRef) {
+        // No catalog ref yet: the stream may still supply a PREVIEW ref — hold an
+        // aspect-video skeleton instead of collapsing layout. Once the stream has
+        // resolved without a ref, render nothing (unchanged behaviour on old BE).
+        if (!videoRef && isLoading) {
+            return (
+                <div className="mx-auto w-full max-w-5xl">
+                    <Skeleton className="aspect-video w-full rounded-2xl" />
+                </div>
+            )
+        }
+        return null
+    }
+
+    const isPreview = mode === "PREVIEW" && !!previewSeconds && previewSeconds > 0
+
+    const ytId = youtubeId(effectiveRef)
     const player = ytId ? (
         <LessonYouTubePlayer
             videoId={ytId}
             lessonId={lessonId}
             previewSeconds={previewSeconds}
-            onOpenGate={openGate}
-            onCountdownTick={setCountdown}
+            isPreview={isPreview}
+            gated={gated}
+            onTimeUpdate={previewGate.onTimeUpdate}
+            onEnded={previewGate.onEnded}
+            onOpenGate={() => setGateOpen(true)}
             onHalfWatched={onHalfWatched}
         />
-    ) : /^\s*video_/.test(videoRef) ? (
+    ) : /^\s*video_/.test(effectiveRef) ? (
         <LessonHlsPlayer
-            videoRef={videoRef.trim()}
+            videoRef={effectiveRef.trim()}
             lessonId={lessonId}
-            mode={mode}
             previewSeconds={previewSeconds}
-            onOpenGate={openGate}
-            onCountdownTick={setCountdown}
+            isGated={previewGate.isGated}
+            onTimeUpdate={previewGate.onTimeUpdate}
+            onEnded={previewGate.onEnded}
             onHalfWatched={onHalfWatched}
         />
     ) : null
 
     if (!player) return null
+
+    const cheapestName = stream?.cheapestPackage?.name
+    const overlayBody = cheapestName ? t("overlay.body", { name: cheapestName }) : null
 
     return (
         <>
@@ -109,10 +180,18 @@ export const LessonVideoBlock = ({
                             >
                                 <span className="flex items-center gap-1">
                                     <Typography type="body-xs" className="text-white">
-                                        {t("chip", { time: formatCountdown(countdown) })}
+                                        {t("chip", { time: formatCountdown(previewGate.timeRemaining) })}
                                     </Typography>
                                 </span>
                             </Chip>
+                        ) : null}
+                        {gated && !gateOpen ? (
+                            <PreviewLockOverlay
+                                title={t("overlay.title")}
+                                body={overlayBody}
+                                cta={t("overlay.cta")}
+                                onReopen={() => setGateOpen(true)}
+                            />
                         ) : null}
                     </CardContent>
                 </Card>

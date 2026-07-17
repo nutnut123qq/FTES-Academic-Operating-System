@@ -211,7 +211,12 @@ const buildLessonView = (
         accessLevel,
         packageSlugs,
         teaser: content.teaser ?? null,
-        hasVideo: current?.videoStatus === "READY" && isVideoRef,
+        // Mount the video block when the curriculum ships a playable ref, OR when this
+        // is a PREVIEW video lesson whose ref the catalog hides (locked) — the stream
+        // response (`freemium-youtube-preview-gate`) supplies the gated ref in that case.
+        hasVideo:
+            current?.videoStatus === "READY" &&
+            (isVideoRef || (contentType === "VIDEO" && accessLevel === "PREVIEW")),
         videoRef: ref,
         documentHtml,
     }

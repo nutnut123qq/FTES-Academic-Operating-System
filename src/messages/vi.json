@@ -5340,9 +5340,17 @@
       "chip": "Xem thử còn {time}",
       "price": "{price}đ",
       "discount": "-{percent}%",
+      "overlay": {
+        "title": "Hết phần xem thử",
+        "body": "Mở khoá từ {name}",
+        "cta": "Đăng ký khoá học"
+      },
+      "fallback": {
+        "body": "Không tải được trình phát xem thử."
+      },
       "modal": {
         "titleDocument": "Đăng ký để đọc tiếp {lesson}",
-        "titleVideo": "Bạn đã xem hết thờ igian học thử {lesson}",
+        "titleVideo": "Bạn đã xem hết thời gian học thử {lesson}",
         "cheapestHint": "Mở khoá chỉ từ {name}",
         "emptyTitle": "Không có gói phù hợp",
         "emptyHint": "Các gói của khóa học này chưa được cập nhật.",

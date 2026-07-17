@@ -130,22 +130,18 @@ export const ContentMap = ({ className }: ContentMapProps) => {
                                         <Accordion.Trigger className="text-sm font-semibold">
                                             <div className="flex w-full min-w-0 items-center gap-2">
                                                 <div className="min-w-0 flex-1 text-left">
-                                                    {/* Eyebrow = the real module name (e.g. "Phần 0"); the bold
-                                                        title is the module's own description (e.g. "Tổng hợp Tài
-                                                        Liệu"). No description → the name is the bold title and the
-                                                        eyebrow is dropped (avoid an empty/duplicate label). */}
-                                                    {module.description ? (
-                                                        <Typography
-                                                            type="body-xs"
-                                                            color="muted"
-                                                            className="uppercase tracking-wide"
-                                                        >
-                                                            {module.title}
-                                                        </Typography>
-                                                    ) : null}
+                                                    {/* Description is the prominent title on top (e.g. "Tổng hợp
+                                                        Tài Liệu"); the real module name (e.g. "Phần 0") is a small
+                                                        muted tag below. No description → the name becomes the title
+                                                        and the tag line is dropped (avoid an empty/duplicate label). */}
                                                     <Typography type="body-sm" weight="semibold" className="line-clamp-2">
                                                         {module.description || module.title}
                                                     </Typography>
+                                                    {module.description ? (
+                                                        <Typography type="body-xs" color="muted" className="line-clamp-1">
+                                                            {module.title}
+                                                        </Typography>
+                                                    ) : null}
                                                 </div>
                                                 <Chip size="sm" variant="soft" className="shrink-0">
                                                     {t("contentMap.lessonCount", {
@@ -238,12 +234,12 @@ const ContentMapLessonRow = ({
                     <PlayCircleIcon aria-hidden focusable="false" className="size-4 shrink-0 text-muted" />
                 )}
                 <div className="min-w-0 flex-1">
-                    <Typography type="body-sm" truncate>
-                        {lesson.title}
+                    <Typography type="body-sm" weight="semibold" className="line-clamp-2">
+                        {lesson.description || lesson.title}
                     </Typography>
                     {lesson.description ? (
-                        <Typography type="body-xs" color="muted" className="line-clamp-1 opacity-70">
-                            {lesson.description}
+                        <Typography type="body-xs" color="muted" className="line-clamp-1">
+                            {lesson.title}
                         </Typography>
                     ) : null}
                 </div>

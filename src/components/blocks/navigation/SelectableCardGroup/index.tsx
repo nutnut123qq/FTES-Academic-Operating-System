@@ -39,6 +39,12 @@ export interface SelectableCardGroupProps<T extends string> extends WithClassNam
      * per-row border/gap) — a single object, not a stack of cards.
      */
     variant?: "card" | "list"
+    /**
+     * Tightens each row's vertical padding (`py-2.5` instead of `py-3`) so a
+     * `"list"` group reads as a compact one-line ladder (e.g. a pricing/package
+     * picker). No effect on `"card"`.
+     */
+    compact?: boolean
 }
 
 /** Tailwind grid-template class per supported column count. */
@@ -72,6 +78,7 @@ export const SelectableCardGroup = <T extends string>({
     ariaLabel,
     columns = 2,
     variant = "card",
+    compact = false,
     className,
 }: SelectableCardGroupProps<T>) => (
         <RadioGroup
@@ -90,7 +97,8 @@ export const SelectableCardGroup = <T extends string>({
                     {({ isSelected, isDisabled, isFocusVisible }) => (
                         <div
                             className={cn(
-                                "flex w-full items-center gap-2 px-3 py-3 text-sm text-foreground transition-colors",
+                                "flex w-full items-center gap-2 px-3 text-sm text-foreground transition-colors",
+                                compact && variant === "list" ? "py-2.5" : "py-3",
                                 // card: standalone bordered surface; list: flat connected row
                                 variant === "list"
                                     ? cn(isSelected && "bg-accent/10 font-medium")

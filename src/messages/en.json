@@ -5307,6 +5307,7 @@
         "active": "Open",
         "entitlementSummary": "{count} parts",
         "buy": "Get this package",
+        "addToCart": "Add to cart",
         "resolving": "Fetching package details…",
         "updatingTitle": "Packages are being updated",
         "updatingHint": "This course's packages are being updated. Please check back soon."

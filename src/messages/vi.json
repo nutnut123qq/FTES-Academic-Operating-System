@@ -5603,6 +5603,88 @@
     "errorRetry": "Thử lại"
   },
   "learn": {
+    "exercises": {
+      "assignment": {
+        "title": "Bài tập",
+        "submissionsCount": "{used}/{max} lượt nộp",
+        "urlLabel": "Đường dẫn GitHub",
+        "urlPlaceholder": "https://github.com/ban/bai-nop",
+        "urlInvalid": "Đường dẫn phải bắt đầu bằng https://",
+        "submit": "Nộp bài",
+        "submitted": "Đã nộp bài, đang chờ chấm.",
+        "maxReached": "Bạn đã dùng hết {max} lượt nộp.",
+        "historyTitle": "Lịch sử nộp",
+        "attemptLine": "Lần {number}",
+        "aiScore": "Điểm AI: {score}",
+        "pendingHint": "AI đang chấm bài, kết quả sẽ tự cập nhật.",
+        "status": {
+          "submitted": "Chờ chấm",
+          "grading": "Đang chấm",
+          "graded": "Đã chấm",
+          "failed": "Chấm lỗi"
+        }
+      },
+      "quiz": {
+        "title": "Bài kiểm tra",
+        "questionsCount": "{count} câu hỏi",
+        "passScore": "Đạt {percent}%",
+        "timeLimit": "Giới hạn {value}",
+        "bestScore": "Cao nhất {percent}%",
+        "attemptsUsed": "Đã làm {count} lần",
+        "maxReached": "Bạn đã dùng hết {max} lần làm.",
+        "passed": "Đạt",
+        "notPassed": "Chưa đạt",
+        "start": "Làm quiz",
+        "retake": "Làm lại",
+        "timeRemaining": "Còn lại {value}",
+        "questionLine": "Câu {number}",
+        "multipleHint": "Chọn tất cả đáp án đúng",
+        "submit": "Nộp bài",
+        "submitting": "Đang nộp…",
+        "autoSubmitted": "Hết giờ — đáp án của bạn đã được nộp tự động.",
+        "resultTitle": "Kết quả của bạn",
+        "scoreLine": "{percent}%",
+        "passedResult": "Bạn đã đạt",
+        "failedResult": "Chưa đạt",
+        "done": "Xong",
+        "historyTitle": "Lịch sử làm bài",
+        "attemptLine": "Lần {number}",
+        "inProgress": "Đang làm",
+        "lockedTitle": "Đăng ký khoá học để làm bài",
+        "lockedBody": "Bài kiểm tra này thuộc khoá học. Đăng ký để bắt đầu luyện tập."
+      },
+      "challenge": {
+        "subtitle": "Giải thử thách và nộp để chấm tự động.",
+        "back": "Về bài học",
+        "submitTitle": "Bài nộp của bạn",
+        "submissionsCount": "{used}/{max} lượt nộp",
+        "maxReached": "Bạn đã dùng hết {max} lượt nộp.",
+        "submit": "Nộp bài",
+        "submitting": "Đang nộp…",
+        "submitted": "Đã nộp — đang chờ chấm.",
+        "essayLabel": "Câu trả lời của bạn",
+        "essayPlaceholder": "Viết câu trả lời…",
+        "languageLabel": "Ngôn ngữ",
+        "codeLabel": "Mã nguồn của bạn",
+        "codePlaceholder": "Dán hoặc viết lời giải…",
+        "noQuestions": "Thử thách này chưa có câu hỏi.",
+        "questionLine": "Câu {number}",
+        "multipleHint": "Chọn tất cả đáp án đúng",
+        "historyTitle": "Lịch sử nộp",
+        "attemptLine": "Lần {number}",
+        "score": "Điểm: {score}",
+        "pendingHint": "Hệ thống đang chấm bài — kết quả tự cập nhật.",
+        "status": {
+          "pending": "Đang chờ",
+          "grading": "Đang chấm",
+          "completed": "Đã chấm",
+          "failed": "Chấm thất bại"
+        },
+        "lockedTitle": "Đăng ký để làm thử thách",
+        "lockedBody": "Thử thách này thuộc khóa học. Đăng ký khóa để bắt đầu luyện tập.",
+        "error": "Không tải được thử thách."
+      }
+    },
     "common": {
       "retry": "Thử lại",
       "loading": "Đang tải…",
@@ -5681,7 +5763,9 @@
       "answerCount": "{count} câu trả lời",
       "answerPlaceholder": "Viết câu trả lời…",
       "answerSubmit": "Trả lời",
-      "founder": "Giảng viên"
+      "founder": "Giảng viên",
+      "targetLessonLabel": "Hỏi ở bài",
+      "viewLesson": "Mở bài học: {lesson}"
     },
     "reader": {
       "error": "Không tải được bài học.",
@@ -5746,6 +5830,9 @@
       "reactionAria": "Bày tỏ cảm xúc",
       "views2": "xem"
     },
+    "reactions": {
+      "likeGated": "Đăng ký khóa học để thích bài học"
+    },
     "comments": {
       "title": "Bình luận ({count})",
       "placeholder": "Viết bình luận…",
@@ -5783,7 +5870,11 @@
       "resumeBody": "Bạn có một phiên phỏng vấn chưa hoàn thành. Tiếp tục để làm nốt và chấm điểm.",
       "resume": "Tiếp tục",
       "tierLabel": "Cấp độ",
-      "tier": { "junior": "Sơ cấp", "middle": "Trung cấp", "senior": "Cao cấp" },
+      "tier": {
+        "junior": "Sơ cấp",
+        "middle": "Trung cấp",
+        "senior": "Cao cấp"
+      },
       "countLabel": "Số câu hỏi",
       "forbiddenTitle": "Bạn chưa ghi danh khóa học này",
       "forbiddenBody": "Đăng ký khóa học để mở tính năng luyện phỏng vấn.",
@@ -5797,7 +5888,11 @@
       "next": "Câu tiếp",
       "submit": "Nộp & chấm",
       "scoreLabel": "Điểm tổng",
-      "verdict": { "PASS": "Đạt", "BORDERLINE": "Cần cải thiện", "FAIL": "Chưa đạt" },
+      "verdict": {
+        "PASS": "Đạt",
+        "BORDERLINE": "Cần cải thiện",
+        "FAIL": "Chưa đạt"
+      },
       "reviewsTitle": "Nhận xét từng câu",
       "questionN": "Câu {n}",
       "strengths": "Điểm mạnh",
@@ -5848,7 +5943,11 @@
       "next": "Câu tiếp",
       "submit": "Nộp & kết thúc",
       "scoreLabel": "Điểm tổng",
-      "verdict": { "PASS": "Đạt", "BORDERLINE": "Cần cải thiện", "FAIL": "Chưa đạt" },
+      "verdict": {
+        "PASS": "Đạt",
+        "BORDERLINE": "Cần cải thiện",
+        "FAIL": "Chưa đạt"
+      },
       "reviewsTitle": "Nhận xét từng câu",
       "questionN": "Câu {n}",
       "pendingGrade": "Đang chờ chấm điểm",

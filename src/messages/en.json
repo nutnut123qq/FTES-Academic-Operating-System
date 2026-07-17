@@ -5603,6 +5603,88 @@
     "errorRetry": "Retry"
   },
   "learn": {
+    "exercises": {
+      "assignment": {
+        "title": "Assignments",
+        "submissionsCount": "{used}/{max} submissions",
+        "urlLabel": "GitHub URL",
+        "urlPlaceholder": "https://github.com/you/your-solution",
+        "urlInvalid": "The URL must start with https://",
+        "submit": "Submit",
+        "submitted": "Submitted — waiting to be graded.",
+        "maxReached": "You've used all {max} submissions.",
+        "historyTitle": "Submission history",
+        "attemptLine": "Attempt {number}",
+        "aiScore": "AI score: {score}",
+        "pendingHint": "The AI is grading your work — the result updates automatically.",
+        "status": {
+          "submitted": "Pending",
+          "grading": "Grading",
+          "graded": "Graded",
+          "failed": "Grading failed"
+        }
+      },
+      "quiz": {
+        "title": "Quiz",
+        "questionsCount": "{count} questions",
+        "passScore": "Pass {percent}%",
+        "timeLimit": "{value} time limit",
+        "bestScore": "Best {percent}%",
+        "attemptsUsed": "{count, plural, one {# attempt} other {# attempts}}",
+        "maxReached": "You've used all {max} attempts.",
+        "passed": "Passed",
+        "notPassed": "Not passed",
+        "start": "Start quiz",
+        "retake": "Retake quiz",
+        "timeRemaining": "Time left {value}",
+        "questionLine": "Question {number}",
+        "multipleHint": "Select all that apply",
+        "submit": "Submit quiz",
+        "submitting": "Submitting…",
+        "autoSubmitted": "Time's up — your answers were submitted automatically.",
+        "resultTitle": "Your result",
+        "scoreLine": "{percent}%",
+        "passedResult": "You passed",
+        "failedResult": "Not passed yet",
+        "done": "Done",
+        "historyTitle": "Attempt history",
+        "attemptLine": "Attempt {number}",
+        "inProgress": "In progress",
+        "lockedTitle": "Enroll to take this quiz",
+        "lockedBody": "This quiz is part of the course. Enroll to start practising."
+      },
+      "challenge": {
+        "subtitle": "Solve the challenge and submit for automatic grading.",
+        "back": "Back to lesson",
+        "submitTitle": "Your submission",
+        "submissionsCount": "{used}/{max} submissions",
+        "maxReached": "You've used all {max} submissions.",
+        "submit": "Submit",
+        "submitting": "Submitting…",
+        "submitted": "Submitted — waiting to be graded.",
+        "essayLabel": "Your answer",
+        "essayPlaceholder": "Write your answer…",
+        "languageLabel": "Language",
+        "codeLabel": "Your code",
+        "codePlaceholder": "Paste or write your solution…",
+        "noQuestions": "This challenge has no questions yet.",
+        "questionLine": "Question {number}",
+        "multipleHint": "Select all that apply",
+        "historyTitle": "Submission history",
+        "attemptLine": "Attempt {number}",
+        "score": "Score: {score}",
+        "pendingHint": "The grader is scoring your submission — the result updates automatically.",
+        "status": {
+          "pending": "Pending",
+          "grading": "Grading",
+          "completed": "Graded",
+          "failed": "Grading failed"
+        },
+        "lockedTitle": "Enroll to attempt this challenge",
+        "lockedBody": "This challenge is part of the course. Enroll to start practising.",
+        "error": "Failed to load the challenge."
+      }
+    },
     "common": {
       "retry": "Retry",
       "loading": "Loading…",
@@ -5681,7 +5763,9 @@
       "answerCount": "{count} answers",
       "answerPlaceholder": "Write an answer…",
       "answerSubmit": "Answer",
-      "founder": "Instructor"
+      "founder": "Instructor",
+      "targetLessonLabel": "Ask about lesson",
+      "viewLesson": "Open lesson: {lesson}"
     },
     "reader": {
       "error": "Failed to load lesson.",
@@ -5746,6 +5830,9 @@
       "reactionAria": "React",
       "views2": "view"
     },
+    "reactions": {
+      "likeGated": "Enroll in this course to like the lesson"
+    },
     "comments": {
       "title": "Comments ({count})",
       "placeholder": "Write a comment…",
@@ -5783,7 +5870,11 @@
       "resumeBody": "You have an unfinished interview session. Resume to finish and get graded.",
       "resume": "Resume",
       "tierLabel": "Level",
-      "tier": { "junior": "Junior", "middle": "Middle", "senior": "Senior" },
+      "tier": {
+        "junior": "Junior",
+        "middle": "Middle",
+        "senior": "Senior"
+      },
       "countLabel": "Questions",
       "forbiddenTitle": "You are not enrolled in this course",
       "forbiddenBody": "Enroll in the course to unlock mock interview practice.",
@@ -5797,7 +5888,11 @@
       "next": "Next",
       "submit": "Submit & grade",
       "scoreLabel": "Overall score",
-      "verdict": { "PASS": "Pass", "BORDERLINE": "Borderline", "FAIL": "Fail" },
+      "verdict": {
+        "PASS": "Pass",
+        "BORDERLINE": "Borderline",
+        "FAIL": "Fail"
+      },
       "reviewsTitle": "Per-question feedback",
       "questionN": "Question {n}",
       "strengths": "Strengths",
@@ -5848,7 +5943,11 @@
       "next": "Next",
       "submit": "Submit & finish",
       "scoreLabel": "Overall score",
-      "verdict": { "PASS": "Pass", "BORDERLINE": "Borderline", "FAIL": "Fail" },
+      "verdict": {
+        "PASS": "Pass",
+        "BORDERLINE": "Borderline",
+        "FAIL": "Fail"
+      },
       "reviewsTitle": "Per-question feedback",
       "questionN": "Question {n}",
       "pendingGrade": "Pending grading",

@@ -5,6 +5,7 @@ import { Button, Label, Link, ScrollShadow, cn } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
 import { useRouter } from "@/i18n/navigation"
+import { useQueryLearnLessonSwr } from "../hooks/useQueryLearnLessonSwr"
 import { useTableOfContents } from "./hooks/useTableOfContents"
 
 /** Props for {@link OnThisPage}. */
@@ -18,9 +19,9 @@ export interface OnThisPageProps {
     mobile?: boolean
 }
 
-/** Build the challenge route for the active lesson. */
-const challengeHref = (courseId: string, contentId: string) =>
-    `/courses/${courseId}/learn/content/modules/${contentId.split("-")[0]}/contents/${contentId}/challenges/${contentId}-c`
+/** Build the challenge route for the active lesson from the REAL ids (no `-c` mock). */
+const challengeHref = (courseId: string, moduleId: string, contentId: string, challengeId: string) =>
+    `/courses/${courseId}/learn/content/modules/${moduleId}/contents/${contentId}/challenges/${challengeId}`
 
 /**
  * Faithful port of StarCI's "On this page" rail — the docs-style right outline of
@@ -38,9 +39,19 @@ export const OnThisPage = ({ className, mobile = false }: OnThisPageProps) => {
     const router = useRouter()
     const { courseId, contentId } = useParams<{ courseId: string; contentId?: string }>()
     const { headings, activeId, onJump } = useTableOfContents(contentId)
+    // Shares the LessonReader SWR key — cheap; gates the practice entry on a REAL
+    // linked challenge (BE sets `challengeId` only for an ACTIVE challenge).
+    const { lesson } = useQueryLearnLessonSwr(courseId, contentId ?? "")
 
     // the rail is per-lesson; nothing to host when no lesson is open
     if (!contentId) {
+        return null
+    }
+
+    const hasChallenge = Boolean(lesson?.hasChallenge && lesson?.challengeId)
+
+    // nothing to host: no in-article outline AND no practice entry → render no chrome
+    if (headings.length === 0 && !hasChallenge) {
         return null
     }
 
@@ -68,18 +79,25 @@ export const OnThisPage = ({ className, mobile = false }: OnThisPageProps) => {
                 </nav>
             )}
 
-            {/* "practice this lesson" — closes the read → practice loop */}
-            <div className="flex flex-col gap-2">
-                <Label>{t("lessonRail.challenges.title")}</Label>
-                <Button
-                    size="sm"
-                    variant="primary"
-                    className="self-start"
-                    onPress={() => router.push(challengeHref(courseId, contentId))}
-                >
-                    {t("lessonRail.challenges.practice")}
-                </Button>
-            </div>
+            {/* "practice this lesson" — closes the read → practice loop. Renders ONLY
+                when the lesson has a REAL ACTIVE challenge (no unconditional `-c` mock). */}
+            {hasChallenge && lesson ? (
+                <div className="flex flex-col gap-2">
+                    <Label>{t("lessonRail.challenges.title")}</Label>
+                    <Button
+                        size="sm"
+                        variant="primary"
+                        className="self-start"
+                        onPress={() => {
+                            if (lesson.challengeId) {
+                                router.push(challengeHref(courseId, lesson.moduleId, contentId, lesson.challengeId))
+                            }
+                        }}
+                    >
+                        {t("lessonRail.challenges.practice")}
+                    </Button>
+                </div>
+            ) : null}
         </>
     )
 

@@ -298,6 +298,7 @@ export const LessonReader = () => {
                             {/* video player (VIDEO lessons) + document attachments — above the article */}
                             {lesson.hasVideo ? (
                                 <LessonVideoBlock
+                                    key={contentId}
                                     courseId={courseId}
                                     lessonId={contentId}
                                     courseRawId={lesson.courseRawId}

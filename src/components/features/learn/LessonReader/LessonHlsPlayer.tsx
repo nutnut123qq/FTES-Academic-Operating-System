@@ -6,7 +6,6 @@ import { ArrowClockwiseIcon, VideoCameraSlashIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import Hls from "hls.js"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
-import { usePreviewGate } from "./hooks/usePreviewGate"
 import { useWatchPositionReporter } from "./hooks/useWatchPositionReporter"
 
 /** Legacy Funnycode stream gateway that resolves `video_*` refs to an HLS manifest. */
@@ -29,23 +28,27 @@ interface PlaylistResponse {
  * (free or FULL) — a locked lesson never reaches this component.
  *
  * In PREVIEW mode the player hard-pauses at `previewSeconds`, clamps seeking before
- * the limit, fires the package gate modal, and reports the limit once per session.
+ * the limit, and reports playback to the shared preview gate owned by the parent
+ * `LessonVideoBlock` (single source of truth for both the HLS and YouTube players).
  */
 export const LessonHlsPlayer = ({
     videoRef,
     lessonId,
-    mode,
     previewSeconds,
-    onOpenGate,
-    onCountdownTick,
+    isGated,
+    onTimeUpdate,
+    onEnded,
     onHalfWatched,
 }: {
     videoRef: string
     lessonId: string
-    mode?: string
     previewSeconds?: number
-    onOpenGate: () => void
-    onCountdownTick?: (remaining: number) => void
+    /** Preview limit reached — hard-pause the media. From the shared preview gate. */
+    isGated: boolean
+    /** Report the current playback time to the shared preview gate. */
+    onTimeUpdate: (currentTime: number) => void
+    /** Media ended — the preview manifest may run out of segments. */
+    onEnded: () => void
     onHalfWatched?: () => void
 }) => {
     const t = useTranslations("learn")
@@ -56,15 +59,6 @@ export const LessonHlsPlayer = ({
     const halfFiredRef = useRef(false)
     const halfWatchedRef = useRef(onHalfWatched)
     halfWatchedRef.current = onHalfWatched
-    const tickRef = useRef(onCountdownTick)
-    tickRef.current = onCountdownTick
-
-    const { isGated, onTimeUpdate, onEnded } = usePreviewGate(
-        lessonId,
-        mode,
-        previewSeconds,
-        onOpenGate,
-    )
 
     // Watch-position reporting (resume + analytics) — independent of the 50% mark-complete
     // above. Reads live position from the same <video> element.

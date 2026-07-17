@@ -235,6 +235,19 @@ export interface StreamViewResponse {
     mode: string
     previewSeconds: number
     cheapestPackage: CheapestPackage | null
+    /**
+     * Stream provider — "YOUTUBE" | "HLS". Optional: only sent by the
+     * `freemium-youtube-preview-gate` BE change; absent on older deployments.
+     */
+    provider?: string
+    /**
+     * YouTube URL (or `video_*` token) returned even for PREVIEW so the client can
+     * mount a gated player. Optional: absent on BE deployments that still hide the
+     * ref when locked — PREVIEW then keeps the current no-player state.
+     */
+    videoRef?: string | null
+    /** True → the BE relies on the client to enforce the preview cut (YouTube). Optional. */
+    enforceClientGate?: boolean
 }
 
 /** A document/slide attachment of a lesson, with a signed read URL for embedding. */

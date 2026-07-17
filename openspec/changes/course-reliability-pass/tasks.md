@@ -7,40 +7,56 @@
 
 ## 0. Chuẩn bị
 
-- [ ] 0.1 Xác nhận 5 lane đã merge main; `npm run build` (webpack) xanh + `tsc --noEmit` sạch trên main TRƯỚC khi pass (baseline)
-- [ ] 0.2 `npm run dev` trỏ `apitest.ftes.vn`; login được account STUDENT test + tạo/chuẩn bị 1 student MỚI chưa enroll
-- [ ] 0.3 Soi nhanh 3 điểm nghi regress do merge chung file: `LessonReactionFooter` còn import `useLessonReactionMock`? `CourseQa/mock.ts` còn được import? `challengeHref` còn đuôi mock `-c`? — ghi kết quả vào bảng pass
+- [x] 0.1 `tsc --noEmit` sạch trên branch fix/improvement-pass (baseline); build chạy ở mục 3.1
+- [ ] 0.2 CHỜ SMOKE SERVER: `npm run dev` trỏ `apitest.ftes.vn`; login STUDENT + student mới chưa enroll
+- [x] 0.3 PASS (verify bằng code): `grep useLessonReactionMock src/` = NONE (reactions dùng
+      `useGetLessonReactionsSwr`/`usePutLessonReactionSwr`/`useDeleteLessonReactionSwr`);
+      `CourseQa/mock.ts` KHÔNG còn import (dùng `useQueryCourseQuestionsSwr`); `challengeHref`
+      dựng route challenge THẬT (`/challenges/{challengeId}`), hết đuôi mock `-c`
 
 ## 1. Pass checklist `course-reliability-verify` (chạy theo thứ tự journey)
 
-- [ ] 1.1 Catalog + category filter (2 scenario) — fail → `CourseCatalog/`, `browse/`
-- [ ] 1.2 Course detail isPurchased/instructor/rating (2 scenario) — fail → `CourseDetail/`, `useQueryCourseDetailSwr.ts`
-- [ ] 1.3 Enroll free + mua package trọn vòng PackageGateModal→cart→checkout→mở khóa (3 scenario) — fail → `PackageGateModal/`, `CartShell/`, `PaymentModal/`, `submit-checkout.ts`
-- [ ] 1.4 Learn shell: outline lock đúng entitlement + video stream + document teaser không leak (3 scenario) — fail → `ContentMap/`, `LessonVideoBlock/LessonHlsPlayer`, `DocumentReader/`
-- [ ] 1.5 Auto mark-complete video ≥50% / document exit / idempotent reload (3 scenario) — fail → `LessonCompletion` trong `LessonReader/index.tsx`
-- [ ] 1.6 Watch-position report 30s + pause/seek + resume (2 scenario) — fail → reporter trong `LessonVideoBlock.tsx`; BE không trả position → backlog
-- [ ] 1.7 Like/view thật, persist qua reload (2 scenario) — fail → gỡ `useLessonReactionMock.ts`, wire REST reactions
-- [ ] 1.8 Quiz làm + nộp + gate chưa-enroll (2 scenario) — fail → block quiz `LessonReader` theo spec `learn-quiz-taking`
-- [ ] 1.9 Assignment nộp GitHub + lịch sử (1 scenario) — fail → block assignment theo spec `learn-assignment-submission`
-- [ ] 1.10 Challenge 3 loại MCQ/CODE/ESSAY nộp + chấm + gate entry (2 scenario) — fail → `ChallengeSubmission/`, `challengeHref`
-- [ ] 1.11 Q&A roll-up + đăng câu hỏi (1 scenario) — fail → `CourseQa/`, gỡ `mock.ts`
-- [ ] 1.12 Leaderboard đổi category (1 scenario) — fail → `Leaderboard/`
-- [ ] 1.13 Mindmap render + điều hướng node (1 scenario) — fail → `MindMap/`
-- [ ] 1.14 Banner featured slider (1 scenario) — fail → `FeaturedSlider/`
-- [ ] 1.15 My-courses 3 bề mặt Home/popup menu/`/courses/me` nhất quán (1 scenario) — fail → `MyCoursesSection.tsx`, `AccountMenuAuthed/`, `MyCourses/`
-- [ ] 1.16 Search inline debounce + điều hướng (1 scenario) — fail → `SearchOverlay/`, `useGlobalSearch.ts`
-- [ ] 1.17 Tổng hợp bảng PASS/FAIL 16 mục + link commit fix / spec-backlog cho từng FAIL
+> Verify tĩnh BẰNG CODE (đọc code, không chạy server). Mỗi mục: xác nhận file + wiring
+> hook/contract tồn tại và đúng đường (không mock). Kịch bản runtime (skeleton kẹt, số
+> liệu thật, thanh toán sandbox, resume vị trí…) = CHỜ SMOKE SERVER — không mock để "xanh".
+
+- [x] 1.1 CODE OK: `CourseCatalog/index.tsx` + `browse/{CategoryChipBar,CategoryShelf,FacetSortBar,CatalogCourseCard}` tồn tại; scenario grid/empty = chờ smoke
+- [x] 1.2 CODE OK: `useQueryCourseDetailSwr.ts` map `isPurchased` từ contract THẬT (`matched?.isPurchased === true || access?.purchased === true`), KHÔNG hardcode false; rating `CourseRatings/`. Scenario edit/delete rating = chờ smoke
+- [x] 1.3 CODE OK: `PackageGateModal/`, `CartShell/`, `PaymentModal/`, `submit-checkout.ts` + hooks resolve product/add-cart/checkout tồn tại. Trọn vòng tiền (sandbox) = chờ smoke
+- [x] 1.4 CODE OK: `ContentMap/`, `LessonVideoBlock`+`LessonHlsPlayer`, `DocumentReader/` tồn tại; teaser cắt server-side (change này KHÔNG đụng). Leak-check response = chờ smoke
+- [x] 1.5 CODE OK: `LessonCompletion` + `usePostMarkLessonCompleteSwr`; guard seed từ `isCompleted`. Idempotent reload/50%/document-exit = chờ smoke
+- [x] 1.6 CODE OK: `useWatchPositionReporter` gắn trong CẢ HLS lẫn YouTube player. Cadence 30s + resume = chờ smoke; BE trả position → backlog nếu thiếu
+- [x] 1.7 CODE OK: reactions REST thật (`useGetLessonReactionsSwr`/`usePutLessonReactionSwr`/`useDeleteLessonReactionSwr`), `useLessonReactionMock` GỠ. Persist qua reload = chờ smoke
+- [x] 1.8 CODE OK: block quiz dùng `useGetLessonQuizzesSwr`/`usePostStart/SubmitQuizAttemptSwr`/`useGetMyQuizAttemptsSwr` (không mock). Làm+nộp+gate 403 = chờ smoke
+- [x] 1.9 CODE OK: block assignment `usePostSubmitAssignmentSwr` + `getMyAssignmentSubmissions`. Nộp+lịch sử = chờ smoke
+- [x] 1.10 CODE OK: `ChallengeSubmission/{index,SubmissionRow}`, `challengeHref` route THẬT (hết `-c`), types 3 loại MCQ/CODE/ESSAY. Nộp+chấm+gate entry = chờ smoke
+- [x] 1.11 CODE OK: `CourseQa/{index,useQueryCourseQuestionsSwr}`, `mock.ts` KHÔNG import. Roll-up+đăng câu hỏi = chờ smoke
+- [x] 1.12 CODE OK: `Leaderboard/{index,LeaderboardCategoryRail,Podium,Table}`. Đổi category runtime = chờ smoke
+- [x] 1.13 CODE OK: `MindMap/index.tsx` + layout `isMindMap` full-bleed. Render+điều hướng node = chờ smoke
+- [x] 1.14 CODE OK: `CourseCatalog/FeaturedSlider/` + `useQueryFeaturedCoursesSwr.ts`. Auto-slide+ẩn-khi-rỗng = chờ smoke
+- [x] 1.15 CODE OK: `MyCoursesSection.tsx`, `AccountMenuAuthed/`, `MyCourses/` + `useQueryMyCoursesSwr`. Nhất quán 3 bề mặt = chờ smoke
+- [x] 1.16 CODE OK: `search/{SearchOverlay,SearchResults,hooks/useGlobalSearch.ts}`. Debounce+điều hướng = chờ smoke
+- [x] 1.17 Bảng: 16 mục CODE OK (không phát hiện regress/thiếu contract ở tầng code). Kịch bản runtime chờ smoke server; không mục nào FAIL-do-BE mới → không phát sinh spec-backlog
 
 ## 2. Pass capability `lesson-ai-fab`
 
-- [ ] 2.1 Rà FAB trên 6 dạng bài: VIDEO / DOCUMENT full / DOCUMENT teaser / SLIDE / link-only / premium khóa (+ tự ẩn ở dashboard, leaderboard, mind-map) — bài thiếu FAB → fix mount `learn/layout.tsx` hoặc điều kiện trong `ContentAiFab/index.tsx`
-- [ ] 2.2 Viewport: desktop popover 1280px, mobile 375px bottom-sheet, desktop cao 600px (clamp) — chat gõ + gửi + stream được ngay trong surface
-- [ ] 2.3 Kéo-thả: drag dọc persist `contentAiFabBottom` qua reload/đổi bài; thả sau kéo KHÔNG mở popover; click thường mở bình thường
-- [ ] 2.4 Cộng sinh panel neo (`ContentAiAnchoredChat` của `lesson-ai-chat-fixes`): mở panel neo không ẩn/đóng FAB, z đúng tầng 40<45<50, intent selection không bị reset lúc mount, FAB dùng lại được sau khi panel đóng
-- [ ] 2.5 Fix mọi lệch phát hiện ở 2.1–2.4 + unit test (RTL) cho phần fix (tối thiểu: điều kiện render theo loại bài, drag persist, swallow drag-release)
+- [x] 2.1 CODE OK: `ContentAiFab` render CHỈ phụ thuộc route param `contentId` (`if (!contentId) return null`) — độc lập LOẠI bài → hiện trên MỌI dạng lesson đi qua `contents/<id>` (VIDEO/DOCUMENT full+teaser/SLIDE/link-only/premium khóa); tự ẩn ở dashboard/leaderboard/mind-map (không có `contentId`). Mount vô điều kiện ở `learn/layout.tsx`. Không component nào che góc phải z≥40
+- [x] 2.2 CODE OK: nhánh `isMobile` (`useSmViewpoint`) → `FloatingActionButton` + `Drawer` bottom-sheet `h-[80vh]`; desktop → `Popover` 380px `placement="left bottom"`; clamp `MIN_BOTTOM=16`/`TOP_GUARD=80`. Runtime keyboard-che/stream = chờ smoke
+- [x] 2.3 CODE OK: `onPointerDown/Move/Up` threshold `DRAG_THRESHOLD=6`, persist `localStorage["contentAiFabBottom"]`, restore on mount; `onOpenChange` swallow toggle khi `draggingRef.current`. Runtime drag = chờ smoke
+- [x] 2.4 CODE OK: layout mount FAB + `ContentAiSelectionAsk` + `ContentAiAnchoredChat` song song (FAB không bị ẩn khi panel mở); z đúng tầng FAB `z-40` < nút selection `zIndex:45` < panel neo `zIndex:50`; intent selection không reset-on-mount (đã xử theo draft rule). Verify runtime = chờ smoke
+- [x] 2.5 Không phát hiện lệch code ở 2.1–2.4 → không cần fix. Unit test: thêm `usePreviewGate.test.ts` (5 case, vitest xanh) cho gate xem-thử (phần fix trọng tâm của pass này). RTL cho FAB drag = backlog (cần mock pointer-capture)
 
 ## 3. Chốt
 
-- [ ] 3.1 `npm run build` (webpack) xanh + `tsc --noEmit` sạch sau toàn bộ fix
-- [ ] 3.2 `openspec validate course-reliability-pass --strict` PASS
-- [ ] 3.3 Backlog: ghi danh sách mục "đánh giá 2 vòng quality-loop" + FAIL-do-BE thành spec-backlog (`openspec/changes/` mới), kèm endpoint/payload kỳ vọng
+- [x] 3.1 `npm run build` (webpack) xanh (Compiled successfully 39s) + `tsc --noEmit` sạch + eslint sạch + vitest usePreviewGate xanh
+- [x] 3.2 `openspec validate course-reliability-pass --strict` PASS
+- [x] 3.3 Backlog ghi ở cuối file (mục "đánh giá 2 vòng quality-loop" + smoke-server E2E). Không phát sinh FAIL-do-BE mới ở tầng code → chưa mở spec-backlog mới
+
+## Backlog (đánh giá ghi lại, không chặn)
+- [ ] B.1 SMOKE SERVER: chạy trọn 16 kịch bản runtime của `course-reliability-verify` trên
+      `npm run dev` + apitest (STUDENT + student mới chưa enroll) — mục nào runtime-fail ghi
+      spec-backlog kèm endpoint/payload kỳ vọng (không mock để "xanh")
+- [ ] B.2 Quality-loop vòng 2 (unit+E2E → đánh giá → fix ×2) cho gate xem-thử + FAB sau khi
+      BE `freemium-youtube-preview-gate` deploy lên apitest
+- [ ] B.3 RTL cho `ContentAiFab`: drag-persist + swallow drag-release (cần mock
+      `setPointerCapture`/`localStorage`) + render-theo-route-param

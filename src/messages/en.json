@@ -5340,6 +5340,14 @@
       "chip": "Preview remaining {time}",
       "price": "{price}đ",
       "discount": "-{percent}%",
+      "overlay": {
+        "title": "Preview ended",
+        "body": "Unlock from {name}",
+        "cta": "Enroll in course"
+      },
+      "fallback": {
+        "body": "Couldn't load the preview player."
+      },
       "modal": {
         "titleDocument": "Subscribe to continue reading {lesson}",
         "titleVideo": "Your preview for {lesson} has ended",

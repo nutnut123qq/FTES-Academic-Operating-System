@@ -119,6 +119,33 @@ describe("GamificationEventHost", () => {
         expect(toastSuccess).toHaveBeenCalledTimes(1)
     })
 
+    it("credits every newly-claimed lượt when the count jumps by >1 between polls", () => {
+        questsData = board(0)
+        const { rerender } = render(<GamificationEventHost />)
+
+        // Two comments landed in one 60s window (dailyLimit 3) → +2 × 50 = 100 xu.
+        questsData = board(2)
+        rerender(<GamificationEventHost />)
+        expect(toastSuccess).toHaveBeenCalledTimes(1)
+        expect(String(toastSuccess.mock.calls[0][0])).toContain("100")
+    })
+
+    it("reseeds after a cache flush (sign-out) instead of raising phantom toasts", () => {
+        // User A's board, baseline seeded.
+        questsData = board(2)
+        const { rerender } = render(<GamificationEventHost />)
+
+        // Sign-out flushes the shared cache to undefined.
+        questsData = undefined
+        rerender(<GamificationEventHost />)
+
+        // User B signs in on the same tab with a higher count — must NOT toast
+        // (the baseline was dropped on flush; B's first fetch reseeds silently).
+        questsData = board(3)
+        rerender(<GamificationEventHost />)
+        expect(toastSuccess).not.toHaveBeenCalled()
+    })
+
     it("does not open the level-up moment on the first progression fetch", () => {
         progressionData = progression(12)
         render(<GamificationEventHost />)

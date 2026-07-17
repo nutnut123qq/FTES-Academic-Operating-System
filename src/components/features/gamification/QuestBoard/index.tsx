@@ -181,7 +181,9 @@ export const QuestBoard = () => {
                         <GamificationChip
                             icon={<CoinsIcon className="size-4" weight="fill" aria-hidden focusable="false" />}
                             value={(data?.totalCoinToday ?? 0).toLocaleString(locale)}
-                            label={t("todayEarnedLabel", { coin: data?.totalCoinToday ?? 0 })}
+                            label={t("todayEarnedLabel", {
+                                coin: (data?.totalCoinToday ?? 0).toLocaleString(locale),
+                            })}
                         />
                     </div>
                     <div className="flex flex-col items-start gap-1 sm:items-end">
@@ -191,7 +193,9 @@ export const QuestBoard = () => {
                         <GamificationChip
                             icon={<WalletIcon className="size-4" aria-hidden focusable="false" />}
                             value={(wallet?.balance ?? 0).toLocaleString(locale)}
-                            label={t("walletBalanceLabel", { coin: wallet?.balance ?? 0 })}
+                            label={t("walletBalanceLabel", {
+                                coin: (wallet?.balance ?? 0).toLocaleString(locale),
+                            })}
                         />
                     </div>
                 </div>

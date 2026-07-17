@@ -24,7 +24,13 @@ const useQuestCompletionToasts = (): void => {
     const seen = useRef<Map<string, number> | null>(null)
 
     useEffect(() => {
-        if (!data) return
+        // Sign-out / auth-gate flushes the cache to `undefined` — drop the baseline
+        // so a NEXT user's first fetch reseeds silently instead of diffing against
+        // the previous user's counts (would raise phantom "+xu" toasts).
+        if (!data) {
+            seen.current = null
+            return
+        }
         const counts = new Map(data.quests.map((quest) => [quest.code, quest.completedCount]))
         // First fetch → seed the baseline silently (no toast for history).
         if (seen.current === null) {
@@ -34,7 +40,10 @@ const useQuestCompletionToasts = (): void => {
         for (const quest of data.quests) {
             const previous = seen.current.get(quest.code) ?? 0
             if (quest.completedCount > previous) {
-                toast.success(t("quests.toast.questDone", { coin: quest.rewardCoin, title: quest.title }))
+                // A `dailyLimit>1` quest can claim ≥2 lượt between two polls — credit
+                // every newly-claimed lượt, not just one reward.
+                const coin = (quest.completedCount - previous) * quest.rewardCoin
+                toast.success(t("quests.toast.questDone", { coin, title: quest.title }))
             }
         }
         seen.current = counts
@@ -59,7 +68,12 @@ const useLevelUpMoment = (): { level: number | null; clear: () => void } => {
     const [level, setLevel] = useState<number | null>(null)
 
     useEffect(() => {
-        if (!data) return
+        // Flush on sign-out resets data to `undefined` — clear the baseline so a
+        // next user isn't diffed against the previous user's level (phantom level-up).
+        if (!data) {
+            previous.current = null
+            return
+        }
         if (previous.current === null) {
             previous.current = data.level
             return

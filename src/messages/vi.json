@@ -3273,30 +3273,9 @@
       "platinum": "Bạch Kim",
       "diamond": "Kim Cương"
     },
-    "reasons": {
-      "lessonComplete": "Hoàn thành bài học",
-      "quizSubmit": "Nộp quiz",
-      "challengeComplete": "Hoàn thành challenge",
-      "dailyLogin": "Đăng nhập hằng ngày",
-      "postUpvote": "Bài viết được upvote",
-      "commentUpvote": "Bình luận được upvote",
-      "dailyGoal": "Hoàn thành mục tiêu ngày",
-      "weeklyGoal": "Hoàn thành mục tiêu tuần"
-    },
-    "toast": {
-      "xp": "+{xp} XP"
-    },
     "moment": {
       "levelUpTitle": "Lên cấp!",
-      "levelUpBody": "Bạn đã đạt cấp {level}",
-      "milestoneTitle": "Đạt mốc streak!",
-      "milestoneReward": "Streak {days} ngày · +{coin} coin"
-    },
-    "demo": {
-      "label": "Thử (mock):",
-      "lesson": "Hoàn thành bài học",
-      "quiz": "Nộp quiz 90%",
-      "challenge": "Xong challenge"
+      "levelUpBody": "Bạn đã đạt cấp {level}"
     },
     "milestones": {
       "weekOfFire": {
@@ -3353,10 +3332,6 @@
       "freezeCount": "{count} Streak Freeze",
       "useFreeze": "Dùng freeze",
       "freezeUsed": "Đã dùng một Streak Freeze để giữ chuỗi ngày."
-    },
-    "reminder": {
-      "title": "Streak sắp mất",
-      "body": "Streak {count} ngày sắp mất — hoàn thành 1 bài học/quiz để giữ lửa"
     },
     "guide": {
       "link": "Cách tính điểm",

@@ -3273,30 +3273,9 @@
       "platinum": "Platinum",
       "diamond": "Diamond"
     },
-    "reasons": {
-      "lessonComplete": "Lesson completed",
-      "quizSubmit": "Quiz submitted",
-      "challengeComplete": "Challenge completed",
-      "dailyLogin": "Daily login",
-      "postUpvote": "Post upvoted",
-      "commentUpvote": "Comment upvoted",
-      "dailyGoal": "Daily goal completed",
-      "weeklyGoal": "Weekly goal completed"
-    },
-    "toast": {
-      "xp": "+{xp} XP"
-    },
     "moment": {
       "levelUpTitle": "Level up!",
-      "levelUpBody": "You reached level {level}",
-      "milestoneTitle": "Streak milestone!",
-      "milestoneReward": "{days}-day streak · +{coin} coins"
-    },
-    "demo": {
-      "label": "Try (mock):",
-      "lesson": "Complete lesson",
-      "quiz": "Submit quiz 90%",
-      "challenge": "Finish challenge"
+      "levelUpBody": "You reached level {level}"
     },
     "milestones": {
       "weekOfFire": {
@@ -3353,10 +3332,6 @@
       "freezeCount": "{count} Streak Freeze",
       "useFreeze": "Use freeze",
       "freezeUsed": "Used one Streak Freeze to keep your streak."
-    },
-    "reminder": {
-      "title": "Streak at risk",
-      "body": "Your {count}-day streak is at risk — finish a lesson/quiz to keep it alive"
     },
     "guide": {
       "link": "How points work",

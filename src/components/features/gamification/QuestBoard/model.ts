@@ -4,7 +4,8 @@ import type { QuestItemView } from "@/modules/api/rest/gamification"
 
 /**
  * Known quest codes seeded by the backend change `gamification-quest-coin-engine`
- * (seed V213). Codes NOT in this union are still rendered — the client degrades
+ * (seed V221 — `V221__gamification_quest_seed_and_rulekey_fix.sql`). Codes NOT in
+ * this union are still rendered — the client degrades
  * gracefully and simply shows no CTA (see {@link questCtaHref}).
  */
 export type KnownQuestCode =

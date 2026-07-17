@@ -11,6 +11,7 @@ import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { blogCategoryColor, buildCategoryLookup } from "../shared/category"
 import { ReadingProgress } from "./ReadingProgress"
 import { RelatedPosts } from "./RelatedPosts"
+import { BlogEngagement } from "./BlogEngagement"
 import { BlogPostSkeleton } from "./BlogPostSkeleton"
 import { getBlogCategories, getBlogPostBySlug } from "@/modules/api/rest/blog"
 
@@ -110,6 +111,13 @@ export const BlogPost = () => {
 
                             {/* body (markdown, safely rendered) */}
                             <MarkdownContent markdown={data.contentMd} reading allowHtml />
+
+                            {/* engagement: post reaction bar + flat comment thread */}
+                            <BlogEngagement
+                                key={data.id}
+                                postId={data.id}
+                                initialEmojiCount={data.emojiCount}
+                            />
 
                             {/* more in this category (self-hiding) */}
                             <RelatedPosts

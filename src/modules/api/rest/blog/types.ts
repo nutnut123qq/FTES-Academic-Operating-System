@@ -63,6 +63,12 @@ export interface BlogPostPage {
     page: number
     size: number
     hasNext: boolean
+    /**
+     * Total number of matching posts across all pages. Optional so the type keeps
+     * working against a backend that has not yet started returning it (mirrors the
+     * BE delta `blog-admin-filter-and-engagement-seed`).
+     */
+    totalElements?: number | null
 }
 
 // ---- Category ----
@@ -97,6 +103,14 @@ export interface BlogCommentResponse {
     emojiCount: number
     createdAt: string
     updatedAt: string
+    /**
+     * URL-facing handle of the comment author, resolved by the backend for the
+     * `UserLink` hovercard. Optional/nullable: a legacy user id or an older BE
+     * returns `null`, in which case the UI falls back to an avatar seeded by
+     * `userId` plus a generic author label (mirrors the BE delta
+     * `blog-admin-filter-and-engagement-seed`).
+     */
+    authorUsername?: string | null
 }
 
 export interface BlogCommentPage {

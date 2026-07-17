@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest run",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@apollo/client": "^4.1.6",
@@ -106,6 +108,8 @@
     "@playwright/test": "^1.61.1",
     "@shikijs/markdown-it": "^4.0.2",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.2",
     "@types/bn.js": "^5.2.0",
     "@types/d3-force": "^3.0.10",
     "@types/jsonwebtoken": "^9.0.10",
@@ -118,12 +122,15 @@
     "@types/react-syntax-highlighter": "^15.5.13",
     "@types/three": "^0.185.0",
     "@types/validator": "^13.15.10",
+    "@vitejs/plugin-react": "^4.7.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "eslint-plugin-react-hooks": "^7.0.1",
+    "happy-dom": "^15.11.7",
     "playwright": "^1.61.1",
     "shiki": "^4.0.2",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^2.1.9"
   }
 }

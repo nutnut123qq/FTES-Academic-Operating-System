@@ -3233,11 +3233,32 @@
     }
   },
   "gamification": {
+    "quests": {
+      "title": "Nhiệm vụ hằng ngày",
+      "subtitle": "Hoàn thành nhiệm vụ mỗi ngày để nhận FTES Coin.",
+      "todayEarned": "Xu hôm nay",
+      "todayEarnedLabel": "Xu nhận hôm nay: {coin}",
+      "walletBalance": "Số dư ví",
+      "walletBalanceLabel": "Số dư ví: {coin} xu",
+      "perClaim": "+{coin} xu/lượt",
+      "progressLabel": "{current}/{total}",
+      "claimedOfLimit": "Đã nhận {claimed}/{limit} lượt hôm nay",
+      "done": "Đã hoàn thành",
+      "goDo": "Làm ngay",
+      "signInPrompt": "Đăng nhập để xem nhiệm vụ hằng ngày và nhận xu.",
+      "signIn": "Đăng nhập",
+      "empty": "Chưa có nhiệm vụ nào hôm nay.",
+      "loadError": "Không tải được nhiệm vụ",
+      "retry": "Thử lại",
+      "toast": {
+        "questDone": "+{coin} xu — {title}"
+      }
+    },
     "title": "Bảng xếp hạng",
     "subtitle": "Theo dõi tiến độ và xem thứ hạng của bạn so với mọi người.",
     "leaderboard": "Bảng xếp hạng",
     "badges": "Huy hiệu",
-    "badgeLocked": "Chưa mở khóa",
+    "badgesEmpty": "Chưa có huy hiệu nào. Học đều để mở khóa nhé.",
     "xpValue": "{xp} XP",
     "levelHint": "Còn {xp} XP để lên cấp",
     "stats": {
@@ -3253,30 +3274,9 @@
       "platinum": "Bạch Kim",
       "diamond": "Kim Cương"
     },
-    "reasons": {
-      "lessonComplete": "Hoàn thành bài học",
-      "quizSubmit": "Nộp quiz",
-      "challengeComplete": "Hoàn thành challenge",
-      "dailyLogin": "Đăng nhập hằng ngày",
-      "postUpvote": "Bài viết được upvote",
-      "commentUpvote": "Bình luận được upvote",
-      "dailyGoal": "Hoàn thành mục tiêu ngày",
-      "weeklyGoal": "Hoàn thành mục tiêu tuần"
-    },
-    "toast": {
-      "xp": "+{xp} XP"
-    },
     "moment": {
       "levelUpTitle": "Lên cấp!",
-      "levelUpBody": "Bạn đã đạt cấp {level}",
-      "milestoneTitle": "Đạt mốc streak!",
-      "milestoneReward": "Streak {days} ngày · +{coin} coin"
-    },
-    "demo": {
-      "label": "Thử (mock):",
-      "lesson": "Hoàn thành bài học",
-      "quiz": "Nộp quiz 90%",
-      "challenge": "Xong challenge"
+      "levelUpBody": "Bạn đã đạt cấp {level}"
     },
     "milestones": {
       "weekOfFire": {
@@ -3291,37 +3291,48 @@
     },
     "goals": {
       "title": "Mục tiêu",
-      "completed": "Đã hoàn thành",
-      "reward": "+{xp} XP",
-      "daily": {
-        "name": "Mục tiêu ngày",
-        "progress": "{current}/{target} hành động"
+      "empty": "Chưa đặt mục tiêu nào. Thêm một mục tiêu bên dưới.",
+      "loadError": "Không tải được mục tiêu",
+      "retry": "Thử lại",
+      "targetValue": "Mục tiêu: {target}",
+      "saved": "Đã lưu mục tiêu",
+      "saveError": "Không lưu được mục tiêu",
+      "periods": {
+        "DAILY": "Hằng ngày",
+        "WEEKLY": "Hằng tuần",
+        "MONTHLY": "Hằng tháng"
       },
-      "weekly": {
-        "name": "Mục tiêu tuần",
-        "progress": "{current}/{target} ngày"
+      "metrics": {
+        "XP": "Điểm KN (XP)",
+        "LESSONS": "Bài học",
+        "MINUTES": "Phút học"
+      },
+      "form": {
+        "legend": "Thêm / cập nhật mục tiêu",
+        "periodLabel": "Kỳ",
+        "metricLabel": "Chỉ số",
+        "targetLabel": "Mục tiêu",
+        "targetPlaceholder": "vd. 5",
+        "submit": "Lưu",
+        "submitting": "Đang lưu..."
       }
     },
     "heatmap": {
       "active": "Có hoạt động học",
-      "frozen": "Ngày đóng băng",
-      "empty": "Không hoạt động"
+      "empty": "Không hoạt động",
+      "less": "Ít",
+      "more": "Nhiều",
+      "xpLabel": "{xp} XP"
     },
     "streak": {
       "openDetail": "Xem chi tiết chuỗi ngày",
       "chipLabel": "Chuỗi {count} ngày — xem chi tiết",
       "daysCount": "{count} ngày",
-      "multiplier": "+{percent}% XP",
+      "longest": "Dài nhất {count} ngày",
       "heatmapTitle": "12 tuần gần đây",
       "freezeCount": "{count} Streak Freeze",
-      "buyFreeze": "Đổi ({cost} coin)",
-      "nextMilestone": "Còn {remaining} ngày tới mốc {days}",
-      "lostTitle": "Chuỗi {days} ngày đã mất",
-      "repair": "Khôi phục ({cost} coin)"
-    },
-    "reminder": {
-      "title": "Streak sắp mất",
-      "body": "Streak {count} ngày sắp mất — hoàn thành 1 bài học/quiz để giữ lửa"
+      "useFreeze": "Dùng freeze",
+      "freezeUsed": "Đã dùng một Streak Freeze để giữ chuỗi ngày."
     },
     "guide": {
       "link": "Cách tính điểm",
@@ -3573,7 +3584,10 @@
         "summary": "Đã hoàn thành {done}/{total} nhiệm vụ",
         "claim": "Nhận {count} xu",
         "claimed": "Đã nhận thưởng",
-        "completePrompt": "Hoàn thành mọi nhiệm vụ để nhận {count} xu"
+        "completePrompt": "Hoàn thành mọi nhiệm vụ để nhận {count} xu",
+        "coinToday": "+{coin} xu hôm nay",
+        "viewAll": "Xem tất cả nhiệm vụ",
+        "empty": "Chưa có nhiệm vụ nào hôm nay"
       },
       "streakCurrent": "Chuỗi {count} ngày",
       "goals": {
@@ -3584,6 +3598,13 @@
           "flashcards": "Thẻ ghi nhớ",
           "coding": "Lập trình"
         },
+        "metrics": {
+          "XP": "Điểm KN (XP)",
+          "LESSONS": "Bài học",
+          "MINUTES": "Phút học"
+        },
+        "targetValue": "Mục tiêu {target}",
+        "empty": "Chưa đặt mục tiêu tuần nào",
         "progress": "{label} · {current}/{target}",
         "summary": "Đạt {percent}% mục tiêu tuần · {completed}/{total} hoàn thành"
       },

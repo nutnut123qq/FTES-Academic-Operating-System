@@ -599,6 +599,9 @@ export const pathConfig = () => {
         const activity = makeSimplePath("activity")
         const workflow = makeSimplePath("workflow")
         const analytics = makeSimplePath("analytics")
+        // Daily quest board (§ gamification) — today's quests, coins earned and
+        // the wallet balance, with per-quest CTAs to the earning surface.
+        const quests = makeSimplePath("quests")
         // Batch-2 domain shells (§9/§15/§16/§17/§21/§23 + §1 RBAC).
         const ai = makeSimplePath("ai")
         const notifications = makeSimplePath("notifications")
@@ -692,6 +695,7 @@ export const pathConfig = () => {
             activity,
             workflow,
             analytics,
+            quests,
             ai,
             notifications,
             search,

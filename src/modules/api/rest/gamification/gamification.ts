@@ -1,5 +1,6 @@
 import { restRequest } from "@/modules/api/rest/client"
 import type {
+    ActivityDaysView,
     BadgeView,
     ClaimRequest,
     ClaimResultView,
@@ -8,6 +9,8 @@ import type {
     GoalUpdate,
     GoalView,
     MasteryView,
+    ProgressionView,
+    QuestBoardView,
     RewardItemRequest,
     RewardItemResponse,
     RewardPoolRequest,
@@ -52,6 +55,49 @@ export const getMyStreak = async (): Promise<StreakView> => {
     return restRequest<StreakView>({
         method: "GET",
         url: "/gamification/me/streak",
+    })
+}
+
+/**
+ * Returns the current user's daily quest board for the active Vietnam day
+ * (total coin earned today plus each active quest's progress/limit state).
+ *
+ * `GET /api/v1/gamification/me/quests`
+ */
+export const getMyQuests = async (): Promise<QuestBoardView> => {
+    return restRequest<QuestBoardView>({
+        method: "GET",
+        url: "/gamification/me/quests",
+    })
+}
+
+/**
+ * Returns the current user's per-day XP window for the streak heatmap. Days
+ * without activity are omitted by the backend; callers fill the window.
+ *
+ * `GET /api/v1/gamification/me/activity-days?weeks=`
+ */
+export const getMyActivityDays = async (params?: {
+    weeks?: number
+}): Promise<ActivityDaysView> => {
+    return restRequest<ActivityDaysView>({
+        method: "GET",
+        url: "/gamification/me/activity-days",
+        params: {
+            weeks: params?.weeks ?? 12,
+        },
+    })
+}
+
+/**
+ * Returns the current user's XP/level progression snapshot.
+ *
+ * `GET /api/v1/gamification/me/progression`
+ */
+export const getMyProgression = async (): Promise<ProgressionView> => {
+    return restRequest<ProgressionView>({
+        method: "GET",
+        url: "/gamification/me/progression",
     })
 }
 

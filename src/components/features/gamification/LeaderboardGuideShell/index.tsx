@@ -6,21 +6,47 @@ import { useLocale, useTranslations } from "next-intl"
 import { ArrowLeftIcon } from "@phosphor-icons/react"
 import { Link } from "@/i18n/navigation"
 import { pathConfig } from "@/resources/path"
-import {
-    FREEZE,
-    GOALS,
-    LEVEL_CURVE,
-    QUIZ_XP_TIERS,
-    RANK_TIERS,
-    REMINDER,
-    REPAIR,
-    STREAK_MILESTONES,
-    STREAK_MULTIPLIER_CAP,
-    STREAK_MULTIPLIER_STEP,
-    XP_TABLE,
-    GamificationActionType,
-    xpForLevel,
-} from "../rules"
+import { RANK_TIERS } from "../leaderboardTiers"
+
+// Gamification economics for the "Cách tính điểm" explainer. These display
+// constants mirror the backend `gamification-quest-coin-engine` config; with the
+// mock engine removed the guide is their only consumer, so they live here. The
+// live viewer numbers come from `useQueryMyGamificationSwr` and tiers from
+// `leaderboardTiers.ts` — there is no BE explainer endpoint, so this page is the
+// human-readable contract for the numbers.
+
+/** Level curve: total XP to REACH level L is `factor × (L − 1)²`. */
+const LEVEL_CURVE = { factor: 35 } as const
+/** Total XP required to reach a given level: `factor × (L − 1)²`. */
+const xpForLevel = (level: number): number =>
+    LEVEL_CURVE.factor * Math.pow(Math.max(1, level) - 1, 2)
+/** Quiz XP by score band (descending by threshold). */
+const QUIZ_XP_TIERS: ReadonlyArray<{ minPercent: number; xp: number }> = [
+    { minPercent: 100, xp: 50 },
+    { minPercent: 85, xp: 35 },
+    { minPercent: 60, xp: 20 },
+    { minPercent: 0, xp: 10 },
+]
+/** Streak XP multiplier: +5%/day, capped at +50%. */
+const STREAK_MULTIPLIER_STEP = 0.05
+const STREAK_MULTIPLIER_CAP = 0.5
+/** Streak Freeze: hold at most 2, buy one for 50 coin. */
+const FREEZE = { max: 2, cost: 50 } as const
+/** Streak Repair: within 48h of a reset, 10 coin/day, capped at 200. */
+const REPAIR = { windowHours: 48, costPerDay: 10, costCap: 200 } as const
+/** Streak-at-risk reminder: fires at 20:00 local when the streak is ≥ 3. */
+const REMINDER = { hour: 20, minStreak: 3 } as const
+/** Daily/Weekly goal targets and their XP rewards. */
+const GOALS = {
+    daily: { target: 2, xp: 10 },
+    weekly: { target: 5, xp: 50 },
+} as const
+/** One-time streak milestones (badge + coin). */
+const STREAK_MILESTONES: ReadonlyArray<{ days: number; badgeKey: string; coin: number }> = [
+    { days: 7, badgeKey: "weekOfFire", coin: 50 },
+    { days: 30, badgeKey: "monthOfGrit", coin: 200 },
+    { days: 100, badgeKey: "hundredDays", coin: 1000 },
+]
 
 /** A row in the XP table. `xp` null → the value is score-banded (shown inline). */
 interface XpRow {
@@ -31,7 +57,8 @@ interface XpRow {
 /**
  * "Cách tính điểm" — the gamification rules explainer at `/leaderboard/guide`.
  *
- * Every number renders from `rules.ts` (the single source of truth): the XP
+ * Every number renders from the local economics constants above (the display
+ * contract mirroring the backend engine config): the XP
  * table, the level-curve formula + worked example, the rank tiers, the streak
  * rules (qualifying day / multiplier / milestones / freeze / repair / reminder),
  * the Daily/Weekly goals, and a "Sắp ra mắt" (coming soon) section that only
@@ -44,14 +71,14 @@ export const LeaderboardGuideShell = () => {
     const locale = useLocale()
 
     const xpRows: Array<XpRow> = [
-        { key: "lessonComplete", xp: XP_TABLE[GamificationActionType.LessonComplete] },
+        { key: "lessonComplete", xp: 20 },
         { key: "quizSubmit", xp: null },
-        { key: "challengeComplete", xp: XP_TABLE[GamificationActionType.ChallengeComplete] },
-        { key: "dailyLogin", xp: XP_TABLE[GamificationActionType.DailyLogin] },
-        { key: "postUpvote", xp: XP_TABLE[GamificationActionType.PostUpvote] },
-        { key: "commentUpvote", xp: XP_TABLE[GamificationActionType.CommentUpvote] },
-        { key: "dailyGoal", xp: XP_TABLE[GamificationActionType.DailyGoal] },
-        { key: "weeklyGoal", xp: XP_TABLE[GamificationActionType.WeeklyGoal] },
+        { key: "challengeComplete", xp: 40 },
+        { key: "dailyLogin", xp: 5 },
+        { key: "postUpvote", xp: 2 },
+        { key: "commentUpvote", xp: 1 },
+        { key: "dailyGoal", xp: 10 },
+        { key: "weeklyGoal", xp: 50 },
     ]
 
     return (

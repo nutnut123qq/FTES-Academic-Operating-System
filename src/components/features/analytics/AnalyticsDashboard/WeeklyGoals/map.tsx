@@ -1,40 +1,27 @@
 import React from "react"
-import {
-    BookOpenIcon,
-    FireIcon,
-    PuzzlePieceIcon,
-    CodeIcon,
-    CardsIcon,
-} from "@phosphor-icons/react"
-import type { KpiKey } from "../../hooks/useQueryWeeklyGoalsSwr"
-
-/** Phosphor icon per weekly-KPI key. */
-export const KPI_ICON_MAP: Record<KpiKey, React.ReactNode> = {
-    lessons: <BookOpenIcon aria-hidden focusable="false" className="size-5 shrink-0" />,
-    studyDays: <FireIcon aria-hidden focusable="false" className="size-5 shrink-0" />,
-    challenges: <PuzzlePieceIcon aria-hidden focusable="false" className="size-5 shrink-0" />,
-    coding: <CodeIcon aria-hidden focusable="false" className="size-5 shrink-0" />,
-    flashcards: <CardsIcon aria-hidden focusable="false" className="size-5 shrink-0" />,
-}
-
-/** Weekly-KPI display order (label key === KPI key). */
-export const KPI_ORDER: Array<KpiKey> = [
-    "lessons",
-    "studyDays",
-    "challenges",
-    "coding",
-    "flashcards",
-]
+import { BookOpenIcon, ClockIcon, LightningIcon, TargetIcon } from "@phosphor-icons/react"
+import type { ReactNode } from "react"
 
 /**
- * Sensible default weekly targets used when the learner hasn't set a custom goal
- * yet — so each meter tracks this week's activity out of the box (the bar fills as
- * you study). The learner can still override any of these via the editor.
+ * Phosphor icon per backend goal metric (`XP` | `LESSONS` | `MINUTES`). Unknown
+ * metrics fall back to a generic target icon so an admin-added metric still renders.
  */
-export const DEFAULT_KPI_TARGETS: Record<KpiKey, number> = {
-    lessons: 5,
-    studyDays: 5,
-    challenges: 3,
-    coding: 3,
-    flashcards: 20,
+export const GOAL_METRIC_ICON_MAP: Record<string, ReactNode> = {
+    XP: <LightningIcon aria-hidden focusable="false" className="size-5 shrink-0" />,
+    LESSONS: <BookOpenIcon aria-hidden focusable="false" className="size-5 shrink-0" />,
+    MINUTES: <ClockIcon aria-hidden focusable="false" className="size-5 shrink-0" />,
 }
+
+/** Generic goal icon for metrics with no specific mapping. */
+export const GOAL_METRIC_FALLBACK_ICON: ReactNode = (
+    <TargetIcon aria-hidden focusable="false" className="size-5 shrink-0" />
+)
+
+/**
+ * Icon for a weekly-goal row, keyed by metric.
+ *
+ * @param metric - the backend metric key
+ * @returns the phosphor icon node for that metric
+ */
+export const goalMetricIcon = (metric: string): ReactNode =>
+    GOAL_METRIC_ICON_MAP[metric] ?? GOAL_METRIC_FALLBACK_ICON

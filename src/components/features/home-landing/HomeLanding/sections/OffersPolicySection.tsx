@@ -136,7 +136,7 @@ export const OffersPolicySection = () => {
                                         hidden={i !== active}
                                     >
                                         <div className="mb-6 flex items-center gap-3">
-                                            <div className="flex size-11 items-center justify-center rounded-large bg-accent/10 text-accent">
+                                            <div className="flex size-11 items-center justify-center rounded-full bg-accent/10 text-accent">
                                                 <GroupIcon className="size-6" aria-hidden focusable="false" />
                                             </div>
                                             <Typography type="h5" weight="bold">

@@ -43,7 +43,7 @@ export const ModuleShowcaseSection = () => {
                                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
                             )}
                         >
-                            <div className="flex size-11 items-center justify-center rounded-large bg-accent/10 text-accent">
+                            <div className="flex size-11 items-center justify-center rounded-full bg-accent/10 text-accent">
                                 <ModuleIcon className="size-6" aria-hidden focusable="false" />
                             </div>
                             <Typography type="h5" weight="bold">

@@ -45,12 +45,6 @@ export const ContentMap = ({ className }: ContentMapProps) => {
     const [query, setQuery] = useState("")
 
     const flatLessons = useMemo(() => modules.flatMap((module) => module.lessons), [modules])
-    // Stable 1-based "Phần N" index keyed on the FULL module order, so filtering
-    // out empty modules never renumbers the eyebrow.
-    const modulePartIndex = useMemo(
-        () => new Map(modules.map((module, index) => [module.id, index + 1])),
-        [modules],
-    )
     const doneCount = flatLessons.filter((lesson) => lesson.isCompleted).length
     const totalCount = flatLessons.length
 
@@ -130,30 +124,28 @@ export const ContentMap = ({ className }: ContentMapProps) => {
                         defaultExpandedKeys={activeModuleId ? [activeModuleId] : undefined}
                     >
                         {filteredModules.map((module) => {
-                            const partIndex = modulePartIndex.get(module.id)
                             return (
                                 <Accordion.Item key={module.id} id={module.id} aria-label={module.title}>
                                     <Accordion.Heading>
                                         <Accordion.Trigger className="text-sm font-semibold">
                                             <div className="flex w-full min-w-0 items-center gap-2">
                                                 <div className="min-w-0 flex-1 text-left">
-                                                    {partIndex != null ? (
+                                                    {/* Eyebrow = the real module name (e.g. "Phần 0"); the bold
+                                                        title is the module's own description (e.g. "Tổng hợp Tài
+                                                        Liệu"). No description → the name is the bold title and the
+                                                        eyebrow is dropped (avoid an empty/duplicate label). */}
+                                                    {module.description ? (
                                                         <Typography
                                                             type="body-xs"
                                                             color="muted"
                                                             className="uppercase tracking-wide"
                                                         >
-                                                            {t("contentMap.partLabel", { index: partIndex })}
+                                                            {module.title}
                                                         </Typography>
                                                     ) : null}
                                                     <Typography type="body-sm" weight="semibold" className="line-clamp-2">
-                                                        {module.title}
+                                                        {module.description || module.title}
                                                     </Typography>
-                                                    {module.description ? (
-                                                        <Typography type="body-xs" color="muted" className="line-clamp-1">
-                                                            {module.description}
-                                                        </Typography>
-                                                    ) : null}
                                                 </div>
                                                 <Chip size="sm" variant="soft" className="shrink-0">
                                                     {t("contentMap.lessonCount", {

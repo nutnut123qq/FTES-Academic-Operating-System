@@ -5222,7 +5222,6 @@
       "credits": "{count} tín chỉ",
       "enroll": "Đăng ký học",
       "outline": "Nội dung khóa học",
-      "partLabel": "Phần {index}",
       "ratings": "{count} đánh giá",
       "stats": {
         "learners": "học viên",
@@ -5273,7 +5272,7 @@
       "continueLearning": "Tiếp tục học",
       "enrolledHint": "Bạn đã đăng ký khóa này.",
       "enrolledCount": "{count} người đã đăng ký",
-      "inCart": "Đã thêm vào giỏ",
+      "inCart": "Đã ở trong giỏ",
       "earlyBirdSlots": "Còn {count} suất Early bird",
       "planSelectorAria": "Chọn gói học",
       "planNames": {
@@ -5306,7 +5305,7 @@
         "title": "Chọn gói học",
         "selectorAria": "Chọn gói học",
         "active": "Đang mở",
-        "entitlementSummary": "Gồm {count} phần",
+        "entitlementSummary": "{count} phần",
         "buy": "Đăng ký gói",
         "resolving": "Đang lấy thông tin gói…",
         "updatingTitle": "Đang cập nhật gói",
@@ -6369,7 +6368,6 @@
     "contentMap": {
       "title": "Nội dung khóa học",
       "searchPlaceholder": "Tìm bài học…",
-      "partLabel": "Phần {index}",
       "resizeRail": "Kéo để đổi độ rộng thanh nội dung",
       "empty": "Chưa có nội dung",
       "noMatch": "Không tìm thấy bài học nào",
@@ -6436,6 +6434,7 @@
     "empty": "Giỏ hàng trống.",
     "errorTitle": "Không tải được giỏ hàng",
     "errorDescription": "Đã có lỗi xảy ra. Vui lòng thử lại.",
-    "retry": "Thử lại"
+    "retry": "Thử lại",
+    "viewFullCart": "Xem giỏ hàng đầy đủ"
   }
 }

@@ -462,21 +462,22 @@ const CourseDetailView = ({
                                                 <CaretRightIcon aria-hidden focusable="false" className="size-4 shrink-0 text-muted" />
                                             )}
                                             <div className="min-w-0 flex-1">
-                                                <Typography
-                                                    type="body-xs"
-                                                    color="muted"
-                                                    className="uppercase tracking-wide"
-                                                >
-                                                    {t("detail.partLabel", { index: index + 1 })}
-                                                </Typography>
-                                                <Typography type="body" weight="semibold" className="line-clamp-2">
-                                                    {section.title}
-                                                </Typography>
+                                                {/* Eyebrow = the real section name (e.g. "Phần 0"); the bold
+                                                    title is the section's own description (e.g. "Tổng hợp Tài
+                                                    Liệu"). No description → the name becomes the bold title and
+                                                    the eyebrow is dropped (avoid an empty/duplicate label). */}
                                                 {section.description ? (
-                                                    <Typography type="body-xs" color="muted" className="line-clamp-1">
-                                                        {section.description}
+                                                    <Typography
+                                                        type="body-xs"
+                                                        color="muted"
+                                                        className="uppercase tracking-wide"
+                                                    >
+                                                        {section.title}
                                                     </Typography>
                                                 ) : null}
+                                                <Typography type="body" weight="semibold" className="line-clamp-2">
+                                                    {section.description ?? section.title}
+                                                </Typography>
                                             </div>
                                             <Typography type="body-xs" color="muted" className="shrink-0">
                                                 {t("catalog.lessonsCount", { count: section.lessons.length })}
@@ -950,9 +951,6 @@ const PackageEnrollCard = ({
                         })()
                     ) : null}
 
-                    <Typography type="body-xs" weight="medium" color="muted">
-                        {t("detail.package.title")}
-                    </Typography>
                     <SelectableCardGroup
                         ariaLabel={t("detail.package.selectorAria")}
                         variant="list"
@@ -970,29 +968,31 @@ const PackageEnrollCard = ({
                                 ) : (
                                     <CircleIcon aria-hidden focusable="false" className="size-5 text-muted" />
                                 ),
-                                // name on the left; the open/selected package carries an
-                                // accent "Đang mở" label (the row itself is accent-highlighted
-                                // by SelectableCardGroup's list variant).
+                                // compact single-line row: name on the left with a small "N phần"
+                                // annotation inline (never a full description sub-line). The row
+                                // itself is accent-highlighted by the list variant when selected.
                                 label: (
-                                    <span className="flex items-center gap-1.5">
+                                    <span className="flex items-baseline gap-1.5">
                                         <span className="truncate">{pkg.name}</span>
+                                        {count > 0 ? (
+                                            <span className="shrink-0 text-xs text-muted">
+                                                {t("detail.package.entitlementSummary", { count })}
+                                            </span>
+                                        ) : null}
+                                    </span>
+                                ),
+                                // right cluster: the open package carries an accent "Đang mở"
+                                // label, then the price. Prices are PLAIN spans, not PriceTag —
+                                // PriceTag wraps React-Aria Text, which throws "slot prop
+                                // required" when nested in the RadioGroup's Text context; the
+                                // headline PriceTag above renders the selected price normally.
+                                badge: (
+                                    <span className="flex items-center gap-2 text-sm">
                                         {isSelected ? (
                                             <Chip size="sm" variant="soft" color="accent" className="shrink-0">
                                                 {t("detail.package.active")}
                                             </Chip>
                                         ) : null}
-                                    </span>
-                                ),
-                                // hide "Gồm 0 phần" when the compact list carries no entitlements
-                                description: count > 0
-                                    ? t("detail.package.entitlementSummary", { count })
-                                    : undefined,
-                                // ponytail: price as PLAIN spans, not PriceTag — PriceTag wraps
-                                // React-Aria Text, which throws "slot prop required" when nested
-                                // in the RadioGroup's Text context. The headline PriceTag above
-                                // renders the selected package's price in a normal context.
-                                badge: (
-                                    <span className="flex items-center gap-2 text-sm">
                                         {original ? (
                                             <span className="text-xs text-muted line-through">
                                                 {original.toLocaleString("vi-VN")}₫
@@ -1033,8 +1033,9 @@ const PackageEnrollCard = ({
                             {t("detail.package.buy")}
                         </Button>
                     )}
-                    {/* CTA tier 2: try free (acquisition entry for a non-payer) */}
-                    <Button variant="secondary" fullWidth onPress={onTryLearning}>
+                    {/* CTA tier 2: try free — the lowest-priority action (tertiary) so the
+                        primary "Đăng ký gói" stays visually dominant. */}
+                    <Button variant="tertiary" fullWidth onPress={onTryLearning}>
                         {t("detail.tryFree")}
                     </Button>
                     {!product ? (

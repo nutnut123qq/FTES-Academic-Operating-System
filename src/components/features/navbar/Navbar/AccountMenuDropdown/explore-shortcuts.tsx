@@ -2,19 +2,18 @@ import React from "react"
 import {
     NewspaperIcon,
     RobotIcon,
-    SparkleIcon,
-    TrendUpIcon,
 } from "@phosphor-icons/react"
 import { pathConfig } from "@/resources/path"
 
 /**
  * One discovery shortcut in the account popup's "Khám phá" (Explore) section —
  * the relocated header discovery entries (see change `app-shell-header-nav`:
- * the header carries plain module links only, so `/ai` and `/recommendations`
- * enter the app from HERE).
+ * the header carries plain module links only, so `/ai` enters the app from
+ * HERE). Recommendations was folded into the AI Assistant hub and Trending into
+ * Community, so only the AI Assistant and community feed remain here.
  */
 export interface ExploreShortcut {
-    id: "ai" | "forYou" | "recommendations" | "trending"
+    id: "ai" | "forYou"
     icon: React.ReactNode
     /** Full i18n key of the shortcut label (`profileMenu.explore.*`). */
     labelKey: string
@@ -24,7 +23,7 @@ export interface ExploreShortcut {
     authGated: boolean
 }
 
-/** The four Explore shortcuts, in display order. Shared by authed + guest menus. */
+/** The Explore shortcuts, in display order. Shared by authed + guest menus. */
 export const EXPLORE_SHORTCUTS: Array<ExploreShortcut> = [
     {
         id: "ai",
@@ -38,20 +37,6 @@ export const EXPLORE_SHORTCUTS: Array<ExploreShortcut> = [
         icon: <NewspaperIcon className="size-5" aria-hidden focusable="false" />,
         labelKey: "profileMenu.explore.forYou",
         path: () => pathConfig().locale().community().build(),
-        authGated: false,
-    },
-    {
-        id: "recommendations",
-        icon: <SparkleIcon className="size-5" aria-hidden focusable="false" />,
-        labelKey: "profileMenu.explore.recommendations",
-        path: () => pathConfig().locale().recommendations().build(),
-        authGated: true,
-    },
-    {
-        id: "trending",
-        icon: <TrendUpIcon className="size-5" aria-hidden focusable="false" />,
-        labelKey: "profileMenu.explore.trending",
-        path: () => pathConfig().locale().community().trending().build(),
         authGated: false,
     },
 ]

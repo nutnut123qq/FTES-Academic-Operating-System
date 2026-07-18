@@ -9,21 +9,19 @@ import {
 import {
     GraduationCapIcon,
     ChalkboardTeacherIcon,
-    SquaresFourIcon,
     UserIcon,
     FileTextIcon,
     GearIcon,
     SignOutIcon,
-    PulseIcon,
     WalletIcon,
-    PlugIcon,
-    ShieldIcon,
+    PlusCircleIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
 import { pathConfig } from "@/resources/path"
 import { useHasPermission } from "@/hooks/useHasPermission"
 import { useAccountMenuOverlayState } from "@/hooks/zustand/overlay/hooks"
+import { useGetMyWalletSwr } from "@/hooks/swr/api/rest/queries/useGetMyWalletSwr"
 import { useMutateSignOutSwr } from "@/hooks/swr/api/graphql/mutations/useMutateSignOutSwr"
 import { EXPLORE_SHORTCUTS } from "../explore-shortcuts"
 import type { WithClassNames } from "@/modules/types/base/class-name"
@@ -33,12 +31,14 @@ export type AccountMenuAuthedProps = WithClassNames<undefined>
 
 /**
  * Account dropdown menu for SIGNED-IN viewers: a labeled "Khám phá" (Explore)
- * section (Trợ lý AI · Dành cho bạn · Gợi ý cho bạn · Thịnh hành — the discovery
- * shortcuts relocated from the header), a primary section (Dashboard · Profile ·
- * CV · Settings), a labeled "You" section (Activity · Wallet), a labeled
- * "System" section (Integrations · Roles), and a separated destructive section
- * (Sign out, danger). Self-contained — owns navigation (closes the menu then
- * pushes) and the sign-out mutation; takes no data props.
+ * section (Trợ lý AI · Dành cho bạn — discovery shortcuts relocated from the
+ * header; Recommendations now lives inside the AI Assistant, Trending inside
+ * Community), then a primary section (Profile · CV · Settings · Wallet with its
+ * live balance + a top-up shortcut), and a separated destructive section (Sign
+ * out, danger). Dashboard / Activity / Integrations / Roles were removed as
+ * redundant (Dashboard unused, Activity duplicated in the profile, System admin
+ * links out of scope for the account menu). Self-contained — owns navigation
+ * (closes the menu then pushes) and the sign-out mutation; takes no data props.
  *
  * @param props - optional className (placement only).
  */
@@ -47,6 +47,9 @@ export const AccountMenuAuthed = ({ className }: AccountMenuAuthedProps) => {
     const router = useRouter()
     const { close } = useAccountMenuOverlayState()
     const signOut = useMutateSignOutSwr()
+    // Wallet balance shown inline on the Wallet row (auth-gated hook → undefined
+    // for guests / before load, in which case the balance chip is simply omitted).
+    const walletBalance = useGetMyWalletSwr().data?.balance
     // Lecturer-only "Khoá tôi dạy" entry — same gate as the interview manage panel
     // (`ai.teacher.use`); a non-lecturer never sees the teaching link.
     const isLecturer = useHasPermission("ai.teacher.use")
@@ -111,14 +114,6 @@ export const AccountMenuAuthed = ({ className }: AccountMenuAuthedProps) => {
             </Dropdown.Section>
             <Dropdown.Section>
                 <Dropdown.Item
-                    id="dashboard"
-                    textValue={t("nav.dashboard")}
-                    onPress={() => go(pathConfig().locale().dashboard().build())}
-                >
-                    <SquaresFourIcon className="size-5" />
-                    <Label>{t("nav.dashboard")}</Label>
-                </Dropdown.Item>
-                <Dropdown.Item
                     id="profile"
                     textValue={t("nav.profile")}
                     onPress={() => go(pathConfig().locale().profile().build())}
@@ -142,18 +137,8 @@ export const AccountMenuAuthed = ({ className }: AccountMenuAuthedProps) => {
                     <GearIcon className="size-5" />
                     <Label>{t("profileSettings.title")}</Label>
                 </Dropdown.Item>
-            </Dropdown.Section>
-            {/* "You" — personal destinations migrated from the old Explore mega-menu */}
-            <Dropdown.Section>
-                <Header>{t("nav.section.you")}</Header>
-                <Dropdown.Item
-                    id="activity"
-                    textValue={t("nav.activity")}
-                    onPress={() => go(pathConfig().locale().activity().build())}
-                >
-                    <PulseIcon className="size-5" />
-                    <Label>{t("nav.activity")}</Label>
-                </Dropdown.Item>
+                {/* Wallet: live balance shown inline; the trailing "+" affordance and
+                    the row itself open the wallet surface (where top-up lives). */}
                 <Dropdown.Item
                     id="wallet"
                     textValue={t("nav.wallet")}
@@ -161,26 +146,18 @@ export const AccountMenuAuthed = ({ className }: AccountMenuAuthedProps) => {
                 >
                     <WalletIcon className="size-5" />
                     <Label>{t("nav.wallet")}</Label>
-                </Dropdown.Item>
-            </Dropdown.Section>
-            {/* "System" — admin/system destinations migrated from the old Explore mega-menu */}
-            <Dropdown.Section>
-                <Header>{t("nav.section.system")}</Header>
-                <Dropdown.Item
-                    id="integrations"
-                    textValue={t("nav.integrations")}
-                    onPress={() => go(pathConfig().locale().integrations().build())}
-                >
-                    <PlugIcon className="size-5" />
-                    <Label>{t("nav.integrations")}</Label>
-                </Dropdown.Item>
-                <Dropdown.Item
-                    id="roles"
-                    textValue={t("nav.roles")}
-                    onPress={() => go(pathConfig().locale().roles().build())}
-                >
-                    <ShieldIcon className="size-5" />
-                    <Label>{t("nav.roles")}</Label>
+                    <span className="ml-auto flex items-center gap-2">
+                        {walletBalance !== undefined ? (
+                            <span className="text-sm font-medium text-foreground">
+                                {walletBalance.toLocaleString()}
+                            </span>
+                        ) : null}
+                        <PlusCircleIcon
+                            className="size-5 text-accent"
+                            aria-label={t("wallet.topup")}
+                            focusable="false"
+                        />
+                    </span>
                 </Dropdown.Item>
             </Dropdown.Section>
             <Dropdown.Section>

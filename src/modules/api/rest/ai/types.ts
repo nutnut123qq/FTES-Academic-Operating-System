@@ -95,13 +95,34 @@ export interface AiInsights {
 
 // ---------------- ModelsController (GET /api/v1/ai/models) ----------------
 
+/**
+ * Static pricing hint from ftes-ai-service — an OBJECT (`{prompt_per_1k,
+ * completion_per_1k, unit}`), NOT a display string. The BE proxies the catalog
+ * verbatim, so never render this directly (an object as a React child throws);
+ * derive a label via {@link isFreeModel} / helpers instead.
+ */
+export interface AiModelPricingHint {
+    prompt_per_1k?: number
+    completion_per_1k?: number
+    unit?: string
+}
+
 /** One selectable model from the ftes-ai-service catalog. */
 export interface AiCatalogModel {
     id: string
     label?: string
     provider?: string
     vision?: boolean
-    pricing_hint?: string
+    default_for?: Array<string>
+    pricing_hint?: AiModelPricingHint
+    /**
+     * True for OpenRouter free-tier models (quota-limited — may fall back). Sent
+     * by newer ai-service builds; older ones omit it, so callers also derive it
+     * from a `:free` id / zero pricing (see {@link isFreeModel}).
+     */
+    free?: boolean
+    /** Coarse per-model health: "available" | "degraded" | "down". Optional. */
+    status?: string
 }
 
 /**
@@ -112,6 +133,11 @@ export interface AiCatalogModel {
 export interface AiModelCatalog {
     models?: Array<AiCatalogModel>
     defaults?: Record<string, string>
+    /**
+     * True when the service falls back to a direct Gemini API key once the
+     * OpenRouter models are exhausted. Optional (older ai-service omits it).
+     */
+    gemini_fallback?: boolean
 }
 
 // ---------------- CodeGradeController (POST /api/v1/ai/coding/*) ----------------

@@ -12,7 +12,7 @@ import {
 } from "@heroui/react"
 import { CaretDownIcon, SparkleIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
-import type { AiModelCatalog } from "@/modules/api/rest/ai"
+import { isFreeModel, isModelDown, type AiModelCatalog } from "@/modules/api/rest/ai"
 
 /** Props for {@link AiModelPicker}. */
 export interface AiModelPickerProps {
@@ -44,6 +44,9 @@ export const AiModelPicker = ({
     const t = useTranslations("learn")
     const models = catalog?.models ?? []
     const defaultId = catalog?.defaults?.chat
+    // Down models stay visible (so the user sees WHY a model is missing) but are
+    // not selectable.
+    const disabledKeys = models.filter(isModelDown).map((model) => String(model.id))
     const labelOf = (id: string | undefined): string => {
         if (!id) return t("codeGrading.defaultModel")
         return models.find((model) => model.id === id)?.label ?? id
@@ -72,6 +75,7 @@ export const AiModelPicker = ({
             <DropdownPopover className="min-w-64">
                 <DropdownMenu
                     aria-label={t("codeGrading.pickModel")}
+                    disabledKeys={disabledKeys}
                     onAction={(key) => onChange(key === "__default" ? null : String(key))}
                 >
                     <DropdownItem
@@ -96,9 +100,15 @@ export const AiModelPicker = ({
                             >
                                 <div className="flex items-center justify-between gap-3">
                                     <span>{model.label ?? model.id}</span>
-                                    {model.pricing_hint ? (
+                                    {/* pricing_hint is an OBJECT from the service — never render it
+                                        directly; surface the useful signal (free / down) as a tag. */}
+                                    {isModelDown(model) ? (
                                         <Typography type="body-xs" color="muted">
-                                            {model.pricing_hint}
+                                            {t("codeGrading.unavailableTag")}
+                                        </Typography>
+                                    ) : isFreeModel(model) ? (
+                                        <Typography type="body-xs" color="muted">
+                                            {t("codeGrading.freeTag")}
                                         </Typography>
                                     ) : null}
                                 </div>

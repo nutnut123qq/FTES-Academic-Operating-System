@@ -25,7 +25,7 @@ import { ChatBubble } from "@/components/blocks/feed/ChatBubble"
 import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
 import { useGetAiCatalogModelsSwr } from "@/hooks/swr/api/rest/queries/useGetAiCatalogModelsSwr"
 import { useContentAiSelectedModel, useContentAiSelection } from "@/hooks/zustand/overlay/hooks"
-import { createSession, sendSessionMessageStream } from "@/modules/api/rest/ai"
+import { createSession, isFreeModel, isModelDown, sendSessionMessageStream } from "@/modules/api/rest/ai"
 
 /** BE default chat model when the catalog omits `defaults.chat`. */
 const FALLBACK_CHAT_MODEL = "openai/gpt-oss-120b"
@@ -86,6 +86,8 @@ export const ContentAiChat = ({ className }: ContentAiChatProps) => {
     const modelsSwr = useGetAiCatalogModelsSwr()
     const catalogModels = modelsSwr.data?.models ?? []
     const hasCatalog = !modelsSwr.error && catalogModels.length > 0
+    // Down models stay listed (so the user sees why) but can't be picked.
+    const disabledModelKeys = catalogModels.filter(isModelDown).map((model) => String(model.id))
     const defaultChatModel = modelsSwr.data?.defaults?.chat ?? FALLBACK_CHAT_MODEL
     /** The model to actually send: the picked one, else the catalog default (when a catalog exists). */
     const activeModel = hasCatalog ? (selectedModel ?? defaultChatModel) : undefined
@@ -335,6 +337,7 @@ export const ContentAiChat = ({ className }: ContentAiChatProps) => {
                             <DropdownPopover placement="top start" className="min-w-56">
                                 <DropdownMenu
                                     aria-label={t("reader.ai.modelLabel")}
+                                    disabledKeys={disabledModelKeys}
                                     onAction={(key) => setSelectedModel(String(key))}
                                 >
                                     {catalogModels
@@ -346,9 +349,15 @@ export const ContentAiChat = ({ className }: ContentAiChatProps) => {
                                             >
                                                 <div className="flex items-center justify-between gap-3">
                                                     <span>{catalogModel.label ?? shortModelName(catalogModel.id)}</span>
-                                                    {catalogModel.pricing_hint ? (
+                                                    {/* pricing_hint is an OBJECT — never render it directly;
+                                                        show the free / unavailable signal instead. */}
+                                                    {isModelDown(catalogModel) ? (
                                                         <Typography type="body-xs" color="muted">
-                                                            {catalogModel.pricing_hint}
+                                                            {t("codeGrading.unavailableTag")}
+                                                        </Typography>
+                                                    ) : isFreeModel(catalogModel) ? (
+                                                        <Typography type="body-xs" color="muted">
+                                                            {t("codeGrading.freeTag")}
                                                         </Typography>
                                                     ) : null}
                                                 </div>

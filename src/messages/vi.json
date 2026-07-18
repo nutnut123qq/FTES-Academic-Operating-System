@@ -2040,7 +2040,9 @@
       "trial": "Học thử",
       "enrolled": "Đã ghi danh",
       "empty": "Bạn chưa ghi danh khoá học nào.",
-      "progressAria": "{title} · {percent}%"
+      "progressAria": "{title} · {percent}%",
+      "showMore": "Xem thêm ({count})",
+      "showLess": "Thu gọn"
     },
     "contributions": {
       "title": "Hoạt động",
@@ -6325,6 +6327,9 @@
       "pickModel": "Chọn model chấm",
       "defaultModel": "Model mặc định",
       "defaultModelWith": "Mặc định ({model})",
+      "freeTag": "Miễn phí",
+      "unavailableTag": "Không khả dụng",
+      "geminiFallbackHint": "Model miễn phí có giới hạn lượt dùng; hết lượt sẽ tự chuyển sang Gemini.",
       "modelHint": "Mỗi model chấm khác nhau — kết quả test case là khách quan, phần nhận xét/điểm phụ thuộc model.",
       "gradeWithAi": "Chấm bằng AI",
       "regrade": "Chấm lại",

@@ -2031,7 +2031,9 @@
       "trial": "Trial",
       "enrolled": "Enrolled",
       "empty": "You haven't enrolled in any course yet.",
-      "progressAria": "{title} · {percent}%"
+      "progressAria": "{title} · {percent}%",
+      "showMore": "See more ({count})",
+      "showLess": "See less"
     },
     "contributions": {
       "title": "Activity",
@@ -6325,6 +6327,9 @@
       "pickModel": "Pick a grading model",
       "defaultModel": "Default model",
       "defaultModelWith": "Default ({model})",
+      "freeTag": "Free",
+      "unavailableTag": "Unavailable",
+      "geminiFallbackHint": "Free models have usage limits; when they run out it falls back to Gemini.",
       "modelHint": "Each model grades differently — test-case results are objective, the score/feedback depends on the model.",
       "gradeWithAi": "Grade with AI",
       "regrade": "Grade again",

@@ -1,8 +1,8 @@
 "use client"
 
-import React from "react"
-import { Chip, Typography } from "@heroui/react"
-import { BookOpenIcon } from "@phosphor-icons/react"
+import React, { useState } from "react"
+import { Button, Chip, Typography } from "@heroui/react"
+import { BookOpenIcon, CaretDownIcon, CaretUpIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { useRouter } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
@@ -22,11 +22,20 @@ import { useQueryMyCoursesSwr } from "@/components/features/course/hooks/useQuer
  * viewer has no enrollments. Owns its own `LabeledCard`, `frameless` computed HERE
  * so the loaded list (self-framed as a `SurfaceListCard`) skips the outer card
  * while skeleton / empty states keep their bounded surface.
+ *
+ * Collapsed by default to {@link COURSES_VISIBLE} row so a long enrollment list does
+ * not push the streak calendar (`ProfileContributions`, rendered directly below) off
+ * the fold; "See more" reveals the rest.
  */
+const COURSES_VISIBLE = 1
+
 export const ProfileCourses = () => {
     const t = useTranslations()
     const router = useRouter()
     const { courses, hasCourses, isLoading, error, mutate } = useQueryMyCoursesSwr()
+    const [expanded, setExpanded] = useState(false)
+    const hasMore = courses.length > COURSES_VISIBLE
+    const visibleCourses = expanded ? courses : courses.slice(0, COURSES_VISIBLE)
 
     return (
         <LabeledCard label={t("profile.courses.title")} frameless={hasCourses}>
@@ -63,7 +72,7 @@ export const ProfileCourses = () => {
                 }}
             >
                 <SurfaceListCard>
-                    {courses.map((course) => (
+                    {visibleCourses.map((course) => (
                         <SurfaceListCardItem
                             key={course.courseId}
                             onPress={() => router.push(course.href)}
@@ -108,6 +117,24 @@ export const ProfileCourses = () => {
                         </SurfaceListCardItem>
                     ))}
                 </SurfaceListCard>
+                {hasMore ? (
+                    <div className="mt-3 flex justify-center">
+                        <Button
+                            variant="tertiary"
+                            size="sm"
+                            onPress={() => setExpanded((prev) => !prev)}
+                        >
+                            {expanded
+                                ? t("profile.courses.showLess")
+                                : t("profile.courses.showMore", { count: courses.length - COURSES_VISIBLE })}
+                            {expanded ? (
+                                <CaretUpIcon aria-hidden focusable="false" className="size-4" />
+                            ) : (
+                                <CaretDownIcon aria-hidden focusable="false" className="size-4" />
+                            )}
+                        </Button>
+                    </div>
+                ) : null}
             </AsyncContent>
         </LabeledCard>
     )

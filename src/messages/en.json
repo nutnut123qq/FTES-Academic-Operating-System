@@ -5276,26 +5276,17 @@
       "enrolledCount": "{count} enrolled",
       "inCart": "In cart",
       "earlyBirdSlots": "{count} Early bird slots left",
-      "planSelectorAria": "Select a learning plan",
-      "planNames": {
-        "free": "Free",
-        "premium": "Premium"
-      },
-      "planBadges": {
-        "recommended": "Recommended"
-      },
+      "freeLabel": "Free",
+      "wholeCourse": "Whole course",
       "planIncludes": {
         "previewVideo": "{duration} preview video",
         "previewLessons": "{count} preview lessons",
-        "freeChallenge": "Free challenge",
         "fullVideo": "{duration} full course video",
         "allLessons": "{count} lessons",
-        "allChallenges": "All challenges",
-        "certificate": "Certificate of completion"
+        "challenges": "{count} challenges"
       },
       "loadError": "Couldn't load the course.",
       "retry": "Try again",
-      "usdApprox": "≈ {price}",
       "includesTitle": "This course includes",
       "includes": {
         "video": "{duration} of video",

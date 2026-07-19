@@ -58,28 +58,6 @@ export interface CoursePrice {
     originalVnd?: number
 }
 
-/** One line item in a tier's "what's included" list. */
-export interface CourseEnrollmentPlanInclude {
-    /** i18n key under `courseSystem.detail.planIncludes`. */
-    key: string
-    /** Optional interpolation values for the i18n message. */
-    params?: Record<string, string | number>
-}
-
-/** A single enrollment tier (Free / Premium) shown in the purchase card. */
-export interface CourseEnrollmentPlan {
-    /** i18n key for the tier name under `courseSystem.detail.planNames`. */
-    name: string
-    /** Optional i18n key for a badge (e.g. "Phổ biến"). */
-    badge?: string
-    /** Price of this tier in VND (0 for Free). */
-    priceVnd: number
-    /** Optional pre-discount price for this tier. */
-    originalPriceVnd?: number
-    /** Benefit rows rendered under the tier. */
-    includes: Array<CourseEnrollmentPlanInclude>
-}
-
 /** Enrollment state of the current viewer for this course.
  *
  * Resolved from the real BE contract: `EnrollmentView.isPurchased` on the
@@ -143,8 +121,8 @@ export interface CourseDetail {
      * BE sale mode, upper-cased: `"PACKAGE"` (the course sells N distinct
      * packages, each its own COURSE_UNLOCK product) or `"LEGACY"` (single
      * enroll/buy). Empty when the BE detail omits it. Drives the enroll card:
-     * PACKAGE renders the real package picker, everything else keeps the
-     * legacy Free/Premium tiers.
+     * PACKAGE renders the real package picker, everything else renders the
+     * single "whole course" option.
      */
     saleMode: string
     level: CourseLevel
@@ -164,11 +142,10 @@ export interface CourseDetail {
     challengeCount?: number
     /** Enrollment state of the current viewer. Optional / mock until BE lands. */
     enrollment?: CourseEnrollmentState
-    /** Free and Premium enrollment tiers shown in the purchase card. Mock until BE lands. */
-    plans: {
-        free: CourseEnrollmentPlan
-        premium: CourseEnrollmentPlan
-    }
+    /** Total lessons across every section — the enroll card's "N bài học" benefit row. */
+    lessonCount: number
+    /** Lessons flagged `free` by the BE — gates the "Học thử miễn phí" entry point. */
+    freeLessonCount: number
     whatYouLearn: Array<string>
     /** Instructor identity. Absent when the BE detail carries no instructor → the card hides. */
     instructor?: CourseInstructor
@@ -181,8 +158,8 @@ export interface CourseDetail {
  * model. The BE detail carries real course meta, description and a full
  * section/lesson syllabus, but has NO instructor, reviews, structured
  * "what you'll learn", credits or duration — those degrade to hidden sections
- * (never fabricated). Prices/plans are built from the real sale/total price and
- * the real free-vs-total lesson counts.
+ * (never fabricated). The price comes from the real sale/total price and the
+ * lesson counts from the real free-vs-total lessons.
  *
  * @param dto - The BE public course detail.
  * @returns The detail-page model.
@@ -246,31 +223,8 @@ const toCourseDetail = (dto: CourseDetailDto): CourseDetail => {
         challengeCount: undefined,
         // Viewer enrollment state is a separate contract — default to the sales card.
         enrollment: { isEnrolled: false, isPurchased: false },
-        plans: {
-            free: {
-                name: "free",
-                priceVnd: 0,
-                includes: [
-                    ...(freeLessons > 0
-                        ? [{ key: "previewLessons", params: { count: freeLessons } }]
-                        : []),
-                    { key: "freeChallenge" },
-                ],
-            },
-            premium: {
-                name: "premium",
-                badge: "recommended",
-                priceVnd,
-                originalPriceVnd,
-                includes: [
-                    ...(totalLessons > 0
-                        ? [{ key: "allLessons", params: { count: totalLessons } }]
-                        : []),
-                    { key: "allChallenges" },
-                    { key: "certificate" },
-                ],
-            },
-        },
+        lessonCount: totalLessons,
+        freeLessonCount: freeLessons,
         // "What you'll learn" = the BE's key topics (`contentCourse`, a
         // comma-joined string) — the same source the hover preview reads.
         // ponytail: split on comma, no NLP. Empty string → [] hides the section.

@@ -44,7 +44,7 @@ import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { FollowButton } from "@/components/reuseable/FollowButton"
 import { StatRibbon } from "@/components/reuseable/StatRibbon"
 import { UserAvatar } from "@/components/reuseable/UserAvatar"
-import { useQueryCourseDetailSwr, type CourseDetail as CourseDetailModel, type CourseEnrollmentPlan, type CourseInstructor } from "../hooks/useQueryCourseDetailSwr"
+import { useQueryCourseDetailSwr, type CourseDetail as CourseDetailModel, type CourseInstructor } from "../hooks/useQueryCourseDetailSwr"
 import { useCourseEnrollment } from "../hooks/useCourseEnrollment"
 import { useQueryCoursePackagesSwr } from "../hooks/useQueryCoursePackagesSwr"
 import { CourseRatings } from "./CourseRatings"
@@ -584,7 +584,7 @@ const CourseDetailView = ({
                 </div>
 
                 {/* RIGHT — sticky enroll card. PACKAGE courses get the real package
-                    picker; LEGACY / absent saleMode keep the Free/Premium tiers. */}
+                    picker; LEGACY / absent saleMode get the single whole-course option. */}
                 <div className="md:col-span-2">
                     {isPackage ? (
                         <PackageEnrollCard
@@ -620,17 +620,18 @@ type EnrollCardProps = {
 }
 
 /**
- * The sticky purchase/enroll card on the course detail right column.
+ * The sticky purchase/enroll card for a LEGACY course (or one with no `saleMode`).
  *
- * - Not enrolled: shows a Free/Premium tier switcher, the selected tier's price,
- *   a primary "Đăng ký học" CTA and a secondary "Học thử miễn phí" CTA.
+ * - Not enrolled: ONE purchase option — the whole course — rendered by the shared
+ *   {@link PurchaseOptionHeadline}, a primary "Đăng ký học" CTA, and the
+ *   "Học thử miễn phí" entry only when the course really has free lessons.
  * - Enrolled: collapses to a single "Tiếp tục học" primary CTA.
  *
- * ponytail: plan data, prices, and benefits are mock until the BE course contract
- * lands. The "continue" / "try" routes use the canonical `/learn` path which is
- * currently a FE placeholder.
+ * There are NO Free/Premium tiers here: the BE has no tier concept for a LEGACY
+ * course, so the card shows only figures the contract actually carries (price,
+ * lesson counts). A course that wants several options is upgraded to PACKAGE.
  */
-const EnrollCard = ({
+export const EnrollCard = ({
     course,
     isEnrolled,
     onEnroll,
@@ -639,8 +640,7 @@ const EnrollCard = ({
     onTryLearning,
 }: EnrollCardProps) => {
     const t = useTranslations("courseSystem")
-    const [selectedTier, setSelectedTier] = useState<"free" | "premium">("free")
-    const activePlan: CourseEnrollmentPlan = course.plans[selectedTier]
+    const challengeCount = course.challengeCount ?? null
 
     return (
         <div className="flex flex-col gap-2.5 rounded-2xl border border-separator p-4 md:sticky md:top-20">
@@ -657,88 +657,58 @@ const EnrollCard = ({
                 </>
             ) : (
                 <>
-                    <SelectableCardGroup
-                        ariaLabel={t("detail.planSelectorAria")}
-                        columns={1}
-                        value={selectedTier}
-                        onChange={setSelectedTier}
-                        items={(["free", "premium"] as const).map((key) => {
-                            const plan = course.plans[key]
-                            const isSelected = selectedTier === key
-                            return {
-                                value: key,
-                                icon: isSelected ? (
-                                    <CircleIcon aria-hidden focusable="false" weight="fill" className="size-5 text-accent" />
-                                ) : (
-                                    <CircleIcon aria-hidden focusable="false" className="size-5 text-muted" />
-                                ),
-                                label: t(`detail.planNames.${plan.name}`),
-                                // ponytail: price rendered as PLAIN spans, not PriceTag/Typography —
-                                // those wrap React-Aria `Text`, which throws "slot prop required" when
-                                // nested inside the RadioGroup's Text context.
-                                badge: (
-                                    <span className="flex items-center gap-2 text-sm">
-                                        {plan.originalPriceVnd && plan.originalPriceVnd > plan.priceVnd ? (
-                                            <span className="text-xs text-muted line-through">
-                                                {plan.originalPriceVnd.toLocaleString("vi-VN")}₫
-                                            </span>
-                                        ) : null}
-                                        <span className="font-medium text-foreground">
-                                            {plan.priceVnd > 0
-                                                ? `${plan.priceVnd.toLocaleString("vi-VN")}₫`
-                                                : t("detail.planNames.free")}
-                                        </span>
-                                    </span>
-                                ),
-                            }
-                        })}
+                    <PurchaseOptionHeadline
+                        name={t("detail.wholeCourse")}
+                        discounted={course.price.vnd}
+                        original={
+                            course.price.originalVnd && course.price.originalVnd > course.price.vnd
+                                ? course.price.originalVnd
+                                : null
+                        }
                     />
 
-                    {selectedTier === "premium" && course.price.usd > 0 ? (
-                        <Typography type="body-xs" color="muted">
-                            {t("detail.usdApprox", {
-                                price: course.price.usd.toLocaleString("en-US", { style: "currency", currency: "USD" }),
-                            })}
-                        </Typography>
-                    ) : null}
-
-                    {selectedTier === "free" ? (
-                        <Button variant="primary" fullWidth onPress={onTryLearning}>
-                            {t("detail.tryFree")}
+                    {/* CTA cluster — same shape as the PACKAGE card: one dominant
+                        primary buy, then a quiet tertiary "Học thử miễn phí" which
+                        only exists when the course actually has free lessons. */}
+                    <div className="flex flex-col gap-2">
+                        <Button variant="primary" fullWidth onPress={onEnroll} isPending={isEnrolling}>
+                            {t("detail.enroll")}
                         </Button>
-                    ) : (
-                        <>
-                            <Button variant="primary" fullWidth onPress={onEnroll} isPending={isEnrolling}>
-                                {t("detail.enroll")}
-                            </Button>
-                            <Button variant="secondary" fullWidth onPress={onTryLearning}>
+                        {course.freeLessonCount > 0 ? (
+                            <Button variant="tertiary" size="sm" fullWidth onPress={onTryLearning}>
                                 {t("detail.tryFree")}
                             </Button>
-                        </>
-                    )}
+                        ) : null}
+                    </div>
 
+                    {/* benefits — ONLY rows backed by a real figure from the contract */}
                     <div className="flex flex-col gap-2 border-t border-separator pt-3">
-                        <div className="flex items-center justify-between">
-                            <Typography type="body-xs" weight="medium" color="muted">
-                                {t("detail.includesTitle")}
-                            </Typography>
-                            {activePlan.badge ? (
-                                <Chip size="sm" variant="soft" color="accent">
-                                    {t(`detail.planBadges.${activePlan.badge}`)}
-                                </Chip>
-                            ) : null}
-                        </div>
-                        {activePlan.includes.map((item) => {
-                            const params = item.params ?? {}
-                            return (
-                                <IncludeRow
-                                    key={item.key}
-                                    icon={<CheckCircleIcon aria-hidden focusable="false" className="size-4 text-accent" />}
-                                >
-                                    {t(`detail.planIncludes.${item.key}`, params)}
-                                </IncludeRow>
-                            )
-                        })}
+                        <Typography type="body-xs" weight="medium" color="muted">
+                            {t("detail.includesTitle")}
+                        </Typography>
+                        {course.lessonCount > 0 ? (
+                            <IncludeRow
+                                icon={<CheckCircleIcon aria-hidden focusable="false" className="size-4 text-accent" />}
+                            >
+                                {t("detail.planIncludes.allLessons", { count: course.lessonCount })}
+                            </IncludeRow>
+                        ) : null}
+                        {course.freeLessonCount > 0 ? (
+                            <IncludeRow
+                                icon={<CheckCircleIcon aria-hidden focusable="false" className="size-4 text-accent" />}
+                            >
+                                {t("detail.planIncludes.previewLessons", { count: course.freeLessonCount })}
+                            </IncludeRow>
+                        ) : null}
+                        {/* ponytail: `challengeCount` is absent from today's detail contract,
+                            so this row stays hidden — never a fabricated promise. */}
+                        {challengeCount !== null ? (
+                            <IncludeRow
+                                icon={<CheckCircleIcon aria-hidden focusable="false" className="size-4 text-accent" />}
+                            >
+                                {t("detail.planIncludes.challenges", { count: challengeCount })}
+                            </IncludeRow>
+                        ) : null}
                     </div>
                     {course.enrollmentCount ? (
                         <Typography type="body-xs" color="muted" align="center">
@@ -747,6 +717,54 @@ const EnrollCard = ({
                     ) : null}
                 </>
             )}
+        </div>
+    )
+}
+
+/**
+ * The shared headline of ONE purchase option, used by both enroll cards: the
+ * option's name (when it isn't already named by a picker row below), the charged
+ * price (with the struck original + the −% chip that {@link PriceTag} derives
+ * itself), or the free label when nothing is charged, plus the optional scarcity
+ * line. Purely presentational — it takes numbers, never a hook, so the LEGACY
+ * card fires no package request.
+ */
+const PurchaseOptionHeadline = ({
+    name,
+    discounted,
+    original,
+    slots,
+}: {
+    /** Option name — omitted by the PACKAGE card, whose picker rows carry the names. */
+    name?: string
+    /** Charged VND amount; `0` renders the free label instead of a price. */
+    discounted: number
+    /** Pre-discount VND — pass `null` when there's no real saving. */
+    original: number | null
+    /** Remaining slots, when the contract carries a real figure. */
+    slots?: number | null
+}) => {
+    const t = useTranslations("courseSystem")
+    return (
+        <div className="flex flex-col gap-2">
+            {name ? (
+                <Typography type="body-xs" weight="medium" color="muted">
+                    {name}
+                </Typography>
+            ) : null}
+            {discounted > 0 ? (
+                <PriceTag discounted={discounted} original={original} size="lg" />
+            ) : (
+                <Typography type="h3" weight="bold">
+                    {t("detail.freeLabel")}
+                </Typography>
+            )}
+            {/* scarcity: hidden unless a real slot figure is supplied. */}
+            {slots != null ? (
+                <Typography type="body-sm" className="text-warning">
+                    {t("detail.earlyBirdSlots", { count: slots })}
+                </Typography>
+            ) : null}
         </div>
     )
 }
@@ -806,8 +824,8 @@ type PackageEnrollCardProps = {
 
 /**
  * The sticky enroll card for a PACKAGE course: a real package picker built from the
- * course's `GET /courses/{id}/packages` list (instead of the fabricated Free/Premium
- * tiers). Each option shows the package name, its price, and a short entitlement
+ * course's `GET /courses/{id}/packages` list. Each option shows the package name,
+ * its price, and a short entitlement
  * summary; selecting one + pressing "Đăng ký gói" resolves THAT package's
  * COURSE_UNLOCK productId (via the packageId-scoped for-course endpoint) and runs the
  * exact same cart + PaymentModal checkout as the legacy buy.
@@ -941,32 +959,13 @@ const PackageEnrollCard = ({
                         −% badge (all via PriceTag), plus ONE orange scarcity line when the
                         contract exposes a slot figure. Free package → the free label. */}
                     {selectedPackage ? (
-                        (() => {
-                            const slots = packageSlots(selectedPackage)
-                            return (
-                                <div className="flex flex-col gap-2">
-                                    {packagePrice(selectedPackage).discounted > 0 ? (
-                                        <PriceTag
-                                            discounted={packagePrice(selectedPackage).discounted}
-                                            original={packagePrice(selectedPackage).original}
-                                            size="lg"
-                                        />
-                                    ) : (
-                                        <Typography type="h3" weight="bold">
-                                            {t("detail.planNames.free")}
-                                        </Typography>
-                                    )}
-                                    {/* scarcity: hidden today — `PackageView` carries no slot
-                                        figure (see tasks Findings); lights up the moment BE
-                                        sends one. Never a fabricated number. */}
-                                    {slots != null ? (
-                                        <Typography type="body-sm" className="text-warning">
-                                            {t("detail.earlyBirdSlots", { count: slots })}
-                                        </Typography>
-                                    ) : null}
-                                </div>
-                            )
-                        })()
+                        <PurchaseOptionHeadline
+                            discounted={packagePrice(selectedPackage).discounted}
+                            original={packagePrice(selectedPackage).original}
+                            // scarcity: hidden today — `PackageView` carries no slot figure
+                            // (see tasks Findings); lights up the moment BE sends one.
+                            slots={packageSlots(selectedPackage)}
+                        />
                     ) : null}
 
                     <SelectableCardGroup
@@ -1020,7 +1019,7 @@ const PackageEnrollCard = ({
                                         <span className={cn("font-medium", isSelected ? "text-accent" : "text-foreground")}>
                                             {discounted > 0
                                                 ? `${discounted.toLocaleString("vi-VN")}₫`
-                                                : t("detail.planNames.free")}
+                                                : t("detail.freeLabel")}
                                         </span>
                                     </span>
                                 ),

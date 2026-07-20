@@ -13,7 +13,6 @@ import {
 import {
     SidebarSimpleIcon as MenuIcon,
     MagnifyingGlassIcon as SearchIcon,
-    PaletteIcon,
 } from "@phosphor-icons/react"
 import {
     useTranslations,
@@ -47,7 +46,6 @@ import {
 } from "./LanguageDropdown"
 import { useNavbarBottomLayerStore } from "@/hooks/zustand/navbarBottomLayer/store"
 import {
-    useAppearanceOverlayState,
     useSearchOverlayState,
 } from "@/hooks/zustand/overlay/hooks"
 import type { WithClassNames } from "@/modules/types/base/class-name"
@@ -63,8 +61,8 @@ export type NavbarProps = WithClassNames<undefined>
  *
  * Container: owns the Ctrl/Cmd+K search shortcut + the mobile drawer state and
  * composes the logo, the 5-module {@link HeaderNav}, search trigger (full field
- * on desktop, icon on mobile), the standalone language dropdown, the appearance
- * settings button, notifications, the account menu, and a mobile expand button that opens
+ * on desktop, icon on mobile), the standalone language dropdown,
+ * notifications, the account menu, and a mobile expand button that opens
  * a navigation drawer mirroring the same 5 modules as PLAIN LINK ROWS from the
  * shared {@link useAppNav} source (no accordion, no nested children). `"use client"`
  * for hooks + keyboard handling.
@@ -74,7 +72,6 @@ export const Navbar = ({ className }: NavbarProps) => {
     const t = useTranslations()
     const router = useRouter()
     const { open: openSearch } = useSearchOverlayState()
-    const { open: openAppearance } = useAppearanceOverlayState()
     const [isDrawerOpen, setDrawerOpen] = useState(false)
     // same primary-nav source HeaderNav renders on desktop — no drift
     const modules = useAppNav()
@@ -135,17 +132,10 @@ export const Navbar = ({ className }: NavbarProps) => {
                     >
                         <SearchIcon className="size-5" />
                     </Button>
-                    {/* desktop: language + appearance settings inline; on mobile they move into the drawer */}
+                    {/* desktop: language inline; on mobile it moves into the drawer.
+                        Appearance is NOT here — it lives in /profile/settings. */}
                     <div className="hidden items-center gap-2 md:flex">
                         <LanguageDropdown />
-                        <Button
-                            isIconOnly
-                            variant="tertiary"
-                            aria-label={t("appearance.title")}
-                            onPress={openAppearance}
-                        >
-                            <PaletteIcon className="size-5" aria-hidden focusable="false" />
-                        </Button>
                     </div>
                     <CartButton />
                     <NotificationBell />
@@ -194,31 +184,14 @@ export const Navbar = ({ className }: NavbarProps) => {
                                         </Button>
                                     ))}
                                 </div>
-                                {/* controls hidden from the mobile bar live here: language + theme */}
+                                {/* controls hidden from the mobile bar live here: language
+                                    (appearance moved to /profile/settings) */}
                                 <div className="flex flex-col gap-3">
                                     <div className="flex items-center justify-between gap-3">
                                         <Typography type="body-sm">
                                             {t("nav.toggleLanguage")}
                                         </Typography>
                                         <LanguageDropdown />
-                                    </div>
-                                    <div className="flex items-center justify-between gap-3">
-                                        <Typography type="body-sm">
-                                            {t("nav.appearance")}
-                                        </Typography>
-                                        {/* close the containing drawer BEFORE opening the
-                                            global modal — never stack overlays */}
-                                        <Button
-                                            isIconOnly
-                                            variant="tertiary"
-                                            aria-label={t("appearance.title")}
-                                            onPress={() => {
-                                                setDrawerOpen(false)
-                                                openAppearance()
-                                            }}
-                                        >
-                                            <PaletteIcon className="size-5" aria-hidden focusable="false" />
-                                        </Button>
                                     </div>
                                 </div>
                             </Drawer.Body>

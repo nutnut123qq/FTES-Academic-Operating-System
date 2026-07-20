@@ -35,7 +35,6 @@ vi.mock("@/hooks/zustand/navbarBottomLayer/store", () => ({
 
 vi.mock("@/hooks/zustand/overlay/hooks", () => ({
     useSearchOverlayState: () => ({ open: h.openSearch }),
-    useAppearanceOverlayState: () => ({ open: vi.fn() }),
 }))
 
 vi.mock("./Logo", () => ({ Logo: () => <div /> }))
@@ -51,7 +50,7 @@ vi.mock("./SearchInline", () => ({
 
 vi.mock("@phosphor-icons/react", () => {
     const Icon = (props: Record<string, unknown>) => <svg {...props} />
-    return { SidebarSimpleIcon: Icon, MagnifyingGlassIcon: Icon, PaletteIcon: Icon, NewspaperIcon: Icon }
+    return { SidebarSimpleIcon: Icon, MagnifyingGlassIcon: Icon, NewspaperIcon: Icon }
 })
 
 vi.mock("@heroui/react", () => {

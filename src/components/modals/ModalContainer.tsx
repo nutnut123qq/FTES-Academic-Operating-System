@@ -2,7 +2,6 @@ import React from "react"
 import { AuthenticationModal } from "./AuthenticationModal"
 import { LanguageModal } from "./LanguageModal"
 import { CookieConsentModal } from "./CookieConsentModal"
-import { AppearanceModal } from "./AppearanceModal"
 import { CommunityComposerModal } from "./CommunityComposerModal"
 import { PaymentModal } from "./PaymentModal"
 import { SearchOverlay } from "@/components/features/search/SearchOverlay"
@@ -14,7 +13,6 @@ export const ModalContainer = () => {
             <AuthenticationModal />
             <LanguageModal />
             <CookieConsentModal />
-            <AppearanceModal />
             <CommunityComposerModal />
             <PaymentModal />
             <SearchOverlay />

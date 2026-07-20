@@ -40,7 +40,6 @@ export type OverlayKey =
     | "aiProcessing"
     | "avatarUpload"
     | "aiQuota"
-    | "appearance"
     | "authentication"
     | "challenge"
     | "communityComposer"
@@ -78,7 +77,6 @@ const OVERLAY_KEYS: ReadonlyArray<OverlayKey> = [
     "aiProcessing",
     "avatarUpload",
     "aiQuota",
-    "appearance",
     "authentication",
     "challenge",
     "communityComposer",

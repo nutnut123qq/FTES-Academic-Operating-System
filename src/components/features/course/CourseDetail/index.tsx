@@ -826,6 +826,25 @@ const packageSlots = (pkg: PackageView): number | null => {
 const hasFullCourseEntitlement = (pkg: PackageView): boolean =>
     pkg.entitlements?.some((entitlement) => entitlement.type?.trim().toUpperCase() === "COURSE") ?? false
 
+/**
+ * Chuẩn hoá 1 nhãn để so TRÙNG (không phải để hiển thị).
+ *
+ * BE tự đặt tên gói mặc định là "Trọn khoá" khi nâng khoá LEGACY → PACKAGE, mà nhãn
+ * entitlement `COURSE` cũng là "Trọn khóa" ⇒ card in y hệt hai lần. Chính tả hai bên
+ * lại có thể lệch dấu ("khoá" vs "khóa"), lệch hoa/thường, thừa khoảng trắng — nên
+ * so sánh phải BỎ DẤU (NFD rồi cắt combining marks) + trim + lowercase + gộp space.
+ */
+const normalizeLabel = (value: string): string =>
+    value
+        .normalize("NFD")
+        // \p{M} = combining marks — dấu tiếng Việt sau khi NFD tách khỏi nguyên âm.
+        // Dùng property-escape thay vì dải U+0300–U+036F viết tay để source không chứa
+        // ký tự vô hình (dễ hỏng khi file bị đọc/ghi sai encoding trên Windows).
+        .replace(/\p{M}/gu, "")
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, " ")
+
 type PackageEnrollCardProps = {
     course: CourseDetailModel
     isEnrolled: boolean
@@ -990,8 +1009,15 @@ const PackageEnrollCard = ({
                             // Gói phủ toàn khoá → nhãn "Trọn khoá", TUYỆT ĐỐI không đếm số
                             // (1 entitlement COURSE mà ghi "1 phần" là hiểu nhầm chí mạng).
                             // Các gói còn lại giữ nguyên cách đếm "{count} phần".
+                            // ...NHƯNG gói mặc định do BE sinh khi nâng LEGACY → PACKAGE đã
+                            // tên sẵn là "Trọn khoá" → in thêm nhãn nữa là ĐÚNG CHỮ ĐÓ hai lần
+                            // (hình dạng mặc định của mọi khoá auto-upgrade, không phải ca hiếm).
+                            // Trùng tên (so sau chuẩn hoá) thì bỏ nhãn, tên gói tự nói hết rồi.
+                            const fullCourseLabel = t("detail.package.entitlementFullCourse")
                             const entitlementSummary = hasFullCourseEntitlement(pkg)
-                                ? t("detail.package.entitlementFullCourse")
+                                ? normalizeLabel(pkg.name) === normalizeLabel(fullCourseLabel)
+                                    ? null
+                                    : fullCourseLabel
                                 : count > 0
                                   ? t("detail.package.entitlementSummary", { count })
                                   : null

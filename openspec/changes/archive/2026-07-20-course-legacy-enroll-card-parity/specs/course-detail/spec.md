@@ -1,6 +1,6 @@
 # course-detail
 
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: Card mua của khoá LEGACY chỉ hiển thị dữ liệu có thật
 

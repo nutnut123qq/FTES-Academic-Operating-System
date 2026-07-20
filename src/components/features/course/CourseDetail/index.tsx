@@ -815,6 +815,17 @@ const packageSlots = (pkg: PackageView): number | null => {
     return typeof slot === "number" && slot >= 0 ? slot : null
 }
 
+/**
+ * Gói này có phủ TOÀN KHOÁ không?
+ *
+ * Một entitlement `type = "COURSE"` mở cả khoá, nên gói "Trọn khoá" chỉ mang ĐÚNG MỘT
+ * entitlement — đếm `entitlements.length` sẽ ghi "1 phần", sai nghiêm trọng về mặt bán
+ * hàng. Khi gói trộn `COURSE` với các loại khác thì `COURSE` vẫn thắng (nó phủ tất).
+ * So sánh tolerant (trim + upper) phòng biến thể hoa/thường từ BE.
+ */
+const hasFullCourseEntitlement = (pkg: PackageView): boolean =>
+    pkg.entitlements?.some((entitlement) => entitlement.type?.trim().toUpperCase() === "COURSE") ?? false
+
 type PackageEnrollCardProps = {
     course: CourseDetailModel
     isEnrolled: boolean
@@ -976,6 +987,14 @@ const PackageEnrollCard = ({
                         items={packages.map((pkg) => {
                             const { discounted, original } = packagePrice(pkg)
                             const count = pkg.entitlements?.length ?? 0
+                            // Gói phủ toàn khoá → nhãn "Trọn khoá", TUYỆT ĐỐI không đếm số
+                            // (1 entitlement COURSE mà ghi "1 phần" là hiểu nhầm chí mạng).
+                            // Các gói còn lại giữ nguyên cách đếm "{count} phần".
+                            const entitlementSummary = hasFullCourseEntitlement(pkg)
+                                ? t("detail.package.entitlementFullCourse")
+                                : count > 0
+                                  ? t("detail.package.entitlementSummary", { count })
+                                  : null
                             const isSelected = pkg.id === selectedId
                             return {
                                 value: pkg.id,
@@ -985,15 +1004,16 @@ const PackageEnrollCard = ({
                                 ) : (
                                     <CircleIcon aria-hidden focusable="false" className="size-5 text-muted" />
                                 ),
-                                // compact single-line row: name on the left with a small "N phần"
-                                // annotation inline (never a full description sub-line). The row
+                                // compact single-line row: name on the left with a small
+                                // "Trọn khoá" / "N phần" annotation inline (never a full
+                                // description sub-line). The row
                                 // itself is accent-highlighted by the list variant when selected.
                                 label: (
                                     <span className="flex items-baseline gap-1.5">
                                         <span className="truncate">{pkg.name}</span>
-                                        {count > 0 ? (
+                                        {entitlementSummary ? (
                                             <span className="shrink-0 text-[11px] leading-none text-muted">
-                                                {t("detail.package.entitlementSummary", { count })}
+                                                {entitlementSummary}
                                             </span>
                                         ) : null}
                                     </span>

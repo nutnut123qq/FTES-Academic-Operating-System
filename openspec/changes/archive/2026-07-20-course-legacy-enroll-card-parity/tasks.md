@@ -22,8 +22,17 @@
 
 ## 4. Verify
 
-- [ ] 4.1 `tsc --noEmit` sạch + `npm run build` (webpack) xanh.
-      (tsc sạch, eslint sạch, `vitest` 4/4 xanh — `npm run build` chạy ở bước sau.)
-- [ ] 4.2 Preview: mở một khoá LEGACY trả phí → card một lựa chọn, giá đúng, không tier bịa;
-      mở một khoá PACKAGE → card gói KHÔNG đổi so với trước (so ảnh chụp trước/sau).
+- [x] 4.1 `tsc --noEmit` sạch + eslint sạch + `vitest` 4/4 xanh + `npm run build` (webpack) xanh
+      (`✓ Compiled successfully`).
+- [x] 4.2 E2E qua trình duyệt trên apitest (2026-07-20): **5/5 PASS**.
+      LEGACY trả phí `mma301-…-react-native-zoom`: một lựa chọn "Trọn khóa" 299.000₫ / 500.000₫ gạch
+      / `−40%`, `[role="radio"].length === 0` ⇒ hết hai tier bịa, bullet chỉ số thật, hết
+      chứng chỉ/challenge. LEGACY 0 bài học thử `mad101-discrete-mathematics`: đúng 1 button
+      "Đăng ký học", `innerText.includes('Học thử') === false`. PACKAGE nhiều tier
+      `goi-prf192prf193…`: `PackageEnrollCard` KHÔNG đổi — 5 gói giữ nhãn `{count} phần`, picker vẫn
+      đổi headline khi chọn MASTER (369.000₫ / 450.000₫ / −18%), badge tier syllabus nguyên vẹn.
+      Console không lỗi React/hydration mới; 10 endpoint trang chi tiết đều 200.
+      Bằng chứng: `C:\Users\hahuy\Desktop\cc\E2E-FE-COURSE-CARD-2026-07-20.md` +
+      `C:\Users\hahuy\Desktop\cc\e2e-evidence-2026-07-20-course-card\` (4 dump DOM `ca1..ca4.html`).
+      Screenshot không chụp được (preview headless timeout 30s) — thay bằng dump DOM thật của card.
 - [x] 4.3 Grep chắc chắn không còn tham chiếu `plans` / khoá i18n đã xoá.

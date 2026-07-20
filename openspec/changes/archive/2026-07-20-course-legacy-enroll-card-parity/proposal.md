@@ -6,7 +6,8 @@ Trang chi tiết khoá đang có HAI card mua khác hẳn nhau (`CourseDetail/in
 
 - `saleMode = "PACKAGE"` → `PackageEnrollCard`: danh sách gói thật từ `GET /courses/{id}/packages`,
   mỗi gói có tên do admin đặt, giá bán + giá gạch + % giảm, bullet quyền lợi từ `descriptions`,
-  chip "Đề xuất" cho gói mặc định.
+  nhãn "Đang mở" cho gói đang chọn (`defaultPackage` chỉ dùng để chọn sẵn gói ban đầu — KHÔNG có
+  chip "Đề xuất" nào trong code; đính chính sau E2E 2026-07-20).
 - `LEGACY` / thiếu `saleMode` → `EnrollCard`: hai tier "Free"/"Premium" **do FE tự nghĩ ra** — BE
   không có khái niệm tier cho khoá legacy — với bullet quyền lợi cứng trong i18n, trong đó
   `allChallenges` và `certificate` **không dựa trên dữ liệu nào**; khoá không có challenge hay chứng

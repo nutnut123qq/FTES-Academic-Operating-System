@@ -5299,6 +5299,7 @@
         "selectorAria": "Choose a package",
         "active": "Open",
         "entitlementSummary": "{count} parts",
+        "entitlementFullCourse": "Full course",
         "buy": "Get this package",
         "addToCart": "Add to cart",
         "resolving": "Fetching package details…",

@@ -80,3 +80,56 @@ The course detail page SHALL render a rich instructor profile card in the left c
 - **THEN** the button toggles its visual state immediately
 - **AND** the interaction is mocked locally; no BE request is made
 
+### Requirement: Nhãn entitlement của card chọn gói
+
+Card chọn gói ở trang chi tiết khoá SHALL gắn nhãn cố định "Trọn khoá" (en: "Full course") cho mọi gói có ít nhất một entitlement `type` bằng `COURSE` (so sánh sau khi trim, không phân biệt hoa/thường) và MUST NOT hiển thị bất kỳ con số đếm nào cho gói đó; khi một gói trộn `COURSE` với các loại entitlement khác thì `COURSE` SHALL thắng vì nó phủ toàn khoá. Gói không có entitlement `COURSE` SHALL giữ nguyên cách đếm hiện có `{count} phần` với `count` là số phần tử `entitlements`, và khi `count = 0` thì MUST NOT render annotation. Nhãn mới SHALL có đủ cặp khoá i18n `vi` và `en`, và khoá đếm cũ `detail.package.entitlementSummary` SHALL được giữ lại vì vẫn phục vụ nhóm gói theo phần.
+
+#### Scenario: Gói trọn khoá chỉ có 1 entitlement COURSE
+
+- **WHEN** gói "Trọn khoá" trả về `entitlements = [{ type: "COURSE" }]`
+- **THEN** annotation cạnh tên gói SHALL là "Trọn khoá"
+- **AND** annotation MUST NOT chứa chuỗi "1 phần"
+
+#### Scenario: Gói trộn COURSE với entitlement khác
+
+- **WHEN** gói có `entitlements = [{ type: "SECTION" }, { type: "COURSE" }, { type: "LESSON" }]`
+- **THEN** annotation SHALL là "Trọn khoá" chứ không phải "3 phần"
+
+#### Scenario: Gói theo phần giữ nguyên cách đếm
+
+- **WHEN** gói có `entitlements = [{ type: "SECTION" }, { type: "SECTION" }]` và không có `COURSE`
+- **THEN** annotation SHALL là "2 phần"
+- **AND** một gói có `entitlements` rỗng hoặc thiếu SHALL không render annotation
+
+### Requirement: Card mua của khoá LEGACY chỉ hiển thị dữ liệu có thật
+
+Card mua của khoá `saleMode = "LEGACY"` (hoặc thiếu `saleMode`) SHALL hiển thị đúng một lựa chọn trả phí đại diện cho việc mua trọn khoá, với giá bán, giá gạch (chỉ
+khi giá gốc thực sự cao hơn giá bán) và % giảm suy ra từ hai giá đó. Card SHALL KHÔNG hiển thị bất kỳ
+"gói"/"tier" nào mà BE không trả về — cụ thể là bỏ hai tier "Free"/"Premium" do FE dựng.
+
+Lối vào "Học thử miễn phí" SHALL chỉ render khi khoá thật sự có bài học thử. Danh sách quyền lợi
+SHALL chỉ gồm các mục có số liệu thật từ hợp đồng BE (số bài học, số bài học thử); các mục không có
+nguồn dữ liệu SHALL bị bỏ khỏi card.
+
+Card SHALL dùng cùng thành phần trình bày một lựa chọn mua với card của khoá `PACKAGE`, để hai loại
+khoá có cùng bố cục, cách hiện giá, chip và nút.
+
+Người học đã đăng ký SHALL vẫn thấy card thu về một nút "Tiếp tục học" như hiện tại.
+
+#### Scenario: Khoá legacy trả phí có giảm giá
+- **WHEN** một khoá LEGACY có giá gốc 800000 và giá bán 500000 được mở bởi người chưa đăng ký
+- **THEN** card hiện một lựa chọn "Trọn khoá" giá 500000, giá gạch 800000 và chip giảm 38%
+- **AND** không có tier "Free" hay "Premium" nào xuất hiện
+
+#### Scenario: Khoá legacy không có bài học thử
+- **WHEN** khoá LEGACY không có bài nào cho học thử
+- **THEN** card không render nút "Học thử miễn phí"
+
+#### Scenario: Không hứa thứ không có dữ liệu
+- **WHEN** hợp đồng BE không trả số challenge của khoá
+- **THEN** card không hiển thị dòng quyền lợi nào về challenge hay chứng chỉ
+
+#### Scenario: Người đã đăng ký
+- **WHEN** người học đã đăng ký khoá LEGACY mở trang
+- **THEN** card chỉ hiện nút "Tiếp tục học" kèm dòng ghi chú như hiện tại
+

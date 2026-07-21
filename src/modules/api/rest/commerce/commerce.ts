@@ -223,6 +223,7 @@ export const getProductBySlug = async (slug: string): Promise<ProductView> => {
 export const getProductForCourse = async (
     courseId: string,
     packageId?: string,
+    preferPriceVnd?: number,
 ): Promise<ProductForCourseView | null> => {
     // The endpoint returns a WRAPPED shape `{ products, cheapest }` with NO top-level
     // product id — reading `data.id` gives undefined, which then posts an empty
@@ -241,7 +242,19 @@ export const getProductForCourse = async (
     if (packageId) {
         return products.find((p) => p.packageId === packageId) ?? null
     }
-    // Non-package: prefer the cheapest, matched back to its full `products[]` entry BY
+    // Non-package (LEGACY): the course carries ONE canonical price (`course.salePrice`),
+    // so the checkout must charge the COURSE_UNLOCK product whose price MATCHES that course
+    // price — NOT an arbitrary "cheapest" one. A stale/duplicate cheaper product must never
+    // undercut the advertised course price (the "shows 399k, charges 200k" bug). Prefer the
+    // price-matching product; fall back to cheapest/first only when none matches (or no
+    // target price was supplied). If no product matches the course price, the caller still
+    // gets a product to buy, but that signals the BE product price is out of sync with the
+    // course and should be reconciled.
+    if (typeof preferPriceVnd === "number" && preferPriceVnd > 0) {
+        const priced = products.find((p) => p.priceVnd === preferPriceVnd)
+        if (priced) return priced
+    }
+    // Fallback: prefer the cheapest, matched back to its full `products[]` entry BY
     // `productId` (the `cheapest` summary keys on `productId`, NOT `id`); else the first.
     if (res.cheapest) {
         const matched = products.find((p) => p.id === res.cheapest?.productId)

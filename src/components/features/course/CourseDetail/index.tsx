@@ -301,7 +301,9 @@ const CourseDetailView = ({
     const { isEnrolled, onEnroll, isEnrolling, onContinueLearning, onTryLearning } = useCourseEnrollment(
         course.id,
         course.enrollment,
-        isPackage ? undefined : { rawId: course.rawId, title: course.name },
+        isPackage
+            ? undefined
+            : { rawId: course.rawId, title: course.name, priceVnd: course.price.vnd },
     )
     // ponytail: hand-rolled accordion state — first chapter open. Set, not boolean-per-row,
     // so multiple chapters can be open. Swap to HeroUI Accordion when its API is confirmed.

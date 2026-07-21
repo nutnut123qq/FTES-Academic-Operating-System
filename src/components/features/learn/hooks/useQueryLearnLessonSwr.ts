@@ -119,6 +119,11 @@ interface FlatLesson {
     locked: boolean
     /** BE access level for this viewer. */
     accessLevel: string | null
+    /**
+     * Free preview window in seconds (`LessonView.previewSeconds`). A property of the
+     * CONTENT, readable by every viewer — unlike `accessLevel`, which is user-scoped.
+     */
+    previewSeconds: number
     /** Slugs of packages that unlock this lesson. */
     packageSlugs: Array<string>
 }
@@ -143,6 +148,7 @@ const flattenCurriculum = (detail: CourseDetail): Array<FlatLesson> =>
                     videoRef: lesson.videoRef ?? null,
                     locked: lesson.locked ?? false,
                     accessLevel: lesson.accessLevel ?? null,
+                    previewSeconds: lesson.previewSeconds ?? 0,
                     packageSlugs: lesson.packageSlugs ?? [],
                 })),
         )
@@ -211,12 +217,20 @@ const buildLessonView = (
         accessLevel,
         packageSlugs,
         teaser: content.teaser ?? null,
-        // Mount the video block when the curriculum ships a playable ref, OR when this
-        // is a PREVIEW video lesson whose ref the catalog hides (locked) — the stream
-        // response (`freemium-youtube-preview-gate`) supplies the gated ref in that case.
+        // Mount the video block when the curriculum ships a playable ref, OR when this is
+        // a video lesson whose ref the catalog hides (locked) but that still has a free
+        // preview — the stream response (`freemium-youtube-preview-gate`) supplies the
+        // gated ref in that case.
+        //
+        // The preview signal must NOT be `accessLevel` alone: that field is USER-SCOPED
+        // and is null for a signed-out visitor, so the whole video block (player AND buy
+        // CTA) disappeared for exactly the audience the preview exists to court.
+        // `previewSeconds` is a property of the CONTENT and is readable by everyone.
         hasVideo:
             current?.videoStatus === "READY" &&
-            (isVideoRef || (contentType === "VIDEO" && accessLevel === "PREVIEW")),
+            (isVideoRef ||
+                (contentType === "VIDEO" &&
+                    (accessLevel === "PREVIEW" || (current?.previewSeconds ?? 0) > 0))),
         videoRef: ref,
         documentHtml,
     }

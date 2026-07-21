@@ -66,9 +66,11 @@ export const PackageGateModal = ({
 
     const filteredPackages = useMemo(() => {
         const slugSet = new Set(packageSlugs)
-        const eligible = packages.filter(
-            (pkg) => slugSet.has(pkg.slug) && pkg.slug !== "free" && Number(pkg.salePrice) > 0
-        )
+        // NO price filter: a package priced at 0 (with a slug other than the platform's
+        // own "free" tier) is exactly what this viewer needs — dropping it pushed them to
+        // the PAID whole-course offer instead. `PackageGateCard` already routes a
+        // zero-price product through the free-enrollment checkout.
+        const eligible = packages.filter((pkg) => slugSet.has(pkg.slug) && pkg.slug !== "free")
         return [...eligible].sort((a, b) => Number(a.salePrice) - Number(b.salePrice))
     }, [packages, packageSlugs])
 

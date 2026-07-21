@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useMemo } from "react"
+import React, { useMemo, useState } from "react"
 import { Button, Typography, cn } from "@heroui/react"
 import { ArrowRightIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
@@ -8,8 +8,9 @@ import { useParams } from "next/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { useRouter } from "@/i18n/navigation"
+import { PackageGateModal } from "@/components/features/course/PackageGateModal"
 import { useQueryLearnCourseSwr } from "../hooks/useQueryLearnCourseSwr"
-import type { LearnModule } from "../hooks/useQueryLearnCourseSwr"
+import type { LearnLesson, LearnModule } from "../hooks/useQueryLearnCourseSwr"
 
 /** Per-module completion state (mirrors StarCI's 5-state legend, minus "current"). */
 type ModuleStatus = "done" | "inProgress" | "notStarted" | "locked"
@@ -31,18 +32,28 @@ const VIEW = 1000
 const CENTER = VIEW / 2
 const RADIUS = 360
 
-/** Classify a module from its lessons + the "current" pointer + premium gate. */
+/** True when the viewer can still open this lesson (matches the ContentMap gate rule). */
+const isOpenable = (lesson: LearnLesson): boolean => lesson.accessLevel !== "NONE"
+
+/**
+ * Classify a module from its lessons + the "current" pointer + the viewer's lock.
+ *
+ * The lock signal is `isLocked` (per-viewer `LessonView.locked`), NOT `isPremium`
+ * (`!lesson.free` — a STATIC property of the content that stays true for a buyer). Using
+ * the static flag greyed out every premium module for people who had already paid.
+ * A module counts as locked only when NOTHING in it is unlocked for this viewer.
+ */
 const statusOf = (module: LearnModule): ModuleStatus => {
     const total = module.lessons.length
     const done = module.lessons.filter((lesson) => lesson.isCompleted).length
-    const anyPremium = module.lessons.some((lesson) => lesson.isPremium)
+    const allLocked = total > 0 && module.lessons.every((lesson) => lesson.isLocked)
     if (done === total && total > 0) {
         return "done"
     }
     if (done > 0) {
         return "inProgress"
     }
-    return anyPremium ? "locked" : "notStarted"
+    return allLocked ? "locked" : "notStarted"
 }
 
 /** SVG fill className per status. */
@@ -77,7 +88,7 @@ export const MindMap = () => {
     const t = useTranslations("learn")
     const router = useRouter()
     const { courseId } = useParams<{ courseId: string }>()
-    const { modules, header, error, mutate } = useQueryLearnCourseSwr(courseId)
+    const { course, modules, header, error, mutate } = useQueryLearnCourseSwr(courseId)
 
     const currentModuleId = useMemo(() => {
         if (!header?.continueLessonId) {
@@ -104,12 +115,22 @@ export const MindMap = () => {
 
     const allDone = modules.length > 0 && nodes.every((node) => node.status === "done")
 
+    // The module whose gate modal is open (null = closed). Opening a fully locked module
+    // must offer a purchase, exactly like ContentMap does — pushing straight into a locked
+    // lesson (the old behaviour) contradicted the rail on the same data.
+    const [gateModule, setGateModule] = useState<LearnModule | null>(null)
+
     const openModule = (module: LearnModule) => {
-        const first = module.lessons[0]
+        const first = module.lessons.find(isOpenable)
         if (first) {
             router.push(`/courses/${courseId}/learn/content/modules/${module.id}/contents/${first.id}`)
+            return
+        }
+        if (module.lessons.length > 0) {
+            setGateModule(module)
         }
     }
+    const gateLesson = gateModule?.lessons[0]
     const onContinue = () => {
         if (header?.continueLessonId) {
             const moduleId = header.continueLessonId.split("-")[0]
@@ -200,6 +221,23 @@ export const MindMap = () => {
                     </svg>
                 </div>
             </AsyncContent>
+
+            {/* Same gate the content rail opens, so a fully locked module offers a real
+                purchase instead of dumping the viewer into a locked lesson. */}
+            {course?.id && gateModule && gateLesson ? (
+                <PackageGateModal
+                    isOpen
+                    onClose={() => setGateModule(null)}
+                    courseId={courseId}
+                    courseRawId={course.id}
+                    courseTitle={course.header.title}
+                    lessonId={gateLesson.id}
+                    lessonTitle={gateLesson.title}
+                    packageSlugs={gateLesson.packageSlugs}
+                    context="document"
+                    onPurchased={() => { void mutate() }}
+                />
+            ) : null}
         </div>
     )
 }

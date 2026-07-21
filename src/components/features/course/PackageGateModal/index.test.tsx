@@ -88,6 +88,39 @@ describe("PackageGateModal — course with no packages (LEGACY)", () => {
         expect(screen.queryByText("modal.emptyTitle")).toBeNull()
     })
 
+    /**
+     * A package priced at 0 (slug ≠ the platform's own "free" tier) used to be filtered
+     * out by `salePrice > 0`, so the viewer was offered the PAID whole course while a free
+     * package already unlocked the lesson. Real data: `goi-prf192prf193` ships an ACTIVE
+     * package priced 0.
+     */
+    it("lists a FREE package that unlocks the lesson instead of upselling the whole course", () => {
+        packagesMock.mockReturnValue({
+            packages: [
+                {
+                    id: "pkg-free",
+                    slug: "goi-tang-kem",
+                    name: "Gói tặng kèm",
+                    salePrice: 0,
+                    originalPrice: 0,
+                    sortOrder: 1,
+                    descriptions: "",
+                    entitlements: [],
+                },
+            ],
+            isLoading: false,
+            isError: false,
+        })
+        courseProductMock.mockReturnValue({
+            data: { id: "p1", priceVnd: 399000, priceCoin: null },
+            isLoading: false,
+        })
+        render(<PackageGateModal {...props} packageSlugs={["goi-tang-kem"]} />)
+        expect(screen.getByText("Gói tặng kèm")).toBeTruthy()
+        // the paid whole-course fallback must NOT take over
+        expect(screen.queryByText("detail.wholeCourse")).toBeNull()
+    })
+
     it("keeps the empty message only when the course carries no product either", () => {
         packagesMock.mockReturnValue({ packages: [], isLoading: false, isError: false })
         courseProductMock.mockReturnValue({ data: null, isLoading: false })

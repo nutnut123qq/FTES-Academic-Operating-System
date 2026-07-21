@@ -685,7 +685,7 @@
       "done": "Done",
       "inProgress": "In progress",
       "notStarted": "Not started",
-      "locked": "Upgrade needed",
+      "locked": "Enroll to unlock",
       "current": "You are here"
     }
   },

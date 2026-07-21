@@ -128,6 +128,12 @@ export const LessonReader = () => {
     const isLinkOnly = resourceLinks.length > 0
     /** True when the lesson has real reading content (written body / HTML / resource links). */
     const hasWrittenBody = !!bodyMd || !!lesson?.documentHtml
+    /**
+     * Is there anything in the reading area to fade out? Same rule as `DocumentReader`: a locked
+     * lesson with an EMPTY teaser leaves the article container 0px tall, so an
+     * `absolute bottom-0 h-72` gradient spills UPWARD over the lesson title.
+     */
+    const hasTeaserBody = hasWrittenBody || isLinkOnly
     /** Draw the reading card only when there is something to put in it (else e.g. video-only). */
     const showReadingCard = !!lesson && (isLocked || hasWrittenBody || isReadingEmpty)
 
@@ -352,8 +358,9 @@ export const LessonReader = () => {
                                                         />
                                                     ) : null}
                                                 </div>
-                                                {/* Medium-style teaser fade behind the paywall */}
-                                                {isLocked ? (
+                                                {/* Medium-style teaser fade behind the paywall — only
+                                                    when there is teaser text to fade (see `hasTeaserBody`). */}
+                                                {isLocked && hasTeaserBody ? (
                                                     <div className="pointer-events-none absolute inset-x-0 bottom-0 h-72 bg-gradient-to-b from-transparent via-surface/70 to-surface" />
                                                 ) : null}
                                             </div>

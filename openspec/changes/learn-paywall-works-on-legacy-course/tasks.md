@@ -11,6 +11,11 @@
 
 - [x] 2.1 `DocumentReader`: thêm `hasTeaserBody` (chữ / HTML / link tài nguyên); fade chỉ vẽ khi
       `locked && hasTeaserBody`.
+- [x] 2.2 `LessonReader` (nhánh bài KHÔNG phải DOCUMENT, vd VIDEO): **bản sao thứ hai của đúng khối
+      đó** — cùng markup, cùng lỗi. Vá lần đầu chỉ sửa `DocumentReader` nên bài VIDEO vẫn còn vệt
+      trắng (sếp phát hiện trên `Buổi 1` của JPD133). Thêm `hasTeaserBody` tương tự.
+      ⚠️ Nợ: hai khối này là code trùng lặp nguyên văn (`LessonReader:339-360` vs `DocumentReader`),
+      nên mọi lỗi ở đây đều phải sửa hai lần. Đáng gộp về một component, tách change riêng.
 
 ## 3. Verify
 

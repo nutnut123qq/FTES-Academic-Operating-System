@@ -5,6 +5,7 @@ import { Button, Chip, Modal, Skeleton, Typography, cn } from "@heroui/react"
 import { CheckIcon, LockSimpleIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { isPaidOrderStatus } from "@/modules/api/rest/commerce"
+import { useGetCourseProductSwr } from "@/hooks/swr/api/rest/queries/useGetCourseProductSwr"
 import { useGetCoursePackageProductSwr } from "@/hooks/swr/api/rest/queries/useGetCoursePackageProductSwr"
 import { usePostAddCartItemSwr } from "@/hooks/swr/api/rest/mutations/usePostAddCartItemSwr"
 import { usePostCheckoutSwr } from "@/hooks/swr/api/rest/mutations/usePostCheckoutSwr"
@@ -59,7 +60,9 @@ export const PackageGateModal = ({
     onPurchased,
 }: PackageGateModalProps) => {
     const t = useTranslations("courseSystem.preview")
-    const { packages, isLoading, isError } = useQueryCoursePackagesSwr(courseRawId, { enabled: isOpen })
+    // `isError` intentionally unused: a failed package fetch lands on the same whole-course
+    // fallback as an empty list — better a working buy path than a dead-end error card.
+    const { packages, isLoading } = useQueryCoursePackagesSwr(courseRawId, { enabled: isOpen })
 
     const filteredPackages = useMemo(() => {
         const slugSet = new Set(packageSlugs)
@@ -97,15 +100,18 @@ export const PackageGateModal = ({
                         <Modal.Body className="flex flex-col gap-4">
                             {isLoading ? (
                                 <PackageGateSkeleton />
-                            ) : isError || !hasPackages ? (
-                                <div className="flex flex-col items-center gap-3 py-6 text-center">
-                                    <Typography type="body" weight="semibold">
-                                        {t("modal.emptyTitle")}
-                                    </Typography>
-                                    <Typography type="body-sm" color="muted">
-                                        {t("modal.emptyHint")}
-                                    </Typography>
-                                </div>
+                            ) : !hasPackages ? (
+                                // A LEGACY course has NO packages by design (the BE forbids them), so
+                                // the package list is legitimately empty and the old "packages are
+                                // being updated" copy was a dead end: the viewer could not buy at all.
+                                // Fall back to the course-level COURSE_UNLOCK product — the same
+                                // checkout the detail page's "Đăng ký học" runs.
+                                <WholeCourseGateCard
+                                    courseRawId={courseRawId}
+                                    courseTitle={courseTitle}
+                                    onPurchased={onPurchased}
+                                    onClose={onClose}
+                                />
                             ) : (
                                 <>
                                     {cheapestPackage ? (
@@ -256,6 +262,108 @@ const PackageGateCard = ({
                 onPress={handleSelect}
             >
                 {ctaLabel}
+            </Button>
+        </div>
+    )
+}
+
+/**
+ * Fallback offer when the course sells no packages (every LEGACY course): buy the whole
+ * course through its COURSE_UNLOCK product — the same resolve → cart → PaymentModal path
+ * the detail page's enroll CTA uses. When the course carries no product either (not on
+ * sale), it degrades to the original "no matching packages" message instead of a CTA that
+ * cannot complete.
+ */
+const WholeCourseGateCard = ({
+    courseRawId,
+    courseTitle,
+    onPurchased,
+    onClose,
+}: {
+    courseRawId: string
+    courseTitle: string
+    onPurchased?: () => void
+    onClose: () => void
+}) => {
+    const t = useTranslations("courseSystem.preview")
+    const tCourse = useTranslations("courseSystem")
+    const { guard } = useRequireAuth()
+    const { data: product, isLoading } = useGetCourseProductSwr(courseRawId)
+    const addCart = usePostAddCartItemSwr()
+    const checkout = usePostCheckoutSwr()
+    const payment = usePaymentOverlayState()
+    const [isProcessing, setIsProcessing] = useState(false)
+
+    const handleBuy = guard(async () => {
+        if (!product || isProcessing) return
+        setIsProcessing(true)
+        try {
+            const item = await addCart.trigger({ productId: product.id, quantity: 1 })
+            const isFree = (product.priceVnd ?? 0) === 0 && (product.priceCoin ?? 0) === 0
+            if (isFree) {
+                const result = await checkout.trigger({
+                    itemIds: [item.id],
+                    payMethod: "VIETQR",
+                    idempotencyKey: crypto.randomUUID(),
+                })
+                if (isPaidOrderStatus(result.status)) {
+                    onPurchased?.()
+                    onClose()
+                }
+                return
+            }
+            payment.open({
+                itemIds: [item.id],
+                title: courseTitle,
+                amountVnd: product.priceVnd ?? 0,
+                amountCoin: product.priceCoin ?? undefined,
+                onSuccess: onPurchased,
+            })
+            onClose()
+        } catch {
+            // SWR surfaces the error; keep the modal open so the user can retry.
+        } finally {
+            setIsProcessing(false)
+        }
+    }, "auth.context.enroll")
+
+    if (isLoading) {
+        return <PackageGateSkeleton />
+    }
+
+    if (!product) {
+        return (
+            <div className="flex flex-col items-center gap-3 py-6 text-center">
+                <Typography type="body" weight="semibold">
+                    {t("modal.emptyTitle")}
+                </Typography>
+                <Typography type="body-sm" color="muted">
+                    {t("modal.emptyHint")}
+                </Typography>
+            </div>
+        )
+    }
+
+    const isBusy = isProcessing || addCart.isMutating || checkout.isMutating
+
+    return (
+        <div className="flex flex-col gap-3 rounded-2xl border border-default bg-surface p-4">
+            <div className="flex items-start justify-between gap-3">
+                <Typography type="body" weight="semibold">
+                    {tCourse("detail.wholeCourse")}
+                </Typography>
+                <Typography type="body" weight="bold" className="text-accent">
+                    {t("price", { price: formatPrice(product.priceVnd ?? 0) })}
+                </Typography>
+            </div>
+            <Button
+                variant="primary"
+                className="self-stretch"
+                isDisabled={isBusy}
+                isPending={isBusy}
+                onPress={handleBuy}
+            >
+                {isBusy ? t("modal.processing") : tCourse("detail.enroll")}
             </Button>
         </div>
     )

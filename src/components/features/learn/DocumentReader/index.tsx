@@ -70,6 +70,8 @@ export const DocumentReader = ({
     const resourceLinks = bodyMd ? extractResourceLinks(bodyMd) : []
     const isLinkOnly = resourceLinks.length > 0
     const hasWrittenBody = !!bodyMd || !!documentHtml
+    /** Is there anything in the reading area at all — text, html, or resource links? */
+    const hasTeaserBody = hasWrittenBody || isLinkOnly
     const isReadingEmpty = !locked && !hasWrittenBody
     const showReadingCard = locked || hasWrittenBody || isReadingEmpty
 
@@ -102,8 +104,13 @@ export const DocumentReader = ({
                                     />
                                 ) : null}
                             </div>
-                            {/* Medium-style teaser fade behind the paywall */}
-                            {locked ? (
+                            {/* Medium-style teaser fade behind the paywall — ONLY when there is
+                                teaser text to fade out. A locked lesson whose body is empty (BE
+                                returns `bodyMd: ""` for DOCUMENT lessons that carry files/links
+                                instead of markdown) leaves this container 0px tall, so an
+                                `absolute bottom-0 h-72` gradient spills UPWARD over the lesson
+                                title — a white veil across content that was never there. */}
+                            {locked && hasTeaserBody ? (
                                 <div className="pointer-events-none absolute inset-x-0 bottom-0 h-72 bg-gradient-to-b from-transparent via-surface/70 to-surface" />
                             ) : null}
                         </div>

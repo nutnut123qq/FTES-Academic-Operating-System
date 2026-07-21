@@ -624,14 +624,12 @@ type EnrollCardProps = {
 /**
  * The sticky purchase/enroll card for a LEGACY course (or one with no `saleMode`).
  *
- * - Not enrolled: ONE purchase option — the whole course — rendered by the shared
- *   {@link PurchaseOptionHeadline}, a primary "Đăng ký học" CTA, and the
- *   "Học thử miễn phí" entry only when the course really has free lessons.
+ * - Not enrolled: an OPTION PICKER in the SAME shape as the PACKAGE card
+ *   ({@link SelectableCardGroup}) — a paid "Trọn khoá" row (default) and, only when the
+ *   course has free lessons, a "Học thử miễn phí" row. The selection drives the headline
+ *   price and the single primary CTA (buy → checkout, or free trial → reader). A course
+ *   with no free lessons shows the paid buy alone (no pointless one-row picker).
  * - Enrolled: collapses to a single "Tiếp tục học" primary CTA.
- *
- * There are NO Free/Premium tiers here: the BE has no tier concept for a LEGACY
- * course, so the card shows only figures the contract actually carries (price,
- * lesson counts). A course that wants several options is upgraded to PACKAGE.
  */
 export const EnrollCard = ({
     course,
@@ -643,6 +641,17 @@ export const EnrollCard = ({
 }: EnrollCardProps) => {
     const t = useTranslations("courseSystem")
     const challengeCount = course.challengeCount ?? null
+    // Two options in the PACKAGE-picker shape: paid whole course (default) + a free trial
+    // (only when the course has free lessons). Selection drives the headline + primary CTA.
+    const PREMIUM = "premium"
+    const FREE = "free"
+    const hasFree = course.freeLessonCount > 0
+    const [chosen, setChosen] = useState<string>(PREMIUM)
+    const selected = hasFree ? chosen : PREMIUM
+    const strikeOriginal =
+        course.price.originalVnd && course.price.originalVnd > course.price.vnd
+            ? course.price.originalVnd
+            : null
 
     return (
         <div className="flex flex-col gap-2.5 rounded-2xl border border-separator p-4 md:sticky md:top-20">
@@ -659,28 +668,72 @@ export const EnrollCard = ({
                 </>
             ) : (
                 <>
+                    {/* headline — the SELECTED option's price (paid → PriceTag; free → free label) */}
                     <PurchaseOptionHeadline
-                        name={t("detail.wholeCourse")}
-                        discounted={course.price.vnd}
-                        original={
-                            course.price.originalVnd && course.price.originalVnd > course.price.vnd
-                                ? course.price.originalVnd
-                                : null
-                        }
+                        discounted={selected === FREE ? 0 : course.price.vnd}
+                        original={selected === FREE ? null : strikeOriginal}
                     />
 
-                    {/* CTA cluster — same shape as the PACKAGE card: one dominant
-                        primary buy, then a quiet tertiary "Học thử miễn phí" which
-                        only exists when the course actually has free lessons. */}
+                    {/* option picker — SAME UI as the PACKAGE card: radio rows + price badge.
+                        Shown only when there's a real choice (the course offers a free trial). */}
+                    {hasFree ? (
+                        <SelectableCardGroup
+                            ariaLabel={t("detail.package.selectorAria")}
+                            variant="plain"
+                            value={selected}
+                            onChange={setChosen}
+                            items={[
+                                {
+                                    value: PREMIUM,
+                                    icon: selected === PREMIUM ? (
+                                        <CircleIcon aria-hidden focusable="false" weight="fill" className="size-5 text-accent" />
+                                    ) : (
+                                        <CircleIcon aria-hidden focusable="false" className="size-5 text-muted" />
+                                    ),
+                                    label: <span className="truncate">{t("detail.wholeCourse")}</span>,
+                                    badge: (
+                                        <span className="flex items-center gap-2 text-sm">
+                                            {strikeOriginal ? (
+                                                <span className="text-xs text-muted line-through">
+                                                    {strikeOriginal.toLocaleString("vi-VN")}₫
+                                                </span>
+                                            ) : null}
+                                            <span className={cn("font-medium", selected === PREMIUM ? "text-accent" : "text-foreground")}>
+                                                {course.price.vnd.toLocaleString("vi-VN")}₫
+                                            </span>
+                                        </span>
+                                    ),
+                                },
+                                {
+                                    value: FREE,
+                                    icon: selected === FREE ? (
+                                        <CircleIcon aria-hidden focusable="false" weight="fill" className="size-5 text-accent" />
+                                    ) : (
+                                        <CircleIcon aria-hidden focusable="false" className="size-5 text-muted" />
+                                    ),
+                                    label: <span className="truncate">{t("detail.tryFree")}</span>,
+                                    badge: (
+                                        <span className={cn("text-sm font-medium", selected === FREE ? "text-accent" : "text-foreground")}>
+                                            {t("detail.freeLabel")}
+                                        </span>
+                                    ),
+                                },
+                            ]}
+                        />
+                    ) : null}
+
+                    {/* CTA — acts on the SELECTED option (mirrors the PACKAGE card's single
+                        primary): premium → real checkout; free → free trial into the reader. */}
                     <div className="flex flex-col gap-2">
-                        <Button variant="primary" fullWidth onPress={onEnroll} isPending={isEnrolling}>
-                            {t("detail.enroll")}
-                        </Button>
-                        {course.freeLessonCount > 0 ? (
-                            <Button variant="tertiary" size="sm" fullWidth onPress={onTryLearning}>
+                        {selected === FREE ? (
+                            <Button variant="primary" fullWidth onPress={onTryLearning}>
                                 {t("detail.tryFree")}
                             </Button>
-                        ) : null}
+                        ) : (
+                            <Button variant="primary" fullWidth onPress={onEnroll} isPending={isEnrolling}>
+                                {t("detail.enroll")}
+                            </Button>
+                        )}
                     </div>
 
                     {/* benefits — ONLY rows backed by a real figure from the contract */}

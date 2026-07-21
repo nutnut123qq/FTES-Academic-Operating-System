@@ -48,4 +48,5 @@
 - [x] 8.1 `npx tsc --noEmit` sạch
 - [x] 8.2 `npm run lint` sạch (vùng đã sửa)
 - [x] 8.3 Test đơn vị cho `PostImagePicker` (giới hạn 4 ảnh, chặn quá cỡ/sai định dạng) và cho hook comment subject (rollback khi lỗi)
-- [ ] 8.4 `npm run build` xanh — KHÔNG chạy được trên box này (node_modules cài từ máy khác, thiếu native binding @tailwindcss/oxide…); cần chạy ở máy local
+- [x] 8.4 `npm run build` xanh (chạy ở máy local — box server thiếu native binding nên không build được ở đó)
+- [x] 8.5 E2E trình duyệt với tài khoản STUDENT thật trên apitest: đăng bài kèm ảnh ở `/community` và ở tab Thảo luận (2 ảnh, đúng subject UUID), ảnh render thật sau F5, bình luận `POST /community/posts/{id}/comments` → 200 và còn sau F5

@@ -20,6 +20,12 @@ export interface CourseEnrollmentBuyContext {
     rawId?: string
     /** Human title shown on the PaymentModal summary line. */
     title?: string
+    /**
+     * The course's advertised price (`course.price.vnd`). Resolves the COURSE_UNLOCK
+     * product whose price MATCHES the course so checkout charges the per-course price
+     * (399k), not the cheapest/arbitrary product (200k). Omit to keep the old behaviour.
+     */
+    priceVnd?: number
 }
 
 /** Result of {@link useCourseEnrollment}. */
@@ -68,8 +74,9 @@ export const useCourseEnrollment = (
     const { trigger: startTrial } = useMutateStartTrialSwr()
 
     // Resolve the course's COURSE_UNLOCK product (null when not on sale). Gated on a
-    // `rawId` so PACKAGE / not-for-sale courses issue no request.
-    const { data: product } = useGetCourseProductSwr(buy?.rawId)
+    // `rawId` so PACKAGE / not-for-sale courses issue no request. `priceVnd` steers the
+    // resolver to the product matching the course price (charge the per-course price).
+    const { data: product } = useGetCourseProductSwr(buy?.rawId, buy?.priceVnd)
     const addCart = usePostAddCartItemSwr()
     const payment = usePaymentOverlayState()
     const { mutate: mutateSwr } = useSWRConfig()

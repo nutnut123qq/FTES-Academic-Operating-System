@@ -641,13 +641,14 @@ export const EnrollCard = ({
 }: EnrollCardProps) => {
     const t = useTranslations("courseSystem")
     const challengeCount = course.challengeCount ?? null
-    // Two options in the PACKAGE-picker shape: paid whole course (default) + a free trial
-    // (only when the course has free lessons). Selection drives the headline + primary CTA.
+    // Two options in the PACKAGE-picker shape, ALWAYS shown (like the package card): the paid
+    // whole course (default) + a free trial. "Học thử miễn phí" (free-enroll) is offered on
+    // EVERY course regardless of freeLessonCount — login → free-enroll gives preview access
+    // (rule premium-unlock-is-enroll-not-vip). Selection drives the headline + primary CTA.
     const PREMIUM = "premium"
     const FREE = "free"
-    const hasFree = course.freeLessonCount > 0
     const [chosen, setChosen] = useState<string>(PREMIUM)
-    const selected = hasFree ? chosen : PREMIUM
+    const selected = chosen
     const strikeOriginal =
         course.price.originalVnd && course.price.originalVnd > course.price.vnd
             ? course.price.originalVnd
@@ -675,52 +676,50 @@ export const EnrollCard = ({
                     />
 
                     {/* option picker — SAME UI as the PACKAGE card: radio rows + price badge.
-                        Shown only when there's a real choice (the course offers a free trial). */}
-                    {hasFree ? (
-                        <SelectableCardGroup
-                            ariaLabel={t("detail.package.selectorAria")}
-                            variant="plain"
-                            value={selected}
-                            onChange={setChosen}
-                            items={[
-                                {
-                                    value: PREMIUM,
-                                    icon: selected === PREMIUM ? (
-                                        <CircleIcon aria-hidden focusable="false" weight="fill" className="size-5 text-accent" />
-                                    ) : (
-                                        <CircleIcon aria-hidden focusable="false" className="size-5 text-muted" />
-                                    ),
-                                    label: <span className="truncate">{t("detail.wholeCourse")}</span>,
-                                    badge: (
-                                        <span className="flex items-center gap-2 text-sm">
-                                            {strikeOriginal ? (
-                                                <span className="text-xs text-muted line-through">
-                                                    {strikeOriginal.toLocaleString("vi-VN")}₫
-                                                </span>
-                                            ) : null}
-                                            <span className={cn("font-medium", selected === PREMIUM ? "text-accent" : "text-foreground")}>
-                                                {course.price.vnd.toLocaleString("vi-VN")}₫
+                        ALWAYS shown so every course offers both the paid course + a free trial. */}
+                    <SelectableCardGroup
+                        ariaLabel={t("detail.package.selectorAria")}
+                        variant="plain"
+                        value={selected}
+                        onChange={setChosen}
+                        items={[
+                            {
+                                value: PREMIUM,
+                                icon: selected === PREMIUM ? (
+                                    <CircleIcon aria-hidden focusable="false" weight="fill" className="size-5 text-accent" />
+                                ) : (
+                                    <CircleIcon aria-hidden focusable="false" className="size-5 text-muted" />
+                                ),
+                                label: <span className="truncate">{t("detail.wholeCourse")}</span>,
+                                badge: (
+                                    <span className="flex items-center gap-2 text-sm">
+                                        {strikeOriginal ? (
+                                            <span className="text-xs text-muted line-through">
+                                                {strikeOriginal.toLocaleString("vi-VN")}₫
                                             </span>
+                                        ) : null}
+                                        <span className={cn("font-medium", selected === PREMIUM ? "text-accent" : "text-foreground")}>
+                                            {course.price.vnd.toLocaleString("vi-VN")}₫
                                         </span>
-                                    ),
-                                },
-                                {
-                                    value: FREE,
-                                    icon: selected === FREE ? (
-                                        <CircleIcon aria-hidden focusable="false" weight="fill" className="size-5 text-accent" />
-                                    ) : (
-                                        <CircleIcon aria-hidden focusable="false" className="size-5 text-muted" />
-                                    ),
-                                    label: <span className="truncate">{t("detail.tryFree")}</span>,
-                                    badge: (
-                                        <span className={cn("text-sm font-medium", selected === FREE ? "text-accent" : "text-foreground")}>
-                                            {t("detail.freeLabel")}
-                                        </span>
-                                    ),
-                                },
-                            ]}
-                        />
-                    ) : null}
+                                    </span>
+                                ),
+                            },
+                            {
+                                value: FREE,
+                                icon: selected === FREE ? (
+                                    <CircleIcon aria-hidden focusable="false" weight="fill" className="size-5 text-accent" />
+                                ) : (
+                                    <CircleIcon aria-hidden focusable="false" className="size-5 text-muted" />
+                                ),
+                                label: <span className="truncate">{t("detail.tryFree")}</span>,
+                                badge: (
+                                    <span className={cn("text-sm font-medium", selected === FREE ? "text-accent" : "text-foreground")}>
+                                        {t("detail.freeLabel")}
+                                    </span>
+                                ),
+                            },
+                        ]}
+                    />
 
                     {/* CTA — acts on the SELECTED option (mirrors the PACKAGE card's single
                         primary): premium → real checkout; free → free trial into the reader. */}

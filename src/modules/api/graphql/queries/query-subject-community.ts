@@ -1,6 +1,7 @@
 import { createAuthApolloClient } from "../clients"
 import { type GraphQLHeaders } from "../types"
 import { DocumentNode, gql } from "@apollo/client"
+import type { FeedPostMedia } from "./query-community-feed"
 
 /**
  * Real BE subject discussion feed — GraphQL `subjectWorkspace(subjectId).community(scope: ...)`
@@ -66,6 +67,8 @@ export interface SubjectCommunityPost {
     commentCount: number
     /** Batch-resolved comment thread (top-level + one reply level), capped at 50/post. */
     comments: Array<SubjectCommunityCommentNode>
+    /** Images attached to the post, in server order (BE `Post.media`); empty when none. */
+    media: Array<FeedPostMedia>
 }
 
 /** Cursor-paginated page of posts (BE `PostConnection`). */
@@ -98,6 +101,13 @@ const COMMUNITY_SELECTION = `
       username
       displayName
       avatarUrl
+    }
+    media {
+      id
+      mediaType
+      storageKey
+      mimeType
+      sortOrder
     }
     comments {
       id

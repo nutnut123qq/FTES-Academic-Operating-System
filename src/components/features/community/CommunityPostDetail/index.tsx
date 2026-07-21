@@ -7,6 +7,7 @@ import { useParams } from "next/navigation"
 import { useAppSelector } from "@/redux/hooks"
 import { UserLink } from "@/components/features/identity"
 import { ThreadsPostRow } from "@/components/blocks/feed/ThreadsPostRow"
+import { PostMediaGrid } from "@/components/blocks/feed/PostMediaGrid"
 import { PostEngagementBar } from "@/components/reuseable/PostEngagementBar"
 import { PostCommentThread } from "@/components/reuseable/PostCommentThread"
 import { useQueryPostDetailSwr } from "../hooks/useQueryPostDetailSwr"
@@ -86,6 +87,7 @@ export const CommunityPostDetail = () => {
                     {post.title}
                 </Typography>
                 <Typography type="body-sm">{post.body}</Typography>
+                <PostMediaGrid media={post.media} imageAlt={t("composer.imageAlt")} />
                 <PostEngagementBar
                     likes={post.likes}
                     liked={post.liked}

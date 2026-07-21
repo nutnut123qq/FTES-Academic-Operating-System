@@ -57,6 +57,20 @@ export interface FeedPost {
     likedByMe: boolean
     /** Denormalized comment counter (BE `commentCount`). */
     commentCount: number
+    /** Images attached to the post, in server order (BE `Post.media`); empty when none. */
+    media: Array<FeedPostMedia>
+}
+
+/**
+ * One image attached to a post (BE `PostMedia`). `storageKey` is a ready-to-render delivery URL
+ * issued by the platform image provider — never build a URL from it.
+ */
+export interface FeedPostMedia {
+    id: string
+    mediaType: string
+    storageKey: string
+    mimeType: string | null
+    sortOrder: number
 }
 
 /** Cursor-paginated page of posts (BE `PostConnection`). */
@@ -86,6 +100,13 @@ const FEED_SELECTION = `
       username
       displayName
       avatarUrl
+    }
+    media {
+      id
+      mediaType
+      storageKey
+      mimeType
+      sortOrder
     }
   }
   nextCursor

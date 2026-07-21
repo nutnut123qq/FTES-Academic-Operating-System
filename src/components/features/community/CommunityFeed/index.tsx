@@ -7,6 +7,7 @@ import { useAppSelector } from "@/redux/hooks"
 import { Link } from "@/i18n/navigation"
 import { UserLink } from "@/components/features/identity"
 import { ThreadsPostRow } from "@/components/blocks/feed/ThreadsPostRow"
+import { PostMediaGrid } from "@/components/blocks/feed/PostMediaGrid"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { PostEngagementBar } from "@/components/reuseable/PostEngagementBar"
 import { PostCommentThread } from "@/components/reuseable/PostCommentThread"
@@ -66,6 +67,7 @@ const FeedSkeleton = () => (
 
 /** One community feed row + its inline (lazy) comment thread. */
 const CommunityFeedRow = ({ post }: { post: CommunityPost }) => {
+    const t = useTranslations("communityHub")
     const locale = useLocale()
     const currentUser = useAppSelector((state) => state.user.user)
     const [expanded, setExpanded] = useState(false)
@@ -95,7 +97,7 @@ const CommunityFeedRow = ({ post }: { post: CommunityPost }) => {
             }
             return submitComment(input)
         },
-        [post.id, locale, submitComment],
+        [post.id, locale, submitComment, currentUser],
     )
 
     return (
@@ -124,6 +126,7 @@ const CommunityFeedRow = ({ post }: { post: CommunityPost }) => {
                     </Typography>
                     <Typography type="body-sm">{post.snippet}</Typography>
                 </Link>
+                <PostMediaGrid media={post.media} imageAlt={t("composer.imageAlt")} />
                 <PostEngagementBar
                     likes={post.likes}
                     liked={post.liked}

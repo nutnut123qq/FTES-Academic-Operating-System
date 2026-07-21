@@ -8,7 +8,9 @@ import {
     type CommunityPostNode,
     type CommunityPostReplyNode,
 } from "@/modules/api/graphql/queries/query-community-post"
+import type { PostMediaItem } from "@/components/blocks/feed/PostMediaGrid"
 import { formatRelativeTime } from "./relativeTime"
+import { toMediaItems } from "./useQueryCommunityFeedSwr"
 
 /** A comment on a post. Replies are flat, one level deep (Threads-like). */
 export interface PostComment {
@@ -37,6 +39,8 @@ export interface PostDetail {
     /** Whether the current user has liked this post. */
     liked: boolean
     comments: Array<PostComment>
+    /** Image attachments in server order; empty when the post has none. */
+    media: Array<PostMediaItem>
 }
 
 /** SWR cache key for a post's detail — shared by the detail page, the inline
@@ -73,6 +77,7 @@ const toPostDetail = (post: CommunityPostNode, locale: string): PostDetail => ({
     likes: post.likeCount,
     liked: post.likedByMe,
     comments: post.comments.map((comment) => toComment(comment, locale)),
+    media: toMediaItems(post.media),
 })
 
 /** Fetch + map a single post; a not-found / not-visible id throws (Apollo error) → caller degrades. */

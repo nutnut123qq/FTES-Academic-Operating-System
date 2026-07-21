@@ -7,6 +7,7 @@ import type {
     CreateReportRequest,
     FeedPage,
     LeaderboardResponse,
+    MediaUploadResponse,
     ModerationDecisionRequest,
     ModerationQueueResponse,
     PollResponse,
@@ -31,6 +32,29 @@ export const createPost = async (
         method: "POST",
         url: "/community/posts",
         data: request,
+    })
+}
+
+/**
+ * Uploads one image for a community post. The BE stores it on the platform image provider
+ * (Cloudinary) under its own folder and returns the delivery URLs; only a `secureUrl` issued here
+ * is accepted as a post's `media[].storageKey`.
+ *
+ * Requires `community.post.create` — the same permission that gates posting. Limits mirrored by the
+ * server: 10MB and png/jpeg/webp/gif.
+ *
+ * `Content-Type: null` lets the browser set the multipart boundary (same trick as `uploadAvatar`).
+ *
+ * `POST /api/v1/community/media`
+ */
+export const uploadCommunityMedia = async (file: File): Promise<MediaUploadResponse> => {
+    const formData = new FormData()
+    formData.append("file", file)
+    return restRequest<MediaUploadResponse>({
+        method: "POST",
+        url: "/community/media",
+        data: formData,
+        headers: { "Content-Type": null as unknown as string },
     })
 }
 

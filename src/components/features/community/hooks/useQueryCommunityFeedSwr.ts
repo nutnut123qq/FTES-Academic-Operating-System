@@ -7,7 +7,18 @@ import {
     queryCommunityFeed,
     type FeedPost,
 } from "@/modules/api/graphql/queries/query-community-feed"
+import type { PostMediaItem } from "@/components/blocks/feed/PostMediaGrid"
 import { formatRelativeTime } from "./relativeTime"
+
+/** Map BE `Post.media` onto the render contract of the shared media grid. */
+export const toMediaItems = (
+    media: Array<{ id: string; mediaType: string; storageKey: string }> | undefined,
+): Array<PostMediaItem> =>
+    (media ?? []).map((item) => ({
+        id: item.id,
+        mediaType: item.mediaType,
+        storageKey: item.storageKey,
+    }))
 
 /** A community post (BE `Post` mapped to the feed card contract). */
 export interface CommunityPost {
@@ -22,6 +33,8 @@ export interface CommunityPost {
     /** Whether the current user has liked this post (drives optimistic toggle). */
     liked: boolean
     comments: number
+    /** Image attachments in server order (BE `Post.media`); empty when the post has none. */
+    media: Array<PostMediaItem>
 }
 
 /** Feed scope selectable by the shell tabs. */
@@ -60,6 +73,7 @@ const toCommunityPost = (post: FeedPost, locale: string): CommunityPost => ({
     likes: post.likeCount,
     liked: post.likedByMe,
     comments: post.commentCount,
+    media: toMediaItems(post.media),
 })
 
 /** Items per feed page (BE `CursorInput.limit`). */

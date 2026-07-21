@@ -1,12 +1,14 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useCallback, useState } from "react"
 import { Button, Chip, toast } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { useSWRConfig } from "swr"
 import { useRouter } from "@/i18n/navigation"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
+import { PostImagePicker } from "@/components/blocks/feed/PostImagePicker"
 import { createPost } from "@/modules/api/rest/community"
+import type { MediaInput } from "@/modules/api/rest/community/types"
 import { COMMUNITY_FEED_KEY } from "../hooks/useQueryCommunityFeedSwr"
 
 /** Post kinds a user can attach (§6). */
@@ -51,8 +53,15 @@ export const CommunityComposerForm = ({
     const [body, setBody] = useState("")
     const [kind, setKind] = useState<(typeof KINDS)[number]>("knowledge")
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [media, setMedia] = useState<Array<MediaInput>>([])
+    const [isUploading, setIsUploading] = useState(false)
+    const [imagesResetToken, setImagesResetToken] = useState(0)
 
-    const canSubmit = title.trim() !== "" && body.trim() !== "" && !isSubmitting
+    // Submitting while an image is still uploading would publish the post without it.
+    const canSubmit = title.trim() !== "" && body.trim() !== "" && !isSubmitting && !isUploading
+
+    const onImagesChange = useCallback((next: Array<MediaInput>) => setMedia(next), [])
+    const onUploadingChange = useCallback((uploading: boolean) => setIsUploading(uploading), [])
 
     const onSubmit = async () => {
         if (!requireAuth("auth.context.generic")) {
@@ -64,9 +73,12 @@ export const CommunityComposerForm = ({
                 postType: KIND_TO_POST_TYPE[kind],
                 title: title.trim(),
                 content: body.trim(),
+                media: media.length > 0 ? media : undefined,
             })
             setTitle("")
             setBody("")
+            setMedia([])
+            setImagesResetToken((token) => token + 1)
             // createPost is the sole success signal. Revalidate the feed so an
             // already-loaded feed shows the new post on back-navigation, but keep it
             // non-throwing: a feed-refetch error after a SUCCESSFUL create must not be
@@ -112,6 +124,12 @@ export const CommunityComposerForm = ({
                 placeholder={t("composer.bodyField")}
                 rows={6}
                 className="w-full resize-none rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted focus:border-accent"
+            />
+
+            <PostImagePicker
+                onChange={onImagesChange}
+                onUploadingChange={onUploadingChange}
+                resetToken={imagesResetToken}
             />
 
             <Button

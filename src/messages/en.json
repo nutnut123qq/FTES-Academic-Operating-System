@@ -4938,7 +4938,11 @@
       "empty": "No discussions yet.",
       "loadError": "Couldn't load discussions.",
       "retry": "Try again",
-      "likeFailed": "Couldn't update your like. Please try again."
+      "likeFailed": "Couldn't update your like. Please try again.",
+      "compose": "Start a discussion",
+      "titleField": "Title",
+      "bodyField": "What do you want to ask or share?",
+      "createFailed": "Could not publish the post. Please try again."
     },
     "members": {
       "title": "Members",
@@ -5597,7 +5601,15 @@
         "question": "Question",
         "showcase": "Showcase",
         "resource": "Resource"
-      }
+      },
+      "addImage": "Add image",
+      "imageAlt": "Post attachment",
+      "imageLimit": "Up to {max} images per post.",
+      "imageTooLarge": "Images can be at most 10MB.",
+      "imageInvalid": "Only PNG, JPEG, WebP or GIF images are accepted.",
+      "imageUploadFailed": "Could not upload the image. Please try again.",
+      "imageUploading": "Uploading…",
+      "removeImage": "Remove image"
     },
     "reputation": {
       "title": "Reputation",

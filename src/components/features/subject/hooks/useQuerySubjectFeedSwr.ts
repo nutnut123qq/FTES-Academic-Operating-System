@@ -8,6 +8,8 @@ import {
     type SubjectCommunityPost,
 } from "@/modules/api/graphql/queries/query-subject-community"
 import { formatRelativeTime } from "@/components/features/community/hooks/relativeTime"
+import { toMediaItems } from "@/components/features/community/hooks/useQueryCommunityFeedSwr"
+import type { PostMediaItem } from "@/components/blocks/feed/PostMediaGrid"
 
 /** Feed filter scope. */
 export type FeedScope = "forYou" | "following" | "trending"
@@ -40,6 +42,8 @@ export interface SubjectPost {
     liked: boolean
     /** Comment count for the discussion engagement bar. */
     comments: number
+    /** Image attachments in server order (BE `Post.media`); empty when the post has none. */
+    media: Array<PostMediaItem>
 }
 
 /**
@@ -66,6 +70,7 @@ const toSubjectPost = (post: SubjectCommunityPost, locale: string): SubjectPost 
     reactions: post.likeCount,
     liked: post.likedByMe,
     comments: post.commentCount,
+    media: toMediaItems(post.media),
 })
 
 /**

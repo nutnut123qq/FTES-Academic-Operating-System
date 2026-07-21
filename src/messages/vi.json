@@ -4938,7 +4938,11 @@
       "empty": "Chưa có bài thảo luận nào.",
       "loadError": "Không tải được thảo luận.",
       "retry": "Thử lại",
-      "likeFailed": "Không cập nhật được lượt thích. Vui lòng thử lại."
+      "likeFailed": "Không cập nhật được lượt thích. Vui lòng thử lại.",
+      "compose": "Đăng bài thảo luận",
+      "titleField": "Tiêu đề",
+      "bodyField": "Bạn muốn hỏi hoặc chia sẻ điều gì?",
+      "createFailed": "Không đăng được bài. Vui lòng thử lại."
     },
     "members": {
       "title": "Thành viên",
@@ -5597,7 +5601,15 @@
         "question": "Câu hỏi",
         "showcase": "Khoe dự án",
         "resource": "Chia sẻ tài nguyên"
-      }
+      },
+      "addImage": "Thêm ảnh",
+      "imageAlt": "Ảnh đính kèm bài viết",
+      "imageLimit": "Tối đa {max} ảnh mỗi bài.",
+      "imageTooLarge": "Ảnh tối đa 10MB.",
+      "imageInvalid": "Chỉ nhận ảnh PNG, JPEG, WebP hoặc GIF.",
+      "imageUploadFailed": "Không tải được ảnh lên. Vui lòng thử lại.",
+      "imageUploading": "Đang tải…",
+      "removeImage": "Bỏ ảnh"
     },
     "reputation": {
       "title": "Bảng uy tín",

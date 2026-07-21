@@ -13,6 +13,9 @@ import {
     DISCUSSION_ENGAGEMENT_ACTIONS,
 } from "@/components/reuseable/PostEngagementBar"
 import { PostCommentThread } from "@/components/reuseable/PostCommentThread"
+import { PostMediaGrid } from "@/components/blocks/feed/PostMediaGrid"
+import { PostImagePicker } from "@/components/blocks/feed/PostImagePicker"
+import type { MediaInput } from "@/modules/api/rest/community/types"
 import {
     useQuerySubjectFeedSwr,
     type FeedScope,
@@ -20,6 +23,8 @@ import {
 } from "../hooks/useQuerySubjectFeedSwr"
 import { useQuerySubjectPostCommentsSwr } from "../hooks/useQuerySubjectPostCommentsSwr"
 import { useMutateReactSubjectPostSwr } from "../hooks/useMutateReactSubjectPostSwr"
+import { useMutateCreateSubjectPostSwr } from "../hooks/useMutateCreateSubjectPostSwr"
+import { useMutateCreateSubjectPostCommentSwr } from "../hooks/useMutateCreateSubjectPostCommentSwr"
 import { useQuerySubjectSwr } from "../hooks/useQuerySubjectSwr"
 
 /** Feed scope tabs. */
@@ -35,11 +40,13 @@ const SubjectPostRow = ({
     scope: FeedScope
     post: SubjectPost
 }) => {
+    const tHub = useTranslations("communityHub")
     const locale = useLocale()
     const currentUser = useAppSelector((state) => state.user.user)
     const [expanded, setExpanded] = useState(false)
     const [hasOpened, setHasOpened] = useState(false)
     const reactPost = useMutateReactSubjectPostSwr(subjectId, scope)
+    const submitComment = useMutateCreateSubjectPostCommentSwr(subjectId, scope)
     const { thread, isLoading, error, mutate } = useQuerySubjectPostCommentsSwr(
         subjectId,
         post.id,
@@ -54,37 +61,19 @@ const SubjectPostRow = ({
         setExpanded((prev) => !prev)
     }, [])
 
-    // Write (add comment) is still local-optimistic: the real BE `Post.comments` read
-    // is wired, but there is no GraphQL mutation in this scope, so the new comment is
-    // appended to the SWR cache until the next revalidation.
+    // The comment is written through the community REST API (the GraphQL gateway is read-only);
+    // the hook owns the optimistic append + rollback on the discussion thread cache.
     const onSubmit = useCallback(
-        async (body: string, parentCommentId?: string): Promise<boolean> => {
-            await mutate((current) => {
-                if (!current) {
-                    return current
-                }
-                const optimistic = {
-                    id: `tmp-${Date.now()}`,
-                    author: locale === "vi" ? "Bạn" : "You",
-                    authorUsername: currentUser?.username ?? "you",
-                    text: body,
-                    timeLabel: locale === "vi" ? "vừa xong" : "just now",
-                }
-                if (parentCommentId) {
-                    return {
-                        ...current,
-                        comments: current.comments.map((comment) =>
-                            comment.id === parentCommentId
-                                ? { ...comment, replies: [...(comment.replies ?? []), optimistic] }
-                                : comment,
-                        ),
-                    }
-                }
-                return { ...current, comments: [...current.comments, optimistic] }
-            }, { revalidate: false })
-            return true
-        },
-        [mutate, locale, currentUser],
+        async (body: string, parentCommentId?: string): Promise<boolean> =>
+            submitComment({
+                postId: post.id,
+                body,
+                authorLabel: locale === "vi" ? "Bạn" : "You",
+                authorUsername: currentUser?.username ?? "you",
+                justNowLabel: locale === "vi" ? "vừa xong" : "just now",
+                parentCommentId,
+            }),
+        [submitComment, post.id, locale, currentUser],
     )
 
     return (
@@ -109,6 +98,7 @@ const SubjectPostRow = ({
                 <Typography type="body-sm" color="muted">
                     {post.snippet}
                 </Typography>
+                <PostMediaGrid media={post.media} imageAlt={tHub("composer.imageAlt")} />
                 {/* discussion = like + comment ONLY — no share, no save */}
                 <PostEngagementBar
                     className="pt-1"
@@ -140,13 +130,86 @@ const SubjectPostRow = ({
     )
 }
 
+/** Discussion composer — title + body + images, publishing into the current subject. */
+const SubjectComposer = ({ subjectId, scope }: { subjectId: string; scope: FeedScope }) => {
+    const t = useTranslations("subjects")
+    const tHub = useTranslations("communityHub")
+    const submitPost = useMutateCreateSubjectPostSwr(subjectId, scope)
+    const [title, setTitle] = useState("")
+    const [body, setBody] = useState("")
+    const [media, setMedia] = useState<Array<MediaInput>>([])
+    const [isUploading, setIsUploading] = useState(false)
+    const [isSubmitting, setIsSubmitting] = useState(false)
+    const [imagesResetToken, setImagesResetToken] = useState(0)
+
+    const onImagesChange = useCallback((next: Array<MediaInput>) => setMedia(next), [])
+    const onUploadingChange = useCallback((uploading: boolean) => setIsUploading(uploading), [])
+
+    // No subject uuid yet → the post would have nothing to anchor to; an in-flight image
+    // upload → the post would publish without it.
+    const canSubmit =
+        Boolean(subjectId) &&
+        title.trim() !== "" &&
+        body.trim() !== "" &&
+        !isSubmitting &&
+        !isUploading
+
+    const onSubmit = useCallback(async () => {
+        setIsSubmitting(true)
+        const ok = await submitPost({ title: title.trim(), content: body.trim(), media })
+        setIsSubmitting(false)
+        if (ok) {
+            setTitle("")
+            setBody("")
+            setMedia([])
+            setImagesResetToken((token) => token + 1)
+        }
+    }, [submitPost, title, body, media])
+
+    return (
+        <div className="flex flex-col gap-3 rounded-2xl border border-separator p-4">
+            <Typography type="body-sm" weight="semibold">
+                {t("community.compose")}
+            </Typography>
+            <input
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+                placeholder={t("community.titleField")}
+                className="w-full rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted focus:border-accent"
+            />
+            <textarea
+                value={body}
+                onChange={(event) => setBody(event.target.value)}
+                placeholder={t("community.bodyField")}
+                rows={3}
+                className="w-full resize-none rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted focus:border-accent"
+            />
+            <PostImagePicker
+                onChange={onImagesChange}
+                onUploadingChange={onUploadingChange}
+                resetToken={imagesResetToken}
+            />
+            <Button
+                size="sm"
+                variant="secondary"
+                className="self-start"
+                isDisabled={!canSubmit}
+                isPending={isSubmitting}
+                onPress={onSubmit}
+            >
+                {tHub("composer.submit")}
+            </Button>
+        </div>
+    )
+}
+
 /**
  * Subject workspace "Thảo luận" tab (renamed by subject-workspace-ia). A scope
  * filter over post rows carrying the shared engagement bar configured for
  * DISCUSSION (like + comment ONLY — no share, no save) with inline push-down
- * comment expansion. The feed read + like + comment read are wired to the real BE
- * (`subjectWorkspace.community` + community REST reactions); the add-comment write
- * stays local-optimistic here.
+ * comment expansion. Reads go through `subjectWorkspace.community` (GraphQL); writes —
+ * publishing a post and adding a comment — go through the community REST API, since a
+ * discussion post IS a community post anchored to the subject.
  */
 export const SubjectCommunity = () => {
     const t = useTranslations("subjects")
@@ -179,6 +242,8 @@ export const SubjectCommunity = () => {
                     ))}
                 </div>
             </div>
+
+            <SubjectComposer subjectId={subjectId} scope={scope} />
 
             <AsyncContent
                 isLoading={isLoading && posts.length === 0}

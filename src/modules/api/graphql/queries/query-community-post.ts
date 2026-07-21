@@ -1,7 +1,7 @@
 import { createAuthApolloClient } from "../clients"
 import { type GraphQLOperationContext, type GraphQLHeaders } from "../types"
 import { DocumentNode, gql } from "@apollo/client"
-import type { FeedPostAuthor } from "./query-community-feed"
+import type { FeedPostAuthor, FeedPostMedia } from "./query-community-feed"
 
 /**
  * Real BE `post(id: ID!): Post` (schema.graphqls) — a single community post, returned
@@ -26,6 +26,7 @@ const postDocument = (id: string): DocumentNode =>
             `  post(id: ${JSON.stringify(id)}) {\n` +
             `    id\n    kind\n    title\n    createdAt\n` +
             `    body\n    likeCount\n    likedByMe\n    commentCount\n` +
+            `    media { id mediaType storageKey mimeType sortOrder }\n` +
             `    author { id username displayName avatarUrl }\n` +
             `    comments {\n` +
             `      id\n      body\n      createdAt\n      parentCommentId\n` +
@@ -71,6 +72,8 @@ export interface CommunityPostNode {
     likedByMe: boolean
     commentCount: number
     comments: Array<CommunityPostCommentNode>
+    /** Images attached to the post, in server order; empty when none. */
+    media: Array<FeedPostMedia>
 }
 
 /** Apollo response shape for `post` (returned directly — no envelope; null when not found). */

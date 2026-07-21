@@ -22,6 +22,17 @@ export interface MediaOutput {
     sortOrder: number
 }
 
+/**
+ * Result of `POST /api/v1/community/media` (BE `MediaUploadResponse`). `secureUrl` is what the
+ * composer puts into {@link MediaInput.storageKey} — the BE only accepts storage keys it issued.
+ */
+export interface MediaUploadResponse {
+    mediaAssetId: string
+    provider: string
+    url: string
+    secureUrl: string
+}
+
 /** Body sent to `POST /api/v1/community/posts`. */
 export interface CreatePostRequest {
     postType: string

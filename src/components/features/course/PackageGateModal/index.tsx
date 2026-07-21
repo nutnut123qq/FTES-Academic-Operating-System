@@ -267,24 +267,37 @@ const PackageGateCard = ({
     )
 }
 
+/** Props for {@link WholeCourseGateCard}. */
+export interface WholeCourseGateCardProps {
+    /** Course UUID (`course.rawId`) used to resolve the COURSE_UNLOCK product. */
+    courseRawId: string
+    /** Human course title shown on the PaymentModal summary line. */
+    courseTitle: string
+    /** Called after a successful purchase / free enrollment (revalidate the caller). */
+    onPurchased?: () => void
+    /**
+     * Dismiss the surface hosting this card once checkout is under way. Optional: the
+     * course detail page embeds the card in a sticky panel that has nothing to close.
+     */
+    onClose?: () => void
+}
+
 /**
- * Fallback offer when the course sells no packages (every LEGACY course): buy the whole
- * course through its COURSE_UNLOCK product — the same resolve → cart → PaymentModal path
- * the detail page's enroll CTA uses. When the course carries no product either (not on
- * sale), it degrades to the original "no matching packages" message instead of a CTA that
- * cannot complete.
+ * Fallback offer when the course sells no packages (every LEGACY course, and any PACKAGE
+ * course whose package list is still empty): buy the whole course through its
+ * COURSE_UNLOCK product — the same resolve → cart → PaymentModal path the detail page's
+ * enroll CTA uses. When the course carries no product either (not on sale), it degrades
+ * to the original "no matching packages" message instead of a CTA that cannot complete.
+ *
+ * Exported so the course detail page's package card REUSES this exact flow instead of
+ * hand-rolling yet another copy of `addCart → isFree ? checkout : payment.open`.
  */
-const WholeCourseGateCard = ({
+export const WholeCourseGateCard = ({
     courseRawId,
     courseTitle,
     onPurchased,
     onClose,
-}: {
-    courseRawId: string
-    courseTitle: string
-    onPurchased?: () => void
-    onClose: () => void
-}) => {
+}: WholeCourseGateCardProps) => {
     const t = useTranslations("courseSystem.preview")
     const tCourse = useTranslations("courseSystem")
     const { guard } = useRequireAuth()
@@ -308,7 +321,7 @@ const WholeCourseGateCard = ({
                 })
                 if (isPaidOrderStatus(result.status)) {
                     onPurchased?.()
-                    onClose()
+                    onClose?.()
                 }
                 return
             }
@@ -319,7 +332,7 @@ const WholeCourseGateCard = ({
                 amountCoin: product.priceCoin ?? undefined,
                 onSuccess: onPurchased,
             })
-            onClose()
+            onClose?.()
         } catch {
             // SWR surfaces the error; keep the modal open so the user can retry.
         } finally {

@@ -47,6 +47,7 @@ import { UserAvatar } from "@/components/reuseable/UserAvatar"
 import { useQueryCourseDetailSwr, type CourseDetail as CourseDetailModel, type CourseInstructor } from "../hooks/useQueryCourseDetailSwr"
 import { useCourseEnrollment } from "../hooks/useCourseEnrollment"
 import { useQueryCoursePackagesSwr } from "../hooks/useQueryCoursePackagesSwr"
+import { WholeCourseGateCard } from "../PackageGateModal"
 import { CourseRatings } from "./CourseRatings"
 import { SelectableCardGroup } from "@/components/blocks/navigation/SelectableCardGroup"
 import { PriceTag } from "@/components/blocks/commerce/PriceTag"
@@ -259,6 +260,7 @@ export const CourseDetail = () => {
                     <CourseDetailView
                         course={course}
                         onCourses={() => router.push("/courses")}
+                        onPurchased={() => { void mutate() }}
                     />
                 ) : null}
             </AsyncContent>
@@ -270,9 +272,12 @@ export const CourseDetail = () => {
 const CourseDetailView = ({
     course,
     onCourses,
+    onPurchased,
 }: {
     course: CourseDetailModel
     onCourses: () => void
+    /** Revalidate the course detail once a purchase completes (enrollment flips). */
+    onPurchased?: () => void
 }) => {
     const t = useTranslations("courseSystem")
     const router = useRouter()
@@ -298,7 +303,15 @@ const CourseDetailView = ({
     // course's COURSE_UNLOCK product, adds it to the cart, and opens the shared
     // PaymentModal (VietQR / coin). The buy context is withheld for PACKAGE courses
     // (resolved per-package by PackageEnrollCard) so we never add an arbitrary product.
-    const { isEnrolled, onEnroll, isEnrolling, onContinueLearning, onTryLearning } = useCourseEnrollment(
+    const {
+        isEnrolled,
+        onEnroll,
+        isEnrolling,
+        canBuy,
+        isResolvingProduct,
+        onContinueLearning,
+        onTryLearning,
+    } = useCourseEnrollment(
         course.id,
         course.enrollment,
         isPackage
@@ -594,6 +607,7 @@ const CourseDetailView = ({
                             isEnrolled={isEnrolled}
                             onContinueLearning={onContinueLearning}
                             onTryLearning={onTryLearning}
+                            onPurchased={onPurchased}
                         />
                     ) : (
                         <EnrollCard
@@ -601,6 +615,8 @@ const CourseDetailView = ({
                             isEnrolled={isEnrolled}
                             onEnroll={onEnroll}
                             isEnrolling={isEnrolling}
+                            canBuy={canBuy}
+                            isResolvingProduct={isResolvingProduct}
                             onContinueLearning={onContinueLearning}
                             onTryLearning={onTryLearning}
                         />
@@ -617,6 +633,14 @@ type EnrollCardProps = {
     onEnroll: () => void
     /** Add-to-cart in flight — drives the enroll CTA's pending state. */
     isEnrolling?: boolean
+    /**
+     * Whether `onEnroll` can actually complete a checkout (the course's COURSE_UNLOCK
+     * product resolved). FALSE → the CTA is disabled and reads "chưa mở bán": pressing
+     * it could only be a no-op. Undefined keeps the CTA enabled (legacy callers/tests).
+     */
+    canBuy?: boolean
+    /** Product lookup still in flight — don't conclude "not on sale" yet. */
+    isResolvingProduct?: boolean
     onContinueLearning: () => void
     onTryLearning: () => void
 }
@@ -636,6 +660,8 @@ export const EnrollCard = ({
     isEnrolled,
     onEnroll,
     isEnrolling,
+    canBuy,
+    isResolvingProduct,
     onContinueLearning,
     onTryLearning,
 }: EnrollCardProps) => {
@@ -649,6 +675,10 @@ export const EnrollCard = ({
     const FREE = "free"
     const [chosen, setChosen] = useState<string>(PREMIUM)
     const selected = chosen
+    // "Not on sale" is a CONCLUSION, so it needs the lookup to have finished: while the
+    // product request is in flight we keep the normal enroll label. `canBuy === undefined`
+    // (caller doesn't know) also keeps the CTA as it was.
+    const notForSale = canBuy === false && !isResolvingProduct
     const strikeOriginal =
         course.price.originalVnd && course.price.originalVnd > course.price.vnd
             ? course.price.originalVnd
@@ -729,9 +759,22 @@ export const EnrollCard = ({
                                 {t("detail.tryFree")}
                             </Button>
                         ) : (
-                            <Button variant="primary" fullWidth onPress={onEnroll} isPending={isEnrolling}>
-                                {t("detail.enroll")}
-                            </Button>
+                            <>
+                                <Button
+                                    variant="primary"
+                                    fullWidth
+                                    onPress={onEnroll}
+                                    isPending={isEnrolling}
+                                    isDisabled={notForSale}
+                                >
+                                    {notForSale ? t("detail.notForSale") : t("detail.enroll")}
+                                </Button>
+                                {notForSale ? (
+                                    <Typography type="body-xs" color="muted" align="center">
+                                        {t("detail.notForSaleHint")}
+                                    </Typography>
+                                ) : null}
+                            </>
                         )}
                     </div>
 
@@ -904,6 +947,8 @@ type PackageEnrollCardProps = {
     isEnrolled: boolean
     onContinueLearning: () => void
     onTryLearning: () => void
+    /** Revalidate the course detail after a purchase completes (enrollment flips). */
+    onPurchased?: () => void
 }
 
 /**
@@ -918,14 +963,15 @@ type PackageEnrollCardProps = {
  * "Đang cập nhật gói" panel (never a crash) when the list errors or is empty.
  * Enrolled viewers collapse to a single "Tiếp tục học" CTA, matching {@link EnrollCard}.
  */
-const PackageEnrollCard = ({
+export const PackageEnrollCard = ({
     course,
     isEnrolled,
     onContinueLearning,
     onTryLearning,
+    onPurchased,
 }: PackageEnrollCardProps) => {
     const t = useTranslations("courseSystem")
-    const { packages, isLoading, isError, isEmpty } = useQueryCoursePackagesSwr(course.rawId, {
+    const { packages, isLoading, isError, isEmpty, retry } = useQueryCoursePackagesSwr(course.rawId, {
         enabled: !isEnrolled,
     })
 
@@ -1023,16 +1069,38 @@ const PackageEnrollCard = ({
                 </>
             ) : isLoading ? (
                 <PackagePickerSkeleton />
-            ) : isError || isEmpty || packages.length === 0 ? (
+            ) : isError ? (
+                // FETCH failure (network / 401 / WAF), NOT a data state. Saying "the
+                // packages are being updated" here blames the data for a request that
+                // never landed — and leaves no way out. Say it failed, offer a retry.
                 <div className="flex flex-col gap-3">
                     <div className="flex flex-col gap-1 rounded-xl border border-separator bg-default/40 p-4 text-center">
                         <Typography type="body-sm" weight="medium">
-                            {t("detail.package.updatingTitle")}
+                            {t("detail.package.errorTitle")}
                         </Typography>
                         <Typography type="body-xs" color="muted">
-                            {t("detail.package.updatingHint")}
+                            {t("detail.package.errorHint")}
                         </Typography>
                     </div>
+                    <Button variant="primary" fullWidth onPress={retry}>
+                        {t("detail.retry")}
+                    </Button>
+                    <Button variant="secondary" fullWidth onPress={onTryLearning}>
+                        {t("detail.tryFree")}
+                    </Button>
+                </div>
+            ) : isEmpty || packages.length === 0 ? (
+                // No packages ≠ nothing to sell: the course-level COURSE_UNLOCK product
+                // still buys the whole course. REUSE the gate modal's card (one flow,
+                // one place) — the detail page must not grow a 5th copy of
+                // `addCart → isFree ? checkout : payment.open`. WholeCourseGateCard
+                // itself degrades to the "no packages" message when no product resolves.
+                <div className="flex flex-col gap-3">
+                    <WholeCourseGateCard
+                        courseRawId={course.rawId}
+                        courseTitle={course.name}
+                        onPurchased={onPurchased}
+                    />
                     <Button variant="secondary" fullWidth onPress={onTryLearning}>
                         {t("detail.tryFree")}
                     </Button>

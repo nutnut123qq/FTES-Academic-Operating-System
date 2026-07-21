@@ -14,6 +14,8 @@ export interface UseCoursePackagesResult {
     isError: boolean
     /** True when the request succeeded but the course has no packages yet. */
     isEmpty: boolean
+    /** Re-runs the request — wire it to the error state's "Thử lại" button. */
+    retry: () => void
 }
 
 /**
@@ -35,7 +37,7 @@ export const useQueryCoursePackagesSwr = (
 ): UseCoursePackagesResult => {
     const enabled = options?.enabled !== false
     const active = Boolean(enabled && rawId)
-    const { data, isLoading, error } = useSWR(
+    const { data, isLoading, error, mutate } = useSWR(
         active ? ["COURSE_PACKAGES_SWR", rawId] : null,
         () => getCoursePackages(rawId as string),
         { shouldRetryOnError: false },
@@ -50,5 +52,8 @@ export const useQueryCoursePackagesSwr = (
         isLoading: active && isLoading,
         isError: Boolean(error),
         isEmpty: active && !isLoading && !error && packages.length === 0,
+        retry: () => {
+            void mutate()
+        },
     }
 }

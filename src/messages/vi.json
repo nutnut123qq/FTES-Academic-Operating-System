@@ -5278,6 +5278,8 @@
       "earlyBirdSlots": "Còn {count} suất Early bird",
       "freeLabel": "Miễn phí",
       "wholeCourse": "Trọn khóa",
+      "notForSale": "Chưa mở bán",
+      "notForSaleHint": "Khóa này chưa mở bán. Bạn vẫn có thể học thử miễn phí.",
       "planIncludes": {
         "previewVideo": "{duration} video xem trước",
         "previewLessons": "{count} bài học xem trước",
@@ -5304,7 +5306,9 @@
         "addToCart": "Thêm vào giỏ",
         "resolving": "Đang tải chi tiết gói…",
         "updatingTitle": "Đang cập nhật gói",
-        "updatingHint": "Các gói của khóa này đang được cập nhật. Vui lòng quay lại sau."
+        "updatingHint": "Các gói của khóa này đang được cập nhật. Vui lòng quay lại sau.",
+        "errorTitle": "Không tải được danh sách gói",
+        "errorHint": "Có lỗi khi tải các gói của khóa này. Kiểm tra kết nối rồi thử lại."
       }
     },
     "lesson": {

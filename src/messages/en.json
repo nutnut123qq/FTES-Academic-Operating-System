@@ -5278,6 +5278,8 @@
       "earlyBirdSlots": "{count} Early bird slots left",
       "freeLabel": "Free",
       "wholeCourse": "Full course",
+      "notForSale": "Not on sale yet",
+      "notForSaleHint": "This course isn't on sale yet. You can still try it for free.",
       "planIncludes": {
         "previewVideo": "{duration} preview video",
         "previewLessons": "{count} preview lessons",
@@ -5304,7 +5306,9 @@
         "addToCart": "Add to cart",
         "resolving": "Fetching package details…",
         "updatingTitle": "Packages are being updated",
-        "updatingHint": "This course's packages are being updated. Please check back soon."
+        "updatingHint": "This course's packages are being updated. Please check back soon.",
+        "errorTitle": "Couldn't load the packages",
+        "errorHint": "Something went wrong loading this course's packages. Check your connection and try again."
       }
     },
     "lesson": {

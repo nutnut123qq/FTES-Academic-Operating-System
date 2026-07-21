@@ -36,6 +36,17 @@ export interface UseCourseEnrollmentResult {
     onEnroll: () => void
     /** Whether the add-to-cart step is in flight (drive the CTA's pending state). */
     isEnrolling: boolean
+    /**
+     * Whether {@link onEnroll} can actually complete a purchase — i.e. the course's
+     * COURSE_UNLOCK product resolved. FALSE means the CTA must be disabled: there is
+     * no checkout to run, and no other page to send the viewer to.
+     */
+    canBuy: boolean
+    /**
+     * Whether the product lookup is still in flight. Distinguishes "not on sale" from
+     * "we don't know yet", so the CTA never flashes the not-on-sale copy while loading.
+     */
+    isResolvingProduct: boolean
     /** Enter the course content (continue learning). */
     onContinueLearning: () => void
     /** Start a trial enrollment best-effort, then enter the course content. */
@@ -52,8 +63,9 @@ export interface UseCourseEnrollmentResult {
  * `onEnroll` runs the SAME real checkout as the course detail buy: resolve the
  * COURSE_UNLOCK product for `buy.rawId`, add it to the cart, then open the shared
  * {@link usePaymentOverlayState} PaymentModal with the new cart-item id. When the
- * course isn't on sale (no product / no `rawId`), it falls back to the course
- * detail sales page — never the (removed) mock enroll route.
+ * course isn't on sale (no product / no `rawId`) there is no checkout to run, so
+ * `canBuy` is false and the caller MUST disable the CTA — the hook does not fall
+ * back to a navigation (the old fallback pushed the page it was already on).
  *
  * ponytail: trial + continue-learning routes use the canonical `/learn` path,
  * which is a FE placeholder until the course content page lands.
@@ -76,7 +88,10 @@ export const useCourseEnrollment = (
     // Resolve the course's COURSE_UNLOCK product (null when not on sale). Gated on a
     // `rawId` so PACKAGE / not-for-sale courses issue no request. `priceVnd` steers the
     // resolver to the product matching the course price (charge the per-course price).
-    const { data: product } = useGetCourseProductSwr(buy?.rawId, buy?.priceVnd)
+    const { data: product, isLoading: isResolvingProduct } = useGetCourseProductSwr(
+        buy?.rawId,
+        buy?.priceVnd,
+    )
     const addCart = usePostAddCartItemSwr()
     const payment = usePaymentOverlayState()
     const { mutate: mutateSwr } = useSWRConfig()
@@ -84,7 +99,6 @@ export const useCourseEnrollment = (
     const isEnrolled = enrollment?.isEnrolled === true
 
     const learnHref = pathConfig().locale(locale).course(courseId).learn().build()
-    const detailHref = pathConfig().locale(locale).course(courseId).build()
 
     const onEnroll = guard(async () => {
         // On sale → real checkout: add the unlock product to the cart, then open the
@@ -104,9 +118,9 @@ export const useCourseEnrollment = (
             }
             return
         }
-        // Not resolvable here (no rawId / not on sale) → the course sales page, whose
-        // enroll card resolves the product and opens the same PaymentModal.
-        router.push(detailHref)
+        // No product → there is NOTHING to check out. The old fallback pushed
+        // `detailHref`, which IS the page the CTA lives on: the button "worked" and
+        // nothing happened. Callers must disable the CTA via `canBuy` instead.
     }, "auth.context.enroll")
 
     const onContinueLearning = useCallback(() => {
@@ -128,6 +142,8 @@ export const useCourseEnrollment = (
         isEnrolled,
         onEnroll,
         isEnrolling: addCart.isMutating,
+        canBuy: Boolean(product),
+        isResolvingProduct,
         onContinueLearning,
         onTryLearning,
     }

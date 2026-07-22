@@ -17,12 +17,19 @@ export class RestError extends Error {
     readonly status: number
     /** Backend domain error code (e.g. `COURSE_FORBIDDEN`), when present. */
     readonly errorCode?: string
+    /**
+     * Full backend error body (the envelope `data`), when present — carries the
+     * contract extras beyond `errorCode` (e.g. `courseId` / `requiredPackageSlugs`
+     * on a `CHALLENGE_COURSE_ACCESS_DENIED`) so callers can branch on them.
+     */
+    readonly body?: RestErrorBody
 
-    constructor(message: string, status: number, errorCode?: string) {
+    constructor(message: string, status: number, errorCode?: string, body?: RestErrorBody) {
         super(message)
         this.name = "RestError"
         this.status = status
         this.errorCode = errorCode
+        this.body = body
     }
 }
 
@@ -99,7 +106,7 @@ export const restRequest = async <T>(config: RestRequestConfig): Promise<T> => {
             const errorBody = envelope.data as unknown as RestErrorBody | undefined
             const errorCode = errorBody?.errorCode
             const message = [envelope.message, errorCode].filter(Boolean).join(" — ")
-            throw new RestError(message || "REST request failed", envelope.code, errorCode)
+            throw new RestError(message || "REST request failed", envelope.code, errorCode, errorBody)
         }
 
         // data có thể null hợp lệ (endpoint void) — caller khai T=void cho các call đó.
@@ -119,6 +126,7 @@ export const restRequest = async <T>(config: RestRequestConfig): Promise<T> => {
                 message || error.message || "REST request failed",
                 error.response.status,
                 errorCode,
+                errorBody ?? undefined,
             )
         }
 

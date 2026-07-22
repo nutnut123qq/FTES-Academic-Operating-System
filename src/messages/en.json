@@ -4719,10 +4719,6 @@
     "middle": "Mid",
     "senior": "Senior"
   },
-  "socketStatus": {
-    "reconnecting": "Connection lost — reconnecting…",
-    "reconnected": "Reconnected"
-  },
   "status": {
     "title": "System status",
     "subtitle": "Live health of the FTES AOS platform — built in public, no login required.",
@@ -5388,6 +5384,7 @@
       "modal": {
         "titleDocument": "Subscribe to continue reading {lesson}",
         "titleVideo": "Your preview for {lesson} has ended",
+        "titleChallenge": "Upgrade your package to unlock this challenge",
         "cheapestHint": "Unlock from {name}",
         "emptyTitle": "No matching packages",
         "emptyHint": "This course's packages are being updated.",
@@ -5902,6 +5899,10 @@
         },
         "lockedTitle": "Enroll to attempt this challenge",
         "lockedBody": "This challenge is part of the course. Enroll to start practising.",
+        "upgradeTitle": "Upgrade your package to attempt this challenge",
+        "upgradeBody": "This challenge belongs to a lesson in a higher tier than the package you own. Upgrade to start practising.",
+        "upgradeTiersHint": "Packages that unlock this challenge:",
+        "upgradeCta": "Upgrade package",
         "error": "Failed to load the challenge."
       }
     },

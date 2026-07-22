@@ -1,4 +1,4 @@
-import React from "react"
+import React, { type ReactNode } from "react"
 import { render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 import type { CourseDetail as CourseDetailModel } from "../hooks/useQueryCourseDetailSwr"
@@ -94,7 +94,21 @@ vi.mock("@/components/blocks/async/AsyncContent", () => ({ AsyncContent: () => <
 vi.mock("@/components/blocks/buttons/SaveButton", () => ({ SaveButton: () => <div /> }))
 vi.mock("@/components/blocks/chips/HighlightChip", () => ({ HighlightChip: () => <div /> }))
 vi.mock("@/components/blocks/navigation/ResponsiveBreadcrumb", () => ({ ResponsiveBreadcrumb: () => <div /> }))
-vi.mock("@/components/blocks/navigation/SelectableCardGroup", () => ({ SelectableCardGroup: () => <div /> }))
+// Render label/description/badge của từng item — EnrollCard đưa nhãn "Trọn khoá",
+// giá gạch và chip −% vào items nên mock rỗng sẽ nuốt mất nội dung cần assert.
+vi.mock("@/components/blocks/navigation/SelectableCardGroup", () => ({
+    SelectableCardGroup: ({ items }: { items: Array<{ value: string; label?: ReactNode; description?: ReactNode; badge?: ReactNode }> }) => (
+        <div>
+            {items.map((item) => (
+                <div key={item.value}>
+                    {item.label}
+                    {item.description}
+                    {item.badge}
+                </div>
+            ))}
+        </div>
+    ),
+}))
 vi.mock("@/components/blocks/skeleton/Skeleton", () => ({ Skeleton: () => <div /> }))
 vi.mock("@/components/reuseable/FollowButton", () => ({ FollowButton: () => <div /> }))
 vi.mock("@/components/reuseable/StatRibbon", () => ({ StatRibbon: () => <div /> }))
@@ -138,9 +152,10 @@ describe("EnrollCard (LEGACY)", () => {
     it("renders one paid option with the struck original and the −% chip", () => {
         renderCard()
         expect(screen.getByText("detail.wholeCourse")).toBeTruthy()
-        expect(screen.getByText("500.000₫")).toBeTruthy()
-        expect(screen.getByText("800.000₫")).toBeTruthy()
-        expect(screen.getByText("−38%")).toBeTruthy()
+        // Giá hiện ở CẢ headline lẫn dòng mô tả của option trong picker — đều hợp lệ.
+        expect(screen.getAllByText("500.000₫").length).toBeGreaterThanOrEqual(1)
+        expect(screen.getAllByText("800.000₫").length).toBeGreaterThanOrEqual(1)
+        expect(screen.getAllByText("−38%").length).toBeGreaterThanOrEqual(1)
         // no fabricated tier: neither a plan selector nor plan names survive
         const body = document.body.textContent ?? ""
         expect(body).not.toContain("planNames")
@@ -149,9 +164,11 @@ describe("EnrollCard (LEGACY)", () => {
         expect(screen.getByText("detail.enroll")).toBeTruthy()
     })
 
-    it("hides the try-free entry when the course has no free lesson", () => {
+    it("offers the free-trial entry even when the course has no free lesson (free-enroll rule)", () => {
+        // Rule premium-unlock-is-enroll-not-vip: "Học thử miễn phí" là free-enroll,
+        // hiện trên MỌI khoá bất kể freeLessonCount.
         renderCard({ freeLessonCount: 0 })
-        expect(screen.queryByText("detail.tryFree")).toBeNull()
+        expect(screen.getByText("detail.tryFree")).toBeTruthy()
     })
 
     it("renders no challenge benefit row when the contract carries no challengeCount", () => {

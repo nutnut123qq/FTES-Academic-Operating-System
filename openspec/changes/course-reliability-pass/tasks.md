@@ -58,5 +58,10 @@
       spec-backlog kèm endpoint/payload kỳ vọng (không mock để "xanh")
 - [ ] B.2 Quality-loop vòng 2 (unit+E2E → đánh giá → fix ×2) cho gate xem-thử + FAB sau khi
       BE `freemium-youtube-preview-gate` deploy lên apitest
-- [ ] B.3 RTL cho `ContentAiFab`: drag-persist + swallow drag-release (cần mock
-      `setPointerCapture`/`localStorage`) + render-theo-route-param
+- [x] B.3 RTL cho `ContentAiFab`: drag-persist + swallow drag-release (cần mock
+      `setPointerCapture`/`localStorage`) + render-theo-route-param — ĐÃ TRẢ NỢ 2026-07-22:
+      `src/components/features/learn/ContentAiFab/index.test.tsx` (9 case: không contentId
+      → null; restore/ignore-corrupt localStorage; drag quá threshold → capture pointer +
+      move + persist on release; clamp [16, innerHeight−80]; press micro-jitter → mở chat,
+      KHÔNG persist; swallow toggle drag-release đúng 1 lần rồi press sau mở được; mobile
+      bottom-sheet render chat) — vitest xanh

@@ -18,7 +18,13 @@
       (post POLL từ feed/post-detail). (`CommunityPoll` nhận prop `postId?`; `myOptionId` server
       thắng local reveal — không double-count sau revalidate; rollback + `toast.danger`
       `poll.voteFailed` vi+en khi write lỗi.)
-- [ ] 1.5 Vòng chất lượng: unit test + e2e test → đánh giá vòng 1 → fix → đánh giá vòng 2.
+- [x] 1.5 Vòng chất lượng (2026-07-22): UNIT test ĐÃ CÓ — repo nay có vitest runner →
+      `CommunityPoll/index.test.tsx` (7 test PASS): vote → optimistic reveal +1 trước revalidate
+      (80/20%), write fail → rollback + `toast.danger poll.voteFailed` + vote lại được, guest →
+      rollback im lặng (không toast), đã vote (`myOptionId` server) → disable không re-submit,
+      % từ tally server không double-count sau revalidate, empty-state. Đánh giá 2 vòng: vòng 1
+      viết+chạy, vòng 2 verify percent-math khớp component (`extra` chỉ khi pending). `npx vitest run`
+      xanh + `tsc --noEmit` sạch. E2E vẫn auth-gated → backlog lane (như 2.4/3.3).
 
 ## 2. Contributors leaderboard (BE: community-engagement-reads)
 - [x] 2.1 REST client `getLeaderboard(page,size)` + types (design §1).

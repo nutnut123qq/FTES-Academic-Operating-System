@@ -18,6 +18,19 @@ export interface RestErrorBody {
         /** Human-readable issue. */
         issue: string
     }>
+    /**
+     * Course tied to the failure (course UUID) — set on `CHALLENGE_COURSE_ACCESS_DENIED`
+     * so the FE can render the enroll / upgrade CTA. NON_NULL-serialized on the BE →
+     * absent on every other error.
+     */
+    courseId?: string | null
+    /**
+     * Package slugs that DO unlock the gated lesson (challenge-lesson-level-access-gate):
+     * present on `CHALLENGE_COURSE_ACCESS_DENIED` when the challenge is attached to a
+     * lesson, so a viewer who bought a lower tier can be offered the right upgrade.
+     * Defensive-optional — older BE builds omit it.
+     */
+    requiredPackageSlugs?: Array<string> | null
 }
 
 /**

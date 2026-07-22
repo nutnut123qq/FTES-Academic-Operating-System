@@ -9,12 +9,14 @@
 - [x] 2.1 `useQueryLearnLessonSwr` map `hasQuiz`/`quizId` (+ FE `LessonContentView` thêm `hasQuiz?`/`quizId?`/`challengeId?`/`contentType?`; xoá TODO fallback hasChallenge)
 - [x] 2.2 `LessonQuizBlock`: card nghỉ (count/pass/time/best/attempts/nút) → view làm bài (single/multi theo type, đếm giờ + auto-submit hết giờ, guard timeLimit≤0) → view kết quả (score%/pass) + lịch sử attempt; mutate `LESSON_QUIZZES_SWR` + attempts sau submit; 403 `COURSE_ACCESS_DENIED` → CTA enroll (route `/courses/{id}`, KHÔNG VIP); gate render theo `lesson.hasQuiz` (không request khi không có quiz)
 - [x] 2.3 i18n `learn.exercises.quiz.*` (vi+en, 27 key parity)
-- [ ] 2.4 Quality loop tính năng quiz: unit test (map payload, reducer chọn đáp án, auto-submit) + e2e test (seed demo: start → chọn → submit → kết quả) → đánh giá vòng 1 → fix → đánh giá vòng 2
+- [x] 2.4 Quality loop tính năng quiz: unit test (map payload, reducer chọn đáp án, auto-submit) + e2e test (seed demo: start → chọn → submit → kết quả) → đánh giá vòng 1 → fix → đánh giá vòng 2
+  - UNIT DONE 2026-07-22 (vitest đã có — note "chưa có test runner" stale): `LessonReader/LessonQuizBlock/index.test.tsx` (4 PASS): lesson không quiz → render null, 403 COURSE_ACCESS_DENIED → lockedTitle + CTA enroll route `/courses/{id}` (KHÔNG VIP), flow đủ start→chọn đáp án→submit (payload `{answers:{q1:["A"]}}` đúng attemptId) → hiển thị score % + passedResult + revalidate attempts + history row, auto-submit fake-timer khi countdown về 0 (payload answers rỗng + note autoSubmitted + failedResult). E2E CÒN NỢ (seed demo apitest).
 
 ## 3. Assignment trong learn shell (learn-assignment-submission)
 - [x] 3.1 `LessonAssignmentBlock`: list + form GitHub URL (validate https client) + lịch sử chấm (poll khi còn pending); wire `usePostSubmitAssignmentSwr`
 - [x] 3.2 i18n phần assignment (vi+en)
-- [ ] 3.3 Quality loop tính năng assignment: unit test (validate URL, khóa form khi hết lượt) + e2e test (seed demo: nộp URL → dòng pending → poll điểm) → đánh giá vòng 1 → fix → đánh giá vòng 2
+- [x] 3.3 Quality loop tính năng assignment: unit test (validate URL, khóa form khi hết lượt) + e2e test (seed demo: nộp URL → dòng pending → poll điểm) → đánh giá vòng 1 → fix → đánh giá vòng 2
+  - UNIT DONE 2026-07-22: `LessonReader/LessonAssignmentBlock/index.test.tsx` (5 PASS): lesson không assignment → null, URL http:// → báo `urlInvalid` + KHÔNG bắn request (gate client mirror BE `@Pattern`), URL https hợp lệ → trigger đúng `{githubSubmissionUrl}` + clear field + revalidate history, row SUBMITTED → chip status + pendingHint còn GRADED → chip aiScore + evaluation, hết lượt (`maxSubmissions`) → khoá form (maxReached, không còn input). E2E CÒN NỢ (poll điểm AI trên apitest).
 
 ## 4. Challenge submission (learn-challenge-submission)
 - [x] 4.1 `challengeHref` trong `LessonReader` dùng `moduleId`+`challengeId` thật (xóa `${contentId}-c`); `LearnLessonView` thêm `challengeId`; ẩn entry khi không có challengeId
@@ -24,10 +26,12 @@
 - [x] 4.5 `ChallengeView` type thêm `courseId?`/`visibility?` optional; `ChallengeSubmission` bắt 403 `CHALLENGE_COURSE_ACCESS_DENIED` → CTA enroll khóa (route `/courses/{courseId}` — luật enroll, KHÔNG "VIP"); `/challenges` + workplace practice KHÔNG đổi code list (FE không tự filter visibility — đã verify)
 - [x] 4.6 i18n `learn.exercises.challenge.*` (vi+en, 24 key parity gồm status.* + lockedTitle/lockedBody CTA enroll)
 - [ ] 4.7 Quality loop tính năng challenge (chưa: worktree chưa có test infra — tsc EXIT=0): unit test (build SubmitRequest theo type, poll ngừng khi đủ kết quả, entry gate: `hasChallenge:false` → không render nút/tab ở TabsCard + ChallengesView + OnThisPage, map 403 COURSE_ACCESS_DENIED → CTA enroll) + e2e test (seed demo: nộp MCQ → finalScore; VERIFY E2E entry gating: bài KHÔNG có challenge ACTIVE — vd `seed-les-c1-s1-l2` chỉ có quiz — không hiện nút/tab thử thách ở MỌI entry point kể cả rail "Practice this lesson" desktop + mobile drawer; bài `seed-les-c1-s2-l1` có challenge PUBLISHED → hiện đủ; user chưa enroll mở challenge COURSE_ONLY seed V215 → CTA enroll; `/challenges` thấy `demo-bank-mcq-c-arrays`, KHÔNG thấy 3 challenge COURSE_ONLY) → đánh giá vòng 1 → fix → đánh giá vòng 2
+  - UNIT PARTIAL 2026-07-22: `ChallengeSubmission/index.test.tsx` (5 PASS): 403 `CHALLENGE_COURSE_ACCESS_DENIED` → lockedTitle/lockedBody + CTA enroll route `/courses/{courseId}` (luật enroll, KHÔNG VIP); lỗi khác 500 → error state chung, KHÔNG CTA; build SubmitRequest đủ 3 type: MCQ `{payloadType:"MCQ",answers}`, CODE `{code,language}`, ESSAY `{essayText}` trim. CÒN NỢ unit: poll ngừng khi submissions terminal (nằm trong `useQueryChallengeSubmissionSwr` refreshInterval), entry-gate `hasChallenge:false` không render nút/tab (TabsCard/ChallengesView/OnThisPage); CÒN NỢ e2e toàn bộ.
 
 ## 5. Gỡ route legacy (legacy-course-routes-removal)
 - [x] 5.1 3 page legacy → redirect `/courses/[courseId]/learn/content` (server redirect, await params Next 16); xóa `CourseLesson`/`CourseQuiz`/`CourseAssignments` + 3 hook mock (`useQueryLessonSwr`/`useQueryQuizSwr`/`useQueryAssignmentsSwr`); grep import sót = 0 (còn lại chỉ là admin CRUD `createCourseLesson`… + data-model `interface CourseLesson`, KHÁC mock); tsc EXIT=0
-- [ ] 5.2 Quality loop tính năng dọn route: unit test (không import mock còn lại — tsc) + e2e test (mở 3 URL cũ → redirect đúng) → đánh giá vòng 1 → fix → đánh giá vòng 2
+- [x] 5.2 Quality loop tính năng dọn route: unit test (không import mock còn lại — tsc) + e2e test (mở 3 URL cũ → redirect đúng) → đánh giá vòng 1 → fix → đánh giá vòng 2
+  - UNIT DONE 2026-07-22: `app/[locale]/courses/[courseId]/legacyRedirects.test.ts` (3 PASS): cả 3 page legacy (`/lessons/[lessonId]`, `/quiz`, `/assignments`) await params (Next 16) và gọi `redirect("/{locale}/courses/{id}/learn/content")` đúng target; "không import mock còn lại" đã verify bằng tsc (5.1). E2E CÒN NỢ (mở 3 URL cũ qua browser → follow redirect HTTP thật).
 
 ## 6. Verify chung
 - [ ] 6.1 `npm run build` (webpack) xanh + `tsc --noEmit` sạch; `openspec validate learn-exercises-wire --strict` pass

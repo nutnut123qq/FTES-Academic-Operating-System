@@ -4,9 +4,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { useMemo } from "react"
-import { useLocale, useTranslations } from "next-intl"
-import { PublicationEvent } from "@/hooks/socketio/enums/publication-event"
-import { useJobNotificationsSocketIo } from "@/hooks/socketio/useJobNotificationsSocketIo"
+import { useTranslations } from "next-intl"
 import { useMutateReviewCvSwr } from "@/hooks/swr/api/graphql/mutations/useMutateReviewCvSwr"
 import type { GraphQLResponse } from "@/modules/api/graphql/types"
 import type { ReviewCvResponseData } from "@/modules/api/graphql/mutations/types/review-cv"
@@ -23,14 +21,13 @@ export interface CvReviewFormValues {
 
 /**
  * react-hook-form for queuing an AI CV review (replaces the old formik).
- * Seeds submission + rubric from redux; submit calls reviewCv then subscribes to job notifications.
+ * Seeds submission + rubric from redux; submit calls reviewCv (job result surfaces via
+ * refetch/toast — the legacy socket.io job channel had no server and was removed).
  * @returns the RHF methods + `onSubmit`.
  */
 export const useCvReviewForm = () => {
     const t = useTranslations()
-    const locale = useLocale()
     const mutateReviewCvSwr = useMutateReviewCvSwr()
-    const jobNotificationsSocket = useJobNotificationsSocketIo()
     const cvUrlPayload = useAppSelector((state) => state.cvUrl.entity)
     const selectedTemplateId = useAppSelector((state) => state.cvReviewLevel.selectedTemplateId)
     const templateCvs = useAppSelector((state) => state.templateCvs.rows)
@@ -74,10 +71,6 @@ export const useCvReviewForm = () => {
                 if (!jobId) {
                     throw new Error(env.message || t("cv.submission.toast.reviewFailed"))
                 }
-                jobNotificationsSocket.emit(
-                    PublicationEvent.SubscribeJobNotification,
-                    { data: { jobId }, locale },
-                )
                 return env
             },
             { showErrorToast: true, showSuccessToast: true },

@@ -26,6 +26,10 @@ import { RestError } from "@/modules/api/rest/client"
 import type { McqQuestionView, SubmissionView, SubmitRequest } from "@/modules/api/rest/challenges"
 import { useRestWithToast } from "@/modules/toast/hooks"
 import { usePostSubmitChallengeSwr } from "@/hooks/swr/api/rest/mutations/usePostSubmitChallengeSwr"
+import { PackageGateModal } from "@/components/features/course/PackageGateModal"
+import { useQueryCoursePackagesSwr } from "@/components/features/course/hooks/useQueryCoursePackagesSwr"
+import { resolveTierLabel } from "@/components/features/course/tierLabels"
+import { useQueryLearnCourseSwr } from "../hooks/useQueryLearnCourseSwr"
 import {
     isChallengeSubmissionPending,
     useQueryChallengeSubmissionSwr,
@@ -41,8 +45,12 @@ import {
  *
  * Grading is async (auto-grade / ftes-ai-service); the attempts list self-polls until
  * every submission is terminal. The form locks once `maxSubmissions` is reached. A
- * course-bank `CHALLENGE_COURSE_ACCESS_DENIED` (403) renders an enroll CTA (enroll the
- * course — never "VIP") instead of a generic error.
+ * course-bank `CHALLENGE_COURSE_ACCESS_DENIED` (403) renders an access-gate card
+ * (challenge-lesson-level-access-gate): when the error body carries
+ * `requiredPackageSlugs` (viewer already enrolled but their tier does not cover the
+ * attached lesson) the CTA is "Nâng cấp gói" and opens the shared PackageGateModal
+ * scoped to exactly those packages; otherwise it keeps the enroll CTA (enroll the
+ * course — never "VIP").
  */
 export const ChallengeSubmission = () => {
     const t = useTranslations("learn")
@@ -73,9 +81,43 @@ export const ChallengeSubmission = () => {
         [submissions],
     )
 
-    // course-bank challenge, viewer not enrolled → enroll CTA (never "VIP")
-    const accessDenied =
+    // course-bank challenge denied (403). BE contract (challenge-lesson-level-access-gate):
+    // the error body carries `courseId` (course UUID) and — when the viewer already holds a
+    // purchase whose tier does not cover the attached lesson — `requiredPackageSlugs`, the
+    // packages that DO unlock it. Both are defensive-optional (older BE builds omit them).
+    const deniedError =
         error instanceof RestError && error.errorCode === "CHALLENGE_COURSE_ACCESS_DENIED"
+            ? error
+            : undefined
+    const accessDenied = deniedError !== undefined
+    const requiredPackageSlugs = useMemo(() => {
+        const raw = deniedError?.body?.requiredPackageSlugs
+        if (!Array.isArray(raw)) return []
+        return raw.filter((slug): slug is string => typeof slug === "string" && slug.length > 0)
+    }, [deniedError])
+    // Course title (modal header / payment summary) + rawId fallback come from the learn
+    // tree — same SWR key the learn rail uses, so this is a cache hit; gated off entirely
+    // on the happy path.
+    const { course: learnCourse, header: learnHeader } = useQueryLearnCourseSwr(
+        accessDenied ? courseId : "",
+    )
+    const deniedBodyCourseId = deniedError?.body?.courseId
+    const courseRawId =
+        (typeof deniedBodyCourseId === "string" && deniedBodyCourseId.length > 0
+            ? deniedBodyCourseId
+            : undefined) ?? learnCourse?.id
+    // Upgrade path only when the BE told us WHICH packages unlock the lesson AND we can
+    // resolve the course UUID the gate modal needs; anything missing → old enroll CTA.
+    const canUpgrade = requiredPackageSlugs.length > 0 && courseRawId !== undefined
+    const [isGateOpen, setIsGateOpen] = useState(false)
+    // Real package names for the tier chips (lesson-tier-badge labels); the gate modal
+    // reuses the same SWR key when opened, so this fetch is shared, and it only fires on
+    // the denied-with-slugs branch.
+    const { packages } = useQueryCoursePackagesSwr(courseRawId, { enabled: canUpgrade })
+    const packageNameBySlug = useMemo(
+        () => new Map(packages.map((pkg) => [pkg.slug, pkg.name])),
+        [packages],
+    )
 
     const toggleAnswer = (questionId: string, key: string) => {
         setAnswers((prev) => {
@@ -135,14 +177,43 @@ export const ChallengeSubmission = () => {
             <div className="mx-auto flex w-full max-w-3xl flex-col items-start gap-3 rounded-3xl border border-default bg-surface p-6">
                 <LockSimpleIcon aria-hidden focusable="false" className="size-8 text-accent" />
                 <Typography type="body" weight="semibold">
-                    {t("exercises.challenge.lockedTitle")}
+                    {t(canUpgrade ? "exercises.challenge.upgradeTitle" : "exercises.challenge.lockedTitle")}
                 </Typography>
                 <Typography type="body-sm" color="muted">
-                    {t("exercises.challenge.lockedBody")}
+                    {t(canUpgrade ? "exercises.challenge.upgradeBody" : "exercises.challenge.lockedBody")}
                 </Typography>
-                <Button variant="primary" onPress={() => router.push(`/courses/${courseId}`)}>
-                    {t("reader.enrollCta")}
-                </Button>
+                {canUpgrade ? (
+                    <>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <Typography type="body-xs" color="muted">
+                                {t("exercises.challenge.upgradeTiersHint")}
+                            </Typography>
+                            {requiredPackageSlugs.map((slug) => (
+                                <Chip key={slug} size="sm" variant="soft" color="accent" className="shrink-0">
+                                    {resolveTierLabel(slug, packageNameBySlug)}
+                                </Chip>
+                            ))}
+                        </div>
+                        <Button variant="primary" onPress={() => setIsGateOpen(true)}>
+                            {t("exercises.challenge.upgradeCta")}
+                        </Button>
+                        <PackageGateModal
+                            isOpen={isGateOpen}
+                            onClose={() => setIsGateOpen(false)}
+                            courseId={courseId}
+                            courseRawId={courseRawId as string}
+                            courseTitle={learnHeader?.title ?? ""}
+                            lessonId={contentId}
+                            packageSlugs={requiredPackageSlugs}
+                            context="challenge"
+                            onPurchased={() => { void mutate() }}
+                        />
+                    </>
+                ) : (
+                    <Button variant="primary" onPress={() => router.push(`/courses/${courseId}`)}>
+                        {t("reader.enrollCta")}
+                    </Button>
+                )}
             </div>
         )
     }

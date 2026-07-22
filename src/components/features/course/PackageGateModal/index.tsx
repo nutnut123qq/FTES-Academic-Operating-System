@@ -35,8 +35,13 @@ export interface PackageGateModalProps {
     packageSlugs: Array<string>
     /** Cheapest package metadata from the locked content/stream response. */
     cheapestPackage?: CheapestPackage | null
-    /** Which paywall entry triggered the modal — drives the title. */
-    context: "document" | "video"
+    /**
+     * Which paywall entry triggered the modal — drives the title. `challenge` is the
+     * course-bank challenge upgrade path (`CHALLENGE_COURSE_ACCESS_DENIED` with
+     * `requiredPackageSlugs`): its title takes no lesson name because the denied
+     * challenge detail never loaded.
+     */
+    context: "document" | "video" | "challenge"
     /** Called after a successful purchase/free enrollment so the parent can revalidate lesson data. */
     onPurchased?: () => void
 }
@@ -77,7 +82,9 @@ export const PackageGateModal = ({
     const hasPackages = filteredPackages.length > 0
     const title = context === "video"
         ? t("modal.titleVideo", { lesson: lessonTitle ?? "" })
-        : t("modal.titleDocument", { lesson: lessonTitle ?? "" })
+        : context === "challenge"
+            ? t("modal.titleChallenge")
+            : t("modal.titleDocument", { lesson: lessonTitle ?? "" })
 
     return (
         <Modal isOpen={isOpen} onOpenChange={(open) => { if (!open) onClose() }}>

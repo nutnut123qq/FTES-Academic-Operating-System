@@ -48,6 +48,7 @@ import { useQueryCourseDetailSwr, type CourseDetail as CourseDetailModel, type C
 import { useCourseEnrollment } from "../hooks/useCourseEnrollment"
 import { useQueryCoursePackagesSwr } from "../hooks/useQueryCoursePackagesSwr"
 import { WholeCourseGateCard } from "../PackageGateModal"
+import { resolveTierLabel } from "../tierLabels"
 import { CourseRatings } from "./CourseRatings"
 import { SelectableCardGroup } from "@/components/blocks/navigation/SelectableCardGroup"
 import { PriceTag } from "@/components/blocks/commerce/PriceTag"
@@ -59,25 +60,6 @@ const ACHIEVEMENT_ICONS: Record<string, Icon> = {
     trophy: TrophyIcon,
     book: BookIcon,
 }
-
-/**
- * Fallback tier labels for the known package slugs — used only while the course's
- * package list is still loading (the real `PackageView.name` is the source of truth).
- */
-const TIER_LABEL_FALLBACK: Record<string, string> = {
-    free: "Miễn phí",
-    basic: "Cơ bản",
-    premium: "Premium",
-    master: "Master",
-    "on-tap-thuc-chien": "Ôn tập thực chiến",
-}
-
-/** Title-case a slug (`on-tap-thuc-chien` → `On Tap Thuc Chien`) as a last-resort label. */
-const titleCaseSlug = (slug: string) =>
-    slug
-        .split("-")
-        .map((word) => (word ? word.charAt(0).toUpperCase() + word.slice(1) : word))
-        .join(" ")
 
 /**
  * Build the reader route for a syllabus lesson — mirrors the learn rail's
@@ -297,8 +279,9 @@ const CourseDetailView = ({
         () => new Map(packages.map((pkg) => [pkg.slug, pkg.name])),
         [packages],
     )
-    const resolveTierLabel = (slug: string) =>
-        packageNameBySlug.get(slug) ?? TIER_LABEL_FALLBACK[slug] ?? titleCaseSlug(slug)
+    // Shared with the learn-side upgrade CTA (tierLabels.ts): package name → fallback map
+    // → Title-Cased slug.
+    const resolveLessonTierLabel = (slug: string) => resolveTierLabel(slug, packageNameBySlug)
     // The legacy "Đăng ký học" CTA is a real buy: the enrollment hook resolves this
     // course's COURSE_UNLOCK product, adds it to the cart, and opens the shared
     // PaymentModal (VietQR / coin). The buy context is withheld for PACKAGE courses
@@ -539,7 +522,7 @@ const CourseDetailView = ({
                                                                                     color="accent"
                                                                                     className="shrink-0"
                                                                                 >
-                                                                                    {resolveTierLabel(slug)}
+                                                                                    {resolveLessonTierLabel(slug)}
                                                                                 </Chip>
                                                                             ))}
                                                                         </div>

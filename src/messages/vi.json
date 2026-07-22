@@ -4719,10 +4719,6 @@
     "clear": "Bỏ ghim linh vật",
     "empty": "Đạt thành tích để ghim linh vật."
   },
-  "socketStatus": {
-    "reconnecting": "Mất kết nối — đang thử lại…",
-    "reconnected": "Đã kết nối lại"
-  },
   "status": {
     "title": "Trạng thái hệ thống",
     "subtitle": "Tình trạng trực tiếp của nền tảng FTES AOS — làm công khai, không cần đăng nhập.",
@@ -5388,6 +5384,7 @@
       "modal": {
         "titleDocument": "Đăng ký để đọc tiếp {lesson}",
         "titleVideo": "Bạn đã xem hết thời gian học thử {lesson}",
+        "titleChallenge": "Nâng cấp gói để mở thử thách này",
         "cheapestHint": "Mở khoá chỉ từ {name}",
         "emptyTitle": "Không có gói phù hợp",
         "emptyHint": "Các gói của khóa học này chưa được cập nhật.",
@@ -5902,6 +5899,10 @@
         },
         "lockedTitle": "Đăng ký để làm thử thách",
         "lockedBody": "Thử thách này thuộc khóa học. Đăng ký khóa để bắt đầu luyện tập.",
+        "upgradeTitle": "Nâng cấp gói để làm thử thách",
+        "upgradeBody": "Thử thách này thuộc bài học ở gói cao hơn gói bạn đang có. Nâng cấp gói để bắt đầu luyện tập.",
+        "upgradeTiersHint": "Gói mở khóa thử thách này:",
+        "upgradeCta": "Nâng cấp gói",
         "error": "Không tải được thử thách."
       }
     },

@@ -12,8 +12,7 @@ import { DrawerContainer } from "@/components/drawers/DrawerContainer"
 import { AmbientBackground } from "@/components/blocks/layout/AmbientBackground"
 import { TopLoader } from "@/components/blocks/layout/TopLoader"
 import { AppSplash } from "@/components/blocks/layout/AppSplash"
-import { SocketConnectionStatus } from "@/components/blocks/layout/SocketConnectionStatus"
-import { SocketIoSideEffects } from "@/hooks/socketio/SocketIoSideEffects"
+import { SseSideEffects } from "@/hooks/sse/SseSideEffects"
 import { SwrSideEffects } from "@/hooks/swr/SwrSideEffects"
 import { ReduxProvider } from "@/redux/ReduxProvider"
 import { ModalContainer } from "@/components/modals/ModalContainer"
@@ -62,7 +61,7 @@ export const InnerLayout = ({ children }: PropsWithChildren) => {
                     <ReduxProvider>
                         <SwrProvider>
                             <SwrSideEffects />
-                            <SocketIoSideEffects />
+                            <SseSideEffects />
                             <UseEffects />
                             {/* `?auth=signin|signup` deep link → opens the auth modal (needs its
                                 own Suspense: useSearchParams) */}
@@ -75,7 +74,6 @@ export const InnerLayout = ({ children }: PropsWithChildren) => {
                                 <AmbientBackground direction={effectDirection} speed={effectSpeed} />
                             ) : null}
                             <Navbar />
-                            <SocketConnectionStatus />
                             <ModalContainer />
                             <DrawerContainer />
                             <div>{children}</div>

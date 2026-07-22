@@ -1,17 +1,14 @@
 "use client"
 
-import React, { useCallback, useEffect, useState } from "react"
+import React, { useCallback, useState } from "react"
 import { useParams } from "next/navigation"
 import { Alert, Button, Modal, Typography, cn } from "@heroui/react"
-import { useLocale, useTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { GraduationCapIcon } from "@phosphor-icons/react"
 import { useAppSelector } from "@/redux/hooks"
 import { useQueryMyGithubTeamStatusSwr } from "@/hooks/swr/api/graphql/queries/useQueryMyGithubTeamStatusSwr"
 import { useLinkGithubOverlayState } from "@/hooks/zustand/overlay/hooks"
-import { useJobNotificationsSocketIo } from "@/hooks/socketio/useJobNotificationsSocketIo"
-import { PublicationEvent } from "@/hooks/socketio/enums/publication-event"
 import { IconTile } from "@/components/blocks/identity/IconTile"
-import { JobStatus } from "@/modules/types/enums/job-status"
 import { mutateRequestToTeam } from "@/modules/api/graphql/mutations/mutation-request-to-team"
 import { GithubIcon } from "@/components/svg/GithubIcon"
 
@@ -36,11 +33,6 @@ export const GithubTeamGate = () => {
     const [requesting, setRequesting] = useState(false)
     // the guided modal is opt-in (opened from the banner CTA) and dismissable
     const [modalOpen, setModalOpen] = useState(false)
-    const locale = useLocale()
-    const jobNotificationsSocket = useJobNotificationsSocketIo()
-    const jobStatusByJobId = useAppSelector((state) => state.socketIo.jobStatusByJobId)
-    // courseId -> id of the enqueued resolve-github invite job (for realtime status)
-    const [jobByCourse, setJobByCourse] = useState<Record<string, string>>({})
 
     // scope to the COURSE CURRENTLY BEING STUDIED (route segment [courseId] = slug).
     const params = useParams()
@@ -48,59 +40,30 @@ export const GithubTeamGate = () => {
     const courseTeams = (data?.teams ?? []).filter((entry) => entry.courseSlug === courseSlug)
     const allInCourseTeams = courseTeams.every((entry) => entry.state === "active")
 
-    // request to join THIS course's team if not invited yet (non-blocking enqueue +
-    // realtime job status via socket — see the original gate's rationale).
+    // request to join THIS course's team if not invited yet (non-blocking enqueue;
+    // job settlement is observed via the refetch below + the "re-check" button — no
+    // realtime push, the legacy socket.io job channel had no server and was removed,
+    // so nothing must gate the UI on a job status that can never arrive).
     const onRequest = useCallback(
         async () => {
             setRequesting(true)
             try {
-                const next: Record<string, string> = {}
                 for (const team of courseTeams.filter((entry) => entry.state === "none")) {
-                    const res = await mutateRequestToTeam({
+                    await mutateRequestToTeam({
                         request: {
                             courseId: team.courseId,
                         },
                     })
-                    const jobId = res.data?.requestToTeam?.data?.jobId
-                    if (jobId) {
-                        next[team.courseId] = jobId
-                        jobNotificationsSocket.emit(
-                            PublicationEvent.SubscribeJobNotification,
-                            {
-                                data: {
-                                    jobId,
-                                },
-                                locale,
-                            },
-                        )
-                    }
                 }
-                setJobByCourse((prev) => ({ ...prev, ...next }))
+                // refetch once so a row the BE already flipped (none → pending) updates;
+                // if the async invite job hasn't landed yet, "re-check" covers it later
+                await mutate()
             } finally {
                 setRequesting(false)
             }
         },
-        [courseTeams, jobNotificationsSocket, locale],
+        [courseTeams, mutate],
     )
-
-    // when a tracked invite job settles, refetch team status once so the row flips.
-    useEffect(() => {
-        const settled = Object.entries(jobByCourse).filter(([, id]) => {
-            const status = jobStatusByJobId[id]?.data?.status
-            return status === JobStatus.Completed || status === JobStatus.Failed
-        })
-        if (settled.length === 0) {
-            return
-        }
-        void mutate()
-        setJobByCourse((prev) => {
-            const remaining = { ...prev }
-            for (const [courseId] of settled) {
-                delete remaining[courseId]
-            }
-            return remaining
-        })
-    }, [jobStatusByJobId, jobByCourse, mutate])
 
     // show only for a viewer with a (paid) team for THIS course that isn't fully joined
     const open = Boolean(
@@ -112,18 +75,14 @@ export const GithubTeamGate = () => {
 
     const linked = data.linked
     const hasUninvited = courseTeams.some((entry) => entry.state === "none")
-    const anySending = Object.values(jobByCourse).some((id) => {
-        const status = jobStatusByJobId[id]?.data?.status
-        return status !== JobStatus.Completed && status !== JobStatus.Failed
-    })
 
     // identity-tile state line (this course's team; gate is scoped to the current course)
     const primaryTeam = courseTeams[0]
     const primaryState = primaryTeam?.state ?? "none"
-    const primaryStateLabel = anySending
+    const primaryStateLabel = requesting
         ? t("githubTeamGate.sending")
         : t(`githubTeamGate.state.${primaryState}`)
-    const primaryStateColor = anySending || primaryState === "pending"
+    const primaryStateColor = requesting || primaryState === "pending"
         ? "text-warning"
         : primaryState === "active"
             ? "text-success"
@@ -215,9 +174,9 @@ export const GithubTeamGate = () => {
                                                             variant="primary"
                                                             size="sm"
                                                             className="self-start"
-                                                            isDisabled={requesting || anySending}
+                                                            isDisabled={requesting}
                                                             onPress={onRequest}>
-                                                            {anySending
+                                                            {requesting
                                                                 ? t("githubTeamGate.sending")
                                                                 : t("githubTeamGate.requestCta")}
                                                         </Button>

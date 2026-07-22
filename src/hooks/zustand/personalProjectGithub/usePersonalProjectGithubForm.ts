@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { debounce } from "lodash"
-import { useLocale, useTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { SidebarTab } from "@/redux/slices/sidebar"
 import { usePersonalProjectGithubStore, type GradingModelSelection, type PersonalProjectGithubAutosaveStatus } from "./store"
 import { useAppDispatch, useAppSelector } from "@/redux/hooks"
@@ -17,8 +17,6 @@ import type { AiGradableModel } from "@/modules/api/graphql/queries/types/ai-mod
 import { useMutateSyncPersonalProjectGithubBranchSwr } from "@/hooks/swr/api/graphql/mutations/useMutateSyncPersonalProjectGithubBranchSwr"
 import { useMutateSyncPersonalProjectGithubSwr } from "@/hooks/swr/api/graphql/mutations/useMutateSyncPersonalProjectGithubSwr"
 import { useQueryCourseEnrollmentStatusSwr } from "@/hooks/swr/api/graphql/queries/useQueryCourseEnrollmentStatusSwr"
-import { PublicationEvent } from "@/hooks/socketio/enums/publication-event"
-import { useJobNotificationsSocketIo } from "@/hooks/socketio/useJobNotificationsSocketIo"
 
 /** GitHub repo regex (aligned with the challenge submission rule). */
 const GITHUB_REGEX = /^https:\/\/(www\.)?github\.com\/[A-Za-z0-9_.-]+(\/[A-Za-z0-9_.-]+)?(\/)?$/
@@ -67,14 +65,14 @@ export interface UsePersonalProjectGithubFormOptions {
 
 /**
  * Personal-project GitHub form hook — state SHARED via {@link usePersonalProjectGithubStore}.
- * Validated inline; submit runs the AI review + subscribes to the job. `enableSync` turns on the
+ * Validated inline; submit runs the AI review (job settlement surfaces via refetch — the legacy
+ * socket.io job channel had no server and was removed). `enableSync` turns on the
  * debounced url/branch sync (only one component enables it so we never sync twice).
  * @param options - {@link UsePersonalProjectGithubFormOptions}
  */
 export const usePersonalProjectGithubForm = (options: UsePersonalProjectGithubFormOptions = {}) => {
     const { enableSync = false } = options
     const t = useTranslations()
-    const locale = useLocale()
     const dispatch = useAppDispatch()
     const runGraphQL = useGraphQLWithToast()
     const course = useAppSelector((state) => state.course.entity)
@@ -86,7 +84,6 @@ export const usePersonalProjectGithubForm = (options: UsePersonalProjectGithubFo
     const syncBranchSwr = useMutateSyncPersonalProjectGithubBranchSwr()
     const queryCourseEnrollmentStatusSwr = useQueryCourseEnrollmentStatusSwr()
     const reviewPersonalProjectTaskSwr = useMutateReviewPersonalProjectTaskSwr()
-    const jobNotificationsSocket = useJobNotificationsSocketIo()
 
     // Grading model catalog + entitlement. Economy and up only — the personal project never
     // grades on the free Auto lane. SWR dedupes across the panel + drawer instances.
@@ -383,10 +380,6 @@ export const usePersonalProjectGithubForm = (options: UsePersonalProjectGithubFo
                     const jobId = reviewEnv.data?.jobId
                     if (jobId) {
                         dispatch(addMilestoneTaskIdToJobId({ milestoneTaskId: selectedTaskId, jobId }))
-                        jobNotificationsSocket.emit(
-                            PublicationEvent.SubscribeJobNotification,
-                            { data: { jobId }, locale },
-                        )
                     }
                     await queryCourseEnrollmentStatusSwr.mutate()
                     return reviewEnv
@@ -396,7 +389,7 @@ export const usePersonalProjectGithubForm = (options: UsePersonalProjectGithubFo
         } finally {
             setIsSubmitting(false)
         }
-    }, [course?.id, githubUrl, branch, lang, gradeModel, gradeSelection, gradeModels, canPremium, enrollment?.personalProjectGithubUrl, selectedTaskId, reviewPersonalProjectTaskSwr, jobNotificationsSocket, locale, dispatch, queryCourseEnrollmentStatusSwr, setBranchError, setIsSubmitting, t, runGraphQL])
+    }, [course?.id, githubUrl, branch, lang, gradeModel, gradeSelection, gradeModels, canPremium, enrollment?.personalProjectGithubUrl, selectedTaskId, reviewPersonalProjectTaskSwr, dispatch, queryCourseEnrollmentStatusSwr, setBranchError, setIsSubmitting, t, runGraphQL])
 
     return {
         githubUrl,

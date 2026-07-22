@@ -5,9 +5,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
  * per-fn client tests (e.g. `gamification.test.ts`) mock `restRequest` itself, so
  * this is the ONE place the real `{code,message,data}` handling is exercised:
  *  - a `code:200` success returns `data` verbatim (unwrapped),
+ *  - a `code:1002` "Accepted" envelope (async AI job submit) also unwraps —
+ *    `data` is the JobRef the poller needs (`ai-hub-live-tools` task 1.3),
  *  - a valid `code:200` with `data:null` (void endpoints) returns `null`,
- *  - a non-200 envelope on a 2xx HTTP response throws a {@link RestError} with the
- *    envelope `code` + nested `errorCode`,
+ *  - a non-{200,1002} envelope on a 2xx HTTP response throws a {@link RestError}
+ *    with the envelope `code` + nested `errorCode`,
  *  - an axios error (non-2xx HTTP) is normalised to a {@link RestError} carrying the
  *    HTTP status + `errorCode`.
  *
@@ -50,6 +52,38 @@ describe("restRequest envelope unwrap", () => {
         })
 
         expect(result).toEqual(payload)
+    })
+
+    it("returns the unwrapped data of a code:1002 Accepted envelope (async job JobRef)", async () => {
+        const jobRef = { jobId: "job-1", status: "PENDING" }
+        request.mockResolvedValue({
+            data: { code: 1002, message: "Accepted", data: jobRef },
+        })
+
+        const result = await restRequest<typeof jobRef>({
+            method: "POST",
+            url: "/ai/learning/summary",
+        })
+
+        expect(result).toEqual(jobRef)
+    })
+
+    it("still throws for an envelope code near but not in {200,1002} (e.g. 1001)", async () => {
+        request.mockResolvedValue({
+            data: {
+                code: 1001,
+                message: "Not accepted",
+                data: { errorCode: "AI_SOMETHING", traceId: "t-3", details: [] },
+            },
+        })
+
+        const error = await restRequest({ method: "POST", url: "/x" }).catch(
+            (e: unknown) => e,
+        )
+
+        expect(error).toBeInstanceOf(RestError)
+        expect((error as RestError).status).toBe(1001)
+        expect((error as RestError).errorCode).toBe("AI_SOMETHING")
     })
 
     it("returns null for a valid code:200 void envelope", async () => {

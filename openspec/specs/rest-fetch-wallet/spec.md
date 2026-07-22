@@ -1,7 +1,14 @@
-## ADDED Requirements
+# rest-fetch-wallet Specification
 
+## Purpose
+TBD - created by archiving change rest-fetch-wallet. Update Purpose after archive.
+## Requirements
 ### Requirement: Wallet REST client reuses the shared REST wrapper
 The wallet REST client SHALL import `restRequest` from `src/modules/api/rest/client/` and SHALL NOT create its own axios instance or envelope handling.
+
+#### Scenario: Client uses the shared wrapper
+- **WHEN** any wallet REST function issues a request
+- **THEN** it routes through `restRequest` and inherits the shared bearer + envelope unwrap behaviour
 
 ### Requirement: WalletController endpoints are exposed via REST
 The wallet REST client SHALL expose typed functions for all `WalletController` endpoints.
@@ -112,5 +119,9 @@ For every GET wallet REST function, a corresponding `useGet*Swr` hook SHALL exis
 - **THEN** the hook invokes `listAdminTransactions(params)` through `useSWR`
 
 ### Requirement: Wallet module is re-exported from the REST barrel
+The REST barrel `src/modules/api/rest/index.ts` SHALL re-export the wallet module so consumers import it from the shared entry point.
+
+#### Scenario: Barrel re-exports wallet
 - **WHEN** `src/modules/api/rest/index.ts` is updated
 - **THEN** it adds `export * from "./wallet"` alongside existing module exports
+

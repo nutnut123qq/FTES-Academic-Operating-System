@@ -39,4 +39,4 @@
 ## 5. Verification
 
 - [x] 5.1 Run `npx tsc --noEmit` and fix type errors.
-- [ ] 5.2 Run `npm run build` (webpack) and ensure a green build.
+- [x] 5.2 Run `npm run build` (webpack) and ensure a green build.

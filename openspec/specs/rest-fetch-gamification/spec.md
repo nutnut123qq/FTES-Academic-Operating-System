@@ -1,5 +1,8 @@
-## ADDED Requirements
+# rest-fetch-gamification Specification
 
+## Purpose
+TBD - created by archiving change rest-fetch-gamification. Update Purpose after archive.
+## Requirements
 ### Requirement: Gamification REST client reuses the shared REST wrapper
 The gamification REST client SHALL import `restRequest` from `src/modules/api/rest/client/` and SHALL NOT create its own axios instance or envelope handling.
 
@@ -201,6 +204,9 @@ For every GET gamification REST function we expose, a corresponding `useGet*Swr`
 - **THEN** the hook invokes `validateRewardPool(poolId)` through `useSWR`
 
 ### Requirement: Gamification module is re-exported from the REST barrel
+The REST barrel `src/modules/api/rest/index.ts` SHALL re-export the gamification module so consumers import it from the shared entry point.
+
+#### Scenario: Barrel re-exports gamification
 - **WHEN** `src/modules/api/rest/index.ts` is updated
 - **THEN** it adds `export * from "./gamification"` alongside existing module exports
 
@@ -214,3 +220,4 @@ Endpoints already served by GraphQL operations SHALL NOT receive duplicate REST 
 #### Scenario: Skip GraphQL-covered reward pools list
 - **WHEN** reviewing the user gamification surface
 - **THEN** `GET /api/v1/gamification/rewards/pools` is listed as covered by `rewards`/`myRewardWallet` and omitted
+

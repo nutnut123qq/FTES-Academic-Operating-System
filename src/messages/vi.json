@@ -1,4 +1,67 @@
 {
+  "mascot": {
+    "name": "Tesu",
+    "dismiss": "Bỏ qua",
+    "greeting": {
+      "guest": "Chào bạn! Mình là Tesu. Đăng nhập để mình đồng hành cùng bạn nhé."
+    },
+    "nudge": {
+      "completeProfile": {
+        "title": "Hoàn thiện hồ sơ của bạn",
+        "body": "Thêm ảnh đại diện và giới thiệu ngắn để bạn học và mentor hiểu bạn hơn.",
+        "cta": "Hoàn thiện hồ sơ",
+        "dismiss": "Để sau"
+      }
+    }
+  },
+  "onboarding": {
+    "dialogLabel": "Hướng dẫn làm quen",
+    "progress": "{current} / {total}",
+    "skip": "Bỏ qua",
+    "next": "Tiếp",
+    "finish": "Xong",
+    "replay": "Xem lại hướng dẫn",
+    "skipConfirm": {
+      "title": "Bỏ qua hướng dẫn?",
+      "body": "Bạn có thể mở lại hướng dẫn này bất cứ lúc nào từ menu tài khoản.",
+      "confirm": "Bỏ qua",
+      "cancel": "Tiếp tục"
+    },
+    "welcome": {
+      "title": "Xin chào, mình là {name}!",
+      "body": "Để mình dẫn bạn một vòng nhanh qua FTES nhé — chỉ khoảng một phút thôi."
+    },
+    "steps": {
+      "home": {
+        "title": "Trang chủ",
+        "body": "Điểm khởi đầu của bạn: tiếp tục học, gợi ý cho bạn và những gì đang diễn ra."
+      },
+      "workplace": {
+        "title": "Không gian làm việc",
+        "body": "Nơi bạn thực hành theo môn: bài tập, dự án và lộ trình kỹ năng của bạn."
+      },
+      "course": {
+        "title": "Khoá học",
+        "body": "Duyệt và ghi danh khoá học. Mở khoá phần nâng cao bằng cách đăng ký chính khoá đó."
+      },
+      "community": {
+        "title": "Cộng đồng",
+        "body": "Hỏi đáp, chia sẻ bài viết và học cùng những người học khác."
+      },
+      "search": {
+        "title": "Tìm kiếm nhanh",
+        "body": "Nhấn vào đây (hoặc Ctrl/Cmd + K) để nhảy tới bất kỳ khoá học, bài học hay người dùng nào."
+      },
+      "account": {
+        "title": "Khu vực của bạn",
+        "body": "Bấm ảnh đại diện để mở Trợ lý AI, chuỗi ngày 🔥 và nhiệm vụ, ví và cài đặt."
+      }
+    },
+    "done": {
+      "title": "Sẵn sàng rồi!",
+      "body": "Cần xem lại? Mở lại hướng dẫn này bất cứ lúc nào từ menu tài khoản của bạn."
+    }
+  },
   "community": {
     "title": "Cộng đồng",
     "description": "Chia sẻ điều bạn đang làm, hỏi khi gặp khó, cùng nhau học.",
@@ -566,7 +629,8 @@
       "title": "Khóa học của tôi",
       "subtitle": "Tiếp tục hành trình học của bạn.",
       "empty": "Bạn chưa đăng ký khóa học nào",
-      "browse": "Khám phá khóa học"
+      "browse": "Khám phá khóa học",
+      "emptyHint": "Đăng ký một khóa học, nó sẽ hiện ở đây để bạn học tiếp bất kỳ lúc nào."
     },
     "teaching": {
       "title": "Khóa tôi dạy",
@@ -3266,7 +3330,8 @@
     "noResults": "Không tìm thấy kết quả. Thử từ khóa khác.",
     "noResultsFor": "Không có kết quả cho “{query}”. Thử từ khóa khác.",
     "all": "Tất cả",
-    "signInPrompt": "Đăng nhập để tìm kiếm nội dung học tập. Kết quả cộng đồng vẫn hiển thị bên dưới."
+    "signInPrompt": "Đăng nhập để tìm kiếm nội dung học tập. Kết quả cộng đồng vẫn hiển thị bên dưới.",
+    "noResultsHint": "Thử từ khóa khác hoặc kiểm tra chính tả."
   },
   "recommendation": {
     "title": "Dành cho bạn",
@@ -3452,7 +3517,9 @@
       "retry": "Thử lại",
       "toast": {
         "questDone": "+{coin} xu — {title}"
-      }
+      },
+      "celebrateAllClaimedTitle": "Hoàn thành hết nhiệm vụ!",
+      "celebrateAllClaimedBody": "Bạn đã nhận hết nhiệm vụ hôm nay. Quay lại ngày mai để nhận nhiệm vụ mới nhé."
     },
     "title": "Bảng xếp hạng",
     "subtitle": "Theo dõi tiến độ và xem thứ hạng của bạn so với mọi người.",
@@ -5581,7 +5648,9 @@
       "empty": "Chưa có bài viết nào. Hãy là người đầu tiên chia sẻ!",
       "error": "Không tải được bảng tin. Vui lòng thử lại.",
       "campusEmpty": "Cơ sở của bạn chưa có bài viết nào.",
-      "campusEmptyHint": "Cập nhật cơ sở trong hồ sơ để xem bài viết từ cộng đồng cơ sở của bạn."
+      "campusEmptyHint": "Cập nhật cơ sở trong hồ sơ để xem bài viết từ cộng đồng cơ sở của bạn.",
+      "emptyHint": "Hãy là người đầu tiên chia sẻ điều gì đó với cộng đồng.",
+      "emptyCompose": "Đăng bài"
     },
     "detail": {
       "comments": "{count} bình luận"
@@ -6450,6 +6519,8 @@
     "errorTitle": "Không tải được giỏ hàng",
     "errorDescription": "Đã có lỗi xảy ra. Vui lòng thử lại.",
     "retry": "Thử lại",
-    "viewFullCart": "Xem giỏ hàng đầy đủ"
+    "viewFullCart": "Xem giỏ hàng đầy đủ",
+    "emptyHint": "Khám phá danh mục và thêm một khóa học để bắt đầu.",
+    "emptyBrowse": "Khám phá khóa học"
   }
 }

@@ -49,6 +49,23 @@ giảm bỏ ngang, tạo bản sắc thương hiệu vui-thân-thiện.
   linh vật `aria-hidden` vì trang trí), **reduced-motion**, **i18n vi/en** (`mascot.*`,
   `onboarding.*`).
 
+## Scope (FE-only slice)
+
+**Delivered:** `FtesMascot` (poses/sizes/animated/reduced-motion, art via one swappable
+module), the tour engine (`TourProvider` + `SpotlightOverlay` + `MascotCoachMark`), the
+welcome tour with `data-tour` anchors, first-visit auto-start with a single device-wide
+done flag, confirmed skip, manual replay from the account menu, missing-target skip, and
+full a11y (focus trap, keyboard, aria-live, reduced-motion) + i18n vi/en.
+
+**Non-Goals (deferred — NOT specified as requirements of this change):** cross-device BE
+sync of the onboarding flag; per-surface first-visit tip registry (`registerTour` /
+`first-visit:{surface}`); a multi-tour queue; resume-at-step and an opt-out flag;
+per-principal storage keys (`ftes:tour:{principal}:*`); a floating `MascotHelperFab`
+(replaced by an account-menu replay entry); step `route` navigation and `allowInteract`
+pass-through; emitting `onboarding.completed`. These stay in tasks.md as a backlog and are
+deliberately absent from the delta spec so `openspec sync` cannot write unbuilt behaviour
+into the main specs.
+
 ## Capabilities
 
 ### New Capabilities

@@ -2,7 +2,6 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react"
 import { Skeleton, Typography } from "@heroui/react"
-import { MagnifyingGlassIcon } from "@phosphor-icons/react"
 import { useLocale, useTranslations } from "next-intl"
 import { useRouter, useSearchParams } from "next/navigation"
 import { pathConfig } from "@/resources/path"
@@ -10,6 +9,7 @@ import { useAppDispatch, useAppSelector } from "@/redux/hooks"
 import { setSearchQuery } from "@/redux/slices/search"
 import { EmptyContent } from "@/components/blocks/async/EmptyContent"
 import { ErrorContent } from "@/components/blocks/async/ErrorContent"
+import { FtesMascot } from "@/components/reuseable/FtesMascot"
 import { useDebouncedValue } from "@/hooks/reuseables/useDebouncedValue"
 import { useGlobalSearch, SEARCH_MIN_CHARS } from "../hooks/useGlobalSearch"
 import { SEARCH_CATEGORY_MAP } from "../map"
@@ -159,8 +159,9 @@ export const SearchResults = () => {
                         </div>
                     ) : !isLoading && !error ? (
                         <EmptyContent
-                            icon={<MagnifyingGlassIcon className="size-8 text-muted" aria-hidden focusable="false" />}
+                            icon={<FtesMascot pose="point" size="lg" />}
                             title={t("searchPage.noResultsFor", { query: trimmed })}
+                            description={t("searchPage.noResultsHint")}
                         />
                     ) : null}
                 </>

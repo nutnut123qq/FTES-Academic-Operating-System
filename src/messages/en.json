@@ -1,4 +1,67 @@
 {
+  "mascot": {
+    "name": "Tesu",
+    "dismiss": "Dismiss",
+    "greeting": {
+      "guest": "Hi, I'm Tesu! Sign in and I'll keep you company along the way."
+    },
+    "nudge": {
+      "completeProfile": {
+        "title": "Round out your profile",
+        "body": "Add a photo and a short bio so classmates and mentors get to know you.",
+        "cta": "Complete profile",
+        "dismiss": "Not now"
+      }
+    }
+  },
+  "onboarding": {
+    "dialogLabel": "Getting-started guide",
+    "progress": "{current} / {total}",
+    "skip": "Skip",
+    "next": "Next",
+    "finish": "Done",
+    "replay": "Replay the guide",
+    "skipConfirm": {
+      "title": "Skip the guide?",
+      "body": "You can reopen this guide anytime from your account menu.",
+      "confirm": "Skip",
+      "cancel": "Keep going"
+    },
+    "welcome": {
+      "title": "Hi, I'm {name}!",
+      "body": "Let me give you a quick tour of FTES — it'll only take about a minute."
+    },
+    "steps": {
+      "home": {
+        "title": "Home",
+        "body": "Your starting point: pick up where you left off, see picks for you and what's new."
+      },
+      "workplace": {
+        "title": "Workplace",
+        "body": "Where you practise by subject: exercises, projects and your skill roadmap."
+      },
+      "course": {
+        "title": "Courses",
+        "body": "Browse and enrol in courses. Unlock the advanced parts by enrolling in the course itself."
+      },
+      "community": {
+        "title": "Community",
+        "body": "Ask questions, share posts and learn alongside other learners."
+      },
+      "search": {
+        "title": "Quick search",
+        "body": "Tap here (or press Ctrl/Cmd + K) to jump to any course, lesson or person."
+      },
+      "account": {
+        "title": "Your space",
+        "body": "Open your avatar for the AI tutor, your streak 🔥 and quests, wallet and settings."
+      }
+    },
+    "done": {
+      "title": "You're all set!",
+      "body": "Need a refresher? Reopen this guide any time from your account menu."
+    }
+  },
   "community": {
     "title": "Community",
     "description": "Share what you're working on, ask for help, and learn together.",
@@ -566,7 +629,8 @@
       "title": "My courses",
       "subtitle": "Pick up where you left off.",
       "empty": "You haven't enrolled in any course yet",
-      "browse": "Browse courses"
+      "browse": "Browse courses",
+      "emptyHint": "Enroll in a course and it will show up here to continue anytime."
     },
     "teaching": {
       "title": "Courses I teach",
@@ -3266,7 +3330,8 @@
     "noResults": "No results found. Try a different search.",
     "noResultsFor": "No results for “{query}”. Try a different search.",
     "all": "All",
-    "signInPrompt": "Sign in to search learning content. Community results still show below."
+    "signInPrompt": "Sign in to search learning content. Community results still show below.",
+    "noResultsHint": "Try a different keyword or check the spelling."
   },
   "recommendation": {
     "title": "For you",
@@ -3452,7 +3517,9 @@
       "retry": "Try again",
       "toast": {
         "questDone": "+{coin} coins — {title}"
-      }
+      },
+      "celebrateAllClaimedTitle": "Every quest cleared!",
+      "celebrateAllClaimedBody": "You claimed all of today’s quests. Come back tomorrow for a fresh set."
     },
     "title": "Leaderboard",
     "subtitle": "Track your progress and see how you rank against your peers.",
@@ -5581,7 +5648,9 @@
       "empty": "No posts yet. Be the first to share!",
       "error": "Couldn't load the feed. Please try again.",
       "campusEmpty": "No posts from your campus yet.",
-      "campusEmptyHint": "Set your campus in your profile to see posts from your campus community."
+      "campusEmptyHint": "Set your campus in your profile to see posts from your campus community.",
+      "emptyHint": "Be the first to share something with the community.",
+      "emptyCompose": "Start a post"
     },
     "detail": {
       "comments": "{count} comments"
@@ -6450,6 +6519,8 @@
     "errorTitle": "Couldn't load your cart",
     "errorDescription": "Something went wrong. Please try again.",
     "retry": "Try again",
-    "viewFullCart": "View full cart"
+    "viewFullCart": "View full cart",
+    "emptyHint": "Browse the catalog and add a course to get started.",
+    "emptyBrowse": "Explore courses"
   }
 }

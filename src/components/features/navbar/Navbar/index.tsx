@@ -121,17 +121,21 @@ export const Navbar = ({ className }: NavbarProps) => {
                 </div>
 
                 <div className="flex items-center justify-end gap-2">
-                    {/* desktop: field-shaped trigger that opens the command palette; mobile: just an icon */}
-                    <SearchInline />
-                    <Button
-                        isIconOnly
-                        variant="tertiary"
-                        aria-label={t("search.label")}
-                        className="md:hidden"
-                        onPress={openSearch}
-                    >
-                        <SearchIcon className="size-5" />
-                    </Button>
+                    {/* desktop: field-shaped trigger that opens the command palette; mobile: just an icon.
+                        Wrapped with the onboarding `global-search` anchor so the tour spotlights
+                        whichever affordance is visible on the current viewport (field or icon). */}
+                    <span data-tour="global-search" className="flex items-center">
+                        <SearchInline />
+                        <Button
+                            isIconOnly
+                            variant="tertiary"
+                            aria-label={t("search.label")}
+                            className="md:hidden"
+                            onPress={openSearch}
+                        >
+                            <SearchIcon className="size-5" />
+                        </Button>
+                    </span>
                     {/* desktop: language inline; on mobile it moves into the drawer.
                         Appearance is NOT here — it lives in /profile/settings. */}
                     <div className="hidden items-center gap-2 md:flex">
@@ -139,7 +143,13 @@ export const Navbar = ({ className }: NavbarProps) => {
                     </div>
                     <CartButton />
                     <NotificationBell />
-                    <AccountMenuDropdown />
+                    {/* onboarding `account-menu` anchor: the avatar is the honest gateway to
+                        the AI tutor + gamification (streak / quests) surfaces, which live
+                        inside this menu / the AI hub. The tour points here rather than
+                        opening the dropdown mid-run. */}
+                    <span data-tour="account-menu" className="flex items-center">
+                        <AccountMenuDropdown />
+                    </span>
                     {/* mobile: expand icon → navigation drawer */}
                     <Button
                         isIconOnly

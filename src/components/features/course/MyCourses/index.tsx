@@ -7,6 +7,8 @@ import { Link, useRouter } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { ContinueCard } from "@/components/blocks/cards/ContinueCard"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
+import { FtesMascot } from "@/components/reuseable/FtesMascot"
+import { MascotProfileNudge } from "@/components/features/mascot-moments"
 import { useQueryMyCoursesSwr } from "../hooks/useQueryMyCoursesSwr"
 
 /**
@@ -51,7 +53,9 @@ export const MyCourses = () => {
                 }}
                 isEmpty={courses.length === 0}
                 emptyContent={{
+                    icon: <FtesMascot pose="explain" size="lg" />,
                     title: t("courses.mine.empty"),
+                    description: t("courses.mine.emptyHint"),
                     action: (
                         <Button variant="primary" onPress={() => router.push("/courses")}>
                             {t("courses.mine.browse")}
@@ -59,22 +63,27 @@ export const MyCourses = () => {
                     ),
                 }}
             >
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {courses.map((course) => (
-                        <Link
-                            key={course.courseId}
-                            href={course.href}
-                            className="group block no-underline"
-                        >
-                            <ContinueCard
-                                title={course.title}
-                                subtitle={t("courses.percentComplete", { percent: course.completionPercent })}
-                                value={course.completionPercent}
-                                ctaLabel={t("courses.continueLearning")}
-                                className="h-full"
-                            />
-                        </Link>
-                    ))}
+                <div className="flex flex-col gap-4">
+                    {/* profile-completion nudge sits above the list ONLY when there are
+                        courses (no empty-state mascot), keeping one mascot per page */}
+                    <MascotProfileNudge />
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        {courses.map((course) => (
+                            <Link
+                                key={course.courseId}
+                                href={course.href}
+                                className="group block no-underline"
+                            >
+                                <ContinueCard
+                                    title={course.title}
+                                    subtitle={t("courses.percentComplete", { percent: course.completionPercent })}
+                                    value={course.completionPercent}
+                                    ctaLabel={t("courses.continueLearning")}
+                                    className="h-full"
+                                />
+                            </Link>
+                        ))}
+                    </div>
                 </div>
             </AsyncContent>
         </div>

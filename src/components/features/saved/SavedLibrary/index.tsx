@@ -7,9 +7,9 @@ import {
     ChatCircleTextIcon,
     FileTextIcon,
     GraduationCapIcon,
-    SignInIcon,
     SquaresFourIcon,
 } from "@phosphor-icons/react"
+import { FtesMascot } from "@/components/reuseable/FtesMascot"
 import { useTranslations } from "next-intl"
 import { Link, useRouter } from "@/i18n/navigation"
 import { useAppDispatch, useAppSelector } from "@/redux/hooks"
@@ -199,9 +199,9 @@ export const SavedLibrary = () => {
 
             {!authenticated ? (
                 <EmptyContent
-                    icon={<SignInIcon aria-hidden focusable="false" className="size-8 text-muted" />}
+                    icon={<FtesMascot pose="greeting" size="lg" />}
                     title={t("savedItems.signInTitle")}
-                    description={t("savedItems.signInHint")}
+                    description={t("mascot.greeting.guest")}
                     action={
                         <Button size="sm" variant="primary" onPress={onSignIn}>
                             {t("savedItems.signInCta")}
@@ -247,7 +247,7 @@ export const SavedLibrary = () => {
                         emptyContent={
                             tabRows.length === 0
                                 ? {
-                                    icon: <BookmarkSimpleIcon aria-hidden focusable="false" className="size-8 text-muted" />,
+                                    icon: <FtesMascot pose="explain" size="lg" />,
                                     title: t(`savedItems.empty.${tab}.title`),
                                     description: t(`savedItems.empty.${tab}.hint`),
                                     action: (

@@ -18,6 +18,7 @@ import { ReduxProvider } from "@/redux/ReduxProvider"
 import { ModalContainer } from "@/components/modals/ModalContainer"
 import { UseEffects } from "@/hooks/effects/UseEffects"
 import { AuthQueryOpener } from "@/components/layouts/auth/AuthQueryOpener"
+import { TourProvider } from "@/components/features/onboarding"
 import { useAppearanceStore } from "@/hooks/zustand/appearance/store"
 
 export const InnerLayout = ({ children }: PropsWithChildren) => {
@@ -73,11 +74,16 @@ export const InnerLayout = ({ children }: PropsWithChildren) => {
                             {!isContentRoute && effectEnabled ? (
                                 <AmbientBackground direction={effectDirection} speed={effectSpeed} />
                             ) : null}
-                            <Navbar />
-                            <ModalContainer />
-                            <DrawerContainer />
-                            <div>{children}</div>
-                            {showFooter ? <Footer /> : null}
+                            {/* Onboarding tour engine — wraps the shell so it can spotlight the
+                                Navbar anchors and the account-menu replay entry shares its context.
+                                The overlay itself renders in a body-level portal. */}
+                            <TourProvider>
+                                <Navbar />
+                                <ModalContainer />
+                                <DrawerContainer />
+                                <div>{children}</div>
+                                {showFooter ? <Footer /> : null}
+                            </TourProvider>
                             <CookieConsentBanner />
                             <ToastProvider />
                         </SwrProvider>

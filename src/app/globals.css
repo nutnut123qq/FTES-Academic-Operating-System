@@ -265,11 +265,25 @@ html {
     100% { transform: translate3d(var(--drift, 45vw), 110vh, 0) rotate(var(--tilt, -32deg)); opacity: 0; }
 }
 
+/*
+ * FtesMascot idle "bob" — a gentle vertical float that keeps the mascot feeling
+ * alive without demanding attention. Transform-only (GPU-cheap). Applied via the
+ * `.mascot-bob` class from the FtesMascot component; disabled under
+ * reduced-motion below so callers never branch on the motion setting.
+ */
+@keyframes mascotBob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6%); }
+}
+
+.mascot-bob { animation: mascotBob 2.8s ease-in-out infinite; }
+
 @media (prefers-reduced-motion: reduce) {
     /* reduced-motion always wins over the appearance setting — both ambient modes
        are fully hidden (not just frozen), regardless of the stored config */
     .ambient-ember, .ambient-meteor { animation: none !important; opacity: 0 !important; }
     .app-splash-bar { animation: none !important; width: 40% !important; }
+    .mascot-bob { animation: none !important; }
 }
 
 /*

@@ -36,6 +36,9 @@ export const HeaderNav = ({ className }: HeaderNavProps) => {
                 <Link
                     key={module.key}
                     href={module.path}
+                    // stable anchor for the onboarding tour (nav-home / nav-workplace /
+                    // nav-course / nav-community / nav-blog) — see `features/onboarding`
+                    data-tour={`nav-${module.key}`}
                     aria-current={module.isActive ? "page" : undefined}
                     className={cn(
                         "rounded-full px-3 py-2 text-sm no-underline transition-colors",

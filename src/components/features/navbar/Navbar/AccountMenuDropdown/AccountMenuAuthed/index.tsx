@@ -24,6 +24,7 @@ import { useAccountMenuOverlayState } from "@/hooks/zustand/overlay/hooks"
 import { useGetMyWalletSwr } from "@/hooks/swr/api/rest/queries/useGetMyWalletSwr"
 import { useMutateSignOutSwr } from "@/hooks/swr/api/graphql/mutations/useMutateSignOutSwr"
 import { EXPLORE_SHORTCUTS } from "../explore-shortcuts"
+import { ReplayGuideItem } from "@/components/features/onboarding"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 
 /** Props for {@link AccountMenuAuthed}. */
@@ -137,6 +138,8 @@ export const AccountMenuAuthed = ({ className }: AccountMenuAuthedProps) => {
                     <GearIcon className="size-5" />
                     <Label>{t("profileSettings.title")}</Label>
                 </Dropdown.Item>
+                {/* replay the onboarding welcome tour on demand */}
+                <ReplayGuideItem />
                 {/* Wallet: live balance shown inline; the trailing "+" affordance and
                     the row itself open the wallet surface (where top-up lives). */}
                 <Dropdown.Item

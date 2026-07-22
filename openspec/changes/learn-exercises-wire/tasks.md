@@ -35,3 +35,7 @@
 
 ## 6. Verify chung
 - [ ] 6.1 `npm run build` (webpack) xanh + `tsc --noEmit` sạch; `openspec validate learn-exercises-wire --strict` pass
+
+## Nghiệm thu E2E 2026-07-23 (spec e2e/learn-exercises-wire.spec.ts, 14p/3f toàn cụm)
+- PASS: quiz start→chọn→submit→điểm (submit là PUT /quiz-attempts/{id}/submit); assignment seed-les-c1-s1-l3 nộp URL → "Chờ chấm"; lesson không challenge ẩn sạch entry point; ctv mở COURSE_ONLY → CTA enroll; /challenges thấy demo-bank-mcq-c-public + ẩn 3 bài COURSE_ONLY V215; 3 route legacy redirect đúng.
+- FAIL (BUG): lesson có challenge PUBLISHED (seed-les-c1-s2-l1) KHÔNG hiện tab/rail/CTA — GET /lessons/{id}/content 404 (LESSON_CONTENT_NOT_FOUND, lesson video không content row) mà useQueryLearnLessonSwr chỉ map hasChallenge/challengeId từ endpoint content; course tree có đủ flag nhưng flattenCurriculum bỏ qua. Fix gợi ý: map hasChallenge từ course tree.

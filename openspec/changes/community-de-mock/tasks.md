@@ -215,3 +215,10 @@
       post, tạo thread, RSVP, sửa rules, đổi avatar nhóm.
 - [x] 9.5 `openspec validate community-de-mock --strict` xanh (verify 2026-07-17: "Change 'community-de-mock' is valid").
 - [ ] 9.6 Vòng chất lượng toàn change: unit test + e2e test → đánh giá vòng 1 → fix → đánh giá vòng 2.
+
+## Nghiệm thu E2E 2026-07-23 (spec e2e/community-de-mock.spec.ts, 9/12 tiểu-cảnh PASS)
+- PASS: poll optimistic+rollback (intercept 500, không tiêu vote thật); bỏ-lưu từ tab Đã lưu; campus tab 2 nhánh (HN thấy bài Meetup, campus null → empty-hint); like/unlike group post; tạo thread; RSVP join/leave; sửa rules trọn vòng.
+- FAIL (FE gap): lưu bài từ feed — SaveButton vẫn là mock zustand/localStorage, không gọi bookmarkPost REST → không phản ánh vào tab Đã lưu.
+- FAIL (BUG FE): RichCommentEditor không submit được từ UI — nút Gửi không enable (editor.isEmpty stale với @tiptap/react v3) VÀ Ctrl+Enter chết (closure editor null) → reply thread/comment community không gửi được; BE contract vẫn 200 qua REST.
+- BLOCKED-STORAGE: avatar nhóm — presign 200 nhưng upload.ftes.vn 404 "No endpoint POST /api/images".
+- Không có token ADMIN (mật khẩu xoay 2026-07-21) — smoke chạy 3 role student/lecturer/ctv.

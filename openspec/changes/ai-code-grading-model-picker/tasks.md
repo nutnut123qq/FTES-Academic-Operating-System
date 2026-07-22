@@ -34,3 +34,8 @@
 - [x] 4.1 Keys `learn.codeGrading.*` (vi/en)
 - [x] 4.2 "Chấm lại với model khác" (lần 2 gửi run_code_execution:false nếu code không đổi)
 - [ ] 4.3 Build + typecheck xanh (tsc --noEmit xanh; npm run build chạy ở vòng verify cuối)
+
+## Nghiệm thu E2E 2026-07-23 (spec e2e/ai-code-grading-model-picker.spec.ts)
+- PASS: chấm code tại /challenges/demo-bank-code-c-swap (GradeCodePanel) — Python 1/1 test PASS + rubric + chip "Chấm bởi" + nút Chấm lại.
+- FAIL: model/language picker cùng bug DropdownItem thiếu id → gửi react-aria-N (xem lesson-ai-chat-fixes).
+- 3.2/3.4: N/A theo tasks.md.

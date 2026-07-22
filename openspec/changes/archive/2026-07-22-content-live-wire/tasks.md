@@ -4,7 +4,7 @@
 - [x] 1.1 `modules/api/rest/admin/types.ts`: `AdminBannerView` +`subtitle?`, `ctaText?`, `theme?`.
 - [x] 1.2 `useQueryFeaturedCoursesSwr.ts`: `toFeaturedFromBanner` map subtitle/ctaText/theme/linkUrl; đổi ưu tiên realBanners, mock chỉ khi lỗi.
 - [x] 1.3 `FeaturedSlide`: render `theme` làm background, `ctaLabel` (fallback i18n `courseSystem.slider.cta`), `pitch` từ subtitle; degrade khi thiếu.
-- [ ] 1.4 (Tuỳ chọn) slider `placement="home"` trên Home landing. — BỎ QUA (optional).
+- [x] 1.4 (Tuỳ chọn) slider `placement="home"` trên Home landing. — BỎ QUA (optional, chốt bỏ khi đóng sổ 2026-07-23).
 
 ## 2. Course category live
 - [x] 2.1 `modules/api/rest/course/course.ts`: `getCourseCategories(nonEmpty)` + type `CourseCategoryDto`; export qua `index.ts`.
@@ -23,5 +23,5 @@
 
 ## 5. Verify
 - [x] 5.1 `npm run build` (webpack) + `tsc --noEmit` sạch.
-- [ ] 5.2 E2E thủ công trên apitest: — KHÔNG chạy (FE chỉ chạy local máy user; cần backend seed banner + endpoint `/courses/categories`).
+- [x] 5.2 E2E thủ công trên apitest. (2026-07-23 Playwright `e2e/content-live-wire.spec.ts` 3/3, FE local nối apitest: banner seed CÓ thật (`/admin-content/banners?placement=courses` → 4 banner) render hero carousel; `/courses/categories` 200 → đủ chip tab; blog detail markdown render sạch.)
 - [x] 5.3 `openspec validate content-live-wire`.

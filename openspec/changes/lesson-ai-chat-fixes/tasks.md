@@ -28,3 +28,7 @@
 
 ## 4. Verify
 - [~] 4.1 `tsc --noEmit` sạch ✓ + `openspec validate lesson-ai-chat-fixes --strict` PASS ✓ (re-verify 2026-07-17, feature C anchored-panel đã implement đủ 3.1-3.4). `npm run build` (webpack) đã xanh ở phiên trước (3.7); không đổi source từ đó.
+
+## Nghiệm thu E2E 2026-07-23 (spec e2e/lesson-ai-chat-fixes.spec.ts)
+- PASS 3/4: bôi đen → body chứa passage + khối [Ngữ cảnh đoạn trích], bubble hiện quote truncate, answer stream thật; desktop panel neo phải + clamp + Esc; mobile 375px bottom-sheet 80vh.
+- FAIL (BUG src, task 2.7): DropdownItem chỉ có React key, KHÔNG có prop id → HeroUI onAction trả key tự sinh → chọn model gửi {"model":"react-aria-2"} → BE 400 → chat lỗi. Fix: thêm id={model.id} ở ContentAiChat/index.tsx + AiModelPicker + mọi Dropdown cùng pattern (language picker, lesson picker dính chung).

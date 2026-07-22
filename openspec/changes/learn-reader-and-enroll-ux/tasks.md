@@ -75,3 +75,9 @@
       challenge tab/CTA follow the BE flag; inline next button advances; sidebar toggle
       hides/shows the rail; "See all questions" reveals inline + scrolls (no nav); enroll
       opens the PaymentModal QR.
+
+## Nghiệm thu E2E 2026-07-23 (spec e2e/learn-reader-and-enroll-ux.spec.ts)
+- PASS: reader đúng loại bài; "Bài sau"; toggle sidebar; Q&A inline; Enroll WED201c → PaymentModal 399k (cart 200).
+- FAIL: tab challenge trên lesson VIDEO — cùng bug content-404 ghi ở learn-exercises-wire.
+- Task 6.3 NOT-IMPLEMENTED as-written: nút enroll ở paywall mở PackageGateModal (supersede hướng useCourseEnrollment/PaymentModal). Tasks 2–7 thực tế ĐÃ implement (tasks.md stale).
+- Bug phụ: readerHref build moduleId bằng lessonId.split("-")[0] → segment "seed" sai (vẫn chạy vì data theo contentId).

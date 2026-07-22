@@ -70,5 +70,5 @@
 ## 5. Verify chung
 - [x] 5.1 `tsc --noEmit` sạch + eslint file đã chạm. ✅ (tsc exit 0; eslint 0 trên
       SearchInline + SearchDropdown + Navbar + SearchOverlay + tests).
-- [ ] 5.2 `npm run build` (webpack) xanh. (đang chạy)
+- [x] 5.2 `npm run build` (webpack) xanh. (2026-07-23: build + `tsc --noEmit` exit 0; kèm E2E `e2e/blog-nav-and-engagement.spec.ts` 3/3 — tim bài ±1, comment tạo/xoá + count đổi, load-more ẩn đúng khi hasNext=false.)
 - [x] 5.3 `openspec validate blog-nav-and-engagement --strict` pass. ✅

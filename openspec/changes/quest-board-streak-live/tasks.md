@@ -34,4 +34,4 @@
 ## 6. Verify tổng
 - [ ] 6.1 `npm run build` (webpack) xanh + `tsc --noEmit` sạch
 - [ ] 6.2 Smoke trên apitest với acc test: login → /quests thấy DAILY_LOGIN done + ví +50; hoàn thành 1 lesson → streak/heatmap/xp/quest cập nhật
-- [ ] 6.3 `openspec validate quest-board-streak-live --strict` sạch
+- [x] 6.3 `openspec validate quest-board-streak-live --strict` sạch ✅ (verify: "Change 'quest-board-streak-live' is valid")

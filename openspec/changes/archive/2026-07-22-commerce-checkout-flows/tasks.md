@@ -1,12 +1,12 @@
 ## 1. Types & contract
 
-- [ ] 1.1 Reshape `modules/types/payment.ts`: thay `PaymentContext` union theo-flow bằng payload phẳng `{ itemIds: string[]; title: string; amountVnd: number; amountCoin?: number }`; giữ `PaymentType` enum PG cũ nguyên vẹn.
-- [ ] 1.2 Thêm order-status union FE (`OrderStatus`) + helper `isTerminalOrderStatus(status)` (PAID/SUCCESS/FAILED/CANCELLED/EXPIRED/REFUNDED = terminal) trong `modules/api/rest/commerce/types.ts` (hoặc file kề).
+- [x] 1.1 Reshape `modules/types/payment.ts`: thay `PaymentContext` union theo-flow bằng payload phẳng `{ itemIds: string[]; title: string; amountVnd: number; amountCoin?: number }`; giữ `PaymentType` enum PG cũ nguyên vẹn. ✅ (verify code: PaymentContext phẳng {itemIds,title,amountVnd,amountCoin?,onSuccess?}; enum PaymentType giữ ở `modules/types/enums/payment-type.ts`)
+- [x] 1.2 Thêm order-status union FE (`OrderStatus`) + helper `isTerminalOrderStatus(status)` (PAID/SUCCESS/FAILED/CANCELLED/EXPIRED/REFUNDED = terminal) trong `modules/api/rest/commerce/types.ts` (hoặc file kề). ✅ (verify code: `OrderStatus` union + `isTerminalOrderStatus`/`isPaidOrderStatus` tại commerce/types.ts)
 
 ## 2. Data hooks
 
-- [ ] 2.1 `useGetOrderSwr(orderId, opts?)`: thêm option `poll?: boolean` → khi bật, `refreshInterval: (d) => isTerminalOrderStatus(d?.status) ? 0 : 3000`, `refreshWhenHidden:false`; key `null` khi `!orderId`.
-- [ ] 2.2 Xác nhận có sẵn hook ví (`useGetMyWalletSwr`) để đọc balance; nếu cần, dùng thẳng trong modal. Không tạo hook top-up.
+- [x] 2.1 `useGetOrderSwr(orderId, opts?)`: thêm option `poll?: boolean` → khi bật, `refreshInterval: (d) => isTerminalOrderStatus(d?.status) ? 0 : 3000`, `refreshWhenHidden:false`; key `null` khi `!orderId`. ✅ (verify code: `queries/useGetOrderSwr.ts` khớp chính xác)
+- [x] 2.2 Xác nhận có sẵn hook ví (`useGetMyWalletSwr`) để đọc balance; nếu cần, dùng thẳng trong modal. Không tạo hook top-up. ✅ (verify code: `queries/useGetMyWalletSwr.ts` tồn tại, dùng thẳng trong PaymentModal)
 
 ## 3. PaymentModal (capability commerce-payment-modal)
 

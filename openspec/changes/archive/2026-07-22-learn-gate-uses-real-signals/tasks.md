@@ -1,14 +1,19 @@
 ## 1. Sơ đồ tư duy dùng tín hiệu quyền thật
 
-- [ ] 1.1 `MindMap.statusOf`: `isPremium` → `isLocked`; học phần chỉ "khoá" khi MỌI bài đều khoá.
-- [ ] 1.2 `MindMap.openModule`: vào bài đầu tiên có `accessLevel !== "NONE"`; khoá hết thì mở
+- [x] 1.1 `MindMap.statusOf`: `isPremium` → `isLocked`; học phần chỉ "khoá" khi MỌI bài đều khoá.
+      (verify: statusOf dùng `module.lessons.every(l => l.isLocked)`, doc ghi rõ "NOT isPremium".)
+- [x] 1.2 `MindMap.openModule`: vào bài đầu tiên có `accessLevel !== "NONE"`; khoá hết thì mở
       `PackageGateModal` (như `ContentMap`), không `router.push` vào bài khoá.
-- [ ] 1.3 Copy `learn.mindMap.legend.locked` bỏ "Cần nâng cấp"/"Upgrade needed" (luật
-      `premium-unlock-is-enroll-not-vip`), vi + en.
+      (verify: openModule dùng `find(isOpenable)`; không có bài mở → setGateModule → PackageGateModal.)
+- [x] 1.3 Copy `learn.mindMap.legend.locked` bỏ "Cần nâng cấp"/"Upgrade needed" (luật
+      `premium-unlock-is-enroll-not-vip`), vi + en. (verify: legend.locked = "Chưa mở"/"Locked";
+      grep "Cần nâng cấp"/"Upgrade needed" = 0 hit toàn messages.)
 
 ## 2. Video xem thử không phụ thuộc trường theo người xem
 
-- [ ] 2.1 `FlatLesson` thêm `previewSeconds`; `hasVideo` thêm nhánh `previewSeconds > 0`.
+- [x] 2.1 `FlatLesson` thêm `previewSeconds`; `hasVideo` thêm nhánh `previewSeconds > 0`.
+      (verify: hook map `previewSeconds`, `hasVideo` nhánh `accessLevel==="PREVIEW" || previewSeconds>0`;
+      10/10 vitest xanh MindMap+PackageGateModal+hook.)
 
 ## 3. Cổng gói không loại gói miễn phí
 

@@ -4888,6 +4888,7 @@
       "compose": "New post",
       "pinned": "Pinned by moderator",
       "discussions": "Recent discussions",
+      "noDiscussions": "No discussions in this subject yet. Be the first to start one!",
       "newResources": "New resources",
       "challenges": "Featured challenges",
       "activeMembers": "Active members",

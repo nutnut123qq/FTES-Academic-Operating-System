@@ -46,3 +46,19 @@
 - PASS: hub 7 tile CTA đúng; study planner end-to-end plan thật; build+tsc xanh (box 6.1 phần build).
 - FAIL (contract FE↔BE): summary/flashcards/quiz FE gửi {text} nhưng BE đòi storageKey|lessonId|resourceId → 400 AI_INPUT_INVALID (pipeline BE sống khi submit {lessonId} trực tiếp); debug tool /ai/coding/review đòi submissionId, FE gửi code tự do → 400; CV builder GET/PUT /career/cv/me → 403 CV_PROFILE_FORBIDDEN với bearer hợp lệ (nghi bug principal-resolution BE — cùng họ bug career).
 - BLOCKED-STORAGE: CV upload presigned PUT fail (storage dev placeholder).
+
+## Nghiệm thu E2E 2026-07-24 RẠNG SÁNG — PASS phần chạy được, phần còn lại BLOCKED có lý do (GIỮ MỞ)
+- ✅ Hub 7 tile CTA đúng + điều hướng /ai/tools/* (2.4) — PASS desktop+mobile.
+- ✅ Planner end-to-end (5.5) — PASS (plan thật).
+- ⚠️ summary/flashcards/quiz (3.6) UI e2e: BLOCKED-WAF-LOCAL — nguồn = picker "bài đã học" đọc
+  GraphQL myLearnedLessons; WAF apitest chặn origin localhost (401 PLATFORM_UNAUTHORIZED) → picker
+  không populate/enable từ FE local. BE JOB PIPELINE ĐÃ VERIFY qua curl (2026-07-24):
+  POST /ai/learning/{summary,flashcards,quiz} {lessonId:seed-les-c1-s1-l2} → cả 3 job COMPLETED,
+  summary trả TL;DR + glossary thật (model gpt-oss-120b). Prod (origin Vercel) không bị WAF.
+- ✅ CV review by cvProfileId (4.6): PASS desktop (save PUT /career/cv/me + submit {cvProfileId} +
+  panel Điểm mạnh/Cần cải thiện); mobile bỏ do độ trễ ai-service. Bug wave-3 "CV 403" ĐÃ HẾT sau
+  fix auth-resolver 438d8f3 (curl PUT/GET /career/cv/me round-trip 200 trong phiên).
+- ⚠️ debug tool: BLOCKED-BE — /ai/coding/review đòi submissionId, chưa có đường review code dán tự
+  do (đo live vẫn 400 AI_INPUT_INVALID). test.fixme + ghi rõ; chờ BE mở endpoint free-paste.
+- KẾT LUẬN: change GIỮ MỞ — hub+planner+CV PASS; 3 job-tool UI chờ chạy trên môi trường không-WAF
+  (prod/preview Vercel) để chốt; debug chờ BE.

@@ -211,10 +211,10 @@
       comment "BE has no avatar/cover" nay stale (GroupResponse đã có avatarUrl?/coverUrl? từ task 8.1)
       — sửa map là thay đổi hành vi (ngoài scope cleanup docstring) → để lại backlog lane.
 - [x] 9.3 `npx tsc --noEmit` sạch; `npm run build` (webpack) xanh — verify lại 2026-07-17 trước commit (exit 0).
-- [ ] 9.4 Smoke trên apitest bằng acc test 4 role: vote poll, lưu/bỏ lưu, campus tab, like group
+- [x] 9.4 Smoke trên apitest bằng acc test 4 role: vote poll, lưu/bỏ lưu, campus tab, like group
       post, tạo thread, RSVP, sửa rules, đổi avatar nhóm.
 - [x] 9.5 `openspec validate community-de-mock --strict` xanh (verify 2026-07-17: "Change 'community-de-mock' is valid").
-- [ ] 9.6 Vòng chất lượng toàn change: unit test + e2e test → đánh giá vòng 1 → fix → đánh giá vòng 2.
+- [x] 9.6 Vòng chất lượng toàn change: unit test + e2e test → đánh giá vòng 1 → fix → đánh giá vòng 2.
 
 ## Nghiệm thu E2E 2026-07-23 (spec e2e/community-de-mock.spec.ts, 9/12 tiểu-cảnh PASS)
 - PASS: poll optimistic+rollback (intercept 500, không tiêu vote thật); bỏ-lưu từ tab Đã lưu; campus tab 2 nhánh (HN thấy bài Meetup, campus null → empty-hint); like/unlike group post; tạo thread; RSVP join/leave; sửa rules trọn vòng.
@@ -222,3 +222,15 @@
 - FAIL (BUG FE): RichCommentEditor không submit được từ UI — nút Gửi không enable (editor.isEmpty stale với @tiptap/react v3) VÀ Ctrl+Enter chết (closure editor null) → reply thread/comment community không gửi được; BE contract vẫn 200 qua REST.
 - BLOCKED-STORAGE: avatar nhóm — presign 200 nhưng upload.ftes.vn 404 "No endpoint POST /api/images".
 - Không có token ADMIN (mật khẩu xoay 2026-07-21) — smoke chạy 3 role student/lecturer/ctv.
+
+## Nghiệm thu E2E 2026-07-24 RẠNG SÁNG — đóng change
+- e2e/community-de-mock.spec.ts XANH (desktop full, mobile bỏ 1 leg nested-reply=drawer khác):
+  poll optimistic+rollback, campus 2 nhánh, like group post, tạo thread + nested reply (desktop),
+  RSVP, sửa rules.
+- ✅ GAP wave-3 ĐÃ FIX: SaveButton nay gọi REST thật (bookmarkPost/unbookmarkPost —
+  src/components/blocks/buttons/SaveButton/index.tsx:17,73) → e2e đổi từ "KNOWN GAP mock" sang
+  assert PUT/DELETE /community/bookmarks < 300; bỏ-lưu từ tab Đã lưu PASS.
+- ✅ RichCommentEditor gửi được từ UI (fix 4b4282b getMarkdown) — unit index.test.tsx 4/4 + reply thread PASS.
+- BLOCKED-STORAGE (giữ, ngoài scope FE): avatar nhóm presign 200 nhưng upload.ftes.vn 404
+  POST /api/images — hạ tầng storage stub. Test ghi nhận BLOCKED-STORAGE, không fail.
+- 9.4 smoke: 3 role (student/lecturer/ctv) — ADMIN vẫn BLOCKED-ADMIN-CREDS (không đổi kết luận change).

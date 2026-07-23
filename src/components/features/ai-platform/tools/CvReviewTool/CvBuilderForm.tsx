@@ -6,7 +6,6 @@ import {
     Button,
     Input,
     Label,
-    Spinner,
     TextArea,
     TextField,
     Typography,
@@ -14,6 +13,8 @@ import {
 } from "@heroui/react"
 import { PlusIcon, TrashIcon, FilePdfIcon, WarningCircleIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
+import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { getMyCv, putMyCv } from "@/modules/api/rest/career"
 import type { CvSections, CvStatus } from "@/modules/api/rest/career"
 import {
@@ -140,6 +141,38 @@ const Row = ({ children, onRemove, removeLabel }: {
             <TrashIcon aria-hidden focusable="false" className="size-4" />
         </Button>
         {children}
+    </div>
+)
+
+/**
+ * Loading skeleton mirroring the builder's real layout — the personal-details
+ * heading + title field + 2-col grid, the summary block, and two repeater
+ * headings — so the box holds its shape instead of collapsing behind a spinner.
+ */
+const CvBuilderFormSkeleton = () => (
+    <div className="flex flex-col gap-8" aria-hidden>
+        <section className="flex flex-col gap-3">
+            <Skeleton.Typography type="h6" width="1/3" />
+            <Skeleton.Input />
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Skeleton.Input />
+                <Skeleton.Input />
+                <Skeleton.Input />
+                <Skeleton.Input />
+            </div>
+        </section>
+        <section className="flex flex-col gap-3">
+            <Skeleton.Typography type="h6" width="1/4" />
+            <Skeleton.TextArea rows={3} />
+        </section>
+        <section className="flex flex-col gap-3">
+            <Skeleton.Typography type="h6" width="1/4" />
+            <Skeleton className="h-24 w-full rounded-2xl" />
+        </section>
+        <section className="flex flex-col gap-3">
+            <Skeleton.Typography type="h6" width="1/4" />
+            <Skeleton className="h-24 w-full rounded-2xl" />
+        </section>
     </div>
 )
 
@@ -275,262 +308,269 @@ export const CvBuilderForm = ({ onReview, isReviewBusy }: CvBuilderFormProps) =>
         }
     }
 
-    if (swr.isLoading) {
-        return (
-            <div className="flex justify-center p-10">
-                <Spinner size="lg" />
-            </div>
-        )
-    }
-
     const hasError = (field: CvHeaderErrorField) => errors.includes(field)
     const anyBusy = busy !== null || isReviewBusy
 
+    // Load-state switch. On a failed load we show an error with retry rather than
+    // an empty editable form — saving from a blank form would upsert an empty CV
+    // over the caller's saved one (PUT /career/cv/me is an upsert).
     return (
-        <div className="flex flex-col gap-8">
-            {/* Header */}
-            <section className="flex flex-col gap-3">
-                <Typography type="h6" weight="semibold">
-                    {t("sections.header")}
-                </Typography>
-                <Field
-                    label={t("fields.title")}
-                    value={title}
-                    onChange={(value) => {
-                        setTitle(value)
-                        setSaved(false)
-                    }}
-                    placeholder={t("fields.titlePlaceholder")}
-                />
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <AsyncContent
+            isLoading={swr.isLoading && !swr.data}
+            skeleton={<CvBuilderFormSkeleton />}
+            error={!swr.data ? swr.error : undefined}
+            errorContent={{
+                title: t("loadError.title"),
+                description: t("loadError.description"),
+                onRetry: () => void swr.mutate(),
+                retryLabel: t("loadError.retry"),
+            }}
+        >
+            <div className="flex flex-col gap-8">
+                {/* Header */}
+                <section className="flex flex-col gap-3">
+                    <Typography type="h6" weight="semibold">
+                        {t("sections.header")}
+                    </Typography>
                     <Field
-                        label={t("fields.fullName")}
-                        value={sections.header?.fullName ?? ""}
-                        onChange={(value) => patchHeader({ fullName: value })}
-                        invalid={hasError("fullName")}
+                        label={t("fields.title")}
+                        value={title}
+                        onChange={(value) => {
+                            setTitle(value)
+                            setSaved(false)
+                        }}
+                        placeholder={t("fields.titlePlaceholder")}
                     />
-                    <Field
-                        label={t("fields.email")}
-                        value={sections.header?.email ?? ""}
-                        onChange={(value) => patchHeader({ email: value })}
-                        invalid={hasError("email")}
-                        type="email"
-                    />
-                    <Field
-                        label={t("fields.phone")}
-                        value={sections.header?.phone ?? ""}
-                        onChange={(value) => patchHeader({ phone: value })}
-                    />
-                    <Field
-                        label={t("fields.location")}
-                        value={sections.header?.location ?? ""}
-                        onChange={(value) => patchHeader({ location: value })}
-                    />
-                </div>
-                {errors.length > 0 ? (
-                    <Typography type="body-xs" className="text-danger">
-                        {t("headerRequired")}
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <Field
+                            label={t("fields.fullName")}
+                            value={sections.header?.fullName ?? ""}
+                            onChange={(value) => patchHeader({ fullName: value })}
+                            invalid={hasError("fullName")}
+                        />
+                        <Field
+                            label={t("fields.email")}
+                            value={sections.header?.email ?? ""}
+                            onChange={(value) => patchHeader({ email: value })}
+                            invalid={hasError("email")}
+                            type="email"
+                        />
+                        <Field
+                            label={t("fields.phone")}
+                            value={sections.header?.phone ?? ""}
+                            onChange={(value) => patchHeader({ phone: value })}
+                        />
+                        <Field
+                            label={t("fields.location")}
+                            value={sections.header?.location ?? ""}
+                            onChange={(value) => patchHeader({ location: value })}
+                        />
+                    </div>
+                    {errors.length > 0 ? (
+                        <Typography type="body-xs" className="text-danger">
+                            {t("headerRequired")}
+                        </Typography>
+                    ) : null}
+                    {/* Links */}
+                    <div className="flex flex-col gap-2">
+                        {links.map((link, index) => (
+                            <div key={index} className="flex items-end gap-2">
+                                <Field
+                                    label={t("fields.linkLabel")}
+                                    value={link.label ?? ""}
+                                    onChange={(value) => updateLink(index, { label: value })}
+                                />
+                                <Field
+                                    label={t("fields.linkUrl")}
+                                    value={link.url ?? ""}
+                                    onChange={(value) => updateLink(index, { url: value })}
+                                />
+                                <Button
+                                    isIconOnly
+                                    variant="tertiary"
+                                    size="sm"
+                                    aria-label={t("actions.remove")}
+                                    onPress={() => patchHeader({ links: links.filter((_, i) => i !== index) })}
+                                >
+                                    <TrashIcon aria-hidden focusable="false" className="size-4" />
+                                </Button>
+                            </div>
+                        ))}
+                        <Button
+                            variant="tertiary"
+                            size="sm"
+                            className="self-start"
+                            onPress={() => patchHeader({ links: [...links, emptyCvLink()] })}
+                        >
+                            <PlusIcon aria-hidden focusable="false" className="size-4" />
+                            {t("actions.addLink")}
+                        </Button>
+                    </div>
+                </section>
+
+                {/* Summary */}
+                <section className="flex flex-col gap-3">
+                    <Typography type="h6" weight="semibold">
+                        {t("sections.summary")}
+                    </Typography>
+                    <TextField variant="primary" className="w-full">
+                        <TextArea
+                            rows={3}
+                            value={sections.summary ?? ""}
+                            onChange={(event) => patchSections({ summary: event.target.value })}
+                            placeholder={t("fields.summaryPlaceholder")}
+                            className="resize-y"
+                        />
+                    </TextField>
+                </section>
+
+                {/* Education */}
+                <Repeater
+                    title={t("sections.education")}
+                    onAdd={() => addItem("education", emptyEducation)}
+                    addLabel={t("actions.addEducation")}
+                >
+                    {(sections.education ?? []).map((item, index) => (
+                        <Row key={index} onRemove={() => removeItem("education", index)} removeLabel={t("actions.remove")}>
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                <Field label={t("fields.school")} value={item.school ?? ""} onChange={(v) => updateItem("education", index, { school: v })} />
+                                <Field label={t("fields.degree")} value={item.degree ?? ""} onChange={(v) => updateItem("education", index, { degree: v })} />
+                                <Field label={t("fields.major")} value={item.major ?? ""} onChange={(v) => updateItem("education", index, { major: v })} />
+                                <Field label={t("fields.gpa")} value={item.gpa ?? ""} onChange={(v) => updateItem("education", index, { gpa: v })} />
+                                <Field label={t("fields.start")} value={item.start ?? ""} onChange={(v) => updateItem("education", index, { start: v })} />
+                                <Field label={t("fields.end")} value={item.end ?? ""} onChange={(v) => updateItem("education", index, { end: v })} />
+                            </div>
+                            <ListField
+                                label={t("fields.highlights")}
+                                hint={t("fields.lineHint")}
+                                value={listToLines(item.highlights)}
+                                onChange={(v) => updateItem("education", index, { highlights: linesToList(v) })}
+                            />
+                        </Row>
+                    ))}
+                </Repeater>
+
+                {/* Experience */}
+                <Repeater
+                    title={t("sections.experience")}
+                    onAdd={() => addItem("experience", emptyExperience)}
+                    addLabel={t("actions.addExperience")}
+                >
+                    {(sections.experience ?? []).map((item, index) => (
+                        <Row key={index} onRemove={() => removeItem("experience", index)} removeLabel={t("actions.remove")}>
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                <Field label={t("fields.company")} value={item.company ?? ""} onChange={(v) => updateItem("experience", index, { company: v })} />
+                                <Field label={t("fields.jobTitle")} value={item.title ?? ""} onChange={(v) => updateItem("experience", index, { title: v })} />
+                                <Field label={t("fields.start")} value={item.start ?? ""} onChange={(v) => updateItem("experience", index, { start: v })} />
+                                <Field label={t("fields.end")} value={item.end ?? ""} onChange={(v) => updateItem("experience", index, { end: v })} />
+                            </div>
+                            <ListField
+                                label={t("fields.bullets")}
+                                hint={t("fields.lineHint")}
+                                value={listToLines(item.bullets)}
+                                onChange={(v) => updateItem("experience", index, { bullets: linesToList(v) })}
+                            />
+                        </Row>
+                    ))}
+                </Repeater>
+
+                {/* Projects */}
+                <Repeater
+                    title={t("sections.projects")}
+                    onAdd={() => addItem("projects", emptyProject)}
+                    addLabel={t("actions.addProject")}
+                >
+                    {(sections.projects ?? []).map((item, index) => (
+                        <Row key={index} onRemove={() => removeItem("projects", index)} removeLabel={t("actions.remove")}>
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                <Field label={t("fields.projectName")} value={item.name ?? ""} onChange={(v) => updateItem("projects", index, { name: v })} />
+                                <Field label={t("fields.role")} value={item.role ?? ""} onChange={(v) => updateItem("projects", index, { role: v })} />
+                                <Field label={t("fields.link")} value={item.link ?? ""} onChange={(v) => updateItem("projects", index, { link: v })} />
+                            </div>
+                            <ListField
+                                label={t("fields.tech")}
+                                hint={t("fields.lineHint")}
+                                value={listToLines(item.tech)}
+                                onChange={(v) => updateItem("projects", index, { tech: linesToList(v) })}
+                            />
+                            <ListField
+                                label={t("fields.bullets")}
+                                hint={t("fields.lineHint")}
+                                value={listToLines(item.bullets)}
+                                onChange={(v) => updateItem("projects", index, { bullets: linesToList(v) })}
+                            />
+                        </Row>
+                    ))}
+                </Repeater>
+
+                {/* Skills */}
+                <Repeater
+                    title={t("sections.skills")}
+                    onAdd={() => addItem("skills", emptySkillGroup)}
+                    addLabel={t("actions.addSkill")}
+                >
+                    {(sections.skills ?? []).map((item, index) => (
+                        <Row key={index} onRemove={() => removeItem("skills", index)} removeLabel={t("actions.remove")}>
+                            <Field label={t("fields.skillGroup")} value={item.group ?? ""} onChange={(v) => updateItem("skills", index, { group: v })} />
+                            <ListField
+                                label={t("fields.skillItems")}
+                                hint={t("fields.lineHint")}
+                                value={listToLines(item.items)}
+                                onChange={(v) => updateItem("skills", index, { items: linesToList(v) })}
+                            />
+                        </Row>
+                    ))}
+                </Repeater>
+
+                {/* Awards */}
+                <Repeater
+                    title={t("sections.awards")}
+                    onAdd={() => addItem("awards", emptyAward)}
+                    addLabel={t("actions.addAward")}
+                >
+                    {(sections.awards ?? []).map((item, index) => (
+                        <Row key={index} onRemove={() => removeItem("awards", index)} removeLabel={t("actions.remove")}>
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                                <Field label={t("fields.awardName")} value={item.name ?? ""} onChange={(v) => updateItem("awards", index, { name: v })} />
+                                <Field label={t("fields.awardBy")} value={item.by ?? ""} onChange={(v) => updateItem("awards", index, { by: v })} />
+                                <Field label={t("fields.awardYear")} value={item.year ?? ""} onChange={(v) => updateItem("awards", index, { year: v })} />
+                            </div>
+                        </Row>
+                    ))}
+                </Repeater>
+
+                {saveError ? (
+                    <div className="flex items-center gap-2 rounded-2xl border border-danger/40 bg-danger/5 px-4 py-3">
+                        <WarningCircleIcon aria-hidden focusable="false" className="size-5 shrink-0 text-danger" />
+                        <Typography type="body-sm" color="muted">
+                            {saveError}
+                        </Typography>
+                    </div>
+                ) : null}
+                {saved ? (
+                    <Typography type="body-sm" className="text-success">
+                        {t("saved")}
                     </Typography>
                 ) : null}
-                {/* Links */}
-                <div className="flex flex-col gap-2">
-                    {links.map((link, index) => (
-                        <div key={index} className="flex items-end gap-2">
-                            <Field
-                                label={t("fields.linkLabel")}
-                                value={link.label ?? ""}
-                                onChange={(value) => updateLink(index, { label: value })}
-                            />
-                            <Field
-                                label={t("fields.linkUrl")}
-                                value={link.url ?? ""}
-                                onChange={(value) => updateLink(index, { url: value })}
-                            />
-                            <Button
-                                isIconOnly
-                                variant="tertiary"
-                                size="sm"
-                                aria-label={t("actions.remove")}
-                                onPress={() => patchHeader({ links: links.filter((_, i) => i !== index) })}
-                            >
-                                <TrashIcon aria-hidden focusable="false" className="size-4" />
-                            </Button>
-                        </div>
-                    ))}
+
+                <div className="flex flex-wrap gap-3">
+                    <Button variant="primary" onPress={handleReview} isPending={busy === "review" || isReviewBusy} isDisabled={anyBusy}>
+                        {t("reviewThisCv")}
+                    </Button>
+                    <Button variant="secondary" onPress={handleSave} isPending={busy === "save"} isDisabled={anyBusy}>
+                        {t("save")}
+                    </Button>
                     <Button
                         variant="tertiary"
-                        size="sm"
-                        className="self-start"
-                        onPress={() => patchHeader({ links: [...links, emptyCvLink()] })}
+                        onPress={handleExportPdf}
+                        isPending={busy === "pdf"}
+                        isDisabled={anyBusy}
                     >
-                        <PlusIcon aria-hidden focusable="false" className="size-4" />
-                        {t("actions.addLink")}
+                        <FilePdfIcon aria-hidden focusable="false" className="size-4" />
+                        {t("exportPdf")}
                     </Button>
                 </div>
-            </section>
-
-            {/* Summary */}
-            <section className="flex flex-col gap-3">
-                <Typography type="h6" weight="semibold">
-                    {t("sections.summary")}
-                </Typography>
-                <TextField variant="primary" className="w-full">
-                    <TextArea
-                        rows={3}
-                        value={sections.summary ?? ""}
-                        onChange={(event) => patchSections({ summary: event.target.value })}
-                        placeholder={t("fields.summaryPlaceholder")}
-                        className="resize-y"
-                    />
-                </TextField>
-            </section>
-
-            {/* Education */}
-            <Repeater
-                title={t("sections.education")}
-                onAdd={() => addItem("education", emptyEducation)}
-                addLabel={t("actions.addEducation")}
-            >
-                {(sections.education ?? []).map((item, index) => (
-                    <Row key={index} onRemove={() => removeItem("education", index)} removeLabel={t("actions.remove")}>
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            <Field label={t("fields.school")} value={item.school ?? ""} onChange={(v) => updateItem("education", index, { school: v })} />
-                            <Field label={t("fields.degree")} value={item.degree ?? ""} onChange={(v) => updateItem("education", index, { degree: v })} />
-                            <Field label={t("fields.major")} value={item.major ?? ""} onChange={(v) => updateItem("education", index, { major: v })} />
-                            <Field label={t("fields.gpa")} value={item.gpa ?? ""} onChange={(v) => updateItem("education", index, { gpa: v })} />
-                            <Field label={t("fields.start")} value={item.start ?? ""} onChange={(v) => updateItem("education", index, { start: v })} />
-                            <Field label={t("fields.end")} value={item.end ?? ""} onChange={(v) => updateItem("education", index, { end: v })} />
-                        </div>
-                        <ListField
-                            label={t("fields.highlights")}
-                            hint={t("fields.lineHint")}
-                            value={listToLines(item.highlights)}
-                            onChange={(v) => updateItem("education", index, { highlights: linesToList(v) })}
-                        />
-                    </Row>
-                ))}
-            </Repeater>
-
-            {/* Experience */}
-            <Repeater
-                title={t("sections.experience")}
-                onAdd={() => addItem("experience", emptyExperience)}
-                addLabel={t("actions.addExperience")}
-            >
-                {(sections.experience ?? []).map((item, index) => (
-                    <Row key={index} onRemove={() => removeItem("experience", index)} removeLabel={t("actions.remove")}>
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            <Field label={t("fields.company")} value={item.company ?? ""} onChange={(v) => updateItem("experience", index, { company: v })} />
-                            <Field label={t("fields.jobTitle")} value={item.title ?? ""} onChange={(v) => updateItem("experience", index, { title: v })} />
-                            <Field label={t("fields.start")} value={item.start ?? ""} onChange={(v) => updateItem("experience", index, { start: v })} />
-                            <Field label={t("fields.end")} value={item.end ?? ""} onChange={(v) => updateItem("experience", index, { end: v })} />
-                        </div>
-                        <ListField
-                            label={t("fields.bullets")}
-                            hint={t("fields.lineHint")}
-                            value={listToLines(item.bullets)}
-                            onChange={(v) => updateItem("experience", index, { bullets: linesToList(v) })}
-                        />
-                    </Row>
-                ))}
-            </Repeater>
-
-            {/* Projects */}
-            <Repeater
-                title={t("sections.projects")}
-                onAdd={() => addItem("projects", emptyProject)}
-                addLabel={t("actions.addProject")}
-            >
-                {(sections.projects ?? []).map((item, index) => (
-                    <Row key={index} onRemove={() => removeItem("projects", index)} removeLabel={t("actions.remove")}>
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            <Field label={t("fields.projectName")} value={item.name ?? ""} onChange={(v) => updateItem("projects", index, { name: v })} />
-                            <Field label={t("fields.role")} value={item.role ?? ""} onChange={(v) => updateItem("projects", index, { role: v })} />
-                            <Field label={t("fields.link")} value={item.link ?? ""} onChange={(v) => updateItem("projects", index, { link: v })} />
-                        </div>
-                        <ListField
-                            label={t("fields.tech")}
-                            hint={t("fields.lineHint")}
-                            value={listToLines(item.tech)}
-                            onChange={(v) => updateItem("projects", index, { tech: linesToList(v) })}
-                        />
-                        <ListField
-                            label={t("fields.bullets")}
-                            hint={t("fields.lineHint")}
-                            value={listToLines(item.bullets)}
-                            onChange={(v) => updateItem("projects", index, { bullets: linesToList(v) })}
-                        />
-                    </Row>
-                ))}
-            </Repeater>
-
-            {/* Skills */}
-            <Repeater
-                title={t("sections.skills")}
-                onAdd={() => addItem("skills", emptySkillGroup)}
-                addLabel={t("actions.addSkill")}
-            >
-                {(sections.skills ?? []).map((item, index) => (
-                    <Row key={index} onRemove={() => removeItem("skills", index)} removeLabel={t("actions.remove")}>
-                        <Field label={t("fields.skillGroup")} value={item.group ?? ""} onChange={(v) => updateItem("skills", index, { group: v })} />
-                        <ListField
-                            label={t("fields.skillItems")}
-                            hint={t("fields.lineHint")}
-                            value={listToLines(item.items)}
-                            onChange={(v) => updateItem("skills", index, { items: linesToList(v) })}
-                        />
-                    </Row>
-                ))}
-            </Repeater>
-
-            {/* Awards */}
-            <Repeater
-                title={t("sections.awards")}
-                onAdd={() => addItem("awards", emptyAward)}
-                addLabel={t("actions.addAward")}
-            >
-                {(sections.awards ?? []).map((item, index) => (
-                    <Row key={index} onRemove={() => removeItem("awards", index)} removeLabel={t("actions.remove")}>
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                            <Field label={t("fields.awardName")} value={item.name ?? ""} onChange={(v) => updateItem("awards", index, { name: v })} />
-                            <Field label={t("fields.awardBy")} value={item.by ?? ""} onChange={(v) => updateItem("awards", index, { by: v })} />
-                            <Field label={t("fields.awardYear")} value={item.year ?? ""} onChange={(v) => updateItem("awards", index, { year: v })} />
-                        </div>
-                    </Row>
-                ))}
-            </Repeater>
-
-            {saveError ? (
-                <div className="flex items-center gap-2 rounded-2xl border border-danger/40 bg-danger/5 px-4 py-3">
-                    <WarningCircleIcon aria-hidden focusable="false" className="size-5 shrink-0 text-danger" />
-                    <Typography type="body-sm" color="muted">
-                        {saveError}
-                    </Typography>
-                </div>
-            ) : null}
-            {saved ? (
-                <Typography type="body-sm" className="text-success">
-                    {t("saved")}
-                </Typography>
-            ) : null}
-
-            <div className="flex flex-wrap gap-3">
-                <Button variant="primary" onPress={handleReview} isPending={busy === "review" || isReviewBusy} isDisabled={anyBusy}>
-                    {t("reviewThisCv")}
-                </Button>
-                <Button variant="secondary" onPress={handleSave} isPending={busy === "save"} isDisabled={anyBusy}>
-                    {t("save")}
-                </Button>
-                <Button
-                    variant="tertiary"
-                    onPress={handleExportPdf}
-                    isPending={busy === "pdf"}
-                    isDisabled={anyBusy}
-                >
-                    <FilePdfIcon aria-hidden focusable="false" className="size-4" />
-                    {t("exportPdf")}
-                </Button>
             </div>
-        </div>
+        </AsyncContent>
     )
 }

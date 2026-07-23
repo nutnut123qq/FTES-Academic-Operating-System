@@ -1924,10 +1924,15 @@
     "sections": {
       "personal": "Personal",
       "academic": "Academic",
+      "cv": "CV",
       "portfolio": "Portfolio",
       "certificates": "Certificates",
       "community": "Community",
       "progress": "Progress"
+    },
+    "cv": {
+      "title": "CV & AI review",
+      "description": "Build your CV from the Harvard template or upload an existing file, then get an AI review. Your CV is saved to your profile and can be exported as a PDF."
     },
     "certificates": {
       "title": "My certificates",
@@ -3274,7 +3279,12 @@
         "reviewUpload": "Upload and review",
         "strengths": "Strengths",
         "improvements": "Improvements",
-        "sectionFeedback": "Section-by-section feedback"
+        "sectionFeedback": "Section-by-section feedback",
+        "loadError": {
+          "title": "Couldn't load your CV",
+          "description": "We couldn't load your saved CV. Try again — saving now would overwrite it with an empty form.",
+          "retry": "Try again"
+        }
       },
       "planner": {
         "myPlans": "My study plans",

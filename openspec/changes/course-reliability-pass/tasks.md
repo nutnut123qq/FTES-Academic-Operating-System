@@ -70,3 +70,15 @@
 - PASS: catalog; detail 2-viewer; mua tới QR (checkout 200 + VietQR render, không thanh toán thật); document reader; completion idempotent; quiz; assignment; Q&A đăng câu hỏi; leaderboard; mindmap; featured slider; my-courses; search (index không trả seed demo theo title — ghi nhận).
 - FAIL-KNOWN (không phải bug mới, trỏ learn-exercises-wire/learn-engagement-wire): S04a video player + S10 challenge entry (VIDEO lesson content 404); S07 reactions footer không render; S06 watch-position BLOCKED-DATA.
 - Đóng sổ chờ: fix 2 bug learn-* rồi rerun 4 kịch bản còn lại.
+
+## Nghiệm thu E2E 2026-07-24 RẠNG SÁNG — 13/16 kịch bản PASS live, 3 residual có nhãn (GIỮ MỞ)
+- ✅ PASS (spec course-reliability-pass.spec.ts, desktop+mobile): catalog, detail, S03 mua→QR VietQR
+  (desktop), document reader, completion idempotent, S08 quiz trọn vòng, assignment (chịu race
+  hết-lượt), Q&A, leaderboard, S13 mindmap, featured, my-courses, search, S10 (rail challenge nay
+  HIỆN — content-404 gap đã hết).
+- ⚠️ Residual có nhãn (không phải hồi quy mới):
+  - S03 mobile: BLOCKED-DATA — for-course WED201c trả 0 product cho CTV (curl xác nhận), desktop
+    cart 200; product-resolve khác giữa 2 layout CTA. Verify luồng mua ở desktop.
+  - S06 watch-position: BLOCKED-DATA — không có khoá đã mua videoStatus=READY (storage/video stub).
+  - S07 reaction footer: ĐÃ HẾT (fix DocumentReader mount footer) — nay PASS ở learn-engagement.
+- 0.2/B.1/B.2: smoke đã chạy (harness Playwright commit); phần video/storage chờ hạ tầng thật.

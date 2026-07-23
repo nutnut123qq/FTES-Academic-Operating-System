@@ -41,3 +41,8 @@
 
 ## 6. Verify
 - [ ] 6.1 `npm run build` (webpack) xanh + `tsc --noEmit` sạch; i18n vi/en đủ khoá; `openspec validate ai-hub-live-tools --strict` PASS
+
+## Nghiệm thu E2E 2026-07-23 (spec e2e/ai-hub-live-tools.spec.ts, 3 pass / 5 fail)
+- PASS: hub 7 tile CTA đúng; study planner end-to-end plan thật; build+tsc xanh (box 6.1 phần build).
+- FAIL (contract FE↔BE): summary/flashcards/quiz FE gửi {text} nhưng BE đòi storageKey|lessonId|resourceId → 400 AI_INPUT_INVALID (pipeline BE sống khi submit {lessonId} trực tiếp); debug tool /ai/coding/review đòi submissionId, FE gửi code tự do → 400; CV builder GET/PUT /career/cv/me → 403 CV_PROFILE_FORBIDDEN với bearer hợp lệ (nghi bug principal-resolution BE — cùng họ bug career).
+- BLOCKED-STORAGE: CV upload presigned PUT fail (storage dev placeholder).

@@ -36,3 +36,8 @@
 
 ## 6. Verify chung
 - [ ] 6.1 `npm run build` xanh + `tsc --noEmit` sạch; `openspec validate learn-engagement-wire --strict` pass
+
+## Nghiệm thu E2E 2026-07-23 (Playwright local :3000 → apitest, spec e2e/learn-engagement-wire.spec.ts)
+- Q&A: PASS — post comment → roll-up "Xem tất cả câu hỏi" → link nhảy đúng bài.
+- FAIL (REGRESSION): LessonReactionFooter (view count + like) KHÔNG render trên bất kỳ lesson seed nào — DOCUMENT đi qua DocumentReader (LessonReader/index.tsx:319) bỏ mất footer; lesson VIDEO không body rơi vào isReadingEmpty cũng ẩn footer. FE không bao giờ bắn GET /reactions (API-level vẫn OK: viewCount 42, PUT/DELETE 200 khi gọi tay).
+- Watch-position: BLOCKED-DATA — student không có khoá đã mua nào videoStatus=READY.

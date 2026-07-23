@@ -5,6 +5,7 @@ import { Button, Skeleton, Typography } from "@heroui/react"
 import { useLocale, useTranslations } from "next-intl"
 import { useAppSelector } from "@/redux/hooks"
 import { Link } from "@/i18n/navigation"
+import { FtesMascot } from "@/components/reuseable/FtesMascot"
 import { UserLink } from "@/components/features/identity"
 import { ThreadsPostRow } from "@/components/blocks/feed/ThreadsPostRow"
 import { PostMediaGrid } from "@/components/blocks/feed/PostMediaGrid"
@@ -171,6 +172,7 @@ const CommunityFeedRow = ({ post }: { post: CommunityPost }) => {
  */
 export const CommunityFeed = ({ tab = "forYou" }: { tab?: CommunityFeedTab } = {}) => {
     const t = useTranslations("communityHub")
+    const { open: openComposer } = useCommunityComposerOverlayState()
     const { posts, isLoading, error, mutate } = useQueryCommunityFeedSwr(tab)
 
     // CAMPUS tab is scoped to the viewer's campus (BE falls back to the profile campus).
@@ -185,10 +187,23 @@ export const CommunityFeed = ({ tab = "forYou" }: { tab?: CommunityFeedTab } = {
                 isLoading={isLoading && posts.length === 0}
                 skeleton={<FeedSkeleton />}
                 isEmpty={posts.length === 0}
-                emptyContent={{
-                    title: isCampus ? t("feed.campusEmpty") : t("feed.empty"),
-                    description: isCampus ? t("feed.campusEmptyHint") : undefined,
-                }}
+                emptyContent={
+                    isCampus
+                        ? {
+                            title: t("feed.campusEmpty"),
+                            description: t("feed.campusEmptyHint"),
+                        }
+                        : {
+                            icon: <FtesMascot pose="explain" size="lg" />,
+                            title: t("feed.empty"),
+                            description: t("feed.emptyHint"),
+                            action: (
+                                <Button size="sm" variant="primary" onPress={openComposer}>
+                                    {t("feed.emptyCompose")}
+                                </Button>
+                            ),
+                        }
+                }
                 error={posts.length === 0 ? error : undefined}
                 errorContent={{
                     title: t("feed.error"),

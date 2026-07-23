@@ -44,6 +44,10 @@ vi.mock("@heroui/react", () => ({
 
 vi.mock("@phosphor-icons/react", () => ({ StarIcon: () => <span /> }))
 
+// The level-up moment now cheers with the mascot; stub it so this test stays
+// pinned to the diff logic (and doesn't need the real HeroUI `cn`).
+vi.mock("@/components/reuseable/FtesMascot", () => ({ FtesMascot: () => <span /> }))
+
 // The two shared SWR caches the host diffs — controllable per render.
 let questsData: QuestBoardView | undefined
 let progressionData: ProgressionView | undefined

@@ -24,9 +24,11 @@
       `DocumentReader/index.test.tsx` (3 test — gỡ fix → `expected 1 to be +0`);
       `PackageGateModal/index.test.tsx` (2 test — gỡ fix → không tìm thấy `detail.wholeCourse`).
 - [x] 3.3 `npm run build` (webpack) xanh.
-- [ ] 3.4 E2E trên apitest: mở bài PREVIEW của một khoá LEGACY → không còn vệt trắng phủ tiêu đề;
-      bấm đăng ký → ra PaymentModal/QR. CHƯA chạy được: login lập trình bị chặn trong khung preview
-      (fetch fail cả same-origin), nên phần mua chỉ mới verify ở tầng render.
+- [x] 3.4 E2E trên apitest: mở bài PREVIEW của một khoá LEGACY → không còn vệt trắng phủ tiêu đề;
+      bấm đăng ký → ra PaymentModal/QR.
+      (E2E Playwright 2026-07-23 `e2e/learn-paywall-works-on-legacy-course.spec.ts` 1/1 xanh, login STUDENT
+      programmatic: WED201c PREVIEW "Buổi 1" tiêu đề không vệt trắng (fade=0 khi teaser rỗng); CTA →
+      PackageGateModal → WholeCourseGateCard "Trọn khóa" 399k → cart 200 → PaymentModal.)
 
 ## 4. Ghi nhận, KHÔNG sửa trong change này
 

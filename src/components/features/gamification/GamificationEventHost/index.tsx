@@ -3,8 +3,8 @@
 import React, { useEffect, useRef, useState } from "react"
 import { Modal, Typography, toast } from "@heroui/react"
 import { useTranslations } from "next-intl"
-import { StarIcon } from "@phosphor-icons/react"
 import type { WithClassNames } from "@/modules/types/base/class-name"
+import { FtesMascot } from "@/components/reuseable/FtesMascot"
 import { useGetMyQuestsSwr } from "@/hooks/swr/api/rest/queries/useGetMyQuestsSwr"
 import { useGetMyProgressionSwr } from "@/hooks/swr/api/rest/queries/useGetMyProgressionSwr"
 
@@ -112,12 +112,10 @@ export const GamificationEventHost = ({ className }: WithClassNames<undefined>) 
                         <Modal.Dialog>
                             <Modal.CloseTrigger />
                             <Modal.Body className="flex flex-col items-center gap-3 py-8 text-center">
-                                <StarIcon
-                                    className="size-10 text-accent"
-                                    weight="fill"
-                                    aria-hidden
-                                    focusable="false"
-                                />
+                                {/* the mascot cheers the level-up (badge.awarded /
+                                    streak.milestone can reuse this moment when those
+                                    diffs land — TODO(mascot-moments)) */}
+                                <FtesMascot pose="cheer" size="lg" />
                                 <Typography type="h5" weight="bold">
                                     {t("moment.levelUpTitle")}
                                 </Typography>

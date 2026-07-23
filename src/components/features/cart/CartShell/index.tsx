@@ -5,6 +5,8 @@ import { Button, Typography } from "@heroui/react"
 import { useFormatter, useTranslations } from "next-intl"
 import { useSWRConfig } from "swr"
 import { ShoppingCartIcon, TrashIcon } from "@phosphor-icons/react"
+import { useRouter } from "@/i18n/navigation"
+import { FtesMascot } from "@/components/reuseable/FtesMascot"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { useGetCartSwr } from "@/hooks/swr/api/rest/queries/useGetCartSwr"
@@ -23,6 +25,7 @@ import { useQueryProductsSwr } from "@/components/features/marketplace/hooks/use
 export const CartShell = () => {
     const t = useTranslations("cart")
     const format = useFormatter()
+    const router = useRouter()
     const { mutate } = useSWRConfig()
 
     const cartSwr = useGetCartSwr()
@@ -81,8 +84,14 @@ export const CartShell = () => {
                 }}
                 isEmpty={items.length === 0}
                 emptyContent={{
+                    icon: <FtesMascot pose="explain" size="lg" />,
                     title: t("empty"),
-                    icon: <ShoppingCartIcon aria-hidden focusable="false" className="size-8 text-muted" />,
+                    description: t("emptyHint"),
+                    action: (
+                        <Button variant="primary" onPress={() => router.push("/courses")}>
+                            {t("emptyBrowse")}
+                        </Button>
+                    ),
                 }}
             >
                 <div className="flex flex-col gap-3">

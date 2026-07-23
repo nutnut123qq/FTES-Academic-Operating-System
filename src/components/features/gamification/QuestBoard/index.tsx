@@ -3,8 +3,10 @@
 import React from "react"
 import { Chip, Typography, cn } from "@heroui/react"
 import { useLocale, useTranslations } from "next-intl"
-import { CheckCircleIcon, CoinsIcon, SignInIcon, WalletIcon } from "@phosphor-icons/react"
+import { CheckCircleIcon, CoinsIcon, WalletIcon } from "@phosphor-icons/react"
 import { Link } from "@/i18n/navigation"
+import { FtesMascot } from "@/components/reuseable/FtesMascot"
+import { MascotCelebration } from "@/components/features/mascot-moments"
 import { pathConfig } from "@/resources/path"
 import { useAppSelector } from "@/redux/hooks"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
@@ -130,6 +132,7 @@ const QuestCard = ({ quest }: QuestCardProps) => {
  */
 export const QuestBoard = () => {
     const t = useTranslations("gamification.quests")
+    const tm = useTranslations("mascot")
     const locale = useLocale()
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
     const { data, error, isLoading, mutate } = useGetMyQuestsSwr()
@@ -144,8 +147,9 @@ export const QuestBoard = () => {
                     {t("title")}
                 </Typography>
                 <EmptyContent
-                    icon={<SignInIcon className="size-8 text-muted" aria-hidden focusable="false" />}
+                    icon={<FtesMascot pose="greeting" size="lg" />}
                     title={t("signInPrompt")}
+                    description={tm("greeting.guest")}
                     action={
                         <Link
                             href={pathConfig().locale(locale).authentication().build()}
@@ -160,6 +164,8 @@ export const QuestBoard = () => {
     }
 
     const quests = [...(data?.quests ?? [])].sort((a, b) => a.sortOrder - b.sortOrder)
+    // Every quest claimed to its daily limit → a once-a-day mascot celebration.
+    const allClaimed = quests.length > 0 && quests.every((quest) => questProgress(quest).isDone)
 
     return (
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-6">
@@ -201,11 +207,24 @@ export const QuestBoard = () => {
                 </div>
             </div>
 
+            {/* all quests claimed today → cheer once/day (mutually exclusive with the
+                explain empty-state below, so only one mascot is ever on screen) */}
+            {allClaimed ? (
+                <MascotCelebration
+                    id="questAllClaimed"
+                    title={t("celebrateAllClaimedTitle")}
+                    body={t("celebrateAllClaimedBody")}
+                />
+            ) : null}
+
             <AsyncContent
                 isLoading={isLoading && quests.length === 0}
                 skeleton={<QuestBoardSkeleton />}
                 isEmpty={quests.length === 0}
-                emptyContent={{ title: t("empty") }}
+                emptyContent={{
+                    icon: <FtesMascot pose="explain" size="lg" />,
+                    title: t("empty"),
+                }}
                 error={quests.length === 0 ? error : undefined}
                 errorContent={{
                     title: t("loadError"),

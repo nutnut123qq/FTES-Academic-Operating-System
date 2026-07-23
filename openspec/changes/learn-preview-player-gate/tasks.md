@@ -47,3 +47,8 @@
       `freemium-youtube-preview-gate` deploy lên apitest
 - [ ] B.3 Nếu BE thêm `videos.visibility` (unlisted): nhánh PREVIEW không ref → teaser
       thumbnail + CTA
+
+## Nghiệm thu E2E 2026-07-23 (spec e2e/learn-preview-player-gate.spec.ts, 4/4 scenario chạy được đều xanh)
+- Kịch bản lõi (đếm previewSeconds/pause/seek-clamp) KHÔNG chạy được trên apitest: BE change preview-youtube-ref-gate (c08425c, 2026-07-22) CỐ Ý trả videoRef:null cho mọi PREVIEW → client-gate thành dead-path môi trường thật. Hành vi thay thế verify OK: không rò iframe, paywall+modal đúng; FULL YT + FULL HLS không gate; DOCUMENT PREVIEW regression OK.
+- Acc FULL trên khoa-test YT: BLOCKED-DATA.
+- Đề nghị: đánh dấu tasks 4.1/4.2 superseded bởi preview-youtube-ref-gate rồi đóng sổ, hoặc giữ chờ BE bật lại ref PREVIEW.

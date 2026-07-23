@@ -7,5 +7,5 @@
 
 ## 2. Verify
 - [x] 2.1 `tsc --noEmit` sạch.
-- [ ] 2.2 `npm run build` (webpack) xanh.
+- [x] 2.2 `npm run build` (webpack) xanh. (2026-07-23: build + tsc exit 0; kèm E2E `e2e/lecturer-teaching-nav-link.spec.ts` 2/2 — instructor.test thấy "Khoá tôi dạy" → /courses/teaching, student không thấy.)
 - [x] 2.3 E2E FE local: instructor.test (có `ai.teacher.use`) thấy "Khoá tôi dạy" trong account menu; student.test (không có) KHÔNG thấy (vẫn thấy "Khóa học của tôi").

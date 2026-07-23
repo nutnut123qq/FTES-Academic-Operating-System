@@ -139,6 +139,9 @@ export const RichCommentEditor = ({
 
     const editor = useEditor({
         immediatelyRender: false,
+        // tiptap v3 defaults this to false → canSubmit/isActive read stale
+        // editor state in render; true restores v2 per-transaction re-render.
+        shouldRerenderOnTransaction: true,
         autofocus: autoFocus,
         editable: !disabled,
         extensions: [

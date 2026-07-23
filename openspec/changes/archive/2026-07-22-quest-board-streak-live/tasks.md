@@ -32,6 +32,7 @@
 - [x] 5.4 Quality loop tính năng dọn engine: unit test `GamificationEventHost/index.test.tsx` (4 test: seed không toast, tăng completedCount → 1 toast coin+title, level tăng → moment) + full suite 71 xanh + `tsc` sạch + `npm run build` webpack xanh → đánh giá vòng 1 (badgesEmpty i18n + dashed guest stats) → fix → vòng 2 (không leftover engine symbol); e2e smoke hoãn task 6.2 (auth+BE-gated, như 4.4)
 
 ## 6. Verify tổng
-- [ ] 6.1 `npm run build` (webpack) xanh + `tsc --noEmit` sạch
-- [ ] 6.2 Smoke trên apitest với acc test: login → /quests thấy DAILY_LOGIN done + ví +50; hoàn thành 1 lesson → streak/heatmap/xp/quest cập nhật
+- [x] 6.1 `npm run build` (webpack) xanh + `tsc --noEmit` sạch (2026-07-23: cả hai exit 0.)
+- [x] 6.2 Smoke trên apitest với acc test: login → /quests thấy DAILY_LOGIN done + ví +50; hoàn thành 1 lesson → streak/heatmap/xp/quest cập nhật
+      (E2E Playwright 2026-07-23 `e2e/quest-board-streak-live.spec.ts` 2/2: DAILY_LOGIN done +50 xu khớp API live; complete lesson → LESSON_COMPLETE eventCount tăng, card 1/1, streak ≥1, activity-day hôm nay, xp, /profile/progress render đủ. Finding phụ ghi nhận: POST /complete khi lesson chưa có progress-row → 409; lesson có quiz không COMPLETED qua /complete; streak chỉ nhích theo lesson-completion.)
 - [x] 6.3 `openspec validate quest-board-streak-live --strict` sạch ✅ (verify: "Change 'quest-board-streak-live' is valid")

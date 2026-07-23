@@ -65,3 +65,8 @@
       move + persist on release; clamp [16, innerHeight−80]; press micro-jitter → mở chat,
       KHÔNG persist; swallow toggle drag-release đúng 1 lần rồi press sau mở được; mobile
       bottom-sheet render chat) — vitest xanh
+
+## Nghiệm thu E2E 2026-07-23 (spec e2e/course-reliability-pass.spec.ts — B.1: 12/16 kịch bản PASS, rerun cuối 2 test flaky đều PASS sau hydration gate)
+- PASS: catalog; detail 2-viewer; mua tới QR (checkout 200 + VietQR render, không thanh toán thật); document reader; completion idempotent; quiz; assignment; Q&A đăng câu hỏi; leaderboard; mindmap; featured slider; my-courses; search (index không trả seed demo theo title — ghi nhận).
+- FAIL-KNOWN (không phải bug mới, trỏ learn-exercises-wire/learn-engagement-wire): S04a video player + S10 challenge entry (VIDEO lesson content 404); S07 reactions footer không render; S06 watch-position BLOCKED-DATA.
+- Đóng sổ chờ: fix 2 bug learn-* rồi rerun 4 kịch bản còn lại.

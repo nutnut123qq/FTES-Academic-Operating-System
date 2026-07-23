@@ -5658,6 +5658,22 @@
       "emptyHint": "Be the first to share something with the community.",
       "emptyCompose": "Start a post"
     },
+    "search": {
+      "placeholder": "Search posts by title or content…",
+      "sortLabel": "Sort by time",
+      "sortNewest": "Newest",
+      "sortOldest": "Oldest",
+      "typeLabel": "Filter by post type",
+      "types": {
+        "all": "All",
+        "DISCUSSION": "Discussion",
+        "QUESTION": "Question",
+        "PROJECT_SHOWCASE": "Showcase",
+        "KNOWLEDGE_SHARING": "Knowledge"
+      },
+      "resultsEmpty": "No matching posts found.",
+      "resultsEmptyHint": "Try a different keyword or clear some filters."
+    },
     "detail": {
       "comments": "{count} comments"
     },

@@ -2,12 +2,12 @@
 
 import React, { useEffect, useRef, useState } from "react"
 import { MotionConfig } from "framer-motion"
-import { Button, Input, Label, TextField, Typography } from "@heroui/react"
-import { FilePdfIcon, WarningCircleIcon } from "@phosphor-icons/react"
+import { Alert, Button, Input, Label, TextField, Typography } from "@heroui/react"
+import { FilePdfIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
-import { A4Page } from "./A4Page"
+import { A4Page, CV_HEADER_ERROR_ID } from "./A4Page"
 import { DesignToolbar } from "./DesignToolbar"
 import { SectionRail } from "./SectionRail"
 import { useCvDraft } from "./useCvDraft"
@@ -73,6 +73,7 @@ export const CvLiveEditor = ({ onReview, isReviewBusy }: CvLiveEditorProps) => {
     const [layout, setLayout] = useState<CvLayout>(defaultLayout)
     const [design, setDesign] = useState<CvDesign>(defaultDesign)
     const [busy, setBusy] = useState<null | "save" | "review" | "pdf">(null)
+    const [exportError, setExportError] = useState<string | null>(null)
 
     // Hydrate FE-only prefs from localStorage once the CV (and its id scope) loads.
     const prefsHydratedRef = useRef(false)
@@ -134,6 +135,7 @@ export const CvLiveEditor = ({ onReview, isReviewBusy }: CvLiveEditorProps) => {
     const handleExport = async () => {
         if (draft.validateHeader().length > 0) return
         setBusy("pdf")
+        setExportError(null)
         try {
             const { renderCvPdfBlob } = await import("../pdf")
             const blob = await renderCvPdfBlob(
@@ -158,9 +160,12 @@ export const CvLiveEditor = ({ onReview, isReviewBusy }: CvLiveEditorProps) => {
             anchor.click()
             anchor.remove()
             URL.revokeObjectURL(url)
-        } catch {
-            // renderCvPdfBlob already falls back to a builtin font; a hard failure
-            // here is rare — surface nothing rather than a broken download.
+        } catch (error) {
+            // A hard failure here is rare (renderCvPdfBlob falls back through font
+            // families first), but never swallow it silently — log it and surface a
+            // banner so the user knows the download didn't happen.
+            console.error("CV PDF export failed", error)
+            setExportError(t("exportError"))
         } finally {
             setBusy(null)
         }
@@ -203,21 +208,26 @@ export const CvLiveEditor = ({ onReview, isReviewBusy }: CvLiveEditorProps) => {
                         </div>
                     </div>
 
-                    {draft.saveError ? (
-                        <div className="flex items-center gap-2 rounded-2xl border border-danger/40 bg-danger/5 px-4 py-3">
-                            <WarningCircleIcon aria-hidden focusable="false" className="size-5 shrink-0 text-danger" />
-                            <Typography type="body-sm" color="muted">
-                                {draft.saveError}
-                            </Typography>
-                        </div>
+                    {draft.saveError || exportError ? (
+                        <Alert status="danger">
+                            <Alert.Indicator />
+                            <Alert.Content>
+                                <Alert.Title>{draft.saveError ?? exportError}</Alert.Title>
+                            </Alert.Content>
+                        </Alert>
                     ) : null}
                     {draft.errors.length > 0 ? (
-                        <Typography type="body-xs" className="text-danger">
+                        <Typography
+                            id={CV_HEADER_ERROR_ID}
+                            type="body-xs"
+                            className="text-danger"
+                            role="alert"
+                        >
                             {t("headerRequired")}
                         </Typography>
                     ) : null}
                     {draft.saved ? (
-                        <Typography type="body-sm" className="text-success">
+                        <Typography type="body-sm" className="text-success" role="status">
                             {t("saved")}
                         </Typography>
                     ) : null}

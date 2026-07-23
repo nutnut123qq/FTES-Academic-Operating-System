@@ -3258,6 +3258,7 @@
         "reviewThisCv": "Review this CV",
         "exportPdf": "Export PDF",
         "pdfUntitled": "My CV",
+        "exportError": "Couldn't export the PDF. Please try again.",
         "uploadCta": "Choose or drop a file",
         "uploadHint": "PDF or DOCX, up to 10MB",
         "uploadError": {
@@ -3301,13 +3302,18 @@
           "moveUp": "Move {section} up",
           "moveDown": "Move {section} down",
           "show": "Show {section}",
-          "hide": "Hide {section}"
+          "hide": "Hide {section}",
+          "visibility": "Toggle visibility of {section}"
         },
         "inline": {
           "addBullet": "Add line",
           "removeBullet": "Remove line",
           "addTech": "Add tech",
-          "addSkill": "Add skill"
+          "addSkill": "Add skill",
+          "dragEntry": "Drag to reorder {section} entry {index}",
+          "moveEntryUp": "Move {section} entry {index} up",
+          "moveEntryDown": "Move {section} entry {index} down",
+          "removeEntry": "Remove {section} entry {index}"
         }
       },
       "planner": {

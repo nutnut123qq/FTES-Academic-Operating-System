@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useRef } from "react"
+import React, { useLayoutEffect, useRef } from "react"
 import { cn } from "@heroui/react"
 
 /**
@@ -20,11 +20,19 @@ import { cn } from "@heroui/react"
  * the page — the surrounding résumé text is the only visual affordance.
  */
 
-/** Shared flat-field look: transparent, inherits type, subtle focus affordance. */
+/**
+ * Shared flat-field look: transparent, inherits type, subtle focus affordance.
+ *
+ * The focus treatment uses the house `accent` token (`ring-accent`, matching
+ * `SegmentedControl`/`PressableCard`); the placeholder is pinned to an explicit
+ * print-ink tint (`text-[#6b6b6b]`, ≈5.3:1 on white) rather than a theme token,
+ * because the A4 paper is ALWAYS white regardless of the app's light/dark theme —
+ * a `text-muted`/`foreground-N` token would flip light and vanish on the page.
+ */
 const FLAT_CLASS =
     "w-full min-w-0 rounded-sm bg-transparent px-0.5 outline-none transition-colors " +
-    "placeholder:text-foreground-500/50 focus:bg-primary/5 " +
-    "focus:ring-1 focus:ring-primary/40"
+    "placeholder:text-[#6b6b6b] focus:bg-accent/5 " +
+    "focus:ring-2 focus:ring-accent/70"
 
 export interface InlineTextProps {
     value: string
@@ -37,6 +45,8 @@ export interface InlineTextProps {
     className?: string
     /** Flag an invalid required field (name / email). */
     invalid?: boolean
+    /** Id of an error message describing an invalid field (for `aria-describedby`). */
+    describedBy?: string
     type?: "text" | "email"
     align?: "left" | "center"
 }
@@ -50,6 +60,7 @@ export const InlineText = ({
     style,
     className,
     invalid,
+    describedBy,
     type = "text",
     align = "left",
 }: InlineTextProps) => (
@@ -60,6 +71,7 @@ export const InlineText = ({
         placeholder={placeholder}
         aria-label={ariaLabel}
         aria-invalid={invalid || undefined}
+        aria-describedby={invalid ? describedBy : undefined}
         spellCheck={false}
         className={cn(
             FLAT_CLASS,
@@ -95,13 +107,19 @@ export const InlineTextArea = ({
 }: InlineTextAreaProps) => {
     const ref = useRef<HTMLTextAreaElement>(null)
 
-    // Auto-grow: reset then match scrollHeight whenever the value changes.
-    useEffect(() => {
+    // Auto-grow: reset then match scrollHeight. Runs after EVERY render (no dep
+    // array) on purpose — the height must be re-measured not only when the value
+    // changes but whenever the wrapping metrics do: the density knob rescales
+    // fontSize/lineHeight and the font knob swaps the family, both of which reach
+    // this textarea by INHERITANCE (not via its own style prop), so a value-only
+    // dep would leave the imperative height stale and clip the tail under
+    // `overflow-hidden`. Two style writes per render is cheap for a CV's fields.
+    useLayoutEffect(() => {
         const node = ref.current
         if (!node) return
         node.style.height = "auto"
         node.style.height = `${node.scrollHeight}px`
-    }, [value])
+    })
 
     return (
         <textarea

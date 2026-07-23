@@ -1,8 +1,9 @@
 "use client"
 
 import React from "react"
-import { Button, Typography, cn } from "@heroui/react"
+import { Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
+import { SegmentedControl } from "@/components/blocks/navigation/SegmentedControl"
 import {
     accentColor,
     type CvAccent,
@@ -12,10 +13,9 @@ import {
     CV_ACCENTS,
     CV_DENSITIES,
     CV_FONTS,
-    CV_INK,
 } from "./layout"
 
-/** A labelled segmented control — one active option, keyboard + a11y friendly. */
+/** A labelled segmented control — the house `SegmentedControl` block owns the look. */
 const Segmented = <T extends string>({
     label,
     options,
@@ -29,31 +29,17 @@ const Segmented = <T extends string>({
     onChange: (next: T) => void
     renderOption: (option: T) => React.ReactNode
 }) => (
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-2">
             <Typography type="body-xs" color="muted">
                 {label}
             </Typography>
-            <div
-                role="group"
-                aria-label={label}
-                className="inline-flex flex-wrap gap-1 rounded-xl border border-default bg-surface p-1"
-            >
-                {options.map((option) => {
-                    const active = option === value
-                    return (
-                        <Button
-                            key={option}
-                            size="sm"
-                            variant={active ? "primary" : "tertiary"}
-                            aria-pressed={active}
-                            className={cn("min-w-0 px-2", !active && "bg-transparent")}
-                            onPress={() => onChange(option)}
-                        >
-                            {renderOption(option)}
-                        </Button>
-                    )
-                })}
-            </div>
+            <SegmentedControl<T>
+                className="w-fit"
+                ariaLabel={label}
+                items={options.map((option) => ({ value: option, label: renderOption(option) }))}
+                value={value}
+                onChange={onChange}
+            />
         </div>
     )
 
@@ -61,14 +47,16 @@ const Segmented = <T extends string>({
 const AccentOption = ({ accent, label }: { accent: CvAccent; label: string }) => {
     const color = accentColor(accent)
     return (
-        <span className="flex items-center gap-1.5">
+        <span className="flex items-center gap-2">
             <span
                 aria-hidden
-                className="size-3 rounded-full border border-black/10"
+                className="size-3 rounded-full border border-default bg-surface"
                 style={{
-                    background: color ?? "transparent",
+                    background: color ?? undefined,
                     borderColor: color ? "transparent" : undefined,
-                    ...(accent === "none" ? { backgroundImage: "linear-gradient(135deg,#fff 45%,#e11 45% 55%,#fff 55%)" } : {}),
+                    ...(accent === "none"
+                        ? { backgroundImage: "linear-gradient(135deg, transparent 45%, var(--danger) 45% 55%, transparent 55%)" }
+                        : {}),
                 }}
             />
             <span>{label}</span>
@@ -91,9 +79,8 @@ export interface DesignToolbarProps {
  */
 export const DesignToolbar = ({ design, onAccent, onDensity, onFont }: DesignToolbarProps) => {
     const t = useTranslations("aiPlatform.toolPages.cvReview.design")
-    void CV_INK
     return (
-        <div className="flex flex-wrap items-start gap-4 rounded-2xl border border-default bg-content1 px-4 py-3">
+        <div className="flex flex-wrap items-start gap-4 rounded-2xl border border-default bg-surface px-4 py-3">
             <Segmented<CvAccent>
                 label={t("accent")}
                 options={CV_ACCENTS}

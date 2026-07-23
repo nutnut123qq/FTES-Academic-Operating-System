@@ -103,9 +103,18 @@ const toDraft = (sections: CvSections | undefined): DraftSections => {
     }
 }
 
+/** Drop blank / whitespace-only rows from a per-line list (bullets / tech / items).
+ * In-progress empty rows live only in the client draft; they must never reach the
+ * saved payload — otherwise they round-trip forever, accumulate on every reload,
+ * count against the BE 64 KB cap, and pollute the AI-review input. Mirrors the old
+ * `CvBuilderForm`'s `linesToList` saved-shape behaviour. */
+const cleanLines = (lines: string[] | undefined): string[] =>
+    (lines ?? []).filter((line) => line.trim().length > 0)
+
 /**
  * Strip client ids and rebuild the exact Harvard-shape payload (only known keys)
- * so the BE never sees an unknown key (400 CV_PROFILE_INVALID).
+ * so the BE never sees an unknown key (400 CV_PROFILE_INVALID). Blank list rows are
+ * pruned here (not in the draft) so in-progress empty rows still render while editing.
  */
 export const sanitizeSections = (draft: DraftSections): CvSections => ({
     header: {
@@ -123,23 +132,23 @@ export const sanitizeSections = (draft: DraftSections): CvSections => ({
         start: item.start ?? "",
         end: item.end ?? "",
         gpa: item.gpa ?? "",
-        highlights: item.highlights ?? [],
+        highlights: cleanLines(item.highlights),
     })),
     experience: draft.experience.map((item) => ({
         company: item.company ?? "",
         title: item.title ?? "",
         start: item.start ?? "",
         end: item.end ?? "",
-        bullets: item.bullets ?? [],
+        bullets: cleanLines(item.bullets),
     })),
     projects: draft.projects.map((item) => ({
         name: item.name ?? "",
         role: item.role ?? "",
-        tech: item.tech ?? [],
-        bullets: item.bullets ?? [],
+        tech: cleanLines(item.tech),
+        bullets: cleanLines(item.bullets),
         link: item.link ?? "",
     })),
-    skills: draft.skills.map((item) => ({ group: item.group ?? "", items: item.items ?? [] })),
+    skills: draft.skills.map((item) => ({ group: item.group ?? "", items: cleanLines(item.items) })),
     awards: draft.awards.map((item) => ({ name: item.name ?? "", by: item.by ?? "", year: item.year ?? "" })),
 })
 

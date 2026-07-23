@@ -14,6 +14,9 @@ import type { CvProfileView, CvSections } from "@/modules/api/rest/career"
 import {
     accentColor,
     CV_INK,
+    CV_INK_CONTACT,
+    CV_INK_META,
+    CV_INK_SUB,
     densityScale,
     orderedVisibleKeys,
     type CvDesign,
@@ -89,6 +92,20 @@ const ensureFonts = (): void => {
 const hasText = (value: string | undefined): value is string =>
     !!value && value.trim().length > 0
 
+/** True if any of the given strings has content. */
+const anyText = (...values: Array<string | undefined>): boolean => values.some(hasText)
+
+/** True if a per-line list has any non-blank row. */
+const anyLine = (lines: string[] | undefined): boolean => (lines ?? []).some(hasText)
+
+/*
+ * Entry-emptiness filters below use `anyText`/`anyLine` so an entry exports when
+ * the user typed content into ANY field — not only the title field. The on-screen
+ * A4 renders every draft entry, so filtering on title alone used to silently drop
+ * entries the user could see (a bullets-only experience, a dates+GPA education
+ * row, a tech-only project), breaking preview↔PDF parity.
+ */
+
 const joinParts = (parts: Array<string | undefined>): string =>
     parts.filter((part) => hasText(part)).join("  ·  ")
 
@@ -121,7 +138,7 @@ const buildStyles = (design: CvDesign, fontFamily: string) => {
             fontFamily,
         },
         name: { fontSize: s(20), fontWeight: 700, textAlign: "center", marginBottom: 4, color: accent },
-        contact: { fontSize: s(9), textAlign: "center", color: "#444" },
+        contact: { fontSize: s(9), textAlign: "center", color: CV_INK_CONTACT },
         sectionHeading: {
             fontSize: s(11),
             fontWeight: 700,
@@ -134,13 +151,18 @@ const buildStyles = (design: CvDesign, fontFamily: string) => {
         },
         itemRow: { flexDirection: "row", justifyContent: "space-between", marginTop: 6 * scale.gap },
         itemTitle: { fontSize: s(10), fontWeight: 700 },
-        itemSub: { fontSize: s(10), fontStyle: "italic", color: "#333" },
-        itemDates: { fontSize: s(9), color: "#555" },
+        // No `fontStyle: "italic"`: the registered Roboto/Roboto Slab families have
+        // only normal cuts, and @react-pdf's font resolver THROWS when asked for an
+        // italic it can't find — aborting the whole render and silently dropping the
+        // export to Helvetica (which loses Vietnamese glyphs and the font knob). The
+        // sub-line is distinguished by colour instead.
+        itemSub: { fontSize: s(10), color: CV_INK_SUB },
+        itemDates: { fontSize: s(9), color: CV_INK_META },
         paragraph: { marginTop: 2 },
         bulletRow: { flexDirection: "row", marginTop: 1, paddingLeft: 8 },
         bulletDot: { width: 8 },
         bulletText: { flex: 1 },
-        meta: { fontSize: s(9), color: "#555", marginTop: 1 },
+        meta: { fontSize: s(9), color: CV_INK_META, marginTop: 1 },
     })
 }
 
@@ -169,7 +191,9 @@ const SummarySection = ({ sections, labels, styles }: SectionProps) =>
 
 const EducationSection = ({ sections, labels, styles }: SectionProps) => {
     const education = (sections.education ?? []).filter(
-        (item) => hasText(item.school) || hasText(item.degree) || hasText(item.major),
+        (item) =>
+            anyText(item.school, item.degree, item.major, item.start, item.end, item.gpa) ||
+            anyLine(item.highlights),
     )
     if (education.length === 0) return null
     return (
@@ -199,7 +223,7 @@ const EducationSection = ({ sections, labels, styles }: SectionProps) => {
 
 const ExperienceSection = ({ sections, labels, styles }: SectionProps) => {
     const experience = (sections.experience ?? []).filter(
-        (item) => hasText(item.company) || hasText(item.title),
+        (item) => anyText(item.company, item.title, item.start, item.end) || anyLine(item.bullets),
     )
     if (experience.length === 0) return null
     return (
@@ -223,7 +247,9 @@ const ExperienceSection = ({ sections, labels, styles }: SectionProps) => {
 }
 
 const ProjectsSection = ({ sections, labels, styles }: SectionProps) => {
-    const projects = (sections.projects ?? []).filter((item) => hasText(item.name))
+    const projects = (sections.projects ?? []).filter(
+        (item) => anyText(item.name, item.role, item.link) || anyLine(item.tech) || anyLine(item.bullets),
+    )
     if (projects.length === 0) return null
     return (
         <View>
@@ -249,8 +275,8 @@ const ProjectsSection = ({ sections, labels, styles }: SectionProps) => {
 }
 
 const SkillsSection = ({ sections, labels, styles }: SectionProps) => {
-    const skills = (sections.skills ?? []).filter((group) =>
-        (group.items ?? []).some((skill) => hasText(skill)),
+    const skills = (sections.skills ?? []).filter(
+        (group) => anyText(group.group) || anyLine(group.items),
     )
     if (skills.length === 0) return null
     return (
@@ -267,7 +293,7 @@ const SkillsSection = ({ sections, labels, styles }: SectionProps) => {
 }
 
 const AwardsSection = ({ sections, labels, styles }: SectionProps) => {
-    const awards = (sections.awards ?? []).filter((item) => hasText(item.name))
+    const awards = (sections.awards ?? []).filter((item) => anyText(item.name, item.by, item.year))
     if (awards.length === 0) return null
     return (
         <View>
@@ -309,7 +335,9 @@ interface CvPdfDocumentProps {
 const CvPdfDocument = ({ title, sections, labels, layout, design, fontFamily }: CvPdfDocumentProps) => {
     const styles = buildStyles(design, fontFamily)
     const header = sections.header ?? {}
-    const links = (header.links ?? []).filter((link) => hasText(link.url))
+    // Keep a link the user filled in either field (matches the A4, which shows both
+    // the label and url inputs); a label-only link used to vanish from the export.
+    const links = (header.links ?? []).filter((link) => anyText(link.url, link.label))
     const visibleKeys = orderedVisibleKeys(layout)
 
     return (
@@ -326,7 +354,11 @@ const CvPdfDocument = ({ title, sections, labels, layout, design, fontFamily }: 
                 {links.length > 0 ? (
                     <Text style={styles.contact}>
                         {links
-                            .map((link) => (hasText(link.label) ? `${link.label}: ${link.url}` : link.url))
+                            .map((link) =>
+                                hasText(link.label) && hasText(link.url)
+                                    ? `${link.label}: ${link.url}`
+                                    : (link.url || link.label),
+                            )
                             .join("  ·  ")}
                     </Text>
                 ) : null}
@@ -353,7 +385,13 @@ export const renderCvPdfBlob = async (
     design: CvDesign,
 ): Promise<Blob> => {
     ensureFonts()
-    const families = design.font === "serif" ? ["Roboto Slab", "Roboto", "Helvetica"] : ["Roboto", "Helvetica"]
+    // Fallback chains keep the chosen classification if a CDN font fetch fails:
+    // serif degrades to the builtin serif Times-Roman (not sans Helvetica). Builtin
+    // families lack Vietnamese diacritics, so they are last-resort only.
+    const families =
+        design.font === "serif"
+            ? ["Roboto Slab", "Roboto", "Times-Roman"]
+            : ["Roboto", "Helvetica"]
 
     let lastError: unknown
     for (const fontFamily of families) {

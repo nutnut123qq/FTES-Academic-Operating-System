@@ -40,15 +40,16 @@ const RailItem = ({
             dragListener={false}
             dragControls={controls}
             className={cn(
-                "flex items-center gap-1.5 rounded-xl border border-default bg-surface px-2 py-1.5",
+                "flex items-center gap-2 rounded-xl border border-default bg-surface px-2 py-2",
                 hidden && "opacity-60",
             )}
         >
             <button
                 type="button"
+                tabIndex={-1}
                 aria-label={t("dragHandle", { section: label })}
                 onPointerDown={(event) => controls.start(event)}
-                className="cursor-grab touch-none text-foreground-400 active:cursor-grabbing"
+                className="cursor-grab touch-none text-muted active:cursor-grabbing"
             >
                 <DotsSixVerticalIcon aria-hidden focusable="false" className="size-4" />
             </button>
@@ -82,7 +83,7 @@ const RailItem = ({
                     isIconOnly
                     size="sm"
                     variant="tertiary"
-                    aria-label={hidden ? t("show", { section: label }) : t("hide", { section: label })}
+                    aria-label={t("visibility", { section: label })}
                     aria-pressed={!hidden}
                     onPress={onToggle}
                 >
@@ -131,7 +132,7 @@ export const SectionRail = ({
             <Typography type="body-xs" color="muted">
                 {t("hint")}
             </Typography>
-            <Reorder.Group axis="y" values={order} onReorder={onReorder} className="flex flex-col gap-1.5">
+            <Reorder.Group axis="y" values={order} onReorder={onReorder} className="flex flex-col gap-2">
                 {order.map((key, index) => (
                     <RailItem
                         key={key}

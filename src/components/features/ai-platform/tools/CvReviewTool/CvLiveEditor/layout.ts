@@ -130,6 +130,18 @@ export const accentColor = (accent: CvAccent): string | null => {
 /** The default near-black used for the name + rule when accent is "none". */
 export const CV_INK = "#1a1a1a"
 
+/**
+ * Secondary print-ink shades — theme-INDEPENDENT (the A4 is always white and
+ * react-pdf can't read CSS vars), shared by BOTH the on-screen A4 preview and the
+ * PDF so the two renderers can never drift on their greys.
+ */
+/** Italic sub-line (degree / major / GPA). */
+export const CV_INK_SUB = "#333"
+/** Contact + links line under the name. */
+export const CV_INK_CONTACT = "#444"
+/** Dates + meta (dates, tech line). */
+export const CV_INK_META = "#555"
+
 /** CSS font-family stack for the HTML A4 preview (serif vs sans). */
 export const cssFontStack = (font: CvFontChoice): string =>
     font === "serif"

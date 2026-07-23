@@ -15,6 +15,9 @@ import { InlineText, InlineTextArea } from "./InlineField"
 import {
     accentColor,
     CV_INK,
+    CV_INK_CONTACT,
+    CV_INK_META,
+    CV_INK_SUB,
     cssFontStack,
     densityScale,
     type CvDesign,
@@ -44,11 +47,18 @@ const buildTokens = (design: CvDesign): Tokens => {
     }
 }
 
+/** Id of the header-required error message, linked from the invalid name/email fields. */
+export const CV_HEADER_ERROR_ID = "cv-header-required-msg"
+
+const hasText = (value: string | undefined): boolean => !!value && value.trim().length > 0
+
 // ---- small building blocks ----
 
 /** A section heading with the accent-tinted rule (matches the PDF heading). */
 const Heading = ({ label, tk }: { label: string; tk: Tokens }) => (
     <div
+        role="heading"
+        aria-level={3}
         style={{
             fontSize: tk.sz(11.5),
             fontWeight: 700,
@@ -107,21 +117,21 @@ const LineList = ({
                         size="sm"
                         variant="tertiary"
                         aria-label={removeLabel}
-                        className="ml-1 shrink-0 opacity-0 transition-opacity focus:opacity-100 group-hover/line:opacity-100"
+                        className="ml-2 shrink-0 opacity-0 transition-opacity focus:opacity-100 group-hover/line:opacity-100"
                         onPress={() => removeLine(index)}
                     >
-                        <TrashIcon aria-hidden focusable="false" className="size-3.5" />
+                        <TrashIcon aria-hidden focusable="false" className="size-4" />
                     </Button>
                 </div>
             ))}
             <Button
                 size="sm"
                 variant="tertiary"
-                className="mt-0.5 self-start px-1 text-foreground-500"
+                className="mt-0.5 self-start px-1 text-black/50"
                 style={{ marginLeft: tk.sp(8) }}
                 onPress={addLine}
             >
-                <PlusIcon aria-hidden focusable="false" className="size-3.5" />
+                <PlusIcon aria-hidden focusable="false" className="size-4" />
                 {addLabel}
             </Button>
         </div>
@@ -132,7 +142,13 @@ const LineList = ({
  * Wraps one repeater entry with screen-only chrome: a drag handle (pointer
  * reorder via framer `Reorder`), keyboard move up/down, and remove. None of this
  * chrome is in the exported PDF — the PDF is rendered from the CV data, not the
- * DOM — so it is safe to overlay editing affordances on the A4.
+ * DOM.
+ *
+ * The action cluster lives in NORMAL FLOW as a `shrink-0` column to the right of
+ * the content (it reserves its width even while opacity-0), NOT absolutely
+ * positioned over the entry — an overlay would sit on top of the entry's own
+ * top-right fields (end date / link / year) and a mis-aimed click could hit the
+ * remove button and delete the whole entry.
  */
 const EntryFrame = ({
     value,
@@ -164,20 +180,19 @@ const EntryFrame = ({
             value={value}
             dragListener={false}
             dragControls={controls}
-            className="group/entry relative rounded-md"
+            className="group/entry flex items-start gap-2 rounded-md"
         >
-            <div className="flex items-start gap-1">
-                <button
-                    type="button"
-                    aria-label={dragLabel}
-                    onPointerDown={(event) => controls.start(event)}
-                    className="mt-0.5 cursor-grab touch-none text-foreground-300 opacity-0 transition-opacity focus:opacity-100 active:cursor-grabbing group-hover/entry:opacity-100"
-                >
-                    <DotsSixVerticalIcon aria-hidden focusable="false" className="size-4" />
-                </button>
-                <div className="min-w-0 flex-1">{children}</div>
-            </div>
-            <div className="absolute right-0 top-0 flex items-center opacity-0 transition-opacity focus-within:opacity-100 group-hover/entry:opacity-100">
+            <button
+                type="button"
+                tabIndex={-1}
+                aria-label={dragLabel}
+                onPointerDown={(event) => controls.start(event)}
+                className="mt-0.5 shrink-0 cursor-grab touch-none rounded-sm text-black/30 opacity-0 transition-opacity active:cursor-grabbing group-hover/entry:opacity-100"
+            >
+                <DotsSixVerticalIcon aria-hidden focusable="false" className="size-4" />
+            </button>
+            <div className="min-w-0 flex-1">{children}</div>
+            <div className="flex shrink-0 items-center opacity-0 transition-opacity focus-within:opacity-100 group-hover/entry:opacity-100">
                 <Button
                     isIconOnly
                     size="sm"
@@ -186,7 +201,7 @@ const EntryFrame = ({
                     isDisabled={index === 0}
                     onPress={() => onMove(-1)}
                 >
-                    <CaretUpIcon aria-hidden focusable="false" className="size-3.5" />
+                    <CaretUpIcon aria-hidden focusable="false" className="size-4" />
                 </Button>
                 <Button
                     isIconOnly
@@ -196,7 +211,7 @@ const EntryFrame = ({
                     isDisabled={index === count - 1}
                     onPress={() => onMove(1)}
                 >
-                    <CaretDownIcon aria-hidden focusable="false" className="size-3.5" />
+                    <CaretDownIcon aria-hidden focusable="false" className="size-4" />
                 </Button>
                 <Button
                     isIconOnly
@@ -205,7 +220,7 @@ const EntryFrame = ({
                     aria-label={removeLabel}
                     onPress={onRemove}
                 >
-                    <TrashIcon aria-hidden focusable="false" className="size-3.5" />
+                    <TrashIcon aria-hidden focusable="false" className="size-4" />
                 </Button>
             </div>
         </Reorder.Item>
@@ -256,10 +271,10 @@ export const A4Page = ({ draft, visibleKeys, design }: A4PageProps) => {
                         count={list.length}
                         onMove={(dir) => draft.moveEntry(key, index, dir)}
                         onRemove={() => draft.removeEntry(key, index)}
-                        dragLabel={t("rail.dragHandle", { section: t(`sections.${key}`) })}
-                        moveUpLabel={t("rail.moveUp", { section: t(`sections.${key}`) })}
-                        moveDownLabel={t("rail.moveDown", { section: t(`sections.${key}`) })}
-                        removeLabel={t("actions.remove")}
+                        dragLabel={t("inline.dragEntry", { section: t(`sections.${key}`), index: index + 1 })}
+                        moveUpLabel={t("inline.moveEntryUp", { section: t(`sections.${key}`), index: index + 1 })}
+                        moveDownLabel={t("inline.moveEntryDown", { section: t(`sections.${key}`), index: index + 1 })}
+                        removeLabel={t("inline.removeEntry", { section: t(`sections.${key}`), index: index + 1 })}
                     >
                         {renderEntry(item, index)}
                     </EntryFrame>
@@ -267,10 +282,10 @@ export const A4Page = ({ draft, visibleKeys, design }: A4PageProps) => {
                 <Button
                     size="sm"
                     variant="tertiary"
-                    className="self-start px-1 text-foreground-500"
+                    className="self-start px-1 text-black/50"
                     onPress={() => draft.addEntry(key)}
                 >
-                    <PlusIcon aria-hidden focusable="false" className="size-3.5" />
+                    <PlusIcon aria-hidden focusable="false" className="size-4" />
                     {addLabel}
                 </Button>
             </Reorder.Group>
@@ -278,14 +293,14 @@ export const A4Page = ({ draft, visibleKeys, design }: A4PageProps) => {
     }
 
     const itemTitleStyle: React.CSSProperties = { fontSize: tk.sz(11), fontWeight: 700 }
-    const itemSubStyle: React.CSSProperties = { fontSize: tk.sz(11), fontStyle: "italic", color: "#333" }
-    const metaStyle: React.CSSProperties = { fontSize: tk.sz(10), color: "#555" }
+    const itemSubStyle: React.CSSProperties = { fontSize: tk.sz(11), fontStyle: "italic", color: CV_INK_SUB }
+    const metaStyle: React.CSSProperties = { fontSize: tk.sz(10), color: CV_INK_META }
 
     const renderSection = (key: CvSectionKey): React.ReactNode => {
         switch (key) {
         case "summary":
             return (
-                <section key={key}>
+                <section key={key} aria-label={t(`sections.${key}`)}>
                     <Heading label={t("sections.summary")} tk={tk} />
                     <InlineTextArea
                         value={d.summary}
@@ -298,7 +313,7 @@ export const A4Page = ({ draft, visibleKeys, design }: A4PageProps) => {
             )
         case "education":
             return (
-                <section key={key}>
+                <section key={key} aria-label={t(`sections.${key}`)}>
                     <Heading label={t("sections.education")} tk={tk} />
                     {repeater("education", t("actions.addEducation"), (item, index) => (
                         <>
@@ -306,7 +321,7 @@ export const A4Page = ({ draft, visibleKeys, design }: A4PageProps) => {
                                 <InlineText
                                     value={String(item.school ?? "")}
                                     onChange={(v) => draft.updateEntry("education", index, { school: v })}
-                                    ariaLabel={t("fields.school")}
+                                    ariaLabel={`${t("fields.school")} ${index + 1}`}
                                     placeholder={t("fields.school")}
                                     style={itemTitleStyle}
                                 />
@@ -314,7 +329,7 @@ export const A4Page = ({ draft, visibleKeys, design }: A4PageProps) => {
                                     <InlineText
                                         value={String(item.start ?? "")}
                                         onChange={(v) => draft.updateEntry("education", index, { start: v })}
-                                        ariaLabel={t("fields.start")}
+                                        ariaLabel={`${t("fields.start")} ${index + 1}`}
                                         placeholder={t("fields.start")}
                                         align="center"
                                         className="w-16"
@@ -324,7 +339,7 @@ export const A4Page = ({ draft, visibleKeys, design }: A4PageProps) => {
                                     <InlineText
                                         value={String(item.end ?? "")}
                                         onChange={(v) => draft.updateEntry("education", index, { end: v })}
-                                        ariaLabel={t("fields.end")}
+                                        ariaLabel={`${t("fields.end")} ${index + 1}`}
                                         placeholder={t("fields.end")}
                                         align="center"
                                         className="w-16"
@@ -336,7 +351,7 @@ export const A4Page = ({ draft, visibleKeys, design }: A4PageProps) => {
                                 <InlineText
                                     value={String(item.degree ?? "")}
                                     onChange={(v) => draft.updateEntry("education", index, { degree: v })}
-                                    ariaLabel={t("fields.degree")}
+                                    ariaLabel={`${t("fields.degree")} ${index + 1}`}
                                     placeholder={t("fields.degree")}
                                     className="w-auto flex-1"
                                     style={itemSubStyle}
@@ -344,7 +359,7 @@ export const A4Page = ({ draft, visibleKeys, design }: A4PageProps) => {
                                 <InlineText
                                     value={String(item.major ?? "")}
                                     onChange={(v) => draft.updateEntry("education", index, { major: v })}
-                                    ariaLabel={t("fields.major")}
+                                    ariaLabel={`${t("fields.major")} ${index + 1}`}
                                     placeholder={t("fields.major")}
                                     className="w-auto flex-1"
                                     style={itemSubStyle}
@@ -352,7 +367,7 @@ export const A4Page = ({ draft, visibleKeys, design }: A4PageProps) => {
                                 <InlineText
                                     value={String(item.gpa ?? "")}
                                     onChange={(v) => draft.updateEntry("education", index, { gpa: v })}
-                                    ariaLabel={t("fields.gpa")}
+                                    ariaLabel={`${t("fields.gpa")} ${index + 1}`}
                                     placeholder={t("fields.gpa")}
                                     className="w-20"
                                     style={itemSubStyle}
@@ -373,7 +388,7 @@ export const A4Page = ({ draft, visibleKeys, design }: A4PageProps) => {
             )
         case "experience":
             return (
-                <section key={key}>
+                <section key={key} aria-label={t(`sections.${key}`)}>
                     <Heading label={t("sections.experience")} tk={tk} />
                     {repeater("experience", t("actions.addExperience"), (item, index) => (
                         <>
@@ -382,7 +397,7 @@ export const A4Page = ({ draft, visibleKeys, design }: A4PageProps) => {
                                     <InlineText
                                         value={String(item.title ?? "")}
                                         onChange={(v) => draft.updateEntry("experience", index, { title: v })}
-                                        ariaLabel={t("fields.jobTitle")}
+                                        ariaLabel={`${t("fields.jobTitle")} ${index + 1}`}
                                         placeholder={t("fields.jobTitle")}
                                         className="w-auto flex-1"
                                         style={itemTitleStyle}
@@ -390,7 +405,7 @@ export const A4Page = ({ draft, visibleKeys, design }: A4PageProps) => {
                                     <InlineText
                                         value={String(item.company ?? "")}
                                         onChange={(v) => draft.updateEntry("experience", index, { company: v })}
-                                        ariaLabel={t("fields.company")}
+                                        ariaLabel={`${t("fields.company")} ${index + 1}`}
                                         placeholder={t("fields.company")}
                                         className="w-auto flex-1"
                                         style={itemTitleStyle}
@@ -400,7 +415,7 @@ export const A4Page = ({ draft, visibleKeys, design }: A4PageProps) => {
                                     <InlineText
                                         value={String(item.start ?? "")}
                                         onChange={(v) => draft.updateEntry("experience", index, { start: v })}
-                                        ariaLabel={t("fields.start")}
+                                        ariaLabel={`${t("fields.start")} ${index + 1}`}
                                         placeholder={t("fields.start")}
                                         align="center"
                                         className="w-16"
@@ -410,7 +425,7 @@ export const A4Page = ({ draft, visibleKeys, design }: A4PageProps) => {
                                     <InlineText
                                         value={String(item.end ?? "")}
                                         onChange={(v) => draft.updateEntry("experience", index, { end: v })}
-                                        ariaLabel={t("fields.end")}
+                                        ariaLabel={`${t("fields.end")} ${index + 1}`}
                                         placeholder={t("fields.end")}
                                         align="center"
                                         className="w-16"
@@ -433,7 +448,7 @@ export const A4Page = ({ draft, visibleKeys, design }: A4PageProps) => {
             )
         case "projects":
             return (
-                <section key={key}>
+                <section key={key} aria-label={t(`sections.${key}`)}>
                     <Heading label={t("sections.projects")} tk={tk} />
                     {repeater("projects", t("actions.addProject"), (item, index) => (
                         <>
@@ -442,7 +457,7 @@ export const A4Page = ({ draft, visibleKeys, design }: A4PageProps) => {
                                     <InlineText
                                         value={String(item.name ?? "")}
                                         onChange={(v) => draft.updateEntry("projects", index, { name: v })}
-                                        ariaLabel={t("fields.projectName")}
+                                        ariaLabel={`${t("fields.projectName")} ${index + 1}`}
                                         placeholder={t("fields.projectName")}
                                         className="w-auto flex-1"
                                         style={itemTitleStyle}
@@ -450,7 +465,7 @@ export const A4Page = ({ draft, visibleKeys, design }: A4PageProps) => {
                                     <InlineText
                                         value={String(item.role ?? "")}
                                         onChange={(v) => draft.updateEntry("projects", index, { role: v })}
-                                        ariaLabel={t("fields.role")}
+                                        ariaLabel={`${t("fields.role")} ${index + 1}`}
                                         placeholder={t("fields.role")}
                                         className="w-auto flex-1"
                                         style={itemTitleStyle}
@@ -459,7 +474,7 @@ export const A4Page = ({ draft, visibleKeys, design }: A4PageProps) => {
                                 <InlineText
                                     value={String(item.link ?? "")}
                                     onChange={(v) => draft.updateEntry("projects", index, { link: v })}
-                                    ariaLabel={t("fields.link")}
+                                    ariaLabel={`${t("fields.link")} ${index + 1}`}
                                     placeholder={t("fields.link")}
                                     className="w-40 shrink-0"
                                     style={metaStyle}
@@ -489,14 +504,14 @@ export const A4Page = ({ draft, visibleKeys, design }: A4PageProps) => {
             )
         case "skills":
             return (
-                <section key={key}>
+                <section key={key} aria-label={t(`sections.${key}`)}>
                     <Heading label={t("sections.skills")} tk={tk} />
                     {repeater("skills", t("actions.addSkill"), (item, index) => (
                         <>
                             <InlineText
                                 value={String(item.group ?? "")}
                                 onChange={(v) => draft.updateEntry("skills", index, { group: v })}
-                                ariaLabel={t("fields.skillGroup")}
+                                ariaLabel={`${t("fields.skillGroup")} ${index + 1}`}
                                 placeholder={t("fields.skillGroup")}
                                 style={itemTitleStyle}
                             />
@@ -515,7 +530,7 @@ export const A4Page = ({ draft, visibleKeys, design }: A4PageProps) => {
             )
         case "awards":
             return (
-                <section key={key}>
+                <section key={key} aria-label={t(`sections.${key}`)}>
                     <Heading label={t("sections.awards")} tk={tk} />
                     {repeater("awards", t("actions.addAward"), (item, index) => (
                         <div className="flex flex-wrap items-baseline gap-x-1" style={{ paddingLeft: tk.sp(8) }}>
@@ -525,7 +540,7 @@ export const A4Page = ({ draft, visibleKeys, design }: A4PageProps) => {
                             <InlineText
                                 value={String(item.name ?? "")}
                                 onChange={(v) => draft.updateEntry("awards", index, { name: v })}
-                                ariaLabel={t("fields.awardName")}
+                                ariaLabel={`${t("fields.awardName")} ${index + 1}`}
                                 placeholder={t("fields.awardName")}
                                 className="w-auto flex-1"
                                 style={{ fontSize: tk.sz(11) }}
@@ -533,7 +548,7 @@ export const A4Page = ({ draft, visibleKeys, design }: A4PageProps) => {
                             <InlineText
                                 value={String(item.by ?? "")}
                                 onChange={(v) => draft.updateEntry("awards", index, { by: v })}
-                                ariaLabel={t("fields.awardBy")}
+                                ariaLabel={`${t("fields.awardBy")} ${index + 1}`}
                                 placeholder={t("fields.awardBy")}
                                 className="w-auto flex-1"
                                 style={{ fontSize: tk.sz(11) }}
@@ -541,7 +556,7 @@ export const A4Page = ({ draft, visibleKeys, design }: A4PageProps) => {
                             <InlineText
                                 value={String(item.year ?? "")}
                                 onChange={(v) => draft.updateEntry("awards", index, { year: v })}
-                                ariaLabel={t("fields.awardYear")}
+                                ariaLabel={`${t("fields.awardYear")} ${index + 1}`}
                                 placeholder={t("fields.awardYear")}
                                 className="w-20"
                                 style={{ fontSize: tk.sz(11) }}
@@ -577,22 +592,25 @@ export const A4Page = ({ draft, visibleKeys, design }: A4PageProps) => {
                     ariaLabel={t("fields.fullName")}
                     placeholder={t("fields.fullName")}
                     invalid={hasError("fullName")}
+                    describedBy={CV_HEADER_ERROR_ID}
                     align="center"
                     style={{ fontSize: tk.sz(21), fontWeight: 700, color: tk.accent, textAlign: "center" }}
                 />
-                <div className="mx-auto flex max-w-full flex-wrap items-baseline justify-center gap-x-1" style={{ fontSize: tk.sz(9), color: "#444" }}>
+                <div className="mx-auto flex max-w-full flex-wrap items-baseline justify-center gap-x-1" style={{ fontSize: tk.sz(9), color: CV_INK_CONTACT }}>
                     <InlineText
                         value={d.header.email}
                         onChange={(v) => draft.patchHeader({ email: v })}
                         ariaLabel={t("fields.email")}
                         placeholder={t("fields.email")}
                         invalid={hasError("email")}
+                        describedBy={CV_HEADER_ERROR_ID}
                         type="email"
                         align="center"
                         className="w-48"
-                        style={{ fontSize: tk.sz(9), color: "#444" }}
+                        style={{ fontSize: tk.sz(9), color: CV_INK_CONTACT }}
                     />
-                    <span aria-hidden>·</span>
+                    {/* Separators mirror the PDF: shown only between two present fields. */}
+                    {hasText(d.header.email) && hasText(d.header.phone) ? <span aria-hidden>·</span> : null}
                     <InlineText
                         value={d.header.phone}
                         onChange={(v) => draft.patchHeader({ phone: v })}
@@ -600,9 +618,11 @@ export const A4Page = ({ draft, visibleKeys, design }: A4PageProps) => {
                         placeholder={t("fields.phone")}
                         align="center"
                         className="w-36"
-                        style={{ fontSize: tk.sz(9), color: "#444" }}
+                        style={{ fontSize: tk.sz(9), color: CV_INK_CONTACT }}
                     />
-                    <span aria-hidden>·</span>
+                    {hasText(d.header.location) && (hasText(d.header.email) || hasText(d.header.phone)) ? (
+                        <span aria-hidden>·</span>
+                    ) : null}
                     <InlineText
                         value={d.header.location}
                         onChange={(v) => draft.patchHeader({ location: v })}
@@ -610,51 +630,51 @@ export const A4Page = ({ draft, visibleKeys, design }: A4PageProps) => {
                         placeholder={t("fields.location")}
                         align="center"
                         className="w-40"
-                        style={{ fontSize: tk.sz(9), color: "#444" }}
+                        style={{ fontSize: tk.sz(9), color: CV_INK_CONTACT }}
                     />
                 </div>
                 {/* Header links */}
-                <div className="mt-0.5 flex flex-col items-center" style={{ fontSize: tk.sz(9), color: "#444" }}>
+                <div className="mt-0.5 flex flex-col items-center" style={{ fontSize: tk.sz(9), color: CV_INK_CONTACT }}>
                     {d.header.links.map((link, index) => (
                         <div key={link._id} className="group/link flex items-baseline gap-1">
                             <InlineText
                                 value={link.label ?? ""}
                                 onChange={(v) => draft.updateLink(index, { label: v })}
-                                ariaLabel={t("fields.linkLabel")}
+                                ariaLabel={`${t("fields.linkLabel")} ${index + 1}`}
                                 placeholder={t("fields.linkLabel")}
                                 align="center"
                                 className="w-24"
-                                style={{ fontSize: tk.sz(9), color: "#444" }}
+                                style={{ fontSize: tk.sz(9), color: CV_INK_CONTACT }}
                             />
                             <span aria-hidden>:</span>
                             <InlineText
                                 value={link.url ?? ""}
                                 onChange={(v) => draft.updateLink(index, { url: v })}
-                                ariaLabel={t("fields.linkUrl")}
+                                ariaLabel={`${t("fields.linkUrl")} ${index + 1}`}
                                 placeholder={t("fields.linkUrl")}
                                 align="center"
                                 className="w-48"
-                                style={{ fontSize: tk.sz(9), color: "#444" }}
+                                style={{ fontSize: tk.sz(9), color: CV_INK_CONTACT }}
                             />
                             <Button
                                 isIconOnly
                                 size="sm"
                                 variant="tertiary"
-                                aria-label={t("actions.remove")}
+                                aria-label={`${t("actions.remove")} ${index + 1}`}
                                 className="opacity-0 transition-opacity focus:opacity-100 group-hover/link:opacity-100"
                                 onPress={() => draft.removeLink(index)}
                             >
-                                <TrashIcon aria-hidden focusable="false" className="size-3.5" />
+                                <TrashIcon aria-hidden focusable="false" className="size-4" />
                             </Button>
                         </div>
                     ))}
                     <Button
                         size="sm"
                         variant="tertiary"
-                        className="mt-0.5 px-1 text-foreground-500"
+                        className="mt-0.5 px-1 text-black/50"
                         onPress={draft.addLink}
                     >
-                        <PlusIcon aria-hidden focusable="false" className="size-3.5" />
+                        <PlusIcon aria-hidden focusable="false" className="size-4" />
                         {t("actions.addLink")}
                     </Button>
                 </div>

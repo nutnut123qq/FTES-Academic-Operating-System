@@ -3258,6 +3258,7 @@
         "reviewThisCv": "Đưa CV này đi review",
         "exportPdf": "Xuất PDF",
         "pdfUntitled": "CV của tôi",
+        "exportError": "Không xuất được PDF. Vui lòng thử lại.",
         "uploadCta": "Chọn hoặc kéo thả file",
         "uploadHint": "PDF hoặc DOCX, tối đa 10MB",
         "uploadError": {
@@ -3301,13 +3302,18 @@
           "moveUp": "Đưa mục {section} lên trên",
           "moveDown": "Đưa mục {section} xuống dưới",
           "show": "Hiện mục {section}",
-          "hide": "Ẩn mục {section}"
+          "hide": "Ẩn mục {section}",
+          "visibility": "Bật/tắt hiển thị mục {section}"
         },
         "inline": {
           "addBullet": "Thêm dòng",
           "removeBullet": "Xóa dòng",
           "addTech": "Thêm công nghệ",
-          "addSkill": "Thêm kỹ năng"
+          "addSkill": "Thêm kỹ năng",
+          "dragEntry": "Kéo để sắp xếp {section} mục {index}",
+          "moveEntryUp": "Đưa {section} mục {index} lên trên",
+          "moveEntryDown": "Đưa {section} mục {index} xuống dưới",
+          "removeEntry": "Xóa {section} mục {index}"
         }
       },
       "planner": {

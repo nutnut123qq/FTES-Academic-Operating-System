@@ -26,7 +26,7 @@ import {
     TrophyIcon,
     UsersIcon,
 } from "@phosphor-icons/react"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import Image from "next/image"
 import { useParams } from "next/navigation"
 import { useSWRConfig } from "swr"
@@ -49,6 +49,7 @@ import { useCourseEnrollment } from "../hooks/useCourseEnrollment"
 import { useQueryCoursePackagesSwr } from "../hooks/useQueryCoursePackagesSwr"
 import { WholeCourseGateCard } from "../PackageGateModal"
 import { resolveTierLabel } from "../tierLabels"
+import { pathConfig } from "@/resources/path"
 import { CourseRatings } from "./CourseRatings"
 import { SelectableCardGroup } from "@/components/blocks/navigation/SelectableCardGroup"
 import { PriceTag } from "@/components/blocks/commerce/PriceTag"
@@ -954,9 +955,15 @@ export const PackageEnrollCard = ({
     onPurchased,
 }: PackageEnrollCardProps) => {
     const t = useTranslations("courseSystem")
+    const locale = useLocale()
     const { packages, isLoading, isError, isEmpty, retry } = useQueryCoursePackagesSwr(course.rawId, {
         enabled: !isEnrolled,
     })
+
+    // Where the post-purchase "start learning" CTA sends the buyer — this course's
+    // `/learn` page, matching the enroll-CTA path (useCourseEnrollment) so a package
+    // buy cheers with the same "Bắt đầu học ngay" button as a plain enroll.
+    const learnHref = pathConfig().locale(locale).course(course.id).learn().build()
 
     // Default selection = the flagged default package, else the first (the hook
     // already sorts by sortOrder). Derived (not effect-synced) so it settles the
@@ -1007,6 +1014,9 @@ export const PackageEnrollCard = ({
                 title: `${course.name} · ${selectedPackage.name}`,
                 amountVnd: product.priceVnd ?? 0,
                 amountCoin: product.priceCoin ?? undefined,
+                // On success the modal cheers and offers "start learning" into this
+                // course's content — same as the plain enroll CTA (useCourseEnrollment).
+                learnHref,
             })
         } catch {
             // add-to-cart failed → SWR surfaces the error; leave the CTA idle
@@ -1124,8 +1134,8 @@ export const PackageEnrollCard = ({
                                     ? null
                                     : fullCourseLabel
                                 : count > 0
-                                  ? t("detail.package.entitlementSummary", { count })
-                                  : null
+                                    ? t("detail.package.entitlementSummary", { count })
+                                    : null
                             const isSelected = pkg.id === selectedId
                             return {
                                 value: pkg.id,

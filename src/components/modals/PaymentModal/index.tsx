@@ -4,15 +4,16 @@ import React, { useEffect, useState } from "react"
 import { Button, Chip, Modal, Typography, cn } from "@heroui/react"
 import { useFormatter, useTranslations } from "next-intl"
 import { useSWRConfig } from "swr"
+import { useRouter } from "next/navigation"
 import {
     BankIcon,
-    CheckCircleIcon,
     CircleNotchIcon,
     CoinsIcon,
     XCircleIcon,
 } from "@phosphor-icons/react"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 import { isPaidOrderStatus } from "@/modules/api/rest/commerce"
+import { MascotBubble } from "@/components/reuseable/FtesMascot"
 import { usePaymentOverlayState } from "@/hooks/zustand/overlay/hooks"
 import { usePostCheckoutSwr } from "@/hooks/swr/api/rest/mutations/usePostCheckoutSwr"
 import { usePostValidateCouponSwr } from "@/hooks/swr/api/rest/mutations/usePostValidateCouponSwr"
@@ -40,6 +41,7 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
     const t = useTranslations("payment")
     const format = useFormatter()
     const { mutate } = useSWRConfig()
+    const router = useRouter()
 
     const checkoutSwr = usePostCheckoutSwr()
     const couponSwr = usePostValidateCouponSwr()
@@ -199,7 +201,20 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
                                 <AwaitingView t={t} format={format} qrCode={qrCode} amount={netVnd} />
                             ) : null}
 
-                            {phase === "success" ? <SuccessView t={t} onDone={close} /> : null}
+                            {phase === "success" ? (
+                                <SuccessView
+                                    t={t}
+                                    onDone={close}
+                                    onLearn={
+                                        context.learnHref
+                                            ? () => {
+                                                close()
+                                                router.push(context.learnHref as string)
+                                            }
+                                            : undefined
+                                    }
+                                />
+                            ) : null}
 
                             {phase === "failed" ? (
                                 <FailedView t={t} onRetry={() => setPhase("choose")} onClose={close} />
@@ -389,14 +404,39 @@ const AwaitingView = ({
     </div>
 )
 
-/** Paid: success confirmation. */
-const SuccessView = ({ t, onDone }: { t: Tr; onDone: () => void }) => (
-    <div className="flex flex-col items-center gap-4 py-4">
-        <CheckCircleIcon weight="fill" className="size-14 text-success" aria-hidden />
-        <Typography type="body" weight="bold">
-            {t("checkout.success")}
-        </Typography>
-        <Button variant="primary" onPress={onDone} fullWidth>
+/**
+ * Paid: FrosTES cheers the completed purchase (cheer pose) and — for a course
+ * enrollment (`onLearn` set) — offers a CTA straight into the course content.
+ * Non-course checkouts (cart / marketplace) get the same congratulations without
+ * the learn CTA. The celebration is transient (it lives inside the checkout modal
+ * the user dismisses), so it needs no persistence guard. Reduced motion is handled
+ * inside {@link MascotBubble} / FtesMascot.
+ */
+const SuccessView = ({
+    t,
+    onDone,
+    onLearn,
+}: {
+    t: Tr
+    onDone: () => void
+    onLearn?: () => void
+}) => (
+    <div className="flex flex-col gap-4 py-1">
+        <MascotBubble
+            pose="cheer"
+            size="md"
+            title={t("mascotSuccess.title")}
+            actions={
+                onLearn ? (
+                    <Button variant="primary" onPress={onLearn}>
+                        {t("mascotSuccess.learn")}
+                    </Button>
+                ) : null
+            }
+        >
+            {t("mascotSuccess.body")}
+        </MascotBubble>
+        <Button variant={onLearn ? "ghost" : "primary"} onPress={onDone} fullWidth>
             {t("checkout.done")}
         </Button>
     </div>

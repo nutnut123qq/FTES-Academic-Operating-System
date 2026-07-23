@@ -1,9 +1,16 @@
 {
   "mascot": {
-    "name": "Tesu",
+    "name": "FrosTES",
     "dismiss": "Bỏ qua",
     "greeting": {
-      "guest": "Chào bạn! Mình là Tesu. Đăng nhập để mình đồng hành cùng bạn nhé."
+      "guest": "Chào bạn! Mình là FrosTES. Đăng nhập để mình đồng hành cùng bạn nhé.",
+      "home": {
+        "welcomeTitle": "Chào mừng trở lại, {name}!",
+        "welcomeTitleNoName": "Chào mừng trở lại!",
+        "welcomeBody": "Cùng FrosTES tiếp tục hành trình học của bạn nhé.",
+        "guestTitle": "Xin chào! Mình là FrosTES.",
+        "guestBody": "Khám phá các khóa học và bắt đầu hành trình của bạn cùng mình nhé."
+      }
     },
     "nudge": {
       "completeProfile": {
@@ -2567,6 +2574,11 @@
       "failedHint": "Không thể xử lý thanh toán. Vui lòng thử lại.",
       "retry": "Thử lại",
       "close": "Đóng"
+    },
+    "mascotSuccess": {
+      "title": "Chúc mừng!",
+      "body": "Thanh toán thành công. Cùng FrosTES bắt đầu học ngay nhé!",
+      "learn": "Bắt đầu học ngay"
     }
   },
   "aiProcessing": {
@@ -6089,6 +6101,10 @@
       "videoUnavailable": "Không thể phát video này.",
       "markComplete": "Đánh dấu hoàn thành",
       "completed": "Đã hoàn thành",
+      "celebration": {
+        "title": "Hoàn thành bài học!",
+        "body": "Làm tốt lắm! Cùng FrosTES tiếp tục sang bài tiếp theo nhé."
+      },
       "ai": {
         "open": "Mở trợ giảng AI",
         "close": "Đóng",

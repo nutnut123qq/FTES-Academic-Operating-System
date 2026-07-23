@@ -112,6 +112,9 @@ export const useCourseEnrollment = (
                     title: buy?.title ?? "",
                     amountVnd: product.priceVnd ?? 0,
                     amountCoin: product.priceCoin ?? undefined,
+                    // On success the modal cheers and offers "start learning" straight
+                    // into this course's content (mirrors onContinueLearning's route).
+                    learnHref,
                 })
             } catch {
                 // add-to-cart failed → SWR surfaces the error; leave the CTA idle

@@ -22,4 +22,11 @@ export interface PaymentContext {
      * Use this to revalidate gated data (e.g. lesson content/stream) without a reload.
      */
     onSuccess?: () => void
+    /**
+     * Optional "start learning" destination for a course purchase. When set, the
+     * success step shows a cheering-mascot congratulations with a CTA that routes
+     * here (the course's `/learn` page). Omit for cart / non-course checkouts — the
+     * success step then congratulates without the learn CTA.
+     */
+    learnHref?: string
 }

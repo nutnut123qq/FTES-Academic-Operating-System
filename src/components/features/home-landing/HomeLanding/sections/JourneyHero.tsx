@@ -9,6 +9,7 @@ import { useRouter } from "@/i18n/navigation"
 import { JourneyFallback } from "@/components/blocks/marketing/UserJourneyScene/JourneyFallback"
 import type { JourneyStationLabel } from "@/components/blocks/marketing/UserJourneyScene/types"
 import { JOURNEY_STATIONS } from "../content"
+import { HomeMascotGreeting } from "./HomeMascotGreeting"
 
 /** Auto-advance dwell per stage (ms); the payoff stage dwells longer. */
 const ADVANCE_MS = 3200
@@ -125,6 +126,8 @@ export const JourneyHero = () => {
         <section className="mx-auto grid w-full max-w-6xl grid-cols-1 items-center gap-6 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:py-24">
             {/* text column */}
             <div className="flex flex-col items-start gap-6 text-left">
+                {/* FrosTES welcome — the page's single mascot (ambient hero chrome) */}
+                <HomeMascotGreeting />
                 <Chip variant="soft" color="accent" size="sm">
                     {t("hero.eyebrow")}
                 </Chip>

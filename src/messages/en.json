@@ -1,9 +1,16 @@
 {
   "mascot": {
-    "name": "Tesu",
+    "name": "FrosTES",
     "dismiss": "Dismiss",
     "greeting": {
-      "guest": "Hi, I'm Tesu! Sign in and I'll keep you company along the way."
+      "guest": "Hi, I'm FrosTES! Sign in and I'll keep you company along the way.",
+      "home": {
+        "welcomeTitle": "Welcome back, {name}!",
+        "welcomeTitleNoName": "Welcome back!",
+        "welcomeBody": "Let's pick your learning journey back up together.",
+        "guestTitle": "Hi, I'm FrosTES!",
+        "guestBody": "Explore the courses and start your journey with me."
+      }
     },
     "nudge": {
       "completeProfile": {
@@ -2558,6 +2565,11 @@
       "failedHint": "Could not process the payment. Please try again.",
       "retry": "Try again",
       "close": "Close"
+    },
+    "mascotSuccess": {
+      "title": "Congratulations!",
+      "body": "Payment complete. Let's start learning with FrosTES right away!",
+      "learn": "Start learning"
     }
   },
   "aiProcessing": {
@@ -6089,6 +6101,10 @@
       "videoUnavailable": "This video can't be played.",
       "markComplete": "Mark as complete",
       "completed": "Completed",
+      "celebration": {
+        "title": "Lesson complete!",
+        "body": "Nice work! Keep the momentum going with FrosTES on the next lesson."
+      },
       "ai": {
         "open": "Open AI tutor",
         "close": "Close",

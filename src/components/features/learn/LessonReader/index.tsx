@@ -44,6 +44,7 @@ import { SelectionHintCallout } from "./ContentAiSelectionAsk/SelectionHintCallo
 import { LessonAiStudy } from "./LessonAiStudy"
 import { LessonAssignmentBlock } from "./LessonAssignmentBlock"
 import { LessonQuizBlock } from "./LessonQuizBlock"
+import { LessonCompleteCelebration } from "./LessonCompleteCelebration"
 import { PackageGateModal } from "@/components/features/course/PackageGateModal"
 import { DocumentReader } from "@/components/features/learn/DocumentReader"
 
@@ -98,6 +99,15 @@ export const LessonReader = () => {
     const [view, setView] = useState<ContentView>("content")
     const [lang, setLang] = useState("typescript")
     const [gateOpen, setGateOpen] = useState(false)
+    /**
+     * Content id whose completion cheer should show. Set only on the learner-driven
+     * video ≥50% completion so the transient cheer renders BESIDE the player (where
+     * the learner is looking) rather than at the bottom completion block below the
+     * fold. Gated on `=== contentId` so it self-clears when navigating to another
+     * lesson.
+     */
+    const [celebratedId, setCelebratedId] = useState<string | null>(null)
+    const handleCelebrate = useCallback(() => setCelebratedId(contentId), [contentId])
 
     // Auto-completion wiring. The video player reports ≥50% watched via
     // `handleHalfWatched`; the per-lesson (keyed) <LessonCompletion> registers its
@@ -311,6 +321,12 @@ export const LessonReader = () => {
                                     onPurchased={() => { void mutate() }}
                                 />
                             ) : null}
+                            {/* completion cheer anchored beside the player — this fires on the
+                                video ≥50% path, so the learner is looking here, not at the bottom
+                                completion block. Keyed match self-clears on lesson change. */}
+                            {celebratedId === contentId ? (
+                                <LessonCompleteCelebration lessonId={contentId} className="mx-auto w-full max-w-3xl" />
+                            ) : null}
                             <LessonDocumentsBlock lessonId={contentId} />
 
                             {/* reading card — DOCUMENT lessons get the dedicated DocumentReader
@@ -429,6 +445,7 @@ export const LessonReader = () => {
                                         hasVideo={lesson.hasVideo}
                                         isCompleted={lesson.isCompleted}
                                         registerFire={registerFire}
+                                        onCelebrate={handleCelebrate}
                                         className="mx-auto w-full max-w-3xl"
                                     />
                                     {/* on-demand AI study tools (note + flashcards) grounded on
@@ -502,12 +519,20 @@ const LessonCompletion = ({
     hasVideo,
     isCompleted,
     registerFire,
+    onCelebrate,
     className,
 }: {
     contentId: string
     hasVideo: boolean
     isCompleted: boolean
     registerFire: (fn: (() => void) | null) => void
+    /**
+     * Fired ONCE on a learner-driven, on-page completion (video ≥50%) so the parent
+     * can render the transient cheer beside the player. Never called on the
+     * server-seeded / late-flip already-complete path, so revisiting a finished
+     * lesson never re-celebrates.
+     */
+    onCelebrate?: () => void
     className?: string
 }) => {
     const t = useTranslations("learn")
@@ -522,7 +547,7 @@ const LessonCompletion = ({
     const triggerRef = useRef(mark.trigger)
     triggerRef.current = mark.trigger
 
-    const fire = useCallback(async () => {
+    const fire = useCallback(async (opts?: { celebrate?: boolean }) => {
         // NEVER send if the lesson is already complete (server-seeded) or we already sent.
         if (completedRef.current || firedRef.current) {
             return
@@ -531,16 +556,24 @@ const LessonCompletion = ({
         try {
             await triggerRef.current(contentId)
             setCompleted(true)
+            // Celebrate only when the completion happened WHILE the learner is on the
+            // page (video ≥50%) — the exit-fire path (document lessons) unmounts this
+            // component, so there is nothing to cheer to. The parent renders the cheer
+            // beside the player; the transient itself caps to once per lesson via persistence.
+            if (opts?.celebrate) {
+                onCelebrate?.()
+            }
             // Revalidate any mounted course-progress query (the rail lives in another tree).
             await globalMutate((key) => Array.isArray(key) && key[0] === "GET_COURSE_PROGRESS")
         } catch {
             firedRef.current = false
         }
-    }, [contentId])
+    }, [contentId, onCelebrate])
 
     // Register this lesson's guarded fire so the video player's ≥50% signal reaches it.
+    // This is the on-page path, so it opts into the completion cheer.
     useEffect(() => {
-        registerFire(() => void fire())
+        registerFire(() => void fire({ celebrate: true }))
         return () => registerFire(null)
     }, [registerFire, fire])
 
@@ -572,16 +605,20 @@ const LessonCompletion = ({
         }
     }, [hasVideo, fire])
 
-    // No manual CTA — just a small, unobtrusive "already completed" indicator.
+    // No manual CTA — just a small, unobtrusive "already completed" indicator. The
+    // transient cheer for an on-page completion is rendered by the parent beside the
+    // player (see `onCelebrate`), not here at the bottom of the lesson.
     if (!completed) {
         return null
     }
     return (
-        <div className={cn("flex items-center justify-center gap-2 text-success", className)}>
-            <CheckCircleIcon aria-hidden focusable="false" weight="fill" className="size-5" />
-            <Typography type="body-sm" weight="medium">
-                {t("reader.completed")}
-            </Typography>
+        <div className={cn("flex flex-col gap-4", className)}>
+            <div className="flex items-center justify-center gap-2 text-success">
+                <CheckCircleIcon aria-hidden focusable="false" weight="fill" className="size-5" />
+                <Typography type="body-sm" weight="medium">
+                    {t("reader.completed")}
+                </Typography>
+            </div>
         </div>
     )
 }

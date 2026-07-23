@@ -19,6 +19,14 @@ export interface MascotCelebrationProps {
     title: React.ReactNode
     /** Supporting congratulations copy (already translated). */
     body: React.ReactNode
+    /**
+     * When set, the celebration also fades itself out after this many ms — a
+     * transient cheer rather than a banner that waits for a dismiss. The manual ×
+     * stays regardless, so the learner can still close it early.
+     */
+    autoHideMs?: number
+    /** Class on the outer wrapper (e.g. spacing when embedded in a flow). */
+    className?: string
 }
 
 /**
@@ -27,13 +35,24 @@ export interface MascotCelebrationProps {
  * on the shared {@link MascotBubble} (cheer pose) so the celebration reads in the
  * mascot's voice and its copy is announced via the bubble's `aria-live` region.
  *
- * Renders nothing on the server, when already shown today, or after dismissal —
- * keeping the anti-nag guarantee (one mascot, one time). See
+ * Pass {@link MascotCelebrationProps.autoHideMs} to make it a transient cheer that
+ * also fades itself out after a delay (the manual × dismiss stays either way).
+ *
+ * Renders nothing on the server, when already shown today, after dismissal, or
+ * (with `autoHideMs`) after it has faded — keeping the anti-nag guarantee (one
+ * mascot, one time). Never stacks on a running guided tour, holding off WITHOUT
+ * stamping so it can still fire once the tour ends. See
  * `openspec/changes/onboarding-mascot-guide` (mascot moments).
  *
  * @param props - {@link MascotCelebrationProps}
  */
-export const MascotCelebration = ({ id, title, body }: MascotCelebrationProps) => {
+export const MascotCelebration = ({
+    id,
+    title,
+    body,
+    autoHideMs,
+    className,
+}: MascotCelebrationProps) => {
     const t = useTranslations()
     // Anti-nag: never stack on top of a running guided tour (one mascot on screen).
     const { isActive: tourActive } = useTour()
@@ -51,9 +70,16 @@ export const MascotCelebration = ({ id, title, body }: MascotCelebrationProps) =
         setVisible(true)
     }, [id, tourActive])
 
+    // Optional self-hide — a transient cheer should pass, not linger.
+    useEffect(() => {
+        if (!visible || !autoHideMs) return
+        const timer = window.setTimeout(() => setVisible(false), autoHideMs)
+        return () => window.clearTimeout(timer)
+    }, [visible, autoHideMs])
+
     if (!visible) return null
 
-    return (
+    const banner = (
         <div className="rounded-2xl border border-success/40 bg-success/5 p-3">
             <MascotBubble
                 pose="cheer"
@@ -74,4 +100,6 @@ export const MascotCelebration = ({ id, title, body }: MascotCelebrationProps) =
             </MascotBubble>
         </div>
     )
+
+    return className ? <div className={className}>{banner}</div> : banner
 }

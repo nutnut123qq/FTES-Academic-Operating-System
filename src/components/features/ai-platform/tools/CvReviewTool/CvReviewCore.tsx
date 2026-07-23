@@ -8,7 +8,7 @@ import { ExtendedTabs } from "@/components/blocks/navigation/ExtendedTabs"
 import { useAiToolJob } from "../../hooks/useAiToolJob"
 import { AiJobFeedback } from "../AiToolResult"
 import type { CvReviewResult } from "../types"
-import { CvBuilderForm } from "./CvBuilderForm"
+import { CvLiveEditor } from "./CvLiveEditor"
 import { CvUploadTab } from "./CvUploadTab"
 import { CvReviewResultPanel } from "./CvReviewResultPanel"
 
@@ -56,7 +56,7 @@ export const CvReviewCore = () => {
 
             <div className="mt-2">
                 {tab === "builder" ? (
-                    <CvBuilderForm
+                    <CvLiveEditor
                         onReview={(cvProfileId) => submitReview({ cvProfileId })}
                         isReviewBusy={job.isBusy}
                     />

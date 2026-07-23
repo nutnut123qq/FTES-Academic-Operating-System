@@ -30,14 +30,21 @@
       "thờ igian" → "thời gian" ở `courseSystem.preview.gate.titleVideo` (vi.json)
 
 ## 4. Test & fix (chạy ngay sau implement)
-> 4.1–4.3 CHỜ SMOKE SERVER: cần BE `freemium-youtube-preview-gate` deploy lên apitest
-> (stream trả `videoRef` cho PREVIEW) + acc chưa-mua/đã-mua. Logic đã verify bằng code
-> (đọc code path gate bền + overlay + fallback). 4.4 (tsc/build) chạy ngay.
-- [ ] 4.1 E2E: acc chưa mua mở bài PREVIEW video YouTube → xem đúng previewSeconds → pause +
-      modal tự mở; đóng modal → overlay che, play/click không phát tiếp, CTA mở lại modal;
-      seek quá mốc bị kéo về
-- [ ] 4.2 E2E: acc đã mua (FULL) → xem hết, không chip/gate/overlay
-- [ ] 4.3 Regression: DOCUMENT PREVIEW teaser + paywall như cũ; HLS PREVIEW như cũ
+> **SUPERSEDED bởi BE `preview-youtube-ref-gate` (c08425c 2026-07-22)**: BE cố ý trả
+> `videoRef:null` cho mọi PREVIEW YouTube → nhánh client-gate (đếm previewSeconds/pause/
+> seek-clamp) là dead-path môi trường thật. 4.1 = N/A-superseded; mục tiêu bảo mật đạt qua
+> đường thay thế (không mount iframe + paywall) — verify OK 2026-07-23.
+- [~] 4.1 **N/A-superseded** — E2E core-gate (acc chưa mua: previewSeconds→pause+modal→overlay
+      →play/seek không bypass) KHÔNG chạy được vì BE không giao ref PREVIEW nên player không
+      mount để mà gate. Hành vi thay thế đã verify: PREVIEW YT không rò iframe ref + paywall/
+      modal đúng (nhánh "no ref → hide + CTA" của spec req 1 & 2). Client-gate giữ trong code
+      cho tương lai nếu BE bật lại ref.
+- [x] 4.2 E2E: FULL không gate — verify OK (FULL YouTube + FULL HLS phát bình thường, không
+      chip/gate/overlay). Ghi chú: acc FULL trên đúng khoá-test YouTube bị BLOCKED-DATA nên
+      "xem tới hết" không chạy trên chính khoá đó, nhưng invariant "FULL → không gate" đã
+      xác nhận qua đường thay thế.
+- [x] 4.3 Regression: DOCUMENT PREVIEW teaser + paywall như cũ — verify OK 2026-07-23; HLS
+      PREVIEW đường cũ không đổi (usePreviewGate dùng chung, hành vi giữ nguyên).
 - [x] 4.4 `tsc --noEmit` sạch + `npm run build` (webpack) xanh; fail thì fix trong vòng này
 
 ## Backlog (đánh giá ghi lại, không chặn)
@@ -51,4 +58,4 @@
 ## Nghiệm thu E2E 2026-07-23 (spec e2e/learn-preview-player-gate.spec.ts, 4/4 scenario chạy được đều xanh)
 - Kịch bản lõi (đếm previewSeconds/pause/seek-clamp) KHÔNG chạy được trên apitest: BE change preview-youtube-ref-gate (c08425c, 2026-07-22) CỐ Ý trả videoRef:null cho mọi PREVIEW → client-gate thành dead-path môi trường thật. Hành vi thay thế verify OK: không rò iframe, paywall+modal đúng; FULL YT + FULL HLS không gate; DOCUMENT PREVIEW regression OK.
 - Acc FULL trên khoa-test YT: BLOCKED-DATA.
-- Đề nghị: đánh dấu tasks 4.1/4.2 superseded bởi preview-youtube-ref-gate rồi đóng sổ, hoặc giữ chờ BE bật lại ref PREVIEW.
+- QUYẾT ĐỊNH (2026-07-23): đóng sổ **SUPERSEDED** bởi preview-youtube-ref-gate, KHÔNG chờ BE bật lại ref PREVIEW (hành vi thay thế no-ref+paywall mạnh hơn). Xem "Status — SUPERSEDED" ở proposal.md. Backlog B.2 (đánh giá vòng 2 chờ BE ref) trở nên moot theo quyết định này.

@@ -1,5 +1,23 @@
 # learn-preview-player-gate — Gate xem thử video YouTube: đúng previewSeconds, tự bật modal, overlay khoá
 
+## Status — SUPERSEDED (implemented, archived)
+
+**Superseded by `preview-youtube-ref-gate` (BE, FTES-AOS-Backend, commit c08425c 2026-07-22).**
+BE change này CỐ Ý không trả `videoRef` cho MỌI lesson PREVIEW YouTube nữa (`videoRef: null`)
+→ client-gate đếm `previewSeconds`/pause/seek-clamp trở thành **dead-path** ở môi trường thật:
+stream không bao giờ giao ref cho FE để mà mount player rồi mới gate.
+
+Hành vi **thay thế** (đã chạy, verify OK trên apitest 2026-07-23) **mạnh hơn về bảo mật**:
+PREVIEW YouTube rơi vào nhánh "không có ref → KHÔNG mount iframe" của chính change này
+(iframe ref không bao giờ rò ra client) + hiện thẳng paywall/CTA enroll. Tức mục tiêu gốc
+("chặn xem hết + charge") đạt được ở tầng server-cut-ref thay vì client-side timer — không
+còn bề mặt để user bấm play lại/seek/bypass. **Quyết định: đóng sổ superseded, KHÔNG chờ BE
+bật lại ref PREVIEW.**
+
+Phần FE của change vẫn được implement đầy đủ và giữ nguyên trong code (mount-từ-stream-ref,
+gate bền, overlay khoá, no-ref → hide + paywall, fallback iframe-fail → enroll CTA). Khi/nếu
+BE sau này bật lại ref cho PREVIEW, nhánh client-gate sẽ tự kích hoạt mà không cần change mới.
+
 ## Why
 
 Bug thật user báo trên UI: bài "học thử" (PREVIEW) dạng video YouTube **cho xem HẾT video**,

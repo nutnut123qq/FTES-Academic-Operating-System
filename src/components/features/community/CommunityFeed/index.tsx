@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useCallback, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useState } from "react"
 import { Button, Skeleton, Typography } from "@heroui/react"
 import { useLocale, useTranslations } from "next-intl"
 import { useAppSelector } from "@/redux/hooks"
@@ -18,6 +18,11 @@ import {
     type CommunityFeedTab,
     type CommunityPost,
 } from "../hooks/useQueryCommunityFeedSwr"
+import {
+    useQueryCommunitySearchSwr,
+    CommunitySearchSort,
+} from "../hooks/useQueryCommunitySearchSwr"
+import { CommunityFilterBar } from "../CommunityFilterBar"
 import { useQueryPostCommentsSwr } from "../hooks/useQueryPostDetailSwr"
 import { useMutateReactPostSwr } from "../hooks/useMutateReactPostSwr"
 import { useMutateCreatePostCommentSwr, type SubmitCommentInput } from "../hooks/useMutateCreatePostCommentSwr"
@@ -173,37 +178,68 @@ const CommunityFeedRow = ({ post }: { post: CommunityPost }) => {
 export const CommunityFeed = ({ tab = "forYou" }: { tab?: CommunityFeedTab } = {}) => {
     const t = useTranslations("communityHub")
     const { open: openComposer } = useCommunityComposerOverlayState()
-    const { posts, isLoading, error, mutate } = useQueryCommunityFeedSwr(tab)
+
+    // Search/filter state. Typing a keyword or choosing a filter switches to search mode (global,
+    // all published posts) and replaces the tab feed; clearing everything returns to the tab feed.
+    const [query, setQuery] = useState("")
+    const [sort, setSort] = useState<CommunitySearchSort>(CommunitySearchSort.Newest)
+    const [postType, setPostType] = useState("")
+    // Debounce the keyword so the SWR key (and refetch) don't fire on every keystroke.
+    const [debouncedQuery, setDebouncedQuery] = useState("")
+    useEffect(() => {
+        const id = setTimeout(() => setDebouncedQuery(query), 300)
+        return () => clearTimeout(id)
+    }, [query])
+
+    const criteria = useMemo(
+        () => ({ q: debouncedQuery, sort, postType }),
+        [debouncedQuery, sort, postType],
+    )
+    const search = useQueryCommunitySearchSwr(criteria)
+    const feed = useQueryCommunityFeedSwr(tab)
+
+    const searching = search.active
+    const posts = searching ? search.posts : feed.posts
+    const isLoading = searching ? search.isLoading : feed.isLoading
+    const error = searching ? search.error : feed.error
+    const mutate = searching ? search.mutate : feed.mutate
 
     // CAMPUS tab is scoped to the viewer's campus (BE falls back to the profile campus).
     // When empty it usually means the viewer hasn't set a campus on their profile, so the
     // empty state guides them there instead of showing the generic "be the first to post".
     const isCampus = tab === "campus"
 
+    const emptyContent = searching
+        ? { title: t("search.resultsEmpty"), description: t("search.resultsEmptyHint") }
+        : isCampus
+            ? { title: t("feed.campusEmpty"), description: t("feed.campusEmptyHint") }
+            : {
+                icon: <FtesMascot pose="explain" size="lg" />,
+                title: t("feed.empty"),
+                description: t("feed.emptyHint"),
+                action: (
+                    <Button size="sm" variant="primary" onPress={openComposer}>
+                        {t("feed.emptyCompose")}
+                    </Button>
+                ),
+            }
+
     return (
         <div className="flex flex-col divide-y divide-separator">
             <ComposerTrigger />
+            <CommunityFilterBar
+                query={query}
+                onQueryChange={setQuery}
+                sort={sort}
+                onSortChange={setSort}
+                postType={postType}
+                onPostTypeChange={setPostType}
+            />
             <AsyncContent
                 isLoading={isLoading && posts.length === 0}
                 skeleton={<FeedSkeleton />}
                 isEmpty={posts.length === 0}
-                emptyContent={
-                    isCampus
-                        ? {
-                            title: t("feed.campusEmpty"),
-                            description: t("feed.campusEmptyHint"),
-                        }
-                        : {
-                            icon: <FtesMascot pose="explain" size="lg" />,
-                            title: t("feed.empty"),
-                            description: t("feed.emptyHint"),
-                            action: (
-                                <Button size="sm" variant="primary" onPress={openComposer}>
-                                    {t("feed.emptyCompose")}
-                                </Button>
-                            ),
-                        }
-                }
+                emptyContent={emptyContent}
                 error={posts.length === 0 ? error : undefined}
                 errorContent={{
                     title: t("feed.error"),

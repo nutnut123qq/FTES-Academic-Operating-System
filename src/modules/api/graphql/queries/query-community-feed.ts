@@ -84,8 +84,8 @@ export interface QueryCommunityFeedResponse {
     feed: FeedConnection
 }
 
-/** Post/author selection shared by every per-tab document. */
-const FEED_SELECTION = `
+/** Post/author selection shared by every per-tab document (+ reused by `communitySearch`). */
+export const FEED_SELECTION = `
   items {
     id
     kind

@@ -63,7 +63,7 @@ const toFeedTab = (tab: CommunityFeedTab): FeedTab => {
  * with `snippet`, `likeCount`, `likedByMe` and `commentCount`, so the card renders the
  * real excerpt and engagement instead of the previous "" / 0 / false placeholders.
  */
-const toCommunityPost = (post: FeedPost, locale: string): CommunityPost => ({
+export const toCommunityPost = (post: FeedPost, locale: string): CommunityPost => ({
     id: post.id,
     author: post.author.displayName ?? post.author.username ?? "",
     authorUsername: post.author.username ?? post.author.id,

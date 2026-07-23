@@ -5681,6 +5681,22 @@
       "emptyHint": "Hãy là người đầu tiên chia sẻ điều gì đó với cộng đồng.",
       "emptyCompose": "Đăng bài"
     },
+    "search": {
+      "placeholder": "Tìm bài viết theo tiêu đề, nội dung…",
+      "sortLabel": "Sắp xếp theo thời gian",
+      "sortNewest": "Mới nhất",
+      "sortOldest": "Cũ nhất",
+      "typeLabel": "Lọc theo loại bài",
+      "types": {
+        "all": "Tất cả",
+        "DISCUSSION": "Thảo luận",
+        "QUESTION": "Câu hỏi",
+        "PROJECT_SHOWCASE": "Dự án",
+        "KNOWLEDGE_SHARING": "Kiến thức"
+      },
+      "resultsEmpty": "Không tìm thấy bài viết phù hợp.",
+      "resultsEmptyHint": "Thử từ khoá khác hoặc bỏ bớt bộ lọc."
+    },
     "detail": {
       "comments": "{count} bình luận"
     },

@@ -1926,10 +1926,15 @@
     "sections": {
       "personal": "Cá nhân",
       "academic": "Học vấn",
+      "cv": "CV",
       "portfolio": "Hồ sơ",
       "certificates": "Chứng chỉ",
       "community": "Cộng đồng",
       "progress": "Tiến độ"
+    },
+    "cv": {
+      "title": "CV & đánh giá AI",
+      "description": "Tạo CV theo mẫu Harvard hoặc tải lên CV có sẵn, rồi nhận đánh giá từ AI. CV được lưu vào hồ sơ của bạn và có thể xuất ra file PDF."
     },
     "certificates": {
       "title": "Chứng chỉ của tôi",
@@ -3262,7 +3267,12 @@
         "reviewUpload": "Tải lên và đánh giá",
         "strengths": "Điểm mạnh",
         "improvements": "Cần cải thiện",
-        "sectionFeedback": "Nhận xét theo từng mục"
+        "sectionFeedback": "Nhận xét theo từng mục",
+        "loadError": {
+          "title": "Không tải được CV của bạn",
+          "description": "Chúng tôi không tải được CV đã lưu. Hãy thử lại — nếu lưu ngay lúc này sẽ ghi đè CV của bạn bằng biểu mẫu trống.",
+          "retry": "Thử lại"
+        }
       },
       "planner": {
         "myPlans": "Lộ trình của tôi",

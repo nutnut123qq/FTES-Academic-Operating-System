@@ -30,6 +30,7 @@ interface ProfileShellProps {
 const SECTIONS: Array<{ key: string; segment: string }> = [
     { key: "personal", segment: "" },
     { key: "academic", segment: "academic" },
+    { key: "cv", segment: "cv" },
     { key: "portfolio", segment: "portfolio" },
     { key: "certificates", segment: "certificates" },
     { key: "community", segment: "community" },

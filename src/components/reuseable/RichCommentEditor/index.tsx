@@ -343,25 +343,25 @@ export const RichCommentEditor = ({
                 <div className="flex shrink-0 items-center gap-1">
                     <span className="mx-1 h-5 w-px bg-default" aria-hidden />
                     <EmojiPicker
-                    emojiLabel={t("engagement.emojiPickerLabel")}
-                    onEmojiSelect={(emoji) => editor.chain().focus().insertContent(emoji).run()}
-                />
-                <StickerPicker
-                    stickerLabel={t("engagement.stickerPickerLabel")}
-                    stickers={stickers}
-                    onStickerSelect={insertSticker}
-                />
-                <Button
-                    isIconOnly
-                    size="sm"
-                    variant="primary"
-                    isDisabled={!canSubmit}
-                    isPending={isSubmitting}
-                    aria-label={t("engagement.commentSend")}
-                    onPress={() => void handleSubmit(editor)}
-                >
-                    <SendIcon aria-hidden focusable="false" className="size-4" />
-                </Button>
+                        emojiLabel={t("engagement.emojiPickerLabel")}
+                        onEmojiSelect={(emoji) => editor.chain().focus().insertContent(emoji).run()}
+                    />
+                    <StickerPicker
+                        stickerLabel={t("engagement.stickerPickerLabel")}
+                        stickers={stickers}
+                        onStickerSelect={insertSticker}
+                    />
+                    <Button
+                        isIconOnly
+                        size="sm"
+                        variant="primary"
+                        isDisabled={!canSubmit}
+                        isPending={isSubmitting}
+                        aria-label={t("engagement.commentSend")}
+                        onPress={() => void handleSubmit(editor)}
+                    >
+                        <SendIcon aria-hidden focusable="false" className="size-4" />
+                    </Button>
                 </div>
             </div>
         </div>

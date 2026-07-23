@@ -336,8 +336,8 @@ describe("DebugTool", () => {
     it("gives each language option a real collection id (picker-id fix)", () => {
         const { container } = render(<DebugTool />)
         // The value the picker feeds to onAction is the `id`, not the React `key`.
-        const python = container.querySelector('[data-item-id="python"]')
-        const sql = container.querySelector('[data-item-id="sql"]')
+        const python = container.querySelector("[data-item-id=\"python\"]")
+        const sql = container.querySelector("[data-item-id=\"sql\"]")
         expect(python?.textContent).toBe("python")
         expect(sql?.textContent).toBe("sql")
     })

@@ -26,7 +26,11 @@ import {
     type SubjectOverview as SubjectOverviewModel,
 } from "../hooks/useQuerySubjectOverviewSwr"
 import { useQuerySubjectSwr } from "../hooks/useQuerySubjectSwr"
+import { useQuerySubjectFeedSwr } from "../hooks/useQuerySubjectFeedSwr"
 import { getCourseIdentity } from "./course-identity"
+
+/** How many recent discussions to surface on the overview. */
+const RECENT_DISCUSSIONS = 5
 
 /** A linked course resolved for the "Khóa học của môn này" link-out card. */
 interface LinkedCourse {
@@ -63,6 +67,20 @@ export const SubjectOverview = () => {
     const router = useRouter()
     const { overview, error, mutate } = useQuerySubjectOverviewSwr(subjectId)
     const { subject, error: subjectError } = useQuerySubjectSwr(subjectId)
+    // "Recent discussions" are the REAL subject community feed (the workspace REST aggregate carries no
+    // posts — the overview hook returns []). Fetch the newest (FOR_YOU) via the same GraphQL the Discussion
+    // tab uses; needs the subject UUID (route param is the code), gated until `subject` resolves.
+    const { posts: subjectPosts } = useQuerySubjectFeedSwr(subject?.uuid ?? "", "forYou")
+    const recentPosts: Array<OverviewPost> = subjectPosts.slice(0, RECENT_DISCUSSIONS).map((post) => ({
+        id: post.id,
+        author: post.author,
+        authorUsername: post.authorUsername,
+        timeLabel: post.timeLabel,
+        title: post.title,
+        snippet: post.snippet,
+        reactions: post.reactions,
+        comments: post.comments,
+    }))
 
     const base = `/subjects/${subjectId}`
     // linked-course mapping (mock Subject.courseIds → identity); link-out only
@@ -85,6 +103,7 @@ export const SubjectOverview = () => {
                 {overview ? (
                     <OverviewView
                         overview={overview}
+                        recentPosts={recentPosts}
                         linkedCourses={linkedCourses}
                         onCompose={() => router.push(`${base}/discussion`)}
                         base={base}
@@ -98,11 +117,13 @@ export const SubjectOverview = () => {
 /** Presentation of the loaded overview. */
 const OverviewView = ({
     overview,
+    recentPosts,
     linkedCourses,
     onCompose,
     base,
 }: {
     overview: SubjectOverviewModel
+    recentPosts: Array<OverviewPost>
     linkedCourses: Array<LinkedCourse>
     onCompose: () => void
     base: string
@@ -181,14 +202,20 @@ const OverviewView = ({
                                 {t("overview.compose")}
                             </Button>
                         </div>
-                        {overview.posts.map((post, index) => (
-                            <PostRow
-                                key={post.id}
-                                post={post}
-                                withDivider={index > 0}
-                                discussionHref={`${base}/discussion`}
-                            />
-                        ))}
+                        {recentPosts.length > 0 ? (
+                            recentPosts.map((post, index) => (
+                                <PostRow
+                                    key={post.id}
+                                    post={post}
+                                    withDivider={index > 0}
+                                    discussionHref={`${base}/discussion`}
+                                />
+                            ))
+                        ) : (
+                            <Typography type="body-sm" color="muted">
+                                {t("overview.noDiscussions")}
+                            </Typography>
+                        )}
                     </div>
                 </div>
 

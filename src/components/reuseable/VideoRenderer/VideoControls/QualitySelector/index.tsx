@@ -100,6 +100,7 @@ export const QualitySelector = ({
             >
                 {allQualities.map((quality) => (
                     <DropdownItem key={String(quality.index)}>
+                    id={String(quality.index)}
                         {qualityLabel(quality)}
                     </DropdownItem>
                 ))}

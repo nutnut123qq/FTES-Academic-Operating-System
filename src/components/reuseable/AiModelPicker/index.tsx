@@ -80,6 +80,7 @@ export const AiModelPicker = ({
                 >
                     <DropdownItem
                         key="__default"
+                        id="__default"
                         textValue={t("codeGrading.defaultModel")}
                     >
                         <div className="flex flex-col">
@@ -96,6 +97,7 @@ export const AiModelPicker = ({
                         .map((model) => (
                             <DropdownItem
                                 key={String(model.id)}
+                                id={String(model.id)}
                                 textValue={model.label ?? model.id}
                             >
                                 <div className="flex items-center justify-between gap-3">

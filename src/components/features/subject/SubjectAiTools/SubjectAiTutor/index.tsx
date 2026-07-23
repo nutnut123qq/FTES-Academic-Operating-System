@@ -320,6 +320,7 @@ export const SubjectAiTutor = ({
                                 {MODELS.map((option) => (
                                     <DropdownItem
                                         key={option}
+                                        id={option}
                                         textValue={option}
                                     >
                                         {option}

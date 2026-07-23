@@ -45,6 +45,10 @@ export const loginAs = async (page: Page, role: Role): Promise<string> => {
     const token = await fetchToken(role)
     await page.context().addInitScript((t: string) => {
         window.localStorage.setItem("keycloak:access_token", t)
+        // Tour chào mừng (onboarding-mascot-guide) là modal z-[1000] chặn MỌI click trên
+        // trang đầu tiên chưa có cờ done — login programmatic không đi qua UI nên phải
+        // seed cờ, không thì mọi click sau đó treo "subtree intercepts pointer events".
+        window.localStorage.setItem("ftes.tour.onboarding.done", "1")
     }, token)
     await page.context().addCookies([
         { name: "session_hint", value: "1", domain: "localhost", path: "/" },

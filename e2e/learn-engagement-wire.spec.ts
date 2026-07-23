@@ -43,21 +43,29 @@ test.describe("learn-engagement-wire", () => {
         const token = await loginAs(page, "student")
 
         // Normalize: start from "not liked" so the toggle assertions are deterministic.
+        // Xoá với BẤT KỲ reaction nào còn sót (run trước có thể để lại loại khác "LIKE"),
+        // và poll tới khi server phản ánh null — DELETE rồi đọc ngay có thể dính cache/replica.
         const before = await fetchReactions(page, token)
-        if (before.myReaction === "LIKE") {
-            await page.request.delete(`${API_BASE}/courses/lessons/${LESSON_DOC}/reactions`, {
-                headers: { Authorization: `Bearer ${token}` },
-            })
+        if (before.myReaction !== null) {
+            // BE: DELETE /lessons/{id}/reactions/{reaction} — thiếu {reaction} → 405
+            const del = await page.request.delete(
+                `${API_BASE}/courses/lessons/${LESSON_DOC}/reactions/${before.myReaction}`,
+                { headers: { Authorization: `Bearer ${token}` } },
+            )
+            expect(del.status()).toBe(200)
         }
+        await expect
+            .poll(async () => (await fetchReactions(page, token)).myReaction, { timeout: 15_000 })
+            .toBeNull()
         const base = await fetchReactions(page, token)
-        expect(base.myReaction).toBeNull()
 
         await page.goto(READER_URL)
         // the lesson body must be up before we judge the footer's presence
         await expect(page.locator("#lesson-article, article").first()).toBeVisible({ timeout: 60_000 })
 
         // like: trigger opens the picker, picking "Thích" flips the control optimistically
-        const trigger = page.getByRole("button", { name: "Bày tỏ cảm xúc" })
+        // HeroUI popover-trigger bọc role=button quanh button thật → 2 element cùng name; lấy button thật
+        const trigger = page.getByRole("button", { name: "Bày tỏ cảm xúc" }).and(page.locator("button"))
         await expect(
             trigger,
             "REGRESSION: LessonReactionFooter không render — DOCUMENT lesson đi qua DocumentReader " +
@@ -71,13 +79,24 @@ test.describe("learn-engagement-wire", () => {
         await expect(
             page.locator("span.text-muted", { hasText: String(summary.viewCount) }).first(),
         ).toBeVisible({ timeout: 15_000 })
+        // Vòng like/unlike mutate state DÙNG CHUNG 1 account+lesson — 2 project song song
+        // (fullyParallel) giẫm nhau: PUT đấu DELETE cùng row → BE 500 (race tổng hợp, không phải
+        // hành vi user thật; DELETE tuần tự đã kiểm idempotent 200). Chạy round-trip ở desktop;
+        // mobile giữ assert footer + view count phía trên.
+        if (test.info().project.name === "mobile") return
         const putDone = page.waitForResponse(
             (res) => res.url().includes(`/lessons/${LESSON_DOC}/reactions`) && res.request().method() === "PUT",
         )
         await trigger.click()
-        await page.getByRole("dialog").getByRole("button", { name: "Thích" }).click()
-        // optimistic: the trigger relabels to the picked reaction immediately
-        const likedTrigger = page.getByRole("button", { name: "Thích", exact: true })
+        // exact: "Thích" khớp substring cả "Yêu thích" → strict-mode 2 element
+        await page.getByRole("dialog").getByRole("button", { name: "Thích", exact: true }).click()
+        // optimistic: the trigger relabels to the picked reaction immediately.
+        // Scope vào popover-trigger của footer: "Thích" còn xuất hiện ở nút like Q&A (aria-label)
+        // và item trong picker → match toàn trang dính strict-mode 9 element.
+        const likedTrigger = page
+            .locator("div[data-slot='popover-trigger']")
+            .filter({ hasText: /^Thích$/ })
+            .locator("button")
         await expect(likedTrigger).toBeVisible()
         expect((await putDone).status()).toBe(200)
         // server truth: like really persisted (+1)
@@ -90,8 +109,9 @@ test.describe("learn-engagement-wire", () => {
             (res) => res.url().includes(`/lessons/${LESSON_DOC}/reactions`) && res.request().method() === "DELETE",
         )
         await likedTrigger.click()
-        await page.getByRole("dialog").getByRole("button", { name: "Thích" }).click()
-        await expect(page.getByRole("button", { name: "Bày tỏ cảm xúc" })).toBeVisible()
+        // exact: "Thích" khớp substring cả "Yêu thích" → strict-mode 2 element
+        await page.getByRole("dialog").getByRole("button", { name: "Thích", exact: true }).click()
+        await expect(page.getByRole("button", { name: "Bày tỏ cảm xúc" }).and(page.locator("button"))).toBeVisible()
         expect((await deleteDone).status()).toBe(200)
         await expect
             .poll(async () => (await fetchReactions(page, token)).likeCount, { timeout: 15_000 })

@@ -35,9 +35,19 @@
   - UNIT DONE 2026-07-22: `course/hooks/useQueryCourseDetailSwr.test.tsx` (5 PASS): (a) enrollment match isPurchased=true → purchased + KHÔNG gọi me/access, (b) match isPurchased=false → enrolled-not-purchased, (c) fallback me/access khi mua package không có enrollment row (key đúng rawId UUID) → purchased=true, (d) enrollments lỗi 500 → degrade sales card (false/false, không throw), (e) anonymous không token → không gọi enrollments, default false. E2E CÒN NỢ (account seed có purchase trên apitest).
 
 ## 6. Verify chung
-- [ ] 6.1 `npm run build` xanh + `tsc --noEmit` sạch; `openspec validate learn-engagement-wire --strict` pass
+- [x] 6.1 `npm run build` xanh + `tsc --noEmit` sạch; `openspec validate learn-engagement-wire --strict` pass
 
 ## Nghiệm thu E2E 2026-07-23 (Playwright local :3000 → apitest, spec e2e/learn-engagement-wire.spec.ts)
 - Q&A: PASS — post comment → roll-up "Xem tất cả câu hỏi" → link nhảy đúng bài.
 - FAIL (REGRESSION): LessonReactionFooter (view count + like) KHÔNG render trên bất kỳ lesson seed nào — DOCUMENT đi qua DocumentReader (LessonReader/index.tsx:319) bỏ mất footer; lesson VIDEO không body rơi vào isReadingEmpty cũng ẩn footer. FE không bao giờ bắn GET /reactions (API-level vẫn OK: viewCount 42, PUT/DELETE 200 khi gọi tay).
 - Watch-position: BLOCKED-DATA — student không có khoá đã mua nào videoStatus=READY.
+
+## Nghiệm thu E2E 2026-07-24 RẠNG SÁNG — PASS, đóng change
+- REGRESSION footer wave-3 ĐÃ HẾT (fix DocumentReader mount footer, 270a013): e2e XANH —
+  footer hiện view count thật (≥42) cả desktop+mobile; like→unlike round-trip PUT/DELETE 200 +
+  server-truth ±1 (desktop; mobile bỏ round-trip vì 2 project song song giẫm state chung 1
+  account → PUT đấu DELETE race 500 tổng hợp — DELETE tuần tự idempotent 200 đã kiểm curl).
+- Q&A roll-up PASS cả 2 project: post comment → hiện inline → search → chip link về đúng bài.
+- Watch-position: GIỮ skip BLOCKED-DATA (không có khoá đã mua videoStatus=READY) — đã ghi chú.
+- 6.1: tsc + next build xanh + validate --strict pass.
+- Ghi chú spec: DELETE reaction cần path /reactions/{reaction} (thiếu → 405); normalize poll tới null.

@@ -86,6 +86,7 @@ export const MenuList = ({ className }: MenuListProps) => {
                     {!user.githubUsername ? (
                         <DropdownItem
                             key="link-github"
+                            id="link-github"
                             onPress={onLinkGithub}
                             className="py-3"
                         >
@@ -97,6 +98,7 @@ export const MenuList = ({ className }: MenuListProps) => {
                     ) : null}
                     <DropdownItem
                         key="bookmarks"
+                        id="bookmarks"
                         onPress={onOpenBookmarks}
                         className="py-3"
                     >
@@ -110,6 +112,7 @@ export const MenuList = ({ className }: MenuListProps) => {
             <DropdownSection>
                 <DropdownItem
                     key="language"
+                    id="language"
                     onPress={onOpenLanguage}
                     className="py-3"
                 >

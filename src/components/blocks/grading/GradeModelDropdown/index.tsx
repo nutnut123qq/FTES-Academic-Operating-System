@@ -165,6 +165,7 @@ export const GradeModelDropdown = ({
                         <DropdownSection>
                             <DropdownItem
                                 key="auto"
+                                id="auto"
                             >
                                 <div className="flex items-center gap-2">
                                     <span>{t("aiSettings.lanes.auto.title")}</span>
@@ -191,6 +192,7 @@ export const GradeModelDropdown = ({
                                     return (
                                         <DropdownItem
                                             key={key}
+                                            id={key}
                                             textValue={model.model}
                                         >
                                             <Tooltip>
@@ -213,6 +215,7 @@ export const GradeModelDropdown = ({
                                     return (
                                         <DropdownItem
                                             key={key}
+                                            id={key}
                                             textValue={model.model}
                                         >
                                             <Tooltip>
@@ -237,6 +240,7 @@ export const GradeModelDropdown = ({
                                     return (
                                         <DropdownItem
                                             key={key}
+                                            id={key}
                                             textValue={model.model}
                                         >
                                             <Tooltip>
@@ -261,6 +265,7 @@ export const GradeModelDropdown = ({
                                 return (
                                     <DropdownItem
                                         key={key}
+                                        id={key}
                                         textValue={model.model}
                                     >
                                         <div className="flex items-center justify-between gap-2">

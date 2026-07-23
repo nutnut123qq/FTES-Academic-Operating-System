@@ -217,6 +217,7 @@ export const GradeCodePanel = ({ challenge, className }: GradeCodePanelProps) =>
                                     {EXECUTABLE_LANGUAGES.map((lang) => (
                                         <DropdownItem
                                             key={lang}
+                                            id={lang}
                                             textValue={t(`codeGrading.languages.${lang}`)}
                                         >
                                             {t(`codeGrading.languages.${lang}`)}

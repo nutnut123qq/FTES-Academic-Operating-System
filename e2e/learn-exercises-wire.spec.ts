@@ -69,17 +69,27 @@ test.describe("learn-exercises-wire — assignment", () => {
         await expect(page.getByText("[DEMO] Viết parser nhỏ")).toBeVisible({ timeout: 60_000 })
 
         // If prior runs consumed all 5 slots, the locked state IS the wire working.
+        // Chờ MỘT trong hai trạng thái xuất hiện rồi mới rẽ nhánh — check isVisible() ngay khi
+        // panel còn loading sẽ rơi nhầm vào nhánh fill dù thật ra đã hết lượt (race mobile).
         const locked = page.getByText(/Bạn đã dùng hết \d+ lượt nộp/)
+        const urlInput = page.getByLabel("Đường dẫn GitHub")
+        await expect(locked.or(urlInput).first()).toBeVisible({ timeout: 60_000 })
         if (await locked.isVisible()) {
-            await expect(page.getByLabel("Đường dẫn GitHub")).toHaveCount(0)
+            await expect(urlInput).toHaveCount(0)
             return
         }
 
         await page.getByLabel("Đường dẫn GitHub").fill(`https://github.com/e2e/parser-${Date.now()}`)
+        // Slot có thể cạn GIỮA CHỪNG (project desktop chạy trước tiêu lượt cuối → attempts
+        // revalidate swap form thành khối "hết lượt" sau khi fill) — locked lúc này vẫn là
+        // wire đúng, không phải fail.
+        const submitBtn = page.getByRole("button", { name: "Nộp bài" })
+        await expect(submitBtn.or(locked).first()).toBeVisible({ timeout: 30_000 })
+        if (await locked.isVisible()) return
         const submitted = page.waitForResponse(
             (res) => res.url().includes("/submissions") && res.request().method() === "POST",
         )
-        await page.getByRole("button", { name: "Nộp bài" }).click()
+        await submitBtn.click()
         expect((await submitted).status()).toBe(200)
 
         await expect(page.getByText("Lịch sử nộp")).toBeVisible()
@@ -109,14 +119,15 @@ test.describe("learn-exercises-wire — challenge entry gating (4.7)", () => {
         await page.goto(reader("seed-sec-c1-s2", "seed-les-c1-s2-l1"))
         await expect(page.getByRole("heading", { name: "Con trỏ (video)" })).toBeVisible({ timeout: 60_000 })
 
-        // rail "practice this lesson" gated on the REAL challengeId
-        await expect(
-            page.getByRole("button", { name: "Vào thử thách" }).first(),
-            "BUG: GET /lessons/seed-les-c1-s2-l1/content 404s (LESSON_CONTENT_NOT_FOUND — video lesson, " +
-                "hasContent:false) và useQueryLearnLessonSwr chỉ đọc hasChallenge/challengeId từ endpoint content " +
-                "→ lesson KHÔNG có content row mất sạch entry point challenge dù course tree trả " +
-                "hasChallenge:true + challengeId 2222…b001.",
-        ).toBeVisible({ timeout: 15_000 })
+        // rail "practice this lesson" gated on the REAL challengeId — CHỈ desktop: rail
+        // OnThisPage là <aside> ẩn dưới lg, mobile vào bằng tab "Thử thách" (assert ngay dưới).
+        if (test.info().project.name !== "mobile") {
+            await expect(
+                page.getByRole("button", { name: "Vào thử thách" }).first(),
+                "BUG (đã fix 270a013): hasChallenge/challengeId phải map từ course tree — lesson VIDEO " +
+                    "không có content row (GET /content 404) vẫn phải hiện entry challenge.",
+            ).toBeVisible({ timeout: 15_000 })
+        }
 
         // challenges tab present; the view links to the REAL challenge id (no `-c` mock)
         await page.getByRole("tab", { name: "Thử thách" }).click()

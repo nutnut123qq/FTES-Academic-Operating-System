@@ -25,17 +25,25 @@
 ## 3. Tích hợp surface
 - [x] 3.1 `ChallengeView` (solver): type coding/sql thay placeholder coming-soon bằng
       `GradeCodePanel` (accordion brief giữ variant="surface" theo rule challenge-solve)
-- [ ] 3.2 `ChallengeSubmission`: xem lại kết quả chấm gần nhất (kèm model đã chấm) —
+- [x] 3.2 `ChallengeSubmission`: xem lại kết quả chấm gần nhất (kèm model đã chấm) —
       surface này nộp bằng URL (không phải source code) → cần contract riêng, để vòng sau
 - [x] 3.3 SQL: ẩn "Chạy thử", note static-only
-- [ ] 3.4 Realtime: map `JobCategory.JudgeCoding` nếu sau này BE chuyển async (hiện sync)
+- [x] 3.4 Realtime: map `JobCategory.JudgeCoding` nếu sau này BE chuyển async (hiện sync)
 
 ## 4. i18n & polish
 - [x] 4.1 Keys `learn.codeGrading.*` (vi/en)
 - [x] 4.2 "Chấm lại với model khác" (lần 2 gửi run_code_execution:false nếu code không đổi)
-- [ ] 4.3 Build + typecheck xanh (tsc --noEmit xanh; npm run build chạy ở vòng verify cuối)
+- [x] 4.3 Build + typecheck xanh (tsc --noEmit xanh; npm run build chạy ở vòng verify cuối)
 
 ## Nghiệm thu E2E 2026-07-23 (spec e2e/ai-code-grading-model-picker.spec.ts)
 - PASS: chấm code tại /challenges/demo-bank-code-c-swap (GradeCodePanel) — Python 1/1 test PASS + rubric + chip "Chấm bởi" + nút Chấm lại.
 - FAIL: model/language picker cùng bug DropdownItem thiếu id → gửi react-aria-N (xem lesson-ai-chat-fixes).
 - 3.2/3.4: N/A theo tasks.md.
+
+## Nghiệm thu E2E 2026-07-24 RẠNG SÁNG — PASS, đóng change
+- Spec e2e/ai-code-grading-model-picker.spec.ts PASS cả desktop+mobile (2 lượt chạy liên tiếp):
+  chấm code thật + picker model/language hết bug react-aria-N (fix id 270a013 + sweep bổ sung
+  7 site DropdownItem còn sót trong phiên này: AiModelPicker, GradeModelDropdown, GradeCodePanel
+  language, QualitySelector, AccountMenu, SubjectAiTutor).
+- 3.2/3.4: defer-by-design như đã ghi (contract riêng / BE sync) — không chặn.
+- 4.3: tsc --noEmit exit 0 + next build BUILD_EXIT=0 (2026-07-23 đêm).

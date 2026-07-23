@@ -3272,6 +3272,42 @@
           "title": "Couldn't load your CV",
           "description": "We couldn't load your saved CV. Try again — saving now would overwrite it with an empty form.",
           "retry": "Try again"
+        },
+        "design": {
+          "accent": "Accent",
+          "density": "Density",
+          "font": "Font",
+          "accents": {
+            "none": "None",
+            "black": "Black",
+            "navy": "Navy",
+            "burgundy": "Burgundy",
+            "teal": "Teal"
+          },
+          "densities": {
+            "compact": "Compact",
+            "normal": "Normal",
+            "relaxed": "Relaxed"
+          },
+          "fonts": {
+            "serif": "Serif",
+            "sans": "Sans"
+          }
+        },
+        "rail": {
+          "title": "Layout",
+          "hint": "Drag to reorder, toggle the eye to show/hide.",
+          "dragHandle": "Drag to reorder {section}",
+          "moveUp": "Move {section} up",
+          "moveDown": "Move {section} down",
+          "show": "Show {section}",
+          "hide": "Hide {section}"
+        },
+        "inline": {
+          "addBullet": "Add line",
+          "removeBullet": "Remove line",
+          "addTech": "Add tech",
+          "addSkill": "Add skill"
         }
       },
       "planner": {

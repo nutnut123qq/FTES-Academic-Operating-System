@@ -117,7 +117,9 @@ export const RichCommentEditor = ({
         if (disabled || isSubmitting || editor.isEmpty) {
             return
         }
-        const body = trimMarkdown((editor.storage as unknown as MarkdownStorage).getMarkdown())
+        const body = trimMarkdown(
+            (editor.storage as unknown as { markdown: MarkdownStorage }).markdown.getMarkdown(),
+        )
         if (!body) {
             return
         }

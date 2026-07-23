@@ -365,49 +365,18 @@ test.describe("community-de-mock — group discussion thread", () => {
             await page.keyboard.type(replyText)
             await expect(composer).toContainText(replyText)
 
-            // BUG (NEW, 2026-07-23): RichCommentEditor cannot submit from the UI at all —
-            //  (1) the "Gửi" button never enables: `canSubmit` reads `editor.isEmpty`
-            //      during render but @tiptap/react v3 does not re-render on transactions,
-            //      so the disabled state is permanently stale (verified: still disabled
-            //      after typing + blur);
-            //  (2) Ctrl+Enter (editorProps.handleKeyDown) also never fires the POST —
-            //      its closure guards on an `editor` const that is null on the render
-            //      that supplied the options (immediatelyRender: false).
-            // Try Ctrl+Enter; when no POST lands, record the bug and prove the BE
-            // contract works by posting the same comment through the API.
-            const replied = page
-                .waitForResponse(
-                    (r) => r.url().includes("/comments") && r.request().method() === "POST",
-                    { timeout: 10_000 },
-                )
-                .catch(() => null)
-            await page.keyboard.press("Control+Enter")
-            const uiPost = await replied
-            if (uiPost !== null) {
-                expect(uiPost.status()).toBe(200)
-                await expect(page.getByText(replyText)).toBeVisible({ timeout: 15_000 })
-            } else {
-                // bug evidence: content typed, send still disabled, no request fired
-                await expect(
-                    page.getByRole("button", { name: "Gửi", exact: true }).last(),
-                ).toBeDisabled()
-                test.info().annotations.push({
-                    type: "FAIL-NEW-BUG",
-                    description:
-                        "RichCommentEditor: nút Gửi không bao giờ enable (editor.isEmpty stale với @tiptap/react v3) và Ctrl+Enter cũng không bắn POST — reply KHÔNG thể gửi từ UI",
-                })
-                // BE contract itself is fine — the same reply posts via REST
-                const ctx = await apiCtx("student")
-                try {
-                    const res = await ctx.post(
-                        `${API}/groups/${OWNED_GROUP}/discussion/threads/${threadId}/comments`,
-                        { data: { content: replyText } },
-                    )
-                    expect(res.status()).toBe(200)
-                } finally {
-                    await ctx.dispose()
-                }
-            }
+            // FIXED 2026-07-23: RichCommentEditor sets shouldRerenderOnTransaction
+            // (tiptap v3 defaults it off), so `canSubmit` re-evaluates as the user
+            // types — the "Gửi" button enables and submits like a real user would.
+            const sendBtn = page.getByRole("button", { name: "Gửi", exact: true }).last()
+            await expect(sendBtn).toBeEnabled({ timeout: 5_000 })
+            const replied = page.waitForResponse(
+                (r) => r.url().includes("/comments") && r.request().method() === "POST",
+                { timeout: 15_000 },
+            )
+            await sendBtn.click()
+            expect((await replied).status()).toBe(200)
+            await expect(page.getByText(replyText)).toBeVisible({ timeout: 15_000 })
         } finally {
             // cleanup: drop the thread (cascades its comments)
             if (threadId) {

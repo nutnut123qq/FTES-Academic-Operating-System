@@ -10,7 +10,7 @@ import { AiJobFeedback } from "../AiToolResult"
 import {
     LearningInput,
     emptyLearningInput,
-    learningInputBody,
+    resolveLearningInputRef,
     isLearningInputReady,
     type LearningInputValue,
 } from "../LearningInput"
@@ -28,7 +28,10 @@ export const SummaryTool = () => {
     const job = useAiToolJob<SummaryResult>()
 
     const submit = () =>
-        void job.run(() => submitSummaryJob({ ...learningInputBody(input), language: locale }))
+        void job.run(async () => {
+            const ref = await resolveLearningInputRef(input)
+            return submitSummaryJob({ ...ref, language: locale })
+        })
 
     const result = job.poll.result
     const ready = isLearningInputReady(input) && !job.isBusy

@@ -91,6 +91,15 @@ export interface LessonView {
     accessLevel: string | null
     /** Slugs of the packages that unlock this lesson, ordered lowest→highest tier by the BE; `[0]` is the minimum tier. */
     packageSlugs?: string[]
+    /**
+     * True when an ACTIVE (PUBLISHED/RUNNING) challenge is linked to this lesson.
+     * Served by the CourseReadApi curriculum, so it is present for EVERY lesson —
+     * including VIDEO lessons that carry no `/content` markdown row (whose content
+     * endpoint 404s). Additive, defaults false.
+     */
+    hasChallenge?: boolean
+    /** Id of the linked ACTIVE challenge (present when `hasChallenge`). Additive. */
+    challengeId?: string | null
 }
 
 /** Query params for the public catalog list `GET /api/v1/courses`. */

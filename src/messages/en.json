@@ -3143,11 +3143,16 @@
       "running": "Generating…",
       "modelLabel": "Model: {model}",
       "input": {
-        "modeText": "Paste text",
+        "modeUpload": "Upload a document",
         "modeLesson": "Pick a lesson",
-        "textPlaceholder": "Paste the lesson text or notes you want to work with…",
+        "uploadCta": "Choose or drop a document",
+        "uploadHint": "PDF or image (PNG/JPG/WebP), up to 10MB",
+        "uploadError": {
+          "type": "Only PDF or image (PNG/JPG/WebP) files are accepted.",
+          "size": "The file exceeds the 10MB limit."
+        },
         "lessonPlaceholder": "Choose a lesson you've studied",
-        "noLessons": "No studied lessons yet — paste text instead."
+        "noLessons": "No studied lessons yet — upload a document instead."
       },
       "states": {
         "running": "The AI is working on it — this usually takes a few seconds.",
@@ -4708,6 +4713,7 @@
     "title": "Saved",
     "save": "Save",
     "unsave": "Unsave",
+    "saveFailed": "Could not update your saved items. Please try again.",
     "tabs": {
       "all": "All",
       "resource": "Resources",

@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { Button, cn } from "@heroui/react"
+import { Button, cn, toast } from "@heroui/react"
 import { BookmarkSimpleIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { useAppDispatch, useAppSelector } from "@/redux/hooks"
@@ -14,6 +14,7 @@ import {
     type SavedEntityType,
     type SavedPostSource,
 } from "@/hooks/zustand/savedItems"
+import { bookmarkPost, unbookmarkPost } from "@/modules/api/rest/community/community"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 
 /** Props for {@link SaveButton}. Features pass only the entity coordinates. */
@@ -54,13 +55,27 @@ export const SaveButton = ({ entityType, entityId, source, className }: SaveButt
     useHydrateSavedItems()
     const saved = useIsSaved(entityType, entityId)
 
-    const onToggle = () => {
+    const onToggle = async () => {
         if (!authenticated) {
             dispatch(setAuthenticationModalTab(AuthenticationModalTab.SignIn))
             openAuthentication()
             return
         }
+        // Optimistic flip first so the icon fills/empties with no perceptible lag.
+        const wasSaved = saved
         toggleSaved({ entityType, entityId, source })
+        // Only POSTs have a real BE bookmark endpoint; resources/courses stay on
+        // the local store until their backends land (see store BE ASSUMPTION).
+        if (entityType !== "post") {
+            return
+        }
+        try {
+            await (wasSaved ? unbookmarkPost(entityId) : bookmarkPost(entityId))
+        } catch {
+            // Revert the optimistic flip and surface the failure.
+            toggleSaved({ entityType, entityId, source })
+            toast.danger(t("savedItems.saveFailed"))
+        }
     }
 
     return (
@@ -79,7 +94,7 @@ export const SaveButton = ({ entityType, entityId, source, className }: SaveButt
                 variant="ghost"
                 aria-pressed={saved}
                 aria-label={saved ? t("savedItems.unsave") : t("savedItems.save")}
-                onPress={onToggle}
+                onPress={() => void onToggle()}
             >
                 <BookmarkSimpleIcon
                     aria-hidden

@@ -1,5 +1,5 @@
 import React from "react"
-import { fireEvent, render, screen } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { UseAiToolJobReturn } from "../hooks/useAiToolJob"
 
@@ -53,7 +53,10 @@ vi.mock("@heroui/react", () => {
         DropdownTrigger: Passthrough,
         DropdownPopover: Passthrough,
         DropdownMenu: Passthrough,
-        DropdownItem: Passthrough,
+        // Expose the collection `id` so the picker-id fix is assertable.
+        DropdownItem: ({ children, id }: { children: React.ReactNode; id?: string }) => (
+            <div data-item-id={id}>{children}</div>
+        ),
         cn: (...a: Array<unknown>) => a.filter(Boolean).join(" "),
     }
 })
@@ -79,8 +82,10 @@ vi.mock("./AiToolResult", () => ({
     AiJobFeedback: () => null,
 }))
 
-// Keep the REAL learningInputBody/isLearningInputReady — stub only the component:
-// a "seed" button that fills the text source, exercising the genuine body mapping.
+// Keep the REAL resolveLearningInputRef/isLearningInputReady — stub only the
+// component: a "seed" button that picks a lesson source (the raw-text path no
+// longer exists — the BE learning guard needs a lessonId/storageKey reference),
+// exercising the genuine lessonId body mapping without touching the upload pipeline.
 vi.mock("./LearningInput", async (importOriginal) => {
     const original = await importOriginal<typeof import("./LearningInput")>()
     return {
@@ -95,7 +100,14 @@ vi.mock("./LearningInput", async (importOriginal) => {
             <button
                 type="button"
                 data-testid="seed-input"
-                onClick={() => onChange({ ...value, text: "  Nội dung ôn tập  " })}
+                onClick={() =>
+                    onChange({
+                        ...value,
+                        mode: "lesson",
+                        lessonId: "lesson-123",
+                        lessonLabel: "Bài học ôn tập",
+                    })
+                }
             >
                 seed
             </button>
@@ -179,13 +191,15 @@ const seedAndRun = () => {
 }
 
 describe("SummaryTool", () => {
-    it("submits the trimmed text source with the locale", () => {
+    it("submits the picked lesson reference (lessonId) with the locale", async () => {
         render(<SummaryTool />)
         seedAndRun()
-        expect(submitSummaryJob).toHaveBeenCalledWith({
-            text: "Nội dung ôn tập",
-            language: "vi",
-        })
+        await waitFor(() =>
+            expect(submitSummaryJob).toHaveBeenCalledWith({
+                lessonId: "lesson-123",
+                language: "vi",
+            }),
+        )
     })
 
     it("blocks the run until a source exists", () => {
@@ -214,15 +228,17 @@ describe("SummaryTool", () => {
 })
 
 describe("FlashcardsTool", () => {
-    it("submits the source with the picked cardCount and locale", () => {
+    it("submits the source with the picked cardCount and locale", async () => {
         render(<FlashcardsTool />)
         fireEvent.click(screen.getByText("15"))
         seedAndRun()
-        expect(submitFlashcardsJob).toHaveBeenCalledWith({
-            text: "Nội dung ôn tập",
-            cardCount: 15,
-            language: "vi",
-        })
+        await waitFor(() =>
+            expect(submitFlashcardsJob).toHaveBeenCalledWith({
+                lessonId: "lesson-123",
+                cardCount: 15,
+                language: "vi",
+            }),
+        )
     })
 
     it("renders cards front-first and flips to the back on click", () => {
@@ -242,16 +258,18 @@ describe("FlashcardsTool", () => {
 })
 
 describe("QuizTool", () => {
-    it("submits the source with questionCount + difficulty + locale", () => {
+    it("submits the source with questionCount + difficulty + locale", async () => {
         render(<QuizTool />)
         fireEvent.click(screen.getByText("quiz.difficulties.hard"))
         seedAndRun()
-        expect(submitQuizJob).toHaveBeenCalledWith({
-            text: "Nội dung ôn tập",
-            questionCount: 5,
-            difficulty: "hard",
-            language: "vi",
-        })
+        await waitFor(() =>
+            expect(submitQuizJob).toHaveBeenCalledWith({
+                lessonId: "lesson-123",
+                questionCount: 5,
+                difficulty: "hard",
+                language: "vi",
+            }),
+        )
     })
 
     it("grades in place (letter + text `correct` shapes) and totals the score", () => {
@@ -313,6 +331,15 @@ describe("DebugTool", () => {
             language: "python",
             question: "",
         })
+    })
+
+    it("gives each language option a real collection id (picker-id fix)", () => {
+        const { container } = render(<DebugTool />)
+        // The value the picker feeds to onAction is the `id`, not the React `key`.
+        const python = container.querySelector('[data-item-id="python"]')
+        const sql = container.querySelector('[data-item-id="sql"]')
+        expect(python?.textContent).toBe("python")
+        expect(sql?.textContent).toBe("sql")
     })
 
     it("renders a wrapped {output, model} result through the markdown renderer", () => {

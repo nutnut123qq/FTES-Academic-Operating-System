@@ -84,12 +84,62 @@ vi.mock("@heroui/react", () => {
     ScrollShadow.displayName = "ScrollShadow"
     const Typography = ({ children }: { children?: React.ReactNode }) => <span>{children}</span>
     const cn = (...args: Array<unknown>) => args.filter(Boolean).join(" ")
+
+    // Model picker (Dropdown) — faithful to react-aria's collection: the node key
+    // comes from the `id` PROP, NOT React's `key` (React strips `key`, so it never
+    // reaches the collection). A missing `id` falls back to an auto `react-aria-N`
+    // key and `onAction`/`disabledKeys` fire with THAT — the exact shape of the
+    // AI_MODEL_NOT_ALLOWED bug. The mock derives its click key from `id` with the
+    // same fallback so the picker test catches a regression (a bare `key` prop
+    // would send `react-aria-N`, not the model id).
+    const MenuActionContext = React.createContext<((key: string) => void) | undefined>(undefined)
+    const MenuDisabledContext = React.createContext<Array<string>>([])
+    let autoKeySeq = 0
+    const DropdownMenu = ({
+        children,
+        onAction,
+        disabledKeys,
+    }: {
+        children?: React.ReactNode
+        onAction?: (key: string) => void
+        disabledKeys?: Iterable<string>
+    }) => (
+        <MenuActionContext.Provider value={onAction}>
+            <MenuDisabledContext.Provider value={Array.from(disabledKeys ?? [])}>
+                <div role="menu">{children}</div>
+            </MenuDisabledContext.Provider>
+        </MenuActionContext.Provider>
+    )
+    const DropdownItem = ({
+        children,
+        id,
+        textValue,
+    }: {
+        children?: React.ReactNode
+        id?: string
+        textValue?: string
+    }) => {
+        const nodeKey = id ?? `react-aria-${++autoKeySeq}`
+        const onAction = React.useContext(MenuActionContext)
+        const disabled = React.useContext(MenuDisabledContext).includes(nodeKey)
+        return (
+            <button
+                type="button"
+                role="menuitem"
+                aria-label={textValue}
+                disabled={disabled}
+                onClick={() => onAction?.(nodeKey)}
+            >
+                {children}
+            </button>
+        )
+    }
     return {
         Button,
         CloseButton,
         Dropdown: passthrough,
-        DropdownItem: passthrough,
-        DropdownMenu: passthrough,
+        DropdownItem,
+        DropdownMenu,
         DropdownPopover: passthrough,
         DropdownTrigger: passthrough,
         ScrollShadow,
@@ -206,6 +256,32 @@ describe("ContentAiChat — model picker (task 2.6)", () => {
             model: "prov/model-x",
         })
         expect(streamMock.mock.calls[0][3]).toBe("prov/model-x")
+    })
+
+    it("selecting a model from the picker sends that REAL model id — never a react-aria-* auto key", async () => {
+        render(<ContentAiChat />)
+
+        // Pick the second catalog model from the menu. Its item is labelled by its
+        // textValue (= the model id, since it carries no display label). The mock
+        // fires onAction with the DropdownItem's `id` prop — so this only lands on
+        // "prov/model-y" if the component sets `id`; a bare `key` yields react-aria-N.
+        act(() => {
+            fireEvent.click(screen.getByLabelText("prov/model-y"))
+        })
+
+        // the store holds the REAL model id, not an auto-generated collection key
+        expect(useOverlayStore.getState().contentAiSelectedModel).toBe("prov/model-y")
+
+        await typeAndSend("hi")
+
+        const sentModel = streamMock.mock.calls[0][3]
+        expect(sentModel).toBe("prov/model-y")
+        expect(sentModel).not.toMatch(/^react-aria-/)
+        expect(createSessionMock).toHaveBeenCalledWith({
+            feature: "TUTOR_CHAT",
+            contextRef: { lessonId: "content-1" },
+            model: "prov/model-y",
+        })
     })
 
     it("a picked model rides the body and survives a remount (store-backed)", async () => {

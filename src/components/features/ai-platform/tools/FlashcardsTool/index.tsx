@@ -10,7 +10,7 @@ import { AiJobFeedback } from "../AiToolResult"
 import {
     LearningInput,
     emptyLearningInput,
-    learningInputBody,
+    resolveLearningInputRef,
     isLearningInputReady,
     type LearningInputValue,
 } from "../LearningInput"
@@ -31,9 +31,10 @@ export const FlashcardsTool = () => {
     const job = useAiToolJob<FlashcardsResult>()
 
     const submit = () =>
-        void job.run(() =>
-            submitFlashcardsJob({ ...learningInputBody(input), cardCount, language: locale }),
-        )
+        void job.run(async () => {
+            const ref = await resolveLearningInputRef(input)
+            return submitFlashcardsJob({ ...ref, cardCount, language: locale })
+        })
 
     const cards = job.poll.result?.cards ?? []
     const ready = isLearningInputReady(input) && !job.isBusy

@@ -11,7 +11,7 @@ import { AiJobFeedback } from "../AiToolResult"
 import {
     LearningInput,
     emptyLearningInput,
-    learningInputBody,
+    resolveLearningInputRef,
     isLearningInputReady,
     type LearningInputValue,
 } from "../LearningInput"
@@ -36,14 +36,15 @@ export const QuizTool = () => {
     const job = useAiToolJob<QuizResult>()
 
     const submit = () =>
-        void job.run(() =>
-            submitQuizJob({
-                ...learningInputBody(input),
+        void job.run(async () => {
+            const ref = await resolveLearningInputRef(input)
+            return submitQuizJob({
+                ...ref,
                 questionCount,
                 difficulty,
                 language: locale,
-            }),
-        )
+            })
+        })
 
     const questions = job.poll.result?.questions ?? []
     const ready = isLearningInputReady(input) && !job.isBusy

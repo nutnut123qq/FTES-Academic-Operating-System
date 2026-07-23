@@ -3143,11 +3143,16 @@
       "running": "Đang tạo…",
       "modelLabel": "Mô hình: {model}",
       "input": {
-        "modeText": "Dán văn bản",
+        "modeUpload": "Tải tài liệu",
         "modeLesson": "Chọn bài học",
-        "textPlaceholder": "Dán nội dung bài học hoặc ghi chú bạn muốn xử lý…",
+        "uploadCta": "Chọn hoặc kéo thả tài liệu",
+        "uploadHint": "PDF hoặc ảnh (PNG/JPG/WebP), tối đa 10MB",
+        "uploadError": {
+          "type": "Chỉ chấp nhận PDF hoặc ảnh (PNG/JPG/WebP).",
+          "size": "File vượt quá giới hạn 10MB."
+        },
         "lessonPlaceholder": "Chọn một bài bạn đã học",
-        "noLessons": "Chưa có bài đã học — hãy dán văn bản."
+        "noLessons": "Chưa có bài đã học — hãy tải tài liệu lên."
       },
       "states": {
         "running": "AI đang xử lý — thường mất vài giây.",
@@ -4708,6 +4713,7 @@
     "title": "Đã lưu",
     "save": "Lưu",
     "unsave": "Bỏ lưu",
+    "saveFailed": "Không cập nhật được mục đã lưu. Vui lòng thử lại.",
     "tabs": {
       "all": "Tất cả",
       "resource": "Tài liệu",

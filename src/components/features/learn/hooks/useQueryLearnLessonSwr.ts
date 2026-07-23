@@ -126,6 +126,16 @@ interface FlatLesson {
     previewSeconds: number
     /** Slugs of packages that unlock this lesson. */
     packageSlugs: Array<string>
+    /**
+     * True when this lesson carries an ACTIVE challenge — from the CURRICULUM
+     * (`LessonView.hasChallenge`), so it is reliable even for VIDEO lessons whose
+     * `/content` endpoint 404s (no markdown row). The AUTHORITATIVE challenge signal.
+     * Left `undefined` (NOT coerced to false) when the curriculum omits the additive
+     * flag, so `buildLessonView` can degrade to the `/content` endpoint for a legacy BE.
+     */
+    hasChallenge: boolean | undefined
+    /** Id of the linked ACTIVE challenge (from the curriculum), null when none. */
+    challengeId: string | null
 }
 
 /** Flattens the course detail into an ordered lesson list (module order → lesson order). */
@@ -150,6 +160,11 @@ const flattenCurriculum = (detail: CourseDetail): Array<FlatLesson> =>
                     accessLevel: lesson.accessLevel ?? null,
                     previewSeconds: lesson.previewSeconds ?? 0,
                     packageSlugs: lesson.packageSlugs ?? [],
+                    // Preserve undefined (do NOT `?? false`): a false here is non-nullish
+                    // and would short-circuit the `content.hasChallenge` fallback in
+                    // buildLessonView, making that documented legacy-BE degradation dead.
+                    hasChallenge: lesson.hasChallenge,
+                    challengeId: lesson.challengeId ?? null,
                 })),
         )
 
@@ -169,9 +184,14 @@ const buildLessonView = (
     const isVideoLesson = contentType === "VIDEO"
     const accessLevel = current?.accessLevel ?? null
     const packageSlugs = current?.packageSlugs ?? []
-    const hasChallenge = content.hasChallenge ?? false
-    // BE `/lessons/{id}/content` carries the linked ACTIVE challenge id (course-learn-contract-gaps).
-    const challengeId = content.challengeId ?? null
+    // hasChallenge / challengeId come from the CURRICULUM tree (CourseReadApi), NOT the
+    // `/lessons/{id}/content` endpoint: a VIDEO lesson has no content row → `/content`
+    // 404s → the caught empty fallback drops `hasChallenge`, which used to hide the
+    // challenge tab/rail on every video lesson. The tree carries the flag for every
+    // lesson type. Fall back to the content endpoint only for a BE that predates the
+    // curriculum flag (older deployments).
+    const hasChallenge = current?.hasChallenge ?? content.hasChallenge ?? false
+    const challengeId = current?.challengeId ?? content.challengeId ?? null
     // BE `/lessons/{id}/content` carries the linked PUBLISHED quiz (course-learn-contract-gaps).
     const hasQuiz = content.hasQuiz ?? false
     const quizId = content.quizId ?? null

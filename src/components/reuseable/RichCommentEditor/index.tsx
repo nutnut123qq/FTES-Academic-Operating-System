@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useCallback, useEffect, useMemo, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Button, cn } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { useEditor, EditorContent, type Editor } from "@tiptap/react"
@@ -113,10 +113,20 @@ export const RichCommentEditor = ({
 
     const stickers = useMemo(() => localizeStickers(STICKER_CATALOG, t), [t])
 
+    // Live handle to the current editor. The keydown handler below is captured
+    // when tiptap creates the editor (first render → `editor` is still null), so
+    // it must read the instance from this ref instead of a stale closure.
+    const editorRef = useRef<Editor | null>(null)
+
     const handleSubmit = useCallback(async (editor: Editor) => {
-        if (disabled || isSubmitting || editor.isEmpty) {
+        if (disabled || isSubmitting) {
             return
         }
+        // Serialize the body from the CURRENT editor at submit time. tiptap v3 does
+        // not re-render React on every transaction, so `editor.isEmpty` (and any
+        // value captured at render) can lag the latest keystroke — gate on the
+        // freshly read body instead of a stale emptiness flag. Đọc đúng chỗ storage
+        // (`.markdown.getMarkdown()`) theo fix 4b4282b.
         const body = trimMarkdown(
             (editor.storage as unknown as { markdown: MarkdownStorage }).markdown.getMarkdown(),
         )
@@ -181,8 +191,12 @@ export const RichCommentEditor = ({
             handleKeyDown: (_view, event) => {
                 if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
                     event.preventDefault()
-                    if (editor) {
-                        void handleSubmit(editor)
+                    // Read the editor from the ref (never the closure `editor`, which
+                    // is null at the point this handler is created) so Ctrl/Cmd+Enter
+                    // always submits the current draft.
+                    const current = editorRef.current
+                    if (current) {
+                        void handleSubmit(current)
                     }
                     return true
                 }
@@ -196,6 +210,10 @@ export const RichCommentEditor = ({
             onBlur?.()
         },
     })
+
+    // Keep the ref pointing at the live editor so the keydown handler resolves the
+    // current instance rather than the null captured when the editor was created.
+    editorRef.current = editor
 
     useEffect(() => {
         if (editor && focusTrigger !== undefined) {

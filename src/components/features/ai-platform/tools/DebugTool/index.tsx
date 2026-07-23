@@ -42,6 +42,14 @@ const LANGUAGES = [
  * `/ai/tools/debug` — paste code plus a description of the bug and get an AI code
  * review back as markdown. Submits the code-review job, polls it, and renders the
  * `output` (or a bare markdown string) through the shared markdown renderer.
+ *
+ * BLOCKED-BE: `POST /ai/coding/review` (`JobController.codeReview` →
+ * `AiInputGuard.requireGradableSubmission`) accepts ONLY an owned/gradable
+ * `submissionId` — there is no endpoint that reviews raw pasted code. This
+ * `{code, language, question}` body will 400 (`AI_INPUT_INVALID` "Thiếu
+ * submissionId") until the BE exposes a free-paste code-review job. Left as the
+ * intended shape rather than force-wiring the semantically different synchronous
+ * `POST /ai/coding/grade-code` (returns a graded scorecard, not a markdown review).
  */
 export const DebugTool = () => {
     const t = useTranslations("aiPlatform.toolPages")
@@ -84,7 +92,11 @@ export const DebugTool = () => {
                             >
                                 {LANGUAGES.map((lang) => (
                                     <DropdownItem
+                                        // `id` (not just React `key`) is the collection key
+                                        // react-aria hands to `onAction`; a bare `key` is a reserved
+                                        // React prop the collection never sees (picker-id bug family).
                                         key={lang}
+                                        id={lang}
                                         textValue={lang}
                                     >
                                         {lang}

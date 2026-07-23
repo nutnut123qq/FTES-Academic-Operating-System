@@ -344,7 +344,14 @@ export const ContentAiChat = ({ className }: ContentAiChatProps) => {
                                         .filter((catalogModel) => !!catalogModel.id)
                                         .map((catalogModel) => (
                                             <DropdownItem
+                                                // `key` is React's reconciliation key and is stripped by React —
+                                                // it never reaches the collection. HeroUI/react-aria read the
+                                                // collection node key from the `id` PROP (Document.setProps:
+                                                // `id ?? react-aria-${n}`), and `onAction`/`disabledKeys` are keyed
+                                                // by it. Without `id` the item gets an auto `react-aria-N` key, which
+                                                // is what would be sent as the model → BE 400 AI_MODEL_NOT_ALLOWED.
                                                 key={String(catalogModel.id)}
+                                                id={String(catalogModel.id)}
                                                 textValue={catalogModel.label ?? catalogModel.id}
                                             >
                                                 <div className="flex items-center justify-between gap-3">

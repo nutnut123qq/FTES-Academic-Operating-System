@@ -28,8 +28,8 @@ describe("FtesMascot", () => {
             const { container, unmount } = render(<FtesMascot pose={pose} />)
             const root = container.querySelector(`[data-pose="${pose}"]`)
             expect(root).not.toBeNull()
-            // one inline SVG per pose (the swappable placeholder art)
-            expect(root?.querySelector("svg")).not.toBeNull()
+            // one image per pose (the swappable FrosTES art in `./art`)
+            expect(root?.querySelector("img")).not.toBeNull()
             // decorative by default → hidden from the a11y tree, no img role
             expect(root?.getAttribute("aria-hidden")).toBe("true")
             expect(root?.getAttribute("role")).toBeNull()

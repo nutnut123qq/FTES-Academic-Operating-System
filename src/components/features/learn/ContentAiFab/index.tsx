@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useCallback, useEffect, useRef, useState } from "react"
+import { createPortal } from "react-dom"
 import {
     Button,
     Drawer,
@@ -16,6 +17,7 @@ import { useSmViewpoint } from "@/hooks/reuseables/useSmViewpoint"
 import { FloatingActionButton } from "@/components/blocks/buttons/FloatingActionButton"
 import { useContentAiChatOverlayState } from "@/hooks/zustand/overlay/hooks"
 import { ContentAiChat } from "@/components/features/learn/ContentAiChat"
+import { useFullscreenElement } from "@/components/features/learn/LessonReader/hooks/useFullscreen"
 
 /** localStorage key for the FAB's persisted vertical position (px from viewport bottom). */
 const STORAGE_KEY = "contentAiFabBottom"
@@ -44,6 +46,10 @@ export const ContentAiFab = () => {
     const { contentId } = useParams<{ contentId?: string }>()
     const { isOpen, setOpen, open } = useContentAiChatOverlayState()
     const { isMobile } = useSmViewpoint()
+    // When a video wrapper is fullscreen, the browser paints it in a top layer above
+    // everything, so a fixed FAB in <body> is hidden. Portal the whole FAB (and route
+    // its popover/drawer overlay) INTO the fullscreen element so it stays usable.
+    const fullscreenEl = useFullscreenElement()
 
     // vertical position of the FAB (px from viewport bottom); restored from localStorage on mount
     const [bottom, setBottom] = useState<number>(DEFAULT_BOTTOM)
@@ -109,14 +115,23 @@ export const ContentAiFab = () => {
         return null
     }
 
+    // A fullscreen video wrapper is painted in the browser top layer; portal the FAB
+    // into it (and target its overlay there) so it renders ABOVE the video.
+    const intoFullscreen = (tree: React.ReactNode): React.ReactNode =>
+        fullscreenEl ? createPortal(tree, fullscreenEl) : tree
+
     // MOBILE — a fixed FAB that opens the bottom-sheet drawer
     if (isMobile) {
-        return (
+        return intoFullscreen(
             <>
                 <FloatingActionButton onPress={open} ariaLabel={t("reader.ai.open")}>
                     <SparkleIcon aria-hidden focusable="false" weight="fill" />
                 </FloatingActionButton>
-                <Drawer.Backdrop isOpen={isOpen} onOpenChange={setOpen}>
+                <Drawer.Backdrop
+                    isOpen={isOpen}
+                    onOpenChange={setOpen}
+                    UNSTABLE_portalContainer={fullscreenEl ?? undefined}
+                >
                     <Drawer.Content placement="bottom">
                         <Drawer.Dialog className="flex h-[80vh] flex-col">
                             <Drawer.CloseTrigger />
@@ -129,12 +144,12 @@ export const ContentAiFab = () => {
                         </Drawer.Dialog>
                     </Drawer.Content>
                 </Drawer.Backdrop>
-            </>
+            </>,
         )
     }
 
     // DESKTOP — draggable right-edge FAB anchoring the chat popover
-    return (
+    return intoFullscreen(
         <Popover isOpen={isOpen} onOpenChange={onOpenChange}>
             <Button
                 isIconOnly
@@ -148,7 +163,11 @@ export const ContentAiFab = () => {
             >
                 <SparkleIcon aria-hidden focusable="false" weight="fill" />
             </Button>
-            <PopoverContent placement="left bottom" className="w-[380px] p-0">
+            <PopoverContent
+                placement="left bottom"
+                className="w-[380px] p-0"
+                UNSTABLE_portalContainer={fullscreenEl ?? undefined}
+            >
                 <div className="flex items-center gap-2 p-3">
                     <SparkleIcon aria-hidden focusable="false" weight="fill" className="size-5 text-accent" />
                     <Typography type="body" weight="semibold">
@@ -159,7 +178,7 @@ export const ContentAiFab = () => {
                     <ContentAiChat />
                 </div>
             </PopoverContent>
-        </Popover>
+        </Popover>,
     )
 }
 

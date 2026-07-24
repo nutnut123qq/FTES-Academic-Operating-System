@@ -6171,6 +6171,10 @@
       "videoUnavailable": "Không thể phát video này.",
       "markComplete": "Đánh dấu hoàn thành",
       "completed": "Đã hoàn thành",
+      "player": {
+        "fullscreen": "Xem toàn màn hình",
+        "exitFullscreen": "Thoát toàn màn hình"
+      },
       "celebration": {
         "title": "Hoàn thành bài học!",
         "body": "Làm tốt lắm! Cùng FrosTES tiếp tục sang bài tiếp theo nhé."

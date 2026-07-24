@@ -1,12 +1,14 @@
 "use client"
 
 import React, { useEffect, useRef, useState } from "react"
-import { Button, Card, CardContent, Typography } from "@heroui/react"
+import { Button, Card, CardContent, Typography, cn } from "@heroui/react"
 import { ArrowClockwiseIcon, VideoCameraSlashIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import Hls from "hls.js"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { useWatchPositionReporter } from "./hooks/useWatchPositionReporter"
+import { useElementFullscreen } from "./hooks/useFullscreen"
+import { LessonFullscreenButton } from "./LessonFullscreenButton"
 
 /** Legacy Funnycode stream gateway that resolves `video_*` refs to an HLS manifest. */
 const STREAM_BASE = "https://stream.ftes.vn"
@@ -53,6 +55,10 @@ export const LessonHlsPlayer = ({
 }) => {
     const t = useTranslations("learn")
     const videoEl = useRef<HTMLVideoElement>(null)
+    // Fullscreen a CONTAINER div (not the bare <video>) so the AI FAB stays visible
+    // in fullscreen; the native fullscreen button is suppressed via controlsList below.
+    const { ref: containerRef, isFullscreen, toggle: toggleFullscreen } =
+        useElementFullscreen<HTMLDivElement>()
     const [failed, setFailed] = useState(false)
     const [loading, setLoading] = useState(true)
     const [attempt, setAttempt] = useState(0)
@@ -211,10 +217,22 @@ export const LessonHlsPlayer = ({
         <div className="mx-auto w-full max-w-5xl">
             <Card>
                 <CardContent className="p-0">
-                    <div className="relative aspect-video w-full">
+                    <div
+                        ref={containerRef}
+                        className={cn(
+                            "relative w-full overflow-hidden bg-black",
+                            isFullscreen
+                                ? "flex h-full items-center rounded-none"
+                                : "aspect-video rounded-2xl",
+                        )}
+                    >
                         <video
                             ref={videoEl}
                             controls
+                            // Suppress native fullscreen so the reader fullscreens the
+                            // container div (keeping the AI FAB in view) — not the bare <video>.
+                            controlsList="nofullscreen"
+                            disablePictureInPicture
                             playsInline
                             onTimeUpdate={handleTimeUpdate}
                             onEnded={handleEnded}
@@ -222,11 +240,18 @@ export const LessonHlsPlayer = ({
                             onPause={handlePause}
                             onSeeking={clampSeek}
                             onSeeked={handleSeeked}
-                            className="aspect-video w-full rounded-2xl"
+                            className={cn(
+                                "w-full bg-black",
+                                isFullscreen ? "h-full object-contain" : "aspect-video rounded-2xl",
+                            )}
                         />
                         {loading ? (
                             <Skeleton className="absolute inset-0 size-full rounded-2xl" />
                         ) : null}
+                        <LessonFullscreenButton
+                            isFullscreen={isFullscreen}
+                            onToggle={toggleFullscreen}
+                        />
                     </div>
                 </CardContent>
             </Card>

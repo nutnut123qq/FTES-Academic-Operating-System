@@ -6171,6 +6171,10 @@
       "videoUnavailable": "This video can't be played.",
       "markComplete": "Mark as complete",
       "completed": "Completed",
+      "player": {
+        "fullscreen": "Fullscreen",
+        "exitFullscreen": "Exit fullscreen"
+      },
       "celebration": {
         "title": "Lesson complete!",
         "body": "Nice work! Keep the momentum going with FrosTES on the next lesson."

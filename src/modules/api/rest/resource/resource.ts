@@ -22,6 +22,9 @@ import type {
     ResourceUploadUrlRequest,
     ResourceUploadUrlResponse,
     VersionResponse,
+    ResourceCommentView,
+    ResourceCommentsPage,
+    PostResourceCommentRequest,
 } from "./types"
 
 // ---------------------------------------------------------------- ResourceController
@@ -471,5 +474,57 @@ export const getMyBookmarks = async (params?: {
             size: params?.size ?? 20,
         },
         authenticated: true,
+    })
+}
+
+// ---------------------------------------------------------------- resource comments (C-4)
+
+/**
+ * Lists a resource's threaded Q&A comments (top-level with one level of replies).
+ * Read access is gated server-side by the resource `VisibilityGuard.requireRead`.
+ *
+ * `GET /api/v1/resources/{id}/comments?page=&size=`
+ */
+export const getResourceComments = async (
+    resourceId: string,
+    params?: { page?: number; size?: number },
+): Promise<ResourceCommentsPage> => {
+    return restRequest<ResourceCommentsPage>({
+        method: "GET",
+        url: `/resources/${resourceId}/comments`,
+        params: {
+            page: params?.page ?? 1,
+            size: params?.size ?? 20,
+        },
+        authenticated: true,
+    })
+}
+
+/**
+ * Posts a comment (or a one-level reply, via `parentId`) on a resource. A
+ * reply-of-reply is auto-reparented to the root by the BE.
+ *
+ * `POST /api/v1/resources/{id}/comments`
+ */
+export const postResourceComment = async (
+    resourceId: string,
+    request: PostResourceCommentRequest,
+): Promise<ResourceCommentView> => {
+    return restRequest<ResourceCommentView>({
+        method: "POST",
+        url: `/resources/${resourceId}/comments`,
+        data: request,
+    })
+}
+
+/**
+ * Deletes a resource comment (owner or moderator → soft-delete `status=DELETED`).
+ *
+ * `DELETE /api/v1/resources/comments/{commentId}`
+ */
+export const deleteResourceComment = async (commentId: string): Promise<void> => {
+    return restRequest<void>({
+        method: "DELETE",
+        url: `/resources/comments/${commentId}`,
     })
 }

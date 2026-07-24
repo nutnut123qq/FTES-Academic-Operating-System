@@ -5586,7 +5586,12 @@
       "cancelReply": "Cancel",
       "like": "Like",
       "unlike": "Unlike",
-      "likeCount": "{count} likes"
+      "likeCount": "{count} likes",
+      "you": "You",
+      "member": "Member",
+      "prev": "Prev",
+      "next": "Next",
+      "pageOf": "Page {page}/{total}"
     },
     "upload": {
       "title": "Upload resource",

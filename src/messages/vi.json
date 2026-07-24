@@ -5586,7 +5586,12 @@
       "cancelReply": "Hủy",
       "like": "Thích",
       "unlike": "Bỏ thích",
-      "likeCount": "{count} lượt thích"
+      "likeCount": "{count} lượt thích",
+      "you": "Bạn",
+      "member": "Thành viên",
+      "prev": "Trước",
+      "next": "Sau",
+      "pageOf": "Trang {page}/{total}"
     },
     "upload": {
       "title": "Tải lên tài nguyên",

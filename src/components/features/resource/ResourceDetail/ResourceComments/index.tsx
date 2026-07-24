@@ -294,6 +294,9 @@ export const ResourceComments = () => {
                     placeholder={t("placeholder")}
                     submitLabel={t("submit")}
                     busy={create.isMutating && replyingTo === null}
+                    // Gate guests BEFORE they type: a blocked expand opens the auth modal
+                    // (via requireAuth) so a draft is never erased at the submit-time gate.
+                    onBeforeExpand={requireAuth}
                     onSubmit={(text) => {
                         void submitComment(text)
                     }}

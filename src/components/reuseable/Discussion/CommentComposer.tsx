@@ -31,6 +31,12 @@ export interface CommentComposerProps extends WithClassNames<undefined> {
      * omit this and render expanded.
      */
     collapsible?: boolean
+    /**
+     * Optional guard run when a `collapsible` composer is about to expand. Return `false`
+     * to BLOCK expansion (e.g. a guest gate that opens the auth modal instead) so the
+     * draft is never lost at a submit-time gate. No-op for non-collapsible composers.
+     */
+    onBeforeExpand?: () => boolean
 }
 
 /**
@@ -52,6 +58,7 @@ export const CommentComposer = ({
     busy,
     currentUser,
     collapsible,
+    onBeforeExpand,
     className,
 }: CommentComposerProps) => {
     const t = useTranslations()
@@ -87,11 +94,19 @@ export const CommentComposer = ({
     }
 
     // collapsed pill: avatar + placeholder, the whole row opens the composer
+    // (unless a guard blocks it, e.g. a guest is sent to the auth modal first)
+    const handleExpand = () => {
+        if (onBeforeExpand && !onBeforeExpand()) {
+            return
+        }
+        setExpanded(true)
+    }
+
     if (collapsible && !expanded) {
         return (
             <button
                 type="button"
-                onClick={() => setExpanded(true)}
+                onClick={handleExpand}
                 className={cn("flex w-full items-center gap-3 text-left", className)}
             >
                 {currentUser ? (

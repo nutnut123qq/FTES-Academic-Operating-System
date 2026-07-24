@@ -7,9 +7,11 @@ import { useSWRConfig } from "swr"
 import { useRouter } from "@/i18n/navigation"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
 import { PostImagePicker } from "@/components/blocks/feed/PostImagePicker"
-import { createPost } from "@/modules/api/rest/community"
+import { createPost, sharePost } from "@/modules/api/rest/community"
 import type { MediaInput } from "@/modules/api/rest/community/types"
-import { COMMUNITY_FEED_KEY } from "../hooks/useQueryCommunityFeedSwr"
+import { QuotedPostCard } from "@/components/reuseable/QuotedPostCard"
+import { useCommunityComposerOverlayState } from "@/hooks/zustand/overlay/hooks"
+import { isCommunityFeedKey } from "../hooks/useQueryCommunityFeedSwr"
 
 /** Post kinds a user can attach (§6). */
 const KINDS = ["knowledge", "question", "showcase", "resource"] as const
@@ -49,6 +51,10 @@ export const CommunityComposerForm = ({
     const router = useRouter()
     const { mutate } = useSWRConfig()
     const { requireAuth } = useRequireAuth()
+    // Repost/quote mode (C-1): when a quoted post is stashed, the form embeds it and
+    // routes submit to `sharePost` instead of `createPost`.
+    const { quote, setQuote } = useCommunityComposerOverlayState()
+    const isQuote = Boolean(quote)
     const [title, setTitle] = useState("")
     const [body, setBody] = useState("")
     const [kind, setKind] = useState<(typeof KINDS)[number]>("knowledge")
@@ -58,7 +64,10 @@ export const CommunityComposerForm = ({
     const [imagesResetToken, setImagesResetToken] = useState(0)
 
     // Submitting while an image is still uploading would publish the post without it.
-    const canSubmit = title.trim() !== "" && body.trim() !== "" && !isSubmitting && !isUploading
+    // A repost needs no title/body (an empty repost is a plain share); a new post does.
+    const canSubmit = isQuote
+        ? !isSubmitting
+        : title.trim() !== "" && body.trim() !== "" && !isSubmitting && !isUploading
 
     const onImagesChange = useCallback((next: Array<MediaInput>) => setMedia(next), [])
     const onUploadingChange = useCallback((uploading: boolean) => setIsUploading(uploading), [])
@@ -69,25 +78,38 @@ export const CommunityComposerForm = ({
         }
         setIsSubmitting(true)
         try {
-            const created = await createPost({
-                postType: KIND_TO_POST_TYPE[kind],
-                title: title.trim(),
-                content: body.trim(),
-                media: media.length > 0 ? media : undefined,
-            })
+            let createdId: string
+            if (quote) {
+                // C-1 repost/quote: optional commentary → QUOTE, empty → plain REPOST.
+                const commentary = body.trim()
+                const shared = await sharePost(quote.id, {
+                    shareType: commentary ? "QUOTE" : "REPOST",
+                    quoteContent: commentary || undefined,
+                })
+                createdId = shared.id
+                setQuote(null)
+            } else {
+                const created = await createPost({
+                    postType: KIND_TO_POST_TYPE[kind],
+                    title: title.trim(),
+                    content: body.trim(),
+                    media: media.length > 0 ? media : undefined,
+                })
+                createdId = created.id
+            }
             setTitle("")
             setBody("")
             setMedia([])
             setImagesResetToken((token) => token + 1)
-            // createPost is the sole success signal. Revalidate the feed so an
-            // already-loaded feed shows the new post on back-navigation, but keep it
-            // non-throwing: a feed-refetch error after a SUCCESSFUL create must not be
-            // reported as a create failure nor block navigation.
-            mutate(COMMUNITY_FEED_KEY).catch(() => {})
+            // The create/share is the sole success signal. Revalidate every community-feed
+            // infinite cache so an already-loaded feed shows the new post on
+            // back-navigation, but keep it non-throwing: a feed-refetch error after a
+            // SUCCESSFUL write must not be reported as a failure nor block nav.
+            mutate(isCommunityFeedKey).catch(() => {})
             onSubmitted?.()
-            router.push(`/community/${created.id}`)
+            router.push(`/community/${createdId}`)
         } catch {
-            toast.danger(t("composer.createFailed"))
+            toast.danger(isQuote ? t("composer.repostFailed") : t("composer.createFailed"))
         } finally {
             setIsSubmitting(false)
         }
@@ -95,42 +117,52 @@ export const CommunityComposerForm = ({
 
     return (
         <div className="flex flex-col gap-4">
-            {/* kind chips */}
-            <div className="flex flex-wrap gap-2">
-                {KINDS.map((option) => (
-                    <button key={option} type="button" onClick={() => setKind(option)}>
-                        <Chip
-                            size="sm"
-                            variant={kind === option ? "primary" : "soft"}
-                            color="accent"
-                        >
-                            {t(`composer.kinds.${option}`)}
-                        </Chip>
-                    </button>
-                ))}
-            </div>
+            {/* kind chips + title + image picker are for a NEW post only; a repost
+                embeds the quoted card and takes optional commentary instead. */}
+            {!isQuote ? (
+                <div className="flex flex-wrap gap-2">
+                    {KINDS.map((option) => (
+                        <button key={option} type="button" onClick={() => setKind(option)}>
+                            <Chip
+                                size="sm"
+                                variant={kind === option ? "primary" : "soft"}
+                                color="accent"
+                            >
+                                {t(`composer.kinds.${option}`)}
+                            </Chip>
+                        </button>
+                    ))}
+                </div>
+            ) : null}
 
-            {/* fields */}
-            <input
-                value={title}
-                autoFocus={autoFocusTitle}
-                onChange={(event) => setTitle(event.target.value)}
-                placeholder={t("composer.titleField")}
-                className="w-full rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted focus:border-accent"
-            />
+            {!isQuote ? (
+                <input
+                    value={title}
+                    autoFocus={autoFocusTitle}
+                    onChange={(event) => setTitle(event.target.value)}
+                    placeholder={t("composer.titleField")}
+                    className="w-full rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted focus:border-accent"
+                />
+            ) : null}
+
             <textarea
                 value={body}
+                autoFocus={isQuote}
                 onChange={(event) => setBody(event.target.value)}
-                placeholder={t("composer.bodyField")}
-                rows={6}
+                placeholder={isQuote ? t("composer.quotePlaceholder") : t("composer.bodyField")}
+                rows={isQuote ? 3 : 6}
                 className="w-full resize-none rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted focus:border-accent"
             />
 
-            <PostImagePicker
-                onChange={onImagesChange}
-                onUploadingChange={onUploadingChange}
-                resetToken={imagesResetToken}
-            />
+            {quote ? (
+                <QuotedPostCard post={quote} />
+            ) : (
+                <PostImagePicker
+                    onChange={onImagesChange}
+                    onUploadingChange={onUploadingChange}
+                    resetToken={imagesResetToken}
+                />
+            )}
 
             <Button
                 variant="secondary"
@@ -139,7 +171,7 @@ export const CommunityComposerForm = ({
                 isPending={isSubmitting}
                 onPress={onSubmit}
             >
-                {t("composer.submit")}
+                {isQuote ? t("composer.repostSubmit") : t("composer.submit")}
             </Button>
         </div>
     )

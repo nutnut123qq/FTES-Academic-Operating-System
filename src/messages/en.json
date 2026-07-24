@@ -5657,6 +5657,7 @@
       "unlike": "Unlike",
       "comment": "Comment",
       "share": "Share",
+      "repost": "Repost",
       "save": "Save for later",
       "saved": "Saved",
       "copyLink": "Copy link",
@@ -5750,6 +5751,10 @@
       "bodyField": "What do you want to share?",
       "submit": "Post",
       "createFailed": "Couldn't publish your post. Please try again.",
+      "repostTitle": "Repost",
+      "quotePlaceholder": "Add a comment (optional)…",
+      "repostSubmit": "Repost",
+      "repostFailed": "Couldn't repost. Please try again.",
       "kinds": {
         "knowledge": "Knowledge",
         "question": "Question",

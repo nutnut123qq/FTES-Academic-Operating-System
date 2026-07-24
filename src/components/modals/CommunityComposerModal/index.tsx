@@ -14,7 +14,7 @@ import { CommunityComposerForm } from "@/components/features/community/Community
  * `ModalContainer`, controlled by the `communityComposer` overlay key.
  */
 export const CommunityComposerModal = ({ className }: WithClassNames<undefined>) => {
-    const { isOpen, setOpen, close } = useCommunityComposerOverlayState()
+    const { isOpen, setOpen, close, quote } = useCommunityComposerOverlayState()
     const t = useTranslations("communityHub")
 
     return (
@@ -24,7 +24,9 @@ export const CommunityComposerModal = ({ className }: WithClassNames<undefined>)
                     <Modal.Dialog className={cn(className)}>
                         <Modal.CloseTrigger />
                         <Modal.Header>
-                            <div className="text-2xl font-bold">{t("composer.title")}</div>
+                            <div className="text-2xl font-bold">
+                                {quote ? t("composer.repostTitle") : t("composer.title")}
+                            </div>
                         </Modal.Header>
                         <Modal.Body>
                             <CommunityComposerForm autoFocusTitle onSubmitted={close} />

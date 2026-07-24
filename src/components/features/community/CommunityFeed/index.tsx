@@ -10,6 +10,7 @@ import { UserLink } from "@/components/features/identity"
 import { ThreadsPostRow } from "@/components/blocks/feed/ThreadsPostRow"
 import { PostMediaGrid } from "@/components/blocks/feed/PostMediaGrid"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { InfiniteScrollSentinel } from "@/components/blocks/async/InfiniteScrollSentinel"
 import { PostEngagementBar } from "@/components/reuseable/PostEngagementBar"
 import { PostCommentThread } from "@/components/reuseable/PostCommentThread"
 import { useCommunityComposerOverlayState } from "@/hooks/zustand/overlay/hooks"
@@ -80,6 +81,7 @@ const CommunityFeedRow = ({ post }: { post: CommunityPost }) => {
     const [hasOpened, setHasOpened] = useState(false)
     const reactPost = useMutateReactPostSwr()
     const submitComment = useMutateCreatePostCommentSwr()
+    const { openQuote } = useCommunityComposerOverlayState()
     const { post: detail, isLoading, error, mutate } = useQueryPostCommentsSwr(post.id, hasOpened)
 
     const regionId = `post-comments-${post.id}`
@@ -140,6 +142,15 @@ const CommunityFeedRow = ({ post }: { post: CommunityPost }) => {
                     hideZeroCounts
                     onToggleLike={() => void reactPost(post.id, !post.liked)}
                     onToggleComments={onToggleComments}
+                    onRepost={() =>
+                        openQuote({
+                            id: post.id,
+                            author: post.author,
+                            authorUsername: post.authorUsername,
+                            title: post.title,
+                            snippet: post.snippet,
+                        })
+                    }
                     commentsExpanded={expanded}
                     commentsRegionId={regionId}
                     postUrl={postUrl}
@@ -203,6 +214,8 @@ export const CommunityFeed = ({ tab = "forYou" }: { tab?: CommunityFeedTab } = {
     const isLoading = searching ? search.isLoading : feed.isLoading
     const error = searching ? search.error : feed.error
     const mutate = searching ? search.mutate : feed.mutate
+    // Infinite scroll only applies to the tab feed (search is a single global page).
+    const canLoadMore = !searching && feed.hasMore
 
     // CAMPUS tab is scoped to the viewer's campus (BE falls back to the profile campus).
     // When empty it usually means the viewer hasn't set a campus on their profile, so the
@@ -252,6 +265,19 @@ export const CommunityFeed = ({ tab = "forYou" }: { tab?: CommunityFeedTab } = {
                         <CommunityFeedRow key={post.id} post={post} />
                     ))}
                 </div>
+                {canLoadMore ? (
+                    <>
+                        {feed.isLoadingMore ? (
+                            <div className="px-4 py-3" aria-hidden>
+                                <Skeleton className="h-3 w-40 rounded-full" />
+                            </div>
+                        ) : null}
+                        <InfiniteScrollSentinel
+                            onReach={() => void feed.setSize((current) => current + 1)}
+                            disabled={feed.isLoadingMore}
+                        />
+                    </>
+                ) : null}
             </AsyncContent>
         </div>
     )

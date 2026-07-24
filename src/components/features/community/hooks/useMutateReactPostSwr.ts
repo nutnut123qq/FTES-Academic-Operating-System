@@ -6,7 +6,11 @@ import { useTranslations } from "next-intl"
 import { toast } from "@heroui/react"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
 import { reactToPost, unreactPost } from "@/modules/api/rest/community"
-import { COMMUNITY_FEED_KEY, type CommunityPost } from "./useQueryCommunityFeedSwr"
+import {
+    isCommunityFeedKey,
+    patchFeedPostInPages,
+    type CommunityFeedPage,
+} from "./useQueryCommunityFeedSwr"
 import { postDetailKey, type PostDetail } from "./useQueryPostDetailSwr"
 
 /** Apply the like toggle to a post-shaped item (feed row or detail). */
@@ -23,14 +27,16 @@ const applyLike = <T extends { id: string; likes: number; liked: boolean }>(
 
 /**
  * Toggles the current user's like on a community post with optimistic update +
- * rollback, mutating BOTH the feed cache (`["community-feed"]`) and the post
- * detail cache (`["post-detail", postId]`) so the feed row and detail page stay
- * consistent. Guests get the `AuthenticationModal` and nothing toggles.
+ * rollback, mutating BOTH the feed caches (every `useSWRInfinite` community-feed
+ * aggregate, via {@link isCommunityFeedKey}) and the post detail cache
+ * (`["post-detail", postId]`) so the feed row and detail page stay consistent.
+ * Guests get the `AuthenticationModal` and nothing toggles.
  *
  * The write hits the community REST reactions API (`PUT`/`DELETE
  * /community/reactions`). ANY failure — transport reject OR a non-2xx envelope
- * (`RestError`) — rolls the optimistic state back; on success the post-detail
- * cache is revalidated so its authoritative `likeCount`/`likedByMe` reconcile.
+ * (`RestError`) — rolls the optimistic state back by re-applying the toggle
+ * (`applyLike` is its own inverse); on success the post-detail cache is
+ * revalidated so its authoritative `likeCount`/`likedByMe` reconcile.
  */
 export const useMutateReactPostSwr = () => {
     const t = useTranslations("communityHub")
@@ -43,18 +49,17 @@ export const useMutateReactPostSwr = () => {
                 return
             }
 
-            // snapshot both caches for rollback
-            let feedSnapshot: Array<CommunityPost> | undefined
+            // snapshot the detail cache for rollback; the paged feed reverts by
+            // re-applying the (involutive) toggle.
             let detailSnapshot: PostDetail | undefined
+            const toggleFeed = () =>
+                mutate<Array<CommunityFeedPage>>(
+                    isCommunityFeedKey,
+                    (pages) => patchFeedPostInPages(pages, postId, (post) => applyLike(post, postId)),
+                    { revalidate: false },
+                )
 
-            await mutate<Array<CommunityPost>>(
-                COMMUNITY_FEED_KEY,
-                (current) => {
-                    feedSnapshot = current
-                    return current?.map((post) => applyLike(post, postId))
-                },
-                { revalidate: false },
-            )
+            await toggleFeed()
             await mutate<PostDetail>(
                 postDetailKey(postId),
                 (current) => {
@@ -73,7 +78,7 @@ export const useMutateReactPostSwr = () => {
             } catch {
                 // Only a failure of the WRITE (transport reject OR RestError envelope)
                 // rolls back the optimistic state.
-                await mutate(COMMUNITY_FEED_KEY, feedSnapshot, { revalidate: false })
+                await toggleFeed()
                 await mutate(postDetailKey(postId), detailSnapshot, { revalidate: false })
                 toast.danger(t("engagement.likeFailed"))
                 return

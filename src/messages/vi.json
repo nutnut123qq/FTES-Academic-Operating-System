@@ -5657,6 +5657,7 @@
       "unlike": "Bỏ thích",
       "comment": "Bình luận",
       "share": "Chia sẻ",
+      "repost": "Đăng lại",
       "save": "Lưu xem sau",
       "saved": "Đã lưu",
       "copyLink": "Sao chép liên kết",
@@ -5750,6 +5751,10 @@
       "bodyField": "Bạn muốn chia sẻ điều gì?",
       "submit": "Đăng bài",
       "createFailed": "Không đăng được bài viết. Vui lòng thử lại.",
+      "repostTitle": "Đăng lại bài viết",
+      "quotePlaceholder": "Thêm nhận xét (không bắt buộc)…",
+      "repostSubmit": "Đăng lại",
+      "repostFailed": "Không đăng lại được. Vui lòng thử lại.",
       "kinds": {
         "knowledge": "Kiến thức",
         "question": "Câu hỏi",

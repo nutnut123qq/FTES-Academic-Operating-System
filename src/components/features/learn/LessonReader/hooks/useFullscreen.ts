@@ -9,6 +9,33 @@ import { useCallback, useEffect, useRef, useState } from "react"
  * top layer above everything else, so a `position: fixed` sibling in `<body>`
  * (e.g. the AI FAB) is otherwise hidden behind the fullscreened video.
  */
+/**
+ * Whether the browser implements the Fullscreen API for an arbitrary ELEMENT
+ * (i.e. container fullscreen via `Element.requestFullscreen`). iPhone Safari — every
+ * version — does NOT: it exposes fullscreen only on the bare `<video>`, so
+ * `Element.requestFullscreen` is absent and {@link useElementFullscreen}.toggle would
+ * silently no-op. Suppressing the media's native fullscreen (YouTube `fs:0`, HLS
+ * `controlsList="nofullscreen"`) and rendering the custom container button is only
+ * correct when this is true; otherwise the native control must stay.
+ */
+export const isElementFullscreenSupported = (): boolean =>
+    typeof document !== "undefined" &&
+    Boolean(document.fullscreenEnabled) &&
+    typeof document.documentElement.requestFullscreen === "function"
+
+/**
+ * Client-safe reactive read of {@link isElementFullscreenSupported}. Starts `false`
+ * so SSR and the first client render agree (no hydration mismatch), then resolves
+ * to the real capability after mount — gate the custom fullscreen button on it.
+ */
+export const useElementFullscreenSupported = (): boolean => {
+    const [supported, setSupported] = useState(false)
+    useEffect(() => {
+        setSupported(isElementFullscreenSupported())
+    }, [])
+    return supported
+}
+
 export const useFullscreenElement = (): HTMLElement | null => {
     const [element, setElement] = useState<HTMLElement | null>(null)
     useEffect(() => {
@@ -45,7 +72,10 @@ export const useElementFullscreen = <T extends HTMLElement>() => {
     const toggle = useCallback(() => {
         const el = ref.current
         if (!el) return
-        if (document.fullscreenElement) {
+        // Compare by IDENTITY, not truthiness: if a DIFFERENT element is fullscreen
+        // (e.g. another VideoRenderer / diagram viewer), exiting it would be wrong —
+        // this button must fullscreen ITS OWN container.
+        if (document.fullscreenElement === el) {
             void document.exitFullscreen?.()
         } else {
             void el.requestFullscreen?.()

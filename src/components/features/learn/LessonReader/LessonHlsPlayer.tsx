@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl"
 import Hls from "hls.js"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { useWatchPositionReporter } from "./hooks/useWatchPositionReporter"
-import { useElementFullscreen } from "./hooks/useFullscreen"
+import { useElementFullscreen, useElementFullscreenSupported } from "./hooks/useFullscreen"
 import { LessonFullscreenButton } from "./LessonFullscreenButton"
 
 /** Legacy Funnycode stream gateway that resolves `video_*` refs to an HLS manifest. */
@@ -59,6 +59,10 @@ export const LessonHlsPlayer = ({
     // in fullscreen; the native fullscreen button is suppressed via controlsList below.
     const { ref: containerRef, isFullscreen, toggle: toggleFullscreen } =
         useElementFullscreen<HTMLDivElement>()
+    // Only suppress the native <video> fullscreen where element fullscreen exists.
+    // On iPhone Safari (no Element.requestFullscreen) keep the native control so the
+    // lesson stays fullscreenable instead of relying on Safari ignoring controlsList.
+    const canContainerFullscreen = useElementFullscreenSupported()
     const [failed, setFailed] = useState(false)
     const [loading, setLoading] = useState(true)
     const [attempt, setAttempt] = useState(0)
@@ -230,8 +234,10 @@ export const LessonHlsPlayer = ({
                             ref={videoEl}
                             controls
                             // Suppress native fullscreen so the reader fullscreens the
-                            // container div (keeping the AI FAB in view) — not the bare <video>.
-                            controlsList="nofullscreen"
+                            // container div (keeping the AI FAB in view) — not the bare
+                            // <video> — but only where container fullscreen works; on
+                            // iPhone keep the native control (see canContainerFullscreen).
+                            controlsList={canContainerFullscreen ? "nofullscreen" : undefined}
                             disablePictureInPicture
                             playsInline
                             onTimeUpdate={handleTimeUpdate}
@@ -248,10 +254,12 @@ export const LessonHlsPlayer = ({
                         {loading ? (
                             <Skeleton className="absolute inset-0 size-full rounded-2xl" />
                         ) : null}
-                        <LessonFullscreenButton
-                            isFullscreen={isFullscreen}
-                            onToggle={toggleFullscreen}
-                        />
+                        {canContainerFullscreen ? (
+                            <LessonFullscreenButton
+                                isFullscreen={isFullscreen}
+                                onToggle={toggleFullscreen}
+                            />
+                        ) : null}
                     </div>
                 </CardContent>
             </Card>

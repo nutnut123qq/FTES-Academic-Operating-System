@@ -5,7 +5,11 @@ import { Button, Typography, cn } from "@heroui/react"
 import { LockSimpleIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { useWatchPositionReporter } from "./hooks/useWatchPositionReporter"
-import { useElementFullscreen } from "./hooks/useFullscreen"
+import {
+    isElementFullscreenSupported,
+    useElementFullscreen,
+    useElementFullscreenSupported,
+} from "./hooks/useFullscreen"
 import { LessonFullscreenButton } from "./LessonFullscreenButton"
 
 /** Minimal shape of the YouTube IFrame Player API surface we use. */
@@ -122,6 +126,10 @@ export const LessonYouTubePlayer = ({
     // via playerVars.fs=0) so the AI FAB can be portalled into the fullscreen element.
     const { ref: containerRef, isFullscreen, toggle: toggleFullscreen } =
         useElementFullscreen<HTMLDivElement>()
+    // On browsers without element fullscreen (iPhone Safari) the custom button can't
+    // work, so keep YouTube's OWN fullscreen button (fs:1) and hide ours instead of
+    // leaving the lesson with NO way to fullscreen.
+    const canContainerFullscreen = useElementFullscreenSupported()
     const [apiFailed, setApiFailed] = useState(false)
     /** Live player handle so the reporter can read position/duration on demand. */
     const playerRef = useRef<YouTubePlayer | null>(null)
@@ -231,13 +239,22 @@ export const LessonYouTubePlayer = ({
                 const target = document.createElement("div")
                 target.className = "size-full"
                 hostRef.current.appendChild(target)
+                // fs:0 hides YouTube's own fullscreen button so the reader fullscreens
+                // the container div (keeping the AI FAB visible) — but ONLY where
+                // element fullscreen exists. On iPhone Safari keep fs:1 so the native
+                // (video) fullscreen remains reachable. Read the capability directly
+                // (client, post-mount) so it's correct on first player build.
+                const nativeFsButton = isElementFullscreenSupported() ? 0 : 1
                 player = new window.YT.Player(target, {
                     videoId,
                     width: "100%",
                     height: "100%",
-                    // fs:0 hides YouTube's own fullscreen button so the reader
-                    // fullscreens the container div (keeping the AI FAB visible).
-                    playerVars: { rel: 0, modestbranding: 1, playsinline: 1, fs: 0 },
+                    playerVars: {
+                        rel: 0,
+                        modestbranding: 1,
+                        playsinline: 1,
+                        fs: nativeFsButton,
+                    },
                     events: {
                         onReady: () => {
                             // Clamp / enforce in case the player resumes mid-video.
@@ -336,7 +353,9 @@ export const LessonYouTubePlayer = ({
             )}
         >
             <div ref={hostRef} className="size-full" />
-            <LessonFullscreenButton isFullscreen={isFullscreen} onToggle={toggleFullscreen} />
+            {canContainerFullscreen ? (
+                <LessonFullscreenButton isFullscreen={isFullscreen} onToggle={toggleFullscreen} />
+            ) : null}
         </div>
     )
 }

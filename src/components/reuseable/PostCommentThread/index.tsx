@@ -42,21 +42,33 @@ export const CommentRow = ({
     onReply,
     replyLabel,
     isReply,
+    hasThreadline,
 }: {
     comment: PostComment
     onReply?: (comment: PostComment) => void
     replyLabel: string
     isReply?: boolean
+    /**
+     * Draw the Threads-style vertical connector under this (top-level) comment's
+     * avatar, running down to its replies. Set when the comment has replies.
+     */
+    hasThreadline?: boolean
 }) => {
     return (
         <div className={cn("flex items-start gap-3", isReply && "ml-9")}>
-            <UserLink
-                username={comment.authorUsername}
-                displayName={comment.author}
-                hideName
-                size="sm"
-                classNames={{ avatar: "size-8" }}
-            />
+            {/* avatar column — carries the vertical threadline down to the replies */}
+            <div className="flex shrink-0 flex-col items-center self-stretch">
+                <UserLink
+                    username={comment.authorUsername}
+                    displayName={comment.author}
+                    hideName
+                    size="sm"
+                    classNames={{ avatar: "size-8" }}
+                />
+                {hasThreadline ? (
+                    <div aria-hidden className="mt-1 w-0.5 flex-1 rounded-full bg-separator" />
+                ) : null}
+            </div>
             <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                     <UserLink username={comment.authorUsername} displayName={comment.author} showAvatar={false} />
@@ -187,23 +199,45 @@ export const PostCommentThread = ({
                         </Typography>
                     ) : (
                         <div className="flex flex-col gap-3">
-                            {comments.map((comment) => (
-                                <div key={comment.id} className="flex flex-col gap-3">
-                                    <CommentRow
-                                        comment={comment}
-                                        onReply={onReply}
-                                        replyLabel={t("engagement.reply")}
-                                    />
-                                    {comment.replies?.map((reply) => (
+                            {comments.map((comment) => {
+                                const replies = comment.replies ?? []
+                                return (
+                                    <div key={comment.id} className="flex flex-col gap-3">
                                         <CommentRow
-                                            key={reply.id}
-                                            comment={reply}
+                                            comment={comment}
+                                            onReply={onReply}
                                             replyLabel={t("engagement.reply")}
-                                            isReply
+                                            hasThreadline={replies.length > 0}
                                         />
-                                    ))}
-                                </div>
-                            ))}
+                                        {replies.map((reply, index) => {
+                                            const isLast = index === replies.length - 1
+                                            return (
+                                                <div key={reply.id} className="relative">
+                                                    {/* trunk: continues the avatar threadline; the
+                                                        last reply stops at the avatar center */}
+                                                    <span
+                                                        aria-hidden
+                                                        className={cn(
+                                                            "pointer-events-none absolute left-4 -top-3 w-0.5 -translate-x-1/2 bg-separator",
+                                                            isLast ? "h-7" : "bottom-0",
+                                                        )}
+                                                    />
+                                                    {/* elbow: connects the trunk to the reply avatar */}
+                                                    <span
+                                                        aria-hidden
+                                                        className="pointer-events-none absolute left-4 top-4 h-0.5 w-5 bg-separator"
+                                                    />
+                                                    <CommentRow
+                                                        comment={reply}
+                                                        replyLabel={t("engagement.reply")}
+                                                        isReply
+                                                    />
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                )
+                            })}
                         </div>
                     )}
 

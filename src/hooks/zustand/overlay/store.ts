@@ -16,6 +16,20 @@ export interface FollowListContext {
 }
 
 /**
+ * The post being quoted/reposted, carried into the community composer so it can
+ * render the embedded quoted-post card and share it (C-1
+ * `POST /community/posts/{id}/shares`). A minimal serializable snapshot of the
+ * feed card — never a live node.
+ */
+export interface CommunityQuoteContext {
+    id: string
+    author: string
+    authorUsername: string
+    title: string
+    snippet: string
+}
+
+/**
  * Serializable snapshot of a selection rect (viewport coordinates), captured
  * BEFORE the browser selection is cleared. Drives where the desktop
  * selection-anchored AI panel is placed (right of the rect → flip left → under).
@@ -122,6 +136,8 @@ interface OverlayStoreState {
     adModalContext: QueryActiveAdvertisementData | null
     /** Follow-list modal payload (whose graph + which tab). */
     followListContext: FollowListContext | null
+    /** Post being quoted/reposted in the community composer (null for a plain compose). */
+    communityComposerQuote: CommunityQuoteContext | null
     /** Content-AI selected model — shared between the chat composer + the settings modal. */
     contentAiSelectedModel: string | null
     /** Bumped by the settings modal after clearing history → signals the chat to reset its thread. */
@@ -151,6 +167,8 @@ interface OverlayStoreState {
     setAdModalContext: (context: QueryActiveAdvertisementData | null) => void
     /** Stash the follow-list modal payload. */
     setFollowListContext: (context: FollowListContext | null) => void
+    /** Stash (or clear) the post being quoted/reposted in the composer. */
+    setCommunityComposerQuote: (context: CommunityQuoteContext | null) => void
     /** Set the content-AI selected model. */
     setContentAiSelectedModel: (model: string | null) => void
     /** Signal the chat thread to reset (after the settings modal clears the saved history). */
@@ -185,6 +203,7 @@ export const useOverlayStore = create<OverlayStoreState>((set) => ({
     paymentContext: null,
     adModalContext: null,
     followListContext: null,
+    communityComposerQuote: null,
     contentAiSelectedModel: null,
     contentAiClearNonce: 0,
     contentAiSelection: null,
@@ -202,6 +221,7 @@ export const useOverlayStore = create<OverlayStoreState>((set) => ({
     setPaymentContext: (context) => set({ paymentContext: context }),
     setAdModalContext: (context) => set({ adModalContext: context }),
     setFollowListContext: (context) => set({ followListContext: context }),
+    setCommunityComposerQuote: (context) => set({ communityComposerQuote: context }),
     setContentAiSelectedModel: (model) => set({ contentAiSelectedModel: model }),
     signalContentAiCleared: () =>
         set((state) => ({ contentAiClearNonce: state.contentAiClearNonce + 1 })),

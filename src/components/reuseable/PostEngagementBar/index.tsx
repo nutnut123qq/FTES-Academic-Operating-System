@@ -14,6 +14,7 @@ import {
     ShareNetworkIcon,
     LinkSimpleIcon,
     PaperPlaneTiltIcon,
+    RepeatIcon,
 } from "@phosphor-icons/react"
 import { useLocale, useTranslations } from "next-intl"
 import { SaveButton } from "@/components/blocks/buttons/SaveButton"
@@ -48,6 +49,12 @@ export interface PostEngagementBarProps extends WithClassNames<undefined> {
     commentsRegionId?: string
     /** Detail-page variant: focuses the composer instead of toggling a thread. */
     onCommentClick?: () => void
+    /**
+     * Repost/quote affordance (C-1). When provided a 🔁 button renders after the
+     * comment button and opens the composer in quote mode with this post. Omit it
+     * on surfaces without a repost flow (e.g. discussion).
+     */
+    onRepost?: () => void
     /** Absolute URL of the item — required only when `actions.share` is enabled. */
     postUrl?: string
     /** Title used for the native share sheet (falls back to the URL). */
@@ -96,6 +103,7 @@ export const PostEngagementBar = ({
     commentsExpanded = false,
     commentsRegionId,
     onCommentClick,
+    onRepost,
     postUrl,
     shareTitle,
     saveEntityType,
@@ -215,6 +223,19 @@ export const PostEngagementBar = ({
                             {formatCompactCount(commentsCount, locale)}
                         </span>
                     )}
+                </Button>
+            ) : null}
+
+            {onRepost ? (
+                <Button
+                    isIconOnly
+                    size="sm"
+                    variant="ghost"
+                    aria-label={t("engagement.repost")}
+                    onPress={onRepost}
+                    onClick={stop}
+                >
+                    <RepeatIcon aria-hidden focusable="false" className="size-5" />
                 </Button>
             ) : null}
 

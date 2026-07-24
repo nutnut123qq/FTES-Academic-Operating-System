@@ -1,7 +1,13 @@
 "use client"
 
 import { useCallback } from "react"
-import { useOverlayStore, type OverlayKey, type FollowListContext, type AnchorRect } from "./store"
+import {
+    useOverlayStore,
+    type OverlayKey,
+    type FollowListContext,
+    type CommunityQuoteContext,
+    type AnchorRect,
+} from "./store"
 import type { PaymentContext } from "@/modules/types/payment"
 import type { QueryActiveAdvertisementData } from "@/modules/api/graphql/queries/types/active-advertisement"
 
@@ -76,8 +82,33 @@ export const useAuthenticationOverlayState = () => {
 export const useAvatarUploadOverlayState = () => useOverlayHandle("avatarUpload")
 /** Challenge overlay state. */
 export const useChallengeOverlayState = () => useOverlayHandle("challenge")
-/** Community composer modal overlay state (feed "Có gì mới?" trigger). */
-export const useCommunityComposerOverlayState = () => useOverlayHandle("communityComposer")
+/**
+ * Community composer modal overlay state (feed "Có gì mới?" trigger).
+ *
+ * `open()` starts a plain compose and CLEARS any stale quote; `openQuote(post)`
+ * opens the composer in repost/quote mode with the embedded post (C-1). The
+ * composer reads `quote` to render the quoted-post card and route submit to
+ * `sharePost`, and clears it via `setQuote(null)` after a successful share.
+ * @returns the overlay handle plus `openQuote`, `quote`, and `setQuote`.
+ */
+export const useCommunityComposerOverlayState = () => {
+    const base = useOverlayHandle("communityComposer")
+    const quote = useOverlayStore((state) => state.communityComposerQuote)
+    const setQuote = useOverlayStore((state) => state.setCommunityComposerQuote)
+    const openOverlay = useOverlayStore((state) => state.openOverlay)
+    const open = useCallback(() => {
+        setQuote(null)
+        openOverlay("communityComposer")
+    }, [setQuote, openOverlay])
+    const openQuote = useCallback(
+        (context: CommunityQuoteContext) => {
+            setQuote(context)
+            openOverlay("communityComposer")
+        },
+        [setQuote, openOverlay],
+    )
+    return { ...base, open, openQuote, quote, setQuote }
+}
 /** Content overlay state. */
 export const useContentOverlayState = () => useOverlayHandle("content")
 /** Content AI chat drawer overlay state (ask FTES AOS AI about the current content). */

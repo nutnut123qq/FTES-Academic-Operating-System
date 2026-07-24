@@ -332,6 +332,7 @@
     "courses": "Khóa học",
     "community": "Cộng đồng",
     "blog": "Blog",
+    "quests": "Nhiệm vụ",
     "activity": "Hoạt động",
     "wallet": "Ví",
     "search": "Tìm kiếm",
@@ -5585,7 +5586,12 @@
       "cancelReply": "Hủy",
       "like": "Thích",
       "unlike": "Bỏ thích",
-      "likeCount": "{count} lượt thích"
+      "likeCount": "{count} lượt thích",
+      "you": "Bạn",
+      "member": "Thành viên",
+      "prev": "Trước",
+      "next": "Sau",
+      "pageOf": "Trang {page}/{total}"
     },
     "upload": {
       "title": "Tải lên tài nguyên",
@@ -5656,6 +5662,7 @@
       "unlike": "Bỏ thích",
       "comment": "Bình luận",
       "share": "Chia sẻ",
+      "repost": "Đăng lại",
       "save": "Lưu xem sau",
       "saved": "Đã lưu",
       "copyLink": "Sao chép liên kết",
@@ -5749,6 +5756,10 @@
       "bodyField": "Bạn muốn chia sẻ điều gì?",
       "submit": "Đăng bài",
       "createFailed": "Không đăng được bài viết. Vui lòng thử lại.",
+      "repostTitle": "Đăng lại bài viết",
+      "quotePlaceholder": "Thêm nhận xét (không bắt buộc)…",
+      "repostSubmit": "Đăng lại",
+      "repostFailed": "Không đăng lại được. Vui lòng thử lại.",
       "kinds": {
         "knowledge": "Kiến thức",
         "question": "Câu hỏi",
@@ -6170,6 +6181,10 @@
       "videoUnavailable": "Không thể phát video này.",
       "markComplete": "Đánh dấu hoàn thành",
       "completed": "Đã hoàn thành",
+      "player": {
+        "fullscreen": "Xem toàn màn hình",
+        "exitFullscreen": "Thoát toàn màn hình"
+      },
       "celebration": {
         "title": "Hoàn thành bài học!",
         "body": "Làm tốt lắm! Cùng FrosTES tiếp tục sang bài tiếp theo nhé."

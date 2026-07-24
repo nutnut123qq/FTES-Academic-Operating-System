@@ -14,17 +14,30 @@ import { CommunityComposerForm } from "@/components/features/community/Community
  * `ModalContainer`, controlled by the `communityComposer` overlay key.
  */
 export const CommunityComposerModal = ({ className }: WithClassNames<undefined>) => {
-    const { isOpen, setOpen, close } = useCommunityComposerOverlayState()
+    const { isOpen, setOpen, close, quote, setQuote } = useCommunityComposerOverlayState()
     const t = useTranslations("communityHub")
 
+    // Dismissing the modal (X / ESC / backdrop) must drop any stashed repost quote —
+    // it lives in the shared overlay store, so a leftover quote would otherwise hijack
+    // the next plain compose (modal AND the /community/new page read the same store).
+    // A successful share already clears it; this covers the abandon paths.
+    const onOpenChange = (next: boolean) => {
+        setOpen(next)
+        if (!next) {
+            setQuote(null)
+        }
+    }
+
     return (
-        <Modal isOpen={isOpen} onOpenChange={setOpen}>
+        <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
             <Modal.Backdrop>
                 <Modal.Container>
                     <Modal.Dialog className={cn(className)}>
                         <Modal.CloseTrigger />
                         <Modal.Header>
-                            <div className="text-2xl font-bold">{t("composer.title")}</div>
+                            <div className="text-2xl font-bold">
+                                {quote ? t("composer.repostTitle") : t("composer.title")}
+                            </div>
                         </Modal.Header>
                         <Modal.Body>
                             <CommunityComposerForm autoFocusTitle onSubmitted={close} />

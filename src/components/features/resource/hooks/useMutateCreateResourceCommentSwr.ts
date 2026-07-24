@@ -1,51 +1,32 @@
 "use client"
 
-import { useCallback } from "react"
 import useSWRMutation from "swr/mutation"
 
-import { createResourceCommentMock } from "./resource-comments-mock"
-import type { CreateResourceCommentInput, ResourceCommentItem } from "./resource-comments-mock"
-import { resourceCommentsSwrKey } from "./useQueryResourceCommentsSwr"
-import type { ResourceCommentsSwrKey } from "./useQueryResourceCommentsSwr"
+import {
+    postResourceComment,
+    type PostResourceCommentRequest,
+    type ResourceCommentView,
+} from "@/modules/api/rest/resource"
+
+/** Trigger arg: the resource + the comment/reply payload. */
+export interface CreateResourceCommentArg {
+    resourceId: string
+    request: PostResourceCommentRequest
+}
 
 /**
- * Creates a comment (optional `parentId` makes it a one-level reply) with an
- * optimistic append into the comments cache and rollback on error. Mocked;
- * the trigger throws on failure so callers can keep the draft + show an error.
- * @param resourceId - The resource being commented on.
+ * Posts a resource Q&A comment (or a one-level reply via `parentId`) to the real
+ * C-4 BE (`POST /api/v1/resources/{id}/comments`). The caller revalidates the
+ * comments page on success; `trigger` rejects on failure so the draft is kept.
+ * Mirrors `usePostLessonCommentSwr`.
  */
-export const useMutateCreateResourceCommentSwr = (resourceId: string) => {
-    const { trigger, isMutating } = useSWRMutation<
-        Array<ResourceCommentItem>,
+export const useMutateCreateResourceCommentSwr = () => {
+    return useSWRMutation<
+        ResourceCommentView,
         Error,
-        ResourceCommentsSwrKey,
-        CreateResourceCommentInput
-    >(
-        resourceCommentsSwrKey(resourceId),
-        ([, id], { arg }) => createResourceCommentMock(id, arg),
+        "RESOURCE_COMMENT_CREATE",
+        CreateResourceCommentArg
+    >("RESOURCE_COMMENT_CREATE", (_key, { arg }) =>
+        postResourceComment(arg.resourceId, arg.request),
     )
-
-    const createComment = useCallback(
-        (input: CreateResourceCommentInput) => {
-            // temp item shown until the mock "server" list replaces the cache
-            const optimistic: ResourceCommentItem = {
-                id: `temp-${Date.now()}`,
-                parentId: input.parentId,
-                author: { ...input.author },
-                text: input.text,
-                createdAt: new Date().toISOString(),
-                likeCount: 0,
-                likedByMe: false,
-            }
-            return trigger(input, {
-                optimisticData: (current) => [...(current ?? []), optimistic],
-                populateCache: true,
-                rollbackOnError: true,
-                revalidate: false,
-            })
-        },
-        [trigger],
-    )
-
-    return { createComment, isMutating }
 }

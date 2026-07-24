@@ -206,3 +206,37 @@ export interface CollectionDetailResponse {
     collection: CollectionResponse
     items: Array<CollectionItemResponse>
 }
+
+// ---------------------------------------------------------------- resource comments (C-4)
+
+/**
+ * A threaded resource Q&A comment (C-4). Mirrors the course `LessonCommentView`:
+ * top-level comments carry one level of nested `replies`; a reply row carries an
+ * empty `replies` array. A deleted comment comes back as a tombstone
+ * (`status: "DELETED"`, `userId: null`) with its replies preserved.
+ */
+export interface ResourceCommentView {
+    id: string
+    userId: string | null
+    parentId: string | null
+    content: string
+    /** `VISIBLE` | `DELETED`. */
+    status: string
+    createdAt: string
+    replies: Array<ResourceCommentView>
+}
+
+/** Body sent to `POST /api/v1/resources/{id}/comments`. */
+export interface PostResourceCommentRequest {
+    /** Parent comment id when replying; omit/null for a top-level comment. */
+    parentId?: string | null
+    content: string
+}
+
+/** Paged resource comments (`GET /api/v1/resources/{id}/comments?page=&size=`). */
+export interface ResourceCommentsPage {
+    items: Array<ResourceCommentView>
+    page: number
+    size: number
+    total: number
+}

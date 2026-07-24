@@ -6,8 +6,20 @@ import { useTranslations } from "next-intl"
 import { toast } from "@heroui/react"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
 import { addComment } from "@/modules/api/rest/community"
-import { COMMUNITY_FEED_KEY, type CommunityPost } from "./useQueryCommunityFeedSwr"
+import {
+    mutateCommunityFeeds,
+    patchFeedPostInPages,
+    type CommunityFeedPage,
+} from "./useQueryCommunityFeedSwr"
 import { postDetailKey, type PostComment, type PostDetail } from "./useQueryPostDetailSwr"
+
+/** Apply a signed delta to the target post's comment count across every feed page. */
+const patchFeedCommentCount = (postId: string, delta: number) =>
+    (pages: Array<CommunityFeedPage> | undefined): Array<CommunityFeedPage> | undefined =>
+        patchFeedPostInPages(pages, postId, (post) => ({
+            ...post,
+            comments: Math.max(0, post.comments + delta),
+        }))
 
 /** Input for a comment/reply submission. */
 export interface SubmitCommentInput {
@@ -28,9 +40,12 @@ export interface SubmitCommentInput {
 /**
  * Creates a comment (top-level or one-level reply) on a community post with an
  * optimistic append to the `["post-detail", postId]` cache (which the inline
- * thread and detail page share) plus a +1 to the feed cache's comment count.
- * On explicit failure the optimistic node is removed, counts revert, and the
- * caller is told to restore the draft (via the thrown error / false return).
+ * thread and detail page share) plus a +1 to the comment count on EVERY
+ * community-feed cache holding the post (For You + the following/campus/trending
+ * tab variants), via a key matcher — the previous single-key patch missed the
+ * active tab whenever it wasn't For You. On explicit failure the optimistic node
+ * is removed, the count is reverted symmetrically, and the caller is told to
+ * restore the draft (via the thrown error / false return).
  *
  * Guests get the `AuthenticationModal` and nothing is appended.
  *
@@ -39,7 +54,7 @@ export interface SubmitCommentInput {
  */
 export const useMutateCreatePostCommentSwr = () => {
     const t = useTranslations("communityHub")
-    const { mutate } = useSWRConfig()
+    const { mutate, cache } = useSWRConfig()
     const { requireAuth } = useRequireAuth()
 
     return useCallback(
@@ -58,7 +73,6 @@ export const useMutateCreatePostCommentSwr = () => {
             }
 
             let detailSnapshot: PostDetail | undefined
-            let feedSnapshot: Array<CommunityPost> | undefined
 
             await mutate<PostDetail>(
                 postDetailKey(input.postId),
@@ -81,16 +95,10 @@ export const useMutateCreatePostCommentSwr = () => {
                 },
                 { revalidate: false },
             )
-            await mutate<Array<CommunityPost>>(
-                COMMUNITY_FEED_KEY,
-                (current) => {
-                    feedSnapshot = current
-                    return current?.map((post) =>
-                        post.id === input.postId ? { ...post, comments: post.comments + 1 } : post,
-                    )
-                },
-                { revalidate: false },
-            )
+            // +1 on EVERY feed-tab cache that holds this post (For You / following /
+            // campus / trending), not only the default For You cache — a post
+            // commented from another tab lives under that tab's key.
+            await mutateCommunityFeeds(cache, mutate, patchFeedCommentCount(input.postId, 1))
 
             try {
                 await addComment(input.postId, {
@@ -102,7 +110,8 @@ export const useMutateCreatePostCommentSwr = () => {
                 // rolls back the optimistic node + feed count and tells the caller to
                 // keep the draft.
                 await mutate(postDetailKey(input.postId), detailSnapshot, { revalidate: false })
-                await mutate(COMMUNITY_FEED_KEY, feedSnapshot, { revalidate: false })
+                // revert the +1 symmetrically across the same feed caches
+                await mutateCommunityFeeds(cache, mutate, patchFeedCommentCount(input.postId, -1))
                 toast.danger(t("engagement.commentFailed"))
                 return false
             }
@@ -113,6 +122,6 @@ export const useMutateCreatePostCommentSwr = () => {
             await mutate(postDetailKey(input.postId)).catch(() => {})
             return true
         },
-        [mutate, requireAuth, t],
+        [mutate, cache, requireAuth, t],
     )
 }

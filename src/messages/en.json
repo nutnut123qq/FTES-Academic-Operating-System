@@ -332,6 +332,7 @@
     "courses": "Courses",
     "community": "Community",
     "blog": "Blog",
+    "quests": "Quests",
     "activity": "Activity",
     "wallet": "Wallet",
     "search": "Search",
@@ -5585,7 +5586,12 @@
       "cancelReply": "Cancel",
       "like": "Like",
       "unlike": "Unlike",
-      "likeCount": "{count} likes"
+      "likeCount": "{count} likes",
+      "you": "You",
+      "member": "Member",
+      "prev": "Prev",
+      "next": "Next",
+      "pageOf": "Page {page}/{total}"
     },
     "upload": {
       "title": "Upload resource",
@@ -5656,6 +5662,7 @@
       "unlike": "Unlike",
       "comment": "Comment",
       "share": "Share",
+      "repost": "Repost",
       "save": "Save for later",
       "saved": "Saved",
       "copyLink": "Copy link",
@@ -5749,6 +5756,10 @@
       "bodyField": "What do you want to share?",
       "submit": "Post",
       "createFailed": "Couldn't publish your post. Please try again.",
+      "repostTitle": "Repost",
+      "quotePlaceholder": "Add a comment (optional)…",
+      "repostSubmit": "Repost",
+      "repostFailed": "Couldn't repost. Please try again.",
       "kinds": {
         "knowledge": "Knowledge",
         "question": "Question",
@@ -6170,6 +6181,10 @@
       "videoUnavailable": "This video can't be played.",
       "markComplete": "Mark as complete",
       "completed": "Completed",
+      "player": {
+        "fullscreen": "Fullscreen",
+        "exitFullscreen": "Exit fullscreen"
+      },
       "celebration": {
         "title": "Lesson complete!",
         "body": "Nice work! Keep the momentum going with FrosTES on the next lesson."

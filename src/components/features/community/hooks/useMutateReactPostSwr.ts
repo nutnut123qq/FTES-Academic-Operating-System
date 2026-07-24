@@ -7,9 +7,8 @@ import { toast } from "@heroui/react"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
 import { reactToPost, unreactPost } from "@/modules/api/rest/community"
 import {
-    isCommunityFeedKey,
+    mutateCommunityFeeds,
     patchFeedPostInPages,
-    type CommunityFeedPage,
 } from "./useQueryCommunityFeedSwr"
 import { postDetailKey, type PostDetail } from "./useQueryPostDetailSwr"
 
@@ -28,7 +27,7 @@ const applyLike = <T extends { id: string; likes: number; liked: boolean }>(
 /**
  * Toggles the current user's like on a community post with optimistic update +
  * rollback, mutating BOTH the feed caches (every `useSWRInfinite` community-feed
- * aggregate, via {@link isCommunityFeedKey}) and the post detail cache
+ * aggregate, via {@link mutateCommunityFeeds}) and the post detail cache
  * (`["post-detail", postId]`) so the feed row and detail page stay consistent.
  * Guests get the `AuthenticationModal` and nothing toggles.
  *
@@ -40,7 +39,7 @@ const applyLike = <T extends { id: string; likes: number; liked: boolean }>(
  */
 export const useMutateReactPostSwr = () => {
     const t = useTranslations("communityHub")
-    const { mutate } = useSWRConfig()
+    const { mutate, cache } = useSWRConfig()
     const { requireAuth } = useRequireAuth()
 
     return useCallback(
@@ -53,10 +52,8 @@ export const useMutateReactPostSwr = () => {
             // re-applying the (involutive) toggle.
             let detailSnapshot: PostDetail | undefined
             const toggleFeed = () =>
-                mutate<Array<CommunityFeedPage>>(
-                    isCommunityFeedKey,
-                    (pages) => patchFeedPostInPages(pages, postId, (post) => applyLike(post, postId)),
-                    { revalidate: false },
+                mutateCommunityFeeds(cache, mutate, (pages) =>
+                    patchFeedPostInPages(pages, postId, (post) => applyLike(post, postId)),
                 )
 
             await toggleFeed()
@@ -88,6 +85,6 @@ export const useMutateReactPostSwr = () => {
             // counts. A revalidation refetch error here must NOT undo the like.
             await mutate(postDetailKey(postId)).catch(() => {})
         },
-        [mutate, requireAuth, t],
+        [mutate, cache, requireAuth, t],
     )
 }

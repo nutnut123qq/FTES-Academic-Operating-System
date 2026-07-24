@@ -7,7 +7,7 @@ import { toast } from "@heroui/react"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
 import { addComment } from "@/modules/api/rest/community"
 import {
-    isCommunityFeedKey,
+    mutateCommunityFeeds,
     patchFeedPostInPages,
     type CommunityFeedPage,
 } from "./useQueryCommunityFeedSwr"
@@ -54,7 +54,7 @@ export interface SubmitCommentInput {
  */
 export const useMutateCreatePostCommentSwr = () => {
     const t = useTranslations("communityHub")
-    const { mutate } = useSWRConfig()
+    const { mutate, cache } = useSWRConfig()
     const { requireAuth } = useRequireAuth()
 
     return useCallback(
@@ -98,11 +98,7 @@ export const useMutateCreatePostCommentSwr = () => {
             // +1 on EVERY feed-tab cache that holds this post (For You / following /
             // campus / trending), not only the default For You cache — a post
             // commented from another tab lives under that tab's key.
-            await mutate<Array<CommunityFeedPage>>(
-                isCommunityFeedKey,
-                patchFeedCommentCount(input.postId, 1),
-                { revalidate: false },
-            )
+            await mutateCommunityFeeds(cache, mutate, patchFeedCommentCount(input.postId, 1))
 
             try {
                 await addComment(input.postId, {
@@ -115,11 +111,7 @@ export const useMutateCreatePostCommentSwr = () => {
                 // keep the draft.
                 await mutate(postDetailKey(input.postId), detailSnapshot, { revalidate: false })
                 // revert the +1 symmetrically across the same feed caches
-                await mutate<Array<CommunityFeedPage>>(
-                    isCommunityFeedKey,
-                    patchFeedCommentCount(input.postId, -1),
-                    { revalidate: false },
-                )
+                await mutateCommunityFeeds(cache, mutate, patchFeedCommentCount(input.postId, -1))
                 toast.danger(t("engagement.commentFailed"))
                 return false
             }
@@ -130,6 +122,6 @@ export const useMutateCreatePostCommentSwr = () => {
             await mutate(postDetailKey(input.postId)).catch(() => {})
             return true
         },
-        [mutate, requireAuth, t],
+        [mutate, cache, requireAuth, t],
     )
 }

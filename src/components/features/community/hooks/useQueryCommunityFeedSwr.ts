@@ -2,7 +2,7 @@
 
 import useSWRInfinite from "swr/infinite"
 import { unstable_serialize } from "swr/infinite"
-import type { Arguments } from "swr"
+import type { Cache, ScopedMutator } from "swr"
 import { useLocale } from "next-intl"
 import {
     FeedTab,
@@ -53,7 +53,7 @@ export type CommunityFeedTab = "forYou" | "following" | "campus" | "trending"
  * `useSWRInfinite`, whose assembled pages live under an `$inf$…` string key that
  * embeds the serialized first-page key `["community-feed", tab, campus, cursor]`.
  * The optimistic like/comment mutations target those aggregate caches through
- * {@link isCommunityFeedKey} rather than a single exact key.
+ * {@link mutateCommunityFeeds} rather than a single exact key.
  */
 export const COMMUNITY_FEED_TAG = "community-feed"
 
@@ -61,14 +61,58 @@ export const COMMUNITY_FEED_TAG = "community-feed"
 const INFINITE_PREFIX = unstable_serialize(() => null)
 
 /**
- * Matches EVERY community-feed infinite cache regardless of scope (For You /
- * following / campus / trending and any campus-scoped variant). The value under
- * such a key is the assembled `Array<CommunityFeedPage>`, so patch it with
- * {@link patchFeedPostInPages}. Used by the optimistic like/comment mutations and
- * the composer revalidation so a change lands on whichever tab is mounted.
+ * Enumerate the mounted community-feed infinite cache keys — one `$inf$…` string
+ * key per scope (For You / following / campus / trending and any campus-scoped
+ * variant). Each such key embeds the serialized first-page key, which always
+ * begins with {@link COMMUNITY_FEED_TAG}, so a substring test isolates the feed
+ * caches from every other `$inf$` aggregate in the cache.
+ *
+ * NOTE: this must address the `$inf$` keys DIRECTLY. SWR 2.x global
+ * `mutate(filterFn)` deliberately SKIPS every `$inf$`/`$sub$` aggregate key before
+ * the filter runs (and hands the filter the per-page ARRAY key, never the string),
+ * so a key-filter can never reach the infinite feed caches — hence the manual scan.
  */
-export const isCommunityFeedKey = (key: Arguments): boolean =>
-    typeof key === "string" && key.startsWith(INFINITE_PREFIX) && key.includes(COMMUNITY_FEED_TAG)
+export const communityFeedCacheKeys = (cache: Cache): Array<string> => {
+    const keys: Array<string> = []
+    for (const key of cache.keys()) {
+        if (
+            typeof key === "string" &&
+            key.startsWith(INFINITE_PREFIX) &&
+            key.includes(COMMUNITY_FEED_TAG)
+        ) {
+            keys.push(key)
+        }
+    }
+    return keys
+}
+
+/**
+ * Apply `updater` to EVERY mounted community-feed infinite cache (all scopes) with
+ * no revalidation — the value under each key is the assembled
+ * `Array<CommunityFeedPage>`, so patch it with {@link patchFeedPostInPages}. Used
+ * by the optimistic like/comment mutations so a change lands on whichever tab is
+ * mounted. Addressing each exact `$inf$` string key works where a key-filter
+ * cannot (see {@link communityFeedCacheKeys}).
+ */
+export const mutateCommunityFeeds = (
+    cache: Cache,
+    mutate: ScopedMutator,
+    updater: (
+        pages: Array<CommunityFeedPage> | undefined,
+    ) => Array<CommunityFeedPage> | undefined,
+): Promise<Array<unknown>> =>
+    Promise.all(
+        communityFeedCacheKeys(cache).map((key) =>
+            mutate<Array<CommunityFeedPage>>(key, updater, { revalidate: false }),
+        ),
+    )
+
+/** Revalidate (refetch) every mounted community-feed infinite cache. */
+export const revalidateCommunityFeeds = (
+    cache: Cache,
+    mutate: ScopedMutator,
+): Promise<Array<unknown>> =>
+    Promise.all(communityFeedCacheKeys(cache).map((key) => mutate(key)))
 
 /** Apply `patch` to the target post across every loaded feed page (identity elsewhere). */
 export const patchFeedPostInPages = (
@@ -126,7 +170,7 @@ type FeedPageKey = readonly [string, CommunityFeedTab, string, string]
  * auth (viewer-scoped visibility); a guest / error surfaces via `error` and the feed renders
  * its empty/error state. Keyed on the tab (and `campus` when given) so switching scope
  * refetches; every page key starts with `COMMUNITY_FEED_TAG` so the optimistic like/comment
- * mutations keep patching the right aggregate cache via {@link isCommunityFeedKey}.
+ * mutations keep patching the right aggregate cache via {@link mutateCommunityFeeds}.
  *
  * `campus` scopes the CAMPUS tab; omit it and the BE falls back to the viewer's profile
  * campus (empty connection when the viewer has no campus). Ignored for other tabs.

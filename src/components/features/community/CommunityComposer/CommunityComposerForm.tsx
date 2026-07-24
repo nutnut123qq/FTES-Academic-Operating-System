@@ -11,7 +11,7 @@ import { createPost, sharePost } from "@/modules/api/rest/community"
 import type { MediaInput } from "@/modules/api/rest/community/types"
 import { QuotedPostCard } from "@/components/reuseable/QuotedPostCard"
 import { useCommunityComposerOverlayState } from "@/hooks/zustand/overlay/hooks"
-import { isCommunityFeedKey } from "../hooks/useQueryCommunityFeedSwr"
+import { revalidateCommunityFeeds } from "../hooks/useQueryCommunityFeedSwr"
 
 /** Post kinds a user can attach (§6). */
 const KINDS = ["knowledge", "question", "showcase", "resource"] as const
@@ -49,7 +49,7 @@ export const CommunityComposerForm = ({
 }: CommunityComposerFormProps) => {
     const t = useTranslations("communityHub")
     const router = useRouter()
-    const { mutate } = useSWRConfig()
+    const { mutate, cache } = useSWRConfig()
     const { requireAuth } = useRequireAuth()
     // Repost/quote mode (C-1): when a quoted post is stashed, the form embeds it and
     // routes submit to `sharePost` instead of `createPost`.
@@ -105,7 +105,7 @@ export const CommunityComposerForm = ({
             // infinite cache so an already-loaded feed shows the new post on
             // back-navigation, but keep it non-throwing: a feed-refetch error after a
             // SUCCESSFUL write must not be reported as a failure nor block nav.
-            mutate(isCommunityFeedKey).catch(() => {})
+            revalidateCommunityFeeds(cache, mutate).catch(() => {})
             onSubmitted?.()
             router.push(`/community/${createdId}`)
         } catch {

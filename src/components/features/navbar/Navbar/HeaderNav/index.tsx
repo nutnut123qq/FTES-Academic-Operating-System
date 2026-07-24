@@ -12,8 +12,8 @@ export type HeaderNavProps = WithClassNames<undefined>
 
 /**
  * HeaderNav — desktop global navigation in the top bar (header-first shell,
- * NO global left sidebar anywhere). Exactly five top-level modules from
- * {@link useAppNav} (Home · Workplace · Course · Community · Blog), each a PLAIN LABEL
+ * NO global left sidebar anywhere). The top-level modules from
+ * {@link useAppNav} (Home · Workplace · Course · Community · Blog · Quests), each a PLAIN LABEL
  * LINK to its landing route. Per product directive (design D9) there are NO
  * dropdowns, carets, hover sub-menus, or mega-menus — nested features are
  * reached from inside each module's own landing page.

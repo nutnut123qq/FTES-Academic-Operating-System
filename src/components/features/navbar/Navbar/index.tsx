@@ -60,10 +60,10 @@ export type NavbarProps = WithClassNames<undefined>
  * global left sidebar exists anywhere).
  *
  * Container: owns the Ctrl/Cmd+K search shortcut + the mobile drawer state and
- * composes the logo, the 5-module {@link HeaderNav}, search trigger (full field
+ * composes the logo, the {@link HeaderNav} modules, search trigger (full field
  * on desktop, icon on mobile), the standalone language dropdown,
  * notifications, the account menu, and a mobile expand button that opens
- * a navigation drawer mirroring the same 5 modules as PLAIN LINK ROWS from the
+ * a navigation drawer mirroring the same modules as PLAIN LINK ROWS from the
  * shared {@link useAppNav} source (no accordion, no nested children). `"use client"`
  * for hooks + keyboard handling.
  * @param props - optional root class name (placement only)

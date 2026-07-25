@@ -42,6 +42,33 @@ const api = async (request: APIRequestContext, role: Role, freshToken = false) =
 
 const body = async (res: { json: () => Promise<{ data: unknown }> }) => (await res.json()).data
 
+/**
+ * Nhóm do CHÍNH người gọi sở hữu — TÁI DÙNG nếu đã có, chỉ tạo khi chưa.
+ *
+ * BE chặn tạo nhóm 3/ngày/người (`GroupRateLimiter.checkCreate`). Smoke mà tạo nhóm mới
+ * mỗi lần chạy thì sau 3 lần/ngày sẽ đỏ vì `POST /groups` bị từ chối, id rỗng, mọi call
+ * sau đó thành 400 — đỏ vì TRẦN chứ không phải vì sản phẩm hỏng (đã dính đúng bẫy này
+ * ngày 2026-07-25). Tái dùng cũng khỏi để lại rác nhóm sau mỗi lượt chạy.
+ *
+ * Nhận diện nhóm của mình bằng `viewerMembership: "OWNER"` mà GET /groups nay đã trả.
+ */
+const ownedGroup = async (as: Awaited<ReturnType<typeof api>>, label: string) => {
+    const page = (await body(await as.get("/groups?page=0&size=50"))) as {
+        items?: Array<{ id: string; viewerMembership?: string | null }>
+    }
+    const mine = (page.items ?? []).find((g) => g.viewerMembership === "OWNER")
+    if (mine) return mine
+
+    const created = await as.post("/groups", {
+        name: `E2E ${label} ${Date.now()}`,
+        groupType: "GENERAL",
+        visibility: "PUBLIC",
+        joinPolicy: "OPEN",
+    })
+    expect(created.status(), "tạo nhóm hỏng (có thể đã đụng trần 3 nhóm/ngày)").toBe(200)
+    return (await body(created)) as { id: string }
+}
+
 /** Resource DRAFT của chính student — đủ để thử bình luận/đánh giá/bộ sưu tập (không cần file). */
 const seedResource = async (as: Awaited<ReturnType<typeof api>>) => {
     const res = await as.post("/resources", {
@@ -159,12 +186,14 @@ test.describe("community + groups", () => {
         const asStudent = await api(request, "student")
         const me = (await body(await asStudent.get("/profiles/me"))) as { userId: string }
 
-        const group = (await body(
-            await asLecturer.post("/groups", { name: `E2E mời ${Date.now()}`, groupType: "GENERAL", visibility: "PUBLIC", joinPolicy: "APPROVAL" }),
-        )) as { id: string }
+        const group = await ownedGroup(asLecturer, "mời")
         // Tạo nhóm cấp role mới cho người tạo → token cũ thành stale, phải lấy token mới trước khi mời.
         const asLecturerFresh = await api(request, "lecturer", true)
-        expect((await asLecturerFresh.post(`/groups/${group.id}/invitations`, { inviteeId: me.userId })).status()).toBe(200)
+        // Mời lại người ĐÃ có lời mời PENDING → BE từ chối (400). Tái dùng nhóm nên phải chấp nhận
+        // cả hai: 200 (lời mời mới) hoặc 400 (đã mời từ lượt chạy trước) — cái cần khẳng định là
+        // hộp thư bên dưới, không phải lần bấm mời này.
+        const invited = await asLecturerFresh.post(`/groups/${group.id}/invitations`, { inviteeId: me.userId })
+        expect([200, 400]).toContain(invited.status())
 
         const inbox = (await body(await asStudent.get("/invitations/me"))) as {
             status: string
@@ -180,9 +209,7 @@ test.describe("community + groups", () => {
 
     test("gỡ ảnh nhóm: idempotent, trả GroupResponse, viewerMembership đúng vai", async ({ request }) => {
         const as = await api(request, "student")
-        const group = (await body(
-            await as.post("/groups", { name: `E2E ảnh ${Date.now()}`, groupType: "GENERAL", visibility: "PUBLIC", joinPolicy: "OPEN" }),
-        )) as { id: string }
+        const group = await ownedGroup(as, "ảnh")
         const asFresh = await api(request, "student", true)
 
         for (const kind of ["AVATAR", "COVER"]) {

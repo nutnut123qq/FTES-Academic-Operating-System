@@ -2500,7 +2500,8 @@
       "aiQa": "Đăng nhập để hỏi AI về tài liệu",
       "rate": "Đăng nhập để đánh giá tài nguyên",
       "uploadResource": "Đăng nhập để đăng tài liệu",
-      "follow": "Đăng nhập để theo dõi người dùng"
+      "follow": "Đăng nhập để theo dõi người dùng",
+      "feed": "Đăng nhập để xem bảng tin cộng đồng"
     }
   },
   "priceTag": {
@@ -6266,7 +6267,10 @@
       "emptyHint": "Hãy là người đầu tiên chia sẻ điều gì đó với cộng đồng.",
       "emptyCompose": "Đăng bài",
       "pinnedBadge": "Đã ghim",
-      "pinned": "Đã ghim"
+      "pinned": "Đã ghim",
+      "guestTitle": "Đăng nhập để xem bảng tin",
+      "guestHint": "Bảng tin cộng đồng hiển thị theo người dùng, hãy đăng nhập để xem bài viết phù hợp với bạn.",
+      "guestCta": "Đăng nhập"
     },
     "search": {
       "placeholder": "Tìm bài viết theo tiêu đề, nội dung…",

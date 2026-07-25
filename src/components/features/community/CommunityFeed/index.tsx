@@ -320,6 +320,8 @@ export const CommunityFeedRow = ({
 export const CommunityFeed = ({ tab = "forYou" }: { tab?: CommunityFeedTab } = {}) => {
     const t = useTranslations("communityHub")
     const { open: openComposer } = useCommunityComposerOverlayState()
+    // Guests get 401 from the viewer-scoped feed read — see `isAuthGate` below.
+    const { authenticated, requireAuth } = useRequireAuth()
 
     // Search/filter state. Typing a keyword or choosing a filter switches to search mode (global,
     // all published posts) and replaces the tab feed; clearing everything returns to the tab feed.
@@ -368,7 +370,35 @@ export const CommunityFeed = ({ tab = "forYou" }: { tab?: CommunityFeedTab } = {
     // empty state guides them there instead of showing the generic "be the first to post".
     const isCampus = tab === "campus"
 
-    const emptyContent = searching
+    /**
+     * The BE feed read is viewer-scoped, so a guest gets 401 `PLATFORM_UNAUTHORIZED`
+     * rather than a public feed. That is an AUTH GATE, not a broken request — routing
+     * it into the generic error state showed "Không tải được bảng tin" with a Retry
+     * button that could never succeed. Detect the gate (duck-typed `status`, mirroring
+     * `sectionStatusOf` in the subject-career hook, plus the platform error code that
+     * the GraphQL gateway returns) and invite sign-in instead.
+     */
+    const isAuthGate =
+        !authenticated &&
+        Boolean(error) &&
+        (() => {
+            const status = (error as { status?: unknown } | null)?.status
+            if (status === 401 || status === 403) return true
+            return /PLATFORM_UNAUTHORIZED|401/.test(String((error as Error | null)?.message ?? ""))
+        })()
+
+    const emptyContent = isAuthGate
+        ? {
+            icon: <FtesMascot pose="explain" size="lg" />,
+            title: t("feed.guestTitle"),
+            description: t("feed.guestHint"),
+            action: (
+                <Button size="sm" variant="primary" onPress={() => requireAuth("auth.context.feed")}>
+                    {t("feed.guestCta")}
+                </Button>
+            ),
+        }
+        : searching
         ? { title: t("search.resultsEmpty"), description: t("search.resultsEmptyHint") }
         : isCampus
             ? { title: t("feed.campusEmpty"), description: t("feed.campusEmptyHint") }
@@ -399,7 +429,7 @@ export const CommunityFeed = ({ tab = "forYou" }: { tab?: CommunityFeedTab } = {
                 skeleton={<FeedSkeleton />}
                 isEmpty={posts.length === 0}
                 emptyContent={emptyContent}
-                error={posts.length === 0 ? error : undefined}
+                error={posts.length === 0 && !isAuthGate ? error : undefined}
                 errorContent={{
                     title: t("feed.error"),
                     onRetry: () => void mutate(),

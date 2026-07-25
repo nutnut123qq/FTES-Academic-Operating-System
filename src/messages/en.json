@@ -2491,7 +2491,8 @@
       "aiQa": "Sign in to ask AI about this document",
       "rate": "Sign in to rate this resource",
       "uploadResource": "Sign in to upload a resource",
-      "follow": "Sign in to follow this user"
+      "follow": "Sign in to follow this user",
+      "feed": "Sign in to view the community feed"
     }
   },
   "priceTag": {
@@ -6266,7 +6267,10 @@
       "emptyHint": "Be the first to share something with the community.",
       "emptyCompose": "Start a post",
       "pinnedBadge": "Pinned",
-      "pinned": "Pinned"
+      "pinned": "Pinned",
+      "guestTitle": "Sign in to see the feed",
+      "guestHint": "The community feed is personalised, so sign in to see posts relevant to you.",
+      "guestCta": "Sign in"
     },
     "search": {
       "placeholder": "Search posts by title or content…",

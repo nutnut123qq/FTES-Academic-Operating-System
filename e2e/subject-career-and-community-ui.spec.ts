@@ -53,18 +53,19 @@ test("feed cộng đồng: menu ⋯ mở được và phân quyền theo chủ b
 })
 
 /**
- * BUG (nghiệm thu 2026-07-25): `GET /community/posts` là 401 với khách, nên bảng tin của
- * khách rơi vào nhánh lỗi chung — hiện "Không tải được bảng tin. Vui lòng thử lại." kèm nút
- * "Thử lại" bấm mãi vẫn hỏng, thay vì mời đăng nhập. Không có dòng bài nào render nên ca
- * "khách bấm ⋯ → modal đăng nhập" cũng không chạy tới được.
+ * Feed đọc theo viewer nên khách nhận 401 `PLATFORM_UNAUTHORIZED` — đó là CỔNG ĐĂNG NHẬP,
+ * không phải request hỏng. Trước đây 401 rơi vào nhánh lỗi chung nên khách thấy "Không tải
+ * được bảng tin" kèm nút "Thử lại" bấm mãi vẫn hỏng (bug nghiệm thu 2026-07-25).
  *
- * Giữ test ở dạng `fail` để suite vẫn xanh mà lỗi không bị quên: khi FE phân biệt 401 với
- * lỗi mạng, bỏ `test.fail()` là test này thành hàng rào thật.
+ * Đã vá: `CommunityFeed` tách 401/403 ra khỏi lỗi mạng và hiện lời mời đăng nhập. Test này
+ * giờ là hàng rào thật — nếu ai đó gộp 401 lại vào nhánh lỗi, nó sẽ đỏ.
  */
 test("khách xem bảng tin: phải mời đăng nhập, không phải báo lỗi tải", async ({ page }) => {
-    test.fail()
     await page.goto("/vi/community")
     // Chờ request feed kịp hỏng — kiểm "không có chữ lỗi" ngay lúc đang tải thì luôn đúng giả.
     await page.waitForTimeout(8_000)
     await expect(page.getByText(/Không tải được bảng tin/)).toHaveCount(0)
+    // Assert DƯƠNG: phải thấy lời mời đăng nhập. Thiếu vế này thì một trang trắng trơn
+    // cũng "pass" — đúng cái bẫy làm bug lọt lần trước.
+    await expect(page.getByText(/Đăng nhập để xem bảng tin/)).toBeVisible()
 })

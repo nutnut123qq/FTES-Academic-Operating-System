@@ -116,8 +116,8 @@ vi.mock("./LearningInput", async (importOriginal) => {
 })
 
 // The real LearningInput module still imports its lesson-picker hook — silence it.
-vi.mock("@/hooks/swr/api/graphql/queries/useQueryMyLearnedLessonsSwr", () => ({
-    useQueryMyLearnedLessonsSwr: () => ({ data: [], isLoading: false }),
+vi.mock("@/hooks/swr/api/rest/queries/useGetMyLearnedLessonsSwr", () => ({
+    useGetMyLearnedLessonsSwr: () => ({ data: [], isLoading: false }),
 }))
 
 vi.mock("@/components/reuseable/MarkdownContent", () => ({

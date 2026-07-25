@@ -667,3 +667,18 @@ export interface LessonReactionSummaryView {
     /** `"LIKE"` when the viewer has liked this lesson, else `null`. */
     myReaction: string | null
 }
+
+/**
+ * Một bài học viên đã học gần đây (`GET /courses/me/learned-lessons`, mới nhất trước).
+ * Nguồn cho picker "chọn bài" của AI Hub — thay query GraphQL legacy `myLearnedLessons`
+ * (BE chưa từng có field đó: gọi vào trả FieldUndefined nên picker luôn rỗng).
+ */
+export interface LearnedLessonView {
+    lessonId: string
+    title: string
+    courseId: string
+    /** Null khi khoá đã bị xoá. */
+    courseTitle: string | null
+    /** ISO-8601. */
+    lastLearnedAt: string
+}

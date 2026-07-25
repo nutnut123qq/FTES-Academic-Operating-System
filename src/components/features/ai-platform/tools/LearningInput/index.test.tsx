@@ -60,12 +60,12 @@ vi.mock("@phosphor-icons/react", () => {
 })
 
 const lessons = [
-    // base64url("Lesson:abc-1") / ("Lesson:xyz-2") — the opaque globalId the picker keys on.
-    { globalId: "TGVzc29uOmFiYy0x", label: "Bài 1" },
-    { globalId: "TGVzc29uOnh5ei0y", label: "Bài 2" },
+    // REST /courses/me/learned-lessons trả lessonId THÔ (không còn globalId base64 kiểu StarCI).
+    { lessonId: "abc-1", title: "Bài 1", courseId: "c1", courseTitle: "Khoá A", lastLearnedAt: "2026-07-25T00:00:00Z" },
+    { lessonId: "xyz-2", title: "Bài 2", courseId: "c1", courseTitle: "Khoá A", lastLearnedAt: "2026-07-24T00:00:00Z" },
 ]
-vi.mock("@/hooks/swr/api/graphql/queries/useQueryMyLearnedLessonsSwr", () => ({
-    useQueryMyLearnedLessonsSwr: () => ({ data: lessons, isLoading: false }),
+vi.mock("@/hooks/swr/api/rest/queries/useGetMyLearnedLessonsSwr", () => ({
+    useGetMyLearnedLessonsSwr: () => ({ data: lessons, isLoading: false }),
 }))
 
 const uploadLearningFileToStorage = vi.fn()
@@ -138,11 +138,8 @@ describe("isLearningInputReady", () => {
 })
 
 describe("LearningInput lesson picker", () => {
-    it("gives each lesson option a real collection id (the opaque globalId)", () => {
+    it("gives each lesson option a real collection id (raw lessonId từ REST)", () => {
         render(<LearningInput value={value({ mode: "lesson" })} onChange={() => {}} />)
-        expect(dropdownItems.map((item) => item.id)).toEqual([
-            "TGVzc29uOmFiYy0x",
-            "TGVzc29uOnh5ei0y",
-        ])
+        expect(dropdownItems.map((item) => item.id)).toEqual(["abc-1", "xyz-2"])
     })
 })

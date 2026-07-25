@@ -19,8 +19,7 @@ import {
     WarningCircleIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
-import { useQueryMyLearnedLessonsSwr } from "@/hooks/swr/api/graphql/queries/useQueryMyLearnedLessonsSwr"
-import { fromGlobalId } from "@/modules/utils/globalId"
+import { useGetMyLearnedLessonsSwr } from "@/hooks/swr/api/rest/queries/useGetMyLearnedLessonsSwr"
 import {
     uploadLearningFileToStorage,
     validateLearningFile,
@@ -101,14 +100,15 @@ const prettySize = (bytes: number): string => `${(bytes / (1024 * 1024)).toFixed
  * Shared source input for the learning tools (summary / flashcards / quiz): a two-
  * tab switch between UPLOADING a document (pdf/image → `storageKey`) and picking one
  * of the viewer's recently studied lessons (→ `lessonId`). The BE has no raw-text
- * path, so there is no paste box. The lesson list comes from `myLearnedLessons`
- * (opaque global ids decoded to the raw lesson id the job body needs). When the
- * viewer has no studied lessons the lesson tab explains that and upload stays
- * available.
+ * path, so there is no paste box. The lesson list comes from REST
+ * `GET /courses/me/learned-lessons`, which returns RAW lesson ids (no globalId
+ * decoding) — the old GraphQL `myLearnedLessons` never existed on this BE, so the
+ * picker was permanently empty. When the viewer has no studied lessons the lesson
+ * tab explains that and upload stays available.
  */
 export const LearningInput = ({ value, onChange, isDisabled }: LearningInputProps) => {
     const t = useTranslations("aiPlatform.toolPages.input")
-    const { data: lessons, isLoading } = useQueryMyLearnedLessonsSwr()
+    const { data: lessons, isLoading } = useGetMyLearnedLessonsSwr()
     const fileInputRef = useRef<HTMLInputElement>(null)
 
     const setMode = (mode: LearningInputMode) => onChange({ ...value, mode })
@@ -225,29 +225,31 @@ export const LearningInput = ({ value, onChange, isDisabled }: LearningInputProp
                                 <DropdownMenu
                                     aria-label={t("lessonPlaceholder")}
                                     onAction={(key) => {
-                                        const globalId = String(key)
-                                        const lesson = (lessons ?? []).find((item) => item.globalId === globalId)
+                                        const lessonId = String(key)
+                                        const lesson = (lessons ?? []).find((item) => item.lessonId === lessonId)
                                         if (!lesson) return
+                                        // REST trả lessonId THÔ (khác GraphQL StarCI cũ dùng globalId
+                                        // base64) → dùng thẳng, không decode.
                                         onChange({
                                             ...value,
-                                            lessonId: fromGlobalId(lesson.globalId)?.id ?? null,
-                                            lessonLabel: lesson.label,
+                                            lessonId: lesson.lessonId,
+                                            lessonLabel: lesson.title,
                                         })
                                     }}
                                 >
                                     {(lessons ?? [])
-                                        .filter((lesson) => !!lesson.globalId)
+                                        .filter((lesson) => !!lesson.lessonId)
                                         .map((lesson) => (
                                             <DropdownItem
                                                 // `id` (not just React `key`) is the collection key
                                                 // react-aria hands to `onAction` — a bare `key` is a
                                                 // reserved React prop the collection never sees, so the
                                                 // picked value would be lost (same picker-id bug family).
-                                                key={lesson.globalId}
-                                                id={lesson.globalId}
-                                                textValue={lesson.label}
+                                                key={lesson.lessonId}
+                                                id={lesson.lessonId}
+                                                textValue={lesson.title}
                                             >
-                                                <span className="line-clamp-2">{lesson.label}</span>
+                                                <span className="line-clamp-2">{lesson.title}</span>
                                             </DropdownItem>
                                         ))}
                                 </DropdownMenu>

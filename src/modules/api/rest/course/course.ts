@@ -54,6 +54,7 @@ import type {
     UploadUrlRequest,
     UploadUrlResponse,
     UpsertContentRequest,
+    LearnedLessonView,
 } from "./types"
 
 // ---------------------------------------------------------------- public catalog
@@ -1079,5 +1080,20 @@ export const deleteLessonReaction = async (
     return restRequest<LessonReactionSummaryView>({
         method: "DELETE",
         url: `/courses/lessons/${lessonId}/reactions/${reaction}`,
+    })
+}
+
+/**
+ * Bài viewer đã học gần đây (mới nhất trước) — nguồn picker "chọn bài" của AI Hub.
+ *
+ * `GET /api/v1/courses/me/learned-lessons?limit=` (BE kẹp trần 200, mặc định 50).
+ * Chưa học bài nào → mảng rỗng. Cần đăng nhập.
+ */
+export const getMyLearnedLessons = async (limit?: number): Promise<Array<LearnedLessonView>> => {
+    return restRequest<Array<LearnedLessonView>>({
+        method: "GET",
+        url: "/courses/me/learned-lessons",
+        authenticated: true,
+        params: { limit: limit ?? undefined },
     })
 }

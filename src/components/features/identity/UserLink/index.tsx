@@ -50,6 +50,19 @@ export interface UserLinkProps extends WithClassNames<{ avatar?: string; name?: 
     showAvatar?: boolean
     /** Whether to hide the name and render only the avatar. */
     hideName?: boolean
+    /**
+     * Follow state supplied by the CALLER, for surfaces that already read it for the
+     * whole list in one request
+     * ({@link import("./useQueryFollowedUserIdsSwr").useQueryFollowedUserIdsSwr} over
+     * `GET /community/follows/me`). Optional on purpose: when it is omitted the card
+     * behaves exactly as before (it only knows the state after the viewer toggles it
+     * here), so no other surface changes.
+     *
+     * The card's OWN knowledge still wins when it has any — after an optimistic
+     * toggle the hovercard entry carries the truth, and the batch lot is patched to
+     * match it by the same write.
+     */
+    isFollowing?: boolean
 }
 
 /**
@@ -58,11 +71,15 @@ export interface UserLinkProps extends WithClassNames<{ avatar?: string; name?: 
  * delegates all presentation to {@link UserHovercard} and {@link UserAvatar}.
  *
  * The card is backed by the real public-profile REST read and the follow CTA by
- * the real community follow API (see {@link useMutateFollowUserSwr}). Because the
- * backend exposes no viewer-scoped "am I following this user" flag, the CTA
- * starts in its neutral "Follow" state and only shows "Following" once the viewer
- * toggles it here — the write is idempotent server-side, so a redundant follow is
- * harmless.
+ * the real community follow API (see {@link useMutateFollowUserSwr}).
+ *
+ * The profile read carries no viewer-scoped "am I following this user" flag, so on
+ * its own the CTA can only start neutral. A list surface therefore READS THE WHOLE
+ * PAGE'S state in one request
+ * ({@link import("./useQueryFollowedUserIdsSwr").useQueryFollowedUserIdsSwr}) and
+ * hands it down as {@link UserLinkProps.isFollowing} — without it, hovering someone
+ * you already follow would offer "Theo dõi" again and the press would re-follow
+ * instead of unfollow.
  *
  * @param props - {@link UserLinkProps}
  */
@@ -74,6 +91,7 @@ export const UserLink = ({
     size = "sm",
     showAvatar = true,
     hideName = false,
+    isFollowing: isFollowingProp,
     className,
     classNames,
 }: UserLinkProps) => {
@@ -91,7 +109,14 @@ export const UserLink = ({
     const isOwnProfile =
         Boolean(username) &&
         (currentUser?.username === username || currentUser?.id === profile?.id)
-    const isFollowing = profile?.isFollowedByMe === true
+    /**
+     * The hovercard entry wins WHENEVER IT HAS AN OPINION: it is `undefined` until
+     * either the viewer toggles follow here (optimistic write) or the profile read
+     * grows the flag, and in both cases it is fresher than the batch snapshot the
+     * caller passed in. Otherwise the caller's batch answer decides, and only if
+     * there is neither does the CTA fall back to its neutral state.
+     */
+    const isFollowing = profile?.isFollowedByMe ?? isFollowingProp ?? false
     const showFollowButton = Boolean(profile) && !isOwnProfile
 
     const handleOpenHovercard = useCallback(() => {
@@ -102,10 +127,13 @@ export const UserLink = ({
 
     // Guests get the AuthenticationModal instead of a 401; the optimistic write +
     // rollback lives in the mutation hook, keyed by username so all links sync.
+    // The RESOLVED state goes with the target: the hook derives the direction from
+    // `isFollowedByMe`, so handing it the raw (possibly `undefined`) profile would
+    // re-follow someone the batch read already reported as followed.
     const handleFollowToggle = useCallback(() => {
         if (!profile) return
-        void toggleFollow(profile)
-    }, [profile, toggleFollow])
+        void toggleFollow({ ...profile, isFollowedByMe: isFollowing })
+    }, [profile, isFollowing, toggleFollow])
 
     const nameNode = useMemo(
         () => (

@@ -120,6 +120,12 @@ export const useQueryFollowedUserIdsSwr = (
         {
             revalidateOnFocus: false,
             dedupingInterval: 60_000,
+            // An infinite list grows its id set page by page, and every page CHANGES
+            // the key. Without this the rows would blink back to "Theo dõi" on each
+            // append; the previous answer stays valid meanwhile because it is a
+            // subset answer to the same question (ids absent from it simply have no
+            // verdict yet).
+            keepPreviousData: true,
         },
     )
 

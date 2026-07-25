@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from "next-intl"
 import { useAppSelector } from "@/redux/hooks"
 import { Link } from "@/i18n/navigation"
 import { FtesMascot } from "@/components/reuseable/FtesMascot"
-import { UserLink } from "@/components/features/identity"
+import { UserLink, useQueryFollowedUserIdsSwr } from "@/components/features/identity"
 import { ThreadsPostRow } from "@/components/blocks/feed/ThreadsPostRow"
 import { PostMediaGrid } from "@/components/blocks/feed/PostMediaGrid"
 import { PinnedBadge } from "@/components/blocks/feed/PinnedBadge"
@@ -91,10 +91,21 @@ const FeedSkeleton = () => (
  * {@link useMutateFeedPostOwnerActionsSwr}, which wraps the shared owner hook) —
  * the feed adds only the row-level optimistic removal.
  *
+ * `isFollowing` comes from the PAGE-level batch read (see {@link CommunityFeed}) —
+ * the row never asks for it itself, so a feed of 20 authors costs one request
+ * instead of one per hovered avatar.
+ *
  * Exported for unit tests: rendering ONE row pins the owner gate without
  * standing up the whole paginated feed.
  */
-export const CommunityFeedRow = ({ post }: { post: CommunityPost }) => {
+export const CommunityFeedRow = ({
+    post,
+    isFollowing,
+}: {
+    post: CommunityPost
+    /** Whether the viewer already follows this author; `undefined` = not read yet. */
+    isFollowing?: boolean
+}) => {
     const t = useTranslations("communityHub")
     const locale = useLocale()
     const currentUser = useAppSelector((state) => state.user.user)
@@ -188,9 +199,17 @@ export const CommunityFeedRow = ({ post }: { post: CommunityPost }) => {
                         size="sm"
                         className="size-9"
                         classNames={{ avatar: "size-9" }}
+                        isFollowing={isFollowing}
                     />
                 }
-                author={<UserLink username={post.authorUsername} displayName={post.author} showAvatar={false} />}
+                author={
+                    <UserLink
+                        username={post.authorUsername}
+                        displayName={post.author}
+                        showAvatar={false}
+                        isFollowing={isFollowing}
+                    />
+                }
                 timeLabel={post.timeLabel}
                 threadline={expanded}
             >
@@ -291,6 +310,12 @@ export const CommunityFeedRow = ({ post }: { post: CommunityPost }) => {
  * / filter is set. BOTH are cursor-paginated with `useSWRInfinite`, so the list keeps loading
  * pages through the `InfiniteScrollSentinel` until the BE stops returning a `nextCursor` —
  * there is no fixed first-page ceiling on either.
+ *
+ * Follow state for the authors on screen is read ONCE PER PAGE-SET
+ * ({@link useQueryFollowedUserIdsSwr}) and pushed into every row, so the hovercard CTA
+ * already says "Đang theo dõi" the first time it opens — and a toggle fired from any
+ * row moves the whole feed, because the write patches both the batch lot and the
+ * hovercard entry.
  */
 export const CommunityFeed = ({ tab = "forYou" }: { tab?: CommunityFeedTab } = {}) => {
     const t = useTranslations("communityHub")
@@ -326,6 +351,17 @@ export const CommunityFeed = ({ tab = "forYou" }: { tab?: CommunityFeedTab } = {
     const isLoadingMore = source.isLoadingMore
     const canLoadMore = source.hasMore
     const loadMore = () => void source.setSize((current) => current + 1)
+
+    /**
+     * Follow state for EVERY author currently on screen, in one read
+     * (`GET /community/follows/me`) instead of one profile read per hovered avatar.
+     * The hook dedupes + sorts the ids into a single cache entry and splits them into
+     * `FOLLOW_BATCH_LIMIT`-sized lots itself, so a long infinite feed (the same author
+     * repeated, or well past 100 distinct ones) stays correct without the row knowing
+     * anything. Guests never fetch — the endpoint reads the caller's own edges.
+     */
+    const authorIds = useMemo(() => posts.map((post) => post.authorId), [posts])
+    const { isFollowing } = useQueryFollowedUserIdsSwr(authorIds)
 
     // CAMPUS tab is scoped to the viewer's campus (BE falls back to the profile campus).
     // When empty it usually means the viewer hasn't set a campus on their profile, so the
@@ -372,7 +408,11 @@ export const CommunityFeed = ({ tab = "forYou" }: { tab?: CommunityFeedTab } = {
             >
                 <div className="flex flex-col divide-y divide-separator">
                     {posts.map((post) => (
-                        <CommunityFeedRow key={post.id} post={post} />
+                        <CommunityFeedRow
+                            key={post.id}
+                            post={post}
+                            isFollowing={isFollowing(post.authorId)}
+                        />
                     ))}
                 </div>
                 {canLoadMore ? (

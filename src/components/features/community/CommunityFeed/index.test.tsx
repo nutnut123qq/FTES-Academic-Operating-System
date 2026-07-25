@@ -104,7 +104,22 @@ vi.mock("@phosphor-icons/react", () => ({
 // Presentation the gate does not depend on.
 vi.mock("@/components/blocks/buttons/SaveButton", () => ({ SaveButton: () => <span /> }))
 vi.mock("@/components/reuseable/FtesMascot", () => ({ FtesMascot: () => <span /> }))
-vi.mock("@/components/features/identity", () => ({ UserLink: () => <span /> }))
+// The identity barrel also owns the BATCH follow-state read the feed now consumes:
+// the mock records which ids the page asked about and answers from `followedIds`.
+const batchAsks: Array<ReadonlyArray<string | null | undefined>> = []
+let followedIds: Array<string> = []
+vi.mock("@/components/features/identity", () => ({
+    UserLink: ({ isFollowing }: { isFollowing?: boolean }) => (
+        <span data-testid="user-link" data-following={String(isFollowing)} />
+    ),
+    useQueryFollowedUserIdsSwr: (userIds: ReadonlyArray<string | null | undefined>) => {
+        batchAsks.push(userIds)
+        return {
+            isFollowing: (userId: string | null | undefined) =>
+                Boolean(userId) && followedIds.includes(userId as string),
+        }
+    },
+}))
 vi.mock("@/components/blocks/feed/PostMediaGrid", () => ({ PostMediaGrid: () => <div /> }))
 vi.mock("@/components/reuseable/PostCommentThread", () => ({ PostCommentThread: () => <div /> }))
 vi.mock("@/components/blocks/async/AsyncContent", () => ({
@@ -168,9 +183,10 @@ vi.mock("../hooks/useMutateReactPostSwr", () => ({ useMutateReactPostSwr: () => 
 vi.mock("../hooks/useMutateCreatePostCommentSwr", () => ({
     useMutateCreatePostCommentSwr: () => vi.fn(),
 }))
+let feedPosts: Array<CommunityPost> = []
 vi.mock("../hooks/useQueryCommunityFeedSwr", () => ({
     useQueryCommunityFeedSwr: () => ({
-        posts: [],
+        posts: feedPosts,
         isLoading: false,
         isLoadingMore: false,
         error: undefined,
@@ -188,7 +204,7 @@ vi.mock("@/hooks/zustand/overlay/hooks", () => ({
     useCommunityComposerOverlayState: () => ({ open: vi.fn(), openQuote: vi.fn() }),
 }))
 
-import { CommunityFeedRow } from "./index"
+import { CommunityFeed, CommunityFeedRow } from "./index"
 
 const row: CommunityPost = {
     id: "p1",
@@ -211,6 +227,9 @@ beforeEach(() => {
     deleteFeedPost.mockReset()
     submitReport.mockReset()
     bounced.mockReset()
+    batchAsks.length = 0
+    followedIds = []
+    feedPosts = []
 })
 
 describe("CommunityFeedRow — ⋯ menu", () => {
@@ -269,6 +288,14 @@ describe("CommunityFeedRow — ⋯ menu", () => {
         expect(deleteFeedPost).toHaveBeenCalledWith("p1")
     })
 
+    it("passes the follow state it was given down to BOTH identity links", () => {
+        render(<CommunityFeedRow post={row} isFollowing />)
+
+        const links = screen.getAllByTestId("user-link")
+        expect(links.length).toBe(2)
+        expect(links.map((link) => link.getAttribute("data-following"))).toEqual(["true", "true"])
+    })
+
     it("keeps the editor shut until the raw body arrives", () => {
         currentUser = { id: "u1", username: "minh" }
         render(<CommunityFeedRow post={row} />)
@@ -277,5 +304,51 @@ describe("CommunityFeedRow — ⋯ menu", () => {
         // the truncated snippet, which a save would write over the real body
         fireEvent.click(screen.getByTestId("item-edit"))
         expect(screen.queryByTestId("edit-dialog")).toBeNull()
+    })
+})
+
+/**
+ * The feed is the CONSUMER of the batch follow-state read: one
+ * `GET /community/follows/me` for the whole rendered page instead of one profile
+ * read per hovered avatar. What is pinned here is the wiring the rows depend on —
+ * the ids the page asks about, and the answer reaching every row.
+ */
+describe("CommunityFeed — batch follow state for the page's authors", () => {
+    const post = (id: string, authorId: string | null): CommunityPost => ({
+        ...row,
+        id,
+        authorId,
+        authorUsername: `author-${id}`,
+        author: `Author ${id}`,
+    })
+
+    it("asks about the authors on screen and hands each row its own answer", () => {
+        feedPosts = [post("p1", "a1"), post("p2", "a2"), post("p3", "a1")]
+        followedIds = ["a1"]
+
+        render(<CommunityFeed />)
+
+        // one ask for the page (dedupe/sort/chunking is the hook's job — see
+        // useQueryFollowedUserIdsSwr.test.tsx), covering every author on screen
+        expect(batchAsks.length).toBe(1)
+        expect(batchAsks[0]).toEqual(["a1", "a2", "a1"])
+
+        // two links per row (avatar + name), so the followed author's rows read
+        // "Đang theo dõi" on the FIRST hover, without asking per avatar
+        expect(
+            screen.getAllByTestId("user-link").map((link) => link.getAttribute("data-following")),
+        ).toEqual(["true", "true", "false", "false", "true", "true"])
+    })
+
+    it("tolerates a post whose author id is missing", () => {
+        feedPosts = [post("p1", null)]
+        followedIds = ["a1"]
+
+        render(<CommunityFeed />)
+
+        expect(batchAsks[0]).toEqual([null])
+        expect(
+            screen.getAllByTestId("user-link").map((link) => link.getAttribute("data-following")),
+        ).toEqual(["false", "false"])
     })
 })

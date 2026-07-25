@@ -50,10 +50,11 @@
       cache đánh giá của mình.
 - [x] 4.5 Ghi chú cho một tài nguyên trong bộ sưu tập: `PATCH /resources/collections/{id}/items/
       {resourceId}` giữ nguyên `sortOrder`, ghi chú rỗng = xoá ghi chú, lỗi thì trả lại ghi chú cũ.
-- [ ] 4.6 **Chưa xong:** các hàm client tương ứng (`likeResourceComment` / `unlikeResourceComment` /
-      `getMyResourceRating` / `deleteMyResourceRating` / `updateCollectionItemNote`) và các field
-      `ResourceCommentView.{likedByMe,likeCount}` / `RatingResponse.updatedAt` chưa có trong
-      `src/modules/api/rest/resource` → `tsc --noEmit` còn đỏ ở cụm này.
+- [x] 4.6 **XONG (2026-07-25, đính chính tick sai):** các hàm client tương ứng đã có đủ trong
+      `src/modules/api/rest/resource/resource.ts` — `updateCollectionItemNote` (l.388),
+      `getMyResourceRating` (l.463), `deleteMyResourceRating` (l.476), `likeResourceComment`
+      (l.627), `unlikeResourceComment` (l.642) — kèm field `ResourceCommentView.{likeCount,
+      likedByMe}` và `RatingResponse.updatedAt` trong `types.ts`. `tsc --noEmit` sạch ở cụm này.
 
 ## 5. Community — chuyển cấp báo cáo
 
@@ -68,10 +69,12 @@
       `ESCALATED_REPORTS_KEY` nên **sống qua revalidate**.
 - [x] 5.3 409 = đã chuyển cấp trước đó → đánh dấu như thành công, báo `moderation.escalateAlready`;
       403 / 404 / 429 đi qua `communityErrorMessageKey` và không đánh dấu gì.
-- [ ] 5.4 **Chưa xong:** block `PinnedBadge` mới dựng chưa được feed tiêu thụ — REST feed hiện
-      KHÔNG trả field `pinned` nào (`src/modules/api/rest/community` không có), nên key
-      `communityHub.feed.pinnedBadge` vẫn là key chết. `CommunityPostCard` (block dùng
-      `post.isPinned` của GraphQL cũ) cũng chưa có nơi render. (`ModerationReport.reportId` đã có.)
+- [x] 5.4 **XONG (2026-07-25, đính chính tick sai):** `PinnedBadge` ĐÃ được feed tiêu thụ —
+      `CommunityFeed/index.tsx:221` render `post.pinned ? <PinnedBadge label={t("feed.pinned")}/>`,
+      và `FEED_SELECTION` (`query-community-feed.ts:98`, dùng chung cho cả `communitySearch`) đã
+      chọn `pinned` + `authorId`. Nhãn CHỈ là nhãn: BE đã đẩy bài ghim lên đầu trang đầu, FE tuyệt
+      đối không sắp xếp lại theo cờ này. (`ModerationReport.reportId` đã có.) Còn dư: key
+      `communityHub.feed.pinnedBadge` là alias không dùng (bản dùng thật là `feed.pinned`).
 
 ## 6. Groups Hub — gỡ ảnh nhóm & hộp thư lời mời
 
@@ -102,9 +105,11 @@
       nhãn "Đang theo dõi" ở các dòng danh sách đứng im tới 60s (`dedupingInterval`); nay patch cả
       lô và hoàn lại lô khi write hỏng.
 - [x] 7.3 `getFollowedUserIds` / `FOLLOW_BATCH_LIMIT` đã export từ `src/modules/api/rest/community`.
-- [ ] 7.4 **Chưa xong:** `useQueryFollowedUserIdsSwr` vẫn CHƯA có nơi tiêu thụ — không danh sách tác
-      giả nào (feed / bình luận / thành viên) đọc trạng thái theo dõi theo lô, vì `UserLink` chưa
-      nhận trạng thái từ ngoài (mỗi avatar vẫn tự hỏi hovercard khi hover).
+- [x] 7.4 **XONG (2026-07-25, đính chính tick sai):** `CommunityFeed` gom `authorIds` của mọi bài
+      đang hiển thị (`useMemo` trên `posts`) rồi gọi `useQueryFollowedUserIdsSwr(authorIds)` MỘT lần
+      (`index.tsx:363-364`), và đẩy `isFollowing` xuống cả `UserLink` avatar lẫn `UserLink` tên tác
+      giả — hovercard không còn phải tự hỏi từng avatar. Có test cho cả hook (batch/dedupe/lô) lẫn
+      `UserLink` nhận trạng thái từ ngoài (`UserLink/index.test.tsx` mới).
 
 ## 8. i18n & glue
 
@@ -121,11 +126,24 @@
       `practice.flashcards.rating.${labelKey}` (again / hard / good / easy),
       `resourceHub.apiErrors.${resolveResourceErrorKey(...)}` (5 nhánh) — tất cả đã có key.
 - [x] 8.4 Grep toàn bộ file đã sửa + file mới: 0 key `t("…")` tĩnh còn thiếu ở vi hoặc en.
-- [ ] 8.5 **Chưa xong (ngoài phạm vi glue):** `tsc --noEmit` còn 44 lỗi thuộc cụm 4.6 / 5.4 / 6.5 /
-      7.3 (thiếu export REST + prop component), phải đóng trước khi build.
+- [x] 8.5 **XONG (2026-07-25, đính chính tick sai):** `npx tsc --noEmit` chạy lại trên cây hiện tại
+      → **0 lỗi**; 44 lỗi cũ (thiếu export REST + prop component ở cụm 4.6 / 5.4 / 6.5 / 7.3) đã
+      được đóng hết. `vitest` cụm subject + identity + CommunityFeed: 13 file / 104 test pass.
+- [x] 8.6 **Glue đợt thống kê & nghề (2026-07-25):** thêm 49 key × 2 locale (98 mục) —
+      `subjects.statistics.{updatedAt,notComputed,topContributors,popularResources,leaderboard,xp,
+      contributions,unknownMember,unknownResource,you,empty.*}` và `subjects.career.{subtitle,
+      openCenter,empty,skills*,skillLevel,skillTarget,skillEligible,roadmap*,related,opportunit*,
+      opportunityTypes.*,remote,deadline,careerPath*,viewSubject}`. JSON hợp lệ, parity vi/en = 0
+      lệch (5512 key mỗi bên). Key ĐỘNG `career.opportunityTypes.${typeKey}` phủ đủ 4 nhánh
+      (`INTERNSHIP`→internship · `JOB`→job · `PORTFOLIO_REVIEW`→portfolioReview · fallback `other`).
+      Quét lại toàn repo (2506 file ts/tsx, 2731 tham chiếu `t("…")`): **0 key tĩnh thiếu** ở vi/en.
 
 ## 9. Deferred — vẫn chờ BE
 
-- [ ] 9.1 Thống kê môn (`SubjectStatistics`) và định hướng nghề theo môn (`SubjectCareer`) vẫn là dữ
-      liệu mẫu — chưa có endpoint.
+- [x] 9.1 **ĐÃ GIẢI PHÓNG (2026-07-25):** thống kê môn và định hướng nghề theo môn KHÔNG còn là dữ
+      liệu mẫu — `useQuerySubjectStatsSwr` đọc `getSubjectStatistics` (`GET /subjects/{code}/
+      statistics`, join tên người/tài nguyên từ `getSubjectMembers` + `getResourceDetail`, không bịa
+      tên: không khớp thì hiện `unknownMember` / `unknownResource`) và `useQuerySubjectCareerSwr`
+      đọc module career thật (skills / roadmaps / opportunities / recommendations + workspace
+      aggregate). Xem `workplace-community-full-wire` §16.5.
 - [ ] 9.2 Độ khó / tỉ lệ chấp nhận / cờ "đã giải" của thử thách — không có trên payload danh sách.

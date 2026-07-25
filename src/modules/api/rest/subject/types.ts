@@ -305,12 +305,18 @@ export interface StatisticsView {
     topStudents: Array<TopStudentView>
     topContributors: Array<TopContributorView>
     popularResources: Array<PopularResourceView>
-    completionRate: string
+    /**
+     * Completion rate as a percent (0..100, 2dp) computed from the linked courses.
+     * `null` until the worker computes a snapshot, or when no linked course has
+     * enrollments — a missing rate is NOT zero.
+     */
+    completionRate: number | null
     memberCount: number
     postCount: number
     resourceCount: number
     leaderboard: Array<SubjectLeaderboardEntry>
-    computedAt: string
+    /** Timestamp of the last worker recompute; `null` before the first run. */
+    computedAt: string | null
 }
 
 // ---------------------------------------------------------------- practice: quiz (V266/V267)

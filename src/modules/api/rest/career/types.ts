@@ -31,19 +31,36 @@ export interface CareerRoadmap {
     updatedAt: string
 }
 
+/**
+ * One step of `GET /career/roadmaps/{slug}` → `steps[]`.
+ *
+ * WIRE SHAPE: the backend serves these rows straight from a
+ * `JdbcTemplate.queryForList` (`RoadmapService#steps`), so the keys arrive
+ * **snake_case** (`step_order`, `skill_ids`, `subject_ids`, `target_levels`,
+ * `starci_course_refs`); `uuid[]` columns are flattened to `string[]` and `jsonb`
+ * columns to plain JSON before serialisation. The camelCase spellings are kept as
+ * optional aliases so a future DTO-based response keeps type-checking — read the row
+ * tolerantly (accept both) instead of assuming one.
+ */
 export interface CareerRoadmapStep {
     id: string
-    stepOrder: number
     title: string
     description?: string
-    /** Backend JSON column; shape depends on roadmap definition. */
-    skillIds: unknown
-    /** Backend JSON column; shape depends on roadmap definition. */
-    targetLevels: unknown
-    /** Backend JSON column; shape depends on roadmap definition. */
-    subjectIds: unknown
-    /** Backend JSON column; shape depends on roadmap definition. */
-    starciCourseRefs: unknown
+    /** Step position; `step_order` on the wire today. */
+    stepOrder?: number
+    step_order?: number
+    /** Skill UUIDs required by the step (`uuid[]` → `string[]`). */
+    skillIds?: unknown
+    skill_ids?: unknown
+    /** `{skillId: targetLevel}` object. */
+    targetLevels?: unknown
+    target_levels?: unknown
+    /** Subject UUIDs the step points at (`uuid[]` → `string[]`). */
+    subjectIds?: unknown
+    subject_ids?: unknown
+    /** StarCI course refs; only filled once the integration hub syncs them. */
+    starciCourseRefs?: unknown
+    starci_course_refs?: unknown
 }
 
 export interface CareerRoadmapDetail {

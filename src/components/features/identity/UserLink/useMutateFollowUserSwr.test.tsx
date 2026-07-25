@@ -21,7 +21,8 @@ const unfollowUser = vi.fn()
 const getFollowedUserIds = vi.fn()
 const getPublicProfile = vi.fn()
 const toastDanger = vi.fn()
-const requireAuth = vi.fn((_contextKey?: string) => true)
+// typed with the context-key argument so the assertions can read `mock.calls`
+const requireAuth = vi.fn((contextKey?: string): boolean => Boolean(contextKey) || true)
 
 vi.mock("@/modules/api/rest/community", () => ({
     followUser: (userId: string) => followUser(userId),
@@ -153,7 +154,9 @@ describe("useMutateFollowUserSwr", () => {
 
         renderProbe()
         await waitFor(() => expect(screen.getByTestId("followers").textContent).toBe("10"))
-        // BE exposes no viewer-scoped follow flag → unknown until the viewer acts.
+        // The hovercard read does not MAP a viewer-scoped follow flag, so the card's
+        // own state is unknown until the viewer acts; a list surface fills that gap
+        // with the batch read (`useQueryFollowedUserIdsSwr`).
         expect(screen.getByTestId("followed").textContent).toBe("undefined")
 
         fireEvent.click(screen.getByText("toggle"))
@@ -278,8 +281,8 @@ describe("useMutateFollowUserSwr — batch follow-state lots", () => {
         renderBatchProbe()
         await waitFor(() => expect(screen.getByTestId("row-following").textContent).toBe("true"))
 
-        // the card starts "not following" (no viewer-scoped flag on the profile read),
-        // so the first press follows and the second one unfollows
+        // the card itself starts "not following" (the profile read is not mapped to a
+        // viewer-scoped flag), so the first press follows and the second one unfollows
         await act(async () => {
             fireEvent.click(screen.getByText("toggle"))
         })

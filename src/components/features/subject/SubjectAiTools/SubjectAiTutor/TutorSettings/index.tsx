@@ -4,54 +4,59 @@ import React from "react"
 import { Button, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 
-import { archiveSession } from "@/modules/api/rest/ai"
+import { deleteAiSessions } from "@/modules/api/rest/ai"
 
 import { ToolSurfaceHeader } from "../../ToolSurfaceHeader"
-import {
-    TUTOR_SESSIONS_PAGE_SIZE,
-    useTutorSessionsInfiniteSwr,
-} from "../useSubjectTutorSwr"
-
-/** Safety cap on how many pages "clear all" pulls before archiving (20 × 20 = 400 sessions). */
-const MAX_CLEAR_PAGES = 20
+import { useTutorSessionsInfiniteSwr } from "../useSubjectTutorSwr"
 
 /** Props for {@link TutorSettings}. */
 export interface TutorSettingsProps {
+    /**
+     * UUID of the subject being cleared — the value stored in `context_ref`, NOT the
+     * code from the route. Sending nothing here would wipe EVERY tutor conversation of
+     * the user, so it is required.
+     */
+    subjectUuid: string
     /** Active answering model, already shortened for display (read-only context). */
     modelLabel: string
     /** Back to the chat view. */
     onBack: () => void
-    /** Fired after every conversation was archived (parent resets the thread). */
+    /** Fired after the subject's conversations were archived (parent resets the thread). */
     onCleared?: () => void
 }
 
 /**
  * In-panel tutor settings: the active model as read-only context + a destructive
- * "archive every conversation" action.
+ * "archive this subject's conversations" action.
  *
- * The BE has NO bulk endpoint and no subject filter on the sessions list
- * (`SessionView` omits `contextRef`), so the action loops
- * `DELETE /api/v1/ai/sessions/{id}` over the loaded TUTOR_CHAT sessions — i.e. it
- * clears the user's AI-tutor conversations, not only this subject's. The copy
- * says exactly that; a bulk + subject-scoped endpoint is the proper fix.
+ * The clear is ONE request — `DELETE /api/v1/ai/sessions?feature=TUTOR_CHAT&subjectId=…`
+ * — instead of the old `DELETE /ai/sessions/{id}` loop, which was both N+1 AND wiped the
+ * user's conversations in OTHER subjects (the list was not scoped). The BE answers
+ * `{archived}`, the number of rows that actually flipped, and that count is shown rather
+ * than swallowed; a repeat press legitimately archives `0`.
+ *
+ * A failure surfaces its own message and does NOT fire `onCleared`, but the list is
+ * revalidated either way: a partially applied archive must not leave a stale list behind.
  */
 export const TutorSettings = ({
+    subjectUuid,
     modelLabel,
     onBack,
     onCleared,
 }: TutorSettingsProps) => {
     const t = useTranslations()
     const headingRef = React.useRef<HTMLHeadingElement>(null)
-    const sessionsSwr = useTutorSessionsInfiniteSwr()
+    const sessionsSwr = useTutorSessionsInfiniteSwr(subjectUuid)
     const [isClearing, setIsClearing] = React.useState(false)
     const [clearError, setClearError] = React.useState(false)
+    const [archivedCount, setArchivedCount] = React.useState<number | null>(null)
 
     React.useEffect(() => {
         headingRef.current?.focus()
     }, [])
 
-    // already-archived rows still come back from the list (the BE query has no status
-    // predicate) — skip them so "clear all" does not re-DELETE the same sessions
+    // the loaded pages only decide whether the action has anything to act on — the write
+    // itself is server-side and covers pages that were never scrolled into view
     const sessions = (sessionsSwr.data ?? [])
         .flat()
         .filter((session) => session.status !== "ARCHIVED")
@@ -62,40 +67,21 @@ export const TutorSettings = ({
         }
         setIsClearing(true)
         setClearError(false)
-        let failed = false
+        setArchivedCount(null)
 
-        // "all" must mean all: pull the remaining pages first (the list is paginated
-        // and the settings view only holds page 0 until it grows), capped so a broken
-        // pager can never spin forever.
-        let pages = sessionsSwr.data ?? []
-        for (let guardPage = 0; guardPage < MAX_CLEAR_PAGES; guardPage += 1) {
-            const last = pages[pages.length - 1]
-            if (!last || last.length < TUTOR_SESSIONS_PAGE_SIZE) {
-                break
-            }
-            const next = await sessionsSwr.setSize(pages.length + 1)
-            if (!next || next.length === pages.length) {
-                break
-            }
-            pages = next
-        }
-
-        const targets = pages.flat().filter((session) => session.status !== "ARCHIVED")
-        // sequential on purpose: archiving is cheap but the BE has no bulk route,
-        // and a burst of parallel DELETEs would only add load for no UX gain
-        for (const session of targets) {
-            try {
-                await archiveSession(session.id)
-            } catch {
-                failed = true
-            }
-        }
-        setIsClearing(false)
-        setClearError(failed)
-        await sessionsSwr.mutate()
-        if (!failed) {
+        try {
+            const result = await deleteAiSessions({
+                feature: "TUTOR_CHAT",
+                subjectId: subjectUuid,
+            })
+            setArchivedCount(result?.archived ?? 0)
+            await sessionsSwr.mutate()
             onCleared?.()
-            onBack()
+        } catch {
+            setClearError(true)
+            await sessionsSwr.mutate()
+        } finally {
+            setIsClearing(false)
         }
     }
 
@@ -119,11 +105,18 @@ export const TutorSettings = ({
 
             <div className="flex flex-col gap-2">
                 <Typography type="body-sm" color="muted">
-                    {t("subjects.aiTools.tutor.clearHintAll")}
+                    {t("subjects.aiTools.tutor.clearHint")}
                 </Typography>
                 {clearError ? (
                     <Typography type="body-sm" className="text-danger">
                         {t("subjects.aiTools.tutor.clearError")}
+                    </Typography>
+                ) : null}
+                {archivedCount !== null && !clearError ? (
+                    <Typography type="body-sm" color="muted">
+                        {t("subjects.aiTools.tutor.clearedCount", {
+                            count: archivedCount,
+                        })}
                     </Typography>
                 ) : null}
                 <Button
@@ -135,7 +128,7 @@ export const TutorSettings = ({
                         void onClearAll()
                     }}
                 >
-                    {t("subjects.aiTools.tutor.clearAction")}
+                    {t("subjects.aiTools.tutor.clearActionSubject")}
                 </Button>
             </div>
         </div>

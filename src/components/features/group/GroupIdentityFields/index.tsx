@@ -5,6 +5,7 @@ import { Button, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { AvatarUploadButton } from "@/components/blocks/identity/AvatarUploadButton"
 import { ImageDropzone } from "@/components/blocks/identity/ImageDropzone"
+import type { GroupMediaKind } from "@/modules/api/rest/group"
 import type { IdentityImagePickerHandle } from "../hooks/useIdentityImagePicker"
 
 /** Props for {@link GroupIdentityFields}. */
@@ -15,6 +16,15 @@ interface GroupIdentityFieldsProps {
     avatar: IdentityImagePickerHandle
     /** Cover picker handle (from `useIdentityImagePicker`). */
     cover: IdentityImagePickerHandle
+    /**
+     * Owner-supplied remove handler. The create form omits it — nothing is stored yet, so
+     * dropping a pick is purely local — while the management section passes one that tells
+     * an unsaved pick (local drop) apart from an image the server holds (confirm → DELETE).
+     * Absent ⇒ the button falls back to the picker's own local `remove`.
+     */
+    onRemove?: (kind: GroupMediaKind) => void
+    /** Which image is being cleared server-side right now; its button is disabled. */
+    removingKind?: GroupMediaKind | null
 }
 
 /**
@@ -25,9 +35,16 @@ interface GroupIdentityFieldsProps {
  * create form and the management identity section (which pre-seeds the
  * handles from the group's saved images). This component only picks + previews;
  * the owning form uploads for real (presign → PUT → verify via
- * `useMutateGroupMediaSwr`).
+ * `useMutateGroupMediaSwr`) and, when it passes `onRemove`, decides whether a
+ * removal is a local drop or a server-side clear.
  */
-export const GroupIdentityFields = ({ name, avatar, cover }: GroupIdentityFieldsProps) => {
+export const GroupIdentityFields = ({
+    name,
+    avatar,
+    cover,
+    onRemove,
+    removingKind,
+}: GroupIdentityFieldsProps) => {
     const t = useTranslations("groupsHub")
     const avatarInputRef = useRef<HTMLInputElement>(null)
     const altName = name.trim() || t("title")
@@ -51,7 +68,15 @@ export const GroupIdentityFields = ({ name, avatar, cover }: GroupIdentityFields
                         {t("identity.avatarHint")}
                     </Typography>
                     {avatar.shown ? (
-                        <Button size="sm" variant="ghost" className="self-start" onPress={avatar.remove}>
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            className="self-start"
+                            isPending={removingKind === "AVATAR"}
+                            onPress={() =>
+                                onRemove ? onRemove("AVATAR") : avatar.remove()
+                            }
+                        >
                             {t("identity.remove")}
                         </Button>
                     ) : null}
@@ -88,7 +113,13 @@ export const GroupIdentityFields = ({ name, avatar, cover }: GroupIdentityFields
                         alt={t("identity.coverAlt", { name: altName })}
                         className="aspect-[3/1] w-full rounded-large object-cover"
                     />
-                    <Button size="sm" variant="ghost" className="self-start" onPress={cover.remove}>
+                    <Button
+                        size="sm"
+                        variant="ghost"
+                        className="self-start"
+                        isPending={removingKind === "COVER"}
+                        onPress={() => (onRemove ? onRemove("COVER") : cover.remove())}
+                    >
                         {t("identity.remove")}
                     </Button>
                 </div>

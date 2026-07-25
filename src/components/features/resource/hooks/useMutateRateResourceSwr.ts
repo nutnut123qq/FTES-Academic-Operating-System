@@ -22,11 +22,18 @@ export type RateResourceOutcome =
     | { status: "error"; error: Error }
 
 /**
- * Maps a failed rating write onto a {@link RateResourceOutcome}.
+ * The refusal half of {@link RateResourceOutcome} — every outcome a FAILED rating call can
+ * produce. Shared with the "delete my rating" write, which classifies its failures the same
+ * way but can never answer `rated`.
+ */
+export type RateResourceFailure = Exclude<RateResourceOutcome, { status: "rated" }>
+
+/**
+ * Maps a failed rating write onto a {@link RateResourceFailure}.
  *
  * @param error - Whatever the REST call rejected with.
  */
-export const classifyRateResourceError = (error: unknown): RateResourceOutcome => {
+export const classifyRateResourceError = (error: unknown): RateResourceFailure => {
     if (error instanceof RestError) {
         switch (error.status) {
             case 401:

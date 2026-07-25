@@ -382,6 +382,38 @@ export const unfollowUser = async (userId: string): Promise<void> => {
 }
 
 /**
+ * Largest number of ids one batch follow-state read accepts. The BE rejects a longer
+ * list with `400 COMMUNITY_FOLLOW_BATCH_TOO_LARGE`, so callers chunk to this size.
+ */
+export const FOLLOW_BATCH_LIMIT = 100
+
+/**
+ * Of the users passed in, which ones the CALLER already follows — one query for a whole
+ * rendered list instead of a read per avatar.
+ *
+ * Scoped to the session (there is no viewer parameter, so no IDOR) and requires a login.
+ * Unknown / not-followed ids are simply absent from the answer, and an empty input never
+ * reaches the network. At most {@link FOLLOW_BATCH_LIMIT} ids per call.
+ *
+ * The ids go over the wire COMMA-JOINED (`?userIds=a,b`) — the form Spring binds into
+ * `List<UUID>`; axios' default bracket form (`userIds[]=`) would not bind.
+ *
+ * `GET /api/v1/community/follows/me?userIds=`
+ */
+export const getFollowedUserIds = async (
+    userIds: ReadonlyArray<string>,
+): Promise<Array<string>> => {
+    if (userIds.length === 0) {
+        return []
+    }
+    return restRequest<Array<string>>({
+        method: "GET",
+        url: "/community/follows/me",
+        params: { userIds: userIds.join(",") },
+    })
+}
+
+/**
  * Returns the contributor score for a user.
  *
  * `GET /api/v1/community/users/{id}/contributor-score`

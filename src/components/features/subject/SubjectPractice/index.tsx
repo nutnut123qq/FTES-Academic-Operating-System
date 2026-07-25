@@ -10,10 +10,10 @@ import {
     type PracticeModuleKey,
 } from "../hooks/useQuerySubjectPracticeSwr"
 import { PracticeHub } from "./PracticeHub"
-import { PracticeAiHandoff } from "./PracticeAiHandoff"
 import { CodingChallengeList } from "./CodingChallengeList"
 import { PracticeFlashcards } from "./PracticeFlashcards"
 import { PracticeLeaderboard } from "./PracticeLeaderboard"
+import { PracticeQuiz } from "./PracticeQuiz"
 
 /** The in-panel view: the hub, or one opened module. */
 type PracticeView = "hub" | PracticeModuleKey
@@ -22,13 +22,13 @@ type PracticeView = "hub" | PracticeModuleKey
  * Practice tab (§3 → §9 checklist). A practice HUB whose module cards open their own
  * in-panel sub-view (view-state navigation — no dead buttons).
  *
+ * - **Quiz** — the subject's question bank ({@link PracticeQuiz}: `GET/POST
+ *   /subjects/{code}/practice/quiz`, graded server-side).
+ * - **Flashcards** — the SM-2 reviewer over the subject's curated decks, with the
+ *   review state persisted server-side.
  * - **Coding** — the real challenge bank ({@link CodingChallengeList}: `GET /challenges`
  *   + run/submit against `/ai/coding/*` and `/challenges/{id}/submissions`).
- * - **Flashcards** — the SM-2 reviewer; the BE ships no curated per-subject deck yet, so
- *   its empty state hands over to the AI Flashcards generator.
  * - **Leaderboard** — the subject leaderboard.
- * - **Quiz** — no BE quiz bank exists; the card opens a handoff to the AI Quiz tool
- *   instead of a dead "coming soon".
  */
 export const SubjectPractice = () => {
     const t = useTranslations("subjects")
@@ -50,7 +50,7 @@ export const SubjectPractice = () => {
         )
     }
 
-    // flashcards — SM-2 reviewer; empty deck hands over to the AI generator
+    // flashcards — SM-2 reviewer over the curated decks (progress persists server-side)
     if (view === "flashcards") {
         return (
             <PracticeFlashcards
@@ -66,15 +66,13 @@ export const SubjectPractice = () => {
         return <PracticeLeaderboard subjectId={subjectId} onBack={backToHub} />
     }
 
-    // quiz — the BE has no quiz bank (deferred); hand over to the AI Quiz tool
+    // quiz — draw from the subject question bank, answer, submit (graded server-side)
     if (view === "quiz") {
         return (
-            <PracticeAiHandoff
-                title={t("practice.modules.quiz.title")}
-                description={t("practice.quizHandoff.description")}
-                ctaLabel={t("practice.quizHandoff.cta")}
-                onOpenAiTools={openAiTools}
+            <PracticeQuiz
+                subjectId={subjectId}
                 onBack={backToHub}
+                onOpenAiTools={openAiTools}
             />
         )
     }

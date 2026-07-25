@@ -194,6 +194,8 @@ const row: CommunityPost = {
     id: "p1",
     author: "Minh",
     authorUsername: "minh",
+    authorId: "minh-id",
+    pinned: false,
     timeLabel: "2 giờ",
     title: "Tiêu đề",
     snippet: "Trích đoạn",

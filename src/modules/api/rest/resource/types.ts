@@ -125,13 +125,20 @@ export interface RateRequest {
     review?: string
 }
 
-/** One rating/review. */
+/**
+ * One rating/review.
+ *
+ * `updatedAt` is stamped by the BE on every upsert (`POST /resources/{id}/ratings` is an
+ * upsert), so `GET /resources/{id}/ratings/me` can prefill the composer and the reviews list
+ * can show an "edited at" hint. It is absent on rows the BE never re-saved.
+ */
 export interface RatingResponse {
     id: string
     userId: string
     stars: number
     review?: string
     createdAt?: string
+    updatedAt?: string
 }
 
 /** Rating summary for a resource. */
@@ -170,6 +177,16 @@ export interface UpdateCollectionRequest {
 export interface AddItemRequest {
     resourceId: string
     note?: string
+}
+
+/**
+ * Body sent to `PATCH /api/v1/resources/collections/{id}/items/{resourceId}`.
+ *
+ * Only the note moves — `sortOrder` is left untouched by the BE. An omitted/`null` note
+ * CLEARS the stored note.
+ */
+export interface UpdateItemNoteRequest {
+    note?: string | null
 }
 
 /** Body sent to `PATCH /api/v1/resources/collections/{id}/items/reorder`. */
@@ -223,7 +240,27 @@ export interface ResourceCommentView {
     /** `VISIBLE` | `DELETED`. */
     status: string
     createdAt: string
+    /**
+     * Comment-level likes (hearts), filled in batch for the whole page by the BE list.
+     * An anonymous viewer always reads `likedByMe: false`. Distinct from the course-shaped
+     * `reactionCount`/`myReactions`, which resource-hub never populates.
+     */
+    likeCount: number
+    likedByMe: boolean
     replies: Array<ResourceCommentView>
+}
+
+/**
+ * Result of toggling a comment like
+ * (`PUT`/`DELETE /api/v1/resources/comments/{commentId}/like`).
+ *
+ * A superset of {@link ToggleResponse}: `active` keeps the bookmark/favorite meaning and
+ * `likeCount` is the fresh server-side total, so the heart never needs a client-side recount
+ * nor a refetch of the comment page.
+ */
+export interface ResourceCommentLikeResponse {
+    active: boolean
+    likeCount: number
 }
 
 /** Body sent to `POST /api/v1/resources/{id}/comments`. */

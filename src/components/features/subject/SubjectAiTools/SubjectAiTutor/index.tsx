@@ -357,6 +357,7 @@ export const SubjectAiTutor = ({
     if (view === "conversations") {
         return (
             <TutorConversations
+                subjectUuid={subjectUuid}
                 activeSessionId={currentSessionId}
                 onBack={() => setView("chat")}
                 onNew={() => switchSession(null)}
@@ -374,6 +375,7 @@ export const SubjectAiTutor = ({
     if (view === "settings") {
         return (
             <TutorSettings
+                subjectUuid={subjectUuid}
                 modelLabel={
                     activeModel
                         ? shortModelName(activeModel)

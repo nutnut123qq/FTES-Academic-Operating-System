@@ -4985,7 +4985,7 @@
       "modules": {
         "quiz": {
           "title": "Trắc nghiệm",
-          "meta": "{count} bộ đề"
+          "meta": "{count} câu hỏi"
         },
         "flashcards": {
           "title": "Flashcards",
@@ -5125,7 +5125,36 @@
         "sessionDoneDesc": "Bạn đã ôn {count} thẻ trong phiên này.",
         "studyAgain": "Ôn lại",
         "empty": "Chưa có thẻ nào để ôn",
-        "error": "Không tải được bộ thẻ"
+        "error": "Không tải được bộ thẻ",
+        "dueBadge": "Đến hạn",
+        "dueSummary": "{count} thẻ đến hạn",
+        "sessionDoneDue": "Còn {count} thẻ đến hạn.",
+        "progressSaved": "Tiến độ ôn tập được lưu trên máy chủ.",
+        "status": {
+          "new": "Thẻ mới",
+          "learning": "Đang học lại",
+          "reviewing": "Đang ôn"
+        },
+        "manage": "Quản lý bộ thẻ",
+        "manageClose": "Đóng quản lý",
+        "manageTitle": "Bộ thẻ của môn",
+        "manageEmpty": "Chưa có bộ thẻ nào — tạo bộ đầu tiên cho môn.",
+        "deckMeta": "{cards} thẻ · {due} đến hạn",
+        "newDeck": "Tạo bộ thẻ mới",
+        "deckTitleLabel": "Tên bộ thẻ",
+        "deckDescriptionLabel": "Mô tả (không bắt buộc)",
+        "cardsLabel": "Thẻ — mỗi dòng một thẻ: mặt trước | mặt sau",
+        "cardsPlaceholder": "Đệ quy | Hàm tự gọi lại chính nó",
+        "cardsParsed": "Nhận diện {count} thẻ hợp lệ",
+        "create": "Tạo bộ thẻ",
+        "addCards": "Thêm thẻ",
+        "deleteDeck": "Xoá bộ thẻ",
+        "deleteDeckConfirm": "Xoá bộ thẻ này cùng toàn bộ thẻ và tiến độ ôn tập của người học?",
+        "confirmDelete": "Xoá",
+        "cancel": "Huỷ",
+        "createdToast": "Đã tạo bộ thẻ.",
+        "addedToast": "Đã thêm {count} thẻ.",
+        "deletedToast": "Đã xoá bộ thẻ."
       },
       "leaderboard": {
         "title": "Bảng xếp hạng",
@@ -5143,7 +5172,47 @@
         "description": "Chưa có bộ thẻ do giảng viên soạn cho môn này. Dùng AI Flashcards để sinh thẻ từ tài liệu của môn.",
         "cta": "Mở AI Flashcards"
       },
-      "aiHandoffHint": "Công cụ AI nằm ở tab AI của môn học."
+      "aiHandoffHint": "Công cụ AI nằm ở tab AI của môn học.",
+      "quiz": {
+        "intro": "Bốc ngẫu nhiên câu hỏi từ ngân hàng đề của môn. Kết quả không tính vào học bạ — bạn làm lại thoải mái.",
+        "countLabel": "Số câu",
+        "countOption": "{count} câu",
+        "start": "Bắt đầu luyện tập",
+        "drawing": "Đang bốc đề…",
+        "ephemeralNote": "Bài luyện tập không tính vào học bạ.",
+        "empty": "Môn này chưa có câu hỏi luyện tập",
+        "emptyDesc": "Ngân hàng đề của môn chưa có câu hỏi nào sẵn sàng. Bạn có thể dùng AI Quiz để sinh đề từ tài liệu của môn.",
+        "retry": "Thử lại",
+        "questionLine": "Câu {number}",
+        "multipleHint": "Chọn tất cả đáp án đúng",
+        "answeredProgress": "Đã trả lời {answered}/{total}",
+        "submit": "Nộp bài",
+        "submitting": "Đang chấm…",
+        "resultTitle": "Kết quả luyện tập",
+        "scoreLine": "{percent}%",
+        "correctSummary": "Đúng {correct}/{total} câu",
+        "pointsSummary": "{earned}/{total} điểm",
+        "skippedSummary": "Bỏ trống {count} câu",
+        "correct": "Đúng",
+        "incorrect": "Sai",
+        "skipped": "Bỏ trống",
+        "yourAnswer": "Bạn chọn",
+        "correctAnswer": "Đáp án đúng",
+        "explanation": "Giải thích",
+        "retake": "Làm bộ đề khác"
+      },
+      "errors": {
+        "unauthorized": "Bạn cần đăng nhập để luyện tập (tiến độ gắn với tài khoản).",
+        "forbidden": "Tài khoản của bạn không có quyền thực hiện thao tác này.",
+        "notFound": "Không tìm thấy nội dung luyện tập này.",
+        "conflict": "Dữ liệu vừa thay đổi — tải lại rồi thử lại.",
+        "rateLimited": "Bạn thao tác quá nhanh — thử lại sau ít phút.",
+        "unavailable": "Dịch vụ luyện tập đang tạm ngưng, thử lại sau.",
+        "invalid": "Bài nộp không hợp lệ — bốc đề mới rồi làm lại.",
+        "timeout": "Quá thời gian chờ. Thử lại sau.",
+        "network": "Mất kết nối tới máy chủ. Kiểm tra mạng rồi thử lại.",
+        "generic": "Không thực hiện được. Thử lại sau."
+      }
     },
     "community": {
       "title": "Thảo luận môn học",
@@ -5272,7 +5341,10 @@
         "allSubjectsHint": "Danh sách gồm mọi cuộc trò chuyện với gia sư AI của bạn (máy chủ chưa lọc theo môn).",
         "deleteError": "Không xóa được cuộc trò chuyện. Vui lòng thử lại.",
         "clearHintAll": "Xóa toàn bộ cuộc trò chuyện với gia sư AI của bạn (máy chủ chưa hỗ trợ xóa riêng theo môn). Hành động không thể hoàn tác.",
-        "clearError": "Một số cuộc trò chuyện chưa xóa được. Vui lòng thử lại."
+        "clearError": "Một số cuộc trò chuyện chưa xóa được. Vui lòng thử lại.",
+        "subjectOnlyHint": "Chỉ hiển thị cuộc trò chuyện của môn đang xem.",
+        "clearedCount": "Đã xóa {count} cuộc trò chuyện của môn này.",
+        "clearActionSubject": "Xóa hội thoại của môn này"
       },
       "summary": {
         "generate": "Tạo tóm tắt",
@@ -5755,7 +5827,13 @@
       "addDuplicate": "Tài nguyên này đã có trong bộ sưu tập.",
       "createAndAdd": "Tạo và thêm",
       "signInTitle": "Đăng nhập để xem bộ sưu tập của bạn.",
-      "signIn": "Đăng nhập"
+      "signIn": "Đăng nhập",
+      "editNote": "Sửa ghi chú",
+      "addNote": "Thêm ghi chú",
+      "noteLabel": "Ghi chú cho tài nguyên này",
+      "notePlaceholder": "VD: đọc phần 2 trước khi làm bài tập",
+      "saveNote": "Lưu ghi chú",
+      "noteError": "Không lưu được ghi chú."
     },
     "detail": {
       "rating": "{rating}★",
@@ -5803,7 +5881,8 @@
       "member": "Thành viên",
       "prev": "Trước",
       "next": "Sau",
-      "pageOf": "Trang {page}/{total}"
+      "pageOf": "Trang {page}/{total}",
+      "likeError": "Không thích được bình luận. Thử lại nhé."
     },
     "upload": {
       "title": "Tải lên tài nguyên",
@@ -5908,7 +5987,16 @@
       "member": "Thành viên",
       "prev": "Trước",
       "next": "Sau",
-      "pageOf": "Trang {page}/{total}"
+      "pageOf": "Trang {page}/{total}",
+      "update": "Cập nhật đánh giá",
+      "updated": "Đã cập nhật đánh giá của bạn.",
+      "delete": "Xoá đánh giá",
+      "deleteTitle": "Xoá đánh giá của bạn?",
+      "deleteDescription": "Số sao và nhận xét của bạn sẽ bị gỡ khỏi tài liệu này, điểm trung bình sẽ được tính lại.",
+      "deleteConfirm": "Xoá đánh giá",
+      "deleted": "Đã xoá đánh giá của bạn.",
+      "deleteError": "Không xoá được đánh giá. Thử lại nhé.",
+      "editedAt": "Đã cập nhật {time}"
     },
     "recommended": {
       "title": "Gợi ý cho bạn",
@@ -6118,7 +6206,9 @@
       "campusEmpty": "Cơ sở của bạn chưa có bài viết nào.",
       "campusEmptyHint": "Cập nhật cơ sở trong hồ sơ để xem bài viết từ cộng đồng cơ sở của bạn.",
       "emptyHint": "Hãy là người đầu tiên chia sẻ điều gì đó với cộng đồng.",
-      "emptyCompose": "Đăng bài"
+      "emptyCompose": "Đăng bài",
+      "pinnedBadge": "Đã ghim",
+      "pinned": "Đã ghim"
     },
     "search": {
       "placeholder": "Tìm bài viết theo tiêu đề, nội dung…",
@@ -6193,7 +6283,9 @@
       "escalate": "Chuyển cấp",
       "escalated": "Đã chuyển cấp báo cáo.",
       "escalateFailed": "Không chuyển cấp được báo cáo. Vui lòng thử lại.",
-      "openTarget": "Mở nội dung bị báo cáo"
+      "openTarget": "Mở nội dung bị báo cáo",
+      "escalateAlready": "Báo cáo này đã được chuyển cấp trước đó.",
+      "escalatedTag": "Đã chuyển cấp"
     },
     "states": {
       "retry": "Thử lại"
@@ -6390,7 +6482,12 @@
       "presignFailed": "Không tạo được liên kết tải lên. Vui lòng thử lại.",
       "uploadFailed": "Tải ảnh lên thất bại. Vui lòng thử lại.",
       "verifyFailed": "Không xác nhận được ảnh đã tải lên. Vui lòng thử lại.",
-      "removeLocalOnly": "Gỡ ảnh chỉ bỏ ảnh vừa chọn; ảnh đã lưu chỉ thay được bằng cách tải ảnh mới lên."
+      "removeLocalOnly": "Gỡ ảnh chỉ bỏ ảnh vừa chọn; ảnh đã lưu chỉ thay được bằng cách tải ảnh mới lên.",
+      "removeHint": "Gỡ ảnh đã lưu sẽ xoá ảnh khỏi nhóm; ảnh vừa chọn mà chưa lưu thì chỉ bị bỏ khỏi bản xem trước.",
+      "cleared": "Đã gỡ ảnh nhóm.",
+      "clearConfirmTitle": "Gỡ ảnh nhóm?",
+      "clearAvatarConfirmDescription": "Ảnh đại diện của nhóm sẽ bị xoá, nhóm quay về hiển thị chữ cái đầu. Bạn có thể tải ảnh mới bất cứ lúc nào.",
+      "clearCoverConfirmDescription": "Ảnh nền của nhóm sẽ bị xoá, nhóm quay về nền mặc định. Bạn có thể tải ảnh mới bất cứ lúc nào."
     },
     "states": {
       "retry": "Thử lại"
@@ -6462,6 +6559,15 @@
       "decline": "Từ chối",
       "accepted": "Đã tham gia nhóm.",
       "declined": "Đã từ chối lời mời."
+    },
+    "invitations": {
+      "title": "Lời mời vào nhóm",
+      "empty": "Bạn chưa có lời mời nào.",
+      "error": "Không tải được lời mời. Vui lòng thử lại.",
+      "invitedBy": "{name} đã mời bạn tham gia",
+      "invitedByUnknown": "Bạn được mời tham gia nhóm này",
+      "expiresAt": "Hết hạn {date}",
+      "noExpiry": "Không có hạn trả lời"
     }
   },
   "appearance": {

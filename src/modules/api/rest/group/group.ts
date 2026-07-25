@@ -14,11 +14,13 @@ import type {
     GroupJoinRequest,
     GroupJoinRequestDto,
     GroupJoinResult,
+    GroupMediaKind,
     GroupMediaPresignRequest,
     GroupMediaPresignResponse,
     GroupMediaRef,
     GroupMediaVerifyRequest,
     GroupMember,
+    GroupMyInvitation,
     GroupPage,
     GroupPostSummary,
     GroupResourceLink,
@@ -444,6 +446,24 @@ export const verifyGroupMedia = async (
         data: request,
     })
 
+/**
+ * Clears the group avatar or cover (`group.manage`, same family as presign/verify).
+ *
+ * Idempotent — clearing an already-empty image still answers `200` — and it returns the
+ * UPDATED group (`avatarUrl`/`coverUrl` now `null`), so the caller can patch its cache
+ * instead of re-fetching the header.
+ *
+ * `DELETE /groups/{id}/media/{kind}`
+ */
+export const clearGroupMedia = async (
+    id: string,
+    kind: GroupMediaKind,
+): Promise<GroupResponse> =>
+    restRequest<GroupResponse>({
+        method: "DELETE",
+        url: `/groups/${id}/media/${kind}`,
+    })
+
 // ---------------- Group discussion threads (change group-social-engagement §2.2) ----------------
 
 export const listGroupThreads = async (
@@ -557,6 +577,22 @@ export const unlikeGroupThreadComment = async (
     })
 
 // ---------------- InvitationController ----------------
+
+/**
+ * The caller's own pending invitations (`GET /invitations/me`).
+ *
+ * Always scoped server-side to the session — no user id is accepted — so one viewer can
+ * never read another's inbox. Only PENDING, unexpired invitations come back; `limit`
+ * defaults to 20 and the BE caps it at 50.
+ */
+export const getMyInvitations = async (params?: {
+    limit?: number
+}): Promise<Array<GroupMyInvitation>> =>
+    restRequest<Array<GroupMyInvitation>>({
+        method: "GET",
+        url: "/invitations/me",
+        params: { limit: params?.limit ?? 20 },
+    })
 
 export const respondToInvitation = async (
     id: string,

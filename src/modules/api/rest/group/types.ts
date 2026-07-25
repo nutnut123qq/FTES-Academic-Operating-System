@@ -87,6 +87,42 @@ export interface GroupRespondInviteRequest {
     action: string
 }
 
+/**
+ * Trimmed group card carried by an invitation row — enough to render and navigate
+ * (name + id) without exposing the rules/owner of a group the invitee has not joined.
+ */
+export interface GroupInvitationGroupCard {
+    id: string
+    name: string
+    slug: string
+    avatarUrl?: string | null
+}
+
+/** Person shown on an invitation row; `null` fields when they have no profile yet. */
+export interface GroupInvitationUserCard {
+    userId: string
+    username?: string | null
+    displayName?: string | null
+    avatarUrl?: string | null
+}
+
+/**
+ * One pending invitation in the caller's inbox (`GET /invitations/me`).
+ *
+ * The row is self-contained on purpose — group card, inviter card and both timestamps
+ * ship with it — so the inbox renders a full row (and answers it via `invitationId`)
+ * without a follow-up `/groups/{id}` or profile lookup. `inviter` is `null` when the
+ * person who invited has no profile; `expiresAt` is `null` for an open-ended invite.
+ */
+export interface GroupMyInvitation {
+    invitationId: string
+    group: GroupInvitationGroupCard
+    inviter?: GroupInvitationUserCard | null
+    status: string
+    createdAt: string
+    expiresAt?: string | null
+}
+
 export interface GroupRoleChangeRequest {
     role: string
 }
@@ -182,6 +218,13 @@ export interface GroupEvent {
 }
 
 // ---------------- Group media (avatar/cover presign → verify) ----------------
+
+/**
+ * Which group image an operation targets. The BE takes the value as a path/body string
+ * and matches it case-insensitively, but the FE keeps the pair closed so a typo cannot
+ * reach the wire.
+ */
+export type GroupMediaKind = "AVATAR" | "COVER"
 
 /** Body for `POST /groups/{id}/media/presign`. `kind` = `AVATAR` | `COVER`. */
 export interface GroupMediaPresignRequest {

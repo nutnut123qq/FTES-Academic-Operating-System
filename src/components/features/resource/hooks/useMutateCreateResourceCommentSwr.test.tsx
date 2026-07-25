@@ -38,6 +38,8 @@ const seed = (): ResourceCommentsPage => ({
             content: "câu hỏi cũ",
             status: "VISIBLE",
             createdAt: "2026-07-01T00:00:00Z",
+            likeCount: 0,
+            likedByMe: false,
             replies: [],
         },
     ],

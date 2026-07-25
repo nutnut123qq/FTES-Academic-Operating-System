@@ -3,7 +3,7 @@
 import useSWR from "swr"
 import useSWRInfinite from "swr/infinite"
 
-import { getSessions, type AiSessionView, type MessageView } from "@/modules/api/rest/ai"
+import { listAiSessions, type AiSessionView, type MessageView } from "@/modules/api/rest/ai"
 import { useAppSelector } from "@/redux/hooks"
 
 import { getAiSessionMessages } from "./api"
@@ -34,41 +34,48 @@ export const useAiSessionMessagesSwr = (sessionId: string | null) => {
 }
 
 /**
- * Page-paginated tutor conversations (`GET /ai/sessions?feature=TUTOR_CHAT`) for
- * infinite scroll: a page shorter than {@link TUTOR_SESSIONS_PAGE_SIZE} ends the
- * list.
+ * Page-paginated tutor conversations of ONE subject
+ * (`GET /ai/sessions?feature=TUTOR_CHAT&subjectId=…&status=ACTIVE`) for infinite
+ * scroll: a page shorter than {@link TUTOR_SESSIONS_PAGE_SIZE} ends the list.
  *
- * SCOPE CAVEAT (investigated against `SessionController.SessionView`): the BE
- * list projection returns `{id, feature, title, status, messageCount,
- * remainingLessonChats, modelOverride}` and deliberately NOT `contextRef`, so a
- * conversation cannot be attributed to a subject client-side — the list is every
- * TUTOR_CHAT conversation of the caller, not just this subject's. Filtering by
- * subject needs the BE to either expose `contextRef` on the view or accept a
- * `contextRef`/`subjectId` query param.
+ * The narrowing happens SERVER-SIDE (change `ai-session-context-filter`): the list
+ * matches the `subjectId` stored in each session's `context_ref` and drops archived
+ * rows, so the view no longer shows — nor bulk-clears — other subjects' conversations.
  *
+ * `subjectId` is the subject's UUID, NOT the code in the route: `context_ref` was
+ * written with the UUID at create time, so a code here silently matches nothing.
+ * The subject id is part of the SWR key, so switching subject cannot serve the
+ * previous subject's cached pages.
+ *
+ * @param subjectUuid - UUID of the subject; falsy suspends fetching.
  * @param enabled - false (e.g. while the conversations view is hidden) suspends fetching.
  */
-export const useTutorSessionsInfiniteSwr = (enabled = true) => {
+export const useTutorSessionsInfiniteSwr = (
+    subjectUuid: string | null | undefined,
+    enabled = true,
+) => {
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
 
     const getKey = (
         index: number,
         previous: ReadonlyArray<AiSessionView> | null,
-    ): readonly [string, number] | null => {
-        if (!enabled || !authenticated) {
+    ): readonly [string, string, number] | null => {
+        if (!enabled || !authenticated || !subjectUuid) {
             return null
         }
         if (previous && previous.length < TUTOR_SESSIONS_PAGE_SIZE) {
             return null
         }
-        return ["GET_AI_TUTOR_SESSIONS_INFINITE_SWR", index] as const
+        return ["GET_AI_TUTOR_SESSIONS_INFINITE_SWR", subjectUuid, index] as const
     }
 
     return useSWRInfinite<Array<AiSessionView>, Error>(
         getKey,
-        async ([, page]: readonly [string, number]) =>
-            (await getSessions({
+        async ([, subjectId, page]: readonly [string, string, number]) =>
+            (await listAiSessions({
                 feature: "TUTOR_CHAT",
+                subjectId,
+                status: "ACTIVE",
                 page,
                 size: TUTOR_SESSIONS_PAGE_SIZE,
             })) ?? [],

@@ -27,6 +27,8 @@ const PAGE: ResourceCommentsPage = {
             content: "Bài này hay",
             status: "VISIBLE",
             createdAt: "2026-07-25T00:00:00Z",
+            likeCount: 0,
+            likedByMe: false,
             replies: [],
         },
     ],

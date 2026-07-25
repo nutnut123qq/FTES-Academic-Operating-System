@@ -28,6 +28,16 @@ export interface CommunityPost {
     author: string
     /** URL-facing username for the profile link + hovercard. */
     authorUsername: string
+    /**
+     * Author id (BE `Post.authorId`) — the owner gate compares this, since a display
+     * name/username can be missing while the id is always present.
+     */
+    authorId: string | null
+    /**
+     * Pinned by an admin (BE `Post.pinned`). Render the badge only: the BE already
+     * hoists pinned posts to the head of the first page, so never re-sort on it.
+     */
+    pinned: boolean
     timeLabel: string
     title: string
     snippet: string
@@ -155,6 +165,8 @@ export const toCommunityPost = (post: FeedPost, locale: string): CommunityPost =
     id: post.id,
     author: post.author.displayName ?? post.author.username ?? "",
     authorUsername: post.author.username ?? post.author.id,
+    authorId: post.authorId ?? post.author.id ?? null,
+    pinned: post.pinned ?? false,
     timeLabel: formatRelativeTime(post.createdAt, locale),
     title: post.title ?? "",
     snippet: post.snippet ?? "",

@@ -7,6 +7,7 @@ import { Link, useRouter } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { GroupJoinButton } from "../GroupJoinButton"
+import { GroupInvitationsInbox } from "../GroupInvitationsInbox"
 import { useQueryGroupsSwr, type GroupType } from "../hooks/useQueryGroupsSwr"
 
 /** Loading skeleton — mirrors the group card grid (avatar + text lines). */
@@ -54,6 +55,13 @@ export const GroupsList = () => {
                     {t("create.title")}
                 </Button>
             </div>
+
+            {/* invitation inbox — the hub is where a viewer answers the invitations
+                addressed to them; renders nothing for a guest (and nothing at all when
+                the inbox is empty is still a titled empty state, so it stays above the
+                filter where it can be seen). Accepting adds the viewer to a group, so the
+                list below revalidates on any answer. */}
+            <GroupInvitationsInbox onResponded={() => void mutate()} />
 
             {/* type filter — static chrome, stays outside the skeleton */}
             <div className="flex flex-wrap gap-2">

@@ -43,6 +43,16 @@ export interface FeedPostAuthor {
  */
 export interface FeedPost {
     id: string
+    /**
+     * Author id (BE `Post.authorId`). Owner-gate reads this instead of comparing
+     * usernames — `author` may be null when the profile card is missing.
+     */
+    authorId: string | null
+    /**
+     * Whether the post is pinned (BE `Post.pinned`). The BE already puts pinned posts
+     * at the head of the FIRST page — the FE only renders the badge, never re-sorts.
+     */
+    pinned: boolean
     /** Post type / kind (BE `kind`, e.g. DISCUSSION/QUESTION). */
     kind: string
     title: string | null
@@ -88,6 +98,8 @@ export interface QueryCommunityFeedResponse {
 export const FEED_SELECTION = `
   items {
     id
+    authorId
+    pinned
     kind
     title
     createdAt

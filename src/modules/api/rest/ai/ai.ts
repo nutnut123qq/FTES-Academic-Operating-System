@@ -3,6 +3,7 @@ import { publicEnv } from "@/resources/env/public"
 import { LocalStorage } from "@/modules/storage/local/storage"
 import { LocalStorageId } from "@/modules/storage/local/enums/id"
 import type {
+    AiBulkArchiveResult,
     AiInsights,
     AiModelCatalog,
     CareerSuggestionView,
@@ -134,6 +135,60 @@ export const getSessions = async (params?: {
         url: "/ai/sessions",
         params: { ...params },
         authenticated: true,
+    })
+
+/**
+ * Lists the caller's own sessions, newest first, with the server-side filters
+ * (`change ai-session-context-filter`):
+ *
+ * - `subjectId` / `lessonId` / `questionSetId` match the flat `context_ref` the client
+ *   declared when the session was created — this is what makes a list SUBJECT-SCOPED
+ *   instead of "every conversation of this user";
+ * - `status` (`ACTIVE` | `ARCHIVED`) keeps archived rows out server-side; an unknown value
+ *   is a `400 AI_SESSION_STATUS_INVALID` rather than a silent empty page.
+ *
+ * Every row carries its `contextRef` back, so a session can be attributed without an
+ * extra request. Passing no filter reproduces the old behaviour (all sessions).
+ *
+ * `GET /api/v1/ai/sessions`
+ */
+export const listAiSessions = async (params?: {
+    feature?: string
+    status?: string
+    subjectId?: string
+    lessonId?: string
+    questionSetId?: string
+    page?: number
+    size?: number
+}): Promise<AiSessionView[]> =>
+    restRequest<AiSessionView[]>({
+        method: "GET",
+        url: "/ai/sessions",
+        params: { ...params },
+        authenticated: true,
+    })
+
+/**
+ * Bulk-archives the caller's sessions matching the filter — ONE request instead of a
+ * `DELETE /ai/sessions/{id}` loop — and answers `{archived}`, the number of rows that
+ * actually changed state (so a second call returns `0`: idempotent).
+ *
+ * Same filter vocabulary as {@link listAiSessions}. Passing NOTHING archives every
+ * non-archived session of the caller, so a scoped "clear" must always send its
+ * `subjectId`. The BE always constrains by user id — another user's rows are unreachable.
+ *
+ * `DELETE /api/v1/ai/sessions`
+ */
+export const deleteAiSessions = async (params?: {
+    feature?: string
+    subjectId?: string
+    lessonId?: string
+    questionSetId?: string
+}): Promise<AiBulkArchiveResult> =>
+    restRequest<AiBulkArchiveResult>({
+        method: "DELETE",
+        url: "/ai/sessions",
+        params: { ...params },
     })
 
 export const getSession = async (id: string): Promise<AiSessionView> =>

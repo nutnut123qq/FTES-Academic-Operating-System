@@ -21,6 +21,11 @@ import {
 
 /** Props for {@link TutorConversations}. */
 export interface TutorConversationsProps {
+    /**
+     * UUID of the subject whose conversations are listed — the value stored in each
+     * session's `context_ref`, NOT the code from the route.
+     */
+    subjectUuid: string
     /** Currently open session (highlighted in the list). */
     activeSessionId: string | null
     /** Back to the chat view. */
@@ -40,14 +45,15 @@ export interface TutorConversationsProps {
  * archive) + empty/error states. Renders in-place (no overlay stacked over the
  * tool surface).
  *
- * TWO backend gaps, handled by degrading rather than faking:
- * - the list projection omits `contextRef`, so conversations cannot be filtered
- *   per subject — the list is every AI-tutor conversation of the user (a hint
- *   line says so);
- * - there is no server-side search, so the search box filters the pages already
- *   loaded (by title) instead of querying.
+ * The list is scoped to THIS subject server-side (`subjectId` + `status=ACTIVE`),
+ * so nothing from another subject shows up and archived rows never come back.
+ *
+ * One backend gap remains, handled by degrading rather than faking: there is no
+ * server-side search, so the search box filters the pages already loaded (by
+ * title) instead of querying.
  */
 export const TutorConversations = ({
+    subjectUuid,
     activeSessionId,
     onBack,
     onNew,
@@ -60,7 +66,7 @@ export const TutorConversations = ({
     const [deleteError, setDeleteError] = React.useState(false)
     const [pendingDeleteId, setPendingDeleteId] = React.useState<string | null>(null)
 
-    const sessionsSwr = useTutorSessionsInfiniteSwr()
+    const sessionsSwr = useTutorSessionsInfiniteSwr(subjectUuid)
     const archiveSwr = usePostArchiveAiSessionSwr()
 
     React.useEffect(() => {
@@ -72,10 +78,10 @@ export const TutorConversations = ({
     const lastPage = pages[pages.length - 1]
     const hasMore = !!lastPage && lastPage.length >= TUTOR_SESSIONS_PAGE_SIZE
 
-    // ARCHIVED sessions must be filtered CLIENT-SIDE: `DELETE /ai/sessions/{id}` is a
-    // soft archive but the list query (`findByUserIdAndFeatureOrderByUpdatedAtDesc`)
-    // has NO status predicate, so a deleted conversation would reappear on the next
-    // revalidate. Empty (never-used) sessions are hidden too.
+    // `status=ACTIVE` already keeps archived rows out server-side; the same predicate is
+    // kept here so a row archived optimistically stays gone until the refetch lands.
+    // Empty (never-used) sessions — what a lazy create leaves behind when the first send
+    // never happened — are hidden too.
     const needle = query.trim().toLowerCase()
     const visible = sessions
         .filter((session) => session.status !== "ARCHIVED")
@@ -136,7 +142,7 @@ export const TutorConversations = ({
             />
 
             <Typography type="body-xs" color="muted">
-                {t("subjects.aiTools.tutor.allSubjectsHint")}
+                {t("subjects.aiTools.tutor.subjectOnlyHint")}
             </Typography>
 
             {deleteError ? (

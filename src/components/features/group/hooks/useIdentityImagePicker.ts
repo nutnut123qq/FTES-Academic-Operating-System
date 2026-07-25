@@ -17,7 +17,17 @@ export interface IdentityImagePickerHandle {
     accept: (file: File) => void
     /** Records a rejection surfaced by the picker UI (e.g. ImageDropzone filter). */
     reject: (reason: IdentityImageError) => void
-    /** Clears the pick (and hides the saved image, restoring the empty state). */
+    /**
+     * Drops the PICKED file only. The saved image is untouched, so `shown` falls back
+     * to `currentUrl` — "I picked the wrong file" must never read as "remove the image
+     * the server holds".
+     */
+    discardPick: () => void
+    /**
+     * Marks the image as REMOVED: drops any pick AND hides the saved image, so `shown`
+     * is null until a new pick lands. This is the state the owner flushes as a real
+     * clear — use {@link IdentityImagePickerHandle.discardPick} to undo a pick.
+     */
     remove: () => void
 }
 
@@ -60,10 +70,15 @@ export const useIdentityImagePicker = (
 
     const reject = (reason: IdentityImageError) => setError(reason)
 
-    const remove = () => {
+    const discardPick = () => {
         setFile(null)
         setPreview(null)
         setError(null)
+    }
+
+    // `cleared` is what makes the SAVED image disappear — only a real removal sets it.
+    const remove = () => {
+        discardPick()
         setCleared(true)
     }
 
@@ -74,6 +89,7 @@ export const useIdentityImagePicker = (
         error,
         accept,
         reject,
+        discardPick,
         remove,
     }
 }

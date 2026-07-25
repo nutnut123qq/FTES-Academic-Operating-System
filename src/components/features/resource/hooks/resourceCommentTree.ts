@@ -1,4 +1,8 @@
-import type { ResourceCommentView, ResourceCommentsPage } from "@/modules/api/rest/resource"
+import type {
+    ResourceCommentLikeResponse,
+    ResourceCommentView,
+    ResourceCommentsPage,
+} from "@/modules/api/rest/resource"
 
 /** Comment status the BE stamps on a soft-deleted (tombstoned) comment. */
 export const RESOURCE_COMMENT_DELETED = "DELETED"
@@ -26,7 +30,39 @@ export const buildOptimisticResourceComment = (
     content,
     status: "VISIBLE",
     createdAt: new Date().toISOString(),
+    // A brand-new comment has no likes yet; declaring them keeps the placeholder shaped
+    // exactly like a BE row so the heart renders without an "is this optimistic?" branch.
+    likeCount: 0,
+    likedByMe: false,
     replies: [],
+})
+
+/**
+ * Rewrites ONE comment anywhere in a cached page — root or one-level reply — leaving every
+ * other node (and the ordering) untouched.
+ *
+ * @param page - The cached page.
+ * @param commentId - Id of the node to rewrite; a page without it comes back unchanged.
+ * @param patch - Maps the matched node onto its replacement.
+ */
+export const patchResourceComment = (
+    page: ResourceCommentsPage,
+    commentId: string,
+    patch: (comment: ResourceCommentView) => ResourceCommentView,
+): ResourceCommentsPage => ({
+    ...page,
+    items: page.items.map((root) => {
+        if (root.id === commentId) {
+            return patch(root)
+        }
+        if (!root.replies.some((reply) => reply.id === commentId)) {
+            return root
+        }
+        return {
+            ...root,
+            replies: root.replies.map((reply) => (reply.id === commentId ? patch(reply) : reply)),
+        }
+    }),
 })
 
 /**
@@ -81,21 +117,54 @@ export const replaceResourceComment = (
     page: ResourceCommentsPage,
     optimisticId: string,
     saved: ResourceCommentView,
-): ResourceCommentsPage => ({
-    ...page,
-    items: page.items.map((root) => {
-        if (root.id === optimisticId) {
-            // Keep the replies already rendered under the placeholder root.
-            return { ...saved, replies: saved.replies.length > 0 ? saved.replies : root.replies }
-        }
-        if (!root.replies.some((reply) => reply.id === optimisticId)) {
-            return root
-        }
-        return {
-            ...root,
-            replies: root.replies.map((reply) => (reply.id === optimisticId ? saved : reply)),
-        }
-    }),
+): ResourceCommentsPage =>
+    patchResourceComment(page, optimisticId, (placeholder) => ({
+        ...saved,
+        // Keep the replies already rendered under the placeholder root.
+        replies: saved.replies.length > 0 ? saved.replies : placeholder.replies,
+    }))
+
+/**
+ * Flips the viewer's like on one comment and moves the counter by exactly one.
+ *
+ * The counter NEVER comes from a client-side recount — the BE ships `likeCount` on every
+ * row — this only nudges the number the server already sent so the heart reacts instantly.
+ * A no-op when the comment is already in the requested state, which makes the function safe
+ * to apply twice (the optimistic paint and the rollback both go through it) and matches the
+ * idempotent `PUT`/`DELETE .../like` endpoints.
+ *
+ * @param comment - The comment as currently cached.
+ * @param nextLiked - The state the viewer is moving to.
+ */
+export const toggleResourceCommentLike = (
+    comment: ResourceCommentView,
+    nextLiked: boolean,
+): ResourceCommentView => {
+    if ((comment.likedByMe ?? false) === nextLiked) {
+        return comment
+    }
+    return {
+        ...comment,
+        likedByMe: nextLiked,
+        likeCount: Math.max(0, (comment.likeCount ?? 0) + (nextLiked ? 1 : -1)),
+    }
+}
+
+/**
+ * Overwrites a comment's like state with what the server just answered
+ * (`{active, likeCount}`), which is authoritative — it accounts for likes other people
+ * landed while the request was in flight.
+ *
+ * @param comment - The comment as currently cached.
+ * @param result - The `PUT`/`DELETE .../like` response.
+ */
+export const applyResourceCommentLikeResult = (
+    comment: ResourceCommentView,
+    result: ResourceCommentLikeResponse,
+): ResourceCommentView => ({
+    ...comment,
+    likedByMe: result.active,
+    likeCount: result.likeCount,
 })
 
 /**
@@ -108,28 +177,10 @@ export const replaceResourceComment = (
 export const tombstoneResourceComment = (
     page: ResourceCommentsPage,
     commentId: string,
-): ResourceCommentsPage => {
-    const tombstone = (comment: ResourceCommentView): ResourceCommentView => ({
+): ResourceCommentsPage =>
+    // The spread keeps `replies`, so the thread under a deleted parent survives.
+    patchResourceComment(page, commentId, (comment) => ({
         ...comment,
         userId: null,
         status: RESOURCE_COMMENT_DELETED,
-    })
-
-    return {
-        ...page,
-        items: page.items.map((root) => {
-            if (root.id === commentId) {
-                return { ...tombstone(root), replies: root.replies }
-            }
-            if (!root.replies.some((reply) => reply.id === commentId)) {
-                return root
-            }
-            return {
-                ...root,
-                replies: root.replies.map((reply) =>
-                    reply.id === commentId ? tombstone(reply) : reply,
-                ),
-            }
-        }),
-    }
-}
+    }))

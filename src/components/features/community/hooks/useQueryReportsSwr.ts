@@ -6,7 +6,13 @@ import type { ModerationQueueResponse } from "@/modules/api/rest/community"
 
 /** A moderation queue item (mapped from the BE `ModerationQueueResponse`). */
 export interface ModerationReport {
+    /** Queue-row id — what a keep/remove DECISION is addressed to. */
     id: string
+    /**
+     * Id of the report behind the row, or `undefined` when the row came from AI/the
+     * system with no open report. Escalation uses THIS id, never {@link id}.
+     */
+    reportId?: string
     targetType: string
     targetId: string
     source: string
@@ -23,6 +29,9 @@ const QUEUE_STATUS = "PENDING"
 
 const toReport = (item: ModerationQueueResponse): ModerationReport => ({
     id: item.id,
+    // null (no report behind the row) is normalized to undefined so the renderer has ONE
+    // "nothing to escalate" shape to test.
+    reportId: item.reportId ?? undefined,
     targetType: item.targetType,
     targetId: item.targetId,
     source: item.source,

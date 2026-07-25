@@ -18,6 +18,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const followUser = vi.fn()
 const unfollowUser = vi.fn()
+const getFollowedUserIds = vi.fn()
 const getPublicProfile = vi.fn()
 const toastDanger = vi.fn()
 const requireAuth = vi.fn((_contextKey?: string) => true)
@@ -25,6 +26,14 @@ const requireAuth = vi.fn((_contextKey?: string) => true)
 vi.mock("@/modules/api/rest/community", () => ({
     followUser: (userId: string) => followUser(userId),
     unfollowUser: (userId: string) => unfollowUser(userId),
+    getFollowedUserIds: (ids: ReadonlyArray<string>) => getFollowedUserIds(ids),
+    FOLLOW_BATCH_LIMIT: 100,
+}))
+
+// the batch hook only fetches for a signed-in viewer
+vi.mock("@/redux/hooks", () => ({
+    useAppSelector: (selector: (state: unknown) => unknown) =>
+        selector({ keycloak: { authenticated: true } }),
 }))
 
 vi.mock("@/modules/api/rest/profile", () => ({
@@ -50,6 +59,7 @@ vi.mock("@/hooks/useRequireAuth", () => ({
 import { RestError } from "@/modules/api/rest/client"
 import { useQueryUserHovercardSwr } from "@/hooks/swr/api/graphql/queries/useQueryUserHovercardSwr"
 import { followErrorMessageKey, useMutateFollowUserSwr } from "./useMutateFollowUserSwr"
+import { useQueryFollowedUserIdsSwr } from "./useQueryFollowedUserIdsSwr"
 
 const USERNAME = "minh-tran"
 const USER_ID = "11111111-2222-3333-4444-555555555555"
@@ -98,9 +108,37 @@ const renderProbe = () =>
         </SWRConfig>,
     )
 
+/**
+ * Same toggle, but rendered next to a LIST that already read its follow state in batch
+ * (`GET /community/follows/me`) — the row label must move with the hovercard.
+ */
+const BatchProbe = ({ otherId = "aaaa-other" }: { otherId?: string }) => {
+    const { data } = useQueryUserHovercardSwr(USERNAME)
+    const { toggleFollow } = useMutateFollowUserSwr()
+    const { isFollowing } = useQueryFollowedUserIdsSwr([USER_ID, otherId])
+    return (
+        <div>
+            <span data-testid="row-following">{String(isFollowing(USER_ID))}</span>
+            <span data-testid="other-following">{String(isFollowing(otherId))}</span>
+            <button type="button" onClick={() => data && void toggleFollow(data)}>
+                toggle
+            </button>
+        </div>
+    )
+}
+
+const renderBatchProbe = () =>
+    render(
+        <SWRConfig value={{ provider: () => new Map(), dedupingInterval: 0 }}>
+            <BatchProbe />
+        </SWRConfig>,
+    )
+
 beforeEach(() => {
     followUser.mockReset()
     unfollowUser.mockReset()
+    getFollowedUserIds.mockReset()
+    getFollowedUserIds.mockResolvedValue([])
     toastDanger.mockReset()
     requireAuth.mockReset()
     requireAuth.mockReturnValue(true)
@@ -193,6 +231,64 @@ describe("useMutateFollowUserSwr", () => {
         expect(followUser).not.toHaveBeenCalled()
         expect(screen.getByTestId("followed").textContent).toBe("undefined")
         expect(screen.getByTestId("followers").textContent).toBe("10")
+    })
+})
+
+describe("useMutateFollowUserSwr — batch follow-state lots", () => {
+    it("patches every lot that contains the user (and only that user)", async () => {
+        followUser.mockResolvedValue(undefined)
+
+        renderBatchProbe()
+        await waitFor(() => expect(getFollowedUserIds).toHaveBeenCalled())
+        expect(screen.getByTestId("row-following").textContent).toBe("false")
+
+        await act(async () => {
+            fireEvent.click(screen.getByText("toggle"))
+        })
+
+        // the LIST row flips with the hovercard — no refetch, no 60s of stale label
+        await waitFor(() => expect(screen.getByTestId("row-following").textContent).toBe("true"))
+        expect(screen.getByTestId("other-following").textContent).toBe("false")
+        expect(getFollowedUserIds).toHaveBeenCalledTimes(1)
+    })
+
+    it("takes the user back out of the lots when the write fails", async () => {
+        const write = deferred<void>()
+        followUser.mockReturnValue(write.promise)
+
+        renderBatchProbe()
+        await waitFor(() => expect(getFollowedUserIds).toHaveBeenCalled())
+
+        fireEvent.click(screen.getByText("toggle"))
+        await waitFor(() => expect(screen.getByTestId("row-following").textContent).toBe("true"))
+
+        await act(async () => {
+            write.reject(new RestError("boom", 500))
+            await write.promise.catch(() => {})
+        })
+
+        await waitFor(() => expect(screen.getByTestId("row-following").textContent).toBe("false"))
+    })
+
+    it("drops the user from the lots on unfollow", async () => {
+        followUser.mockResolvedValue(undefined)
+        unfollowUser.mockResolvedValue(undefined)
+        getFollowedUserIds.mockResolvedValue([USER_ID])
+
+        renderBatchProbe()
+        await waitFor(() => expect(screen.getByTestId("row-following").textContent).toBe("true"))
+
+        // the card starts "not following" (no viewer-scoped flag on the profile read),
+        // so the first press follows and the second one unfollows
+        await act(async () => {
+            fireEvent.click(screen.getByText("toggle"))
+        })
+        await act(async () => {
+            fireEvent.click(screen.getByText("toggle"))
+        })
+
+        await waitFor(() => expect(unfollowUser).toHaveBeenCalledWith(USER_ID))
+        await waitFor(() => expect(screen.getByTestId("row-following").textContent).toBe("false"))
     })
 })
 

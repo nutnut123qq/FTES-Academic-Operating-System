@@ -11,18 +11,16 @@ import { useAppSelector } from "@/redux/hooks"
 import { UserLink } from "@/components/features/identity"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
-import { GroupIdentityFields } from "../GroupIdentityFields"
+import { GroupIdentitySection } from "./GroupIdentitySection"
 import { GroupInfoSection } from "./GroupInfoSection"
 import { GroupDangerZone } from "./GroupDangerZone"
 import { useQueryGroupSettingsSwr } from "./useQueryGroupSettingsSwr"
-import { useIdentityImagePicker } from "../hooks/useIdentityImagePicker"
 import {
     useQueryGroupManageSwr,
     type GroupManage,
 } from "../hooks/useQueryGroupManageSwr"
 import { useMutateGroupPinnedSwr } from "../hooks/useMutateGroupPinnedSwr"
 import { useMutateGroupRulesSwr } from "../hooks/useMutateGroupRulesSwr"
-import { useMutateGroupMediaSwr } from "../hooks/useMutateGroupMediaSwr"
 import { useQueryGroupSwr } from "../hooks/useQueryGroupSwr"
 
 /** Loading skeleton — mirrors the three management sections (heading + rows). */
@@ -149,32 +147,8 @@ export const GroupManagement = () => {
     const { group } = useQueryGroupSwr(groupId)
     const { settings } = useQueryGroupSettingsSwr(groupId)
     const currentUser = useAppSelector((state) => state.user.user)
-    const avatar = useIdentityImagePicker(group?.avatarUrl ?? null)
-    const cover = useIdentityImagePicker(group?.coverUrl ?? null)
     const runRest = useRestWithToast()
     const { unpin } = useMutateGroupPinnedSwr(groupId)
-    const { upload } = useMutateGroupMediaSwr(groupId)
-    const [isSavingIdentity, setIsSavingIdentity] = useState(false)
-
-    // presign → upload → verify for whichever picker holds a fresh file; each step
-    // toasts its own failure (see useMutateGroupMediaSwr). No file picked = no-op.
-    const onSaveIdentity = async () => {
-        if (isSavingIdentity || (!avatar.file && !cover.file)) {
-            return
-        }
-        setIsSavingIdentity(true)
-        if (avatar.file) {
-            await runRest(() => upload("AVATAR", avatar.file as File), {
-                successMessage: t("identity.saved"),
-            })
-        }
-        if (cover.file) {
-            await runRest(() => upload("COVER", cover.file as File), {
-                successMessage: t("identity.saved"),
-            })
-        }
-        setIsSavingIdentity(false)
-    }
 
     // approve/reject a join request — optimistic removal + rollback on failure
     const onDecide = useCallback(
@@ -226,32 +200,12 @@ export const GroupManagement = () => {
             {/* group information — name / description / join policy / visibility */}
             <GroupInfoSection groupId={groupId} />
 
-            {/* group identity — pre-seeded from the group's current images */}
-            <div className="flex flex-col gap-3 border-t border-separator pt-6">
-                <Typography type="h6" weight="bold">
-                    {t("identity.title")}
-                </Typography>
-                <GroupIdentityFields name={group?.name ?? ""} avatar={avatar} cover={cover} />
-                {/*
-                  "Gỡ ảnh" inside the pickers is LOCAL only: it drops the picked file /
-                  preview, it does not clear the saved image. The group media contract has
-                  presign → upload → verify but no clear/delete op, so a saved avatar/cover
-                  can only be REPLACED by uploading a new file. Spelled out here so the
-                  action does not read as a server-side removal that silently no-ops.
-                */}
-                <Typography type="body-xs" color="muted">
-                    {t("identity.removeLocalOnly")}
-                </Typography>
-                <Button
-                    size="sm"
-                    variant="secondary"
-                    className="self-start"
-                    isDisabled={!avatar.file && !cover.file}
-                    isPending={isSavingIdentity}
-                    onPress={() => void onSaveIdentity()}
-                >
-                    {t("identity.save")}
-                </Button>
+            {/* group identity — pre-seeded from the group's current images. Owns its
+                pickers + both writes (upload AND the real `DELETE /groups/{id}/media/{kind}`
+                behind a confirm), so "Gỡ ảnh" removes the saved image for real instead of
+                only hiding it until the next refresh. */}
+            <div className="border-t border-separator pt-6">
+                <GroupIdentitySection groupId={groupId} />
             </div>
 
             {/* management data (join requests · rules · pinned) — one async region */}

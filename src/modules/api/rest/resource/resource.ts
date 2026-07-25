@@ -22,9 +22,11 @@ import type {
     ResourceUploadUrlRequest,
     ResourceUploadUrlResponse,
     VersionResponse,
+    ResourceCommentLikeResponse,
     ResourceCommentView,
     ResourceCommentsPage,
     PostResourceCommentRequest,
+    UpdateItemNoteRequest,
 } from "./types"
 
 // ---------------------------------------------------------------- ResourceController
@@ -378,6 +380,24 @@ export const removeCollectionItem = async (
 }
 
 /**
+ * Edits the note attached to ONE resource inside a collection, keeping its position
+ * (the BE never touches `sortOrder` here). Sending an empty/omitted note CLEARS it.
+ *
+ * `PATCH /api/v1/resources/collections/{id}/items/{resourceId}`
+ */
+export const updateCollectionItemNote = async (
+    id: string,
+    resourceId: string,
+    request: UpdateItemNoteRequest,
+): Promise<CollectionItemResponse> => {
+    return restRequest<CollectionItemResponse>({
+        method: "PATCH",
+        url: `/resources/collections/${id}/items/${resourceId}`,
+        data: { note: request.note ?? null },
+    })
+}
+
+/**
  * Reorders items in a collection.
  *
  * `PATCH /api/v1/resources/collections/{id}/items/reorder`
@@ -428,6 +448,35 @@ export const getResourceRatings = async (
             size: params?.size ?? 20,
         },
         authenticated: true,
+    })
+}
+
+/**
+ * Returns the CALLER'S OWN rating of a resource, or `null` when they have not rated it.
+ *
+ * "Not rated yet" is a `200` with `data: null` (NOT a `404`), mirroring the course
+ * `GET /courses/{id}/ratings/me`, so an empty answer must not be treated as an error.
+ * Requires a session — the 3-segment path is outside the public `/resources/*&#47;ratings` chain.
+ *
+ * `GET /api/v1/resources/{id}/ratings/me`
+ */
+export const getMyResourceRating = async (id: string): Promise<RatingResponse | null> => {
+    return restRequest<RatingResponse | null>({
+        method: "GET",
+        url: `/resources/${id}/ratings/me`,
+    })
+}
+
+/**
+ * Deletes the caller's own rating of a resource. Idempotent — deleting a rating that is
+ * already gone succeeds, so a repeated confirm is not an error.
+ *
+ * `DELETE /api/v1/resources/{id}/ratings/me`
+ */
+export const deleteMyResourceRating = async (id: string): Promise<void> => {
+    return restRequest<void>({
+        method: "DELETE",
+        url: `/resources/${id}/ratings/me`,
     })
 }
 
@@ -565,5 +614,36 @@ export const deleteResourceComment = async (commentId: string): Promise<void> =>
     return restRequest<void>({
         method: "DELETE",
         url: `/resources/comments/${commentId}`,
+    })
+}
+
+/**
+ * Likes (hearts) one resource comment. Idempotent: liking an already-liked comment answers
+ * the same `{active: true, likeCount}` instead of double-counting. Requires a session plus
+ * read access to the parent resource (checked server-side).
+ *
+ * `PUT /api/v1/resources/comments/{commentId}/like`
+ */
+export const likeResourceComment = async (
+    commentId: string,
+): Promise<ResourceCommentLikeResponse> => {
+    return restRequest<ResourceCommentLikeResponse>({
+        method: "PUT",
+        url: `/resources/comments/${commentId}/like`,
+    })
+}
+
+/**
+ * Removes the caller's like from a resource comment — the idempotent mirror of
+ * {@link likeResourceComment}.
+ *
+ * `DELETE /api/v1/resources/comments/{commentId}/like`
+ */
+export const unlikeResourceComment = async (
+    commentId: string,
+): Promise<ResourceCommentLikeResponse> => {
+    return restRequest<ResourceCommentLikeResponse>({
+        method: "DELETE",
+        url: `/resources/comments/${commentId}/like`,
     })
 }

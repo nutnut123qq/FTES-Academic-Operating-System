@@ -9,6 +9,10 @@ import { Link } from "@/i18n/navigation"
 import { useHasPermission } from "@/hooks/useHasPermission"
 import { useQueryReportsSwr } from "../hooks/useQueryReportsSwr"
 import { useMutateModerationDecisionSwr } from "../hooks/useMutateModerationDecisionSwr"
+import {
+    useEscalatedReports,
+    useMutateEscalateReportSwr,
+} from "../hooks/useMutateEscalateReportSwr"
 
 /** Loading skeleton — mirrors the reported-item rows so the layout never jumps. */
 const ModerationSkeleton = () => (
@@ -43,17 +47,20 @@ const ModerationSkeleton = () => (
  * A POST target's id links to the reported post itself (new tab) so the moderator
  * never decides blind.
  *
- * NO escalate action here on purpose: `POST /community/reports/{id}/escalate`
- * resolves a REPORT id (`ModerationService.escalate` → `reportRepository.findById`)
- * while these rows carry `moderation_queue_items.id`, and the BE exposes no mapping
- * between the two on `ModerationQueueResponse` — the button would 404 on every row.
- * It comes back once the queue read carries a `reportId`.
+ * Escalation (`POST /community/reports/{reportId}/escalate`) addresses the REPORT, not
+ * the queue row, so the action is offered ONLY on rows whose `reportId` came back non-null
+ * — a row raised by AI/the system has no report to escalate and passing the queue-row id
+ * there would 404. Escalating does NOT resolve the queue row (the BE only moves the report
+ * to `IN_REVIEW`), so the row stays here for its keep/remove decision and only swaps the
+ * button for an "đã chuyển cấp" chip — pressing it again could only ever 409.
  */
 export const CommunityModeration = () => {
     const t = useTranslations("communityHub")
     const canModerate = useHasPermission("community.moderate")
     const { reports, isLoading, error, mutate } = useQueryReportsSwr(canModerate)
     const decide = useMutateModerationDecisionSwr()
+    const escalate = useMutateEscalateReportSwr()
+    const isEscalated = useEscalatedReports()
 
     return (
         <div className="flex flex-col gap-3">
@@ -135,6 +142,20 @@ export const CommunityModeration = () => {
                                 >
                                     {t("moderation.remove")}
                                 </Button>
+                                {report.reportId && !isEscalated(report.reportId) ? (
+                                    <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onPress={() => void escalate(report.reportId as string)}
+                                    >
+                                        {t("moderation.escalate")}
+                                    </Button>
+                                ) : null}
+                                {isEscalated(report.reportId) ? (
+                                    <Chip size="sm" variant="soft" color="accent">
+                                        {t("moderation.escalatedTag")}
+                                    </Chip>
+                                ) : null}
                             </div>
                         </div>
                     ))}

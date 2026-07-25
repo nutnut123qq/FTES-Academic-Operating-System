@@ -29,6 +29,8 @@ const feedInfiniteKey = (tab: string, campus = "", cursor = ""): string =>
 const post = (id: string, comments: number, likes = 0, liked = false): CommunityPost => ({
     id,
     author: "A",
+    authorId: "a-id",
+    pinned: false,
     authorUsername: "a",
     timeLabel: "now",
     title: "t",

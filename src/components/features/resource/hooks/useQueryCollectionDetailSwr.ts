@@ -5,6 +5,7 @@ import useSWR from "swr"
 import {
     getCollectionDetail,
     removeCollectionItem,
+    updateCollectionItemNote,
     type CollectionDetailResponse,
 } from "@/modules/api/rest/resource"
 import { useAppSelector } from "@/redux/hooks"
@@ -20,7 +21,8 @@ export const COLLECTION_DETAIL_SWR_KEY = "QUERY_RESOURCE_COLLECTION_DETAIL_SWR"
  *
  * `removeItem` drops the row optimistically, fires
  * `DELETE /resources/collections/{id}/items/{resourceId}` and re-fetches (rollback)
- * when the delete fails.
+ * when the delete fails. `updateItemNote` edits one item's note in place
+ * (`PATCH .../items/{resourceId}`), keeping its position.
  *
  * @param collectionId - Selected collection id; `null`/`undefined` disables the fetch.
  */
@@ -69,6 +71,71 @@ export const useQueryCollectionDetailSwr = (collectionId?: string | null) => {
         [collectionId, mutate],
     )
 
+    /**
+     * Rewrites the personal note of ONE item in place
+     * (`PATCH /resources/collections/{id}/items/{resourceId}`) — the item keeps its
+     * `sortOrder`, so editing a note never reshuffles the collection (which is exactly what
+     * the old remove-then-re-add workaround did).
+     *
+     * The new text paints immediately and the server's echoed item is merged in once the
+     * PATCH lands. A failure re-patches the PREVIOUS note onto the cache as it stands AT
+     * THAT MOMENT rather than restoring a whole pre-write snapshot, so a reorder or removal
+     * that happened meanwhile survives the undo.
+     *
+     * @param resourceId - Resource id of the item row (the BE addresses items by resource id).
+     * @param note - New note; blank clears it (the BE treats a null note as "no note").
+     * @throws The underlying `RestError` after restoring the previous note.
+     */
+    const updateItemNote = useCallback(
+        async (resourceId: string, note: string): Promise<void> => {
+            if (!collectionId) {
+                return
+            }
+            const trimmed = note.trim()
+            const nextNote = trimmed === "" ? undefined : trimmed
+
+            const withNote =
+                (value: string | undefined) => (current: CollectionDetailResponse | undefined) =>
+                    current
+                        ? {
+                              ...current,
+                              items: current.items.map((item) =>
+                                  item.resourceId === resourceId ? { ...item, note: value } : item,
+                              ),
+                          }
+                        : current
+
+            let previousNote: string | undefined
+            await mutate((current) => {
+                previousNote = current?.items.find((item) => item.resourceId === resourceId)?.note
+                return withNote(nextNote)(current)
+            }, { revalidate: false })
+
+            try {
+                const saved = await updateCollectionItemNote(collectionId, resourceId, {
+                    note: nextNote,
+                })
+                // The BE echo is authoritative (and carries the unchanged sortOrder).
+                await mutate(
+                    (current) =>
+                        current
+                            ? {
+                                  ...current,
+                                  items: current.items.map((item) =>
+                                      item.resourceId === resourceId ? { ...item, ...saved } : item,
+                                  ),
+                              }
+                            : current,
+                    { revalidate: false },
+                )
+            } catch (noteError) {
+                await mutate(withNote(previousNote), { revalidate: false })
+                throw noteError
+            }
+        },
+        [collectionId, mutate],
+    )
+
     return {
         collection: data?.collection ?? null,
         items: data?.items ?? [],
@@ -76,5 +143,6 @@ export const useQueryCollectionDetailSwr = (collectionId?: string | null) => {
         error,
         mutate,
         removeItem,
+        updateItemNote,
     }
 }

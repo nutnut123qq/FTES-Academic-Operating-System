@@ -14,6 +14,17 @@ export interface CreateSessionRequest {
     model?: string
 }
 
+/**
+ * The context a session was opened against, as the BE projects it back
+ * (`AiSessionContextRef` — a safe subset of the stored `context_ref` jsonb).
+ * `null`/absent when the session is not tied to anything.
+ */
+export interface AiSessionContextRef {
+    subjectId?: string | null
+    lessonId?: string | null
+    questionSetId?: string | null
+}
+
 export interface AiSessionView {
     id: string
     feature: AiFeature
@@ -21,6 +32,13 @@ export interface AiSessionView {
     status: string
     messageCount: number
     remainingLessonChats?: number
+    /** Context the session belongs to — lets the FE attribute a row to a subject/lesson. */
+    contextRef?: AiSessionContextRef | null
+}
+
+/** Result of the bulk archive (`DELETE /ai/sessions`) — how many rows actually flipped. */
+export interface AiBulkArchiveResult {
+    archived: number
 }
 
 export interface AiSendMessageRequest {

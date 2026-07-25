@@ -1,20 +1,32 @@
 import { restRequest } from "@/modules/api/rest/client"
 import type {
+    AddFlashcardCardsRequest,
     ChangeRoleRequest,
+    CreateFlashcardDeckRequest,
     CreateLinkRequest,
     CreateSubjectRequest,
+    FlashcardCardView,
+    FlashcardDeckView,
+    FlashcardDecksView,
     JoinResponse,
     LinkView,
     MemberView,
     MyMembershipView,
     PageResponse,
+    PracticeQuizResultView,
+    PracticeQuizView,
     PrerequisiteView,
     RelatedView,
     ReplacePrerequisitesRequest,
     ReplaceRelatedRequest,
+    ReviewFlashcardRequest,
+    ReviewFlashcardResultView,
     StatisticsView,
     SubjectDetail,
     SubjectSummary,
+    SubmitPracticeQuizRequest,
+    UpdateFlashcardCardRequest,
+    UpdateFlashcardDeckRequest,
     UpdateLinkRequest,
     UpdateSubjectRequest,
     WorkspaceView,
@@ -339,5 +351,185 @@ export const getSubjectStatistics = async (
         method: "GET",
         url: `/subjects/${code}/statistics`,
         authenticated: false,
+    })
+}
+
+// ---------------------------------------------------------------- practice: quiz
+
+/**
+ * Draws random ready questions from the subject's question bank for a practice run —
+ * WITHOUT the correct answers. Default 10, capped at 50 by the BE; a subject with no
+ * ready questions answers `count: 0` + `questions: []` (render the empty state, not an
+ * error). Authenticated: practice is always tied to a learner.
+ *
+ * `GET /api/v1/subjects/{code}/practice/quiz?count=N`
+ */
+export const getPracticeQuiz = async (
+    code: string,
+    params?: { count?: number },
+): Promise<PracticeQuizView> => {
+    return restRequest<PracticeQuizView>({
+        method: "GET",
+        url: `/subjects/${code}/practice/quiz`,
+        params: { count: params?.count ?? undefined },
+        authenticated: true,
+    })
+}
+
+/**
+ * Submits a practice attempt — graded server-side. Only the response carries
+ * `correctKeys` + `explanation`. Nothing is written to the transcript, so retaking is
+ * free.
+ *
+ * `POST /api/v1/subjects/{code}/practice/quiz/submit`
+ */
+export const submitPracticeQuiz = async (
+    code: string,
+    request: SubmitPracticeQuizRequest,
+): Promise<PracticeQuizResultView> => {
+    return restRequest<PracticeQuizResultView>({
+        method: "POST",
+        url: `/subjects/${code}/practice/quiz/submit`,
+        data: request,
+    })
+}
+
+// ---------------------------------------------------------------- practice: flashcards
+
+/**
+ * Returns every flashcard deck of a subject with all its cards AND the caller's SM-2
+ * progress in one batched read — enough to run a whole review session offline of
+ * further requests. `canManage` tells whether to show the deck/card CRUD affordances.
+ *
+ * `GET /api/v1/subjects/{code}/practice/flashcards`
+ */
+export const getSubjectFlashcards = async (
+    code: string,
+): Promise<FlashcardDecksView> => {
+    return restRequest<FlashcardDecksView>({
+        method: "GET",
+        url: `/subjects/${code}/practice/flashcards`,
+        authenticated: true,
+    })
+}
+
+/**
+ * Records one review of a card (self-grade 0..5). The server runs SM-2, persists the
+ * new state and returns it together with the deck's remaining due count, so the badge
+ * can be updated without refetching the deck.
+ *
+ * `POST /api/v1/subjects/{code}/practice/flashcards/{cardId}/review`
+ */
+export const reviewFlashcard = async (
+    code: string,
+    cardId: string,
+    request: ReviewFlashcardRequest,
+): Promise<ReviewFlashcardResultView> => {
+    return restRequest<ReviewFlashcardResultView>({
+        method: "POST",
+        url: `/subjects/${code}/practice/flashcards/${cardId}/review`,
+        data: request,
+    })
+}
+
+// ------------------------------------------------- practice: flashcard CRUD (curators)
+
+/**
+ * Creates a deck, optionally with its cards in the same request (bulk import).
+ * Requires curate rights on the subject (`FlashcardDecksView.canManage`) → `403`
+ * otherwise.
+ *
+ * `POST /api/v1/subjects/{code}/practice/flashcards/decks`
+ */
+export const createFlashcardDeck = async (
+    code: string,
+    request: CreateFlashcardDeckRequest,
+): Promise<FlashcardDeckView> => {
+    return restRequest<FlashcardDeckView>({
+        method: "POST",
+        url: `/subjects/${code}/practice/flashcards/decks`,
+        data: request,
+    })
+}
+
+/**
+ * Patches a deck — an omitted field keeps its current value.
+ *
+ * `PATCH /api/v1/subjects/{code}/practice/flashcards/decks/{deckId}`
+ */
+export const updateFlashcardDeck = async (
+    code: string,
+    deckId: string,
+    request: UpdateFlashcardDeckRequest,
+): Promise<FlashcardDeckView> => {
+    return restRequest<FlashcardDeckView>({
+        method: "PATCH",
+        url: `/subjects/${code}/practice/flashcards/decks/${deckId}`,
+        data: request,
+    })
+}
+
+/**
+ * Deletes a deck together with its cards and every learner's progress on them. Keep
+ * the history instead by patching `status = ARCHIVED`.
+ *
+ * `DELETE /api/v1/subjects/{code}/practice/flashcards/decks/{deckId}`
+ */
+export const deleteFlashcardDeck = async (
+    code: string,
+    deckId: string,
+): Promise<void> => {
+    return restRequest<void>({
+        method: "DELETE",
+        url: `/subjects/${code}/practice/flashcards/decks/${deckId}`,
+    })
+}
+
+/**
+ * Appends 1..500 cards to the end of a deck.
+ *
+ * `POST /api/v1/subjects/{code}/practice/flashcards/decks/{deckId}/cards`
+ */
+export const addFlashcardCards = async (
+    code: string,
+    deckId: string,
+    request: AddFlashcardCardsRequest,
+): Promise<Array<FlashcardCardView>> => {
+    return restRequest<Array<FlashcardCardView>>({
+        method: "POST",
+        url: `/subjects/${code}/practice/flashcards/decks/${deckId}/cards`,
+        data: request,
+    })
+}
+
+/**
+ * Patches one card — an omitted field keeps its current value.
+ *
+ * `PATCH /api/v1/subjects/{code}/practice/flashcards/cards/{cardId}`
+ */
+export const updateFlashcardCard = async (
+    code: string,
+    cardId: string,
+    request: UpdateFlashcardCardRequest,
+): Promise<FlashcardCardView> => {
+    return restRequest<FlashcardCardView>({
+        method: "PATCH",
+        url: `/subjects/${code}/practice/flashcards/cards/${cardId}`,
+        data: request,
+    })
+}
+
+/**
+ * Deletes one card (and the learners' progress on it).
+ *
+ * `DELETE /api/v1/subjects/{code}/practice/flashcards/cards/{cardId}`
+ */
+export const deleteFlashcardCard = async (
+    code: string,
+    cardId: string,
+): Promise<void> => {
+    return restRequest<void>({
+        method: "DELETE",
+        url: `/subjects/${code}/practice/flashcards/cards/${cardId}`,
     })
 }

@@ -6,6 +6,7 @@ import {
     ArrowLeftIcon,
     CheckCircleIcon,
     CursorClickIcon,
+    GearIcon,
     SparkleIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
@@ -13,8 +14,15 @@ import { useTranslations } from "next-intl"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { ProgressMeter } from "@/components/blocks/stats/ProgressMeter"
-import { SM2_GRADES, nextIntervalDays } from "../SubjectAiTools/SubjectAiFlashcards/constants"
-import { useQuerySubjectPracticeFlashcardsSwr } from "../hooks/useQuerySubjectPracticeFlashcardsSwr"
+import { useRequireAuth } from "@/hooks/useRequireAuth"
+import {
+    applyFlashcardReview,
+    useQuerySubjectPracticeFlashcardsSwr,
+} from "../hooks/useQuerySubjectPracticeFlashcardsSwr"
+import { useMutateSubjectFlashcardReviewSwr } from "../hooks/useMutateSubjectFlashcardReviewSwr"
+import { PracticeFlashcardManager } from "./PracticeFlashcardManager"
+import { PRACTICE_SM2_GRADES, previewIntervalDays } from "./flashcardSm2"
+import { resolvePracticeErrorKey } from "./practiceQuiz"
 
 /** Props for {@link PracticeFlashcards}. */
 export interface PracticeFlashcardsProps {
@@ -22,19 +30,25 @@ export interface PracticeFlashcardsProps {
     /** Return to the practice hub. */
     onBack: () => void
     /**
-     * Opens the subject's AI tools tab. The BE ships no curated per-subject deck yet,
-     * so the empty state hands the learner over to the AI Flashcards generator.
+     * Opens the subject's AI tools tab — offered when the subject has no curated deck
+     * yet, so the learner can still generate cards from its resources.
      */
     onOpenAiTools: () => void
 }
 
 /**
- * Practice flashcards — a compact reuse of the Task-A StarCI `FlashcardReviewer`
- * (STT 9). Same reviewer mechanics: one card at a time, flip front↔back, a
- * "Thẻ i/total" progress meter, and — once revealed — the SM-2 self-rating row
- * (Quên / Khó / Được / Dễ) with real per-grade interval previews that advance the
- * run; a summary closes it (studyAgain). Backed by a fixed practice deck
- * (`useQuerySubjectPracticeFlashcardsSwr`) rather than the AI source-pick flow.
+ * Practice flashcards — the SM-2 reviewer over the subject's CURATED decks
+ * (`GET /api/v1/subjects/{code}/practice/flashcards`).
+ *
+ * Reviewer mechanics are unchanged (one card at a time, flip front↔back, a
+ * "Thẻ i/total" meter, the four-grade self-rating row, a session summary), but the
+ * scheduling is now the server's: every grade posts to
+ * `POST …/flashcards/{cardId}/review` and the returned SM-2 state (ease · interval ·
+ * dueAt · the deck's remaining due count) is written back into the SWR cache — so the
+ * progress SURVIVES A RELOAD instead of living in component state. The queue is
+ * ordered due-first and each card shows whether it is due.
+ *
+ * Curators (`canManage`) additionally get the deck/card management panel.
  */
 export const PracticeFlashcards = ({
     subjectId,
@@ -42,45 +56,81 @@ export const PracticeFlashcards = ({
     onOpenAiTools,
 }: PracticeFlashcardsProps) => {
     const t = useTranslations("subjects")
-    const { cards, isLoading, error, mutate } = useQuerySubjectPracticeFlashcardsSwr(subjectId)
+    const { guard } = useRequireAuth()
+    const { code, cards, decks, dueCount, canManage, isLoading, error, mutate } =
+        useQuerySubjectPracticeFlashcardsSwr(subjectId)
+    const review = useMutateSubjectFlashcardReviewSwr()
 
     const [currentIndex, setCurrentIndex] = React.useState(0)
     const [revealed, setRevealed] = React.useState(false)
     const [reviewedCount, setReviewedCount] = React.useState(0)
-    const [streaks, setStreaks] = React.useState<Record<string, number>>({})
+    const [managing, setManaging] = React.useState(false)
+    const [reviewErrorKey, setReviewErrorKey] = React.useState<string | null>(null)
+    /**
+     * Card ids in the order this session walks them, frozen when the deck payload
+     * arrives. The hook's queue re-sorts due-first on every review, so walking `cards`
+     * by index would jump over the neighbour of the card just graded.
+     */
+    const [queueIds, setQueueIds] = React.useState<Array<string>>([])
 
-    const card = cards[currentIndex] ?? null
-    const done = cards.length > 0 && currentIndex >= cards.length
-    const isFirst = currentIndex === 0
+    const byId = React.useMemo(() => new Map(cards.map((entry) => [entry.id, entry])), [cards])
+
+    React.useEffect(() => {
+        setQueueIds((previous) =>
+            previous.length === 0 && cards.length > 0 ? cards.map((entry) => entry.id) : previous,
+        )
+    }, [cards])
+
+    // Skip ids that vanished (a curator deleted the card mid-session).
+    let cursor = currentIndex
+    while (cursor < queueIds.length && !byId.has(queueIds[cursor])) {
+        cursor += 1
+    }
+    const card = cursor < queueIds.length ? byId.get(queueIds[cursor]) ?? null : null
+    const done = queueIds.length > 0 && cursor >= queueIds.length
+    const isFirst = cursor === 0
 
     const goPrev = () => {
         setRevealed(false)
-        setCurrentIndex((index) => Math.max(index - 1, 0))
+        setCurrentIndex(Math.max(cursor - 1, 0))
     }
 
-    /** Grade the current card (SM-2), grow/reset its recall streak, then advance. */
-    const onRate = (grade: number) => {
-        if (!card) return
-        setStreaks((prev) => {
-            const current = prev[card.id] ?? 0
-            const next = grade === 0 ? 0 : grade >= 2 ? current + 1 : current
-            return { ...prev, [card.id]: next }
-        })
-        setReviewedCount((count) => count + 1)
-        setRevealed(false)
-        setCurrentIndex((index) => index + 1)
+    /**
+     * Grades the current card. The SERVER runs SM-2 and persists it; its response
+     * patches the cached deck (progress + due counters) before the queue advances. A
+     * failed call keeps the learner on the card so the grade is not silently lost.
+     */
+    const rate = async (grade: number) => {
+        if (!card || review.isMutating) return
+        setReviewErrorKey(null)
+        try {
+            const outcome = await review.trigger({ code, cardId: card.id, grade })
+            if (!outcome) return
+            await mutate((current) => applyFlashcardReview(current, outcome), {
+                revalidate: false,
+            })
+            setReviewedCount((count) => count + 1)
+            setRevealed(false)
+            setCurrentIndex(cursor + 1)
+        } catch (cause) {
+            setReviewErrorKey(resolvePracticeErrorKey(cause))
+        }
     }
 
     const restart = () => {
         setCurrentIndex(0)
         setRevealed(false)
         setReviewedCount(0)
-        setStreaks({})
+        setReviewErrorKey(null)
+        // Drop the frozen order and re-read the decks: the next session re-queues
+        // around whatever is still due after this run.
+        setQueueIds([])
+        void mutate()
     }
 
     return (
         <div className="flex flex-col gap-6 p-6">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
                 <Button
                     size="sm"
                     variant="tertiary"
@@ -93,7 +143,31 @@ export const PracticeFlashcards = ({
                 <Typography type="h5" weight="bold" className="flex-1">
                     {t("practice.flashcards.title")}
                 </Typography>
+                {dueCount > 0 ? (
+                    <Chip size="sm" variant="soft" color="accent">
+                        {t("practice.flashcards.dueSummary", { count: dueCount })}
+                    </Chip>
+                ) : null}
+                {canManage ? (
+                    <Button size="sm" variant="secondary" onPress={() => setManaging((open) => !open)}>
+                        <GearIcon aria-hidden focusable="false" className="size-4" />
+                        {t(managing ? "practice.flashcards.manageClose" : "practice.flashcards.manage")}
+                    </Button>
+                ) : null}
             </div>
+
+            {managing && canManage ? (
+                <PracticeFlashcardManager
+                    code={code}
+                    decks={decks}
+                    onChanged={() => {
+                        setCurrentIndex(0)
+                        setRevealed(false)
+                        setQueueIds([])
+                        void mutate()
+                    }}
+                />
+            ) : null}
 
             <AsyncContent
                 isLoading={isLoading && cards.length === 0}
@@ -111,7 +185,7 @@ export const PracticeFlashcards = ({
                 }}
                 error={error}
                 errorContent={{
-                    title: t("practice.flashcards.error"),
+                    title: t(`practice.errors.${resolvePracticeErrorKey(error)}`),
                     onRetry: () => {
                         void mutate()
                     },
@@ -126,6 +200,11 @@ export const PracticeFlashcards = ({
                         <Typography type="body-sm" color="muted">
                             {t("practice.flashcards.sessionDoneDesc", { count: reviewedCount })}
                         </Typography>
+                        <Typography type="body-xs" color="muted">
+                            {dueCount > 0
+                                ? t("practice.flashcards.sessionDoneDue", { count: dueCount })
+                                : t("practice.flashcards.progressSaved")}
+                        </Typography>
                         <Button variant="secondary" className="mt-2" onPress={restart}>
                             {t("practice.flashcards.studyAgain")}
                         </Button>
@@ -133,17 +212,27 @@ export const PracticeFlashcards = ({
                 ) : card ? (
                     <div className="mx-auto flex w-full max-w-xl flex-col gap-6">
                         <ProgressMeter
-                            value={currentIndex + 1}
-                            max={cards.length}
+                            value={cursor + 1}
+                            max={queueIds.length}
                             label={t("practice.flashcards.cardProgress", {
-                                current: currentIndex + 1,
-                                total: cards.length,
+                                current: cursor + 1,
+                                total: queueIds.length,
                             })}
                         />
 
                         <div className="flex flex-wrap items-center gap-2">
                             <Chip size="sm" variant="soft" color="default">
                                 {card.tag}
+                            </Chip>
+                            {card.progress?.due ? (
+                                <Chip size="sm" variant="soft" color="accent">
+                                    {t("practice.flashcards.dueBadge")}
+                                </Chip>
+                            ) : null}
+                            <Chip size="sm" variant="soft">
+                                {t(
+                                    `practice.flashcards.status.${(card.progress?.status ?? "NEW").toLowerCase()}`,
+                                )}
                             </Chip>
                         </div>
 
@@ -176,26 +265,28 @@ export const PracticeFlashcards = ({
                             </span>
                         </button>
 
+                        {reviewErrorKey ? (
+                            <Typography type="body-sm" align="center" className="text-danger">
+                                {t(`practice.errors.${reviewErrorKey}`)}
+                            </Typography>
+                        ) : null}
+
                         {revealed ? (
                             <div className="flex flex-col gap-2">
                                 <Typography type="body-xs" color="muted" align="center">
                                     {t("practice.flashcards.rateHint")}
                                 </Typography>
                                 <div className="grid grid-cols-4 gap-2">
-                                    {SM2_GRADES.map((option) => {
-                                        const streak = streaks[card.id] ?? 0
-                                        const days = nextIntervalDays(option.grade, streak)
-                                        const interval =
-                                            days === 0
-                                                ? t("practice.flashcards.intervalNow")
-                                                : t("practice.flashcards.intervalDays", { count: days })
+                                    {PRACTICE_SM2_GRADES.map((option) => {
+                                        const days = previewIntervalDays(card.progress, option.grade)
                                         return (
                                             <button
                                                 key={option.grade}
                                                 type="button"
-                                                onClick={() => onRate(option.grade)}
+                                                disabled={review.isMutating}
+                                                onClick={guard(() => void rate(option.grade))}
                                                 className={cn(
-                                                    "flex flex-col items-center gap-0.5 rounded-xl border py-2 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-focus",
+                                                    "flex flex-col items-center gap-0.5 rounded-xl border py-2 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-focus disabled:opacity-60",
                                                     option.tone,
                                                 )}
                                             >
@@ -203,12 +294,15 @@ export const PracticeFlashcards = ({
                                                     {t(`practice.flashcards.rating.${option.labelKey}`)}
                                                 </Typography>
                                                 <Typography type="body-xs" color="muted">
-                                                    {interval}
+                                                    {t("practice.flashcards.intervalDays", { count: days })}
                                                 </Typography>
                                             </button>
                                         )
                                     })}
                                 </div>
+                                <Typography type="body-xs" color="muted" align="center">
+                                    {t("practice.flashcards.progressSaved")}
+                                </Typography>
                             </div>
                         ) : (
                             <div className="flex items-center justify-between gap-3">

@@ -34,6 +34,8 @@ const post = (id: string): CommunityPost => ({
     id,
     author: "A",
     authorUsername: "a",
+    authorId: "a-id",
+    pinned: false,
     timeLabel: "now",
     title: `title-${id}`,
     snippet: `snippet-${id}`,

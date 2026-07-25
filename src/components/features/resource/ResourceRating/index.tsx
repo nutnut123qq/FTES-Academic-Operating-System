@@ -1,18 +1,21 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { Button, Skeleton, TextArea, TextField, Typography, cn, toast } from "@heroui/react"
-import { StarIcon } from "@phosphor-icons/react"
+import { StarIcon, TrashIcon } from "@phosphor-icons/react"
 import { useLocale, useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
 
 import { useAppSelector } from "@/redux/hooks"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { ConfirmDialog } from "@/components/reuseable/PostEngagementBar"
 import { UserAvatar } from "@/components/reuseable/UserAvatar"
 import { formatRelativeTime } from "@/components/features/community/hooks/relativeTime"
 import { REVIEW_STAR_BUCKETS, useQueryReviewsSwr } from "../hooks/useQueryReviewsSwr"
 import { useMutateRateResourceSwr } from "../hooks/useMutateRateResourceSwr"
+import { useQueryMyResourceRatingSwr } from "../hooks/useQueryMyResourceRatingSwr"
+import { useMutateDeleteMyResourceRatingSwr } from "../hooks/useMutateDeleteMyResourceRatingSwr"
 
 /** Page size for the review list. */
 const REVIEWS_PAGE_SIZE = 10
@@ -93,6 +96,11 @@ const ReviewsSkeleton = () => (
  * revalidating the list. Nothing is appended to local state any more, so what the page
  * shows after a submit is what the server actually stored.
  *
+ * A viewer who already rated gets their stars/review back in the composer
+ * (`GET /ratings/me`, which answers `null` — not a 404 — when there is none), the CTA reads
+ * "update" instead of "submit" (the POST is an upsert), and a confirmed
+ * `DELETE /ratings/me` removes it and refreshes the aggregate so avg/count move with it.
+ *
  * Guests are gated into the auth modal before the write (`useRequireAuth`), and a rejected
  * write is classified into friendly copy (already rated / no access / rate limited)
  * instead of a raw error. The author label comes from `userId` — the rating DTO carries no
@@ -108,9 +116,29 @@ export const ResourceRating = () => {
     const [page, setPage] = useState(1)
     const ratingsSwr = useQueryReviewsSwr(resourceId, { page, size: REVIEWS_PAGE_SIZE })
     const rate = useMutateRateResourceSwr()
+    const myRatingSwr = useQueryMyResourceRatingSwr(resourceId)
+    const removeRating = useMutateDeleteMyResourceRatingSwr()
 
-    const [myRating, setMyRating] = useState(0)
+    const [stars, setStars] = useState(0)
     const [text, setText] = useState("")
+    const [isConfirmOpen, setConfirmOpen] = useState(false)
+
+    const stored = myRatingSwr.myRating
+    const hasRating = myRatingSwr.hasRating
+    /** Id of the stored rating already copied into the composer (prefill runs once per row). */
+    const prefilledRef = useRef<string | null>(null)
+
+    useEffect(() => {
+        // Prefill the composer from the rating the BE already holds, ONCE per stored row:
+        // a background revalidation returning the same rating must not overwrite the edit
+        // in progress, and the reset after a delete must not be undone by a late answer.
+        if (!stored || prefilledRef.current === stored.id) {
+            return
+        }
+        prefilledRef.current = stored.id
+        setStars(stored.stars)
+        setText(stored.review ?? "")
+    }, [stored])
 
     const { reviews, avg, count, distribution, total, error, mutate, isLoading, summary } = ratingsSwr
     const pageCount = Math.max(1, Math.ceil(total / REVIEWS_PAGE_SIZE))
@@ -120,8 +148,14 @@ export const ResourceRating = () => {
         ...REVIEW_STAR_BUCKETS.map((star) => distribution[String(star)] ?? 0),
     )
 
+    /** Re-reads the aggregate (avg/count/distribution + rows) AND the viewer's own rating. */
+    const refreshAll = () => {
+        void mutate()
+        void myRatingSwr.mutate()
+    }
+
     const submit = async () => {
-        if (myRating === 0 || rate.isMutating) {
+        if (stars === 0 || rate.isMutating) {
             return
         }
         // Guests: open the auth modal instead of firing a write that would 401.
@@ -131,23 +165,23 @@ export const ResourceRating = () => {
 
         const trimmed = text.trim()
         const outcome = await rate.submit(resourceId, {
-            stars: myRating,
+            stars,
             review: trimmed === "" ? undefined : trimmed,
         })
 
         switch (outcome.status) {
             case "rated":
-                toast.success(t("reviews.submitted"))
-                setText("")
-                setMyRating(0)
+                // POST is an UPSERT — the composer keeps showing what is now stored instead
+                // of blanking out and pretending the viewer never rated.
+                toast.success(hasRating ? t("reviews.updated") : t("reviews.submitted"))
                 setPage(1)
-                void mutate()
+                refreshAll()
                 break
             case "conflict":
                 // Already rated: server state wins — refetch so the viewer sees theirs.
                 toast.warning(t("reviews.alreadyRated"))
                 setPage(1)
-                void mutate()
+                refreshAll()
                 break
             case "unauthorized":
                 requireAuth("auth.context.rate")
@@ -163,6 +197,40 @@ export const ResourceRating = () => {
                 break
             default:
                 toast.danger(t("reviews.submitError"))
+                break
+        }
+    }
+
+    const confirmDelete = async () => {
+        const outcome = await removeRating.remove(resourceId)
+
+        switch (outcome.status) {
+            case "deleted":
+                setConfirmOpen(false)
+                // The rating is gone → so is the prefill it seeded; clearing the marker lets
+                // a NEW rating prefill later instead of being skipped as "already applied".
+                prefilledRef.current = null
+                setStars(0)
+                setText("")
+                setPage(1)
+                toast.success(t("reviews.deleted"))
+                refreshAll()
+                break
+            case "unauthorized":
+                setConfirmOpen(false)
+                requireAuth("auth.context.rate")
+                break
+            case "forbidden":
+                toast.danger(t("reviews.forbidden"))
+                break
+            case "notFound":
+                toast.danger(t("reviews.notFound"))
+                break
+            case "rateLimited":
+                toast.danger(t("reviews.rateLimited"))
+                break
+            default:
+                toast.danger(t("reviews.deleteError"))
                 break
         }
     }
@@ -214,15 +282,24 @@ export const ResourceRating = () => {
                 </div>
             </div>
 
-            {/* composer */}
+            {/* composer — prefilled from `GET /ratings/me` when the viewer already rated */}
             <div className="flex flex-col gap-3 rounded-2xl border border-separator p-4">
-                <Typography type="body-sm" weight="medium">
-                    {t("reviews.composerTitle")}
-                </Typography>
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <Typography type="body-sm" weight="medium">
+                        {t("reviews.composerTitle")}
+                    </Typography>
+                    {stored?.updatedAt ? (
+                        <Typography type="body-xs" color="muted">
+                            {t("reviews.editedAt", {
+                                time: formatRelativeTime(stored.updatedAt, locale),
+                            })}
+                        </Typography>
+                    ) : null}
+                </div>
                 <StarPicker
-                    value={myRating}
-                    onChange={setMyRating}
-                    isDisabled={rate.isMutating}
+                    value={stars}
+                    onChange={setStars}
+                    isDisabled={rate.isMutating || removeRating.isMutating}
                     label={(star) => t("reviews.starLabel", { count: star })}
                 />
                 <TextField variant="secondary" className="w-full">
@@ -235,17 +312,39 @@ export const ResourceRating = () => {
                         className="resize-none"
                     />
                 </TextField>
-                <Button
-                    size="sm"
-                    variant="primary"
-                    className="self-start"
-                    onPress={() => void submit()}
-                    isPending={rate.isMutating}
-                    isDisabled={myRating === 0 || rate.isMutating}
-                >
-                    {t("reviews.submit")}
-                </Button>
+                <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                        size="sm"
+                        variant="primary"
+                        onPress={() => void submit()}
+                        isPending={rate.isMutating}
+                        isDisabled={stars === 0 || rate.isMutating || removeRating.isMutating}
+                    >
+                        {hasRating ? t("reviews.update") : t("reviews.submit")}
+                    </Button>
+                    {hasRating ? (
+                        <Button
+                            size="sm"
+                            variant="tertiary"
+                            onPress={() => setConfirmOpen(true)}
+                            isDisabled={rate.isMutating || removeRating.isMutating}
+                        >
+                            <TrashIcon aria-hidden focusable="false" className="size-4" />
+                            {t("reviews.delete")}
+                        </Button>
+                    ) : null}
+                </div>
             </div>
+
+            <ConfirmDialog
+                isOpen={isConfirmOpen}
+                onClose={() => setConfirmOpen(false)}
+                onConfirm={() => void confirmDelete()}
+                title={t("reviews.deleteTitle")}
+                description={t("reviews.deleteDescription")}
+                confirmLabel={t("reviews.deleteConfirm")}
+                isPending={removeRating.isMutating}
+            />
 
             {/* review list */}
             <AsyncContent

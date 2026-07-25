@@ -216,6 +216,12 @@ export interface ModerationDecisionRequest {
 /** One moderation queue item. */
 export interface ModerationQueueResponse {
     id: string
+    /**
+     * Id of the REPORT behind this row — what `POST /community/reports/{id}/escalate`
+     * takes. NULLABLE and distinct from `id` (the queue-row id used for decisions): a row
+     * pushed by AI/the system with no open report on the target has nothing to escalate.
+     */
+    reportId?: string | null
     targetType: string
     targetId: string
     source: string

@@ -4985,7 +4985,7 @@
       "modules": {
         "quiz": {
           "title": "Quiz",
-          "meta": "{count} sets"
+          "meta": "{count} questions"
         },
         "flashcards": {
           "title": "Flashcards",
@@ -5125,7 +5125,36 @@
         "sessionDoneDesc": "You reviewed {count} cards this session.",
         "studyAgain": "Study again",
         "empty": "No cards to review yet",
-        "error": "Couldn't load the deck"
+        "error": "Couldn't load the deck",
+        "dueBadge": "Due",
+        "dueSummary": "{count} cards due",
+        "sessionDoneDue": "{count} cards are still due.",
+        "progressSaved": "Your review progress is saved on the server.",
+        "status": {
+          "new": "New",
+          "learning": "Relearning",
+          "reviewing": "Reviewing"
+        },
+        "manage": "Manage decks",
+        "manageClose": "Close manager",
+        "manageTitle": "Subject decks",
+        "manageEmpty": "No decks yet — create the first one for this subject.",
+        "deckMeta": "{cards} cards · {due} due",
+        "newDeck": "New deck",
+        "deckTitleLabel": "Deck title",
+        "deckDescriptionLabel": "Description (optional)",
+        "cardsLabel": "Cards — one per line: front | back",
+        "cardsPlaceholder": "Recursion | A function that calls itself",
+        "cardsParsed": "{count} valid cards detected",
+        "create": "Create deck",
+        "addCards": "Add cards",
+        "deleteDeck": "Delete deck",
+        "deleteDeckConfirm": "Delete this deck with all its cards and every learner's review progress?",
+        "confirmDelete": "Delete",
+        "cancel": "Cancel",
+        "createdToast": "Deck created.",
+        "addedToast": "Added {count} cards.",
+        "deletedToast": "Deck deleted."
       },
       "leaderboard": {
         "title": "Leaderboard",
@@ -5143,7 +5172,47 @@
         "description": "No lecturer-curated deck exists for this subject yet. Use AI Flashcards to generate cards from the subject's materials.",
         "cta": "Open AI Flashcards"
       },
-      "aiHandoffHint": "The AI tools live in the subject's AI tab."
+      "aiHandoffHint": "The AI tools live in the subject's AI tab.",
+      "quiz": {
+        "intro": "Draws random questions from this subject's bank. Practice is not recorded in your transcript — retake as often as you like.",
+        "countLabel": "Questions",
+        "countOption": "{count} questions",
+        "start": "Start practising",
+        "drawing": "Drawing questions…",
+        "ephemeralNote": "Practice runs are not recorded in your transcript.",
+        "empty": "No practice questions for this subject yet",
+        "emptyDesc": "The subject's question bank has no ready questions. You can use AI Quiz to generate questions from its resources.",
+        "retry": "Try again",
+        "questionLine": "Question {number}",
+        "multipleHint": "Select every correct answer",
+        "answeredProgress": "Answered {answered}/{total}",
+        "submit": "Submit",
+        "submitting": "Grading…",
+        "resultTitle": "Practice result",
+        "scoreLine": "{percent}%",
+        "correctSummary": "{correct}/{total} correct",
+        "pointsSummary": "{earned}/{total} points",
+        "skippedSummary": "{count} skipped",
+        "correct": "Correct",
+        "incorrect": "Incorrect",
+        "skipped": "Skipped",
+        "yourAnswer": "Your answer",
+        "correctAnswer": "Correct answer",
+        "explanation": "Explanation",
+        "retake": "Draw another set"
+      },
+      "errors": {
+        "unauthorized": "Sign in to practise — your progress is tied to your account.",
+        "forbidden": "Your account is not allowed to do this.",
+        "notFound": "This practice content no longer exists.",
+        "conflict": "The data just changed — reload and try again.",
+        "rateLimited": "Too many requests — try again in a few minutes.",
+        "unavailable": "The practice service is temporarily unavailable.",
+        "invalid": "Invalid submission — draw a new set and try again.",
+        "timeout": "The request timed out. Try again.",
+        "network": "Lost connection to the server. Check your network and try again.",
+        "generic": "Something went wrong. Try again."
+      }
     },
     "community": {
       "title": "Subject discussion",
@@ -5272,7 +5341,10 @@
         "allSubjectsHint": "This lists all of your AI tutor conversations (the server can't filter by subject yet).",
         "deleteError": "Couldn't delete the conversation. Please try again.",
         "clearHintAll": "Archives every AI tutor conversation you have (the server can't scope this to a single subject yet). This can't be undone.",
-        "clearError": "Some conversations couldn't be deleted. Please try again."
+        "clearError": "Some conversations couldn't be deleted. Please try again.",
+        "subjectOnlyHint": "Showing only conversations for the subject you're viewing.",
+        "clearedCount": "Cleared {count} conversations for this subject.",
+        "clearActionSubject": "Clear this subject's conversations"
       },
       "summary": {
         "generate": "Generate summary",
@@ -5755,7 +5827,13 @@
       "addDuplicate": "This resource is already in that collection.",
       "createAndAdd": "Create and add",
       "signInTitle": "Sign in to see your collections.",
-      "signIn": "Sign in"
+      "signIn": "Sign in",
+      "editNote": "Edit note",
+      "addNote": "Add note",
+      "noteLabel": "Note for this resource",
+      "notePlaceholder": "e.g. read part 2 before doing the exercises",
+      "saveNote": "Save note",
+      "noteError": "Could not save the note."
     },
     "detail": {
       "rating": "{rating}★",
@@ -5803,7 +5881,8 @@
       "member": "Member",
       "prev": "Prev",
       "next": "Next",
-      "pageOf": "Page {page}/{total}"
+      "pageOf": "Page {page}/{total}",
+      "likeError": "Could not like this comment. Please try again."
     },
     "upload": {
       "title": "Upload resource",
@@ -5908,7 +5987,16 @@
       "member": "Member",
       "prev": "Previous",
       "next": "Next",
-      "pageOf": "Page {page} of {total}"
+      "pageOf": "Page {page} of {total}",
+      "update": "Update review",
+      "updated": "Your review has been updated.",
+      "delete": "Delete review",
+      "deleteTitle": "Delete your review?",
+      "deleteDescription": "Your stars and review will be removed from this resource and the average will be recalculated.",
+      "deleteConfirm": "Delete review",
+      "deleted": "Your review has been deleted.",
+      "deleteError": "Could not delete the review. Please try again.",
+      "editedAt": "Updated {time}"
     },
     "recommended": {
       "title": "Recommended for you",
@@ -6118,7 +6206,9 @@
       "campusEmpty": "No posts from your campus yet.",
       "campusEmptyHint": "Set your campus in your profile to see posts from your campus community.",
       "emptyHint": "Be the first to share something with the community.",
-      "emptyCompose": "Start a post"
+      "emptyCompose": "Start a post",
+      "pinnedBadge": "Pinned",
+      "pinned": "Pinned"
     },
     "search": {
       "placeholder": "Search posts by title or content…",
@@ -6193,7 +6283,9 @@
       "escalate": "Escalate",
       "escalated": "Report escalated.",
       "escalateFailed": "Could not escalate the report. Please try again.",
-      "openTarget": "Open reported content"
+      "openTarget": "Open reported content",
+      "escalateAlready": "This report has already been escalated.",
+      "escalatedTag": "Escalated"
     },
     "states": {
       "retry": "Try again"
@@ -6390,7 +6482,12 @@
       "presignFailed": "Couldn't create the upload link. Please try again.",
       "uploadFailed": "Image upload failed. Please try again.",
       "verifyFailed": "Couldn't confirm the uploaded image. Please try again.",
-      "removeLocalOnly": "Remove only clears the image you just picked; a saved image can only be replaced by uploading a new one."
+      "removeLocalOnly": "Remove only clears the image you just picked; a saved image can only be replaced by uploading a new one.",
+      "removeHint": "Removing a saved image deletes it from the group; a pick you haven't saved yet is only dropped from the preview.",
+      "cleared": "Group image removed.",
+      "clearConfirmTitle": "Remove group image?",
+      "clearAvatarConfirmDescription": "The group avatar will be deleted and the group falls back to its initials. You can upload a new one any time.",
+      "clearCoverConfirmDescription": "The group cover will be deleted and the group falls back to the default banner. You can upload a new one any time."
     },
     "states": {
       "retry": "Try again"
@@ -6462,6 +6559,15 @@
       "decline": "Decline",
       "accepted": "You joined the group.",
       "declined": "Invitation declined."
+    },
+    "invitations": {
+      "title": "Group invitations",
+      "empty": "You have no pending invitations.",
+      "error": "Couldn't load your invitations. Please try again.",
+      "invitedBy": "{name} invited you",
+      "invitedByUnknown": "You were invited to this group",
+      "expiresAt": "Expires {date}",
+      "noExpiry": "No expiry"
     }
   },
   "appearance": {

@@ -9,6 +9,7 @@ import { followUser, unfollowUser } from "@/modules/api/rest/community"
 import { RestError } from "@/modules/api/rest/client"
 import type { UserHovercardData } from "@/modules/types/user-hovercard"
 import { userHovercardKey } from "@/hooks/swr/api/graphql/queries/useQueryUserHovercardSwr"
+import { isFollowedUserIdsKeyFor } from "./useQueryFollowedUserIdsSwr"
 
 /**
  * Maps a failed follow write to the i18n key of the message shown to the user.
@@ -44,11 +45,26 @@ const applyFollow = (
     followerCount: Math.max(0, (current.followerCount ?? 0) + (nextFollow ? 1 : -1)),
 })
 
+/** Adds/removes `userId` in one batch follow-state lot (see {@link isFollowedUserIdsKeyFor}). */
+const applyBatchFollow = (
+    current: Array<string> | undefined,
+    userId: string,
+    nextFollow: boolean,
+): Array<string> => {
+    const ids = current ?? []
+    if (!nextFollow) {
+        return ids.filter((id) => id !== userId)
+    }
+    return ids.includes(userId) ? ids : [...ids, userId]
+}
+
 /**
  * Toggles the viewer's follow on another user through the REAL community REST API
  * (`PUT` / `DELETE /api/v1/community/follows/{userId}`, both idempotent), with an
  * optimistic write into the hovercard cache keyed by USERNAME
- * ({@link userHovercardKey}) so every `<UserLink>` for that user flips at once.
+ * ({@link userHovercardKey}) so every `<UserLink>` for that user flips at once, plus
+ * the same flip into every BATCH follow-state lot that covers the user
+ * ({@link isFollowedUserIdsKeyFor}) so list rows agree with the card.
  *
  * Guests never reach the network: {@link useRequireAuth} opens the
  * `AuthenticationModal` with the `auth.context.follow` message and the toggle
@@ -74,7 +90,19 @@ export const useMutateFollowUserSwr = () => {
 
             const nextFollow = !target.isFollowedByMe
             const key = userHovercardKey(target.username)
+            const userId = target.id
             let snapshot: UserHovercardData | undefined
+
+            // Every batch lot that ASKED about this user (a feed / member list read
+            // `GET /community/follows/me` in chunks) has to flip too — otherwise the
+            // hovercard says "Đang theo dõi" while the rows keep the old label for the
+            // whole `dedupingInterval`.
+            const patchBatches = (follow: boolean) =>
+                mutate<Array<string>>(
+                    (cacheKey) => isFollowedUserIdsKeyFor(cacheKey, userId),
+                    (current) => applyBatchFollow(current, userId, follow),
+                    { revalidate: false },
+                )
 
             setIsPending(true)
             await mutate<UserHovercardData>(
@@ -85,6 +113,7 @@ export const useMutateFollowUserSwr = () => {
                 },
                 { revalidate: false },
             )
+            await patchBatches(nextFollow)
 
             try {
                 if (nextFollow) {
@@ -95,6 +124,7 @@ export const useMutateFollowUserSwr = () => {
             } catch (error) {
                 // Only a failed WRITE rolls back — restore the pre-toggle snapshot.
                 await mutate<UserHovercardData>(key, snapshot, { revalidate: false })
+                await patchBatches(!nextFollow)
                 toast.danger(t(followErrorMessageKey(error)))
             } finally {
                 setIsPending(false)

@@ -2,7 +2,7 @@
 
 import React, { useCallback, useState } from "react"
 import { Button, Typography, cn, toast } from "@heroui/react"
-import { PaperPlaneTiltIcon, TrashIcon } from "@phosphor-icons/react"
+import { HeartIcon, PaperPlaneTiltIcon, TrashIcon } from "@phosphor-icons/react"
 import { TextArea, TextField } from "@heroui/react"
 import { useLocale, useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
@@ -19,6 +19,7 @@ import type { ResourceCommentView } from "@/modules/api/rest/resource"
 import { useQueryResourceCommentsSwr } from "../../hooks/useQueryResourceCommentsSwr"
 import { useMutateCreateResourceCommentSwr } from "../../hooks/useMutateCreateResourceCommentSwr"
 import { useMutateDeleteResourceCommentSwr } from "../../hooks/useMutateDeleteResourceCommentSwr"
+import { useMutateLikeResourceCommentSwr } from "../../hooks/useMutateLikeResourceCommentSwr"
 
 /** Comment status the BE stamps on a soft-deleted (tombstoned) comment. */
 const DELETED_STATUS = "DELETED"
@@ -107,6 +108,8 @@ const CommentNode = ({
     isReply,
     onReply,
     onDelete,
+    onToggleLike,
+    isLikePending,
 }: {
     comment: ResourceCommentView
     viewerId?: string
@@ -114,11 +117,17 @@ const CommentNode = ({
     isReply: boolean
     onReply?: (commentId: string) => void
     onDelete: (commentId: string) => void
+    onToggleLike: (comment: ResourceCommentView) => void
+    isLikePending: boolean
 }) => {
     const t = useTranslations("resourceHub.comments")
     const isDeleted = comment.status === DELETED_STATUS || comment.userId === null
     const isOwner = !isDeleted && !!comment.userId && comment.userId === viewerId
     const authorLabel = isDeleted ? "—" : comment.userId === viewerId ? t("you") : t("member")
+    // Both come straight from `GET /resources/{id}/comments` (root rows AND replies) — the
+    // count is never derived client-side.
+    const liked = comment.likedByMe ?? false
+    const likeCount = comment.likeCount ?? 0
 
     return (
         <div className="flex items-start gap-3">
@@ -143,16 +152,29 @@ const CommentNode = ({
                     </Typography>
                 </div>
 
-                {/*
-                  BE GAP — no comment-like endpoint exists on C-4 (`InteractionController`
-                  ships rate/comment/bookmark/favorite only, and there is no
-                  `resource_comment_likes` store), so the heart affordance is NOT rendered:
-                  a toggle that cannot persist would lie to the reader on reload. The
-                  `resourceHub.comments.{like,unlike,likeCount}` copy is kept so the button
-                  can be restored the day `POST /resources/comments/{id}/like` lands.
-                */}
                 {!isDeleted ? (
                     <div className="flex items-center gap-3">
+                        <button
+                            type="button"
+                            onClick={() => onToggleLike(comment)}
+                            disabled={isLikePending}
+                            aria-pressed={liked}
+                            aria-label={liked ? t("unlike") : t("like")}
+                            title={t("likeCount", { count: likeCount })}
+                            className={cn(
+                                "flex items-center gap-1 rounded-full text-xs outline-none transition-colors focus-visible:ring-2 focus-visible:ring-accent",
+                                isLikePending ? "cursor-not-allowed opacity-60" : "cursor-pointer",
+                                liked ? "text-accent" : "text-muted hover:text-accent",
+                            )}
+                        >
+                            <HeartIcon
+                                aria-hidden
+                                focusable="false"
+                                weight={liked ? "fill" : "regular"}
+                                className="size-4"
+                            />
+                            {likeCount > 0 ? <span>{likeCount}</span> : null}
+                        </button>
                         {!isReply && onReply ? (
                             <button
                                 type="button"
@@ -199,7 +221,9 @@ const ResourceCommentsSkeleton = () => (
  * the real BE (`GET/POST /api/v1/resources/{id}/comments`, `DELETE
  * /api/v1/resources/comments/{commentId}`). Top-level comments each carry one
  * level of nested replies; a soft-deleted comment renders as a greyed tombstone
- * with its replies preserved. Owner-only delete, a per-thread reply composer, and
+ * with its replies preserved. Owner-only delete, a per-thread reply composer, a heart on
+ * every row (`PUT`/`DELETE /api/v1/resources/comments/{commentId}/like`, rendered from the
+ * `likeCount`/`likedByMe` the list already carries — nothing is counted client-side), and
  * page/size pagination. Writes are optimistic and roll back on failure (the write hooks
  * own the cache patching). Guests are gated into the auth modal on submit. Mirrors
  * the course `LessonComments` real-`CommentView` pattern (author shown from
@@ -217,10 +241,13 @@ export const ResourceComments = () => {
 
     const [page, setPage] = useState(1)
     const [replyingTo, setReplyingTo] = useState<string | null>(null)
+    /** Comment whose like is mid-flight — only THAT heart is disabled, not the thread. */
+    const [likingId, setLikingId] = useState<string | null>(null)
 
     const commentsSwr = useQueryResourceCommentsSwr(resourceId, page)
     const create = useMutateCreateResourceCommentSwr()
     const remove = useMutateDeleteResourceCommentSwr()
+    const like = useMutateLikeResourceCommentSwr()
 
     const data = commentsSwr.data
     const items = data?.items ?? []
@@ -271,6 +298,29 @@ export const ResourceComments = () => {
             }
         },
         [remove, resourceId, page, t],
+    )
+
+    const onToggleLike = useCallback(
+        async (comment: ResourceCommentView) => {
+            // Guests: open the auth modal instead of firing a write that would 401.
+            if (!requireAuthBase("auth.context.like")) {
+                return
+            }
+            setLikingId(comment.id)
+            try {
+                await like.toggle({
+                    commentId: comment.id,
+                    resourceId,
+                    page,
+                    nextLiked: !(comment.likedByMe ?? false),
+                })
+            } catch {
+                toast.danger(t("likeError"))
+            } finally {
+                setLikingId(null)
+            }
+        },
+        [requireAuthBase, like, resourceId, page, t],
     )
 
     const onRequestReply = useCallback(
@@ -339,6 +389,8 @@ export const ResourceComments = () => {
                                 isReply={false}
                                 onReply={onRequestReply}
                                 onDelete={onDelete}
+                                onToggleLike={(target) => void onToggleLike(target)}
+                                isLikePending={likingId === comment.id}
                             />
 
                             {comment.replies.length > 0 ? (
@@ -351,6 +403,8 @@ export const ResourceComments = () => {
                                             locale={locale}
                                             isReply
                                             onDelete={onDelete}
+                                            onToggleLike={(target) => void onToggleLike(target)}
+                                            isLikePending={likingId === reply.id}
                                         />
                                     ))}
                                 </div>

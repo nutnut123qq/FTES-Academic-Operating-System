@@ -9,6 +9,7 @@ import { FtesMascot } from "@/components/reuseable/FtesMascot"
 import { UserLink } from "@/components/features/identity"
 import { ThreadsPostRow } from "@/components/blocks/feed/ThreadsPostRow"
 import { PostMediaGrid } from "@/components/blocks/feed/PostMediaGrid"
+import { PinnedBadge } from "@/components/blocks/feed/PinnedBadge"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { InfiniteScrollSentinel } from "@/components/blocks/async/InfiniteScrollSentinel"
 import {
@@ -139,13 +140,15 @@ export const CommunityFeedRow = ({ post }: { post: CommunityPost }) => {
     )
 
     /**
-     * Owner gate. The feed selection carries no author id, so the username the
-     * BE returns for the row is compared with the viewer's — the same fallback
-     * the detail page uses while its metadata request is in flight. Guests match
-     * nothing, and the server re-checks ownership on the write anyway (403).
+     * Owner gate. Prefers the author id (BE `Post.authorId`, now in the feed
+     * selection) because a display name / username can be missing on the card while
+     * the id is always present; the username comparison stays as the fallback for
+     * surfaces whose selection has no id yet. Guests match nothing, and the server
+     * re-checks ownership on the write anyway (403).
      */
     const isOwner = Boolean(
-        currentUser?.username && post.authorUsername === currentUser.username,
+        (currentUser?.id && post.authorId && post.authorId === currentUser.id) ||
+            (currentUser?.username && post.authorUsername === currentUser.username),
     )
 
     // The metadata request backs the editor prefill; losing it would mean saving
@@ -194,6 +197,9 @@ export const CommunityFeedRow = ({ post }: { post: CommunityPost }) => {
                 {/* only the title + snippet navigate; actions keep their own press */}
                 {/* Threads reads as ONE text block: title = first emphasized line, body
                     continues in foreground (not muted snippet) */}
+                {/* Bài admin ghim — CHỈ là nhãn: BE đã đẩy bài ghim lên đầu trang đầu,
+                    tuyệt đối không sắp xếp lại phía FE theo cờ này. */}
+                {post.pinned ? <PinnedBadge label={t("feed.pinned")} className="mb-1" /> : null}
                 <Link href={`/community/${post.id}`} className="flex flex-col gap-0 no-underline">
                     <Typography type="body-sm" weight="medium">
                         {post.title}

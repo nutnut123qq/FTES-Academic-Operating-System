@@ -1,8 +1,8 @@
 "use client"
 
 import React, { useState } from "react"
-import { Button, Chip, Modal, Skeleton, Typography } from "@heroui/react"
-import { ArrowDownIcon, ArrowUpIcon, TrashIcon } from "@phosphor-icons/react"
+import { Button, Chip, Modal, Skeleton, TextArea, TextField, Typography } from "@heroui/react"
+import { ArrowDownIcon, ArrowUpIcon, NotePencilIcon, TrashIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
@@ -43,9 +43,11 @@ const ItemsSkeleton = () => (
 /**
  * Collection detail (§5) opened by clicking a collection row: the real
  * `GET /api/v1/resources/collections/{id}` aggregate — each item links to
- * `/resources/{resourceId}`, can be removed, and can be moved up/down
+ * `/resources/{resourceId}`, can be removed, can have its personal note rewritten in place
+ * (`PATCH /collections/{id}/items/{resourceId}`, which keeps the item's `sortOrder` — no
+ * more remove-then-re-add just to fix a note), and can be moved up/down
  * (`PATCH /collections/{id}/items/reorder`, which takes the FULL ordered resource-id
- * list). Both writes are optimistic and roll back by re-fetching on failure.
+ * list). Every write is optimistic and rolls back on failure.
  *
  * Up/down buttons instead of drag-and-drop: the BE only needs the resulting order,
  * and a keyboard/touch-reachable pair of buttons costs a fraction of a DnD stack.
@@ -57,11 +59,15 @@ export const CollectionDetailModal = ({
     onChanged,
 }: CollectionDetailModalProps) => {
     const t = useTranslations("resourceHub")
-    const { collection, items, isLoading, error, mutate, removeItem } =
+    const { collection, items, isLoading, error, mutate, removeItem, updateItemNote } =
         useQueryCollectionDetailSwr(collectionId)
     const [removingId, setRemovingId] = useState<string | null>(null)
     const [movingId, setMovingId] = useState<string | null>(null)
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
+    /** Resource id of the item whose note is open for editing (`null` = none). */
+    const [editingNoteId, setEditingNoteId] = useState<string | null>(null)
+    const [noteDraft, setNoteDraft] = useState("")
+    const [savingNoteId, setSavingNoteId] = useState<string | null>(null)
 
     const onRemove = async (resourceId: string) => {
         setRemovingId(resourceId)
@@ -75,6 +81,30 @@ export const CollectionDetailModal = ({
             )
         } finally {
             setRemovingId(null)
+        }
+    }
+
+    /**
+     * Saves the edited note of one item, in place — no remove-then-re-add, so the item
+     * stays exactly where it was in the collection.
+     *
+     * @param resourceId - Resource id of the edited item row.
+     */
+    const onSaveNote = async (resourceId: string) => {
+        setSavingNoteId(resourceId)
+        setErrorMessage(null)
+        try {
+            await updateItemNote(resourceId, noteDraft)
+            setEditingNoteId(null)
+            setNoteDraft("")
+            onChanged?.()
+        } catch (noteError) {
+            // The editor stays open with the draft intact so nothing typed is lost.
+            setErrorMessage(
+                `${t("collections.noteError")} ${t(`apiErrors.${resolveResourceErrorKey(noteError)}`)}`,
+            )
+        } finally {
+            setSavingNoteId(null)
         }
     }
 
@@ -128,6 +158,8 @@ export const CollectionDetailModal = ({
             onOpenChange={(open) => {
                 if (!open) {
                     setErrorMessage(null)
+                    setEditingNoteId(null)
+                    setNoteDraft("")
                     onClose()
                 }
             }}
@@ -167,69 +199,145 @@ export const CollectionDetailModal = ({
                                     {items.map((item, index) => (
                                         <div
                                             key={item.id}
-                                            className="flex items-center gap-3 rounded-2xl border border-separator p-3"
+                                            className="flex flex-col gap-2 rounded-2xl border border-separator p-3"
                                         >
-                                            <Link
-                                                href={`/resources/${item.resourceId}`}
-                                                className="min-w-0 flex-1 no-underline hover:underline"
-                                                onClick={onClose}
-                                            >
-                                                <Typography type="body-sm" weight="medium" truncate>
-                                                    {item.title}
-                                                </Typography>
-                                                {item.note ? (
-                                                    <Typography type="body-xs" color="muted" truncate>
-                                                        {item.note}
+                                            <div className="flex items-center gap-3">
+                                                <Link
+                                                    href={`/resources/${item.resourceId}`}
+                                                    className="min-w-0 flex-1 no-underline hover:underline"
+                                                    onClick={onClose}
+                                                >
+                                                    <Typography type="body-sm" weight="medium" truncate>
+                                                        {item.title}
                                                     </Typography>
-                                                ) : null}
-                                            </Link>
-                                            <Chip size="sm" variant="soft" color="accent">
-                                                {item.type}
-                                            </Chip>
-                                            <Button
-                                                variant="tertiary"
-                                                size="sm"
-                                                isIconOnly
-                                                aria-label={t("collections.moveUp")}
-                                                isDisabled={index === 0 || movingId !== null}
-                                                onPress={() => void onMove(index, -1)}
-                                            >
-                                                <ArrowUpIcon
-                                                    aria-hidden
-                                                    focusable="false"
-                                                    className="size-4"
-                                                />
-                                            </Button>
-                                            <Button
-                                                variant="tertiary"
-                                                size="sm"
-                                                isIconOnly
-                                                aria-label={t("collections.moveDown")}
-                                                isDisabled={
-                                                    index === items.length - 1 || movingId !== null
-                                                }
-                                                onPress={() => void onMove(index, 1)}
-                                            >
-                                                <ArrowDownIcon
-                                                    aria-hidden
-                                                    focusable="false"
-                                                    className="size-4"
-                                                />
-                                            </Button>
-                                            <Button
-                                                variant="tertiary"
-                                                size="sm"
-                                                isIconOnly
-                                                aria-label={t("collections.removeItem")}
-                                                isDisabled={removingId === item.resourceId}
-                                                onPress={() => void onRemove(item.resourceId)}
-                                            >
-                                                <TrashIcon
-                                                    aria-hidden
-                                                    focusable="false"
-                                                    className="size-4"
-                                                />
-                                            </Button>
+                                                    {/* while editing, the draft below is the note on screen */}
+                                                    {item.note && editingNoteId !== item.resourceId ? (
+                                                        <Typography type="body-xs" color="muted" truncate>
+                                                            {item.note}
+                                                        </Typography>
+                                                    ) : null}
+                                                </Link>
+                                                <Chip size="sm" variant="soft" color="accent">
+                                                    {item.type}
+                                                </Chip>
+                                                <Button
+                                                    variant="tertiary"
+                                                    size="sm"
+                                                    isIconOnly
+                                                    aria-label={
+                                                        item.note
+                                                            ? t("collections.editNote")
+                                                            : t("collections.addNote")
+                                                    }
+                                                    isDisabled={savingNoteId !== null}
+                                                    onPress={() => {
+                                                        setErrorMessage(null)
+                                                        if (editingNoteId === item.resourceId) {
+                                                            setEditingNoteId(null)
+                                                            return
+                                                        }
+                                                        setEditingNoteId(item.resourceId)
+                                                        setNoteDraft(item.note ?? "")
+                                                    }}
+                                                >
+                                                    <NotePencilIcon
+                                                        aria-hidden
+                                                        focusable="false"
+                                                        className="size-4"
+                                                    />
+                                                </Button>
+                                                <Button
+                                                    variant="tertiary"
+                                                    size="sm"
+                                                    isIconOnly
+                                                    aria-label={t("collections.moveUp")}
+                                                    isDisabled={index === 0 || movingId !== null}
+                                                    onPress={() => void onMove(index, -1)}
+                                                >
+                                                    <ArrowUpIcon
+                                                        aria-hidden
+                                                        focusable="false"
+                                                        className="size-4"
+                                                    />
+                                                </Button>
+                                                <Button
+                                                    variant="tertiary"
+                                                    size="sm"
+                                                    isIconOnly
+                                                    aria-label={t("collections.moveDown")}
+                                                    isDisabled={
+                                                        index === items.length - 1 ||
+                                                        movingId !== null
+                                                    }
+                                                    onPress={() => void onMove(index, 1)}
+                                                >
+                                                    <ArrowDownIcon
+                                                        aria-hidden
+                                                        focusable="false"
+                                                        className="size-4"
+                                                    />
+                                                </Button>
+                                                <Button
+                                                    variant="tertiary"
+                                                    size="sm"
+                                                    isIconOnly
+                                                    aria-label={t("collections.removeItem")}
+                                                    isDisabled={removingId === item.resourceId}
+                                                    onPress={() => void onRemove(item.resourceId)}
+                                                >
+                                                    <TrashIcon
+                                                        aria-hidden
+                                                        focusable="false"
+                                                        className="size-4"
+                                                    />
+                                                </Button>
+                                            </div>
+
+                                            {editingNoteId === item.resourceId ? (
+                                                <div className="flex flex-col gap-2">
+                                                    <TextField variant="secondary" className="w-full">
+                                                        <TextArea
+                                                            rows={2}
+                                                            autoFocus
+                                                            value={noteDraft}
+                                                            onChange={(event) =>
+                                                                setNoteDraft(event.target.value)
+                                                            }
+                                                            placeholder={t(
+                                                                "collections.notePlaceholder",
+                                                            )}
+                                                            aria-label={t("collections.noteLabel")}
+                                                            className="resize-none"
+                                                        />
+                                                    </TextField>
+                                                    <div className="flex items-center gap-2">
+                                                        <Button
+                                                            size="sm"
+                                                            variant="primary"
+                                                            isPending={
+                                                                savingNoteId === item.resourceId
+                                                            }
+                                                            isDisabled={savingNoteId !== null}
+                                                            onPress={() =>
+                                                                void onSaveNote(item.resourceId)
+                                                            }
+                                                        >
+                                                            {t("collections.saveNote")}
+                                                        </Button>
+                                                        <Button
+                                                            size="sm"
+                                                            variant="ghost"
+                                                            isDisabled={savingNoteId !== null}
+                                                            onPress={() => {
+                                                                setEditingNoteId(null)
+                                                                setNoteDraft("")
+                                                            }}
+                                                        >
+                                                            {t("collections.cancel")}
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            ) : null}
                                         </div>
                                     ))}
                                 </div>

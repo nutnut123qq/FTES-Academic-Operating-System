@@ -121,9 +121,12 @@
 
 ## 16. Deferred — BE chưa có, KHÔNG mock
 
-- [ ] 16.1 Ngân hàng đề trắc nghiệm theo môn — BE không có endpoint quiz bank; tạm chuyển hướng sang AI Quiz (`practice.quizHandoff.*`).
-- [ ] 16.2 Bộ thẻ flashcards do giảng viên soạn theo môn — chưa có endpoint; chuyển hướng sang AI Flashcards (`practice.flashcardsHandoff.*`).
-- [ ] 16.3 Lưu tiến độ ôn flashcards — BE chưa có endpoint review, kết quả chỉ sống trong phiên (`flashcards.localOnlyHint`).
-- [ ] 16.4 Lọc/xoá hội thoại gia sư AI theo môn — `SessionView` không trả `contextRef` và không nhận query `subjectId`; danh sách hiện là toàn bộ hội thoại TUTOR_CHAT của người dùng (`tutor.allSubjectsHint`, `tutor.clearHintAll`).
+> 16.1–16.4 đã ĐƯỢC GIẢI PHÓNG: BE ra endpoint tương ứng và phần wire thật nằm ở change
+> `fe-wire-new-be-endpoints` (mục 1, 2, 3). Giữ lại ở đây để đọc lịch sử, không làm lại.
+
+- [x] 16.1 Ngân hàng đề trắc nghiệm theo môn — ~~BE không có endpoint quiz bank; tạm chuyển hướng sang AI Quiz~~ → `GET|POST /subjects/{code}/practice/quiz[/submit]` đã live, `PracticeQuiz` bốc đề + nộp bài thật, `PracticeAiHandoff` bị xoá (xem `fe-wire-new-be-endpoints` §1).
+- [x] 16.2 Bộ thẻ flashcards do giảng viên soạn theo môn — ~~chưa có endpoint; chuyển hướng sang AI Flashcards~~ → `GET /subjects/{code}/practice/flashcards` + CRUD deck/card đã live, có panel quản lý cho người curate (xem `fe-wire-new-be-endpoints` §2).
+- [x] 16.3 Lưu tiến độ ôn flashcards — ~~BE chưa có endpoint review, kết quả chỉ sống trong phiên~~ → `POST …/flashcards/{cardId}/review` trả SM-2 state, tiến độ lưu trên máy chủ (`flashcards.progressSaved` thay `flashcards.localOnlyHint`).
+- [x] 16.4 Lọc/xoá hội thoại gia sư AI theo môn — ~~`SessionView` không trả `contextRef` và không nhận query `subjectId`~~ → BE đã narrow theo `subjectId` (UUID của môn, KHÔNG phải mã môn), copy đổi sang `tutor.subjectOnlyHint` / `tutor.clearActionSubject`.
 - [ ] 16.5 Thống kê môn (`SubjectStatistics`) và định hướng nghề theo môn (`SubjectCareer`) vẫn là dữ liệu mẫu — chưa có endpoint tương ứng.
 - [ ] 16.6 Độ khó / tỉ lệ chấp nhận / cờ "đã giải" của thử thách — không có trên payload danh sách của BE nên đã gỡ khỏi UI thay vì bịa.

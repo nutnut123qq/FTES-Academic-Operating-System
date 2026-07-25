@@ -19,8 +19,9 @@ const THUMBNAIL_SIZES = "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100v
 /**
  * Subject catalog (§3) — the `/subjects` list. Mirrors the house catalog archetype
  * (see `CourseCatalog`): text search + difficulty filter + a grid of subject cards
- * linking into each subject workspace. Feature owns data (mock) + filtering; tokens
- * own the look. ponytail: plain search input + hand-rolled cards, mock data.
+ * linking into each subject workspace. Data is REAL — `useQuerySubjectsSwr` reads
+ * `GET /api/v1/subjects`; the feature owns only the client-side filtering, tokens
+ * own the look.
  */
 export const SubjectCatalog = () => {
     const t = useTranslations("subjects")

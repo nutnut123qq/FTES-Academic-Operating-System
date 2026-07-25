@@ -29,7 +29,7 @@ import {
     type PracticeOptionState,
     type PracticeQuizResult,
     type PracticeResultQuestion,
-} from "./practiceQuiz"
+} from "./practiceQuizLogic"
 
 /** Question-count presets offered before a run (BE default 10, hard cap 50). */
 const COUNT_OPTIONS = [5, 10, 20] as const

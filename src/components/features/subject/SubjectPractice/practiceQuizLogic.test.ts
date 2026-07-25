@@ -15,7 +15,7 @@ import {
     mapPracticeQuizResult,
     toPracticeAnswers,
     toggleSelection,
-} from "./practiceQuiz"
+} from "./practiceQuizLogic"
 import type { PracticeQuizResultView } from "@/modules/api/rest/subject/types"
 
 const result: PracticeQuizResultView = {

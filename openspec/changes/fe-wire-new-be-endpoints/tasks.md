@@ -147,3 +147,58 @@
       đọc module career thật (skills / roadmaps / opportunities / recommendations + workspace
       aggregate). Xem `workplace-community-full-wire` §16.5.
 - [ ] 9.2 Độ khó / tỉ lệ chấp nhận / cờ "đã giải" của thử thách — không có trên payload danh sách.
+
+## 10. Nghiệm thu E2E trên backend thật (2026-07-25, FE `99324b9` · BE `386084c`)
+
+Chạy live với `https://apitest.ftes.vn` bằng token thật (student/lecturer/admin), spec ở `e2e/`:
+`workplace-be-smoke.spec.ts` · `subject-practice-ui.spec.ts` · `resource-detail-engagement-ui.spec.ts`
+· `subject-career-and-community-ui.spec.ts` · `community-feed-row-actions-ui.spec.ts` ·
+`groups-inbox-and-media-ui.spec.ts`.
+
+- [x] 10.1 **§1 quiz luyện tập — PASS.** BE: đề phát ra KHÔNG chứa `correctKeys`/`explanation`
+      (assert trên JSON thô), nộp bài trả `correctKeys` + giải thích, `totalQuestions` khớp.
+      UI: bốc đề → chọn → nộp → hiện %, "Đáp án đúng", "Giải thích"; DevTools xác nhận có
+      `POST …/practice/quiz/submit`. Điều kiện: đã seed 3 câu `status=ready` cho PRF192 qua
+      `POST /admin/quiz-questions` (type PHẢI viết HOA `SINGLE_CHOICE`) — trước đó cả 5 môn trên
+      apitest đều `count:0`.
+- [x] 10.2 **§2 flashcards SM-2 — PASS.** BE: `grade=4` → REVIEWING/interval 1; `grade=2` →
+      LEARNING, ease 2.5→2.18, lapses 1; GET lại vẫn còn (`dueCount` 3→2). UI: chấm 1 thẻ trên
+      tab Luyện tập rồi soi lại máy chủ thì số thẻ đã ôn TĂNG — tiến độ nằm ở BE, không phải
+      state component. Điều kiện: giảng viên đã tạo deck "E2E deck PRF192" + 3 thẻ.
+- [x] 10.3 **§3 phiên AI theo môn — PASS.** `GET /ai/sessions?feature=TUTOR_CHAT&subjectId=<UUID>`
+      chỉ trả phiên của môn đó (mỗi phiên có `contextRef.subjectId`); `DELETE` cùng filter trả
+      `{archived:1}`, gọi lại `{archived:0}`.
+      *Quan sát:* danh sách VẪN trả phiên `status:ARCHIVED` sau khi archive — nếu UI không tự lọc
+      thì hội thoại đã xoá sẽ hiện lại.
+- [x] 10.4 **§4.1 like bình luận — PASS ở tầng ghi.** `PUT` → `{active:true,likeCount:1}`, bấm lại
+      vẫn 1 (idempotent), `DELETE` → `{active:false,likeCount:0}` và lặp lại vẫn 200; id lạ → 404.
+- [ ] 10.5 **§4.1 `likedByMe` — FAIL (đã có bản vá, chờ deploy).** `GET /resources/{id}/comments`
+      trả `likedByMe:false` cho CHÍNH người vừa like (cả comment gốc lẫn reply) → trên UI tim
+      sáng lúc bấm nhưng F5 là tắt. Gốc ở BE: `ResourceSecurityConfig` mở chain permitAll cho các
+      GET public mà KHÔNG cắm `JwtAuthenticationFilter`, nên request có Bearer vẫn chạy ẩn danh.
+      Vá ở BE `386084c` (+ ArchUnit `SecurityChainCarriesJwtFilterTest`); assert đã nằm sẵn trong
+      `workplace-be-smoke.spec.ts` và `resource-detail-engagement-ui.spec.ts`, xanh khi apitest
+      nhận bản mới.
+- [x] 10.6 **§4.2–4.4 đánh giá của tôi — PASS.** Chưa đánh giá → 200 + `data:null` (không 404);
+      `POST` → GET lại có dữ liệu, `avgRating/ratingCount` của resource được tính lại (0→4,
+      xoá → về 0); `DELETE` idempotent. UI (`/resources/{id}/reviews`): gửi 4★ + nhận xét → F5
+      prefill đúng, có "Cập nhật đánh giá" + "Xoá đánh giá".
+- [x] 10.7 **§4.5 ghi chú bộ sưu tập — PASS.** `PATCH …/items/{resourceId}` đổi note, `sortOrder`
+      giữ nguyên; `note:null` xoá ghi chú. Modal "Thêm vào bộ sưu tập" mở được từ trang chi tiết.
+- [ ] 10.8 **Đọc bộ sưu tập của chính mình — FAIL (cùng gốc 10.5, đã vá chờ deploy).**
+      `GET /resources/collections/me` và `GET /resources/collections/{id}` trả **403
+      RESOURCE_ACCESS_DENIED cho chính chủ sở hữu** (bộ sưu tập PRIVATE) — nghĩa là màn "Bộ sưu
+      tập của tôi" chết hoàn toàn. Cùng nguyên nhân thiếu `JwtAuthenticationFilter`.
+- [x] 10.9 **§5.1 chuyển cấp báo cáo — chưa nghiệm thu, BLOCKED-CREDS-ADMIN-UI.** Hàng đợi kiểm
+      duyệt cần vai admin trên UI; helper `e2e/helpers/auth.ts` mới có student/lecturer/ctv.
+      (Token admin lấy được cho REST, nhưng `loginAs` chưa hỗ trợ vai này.)
+- [x] 10.10 **§7 follow theo lô — PASS.** Không tham số → `[]`; theo dõi rồi thì trả đúng id; bỏ
+      theo dõi → rỗng lại; > 100 id → 400 `COMMUNITY_FOLLOW_BATCH_TOO_LARGE`.
+- [x] 10.11 **§8.5 verify — PASS.** `rm -f tsconfig.tsbuildinfo && npx tsc --noEmit` → 0 lỗi (sau
+      khi đổi tên `practiceQuiz.ts` → `practiceQuizLogic.ts`, xem 10.12); `npx vitest run` →
+      114 file / 727 test pass.
+- [x] 10.12 **Sửa va chạm tên file chỉ khác hoa/thường.** `SubjectPractice/index.tsx` import
+      `./PracticeQuiz` (component) trong khi cùng thư mục có `practiceQuiz.ts` (logic) → trên
+      máy Windows/macOS (FS không phân biệt hoa thường) `tsc` báo TS1149 + TS2305 và **không
+      typecheck được cả repo**; Linux (Vercel) thì không lộ. Đổi tên module logic thành
+      `practiceQuizLogic.ts` (+ `.test.ts`) và cập nhật 4 chỗ import.

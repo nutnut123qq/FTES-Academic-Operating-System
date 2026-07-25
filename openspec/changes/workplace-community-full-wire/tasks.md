@@ -134,3 +134,60 @@
       - Rỗng-thật có copy riêng cho từng bảng (`statistics.empty.*`, `career.skillsEmpty` / `roadmapsEmpty` / `opportunitiesEmpty`), tách khỏi nhánh lỗi (`loadError` + `retry`).
       - Glue: 49 key × 2 locale ở `subjects.statistics.*` / `subjects.career.*`, parity vi/en = 0 lệch (xem `fe-wire-new-be-endpoints` §8.6). `tsc --noEmit` sạch; vitest cụm subject/identity/community: 13 file / 104 test pass.
 - [ ] 16.6 Độ khó / tỉ lệ chấp nhận / cờ "đã giải" của thử thách — không có trên payload danh sách của BE nên đã gỡ khỏi UI thay vì bịa.
+
+## 17. Nghiệm thu E2E trên backend thật (2026-07-25, FE `99324b9` · BE `386084c`)
+
+Kết quả chi tiết của cụm resource/quiz/flashcard/follow xem `fe-wire-new-be-endpoints` §10.
+Phần dưới là các hạng mục thuộc riêng change này.
+
+- [x] 17.1 **§7 hỏi đáp AI tài liệu (BE) — PASS phần chạy được.** Thiếu cả `documentId` lẫn
+      `lessonId` → 400; id không tồn tại → 404 `AI_DOCUMENT_NOT_FOUND`; `lessonId` đọc được →
+      **200 kèm câu trả lời thật + trích dẫn** (model `openai/gpt-oss-120b`, quote lấy đúng đoạn
+      trong bài). Tài liệu chưa có file → `processing:true` đúng như thiết kế.
+- [ ] 17.2 **§7 nhánh 403 `AI_DOCUMENT_ACCESS_DENIED` — BLOCKED-MINIO-PUBLIC.** Muốn có 403 phải
+      có resource **APPROVED** + visibility hẹp; approve đòi version `UPLOADED`, mà presign trả
+      host nội bộ `http://minio:9000` nên máy ngoài không PUT được. Hiện tài liệu nháp của người
+      khác trả **404** (đúng thiết kế "không lộ bản nháp"), nên nhánh 403 chưa có đường chạm tới.
+      Mở khoá khi luồng upload Cloudinary (`8b65149`) lên apitest.
+- [ ] 17.3 **§7 UI `ResourceAiQa` — BLOCKED-MINIO-PUBLIC.** Panel chỉ render khi tài liệu có
+      version; apitest chưa có tài liệu nào có file → không kiểm được `?ask=1` (tự cuộn + focus),
+      model picker gửi đúng model id, banner "đang xử lý" + nút "Thử lại".
+- [x] 17.4 **§11 luyện tập theo môn (UI) — PASS.** Xem §10.1, §10.2.
+- [x] 17.5 **§9/§16.5 thống kê môn — PASS về hành vi, BLOCKED-INFRA về số liệu.** Payload đủ khoá
+      (`memberCount`/`postCount`/`resourceCount`/`completionRate`/`topStudents`/`leaderboard`)
+      và UI hiện đúng môn đang xem khi đổi môn liên tiếp PRF192 → CSD201 → DBI202 (không dính số
+      môn trước). NHƯNG mọi môn đều `computedAt = 2026-07-14T09:27Z`, chỉ `memberCount=3`, phần
+      còn lại rỗng/null → `StatisticsService.recompute` **không chạy lại từ 11 ngày nay**; muốn
+      nghiệm thu con số thật phải chạy worker cho các môn này.
+- [x] 17.6 **§16.5 định hướng nghề — PASS.** Tab hiện tên kỹ năng chứ không phải UUID (assert
+      không có chuỗi UUID nào trên trang), có nút hành động hoặc empty state tử tế. Khách chưa
+      đăng nhập mở tab này thấy trạng thái "cần đăng nhập" chứ không phải "không có dữ liệu".
+- [x] 17.7 **§12 menu ⋯ trên dòng bảng tin — PASS.** Người đăng nhập mở được menu; dòng của người
+      khác chỉ có "Báo cáo" (không có Sửa/Xoá) và bấm vào mở đúng hộp thoại "Báo cáo nội dung".
+- [ ] 17.8 **§12 bảng tin cho KHÁCH — FAIL (UX).** `GET /community/posts` là 401 với khách nên
+      bảng tin rơi vào nhánh lỗi chung: hiện "Không tải được bảng tin. Vui lòng thử lại." + nút
+      "Thử lại" bấm mãi vẫn hỏng, thay vì mời đăng nhập. Vì không có dòng nào render nên ca
+      "khách bấm ⋯ → modal đăng nhập" cũng không chạm tới được. Test giữ ở dạng `test.fail()`
+      trong `subject-career-and-community-ui.spec.ts` — bỏ `test.fail()` khi FE tách 401 khỏi
+      lỗi mạng.
+- [ ] 17.9 **§12 badge "Đã ghim" — BLOCKED-DATA.** Trên apitest chưa có bài nào `pinned:true`.
+      Cần một bài ghim (quyền kiểm duyệt) mới nghiệm thu được nhãn.
+- [ ] 17.10 **§12 báo cáo BÌNH LUẬN, sửa/xoá bài từ feed — chưa nghiệm thu.** Bài mới đăng chỉ
+      lên bảng tin sau vài giây và thứ tự hiển thị không phải hợp đồng, nên spec "tự đăng rồi đi
+      tìm dòng của mình" chập chờn; đã đổi sang dùng dòng có sẵn (17.7) và để lại 2 ca này.
+- [x] 17.11 **§13 hộp thư lời mời — PASS.** `GET /invitations/me` chỉ trả PENDING của chính người
+      gọi, kèm `group{name,slug,avatarUrl}` + `inviter{displayName}`. UI `/groups`: hiện tên nhóm
+      + "Instructor Test đã mời bạn tham gia" + hạn trả lời + 2 nút; bấm "Chấp nhận" → dòng biến
+      mất VÀ người dùng **thật sự vào danh sách thành viên** (kiểm lại bằng REST sau toast).
+- [x] 17.12 **§13 gỡ ảnh nhóm — PASS.** `DELETE /groups/{id}/media/AVATAR|COVER` idempotent, trả
+      `GroupResponse` với `viewerMembership` đúng vai (OWNER cho chủ nhóm, null cho người ngoài);
+      `kind` sai → 400 `GROUP_MEDIA_INVALID_KIND`. UI: khi chưa chọn ảnh mới, nút "Lưu nhận diện"
+      **TẮT** và ảnh trên máy chủ không bị đụng tới (đúng bẫy đã vá ở §6.6).
+- [x] 17.13 **§13 tab Tài nguyên nhóm — PASS.** Nhóm chưa gắn tài liệu → empty state + lối "Gắn
+      tài liệu", không phải màn lỗi.
+      *Quan sát:* các tab con gọi `/groups/{id}/…` (BE khai UUID) nên mở nhóm bằng **slug** thì
+      tab con 400 → "Không tải được tài nguyên nhóm". Điều hướng trong app dùng `group.id` nên
+      người dùng thật không gặp; chỉ vỡ nếu ai đó dán URL dạng slug.
+- [ ] 17.14 **§13 sự kiện / thông báo / rời nhóm — chưa nghiệm thu.** Hết hạn mức tạo nhóm
+      (`GROUP_RATE_LIMITED`: 3 nhóm/ngày/người) trong lúc dựng fixture nên không dựng thêm được
+      nhóm sạch để thử vòng đời sự kiện.

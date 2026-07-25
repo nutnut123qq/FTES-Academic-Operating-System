@@ -22,10 +22,14 @@ const EMAILS: Record<Role, string> = {
 
 const tokenCache = new Map<Role, { token: string; at: number }>()
 
-export const fetchToken = async (role: Role): Promise<string> => {
+/**
+ * `force` = bỏ qua cache, đăng nhập lại. Cần khi một thao tác vừa ĐỔI VAI của chính tài khoản
+ * đó (tạo nhóm → OWNER) — BE trả 401 `IDENTITY_TOKEN_STALE` cho token phát trước khi vai đổi.
+ */
+export const fetchToken = async (role: Role, force = false): Promise<string> => {
     const cached = tokenCache.get(role)
     // ponytail: 10-min reuse window under the 15-min TTL
-    if (cached && Date.now() - cached.at < 10 * 60 * 1000) return cached.token
+    if (!force && cached && Date.now() - cached.at < 10 * 60 * 1000) return cached.token
     const password = process.env.FTES_TEST_PASSWORD
     if (!password) throw new Error("FTES_TEST_PASSWORD env var is required")
     const ctx = await request.newContext()
@@ -40,6 +44,22 @@ export const fetchToken = async (role: Role): Promise<string> => {
     return token
 }
 
+/**
+ * Chờ app hydrate phiên đăng nhập vào Redux (`keycloak.authenticated`) — app chỉ bật cờ này SAU
+ * khi GraphQL `me` trả về. Mọi nút gated bằng `useRequireAuth` (gửi đánh giá, thích, lưu…) bấm
+ * trước thời điểm đó sẽ bị đá vào modal đăng nhập dù localStorage đã có token.
+ *
+ * Gọi TRƯỚC `page.goto` (trả về promise) rồi `await` sau khi điều hướng.
+ */
+export const waitForViewer = (page: Page) =>
+    page.waitForResponse(
+        async (res) =>
+            res.url().includes("/graphql") &&
+            res.status() === 200 &&
+            (await res.text().catch(() => "")).includes('"me"'),
+        { timeout: 30_000 },
+    )
+
 /** Seed auth state into the browser context BEFORE navigating anywhere. */
 export const loginAs = async (page: Page, role: Role): Promise<string> => {
     const token = await fetchToken(role)
@@ -52,6 +72,14 @@ export const loginAs = async (page: Page, role: Role): Promise<string> => {
     }, token)
     await page.context().addCookies([
         { name: "session_hint", value: "1", domain: "localhost", path: "/" },
+        // Banner cookie-consent là StickyBottomBar cố định đáy màn → nuốt click của mọi nút nằm
+        // cuối trang ("Nộp bài"…). Seed lựa chọn từ chối analytics = banner không render.
+        {
+            name: "ftesaos-cookie-consent",
+            value: encodeURIComponent(JSON.stringify({ analytics: false })),
+            domain: "localhost",
+            path: "/",
+        },
     ])
     return token
 }

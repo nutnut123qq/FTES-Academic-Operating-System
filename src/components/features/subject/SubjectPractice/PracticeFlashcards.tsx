@@ -22,7 +22,7 @@ import {
 import { useMutateSubjectFlashcardReviewSwr } from "../hooks/useMutateSubjectFlashcardReviewSwr"
 import { PracticeFlashcardManager } from "./PracticeFlashcardManager"
 import { PRACTICE_SM2_GRADES, previewIntervalDays } from "./flashcardSm2"
-import { resolvePracticeErrorKey } from "./practiceQuiz"
+import { resolvePracticeErrorKey } from "./practiceQuizLogic"
 
 /** Props for {@link PracticeFlashcards}. */
 export interface PracticeFlashcardsProps {

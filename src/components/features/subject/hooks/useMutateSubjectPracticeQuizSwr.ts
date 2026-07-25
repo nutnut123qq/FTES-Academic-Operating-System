@@ -10,7 +10,7 @@ import {
     mapPracticeQuizResult,
     toPracticeAnswers,
     type PracticeQuizResult,
-} from "../SubjectPractice/practiceQuiz"
+} from "../SubjectPractice/practiceQuizLogic"
 
 /** Argument of a practice draw: which subject and how many questions to pull. */
 export interface DrawPracticeQuizArg {

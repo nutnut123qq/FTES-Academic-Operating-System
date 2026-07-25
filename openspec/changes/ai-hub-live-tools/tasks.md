@@ -62,3 +62,24 @@
   do (đo live vẫn 400 AI_INPUT_INVALID). test.fixme + ghi rõ; chờ BE mở endpoint free-paste.
 - KẾT LUẬN: change GIỮ MỞ — hub+planner+CV PASS; 3 job-tool UI chờ chạy trên môi trường không-WAF
   (prod/preview Vercel) để chốt; debug chờ BE.
+
+## Nghiệm thu E2E 2026-07-25 — nhãn BLOCKED-WAF-local SAI, nguyên nhân thật là contract GraphQL
+- ❌ **Đính chính**: WAF apitest KHÔNG còn chặn origin localhost — đo tay từ `http://localhost:3000`:
+  `POST https://apitest.ftes.vn/api/v1/graphql {"query":"{ __typename }"}` → **200**.
+- 🐞 **BUG THẬT (FE↔BE contract)**: picker "Chọn bài học" của summary/flashcards/quiz gọi query
+  `myLearnedLessons` (`src/modules/api/graphql/queries/query-my-learned-lessons.ts`), mà **schema BE
+  KHÔNG có field này**:
+  `POST /api/v1/graphql {"query":"{ myLearnedLessons { data { globalId label } } }"}` →
+  `Validation error (FieldUndefined@[myLearnedLessons]) : Field 'myLearnedLessons' in type 'Query'
+  is undefined` (token student hợp lệ).
+  Hệ quả: danh sách bài luôn rỗng → trigger picker **disabled** → 3 công cụ AI này KHÔNG dùng được
+  từ UI, dù pipeline BE sống (`POST /ai/learning/summary {lessonId}` ra job COMPLETED).
+  Điều kiện mở khoá: BE thêm query `myLearnedLessons` (hoặc FE đổi nguồn sang REST
+  `/courses/me/enrollments` + cây bài học). 3 test giữ `test.skip` với nhãn **BLOCKED-BE** mới.
+- ⛔ debug tool: vẫn **BLOCKED-BE** — `/ai/coding/review` đòi `submissionId`, chưa có đường
+  review code dán tự do (`test.fixme` giữ nguyên).
+- ✅ PASS trong phiên: hub 7 tile + điều hướng `/ai/tools/*` (2.4); planner end-to-end (5.5);
+  CV builder → review by `cvProfileId` (4.6) — sửa locator `getByText("Điểm mạnh", {exact:true})`
+  vì nội dung gợi ý cũng chứa cụm này (strict-mode violation, KHÔNG phải lỗi sản phẩm).
+- ⛔ CV upload: vẫn BLOCKED-STORAGE (presigned PUT hỏng — cùng gốc MinIO nội bộ, xem dưới).
+- ⇒ change GIỮ MỞ.

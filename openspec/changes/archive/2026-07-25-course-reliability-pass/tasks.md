@@ -82,3 +82,18 @@
   - S06 watch-position: BLOCKED-DATA — không có khoá đã mua videoStatus=READY (storage/video stub).
   - S07 reaction footer: ĐÃ HẾT (fix DocumentReader mount footer) — nay PASS ở learn-engagement.
 - 0.2/B.1/B.2: smoke đã chạy (harness Playwright commit); phần video/storage chờ hạ tầng thật.
+
+## Nghiệm thu E2E 2026-07-25 — 16/16 kịch bản PASS, HẾT residual
+- ✅ **S06 watch-position (trước BLOCKED-DATA)**: nay chạy thật. student.test ĐÃ ghi danh DBI202,
+  bài "Buổi 2" (`4f672ca4-…`) có videoStatus=READY và là HLS TỰ HOST sống
+  (`https://upload.ftes.vn/api/videos/hls/video_f7609898-5tt/master.m3u8` → 200, segment ký sẵn
+  trên Wasabi) → `<video>` mount, currentTime chạy, **PUT /courses/lessons/{id}/progress 200**
+  trong hạn cadence. Spec đã đổi đích khỏi khoá demo (khoá demo không có lesson READY).
+  Các bài READY khác của DBI202 là YouTube embed (iframe) — không có `<video>` để đo.
+- ✅ **S03 mobile (trước BLOCKED-DATA)**: bỏ `test.skip(mobile)`. `for-course` WED201c nay trả
+  product "WED201c Unlock (demo)" 399.000₫ cho MỌI viewer (kể cả CTV và anonymous) nhờ
+  legacy-course-product-sync ⇒ cart POST 200 → PaymentModal → checkout 200 → VietQR render.
+  PASS cả desktop lẫn mobile.
+- ✅ Chạy lại toàn spec (desktop+mobile): 35 pass / 0 fail trước khi gỡ 2 skip; sau khi gỡ,
+  S03 2/2 và S06 1/1 đều xanh.
+- ⇒ Đóng sổ change.

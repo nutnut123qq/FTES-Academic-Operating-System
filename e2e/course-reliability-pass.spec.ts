@@ -114,10 +114,9 @@ test("S02b — un-enrolled ctv does NOT get the continue CTA (buy/enroll card in
 // ---------------------------------------------------------------- 3: purchase to QR (no real payment)
 
 test("S03 — ctv buys WED201c: cart POST → PaymentModal → checkout → VietQR rendered", async ({ page }) => {
-    // Mobile: cart POST 400 lặp lại — for-course WED201c trả 0 product cho CTV (curl xác nhận),
-    // desktop lại cart 200 (product resolve khác giữa 2 layout CTA). Data-flaky theo trạng thái
-    // sở hữu CTV; verify luồng mua→QR ở desktop, ghi anomaly. GIỮ MỞ trong course-reliability tasks.
-    test.skip(test.info().project.name === "mobile", "BLOCKED-DATA: CTV WED201c product resolve 0 trên mobile CTA")
+    // (2026-07-25) Bỏ skip mobile: WED201c nay CÓ product cho mọi viewer kể cả CTV
+    // (`for-course` trả "WED201c Unlock (demo)" 399.000₫ — legacy-course-product-sync đã chạy),
+    // nên nhánh cart 400 do product-resolve rỗng không còn đất diễn. Chạy cả 2 layout CTA.
     test.setTimeout(150_000)
     await clearCart("ctv")
     await login(page, "ctv")
@@ -231,10 +230,15 @@ test("S05 — document lesson completes on exit (or stays completed, no re-fire)
 test("S06 — video watch position PUTs /progress while playing (env-permitting)", async ({ page }) => {
     test.setTimeout(150_000)
     await login(page, "student")
-    await page.goto(reader("seed-sec-c1-s1", "seed-les-c1-s1-l1"))
-    await expect(page.getByRole("heading", { name: "Giới thiệu C (video)" })).toBeVisible({ timeout: 60_000 })
+    // Khoá demo không có lesson videoStatus=READY. DBI202 thì có, student.test ĐÃ ghi danh
+    // (accessLevel FULL) và bài dưới đây là HLS tự host thật (`upload.ftes.vn/.../master.m3u8`
+    // trả 200 + segment Wasabi) → player mount được, khác YouTube-embed (iframe, không <video>).
+    await page.goto(
+        `/vi/courses/dbi202-co-so-du-lieu-sql-server-jdbc-zoom/learn/content/modules/0a1c6145-5c57-4302-9c02-4c59f77e9138/contents/4f672ca4-28bf-40c1-88c7-08f3f35882f5`,
+    )
 
     const video = page.locator("video").first()
+    await video.waitFor({ state: "attached", timeout: 60_000 }).catch(() => undefined)
     const hasVideo = (await video.count()) > 0
     if (!hasVideo) {
         test.info().annotations.push({

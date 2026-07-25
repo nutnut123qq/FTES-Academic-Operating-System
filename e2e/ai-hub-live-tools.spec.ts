@@ -101,11 +101,14 @@ test.describe("ai-hub-live-tools — hub tile wiring (2.4)", () => {
 
 test.describe("ai-hub-live-tools — job tools (3.6)", () => {
     test("summary: paste text → run → real TL;DR + key points render", async ({ page }) => {
-        // BLOCKED-WAF-local: nguồn = picker "bài đã học" đọc GraphQL myLearnedLessons; WAF apitest
-        // chặn origin localhost (401) → picker không populate/enable. BE job pipeline VERIFY qua
-        // curl: POST /ai/learning/summary {lessonId:seed-les-c1-s1-l2} → job COMPLETED, TL;DR thật
-        // + glossary (2026-07-24). Prod (origin vercel) không bị WAF.
-        test.skip(true, "BLOCKED-WAF-local: picker myLearnedLessons GraphQL 401 từ localhost; BE verify curl")
+        // (2026-07-25) Nhãn cũ "BLOCKED-WAF-local" SAI: GraphQL từ origin http://localhost:3000 nay
+        // trả 200 ({__typename} OK). Nguyên nhân THẬT là contract: picker "bài đã học" gọi query
+        // `myLearnedLessons`, mà schema BE KHÔNG có field này —
+        //   POST /api/v1/graphql {"query":"{ myLearnedLessons { data { globalId label } } }"}
+        //   → Validation error (FieldUndefined@[myLearnedLessons]).
+        // ⇒ picker luôn rỗng, trigger disabled, 3 công cụ này KHÔNG dùng được từ UI dù pipeline
+        // BE sống (POST /ai/learning/summary {lessonId} chạy ra job COMPLETED).
+        test.skip(true, "BLOCKED-BE: GraphQL myLearnedLessons không tồn tại trong schema → picker rỗng")
         test.setTimeout(240_000)
         await loginAs(page, "student")
         await suppressCookieBanner(page)
@@ -120,11 +123,14 @@ test.describe("ai-hub-live-tools — job tools (3.6)", () => {
     })
 
     test("flashcards: paste text → run → a real deck renders and a card flips", async ({ page }) => {
-        // BLOCKED-WAF-local: nguồn = picker "bài đã học" đọc GraphQL myLearnedLessons; WAF apitest
-        // chặn origin localhost (401) → picker không populate/enable. BE job pipeline VERIFY qua
-        // curl: POST /ai/learning/summary {lessonId:seed-les-c1-s1-l2} → job COMPLETED, TL;DR thật
-        // + glossary (2026-07-24). Prod (origin vercel) không bị WAF.
-        test.skip(true, "BLOCKED-WAF-local: picker myLearnedLessons GraphQL 401 từ localhost; BE verify curl")
+        // (2026-07-25) Nhãn cũ "BLOCKED-WAF-local" SAI: GraphQL từ origin http://localhost:3000 nay
+        // trả 200 ({__typename} OK). Nguyên nhân THẬT là contract: picker "bài đã học" gọi query
+        // `myLearnedLessons`, mà schema BE KHÔNG có field này —
+        //   POST /api/v1/graphql {"query":"{ myLearnedLessons { data { globalId label } } }"}
+        //   → Validation error (FieldUndefined@[myLearnedLessons]).
+        // ⇒ picker luôn rỗng, trigger disabled, 3 công cụ này KHÔNG dùng được từ UI dù pipeline
+        // BE sống (POST /ai/learning/summary {lessonId} chạy ra job COMPLETED).
+        test.skip(true, "BLOCKED-BE: GraphQL myLearnedLessons không tồn tại trong schema → picker rỗng")
         test.setTimeout(240_000)
         await loginAs(page, "student")
         await suppressCookieBanner(page)
@@ -141,11 +147,14 @@ test.describe("ai-hub-live-tools — job tools (3.6)", () => {
     })
 
     test("quiz: paste text → run → real questions render and answering grades locally", async ({ page }) => {
-        // BLOCKED-WAF-local: nguồn = picker "bài đã học" đọc GraphQL myLearnedLessons; WAF apitest
-        // chặn origin localhost (401) → picker không populate/enable. BE job pipeline VERIFY qua
-        // curl: POST /ai/learning/summary {lessonId:seed-les-c1-s1-l2} → job COMPLETED, TL;DR thật
-        // + glossary (2026-07-24). Prod (origin vercel) không bị WAF.
-        test.skip(true, "BLOCKED-WAF-local: picker myLearnedLessons GraphQL 401 từ localhost; BE verify curl")
+        // (2026-07-25) Nhãn cũ "BLOCKED-WAF-local" SAI: GraphQL từ origin http://localhost:3000 nay
+        // trả 200 ({__typename} OK). Nguyên nhân THẬT là contract: picker "bài đã học" gọi query
+        // `myLearnedLessons`, mà schema BE KHÔNG có field này —
+        //   POST /api/v1/graphql {"query":"{ myLearnedLessons { data { globalId label } } }"}
+        //   → Validation error (FieldUndefined@[myLearnedLessons]).
+        // ⇒ picker luôn rỗng, trigger disabled, 3 công cụ này KHÔNG dùng được từ UI dù pipeline
+        // BE sống (POST /ai/learning/summary {lessonId} chạy ra job COMPLETED).
+        test.skip(true, "BLOCKED-BE: GraphQL myLearnedLessons không tồn tại trong schema → picker rỗng")
         test.setTimeout(240_000)
         await loginAs(page, "student")
         await suppressCookieBanner(page)
@@ -229,8 +238,9 @@ test.describe("ai-hub-live-tools — CV review (4.6)", () => {
         expect(typeof submitBody.cvProfileId).toBe("string")
 
         // real review result: strengths/improvements panel
-        await expect(page.getByText("Điểm mạnh")).toBeVisible({ timeout: 240_000 })
-        await expect(page.getByText("Cần cải thiện")).toBeVisible()
+        // exact: nội dung gợi ý cũng chứa cụm "điểm mạnh" → non-exact vi phạm strict mode.
+        await expect(page.getByText("Điểm mạnh", { exact: true })).toBeVisible({ timeout: 240_000 })
+        await expect(page.getByText("Cần cải thiện", { exact: true })).toBeVisible()
         await expectNoFailure(page)
     })
 

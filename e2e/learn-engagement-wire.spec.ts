@@ -154,12 +154,32 @@ test.describe("learn-engagement-wire", () => {
     })
 
     test("watch-position resume on a purchased course with a READY video", async ({ page }) => {
-        // BLOCKED-DATA (tasks.md 3.3 note): the seed demo course has no lesson with
-        // videoStatus=READY, and the only READY-video courses on apitest (khoa-test /
-        // goi-prf192...) are NOT purchased by student.test — the player never mounts,
-        // so the reporter has nothing to observe end-to-end. Unit coverage exists
-        // (useWatchPositionReporter.test.ts, 6 PASS).
-        test.skip(true, "BLOCKED-DATA: no purchased course with videoStatus=READY for student.test on apitest")
+        // (2026-07-25) Hết BLOCKED-DATA: student.test ĐÃ ghi danh DBI202, bài "Buổi 2" có
+        // videoStatus=READY và là HLS TỰ HOST thật (upload.ftes.vn/.../master.m3u8 → 200 +
+        // segment Wasabi) nên <video> mount và reporter chạy được. Các bài READY khác của
+        // khoá là YouTube embed (iframe) — không có <video> để đo.
+        test.setTimeout(180_000)
         await loginAs(page, "student")
+        await page.goto(
+            "/vi/courses/dbi202-co-so-du-lieu-sql-server-jdbc-zoom/learn/content/modules/0a1c6145-5c57-4302-9c02-4c59f77e9138/contents/4f672ca4-28bf-40c1-88c7-08f3f35882f5",
+        )
+
+        const video = page.locator("video").first()
+        await expect(video).toBeAttached({ timeout: 60_000 })
+        await video.evaluate((v: HTMLVideoElement) => {
+            v.muted = true
+            void v.play()
+        })
+        await expect
+            .poll(async () => video.evaluate((v: HTMLVideoElement) => v.currentTime), {
+                timeout: 30_000,
+            })
+            .toBeGreaterThan(0)
+
+        const progress = await page.waitForResponse(
+            (r) => r.url().includes("/progress") && r.request().method() === "PUT",
+            { timeout: 60_000 },
+        )
+        expect(progress.status()).toBe(200)
     })
 })

@@ -11,6 +11,10 @@ import { fetchToken, loginAs, waitForViewer } from "./helpers/auth"
  * mọi ca cần FILE (tải xuống, hỏi AI trên PDF) chưa chạy được — ghi rõ ở tasks.md.
  */
 
+// Route `/vi/resources/[resourceId]` biên dịch lần đầu mất >20s trên dev server (Next dev
+// compile theo route). 30s mặc định đủ cho lần chạy ấm nhưng đỏ oan ở lần chạy nguội.
+test.describe.configure({ timeout: 90_000 })
+
 const API = process.env.API_BASE ?? "https://apitest.ftes.vn/api/v1"
 const PRF192 = "b79a7192-932e-4427-9b97-d171650638ab"
 

@@ -202,3 +202,54 @@ Chạy live với `https://apitest.ftes.vn` bằng token thật (student/lecture
       máy Windows/macOS (FS không phân biệt hoa thường) `tsc` báo TS1149 + TS2305 và **không
       typecheck được cả repo**; Linux (Vercel) thì không lộ. Đổi tên module logic thành
       `practiceQuizLogic.ts` (+ `.test.ts`) và cập nhật 4 chỗ import.
+
+## 11. Nghiệm thu E2E vòng 2 (2026-07-26, FE `6b7f816` · BE `dc29c86`)
+
+Chạy live apitest + dev server local. Spec mới: `resource-upload-and-access.spec.ts` ·
+`resource-ai-qa-with-file.spec.ts` · `community-moderation-admin-ui.spec.ts` ·
+`regression-post-and-tutor-ui.spec.ts` · `pinned-badge-and-group-events-ui.spec.ts`.
+
+- [x] 11.1 **Upload Cloudinary — PASS (vòng 1 BLOCKED-MINIO).** `POST /resources/{id}/versions`
+      (multipart, field `file`) → `uploadStatus: UPLOADED`, `currentVersionId` được set;
+      `GET /download-url` trả URL `res.cloudinary.com` (không còn `minio:9000`) và tải thật được
+      200 với `.md`.
+- [ ] 11.2 **Tải PDF vẫn 401 — BLOCKED-INFRA (setting Cloudinary).** Cùng đường `raw/upload/...`:
+      `.md` → 200, `.pdf` → **401** (Cloudinary trả gif lỗi). Đây là tuỳ chọn "Allow delivery of
+      PDF and ZIP files" chưa bật trên tài khoản, KHÔNG phải lỗi code. Test khoá hiện trạng bằng
+      `test.fail()` trong `resource-upload-and-access.spec.ts` — bật setting xong thì gỡ.
+- [x] 11.3 **Panel ResourceAiQa — PASS (vòng 1 luôn ẩn).** Tài liệu đã có file → panel
+      "Hỏi AI về tài liệu này" hiện; `?ask=1` cuộn tới panel và **focus** ô hỏi; gửi câu hỏi thì
+      câu hỏi vào thread và panel phản hồi.
+- [ ] 11.4 **Trả lời AI thực chất — BLOCKED-INFRA.** `POST /ai/document-qa` với `documentId` của
+      tài liệu ĐÃ có file luôn trả `{processing:true}` (thử lại sau 15s/30s vẫn vậy, cả `.md` lẫn
+      `.pdf`) → ai-service chưa index tài liệu vào Qdrant. UI xử lý đúng: banner "Đang xử lý tài
+      liệu… Thử lại sau ít phút nhé." + nút "Thử lại".
+- [x] 11.5 **Nhánh 403 `AI_DOCUMENT_ACCESS_DENIED` — PASS (vòng 1 không dựng được ca).** Tài liệu
+      PRIVATE + đã APPROVED: người khác `GET /resources/{id}` → 403 và `POST /ai/document-qa` →
+      403 `AI_DOCUMENT_ACCESS_DENIED`; chủ sở hữu vẫn 200.
+      *Ghi chú contract:* đổi visibility PUBLIC→PRIVATE sau khi đã có file trả **409** kèm hướng
+      dẫn tải lại file — nên ca này phải tạo resource PRIVATE ngay từ đầu.
+- [x] 11.6 **Hàng đợi kiểm duyệt học liệu — PASS sau khi vá BE.** Admin thấy bản `PENDING_APPROVAL`
+      trong `GET /resources/moderation/pending` và `POST /approve` → `APPROVED`.
+- [x] 11.7 **Vai `admin` trong harness — XONG.** `e2e/helpers/auth.ts` thêm `admin` →
+      `admin.test@ftes.vn`, mật khẩu đọc từ `FTES_ADMIN_PASSWORD` (xoay riêng, không dùng chung
+      `FTES_TEST_PASSWORD`); thiếu biến thì ném lỗi nói rõ tên biến thay vì 401 mờ mịt.
+- [x] 11.8 **Hàng đợi kiểm duyệt cộng đồng (mục 20 vòng 1) — PASS.** "Chuyển cấp" chỉ xuất hiện ở
+      hàng có `reportId` (số nút ≤ số hàng); bấm xong hiện nhãn "Đã chuyển cấp" và **hàng vẫn ở
+      lại** (số hàng không đổi).
+- [x] 11.9 **Regression `contentFormat` — PASS.** Đăng bài từ composer cộng đồng (chọn loại +
+      tiêu đề + nội dung) vẫn chạy, tải lại trang thấy bài trên bảng tin.
+- [x] 11.10 **Regression archive hội thoại AI — PASS.** Xoá 1 cuộc trò chuyện của môn rồi tải lại
+      thì `GET /ai/sessions?feature=TUTOR_CHAT&subjectId=…` không còn trả cuộc đó và số cuộc giảm
+      đúng 1.
+- [x] 11.11 **Badge "Đã ghim" — PASS (vòng 1 BLOCKED-DATA).** Ghim bài qua
+      `POST /admin/community/posts/{id}/pin` → dòng bài trên bảng tin hiện nhãn "Đã ghim"; test tự
+      bỏ ghim + xoá bài sau khi chạy.
+- [x] 11.12 **Sự kiện nhóm + rời nhóm — PASS (vòng 1 chưa nghiệm thu).** Tạo → sửa → xoá sự kiện,
+      tab Sự kiện phản ánh đúng sau mỗi bước; nhận lời mời vào nhóm rồi rời nhóm thì biến mất khỏi
+      danh sách thành viên. *Contract:* `endsAt` phải SAU `startsAt`, bằng nhau cũng bị
+      `GROUP_EVENT_INVALID_TIME`.
+- [x] 11.13 **Spec UI vòng 1 chạy được với dev server — PASS.** `resource-detail-engagement-ui`
+      3/3 (tim bình luận giữ trạng thái sau F5 — xác nhận bản vá `JwtAuthenticationFilter` đã
+      live) và `subject-career-and-community-ui` 4/4, gồm ca "khách xem bảng tin phải mời đăng
+      nhập" chạy LẦN ĐẦU và xanh.

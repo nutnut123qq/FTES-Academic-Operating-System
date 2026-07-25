@@ -12,12 +12,25 @@ import { type Page, request } from "@playwright/test"
 
 const API_BASE = process.env.API_BASE ?? "https://apitest.ftes.vn/api/v1"
 
-export type Role = "student" | "lecturer" | "ctv"
+export type Role = "student" | "lecturer" | "ctv" | "admin"
 
 const EMAILS: Record<Role, string> = {
     student: "student.test@ftes.vn",
     lecturer: "instructor.test@ftes.vn",
     ctv: "ctv.test@ftes.vn",
+    admin: "admin.test@ftes.vn",
+}
+
+/**
+ * Mật khẩu admin.test được XOAY RIÊNG (2026-07-21) nên không dùng chung `FTES_TEST_PASSWORD`.
+ * Thiếu biến `FTES_ADMIN_PASSWORD` → mọi ca cần vai admin sẽ ném lỗi nói rõ tên biến, thay vì
+ * lặng lẽ 401 rồi đổ cho sản phẩm.
+ */
+const passwordFor = (role: Role): string => {
+    const key = role === "admin" ? "FTES_ADMIN_PASSWORD" : "FTES_TEST_PASSWORD"
+    const password = process.env[key]
+    if (!password) throw new Error(`${key} env var is required (role: ${role})`)
+    return password
 }
 
 const tokenCache = new Map<Role, { token: string; at: number }>()
@@ -30,8 +43,7 @@ export const fetchToken = async (role: Role, force = false): Promise<string> => 
     const cached = tokenCache.get(role)
     // ponytail: 10-min reuse window under the 15-min TTL
     if (!force && cached && Date.now() - cached.at < 10 * 60 * 1000) return cached.token
-    const password = process.env.FTES_TEST_PASSWORD
-    if (!password) throw new Error("FTES_TEST_PASSWORD env var is required")
+    const password = passwordFor(role)
     const ctx = await request.newContext()
     const res = await ctx.post(`${API_BASE}/auth/login`, {
         data: { identifier: EMAILS[role], password },

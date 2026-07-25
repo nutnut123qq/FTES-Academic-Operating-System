@@ -13,8 +13,23 @@ import { UserLink } from "@/components/features/identity"
 import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
 import { RichCommentEditor } from "@/components/reuseable/RichCommentEditor"
 import { ConfirmDialog } from "@/components/reuseable/PostEngagementBar/ConfirmDialog"
+import { ReportDialog } from "@/components/reuseable/PostEngagementBar/ReportDialog"
+import type { ReportReasonCode } from "@/components/reuseable/PostEngagementBar/report-reasons"
+import { useMutateReportContentSwr } from "@/components/features/community/CommunityPostDetail/hooks/useMutateReportContentSwr"
+import { useRequireAuth } from "@/hooks/useRequireAuth"
+import { useAppSelector } from "@/redux/hooks"
 import type { PostComment } from "@/components/features/community/hooks/useQueryPostDetailSwr"
 import type { WithClassNames } from "@/modules/types/base/class-name"
+
+/**
+ * Submit a report for ONE comment. Resolves `true` when the report was accepted
+ * (the dialog closes) and `false` otherwise (the draft is kept).
+ */
+export type ReportCommentHandler = (
+    commentId: string,
+    reasonCode: ReportReasonCode,
+    detail?: string,
+) => Promise<boolean>
 
 /** Props for {@link PostCommentThread}. */
 export interface PostCommentThreadProps extends WithClassNames<undefined> {
@@ -42,9 +57,19 @@ export interface PostCommentThreadProps extends WithClassNames<undefined> {
     stickyComposerOnMobile?: boolean
     /**
      * Username of the signed-in viewer. A comment whose `authorUsername` matches
-     * gets the inline "Sửa" / "Xoá" affordances; guests / other users get none.
+     * gets the inline "Sửa" / "Xoá" affordances; guests / other users get none —
+     * and the "Báo cáo" entry shows on everyone ELSE's comments. Optional: when
+     * omitted the thread falls back to the session user in the store.
      */
     currentUsername?: string
+    /**
+     * Id of the signed-in viewer, for surfaces whose comment mapper has no
+     * profile join and degrades `authorUsername` to the raw author id (the group
+     * feed / discussion threads do). Without it the owner gate would compare a
+     * username against a uuid and never match — so the viewer's OWN comment would
+     * wrongly offer "Báo cáo". Defaults to the session user id in the store.
+     */
+    currentUserId?: string
     /**
      * Save an edited comment body (author only). Resolves `true` on success.
      * Omit to hide the edit affordance entirely.
@@ -64,6 +89,22 @@ export interface PostCommentThreadProps extends WithClassNames<undefined> {
     canAcceptAnswer?: boolean
     /** Mark a top-level comment as the post's accepted answer. */
     onAcceptAnswer?: (commentId: string) => void
+    /**
+     * Override the comment report submission (tests / surfaces with their own
+     * moderation wiring). Omitted → the thread reports through the shared
+     * `POST /community/reports` hook with `targetType: "COMMENT"`.
+     */
+    onReportComment?: ReportCommentHandler
+    /**
+     * Whether the BUILT-IN report path may run here. It posts `targetType:
+     * "COMMENT"` with the row id, which only resolves for comments living in the
+     * COMMUNITY module. Threads backed by another module (group discussion
+     * threads: `/groups/{id}/discussion/threads/{threadId}/comments`) must pass
+     * `false` — a report carrying a foreign id would look handled to the
+     * moderator while the content stays up. Ignored when `onReportComment` is
+     * supplied: that surface owns the wiring.
+     */
+    canReportComments?: boolean
 }
 
 /** One comment row (avatar + author + time + body + optional reply affordance). */
@@ -79,6 +120,8 @@ export const CommentRow = ({
     isAccepted = false,
     canAccept = false,
     onAccept,
+    canReport = false,
+    onReport,
 }: {
     comment: PostComment
     onReply?: (comment: PostComment) => void
@@ -110,12 +153,20 @@ export const CommentRow = ({
     canAccept?: boolean
     /** Mark this comment as the accepted answer. */
     onAccept?: (commentId: string) => void
+    /**
+     * Whether the viewer may report THIS comment — signed in AND not its author
+     * (nobody reports their own comment). The server re-checks; UX gate only.
+     */
+    canReport?: boolean
+    /** Send the report for this comment (the row owns the dialog). */
+    onReport?: ReportCommentHandler
 }) => {
     const t = useTranslations("communityHub")
     const [isEditing, setIsEditing] = useState(false)
     const [draft, setDraft] = useState(comment.text)
     const [isSaving, setIsSaving] = useState(false)
     const [confirmOpen, setConfirmOpen] = useState(false)
+    const [reportOpen, setReportOpen] = useState(false)
 
     const startEdit = useCallback(() => {
         setDraft(comment.text)
@@ -136,6 +187,7 @@ export const CommentRow = ({
     }, [draft, onEdit, isSaving, comment.id])
 
     const showManage = canManage && (Boolean(onEdit) || Boolean(onDelete))
+    const showReport = canReport && !canManage && Boolean(onReport)
 
     return (
         <div className={cn("flex items-start gap-3", isReply && "ml-9")}>
@@ -244,6 +296,16 @@ export const CommentRow = ({
                                 {t("engagement.acceptAnswer")}
                             </Button>
                         ) : null}
+                        {showReport ? (
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-auto px-0 text-xs"
+                                onPress={() => setReportOpen(true)}
+                            >
+                                {t("engagement.report")}
+                            </Button>
+                        ) : null}
                     </div>
                 ) : null}
 
@@ -257,6 +319,14 @@ export const CommentRow = ({
                         }}
                         title={t("engagement.deleteCommentTitle")}
                         description={t("engagement.deleteCommentConfirm")}
+                    />
+                ) : null}
+
+                {showReport && onReport ? (
+                    <ReportDialog
+                        isOpen={reportOpen}
+                        onClose={() => setReportOpen(false)}
+                        onSubmit={(reasonCode, detail) => onReport(comment.id, reasonCode, detail)}
                     />
                 ) : null}
             </div>
@@ -283,7 +353,10 @@ export const CommentRow = ({
  * currentUsername`) get inline "Sửa" (a minimal markdown textarea, draft kept on
  * failure) and "Xoá" (confirm dialog); on a QUESTION post the post author can
  * accept a TOP-LEVEL comment as the answer, and the accepted one wears a badge
- * instead of the action.
+ * instead of the action. Every OTHER person's comment (top-level or reply) shows
+ * "Báo cáo" to a signed-in viewer, opening the shared {@link ReportDialog} and
+ * posting `targetType: "COMMENT"` — guests and the comment's own author get none,
+ * and threads outside the community module opt out via `canReportComments={false}`.
  *
  * The region is focusable (`tabIndex={-1}` + localized accessible name) so the
  * bar can move focus into it on expand.
@@ -301,25 +374,64 @@ export const PostCommentThread = ({
     autoFocus,
     stickyComposerOnMobile,
     currentUsername,
+    currentUserId,
     onEditComment,
     onDeleteComment,
     acceptedCommentId,
     canAcceptAnswer = false,
     onAcceptAnswer,
+    onReportComment,
+    canReportComments = true,
     className,
 }: PostCommentThreadProps) => {
     const t = useTranslations("communityHub")
+    const { authenticated } = useRequireAuth()
+    const submitReport = useMutateReportContentSwr()
+    /**
+     * Viewer identity for the owner gate. Surfaces that already pass
+     * `currentUsername` / `currentUserId` win; the rest fall back to the session
+     * user so "Báo cáo" never shows on the viewer's OWN comment (edit/delete stay
+     * opt-in via their callbacks, so the fallback changes nothing for them).
+     */
+    const sessionUsername = useAppSelector((state) => state.user.user?.username)
+    const sessionUserId = useAppSelector((state) => state.user.user?.id)
     const [replyTo, setReplyTo] = useState<PostComment | null>(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [isFocused, setIsFocused] = useState(false)
     const [replyFocusTrigger, setReplyFocusTrigger] = useState(0)
 
-    /** Owner gate for the inline comment affordances (guest → never mine). */
+    /**
+     * Owner gate for the inline comment affordances (guest → never mine). The row
+     * carries `authorUsername`, but mappers with no profile join degrade it to the
+     * raw author id, so the viewer id counts as a match too (same degradation the
+     * post detail's owner gate makes with `meta.authorId === currentUser.id`).
+     */
     const isMine = useCallback(
-        (authorUsername: string) =>
-            Boolean(currentUsername) && authorUsername === currentUsername,
-        [currentUsername],
+        (authorUsername: string) => {
+            const viewerName = currentUsername ?? sessionUsername
+            const viewerId = currentUserId ?? sessionUserId
+            return (
+                (Boolean(viewerName) && authorUsername === viewerName) ||
+                (Boolean(viewerId) && authorUsername === viewerId)
+            )
+        },
+        [currentUsername, currentUserId, sessionUsername, sessionUserId],
     )
+
+    /** Report ONE comment — the override when given, else the shared hook. */
+    const reportComment = useCallback<ReportCommentHandler>(
+        (commentId, reasonCode, detail) =>
+            onReportComment
+                ? onReportComment(commentId, reasonCode, detail)
+                : submitReport("COMMENT", commentId, reasonCode, detail),
+        [onReportComment, submitReport],
+    )
+
+    /**
+     * Whether a row may offer "Báo cáo" at all: signed in, plus either the surface
+     * wired its own handler or the built-in community path is valid here.
+     */
+    const reportEnabled = authenticated && (Boolean(onReportComment) || canReportComments)
 
     const onReply = useCallback((comment: PostComment) => {
         setReplyTo(comment)
@@ -406,6 +518,8 @@ export const PostCommentThread = ({
                                             isAccepted={acceptedCommentId === comment.id}
                                             canAccept={canAcceptAnswer}
                                             onAccept={onAcceptAnswer}
+                                            canReport={reportEnabled && !isMine(comment.authorUsername)}
+                                            onReport={reportComment}
                                         />
                                         {replies.map((reply, index) => {
                                             const isLast = index === replies.length - 1
@@ -432,6 +546,10 @@ export const PostCommentThread = ({
                                                         canManage={isMine(reply.authorUsername)}
                                                         onEdit={onEditComment}
                                                         onDelete={onDeleteComment}
+                                                        canReport={
+                                                            reportEnabled && !isMine(reply.authorUsername)
+                                                        }
+                                                        onReport={reportComment}
                                                     />
                                                 </div>
                                             )

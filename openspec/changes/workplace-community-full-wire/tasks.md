@@ -25,6 +25,9 @@
 - [x] 4.2 Xem chi tiết bộ sưu tập (`CollectionDetailModal` → `GET /resources/collections/{id}`) + trạng thái rỗng/lỗi.
 - [x] 4.3 Gỡ tài nguyên khỏi bộ sưu tập + revalidate.
 - [x] 4.4 Guest thấy khối mời đăng nhập thay vì danh sách rỗng.
+- [x] 4.5 "Thêm vào bộ sưu tập" từ trang chi tiết tài nguyên (`AddToCollectionModal` → `POST /resources/collections/{id}/items`): chọn từ bộ sưu tập sẵn có hoặc tạo mới rồi thêm luôn (`createAndAdd`), 409 = đã có trong bộ sưu tập, guard đăng nhập.
+- [x] 4.6 Sửa / xoá bộ sưu tập ngay trên từng dòng: `CollectionFormModal` dùng chung cho tạo lẫn sửa (`PATCH /resources/collections/{id}`), xoá qua `ConfirmDialog` (`DELETE /resources/collections/{id}`); cả hai optimistic + rollback theo cache mới.
+- [x] 4.7 Sắp xếp lại tài nguyên trong bộ sưu tập bằng nút lên/xuống (`PATCH /resources/collections/{id}/items/reorder`, gửi TRỌN danh sách đã sắp) — optimistic, lỗi thì re-fetch.
 
 ## 5. Resource — gợi ý cá nhân hoá
 
@@ -86,6 +89,8 @@
 - [x] 12.4 Bình luận: sửa / xoá tại chỗ + chấp nhận câu trả lời (Q&A), gợi ý @mention gọi search thật.
 - [x] 12.5 `CommunityModeration`: nút chuyển cấp báo cáo + link mở nội dung bị báo cáo.
 - [x] 12.6 Gom map lỗi community vào `community-error-message.ts` (403 / 404 / 429 / chung).
+- [x] 12.7 Menu ⋯ trên TỪNG dòng feed (không chỉ trang chi tiết): tác giả thấy Sửa / Xoá, người khác thấy Báo cáo — dùng lại `PostEditDialog` / `ConfirmDialog` / `ReportDialog`; xoá là optimistic ở mức dòng, sửa nạp nội dung gốc qua `useQueryPostMetaSwr` (dòng feed chỉ có `snippet` cắt ngắn) và đóng kèm `engagement.editLoadFailed` nếu nạp hỏng.
+- [x] 12.8 Báo cáo BÌNH LUẬN trong `PostCommentThread` (`targetType: "COMMENT"`): hiện với người đã đăng nhập và không phải tác giả bình luận, gate qua `useRequireAuth`, có `onReportComment` để surface khác/test tự cắm.
 
 ## 13. Groups Hub
 
@@ -97,6 +102,7 @@
 - [x] 13.6 `GroupMembers`: mời (tìm người dùng hoặc dán ID), đổi vai trò, xoá khỏi nhóm — có gate quyền theo vai trò người xem.
 - [x] 13.7 `GroupInvitationResponder`: chấp nhận / từ chối lời mời.
 - [x] 13.8 `GroupManagement`: lưu thông tin nhóm, đổi join policy / visibility; `GroupDangerZone`: chuyển quyền sở hữu + lưu trữ nhóm (gõ đúng tên để xác nhận).
+- [x] 13.9 Yêu cầu tham gia hiện DANH TÍNH thật (`UserLink`: avatar + tên hiển thị + hovercard) thay vì in raw user id — `toJoinRequest` đọc thủ thế profile card BE mới gắn (`displayName` / `username` / `avatarUrl`), fallback chuỗi `displayName ?? username ?? userId`, không có username thì render text phẳng; kèm lời nhắn của người xin vào.
 
 ## 14. Identity, profile & phụ trợ
 
@@ -110,6 +116,8 @@
 - [x] 15.2 Rà key động (`t(\`types.${x}\`)`, `apiErrors.*`, `upload.*`, `reasons.*`, `roles.*`) đủ mọi nhánh enum; bổ sung `communityHub.engagement.replyPlaceholder` bị thiếu.
 - [x] 15.3 Không cần barrel trung tâm: các feature ở đây không có file barrel (`index.ts` gom) — component import trực tiếp theo đường dẫn.
 - [x] 15.4 `tsc --noEmit` sạch sau khi vá 8 lỗi kiểu còn sót của đợt implement (`toast.error` → `toast.danger`, `Typography color="current"`, key tuple của `useSWRInfinite`, 4 lỗi trong file test).
+- [x] 15.5 Thêm 21 key của đợt đóng này vào `vi.json` + `en.json` (`communityHub.engagement.editLoadFailed`, `resourceHub.detail.addToCollection`, `resourceHub.collections.{add*,createAndAdd,edit*,submitSave,saving,delete*,move*,reorderError}`) — JSON hợp lệ, parity vi/en = 0 lệch, thứ tự key trong 3 namespace khớp nhau.
+- [x] 15.6 Dọn file mồ côi sau khi wire xong: xoá `useQueryGroupAnnouncementsSwr.ts` (không nơi nào import), `CreateCollectionModal.tsx` (đã bị `CollectionFormModal` gộp tạo + sửa) và `useMockAiStream.ts` (mock còn sót của công cụ AI môn học) — grep toàn `src/` + `e2e/` xác nhận 0 tham chiếu.
 
 ## 16. Deferred — BE chưa có, KHÔNG mock
 

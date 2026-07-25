@@ -1,6 +1,6 @@
 import React from "react"
 import { fireEvent, render, screen } from "@testing-library/react"
-import { describe, expect, it, vi } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { PostComment } from "@/components/features/community/hooks/useQueryPostDetailSwr"
 
 /**
@@ -12,7 +12,15 @@ import type { PostComment } from "@/components/features/community/hooks/useQuery
  *  - the accept press reports the comment id back to the feature,
  *  - the comment OWNER GATE: "Sửa"/"Xoá" render only on rows whose
  *    `authorUsername` matches the signed-in viewer — a guest (no username) gets
- *    none at all.
+ *    none at all,
+ *  - REPORT: a signed-in viewer gets "Báo cáo" on OTHER people's comments (and
+ *    replies) which opens the shared report dialog and submits
+ *    `targetType: "COMMENT"`; the viewer's own comment and guests get none,
+ *  - the owner gate ALSO matches on the viewer id, because surfaces without a
+ *    profile join (group feed / discussion) map `authorUsername` to the raw
+ *    author id — otherwise the viewer's own comment would offer "Báo cáo",
+ *  - `canReportComments={false}` (threads outside the community module) drops
+ *    the built-in report entry entirely.
  *
  * `t` echoes the key so assertions key off message ids.
  */
@@ -67,6 +75,48 @@ vi.mock("@/components/reuseable/MarkdownContent", () => ({
 
 vi.mock("@/components/reuseable/RichCommentEditor", () => ({
     RichCommentEditor: () => <div data-testid="composer" />,
+}))
+
+/** Mutable session flag + the shared report mutation, shared with the factories. */
+const session = vi.hoisted(() => ({ authenticated: true }))
+const submitReport = vi.hoisted(() => vi.fn())
+
+vi.mock("@/hooks/useRequireAuth", () => ({
+    useRequireAuth: () => ({
+        authenticated: session.authenticated,
+        requireAuth: () => session.authenticated,
+        guard: (action: (...args: Array<unknown>) => void) => action,
+    }),
+}))
+
+vi.mock("@/redux/hooks", () => ({
+    // no session user in the store → the `currentUsername` prop is the only viewer
+    useAppSelector: (selector: (state: { user: { user: null } }) => unknown) =>
+        selector({ user: { user: null } }),
+}))
+
+vi.mock(
+    "@/components/features/community/CommunityPostDetail/hooks/useMutateReportContentSwr",
+    () => ({ useMutateReportContentSwr: () => submitReport }),
+)
+
+vi.mock("@/components/reuseable/PostEngagementBar/ReportDialog", () => ({
+    ReportDialog: ({
+        isOpen,
+        onSubmit,
+    }: {
+        isOpen: boolean
+        onSubmit: (reasonCode: string, detail?: string) => Promise<boolean>
+    }) =>
+        isOpen ? (
+            <button
+                type="button"
+                data-testid="report-dialog"
+                onClick={() => void onSubmit("SPAM", "spam quảng cáo")}
+            >
+                report
+            </button>
+        ) : null,
 }))
 
 vi.mock("@/components/reuseable/PostEngagementBar/ConfirmDialog", () => ({
@@ -185,5 +235,114 @@ describe("PostCommentThread — comment owner gate", () => {
         fireEvent.click(screen.getByText("engagement.delete"))
         fireEvent.click(screen.getByTestId("confirm-delete"))
         expect(onDeleteComment).toHaveBeenCalledWith("c-2")
+    })
+})
+
+describe("PostCommentThread — report a comment", () => {
+    beforeEach(() => {
+        session.authenticated = true
+        submitReport.mockReset().mockResolvedValue(true)
+    })
+
+    it("offers report on other members' comments and replies, never on the viewer's own", () => {
+        renderThread({ currentUsername: "khoa" })
+
+        // "c-1" (Minh) + "r-1" (Lan) — "c-2" is the viewer's own comment
+        expect(screen.getAllByText("engagement.report")).toHaveLength(2)
+    })
+
+    it("hides report on the viewer's own comment", () => {
+        renderThread({
+            currentUsername: "khoa",
+            comments: [
+                {
+                    id: "c-2",
+                    author: "Bạn",
+                    authorUsername: "khoa",
+                    text: "Mình thử rồi, nhanh hơn hẳn.",
+                    timeLabel: "30 phút",
+                },
+            ],
+        })
+
+        expect(screen.queryByText("engagement.report")).toBeNull()
+    })
+
+    it("hides report from guests", () => {
+        session.authenticated = false
+        renderThread()
+
+        expect(screen.queryByText("engagement.report")).toBeNull()
+    })
+
+    it("opens the dialog and reports the comment as targetType COMMENT", async () => {
+        renderThread({ currentUsername: "khoa" })
+
+        // dialog stays closed until the row action is pressed
+        expect(screen.queryByTestId("report-dialog")).toBeNull()
+        fireEvent.click(screen.getAllByText("engagement.report")[0])
+
+        const dialogs = screen.getAllByTestId("report-dialog")
+        expect(dialogs).toHaveLength(1)
+        fireEvent.click(dialogs[0])
+
+        expect(submitReport).toHaveBeenCalledWith("COMMENT", "c-1", "SPAM", "spam quảng cáo")
+    })
+
+    it("lets the surface override the report submission", () => {
+        const onReportComment = vi.fn().mockResolvedValue(true)
+        renderThread({ currentUsername: "khoa", onReportComment })
+
+        fireEvent.click(screen.getAllByText("engagement.report")[0])
+        fireEvent.click(screen.getByTestId("report-dialog"))
+
+        expect(onReportComment).toHaveBeenCalledWith("c-1", "SPAM", "spam quảng cáo")
+        expect(submitReport).not.toHaveBeenCalled()
+    })
+
+    it("hides report on the viewer's OWN comment when the surface maps author to the raw id", () => {
+        // group feed / discussion: no profile join → `authorUsername` IS the author id
+        renderThread({
+            currentUserId: "11111111-2222-3333-4444-555555555555",
+            comments: [
+                {
+                    id: "c-9",
+                    author: "11111111-2222-3333-4444-555555555555",
+                    authorUsername: "11111111-2222-3333-4444-555555555555",
+                    text: "Bài của mình.",
+                    timeLabel: "5 phút",
+                    replies: [
+                        {
+                            id: "r-9",
+                            author: "99999999-8888-7777-6666-555555555555",
+                            authorUsername: "99999999-8888-7777-6666-555555555555",
+                            text: "Của người khác.",
+                            timeLabel: "1 phút",
+                        },
+                    ],
+                },
+            ],
+        })
+
+        // only the OTHER member's reply may be reported
+        expect(screen.getAllByText("engagement.report")).toHaveLength(1)
+    })
+
+    it("drops the built-in report entry for threads outside the community module", () => {
+        // group discussion comments live in their own table — a `targetType: "COMMENT"`
+        // report would carry an id the moderator cannot resolve
+        renderThread({ currentUsername: "khoa", canReportComments: false })
+
+        expect(screen.queryByText("engagement.report")).toBeNull()
+    })
+
+    it("still reports when the surface wired its own handler, opt-out or not", () => {
+        const onReportComment = vi.fn().mockResolvedValue(true)
+        renderThread({ currentUsername: "khoa", canReportComments: false, onReportComment })
+
+        fireEvent.click(screen.getAllByText("engagement.report")[0])
+        fireEvent.click(screen.getByTestId("report-dialog"))
+
+        expect(onReportComment).toHaveBeenCalledWith("c-1", "SPAM", "spam quảng cáo")
     })
 })

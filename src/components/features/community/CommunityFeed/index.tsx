@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useCallback, useEffect, useMemo, useState } from "react"
-import { Button, Skeleton, Typography } from "@heroui/react"
+import { Button, Skeleton, Typography, toast } from "@heroui/react"
 import { useLocale, useTranslations } from "next-intl"
 import { useAppSelector } from "@/redux/hooks"
 import { Link } from "@/i18n/navigation"
@@ -11,9 +11,15 @@ import { ThreadsPostRow } from "@/components/blocks/feed/ThreadsPostRow"
 import { PostMediaGrid } from "@/components/blocks/feed/PostMediaGrid"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { InfiniteScrollSentinel } from "@/components/blocks/async/InfiniteScrollSentinel"
-import { PostEngagementBar } from "@/components/reuseable/PostEngagementBar"
+import {
+    ConfirmDialog,
+    PostEngagementBar,
+    ReportDialog,
+    type ReportReasonCode,
+} from "@/components/reuseable/PostEngagementBar"
 import { PostCommentThread } from "@/components/reuseable/PostCommentThread"
 import { useCommunityComposerOverlayState } from "@/hooks/zustand/overlay/hooks"
+import { useRequireAuth } from "@/hooks/useRequireAuth"
 import {
     useQueryCommunityFeedSwr,
     type CommunityFeedTab,
@@ -27,6 +33,10 @@ import { CommunityFilterBar } from "../CommunityFilterBar"
 import { useQueryPostCommentsSwr } from "../hooks/useQueryPostDetailSwr"
 import { useMutateReactPostSwr } from "../hooks/useMutateReactPostSwr"
 import { useMutateCreatePostCommentSwr, type SubmitCommentInput } from "../hooks/useMutateCreatePostCommentSwr"
+import { useQueryPostMetaSwr } from "../CommunityPostDetail/hooks/useQueryPostMetaSwr"
+import { useMutateReportContentSwr } from "../CommunityPostDetail/hooks/useMutateReportContentSwr"
+import { PostEditDialog } from "../CommunityPostDetail/PostEditDialog"
+import { useMutateFeedPostOwnerActionsSwr } from "./hooks/useMutateFeedPostOwnerActionsSwr"
 
 /** Composer trigger row — avatar + ghost "Có gì mới?" prompt + Đăng button. */
 const ComposerTrigger = () => {
@@ -72,17 +82,37 @@ const FeedSkeleton = () => (
     </div>
 )
 
-/** One community feed row + its inline (lazy) comment thread. */
-const CommunityFeedRow = ({ post }: { post: CommunityPost }) => {
+/**
+ * One community feed row + its inline (lazy) comment thread, with the SAME ⋯
+ * overflow menu the detail page has: "Sửa"/"Xoá" for the author, "Báo cáo" for
+ * everyone else. Both dialogs and every write are the shared detail-page ones
+ * ({@link PostEditDialog} / {@link ConfirmDialog} / {@link ReportDialog} over
+ * {@link useMutateFeedPostOwnerActionsSwr}, which wraps the shared owner hook) —
+ * the feed adds only the row-level optimistic removal.
+ *
+ * Exported for unit tests: rendering ONE row pins the owner gate without
+ * standing up the whole paginated feed.
+ */
+export const CommunityFeedRow = ({ post }: { post: CommunityPost }) => {
     const t = useTranslations("communityHub")
     const locale = useLocale()
     const currentUser = useAppSelector((state) => state.user.user)
     const [expanded, setExpanded] = useState(false)
     const [hasOpened, setHasOpened] = useState(false)
+    const [isEditOpen, setEditOpen] = useState(false)
+    const [isDeleteOpen, setDeleteOpen] = useState(false)
+    const [isReportOpen, setReportOpen] = useState(false)
     const reactPost = useMutateReactPostSwr()
     const submitComment = useMutateCreatePostCommentSwr()
     const { openQuote } = useCommunityComposerOverlayState()
+    const { guard } = useRequireAuth()
+    const { deleteFeedPost, editFeedPost } = useMutateFeedPostOwnerActionsSwr()
+    const submitReport = useMutateReportContentSwr()
     const { post: detail, isLoading, error, mutate } = useQueryPostCommentsSwr(post.id, hasOpened)
+    // The feed row carries a truncated `snippet`, never the raw markdown, so the
+    // editor prefill needs the REST metadata — fetched only once "Sửa" is picked
+    // (a key per row would be one request per row on every feed page).
+    const { meta, error: metaError } = useQueryPostMetaSwr(isEditOpen ? post.id : "")
 
     const regionId = `post-comments-${post.id}`
     const postUrl =
@@ -106,6 +136,42 @@ const CommunityFeedRow = ({ post }: { post: CommunityPost }) => {
             return submitComment(input)
         },
         [post.id, locale, submitComment, currentUser],
+    )
+
+    /**
+     * Owner gate. The feed selection carries no author id, so the username the
+     * BE returns for the row is compared with the viewer's — the same fallback
+     * the detail page uses while its metadata request is in flight. Guests match
+     * nothing, and the server re-checks ownership on the write anyway (403).
+     */
+    const isOwner = Boolean(
+        currentUser?.username && post.authorUsername === currentUser.username,
+    )
+
+    // The metadata request backs the editor prefill; losing it would mean saving
+    // the truncated snippet over the real body, so the editor stays shut.
+    useEffect(() => {
+        if (isEditOpen && metaError) {
+            toast.danger(t("engagement.editLoadFailed"))
+            setEditOpen(false)
+        }
+    }, [isEditOpen, metaError, t])
+
+    /**
+     * Confirming closes the dialog straight away: the removal is optimistic, so
+     * the row (and this dialog with it) is gone before the DELETE resolves —
+     * a pending state would only ever flash. A failed write rolls the row back
+     * and the shared hook toasts the real reason.
+     */
+    const onConfirmDelete = useCallback(() => {
+        setDeleteOpen(false)
+        void deleteFeedPost(post.id)
+    }, [post.id, deleteFeedPost])
+
+    const onReportPost = useCallback(
+        (reasonCode: ReportReasonCode, detailText?: string) =>
+            submitReport("POST", post.id, reasonCode, detailText),
+        [post.id, submitReport],
     )
 
     return (
@@ -155,6 +221,10 @@ const CommunityFeedRow = ({ post }: { post: CommunityPost }) => {
                     commentsRegionId={regionId}
                     postUrl={postUrl}
                     shareTitle={post.title}
+                    isOwner={isOwner}
+                    onEdit={() => setEditOpen(true)}
+                    onDelete={() => setDeleteOpen(true)}
+                    onReport={guard(() => setReportOpen(true), "auth.context.generic")}
                     saveEntityType="post"
                     saveEntityId={post.id}
                     saveSource={{ kind: "community", label: post.author }}
@@ -172,6 +242,29 @@ const CommunityFeedRow = ({ post }: { post: CommunityPost }) => {
                     />
                 ) : null}
             </ThreadsPostRow>
+
+            {/* opens only once the raw title/body landed — see the metadata note above */}
+            <PostEditDialog
+                isOpen={isEditOpen && Boolean(meta)}
+                onClose={() => setEditOpen(false)}
+                title={meta?.title ?? post.title}
+                content={meta?.content ?? ""}
+                onSave={(input) => editFeedPost(post.id, input)}
+            />
+
+            <ConfirmDialog
+                isOpen={isDeleteOpen}
+                onClose={() => setDeleteOpen(false)}
+                onConfirm={onConfirmDelete}
+                title={t("engagement.deletePostTitle")}
+                description={t("engagement.deletePostConfirm")}
+            />
+
+            <ReportDialog
+                isOpen={isReportOpen}
+                onClose={() => setReportOpen(false)}
+                onSubmit={onReportPost}
+            />
         </div>
     )
 }
@@ -184,6 +277,9 @@ const CommunityFeedRow = ({ post }: { post: CommunityPost }) => {
  * uses the `ThreadsPostRow` anatomy (48px avatar column + content column) with
  * the shared engagement bar (zero counts suppressed) and inline push-down
  * comment expansion; a threadline connects the avatar to the expanded thread.
+ * Every row carries the SAME ⋯ owner menu as the post detail page (see
+ * {@link CommunityFeedRow}) — editing/deleting/reporting no longer requires
+ * opening the post first.
  *
  * Data is the real BE GraphQL `feed(tab, page, campus)`, or `communitySearch` while a keyword
  * / filter is set. BOTH are cursor-paginated with `useSWRInfinite`, so the list keeps loading

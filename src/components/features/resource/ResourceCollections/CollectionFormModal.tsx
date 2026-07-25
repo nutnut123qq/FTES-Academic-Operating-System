@@ -5,52 +5,74 @@ import { Button, Input, Label, Modal, TextField, Typography } from "@heroui/reac
 import { useTranslations } from "next-intl"
 import { resolveResourceErrorKey } from "../hooks/useQueryCollectionsSwr"
 
-/** Props for {@link CreateCollectionModal}. */
-export interface CreateCollectionModalProps {
+/** Props for {@link CollectionFormModal}. */
+export interface CollectionFormModalProps {
     /** Whether the modal is open. */
     isOpen: boolean
-    /** Close handler (backdrop, cancel, or after a successful create). */
+    /** `create` → `POST /collections`; `edit` → `PATCH /collections/{id}`. */
+    mode: "create" | "edit"
+    /** Close handler (backdrop, cancel, or after a successful submit). */
     onClose: () => void
     /**
-     * Persists the collection. Rejects on failure so the modal can keep the draft
+     * Persists the draft. Rejects on failure so the modal can keep what was typed
      * and show the mapped error message.
      */
-    onCreate: (input: { title: string; description?: string }) => Promise<unknown>
+    onSubmit: (input: { title: string; description?: string }) => Promise<unknown>
+    /** Current title, prefilled in `edit` mode. */
+    initialTitle?: string
+    /** Current description, prefilled in `edit` mode. */
+    initialDescription?: string
 }
 
 /**
- * "Tạo bộ sưu tập" form (§5) — name (required) + optional description. Submits to
- * the real `POST /api/v1/resources/collections` through the caller's optimistic
- * `create`; on failure the draft is kept and the API error is mapped to a friendly
- * line (403/404/429/401 → their own copy).
+ * The collection name/description form (§5), shared by BOTH writes so the two
+ * flows read identically: "Tạo bộ sưu tập" (`POST /api/v1/resources/collections`)
+ * and "Sửa bộ sưu tập" (`PATCH /api/v1/resources/collections/{id}`). The caller
+ * owns the optimistic list update; this modal only owns the draft, the pending
+ * state and the mapped error line (403/404/429/401 → their own copy).
+ *
+ * In `edit` mode the fields are re-seeded from `initialTitle`/`initialDescription`
+ * every time the modal opens, so re-opening on another row never shows the previous
+ * row's draft.
  */
-export const CreateCollectionModal = ({ isOpen, onClose, onCreate }: CreateCollectionModalProps) => {
+export const CollectionFormModal = ({
+    isOpen,
+    mode,
+    onClose,
+    onSubmit,
+    initialTitle = "",
+    initialDescription = "",
+}: CollectionFormModalProps) => {
     const t = useTranslations("resourceHub")
-    const [title, setTitle] = useState("")
-    const [description, setDescription] = useState("")
+    const [title, setTitle] = useState(initialTitle)
+    const [description, setDescription] = useState(initialDescription)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [errorKey, setErrorKey] = useState<string | null>(null)
 
-    // fresh draft every time the modal opens (a kept draft after a *successful*
-    // create would look like the create failed)
+    // fresh draft every time the modal opens: `create` starts blank, `edit` starts
+    // from the row being edited (a kept draft would look like the write failed)
     useEffect(() => {
         if (isOpen) {
             setErrorKey(null)
+            setTitle(initialTitle)
+            setDescription(initialDescription)
         }
-    }, [isOpen])
+    }, [initialDescription, initialTitle, isOpen])
 
     const canSubmit = title.trim() !== "" && !isSubmitting
 
-    const onSubmit = async () => {
+    const onSubmitPress = async () => {
         if (!canSubmit) {
             return
         }
         setIsSubmitting(true)
         setErrorKey(null)
         try {
-            await onCreate({ title, description })
-            setTitle("")
-            setDescription("")
+            await onSubmit({ title, description })
+            if (mode === "create") {
+                setTitle("")
+                setDescription("")
+            }
             onClose()
         } catch (error) {
             setErrorKey(resolveResourceErrorKey(error))
@@ -58,6 +80,10 @@ export const CreateCollectionModal = ({ isOpen, onClose, onCreate }: CreateColle
             setIsSubmitting(false)
         }
     }
+
+    const isCreate = mode === "create"
+    const pendingLabel = isCreate ? t("collections.creating") : t("collections.saving")
+    const submitLabel = isCreate ? t("collections.submitCreate") : t("collections.submitSave")
 
     return (
         <Modal
@@ -73,7 +99,7 @@ export const CreateCollectionModal = ({ isOpen, onClose, onCreate }: CreateColle
                     <Modal.Dialog className="w-full max-w-md">
                         <Modal.Header>
                             <Typography type="body" weight="bold">
-                                {t("collections.createTitle")}
+                                {isCreate ? t("collections.createTitle") : t("collections.editTitle")}
                             </Typography>
                         </Modal.Header>
                         <Modal.Body className="flex flex-col gap-4">
@@ -122,11 +148,9 @@ export const CreateCollectionModal = ({ isOpen, onClose, onCreate }: CreateColle
                             <Button
                                 variant="primary"
                                 isDisabled={!canSubmit}
-                                onPress={() => void onSubmit()}
+                                onPress={() => void onSubmitPress()}
                             >
-                                {isSubmitting
-                                    ? t("collections.creating")
-                                    : t("collections.submitCreate")}
+                                {isSubmitting ? pendingLabel : submitLabel}
                             </Button>
                         </Modal.Footer>
                     </Modal.Dialog>

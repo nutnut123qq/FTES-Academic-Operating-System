@@ -2,10 +2,14 @@
 
 import React, { useState } from "react"
 import { Button, Chip, Modal, Skeleton, Typography } from "@heroui/react"
-import { TrashIcon } from "@phosphor-icons/react"
+import { ArrowDownIcon, ArrowUpIcon, TrashIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import {
+    reorderCollectionItems,
+    type CollectionDetailResponse,
+} from "@/modules/api/rest/resource"
 import { useQueryCollectionDetailSwr } from "../hooks/useQueryCollectionDetailSwr"
 import { resolveResourceErrorKey } from "../hooks/useQueryCollectionsSwr"
 
@@ -39,8 +43,12 @@ const ItemsSkeleton = () => (
 /**
  * Collection detail (§5) opened by clicking a collection row: the real
  * `GET /api/v1/resources/collections/{id}` aggregate — each item links to
- * `/resources/{resourceId}` and can be removed (optimistic, rolled back on
- * failure).
+ * `/resources/{resourceId}`, can be removed, and can be moved up/down
+ * (`PATCH /collections/{id}/items/reorder`, which takes the FULL ordered resource-id
+ * list). Both writes are optimistic and roll back by re-fetching on failure.
+ *
+ * Up/down buttons instead of drag-and-drop: the BE only needs the resulting order,
+ * and a keyboard/touch-reachable pair of buttons costs a fraction of a DnD stack.
  */
 export const CollectionDetailModal = ({
     collectionId,
@@ -52,18 +60,65 @@ export const CollectionDetailModal = ({
     const { collection, items, isLoading, error, mutate, removeItem } =
         useQueryCollectionDetailSwr(collectionId)
     const [removingId, setRemovingId] = useState<string | null>(null)
-    const [removeErrorKey, setRemoveErrorKey] = useState<string | null>(null)
+    const [movingId, setMovingId] = useState<string | null>(null)
+    const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
     const onRemove = async (resourceId: string) => {
         setRemovingId(resourceId)
-        setRemoveErrorKey(null)
+        setErrorMessage(null)
         try {
             await removeItem(resourceId)
             onChanged?.()
         } catch (removeError) {
-            setRemoveErrorKey(resolveResourceErrorKey(removeError))
+            setErrorMessage(
+                `${t("collections.removeError")} ${t(`apiErrors.${resolveResourceErrorKey(removeError)}`)}`,
+            )
         } finally {
             setRemovingId(null)
+        }
+    }
+
+    /**
+     * Moves one item one slot up (`direction = -1`) or down (`+1`).
+     *
+     * @param index - Current position of the item in the rendered list.
+     * @param direction - `-1` up, `+1` down.
+     */
+    const onMove = async (index: number, direction: -1 | 1) => {
+        const target = index + direction
+        if (!collectionId || movingId || target < 0 || target >= items.length) {
+            return
+        }
+        const reordered = [...items]
+        const [moved] = reordered.splice(index, 1)
+        reordered.splice(target, 0, moved)
+        const orderedResourceIds = reordered.map((item) => item.resourceId)
+
+        setMovingId(moved.resourceId)
+        setErrorMessage(null)
+        // optimistic: the list re-renders in the new order (sortOrder re-numbered so
+        // a later re-fetch cannot disagree with what is on screen)
+        const applyOrder = (current: CollectionDetailResponse | undefined) => {
+            if (!current) {
+                return current
+            }
+            return {
+                ...current,
+                items: reordered.map((item, sortOrder) => ({ ...item, sortOrder })),
+            }
+        }
+        await mutate(applyOrder, { revalidate: false })
+        try {
+            await reorderCollectionItems(collectionId, { orderedResourceIds })
+            onChanged?.()
+        } catch (reorderError) {
+            // rollback: re-fetch so the server order comes back
+            await mutate()
+            setErrorMessage(
+                `${t("collections.reorderError")} ${t(`apiErrors.${resolveResourceErrorKey(reorderError)}`)}`,
+            )
+        } finally {
+            setMovingId(null)
         }
     }
 
@@ -72,7 +127,7 @@ export const CollectionDetailModal = ({
             isOpen={Boolean(collectionId)}
             onOpenChange={(open) => {
                 if (!open) {
-                    setRemoveErrorKey(null)
+                    setErrorMessage(null)
                     onClose()
                 }
             }}
@@ -109,7 +164,7 @@ export const CollectionDetailModal = ({
                                 }}
                             >
                                 <div className="flex flex-col gap-2">
-                                    {items.map((item) => (
+                                    {items.map((item, index) => (
                                         <div
                                             key={item.id}
                                             className="flex items-center gap-3 rounded-2xl border border-separator p-3"
@@ -135,6 +190,36 @@ export const CollectionDetailModal = ({
                                                 variant="tertiary"
                                                 size="sm"
                                                 isIconOnly
+                                                aria-label={t("collections.moveUp")}
+                                                isDisabled={index === 0 || movingId !== null}
+                                                onPress={() => void onMove(index, -1)}
+                                            >
+                                                <ArrowUpIcon
+                                                    aria-hidden
+                                                    focusable="false"
+                                                    className="size-4"
+                                                />
+                                            </Button>
+                                            <Button
+                                                variant="tertiary"
+                                                size="sm"
+                                                isIconOnly
+                                                aria-label={t("collections.moveDown")}
+                                                isDisabled={
+                                                    index === items.length - 1 || movingId !== null
+                                                }
+                                                onPress={() => void onMove(index, 1)}
+                                            >
+                                                <ArrowDownIcon
+                                                    aria-hidden
+                                                    focusable="false"
+                                                    className="size-4"
+                                                />
+                                            </Button>
+                                            <Button
+                                                variant="tertiary"
+                                                size="sm"
+                                                isIconOnly
                                                 aria-label={t("collections.removeItem")}
                                                 isDisabled={removingId === item.resourceId}
                                                 onPress={() => void onRemove(item.resourceId)}
@@ -149,9 +234,9 @@ export const CollectionDetailModal = ({
                                     ))}
                                 </div>
                             </AsyncContent>
-                            {removeErrorKey ? (
+                            {errorMessage ? (
                                 <div role="alert" className="text-xs text-danger">
-                                    {t("collections.removeError")} {t(`apiErrors.${removeErrorKey}`)}
+                                    {errorMessage}
                                 </div>
                             ) : null}
                         </Modal.Body>

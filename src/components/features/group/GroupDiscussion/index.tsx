@@ -77,6 +77,10 @@ const GroupDiscussionRow = ({ groupId, thread }: { groupId: string; thread: Grou
                         onSubmit={onSubmit}
                         onCollapse={onToggleComments}
                         stickyComposerOnMobile
+                        // discussion comments live in the GROUP module, not community —
+                        // the shared `targetType: "COMMENT"` report would carry an id no
+                        // moderator can resolve, so no report entry until the BE exposes one
+                        canReportComments={false}
                     />
                 </div>
             ) : null}

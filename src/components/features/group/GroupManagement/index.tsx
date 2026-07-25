@@ -8,6 +8,7 @@ import { useParams } from "next/navigation"
 import { decideJoinRequest } from "@/modules/api/rest/group"
 import { useRestWithToast } from "@/modules/toast/hooks"
 import { useAppSelector } from "@/redux/hooks"
+import { UserLink } from "@/components/features/identity"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { GroupIdentityFields } from "../GroupIdentityFields"
@@ -280,9 +281,32 @@ export const GroupManagement = () => {
                                     key={request.id}
                                     className="flex items-center gap-3 rounded-2xl border border-separator p-4"
                                 >
-                                    <Typography type="body-sm" weight="medium" className="min-w-0 flex-1" truncate>
-                                        {request.name}
-                                    </Typography>
+                                    {/*
+                                      Identity comes from the BE profile card on the request
+                                      (displayName/username/avatarUrl); `request.name` already
+                                      resolved the fallback chain down to the raw user id, and a
+                                      request with no username renders as plain text (UserLink
+                                      drops the profile link + hovercard when the handle is null).
+                                    */}
+                                    <div className="flex min-w-0 flex-1 flex-col gap-1">
+                                        <UserLink
+                                            username={request.username}
+                                            displayName={request.name}
+                                            avatar={request.avatarUrl}
+                                            seed={request.username ?? request.userId}
+                                            size="sm"
+                                            classNames={{ avatar: "size-9" }}
+                                        />
+                                        {request.message ? (
+                                            <Typography
+                                                type="body-xs"
+                                                color="muted"
+                                                className="line-clamp-2"
+                                            >
+                                                {request.message}
+                                            </Typography>
+                                        ) : null}
+                                    </div>
                                     <Button
                                         size="sm"
                                         variant="ghost"

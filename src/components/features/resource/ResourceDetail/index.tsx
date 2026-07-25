@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { Button, Chip, Skeleton, Typography, toast } from "@heroui/react"
-import { HeartIcon, ShareNetworkIcon, SparkleIcon } from "@phosphor-icons/react"
+import { FolderPlusIcon, HeartIcon, ShareNetworkIcon, SparkleIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
 import { SaveButton } from "@/components/blocks/buttons/SaveButton"
@@ -16,6 +16,7 @@ import { RestError } from "@/modules/api/rest/client"
 import { favoriteResource, getResourceDownloadUrl, unfavoriteResource } from "@/modules/api/rest/resource"
 import { useQueryResourceDetailSwr } from "../hooks/useQueryResourceDetailSwr"
 import { ResourceAiQa } from "../ResourceAiQa"
+import { AddToCollectionModal } from "./AddToCollectionModal"
 import { ResourceComments } from "./ResourceComments"
 
 /** Skeleton mirroring the detail header (title + meta chips + preview box). */
@@ -71,6 +72,8 @@ export const ResourceDetail = () => {
     const [liked, setLiked] = useState(false)
     const [isTogglingLike, setIsTogglingLike] = useState(false)
     const [isDownloading, setIsDownloading] = useState(false)
+    /** "Thêm vào bộ sưu tập" picker — only ever opened for a signed-in viewer. */
+    const [isCollectionPickerOpen, setCollectionPickerOpen] = useState(false)
 
     /** Only ask about a resource that exists AND has a file version to ground on. */
     const canAskAi = !!resource?.currentVersionId
@@ -145,6 +148,8 @@ export const ResourceDetail = () => {
     }, [isDownloading, resourceId, t])
 
     const onLikePress = guard(() => void toggleLike(), "auth.context.like")
+    // the picker lists the CALLER's own collections → guests get the sign-in modal
+    const onAddToCollectionPress = guard(() => setCollectionPickerOpen(true), "auth.context.save")
 
     return (
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-6">
@@ -187,6 +192,10 @@ export const ResourceDetail = () => {
                             {t("detail.share")}
                         </Button>
                         <SaveButton entityType="resource" entityId={resource.id} />
+                        <Button size="sm" variant="ghost" onPress={() => onAddToCollectionPress()}>
+                            <FolderPlusIcon aria-hidden focusable="false" className="size-4" />
+                            {t("detail.addToCollection")}
+                        </Button>
                         <Button
                             size="sm"
                             variant="secondary"
@@ -252,6 +261,12 @@ export const ResourceDetail = () => {
                             </div>
                         </AsyncContent>
                     </LabeledCard>
+
+                    <AddToCollectionModal
+                        resourceId={resource.id}
+                        isOpen={isCollectionPickerOpen}
+                        onClose={() => setCollectionPickerOpen(false)}
+                    />
                 </>
             ) : null}
         </div>

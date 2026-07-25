@@ -23,15 +23,27 @@ export interface EditPostInput {
     content: string
 }
 
+/** Caller-side options for {@link useMutatePostOwnerActionsSwr}'s `removePost`. */
+export interface RemovePostOptions {
+    /**
+     * Whether to leave the current route for `/community` after a successful
+     * delete. True for the DETAIL page (its route would only 404 now); callers
+     * deleting a row IN PLACE (feed rows, including `/community/following` and
+     * `/community/campus`) pass `false` so the viewer stays on their tab.
+     */
+    navigate?: boolean
+}
+
 /**
  * Author-only post writes: edit (`PATCH /community/posts/{id}`) and delete
  * (`DELETE /community/posts/{id}`).
  *
  * `editPost` patches the detail + metadata caches optimistically and rolls both
  * back on failure. `deletePost` optimistically drops the post from EVERY mounted
- * feed cache, then navigates back to `/community` — the detail route of a deleted
- * post would only 404. Both surface the real reason on failure (403 not the
- * author / 404 already gone / 429 rate limited) instead of a generic toast.
+ * feed cache, then — for the detail page only, see {@link RemovePostOptions} —
+ * navigates back to `/community`, whose route of a deleted post would only 404.
+ * Both surface the real reason on failure (403 not the author / 404 already gone
+ * / 429 rate limited) instead of a generic toast.
  */
 export const useMutatePostOwnerActionsSwr = () => {
     const t = useTranslations("communityHub")
@@ -87,7 +99,7 @@ export const useMutatePostOwnerActionsSwr = () => {
     )
 
     const removePost = useCallback(
-        async (postId: string): Promise<boolean> => {
+        async (postId: string, options: RemovePostOptions = {}): Promise<boolean> => {
             if (!requireAuth("auth.context.generic")) {
                 return false
             }
@@ -108,7 +120,9 @@ export const useMutatePostOwnerActionsSwr = () => {
             )
             await mutate(postDetailKey(postId), undefined, { revalidate: false })
             toast.success(t("engagement.postDeleted"))
-            router.replace("/community")
+            if (options.navigate ?? true) {
+                router.replace("/community")
+            }
             return true
         },
         [cache, mutate, requireAuth, router, t],

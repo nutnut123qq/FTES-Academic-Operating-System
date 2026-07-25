@@ -14,7 +14,15 @@ import { formatRelativeTime } from "@/components/features/community/hooks/relati
 /** A pending join request (§7). */
 export interface JoinRequest {
     id: string
-    /** Display name of the requester (falls back to the user id — no profile join). */
+    /** Internal user id of the requester (the key the decision write is scoped by). */
+    userId: string
+    /** URL-facing username — null while the BE profile join has no handle for the user. */
+    username: string | null
+    /** Preferred display name — null → the row falls back to the username, then the id. */
+    displayName: string | null
+    /** Avatar URL from the profile join; null when the user has none. */
+    avatarUrl: string | null
+    /** Resolved label for the row: displayName ?? username ?? userId (never blank). */
     name: string
     /** Optional message the requester attached to the request. */
     message: string
@@ -51,11 +59,47 @@ export const matchesGroupManageKey =
         return Array.isArray(key) && key[0] === base[0] && key[1] === base[1]
     }
 
-const toJoinRequest = (dto: GroupJoinRequest): JoinRequest => ({
-    id: dto.id,
-    name: dto.userId,
-    message: dto.message ?? "",
-})
+/**
+ * Shape the join-request DTO grew when the BE started attaching the requester's
+ * profile card (`GroupDtos.JoinRequestItemDto` → displayName/username/avatarUrl,
+ * batch-loaded by `GroupAuthorEnricher`). The shared REST type has not caught up
+ * yet, and a user with no profile row still gets nulls back, so every field is
+ * read DEFENSIVELY — same treatment as the member rows (`toGroupMemberRow`).
+ */
+type EnrichedGroupJoinRequest = GroupJoinRequest & {
+    displayName?: string | null
+    username?: string | null
+    avatarUrl?: string | null
+}
+
+/** Trims a possibly-missing string field down to `string | null` (blank → null). */
+const text = (value: unknown): string | null => {
+    if (typeof value !== "string") {
+        return null
+    }
+    const trimmed = value.trim()
+    return trimmed.length > 0 ? trimmed : null
+}
+
+/**
+ * Maps a (possibly enriched) join request onto the row shape. `name` is the
+ * resolved label — displayName wins, then the username, and finally the raw user
+ * id so an un-enriched request still renders something rather than an empty row.
+ */
+export const toJoinRequest = (dto: GroupJoinRequest): JoinRequest => {
+    const enriched = dto as EnrichedGroupJoinRequest
+    const username = text(enriched.username)
+    const displayName = text(enriched.displayName)
+    return {
+        id: dto.id,
+        userId: dto.userId,
+        username,
+        displayName,
+        avatarUrl: text(enriched.avatarUrl),
+        name: displayName ?? username ?? dto.userId,
+        message: dto.message ?? "",
+    }
+}
 
 const toPinnedPost = (dto: GroupPostSummary, locale: string): PinnedPost => ({
     id: dto.id,

@@ -5,13 +5,34 @@ import { Button, Skeleton, Spinner, Typography, cn } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
 import { useAppSelector } from "@/redux/hooks"
-import type { UserHovercardData } from "@/modules/types/user-hovercard"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 import { useQueryUserHovercardSwr } from "@/hooks/swr/api/graphql/queries"
-import { useMutateSetFollowSwr } from "@/hooks/swr/api/graphql/mutations"
+import { RestError } from "@/modules/api/rest/client"
 import { UserAvatar } from "@/components/reuseable/UserAvatar"
 import { UserHovercard } from "@/components/blocks/identity"
 import { pathConfig } from "@/resources/path"
+import { useMutateFollowUserSwr } from "./useMutateFollowUserSwr"
+
+/**
+ * Maps a failed hovercard load to its message key. A private profile (403) or a
+ * deleted/unknown handle (404) is a terminal answer — retrying cannot help — so
+ * the caller hides the retry button for those.
+ *
+ * @param error - the rejection thrown by the REST client.
+ */
+const hovercardErrorState = (error: unknown): { messageKey: string; retryable: boolean } => {
+    const status = error instanceof RestError ? error.status : 0
+    if (status === 403) {
+        return { messageKey: "hovercard.private", retryable: false }
+    }
+    if (status === 404) {
+        return { messageKey: "hovercard.notFound", retryable: false }
+    }
+    if (status === 429) {
+        return { messageKey: "hovercard.rateLimited", retryable: true }
+    }
+    return { messageKey: "hovercard.error", retryable: true }
+}
 
 /** Props for {@link UserLink}. */
 export interface UserLinkProps extends WithClassNames<{ avatar?: string; name?: string }> {
@@ -36,6 +57,13 @@ export interface UserLinkProps extends WithClassNames<{ avatar?: string; name?: 
  * linking to the user's public profile. Data owner (SWR + Redux + i18n) that
  * delegates all presentation to {@link UserHovercard} and {@link UserAvatar}.
  *
+ * The card is backed by the real public-profile REST read and the follow CTA by
+ * the real community follow API (see {@link useMutateFollowUserSwr}). Because the
+ * backend exposes no viewer-scoped "am I following this user" flag, the CTA
+ * starts in its neutral "Follow" state and only shows "Following" once the viewer
+ * toggles it here — the write is idempotent server-side, so a redundant follow is
+ * harmless.
+ *
  * @param props - {@link UserLinkProps}
  */
 export const UserLink = ({
@@ -51,20 +79,20 @@ export const UserLink = ({
 }: UserLinkProps) => {
     const t = useTranslations()
     const currentUser = useAppSelector((state) => state.user.user)
-    const authenticated = useAppSelector((state) => state.keycloak.authenticated)
 
     const [shouldFetch, setShouldFetch] = useState(false)
     const { data: profile, error, isLoading, mutate } = useQueryUserHovercardSwr(
         shouldFetch && username ? username : null,
     )
-    const { trigger: setFollow, isMutating: isFollowPending } = useMutateSetFollowSwr()
+    const { toggleFollow, isPending: isFollowPending } = useMutateFollowUserSwr()
 
     const display = (displayName || username || "").trim()
     const href = username ? pathConfig().profile(username).build() : undefined
     const isOwnProfile =
         Boolean(username) &&
         (currentUser?.username === username || currentUser?.id === profile?.id)
-    const showFollowButton = authenticated && profile && !isOwnProfile
+    const isFollowing = profile?.isFollowedByMe === true
+    const showFollowButton = Boolean(profile) && !isOwnProfile
 
     const handleOpenHovercard = useCallback(() => {
         if (!shouldFetch) {
@@ -72,29 +100,12 @@ export const UserLink = ({
         }
     }, [shouldFetch])
 
-    const handleFollowToggle = useCallback(async () => {
+    // Guests get the AuthenticationModal instead of a 401; the optimistic write +
+    // rollback lives in the mutation hook, keyed by username so all links sync.
+    const handleFollowToggle = useCallback(() => {
         if (!profile) return
-
-        const nextFollow = !profile.isFollowedByMe
-        const original: UserHovercardData = profile
-        const optimistic: UserHovercardData = {
-            ...original,
-            isFollowedByMe: nextFollow,
-            followerCount: Math.max(
-                0,
-                (original.followerCount ?? 0) + (nextFollow ? 1 : -1),
-            ),
-        }
-
-        // Write the optimistic follow state into the SWR cache keyed by username,
-        // so every <UserLink username="..."> for the same user re-renders in sync.
-        mutate(optimistic, false)
-        try {
-            await setFollow({ userId: original.id, follow: nextFollow })
-        } catch {
-            mutate(original, false)
-        }
-    }, [profile, mutate, setFollow])
+        void toggleFollow(profile)
+    }, [profile, toggleFollow])
 
     const nameNode = useMemo(
         () => (
@@ -141,6 +152,8 @@ export const UserLink = ({
         </span>
     )
 
+    const errorState = hovercardErrorState(error)
+
     const hovercardContent = isLoading ? (
         <div className="flex flex-col gap-3 p-4">
             <div className="flex items-center gap-3">
@@ -156,11 +169,13 @@ export const UserLink = ({
     ) : error || !profile ? (
         <div className="flex flex-col gap-3 p-4">
             <Typography type="body-sm" color="muted">
-                {t("hovercard.error")}
+                {t(errorState.messageKey)}
             </Typography>
-            <Button size="sm" variant="secondary" onPress={() => void mutate()}>
-                {t("hovercard.errorRetry")}
-            </Button>
+            {errorState.retryable ? (
+                <Button size="sm" variant="secondary" onPress={() => void mutate()}>
+                    {t("hovercard.errorRetry")}
+                </Button>
+            ) : null}
         </div>
     ) : (
         <div className="flex flex-col gap-3 p-4">
@@ -197,7 +212,7 @@ export const UserLink = ({
             {showFollowButton ? (
                 <Button
                     size="sm"
-                    variant={profile.isFollowedByMe ? "secondary" : "primary"}
+                    variant={isFollowing ? "secondary" : "primary"}
                     isPending={isFollowPending}
                     isDisabled={isFollowPending}
                     onPress={handleFollowToggle}
@@ -206,7 +221,7 @@ export const UserLink = ({
                     {({ isPending }) => (
                         <>
                             {isPending ? <Spinner color="current" size="sm" /> : null}
-                            {t(profile.isFollowedByMe ? "hovercard.unfollow" : "hovercard.follow")}
+                            {t(isFollowing ? "hovercard.unfollow" : "hovercard.follow")}
                         </>
                     )}
                 </Button>

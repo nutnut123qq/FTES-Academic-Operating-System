@@ -1,6 +1,9 @@
 "use client"
 
 import useSWR from "swr"
+import { useLocale, useTranslations } from "next-intl"
+import { restRequest } from "@/modules/api/rest/client"
+import type { FeedPage, PostResponse } from "@/modules/api/rest/community"
 import {
     getProfileFollowers,
     getProfileFollowing,
@@ -46,6 +49,13 @@ export interface MyCommunitySummary {
     following: Array<CommunityUser>
 }
 
+/**
+ * How many of the viewer's newest posts the Community tab lists. The same page also
+ * feeds the post/comment/reaction counters (the BE exposes no aggregate counter), so
+ * those are a LOWER BOUND over this window — see {@link toMyCommunitySummaryCounters}.
+ */
+const RECENT_POSTS_LIMIT = 5
+
 /** Adapts a BE follow entry into the community user-row stub. */
 const toCommunityUser = (entry: FollowEntry): CommunityUser => ({
     id: entry.userId,
@@ -54,16 +64,87 @@ const toCommunityUser = (entry: FollowEntry): CommunityUser => ({
     headline: `@${entry.username}`,
 })
 
+/** Locale date line for a post row; "" when the BE sent no / an unparseable timestamp. */
+const toDateLabel = (iso: string | undefined, locale: string): string => {
+    if (!iso) {
+        return ""
+    }
+    const date = new Date(iso)
+    if (Number.isNaN(date.getTime())) {
+        return ""
+    }
+    return date.toLocaleDateString(locale, { day: "2-digit", month: "2-digit", year: "numeric" })
+}
+
 /**
- * Loads the viewer's community summary from the real BE. Reputation comes from
- * the public-profile progress block; the follower/following lists come from the
- * follow list endpoints (best-effort — a private list degrades to empty). The BE
- * exposes no self "recent posts" or post/comment/reaction counters, so those
- * degrade to empty/zero (the tab renders empty states rather than fabricating).
+ * Maps a BE `PostResponse` (REST `GET /community/search`) onto the profile row contract.
+ * Community posts may legitimately have NO title (Threads-style body-only posts), so the
+ * row falls back to a short body excerpt and finally to a translated "untitled" label —
+ * never to an empty, unclickable-looking row.
  */
-const fetchMyCommunitySummary = async (): Promise<MyCommunitySummary> => {
+export const toMyCommunityPost = (
+    post: PostResponse,
+    locale: string,
+    untitledLabel: string,
+): MyCommunityPost => ({
+    id: post.id,
+    title: post.title?.trim() || post.content?.trim().slice(0, 80) || untitledLabel,
+    dateLabel: toDateLabel(post.createdAt, locale),
+    likeCount: post.likeCount ?? 0,
+    commentCount: post.commentCount ?? 0,
+})
+
+/**
+ * Derives the reputation counters from the viewer's most recent posts.
+ *
+ * The community module exposes no aggregate "my posts / my comments / my reactions"
+ * endpoint, so these are counted over the {@link RECENT_POSTS_LIMIT} window returned by
+ * `GET /community/search?author=<me>`: `posts` = rows in the window, `comments` /
+ * `reactions` = comments and likes RECEIVED on them. When the window is full the numbers
+ * are a lower bound, not a lifetime total — do not present them as exact totals.
+ */
+export const toMyCommunitySummaryCounters = (
+    posts: Array<PostResponse>,
+): { posts: number; comments: number; reactions: number } => ({
+    posts: posts.length,
+    comments: posts.reduce((total, post) => total + (post.commentCount ?? 0), 0),
+    reactions: posts.reduce((total, post) => total + (post.likeCount ?? 0), 0),
+})
+
+/**
+ * The viewer's newest community posts, from the REST parity of `communitySearch`
+ * (`GET /api/v1/community/search?author=<userId>&limit=`, `PostController#search`).
+ * Best-effort: any failure (403/404/429/offline) degrades to an empty page so the whole
+ * Community tab still renders its other blocks instead of erroring out.
+ */
+const fetchMyRecentPosts = async (userId: string): Promise<Array<PostResponse>> => {
+    try {
+        const page = await restRequest<FeedPage<PostResponse>>({
+            method: "GET",
+            url: "/community/search",
+            params: { author: userId, limit: RECENT_POSTS_LIMIT },
+            authenticated: true,
+        })
+        return page?.items ?? []
+    } catch {
+        return []
+    }
+}
+
+/**
+ * Loads the viewer's community summary from the real BE. Reputation score comes from the
+ * public-profile progress block; the follower/following lists come from the follow list
+ * endpoints; the recent posts + post/comment/reaction counters come from the community
+ * search endpoint filtered to the viewer (`author=<userId>`). Every secondary call is
+ * best-effort — a private list or a community outage degrades that block to empty rather
+ * than failing the tab.
+ */
+const fetchMyCommunitySummary = async (
+    locale: string,
+    untitledLabel: string,
+): Promise<MyCommunitySummary> => {
     const me = await getSelfProfile()
-    const [publicProfile, followers, following] = await Promise.all([
+    const [publicProfile, followers, following, myPosts] = await Promise.all([
         getPublicProfile(me.username).catch(() => null),
         getProfileFollowers(me.username)
             .then((page) => page.items)
@@ -71,27 +152,32 @@ const fetchMyCommunitySummary = async (): Promise<MyCommunitySummary> => {
         getProfileFollowing(me.username)
             .then((page) => page.items)
             .catch(() => [] as Array<FollowEntry>),
+        fetchMyRecentPosts(me.userId),
     ])
+    const counters = toMyCommunitySummaryCounters(myPosts)
     return {
         reputation: {
             score: publicProfile?.progress?.reputation ?? 0,
-            // BE exposes no post/comment/reaction counters for the self profile.
-            posts: 0,
-            comments: 0,
-            reactions: 0,
+            ...counters,
         },
-        // BE exposes no self "recent posts" feed on the profile module.
-        recentPosts: [],
+        recentPosts: myPosts.map((post) => toMyCommunityPost(post, locale, untitledLabel)),
         followers: followers.map(toCommunityUser),
         following: following.map(toCommunityUser),
     }
 }
 
-/** Loads the viewer's community summary from the real BE. */
+/**
+ * Loads the viewer's community summary from the real BE. The locale is part of the SWR key
+ * because the post rows carry a locale-formatted date line.
+ */
 export const useQueryMyCommunitySummarySwr = () => {
+    const locale = useLocale()
+    const t = useTranslations("profile.community.recentPosts")
+    const untitledLabel = t("untitled")
+
     const { data, isLoading, error, mutate } = useSWR(
-        ["my-community-summary"],
-        fetchMyCommunitySummary,
+        ["my-community-summary", locale],
+        () => fetchMyCommunitySummary(locale, untitledLabel),
     )
     return { data, isLoading, error, mutate }
 }

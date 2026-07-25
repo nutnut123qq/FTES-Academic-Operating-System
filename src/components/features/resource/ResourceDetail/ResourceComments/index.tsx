@@ -143,6 +143,14 @@ const CommentNode = ({
                     </Typography>
                 </div>
 
+                {/*
+                  BE GAP — no comment-like endpoint exists on C-4 (`InteractionController`
+                  ships rate/comment/bookmark/favorite only, and there is no
+                  `resource_comment_likes` store), so the heart affordance is NOT rendered:
+                  a toggle that cannot persist would lie to the reader on reload. The
+                  `resourceHub.comments.{like,unlike,likeCount}` copy is kept so the button
+                  can be restored the day `POST /resources/comments/{id}/like` lands.
+                */}
                 {!isDeleted ? (
                     <div className="flex items-center gap-3">
                         {!isReply && onReply ? (
@@ -192,7 +200,8 @@ const ResourceCommentsSkeleton = () => (
  * /api/v1/resources/comments/{commentId}`). Top-level comments each carry one
  * level of nested replies; a soft-deleted comment renders as a greyed tombstone
  * with its replies preserved. Owner-only delete, a per-thread reply composer, and
- * page/size pagination. Guests are gated into the auth modal on submit. Mirrors
+ * page/size pagination. Writes are optimistic and roll back on failure (the write hooks
+ * own the cache patching). Guests are gated into the auth modal on submit. Mirrors
  * the course `LessonComments` real-`CommentView` pattern (author shown from
  * `userId` as "you"/"member" — the C-4 view carries no author card). Free-form
  * discussion only; star rating lives on `/resources/[resourceId]/reviews`.
@@ -223,42 +232,45 @@ export const ResourceComments = () => {
         [requireAuthBase, viewer],
     )
 
-    const revalidate = () => {
-        void commentsSwr.mutate()
-    }
-
     const submitComment = useCallback(
         async (content: string, parentId?: string): Promise<boolean> => {
             if (!requireAuth()) {
                 return false
             }
             try {
-                await create.trigger({ resourceId, request: { parentId, content } })
+                // The hook inserts the row optimistically, swaps in the server's (real id,
+                // server timestamp) and rolls the page back if the write fails.
+                await create.submit({
+                    resourceId,
+                    page,
+                    request: { parentId, content },
+                    viewerId,
+                })
                 if (parentId) {
                     setReplyingTo(null)
                 } else {
+                    // A new root belongs on page 1 (BE lists roots newest-first); the page the
+                    // optimistic row was inserted into has already been revalidated by the hook.
                     setPage(1)
                 }
-                revalidate()
                 return true
             } catch {
                 toast.danger(t("submitError"))
                 return false
             }
         },
-        [requireAuth, create, resourceId, t],
+        [requireAuth, create, resourceId, page, viewerId, t],
     )
 
     const onDelete = useCallback(
         async (commentId: string) => {
             try {
-                await remove.trigger(commentId)
-                revalidate()
+                await remove.remove({ commentId, resourceId, page })
             } catch {
                 toast.danger(t("deleteError"))
             }
         },
-        [remove, t],
+        [remove, resourceId, page, t],
     )
 
     const onRequestReply = useCallback(

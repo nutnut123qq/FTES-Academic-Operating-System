@@ -1,16 +1,16 @@
 "use client"
 
 import React, { useState } from "react"
-import { Button, Typography } from "@heroui/react"
-import { ArrowLeftIcon, SparkleIcon } from "@phosphor-icons/react"
+import { Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
-import { EmptyContent } from "@/components/blocks/async/EmptyContent"
+import { useRouter } from "@/i18n/navigation"
 import {
     useQuerySubjectPracticeSwr,
     type PracticeModuleKey,
 } from "../hooks/useQuerySubjectPracticeSwr"
 import { PracticeHub } from "./PracticeHub"
+import { PracticeAiHandoff } from "./PracticeAiHandoff"
 import { CodingChallengeList } from "./CodingChallengeList"
 import { PracticeFlashcards } from "./PracticeFlashcards"
 import { PracticeLeaderboard } from "./PracticeLeaderboard"
@@ -20,53 +20,62 @@ type PracticeView = "hub" | PracticeModuleKey
 
 /**
  * Practice tab (§3 → §9 checklist). A practice HUB whose module cards open their own
- * in-panel sub-view (view-state navigation — no dead buttons). Three modules are
- * built out: Coding (a LeetCode-style problem bank — {@link CodingChallengeList} —
- * with filters + a problem detail/attempt surface), Flashcards (a compact StarCI
- * flashcard reviewer — {@link PracticeFlashcards}) and Leaderboard (a compact port
- * of StarCI's leaderboard — {@link PracticeLeaderboard}). Quiz stays a "coming soon"
- * placeholder — StarCI has no quiz feature to port. Mock data via the subject hooks.
+ * in-panel sub-view (view-state navigation — no dead buttons).
+ *
+ * - **Coding** — the real challenge bank ({@link CodingChallengeList}: `GET /challenges`
+ *   + run/submit against `/ai/coding/*` and `/challenges/{id}/submissions`).
+ * - **Flashcards** — the SM-2 reviewer; the BE ships no curated per-subject deck yet, so
+ *   its empty state hands over to the AI Flashcards generator.
+ * - **Leaderboard** — the subject leaderboard.
+ * - **Quiz** — no BE quiz bank exists; the card opens a handoff to the AI Quiz tool
+ *   instead of a dead "coming soon".
  */
 export const SubjectPractice = () => {
     const t = useTranslations("subjects")
+    const router = useRouter()
     const { subjectId } = useParams<{ subjectId: string }>()
     const { modules } = useQuerySubjectPracticeSwr(subjectId)
     const [view, setView] = useState<PracticeView>("hub")
+
+    const backToHub = () => setView("hub")
+    /** The subject's AI tools tab hosts the AI Quiz / AI Flashcards generators. */
+    const openAiTools = () => router.push(`/subjects/${subjectId}/ai`)
 
     // the coding bank owns its whole panel (list + detail)
     if (view === "coding") {
         return (
             <div className="p-6">
-                <CodingChallengeList subjectId={subjectId} onBack={() => setView("hub")} />
+                <CodingChallengeList subjectId={subjectId} onBack={backToHub} />
             </div>
         )
     }
 
-    // flashcards — a compact StarCI flashcard reviewer (owns its whole panel)
+    // flashcards — SM-2 reviewer; empty deck hands over to the AI generator
     if (view === "flashcards") {
-        return <PracticeFlashcards subjectId={subjectId} onBack={() => setView("hub")} />
-    }
-
-    // leaderboard — a compact StarCI leaderboard (podium + ranked list + XP bars)
-    if (view === "leaderboard") {
-        return <PracticeLeaderboard subjectId={subjectId} onBack={() => setView("hub")} />
-    }
-
-    // quiz — StarCI has NO quiz feature to port, so it stays a "coming soon"
-    // placeholder (clickable, not dead)
-    if (view !== "hub") {
         return (
-            <div className="flex flex-col gap-4 p-6">
-                <Button size="sm" variant="tertiary" className="self-start" onPress={() => setView("hub")}>
-                    <ArrowLeftIcon aria-hidden focusable="false" className="size-4" />
-                    {t("practice.backToHub")}
-                </Button>
-                <EmptyContent
-                    icon={<SparkleIcon aria-hidden focusable="false" className="size-8 text-muted" />}
-                    title={t(`practice.modules.${view}.title`)}
-                    description={t("practice.comingSoon")}
-                />
-            </div>
+            <PracticeFlashcards
+                subjectId={subjectId}
+                onBack={backToHub}
+                onOpenAiTools={openAiTools}
+            />
+        )
+    }
+
+    // leaderboard — a compact leaderboard (podium + ranked list + XP bars)
+    if (view === "leaderboard") {
+        return <PracticeLeaderboard subjectId={subjectId} onBack={backToHub} />
+    }
+
+    // quiz — the BE has no quiz bank (deferred); hand over to the AI Quiz tool
+    if (view === "quiz") {
+        return (
+            <PracticeAiHandoff
+                title={t("practice.modules.quiz.title")}
+                description={t("practice.quizHandoff.description")}
+                ctaLabel={t("practice.quizHandoff.cta")}
+                onOpenAiTools={openAiTools}
+                onBack={backToHub}
+            />
         )
     }
 

@@ -2062,7 +2062,8 @@
       },
       "recentPosts": {
         "title": "Bài viết gần đây",
-        "engagement": "{likes} thích · {comments} bình luận"
+        "engagement": "{likes} thích · {comments} bình luận",
+        "untitled": "Bài viết chưa có tiêu đề"
       },
       "empty": {
         "title": "Bạn chưa đăng bài viết nào.",
@@ -2495,7 +2496,11 @@
       "search": "Đăng nhập để tìm kiếm nội dung học tập",
       "explore": "Đăng nhập để dùng trợ lý AI và gợi ý cá nhân hoá",
       "join": "Đăng nhập để tham gia nhóm",
-      "vote": "Đăng nhập để bình chọn"
+      "vote": "Đăng nhập để bình chọn",
+      "aiQa": "Đăng nhập để hỏi AI về tài liệu",
+      "rate": "Đăng nhập để đánh giá tài nguyên",
+      "uploadResource": "Đăng nhập để đăng tài liệu",
+      "follow": "Đăng nhập để theo dõi người dùng"
     }
   },
   "priceTag": {
@@ -4942,7 +4947,8 @@
         "easy": "Dễ",
         "medium": "Vừa",
         "hard": "Khó"
-      }
+      },
+      "viewCourseNameAria": "Xem khóa học {name}"
     },
     "resources": {
       "title": "Tài nguyên",
@@ -4958,10 +4964,20 @@
         "pe": "PE",
         "fe": "FE",
         "source": "Source code",
-        "notes": "Ghi chú"
+        "notes": "Ghi chú",
+        "book": "Sách",
+        "assignment": "Bài tập",
+        "templates": "Biểu mẫu"
       },
       "loadError": "Không tải được tài nguyên.",
-      "retry": "Thử lại"
+      "retry": "Thử lại",
+      "askAi": "Hỏi AI về tài liệu này",
+      "downloads": "{count} lượt tải",
+      "ratingLabel": "{rating}/5 · {count} đánh giá",
+      "downloadError": "Không tạo được liên kết tải xuống. Vui lòng thử lại.",
+      "downloadForbidden": "Bạn không có quyền tải tài liệu này.",
+      "downloadNotFound": "Tài liệu không tồn tại hoặc đã bị gỡ.",
+      "downloadRateLimited": "Bạn tải quá nhanh. Thử lại sau ít phút."
     },
     "practice": {
       "title": "Luyện tập",
@@ -5025,7 +5041,65 @@
         },
         "filters": {
           "allDifficulties": "Mọi độ khó",
-          "allStatuses": "Mọi trạng thái"
+          "allStatuses": "Mọi trạng thái",
+          "allTypes": "Mọi loại",
+          "allLifecycles": "Mọi trạng thái"
+        },
+        "types": {
+          "coding": "Lập trình",
+          "sql": "SQL",
+          "uiux": "UI/UX",
+          "ai": "AI",
+          "business": "Kinh doanh"
+        },
+        "modes": {
+          "individual": "Cá nhân",
+          "team": "Đội nhóm"
+        },
+        "lifecycle": {
+          "running": "Đang diễn ra",
+          "upcoming": "Sắp mở",
+          "closed": "Đã đóng"
+        },
+        "scopeNote": "Môn này chưa có thử thách riêng — đang hiển thị toàn bộ thử thách công khai của hệ thống.",
+        "window": "Diễn ra: {start} → {end}",
+        "maxSubmissions": "Tối đa {count} lượt nộp",
+        "problem": "Đề bài",
+        "noDescription": "Thử thách này chưa có mô tả đề bài.",
+        "samples": "Test case của bạn",
+        "samplesHint": "Hệ thống giấu test case thật của thử thách. Thêm test case của bạn để chạy thử trước khi nộp.",
+        "addSample": "Thêm test case",
+        "removeSample": "Xoá test case",
+        "grading": "Đang chạy và chấm, có thể mất tới vài chục giây…",
+        "notOpenHint": "Thử thách chưa mở (hoặc đã đóng) nên không nộp bài được — bạn vẫn có thể chạy thử code.",
+        "notExecuted": "Ngôn ngữ này không chạy được test case tự động — chỉ chấm tĩnh.",
+        "noCases": "Không có test case nào để đối chiếu — hệ thống chỉ chạy code.",
+        "stderr": "Lỗi",
+        "gradeTitle": "Kết quả chấm AI",
+        "gradeScore": "{score}/{max} điểm",
+        "criteria": "Tiêu chí",
+        "feedback": "Nhận xét",
+        "improvements": "Gợi ý cải thiện",
+        "gradedBy": "Chấm bởi {model}; model khác có thể cho điểm khác.",
+        "submissionTitle": "Bài nộp lần {attempt}",
+        "submissionStatus": "Trạng thái: {status}",
+        "submissionScore": "Điểm cuối: {score}",
+        "officialTitle": "Kết quả chấm của hệ thống",
+        "hiddenCase": "Test ẩn",
+        "pending": "Đang chấm",
+        "errors": {
+          "unauthorized": "Bạn cần đăng nhập để chạy hoặc nộp bài.",
+          "forbidden": "Tài khoản của bạn chưa có quyền dùng tính năng chấm code.",
+          "notFound": "Không tìm thấy thử thách này.",
+          "rateLimited": "Bạn thao tác quá nhanh — thử lại sau ít phút.",
+          "unavailable": "Dịch vụ chấm code đang tạm ngưng, thử lại sau.",
+          "executionFailed": "Không chạy được code (lỗi trình thực thi). Thử lại sau.",
+          "timeout": "Quá thời gian chờ chấm bài. Rút gọn code/test case rồi thử lại.",
+          "network": "Mất kết nối tới máy chủ. Kiểm tra mạng rồi thử lại.",
+          "generic": "Không thực hiện được. Thử lại sau.",
+          "maxSubmissions": "Bạn đã dùng hết số lượt nộp cho thử thách này.",
+          "notOpen": "Thử thách chưa mở hoặc đã đóng nộp bài.",
+          "courseLocked": "Thử thách thuộc khoá học — bạn cần ghi danh khoá đó trước."
         }
       },
       "flashcards": {
@@ -5060,7 +5134,16 @@
         "you": "Bạn",
         "empty": "Chưa có ai trên bảng xếp hạng",
         "error": "Không tải được bảng xếp hạng"
-      }
+      },
+      "quizHandoff": {
+        "description": "Hệ thống chưa có ngân hàng đề trắc nghiệm cho môn này. Trong lúc chờ, dùng AI Quiz để sinh đề từ tài liệu của môn.",
+        "cta": "Mở AI Quiz"
+      },
+      "flashcardsHandoff": {
+        "description": "Chưa có bộ thẻ do giảng viên soạn cho môn này. Dùng AI Flashcards để sinh thẻ từ tài liệu của môn.",
+        "cta": "Mở AI Flashcards"
+      },
+      "aiHandoffHint": "Công cụ AI nằm ở tab AI của môn học."
     },
     "community": {
       "title": "Thảo luận môn học",
@@ -5090,7 +5173,19 @@
       },
       "empty": "Chưa có thành viên nào.",
       "loadError": "Không tải được danh sách thành viên.",
-      "retry": "Thử lại"
+      "retry": "Thử lại",
+      "manage": "Quản lý thành viên",
+      "setRole": "Đặt làm {role}",
+      "ban": "Cấm thành viên",
+      "banConfirmTitle": "Cấm thành viên khỏi môn học?",
+      "banConfirmBody": "{name} sẽ bị gỡ khỏi workspace môn học và không thể tham gia lại cho tới khi được bỏ cấm.",
+      "banned": "Đã cấm thành viên.",
+      "banError": "Không cấm được thành viên. Vui lòng thử lại.",
+      "roleChanged": "Đã đổi vai trò thành {role}.",
+      "roleChangeError": "Không đổi được vai trò. Vui lòng thử lại.",
+      "actionForbidden": "Bạn không có quyền thực hiện thao tác này.",
+      "actionNotFound": "Không tìm thấy thành viên này nữa.",
+      "actionRateLimited": "Bạn thao tác quá nhanh. Thử lại sau ít phút."
     },
     "statistics": {
       "title": "Thống kê",
@@ -5162,7 +5257,22 @@
           "explain": "Giải thích khái niệm cốt lõi của môn {subject}",
           "plan": "Gợi ý lộ trình ôn tập môn {subject}",
           "example": "Cho một ví dụ minh họa"
-        }
+        },
+        "modelDefault": "Mô hình mặc định",
+        "modelFree": "Miễn phí",
+        "modelUnavailable": "Tạm ngưng",
+        "answeredBy": "Trả lời bởi {model}",
+        "loadingThread": "Đang tải cuộc trò chuyện...",
+        "modelNotAllowed": "Mô hình này không được phép dùng. Đã quay lại mô hình mặc định.",
+        "quotaHit": "Bạn đã dùng hết lượt hỏi AI. Vui lòng thử lại sau.",
+        "signInRequired": "Phiên đăng nhập đã hết hạn. Đăng nhập lại để tiếp tục.",
+        "forbidden": "Bạn chưa có quyền dùng gia sư AI cho nội dung này.",
+        "sessionBusy": "Cuộc trò chuyện đang trả lời câu hỏi trước. Đợi một chút rồi thử lại.",
+        "sessionGone": "Không tìm thấy cuộc trò chuyện. Hãy bắt đầu cuộc mới.",
+        "allSubjectsHint": "Danh sách gồm mọi cuộc trò chuyện với gia sư AI của bạn (máy chủ chưa lọc theo môn).",
+        "deleteError": "Không xóa được cuộc trò chuyện. Vui lòng thử lại.",
+        "clearHintAll": "Xóa toàn bộ cuộc trò chuyện với gia sư AI của bạn (máy chủ chưa hỗ trợ xóa riêng theo môn). Hành động không thể hoàn tác.",
+        "clearError": "Một số cuộc trò chuyện chưa xóa được. Vui lòng thử lại."
       },
       "summary": {
         "generate": "Tạo tóm tắt",
@@ -5172,7 +5282,9 @@
         "keyPoints": "Ý chính",
         "errorTitle": "Không tạo được tóm tắt",
         "emptyTitle": "Chưa có tài liệu để tóm tắt",
-        "emptyDesc": "Thêm tài nguyên ở tab Tài nguyên rồi quay lại."
+        "emptyDesc": "Thêm tài nguyên ở tab Tài nguyên rồi quay lại.",
+        "glossary": "Thuật ngữ",
+        "readMin": "Đọc khoảng {count} phút"
       },
       "quiz": {
         "generate": "Tạo quiz",
@@ -5183,7 +5295,9 @@
         "score": "Điểm: {score}/{total}",
         "errorTitle": "Không tạo được quiz",
         "emptyTitle": "Chưa có tài liệu để tạo quiz",
-        "emptyDesc": "Thêm tài nguyên ở tab Tài nguyên rồi quay lại."
+        "emptyDesc": "Thêm tài nguyên ở tab Tài nguyên rồi quay lại.",
+        "explanation": "Giải thích",
+        "unknownAnswer": "AI không chỉ rõ đáp án đúng cho câu này."
       },
       "flashcards": {
         "generate": "Tạo flashcards",
@@ -5231,6 +5345,38 @@
           "learning": "Đang học",
           "new": "Thẻ mới",
           "barAria": "Đã thuộc {mastered}, đang học {learning}, thẻ mới {newCount} trên tổng {total} thẻ"
+        },
+        "hint": "Gợi ý: {hint}",
+        "localOnlyHint": "Kết quả ôn tập chỉ lưu trong phiên này."
+      },
+      "sourcesErrorTitle": "Không tải được danh sách tài liệu",
+      "job": {
+        "working": "Đang xử lý...",
+        "running": "AI đang xử lý — thường mất vài giây.",
+        "stale": "Lâu hơn bình thường một chút.",
+        "refresh": "Kiểm tra lại",
+        "quota": "Bạn đã dùng hết lượt AI cho công cụ này. Vui lòng thử lại sau.",
+        "auth": "Phiên đăng nhập đã hết hạn. Đăng nhập lại để tiếp tục.",
+        "forbidden": "Bạn chưa có quyền dùng AI với tài liệu này.",
+        "notFound": "Không tìm thấy tài liệu đã chọn.",
+        "invalid": "Tài liệu đã chọn chưa dùng được cho AI.",
+        "failed": "AI xử lý thất bại. Vui lòng thử lại.",
+        "model": "Mô hình: {model}"
+      },
+      "ocr": {
+        "pick": "Chọn ảnh hoặc PDF",
+        "hint": "PDF, PNG, JPG hoặc WEBP, tối đa 10MB.",
+        "run": "Trích xuất văn bản",
+        "again": "Chọn tệp khác",
+        "resultTitle": "Văn bản trích xuất",
+        "copy": "Sao chép văn bản",
+        "copied": "Đã sao chép văn bản",
+        "pages": "{count} trang",
+        "emptyTitle": "Không trích được chữ nào",
+        "emptyDesc": "Thử lại với ảnh rõ hơn hoặc PDF có chữ.",
+        "fileError": {
+          "type": "Định dạng không hỗ trợ. Chỉ nhận PDF, PNG, JPG hoặc WEBP.",
+          "size": "Tệp quá lớn. Tối đa 10MB."
         }
       }
     },
@@ -5248,6 +5394,22 @@
       },
       "loadError": "Không tải được thông tin nghề nghiệp.",
       "retry": "Thử lại"
+    },
+    "membership": {
+      "join": "Tham gia môn học",
+      "joinHint": "Tham gia để mở khóa công cụ AI, tài liệu và thảo luận của môn này.",
+      "joinSuccess": "Đã tham gia môn học",
+      "joinFailed": "Không tham gia được môn học. Vui lòng thử lại.",
+      "leave": "Rời môn",
+      "leaveConfirmTitle": "Rời môn học này?",
+      "leaveConfirmBody": "Bạn sẽ mất quyền dùng công cụ AI và các nội dung dành cho thành viên của môn {name}. Có thể tham gia lại bất cứ lúc nào.",
+      "leaveCancel": "Ở lại",
+      "leaveConfirm": "Rời môn",
+      "leaveSuccess": "Đã rời môn học",
+      "leaveFailed": "Không rời được môn học. Vui lòng thử lại.",
+      "forbidden": "Bạn không có quyền thực hiện thao tác này.",
+      "notFound": "Không tìm thấy môn học này.",
+      "rateLimited": "Bạn thao tác hơi nhanh. Đợi một lát rồi thử lại nhé."
     }
   },
   "skillGraph": {
@@ -5548,13 +5710,33 @@
       "pe": "PE",
       "fe": "FE",
       "source": "Source code",
-      "notes": "Ghi chú"
+      "notes": "Ghi chú",
+      "book": "Sách",
+      "assignment": "Bài tập",
+      "templates": "Biểu mẫu",
+      "other": "Khác"
     },
     "collections": {
       "title": "Bộ sưu tập",
       "itemsCount": "{count} tài nguyên",
       "empty": "Chưa có bộ sưu tập nào.",
-      "loadError": "Không tải được bộ sưu tập."
+      "loadError": "Không tải được bộ sưu tập.",
+      "create": "Tạo bộ sưu tập",
+      "createTitle": "Tạo bộ sưu tập mới",
+      "nameLabel": "Tên bộ sưu tập",
+      "namePlaceholder": "VD: Ôn thi PE nhập môn",
+      "descriptionLabel": "Mô tả (không bắt buộc)",
+      "descriptionPlaceholder": "Bộ sưu tập này gồm những gì?",
+      "submitCreate": "Tạo",
+      "creating": "Đang tạo…",
+      "cancel": "Hủy",
+      "close": "Đóng",
+      "emptyItems": "Bộ sưu tập này chưa có tài nguyên nào.",
+      "loadDetailError": "Không tải được bộ sưu tập này.",
+      "removeItem": "Gỡ khỏi bộ sưu tập",
+      "removeError": "Không gỡ được tài nguyên.",
+      "signInTitle": "Đăng nhập để xem bộ sưu tập của bạn.",
+      "signIn": "Đăng nhập"
     },
     "detail": {
       "rating": "{rating}★",
@@ -5563,7 +5745,17 @@
       "like": "Thích",
       "share": "Chia sẻ",
       "shareCopied": "Đã sao chép liên kết",
-      "loadError": "Không tải được tài nguyên."
+      "loadError": "Không tải được tài nguyên.",
+      "ratingCount": "{count} đánh giá",
+      "noRating": "Chưa có đánh giá",
+      "related": "Tài liệu liên quan",
+      "relatedEmpty": "Chưa có tài liệu liên quan.",
+      "relatedLoadError": "Không tải được tài liệu liên quan.",
+      "downloadError": "Không tải xuống được. Vui lòng thử lại.",
+      "downloadDenied": "Bạn không có quyền tải tài liệu này.",
+      "downloadThrottled": "Bạn tải quá nhanh — thử lại sau ít phút.",
+      "likeError": "Không cập nhật được lượt thích. Vui lòng thử lại.",
+      "likeDenied": "Bạn không thể thích tài liệu này."
     },
     "comments": {
       "title": "Bình luận ({count})",
@@ -5601,7 +5793,80 @@
       "submit": "Tải lên",
       "titleLabel": "Tiêu đề",
       "typeLabel": "Loại tài nguyên",
-      "subjectLabel": "Mã môn"
+      "subjectLabel": "Mã môn",
+      "dropzoneHint": "Chấp nhận {extensions} · tối đa {maxSize}MB",
+      "clearFile": "Bỏ tệp đã chọn",
+      "fileError": {
+        "type": "Định dạng không hợp lệ cho loại tài nguyên đã chọn. Cho phép: {extensions}.",
+        "size": "Tệp quá lớn — tối đa {maxSize}MB cho loại này.",
+        "empty": "Tệp rỗng, hãy chọn tệp khác.",
+        "filename": "Tên tệp quá dài (tối đa 512 ký tự)."
+      },
+      "descriptionLabel": "Mô tả",
+      "descriptionField": "Mô tả ngắn về tài liệu (không bắt buộc)",
+      "subjectPlaceholder": "— Chọn môn —",
+      "subjectLoading": "Đang tải danh sách môn…",
+      "subjectLoadError": "Không tải được danh sách môn.",
+      "visibilityLabel": "Phạm vi hiển thị",
+      "visibility": {
+        "MEMBERS": "Thành viên",
+        "PUBLIC": "Công khai",
+        "PRIVATE": "Riêng tư"
+      },
+      "licenseLabel": "Giấy phép",
+      "license": {
+        "ALL_RIGHTS_RESERVED": "Giữ toàn bộ bản quyền",
+        "CC_BY": "CC BY",
+        "CC_BY_SA": "CC BY-SA",
+        "CC_BY_NC": "CC BY-NC",
+        "MIT": "MIT",
+        "APACHE_2": "Apache 2.0",
+        "PUBLIC_DOMAIN": "Phạm vi công cộng"
+      },
+      "type": {
+        "PDF": "PDF",
+        "SLIDE": "Slide",
+        "VIDEO": "Video",
+        "BOOK": "Sách / giáo trình",
+        "SOURCE_CODE": "Mã nguồn",
+        "ASSIGNMENT": "Bài tập / assignment",
+        "PE": "Đề PE",
+        "FE": "Đề FE",
+        "NOTES": "Ghi chú",
+        "TEMPLATES": "Biểu mẫu"
+      },
+      "steps": {
+        "hash": "Tính mã băm tệp",
+        "create": "Tạo bản ghi tài nguyên",
+        "uploadUrl": "Xin liên kết tải lên",
+        "put": "Tải tệp lên kho lưu trữ",
+        "complete": "Xác nhận tệp đã tải",
+        "submit": "Gửi duyệt"
+      },
+      "progressLabel": "Tiến độ đăng tài liệu",
+      "errorAtStep": "Dừng ở bước: {step}",
+      "retry": "Thử lại từ bước lỗi",
+      "error": {
+        "auth": "Phiên đăng nhập đã hết hạn — đăng nhập lại rồi thử lại.",
+        "forbidden": "Bạn không có quyền thực hiện bước này.",
+        "notFound": "Không tìm thấy tài nguyên (có thể đã bị xóa).",
+        "rateLimited": "Bạn xin liên kết tải lên quá nhiều lần. Chờ vài phút rồi thử lại.",
+        "tooLarge": "Tệp vượt quá giới hạn dung lượng cho loại tài nguyên này.",
+        "checksum": "Tệp trên kho lưu trữ không khớp dung lượng/mã băm — hãy tải lại.",
+        "invalidState": "Tài nguyên không ở trạng thái cho phép gửi duyệt.",
+        "validation": "Dữ liệu không hợp lệ — kiểm tra lại định dạng tệp và các trường đã nhập.",
+        "storage": "Không tải được tệp lên kho lưu trữ.",
+        "network": "Mất kết nối mạng. Kiểm tra đường truyền rồi thử lại.",
+        "server": "Máy chủ đang gặp sự cố. Thử lại sau ít phút.",
+        "generic": "Có lỗi xảy ra khi đăng tài liệu."
+      },
+      "success": {
+        "title": "Đã gửi tài liệu",
+        "pendingReview": "Tài liệu của bạn đang CHỜ DUYỆT. Sau khi kiểm duyệt viên phê duyệt, tài liệu sẽ xuất hiện trong kho tài nguyên.",
+        "viewResource": "Xem tài liệu",
+        "uploadAnother": "Đăng tài liệu khác",
+        "toast": "Đã gửi tài liệu, đang chờ duyệt."
+      }
     },
     "reviews": {
       "title": "Đánh giá",
@@ -5609,17 +5874,77 @@
       "submit": "Gửi đánh giá",
       "you": "Bạn",
       "empty": "Chưa có đánh giá nào — hãy là người đầu tiên!",
-      "loadError": "Không tải được đánh giá."
+      "loadError": "Không tải được đánh giá.",
+      "count": "{count} đánh giá",
+      "starShort": "{count}★",
+      "starLabel": "{count} sao",
+      "composerTitle": "Đánh giá của bạn",
+      "submitted": "Đã gửi đánh giá của bạn.",
+      "alreadyRated": "Bạn đã đánh giá tài nguyên này rồi — đánh giá đang lưu được giữ nguyên.",
+      "forbidden": "Bạn không có quyền đánh giá tài nguyên này.",
+      "notFound": "Tài nguyên không tồn tại hoặc đã bị gỡ.",
+      "rateLimited": "Bạn thao tác hơi nhanh — thử lại sau ít phút nhé.",
+      "submitError": "Không gửi được đánh giá. Thử lại nhé.",
+      "member": "Thành viên",
+      "prev": "Trước",
+      "next": "Sau",
+      "pageOf": "Trang {page}/{total}"
     },
     "recommended": {
       "title": "Gợi ý cho bạn",
       "empty": "Chưa có gợi ý nào.",
-      "loadError": "Không tải được gợi ý."
+      "loadError": "Không tải được gợi ý.",
+      "signInTitle": "Đăng nhập để nhận gợi ý dành riêng cho bạn.",
+      "signIn": "Đăng nhập",
+      "reasons": {
+        "default": "Gợi ý dành cho bạn",
+        "SAME_SUBJECT": "Cùng môn bạn đang học",
+        "SAME_SUBJECT_PARAM": "Cùng môn {subject} bạn đang học",
+        "TRENDING": "Đang được tải nhiều",
+        "SIMILAR_USERS": "Người học giống bạn đã dùng",
+        "SIMILAR_USERS_PARAM": "{count} người học giống bạn đã dùng",
+        "POPULAR": "Phổ biến trong kho tài nguyên"
+      }
     },
     "filterLabel": "Lọc theo loại",
     "hub": {
       "loadError": "Không tải được tài nguyên.",
-      "retry": "Thử lại"
+      "retry": "Thử lại",
+      "downloadError": "Không tải được tệp. Vui lòng thử lại.",
+      "downloadForbidden": "Bạn không có quyền tải tài nguyên này.",
+      "downloadNotFound": "Tài nguyên không còn tồn tại hoặc chưa có tệp để tải.",
+      "downloadRateLimited": "Bạn tải quá nhanh. Vui lòng thử lại sau ít phút."
+    },
+    "downloadsCount": "{count} lượt tải",
+    "aiQa": {
+      "title": "Hỏi AI về tài liệu này",
+      "hint": "Gợi ý câu hỏi",
+      "placeholder": "Hỏi về tài liệu này…",
+      "send": "Gửi",
+      "thinking": "Đang tìm câu trả lời…",
+      "error": "Xin lỗi, mình chưa trả lời được. Vui lòng thử lại.",
+      "quotaHit": "Bạn đã dùng hết lượt hỏi AI cho hôm nay.",
+      "modelNotAllowed": "Model này không được phép — đã chuyển về model mặc định.",
+      "accessDenied": "Bạn không có quyền hỏi AI về tài liệu này.",
+      "processing": "Đang xử lý tài liệu… Thử lại sau ít phút nhé.",
+      "retry": "Thử lại",
+      "citations": "Trích dẫn",
+      "answeredBy": "Trả lời bởi {model}",
+      "modelLabel": "Model trả lời",
+      "freeTag": "Miễn phí",
+      "unavailableTag": "Không khả dụng",
+      "suggestions": {
+        "summarize": "Tóm tắt tài liệu này",
+        "keyPoints": "Các ý chính là gì?",
+        "terms": "Giải thích các thuật ngữ quan trọng"
+      }
+    },
+    "apiErrors": {
+      "unauthorized": "Bạn cần đăng nhập lại để tiếp tục.",
+      "forbidden": "Bạn không có quyền với nội dung này.",
+      "notFound": "Nội dung không còn tồn tại.",
+      "rateLimited": "Bạn thao tác hơi nhanh, thử lại sau ít phút nhé.",
+      "generic": "Có lỗi xảy ra, thử lại nhé."
     }
   },
   "communityHub": {
@@ -5673,6 +5998,7 @@
       "replyingTo": "Đang trả lời {name}",
       "cancelReply": "Huỷ",
       "commentPlaceholder": "Viết bình luận…",
+      "replyPlaceholder": "Viết câu trả lời…",
       "commentSend": "Gửi",
       "commentFailed": "Không gửi được bình luận",
       "likeFailed": "Không cập nhật được lượt thích",
@@ -5718,7 +6044,50 @@
       "codeInline": "Code inline",
       "codeBlock": "Khối code",
       "mention": "Nhắc đến",
-      "mentionPlaceholder": "Tìm ngườidùng…"
+      "mentionPlaceholder": "Tìm ngườidùng…",
+      "moreActions": "Tuỳ chọn khác",
+      "edit": "Sửa",
+      "delete": "Xoá",
+      "report": "Báo cáo",
+      "cancel": "Huỷ",
+      "saveEdit": "Lưu",
+      "editComment": "Sửa bình luận",
+      "deleteCommentTitle": "Xoá bình luận?",
+      "deleteCommentConfirm": "Bình luận sẽ bị gỡ khỏi bài viết. Hành động này không hoàn tác được.",
+      "commentUpdateFailed": "Không lưu được bình luận. Vui lòng thử lại.",
+      "commentDeleteFailed": "Không xoá được bình luận. Vui lòng thử lại.",
+      "editPostTitle": "Sửa bài viết",
+      "editTitleLabel": "Tiêu đề",
+      "editContentLabel": "Nội dung (Markdown)",
+      "postUpdated": "Đã cập nhật bài viết.",
+      "postUpdateFailed": "Không cập nhật được bài viết. Vui lòng thử lại.",
+      "deletePostTitle": "Xoá bài viết?",
+      "deletePostConfirm": "Bài viết và toàn bộ bình luận sẽ bị gỡ. Hành động này không hoàn tác được.",
+      "postDeleted": "Đã xoá bài viết.",
+      "postDeleteFailed": "Không xoá được bài viết. Vui lòng thử lại.",
+      "reportTitle": "Báo cáo nội dung",
+      "reportDescription": "Chọn lý do báo cáo. Đội kiểm duyệt sẽ xem xét sớm nhất có thể.",
+      "reportReasonLabel": "Lý do",
+      "reportReasons": {
+        "SPAM": "Spam / quảng cáo",
+        "HARASSMENT": "Quấy rối, xúc phạm",
+        "NSFW": "Nội dung nhạy cảm",
+        "MISINFORMATION": "Thông tin sai lệch",
+        "OTHER": "Lý do khác"
+      },
+      "reportDetailLabel": "Mô tả thêm (không bắt buộc)",
+      "reportDetailPlaceholder": "Mô tả ngắn gọn vấn đề…",
+      "reportSubmit": "Gửi báo cáo",
+      "reportSent": "Đã gửi báo cáo. Cảm ơn bạn!",
+      "reportFailed": "Không gửi được báo cáo. Vui lòng thử lại.",
+      "reportDuplicate": "Bạn đã báo cáo nội dung này và báo cáo đang chờ xử lý.",
+      "rateLimited": "Bạn thao tác quá nhanh. Vui lòng thử lại sau ít phút.",
+      "forbidden": "Bạn không có quyền thực hiện thao tác này.",
+      "notFound": "Nội dung không còn tồn tại.",
+      "acceptAnswer": "Chấp nhận câu trả lời",
+      "acceptedAnswer": "Câu trả lời được chấp nhận",
+      "acceptAnswerDone": "Đã chọn câu trả lời được chấp nhận.",
+      "acceptAnswerFailed": "Không chọn được câu trả lời. Vui lòng thử lại."
     },
     "feed": {
       "likes": "{count} thích",
@@ -5799,7 +6168,11 @@
       "keep": "Giữ lại",
       "remove": "Gỡ bỏ",
       "error": "Không tải được hàng chờ kiểm duyệt. Vui lòng thử lại.",
-      "decisionFailed": "Không áp dụng được quyết định. Vui lòng thử lại."
+      "decisionFailed": "Không áp dụng được quyết định. Vui lòng thử lại.",
+      "escalate": "Chuyển cấp",
+      "escalated": "Đã chuyển cấp báo cáo.",
+      "escalateFailed": "Không chuyển cấp được báo cáo. Vui lòng thử lại.",
+      "openTarget": "Mở nội dung bị báo cáo"
     },
     "states": {
       "retry": "Thử lại"
@@ -5834,7 +6207,11 @@
     "join": {
       "action": "Tham gia",
       "joined": "Đã tham gia",
-      "pending": "Đang chờ duyệt"
+      "pending": "Đang chờ duyệt",
+      "leave": "Rời nhóm",
+      "leaveTitle": "Rời nhóm này?",
+      "leaveDescription": "Bạn sẽ mất quyền truy cập nội dung riêng của nhóm. Bạn có thể tham gia lại sau.",
+      "left": "Đã rời nhóm."
     },
     "discussion": {
       "replies": "{count} phản hồi",
@@ -5858,7 +6235,24 @@
       "join": "Tham gia",
       "leave": "Huỷ tham gia",
       "empty": "Chưa có sự kiện sắp tới.",
-      "error": "Không tải được sự kiện. Vui lòng thử lại."
+      "error": "Không tải được sự kiện. Vui lòng thử lại.",
+      "title": "Sự kiện nhóm",
+      "create": "Tạo sự kiện",
+      "titleField": "Tên sự kiện",
+      "descriptionField": "Mô tả sự kiện",
+      "locationField": "Địa điểm (không bắt buộc)",
+      "startsAtField": "Bắt đầu",
+      "endsAtField": "Kết thúc (không bắt buộc)",
+      "submit": "Tạo sự kiện",
+      "save": "Lưu",
+      "cancel": "Huỷ",
+      "created": "Đã tạo sự kiện.",
+      "updated": "Đã cập nhật sự kiện.",
+      "deleted": "Đã xoá sự kiện.",
+      "edit": "Sửa sự kiện",
+      "delete": "Xoá sự kiện",
+      "deleteConfirmTitle": "Xoá sự kiện này?",
+      "deleteConfirmBody": "Sự kiện và toàn bộ lượt đăng ký tham gia sẽ bị xoá."
     },
     "manage": {
       "title": "Quản lý nhóm",
@@ -5876,7 +6270,42 @@
       "pinned": "Bài ghim",
       "noPinned": "Chưa có bài ghim nào.",
       "unpin": "Bỏ ghim",
-      "error": "Không tải được dữ liệu quản lý. Vui lòng thử lại."
+      "error": "Không tải được dữ liệu quản lý. Vui lòng thử lại.",
+      "info": "Thông tin nhóm",
+      "infoLoading": "Đang tải thông tin nhóm…",
+      "nameField": "Tên nhóm",
+      "descriptionField": "Mô tả nhóm",
+      "joinPolicy": "Cách tham gia",
+      "visibility": "Chế độ hiển thị",
+      "joinPolicies": {
+        "OPEN": "Ai cũng tham gia được",
+        "APPROVAL": "Cần duyệt",
+        "INVITE_ONLY": "Chỉ theo lời mời"
+      },
+      "visibilities": {
+        "PUBLIC": "Công khai",
+        "PRIVATE": "Riêng tư"
+      },
+      "saveInfo": "Lưu thông tin",
+      "infoSaved": "Đã cập nhật thông tin nhóm.",
+      "cancel": "Huỷ",
+      "dangerZone": "Vùng nguy hiểm",
+      "transfer": "Chuyển quyền sở hữu",
+      "transferHint": "Chủ nhóm mới phải đang là Quản trị của nhóm. Sau khi chuyển, bạn trở thành Quản trị.",
+      "transferNoAdmins": "Nhóm chưa có Quản trị nào. Hãy nâng một thành viên lên Quản trị trước.",
+      "transferSelect": "Chọn chủ nhóm mới",
+      "transferAction": "Chuyển quyền",
+      "transferConfirmTitle": "Chuyển quyền sở hữu nhóm?",
+      "transferConfirmDescription": "{name} sẽ trở thành chủ nhóm và bạn bị hạ xuống Quản trị. Chỉ chủ nhóm mới có thể đảo ngược.",
+      "transferred": "Đã chuyển quyền sở hữu nhóm.",
+      "archive": "Lưu trữ nhóm",
+      "archiveHint": "Nhóm sẽ ngừng hoạt động: không đăng bài, không sự kiện, không nhận thành viên mới.",
+      "archivedAlready": "Nhóm đã được lưu trữ",
+      "archiveConfirmTitle": "Lưu trữ nhóm này?",
+      "archiveConfirmDescription": "Mọi hoạt động của nhóm sẽ dừng lại. Chỉ quản trị hệ thống mới khôi phục được.",
+      "archiveTypeName": "Nhập đúng tên nhóm \"{name}\" để xác nhận.",
+      "archiveConfirm": "Lưu trữ nhóm",
+      "archived": "Đã lưu trữ nhóm."
     },
     "create": {
       "title": "Tạo nhóm",
@@ -5906,7 +6335,22 @@
     "announcements": {
       "title": "Thông báo",
       "empty": "Chưa có thông báo nào.",
-      "error": "Không tải được thông báo. Vui lòng thử lại."
+      "error": "Không tải được thông báo. Vui lòng thử lại.",
+      "create": "Tạo thông báo",
+      "titleField": "Tiêu đề thông báo",
+      "contentField": "Nội dung thông báo",
+      "pinned": "Ghim lên đầu",
+      "pinnedBadge": "Đã ghim",
+      "post": "Đăng",
+      "save": "Lưu",
+      "cancel": "Huỷ",
+      "created": "Đã đăng thông báo.",
+      "updated": "Đã cập nhật thông báo.",
+      "deleted": "Đã xoá thông báo.",
+      "edit": "Sửa thông báo",
+      "delete": "Xoá thông báo",
+      "deleteConfirmTitle": "Xoá thông báo này?",
+      "deleteConfirmBody": "Thông báo sẽ bị xoá vĩnh viễn khỏi nhóm."
     },
     "identity": {
       "title": "Nhận diện nhóm",
@@ -5924,7 +6368,8 @@
       "saved": "Đã cập nhật ảnh nhóm.",
       "presignFailed": "Không tạo được liên kết tải lên. Vui lòng thử lại.",
       "uploadFailed": "Tải ảnh lên thất bại. Vui lòng thử lại.",
-      "verifyFailed": "Không xác nhận được ảnh đã tải lên. Vui lòng thử lại."
+      "verifyFailed": "Không xác nhận được ảnh đã tải lên. Vui lòng thử lại.",
+      "removeLocalOnly": "Gỡ ảnh chỉ bỏ ảnh vừa chọn; ảnh đã lưu chỉ thay được bằng cách tải ảnh mới lên."
     },
     "states": {
       "retry": "Thử lại"
@@ -5932,15 +6377,70 @@
     "feed": {
       "empty": "Chưa có bài viết nào trong nhóm. Hãy là người đầu tiên chia sẻ!",
       "error": "Không tải được bảng tin nhóm. Vui lòng thử lại.",
-      "pin": "Ghim bài viết"
+      "pin": "Ghim bài viết",
+      "composer": {
+        "titleField": "Tiêu đề bài viết",
+        "bodyField": "Chia sẻ điều gì đó với nhóm…",
+        "submit": "Đăng bài",
+        "created": "Đã đăng bài vào nhóm.",
+        "forbidden": "Bạn cần là thành viên của nhóm để đăng bài.",
+        "rateLimited": "Bạn đang đăng quá nhanh. Vui lòng thử lại sau.",
+        "failed": "Không đăng được bài. Vui lòng thử lại."
+      }
     },
     "members": {
       "empty": "Chưa có thành viên nào phù hợp.",
-      "error": "Không tải được danh sách thành viên. Vui lòng thử lại."
+      "error": "Không tải được danh sách thành viên. Vui lòng thử lại.",
+      "invite": "Mời thành viên",
+      "inviteTitle": "Mời thành viên vào nhóm",
+      "invitePlaceholder": "Tìm theo tên hoặc @username…",
+      "inviteHint": "Nhập tối thiểu 2 ký tự để tìm, hoặc dán ID người dùng.",
+      "inviteSearching": "Đang tìm…",
+      "inviteNoResults": "Không tìm thấy người dùng phù hợp.",
+      "inviteAction": "Mời",
+      "inviteById": "Mời theo ID đã dán",
+      "inviteClose": "Đóng",
+      "invited": "Đã gửi lời mời.",
+      "actions": "Tuỳ chọn thành viên",
+      "setRole": "Đặt làm {role}",
+      "remove": "Xoá khỏi nhóm",
+      "removeConfirmTitle": "Xoá thành viên khỏi nhóm?",
+      "removeConfirmDescription": "{name} sẽ mất quyền truy cập nội dung nhóm. Bạn có thể mời lại sau.",
+      "removeConfirm": "Xoá khỏi nhóm",
+      "removed": "Đã xoá thành viên khỏi nhóm.",
+      "roleUpdated": "Đã cập nhật vai trò.",
+      "you": "Bạn"
     },
     "groupsList": {
       "empty": "Chưa có nhóm nào. Hãy tạo nhóm đầu tiên!",
       "error": "Không tải được danh sách nhóm. Vui lòng thử lại."
+    },
+    "resources": {
+      "title": "Tài nguyên nhóm",
+      "empty": "Chưa có tài liệu nào được gắn vào nhóm.",
+      "error": "Không tải được tài nguyên nhóm. Vui lòng thử lại.",
+      "link": "Gắn tài liệu",
+      "idField": "ID hoặc liên kết tài liệu",
+      "idHint": "Dán liên kết /resources/… hoặc nhập ID tài liệu.",
+      "noteField": "Ghi chú (không bắt buộc)",
+      "submit": "Gắn",
+      "cancel": "Huỷ",
+      "linked": "Đã gắn tài liệu vào nhóm.",
+      "unlink": "Gỡ",
+      "unlinked": "Đã gỡ tài liệu khỏi nhóm.",
+      "unlinkConfirmTitle": "Gỡ tài liệu khỏi nhóm?",
+      "unlinkConfirmBody": "Tài liệu vẫn còn trong thư viện, chỉ bị gỡ khỏi nhóm này.",
+      "open": "Mở tài liệu",
+      "untitled": "Tài liệu {id}",
+      "addedBy": "Người gắn: {name}"
+    },
+    "invitation": {
+      "title": "Bạn có lời mời tham gia nhóm",
+      "description": "Chấp nhận để trở thành thành viên, hoặc từ chối lời mời này.",
+      "accept": "Chấp nhận",
+      "decline": "Từ chối",
+      "accepted": "Đã tham gia nhóm.",
+      "declined": "Đã từ chối lời mời."
     }
   },
   "appearance": {
@@ -5984,7 +6484,15 @@
     "following": "Đang theo dõi {count}",
     "loading": "Đang tải…",
     "error": "Không tải được thông tin.",
-    "errorRetry": "Thử lại"
+    "errorRetry": "Thử lại",
+    "followFailed": "Không thực hiện được. Vui lòng thử lại.",
+    "followForbidden": "Bạn không thể theo dõi người dùng này.",
+    "followNotFound": "Không tìm thấy người dùng này.",
+    "followRateLimited": "Bạn thao tác hơi nhanh. Thử lại sau ít phút nhé.",
+    "followSessionExpired": "Phiên đăng nhập đã hết hạn. Đăng nhập lại để theo dõi.",
+    "private": "Hồ sơ này ở chế độ riêng tư.",
+    "notFound": "Không tìm thấy người dùng này.",
+    "rateLimited": "Bạn xem hơi nhanh. Thử lại sau ít phút nhé."
   },
   "learn": {
     "exercises": {

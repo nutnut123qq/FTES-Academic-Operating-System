@@ -22,9 +22,14 @@ import type { SavedEntityType, SavedPostSource } from "@/hooks/zustand/savedItem
 import type { WithClassNames } from "@/modules/types/base/class-name"
 import { formatCompactCount } from "./format-compact-count"
 import type { EngagementActions } from "./actions"
+import { PostActionsMenu } from "./PostActionsMenu"
 
 export * from "./actions"
+export * from "./report-reasons"
 export { formatCompactCount } from "./format-compact-count"
+export { PostActionsMenu, type PostActionsMenuProps } from "./PostActionsMenu"
+export { ReportDialog, type ReportDialogProps } from "./ReportDialog"
+export { ConfirmDialog, type ConfirmDialogProps } from "./ConfirmDialog"
 
 /** Props for {@link PostEngagementBar}. */
 export interface PostEngagementBarProps extends WithClassNames<undefined> {
@@ -59,6 +64,24 @@ export interface PostEngagementBarProps extends WithClassNames<undefined> {
     postUrl?: string
     /** Title used for the native share sheet (falls back to the URL). */
     shareTitle?: string
+    /**
+     * Fired ONLY after a share actually succeeded (link copied, or the native
+     * sheet resolved without an `AbortError`). The feature records the share
+     * server-side (`POST /community/posts/{id}/shares`) fire-and-forget; a user
+     * who cancels the sheet or a failed copy never counts.
+     */
+    onShared?: (channel: "COPY_LINK" | "NATIVE") => void
+    /**
+     * Whether the viewer authored this item — gates the ⋯ menu's owner-only
+     * entries ("Sửa" / "Xoá"); a non-owner gets "Báo cáo" instead.
+     */
+    isOwner?: boolean
+    /** Open the edit flow (owner). Omit to leave the entry out of the ⋯ menu. */
+    onEdit?: () => void
+    /** Start the delete flow (owner). Omit to leave the entry out of the ⋯ menu. */
+    onDelete?: () => void
+    /** Open the report dialog (non-owner). Omit to leave the entry out. */
+    onReport?: () => void
     /** Save entity kind — required only when `actions.save` is enabled. */
     saveEntityType?: SavedEntityType
     /** Save entity id — required only when `actions.save` is enabled. */
@@ -91,6 +114,12 @@ export interface PostEngagementBarProps extends WithClassNames<undefined> {
  * Guest gating (like/comment/save) lives in the feature callbacks / SaveButton;
  * copy-link and native share stay open to guests.
  *
+ * A trailing ⋯ menu ({@link PostActionsMenu}) appears when the surface passes
+ * ownership callbacks: "Sửa"/"Xoá" for the author, "Báo cáo" for everyone else.
+ * A share that actually happened (link copied / native sheet resolved) calls
+ * `onShared` so the feature can record it server-side — a cancelled sheet or a
+ * failed copy never does.
+ *
  * @param props - {@link PostEngagementBarProps}
  */
 export const PostEngagementBar = ({
@@ -106,6 +135,11 @@ export const PostEngagementBar = ({
     onRepost,
     postUrl,
     shareTitle,
+    onShared,
+    isOwner,
+    onEdit,
+    onDelete,
+    onReport,
     saveEntityType,
     saveEntityId,
     saveSource,
@@ -158,10 +192,12 @@ export const PostEngagementBar = ({
                 document.body.removeChild(textarea)
             }
             toast.success(t("engagement.linkCopied"))
+            // the link really left the app → record the share (fire-and-forget)
+            onShared?.("COPY_LINK")
         } catch {
             toast.danger(t("engagement.linkCopyFailed"))
         }
-    }, [postUrl, t])
+    }, [postUrl, t, onShared])
 
     /** Open the native share sheet; swallow a user cancel (AbortError). */
     const onNativeShare = useCallback(async () => {
@@ -170,13 +206,14 @@ export const PostEngagementBar = ({
         }
         try {
             await navigator.share({ title: shareTitle ?? postUrl, url: postUrl })
+            onShared?.("NATIVE")
         } catch (error) {
-            // user cancelled the share sheet — not an error
+            // user cancelled the share sheet — not an error, and NOT a share
             if (error instanceof Error && error.name === "AbortError") {
                 return
             }
         }
-    }, [postUrl, shareTitle])
+    }, [postUrl, shareTitle, onShared])
 
     return (
         <div className={cn("flex items-center gap-2", className)}>
@@ -285,6 +322,14 @@ export const PostEngagementBar = ({
                     source={saveSource}
                 />
             ) : null}
+
+            <PostActionsMenu
+                isOwner={isOwner}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onReport={onReport}
+                className="ml-auto"
+            />
         </div>
     )
 }

@@ -2,8 +2,10 @@
 
 import React from "react"
 import { Button, Chip, Skeleton, Typography } from "@heroui/react"
+import { ArrowSquareOutIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { Link } from "@/i18n/navigation"
 import { useHasPermission } from "@/hooks/useHasPermission"
 import { useQueryReportsSwr } from "../hooks/useQueryReportsSwr"
 import { useMutateModerationDecisionSwr } from "../hooks/useMutateModerationDecisionSwr"
@@ -37,6 +39,15 @@ const ModerationSkeleton = () => (
  * The queue requires the `community.moderate` permission: without it the fetch
  * is gated off (no 403 spam) and the empty state is shown. Decisions
  * optimistically drop the row and roll back on failure.
+ *
+ * A POST target's id links to the reported post itself (new tab) so the moderator
+ * never decides blind.
+ *
+ * NO escalate action here on purpose: `POST /community/reports/{id}/escalate`
+ * resolves a REPORT id (`ModerationService.escalate` → `reportRepository.findById`)
+ * while these rows carry `moderation_queue_items.id`, and the BE exposes no mapping
+ * between the two on `ModerationQueueResponse` — the button would 404 on every row.
+ * It comes back once the queue read carries a `reportId`.
  */
 export const CommunityModeration = () => {
     const t = useTranslations("communityHub")
@@ -80,9 +91,31 @@ export const CommunityModeration = () => {
                                         </Chip>
                                     ) : null}
                                 </div>
-                                <Typography type="body-xs" color="muted" truncate>
-                                    {report.targetId}
-                                </Typography>
+                                {/* a POST target opens in a NEW TAB: the moderator keeps
+                                    the queue (and its optimistic state) mounted while
+                                    reviewing the reported content */}
+                                {report.targetType === "POST" ? (
+                                    <Link
+                                        href={`/community/${report.targetId}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex max-w-full items-center gap-1 text-accent hover:underline"
+                                        aria-label={t("moderation.openTarget")}
+                                    >
+                                        <Typography type="body-xs" truncate className="text-accent">
+                                            {report.targetId}
+                                        </Typography>
+                                        <ArrowSquareOutIcon
+                                            aria-hidden
+                                            focusable="false"
+                                            className="size-3.5 shrink-0"
+                                        />
+                                    </Link>
+                                ) : (
+                                    <Typography type="body-xs" color="muted" truncate>
+                                        {report.targetId}
+                                    </Typography>
+                                )}
                                 <Typography type="body-xs" color="muted">
                                     {t("moderation.source", { source: report.source })}
                                 </Typography>

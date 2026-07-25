@@ -7,6 +7,8 @@ import type {
     GroupCreateGroupRequest,
     GroupDecisionRequest,
     GroupEvent,
+    GroupEventRequest,
+    GroupEventUpdateRequest,
     GroupFeedSlice,
     GroupInviteRequest,
     GroupJoinRequest,
@@ -306,6 +308,42 @@ export const listGroupEvents = async (
             limit: request?.limit,
         },
         authenticated: true,
+    })
+
+/**
+ * Creates a group event (owner/moderator gated server-side). Returns the fresh
+ * EventDto with `attendeeCount`/`attending` already resolved for the caller.
+ */
+export const createGroupEvent = async (
+    id: string,
+    request: GroupEventRequest,
+): Promise<GroupEvent> =>
+    restRequest<GroupEvent>({
+        method: "POST",
+        url: `/groups/${id}/events`,
+        data: request,
+    })
+
+/** Partially updates a group event — an omitted field keeps its current value. */
+export const updateGroupEvent = async (
+    id: string,
+    eventId: string,
+    request: GroupEventUpdateRequest,
+): Promise<GroupEvent> =>
+    restRequest<GroupEvent>({
+        method: "PATCH",
+        url: `/groups/${id}/events/${eventId}`,
+        data: request,
+    })
+
+/** Deletes a group event (with its RSVPs). */
+export const deleteGroupEvent = async (
+    id: string,
+    eventId: string,
+): Promise<void> =>
+    restRequest<void>({
+        method: "DELETE",
+        url: `/groups/${id}/events/${eventId}`,
     })
 
 // ---------------- Group challenges (read-only bridge) ----------------

@@ -19,6 +19,8 @@ import {
 } from "../hooks/useQueryGroupPostCommentsSwr"
 import { useMutateReactGroupPostSwr } from "../hooks/useMutateReactGroupPostSwr"
 import { useMutateGroupPinnedSwr } from "../hooks/useMutateGroupPinnedSwr"
+import { GroupFeedComposer } from "./GroupFeedComposer"
+import { groupPostPermalink } from "./permalink"
 
 /** One group feed post card + its inline (lazy) comment thread. */
 const GroupFeedCard = ({
@@ -43,10 +45,9 @@ const GroupFeedCard = ({
     )
 
     const regionId = `post-comments-${post.id}`
-    const postUrl =
-        typeof window !== "undefined"
-            ? `${window.location.origin}/${locale}/groups/${groupId}`
-            : ""
+    // share the POST permalink (/community/{postId}), not the group page — sharing the
+    // group dropped the reader on the feed with no way to tell which post was meant
+    const postUrl = groupPostPermalink(locale, post.id)
 
     const onToggleComments = useCallback(() => {
         setHasOpened(true)
@@ -158,23 +159,33 @@ export const GroupFeed = () => {
     const canPin = group != null && currentUserId != null && group.ownerId === currentUserId
 
     return (
-        <AsyncContent
-            isLoading={isLoading && posts.length === 0}
-            skeleton={<GroupFeedSkeleton />}
-            isEmpty={posts.length === 0}
-            emptyContent={{ title: t("feed.empty") }}
-            error={posts.length === 0 ? error : undefined}
-            errorContent={{
-                title: t("feed.error"),
-                onRetry: () => void mutate(),
-                retryLabel: t("states.retry"),
-            }}
-        >
-            <div className="flex flex-col gap-3">
-                {posts.map((post) => (
-                    <GroupFeedCard key={post.id} groupId={groupId} post={post} canPin={canPin} />
-                ))}
-            </div>
-        </AsyncContent>
+        <div className="flex flex-col gap-3">
+            {/* composer — static chrome, stays outside the async body so members can
+                post into an empty (or still loading) feed */}
+            <GroupFeedComposer groupId={groupId} />
+            <AsyncContent
+                isLoading={isLoading && posts.length === 0}
+                skeleton={<GroupFeedSkeleton />}
+                isEmpty={posts.length === 0}
+                emptyContent={{ title: t("feed.empty") }}
+                error={posts.length === 0 ? error : undefined}
+                errorContent={{
+                    title: t("feed.error"),
+                    onRetry: () => void mutate(),
+                    retryLabel: t("states.retry"),
+                }}
+            >
+                <div className="flex flex-col gap-3">
+                    {posts.map((post) => (
+                        <GroupFeedCard
+                            key={post.id}
+                            groupId={groupId}
+                            post={post}
+                            canPin={canPin}
+                        />
+                    ))}
+                </div>
+            </AsyncContent>
+        </div>
     )
 }

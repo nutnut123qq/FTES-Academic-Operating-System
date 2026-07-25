@@ -7,10 +7,13 @@ import { useParams } from "next/navigation"
 import { UserLink } from "@/components/features/identity/UserLink"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
+import { useRequireAuth } from "@/hooks/useRequireAuth"
 import {
     useQuerySubjectMembersSwr,
     type MemberRole,
 } from "../hooks/useQuerySubjectMembersSwr"
+import { MemberActionsMenu } from "./MemberActionsMenu"
+import { useQuerySubjectCallerMembershipSwr } from "./useQuerySubjectCallerMembershipSwr"
 
 /** Role filter options: "all" + every role. */
 const ROLES: Array<MemberRole | "all"> = ["all", "lecturer", "moderator", "contributor", "student"]
@@ -18,13 +21,20 @@ const ROLES: Array<MemberRole | "all"> = ["all", "lecturer", "moderator", "contr
 /**
  * Members tab (§3 Members). DEFAULT on-canon layout (no dedicated brainstorm):
  * a role filter + a dense list of member rows (initials avatar + name + role Chip).
- * ponytail: rows hand-rolled, initials avatar (icon-free); mock data.
+ * ponytail: rows hand-rolled, initials avatar (icon-free).
+ *
+ * Rows carry a moderation menu (change role / ban) — rendered only when the
+ * caller's own membership is MODERATOR or LECTURER, matching the BE guards on
+ * `PUT …/members/{userId}/role` and `POST …/members/{userId}/ban`.
  */
 export const SubjectMembers = () => {
     const t = useTranslations("subjects")
     const { subjectId } = useParams<{ subjectId: string }>()
+    const { authenticated } = useRequireAuth()
     const { members, isLoading, error, mutate } = useQuerySubjectMembersSwr(subjectId)
+    const { canManage } = useQuerySubjectCallerMembershipSwr(subjectId, authenticated)
     const [active, setActive] = useState<MemberRole | "all">("all")
+    const code = subjectId ? subjectId.toUpperCase() : ""
 
     const filtered = active === "all" ? members : members.filter((m) => m.role === active)
 
@@ -78,6 +88,9 @@ export const SubjectMembers = () => {
                             <Chip size="sm" variant="soft" color="accent">
                                 {t(`members.roles.${member.role}`)}
                             </Chip>
+                            {canManage ? (
+                                <MemberActionsMenu code={code} member={member} mutate={mutate} />
+                            ) : null}
                         </div>
                     ))}
                 </div>

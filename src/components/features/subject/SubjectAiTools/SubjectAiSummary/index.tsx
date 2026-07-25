@@ -1,15 +1,17 @@
 "use client"
 
 import React from "react"
-import { Button, Typography, toast } from "@heroui/react"
+import { Button, Chip, Spinner, Typography, toast } from "@heroui/react"
 import { ArrowClockwiseIcon, CopyIcon } from "@phosphor-icons/react"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 
+import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { EmptyContent } from "@/components/blocks/async/EmptyContent"
 import { ErrorContent } from "@/components/blocks/async/ErrorContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
+import { useRequireAuth } from "@/hooks/useRequireAuth"
 
-import { useQuerySubjectAiSourcesSwr } from "../../hooks/useQuerySubjectAiSourcesSwr"
+import { useQuerySubjectAiResourceSourcesSwr } from "../../hooks/useQuerySubjectAiResourceSourcesSwr"
 import { useMutateSubjectAiSummarySwr } from "../../hooks/useMutateSubjectAiSummarySwr"
 import { ToolSurfaceHeader } from "../ToolSurfaceHeader"
 import { SourcePicker } from "../SourcePicker"
@@ -17,7 +19,8 @@ import { SourcePicker } from "../SourcePicker"
 /** Props for {@link SubjectAiSummary}. */
 export interface SubjectAiSummaryProps {
     subjectId: string
-    subjectCode: string
+    /** Subject code — part of the hub's shared tool-surface prop shape. */
+    subjectCode?: string
     /** Back to the hub. */
     onBack: () => void
     /** Navigate to the Resources tab (empty-state link). */
@@ -25,20 +28,29 @@ export interface SubjectAiSummaryProps {
 }
 
 /**
- * Summary tool surface: pick a subject source → generate a mock summary (key
- * points + abstract) with loading skeleton, copy, and regenerate. Previous
- * summary is preserved on a failed regenerate.
+ * Summary tool surface, wired to the REAL async summary job.
+ *
+ * Pick one of the subject's resources (real resource UUIDs from the Resource Hub) →
+ * `POST /ai/learning/summary` → poll `GET /ai/jobs/{id}` until terminal → render the
+ * worker's key points, TL;DR and glossary. A failed regenerate keeps the previous
+ * summary on screen; quota / permission rejections get their own message.
  */
 export const SubjectAiSummary = ({
     subjectId,
-    subjectCode,
     onBack,
     onGoResources,
 }: SubjectAiSummaryProps) => {
     const t = useTranslations()
+    const locale = useLocale()
+    const { guard } = useRequireAuth()
     const headingRef = React.useRef<HTMLHeadingElement>(null)
-    const { sources } = useQuerySubjectAiSourcesSwr(subjectId)
-    const summarySwr = useMutateSubjectAiSummarySwr(subjectId)
+    const {
+        sources,
+        isLoading: isSourcesLoading,
+        error: sourcesError,
+        mutate: reloadSources,
+    } = useQuerySubjectAiResourceSourcesSwr(subjectId)
+    const summary = useMutateSubjectAiSummarySwr()
 
     const [selectedId, setSelectedId] = React.useState<string | null>(null)
 
@@ -46,26 +58,21 @@ export const SubjectAiSummary = ({
         headingRef.current?.focus()
     }, [])
 
-    const selected = sources.find((s) => s.id === selectedId) ?? null
+    const selected = sources.find((source) => source.id === selectedId) ?? null
 
-    const generate = async () => {
-        if (!selected) return
-        try {
-            await summarySwr.trigger({
-                subjectCode,
-                sourceTitle: selected.title,
-            })
-        } catch {
-            // preserve prior summary; error rendered from summarySwr.error
-        }
-    }
+    // AI jobs are auth-scoped (permission `ai.learning.use`) — guests get the sign-in
+    // modal instead of a 401 round-trip.
+    const generate = guard(() => {
+        if (!selected || summary.isBusy) return
+        summary.generate({ resourceId: selected.id, language: locale })
+    })
 
     const copy = async () => {
-        if (!summarySwr.data) return
+        if (!summary.data) return
         const text = [
-            ...summarySwr.data.keyPoints.map((p) => `• ${p}`),
+            ...summary.data.keyPoints.map((point) => `• ${point}`),
             "",
-            summarySwr.data.abstract,
+            summary.data.abstract,
         ].join("\n")
         await navigator.clipboard.writeText(text)
         toast.success(t("subjects.aiTools.summary.copied"))
@@ -80,96 +87,188 @@ export const SubjectAiSummary = ({
                 headingRef={headingRef}
             />
 
-            {sources.length === 0 ? (
-                <EmptyContent
-                    title={t("subjects.aiTools.summary.emptyTitle")}
-                    description={t("subjects.aiTools.summary.emptyDesc")}
-                    onRetry={onGoResources}
-                    retryLabel={t("subjects.aiTools.goResources")}
-                />
-            ) : (
-                <>
-                    <SourcePicker
-                        label={t("subjects.aiTools.pickSource")}
-                        sources={sources}
-                        selectedId={selectedId}
-                        onSelect={setSelectedId}
+            <AsyncContent
+                isLoading={isSourcesLoading && sources.length === 0}
+                skeleton={
+                    <div className="flex flex-col gap-2">
+                        {Array.from({ length: 3 }).map((_, index) => (
+                            <Skeleton key={index} className="h-12 w-full rounded-2xl" />
+                        ))}
+                    </div>
+                }
+                error={!sources.length ? sourcesError : undefined}
+                errorContent={{
+                    title: t("subjects.aiTools.sourcesErrorTitle"),
+                    onRetry: () => {
+                        void reloadSources()
+                    },
+                    retryLabel: t("subjects.aiTools.retry"),
+                }}
+            >
+                {sources.length === 0 ? (
+                    <EmptyContent
+                        title={t("subjects.aiTools.summary.emptyTitle")}
+                        description={t("subjects.aiTools.summary.emptyDesc")}
+                        onRetry={onGoResources}
+                        retryLabel={t("subjects.aiTools.goResources")}
                     />
-                    <Button
-                        variant="primary"
-                        className="self-start"
-                        isDisabled={!selected || summarySwr.isMutating}
-                        isPending={summarySwr.isMutating}
-                        onPress={generate}
-                    >
-                        {summarySwr.data
-                            ? t("subjects.aiTools.summary.regenerate")
-                            : t("subjects.aiTools.summary.generate")}
-                    </Button>
-
-                    {summarySwr.isMutating ? (
-                        <div className="flex flex-col gap-3">
-                            <Skeleton.Typography type="body-sm" width="1/3" />
-                            <Skeleton.Paragraph lines={4} />
-                        </div>
-                    ) : summarySwr.error && !summarySwr.data ? (
-                        <ErrorContent
-                            title={t("subjects.aiTools.summary.errorTitle")}
-                            description={t("subjects.aiTools.errorRetryHint")}
-                            onRetry={generate}
-                            retryLabel={t("subjects.aiTools.retry")}
+                ) : (
+                    <div className="flex flex-col gap-6">
+                        <SourcePicker
+                            label={t("subjects.aiTools.pickSource")}
+                            sources={sources}
+                            selectedId={selectedId}
+                            onSelect={setSelectedId}
                         />
-                    ) : summarySwr.data ? (
-                        <div className="flex flex-col gap-3 rounded-2xl border border-separator p-4">
-                            <div className="flex items-center justify-between gap-2">
-                                <Typography type="body" weight="medium">
-                                    {t("subjects.aiTools.summary.keyPoints")}
+                        <Button
+                            variant="primary"
+                            className="self-start"
+                            isDisabled={!selected || summary.isBusy}
+                            isPending={summary.isBusy}
+                            onPress={generate}
+                        >
+                            {summary.isBusy
+                                ? t("subjects.aiTools.job.working")
+                                : summary.data
+                                    ? t("subjects.aiTools.summary.regenerate")
+                                    : t("subjects.aiTools.summary.generate")}
+                        </Button>
+
+                        {summary.isBusy ? (
+                            <div className="flex flex-col items-center gap-3 rounded-2xl border border-separator p-8 text-center">
+                                <Spinner size="lg" />
+                                <Typography type="body-sm" color="muted">
+                                    {t("subjects.aiTools.job.running")}
                                 </Typography>
-                                <div className="flex items-center gap-2">
-                                    <Button
-                                        size="sm"
-                                        variant="tertiary"
-                                        isIconOnly
-                                        aria-label={t("subjects.aiTools.summary.copy")}
-                                        onPress={copy}
-                                    >
-                                        <CopyIcon
-                                            className="size-5"
-                                            aria-hidden
-                                            focusable="false"
-                                        />
-                                    </Button>
-                                    <Button
-                                        size="sm"
-                                        variant="tertiary"
-                                        isIconOnly
-                                        aria-label={t("subjects.aiTools.summary.regenerate")}
-                                        onPress={generate}
-                                    >
-                                        <ArrowClockwiseIcon
-                                            className="size-5"
-                                            aria-hidden
-                                            focusable="false"
-                                        />
-                                    </Button>
-                                </div>
-                            </div>
-                            <ul className="flex list-disc flex-col gap-2 pl-5">
-                                {summarySwr.data.keyPoints.map((point, i) => (
-                                    <li key={i}>
-                                        <Typography type="body-sm">
-                                            {point}
+                                {summary.isStale ? (
+                                    <div className="flex flex-col items-center gap-2">
+                                        <Typography type="body-xs" color="muted">
+                                            {t("subjects.aiTools.job.stale")}
                                         </Typography>
-                                    </li>
-                                ))}
-                            </ul>
-                            <Typography type="body-sm" color="muted">
-                                {summarySwr.data.abstract}
-                            </Typography>
-                        </div>
-                    ) : null}
-                </>
-            )}
+                                        <Button
+                                            size="sm"
+                                            variant="tertiary"
+                                            onPress={() => summary.refresh()}
+                                        >
+                                            {t("subjects.aiTools.job.refresh")}
+                                        </Button>
+                                    </div>
+                                ) : null}
+                            </div>
+                        ) : summary.errorKey ? (
+                            <ErrorContent
+                                title={t(`subjects.aiTools.job.${summary.errorKey}`)}
+                                description={
+                                    summary.failureMessage ??
+                                    t("subjects.aiTools.errorRetryHint")
+                                }
+                                onRetry={generate}
+                                retryLabel={t("subjects.aiTools.retry")}
+                            />
+                        ) : null}
+
+                        {summary.data ? (
+                            <div className="flex flex-col gap-4 rounded-2xl border border-separator p-4">
+                                <div className="flex items-center justify-between gap-2">
+                                    <Typography type="body" weight="medium">
+                                        {t("subjects.aiTools.summary.keyPoints")}
+                                    </Typography>
+                                    <div className="flex items-center gap-2">
+                                        <Button
+                                            size="sm"
+                                            variant="tertiary"
+                                            isIconOnly
+                                            aria-label={t("subjects.aiTools.summary.copy")}
+                                            onPress={copy}
+                                        >
+                                            <CopyIcon
+                                                className="size-5"
+                                                aria-hidden
+                                                focusable="false"
+                                            />
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="tertiary"
+                                            isIconOnly
+                                            isDisabled={summary.isBusy}
+                                            aria-label={t("subjects.aiTools.summary.regenerate")}
+                                            onPress={generate}
+                                        >
+                                            <ArrowClockwiseIcon
+                                                className="size-5"
+                                                aria-hidden
+                                                focusable="false"
+                                            />
+                                        </Button>
+                                    </div>
+                                </div>
+
+                                {summary.data.keyPoints.length ? (
+                                    <ul className="flex list-disc flex-col gap-2 pl-5">
+                                        {summary.data.keyPoints.map((point, index) => (
+                                            <li key={index}>
+                                                <Typography type="body-sm">{point}</Typography>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : null}
+
+                                {summary.data.abstract ? (
+                                    <Typography type="body-sm" color="muted">
+                                        {summary.data.abstract}
+                                    </Typography>
+                                ) : null}
+
+                                {summary.data.readMinutes ? (
+                                    <Chip
+                                        size="sm"
+                                        variant="soft"
+                                        color="default"
+                                        className="self-start"
+                                    >
+                                        {t("subjects.aiTools.summary.readMin", {
+                                            count: summary.data.readMinutes,
+                                        })}
+                                    </Chip>
+                                ) : null}
+
+                                {summary.data.glossary.length ? (
+                                    <div className="flex flex-col gap-2">
+                                        <Typography type="body-sm" weight="medium">
+                                            {t("subjects.aiTools.summary.glossary")}
+                                        </Typography>
+                                        <dl className="flex flex-col gap-2">
+                                            {summary.data.glossary.map((entry, index) => (
+                                                <div key={index} className="flex flex-col gap-0.5">
+                                                    <dt>
+                                                        <Typography type="body-sm" weight="medium">
+                                                            {entry.term}
+                                                        </Typography>
+                                                    </dt>
+                                                    <dd>
+                                                        <Typography type="body-sm" color="muted">
+                                                            {entry.definition}
+                                                        </Typography>
+                                                    </dd>
+                                                </div>
+                                            ))}
+                                        </dl>
+                                    </div>
+                                ) : null}
+
+                                {summary.data.model ? (
+                                    <Typography type="body-xs" color="muted">
+                                        {t("subjects.aiTools.job.model", {
+                                            model: summary.data.model,
+                                        })}
+                                    </Typography>
+                                ) : null}
+                            </div>
+                        ) : null}
+                    </div>
+                )}
+            </AsyncContent>
         </div>
     )
 }

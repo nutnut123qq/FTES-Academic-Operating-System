@@ -1,70 +1,100 @@
 "use client"
 
-import useSWRMutation from "swr/mutation"
+import { submitQuizJob } from "@/modules/api/rest/ai"
+import {
+    isCorrectQuizOption,
+    type QuizResult,
+} from "@/components/features/ai-platform/tools/types"
 
-/** A single generated multiple-choice question. */
+import { useSubjectAiJob } from "./useSubjectAiJob"
+
+/** A single generated multiple-choice question, normalized for client grading. */
 export interface SubjectAiQuizQuestion {
+    /** Stable per-run id (index-derived — the worker sends no ids). */
     id: string
+    /** The question stem. */
     prompt: string
-    /** Option labels; index matches `answerIndex`. */
+    /** Option labels; index matches {@link answerIndex}. */
     options: Array<string>
-    /** Index of the correct option. */
+    /**
+     * Index of the correct option, or `-1` when the worker's `correct` matched no
+     * option (a degraded generation). The surface must NOT mark anything correct in
+     * that case rather than silently blaming option 0.
+     */
     answerIndex: number
+    /** Why the answer is right, revealed after grading. */
+    explanation?: string
 }
 
-/** Args for a quiz generation. */
-export interface GenerateQuizArgs {
-    subjectCode: string
-    sourceTitle: string
-    /** Number of questions to generate. */
+/** A graded-ready quiz plus the model that produced it. */
+export interface SubjectAiQuiz {
+    questions: Array<SubjectAiQuizQuestion>
+    model?: string
+}
+
+/** Args for a quiz run. */
+export interface GenerateSubjectQuizArgs {
+    /** Resource UUID picked in the source list (BE `resourceId`). */
+    resourceId: string
+    /** How many questions to generate (BE `questionCount`). */
     count: number
-    /** Force the mock failure path (retry testing). */
-    fail?: boolean
-}
-
-/** ~1.1s so the generation loading state is observable. */
-const MOCK_DELAY_MS = 1100
-
-// ponytail: mock BE — no quiz endpoint. Builds `count` source-aware MCQs with a
-// deterministic correct option so FE grading works.
-const generateQuizMock = async (
-    _key: string,
-    { arg }: { arg: GenerateQuizArgs },
-): Promise<Array<SubjectAiQuizQuestion>> => {
-    await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY_MS))
-    if (arg.fail) {
-        throw new Error("mock-quiz-failure")
-    }
-    return Array.from({ length: arg.count }, (_, i) => {
-        const answerIndex = i % 4
-        return {
-            id: `q${i + 1}`,
-            prompt:
-                `Câu ${i + 1} — ${arg.subjectCode}: theo "${arg.sourceTitle}", ` +
-                "đâu là phát biểu đúng? (câu hỏi demo)",
-            options: [
-                "Phương án A",
-                "Phương án B",
-                "Phương án C",
-                "Phương án D",
-            ],
-            answerIndex,
-        }
-    })
+    /** UI locale forwarded as the generation language. */
+    language: string
 }
 
 /**
- * Generates a mock MCQ quiz from a picked subject source. SWR-mutation-shaped for
- * a drop-in BE swap. BE assumption (logged): a real BE generates + returns the
- * quiz for the (subject, source, count).
+ * Normalizes a raw `QUIZ_GEN` job result into locally gradable questions.
  *
- * @param subjectId - the `[subjectId]` route segment (scopes the SWR key).
+ * The worker maps ftes-ai-service onto `{questions:[{question, options, correct,
+ * explanation}], model}`, where `correct` is a 0-based index, a letter, or the exact
+ * option text — {@link isCorrectQuizOption} resolves all three, so the answer is
+ * folded into an `answerIndex` ONCE here instead of re-deriving it per click.
+ * Questions with no options are dropped (nothing to answer).
+ *
+ * @param raw - the parsed job result, or undefined before the job COMPLETED.
  */
-export const useMutateSubjectAiQuizSwr = (subjectId: string) => {
-    return useSWRMutation<
-        Array<SubjectAiQuizQuestion>,
-        Error,
-        string,
-        GenerateQuizArgs
-    >(`subject-ai-quiz:${subjectId}`, generateQuizMock)
+export const mapQuizJobResult = (
+    raw: QuizResult | string | undefined,
+): SubjectAiQuiz => {
+    if (!raw || typeof raw === "string") return { questions: [] }
+    const questions = (raw.questions ?? [])
+        .filter((question) => Array.isArray(question?.options) && question.options.length > 0)
+        .map((question, index) => ({
+            id: `q${index + 1}`,
+            prompt: question.question ?? "",
+            options: question.options,
+            answerIndex: question.options.findIndex((option, optionIndex) =>
+                isCorrectQuizOption(question.correct, optionIndex, option),
+            ),
+            explanation: question.explanation?.trim() || undefined,
+        }))
+    return { questions, model: raw.model }
+}
+
+/**
+ * Runs the REAL quiz job for a picked subject resource: `POST /ai/learning/quiz`
+ * with `{resourceId, questionCount, language}` → poll `GET /ai/jobs/{id}` → hand back
+ * normalized questions. Grading stays client-side (no BE round-trip per answer).
+ */
+export const useMutateSubjectAiQuizSwr = () => {
+    const job = useSubjectAiJob<QuizResult | string>()
+
+    /** Submit a quiz job for the picked resource. */
+    const generate = (args: GenerateSubjectQuizArgs) =>
+        void job.run(() =>
+            submitQuizJob({
+                resourceId: args.resourceId,
+                questionCount: args.count,
+                language: args.language,
+            }),
+        )
+
+    const quiz = mapQuizJobResult(job.result)
+
+    return {
+        ...job,
+        generate,
+        questions: quiz.questions,
+        model: quiz.model,
+    }
 }

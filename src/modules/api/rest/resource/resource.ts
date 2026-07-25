@@ -477,11 +477,50 @@ export const getMyBookmarks = async (params?: {
     })
 }
 
+/**
+ * Alias of {@link getMyBookmarks} — kept because feature code refers to this
+ * endpoint as "list my bookmarks".
+ *
+ * `GET /api/v1/resources/me/bookmarks?page=&size=`
+ */
+export const listMyBookmarks = getMyBookmarks
+
+/**
+ * Marks a resource as a favorite.
+ *
+ * `PUT /api/v1/resources/{id}/favorite`
+ */
+export const favoriteResource = async (id: string): Promise<ToggleResponse> => {
+    return restRequest<ToggleResponse>({
+        method: "PUT",
+        url: `/resources/${id}/favorite`,
+    })
+}
+
+/**
+ * Removes a resource from favorites.
+ *
+ * `DELETE /api/v1/resources/{id}/favorite`
+ */
+export const unfavoriteResource = async (
+    id: string,
+): Promise<ToggleResponse> => {
+    return restRequest<ToggleResponse>({
+        method: "DELETE",
+        url: `/resources/${id}/favorite`,
+    })
+}
+
 // ---------------------------------------------------------------- resource comments (C-4)
 
 /**
  * Lists a resource's threaded Q&A comments (top-level with one level of replies).
  * Read access is gated server-side by the resource `VisibilityGuard.requireRead`.
+ *
+ * The BE (`ResourceCommentController.list`) answers with the enveloped
+ * `CommentPage {items, page, size, total}` and a **1-based** `page`
+ * (`ResourceCommentService.list` shifts it to a 0-based `PageRequest` itself), so
+ * the page number is passed through verbatim — no client-side normalization.
  *
  * `GET /api/v1/resources/{id}/comments?page=&size=`
  */

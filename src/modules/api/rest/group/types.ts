@@ -28,6 +28,13 @@ export interface GroupResponse {
     coverUrl?: string | null
     /** Group rules as an ordered list of strings (BE stores a JSON array). */
     rules?: Array<string> | null
+    /**
+     * The CALLER's role in the group (`OWNER` / `ADMIN` / `MODERATOR` / `MEMBER`),
+     * `null` when the caller is not a member or is anonymous. Only the detail read
+     * (`GET /groups/{id}`) resolves it — the create/update/discover mappers send
+     * `null` (BE `GroupMapper.toGroup`).
+     */
+    viewerMembership?: string | null
 }
 
 export interface GroupCreateGroupRequest {
@@ -133,6 +140,31 @@ export interface GroupResourceLink {
  * state (change group-identity-media-rules-rsvp): the count reflects real GOING rows
  * and `attending` is true when the caller has RSVP'd.
  */
+/**
+ * Body for `POST /groups/{id}/events` (BE `GroupDtos.EventRequest`).
+ * `title`/`description`/`startsAt` are required; `startsAt`/`endsAt` are ISO-8601
+ * instants (`Instant`, e.g. `2026-08-01T09:00:00Z`).
+ */
+export interface GroupEventRequest {
+    title: string
+    description: string
+    location?: string
+    startsAt: string
+    endsAt?: string
+}
+
+/**
+ * Body for `PATCH /groups/{id}/events/{eventId}` (BE `GroupDtos.EventUpdateRequest`).
+ * Partial update: an omitted/null field keeps its current value.
+ */
+export interface GroupEventUpdateRequest {
+    title?: string
+    description?: string
+    location?: string
+    startsAt?: string
+    endsAt?: string
+}
+
 export interface GroupEvent {
     id: string
     groupId: string

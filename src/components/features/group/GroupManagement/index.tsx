@@ -7,9 +7,13 @@ import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
 import { decideJoinRequest } from "@/modules/api/rest/group"
 import { useRestWithToast } from "@/modules/toast/hooks"
+import { useAppSelector } from "@/redux/hooks"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { GroupIdentityFields } from "../GroupIdentityFields"
+import { GroupInfoSection } from "./GroupInfoSection"
+import { GroupDangerZone } from "./GroupDangerZone"
+import { useQueryGroupSettingsSwr } from "./useQueryGroupSettingsSwr"
 import { useIdentityImagePicker } from "../hooks/useIdentityImagePicker"
 import {
     useQueryGroupManageSwr,
@@ -129,10 +133,12 @@ const GroupRulesEditor = ({
 }
 
 /**
- * Group management (§7). DEFAULT on-canon layout: group identity (avatar + cover
- * pickers with real presign→upload→verify) + join requests (approve/reject) + rules
- * (real read/write, replace-all) + pinned posts (real endpoint, unpin). All writes
- * are wired to the real BE (changes group-social-engagement / group-identity-media-rules-rsvp).
+ * Group management (§7): group information (name/description/join policy/visibility
+ * via `PATCH /groups/{id}`) + group identity (avatar + cover pickers with real
+ * presign→upload→verify) + join requests (approve/reject) + rules (real read/write,
+ * replace-all) + pinned posts (real endpoint, unpin) + the OWNER-only danger zone
+ * (archive, transfer ownership). All writes are wired to the real BE (changes
+ * group-social-engagement / group-identity-media-rules-rsvp / group-management).
  */
 export const GroupManagement = () => {
     const t = useTranslations("groupsHub")
@@ -140,6 +146,8 @@ export const GroupManagement = () => {
     const { joinRequests, rules, pinned, hasData, isLoading, error, mutate } =
         useQueryGroupManageSwr(groupId)
     const { group } = useQueryGroupSwr(groupId)
+    const { settings } = useQueryGroupSettingsSwr(groupId)
+    const currentUser = useAppSelector((state) => state.user.user)
     const avatar = useIdentityImagePicker(group?.avatarUrl ?? null)
     const cover = useIdentityImagePicker(group?.coverUrl ?? null)
     const runRest = useRestWithToast()
@@ -214,12 +222,25 @@ export const GroupManagement = () => {
                 {t("manage.title")}
             </Typography>
 
+            {/* group information — name / description / join policy / visibility */}
+            <GroupInfoSection groupId={groupId} />
+
             {/* group identity — pre-seeded from the group's current images */}
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 border-t border-separator pt-6">
                 <Typography type="h6" weight="bold">
                     {t("identity.title")}
                 </Typography>
                 <GroupIdentityFields name={group?.name ?? ""} avatar={avatar} cover={cover} />
+                {/*
+                  "Gỡ ảnh" inside the pickers is LOCAL only: it drops the picked file /
+                  preview, it does not clear the saved image. The group media contract has
+                  presign → upload → verify but no clear/delete op, so a saved avatar/cover
+                  can only be REPLACED by uploading a new file. Spelled out here so the
+                  action does not read as a server-side removal that silently no-ops.
+                */}
+                <Typography type="body-xs" color="muted">
+                    {t("identity.removeLocalOnly")}
+                </Typography>
                 <Button
                     size="sm"
                     variant="secondary"
@@ -315,6 +336,19 @@ export const GroupManagement = () => {
                         )}
                     </div>
                 </AsyncContent>
+            </div>
+
+            {/* danger zone — OWNER only (renders nothing for an admin) */}
+            <div className="border-t border-separator pt-6">
+                <GroupDangerZone
+                    groupId={groupId}
+                    groupName={settings?.name ?? group?.name ?? ""}
+                    isOwner={Boolean(
+                        currentUser?.id &&
+                            (settings?.ownerId ?? group?.ownerId) === currentUser.id,
+                    )}
+                    isArchived={settings?.status === "ARCHIVED"}
+                />
             </div>
         </div>
     )

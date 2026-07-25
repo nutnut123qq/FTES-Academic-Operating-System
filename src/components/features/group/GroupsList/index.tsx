@@ -3,7 +3,7 @@
 import React, { useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage, Button, Chip, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
-import { Link } from "@/i18n/navigation"
+import { Link, useRouter } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { GroupJoinButton } from "../GroupJoinButton"
@@ -36,6 +36,7 @@ const TYPES: Array<GroupType | "all"> = ["all", "public", "private", "study", "c
  */
 export const GroupsList = () => {
     const t = useTranslations("groupsHub")
+    const router = useRouter()
     const { groups, isLoading, error, mutate } = useQueryGroupsSwr()
     const [type, setType] = useState<GroupType | "all">("all")
 
@@ -43,9 +44,16 @@ export const GroupsList = () => {
 
     return (
         <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 p-6">
-            <Typography type="h4" weight="bold">
-                {t("title")}
-            </Typography>
+            {/* title row — the create CTA sits beside the heading (the create page
+                exists at /groups/new but had no entry point from the hub) */}
+            <div className="flex flex-wrap items-center justify-between gap-3">
+                <Typography type="h4" weight="bold">
+                    {t("title")}
+                </Typography>
+                <Button size="sm" variant="primary" onPress={() => router.push("/groups/new")}>
+                    {t("create.title")}
+                </Button>
+            </div>
 
             {/* type filter — static chrome, stays outside the skeleton */}
             <div className="flex flex-wrap gap-2">
@@ -120,9 +128,11 @@ export const GroupsList = () => {
                                 <Typography type="body-xs" color="muted">
                                     {t("membersCount", { count: group.members })}
                                 </Typography>
-                                {/* join action — sibling of the Link (not nested in the
-                                    anchor); re-enable pointer events so it's clickable
-                                    above the overlay. join-only, no leave BE */}
+                                {/* join / leave action — sibling of the Link (not nested
+                                    in the anchor); re-enable pointer events so it's
+                                    clickable above the overlay. The discover list carries
+                                    no membership flag, so the button falls back to the
+                                    cached group header / this session's actions. */}
                                 <GroupJoinButton
                                     groupId={group.id}
                                     className="pointer-events-auto relative"

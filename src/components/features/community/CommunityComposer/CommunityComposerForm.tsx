@@ -80,10 +80,13 @@ export const CommunityComposerForm = ({
         try {
             let createdId: string
             if (quote) {
-                // C-1 repost/quote: optional commentary → QUOTE, empty → plain REPOST.
+                // C-1 repost/quote: optional commentary → QUOTE, empty → plain SHARE.
+                // Only those two values exist in the BE allowlist
+                // (`InteractionService.SHARE_TYPES`); anything else — "REPOST",
+                // "LINK", … — is a 400 `COMMUNITY_INVALID_SHARE_TYPE`.
                 const commentary = body.trim()
                 const shared = await sharePost(quote.id, {
-                    shareType: commentary ? "QUOTE" : "REPOST",
+                    shareType: commentary ? "QUOTE" : "SHARE",
                     quoteContent: commentary || undefined,
                 })
                 createdId = shared.id

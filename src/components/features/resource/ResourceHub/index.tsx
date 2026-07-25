@@ -1,18 +1,23 @@
 "use client"
 
 import React, { useState } from "react"
-import { Button, Chip, Skeleton, Typography, cn } from "@heroui/react"
+import { Button, Chip, Skeleton, Spinner, Typography, cn, toast } from "@heroui/react"
 import { useTranslations } from "next-intl"
+import { Link } from "@/i18n/navigation"
 import { SaveButton } from "@/components/blocks/buttons/SaveButton"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { SearchInput } from "@/components/reuseable/SearchInput"
+import { useRequireAuth } from "@/hooks/useRequireAuth"
+import { getResourceDownloadUrl } from "@/modules/api/rest/resource"
+import { RestError } from "@/modules/api/rest/client"
 import {
+    RESOURCE_HUB_TYPES,
     useQueryResourceHubSwr,
     type ResourceType,
 } from "../hooks/useQueryResourceHubSwr"
 
-/** Filter options: "all" + every resource type. */
-const TYPES: Array<ResourceType | "all"> = ["all", "pdf", "slide", "video", "pe", "fe", "source", "notes"]
+/** Filter options: "all" + every backend-filterable resource type. */
+const TYPES: Array<ResourceType | "all"> = ["all", ...RESOURCE_HUB_TYPES]
 
 /** Loading skeleton — mirrors the resource-row anatomy (title/meta + trailing chip). */
 const ResourceHubSkeleton = () => (
@@ -30,23 +35,53 @@ const ResourceHubSkeleton = () => (
 )
 
 /**
- * Global Resource Hub (§5). DEFAULT on-canon layout: a text search + type filter +
- * a dense resource list (mirrors the subject Resources tab, standalone at /resources).
- * ponytail: mock data.
+ * Global Resource Hub (§5): text search + type filter + a dense resource list,
+ * served by `GET /api/v1/resources` (search/type are SERVER filters — they ride
+ * the SWR key, see `useQueryResourceHubSwr`).
+ *
+ * A row is a link to `/resources/{id}`; the trailing save/download controls
+ * swallow their own presses so they never navigate. "Download" resolves the
+ * presigned URL through `GET /resources/{id}/download-url` and opens it in a new
+ * tab — a 401 re-opens the sign-in modal, 403/404/429 surface a specific toast.
  */
 export const ResourceHub = () => {
     const t = useTranslations("resourceHub")
-    const { resources, isLoading, error, mutate } = useQueryResourceHubSwr()
+    const { requireAuth } = useRequireAuth()
     const [query, setQuery] = useState("")
     const [type, setType] = useState<ResourceType | "all">("all")
+    const { resources, isLoading, error, mutate } = useQueryResourceHubSwr({ q: query, type })
+    const [downloadingId, setDownloadingId] = useState<string | null>(null)
 
-    const filtered = resources.filter((resource) => {
-        const matchesType = type === "all" || resource.type === type
-        const matchesQuery =
-            query.trim() === "" ||
-            `${resource.title} ${resource.subject}`.toLowerCase().includes(query.trim().toLowerCase())
-        return matchesType && matchesQuery
-    })
+    /** Resolve the presigned URL for one row and open it; map API failures to copy. */
+    const onDownload = async (resourceId: string) => {
+        if (downloadingId) {
+            return
+        }
+        setDownloadingId(resourceId)
+        try {
+            const download = await getResourceDownloadUrl(resourceId)
+            if (!download?.url) {
+                throw new RestError("missing download url", 404)
+            }
+            window.open(download.url, "_blank", "noopener,noreferrer")
+        } catch (downloadError) {
+            const status = downloadError instanceof RestError ? downloadError.status : 0
+            if (status === 401) {
+                // guests/expired sessions: the shared modal, not a dead-end toast
+                requireAuth("auth.context.generic")
+            } else if (status === 403) {
+                toast.danger(t("hub.downloadForbidden"))
+            } else if (status === 404) {
+                toast.danger(t("hub.downloadNotFound"))
+            } else if (status === 429) {
+                toast.danger(t("hub.downloadRateLimited"))
+            } else {
+                toast.danger(t("hub.downloadError"))
+            }
+        } finally {
+            setDownloadingId(null)
+        }
+    }
 
     return (
         <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 p-6">
@@ -92,7 +127,7 @@ export const ResourceHub = () => {
             <AsyncContent
                 isLoading={isLoading && resources.length === 0}
                 skeleton={<ResourceHubSkeleton />}
-                isEmpty={filtered.length === 0}
+                isEmpty={resources.length === 0}
                 emptyContent={{ title: t("empty") }}
                 error={resources.length === 0 ? error : undefined}
                 errorContent={{
@@ -102,9 +137,10 @@ export const ResourceHub = () => {
                 }}
             >
                 <div className="flex flex-col gap-3">
-                    {filtered.map((resource) => (
-                        <div
+                    {resources.map((resource) => (
+                        <Link
                             key={resource.id}
+                            href={`/resources/${resource.id}`}
                             className="flex items-center gap-3 rounded-2xl border border-separator px-4 py-3 transition-colors hover:bg-default/40"
                         >
                             <div className="min-w-0 flex-1">
@@ -119,10 +155,27 @@ export const ResourceHub = () => {
                                 {t(`types.${resource.type}`)}
                             </Chip>
                             <SaveButton entityType="resource" entityId={resource.id} />
-                            <Button size="sm" variant="ghost">
-                                {t("download")}
-                            </Button>
-                        </div>
+                            {/* wrapper swallows the press so downloading never follows the row link */}
+                            <span
+                                className="inline-flex shrink-0"
+                                onClick={(event) => {
+                                    event.preventDefault()
+                                    event.stopPropagation()
+                                }}
+                            >
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    isDisabled={downloadingId !== null}
+                                    onPress={() => void onDownload(resource.id)}
+                                >
+                                    {downloadingId === resource.id ? (
+                                        <Spinner color="current" size="sm" />
+                                    ) : null}
+                                    {t("download")}
+                                </Button>
+                            </span>
+                        </Link>
                     ))}
                 </div>
             </AsyncContent>

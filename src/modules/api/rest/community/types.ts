@@ -126,6 +126,11 @@ export interface CreateCommentRequest {
     parentId?: string
 }
 
+/** Body sent to `PATCH /api/v1/community/comments/{id}`. */
+export interface UpdateCommentRequest {
+    content: string
+}
+
 /** One comment on a post. */
 export interface CommentResponse {
     id: string

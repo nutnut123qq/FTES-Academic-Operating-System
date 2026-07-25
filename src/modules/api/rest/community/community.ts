@@ -14,6 +14,7 @@ import type {
     PollVoteRequest,
     PostResponse,
     ShareRequest,
+    UpdateCommentRequest,
     UpdatePostRequest,
     VoteRequest,
 } from "./types"
@@ -92,6 +93,36 @@ export const getPostComments = async (
         url: `/community/posts/${postId}/comments`,
         params: { cursor: params?.cursor || undefined, limit: params?.limit ?? 20 },
         authenticated: true,
+    })
+}
+
+/**
+ * Edits a comment's text. Author-only server-side; a non-author gets 403 and a
+ * missing/deleted comment 404.
+ *
+ * `PATCH /api/v1/community/comments/{id}`
+ */
+export const updateComment = async (
+    commentId: string,
+    request: UpdateCommentRequest,
+): Promise<CommentResponse> => {
+    return restRequest<CommentResponse>({
+        method: "PATCH",
+        url: `/community/comments/${commentId}`,
+        data: request,
+    })
+}
+
+/**
+ * Deletes a comment (author, or a moderator holding `community.moderate` →
+ * soft-delete tombstone keeping the replies).
+ *
+ * `DELETE /api/v1/community/comments/{id}`
+ */
+export const deleteComment = async (commentId: string): Promise<void> => {
+    return restRequest<void>({
+        method: "DELETE",
+        url: `/community/comments/${commentId}`,
     })
 }
 
@@ -322,6 +353,31 @@ export const getBookmarkedPosts = async (
         url: "/community/bookmarks/posts",
         params: { cursor: cursor || undefined, limit },
         authenticated: true,
+    })
+}
+
+/**
+ * Follows another user. Idempotent server-side (re-following is a no-op), so the
+ * FE can fire it optimistically.
+ *
+ * `PUT /api/v1/community/follows/{userId}`
+ */
+export const followUser = async (userId: string): Promise<void> => {
+    return restRequest<void>({
+        method: "PUT",
+        url: `/community/follows/${userId}`,
+    })
+}
+
+/**
+ * Unfollows a user. Idempotent server-side.
+ *
+ * `DELETE /api/v1/community/follows/{userId}`
+ */
+export const unfollowUser = async (userId: string): Promise<void> => {
+    return restRequest<void>({
+        method: "DELETE",
+        url: `/community/follows/${userId}`,
     })
 }
 

@@ -1,18 +1,23 @@
 "use client"
 
 import React from "react"
-import { Button, Chip, Typography, cn } from "@heroui/react"
+import { Button, Chip, Spinner, Typography, cn } from "@heroui/react"
 import { CheckCircleIcon, CursorClickIcon } from "@phosphor-icons/react"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 
+import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { EmptyContent } from "@/components/blocks/async/EmptyContent"
 import { ErrorContent } from "@/components/blocks/async/ErrorContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { ProgressMeter } from "@/components/blocks/stats/ProgressMeter"
 import { SegmentBar } from "@/components/blocks/stats/SegmentBar"
+import { useRequireAuth } from "@/hooks/useRequireAuth"
 
-import { useQuerySubjectAiSourcesSwr } from "../../hooks/useQuerySubjectAiSourcesSwr"
-import { useMutateSubjectAiFlashcardsSwr } from "../../hooks/useMutateSubjectAiFlashcardsSwr"
+import { useQuerySubjectAiResourceSourcesSwr } from "../../hooks/useQuerySubjectAiResourceSourcesSwr"
+import {
+    useMutateSubjectAiFlashcardsSwr,
+    SUBJECT_FLASHCARDS_DEFAULT_COUNT,
+} from "../../hooks/useMutateSubjectAiFlashcardsSwr"
 import { ToolSurfaceHeader } from "../ToolSurfaceHeader"
 import { SourcePicker } from "../SourcePicker"
 import { SM2_GRADES, nextIntervalDays } from "./constants"
@@ -20,31 +25,39 @@ import { SM2_GRADES, nextIntervalDays } from "./constants"
 /** Props for {@link SubjectAiFlashcards}. */
 export interface SubjectAiFlashcardsProps {
     subjectId: string
-    subjectCode: string
+    /** Subject code — part of the hub's shared tool-surface prop shape. */
+    subjectCode?: string
     onBack: () => void
     onGoResources: () => void
 }
 
 /**
- * Flashcards tool surface — a faithful port of StarCI's `FlashcardReviewer` (STT 29D).
- * Pick a source → generate a mock deck, then run the polished "Ôn tập" reviewer:
- * one card at a time (Markdown-free mock term/definition), flip front↔back, a
- * "Thẻ i/total" progress meter, and — once revealed — an SM-2 self-rating row
- * (Quên / Khó / Được / Dễ) where each grade previews its real next interval and
- * reschedules the card client-side (no BE), advancing the run. A deck/stats strip
- * frames the session (mastered · learning · new), and a summary closes it
- * (studyAgain / regenerate). Wired into FTES's source-pick → generate flow.
+ * Flashcards tool surface — the StarCI `FlashcardReviewer` port (STT 29D) on a REAL
+ * deck: pick a subject resource → `POST /ai/learning/flashcards` → poll
+ * `GET /ai/jobs/{id}` → study the worker's cards one at a time (flip front↔back, a
+ * "Thẻ i/total" meter, a mastered·learning·new strip) and self-rate recall on the
+ * SM-2 row, where each grade previews its next interval.
+ *
+ * Scheduling is CLIENT-SIDE only: the BE exposes no flashcard review endpoint, so a
+ * rating lives for the session and is lost on reload (deferred: review persistence
+ * needs BE).
  */
 export const SubjectAiFlashcards = ({
     subjectId,
-    subjectCode,
     onBack,
     onGoResources,
 }: SubjectAiFlashcardsProps) => {
     const t = useTranslations()
+    const locale = useLocale()
+    const { guard } = useRequireAuth()
     const headingRef = React.useRef<HTMLHeadingElement>(null)
-    const { sources } = useQuerySubjectAiSourcesSwr(subjectId)
-    const deckSwr = useMutateSubjectAiFlashcardsSwr(subjectId)
+    const {
+        sources,
+        isLoading: isSourcesLoading,
+        error: sourcesError,
+        mutate: reloadSources,
+    } = useQuerySubjectAiResourceSourcesSwr(subjectId)
+    const flashcards = useMutateSubjectAiFlashcardsSwr()
 
     const [selectedId, setSelectedId] = React.useState<string | null>(null)
     // index of the card currently shown + whether it's flipped to its answer
@@ -59,8 +72,8 @@ export const SubjectAiFlashcards = ({
         headingRef.current?.focus()
     }, [])
 
-    const selected = sources.find((s) => s.id === selectedId) ?? null
-    const deck = deckSwr.data ?? null
+    const selected = sources.find((source) => source.id === selectedId) ?? null
+    const deck = flashcards.deck ?? null
     const cards = deck?.cards ?? []
     const card = cards[currentIndex] ?? null
     // past the last card → the run is complete (mirrors StarCI's `done`)
@@ -74,18 +87,24 @@ export const SubjectAiFlashcards = ({
     const learning = done ? 0 : Math.min(1, cards.length - mastered)
     const newCount = Math.max(0, cards.length - mastered - learning)
 
-    const generate = async () => {
-        if (!selected) return
+    /** Restart the deck from the first card (keeps the generated deck). */
+    const restart = () => {
         setCurrentIndex(0)
         setRevealed(false)
         setReviewedCount(0)
         setStreaks({})
-        try {
-            await deckSwr.trigger({ subjectCode, sourceTitle: selected.title })
-        } catch {
-            // error rendered from deckSwr.error
-        }
     }
+
+    const generate = guard(() => {
+        if (!selected || flashcards.isBusy) return
+        restart()
+        flashcards.generate({
+            resourceId: selected.id,
+            title: selected.title,
+            cardCount: SUBJECT_FLASHCARDS_DEFAULT_COUNT,
+            language: locale,
+        })
+    })
 
     /** Step back to re-grade an earlier card (always on its question side). */
     const goPrev = () => {
@@ -110,14 +129,6 @@ export const SubjectAiFlashcards = ({
         setCurrentIndex((index) => index + 1)
     }
 
-    /** Restart the deck from the first card (keeps the generated deck). */
-    const restart = () => {
-        setCurrentIndex(0)
-        setRevealed(false)
-        setReviewedCount(0)
-        setStreaks({})
-    }
-
     return (
         <div className="flex flex-col gap-6 p-6">
             <ToolSurfaceHeader
@@ -127,224 +138,279 @@ export const SubjectAiFlashcards = ({
                 headingRef={headingRef}
             />
 
-            {sources.length === 0 ? (
-                <EmptyContent
-                    title={t("subjects.aiTools.flashcards.emptyTitle")}
-                    description={t("subjects.aiTools.flashcards.emptyDesc")}
-                    onRetry={onGoResources}
-                    retryLabel={t("subjects.aiTools.goResources")}
-                />
-            ) : !deck && !deckSwr.isMutating ? (
-                <>
-                    <SourcePicker
-                        label={t("subjects.aiTools.pickSource")}
-                        sources={sources}
-                        selectedId={selectedId}
-                        onSelect={setSelectedId}
+            <AsyncContent
+                isLoading={isSourcesLoading && sources.length === 0}
+                skeleton={
+                    <div className="flex flex-col gap-2">
+                        {Array.from({ length: 3 }).map((_, index) => (
+                            <Skeleton key={index} className="h-12 w-full rounded-2xl" />
+                        ))}
+                    </div>
+                }
+                error={!sources.length ? sourcesError : undefined}
+                errorContent={{
+                    title: t("subjects.aiTools.sourcesErrorTitle"),
+                    onRetry: () => {
+                        void reloadSources()
+                    },
+                    retryLabel: t("subjects.aiTools.retry"),
+                }}
+            >
+                {sources.length === 0 ? (
+                    <EmptyContent
+                        title={t("subjects.aiTools.flashcards.emptyTitle")}
+                        description={t("subjects.aiTools.flashcards.emptyDesc")}
+                        onRetry={onGoResources}
+                        retryLabel={t("subjects.aiTools.goResources")}
                     />
-                    {deckSwr.error ? (
-                        <ErrorContent
-                            title={t("subjects.aiTools.flashcards.errorTitle")}
-                            description={t("subjects.aiTools.errorRetryHint")}
-                            onRetry={generate}
-                            retryLabel={t("subjects.aiTools.retry")}
+                ) : flashcards.isBusy ? (
+                    <div className="flex flex-col items-center gap-3 rounded-2xl border border-separator p-8 text-center">
+                        <Spinner size="lg" />
+                        <Typography type="body-sm" color="muted">
+                            {t("subjects.aiTools.job.running")}
+                        </Typography>
+                        {flashcards.isStale ? (
+                            <div className="flex flex-col items-center gap-2">
+                                <Typography type="body-xs" color="muted">
+                                    {t("subjects.aiTools.job.stale")}
+                                </Typography>
+                                <Button
+                                    size="sm"
+                                    variant="tertiary"
+                                    onPress={() => flashcards.refresh()}
+                                >
+                                    {t("subjects.aiTools.job.refresh")}
+                                </Button>
+                            </div>
+                        ) : null}
+                    </div>
+                ) : !deck ? (
+                    <div className="flex flex-col gap-6">
+                        <SourcePicker
+                            label={t("subjects.aiTools.pickSource")}
+                            sources={sources}
+                            selectedId={selectedId}
+                            onSelect={setSelectedId}
                         />
-                    ) : null}
-                    <Button
-                        variant="primary"
-                        className="self-start"
-                        isDisabled={!selected}
-                        onPress={generate}
-                    >
-                        {t("subjects.aiTools.flashcards.generate")}
-                    </Button>
-                </>
-            ) : deckSwr.isMutating ? (
-                <Skeleton className="h-64 w-full rounded-large" />
-            ) : done ? (
-                <div className="mx-auto flex w-full max-w-xl flex-col items-center gap-3 rounded-2xl border border-separator p-8 text-center">
-                    <CheckCircleIcon
-                        aria-hidden
-                        focusable="false"
-                        className="size-8 text-success"
-                    />
-                    <Typography type="h6" weight="bold">
-                        {t("subjects.aiTools.flashcards.sessionDoneTitle")}
-                    </Typography>
-                    <Typography type="body-sm" color="muted">
-                        {t("subjects.aiTools.flashcards.sessionDoneDesc", {
-                            count: reviewedCount,
-                        })}
-                    </Typography>
-                    <div className="mt-2 flex gap-2">
-                        <Button variant="secondary" onPress={restart}>
-                            {t("subjects.aiTools.flashcards.studyAgain")}
-                        </Button>
+                        {flashcards.errorKey ? (
+                            <ErrorContent
+                                title={t(`subjects.aiTools.job.${flashcards.errorKey}`)}
+                                description={
+                                    flashcards.failureMessage ??
+                                    t("subjects.aiTools.errorRetryHint")
+                                }
+                                onRetry={generate}
+                                retryLabel={t("subjects.aiTools.retry")}
+                            />
+                        ) : null}
                         <Button
                             variant="primary"
-                            onPress={() => {
-                                deckSwr.reset()
-                                restart()
-                            }}
+                            className="self-start"
+                            isDisabled={!selected}
+                            onPress={generate}
                         >
-                            {t("subjects.aiTools.flashcards.regenerate")}
+                            {t("subjects.aiTools.flashcards.generate")}
                         </Button>
                     </div>
-                </div>
-            ) : card ? (
-                <div className="mx-auto flex w-full max-w-xl flex-col gap-6">
-                    {/* deck/stats framing — the source + a maturity mix bar
-                        (mastered · learning · new), mirroring FlashcardStatsStrip */}
-                    <div className="flex flex-col gap-3 rounded-2xl border border-separator p-4">
-                        <Typography type="body-sm" weight="medium" className="min-w-0 truncate">
-                            {deck?.title}
+                ) : done ? (
+                    <div className="mx-auto flex w-full max-w-xl flex-col items-center gap-3 rounded-2xl border border-separator p-8 text-center">
+                        <CheckCircleIcon
+                            aria-hidden
+                            focusable="false"
+                            className="size-8 text-success"
+                        />
+                        <Typography type="h6" weight="bold">
+                            {t("subjects.aiTools.flashcards.sessionDoneTitle")}
                         </Typography>
-                        <SegmentBar
+                        <Typography type="body-sm" color="muted">
+                            {t("subjects.aiTools.flashcards.sessionDoneDesc", {
+                                count: reviewedCount,
+                            })}
+                        </Typography>
+                        <Typography type="body-xs" color="muted">
+                            {t("subjects.aiTools.flashcards.localOnlyHint")}
+                        </Typography>
+                        <div className="mt-2 flex gap-2">
+                            <Button variant="secondary" onPress={restart}>
+                                {t("subjects.aiTools.flashcards.studyAgain")}
+                            </Button>
+                            <Button
+                                variant="primary"
+                                onPress={() => {
+                                    flashcards.reset()
+                                    restart()
+                                }}
+                            >
+                                {t("subjects.aiTools.flashcards.regenerate")}
+                            </Button>
+                        </div>
+                    </div>
+                ) : card ? (
+                    <div className="mx-auto flex w-full max-w-xl flex-col gap-6">
+                        {/* deck/stats framing — the source + a maturity mix bar
+                            (mastered · learning · new), mirroring FlashcardStatsStrip */}
+                        <div className="flex flex-col gap-3 rounded-2xl border border-separator p-4">
+                            <Typography
+                                type="body-sm"
+                                weight="medium"
+                                className="min-w-0 truncate"
+                            >
+                                {deck.title}
+                            </Typography>
+                            <SegmentBar
+                                max={cards.length}
+                                ariaLabel={t("subjects.aiTools.flashcards.stats.barAria", {
+                                    mastered,
+                                    learning,
+                                    newCount,
+                                    total: cards.length,
+                                })}
+                                segments={[
+                                    {
+                                        key: "mastered",
+                                        label: t("subjects.aiTools.flashcards.stats.mastered"),
+                                        value: mastered,
+                                        color: "var(--success)",
+                                    },
+                                    {
+                                        key: "learning",
+                                        label: t("subjects.aiTools.flashcards.stats.learning"),
+                                        value: learning,
+                                        color: "var(--warning)",
+                                    },
+                                    {
+                                        key: "new",
+                                        label: t("subjects.aiTools.flashcards.stats.new"),
+                                        value: newCount,
+                                        color: "var(--default)",
+                                    },
+                                ]}
+                            />
+                        </div>
+
+                        {/* progress — "Thẻ i/total" + bar (mirrors StarCi review) */}
+                        <ProgressMeter
+                            value={currentIndex + 1}
                             max={cards.length}
-                            ariaLabel={t("subjects.aiTools.flashcards.stats.barAria", {
-                                mastered,
-                                learning,
-                                newCount,
+                            label={t("subjects.aiTools.flashcards.cardProgress", {
+                                current: currentIndex + 1,
                                 total: cards.length,
                             })}
-                            segments={[
-                                {
-                                    key: "mastered",
-                                    label: t("subjects.aiTools.flashcards.stats.mastered"),
-                                    value: mastered,
-                                    color: "var(--success)",
-                                },
-                                {
-                                    key: "learning",
-                                    label: t("subjects.aiTools.flashcards.stats.learning"),
-                                    value: learning,
-                                    color: "var(--warning)",
-                                },
-                                {
-                                    key: "new",
-                                    label: t("subjects.aiTools.flashcards.stats.new"),
-                                    value: newCount,
-                                    color: "var(--default)",
-                                },
-                            ]}
                         />
-                    </div>
 
-                    {/* progress — "Thẻ i/total" + bar (mirrors StarCi review) */}
-                    <ProgressMeter
-                        value={currentIndex + 1}
-                        max={cards.length}
-                        label={t("subjects.aiTools.flashcards.cardProgress", {
-                            current: currentIndex + 1,
-                            total: cards.length,
-                        })}
-                    />
-
-                    {/* current card meta: topic tags (StarCi shows level + tag chips) */}
-                    {card.tags && card.tags.length > 0 ? (
-                        <div className="flex flex-wrap items-center gap-2">
-                            {card.tags.map((tag) => (
-                                <Chip key={tag} size="sm" variant="soft" color="default">
-                                    {tag}
-                                </Chip>
-                            ))}
-                        </div>
-                    ) : null}
-
-                    {/* flip card — question on the front, answer on the back */}
-                    <button
-                        type="button"
-                        aria-label={t("subjects.aiTools.flashcards.flip")}
-                        aria-pressed={revealed}
-                        onClick={() => setRevealed((prev) => !prev)}
-                        className="flex min-h-64 w-full flex-col items-center justify-center gap-3 rounded-3xl border border-separator bg-surface p-8 text-center outline-none transition-colors hover:border-accent/50 focus-visible:ring-2 focus-visible:ring-focus"
-                    >
-                        <Typography
-                            type="body-xs"
-                            weight="medium"
-                            className={cn(revealed ? "text-success" : "text-accent")}
-                        >
-                            {revealed
-                                ? t("subjects.aiTools.flashcards.answerLabel")
-                                : t("subjects.aiTools.flashcards.questionLabel")}
-                        </Typography>
-                        <Typography type="h5" weight="semibold">
-                            {revealed ? card.definition : card.term}
-                        </Typography>
-                        <span className="flex items-center gap-1 text-muted">
-                            <CursorClickIcon
-                                className="size-3.5"
-                                aria-hidden
-                                focusable="false"
-                            />
-                            <Typography type="body-xs" color="muted">
-                                {revealed
-                                    ? t("subjects.aiTools.flashcards.flipBackHint")
-                                    : t("subjects.aiTools.flashcards.flipHint")}
-                            </Typography>
-                        </span>
-                    </button>
-
-                    {/* reveal first, then grade recall (which advances) — mirrors
-                        StarCi's reveal-gate: question side has prev + "show answer",
-                        answer side shows the SM-2 rating row */}
-                    {revealed ? (
-                        <div className="flex flex-col gap-2">
-                            <Typography type="body-xs" color="muted" align="center">
-                                {t("subjects.aiTools.flashcards.rateHint")}
-                            </Typography>
-                            <div className="grid grid-cols-4 gap-2">
-                                {SM2_GRADES.map((option) => {
-                                    const streak = streaks[card.id] ?? 0
-                                    const days = nextIntervalDays(option.grade, streak)
-                                    const interval =
-                                        days === 0
-                                            ? t("subjects.aiTools.flashcards.intervalNow")
-                                            : t("subjects.aiTools.flashcards.intervalDays", {
-                                                count: days,
-                                            })
-                                    return (
-                                        <button
-                                            key={option.grade}
-                                            type="button"
-                                            onClick={() => onRate(option.grade)}
-                                            className={cn(
-                                                "flex flex-col items-center gap-0.5 rounded-xl border py-2 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-focus",
-                                                option.tone,
-                                            )}
-                                        >
-                                            <Typography type="body-sm" weight="medium">
-                                                {t(`subjects.aiTools.flashcards.rating.${option.labelKey}`)}
-                                            </Typography>
-                                            <Typography type="body-xs" color="muted">
-                                                {interval}
-                                            </Typography>
-                                        </button>
-                                    )
-                                })}
+                        {/* current card meta: topic tags (StarCi shows level + tag chips) */}
+                        {card.tags && card.tags.length > 0 ? (
+                            <div className="flex flex-wrap items-center gap-2">
+                                {card.tags.map((tag) => (
+                                    <Chip key={tag} size="sm" variant="soft" color="default">
+                                        {tag}
+                                    </Chip>
+                                ))}
                             </div>
-                        </div>
-                    ) : (
-                        <div className="flex items-center justify-between gap-3">
-                            <Button
-                                size="sm"
-                                variant="secondary"
-                                isDisabled={isFirst}
-                                onPress={goPrev}
+                        ) : null}
+
+                        {/* flip card — question on the front, answer on the back */}
+                        <button
+                            type="button"
+                            aria-label={t("subjects.aiTools.flashcards.flip")}
+                            aria-pressed={revealed}
+                            onClick={() => setRevealed((prev) => !prev)}
+                            className="flex min-h-64 w-full flex-col items-center justify-center gap-3 rounded-3xl border border-separator bg-surface p-8 text-center outline-none transition-colors hover:border-accent/50 focus-visible:ring-2 focus-visible:ring-focus"
+                        >
+                            <Typography
+                                type="body-xs"
+                                weight="medium"
+                                className={cn(revealed ? "text-success" : "text-accent")}
                             >
-                                {t("subjects.aiTools.flashcards.previous")}
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                onPress={() => setRevealed(true)}
-                            >
-                                {t("subjects.aiTools.flashcards.showAnswer")}
-                            </Button>
-                        </div>
-                    )}
-                </div>
-            ) : null}
+                                {revealed
+                                    ? t("subjects.aiTools.flashcards.answerLabel")
+                                    : t("subjects.aiTools.flashcards.questionLabel")}
+                            </Typography>
+                            <Typography type="h5" weight="semibold">
+                                {revealed ? card.definition : card.term}
+                            </Typography>
+                            {!revealed && card.hint ? (
+                                <Typography type="body-xs" color="muted">
+                                    {t("subjects.aiTools.flashcards.hint", { hint: card.hint })}
+                                </Typography>
+                            ) : null}
+                            <span className="flex items-center gap-1 text-muted">
+                                <CursorClickIcon
+                                    className="size-3.5"
+                                    aria-hidden
+                                    focusable="false"
+                                />
+                                <Typography type="body-xs" color="muted">
+                                    {revealed
+                                        ? t("subjects.aiTools.flashcards.flipBackHint")
+                                        : t("subjects.aiTools.flashcards.flipHint")}
+                                </Typography>
+                            </span>
+                        </button>
+
+                        {/* reveal first, then grade recall (which advances) — mirrors
+                            StarCi's reveal-gate: question side has prev + "show answer",
+                            answer side shows the SM-2 rating row */}
+                        {revealed ? (
+                            <div className="flex flex-col gap-2">
+                                <Typography type="body-xs" color="muted" align="center">
+                                    {t("subjects.aiTools.flashcards.rateHint")}
+                                </Typography>
+                                <div className="grid grid-cols-4 gap-2">
+                                    {SM2_GRADES.map((option) => {
+                                        const streak = streaks[card.id] ?? 0
+                                        const days = nextIntervalDays(option.grade, streak)
+                                        const interval =
+                                            days === 0
+                                                ? t("subjects.aiTools.flashcards.intervalNow")
+                                                : t("subjects.aiTools.flashcards.intervalDays", {
+                                                    count: days,
+                                                })
+                                        return (
+                                            <button
+                                                key={option.grade}
+                                                type="button"
+                                                onClick={() => onRate(option.grade)}
+                                                className={cn(
+                                                    "flex flex-col items-center gap-0.5 rounded-xl border py-2 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-focus",
+                                                    option.tone,
+                                                )}
+                                            >
+                                                <Typography type="body-sm" weight="medium">
+                                                    {t(
+                                                        `subjects.aiTools.flashcards.rating.${option.labelKey}`,
+                                                    )}
+                                                </Typography>
+                                                <Typography type="body-xs" color="muted">
+                                                    {interval}
+                                                </Typography>
+                                            </button>
+                                        )
+                                    })}
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="flex items-center justify-between gap-3">
+                                <Button
+                                    size="sm"
+                                    variant="secondary"
+                                    isDisabled={isFirst}
+                                    onPress={goPrev}
+                                >
+                                    {t("subjects.aiTools.flashcards.previous")}
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onPress={() => setRevealed(true)}
+                                >
+                                    {t("subjects.aiTools.flashcards.showAnswer")}
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                ) : null}
+            </AsyncContent>
         </div>
     )
 }

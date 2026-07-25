@@ -1,8 +1,9 @@
 "use client"
 
-import React from "react"
+import React, { useCallback, useState } from "react"
 import { Button } from "@heroui/react"
 import { useTranslations } from "next-intl"
+import { ConfirmDialog } from "@/components/reuseable/PostEngagementBar/ConfirmDialog"
 import { useMutateJoinGroupSwr } from "../hooks/useMutateJoinGroupSwr"
 
 /** Props for {@link GroupJoinButton}. */
@@ -14,26 +15,77 @@ interface GroupJoinButtonProps {
     /** Extra classes for layout (e.g. `self-start`). */
     className?: string
     /**
-     * Whether the viewer owns this group. Owners are already members, so the CTA
-     * renders as a disabled "Joined" state — pressing Join would POST against
-     * their own group. The read contract has no membership flag, so ownership is
-     * the only membership signal available here.
+     * Whether the viewer owns this group. Owners are already members AND cannot leave
+     * (the BE requires an ownership transfer first — `GROUP_OWNER_MUST_TRANSFER`), so
+     * the CTA renders as a disabled "Joined" state for them.
      */
     isOwner?: boolean
+    /**
+     * The viewer's role in the group as returned by `GET /groups/{id}`
+     * (`viewerMembership`; null = not a member). Optional — pass it on surfaces that
+     * already hold the group DTO. When omitted the hook falls back to the cached group
+     * header, then to the status of the actions taken this session.
+     */
+    viewerMembership?: string | null
 }
 
 /**
- * Join action for a group (§7). Optimistically flips to a pending state on press
- * and reflects the BE result: `JOINED` (open group) → "Joined" (disabled), or
- * `PENDING` (approval required) → "Pending" (disabled). Guests get the
- * `AuthenticationModal`. Join-only — the backend has no leave endpoint. When the
- * viewer owns the group it renders a disabled "Joined" state (owners are members).
+ * Join / leave action for a group (§7).
+ *
+ * Not a member → "Join": optimistically flips to a pending state and reflects the BE
+ * result — `JOINED` (open group) → "Joined", `PENDING` (approval required) → "Pending"
+ * (disabled). Member → "Leave group", behind the shared {@link ConfirmDialog} (a
+ * destructive membership change, and in a dense card grid a stray tap must not drop
+ * it); the confirm calls `DELETE /groups/{id}/members/{userId}` with the viewer's own
+ * id. Guests get the `AuthenticationModal`. Owners render a disabled "Joined" state —
+ * they are members and must transfer ownership before they can leave.
  */
-export const GroupJoinButton = ({ groupId, size = "sm", className, isOwner = false }: GroupJoinButtonProps) => {
+export const GroupJoinButton = ({
+    groupId,
+    size = "sm",
+    className,
+    isOwner = false,
+    viewerMembership,
+}: GroupJoinButtonProps) => {
     const t = useTranslations("groupsHub")
-    const { status, isJoining, join } = useMutateJoinGroupSwr(groupId)
+    const { status, isJoining, isLeaving, canLeave, join, leave } = useMutateJoinGroupSwr(groupId, {
+        viewerMembership,
+    })
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false)
 
     const joined = isOwner || status === "joined"
+    // Owners cannot leave — the BE demands an ownership transfer first.
+    const showLeave = joined && !isOwner && canLeave
+
+    const onConfirmLeave = useCallback(async () => {
+        await leave(t("join.left"))
+        setIsConfirmOpen(false)
+    }, [leave, t])
+
+    if (showLeave) {
+        return (
+            <>
+                <Button
+                    size={size}
+                    variant="ghost"
+                    className={className}
+                    isPending={isLeaving}
+                    onPress={() => setIsConfirmOpen(true)}
+                >
+                    {t("join.leave")}
+                </Button>
+                <ConfirmDialog
+                    isOpen={isConfirmOpen}
+                    onClose={() => setIsConfirmOpen(false)}
+                    onConfirm={() => void onConfirmLeave()}
+                    title={t("join.leaveTitle")}
+                    description={t("join.leaveDescription")}
+                    confirmLabel={t("join.leave")}
+                    isPending={isLeaving}
+                />
+            </>
+        )
+    }
 
     const label = joined
         ? t("join.joined")

@@ -1,62 +1,89 @@
 "use client"
 
-import useSWRMutation from "swr/mutation"
+import { submitSummaryJob } from "@/modules/api/rest/ai"
+import type { SummaryResult } from "@/components/features/ai-platform/tools/types"
 
-/** A generated mock summary for a picked source. */
+import { useSubjectAiJob } from "./useSubjectAiJob"
+
+/** A generated summary, flattened for the subject Summary surface. */
 export interface SubjectAiSummary {
-    /** Bulleted key points. */
+    /** Bulleted key points (worker `key_points`). */
     keyPoints: Array<string>
-    /** A short abstract paragraph. */
+    /** Short abstract paragraph (worker `tldr`). */
     abstract: string
+    /** Glossary entries, when the worker produced any. */
+    glossary: Array<{ term: string, definition: string }>
+    /** Estimated read minutes, when present. */
+    readMinutes?: number
+    /** Producing model — always surfaced (every model summarizes differently). */
+    model?: string
 }
 
-/** Args for a summary generation. */
-export interface GenerateSummaryArgs {
-    subjectCode: string
-    sourceTitle: string
-    /** Force the mock failure path (retry testing). */
-    fail?: boolean
+/** Args for a summary run. */
+export interface GenerateSubjectSummaryArgs {
+    /** Resource UUID picked in the source list (BE `resourceId`). */
+    resourceId: string
+    /** UI locale forwarded as the generation language. */
+    language: string
 }
 
-/** ~1s so the loading skeleton is observable. */
-const MOCK_DELAY_MS = 900
-
-// ponytail: mock BE — no summary endpoint. Builds a source-aware canned summary.
-const generateSummaryMock = async (
-    _key: string,
-    { arg }: { arg: GenerateSummaryArgs },
-): Promise<SubjectAiSummary> => {
-    await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY_MS))
-    if (arg.fail) {
-        throw new Error("mock-summary-failure")
+/**
+ * Flattens a raw `SUMMARY` job result into {@link SubjectAiSummary}.
+ *
+ * The worker stores `{tldr, key_points, glossary, estimated_read_min, model}` as a
+ * JSON string, already parsed by the poller. A model that answered with bare
+ * markdown instead of the wrapper arrives as a plain string — it is kept as the
+ * abstract rather than dropped, so a degraded run still shows its content.
+ *
+ * @param raw - the parsed job result, or undefined before the job COMPLETED.
+ * @returns the flattened summary, or undefined when there is nothing to render.
+ */
+export const mapSummaryJobResult = (
+    raw: SummaryResult | string | undefined,
+): SubjectAiSummary | undefined => {
+    if (raw === undefined || raw === null) return undefined
+    if (typeof raw === "string") {
+        const text = raw.trim()
+        return text ? { keyPoints: [], abstract: text, glossary: [] } : undefined
     }
+    const keyPoints = (raw.key_points ?? []).filter(
+        (point): point is string => typeof point === "string" && point.trim() !== "",
+    )
+    const abstract = raw.tldr?.trim() ?? ""
+    const glossary = (raw.glossary ?? []).filter((entry) => !!entry?.term)
+    if (!keyPoints.length && !abstract && !glossary.length) return undefined
     return {
-        keyPoints: [
-            `Nội dung chính của "${arg.sourceTitle}" (${arg.subjectCode}).`,
-            "Các khái niệm cốt lõi được nêu bật để ôn nhanh.",
-            "Ví dụ minh hoạ và lưu ý thường gặp.",
-            "Gợi ý bước tiếp theo để luyện tập.",
-        ],
-        abstract:
-            `Đây là bản tóm tắt demo cho "${arg.sourceTitle}". Trợ lý AI sẽ ` +
-            `chắt lọc ý chính từ tài liệu của môn ${arg.subjectCode}, sắp xếp ` +
-            "theo trình tự dễ ôn và nêu các điểm cần lưu ý. (AI demo — nội dung " +
-            "mô phỏng phía client.)",
+        keyPoints,
+        abstract,
+        glossary,
+        readMinutes: raw.estimated_read_min,
+        model: raw.model,
     }
 }
 
 /**
- * Generates a mock summary for a picked subject source. SWR-mutation-shaped so a
- * real BE fetcher drops in without UI changes. BE assumption (logged): a real BE
- * summarizes the (subject, source) pair server-side.
+ * Runs the REAL summary job for a picked subject resource: `POST /ai/learning/summary`
+ * with `{resourceId, language}` → poll `GET /ai/jobs/{id}` until a terminal status →
+ * flatten the worker payload into key points + abstract.
  *
- * @param subjectId - the `[subjectId]` route segment (scopes the SWR key).
+ * A failed re-run keeps the previous summary on screen (the surface renders `data`
+ * and `errorKey` side by side) — regenerating never blanks a good result.
  */
-export const useMutateSubjectAiSummarySwr = (subjectId: string) => {
-    return useSWRMutation<
-        SubjectAiSummary,
-        Error,
-        string,
-        GenerateSummaryArgs
-    >(`subject-ai-summary:${subjectId}`, generateSummaryMock)
+export const useMutateSubjectAiSummarySwr = () => {
+    const job = useSubjectAiJob<SummaryResult | string>()
+
+    /** Submit a summary job for the picked resource. */
+    const generate = (args: GenerateSubjectSummaryArgs) =>
+        void job.run(() =>
+            submitSummaryJob({
+                resourceId: args.resourceId,
+                language: args.language,
+            }),
+        )
+
+    return {
+        ...job,
+        generate,
+        data: mapSummaryJobResult(job.result),
+    }
 }

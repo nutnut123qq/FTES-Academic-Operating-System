@@ -2,7 +2,12 @@
 
 import React from "react"
 import { Button, Chip, Typography, cn } from "@heroui/react"
-import { ArrowLeftIcon, CheckCircleIcon, CursorClickIcon } from "@phosphor-icons/react"
+import {
+    ArrowLeftIcon,
+    CheckCircleIcon,
+    CursorClickIcon,
+    SparkleIcon,
+} from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
@@ -16,6 +21,11 @@ export interface PracticeFlashcardsProps {
     subjectId: string
     /** Return to the practice hub. */
     onBack: () => void
+    /**
+     * Opens the subject's AI tools tab. The BE ships no curated per-subject deck yet,
+     * so the empty state hands the learner over to the AI Flashcards generator.
+     */
+    onOpenAiTools: () => void
 }
 
 /**
@@ -26,7 +36,11 @@ export interface PracticeFlashcardsProps {
  * run; a summary closes it (studyAgain). Backed by a fixed practice deck
  * (`useQuerySubjectPracticeFlashcardsSwr`) rather than the AI source-pick flow.
  */
-export const PracticeFlashcards = ({ subjectId, onBack }: PracticeFlashcardsProps) => {
+export const PracticeFlashcards = ({
+    subjectId,
+    onBack,
+    onOpenAiTools,
+}: PracticeFlashcardsProps) => {
     const t = useTranslations("subjects")
     const { cards, isLoading, error, mutate } = useQuerySubjectPracticeFlashcardsSwr(subjectId)
 
@@ -85,7 +99,16 @@ export const PracticeFlashcards = ({ subjectId, onBack }: PracticeFlashcardsProp
                 isLoading={isLoading && cards.length === 0}
                 skeleton={<Skeleton className="mx-auto h-64 w-full max-w-xl rounded-large" />}
                 isEmpty={cards.length === 0}
-                emptyContent={{ title: t("practice.flashcards.empty") }}
+                emptyContent={{
+                    title: t("practice.flashcards.empty"),
+                    description: t("practice.flashcardsHandoff.description"),
+                    action: (
+                        <Button size="sm" variant="primary" onPress={onOpenAiTools}>
+                            <SparkleIcon aria-hidden focusable="false" className="size-4" />
+                            {t("practice.flashcardsHandoff.cta")}
+                        </Button>
+                    ),
+                }}
                 error={error}
                 errorContent={{
                     title: t("practice.flashcards.error"),

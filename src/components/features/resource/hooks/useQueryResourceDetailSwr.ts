@@ -1,42 +1,26 @@
 "use client"
 
 import useSWR from "swr"
+import { getResourceDetail, type ResourceResponse } from "@/modules/api/rest/resource"
 
-/** A comment on a resource. */
-export interface ResourceComment {
-    id: string
-    author: string
-    text: string
-}
-
-/** Full resource detail (§5, mock until BE lands). */
-export interface ResourceDetail {
-    id: string
-    title: string
-    subject: string
-    sizeLabel: string
-    rating: number
-    comments: Array<ResourceComment>
-}
-
-// ponytail: mock BE — no resource endpoint yet. Derives from the id.
-const fetchResourceDetailMock = async (resourceId: string): Promise<ResourceDetail> => ({
-    id: resourceId,
-    title: "Giáo trình PRF192 (bản đầy đủ)",
-    subject: "PRF192",
-    sizeLabel: "8.4 MB",
-    rating: 4.6,
-    comments: [
-        { id: "cm1", author: "Minh", text: "Tài liệu rất đầy đủ, cảm ơn!" },
-        { id: "cm2", author: "An", text: "Phần con trỏ giải thích dễ hiểu." },
-    ],
-})
-
-/** Loads a resource's detail. Mocked; SWR-shaped for a drop-in BE swap. */
+/**
+ * Loads a resource's detail from the REST backend (`GET /api/v1/resources/{id}`).
+ *
+ * The endpoint is PUBLIC (visibility-gated server-side), so a guest can read a
+ * public resource; a private/soft-deleted one answers 403/404 and the caller
+ * renders the error state (and hides the AI-QA section).
+ *
+ * The SWR key mirrors the central `useGetResourceDetailSwr` wrapper so both share
+ * one cache entry (a `mutate` here also refreshes any other consumer).
+ *
+ * @param resourceId - Resource id from the route.
+ * @returns `{ resource, isLoading, error, mutate }` — `resource` is the raw
+ * {@link ResourceResponse} (title / type / avgRating / ratingCount / currentVersionId).
+ */
 export const useQueryResourceDetailSwr = (resourceId: string) => {
-    const { data, isLoading, error, mutate } = useSWR(
-        ["resource-detail", resourceId],
-        () => fetchResourceDetailMock(resourceId),
+    const { data, isLoading, error, mutate } = useSWR<ResourceResponse, Error>(
+        resourceId ? ["GET_RESOURCE_DETAIL_SWR", resourceId] : null,
+        () => getResourceDetail(resourceId),
     )
     return { resource: data, isLoading, error, mutate }
 }

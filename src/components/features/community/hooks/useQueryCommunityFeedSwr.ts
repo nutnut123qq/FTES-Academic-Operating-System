@@ -49,11 +49,17 @@ export interface CommunityFeedPage {
 export type CommunityFeedTab = "forYou" | "following" | "campus" | "trending"
 
 /**
- * SWR cache tag for the community feed. The feed is now cursor-paginated via
+ * SWR cache tag for the community feed. The feed is cursor-paginated via
  * `useSWRInfinite`, whose assembled pages live under an `$inf$…` string key that
  * embeds the serialized first-page key `["community-feed", tab, campus, cursor]`.
  * The optimistic like/comment mutations target those aggregate caches through
  * {@link mutateCommunityFeeds} rather than a single exact key.
+ *
+ * The community SEARCH hook deliberately tags its own infinite pages with a tag that
+ * STARTS WITH this one (`community-feed-search`, see `useQueryCommunitySearchSwr`), so a
+ * like/comment fired from a search result lands on the search cache too — search rows carry
+ * the exact same {@link CommunityFeedPage} shape, so {@link patchFeedPostInPages} applies
+ * verbatim.
  */
 export const COMMUNITY_FEED_TAG = "community-feed"
 
@@ -162,7 +168,28 @@ export const toCommunityPost = (post: FeedPost, locale: string): CommunityPost =
 const PAGE_LIMIT = 20
 
 /** Infinite-scroll page key: `["community-feed", tab, campus, cursor]` (null ⇒ end). */
-type FeedPageKey = readonly [string, CommunityFeedTab, string, string]
+export type FeedPageKey = readonly [string, CommunityFeedTab, string, string]
+
+/**
+ * `useSWRInfinite` key factory for one feed scope — pure, so the paging STOP condition is
+ * unit-testable without rendering. Page 1 has no cursor; every later page keys off the
+ * PREVIOUS page's `nextCursor`, and returning `null` tells SWR the list is exhausted (the
+ * BE returns `nextCursor: null` on the last page, so no extra empty request is made).
+ */
+export const communityFeedPageKey = (
+    tab: CommunityFeedTab,
+    campus: string,
+    index: number,
+    previous: CommunityFeedPage | null,
+): FeedPageKey | null => {
+    // previous page had no next cursor → end of list, stop paging
+    if (previous && !previous.nextCursor) {
+        return null
+    }
+    // page 1 has no cursor; later pages use the previous page's nextCursor
+    const cursor = index === 0 ? "" : previous?.nextCursor ?? ""
+    return [COMMUNITY_FEED_TAG, tab, campus, cursor]
+}
 
 /**
  * Loads the community feed for a scope from the real BE GraphQL `feed(tab, page, campus)`,
@@ -182,15 +209,8 @@ export const useQueryCommunityFeedSwr = (tab: CommunityFeedTab = "forYou", campu
     const locale = useLocale()
     const scopedCampus = tab === "campus" ? campus : undefined
 
-    const getKey = (index: number, previous: CommunityFeedPage | null): FeedPageKey | null => {
-        // previous page had no next cursor → end of list, stop paging
-        if (previous && previous.nextCursor === null) {
-            return null
-        }
-        // page 1 has no cursor; later pages use the previous page's nextCursor
-        const cursor = index === 0 ? "" : previous?.nextCursor ?? ""
-        return [COMMUNITY_FEED_TAG, tab, scopedCampus ?? "", cursor]
-    }
+    const getKey = (index: number, previous: CommunityFeedPage | null): FeedPageKey | null =>
+        communityFeedPageKey(tab, scopedCampus ?? "", index, previous)
 
     const fetchPage = async ([, , , cursor]: FeedPageKey): Promise<CommunityFeedPage> => {
         const result = await queryCommunityFeed({

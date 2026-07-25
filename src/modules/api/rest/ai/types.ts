@@ -306,3 +306,44 @@ export interface StudyPlanProgressRequest {
     taskKey: string
     done: boolean
 }
+
+// ---------------- DocumentQaController (POST /api/v1/ai/document-qa) ----------------
+
+/**
+ * Body of `POST /api/v1/ai/document-qa` (BE `DocumentQaController.DocumentQaRequest`).
+ * `document_ref` BE-side = `documentId ?? lessonId` — send at least one of them.
+ * `selection` is the highlighted passage ("bôi đen hỏi AI"); `model` must be on the
+ * catalog allowlist (invalid → 400 before any quota is spent).
+ */
+export interface DocumentQaRequest {
+    documentId?: string
+    lessonId?: string
+    selection?: string
+    question: string
+    /** Catalog model id; omit → BE resolves (image mime → vision default, else DOCUMENT_QA config). */
+    model?: string
+}
+
+/**
+ * One citation of a document-QA answer (snake_case — passed through verbatim from
+ * ftes-ai-service `Citation`). `quote` is clamped BE-side to ≤200 chars.
+ */
+export interface DocumentQaCitation {
+    document_ref?: string | null
+    page?: number | null
+    chunk_index?: number | null
+    quote: string
+}
+
+/**
+ * Response of `POST /api/v1/ai/document-qa` — raw ftes-ai-service JSON passed through
+ * (`{answer, citations[], model}`). A document not yet indexed/OCR'd answers softly with
+ * `{answer: "", processing: true}` → show "Đang xử lý tài liệu…" instead of a hard error.
+ */
+export interface DocumentQaResponse {
+    answer: string
+    citations?: Array<DocumentQaCitation>
+    model?: string
+    /** True while the document is still being indexed/OCR'd (quota refunded). */
+    processing?: boolean
+}

@@ -1,12 +1,18 @@
 "use client"
 
 import React, { useCallback, useMemo, useState } from "react"
-import { Button, Skeleton, Typography, cn } from "@heroui/react"
-import { ArrowClockwiseIcon, CaretUpIcon, XIcon } from "@phosphor-icons/react"
+import { Button, Chip, Skeleton, TextArea, TextField, Typography, cn } from "@heroui/react"
+import {
+    ArrowClockwiseIcon,
+    CaretUpIcon,
+    CheckCircleIcon,
+    XIcon,
+} from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { UserLink } from "@/components/features/identity"
 import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
 import { RichCommentEditor } from "@/components/reuseable/RichCommentEditor"
+import { ConfirmDialog } from "@/components/reuseable/PostEngagementBar/ConfirmDialog"
 import type { PostComment } from "@/components/features/community/hooks/useQueryPostDetailSwr"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 
@@ -34,6 +40,30 @@ export interface PostCommentThreadProps extends WithClassNames<undefined> {
     autoFocus?: boolean
     /** Pin the composer to the bottom of the viewport on mobile while focused. */
     stickyComposerOnMobile?: boolean
+    /**
+     * Username of the signed-in viewer. A comment whose `authorUsername` matches
+     * gets the inline "Sửa" / "Xoá" affordances; guests / other users get none.
+     */
+    currentUsername?: string
+    /**
+     * Save an edited comment body (author only). Resolves `true` on success.
+     * Omit to hide the edit affordance entirely.
+     */
+    onEditComment?: (commentId: string, text: string) => Promise<boolean>
+    /** Delete a comment (author only) — the row confirms first. */
+    onDeleteComment?: (commentId: string) => void
+    /**
+     * Id of the comment already marked as the post's accepted answer (QUESTION
+     * posts) — that row shows the badge and never offers "Chấp nhận".
+     */
+    acceptedCommentId?: string
+    /**
+     * Whether the viewer may accept an answer here (post author + QUESTION post).
+     * Only TOP-LEVEL comments can be accepted (BE contract).
+     */
+    canAcceptAnswer?: boolean
+    /** Mark a top-level comment as the post's accepted answer. */
+    onAcceptAnswer?: (commentId: string) => void
 }
 
 /** One comment row (avatar + author + time + body + optional reply affordance). */
@@ -43,6 +73,12 @@ export const CommentRow = ({
     replyLabel,
     isReply,
     hasThreadline,
+    canManage = false,
+    onEdit,
+    onDelete,
+    isAccepted = false,
+    canAccept = false,
+    onAccept,
 }: {
     comment: PostComment
     onReply?: (comment: PostComment) => void
@@ -53,7 +89,54 @@ export const CommentRow = ({
      * avatar, running down to its replies. Set when the comment has replies.
      */
     hasThreadline?: boolean
+    /**
+     * Whether the viewer authored this comment — gates the inline "Sửa" / "Xoá"
+     * affordances (the server re-checks; this is UX only).
+     */
+    canManage?: boolean
+    /**
+     * Save an edited body. Resolves `true` on success (the row leaves edit mode)
+     * and `false` on failure (the draft is kept).
+     */
+    onEdit?: (commentId: string, text: string) => Promise<boolean>
+    /** Delete this comment after the row's confirm dialog. */
+    onDelete?: (commentId: string) => void
+    /** Whether this comment is the post's accepted answer (badge). */
+    isAccepted?: boolean
+    /**
+     * Whether the viewer may accept THIS comment as the answer (post author on a
+     * QUESTION post, top-level comments only).
+     */
+    canAccept?: boolean
+    /** Mark this comment as the accepted answer. */
+    onAccept?: (commentId: string) => void
 }) => {
+    const t = useTranslations("communityHub")
+    const [isEditing, setIsEditing] = useState(false)
+    const [draft, setDraft] = useState(comment.text)
+    const [isSaving, setIsSaving] = useState(false)
+    const [confirmOpen, setConfirmOpen] = useState(false)
+
+    const startEdit = useCallback(() => {
+        setDraft(comment.text)
+        setIsEditing(true)
+    }, [comment.text])
+
+    const saveEdit = useCallback(async () => {
+        const next = draft.trim()
+        if (!onEdit || next.length === 0 || isSaving) {
+            return
+        }
+        setIsSaving(true)
+        const ok = await onEdit(comment.id, next)
+        setIsSaving(false)
+        if (ok) {
+            setIsEditing(false)
+        }
+    }, [draft, onEdit, isSaving, comment.id])
+
+    const showManage = canManage && (Boolean(onEdit) || Boolean(onDelete))
+
     return (
         <div className={cn("flex items-start gap-3", isReply && "ml-9")}>
             {/* avatar column — carries the vertical threadline down to the replies */}
@@ -75,17 +158,106 @@ export const CommentRow = ({
                     <Typography type="body-xs" color="muted">
                         {comment.timeLabel}
                     </Typography>
+                    {isAccepted ? (
+                        <Chip size="sm" variant="soft" color="success">
+                            <Chip.Label>{t("engagement.acceptedAnswer")}</Chip.Label>
+                        </Chip>
+                    ) : null}
                 </div>
-                <MarkdownContent markdown={comment.text} />
-                {!isReply && onReply ? (
-                    <Button
-                        size="sm"
-                        variant="ghost"
-                        className="mt-1 h-auto px-0 text-xs"
-                        onPress={() => onReply(comment)}
-                    >
-                        {replyLabel}
-                    </Button>
+
+                {isEditing ? (
+                    <div className="mt-1 flex flex-col gap-2">
+                        <TextField variant="secondary" className="w-full">
+                            <TextArea
+                                rows={3}
+                                value={draft}
+                                onChange={(event) => setDraft(event.target.value)}
+                                aria-label={t("engagement.editComment")}
+                                className="resize-y"
+                                disabled={isSaving}
+                            />
+                        </TextField>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                size="sm"
+                                variant="primary"
+                                onPress={() => void saveEdit()}
+                                isPending={isSaving}
+                                isDisabled={isSaving || draft.trim().length === 0}
+                            >
+                                {t("engagement.saveEdit")}
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                onPress={() => setIsEditing(false)}
+                                isDisabled={isSaving}
+                            >
+                                {t("engagement.cancel")}
+                            </Button>
+                        </div>
+                    </div>
+                ) : (
+                    <MarkdownContent markdown={comment.text} />
+                )}
+
+                {!isEditing ? (
+                    <div className="mt-1 flex flex-wrap items-center gap-2">
+                        {!isReply && onReply ? (
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-auto px-0 text-xs"
+                                onPress={() => onReply(comment)}
+                            >
+                                {replyLabel}
+                            </Button>
+                        ) : null}
+                        {showManage && onEdit ? (
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-auto px-0 text-xs"
+                                onPress={startEdit}
+                            >
+                                {t("engagement.edit")}
+                            </Button>
+                        ) : null}
+                        {showManage && onDelete ? (
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-auto px-0 text-xs"
+                                onPress={() => setConfirmOpen(true)}
+                            >
+                                {t("engagement.delete")}
+                            </Button>
+                        ) : null}
+                        {canAccept && onAccept && !isAccepted ? (
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-auto px-0 text-xs text-success"
+                                onPress={() => onAccept(comment.id)}
+                            >
+                                <CheckCircleIcon aria-hidden focusable="false" className="size-4" />
+                                {t("engagement.acceptAnswer")}
+                            </Button>
+                        ) : null}
+                    </div>
+                ) : null}
+
+                {showManage && onDelete ? (
+                    <ConfirmDialog
+                        isOpen={confirmOpen}
+                        onClose={() => setConfirmOpen(false)}
+                        onConfirm={() => {
+                            setConfirmOpen(false)
+                            onDelete(comment.id)
+                        }}
+                        title={t("engagement.deleteCommentTitle")}
+                        description={t("engagement.deleteCommentConfirm")}
+                    />
                 ) : null}
             </div>
         </div>
@@ -106,6 +278,13 @@ export const CommentRow = ({
  * composer sticks to the bottom of the viewport while focused when
  * `stickyComposerOnMobile` is set.
  *
+ * Per-comment affordances (all opt-in via callbacks, so surfaces that pass none
+ * render exactly as before): the viewer's OWN comments (`authorUsername ===
+ * currentUsername`) get inline "Sửa" (a minimal markdown textarea, draft kept on
+ * failure) and "Xoá" (confirm dialog); on a QUESTION post the post author can
+ * accept a TOP-LEVEL comment as the answer, and the accepted one wears a badge
+ * instead of the action.
+ *
  * The region is focusable (`tabIndex={-1}` + localized accessible name) so the
  * bar can move focus into it on expand.
  *
@@ -121,6 +300,12 @@ export const PostCommentThread = ({
     onCollapse,
     autoFocus,
     stickyComposerOnMobile,
+    currentUsername,
+    onEditComment,
+    onDeleteComment,
+    acceptedCommentId,
+    canAcceptAnswer = false,
+    onAcceptAnswer,
     className,
 }: PostCommentThreadProps) => {
     const t = useTranslations("communityHub")
@@ -128,6 +313,13 @@ export const PostCommentThread = ({
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [isFocused, setIsFocused] = useState(false)
     const [replyFocusTrigger, setReplyFocusTrigger] = useState(0)
+
+    /** Owner gate for the inline comment affordances (guest → never mine). */
+    const isMine = useCallback(
+        (authorUsername: string) =>
+            Boolean(currentUsername) && authorUsername === currentUsername,
+        [currentUsername],
+    )
 
     const onReply = useCallback((comment: PostComment) => {
         setReplyTo(comment)
@@ -208,6 +400,12 @@ export const PostCommentThread = ({
                                             onReply={onReply}
                                             replyLabel={t("engagement.reply")}
                                             hasThreadline={replies.length > 0}
+                                            canManage={isMine(comment.authorUsername)}
+                                            onEdit={onEditComment}
+                                            onDelete={onDeleteComment}
+                                            isAccepted={acceptedCommentId === comment.id}
+                                            canAccept={canAcceptAnswer}
+                                            onAccept={onAcceptAnswer}
                                         />
                                         {replies.map((reply, index) => {
                                             const isLast = index === replies.length - 1
@@ -231,6 +429,9 @@ export const PostCommentThread = ({
                                                         comment={reply}
                                                         replyLabel={t("engagement.reply")}
                                                         isReply
+                                                        canManage={isMine(reply.authorUsername)}
+                                                        onEdit={onEditComment}
+                                                        onDelete={onDeleteComment}
                                                     />
                                                 </div>
                                             )

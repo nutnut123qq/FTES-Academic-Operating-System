@@ -1,9 +1,9 @@
 "use client"
 
 import React from "react"
-import { GroupTabPlaceholder } from "@/components/features/group/GroupTabPlaceholder"
+import { GroupResources } from "@/components/features/group/GroupResources"
 
-/** `/groups/[groupId]/resources` — placeholder until built. */
-const Page = () => <GroupTabPlaceholder tabKey="resources" />
+/** `/groups/[groupId]/resources` — documents linked to the group (§7). */
+const Page = () => <GroupResources />
 
 export default Page

@@ -4,6 +4,7 @@ import React from "react"
 import { Button, Chip, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
+import { useRouter } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { useQueryGroupChallengesSwr } from "../hooks/useQueryGroupChallengesSwr"
@@ -35,6 +36,7 @@ const GroupChallengeSkeleton = () => (
  */
 export const GroupChallenge = () => {
     const t = useTranslations("groupsHub")
+    const router = useRouter()
     const { groupId } = useParams<{ groupId: string }>()
     const { challenges, isLoading, error, mutate } = useQueryGroupChallengesSwr(groupId)
 
@@ -79,9 +81,14 @@ export const GroupChallenge = () => {
                             <Chip size="sm" variant="soft" color="accent">
                                 {statusLabel(challenge.status)}
                             </Chip>
-                            {/* mock BE — the real challenge "join" lives in the challenge module,
-                                not this read-only group bridge. Out of scope; left as a no-op. */}
-                            <Button size="sm" variant="secondary">
+                            {/* the group bridge is read-only: participating happens on the
+                                challenge itself, so this navigates to the (slug-addressed)
+                                challenge page where the real join/submit flow lives */}
+                            <Button
+                                size="sm"
+                                variant="secondary"
+                                onPress={() => router.push(`/challenges/${challenge.slug}`)}
+                            >
                                 {t("challenges.join")}
                             </Button>
                         </div>

@@ -22,10 +22,12 @@ import {
     type AiToolKey,
 } from "../hooks/useQuerySubjectAiToolsSwr"
 import { useQuerySubjectSwr } from "../hooks/useQuerySubjectSwr"
+import { useMutateSubjectMembershipSwr } from "../hooks/useMutateSubjectMembershipSwr"
 import { SubjectAiTutor } from "./SubjectAiTutor"
 import { SubjectAiSummary } from "./SubjectAiSummary"
 import { SubjectAiQuiz } from "./SubjectAiQuiz"
 import { SubjectAiFlashcards } from "./SubjectAiFlashcards"
+import { SubjectAiOcr } from "./SubjectAiOcr"
 
 // ponytail: provisional icons (confirmed-compiling set) — refine when the AI tab
 // gets its own brainstorm.
@@ -37,14 +39,15 @@ const ICONS: Record<AiToolKey, React.ReactNode> = {
     ocr: <FolderIcon className="size-6" aria-hidden focusable="false" />,
 }
 
-/** Tools that open a working surface (OCR stays a coming-soon shell). */
-type ActiveTool = Exclude<AiToolKey, "ocr">
+/** Tools that open a working surface — all five are wired now, OCR included. */
+type ActiveTool = AiToolKey
 
 /**
  * AI tab (§3 → §9): a functional per-subject AI hub. Tool cards are real entry
  * points that open working surfaces INSIDE the tab via local `activeTool` view
  * state (no sub-routes). Tools are gated on workspace membership (enroll axis).
- * OCR remains a coming-soon shell this change.
+ * Every surface runs against the real AI module: the tutor streams over SSE, and
+ * summary/quiz/flashcards/OCR submit an async job and poll `GET /ai/jobs/{id}`.
  */
 export const SubjectAiTools = () => {
     const t = useTranslations("subjects")
@@ -52,8 +55,11 @@ export const SubjectAiTools = () => {
     const { subjectId } = useParams<{ subjectId: string }>()
     const { tools, isLoading, error, mutate } =
         useQuerySubjectAiToolsSwr(subjectId)
-    const { subject } = useQuerySubjectSwr(subjectId)
+    const { subject, isMembershipLoading } = useQuerySubjectSwr(subjectId)
+    const { join, isJoining } = useMutateSubjectMembershipSwr(subjectId)
 
+    // REAL membership: the workspace aggregate's `callerMembership` (null → non-member),
+    // no longer a hardcoded false.
     const isMember = subject?.isMember ?? false
     const [activeTool, setActiveTool] = React.useState<ActiveTool | null>(null)
 
@@ -70,6 +76,9 @@ export const SubjectAiTools = () => {
             return (
                 <SubjectAiTutor
                     subjectId={subjectId}
+                    // the route segment is the CODE; the session grounding keys on the
+                    // real UUID (BE parses `contextRef.subjectId` with UUID.fromString)
+                    subjectUuid={subject.uuid}
                     subjectCode={subject.code}
                     subjectName={subject.name}
                     onBack={backToHub}
@@ -96,6 +105,15 @@ export const SubjectAiTools = () => {
                 />
             )
         }
+        if (activeTool === "ocr") {
+            return (
+                <SubjectAiOcr
+                    subjectId={subjectId}
+                    subjectCode={subject.code}
+                    onBack={backToHub}
+                />
+            )
+        }
         return (
             <SubjectAiFlashcards
                 subjectId={subjectId}
@@ -112,7 +130,10 @@ export const SubjectAiTools = () => {
                 {t("aiTools.title")}
             </Typography>
 
-            {!isMember ? (
+            {/* locked state — hidden while the membership read is in flight so a member
+                never sees a flash of the gate. "Tham gia" now really joins (POST
+                /subjects/{code}/join) and the AI hub unlocks in place. */}
+            {!isMember && !isMembershipLoading ? (
                 <div className="flex flex-col gap-3 rounded-2xl border border-separator p-4">
                     <div className="flex items-center gap-2 text-muted">
                         <LockIcon
@@ -127,9 +148,13 @@ export const SubjectAiTools = () => {
                     <Button
                         variant="primary"
                         className="self-start"
-                        onPress={goResources}
+                        isDisabled={isJoining}
+                        isPending={isJoining}
+                        onPress={() => {
+                            void join()
+                        }}
                     >
-                        {t("aiTools.join")}
+                        {t("membership.join")}
                     </Button>
                 </div>
             ) : null}

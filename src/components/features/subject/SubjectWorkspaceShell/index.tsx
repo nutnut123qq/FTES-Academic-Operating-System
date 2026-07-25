@@ -149,10 +149,14 @@ export const SubjectWorkspaceShell = ({ subjectId, children }: SubjectWorkspaceS
                                     ? `${t("credits", { count: subject.credits })} · ${t(`difficulty.${subject.difficulty}`)}`
                                     : ""}
                             </Typography>
+                            {/* real per-viewer progress: GraphQL `subjectMastery.completionPct`
+                                (0..100). `null` for a guest / no mastery row → no meter,
+                                never a fabricated figure. Clamped defensively so a stray
+                                out-of-range percent can't overflow the bar. */}
                             {subject && subject.progress !== null ? (
                                 <div className="mt-1 flex items-center gap-2">
                                     <ProgressMeter
-                                        value={subject.progress}
+                                        value={Math.min(100, Math.max(0, subject.progress))}
                                         aria-label={t("progressLabel")}
                                         className="min-w-0 flex-1"
                                     />
@@ -161,7 +165,7 @@ export const SubjectWorkspaceShell = ({ subjectId, children }: SubjectWorkspaceS
                                         color="muted"
                                         className="shrink-0 tabular-nums"
                                     >
-                                        {Math.round(subject.progress)}%
+                                        {Math.round(Math.min(100, Math.max(0, subject.progress)))}%
                                     </Typography>
                                 </div>
                             ) : null}

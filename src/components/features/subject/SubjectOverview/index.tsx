@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { Button, Chip, Typography } from "@heroui/react"
+import { Button, Chip, Modal, Typography } from "@heroui/react"
 import {
     CaretRightIcon,
     ChatCircleIcon,
@@ -9,6 +9,7 @@ import {
     GraduationCapIcon,
     HeartIcon,
     PushPinIcon,
+    SignOutIcon,
     TargetIcon,
     UsersIcon,
     XIcon,
@@ -26,6 +27,7 @@ import {
     type SubjectOverview as SubjectOverviewModel,
 } from "../hooks/useQuerySubjectOverviewSwr"
 import { useQuerySubjectSwr } from "../hooks/useQuerySubjectSwr"
+import { useMutateSubjectMembershipSwr } from "../hooks/useMutateSubjectMembershipSwr"
 import { useQuerySubjectFeedSwr } from "../hooks/useQuerySubjectFeedSwr"
 import { getCourseIdentity } from "./course-identity"
 
@@ -36,8 +38,8 @@ const RECENT_DISCUSSIONS = 5
 interface LinkedCourse {
     /** Course id — the `/courses/[courseId]` segment. */
     id: string
-    /** Course code, e.g. `PRF192`. */
-    code: string
+    /** Course code (e.g. `PRF192`) when the curated title carries one. */
+    code: string | null
     /** Human course name. */
     name: string
 }
@@ -66,7 +68,13 @@ export const SubjectOverview = () => {
     const { subjectId } = useParams<{ subjectId: string }>()
     const router = useRouter()
     const { overview, error, mutate } = useQuerySubjectOverviewSwr(subjectId)
-    const { subject, error: subjectError } = useQuerySubjectSwr(subjectId)
+    const {
+        subject,
+        error: subjectError,
+        isMembershipLoading,
+    } = useQuerySubjectSwr(subjectId)
+    const { join, leave, isJoining, isLeaving } =
+        useMutateSubjectMembershipSwr(subjectId)
     // "Recent discussions" are the REAL subject community feed (the workspace REST aggregate carries no
     // posts — the overview hook returns []). Fetch the newest (FOR_YOU) via the same GraphQL the Discussion
     // tab uses; needs the subject UUID (route param is the code), gated until `subject` resolves.
@@ -83,9 +91,10 @@ export const SubjectOverview = () => {
     }))
 
     const base = `/subjects/${subjectId}`
-    // linked-course mapping (mock Subject.courseIds → identity); link-out only
-    const linkedCourses: Array<LinkedCourse> = (subject?.courseIds ?? []).map(
-        (courseId) => ({ id: courseId, ...getCourseIdentity(courseId) }),
+    // linked-course mapping — REAL workspace `learning` links (targetType = COURSE);
+    // link-out only (the Course module owns course data).
+    const linkedCourses: Array<LinkedCourse> = (subject?.courseLinks ?? []).map(
+        (link) => ({ id: link.id, ...getCourseIdentity(link) }),
     )
 
     return (
@@ -107,6 +116,13 @@ export const SubjectOverview = () => {
                         linkedCourses={linkedCourses}
                         onCompose={() => router.push(`${base}/discussion`)}
                         base={base}
+                        subjectName={subject?.name ?? subjectId}
+                        isMember={subject?.isMember ?? false}
+                        isMembershipLoading={isMembershipLoading}
+                        onJoin={() => { void join() }}
+                        isJoining={isJoining}
+                        onLeave={() => { void leave() }}
+                        isLeaving={isLeaving}
                     />
                 ) : null}
             </AsyncContent>
@@ -121,12 +137,29 @@ const OverviewView = ({
     linkedCourses,
     onCompose,
     base,
+    subjectName,
+    isMember,
+    isMembershipLoading,
+    onJoin,
+    isJoining,
+    onLeave,
+    isLeaving,
 }: {
     overview: SubjectOverviewModel
     recentPosts: Array<OverviewPost>
     linkedCourses: Array<LinkedCourse>
     onCompose: () => void
     base: string
+    /** Subject name, shown in the leave confirmation. */
+    subjectName: string
+    /** Real membership (workspace `callerMembership`), NOT a hardcoded flag. */
+    isMember: boolean
+    /** Membership read still in flight — neither banner nor CTA is honest yet. */
+    isMembershipLoading: boolean
+    onJoin: () => void
+    isJoining: boolean
+    onLeave: () => void
+    isLeaving: boolean
 }) => {
     const t = useTranslations("subjects")
 
@@ -141,37 +174,85 @@ const OverviewView = ({
         localStorage.setItem(dismissKey, "1")
         setJoinedDismissed(true)
     }
+    const [leaveOpen, setLeaveOpen] = useState(false)
 
     return (
         <div className="flex flex-col gap-6">
-            {/* stats line — moved up, sits directly under the workspace name header */}
-            <Typography type="body-sm" color="muted">
-                {t("overview.statsLine", {
-                    members: overview.stats.members,
-                    moderators: overview.stats.moderators,
-                    resources: overview.stats.resources,
-                })}
-            </Typography>
-
-            {/* "đã tham gia" — a dismissible notice only (no stats, no compose action) */}
-            {!joinedDismissed ? (
-                <div className="flex items-center gap-3 rounded-2xl bg-accent/10 p-4">
-                    <UsersIcon aria-hidden focusable="false" className="size-6 shrink-0 text-accent" />
-                    <Typography type="body-sm" weight="medium" className="min-w-0 flex-1 text-accent">
-                        {t("overview.joined")}
-                    </Typography>
+            {/* stats line + the member-only "rời môn" action */}
+            <div className="flex items-center gap-3">
+                <Typography type="body-sm" color="muted" className="min-w-0 flex-1">
+                    {t("overview.statsLine", {
+                        members: overview.stats.members,
+                        moderators: overview.stats.moderators,
+                        resources: overview.stats.resources,
+                    })}
+                </Typography>
+                {isMember ? (
                     <Button
-                        isIconOnly
-                        variant="tertiary"
                         size="sm"
+                        variant="tertiary"
                         className="shrink-0"
-                        aria-label={t("overview.dismiss")}
-                        onPress={dismissJoined}
+                        isDisabled={isLeaving}
+                        isPending={isLeaving}
+                        onPress={() => setLeaveOpen(true)}
                     >
-                        <XIcon aria-hidden focusable="false" className="size-4" />
+                        <SignOutIcon aria-hidden focusable="false" className="size-4" />
+                        {t("membership.leave")}
+                    </Button>
+                ) : null}
+            </div>
+
+            {/* membership state: the "đã tham gia" notice is ONLY for real members
+                (workspace `callerMembership` != null); a non-member gets the join CTA. */}
+            {isMembershipLoading ? null : isMember ? (
+                !joinedDismissed ? (
+                    <div className="flex items-center gap-3 rounded-2xl bg-accent/10 p-4">
+                        <UsersIcon aria-hidden focusable="false" className="size-6 shrink-0 text-accent" />
+                        <Typography type="body-sm" weight="medium" className="min-w-0 flex-1 text-accent">
+                            {t("overview.joined")}
+                        </Typography>
+                        <Button
+                            isIconOnly
+                            variant="tertiary"
+                            size="sm"
+                            className="shrink-0"
+                            aria-label={t("overview.dismiss")}
+                            onPress={dismissJoined}
+                        >
+                            <XIcon aria-hidden focusable="false" className="size-4" />
+                        </Button>
+                    </div>
+                ) : null
+            ) : (
+                <div className="flex flex-col gap-3 rounded-2xl border border-separator p-4 sm:flex-row sm:items-center">
+                    <div className="flex min-w-0 flex-1 items-center gap-3">
+                        <UsersIcon aria-hidden focusable="false" className="size-6 shrink-0 text-accent" />
+                        <Typography type="body-sm" color="muted" className="min-w-0 flex-1">
+                            {t("membership.joinHint")}
+                        </Typography>
+                    </div>
+                    <Button
+                        variant="primary"
+                        className="shrink-0 self-start sm:self-auto"
+                        isDisabled={isJoining}
+                        isPending={isJoining}
+                        onPress={onJoin}
+                    >
+                        {t("membership.join")}
                     </Button>
                 </div>
-            ) : null}
+            )}
+
+            <LeaveConfirmModal
+                isOpen={leaveOpen}
+                subjectName={subjectName}
+                isLeaving={isLeaving}
+                onClose={() => setLeaveOpen(false)}
+                onConfirm={() => {
+                    setLeaveOpen(false)
+                    onLeave()
+                }}
+            />
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                 {/* feed */}
@@ -336,6 +417,59 @@ const PostRow = ({
 }
 
 /**
+ * Confirmation before leaving the workspace — leaving drops the AI tools + member-only
+ * surfaces, so it is never a one-tap action.
+ */
+const LeaveConfirmModal = ({
+    isOpen,
+    subjectName,
+    isLeaving,
+    onClose,
+    onConfirm,
+}: {
+    isOpen: boolean
+    subjectName: string
+    isLeaving: boolean
+    onClose: () => void
+    onConfirm: () => void
+}) => {
+    const t = useTranslations("subjects")
+    return (
+        <Modal isOpen={isOpen} onOpenChange={(open) => { if (!open) onClose() }}>
+            <Modal.Backdrop>
+                <Modal.Container>
+                    <Modal.Dialog className="w-full max-w-md">
+                        <Modal.Header>
+                            <Typography type="body" weight="bold">
+                                {t("membership.leaveConfirmTitle")}
+                            </Typography>
+                        </Modal.Header>
+                        <Modal.Body>
+                            <Typography type="body-sm" color="muted">
+                                {t("membership.leaveConfirmBody", { name: subjectName })}
+                            </Typography>
+                        </Modal.Body>
+                        <Modal.Footer className="justify-end gap-2">
+                            <Button variant="tertiary" onPress={onClose}>
+                                {t("membership.leaveCancel")}
+                            </Button>
+                            <Button
+                                variant="danger"
+                                isDisabled={isLeaving}
+                                isPending={isLeaving}
+                                onPress={onConfirm}
+                            >
+                                {t("membership.leaveConfirm")}
+                            </Button>
+                        </Modal.Footer>
+                    </Modal.Dialog>
+                </Modal.Container>
+            </Modal.Backdrop>
+        </Modal>
+    )
+}
+
+/**
  * "Khóa học của môn này" — the course link-out card (workspace IA domain
  * separation: structured learning lives in the Course module; the workspace only
  * links out). Lists each linked course's identity + a "Xem khóa học" CTA to
@@ -357,15 +491,21 @@ const LinkedCoursesCard = ({ courses }: { courses: Array<LinkedCourse> }) => {
                     <GraduationCapIcon aria-hidden focusable="false" className="size-5 shrink-0 text-accent" />
                     <div className="min-w-0 flex-1">
                         <Typography type="body-sm" weight="medium" truncate>
-                            {course.code}
+                            {course.code ?? course.name}
                         </Typography>
-                        <Typography type="body-xs" color="muted" truncate>
-                            {course.name}
-                        </Typography>
+                        {course.code ? (
+                            <Typography type="body-xs" color="muted" truncate>
+                                {course.name}
+                            </Typography>
+                        ) : null}
                     </div>
                     <Link
                         href={`/courses/${course.id}`}
-                        aria-label={t("overview.viewCourseAria", { code: course.code, name: course.name })}
+                        aria-label={
+                            course.code
+                                ? t("overview.viewCourseAria", { code: course.code, name: course.name })
+                                : t("overview.viewCourseNameAria", { name: course.name })
+                        }
                         className="flex shrink-0 items-center gap-2 text-sm text-accent hover:underline"
                     >
                         {t("overview.viewCourse")}

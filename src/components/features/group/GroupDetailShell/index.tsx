@@ -122,9 +122,16 @@ export const GroupDetailShell = ({ groupId, children }: GroupDetailShellProps) =
                                 </Typography>
                             </div>
                         </div>
-                        {/* join action — join-only (no leave endpoint on the BE); owners
-                            are already members, so it renders a disabled "Joined" state */}
-                        <GroupJoinButton groupId={groupId} isOwner={isOwner} className="mb-1 shrink-0" />
+                        {/* join / leave action — `viewerMembership` comes from the detail
+                            read, so an existing member sees "Leave" instead of a "Join"
+                            that would 409 `GROUP_ALREADY_MEMBER`; owners must transfer
+                            ownership first, so they get a disabled "Joined" state */}
+                        <GroupJoinButton
+                            groupId={groupId}
+                            isOwner={isOwner}
+                            viewerMembership={group.viewerMembership}
+                            className="mb-1 shrink-0"
+                        />
                     </div>
                 </div>
             )}

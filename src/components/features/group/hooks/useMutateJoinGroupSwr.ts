@@ -1,55 +1,176 @@
 "use client"
 
 import { useCallback, useState } from "react"
-import { joinGroup } from "@/modules/api/rest/group"
+import { unstable_serialize, useSWRConfig } from "swr"
+import { joinGroup, removeMember } from "@/modules/api/rest/group"
+import { useAppSelector } from "@/redux/hooks"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
 import { useRestWithToast } from "@/modules/toast/hooks"
+import { groupHeaderKey } from "./useQueryGroupSwr"
 
 /**
- * Local membership status after a join attempt.
- * - `idle`   — not requested yet (the default; BE has no "am I a member" flag
- *   on the group read contract, so we can only reflect actions taken this session).
+ * Membership status the CTA reflects.
+ * - `idle`    — not a member (BE `viewerMembership` = null, or no membership signal
+ *   is available on this surface and nothing was done this session).
  * - `pending` — optimistic in-flight, or the group requires approval (BE `PENDING`).
- * - `joined`  — the BE accepted the join immediately (`JOINED`).
+ * - `joined`  — the viewer is a member: either the BE reports a `viewerMembership`
+ *   role on `GET /groups/{id}`, or a join was accepted immediately (`JOINED`).
  */
 export type JoinStatus = "idle" | "pending" | "joined"
 
+/** Options for {@link useMutateJoinGroupSwr}. */
+export interface UseMutateJoinGroupOptions {
+    /**
+     * The viewer's role in the group from `GET /groups/{id}` (`viewerMembership`;
+     * null = not a member). Pass it when the surface already holds the group DTO;
+     * omit it and the hook falls back to the cached group header, then to the
+     * session-local status.
+     */
+    viewerMembership?: string | null
+}
+
+/** Shape read defensively off whatever the group-header SWR cache holds. */
+interface CachedGroupHeader {
+    viewerMembership?: string | null
+}
+
 /**
- * Joins a group via the real group REST API with an optimistic status + toast.
+ * Defensive read of `viewerMembership` from the cached group header.
  *
- * On press we optimistically flip to `pending`; the BE result then resolves to
- * `joined` (open group) or stays `pending` (approval required). On failure we
- * roll back to `idle` (the shared toast surfaces the error).
- *
- * NOTE: there is no leave-group endpoint on the backend, so this hook is
- * join-only — do NOT add a leave action until a BE contract lands.
- *
- * @param groupId - the group to join.
+ * `useQueryGroupSwr` maps the BE `viewerMembership` (`GET /groups/{id}`) onto the
+ * `GroupHeader`, so this hits whenever that detail read is already cached — e.g. the
+ * buttons rendered under an opened group. On a discover list (whose DTOs carry
+ * `viewerMembership: null` by contract) there is no cache entry and it degrades to
+ * `null`. It deliberately reads the cache instead of subscribing to a query: a group
+ * list renders dozens of these buttons and must not fan out one GET per card.
  */
-export const useMutateJoinGroupSwr = (groupId: string) => {
+const readCachedMembership = (
+    cache: ReturnType<typeof useSWRConfig>["cache"],
+    groupId: string,
+): string | null => {
+    if (!groupId) {
+        return null
+    }
+    const cached = cache.get(unstable_serialize(groupHeaderKey(groupId)))?.data as
+        | CachedGroupHeader
+        | undefined
+    return cached?.viewerMembership ?? null
+}
+
+/**
+ * Join / leave a group through the real group REST API, with an optimistic status
+ * and the shared toast.
+ *
+ * Join (`POST /groups/{id}/join`): optimistically flips to `pending`; the BE result
+ * resolves to `joined` (open group) or stays `pending` (approval required).
+ * Leave (`DELETE /groups/{id}/members/{userId}` with the viewer's OWN user id): the
+ * BE `leaveOrKick` treats a self-target as a leave. An OWNER cannot leave (BE
+ * `GROUP_OWNER_MUST_TRANSFER`), so owner surfaces must not offer the action.
+ *
+ * Both roll back to the previous status on failure and revalidate the group header +
+ * the discover list, so member counts and `viewerMembership` refresh.
+ *
+ * @param groupId - the group to join/leave.
+ * @param options - optional `viewerMembership` when the caller already has the DTO.
+ */
+export const useMutateJoinGroupSwr = (groupId: string, options?: UseMutateJoinGroupOptions) => {
     const { requireAuth } = useRequireAuth()
     const runRest = useRestWithToast()
-    const [status, setStatus] = useState<JoinStatus>("idle")
+    const { cache, mutate } = useSWRConfig()
+    const currentUserId = useAppSelector((state) => state.user.user?.id)
+    // Session-local override; null = follow the BE membership signal.
+    const [localStatus, setLocalStatus] = useState<JoinStatus | null>(null)
     const [isJoining, setIsJoining] = useState(false)
+    const [isLeaving, setIsLeaving] = useState(false)
+
+    const membership =
+        options?.viewerMembership !== undefined
+            ? options.viewerMembership
+            : readCachedMembership(cache, groupId)
+    const remoteStatus: JoinStatus = membership ? "joined" : "idle"
+    const status: JoinStatus = localStatus ?? remoteStatus
+
+    /** Refresh the surfaces carrying membership state (group header + discover list). */
+    const revalidateMembership = useCallback(() => {
+        void mutate(groupHeaderKey(groupId))
+        void mutate(["GET_GROUPS_DISCOVER"])
+    }, [groupId, mutate])
 
     const join = useCallback(async (): Promise<void> => {
-        if (status === "joined" || isJoining) {
+        if (status === "joined" || isJoining || isLeaving) {
             return
         }
         if (!requireAuth("auth.context.join")) {
             return
         }
         const previous = status
-        setStatus("pending") // optimistic
+        setLocalStatus("pending") // optimistic
         setIsJoining(true)
         const result = await runRest(() => joinGroup(groupId), { showSuccessToast: false })
         setIsJoining(false)
         if (result === null) {
-            setStatus(previous) // rollback on failure
+            setLocalStatus(previous) // rollback on failure
             return
         }
-        setStatus(result.result === "JOINED" ? "joined" : "pending")
-    }, [groupId, isJoining, requireAuth, runRest, status])
+        setLocalStatus(result.result === "JOINED" ? "joined" : "pending")
+        revalidateMembership()
+    }, [groupId, isJoining, isLeaving, requireAuth, revalidateMembership, runRest, status])
 
-    return { status, isJoining, join }
+    /**
+     * Leave the group (self-removal). No-op unless the viewer is currently a member
+     * and their internal user id is known — the endpoint is user-scoped.
+     *
+     * @param successMessage - localized toast copy shown on success.
+     */
+    const leave = useCallback(
+        async (successMessage?: string): Promise<void> => {
+            if (status !== "joined" || isLeaving || isJoining) {
+                return
+            }
+            if (!requireAuth("auth.context.join")) {
+                return
+            }
+            if (!currentUserId) {
+                return
+            }
+            const previous = status
+            setLocalStatus("idle") // optimistic
+            setIsLeaving(true)
+            // The endpoint is void — wrap it so a SUCCESSFUL call yields a non-null
+            // result (runRest reports failures, and only failures, as `null`).
+            const result = await runRest(
+                async () => {
+                    await removeMember(groupId, currentUserId)
+                    return true as const
+                },
+                { successMessage },
+            )
+            setIsLeaving(false)
+            if (result === null) {
+                setLocalStatus(previous) // rollback on failure
+                return
+            }
+            revalidateMembership()
+        },
+        [
+            currentUserId,
+            groupId,
+            isJoining,
+            isLeaving,
+            requireAuth,
+            revalidateMembership,
+            runRest,
+            status,
+        ],
+    )
+
+    return {
+        status,
+        isJoining,
+        isLeaving,
+        /** Whether leaving is possible right now (member + known internal user id). */
+        canLeave: status === "joined" && Boolean(currentUserId),
+        join,
+        leave,
+    }
 }

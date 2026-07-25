@@ -7,6 +7,12 @@ import { getGroupChallenges } from "@/modules/api/rest/group"
 export interface GroupChallenge {
     id: string
     title: string
+    /**
+     * URL slug — the challenge detail route (`/challenges/{slug}`) and
+     * `GET /api/v1/challenges/{slug}` are slug-addressed, not id-addressed.
+     * Falls back to the id when the BE row carries no slug.
+     */
+    slug: string
     /** Challenge type (BE `type`, e.g. CODING / PROJECT). */
     type: string
     /** Lifecycle status (BE `status`, e.g. ACTIVE / CLOSED). */
@@ -27,6 +33,7 @@ export const useQueryGroupChallengesSwr = (groupId: string) => {
             return (items ?? []).map((dto) => ({
                 id: dto.id,
                 title: dto.title,
+                slug: dto.slug || dto.id,
                 type: dto.type,
                 status: dto.status,
             }))

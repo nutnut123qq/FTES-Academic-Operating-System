@@ -1,31 +1,40 @@
+import type { SubjectCourseLink } from "../hooks/useQuerySubjectSwr"
+
 /** Display identity of a linked course on the Overview link-out card. */
 export interface CourseIdentity {
-    /** Course code shown as the mark, e.g. `PRF192`. */
-    code: string
+    /** Course code shown as the mark (e.g. `PRF192`), or `null` when the title carries none. */
+    code: string | null
     /** Human course name. */
     name: string
 }
 
-// ponytail: mock BE — the card is a link-out only, so no course query is wired here
-// (the Course module owns course data). Known mock course ids (see the subject mocks'
-// `courseIds`) map to a display identity; unknown ids fall back to a derived code.
-const COURSE_IDENTITY_MOCK: Record<string, CourseIdentity> = {
-    "prf192-course": { code: "PRF192", name: "Lập trình C" },
-    "csd201-course": { code: "CSD201", name: "Cấu trúc dữ liệu & Giải thuật" },
-    "prj301-course": { code: "PRJ301", name: "Lập trình Java Web" },
-    "dbi202-course": { code: "DBI202", name: "Cơ sở dữ liệu" },
-    "net1704-course": { code: "NET1704", name: "Mạng máy tính" },
-}
+/**
+ * A curated link title that opens with a course code — `PRF192`, `PRF192 - Lập trình C`,
+ * `CSD201: Cấu trúc dữ liệu`. Everything after the separator is the human name.
+ */
+const CODE_PREFIX = /^\s*([A-Za-z]{2,5}\d{2,4})\s*(?:[-–—·:|]\s*)?(.*)$/
 
 /**
- * Resolves the display identity (code + name) of a linked course id for the
- * "Khóa học của môn này" card.
+ * Resolves the display identity (code + name) of a linked course from the workspace
+ * `learning` link. The card is a link-out only — the Course module owns course data —
+ * so the identity is derived from the curated link title (`titleOverride` → source
+ * title) rather than fetched.
  *
- * @param courseId - a course id from `Subject.courseIds`.
- * @returns the mock identity, or a code derived from the id when unknown.
+ * @param link - a `COURSE` link item from `Subject.courseLinks`.
+ * @returns the code (when the title carries one) and the human name; the raw link
+ * title is used as the name when it has no code prefix, and the id is the last resort
+ * for a link the BE could not title at all.
  */
-export const getCourseIdentity = (courseId: string): CourseIdentity =>
-    COURSE_IDENTITY_MOCK[courseId] ?? {
-        code: courseId.replace(/-course$/, "").toUpperCase(),
-        name: courseId,
+export const getCourseIdentity = (link: SubjectCourseLink): CourseIdentity => {
+    const title = link.title.trim()
+    if (!title) {
+        return { code: null, name: link.id }
     }
+    const match = CODE_PREFIX.exec(title)
+    if (!match) {
+        return { code: null, name: title }
+    }
+    const [, code, rest] = match
+    const name = rest.trim()
+    return { code: code.toUpperCase(), name: name || code.toUpperCase() }
+}

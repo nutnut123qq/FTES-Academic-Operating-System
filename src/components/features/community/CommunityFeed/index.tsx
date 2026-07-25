@@ -184,7 +184,11 @@ const CommunityFeedRow = ({ post }: { post: CommunityPost }) => {
  * uses the `ThreadsPostRow` anatomy (48px avatar column + content column) with
  * the shared engagement bar (zero counts suppressed) and inline push-down
  * comment expansion; a threadline connects the avatar to the expanded thread.
- * Data is the real BE GraphQL `feed(tab, page, campus)`.
+ *
+ * Data is the real BE GraphQL `feed(tab, page, campus)`, or `communitySearch` while a keyword
+ * / filter is set. BOTH are cursor-paginated with `useSWRInfinite`, so the list keeps loading
+ * pages through the `InfiniteScrollSentinel` until the BE stops returning a `nextCursor` —
+ * there is no fixed first-page ceiling on either.
  */
 export const CommunityFeed = ({ tab = "forYou" }: { tab?: CommunityFeedTab } = {}) => {
     const t = useTranslations("communityHub")
@@ -209,13 +213,17 @@ export const CommunityFeed = ({ tab = "forYou" }: { tab?: CommunityFeedTab } = {
     const search = useQueryCommunitySearchSwr(criteria)
     const feed = useQueryCommunityFeedSwr(tab)
 
+    // Search mode and the tab feed are BOTH cursor-paginated `useSWRInfinite` sources with the
+    // same page shape, so the list/sentinel below reads from whichever one is active.
     const searching = search.active
-    const posts = searching ? search.posts : feed.posts
-    const isLoading = searching ? search.isLoading : feed.isLoading
-    const error = searching ? search.error : feed.error
-    const mutate = searching ? search.mutate : feed.mutate
-    // Infinite scroll only applies to the tab feed (search is a single global page).
-    const canLoadMore = !searching && feed.hasMore
+    const source = searching ? search : feed
+    const posts = source.posts
+    const isLoading = source.isLoading
+    const error = source.error
+    const mutate = source.mutate
+    const isLoadingMore = source.isLoadingMore
+    const canLoadMore = source.hasMore
+    const loadMore = () => void source.setSize((current) => current + 1)
 
     // CAMPUS tab is scoped to the viewer's campus (BE falls back to the profile campus).
     // When empty it usually means the viewer hasn't set a campus on their profile, so the
@@ -267,14 +275,14 @@ export const CommunityFeed = ({ tab = "forYou" }: { tab?: CommunityFeedTab } = {
                 </div>
                 {canLoadMore ? (
                     <>
-                        {feed.isLoadingMore ? (
+                        {isLoadingMore ? (
                             <div className="px-4 py-3" aria-hidden>
                                 <Skeleton className="h-3 w-40 rounded-full" />
                             </div>
                         ) : null}
                         <InfiniteScrollSentinel
-                            onReach={() => void feed.setSize((current) => current + 1)}
-                            disabled={feed.isLoadingMore}
+                            onReach={loadMore}
+                            disabled={isLoadingMore}
                         />
                     </>
                 ) : null}

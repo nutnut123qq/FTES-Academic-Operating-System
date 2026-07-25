@@ -2053,7 +2053,8 @@
       },
       "recentPosts": {
         "title": "Recent posts",
-        "engagement": "{likes} likes · {comments} comments"
+        "engagement": "{likes} likes · {comments} comments",
+        "untitled": "Untitled post"
       },
       "empty": {
         "title": "You haven't posted anything yet.",
@@ -2486,7 +2487,11 @@
       "search": "Sign in to search learning content",
       "explore": "Sign in to use the AI assistant and personalized recommendations",
       "join": "Sign in to join this group",
-      "vote": "Sign in to vote in this poll"
+      "vote": "Sign in to vote in this poll",
+      "aiQa": "Sign in to ask AI about this document",
+      "rate": "Sign in to rate this resource",
+      "uploadResource": "Sign in to upload a resource",
+      "follow": "Sign in to follow this user"
     }
   },
   "priceTag": {
@@ -4942,7 +4947,8 @@
         "easy": "Easy",
         "medium": "Medium",
         "hard": "Hard"
-      }
+      },
+      "viewCourseNameAria": "View the course {name}"
     },
     "resources": {
       "title": "Resources",
@@ -4958,10 +4964,20 @@
         "pe": "PE",
         "fe": "FE",
         "source": "Source code",
-        "notes": "Notes"
+        "notes": "Notes",
+        "book": "Book",
+        "assignment": "Assignment",
+        "templates": "Templates"
       },
       "loadError": "Couldn't load resources.",
-      "retry": "Try again"
+      "retry": "Try again",
+      "askAi": "Ask AI about this document",
+      "downloads": "{count} downloads",
+      "ratingLabel": "{rating}/5 · {count} ratings",
+      "downloadError": "Could not create the download link. Please try again.",
+      "downloadForbidden": "You do not have permission to download this document.",
+      "downloadNotFound": "This document no longer exists.",
+      "downloadRateLimited": "Too many downloads. Try again in a few minutes."
     },
     "practice": {
       "title": "Practice",
@@ -5025,7 +5041,65 @@
         },
         "filters": {
           "allDifficulties": "All difficulties",
-          "allStatuses": "All statuses"
+          "allStatuses": "All statuses",
+          "allTypes": "All types",
+          "allLifecycles": "All statuses"
+        },
+        "types": {
+          "coding": "Coding",
+          "sql": "SQL",
+          "uiux": "UI/UX",
+          "ai": "AI",
+          "business": "Business"
+        },
+        "modes": {
+          "individual": "Individual",
+          "team": "Team"
+        },
+        "lifecycle": {
+          "running": "Running",
+          "upcoming": "Upcoming",
+          "closed": "Closed"
+        },
+        "scopeNote": "This subject has no challenges of its own yet — showing every public challenge instead.",
+        "window": "Window: {start} → {end}",
+        "maxSubmissions": "Up to {count} submissions",
+        "problem": "Problem",
+        "noDescription": "This challenge has no problem statement yet.",
+        "samples": "Your test cases",
+        "samplesHint": "The challenge's own test cases are hidden. Add your own cases to try the code before submitting.",
+        "addSample": "Add test case",
+        "removeSample": "Remove test case",
+        "grading": "Running and grading, this can take up to a minute…",
+        "notOpenHint": "The challenge is not open (or already closed), so submitting is disabled — you can still run your code.",
+        "notExecuted": "This language cannot be executed automatically — it is graded statically.",
+        "noCases": "No test cases to compare against — the code was just executed.",
+        "stderr": "Error output",
+        "gradeTitle": "AI grading result",
+        "gradeScore": "{score}/{max} points",
+        "criteria": "Criteria",
+        "feedback": "Feedback",
+        "improvements": "Suggested improvements",
+        "gradedBy": "Graded by {model}; other models may score differently.",
+        "submissionTitle": "Submission attempt {attempt}",
+        "submissionStatus": "Status: {status}",
+        "submissionScore": "Final score: {score}",
+        "officialTitle": "Server-side test results",
+        "hiddenCase": "Hidden test",
+        "pending": "Grading",
+        "errors": {
+          "unauthorized": "Sign in to run or submit your solution.",
+          "forbidden": "Your account is not allowed to use code grading.",
+          "notFound": "This challenge no longer exists.",
+          "rateLimited": "Too many requests — please try again in a few minutes.",
+          "unavailable": "The code-grading service is unavailable, please try again later.",
+          "executionFailed": "The code could not be executed (runner error). Please try again.",
+          "timeout": "Grading timed out. Trim your code or test cases and try again.",
+          "network": "Lost connection to the server. Check your network and try again.",
+          "generic": "Something went wrong. Please try again.",
+          "maxSubmissions": "You have used all submissions for this challenge.",
+          "notOpen": "This challenge is not open for submissions.",
+          "courseLocked": "This challenge belongs to a course — enroll in it first."
         }
       },
       "flashcards": {
@@ -5060,7 +5134,16 @@
         "you": "You",
         "empty": "No one on the leaderboard yet",
         "error": "Couldn't load the leaderboard"
-      }
+      },
+      "quizHandoff": {
+        "description": "There is no quiz bank for this subject yet. Meanwhile, use AI Quiz to generate questions from the subject's materials.",
+        "cta": "Open AI Quiz"
+      },
+      "flashcardsHandoff": {
+        "description": "No lecturer-curated deck exists for this subject yet. Use AI Flashcards to generate cards from the subject's materials.",
+        "cta": "Open AI Flashcards"
+      },
+      "aiHandoffHint": "The AI tools live in the subject's AI tab."
     },
     "community": {
       "title": "Subject discussion",
@@ -5090,7 +5173,19 @@
       },
       "empty": "No members yet.",
       "loadError": "Couldn't load the member list.",
-      "retry": "Try again"
+      "retry": "Try again",
+      "manage": "Manage member",
+      "setRole": "Make {role}",
+      "ban": "Ban member",
+      "banConfirmTitle": "Ban this member from the subject?",
+      "banConfirmBody": "{name} will be removed from this subject workspace and cannot rejoin until unbanned.",
+      "banned": "Member banned.",
+      "banError": "Could not ban the member. Please try again.",
+      "roleChanged": "Role changed to {role}.",
+      "roleChangeError": "Could not change the role. Please try again.",
+      "actionForbidden": "You do not have permission to do this.",
+      "actionNotFound": "This member no longer exists.",
+      "actionRateLimited": "Too many actions. Try again in a few minutes."
     },
     "statistics": {
       "title": "Statistics",
@@ -5162,7 +5257,22 @@
           "explain": "Explain the core concepts of {subject}",
           "plan": "Suggest a study plan for {subject}",
           "example": "Give a worked example"
-        }
+        },
+        "modelDefault": "Default model",
+        "modelFree": "Free",
+        "modelUnavailable": "Unavailable",
+        "answeredBy": "Answered by {model}",
+        "loadingThread": "Loading conversation…",
+        "modelNotAllowed": "That model isn't allowed. Switched back to the default.",
+        "quotaHit": "You've used up your AI quota. Please try again later.",
+        "signInRequired": "Your session expired. Sign in again to continue.",
+        "forbidden": "You don't have access to the AI tutor for this content.",
+        "sessionBusy": "This conversation is still answering the previous question. Please wait and retry.",
+        "sessionGone": "Conversation not found. Start a new one.",
+        "allSubjectsHint": "This lists all of your AI tutor conversations (the server can't filter by subject yet).",
+        "deleteError": "Couldn't delete the conversation. Please try again.",
+        "clearHintAll": "Archives every AI tutor conversation you have (the server can't scope this to a single subject yet). This can't be undone.",
+        "clearError": "Some conversations couldn't be deleted. Please try again."
       },
       "summary": {
         "generate": "Generate summary",
@@ -5172,7 +5282,9 @@
         "keyPoints": "Key points",
         "errorTitle": "Couldn't generate the summary",
         "emptyTitle": "No material to summarize yet",
-        "emptyDesc": "Add resources in the Resources tab, then come back."
+        "emptyDesc": "Add resources in the Resources tab, then come back.",
+        "glossary": "Glossary",
+        "readMin": "About {count} min read"
       },
       "quiz": {
         "generate": "Generate quiz",
@@ -5183,7 +5295,9 @@
         "score": "Score: {score}/{total}",
         "errorTitle": "Couldn't generate the quiz",
         "emptyTitle": "No material to build a quiz from",
-        "emptyDesc": "Add resources in the Resources tab, then come back."
+        "emptyDesc": "Add resources in the Resources tab, then come back.",
+        "explanation": "Explanation",
+        "unknownAnswer": "The AI didn't mark a correct answer for this question."
       },
       "flashcards": {
         "generate": "Generate flashcards",
@@ -5231,6 +5345,38 @@
           "learning": "Learning",
           "new": "New",
           "barAria": "{mastered} mastered, {learning} learning, {newCount} new out of {total} cards"
+        },
+        "hint": "Hint: {hint}",
+        "localOnlyHint": "Review progress is kept for this session only."
+      },
+      "sourcesErrorTitle": "Couldn't load the resource list",
+      "job": {
+        "working": "Working…",
+        "running": "The AI is working on it — this usually takes a few seconds.",
+        "stale": "This is taking longer than usual.",
+        "refresh": "Check again",
+        "quota": "You've used all your AI runs for this tool. Please try again later.",
+        "auth": "Your session expired. Sign in again to continue.",
+        "forbidden": "You don't have access to run AI on this material.",
+        "notFound": "The selected material was not found.",
+        "invalid": "The selected material can't be used by the AI yet.",
+        "failed": "The AI job failed. Please try again.",
+        "model": "Model: {model}"
+      },
+      "ocr": {
+        "pick": "Choose an image or PDF",
+        "hint": "PDF, PNG, JPG or WEBP, up to 10MB.",
+        "run": "Extract text",
+        "again": "Pick another file",
+        "resultTitle": "Extracted text",
+        "copy": "Copy text",
+        "copied": "Text copied",
+        "pages": "{count} pages",
+        "emptyTitle": "No text was recognized",
+        "emptyDesc": "Try a sharper image or a PDF that contains text.",
+        "fileError": {
+          "type": "Unsupported format. Only PDF, PNG, JPG or WEBP.",
+          "size": "File is too large. Maximum 10MB."
         }
       }
     },
@@ -5248,6 +5394,22 @@
       },
       "loadError": "Couldn't load career info.",
       "retry": "Try again"
+    },
+    "membership": {
+      "join": "Join subject",
+      "joinHint": "Join to unlock this subject's AI tools, resources and discussions.",
+      "joinSuccess": "Joined the subject",
+      "joinFailed": "Could not join the subject. Please try again.",
+      "leave": "Leave",
+      "leaveConfirmTitle": "Leave this subject?",
+      "leaveConfirmBody": "You will lose access to the AI tools and member-only content of {name}. You can join again at any time.",
+      "leaveCancel": "Stay",
+      "leaveConfirm": "Leave",
+      "leaveSuccess": "Left the subject",
+      "leaveFailed": "Could not leave the subject. Please try again.",
+      "forbidden": "You are not allowed to do this.",
+      "notFound": "This subject no longer exists.",
+      "rateLimited": "Too many attempts. Please wait a moment and try again."
     }
   },
   "skillGraph": {
@@ -5548,13 +5710,33 @@
       "pe": "PE",
       "fe": "FE",
       "source": "Source code",
-      "notes": "Notes"
+      "notes": "Notes",
+      "book": "Book",
+      "assignment": "Assignment",
+      "templates": "Templates",
+      "other": "Other"
     },
     "collections": {
       "title": "Collections",
       "itemsCount": "{count} items",
       "empty": "No collections yet.",
-      "loadError": "Could not load collections."
+      "loadError": "Could not load collections.",
+      "create": "New collection",
+      "createTitle": "Create a collection",
+      "nameLabel": "Collection name",
+      "namePlaceholder": "e.g. Intro PE exam prep",
+      "descriptionLabel": "Description (optional)",
+      "descriptionPlaceholder": "What's in this collection?",
+      "submitCreate": "Create",
+      "creating": "Creating…",
+      "cancel": "Cancel",
+      "close": "Close",
+      "emptyItems": "This collection has no resources yet.",
+      "loadDetailError": "Couldn't load this collection.",
+      "removeItem": "Remove from collection",
+      "removeError": "Couldn't remove the resource.",
+      "signInTitle": "Sign in to see your collections.",
+      "signIn": "Sign in"
     },
     "detail": {
       "rating": "{rating}★",
@@ -5563,7 +5745,17 @@
       "like": "Like",
       "share": "Share",
       "shareCopied": "Link copied",
-      "loadError": "Could not load the resource."
+      "loadError": "Could not load the resource.",
+      "ratingCount": "{count} ratings",
+      "noRating": "No ratings yet",
+      "related": "Related resources",
+      "relatedEmpty": "No related resources yet.",
+      "relatedLoadError": "Couldn't load related resources.",
+      "downloadError": "Download failed. Please try again.",
+      "downloadDenied": "You don't have permission to download this resource.",
+      "downloadThrottled": "Too many downloads — try again in a few minutes.",
+      "likeError": "Couldn't update your like. Please try again.",
+      "likeDenied": "You can't like this resource."
     },
     "comments": {
       "title": "Comments ({count})",
@@ -5601,7 +5793,80 @@
       "submit": "Upload",
       "titleLabel": "Title",
       "typeLabel": "Resource type",
-      "subjectLabel": "Subject code"
+      "subjectLabel": "Subject code",
+      "dropzoneHint": "Accepts {extensions} · up to {maxSize}MB",
+      "clearFile": "Remove the selected file",
+      "fileError": {
+        "type": "This format is not allowed for the selected resource type. Allowed: {extensions}.",
+        "size": "File too large — the limit for this type is {maxSize}MB.",
+        "empty": "The file is empty — pick another one.",
+        "filename": "The file name is too long (max 512 characters)."
+      },
+      "descriptionLabel": "Description",
+      "descriptionField": "A short description (optional)",
+      "subjectPlaceholder": "— Select a subject —",
+      "subjectLoading": "Loading subjects…",
+      "subjectLoadError": "Could not load the subject list.",
+      "visibilityLabel": "Visibility",
+      "visibility": {
+        "MEMBERS": "Members",
+        "PUBLIC": "Public",
+        "PRIVATE": "Private"
+      },
+      "licenseLabel": "License",
+      "license": {
+        "ALL_RIGHTS_RESERVED": "All rights reserved",
+        "CC_BY": "CC BY",
+        "CC_BY_SA": "CC BY-SA",
+        "CC_BY_NC": "CC BY-NC",
+        "MIT": "MIT",
+        "APACHE_2": "Apache 2.0",
+        "PUBLIC_DOMAIN": "Public domain"
+      },
+      "type": {
+        "PDF": "PDF",
+        "SLIDE": "Slides",
+        "VIDEO": "Video",
+        "BOOK": "Book",
+        "SOURCE_CODE": "Source code",
+        "ASSIGNMENT": "Assignment",
+        "PE": "PE exam",
+        "FE": "FE exam",
+        "NOTES": "Notes",
+        "TEMPLATES": "Templates"
+      },
+      "steps": {
+        "hash": "Hashing the file",
+        "create": "Creating the resource",
+        "uploadUrl": "Requesting the upload link",
+        "put": "Uploading the file",
+        "complete": "Verifying the upload",
+        "submit": "Submitting for review"
+      },
+      "progressLabel": "Upload progress",
+      "errorAtStep": "Stopped at: {step}",
+      "retry": "Retry from the failed step",
+      "error": {
+        "auth": "Your session expired — sign in again and retry.",
+        "forbidden": "You do not have permission for this step.",
+        "notFound": "Resource not found (it may have been deleted).",
+        "rateLimited": "Too many upload links requested. Wait a few minutes and retry.",
+        "tooLarge": "The file exceeds the size limit for this resource type.",
+        "checksum": "The stored file does not match its size/checksum — please upload again.",
+        "invalidState": "The resource is not in a state that can be submitted.",
+        "validation": "Invalid data — check the file format and the fields.",
+        "storage": "Could not upload the file to storage.",
+        "network": "Network connection lost. Check your connection and retry.",
+        "server": "The server hit an error. Try again in a few minutes.",
+        "generic": "Something went wrong while publishing the resource."
+      },
+      "success": {
+        "title": "Resource submitted",
+        "pendingReview": "Your resource is now PENDING REVIEW. Once a moderator approves it, it will appear in the resource hub.",
+        "viewResource": "View the resource",
+        "uploadAnother": "Upload another",
+        "toast": "Resource submitted — pending review."
+      }
     },
     "reviews": {
       "title": "Reviews",
@@ -5609,17 +5874,77 @@
       "submit": "Submit review",
       "you": "You",
       "empty": "No reviews yet — be the first!",
-      "loadError": "Could not load reviews."
+      "loadError": "Could not load reviews.",
+      "count": "{count} ratings",
+      "starShort": "{count}★",
+      "starLabel": "{count} stars",
+      "composerTitle": "Your rating",
+      "submitted": "Your rating was submitted.",
+      "alreadyRated": "You already rated this resource — your stored rating was kept.",
+      "forbidden": "You do not have access to rate this resource.",
+      "notFound": "This resource no longer exists.",
+      "rateLimited": "Too many ratings just now — try again in a few minutes.",
+      "submitError": "Could not submit your rating. Please try again.",
+      "member": "Member",
+      "prev": "Previous",
+      "next": "Next",
+      "pageOf": "Page {page} of {total}"
     },
     "recommended": {
       "title": "Recommended for you",
       "empty": "No recommendations yet.",
-      "loadError": "Could not load recommendations."
+      "loadError": "Could not load recommendations.",
+      "signInTitle": "Sign in to get suggestions picked for you.",
+      "signIn": "Sign in",
+      "reasons": {
+        "default": "Suggested for you",
+        "SAME_SUBJECT": "From a subject you're studying",
+        "SAME_SUBJECT_PARAM": "From {subject}, a subject you're studying",
+        "TRENDING": "Downloaded a lot right now",
+        "SIMILAR_USERS": "Learners like you used this",
+        "SIMILAR_USERS_PARAM": "{count} learners like you used this",
+        "POPULAR": "Popular in the resource hub"
+      }
     },
     "filterLabel": "Filter by type",
     "hub": {
       "loadError": "Could not load resources.",
-      "retry": "Try again"
+      "retry": "Try again",
+      "downloadError": "Could not download the file. Please try again.",
+      "downloadForbidden": "You do not have permission to download this resource.",
+      "downloadNotFound": "This resource no longer exists or has no file to download.",
+      "downloadRateLimited": "Too many downloads. Please try again in a few minutes."
+    },
+    "downloadsCount": "{count} downloads",
+    "aiQa": {
+      "title": "Ask AI about this document",
+      "hint": "Suggested questions",
+      "placeholder": "Ask about this document…",
+      "send": "Send",
+      "thinking": "Looking for an answer…",
+      "error": "Sorry, I couldn't answer that. Please try again.",
+      "quotaHit": "You've used up your AI questions for today.",
+      "modelNotAllowed": "That model isn't allowed — switched back to the default.",
+      "accessDenied": "You don't have access to ask AI about this document.",
+      "processing": "Preparing the document… try again in a few minutes.",
+      "retry": "Try again",
+      "citations": "Citations",
+      "answeredBy": "Answered by {model}",
+      "modelLabel": "Answering model",
+      "freeTag": "Free",
+      "unavailableTag": "Unavailable",
+      "suggestions": {
+        "summarize": "Summarize this document",
+        "keyPoints": "What are the key points?",
+        "terms": "Explain the key terms"
+      }
+    },
+    "apiErrors": {
+      "unauthorized": "Please sign in again to continue.",
+      "forbidden": "You don't have permission for this.",
+      "notFound": "This content no longer exists.",
+      "rateLimited": "Too many requests — try again in a few minutes.",
+      "generic": "Something went wrong. Please try again."
     }
   },
   "communityHub": {
@@ -5673,6 +5998,7 @@
       "replyingTo": "Replying to {name}",
       "cancelReply": "Cancel",
       "commentPlaceholder": "Write a comment…",
+      "replyPlaceholder": "Write a reply…",
       "commentSend": "Send",
       "commentFailed": "Couldn't post your comment",
       "likeFailed": "Couldn't update the like",
@@ -5718,7 +6044,50 @@
       "codeInline": "Inline code",
       "codeBlock": "Code block",
       "mention": "Mention",
-      "mentionPlaceholder": "Find a user…"
+      "mentionPlaceholder": "Find a user…",
+      "moreActions": "More actions",
+      "edit": "Edit",
+      "delete": "Delete",
+      "report": "Report",
+      "cancel": "Cancel",
+      "saveEdit": "Save",
+      "editComment": "Edit comment",
+      "deleteCommentTitle": "Delete comment?",
+      "deleteCommentConfirm": "The comment will be removed from the post. This cannot be undone.",
+      "commentUpdateFailed": "Could not save the comment. Please try again.",
+      "commentDeleteFailed": "Could not delete the comment. Please try again.",
+      "editPostTitle": "Edit post",
+      "editTitleLabel": "Title",
+      "editContentLabel": "Content (Markdown)",
+      "postUpdated": "Post updated.",
+      "postUpdateFailed": "Could not update the post. Please try again.",
+      "deletePostTitle": "Delete post?",
+      "deletePostConfirm": "The post and all of its comments will be removed. This cannot be undone.",
+      "postDeleted": "Post deleted.",
+      "postDeleteFailed": "Could not delete the post. Please try again.",
+      "reportTitle": "Report content",
+      "reportDescription": "Pick a reason. Our moderators will review it shortly.",
+      "reportReasonLabel": "Reason",
+      "reportReasons": {
+        "SPAM": "Spam or advertising",
+        "HARASSMENT": "Harassment or abuse",
+        "NSFW": "Adult or sensitive content",
+        "MISINFORMATION": "Misinformation",
+        "OTHER": "Other"
+      },
+      "reportDetailLabel": "More detail (optional)",
+      "reportDetailPlaceholder": "Briefly describe the issue…",
+      "reportSubmit": "Send report",
+      "reportSent": "Report sent. Thank you!",
+      "reportFailed": "Could not send the report. Please try again.",
+      "reportDuplicate": "You already have an open report for this content.",
+      "rateLimited": "Too many actions. Please try again in a few minutes.",
+      "forbidden": "You do not have permission to do this.",
+      "notFound": "This content no longer exists.",
+      "acceptAnswer": "Accept answer",
+      "acceptedAnswer": "Accepted answer",
+      "acceptAnswerDone": "Answer accepted.",
+      "acceptAnswerFailed": "Could not accept the answer. Please try again."
     },
     "feed": {
       "likes": "{count} likes",
@@ -5799,7 +6168,11 @@
       "keep": "Keep",
       "remove": "Remove",
       "error": "Couldn't load the moderation queue. Please try again.",
-      "decisionFailed": "Couldn't apply the decision. Please try again."
+      "decisionFailed": "Couldn't apply the decision. Please try again.",
+      "escalate": "Escalate",
+      "escalated": "Report escalated.",
+      "escalateFailed": "Could not escalate the report. Please try again.",
+      "openTarget": "Open reported content"
     },
     "states": {
       "retry": "Try again"
@@ -5834,7 +6207,11 @@
     "join": {
       "action": "Join",
       "joined": "Joined",
-      "pending": "Pending approval"
+      "pending": "Pending approval",
+      "leave": "Leave group",
+      "leaveTitle": "Leave this group?",
+      "leaveDescription": "You'll lose access to this group's private content. You can join again later.",
+      "left": "You left the group."
     },
     "discussion": {
       "replies": "{count} replies",
@@ -5858,7 +6235,24 @@
       "join": "Join",
       "leave": "Leave",
       "empty": "No upcoming events.",
-      "error": "Couldn't load events. Please try again."
+      "error": "Couldn't load events. Please try again.",
+      "title": "Group events",
+      "create": "New event",
+      "titleField": "Event title",
+      "descriptionField": "Event description",
+      "locationField": "Location (optional)",
+      "startsAtField": "Starts at",
+      "endsAtField": "Ends at (optional)",
+      "submit": "Create event",
+      "save": "Save",
+      "cancel": "Cancel",
+      "created": "Event created.",
+      "updated": "Event updated.",
+      "deleted": "Event deleted.",
+      "edit": "Edit event",
+      "delete": "Delete event",
+      "deleteConfirmTitle": "Delete this event?",
+      "deleteConfirmBody": "The event and all its RSVPs will be removed."
     },
     "manage": {
       "title": "Manage group",
@@ -5876,7 +6270,42 @@
       "pinned": "Pinned",
       "noPinned": "No pinned posts.",
       "unpin": "Unpin",
-      "error": "Couldn't load management data. Please try again."
+      "error": "Couldn't load management data. Please try again.",
+      "info": "Group information",
+      "infoLoading": "Loading group information…",
+      "nameField": "Group name",
+      "descriptionField": "Group description",
+      "joinPolicy": "Join policy",
+      "visibility": "Visibility",
+      "joinPolicies": {
+        "OPEN": "Anyone can join",
+        "APPROVAL": "Requires approval",
+        "INVITE_ONLY": "Invite only"
+      },
+      "visibilities": {
+        "PUBLIC": "Public",
+        "PRIVATE": "Private"
+      },
+      "saveInfo": "Save information",
+      "infoSaved": "Group information updated.",
+      "cancel": "Cancel",
+      "dangerZone": "Danger zone",
+      "transfer": "Transfer ownership",
+      "transferHint": "The new owner must already be an admin of this group. After the transfer you become an admin.",
+      "transferNoAdmins": "This group has no admin yet. Promote a member to admin first.",
+      "transferSelect": "Choose the new owner",
+      "transferAction": "Transfer",
+      "transferConfirmTitle": "Transfer group ownership?",
+      "transferConfirmDescription": "{name} becomes the group owner and you are demoted to admin. Only the new owner can reverse it.",
+      "transferred": "Group ownership transferred.",
+      "archive": "Archive group",
+      "archiveHint": "The group is frozen: no new posts, events, or members.",
+      "archivedAlready": "Group already archived",
+      "archiveConfirmTitle": "Archive this group?",
+      "archiveConfirmDescription": "All group activity stops. Only a platform admin can restore it.",
+      "archiveTypeName": "Type the group name \"{name}\" to confirm.",
+      "archiveConfirm": "Archive group",
+      "archived": "Group archived."
     },
     "create": {
       "title": "Create group",
@@ -5906,7 +6335,22 @@
     "announcements": {
       "title": "Announcements",
       "empty": "No announcements yet.",
-      "error": "Couldn't load announcements. Please try again."
+      "error": "Couldn't load announcements. Please try again.",
+      "create": "New announcement",
+      "titleField": "Announcement title",
+      "contentField": "Announcement content",
+      "pinned": "Pin to top",
+      "pinnedBadge": "Pinned",
+      "post": "Post",
+      "save": "Save",
+      "cancel": "Cancel",
+      "created": "Announcement posted.",
+      "updated": "Announcement updated.",
+      "deleted": "Announcement deleted.",
+      "edit": "Edit announcement",
+      "delete": "Delete announcement",
+      "deleteConfirmTitle": "Delete this announcement?",
+      "deleteConfirmBody": "The announcement will be permanently removed from the group."
     },
     "identity": {
       "title": "Group identity",
@@ -5924,7 +6368,8 @@
       "saved": "Group image updated.",
       "presignFailed": "Couldn't create the upload link. Please try again.",
       "uploadFailed": "Image upload failed. Please try again.",
-      "verifyFailed": "Couldn't confirm the uploaded image. Please try again."
+      "verifyFailed": "Couldn't confirm the uploaded image. Please try again.",
+      "removeLocalOnly": "Remove only clears the image you just picked; a saved image can only be replaced by uploading a new one."
     },
     "states": {
       "retry": "Try again"
@@ -5932,15 +6377,70 @@
     "feed": {
       "empty": "No posts in this group yet. Be the first to share!",
       "error": "Couldn't load the group feed. Please try again.",
-      "pin": "Pin post"
+      "pin": "Pin post",
+      "composer": {
+        "titleField": "Post title",
+        "bodyField": "Share something with the group…",
+        "submit": "Post",
+        "created": "Posted to the group.",
+        "forbidden": "You must be a group member to post here.",
+        "rateLimited": "You're posting too fast. Please try again in a moment.",
+        "failed": "Couldn't publish the post. Please try again."
+      }
     },
     "members": {
       "empty": "No members match this filter.",
-      "error": "Couldn't load members. Please try again."
+      "error": "Couldn't load members. Please try again.",
+      "invite": "Invite member",
+      "inviteTitle": "Invite someone to the group",
+      "invitePlaceholder": "Search by name or @username…",
+      "inviteHint": "Type at least 2 characters to search, or paste a user ID.",
+      "inviteSearching": "Searching…",
+      "inviteNoResults": "No matching users.",
+      "inviteAction": "Invite",
+      "inviteById": "Invite the pasted ID",
+      "inviteClose": "Close",
+      "invited": "Invitation sent.",
+      "actions": "Member actions",
+      "setRole": "Set as {role}",
+      "remove": "Remove from group",
+      "removeConfirmTitle": "Remove this member?",
+      "removeConfirmDescription": "{name} will lose access to the group's content. You can invite them back later.",
+      "removeConfirm": "Remove",
+      "removed": "Member removed from the group.",
+      "roleUpdated": "Role updated.",
+      "you": "You"
     },
     "groupsList": {
       "empty": "No groups yet. Create the first one!",
       "error": "Couldn't load groups. Please try again."
+    },
+    "resources": {
+      "title": "Group resources",
+      "empty": "No resources linked to this group yet.",
+      "error": "Couldn't load group resources. Please try again.",
+      "link": "Link a resource",
+      "idField": "Resource ID or link",
+      "idHint": "Paste a /resources/… link or type a resource ID.",
+      "noteField": "Note (optional)",
+      "submit": "Link",
+      "cancel": "Cancel",
+      "linked": "Resource linked to the group.",
+      "unlink": "Unlink",
+      "unlinked": "Resource unlinked.",
+      "unlinkConfirmTitle": "Unlink this resource?",
+      "unlinkConfirmBody": "The resource stays in the library; it is only removed from this group.",
+      "open": "Open resource",
+      "untitled": "Resource {id}",
+      "addedBy": "Linked by {name}"
+    },
+    "invitation": {
+      "title": "You have a pending group invitation",
+      "description": "Accept to join the group, or decline this invitation.",
+      "accept": "Accept",
+      "decline": "Decline",
+      "accepted": "You joined the group.",
+      "declined": "Invitation declined."
     }
   },
   "appearance": {
@@ -5984,7 +6484,15 @@
     "following": "Following {count}",
     "loading": "Loading…",
     "error": "Could not load user info.",
-    "errorRetry": "Retry"
+    "errorRetry": "Retry",
+    "followFailed": "Could not update follow. Please try again.",
+    "followForbidden": "You can't follow this user.",
+    "followNotFound": "This user no longer exists.",
+    "followRateLimited": "Too many requests. Please try again in a moment.",
+    "followSessionExpired": "Your session expired. Sign in again to follow.",
+    "private": "This profile is private.",
+    "notFound": "User not found.",
+    "rateLimited": "Too many requests. Please try again in a moment."
   },
   "learn": {
     "exercises": {

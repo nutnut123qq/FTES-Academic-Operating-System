@@ -10,6 +10,8 @@ import type {
     CodeGradeResult,
     CreateSessionRequest,
     CreateStudyPlanRequest,
+    DocumentQaRequest,
+    DocumentQaResponse,
     ExecuteCodeRequest,
     GradeCodeRequest,
     JobRef,
@@ -293,6 +295,32 @@ export const getTranscript = async (lessonId: string): Promise<TranscriptRef> =>
         method: "GET",
         url: `/ai/learning/transcript/${lessonId}`,
         authenticated: true,
+    })
+
+// ---------------- DocumentQaController ----------------
+
+/**
+ * Synchronous BE-side (RAG hop to ftes-ai-service) → long axios timeout so a slow
+ * retrieval/answer is not aborted client-side.
+ */
+const DOCUMENT_QA_TIMEOUT_MS = 120_000
+
+/**
+ * Asks a question about a document/lesson ("hỏi đáp tài liệu" + selection-anchored ask).
+ *
+ * `POST /api/v1/ai/document-qa` — permission `ai.learning.use` (STUDENT+). Send
+ * `documentId` and/or `lessonId` (BE resolves `document_ref = documentId ?? lessonId`).
+ * Quota-gated (2 layers, refunded on provider failure / not-yet-indexed). A document
+ * still being indexed answers softly with `{answer: "", processing: true}` — treat it
+ * as "Đang xử lý tài liệu…", not an error.
+ */
+export const askDocumentQa = async (body: DocumentQaRequest): Promise<DocumentQaResponse> =>
+    restRequest<DocumentQaResponse>({
+        method: "POST",
+        url: "/ai/document-qa",
+        data: body,
+        authenticated: true,
+        timeout: DOCUMENT_QA_TIMEOUT_MS,
     })
 
 // ---------------- ModelsController ----------------

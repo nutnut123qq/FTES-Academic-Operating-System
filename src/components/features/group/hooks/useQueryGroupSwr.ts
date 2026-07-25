@@ -16,6 +16,13 @@ export interface GroupHeader {
     coverUrl: string | null
     /** Internal user id of the group owner — the only ownership signal on the read contract. */
     ownerId: string
+    /**
+     * The viewer's role in the group (`OWNER` / `ADMIN` / `MODERATOR` / `MEMBER`),
+     * `null` when not a member. Straight from the BE `viewerMembership`; the join /
+     * leave CTA reads it to decide whether the viewer is already in the group (a
+     * dropped field made every member render "Join" again → 409 on press).
+     */
+    viewerMembership: string | null
 }
 
 /** Maps BE group kind + visibility onto the FE `type` axis (see useQueryGroupsSwr). */
@@ -53,6 +60,7 @@ export const useQueryGroupSwr = (groupId: string) => {
                 avatarUrl: dto.avatarUrl ?? null,
                 coverUrl: dto.coverUrl ?? null,
                 ownerId: dto.ownerId,
+                viewerMembership: dto.viewerMembership ?? null,
             }
         },
     )

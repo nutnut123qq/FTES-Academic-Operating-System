@@ -7273,6 +7273,16 @@
         "title": "Luyện tập bài này",
         "practice": "Vào thử thách"
       }
+    },
+    "toolsRail": {
+      "title": "Công cụ",
+      "mindMap": "Sơ đồ tư duy",
+      "leaderboard": "Bảng xếp hạng",
+      "mockInterview": "Phỏng vấn thử",
+      "interview": "Phỏng vấn",
+      "subjectTitle": "Môn học",
+      "review": "Ôn tập",
+      "qa": "Hỏi đáp"
     }
   },
   "adminConsole": {

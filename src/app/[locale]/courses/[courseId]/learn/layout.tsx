@@ -6,6 +6,7 @@ import { useParams, useSelectedLayoutSegments } from "next/navigation"
 import { LearnShell } from "@/components/features/learn/LearnShell"
 import { ContentMap } from "@/components/features/learn/ContentMap"
 import { OnThisPage } from "@/components/features/learn/OnThisPage"
+import { LearnToolsRail } from "@/components/features/learn/LearnToolsRail"
 import { LeaderboardCategoryRail } from "@/components/features/learn/Leaderboard/LeaderboardCategoryRail"
 import { ContentAiFab } from "@/components/features/learn/ContentAiFab"
 import { ContentAiAnchoredChat } from "@/components/features/learn/ContentAiChat/ContentAiAnchoredChat"
@@ -46,6 +47,8 @@ const LearnLayout = ({ children }: PropsWithChildren) => {
     const isInterview = segments[0] === "interview"
     // the lesson reader is a real `contents/<id>` route (not the challenge sub-route)
     const isLessonReader = isModules && segments.includes("contents") && !isChallenge
+    // the content dashboard = the course "home" (content route, not a lesson/module page)
+    const isContentDashboard = isContent && !isModules
 
     // sticky, viewport-tall rail chrome (hidden below lg — mobile stacks the content).
     // `relative` positions the ResizableRail's absolute drag handle.
@@ -79,7 +82,13 @@ const LearnLayout = ({ children }: PropsWithChildren) => {
         </ResizableRail>
     ) : undefined
 
-    const rightRail = isLessonReader ? <OnThisPage /> : undefined
+    // right rail: on-this-page outline on the lesson reader; the tools rail on the
+    // content dashboard (mind-map / leaderboard / interviews + subject Ôn tập/Hỏi đáp).
+    const rightRail = isLessonReader ? (
+        <OnThisPage />
+    ) : isContentDashboard ? (
+        <LearnToolsRail />
+    ) : undefined
 
     return (
         <>

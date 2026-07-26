@@ -63,6 +63,13 @@ export interface CourseDetail {
     contentCourse: string
     infoCourse: string
     sections: Array<SectionView>
+    /**
+     * The code of the subject this course is linked to (e.g. "MAD101"), or null when
+     * the course has no linked subject. Lets the learn header route "Ôn tập" →
+     * /subjects/{subjectCode}/practice and "Hỏi đáp" → /subjects/{subjectCode}/discussion.
+     * Additive on the BE detail projection.
+     */
+    subjectCode?: string | null
 }
 
 /** Section inside course detail. */

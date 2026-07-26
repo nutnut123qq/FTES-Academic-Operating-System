@@ -7273,6 +7273,16 @@
         "title": "Practice this lesson",
         "practice": "Open challenges"
       }
+    },
+    "toolsRail": {
+      "title": "Tools",
+      "mindMap": "Mind map",
+      "leaderboard": "Leaderboard",
+      "mockInterview": "Mock interview",
+      "interview": "Interview",
+      "subjectTitle": "Subject",
+      "review": "Review",
+      "qa": "Q&A"
     }
   },
   "adminConsole": {

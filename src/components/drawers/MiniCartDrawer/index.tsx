@@ -6,8 +6,8 @@ import { ArrowRightIcon, ShoppingCartIcon } from "@phosphor-icons/react"
 import { useFormatter, useTranslations } from "next-intl"
 import { useSWRConfig } from "swr"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
-import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { CartLineItem } from "@/components/features/cart/CartLineItem"
+import { CartLineItemSkeleton } from "@/components/features/cart/CartLineItem/CartLineItemSkeleton"
 import { useRouter } from "@/i18n/navigation"
 import { useSmViewpoint } from "@/hooks/reuseables/useSmViewpoint"
 import { useGetCartSwr } from "@/hooks/swr/api/rest/queries/useGetCartSwr"
@@ -70,13 +70,7 @@ const MiniCartInner = ({ onClose }: { onClose: () => void }) => {
                     skeleton={
                         <div className="flex flex-col gap-3">
                             {Array.from({ length: 3 }, (_, index) => (
-                                <div
-                                    key={index}
-                                    className="flex items-center justify-between gap-3 rounded-2xl border border-separator p-4"
-                                >
-                                    <Skeleton.Typography type="body-sm" width="1/2" />
-                                    <Skeleton.Typography type="body-sm" width="1/4" />
-                                </div>
+                                <CartLineItemSkeleton key={index} />
                             ))}
                         </div>
                     }

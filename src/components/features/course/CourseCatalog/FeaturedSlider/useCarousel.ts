@@ -5,14 +5,14 @@ import type { FocusEvent } from "react"
 import { useMediaQuery } from "usehooks-ts"
 
 /** Autoplay interval between slide advances (ms). */
-export const AUTOPLAY_INTERVAL_MS = 5_000
+export const AUTOPLAY_INTERVAL_MS = 3_000
 
 /**
  * Controls a native CSS scroll-snap carousel track (no carousel dependency —
  * decision logged in the change's design.md). The track is a `snap-x snap-mandatory`
  * flex row of full-width `snap-center` slides; swipe/momentum is native. This hook
  * adds: the active index (derived from scroll position), programmatic navigation
- * (`scrollToIndex` / `next` / `prev`, wrapping at both ends), and a 5s autoplay that
+ * (`scrollToIndex` / `next` / `prev`, wrapping at both ends), and a 3s autoplay that
  * pauses on hover, focus-within and document-hidden — and is disabled entirely under
  * `prefers-reduced-motion` or with fewer than 2 slides (reduced motion also makes
  * programmatic scrolls instant instead of smooth).
@@ -102,7 +102,7 @@ export const useCarousel = (slideCount: number, options?: { autoplay?: boolean }
         !isFocusedWithin &&
         !isDocumentHidden
 
-    // depending on activeIndex intentionally restarts the 5s timer after ANY slide
+    // depending on activeIndex intentionally restarts the 3s timer after ANY slide
     // change (autoplay tick or manual nav) — manual nav gets a full quiet window
     useEffect(() => {
         if (!isAutoplaying) return

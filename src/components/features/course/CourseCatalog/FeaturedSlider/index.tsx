@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { Button, cn } from "@heroui/react"
+import { cn } from "@heroui/react"
 import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { useRouter } from "@/i18n/navigation"
@@ -42,7 +42,7 @@ export const FeaturedSlider = () => {
             role="region"
             aria-roledescription="carousel"
             aria-label={t("featured.regionLabel")}
-            className="relative flex flex-col gap-3"
+            className="relative mx-auto flex w-full max-w-[1200px] flex-col gap-3 px-[30px]"
             onKeyDown={(event) => {
                 if (!hasMultiple) return
                 if (event.key === "ArrowRight") {
@@ -75,32 +75,30 @@ export const FeaturedSlider = () => {
 
                 {hasMultiple ? (
                     <>
-                        <Button
-                            isIconOnly
-                            size="sm"
-                            variant="secondary"
+                        {/* circular white edge arrows sitting just outside the track
+                            (left/right -12px), mirroring the classic Ftes slider */}
+                        <button
+                            type="button"
                             aria-label={t("featured.prev")}
-                            onPress={prev}
-                            className="absolute left-3 top-1/2 -translate-y-1/2"
+                            onClick={prev}
+                            className="absolute left-[-12px] top-1/2 z-10 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-white text-black shadow-md transition hover:bg-white/90"
                         >
                             <CaretLeftIcon className="size-5" aria-hidden focusable="false" />
-                        </Button>
-                        <Button
-                            isIconOnly
-                            size="sm"
-                            variant="secondary"
+                        </button>
+                        <button
+                            type="button"
                             aria-label={t("featured.next")}
-                            onPress={next}
-                            className="absolute right-3 top-1/2 -translate-y-1/2"
+                            onClick={next}
+                            className="absolute right-[-12px] top-1/2 z-10 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-white text-black shadow-md transition hover:bg-white/90"
                         >
                             <CaretRightIcon className="size-5" aria-hidden focusable="false" />
-                        </Button>
+                        </button>
                     </>
                 ) : null}
             </div>
 
             {hasMultiple ? (
-                <div className="flex items-center justify-center gap-2">
+                <div className="flex items-center justify-start gap-2 pl-2.5">
                     {featured.map((course, index) => (
                         <button
                             key={course.id}

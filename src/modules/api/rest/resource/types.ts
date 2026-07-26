@@ -27,29 +27,6 @@ export interface UpdateResourceRequest {
     metadata?: Record<string, unknown>
 }
 
-/** Body sent to `POST /api/v1/resources/{id}/versions/upload-url`. */
-export interface ResourceUploadUrlRequest {
-    filename: string
-    mimeType: string
-    sizeBytes: number
-    checksumSha256: string
-    changelog?: string
-}
-
-/** Response from requesting an upload URL. */
-export interface ResourceUploadUrlResponse {
-    versionId: string
-    versionNo: number
-    presignedPutUrl: string
-    storageKey: string
-}
-
-/** Body sent to `POST /api/v1/resources/versions/{versionId}/complete`. */
-export interface CompleteUploadRequest {
-    checksumSha256: string
-    sizeBytes: number
-}
-
 /** Body sent to `POST /api/v1/resources/{id}/reject`. */
 export interface RejectRequest {
     reason: string

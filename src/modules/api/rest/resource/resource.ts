@@ -5,7 +5,6 @@ import type {
     CollectionDetailResponse,
     CollectionItemResponse,
     CollectionResponse,
-    CompleteUploadRequest,
     CreateCollectionRequest,
     CreateResourceRequest,
     DownloadUrlResponse,
@@ -20,8 +19,6 @@ import type {
     ToggleResponse,
     UpdateCollectionRequest,
     UpdateResourceRequest,
-    ResourceUploadUrlRequest,
-    ResourceUploadUrlResponse,
     VersionResponse,
     ResourceCommentLikeResponse,
     ResourceCommentView,
@@ -107,38 +104,6 @@ export const updateResource = async (
     return restRequest<ResourceResponse>({
         method: "PATCH",
         url: `/resources/${id}`,
-        data: request,
-    })
-}
-
-/**
- * Requests a presigned upload URL for a new resource version.
- *
- * `POST /api/v1/resources/{id}/versions/upload-url`
- */
-export const createResourceUploadUrl = async (
-    id: string,
-    request: ResourceUploadUrlRequest,
-): Promise<ResourceUploadUrlResponse> => {
-    return restRequest<ResourceUploadUrlResponse>({
-        method: "POST",
-        url: `/resources/${id}/versions/upload-url`,
-        data: request,
-    })
-}
-
-/**
- * Completes an uploaded resource version.
- *
- * `POST /api/v1/resources/versions/{versionId}/complete`
- */
-export const completeResourceUpload = async (
-    versionId: string,
-    request: CompleteUploadRequest,
-): Promise<VersionResponse> => {
-    return restRequest<VersionResponse>({
-        method: "POST",
-        url: `/resources/versions/${versionId}/complete`,
         data: request,
     })
 }

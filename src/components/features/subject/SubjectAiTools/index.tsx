@@ -8,7 +8,6 @@ import {
     TargetIcon,
     SquaresFourIcon,
     FolderIcon,
-    LockIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
@@ -22,7 +21,6 @@ import {
     type AiToolKey,
 } from "../hooks/useQuerySubjectAiToolsSwr"
 import { useQuerySubjectSwr } from "../hooks/useQuerySubjectSwr"
-import { useMutateSubjectMembershipSwr } from "../hooks/useMutateSubjectMembershipSwr"
 import { SubjectAiTutor } from "./SubjectAiTutor"
 import { SubjectAiSummary } from "./SubjectAiSummary"
 import { SubjectAiQuiz } from "./SubjectAiQuiz"
@@ -45,7 +43,8 @@ type ActiveTool = AiToolKey
 /**
  * AI tab (§3 → §9): a functional per-subject AI hub. Tool cards are real entry
  * points that open working surfaces INSIDE the tab via local `activeTool` view
- * state (no sub-routes). Tools are gated on workspace membership (enroll axis).
+ * state (no sub-routes). Membership is OPTIONAL — the AI endpoints don't hard-gate
+ * on it, so joining the workspace is not required to use the tools.
  * Every surface runs against the real AI module: the tutor streams over SSE, and
  * summary/quiz/flashcards/OCR submit an async job and poll `GET /ai/jobs/{id}`.
  */
@@ -55,23 +54,15 @@ export const SubjectAiTools = () => {
     const { subjectId } = useParams<{ subjectId: string }>()
     const { tools, isLoading, error, mutate } =
         useQuerySubjectAiToolsSwr(subjectId)
-    const { subject, isMembershipLoading } = useQuerySubjectSwr(subjectId)
-    const { join, isJoining } = useMutateSubjectMembershipSwr(subjectId)
+    const { subject } = useQuerySubjectSwr(subjectId)
 
-    // REAL membership: the workspace aggregate's `callerMembership` (null → non-member),
-    // no longer a hardcoded false.
-    const isMember = subject?.isMember ?? false
     const [activeTool, setActiveTool] = React.useState<ActiveTool | null>(null)
 
-    // guard beyond the button: never render a tool surface for a non-member
-    const openTool = (key: ActiveTool) => {
-        if (!isMember) return
-        setActiveTool(key)
-    }
+    const openTool = (key: ActiveTool) => setActiveTool(key)
     const backToHub = () => setActiveTool(null)
     const goResources = () => router.push(`/subjects/${subjectId}/resources`)
 
-    if (activeTool && isMember && subject) {
+    if (activeTool && subject) {
         if (activeTool === "tutor") {
             return (
                 <SubjectAiTutor
@@ -130,35 +121,6 @@ export const SubjectAiTools = () => {
                 {t("aiTools.title")}
             </Typography>
 
-            {/* locked state — hidden while the membership read is in flight so a member
-                never sees a flash of the gate. "Tham gia" now really joins (POST
-                /subjects/{code}/join) and the AI hub unlocks in place. */}
-            {!isMember && !isMembershipLoading ? (
-                <div className="flex flex-col gap-3 rounded-2xl border border-separator p-4">
-                    <div className="flex items-center gap-2 text-muted">
-                        <LockIcon
-                            className="size-5"
-                            aria-hidden
-                            focusable="false"
-                        />
-                        <Typography type="body-sm" color="muted">
-                            {t("aiTools.lockedHint")}
-                        </Typography>
-                    </div>
-                    <Button
-                        variant="primary"
-                        className="self-start"
-                        isDisabled={isJoining}
-                        isPending={isJoining}
-                        onPress={() => {
-                            void join()
-                        }}
-                    >
-                        {t("membership.join")}
-                    </Button>
-                </div>
-            ) : null}
-
             <AsyncContent
                 isLoading={isLoading && tools.length === 0}
                 skeleton={
@@ -188,8 +150,7 @@ export const SubjectAiTools = () => {
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     {tools.map((tool) => {
                         const isComingSoon = tool.status === "comingSoon"
-                        const isLocked = !isMember
-                        const disabled = isComingSoon || isLocked
+                        const disabled = isComingSoon
                         return (
                             <div
                                 key={tool.key}
@@ -206,13 +167,6 @@ export const SubjectAiTools = () => {
                                         <Typography type="body" weight="medium">
                                             {t(`aiTools.tools.${tool.key}.title`)}
                                         </Typography>
-                                        {isLocked ? (
-                                            <LockIcon
-                                                className="size-4 text-muted"
-                                                aria-hidden
-                                                focusable="false"
-                                            />
-                                        ) : null}
                                     </div>
                                     <Typography type="body-sm" color="muted">
                                         {isComingSoon

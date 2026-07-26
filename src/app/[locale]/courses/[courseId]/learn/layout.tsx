@@ -2,7 +2,7 @@
 
 import React, { PropsWithChildren } from "react"
 import { useTranslations } from "next-intl"
-import { useParams, useSelectedLayoutSegments } from "next/navigation"
+import { useSelectedLayoutSegments } from "next/navigation"
 import { LearnShell } from "@/components/features/learn/LearnShell"
 import { ContentMap } from "@/components/features/learn/ContentMap"
 import { OnThisPage } from "@/components/features/learn/OnThisPage"
@@ -34,7 +34,6 @@ import { useLearnSidebarStore } from "@/hooks/zustand/learnSidebar/store"
  */
 const LearnLayout = ({ children }: PropsWithChildren) => {
     const t = useTranslations("learn")
-    const { courseId } = useParams<{ courseId: string }>()
     const segments = useSelectedLayoutSegments()
     const { collapsed } = useLearnSidebarStore()
 

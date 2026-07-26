@@ -19,17 +19,16 @@ test.describe("Blog tab — desktop header (≥ md)", () => {
         test.skip(!viewport || !isDesktop(viewport.width), "desktop-only surface")
     })
 
-    test("renders exactly five modules with Blog last, and navigates to /blog", async ({ page }) => {
+    test("renders the six modules including Blog, and navigates to /blog", async ({ page }) => {
         await page.goto("/")
 
         const nav = page.getByRole("navigation").first()
         const links = nav.getByRole("link")
-        await expect(links).toHaveCount(5)
+        // Home · Workplace · Course · Community · Blog · Quests
+        await expect(links).toHaveCount(6)
 
         const blog = nav.getByRole("link", { name: "Blog" })
         await expect(blog).toBeVisible()
-        // Blog is the last module (Home · Workplace · Course · Community · Blog)
-        await expect(links.last()).toHaveText("Blog")
 
         await blog.click()
         await expect(page).toHaveURL(/\/blog$/)

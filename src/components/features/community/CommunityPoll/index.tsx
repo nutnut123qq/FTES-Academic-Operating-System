@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react"
 import { Skeleton, Typography, cn, toast } from "@heroui/react"
 import { useTranslations } from "next-intl"
+import { RestError } from "@/modules/api/rest/client"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { useQueryPollSwr } from "../hooks/useQueryPollSwr"
 import { useMutatePollVoteSwr } from "../hooks/useMutatePollVoteSwr"
@@ -52,9 +53,12 @@ export const CommunityPoll = ({ postId }: CommunityPollProps) => {
     // While optimistic (server tallies do not include the click yet) add the +1
     // locally; after revalidate the server voteCount already carries it.
     const pending = localVotedId !== null && !poll?.myOptionId
+    // Past the deadline the BE rejects every vote (`COMMUNITY_POLL_CLOSED`), so the
+    // UI must stop offering the click and just show the tally.
+    const isClosed = poll?.closesAt != null && new Date(poll.closesAt).getTime() <= Date.now()
 
     const onVote = (optionId: string) => {
-        if (!poll || votedId !== null) {
+        if (!poll || votedId !== null || isClosed) {
             return
         }
         setLocalVotedId(optionId)
@@ -65,9 +69,16 @@ export const CommunityPoll = ({ postId }: CommunityPollProps) => {
                     setLocalVotedId(null)
                 }
             })
-            .catch(() => {
+            .catch((cause: unknown) => {
                 setLocalVotedId(null)
-                toast.danger(t("poll.voteFailed"))
+                // The poll can close between load and click — revalidate so the UI
+                // flips to the closed state instead of showing a generic failure.
+                const closed =
+                    cause instanceof RestError && cause.errorCode === "COMMUNITY_POLL_CLOSED"
+                if (closed) {
+                    void mutate()
+                }
+                toast.danger(closed ? t("poll.closed") : t("poll.voteFailed"))
             })
     }
 
@@ -98,16 +109,19 @@ export const CommunityPoll = ({ postId }: CommunityPollProps) => {
                         {poll.options.map((option) => {
                             const votes = votesOf(option.id, option.votes)
                             const percent = percentOf(votes)
-                            const revealed = votedId !== null
+                            // A closed poll reveals the tally too — there is nothing left to vote on.
+                            const revealed = votedId !== null || isClosed
                             return (
                                 <button
                                     key={option.id}
                                     type="button"
+                                    disabled={isClosed}
                                     onClick={() => onVote(option.id)}
                                     className={cn(
                                         "relative overflow-hidden rounded-2xl border p-3 text-left transition-colors",
                                         votedId === option.id ? "border-accent" : "border-separator",
                                         !revealed && "hover:bg-default/40",
+                                        isClosed && "cursor-default",
                                     )}
                                 >
                                     {revealed ? (
@@ -131,7 +145,9 @@ export const CommunityPoll = ({ postId }: CommunityPollProps) => {
                         })}
                     </div>
                     <Typography type="body-xs" color="muted">
-                        {t("poll.totalVotes", { count: total })}
+                        {isClosed
+                            ? `${t("poll.totalVotes", { count: total })} · ${t("poll.closed")}`
+                            : t("poll.totalVotes", { count: total })}
                     </Typography>
                 </div>
             ) : null}

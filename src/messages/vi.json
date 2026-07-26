@@ -6332,7 +6332,8 @@
       "totalVotes": "{count} lượt bình chọn",
       "error": "Không tải được bình chọn. Vui lòng thử lại.",
       "empty": "Chưa có bình chọn nào trong bảng tin của bạn.",
-      "voteFailed": "Không gửi được bình chọn. Vui lòng thử lại."
+      "voteFailed": "Không gửi được bình chọn. Vui lòng thử lại.",
+      "closed": "Bình chọn đã đóng"
     },
     "moderation": {
       "title": "Kiểm duyệt",

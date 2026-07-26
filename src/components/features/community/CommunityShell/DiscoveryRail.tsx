@@ -55,9 +55,11 @@ const QuickPoll = () => {
     // Server truth wins once revalidate lands; local id only covers the optimistic window.
     const votedId = poll.myOptionId ?? localVotedId
     const pending = localVotedId !== null && !poll.myOptionId
+    // Hết hạn thì BE từ chối mọi vote (`COMMUNITY_POLL_CLOSED`) — khoá click, chỉ hiện kết quả.
+    const isClosed = poll.closesAt != null && new Date(poll.closesAt).getTime() <= Date.now()
 
     const onVote = (optionId: string) => {
-        if (votedId !== null) {
+        if (votedId !== null || isClosed) {
             return
         }
         setLocalVotedId(optionId)
@@ -79,7 +81,7 @@ const QuickPoll = () => {
         const votes = option.votes + (pending && localVotedId === option.id ? 1 : 0)
         return total === 0 ? 0 : Math.round((votes / total) * 100)
     }
-    const revealed = votedId !== null
+    const revealed = votedId !== null || isClosed
 
     return (
         <div className="flex flex-col gap-2">
@@ -88,11 +90,13 @@ const QuickPoll = () => {
                 <button
                     key={option.id}
                     type="button"
+                    disabled={isClosed}
                     onClick={() => onVote(option.id)}
                     className={cn(
                         "relative overflow-hidden rounded-large border p-2 text-left transition-colors",
                         votedId === option.id ? "border-accent" : "border-separator",
                         !revealed && "hover:bg-default/40",
+                        isClosed && "cursor-default",
                     )}
                 >
                     {revealed ? (
@@ -113,6 +117,11 @@ const QuickPoll = () => {
                     </div>
                 </button>
             ))}
+            {isClosed ? (
+                <Typography type="body-xs" color="muted">
+                    {t("poll.closed")}
+                </Typography>
+            ) : null}
         </div>
     )
 }

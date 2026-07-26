@@ -5,6 +5,7 @@ import {
     Button,
     Chip,
     Input,
+    Label,
     TextField,
     Typography,
     cn,
@@ -168,9 +169,11 @@ export const GoalsCard = ({ className }: WithClassNames<undefined>) => {
 
                 <div className="flex items-end gap-2">
                     <TextField variant="secondary" className="w-32">
-                        <Typography type="body-xs" color="muted" className="mb-1 block">
+                        {/* Label, không Typography: trong TextField, react-aria bắt mọi `Text`
+                            phải có `slot` — Typography không slot sẽ throw và giết cả trang. */}
+                        <Label className="mb-1 block text-xs text-muted">
                             {t("form.targetLabel")}
-                        </Typography>
+                        </Label>
                         <Input
                             type="number"
                             inputMode="numeric"
@@ -178,7 +181,6 @@ export const GoalsCard = ({ className }: WithClassNames<undefined>) => {
                             value={target}
                             onChange={(event) => setTarget(event.target.value)}
                             placeholder={t("form.targetPlaceholder")}
-                            aria-label={t("form.targetLabel")}
                         />
                     </TextField>
                     <Button

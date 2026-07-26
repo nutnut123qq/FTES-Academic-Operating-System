@@ -7,6 +7,7 @@ import {
 import type {
     WithClassNames,
 } from "@/modules/types/base/class-name"
+import { Link } from "@/i18n/navigation"
 
 /** Props for the {@link PressableCard} block. */
 export interface PressableCardProps extends WithClassNames<undefined> {
@@ -50,10 +51,12 @@ export const PressableCard = ({
     )
 
     if (href && !isDisabled) {
+        // next-intl Link, KHÔNG `<a>` thuần: `<a>` điều hướng cứng → reload cả trang và
+        // rơi về locale mặc định vì href của caller không mang prefix locale.
         return (
-            <a href={href} className={base}>
+            <Link href={href} className={base}>
                 {children}
-            </a>
+            </Link>
         )
     }
 

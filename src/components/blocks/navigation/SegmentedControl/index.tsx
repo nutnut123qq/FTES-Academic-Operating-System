@@ -11,6 +11,13 @@ export interface SegmentedControlItem<T extends string> {
     value: T
     /** Segment label (text / icon + text). */
     label: ReactNode
+    /**
+     * Accessible name of the segment. Pass this whenever {@link SegmentedControlItem.label}
+     * shortens itself on narrow viewports (e.g. "4.5+" under `sm`, "4.5 trở lên"
+     * from `sm:` up): the rendered text then stops naming the segment on every
+     * breakpoint, so the full label has to reach screen readers from here.
+     */
+    ariaLabel?: string
     /** When true the segment is shown dimmed and not pressable. */
     isDisabled?: boolean
 }
@@ -49,6 +56,7 @@ export const SegmentedControl = <T extends string>({
                     key={item.value}
                     type="button"
                     disabled={item.isDisabled}
+                    aria-label={item.ariaLabel}
                     aria-pressed={value === item.value}
                     onClick={() => onChange(item.value)}
                     className={cn(

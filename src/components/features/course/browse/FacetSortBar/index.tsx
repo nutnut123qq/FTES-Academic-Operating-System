@@ -83,10 +83,15 @@ export const FacetSortBar = ({
                         ariaLabel={t("courseSystem.browse.filters.levelLabel")}
                         items={LEVELS.map((option) => ({
                             value: option,
-                            label:
-                                option === "all"
-                                    ? t("courseSystem.browse.filters.all")
-                                    : t(`courseSystem.levels.${option}`),
+                            // nowrap: the labels are short enough to fit a narrow
+                            // segment on one line — wrapping only made the pills tall
+                            label: (
+                                <span className="whitespace-nowrap">
+                                    {option === "all"
+                                        ? t("courseSystem.browse.filters.all")
+                                        : t(`courseSystem.levels.${option}`)}
+                                </span>
+                            ),
                         }))}
                         value={level}
                         onChange={onLevelChange}
@@ -98,18 +103,30 @@ export const FacetSortBar = ({
                         ariaLabel={t("courseSystem.browse.filters.ratingLabel")}
                         items={RATINGS.map((option) => ({
                             value: option,
+                            // under sm the wording is dropped to "4.5+" (the ★ carries
+                            // the meaning) so the pill stays one line; `ariaLabel` keeps
+                            // the full name for screen readers at every breakpoint
+                            ariaLabel:
+                                option === "all"
+                                    ? undefined
+                                    : t("courseSystem.browse.filters.ratingAtLeast", { rating: option }),
                             label:
                                 option === "all" ? (
-                                    t("courseSystem.browse.filters.all")
+                                    <span className="whitespace-nowrap">
+                                        {t("courseSystem.browse.filters.all")}
+                                    </span>
                                 ) : (
-                                    <span className="inline-flex items-center gap-2">
+                                    <span className="inline-flex items-center gap-2 whitespace-nowrap">
                                         <StarIcon
                                             aria-hidden
                                             focusable="false"
                                             weight="fill"
-                                            className="size-4 text-warning"
+                                            className="size-4 shrink-0 text-warning"
                                         />
-                                        {t("courseSystem.browse.filters.ratingAtLeast", { rating: option })}
+                                        <span className="sm:hidden">{`${option}+`}</span>
+                                        <span className="hidden sm:inline">
+                                            {t("courseSystem.browse.filters.ratingAtLeast", { rating: option })}
+                                        </span>
                                     </span>
                                 ),
                         }))}

@@ -1,4 +1,4 @@
-import { expect, test, type APIRequestContext, type Page } from "@playwright/test"
+import { expect, test, type APIRequestContext, type Locator, type Page } from "@playwright/test"
 
 /**
  * E2E — category landing page chrome (change `catalog-cross-category-facets`) and
@@ -101,6 +101,24 @@ const levelFacet = (page: Page) => page.getByRole("group", { name: "Lọc theo c
  */
 const NAV_TIMEOUT = 30_000
 
+/**
+ * Presses a chip and waits for the route it owns. Retries the WHOLE action, because
+ * a chip is a client `router.push`: against a dev server compiling routes under
+ * parallel workers the first transition can stall past any fixed budget (the URL
+ * only commits once the RSC payload lands). A retry after the route is compiled is
+ * instant, so this stays a real assertion — it fails if the chip never navigates.
+ *
+ * @param page - The page under test.
+ * @param tab - The chip to press.
+ * @param url - The route the chip must land on.
+ */
+const pressChipAndLand = async (page: Page, tab: Locator, url: RegExp) => {
+    await expect(async () => {
+        await tab.click()
+        await expect(page).toHaveURL(url, { timeout: 5_000 })
+    }).toPass({ timeout: NAV_TIMEOUT })
+}
+
 /** Waits for the grid to settle on a non-empty first paint of the category. */
 const waitForGrid = async (page: Page, courses: Array<LiveCourse>) => {
     await expect(page.getByRole("link", { name: new RegExp(courses[0].code) }).first()).toBeVisible({
@@ -143,10 +161,13 @@ test.describe("/courses/category/[slug] — cross-category chips + facets", () =
         // the chips are client-side route pushes — wait for hydration (first cards
         // painted) or the press lands on dead markup and nothing navigates
         await waitForGrid(page, courses)
-        await chipBar(page).getByRole("tab", { name: language.name, exact: true }).click()
 
         // real route change, locale preserved (never /en/...)
-        await expect(page).toHaveURL(/\/vi\/courses\/category\/language$/, { timeout: NAV_TIMEOUT })
+        await pressChipAndLand(
+            page,
+            chipBar(page).getByRole("tab", { name: language.name, exact: true }),
+            /\/vi\/courses\/category\/language$/,
+        )
         // header renders the switched-to category from BE data
         await expect(page.getByRole("heading", { name: language.name })).toBeVisible({
             timeout: NAV_TIMEOUT,
@@ -158,8 +179,11 @@ test.describe("/courses/category/[slug] — cross-category chips + facets", () =
         )
 
         // "Tất cả" leaves the category route for the catalog, still under /vi
-        await chipBar(page).getByRole("tab", { name: "Tất cả", exact: true }).click()
-        await expect(page).toHaveURL(/\/vi\/courses$/, { timeout: NAV_TIMEOUT })
+        await pressChipAndLand(
+            page,
+            chipBar(page).getByRole("tab", { name: "Tất cả", exact: true }),
+            /\/vi\/courses$/,
+        )
     })
 
     test("star facet keeps only rated courses at or above the threshold (task 3)", async ({ page, request }) => {
@@ -251,12 +275,15 @@ test.describe("/courses/category/[slug] — cross-category chips + facets", () =
         await expect(page.getByPlaceholder("Tìm theo mã hoặc tên môn")).toBeVisible({
             timeout: NAV_TIMEOUT,
         })
-        await expect(page.getByRole("group", { name: "Sắp xếp" })).toBeVisible()
+        await expect(page.getByRole("group", { name: "Sắp xếp" })).toBeVisible({ timeout: NAV_TIMEOUT })
         await expect(levelFacet(page)).toHaveCount(0)
         await expect(starFacet(page)).toHaveCount(0)
 
-        // and the catalog still browses by category shelf
-        await expect(chipBar(page).getByRole("tab", { name: "Tất cả" })).toBeVisible()
+        // and the catalog still browses by category shelf (the chip bar only mounts
+        // once GET /courses/categories resolves, so it gets the live-data budget)
+        await expect(chipBar(page).getByRole("tab", { name: "Tất cả", exact: true })).toBeVisible({
+            timeout: NAV_TIMEOUT,
+        })
     })
 })
 

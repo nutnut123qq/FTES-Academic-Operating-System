@@ -8,7 +8,7 @@ import { SaveButton } from "@/components/blocks/buttons/SaveButton"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { SearchInput } from "@/components/reuseable/SearchInput"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
-import { getResourceDownloadUrl } from "@/modules/api/rest/resource"
+import { downloadResourceFile } from "@/modules/api/rest/resource"
 import { RestError } from "@/modules/api/rest/client"
 import {
     RESOURCE_HUB_TYPES,
@@ -59,11 +59,8 @@ export const ResourceHub = () => {
         }
         setDownloadingId(resourceId)
         try {
-            const download = await getResourceDownloadUrl(resourceId)
-            if (!download?.url) {
-                throw new RestError("missing download url", 404)
-            }
-            window.open(download.url, "_blank", "noopener,noreferrer")
+            // Tải qua BE-stream: URL provider của PDF/slide/zip bị Cloudinary chặn (401).
+            await downloadResourceFile(resourceId)
         } catch (downloadError) {
             const status = downloadError instanceof RestError ? downloadError.status : 0
             if (status === 401) {

@@ -1,37 +1,27 @@
 /**
- * The real resource-publish chain (BE `ResourceController` + `ResourceService`):
+ * Chuoi dang hoc lieu THAT (BE `ResourceController` + `ResourceService`):
  *
  * ```
- * hash      → SHA-256 of the bytes (WebCrypto)   — required BEFORE the presign call:
- *                                                  `UploadUrlRequest.checksumSha256`
- *                                                  is @NotBlank @Size(min=64,max=64)
- * create    → POST /resources                    → DRAFT resource
- * uploadUrl → POST /resources/{id}/versions/upload-url
- *                                                → {versionId, presignedPutUrl, storageKey}
- * put       → PUT presignedPutUrl (raw bytes, exact Content-Type the presign was signed with)
- * complete  → POST /resources/versions/{versionId}/complete
- *                                                → BE re-stats the object and compares
- *                                                  size + checksum, then sets currentVersionId
- * submit    → POST /resources/{id}/submit        → PENDING_APPROVAL (moderation workflow)
+ * create -> POST /resources               -> hoc lieu DRAFT
+ * upload -> POST /resources/{id}/versions -> multipart (field `file`); BE tu tinh checksum +
+ *                                            kich thuoc va set currentVersionId
+ * submit -> POST /resources/{id}/submit   -> PENDING_APPROVAL (vao hang doi duyet)
  * ```
  *
- * The chain is written as a **resumable state machine** rather than a straight-line
- * `await` sequence: every step records what it produced in {@link ResourceUploadState},
- * so a failure half-way (a 429 on presign, a dropped PUT, a 5xx on submit) can be
- * retried from exactly the step that failed without re-creating the resource or
- * re-hashing hundreds of MB.
+ * Van la state machine resume duoc: moi buoc ghi lai thu no tao ra trong
+ * {@link ResourceUploadState}, nen hong giua duong thi thu lai DUNG buoc do, khong tao lai hoc lieu.
+ *
+ * Truoc 2026-07-26 chuoi nay di presign 4 buoc (hash -> upload-url -> PUT -> complete). BE da GO
+ * `/versions/upload-url` khi chuyen sang Cloudinary: goi vao tra 404 PLATFORM_NOT_FOUND, nen moi
+ * luot upload tren UI deu tao ra hoc lieu RONG (khong version => khong tai xuong duoc, panel hoi AI
+ * bi an). Do la ly do chuoi rut con 3 buoc.
  */
-
 import {
-    completeResourceUpload,
     createResource,
-    createResourceUploadUrl,
     submitResource,
-    type CompleteUploadRequest,
+    uploadResourceVersion,
     type CreateResourceRequest,
     type ResourceResponse,
-    type ResourceUploadUrlRequest,
-    type ResourceUploadUrlResponse,
     type VersionResponse,
 } from "@/modules/api/rest/resource"
 import { RestError } from "@/modules/api/rest/client"
@@ -39,21 +29,12 @@ import { RestError } from "@/modules/api/rest/client"
 import type { ResourceTypeCode } from "./uploadRules"
 
 /** One step of the publish chain, in execution order. */
-export type ResourceUploadStep =
-    | "hash"
-    | "create"
-    | "uploadUrl"
-    | "put"
-    | "complete"
-    | "submit"
+export type ResourceUploadStep = "create" | "upload" | "submit"
 
 /** The chain in order — the progress list renders straight off this. */
 export const RESOURCE_UPLOAD_STEPS: ReadonlyArray<ResourceUploadStep> = [
-    "hash",
     "create",
-    "uploadUrl",
-    "put",
-    "complete",
+    "upload",
     "submit",
 ]
 
@@ -79,27 +60,15 @@ export interface ResourceUploadDraft {
 
 /** Everything the chain has produced so far. Serializable ⇒ trivially resumable. */
 export interface ResourceUploadState {
-    checksumSha256: string | null
-    sizeBytes: number | null
     resourceId: string | null
     versionId: string | null
-    presignedPutUrl: string | null
-    storageKey: string | null
-    uploaded: boolean
-    completed: boolean
     submitted: boolean
 }
 
 /** A pristine state — nothing has run yet. */
 export const emptyResourceUploadState = (): ResourceUploadState => ({
-    checksumSha256: null,
-    sizeBytes: null,
     resourceId: null,
     versionId: null,
-    presignedPutUrl: null,
-    storageKey: null,
-    uploaded: false,
-    completed: false,
     submitted: false,
 })
 
@@ -111,11 +80,8 @@ export const emptyResourceUploadState = (): ResourceUploadState => ({
 export const nextResourceUploadStep = (
     state: ResourceUploadState,
 ): ResourceUploadStep | null => {
-    if (state.checksumSha256 === null || state.sizeBytes === null) return "hash"
     if (state.resourceId === null) return "create"
-    if (state.versionId === null || state.presignedPutUrl === null) return "uploadUrl"
-    if (!state.uploaded) return "put"
-    if (!state.completed) return "complete"
+    if (state.versionId === null) return "upload"
     if (!state.submitted) return "submit"
     return null
 }
@@ -134,17 +100,6 @@ export type ResourceUploadErrorReason =
     | "network"
     | "server"
     | "generic"
-
-/** Raised when the presigned PUT itself fails (non-2xx from object storage). */
-export class ResourceStoragePutError extends Error {
-    readonly status: number
-
-    constructor(status: number) {
-        super(`Storage PUT failed (${status})`)
-        this.name = "ResourceStoragePutError"
-        this.status = status
-    }
-}
 
 /**
  * A failure of one chain step, carrying the state to resume from.
@@ -191,13 +146,6 @@ const ERROR_CODE_REASONS: Record<string, ResourceUploadErrorReason> = {
 export const classifyResourceUploadError = (
     error: unknown,
 ): { reason: ResourceUploadErrorReason; status: number; message: string } => {
-    if (error instanceof ResourceStoragePutError) {
-        return {
-            reason: error.status === 0 ? "network" : "storage",
-            status: error.status,
-            message: error.message,
-        }
-    }
     if (error instanceof RestError) {
         const byCode = error.errorCode ? ERROR_CODE_REASONS[error.errorCode] : undefined
         if (byCode) {
@@ -235,40 +183,23 @@ export const classifyResourceUploadError = (
 }
 
 /**
- * State to resume from after `step` failed. A failed transfer (`put`) or a rejected
- * `complete` invalidates the presign, so both drop back to `uploadUrl`; every other
- * step is retried in place.
+ * State de thu lai sau khi `step` hong. Upload multipart la MOT request nguyen khoi nen hong thi
+ * thu lai dung buoc do (versionId van null); cac buoc khac cung retry tai cho.
  */
 export const retryStateAfter = (
     step: ResourceUploadStep,
     state: ResourceUploadState,
 ): ResourceUploadState => {
-    if (step === "put" || step === "complete") {
-        return {
-            ...state,
-            versionId: null,
-            presignedPutUrl: null,
-            storageKey: null,
-            uploaded: false,
-            completed: false,
-        }
+    if (step === "upload") {
+        return { ...state, versionId: null }
     }
     return state
 }
 
 /** Injection seam — the unit test swaps every one of these for a spy. */
 export interface ResourceUploadDeps {
-    hashFile: (file: File) => Promise<string>
     createResource: (request: CreateResourceRequest) => Promise<ResourceResponse>
-    createUploadUrl: (
-        id: string,
-        request: ResourceUploadUrlRequest,
-    ) => Promise<ResourceUploadUrlResponse>
-    putObject: (url: string, file: File, contentType: string) => Promise<void>
-    completeUpload: (
-        versionId: string,
-        request: CompleteUploadRequest,
-    ) => Promise<VersionResponse>
+    uploadVersion: (id: string, file: File, changelog?: string) => Promise<VersionResponse>
     submitResource: (id: string) => Promise<ResourceResponse>
     onStep?: (
         step: ResourceUploadStep,
@@ -277,44 +208,10 @@ export interface ResourceUploadDeps {
     ) => void
 }
 
-/** Hex SHA-256 of the file bytes — the checksum both BE steps verify. */
-export const sha256HexOfFile = async (file: File): Promise<string> => {
-    const buffer = await file.arrayBuffer()
-    const digest = await crypto.subtle.digest("SHA-256", buffer)
-    return Array.from(new Uint8Array(digest))
-        .map((byte) => byte.toString(16).padStart(2, "0"))
-        .join("")
-}
-
-/**
- * Uploads the raw bytes to the presigned URL.
- *
- * The `Content-Type` MUST equal the MIME the presign was signed with
- * (`S3StorageAdapter.presignedPutUrl` puts it in the signature) — a different header
- * makes S3 answer 403 SignatureDoesNotMatch.
- */
-export const putResourceObject = async (
-    url: string,
-    file: File,
-    contentType: string,
-): Promise<void> => {
-    const response = await fetch(url, {
-        method: "PUT",
-        headers: { "Content-Type": contentType },
-        body: file,
-    })
-    if (!response.ok) {
-        throw new ResourceStoragePutError(response.status)
-    }
-}
-
 /** Production wiring of {@link ResourceUploadDeps}. */
 export const defaultResourceUploadDeps: Omit<ResourceUploadDeps, "onStep"> = {
-    hashFile: sha256HexOfFile,
     createResource,
-    createUploadUrl: createResourceUploadUrl,
-    putObject: putResourceObject,
-    completeUpload: completeResourceUpload,
+    uploadVersion: uploadResourceVersion,
     submitResource,
 }
 
@@ -333,12 +230,6 @@ const runStep = async (
     state: ResourceUploadState,
 ): Promise<{ state: ResourceUploadState; resource?: ResourceResponse }> => {
     switch (step) {
-        case "hash": {
-            const checksumSha256 = await deps.hashFile(draft.file)
-            return {
-                state: { ...state, checksumSha256, sizeBytes: draft.file.size },
-            }
-        }
         case "create": {
             const resource = await deps.createResource({
                 title: draft.title.trim(),
@@ -350,37 +241,13 @@ const runStep = async (
             })
             return { state: { ...state, resourceId: resource.id }, resource }
         }
-        case "uploadUrl": {
-            const presigned = await deps.createUploadUrl(state.resourceId as string, {
-                filename: draft.file.name,
-                mimeType: draft.mimeType,
-                sizeBytes: state.sizeBytes as number,
-                checksumSha256: state.checksumSha256 as string,
-                changelog: draft.changelog?.trim() || undefined,
-            })
-            return {
-                state: {
-                    ...state,
-                    versionId: presigned.versionId,
-                    presignedPutUrl: presigned.presignedPutUrl,
-                    storageKey: presigned.storageKey,
-                },
-            }
-        }
-        case "put": {
-            await deps.putObject(
-                state.presignedPutUrl as string,
+        case "upload": {
+            const version = await deps.uploadVersion(
+                state.resourceId as string,
                 draft.file,
-                draft.mimeType,
+                draft.changelog?.trim() || undefined,
             )
-            return { state: { ...state, uploaded: true } }
-        }
-        case "complete": {
-            await deps.completeUpload(state.versionId as string, {
-                checksumSha256: state.checksumSha256 as string,
-                sizeBytes: state.sizeBytes as number,
-            })
-            return { state: { ...state, completed: true } }
+            return { state: { ...state, versionId: version.id } }
         }
         case "submit": {
             const resource = await deps.submitResource(state.resourceId as string)

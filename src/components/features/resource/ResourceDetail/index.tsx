@@ -13,7 +13,7 @@ import { Link } from "@/i18n/navigation"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
 import { useGetRelatedResourcesSwr } from "@/hooks/swr/api/rest/queries/useGetRelatedResourcesSwr"
 import { RestError } from "@/modules/api/rest/client"
-import { favoriteResource, getResourceDownloadUrl, unfavoriteResource } from "@/modules/api/rest/resource"
+import { downloadResourceFile, favoriteResource, unfavoriteResource } from "@/modules/api/rest/resource"
 import { useQueryResourceDetailSwr } from "../hooks/useQueryResourceDetailSwr"
 import { ResourceAiQa } from "../ResourceAiQa"
 import { AddToCollectionModal } from "./AddToCollectionModal"
@@ -131,8 +131,8 @@ export const ResourceDetail = () => {
         }
         setIsDownloading(true)
         try {
-            const { url } = await getResourceDownloadUrl(resourceId)
-            window.open(url, "_blank", "noopener,noreferrer")
+            // Tải qua BE-stream: URL provider của PDF/slide/zip bị Cloudinary chặn (401).
+            await downloadResourceFile(resourceId)
         } catch (downloadError) {
             const status = downloadError instanceof RestError ? downloadError.status : 0
             toast.danger(

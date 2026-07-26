@@ -5995,11 +5995,8 @@
         "TEMPLATES": "Biểu mẫu"
       },
       "steps": {
-        "hash": "Tính mã băm tệp",
         "create": "Tạo bản ghi tài nguyên",
-        "uploadUrl": "Xin liên kết tải lên",
-        "put": "Tải tệp lên kho lưu trữ",
-        "complete": "Xác nhận tệp đã tải",
+        "upload": "Tải tệp lên",
         "submit": "Gửi duyệt"
       },
       "progressLabel": "Tiến độ đăng tài liệu",

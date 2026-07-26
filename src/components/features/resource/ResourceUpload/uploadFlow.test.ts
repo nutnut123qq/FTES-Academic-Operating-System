@@ -3,7 +3,6 @@ import { describe, expect, it, vi } from "vitest"
 import { RestError } from "@/modules/api/rest/client"
 
 import {
-    ResourceStoragePutError,
     ResourceUploadError,
     classifyResourceUploadError,
     emptyResourceUploadState,
@@ -23,17 +22,16 @@ import {
 } from "./uploadRules"
 
 /**
- * Unit — the resource publish chain state machine + the client-side file gate.
+ * Unit — state machine đăng học liệu (3 bước) + cửa kiểm file phía client.
  *
- * Pins the two contract traps this feature exists to avoid:
- *  - the BE wants the SHA-256 **before** it will presign (`UploadUrlRequest` has a
- *    `@NotBlank @Size(64,64) checksumSha256`), so `hash` must precede `create`/`uploadUrl`
- *    and the SAME checksum + size must be replayed on `complete`;
- *  - a failure must resume from the failed step — never re-`create` the resource (that
- *    would leave orphan DRAFT rows) and never re-hash a file that already hashed.
+ * Chốt 2 điều feature này tồn tại để tránh:
+ *  - upload đi ĐÚNG một request multipart `POST /resources/{id}/versions`; luồng presign cũ
+ *    (`/versions/upload-url` → PUT → complete) đã bị BE gỡ, gọi vào là 404 và học liệu ra RỖNG
+ *    (nghiệm thu E2E 2026-07-26);
+ *  - hỏng ở bước nào thì resume ĐÚNG bước đó — không bao giờ `create` lại (sinh DRAFT mồ côi).
  */
 
-/** A `File` stand-in: happy-dom has `File`, but this keeps the bytes deterministic. */
+/** Một `File` giả: happy-dom có `File`, nhưng cách này giữ số byte tất định. */
 const fakeFile = (
     name: string,
     type: string,
@@ -56,7 +54,7 @@ interface SpyDeps extends ResourceUploadDeps {
     calls: Array<ResourceUploadStep>
 }
 
-/** Awaits a flow that MUST fail and returns its typed {@link ResourceUploadError}. */
+/** Chờ một flow BẮT BUỘC hỏng và trả về {@link ResourceUploadError} của nó. */
 const expectFlowFailure = async (
     run: Promise<unknown>,
 ): Promise<ResourceUploadError> => {
@@ -77,34 +75,18 @@ const expectFlowFailure = async (
     return failure
 }
 
-/** Deps whose steps all succeed, recording the order they ran in. */
+/** Deps mà mọi bước đều thành công, có ghi lại thứ tự chạy. */
 const happyDeps = (overrides: Partial<ResourceUploadDeps> = {}): SpyDeps => {
     const calls: Array<ResourceUploadStep> = []
     const deps: SpyDeps = {
         calls,
-        hashFile: vi.fn(async () => {
-            calls.push("hash")
-            return "a".repeat(64)
-        }),
         createResource: vi.fn(async () => {
             calls.push("create")
             return { id: "res-1", status: "DRAFT" } as never
         }),
-        createUploadUrl: vi.fn(async () => {
-            calls.push("uploadUrl")
-            return {
-                versionId: "ver-1",
-                versionNo: 1,
-                presignedPutUrl: "https://s3.local/put?sig=1",
-                storageKey: "resource/res-1/v1/de-pe-prf192.pdf",
-            }
-        }),
-        putObject: vi.fn(async () => {
-            calls.push("put")
-        }),
-        completeUpload: vi.fn(async () => {
-            calls.push("complete")
-            return { id: "ver-1", uploadStatus: "UPLOADED" } as never
+        uploadVersion: vi.fn(async () => {
+            calls.push("upload")
+            return { id: "ver-1", versionNo: 1, uploadStatus: "UPLOADED" } as never
         }),
         submitResource: vi.fn(async () => {
             calls.push("submit")
@@ -116,191 +98,88 @@ const happyDeps = (overrides: Partial<ResourceUploadDeps> = {}): SpyDeps => {
 }
 
 describe("nextResourceUploadStep", () => {
-    it("walks the chain in BE order, hashing before the presign", () => {
-        const seen: Array<ResourceUploadStep> = []
-        let state = emptyResourceUploadState()
+    it("đi create → upload → submit rồi dừng", () => {
+        let state: ResourceUploadState = emptyResourceUploadState()
+        expect(nextResourceUploadStep(state)).toBe("create")
 
-        seen.push(nextResourceUploadStep(state) as ResourceUploadStep)
-        state = { ...state, checksumSha256: "a".repeat(64), sizeBytes: 10 }
-        seen.push(nextResourceUploadStep(state) as ResourceUploadStep)
         state = { ...state, resourceId: "res-1" }
-        seen.push(nextResourceUploadStep(state) as ResourceUploadStep)
-        state = { ...state, versionId: "ver-1", presignedPutUrl: "https://s3/put" }
-        seen.push(nextResourceUploadStep(state) as ResourceUploadStep)
-        state = { ...state, uploaded: true }
-        seen.push(nextResourceUploadStep(state) as ResourceUploadStep)
-        state = { ...state, completed: true }
-        seen.push(nextResourceUploadStep(state) as ResourceUploadStep)
+        expect(nextResourceUploadStep(state)).toBe("upload")
+
+        state = { ...state, versionId: "ver-1" }
+        expect(nextResourceUploadStep(state)).toBe("submit")
+
         state = { ...state, submitted: true }
-
-        expect(seen).toEqual([
-            "hash",
-            "create",
-            "uploadUrl",
-            "put",
-            "complete",
-            "submit",
-        ])
         expect(nextResourceUploadStep(state)).toBeNull()
-    })
-
-    it("re-presigns when the version was dropped but the resource survived", () => {
-        const state: ResourceUploadState = {
-            ...emptyResourceUploadState(),
-            checksumSha256: "b".repeat(64),
-            sizeBytes: 5,
-            resourceId: "res-1",
-        }
-        expect(nextResourceUploadStep(state)).toBe("uploadUrl")
     })
 })
 
 describe("runResourceUploadFlow — happy path", () => {
-    it("runs create → presign → PUT → complete → submit with the BE-required payloads", async () => {
+    it("chạy đúng 3 bước, đúng thứ tự, và trả học liệu đã gửi duyệt", async () => {
         const deps = happyDeps()
-        const draft = draftOf()
+        const result = await runResourceUploadFlow(draftOf(), deps)
 
-        const outcome = await runResourceUploadFlow(draft, deps)
-
-        expect(deps.calls).toEqual([
-            "hash",
-            "create",
-            "uploadUrl",
-            "put",
-            "complete",
-            "submit",
-        ])
-        expect(deps.createResource).toHaveBeenCalledWith({
-            title: "Đề PE PRF192",
-            description: "ghi chú",
-            type: "PDF",
-            subjectId: "11111111-1111-1111-1111-111111111111",
-            visibility: "MEMBERS",
-            license: "CC_BY",
-        })
-        // presign carries the checksum the BE validates as @Size(min=64,max=64)
-        expect(deps.createUploadUrl).toHaveBeenCalledWith("res-1", {
-            filename: "de-pe-prf192.pdf",
-            mimeType: "application/pdf",
-            sizeBytes: 2048,
-            checksumSha256: "a".repeat(64),
-            changelog: undefined,
-        })
-        // the PUT must use the MIME the presign was signed with
-        expect(deps.putObject).toHaveBeenCalledWith(
-            "https://s3.local/put?sig=1",
-            draft.file,
-            "application/pdf",
-        )
-        // complete replays the SAME checksum + size (BE re-stats and compares both)
-        expect(deps.completeUpload).toHaveBeenCalledWith("ver-1", {
-            checksumSha256: "a".repeat(64),
-            sizeBytes: 2048,
-        })
-        expect(deps.submitResource).toHaveBeenCalledWith("res-1")
-        expect(outcome.resource.status).toBe("PENDING_APPROVAL")
-        expect(nextResourceUploadStep(outcome.state)).toBeNull()
+        expect(deps.calls).toEqual(["create", "upload", "submit"])
+        expect(result.state).toEqual({ resourceId: "res-1", versionId: "ver-1", submitted: true })
+        expect(result.resource).toMatchObject({ status: "PENDING_APPROVAL" })
     })
 
-    it("reports every step as running then done", async () => {
-        const events: Array<string> = []
+    it("gửi file + changelog đã trim sang endpoint multipart", async () => {
         const deps = happyDeps()
-        deps.onStep = (step, status) => events.push(`${step}:${status}`)
+        const draft = draftOf({ changelog: "  bản 2  " })
+        await runResourceUploadFlow(draft, deps)
 
+        expect(deps.uploadVersion).toHaveBeenCalledWith("res-1", draft.file, "bản 2")
+    })
+
+    it("trim tiêu đề/mô tả khi tạo bản ghi", async () => {
+        const deps = happyDeps()
         await runResourceUploadFlow(draftOf(), deps)
 
-        expect(events).toEqual([
-            "hash:running",
-            "hash:done",
-            "create:running",
-            "create:done",
-            "uploadUrl:running",
-            "uploadUrl:done",
-            "put:running",
-            "put:done",
-            "complete:running",
-            "complete:done",
-            "submit:running",
-            "submit:done",
-        ])
+        expect(deps.createResource).toHaveBeenCalledWith(
+            expect.objectContaining({ title: "Đề PE PRF192", description: "ghi chú" }),
+        )
     })
 })
 
 describe("runResourceUploadFlow — failure and resume", () => {
-    it("stops at the failing step and maps the BE error code to a reason", async () => {
-        const deps = happyDeps({
-            createUploadUrl: vi.fn(async () => {
-                throw new RestError("rate limited", 429, "RESOURCE_RATE_LIMITED")
+    it("upload hỏng → resume ở đúng bước upload, KHÔNG tạo lại học liệu", async () => {
+        const failing = happyDeps({
+            uploadVersion: vi.fn(async () => {
+                throw new RestError("boom", 502)
             }),
         })
+        const failure = await expectFlowFailure(runResourceUploadFlow(draftOf(), failing))
 
-        const failure = await expectFlowFailure(runResourceUploadFlow(draftOf(), deps))
-
-        expect(failure).toBeInstanceOf(ResourceUploadError)
-        expect(failure.step).toBe("uploadUrl")
-        expect(failure.reason).toBe("rateLimited")
-        expect(deps.submitResource).not.toHaveBeenCalled()
-        // the resource already exists — the retry state keeps it
+        expect(failure.step).toBe("upload")
         expect(failure.state.resourceId).toBe("res-1")
-        expect(failure.state.checksumSha256).toBe("a".repeat(64))
-    })
-
-    it("resumes from the failed step without re-hashing or re-creating the resource", async () => {
-        const failing = happyDeps({
-            createUploadUrl: vi.fn(async () => {
-                throw new RestError("boom", 500)
-            }),
-        })
-        const failure = await expectFlowFailure(runResourceUploadFlow(draftOf(), failing))
-        expect(failure.reason).toBe("server")
-
-        const resumed = happyDeps()
-        const outcome = await runResourceUploadFlow(draftOf(), resumed, failure.state)
-
-        expect(resumed.calls).toEqual(["uploadUrl", "put", "complete", "submit"])
-        expect(resumed.hashFile).not.toHaveBeenCalled()
-        expect(resumed.createResource).not.toHaveBeenCalled()
-        expect(outcome.resource.id).toBe("res-1")
-    })
-
-    it("mints a FRESH presign when the transfer itself failed (the old URL may be expired)", async () => {
-        const failing = happyDeps({
-            putObject: vi.fn(async () => {
-                throw new ResourceStoragePutError(403)
-            }),
-        })
-        const failure = await expectFlowFailure(runResourceUploadFlow(draftOf(), failing))
-
-        expect(failure.step).toBe("put")
-        expect(failure.reason).toBe("storage")
-        expect(failure.state.presignedPutUrl).toBeNull()
         expect(failure.state.versionId).toBeNull()
-        expect(failure.state.uploaded).toBe(false)
+        expect(nextResourceUploadStep(failure.state)).toBe("upload")
 
-        const resumed = happyDeps()
-        await runResourceUploadFlow(draftOf(), resumed, failure.state)
-        expect(resumed.calls).toEqual(["uploadUrl", "put", "complete", "submit"])
+        // Thử lại từ state đó: chỉ upload + submit chạy, create KHÔNG chạy lại.
+        const retry = happyDeps()
+        await runResourceUploadFlow(draftOf(), retry, failure.state)
+        expect(retry.calls).toEqual(["upload", "submit"])
     })
 
-    it("drops the version after a checksum mismatch on complete so the retry re-uploads", async () => {
-        const state: ResourceUploadState = {
-            ...emptyResourceUploadState(),
-            checksumSha256: "c".repeat(64),
-            sizeBytes: 9,
-            resourceId: "res-1",
-            versionId: "ver-1",
-            presignedPutUrl: "https://s3/put",
-            storageKey: "k",
-            uploaded: true,
-        }
-        const resumeState = retryStateAfter("complete", state)
+    it("submit hỏng → giữ nguyên version đã nạp, chỉ chạy lại submit", async () => {
+        const failing = happyDeps({
+            submitResource: vi.fn(async () => {
+                throw new RestError("nope", 403, "RESOURCE_ACCESS_DENIED")
+            }),
+        })
+        const failure = await expectFlowFailure(runResourceUploadFlow(draftOf(), failing))
 
-        expect(resumeState.versionId).toBeNull()
-        expect(resumeState.uploaded).toBe(false)
-        expect(nextResourceUploadStep(resumeState)).toBe("uploadUrl")
+        expect(failure.step).toBe("submit")
+        expect(failure.reason).toBe("forbidden")
+        expect(failure.state.versionId).toBe("ver-1")
+        expect(retryStateAfter("submit", failure.state).versionId).toBe("ver-1")
+
+        const retry = happyDeps()
+        await runResourceUploadFlow(draftOf(), retry, failure.state)
+        expect(retry.calls).toEqual(["submit"])
     })
 
-    it("reports the failing step as errored to the progress callback", async () => {
+    it("báo bước hỏng ra callback tiến trình", async () => {
         const events: Array<string> = []
         const deps = happyDeps({
             submitResource: vi.fn(async () => {
@@ -327,7 +206,6 @@ describe("classifyResourceUploadError", () => {
         [new RestError("x", 400, "RESOURCE_UPLOAD_INCOMPLETE"), "checksum"],
         [new RestError("x", 400, "RESOURCE_VALIDATION"), "validation"],
         [new RestError("x", 409, "RESOURCE_INVALID_STATE"), "invalidState"],
-        [new ResourceStoragePutError(500), "storage"],
         [new TypeError("Failed to fetch"), "network"],
     ]
 

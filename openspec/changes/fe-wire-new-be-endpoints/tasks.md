@@ -253,3 +253,53 @@ Chạy live apitest + dev server local. Spec mới: `resource-upload-and-access.
       3/3 (tim bình luận giữ trạng thái sau F5 — xác nhận bản vá `JwtAuthenticationFilter` đã
       live) và `subject-career-and-community-ui` 4/4, gồm ca "khách xem bảng tin phải mời đăng
       nhập" chạy LẦN ĐẦU và xanh.
+
+## 12. Nghiệm thu E2E vòng 3 (2026-07-26) — hỏi đáp AI tài liệu, bấm tay trên UI
+
+Thao tác thật trên UI (Playwright điều khiển chuột/bàn phím trên dev server local + apitest), spec
+mới: `document-qa-manual-walkthrough.spec.ts` · `document-qa-upload-roundtrip.spec.ts`.
+
+- [x] 12.1 **Panel đúng chỗ — PASS.** Thứ tự trong DOM: preview → "Hỏi AI về tài liệu này" → phần
+      bình luận.
+- [x] 12.2 **Trả lời ĐÚNG NỘI DUNG — PASS (vòng 2 là BLOCKED-INFRA).** "Thi cuối kỳ chiếm bao nhiêu
+      phần trăm?" → **50%**; "Nộp bài muộn bị trừ thế nào?" → **10%/ngày, quá 3 ngày không nhận**.
+      Assert bằng con số thật trong tài liệu, không nhận trả lời chung chung.
+- [x] 12.3 **Trích dẫn — PASS.** Dưới câu trả lời có mục "Trích dẫn" kèm đoạn trích nguyên văn của
+      đề cương.
+- [x] 12.4 **Model picker — PASS (regression bug cũ).** Đổi sang Nemotron → payload gửi
+      `"model":"nvidia/nemotron-nano-12b-v2-vl:free"` (id THẬT dạng `provider/model`, không phải
+      `react-aria-N`) và caption dưới bubble đổi thành "Trả lời bởi nvidia/nemotron-…".
+- [x] 12.5 **Khách chưa đăng nhập — PASS.** Panel vẫn hiện, bấm Gửi ra modal đăng nhập, không rơi
+      vào nhánh lỗi đỏ.
+- [x] 12.6 **Vào từ workspace môn — PASS.** Nút "Hỏi AI về tài liệu này" trên dòng tài liệu →
+      `/resources/{id}?ask=1`, trang tự cuộn tới panel và focus ô nhập.
+- [x] 12.7 **Trọn vòng upload → hỏi — PASS sau 3 bản vá FE (xem 12.9–12.11).** Upload `.md` qua
+      wizard → mở tài liệu → hỏi câu chỉ trả lời được nếu đã đọc file → ra đúng số bịa riêng cho
+      lượt chạy ("137 phút"). Ingest ~10-20s; lượt đầu ra banner "đang xử lý" + "Thử lại" là đúng
+      thiết kế.
+- [x] 12.8 **Tải xuống — PASS sau bản vá.** Bấm "Tải" trên tài liệu PDF nhận về file thật
+      (`%PDF-`, đúng tên file).
+- [x] 12.9 **BUG ĐÃ VÁ — nút Tải mở URL Cloudinary nên PDF luôn 401.** BE đã có
+      `GET /resources/{id}/download` (stream bytes) và ghi rõ `/download-url` không dùng được cho
+      PDF/slide/zip, nhưng 3 call site FE vẫn `window.open(download-url)`. Đo: `/download` → 200
+      `application/pdf`; URL Cloudinary của đúng file đó → 401. Sửa: `downloadResourceFile()` tải
+      blob qua BE-stream + đặt tên từ `Content-Disposition`; đổi cả 3 chỗ (ResourceDetail,
+      ResourceHub, SubjectResources).
+- [x] 12.10 **BUG ĐÃ VÁ — wizard upload đi luồng presign đã bị BE gỡ.** `POST
+      /resources/{id}/versions/upload-url` nay trả **404 PLATFORM_NOT_FOUND**, nên mọi lượt upload
+      trên UI tạo ra học liệu RỖNG (không version ⇒ không tải được, panel hỏi AI bị ẩn). Sửa:
+      chuỗi rút từ 6 bước còn **create → upload (multipart) → submit**, thêm client
+      `uploadResourceVersion()`; test `uploadFlow.test.ts` viết lại theo chain mới; i18n
+      `upload.steps` còn 3 khoá (vi/en).
+- [x] 12.11 **BUG ĐÃ VÁ — read-path resource không gửi token.** 5 hàm đọc (`getResourceDetail`,
+      `listResources`, `getResourceVersions`, `getResourceDownloadUrl`, `getRelatedResources`) đặt
+      `authenticated: false` ⇒ học liệu **MEMBERS** — đúng mặc định của wizard — trả 403, chính
+      người vừa đăng cũng không mở được tài liệu của mình. Đo: cùng id, có token → 200, không token
+      → 403. Sửa: bỏ `authenticated: false` (khách vẫn đọc PUBLIC nhờ chain public đã cắm
+      `JwtAuthenticationFilter`).
+- [x] 12.12 **Regression BE — PASS.** Đăng bài từ composer vẫn chạy (bản vá `contentFormat` không
+      làm vỡ đường thường); xoá 1 hội thoại gia sư AI → tải lại KHÔNG hiện lại; admin duyệt được
+      học liệu đang chờ.
+- [ ] 12.13 **Còn lại — BLOCKED-INFRA.** URL Cloudinary của PDF vẫn 401 (chưa bật "Allow delivery
+      of PDF and ZIP files"); không chặn người dùng nữa vì UI đã đi BE-stream, nhưng bất kỳ chỗ nào
+      còn phát URL provider cho PDF sẽ hỏng. Test khoá hiện trạng bằng `test.fail()`.

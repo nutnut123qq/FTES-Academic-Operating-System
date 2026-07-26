@@ -68,7 +68,7 @@ vi.mock("@/components/blocks/buttons/SaveButton", () => ({
         <button type="button" aria-label={`save-${entityType}-${entityId}`} />
     ),
 }))
-vi.mock("@/modules/api/rest/resource", () => ({ getResourceDownloadUrl: vi.fn() }))
+vi.mock("@/modules/api/rest/resource", () => ({ downloadResourceFile: vi.fn() }))
 vi.mock("@/modules/api/rest/client", () => ({
     RestError: class RestError extends Error {
         status: number

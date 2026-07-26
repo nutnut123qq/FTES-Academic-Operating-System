@@ -1,4 +1,5 @@
-import { restRequest } from "@/modules/api/rest/client"
+import { authHeaders, RestError, restRequest } from "@/modules/api/rest/client"
+import { publicEnv } from "@/resources/env/public"
 import type {
     AddItemRequest,
     CollectionDetailResponse,
@@ -59,7 +60,6 @@ export const listResources = async (params?: {
             page: params?.page ?? 0,
             size: params?.size ?? 20,
         },
-        authenticated: false,
     })
 }
 
@@ -67,12 +67,16 @@ export const listResources = async (params?: {
  * Returns the detail of a single resource.
  *
  * `GET /api/v1/resources/{id}`
+ *
+ * Gửi KÈM token (mặc định của `restRequest`). Trước 2026-07-26 các read-path của resource đặt
+ * `authenticated: false` nên học liệu **MEMBERS** — đúng mặc định của wizard đăng tài liệu — trả
+ * 403 và chính người vừa đăng cũng không mở được tài liệu của mình (trang chi tiết trắng, panel
+ * hỏi AI bị ẩn). Chain public của BE đã cắm `JwtAuthenticationFilter` nên khách vẫn đọc bản PUBLIC.
  */
 export const getResourceDetail = async (id: string): Promise<ResourceResponse> => {
     return restRequest<ResourceResponse>({
         method: "GET",
         url: `/resources/${id}`,
-        authenticated: false,
     })
 }
 
@@ -150,7 +154,6 @@ export const getResourceVersions = async (
     return restRequest<Array<VersionResponse>>({
         method: "GET",
         url: `/resources/${id}/versions`,
-        authenticated: false,
     })
 }
 
@@ -217,8 +220,84 @@ export const getResourceDownloadUrl = async (
     return restRequest<DownloadUrlResponse>({
         method: "GET",
         url: `/resources/${id}/download-url`,
-        authenticated: false,
     })
+}
+
+/**
+ * Nạp một version MỚI cho học liệu bằng multipart — đường upload DUY NHẤT còn sống.
+ *
+ * `POST /api/v1/resources/{id}/versions` (field `file`, tuỳ chọn `changelog`).
+ *
+ * Luồng presign cũ (`/versions/upload-url` → `PUT` → `/versions/{id}/complete`) đã bị BE GỠ khi
+ * chuyển sang Cloudinary: gọi vào trả **404 PLATFORM_NOT_FOUND** (đo trên apitest 2026-07-26), nên
+ * wizard đi đường đó tạo ra học liệu KHÔNG có file. BE tự tính checksum/kích thước, FE không cần
+ * hash trước nữa.
+ */
+export const uploadResourceVersion = async (
+    id: string,
+    file: File,
+    changelog?: string,
+): Promise<VersionResponse> => {
+    const form = new FormData()
+    form.append("file", file)
+    if (changelog) form.append("changelog", changelog)
+    const response = await fetch(`${publicEnv().api.http}/resources/${id}/versions`, {
+        method: "POST",
+        headers: authHeaders(), // KHÔNG set Content-Type: boundary do trình duyệt tự sinh
+        body: form,
+    })
+    const body = (await response.json().catch(() => null)) as
+        | { code?: number; message?: string; data?: VersionResponse }
+        | null
+    if (!response.ok || !body?.data) {
+        throw new RestError(
+            body?.message ?? `upload failed (${response.status})`,
+            response.status,
+            (body as { data?: { errorCode?: string } } | null)?.data?.errorCode,
+        )
+    }
+    return body.data
+}
+
+/** Tên file từ `Content-Disposition` (ưu tiên `filename*=UTF-8''…` vì tên tiếng Việt nằm ở đó). */
+const filenameFromDisposition = (disposition: string | null): string | undefined => {
+    if (!disposition) return undefined
+    const utf8 = /filename\*=UTF-8''([^;]+)/i.exec(disposition)
+    if (utf8) return decodeURIComponent(utf8[1].trim())
+    const plain = /filename="?([^";]+)"?/i.exec(disposition)
+    return plain ? plain[1].trim() : undefined
+}
+
+/**
+ * Tải file học liệu qua ĐƯỜNG BE-STREAM và bung ra như một lượt tải xuống của trình duyệt.
+ *
+ * `GET /api/v1/resources/{id}/download` — BE trả bytes trần (không envelope) kèm
+ * `Content-Disposition`. PHẢI dùng đường này thay cho {@link getResourceDownloadUrl}: URL provider
+ * chỉ mở được với ảnh; PDF/slide/zip nằm ở `raw` mà Cloudinary chặn delivery nên mở trực tiếp trả
+ * **401** (đo trên apitest 2026-07-26: `/download` → 200 `application/pdf`, còn URL Cloudinary của
+ * đúng file đó → 401).
+ *
+ * Không dùng `restRequest` vì nó parse envelope JSON; ở đây cần blob thô + header.
+ *
+ * @throws RestError khi BE từ chối (403 không có quyền, 429 quá nhiều lượt tải…).
+ */
+export const downloadResourceFile = async (id: string): Promise<void> => {
+    const response = await fetch(`${publicEnv().api.http}/resources/${id}/download`, {
+        headers: authHeaders(),
+    })
+    if (!response.ok) {
+        throw new RestError(`download failed (${response.status})`, response.status)
+    }
+    const blob = await response.blob()
+    const objectUrl = URL.createObjectURL(blob)
+    const anchor = document.createElement("a")
+    anchor.href = objectUrl
+    anchor.download = filenameFromDisposition(response.headers.get("content-disposition")) ?? "resource"
+    document.body.appendChild(anchor)
+    anchor.click()
+    anchor.remove()
+    // Nhả blob ở lần tick sau: thu hồi ngay đôi khi cắt luôn lượt tải đang bắt đầu.
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 1_000)
 }
 
 /**
@@ -232,7 +311,6 @@ export const getRelatedResources = async (
     return restRequest<Array<ResourceSummary>>({
         method: "GET",
         url: `/resources/${id}/related`,
-        authenticated: false,
     })
 }
 

@@ -46,6 +46,16 @@ const getAccessToken = (): string | undefined => {
 }
 
 /**
+ * `Authorization` header cho các call KHÔNG đi qua {@link restRequest} — cụ thể là những endpoint
+ * trả bytes trần (tải file) mà không dùng envelope JSON. Không có token → object rỗng để endpoint
+ * public vẫn gọi được.
+ */
+export const authHeaders = (): Record<string, string> => {
+    const accessToken = getAccessToken()
+    return accessToken ? { Authorization: `Bearer ${accessToken}` } : {}
+}
+
+/**
  * Creates a fresh axios instance for a single REST call.
  *
  * The instance is preconfigured with the public HTTP base URL and JSON headers.

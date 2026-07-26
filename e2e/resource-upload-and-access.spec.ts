@@ -68,10 +68,13 @@ test("upload multipart → version UPLOADED, tải xuống được qua URL Clou
 /**
  * Cloudinary chặn delivery `raw` cho PDF/ZIP khi tài khoản chưa bật "Allow delivery of PDF and ZIP
  * files" (Security console). Cùng đường dẫn `raw/upload/...`, chỉ khác đuôi file: `.md` trả 200 còn
- * `.pdf` trả 401 → đây là SETTING hạ tầng, không phải lỗi code. Test khoá lại hiện trạng để khi ai
- * đó bật setting thì nó đỏ và mình biết mà gỡ `test.fail()`.
+ * `.pdf` trả 401 → đây là SETTING hạ tầng, không phải lỗi code.
+ *
+ * Người dùng KHÔNG còn dính lỗi này: từ 2026-07-26 nút Tải trên UI đi `GET /resources/{id}/download`
+ * (BE tự stream). Test giữ `test.fail()` để theo dõi hiện trạng hạ tầng — bật setting xong nó sẽ đỏ
+ * và mình biết mà gỡ.
  */
-test("tải PDF vẫn 401 — Cloudinary chưa bật delivery cho PDF/ZIP", async ({ request }) => {
+test("URL Cloudinary của PDF vẫn 401 — vì vậy UI phải đi BE-stream", async ({ request }) => {
     test.fail()
     const as = await asRole(request, "student")
     const id = await createResource(as, "PUBLIC")

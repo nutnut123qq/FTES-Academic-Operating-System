@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { SaveButton } from "@/components/blocks/buttons/SaveButton"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
 import { RestError } from "@/modules/api/rest/client"
-import { getResourceDownloadUrl } from "@/modules/api/rest/resource"
+import { downloadResourceFile } from "@/modules/api/rest/resource"
 import {
     SUBJECT_RESOURCE_TYPES,
     useQuerySubjectResourcesSwr,
@@ -73,16 +73,11 @@ export const SubjectResources = () => {
         return parts.join(" · ")
     }
 
-    /** Opens the presigned download URL; maps the API failure modes to a toast. */
+    /** Tải file qua BE-stream (URL provider của PDF/slide/zip bị chặn 401); lỗi map sang toast. */
     const onDownload = async (resource: SubjectResource) => {
         setDownloadingId(resource.id)
         try {
-            const { url } = await getResourceDownloadUrl(resource.id)
-            if (!url) {
-                toast.danger(t("resources.downloadError"))
-                return
-            }
-            window.open(url, "_blank", "noopener,noreferrer")
+            await downloadResourceFile(resource.id)
         } catch (downloadError) {
             if (downloadError instanceof RestError) {
                 if (downloadError.status === 401) {

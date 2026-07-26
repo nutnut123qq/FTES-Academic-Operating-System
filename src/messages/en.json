@@ -5995,11 +5995,8 @@
         "TEMPLATES": "Templates"
       },
       "steps": {
-        "hash": "Hashing the file",
         "create": "Creating the resource",
-        "uploadUrl": "Requesting the upload link",
-        "put": "Uploading the file",
-        "complete": "Verifying the upload",
+        "upload": "Uploading the file",
         "submit": "Submitting for review"
       },
       "progressLabel": "Upload progress",

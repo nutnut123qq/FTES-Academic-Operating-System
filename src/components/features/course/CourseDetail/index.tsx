@@ -36,6 +36,7 @@ import { useGetCartSwr } from "@/hooks/swr/api/rest/queries/useGetCartSwr"
 import { usePostAddCartItemSwr } from "@/hooks/swr/api/rest/mutations/usePostAddCartItemSwr"
 import { usePostRemoveCartItemSwr } from "@/hooks/swr/api/rest/mutations/usePostRemoveCartItemSwr"
 import { usePaymentOverlayState } from "@/hooks/zustand/overlay/hooks"
+import { useAppSelector } from "@/redux/hooks"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { SaveButton } from "@/components/blocks/buttons/SaveButton"
 import { HighlightChip } from "@/components/blocks/chips/HighlightChip"
@@ -295,6 +296,10 @@ const CourseDetailView = ({
         isResolvingProduct,
         onContinueLearning,
         onTryLearning,
+        inCart,
+        onAddToCart,
+        onRemoveFromCart,
+        isTogglingCart,
     } = useCourseEnrollment(
         course.id,
         course.enrollment,
@@ -603,6 +608,10 @@ const CourseDetailView = ({
                             isResolvingProduct={isResolvingProduct}
                             onContinueLearning={onContinueLearning}
                             onTryLearning={onTryLearning}
+                            inCart={inCart}
+                            onAddToCart={onAddToCart}
+                            onRemoveFromCart={onRemoveFromCart}
+                            isTogglingCart={isTogglingCart}
                         />
                     )}
                 </div>
@@ -627,6 +636,14 @@ type EnrollCardProps = {
     isResolvingProduct?: boolean
     onContinueLearning: () => void
     onTryLearning: () => void
+    /** Whether the course's unlock product is already in the viewer's cart. */
+    inCart?: boolean
+    /** Add the unlock product to the cart (secondary CTA, no checkout). */
+    onAddToCart?: () => void
+    /** Remove the unlock product from the cart (once it's in). */
+    onRemoveFromCart?: () => void
+    /** Whether an add/remove cart mutation is in flight. */
+    isTogglingCart?: boolean
 }
 
 /**
@@ -648,6 +665,10 @@ export const EnrollCard = ({
     isResolvingProduct,
     onContinueLearning,
     onTryLearning,
+    inCart = false,
+    onAddToCart,
+    onRemoveFromCart,
+    isTogglingCart = false,
 }: EnrollCardProps) => {
     const t = useTranslations("courseSystem")
     const challengeCount = course.challengeCount ?? null
@@ -753,6 +774,33 @@ export const EnrollCard = ({
                                 >
                                     {notForSale ? t("detail.notForSale") : t("detail.enroll")}
                                 </Button>
+                                {/* secondary "Thêm vào giỏ" ↔ "Đã trong giỏ" peer, mirroring
+                                    the PACKAGE card — add-to-cart without opening checkout. */}
+                                {!notForSale ? (
+                                    inCart ? (
+                                        <Button
+                                            variant="secondary"
+                                            fullWidth
+                                            onPress={onRemoveFromCart}
+                                            isPending={isTogglingCart}
+                                        >
+                                            <CheckIcon aria-hidden focusable="false" className="size-5" />
+                                            {t("detail.inCart")}
+                                            <TrashIcon aria-hidden focusable="false" className="size-4" />
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            variant="secondary"
+                                            fullWidth
+                                            onPress={onAddToCart}
+                                            isDisabled={canBuy === false}
+                                            isPending={isTogglingCart}
+                                        >
+                                            <ShoppingCartIcon aria-hidden focusable="false" className="size-5" />
+                                            {t("detail.package.addToCart")}
+                                        </Button>
+                                    )
+                                ) : null}
                                 {notForSale ? (
                                     <Typography type="body-xs" color="muted" align="center">
                                         {t("detail.notForSaleHint")}
@@ -990,9 +1038,11 @@ export const PackageEnrollCard = ({
     const { mutate: mutateSwr } = useSWRConfig()
 
     // Cart membership for the resolved product → drives the primary CTA's
-    // "Đăng ký gói" ↔ "Đã thêm vào giỏ" (remove) toggle. Signed-in only, and
-    // skipped once enrolled (no re-buy) so a guest never fires the authed call.
-    const { data: cart } = useGetCartSwr(!isEnrolled)
+    // "Đăng ký gói" ↔ "Đã thêm vào giỏ" (remove) toggle. Signed-in only (guests 401,
+    // mirrors CartButton), and skipped once enrolled (no re-buy) so a guest never
+    // fires the authed call.
+    const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const { data: cart } = useGetCartSwr(authenticated && !isEnrolled)
     const cartItem = product ? cart?.items.find((item) => item.productId === product.id) : undefined
     const inCart = Boolean(cartItem)
 

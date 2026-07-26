@@ -17,6 +17,7 @@ import { LabeledCard } from "@/components/blocks/cards/LabeledCard"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { useRouter } from "@/i18n/navigation"
 import { useQueryLearnCourseSwr } from "../hooks/useQueryLearnCourseSwr"
+import { LearnToolsRail } from "../LearnToolsRail"
 import { LearnNudges } from "./LearnNudges"
 
 /** Build the reader route for a lesson id shaped "m<n>-l<k>". */
@@ -98,43 +99,9 @@ export const LearnContentPage = () => {
                         {/* contextual nudges — surfaces the (built-but-hidden) leaderboard rank */}
                         <LearnNudges />
 
-                        {/* mock interview entry (§9 AI) — the surface itself has no live nav */}
-                        <div className="flex flex-col gap-3 rounded-3xl border border-default bg-surface p-4">
-                            <div className="flex flex-col gap-1">
-                                <Typography type="body-sm" weight="semibold">
-                                    {t("mockInterview.entryTitle")}
-                                </Typography>
-                                <Typography type="body-xs" color="muted">
-                                    {t("mockInterview.entrySubtitle")}
-                                </Typography>
-                            </div>
-                            <Button
-                                variant="secondary"
-                                className="self-start"
-                                onPress={() => router.push(`/courses/${courseId}/learn/mock-interview`)}
-                            >
-                                {t("mockInterview.title")}
-                            </Button>
-                        </div>
-
-                        {/* course AI interview entry */}
-                        <div className="flex flex-col gap-3 rounded-3xl border border-default bg-surface p-4">
-                            <div className="flex flex-col gap-1">
-                                <Typography type="body-sm" weight="semibold">
-                                    {t("courseInterview.entryTitle")}
-                                </Typography>
-                                <Typography type="body-xs" color="muted">
-                                    {t("courseInterview.entrySubtitle")}
-                                </Typography>
-                            </div>
-                            <Button
-                                variant="secondary"
-                                className="self-start"
-                                onPress={() => router.push(`/courses/${courseId}/learn/interview`)}
-                            >
-                                {t("courseInterview.title")}
-                            </Button>
-                        </div>
+                        {/* the tool feature cards (mind-map / leaderboard / mock-interview /
+                            course-interview + subject Ôn tập/Hỏi đáp) moved OUT of the centre
+                            column into the right-side LearnToolsRail (owned by the layout). */}
 
                         {/* about — the module→lesson tree lives in the LEFT content-map rail,
                             so the home body describes the course instead of repeating it. */}
@@ -145,6 +112,12 @@ export const LearnContentPage = () => {
                                 </Typography>
                             </LabeledCard>
                         ) : null}
+
+                        {/* the tools live in the right-side LearnToolsRail on desktop; below
+                            lg (no rail) surface them inline so mobile keeps the access. */}
+                        <div className="rounded-3xl border border-default bg-surface lg:hidden">
+                            <LearnToolsRail mobile />
+                        </div>
                     </>
                 ) : null}
             </AsyncContent>

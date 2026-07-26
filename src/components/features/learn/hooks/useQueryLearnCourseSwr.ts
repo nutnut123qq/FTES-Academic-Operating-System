@@ -71,6 +71,12 @@ export interface LearnCourseHeader {
     progressPercent: number
     /** The lesson to resume ("Continue learning"). */
     continueLessonId: string | null
+    /**
+     * The linked subject's code (null when the course has no linked subject). Routes
+     * the learn tools rail "Ôn tập" → /subjects/{subjectCode}/practice and "Hỏi đáp"
+     * → /subjects/{subjectCode}/discussion.
+     */
+    subjectCode: string | null
 }
 
 /** The full learn shape for a course (§4). */
@@ -136,6 +142,7 @@ const toLearnCourse = (courseId: string, detail: CourseDetail): LearnCourse => {
             learnerCount: detail.course?.totalUser ?? 0,
             progressPercent: 0,
             continueLessonId: firstLessonId,
+            subjectCode: detail.subjectCode ?? null,
         },
         navSections: NAV_SECTIONS,
         modules,

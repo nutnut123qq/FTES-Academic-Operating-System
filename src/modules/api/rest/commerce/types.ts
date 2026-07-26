@@ -27,6 +27,17 @@ export interface ProductView {
     stockQuantity?: number
     /** Product status, e.g. "ACTIVE" or "ARCHIVED". */
     status: string
+    /**
+     * Cover image for the linked entity (course cover for COURSE_UNLOCK products);
+     * null when the product has no image. Populated by the BE commerce projection.
+     */
+    imageUrl?: string | null
+    /**
+     * The list/compare price in VND before any discount (from the linked course's
+     * list price for COURSE_UNLOCK products); null when there is no compare price.
+     * Struck through in the UI when greater than the charged price.
+     */
+    originalPriceVnd?: number | null
 }
 
 /**
@@ -79,6 +90,16 @@ export interface CartItemView {
     quantity: number
     /** Unit price at the time the item was added. */
     unitPrice?: number
+    /**
+     * Cover image for the line (course cover for COURSE_UNLOCK products); null when
+     * absent. Populated by the BE commerce projection from the linked course cover.
+     */
+    imageUrl?: string | null
+    /**
+     * The list/compare price in VND before any discount; null when there is no
+     * compare price. Struck through + shown as a "-X%" chip when greater than unitPrice.
+     */
+    originalPriceVnd?: number | null
 }
 
 /** Shopping cart aggregate. */

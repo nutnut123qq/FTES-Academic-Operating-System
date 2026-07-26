@@ -2,11 +2,12 @@
 
 import React from "react"
 import { Button, Drawer, Typography } from "@heroui/react"
-import { ArrowRightIcon, ShoppingCartIcon, TrashIcon } from "@phosphor-icons/react"
+import { ArrowRightIcon, ShoppingCartIcon } from "@phosphor-icons/react"
 import { useFormatter, useTranslations } from "next-intl"
 import { useSWRConfig } from "swr"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
-import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
+import { CartLineItem } from "@/components/features/cart/CartLineItem"
+import { CartLineItemSkeleton } from "@/components/features/cart/CartLineItem/CartLineItemSkeleton"
 import { useRouter } from "@/i18n/navigation"
 import { useSmViewpoint } from "@/hooks/reuseables/useSmViewpoint"
 import { useGetCartSwr } from "@/hooks/swr/api/rest/queries/useGetCartSwr"
@@ -69,13 +70,7 @@ const MiniCartInner = ({ onClose }: { onClose: () => void }) => {
                     skeleton={
                         <div className="flex flex-col gap-3">
                             {Array.from({ length: 3 }, (_, index) => (
-                                <div
-                                    key={index}
-                                    className="flex items-center justify-between gap-3 rounded-2xl border border-separator p-4"
-                                >
-                                    <Skeleton.Typography type="body-sm" width="1/2" />
-                                    <Skeleton.Typography type="body-sm" width="1/4" />
-                                </div>
+                                <CartLineItemSkeleton key={index} />
                             ))}
                         </div>
                     }
@@ -94,34 +89,13 @@ const MiniCartInner = ({ onClose }: { onClose: () => void }) => {
                 >
                     <div className="flex flex-col gap-3">
                         {items.map((item) => (
-                            <div
+                            <CartLineItem
                                 key={item.id}
-                                className="flex items-center justify-between gap-3 rounded-2xl border border-separator p-4"
-                            >
-                                <div className="min-w-0">
-                                    <Typography type="body-sm" weight="medium" truncate>
-                                        {nameOf(item.productId)}
-                                    </Typography>
-                                    <Typography type="body-xs" color="muted">
-                                        {t("quantity", { count: item.quantity })}
-                                    </Typography>
-                                </div>
-                                <div className="flex shrink-0 items-center gap-3">
-                                    <Typography type="body-sm" weight="bold" className="text-accent">
-                                        {t("priceVnd", { amount: format.number((item.unitPrice ?? 0) * item.quantity) })}
-                                    </Typography>
-                                    <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        isIconOnly
-                                        aria-label={t("remove")}
-                                        onPress={() => void remove(item.id)}
-                                        isDisabled={removeSwr.isMutating}
-                                    >
-                                        <TrashIcon className="size-4" aria-hidden />
-                                    </Button>
-                                </div>
-                            </div>
+                                item={item}
+                                name={nameOf(item.productId)}
+                                onRemove={() => void remove(item.id)}
+                                isRemoving={removeSwr.isMutating}
+                            />
                         ))}
                     </div>
                 </AsyncContent>

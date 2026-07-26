@@ -351,6 +351,7 @@
     "contact": "Liên hệ",
     "logout": "Đăng xuất",
     "profile": "Hồ sơ",
+    "saved": "Đã lưu / Yêu thích",
     "settings": "Cài đặt",
     "signIn": "Đăng nhập",
     "learn": "Học",
@@ -5806,9 +5807,9 @@
       "price": "{price}đ",
       "discount": "-{percent}%",
       "overlay": {
-        "title": "Hết phần xem thử",
+        "title": "Hết đoạn học thử",
         "body": "Mở khoá từ {name}",
-        "cta": "Đăng ký khoá học"
+        "cta": "Mở khoá để xem tiếp"
       },
       "fallback": {
         "body": "Không tải được trình phát xem thử."
@@ -7272,6 +7273,16 @@
         "title": "Luyện tập bài này",
         "practice": "Vào thử thách"
       }
+    },
+    "toolsRail": {
+      "title": "Công cụ",
+      "mindMap": "Sơ đồ tư duy",
+      "leaderboard": "Bảng xếp hạng",
+      "mockInterview": "Phỏng vấn thử",
+      "interview": "Phỏng vấn",
+      "subjectTitle": "Môn học",
+      "review": "Ôn tập",
+      "qa": "Hỏi đáp"
     }
   },
   "adminConsole": {

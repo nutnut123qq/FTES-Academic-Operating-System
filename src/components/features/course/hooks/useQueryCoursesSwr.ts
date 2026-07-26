@@ -128,6 +128,48 @@ const COURSE_COMPARATORS: Record<CourseSort, (a: Course, b: Course) => number> =
 export const coursesByCategory = (courses: Array<Course>, categoryId: string): Array<Course> =>
     courses.filter((course) => course.category === categoryId)
 
+/** Level facet of the browse bar — the three catalog levels plus "all". */
+export type CourseLevelFacet = "all" | CourseLevel
+
+/** Minimum-rating facet of the browse bar ("all" = no rating requirement). */
+export type CourseRatingFacet = "all" | "4.5" | "4" | "3.5"
+
+/** Star thresholds behind {@link CourseRatingFacet} (order = display order). */
+export const RATING_FACET_THRESHOLDS: Record<Exclude<CourseRatingFacet, "all">, number> = {
+    "4.5": 4.5,
+    "4": 4,
+    "3.5": 3.5,
+}
+
+/** Active facet selection of {@link filterCoursesByFacets}. */
+export interface CourseFacets {
+    /** Keep only this level; "all" keeps every level. */
+    level: CourseLevelFacet
+    /** Keep only courses rated at least this many stars; "all" keeps every course. */
+    minRating: CourseRatingFacet
+}
+
+/**
+ * Narrows the catalog by the level + minimum-rating facets. A course with no
+ * `rating` is dropped once a star facet is active — an unrated course must not
+ * pass as "4+ stars" (the BE reports no stars, which is not the same as zero).
+ *
+ * @param courses - The courses to narrow (already category/search-scoped).
+ * @param facets - The active facet selection ({@link CourseFacets}).
+ * @returns The courses matching every active facet.
+ */
+export const filterCoursesByFacets = (
+    courses: Array<Course>,
+    { level, minRating }: CourseFacets,
+): Array<Course> =>
+    courses.filter((course) => {
+        if (level !== "all" && course.level !== level) return false
+        if (minRating !== "all") {
+            return (course.rating ?? -1) >= RATING_FACET_THRESHOLDS[minRating]
+        }
+        return true
+    })
+
 /**
  * Returns a new array sorted by the given browse sort order (stable — ties keep
  * the incoming order).

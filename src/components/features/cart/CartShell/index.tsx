@@ -4,11 +4,12 @@ import React from "react"
 import { Button, Typography } from "@heroui/react"
 import { useFormatter, useTranslations } from "next-intl"
 import { useSWRConfig } from "swr"
-import { ShoppingCartIcon, TrashIcon } from "@phosphor-icons/react"
+import { ShoppingCartIcon } from "@phosphor-icons/react"
 import { useRouter } from "@/i18n/navigation"
 import { FtesMascot } from "@/components/reuseable/FtesMascot"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
+import { CartLineItem } from "@/components/features/cart/CartLineItem"
 import { useGetCartSwr } from "@/hooks/swr/api/rest/queries/useGetCartSwr"
 import { usePostRemoveCartItemSwr } from "@/hooks/swr/api/rest/mutations/usePostRemoveCartItemSwr"
 import { usePaymentOverlayState } from "@/hooks/zustand/overlay/hooks"
@@ -96,34 +97,13 @@ export const CartShell = () => {
             >
                 <div className="flex flex-col gap-3">
                     {items.map((item) => (
-                        <div
+                        <CartLineItem
                             key={item.id}
-                            className="flex items-center justify-between gap-3 rounded-2xl border border-separator p-4"
-                        >
-                            <div className="min-w-0">
-                                <Typography type="body-sm" weight="medium" truncate>
-                                    {nameOf(item.productId)}
-                                </Typography>
-                                <Typography type="body-xs" color="muted">
-                                    {t("quantity", { count: item.quantity })}
-                                </Typography>
-                            </div>
-                            <div className="flex shrink-0 items-center gap-3">
-                                <Typography type="body-sm" weight="bold" className="text-accent">
-                                    {t("priceVnd", { amount: format.number((item.unitPrice ?? 0) * item.quantity) })}
-                                </Typography>
-                                <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    isIconOnly
-                                    aria-label={t("remove")}
-                                    onPress={() => void remove(item.id)}
-                                    isDisabled={removeSwr.isMutating}
-                                >
-                                    <TrashIcon className="size-4" aria-hidden />
-                                </Button>
-                            </div>
-                        </div>
+                            item={item}
+                            name={nameOf(item.productId)}
+                            onRemove={() => void remove(item.id)}
+                            isRemoving={removeSwr.isMutating}
+                        />
                     ))}
 
                     <div className="flex items-center justify-between gap-3 border-t border-separator pt-4">

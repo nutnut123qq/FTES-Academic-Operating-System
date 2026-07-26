@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback } from "react"
+import { useCallback, useState } from "react"
 import { useLocale } from "next-intl"
 import { useRouter } from "next/navigation"
 import { useSWRConfig } from "swr"
@@ -117,6 +117,11 @@ export const useCourseEnrollment = (
     const payment = usePaymentOverlayState()
     const { mutate: mutateSwr } = useSWRConfig()
 
+    // Which CTA started the in-flight cart mutation, so the enroll CTA and the
+    // add-to-cart CTA never spin together (both use the SAME usePostAddCartItemSwr
+    // instance). Set before `trigger`, cleared in `finally`.
+    const [pendingAction, setPendingAction] = useState<"enroll" | "cart" | null>(null)
+
     const isEnrolled = enrollment?.isEnrolled === true
 
     // Cart membership for the resolved product → drives the secondary CTA's
@@ -132,6 +137,7 @@ export const useCourseEnrollment = (
         // On sale → real checkout: add the unlock product to the cart, then open the
         // global PaymentModal with the new cart-item id (mirrors CourseDetail onBuy).
         if (product) {
+            setPendingAction("enroll")
             try {
                 const item = await addCart.trigger({ productId: product.id, quantity: 1 })
                 void mutateSwr("GET_CART_SWR")
@@ -146,6 +152,8 @@ export const useCourseEnrollment = (
                 })
             } catch {
                 // add-to-cart failed → SWR surfaces the error; leave the CTA idle
+            } finally {
+                setPendingAction(null)
             }
             return
         }
@@ -159,22 +167,28 @@ export const useCourseEnrollment = (
     // cart (the button flips to the remove state then). Guests are routed through auth.
     const onAddToCart = guard(async () => {
         if (!product || inCart) return
+        setPendingAction("cart")
         try {
             await addCart.trigger({ productId: product.id, quantity: 1 })
             void mutateSwr("GET_CART_SWR")
         } catch {
             // add-to-cart failed → SWR surfaces the error; leave the CTA idle
+        } finally {
+            setPendingAction(null)
         }
     }, "auth.context.enroll")
 
     // Remove the resolved product from the cart (reachable only once it IS in cart).
     const onRemoveFromCart = useCallback(async () => {
         if (!cartItem) return
+        setPendingAction("cart")
         try {
             await removeCart.trigger(cartItem.id)
             void mutateSwr("GET_CART_SWR")
         } catch {
             // remove failed → SWR surfaces the error; leave the item in place
+        } finally {
+            setPendingAction(null)
         }
     }, [cartItem, removeCart, mutateSwr])
 
@@ -196,7 +210,9 @@ export const useCourseEnrollment = (
     return {
         isEnrolled,
         onEnroll,
-        isEnrolling: addCart.isMutating,
+        // Scope each spinner to the intent that started it: the enroll CTA and the
+        // add-to-cart CTA share one add mutation, so gate on `pendingAction`.
+        isEnrolling: pendingAction === "enroll" && addCart.isMutating,
         canBuy: Boolean(product),
         isResolvingProduct,
         onContinueLearning,
@@ -205,6 +221,6 @@ export const useCourseEnrollment = (
         inCart,
         onAddToCart,
         onRemoveFromCart,
-        isTogglingCart: addCart.isMutating || removeCart.isMutating,
+        isTogglingCart: pendingAction === "cart" && (addCart.isMutating || removeCart.isMutating),
     }
 }

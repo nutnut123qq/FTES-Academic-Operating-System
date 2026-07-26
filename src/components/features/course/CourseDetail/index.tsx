@@ -769,7 +769,7 @@ export const EnrollCard = ({
                                     variant="primary"
                                     fullWidth
                                     onPress={onEnroll}
-                                    isPending={isEnrolling && !inCart}
+                                    isPending={isEnrolling}
                                     isDisabled={notForSale}
                                 >
                                     {notForSale ? t("detail.notForSale") : t("detail.enroll")}

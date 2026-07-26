@@ -6,10 +6,13 @@ import { useRouter } from "next/navigation"
 import { useSWRConfig } from "swr"
 import { useMutateStartTrialSwr } from "@/hooks/swr/api/graphql/mutations/useMutateStartTrialSwr"
 import { useGetCourseProductSwr } from "@/hooks/swr/api/rest/queries/useGetCourseProductSwr"
+import { useGetCartSwr } from "@/hooks/swr/api/rest/queries/useGetCartSwr"
 import { usePostAddCartItemSwr } from "@/hooks/swr/api/rest/mutations/usePostAddCartItemSwr"
+import { usePostRemoveCartItemSwr } from "@/hooks/swr/api/rest/mutations/usePostRemoveCartItemSwr"
 import { usePaymentOverlayState } from "@/hooks/zustand/overlay/hooks"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
 import { pathConfig } from "@/resources/path"
+import type { ProductForCourseView } from "@/modules/api/rest/commerce"
 
 /**
  * The commerce context an enroll CTA needs to run the real checkout: the BE course
@@ -51,6 +54,19 @@ export interface UseCourseEnrollmentResult {
     onContinueLearning: () => void
     /** Start a trial enrollment best-effort, then enter the course content. */
     onTryLearning: () => void
+    /**
+     * The resolved COURSE_UNLOCK product for this course (null when not on sale /
+     * still resolving). Drives the "add to cart" affordance.
+     */
+    product: ProductForCourseView | null
+    /** Whether the resolved product is already in the viewer's cart. */
+    inCart: boolean
+    /** Add the resolved product to the cart WITHOUT opening checkout (guest → auth). */
+    onAddToCart: () => void
+    /** Remove the resolved product from the cart (reachable only once in cart). */
+    onRemoveFromCart: () => void
+    /** Whether an add/remove cart mutation is in flight (drive the CTA's pending state). */
+    isTogglingCart: boolean
 }
 
 /**
@@ -93,10 +109,18 @@ export const useCourseEnrollment = (
         buy?.priceVnd,
     )
     const addCart = usePostAddCartItemSwr()
+    const removeCart = usePostRemoveCartItemSwr()
     const payment = usePaymentOverlayState()
     const { mutate: mutateSwr } = useSWRConfig()
 
     const isEnrolled = enrollment?.isEnrolled === true
+
+    // Cart membership for the resolved product → drives the secondary CTA's
+    // "Thêm vào giỏ" ↔ "Đã trong giỏ" (remove) toggle. Signed-in only, and skipped
+    // once enrolled (no re-buy) so a guest never fires the authed call.
+    const { data: cart } = useGetCartSwr(!isEnrolled)
+    const cartItem = product ? cart?.items.find((item) => item.productId === product.id) : undefined
+    const inCart = Boolean(cartItem)
 
     const learnHref = pathConfig().locale(locale).course(courseId).learn().build()
 
@@ -126,6 +150,30 @@ export const useCourseEnrollment = (
         // nothing happened. Callers must disable the CTA via `canBuy` instead.
     }, "auth.context.enroll")
 
+    // Secondary CTA: add the resolved product to the cart WITHOUT opening checkout
+    // (mirrors the PACKAGE card's "Thêm vào giỏ" peer). No-op once it's already in the
+    // cart (the button flips to the remove state then). Guests are routed through auth.
+    const onAddToCart = guard(async () => {
+        if (!product || inCart) return
+        try {
+            await addCart.trigger({ productId: product.id, quantity: 1 })
+            void mutateSwr("GET_CART_SWR")
+        } catch {
+            // add-to-cart failed → SWR surfaces the error; leave the CTA idle
+        }
+    }, "auth.context.enroll")
+
+    // Remove the resolved product from the cart (reachable only once it IS in cart).
+    const onRemoveFromCart = useCallback(async () => {
+        if (!cartItem) return
+        try {
+            await removeCart.trigger(cartItem.id)
+            void mutateSwr("GET_CART_SWR")
+        } catch {
+            // remove failed → SWR surfaces the error; leave the item in place
+        }
+    }, [cartItem, removeCart, mutateSwr])
+
     const onContinueLearning = useCallback(() => {
         router.push(learnHref)
     }, [router, learnHref])
@@ -149,5 +197,10 @@ export const useCourseEnrollment = (
         isResolvingProduct,
         onContinueLearning,
         onTryLearning,
+        product: product ?? null,
+        inCart,
+        onAddToCart,
+        onRemoveFromCart,
+        isTogglingCart: addCart.isMutating || removeCart.isMutating,
     }
 }

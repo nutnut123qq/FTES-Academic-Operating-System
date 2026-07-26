@@ -295,6 +295,10 @@ const CourseDetailView = ({
         isResolvingProduct,
         onContinueLearning,
         onTryLearning,
+        inCart,
+        onAddToCart,
+        onRemoveFromCart,
+        isTogglingCart,
     } = useCourseEnrollment(
         course.id,
         course.enrollment,
@@ -603,6 +607,10 @@ const CourseDetailView = ({
                             isResolvingProduct={isResolvingProduct}
                             onContinueLearning={onContinueLearning}
                             onTryLearning={onTryLearning}
+                            inCart={inCart}
+                            onAddToCart={onAddToCart}
+                            onRemoveFromCart={onRemoveFromCart}
+                            isTogglingCart={isTogglingCart}
                         />
                     )}
                 </div>
@@ -627,6 +635,14 @@ type EnrollCardProps = {
     isResolvingProduct?: boolean
     onContinueLearning: () => void
     onTryLearning: () => void
+    /** Whether the course's unlock product is already in the viewer's cart. */
+    inCart?: boolean
+    /** Add the unlock product to the cart (secondary CTA, no checkout). */
+    onAddToCart?: () => void
+    /** Remove the unlock product from the cart (once it's in). */
+    onRemoveFromCart?: () => void
+    /** Whether an add/remove cart mutation is in flight. */
+    isTogglingCart?: boolean
 }
 
 /**
@@ -648,6 +664,10 @@ export const EnrollCard = ({
     isResolvingProduct,
     onContinueLearning,
     onTryLearning,
+    inCart = false,
+    onAddToCart,
+    onRemoveFromCart,
+    isTogglingCart = false,
 }: EnrollCardProps) => {
     const t = useTranslations("courseSystem")
     const challengeCount = course.challengeCount ?? null
@@ -748,11 +768,38 @@ export const EnrollCard = ({
                                     variant="primary"
                                     fullWidth
                                     onPress={onEnroll}
-                                    isPending={isEnrolling}
+                                    isPending={isEnrolling && !inCart}
                                     isDisabled={notForSale}
                                 >
                                     {notForSale ? t("detail.notForSale") : t("detail.enroll")}
                                 </Button>
+                                {/* secondary "Thêm vào giỏ" ↔ "Đã trong giỏ" peer, mirroring
+                                    the PACKAGE card — add-to-cart without opening checkout. */}
+                                {!notForSale ? (
+                                    inCart ? (
+                                        <Button
+                                            variant="secondary"
+                                            fullWidth
+                                            onPress={onRemoveFromCart}
+                                            isPending={isTogglingCart}
+                                        >
+                                            <CheckIcon aria-hidden focusable="false" className="size-5" />
+                                            {t("detail.inCart")}
+                                            <TrashIcon aria-hidden focusable="false" className="size-4" />
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            variant="secondary"
+                                            fullWidth
+                                            onPress={onAddToCart}
+                                            isDisabled={canBuy === false}
+                                            isPending={isTogglingCart}
+                                        >
+                                            <ShoppingCartIcon aria-hidden focusable="false" className="size-5" />
+                                            {t("detail.package.addToCart")}
+                                        </Button>
+                                    )
+                                ) : null}
                                 {notForSale ? (
                                     <Typography type="body-xs" color="muted" align="center">
                                         {t("detail.notForSaleHint")}

@@ -15,6 +15,7 @@ import {
     SignOutIcon,
     WalletIcon,
     PlusCircleIcon,
+    BookmarkSimpleIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
@@ -129,6 +130,15 @@ export const AccountMenuAuthed = ({ className }: AccountMenuAuthedProps) => {
                 >
                     <FileTextIcon className="size-5" />
                     <Label>{t("cv.title")}</Label>
+                </Dropdown.Item>
+                {/* "Đã lưu / Yêu thích" — the save-for-later library (/saved). */}
+                <Dropdown.Item
+                    id="saved"
+                    textValue={t("nav.saved")}
+                    onPress={() => go(pathConfig().locale().saved().build())}
+                >
+                    <BookmarkSimpleIcon className="size-5" />
+                    <Label>{t("nav.saved")}</Label>
                 </Dropdown.Item>
                 <Dropdown.Item
                     id="settings"

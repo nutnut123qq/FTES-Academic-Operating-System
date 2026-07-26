@@ -5807,9 +5807,9 @@
       "price": "{price}đ",
       "discount": "-{percent}%",
       "overlay": {
-        "title": "Hết phần xem thử",
+        "title": "Hết đoạn học thử",
         "body": "Mở khoá từ {name}",
-        "cta": "Đăng ký khoá học"
+        "cta": "Mở khoá để xem tiếp"
       },
       "fallback": {
         "body": "Không tải được trình phát xem thử."

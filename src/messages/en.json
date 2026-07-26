@@ -5807,9 +5807,9 @@
       "price": "{price}đ",
       "discount": "-{percent}%",
       "overlay": {
-        "title": "Preview ended",
+        "title": "End of the trial clip",
         "body": "Unlock from {name}",
-        "cta": "Enroll in course"
+        "cta": "Unlock to keep watching"
       },
       "fallback": {
         "body": "Couldn't load the preview player."

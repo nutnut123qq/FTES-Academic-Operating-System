@@ -119,6 +119,7 @@ vi.mock("@/hooks/swr/api/rest/mutations/usePostCheckoutSwr", () => ({
 }))
 vi.mock("@/hooks/zustand/overlay/hooks", () => ({ usePaymentOverlayState: () => ({ open: vi.fn() }) }))
 vi.mock("@/hooks/useRequireAuth", () => ({ useRequireAuth: () => ({ guard: (fn: () => void) => fn }) }))
+vi.mock("@/redux/hooks", () => ({ useAppSelector: () => false }))
 vi.mock("../hooks/useQueryCourseDetailSwr", () => ({ useQueryCourseDetailSwr: () => ({ course: undefined }) }))
 vi.mock("../hooks/useCourseEnrollment", () => ({ useCourseEnrollment: () => ({}) }))
 vi.mock("../hooks/useQueryCoursePackagesSwr", () => ({

@@ -139,7 +139,13 @@ export const FacetSortBar = ({
                     ariaLabel={t("courseSystem.browse.sortLabel")}
                     items={SORTS.map((option) => ({
                         value: option,
-                        label: t(`courseSystem.browse.sort.${option}`),
+                        // same one-line rule as the facets next to it: "Phổ biến" /
+                        // "Đánh giá" only wrapped because the segment is narrow
+                        label: (
+                            <span className="whitespace-nowrap">
+                                {t(`courseSystem.browse.sort.${option}`)}
+                            </span>
+                        ),
                     }))}
                     value={sort}
                     onChange={onSortChange}

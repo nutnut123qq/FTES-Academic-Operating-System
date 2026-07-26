@@ -8,7 +8,6 @@ import { useLocale, useTranslations } from "next-intl"
 import { PageHeader } from "@/components/blocks/layout/PageHeader"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { SearchInput } from "@/components/reuseable/SearchInput"
-import { TopicsStrip } from "./TopicsStrip"
 import { CategoryFilter } from "./CategoryFilter"
 import { FeaturedPost } from "./FeaturedPost"
 import { PostRow } from "../shared/PostRow"
@@ -104,9 +103,19 @@ export const BlogList = () => {
             {/* identity — reframed as an engineering publication */}
             <PageHeader title={t("title")} description={t("subtitle")} />
 
-            {/* browse — topics framing + search + (optional) filter + results */}
+            {/* browse — real categories first, then search + results. The filter row
+                stays mounted while searching so the chrome never jumps; picking a
+                category clears the query (see `changeCategory`). */}
             <div className="flex flex-col gap-3">
-                <TopicsStrip />
+                {showFilter && (
+                    // search spans ALL categories, so while searching no chip may
+                    // claim to be active — "All" reads as the honest state
+                    <CategoryFilter
+                        value={isSearching ? null : categorySlug}
+                        onChange={changeCategory}
+                        categories={categories ?? []}
+                    />
+                )}
 
                 <SearchInput
                     value={search}
@@ -115,14 +124,6 @@ export const BlogList = () => {
                     variant="secondary"
                     className="sm:max-w-none"
                 />
-
-                {showFilter && !isSearching && (
-                    <CategoryFilter
-                        value={categorySlug}
-                        onChange={changeCategory}
-                        categories={categories ?? []}
-                    />
-                )}
 
                 <AsyncContent
                     isLoading={isLoading && posts.length === 0}

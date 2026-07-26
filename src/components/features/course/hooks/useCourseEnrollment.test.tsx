@@ -22,13 +22,20 @@ vi.mock("@/hooks/swr/api/graphql/mutations/useMutateStartTrialSwr", () => ({
 vi.mock("@/hooks/swr/api/rest/queries/useGetCourseProductSwr", () => ({
     useGetCourseProductSwr: () => productMock(),
 }))
+vi.mock("@/hooks/swr/api/rest/queries/useGetCartSwr", () => ({
+    useGetCartSwr: () => ({ data: undefined }),
+}))
 vi.mock("@/hooks/swr/api/rest/mutations/usePostAddCartItemSwr", () => ({
     usePostAddCartItemSwr: () => ({ trigger: vi.fn(), isMutating: false }),
+}))
+vi.mock("@/hooks/swr/api/rest/mutations/usePostRemoveCartItemSwr", () => ({
+    usePostRemoveCartItemSwr: () => ({ trigger: vi.fn(), isMutating: false }),
 }))
 vi.mock("@/hooks/zustand/overlay/hooks", () => ({ usePaymentOverlayState: () => ({ open: vi.fn() }) }))
 vi.mock("@/hooks/useRequireAuth", () => ({
     useRequireAuth: () => ({ guard: (fn: () => unknown) => fn }),
 }))
+vi.mock("@/redux/hooks", () => ({ useAppSelector: () => false }))
 
 import { useCourseEnrollment } from "./useCourseEnrollment"
 

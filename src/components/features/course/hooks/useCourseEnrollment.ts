@@ -11,6 +11,7 @@ import { usePostAddCartItemSwr } from "@/hooks/swr/api/rest/mutations/usePostAdd
 import { usePostRemoveCartItemSwr } from "@/hooks/swr/api/rest/mutations/usePostRemoveCartItemSwr"
 import { usePaymentOverlayState } from "@/hooks/zustand/overlay/hooks"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
+import { useAppSelector } from "@/redux/hooks"
 import { pathConfig } from "@/resources/path"
 import type { ProductForCourseView } from "@/modules/api/rest/commerce"
 
@@ -99,6 +100,9 @@ export const useCourseEnrollment = (
     const locale = useLocale()
     const router = useRouter()
     const { guard } = useRequireAuth()
+    // Real auth gate for the cart read — GET /commerce/cart 401s for guests
+    // (mirrors CartButton). `isEnrolled === false` alone does NOT imply signed-in.
+    const authenticated = useAppSelector((state) => state.keycloak.authenticated)
     const { trigger: startTrial } = useMutateStartTrialSwr()
 
     // Resolve the course's COURSE_UNLOCK product (null when not on sale). Gated on a
@@ -116,9 +120,9 @@ export const useCourseEnrollment = (
     const isEnrolled = enrollment?.isEnrolled === true
 
     // Cart membership for the resolved product → drives the secondary CTA's
-    // "Thêm vào giỏ" ↔ "Đã trong giỏ" (remove) toggle. Signed-in only, and skipped
-    // once enrolled (no re-buy) so a guest never fires the authed call.
-    const { data: cart } = useGetCartSwr(!isEnrolled)
+    // "Thêm vào giỏ" ↔ "Đã trong giỏ" (remove) toggle. Signed-in only (guests 401),
+    // and skipped once enrolled (no re-buy) so a guest never fires the authed call.
+    const { data: cart } = useGetCartSwr(authenticated && !isEnrolled)
     const cartItem = product ? cart?.items.find((item) => item.productId === product.id) : undefined
     const inCart = Boolean(cartItem)
 

@@ -36,6 +36,7 @@ import { useGetCartSwr } from "@/hooks/swr/api/rest/queries/useGetCartSwr"
 import { usePostAddCartItemSwr } from "@/hooks/swr/api/rest/mutations/usePostAddCartItemSwr"
 import { usePostRemoveCartItemSwr } from "@/hooks/swr/api/rest/mutations/usePostRemoveCartItemSwr"
 import { usePaymentOverlayState } from "@/hooks/zustand/overlay/hooks"
+import { useAppSelector } from "@/redux/hooks"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { SaveButton } from "@/components/blocks/buttons/SaveButton"
 import { HighlightChip } from "@/components/blocks/chips/HighlightChip"
@@ -1037,9 +1038,11 @@ export const PackageEnrollCard = ({
     const { mutate: mutateSwr } = useSWRConfig()
 
     // Cart membership for the resolved product → drives the primary CTA's
-    // "Đăng ký gói" ↔ "Đã thêm vào giỏ" (remove) toggle. Signed-in only, and
-    // skipped once enrolled (no re-buy) so a guest never fires the authed call.
-    const { data: cart } = useGetCartSwr(!isEnrolled)
+    // "Đăng ký gói" ↔ "Đã thêm vào giỏ" (remove) toggle. Signed-in only (guests 401,
+    // mirrors CartButton), and skipped once enrolled (no re-buy) so a guest never
+    // fires the authed call.
+    const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const { data: cart } = useGetCartSwr(authenticated && !isEnrolled)
     const cartItem = product ? cart?.items.find((item) => item.productId === product.id) : undefined
     const inCart = Boolean(cartItem)
 

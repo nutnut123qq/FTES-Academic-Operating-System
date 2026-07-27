@@ -725,6 +725,34 @@ export const submitAssignment = async (
 }
 
 /**
+ * Submits an assignment as a FILE upload (code / zip → AI graded), the second
+ * first-class submission method alongside the GitHub URL (contract
+ * exercise-submission-methods, mirroring the legacy ftes `ExerciseController
+ * POST /api/exercises/{id}/submit-and-grade` multipart flow).
+ *
+ * `Content-Type: null` lets the browser set the multipart boundary (same trick as
+ * `uploadAvatar` / `uploadCommunityMedia`); the file part is named `file`.
+ *
+ * FE ASSUMPTION (BE lane owns the real route): multipart `POST` to
+ * `/api/v1/courses/assignments/{assignmentId}/submissions/file`, returning the same
+ * {@link CourseSubmissionView} as the URL submission. Kept a distinct path so it is
+ * additive to the existing JSON `…/submissions` endpoint.
+ */
+export const submitAssignmentFile = async (
+    assignmentId: string,
+    file: File,
+): Promise<CourseSubmissionView> => {
+    const formData = new FormData()
+    formData.append("file", file)
+    return restRequest<CourseSubmissionView>({
+        method: "POST",
+        url: `/courses/assignments/${assignmentId}/submissions/file`,
+        data: formData,
+        headers: { "Content-Type": null as unknown as string },
+    })
+}
+
+/**
  * Lists the current user's submissions for an assignment.
  *
  * `GET /api/v1/courses/assignments/{assignmentId}/submissions/me`

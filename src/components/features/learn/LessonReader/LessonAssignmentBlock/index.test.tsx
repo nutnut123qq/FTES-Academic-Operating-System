@@ -5,15 +5,18 @@ import type { AssignmentView, CourseSubmissionView } from "@/modules/api/rest/co
 
 /**
  * Component — the in-lesson assignment block (learn-exercises-wire task 3.3 quality
- * loop). Pins the GitHub-URL submit flow: the client-side `https://` gate (mirrors the
- * BE `@Pattern`) that never fires a doomed request, the successful submit + history
- * revalidation, the pending/graded status rows, and the max-submissions lock.
+ * loop + exercise-submission-methods). Pins BOTH first-class submission methods: the
+ * GitHub-URL flow (client-side `https://` gate mirroring the BE `@Pattern`, submit +
+ * history revalidation, pending/graded rows, max-submissions lock) AND the file-upload
+ * flow (extension whitelist gate, multipart submit), plus the tab switch when the
+ * author allows both.
  */
 
 const assignmentsMock = vi.fn()
 const submissionsData = vi.fn()
 const submissionsMutate = vi.fn()
 const submitTrigger = vi.fn()
+const submitFileTrigger = vi.fn()
 
 vi.mock("next-intl", () => ({
     useTranslations: () => (key: string, params?: Record<string, unknown>) =>
@@ -22,10 +25,36 @@ vi.mock("next-intl", () => ({
 }))
 
 vi.mock("@heroui/react", () => {
+    const TabsCtx = React.createContext<{
+        selectedKey?: string
+        onSelectionChange?: (key: string) => void
+            }>({})
     const Typography = ({ children }: { children?: React.ReactNode }) => <span>{children}</span>
     Typography.Heading = ({ children }: { children?: React.ReactNode }) => <h2>{children}</h2>
+    const Tabs = ({
+        children,
+        selectedKey,
+        onSelectionChange,
+    }: {
+        children?: React.ReactNode
+        selectedKey?: string
+        onSelectionChange?: (key: string) => void
+    }) => (
+        <TabsCtx.Provider value={{ selectedKey, onSelectionChange }}>{children}</TabsCtx.Provider>
+    )
+    Tabs.ListContainer = ({ children }: { children?: React.ReactNode }) => <div>{children}</div>
+    Tabs.List = ({ children }: { children?: React.ReactNode }) => <div>{children}</div>
+    Tabs.Tab = ({ children, id }: { children?: React.ReactNode, id: string }) => {
+        const ctx = React.useContext(TabsCtx)
+        return (
+            <button type="button" onClick={() => ctx.onSelectionChange?.(id)}>
+                {children}
+            </button>
+        )
+    }
     return {
         Typography,
+        Tabs,
         Button: ({
             children,
             onPress,
@@ -41,6 +70,8 @@ vi.mock("@heroui/react", () => {
         ),
         Chip: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
         TextField: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+        // strip `variant` so it never reaches the DOM <input> (heroui-only prop)
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         Input: ({ variant, ...rest }: { variant?: string } & React.InputHTMLAttributes<HTMLInputElement>) => (
             <input {...rest} />
         ),
@@ -51,6 +82,9 @@ vi.mock("@heroui/react", () => {
 vi.mock("@phosphor-icons/react", () => ({
     ClipboardTextIcon: () => <span />,
     LockSimpleIcon: () => <span />,
+    FileArrowUpIcon: () => <span />,
+    UploadSimpleIcon: () => <span />,
+    WarningCircleIcon: () => <span />,
 }))
 
 vi.mock("@/components/reuseable/MarkdownContent", () => ({
@@ -76,6 +110,9 @@ vi.mock("@/hooks/swr/api/rest/queries/useGetMyAssignmentSubmissionsSwr", () => (
 }))
 vi.mock("@/hooks/swr/api/rest/mutations/usePostSubmitAssignmentSwr", () => ({
     usePostSubmitAssignmentSwr: () => ({ trigger: submitTrigger, isMutating: false }),
+}))
+vi.mock("@/hooks/swr/api/rest/mutations/usePostSubmitAssignmentFileSwr", () => ({
+    usePostSubmitAssignmentFileSwr: () => ({ trigger: submitFileTrigger, isMutating: false }),
 }))
 
 import { LessonAssignmentBlock } from "./index"
@@ -109,6 +146,7 @@ beforeEach(() => {
     submissionsData.mockReturnValue([])
     submissionsMutate.mockReset()
     submitTrigger.mockReset()
+    submitFileTrigger.mockReset()
 })
 
 describe("LessonAssignmentBlock", () => {
@@ -116,6 +154,14 @@ describe("LessonAssignmentBlock", () => {
         assignmentsMock.mockReturnValue({ data: [] })
         const { container } = render(<LessonAssignmentBlock lessonId="les-1" />)
         expect(container.innerHTML).toBe("")
+    })
+
+    it("defaults to the GitHub form (no submissionMethod) with no file tab", () => {
+        render(<LessonAssignmentBlock lessonId="les-1" />)
+        expect(screen.getByPlaceholderText("exercises.assignment.urlPlaceholder")).toBeTruthy()
+        // No tabs, no file CTA on the back-compat GitHub-only default.
+        expect(screen.queryByText("exercises.assignment.tabFile")).toBeNull()
+        expect(screen.queryByText("exercises.assignment.fileCta")).toBeNull()
     })
 
     it("blocks a non-https URL client-side and never fires the request", async () => {
@@ -165,7 +211,7 @@ describe("LessonAssignmentBlock", () => {
         expect(screen.getByText("exercises.assignment.status.submitted")).toBeTruthy()
         expect(screen.getByText("exercises.assignment.pendingHint")).toBeTruthy()
         expect(screen.getByText("exercises.assignment.status.graded")).toBeTruthy()
-        expect(screen.getByText('exercises.assignment.aiScore:{"score":"8.5"}')).toBeTruthy()
+        expect(screen.getByText("exercises.assignment.aiScore:{\"score\":\"8.5\"}")).toBeTruthy()
         expect(screen.getByText("Tốt")).toBeTruthy()
     })
 
@@ -174,7 +220,54 @@ describe("LessonAssignmentBlock", () => {
         submissionsData.mockReturnValue([submission()])
         render(<LessonAssignmentBlock lessonId="les-1" />)
 
-        expect(screen.getByText('exercises.assignment.maxReached:{"max":1}')).toBeTruthy()
+        expect(screen.getByText("exercises.assignment.maxReached:{\"max\":1}")).toBeTruthy()
         expect(screen.queryByPlaceholderText("exercises.assignment.urlPlaceholder")).toBeNull()
+    })
+
+    it("offers both tabs when submissionMethod is BOTH and switches to the file form", () => {
+        assignmentsMock.mockReturnValue({ data: [assignment({ submissionMethod: "BOTH" })] })
+        render(<LessonAssignmentBlock lessonId="les-1" />)
+
+        // Both tabs present; GitHub is the default surface.
+        expect(screen.getByText("exercises.assignment.tabGithub")).toBeTruthy()
+        expect(screen.getByText("exercises.assignment.tabFile")).toBeTruthy()
+        expect(screen.getByPlaceholderText("exercises.assignment.urlPlaceholder")).toBeTruthy()
+        expect(screen.queryByText("exercises.assignment.fileCta")).toBeNull()
+
+        // Switch to the upload tab → file surface replaces the URL form.
+        fireEvent.click(screen.getByText("exercises.assignment.tabFile"))
+        expect(screen.getByText("exercises.assignment.fileCta")).toBeTruthy()
+        expect(screen.queryByPlaceholderText("exercises.assignment.urlPlaceholder")).toBeNull()
+    })
+
+    it("submits a file (FILE method) via the multipart endpoint and revalidates", async () => {
+        submitFileTrigger.mockResolvedValue(submission())
+        assignmentsMock.mockReturnValue({ data: [assignment({ submissionMethod: "FILE", fileExtension: ".py" })] })
+        render(<LessonAssignmentBlock lessonId="les-1" />)
+
+        // FILE-only → no GitHub input, straight to the file surface.
+        expect(screen.queryByPlaceholderText("exercises.assignment.urlPlaceholder")).toBeNull()
+        const input = screen.getByLabelText("exercises.assignment.fileLabel") as HTMLInputElement
+        const file = new File(["print(1)"], "solution.py", { type: "text/x-python" })
+        fireEvent.change(input, { target: { files: [file] } })
+
+        fireEvent.click(screen.getByText("exercises.assignment.submitFile"))
+        await waitFor(() =>
+            expect(submitFileTrigger).toHaveBeenCalledWith({ assignmentId: "asg-1", file }),
+        )
+        expect(submissionsMutate).toHaveBeenCalled()
+    })
+
+    it("rejects a file outside the extension whitelist and never fires the request", () => {
+        assignmentsMock.mockReturnValue({ data: [assignment({ submissionMethod: "FILE", fileExtension: "py, zip" })] })
+        render(<LessonAssignmentBlock lessonId="les-1" />)
+
+        const input = screen.getByLabelText("exercises.assignment.fileLabel") as HTMLInputElement
+        const file = new File(["nope"], "solution.txt", { type: "text/plain" })
+        fireEvent.change(input, { target: { files: [file] } })
+
+        expect(screen.getByText("exercises.assignment.fileWrongType:{\"extensions\":\".py, .zip\"}")).toBeTruthy()
+        fireEvent.click(screen.getByText("exercises.assignment.submitFile"))
+        expect(submitFileTrigger).not.toHaveBeenCalled()
     })
 })

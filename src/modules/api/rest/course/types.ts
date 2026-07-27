@@ -407,10 +407,24 @@ export interface AssignmentView {
     title: string
     question: string
     criteria: string
+    /**
+     * Accepted file extension(s) for a FILE submission — a comma/space-separated list
+     * that may or may not be dot-prefixed (`"py"`, `".py"`, `"py, zip"`). Empty → no
+     * client-side extension restriction. Drives the file-tab `accept` attribute and the
+     * client-side extension gate.
+     */
     fileExtension: string
     maxSubmissions: number
     free: boolean
     sortOrder: number
+    /**
+     * Which submission method(s) the author allows (contract exercise-submission-methods):
+     * `"GITHUB"` (repo URL only) | `"FILE"` (upload a code/zip file, AI-graded) | `"BOTH"`.
+     * Additive — absent on older deployments (before the `submission_method` column) →
+     * the FE treats it as `"GITHUB"` so it keeps the existing URL-only form and never
+     * offers a file tab the BE cannot accept yet.
+     */
+    submissionMethod?: string | null
 }
 
 /** Body sent to `POST /api/v1/courses/lessons/{lessonId}/assignments`. */

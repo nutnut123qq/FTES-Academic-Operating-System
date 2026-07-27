@@ -92,6 +92,12 @@ export interface SubjectDetail {
     learningOutcomes: Array<string>
     roadmap: Array<string>
     thumbnailUrl: string
+    /**
+     * Cover/identity image URL (CONTRACT A), or null when the subject has no artwork.
+     * Additive on the BE detail + workspace read; falls back to {@link thumbnailUrl}
+     * on deployments that predate the field.
+     */
+    imageUrl?: string | null
     status: string
     prerequisites: Array<PrerequisiteView>
     related: Array<RelatedView>
@@ -110,6 +116,8 @@ export interface SubjectSummary {
     recommendedSemester: number | null
     difficulty: string
     thumbnailUrl: string
+    /** Cover/identity image URL (CONTRACT A); falls back to {@link thumbnailUrl}. */
+    imageUrl?: string | null
     status: string
 }
 

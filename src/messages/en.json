@@ -4978,7 +4978,12 @@
       "downloadError": "Could not create the download link. Please try again.",
       "downloadForbidden": "You do not have permission to download this document.",
       "downloadNotFound": "This document no longer exists.",
-      "downloadRateLimited": "Too many downloads. Try again in a few minutes."
+      "downloadRateLimited": "Too many downloads. Try again in a few minutes.",
+      "lockedBadge": "Locked",
+      "lockedAria": "material locked — buy the course to unlock",
+      "unlockHint": "Buy the linked course to unlock this material",
+      "lockedNeutralAria": "locked material",
+      "lockedNeutralHint": "Locked material"
     },
     "practice": {
       "title": "Practice",
@@ -6817,6 +6822,12 @@
       "metaModules": "{count} modules",
       "metaHours": "~{count}h",
       "metaLearners": "{count} learners",
+      "trialCard": {
+        "title": "You're on a free trial",
+        "subtitle": "Unlock every lesson, challenge and material in this course.",
+        "unlock": "Unlock course",
+        "continueTrial": "Keep trying"
+      },
       "tabs": {
         "content": "Content",
         "challenges": "Challenges"
@@ -7295,8 +7306,14 @@
       "mockInterview": "Mock interview",
       "interview": "Interview",
       "subjectTitle": "Subject",
+      "materials": "Materials / Review",
+      "practice": "Flashcards / Practice",
+      "workspace": "Subject space",
       "review": "Review",
-      "qa": "Q&A"
+      "qa": "Q&A",
+      "playground": "Playground",
+      "personalProject": "Personal project",
+      "lockedAria": "feature requires course enrollment"
     }
   },
   "adminConsole": {

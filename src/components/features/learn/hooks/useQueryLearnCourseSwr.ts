@@ -4,10 +4,12 @@ import useSWR from "swr"
 import {
     getCourseDetail,
     getCourseProgress,
+    type CourseAccessStateView,
     type CourseDetail,
     type CourseProgressView,
     type LessonView,
 } from "@/modules/api/rest/course"
+import { useGetMyCourseAccessSwr } from "@/hooks/swr/api/rest/queries/useGetMyCourseAccessSwr"
 
 /** One lesson (content) inside a module. */
 export interface LearnLesson {
@@ -101,6 +103,12 @@ export interface LearnCourseHeader {
      * → /subjects/{subjectCode}/discussion.
      */
     subjectCode: string | null
+    /** Course cover art (`course.imageHeader`) — empty string when the BE omits it. */
+    coverUrl: string
+    /** Discounted course price in VND (`course.salePrice`); 0 when free/unknown. */
+    priceVnd: number
+    /** List (pre-discount) course price in VND (`course.totalPrice`); 0 when unknown. */
+    originalVnd: number
 }
 
 /** The full learn shape for a course (§4). */
@@ -187,6 +195,9 @@ const toLearnCourse = (courseId: string, detail: CourseDetail): LearnCourse => {
             progressPercent: 0,
             continueLessonId: firstLessonId,
             subjectCode: detail.subjectCode ?? null,
+            coverUrl: detail.course?.imageHeader ?? "",
+            priceVnd: Number(detail.course?.salePrice ?? 0) || 0,
+            originalVnd: Number(detail.course?.totalPrice ?? 0) || 0,
         },
         navSections: NAV_SECTIONS,
         modules,
@@ -246,6 +257,11 @@ export const useQueryLearnCourseSwr = (courseId: string) => {
         async () => getCourseProgress(realId as string),
         { shouldRetryOnError: false },
     )
+    // The caller's own access state on this course ({enrolled, purchased, fullAccess}),
+    // keyed on the resolved course UUID. Degrades to null for a guest / not-found, so
+    // the trial-card + rail buy CTA read a single owned source without an extra manual
+    // fetch. `GET /courses/{id}/me/access`.
+    const { data: access, mutate: mutateAccess } = useGetMyCourseAccessSwr(realId)
 
     const data = base ? withProgress(base, progress) : undefined
     return {
@@ -253,10 +269,12 @@ export const useQueryLearnCourseSwr = (courseId: string) => {
         modules: data?.modules ?? [],
         header: data?.header,
         navSections: data?.navSections ?? [],
+        /** The caller's course access state, or `null` for a guest / not-found. */
+        access: (access ?? null) as CourseAccessStateView | null,
         isLoading,
         error,
         mutate: async () => {
-            await Promise.all([mutate(), mutateProgress()])
+            await Promise.all([mutate(), mutateProgress(), mutateAccess()])
         },
     }
 }

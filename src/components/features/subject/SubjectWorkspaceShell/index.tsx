@@ -1,7 +1,6 @@
 "use client"
 
 import React, { useState } from "react"
-import Image from "next/image"
 import { Typography, cn } from "@heroui/react"
 import {
     SquaresFourIcon,
@@ -125,13 +124,15 @@ export const SubjectWorkspaceShell = ({ subjectId, children }: SubjectWorkspaceS
                 <header className={cn("flex flex-col gap-2 border-b border-separator p-6")}>
                     <div className="flex items-center gap-3">
                         {imageUrl !== null && subject ? (
-                            <div className="relative size-11 shrink-0 overflow-hidden rounded-large">
-                                <Image
+                            // CONTRACT A cover: a plain <img> (not next/image) so a remote
+                            // BE-provider host renders without being registered in
+                            // next.config images.remotePatterns; broken src → initials badge.
+                            <div className="size-11 shrink-0 overflow-hidden rounded-large">
+                                <img
                                     src={imageUrl}
                                     alt={subject.name}
-                                    fill
-                                    sizes="44px"
-                                    className="object-cover"
+                                    loading="lazy"
+                                    className="size-full object-cover"
                                     onError={() => setBrokenImageUrl(imageUrl)}
                                 />
                             </div>

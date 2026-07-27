@@ -84,6 +84,13 @@ export interface ResourceSummary {
     ratingCount: number
     downloadCount: number
     createdAt?: string
+    /**
+     * Server-computed lock flag (CONTRACT B): `true` when the material is
+     * purchasers-only (`visibility` = enrolled/purchasers-only) AND the viewer has
+     * NOT purchased the linked course. The BE never leaks the body/URL of a locked
+     * row. Additive — absent (→ unlocked) on deployments that predate the contract.
+     */
+    lockedForViewer?: boolean
 }
 
 /** Paginated response. */

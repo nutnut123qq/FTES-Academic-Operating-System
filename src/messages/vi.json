@@ -4978,7 +4978,12 @@
       "downloadError": "Không tạo được liên kết tải xuống. Vui lòng thử lại.",
       "downloadForbidden": "Bạn không có quyền tải tài liệu này.",
       "downloadNotFound": "Tài liệu không tồn tại hoặc đã bị gỡ.",
-      "downloadRateLimited": "Bạn tải quá nhanh. Thử lại sau ít phút."
+      "downloadRateLimited": "Bạn tải quá nhanh. Thử lại sau ít phút.",
+      "lockedBadge": "Cần mở khóa",
+      "lockedAria": "tài liệu cần mua khóa học để mở",
+      "unlockHint": "Mua khóa học liên kết để mở tài liệu này",
+      "lockedNeutralAria": "học liệu đã khoá",
+      "lockedNeutralHint": "Học liệu đã khoá"
     },
     "practice": {
       "title": "Luyện tập",
@@ -6817,6 +6822,12 @@
       "metaModules": "{count} học phần",
       "metaHours": "~{count} giờ",
       "metaLearners": "{count} người học",
+      "trialCard": {
+        "title": "Bạn đang học thử",
+        "subtitle": "Mở khóa toàn bộ bài học, thử thách và tài liệu của khóa này.",
+        "unlock": "Mở khóa học",
+        "continueTrial": "Tiếp tục học thử"
+      },
       "tabs": {
         "content": "Nội dung",
         "challenges": "Thử thách"
@@ -7295,8 +7306,14 @@
       "mockInterview": "Phỏng vấn thử",
       "interview": "Phỏng vấn",
       "subjectTitle": "Môn học",
+      "materials": "Học liệu / Ôn tập",
+      "practice": "Flashcard / Luyện tập",
+      "workspace": "Không gian môn học",
       "review": "Ôn tập",
-      "qa": "Hỏi đáp"
+      "qa": "Hỏi đáp",
+      "playground": "Playground",
+      "personalProject": "Dự án cá nhân",
+      "lockedAria": "tính năng cần đăng ký khóa học"
     }
   },
   "adminConsole": {

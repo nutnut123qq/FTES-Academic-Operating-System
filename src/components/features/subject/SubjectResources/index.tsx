@@ -1,8 +1,8 @@
 "use client"
 
 import React, { useState } from "react"
-import { Button, Chip, Typography, toast } from "@heroui/react"
-import { FolderIcon, SparkleIcon } from "@phosphor-icons/react"
+import { Button, Chip, Link, Typography, cn, toast } from "@heroui/react"
+import { FolderIcon, LockSimpleIcon, SparkleIcon } from "@phosphor-icons/react"
 import { useLocale, useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
 import { useRouter } from "@/i18n/navigation"
@@ -12,6 +12,7 @@ import { SaveButton } from "@/components/blocks/buttons/SaveButton"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
 import { RestError } from "@/modules/api/rest/client"
 import { downloadResourceFile } from "@/modules/api/rest/resource"
+import { useQuerySubjectSwr } from "../hooks/useQuerySubjectSwr"
 import {
     SUBJECT_RESOURCE_TYPES,
     useQuerySubjectResourcesSwr,
@@ -51,6 +52,11 @@ export const SubjectResources = () => {
     const { resources, collections, isLoading, error, mutate } =
         useQuerySubjectResourcesSwr(subjectId, active, authenticated)
     const [downloadingId, setDownloadingId] = useState<string | null>(null)
+    // CONTRACT B: a locked material's click opens the buy flow of the subject's
+    // linked course (first pinned learning link). `null` when no course is linked —
+    // the row then stays inert with a muted "cần mua khoá" hint.
+    const { subject } = useQuerySubjectSwr(subjectId)
+    const lockedCourseId = subject?.courseLinks?.[0]?.id ?? null
 
     /** Human meta line: rating · downloads · created date (each part degrades away). */
     const metaLabel = (resource: SubjectResource) => {
@@ -144,44 +150,76 @@ export const SubjectResources = () => {
                 }}
             >
                 <div className="flex flex-col gap-3">
-                    {resources.map((resource) => (
-                        <div
-                            key={resource.id}
-                            className="flex items-center gap-3 rounded-2xl border border-separator p-4 transition-colors hover:border-accent/50 hover:bg-accent/5"
-                        >
-                            <div className="min-w-0 flex-1">
-                                <Typography type="body-sm" weight="medium" truncate>
-                                    {resource.title}
-                                </Typography>
-                                <Typography type="body-xs" color="muted">
-                                    {metaLabel(resource)}
-                                </Typography>
+                    {resources.map((resource) =>
+                        resource.lockedForViewer ? (
+                            // CONTRACT B: purchasers-only material the viewer hasn't bought.
+                            // No body/URL affordances (no download / ask-AI / save leak); the
+                            // whole row opens the linked course's buy/enroll page.
+                            <Link
+                                key={resource.id}
+                                onPress={() => { if (lockedCourseId) router.push(`/courses/${lockedCourseId}`) }}
+                                aria-label={`${resource.title} — ${lockedCourseId ? t("resources.lockedAria") : t("resources.lockedNeutralAria")}`}
+                                className={cn(
+                                    "flex items-center gap-3 rounded-2xl border border-separator p-4 no-underline transition-colors",
+                                    lockedCourseId
+                                        ? "cursor-pointer hover:border-accent/50 hover:bg-accent/5"
+                                        : "cursor-default",
+                                )}
+                            >
+                                <div className="min-w-0 flex-1">
+                                    <Typography type="body-sm" weight="medium" truncate>
+                                        {resource.title}
+                                    </Typography>
+                                    <Typography type="body-xs" color="muted">
+                                        {lockedCourseId ? t("resources.unlockHint") : t("resources.lockedNeutralHint")}
+                                    </Typography>
+                                </div>
+                                <Chip size="sm" variant="soft" color="warning">
+                                    <span className="flex items-center gap-1">
+                                        <LockSimpleIcon aria-hidden focusable="false" className="size-4" />
+                                        {t("resources.lockedBadge")}
+                                    </span>
+                                </Chip>
+                            </Link>
+                        ) : (
+                            <div
+                                key={resource.id}
+                                className="flex items-center gap-3 rounded-2xl border border-separator p-4 transition-colors hover:border-accent/50 hover:bg-accent/5"
+                            >
+                                <div className="min-w-0 flex-1">
+                                    <Typography type="body-sm" weight="medium" truncate>
+                                        {resource.title}
+                                    </Typography>
+                                    <Typography type="body-xs" color="muted">
+                                        {metaLabel(resource)}
+                                    </Typography>
+                                </div>
+                                <Chip size="sm" variant="soft" color="accent">
+                                    {t(`resources.types.${resource.type}`)}
+                                </Chip>
+                                <SaveButton entityType="resource" entityId={resource.id} />
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    isIconOnly
+                                    aria-label={t("resources.askAi")}
+                                    isDisabled={!resource.isResource}
+                                    onPress={() => onAskAi(resource.id)}
+                                >
+                                    <SparkleIcon aria-hidden focusable="false" className="size-5" />
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    isDisabled={!resource.isResource || downloadingId === resource.id}
+                                    isPending={downloadingId === resource.id}
+                                    onPress={() => { void onDownload(resource) }}
+                                >
+                                    {t("resources.download")}
+                                </Button>
                             </div>
-                            <Chip size="sm" variant="soft" color="accent">
-                                {t(`resources.types.${resource.type}`)}
-                            </Chip>
-                            <SaveButton entityType="resource" entityId={resource.id} />
-                            <Button
-                                size="sm"
-                                variant="ghost"
-                                isIconOnly
-                                aria-label={t("resources.askAi")}
-                                isDisabled={!resource.isResource}
-                                onPress={() => onAskAi(resource.id)}
-                            >
-                                <SparkleIcon aria-hidden focusable="false" className="size-5" />
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="ghost"
-                                isDisabled={!resource.isResource || downloadingId === resource.id}
-                                isPending={downloadingId === resource.id}
-                                onPress={() => { void onDownload(resource) }}
-                            >
-                                {t("resources.download")}
-                            </Button>
-                        </div>
-                    ))}
+                        ),
+                    )}
                 </div>
             </AsyncContent>
 

@@ -51,14 +51,33 @@ vi.mock("@heroui/react", () => ({
             {children}
         </button>
     ),
+    Link: ({
+        children,
+        onPress,
+        "aria-label": ariaLabel,
+    }: {
+        children?: React.ReactNode
+        onPress?: () => void
+        "aria-label"?: string
+    }) => (
+        <a aria-label={ariaLabel} onClick={onPress}>
+            {children}
+        </a>
+    ),
     Chip: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
     Typography: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
+    cn: (...a: Array<unknown>) => a.filter(Boolean).join(" "),
     toast: { danger: vi.fn(), success: vi.fn() },
 }))
 vi.mock("@phosphor-icons/react", () => {
     const Icon = () => <span />
-    return { FolderIcon: Icon, SparkleIcon: Icon }
+    return { FolderIcon: Icon, LockSimpleIcon: Icon, SparkleIcon: Icon }
 })
+vi.mock("../hooks/useQuerySubjectSwr", () => ({
+    useQuerySubjectSwr: () => ({
+        subject: { courseLinks: [{ id: "course-9", title: "PRF192", pinned: true }] },
+    }),
+}))
 vi.mock("@/components/blocks/async/AsyncContent", () => ({
     AsyncContent: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
 }))
@@ -89,6 +108,8 @@ const resources = [
         rating: 4.5,
         ratingCount: 3,
         createdAt: "2026-07-01T00:00:00Z",
+        visibility: "PUBLIC",
+        lockedForViewer: false,
     },
     {
         id: "link-1",
@@ -99,6 +120,20 @@ const resources = [
         rating: null,
         ratingCount: 0,
         createdAt: null,
+        visibility: "PUBLIC",
+        lockedForViewer: false,
+    },
+    {
+        id: "res-locked",
+        title: "Đề thi cuối kỳ",
+        type: "pdf" as const,
+        isResource: true,
+        downloadCount: 0,
+        rating: null,
+        ratingCount: 0,
+        createdAt: null,
+        visibility: "ENROLLED_ONLY",
+        lockedForViewer: true,
     },
 ]
 
@@ -150,5 +185,25 @@ describe("SubjectResources — ask AI", () => {
         fireEvent.click(askButton)
 
         expect(push).not.toHaveBeenCalled()
+    })
+})
+
+describe("SubjectResources — locked material (CONTRACT B)", () => {
+    it("badges a lockedForViewer row and never exposes its download / ask-AI actions", () => {
+        render(<SubjectResources />)
+
+        // the lock badge is shown
+        expect(screen.getByText("resources.lockedBadge")).toBeTruthy()
+        // only the two UNLOCKED rows expose the body/URL affordances (no leak on the locked row)
+        expect(screen.getAllByLabelText("resources.askAi")).toHaveLength(2)
+    })
+
+    it("routes the locked row click to the subject's linked course buy page", () => {
+        render(<SubjectResources />)
+
+        const lockedRow = screen.getByLabelText("Đề thi cuối kỳ — resources.lockedAria")
+        fireEvent.click(lockedRow)
+
+        expect(push).toHaveBeenCalledWith("/courses/course-9")
     })
 })

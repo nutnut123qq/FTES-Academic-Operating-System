@@ -460,6 +460,27 @@ export const LessonReader = () => {
                             {/* engagement + navigation OUTSIDE the reading card (hidden while locked) */}
                             {!isLocked ? (
                                 <div className="flex flex-col gap-6 pb-6">
+                                    {/* "Làm thử thách" — a clear trial CTA after the lesson content
+                                        when this accessible (free/trial FULL) lesson carries a FREE
+                                        challenge, so a trial learner sees the challenge to do after
+                                        studying. Routes to the free challenge's solver (no paywall).
+                                        Non-free challenges leave `freeChallengeSlug` null → no CTA
+                                        (they keep the existing Challenges-tab + BE access gate). */}
+                                    {lesson.freeChallengeSlug ? (
+                                        <TrialChallengeCta
+                                            className="mx-auto w-full max-w-3xl"
+                                            onOpen={() =>
+                                                router.push(
+                                                    challengeHref(
+                                                        courseId,
+                                                        lesson.moduleId,
+                                                        contentId,
+                                                        lesson.freeChallengeSlug!,
+                                                    ),
+                                                )
+                                            }
+                                        />
+                                    ) : null}
                                     {/* real assignments for this lesson (renders only when a
                                         non-empty list comes back) — GitHub URL submit + grading history */}
                                     <LessonAssignmentBlock lessonId={contentId} className="mx-auto w-full max-w-3xl" />
@@ -768,6 +789,46 @@ const ChallengesView = ({
             <Button variant="primary" onPress={onOpen}>
                 {t("reader.openChallenge")}
             </Button>
+        </div>
+    )
+}
+
+/**
+ * "Làm thử thách" — the trial call-to-action shown after the lesson content when the
+ * lesson is accessible (free/trial FULL) and carries a FREE challenge. A prominent
+ * accent card so a trial learner sees the challenge to do after studying, routing
+ * straight into the free challenge's solver.
+ */
+const TrialChallengeCta = ({
+    className,
+    onOpen,
+}: {
+    className?: string
+    onOpen: () => void
+}) => {
+    const t = useTranslations("learn")
+    return (
+        <div className={className}>
+            <div className="flex flex-col items-start gap-3 rounded-3xl border border-accent/40 bg-accent/5 p-6">
+                <div className="flex items-center gap-2">
+                    <PuzzlePieceIcon aria-hidden focusable="false" className="size-6 text-accent" />
+                    <Typography type="body" weight="semibold">
+                        {t("reader.trialChallengeTitle")}
+                    </Typography>
+                    <Chip size="sm" variant="soft" color="accent" className="shrink-0">
+                        {t("reader.trialChallengeBadge")}
+                    </Chip>
+                </div>
+                <Typography type="body-sm" color="muted">
+                    {t("reader.trialChallengeBody")}
+                </Typography>
+                <Button variant="primary" onPress={onOpen}>
+                    <span className="flex items-center gap-1">
+                        {t("reader.trialChallengeCta")}
+                        <CaretRightIcon aria-hidden focusable="false" className="size-4" />
+                    </span>
+                </Button>
+            </div>
         </div>
     )
 }

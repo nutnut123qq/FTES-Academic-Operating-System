@@ -61,6 +61,12 @@ export interface LearnExercise {
     type: string
     /** Challenge lifecycle status; absent for assignments. */
     status?: string
+    /**
+     * True when this is a FREE challenge (playable by trial/non-purchase learners on a
+     * lesson they can access at FULL). Only meaningful for `kind === "challenge"`; always
+     * false for assignments. Sourced from `LessonChallengeSummary.free` (`?? false`).
+     */
+    free?: boolean
 }
 
 /** One module (chapter) grouping lessons. */
@@ -143,6 +149,7 @@ const toLearnLesson = (lesson: LessonView): LearnLesson => {
         title: challenge.title,
         type: challenge.type,
         status: challenge.status,
+        free: challenge.free ?? false,
     }))
     const assignments: Array<LearnExercise> = (lesson.assignments ?? []).map((assignment) => ({
         kind: "assignment",

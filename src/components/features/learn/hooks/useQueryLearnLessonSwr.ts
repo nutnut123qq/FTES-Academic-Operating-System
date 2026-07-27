@@ -76,6 +76,14 @@ export interface LearnLessonView {
     hasChallenge: boolean
     /** Id of the linked ACTIVE challenge (null when `hasChallenge` is false). */
     challengeId: string | null
+    /**
+     * Routing slug of a FREE challenge on this lesson (the first `LessonChallengeSummary`
+     * with `free === true`), or null when none. Non-null + an accessible lesson (`!isLocked`)
+     * is exactly the "video free + challenge free" trial case — the reader surfaces the
+     * "Làm thử thách" CTA and routes it here. A non-free challenge leaves this null (its
+     * entry stays gated by the existing lock / BE access gate).
+     */
+    freeChallengeSlug: string | null
     /** True → this lesson has a PUBLISHED quiz (shows the quiz block). */
     hasQuiz: boolean
     /** Id of the linked PUBLISHED quiz (null when `hasQuiz` is false). */
@@ -142,6 +150,12 @@ interface FlatLesson {
     hasChallenge: boolean | undefined
     /** Id of the linked ACTIVE challenge (from the curriculum), null when none. */
     challengeId: string | null
+    /**
+     * ALL active challenges attached to this lesson (from the curriculum), each carrying
+     * its routing `slug` + the `free` flag — so the reader can find a free challenge to
+     * offer as the "Làm thử thách" trial CTA without an extra call. Empty on an older BE.
+     */
+    challenges: Array<{ id: string; slug: string; free: boolean }>
 }
 
 /** Flattens the course detail into an ordered lesson list (module order → lesson order). */
@@ -171,6 +185,11 @@ const flattenCurriculum = (detail: CourseDetail): Array<FlatLesson> =>
                     // buildLessonView, making that documented legacy-BE degradation dead.
                     hasChallenge: lesson.hasChallenge,
                     challengeId: lesson.challengeId ?? null,
+                    challenges: (lesson.challenges ?? []).map((challenge) => ({
+                        id: challenge.id,
+                        slug: challenge.slug,
+                        free: challenge.free ?? false,
+                    })),
                 })),
         )
 
@@ -199,6 +218,10 @@ const buildLessonView = (
     // curriculum flag (older deployments).
     const hasChallenge = current?.hasChallenge ?? content.hasChallenge ?? false
     const challengeId = current?.challengeId ?? content.challengeId ?? null
+    // A free challenge on this lesson → its routing slug, used by the reader's trial CTA
+    // ("Làm thử thách"). null when the lesson has no free challenge (nothing to offer for
+    // free). The lesson's own access still gates the CTA in the reader (`!isLocked`).
+    const freeChallengeSlug = (current?.challenges ?? []).find((c) => c.free)?.slug ?? null
     // BE `/lessons/{id}/content` carries the linked PUBLISHED quiz (course-learn-contract-gaps).
     const hasQuiz = content.hasQuiz ?? false
     const quizId = content.quizId ?? null
@@ -236,6 +259,7 @@ const buildLessonView = (
         isVideoLesson,
         hasChallenge,
         challengeId,
+        freeChallengeSlug,
         hasQuiz,
         quizId,
         // Trust the per-viewer curriculum lock — `content.locked` comes from

@@ -65,7 +65,10 @@ const PreviewLockOverlay = ({
  *
  * Resolves the stream manifest to determine `mode`/`previewSeconds`/`cheapestPackage`
  * (and, on the `freemium-youtube-preview-gate` BE, a PREVIEW `videoRef`), then mounts
- * the correct player (HLS for internal `video_*` tokens, YouTube embed otherwise).
+ * the correct player. Dispatch order: a signed HLS manifest (`provider === "HLS"`,
+ * `stream.url` set, `videoRef` null) plays DIRECTLY via {@link LessonHlsPlayer}'s
+ * `manifestUrl` mode; otherwise the ref-based fallback runs — YouTube embed for a
+ * YouTube ref, HLS token mode for an internal `video_*` ref.
  *
  * The preview gate is a PERSISTENT state owned here (single source of truth): the
  * shared `usePreviewGate` hook fires once at `previewSeconds` → opens the package modal
@@ -98,7 +101,7 @@ export const LessonVideoBlock = ({
     onPurchased?: () => void
 }) => {
     const t = useTranslations("courseSystem.preview")
-    const { stream, isLoading } = useLessonStreamSwr(lessonId)
+    const { stream, isLoading, mutate: refreshStream } = useLessonStreamSwr(lessonId)
     const [gateOpen, setGateOpen] = useState(false)
     /** Persistent "preview limit reached" state — drives the lock overlay + player pause. */
     const [gated, setGated] = useState(false)
@@ -120,12 +123,17 @@ export const LessonVideoBlock = ({
         if (mode === "FULL") setGated(false)
     }, [mode])
 
+    // Signed HLS manifest: a real `hls_manifest_key` lesson → the BE ships
+    // `provider === "HLS"` + `stream.url` (a signed master.m3u8) with `videoRef` null.
+    // Play it DIRECTLY, ahead of any ref-based dispatch.
+    const manifestUrl = stream?.provider === "HLS" && stream.url ? stream.url : null
+
     // Catalog ref (free/FULL) wins; PREVIEW YouTube arrives via the stream response.
     const effectiveRef = videoRef ?? stream?.videoRef ?? null
 
-    if (!effectiveRef) {
-        // No catalog ref yet: the stream may still supply a PREVIEW ref — hold an
-        // aspect-video skeleton instead of collapsing layout. Once the stream has
+    if (!manifestUrl && !effectiveRef) {
+        // No manifest and no catalog ref yet: the stream may still supply a PREVIEW ref —
+        // hold an aspect-video skeleton instead of collapsing layout. Once the stream has
         // resolved without a ref, render nothing (unchanged behaviour on old BE).
         if (!videoRef && isLoading) {
             return (
@@ -139,8 +147,21 @@ export const LessonVideoBlock = ({
 
     const isPreview = mode === "PREVIEW" && !!previewSeconds && previewSeconds > 0
 
-    const ytId = youtubeId(effectiveRef)
-    const player = ytId ? (
+    const ytId = effectiveRef ? youtubeId(effectiveRef) : null
+    const player = manifestUrl ? (
+        <LessonHlsPlayer
+            manifestUrl={manifestUrl}
+            lessonId={lessonId}
+            previewSeconds={previewSeconds}
+            isGated={previewGate.isGated}
+            onTimeUpdate={previewGate.onTimeUpdate}
+            onEnded={previewGate.onEnded}
+            onHalfWatched={onHalfWatched}
+            // Direct signed-manifest mode: a retry after expiry re-signs the stream URL
+            // (fetches a fresh stream.url) instead of replaying the stale manifest prop.
+            onRefreshSource={() => { void refreshStream() }}
+        />
+    ) : ytId ? (
         <LessonYouTubePlayer
             videoId={ytId}
             lessonId={lessonId}
@@ -152,7 +173,7 @@ export const LessonVideoBlock = ({
             onOpenGate={() => setGateOpen(true)}
             onHalfWatched={onHalfWatched}
         />
-    ) : /^\s*video_/.test(effectiveRef) ? (
+    ) : effectiveRef && /^\s*video_/.test(effectiveRef) ? (
         <LessonHlsPlayer
             videoRef={effectiveRef.trim()}
             lessonId={lessonId}

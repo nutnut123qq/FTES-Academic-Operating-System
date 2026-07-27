@@ -32,6 +32,7 @@ import {
 } from "@phosphor-icons/react"
 import { Button } from "@heroui/react"
 import { useQueryLearnLessonSwr } from "../hooks/useQueryLearnLessonSwr"
+import { useQueryLearnCourseSwr } from "../hooks/useQueryLearnCourseSwr"
 import { useLearnSidebarStore } from "@/hooks/zustand/learnSidebar/store"
 
 import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
@@ -96,10 +97,16 @@ export const LessonReader = () => {
     const router = useRouter()
     const { courseId, contentId } = useParams<{ courseId: string; contentId: string }>()
     const { lesson, error, mutate } = useQueryLearnLessonSwr(courseId, contentId)
+    // The caller's own course access ({enrolled, purchased, fullAccess}) — shares the
+    // rail's SWR caches (GET_LEARN_COURSE / me/access), so no extra fetch. Gates the
+    // Challenges-tab entry for a non-free challenge the viewer hasn't unlocked.
+    const { access } = useQueryLearnCourseSwr(courseId)
     const { toggle: toggleSidebar } = useLearnSidebarStore()
     const [view, setView] = useState<ContentView>("content")
     const [lang, setLang] = useState("typescript")
     const [gateOpen, setGateOpen] = useState(false)
+    /** Which paywall entry opened the shared gate modal — drives its title/context. */
+    const [gateContext, setGateContext] = useState<"document" | "video" | "challenge">("document")
     /**
      * Content id whose completion cheer should show. Set only on the learner-driven
      * video ≥50% completion so the transient cheer renders BESIDE the player (where
@@ -185,6 +192,21 @@ export const LessonReader = () => {
     // Gate every challenge entry point on a REAL linked challenge id (no `-c` mock):
     // BE only sets `hasChallenge` + `challengeId` for an ACTIVE (PUBLISHED/RUNNING) challenge.
     const hasChallenge = (lesson?.hasChallenge ?? false) && Boolean(lesson?.challengeId)
+    /**
+     * A NON-free linked challenge the viewer hasn't unlocked stays gated even on an
+     * accessible (free/preview) lesson — the BE 403s the solver, so the Challenges-tab
+     * entry carries a lock hint and opens the package gate instead of routing in. Same
+     * predicate as the ContentMap child rows (challenge-free-hardening).
+     */
+    const hasFullAccess = !!(access?.purchased || access?.fullAccess)
+    const challengeLocked =
+        hasChallenge && !(lesson?.challengeFree ?? false) && !hasFullAccess
+
+    /** Open the shared package gate with the given paywall context. */
+    const openGate = useCallback((context: "document" | "video" | "challenge") => {
+        setGateContext(context)
+        setGateOpen(true)
+    }, [])
 
     /**
      * Left tab group: Content, plus Challenges only when the lesson actually has one
@@ -449,7 +471,7 @@ export const LessonReader = () => {
                                                             })}
                                                         </Typography>
                                                     ) : null}
-                                                    <Button variant="primary" onPress={() => setGateOpen(true)}>
+                                                    <Button variant="primary" onPress={() => openGate(lesson.isVideoLesson ? "video" : "document")}>
                                                         {t("reader.enrollCta")}
                                                     </Button>
                                                 </div>
@@ -529,7 +551,14 @@ export const LessonReader = () => {
                         <div className="mx-auto w-full max-w-3xl">
                             <ChallengesView
                                 hasChallenge={lesson.hasChallenge && Boolean(lesson.challengeId)}
+                                isLocked={challengeLocked}
                                 onOpen={() => {
+                                    // A gated non-free challenge upsells the package instead of
+                                    // routing into a solver the BE would 403.
+                                    if (challengeLocked) {
+                                        openGate("challenge")
+                                        return
+                                    }
                                     if (lesson.challengeId) {
                                         router.push(challengeHref(courseId, lesson.moduleId, contentId, lesson.challengeId))
                                     }
@@ -552,7 +581,7 @@ export const LessonReader = () => {
                     lessonTitle={lesson.title}
                     packageSlugs={lesson.packageSlugs}
                     cheapestPackage={lesson.teaser?.cheapestPackage}
-                    context={lesson.isVideoLesson ? "video" : "document"}
+                    context={gateContext}
                     onPurchased={() => { void mutate() }}
                 />
             ) : null}
@@ -766,12 +795,19 @@ const LessonPager = ({
     )
 }
 
-/** The Challenges view — a link into the auto-grading submission surface. */
+/**
+ * The Challenges view — a link into the auto-grading submission surface. When the linked
+ * challenge is gated for this viewer (`isLocked`: a non-free challenge they haven't
+ * unlocked), it carries a lock hint (icon + premium chip) and the CTA opens the package
+ * gate instead of routing into a solver the BE would 403.
+ */
 const ChallengesView = ({
     hasChallenge,
+    isLocked,
     onOpen,
 }: {
     hasChallenge: boolean
+    isLocked: boolean
     onOpen: () => void
 }) => {
     const t = useTranslations("learn")
@@ -785,16 +821,28 @@ const ChallengesView = ({
     return (
         <div className="flex flex-col items-start gap-3 rounded-3xl border border-default bg-surface p-6">
             <div className="flex items-center gap-2">
-                <PuzzlePieceIcon aria-hidden focusable="false" className="size-6 text-accent" />
+                {isLocked ? (
+                    <LockSimpleIcon aria-hidden focusable="false" className="size-6 text-accent" />
+                ) : (
+                    <PuzzlePieceIcon aria-hidden focusable="false" className="size-6 text-accent" />
+                )}
                 <Typography type="body" weight="semibold">
                     {t("reader.challengeTitle")}
                 </Typography>
+                {isLocked ? (
+                    <Chip size="sm" variant="soft" color="warning" className="shrink-0">
+                        <span className="flex items-center gap-1">
+                            <LockSimpleIcon aria-hidden focusable="false" className="size-3" />
+                            {t("content.premium")}
+                        </span>
+                    </Chip>
+                ) : null}
             </div>
             <Typography type="body-sm" color="muted">
-                {t("reader.challengeBody")}
+                {isLocked ? t("reader.lockedBody") : t("reader.challengeBody")}
             </Typography>
             <Button variant="primary" onPress={onOpen}>
-                {t("reader.openChallenge")}
+                {isLocked ? t("reader.enrollCta") : t("reader.openChallenge")}
             </Button>
         </div>
     )

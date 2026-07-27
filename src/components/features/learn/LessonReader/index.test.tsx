@@ -20,6 +20,13 @@ vi.mock("../hooks/useQueryLearnLessonSwr", () => ({
     useQueryLearnLessonSwr: () => lessonHook(),
 }))
 
+// The reader reads the caller's course access to gate a non-free challenge entry. Default
+// to a guest (no full access); a case can override via `courseHook`.
+const courseHook = vi.fn(() => ({ access: null }))
+vi.mock("../hooks/useQueryLearnCourseSwr", () => ({
+    useQueryLearnCourseSwr: () => courseHook(),
+}))
+
 vi.mock("next-intl", () => ({
     useTranslations: () => (key: string) => key,
     useFormatter: () => ({ number: (n: number) => String(n) }),
@@ -174,6 +181,7 @@ const makeLesson = (over: Partial<LearnLessonView> = {}): LearnLessonView => ({
     isVideoLesson: false,
     hasChallenge: false,
     challengeId: null,
+    challengeFree: false,
     freeChallengeSlug: null,
     hasQuiz: false,
     quizId: null,

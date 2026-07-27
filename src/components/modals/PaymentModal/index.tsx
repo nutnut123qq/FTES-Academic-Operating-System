@@ -25,6 +25,18 @@ type PayMethod = "VIETQR" | "COIN"
 type Phase = "choose" | "awaiting" | "success" | "failed"
 
 /**
+ * Số tiền hiển thị ở dòng tóm tắt phải là số SẼ BỊ TRỪ theo phương thức ĐANG CHỌN, không phải
+ * theo phương thức khả dụng: sản phẩm có cả giá VND lẫn giá Xu, chọn Xu mà vẫn in "299.000₫"
+ * trong khi ví bị trừ 2.990 Xu là sai lệch trên đường tiền.
+ */
+export const summaryAmount = (
+    method: PayMethod,
+    amountVnd: number,
+    amountCoin?: number,
+): { unit: "vnd" | "coin"; value: number } =>
+    method === "COIN" ? { unit: "coin", value: amountCoin ?? 0 } : { unit: "vnd", value: amountVnd }
+
+/**
  * PaymentModal (§13) — the single global checkout modal, opened by every purchase
  * entry point via `usePaymentOverlayState().open(context)`. Two settlement paths:
  *
@@ -167,9 +179,12 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
                                     {context.title}
                                 </Typography>
                                 <Typography type="body-sm" weight="bold" className="shrink-0 text-accent">
-                                    {showVietqr
-                                        ? t("checkout.amountVnd", { amount: format.number(amountVnd) })
-                                        : t("checkout.amountCoin", { amount: format.number(amountCoin ?? 0) })}
+                                    {(() => {
+                                        const shown = summaryAmount(method, amountVnd, amountCoin)
+                                        return shown.unit === "vnd"
+                                            ? t("checkout.amountVnd", { amount: format.number(shown.value) })
+                                            : t("checkout.amountCoin", { amount: format.number(shown.value) })
+                                    })()}
                                 </Typography>
                             </div>
 

@@ -12,10 +12,13 @@ import { type Page, request } from "@playwright/test"
 
 const API_BASE = process.env.API_BASE ?? "https://apitest.ftes.vn/api/v1"
 
-export type Role = "student" | "lecturer" | "ctv" | "admin"
+export type Role = "student" | "student2" | "lecturer" | "ctv" | "admin"
 
 const EMAILS: Record<Role, string> = {
     student: "student.test@ftes.vn",
+    // Tài khoản SẠCH (đăng ký thật 2026-07-27), chỉ ghi danh DBI202 — dùng cho ca mua/học thử,
+    // vì student.test đã enroll 12 khoá nên không tái hiện được cảnh "chưa sở hữu".
+    student2: "student2.test@ftes.vn",
     lecturer: "instructor.test@ftes.vn",
     ctv: "ctv.test@ftes.vn",
     admin: "admin.test@ftes.vn",

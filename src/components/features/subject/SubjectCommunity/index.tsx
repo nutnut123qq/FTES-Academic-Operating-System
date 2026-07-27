@@ -13,6 +13,8 @@ import {
     DISCUSSION_ENGAGEMENT_ACTIONS,
 } from "@/components/reuseable/PostEngagementBar"
 import { PostCommentThread } from "@/components/reuseable/PostCommentThread"
+import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
+import { RichTextEditor } from "@/components/reuseable/RichTextEditor"
 import { PostMediaGrid } from "@/components/blocks/feed/PostMediaGrid"
 import { PostImagePicker } from "@/components/blocks/feed/PostImagePicker"
 import type { MediaInput } from "@/modules/api/rest/community/types"
@@ -95,9 +97,7 @@ const SubjectPostRow = ({
                 <Typography type="body" weight="medium">
                     {post.title}
                 </Typography>
-                <Typography type="body-sm" color="muted">
-                    {post.snippet}
-                </Typography>
+                <MarkdownContent markdown={post.snippet} />
                 <PostMediaGrid media={post.media} imageAlt={tHub("composer.imageAlt")} />
                 {/* discussion = like + comment ONLY — no share, no save */}
                 <PostEngagementBar
@@ -177,12 +177,12 @@ const SubjectComposer = ({ subjectId, scope }: { subjectId: string; scope: FeedS
                 placeholder={t("community.titleField")}
                 className="w-full rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted focus:border-accent"
             />
-            <textarea
+            <RichTextEditor
                 value={body}
-                onChange={(event) => setBody(event.target.value)}
+                onChange={setBody}
+                toolbar="full"
                 placeholder={t("community.bodyField")}
-                rows={3}
-                className="w-full resize-none rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted focus:border-accent"
+                minHeight={120}
             />
             <PostImagePicker
                 onChange={onImagesChange}

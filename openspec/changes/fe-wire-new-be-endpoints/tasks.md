@@ -303,3 +303,141 @@ mới: `document-qa-manual-walkthrough.spec.ts` · `document-qa-upload-roundtrip
 - [ ] 12.13 **Còn lại — BLOCKED-INFRA.** URL Cloudinary của PDF vẫn 401 (chưa bật "Allow delivery
       of PDF and ZIP files"); không chặn người dùng nữa vì UI đã đi BE-stream, nhưng bất kỳ chỗ nào
       còn phát URL provider cho PDF sẽ hỏng. Test khoá hiện trạng bằng `test.fail()`.
+
+## 13. Nghiệm thu E2E vòng 4 — luồng trọn vẹn module Course (2026-07-27)
+
+Kịch bản 17 bước: **A** giảng viên/admin dựng khoá (Admin CMS `:5173`) → **B** học viên mua →
+**C** học + công cụ AI trong reader → **D** workspace môn → **E** vòng khép kín (sửa bên soạn →
+học viên thấy đổi). Spec mới (chưa commit, `??` trong `e2e/`): `course-authoring-admin.spec.ts` ·
+`course-purchase-journey.spec.ts` · `course-learn-and-ai.spec.ts` ·
+`subject-workplace-journey.spec.ts` · `course-authoring-closed-loop.spec.ts` ·
+`course-student-journey.spec.ts`.
+
+> **KẾT LUẬN VÒNG 4: KHÔNG NGHIỆM THU ĐƯỢC.** Backend `apitest.ftes.vn` chết hạ tầng
+> (Cloudflare **530 / error code 1033** — tunnel origin down) suốt cả cửa sổ chạy. Toàn bộ ca
+> B6→E17 là **BLOCKED**, KHÔNG phải FAIL: chưa assert nào chạy nên chưa ca nào nói được gì về
+> chất lượng sản phẩm. Đánh dấu `[x]` dưới đây chỉ dành cho phần A — dữ liệu đã dựng xong từ
+> lượt trước và id còn tra được, không phải kết quả chạy lại trong vòng này.
+
+**Chặn cứng (repro chung cho mọi ca B–E):**
+
+```
+curl -i -X POST https://apitest.ftes.vn/api/v1/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"identifier":"student.test@ftes.vn","password":"…"}'
+→ HTTP/1.1 530 · Server: cloudflare · CF-RAY: a215f4a88ad80953-HKG · body: "error code: 1033"
+```
+
+Cùng 530/1033 ở `/api/v1/catalog/courses`, `/actuator/health`, `/` (root). Poll ~12 phút (9 lần,
+giãn 20–30s) không đổi. `.env.local` chỉ có một base duy nhất → không có BE dự phòng để trỏ sang.
+Triệu chứng trong Playwright: `SyntaxError: Unexpected token '<', "<!doctype "...` tại
+`e2e/helpers/auth.ts:51` (`res.json()` nuốt trang lỗi HTML của Cloudflare) — mọi spec gọi
+`loginAs`/`fetchToken` ở `beforeEach` nên **22/22 ca hỏng cùng một dòng**.
+
+### A — dựng khoá trên Admin CMS
+
+- [x] 13.A1 **Tạo khoá nghiệm thu — XONG (từ lượt dựng trước).** `courseId
+      20214b93-6bfd-4f1b-845a-7da4ea29032c`, slug `e2e-v4-course-505089-ccf58cc7`, thuộc môn
+      PRF192, status **PUBLISHED**. Spec `course-authoring-admin.spec.ts` tái dùng khoá theo prefix
+      tên "E2E V4 Course" nên chạy lại không đẻ khoá rác.
+- [x] 13.A2 **1 chương + 3 bài học — XONG.** `sectionId a991489f-ca3b-4471-ac73-90c3afe113a9`; bài
+      VIDEO `0bc26447-…`, bài DOCUMENT `3f74ca4c-…`, bài phụ `9baa935a-…`; còn nguyên sau reload.
+      *Gotcha đã ghi trong spec:* node mới KHÔNG tự được chọn (phải click trong cây trước khi đổi
+      tên ở panel phải); "Thêm bài học" chỉ bật khi node đang chọn là CHƯƠNG; option môn học của
+      antd Select nằm ở dropdown PORTAL ngoài modal (`.ant-select-dropdown:visible`), bám sai sẽ
+      trúng ô của BẢNG phía sau.
+- [x] 13.A3 **Nội dung bài DOCUMENT + mã bí mật — XONG.** Bài `3f74ca4c-…` chứa con số **4271**
+      ("mỗi sinh viên được cấp tối đa 4271 byte heap") để chấm câu trả lời AI ở phần C: "AI nói
+      chung chung" KHÔNG tính là đạt.
+- [x] 13.A4 **Bài VIDEO + mức học thử — XONG.** video-ref YouTube, `previewPercent = 60` (giá trị
+      gốc để E16 đổi sang giá trị KHÁC rồi đối chiếu).
+- [ ] 13.A5 **Giá / gói bán cho khoá — CHƯA XONG.** Khoá hiện `saleMode = LEGACY`, **chưa có
+      giá/gói**, `level = null`. Đây là tiền đề của B7/B8 (giỏ hàng + mua bằng Xu): không có
+      `COURSE_UNLOCK` có giá VND + giá Xu thì ca "chuẩn bị" của `course-purchase-journey` không
+      resolve được sản phẩm. Repro (khi BE sống): `GET /catalog/courses/e2e-v4-course-505089-ccf58cc7`
+      → không có product/price. Việc cần làm: gán sản phẩm `COURSE_UNLOCK` (VND + Xu) cho khoá trước
+      khi chạy lại phần B.
+
+### B — học viên mua khoá (`course-purchase-journey.spec.ts`, `mode: "serial"`)
+
+- [ ] 13.B6 **Chưa mua → trang khoá hiện tường phí, không lỗi đỏ — BLOCKED-INFRA.**
+      `course-student-journey.spec.ts` ca "B6". Repro: `npx playwright test course-student-journey`
+      → chết ở `loginAs` (530/1033). *Đã biết:* route `/vi/courses/…` KHÔNG phát GraphQL `me` nên
+      **không** được dùng `waitForViewer()` ở đây (treo 30s).
+- [ ] 13.B7 **Thêm vào giỏ → `/vi/cart` có dòng, mở được thanh toán — BLOCKED-INFRA.** Ngoài BE
+      down còn bị chặn bởi 13.A5 (khoá chưa có sản phẩm).
+- [ ] 13.B8 **Mua bằng Xu: Đăng ký học → tab "Trả bằng Xu" → "Chúc mừng!" → BE ghi `purchased` —
+      BLOCKED-INFRA.** Phụ thuộc 13.A5.
+- [ ] 13.B9 **Sau khi mua mở bài DOCUMENT trong `/learn` đọc đủ nội dung — BLOCKED-INFRA.** Phụ
+      thuộc B8.
+
+### C — công cụ AI trong reader (`course-learn-and-ai.spec.ts`)
+
+- [ ] 13.C10 **Hỏi AI trên bài DOCUMENT → trả lời chứa đúng **4271** — BLOCKED-INFRA.** Có ở 2 chỗ:
+      `course-student-journey` ca "C10" (đường API `POST /ai/document-qa`) và `course-learn-and-ai`
+      ca "(b)" (bấm tay trong reader). *Lưu ý khi chạy lại:* job AI chạy nền 10–60s, quá **2 phút**
+      mới coi là lỗi; lượt đầu ra banner "đang xử lý" + "Thử lại" là đúng thiết kế (xem 12.7).
+- [ ] 13.C11 **Tóm tắt bài DOCUMENT bằng AI, sinh từ chính bài đó — BLOCKED-INFRA.** ca "(c)".
+- [ ] 13.C12 **Thẻ ghi nhớ AI: sinh bộ thẻ + lật thẻ; chấm 1 thẻ rồi reload thì tiến độ SM-2 do
+      server giữ — BLOCKED-INFRA.** ca "(d1)" + "(d2)", đối chiếu
+      `POST /practice/flashcards/{id}/review`.
+
+### D — workspace môn (`subject-workplace-journey.spec.ts`)
+
+- [ ] 13.D13 **Tab "Tài liệu": hàng học liệu đủ nút hành động + "Hỏi AI về tài liệu này" mở
+      `/resources/{id}?ask=1` và **focus** ô nhập — BLOCKED-INFRA.** (Vòng 3 mục 12.6 đã PASS trên
+      môn PRF192; vòng 4 muốn chạy lại trong ngữ cảnh khoá nghiệm thu nhưng chưa tới lượt.)
+- [ ] 13.D14 **Tab "Thảo luận": đăng bài → hiện ngay trong feed → bình luận → F5 vẫn còn —
+      BLOCKED-INFRA.**
+
+### E — vòng khép kín soạn ⇄ học (`course-authoring-closed-loop.spec.ts`, `mode: "serial"`)
+
+- [ ] 13.E15 **[admin] Đổi tiêu đề + nội dung markdown bài DOCUMENT (L2) → [student] syllabus hiện
+      tiêu đề MỚI và reader hiện NỘI DUNG MỚI (L4, L6) — BLOCKED-INFRA.** Cũng có bản rút gọn ở
+      `course-student-journey` ca "E15+E17".
+- [ ] 13.E16 **[admin] Đổi mức học thử bài VIDEO sang giá trị KHÁC 60 (L3) → [student] nhận mốc MỚI
+      (L5) — BLOCKED-INFRA.** Bản rút gọn: `course-student-journey` ca "E16+E17".
+- [ ] 13.E17 **[admin] Thêm bài học mới, còn sau reload (L1) → [student] thấy bài MỚI trong syllabus
+      (L4) — BLOCKED-INFRA.**
+
+### Hạ tầng & kiểm tra tĩnh trong vòng này
+
+- [x] 13.14 **Dev server FE chết pool — đã xử lý (vận hành, KHÔNG đụng repo).** Tái diễn
+      `Jest worker encountered 2 child process exceptions` → `/vi`, `/vi/cart` trả **500**. Kill cây
+      tiến trình (70316 → 120328/39560/127744) + restart; RAM trống nhảy **3.7 GB → 7.1 GB**.
+      Restart **không** kèm `NODE_OPTIONS=--max-old-space-size=8192` mà vẫn ổn định cả buổi →
+      củng cố kết luận trước đó: worker chết vì **cạn RAM vật lý** (bị giết ở ~1.44 GB, chưa chạm
+      trần V8 ~4 GB) do chạy song song nhiều `tsc`/build trên cùng box, **không** phải trần heap.
+      Vì vậy KHÔNG áp bản vá `NODE_OPTIONS` vào `package.json`. Route đã warm: `/vi` ·`/vi/cart` ·
+      `/vi/courses/e2e-v4-course-505089-ccf58cc7` · `/vi/subjects/PRF192/resources` ·
+      `/vi/subjects/PRF192/discussion` đều **200**.
+- [x] 13.15 **`tsc --noEmit` sạch** (sau `rm -f tsconfig.tsbuildinfo`, exit 0, không output). 2 lỗi
+      TS2769/TS7006 ở `e2e/course-purchase-journey.spec.ts` mà lượt trước thấy nay đã hết.
+- [x] 13.16 **`npx vitest run` — 114 file / 724 test PASS**, exit 0.
+- [ ] 13.17 **Chạy lại nguyên vòng 4 khi tunnel apitest sống.** Điều kiện vào:
+      `curl https://apitest.ftes.vn/actuator/health` trả JSON. Lệnh:
+      `npx playwright test course-purchase-journey course-learn-and-ai subject-workplace-journey
+      course-authoring-closed-loop course-student-journey --project=desktop --workers=1
+      --reporter=list`. **Đọc kết quả cẩn thận:** `course-purchase-journey` và
+      `course-authoring-closed-loop` là `mode: "serial"` → ca đầu đỏ kéo theo `did not run` cho các
+      ca sau, đừng đếm thành nhiều bug riêng. Ảnh 2 mốc (video học thử · panel AI) vòng này **chưa
+      chụp được**.
+
+### Dữ liệu để lại trên apitest (cần dọn sau khi nghiệm thu xong)
+
+- [ ] 13.18 **Khoá nghiệm thu vẫn PUBLISHED trên catalog công khai.** `E2E V4 Course 505089` —
+      `courseId 20214b93-6bfd-4f1b-845a-7da4ea29032c`, slug `e2e-v4-course-505089-ccf58cc7`, môn
+      PRF192, kèm `sectionId a991489f-…` và 3 bài `0bc26447-…` (VIDEO) · `3f74ca4c-…` (DOCUMENT,
+      chứa "4271") · `9baa935a-…`. **Giữ nguyên tới khi chạy xong vòng 4**, sau đó chuyển về
+      DRAFT/unpublish rồi xoá để không lẫn vào danh mục thật.
+- [ ] 13.19 **Rà khoá trùng tên `E2E V4 Course %`.** Spec tái dùng theo prefix nên rủi ro thấp,
+      nhưng các lượt chạy trước có thể đã đẻ bản trùng (tên gắn `Date.now() % 1000000`) — liệt kê
+      và xoá bản không phải `…-505089-ccf58cc7`.
+- [x] 13.20 **Không phát sinh rác mới trong vòng này.** Vì mọi ca B–E bị chặn ở bước login: KHÔNG
+      có bài thảo luận/bình luận mới (D14), KHÔNG có đơn hàng/enrollment/giao dịch Xu mới (B8),
+      KHÔNG có nhóm mới (tránh luôn trần 3 nhóm/ngày và bẫy token stale của người tạo), KHÔNG có
+      học liệu upload mới. Fixture `test-results/course-journey.json` là file LOCAL, không phải dữ
+      liệu server.
+- [ ] 13.21 **Nếu lượt chạy lại có B8 (mua bằng Xu) thì phải hoàn tác.** Sau khi nghiệm thu: gỡ
+      enrollment/`purchased` của `student.test@ftes.vn` trên khoá này và hoàn số Xu đã trừ, kẻo các
+      vòng sau không tái hiện được trạng thái "chưa mua" của B6.

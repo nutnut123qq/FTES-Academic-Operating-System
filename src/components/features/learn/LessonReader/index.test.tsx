@@ -167,6 +167,7 @@ const makeLesson = (over: Partial<LearnLessonView> = {}): LearnLessonView => ({
     isVideoLesson: false,
     hasChallenge: false,
     challengeId: null,
+    freeChallengeSlug: null,
     hasQuiz: false,
     quizId: null,
     isLocked: false,
@@ -217,5 +218,37 @@ describe("LessonReader — challenge tab + reaction footer wiring", () => {
         })
         render(<LessonReader />)
         expect(screen.queryByTestId("tabs")).toBeNull()
+    })
+
+    it("shows the trial 'Làm thử thách' CTA when an accessible lesson has a free challenge", () => {
+        // Free/trial FULL lesson carrying a free challenge → the CTA routes to its solver.
+        lessonHook.mockReturnValue({
+            lesson: makeLesson({ isLocked: false, accessLevel: "FULL", freeChallengeSlug: "warm-up" }),
+            error: undefined,
+            mutate: vi.fn(),
+        })
+        render(<LessonReader />)
+        expect(screen.getByText("reader.trialChallengeCta")).toBeTruthy()
+    })
+
+    it("hides the trial CTA when the lesson has no free challenge", () => {
+        lessonHook.mockReturnValue({
+            lesson: makeLesson({ isLocked: false, freeChallengeSlug: null }),
+            error: undefined,
+            mutate: vi.fn(),
+        })
+        render(<LessonReader />)
+        expect(screen.queryByText("reader.trialChallengeCta")).toBeNull()
+    })
+
+    it("hides the trial CTA on a locked lesson even with a free challenge slug", () => {
+        // A free challenge on a NON-accessible lesson stays behind the lock — no trial CTA.
+        lessonHook.mockReturnValue({
+            lesson: makeLesson({ isLocked: true, accessLevel: "NONE", freeChallengeSlug: "warm-up" }),
+            error: undefined,
+            mutate: vi.fn(),
+        })
+        render(<LessonReader />)
+        expect(screen.queryByText("reader.trialChallengeCta")).toBeNull()
     })
 })

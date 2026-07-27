@@ -4,15 +4,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Button, cn } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { useEditor, EditorContent, type Editor } from "@tiptap/react"
-import StarterKit from "@tiptap/starter-kit"
-import TiptapLink from "@tiptap/extension-link"
-import Underline from "@tiptap/extension-underline"
-import Placeholder from "@tiptap/extension-placeholder"
-import Image from "@tiptap/extension-image"
-import Mention from "@tiptap/extension-mention"
-import { Markdown, type MarkdownStorage } from "tiptap-markdown"
-import type { MarkdownSerializerState } from "prosemirror-markdown"
-import type { Node as ProseMirrorNode } from "@tiptap/pm/model"
 import {
     Code as CodeIcon,
     CodeBlock as CodeBlockIcon,
@@ -34,7 +25,11 @@ import {
     localizeStickers,
 } from "@/components/reuseable/CommentComposerTools"
 import type { Sticker } from "@/components/reuseable/CommentComposerTools"
-import { mentionSuggestion } from "./mention-suggestion"
+import {
+    buildEditorExtensions,
+    getEditorMarkdown,
+    trimMarkdown,
+} from "@/components/reuseable/RichTextEditor/extensions"
 
 /** Props for {@link RichCommentEditor}. */
 export interface RichCommentEditorProps extends WithClassNames<undefined> {
@@ -61,32 +56,6 @@ export interface RichCommentEditorProps extends WithClassNames<undefined> {
     /** Called when the editor loses focus. */
     onBlur?: () => void
 }
-
-/**
- * Custom mention node that serializes to a clickable profile link in Markdown.
- * Editing representation stays a styled inline mention; export becomes
- * `[@label](/u/<id>)` so `MarkdownContent` can render it without extra logic.
- */
-const ProfileMention = Mention.extend({
-    addStorage() {
-        return {
-            markdown: {
-                serialize(state: MarkdownSerializerState, node: ProseMirrorNode) {
-                    const id = String(node.attrs.id ?? "")
-                    const label = String(node.attrs.label ?? id)
-                    state.write(`[@${label}](/u/${id})`)
-                },
-            },
-        }
-    },
-})
-
-/**
- * Trim trailing whitespace/newlines from a Markdown string exported by Tiptap.
- * @param value - Raw markdown from `editor.storage.markdown.getMarkdown()`.
- * @returns Trimmed markdown string.
- */
-const trimMarkdown = (value: string): string => value.replace(/\s+$/g, "")
 
 /**
  * Rich text composer for comments. Built on Tiptap, exports Markdown, and lives
@@ -127,9 +96,7 @@ export const RichCommentEditor = ({
         // value captured at render) can lag the latest keystroke — gate on the
         // freshly read body instead of a stale emptiness flag. Đọc đúng chỗ storage
         // (`.markdown.getMarkdown()`) theo fix 4b4282b.
-        const body = trimMarkdown(
-            (editor.storage as unknown as { markdown: MarkdownStorage }).markdown.getMarkdown(),
-        )
+        const body = trimMarkdown(getEditorMarkdown(editor))
         if (!body) {
             return
         }
@@ -156,30 +123,13 @@ export const RichCommentEditor = ({
         shouldRerenderOnTransaction: true,
         autofocus: autoFocus,
         editable: !disabled,
-        extensions: [
-            StarterKit.configure({ heading: false }),
-            TiptapLink.configure({ openOnClick: false }),
-            Underline,
-            Placeholder.configure({
-                placeholder: placeholder ?? t("engagement.commentPlaceholder"),
-            }),
-            Image.configure({ inline: true, allowBase64: false }),
-            ProfileMention.configure({
-                suggestion: mentionSuggestion,
-                renderText: ({ node }) => `@${String(node.attrs.label ?? node.attrs.id ?? "")}`,
-                renderHTML: ({ node }) => [
-                    "span",
-                    {
-                        "data-type": "mention",
-                        "data-id": String(node.attrs.id ?? ""),
-                        "data-label": String(node.attrs.label ?? ""),
-                        class: "rounded px-1 font-medium text-accent bg-accent/10",
-                    },
-                    `@${String(node.attrs.label ?? node.attrs.id ?? "")}`,
-                ],
-            }),
-            Markdown.configure({ html: false }),
-        ],
+        // Comment scope: shared extension list with headings OFF (a comment never
+        // grows headings). The general body editor reuses the same base with
+        // `headings: true`.
+        extensions: buildEditorExtensions({
+            placeholder: placeholder ?? t("engagement.commentPlaceholder"),
+            headings: false,
+        }),
         editorProps: {
             attributes: {
                 class: cn(

@@ -7,7 +7,6 @@ import {
     ChatCircleIcon,
     SquaresFourIcon,
     NewspaperIcon,
-    TargetIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { usePathname } from "@/i18n/navigation"
@@ -80,7 +79,6 @@ export const useAppNav = (): Array<AppNavModule> => {
             makeModule("course", p.course().build(), <GraduationCapIcon className="size-5" />),
             makeModule("community", p.community().build(), <ChatCircleIcon className="size-5" />),
             makeModule("blog", p.blog().build(), <NewspaperIcon className="size-5" />),
-            makeModule("quests", p.quests().build(), <TargetIcon className="size-5" />),
         ]
     }, [pathname, t])
 }

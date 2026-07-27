@@ -16,6 +16,7 @@ import {
     WalletIcon,
     PlusCircleIcon,
     BookmarkSimpleIcon,
+    TargetIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
@@ -139,6 +140,16 @@ export const AccountMenuAuthed = ({ className }: AccountMenuAuthedProps) => {
                 >
                     <BookmarkSimpleIcon className="size-5" />
                     <Label>{t("nav.saved")}</Label>
+                </Dropdown.Item>
+                {/* "Nhiệm vụ" — the daily quest board (/quests). Moved here out of the top nav
+                    (a quest board is a personal surface, not a primary section). */}
+                <Dropdown.Item
+                    id="quests"
+                    textValue={t("nav.quests")}
+                    onPress={() => go(pathConfig().locale().quests().build())}
+                >
+                    <TargetIcon className="size-5" />
+                    <Label>{t("nav.quests")}</Label>
                 </Dropdown.Item>
                 <Dropdown.Item
                     id="settings"

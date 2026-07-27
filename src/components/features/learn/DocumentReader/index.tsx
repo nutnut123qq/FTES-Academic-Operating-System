@@ -127,13 +127,15 @@ export const DocumentReader = ({
                                 ) : null}
                             </div>
                             {/* Medium-style teaser fade behind the paywall — ONLY when there is
-                                teaser text to fade out. A locked lesson whose body is empty (BE
-                                returns `bodyMd: ""` for DOCUMENT lessons that carry files/links
-                                instead of markdown) leaves this container 0px tall, so an
-                                `absolute bottom-0 h-72` gradient spills UPWARD over the lesson
-                                title — a white veil across content that was never there. */}
+                                teaser text to fade out. The overlay is `inset-0` (exactly this
+                                article box) with a transparent top half, so a SHORT document body
+                                fades softly at the bottom and the cover can NEVER exceed the box to
+                                spill upward over the lesson title. Still gated on `hasTeaserBody`:
+                                a locked lesson whose body is empty (BE returns `bodyMd: ""` for
+                                DOCUMENT lessons carrying files/links instead of markdown) has
+                                nothing to fade, so skip the overlay. */}
                             {showDocumentPreviewTeaser && hasTeaserBody ? (
-                                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-72 bg-gradient-to-b from-transparent via-surface/70 to-surface" />
+                                <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent from-50% via-surface/60 to-surface" />
                             ) : null}
                         </div>
                         {locked ? (

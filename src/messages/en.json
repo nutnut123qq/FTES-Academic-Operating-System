@@ -5283,7 +5283,6 @@
       "retry": "Try again",
       "likeFailed": "Couldn't update your like. Please try again.",
       "compose": "Start a discussion",
-      "titleField": "Title",
       "bodyField": "What do you want to ask or share?",
       "createFailed": "Could not publish the post. Please try again."
     },
@@ -6282,7 +6281,6 @@
       "commentUpdateFailed": "Could not save the comment. Please try again.",
       "commentDeleteFailed": "Could not delete the comment. Please try again.",
       "editPostTitle": "Edit post",
-      "editTitleLabel": "Title",
       "editContentLabel": "Content (Markdown)",
       "editLoadFailed": "Could not load the post content to edit. Please try again.",
       "postUpdated": "Post updated.",
@@ -6354,7 +6352,6 @@
     "composer": {
       "title": "Create post",
       "whatsNew": "What's new?",
-      "titleField": "Title",
       "bodyField": "What do you want to share?",
       "submit": "Post",
       "createFailed": "Couldn't publish your post. Please try again.",
@@ -6573,7 +6570,6 @@
       "empty": "No announcements yet.",
       "error": "Couldn't load announcements. Please try again.",
       "create": "New announcement",
-      "titleField": "Announcement title",
       "contentField": "Announcement content",
       "pinned": "Pin to top",
       "pinnedBadge": "Pinned",
@@ -6620,7 +6616,6 @@
       "error": "Couldn't load the group feed. Please try again.",
       "pin": "Pin post",
       "composer": {
-        "titleField": "Post title",
         "bodyField": "Share something with the group…",
         "submit": "Post",
         "created": "Posted to the group.",
@@ -7442,6 +7437,7 @@
     "blockquote": "Quote",
     "codeInline": "Inline code",
     "codeBlock": "Code block",
+    "heading1": "Title",
     "heading2": "Heading",
     "heading3": "Subheading",
     "image": "Insert image",

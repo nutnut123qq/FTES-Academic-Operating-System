@@ -40,7 +40,7 @@ export const CommunityComposerModal = ({ className }: WithClassNames<undefined>)
                             </div>
                         </Modal.Header>
                         <Modal.Body>
-                            <CommunityComposerForm autoFocusTitle onSubmitted={close} />
+                            <CommunityComposerForm autoFocus onSubmitted={close} />
                         </Modal.Body>
                     </Modal.Dialog>
                 </Modal.Container>

@@ -3,13 +3,15 @@
 import React, { useEffect, useState } from "react"
 import {
     Button,
-    Input,
     Modal,
-    TextField,
     Typography,
 } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { RichTextEditor } from "@/components/reuseable/RichTextEditor"
+import {
+    joinTitleIntoMarkdown,
+    splitTitleFromMarkdown,
+} from "@/components/reuseable/RichTextEditor/title"
 
 /** Props for {@link PostEditDialog}. */
 export interface PostEditDialogProps {
@@ -29,10 +31,14 @@ export interface PostEditDialogProps {
 }
 
 /**
- * Minimal owner editor for a community post: title + markdown body, prefilled
- * from the post's REST metadata (the composer itself is a much richer flow —
- * media, poll, audience — and reusing it for an edit would drag all of that in
- * for two editable fields, which is exactly what the BE `PATCH` accepts).
+ * Minimal owner editor for a community post: a SINGLE markdown editor (no
+ * separate title field). The stored `title` + `content` are re-joined into one
+ * Markdown value on open (title as a leading H1 via {@link joinTitleIntoMarkdown})
+ * so the author edits both together, then split back apart on save
+ * ({@link splitTitleFromMarkdown} — the H1 stays out of the stored body). Prefilled
+ * from the post's REST metadata; the composer itself is a much richer flow (media,
+ * poll, audience) and reusing it for an edit would drag all of that in for what the
+ * BE `PATCH` accepts (title + content).
  *
  * The draft resets every time the dialog opens, so a cancelled edit never leaks
  * into the next one.
@@ -47,25 +53,23 @@ export const PostEditDialog = ({
     onSave,
 }: PostEditDialogProps) => {
     const t = useTranslations("communityHub")
-    const [draftTitle, setDraftTitle] = useState(title)
-    const [draftContent, setDraftContent] = useState(content)
+    const [draft, setDraft] = useState(() => joinTitleIntoMarkdown(title, content))
     const [isSaving, setIsSaving] = useState(false)
 
     useEffect(() => {
         if (isOpen) {
-            setDraftTitle(title)
-            setDraftContent(content)
+            setDraft(joinTitleIntoMarkdown(title, content))
             setIsSaving(false)
         }
     }, [isOpen, title, content])
 
     const save = async () => {
-        const nextContent = draftContent.trim()
-        if (isSaving || nextContent.length === 0) {
+        if (isSaving || draft.trim().length === 0) {
             return
         }
         setIsSaving(true)
-        const ok = await onSave({ title: draftTitle.trim(), content: nextContent })
+        const { title: nextTitle, body: nextContent } = splitTitleFromMarkdown(draft)
+        const ok = await onSave({ title: nextTitle, content: nextContent })
         setIsSaving(false)
         if (ok) {
             onClose()
@@ -92,25 +96,11 @@ export const PostEditDialog = ({
                         <Modal.Body className="flex flex-col gap-4">
                             <div className="flex flex-col gap-2">
                                 <Typography type="body-sm" weight="medium">
-                                    {t("engagement.editTitleLabel")}
-                                </Typography>
-                                <TextField className="w-full" aria-label={t("engagement.editTitleLabel")}>
-                                    <Input
-                                        variant="secondary"
-                                        value={draftTitle}
-                                        onChange={(event) => setDraftTitle(event.target.value)}
-                                        aria-label={t("engagement.editTitleLabel")}
-                                        disabled={isSaving}
-                                    />
-                                </TextField>
-                            </div>
-                            <div className="flex flex-col gap-2">
-                                <Typography type="body-sm" weight="medium">
                                     {t("engagement.editContentLabel")}
                                 </Typography>
                                 <RichTextEditor
-                                    value={draftContent}
-                                    onChange={setDraftContent}
+                                    value={draft}
+                                    onChange={setDraft}
                                     toolbar="full"
                                     minHeight={200}
                                     ariaLabel={t("engagement.editContentLabel")}
@@ -127,7 +117,7 @@ export const PostEditDialog = ({
                                 variant="primary"
                                 onPress={() => void save()}
                                 isPending={isSaving}
-                                isDisabled={isSaving || draftContent.trim().length === 0}
+                                isDisabled={isSaving || draft.trim().length === 0}
                             >
                                 {t("engagement.saveEdit")}
                             </Button>

@@ -15,6 +15,7 @@ import {
 import { PostCommentThread } from "@/components/reuseable/PostCommentThread"
 import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
 import { RichTextEditor } from "@/components/reuseable/RichTextEditor"
+import { splitTitleFromMarkdown } from "@/components/reuseable/RichTextEditor/title"
 import { PostMediaGrid } from "@/components/blocks/feed/PostMediaGrid"
 import { PostImagePicker } from "@/components/blocks/feed/PostImagePicker"
 import type { MediaInput } from "@/modules/api/rest/community/types"
@@ -130,12 +131,11 @@ const SubjectPostRow = ({
     )
 }
 
-/** Discussion composer — title + body + images, publishing into the current subject. */
+/** Discussion composer — single body editor + images, publishing into the current subject. */
 const SubjectComposer = ({ subjectId, scope }: { subjectId: string; scope: FeedScope }) => {
     const t = useTranslations("subjects")
     const tHub = useTranslations("communityHub")
     const submitPost = useMutateCreateSubjectPostSwr(subjectId, scope)
-    const [title, setTitle] = useState("")
     const [body, setBody] = useState("")
     const [media, setMedia] = useState<Array<MediaInput>>([])
     const [isUploading, setIsUploading] = useState(false)
@@ -146,37 +146,31 @@ const SubjectComposer = ({ subjectId, scope }: { subjectId: string; scope: FeedS
     const onUploadingChange = useCallback((uploading: boolean) => setIsUploading(uploading), [])
 
     // No subject uuid yet → the post would have nothing to anchor to; an in-flight image
-    // upload → the post would publish without it.
+    // upload → the post would publish without it. No separate title: the leading H1 is
+    // the title (derived and stripped from the body on submit).
     const canSubmit =
         Boolean(subjectId) &&
-        title.trim() !== "" &&
         body.trim() !== "" &&
         !isSubmitting &&
         !isUploading
 
     const onSubmit = useCallback(async () => {
         setIsSubmitting(true)
-        const ok = await submitPost({ title: title.trim(), content: body.trim(), media })
+        const { title, body: content } = splitTitleFromMarkdown(body)
+        const ok = await submitPost({ title, content, media })
         setIsSubmitting(false)
         if (ok) {
-            setTitle("")
             setBody("")
             setMedia([])
             setImagesResetToken((token) => token + 1)
         }
-    }, [submitPost, title, body, media])
+    }, [submitPost, body, media])
 
     return (
         <div className="flex flex-col gap-3 rounded-2xl border border-separator p-4">
             <Typography type="body-sm" weight="semibold">
                 {t("community.compose")}
             </Typography>
-            <input
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                placeholder={t("community.titleField")}
-                className="w-full rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted focus:border-accent"
-            />
             <RichTextEditor
                 value={body}
                 onChange={setBody}

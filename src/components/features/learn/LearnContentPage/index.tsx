@@ -115,8 +115,9 @@ export const LearnContentPage = () => {
 
                         {/* trial → buy nudge — hidden for anyone who already has full
                             access (purchased, free-owned, or otherwise entitled)
-                            (rule premium-unlock-is-enroll-not-vip) */}
-                        {!hasFullAccess ? (
+                            (rule premium-unlock-is-enroll-not-vip). Chỉ hiện khi access ĐÃ resolve
+                            (access !== undefined) để không nháy card lúc SWR access còn bay. */}
+                        {access !== undefined && !hasFullAccess ? (
                             <div className="flex flex-col gap-4 rounded-3xl border border-default bg-surface p-4">
                                 <div className="flex flex-col gap-1">
                                     <div className="flex items-center gap-2">

@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl"
 import { getTimeAgoLabel, getTimeAgoMessage } from "@/modules/dayjs"
 import { UserLink } from "@/components/features/identity"
 import { UserAvatar } from "@/components/reuseable/UserAvatar"
+import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
 import type { BlogCommentResponse } from "@/modules/api/rest/blog"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 import { CommentComposer } from "./CommentComposer"
@@ -123,9 +124,7 @@ export const CommentItem = ({
                         autoFocus
                     />
                 ) : (
-                    <p className="whitespace-pre-wrap break-words text-sm text-foreground">
-                        {comment.content}
-                    </p>
+                    <MarkdownContent markdown={comment.content} />
                 )}
 
                 {/* thin action line: heart toggle + owner-only edit/delete */}

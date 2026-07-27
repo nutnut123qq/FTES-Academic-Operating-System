@@ -1,9 +1,10 @@
 "use client"
 
 import React, { useState } from "react"
-import { Button, TextArea, TextField, cn } from "@heroui/react"
+import { Button, cn } from "@heroui/react"
 import { useTranslations } from "next-intl"
 
+import { RichTextEditor } from "@/components/reuseable/RichTextEditor"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 
 /** Max comment length — matches the backend `@Size(max = 5000)` on the create/update DTO. */
@@ -61,7 +62,9 @@ export const CommentComposer = ({
     const atLimit = text.length >= BLOG_COMMENT_MAX_LENGTH
 
     const handleSubmit = async () => {
-        if (!trimmed || isSubmitting) {
+        // The rich editor can't hard-cap Markdown mid-keystroke, so the 5000-char
+        // limit (BE @Size(max=5000)) is enforced at submit time instead.
+        if (!trimmed || isSubmitting || text.length > BLOG_COMMENT_MAX_LENGTH) {
             return
         }
         setSubmitFailed(false)
@@ -76,21 +79,14 @@ export const CommentComposer = ({
 
     return (
         <div className={cn("flex w-full flex-col gap-2", className)}>
-            <TextField variant="primary" className="w-full">
-                <TextArea
-                    rows={2}
-                    value={text}
-                    // hard 5000-char cap: never accept input beyond the limit
-                    onChange={(event) =>
-                        setText(event.target.value.slice(0, BLOG_COMMENT_MAX_LENGTH))
-                    }
-                    maxLength={BLOG_COMMENT_MAX_LENGTH}
-                    placeholder={placeholder}
-                    aria-label={placeholder}
-                    autoFocus={autoFocus}
-                    className="resize-none"
-                />
-            </TextField>
+            <RichTextEditor
+                value={text}
+                onChange={setText}
+                toolbar="comment"
+                placeholder={placeholder}
+                ariaLabel={placeholder}
+                autoFocus={autoFocus}
+            />
             <div className="flex flex-wrap items-center gap-2">
                 <span
                     className={cn(
@@ -123,7 +119,7 @@ export const CommentComposer = ({
                         void handleSubmit()
                     }}
                     isPending={isSubmitting}
-                    isDisabled={!trimmed || isSubmitting}
+                    isDisabled={!trimmed || isSubmitting || text.length > BLOG_COMMENT_MAX_LENGTH}
                 >
                     {submitLabel}
                 </Button>

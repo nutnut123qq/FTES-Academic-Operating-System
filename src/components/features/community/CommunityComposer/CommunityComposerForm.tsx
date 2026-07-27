@@ -7,6 +7,7 @@ import { useSWRConfig } from "swr"
 import { useRouter } from "@/i18n/navigation"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
 import { PostImagePicker } from "@/components/blocks/feed/PostImagePicker"
+import { RichTextEditor } from "@/components/reuseable/RichTextEditor"
 import { createPost, sharePost } from "@/modules/api/rest/community"
 import type { MediaInput } from "@/modules/api/rest/community/types"
 import { QuotedPostCard } from "@/components/reuseable/QuotedPostCard"
@@ -148,14 +149,26 @@ export const CommunityComposerForm = ({
                 />
             ) : null}
 
-            <textarea
-                value={body}
-                autoFocus={isQuote}
-                onChange={(event) => setBody(event.target.value)}
-                placeholder={isQuote ? t("composer.quotePlaceholder") : t("composer.bodyField")}
-                rows={isQuote ? 3 : 6}
-                className="w-full resize-none rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted focus:border-accent"
-            />
+            {isQuote ? (
+                // Repost commentary stays PLAIN text — a repost card renders it raw,
+                // so it must not emit Markdown (only the post body is a Markdown surface).
+                <textarea
+                    value={body}
+                    autoFocus
+                    onChange={(event) => setBody(event.target.value)}
+                    placeholder={t("composer.quotePlaceholder")}
+                    rows={3}
+                    className="w-full resize-none rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted focus:border-accent"
+                />
+            ) : (
+                <RichTextEditor
+                    value={body}
+                    onChange={setBody}
+                    toolbar="full"
+                    placeholder={t("composer.bodyField")}
+                    minHeight={160}
+                />
+            )}
 
             {quote ? (
                 <QuotedPostCard post={quote} />

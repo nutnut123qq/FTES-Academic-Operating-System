@@ -118,9 +118,18 @@ describe("LessonVideoBlock — player dispatch", () => {
         expect(screen.queryByTestId("hls-player")).toBeNull()
     })
 
-    it("falls back to the legacy video_* token HLS mode when provider is not HLS", () => {
-        currentStream = { url: "", provider: undefined, mode: "FULL", previewSeconds: 0 }
-        render(<LessonVideoBlock {...baseProps} videoRef="video_abc123" />)
+    it("falls back to the legacy video_* token HLS mode when provider is HLS but url is null", () => {
+        // Real BE shape for a migrated stream.ftes.vn stream: provider "HLS" with NO signed
+        // manifest (`url: null`) and the token in `videoRef`. The direct-manifest branch must
+        // skip on the null url and fall through to the legacy token mode.
+        currentStream = {
+            url: null,
+            provider: "HLS",
+            mode: "FULL",
+            previewSeconds: 0,
+            videoRef: "video_abc123",
+        }
+        render(<LessonVideoBlock {...baseProps} />)
 
         expect(screen.getByTestId("hls-player")).toBeTruthy()
         const props = hlsProps.mock.calls[0][0]

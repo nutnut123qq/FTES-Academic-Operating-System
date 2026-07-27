@@ -77,6 +77,13 @@ export interface LearnLessonView {
     /** Id of the linked ACTIVE challenge (null when `hasChallenge` is false). */
     challengeId: string | null
     /**
+     * True when the linked challenge ({@link challengeId}) is FREE (playable by trial /
+     * non-purchase learners). Coerced `?? false` — a missing flag (older BE) means a gated,
+     * non-free challenge, matching the ContentMap predicate. The reader uses this with the
+     * viewer's course access to decide whether the Challenges-tab entry carries a lock hint.
+     */
+    challengeFree: boolean
+    /**
      * Routing slug of a FREE challenge on this lesson (the first `LessonChallengeSummary`
      * with `free === true`), or null when none. Non-null + an accessible lesson (`!isLocked`)
      * is exactly the "video free + challenge free" trial case — the reader surfaces the
@@ -222,6 +229,9 @@ const buildLessonView = (
     // ("Làm thử thách"). null when the lesson has no free challenge (nothing to offer for
     // free). The lesson's own access still gates the CTA in the reader (`!isLocked`).
     const freeChallengeSlug = (current?.challenges ?? []).find((c) => c.free)?.slug ?? null
+    // Whether the LINKED challenge (the one the Challenges tab opens) is free. Missing entry
+    // / older BE → false (treat as gated, matching the ContentMap coercion).
+    const challengeFree = (current?.challenges ?? []).find((c) => c.id === challengeId)?.free ?? false
     // BE `/lessons/{id}/content` carries the linked PUBLISHED quiz (course-learn-contract-gaps).
     const hasQuiz = content.hasQuiz ?? false
     const quizId = content.quizId ?? null
@@ -259,6 +269,7 @@ const buildLessonView = (
         isVideoLesson,
         hasChallenge,
         challengeId,
+        challengeFree,
         freeChallengeSlug,
         hasQuiz,
         quizId,

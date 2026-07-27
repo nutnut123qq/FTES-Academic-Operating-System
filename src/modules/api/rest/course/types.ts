@@ -287,7 +287,13 @@ export interface LessonAiChatLimitRequest {
 
 /** Stream response with freemium preview metadata. */
 export interface StreamViewResponse {
-    url: string
+    /**
+     * Signed HLS master manifest URL — present (non-null) only for a `provider === "HLS"`
+     * lesson whose `hls_manifest_key` is set. The BE sends `null` for a YouTube stream or
+     * a legacy `video_*` token (the ref then arrives in {@link videoRef}), so this is
+     * nullable and consumers must truthy-check before playing it directly.
+     */
+    url: string | null
     ttlSeconds: number
     mode: string
     previewSeconds: number
@@ -296,7 +302,7 @@ export interface StreamViewResponse {
      * Stream provider — "YOUTUBE" | "HLS". Optional: only sent by the
      * `freemium-youtube-preview-gate` BE change; absent on older deployments.
      */
-    provider?: string
+    provider?: "YOUTUBE" | "HLS"
     /**
      * YouTube URL (or `video_*` token) returned even for PREVIEW so the client can
      * mount a gated player. Optional: absent on BE deployments that still hide the

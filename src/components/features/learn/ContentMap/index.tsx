@@ -19,6 +19,7 @@ import { mutate as globalMutate } from "swr"
 import { PackageGateModal } from "@/components/features/course/PackageGateModal"
 import { useQueryLearnCourseSwr } from "../hooks/useQueryLearnCourseSwr"
 import type { LearnExercise, LearnLesson } from "../hooks/useQueryLearnCourseSwr"
+import type { CourseAccessStateView } from "@/modules/api/rest/course"
 import { exerciseSolverIcon, normalizeExerciseType } from "../exerciseType"
 
 /** Build the reader route for a lesson id shaped "m<n>-l<k>". */
@@ -59,7 +60,7 @@ export const ContentMap = ({ className }: ContentMapProps) => {
         contentId?: string
         challengeId?: string
     }>()
-    const { course, modules, header, error, mutate } = useQueryLearnCourseSwr(courseId)
+    const { course, modules, header, access, error, mutate } = useQueryLearnCourseSwr(courseId)
 
     const [query, setQuery] = useState("")
 
@@ -183,6 +184,7 @@ export const ContentMap = ({ className }: ContentMapProps) => {
                                                         courseTitle={course?.header.title ?? ""}
                                                         courseCoverUrl={course?.header.coverUrl}
                                                         lesson={lesson}
+                                                        access={access}
                                                         isActive={lesson.id === contentId}
                                                         activeChallengeId={lesson.id === contentId ? challengeId : undefined}
                                                         onOpen={() => openLesson(lesson.id)}
@@ -209,6 +211,7 @@ const ContentMapLessonRow = ({
     courseTitle,
     courseCoverUrl,
     lesson,
+    access,
     isActive,
     activeChallengeId,
     onOpen,
@@ -220,6 +223,8 @@ const ContentMapLessonRow = ({
     /** Course cover art — branded into the package-gate modal opened from a locked row. */
     courseCoverUrl: string | undefined
     lesson: LearnLesson
+    /** The caller's own course access ({enrolled, purchased, fullAccess}); null for a guest. */
+    access: CourseAccessStateView | null
     isActive: boolean
     /** The open challenge's routing id (slug or uuid) when this lesson is active, else undefined. */
     activeChallengeId: string | undefined
@@ -234,6 +239,18 @@ const ContentMapLessonRow = ({
     const isLocked = lesson.isLocked
     const isPreview = accessLevel === "PREVIEW"
     const isFullyLocked = accessLevel === "NONE"
+    /** The viewer already owns FULL/purchased access → no per-challenge gate needed. */
+    const hasFullAccess = !!(access?.purchased || access?.fullAccess)
+    /**
+     * A NON-free challenge the viewer hasn't unlocked stays gated even on an accessible
+     * (free/preview) lesson — the BE 403s the solver, so the row must show a lock and open
+     * the package gate rather than route into a solver the viewer can't reach. Assignments
+     * and free challenges are never gated here (predicate challenge-free-hardening).
+     */
+    const isChallengeLocked = (exercise: LearnExercise): boolean =>
+        exercise.kind === "challenge" && !exercise.free && !hasFullAccess
+    /** This lesson carries a gated (non-free, unowned) challenge → mount the package gate. */
+    const hasLockedChallenge = lesson.exercises.some(isChallengeLocked)
 
     const handleClick = () => {
         if (isFullyLocked) {
@@ -243,10 +260,11 @@ const ContentMapLessonRow = ({
         onOpen()
     }
 
-    // A locked (NONE-access) lesson gates its child exercises too — open the same
-    // package gate rather than routing into a solver the viewer can't reach.
+    // A locked (NONE-access) lesson gates its child exercises too, and a non-free challenge
+    // stays gated even on an accessible lesson — open the same package gate rather than
+    // routing into a solver the viewer can't reach.
     const openExercise = (exercise: LearnExercise) => {
-        if (isFullyLocked) {
+        if (isFullyLocked || isChallengeLocked(exercise)) {
             setGateOpen(true)
             return
         }
@@ -311,13 +329,14 @@ const ContentMapLessonRow = ({
                                 && activeChallengeId !== undefined
                                 && (exercise.slug === activeChallengeId || exercise.id === activeChallengeId)
                             }
-                            isLocked={isFullyLocked}
+                            isLocked={isFullyLocked || isChallengeLocked(exercise)}
+                            lockedLabel={lockedLabel}
                             onOpen={() => openExercise(exercise)}
                         />
                     ))}
                 </div>
             ) : null}
-            {courseRawId && isFullyLocked ? (
+            {courseRawId && (isFullyLocked || hasLockedChallenge) ? (
                 <PackageGateModal
                     isOpen={gateOpen}
                     onClose={() => setGateOpen(false)}
@@ -328,7 +347,9 @@ const ContentMapLessonRow = ({
                     lessonId={lesson.id}
                     lessonTitle={lesson.title}
                     packageSlugs={lesson.packageSlugs}
-                    context="document"
+                    // A fully-locked lesson gates the whole document; an accessible lesson
+                    // with a gated challenge upsells the challenge specifically.
+                    context={isFullyLocked ? "document" : "challenge"}
                     onPurchased={() => { void revalidateLearnData(courseId) }}
                 />
             ) : null}
@@ -346,11 +367,14 @@ const ContentMapExerciseRow = ({
     exercise,
     isActive,
     isLocked,
+    lockedLabel,
     onOpen,
 }: {
     exercise: LearnExercise
     isActive: boolean
     isLocked: boolean
+    /** Premium chip label shown when the exercise is gated. */
+    lockedLabel: string
     onOpen: () => void
 }) => {
     const Icon = isLocked ? LockSimpleIcon : exerciseSolverIcon(normalizeExerciseType(exercise.type))
@@ -372,6 +396,14 @@ const ContentMapExerciseRow = ({
             <Typography type="body-xs" weight="medium" className="min-w-0 flex-1 line-clamp-2">
                 {exercise.title}
             </Typography>
+            {isLocked ? (
+                <Chip size="sm" variant="soft" color="warning" className="shrink-0">
+                    <span className="flex items-center gap-1">
+                        <LockSimpleIcon aria-hidden focusable="false" className="size-3" />
+                        {lockedLabel}
+                    </span>
+                </Chip>
+            ) : null}
         </button>
     )
 }

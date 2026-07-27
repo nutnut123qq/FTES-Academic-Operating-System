@@ -101,7 +101,7 @@ export const LessonVideoBlock = ({
     onPurchased?: () => void
 }) => {
     const t = useTranslations("courseSystem.preview")
-    const { stream, isLoading } = useLessonStreamSwr(lessonId)
+    const { stream, isLoading, mutate: refreshStream } = useLessonStreamSwr(lessonId)
     const [gateOpen, setGateOpen] = useState(false)
     /** Persistent "preview limit reached" state — drives the lock overlay + player pause. */
     const [gated, setGated] = useState(false)
@@ -157,6 +157,9 @@ export const LessonVideoBlock = ({
             onTimeUpdate={previewGate.onTimeUpdate}
             onEnded={previewGate.onEnded}
             onHalfWatched={onHalfWatched}
+            // Direct signed-manifest mode: a retry after expiry re-signs the stream URL
+            // (fetches a fresh stream.url) instead of replaying the stale manifest prop.
+            onRefreshSource={() => { void refreshStream() }}
         />
     ) : ytId ? (
         <LessonYouTubePlayer

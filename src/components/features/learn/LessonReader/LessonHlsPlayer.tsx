@@ -47,6 +47,7 @@ export const LessonHlsPlayer = ({
     onTimeUpdate,
     onEnded,
     onHalfWatched,
+    onRefreshSource,
 }: {
     /** Legacy `video_*` token resolved via the stream gateway. Mutually exclusive with `manifestUrl`. */
     videoRef?: string
@@ -61,6 +62,14 @@ export const LessonHlsPlayer = ({
     /** Media ended — the preview manifest may run out of segments. */
     onEnded: () => void
     onHalfWatched?: () => void
+    /**
+     * Direct (`manifestUrl`) mode only: re-fetch a freshly signed `stream.url`. A signed
+     * master manifest expires (≈6h), so retrying by replaying the same stale prop just
+     * fails again. Retry calls this (wired to the stream SWR `mutate`) so a new signed URL
+     * arrives as a new `manifestUrl` prop, which re-runs the load effect. Legacy token mode
+     * ignores it (it already re-resolves the playlist from the gateway on retry).
+     */
+    onRefreshSource?: () => void
 }) => {
     const t = useTranslations("learn")
     const videoEl = useRef<HTMLVideoElement>(null)
@@ -92,6 +101,22 @@ export const LessonHlsPlayer = ({
             }
         },
     })
+
+    /**
+     * Retry after a load failure. Clears `failed` so the <video> (unmounted by the error
+     * card) remounts and the load effect can re-attach. In direct manifest mode the stale
+     * signed URL may have expired, so fetch a freshly signed one via `onRefreshSource`
+     * (the new `manifestUrl` prop re-runs the effect); in legacy token mode bump `attempt`
+     * to re-resolve the gateway playlist.
+     */
+    const handleRetry = () => {
+        setFailed(false)
+        if (manifestUrl && onRefreshSource) {
+            onRefreshSource()
+        } else {
+            setAttempt((a) => a + 1)
+        }
+    }
 
     const clampSeek = () => {
         const el = videoEl.current
@@ -221,7 +246,7 @@ export const LessonHlsPlayer = ({
                         <Button
                             variant="secondary"
                             size="sm"
-                            onPress={() => setAttempt((a) => a + 1)}
+                            onPress={handleRetry}
                         >
                             <span className="flex items-center gap-1">
                                 <ArrowClockwiseIcon aria-hidden focusable="false" className="size-4" />

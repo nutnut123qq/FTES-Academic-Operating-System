@@ -310,9 +310,11 @@ describe("LessonReader — preview blur/teaser is DOCUMENT free-trial only", () 
     const fadeCount = (container: HTMLElement) =>
         container.querySelectorAll('[class*="bg-gradient-to-b"]').length
 
-    it("renders NO article fade + NO 'viewing the preview' teaser for a VIDEO free-trial preview", () => {
+    it("renders NO article fade but DOES show the enroll card for a VIDEO free-trial preview", () => {
         // A VIDEO lesson served as a PREVIEW (locked, accessLevel PREVIEW) with teaser text:
-        // the video has its own preview-remaining clamp, so the article must NOT blur/teaser.
+        // the video has its own preview-remaining clamp, so the article must NOT blur — but the
+        // lesson is still locked, so the enroll card (previewTitle + "Enroll in course" CTA) MUST
+        // render. Regression: the preview-gating change dropped the enroll card for locked videos.
         lessonHook.mockReturnValue({
             lesson: makeLesson({
                 contentType: "VIDEO",
@@ -327,7 +329,8 @@ describe("LessonReader — preview blur/teaser is DOCUMENT free-trial only", () 
         })
         const { container } = render(<LessonReader />)
         expect(fadeCount(container)).toBe(0)
-        expect(screen.queryByText("reader.previewTitle")).toBeNull()
+        expect(screen.getByText("reader.previewTitle")).toBeTruthy()
+        expect(screen.getByText("reader.enrollCta")).toBeTruthy()
     })
 
     it("still shows the hard paywall for a fully-locked (no-trial) VIDEO lesson", () => {

@@ -147,12 +147,15 @@ export const LessonReader = () => {
      */
     const showDocumentPreviewTeaser = isTrialPreview && contentType === "DOCUMENT"
     /**
-     * The hard paywall for a fully-locked (no-trial) lesson is a SEPARATE surface that
-     * stays as-is: it shows for a DOCUMENT trial-preview (kept) OR any fully-locked
-     * (accessLevel !== PREVIEW) lesson. In this legacy path only the fully-locked branch
-     * is reachable, so a video PREVIEW no longer renders the article teaser footer.
+     * The enroll paywall card (LockSimple + preview/locked title + "Enroll in course"
+     * CTA) shown at the bottom of this legacy reading-card path. A locked NON-DOCUMENT
+     * lesson (video/mixed) must show it whether it is a partial PREVIEW ("học thử") or a
+     * fully-locked no-trial lesson — a locked video always needs a way to enroll. It also
+     * stays true for a fully-locked DOCUMENT (harmless: DOCUMENT routes to <DocumentReader/>
+     * so that branch is unreachable here). It does NOT gate on `showDocumentPreviewTeaser`
+     * (the article blur), so a locked PREVIEW video gets the enroll card without the blur.
      */
-    const showLegacyPaywall = showDocumentPreviewTeaser || (isLocked && !isPreview)
+    const showLegacyPaywall = isLocked && (contentType !== "DOCUMENT" || !isPreview)
     /** A readable lesson whose reading card would be blank (no body, no HTML, no video). */
     const isReadingEmpty = !!lesson && !isLocked && !bodyMd && !lesson.documentHtml && !lesson.hasVideo
     /** External links when the body is essentially just link(s) → render as resource cards. */
@@ -162,8 +165,9 @@ export const LessonReader = () => {
     const hasWrittenBody = !!bodyMd || !!lesson?.documentHtml
     /**
      * Is there anything in the reading area to fade out? Same rule as `DocumentReader`: a locked
-     * lesson with an EMPTY teaser leaves the article container 0px tall, so an
-     * `absolute bottom-0 h-72` gradient spills UPWARD over the lesson title.
+     * lesson with an EMPTY teaser has nothing to fade, so skip the overlay entirely (the fade is
+     * an `inset-0` cover, so it stays contained by the article box and can't spill over the title,
+     * but drawing it over a 0px body would be pointless).
      */
     const hasTeaserBody = hasWrittenBody || isLinkOnly
     /** Draw the reading card only when there is something to put in it (else e.g. video-only). */
@@ -414,9 +418,12 @@ export const LessonReader = () => {
                                                     DOCUMENT free-trial preview with teaser text to fade. A VIDEO
                                                     (or fully-locked) lesson never gets this article blur — the
                                                     video has its own preview clamp; `showDocumentPreviewTeaser`
-                                                    is false in this legacy (non-DOCUMENT) path. */}
+                                                    is false in this legacy (non-DOCUMENT) path. The overlay is
+                                                    `inset-0` (exactly the article box) with a transparent top
+                                                    half, so on a SHORT body it can never exceed the article and
+                                                    spill upward over the title. */}
                                                 {showDocumentPreviewTeaser && hasTeaserBody ? (
-                                                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-72 bg-gradient-to-b from-transparent via-surface/70 to-surface" />
+                                                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent from-50% via-surface/60 to-surface" />
                                                 ) : null}
                                             </div>
                                             {/* one-tap reaction + view count for a finished, readable lesson */}

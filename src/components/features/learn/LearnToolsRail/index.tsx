@@ -1,10 +1,15 @@
 "use client"
 
-import React from "react"
+import React, { useState } from "react"
 import { Label, Link, ScrollShadow, cn } from "@heroui/react"
 import {
     ChatCircleTextIcon,
-    ChatsCircleIcon,
+    CodeIcon,
+    FolderIcon,
+    LockSimpleIcon,
+    PuzzlePieceIcon,
+    SquaresFourIcon,
+    TargetIcon,
     TreeStructureIcon,
     TrophyIcon,
     MicrophoneStageIcon,
@@ -13,6 +18,7 @@ import {
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
 import { useRouter } from "@/i18n/navigation"
+import { PackageGateModal } from "@/components/features/course/PackageGateModal"
 import { useQueryLearnCourseSwr } from "../hooks/useQueryLearnCourseSwr"
 
 /** Props for {@link LearnToolsRail}. */
@@ -26,21 +32,32 @@ export interface LearnToolsRailProps {
     mobile?: boolean
 }
 
-/** One tool row: icon + label acting as a go-there link. */
+/** One tool row: icon + label acting as a go-there link, or a locked buy trigger. */
 interface ToolRow {
     key: string
     icon: React.ReactNode
     label: string
+    /** Target route for a navigable row (ignored when {@link locked}). */
     href: string
+    /**
+     * Locked feature with no working FTES route yet (Playground / Dự án cá nhân):
+     * the row shows a lock marker and, on press, opens the whole-course buy flow
+     * instead of navigating.
+     */
+    locked?: boolean
 }
 
 /**
  * The right-side tools rail for the learn CONTENT DASHBOARD (the course home). Hosts
  * the learn tools that used to clutter the centre column as feature cards: the mind
  * map, leaderboard, mock interview and course interview — plus, below, the subject
- * shortcuts "Ôn tập" (→ workspace practice) and "Hỏi đáp" (→ subject discussion),
- * routed by the course's linked `subjectCode` (exposed on the learn-course header).
- * When the course has no linked subject the subject group is omitted.
+ * shortcuts routed by the course's linked `subjectCode` (exposed on the learn-course
+ * header): "Học liệu / Ôn tập" (→ workspace resources), "Flashcard / Luyện tập" (→
+ * workspace practice), "Không gian môn học" (→ workspace overview), "Hỏi đáp" (→
+ * subject discussion), and two LOCKED upsells (Playground, Dự án cá nhân) that have
+ * no working FTES route yet — pressing one opens the whole-course buy flow.
+ *
+ * When the course has no linked subject the whole subject group is omitted.
  *
  * Sticky under the navbar on desktop; hidden below `lg` (the dashboard stacks on
  * mobile). Mirrors {@link import("../OnThisPage").OnThisPage}'s rail chrome so the
@@ -52,8 +69,14 @@ export const LearnToolsRail = ({ className, mobile = false }: LearnToolsRailProp
     const t = useTranslations("learn.toolsRail")
     const router = useRouter()
     const { courseId } = useParams<{ courseId: string }>()
-    const { header } = useQueryLearnCourseSwr(courseId)
+    const { header, course } = useQueryLearnCourseSwr(courseId)
     const subjectCode = header?.subjectCode ?? null
+    const courseRawId = course?.id ?? ""
+
+    // Local buy-flow state for the locked rows — the whole-course package gate.
+    // Track the pressed row's LABEL (not just an open flag) so the shared gate modal
+    // can render a meaningful header instead of a trailing-blank "…đọc tiếp ".
+    const [lockedRowLabel, setLockedRowLabel] = useState<string | null>(null)
 
     const learnBase = `/courses/${courseId}/learn`
     const tools: Array<ToolRow> = [
@@ -65,21 +88,33 @@ export const LearnToolsRail = ({ className, mobile = false }: LearnToolsRailProp
 
     const subjectTools: Array<ToolRow> = subjectCode
         ? [
-            { key: "review", icon: <ChatsCircleIcon className="size-5" aria-hidden focusable="false" />, label: t("review"), href: `/subjects/${subjectCode}/practice` },
+            { key: "materials", icon: <FolderIcon className="size-5" aria-hidden focusable="false" />, label: t("materials"), href: `/subjects/${subjectCode}/resources` },
+            { key: "practice", icon: <TargetIcon className="size-5" aria-hidden focusable="false" />, label: t("practice"), href: `/subjects/${subjectCode}/practice` },
+            { key: "workspace", icon: <SquaresFourIcon className="size-5" aria-hidden focusable="false" />, label: t("workspace"), href: `/subjects/${subjectCode}` },
             { key: "qa", icon: <ChatCircleTextIcon className="size-5" aria-hidden focusable="false" />, label: t("qa"), href: `/subjects/${subjectCode}/discussion` },
+            { key: "playground", icon: <PuzzlePieceIcon className="size-5" aria-hidden focusable="false" />, label: t("playground"), href: "", locked: true },
+            { key: "personal-project", icon: <CodeIcon className="size-5" aria-hidden focusable="false" />, label: t("personalProject"), href: "", locked: true },
         ]
         : []
 
     const renderRow = (row: ToolRow) => (
         <Link
             key={row.key}
-            onPress={() => router.push(row.href)}
+            onPress={() => (row.locked ? setLockedRowLabel(row.label) : router.push(row.href))}
+            aria-label={row.locked ? `${row.label} — ${t("lockedAria")}` : undefined}
             className={cn(
                 "flex cursor-pointer items-center gap-2 rounded-xl px-2 py-1.5 text-sm text-muted no-underline transition-colors hover:bg-default/40 hover:text-foreground",
             )}
         >
             <span className="text-accent">{row.icon}</span>
-            {row.label}
+            <span className="min-w-0 flex-1 truncate">{row.label}</span>
+            {row.locked ? (
+                <LockSimpleIcon
+                    className="size-4 shrink-0 text-muted"
+                    aria-hidden
+                    focusable="false"
+                />
+            ) : null}
         </Link>
     )
 
@@ -94,6 +129,22 @@ export const LearnToolsRail = ({ className, mobile = false }: LearnToolsRailProp
                     <Label>{t("subjectTitle")}</Label>
                     <div className="flex flex-col gap-1">{subjectTools.map(renderRow)}</div>
                 </nav>
+            ) : null}
+            {/* whole-course buy flow for the locked rows: an empty `packageSlugs`
+                falls through to the WholeCourseGateCard (COURSE_UNLOCK) inside the
+                gate modal. Mounted only once the course UUID resolves. */}
+            {courseRawId ? (
+                <PackageGateModal
+                    isOpen={lockedRowLabel !== null}
+                    onClose={() => setLockedRowLabel(null)}
+                    courseId={courseId}
+                    courseRawId={courseRawId}
+                    courseTitle={header?.title ?? ""}
+                    lessonId=""
+                    lessonTitle={lockedRowLabel ?? ""}
+                    packageSlugs={[]}
+                    context="document"
+                />
             ) : null}
         </>
     )

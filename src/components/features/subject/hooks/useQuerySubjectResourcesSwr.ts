@@ -100,6 +100,15 @@ export interface SubjectResource {
     ratingCount: number
     /** ISO creation timestamp, or `null` when the BE omits it. */
     createdAt: string | null
+    /** Raw BE visibility value (e.g. `PUBLIC` | `ENROLLED_ONLY`). */
+    visibility: string
+    /**
+     * Server-computed lock (CONTRACT B): `true` when the material is purchasers-only
+     * and the viewer has not purchased the linked course. The list row then hides the
+     * body/URL affordances and its click opens the course buy flow. Defaults `false`
+     * so a deployment predating the contract keeps every row unlocked.
+     */
+    lockedForViewer: boolean
 }
 
 /** A grouping of resources (§5 Collections / Learning Pack). */
@@ -119,6 +128,8 @@ const toResource = (summary: ResourceSummary): SubjectResource => ({
     rating: typeof summary.avgRating === "number" ? summary.avgRating : null,
     ratingCount: summary.ratingCount ?? 0,
     createdAt: summary.createdAt ?? null,
+    visibility: summary.visibility ?? "",
+    lockedForViewer: summary.lockedForViewer === true,
 })
 
 /** Maps a BE collection row to the FE {@link SubjectCollection}. */

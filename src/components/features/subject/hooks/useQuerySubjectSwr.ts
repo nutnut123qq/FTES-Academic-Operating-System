@@ -65,10 +65,10 @@ export interface Subject {
      */
     progress: number | null
     /**
-     * Cover/identity image, or `null` when the subject has no artwork. Every seeded
-     * subject has `thumbnailUrl: null` today, so this exercises the initials-badge
-     * fallback. Wire the host into `next.config` `images.remotePatterns` if the BE
-     * ever serves remote thumbnails.
+     * Cover/identity image (CONTRACT A: BE `imageUrl`, falling back to the legacy
+     * `thumbnailUrl`), or `null` when the subject has no artwork → initials-badge
+     * fallback. Rendered with a plain `<img>` (not next/image), so a remote BE host
+     * needs no `next.config` `images.remotePatterns` entry.
      */
     imageUrl: string | null
     /**
@@ -113,7 +113,7 @@ export const toSubjectFromSummary = (summary: SubjectSummary): Subject => ({
     credits: summary.credits,
     difficulty: mapSubjectDifficulty(summary.difficulty),
     progress: null,
-    imageUrl: summary.thumbnailUrl || null,
+    imageUrl: summary.imageUrl || summary.thumbnailUrl || null,
     courseLinks: [],
     isMember: false,
     membershipRole: null,
@@ -137,7 +137,7 @@ export const toSubjectFromDetail = (
     credits: detail.credits,
     difficulty: mapSubjectDifficulty(detail.difficulty),
     progress: context?.progress ?? null,
-    imageUrl: detail.thumbnailUrl || null,
+    imageUrl: detail.imageUrl || detail.thumbnailUrl || null,
     courseLinks: context?.courseLinks ?? [],
     isMember: (context?.membership ?? null) !== null,
     membershipRole: context?.membership?.role ?? null,

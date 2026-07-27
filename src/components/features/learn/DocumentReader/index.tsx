@@ -25,12 +25,20 @@ export interface DocumentReaderProps {
     teaser: TeaserInfo | null
     /** BE access level — used to choose paywall copy. */
     accessLevel: string | null
+    /**
+     * BE lesson content-type ("VIDEO" | "DOCUMENT" | ...). This reader is only mounted
+     * for a DOCUMENT lesson, but the flag is threaded so the partial-blur teaser gate is
+     * explicit (blur belongs to DOCUMENT free-trial only, never VIDEO).
+     */
+    contentType: string
     /** Course slug for routing. */
     courseId: string
     /** Resolved course UUID (for package/product resolution). */
     courseRawId: string
     /** Human course title (modal header). */
     courseTitle: string
+    /** Course cover art (`course.imageHeader`) — branded into the package-gate modal; empty → lock-icon fallback. */
+    courseCoverUrl?: string
     /** Lesson id (route contentId). */
     lessonId: string
     /** Human lesson title (modal copy). */
@@ -55,9 +63,11 @@ export const DocumentReader = ({
     locked,
     teaser,
     accessLevel,
+    contentType,
     courseId,
     courseRawId,
     courseTitle,
+    courseCoverUrl,
     lessonId,
     lessonTitle,
     packageSlugs,
@@ -67,6 +77,14 @@ export const DocumentReader = ({
     const [gateOpen, setGateOpen] = useState(false)
 
     const isPreview = accessLevel === "PREVIEW"
+    /** Free-trial preview = a locked lesson served as a partial PREVIEW (the "học thử" state). */
+    const isTrialPreview = locked && isPreview
+    /**
+     * The partial-blur cover (bottom fade gradient + `select-none` on the article) is a
+     * DOCUMENT free-trial concept only. A fully-locked (no-trial) document still gets the
+     * hard paywall card below, but no blur; a VIDEO lesson never reaches this component.
+     */
+    const showDocumentPreviewTeaser = isTrialPreview && contentType === "DOCUMENT"
     const resourceLinks = bodyMd ? extractResourceLinks(bodyMd) : []
     const isLinkOnly = resourceLinks.length > 0
     const hasWrittenBody = !!bodyMd || !!documentHtml
@@ -89,7 +107,7 @@ export const DocumentReader = ({
                         <div className="relative">
                             <div
                                 id="lesson-article"
-                                className={cn("flex flex-col gap-4", locked && "select-none")}
+                                className={cn("flex flex-col gap-4", showDocumentPreviewTeaser && "select-none")}
                             >
                                 {isLinkOnly ? (
                                     <LessonResourceLinks urls={resourceLinks} />
@@ -110,7 +128,7 @@ export const DocumentReader = ({
                                 instead of markdown) leaves this container 0px tall, so an
                                 `absolute bottom-0 h-72` gradient spills UPWARD over the lesson
                                 title — a white veil across content that was never there. */}
-                            {locked && hasTeaserBody ? (
+                            {showDocumentPreviewTeaser && hasTeaserBody ? (
                                 <div className="pointer-events-none absolute inset-x-0 bottom-0 h-72 bg-gradient-to-b from-transparent via-surface/70 to-surface" />
                             ) : null}
                         </div>
@@ -130,6 +148,7 @@ export const DocumentReader = ({
                 courseId={courseId}
                 courseRawId={courseRawId}
                 courseTitle={courseTitle}
+                courseCoverUrl={courseCoverUrl}
                 lessonId={lessonId}
                 lessonTitle={lessonTitle}
                 packageSlugs={packageSlugs}

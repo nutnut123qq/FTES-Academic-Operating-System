@@ -36,7 +36,10 @@ export const LessonFullscreenButton = ({
             aria-label={isFullscreen ? t("exitFullscreen") : t("fullscreen")}
             onPress={onToggle}
             className={cn(
-                "absolute left-3 top-3 z-30 size-9 min-w-0 rounded-full border-none bg-black/55 text-white hover:bg-black/75",
+                // Bottom-right corner (like native player controls); top-right is taken
+                // by the preview-countdown chip. Shared by BOTH the YouTube embed and the
+                // self-hosted <video> player, so both get the control in the same place.
+                "absolute bottom-3 right-3 z-30 size-9 min-w-0 rounded-full border-none bg-black/55 text-white hover:bg-black/75",
                 className,
             )}
         >

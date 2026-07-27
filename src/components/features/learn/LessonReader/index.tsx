@@ -127,6 +127,32 @@ export const LessonReader = () => {
     const isLocked = lesson?.isLocked ?? false
     const accessLevel = lesson?.accessLevel ?? null
     const isPreview = accessLevel === "PREVIEW"
+    const contentType = lesson?.contentType ?? ""
+    /**
+     * Free-trial preview = a locked lesson the BE serves as a partial PREVIEW
+     * (accessLevel === "PREVIEW"), i.e. the "học thử" state where the first slice is
+     * shown and the rest is paywalled.
+     */
+    const isTrialPreview = isLocked && isPreview
+    /**
+     * The Medium-style partial-blur cover (bottom fade gradient + `select-none` on the
+     * article + the "You're viewing the preview / Subscribe to a package" teaser) is a
+     * DOCUMENT free-trial concept ONLY. A VIDEO lesson gates on its OWN preview-remaining
+     * clamp (the LessonVideoBlock countdown chip + lock overlay), so it must never also
+     * blur the article; a fully-locked no-trial lesson gets the hard paywall instead of
+     * the partial blur. User rule: "che mờ chỉ hiện ở loại document có mở cho học thử".
+     * (Note: the DOCUMENT case is routed to <DocumentReader/> above, so in THIS legacy
+     * reading-card path — reached only for non-DOCUMENT lessons — this is always false,
+     * which is exactly the fix: video/mixed lessons drop the article blur + teaser.)
+     */
+    const showDocumentPreviewTeaser = isTrialPreview && contentType === "DOCUMENT"
+    /**
+     * The hard paywall for a fully-locked (no-trial) lesson is a SEPARATE surface that
+     * stays as-is: it shows for a DOCUMENT trial-preview (kept) OR any fully-locked
+     * (accessLevel !== PREVIEW) lesson. In this legacy path only the fully-locked branch
+     * is reachable, so a video PREVIEW no longer renders the article teaser footer.
+     */
+    const showLegacyPaywall = showDocumentPreviewTeaser || (isLocked && !isPreview)
     /** A readable lesson whose reading card would be blank (no body, no HTML, no video). */
     const isReadingEmpty = !!lesson && !isLocked && !bodyMd && !lesson.documentHtml && !lesson.hasVideo
     /** External links when the body is essentially just link(s) → render as resource cards. */
@@ -315,6 +341,7 @@ export const LessonReader = () => {
                                     lessonId={contentId}
                                     courseRawId={lesson.courseRawId}
                                     courseTitle={lesson.courseTitle}
+                                    courseCoverUrl={lesson.courseCoverUrl}
                                     lessonTitle={lesson.title}
                                     packageSlugs={lesson.packageSlugs}
                                     videoRef={lesson.videoRef}
@@ -341,9 +368,11 @@ export const LessonReader = () => {
                                         locked={isLocked}
                                         teaser={lesson.teaser}
                                         accessLevel={accessLevel}
+                                        contentType={lesson.contentType}
                                         courseId={courseId}
                                         courseRawId={lesson.courseRawId}
                                         courseTitle={lesson.courseTitle}
+                                        courseCoverUrl={lesson.courseCoverUrl}
                                         lessonId={contentId}
                                         lessonTitle={lesson.title}
                                         packageSlugs={lesson.packageSlugs}
@@ -366,7 +395,7 @@ export const LessonReader = () => {
                                             {/* selection-hint only where there is real selectable text */}
                                             {!isLocked && hasWrittenBody && !isLinkOnly ? <SelectionHintCallout /> : null}
                                             <div className="relative">
-                                                <div id="lesson-article" className={cn("flex flex-col gap-4", isLocked && "select-none")}>
+                                                <div id="lesson-article" className={cn("flex flex-col gap-4", showDocumentPreviewTeaser && "select-none")}>
                                                     {isLinkOnly ? (
                                                         <LessonResourceLinks urls={resourceLinks} />
                                                     ) : bodyMd ? (
@@ -381,9 +410,12 @@ export const LessonReader = () => {
                                                         />
                                                     ) : null}
                                                 </div>
-                                                {/* Medium-style teaser fade behind the paywall — only
-                                                    when there is teaser text to fade (see `hasTeaserBody`). */}
-                                                {isLocked && hasTeaserBody ? (
+                                                {/* Medium-style teaser fade behind the paywall — ONLY for a
+                                                    DOCUMENT free-trial preview with teaser text to fade. A VIDEO
+                                                    (or fully-locked) lesson never gets this article blur — the
+                                                    video has its own preview clamp; `showDocumentPreviewTeaser`
+                                                    is false in this legacy (non-DOCUMENT) path. */}
+                                                {showDocumentPreviewTeaser && hasTeaserBody ? (
                                                     <div className="pointer-events-none absolute inset-x-0 bottom-0 h-72 bg-gradient-to-b from-transparent via-surface/70 to-surface" />
                                                 ) : null}
                                             </div>
@@ -391,7 +423,7 @@ export const LessonReader = () => {
                                             {!isLocked && !isReadingEmpty ? (
                                                 <LessonReactionFooter contentId={contentId} accessLevel={accessLevel} />
                                             ) : null}
-                                            {isLocked ? (
+                                            {showLegacyPaywall ? (
                                                 <div className="mt-6 flex flex-col items-start gap-3 border-t border-default pt-6">
                                                     <LockSimpleIcon aria-hidden focusable="false" className="size-8 text-accent" />
                                                     <Typography type="body" weight="semibold">
@@ -487,6 +519,7 @@ export const LessonReader = () => {
                     courseId={courseId}
                     courseRawId={lesson.courseRawId}
                     courseTitle={lesson.courseTitle}
+                    courseCoverUrl={lesson.courseCoverUrl}
                     lessonId={contentId}
                     lessonTitle={lesson.title}
                     packageSlugs={lesson.packageSlugs}

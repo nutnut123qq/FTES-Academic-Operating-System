@@ -181,6 +181,7 @@ export const ContentMap = ({ className }: ContentMapProps) => {
                                                         courseId={courseId}
                                                         courseRawId={course?.id}
                                                         courseTitle={course?.header.title ?? ""}
+                                                        courseCoverUrl={course?.header.coverUrl}
                                                         lesson={lesson}
                                                         isActive={lesson.id === contentId}
                                                         activeChallengeId={lesson.id === contentId ? challengeId : undefined}
@@ -206,6 +207,7 @@ const ContentMapLessonRow = ({
     courseId,
     courseRawId,
     courseTitle,
+    courseCoverUrl,
     lesson,
     isActive,
     activeChallengeId,
@@ -215,6 +217,8 @@ const ContentMapLessonRow = ({
     courseId: string
     courseRawId: string | undefined
     courseTitle: string
+    /** Course cover art — branded into the package-gate modal opened from a locked row. */
+    courseCoverUrl: string | undefined
     lesson: LearnLesson
     isActive: boolean
     /** The open challenge's routing id (slug or uuid) when this lesson is active, else undefined. */
@@ -320,6 +324,7 @@ const ContentMapLessonRow = ({
                     courseId={courseId}
                     courseRawId={courseRawId}
                     courseTitle={courseTitle}
+                    courseCoverUrl={courseCoverUrl}
                     lessonId={lesson.id}
                     lessonTitle={lesson.title}
                     packageSlugs={lesson.packageSlugs}

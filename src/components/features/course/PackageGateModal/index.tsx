@@ -12,6 +12,7 @@ import { usePostCheckoutSwr } from "@/hooks/swr/api/rest/mutations/usePostChecko
 import { usePaymentOverlayState } from "@/hooks/zustand/overlay/hooks"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
 import { useQueryCoursePackagesSwr } from "@/components/features/course/hooks/useQueryCoursePackagesSwr"
+import { CoverImage } from "@/components/blocks/media/CoverImage"
 import type { PackageView } from "@/modules/api/rest/course"
 import type { CheapestPackage } from "@/modules/api/rest/course"
 
@@ -27,6 +28,12 @@ export interface PackageGateModalProps {
     courseRawId: string
     /** Human course title shown in the modal header. */
     courseTitle: string
+    /**
+     * Course cover art (`course.imageHeader`) shown as a branded thumbnail in the modal
+     * header — e.g. the video preview-ended gate. Optional: when null/empty the header
+     * degrades to the lock-icon layout.
+     */
+    courseCoverUrl?: string
     /** Lesson id the gate is being opened for. */
     lessonId: string
     /** Optional lesson title for context-aware copy. */
@@ -58,6 +65,7 @@ export const PackageGateModal = ({
     onClose,
     courseRawId,
     courseTitle,
+    courseCoverUrl,
     lessonTitle,
     packageSlugs,
     cheapestPackage,
@@ -93,9 +101,19 @@ export const PackageGateModal = ({
                     <Modal.Dialog className={cn("w-full max-w-2xl")}>
                         <Modal.Header>
                             <div className="flex items-start gap-3">
-                                <div className="rounded-xl bg-accent/10 p-2 text-accent">
-                                    <LockSimpleIcon aria-hidden focusable="false" className="size-5" />
-                                </div>
+                                {/* Branded course cover when available (e.g. the video preview-ended
+                                    gate); degrade to the lock-icon badge when the BE omits an image. */}
+                                {courseCoverUrl ? (
+                                    <CoverImage
+                                        src={courseCoverUrl}
+                                        alt={courseTitle}
+                                        className="w-28 shrink-0"
+                                    />
+                                ) : (
+                                    <div className="rounded-xl bg-accent/10 p-2 text-accent">
+                                        <LockSimpleIcon aria-hidden focusable="false" className="size-5" />
+                                    </div>
+                                )}
                                 <div className="flex flex-col gap-1">
                                     <Typography type="body" weight="bold">
                                         {title}

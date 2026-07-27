@@ -155,6 +155,7 @@ const makeLesson = (over: Partial<LearnLessonView> = {}): LearnLessonView => ({
     moduleId: "m1",
     courseRawId: "uuid-a",
     courseTitle: "Khóa A",
+    courseCoverUrl: "",
     title: "Bài 1",
     description: "Mô tả",
     moduleTitle: "Học phần 1",
@@ -268,5 +269,50 @@ describe("LessonReader — bài DOCUMENT báo 'đã mở' để mark-complete kh
         })
         render(<LessonReader />)
         expect(reportProgress).not.toHaveBeenCalled()
+    })
+})
+
+describe("LessonReader — preview blur/teaser is DOCUMENT free-trial only", () => {
+    /** The teaser fade is the only bottom-gradient in this tree. */
+    const fadeCount = (container: HTMLElement) =>
+        container.querySelectorAll('[class*="bg-gradient-to-b"]').length
+
+    it("renders NO article fade + NO 'viewing the preview' teaser for a VIDEO free-trial preview", () => {
+        // A VIDEO lesson served as a PREVIEW (locked, accessLevel PREVIEW) with teaser text:
+        // the video has its own preview-remaining clamp, so the article must NOT blur/teaser.
+        lessonHook.mockReturnValue({
+            lesson: makeLesson({
+                contentType: "VIDEO",
+                isVideoLesson: true,
+                hasVideo: false,
+                isLocked: true,
+                accessLevel: "PREVIEW",
+                bodyByLang: { typescript: "Đoạn teaser của bài video." },
+            }),
+            error: undefined,
+            mutate: vi.fn(),
+        })
+        const { container } = render(<LessonReader />)
+        expect(fadeCount(container)).toBe(0)
+        expect(screen.queryByText("reader.previewTitle")).toBeNull()
+    })
+
+    it("still shows the hard paywall for a fully-locked (no-trial) VIDEO lesson", () => {
+        // Fully-locked (accessLevel NONE) keeps its separate hard paywall (lockedTitle).
+        lessonHook.mockReturnValue({
+            lesson: makeLesson({
+                contentType: "VIDEO",
+                isVideoLesson: true,
+                hasVideo: false,
+                isLocked: true,
+                accessLevel: "NONE",
+                bodyByLang: { typescript: "" },
+            }),
+            error: undefined,
+            mutate: vi.fn(),
+        })
+        render(<LessonReader />)
+        expect(screen.getByText("reader.lockedTitle")).toBeTruthy()
+        expect(screen.queryByText("reader.previewTitle")).toBeNull()
     })
 })

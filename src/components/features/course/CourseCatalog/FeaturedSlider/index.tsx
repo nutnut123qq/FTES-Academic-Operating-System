@@ -6,13 +6,13 @@ import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { useRouter } from "@/i18n/navigation"
 import { useQueryFeaturedCoursesSwr } from "../../hooks/useQueryFeaturedCoursesSwr"
+import { useCarousel } from "@/components/blocks/carousel/useCarousel"
 import { FeaturedSlide } from "./FeaturedSlide"
 import { FeaturedSliderSkeleton } from "./FeaturedSliderSkeleton"
-import { useCarousel } from "./useCarousel"
 
 /**
  * Featured-courses hero slider at the top of the course catalog (§4). Built on a
- * native CSS scroll-snap track + the local {@link useCarousel} hook — NO carousel
+ * native CSS scroll-snap track + the shared {@link useCarousel} hook — NO carousel
  * dependency (decision in openspec change `course-catalog-hero-slider`): swipe is
  * native, arrows/dots/autoplay drive `scrollTo`, autoplay pauses on hover /
  * focus-within / hidden tab and is disabled under `prefers-reduced-motion`.

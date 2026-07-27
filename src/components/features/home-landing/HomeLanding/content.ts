@@ -26,17 +26,27 @@ export const JOURNEY_STATIONS: ReadonlyArray<JourneyStation> = [
     { key: "outcome", payoff: true },
 ] as const
 
-/** A module-showcase card: i18n key + locale-aware target route. */
-export interface ModuleCard {
+/** A company achievement stat card: a language-neutral highlight value + i18n label. */
+export interface AchievementStat {
+    /** i18n key suffix under `homeLanding.achievements.items.<key>.label`. */
     key: string
-    href: string
+    /** Big highlight shown on the card (rank / percentage / count) — language-neutral. */
+    value: string
 }
 
-/** What's inside each journey stop — Workplace / Course / Cộng đồng. */
-export const MODULE_CARDS: ReadonlyArray<ModuleCard> = [
-    { key: "workplace", href: "/subjects" },
-    { key: "course", href: "/courses" },
-    { key: "community", href: "/community" },
+/**
+ * Real FTES company recognitions (legacy home "Thành tựu" + milestone slider): awards,
+ * competition placements and scholarships, each with a numeric headline. Deliberately
+ * distinct from the per-learner "Bảng vàng" ({@link ACHIEVERS}) and the live BE
+ * course/enrollment counters (PlatformStatsSection) — no figure is duplicated.
+ */
+export const ACHIEVEMENTS: ReadonlyArray<AchievementStat> = [
+    { key: "techfest", value: "Top 100" },
+    { key: "startupGiaLai", value: "Top 4" },
+    { key: "innovationQuest", value: "Top 30" },
+    { key: "knstgl", value: "Top 3" },
+    { key: "fptScholarship", value: "100%" },
+    { key: "aiAssistants", value: "5" },
 ] as const
 
 /** An AI-feature chip (static, always crawlable). i18n key under `stats.aiChips.*`. */
@@ -62,14 +72,59 @@ export const OFFER_GROUPS: ReadonlyArray<OfferGroup> = [
     { key: "trial", lineCount: 4 },
 ] as const
 
-/** The FTES founder — real person; copy (name/role/quote) lives in i18n `mentors.founder.*`. */
-export const FOUNDER = {
-    avatarUrl:
-        "https://cdn.jsdelivr.net/gh/ftesedu/funnycode-images-1755118228915@main/images/inbound3495336968961600058.jpg_1755149863087.jpg?v=1755149865389",
-    github: "https://github.com/khoa070104",
-    linkedin: "https://www.linkedin.com/in/khoana-dev/",
-    facebook: "https://www.facebook.com/khoaak71.vip",
-} as const
+/** A mentor testimonial — real FTES team members (legacy home mentor carousel). */
+export interface Testimonial {
+    /** i18n key suffix under `homeLanding.mentors.quotes.<key>.{name,role,quote}`. */
+    key: string
+    /** Portrait URL (legacy CDN). Falls back to initials on error. */
+    avatarUrl: string
+    /** Public FTES profile — rendered as the byline "view profile" link. */
+    profileUrl: string
+    github?: string
+    linkedin?: string
+    facebook?: string
+}
+
+/**
+ * Five real FTES mentors for the testimonial carousel — founder Nguyễn Anh Khoa first,
+ * then the rest of the team. Copy (name/role/quote) lives in i18n `mentors.quotes.*`;
+ * only URLs live here. Ngọc Hiếu's avatar is upgraded to https (the legacy source served
+ * it over http, which browsers block as mixed content → the Avatar shows initials).
+ */
+export const TESTIMONIALS: ReadonlyArray<Testimonial> = [
+    {
+        key: "khoa",
+        avatarUrl:
+            "https://cdn.jsdelivr.net/gh/ftesedu/funnycode-images-1755118228915@main/images/inbound3495336968961600058.jpg_1755149863087.jpg?v=1755149865389",
+        profileUrl: "https://ftes.vn/vi/profiles/detail/khoana71",
+        github: "https://github.com/khoa070104",
+        linkedin: "https://www.linkedin.com/in/khoana-dev/",
+        facebook: "https://www.facebook.com/khoaak71.vip",
+    },
+    {
+        key: "nhatHuy",
+        avatarUrl:
+            "https://cdn.jsdelivr.net/gh/ftesedu/funnycode-images-1757352873747@main/images/z7011459834968_c3b2808b021d68c3455b96b8f881c71f.jpg_1758015271900.jpg?v=1758015274883",
+        profileUrl: "https://ftes.vn/vi/profiles/detail/NhatHuyDev",
+    },
+    {
+        key: "ducHai",
+        avatarUrl:
+            "https://cdn.jsdelivr.net/gh/ftesedu/funnycode-images-1755118228915@main/images/NTC_7861.JPG_1755370693669.JPG?v=1755370696709",
+        profileUrl: "https://ftes.vn/vi/profiles/detail/haitthcs",
+    },
+    {
+        key: "ngocHieu",
+        avatarUrl: "https://res.cloudinary.com/dnt5cqzjy/image/upload/v1744559602/soewnzobl40pqextcipr.jpg",
+        profileUrl: "https://ftes.vn/vi/profiles/detail/ngochieu3165",
+    },
+    {
+        key: "thanhHuy",
+        avatarUrl:
+            "https://cdn.jsdelivr.net/gh/ftesedu/funnycode-images-1755118228915@main/images/avata_thanh_huy.jpg_1755134964229.jpg?v=1755134965957",
+        profileUrl: "https://ftes.vn/vi/profiles/detail/huybk",
+    },
+] as const
 
 /** An honored achiever — real FTES learners (legacy home "Bảng vàng"). */
 export interface Achiever {

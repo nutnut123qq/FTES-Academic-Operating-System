@@ -4051,6 +4051,30 @@
         }
       }
     },
+    "achievements": {
+      "eyebrow": "Achievements",
+      "title": "What we've achieved",
+      "items": {
+        "techfest": {
+          "label": "Outstanding startups · Techfest Vietnam 2025"
+        },
+        "startupGiaLai": {
+          "label": "Innovative Startup · Gia Lai 2025"
+        },
+        "innovationQuest": {
+          "label": "Innovation Quest 2025"
+        },
+        "knstgl": {
+          "label": "Gia Lai Startup & Innovation Contest"
+        },
+        "fptScholarship": {
+          "label": "FPT University startup scholarship"
+        },
+        "aiAssistants": {
+          "label": "AI assistants that support your learning"
+        }
+      }
+    },
     "offers": {
       "eyebrow": "What you get at FTES",
       "title": "Offers & policies",
@@ -4176,11 +4200,37 @@
     "mentors": {
       "eyebrow": "The people beside you",
       "title": "The FTES team",
-      "blog": "Read the blog",
-      "founder": {
-        "name": "Nguyễn Anh Khoa",
-        "role": "Founder & CEO @ FTES Education · CEO TEDO Technology",
-        "quote": "Students get hooked by my energy, experience and funny stories — and understand every lesson perfectly!!"
+      "viewProfile": "View profile",
+      "regionLabel": "FTES team testimonials",
+      "prev": "Previous testimonial",
+      "next": "Next testimonial",
+      "goToSlide": "Go to testimonial {index}",
+      "quotes": {
+        "khoa": {
+          "name": "Nguyễn Anh Khoa",
+          "role": "Founder & CEO @ FTES Education · CEO TEDO Technology",
+          "quote": "Students get hooked by my energy, experience and funny stories — and understand every lesson perfectly!!"
+        },
+        "nhatHuy": {
+          "name": "Nhật Huy",
+          "role": "Developer",
+          "quote": "I teach hands-on: theory kept short, focused on helping learners understand fast, build things right away, and apply them to real projects."
+        },
+        "ducHai": {
+          "name": "Đức Hải",
+          "role": "Co-Founder, CTO",
+          "quote": "I aim for a style that is both serious and relaxed: rock-solid knowledge, easy-to-follow explanations, with a bit of humor so class is always fun and never dry."
+        },
+        "ngocHieu": {
+          "name": "Ngọc Hiếu",
+          "role": "BrSE",
+          "quote": "I teach at a steady pace, making everything crystal clear as I go, sprinkling in Japanese culture and a few jokes so the class stays lively while the knowledge sinks in."
+        },
+        "thanhHuy": {
+          "name": "Thanh Huy",
+          "role": "Co-Founder, COO",
+          "quote": "I don't just teach knowledge — I pass on a passion and share honest experiences from my own learning journey, so every lesson unlocks the potential in you."
+        }
       }
     },
     "faq": {

@@ -90,4 +90,19 @@ describe("DocumentReader — locked teaser fade", () => {
         )
         expect(fadeCount(container)).toBe(0)
     })
+
+    it("strips clickable links from the DOCUMENT preview teaser (keeps text, drops URL)", () => {
+        // document-preview-admin-gate: a preview teaser must not carry clickable links — the visible
+        // text stays but the URL is removed so nothing is clickable while previewing.
+        const { container } = render(
+            <DocumentReader
+                {...props}
+                bodyMd={"Xem [tài liệu chính thức](https://secret.example.com/paid) và https://drive.example.com/x"}
+                locked
+            />,
+        )
+        expect(container.textContent).toContain("tài liệu chính thức")
+        expect(container.textContent).not.toContain("secret.example.com")
+        expect(container.textContent).not.toContain("drive.example.com")
+    })
 })

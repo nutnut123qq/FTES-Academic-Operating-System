@@ -9,6 +9,7 @@ import { mutate as globalMutate } from "swr"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { EmptyContent } from "@/components/blocks/async/EmptyContent"
 import { usePostMarkLessonCompleteSwr } from "@/hooks/swr/api/rest/mutations/usePostMarkLessonCompleteSwr"
+import { reportLessonProgress } from "@/modules/api/rest/course"
 import { PageHeader } from "@/components/blocks/layout/PageHeader"
 import { ResponsiveBreadcrumb } from "@/components/blocks/navigation/ResponsiveBreadcrumb"
 import type { ResponsiveBreadcrumbItem } from "@/components/blocks/navigation/ResponsiveBreadcrumb"
@@ -583,6 +584,29 @@ const LessonCompletion = ({
             setCompleted(true)
         }
     }, [isCompleted])
+
+    // Document lessons: tell the BE the lesson was OPENED, once, on mount.
+    //
+    // `POST /courses/lessons/{id}/complete` is rejected `409 COURSE_STATE_INVALID`
+    // ("Lesson must be opened before it can be marked complete") unless a `LessonProgress`
+    // row already exists — the BE's anti-cheat, so nobody can complete a lesson (and earn a
+    // certificate) without ever opening it. The ONLY writer of that row is
+    // `PUT /courses/lessons/{id}/progress`, which until now was called exclusively by
+    // `useWatchPositionReporter` — a VIDEO-only hook. Document/slide lessons therefore never
+    // had a progress row, so the exit-fire below ALWAYS 409'd and their completion never
+    // persisted (course progress stuck at 0%, verified against apitest 2026-07-27).
+    // A `watchedSeconds: 0` report is exactly the "opened" signal the BE guard asks for
+    // (it upserts the row as `IN_PROGRESS`; the value is monotonic so it never lowers a
+    // resume point). Fire-and-forget: a failure here just leaves the old 409 behaviour.
+    useEffect(() => {
+        if (hasVideo || isCompleted) {
+            return
+        }
+        void reportLessonProgress(contentId, {
+            watchedSeconds: 0,
+            videoDurationSeconds: null,
+        }).catch(() => {})
+    }, [hasVideo, isCompleted, contentId])
 
     // Document lessons: complete on exit. This instance is keyed on contentId, so the
     // cleanup runs when the learner navigates to another lesson / leaves the reader

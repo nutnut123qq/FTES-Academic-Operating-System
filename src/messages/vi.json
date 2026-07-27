@@ -605,7 +605,7 @@
       "cardProgress": "Thẻ {current}/{total}",
       "done": "Đã xem hết thẻ",
       "studyAgain": "Ôn lại",
-      "prompt": "Dựa trên nội dung bài học hiện tại, hãy tạo 8 thẻ ghi nhớ (flashcard) hỏi – đáp bằng tiếng Việt để tự kiểm tra. CHỈ trả về JSON hợp lệ là một mảng, mỗi phần tử có dạng {\"q\":\"câu hỏi\",\"a\":\"đáp án ngắn gọn\"}. Không thêm bất kỳ chữ nào ngoài JSON."
+      "prompt": "Dựa trên nội dung bài học hiện tại, hãy tạo 8 thẻ ghi nhớ (flashcard) hỏi – đáp bằng tiếng Việt để tự kiểm tra. CHỈ trả về JSON hợp lệ là một mảng, mỗi phần tử có dạng '{'\"q\":\"câu hỏi\",\"a\":\"đáp án ngắn gọn\"'}'. Không thêm bất kỳ chữ nào ngoài JSON."
     }
   },
   "contentActions": {
@@ -4601,8 +4601,8 @@
       "systemPrompt": "System prompt",
       "systemPromptPlaceholder": "Tùy chọn. Thiết lập vai trò và quy tắc cho mô hình.",
       "userTemplate": "Mẫu prompt người dùng",
-      "userTemplatePlaceholder": "Dùng {{input}} ở nơi cần chèn nội dung của từng test case.",
-      "templatePlaceholderHint": "Dùng placeholder {{input}} — nó sẽ được thay bằng nội dung của từng test case.",
+      "userTemplatePlaceholder": "Dùng '{{input}}' ở nơi cần chèn nội dung của từng test case.",
+      "templatePlaceholderHint": "Dùng placeholder '{{input}}' — nó sẽ được thay bằng nội dung của từng test case.",
       "submit": "Nộp để chấm",
       "submitting": "Đang nộp…",
       "grading": "Đang chấm…",

@@ -43,6 +43,12 @@ vi.mock("@/hooks/swr/api/rest/mutations/usePostMarkLessonCompleteSwr", () => ({
     usePostMarkLessonCompleteSwr: () => ({ trigger: vi.fn() }),
 }))
 
+/** `PUT /courses/lessons/{id}/progress` — the "lesson was opened" signal (case C). */
+const reportProgress = vi.fn((_lessonId: string, _request: unknown) => Promise.resolve({}))
+vi.mock("@/modules/api/rest/course", () => ({
+    reportLessonProgress: (lessonId: string, request: unknown) => reportProgress(lessonId, request),
+}))
+
 vi.mock("@heroui/react", () => ({
     Card: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
     CardContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -181,6 +187,7 @@ const makeLesson = (over: Partial<LearnLessonView> = {}): LearnLessonView => ({
 
 beforeEach(() => {
     lessonHook.mockReset()
+    reportProgress.mockClear()
 })
 
 describe("LessonReader — challenge tab + reaction footer wiring", () => {
@@ -217,5 +224,49 @@ describe("LessonReader — challenge tab + reaction footer wiring", () => {
         })
         render(<LessonReader />)
         expect(screen.queryByTestId("tabs")).toBeNull()
+    })
+})
+
+/**
+ * C. Bài DOCUMENT phải BÁO "đã mở" cho BE ngay khi mount.
+ *
+ * BE từ chối `POST /courses/lessons/{id}/complete` bằng `409 COURSE_STATE_INVALID`
+ * ("Lesson must be opened before it can be marked complete") khi chưa có bản ghi
+ * `LessonProgress`. Bản ghi đó CHỈ sinh ra từ `PUT /courses/lessons/{id}/progress`, mà trước
+ * đây chỉ có hook báo vị trí xem VIDEO gọi tới → mọi bài DOCUMENT hoàn thành xong đều bị 409
+ * và tiến độ khoá đứng yên ở 0%.
+ */
+describe("LessonReader — bài DOCUMENT báo 'đã mở' để mark-complete không bị 409", () => {
+    it("PUT tiến độ watchedSeconds=0 khi mở bài DOCUMENT chưa hoàn thành", () => {
+        lessonHook.mockReturnValue({
+            lesson: makeLesson({ contentType: "DOCUMENT", hasVideo: false, isCompleted: false }),
+            error: undefined,
+            mutate: vi.fn(),
+        })
+        render(<LessonReader />)
+        expect(reportProgress).toHaveBeenCalledWith("l1", {
+            watchedSeconds: 0,
+            videoDurationSeconds: null,
+        })
+    })
+
+    it("KHÔNG gọi khi bài đã hoàn thành (server seed) — không ghi đè gì thêm", () => {
+        lessonHook.mockReturnValue({
+            lesson: makeLesson({ contentType: "DOCUMENT", hasVideo: false, isCompleted: true }),
+            error: undefined,
+            mutate: vi.fn(),
+        })
+        render(<LessonReader />)
+        expect(reportProgress).not.toHaveBeenCalled()
+    })
+
+    it("KHÔNG gọi cho bài VIDEO — vị trí xem đã do useWatchPositionReporter báo", () => {
+        lessonHook.mockReturnValue({
+            lesson: makeLesson({ contentType: "VIDEO", isVideoLesson: true, hasVideo: true }),
+            error: undefined,
+            mutate: vi.fn(),
+        })
+        render(<LessonReader />)
+        expect(reportProgress).not.toHaveBeenCalled()
     })
 })

@@ -605,7 +605,7 @@
       "cardProgress": "Card {current}/{total}",
       "done": "You've reviewed all cards",
       "studyAgain": "Study again",
-      "prompt": "Based on the current lesson, generate 8 Q&A flashcards to test the learner, in the same language as the lesson. Return ONLY a valid JSON array where each item is {\"q\":\"question\",\"a\":\"short answer\"}. Do not add any text outside the JSON."
+      "prompt": "Based on the current lesson, generate 8 Q&A flashcards to test the learner, in the same language as the lesson. Return ONLY a valid JSON array where each item is '{'\"q\":\"question\",\"a\":\"short answer\"'}'. Do not add any text outside the JSON."
     }
   },
   "contentActions": {
@@ -4601,8 +4601,8 @@
       "systemPrompt": "System prompt",
       "systemPromptPlaceholder": "Optional. Set the model's role and rules.",
       "userTemplate": "User template",
-      "userTemplatePlaceholder": "Use {{input}} where each test case input should go.",
-      "templatePlaceholderHint": "Use the {{input}} placeholder — it is replaced with each test case input.",
+      "userTemplatePlaceholder": "Use '{{input}}' where each test case input should go.",
+      "templatePlaceholderHint": "Use the '{{input}}' placeholder — it is replaced with each test case input.",
       "submit": "Submit for grading",
       "submitting": "Submitting…",
       "grading": "Grading…",

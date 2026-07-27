@@ -162,8 +162,8 @@ export const LearnContentPage = () => {
                         <LearnNudges />
 
                         {/* the tool feature cards (mind-map / leaderboard / mock-interview /
-                            course-interview + subject Ôn tập/Hỏi đáp) moved OUT of the centre
-                            column into the right-side LearnToolsRail (owned by the layout). */}
+                            course-interview + subject Ôn tập/Hỏi đáp) live in the FAR-LEFT
+                            LearnToolsRail (column 1, owned by the layout), not the centre. */}
 
                         {/* about — the module→lesson tree lives in the LEFT content-map rail,
                             so the home body describes the course instead of repeating it. */}
@@ -175,7 +175,7 @@ export const LearnContentPage = () => {
                             </LabeledCard>
                         ) : null}
 
-                        {/* the tools live in the right-side LearnToolsRail on desktop; below
+                        {/* the tools live in the far-left LearnToolsRail on desktop; below
                             lg (no rail) surface them inline so mobile keeps the access. */}
                         <div className="rounded-3xl border border-default bg-surface lg:hidden">
                             <LearnToolsRail mobile />

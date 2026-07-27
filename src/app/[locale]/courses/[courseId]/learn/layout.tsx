@@ -81,13 +81,16 @@ const LearnLayout = ({ children }: PropsWithChildren) => {
         </ResizableRail>
     ) : undefined
 
-    // right rail: on-this-page outline on the lesson reader; the tools rail on the
-    // content dashboard (mind-map / leaderboard / interviews + subject Ôn tập/Hỏi đáp).
-    const rightRail = isLessonReader ? (
-        <OnThisPage />
-    ) : isContentDashboard ? (
-        <LearnToolsRail />
-    ) : undefined
+    // column 1 (far LEFT): the course-tools / nav rail on the content dashboard —
+    // the subject + learn tools (Sơ đồ tư duy / Bảng xếp hạng / Phỏng vấn + Ôn tập /
+    // Hỏi đáp …). StarCI keeps this menu on the LEFT (its persistent LearnSidebar),
+    // so it renders here as the far-left navRail, BEFORE the content-map — not dumped
+    // on the right where the features looked "pushed away" and the left menu vanished.
+    const navRail = isContentDashboard ? <LearnToolsRail /> : undefined
+
+    // right rail: on-this-page outline on the lesson reader ONLY. The content
+    // dashboard has no right rail now — its tools moved to the far-left navRail.
+    const rightRail = isLessonReader ? <OnThisPage /> : undefined
 
     return (
         <>
@@ -96,7 +99,7 @@ const LearnLayout = ({ children }: PropsWithChildren) => {
             <ContentAiFab />
             <ContentAiSelectionAsk />
             <ContentAiAnchoredChat />
-            <LearnShell leftRail={leftRail} rightRail={rightRail} fullBleed={isMindMap || isMockInterview || isInterview}>
+            <LearnShell navRail={navRail} leftRail={leftRail} rightRail={rightRail} fullBleed={isMindMap || isMockInterview || isInterview}>
                 {children}
             </LearnShell>
         </>

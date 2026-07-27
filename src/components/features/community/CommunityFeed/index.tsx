@@ -1,11 +1,13 @@
 "use client"
 
 import React, { useCallback, useEffect, useMemo, useState } from "react"
-import { Button, Skeleton, Typography, toast } from "@heroui/react"
+import { Button, Popover, Skeleton, Typography, cn, toast } from "@heroui/react"
+import { MagnifyingGlassIcon } from "@phosphor-icons/react"
 import { useLocale, useTranslations } from "next-intl"
 import { useAppSelector } from "@/redux/hooks"
 import { Link } from "@/i18n/navigation"
 import { FtesMascot } from "@/components/reuseable/FtesMascot"
+import { UserAvatar } from "@/components/reuseable/UserAvatar"
 import { UserLink, useQueryFollowedUserIdsSwr } from "@/components/features/identity"
 import { ThreadsPostRow } from "@/components/blocks/feed/ThreadsPostRow"
 import { PostMediaGrid } from "@/components/blocks/feed/PostMediaGrid"
@@ -39,17 +41,59 @@ import { useMutateReportContentSwr } from "../CommunityPostDetail/hooks/useMutat
 import { PostEditDialog } from "../CommunityPostDetail/PostEditDialog"
 import { useMutateFeedPostOwnerActionsSwr } from "./hooks/useMutateFeedPostOwnerActionsSwr"
 
-/** Composer trigger row — avatar + ghost "Có gì mới?" prompt + Đăng button. */
-const ComposerTrigger = () => {
+/** Props for {@link CommunityFeedHeader} — the search/filter state it relocates into the popover. */
+interface CommunityFeedHeaderProps {
+    query: string
+    onQueryChange: (query: string) => void
+    sort: CommunitySearchSort
+    onSortChange: (sort: CommunitySearchSort) => void
+    postType: string
+    onPostTypeChange: (postType: string) => void
+}
+
+/**
+ * Compact, Threads-style feed header on ONE row:
+ * `[current-user avatar] [ "Có gì mới?" → opens the composer ] [🔍 → search popover] [ Đăng ]`,
+ * with the feed's hairline divider under it (owned by the parent `divide-y`).
+ *
+ * The whole search + type-filter + sort cluster no longer sits always-visible in the feed — it is
+ * collapsed behind the magnifier, which opens the shared {@link CommunityFilterBar} inside a HeroUI
+ * {@link Popover} anchored under the icon. The popover is wired to the SAME search state/handlers
+ * the parent {@link CommunityFeed} owns (nothing about filtering changes — only where the controls
+ * live), and the icon carries a small accent dot whenever a keyword / type filter / non-default sort
+ * is applied so the collapsed state stays legible.
+ *
+ * The avatar is the CURRENT user's (Redux `user.user`, same source as the navbar account avatar via
+ * {@link UserAvatar}); it falls back to a generated/initials face for guests or when no avatar URL
+ * is set.
+ */
+const CommunityFeedHeader = ({
+    query,
+    onQueryChange,
+    sort,
+    onSortChange,
+    postType,
+    onPostTypeChange,
+}: CommunityFeedHeaderProps) => {
     const t = useTranslations("communityHub")
     const { open } = useCommunityComposerOverlayState()
+    const user = useAppSelector((state) => state.user.user)
+
+    // Filters are "applied" when a keyword, a post-type, or a non-default sort is set — drives the
+    // dot indicator + the a11y label so the collapsed magnifier still announces active filtering.
+    const filtersActive =
+        query.trim().length > 0 || postType !== "" || sort !== CommunitySearchSort.Newest
 
     return (
         <div className="flex items-center gap-3 px-4 py-3">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent/10 text-sm font-bold text-accent">
-                {t("engagement.you").slice(0, 1).toUpperCase()}
-            </div>
-            {/* the prompt is a real button; the Đăng button is a SIBLING (no nested interactive) */}
+            <UserAvatar
+                size="sm"
+                className="size-9 shrink-0"
+                username={user?.username}
+                avatar={user?.avatar}
+                seed={user?.email ?? user?.username}
+            />
+            {/* the prompt is a real button; the search + Đăng buttons are SIBLINGS (no nested interactive) */}
             <button
                 type="button"
                 className="min-w-0 flex-1 cursor-text text-left text-sm text-muted"
@@ -57,6 +101,40 @@ const ComposerTrigger = () => {
             >
                 {t("composer.whatsNew")}
             </button>
+            <Popover>
+                <Popover.Trigger>
+                    <Button
+                        isIconOnly
+                        size="sm"
+                        variant="ghost"
+                        className="shrink-0"
+                        aria-label={filtersActive ? t("search.openActive") : t("search.open")}
+                    >
+                        <span className="relative inline-flex">
+                            <MagnifyingGlassIcon aria-hidden focusable="false" className="size-5" />
+                            {filtersActive ? (
+                                <span
+                                    aria-hidden
+                                    className="absolute -right-0.5 -top-0.5 size-2 rounded-full bg-accent ring-2 ring-background"
+                                />
+                            ) : null}
+                        </span>
+                    </Button>
+                </Popover.Trigger>
+                <Popover.Content
+                    placement="bottom end"
+                    className={cn("w-[calc(100vw-2rem)] p-0 sm:w-[26rem]")}
+                >
+                    <CommunityFilterBar
+                        query={query}
+                        onQueryChange={onQueryChange}
+                        sort={sort}
+                        onSortChange={onSortChange}
+                        postType={postType}
+                        onPostTypeChange={onPostTypeChange}
+                    />
+                </Popover.Content>
+            </Popover>
             <Button size="sm" variant="secondary" className="shrink-0" onPress={open}>
                 {t("composer.submit")}
             </Button>
@@ -415,8 +493,7 @@ export const CommunityFeed = ({ tab = "forYou" }: { tab?: CommunityFeedTab } = {
 
     return (
         <div className="flex flex-col divide-y divide-separator">
-            <ComposerTrigger />
-            <CommunityFilterBar
+            <CommunityFeedHeader
                 query={query}
                 onQueryChange={setQuery}
                 sort={sort}

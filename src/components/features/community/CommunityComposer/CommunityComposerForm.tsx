@@ -8,6 +8,7 @@ import { useRouter } from "@/i18n/navigation"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
 import { PostImagePicker } from "@/components/blocks/feed/PostImagePicker"
 import { RichTextEditor } from "@/components/reuseable/RichTextEditor"
+import { splitTitleFromMarkdown } from "@/components/reuseable/RichTextEditor/title"
 import { createPost, sharePost } from "@/modules/api/rest/community"
 import type { MediaInput } from "@/modules/api/rest/community/types"
 import { QuotedPostCard } from "@/components/reuseable/QuotedPostCard"
@@ -31,21 +32,24 @@ const KIND_TO_POST_TYPE: Record<(typeof KINDS)[number], string> = {
 
 /** Props for {@link CommunityComposerForm}. */
 interface CommunityComposerFormProps {
-    /** Autofocus the title field (the modal surface wants it; the page doesn't). */
-    autoFocusTitle?: boolean
+    /** Autofocus the body editor (the modal surface wants it; the page doesn't). */
+    autoFocus?: boolean
     /** Called after a successful submit — the modal closes itself here. */
     onSubmitted?: () => void
 }
 
 /**
- * The community post form (kind chips + title + body + submit), shared by the
- * `/community/new` page and the composer modal. On submit it POSTs the draft via
- * the community REST API (`POST /community/posts`), then navigates to the created
+ * The community post form (kind chips + single body editor + submit), shared by
+ * the `/community/new` page and the composer modal. There is NO separate title
+ * field: the author writes everything in one {@link RichTextEditor} and marks a
+ * leading H1 for the title, which is DERIVED (and stripped from the body) on
+ * submit via {@link splitTitleFromMarkdown}. On submit it POSTs the draft via the
+ * community REST API (`POST /community/posts`), then navigates to the created
  * post and notifies the surface (the modal closes). Guests get the
  * `AuthenticationModal`; a failed write keeps the draft and shows a toast.
  */
 export const CommunityComposerForm = ({
-    autoFocusTitle = false,
+    autoFocus = false,
     onSubmitted,
 }: CommunityComposerFormProps) => {
     const t = useTranslations("communityHub")
@@ -56,7 +60,6 @@ export const CommunityComposerForm = ({
     // routes submit to `sharePost` instead of `createPost`.
     const { quote, setQuote } = useCommunityComposerOverlayState()
     const isQuote = Boolean(quote)
-    const [title, setTitle] = useState("")
     const [body, setBody] = useState("")
     const [kind, setKind] = useState<(typeof KINDS)[number]>("knowledge")
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -65,10 +68,11 @@ export const CommunityComposerForm = ({
     const [imagesResetToken, setImagesResetToken] = useState(0)
 
     // Submitting while an image is still uploading would publish the post without it.
-    // A repost needs no title/body (an empty repost is a plain share); a new post does.
+    // A repost needs no body (an empty repost is a plain share); a new post needs a
+    // non-empty editor (its leading H1 becomes the title, the rest is the content).
     const canSubmit = isQuote
         ? !isSubmitting
-        : title.trim() !== "" && body.trim() !== "" && !isSubmitting && !isUploading
+        : body.trim() !== "" && !isSubmitting && !isUploading
 
     const onImagesChange = useCallback((next: Array<MediaInput>) => setMedia(next), [])
     const onUploadingChange = useCallback((uploading: boolean) => setIsUploading(uploading), [])
@@ -93,15 +97,17 @@ export const CommunityComposerForm = ({
                 createdId = shared.id
                 setQuote(null)
             } else {
+                // Single editor: the leading H1 is the title (stripped from the body
+                // so the detail render never shows it twice); no H1 → first line.
+                const { title, body: content } = splitTitleFromMarkdown(body)
                 const created = await createPost({
                     postType: KIND_TO_POST_TYPE[kind],
-                    title: title.trim(),
-                    content: body.trim(),
+                    title,
+                    content,
                     media: media.length > 0 ? media : undefined,
                 })
                 createdId = created.id
             }
-            setTitle("")
             setBody("")
             setMedia([])
             setImagesResetToken((token) => token + 1)
@@ -121,8 +127,8 @@ export const CommunityComposerForm = ({
 
     return (
         <div className="flex flex-col gap-4">
-            {/* kind chips + title + image picker are for a NEW post only; a repost
-                embeds the quoted card and takes optional commentary instead. */}
+            {/* kind chips + image picker are for a NEW post only; a repost embeds the
+                quoted card and takes optional commentary instead. */}
             {!isQuote ? (
                 <div className="flex flex-wrap gap-2">
                     {KINDS.map((option) => (
@@ -137,16 +143,6 @@ export const CommunityComposerForm = ({
                         </button>
                     ))}
                 </div>
-            ) : null}
-
-            {!isQuote ? (
-                <input
-                    value={title}
-                    autoFocus={autoFocusTitle}
-                    onChange={(event) => setTitle(event.target.value)}
-                    placeholder={t("composer.titleField")}
-                    className="w-full rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted focus:border-accent"
-                />
             ) : null}
 
             {isQuote ? (
@@ -167,6 +163,7 @@ export const CommunityComposerForm = ({
                     toolbar="full"
                     placeholder={t("composer.bodyField")}
                     minHeight={160}
+                    autoFocus={autoFocus}
                 />
             )}
 

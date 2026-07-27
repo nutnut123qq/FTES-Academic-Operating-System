@@ -5283,7 +5283,6 @@
       "retry": "Thử lại",
       "likeFailed": "Không cập nhật được lượt thích. Vui lòng thử lại.",
       "compose": "Đăng bài thảo luận",
-      "titleField": "Tiêu đề",
       "bodyField": "Bạn muốn hỏi hoặc chia sẻ điều gì?",
       "createFailed": "Không đăng được bài. Vui lòng thử lại."
     },
@@ -6282,7 +6281,6 @@
       "commentUpdateFailed": "Không lưu được bình luận. Vui lòng thử lại.",
       "commentDeleteFailed": "Không xoá được bình luận. Vui lòng thử lại.",
       "editPostTitle": "Sửa bài viết",
-      "editTitleLabel": "Tiêu đề",
       "editContentLabel": "Nội dung (Markdown)",
       "editLoadFailed": "Không tải được nội dung bài viết để sửa. Vui lòng thử lại.",
       "postUpdated": "Đã cập nhật bài viết.",
@@ -6354,7 +6352,6 @@
     "composer": {
       "title": "Tạo bài viết",
       "whatsNew": "Có gì mới?",
-      "titleField": "Tiêu đề",
       "bodyField": "Bạn muốn chia sẻ điều gì?",
       "submit": "Đăng bài",
       "createFailed": "Không đăng được bài viết. Vui lòng thử lại.",
@@ -6573,7 +6570,6 @@
       "empty": "Chưa có thông báo nào.",
       "error": "Không tải được thông báo. Vui lòng thử lại.",
       "create": "Tạo thông báo",
-      "titleField": "Tiêu đề thông báo",
       "contentField": "Nội dung thông báo",
       "pinned": "Ghim lên đầu",
       "pinnedBadge": "Đã ghim",
@@ -6620,7 +6616,6 @@
       "error": "Không tải được bảng tin nhóm. Vui lòng thử lại.",
       "pin": "Ghim bài viết",
       "composer": {
-        "titleField": "Tiêu đề bài viết",
         "bodyField": "Chia sẻ điều gì đó với nhóm…",
         "submit": "Đăng bài",
         "created": "Đã đăng bài vào nhóm.",
@@ -7442,8 +7437,9 @@
     "blockquote": "Trích dẫn",
     "codeInline": "Code inline",
     "codeBlock": "Khối code",
-    "heading2": "Tiêu đề",
-    "heading3": "Tiêu đề phụ",
+    "heading1": "Tiêu đề",
+    "heading2": "Đề mục",
+    "heading3": "Đề mục phụ",
     "image": "Chèn ảnh",
     "imageAlt": "Ảnh"
   }

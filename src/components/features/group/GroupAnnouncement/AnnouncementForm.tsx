@@ -4,6 +4,10 @@ import React, { useCallback, useState } from "react"
 import { Button, Checkbox, Label } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { RichTextEditor } from "@/components/reuseable/RichTextEditor"
+import {
+    joinTitleIntoMarkdown,
+    splitTitleFromMarkdown,
+} from "@/components/reuseable/RichTextEditor/title"
 
 /** The editable shape of an announcement (create + edit share it). */
 export interface AnnouncementFormValues {
@@ -26,13 +30,12 @@ export interface AnnouncementFormProps {
     onCancel: () => void
 }
 
-/** Shared field styling — mirrors the hand-rolled inputs in the Discussion composer. */
-const FIELD_CLASS =
-    "w-full rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none placeholder:text-muted focus:border-accent"
-
 /**
- * Announcement composer/editor — title + content + "pin to top". Used both for the
- * owner's new-announcement composer and for the inline edit of an existing card, so
+ * Announcement composer/editor — a SINGLE body editor + "pin to top" (no separate
+ * title field). Used both for the owner's new-announcement composer and for the
+ * inline edit of an existing card. The stored `title` + `content` are re-joined
+ * into one Markdown value (title as a leading H1) so the author edits them
+ * together, then split back apart on save (the H1 stays out of the stored body);
  * a PATCH always round-trips `pinned` instead of dropping it.
  *
  * @param props - {@link AnnouncementFormProps}
@@ -45,12 +48,13 @@ export const AnnouncementForm = ({
     onCancel,
 }: AnnouncementFormProps) => {
     const t = useTranslations("groupsHub")
-    const [title, setTitle] = useState(initialValues?.title ?? "")
-    const [content, setContent] = useState(initialValues?.content ?? "")
+    const [draft, setDraft] = useState(() =>
+        joinTitleIntoMarkdown(initialValues?.title ?? "", initialValues?.content ?? ""),
+    )
     const [pinned, setPinned] = useState(initialValues?.pinned ?? false)
     const [isSubmitting, setIsSubmitting] = useState(false)
 
-    const isValid = title.trim() !== "" && content.trim() !== ""
+    const isValid = draft.trim() !== ""
     const pinnedId = `announcement-pinned-${formId}`
 
     const submit = useCallback(async () => {
@@ -58,31 +62,20 @@ export const AnnouncementForm = ({
             return
         }
         setIsSubmitting(true)
-        const saved = await onSubmit({
-            title: title.trim(),
-            content: content.trim(),
-            pinned,
-        })
+        const { title, body: content } = splitTitleFromMarkdown(draft)
+        const saved = await onSubmit({ title, content, pinned })
         setIsSubmitting(false)
         if (saved && initialValues == null) {
-            setTitle("")
-            setContent("")
+            setDraft("")
             setPinned(false)
         }
-    }, [content, initialValues, isSubmitting, isValid, onSubmit, pinned, title])
+    }, [draft, initialValues, isSubmitting, isValid, onSubmit, pinned])
 
     return (
         <div className="flex flex-col gap-3 rounded-2xl border border-separator p-4">
-            <input
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                placeholder={t("announcements.titleField")}
-                aria-label={t("announcements.titleField")}
-                className={FIELD_CLASS}
-            />
             <RichTextEditor
-                value={content}
-                onChange={setContent}
+                value={draft}
+                onChange={setDraft}
                 toolbar="full"
                 placeholder={t("announcements.contentField")}
                 ariaLabel={t("announcements.contentField")}

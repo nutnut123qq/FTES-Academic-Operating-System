@@ -7,6 +7,7 @@ import { useSWRConfig } from "swr"
 import { RestError } from "@/modules/api/rest/client"
 import { createPost } from "@/modules/api/rest/community"
 import { RichTextEditor } from "@/components/reuseable/RichTextEditor"
+import { splitTitleFromMarkdown } from "@/components/reuseable/RichTextEditor/title"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
 import { matchesGroupFeedKey } from "../hooks/useQueryGroupFeedSwr"
 
@@ -21,8 +22,9 @@ interface GroupFeedComposerProps {
  *
  * A group post is a community post scoped to the group, so this POSTs
  * `/community/posts` with `groupId` — the same write the community composer uses,
- * kept deliberately minimal here (title + body, no repost/quote/poll) because the
- * group feed card only renders the title + counters. The BE rejects a non-member
+ * kept deliberately minimal here (a single body editor, no repost/quote/poll). As
+ * in the community composer there is NO separate title field: the leading H1 is the
+ * title, derived and stripped from the body on submit. The BE rejects a non-member
  * with 403 (`PostService` checks `groupMembership.isMember`), which is surfaced as a
  * "join first" message rather than a generic failure.
  *
@@ -33,11 +35,10 @@ export const GroupFeedComposer = ({ groupId }: GroupFeedComposerProps) => {
     const t = useTranslations("groupsHub")
     const { mutate } = useSWRConfig()
     const { requireAuth } = useRequireAuth()
-    const [title, setTitle] = useState("")
     const [body, setBody] = useState("")
     const [isSubmitting, setIsSubmitting] = useState(false)
 
-    const canSubmit = title.trim() !== "" && body.trim() !== "" && !isSubmitting
+    const canSubmit = body.trim() !== "" && !isSubmitting
 
     const onSubmit = useCallback(async () => {
         if (!canSubmit) {
@@ -48,13 +49,14 @@ export const GroupFeedComposer = ({ groupId }: GroupFeedComposerProps) => {
         }
         setIsSubmitting(true)
         try {
+            // Single editor: leading H1 → title (stripped from the stored body).
+            const { title, body: content } = splitTitleFromMarkdown(body)
             await createPost({
                 postType: "DISCUSSION",
-                title: title.trim(),
-                content: body.trim(),
+                title,
+                content,
                 groupId,
             })
-            setTitle("")
             setBody("")
             toast.success(t("feed.composer.created"))
             // The write is the sole success signal — a failed feed refetch afterwards
@@ -72,17 +74,10 @@ export const GroupFeedComposer = ({ groupId }: GroupFeedComposerProps) => {
         } finally {
             setIsSubmitting(false)
         }
-    }, [body, canSubmit, groupId, mutate, requireAuth, t, title])
+    }, [body, canSubmit, groupId, mutate, requireAuth, t])
 
     return (
         <div className="flex flex-col gap-2 rounded-2xl border border-separator p-4">
-            <input
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                placeholder={t("feed.composer.titleField")}
-                disabled={isSubmitting}
-                className="w-full rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted focus:border-accent disabled:opacity-60"
-            />
             <RichTextEditor
                 value={body}
                 onChange={setBody}

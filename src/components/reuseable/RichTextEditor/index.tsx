@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useRef } from "react"
 import { Button, cn } from "@heroui/react"
 import { useTranslations } from "next-intl"
-import { useEditor, EditorContent, type Editor } from "@tiptap/react"
+import { useEditor, EditorContent } from "@tiptap/react"
 import {
     Code as CodeIcon,
     CodeBlock as CodeBlockIcon,
@@ -13,6 +13,7 @@ import {
     ListNumbers as OrderedListIcon,
     Quotes as BlockquoteIcon,
     TextB as BoldIcon,
+    TextHOne as HeadingOneIcon,
     TextHTwo as HeadingTwoIcon,
     TextHThree as HeadingThreeIcon,
     TextItalic as ItalicIcon,
@@ -41,8 +42,8 @@ export interface RichTextEditorProps extends WithClassNames<undefined> {
     minHeight?: number
     /**
      * `"comment"` — inline formatting only (bold/italic/underline/strike/link/
-     * lists/quote/code). `"full"` — adds H2/H3 headings and an image button.
-     * Defaults to `"comment"`.
+     * lists/quote/code). `"full"` — adds H1/H2/H3 headings (H1 is the post-title
+     * affordance) and an image button. Defaults to `"comment"`.
      */
     toolbar?: RichTextToolbar
     /**
@@ -209,6 +210,12 @@ export const RichTextEditor = ({
                 {isFull
                     ? (
                         <>
+                            {toolbarButton(
+                                t("heading1"),
+                                <HeadingOneIcon aria-hidden focusable="false" className="size-4" />,
+                                () => editor.chain().focus().toggleHeading({ level: 1 }).run(),
+                                editor.isActive("heading", { level: 1 }),
+                            )}
                             {toolbarButton(
                                 t("heading2"),
                                 <HeadingTwoIcon aria-hidden focusable="false" className="size-4" />,

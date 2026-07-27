@@ -39,8 +39,10 @@ export interface BuildEditorExtensionsOptions {
     /** Placeholder shown when the editor is empty. */
     placeholder?: string
     /**
-     * Enable the H2/H3 heading levels (the "full" body toolbar). Comment-scope
-     * editors pass `false` so headings never leak into a short comment.
+     * Enable the H1/H2/H3 heading levels (the "full" body toolbar). H1 is the
+     * title affordance for the single-editor composers (the leading H1 becomes
+     * the post title). Comment-scope editors pass `false` so headings never leak
+     * into a short comment.
      */
     headings?: boolean
 }
@@ -59,7 +61,7 @@ export const buildEditorExtensions = ({
     placeholder = "",
     headings = false,
 }: BuildEditorExtensionsOptions = {}): Extensions => [
-    StarterKit.configure({ heading: headings ? { levels: [2, 3] } : false }),
+    StarterKit.configure({ heading: headings ? { levels: [1, 2, 3] } : false }),
     TiptapLink.configure({ openOnClick: false }),
     Underline,
     Placeholder.configure({ placeholder }),

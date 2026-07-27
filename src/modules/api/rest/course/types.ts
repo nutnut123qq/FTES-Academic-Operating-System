@@ -135,6 +135,13 @@ export interface LessonChallengeSummary {
     type: string
     /** Lifecycle status (`PUBLISHED` | `RUNNING` | `CLOSED`). */
     status: string
+    /**
+     * True when this challenge is playable for trial/non-purchase learners on a lesson
+     * they can already access at FULL (the "video free + challenge free" study-trial
+     * model, mirroring the lesson/assignment free flag). Additive — older BE builds omit
+     * it, so consumers coerce `?? false` (a missing flag means a gated, non-free challenge).
+     */
+    free?: boolean
 }
 
 /** One course-module assignment attached to a lesson, as listed in {@link LessonView.assignments}. */

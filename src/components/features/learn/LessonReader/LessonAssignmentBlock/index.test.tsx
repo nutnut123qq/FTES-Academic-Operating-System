@@ -258,6 +258,20 @@ describe("LessonAssignmentBlock", () => {
         expect(submissionsMutate).toHaveBeenCalled()
     })
 
+    it("resets the file input value after a pick so the same file can be re-selected", () => {
+        assignmentsMock.mockReturnValue({ data: [assignment({ submissionMethod: "FILE", fileExtension: ".py" })] })
+        render(<LessonAssignmentBlock lessonId="les-1" />)
+
+        const input = screen.getByLabelText("exercises.assignment.fileLabel") as HTMLInputElement
+        const file = new File(["print(1)"], "solution.py", { type: "text/x-python" })
+        fireEvent.change(input, { target: { files: [file] } })
+
+        // The picked name is surfaced (state holds the File), but the <input> value is
+        // cleared — so re-picking the SAME file on a resubmission fires a fresh change.
+        expect(screen.getByText("solution.py")).toBeTruthy()
+        expect(input.value).toBe("")
+    })
+
     it("rejects a file outside the extension whitelist and never fires the request", () => {
         assignmentsMock.mockReturnValue({ data: [assignment({ submissionMethod: "FILE", fileExtension: "py, zip" })] })
         render(<LessonAssignmentBlock lessonId="les-1" />)

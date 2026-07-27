@@ -255,15 +255,21 @@ const AssignmentCard = ({ assignment }: { assignment: AssignmentView }) => {
                         ? t("exercises.assignment.fileHint", { extensions: acceptExtensions.join(", ") })
                         : t("exercises.assignment.fileHintAny")}
                 </Typography>
-                <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept={acceptExtensions.length > 0 ? acceptExtensions.join(",") : undefined}
-                    className="hidden"
-                    aria-label={t("exercises.assignment.fileLabel")}
-                    onChange={(event) => selectFile(event.target.files?.[0])}
-                />
             </button>
+            {/* Kept OUTSIDE the button — an <input> nested in a <button> is invalid HTML
+                (interactive-in-interactive). Reset value after each pick so re-selecting
+                the SAME file (the normal resubmission flow) fires a fresh change event. */}
+            <input
+                ref={fileInputRef}
+                type="file"
+                accept={acceptExtensions.length > 0 ? acceptExtensions.join(",") : undefined}
+                className="hidden"
+                aria-label={t("exercises.assignment.fileLabel")}
+                onChange={(event) => {
+                    selectFile(event.target.files?.[0])
+                    event.target.value = ""
+                }}
+            />
 
             {fileError ? (
                 <div className="flex items-center gap-2 rounded-2xl border border-danger/40 bg-danger/5 px-4 py-3">

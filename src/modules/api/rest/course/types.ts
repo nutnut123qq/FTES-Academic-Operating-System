@@ -102,11 +102,45 @@ export interface LessonView {
      * True when an ACTIVE (PUBLISHED/RUNNING) challenge is linked to this lesson.
      * Served by the CourseReadApi curriculum, so it is present for EVERY lesson —
      * including VIDEO lessons that carry no `/content` markdown row (whose content
-     * endpoint 404s). Additive, defaults false.
+     * endpoint 404s). Additive, defaults false. Kept scalar for back-compat with
+     * consumers that only need "does this lesson have a challenge"; the full set is
+     * in {@link challenges}.
      */
     hasChallenge?: boolean
     /** Id of the linked ACTIVE challenge (present when `hasChallenge`). Additive. */
     challengeId?: string | null
+    /**
+     * ALL active (PUBLISHED/RUNNING) challenges attached to this lesson — NOT collapsed
+     * to one, so a lesson carrying several exercises lists them all. Additive (BE change
+     * per-lesson-exercises-in-curriculum); absent on older deployments → treat as empty.
+     * The FE nests these as indented child rows under the lesson and routes each to its
+     * per-type solver by {@link LessonChallengeSummary.type}.
+     */
+    challenges?: Array<LessonChallengeSummary>
+    /**
+     * The lesson's course-module assignments (legacy exercises: GitHub-URL / file
+     * submission + AI rubric). Additive; absent on older deployments → empty. Nested as
+     * indented child rows alongside {@link challenges}.
+     */
+    assignments?: Array<LessonAssignmentSummary>
+}
+
+/** One active challenge attached to a lesson, as listed in {@link LessonView.challenges}. */
+export interface LessonChallengeSummary {
+    id: string
+    title: string
+    /** URL-friendly id the solver route keys on (detail endpoint keys on slug, not uuid). */
+    slug: string
+    /** BE challenge type (either vocabulary — `MULTIPLE_CHOICE`/`CODE`/`ESSAY` or `CODING`/`SQL`/`UI_UX`/…). */
+    type: string
+    /** Lifecycle status (`PUBLISHED` | `RUNNING` | `CLOSED`). */
+    status: string
+}
+
+/** One course-module assignment attached to a lesson, as listed in {@link LessonView.assignments}. */
+export interface LessonAssignmentSummary {
+    id: string
+    title: string
 }
 
 /** Query params for the public catalog list `GET /api/v1/courses`. */

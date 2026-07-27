@@ -18,11 +18,26 @@ import { useRouter } from "@/i18n/navigation"
 import { mutate as globalMutate } from "swr"
 import { PackageGateModal } from "@/components/features/course/PackageGateModal"
 import { useQueryLearnCourseSwr } from "../hooks/useQueryLearnCourseSwr"
-import type { LearnLesson } from "../hooks/useQueryLearnCourseSwr"
+import type { LearnExercise, LearnLesson } from "../hooks/useQueryLearnCourseSwr"
+import { exerciseSolverIcon, normalizeExerciseType } from "../exerciseType"
 
 /** Build the reader route for a lesson id shaped "m<n>-l<k>". */
 const lessonHref = (courseId: string, lessonId: string) =>
     `/courses/${courseId}/learn/content/modules/${lessonId.split("-")[0]}/contents/${lessonId}`
+
+/** Build the per-lesson challenge solver route from the REAL ids (slug the detail keys on). */
+const challengeSolverHref = (courseId: string, lessonId: string, slug: string) =>
+    `${lessonHref(courseId, lessonId)}/challenges/${slug}`
+
+/**
+ * Where an exercise child row navigates: a challenge opens its solver route; an
+ * assignment opens the lesson reader, where {@link LessonAssignmentBlock} renders the
+ * GitHub-URL / file submission surface inline.
+ */
+const exerciseHref = (courseId: string, lessonId: string, exercise: LearnExercise): string =>
+    exercise.kind === "challenge"
+        ? challengeSolverHref(courseId, lessonId, exercise.slug ?? exercise.id)
+        : lessonHref(courseId, lessonId)
 
 /** Props for {@link ContentMap}. */
 export interface ContentMapProps {
@@ -39,7 +54,11 @@ export interface ContentMapProps {
 export const ContentMap = ({ className }: ContentMapProps) => {
     const t = useTranslations("learn")
     const router = useRouter()
-    const { courseId, contentId } = useParams<{ courseId: string; contentId?: string }>()
+    const { courseId, contentId, challengeId } = useParams<{
+        courseId: string
+        contentId?: string
+        challengeId?: string
+    }>()
     const { course, modules, header, error, mutate } = useQueryLearnCourseSwr(courseId)
 
     const [query, setQuery] = useState("")
@@ -164,6 +183,7 @@ export const ContentMap = ({ className }: ContentMapProps) => {
                                                         courseTitle={course?.header.title ?? ""}
                                                         lesson={lesson}
                                                         isActive={lesson.id === contentId}
+                                                        activeChallengeId={lesson.id === contentId ? challengeId : undefined}
                                                         onOpen={() => openLesson(lesson.id)}
                                                         lockedLabel={t("content.premium")}
                                                     />
@@ -188,6 +208,7 @@ const ContentMapLessonRow = ({
     courseTitle,
     lesson,
     isActive,
+    activeChallengeId,
     onOpen,
     lockedLabel,
 }: {
@@ -196,10 +217,13 @@ const ContentMapLessonRow = ({
     courseTitle: string
     lesson: LearnLesson
     isActive: boolean
+    /** The open challenge's routing id (slug or uuid) when this lesson is active, else undefined. */
+    activeChallengeId: string | undefined
     onOpen: () => void
     lockedLabel: string
 }) => {
     const t = useTranslations("learn")
+    const router = useRouter()
     const [gateOpen, setGateOpen] = useState(false)
 
     const accessLevel = lesson.accessLevel
@@ -213,6 +237,16 @@ const ContentMapLessonRow = ({
             return
         }
         onOpen()
+    }
+
+    // A locked (NONE-access) lesson gates its child exercises too — open the same
+    // package gate rather than routing into a solver the viewer can't reach.
+    const openExercise = (exercise: LearnExercise) => {
+        if (isFullyLocked) {
+            setGateOpen(true)
+            return
+        }
+        router.push(exerciseHref(courseId, lesson.id, exercise))
     }
 
     return (
@@ -260,6 +294,25 @@ const ContentMapLessonRow = ({
                     </Typography>
                 )}
             </button>
+            {/* nested exercises — one indent level below the lesson, each routed to its
+                per-type solver; a locked lesson gates them behind the same paywall */}
+            {lesson.exercises.length > 0 ? (
+                <div className="ml-3 flex flex-col gap-1 border-l border-default pl-2">
+                    {lesson.exercises.map((exercise) => (
+                        <ContentMapExerciseRow
+                            key={`${exercise.kind}-${exercise.id}`}
+                            exercise={exercise}
+                            isActive={
+                                exercise.kind === "challenge"
+                                && activeChallengeId !== undefined
+                                && (exercise.slug === activeChallengeId || exercise.id === activeChallengeId)
+                            }
+                            isLocked={isFullyLocked}
+                            onOpen={() => openExercise(exercise)}
+                        />
+                    ))}
+                </div>
+            ) : null}
             {courseRawId && isFullyLocked ? (
                 <PackageGateModal
                     isOpen={gateOpen}
@@ -275,6 +328,46 @@ const ContentMapLessonRow = ({
                 />
             ) : null}
         </>
+    )
+}
+
+/**
+ * One nested exercise child row (a challenge or assignment) under a lesson. A tick
+ * smaller/quieter than the lesson row: a per-type solver icon + the title, tinted
+ * when its solver is the active route. A locked parent shows the lock glyph and the
+ * click bubbles up to the shared package gate (never routes into a gated solver).
+ */
+const ContentMapExerciseRow = ({
+    exercise,
+    isActive,
+    isLocked,
+    onOpen,
+}: {
+    exercise: LearnExercise
+    isActive: boolean
+    isLocked: boolean
+    onOpen: () => void
+}) => {
+    const Icon = isLocked ? LockSimpleIcon : exerciseSolverIcon(normalizeExerciseType(exercise.type))
+    return (
+        <button
+            type="button"
+            onClick={onOpen}
+            aria-current={isActive ? "page" : undefined}
+            className={cn(
+                "flex w-full items-center gap-2 rounded-xl px-2 py-1.5 text-left transition-colors",
+                isActive ? "bg-accent/10 text-accent" : "hover:bg-default/60",
+            )}
+        >
+            <Icon
+                aria-hidden
+                focusable="false"
+                className={cn("size-4 shrink-0", isActive ? "text-accent" : "text-muted")}
+            />
+            <Typography type="body-xs" weight="medium" className="min-w-0 flex-1 line-clamp-2">
+                {exercise.title}
+            </Typography>
+        </button>
     )
 }
 

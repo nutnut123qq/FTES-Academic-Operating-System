@@ -81,12 +81,14 @@ const LearnLayout = ({ children }: PropsWithChildren) => {
         </ResizableRail>
     ) : undefined
 
-    // column 1 (far LEFT): the course-tools / nav rail on the content dashboard —
-    // the subject + learn tools (Sơ đồ tư duy / Bảng xếp hạng / Phỏng vấn + Ôn tập /
-    // Hỏi đáp …). StarCI keeps this menu on the LEFT (its persistent LearnSidebar),
-    // so it renders here as the far-left navRail, BEFORE the content-map — not dumped
-    // on the right where the features looked "pushed away" and the left menu vanished.
-    const navRail = isContentDashboard ? <LearnToolsRail /> : undefined
+    // column 1 (far LEFT): the course-tools / nav rail — the subject + learn tools
+    // (Sơ đồ tư duy / Bảng xếp hạng / Phỏng vấn + Ôn tập / Hỏi đáp …). StarCI keeps
+    // this menu on the LEFT (its persistent LearnSidebar), so it renders here as the
+    // far-left navRail, BEFORE the content-map. Shown on BOTH the content dashboard
+    // AND the lesson reader so cross-section navigation stays reachable while reading
+    // a lesson (it's a CollapsibleSidebar — collapses to a thin icon rail + persists,
+    // so it never crowds the reading column).
+    const navRail = isContentDashboard || isLessonReader ? <LearnToolsRail /> : undefined
 
     // right rail: on-this-page outline on the lesson reader ONLY. The content
     // dashboard has no right rail now — its tools moved to the far-left navRail.

@@ -7364,7 +7364,9 @@
       "qa": "Hỏi đáp",
       "playground": "Playground",
       "personalProject": "Dự án cá nhân",
-      "lockedAria": "tính năng cần đăng ký khóa học"
+      "lockedAria": "tính năng cần đăng ký khóa học",
+      "collapseRail": "Thu gọn menu công cụ",
+      "expandRail": "Mở rộng menu công cụ"
     }
   },
   "adminConsole": {

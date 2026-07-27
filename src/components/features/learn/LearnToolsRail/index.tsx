@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
-import { Label, Link, ScrollShadow, Typography, cn } from "@heroui/react"
+import { Link, Typography, cn } from "@heroui/react"
 import {
     ChatCircleTextIcon,
     CodeIcon,
@@ -20,11 +20,18 @@ import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
 import { useRouter } from "@/i18n/navigation"
 import { PackageGateModal } from "@/components/features/course/PackageGateModal"
+import { CollapsibleSidebar } from "@/components/blocks/navigation/CollapsibleSidebar"
+import { useSidebarCollapsed } from "@/components/blocks/navigation/CollapsibleSidebar/context"
+import { SidebarNavGroup } from "@/components/blocks/navigation/SidebarNavGroup"
+import { SidebarNavItem } from "@/components/blocks/navigation/SidebarNavItem"
 import { useQueryLearnCourseSwr } from "../hooks/useQueryLearnCourseSwr"
 
 /** Build the reader route for a lesson id shaped "m<n>-l<k>" (mirrors ContentMap). */
 const lessonHref = (courseId: string, lessonId: string) =>
     `/courses/${courseId}/learn/content/modules/${lessonId.split("-")[0]}/contents/${lessonId}`
+
+/** Persisted-collapse storage key for the desktop tools rail (survives nav + reloads). */
+const TOOLS_RAIL_STORAGE_KEY = "ftes.learn.toolsRail.collapsed"
 
 /** Props for {@link LearnToolsRail}. */
 export interface LearnToolsRailProps {
@@ -45,31 +52,90 @@ interface ToolRow {
     /** Target route for a navigable row (ignored when {@link locked}). */
     href: string
     /**
-     * Locked feature with no working FTES route yet (Playground / Dự án cá nhân):
-     * the row shows a lock marker and, on press, opens the whole-course buy flow
-     * instead of navigating.
+     * Locked feature: the row shows a lock marker and, on press, opens the
+     * whole-course buy flow instead of navigating. Playground / personal project
+     * are always locked (no FTES route yet); Mock interview / Interview are locked
+     * only while the viewer lacks full course access (rule
+     * premium-unlock-is-enroll-not-vip).
      */
     locked?: boolean
 }
 
 /**
- * The FAR-LEFT course-menu / tools rail for the learn CONTENT DASHBOARD (column 1,
- * the StarCI `LearnSidebar` slot). Opens with the course-menu header ("Mục lục khoá
- * học") and a highlighted "Tiếp tục" resume card (next unread lesson + N/total
- * progress), then the grouped tool links: the learn tools (mind map, leaderboard,
- * mock interview, course interview) and — below — the subject shortcuts routed by the
- * course's linked `subjectCode` (exposed on the learn-course header): "Học liệu / Ôn
- * tập" (→ workspace resources), "Flashcard / Luyện tập" (→ workspace practice),
- * "Không gian môn học" (→ workspace overview), "Hỏi đáp" (→ subject discussion), and
- * two LOCKED upsells (Playground, Dự án cá nhân) that have no working FTES route yet —
- * pressing one opens the whole-course buy flow.
+ * The "Tiếp tục" resume affordance, collapse-aware. Expanded → a highlighted card
+ * (next unread lesson title + N/total progress); collapsed (icon rail) → just the
+ * {@link PlayCircleIcon} tile. Lives INSIDE {@link CollapsibleSidebar} so it can read
+ * the collapsed context; outside a sidebar (mobile panel) the context defaults to
+ * expanded, so the full card renders.
+ */
+const ResumeRow = ({
+    lessonTitle,
+    progressLabel,
+    ariaLabel,
+    onPress,
+}: {
+    lessonTitle: string
+    progressLabel: string
+    ariaLabel: string
+    onPress: () => void
+}) => {
+    const collapsed = useSidebarCollapsed()
+    if (collapsed) {
+        return (
+            <Link
+                onPress={onPress}
+                aria-label={ariaLabel}
+                className="mx-auto flex size-9 cursor-pointer items-center justify-center rounded-large bg-accent/10 text-accent no-underline transition-colors hover:bg-accent/15"
+            >
+                <PlayCircleIcon aria-hidden focusable="false" className="size-5" />
+            </Link>
+        )
+    }
+    return (
+        <Link
+            onPress={onPress}
+            aria-label={ariaLabel}
+            className={cn(
+                "flex w-full min-w-0 max-w-full cursor-pointer items-center gap-2 overflow-hidden rounded-large bg-accent/10 px-3 py-2",
+                "no-underline transition-colors hover:bg-accent/15",
+            )}
+        >
+            <PlayCircleIcon aria-hidden focusable="false" className="size-5 shrink-0 text-accent" />
+            <span className="flex min-w-0 flex-1 flex-col overflow-hidden">
+                <Typography type="body-xs" className="min-w-0 text-accent" truncate>
+                    {progressLabel}
+                </Typography>
+                <Typography type="body-sm" className="min-w-0 text-foreground" truncate title={lessonTitle}>
+                    {lessonTitle}
+                </Typography>
+            </span>
+        </Link>
+    )
+}
+
+/**
+ * The FAR-LEFT course-menu / tools rail for the learn CONTENT surfaces (column 1,
+ * the StarCI `LearnSidebar` slot) — shown on BOTH the content dashboard and the
+ * lesson reader so cross-section navigation (Mind map, Leaderboard, Materials, Q&A,
+ * …) stays reachable while reading/watching a lesson. Opens with the course-menu
+ * header ("Mục lục khoá học") and a highlighted "Tiếp tục" resume card (next unread
+ * lesson + N/total progress), then the grouped tool links: the learn tools (mind
+ * map, leaderboard, mock interview, course interview) and — below — the subject
+ * shortcuts routed by the course's linked `subjectCode`: "Học liệu / Ôn tập", "Flashcard
+ * / Luyện tập", "Không gian môn học", "Hỏi đáp", and two LOCKED upsells (Playground,
+ * Dự án cá nhân). When the course has no linked subject the whole subject group is
+ * omitted.
  *
- * When the course has no linked subject the whole subject group is omitted.
+ * Locked rows show a lock marker and, on press, open the whole-course buy flow
+ * instead of navigating. Playground / personal project are always locked; Mock
+ * interview / Interview lock only while the viewer lacks FULL course access
+ * (`access.fullAccess` — bought, free-owned, or otherwise entitled).
  *
- * Lives on the LEFT (before the content-map) so the course menu reads where StarCI
- * puts it — not pushed to the far right. Sticky under the navbar on desktop; hidden
- * below `lg` (the dashboard surfaces it inline via {@link
- * import("../LearnContentPage").LearnContentPage}).
+ * On desktop the rail is a {@link CollapsibleSidebar}: it collapses to a thin icon
+ * rail and persists that choice to `localStorage` (key {@link TOOLS_RAIL_STORAGE_KEY})
+ * so it survives navigation between the overview + lesson pages and reloads. Sticky
+ * under the navbar, hidden below `lg` (the dashboard surfaces it inline via {@link
+ * import("../LearnContentPage").LearnContentPage} with `mobile`).
  *
  * @param props - {@link LearnToolsRailProps}
  */
@@ -78,9 +144,14 @@ export const LearnToolsRail = ({ className, mobile = false }: LearnToolsRailProp
     const tContent = useTranslations("learn.content")
     const router = useRouter()
     const { courseId } = useParams<{ courseId: string }>()
-    const { header, course, modules } = useQueryLearnCourseSwr(courseId)
+    const { header, course, modules, access } = useQueryLearnCourseSwr(courseId)
     const subjectCode = header?.subjectCode ?? null
     const courseRawId = course?.id ?? ""
+    // Full course access (bought / free-owned / otherwise entitled). Guests and
+    // not-yet-purchased viewers get `false`, which LOCKS the interview tools (mock
+    // interview + course interview) behind the whole-course buy flow — mirroring the
+    // playground / personal-project locks (rule premium-unlock-is-enroll-not-vip).
+    const hasFullAccess = access?.fullAccess ?? false
 
     // resume card data — next unread lesson + overall N/total, computed from the same
     // learn tree the content-map reads (so the pill matches the map's progress header).
@@ -101,8 +172,8 @@ export const LearnToolsRail = ({ className, mobile = false }: LearnToolsRailProp
     const tools: Array<ToolRow> = [
         { key: "mind-map", icon: <TreeStructureIcon className="size-5" aria-hidden focusable="false" />, label: t("mindMap"), href: `${learnBase}/mind-map` },
         { key: "leaderboard", icon: <TrophyIcon className="size-5" aria-hidden focusable="false" />, label: t("leaderboard"), href: `${learnBase}/leaderboard` },
-        { key: "mock-interview", icon: <MicrophoneStageIcon className="size-5" aria-hidden focusable="false" />, label: t("mockInterview"), href: `${learnBase}/mock-interview` },
-        { key: "interview", icon: <CardsThreeIcon className="size-5" aria-hidden focusable="false" />, label: t("interview"), href: `${learnBase}/interview` },
+        { key: "mock-interview", icon: <MicrophoneStageIcon className="size-5" aria-hidden focusable="false" />, label: t("mockInterview"), href: `${learnBase}/mock-interview`, locked: !hasFullAccess },
+        { key: "interview", icon: <CardsThreeIcon className="size-5" aria-hidden focusable="false" />, label: t("interview"), href: `${learnBase}/interview`, locked: !hasFullAccess },
     ]
 
     const subjectTools: Array<ToolRow> = subjectCode
@@ -116,108 +187,96 @@ export const LearnToolsRail = ({ className, mobile = false }: LearnToolsRailProp
         ]
         : []
 
-    const renderRow = (row: ToolRow) => (
-        <Link
+    const renderNavItem = (row: ToolRow) => (
+        <SidebarNavItem
             key={row.key}
+            icon={<span className="text-accent">{row.icon}</span>}
+            label={row.label}
+            ariaLabel={row.locked ? `${row.label} — ${t("lockedAria")}` : undefined}
+            endContent={
+                row.locked ? (
+                    <LockSimpleIcon className="size-4 shrink-0 text-muted" aria-hidden focusable="false" />
+                ) : undefined
+            }
             onPress={() => (row.locked ? setLockedRowLabel(row.label) : router.push(row.href))}
-            aria-label={row.locked ? `${row.label} — ${t("lockedAria")}` : undefined}
-            className={cn(
-                "flex cursor-pointer items-center gap-2 rounded-xl px-2 py-1.5 text-sm text-muted no-underline transition-colors hover:bg-default/40 hover:text-foreground",
-            )}
-        >
-            <span className="text-accent">{row.icon}</span>
-            <span className="min-w-0 flex-1 truncate">{row.label}</span>
-            {row.locked ? (
-                <LockSimpleIcon
-                    className="size-4 shrink-0 text-muted"
-                    aria-hidden
-                    focusable="false"
-                />
-            ) : null}
-        </Link>
+        />
     )
 
-    // the course-menu header ("Mục lục khoá học") + the resume pill, pinned at the
-    // TOP of the rail (mirrors StarCI's LearnSidebar title + ResumeRail top slot).
-    const menuHeader = (
-        <div className="flex flex-col gap-3">
-            <Typography type="body-sm" weight="semibold" className="text-foreground">
-                {t("menuTitle")}
-            </Typography>
-            {continueLesson ? (
-                <Link
-                    onPress={() => router.push(lessonHref(courseId, continueLesson.id))}
-                    aria-label={`${tContent("continue")} · ${continueLesson.title}`}
-                    className={cn(
-                        "flex w-full min-w-0 max-w-full cursor-pointer items-center gap-2 overflow-hidden rounded-large bg-accent/10 px-3 py-2",
-                        "no-underline transition-colors hover:bg-accent/15",
-                    )}
-                >
-                    <PlayCircleIcon aria-hidden focusable="false" className="size-5 shrink-0 text-accent" />
-                    <span className="flex min-w-0 flex-1 flex-col overflow-hidden">
-                        <Typography type="body-xs" className="min-w-0 text-accent" truncate>
-                            {`${tContent("continue")} · ${doneCount}/${totalCount}`}
-                        </Typography>
-                        <Typography type="body-sm" className="min-w-0 text-foreground" truncate title={continueLesson.title}>
-                            {continueLesson.title}
-                        </Typography>
-                    </span>
-                </Link>
-            ) : null}
-        </div>
-    )
-
-    const sections = (
+    // shared body — the resume row + the grouped tool links. Reused by the desktop
+    // CollapsibleSidebar and the mobile inline panel (the rows collapse to icon-only
+    // only inside the sidebar; the mobile panel always renders full labels).
+    const body = (
         <>
-            {menuHeader}
-            <nav className="flex flex-col gap-2">
-                <Label>{t("title")}</Label>
-                <div className="flex flex-col gap-1">{tools.map(renderRow)}</div>
-            </nav>
-            {subjectTools.length > 0 ? (
-                <nav className="flex flex-col gap-2">
-                    <Label>{t("subjectTitle")}</Label>
-                    <div className="flex flex-col gap-1">{subjectTools.map(renderRow)}</div>
-                </nav>
-            ) : null}
-            {/* whole-course buy flow for the locked rows: an empty `packageSlugs`
-                falls through to the WholeCourseGateCard (COURSE_UNLOCK) inside the
-                gate modal. Mounted only once the course UUID resolves. */}
-            {courseRawId ? (
-                <PackageGateModal
-                    isOpen={lockedRowLabel !== null}
-                    onClose={() => setLockedRowLabel(null)}
-                    courseId={courseId}
-                    courseRawId={courseRawId}
-                    courseTitle={header?.title ?? ""}
-                    lessonId=""
-                    lessonTitle={lockedRowLabel ?? ""}
-                    packageSlugs={[]}
-                    context="document"
+            {continueLesson ? (
+                <ResumeRow
+                    lessonTitle={continueLesson.title}
+                    progressLabel={`${tContent("continue")} · ${doneCount}/${totalCount}`}
+                    ariaLabel={`${tContent("continue")} · ${continueLesson.title}`}
+                    onPress={() => router.push(lessonHref(courseId, continueLesson.id))}
                 />
+            ) : null}
+            <SidebarNavGroup label={t("title")}>{tools.map(renderNavItem)}</SidebarNavGroup>
+            {subjectTools.length > 0 ? (
+                <SidebarNavGroup label={t("subjectTitle")} divider>
+                    {subjectTools.map(renderNavItem)}
+                </SidebarNavGroup>
             ) : null}
         </>
     )
 
-    // mobile: a plain full-width panel for the inline dashboard block (no sticky chrome)
+    // whole-course buy flow for the locked rows: an empty `packageSlugs` falls
+    // through to the WholeCourseGateCard (COURSE_UNLOCK) inside the gate modal.
+    // Mounted only once the course UUID resolves.
+    const gate = courseRawId ? (
+        <PackageGateModal
+            isOpen={lockedRowLabel !== null}
+            onClose={() => setLockedRowLabel(null)}
+            courseId={courseId}
+            courseRawId={courseRawId}
+            courseTitle={header?.title ?? ""}
+            lessonId=""
+            lessonTitle={lockedRowLabel ?? ""}
+            packageSlugs={[]}
+            context="document"
+        />
+    ) : null
+
+    // mobile: a plain full-width panel for the inline dashboard block (no sticky /
+    // collapse chrome). The menu header renders here since there's no sidebar header.
     if (mobile) {
-        return <div className={cn("flex flex-col gap-6 p-6", className)}>{sections}</div>
+        return (
+            <div className={cn("flex flex-col gap-4 p-6", className)}>
+                <Typography type="body-sm" weight="semibold" className="text-foreground">
+                    {t("menuTitle")}
+                </Typography>
+                <div className="flex flex-col gap-3">{body}</div>
+                {gate}
+            </div>
+        )
     }
 
-    // desktop column 1 — far-left rail: sticky under the 4rem navbar, viewport-tall,
-    // a bordered flex column (its right border divides it from the content-map in
-    // column 2). Scrolls only the body. Hidden below lg (mobile uses the inline block).
+    // desktop column 1 — far-left rail: a CollapsibleSidebar (owns the border, the
+    // 16rem↔4rem width animation, the collapse toggle + persisted state, and the
+    // scrolling body). A sticky, viewport-tall wrapper pins it under the 4rem navbar.
+    // Hidden below lg (mobile uses the inline block).
     return (
-        <aside
+        <div
             className={cn(
-                "relative hidden w-64 shrink-0 lg:sticky lg:top-16 lg:flex lg:h-[calc(100dvh-4rem)] lg:flex-col lg:self-start lg:border-r lg:border-default",
+                "relative hidden shrink-0 lg:sticky lg:top-16 lg:flex lg:h-[calc(100dvh-4rem)] lg:self-start",
                 className,
             )}
         >
-            <ScrollShadow hideScrollBar className="min-h-0 flex-1 overflow-y-auto">
-                <div className="flex flex-col gap-6 p-4">{sections}</div>
-            </ScrollShadow>
-        </aside>
+            <CollapsibleSidebar
+                title={t("menuTitle")}
+                collapseLabel={t("collapseRail")}
+                expandLabel={t("expandRail")}
+                storageKey={TOOLS_RAIL_STORAGE_KEY}
+                className="h-full"
+            >
+                {body}
+            </CollapsibleSidebar>
+            {gate}
+        </div>
     )
 }
 

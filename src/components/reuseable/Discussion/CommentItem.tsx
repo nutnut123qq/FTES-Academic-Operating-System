@@ -8,6 +8,7 @@ import type { CommentNode } from "@/modules/api/graphql/queries/types/discussion
 import type { ReactionType } from "@/modules/api/graphql/queries/types"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 import { UserLink } from "@/components/features/identity"
+import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
 import { CommentComposer } from "./CommentComposer"
 import { ReactionBar } from "./ReactionBar"
 
@@ -124,9 +125,7 @@ export const CommentItem = ({
                             }}
                         />
                     ) : (
-                        <div className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
-                            {comment.body}
-                        </div>
+                        <MarkdownContent markdown={comment.body} />
                     )}
 
                     {/* action row: reactions + reply + owner edit/delete */}

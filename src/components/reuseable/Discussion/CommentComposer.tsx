@@ -1,9 +1,10 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { Button, TextArea, TextField, cn } from "@heroui/react"
+import { Button, cn } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { UserAvatar } from "../UserAvatar"
+import { RichTextEditor } from "@/components/reuseable/RichTextEditor"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 
 /** Props for {@link CommentComposer}. */
@@ -126,16 +127,14 @@ export const CommentComposer = ({
 
     const form = (
         <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <TextField variant="primary" className="w-full">
-                <TextArea
-                    rows={3}
-                    value={body}
-                    onChange={(event) => setBody(event.target.value)}
-                    placeholder={resolvedPlaceholder}
-                    className="resize-none"
-                    autoFocus={collapsible}
-                />
-            </TextField>
+            <RichTextEditor
+                value={body}
+                onChange={setBody}
+                toolbar="comment"
+                placeholder={resolvedPlaceholder}
+                ariaLabel={resolvedPlaceholder}
+                autoFocus={collapsible}
+            />
             <div className="flex items-center justify-start gap-2">
                 <Button
                     size="sm"

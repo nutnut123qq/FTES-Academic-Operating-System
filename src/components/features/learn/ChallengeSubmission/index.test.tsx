@@ -108,7 +108,16 @@ vi.mock("@/components/features/learn/hooks/useQueryChallengeSubmissionSwr", () =
 // UiUxChallengeEditor. Stub both so the test asserts the dispatch, not their
 // (heavy: Judge0/AI/Monaco) internals.
 vi.mock("@/components/features/challenge/ChallengeView/GradeCodePanel", () => ({
-    GradeCodePanel: () => <div>grade-code-panel</div>,
+    // Exposes onCodeChange so the test can drive the lifted code state the formal
+    // submission posts (the real panel owns a Judge0/AI editor we don't exercise here).
+    GradeCodePanel: ({ onCodeChange }: { onCodeChange?: (code: string) => void }) => (
+        <div>
+            grade-code-panel
+            <button type="button" onClick={() => onCodeChange?.("print(1)")}>
+                set-code
+            </button>
+        </div>
+    ),
 }))
 vi.mock("@/components/features/challenge/ChallengeView/UiUxChallengeEditor", () => ({
     UiUxChallengeEditor: () => <div>uiux-editor</div>,
@@ -207,7 +216,7 @@ describe("ChallengeSubmission — access gate", () => {
         await waitFor(() => expect(submissionMutate).toHaveBeenCalled())
     })
 
-    it("dispatches a CODE challenge to the GradeCodePanel (not the submission form)", () => {
+    it("dispatches a CODE challenge to the GradeCodePanel AND restores the formal CODE submission", async () => {
         queryMock.mockReturnValue({
             challenge: { ...mcqChallenge, type: "CODE", mcqQuestions: [] },
             submissions: [],
@@ -215,12 +224,24 @@ describe("ChallengeSubmission — access gate", () => {
             error: undefined,
             mutate: submissionMutate,
         })
+        submitTrigger.mockResolvedValue({ id: "sub-1" })
         render(<ChallengeSubmission />)
 
-        // CODE/CODING/SQL route to the AI code-grading panel; the submission form
-        // (submit button / code textarea) is not rendered for code challenges.
+        // CODE/CODING/SQL render the AI code-grading panel for editing + practice...
         expect(screen.getByText("grade-code-panel")).toBeTruthy()
-        expect(screen.queryByText("exercises.challenge.submit")).toBeNull()
+
+        // ...but the formal submission path is preserved: the shared code state feeds a
+        // real {payloadType:'CODE', code, language} submission via "Nộp bài".
+        fireEvent.click(screen.getByText("set-code"))
+        fireEvent.click(screen.getByText("exercises.challenge.submit"))
+
+        await waitFor(() =>
+            expect(submitTrigger).toHaveBeenCalledWith({
+                id: "ch-1",
+                request: { payloadType: "CODE", code: "print(1)", language: "python" },
+            }),
+        )
+        await waitFor(() => expect(submissionMutate).toHaveBeenCalled())
     })
 
     it("dispatches an unmapped (e.g. UI_UX without a target asset) challenge to the coming-soon panel", () => {

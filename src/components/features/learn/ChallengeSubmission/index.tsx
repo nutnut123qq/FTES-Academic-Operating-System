@@ -97,15 +97,21 @@ export const ChallengeSubmission = () => {
     const runRest = useRestWithToast()
     const submit = usePostSubmitChallengeSwr()
 
-    // MCQ selections (questionId → option keys) + the ESSAY body. CODE/UI-UX are
-    // handled by their own dedicated solvers (GradeCodePanel / UiUxChallengeEditor).
+    // MCQ selections (questionId → option keys) + the ESSAY body. CODE lifts its
+    // editor state here so the GradeCodePanel (AI practice) and the formal "Nộp bài"
+    // submission share one source; UI-UX keeps its own dedicated solver.
     const [answers, setAnswers] = useState<Record<string, Array<string>>>({})
     const [essayText, setEssayText] = useState("")
+    const [code, setCode] = useState("")
+    /** Learner-picked language; null → derive the default from the challenge type. */
+    const [languageOverride, setLanguageOverride] = useState<string | null>(null)
 
     const type = challenge?.type ?? ""
     /** Unified solver kind — the single dispatch key across both BE type vocabularies. */
     const kind = normalizeExerciseType(type)
     const detail = useMemo(() => (challenge ? toChallengeDetail(challenge) : null), [challenge])
+    // SQL grades static-only (no language pick); everything else defaults to python.
+    const language = languageOverride ?? (detail?.type === "sql" ? "sql" : "python")
     const usedCount = submissions.length
     const reachedMax = challenge ? usedCount >= challenge.maxSubmissions : false
     // newest attempt first
@@ -164,7 +170,7 @@ export const ChallengeSubmission = () => {
         })
     }
 
-    /** Builds the MCQ/ESSAY submit body, or null when the input is incomplete. */
+    /** Builds the MCQ/ESSAY/CODE submit body, or null when the input is incomplete. */
     const buildRequest = (): SubmitRequest | null => {
         if (kind === "mcq") {
             const answered = Object.values(answers).some((keys) => keys.length > 0)
@@ -178,6 +184,12 @@ export const ChallengeSubmission = () => {
                 return null
             }
             return { payloadType: "ESSAY", essayText: essayText.trim() }
+        }
+        if (kind === "code") {
+            if (code.trim() === "") {
+                return null
+            }
+            return { payloadType: "CODE", code, language: language.trim() || "text" }
         }
         return null
     }
@@ -285,10 +297,70 @@ export const ChallengeSubmission = () => {
                         ) : null}
 
                         {/* per-type solver dispatch — one normalizer key routes to the
-                            matching existing solver (code/UI-UX get their dedicated
-                            surfaces; MCQ/ESSAY keep the submission form + attempts). */}
+                            matching existing solver. CODE gets the GradeCodePanel (AI
+                            practice) PLUS the formal submission (chip + Nộp bài + attempts);
+                            UI-UX gets its dedicated editor; MCQ/ESSAY keep the form. */}
                         {kind === "code" && detail ? (
-                            <GradeCodePanel challenge={detail} />
+                            <>
+                                <section className="flex flex-col gap-4">
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                        <div className="flex items-center gap-2">
+                                            <PuzzlePieceIcon aria-hidden focusable="false" className="size-5 text-accent" />
+                                            <Typography type="body" weight="semibold">
+                                                {t("exercises.challenge.submitTitle")}
+                                            </Typography>
+                                        </div>
+                                        <Chip size="sm" variant="soft" className="shrink-0">
+                                            {t("exercises.challenge.submissionsCount", {
+                                                used: usedCount,
+                                                max: challenge.maxSubmissions,
+                                            })}
+                                        </Chip>
+                                    </div>
+
+                                    {/* AI code-editing / feedback surface; its code + language
+                                        are lifted so the formal submission below posts the same
+                                        source (payloadType CODE). */}
+                                    <GradeCodePanel
+                                        challenge={detail}
+                                        code={code}
+                                        language={language}
+                                        onCodeChange={setCode}
+                                        onLanguageChange={setLanguageOverride}
+                                    />
+
+                                    {reachedMax ? (
+                                        <div className="flex items-center gap-2 rounded-2xl border border-default bg-default/40 p-4">
+                                            <LockSimpleIcon aria-hidden focusable="false" className="size-5 shrink-0 text-muted" />
+                                            <Typography type="body-sm" color="muted">
+                                                {t("exercises.challenge.maxReached", { max: challenge.maxSubmissions })}
+                                            </Typography>
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            <Button
+                                                variant="primary"
+                                                isPending={submit.isMutating}
+                                                isDisabled={!canSubmit}
+                                                onPress={() => void handleSubmit()}
+                                            >
+                                                {t(submit.isMutating ? "exercises.challenge.submitting" : "exercises.challenge.submit")}
+                                            </Button>
+                                        </div>
+                                    )}
+                                </section>
+
+                                {history.length > 0 ? (
+                                    <section className="flex flex-col gap-3">
+                                        <Typography type="body" weight="semibold">
+                                            {t("exercises.challenge.historyTitle")}
+                                        </Typography>
+                                        {history.map((attempt) => (
+                                            <AttemptRow key={attempt.id} attempt={attempt} locale={locale} />
+                                        ))}
+                                    </section>
+                                ) : null}
+                            </>
                         ) : kind === "uiux" ? (
                             detail?.targetImageUrl ? (
                                 <UiUxChallengeEditor challenge={detail} />

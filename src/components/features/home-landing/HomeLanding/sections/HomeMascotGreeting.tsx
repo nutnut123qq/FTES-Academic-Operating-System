@@ -6,9 +6,10 @@ import { useAppSelector } from "@/redux/hooks"
 import { MascotBubble } from "@/components/reuseable/FtesMascot"
 
 /**
- * FrosTES's welcome at the top of the landing hero — a compact, persistent
- * greeting bubble (pose `greeting`). Signed-in viewers get a "welcome back,
- * {name}" line; guests get an invitation to explore.
+ * FrosTES's welcome inside the landing hero — a compact, persistent greeting
+ * bubble (pose `greeting`) sitting BELOW the hero stepper (not at the page top),
+ * so it reads as an intentional sign-off rather than a dominant banner. Signed-in
+ * viewers get a "welcome back, {name}" line; guests get an invitation to explore.
  *
  * Deliberately NON-nagging: it is ambient hero chrome, not a moment — it never
  * blocks content, so it shows on every visit with no dismiss and no
@@ -36,7 +37,7 @@ export const HomeMascotGreeting = () => {
     return (
         <MascotBubble
             pose="greeting"
-            size="md"
+            size="sm"
             announce={false}
             title={isSignedIn ? welcomeTitle : t("guestTitle")}
             className="w-full max-w-md"

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import type { FocusEvent } from "react"
 import { useMediaQuery } from "usehooks-ts"
 
-/** Autoplay interval between slide advances (ms). */
+/** Default autoplay interval between slide advances (ms). */
 export const AUTOPLAY_INTERVAL_MS = 3_000
 
 /**
@@ -12,21 +12,27 @@ export const AUTOPLAY_INTERVAL_MS = 3_000
  * decision logged in the change's design.md). The track is a `snap-x snap-mandatory`
  * flex row of full-width `snap-center` slides; swipe/momentum is native. This hook
  * adds: the active index (derived from scroll position), programmatic navigation
- * (`scrollToIndex` / `next` / `prev`, wrapping at both ends), and a 3s autoplay that
+ * (`scrollToIndex` / `next` / `prev`, wrapping at both ends), and an autoplay that
  * pauses on hover, focus-within and document-hidden — and is disabled entirely under
  * `prefers-reduced-motion` or with fewer than 2 slides (reduced motion also makes
  * programmatic scrolls instant instead of smooth).
  *
- * Slides may be full-track-width (hero) or fixed-width cards (category shelves) —
- * the active index is derived from the child offset nearest the scroll position,
- * so both work. Pass `{ autoplay: false }` for manual-only tracks (shelves never
- * auto-advance; only the hero autoplays).
+ * Slides may be full-track-width (hero / testimonial) or fixed-width cards (category
+ * shelves) — the active index is derived from the child offset nearest the scroll
+ * position, so both work. Pass `{ autoplay: false }` for manual-only tracks (shelves
+ * never auto-advance) and `{ intervalMs }` to tune the auto-advance cadence
+ * (defaults to {@link AUTOPLAY_INTERVAL_MS}; e.g. slower for text testimonials).
+ *
+ * Shared block primitive (tier: blocks) — consumed by the course catalog hero
+ * slider, category shelves and the home-landing testimonial carousel.
  *
  * @param slideCount - Number of slides currently in the track.
- * @param options - Optional behaviour flags (`autoplay` defaults to `true`).
+ * @param options - Optional behaviour flags (`autoplay` defaults to `true`,
+ *   `intervalMs` defaults to {@link AUTOPLAY_INTERVAL_MS}).
  */
-export const useCarousel = (slideCount: number, options?: { autoplay?: boolean }) => {
+export const useCarousel = (slideCount: number, options?: { autoplay?: boolean; intervalMs?: number }) => {
     const autoplayEnabled = options?.autoplay ?? true
+    const intervalMs = options?.intervalMs ?? AUTOPLAY_INTERVAL_MS
     const trackRef = useRef<HTMLDivElement | null>(null)
     const [activeIndex, setActiveIndex] = useState(0)
     const [isHovered, setIsHovered] = useState(false)
@@ -102,13 +108,13 @@ export const useCarousel = (slideCount: number, options?: { autoplay?: boolean }
         !isFocusedWithin &&
         !isDocumentHidden
 
-    // depending on activeIndex intentionally restarts the 3s timer after ANY slide
+    // depending on activeIndex intentionally restarts the timer after ANY slide
     // change (autoplay tick or manual nav) — manual nav gets a full quiet window
     useEffect(() => {
         if (!isAutoplaying) return
-        const id = window.setInterval(() => scrollToIndex(activeIndex + 1), AUTOPLAY_INTERVAL_MS)
+        const id = window.setInterval(() => scrollToIndex(activeIndex + 1), intervalMs)
         return () => window.clearInterval(id)
-    }, [isAutoplaying, activeIndex, scrollToIndex])
+    }, [isAutoplaying, activeIndex, scrollToIndex, intervalMs])
 
     /** Spread on the carousel region: pauses autoplay on hover + focus-within. */
     const pauseHandlers = {

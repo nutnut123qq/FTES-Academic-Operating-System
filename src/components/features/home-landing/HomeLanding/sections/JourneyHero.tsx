@@ -126,8 +126,6 @@ export const JourneyHero = () => {
         <section className="mx-auto grid w-full max-w-6xl grid-cols-1 items-center gap-6 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:py-24">
             {/* text column */}
             <div className="flex flex-col items-start gap-6 text-left">
-                {/* FrosTES welcome — the page's single mascot (ambient hero chrome) */}
-                <HomeMascotGreeting />
                 <Chip variant="soft" color="accent" size="sm">
                     {t("hero.eyebrow")}
                 </Chip>
@@ -201,6 +199,11 @@ export const JourneyHero = () => {
                         )
                     })}
                 </div>
+
+                {/* FrosTES welcome — the page's single mascot. Placed here (below the
+                    stepper) as a compact, personalized sign-off so it reads as intentional
+                    hero chrome rather than a banner dominating the top of the page. */}
+                <HomeMascotGreeting />
             </div>
 
             {/* visual column — 3D scene (>= lg, motion, WebGL) or static journey */}

@@ -4051,6 +4051,30 @@
         }
       }
     },
+    "achievements": {
+      "eyebrow": "Thành tựu",
+      "title": "Những gì chúng tôi đạt được",
+      "items": {
+        "techfest": {
+          "label": "Startup xuất sắc · Techfest Vietnam 2025"
+        },
+        "startupGiaLai": {
+          "label": "StartUp Đổi mới sáng tạo · Gia Lai 2025"
+        },
+        "innovationQuest": {
+          "label": "Innovation Quest 2025"
+        },
+        "knstgl": {
+          "label": "Khởi nghiệp sáng tạo Gia Lai (KNSTGL)"
+        },
+        "fptScholarship": {
+          "label": "Học bổng Khởi nghiệp Đại học FPT"
+        },
+        "aiAssistants": {
+          "label": "Trợ lý AI đồng hành cùng việc học"
+        }
+      }
+    },
     "offers": {
       "eyebrow": "Quyền lợi khi học tại FTES",
       "title": "Ưu đãi & chính sách",
@@ -4176,11 +4200,37 @@
     "mentors": {
       "eyebrow": "Người đồng hành cùng bạn",
       "title": "Đội ngũ FTES",
-      "blog": "Đọc blog",
-      "founder": {
-        "name": "Nguyễn Anh Khoa",
-        "role": "Founder & CEO @ FTES Education · CEO TEDO Technology",
-        "quote": "Các bạn sinh viên sẽ bị sự nhiệt huyết, kinh nghiệm và câu chuyện hài hước của mình làm cho mê mẩn và hiểu bài tuyệt đối!!"
+      "viewProfile": "Xem hồ sơ",
+      "regionLabel": "Cảm nhận từ đội ngũ FTES",
+      "prev": "Cảm nhận trước",
+      "next": "Cảm nhận tiếp theo",
+      "goToSlide": "Tới cảm nhận {index}",
+      "quotes": {
+        "khoa": {
+          "name": "Nguyễn Anh Khoa",
+          "role": "Founder & CEO @ FTES Education · CEO TEDO Technology",
+          "quote": "Các bạn sinh viên sẽ bị sự nhiệt huyết, kinh nghiệm và câu chuyện hài hước của mình làm cho mê mẩn và hiểu bài tuyệt đối!!"
+        },
+        "nhatHuy": {
+          "name": "Nhật Huy",
+          "role": "Developer",
+          "quote": "Tôi dạy theo hướng thực hành, lý thuyết ngắn gọn, tập trung giúp học viên hiểu nhanh – làm được ngay – và áp dụng vào dự án thực tế."
+        },
+        "ducHai": {
+          "name": "Đức Hải",
+          "role": "Co-Founder, CTO",
+          "quote": "Mình hướng đến cách dạy vừa nghiêm túc vừa thoải mái: kiến thức thì chắc chắn, giảng giải thì dễ hiểu, lại xen chút hài hước để giờ học luôn vui vẻ và không hề khô khan."
+        },
+        "ngocHieu": {
+          "name": "Ngọc Hiếu",
+          "role": "BrSE",
+          "quote": "Mình dạy theo nhịp vừa phải, giải thích đến đâu là sáng tỏ đến đó, lại xen thêm chuyện văn hoá Nhật Bản và vài pha tấu hài để lớp học lúc nào cũng rộn ràng mà kiến thức thì cứ thấm dần."
+        },
+        "thanhHuy": {
+          "name": "Thanh Huy",
+          "role": "Co-Founder - COO",
+          "quote": "Anh không chỉ dạy kiến thức, mà truyền lửa đam mê và chia sẻ những trải nghiệm chân thật của mình trên con đường học vấn, để mỗi buổi học đều là một hành trình khơi dậy tiềm năng trong các bạn."
+        }
       }
     },
     "faq": {

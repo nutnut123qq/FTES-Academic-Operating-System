@@ -8,7 +8,7 @@ import { useRouter } from "@/i18n/navigation"
 import { JourneyHero } from "./sections/JourneyHero"
 import { MyCoursesSection } from "./sections/MyCoursesSection"
 import { PlatformStatsSection } from "./sections/PlatformStatsSection"
-import { ModuleShowcaseSection } from "./sections/ModuleShowcaseSection"
+import { AchievementsSection } from "./sections/AchievementsSection"
 import { OffersPolicySection } from "./sections/OffersPolicySection"
 import { HonorBoardSection } from "./sections/HonorBoardSection"
 import { MentorTeamSection } from "./sections/MentorTeamSection"
@@ -21,7 +21,7 @@ import { FaqSection } from "./sections/FaqSection"
  *   1. Hero + 3D user-journey scene (Home → Workplace → Course → Luyện tập/AI →
  *      Thành quả; static fallback for mobile / reduced-motion / no-WebGL)
  *   2. "Số liệu thật" platform stats (count-up) + AI-feature chips
- *   3. Module showcase (what's inside each journey stop)
+ *   3. Thành tựu (real FTES awards / recognitions — numeric stat cards)
  *   4. Ưu đãi & chính sách (eight verbatim offer/policy groups)
  *   5. Bảng vàng FTES (real achievers)
  *   6. Đội ngũ FTES (five real mentors + quotes)
@@ -42,7 +42,7 @@ export const HomeLanding = () => {
             {/* signed-in + has-enrollments only; self-hides otherwise (no layout jump) */}
             <MyCoursesSection />
             <PlatformStatsSection />
-            <ModuleShowcaseSection />
+            <AchievementsSection />
             <OffersPolicySection />
             <HonorBoardSection />
             <MentorTeamSection />

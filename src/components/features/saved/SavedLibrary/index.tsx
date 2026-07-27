@@ -28,9 +28,10 @@ import { SearchInput } from "@/components/reuseable/SearchInput"
 import { ExtendedTabs } from "@/components/blocks/navigation/ExtendedTabs"
 import { useQueryResourceHubSwr } from "@/components/features/resource/hooks/useQueryResourceHubSwr"
 import { useQueryCoursesSwr } from "@/components/features/course/hooks/useQueryCoursesSwr"
-import { useQueryCommunityFeedSwr } from "@/components/features/community/hooks/useQueryCommunityFeedSwr"
-import { useQueryGroupFeedSwr } from "@/components/features/group/hooks/useQueryGroupFeedSwr"
-import { useQuerySubjectFeedSwr } from "@/components/features/subject/hooks/useQuerySubjectFeedSwr"
+import {
+    useQueryBookmarkedPostsSwr,
+    type SavedPost,
+} from "@/components/features/community/hooks/useQueryBookmarkedPostsSwr"
 
 /** The type tabs: "all" + one per saveable entity type. */
 type SavedTab = "all" | SavedEntityType
@@ -65,11 +66,15 @@ interface SavedRow {
  * {@link SaveButton}, per-tab empty states and a hydration skeleton mirroring
  * the row list. Guests get an inline sign-in prompt (no redirect loop).
  *
- * ponytail: saved ids join against the same mock datasets the hub/catalog/feeds
- * use; the group/subject feed mocks ignore their id args, so a single
- * representative call resolves any saved group/subject post. Unknown ids are
- * dropped silently. When BE lands, this list swaps to the generalized
- * `savedItems` query recorded in the store's TSDoc.
+ * Data sources: saved resource/course ids join against the same mock datasets the
+ * hub/catalog use; saved POSTS hydrate from the caller's REAL backend bookmarks
+ * (`GET /api/v1/community/bookmarks/posts`, via {@link useQueryBookmarkedPostsSwr}) —
+ * NOT by re-fetching a group/subject feed. The old join called the group/subject feed
+ * with a placeholder id `"saved-library"`, which the BE forced to `UUID` → 400; the real
+ * bookmark endpoint returns the viewer's saved posts already author-enriched. The saved
+ * SET + newest-first order still come from the `savedItems` store; the "source" line still
+ * comes from each entry's captured `source`. Post ids not present in the loaded bookmark
+ * pages are dropped silently.
  */
 export const SavedLibrary = () => {
     const t = useTranslations()
@@ -85,29 +90,33 @@ export const SavedLibrary = () => {
     const [tab, setTab] = useState<SavedTab>("all")
     const [query, setQuery] = useState("")
 
-    // mock datasets the saved ids join against
+    // resource/course display data joins against the hub/catalog mock datasets;
+    // saved POSTS hydrate from the caller's real BE bookmarks (no fake-id feed calls).
     const { resources, isLoading: resourcesLoading, error: resourcesError, mutate: mutateResources } = useQueryResourceHubSwr()
     const { courses, isLoading: coursesLoading, error: coursesError, mutate: mutateCourses } = useQueryCoursesSwr()
-    const { posts: communityPosts, isLoading: communityLoading, error: communityError, mutate: mutateCommunity } = useQueryCommunityFeedSwr()
-    const { posts: groupPosts, isLoading: groupLoading, error: groupError, mutate: mutateGroup } = useQueryGroupFeedSwr("saved-library")
-    const { posts: subjectPosts, isLoading: subjectLoading, error: subjectError, mutate: mutateSubject } = useQuerySubjectFeedSwr("saved-library", "forYou")
+    const { posts: bookmarkedPosts, isLoading: postsLoading, error: postsError, mutate: mutatePosts } = useQueryBookmarkedPostsSwr()
+
+    /** Real bookmarked posts keyed by id — the display source for saved post rows. */
+    const postsById = useMemo(() => {
+        const map = new Map<string, SavedPost>()
+        for (const post of bookmarkedPosts) {
+            map.set(post.id, post)
+        }
+        return map
+    }, [bookmarkedPosts])
 
     const isJoining =
         !isHydrated ||
         resourcesLoading ||
         coursesLoading ||
-        communityLoading ||
-        groupLoading ||
-        subjectLoading
+        postsLoading
 
     // any join dataset failing → the library can't resolve rows: show one error + retry all
-    const joinError = resourcesError || coursesError || communityError || groupError || subjectError
+    const joinError = resourcesError || coursesError || postsError
     const retryJoins = () => {
         void mutateResources()
         void mutateCourses()
-        void mutateCommunity()
-        void mutateGroup()
-        void mutateSubject()
+        void mutatePosts()
     }
 
     /** Saved entries resolved against the datasets, newest-saved first. */
@@ -135,18 +144,11 @@ export const SavedLibrary = () => {
                     haystack: `${course.code} ${course.name}`,
                 }
             }
-            // post: author/snippet resolve at render; source label comes from the entry
-            const community = communityPosts.find((item) => item.id === entry.entityId)
-            const group = groupPosts.find((item) => item.id === entry.entityId)
-            const subject = subjectPosts.find((item) => item.id === entry.entityId)
-            const post = community
-                ? { author: community.author, snippet: `${community.title} — ${community.snippet}` }
-                : group
-                    ? { author: group.author, snippet: group.text }
-                    : subject
-                        ? { author: subject.author, snippet: `${subject.title} — ${subject.snippet}` }
-                        : null
+            // post: author/title/snippet come from the real BE bookmark endpoint; the
+            // source label comes from the entry captured at save time
+            const post = postsById.get(entry.entityId)
             if (!post) return null
+            const snippet = post.title ? `${post.title} — ${post.snippet}` : post.snippet
             const sourceLabel =
                 entry.source?.kind === "community" || !entry.source
                     ? t("savedItems.source.community")
@@ -154,17 +156,17 @@ export const SavedLibrary = () => {
             return {
                 entry,
                 href: `/community/${entry.entityId}`,
-                title: post.snippet,
+                title: snippet,
                 context: sourceLabel,
-                author: post.author,
-                haystack: `${post.author} ${post.snippet}`,
+                author: post.authorName,
+                haystack: `${post.authorName} ${snippet}`,
             }
         }
         return [...items]
             .sort((a, b) => b.savedAt - a.savedAt)
             .map(resolve)
             .filter((row): row is SavedRow => row !== null)
-    }, [items, resources, courses, communityPosts, groupPosts, subjectPosts, t])
+    }, [items, resources, courses, postsById, t])
 
     const tabRows = rows.filter((row) => tab === "all" || row.entry.entityType === tab)
     const trimmedQuery = query.trim().toLowerCase()

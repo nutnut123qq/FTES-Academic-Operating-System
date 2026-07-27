@@ -85,9 +85,13 @@ export const DocumentReader = ({
      * hard paywall card below, but no blur; a VIDEO lesson never reaches this component.
      */
     const showDocumentPreviewTeaser = isTrialPreview && contentType === "DOCUMENT"
-    const resourceLinks = bodyMd ? extractResourceLinks(bodyMd) : []
+    // document-preview-admin-gate: khi hiện teaser học thử của DOCUMENT, KHÔNG render link ấn được.
+    // Ranh giới chính là server (BE strip link khỏi teaser preview); đây là lớp PHÒNG THỦ FE phòng
+    // trường hợp BE cũ còn trả link — giữ chữ, bỏ URL để không có gì bấm được trong lúc học thử.
+    const displayBody = showDocumentPreviewTeaser ? stripPreviewLinks(bodyMd) : bodyMd
+    const resourceLinks = displayBody ? extractResourceLinks(displayBody) : []
     const isLinkOnly = resourceLinks.length > 0
-    const hasWrittenBody = !!bodyMd || !!documentHtml
+    const hasWrittenBody = !!displayBody || !!documentHtml
     /** Is there anything in the reading area at all — text, html, or resource links? */
     const hasTeaserBody = hasWrittenBody || isLinkOnly
     const isReadingEmpty = !locked && !hasWrittenBody
@@ -111,8 +115,8 @@ export const DocumentReader = ({
                             >
                                 {isLinkOnly ? (
                                     <LessonResourceLinks urls={resourceLinks} />
-                                ) : bodyMd ? (
-                                    <MarkdownContent reading markdown={bodyMd} />
+                                ) : displayBody ? (
+                                    <MarkdownContent reading markdown={displayBody} />
                                 ) : documentHtml ? (
                                     <LessonDocumentHtml html={documentHtml} />
                                 ) : isReadingEmpty ? (
@@ -197,6 +201,23 @@ const PaywallCard = ({
         </div>
     )
 }
+
+/**
+ * document-preview-admin-gate: strip clickable links from a DOCUMENT preview teaser (defensive —
+ * the BE already withholds them server-side). Keeps the visible link/anchor text but drops the
+ * URL/href so nothing is clickable while previewing: markdown links/images `[text](url)` /
+ * `![alt](url)` → `text`/`alt`, reference links + their definition lines, autolinks `<http…>`,
+ * bare `http(s)://…` URLs, and `<a>` anchors. Mirrors `LessonContentTeaserService.stripLinks`.
+ */
+const stripPreviewLinks = (markdown: string): string =>
+    markdown
+        .replace(/<a\b[^>]*>/gi, "")
+        .replace(/<\/a\s*>/gi, "")
+        .replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1")
+        .replace(/\[([^\]]*)\]\[[^\]]*\]/g, "$1")
+        .replace(/^[ \t]*\[[^\]]+\]:[ \t]*\S+.*$/gm, "")
+        .replace(/<https?:\/\/[^>\s]+>/g, "")
+        .replace(/https?:\/\/\S+/g, "")
 
 /**
  * Extracts external links when a lesson body is essentially JUST link(s) — a URL (or

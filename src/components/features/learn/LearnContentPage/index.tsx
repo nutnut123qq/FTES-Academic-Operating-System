@@ -89,30 +89,6 @@ export const LearnContentPage = () => {
                             )}
                         />
 
-                        {/* continue + progress */}
-                        <div className="flex flex-col gap-4 rounded-3xl border border-default bg-surface p-4">
-                            <Button
-                                variant="primary"
-                                className="self-start"
-                                isDisabled={!header.continueLessonId}
-                                onPress={() => header.continueLessonId && openLesson(header.continueLessonId)}
-                            >
-                                <PlayCircleIcon aria-hidden focusable="false" className="size-5" />
-                                {t("content.continue")}
-                            </Button>
-                            <div className="flex flex-col gap-2">
-                                <div className="flex items-center justify-between">
-                                    <Typography type="body-sm" color="muted">
-                                        {t("content.overallProgress")}
-                                    </Typography>
-                                    <Typography type="body-sm" weight="semibold">
-                                        {t("content.percent", { value: header.progressPercent })}
-                                    </Typography>
-                                </div>
-                                <ProgressMeter value={header.progressPercent} max={100} />
-                            </div>
-                        </div>
-
                         {/* trial → buy nudge — hidden for anyone who already has full
                             access (purchased, free-owned, or otherwise entitled)
                             (rule premium-unlock-is-enroll-not-vip). Chỉ hiện khi access ĐÃ resolve
@@ -158,15 +134,9 @@ export const LearnContentPage = () => {
                             </div>
                         ) : null}
 
-                        {/* contextual nudges — surfaces the (built-but-hidden) leaderboard rank */}
-                        <LearnNudges />
-
-                        {/* the tool feature cards (mind-map / leaderboard / mock-interview /
-                            course-interview + subject Ôn tập/Hỏi đáp) live in the FAR-LEFT
-                            LearnToolsRail (column 1, owned by the layout), not the centre. */}
-
                         {/* about — the module→lesson tree lives in the LEFT content-map rail,
-                            so the home body describes the course instead of repeating it. */}
+                            so the home body describes the course instead of repeating it.
+                            Nằm ngay DƯỚI card mở khóa, TRÊN "Continue learning". */}
                         {header.description ? (
                             <LabeledCard frameless label={t("content.aboutTitle")}>
                                 <Typography type="body-sm" color="muted" className="whitespace-pre-line">
@@ -174,6 +144,37 @@ export const LearnContentPage = () => {
                                 </Typography>
                             </LabeledCard>
                         ) : null}
+
+                        {/* continue + progress */}
+                        <div className="flex flex-col gap-4 rounded-3xl border border-default bg-surface p-4">
+                            <Button
+                                variant="primary"
+                                className="self-start"
+                                isDisabled={!header.continueLessonId}
+                                onPress={() => header.continueLessonId && openLesson(header.continueLessonId)}
+                            >
+                                <PlayCircleIcon aria-hidden focusable="false" className="size-5" />
+                                {t("content.continue")}
+                            </Button>
+                            <div className="flex flex-col gap-2">
+                                <div className="flex items-center justify-between">
+                                    <Typography type="body-sm" color="muted">
+                                        {t("content.overallProgress")}
+                                    </Typography>
+                                    <Typography type="body-sm" weight="semibold">
+                                        {t("content.percent", { value: header.progressPercent })}
+                                    </Typography>
+                                </div>
+                                <ProgressMeter value={header.progressPercent} max={100} />
+                            </div>
+                        </div>
+
+                        {/* contextual nudges — surfaces the (built-but-hidden) leaderboard rank */}
+                        <LearnNudges />
+
+                        {/* the tool feature cards (mind-map / leaderboard / mock-interview /
+                            course-interview + subject Ôn tập/Hỏi đáp) live in the FAR-LEFT
+                            LearnToolsRail (column 1, owned by the layout), not the centre. */}
 
                         {/* the tools live in the far-left LearnToolsRail on desktop; below
                             lg (no rail) surface them inline so mobile keeps the access. */}

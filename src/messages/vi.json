@@ -6332,6 +6332,8 @@
     },
     "search": {
       "placeholder": "Tìm bài viết theo tiêu đề, nội dung…",
+      "open": "Tìm kiếm và bộ lọc",
+      "openActive": "Tìm kiếm và bộ lọc (đang áp dụng bộ lọc)",
       "sortLabel": "Sắp xếp theo thời gian",
       "sortNewest": "Mới nhất",
       "sortOldest": "Cũ nhất",

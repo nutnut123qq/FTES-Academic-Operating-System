@@ -6332,6 +6332,8 @@
     },
     "search": {
       "placeholder": "Search posts by title or content…",
+      "open": "Search and filters",
+      "openActive": "Search and filters (filters applied)",
       "sortLabel": "Sort by time",
       "sortNewest": "Newest",
       "sortOldest": "Oldest",

@@ -57,9 +57,14 @@ vi.mock("@heroui/react", () => {
     Modal.Header = Passthrough
     Modal.Body = Passthrough
     Modal.Footer = Passthrough
+    // Compact feed-header search popover — render its trigger + content inline so the header mounts.
+    const Popover = ({ children }: { children?: React.ReactNode }) => <div>{children}</div>
+    Popover.Trigger = Passthrough
+    Popover.Content = Passthrough
     return {
         Dropdown,
         Modal,
+        Popover,
         // only the props the assertions need reach the DOM — forwarding HeroUI's own
         // (isIconOnly / isPending / variant …) would just log unknown-attribute warnings
         Button: ({
@@ -90,6 +95,7 @@ vi.mock("@heroui/react", () => {
 
 vi.mock("@phosphor-icons/react", () => ({
     DotsThreeIcon: () => <span />,
+    MagnifyingGlassIcon: () => <span />,
     PencilSimpleIcon: () => <span />,
     TrashIcon: () => <span />,
     FlagIcon: () => <span />,
@@ -104,6 +110,9 @@ vi.mock("@phosphor-icons/react", () => ({
 // Presentation the gate does not depend on.
 vi.mock("@/components/blocks/buttons/SaveButton", () => ({ SaveButton: () => <span /> }))
 vi.mock("@/components/reuseable/FtesMascot", () => ({ FtesMascot: () => <span /> }))
+// The compact feed header shows the current user's avatar via UserAvatar; a stub keeps the real
+// HeroUI Avatar (unmocked here) out of the header render.
+vi.mock("@/components/reuseable/UserAvatar", () => ({ UserAvatar: () => <span /> }))
 // The identity barrel also owns the BATCH follow-state read the feed now consumes:
 // the mock records which ids the page asked about and answers from `followedIds`.
 const batchAsks: Array<ReadonlyArray<string | null | undefined>> = []

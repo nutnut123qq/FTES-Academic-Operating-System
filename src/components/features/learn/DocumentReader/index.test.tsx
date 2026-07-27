@@ -49,6 +49,7 @@ import { DocumentReader } from "./index"
 const props = {
     documentHtml: "",
     accessLevel: "PREVIEW",
+    contentType: "DOCUMENT",
     teaser: { reason: "PREVIEW", cheapestPackage: null },
     courseId: "khoa-a",
     courseRawId: "uuid-a",
@@ -77,6 +78,15 @@ describe("DocumentReader — locked teaser fade", () => {
     it("renders no fade once the lesson is unlocked", () => {
         const { container } = render(
             <DocumentReader {...props} bodyMd="Nội dung đầy đủ." locked={false} accessLevel="FULL" />,
+        )
+        expect(fadeCount(container)).toBe(0)
+    })
+
+    it("renders no fade when the content type is not DOCUMENT (e.g. VIDEO)", () => {
+        // The partial-blur teaser is a DOCUMENT free-trial concept only — a non-DOCUMENT
+        // type must never blur the article even when locked + PREVIEW with teaser text.
+        const { container } = render(
+            <DocumentReader {...props} bodyMd="Đoạn teaser thật." locked contentType="VIDEO" />,
         )
         expect(fadeCount(container)).toBe(0)
     })

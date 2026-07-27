@@ -78,6 +78,7 @@ export const LessonVideoBlock = ({
     lessonId,
     courseRawId,
     courseTitle,
+    courseCoverUrl,
     lessonTitle,
     packageSlugs,
     videoRef,
@@ -88,6 +89,8 @@ export const LessonVideoBlock = ({
     lessonId: string
     courseRawId: string
     courseTitle: string
+    /** Course cover art — branded into the preview-ended package gate; empty → lock-icon fallback. */
+    courseCoverUrl?: string
     lessonTitle: string
     packageSlugs: Array<string>
     videoRef: string | null
@@ -202,6 +205,7 @@ export const LessonVideoBlock = ({
                 courseId={courseId}
                 courseRawId={courseRawId}
                 courseTitle={courseTitle}
+                courseCoverUrl={courseCoverUrl}
                 lessonId={lessonId}
                 lessonTitle={lessonTitle}
                 packageSlugs={packageSlugs}

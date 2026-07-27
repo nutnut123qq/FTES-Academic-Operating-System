@@ -39,6 +39,12 @@ export interface LearnLessonView {
     courseRawId: string
     /** Human course title (shown in package gate modal header). */
     courseTitle: string
+    /**
+     * Course cover art (`course.imageHeader`) — empty string when the BE omits it.
+     * Branded into the package-gate / preview-ended modal (the same image the course
+     * uses on the detail page and catalog cards).
+     */
+    courseCoverUrl: string
     title: string
     /** Short description under the title. */
     description: string
@@ -174,6 +180,7 @@ const buildLessonView = (
     curriculum: Array<FlatLesson>,
     courseRawId: string,
     courseTitle: string,
+    courseCoverUrl: string,
 ): LearnLessonView => {
     const index = curriculum.findIndex((lesson) => lesson.id === contentId)
     const current = index >= 0 ? curriculum[index] : undefined
@@ -208,6 +215,7 @@ const buildLessonView = (
         moduleId: current?.moduleId ?? "",
         courseRawId,
         courseTitle,
+        courseCoverUrl,
         title: current?.name ?? "",
         description: current?.description ?? "",
         moduleTitle: current?.moduleTitle ?? "",
@@ -286,6 +294,7 @@ export const useQueryLearnLessonSwr = (courseId: string, contentId: string) => {
                 flattenCurriculum(detail),
                 detail.course?.id ?? courseId,
                 detail.course?.title ?? "",
+                detail.course?.imageHeader ?? "",
             )
         },
     )

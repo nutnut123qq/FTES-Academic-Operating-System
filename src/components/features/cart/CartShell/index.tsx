@@ -2,7 +2,7 @@
 
 import React from "react"
 import { Button, Typography } from "@heroui/react"
-import { useFormatter, useTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useSWRConfig } from "swr"
 import { ShoppingCartIcon } from "@phosphor-icons/react"
 import { useRouter } from "@/i18n/navigation"
@@ -10,6 +10,7 @@ import { FtesMascot } from "@/components/reuseable/FtesMascot"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { CartLineItem } from "@/components/features/cart/CartLineItem"
 import { CartLineItemSkeleton } from "@/components/features/cart/CartLineItem/CartLineItemSkeleton"
+import { CartSavingsSummary } from "@/components/features/cart/CartSavingsSummary"
 import { useGetCartSwr } from "@/hooks/swr/api/rest/queries/useGetCartSwr"
 import { usePostRemoveCartItemSwr } from "@/hooks/swr/api/rest/mutations/usePostRemoveCartItemSwr"
 import { usePaymentOverlayState } from "@/hooks/zustand/overlay/hooks"
@@ -25,7 +26,6 @@ import { useQueryProductsSwr } from "@/components/features/marketplace/hooks/use
  */
 export const CartShell = () => {
     const t = useTranslations("cart")
-    const format = useFormatter()
     const router = useRouter()
     const { mutate } = useSWRConfig()
 
@@ -100,13 +100,8 @@ export const CartShell = () => {
                         />
                     ))}
 
-                    <div className="flex items-center justify-between gap-3 border-t border-separator pt-4">
-                        <Typography type="body-sm" color="muted">
-                            {t("subtotal")}
-                        </Typography>
-                        <Typography type="body" weight="bold" className="text-accent">
-                            {t("priceVnd", { amount: format.number(subtotal) })}
-                        </Typography>
+                    <div className="border-t border-separator pt-4">
+                        <CartSavingsSummary items={items} subtotal={subtotal} />
                     </div>
 
                     <Button variant="primary" onPress={checkout} fullWidth>

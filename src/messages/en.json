@@ -6771,7 +6771,9 @@
         "upgradeBody": "This challenge belongs to a lesson in a higher tier than the package you own. Upgrade to start practising.",
         "upgradeTiersHint": "Packages that unlock this challenge:",
         "upgradeCta": "Upgrade package",
-        "error": "Failed to load the challenge."
+        "error": "Failed to load the challenge.",
+        "comingSoonTitle": "Coming soon",
+        "comingSoonBody": "The solver for this challenge type is being built."
       }
     },
     "common": {

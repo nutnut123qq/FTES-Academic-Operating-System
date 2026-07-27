@@ -50,16 +50,13 @@ vi.mock("@heroui/react", () => {
             </button>
         ),
         Chip: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
-        TextField: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
-        Input: ({ variant, ...rest }: { variant?: string } & React.InputHTMLAttributes<HTMLInputElement>) => (
-            <input {...rest} />
-        ),
         cn: (...args: Array<unknown>) => args.filter(Boolean).join(" "),
     }
 })
 
 vi.mock("@phosphor-icons/react", () => ({
     CheckSquareIcon: () => <span />,
+    HammerIcon: () => <span />,
     LockSimpleIcon: () => <span />,
     PuzzlePieceIcon: () => <span />,
     SquareIcon: () => <span />,
@@ -105,6 +102,16 @@ vi.mock("@/components/features/learn/hooks/useQueryChallengeSubmissionSwr", () =
     useQueryChallengeSubmissionSwr: () => queryMock(),
     isChallengeSubmissionPending: (submission: { status: string }) =>
         submission.status === "PENDING" || submission.status === "GRADING",
+}))
+
+// The per-type dispatch routes CODE/CODING/SQL → GradeCodePanel and UI_UX →
+// UiUxChallengeEditor. Stub both so the test asserts the dispatch, not their
+// (heavy: Judge0/AI/Monaco) internals.
+vi.mock("@/components/features/challenge/ChallengeView/GradeCodePanel", () => ({
+    GradeCodePanel: () => <div>grade-code-panel</div>,
+}))
+vi.mock("@/components/features/challenge/ChallengeView/UiUxChallengeEditor", () => ({
+    UiUxChallengeEditor: () => <div>uiux-editor</div>,
 }))
 
 import { ChallengeSubmission } from "./index"
@@ -200,7 +207,7 @@ describe("ChallengeSubmission — access gate", () => {
         await waitFor(() => expect(submissionMutate).toHaveBeenCalled())
     })
 
-    it("submits a CODE challenge as {payloadType:'CODE', code, language}", async () => {
+    it("dispatches a CODE challenge to the GradeCodePanel (not the submission form)", () => {
         queryMock.mockReturnValue({
             challenge: { ...mcqChallenge, type: "CODE", mcqQuestions: [] },
             submissions: [],
@@ -208,20 +215,28 @@ describe("ChallengeSubmission — access gate", () => {
             error: undefined,
             mutate: submissionMutate,
         })
-        submitTrigger.mockResolvedValue({ id: "sub-1" })
         render(<ChallengeSubmission />)
 
-        fireEvent.change(screen.getByPlaceholderText("exercises.challenge.codePlaceholder"), {
-            target: { value: "print(1)" },
-        })
-        fireEvent.click(screen.getByText("exercises.challenge.submit"))
+        // CODE/CODING/SQL route to the AI code-grading panel; the submission form
+        // (submit button / code textarea) is not rendered for code challenges.
+        expect(screen.getByText("grade-code-panel")).toBeTruthy()
+        expect(screen.queryByText("exercises.challenge.submit")).toBeNull()
+    })
 
-        await waitFor(() =>
-            expect(submitTrigger).toHaveBeenCalledWith({
-                id: "ch-1",
-                request: { payloadType: "CODE", code: "print(1)", language: "python" },
-            }),
-        )
+    it("dispatches an unmapped (e.g. UI_UX without a target asset) challenge to the coming-soon panel", () => {
+        queryMock.mockReturnValue({
+            challenge: { ...mcqChallenge, type: "UI_UX", mcqQuestions: [] },
+            submissions: [],
+            isLoading: false,
+            error: undefined,
+            mutate: submissionMutate,
+        })
+        render(<ChallengeSubmission />)
+
+        // No target image on the submission view → coming-soon, never the editor.
+        expect(screen.getByText("exercises.challenge.comingSoonTitle")).toBeTruthy()
+        expect(screen.queryByText("uiux-editor")).toBeNull()
+        expect(screen.queryByText("exercises.challenge.submit")).toBeNull()
     })
 
     it("submits an ESSAY challenge as {payloadType:'ESSAY', essayText} (trimmed)", async () => {

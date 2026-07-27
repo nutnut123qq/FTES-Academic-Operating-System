@@ -6771,7 +6771,9 @@
         "upgradeBody": "Thử thách này thuộc bài học ở gói cao hơn gói bạn đang có. Nâng cấp gói để bắt đầu luyện tập.",
         "upgradeTiersHint": "Gói mở khóa thử thách này:",
         "upgradeCta": "Nâng cấp gói",
-        "error": "Không tải được thử thách."
+        "error": "Không tải được thử thách.",
+        "comingSoonTitle": "Sắp ra mắt",
+        "comingSoonBody": "Trình giải cho loại thử thách này đang được xây dựng."
       }
     },
     "common": {

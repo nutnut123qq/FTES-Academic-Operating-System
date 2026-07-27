@@ -7427,5 +7427,22 @@
     "viewFullCart": "View full cart",
     "emptyHint": "Browse the catalog and add a course to get started.",
     "emptyBrowse": "Explore courses"
+  },
+  "richEditor": {
+    "bold": "Bold",
+    "italic": "Italic",
+    "underline": "Underline",
+    "strikethrough": "Strikethrough",
+    "link": "Link",
+    "addLink": "Add link",
+    "bulletList": "Bullet list",
+    "orderedList": "Numbered list",
+    "blockquote": "Quote",
+    "codeInline": "Inline code",
+    "codeBlock": "Code block",
+    "heading2": "Heading",
+    "heading3": "Subheading",
+    "image": "Insert image",
+    "imageAlt": "Image"
   }
 }

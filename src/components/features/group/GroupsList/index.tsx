@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl"
 import { Link, useRouter } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
+import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
 import { GroupJoinButton } from "../GroupJoinButton"
 import { GroupInvitationsInbox } from "../GroupInvitationsInbox"
 import { useQueryGroupsSwr, type GroupType } from "../hooks/useQueryGroupsSwr"
@@ -129,9 +130,10 @@ export const GroupsList = () => {
                                     {t(`types.${group.type}`)}
                                 </Chip>
                             </div>
-                            <Typography type="body-sm" color="muted" className="pointer-events-none">
-                                {group.description}
-                            </Typography>
+                            <MarkdownContent
+                                markdown={group.description}
+                                className="pointer-events-none text-muted"
+                            />
                             <div className="pointer-events-none flex items-center justify-between gap-2">
                                 <Typography type="body-xs" color="muted">
                                     {t("membersCount", { count: group.members })}

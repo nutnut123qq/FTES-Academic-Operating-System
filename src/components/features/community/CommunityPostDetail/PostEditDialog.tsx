@@ -5,11 +5,11 @@ import {
     Button,
     Input,
     Modal,
-    TextArea,
     TextField,
     Typography,
 } from "@heroui/react"
 import { useTranslations } from "next-intl"
+import { RichTextEditor } from "@/components/reuseable/RichTextEditor"
 
 /** Props for {@link PostEditDialog}. */
 export interface PostEditDialogProps {
@@ -108,16 +108,14 @@ export const PostEditDialog = ({
                                 <Typography type="body-sm" weight="medium">
                                     {t("engagement.editContentLabel")}
                                 </Typography>
-                                <TextField variant="secondary" className="w-full">
-                                    <TextArea
-                                        rows={8}
-                                        value={draftContent}
-                                        onChange={(event) => setDraftContent(event.target.value)}
-                                        aria-label={t("engagement.editContentLabel")}
-                                        className="resize-y"
-                                        disabled={isSaving}
-                                    />
-                                </TextField>
+                                <RichTextEditor
+                                    value={draftContent}
+                                    onChange={setDraftContent}
+                                    toolbar="full"
+                                    minHeight={200}
+                                    ariaLabel={t("engagement.editContentLabel")}
+                                    disabled={isSaving}
+                                />
                             </div>
                         </Modal.Body>
                         <Modal.Footer className="justify-end gap-2">

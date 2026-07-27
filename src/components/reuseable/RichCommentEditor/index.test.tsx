@@ -61,7 +61,7 @@ vi.mock("@tiptap/extension-mention", () => ({
     default: { extend: () => ({ configure: () => ({}) }) },
 }))
 vi.mock("tiptap-markdown", () => ({ Markdown: { configure: () => ({}) } }))
-vi.mock("./mention-suggestion", () => ({ mentionSuggestion: {} }))
+vi.mock("../RichTextEditor/mention-suggestion", () => ({ mentionSuggestion: {} }))
 
 // next-intl: echo the key so assertions can key off message ids.
 vi.mock("next-intl", () => ({

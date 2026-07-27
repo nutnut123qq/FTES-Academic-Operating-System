@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useCallback, useMemo, useState } from "react"
-import { Button, Chip, Skeleton, TextArea, TextField, Typography, cn } from "@heroui/react"
+import { Button, Chip, Skeleton, Typography, cn } from "@heroui/react"
 import {
     ArrowClockwiseIcon,
     CaretUpIcon,
@@ -12,6 +12,7 @@ import { useTranslations } from "next-intl"
 import { UserLink } from "@/components/features/identity"
 import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
 import { RichCommentEditor } from "@/components/reuseable/RichCommentEditor"
+import { RichTextEditor } from "@/components/reuseable/RichTextEditor"
 import { ConfirmDialog } from "@/components/reuseable/PostEngagementBar/ConfirmDialog"
 import { ReportDialog } from "@/components/reuseable/PostEngagementBar/ReportDialog"
 import type { ReportReasonCode } from "@/components/reuseable/PostEngagementBar/report-reasons"
@@ -219,16 +220,14 @@ export const CommentRow = ({
 
                 {isEditing ? (
                     <div className="mt-1 flex flex-col gap-2">
-                        <TextField variant="secondary" className="w-full">
-                            <TextArea
-                                rows={3}
-                                value={draft}
-                                onChange={(event) => setDraft(event.target.value)}
-                                aria-label={t("engagement.editComment")}
-                                className="resize-y"
-                                disabled={isSaving}
-                            />
-                        </TextField>
+                        <RichTextEditor
+                            value={draft}
+                            onChange={setDraft}
+                            toolbar="comment"
+                            ariaLabel={t("engagement.editComment")}
+                            disabled={isSaving}
+                            autoFocus
+                        />
                         <div className="flex items-center gap-2">
                             <Button
                                 size="sm"

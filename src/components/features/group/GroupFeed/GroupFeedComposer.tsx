@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl"
 import { useSWRConfig } from "swr"
 import { RestError } from "@/modules/api/rest/client"
 import { createPost } from "@/modules/api/rest/community"
+import { RichTextEditor } from "@/components/reuseable/RichTextEditor"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
 import { matchesGroupFeedKey } from "../hooks/useQueryGroupFeedSwr"
 
@@ -82,13 +83,13 @@ export const GroupFeedComposer = ({ groupId }: GroupFeedComposerProps) => {
                 disabled={isSubmitting}
                 className="w-full rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted focus:border-accent disabled:opacity-60"
             />
-            <textarea
+            <RichTextEditor
                 value={body}
-                onChange={(event) => setBody(event.target.value)}
+                onChange={setBody}
+                toolbar="full"
                 placeholder={t("feed.composer.bodyField")}
-                rows={3}
+                minHeight={120}
                 disabled={isSubmitting}
-                className="w-full resize-none rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted focus:border-accent disabled:opacity-60"
             />
             <Button
                 size="sm"

@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl"
 import { useSWRConfig } from "swr"
 import { useRestWithToast } from "@/modules/toast/hooks"
 import { usePatchGroupSwr } from "@/hooks/swr/api/rest/mutations/usePatchGroupSwr"
+import { RichTextEditor } from "@/components/reuseable/RichTextEditor"
 import { groupHeaderKey } from "../hooks/useQueryGroupSwr"
 import {
     GROUP_JOIN_POLICIES,
@@ -106,14 +107,12 @@ export const GroupInfoSection = ({ groupId }: GroupInfoSectionProps) => {
                         <Typography type="body-xs" color="muted">
                             {t("manage.descriptionField")}
                         </Typography>
-                        <textarea
+                        <RichTextEditor
                             value={draft.description}
-                            onChange={(event) =>
-                                setDraft({ ...draft, description: event.target.value })
-                            }
+                            onChange={(next) => setDraft({ ...draft, description: next })}
+                            toolbar="comment"
                             placeholder={t("manage.descriptionField")}
-                            rows={3}
-                            className={`${FIELD_CLASS} resize-none`}
+                            minHeight={96}
                         />
                     </label>
 

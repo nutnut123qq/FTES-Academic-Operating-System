@@ -7427,5 +7427,22 @@
     "viewFullCart": "Xem giỏ hàng đầy đủ",
     "emptyHint": "Khám phá danh mục và thêm một khóa học để bắt đầu.",
     "emptyBrowse": "Khám phá khóa học"
+  },
+  "richEditor": {
+    "bold": "Đậm",
+    "italic": "Nghiêng",
+    "underline": "Gạch chân",
+    "strikethrough": "Gạch ngang",
+    "link": "Liên kết",
+    "addLink": "Thêm liên kết",
+    "bulletList": "Danh sách đạn",
+    "orderedList": "Danh sách số",
+    "blockquote": "Trích dẫn",
+    "codeInline": "Code inline",
+    "codeBlock": "Khối code",
+    "heading2": "Tiêu đề",
+    "heading3": "Tiêu đề phụ",
+    "image": "Chèn ảnh",
+    "imageAlt": "Ảnh"
   }
 }

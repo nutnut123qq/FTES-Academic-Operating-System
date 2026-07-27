@@ -3,6 +3,7 @@
 import React, { useCallback, useState } from "react"
 import { Button, Checkbox, Label } from "@heroui/react"
 import { useTranslations } from "next-intl"
+import { RichTextEditor } from "@/components/reuseable/RichTextEditor"
 
 /** The editable shape of an announcement (create + edit share it). */
 export interface AnnouncementFormValues {
@@ -79,13 +80,13 @@ export const AnnouncementForm = ({
                 aria-label={t("announcements.titleField")}
                 className={FIELD_CLASS}
             />
-            <textarea
+            <RichTextEditor
                 value={content}
-                onChange={(event) => setContent(event.target.value)}
+                onChange={setContent}
+                toolbar="full"
                 placeholder={t("announcements.contentField")}
-                aria-label={t("announcements.contentField")}
-                rows={3}
-                className={`${FIELD_CLASS} resize-none`}
+                ariaLabel={t("announcements.contentField")}
+                minHeight={96}
             />
             <Checkbox
                 id={pinnedId}

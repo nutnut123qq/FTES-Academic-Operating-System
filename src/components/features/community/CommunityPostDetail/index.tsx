@@ -15,6 +15,7 @@ import {
     type ReportReasonCode,
 } from "@/components/reuseable/PostEngagementBar"
 import { PostCommentThread } from "@/components/reuseable/PostCommentThread"
+import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
 import { useQueryPostDetailSwr } from "../hooks/useQueryPostDetailSwr"
 import { useMutateReactPostSwr } from "../hooks/useMutateReactPostSwr"
 import { useMutateCreatePostCommentSwr, type SubmitCommentInput } from "../hooks/useMutateCreatePostCommentSwr"
@@ -171,7 +172,7 @@ export const CommunityPostDetail = () => {
                 <Typography type="h5" weight="bold">
                     {post.title}
                 </Typography>
-                <Typography type="body-sm">{post.body}</Typography>
+                <MarkdownContent markdown={post.body} />
                 <PostMediaGrid media={post.media} imageAlt={t("composer.imageAlt")} />
                 <PostEngagementBar
                     likes={post.likes}

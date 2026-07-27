@@ -11,6 +11,7 @@ import { useRestWithToast } from "@/modules/toast/hooks"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { ConfirmDialog } from "@/components/reuseable/PostEngagementBar"
+import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
 import { usePostCreateGroupAnnouncementSwr } from "@/hooks/swr/api/rest/mutations/usePostCreateGroupAnnouncementSwr"
 import { usePatchGroupAnnouncementSwr } from "@/hooks/swr/api/rest/mutations/usePatchGroupAnnouncementSwr"
 import { useDeleteGroupAnnouncementSwr } from "@/hooks/swr/api/rest/mutations/useDeleteGroupAnnouncementSwr"
@@ -140,9 +141,7 @@ const GroupAnnouncementCard = ({
                     ) : null}
                 </div>
             </div>
-            <Typography type="body-sm" color="muted">
-                {announcement.body}
-            </Typography>
+            <MarkdownContent markdown={announcement.body} />
             <ConfirmDialog
                 isOpen={isConfirmOpen}
                 onClose={() => setIsConfirmOpen(false)}

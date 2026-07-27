@@ -13,6 +13,7 @@ import {
 } from "@/modules/api/rest/group"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
 import { useRestWithToast } from "@/modules/toast/hooks"
+import { RichTextEditor } from "@/components/reuseable/RichTextEditor"
 import { GroupIdentityFields } from "../GroupIdentityFields"
 import { useIdentityImagePicker } from "../hooks/useIdentityImagePicker"
 import type { GroupType } from "../hooks/useQueryGroupsSwr"
@@ -138,12 +139,12 @@ export const GroupCreate = () => {
                         </option>
                     ))}
                 </select>
-                <textarea
+                <RichTextEditor
                     value={description}
-                    onChange={(event) => setDescription(event.target.value)}
+                    onChange={setDescription}
+                    toolbar="comment"
                     placeholder={t("create.descriptionField")}
-                    rows={4}
-                    className="w-full resize-none rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none placeholder:text-muted focus:border-accent"
+                    minHeight={96}
                 />
             </div>
 

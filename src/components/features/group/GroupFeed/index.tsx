@@ -11,6 +11,7 @@ import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { PostEngagementBar } from "@/components/reuseable/PostEngagementBar"
 import { PostCommentThread } from "@/components/reuseable/PostCommentThread"
+import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
 import { useQueryGroupSwr } from "../hooks/useQueryGroupSwr"
 import { useQueryGroupFeedSwr, type GroupPost } from "../hooks/useQueryGroupFeedSwr"
 import {
@@ -88,9 +89,7 @@ const GroupFeedCard = ({
                         </Button>
                     ) : null}
                 </div>
-                <Typography type="body-sm" color="muted">
-                    {post.text}
-                </Typography>
+                <MarkdownContent markdown={post.text} />
                 <PostEngagementBar
                     className="pt-1"
                     likes={post.likes}

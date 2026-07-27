@@ -38,6 +38,19 @@ export interface GradeCodePanelProps {
     challenge: ChallengeDetail
     /** Extra classes. */
     className?: string
+    /**
+     * Controlled code source. When set (with {@link onCodeChange}) the caller owns the
+     * editor content — used by the learn challenge surface so the same code the learner
+     * edits/AI-tests here is what its "Nộp bài" action posts formally. Omit for the
+     * standalone catalog solver (the panel then keeps its own internal state).
+     */
+    code?: string
+    /** Controlled editor language (see {@link code}). Omit for internal state. */
+    language?: string
+    /** Reports code edits to a controlling caller (pairs with {@link code}). */
+    onCodeChange?: (code: string) => void
+    /** Reports language changes to a controlling caller (pairs with {@link language}). */
+    onLanguageChange?: (language: string) => void
 }
 
 /** Languages Judge0 executes (proposal scope); SQL is static-only. */
@@ -79,12 +92,26 @@ const toErrorKey = (error: unknown): string => {
  * the LLM grade always shows the model that produced it. SQL grades
  * static-only (no execution).
  */
-export const GradeCodePanel = ({ challenge, className }: GradeCodePanelProps) => {
+export const GradeCodePanel = ({
+    challenge,
+    className,
+    code: controlledCode,
+    language: controlledLanguage,
+    onCodeChange,
+    onLanguageChange,
+}: GradeCodePanelProps) => {
     const t = useTranslations("learn")
     const isSql = challenge.type === "sql"
 
-    const [code, setCode] = useState("")
-    const [language, setLanguage] = useState<string>(isSql ? "sql" : "python")
+    // Controlled/uncontrolled: a caller that owns the code (the learn challenge surface,
+    // so its formal submission posts exactly this source) passes code + onCodeChange; the
+    // standalone catalog solver omits both and the panel keeps its own state.
+    const [internalCode, setInternalCode] = useState("")
+    const [internalLanguage, setInternalLanguage] = useState<string>(isSql ? "sql" : "python")
+    const code = controlledCode ?? internalCode
+    const setCode = onCodeChange ?? setInternalCode
+    const language = controlledLanguage ?? internalLanguage
+    const setLanguage = onLanguageChange ?? setInternalLanguage
     const [testCases, setTestCases] = useState<Array<TestCaseRow>>([{ input: "", output: "" }])
     const [model, setModel] = useState<string | null>(null)
     const [errorKey, setErrorKey] = useState<string | null>(null)

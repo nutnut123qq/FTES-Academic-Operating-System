@@ -6696,6 +6696,15 @@
         "urlPlaceholder": "https://github.com/ban/bai-nop",
         "urlInvalid": "Đường dẫn phải bắt đầu bằng https://",
         "submit": "Nộp bài",
+        "submitFile": "Nộp file",
+        "methodTabsLabel": "Cách nộp bài",
+        "tabGithub": "Đường dẫn GitHub",
+        "tabFile": "Tải file lên",
+        "fileLabel": "File bài làm",
+        "fileCta": "Kéo thả hoặc chọn file để tải lên",
+        "fileHint": "Định dạng chấp nhận: {extensions}",
+        "fileHintAny": "Chấp nhận mọi định dạng file",
+        "fileWrongType": "File phải có định dạng: {extensions}",
         "submitted": "Đã nộp bài, đang chờ chấm.",
         "maxReached": "Bạn đã dùng hết {max} lượt nộp.",
         "historyTitle": "Lịch sử nộp",
@@ -6771,7 +6780,9 @@
         "upgradeBody": "Thử thách này thuộc bài học ở gói cao hơn gói bạn đang có. Nâng cấp gói để bắt đầu luyện tập.",
         "upgradeTiersHint": "Gói mở khóa thử thách này:",
         "upgradeCta": "Nâng cấp gói",
-        "error": "Không tải được thử thách."
+        "error": "Không tải được thử thách.",
+        "comingSoonTitle": "Sắp ra mắt",
+        "comingSoonBody": "Trình giải cho loại thử thách này đang được xây dựng."
       }
     },
     "common": {

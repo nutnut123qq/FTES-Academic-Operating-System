@@ -33,8 +33,32 @@ export interface LearnLesson {
     accessLevel: string | null
     /** Slugs of the packages that unlock this lesson (for package-gate filtering). */
     packageSlugs: Array<string>
-    /** True when this lesson carries an auto-graded challenge. */
+    /** True when this lesson carries at least one auto-graded challenge. */
     hasChallenge?: boolean
+    /**
+     * Per-lesson exercises (challenges + assignments) nested as indented child rows
+     * under the lesson in the content-map. Empty when the BE curriculum carries none
+     * (older deployment, or a lesson with no exercises).
+     */
+    exercises: Array<LearnExercise>
+}
+
+/**
+ * One nested exercise under a lesson (a challenge or a course-module assignment).
+ * `kind` picks the child-row icon and the solver route; `type` is the raw BE
+ * challenge type fed to {@link normalizeExerciseType} (empty for assignments).
+ */
+export interface LearnExercise {
+    kind: "challenge" | "assignment"
+    /** Stable row id (challenge id / assignment id). */
+    id: string
+    /** Routing id for challenges — the slug the solver route keys on. Absent for assignments. */
+    slug?: string
+    title: string
+    /** Raw BE challenge type (unified downstream); "" for assignments. */
+    type: string
+    /** Challenge lifecycle status; absent for assignments. */
+    status?: string
 }
 
 /** One module (chapter) grouping lessons. */
@@ -103,18 +127,38 @@ const NAV_SECTIONS: Array<LearnNavSection> = [
  * flag; `isLocked` reflects the PER-VIEWER `locked` flag so a premium lesson the
  * viewer already owns shows no lock marker (premium unlocks by enrolling).
  */
-const toLearnLesson = (lesson: LessonView): LearnLesson => ({
-    id: lesson.id,
-    title: lesson.name,
-    description: lesson.description ?? "",
-    readTimeLabel: "",
-    isCompleted: false,
-    isPremium: !lesson.free,
-    isLocked: lesson.locked ?? false,
-    accessLevel: lesson.accessLevel ?? null,
-    packageSlugs: lesson.packageSlugs ?? [],
-    hasChallenge: false,
-})
+const toLearnLesson = (lesson: LessonView): LearnLesson => {
+    const challenges: Array<LearnExercise> = (lesson.challenges ?? []).map((challenge) => ({
+        kind: "challenge",
+        id: challenge.id,
+        slug: challenge.slug,
+        title: challenge.title,
+        type: challenge.type,
+        status: challenge.status,
+    }))
+    const assignments: Array<LearnExercise> = (lesson.assignments ?? []).map((assignment) => ({
+        kind: "assignment",
+        id: assignment.id,
+        title: assignment.title,
+        type: "",
+    }))
+    const exercises = [...challenges, ...assignments]
+    return {
+        id: lesson.id,
+        title: lesson.name,
+        description: lesson.description ?? "",
+        readTimeLabel: "",
+        isCompleted: false,
+        isPremium: !lesson.free,
+        isLocked: lesson.locked ?? false,
+        accessLevel: lesson.accessLevel ?? null,
+        packageSlugs: lesson.packageSlugs ?? [],
+        // Prefer the real list; fall back to the scalar flag when the BE only sends
+        // `hasChallenge` (older curriculum without the `challenges` list).
+        hasChallenge: challenges.length > 0 || (lesson.hasChallenge ?? false),
+        exercises,
+    }
+}
 
 /** Builds the learn tree from the real public course detail (sections → lessons). */
 const toLearnCourse = (courseId: string, detail: CourseDetail): LearnCourse => {

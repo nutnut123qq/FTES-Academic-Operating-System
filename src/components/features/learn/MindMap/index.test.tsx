@@ -55,6 +55,7 @@ const lesson = (over: Partial<LearnLesson> & { id: string }): LearnLesson => ({
     isLocked: true,
     accessLevel: "NONE",
     packageSlugs: [],
+    exercises: [],
     ...over,
 })
 

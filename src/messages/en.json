@@ -6696,6 +6696,15 @@
         "urlPlaceholder": "https://github.com/you/your-solution",
         "urlInvalid": "The URL must start with https://",
         "submit": "Submit",
+        "submitFile": "Submit file",
+        "methodTabsLabel": "Submission method",
+        "tabGithub": "GitHub URL",
+        "tabFile": "Upload file",
+        "fileLabel": "Solution file",
+        "fileCta": "Drag & drop or choose a file to upload",
+        "fileHint": "Accepted formats: {extensions}",
+        "fileHintAny": "Any file format accepted",
+        "fileWrongType": "The file must be one of: {extensions}",
         "submitted": "Submitted — waiting to be graded.",
         "maxReached": "You've used all {max} submissions.",
         "historyTitle": "Submission history",
@@ -6771,7 +6780,9 @@
         "upgradeBody": "This challenge belongs to a lesson in a higher tier than the package you own. Upgrade to start practising.",
         "upgradeTiersHint": "Packages that unlock this challenge:",
         "upgradeCta": "Upgrade package",
-        "error": "Failed to load the challenge."
+        "error": "Failed to load the challenge.",
+        "comingSoonTitle": "Coming soon",
+        "comingSoonBody": "The solver for this challenge type is being built."
       }
     },
     "common": {

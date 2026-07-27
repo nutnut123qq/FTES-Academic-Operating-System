@@ -7350,6 +7350,7 @@
       }
     },
     "toolsRail": {
+      "menuTitle": "Course menu",
       "title": "Tools",
       "mindMap": "Mind map",
       "leaderboard": "Leaderboard",

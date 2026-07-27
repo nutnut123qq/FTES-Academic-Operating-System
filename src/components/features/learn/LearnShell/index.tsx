@@ -7,9 +7,18 @@ import { LearnMobileBar } from "./LearnMobileBar"
 /** Props for {@link LearnShell}. */
 export interface LearnShellProps extends PropsWithChildren {
     /**
+     * The FAR-LEFT course-tools / navigation rail (column 1), supplied by the route
+     * layout on the content dashboard. Mirrors StarCI's persistent `LearnSidebar`:
+     * it sits BEFORE the content-map so the course tool menu reads on the LEFT, not
+     * dumped on the right. Owns its own width + sticky behaviour; omit where there's
+     * no tools rail (lesson reader, leaderboard, mind-map, …).
+     */
+    navRail?: ReactNode
+    /**
      * The persistent left content rail (the course content-map / milestone /
-     * leaderboard-category rail), supplied by the route layout. Owns its own width
-     * + sticky behaviour; omit for rail-less surfaces (mind-map, dashboard).
+     * leaderboard-category rail), supplied by the route layout. Sits in column 2,
+     * to the RIGHT of {@link LearnShellProps.navRail}. Owns its own width + sticky
+     * behaviour; omit for rail-less surfaces (mind-map, dashboard).
      */
     leftRail?: ReactNode
     /**
@@ -42,13 +51,19 @@ export interface LearnShellProps extends PropsWithChildren {
  */
 export const LearnShell = ({
     children,
+    navRail,
     leftRail,
     rightRail,
     fullBleed = false,
     className,
 }: LearnShellProps) => (
     <div className={cn("flex w-full flex-col items-start lg:flex-row", className)}>
-        {/* persistent left content rail supplied by the layout (self-sizing) */}
+        {/* column 1 — the far-left course-tools / nav rail (StarCI's LearnSidebar
+            slot). Rendered FIRST so the course menu reads on the LEFT, ahead of the
+            content-map, instead of being pushed to the far right. */}
+        {navRail}
+        {/* column 2 — persistent left content rail (content-map) supplied by the
+            layout (self-sizing) */}
         {leftRail}
         {/* reading column — the shell owns the canonical p-6 for every learn page
             (features supply only max-w + mx-auto + gap), except full-bleed routes.

@@ -1,13 +1,14 @@
 "use client"
 
 import React from "react"
-import { Button, Drawer, Typography } from "@heroui/react"
+import { Button, Drawer } from "@heroui/react"
 import { ArrowRightIcon, ShoppingCartIcon } from "@phosphor-icons/react"
-import { useFormatter, useTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useSWRConfig } from "swr"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { CartLineItem } from "@/components/features/cart/CartLineItem"
 import { CartLineItemSkeleton } from "@/components/features/cart/CartLineItem/CartLineItemSkeleton"
+import { CartSavingsSummary } from "@/components/features/cart/CartSavingsSummary"
 import { useRouter } from "@/i18n/navigation"
 import { useSmViewpoint } from "@/hooks/reuseables/useSmViewpoint"
 import { useGetCartSwr } from "@/hooks/swr/api/rest/queries/useGetCartSwr"
@@ -27,7 +28,6 @@ import { useQueryProductsSwr } from "@/components/features/marketplace/hooks/use
  */
 const MiniCartInner = ({ onClose }: { onClose: () => void }) => {
     const t = useTranslations("cart")
-    const format = useFormatter()
     const router = useRouter()
     const { mutate } = useSWRConfig()
 
@@ -103,14 +103,7 @@ const MiniCartInner = ({ onClose }: { onClose: () => void }) => {
 
             {items.length > 0 ? (
                 <Drawer.Footer className="flex flex-col gap-3 border-t border-separator">
-                    <div className="flex items-center justify-between gap-3">
-                        <Typography type="body-sm" color="muted">
-                            {t("subtotal")}
-                        </Typography>
-                        <Typography type="body" weight="bold" className="text-accent">
-                            {t("priceVnd", { amount: format.number(subtotal) })}
-                        </Typography>
-                    </div>
+                    <CartSavingsSummary items={items} subtotal={subtotal} />
                     <Button variant="primary" onPress={checkout} fullWidth>
                         {t("checkout")}
                         <ArrowRightIcon className="size-5" aria-hidden focusable="false" />

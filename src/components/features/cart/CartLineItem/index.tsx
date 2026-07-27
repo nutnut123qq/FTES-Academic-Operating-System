@@ -4,7 +4,7 @@ import React, { useState } from "react"
 import Image from "next/image"
 import { Button, Typography } from "@heroui/react"
 import { ImageSquareIcon, TrashIcon } from "@phosphor-icons/react"
-import { useTranslations } from "next-intl"
+import { useFormatter, useTranslations } from "next-intl"
 import { PriceTag } from "@/components/blocks/commerce/PriceTag"
 import type { CartItemView } from "@/modules/api/rest/commerce"
 
@@ -60,11 +60,14 @@ const CartThumbnail = ({ imageUrl, alt }: { imageUrl: string | null; alt: string
  */
 export const CartLineItem = ({ item, name, onRemove, isRemoving }: CartLineItemProps) => {
     const t = useTranslations("cart")
+    const format = useFormatter()
     const unitPrice = item.unitPrice ?? 0
     const original =
         item.originalPriceVnd != null && item.originalPriceVnd > unitPrice
             ? item.originalPriceVnd
             : null
+    // per-line saving in VND (list − charged) × qty; 0 when the line has no discount.
+    const saving = original != null ? (original - unitPrice) * item.quantity : 0
 
     return (
         <div className="flex items-center gap-3 rounded-2xl border border-separator p-3">
@@ -79,6 +82,11 @@ export const CartLineItem = ({ item, name, onRemove, isRemoving }: CartLineItemP
                     </Typography>
                 ) : null}
                 <PriceTag discounted={unitPrice} original={original} size="sm" />
+                {saving > 0 ? (
+                    <Typography type="body-xs" className="text-success">
+                        {t("itemSaving", { amount: t("priceVnd", { amount: format.number(saving) }) })}
+                    </Typography>
+                ) : null}
             </div>
             <Button
                 size="sm"

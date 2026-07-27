@@ -7364,7 +7364,9 @@
       "qa": "Q&A",
       "playground": "Playground",
       "personalProject": "Personal project",
-      "lockedAria": "feature requires course enrollment"
+      "lockedAria": "feature requires course enrollment",
+      "collapseRail": "Collapse tools menu",
+      "expandRail": "Expand tools menu"
     }
   },
   "adminConsole": {

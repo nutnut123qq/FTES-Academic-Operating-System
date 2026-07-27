@@ -19,6 +19,12 @@ export interface SidebarNavItemProps extends WithClassNames<undefined> {
     icon?: React.ReactNode
     /** Visible label text. */
     label: string
+    /**
+     * Overrides the accessible name (defaults to {@link label}). Use to append a
+     * hint the label doesn't show visually — e.g. a locked row appending
+     * "— requires enrollment" so screen readers announce the gate.
+     */
+    ariaLabel?: string
     /** Whether this is the current destination (accent fill). */
     isActive?: boolean
     /** Optional trailing content pinned to the row's right edge (e.g. a lock badge). Hidden when collapsed. */
@@ -42,6 +48,7 @@ export interface SidebarNavItemProps extends WithClassNames<undefined> {
 export const SidebarNavItem = ({
     icon,
     label,
+    ariaLabel,
     isActive = false,
     endContent,
     onPress,
@@ -51,7 +58,7 @@ export const SidebarNavItem = ({
     const collapsed = useSidebarCollapsed()
     return (
         <Link
-            aria-label={label}
+            aria-label={ariaLabel ?? label}
             aria-current={isActive ? "page" : undefined}
             onPress={onPress}
             className={cn(

@@ -4968,6 +4968,7 @@
     "collapse": "Collapse",
     "expand": "Expand",
     "credits": "{count} credits",
+    "semester": "Semester {count}",
     "progressLabel": "Completion progress",
     "placeholder": "This area is under construction.",
     "catalog": {

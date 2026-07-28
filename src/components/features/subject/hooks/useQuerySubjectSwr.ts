@@ -1,6 +1,7 @@
 "use client"
 
 import useSWR from "swr"
+import { useLocale } from "next-intl"
 import { gql, type DocumentNode } from "@apollo/client"
 import { createAuthApolloClient } from "@/modules/api/graphql/clients"
 import { restRequest } from "@/modules/api/rest/client"
@@ -50,10 +51,15 @@ export interface Subject {
     uuid: string
     /** Course code shown as the mark, e.g. `PRF192`. */
     code: string
-    /** Human name — prefers the Vietnamese title (`nameVi`) for the VN UI. */
+    /** Human name in the ACTIVE locale — see {@link pickSubjectName}. */
     name: string
     /** Credit count. */
     credits: number
+    /**
+     * Kỳ học khuyến nghị (BE `recommendedSemester`, 1..9) hoặc `null` khi môn chưa gắn kỳ —
+     * card ẩn chip thay vì đoán bừa.
+     */
+    recommendedSemester: number | null
     /** FE difficulty facet, bucketed from the BE `Difficulty` enum. */
     difficulty: "basic" | "intermediate" | "advanced"
     /**
@@ -104,13 +110,26 @@ export const mapSubjectDifficulty = (
     }
 }
 
+/**
+ * Tên môn theo NGÔN NGỮ ĐANG BẬT. BE trả cả hai (`name` = tiếng Anh, `nameVi` = tiếng Việt),
+ * nên đừng cứng `nameVi || name` — bật EN mà tên môn vẫn tiếng Việt trong khi bản dịch nằm
+ * ngay trong payload (góp ý website 2026-07-26). Thiếu bản dịch phía nào thì rơi về phía kia,
+ * không bao giờ trả chuỗi rỗng.
+ */
+export const pickSubjectName = (
+    locale: string,
+    name: string,
+    nameVi: string | null | undefined,
+): string => (locale === "vi" ? nameVi || name : name || nameVi || "")
+
 /** Maps a catalog summary row (`GET /subjects`) to the FE {@link Subject}. */
-export const toSubjectFromSummary = (summary: SubjectSummary): Subject => ({
+export const toSubjectFromSummary = (summary: SubjectSummary, locale: string): Subject => ({
     id: summary.code,
     uuid: summary.id,
     code: summary.code,
-    name: summary.nameVi || summary.name,
+    name: pickSubjectName(locale, summary.name, summary.nameVi),
     credits: summary.credits,
+    recommendedSemester: summary.recommendedSemester ?? null,
     difficulty: mapSubjectDifficulty(summary.difficulty),
     progress: null,
     imageUrl: summary.imageUrl || summary.thumbnailUrl || null,
@@ -128,13 +147,15 @@ export const toSubjectFromSummary = (summary: SubjectSummary): Subject => ({
  */
 export const toSubjectFromDetail = (
     detail: SubjectDetail,
+    locale: string,
     context?: SubjectViewerContext,
 ): Subject => ({
     id: detail.code,
     uuid: detail.id,
     code: detail.code,
-    name: detail.nameVi || detail.name,
+    name: pickSubjectName(locale, detail.name, detail.nameVi),
     credits: detail.credits,
+    recommendedSemester: detail.recommendedSemester ?? null,
     difficulty: mapSubjectDifficulty(detail.difficulty),
     progress: context?.progress ?? null,
     imageUrl: detail.imageUrl || detail.thumbnailUrl || null,
@@ -297,6 +318,7 @@ export const useQuerySubjectMasterySwr = (subjectUuid: string | undefined) => {
  * @param subjectId - the `[subjectId]` route segment (a subject code).
  */
 export const useQuerySubjectSwr = (subjectId: string) => {
+    const locale = useLocale()
     const code = subjectId ? subjectId.toUpperCase() : ""
     const { data, isLoading, error, mutate } = useSWR(
         code ? subjectDetailKey(code) : null,
@@ -314,7 +336,7 @@ export const useQuerySubjectSwr = (subjectId: string) => {
 
     return {
         subject: detail
-            ? toSubjectFromDetail(detail, {
+            ? toSubjectFromDetail(detail, locale, {
                   membership: readCallerMembership(workspace),
                   courseLinks: toSubjectCourseLinks(workspace),
                   progress: mastery?.completionPct ?? null,

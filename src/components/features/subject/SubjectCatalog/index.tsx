@@ -153,6 +153,12 @@ const SubjectCard = ({ subject }: SubjectCardProps) => {
                     <Typography type="body-xs" color="muted">
                         {t("credits", { count: subject.credits })}
                     </Typography>
+                    {/* Kỳ khuyến nghị chỉ hiện khi môn có gắn kỳ — null thì ẩn, không đoán. */}
+                    {subject.recommendedSemester !== null ? (
+                        <Typography type="body-xs" color="muted">
+                            {t("semester", { count: subject.recommendedSemester })}
+                        </Typography>
+                    ) : null}
                 </div>
             </div>
         </Link>

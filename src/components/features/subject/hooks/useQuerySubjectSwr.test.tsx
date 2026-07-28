@@ -50,7 +50,11 @@ vi.mock("@/modules/api/rest/subject", () => ({
 vi.mock("@/modules/api/graphql/clients", () => ({
     createAuthApolloClient: () => ({ query: (options: unknown) => apolloQuery(options) }),
 }))
-vi.mock("next-intl", () => ({ useTranslations: () => (key: string) => key }))
+vi.mock("next-intl", () => ({
+    useTranslations: () => (key: string) => key,
+    // Tên môn chọn theo locale (BE trả cả name/nameVi) → hook đọc useLocale.
+    useLocale: () => "vi",
+}))
 vi.mock("@heroui/react", () => ({
     toast: {
         success: (message: string) => toastSuccess(message),

@@ -371,7 +371,21 @@
     "systemTheme": "Theo hệ thống"
   },
   "footer": {
-    "tagline": "Học bằng cách tự tay dựng hệ thống thật — đủ trình cho mọi vòng phỏng vấn kỹ thuật.",
+    "slogan": {
+      "line1": "Khơi mở tiềm năng",
+      "line2": "Dẫn đầu công nghệ"
+    },
+    "company": {
+      "name": "CÔNG TY TNHH GIẢI PHÁP CÔNG NGHỆ GIÁO DỤC FTES",
+      "taxId": "Mã số doanh nghiệp: 5901235207",
+      "founded": "Ngày thành lập: 26/08/2025",
+      "field": "Giáo dục và Công nghệ – phát triển sản phẩm hỗ trợ học tập"
+    },
+    "social": {
+      "facebook": "Facebook FTES",
+      "youtube": "YouTube FunnyCode",
+      "tiktok": "TikTok FunnyCode"
+    },
     "exploreTitle": "Khám phá",
     "supportTitle": "Hỗ trợ",
     "links": {
@@ -384,7 +398,7 @@
       "privacy": "Bảo mật"
     },
     "madeBy": "Được phát triển bởi Nguyễn Văn Tự Cường",
-    "copyright": "© {year} FTES AOS"
+    "copyright": "© {year} FTES — Nền tảng học lập trình uy tín tại Việt Nam"
   },
   "legal": {
     "contactNote": "Có câu hỏi về điều khoản hoặc dữ liệu của bạn? Liên hệ cuongnvtse160875@gmail.com.",

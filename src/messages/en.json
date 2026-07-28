@@ -371,7 +371,21 @@
     "systemTheme": "System theme"
   },
   "footer": {
-    "tagline": "Learn by building real systems with your own hands — sharp enough for any technical interview.",
+    "slogan": {
+      "line1": "Khơi mở tiềm năng",
+      "line2": "Dẫn đầu công nghệ"
+    },
+    "company": {
+      "name": "CÔNG TY TNHH GIẢI PHÁP CÔNG NGHỆ GIÁO DỤC FTES",
+      "taxId": "Business ID: 5901235207",
+      "founded": "Founded: 26/08/2025",
+      "field": "Education & Technology – building products that support learning"
+    },
+    "social": {
+      "facebook": "FTES on Facebook",
+      "youtube": "FunnyCode on YouTube",
+      "tiktok": "FunnyCode on TikTok"
+    },
     "exploreTitle": "Explore",
     "supportTitle": "Support",
     "links": {
@@ -384,7 +398,7 @@
       "privacy": "Privacy"
     },
     "madeBy": "Built by Nguyễn Văn Tự Cường",
-    "copyright": "© {year} FTES AOS"
+    "copyright": "© {year} FTES — Vietnam's trusted platform for learning to code"
   },
   "legal": {
     "contactNote": "Questions about these terms or your data? Email cuongnvtse160875@gmail.com.",

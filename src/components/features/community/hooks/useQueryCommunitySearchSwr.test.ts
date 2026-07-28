@@ -75,6 +75,14 @@ describe("isSearchActive", () => {
         expect(isSearchActive(criteria({ q: "", groupId: "g1" }))).toBe(true)
         expect(isSearchActive(criteria({ q: " kafka " }))).toBe(true)
     })
+
+    it("treats a non-default (oldest) sort as active so Newest/Oldest re-sorts the feed", () => {
+        // The tab feed has no sort arg — the ONLY way to honour a sort is to route through
+        // communitySearch, so a non-default sort MUST switch the feed into search mode.
+        expect(isSearchActive(criteria({ q: "", sort: CommunitySearchSort.Oldest }))).toBe(true)
+        // Newest is the default → with nothing else set, that IS the plain tab feed.
+        expect(isSearchActive(criteria({ q: "", sort: CommunitySearchSort.Newest }))).toBe(false)
+    })
 })
 
 describe("communitySearchPageKey", () => {

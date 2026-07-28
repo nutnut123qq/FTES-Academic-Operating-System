@@ -6,6 +6,7 @@ import { Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
 import { ContinueCard } from "@/components/blocks/cards/ContinueCard"
+import { CoverImage } from "@/components/blocks/media/CoverImage"
 import { useQueryMyCoursesSwr } from "@/components/features/course/hooks/useQueryMyCoursesSwr"
 
 /** Max enrolled courses shown on the landing continue-learning band. */
@@ -54,6 +55,16 @@ export const MyCoursesSection = () => {
                             className="group block no-underline"
                         >
                             <ContinueCard
+                                cover={(
+                                    // fixed-width 16:9 course thumbnail on the left of the
+                                    // info row; CoverImage frames + rounds it and shows an
+                                    // empty surface when the course has no cover.
+                                    <CoverImage
+                                        src={course.coverImage}
+                                        alt={course.title}
+                                        className="w-24 sm:w-28"
+                                    />
+                                )}
                                 title={course.title}
                                 subtitle={t("courses.percentComplete", { percent: course.completionPercent })}
                                 value={course.completionPercent}

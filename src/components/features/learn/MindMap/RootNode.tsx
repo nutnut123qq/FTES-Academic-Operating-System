@@ -50,8 +50,9 @@ const CompletionRing = ({ percent }: { percent: number }) => {
 
 /**
  * Custom course-root node: shows the SUBJECT CODE (e.g. "CSD201") — not the long,
- * uneven course title — over the overall completion ring. A single right-side source
- * handle lets the tree fan out to the module column.
+ * uneven course title — over the overall completion ring. A single CENTRED source
+ * handle lets the tree fan out radially to the sections on every side (the straight
+ * spokes run centre-to-centre, hidden under the cards).
  */
 const MindMapRootNodeBase = ({ data }: NodeProps) => {
     const { label, completionPercent } = data as MindMapNodeData
@@ -65,9 +66,9 @@ const MindMapRootNodeBase = ({ data }: NodeProps) => {
             </div>
             <Handle
                 type="source"
-                position={Position.Right}
+                position={Position.Bottom}
                 isConnectable={false}
-                className="!h-px !w-px !min-h-0 !min-w-0 !border-0 !bg-transparent !opacity-0"
+                className="!left-1/2 !top-1/2 !size-2 !min-h-0 !min-w-0 !-translate-x-1/2 !-translate-y-1/2 !border-0 !bg-transparent !opacity-0"
             />
         </div>
     )

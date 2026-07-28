@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useMemo, useState } from "react"
+import React, { useCallback, useMemo, useState } from "react"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
@@ -67,6 +67,24 @@ export const MindMap = () => {
         [modules, currentLessonId, header?.progressPercent],
     )
 
+    /**
+     * The sections (Phần) the viewer has expanded. Progressive disclosure: the first
+     * paint shows the section ring alone; clicking a section reveals (or hides) its
+     * bài + bài tập child nodes. Default = empty (all collapsed).
+     */
+    const [expandedModuleIds, setExpandedModuleIds] = useState<ReadonlySet<string>>(() => new Set())
+    const onToggleModule = useCallback((moduleId: string) => {
+        setExpandedModuleIds((prev) => {
+            const next = new Set(prev)
+            if (next.has(moduleId)) {
+                next.delete(moduleId)
+            } else {
+                next.add(moduleId)
+            }
+            return next
+        })
+    }, [])
+
     const graph = useMemo(
         () =>
             buildMindMap({
@@ -76,8 +94,17 @@ export const MindMap = () => {
                 currentLessonId,
                 currentModuleId,
                 recommendedLessonId: insight.recommendation.lessonId,
+                expandedModuleIds,
             }),
-        [subjectCode, header?.progressPercent, modules, currentLessonId, currentModuleId, insight.recommendation.lessonId],
+        [
+            subjectCode,
+            header?.progressPercent,
+            modules,
+            currentLessonId,
+            currentModuleId,
+            insight.recommendation.lessonId,
+            expandedModuleIds,
+        ],
     )
 
     const allDone = modules.length > 0 && modules.every((module) => moduleStatus(module) === "completed")
@@ -148,8 +175,8 @@ export const MindMap = () => {
             >
                 <MindMapCanvas
                     graph={graph}
-                    currentModuleId={currentModuleId}
                     onOpenNode={onOpenNode}
+                    onToggleModule={onToggleModule}
                     continueHref={continueHref}
                     allDone={allDone}
                     onContinue={onContinue}

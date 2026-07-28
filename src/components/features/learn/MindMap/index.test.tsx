@@ -45,12 +45,14 @@ const moduleOf = (over: Partial<LearnModule> & { id: string; lessons: Array<Lear
     ...over,
 })
 
-const baseBuildInput = (modules: Array<LearnModule>) => ({
+const baseBuildInput = (modules: Array<LearnModule>, expanded: Array<string> = []) => ({
     subjectCode: "CSD201",
     completionPercent: 40,
     modules,
     currentLessonId: null,
     currentModuleId: null,
+    // Progressive disclosure: sections are collapsed unless listed here.
+    expandedModuleIds: new Set<string>(expanded),
 })
 
 describe("buildMindMap — subject-code root + exercise nodes", () => {
@@ -61,7 +63,7 @@ describe("buildMindMap — subject-code root + exercise nodes", () => {
         expect((root?.data as MindMapNodeData).completionPercent).toBe(40)
     })
 
-    it("renders each lesson exercise as its own node, only where one exists", () => {
+    it("renders each lesson exercise as its own node, only where one exists (expanded section)", () => {
         const modules = [
             moduleOf({
                 id: "m1",
@@ -77,7 +79,7 @@ describe("buildMindMap — subject-code root + exercise nodes", () => {
                 ],
             }),
         ]
-        const { nodes } = buildMindMap(baseBuildInput(modules))
+        const { nodes } = buildMindMap(baseBuildInput(modules, ["m1"]))
         const kinds = nodes.map((node) => (node.data as MindMapNodeData).kind)
         // 1 root + 1 module + 2 lessons + 2 exercises (l2 has none → no fabricated node)
         expect(kinds.filter((k) => k === "exercise")).toHaveLength(2)
@@ -85,11 +87,59 @@ describe("buildMindMap — subject-code root + exercise nodes", () => {
         expect(kinds.filter((k) => k === "module")).toHaveLength(1)
     })
 
-    it("flags the current module + lesson as 'you are here'", () => {
+    it("flags the current module + lesson as 'you are here' (expanded section)", () => {
         const modules = [moduleOf({ id: "m1", lessons: [lesson({ id: "l1" })] })]
-        const { nodes } = buildMindMap({ ...baseBuildInput(modules), currentLessonId: "l1", currentModuleId: "m1" })
+        const { nodes } = buildMindMap({
+            ...baseBuildInput(modules, ["m1"]),
+            currentLessonId: "l1",
+            currentModuleId: "m1",
+        })
         const current = nodes.filter((node) => (node.data as MindMapNodeData).isCurrent)
         expect(current.map((node) => (node.data as MindMapNodeData).kind).sort()).toEqual(["lesson", "module"])
+    })
+})
+
+describe("buildMindMap — progressive disclosure (collapse / expand)", () => {
+    const modules = [
+        moduleOf({
+            id: "m1",
+            lessons: [lesson({ id: "l1", exercises: [exercise({ id: "c1", kind: "challenge", slug: "chal-1" })] })],
+        }),
+    ]
+
+    it("shows ONLY section nodes by default (no lessons / exercises)", () => {
+        const { nodes } = buildMindMap(baseBuildInput(modules))
+        const kinds = nodes.map((node) => (node.data as MindMapNodeData).kind)
+        expect(kinds.filter((k) => k === "module")).toHaveLength(1)
+        expect(kinds.filter((k) => k === "lesson")).toHaveLength(0)
+        expect(kinds.filter((k) => k === "exercise")).toHaveLength(0)
+        const moduleNode = nodes.find((node) => (node.data as MindMapNodeData).kind === "module")
+        expect((moduleNode?.data as MindMapNodeData).hasChildren).toBe(true)
+        expect((moduleNode?.data as MindMapNodeData).isExpanded).toBe(false)
+    })
+
+    it("reveals the section's lessons + exercises once it is expanded", () => {
+        const { nodes } = buildMindMap(baseBuildInput(modules, ["m1"]))
+        const kinds = nodes.map((node) => (node.data as MindMapNodeData).kind)
+        expect(kinds.filter((k) => k === "lesson")).toHaveLength(1)
+        expect(kinds.filter((k) => k === "exercise")).toHaveLength(1)
+        const moduleNode = nodes.find((node) => (node.data as MindMapNodeData).kind === "module")
+        expect((moduleNode?.data as MindMapNodeData).isExpanded).toBe(true)
+    })
+
+    it("carries the section + lesson descriptions onto their nodes", () => {
+        const described = [
+            moduleOf({
+                id: "m1",
+                description: "Mô tả phần",
+                lessons: [lesson({ id: "l1", description: "Mô tả bài" })],
+            }),
+        ]
+        const { nodes } = buildMindMap(baseBuildInput(described, ["m1"]))
+        const moduleNode = nodes.find((node) => (node.data as MindMapNodeData).kind === "module")
+        const lessonNode = nodes.find((node) => (node.data as MindMapNodeData).kind === "lesson")
+        expect((moduleNode?.data as MindMapNodeData).description).toBe("Mô tả phần")
+        expect((lessonNode?.data as MindMapNodeData).description).toBe("Mô tả bài")
     })
 })
 
@@ -205,7 +255,15 @@ vi.mock("../hooks/useQueryLearnCourseSwr", () => ({ useQueryLearnCourseSwr: () =
 // The React-Flow canvas is DOM-measuring; stub it to a light surface that exposes the
 // graph + the open handler so the container wiring (subject code, routing, gate) is testable.
 vi.mock("./MindMapCanvas", () => ({
-    MindMapCanvas: ({ graph, onOpenNode }: { graph: { nodes: Array<{ id: string; data: MindMapNodeData }> }; onOpenNode: (data: MindMapNodeData) => void }) => (
+    MindMapCanvas: ({
+        graph,
+        onOpenNode,
+        onToggleModule,
+    }: {
+        graph: { nodes: Array<{ id: string; data: MindMapNodeData }> }
+        onOpenNode: (data: MindMapNodeData) => void
+        onToggleModule: (moduleId: string) => void
+    }) => (
         <div>
             <span data-testid="root-code">
                 {graph.nodes.find((node) => node.data.kind === "root")?.data.label}
@@ -213,7 +271,17 @@ vi.mock("./MindMapCanvas", () => ({
             {graph.nodes
                 .filter((node) => node.data.kind !== "root")
                 .map((node) => (
-                    <button key={node.id} data-testid={`${node.data.kind}-${node.id}`} type="button" onClick={() => onOpenNode(node.data)}>
+                    <button
+                        key={node.id}
+                        data-testid={`${node.data.kind}-${node.id}`}
+                        type="button"
+                        onClick={() =>
+                            // A section click toggles expand; a lesson / exercise click opens.
+                            node.data.kind === "module"
+                                ? onToggleModule(node.data.moduleId)
+                                : onOpenNode(node.data)
+                        }
+                    >
                         {node.data.label}
                     </button>
                 ))}
@@ -244,9 +312,24 @@ describe("MindMap container — subject code on the root, gate on a locked node"
         expect(screen.getByTestId("root-code").textContent).toBe("CSD201")
     })
 
+    it("shows only sections until one is expanded, then collapses again on a second click", () => {
+        mountWith([moduleOf({ id: "m1", lessons: [lesson({ id: "l1", accessLevel: "FULL", isLocked: false })] })])
+        // first paint: section node present, lesson hidden
+        expect(screen.getByTestId("module-m:m1")).toBeTruthy()
+        expect(screen.queryByTestId("lesson-l:l1")).toBeNull()
+        // expand → lesson appears
+        fireEvent.click(screen.getByTestId("module-m:m1"))
+        expect(screen.getByTestId("lesson-l:l1")).toBeTruthy()
+        // collapse → lesson hidden again
+        fireEvent.click(screen.getByTestId("module-m:m1"))
+        expect(screen.queryByTestId("lesson-l:l1")).toBeNull()
+    })
+
     it("opens the package gate instead of routing into a fully locked lesson", () => {
         mountWith([moduleOf({ id: "m1", lessons: [lesson({ id: "l1" })] })])
         expect(screen.queryByTestId("gate")).toBeNull()
+        // sections start collapsed — expand the section to reach its lesson node
+        fireEvent.click(screen.getByTestId("module-m:m1"))
         fireEvent.click(screen.getByTestId("lesson-l:l1"))
         expect(push).not.toHaveBeenCalled()
         expect(screen.getByTestId("gate").textContent).toBe("l1")
@@ -254,6 +337,7 @@ describe("MindMap container — subject code on the root, gate on a locked node"
 
     it("routes into a lesson the viewer may actually enter", () => {
         mountWith([moduleOf({ id: "m1", lessons: [lesson({ id: "l1", accessLevel: "PREVIEW", isLocked: false })] })])
+        fireEvent.click(screen.getByTestId("module-m:m1"))
         fireEvent.click(screen.getByTestId("lesson-l:l1"))
         expect(push).toHaveBeenCalledWith("/courses/khoa-a/learn/content/modules/m1/contents/l1")
     })

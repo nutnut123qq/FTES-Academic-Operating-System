@@ -29,6 +29,11 @@ export interface MindMapNodeData extends Record<string, unknown> {
     kind: "root" | MindMapNodeKind
     /** Primary label (subject code on the root, title otherwise). */
     label: string
+    /**
+     * Short subtitle shown under the title on module + lesson nodes (the section /
+     * lesson description from the course outline). Empty / absent → no subtitle.
+     */
+    description?: string
     /** 3-state completion status (content nodes only; `notStarted` on the root, unused). */
     status: MindMapNodeStatus
     /** Premium paywall flag for this viewer (orthogonal to `status`). */
@@ -37,6 +42,10 @@ export interface MindMapNodeData extends Record<string, unknown> {
     isCurrent: boolean
     /** True when the progress assistant recommends this lesson as the next step. */
     isRecommended?: boolean
+    /** Module nodes only: true when this section is expanded (its children are shown). */
+    isExpanded?: boolean
+    /** Module nodes only: true when this section has at least one lesson to reveal. */
+    hasChildren?: boolean
     /** Owning module id — the route segment for lessons/exercises. */
     moduleId: string
     /** Owning lesson id (lesson + exercise nodes). */
@@ -75,30 +84,47 @@ export interface BuildMindMapInput {
     currentModuleId: string | null
     /** The lesson the progress assistant recommends next — tags its node `isRecommended`. */
     recommendedLessonId?: string | null
+    /**
+     * The set of EXPANDED section (module) ids. Progressive disclosure: a section's
+     * lesson + exercise child nodes are emitted ONLY when its id is in this set. An
+     * empty set (the default first-paint state) renders the section ring alone.
+     */
+    expandedModuleIds: ReadonlySet<string>
 }
 
-/** Horizontal column position (px, left edge) per tree level. */
-const COLUMN_X: Record<"root" | MindMapNodeKind, number> = {
-    root: 0,
-    module: 360,
-    lesson: 720,
-    exercise: 1080,
+/** Approximate node box (px) per level — used to convert a CENTRE to React Flow's top-left origin. */
+const NODE_SIZE: Record<"root" | MindMapNodeKind, { w: number; h: number }> = {
+    root: { w: 240, h: 128 },
+    module: { w: 280, h: 100 },
+    lesson: { w: 240, h: 84 },
+    exercise: { w: 220, h: 64 },
 }
 
-/** Approximate node height per level (px) — used to vertically centre parents on children. */
-const NODE_HEIGHT: Record<"root" | MindMapNodeKind, number> = {
-    root: 128,
-    module: 96,
-    lesson: 76,
-    exercise: 68,
-}
+// -------------------------------------------------------------- radial geometry
+// The map is a classic radial tree: the subject-code root sits at the origin and
+// the sections fan out EVENLY on all sides (angle 2π·i/N), not down one column.
+// When a section expands, its lessons fan further out along that branch's outward
+// direction (staying inside the section's angular sector so branches never collide),
+// and each lesson's exercises fan further out again.
 
-/** Vertical slot height allotted to each leaf row (px). */
-const ROW_HEIGHT = 92
+/** Tangential spacing budget per section — grows the ring radius so cards never touch. */
+const MODULE_ARC = 360
+/** Floor for the section ring radius (keeps a small course off the root). */
+const MODULE_RADIUS_MIN = 380
+/** Radial distance from a section node out to its lesson ring. */
+const LESSON_GAP = 220
+/** Radial distance from a lesson out to its exercise ring. */
+const EXERCISE_GAP = 180
+/** Angular step between adjacent lessons of a section (rad). */
+const LESSON_ANGLE_STEP = 0.32
+/** Angular step between adjacent exercises of a lesson (rad). */
+const EXERCISE_ANGLE_STEP = 0.17
 
-/** Average of a list of numbers (falls back to 0 for an empty list). */
-const average = (values: Array<number>): number =>
-    values.length === 0 ? 0 : values.reduce((sum, value) => sum + value, 0) / values.length
+/** Polar → cartesian around the origin (React Flow's +y points down; orientation is irrelevant to a ring). */
+const polar = (radius: number, angle: number): { x: number; y: number } => ({
+    x: radius * Math.cos(angle),
+    y: radius * Math.sin(angle),
+})
 
 /** Stable node id for a nested exercise (namespaced by its lesson to stay unique). */
 const exerciseNodeId = (lessonId: string, exerciseId: string, kind: string): string =>
@@ -112,19 +138,16 @@ const edgeStyle = (isCurrent: boolean) => ({
 })
 
 /**
- * Builds a tidy left→right tree of the course: SUBJECT-CODE root → module cards →
- * lesson cards → exercise cards (challenges/assignments). Ported from StarCI's
- * React-Flow `build` (custom node types + Bezier edges), but adapted to a
- * hierarchical dendrogram because FTES renders lessons AND exercises as first-class
- * nodes rather than expand-on-click.
+ * Builds a RADIAL tree of the course: the SUBJECT-CODE root at the centre, section
+ * cards fanned evenly around it (angle `2π·i/N` at a ring radius that scales with the
+ * section count), and — for the sections the viewer has EXPANDED — their lesson cards
+ * and exercise cards fanned further outward along each branch. Sections start
+ * collapsed (progressive disclosure): the first paint shows the section ring alone.
  *
- * Layout is deterministic: each leaf (exercise, or a childless lesson/module) takes
- * one row; every parent is centred on the mean Y of its children, so columns never
- * overlap and the tree reads cleanly under pan/zoom.
- *
- * Node states come straight from the per-viewer completion signals on the learn
- * tree ({@link moduleStatus}/{@link lessonStatus}/{@link exerciseStatus}); the
- * root shows the SUBJECT CODE (not the long, uneven course name) plus the % ring.
+ * Ported from StarCI's React-Flow `build` (custom node types + edges) and adapted so
+ * the map reads as a mind map (distributed on all sides) rather than a one-sided
+ * dendrogram. Node states come straight from the per-viewer completion signals on the
+ * learn tree ({@link moduleStatus}/{@link lessonStatus}/{@link exerciseStatus}).
  */
 export const buildMindMap = ({
     subjectCode,
@@ -133,49 +156,108 @@ export const buildMindMap = ({
     currentLessonId,
     currentModuleId,
     recommendedLessonId = null,
+    expandedModuleIds,
 }: BuildMindMapInput): MindMapGraph => {
     const nodes: Array<Node<MindMapNodeData>> = []
     const edges: Array<Edge> = []
 
     const rootId = "root"
-    let cursorY = 0
-    /** Claim one leaf row and return its centre Y. */
-    const claimRow = (): number => {
-        const centerY = cursorY + ROW_HEIGHT / 2
-        cursorY += ROW_HEIGHT
-        return centerY
-    }
-    /** Push a node placed by its CENTRE Y (converted to React Flow's top-left origin). */
+    /** Push a node placed by its CENTRE (converted to React Flow's top-left origin). */
     const placeNode = (
         id: string,
         kind: "root" | MindMapNodeKind,
-        centerY: number,
+        center: { x: number; y: number },
         data: MindMapNodeData,
     ) => {
+        const size = NODE_SIZE[kind]
         nodes.push({
             id,
             type: kind === "root" ? ROOT_NODE_TYPE : CONTENT_NODE_TYPE,
-            position: { x: COLUMN_X[kind], y: centerY - NODE_HEIGHT[kind] / 2 },
+            position: { x: center.x - size.w / 2, y: center.y - size.h / 2 },
             data,
         })
     }
+    /** Straight (centre-to-centre) edge — the classic radial spoke. */
+    const link = (id: string, source: string, target: string, isCurrent: boolean) => {
+        edges.push({ id, source, target, type: "straight", animated: isCurrent, style: edgeStyle(isCurrent) })
+    }
 
-    const moduleCenters: Array<number> = []
+    const moduleCount = modules.length
+    // Ring radius scales with the section count so cards never overlap on the ring.
+    const moduleRadius = Math.max(MODULE_RADIUS_MIN, (moduleCount * MODULE_ARC) / (2 * Math.PI))
+    // Angular slice each section owns — its children stay inside it so branches don't collide.
+    const sector = moduleCount > 0 ? (2 * Math.PI) / moduleCount : 2 * Math.PI
 
-    for (const module of modules) {
+    modules.forEach((module, index) => {
         const modLocked = isModuleLocked(module)
         const modStatus = moduleStatus(module)
         const lessonsRead = module.lessons.filter((lesson) => lesson.isCompleted).length
-        const lessonCenters: Array<number> = []
+        const moduleIsCurrent = module.id === currentModuleId
+        const isExpanded = expandedModuleIds.has(module.id)
 
-        for (const lesson of module.lessons) {
-            const exerciseCenters: Array<number> = []
+        // Start at the top and go around the ring evenly.
+        const angle = -Math.PI / 2 + (2 * Math.PI * index) / Math.max(moduleCount, 1)
+        const moduleCenter = polar(moduleRadius, angle)
+        const moduleNodeId = `m:${module.id}`
+        placeNode(moduleNodeId, "module", moduleCenter, {
+            kind: "module",
+            label: `${module.order}. ${module.title}`,
+            description: module.description,
+            status: modStatus,
+            isLocked: modLocked,
+            isCurrent: moduleIsCurrent,
+            isExpanded,
+            hasChildren: module.lessons.length > 0,
+            moduleId: module.id,
+            lessonsRead,
+            lessonsTotal: module.lessons.length,
+        })
+        link(`e:${rootId}:${moduleNodeId}`, rootId, moduleNodeId, moduleIsCurrent)
 
-            for (const exercise of lesson.exercises) {
-                const exCenterY = claimRow()
-                exerciseCenters.push(exCenterY)
+        // Progressive disclosure: only an EXPANDED section emits its lessons + exercises.
+        if (!isExpanded) {
+            return
+        }
+
+        const k = module.lessons.length
+        // Fan lessons within the section's sector (narrowed to leave gutters), radius
+        // grows with the lesson count so tangential spacing clears the cards.
+        const lessonSpread = Math.min(sector * 0.82, Math.max(0, k - 1) * LESSON_ANGLE_STEP)
+        const lessonRadius = moduleRadius + LESSON_GAP + Math.max(0, k - 5) * 16
+        const perLessonAngle = k > 1 ? lessonSpread / (k - 1) : sector * 0.6
+
+        module.lessons.forEach((lesson, lessonIndex) => {
+            const lessonFrac = k === 1 ? 0 : lessonIndex / (k - 1) - 0.5
+            const lessonAngle = angle + lessonFrac * lessonSpread
+            const lessonCenter = polar(lessonRadius, lessonAngle)
+            const lessonNodeId = `l:${lesson.id}`
+            const lessonIsCurrent = lesson.id === currentLessonId
+            placeNode(lessonNodeId, "lesson", lessonCenter, {
+                kind: "lesson",
+                label: lesson.title,
+                description: lesson.description,
+                status: lessonStatus(lesson),
+                isLocked: lesson.isLocked,
+                isCurrent: lessonIsCurrent,
+                isRecommended: recommendedLessonId != null && lesson.id === recommendedLessonId,
+                moduleId: module.id,
+                lessonId: lesson.id,
+            })
+            link(`e:${module.id}:${lessonNodeId}`, moduleNodeId, lessonNodeId, lessonIsCurrent)
+
+            const e = lesson.exercises.length
+            if (e === 0) {
+                return
+            }
+            // Exercises fan further out, inside the lesson's own sub-slice of the sector.
+            const exSpread = Math.min(perLessonAngle * 0.8, Math.max(0, e - 1) * EXERCISE_ANGLE_STEP)
+            const exerciseRadius = lessonRadius + EXERCISE_GAP + Math.max(0, e - 3) * 14
+            lesson.exercises.forEach((exercise, exIndex) => {
+                const exFrac = e === 1 ? 0 : exIndex / (e - 1) - 0.5
+                const exAngle = lessonAngle + exFrac * exSpread
+                const exCenter = polar(exerciseRadius, exAngle)
                 const exId = exerciseNodeId(lesson.id, exercise.id, exercise.kind)
-                placeNode(exId, "exercise", exCenterY, {
+                placeNode(exId, "exercise", exCenter, {
                     kind: "exercise",
                     label: exercise.title,
                     status: exerciseStatus(exercise, lesson),
@@ -187,62 +269,13 @@ export const buildMindMap = ({
                     exerciseType: exercise.type,
                     slug: exercise.slug,
                 })
-                edges.push({
-                    id: `e:${lesson.id}:${exId}`,
-                    source: `l:${lesson.id}`,
-                    target: exId,
-                    style: edgeStyle(false),
-                })
-            }
-
-            const lessonCenterY = exerciseCenters.length > 0 ? average(exerciseCenters) : claimRow()
-            lessonCenters.push(lessonCenterY)
-            const lessonId = `l:${lesson.id}`
-            const lessonIsCurrent = lesson.id === currentLessonId
-            placeNode(lessonId, "lesson", lessonCenterY, {
-                kind: "lesson",
-                label: lesson.title,
-                status: lessonStatus(lesson),
-                isLocked: lesson.isLocked,
-                isCurrent: lessonIsCurrent,
-                isRecommended: recommendedLessonId != null && lesson.id === recommendedLessonId,
-                moduleId: module.id,
-                lessonId: lesson.id,
+                link(`e:${lesson.id}:${exId}`, lessonNodeId, exId, false)
             })
-            edges.push({
-                id: `e:${module.id}:${lessonId}`,
-                source: `m:${module.id}`,
-                target: lessonId,
-                animated: lessonIsCurrent,
-                style: edgeStyle(lessonIsCurrent),
-            })
-        }
-
-        const moduleCenterY = lessonCenters.length > 0 ? average(lessonCenters) : claimRow()
-        moduleCenters.push(moduleCenterY)
-        const moduleId = `m:${module.id}`
-        const moduleIsCurrent = module.id === currentModuleId
-        placeNode(moduleId, "module", moduleCenterY, {
-            kind: "module",
-            label: `${module.order}. ${module.title}`,
-            status: modStatus,
-            isLocked: modLocked,
-            isCurrent: moduleIsCurrent,
-            moduleId: module.id,
-            lessonsRead,
-            lessonsTotal: module.lessons.length,
         })
-        edges.push({
-            id: `e:${rootId}:${moduleId}`,
-            source: rootId,
-            target: moduleId,
-            animated: moduleIsCurrent,
-            style: edgeStyle(moduleIsCurrent),
-        })
-    }
+    })
 
-    const rootCenterY = average(moduleCenters)
-    placeNode(rootId, "root", rootCenterY, {
+    // The root sits at the centre of the ring.
+    placeNode(rootId, "root", { x: 0, y: 0 }, {
         kind: "root",
         label: subjectCode,
         status: "notStarted",

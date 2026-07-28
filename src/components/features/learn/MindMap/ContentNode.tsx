@@ -4,6 +4,8 @@ import React, { memo } from "react"
 import { cn } from "@heroui/react"
 import {
     BookOpenIcon,
+    CaretDownIcon,
+    CaretRightIcon,
     CheckCircleIcon,
     type Icon,
     LockSimpleIcon,
@@ -19,8 +21,8 @@ import { STATUS_CARD_CLASS } from "./status"
 /** Width per level — modules read largest, exercises smallest (visual hierarchy). */
 const WIDTH_CLASS: Record<MindMapNodeKind, string> = {
     module: "w-[280px] min-h-[92px]",
-    lesson: "w-[260px] min-h-[72px]",
-    exercise: "w-[240px] min-h-[64px]",
+    lesson: "w-[240px] min-h-[72px]",
+    exercise: "w-[220px] min-h-[60px]",
 }
 
 /** Title type scale per level. */
@@ -29,6 +31,15 @@ const TITLE_CLASS: Record<MindMapNodeKind, string> = {
     lesson: "text-sm font-medium",
     exercise: "text-xs font-medium",
 }
+
+/**
+ * A radial map connects nodes centre-to-centre with straight spokes, so both the
+ * source and target handles sit at the node's CENTRE (invisible) rather than on the
+ * left/right edges — the edge then runs cleanly out in whatever direction the branch
+ * points, hidden under the cards and only visible in the gap between them.
+ */
+const CENTER_HANDLE_CLASS =
+    "!left-1/2 !top-1/2 !size-2 !min-h-0 !min-w-0 !-translate-x-1/2 !-translate-y-1/2 !border-0 !bg-transparent !opacity-0"
 
 /** Leading glyph for a content node. */
 const nodeIcon = (data: MindMapNodeData): Icon => {
@@ -51,14 +62,21 @@ const nodeIcon = (data: MindMapNodeData): Icon => {
  * inProgress = ORANGE, notStarted = light warm neutral. The premium lock is orthogonal
  * (dimmed + lock glyph). The "you are here" module/lesson wins with a full accent ring.
  *
+ * Module + lesson nodes also show a short DESCRIPTION under the title (the section /
+ * lesson blurb from the course outline), clamped to two lines so cards stay compact.
+ * Section nodes carry an expand/collapse caret: clicking a section reveals its lessons
+ * + exercises (progressive disclosure); clicking a lesson/exercise navigates.
+ *
  * Draggable + clickable: dragging is handled by React Flow, the click bubbles to the
- * canvas `onNodeClick`, which routes / opens the package gate.
+ * canvas `onNodeClick`, which toggles a section or routes / opens the package gate.
  */
 const MindMapContentNodeBase = ({ data }: NodeProps) => {
     const node = data as MindMapNodeData
     const t = useTranslations("learn")
     const kind = node.kind as MindMapNodeKind
     const IconGlyph = nodeIcon(node)
+    const showCaret = kind === "module" && node.hasChildren
+    const CaretGlyph = node.isExpanded ? CaretDownIcon : CaretRightIcon
 
     return (
         <div
@@ -78,12 +96,7 @@ const MindMapContentNodeBase = ({ data }: NodeProps) => {
                     {t("mindMap.progress.suggested")}
                 </span>
             ) : null}
-            <Handle
-                type="target"
-                position={Position.Left}
-                isConnectable={false}
-                className="!h-px !w-px !min-h-0 !min-w-0 !border-0 !bg-transparent !opacity-0"
-            />
+            <Handle type="target" position={Position.Top} isConnectable={false} className={CENTER_HANDLE_CLASS} />
             <div className="flex items-start gap-2">
                 <IconGlyph
                     aria-hidden
@@ -93,15 +106,28 @@ const MindMapContentNodeBase = ({ data }: NodeProps) => {
                         node.status === "completed" ? "text-success" : "text-muted",
                     )}
                 />
-                <span className={cn("min-w-0 flex-1 line-clamp-2 text-foreground", TITLE_CLASS[kind])}>
-                    {node.label}
-                </span>
+                <div className="min-w-0 flex-1">
+                    <span className={cn("block line-clamp-2 text-foreground", TITLE_CLASS[kind])}>{node.label}</span>
+                    {node.description ? (
+                        <span className="mt-0.5 block line-clamp-2 text-xs font-normal leading-snug text-muted">
+                            {node.description}
+                        </span>
+                    ) : null}
+                </div>
                 {node.status === "completed" ? (
                     <CheckCircleIcon
                         aria-label={t("mindMap.legend.done")}
                         focusable="false"
                         weight="fill"
                         className="size-4 shrink-0 text-success"
+                    />
+                ) : null}
+                {showCaret ? (
+                    <CaretGlyph
+                        aria-label={t(node.isExpanded ? "mindMap.collapse" : "mindMap.expand")}
+                        focusable="false"
+                        weight="bold"
+                        className="mt-0.5 size-4 shrink-0 text-muted"
                     />
                 ) : null}
             </div>
@@ -130,12 +156,7 @@ const MindMapContentNodeBase = ({ data }: NodeProps) => {
                 ) : null}
             </div>
 
-            <Handle
-                type="source"
-                position={Position.Right}
-                isConnectable={false}
-                className="!h-px !w-px !min-h-0 !min-w-0 !border-0 !bg-transparent !opacity-0"
-            />
+            <Handle type="source" position={Position.Bottom} isConnectable={false} className={CENTER_HANDLE_CLASS} />
         </div>
     )
 }

@@ -64,6 +64,7 @@ export const LeaderboardPodium = ({ top, selectedCategory, viewerUserId, classNa
                             <UserAvatar
                                 username={entry.username}
                                 avatar={entry.avatar}
+                                seed={entry.userId}
                                 size={isLeader ? "lg" : "md"}
                                 className={cn(isViewer && "ring-2 ring-accent")}
                             />

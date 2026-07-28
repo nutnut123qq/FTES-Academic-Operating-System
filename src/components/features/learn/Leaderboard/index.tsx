@@ -10,7 +10,6 @@ import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import {
     rankEntriesByCategory,
     useQueryLearnLeaderboardSwr,
-    VIEWER_USER_ID,
 } from "../hooks/useQueryLearnLeaderboardSwr"
 import { LeaderboardPodium } from "./LeaderboardPodium"
 import { LeaderboardTable } from "./LeaderboardTable"
@@ -32,7 +31,7 @@ export const Leaderboard = () => {
     const { courseId } = useParams<{ courseId: string }>()
     const searchParams = useSearchParams()
     const selectedCategory = parseCategoryParam(searchParams.get("category"))
-    const { entries, computedAt, isLoading, isValidating, error, mutate } = useQueryLearnLeaderboardSwr(courseId)
+    const { entries, computedAt, viewerUserId, isLoading, isValidating, error, mutate } = useQueryLearnLeaderboardSwr(courseId)
 
     const ranked = useMemo(
         () => rankEntriesByCategory(entries, selectedCategory),
@@ -86,7 +85,7 @@ export const Leaderboard = () => {
                         <LeaderboardChampion
                             entry={ranked[0].entry}
                             totalXp={ranked[0].entry.totalXp}
-                            viewerUserId={VIEWER_USER_ID}
+                            viewerUserId={viewerUserId}
                         />
                     ) : (
                         <div className="flex flex-col gap-6">
@@ -94,13 +93,13 @@ export const Leaderboard = () => {
                                 <LeaderboardPodium
                                     top={podiumRows}
                                     selectedCategory={selectedCategory}
-                                    viewerUserId={VIEWER_USER_ID}
+                                    viewerUserId={viewerUserId}
                                 />
                             ) : null}
                             <LeaderboardTable
                                 rankedEntries={listRows}
                                 selectedCategory={selectedCategory}
-                                viewerUserId={VIEWER_USER_ID}
+                                viewerUserId={viewerUserId}
                             />
                         </div>
                     )}

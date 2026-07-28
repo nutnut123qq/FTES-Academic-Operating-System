@@ -47,11 +47,19 @@ const AMOUNT_TYPE: Record<PriceTagSize, "body" | "h4" | "h3"> = {
     lg: "h3",
 }
 
+/**
+ * Format a VND amount in the house VND-primary style (`299.000₫`): the `₫` symbol
+ * AFTER the number with dot thousands separators, locale-independent. Exported so any
+ * copy that must read the SAME as a price (e.g. the cart's "You save" line) reuses this
+ * exact format instead of a leading-symbol / comma-separator formatter.
+ */
+export const formatVnd = (amount: number): string => `${amount.toLocaleString("vi-VN")}₫`
+
 /** Format an amount in the given currency. */
 const formatPrice = (amount: number, currency: PriceCurrency): string =>
     currency === "USD"
         ? amount.toLocaleString("en-US", { style: "currency", currency: "USD" })
-        : `${amount.toLocaleString("vi-VN")}₫`
+        : formatVnd(amount)
 
 /** Whole-percent saving between a "before" and an "after" amount (0 when none). */
 const savingPercent = (before: number, after: number): number =>

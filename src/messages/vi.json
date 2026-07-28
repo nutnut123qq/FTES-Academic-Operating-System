@@ -7425,7 +7425,6 @@
     "itemSaving": "Tiết kiệm {amount}",
     "remove": "Xoá",
     "checkout": "Thanh toán",
-    "priceVnd": "{amount}₫",
     "empty": "Giỏ hàng trống.",
     "errorTitle": "Không tải được giỏ hàng",
     "errorDescription": "Đã có lỗi xảy ra. Vui lòng thử lại.",

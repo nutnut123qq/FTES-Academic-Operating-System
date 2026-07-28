@@ -4,8 +4,8 @@ import React, { useState } from "react"
 import Image from "next/image"
 import { Button, Typography } from "@heroui/react"
 import { ImageSquareIcon, TrashIcon } from "@phosphor-icons/react"
-import { useFormatter, useTranslations } from "next-intl"
-import { PriceTag } from "@/components/blocks/commerce/PriceTag"
+import { useTranslations } from "next-intl"
+import { PriceTag, formatVnd } from "@/components/blocks/commerce/PriceTag"
 import type { CartItemView } from "@/modules/api/rest/commerce"
 
 /** Props for {@link CartLineItem}. */
@@ -60,7 +60,6 @@ const CartThumbnail = ({ imageUrl, alt }: { imageUrl: string | null; alt: string
  */
 export const CartLineItem = ({ item, name, onRemove, isRemoving }: CartLineItemProps) => {
     const t = useTranslations("cart")
-    const format = useFormatter()
     const unitPrice = item.unitPrice ?? 0
     const original =
         item.originalPriceVnd != null && item.originalPriceVnd > unitPrice
@@ -84,7 +83,7 @@ export const CartLineItem = ({ item, name, onRemove, isRemoving }: CartLineItemP
                 <PriceTag discounted={unitPrice} original={original} size="sm" />
                 {saving > 0 ? (
                     <Typography type="body-xs" className="text-success">
-                        {t("itemSaving", { amount: t("priceVnd", { amount: format.number(saving) }) })}
+                        {t("itemSaving", { amount: formatVnd(saving) })}
                     </Typography>
                 ) : null}
             </div>

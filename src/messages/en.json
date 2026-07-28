@@ -7439,7 +7439,6 @@
     "itemSaving": "Save {amount}",
     "remove": "Remove",
     "checkout": "Checkout",
-    "priceVnd": "₫{amount}",
     "empty": "Your cart is empty.",
     "errorTitle": "Couldn't load your cart",
     "errorDescription": "Something went wrong. Please try again.",

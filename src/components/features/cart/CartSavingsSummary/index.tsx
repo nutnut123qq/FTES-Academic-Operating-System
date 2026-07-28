@@ -2,8 +2,8 @@
 
 import React from "react"
 import { Typography } from "@heroui/react"
-import { useFormatter, useTranslations } from "next-intl"
-import { PriceTag } from "@/components/blocks/commerce/PriceTag"
+import { useTranslations } from "next-intl"
+import { PriceTag, formatVnd } from "@/components/blocks/commerce/PriceTag"
 import { computeCartSavings } from "@/components/features/cart/cartSavings"
 import type { CartItemView } from "@/modules/api/rest/commerce"
 
@@ -29,11 +29,7 @@ export interface CartSavingsSummaryProps {
  */
 export const CartSavingsSummary = ({ items, subtotal }: CartSavingsSummaryProps) => {
     const t = useTranslations("cart")
-    const format = useFormatter()
     const { currentTotal, originalTotal, savedAmount, hasSavings } = computeCartSavings(items, subtotal)
-
-    /** One money template for the whole summary (mirrors the app's `priceVnd` format). */
-    const money = (amount: number) => t("priceVnd", { amount: format.number(amount) })
 
     return (
         <div className="flex flex-col gap-1">
@@ -50,7 +46,7 @@ export const CartSavingsSummary = ({ items, subtotal }: CartSavingsSummaryProps)
             </div>
             {hasSavings ? (
                 <Typography type="body-sm" className="text-success">
-                    {t("savings", { amount: money(savedAmount) })}
+                    {t("savings", { amount: formatVnd(savedAmount) })}
                 </Typography>
             ) : null}
         </div>

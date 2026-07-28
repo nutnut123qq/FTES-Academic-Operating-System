@@ -45,6 +45,14 @@ export interface ToggleSavedInput {
     source?: SavedPostSource
 }
 
+/** One server-known bookmarked post fed to {@link SavedItemsStoreState.mergeSavedPosts}. */
+export interface MergeSavedPostInput {
+    /** Post id known-bookmarked on the SERVER. */
+    entityId: string
+    /** Source context applied ONLY when the post is not already in the store. */
+    source?: SavedPostSource
+}
+
 /** Read the persisted list (client only); empty when absent / unreadable. */
 const readStoredItems = (): Array<SavedItem> => {
     if (typeof window === "undefined") {
@@ -97,6 +105,15 @@ interface SavedItemsStoreState {
     hydrate: () => void
     /** Optimistically save/unsave an entity and persist the new list. */
     toggleSaved: (input: ToggleSavedInput) => void
+    /**
+     * Merge server-known bookmarked posts into the store (ADDITIVE — never removes,
+     * never overwrites an existing entry). Lets the `/saved` library list posts
+     * bookmarked on the SERVER that this browser's localStorage never captured
+     * (saved on another device, or after a storage clear), so the real BE bookmark
+     * list — not the client store — decides which posts are saved. No-ops when
+     * every id is already present (safe to call from a render effect).
+     */
+    mergeSavedPosts: (posts: ReadonlyArray<MergeSavedPostInput>) => void
     /** Whether an entity is currently saved. */
     isSaved: (entityType: SavedEntityType, entityId: string) => boolean
 }
@@ -135,6 +152,36 @@ export const useSavedItemsStore = create<SavedItemsStoreState>((set, get) => ({
                 (item) => !(item.entityType === entityType && item.entityId === entityId),
             )
             : [...items, { entityType, entityId, savedAt: Date.now(), source }]
+        writeStoredItems(next)
+        set({ items: next })
+    },
+    mergeSavedPosts: (posts) => {
+        const { items } = get()
+        const savedPostIds = new Set(
+            items
+                .filter((item) => item.entityType === "post")
+                .map((item) => item.entityId),
+        )
+        // BE lists bookmarked posts newest-saved-first; keep that order among the
+        // freshly merged rows (decrement from `now` → they sort above older entries).
+        const now = Date.now()
+        const additions: Array<SavedItem> = []
+        posts.forEach((post) => {
+            if (savedPostIds.has(post.entityId)) {
+                return
+            }
+            savedPostIds.add(post.entityId)
+            additions.push({
+                entityType: "post",
+                entityId: post.entityId,
+                savedAt: now - additions.length,
+                source: post.source,
+            })
+        })
+        if (additions.length === 0) {
+            return
+        }
+        const next = [...items, ...additions]
         writeStoredItems(next)
         set({ items: next })
     },

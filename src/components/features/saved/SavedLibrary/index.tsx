@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useMemo, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import { Button, Chip, Skeleton, Tabs, Typography } from "@heroui/react"
 import {
     BookmarkSimpleIcon,
@@ -71,10 +71,14 @@ interface SavedRow {
  * (`GET /api/v1/community/bookmarks/posts`, via {@link useQueryBookmarkedPostsSwr}) —
  * NOT by re-fetching a group/subject feed. The old join called the group/subject feed
  * with a placeholder id `"saved-library"`, which the BE forced to `UUID` → 400; the real
- * bookmark endpoint returns the viewer's saved posts already author-enriched. The saved
- * SET + newest-first order still come from the `savedItems` store; the "source" line still
- * comes from each entry's captured `source`. Post ids not present in the loaded bookmark
- * pages are dropped silently.
+ * bookmark endpoint returns the viewer's saved posts already author-enriched.
+ *
+ * The saved-POST SET is driven by that SERVER list, not by localStorage: on load the
+ * server bookmarks are reconciled into the `savedItems` store (additive merge), so a
+ * post bookmarked on another device / after a storage clear still appears (previously it
+ * was silently dropped because the store — client-only — never had its id). The
+ * newest-first order + the "source" line still come from each store entry (server-merged
+ * entries default their source to "Cộng đồng"). Resource/course sets stay on the store.
  */
 export const SavedLibrary = () => {
     const t = useTranslations()
@@ -86,6 +90,7 @@ export const SavedLibrary = () => {
     useHydrateSavedItems()
     const items = useSavedItemsStore((state) => state.items)
     const isHydrated = useSavedItemsStore((state) => state.isHydrated)
+    const mergeSavedPosts = useSavedItemsStore((state) => state.mergeSavedPosts)
 
     const [tab, setTab] = useState<SavedTab>("all")
     const [query, setQuery] = useState("")
@@ -104,6 +109,20 @@ export const SavedLibrary = () => {
         }
         return map
     }, [bookmarkedPosts])
+
+    // Reconcile the store with the REAL server bookmark list: the BE bookmark
+    // endpoint — not this browser's localStorage — is the source of truth for which
+    // POSTS are saved. Any post bookmarked on the server but missing from the local
+    // store (saved on another device / after a storage clear) is merged in so it
+    // actually renders (and its per-row un-bookmark button reads the right state).
+    // `mergeSavedPosts` is additive + no-ops once every id is present, so this is
+    // loop-safe despite `bookmarkedPosts` changing identity each render.
+    useEffect(() => {
+        if (bookmarkedPosts.length === 0) {
+            return
+        }
+        mergeSavedPosts(bookmarkedPosts.map((post) => ({ entityId: post.id })))
+    }, [bookmarkedPosts, mergeSavedPosts])
 
     const isJoining =
         !isHydrated ||

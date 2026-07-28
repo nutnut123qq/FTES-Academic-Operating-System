@@ -13,6 +13,7 @@ import { usePaymentOverlayState } from "@/hooks/zustand/overlay/hooks"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
 import { useQueryCoursePackagesSwr } from "@/components/features/course/hooks/useQueryCoursePackagesSwr"
 import { CoverImage } from "@/components/blocks/media/CoverImage"
+import { PriceTag } from "@/components/blocks/commerce/PriceTag"
 import type { PackageView } from "@/modules/api/rest/course"
 import type { CheapestPackage } from "@/modules/api/rest/course"
 
@@ -98,7 +99,7 @@ export const PackageGateModal = ({
         <Modal isOpen={isOpen} onOpenChange={(open) => { if (!open) onClose() }}>
             <Modal.Backdrop>
                 <Modal.Container>
-                    <Modal.Dialog className={cn("w-full max-w-2xl")}>
+                    <Modal.Dialog className={cn("w-full max-w-lg")}>
                         <Modal.Header>
                             <div className="flex items-start gap-3">
                                 {/* Branded course cover when available (e.g. the video preview-ended
@@ -107,7 +108,7 @@ export const PackageGateModal = ({
                                     <CoverImage
                                         src={courseCoverUrl}
                                         alt={courseTitle}
-                                        className="w-28 shrink-0"
+                                        className="w-20 shrink-0"
                                     />
                                 ) : (
                                     <div className="rounded-xl bg-accent/10 p-2 text-accent">
@@ -124,7 +125,7 @@ export const PackageGateModal = ({
                                 </div>
                             </div>
                         </Modal.Header>
-                        <Modal.Body className="flex flex-col gap-4">
+                        <Modal.Body className="flex flex-col gap-3">
                             {isLoading ? (
                                 <PackageGateSkeleton />
                             ) : !hasPackages ? (
@@ -146,7 +147,7 @@ export const PackageGateModal = ({
                                             {t("modal.cheapestHint", { name: cheapestPackage.name })}
                                         </Typography>
                                     ) : null}
-                                    <div className="grid grid-cols-1 gap-3">
+                                    <div className="grid grid-cols-1 gap-2">
                                         {filteredPackages.map((pkg) => (
                                             <PackageGateCard
                                                 key={pkg.id}
@@ -197,9 +198,6 @@ const PackageGateCard = ({
 
     const salePrice = Number(pkg.salePrice)
     const originalPrice = Number(pkg.originalPrice)
-    const discount = originalPrice > salePrice
-        ? Math.round((1 - salePrice / originalPrice) * 100)
-        : 0
 
     const features = useMemo(() => parsePackageFeatures(pkg.descriptions), [pkg.descriptions])
 
@@ -243,9 +241,9 @@ const PackageGateCard = ({
             : t("modal.cta")
 
     return (
-        <div className="flex flex-col gap-3 rounded-2xl border border-default bg-surface p-4">
+        <div className="flex flex-col gap-2 rounded-2xl border border-default bg-surface p-3">
             <div className="flex items-start justify-between gap-3">
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col items-start gap-2">
                     <Typography type="body" weight="semibold">
                         {pkg.name}
                     </Typography>
@@ -255,24 +253,17 @@ const PackageGateCard = ({
                         </Chip>
                     ) : null}
                 </div>
-                <div className="flex flex-col items-end gap-0.5">
-                    <Typography type="body" weight="bold" className="text-accent">
-                        {t("price", { price: formatPrice(salePrice) })}
-                    </Typography>
-                    {originalPrice > salePrice ? (
-                        <Typography type="body-xs" color="muted" className="line-through">
-                            {t("price", { price: formatPrice(originalPrice) })}
-                        </Typography>
-                    ) : null}
-                    {discount > 0 ? (
-                        <Chip size="sm" variant="soft" color="success">
-                            {t("discount", { percent: discount })}
-                        </Chip>
-                    ) : null}
-                </div>
+                {/* House price block: discounted (bold) + struck original + −X% chip in a
+                    single compact row (replaces the old 3-row vertical price stack). */}
+                <PriceTag
+                    discounted={salePrice}
+                    original={originalPrice > salePrice ? originalPrice : null}
+                    size="sm"
+                    className="shrink-0 justify-end"
+                />
             </div>
             {features.length > 0 ? (
-                <ul className="flex flex-col gap-1.5">
+                <ul className="flex flex-col gap-2">
                     {features.map((feature) => (
                         <li key={feature} className="flex items-start gap-2 text-sm text-muted">
                             <CheckIcon aria-hidden focusable="false" className="mt-0.5 size-4 shrink-0 text-success" />
@@ -373,7 +364,7 @@ export const WholeCourseGateCard = ({
 
     if (!product) {
         return (
-            <div className="flex flex-col items-center gap-3 py-6 text-center">
+            <div className="flex flex-col items-center gap-2 py-4 text-center">
                 <Typography type="body" weight="semibold">
                     {t("modal.emptyTitle")}
                 </Typography>
@@ -387,14 +378,14 @@ export const WholeCourseGateCard = ({
     const isBusy = isProcessing || addCart.isMutating || checkout.isMutating
 
     return (
-        <div className="flex flex-col gap-3 rounded-2xl border border-default bg-surface p-4">
-            <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-col gap-2 rounded-2xl border border-default bg-surface p-3">
+            <div className="flex items-center justify-between gap-3">
                 <Typography type="body" weight="semibold">
                     {tCourse("detail.wholeCourse")}
                 </Typography>
-                <Typography type="body" weight="bold" className="text-accent">
-                    {t("price", { price: formatPrice(product.priceVnd ?? 0) })}
-                </Typography>
+                {/* House price block (COURSE_UNLOCK exposes only a charged price → no
+                    struck original / chip here). */}
+                <PriceTag discounted={product.priceVnd ?? 0} size="sm" className="shrink-0" />
             </div>
             <Button
                 variant="primary"
@@ -411,10 +402,10 @@ export const WholeCourseGateCard = ({
 
 /** Skeleton while packages are loading. */
 const PackageGateSkeleton = () => (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-2">
         <Skeleton className="h-4 w-1/2 rounded-md" />
-        <Skeleton className="h-24 w-full rounded-2xl" />
-        <Skeleton className="h-24 w-full rounded-2xl" />
+        <Skeleton className="h-20 w-full rounded-2xl" />
+        <Skeleton className="h-20 w-full rounded-2xl" />
     </div>
 )
 
@@ -432,7 +423,3 @@ const parsePackageFeatures = (description?: string | null): Array<string> => {
     const byComma = raw.split(",").map((s) => s.trim()).filter(Boolean)
     return byComma.length > 0 ? byComma : [raw]
 }
-
-/** Formats a VND price with comma separators. */
-const formatPrice = (value: number): string =>
-    Number.isFinite(value) ? value.toLocaleString("vi-VN") : "0"

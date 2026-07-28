@@ -27,7 +27,7 @@ import { useRestWithToast } from "@/modules/toast/hooks"
 import { usePostSubmitChallengeSwr } from "@/hooks/swr/api/rest/mutations/usePostSubmitChallengeSwr"
 import { PackageGateModal } from "@/components/features/course/PackageGateModal"
 import { useQueryCoursePackagesSwr } from "@/components/features/course/hooks/useQueryCoursePackagesSwr"
-import { resolveTierLabel } from "@/components/features/course/tierLabels"
+import { resolveTierColor, resolveTierLabel } from "@/components/features/course/tierLabels"
 import { GradeCodePanel } from "@/components/features/challenge/ChallengeView/GradeCodePanel"
 import { UiUxChallengeEditor } from "@/components/features/challenge/ChallengeView/UiUxChallengeEditor"
 import { mapChallengeType } from "@/components/features/challenge/hooks/useQueryChallengesSwr"
@@ -229,7 +229,7 @@ export const ChallengeSubmission = () => {
                                 {t("exercises.challenge.upgradeTiersHint")}
                             </Typography>
                             {requiredPackageSlugs.map((slug) => (
-                                <Chip key={slug} size="sm" variant="soft" color="accent" className="shrink-0">
+                                <Chip key={slug} size="sm" variant="soft" color={resolveTierColor(slug)} className="shrink-0">
                                     {resolveTierLabel(slug, packageNameBySlug)}
                                 </Chip>
                             ))}

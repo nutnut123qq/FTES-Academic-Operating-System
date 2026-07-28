@@ -49,7 +49,7 @@ import { useQueryCourseDetailSwr, type CourseDetail as CourseDetailModel, type C
 import { useCourseEnrollment } from "../hooks/useCourseEnrollment"
 import { useQueryCoursePackagesSwr } from "../hooks/useQueryCoursePackagesSwr"
 import { WholeCourseGateCard } from "../PackageGateModal"
-import { resolveTierLabel } from "../tierLabels"
+import { resolveTierColor, resolveTierLabel } from "../tierLabels"
 import { pathConfig } from "@/resources/path"
 import { CourseRatings } from "./CourseRatings"
 import { SelectableCardGroup } from "@/components/blocks/navigation/SelectableCardGroup"
@@ -525,7 +525,7 @@ const CourseDetailView = ({
                                                                                     key={slug}
                                                                                     size="sm"
                                                                                     variant="soft"
-                                                                                    color="accent"
+                                                                                    color={resolveTierColor(slug)}
                                                                                     className="shrink-0"
                                                                                 >
                                                                                     {resolveLessonTierLabel(slug)}

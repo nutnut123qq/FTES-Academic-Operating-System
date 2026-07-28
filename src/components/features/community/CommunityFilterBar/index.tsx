@@ -21,6 +21,12 @@ export interface CommunityFilterBarProps extends WithClassNames<undefined> {
     /** Current post-type filter ("" = any). */
     postType: string
     onPostTypeChange: (postType: string) => void
+    /**
+     * Whether to render the Newest/Oldest time sort. Hidden on the TRENDING tab, whose order IS
+     * engagement — the feed ignores the sort there, so showing the control would be a silent no-op.
+     * Defaults to `true` so keyword search (which always honours the sort) keeps it.
+     */
+    showSortControl?: boolean
 }
 
 /**
@@ -44,6 +50,7 @@ export const CommunityFilterBar = ({
     onSortChange,
     postType,
     onPostTypeChange,
+    showSortControl = true,
     className,
 }: CommunityFilterBarProps) => {
     const t = useTranslations("communityHub")
@@ -72,16 +79,18 @@ export const CommunityFilterBar = ({
                     className="w-max"
                 />
             </div>
-            <SegmentedControl<CommunitySearchSort>
-                ariaLabel={t("search.sortLabel")}
-                items={[
-                    { value: CommunitySearchSort.Newest, label: t("search.sortNewest") },
-                    { value: CommunitySearchSort.Oldest, label: t("search.sortOldest") },
-                ]}
-                value={sort}
-                onChange={onSortChange}
-                className="w-full"
-            />
+            {showSortControl ? (
+                <SegmentedControl<CommunitySearchSort>
+                    ariaLabel={t("search.sortLabel")}
+                    items={[
+                        { value: CommunitySearchSort.Newest, label: t("search.sortNewest") },
+                        { value: CommunitySearchSort.Oldest, label: t("search.sortOldest") },
+                    ]}
+                    value={sort}
+                    onChange={onSortChange}
+                    className="w-full"
+                />
+            ) : null}
         </div>
     )
 }

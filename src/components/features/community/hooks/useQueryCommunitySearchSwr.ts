@@ -53,20 +53,20 @@ export type SearchPageKey = readonly [
 ]
 
 /**
- * True when any search/filter/sort dimension is set — search mode replaces the tab feed.
+ * True when a KEYWORD or a FILTER (type / author / group) is set — search mode (global, all
+ * published posts) replaces the tab feed.
  *
- * A NON-DEFAULT sort (Oldest) counts as active: the tab `feed(tab, page, campus)` query has NO
- * sort argument, so the ONLY way to honour Newest/Oldest is to route through `communitySearch`
- * (which takes `sort`). Newest is the default, so leaving it there — with no keyword/type — keeps
- * the plain tab feed. This mirrors the feed header's own "filters applied" dot, which already
- * lights up on `sort !== Newest`.
+ * Sort (Newest/Oldest) is deliberately NOT a trigger: the tab `feed(tab, page, campus, sort)`
+ * query now honours the sort itself (change community-feed-sort), so flipping Newest↔Oldest
+ * re-orders the CURRENT tab feed in place — it must NOT silently swap the scope to a global
+ * `communitySearch`. Search still applies `criteria.sort` once a keyword/filter is active, so a
+ * keyword search stays sortable.
  */
 export const isSearchActive = (criteria: CommunitySearchCriteria): boolean =>
     criteria.q.trim().length > 0 ||
     Boolean(criteria.postType) ||
     Boolean(criteria.authorId) ||
-    Boolean(criteria.groupId) ||
-    criteria.sort !== CommunitySearchSort.Newest
+    Boolean(criteria.groupId)
 
 /**
  * `useSWRInfinite` key factory for community search — pure, so both GATES are unit-testable

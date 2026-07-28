@@ -345,6 +345,28 @@ export interface EnrollmentView {
      * (`EnrollmentView.isPurchased()`), unlike {@link CourseAccessStateView.purchased}.
      */
     isPurchased: boolean
+    /**
+     * The course cover image URL (same field as {@link CourseSummary.imageHeader}).
+     * Additive — supplied by the paired BE change (home-continue-image-and-mascot);
+     * absent/`null` on older deployments → the continue-learning card shows an empty
+     * framed surface instead of a thumbnail.
+     */
+    imageHeader?: string | null
+    /**
+     * The course publish status (`DRAFT` | `PUBLISHED` | `ARCHIVED`, same enum as
+     * {@link CourseSummary.status}). Additive — the paired BE change ALSO excludes
+     * unpublished courses from `GET /courses/me/enrollments` at the source; this
+     * field lets the FE filter defensively too. Absent → the row is treated as
+     * published (older BE, or a build that already pre-filtered), so the band is
+     * never blanked by a missing flag.
+     */
+    status?: string | null
+    /**
+     * Boolean publish flag — an alternative to {@link status} some BE builds may
+     * send. Additive; when present it takes precedence over {@link status} for the
+     * FE publish gate. Absent → fall back to {@link status}, then to "published".
+     */
+    published?: boolean | null
 }
 
 /**

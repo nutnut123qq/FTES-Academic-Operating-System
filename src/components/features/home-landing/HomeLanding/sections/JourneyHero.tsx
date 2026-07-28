@@ -9,7 +9,6 @@ import { useRouter } from "@/i18n/navigation"
 import { JourneyFallback } from "@/components/blocks/marketing/UserJourneyScene/JourneyFallback"
 import type { JourneyStationLabel } from "@/components/blocks/marketing/UserJourneyScene/types"
 import { JOURNEY_STATIONS } from "../content"
-import { HomeMascotGreeting } from "./HomeMascotGreeting"
 
 /** Auto-advance dwell per stage (ms); the payoff stage dwells longer. */
 const ADVANCE_MS = 3200
@@ -199,11 +198,6 @@ export const JourneyHero = () => {
                         )
                     })}
                 </div>
-
-                {/* FrosTES welcome — the page's single mascot. Placed here (below the
-                    stepper) as a compact, personalized sign-off so it reads as intentional
-                    hero chrome rather than a banner dominating the top of the page. */}
-                <HomeMascotGreeting />
             </div>
 
             {/* visual column — 3D scene (>= lg, motion, WebGL) or static journey */}

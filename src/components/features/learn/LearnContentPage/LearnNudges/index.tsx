@@ -17,10 +17,12 @@ export type LearnNudgesProps = WithClassNames<undefined>
 
 /**
  * Contextual "next actions" strip on the content home — surfaces the built-but-
- * undiscoverable leaderboard as a timely nudge. FTES's `myRank` snapshot carries no
- * server rank, so the viewer's 1-based rank is computed client-side from the ranked
- * entries. Each nudge self-hides when it has nothing to say; the whole strip renders
- * nothing when none apply. Container: reads its own SWR. Built on `SurfaceListCard`.
+ * undiscoverable leaderboard as a timely nudge. The BE `myRank` snapshot carries the
+ * viewer's 1-based rank over the WHOLE course population, so we fall back to it when
+ * the viewer sits outside the returned top window (otherwise the nudge would vanish
+ * for anyone ranked past the window). Each nudge self-hides when it has nothing to
+ * say; the whole strip renders nothing when none apply. Container: reads its own SWR.
+ * Built on `SurfaceListCard`.
  *
  * @param props - {@link LearnNudgesProps}
  */
@@ -28,15 +30,17 @@ export const LearnNudges = ({ className }: LearnNudgesProps) => {
     const t = useTranslations("learn")
     const router = useRouter()
     const { courseId } = useParams<{ courseId: string }>()
-    const { entries, viewerUserId } = useQueryLearnLeaderboardSwr(courseId)
+    const { entries, myRank, viewerUserId } = useQueryLearnLeaderboardSwr(courseId)
 
-    // derive the viewer's 1-based rank from the board (BE myRank carries the server
-    // rank, but the nudge only needs the "total" standing already on the entries)
-    const rank = viewerUserId
+    // Prefer the viewer's standing within the returned window (client re-rank of the
+    // "total" board == server rank while in-window); fall back to the server myRank.rank
+    // computed over the whole population when the viewer is outside the window.
+    const windowRank = viewerUserId
         ? rankEntriesByCategory(entries, "total").find(
             (row) => row.entry.userId === viewerUserId,
         )?.displayRank ?? null
         : null
+    const rank = windowRank ?? myRank?.rank ?? null
 
     if (rank === null) {
         return null

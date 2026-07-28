@@ -38,6 +38,7 @@ export const LeaderboardChampion = ({ entry, totalXp, viewerUserId, className }:
                 <UserAvatar
                     username={entry.username}
                     avatar={entry.avatar}
+                    seed={entry.userId}
                     size="lg"
                     className={cn(isViewer && "ring-2 ring-accent")}
                 />

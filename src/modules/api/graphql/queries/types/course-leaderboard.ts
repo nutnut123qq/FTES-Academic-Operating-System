@@ -18,9 +18,9 @@ export interface CourseLeaderboardEntry {
     completedChallenges: number
     /** Number of lessons the user marked read in the course. */
     lessonsRead: number
-    /** Number of milestone tasks passed in the course. */
+    /** Course-completion percent 0..100 (lessonsRead / totalLessons × 100). */
     milestoneProgress: number
-    /** Total XP (challenge + reads×3 + milestone×10) — the rank metric. */
+    /** Total XP (round(totalScore) + lessonsRead×3 + round(milestonePercent)×1) — the rank metric. */
     totalXp: number
 }
 
@@ -34,7 +34,7 @@ export interface CourseLeaderboardMyRank {
     completedChallenges: number
     /** Viewer's lessons-read count in the course. */
     lessonsRead: number
-    /** Viewer's passed milestone-task count in the course. */
+    /** Viewer's course-completion percent 0..100. */
     milestoneProgress: number
     /** Viewer's total XP. */
     totalXp: number

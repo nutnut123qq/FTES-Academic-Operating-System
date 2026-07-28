@@ -54,6 +54,7 @@ export const LeaderboardTable = ({ rankedEntries, selectedCategory, viewerUserId
                         <UserAvatar
                             username={entry.username}
                             avatar={entry.avatar}
+                            seed={entry.userId}
                             size="sm"
                             className={cn(isViewer && "ring-2 ring-accent")}
                         />

@@ -16,9 +16,16 @@ export const LEADERBOARD_CATEGORIES: ReadonlyArray<LeaderboardCategory> = [
     "milestones",
 ]
 
-/** XP weighting per read lesson / milestone (mirrors StarCI READING_XP / MILESTONE_XP). */
+/** XP per read lesson (mirrors BE `CourseLeaderboardAssembler.READING_XP`). */
 export const READING_XP = 3
-export const MILESTONE_XP = 10
+/**
+ * XP per 1% of course completion (mirrors BE
+ * `CourseLeaderboardAssembler.MILESTONE_XP_PER_PERCENT = 1`). `milestoneProgress`
+ * is a percent 0..100, so `milestoneProgress × MILESTONE_XP` is its exact
+ * contribution to the server `totalXp` — keep this at 1 so the three displayed
+ * category XP figures decompose `totalXp` and don't over-represent the milestone slice.
+ */
+export const MILESTONE_XP = 1
 
 /** Segment colours for the XP-composition bar (challenge / reading / milestone). */
 export const CATEGORY_COLOR: Record<"challenges" | "reading" | "milestones", string> = {
@@ -45,15 +52,18 @@ export interface LeaderboardEntry {
     totalScore: number
     /** Lessons read (× READING_XP for the reading category). */
     lessonsRead: number
-    /** Milestones completed (× MILESTONE_XP for the milestones category). */
+    /** Course-completion percent 0..100 (× MILESTONE_XP for the milestones category). */
     milestoneProgress: number
 }
 
 /** The viewer's own snapshot (drives the per-category XP shown in the rail). */
 export interface LeaderboardMyRank {
+    /** 1-based rank across the WHOLE course population (server-computed, even out of window). */
+    rank: number
     totalXp: number
     totalScore: number
     lessonsRead: number
+    /** Course-completion percent 0..100. */
     milestoneProgress: number
 }
 
@@ -152,13 +162,16 @@ export const useQueryLearnLeaderboardSwr = (courseId: string) => {
     const { data, isLoading, isValidating, error, mutate } = useSWR(
         courseId ? (["learn-leaderboard", courseId] as const) : null,
         async (): Promise<LeaderboardData> => {
-            const result = await queryCourseLeaderboard({ request: { courseId } })
+            // Ask for the server-max window (MAX_LIMIT=100) so the client per-category
+            // re-rank covers a broad population, not just the totalXp top-20 slice.
+            const result = await queryCourseLeaderboard({ request: { courseId, limit: 100 } })
             const payload = result.data?.courseLeaderboard?.data
             const myRank = payload?.myRank
             return {
                 entries: (payload?.entries ?? []).map(toEntry),
                 myRank: myRank
                     ? {
+                        rank: myRank.rank,
                         totalXp: myRank.totalXp,
                         totalScore: myRank.totalScore,
                         lessonsRead: myRank.lessonsRead,

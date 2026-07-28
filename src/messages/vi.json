@@ -2541,7 +2541,6 @@
     "aiPlanName": "Gói AI",
     "membershipName": "Hội viên FTES AOS",
     "loyalty": {
-      "enrolled": "Bạn đã sở hữu {count} khóa học",
       "diligent": "Bạn duy trì streak học tập"
     },
     "group": {

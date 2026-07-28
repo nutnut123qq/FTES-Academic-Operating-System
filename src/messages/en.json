@@ -2532,7 +2532,6 @@
     "aiPlanName": "AI plan",
     "membershipName": "FTES AOS membership",
     "loyalty": {
-      "enrolled": "You own {count} courses",
       "diligent": "You keep a learning streak"
     },
     "group": {

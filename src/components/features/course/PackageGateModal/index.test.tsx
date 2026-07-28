@@ -29,11 +29,17 @@ vi.mock("@heroui/react", () => {
     Modal.Header = ({ children }: { children: React.ReactNode }) => <div>{children}</div>
     Modal.Body = ({ children }: { children: React.ReactNode }) => <div>{children}</div>
     Modal.Footer = ({ children }: { children: React.ReactNode }) => <div>{children}</div>
+    // Chip is callable AND exposes `Chip.Label` (used by the shared PriceTag block for its −X% chip).
+    const Chip = Object.assign(
+        ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
+        { Label: ({ children }: { children: React.ReactNode }) => <span>{children}</span> },
+    )
     return {
         Modal,
         Button: ({ children }: { children: React.ReactNode }) => <button type="button">{children}</button>,
-        Chip: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
+        Chip,
         Skeleton: () => <div />,
+        Tooltip: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
         Typography: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
         cn: (...a: Array<unknown>) => a.filter(Boolean).join(" "),
     }

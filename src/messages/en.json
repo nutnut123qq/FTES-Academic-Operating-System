@@ -3623,14 +3623,23 @@
       "levelUpBody": "You reached level {level}"
     },
     "milestones": {
-      "weekOfFire": {
+      "FIRST_LESSON": {
+        "name": "First Lesson"
+      },
+      "LESSON_100": {
+        "name": "Hundred Lessons"
+      },
+      "STREAK_7": {
         "name": "Week of Fire"
       },
-      "monthOfGrit": {
+      "STREAK_30": {
         "name": "Month of Grit"
       },
-      "hundredDays": {
+      "STREAK_100": {
         "name": "Hundred Days of Fire"
+      },
+      "CHALLENGER": {
+        "name": "Challenger"
       }
     },
     "goals": {

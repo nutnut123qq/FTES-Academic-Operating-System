@@ -14,6 +14,12 @@ export interface MyGamificationBadge {
     id: string
     /** Backend badge `code` — also the i18n key under `gamification.milestones.<badgeKey>.name`. */
     badgeKey: string
+    /**
+     * Tên badge do BE trả (đã có tiếng Việt trong seed). Dùng làm fallback khi
+     * `milestones.<badgeKey>` chưa có bản dịch — BE seed thêm badge mới bất cứ lúc nào,
+     * không được để lộ đường key thô ra UI.
+     */
+    fallbackName: string
     /** ISO date (yyyy-mm-dd) the badge was earned, from the BE `awardedAt` timestamp. */
     earnedDate: string
 }
@@ -99,6 +105,7 @@ export const useQueryMyGamificationSwr = () => {
             badges: (badges ?? []).map((badge) => ({
                 id: badge.code,
                 badgeKey: badge.code,
+                fallbackName: badge.name,
                 // `awardedAt` is a full ISO timestamp; the profile renders a plain
                 // yyyy-mm-dd date, so take the date part.
                 earnedDate: badge.awardedAt.slice(0, 10),

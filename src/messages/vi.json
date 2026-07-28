@@ -3623,14 +3623,23 @@
       "levelUpBody": "Bạn đã đạt cấp {level}"
     },
     "milestones": {
-      "weekOfFire": {
+      "FIRST_LESSON": {
+        "name": "Bài học đầu tiên"
+      },
+      "LESSON_100": {
+        "name": "Trăm bài"
+      },
+      "STREAK_7": {
         "name": "Tuần Lửa"
       },
-      "monthOfGrit": {
+      "STREAK_30": {
         "name": "Tháng Bền Bỉ"
       },
-      "hundredDays": {
+      "STREAK_100": {
         "name": "Trăm Ngày Lửa"
+      },
+      "CHALLENGER": {
+        "name": "Đấu sĩ"
       }
     },
     "goals": {

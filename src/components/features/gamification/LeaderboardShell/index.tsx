@@ -247,7 +247,11 @@ export const LeaderboardShell = () => {
                                     focusable="false"
                                 />
                                 <Typography type="body-xs" weight="medium" className="text-center">
-                                    {t(`milestones.${badge.badgeKey}.name`)}
+                                    {/* BE seed badge mới lúc nào không báo → thiếu bản dịch là
+                                        lộ nguyên đường key ra mặt người dùng. Rơi về tên BE trả. */}
+                                    {t.has(`milestones.${badge.badgeKey}.name`)
+                                        ? t(`milestones.${badge.badgeKey}.name`)
+                                        : badge.fallbackName}
                                 </Typography>
                             </div>
                         ))}

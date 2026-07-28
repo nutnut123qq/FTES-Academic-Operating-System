@@ -43,9 +43,11 @@ const GOALS = {
 } as const
 /** One-time streak milestones (badge + coin). */
 const STREAK_MILESTONES: ReadonlyArray<{ days: number; badgeKey: string; coin: number }> = [
-    { days: 7, badgeKey: "weekOfFire", coin: 50 },
-    { days: 30, badgeKey: "monthOfGrit", coin: 200 },
-    { days: 100, badgeKey: "hundredDays", coin: 1000 },
+    // badgeKey = ĐÚNG `code` badge của BE (V66 seed), không phải tên tự đặt ở FE — nếu lệch thì
+    // trang hướng dẫn quảng cáo một cái tên, badge trao về lại mang tên khác (hoặc mất bản dịch).
+    { days: 7, badgeKey: "STREAK_7", coin: 50 },
+    { days: 30, badgeKey: "STREAK_30", coin: 200 },
+    { days: 100, badgeKey: "STREAK_100", coin: 1000 },
 ]
 
 /** A row in the XP table. `xp` null → the value is score-banded (shown inline). */

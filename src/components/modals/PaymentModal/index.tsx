@@ -1,13 +1,13 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import React, { useCallback, useEffect, useState } from "react"
 import { Button, Chip, Modal, Typography, cn } from "@heroui/react"
 import { useFormatter, useTranslations } from "next-intl"
 import { useSWRConfig } from "swr"
 import { useRouter } from "next/navigation"
 import {
     BankIcon,
-    CircleNotchIcon,
+    ClockIcon,
     CoinsIcon,
     XCircleIcon,
 } from "@phosphor-icons/react"
@@ -65,6 +65,8 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
     const [discount, setDiscount] = useState(0)
     const [couponError, setCouponError] = useState(false)
     const [payError, setPayError] = useState<string | null>(null)
+    // Hết giờ đếm ngược → vẫn dùng nhánh `failed`, cờ này chỉ đổi copy/icon sang "hết hạn".
+    const [expired, setExpired] = useState(false)
     const [orderId, setOrderId] = useState("")
     const [qrCode, setQrCode] = useState("")
 
@@ -85,15 +87,20 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
         setDiscount(0)
         setCouponError(false)
         setPayError(null)
+        setExpired(false)
         setOrderId("")
         setQrCode("")
     }, [isOpen, amountVnd])
 
-    // VietQR: poll the created order until the webhook settles it.
-    const orderPoll = useGetOrderSwr(orderId, { poll: phase === "awaiting" })
+    // VietQR: poll the created order until the webhook settles it. Đồng hồ 5 phút là con số
+    // của FE (BE chưa trả expiresAt), KHÔNG phải hạn thật của đơn — nên hết giờ vẫn PHẢI poll
+    // tiếp: app ngân hàng chậm/OTP lâu, tiền vào ở phút thứ 6 mà UI đã bỏ theo dõi thì người
+    // học thấy "hết hạn" rồi trả lần hai.
+    const orderPoll = useGetOrderSwr(orderId, { poll: phase === "awaiting" || expired })
     const polledStatus = orderPoll.data?.status
     useEffect(() => {
-        if (phase !== "awaiting" || !polledStatus) return
+        if (!polledStatus) return
+        if (phase !== "awaiting" && !(expired && phase === "failed")) return
         if (isPaidOrderStatus(polledStatus)) {
             setPhase("success")
             void mutate("GET_CART_SWR")
@@ -106,7 +113,15 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
         ) {
             setPhase("failed")
         }
-    }, [phase, polledStatus, mutate, context])
+    }, [phase, expired, polledStatus, mutate, context])
+
+    // Hết đồng hồ: rời pha awaiting nhưng KHÔNG ngừng theo dõi đơn (poll bám thêm cờ expired),
+    // để tiền vào muộn vẫn lật sang success. Giữ identity ổn định để đồng hồ trong AwaitingView
+    // không bị khởi động lại mỗi lần poll re-render.
+    const handleExpire = useCallback(() => {
+        setExpired(true)
+        setPhase("failed")
+    }, [])
 
     if (!context) return null
 
@@ -213,7 +228,13 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
                             ) : null}
 
                             {phase === "awaiting" ? (
-                                <AwaitingView t={t} format={format} qrCode={qrCode} amount={netVnd} />
+                                <AwaitingView
+                                    t={t}
+                                    format={format}
+                                    qrCode={qrCode}
+                                    amount={netVnd}
+                                    onExpire={handleExpire}
+                                />
                             ) : null}
 
                             {phase === "success" ? (
@@ -232,7 +253,15 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
                             ) : null}
 
                             {phase === "failed" ? (
-                                <FailedView t={t} onRetry={() => setPhase("choose")} onClose={close} />
+                                <FailedView
+                                    t={t}
+                                    expired={expired}
+                                    onRetry={() => {
+                                        setExpired(false)
+                                        setPhase("choose")
+                                    }}
+                                    onClose={close}
+                                />
                             ) : null}
                         </Modal.Body>
                     </Modal.Dialog>
@@ -390,34 +419,74 @@ const ChooseView = ({
     )
 }
 
-/** VietQR: the QR to scan + a "waiting for payment" indicator. */
+/**
+ * Cửa sổ thanh toán VietQR. BE chưa trả thời điểm hết hạn của đơn (`OrderView` không có
+ * `expiresAt`), nên chốt cứng 5 phút kể từ lúc vào pha awaiting — đổi lại bằng deadline
+ * thật khi BE có trường đó.
+ */
+const AWAITING_WINDOW_SECONDS = 5 * 60
+
+/** Số giây còn lại → "mm:ss". */
+const formatCountdown = (seconds: number) =>
+    `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`
+
+/** VietQR: the QR to scan + a 5-minute countdown to the order expiring. */
 const AwaitingView = ({
     t,
     format,
     qrCode,
     amount,
+    onExpire,
 }: {
     t: Tr
     format: Fmt
     qrCode: string
     amount: number
-}) => (
-    <div className="flex flex-col items-center gap-4 py-2">
-        <QRCode size={220} data={qrCode || "FTES"} />
-        <Typography type="body-sm" color="muted" className="text-center">
-            {t("checkout.scanHint")}
-        </Typography>
-        <Typography type="body-sm" weight="bold" className="text-accent">
-            {t("checkout.amountVnd", { amount: format.number(amount) })}
-        </Typography>
-        <div className="flex items-center gap-2 text-muted">
-            <CircleNotchIcon className="size-4 animate-spin" aria-hidden />
-            <Typography type="body-sm" color="muted">
-                {t("checkout.awaiting")}
+    onExpire: () => void
+}) => {
+    const [remaining, setRemaining] = useState(AWAITING_WINDOW_SECONDS)
+
+    // Đếm theo mốc thời gian tuyệt đối (tab bị throttle vẫn ra đúng số giây còn lại), không
+    // cộng dồn tick. View chỉ tồn tại trong pha awaiting → cleanup lo cả unmount lẫn rời pha.
+    useEffect(() => {
+        const deadline = Date.now() + AWAITING_WINDOW_SECONDS * 1000
+        const timer = window.setInterval(() => {
+            const left = Math.max(Math.ceil((deadline - Date.now()) / 1000), 0)
+            setRemaining(left)
+            if (left === 0) {
+                window.clearInterval(timer)
+                onExpire()
+            }
+        }, 1000)
+        return () => window.clearInterval(timer)
+    }, [onExpire])
+
+    return (
+        <div className="flex flex-col items-center gap-4 py-2">
+            <QRCode size={220} data={qrCode || "FTES"} />
+            <Typography type="body-sm" color="muted" className="text-center">
+                {t("checkout.scanHint")}
             </Typography>
+            <Typography type="body-sm" weight="bold" className="text-accent">
+                {t("checkout.amountVnd", { amount: format.number(amount) })}
+            </Typography>
+            <div className="flex items-center gap-2">
+                <ClockIcon aria-hidden focusable="false" className="size-4 text-muted" />
+                <Typography type="body-sm" color="muted">
+                    {t("checkout.countdownLabel")}
+                </Typography>
+                <Typography
+                    type="body-sm"
+                    weight="bold"
+                    className="tabular-nums"
+                    aria-live="polite"
+                >
+                    {formatCountdown(remaining)}
+                </Typography>
+            </div>
         </div>
-    </div>
-)
+    )
+}
 
 /**
  * Paid: FrosTES cheers the completed purchase (cheer pose) and — for a course
@@ -457,21 +526,32 @@ const SuccessView = ({
     </div>
 )
 
-/** Failed/expired/cancelled: retry or close. */
+/** Failed/expired/cancelled: retry or close. `expired` = hết 5 phút đếm ngược, không phải lỗi. */
 const FailedView = ({
     t,
+    expired,
     onRetry,
     onClose,
 }: {
     t: Tr
+    expired?: boolean
     onRetry: () => void
     onClose: () => void
 }) => (
     <div className="flex flex-col items-center gap-4 py-4">
-        <XCircleIcon weight="fill" className="size-14 text-danger" aria-hidden />
+        {expired ? (
+            <ClockIcon weight="fill" className="size-14 text-muted" aria-hidden />
+        ) : (
+            <XCircleIcon weight="fill" className="size-14 text-danger" aria-hidden />
+        )}
         <Typography type="body" weight="bold">
-            {t("checkout.failed")}
+            {t(expired ? "checkout.expired" : "checkout.failed")}
         </Typography>
+        {expired ? (
+            <Typography type="body-sm" color="muted" className="text-center">
+                {t("checkout.expiredHint")}
+            </Typography>
+        ) : null}
         <div className="flex w-full gap-2">
             <Button variant="ghost" onPress={onClose} fullWidth>
                 {t("checkout.close")}

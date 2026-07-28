@@ -16,12 +16,13 @@ export interface LessonFullscreenButtonProps {
 }
 
 /**
- * Custom fullscreen toggle overlaid on a lesson video wrapper. It replaces the
- * browser's native video/iframe fullscreen (suppressed via `controlsList=
- * "nofullscreen"` on the HLS `<video>` and `playerVars.fs=0` on YouTube) so the
- * player fullscreens a CONTAINER `<div>` instead of the bare media — that lets
- * the AI FAB and this control live inside the fullscreen element. Mirrors the
- * `reuseable/VideoRenderer/VideoControls/FullscreenButton` pattern.
+ * Custom fullscreen toggle overlaid on the YOUTUBE lesson player only. The embed's
+ * own fullscreen is disabled (`playerVars.fs=0`) so the player can fullscreen a
+ * CONTAINER `<div>` instead of the bare iframe — that lets the AI FAB and this
+ * control live inside the fullscreen element. The self-hosted HLS `<video>` is NOT
+ * a consumer: it keeps its native controls' fullscreen button, so adding this here
+ * would duplicate it. Mirrors the `reuseable/VideoRenderer/VideoControls/FullscreenButton`
+ * pattern.
  */
 export const LessonFullscreenButton = ({
     isFullscreen,
@@ -37,8 +38,8 @@ export const LessonFullscreenButton = ({
             onPress={onToggle}
             className={cn(
                 // Bottom-right corner (like native player controls); top-right is taken
-                // by the preview-countdown chip. Shared by BOTH the YouTube embed and the
-                // self-hosted <video> player, so both get the control in the same place.
+                // by the preview-countdown chip. Used by the YouTube player only (the
+                // self-hosted <video> uses its native fullscreen control instead).
                 "absolute bottom-3 right-3 z-30 size-9 min-w-0 rounded-full border-none bg-black/55 text-white hover:bg-black/75",
                 className,
             )}

@@ -1,11 +1,13 @@
 "use client"
 
 import React, { useMemo } from "react"
-import ReactMarkdown from "react-markdown"
+import ReactMarkdown, { defaultUrlTransform } from "react-markdown"
+import type { UrlTransform } from "react-markdown"
+import type { PluggableList } from "unified"
 import remarkGfm from "remark-gfm"
 import remarkDirective from "remark-directive"
 import rehypeRaw from "rehype-raw"
-import rehypeSanitize from "rehype-sanitize"
+import rehypeSanitize, { defaultSchema } from "rehype-sanitize"
 import { cn } from "@heroui/react"
 import { useTheme } from "next-themes"
 import { useTranslations } from "next-intl"
@@ -174,13 +176,48 @@ const remarkAccordion = () => (tree: unknown): void => {
 const REMARK_PLUGINS = [remarkGfm, remarkDirective, remarkMuted, remarkTab, remarkChip, remarkAccordion]
 
 /**
+ * Chỉ cho phép data-URI ẢNH nhúng (base64) đúng vài mime an toàn (`<img>` không chạy script,
+ * kể cả SVG khi load qua `<img>`). Dùng cho cả 2 chốt: (a) `urlTransform` của react-markdown
+ * (chạy MỌI đường, kể cả khi không bật HTML thô — đây là chốt duy nhất cho lesson DOCUMENT),
+ * (b) sanitize schema (chốt của nhánh `allowHtml`). KHÔNG mở `javascript:`/`data:` khác, KHÔNG
+ * mở data: cho `href` (link) — chỉ `img[src]`.
+ */
+const DATA_IMAGE_SRC_REGEX = /^data:image\/(png|jpe?g|gif|webp|svg\+xml);base64,/i
+
+/**
+ * urlTransform: giữ nguyên data-URI ảnh hợp lệ trên `img[src]`, còn lại nhường
+ * `defaultUrlTransform` (vẫn strip `javascript:`, `data:` trên link/`href`, và data: không phải
+ * ảnh). Chạy SAU sanitize nên là lớp thu hẹp cuối: chỉ mime ảnh cho phép mới sống trên img.
+ */
+const permitDataImageUrl: UrlTransform = (url, key, node) => {
+    if (key === "src" && node.tagName === "img" && DATA_IMAGE_SRC_REGEX.test(url)) {
+        return url
+    }
+    return defaultUrlTransform(url)
+}
+
+/**
+ * Sanitize schema mở rộng: thêm scheme `data` cho ĐÚNG `protocols.src` (mặc định chỉ có ở
+ * `img`) để data-image sống qua sanitize; `protocols.href` GIỮ NGUYÊN (link vẫn chỉ http/https…,
+ * `data:`/`javascript:` bị strip). `permitDataImageUrl` (chạy sau) thu hẹp về đúng mime ảnh.
+ */
+const DATA_IMAGE_SANITIZE_SCHEMA = {
+    ...defaultSchema,
+    protocols: {
+        ...defaultSchema.protocols,
+        src: [...(defaultSchema.protocols?.src ?? []), "data"],
+    },
+}
+
+/**
  * Rehype plugins bật khi `allowHtml` — cho nội dung LƯU DẠNG HTML (bài blog legacy migrate từ
  * FTES cũ) render đúng thay vì hiện thẻ dạng text. `rehype-raw` parse HTML thô trong tree,
- * `rehype-sanitize` (chạy SAU) loại XSS. Thuần AST → an toàn SSR (không cần DOM). Module-level
- * hằng để không tạo mảng mới mỗi render. Nội dung markdown thường (bài admin soạn mới) không bị
- * ảnh hưởng — không có HTML thô thì rehype-raw là no-op.
+ * `rehype-sanitize` (chạy SAU) loại XSS — dùng schema đã cho phép data-image trên `img[src]`.
+ * Thuần AST → an toàn SSR (không cần DOM). Module-level hằng để không tạo mảng mới mỗi render.
+ * Nội dung markdown thường (bài admin soạn mới) không bị ảnh hưởng — không có HTML thô thì
+ * rehype-raw là no-op.
  */
-const RAW_HTML_REHYPE_PLUGINS = [rehypeRaw, rehypeSanitize]
+const RAW_HTML_REHYPE_PLUGINS: PluggableList = [rehypeRaw, [rehypeSanitize, DATA_IMAGE_SANITIZE_SCHEMA]]
 
 // Matches each ```mermaid fence and the figure caption paragraph that follows it.
 // Group 1 = diagram source; group 2 = the first non-blank line after the fence.
@@ -291,6 +328,7 @@ export const MarkdownContent = ({ markdown, reading = false, allowHtml = false, 
             <ReactMarkdown
                 remarkPlugins={REMARK_PLUGINS}
                 rehypePlugins={allowHtml ? RAW_HTML_REHYPE_PLUGINS : undefined}
+                urlTransform={permitDataImageUrl}
                 components={components}
             >
                 {renderedMarkdown}

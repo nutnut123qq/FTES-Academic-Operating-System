@@ -10,9 +10,6 @@ import {
     useTranslations,
 } from "next-intl"
 import {
-    useRouter,
-} from "@/i18n/navigation"
-import {
     pathConfig,
 } from "@/resources/path"
 import {
@@ -24,6 +21,7 @@ import type {
     WithClassNames,
 } from "@/modules/types/base/class-name"
 import { BrandLogo } from "@/components/blocks/identity/BrandLogo"
+import { FooterNavColumn } from "./FooterNavColumn"
 
 /** Kênh mạng xã hội chính thức (chủ box cung cấp 2026-07-28). YouTube/TikTok vẫn là kênh
  *  FunnyCode — cố ý, FTES chưa mở kênh riêng. */
@@ -38,22 +36,26 @@ export type FooterProps = WithClassNames<undefined>
 
 /**
  * Global site footer (editorial-minimal) — a single flat band with a top border.
- * Skeleton version: brand lockup + tagline on the left, the legal stubs + copyright
- * below. Feature-specific link columns / founder socials were stripped with the
- * detail pages; add new columns back as the project grows.
+ * 3 cột trên desktop (thương hiệu · pháp nhân · pháp lý), dồn 1 cột trên mobile;
+ * bottom bar chỉ còn copyright. Chỉ link tới route đã tồn tại (/terms, /privacy).
  *
  * @param props - optional className (placement only).
  */
 export const Footer = ({ className }: FooterProps) => {
     const t = useTranslations()
-    const router = useRouter()
     const paths = pathConfig().locale()
     const year = new Date().getFullYear()
+
+    // Nhóm link pháp lý — chỉ 2 trang stub đang có route thật; thêm route mới thì bổ sung ở đây.
+    const legalLinks = [
+        { key: "terms", label: t("footer.links.termsFull"), path: paths.terms().build() },
+        { key: "privacy", label: t("footer.links.privacyFull"), path: paths.privacy().build() },
+    ]
 
     return (
         <footer className={cn("border-t border-default bg-surface", className)}>
             <div className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
-                <div className="flex flex-col gap-10 sm:flex-row sm:justify-between">
+                <div className="grid grid-cols-1 gap-10 md:grid-cols-3">
                     {/* brand: logo + slogan 2 dòng + kênh mạng xã hội */}
                     <div className="flex max-w-sm flex-col gap-4">
                         {/* logo TRÁI — slogan 2 dòng NGAY BÊN PHẢI, khớp lockup của ftes.vn */}
@@ -86,42 +88,42 @@ export const Footer = ({ className }: FooterProps) => {
                         </div>
                     </div>
 
-                    {/* pháp nhân — nguyên văn theo footer ftes.vn đang chạy */}
-                    <div className="flex max-w-sm flex-col gap-2">
-                        <Typography type="body-sm" weight="medium">
-                            {t("footer.company.name")}
+                    {/* pháp nhân — tên/MST/ngày thành lập/ngành nghề nguyên văn theo footer ftes.vn.
+                        Địa chỉ · email · điện thoại CHƯA render: chưa có dữ liệu thật, mà footer là
+                        mặt tiền toàn site nên thà thiếu còn hơn phơi "(cần điền)". Có số thật trên
+                        giấy phép thì thêm 3 dòng vào đây (email/phone nên là mailto:/tel:). */}
+                    <div className="flex max-w-sm flex-col gap-3">
+                        <Typography type="body-sm" weight="semibold">
+                            {t("footer.companyTitle")}
                         </Typography>
-                        <Typography type="body-sm" color="muted">
-                            {t("footer.company.taxId")}
-                        </Typography>
-                        <Typography type="body-sm" color="muted">
-                            {t("footer.company.founded")}
-                        </Typography>
-                        <Typography type="body-sm" color="muted">
-                            {t("footer.company.field")}
-                        </Typography>
+                        <div className="flex flex-col gap-2">
+                            <Typography type="body-sm" weight="medium">
+                                {t("footer.company.name")}
+                            </Typography>
+                            <Typography type="body-sm" color="muted">
+                                {t("footer.company.taxId")}
+                            </Typography>
+                            <Typography type="body-sm" color="muted">
+                                {t("footer.company.founded")}
+                            </Typography>
+                            <Typography type="body-sm" color="muted">
+                                {t("footer.company.field")}
+                            </Typography>
+                        </div>
                     </div>
+
+                    {/* pháp lý — cột link tới các trang điều khoản/chính sách đã có route */}
+                    <FooterNavColumn
+                        title={t("footer.legalTitle")}
+                        links={legalLinks}
+                    />
                 </div>
 
-                {/* bottom bar: copyright (left) · legal stubs (right) */}
-                <div className="mt-10 flex flex-col gap-3 border-t border-default pt-6 sm:flex-row sm:items-center sm:justify-between">
+                {/* bottom bar: chỉ copyright (link pháp lý đã nằm ở cột trên) */}
+                <div className="mt-10 border-t border-default pt-6">
                     <Typography type="body-xs" color="muted">
                         {t("footer.copyright", { year })}
                     </Typography>
-                    <div className="flex items-center gap-4">
-                        <Link
-                            onPress={() => router.push(paths.terms().build())}
-                            className="cursor-pointer text-xs text-muted transition-colors hover:text-foreground"
-                        >
-                            {t("footer.links.terms")}
-                        </Link>
-                        <Link
-                            onPress={() => router.push(paths.privacy().build())}
-                            className="cursor-pointer text-xs text-muted transition-colors hover:text-foreground"
-                        >
-                            {t("footer.links.privacy")}
-                        </Link>
-                    </div>
                 </div>
             </div>
         </footer>

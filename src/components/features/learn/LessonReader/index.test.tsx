@@ -153,6 +153,11 @@ vi.mock("./LessonAiStudy", () => ({ LessonAiStudy: () => <div /> }))
 vi.mock("./LessonAssignmentBlock", () => ({ LessonAssignmentBlock: () => <div /> }))
 vi.mock("./LessonQuizBlock", () => ({ LessonQuizBlock: () => <div /> }))
 vi.mock("@/components/features/course/PackageGateModal", () => ({ PackageGateModal: () => <div /> }))
+// Danh sách gói cho tiêu đề tường phí — `swr` ở đây chỉ mock `mutate`, nên hook thật
+// (dùng useSWR) sẽ nổ; trả list rỗng là đủ cho mọi case hiện có (packageSlugs: []).
+vi.mock("@/components/features/course/hooks/useQueryCoursePackagesSwr", () => ({
+    useQueryCoursePackagesSwr: () => ({ packages: [] }),
+}))
 
 import { LessonReader } from "./index"
 

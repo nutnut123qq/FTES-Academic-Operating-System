@@ -49,6 +49,8 @@ import { LessonQuizBlock } from "./LessonQuizBlock"
 import { LessonCompleteCelebration } from "./LessonCompleteCelebration"
 import { PackageGateModal } from "@/components/features/course/PackageGateModal"
 import { DocumentReader } from "@/components/features/learn/DocumentReader"
+import { useQueryCoursePackagesSwr } from "@/components/features/course/hooks/useQueryCoursePackagesSwr"
+import { resolveTierLabel } from "@/components/features/course/tierLabels"
 
 /** The two content views (reading vs challenges). */
 type ContentView = "content" | "challenges"
@@ -163,6 +165,22 @@ export const LessonReader = () => {
      * (the article blur), so a locked PREVIEW video gets the enroll card without the blur.
      */
     const showLegacyPaywall = isLocked && (contentType !== "DOCUMENT" || !isPreview)
+    /**
+     * Tường phí liệt kê TÊN các gói mở được bài này thay vì "Nội dung premium" chung chung
+     * (góp ý 2026-07-26: "nên liệt kê hết các gói chứa học phần này"). Cùng nguồn dữ liệu
+     * với badge gói ở CourseDetail (`GET /courses/{id}/packages`) nên SWR dedupe, không
+     * thêm request mới; bỏ slug giả "free" và sắp rẻ-trước theo salePrice.
+     */
+    const paidPackageSlugs = (lesson?.packageSlugs ?? []).filter((slug) => slug !== "free")
+    const { packages: coursePackages } = useQueryCoursePackagesSwr(lesson?.courseRawId, {
+        enabled: showLegacyPaywall && paidPackageSlugs.length > 0,
+    })
+    const packagePriceBySlug = new Map(coursePackages.map((pkg) => [pkg.slug, Number(pkg.salePrice)]))
+    const packageNameBySlug = new Map(coursePackages.map((pkg) => [pkg.slug, pkg.name]))
+    const lockedPackageNames = [...paidPackageSlugs]
+        .sort((a, b) => (packagePriceBySlug.get(a) ?? Infinity) - (packagePriceBySlug.get(b) ?? Infinity))
+        .map((slug) => resolveTierLabel(slug, packageNameBySlug))
+        .join(", ")
     /** A readable lesson whose reading card would be blank (no body, no HTML, no video). */
     const isReadingEmpty = !!lesson && !isLocked && !bodyMd && !lesson.documentHtml && !lesson.hasVideo
     /** External links when the body is essentially just link(s) → render as resource cards. */
@@ -257,6 +275,21 @@ export const LessonReader = () => {
                                 description={lesson.description}
                                 actions={(
                                     <div className="flex items-center gap-2">
+                                        {/* "Bài trước" đi cặp với "Bài sau" (góp ý 2026-07-26). Điều hướng
+                                            bằng router của next-intl để giữ prefix locale — thẻ <a> thuần
+                                            sẽ reload cả trang và rơi về tiếng Anh. */}
+                                        {lesson.prevId ? (
+                                            <Button
+                                                size="sm"
+                                                variant="secondary"
+                                                onPress={() => router.push(readerHref(courseId, lesson.prevId!))}
+                                            >
+                                                <span className="flex items-center gap-1">
+                                                    <CaretLeftIcon aria-hidden focusable="false" className="size-4" />
+                                                    {t("reader.prevLesson")}
+                                                </span>
+                                            </Button>
+                                        ) : null}
                                         {lesson.nextId ? (
                                             <Button
                                                 size="sm"
@@ -456,7 +489,11 @@ export const LessonReader = () => {
                                                 <div className="mt-6 flex flex-col items-start gap-3 border-t border-default pt-6">
                                                     <LockSimpleIcon aria-hidden focusable="false" className="size-8 text-accent" />
                                                     <Typography type="body" weight="semibold">
-                                                        {isPreview ? t("reader.previewTitle") : t("reader.lockedTitle")}
+                                                        {isPreview
+                                                            ? t("reader.previewTitle")
+                                                            : lockedPackageNames
+                                                                ? t("reader.lockedTitlePackages", { packages: lockedPackageNames })
+                                                                : t("reader.lockedTitle")}
                                                     </Typography>
                                                     <Typography type="body-sm" color="muted">
                                                         {isPreview

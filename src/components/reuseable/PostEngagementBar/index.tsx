@@ -11,10 +11,13 @@ import {
 import {
     HeartIcon,
     ChatCircleIcon,
+    ChatCircleDotsIcon,
     ShareNetworkIcon,
     LinkSimpleIcon,
     PaperPlaneTiltIcon,
     RepeatIcon,
+    FacebookLogoIcon,
+    XLogoIcon,
 } from "@phosphor-icons/react"
 import { useLocale, useTranslations } from "next-intl"
 import { SaveButton } from "@/components/blocks/buttons/SaveButton"
@@ -30,6 +33,46 @@ export { formatCompactCount } from "./format-compact-count"
 export { PostActionsMenu, type PostActionsMenuProps } from "./PostActionsMenu"
 export { ReportDialog, type ReportDialogProps } from "./ReportDialog"
 export { ConfirmDialog, type ConfirmDialogProps } from "./ConfirmDialog"
+
+/**
+ * Kênh chia sẻ dạng **web-intent**: chỉ là một URL mở ở tab mới — KHÔNG SDK,
+ * KHÔNG script bên thứ ba. Mỗi mạng tự đọc OG tag của `postUrl`, nên không cần
+ * gửi gì thêm ngoài link (X nhận thêm `text` = tiêu đề bài).
+ */
+const SHARE_CHANNELS: readonly {
+    id: string
+    channel: "FACEBOOK" | "X" | "ZALO"
+    labelKey: string
+    Icon: React.ComponentType<{ className?: string }>
+    buildUrl: (url: string, title: string) => string
+}[] = [
+    {
+        id: "share-facebook",
+        channel: "FACEBOOK",
+        labelKey: "engagement.shareFacebook",
+        Icon: FacebookLogoIcon,
+        buildUrl: (url) =>
+            `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
+    },
+    {
+        id: "share-x",
+        channel: "X",
+        labelKey: "engagement.shareX",
+        Icon: XLogoIcon,
+        buildUrl: (url, title) =>
+            `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`,
+    },
+    {
+        id: "share-zalo",
+        channel: "ZALO",
+        // Zalo không có logo trong phosphor → dùng icon chat cho gần nghĩa nhất
+        labelKey: "engagement.shareZalo",
+        Icon: ChatCircleDotsIcon,
+        // sp.zalo.me/plugins/share là đường share web của Zalo (đo 2026-07-28: 200).
+        // KHÔNG dùng zalo.me/share/link — 302 về zalo.me/nf, tức trang không tồn tại.
+        buildUrl: (url) => `https://sp.zalo.me/plugins/share?url=${encodeURIComponent(url)}`,
+    },
+]
 
 /** Props for {@link PostEngagementBar}. */
 export interface PostEngagementBarProps extends WithClassNames<undefined> {
@@ -65,12 +108,12 @@ export interface PostEngagementBarProps extends WithClassNames<undefined> {
     /** Title used for the native share sheet (falls back to the URL). */
     shareTitle?: string
     /**
-     * Fired ONLY after a share actually succeeded (link copied, or the native
-     * sheet resolved without an `AbortError`). The feature records the share
-     * server-side (`POST /community/posts/{id}/shares`) fire-and-forget; a user
-     * who cancels the sheet or a failed copy never counts.
+     * Fired ONLY after a share actually succeeded (link copied, a web-intent tab
+     * opened, or the native sheet resolved without an `AbortError`). The feature
+     * records the share server-side (`POST /community/posts/{id}/shares`)
+     * fire-and-forget; a user who cancels the sheet or a failed copy never counts.
      */
-    onShared?: (channel: "COPY_LINK" | "NATIVE") => void
+    onShared?: (channel: "COPY_LINK" | "NATIVE" | "FACEBOOK" | "X" | "ZALO") => void
     /**
      * Whether the viewer authored this item — gates the ⋯ menu's owner-only
      * entries ("Sửa" / "Xoá"); a non-owner gets "Báo cáo" instead.
@@ -112,7 +155,8 @@ export interface PostEngagementBarProps extends WithClassNames<undefined> {
  * propagation so a press inside a wrapping card `<Link>` never navigates.
  *
  * Guest gating (like/comment/save) lives in the feature callbacks / SaveButton;
- * copy-link and native share stay open to guests.
+ * copy-link, the {@link SHARE_CHANNELS} web-intents (Facebook · X · Zalo — plain
+ * links, no SDK) and native share stay open to guests.
  *
  * A trailing ⋯ menu ({@link PostActionsMenu}) appears when the surface passes
  * ownership callbacks: "Sửa"/"Xoá" for the author, "Báo cáo" for everyone else.
@@ -198,6 +242,27 @@ export const PostEngagementBar = ({
             toast.danger(t("engagement.linkCopyFailed"))
         }
     }, [postUrl, t, onShared])
+
+    /** Mở kênh web-intent ở tab mới; ghi nhận share y như "sao chép liên kết". */
+    const onShareChannel = useCallback(
+        (channel: (typeof SHARE_CHANNELS)[number]) => {
+            if (!postUrl) {
+                return
+            }
+            // Popup bị chặn → window.open trả null. Chỉ ghi nhận lượt share khi cửa sổ kênh
+            // MỞ ĐƯỢC THẬT, đúng tinh thần "sheet bị huỷ thì không tính" của native share.
+            const opened = window.open(
+                channel.buildUrl(postUrl, shareTitle ?? postUrl),
+                "_blank",
+                "noopener,noreferrer",
+            )
+            if (!opened) {
+                return
+            }
+            onShared?.(channel.channel)
+        },
+        [postUrl, shareTitle, onShared],
+    )
 
     /** Open the native share sheet; swallow a user cancel (AbortError). */
     const onNativeShare = useCallback(async () => {
@@ -308,6 +373,21 @@ export const PostEngagementBar = ({
                                             <Label>{t("engagement.shareVia")}</Label>
                                         </Dropdown.Item>
                                     ) : null}
+                                </Dropdown.Section>
+                                {/* Kênh chia sẻ web-intent — desktop cũng có kênh
+                                    thật, không chỉ mỗi "sao chép liên kết" */}
+                                <Dropdown.Section>
+                                    {SHARE_CHANNELS.map((channel) => (
+                                        <Dropdown.Item
+                                            key={channel.id}
+                                            id={channel.id}
+                                            textValue={t(channel.labelKey)}
+                                            onPress={() => onShareChannel(channel)}
+                                        >
+                                            <channel.Icon className="size-5" />
+                                            <Label>{t(channel.labelKey)}</Label>
+                                        </Dropdown.Item>
+                                    ))}
                                 </Dropdown.Section>
                             </Dropdown.Menu>
                         </Dropdown.Popover>

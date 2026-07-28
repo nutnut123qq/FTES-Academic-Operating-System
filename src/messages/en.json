@@ -379,7 +379,10 @@
       "name": "CÔNG TY TNHH GIẢI PHÁP CÔNG NGHỆ GIÁO DỤC FTES",
       "taxId": "Business ID: 5901235207",
       "founded": "Founded: 26/08/2025",
-      "field": "Education & Technology – building products that support learning"
+      "field": "Education & Technology – building products that support learning",
+      "address": "Address: (to be filled)",
+      "email": "Email: (to be filled)",
+      "phone": "Phone: (to be filled)"
     },
     "social": {
       "facebook": "FTES on Facebook",
@@ -388,6 +391,8 @@
     },
     "exploreTitle": "Explore",
     "supportTitle": "Support",
+    "companyTitle": "Company information",
+    "legalTitle": "Legal",
     "links": {
       "courses": "Courses",
       "blog": "Blog",
@@ -395,7 +400,9 @@
       "community": "Community",
       "contact": "Contact",
       "terms": "Terms",
-      "privacy": "Privacy"
+      "privacy": "Privacy",
+      "termsFull": "Terms of Service",
+      "privacyFull": "Privacy Policy"
     },
     "madeBy": "Built by Nguyễn Văn Tự Cường",
     "copyright": "© {year} FTES — Vietnam's trusted platform for learning to code"
@@ -2584,6 +2591,9 @@
       "insufficient": "Not enough coins to pay.",
       "pay": "Pay",
       "scanHint": "Scan the QR code with your banking app to pay.",
+      "countdownLabel": "Order expires in",
+      "expired": "The QR code has expired",
+      "expiredHint": "No payment was received within 5 minutes. If you have just transferred, keep this window open — we are still reconciling and will confirm as soon as the money lands. Otherwise, create the order again.",
       "awaiting": "Waiting for payment...",
       "success": "Payment successful!",
       "done": "Done",
@@ -6242,6 +6252,9 @@
       "linkCopied": "Link copied",
       "linkCopyFailed": "Couldn't copy the link",
       "shareVia": "Share via…",
+      "shareFacebook": "Share on Facebook",
+      "shareX": "Share on X",
+      "shareZalo": "Share via Zalo",
       "reply": "Reply",
       "replyingTo": "Replying to {name}",
       "cancelReply": "Cancel",
@@ -6963,6 +6976,7 @@
       "next": "Next",
       "askAboutThis": "Ask AI about this",
       "lockedTitle": "Premium content",
+      "lockedTitlePackages": "Content in the {packages} package",
       "lockedBody": "Enroll in the course to unlock this lesson and the rest of the content.",
       "previewTitle": "You're viewing the preview",
       "previewBody": "Subscribe to a package to read the full lesson.",

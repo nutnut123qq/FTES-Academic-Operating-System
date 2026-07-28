@@ -379,7 +379,10 @@
       "name": "CÔNG TY TNHH GIẢI PHÁP CÔNG NGHỆ GIÁO DỤC FTES",
       "taxId": "Mã số doanh nghiệp: 5901235207",
       "founded": "Ngày thành lập: 26/08/2025",
-      "field": "Giáo dục và Công nghệ – phát triển sản phẩm hỗ trợ học tập"
+      "field": "Giáo dục và Công nghệ – phát triển sản phẩm hỗ trợ học tập",
+      "address": "Địa chỉ: (cần điền)",
+      "email": "Email: (cần điền)",
+      "phone": "Điện thoại: (cần điền)"
     },
     "social": {
       "facebook": "Facebook FTES",
@@ -388,6 +391,8 @@
     },
     "exploreTitle": "Khám phá",
     "supportTitle": "Hỗ trợ",
+    "companyTitle": "Thông tin công ty",
+    "legalTitle": "Pháp lý",
     "links": {
       "courses": "Khóa học",
       "blog": "Blog",
@@ -395,7 +400,9 @@
       "community": "Cộng đồng",
       "contact": "Liên hệ",
       "terms": "Điều khoản",
-      "privacy": "Bảo mật"
+      "privacy": "Bảo mật",
+      "termsFull": "Điều khoản dịch vụ",
+      "privacyFull": "Chính sách bảo mật"
     },
     "madeBy": "Được phát triển bởi Nguyễn Văn Tự Cường",
     "copyright": "© {year} FTES — Nền tảng học lập trình uy tín tại Việt Nam"
@@ -2593,6 +2600,9 @@
       "insufficient": "Số dư xu không đủ để thanh toán.",
       "pay": "Thanh toán",
       "scanHint": "Quét mã QR bằng ứng dụng ngân hàng để thanh toán.",
+      "countdownLabel": "Đơn hết hạn sau",
+      "expired": "Mã QR đã hết hạn",
+      "expiredHint": "Quá 5 phút chưa nhận được thanh toán. Nếu bạn vừa chuyển khoản thì cứ để yên cửa sổ này, hệ thống vẫn đang đối soát và sẽ tự báo khi tiền vào. Chưa chuyển thì hãy tạo lại đơn.",
       "awaiting": "Đang chờ thanh toán...",
       "success": "Thanh toán thành công!",
       "done": "Hoàn tất",
@@ -6242,6 +6252,9 @@
       "linkCopied": "Đã sao chép liên kết",
       "linkCopyFailed": "Không sao chép được liên kết",
       "shareVia": "Chia sẻ qua…",
+      "shareFacebook": "Chia sẻ lên Facebook",
+      "shareX": "Chia sẻ lên X",
+      "shareZalo": "Chia sẻ qua Zalo",
       "reply": "Trả lời",
       "replyingTo": "Đang trả lời {name}",
       "cancelReply": "Huỷ",
@@ -6963,6 +6976,7 @@
       "next": "Bài sau",
       "askAboutThis": "Hỏi AI về đoạn này",
       "lockedTitle": "Nội dung premium",
+      "lockedTitlePackages": "Nội dung của gói {packages}",
       "lockedBody": "Đăng ký khóa học để mở khóa bài học này và toàn bộ nội dung còn lại.",
       "previewTitle": "Bạn đang xem bản học thử",
       "previewBody": "Đăng ký gói học để đọc toàn bộ nội dung bài học này.",

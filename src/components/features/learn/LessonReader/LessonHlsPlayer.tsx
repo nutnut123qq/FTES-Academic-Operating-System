@@ -249,34 +249,27 @@ export const LessonHlsPlayer = ({
         )
     }
 
+    // Khung đen bo tròn là lớp DUY NHẤT (không Card bọc ngoài) — bề ngang do parent giới hạn.
     return (
-        <div className="mx-auto w-full max-w-5xl">
-            <Card>
-                <CardContent className="p-0">
-                    <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-black">
-                        <video
-                            ref={videoEl}
-                            controls
-                            // Self-hosted <video> keeps its OWN native controls fullscreen
-                            // button — no custom overlay control (that duplicated the native
-                            // one). The custom LessonFullscreenButton stays on the YouTube
-                            // player only, where the embed's native fullscreen is disabled.
-                            disablePictureInPicture
-                            playsInline
-                            onTimeUpdate={handleTimeUpdate}
-                            onEnded={handleEnded}
-                            onPlay={reporter.onPlaying}
-                            onPause={handlePause}
-                            onSeeking={clampSeek}
-                            onSeeked={handleSeeked}
-                            className="aspect-video w-full rounded-2xl bg-black"
-                        />
-                        {loading ? (
-                            <Skeleton className="absolute inset-0 size-full rounded-2xl" />
-                        ) : null}
-                    </div>
-                </CardContent>
-            </Card>
+        <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-black">
+            <video
+                ref={videoEl}
+                controls
+                // Self-hosted <video> keeps its OWN native controls fullscreen
+                // button — no custom overlay control (that duplicated the native
+                // one). The custom LessonFullscreenButton stays on the YouTube
+                // player only, where the embed's native fullscreen is disabled.
+                disablePictureInPicture
+                playsInline
+                onTimeUpdate={handleTimeUpdate}
+                onEnded={handleEnded}
+                onPlay={reporter.onPlaying}
+                onPause={handlePause}
+                onSeeking={clampSeek}
+                onSeeked={handleSeeked}
+                className="aspect-video w-full rounded-2xl bg-black"
+            />
+            {loading ? <Skeleton className="absolute inset-0 size-full rounded-2xl" /> : null}
         </div>
     )
 }

@@ -12,6 +12,7 @@ import {
 } from "@heroui/react"
 import { SparkleIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
+import Image from "next/image"
 import { useParams } from "next/navigation"
 import { useSmViewpoint } from "@/hooks/reuseables/useSmViewpoint"
 import { FloatingActionButton } from "@/components/blocks/buttons/FloatingActionButton"
@@ -29,6 +30,25 @@ const MIN_BOTTOM = 16
 const DRAG_THRESHOLD = 6
 /** Headroom kept below the top edge so the FAB never drags off-screen (px). */
 const TOP_GUARD = 80
+
+/**
+ * Nền SÁNG + ring accent thay cho nền accent đặc: linh vật cáo cũng tông hồng-cam,
+ * đặt trên nền accent thì chìm hẳn. Toàn token của hệ nên chạy đúng cả dark mode.
+ * (`bg-*` ở layer utilities nên đè được `--button-bg` của variant HeroUI.)
+ */
+const FAB_SURFACE_CLASS = "bg-surface ring-1 ring-accent/40 hover:bg-default"
+
+/** Mặt cáo FTES trong nút nổi — ảnh trang trí, tên cho screen-reader nằm ở `aria-label` của nút. */
+const MascotFace = () => (
+    <Image
+        src="/mascot/plain/greeting.webp"
+        alt=""
+        aria-hidden
+        width={72}
+        height={72}
+        className="size-7 shrink-0 object-contain"
+    />
+)
 
 /**
  * Floating "Ask FTES AI" button (StarCI port). Shown only while a lesson is open
@@ -124,8 +144,12 @@ export const ContentAiFab = () => {
     if (isMobile) {
         return intoFullscreen(
             <>
-                <FloatingActionButton onPress={open} ariaLabel={t("reader.ai.open")}>
-                    <SparkleIcon aria-hidden focusable="false" weight="fill" />
+                <FloatingActionButton
+                    onPress={open}
+                    ariaLabel={t("reader.ai.open")}
+                    className={FAB_SURFACE_CLASS}
+                >
+                    <MascotFace />
                 </FloatingActionButton>
                 <Drawer.Backdrop
                     isOpen={isOpen}
@@ -159,9 +183,12 @@ export const ContentAiFab = () => {
                 onPointerMove={onPointerMove}
                 onPointerUp={onPointerUp}
                 style={{ bottom }}
-                className={cn("fixed right-4 z-40 touch-none rounded-full shadow-lg")}
+                className={cn(
+                    "fixed right-4 z-40 touch-none rounded-full shadow-lg",
+                    FAB_SURFACE_CLASS,
+                )}
             >
-                <SparkleIcon aria-hidden focusable="false" weight="fill" />
+                <MascotFace />
             </Button>
             <PopoverContent
                 placement="left bottom"

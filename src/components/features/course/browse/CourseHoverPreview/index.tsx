@@ -10,13 +10,15 @@ import React, {
 import { createPortal } from "react-dom"
 import useSWR from "swr"
 import { Button, Chip, Typography, cn } from "@heroui/react"
-import { CheckIcon } from "@phosphor-icons/react"
+import { CheckIcon, ShoppingCartIcon, TrashIcon } from "@phosphor-icons/react"
 import { useFormatter, useTranslations } from "next-intl"
 import { getCourseDetail } from "@/modules/api/rest/course"
 import { useRouter } from "@/i18n/navigation"
 import { SaveButton } from "@/components/blocks/buttons/SaveButton"
 import { useQueryMyEnrolledSlugsSwr } from "../../hooks/useQueryMyEnrolledSlugsSwr"
 import type { WithClassNames } from "@/modules/types/base/class-name"
+import { useCourseEnrollment } from "../../hooks/useCourseEnrollment"
+import { useQueryMyEnrolledSlugsSwr } from "../../hooks/useQueryMyEnrolledSlugsSwr"
 import type { Course } from "../../hooks/useQueryCoursesSwr"
 
 /** Props for {@link CourseHoverPreview}. */
@@ -59,10 +61,76 @@ const GAP_PX = 12
 const VIEWPORT_MARGIN_PX = 16
 
 /**
+ * The panel's "Thêm vào giỏ" CTA — the catalog card itself stays uncluttered, so this
+ * is the only add-to-cart reachable from the grid. Runs the SAME purchase hook as the
+ * course detail page ({@link useCourseEnrollment}), so the cart line, the pending state
+ * and the "Đã ở trong giỏ" ↔ remove flip behave identically on both surfaces.
+ *
+ * Renders NOTHING when there is nothing to add: the viewer already owns the course, the
+ * course is free, it is sold per-package (PACKAGE → the package must be picked on the
+ * detail page), or the COURSE_UNLOCK product doesn't resolve (`canBuy` false) — mirroring
+ * the detail card, which withholds the buy context for the same cases.
+ *
+ * @param props.course - The catalog card model (slug, price, sale mode).
+ * @param props.rawId - The BE course UUID from the lazily-loaded detail; the product
+ *   lookup stays idle until it arrives.
+ */
+const HoverAddToCartButton = ({ course, rawId }: { course: Course, rawId?: string }) => {
+    const t = useTranslations("courseSystem")
+    // Shared SWR key with every catalog card → no extra request for the ownership check.
+    const { enrolledSlugs } = useQueryMyEnrolledSlugsSwr()
+    const sellable = course.saleMode !== "PACKAGE" && (course.priceVnd ?? 0) > 0
+    const { isEnrolled, canBuy, inCart, onAddToCart, onRemoveFromCart, isTogglingCart } =
+        useCourseEnrollment(
+            course.id,
+            { isEnrolled: enrolledSlugs.has(course.id) },
+            sellable ? { rawId, title: course.name, priceVnd: course.priceVnd } : undefined,
+        )
+
+    if (isEnrolled || !canBuy) return null
+
+    return (
+        // nuốt click như SaveButton: panel là portal nhưng sự kiện React vẫn nổi lên
+        // cây cha, đừng để lọt ra điều hướng của card
+        <span
+            className="flex"
+            onClick={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+            }}
+        >
+            {inCart ? (
+                <Button
+                    variant="secondary"
+                    fullWidth
+                    onPress={onRemoveFromCart}
+                    isPending={isTogglingCart}
+                >
+                    <CheckIcon aria-hidden focusable="false" className="size-5" />
+                    {t("detail.inCart")}
+                    <TrashIcon aria-hidden focusable="false" className="size-4" />
+                </Button>
+            ) : (
+                <Button
+                    variant="secondary"
+                    fullWidth
+                    onPress={onAddToCart}
+                    isPending={isTogglingCart}
+                >
+                    <ShoppingCartIcon aria-hidden focusable="false" className="size-5" />
+                    {t("detail.package.addToCart")}
+                </Button>
+            )}
+        </span>
+    )
+}
+
+/**
  * Udemy-style hover preview for a catalog course card: wraps the card and — on
  * hover-capable desktop pointers only — opens a detail panel beside it after a
  * short delay, showing badges, an "updated" line, meta, description, top
- * "what you'll learn" outcomes, an enroll CTA and the save toggle. The panel is
+ * "what you'll learn" outcomes, an enroll CTA, the save toggle and — for a course
+ * that is actually on sale — the grid's only "Thêm vào giỏ" CTA. The panel is
  * a sibling of the card link (never nested inside the `<a>` — it carries its
  * own interactive controls) and is portaled to `document.body` with fixed
  * positioning so the shelf carousels' `overflow-x-auto` cannot clip it; the
@@ -279,6 +347,9 @@ export const CourseHoverPreview = ({ course, children, className }: CourseHoverP
                             </Button>
                             <SaveButton entityType="course" entityId={course.id} />
                         </div>
+                        {/* đường thêm vào giỏ DUY NHẤT từ lưới danh mục (card nhỏ không
+                            nhồi thêm nút); tự ẩn khi khoá miễn phí / đã sở hữu / bán theo gói */}
+                        <HoverAddToCartButton course={course} rawId={detail?.course.id} />
                     </div>
                 </div>,
                 document.body,

@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useCallback, useEffect, useState } from "react"
-import { Button, Card, CardContent, Chip, Typography } from "@heroui/react"
+import { Button, Chip, Typography } from "@heroui/react"
 import { LockSimpleIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { PackageGateModal } from "@/components/features/course/PackageGateModal"
@@ -192,33 +192,30 @@ export const LessonVideoBlock = ({
 
     return (
         <>
+            {/* Không bọc Card: player tự có khung đen bo tròn — 1 lớp viền duy nhất. */}
             <div className="relative mx-auto w-full max-w-5xl">
-                <Card>
-                    <CardContent className="relative p-0">
-                        {player}
-                        {isPreview ? (
-                            <Chip
-                                size="sm"
-                                color="accent"
-                                className="absolute right-3 top-3 z-10 bg-accent text-white"
-                            >
-                                <span className="flex items-center gap-1">
-                                    <Typography type="body-xs" className="text-white">
-                                        {t("chip", { time: formatCountdown(previewGate.timeRemaining) })}
-                                    </Typography>
-                                </span>
-                            </Chip>
-                        ) : null}
-                        {gated && !gateOpen ? (
-                            <PreviewLockOverlay
-                                title={t("overlay.title")}
-                                body={overlayBody}
-                                cta={t("overlay.cta")}
-                                onReopen={() => setGateOpen(true)}
-                            />
-                        ) : null}
-                    </CardContent>
-                </Card>
+                {player}
+                {isPreview ? (
+                    <Chip
+                        size="sm"
+                        color="accent"
+                        className="absolute right-3 top-3 z-10 bg-accent text-white"
+                    >
+                        <span className="flex items-center gap-1">
+                            <Typography type="body-xs" className="text-white">
+                                {t("chip", { time: formatCountdown(previewGate.timeRemaining) })}
+                            </Typography>
+                        </span>
+                    </Chip>
+                ) : null}
+                {gated && !gateOpen ? (
+                    <PreviewLockOverlay
+                        title={t("overlay.title")}
+                        body={overlayBody}
+                        cta={t("overlay.cta")}
+                        onReopen={() => setGateOpen(true)}
+                    />
+                ) : null}
             </div>
             <PackageGateModal
                 isOpen={gateOpen}

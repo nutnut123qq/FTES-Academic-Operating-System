@@ -15,6 +15,7 @@ import { useFormatter, useTranslations } from "next-intl"
 import { getCourseDetail } from "@/modules/api/rest/course"
 import { useRouter } from "@/i18n/navigation"
 import { SaveButton } from "@/components/blocks/buttons/SaveButton"
+import { useQueryMyEnrolledSlugsSwr } from "../../hooks/useQueryMyEnrolledSlugsSwr"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 import type { Course } from "../../hooks/useQueryCoursesSwr"
 
@@ -65,10 +66,12 @@ const VIEWPORT_MARGIN_PX = 16
  * a sibling of the card link (never nested inside the `<a>` — it carries its
  * own interactive controls) and is portaled to `document.body` with fixed
  * positioning so the shelf carousels' `overflow-x-auto` cannot clip it; the
- * side flips left when the right side would leave the viewport. Touch/coarse
- * pointers never see the panel (CSS hover/pointer media gate), keeping the
- * card's tap-to-navigate untouched, and keyboard users lose nothing — all the
- * panel offers also lives on the course detail page.
+ * side flips left when the right side would leave the viewport. The primary CTA
+ * mirrors the catalog card: a viewer already enrolled in the course gets
+ * "Tiếp tục học" into the learn shell, everyone else gets the enroll CTA onto the
+ * detail page. Touch/coarse pointers never see the panel (CSS hover/pointer media
+ * gate), keeping the card's tap-to-navigate untouched, and keyboard users lose
+ * nothing — all the panel offers also lives on the course detail page.
  *
  * @param props - {@link CourseHoverPreviewProps}
  */
@@ -76,6 +79,13 @@ export const CourseHoverPreview = ({ course, children, className }: CourseHoverP
     const t = useTranslations()
     const format = useFormatter()
     const router = useRouter()
+    // Already enrolled → the CTA continues into the learn shell instead of the
+    // enroll flow. Same shared-key hook the catalog card uses
+    // (`useQueryMyEnrolledSlugsSwr`), so every card + preview reuses one
+    // `GET /courses/me/enrollments` fetch (deduped, token-gated) — hovering never
+    // fires a per-card request, and `course.id` is the slug the set is keyed on.
+    const { enrolledSlugs } = useQueryMyEnrolledSlugsSwr()
+    const isEnrolled = enrolledSlugs.has(course.id)
     const wrapperRef = useRef<HTMLDivElement>(null)
     const panelRef = useRef<HTMLDivElement>(null)
     const openTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
@@ -149,9 +159,13 @@ export const CourseHoverPreview = ({ course, children, className }: CourseHoverP
         }
     }, [open])
 
-    const onEnroll = useCallback(
-        () => router.push(`/courses/${course.id}`),
-        [router, course.id],
+    // Enrolled viewers continue into the course content; everyone else lands on the
+    // detail/enroll page. Same routes the catalog card uses (`/courses/{slug}/learn`
+    // vs `/courses/{slug}`); the i18n router applies the locale prefix, so plain
+    // paths are correct here.
+    const onCta = useCallback(
+        () => router.push(isEnrolled ? `/courses/${course.id}/learn` : `/courses/${course.id}`),
+        [router, course.id, isEnrolled],
     )
 
     // Lazy-fetch the course detail once the panel opens (the list summary carries
@@ -258,8 +272,10 @@ export const CourseHoverPreview = ({ course, children, className }: CourseHoverP
                             </div>
                         ) : null}
                         <div className="flex items-center gap-2">
-                            <Button className="flex-1" onPress={onEnroll}>
-                                {t("courseSystem.browse.preview.enroll")}
+                            <Button className="flex-1" onPress={onCta}>
+                                {isEnrolled
+                                    ? t("courses.continueLearning")
+                                    : t("courseSystem.browse.preview.enroll")}
                             </Button>
                             <SaveButton entityType="course" entityId={course.id} />
                         </div>

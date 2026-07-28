@@ -2,6 +2,7 @@
 
 import useSWR from "swr"
 import { getMyEnrollments } from "@/modules/api/rest/course"
+import type { EnrollmentView } from "@/modules/api/rest/course"
 
 /** One enrolled course the viewer can resume — title + rounded progress + learn href. */
 export interface MyCourse {
@@ -17,6 +18,32 @@ export interface MyCourse {
     href: string
     /** True for a PAID enrollment (bought a package) — drives the Enrolled vs Trial badge. */
     isPurchased: boolean
+    /**
+     * Course cover image URL, or `null` when the course has none / the BE build
+     * doesn't send it yet. The continue-learning card renders a framed thumbnail
+     * when set and an empty framed surface when null (graceful degrade).
+     */
+    coverImage: string | null
+}
+
+/**
+ * Defensive publish gate for a "continue learning" enrollment row.
+ *
+ * The paired BE change (home-continue-image-and-mascot) excludes UNPUBLISHED
+ * courses from `GET /courses/me/enrollments` at the source AND stamps each row
+ * with the course publish status, so unpublished courses never reach the client.
+ * Until every deployment carries that change we also filter here. The gate is
+ * deliberately permissive: a row counts as published UNLESS the BE positively
+ * says otherwise, so a build that doesn't yet send the flag (or already
+ * pre-filtered) keeps showing every active enrollment — a missing field never
+ * blanks the band.
+ */
+const isPublishedEnrollment = (enrollment: EnrollmentView): boolean => {
+    if (typeof enrollment.published === "boolean") return enrollment.published
+    if (typeof enrollment.status === "string") {
+        return enrollment.status.trim().toUpperCase() === "PUBLISHED"
+    }
+    return true
 }
 
 /**
@@ -38,7 +65,9 @@ export const useQueryMyCoursesSwr = () => {
         async (): Promise<Array<MyCourse>> => {
             const enrollments = await getMyEnrollments()
             return enrollments
-                .filter((enrollment) => enrollment.active)
+                // active enrollment AND (defensively) a published course — an
+                // unpublished course must never surface in continue-learning.
+                .filter((enrollment) => enrollment.active && isPublishedEnrollment(enrollment))
                 .slice()
                 .sort(
                     (a, b) =>
@@ -54,6 +83,7 @@ export const useQueryMyCoursesSwr = () => {
                     ),
                     href: `/courses/${enrollment.slugName}/learn`,
                     isPurchased: Boolean(enrollment.isPurchased),
+                    coverImage: enrollment.imageHeader ?? null,
                 }))
         },
     )

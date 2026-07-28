@@ -114,6 +114,7 @@ const course = (over: Partial<MyCourse> & { courseId: string }): MyCourse => ({
     completionPercent: 40,
     href: `/courses/${over.courseId}/learn`,
     isPurchased: true,
+    coverImage: null,
     ...over,
 })
 

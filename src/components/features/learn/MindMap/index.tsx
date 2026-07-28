@@ -12,7 +12,9 @@ import type { LearnLesson } from "../hooks/useQueryLearnCourseSwr"
 import { buildMindMap, resolveRootCode, type MindMapNodeData } from "./build"
 import { resolveNodeOpen } from "./open"
 import { moduleStatus } from "./status"
+import { analyzeProgress } from "./progress"
 import { MindMapCanvas } from "./MindMapCanvas"
+import { MindMapProgressPanel } from "./MindMapProgressPanel"
 
 /**
  * Course mind map (StarCI React-Flow port, wired to FTES's own SWR learn data).
@@ -50,6 +52,21 @@ export const MindMap = () => {
         [header?.subjectCode, header?.title, courseId],
     )
 
+    /**
+     * Deterministic progress read-out (overall roll-up + the one recommended next
+     * step + strengths / review). Drives the {@link MindMapProgressPanel} and the
+     * on-canvas "gợi ý" highlight (via `recommendedLessonId` fed into the graph).
+     */
+    const insight = useMemo(
+        () =>
+            analyzeProgress({
+                modules,
+                currentLessonId,
+                completionPercent: header?.progressPercent ?? 0,
+            }),
+        [modules, currentLessonId, header?.progressPercent],
+    )
+
     const graph = useMemo(
         () =>
             buildMindMap({
@@ -58,8 +75,9 @@ export const MindMap = () => {
                 modules,
                 currentLessonId,
                 currentModuleId,
+                recommendedLessonId: insight.recommendation.lessonId,
             }),
-        [subjectCode, header?.progressPercent, modules, currentLessonId, currentModuleId],
+        [subjectCode, header?.progressPercent, modules, currentLessonId, currentModuleId, insight.recommendation.lessonId],
     )
 
     const allDone = modules.length > 0 && modules.every((module) => moduleStatus(module) === "completed")
@@ -78,6 +96,27 @@ export const MindMap = () => {
             return
         }
         setGateLesson(action.lesson)
+    }
+
+    /**
+     * Jump to the assistant's recommended lesson. Reuses {@link onOpenNode} by
+     * synthesising the lesson node data, so routing vs. the premium gate is decided
+     * by the exact same rule a click on that node would follow.
+     */
+    const onOpenRecommendation = () => {
+        const { moduleId, lessonId, title, isLocked } = insight.recommendation
+        if (!moduleId || !lessonId) {
+            return
+        }
+        onOpenNode({
+            kind: "lesson",
+            label: title,
+            status: "notStarted",
+            isLocked,
+            isCurrent: false,
+            moduleId,
+            lessonId,
+        })
     }
 
     const continueHref =
@@ -115,6 +154,7 @@ export const MindMap = () => {
                     allDone={allDone}
                     onContinue={onContinue}
                 />
+                <MindMapProgressPanel insight={insight} onOpenRecommendation={onOpenRecommendation} />
             </AsyncContent>
 
             {course?.id && gateLesson ? (

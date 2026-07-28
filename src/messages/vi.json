@@ -7214,6 +7214,24 @@
     "mindMap": {
       "title": "Sơ đồ tư duy khóa học",
       "youAreHere": "Bạn ở đây",
+      "progress": {
+        "title": "Trợ lý tiến độ",
+        "overall": "Hoàn thành {percent}%",
+        "lessonsDone": "Đã học {done}/{total} bài",
+        "nextLabel": "Học tiếp theo",
+        "startCta": "Học ngay",
+        "unlockCta": "Mở khóa để học",
+        "suggested": "Gợi ý",
+        "strengths": "Điểm mạnh",
+        "review": "Cần hoàn thành",
+        "reason": {
+          "continue": "Tiếp tục {module} — còn {remaining} bài.",
+          "finishModule": "Sắp xong {module} — chỉ còn {remaining} bài.",
+          "startModule": "Bắt đầu chương tiếp theo: {module}.",
+          "unlock": "Ghi danh để mở khóa bài này và học tiếp.",
+          "done": "Bạn đã hoàn thành khóa học! 🎉"
+        }
+      },
       "error": "Không tải được sơ đồ.",
       "legend": {
         "done": "Hoàn thành",

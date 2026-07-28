@@ -7214,6 +7214,24 @@
     "mindMap": {
       "title": "Course mind map",
       "youAreHere": "You are here",
+      "progress": {
+        "title": "Study assistant",
+        "overall": "{percent}% complete",
+        "lessonsDone": "{done}/{total} lessons done",
+        "nextLabel": "Study next",
+        "startCta": "Study now",
+        "unlockCta": "Unlock to study",
+        "suggested": "Suggested",
+        "strengths": "Strengths",
+        "review": "Finish these",
+        "reason": {
+          "continue": "Continue {module} — {remaining, plural, one {# lesson left} other {# lessons left}}.",
+          "finishModule": "Almost done with {module} — {remaining, plural, one {# lesson left} other {# lessons left}}.",
+          "startModule": "Start the next module: {module}.",
+          "unlock": "Enroll to unlock this lesson and keep going.",
+          "done": "You've completed the course! 🎉"
+        }
+      },
       "error": "Failed to load the map.",
       "legend": {
         "done": "Completed",

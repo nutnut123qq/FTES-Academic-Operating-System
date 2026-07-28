@@ -51,7 +51,8 @@ const XpSegmentBar = ({ entry }: { entry: SubjectLeaderboardEntry }) => {
  * (leader centered + crowned on the tallest pedestal) over a ranked list where
  * each row carries an avatar, name, a stacked XP-composition bar (challenge ·
  * reading · milestone) and the XP value — the viewer's own podium/row is accented
- * with a "Bạn" chip. Mock data via `useQuerySubjectLeaderboardSwr`.
+ * with a "Bạn" chip. Real data via `useQuerySubjectLeaderboardSwr`
+ * (`GET /subjects/{code}/statistics` → `leaderboard`).
  */
 export const PracticeLeaderboard = ({ subjectId, onBack }: PracticeLeaderboardProps) => {
     const t = useTranslations("subjects")

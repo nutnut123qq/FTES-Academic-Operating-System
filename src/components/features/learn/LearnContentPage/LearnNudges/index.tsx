@@ -10,7 +10,6 @@ import type { WithClassNames } from "@/modules/types/base/class-name"
 import {
     rankEntriesByCategory,
     useQueryLearnLeaderboardSwr,
-    VIEWER_USER_ID,
 } from "../../hooks/useQueryLearnLeaderboardSwr"
 
 /** Props for {@link LearnNudges}. */
@@ -29,12 +28,15 @@ export const LearnNudges = ({ className }: LearnNudgesProps) => {
     const t = useTranslations("learn")
     const router = useRouter()
     const { courseId } = useParams<{ courseId: string }>()
-    const { entries } = useQueryLearnLeaderboardSwr(courseId)
+    const { entries, viewerUserId } = useQueryLearnLeaderboardSwr(courseId)
 
-    // FTES myRank has no server rank → derive the viewer's 1-based rank from the board
-    const rank = rankEntriesByCategory(entries, "total").find(
-        (row) => row.entry.userId === VIEWER_USER_ID,
-    )?.displayRank ?? null
+    // derive the viewer's 1-based rank from the board (BE myRank carries the server
+    // rank, but the nudge only needs the "total" standing already on the entries)
+    const rank = viewerUserId
+        ? rankEntriesByCategory(entries, "total").find(
+            (row) => row.entry.userId === viewerUserId,
+        )?.displayRank ?? null
+        : null
 
     if (rank === null) {
         return null

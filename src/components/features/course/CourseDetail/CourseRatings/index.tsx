@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
-import { Button, Skeleton, TextArea, TextField, Typography, cn } from "@heroui/react"
+import React, { useCallback, useEffect, useState } from "react"
+import { Button, Skeleton, TextArea, TextField, Typography, cn, toast } from "@heroui/react"
 import { StarIcon, TrashIcon } from "@phosphor-icons/react"
 import { useLocale, useTranslations } from "next-intl"
 import { useAppSelector } from "@/redux/hooks"
@@ -22,6 +22,14 @@ const RATINGS_PAGE_SIZE = 5
 export interface CourseRatingsProps extends WithClassNames<undefined> {
     /** The course UUID (`course.rawId`), NOT the slug — the rating API keys on it. */
     courseId: string
+    /**
+     * Whether the viewer is enrolled in this course — the SAME signal the detail
+     * page's enroll CTA reads (`useCourseEnrollment().isEnrolled`). Gates the
+     * composer INPUT: a signed-in but NOT-enrolled viewer sees the form yet cannot
+     * type a review or pick a star — clicking/focusing either surfaces the
+     * "enroll first" prompt instead of accepting input. Enrolled → unchanged.
+     */
+    isEnrolled: boolean
 }
 
 /** A static (read-only) star row rendered from a 1–5 value. */
@@ -44,28 +52,43 @@ const StarPicker = ({
     value,
     onChange,
     label,
+    locked = false,
+    onLockedInteract,
 }: {
     value: number
     onChange: (next: number) => void
     label: (star: number) => string
+    /**
+     * When true the picker is gated for INPUT: clicking a star fires
+     * {@link onLockedInteract} (the enroll-first prompt) instead of selecting a rating.
+     */
+    locked?: boolean
+    /** Called when a `locked` picker is clicked, so the caller can prompt to enroll. */
+    onLockedInteract?: () => void
 }) => (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2" aria-disabled={locked || undefined}>
         {[1, 2, 3, 4, 5].map((star) => (
             <button
                 key={star}
                 type="button"
                 aria-label={label(star)}
-                aria-pressed={star <= value}
-                onClick={() => onChange(star)}
+                aria-pressed={locked ? undefined : star <= value}
+                aria-disabled={locked || undefined}
+                onClick={() => (locked ? onLockedInteract?.() : onChange(star))}
                 className={cn(
-                    "cursor-pointer rounded-full outline-none transition-colors focus-visible:ring-2 focus-visible:ring-accent",
-                    star <= value ? "text-accent" : "text-muted hover:text-accent",
+                    "rounded-full outline-none transition-colors focus-visible:ring-2 focus-visible:ring-accent",
+                    locked
+                        ? "cursor-not-allowed text-muted"
+                        : cn(
+                              "cursor-pointer",
+                              star <= value ? "text-accent" : "text-muted hover:text-accent",
+                          ),
                 )}
             >
                 <StarIcon
                     aria-hidden
                     focusable="false"
-                    weight={star <= value ? "fill" : "regular"}
+                    weight={!locked && star <= value ? "fill" : "regular"}
                     className="size-6"
                 />
             </button>
@@ -99,12 +122,21 @@ const RatingsSkeleton = () => (
  * toast rather than crashing. Mirrors the ResourceRating visual pattern.
  * @param props - {@link CourseRatingsProps}
  */
-export const CourseRatings = ({ courseId, className }: CourseRatingsProps) => {
+export const CourseRatings = ({ courseId, isEnrolled, className }: CourseRatingsProps) => {
     const t = useTranslations("courseSystem")
     const locale = useLocale()
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
     const viewerId = useAppSelector((state) => state.user.user?.id)
     const runRest = useRestWithToast()
+
+    // A signed-in viewer who has NOT enrolled may SEE the composer but cannot input:
+    // clicking/focusing the stars or the textarea prompts them to enroll first rather
+    // than accepting a rating or text. Reuses the enroll CTA's `isEnrolled` signal;
+    // the server-side submit gate (403 → accessDenied toast) is left untouched.
+    const canReview = isEnrolled
+    const notifyEnrollFirst = useCallback(() => {
+        toast.warning(t("detail.rating.enrollFirst"))
+    }, [t])
 
     const [page, setPage] = useState(1)
     const ratingsSwr = useGetCourseRatingsSwr(courseId, { page, size: RATINGS_PAGE_SIZE })
@@ -208,6 +240,8 @@ export const CourseRatings = ({ courseId, className }: CourseRatingsProps) => {
                         value={stars}
                         onChange={setStars}
                         label={(star) => t("detail.rating.starLabel", { count: star })}
+                        locked={!canReview}
+                        onLockedInteract={notifyEnrollFirst}
                     />
                     <TextField variant="secondary" className="w-full">
                         <TextArea
@@ -216,7 +250,29 @@ export const CourseRatings = ({ courseId, className }: CourseRatingsProps) => {
                             onChange={(event) => setReview(event.target.value)}
                             placeholder={t("detail.rating.reviewPlaceholder")}
                             aria-label={t("detail.rating.reviewPlaceholder")}
-                            className="resize-none"
+                            // Not-enrolled: stay READ-ONLY (still focusable to catch the
+                            // interaction) rather than `disabled`, so the enroll prompt is
+                            // reachable. `onMouseDown` swallows the click-to-focus and
+                            // prompts; `onFocus` bounces keyboard (Tab) focus back out.
+                            readOnly={!canReview}
+                            aria-disabled={!canReview || undefined}
+                            onMouseDown={
+                                canReview
+                                    ? undefined
+                                    : (event) => {
+                                          event.preventDefault()
+                                          notifyEnrollFirst()
+                                      }
+                            }
+                            onFocus={
+                                canReview
+                                    ? undefined
+                                    : (event) => {
+                                          event.target.blur()
+                                          notifyEnrollFirst()
+                                      }
+                            }
+                            className={cn("resize-none", !canReview && "cursor-not-allowed")}
                         />
                     </TextField>
                     <div className="flex flex-wrap items-center gap-2">

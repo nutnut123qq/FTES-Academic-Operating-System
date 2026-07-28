@@ -5750,6 +5750,7 @@
         "deleted": "Đã xoá đánh giá của bạn.",
         "accessDenied": "Cần đăng ký học khóa này để đánh giá.",
         "signInHint": "Đăng nhập để đánh giá khóa học này.",
+        "enrollFirst": "Bạn chưa đăng ký khóa học",
         "empty": "Chưa có đánh giá nào. Hãy là người đầu tiên!",
         "loadError": "Không tải được đánh giá.",
         "you": "Bạn",

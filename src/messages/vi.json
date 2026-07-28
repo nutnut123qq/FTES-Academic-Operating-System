@@ -7210,6 +7210,11 @@
       "continue": "Tiếp tục học",
       "allDone": "Bạn đã hoàn thành khóa học!",
       "moduleLessons": "{read}/{total} bài",
+      "canvasAria": "Sơ đồ tư duy khóa học tương tác",
+      "kind": {
+        "challenge": "Thử thách",
+        "assignment": "Bài tập nộp"
+      },
       "zoomIn": "Phóng to",
       "zoomOut": "Thu nhỏ"
     },

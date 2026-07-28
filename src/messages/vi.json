@@ -7244,6 +7244,9 @@
       "allDone": "Bạn đã hoàn thành khóa học!",
       "moduleLessons": "{read}/{total} bài",
       "canvasAria": "Sơ đồ tư duy khóa học tương tác",
+      "sectionHint": "Nhấn vào một phần để mở các bài; nhấn vào một bài để vào học.",
+      "expand": "Mở rộng phần",
+      "collapse": "Thu gọn phần",
       "kind": {
         "challenge": "Thử thách",
         "assignment": "Bài tập nộp"

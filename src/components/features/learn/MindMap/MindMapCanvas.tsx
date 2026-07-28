@@ -28,10 +28,10 @@ import { useMindMapFitView } from "./useMindMapFitView"
 export interface MindMapCanvasProps {
     /** Nodes + edges to render. */
     graph: MindMapGraph
-    /** The module that owns the viewer's resume pointer (camera lands here). */
-    currentModuleId: string | null
-    /** Click handler for a content node (routing / package gate lives in the parent). */
+    /** Click handler for a lesson / exercise node (routing / package gate lives in the parent). */
     onOpenNode: (data: MindMapNodeData) => void
+    /** Toggle a SECTION's expanded state (progressive disclosure) on a section-node click. */
+    onToggleModule: (moduleId: string) => void
     /** Resume target for the floating "Continue" action, or null when none. */
     continueHref: string | null
     /** Whether the viewer has completed the whole course (shows the "all done" note). */
@@ -45,31 +45,36 @@ const NODE_TYPES: NodeTypes = {
     [CONTENT_NODE_TYPE]: MindMapContentNode,
 }
 
-/** The status legend + "you are here" + premium gate swatches. */
+/** The status legend + "you are here" + premium gate swatches, plus the how-to hint. */
 const MindMapLegend = () => {
     const t = useTranslations("learn")
     return (
-        <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-separator bg-surface/90 px-3 py-2 shadow-sm backdrop-blur">
-            {(["completed", "inProgress", "notStarted"] as const).map((state) => (
-                <span key={state} className="flex items-center gap-1.5">
-                    <span className={cn("size-3 rounded-full", STATUS_SWATCH[state])} />
+        <div className="flex max-w-[300px] flex-col gap-1.5 rounded-2xl border border-separator bg-surface/90 px-3 py-2 shadow-sm backdrop-blur">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                {(["completed", "inProgress", "notStarted"] as const).map((state) => (
+                    <span key={state} className="flex items-center gap-1.5">
+                        <span className={cn("size-3 rounded-full", STATUS_SWATCH[state])} />
+                        <Typography type="body-xs" color="muted">
+                            {t(
+                                state === "completed"
+                                    ? "mindMap.legend.done"
+                                    : state === "inProgress"
+                                        ? "mindMap.legend.inProgress"
+                                        : "mindMap.legend.notStarted",
+                            )}
+                        </Typography>
+                    </span>
+                ))}
+                <span className="flex items-center gap-1.5">
+                    <span className="size-3 rounded-full bg-accent" />
                     <Typography type="body-xs" color="muted">
-                        {t(
-                            state === "completed"
-                                ? "mindMap.legend.done"
-                                : state === "inProgress"
-                                    ? "mindMap.legend.inProgress"
-                                    : "mindMap.legend.notStarted",
-                        )}
+                        {t("mindMap.legend.current")}
                     </Typography>
                 </span>
-            ))}
-            <span className="flex items-center gap-1.5">
-                <span className="size-3 rounded-full bg-accent" />
-                <Typography type="body-xs" color="muted">
-                    {t("mindMap.legend.current")}
-                </Typography>
-            </span>
+            </div>
+            <Typography type="body-xs" color="muted">
+                {t("mindMap.sectionHint")}
+            </Typography>
         </div>
     )
 }
@@ -77,8 +82,8 @@ const MindMapLegend = () => {
 /** Inner canvas — requires a {@link ReactFlowProvider} ancestor. */
 const MindMapCanvasInner = ({
     graph,
-    currentModuleId,
     onOpenNode,
+    onToggleModule,
     continueHref,
     allDone,
     onContinue,
@@ -88,7 +93,7 @@ const MindMapCanvasInner = ({
     const [edges, setEdges, onEdgesChange] = useEdgesState(graph.edges)
     const { fitView } = useReactFlow()
 
-    // Re-sync when the underlying course data changes (progress refetch, gate purchase).
+    // Re-sync when the graph changes (progress refetch, gate purchase, expand/collapse).
     useEffect(() => {
         setNodes(graph.nodes)
         setEdges(graph.edges)
@@ -102,12 +107,18 @@ const MindMapCanvasInner = ({
                 void fitView({ padding: 0.2, duration: 500 })
                 return
             }
+            // clicking a SECTION expands / collapses it (progressive disclosure); a
+            // lesson / exercise click opens its reader / solver or the package gate.
+            if (data.kind === "module") {
+                onToggleModule(data.moduleId)
+                return
+            }
             onOpenNode(data)
         },
-        [fitView, onOpenNode],
+        [fitView, onOpenNode, onToggleModule],
     )
 
-    useMindMapFitView(currentModuleId, graph.nodes.length)
+    useMindMapFitView(graph.nodes.length)
 
     return (
         <ReactFlow

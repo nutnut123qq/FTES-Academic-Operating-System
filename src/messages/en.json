@@ -7244,6 +7244,9 @@
       "allDone": "You've finished the course!",
       "moduleLessons": "{read}/{total} lessons",
       "canvasAria": "Interactive course mind map",
+      "sectionHint": "Click a section to reveal its lessons; click a lesson to start learning.",
+      "expand": "Expand section",
+      "collapse": "Collapse section",
       "kind": {
         "challenge": "Challenge",
         "assignment": "Assignment"

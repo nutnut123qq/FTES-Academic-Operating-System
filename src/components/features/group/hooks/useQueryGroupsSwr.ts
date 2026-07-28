@@ -13,6 +13,13 @@ export interface Group {
     type: GroupType
     members: number
     description: string
+    /**
+     * Raw BE visibility (`PUBLIC` / `PRIVATE` / `RESTRICTED`). Kept alongside the
+     * derived `type` because `type` is lossy (a STUDY_GROUP/CLUB/PROJECT_TEAM hides
+     * its visibility): the Join CTA needs the true visibility to know an open (PUBLIC)
+     * group needs no join.
+     */
+    visibility: string
     /** Group avatar URL; null = no avatar yet (UI falls back to initials). */
     avatarUrl: string | null
     /** Group cover/banner URL; null = no cover yet (UI falls back to a gradient). */
@@ -44,6 +51,7 @@ const toGroup = (dto: GroupResponse): Group => ({
     type: toGroupType(dto),
     members: dto.memberCount ?? 0,
     description: dto.description ?? "",
+    visibility: dto.visibility,
     avatarUrl: dto.avatarUrl ?? null,
     coverUrl: dto.coverUrl ?? null,
 })

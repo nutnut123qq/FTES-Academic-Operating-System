@@ -11,6 +11,7 @@ import {
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
+import { useHasPermission } from "@/hooks/useHasPermission"
 
 /** Shared look for one rail row (icon + label). */
 const ROW_CLASS =
@@ -23,6 +24,11 @@ const ROW_CLASS =
  */
 export const NavRail = () => {
     const t = useTranslations("communityHub")
+    // Moderation is a role-restricted queue: a viewer without `community.moderate`
+    // only ever gets a "restricted" empty state on the page, so the shortcut is not
+    // shown at all (the CommunityModeration page keeps a fallback for direct-URL
+    // access). Same permission the CommunityModeration page gates its fetch on.
+    const canModerate = useHasPermission("community.moderate")
 
     return (
         <nav
@@ -45,10 +51,12 @@ export const NavRail = () => {
                 <ChartBarIcon aria-hidden focusable="false" className="size-5" />
                 <Typography type="body-sm">{t("menu.poll")}</Typography>
             </Link>
-            <Link href="/community/moderation" className={ROW_CLASS}>
-                <ShieldCheckIcon aria-hidden focusable="false" className="size-5" />
-                <Typography type="body-sm">{t("menu.moderation")}</Typography>
-            </Link>
+            {canModerate ? (
+                <Link href="/community/moderation" className={ROW_CLASS}>
+                    <ShieldCheckIcon aria-hidden focusable="false" className="size-5" />
+                    <Typography type="body-sm">{t("menu.moderation")}</Typography>
+                </Link>
+            ) : null}
         </nav>
     )
 }

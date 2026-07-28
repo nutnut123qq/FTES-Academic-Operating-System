@@ -9,6 +9,7 @@ import {
     queryCommunityFeed,
     type FeedPost,
 } from "@/modules/api/graphql/queries/query-community-feed"
+import { CommunitySearchSort } from "@/modules/api/graphql/queries/query-community-search"
 import type { PostMediaItem } from "@/components/blocks/feed/PostMediaGrid"
 import { formatRelativeTime } from "./relativeTime"
 
@@ -179,17 +180,21 @@ export const toCommunityPost = (post: FeedPost, locale: string): CommunityPost =
 /** Items per feed page (BE `CursorInput.limit`). */
 const PAGE_LIMIT = 20
 
-/** Infinite-scroll page key: `["community-feed", tab, campus, cursor]` (null ⇒ end). */
-export type FeedPageKey = readonly [string, CommunityFeedTab, string, string]
+/** Infinite-scroll page key: `["community-feed", tab, sort, campus, cursor]` (null ⇒ end). */
+export type FeedPageKey = readonly [string, CommunityFeedTab, CommunitySearchSort, string, string]
 
 /**
  * `useSWRInfinite` key factory for one feed scope — pure, so the paging STOP condition is
  * unit-testable without rendering. Page 1 has no cursor; every later page keys off the
  * PREVIOUS page's `nextCursor`, and returning `null` tells SWR the list is exhausted (the
  * BE returns `nextCursor: null` on the last page, so no extra empty request is made).
+ *
+ * `sort` is part of the key so flipping Newest↔Oldest refetches from page 1 (the tab feed now
+ * honours the sort server-side — change community-feed-sort).
  */
 export const communityFeedPageKey = (
     tab: CommunityFeedTab,
+    sort: CommunitySearchSort,
     campus: string,
     index: number,
     previous: CommunityFeedPage | null,
@@ -200,7 +205,7 @@ export const communityFeedPageKey = (
     }
     // page 1 has no cursor; later pages use the previous page's nextCursor
     const cursor = index === 0 ? "" : previous?.nextCursor ?? ""
-    return [COMMUNITY_FEED_TAG, tab, campus, cursor]
+    return [COMMUNITY_FEED_TAG, tab, sort, campus, cursor]
 }
 
 /**
@@ -214,21 +219,30 @@ export const communityFeedPageKey = (
  * `campus` scopes the CAMPUS tab; omit it and the BE falls back to the viewer's profile
  * campus (empty connection when the viewer has no campus). Ignored for other tabs.
  *
+ * `sort` (Newest/Oldest) orders the tab feed by `created_at` server-side (change
+ * community-feed-sort); it is part of the SWR key so switching sort refetches from page 1. The
+ * TRENDING tab ignores it server-side (always engagement order) — the UI hides the control there.
+ *
  * Returns the flattened post list plus `hasMore` / `isLoadingMore` / `size` / `setSize`
  * for the {@link import("@/components/blocks/async/InfiniteScrollSentinel").InfiniteScrollSentinel}.
  */
-export const useQueryCommunityFeedSwr = (tab: CommunityFeedTab = "forYou", campus?: string) => {
+export const useQueryCommunityFeedSwr = (
+    tab: CommunityFeedTab = "forYou",
+    sort: CommunitySearchSort = CommunitySearchSort.Newest,
+    campus?: string,
+) => {
     const locale = useLocale()
     const scopedCampus = tab === "campus" ? campus : undefined
 
     const getKey = (index: number, previous: CommunityFeedPage | null): FeedPageKey | null =>
-        communityFeedPageKey(tab, scopedCampus ?? "", index, previous)
+        communityFeedPageKey(tab, sort, scopedCampus ?? "", index, previous)
 
-    const fetchPage = async ([, , , cursor]: FeedPageKey): Promise<CommunityFeedPage> => {
+    const fetchPage = async ([, , , , cursor]: FeedPageKey): Promise<CommunityFeedPage> => {
         const result = await queryCommunityFeed({
             tab: toFeedTab(tab),
             page: { limit: PAGE_LIMIT, cursor: cursor || undefined },
             campus: scopedCampus,
+            sort,
         })
         const connection = result.data?.feed
         return {

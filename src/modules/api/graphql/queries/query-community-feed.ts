@@ -1,6 +1,9 @@
 import { createAuthApolloClient } from "../clients"
 import { type GraphQLOperationContext, type GraphQLHeaders } from "../types"
 import { DocumentNode, gql } from "@apollo/client"
+// Type-only import (erased at runtime) so the feed query can type its `sort` param with the shared
+// enum WITHOUT a runtime circular import (query-community-search imports FEED_SELECTION from here).
+import type { CommunitySearchSort } from "./query-community-search"
 
 /**
  * Real BE community feed — GraphQL `feed(tab: FeedTab!, page: CursorInput, campus: String):
@@ -126,13 +129,15 @@ export const FEED_SELECTION = `
 
 /**
  * Build a feed document with the `tab` enum INLINED (see the non-null-variable quirk above).
- * `$campus` stays a nullable variable (safe under the quirk) so the CAMPUS tab can scope the
- * feed; other tabs pass `null` and the resolver ignores it.
+ * `$campus` / `$sort` stay NULLABLE variables (safe under the quirk): `$campus` scopes the CAMPUS
+ * tab; `$sort` (SortOrder DESC/ASC) makes the tab feed honour the Newest/Oldest control by ordering
+ * on `created_at` (change community-feed-sort). Other tabs pass `null` and the resolver ignores it;
+ * the TRENDING tab keeps engagement order regardless of `sort`.
  */
 const feedDocument = (tab: FeedTab): DocumentNode =>
     gql(
-        `query CommunityFeed($page: CursorInput, $campus: String) {\n` +
-            `  feed(tab: ${tab}, page: $page, campus: $campus) {${FEED_SELECTION}}\n` +
+        `query CommunityFeed($page: CursorInput, $campus: String, $sort: SortOrder) {\n` +
+            `  feed(tab: ${tab}, page: $page, campus: $campus, sort: $sort) {${FEED_SELECTION}}\n` +
             `}`,
     )
 
@@ -161,6 +166,12 @@ export interface QueryCommunityFeedParams extends GraphQLOperationContext {
      * profile campus. Ignored by other tabs.
      */
     campus?: string | null
+    /**
+     * Time sort (BE `SortOrder`, DESC = newest-first / ASC = oldest-first). Makes the tab feed
+     * honour the Newest/Oldest control by ordering on `created_at`; `null` keeps the tab's natural
+     * order (back-compat). Ignored by the TRENDING tab (always engagement order).
+     */
+    sort?: CommunitySearchSort | null
     headers?: GraphQLHeaders
     debug?: boolean
 }
@@ -175,6 +186,7 @@ export const queryCommunityFeed = async ({
     tab = FeedTab.ForYou,
     page,
     campus,
+    sort,
     headers,
     debug,
     signal,
@@ -187,6 +199,6 @@ export const queryCommunityFeed = async ({
     })
     return apollo.query<QueryCommunityFeedResponse>({
         query: queryMap[tab],
-        variables: { page: page ?? null, campus: campus ?? null },
+        variables: { page: page ?? null, campus: campus ?? null, sort: sort ?? null },
     })
 }

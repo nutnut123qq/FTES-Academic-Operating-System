@@ -49,6 +49,8 @@ interface CommunityFeedHeaderProps {
     onSortChange: (sort: CommunitySearchSort) => void
     postType: string
     onPostTypeChange: (postType: string) => void
+    /** Whether the Newest/Oldest control is meaningful here — hidden on the TRENDING tab. */
+    showSortControl: boolean
 }
 
 /**
@@ -74,6 +76,7 @@ const CommunityFeedHeader = ({
     onSortChange,
     postType,
     onPostTypeChange,
+    showSortControl,
 }: CommunityFeedHeaderProps) => {
     const t = useTranslations("communityHub")
     const { open } = useCommunityComposerOverlayState()
@@ -81,8 +84,11 @@ const CommunityFeedHeader = ({
 
     // Filters are "applied" when a keyword, a post-type, or a non-default sort is set — drives the
     // dot indicator + the a11y label so the collapsed magnifier still announces active filtering.
+    // A non-default sort only counts where the control is shown (Trending sort is hidden/ignored).
     const filtersActive =
-        query.trim().length > 0 || postType !== "" || sort !== CommunitySearchSort.Newest
+        query.trim().length > 0 ||
+        postType !== "" ||
+        (showSortControl && sort !== CommunitySearchSort.Newest)
 
     return (
         <div className="flex items-center gap-3 px-4 py-3">
@@ -132,6 +138,7 @@ const CommunityFeedHeader = ({
                         onSortChange={onSortChange}
                         postType={postType}
                         onPostTypeChange={onPostTypeChange}
+                        showSortControl={showSortControl}
                     />
                 </Popover.Content>
             </Popover>
@@ -418,7 +425,11 @@ export const CommunityFeed = ({ tab = "forYou" }: { tab?: CommunityFeedTab } = {
         [debouncedQuery, sort, postType],
     )
     const search = useQueryCommunitySearchSwr(criteria)
-    const feed = useQueryCommunityFeedSwr(tab)
+    // TRENDING is engagement-ordered by identity — it ignores the sort server-side and hides the
+    // Newest/Oldest control (see CommunityFeedHeader). Feed the hook Newest there so its SWR key
+    // stays stable regardless of the (hidden) sort state.
+    const isTrending = tab === "trending"
+    const feed = useQueryCommunityFeedSwr(tab, isTrending ? CommunitySearchSort.Newest : sort)
 
     // Search mode and the tab feed are BOTH cursor-paginated `useSWRInfinite` sources with the
     // same page shape, so the list/sentinel below reads from whichever one is active.
@@ -500,6 +511,7 @@ export const CommunityFeed = ({ tab = "forYou" }: { tab?: CommunityFeedTab } = {
                 onSortChange={setSort}
                 postType={postType}
                 onPostTypeChange={setPostType}
+                showSortControl={!isTrending}
             />
             <AsyncContent
                 isLoading={isLoading && posts.length === 0}

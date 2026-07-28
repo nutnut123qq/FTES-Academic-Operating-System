@@ -7,6 +7,7 @@ import {
     CheckCircleIcon,
     type Icon,
     LockSimpleIcon,
+    SparkleIcon,
     StackIcon,
 } from "@phosphor-icons/react"
 import { Handle, type NodeProps, Position } from "@xyflow/react"
@@ -66,10 +67,17 @@ const MindMapContentNodeBase = ({ data }: NodeProps) => {
                 WIDTH_CLASS[kind],
                 STATUS_CARD_CLASS[node.status],
                 "hover:border-accent hover:shadow-md hover:ring-2 hover:ring-accent/30",
+                node.isRecommended && !node.isCurrent && "border-dashed border-accent ring-2 ring-accent/40",
                 node.isCurrent && "border-accent ring-2 ring-accent",
                 node.isLocked && "opacity-80",
             )}
         >
+            {node.isRecommended ? (
+                <span className="absolute -right-1.5 -top-2 flex items-center gap-1 rounded-full border border-accent bg-content1 px-1.5 py-0.5 text-xs font-medium text-accent shadow-sm">
+                    <SparkleIcon weight="fill" aria-hidden focusable="false" className="size-3" />
+                    {t("mindMap.progress.suggested")}
+                </span>
+            ) : null}
             <Handle
                 type="target"
                 position={Position.Left}

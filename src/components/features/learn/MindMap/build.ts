@@ -35,6 +35,8 @@ export interface MindMapNodeData extends Record<string, unknown> {
     isLocked: boolean
     /** True when this node owns the viewer's resume pointer ("you are here"). */
     isCurrent: boolean
+    /** True when the progress assistant recommends this lesson as the next step. */
+    isRecommended?: boolean
     /** Owning module id — the route segment for lessons/exercises. */
     moduleId: string
     /** Owning lesson id (lesson + exercise nodes). */
@@ -71,6 +73,8 @@ export interface BuildMindMapInput {
     currentLessonId: string | null
     /** The module that owns {@link currentLessonId} ("you are here"), if any. */
     currentModuleId: string | null
+    /** The lesson the progress assistant recommends next — tags its node `isRecommended`. */
+    recommendedLessonId?: string | null
 }
 
 /** Horizontal column position (px, left edge) per tree level. */
@@ -128,6 +132,7 @@ export const buildMindMap = ({
     modules,
     currentLessonId,
     currentModuleId,
+    recommendedLessonId = null,
 }: BuildMindMapInput): MindMapGraph => {
     const nodes: Array<Node<MindMapNodeData>> = []
     const edges: Array<Edge> = []
@@ -200,6 +205,7 @@ export const buildMindMap = ({
                 status: lessonStatus(lesson),
                 isLocked: lesson.isLocked,
                 isCurrent: lessonIsCurrent,
+                isRecommended: recommendedLessonId != null && lesson.id === recommendedLessonId,
                 moduleId: module.id,
                 lessonId: lesson.id,
             })

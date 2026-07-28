@@ -6,7 +6,7 @@
 
 import React from "react"
 import { Canvas, useFrame, useThree, invalidate } from "@react-three/fiber"
-import { Html, Line, OrbitControls } from "@react-three/drei"
+import { Html, Line, OrbitControls, useTexture } from "@react-three/drei"
 import * as THREE from "three"
 import type { JourneySceneData, JourneyStationLabel, JourneyStationNode, StationKind } from "./types"
 import sceneJson from "./scene.json"
@@ -106,12 +106,32 @@ const usePalette = (): Palette => {
 }
 
 /** Height a station's floating label sits above the node. */
-const LABEL_Y = 1.9
+const LABEL_Y = 2.4
 
-/** A flat-shaded station shape per {@link StationKind}. Payoff scales up + glows. */
+/** Khối chặng phóng to so với bản đầu: ở khoảng cách camera cũ mỗi khối chỉ ~40px nên
+ *  hình gì cũng thành cục — sửa dáng mà không phóng thì công cốc. */
+const STATION_SCALE = 1.35
+
+/**
+ * Hue offset (vòng màu, 0..1) của từng chặng so với `--accent`. Dẫn xuất từ token thay vì
+ * hard-code màu: giữ nguyên độ bão hoà / độ sáng của theme (sáng + tối) mà vẫn tách được 5
+ * chặng. Trước đây 4/5 chặng dùng chung `--default` xám nên nhìn "đơn điệu"; Thành quả vẫn
+ * ăn `--success` riêng (nó là payoff, không nằm trong dải này).
+ */
+const KIND_HUE_SHIFT: Record<StationKind, number> = {
+    home: -0.08,
+    workplace: 0.5,
+    course: 0,
+    practice: 0.28,
+    outcome: 0,
+}
+
+/** A shaded station shape per {@link StationKind}. Payoff scales up + glows. */
 const StationMesh = ({ kind, color, emphasized }: { kind: StationKind; color: THREE.Color; emphasized: boolean }) => {
-    const top = color.clone().lerp(WHITE, 0.18)
-    const side = color.clone().multiplyScalar(0.7)
+    // Hai tông vẫn giữ cho phần "mặt trên vs thân", nhưng nhẹ hơn hẳn bản cũ: từ khi có đèn
+    // thật (ambient + directional) thì sáng-tối do ánh sáng lo, tô cứng nhiều sẽ bệt.
+    const top = color.clone().lerp(WHITE, 0.1)
+    const side = color
     switch (kind) {
     case "home":
         // a house: base cube + pyramid roof
@@ -119,25 +139,55 @@ const StationMesh = ({ kind, color, emphasized }: { kind: StationKind; color: TH
             <group>
                 <mesh position={[0, 0.35, 0]}>
                     <boxGeometry args={[0.9, 0.7, 0.9]} />
-                    <meshBasicMaterial color={side} />
+                    <meshLambertMaterial color={side} />
                 </mesh>
                 <mesh position={[0, 0.9, 0]} rotation={[0, Math.PI / 4, 0]}>
                     <coneGeometry args={[0.75, 0.55, 4]} />
-                    <meshBasicMaterial color={top} />
+                    <meshLambertMaterial color={top} />
                 </mesh>
             </group>
         )
     case "workplace":
-        // a workbench: wide low slab + a raised panel
+        // bàn làm việc + màn hình. Bản cũ là "slab thấp + tấm panel" → nhìn ra thùng carton;
+        // mặt bàn mỏng trên 4 chân + màn nghiêng mới đọc ra "không gian làm việc".
         return (
             <group>
-                <mesh position={[0, 0.2, 0]}>
-                    <boxGeometry args={[1.2, 0.4, 0.8]} />
-                    <meshBasicMaterial color={side} />
+                {/* mặt bàn */}
+                <mesh position={[0, 0.62, 0]}>
+                    <boxGeometry args={[1.3, 0.1, 0.8]} />
+                    <meshLambertMaterial color={top} />
                 </mesh>
-                <mesh position={[0, 0.7, -0.2]}>
-                    <boxGeometry args={[1.0, 0.55, 0.08]} />
-                    <meshBasicMaterial color={top} />
+                {/* 4 chân bàn */}
+                {[[-0.55, -0.3], [0.55, -0.3], [-0.55, 0.3], [0.55, 0.3]].map(([x, z], i) => (
+                    <mesh key={i} position={[x, 0.29, z]}>
+                        <boxGeometry args={[0.09, 0.58, 0.09]} />
+                        <meshLambertMaterial color={side} />
+                    </mesh>
+                ))}
+                {/* Màn hình: HẸP hơn mặt bàn, nâng trên cổ đứng nên có KHE HỞ giữa bàn và màn.
+                    Hai bản trước (tấm cao sát mép sau, rồi tấm rộng bằng bàn) đều đọc ra lưng
+                    ghế — cái tách nghĩa là khe hở + bề rộng nhỏ hơn bàn. Mặt hiển thị tô tông
+                    tối hơn khung để ra "cái màn", không phải tấm ván. */}
+                <mesh position={[0, 0.72, -0.14]}>
+                    <boxGeometry args={[0.3, 0.04, 0.18]} />
+                    <meshLambertMaterial color={side} />
+                </mesh>
+                <mesh position={[0, 0.84, -0.14]}>
+                    <boxGeometry args={[0.07, 0.2, 0.07]} />
+                    <meshLambertMaterial color={side} />
+                </mesh>
+                <mesh position={[0, 1.06, -0.14]} rotation={[-0.16, 0, 0]}>
+                    <boxGeometry args={[0.66, 0.4, 0.05]} />
+                    <meshLambertMaterial color={side} />
+                </mesh>
+                <mesh position={[0, 1.06, -0.11]} rotation={[-0.16, 0, 0]}>
+                    <boxGeometry args={[0.58, 0.32, 0.02]} />
+                    <meshLambertMaterial color={top} />
+                </mesh>
+                {/* bàn phím — chi tiết chốt nghĩa "bàn làm việc", tách hẳn khỏi hình cái ghế */}
+                <mesh position={[0, 0.69, 0.22]} rotation={[-0.06, 0, 0]}>
+                    <boxGeometry args={[0.6, 0.04, 0.22]} />
+                    <meshLambertMaterial color={top} />
                 </mesh>
             </group>
         )
@@ -148,42 +198,75 @@ const StationMesh = ({ kind, color, emphasized }: { kind: StationKind; color: TH
                 {[0, 1, 2].map((i) => (
                     <mesh key={i} position={[i * 0.04 - 0.04, 0.16 + i * 0.24, 0]} rotation={[0, i * 0.12, 0]}>
                         <boxGeometry args={[1.0, 0.2, 0.72]} />
-                        <meshBasicMaterial color={i % 2 ? top : side} />
+                        <meshLambertMaterial color={i % 2 ? top : side} />
                     </mesh>
                 ))}
             </group>
         )
     case "practice":
-        // a dumbbell-ish barbell = luyện tập, plus an AI orb on top
+        // tạ + AI orb. Bản cũ chỉ có thanh trụ trơn nên nhìn như khúc xương — thêm 2 bánh tạ
+        // hai đầu (thứ khiến mắt nhận ra "tạ") và hạ thanh xuống cho ra dáng đặt trên sàn.
         return (
             <group>
-                <mesh position={[0, 0.35, 0]} rotation={[0, 0, Math.PI / 2]}>
-                    <cylinderGeometry args={[0.14, 0.14, 1.1, 24]} />
-                    <meshBasicMaterial color={side} />
+                <mesh position={[0, 0.34, 0]} rotation={[0, 0, Math.PI / 2]}>
+                    <cylinderGeometry args={[0.08, 0.08, 1.24, 16]} />
+                    <meshLambertMaterial color={side} />
                 </mesh>
-                <mesh position={[0, 0.95, 0]}>
+                {[-0.52, 0.52].map((x) => (
+                    <mesh key={x} position={[x, 0.34, 0]} rotation={[0, 0, Math.PI / 2]}>
+                        <cylinderGeometry args={[0.3, 0.3, 0.17, 20]} />
+                        <meshLambertMaterial color={top} />
+                    </mesh>
+                ))}
+                <mesh position={[0, 1.0, 0]}>
                     <icosahedronGeometry args={[0.34, 0]} />
-                    <meshBasicMaterial color={top} />
+                    <meshLambertMaterial color={top} />
                 </mesh>
             </group>
         )
     case "outcome":
     default:
-        // a trophy = thành quả (emphasized station)
+        // cúp = thành quả (chặng payoff). Quai hai bên là chi tiết quyết định: thiếu nó thì
+        // đế + thân + chỏm cầu chỉ đọc ra "cái ly" (góp ý website 2026-07-26).
         return (
             <group scale={emphasized ? 1.28 : 1}>
-                <mesh position={[0, 0.18, 0]}>
-                    <cylinderGeometry args={[0.42, 0.5, 0.22, 6]} />
-                    <meshBasicMaterial color={side} />
+                {/* đế dày 2 tầng */}
+                <mesh position={[0, 0.11, 0]}>
+                    <cylinderGeometry args={[0.5, 0.56, 0.22, 6]} />
+                    <meshLambertMaterial color={side} />
                 </mesh>
-                <mesh position={[0, 0.42, 0]}>
-                    <cylinderGeometry args={[0.1, 0.12, 0.3, 12]} />
-                    <meshBasicMaterial color={side} />
+                <mesh position={[0, 0.29, 0]}>
+                    <cylinderGeometry args={[0.34, 0.44, 0.16, 6]} />
+                    <meshLambertMaterial color={side} />
                 </mesh>
-                <mesh position={[0, 0.78, 0]}>
-                    <sphereGeometry args={[0.42, 24, 16, 0, Math.PI * 2, 0, Math.PI / 1.6]} />
-                    <meshBasicMaterial color={top} />
+                {/* thân */}
+                <mesh position={[0, 0.5, 0]}>
+                    <cylinderGeometry args={[0.1, 0.13, 0.3, 12]} />
+                    <meshLambertMaterial color={side} />
                 </mesh>
+                {/* bát cúp = nón cụt loe miệng. Bản trước dùng chỏm cầu: từ góc camera này mặt
+                    cầu đọc ra quả bóng / cây nấm, không ra cái cốc (thấy trên ảnh chụp thử). */}
+                <mesh position={[0, 0.92, 0]}>
+                    <cylinderGeometry args={[0.42, 0.2, 0.52, 20, 1, true]} />
+                    <meshLambertMaterial color={top} side={THREE.DoubleSide} />
+                </mesh>
+                {/* đáy lòng cốc (nón cụt để hở nên phải bịt, không thì nhìn xuyên) */}
+                <mesh position={[0, 0.7, 0]}>
+                    <cylinderGeometry args={[0.2, 0.2, 0.03, 20]} />
+                    <meshLambertMaterial color={top} />
+                </mesh>
+                {/* quai hai bên: nửa vòng DỰNG trong mặt phẳng XY, bụng quai loe ra ngoài — nằm
+                    ngang như bản trước thì bị bát che mất, mà quai mới là thứ chốt nghĩa "cúp". */}
+                {[-1, 1].map((dir) => (
+                    <mesh
+                        key={dir}
+                        position={[dir * 0.38, 0.96, 0]}
+                        rotation={[0, 0, dir > 0 ? -Math.PI / 2 : Math.PI / 2]}
+                    >
+                        <torusGeometry args={[0.17, 0.045, 10, 20, Math.PI]} />
+                        <meshLambertMaterial color={top} />
+                    </mesh>
+                ))}
             </group>
         )
     }
@@ -205,7 +288,15 @@ const Station = ({
     active: boolean
     reduce: boolean
 }) => {
-    const color = node.payoff ? palette.success : active ? palette.accent : palette.node
+    // Tông riêng cho từng chặng (payoff giữ --success). Active = chính tông đó sáng lên, KHÔNG
+    // đổi sang accent như bản cũ — đổi màu khi active thì 4 chặng còn lại vẫn xám như nhau.
+    const color = React.useMemo(() => {
+        if (node.payoff) return active ? palette.success.clone().lerp(WHITE, 0.16) : palette.success
+        // Kéo mạnh về `--node` để 5 tông chỉ khác nhau đủ phân biệt, không thành 5 cây bút sáp:
+        // lệch hue giữ vai trò "đây là chặng khác", còn độ gắt do token nền quyết định.
+        const tone = palette.accent.clone().offsetHSL(KIND_HUE_SHIFT[node.kind], 0, 0)
+        return active ? tone.lerp(palette.node, 0.32) : tone.lerp(palette.node, 0.62)
+    }, [node.payoff, node.kind, active, palette])
     const ring = React.useRef<THREE.Mesh>(null)
     useFrame(({ clock }) => {
         if (!node.payoff || reduce || !ring.current) return
@@ -218,7 +309,9 @@ const Station = ({
     })
     return (
         <group position={node.pos}>
-            <StationMesh kind={node.kind} color={color} emphasized={Boolean(node.payoff)} />
+            <group scale={STATION_SCALE}>
+                <StationMesh kind={node.kind} color={color} emphasized={Boolean(node.payoff)} />
+            </group>
             {node.payoff ? (
                 <mesh ref={ring} position={[0, 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
                     <ringGeometry args={[0.7, 0.85, 40]} />
@@ -243,35 +336,147 @@ const Station = ({
     )
 }
 
-/** Animated flow along the whole path: dashed accent line + N pulses travelling in
- *  journey order (Home → … → Thành quả), evenly staggered. */
-const FlowPath = ({ stations, palette, reduce }: { stations: JourneyStationNode[]; palette: Palette; reduce: boolean }) => {
-    const points = React.useMemo(() => stations.map((s) => new THREE.Vector3(...s.pos).setY(0.15)), [stations])
-    const curve = React.useMemo(() => new THREE.CatmullRomCurve3(points, false, "catmullrom", 0.4), [points])
+/** Đường ray đi qua các ga — dùng CHUNG cho nét đứt và cho đường chạy của mascot, nên phải
+ *  là một curve duy nhất (hai curve riêng sẽ lệch nhau vài pixel ở khúc cong). */
+const useJourneyCurve = (stations: JourneyStationNode[]) =>
+    React.useMemo(() => {
+        const points = stations.map((s) => new THREE.Vector3(...s.pos).setY(0.15))
+        return new THREE.CatmullRomCurve3(points, false, "catmullrom", 0.4)
+    }, [stations])
+
+/** Nét đứt của đường ray. Bốn chấm tròn chạy dọc đường đã BỎ — mascot thay vai trò "chỉ hướng
+ *  đi", giữ cả hai thì đường ray thành hai thứ chuyển động tranh nhau (góp ý website). */
+const FlowPath = ({ curve, palette }: { curve: THREE.CatmullRomCurve3; palette: Palette }) => {
     const linePoints = React.useMemo(() => curve.getPoints(120), [curve])
-    const PULSES = 4
-    const pulses = React.useRef<Array<THREE.Mesh | null>>([])
+    return (
+        <Line points={linePoints} color={palette.accent} lineWidth={2} dashed dashSize={0.24} gapSize={0.18} transparent opacity={0.7} />
+    )
+}
+
+/** Pose mascot theo ga. `explain` dùng cho cả workplace lẫn course (cùng nghĩa "giảng cho bạn"). */
+const POSE_BY_KIND: Record<StationKind, "greeting" | "explain" | "point" | "cheer"> = {
+    home: "greeting",
+    workplace: "explain",
+    course: "explain",
+    practice: "point",
+    outcome: "cheer",
+}
+
+const MASCOT_SRC = {
+    greeting: "/mascot/plain/greeting.webp",
+    explain: "/mascot/plain/explain.webp",
+    point: "/mascot/plain/point.webp",
+    cheer: "/mascot/plain/cheer.webp",
+} as const
+
+/** Cao ~1.7 đơn vị — mascot là VẬT CHUẨN kích thước của scene, đổi số này thì phải soi lại
+ *  scale khối chặng và khoảng cách camera. */
+const MASCOT_HEIGHT = 1.7
+const MASCOT_ASPECT = 508 / 512
+
+/** Đứng LỆCH SANG BÊN + nhích ra trước so với tâm ga. Góp ý là "đứng CẠNH những phần tử":
+ *  đứng đúng tâm thì khối che mất nửa người, mà nhích thẳng ra trước thì cáo che mất khối
+ *  (cả hai đều đã thấy trên ảnh chụp thử). */
+const MASCOT_OFFSET: [number, number] = [1.2, 0.75]
+
+/**
+ * FrosTES chạy dọc đường ray tới ga đang active rồi ĐỨNG LẠI đó (thay 4 chấm chạy vô nghĩa).
+ * Là billboard 2D: art là ảnh render sẵn, mang ánh sáng riêng nên KHÔNG nhận đèn scene
+ * (`sprite` + `spriteMaterial`), và luôn quay mặt về camera kể cả khi khách xoay OrbitControls.
+ * Bóng ellipse mờ dưới chân để nhân vật chạm đất thay vì trôi.
+ */
+const Mascot = ({
+    curve,
+    stations,
+    activeIndex,
+    palette,
+    reduce,
+}: {
+    curve: THREE.CatmullRomCurve3
+    stations: JourneyStationNode[]
+    activeIndex: number
+    palette: Palette
+    reduce: boolean
+}) => {
+    const textures = useTexture(Object.values(MASCOT_SRC) as unknown as string[])
+    const poses = Object.keys(MASCOT_SRC) as Array<keyof typeof MASCOT_SRC>
+    const byPose = React.useMemo(() => {
+        const map = {} as Record<keyof typeof MASCOT_SRC, THREE.Texture>
+        poses.forEach((pose, i) => {
+            const tex = textures[i]
+            tex.colorSpace = THREE.SRGBColorSpace
+            map[pose] = tex
+        })
+        return map
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [textures])
+
+    const station = stations[Math.max(0, Math.min(activeIndex, stations.length - 1))]
+    /** Vị trí trên curve (0..1) của ga đang active — các ga chia đều theo control point. */
+    const targetU = stations.length > 1 ? Math.max(0, Math.min(activeIndex, stations.length - 1)) / (stations.length - 1) : 0
+
+    const group = React.useRef<THREE.Group>(null)
+    const u = React.useRef(targetU)
+    const point = React.useMemo(() => new THREE.Vector3(), [])
+
     useFrame(({ clock }) => {
-        if (reduce) return
-        const base = (clock.getElapsedTime() * 0.14) % 1
-        for (let i = 0; i < PULSES; i += 1) {
-            const m = pulses.current[i]
-            if (!m) continue
-            const t = (base + i / PULSES) % 1
-            m.position.copy(curve.getPointAt(t))
+        if (!group.current) return
+        // chạy tới ga: lerp trên tham số đường cong (không phải lerp toạ độ) nên luôn bám ray
+        const delta = targetU - u.current
+        if (Math.abs(delta) > 0.0005) {
+            u.current += delta * (reduce ? 1 : 0.06)
+            invalidate()
+        } else {
+            u.current = targetU
         }
-        invalidate()
+        curve.getPointAt(Math.max(0, Math.min(1, u.current)), point)
+        // đứng yên thì bob nhẹ; đang di chuyển thì nảy nhanh hơn cho ra cảm giác bước
+        const t = clock.getElapsedTime()
+        const moving = Math.abs(delta) > 0.0005
+        const bob = reduce ? 0 : Math.sin(t * (moving ? 9 : 2.2)) * (moving ? 0.09 : 0.045)
+        group.current.position.set(
+            point.x + MASCOT_OFFSET[0],
+            point.y + MASCOT_HEIGHT / 2 + bob,
+            point.z + MASCOT_OFFSET[1],
+        )
+        if (!reduce) invalidate()
     })
+
+    const pose = POSE_BY_KIND[station.kind]
     return (
         <group>
-            <Line points={linePoints} color={palette.accent} lineWidth={2} dashed dashSize={0.24} gapSize={0.18} transparent opacity={0.7} />
-            {Array.from({ length: PULSES }).map((_, i) => (
-                <mesh key={i} ref={(el) => { pulses.current[i] = el }}>
-                    <sphereGeometry args={[0.1, 12, 12]} />
-                    <meshBasicMaterial color={palette.accent} />
-                </mesh>
-            ))}
+            <group ref={group}>
+                <sprite scale={[MASCOT_HEIGHT * MASCOT_ASPECT, MASCOT_HEIGHT, 1]}>
+                    <spriteMaterial map={byPose[pose]} transparent depthWrite={false} toneMapped={false} />
+                </sprite>
+            </group>
+            <GroundShadow curve={curve} u={u} palette={palette} />
         </group>
+    )
+}
+
+/** Bóng ellipse mờ bám chân mascot (đọc `u` cùng ref nên không lệch khung hình nào). */
+const GroundShadow = ({
+    curve,
+    u,
+    palette,
+}: {
+    curve: THREE.CatmullRomCurve3
+    u: React.RefObject<number>
+    palette: Palette
+}) => {
+    const mesh = React.useRef<THREE.Mesh>(null)
+    const point = React.useMemo(() => new THREE.Vector3(), [])
+    useFrame(() => {
+        if (!mesh.current) return
+        curve.getPointAt(Math.max(0, Math.min(1, u.current ?? 0)), point)
+        mesh.current.position.set(point.x + MASCOT_OFFSET[0], 0.02, point.z + MASCOT_OFFSET[1])
+    })
+    return (
+        <mesh ref={mesh} rotation={[-Math.PI / 2, 0, 0]} scale={[1, 0.45, 1]}>
+            <circleGeometry args={[0.42, 24]} />
+            <meshBasicMaterial color={palette.muted} transparent opacity={0.22} depthWrite={false} />
+        </mesh>
     )
 }
 
@@ -325,8 +530,15 @@ const Scene = ({
     // true while the visitor drives the camera (OrbitControls grab) — the rig backs
     // off until the next stage change re-takes it (see CameraRig).
     const userTookOver = React.useRef(false)
+    const curve = useJourneyCurve(DATA.stations)
     return (
         <group>
+            {/* Ánh sáng: trước đây mọi khối dùng meshBasicMaterial (bỏ qua đèn) nên mặt nào cũng
+                một màu, cạnh biến mất, cúp/nhà/sách đều dẹp thành mảng. Ambient giữ vùng tối
+                không đen kịt, directional chếch cao tạo mặt sáng/mặt tối cho ra khối. */}
+            <ambientLight intensity={1.35} />
+            <directionalLight position={[5, 9, 6]} intensity={1.5} />
+            <directionalLight position={[-6, 4, -4]} intensity={0.4} />
             <CameraRig target={target} offset={offset} tookOver={userTookOver} />
             {/* grab-to-rotate: orbit the journey, no pan/zoom so it stays framed */}
             <OrbitControls
@@ -340,7 +552,16 @@ const Scene = ({
                 maxPolarAngle={Math.PI / 1.9}
                 onStart={() => { userTookOver.current = true }}
             />
-            <FlowPath stations={DATA.stations} palette={palette} reduce={reduce} />
+            <FlowPath curve={curve} palette={palette} />
+            <React.Suspense fallback={null}>
+                <Mascot
+                    curve={curve}
+                    stations={DATA.stations}
+                    activeIndex={activeIndex}
+                    palette={palette}
+                    reduce={reduce}
+                />
+            </React.Suspense>
             {DATA.stations.map((node, i) => (
                 <Station
                     key={node.id}

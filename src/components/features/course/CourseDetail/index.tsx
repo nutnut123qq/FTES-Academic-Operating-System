@@ -45,6 +45,7 @@ import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { FollowButton } from "@/components/reuseable/FollowButton"
 import { StatRibbon } from "@/components/reuseable/StatRibbon"
 import { UserAvatar } from "@/components/reuseable/UserAvatar"
+import { lessonTypeIcon } from "../../learn/lessonType"
 import { useQueryCourseDetailSwr, type CourseDetail as CourseDetailModel, type CourseInstructor } from "../hooks/useQueryCourseDetailSwr"
 import { useCourseEnrollment } from "../hooks/useCourseEnrollment"
 import { useQueryCoursePackagesSwr } from "../hooks/useQueryCoursePackagesSwr"
@@ -489,12 +490,16 @@ const CourseDetailView = ({
                                                 {section.lessons.map((lesson) => {
                                                     // Lock is the per-viewer `isLocked` (NOT `!free`): an enrolled
                                                     // viewer's premium lessons are unlocked → clickable into the reader.
+                                                    // Unlocked rows carry the per-TYPE glyph (video → play, document →
+                                                    // sheet, materials → paperclip) so a video and a document row never
+                                                    // share one icon; the lock stays a STATE glyph, orthogonal to type.
+                                                    const LessonTypeIcon = lessonTypeIcon(lesson.contentType)
                                                     const rowContent = (
                                                         <>
                                                             {lesson.isLocked ? (
                                                                 <LockIcon aria-hidden focusable="false" className="size-4 shrink-0 text-muted" />
                                                             ) : (
-                                                                <PlayCircleIcon aria-hidden focusable="false" className="size-4 shrink-0 text-accent" />
+                                                                <LessonTypeIcon aria-hidden focusable="false" className="size-4 shrink-0 text-accent" />
                                                             )}
                                                             <div className="min-w-0 flex-1">
                                                                 <Typography type="body-sm" weight="medium" className="line-clamp-2">

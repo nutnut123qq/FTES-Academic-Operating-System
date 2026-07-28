@@ -29,6 +29,7 @@ const lesson = (over: Partial<LearnLesson> & { id: string }): LearnLesson => ({
     title: `Bài ${over.id}`,
     description: "",
     readTimeLabel: "",
+    contentType: "VIDEO",
     isCompleted: false,
     isPremium: true,
     isLocked: true,

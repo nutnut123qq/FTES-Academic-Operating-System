@@ -7,6 +7,7 @@ const lesson = (id: string, opts: Partial<Pick<LearnLesson, "isCompleted" | "isL
     title: opts.title ?? `Lesson ${id}`,
     description: "",
     readTimeLabel: "",
+    contentType: "VIDEO",
     isCompleted: opts.isCompleted ?? false,
     isLocked: opts.isLocked ?? false,
     accessLevel: "FULL",

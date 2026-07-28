@@ -19,6 +19,12 @@ export interface LearnLesson {
     description: string
     /** Estimated read/watch time, e.g. "6 min" — empty when the BE doesn't provide it. */
     readTimeLabel: string
+    /**
+     * BE lesson content-type (`LessonView.type`), e.g. "VIDEO" | "DOCUMENT". Drives the
+     * per-type content-map row glyph ({@link lessonTypeIcon}) so a video row and a document
+     * row never share one icon. Empty when the BE omits it → the neutral default glyph.
+     */
+    contentType: string
     isCompleted: boolean
     /** Premium lessons unlock by enrolling the course (rule premium-unlock-is-enroll-not-vip). */
     isPremium?: boolean
@@ -163,6 +169,7 @@ const toLearnLesson = (lesson: LessonView): LearnLesson => {
         title: lesson.name,
         description: lesson.description ?? "",
         readTimeLabel: "",
+        contentType: lesson.type ?? "",
         isCompleted: false,
         isPremium: !lesson.free,
         isLocked: lesson.locked ?? false,

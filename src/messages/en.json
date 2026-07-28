@@ -7225,6 +7225,11 @@
       "continue": "Continue learning",
       "allDone": "You've finished the course!",
       "moduleLessons": "{read}/{total} lessons",
+      "canvasAria": "Interactive course mind map",
+      "kind": {
+        "challenge": "Challenge",
+        "assignment": "Assignment"
+      },
       "zoomIn": "Zoom in",
       "zoomOut": "Zoom out"
     },

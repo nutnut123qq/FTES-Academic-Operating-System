@@ -27,6 +27,13 @@ interface GroupJoinButtonProps {
      * header, then to the status of the actions taken this session.
      */
     viewerMembership?: string | null
+    /**
+     * Raw BE group visibility (`PUBLIC` / `PRIVATE` / `RESTRICTED`). A PUBLIC group is
+     * open — anyone can read and participate without joining — so a non-member sees NO
+     * Join CTA for it; the button only offers "Join" on PRIVATE/RESTRICTED groups
+     * (request-to-join). Members keep their Leave / Joined state regardless.
+     */
+    visibility?: string | null
 }
 
 /**
@@ -46,6 +53,7 @@ export const GroupJoinButton = ({
     className,
     isOwner = false,
     viewerMembership,
+    visibility,
 }: GroupJoinButtonProps) => {
     const t = useTranslations("groupsHub")
     const { status, isJoining, isLeaving, canLeave, join, leave } = useMutateJoinGroupSwr(groupId, {
@@ -56,6 +64,11 @@ export const GroupJoinButton = ({
     const joined = isOwner || status === "joined"
     // Owners cannot leave — the BE demands an ownership transfer first.
     const showLeave = joined && !isOwner && canLeave
+    // A PUBLIC group is open (readable/participable without joining): a non-member gets
+    // no Join CTA. `!joined && status !== "pending"` is exactly the actionable "Join"
+    // state (see the label below) — members/owners keep their Leave / Joined indicator.
+    const isPublic = visibility === "PUBLIC"
+    const showJoinCta = !joined && status !== "pending"
 
     const onConfirmLeave = useCallback(async () => {
         await leave(t("join.left"))
@@ -85,6 +98,11 @@ export const GroupJoinButton = ({
                 />
             </>
         )
+    }
+
+    // Public group + non-member → no Join CTA at all (public groups are open).
+    if (isPublic && showJoinCta) {
+        return null
     }
 
     const label = joined

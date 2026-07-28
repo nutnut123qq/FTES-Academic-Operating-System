@@ -130,6 +130,7 @@ export const GroupDetailShell = ({ groupId, children }: GroupDetailShellProps) =
                             groupId={groupId}
                             isOwner={isOwner}
                             viewerMembership={group.viewerMembership}
+                            visibility={group.visibility}
                             className="mb-1 shrink-0"
                         />
                     </div>

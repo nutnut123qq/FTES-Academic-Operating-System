@@ -10,6 +10,12 @@ export interface GroupHeader {
     name: string
     type: GroupType
     members: number
+    /**
+     * Raw BE visibility (`PUBLIC` / `PRIVATE` / `RESTRICTED`) — kept alongside the
+     * lossy `type` so the Join CTA can tell an open (PUBLIC) group (no join needed)
+     * from a PRIVATE/RESTRICTED one (request-to-join).
+     */
+    visibility: string
     /** Group avatar URL; null = no avatar yet (UI falls back to initials). */
     avatarUrl: string | null
     /** Group cover/banner URL; null = no cover yet (UI falls back to a gradient). */
@@ -57,6 +63,7 @@ export const useQueryGroupSwr = (groupId: string) => {
                 name: dto.name,
                 type: toGroupType(dto),
                 members: dto.memberCount ?? 0,
+                visibility: dto.visibility,
                 avatarUrl: dto.avatarUrl ?? null,
                 coverUrl: dto.coverUrl ?? null,
                 ownerId: dto.ownerId,

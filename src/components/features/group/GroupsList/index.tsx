@@ -145,6 +145,7 @@ export const GroupsList = () => {
                                     cached group header / this session's actions. */}
                                 <GroupJoinButton
                                     groupId={group.id}
+                                    visibility={group.visibility}
                                     className="pointer-events-auto relative"
                                 />
                             </div>

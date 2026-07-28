@@ -5,6 +5,7 @@ import { Button, Dropdown, Label, Tabs } from "@heroui/react"
 import { DotsThreeIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { usePathname, useRouter } from "@/i18n/navigation"
+import { useHasPermission } from "@/hooks/useHasPermission"
 import { ExtendedTabs } from "@/components/blocks/navigation/ExtendedTabs"
 import { NavRail } from "./NavRail"
 import { DiscoveryRail } from "./DiscoveryRail"
@@ -49,6 +50,13 @@ export const CommunityShell = ({ children }: CommunityShellProps) => {
     const t = useTranslations("communityHub")
     const router = useRouter()
     const pathname = usePathname()
+    // Same gate as the NavRail moderation shortcut: hide the moderation entry from the
+    // ⋯ menu (mobile/tablet) for viewers without `community.moderate`, so the nav link
+    // never appears on any breakpoint for someone who can only see a "restricted" page.
+    const canModerate = useHasPermission("community.moderate")
+    const menuItems = canModerate
+        ? MENU_ITEMS
+        : MENU_ITEMS.filter((item) => item.key !== "moderation")
 
     const base = "/community"
     const hrefFor = (segment: string) => (segment ? `${base}/${segment}` : base)
@@ -103,7 +111,7 @@ export const CommunityShell = ({ children }: CommunityShellProps) => {
                             <Dropdown.Popover>
                                 <Dropdown.Menu>
                                     <Dropdown.Section>
-                                        {MENU_ITEMS.map((item) => (
+                                        {menuItems.map((item) => (
                                             <Dropdown.Item
                                                 key={item.key}
                                                 id={item.key}

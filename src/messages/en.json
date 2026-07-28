@@ -5764,6 +5764,7 @@
         "deleted": "Your rating has been removed.",
         "accessDenied": "Enroll in this course to rate it.",
         "signInHint": "Sign in to rate this course.",
+        "enrollFirst": "You haven't enrolled in this course",
         "empty": "No ratings yet. Be the first!",
         "loadError": "Couldn't load ratings.",
         "you": "You",

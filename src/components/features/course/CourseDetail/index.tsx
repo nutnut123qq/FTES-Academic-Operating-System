@@ -578,8 +578,10 @@ const CourseDetailView = ({
                         </div>
                     </div>
 
-                    {/* reviews — real BE-wired ratings (aggregate + list + composer) */}
-                    <CourseRatings courseId={course.rawId} />
+                    {/* reviews — real BE-wired ratings (aggregate + list + composer).
+                        `isEnrolled` gates the composer INPUT: a non-enrolled viewer
+                        can't type/rate — interacting prompts them to enroll first. */}
+                    <CourseRatings courseId={course.rawId} isEnrolled={isEnrolled} />
 
                     {/* instructor — hidden when the BE detail carries none */}
                     {course.instructor ? (

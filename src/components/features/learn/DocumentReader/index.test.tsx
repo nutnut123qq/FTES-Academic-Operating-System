@@ -105,4 +105,18 @@ describe("DocumentReader — locked teaser fade", () => {
         expect(container.textContent).not.toContain("secret.example.com")
         expect(container.textContent).not.toContain("drive.example.com")
     })
+
+    it("keeps an embedded data-image in the preview teaser while stripping external links", () => {
+        // A `data:` image is embedded content, not an off-page link — the preview stripper must
+        // leave `![](data:…)` intact so the image still renders, but still remove the http link.
+        const { container } = render(
+            <DocumentReader
+                {...props}
+                bodyMd={"![sơ đồ](data:image/png;base64,iVBORw0KAAAA==) và [nguồn](https://secret.example.com/paid)"}
+                locked
+            />,
+        )
+        expect(container.textContent).toContain("data:image/png;base64,iVBORw0KAAAA==")
+        expect(container.textContent).not.toContain("secret.example.com")
+    })
 })

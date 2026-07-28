@@ -210,12 +210,17 @@ const PaywallCard = ({
  * URL/href so nothing is clickable while previewing: markdown links/images `[text](url)` /
  * `![alt](url)` → `text`/`alt`, reference links + their definition lines, autolinks `<http…>`,
  * bare `http(s)://…` URLs, and `<a>` anchors. Mirrors `LessonContentTeaserService.stripLinks`.
+ *
+ * EXCEPTION: an EMBEDDED `data:` URI (`![](data:image/…;base64,…)`) is content, not an external
+ * link — it opens nothing off-page. The inline `[text](url)`/`![alt](url)` stripper skips a
+ * destination beginning with `data:` (negative lookahead) so a data-image stays intact through
+ * the preview teaser. Only external http/https links + anchors are removed.
  */
 const stripPreviewLinks = (markdown: string): string =>
     markdown
         .replace(/<a\b[^>]*>/gi, "")
         .replace(/<\/a\s*>/gi, "")
-        .replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1")
+        .replace(/!?\[([^\]]*)\]\((?!data:)[^)]*\)/g, "$1")
         .replace(/\[([^\]]*)\]\[[^\]]*\]/g, "$1")
         .replace(/^[ \t]*\[[^\]]+\]:[ \t]*\S+.*$/gm, "")
         .replace(/<https?:\/\/[^>\s]+>/g, "")

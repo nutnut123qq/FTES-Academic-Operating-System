@@ -1,14 +1,12 @@
 "use client"
 
 import React, { useEffect, useRef, useState } from "react"
-import { Button, Card, CardContent, Typography, cn } from "@heroui/react"
+import { Button, Card, CardContent, Typography } from "@heroui/react"
 import { ArrowClockwiseIcon, VideoCameraSlashIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import Hls from "hls.js"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { useWatchPositionReporter } from "./hooks/useWatchPositionReporter"
-import { useElementFullscreen, useElementFullscreenSupported } from "./hooks/useFullscreen"
-import { LessonFullscreenButton } from "./LessonFullscreenButton"
 
 /** Legacy Funnycode stream gateway that resolves `video_*` refs to an HLS manifest. */
 const STREAM_BASE = "https://stream.ftes.vn"
@@ -73,14 +71,6 @@ export const LessonHlsPlayer = ({
 }) => {
     const t = useTranslations("learn")
     const videoEl = useRef<HTMLVideoElement>(null)
-    // Fullscreen a CONTAINER div (not the bare <video>) so the AI FAB stays visible
-    // in fullscreen; the native fullscreen button is suppressed via controlsList below.
-    const { ref: containerRef, isFullscreen, toggle: toggleFullscreen } =
-        useElementFullscreen<HTMLDivElement>()
-    // Only suppress the native <video> fullscreen where element fullscreen exists.
-    // On iPhone Safari (no Element.requestFullscreen) keep the native control so the
-    // lesson stays fullscreenable instead of relying on Safari ignoring controlsList.
-    const canContainerFullscreen = useElementFullscreenSupported()
     const [failed, setFailed] = useState(false)
     const [loading, setLoading] = useState(true)
     const [attempt, setAttempt] = useState(0)
@@ -263,23 +253,14 @@ export const LessonHlsPlayer = ({
         <div className="mx-auto w-full max-w-5xl">
             <Card>
                 <CardContent className="p-0">
-                    <div
-                        ref={containerRef}
-                        className={cn(
-                            "relative w-full overflow-hidden bg-black",
-                            isFullscreen
-                                ? "flex h-full items-center rounded-none"
-                                : "aspect-video rounded-2xl",
-                        )}
-                    >
+                    <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-black">
                         <video
                             ref={videoEl}
                             controls
-                            // Suppress native fullscreen so the reader fullscreens the
-                            // container div (keeping the AI FAB in view) — not the bare
-                            // <video> — but only where container fullscreen works; on
-                            // iPhone keep the native control (see canContainerFullscreen).
-                            controlsList={canContainerFullscreen ? "nofullscreen" : undefined}
+                            // Self-hosted <video> keeps its OWN native controls fullscreen
+                            // button — no custom overlay control (that duplicated the native
+                            // one). The custom LessonFullscreenButton stays on the YouTube
+                            // player only, where the embed's native fullscreen is disabled.
                             disablePictureInPicture
                             playsInline
                             onTimeUpdate={handleTimeUpdate}
@@ -288,19 +269,10 @@ export const LessonHlsPlayer = ({
                             onPause={handlePause}
                             onSeeking={clampSeek}
                             onSeeked={handleSeeked}
-                            className={cn(
-                                "w-full bg-black",
-                                isFullscreen ? "h-full object-contain" : "aspect-video rounded-2xl",
-                            )}
+                            className="aspect-video w-full rounded-2xl bg-black"
                         />
                         {loading ? (
                             <Skeleton className="absolute inset-0 size-full rounded-2xl" />
-                        ) : null}
-                        {canContainerFullscreen ? (
-                            <LessonFullscreenButton
-                                isFullscreen={isFullscreen}
-                                onToggle={toggleFullscreen}
-                            />
                         ) : null}
                     </div>
                 </CardContent>

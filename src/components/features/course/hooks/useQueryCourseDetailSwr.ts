@@ -14,6 +14,12 @@ export interface CourseLesson {
     description?: string
     /** Human duration label, e.g. "8:20". */
     durationLabel: string
+    /**
+     * BE lesson content-type (`LessonView.type`), e.g. "VIDEO" | "DOCUMENT". Drives the
+     * per-type syllabus row glyph ({@link lessonTypeIcon}) so a video row and a document
+     * row never share one icon. Absent when the BE omits it → the neutral default glyph.
+     */
+    contentType?: string
     /** Non-free lesson (`!free`) — drives the "Premium" tag ONLY, never the lock. */
     isPremium?: boolean
     /**
@@ -176,6 +182,7 @@ const toCourseDetail = (dto: CourseDetailDto): CourseDetail => {
             description: lesson.description?.trim() ? lesson.description.trim() : undefined,
             // BE carries no per-lesson duration on the public detail.
             durationLabel: "",
+            contentType: lesson.type ?? undefined,
             // `!free` is the "Premium" TAG only — never the lock (an enrolled viewer
             // owns premium lessons: free=false but locked=false).
             isPremium: !lesson.free,

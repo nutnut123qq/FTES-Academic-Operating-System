@@ -6,7 +6,6 @@ import {
     ArrowRightIcon,
     CheckCircleIcon,
     LockSimpleIcon,
-    PlayCircleIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
@@ -21,6 +20,7 @@ import { useQueryLearnCourseSwr } from "../hooks/useQueryLearnCourseSwr"
 import type { LearnExercise, LearnLesson } from "../hooks/useQueryLearnCourseSwr"
 import type { CourseAccessStateView } from "@/modules/api/rest/course"
 import { exerciseSolverIcon, normalizeExerciseType } from "../exerciseType"
+import { lessonTypeIcon } from "../lessonType"
 
 /** Build the reader route for a lesson id shaped "m<n>-l<k>". */
 const lessonHref = (courseId: string, lessonId: string) =>
@@ -235,6 +235,11 @@ const ContentMapLessonRow = ({
     const router = useRouter()
     const [gateOpen, setGateOpen] = useState(false)
 
+    // Per-TYPE glyph for the default row state (video → play, document → sheet, materials
+    // → paperclip). Completed/locked below stay STATE glyphs (tick / lock) — orthogonal to
+    // type — so a row never loses its completion or lock signal.
+    const LessonTypeIcon = lessonTypeIcon(lesson.contentType)
+
     const accessLevel = lesson.accessLevel
     const isLocked = lesson.isLocked
     const isPreview = accessLevel === "PREVIEW"
@@ -287,7 +292,7 @@ const ContentMapLessonRow = ({
                 ) : isFullyLocked ? (
                     <LockSimpleIcon aria-hidden focusable="false" className="size-4 shrink-0 text-muted" />
                 ) : (
-                    <PlayCircleIcon aria-hidden focusable="false" className="size-4 shrink-0 text-muted" />
+                    <LessonTypeIcon aria-hidden focusable="false" className="size-4 shrink-0 text-muted" />
                 )}
                 <div className="min-w-0 flex-1">
                     <Typography type="body-sm" weight="medium" className="line-clamp-2">
@@ -377,7 +382,11 @@ const ContentMapExerciseRow = ({
     lockedLabel: string
     onOpen: () => void
 }) => {
-    const Icon = isLocked ? LockSimpleIcon : exerciseSolverIcon(normalizeExerciseType(exercise.type))
+    // An assignment carries no BE `type` (empty → "unknown" → generic puzzle), so key its
+    // glyph off `kind` to get the dedicated assignment icon; a challenge keeps its per-type
+    // solver glyph (mcq / code / essay / uiux). Locked overrides both with the lock glyph.
+    const solverKind = exercise.kind === "assignment" ? "assignment" : normalizeExerciseType(exercise.type)
+    const Icon = isLocked ? LockSimpleIcon : exerciseSolverIcon(solverKind)
     return (
         <button
             type="button"

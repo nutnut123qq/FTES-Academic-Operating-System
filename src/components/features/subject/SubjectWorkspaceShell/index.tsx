@@ -127,7 +127,7 @@ export const SubjectWorkspaceShell = ({ subjectId, children }: SubjectWorkspaceS
                             // CONTRACT A cover: a plain <img> (not next/image) so a remote
                             // BE-provider host renders without being registered in
                             // next.config images.remotePatterns; broken src → initials badge.
-                            <div className="size-11 shrink-0 overflow-hidden rounded-large">
+                            <div className="size-11 shrink-0 overflow-hidden rounded-2xl">
                                 <img
                                     src={imageUrl}
                                     alt={subject.name}
@@ -137,7 +137,7 @@ export const SubjectWorkspaceShell = ({ subjectId, children }: SubjectWorkspaceS
                                 />
                             </div>
                         ) : (
-                            <div className="flex size-11 shrink-0 items-center justify-center rounded-large bg-accent/10 text-sm font-bold text-accent">
+                            <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-accent/10 text-sm font-bold text-accent">
                                 {(subject?.code ?? subjectId).slice(0, 3).toUpperCase()}
                             </div>
                         )}

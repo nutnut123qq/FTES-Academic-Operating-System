@@ -134,7 +134,7 @@ const SubjectCard = ({ subject }: SubjectCardProps) => {
             ) : null}
             <div className="flex flex-col gap-3 p-4">
                 <div className="flex items-center gap-3">
-                    <div className="flex size-11 shrink-0 items-center justify-center rounded-large bg-accent/10 text-xs font-bold text-accent">
+                    <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-accent/10 text-xs font-bold text-accent">
                         {subject.code.slice(0, 3).toUpperCase()}
                     </div>
                     <div className="min-w-0">
@@ -174,7 +174,7 @@ const SubjectCardSkeleton = () => (
         <Skeleton className="aspect-video w-full rounded-none" />
         <div className="flex flex-col gap-3 p-4">
             <div className="flex items-center gap-3">
-                <Skeleton className="size-11 shrink-0 rounded-large" />
+                <Skeleton className="size-11 shrink-0 rounded-2xl" />
                 <div className="flex min-w-0 flex-1 flex-col">
                     <Skeleton.Typography type="body-sm" width="1/3" />
                     <Skeleton.Typography type="body-xs" width="2/3" />

@@ -9,6 +9,7 @@ import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { CartLineItem } from "@/components/features/cart/CartLineItem"
 import { CartLineItemSkeleton } from "@/components/features/cart/CartLineItem/CartLineItemSkeleton"
 import { CartSavingsSummary } from "@/components/features/cart/CartSavingsSummary"
+import { computeCartSavings } from "@/components/features/cart/cartSavings"
 import { useRouter } from "@/i18n/navigation"
 import { useSmViewpoint } from "@/hooks/reuseables/useSmViewpoint"
 import { useGetCartSwr } from "@/hooks/swr/api/rest/queries/useGetCartSwr"
@@ -55,10 +56,14 @@ const MiniCartInner = ({ onClose }: { onClose: () => void }) => {
     /** Open the shared VietQR checkout for the whole cart (close the drawer first). */
     const checkout = () => {
         onClose()
+        // Carry the summed list total so the modal summary strikes the pre-discount price
+        // + shows the saving — same figures the CartSavingsSummary shows in the footer.
+        const { originalTotal, hasSavings } = computeCartSavings(items, subtotal)
         payment.open({
             itemIds: items.map((item) => item.id),
             title: t("summary", { count: items.length }),
             amountVnd: subtotal,
+            originalAmountVnd: hasSavings ? originalTotal : undefined,
         })
     }
 

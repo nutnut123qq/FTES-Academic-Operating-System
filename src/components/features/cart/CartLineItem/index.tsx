@@ -52,9 +52,10 @@ const CartThumbnail = ({ imageUrl, alt }: { imageUrl: string | null; alt: string
 /**
  * One cart line, shared by the `/cart` page ({@link import("../CartShell").CartShell})
  * and the mini-cart drawer so the two never drift: a course thumbnail, the resolved
- * product name + quantity, and the price via the shared {@link PriceTag} block — the
- * charged unit price with the `originalPriceVnd` struck through and a "-X%" savings
- * chip whenever the list price is higher. A quiet trash button removes the line.
+ * product name, and the price via the shared {@link PriceTag} block — the charged unit
+ * price with the `originalPriceVnd` struck through and a "-X%" savings chip whenever the
+ * list price is higher. A quiet trash button removes the line. A course is added to the
+ * cart exactly once (quantity is always 1), so no quantity is shown or multiplied.
  *
  * @param props - {@link CartLineItemProps}
  */
@@ -65,8 +66,9 @@ export const CartLineItem = ({ item, name, onRemove, isRemoving }: CartLineItemP
         item.originalPriceVnd != null && item.originalPriceVnd > unitPrice
             ? item.originalPriceVnd
             : null
-    // per-line saving in VND (list − charged) × qty; 0 when the line has no discount.
-    const saving = original != null ? (original - unitPrice) * item.quantity : 0
+    // per-line saving in VND (list − charged); 0 when the line has no discount. A course
+    // is only ever in the cart once (quantity is always 1), so there is no × quantity.
+    const saving = original != null ? original - unitPrice : 0
 
     return (
         <div className="flex items-center gap-3 rounded-2xl border border-separator p-3">
@@ -75,11 +77,6 @@ export const CartLineItem = ({ item, name, onRemove, isRemoving }: CartLineItemP
                 <Typography type="body-sm" weight="medium" truncate>
                     {name}
                 </Typography>
-                {item.quantity > 1 ? (
-                    <Typography type="body-xs" color="muted">
-                        {t("quantity", { count: item.quantity })}
-                    </Typography>
-                ) : null}
                 <PriceTag discounted={unitPrice} original={original} size="sm" />
                 {saving > 0 ? (
                     <Typography type="body-xs" className="text-success">

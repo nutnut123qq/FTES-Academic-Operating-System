@@ -2592,6 +2592,7 @@
       "title": "Thanh toán",
       "amountVnd": "{amount}₫",
       "amountCoin": "{amount} Coin",
+      "savings": "Tiết kiệm {amount}₫ (−{percent}%)",
       "method": {
         "vietqr": "Chuyển khoản QR",
         "coin": "Trả bằng Xu"
@@ -7486,7 +7487,6 @@
   "cart": {
     "title": "Giỏ hàng",
     "item": "Sản phẩm",
-    "quantity": "Số lượng: {count}",
     "summary": "Giỏ hàng ({count} sản phẩm)",
     "subtotal": "Tạm tính",
     "total": "Tổng cộng",

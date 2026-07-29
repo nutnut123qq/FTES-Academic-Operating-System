@@ -30,6 +30,12 @@ export interface CourseEnrollmentBuyContext {
      * (399k), not the cheapest/arbitrary product (200k). Omit to keep the old behaviour.
      */
     priceVnd?: number
+    /**
+     * The course's pre-discount list price (`course.price.originalVnd`), when it carries a
+     * discount. Passed to the PaymentModal summary as the struck-through original; omit
+     * (or leave ≤ the charged price) when there is no real saving.
+     */
+    originalPriceVnd?: number
 }
 
 /** Result of {@link useCourseEnrollment}. */
@@ -141,10 +147,17 @@ export const useCourseEnrollment = (
             try {
                 const item = await addCart.trigger({ productId: product.id, quantity: 1 })
                 void mutateSwr("GET_CART_SWR")
+                const chargedVnd = product.priceVnd ?? 0
                 payment.open({
                     itemIds: [item.id],
                     title: buy?.title ?? "",
-                    amountVnd: product.priceVnd ?? 0,
+                    amountVnd: chargedVnd,
+                    // List price → struck through in the modal summary, only when it beats
+                    // the charged amount (the course carries a real discount).
+                    originalAmountVnd:
+                        buy?.originalPriceVnd != null && buy.originalPriceVnd > chargedVnd
+                            ? buy.originalPriceVnd
+                            : undefined,
                     amountCoin: product.priceCoin ?? undefined,
                     // On success the modal cheers and offers "start learning" straight
                     // into this course's content (mirrors onContinueLearning's route).

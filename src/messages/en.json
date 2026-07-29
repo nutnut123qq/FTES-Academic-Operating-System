@@ -2583,6 +2583,7 @@
       "title": "Checkout",
       "amountVnd": "₫{amount}",
       "amountCoin": "{amount} Coin",
+      "savings": "Save ₫{amount} (−{percent}%)",
       "method": {
         "vietqr": "Bank QR",
         "coin": "Pay with Coins"
@@ -7486,7 +7487,6 @@
   "cart": {
     "title": "Cart",
     "item": "Product",
-    "quantity": "Qty: {count}",
     "summary": "Cart ({count} items)",
     "subtotal": "Subtotal",
     "total": "Total",

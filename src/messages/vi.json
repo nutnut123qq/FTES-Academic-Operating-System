@@ -5918,7 +5918,13 @@
         "recommended": "Phổ biến",
         "cta": "Chọn gói này",
         "resolving": "Đang lấy thông tin…",
-        "processing": "Đang xử lý…"
+        "processing": "Đang xử lý…",
+        "paymentTitle": "Thanh toán",
+        "close": "Đóng",
+        "tabSummary": "Tóm tắt",
+        "tabPayment": "Thanh toán",
+        "continuePayment": "Tiếp tục thanh toán",
+        "paymentNextHint": "Bạn sẽ chọn phương thức thanh toán ở bước tiếp theo."
       }
     }
   },

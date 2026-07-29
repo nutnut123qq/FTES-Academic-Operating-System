@@ -5918,7 +5918,13 @@
         "recommended": "Popular",
         "cta": "Choose this package",
         "resolving": "Resolving…",
-        "processing": "Processing…"
+        "processing": "Processing…",
+        "paymentTitle": "Payment",
+        "close": "Close",
+        "tabSummary": "Summary",
+        "tabPayment": "Payment",
+        "continuePayment": "Continue to payment",
+        "paymentNextHint": "You'll choose a payment method in the next step."
       }
     }
   },

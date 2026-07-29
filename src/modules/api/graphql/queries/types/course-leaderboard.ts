@@ -8,8 +8,10 @@ export interface CourseLeaderboardEntry {
     enrollmentId: string
     /** User id (used to highlight the viewer's own row). */
     userId: string
-    /** Username snapshot for display (nullable). */
+    /** Username snapshot for display (nullable; BE sanitizes away `legacy_*` placeholders → null). */
     username: string | null
+    /** Resolved display name (fullName → real username → "Học viên <suffix>"); BE never returns `legacy_*`. */
+    displayName: string | null
     /** Avatar URL snapshot (nullable). */
     avatar: string | null
     /** Total challenge score across the course. */

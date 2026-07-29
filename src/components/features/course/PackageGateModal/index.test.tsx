@@ -3,7 +3,9 @@ import { render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 
 /**
- * Component — the shared paywall gate modal.
+ * Component — the shared paywall gate modal, in the legacy checkout layout: a "Thanh toán"
+ * header + circular close, a "Tóm tắt / Thanh toán" segmented control, an order-summary body,
+ * and a single big "Tiếp tục thanh toán" CTA.
  *
  * Regression: a LEGACY course has NO packages by design (the BE forbids them), so the gate
  * showed "no matching packages / packages are being updated" and the viewer could not buy
@@ -19,7 +21,11 @@ vi.mock("next-intl", () => ({
         params ? `${key}:${JSON.stringify(params)}` : key,
 }))
 
-vi.mock("@phosphor-icons/react", () => ({ CheckIcon: () => <span />, LockSimpleIcon: () => <span /> }))
+vi.mock("@phosphor-icons/react", () => ({
+    ArrowRightIcon: () => <span />,
+    CheckCircleIcon: () => <span />,
+    XIcon: () => <span />,
+}))
 
 vi.mock("@heroui/react", () => {
     const Modal = ({ children }: { children: React.ReactNode }) => <div>{children}</div>
@@ -81,15 +87,21 @@ const props = {
 }
 
 describe("PackageGateModal — course with no packages (LEGACY)", () => {
-    it("offers the whole course when the course sells no packages", () => {
+    it("shows the legacy checkout shell (tabs + order summary + continue CTA) for the whole course", () => {
         packagesMock.mockReturnValue({ packages: [], isLoading: false, isError: false })
         courseProductMock.mockReturnValue({
             data: { id: "p1", priceVnd: 399000, priceCoin: null },
             isLoading: false,
         })
         render(<PackageGateModal {...props} />)
-        expect(screen.getByText("detail.wholeCourse")).toBeTruthy()
-        expect(screen.getByText("detail.enroll")).toBeTruthy()
+        // header title + the "Tóm tắt / Thanh toán" segmented tabs
+        expect(screen.getByText("modal.paymentTitle")).toBeTruthy()
+        expect(screen.getByText("modal.tabSummary")).toBeTruthy()
+        expect(screen.getByText("modal.tabPayment")).toBeTruthy()
+        // the summary order line renders the course title
+        expect(screen.getByText("WED201c")).toBeTruthy()
+        // the single big "Tiếp tục thanh toán" CTA
+        expect(screen.getByText("modal.continuePayment")).toBeTruthy()
         // the old dead end must be gone
         expect(screen.queryByText("modal.emptyTitle")).toBeNull()
     })

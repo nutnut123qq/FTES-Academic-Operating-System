@@ -2,7 +2,7 @@ import React from "react"
 import { fireEvent, render, screen } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { LearnExercise, LearnLesson, LearnModule } from "../hooks/useQueryLearnCourseSwr"
-import { buildMindMap, resolveRootCode } from "./build"
+import { buildMindMap, NODE_SIZE, resolveRootCode } from "./build"
 import type { MindMapNodeData } from "./build"
 import { CURVED_EDGE_TYPE, curvedEdgePath } from "./CurvedEdge"
 import { resolveNodeOpen } from "./open"
@@ -161,15 +161,83 @@ describe("buildMindMap — connectors are CURVED, not straight spokes", () => {
         expect(edges.some((edge) => edge.type === "straight")).toBe(false)
     })
 
-    it("bows the path perpendicular to the spoke (control point off the straight line)", () => {
-        // A horizontal spoke → the quadratic control point is pushed off the y=0 line.
-        const path = curvedEdgePath(0, 0, 400, 0)
-        expect(path).toMatch(/^M 0,0 Q /)
-        const control = path.match(/Q ([-\d.]+),([-\d.]+)/)
+    it("draws a smooth cubic bezier that flows along the dominant (horizontal) axis", () => {
+        // A right-branch spoke with a vertical offset → a horizontal-dominant cubic S-curve.
+        const path = curvedEdgePath(0, 0, 400, 120)
+        // Cubic (`C`), not a quadratic bow (`Q`) or a straight line (`L`).
+        expect(path).toMatch(/^M 0,0 C /)
+        const control = path.match(/C ([-\d.]+),([-\d.]+) ([-\d.]+),([-\d.]+) /)
         expect(control).not.toBeNull()
-        const controlY = Number(control?.[2])
-        // A straight line would keep the control on y=0; a curve pushes it away.
-        expect(Math.abs(controlY)).toBeGreaterThan(10)
+        const [c1x, c1y, c2x, c2y] = [
+            Number(control?.[1]),
+            Number(control?.[2]),
+            Number(control?.[3]),
+            Number(control?.[4]),
+        ]
+        // Horizontal-dominant → both control points slide along X to the mid-span, each held
+        // at its OWN endpoint's y, so the curve leaves the source and enters the target
+        // horizontally (0 + 400·0.5 and 400 − 400·0.5 = 200; y stays at 0 then 120).
+        expect(c1x).toBeCloseTo(200)
+        expect(c2x).toBeCloseTo(200)
+        expect(c1y).toBeCloseTo(0)
+        expect(c2y).toBeCloseTo(120)
+        // The straight source→target line passes (200, 60); the control points sit OFF it → curve.
+        expect(c1y).not.toBeCloseTo(60)
+    })
+
+    it("flows in the branch's own direction — right branch bends right, left branch bends left", () => {
+        // Direction is derived from the geometry (sign of dx), not a fixed rotational bow.
+        const rightControlX = Number(curvedEdgePath(0, 0, 400, 100).match(/C ([-\d.]+),/)?.[1])
+        const leftControlX = Number(curvedEdgePath(0, 0, -400, 100).match(/C ([-\d.]+),/)?.[1])
+        expect(rightControlX).toBeGreaterThan(0)
+        expect(leftControlX).toBeLessThan(0)
+    })
+})
+
+describe("buildMindMap — cards never overlap (worst case)", () => {
+    /** Axis-aligned bounding box of a placed node, from its top-left position + known footprint. */
+    const boxOf = (node: { position: { x: number; y: number }; data: MindMapNodeData }) => {
+        const size = NODE_SIZE[node.data.kind]
+        return {
+            left: node.position.x,
+            top: node.position.y,
+            right: node.position.x + size.w,
+            bottom: node.position.y + size.h,
+        }
+    }
+    const overlaps = (a: ReturnType<typeof boxOf>, b: ReturnType<typeof boxOf>) =>
+        a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom
+
+    it("keeps every card's bounding box disjoint for a dense course (many sections + lessons + exercises)", () => {
+        // Worst case: 8 sections, 7 lessons each, half the lessons carrying 2 exercises — ALL expanded.
+        const modules = Array.from({ length: 8 }, (_unused, m) =>
+            moduleOf({
+                id: `m${m}`,
+                order: m + 1,
+                lessons: Array.from({ length: 7 }, (_l, l) =>
+                    lesson({
+                        id: `m${m}-l${l}`,
+                        exercises:
+                            l % 2 === 0
+                                ? [
+                                    exercise({ id: `m${m}-l${l}-x1`, kind: "challenge", slug: `s-${m}-${l}` }),
+                                    exercise({ id: `m${m}-l${l}-x2`, kind: "assignment" }),
+                                ]
+                                : [],
+                    }),
+                ),
+            }),
+        )
+        const { nodes } = buildMindMap(baseBuildInput(modules, modules.map((mod) => mod.id)))
+        const boxes = nodes.map((node) => ({ id: node.id, box: boxOf(node as never) }))
+        for (let i = 0; i < boxes.length; i += 1) {
+            for (let j = i + 1; j < boxes.length; j += 1) {
+                expect(
+                    overlaps(boxes[i].box, boxes[j].box),
+                    `${boxes[i].id} overlaps ${boxes[j].id}`,
+                ).toBe(false)
+            }
+        }
     })
 })
 

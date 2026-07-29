@@ -51,7 +51,7 @@ const CompletionRing = ({ percent }: { percent: number }) => {
 /**
  * Custom course-root node: shows the SUBJECT CODE (e.g. "CSD201") — not the long,
  * uneven course title — over the overall completion ring. A single CENTRED source
- * handle lets the tree fan out radially to the sections on every side (the curved
+ * handle lets the tree branch out to the sections on the left and right (the curved
  * connectors run centre-to-centre, hidden under the cards).
  */
 const MindMapRootNodeBase = ({ data }: NodeProps) => {

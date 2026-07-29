@@ -1,5 +1,5 @@
 import type { Edge, Node } from "@xyflow/react"
-import type { LearnModule } from "../hooks/useQueryLearnCourseSwr"
+import type { LearnLesson, LearnModule } from "../hooks/useQueryLearnCourseSwr"
 import { CURVED_EDGE_TYPE } from "./CurvedEdge"
 import {
     exerciseStatus,
@@ -93,39 +93,69 @@ export interface BuildMindMapInput {
     expandedModuleIds: ReadonlySet<string>
 }
 
-/** Approximate node box (px) per level — used to convert a CENTRE to React Flow's top-left origin. */
-const NODE_SIZE: Record<"root" | MindMapNodeKind, { w: number; h: number }> = {
+/**
+ * Node box (px) per level — the KNOWN FOOTPRINT of each card, used both to convert a
+ * CENTRE to React Flow's top-left origin AND to guarantee the layout leaves clear gaps
+ * (the row/column gaps below are derived from these). Exported so a test can rebuild each
+ * node's bounding box from `build()` output and assert no two cards overlap.
+ */
+export const NODE_SIZE: Record<"root" | MindMapNodeKind, { w: number; h: number }> = {
     root: { w: 240, h: 128 },
     module: { w: 280, h: 100 },
     lesson: { w: 240, h: 84 },
     exercise: { w: 220, h: 64 },
 }
 
-// -------------------------------------------------------------- radial geometry
-// The map is a classic radial tree: the subject-code root sits at the origin and
-// the sections fan out EVENLY on all sides (angle 2π·i/N), not down one column.
-// When a section expands, its lessons fan further out along that branch's outward
-// direction (staying inside the section's angular sector so branches never collide),
-// and each lesson's exercises fan further out again.
+// ---------------------------------------------------- two-sided tidy-tree geometry
+// The map is a horizontal mind map: the subject-code root sits at the origin and the
+// sections branch to the LEFT and RIGHT (balanced, alternating by order). Each branch is
+// a tidy left-to-right tree — a section's expanded lessons stack as a VERTICAL COLUMN just
+// outward of it, and each lesson's exercises stack as a further column outward again.
+//
+// Non-overlap is structural, not heuristic. Every node owns a vertical BAND whose height is
+// `max(its own row slot, the total height of its children's bands)`, and children are packed
+// into disjoint sub-bands inside it. Because each level lives in its own x-column (gaps below
+// clear both half-widths) and sibling bands never overlap in y, no two cards can collide —
+// on either side — and the two sides are pushed apart on x so they can't collide near the root.
 
-/** Tangential spacing budget per section — grows the ring radius so cards never touch. */
-const MODULE_ARC = 360
-/** Floor for the section ring radius (keeps a small course off the root). */
-const MODULE_RADIUS_MIN = 380
-/** Radial distance from a section node out to its lesson ring. */
-const LESSON_GAP = 220
-/** Radial distance from a lesson out to its exercise ring. */
-const EXERCISE_GAP = 180
-/** Angular step between adjacent lessons of a section (rad). */
-const LESSON_ANGLE_STEP = 0.32
-/** Angular step between adjacent exercises of a lesson (rad). */
-const EXERCISE_ANGLE_STEP = 0.17
+/**
+ * Minimum centre-to-centre VERTICAL spacing per level (px). Each is the card height plus a
+ * clear margin, so stacked siblings always leave a visible gap:
+ *   module 100 + 52 · lesson 84 + 32 · exercise 64 + 32.
+ */
+const ROW_GAP: Record<MindMapNodeKind, number> = {
+    module: 152,
+    lesson: 116,
+    exercise: 96,
+}
 
-/** Polar → cartesian around the origin (React Flow's +y points down; orientation is irrelevant to a ring). */
-const polar = (radius: number, angle: number): { x: number; y: number } => ({
-    x: radius * Math.cos(angle),
-    y: radius * Math.sin(angle),
-})
+/**
+ * Horizontal centre-to-centre distance (px) from a parent out to its child column. Each
+ * clears the parent half-width + the child half-width + a gutter, so a card and its child
+ * column never share x-space (root 120 → module 140 · module 140 → lesson 120 · lesson 120 → exercise 110).
+ */
+const COL_GAP: Record<MindMapNodeKind, number> = {
+    module: 360,
+    lesson: 340,
+    exercise: 300,
+}
+
+/** Cumulative x-offset (from the root) of each level's column — a card sits at `sign · COLUMN_X[kind]`. */
+const COLUMN_X: Record<MindMapNodeKind, number> = {
+    module: COL_GAP.module,
+    lesson: COL_GAP.module + COL_GAP.lesson,
+    exercise: COL_GAP.module + COL_GAP.lesson + COL_GAP.exercise,
+}
+
+/** Vertical band a LESSON needs: its own row slot, or its exercise column if that is taller. */
+const lessonBandHeight = (lesson: LearnLesson): number =>
+    Math.max(ROW_GAP.lesson, lesson.exercises.length * ROW_GAP.exercise)
+
+/** Vertical band a MODULE needs: its own row slot when collapsed, else its stacked lessons' total. */
+const moduleBandHeight = (module: LearnModule, isExpanded: boolean): number =>
+    isExpanded
+        ? Math.max(ROW_GAP.module, module.lessons.reduce((sum, lesson) => sum + lessonBandHeight(lesson), 0))
+        : ROW_GAP.module
 
 /** Stable node id for a nested exercise (namespaced by its lesson to stay unique). */
 const exerciseNodeId = (lessonId: string, exerciseId: string, kind: string): string =>
@@ -143,16 +173,19 @@ const edgeStyle = (isCurrent: boolean) => ({
 })
 
 /**
- * Builds a RADIAL tree of the course: the SUBJECT-CODE root at the centre, section
- * cards fanned evenly around it (angle `2π·i/N` at a ring radius that scales with the
- * section count), and — for the sections the viewer has EXPANDED — their lesson cards
- * and exercise cards fanned further outward along each branch. Sections start
- * collapsed (progressive disclosure): the first paint shows the section ring alone.
+ * Builds a two-sided horizontal mind map of the course: the SUBJECT-CODE root at the
+ * centre, section cards branching to the LEFT and RIGHT (balanced, alternating by order),
+ * and — for the sections the viewer has EXPANDED — their lesson cards stacked as a VERTICAL
+ * COLUMN just outward of the section, and each lesson's exercise cards stacked as a further
+ * column outward again. Sections start collapsed (progressive disclosure): the first paint
+ * shows the section cards alone.
  *
- * Ported from StarCI's React-Flow `build` (custom node types + edges) and adapted so
- * the map reads as a mind map (distributed on all sides) rather than a one-sided
- * dendrogram. Node states come straight from the per-viewer completion signals on the
- * learn tree ({@link moduleStatus}/{@link lessonStatus}/{@link exerciseStatus}).
+ * The layout is a tidy left-to-right tree per side, so cards NEVER overlap by construction:
+ * every node owns a vertical band `max(its own row slot, the height of its children's bands)`,
+ * children are packed into disjoint sub-bands, each level lives in its own x-column (the
+ * COL_GAP clears both half-widths), and the two sides are pushed apart on x. Node states come
+ * straight from the per-viewer completion signals on the learn tree
+ * ({@link moduleStatus}/{@link lessonStatus}/{@link exerciseStatus}).
  */
 export const buildMindMap = ({
     subjectCode,
@@ -183,42 +216,89 @@ export const buildMindMap = ({
         })
     }
     /**
-     * Curved (centre-to-centre) connector — the radial spoke bowed into a gentle arc by
-     * the custom {@link CURVED_EDGE_TYPE} edge. Endpoints stay at the node centres (hidden
-     * under the cards); only the arc between two cards shows.
+     * Curved (centre-to-centre) connector — the parent→child spoke drawn as a smooth cubic
+     * bezier flowing along the branch's (left/right) axis by the custom {@link CURVED_EDGE_TYPE}
+     * edge. Endpoints stay at the node centres (hidden under the cards); only the flowing arc
+     * between two cards shows.
      */
     const link = (id: string, source: string, target: string, isCurrent: boolean) => {
         edges.push({ id, source, target, type: CURVED_EDGE_TYPE, animated: isCurrent, style: edgeStyle(isCurrent) })
     }
 
-    const moduleCount = modules.length
-    // Ring radius scales with the section count so cards never overlap on the ring.
-    const moduleRadius = Math.max(MODULE_RADIUS_MIN, (moduleCount * MODULE_ARC) / (2 * Math.PI))
-    // Angular slice each section owns — its children stay inside it so branches don't collide.
-    const sector = moduleCount > 0 ? (2 * Math.PI) / moduleCount : 2 * Math.PI
+    /**
+     * Places one lesson (and its exercise sub-column) inside the vertical band
+     * `[bandTop, bandTop + bandHeight]` on the given side (`sign` = +1 right / −1 left).
+     * The lesson sits at the band's vertical centre; its exercises are packed into a
+     * further-out column, centred within the same band, so nothing overlaps.
+     */
+    const placeLesson = (
+        module: LearnModule,
+        lesson: LearnLesson,
+        sign: number,
+        bandTop: number,
+        bandHeight: number,
+    ) => {
+        const lessonNodeId = `l:${lesson.id}`
+        const lessonIsCurrent = lesson.id === currentLessonId
+        placeNode(lessonNodeId, "lesson", { x: sign * COLUMN_X.lesson, y: bandTop + bandHeight / 2 }, {
+            kind: "lesson",
+            label: lesson.title,
+            description: lesson.description,
+            status: lessonStatus(lesson),
+            isLocked: lesson.isLocked,
+            isCurrent: lessonIsCurrent,
+            isRecommended: recommendedLessonId != null && lesson.id === recommendedLessonId,
+            moduleId: module.id,
+            lessonId: lesson.id,
+        })
+        link(`e:${module.id}:${lessonNodeId}`, `m:${module.id}`, lessonNodeId, lessonIsCurrent)
 
-    modules.forEach((module, index) => {
-        const modLocked = isModuleLocked(module)
-        const modStatus = moduleStatus(module)
-        const lessonsRead = module.lessons.filter((lesson) => lesson.isCompleted).length
+        const exerciseCount = lesson.exercises.length
+        if (exerciseCount === 0) {
+            return
+        }
+        // Exercises stack as a column outward of the lesson, centred in the lesson's band.
+        const exColHeight = exerciseCount * ROW_GAP.exercise
+        let exCursor = bandTop + (bandHeight - exColHeight) / 2
+        lesson.exercises.forEach((exercise) => {
+            const exId = exerciseNodeId(lesson.id, exercise.id, exercise.kind)
+            placeNode(exId, "exercise", { x: sign * COLUMN_X.exercise, y: exCursor + ROW_GAP.exercise / 2 }, {
+                kind: "exercise",
+                label: exercise.title,
+                status: exerciseStatus(exercise, lesson),
+                isLocked: isExerciseLocked(lesson),
+                isCurrent: false,
+                moduleId: module.id,
+                lessonId: lesson.id,
+                exerciseKind: exercise.kind,
+                exerciseType: exercise.type,
+                slug: exercise.slug,
+            })
+            link(`e:${lesson.id}:${exId}`, lessonNodeId, exId, false)
+            exCursor += ROW_GAP.exercise
+        })
+    }
+
+    /**
+     * Places one section (and, when expanded, its lesson column) inside its vertical band on
+     * the given side. The section card sits at the band's vertical centre; its lessons are
+     * packed into disjoint sub-bands, centred within this band.
+     */
+    const placeModule = (module: LearnModule, sign: number, bandTop: number, bandHeight: number) => {
         const moduleIsCurrent = module.id === currentModuleId
         const isExpanded = expandedModuleIds.has(module.id)
-
-        // Start at the top and go around the ring evenly.
-        const angle = -Math.PI / 2 + (2 * Math.PI * index) / Math.max(moduleCount, 1)
-        const moduleCenter = polar(moduleRadius, angle)
         const moduleNodeId = `m:${module.id}`
-        placeNode(moduleNodeId, "module", moduleCenter, {
+        placeNode(moduleNodeId, "module", { x: sign * COLUMN_X.module, y: bandTop + bandHeight / 2 }, {
             kind: "module",
             label: `${module.order}. ${module.title}`,
             description: module.description,
-            status: modStatus,
-            isLocked: modLocked,
+            status: moduleStatus(module),
+            isLocked: isModuleLocked(module),
             isCurrent: moduleIsCurrent,
             isExpanded,
             hasChildren: module.lessons.length > 0,
             moduleId: module.id,
-            lessonsRead,
+            lessonsRead: module.lessons.filter((lesson) => lesson.isCompleted).length,
             lessonsTotal: module.lessons.length,
         })
         link(`e:${rootId}:${moduleNodeId}`, rootId, moduleNodeId, moduleIsCurrent)
@@ -227,63 +307,36 @@ export const buildMindMap = ({
         if (!isExpanded) {
             return
         }
-
-        const k = module.lessons.length
-        // Fan lessons within the section's sector (narrowed to leave gutters), radius
-        // grows with the lesson count so tangential spacing clears the cards.
-        const lessonSpread = Math.min(sector * 0.82, Math.max(0, k - 1) * LESSON_ANGLE_STEP)
-        const lessonRadius = moduleRadius + LESSON_GAP + Math.max(0, k - 5) * 16
-        const perLessonAngle = k > 1 ? lessonSpread / (k - 1) : sector * 0.6
-
-        module.lessons.forEach((lesson, lessonIndex) => {
-            const lessonFrac = k === 1 ? 0 : lessonIndex / (k - 1) - 0.5
-            const lessonAngle = angle + lessonFrac * lessonSpread
-            const lessonCenter = polar(lessonRadius, lessonAngle)
-            const lessonNodeId = `l:${lesson.id}`
-            const lessonIsCurrent = lesson.id === currentLessonId
-            placeNode(lessonNodeId, "lesson", lessonCenter, {
-                kind: "lesson",
-                label: lesson.title,
-                description: lesson.description,
-                status: lessonStatus(lesson),
-                isLocked: lesson.isLocked,
-                isCurrent: lessonIsCurrent,
-                isRecommended: recommendedLessonId != null && lesson.id === recommendedLessonId,
-                moduleId: module.id,
-                lessonId: lesson.id,
-            })
-            link(`e:${module.id}:${lessonNodeId}`, moduleNodeId, lessonNodeId, lessonIsCurrent)
-
-            const e = lesson.exercises.length
-            if (e === 0) {
-                return
-            }
-            // Exercises fan further out, inside the lesson's own sub-slice of the sector.
-            const exSpread = Math.min(perLessonAngle * 0.8, Math.max(0, e - 1) * EXERCISE_ANGLE_STEP)
-            const exerciseRadius = lessonRadius + EXERCISE_GAP + Math.max(0, e - 3) * 14
-            lesson.exercises.forEach((exercise, exIndex) => {
-                const exFrac = e === 1 ? 0 : exIndex / (e - 1) - 0.5
-                const exAngle = lessonAngle + exFrac * exSpread
-                const exCenter = polar(exerciseRadius, exAngle)
-                const exId = exerciseNodeId(lesson.id, exercise.id, exercise.kind)
-                placeNode(exId, "exercise", exCenter, {
-                    kind: "exercise",
-                    label: exercise.title,
-                    status: exerciseStatus(exercise, lesson),
-                    isLocked: isExerciseLocked(lesson),
-                    isCurrent: false,
-                    moduleId: module.id,
-                    lessonId: lesson.id,
-                    exerciseKind: exercise.kind,
-                    exerciseType: exercise.type,
-                    slug: exercise.slug,
-                })
-                link(`e:${lesson.id}:${exId}`, lessonNodeId, exId, false)
-            })
+        const lessonsTotal = module.lessons.reduce((sum, lesson) => sum + lessonBandHeight(lesson), 0)
+        let lessonCursor = bandTop + (bandHeight - lessonsTotal) / 2
+        module.lessons.forEach((lesson) => {
+            const lessonBand = lessonBandHeight(lesson)
+            placeLesson(module, lesson, sign, lessonCursor, lessonBand)
+            lessonCursor += lessonBand
         })
-    })
+    }
 
-    // The root sits at the centre of the ring.
+    /**
+     * Stacks one side's sections into a vertical run centred on the root's y (0). Each
+     * section owns a band tall enough for its (possibly expanded) subtree, and the bands are
+     * laid end-to-end so no two sections — or their lesson columns — ever overlap in y.
+     */
+    const placeSide = (sideModules: Array<LearnModule>, sign: number) => {
+        const bands = sideModules.map((module) => moduleBandHeight(module, expandedModuleIds.has(module.id)))
+        const sideHeight = bands.reduce((sum, height) => sum + height, 0)
+        let cursor = -sideHeight / 2
+        sideModules.forEach((module, index) => {
+            placeModule(module, sign, cursor, bands[index])
+            cursor += bands[index]
+        })
+    }
+
+    // Balanced two-sided branching: sections alternate RIGHT / LEFT by order so both columns
+    // stay a similar length (a classic balanced mind map), each side stacked vertically.
+    placeSide(modules.filter((_module, index) => index % 2 === 0), 1)
+    placeSide(modules.filter((_module, index) => index % 2 === 1), -1)
+
+    // The root sits at the centre, between the two branches.
     placeNode(rootId, "root", { x: 0, y: 0 }, {
         kind: "root",
         label: subjectCode,

@@ -36,6 +36,12 @@ export interface CourseEnrollmentBuyContext {
      * (or leave ≤ the charged price) when there is no real saving.
      */
     originalPriceVnd?: number
+    /**
+     * The course cover art (`course.coverUrl` / `course.imageHeader`) shown as the rounded
+     * thumbnail on the PaymentModal summary. Optional — omit when unknown; an empty string
+     * is treated as absent.
+     */
+    coverUrl?: string
 }
 
 /** Result of {@link useCourseEnrollment}. */
@@ -159,6 +165,8 @@ export const useCourseEnrollment = (
                             ? buy.originalPriceVnd
                             : undefined,
                     amountCoin: product.priceCoin ?? undefined,
+                    // Course cover → the rounded thumbnail on the modal summary (empty → omit).
+                    imageUrl: buy?.coverUrl || undefined,
                     // On success the modal cheers and offers "start learning" straight
                     // into this course's content (mirrors onContinueLearning's route).
                     learnHref,

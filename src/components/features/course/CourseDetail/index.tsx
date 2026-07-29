@@ -311,6 +311,7 @@ const CourseDetailView = ({
                   title: course.name,
                   priceVnd: course.price.vnd,
                   originalPriceVnd: course.price.originalVnd,
+                  coverUrl: course.coverUrl,
               },
     )
     // ponytail: hand-rolled accordion state — first chapter open. Set, not boolean-per-row,
@@ -1081,6 +1082,8 @@ export const PackageEnrollCard = ({
                 amountVnd: chargedVnd,
                 originalAmountVnd: originalVnd > chargedVnd ? originalVnd : undefined,
                 amountCoin: product.priceCoin ?? undefined,
+                // Course cover → the rounded thumbnail on the modal summary (empty → omit).
+                imageUrl: course.coverUrl || undefined,
                 // On success the modal cheers and offers "start learning" into this
                 // course's content — same as the plain enroll CTA (useCourseEnrollment).
                 learnHref,
@@ -1159,6 +1162,7 @@ export const PackageEnrollCard = ({
                     <WholeCourseGateCard
                         courseRawId={course.rawId}
                         courseTitle={course.name}
+                        courseCoverUrl={course.coverUrl}
                         onPurchased={onPurchased}
                     />
                     <Button variant="secondary" fullWidth onPress={onTryLearning}>

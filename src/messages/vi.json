@@ -2590,6 +2590,9 @@
     },
     "checkout": {
       "title": "Thanh toán",
+      "summaryTab": "Tóm tắt",
+      "paymentTab": "Thanh toán",
+      "continueToPayment": "Tiếp tục thanh toán",
       "amountVnd": "{amount}₫",
       "amountCoin": "{amount} Coin",
       "savings": "Tiết kiệm {amount}₫ (−{percent}%)",

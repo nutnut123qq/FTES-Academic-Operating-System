@@ -2581,6 +2581,9 @@
     },
     "checkout": {
       "title": "Checkout",
+      "summaryTab": "Summary",
+      "paymentTab": "Payment",
+      "continueToPayment": "Continue to payment",
       "amountVnd": "₫{amount}",
       "amountCoin": "{amount} Coin",
       "savings": "Save ₫{amount} (−{percent}%)",

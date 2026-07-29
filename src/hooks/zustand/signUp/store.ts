@@ -3,17 +3,19 @@
 import { create } from "zustand"
 
 /** Touched field of the sign-up form. */
-type SignUpField = "email" | "password" | "confirmPassword" | "agreeToTerms" | "otp"
+type SignUpField = "email" | "username" | "password" | "confirmPassword" | "agreeToTerms" | "otp"
 
 /**
  * Zustand store for the sign-up form — SHARED so values survive the Registration → OTP step
  * transition. Previously a formik singleton.
  */
 interface SignUpStoreState {
-    /** Email (also the username). */
+    /** Email address. */
     email: string
     /** Whether the email already exists (for sign-up, existing = error). */
     emailExists: boolean
+    /** Optional user-chosen username; blank => backend derives it from the email local-part. */
+    username: string
     /** Password. */
     password: string
     /** Password confirmation. */
@@ -31,7 +33,7 @@ interface SignUpStoreState {
     /** Whether a submit is in flight. */
     isSubmitting: boolean
     /** Set one field's value. */
-    setValue: (field: "email" | "emailExists" | "password" | "confirmPassword" | "agreeToTerms" | "otp" | "challengeId" | "captchaToken", value: string | boolean | undefined) => void
+    setValue: (field: "email" | "emailExists" | "username" | "password" | "confirmPassword" | "agreeToTerms" | "otp" | "challengeId" | "captchaToken", value: string | boolean | undefined) => void
     /** Mark one field as touched. */
     setTouched: (field: SignUpField, value: boolean) => void
     /** Set the submitting flag. */
@@ -43,13 +45,14 @@ interface SignUpStoreState {
 const initialState = {
     email: "",
     emailExists: false,
+    username: "",
     password: "",
     confirmPassword: "",
     agreeToTerms: false,
     otp: "",
     challengeId: undefined as string | undefined,
     captchaToken: undefined as string | undefined,
-    touched: { email: false, password: false, confirmPassword: false, agreeToTerms: false, otp: false },
+    touched: { email: false, username: false, password: false, confirmPassword: false, agreeToTerms: false, otp: false },
     isSubmitting: false,
 }
 

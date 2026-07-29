@@ -2454,6 +2454,14 @@
         "checking": "Checking email…",
         "alreadyExists": "This email is already registered"
       },
+      "username": {
+        "label": "Username",
+        "placeholder": "Choose a username (optional)",
+        "helper": "Leave blank to auto-generate from your email",
+        "minLength": "Username must be at least 3 characters",
+        "maxLength": "Username must be at most 64 characters",
+        "invalid": "Use only letters, numbers, and . _ -"
+      },
       "password": {
         "label": "Password",
         "placeholder": "Enter your password",

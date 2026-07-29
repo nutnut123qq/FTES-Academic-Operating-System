@@ -33,11 +33,11 @@ const TITLE_CLASS: Record<MindMapNodeKind, string> = {
 }
 
 /**
- * A radial map connects nodes centre-to-centre with a gently CURVED connector (the
- * custom bowed-bezier edge), so both the source and target handles sit at the node's
- * CENTRE (invisible) rather than on the left/right edges — the arc then bows cleanly out
- * in whatever direction the branch points, hidden under the cards and only visible in the
- * gap between them.
+ * The mind map connects nodes centre-to-centre with a smooth CURVED connector (the custom
+ * cubic-bezier edge), so both the source and target handles sit at the node's CENTRE
+ * (invisible) rather than on the left/right edges — the curve then flows cleanly out along
+ * the branch's (left/right) axis, hidden under the cards and only visible in the gap
+ * between them.
  */
 const CENTER_HANDLE_CLASS =
     "!left-1/2 !top-1/2 !size-2 !min-h-0 !min-w-0 !-translate-x-1/2 !-translate-y-1/2 !border-0 !bg-transparent !opacity-0"

@@ -3,24 +3,25 @@
 import React from "react"
 import { useTranslations } from "next-intl"
 import { useAppSelector } from "@/redux/hooks"
-import { MascotBubble } from "@/components/reuseable/FtesMascot"
+import { FtesMascot } from "@/components/reuseable/FtesMascot"
 
 /**
- * FrosTES's welcome inside the landing hero — a compact, persistent greeting
- * bubble (pose `greeting`) sitting BELOW the hero stepper (not at the page top),
- * so it reads as an intentional sign-off rather than a dominant banner. Signed-in
- * viewers get a "welcome back, {name}" line; guests get an invitation to explore.
+ * FrosTES's welcome under the "Continue learning" band — a SMALL, subtle one-liner:
+ * a `sm` mascot next to a short "welcome back, {name}" line, NOT a hero-sized speech
+ * bubble occupying its own band. It reads as a friendly footer beneath the
+ * resume-your-courses section, never a banner. Signed-in viewers are greeted by name;
+ * guests get a short invite. The second sentence of the old greeting is dropped so the
+ * line stays compact.
  *
- * Deliberately NON-nagging: it is ambient hero chrome, not a moment — it never
- * blocks content, so it shows on every visit with no dismiss and no
- * localStorage. This is the ONLY mascot on the landing page (guardrail: one
- * mascot per page); reduced-motion is handled inside {@link MascotBubble} /
- * {@link FtesMascot}. `announce={false}` because the copy is static decorative
- * chrome that never changes after mount.
+ * Deliberately NON-nagging ambient chrome: it never blocks content, shows on every
+ * visit with no dismiss and no localStorage, and is the ONLY mascot on the landing
+ * page (guardrail: one mascot per page). The mascot art is decorative
+ * ({@link FtesMascot}); the text carries the meaning. Reduced-motion is handled inside
+ * {@link FtesMascot}.
  *
- * Auth comes from Redux, which is unauthenticated on first paint (matches SSR),
- * then flips to the signed-in copy once Keycloak resolves — a normal state
- * transition, not a hydration mismatch.
+ * Auth comes from Redux, which is unauthenticated on first paint (matches SSR), then
+ * flips to the signed-in copy once Keycloak resolves — a normal state transition, not a
+ * hydration mismatch.
  */
 export const HomeMascotGreeting = () => {
     const t = useTranslations("mascot.greeting.home")
@@ -35,14 +36,11 @@ export const HomeMascotGreeting = () => {
     const welcomeTitle = name ? t("welcomeTitle", { name }) : t("welcomeTitleNoName")
 
     return (
-        <MascotBubble
-            pose="greeting"
-            size="sm"
-            announce={false}
-            title={isSignedIn ? welcomeTitle : t("guestTitle")}
-            className="w-full max-w-md"
-        >
-            {isSignedIn ? t("welcomeBody") : t("guestBody")}
-        </MascotBubble>
+        <div className="flex items-center gap-3">
+            <FtesMascot pose="greeting" size="sm" />
+            <p className="text-sm font-medium text-foreground/80">
+                {isSignedIn ? welcomeTitle : t("guestTitle")}
+            </p>
+        </div>
     )
 }

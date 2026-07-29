@@ -27,11 +27,18 @@ const ACHIEVEMENT_ICON: Record<string, Icon> = {
 /**
  * "Thành tựu" — FTES's real company recognitions (awards, competition placements and
  * scholarships from the legacy home), each a stat card with a numeric headline over a
- * label. Replaces the former module showcase in the journey slot. Purely static content
- * (no BE, no interactivity), so it mirrors the neighbouring section rhythm
- * (`max-w-6xl` · `py-16` · centered `mb-10` heading) for a drop-in swap, and is careful
- * not to duplicate the live course/enrollment counters (PlatformStatsSection) or the
- * per-learner "Bảng vàng" (HonorBoardSection).
+ * label. Purely static content (no BE, no interactivity), so it mirrors the neighbouring
+ * section rhythm (`max-w-6xl` · `py-16` · centered `mb-10` heading) for a drop-in swap,
+ * and is careful not to duplicate the live course/enrollment counters
+ * (PlatformStatsSection) or the per-learner "Bảng vàng" (HonorBoardSection).
+ *
+ * The card look mirrors the legacy `Ftes-frontend` "Thành tựu" grid
+ * (`views/home/components/achiverProject/index.tsx`): a soft accent-tinted fill,
+ * LEFT-aligned content, a plain accent-coloured award icon at the top (no circle bubble),
+ * the big value below it, then the label, with a lift-on-hover. Legacy raw hex
+ * (`#F0F6FF`, `text-utilsPrimary`, blue-tinted hover shadow) is mapped onto house tokens
+ * (`bg-accent/5`, `text-accent`, `border-separator`/`border-accent`) so it stays
+ * theme-aware in both modes.
  */
 export const AchievementsSection = () => {
     const t = useTranslations("homeLanding")
@@ -51,11 +58,13 @@ export const AchievementsSection = () => {
                     return (
                         <div
                             key={item.key}
-                            className="flex flex-col items-center gap-3 rounded-2xl border border-separator bg-surface p-6 text-center"
+                            className="flex flex-col items-start gap-2 rounded-2xl border border-separator bg-accent/5 p-6 text-left transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-lg"
                         >
-                            <div className="flex size-11 items-center justify-center rounded-full bg-accent/10 text-accent">
-                                <AchievementIcon className="size-6" aria-hidden focusable="false" />
-                            </div>
+                            <AchievementIcon
+                                className="mb-1 size-8 text-accent"
+                                aria-hidden
+                                focusable="false"
+                            />
                             <span className="text-3xl font-bold tracking-tight text-accent md:text-4xl">
                                 {item.value}
                             </span>

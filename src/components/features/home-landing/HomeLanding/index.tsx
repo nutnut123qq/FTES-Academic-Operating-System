@@ -44,10 +44,11 @@ export const HomeLanding = () => {
             <MyCoursesSection />
             {/* FrosTES welcome — the page's single mascot, placed right AFTER the
                 "Continue learning" band (home-continue-image-and-mascot) so the signed-in
-                flow reads: resume your courses → friendly greeting → rest of the page. It
+                flow reads: resume your courses → small friendly greeting → rest of the
+                page. Rendered as a SMALL, low-padding one-liner footer (not a hero banner);
                 still renders for guests (self-selecting copy inside the greeting), just
                 below the hero since the courses band self-hides. */}
-            <section className="mx-auto flex w-full max-w-6xl px-4 py-10 sm:px-6">
+            <section className="mx-auto flex w-full max-w-6xl px-4 py-6 sm:px-6">
                 <HomeMascotGreeting />
             </section>
             <PlatformStatsSection />

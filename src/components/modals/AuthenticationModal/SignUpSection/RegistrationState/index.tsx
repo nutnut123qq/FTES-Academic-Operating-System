@@ -17,6 +17,7 @@ import {
 } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { EmailField } from "./EmailField"
+import { UsernameField } from "./UsernameField"
 import { PasswordField } from "./PasswordField"
 import { AgreeToTermsRow } from "./AgreeToTermsRow"
 import { SignInPrompt } from "./SignInPrompt"
@@ -60,6 +61,23 @@ export const RegistrationState = () => {
     const onBlurEmail = useCallback(
         () => {
             setFieldTouched("email", true)
+        },
+        [
+            setFieldTouched,
+        ],
+    )
+
+    const onChangeUsername = useCallback(
+        (value: string) => {
+            setFieldValue("username", value)
+        },
+        [
+            setFieldValue,
+        ],
+    )
+    const onBlurUsername = useCallback(
+        () => {
+            setFieldTouched("username", true)
         },
         [
             setFieldTouched,
@@ -153,6 +171,14 @@ export const RegistrationState = () => {
                     touched={touched.email}
                     onChangeValue={onChangeEmail}
                     onBlurField={onBlurEmail}
+                />
+                <div className="h-3" />
+                <UsernameField
+                    value={values.username}
+                    error={errors.username}
+                    touched={touched.username}
+                    onChangeValue={onChangeUsername}
+                    onBlurField={onBlurUsername}
                 />
                 <div className="h-3" />
                 <PasswordField

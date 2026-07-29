@@ -2463,6 +2463,14 @@
         "checking": "Đang kiểm tra email…",
         "alreadyExists": "Email này đã được đăng ký"
       },
+      "username": {
+        "label": "Tên người dùng",
+        "placeholder": "Chọn tên người dùng (không bắt buộc)",
+        "helper": "Để trống sẽ tự tạo từ email",
+        "minLength": "Tên người dùng phải có ít nhất 3 ký tự",
+        "maxLength": "Tên người dùng tối đa 64 ký tự",
+        "invalid": "Chỉ dùng chữ cái, số và các ký tự . _ -"
+      },
       "password": {
         "label": "Mật khẩu",
         "placeholder": "Nhập mật khẩu của bạn",

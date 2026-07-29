@@ -5,6 +5,7 @@ import {
     Background,
     BackgroundVariant,
     Controls,
+    type EdgeTypes,
     type NodeMouseHandler,
     type NodeTypes,
     Panel,
@@ -21,6 +22,7 @@ import type { MindMapGraph, MindMapNodeData } from "./build"
 import { ROOT_NODE_TYPE, CONTENT_NODE_TYPE } from "./build"
 import { MindMapRootNode } from "./RootNode"
 import { MindMapContentNode } from "./ContentNode"
+import { CURVED_EDGE_TYPE, MindMapCurvedEdge } from "./CurvedEdge"
 import { STATUS_SWATCH } from "./status"
 import { useMindMapFitView } from "./useMindMapFitView"
 
@@ -43,6 +45,11 @@ export interface MindMapCanvasProps {
 const NODE_TYPES: NodeTypes = {
     [ROOT_NODE_TYPE]: MindMapRootNode,
     [CONTENT_NODE_TYPE]: MindMapContentNode,
+}
+
+/** The one curved connector type — every tree link renders as a bowed arc under the cards. */
+const EDGE_TYPES: EdgeTypes = {
+    [CURVED_EDGE_TYPE]: MindMapCurvedEdge,
 }
 
 /** The status legend + "you are here" + premium gate swatches, plus the how-to hint. */
@@ -127,6 +134,7 @@ const MindMapCanvasInner = ({
             nodes={nodes}
             edges={edges}
             nodeTypes={NODE_TYPES}
+            edgeTypes={EDGE_TYPES}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onNodeClick={onNodeClick}

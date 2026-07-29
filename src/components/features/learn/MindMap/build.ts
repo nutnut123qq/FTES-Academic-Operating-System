@@ -1,5 +1,6 @@
 import type { Edge, Node } from "@xyflow/react"
 import type { LearnModule } from "../hooks/useQueryLearnCourseSwr"
+import { CURVED_EDGE_TYPE } from "./CurvedEdge"
 import {
     exerciseStatus,
     isExerciseLocked,
@@ -130,11 +131,15 @@ const polar = (radius: number, angle: number): { x: number; y: number } => ({
 const exerciseNodeId = (lessonId: string, exerciseId: string, kind: string): string =>
     `x:${lessonId}:${kind}:${exerciseId}`
 
-/** Edge style shared by every tree link (accent stroke; the current path is emphasised). */
+/**
+ * Edge style shared by every tree link (accent stroke; the current path is emphasised).
+ * Stroke sits slightly thicker than a hairline so the CURVE reads clearly, while the
+ * muted opacity keeps the connectors quiet behind the cards.
+ */
 const edgeStyle = (isCurrent: boolean) => ({
     stroke: "var(--accent)",
-    strokeWidth: isCurrent ? 2.5 : 1.5,
-    opacity: isCurrent ? 1 : 0.4,
+    strokeWidth: isCurrent ? 2.75 : 1.75,
+    opacity: isCurrent ? 1 : 0.5,
 })
 
 /**
@@ -177,9 +182,13 @@ export const buildMindMap = ({
             data,
         })
     }
-    /** Straight (centre-to-centre) edge — the classic radial spoke. */
+    /**
+     * Curved (centre-to-centre) connector — the radial spoke bowed into a gentle arc by
+     * the custom {@link CURVED_EDGE_TYPE} edge. Endpoints stay at the node centres (hidden
+     * under the cards); only the arc between two cards shows.
+     */
     const link = (id: string, source: string, target: string, isCurrent: boolean) => {
-        edges.push({ id, source, target, type: "straight", animated: isCurrent, style: edgeStyle(isCurrent) })
+        edges.push({ id, source, target, type: CURVED_EDGE_TYPE, animated: isCurrent, style: edgeStyle(isCurrent) })
     }
 
     const moduleCount = modules.length

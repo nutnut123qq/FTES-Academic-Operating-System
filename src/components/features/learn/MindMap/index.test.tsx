@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { LearnExercise, LearnLesson, LearnModule } from "../hooks/useQueryLearnCourseSwr"
 import { buildMindMap, resolveRootCode } from "./build"
 import type { MindMapNodeData } from "./build"
+import { CURVED_EDGE_TYPE, curvedEdgePath } from "./CurvedEdge"
 import { resolveNodeOpen } from "./open"
 import { isModuleLocked, lessonStatus, moduleStatus } from "./status"
 
@@ -141,6 +142,34 @@ describe("buildMindMap — progressive disclosure (collapse / expand)", () => {
         const lessonNode = nodes.find((node) => (node.data as MindMapNodeData).kind === "lesson")
         expect((moduleNode?.data as MindMapNodeData).description).toBe("Mô tả phần")
         expect((lessonNode?.data as MindMapNodeData).description).toBe("Mô tả bài")
+    })
+})
+
+describe("buildMindMap — connectors are CURVED, not straight spokes", () => {
+    const modules = [
+        moduleOf({
+            id: "m1",
+            lessons: [lesson({ id: "l1", exercises: [exercise({ id: "c1", kind: "challenge", slug: "chal-1" })] })],
+        }),
+    ]
+
+    it("emits every tree link as the custom curved edge type", () => {
+        const { edges } = buildMindMap(baseBuildInput(modules, ["m1"]))
+        expect(edges.length).toBeGreaterThan(0)
+        expect(edges.every((edge) => edge.type === CURVED_EDGE_TYPE)).toBe(true)
+        // No link is left as the old straight spoke.
+        expect(edges.some((edge) => edge.type === "straight")).toBe(false)
+    })
+
+    it("bows the path perpendicular to the spoke (control point off the straight line)", () => {
+        // A horizontal spoke → the quadratic control point is pushed off the y=0 line.
+        const path = curvedEdgePath(0, 0, 400, 0)
+        expect(path).toMatch(/^M 0,0 Q /)
+        const control = path.match(/Q ([-\d.]+),([-\d.]+)/)
+        expect(control).not.toBeNull()
+        const controlY = Number(control?.[2])
+        // A straight line would keep the control on y=0; a curve pushes it away.
+        expect(Math.abs(controlY)).toBeGreaterThan(10)
     })
 })
 

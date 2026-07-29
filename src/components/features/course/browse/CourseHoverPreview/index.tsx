@@ -10,7 +10,7 @@ import React, {
 import { createPortal } from "react-dom"
 import useSWR from "swr"
 import { Button, Chip, Typography, cn } from "@heroui/react"
-import { CheckIcon, ShoppingCartIcon, TrashIcon } from "@phosphor-icons/react"
+import { CheckIcon, ShoppingCartIcon, StarIcon, TrashIcon, UsersIcon } from "@phosphor-icons/react"
 import { useFormatter, useTranslations } from "next-intl"
 import { getCourseDetail } from "@/modules/api/rest/course"
 import { useRouter } from "@/i18n/navigation"
@@ -52,8 +52,16 @@ const parseIncludes = (infoCourse: string | null | undefined): Array<string> => 
         return []
     }
 }
-/** Grace period to travel from the card into the panel without it closing. */
-const CLOSE_DELAY_MS = 100
+/**
+ * Grace period, on leaving the card OR the panel, before the panel closes — long
+ * enough for the pointer to travel across the gap from the card into the panel
+ * (and back) without it closing. Re-entering either surface cancels a pending
+ * close, so the panel NEVER closes while the pointer is still over the card or
+ * the panel — it stays open as long as the viewer keeps hovering, and closes
+ * only once the pointer has left BOTH. There is deliberately no "show for N ms
+ * then hide" timer: open is not time-boxed.
+ */
+const CLOSE_DELAY_MS = 150
 /** Gap between the card edge and the panel. */
 const GAP_PX = 12
 /** Minimum distance the panel keeps from the viewport edges. */
@@ -165,6 +173,9 @@ export const CourseHoverPreview = ({ course, children, className }: CourseHoverP
     /** Fixed-position coordinates + the card-matched height cap; `null` until the first post-open measure. */
     const [position, setPosition] = useState<{ left: number, top: number, arrowTop: number, side: "left" | "right", maxHeight: number } | null>(null)
 
+    // Bound to BOTH the card wrapper and the portaled panel: entering either one
+    // cancels any pending close, so the panel stays open the whole time the
+    // pointer is over the card OR the panel (moving between them never closes it).
     const onEnter = useCallback(() => {
         clearTimeout(closeTimer.current)
         if (open) return
@@ -172,6 +183,10 @@ export const CourseHoverPreview = ({ course, children, className }: CourseHoverP
         openTimer.current = setTimeout(() => setOpen(true), OPEN_DELAY_MS)
     }, [open])
 
+    // Leaving the card OR the panel starts the close, but only after a short grace
+    // ({@link CLOSE_DELAY_MS}) that a re-enter cancels — the panel closes ONLY once
+    // the pointer has left both surfaces and stayed out. No timer ever hides it
+    // while it is still hovered.
     const onLeave = useCallback(() => {
         clearTimeout(openTimer.current)
         clearTimeout(closeTimer.current)
@@ -227,11 +242,18 @@ export const CourseHoverPreview = ({ course, children, className }: CourseHoverP
         setPosition({ left, top, arrowTop, side, maxHeight })
     }, [open])
 
-    // ponytail: fixed coords go stale on scroll/resize — just close (hover
-    // previews are short-lived; re-hover reopens correctly positioned)
+    // ponytail: the panel is fixed-positioned against the card, so a PAGE/ancestor
+    // scroll (which slides the card out from under it) or a resize makes the coords
+    // stale — close then (re-hover reopens correctly positioned). But scrolling the
+    // panel's OWN content (the includes list) must NOT close it: the pointer is
+    // still on the panel and the viewer is reading it. So ignore scroll events that
+    // originate inside the panel — otherwise the panel would vanish mid-hover the
+    // moment the viewer scrolled it. Resize always closes (its target is the window,
+    // never inside the panel).
     useEffect(() => {
         if (!open) return
-        const close = () => {
+        const close = (event?: Event) => {
+            if (event && panelRef.current?.contains(event.target as Node)) return
             setOpen(false)
             setPosition(null)
         }
@@ -315,8 +337,11 @@ export const CourseHoverPreview = ({ course, children, className }: CourseHoverP
                         <Typography type="h6" weight="bold" className="line-clamp-2">
                             {course.name}
                         </Typography>
-                        <div className="flex flex-wrap items-center gap-2">
-                            {course.badge ? (
+                        {/* merchandising badge only — the course LEVEL is no longer a
+                            standalone chip here: it lives in the meta line below
+                            ("{level} · {N} bài"), so it is not shown twice */}
+                        {course.badge ? (
+                            <div className="flex flex-wrap items-center gap-2">
                                 <Chip
                                     size="sm"
                                     variant="soft"
@@ -324,11 +349,8 @@ export const CourseHoverPreview = ({ course, children, className }: CourseHoverP
                                 >
                                     {t(`courseSystem.browse.badge.${course.badge}`)}
                                 </Chip>
-                            ) : null}
-                            <Chip size="sm" variant="soft" color="accent">
-                                {t(`courseSystem.levels.${course.level}`)}
-                            </Chip>
-                        </div>
+                            </div>
+                        ) : null}
                         {course.updatedAt ? (
                             <Typography type="body-xs" weight="medium" className="text-success">
                                 {t("courseSystem.browse.preview.updated", {
@@ -336,9 +358,47 @@ export const CourseHoverPreview = ({ course, children, className }: CourseHoverP
                                 })}
                             </Typography>
                         ) : null}
+                        {/* level + lesson count on ONE line (the surviving level label) */}
                         <Typography type="body-xs" color="muted">
                             {metaLine}
                         </Typography>
+                        {/* extra detail row, freed up by dropping the duplicate level chip:
+                            rating + learners when the summary carries them (mirrors the
+                            catalog card), else a one-line pitch from the lazily-loaded
+                            detail. Pinned in the header region (never scrolls). */}
+                        {course.rating != null || (course.enrollmentCount ?? 0) > 0 ? (
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                {course.rating != null ? (
+                                    <span className="flex items-center gap-1">
+                                        <StarIcon
+                                            aria-hidden
+                                            focusable="false"
+                                            weight="fill"
+                                            className="size-4 text-warning"
+                                        />
+                                        <Typography type="body-xs" weight="medium">
+                                            {course.rating.toFixed(1)}
+                                        </Typography>
+                                    </span>
+                                ) : null}
+                                {(course.enrollmentCount ?? 0) > 0 ? (
+                                    <span className="flex items-center gap-1">
+                                        <UsersIcon
+                                            aria-hidden
+                                            focusable="false"
+                                            className="size-4 text-muted"
+                                        />
+                                        <Typography type="body-xs" color="muted">
+                                            {t("courses.learners", { count: course.enrollmentCount ?? 0 })}
+                                        </Typography>
+                                    </span>
+                                ) : null}
+                            </div>
+                        ) : detail?.description ? (
+                            <Typography type="body-xs" color="muted" className="line-clamp-1">
+                                {detail.description}
+                            </Typography>
+                        ) : null}
                     </div>
                     {/* includes — the ONLY scrollable region, so a long list never pushes
                         the panel past the card height; capped to a few compact bullets so a

@@ -23,9 +23,9 @@ const FALLBACK_THEME = "linear-gradient(135deg, #3F51B5 0%, #5C6BC0 60%, #7986CB
 /**
  * One slide of the featured hero, rebuilt to the classic Ftes split-card look: a
  * flex row on a solid `theme` background (verbatim CSS color/gradient, never
- * interpolated as HTML), the merchandising copy on the LEFT (title + pitch +
- * white-outline pill CTA → `onOpen`) and the course cover on the RIGHT. On mobile it
- * stacks to a column and the image is hidden. CTA wording is "view/enroll", never
+ * interpolated as HTML), the course cover on the LEFT and the merchandising copy on
+ * the RIGHT (title + pitch + white-outline pill CTA → `onOpen`) — matching the legacy
+ * FTES banner. On mobile it stacks to a column and the image is hidden. CTA wording is "view/enroll", never
  * "buy/VIP" (rule premium-unlock-is-enroll-not-vip). Text is explicit white — the
  * themed background is a locked dark surface, so theme tokens would flip illegibly.
  * ARIA: `role="group"` + `aria-roledescription="slide"` + "i / N" label per the
@@ -45,10 +45,10 @@ export const FeaturedSlide = ({ course, index, total, onOpen }: FeaturedSlidePro
             className="w-full shrink-0 snap-center px-2.5"
         >
             <div
-                className="flex min-h-[300px] flex-col items-center gap-5 overflow-hidden rounded-[20px] p-[30px_35px] text-white md:flex-row"
+                className="flex min-h-[300px] flex-col items-center gap-5 overflow-hidden rounded-[20px] p-[30px_35px] text-white md:flex-row-reverse"
                 style={{ background: course.theme || FALLBACK_THEME }}
             >
-                {/* LEFT — merchandising copy */}
+                {/* RIGHT (desktop) — merchandising copy; flex-row-reverse puts the cover on the LEFT */}
                 <div className="flex w-full flex-col gap-3 md:max-w-[50%]">
                     <Typography type="h4" weight="bold" className="text-white">
                         {course.name}

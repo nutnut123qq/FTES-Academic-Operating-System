@@ -133,7 +133,11 @@ const HoverAddToCartButton = ({ course, rawId }: { course: Course, rawId?: strin
  * a sibling of the card link (never nested inside the `<a>` — it carries its
  * own interactive controls) and is portaled to `document.body` with fixed
  * positioning so the shelf carousels' `overflow-x-auto` cannot clip it; the
- * side flips left when the right side would leave the viewport. The primary CTA
+ * side flips left when the right side would leave the viewport. Its height is
+ * capped at the card's height and its top edge is pinned to the card's top, so
+ * it reads as the SAME height as the card (never floating above/below it): the
+ * header and CTAs stay pinned while the compact "includes" list scrolls if a
+ * short card can't fit it. The primary CTA
  * mirrors the catalog card: a viewer already enrolled in the course gets
  * "Tiếp tục học" into the learn shell, everyone else gets the enroll CTA onto the
  * detail page. Touch/coarse pointers never see the panel (CSS hover/pointer media
@@ -158,8 +162,8 @@ export const CourseHoverPreview = ({ course, children, className }: CourseHoverP
     const openTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
     const closeTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
     const [open, setOpen] = useState(false)
-    /** Fixed-position coordinates; `null` until the first post-open measure. */
-    const [position, setPosition] = useState<{ left: number, top: number, arrowTop: number, side: "left" | "right" } | null>(null)
+    /** Fixed-position coordinates + the card-matched height cap; `null` until the first post-open measure. */
+    const [position, setPosition] = useState<{ left: number, top: number, arrowTop: number, side: "left" | "right", maxHeight: number } | null>(null)
 
     const onEnter = useCallback(() => {
         clearTimeout(closeTimer.current)
@@ -183,8 +187,11 @@ export const CourseHoverPreview = ({ course, children, className }: CourseHoverP
         clearTimeout(closeTimer.current)
     }, [])
 
-    // measure once per open: pick the side with room, center on the card and
-    // clamp to the viewport; the arrow keeps pointing at the card's center
+    // measure once per open: pick the side with room, cap the panel at the
+    // card's height and PIN its top edge to the card's top — so the panel reads
+    // as the same height as the card and grows downward within its bounds
+    // instead of floating above and below it. The arrow still points at the
+    // card's center.
     useLayoutEffect(() => {
         if (!open) return
         const wrapper = wrapperRef.current
@@ -198,16 +205,26 @@ export const CourseHoverPreview = ({ course, children, className }: CourseHoverP
         const left = side === "right"
             ? rect.right + GAP_PX
             : rect.left - GAP_PX - panelRect.width
-        const centerY = rect.top + rect.height / 2
-        const top = Math.min(
-            Math.max(centerY - panelRect.height / 2, VIEWPORT_MARGIN_PX),
-            Math.max(window.innerHeight - panelRect.height - VIEWPORT_MARGIN_PX, VIEWPORT_MARGIN_PX),
+        // Never taller than the card (the whole point of the fix), and never
+        // taller than the viewport — the includes list scrolls to absorb any
+        // overflow while the header + CTAs stay pinned.
+        const maxHeight = Math.min(
+            rect.height,
+            window.innerHeight - VIEWPORT_MARGIN_PX * 2,
         )
+        // Actual rendered height once capped, used to align the top edge and
+        // keep the arrow inside the panel.
+        const height = Math.min(panelRect.height, maxHeight)
+        const top = Math.min(
+            Math.max(rect.top, VIEWPORT_MARGIN_PX),
+            Math.max(window.innerHeight - height - VIEWPORT_MARGIN_PX, VIEWPORT_MARGIN_PX),
+        )
+        const centerY = rect.top + rect.height / 2
         const arrowTop = Math.min(
             Math.max(centerY - top, VIEWPORT_MARGIN_PX),
-            panelRect.height - VIEWPORT_MARGIN_PX,
+            height - VIEWPORT_MARGIN_PX,
         )
-        setPosition({ left, top, arrowTop, side })
+        setPosition({ left, top, arrowTop, side, maxHeight })
     }, [open])
 
     // ponytail: fixed coords go stale on scroll/resize — just close (hover
@@ -270,11 +287,15 @@ export const CourseHoverPreview = ({ course, children, className }: CourseHoverP
                     ref={panelRef}
                     onPointerEnter={onEnter}
                     onPointerLeave={onLeave}
-                    style={position ? { left: position.left, top: position.top } : undefined}
+                    style={position
+                        ? { left: position.left, top: position.top, maxHeight: position.maxHeight }
+                        : undefined}
                     className={cn(
-                        // desktop-only gate: touch/coarse pointers never render the panel
-                        "fixed z-40 hidden w-80 rounded-2xl border border-separator bg-surface p-4 shadow-lg",
-                        "[@media(hover:hover)_and_(pointer:fine)]:block",
+                        // desktop-only gate: touch/coarse pointers never render the panel.
+                        // flex-col so the header + CTAs pin and the includes list scrolls,
+                        // keeping the whole panel inside the card-matched maxHeight.
+                        "fixed z-40 hidden w-80 flex-col gap-3 rounded-2xl border border-separator bg-surface p-4 shadow-lg",
+                        "[@media(hover:hover)_and_(pointer:fine)]:flex",
                         position ? "visible" : "invisible",
                     )}
                 >
@@ -289,8 +310,9 @@ export const CourseHoverPreview = ({ course, children, className }: CourseHoverP
                                 : "-right-1.5 border-r border-t",
                         )}
                     />
-                    <div className="flex flex-col gap-3">
-                        <Typography type="h6" weight="bold">
+                    {/* header — pinned (never scrolls), stays at the card's top edge */}
+                    <div className="flex shrink-0 flex-col gap-2">
+                        <Typography type="h6" weight="bold" className="line-clamp-2">
                             {course.name}
                         </Typography>
                         <div className="flex flex-wrap items-center gap-2">
@@ -317,27 +339,33 @@ export const CourseHoverPreview = ({ course, children, className }: CourseHoverP
                         <Typography type="body-xs" color="muted">
                             {metaLine}
                         </Typography>
-                        {includes.length > 0 ? (
-                            <div className="flex flex-col gap-2">
-                                <Typography type="body-sm" weight="semibold">
-                                    {t("courseSystem.browse.preview.includesTitle")}
-                                </Typography>
-                                <ul className="flex flex-col gap-2">
-                                    {includes.map((item, index) => (
-                                        <li key={index} className="flex items-start gap-2">
-                                            <CheckIcon
-                                                aria-hidden
-                                                focusable="false"
-                                                className="mt-0.5 size-4 shrink-0 text-success"
-                                            />
-                                            <Typography type="body-xs" color="muted">
-                                                {item}
-                                            </Typography>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        ) : null}
+                    </div>
+                    {/* includes — the ONLY scrollable region, so a long list never pushes
+                        the panel past the card height; capped to a few compact bullets so a
+                        typical card fits with no scroll at all (scroll is the fallback) */}
+                    {includes.length > 0 ? (
+                        <div className="flex min-h-0 flex-col gap-2 overflow-y-auto">
+                            <Typography type="body-sm" weight="semibold" className="shrink-0">
+                                {t("courseSystem.browse.preview.includesTitle")}
+                            </Typography>
+                            <ul className="flex flex-col gap-2">
+                                {includes.slice(0, 4).map((item, index) => (
+                                    <li key={index} className="flex items-start gap-2">
+                                        <CheckIcon
+                                            aria-hidden
+                                            focusable="false"
+                                            className="mt-0.5 size-4 shrink-0 text-success"
+                                        />
+                                        <Typography type="body-xs" color="muted" className="line-clamp-2">
+                                            {item}
+                                        </Typography>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    ) : null}
+                    {/* CTAs — pinned (never scroll), always within the card-matched height */}
+                    <div className="flex shrink-0 flex-col gap-2">
                         <div className="flex items-center gap-2">
                             <Button className="flex-1" onPress={onCta}>
                                 {isEnrolled

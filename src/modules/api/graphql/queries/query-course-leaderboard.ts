@@ -22,6 +22,7 @@ const query1 = gql`
           enrollmentId
           userId
           username
+          displayName
           avatar
           totalScore
           completedChallenges

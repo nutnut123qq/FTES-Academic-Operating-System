@@ -126,12 +126,16 @@ export const rankEntriesByCategory = (
 /**
  * Maps a real backend `CourseLeaderboardEntry` onto the FE row model.
  *
- * The BE carries only a nullable `username` snapshot (no separate display name),
- * so `displayName` degrades to a short `#id` handle rather than a raw null — never
- * a fabricated name. Every number is copied straight from the server aggregate.
+ * The BE resolves a proper `displayName` (fullName → real username → "Học viên
+ * <suffix>") and sanitizes any `legacy_<uuid>` migration placeholder out of both
+ * `displayName` and `username` (→ null). So prefer `displayName`, fall back to the
+ * (already clean) `username`, and only as a last resort a short `#id` handle —
+ * never a raw `legacy_*` string or a fabricated name. Numbers copy straight from
+ * the server aggregate.
  */
 const toEntry = (entry: CourseLeaderboardEntry): LeaderboardEntry => {
-    const displayName = entry.username ?? `#${entry.userId.slice(0, 8)}`
+    const displayName =
+        entry.displayName ?? entry.username ?? `#${entry.userId.slice(0, 8)}`
     return {
         enrollmentId: entry.enrollmentId,
         userId: entry.userId,

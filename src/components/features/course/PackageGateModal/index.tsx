@@ -240,11 +240,14 @@ const CheckoutShell = ({
 const useProductCheckout = ({
     product,
     title,
+    imageUrl,
     onPurchased,
     onClose,
 }: {
     product: ProductForCourseView | null | undefined
     title: string
+    /** Course cover art → the rounded thumbnail on the PaymentModal summary (empty → omitted). */
+    imageUrl?: string
     onPurchased?: () => void
     onClose?: () => void
 }) => {
@@ -277,6 +280,8 @@ const useProductCheckout = ({
                 title,
                 amountVnd: product.priceVnd ?? 0,
                 amountCoin: product.priceCoin ?? undefined,
+                // Course cover → the rounded thumbnail on the modal summary (empty → omit).
+                imageUrl: imageUrl || undefined,
                 onSuccess: onPurchased,
             })
             onClose?.()
@@ -346,7 +351,7 @@ const WholeCoursePanel = ({
     onPurchased?: () => void
 }) => {
     const { data: product, isLoading } = useGetCourseProductSwr(courseRawId)
-    const { run, isBusy } = useProductCheckout({ product, title: courseTitle, onPurchased, onClose })
+    const { run, isBusy } = useProductCheckout({ product, title: courseTitle, imageUrl: courseCoverUrl, onPurchased, onClose })
 
     const ctaLabel = isBusy
         ? t("modal.processing")
@@ -424,6 +429,7 @@ const PackagePanel = ({
     const { run, isBusy } = useProductCheckout({
         product,
         title: `${courseTitle} · ${selected.name}`,
+        imageUrl: courseCoverUrl,
         onPurchased,
         onClose,
     })
@@ -538,6 +544,11 @@ export interface WholeCourseGateCardProps {
     courseRawId: string
     /** Human course title shown on the PaymentModal summary line. */
     courseTitle: string
+    /**
+     * Course cover art (`course.coverUrl`) → the rounded thumbnail on the PaymentModal
+     * summary. Optional; an empty string is treated as absent.
+     */
+    courseCoverUrl?: string
     /** Called after a successful purchase / free enrollment (revalidate the caller). */
     onPurchased?: () => void
     /**
@@ -561,13 +572,14 @@ export interface WholeCourseGateCardProps {
 export const WholeCourseGateCard = ({
     courseRawId,
     courseTitle,
+    courseCoverUrl,
     onPurchased,
     onClose,
 }: WholeCourseGateCardProps) => {
     const t = useTranslations("courseSystem.preview")
     const tCourse = useTranslations("courseSystem")
     const { data: product, isLoading } = useGetCourseProductSwr(courseRawId)
-    const { run, isBusy } = useProductCheckout({ product, title: courseTitle, onPurchased, onClose })
+    const { run, isBusy } = useProductCheckout({ product, title: courseTitle, imageUrl: courseCoverUrl, onPurchased, onClose })
 
     if (isLoading) {
         return <PackageGateSkeleton />

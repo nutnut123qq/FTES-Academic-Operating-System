@@ -25,6 +25,14 @@ export interface PaymentContext {
     /** Amount payable in FTES Coin — enables the "pay with coins" (COIN) flow when set. */
     amountCoin?: number
     /**
+     * Optional course cover art shown as the rounded thumbnail beside the title on the
+     * modal's Summary step (and the slim recap line on the Payment step). Threaded from
+     * the entry points that carry a single cover (course buy-now, package/whole-course
+     * gate). Omit for a multi-item cart checkout — the summary then shows the title with
+     * no thumbnail (`CoverImage` owns that empty-surface fallback).
+     */
+    imageUrl?: string
+    /**
      * Optional callback fired when the payment reaches a successful settled status.
      * Use this to revalidate gated data (e.g. lesson content/stream) without a reload.
      */

@@ -6,6 +6,7 @@ import { useFormatter, useTranslations } from "next-intl"
 import { useSWRConfig } from "swr"
 import { useRouter } from "next/navigation"
 import {
+    ArrowRightIcon,
     BankIcon,
     ClockIcon,
     CoinsIcon,
@@ -13,6 +14,8 @@ import {
 } from "@phosphor-icons/react"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 import { isPaidOrderStatus } from "@/modules/api/rest/commerce"
+import { SegmentedControl } from "@/components/blocks/navigation/SegmentedControl"
+import { CoverImage } from "@/components/blocks/media/CoverImage"
 import { PriceTag } from "@/components/blocks/commerce/PriceTag"
 import { MascotBubble } from "@/components/reuseable/FtesMascot"
 import { usePaymentOverlayState } from "@/hooks/zustand/overlay/hooks"
@@ -24,6 +27,16 @@ import { QRCode } from "@/components/reuseable/QRCode"
 
 type PayMethod = "VIETQR" | "COIN"
 type Phase = "choose" | "awaiting" | "success" | "failed"
+/** Which wizard step is shown — a "Summary → Payment" two-step over the pay machinery. */
+type Step = "summary" | "payment"
+
+/**
+ * Whether the "Summary" step is locked (unreachable). True once a payment is in flight
+ * or settled (`phase !== "choose"`): after a QR is shown / coins are charged the buyer
+ * must not rewind to re-edit the order, so the Summary segment is disabled and the modal
+ * is pinned to the Payment step. Exported for the step-gating test.
+ */
+export const isSummaryLocked = (phase: Phase): boolean => phase !== "choose"
 
 /**
  * Số tiền hiển thị ở dòng tóm tắt phải là số SẼ BỊ TRỪ theo phương thức ĐANG CHỌN, không phải
@@ -60,6 +73,7 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
     const couponSwr = usePostValidateCouponSwr()
     const walletSwr = useGetMyWalletSwr()
 
+    const [step, setStep] = useState<Step>("summary")
     const [method, setMethod] = useState<PayMethod>("VIETQR")
     const [phase, setPhase] = useState<Phase>("choose")
     const [coupon, setCoupon] = useState("")
@@ -91,6 +105,7 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
     // item supports (coin-only items open straight on the Xu tab).
     useEffect(() => {
         if (!isOpen) return
+        setStep("summary")
         setMethod(amountVnd > 0 ? "VIETQR" : "COIN")
         setPhase("choose")
         setCoupon("")
@@ -101,6 +116,14 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
         setOrderId("")
         setQrCode("")
     }, [isOpen, amountVnd])
+
+    // Guard: once a QR/pay is in flight or settled, pin the modal to the Payment step so
+    // the buyer can't rewind to the Summary mid-payment (the Summary segment is disabled
+    // in the same phases). Never runs while still on `choose`, so it can't fight a manual
+    // "back to Summary" tap the user makes before paying.
+    useEffect(() => {
+        if (isSummaryLocked(phase)) setStep("payment")
+    }, [phase])
 
     // VietQR: poll the created order until the webhook settles it. Đồng hồ 5 phút là con số
     // của FE (BE chưa trả expiresAt), KHÔNG phải hạn thật của đơn — nên hết giờ vẫn PHẢI poll
@@ -188,112 +211,180 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
 
     const close = () => setOpen(false)
 
+    // The payable amount shown per the ACTIVE method (VND or Xu) — reused by the Summary
+    // step's plain-amount line and the Payment step's slim recap.
+    const shown = summaryAmount(method, amountVnd, amountCoin)
+    const shownAmountLabel =
+        shown.unit === "vnd"
+            ? t("checkout.amountVnd", { amount: format.number(shown.value) })
+            : t("checkout.amountCoin", { amount: format.number(shown.value) })
+
     return (
         <Modal isOpen={isOpen} onOpenChange={setOpen}>
             <Modal.Backdrop>
                 <Modal.Container>
                     <Modal.Dialog className={cn("w-full max-w-md", className)}>
                         <Modal.CloseTrigger />
-                        <Modal.Header>
+                        <Modal.Header className="flex flex-col gap-3">
                             <div className="text-2xl font-bold">{t("checkout.title")}</div>
+                            <SegmentedControl<Step>
+                                ariaLabel={t("checkout.title")}
+                                items={[
+                                    {
+                                        value: "summary",
+                                        label: t("checkout.summaryTab"),
+                                        isDisabled: isSummaryLocked(phase),
+                                    },
+                                    { value: "payment", label: t("checkout.paymentTab") },
+                                ]}
+                                value={step}
+                                onChange={setStep}
+                            />
                         </Modal.Header>
                         <Modal.Body className="flex flex-col gap-5">
-                            {/* summary — always visible */}
-                            <div className="flex flex-col gap-2 rounded-2xl border border-separator p-4">
-                                <div className="flex items-start justify-between gap-3">
-                                    <Typography type="body-sm" weight="medium" className="min-w-0">
-                                        {context.title}
-                                    </Typography>
-                                    {showSavings ? (
-                                        // VND + discount → reuse PriceTag so the struck original + −X%
-                                        // chip read the same as the cart summary (CartSavingsSummary).
-                                        <PriceTag
-                                            discounted={amountVnd}
-                                            original={originalAmountVnd}
-                                            size="sm"
-                                            className="shrink-0 justify-end"
-                                        />
-                                    ) : (
-                                        <Typography type="body-sm" weight="bold" className="shrink-0 text-accent">
-                                            {(() => {
-                                                const shown = summaryAmount(method, amountVnd, amountCoin)
-                                                return shown.unit === "vnd"
-                                                    ? t("checkout.amountVnd", { amount: format.number(shown.value) })
-                                                    : t("checkout.amountCoin", { amount: format.number(shown.value) })
-                                            })()}
+                            {step === "summary" ? (
+                                <div className="flex flex-col gap-5">
+                                    {/* course thumbnail + title */}
+                                    <div className="flex items-start gap-3">
+                                        {context.imageUrl ? (
+                                            <CoverImage
+                                                src={context.imageUrl}
+                                                alt={context.title}
+                                                className="size-14 shrink-0"
+                                            />
+                                        ) : null}
+                                        <Typography
+                                            type="body"
+                                            weight="semibold"
+                                            className="min-w-0 flex-1 line-clamp-2"
+                                        >
+                                            {context.title}
                                         </Typography>
-                                    )}
+                                    </div>
+
+                                    {/* payable amount — large/bold; discounted VND buys strike the
+                                        original + show the −X% chip (PriceTag) and the savings line. */}
+                                    <div className="flex flex-col gap-1">
+                                        {showSavings ? (
+                                            <PriceTag
+                                                discounted={amountVnd}
+                                                original={originalAmountVnd}
+                                                size="lg"
+                                            />
+                                        ) : (
+                                            <Typography type="h3" weight="bold" className="text-accent">
+                                                {shownAmountLabel}
+                                            </Typography>
+                                        )}
+                                        {showSavings ? (
+                                            <Typography type="body-sm" className="text-success">
+                                                {t("checkout.savings", {
+                                                    amount: format.number(savedVnd),
+                                                    percent: savedPercent,
+                                                })}
+                                            </Typography>
+                                        ) : null}
+                                    </div>
+
+                                    <Button
+                                        variant="primary"
+                                        fullWidth
+                                        className="rounded-full"
+                                        onPress={() => setStep("payment")}
+                                    >
+                                        {t("checkout.continueToPayment")}
+                                        <ArrowRightIcon aria-hidden focusable="false" className="size-4" />
+                                    </Button>
                                 </div>
-                                {showSavings ? (
-                                    <Typography type="body-sm" className="text-success">
-                                        {t("checkout.savings", {
-                                            amount: format.number(savedVnd),
-                                            percent: savedPercent,
-                                        })}
-                                    </Typography>
-                                ) : null}
-                            </div>
+                            ) : (
+                                <div className="flex flex-col gap-5">
+                                    {/* slim recap — small thumbnail + title + payable amount */}
+                                    <div className="flex items-center gap-3 rounded-2xl border border-separator p-3">
+                                        {context.imageUrl ? (
+                                            <CoverImage
+                                                src={context.imageUrl}
+                                                alt={context.title}
+                                                className="size-10 shrink-0"
+                                            />
+                                        ) : null}
+                                        <Typography
+                                            type="body-sm"
+                                            weight="medium"
+                                            className="min-w-0 flex-1 line-clamp-1"
+                                        >
+                                            {context.title}
+                                        </Typography>
+                                        <Typography
+                                            type="body-sm"
+                                            weight="bold"
+                                            className="shrink-0 text-accent"
+                                        >
+                                            {shownAmountLabel}
+                                        </Typography>
+                                    </div>
 
-                            {phase === "choose" ? (
-                                <ChooseView
-                                    t={t}
-                                    format={format}
-                                    method={method}
-                                    setMethod={setMethod}
-                                    showVietqr={showVietqr}
-                                    showCoin={showCoin}
-                                    coupon={coupon}
-                                    setCoupon={setCoupon}
-                                    discount={discount}
-                                    couponError={couponError}
-                                    couponPending={couponSwr.isMutating}
-                                    applyCoupon={applyCoupon}
-                                    clearCoupon={clearCoupon}
-                                    netVnd={netVnd}
-                                    amountCoin={amountCoin ?? 0}
-                                    balance={balance}
-                                    payError={payError}
-                                    payPending={checkoutSwr.isMutating}
-                                    pay={pay}
-                                />
-                            ) : null}
+                                    {phase === "choose" ? (
+                                        <ChooseView
+                                            t={t}
+                                            format={format}
+                                            method={method}
+                                            setMethod={setMethod}
+                                            showVietqr={showVietqr}
+                                            showCoin={showCoin}
+                                            coupon={coupon}
+                                            setCoupon={setCoupon}
+                                            discount={discount}
+                                            couponError={couponError}
+                                            couponPending={couponSwr.isMutating}
+                                            applyCoupon={applyCoupon}
+                                            clearCoupon={clearCoupon}
+                                            netVnd={netVnd}
+                                            amountCoin={amountCoin ?? 0}
+                                            balance={balance}
+                                            payError={payError}
+                                            payPending={checkoutSwr.isMutating}
+                                            pay={pay}
+                                        />
+                                    ) : null}
 
-                            {phase === "awaiting" ? (
-                                <AwaitingView
-                                    t={t}
-                                    format={format}
-                                    qrCode={qrCode}
-                                    amount={netVnd}
-                                    onExpire={handleExpire}
-                                />
-                            ) : null}
+                                    {phase === "awaiting" ? (
+                                        <AwaitingView
+                                            t={t}
+                                            format={format}
+                                            qrCode={qrCode}
+                                            amount={netVnd}
+                                            onExpire={handleExpire}
+                                        />
+                                    ) : null}
 
-                            {phase === "success" ? (
-                                <SuccessView
-                                    t={t}
-                                    onDone={close}
-                                    onLearn={
-                                        context.learnHref
-                                            ? () => {
-                                                close()
-                                                router.push(context.learnHref as string)
+                                    {phase === "success" ? (
+                                        <SuccessView
+                                            t={t}
+                                            onDone={close}
+                                            onLearn={
+                                                context.learnHref
+                                                    ? () => {
+                                                        close()
+                                                        router.push(context.learnHref as string)
+                                                    }
+                                                    : undefined
                                             }
-                                            : undefined
-                                    }
-                                />
-                            ) : null}
+                                        />
+                                    ) : null}
 
-                            {phase === "failed" ? (
-                                <FailedView
-                                    t={t}
-                                    expired={expired}
-                                    onRetry={() => {
-                                        setExpired(false)
-                                        setPhase("choose")
-                                    }}
-                                    onClose={close}
-                                />
-                            ) : null}
+                                    {phase === "failed" ? (
+                                        <FailedView
+                                            t={t}
+                                            expired={expired}
+                                            onRetry={() => {
+                                                setExpired(false)
+                                                setPhase("choose")
+                                            }}
+                                            onClose={close}
+                                        />
+                                    ) : null}
+                                </div>
+                            )}
                         </Modal.Body>
                     </Modal.Dialog>
                 </Modal.Container>

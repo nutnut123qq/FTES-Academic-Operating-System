@@ -53,7 +53,7 @@ export const LearnContentPage = () => {
     const enrollment = useCourseEnrollment(
         courseId,
         { isEnrolled: access?.enrolled === true, isPurchased: purchased },
-        { rawId: course?.id, title: header?.title, priceVnd: header?.priceVnd },
+        { rawId: course?.id, title: header?.title, priceVnd: header?.priceVnd, coverUrl: header?.coverUrl },
     )
 
     return (

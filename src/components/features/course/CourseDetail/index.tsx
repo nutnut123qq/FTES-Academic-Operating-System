@@ -306,7 +306,12 @@ const CourseDetailView = ({
         course.enrollment,
         isPackage
             ? undefined
-            : { rawId: course.rawId, title: course.name, priceVnd: course.price.vnd },
+            : {
+                  rawId: course.rawId,
+                  title: course.name,
+                  priceVnd: course.price.vnd,
+                  originalPriceVnd: course.price.originalVnd,
+              },
     )
     // ponytail: hand-rolled accordion state — first chapter open. Set, not boolean-per-row,
     // so multiple chapters can be open. Swap to HeroUI Accordion when its API is confirmed.
@@ -1066,10 +1071,15 @@ export const PackageEnrollCard = ({
                 itemId = item.id
                 void mutateSwr("GET_CART_SWR")
             }
+            const chargedVnd = product.priceVnd ?? 0
+            // The package's pre-discount list price → struck through in the modal summary,
+            // only when it actually beats the charged amount (mirrors packagePrice()).
+            const originalVnd = Number(selectedPackage.originalPrice) || 0
             payment.open({
                 itemIds: [itemId],
                 title: `${course.name} · ${selectedPackage.name}`,
-                amountVnd: product.priceVnd ?? 0,
+                amountVnd: chargedVnd,
+                originalAmountVnd: originalVnd > chargedVnd ? originalVnd : undefined,
                 amountCoin: product.priceCoin ?? undefined,
                 // On success the modal cheers and offers "start learning" into this
                 // course's content — same as the plain enroll CTA (useCourseEnrollment).

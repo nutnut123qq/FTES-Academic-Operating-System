@@ -14,21 +14,25 @@ export interface CartSavings {
     hasSavings: boolean
 }
 
-/** Charged total for one line (unit price × quantity). */
-const lineCharged = (item: CartItemView): number => (item.unitPrice ?? 0) * item.quantity
+/**
+ * Charged total for one line. A course is added to the cart exactly once (quantity is
+ * always 1), so the line total is just the unit price — no × quantity.
+ */
+const lineCharged = (item: CartItemView): number => item.unitPrice ?? 0
 
 /**
  * Per-line saving in VND (0 when the line has no compare price above its charged
  * unit price). Uses the SAME "the list price only counts when it beats the charged
  * price" rule as {@link import("./CartLineItem").CartLineItem}, so the per-row `−X%`
- * chip and the cart summary can never disagree.
+ * chip and the cart summary can never disagree. A course is only ever in the cart once
+ * (quantity is always 1), so the saving is the plain list − charged gap, not × quantity.
  *
- * @param item - a cart line (carries `unitPrice`, optional `originalPriceVnd`, `quantity`)
+ * @param item - a cart line (carries `unitPrice`, optional `originalPriceVnd`)
  */
 export const lineSaving = (item: CartItemView): number => {
     const unit = item.unitPrice ?? 0
     const original = item.originalPriceVnd ?? 0
-    return original > unit ? (original - unit) * item.quantity : 0
+    return original > unit ? original - unit : 0
 }
 
 /**

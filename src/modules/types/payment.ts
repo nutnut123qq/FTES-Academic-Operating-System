@@ -15,6 +15,13 @@ export interface PaymentContext {
     title: string
     /** Amount payable in VND — drives the VietQR flow. `0` when the item is coin-only. */
     amountVnd: number
+    /**
+     * The pre-discount VND list total, when the purchase carries a discount. Drives the
+     * struck-through original price + "you save" line in the modal summary (VND path only).
+     * Omit when there is no discount (or the price is coin-only) — the summary then shows
+     * the payable amount alone.
+     */
+    originalAmountVnd?: number
     /** Amount payable in FTES Coin — enables the "pay with coins" (COIN) flow when set. */
     amountCoin?: number
     /**

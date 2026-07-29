@@ -11,6 +11,7 @@ import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { CartLineItem } from "@/components/features/cart/CartLineItem"
 import { CartLineItemSkeleton } from "@/components/features/cart/CartLineItem/CartLineItemSkeleton"
 import { CartSavingsSummary } from "@/components/features/cart/CartSavingsSummary"
+import { computeCartSavings } from "@/components/features/cart/cartSavings"
 import { useGetCartSwr } from "@/hooks/swr/api/rest/queries/useGetCartSwr"
 import { usePostRemoveCartItemSwr } from "@/hooks/swr/api/rest/mutations/usePostRemoveCartItemSwr"
 import { usePaymentOverlayState } from "@/hooks/zustand/overlay/hooks"
@@ -45,10 +46,14 @@ export const CartShell = () => {
     }
 
     const checkout = () => {
+        // Carry the summed list total so the modal summary can strike the pre-discount
+        // price + show the saving — same figures the CartSavingsSummary shows here.
+        const { originalTotal, hasSavings } = computeCartSavings(items, subtotal)
         payment.open({
             itemIds: items.map((item) => item.id),
             title: t("summary", { count: items.length }),
             amountVnd: subtotal,
+            originalAmountVnd: hasSavings ? originalTotal : undefined,
         })
     }
 

@@ -13,6 +13,7 @@ import {
 } from "@phosphor-icons/react"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 import { isPaidOrderStatus } from "@/modules/api/rest/commerce"
+import { PriceTag } from "@/components/blocks/commerce/PriceTag"
 import { MascotBubble } from "@/components/reuseable/FtesMascot"
 import { usePaymentOverlayState } from "@/hooks/zustand/overlay/hooks"
 import { usePostCheckoutSwr } from "@/hooks/swr/api/rest/mutations/usePostCheckoutSwr"
@@ -76,6 +77,15 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
     const showCoin = amountCoin != null && amountCoin > 0
     const balance = walletSwr.data?.balance ?? 0
     const netVnd = Math.max(amountVnd - discount, 0)
+
+    // List → sale saving for the summary box: only on the VND path, and only when the
+    // caller passed a real pre-discount list total above the payable amount. The COIN
+    // path has no list price, so it never shows savings. This is the product's
+    // list→sale gap; any coupon is a SEPARATE discount shown inside ChooseView.
+    const originalAmountVnd = context?.originalAmountVnd ?? 0
+    const showSavings = method === "VIETQR" && originalAmountVnd > amountVnd
+    const savedVnd = showSavings ? originalAmountVnd - amountVnd : 0
+    const savedPercent = showSavings ? Math.round((savedVnd / originalAmountVnd) * 100) : 0
 
     // Reset the machine each time the modal opens; default to whichever method the
     // item supports (coin-only items open straight on the Xu tab).
@@ -189,18 +199,39 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
                         </Modal.Header>
                         <Modal.Body className="flex flex-col gap-5">
                             {/* summary — always visible */}
-                            <div className="flex items-start justify-between gap-3 rounded-2xl border border-separator p-4">
-                                <Typography type="body-sm" weight="medium" className="min-w-0">
-                                    {context.title}
-                                </Typography>
-                                <Typography type="body-sm" weight="bold" className="shrink-0 text-accent">
-                                    {(() => {
-                                        const shown = summaryAmount(method, amountVnd, amountCoin)
-                                        return shown.unit === "vnd"
-                                            ? t("checkout.amountVnd", { amount: format.number(shown.value) })
-                                            : t("checkout.amountCoin", { amount: format.number(shown.value) })
-                                    })()}
-                                </Typography>
+                            <div className="flex flex-col gap-2 rounded-2xl border border-separator p-4">
+                                <div className="flex items-start justify-between gap-3">
+                                    <Typography type="body-sm" weight="medium" className="min-w-0">
+                                        {context.title}
+                                    </Typography>
+                                    {showSavings ? (
+                                        // VND + discount → reuse PriceTag so the struck original + −X%
+                                        // chip read the same as the cart summary (CartSavingsSummary).
+                                        <PriceTag
+                                            discounted={amountVnd}
+                                            original={originalAmountVnd}
+                                            size="sm"
+                                            className="shrink-0 justify-end"
+                                        />
+                                    ) : (
+                                        <Typography type="body-sm" weight="bold" className="shrink-0 text-accent">
+                                            {(() => {
+                                                const shown = summaryAmount(method, amountVnd, amountCoin)
+                                                return shown.unit === "vnd"
+                                                    ? t("checkout.amountVnd", { amount: format.number(shown.value) })
+                                                    : t("checkout.amountCoin", { amount: format.number(shown.value) })
+                                            })()}
+                                        </Typography>
+                                    )}
+                                </div>
+                                {showSavings ? (
+                                    <Typography type="body-sm" className="text-success">
+                                        {t("checkout.savings", {
+                                            amount: format.number(savedVnd),
+                                            percent: savedPercent,
+                                        })}
+                                    </Typography>
+                                ) : null}
                             </div>
 
                             {phase === "choose" ? (

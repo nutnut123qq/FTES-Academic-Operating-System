@@ -2,46 +2,135 @@
 
 import React from "react"
 import {
+    ArrowRightIcon,
+    CaretLeftIcon,
+    CaretRightIcon,
+    DoorOpenIcon,
     GraduationCapIcon,
+    HandshakeIcon,
     LightbulbIcon,
     MedalIcon,
+    MonitorPlayIcon,
+    PresentationChartIcon,
     RocketLaunchIcon,
     SparkleIcon,
     TrophyIcon,
     type Icon,
 } from "@phosphor-icons/react"
-import { Typography } from "@heroui/react"
+import { Chip, Link, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
+import { MediaCard } from "@/components/blocks/cards/MediaCard"
+import { useCarousel } from "@/components/blocks/carousel/useCarousel"
 import { ACHIEVEMENTS } from "../content"
+import type { AchievementStat } from "../content"
 
-/** Icon per achievement stat key. */
+/** Slower than the course hero — each card carries a title plus a two-line description. */
+const ACHIEVEMENT_INTERVAL_MS = 4_500
+
+/** Icon per achievement milestone key (also the cover fallback for photo-less milestones). */
 const ACHIEVEMENT_ICON: Record<string, Icon> = {
     techfest: TrophyIcon,
     startupGiaLai: RocketLaunchIcon,
     innovationQuest: LightbulbIcon,
     knstgl: MedalIcon,
     fptScholarship: GraduationCapIcon,
+    openDay: DoorOpenIcon,
+    ttsg: PresentationChartIcon,
+    fundraising: HandshakeIcon,
+    demoDay: MonitorPlayIcon,
     aiAssistants: SparkleIcon,
 }
 
 /**
- * "Thành tựu" — FTES's real company recognitions (awards, competition placements and
- * scholarships from the legacy home), each a stat card with a numeric headline over a
- * label. Purely static content (no BE, no interactivity), so it mirrors the neighbouring
- * section rhythm (`max-w-6xl` · `py-16` · centered `mb-10` heading) for a drop-in swap,
- * and is careful not to duplicate the live course/enrollment counters
- * (PlatformStatsSection) or the per-learner "Bảng vàng" (HonorBoardSection).
+ * One milestone slide: the real event photo (or an icon tile when there is none) over
+ * year / rank chips, the localized title, a clamped description and — when public
+ * evidence exists — a "Xem chi tiết" link out to the original post.
+ */
+const AchievementSlide = ({ item }: { item: AchievementStat }) => {
+    const t = useTranslations("homeLanding")
+    const AchievementIcon = ACHIEVEMENT_ICON[item.key] ?? TrophyIcon
+    const title = t(`achievements.items.${item.key}.title`)
+
+    return (
+        <MediaCard
+            // one card on phones, two from sm, three per viewport from lg — matching the
+            // legacy slider's 1 → 2 → 3 responsive breakpoints (gap-3 = 0.75rem)
+            className="w-[17rem] shrink-0 snap-start sm:w-[calc(50%-0.375rem)] lg:w-[calc(33.333%-0.5rem)]"
+            cover={
+                <div className="relative w-full">
+                    {item.imageSrc ? (
+                        <img
+                            src={item.imageSrc}
+                            alt={title}
+                            loading="lazy"
+                            className="aspect-video w-full object-cover"
+                        />
+                    ) : (
+                        // no photo exists for this milestone — icon tile keeps the card shape
+                        <div className="flex aspect-video w-full items-center justify-center bg-accent/10">
+                            <AchievementIcon className="size-10 text-accent" aria-hidden focusable="false" />
+                        </div>
+                    )}
+                    {/* year badge sits ON the photo (legacy slider idiom), accent instead of
+                        the legacy red so it stays inside the AOS palette */}
+                    {item.year ? (
+                        <Chip size="sm" className="absolute bottom-3 left-3 bg-accent text-accent-foreground">
+                            <Chip.Label>{item.year}</Chip.Label>
+                        </Chip>
+                    ) : null}
+                </div>
+            }
+            meta={
+                // highlight printed verbatim — never an animated counter
+                item.value ? (
+                    <Chip size="sm" variant="soft" color="accent">
+                        <Chip.Label>{item.value}</Chip.Label>
+                    </Chip>
+                ) : null
+            }
+            title={title}
+            description={t(`achievements.items.${item.key}.description`)}
+            footer={
+                item.href ? (
+                    <Link
+                        href={item.href}
+                        target="_blank"
+                        rel="noopener"
+                        className="inline-flex items-center gap-2 text-sm text-accent"
+                    >
+                        {t("achievements.viewDetail")}
+                        <ArrowRightIcon aria-hidden focusable="false" className="size-4" />
+                    </Link>
+                ) : null
+            }
+        />
+    )
+}
+
+/**
+ * "Thành tựu" — FTES's real company milestones (awards, competition placements,
+ * scholarships and public events ported from the legacy home), now a CAROUSEL of
+ * milestone cards with the actual event PHOTOS and a link out to the original public
+ * post, so every claim is verifiable instead of being a bare number tile.
  *
- * The card look mirrors the legacy `Ftes-frontend` "Thành tựu" grid
- * (`views/home/components/achiverProject/index.tsx`): a soft accent-tinted fill,
- * LEFT-aligned content, a plain accent-coloured award icon at the top (no circle bubble),
- * the big value below it, then the label, with a lift-on-hover. Legacy raw hex
- * (`#F0F6FF`, `text-utilsPrimary`, blue-tinted hover shadow) is mapped onto house tokens
- * (`bg-accent/5`, `text-accent`, `border-separator`/`border-accent`) so it stays
- * theme-aware in both modes.
+ * Built on the shared {@link useCarousel} hook (native CSS scroll-snap, NO carousel
+ * dependency — the legacy home's react-slick is deliberately not ported): fixed-width
+ * cards so several show per viewport (shelf-style, like `CategoryShelf`) while autoplay
+ * (~4.5s) wraps around and pauses on hover / focus-within / hidden tab and under
+ * `prefers-reduced-motion`. Still purely static content (no BE), keeps the neighbouring
+ * section rhythm (`max-w-6xl` · `py-16` · centered `mb-10` heading), and is careful not
+ * to duplicate the live course/enrollment counters (PlatformStatsSection) or the
+ * per-learner "Bảng vàng" (HonorBoardSection). ARIA follows the WAI-ARIA carousel
+ * pattern (labeled region, labeled controls, ArrowLeft/ArrowRight on the region).
  */
 export const AchievementsSection = () => {
     const t = useTranslations("homeLanding")
+    const slideCount = ACHIEVEMENTS.length
+    const { trackRef, next, prev, pauseHandlers } = useCarousel(slideCount, {
+        intervalMs: ACHIEVEMENT_INTERVAL_MS,
+    })
+    const hasMultiple = slideCount > 1
+
     return (
         <section className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
             <div className="mb-10 flex flex-col items-center gap-2 text-center">
@@ -52,28 +141,56 @@ export const AchievementsSection = () => {
                     {t("achievements.title")}
                 </Typography>
             </div>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {ACHIEVEMENTS.map((item) => {
-                    const AchievementIcon = ACHIEVEMENT_ICON[item.key] ?? TrophyIcon
-                    return (
-                        <div
-                            key={item.key}
-                            className="flex flex-col items-start gap-2 rounded-2xl border border-separator bg-accent/5 p-6 text-left transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-lg"
+
+            <div
+                role="region"
+                aria-roledescription="carousel"
+                aria-label={t("achievements.regionLabel")}
+                onKeyDown={(event) => {
+                    if (!hasMultiple) return
+                    if (event.key === "ArrowRight") {
+                        event.preventDefault()
+                        next()
+                    } else if (event.key === "ArrowLeft") {
+                        event.preventDefault()
+                        prev()
+                    }
+                }}
+                {...pauseHandlers}
+                className="relative"
+            >
+                <div
+                    ref={trackRef}
+                    className="-mx-1 flex snap-x gap-3 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                >
+                    {ACHIEVEMENTS.map((item) => (
+                        <AchievementSlide key={item.key} item={item} />
+                    ))}
+                </div>
+
+                {/* arrows flank the track (legacy slider idiom) instead of sitting under it,
+                    vertically centered on the cover strip and hidden on phones where the
+                    native swipe is the primary gesture */}
+                {hasMultiple ? (
+                    <>
+                        <button
+                            type="button"
+                            aria-label={t("achievements.prev")}
+                            onClick={prev}
+                            className="absolute -left-3 top-1/2 hidden size-10 -translate-y-1/2 items-center justify-center rounded-full border border-separator bg-surface text-foreground shadow-md transition hover:bg-default sm:flex"
                         >
-                            <AchievementIcon
-                                className="mb-1 size-8 text-accent"
-                                aria-hidden
-                                focusable="false"
-                            />
-                            <span className="text-3xl font-bold tracking-tight text-accent md:text-4xl">
-                                {item.value}
-                            </span>
-                            <Typography type="body-sm" color="muted">
-                                {t(`achievements.items.${item.key}.label`)}
-                            </Typography>
-                        </div>
-                    )
-                })}
+                            <CaretLeftIcon className="size-5" aria-hidden focusable="false" />
+                        </button>
+                        <button
+                            type="button"
+                            aria-label={t("achievements.next")}
+                            onClick={next}
+                            className="absolute -right-3 top-1/2 hidden size-10 -translate-y-1/2 items-center justify-center rounded-full border border-separator bg-surface text-foreground shadow-md transition hover:bg-default sm:flex"
+                        >
+                            <CaretRightIcon className="size-5" aria-hidden focusable="false" />
+                        </button>
+                    </>
+                ) : null}
             </div>
         </section>
     )

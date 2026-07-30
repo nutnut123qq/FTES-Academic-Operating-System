@@ -4098,24 +4098,50 @@
     "achievements": {
       "eyebrow": "Achievements",
       "title": "What we've achieved",
+      "viewDetail": "View details",
+      "regionLabel": "FTES achievements",
+      "prev": "Previous achievement",
+      "next": "Next achievement",
       "items": {
         "techfest": {
-          "label": "Outstanding startups · Techfest Vietnam 2025"
+          "title": "Top 100 outstanding startups · Techfest Vietnam 2025",
+          "description": "FTES made the Top 100 outstanding startups at Techfest Vietnam 2025, the national startup talent search."
         },
         "startupGiaLai": {
-          "label": "Innovative Startup · Gia Lai 2025"
+          "title": "Innovative Startup · Gia Lai 2025",
+          "description": "FTES was recognised among the Top 4 innovative startups in Gia Lai in 2025."
         },
         "innovationQuest": {
-          "label": "Innovation Quest 2025"
+          "title": "Innovation Quest 2025",
+          "description": "The FTES project was selected into Ho Chi Minh City's 2025 innovation and startup programme."
         },
         "knstgl": {
-          "label": "Gia Lai Startup & Innovation Contest"
+          "title": "Third prize · Gia Lai Startup & Innovation Contest",
+          "description": "Third prize in the final round of the 2025 Gia Lai Youth Startup & Innovation Contest."
         },
         "fptScholarship": {
-          "label": "FPT University startup scholarship"
+          "title": "FPT University startup scholarship",
+          "description": "FTES received a startup scholarship from FPT University for its project."
+        },
+        "openDay": {
+          "title": "Open Day",
+          "description": "FTES Open Day — learners and parents visit the learning space and explore the programmes in person."
+        },
+        "ttsg": {
+          "title": "Tech Talent Showcase (TTSG)",
+          "description": "FTES presented its product and business plan at the tech talent showcase."
+        },
+        "fundraising": {
+          "title": "First fundraising round",
+          "description": "FTES joined the investor-matching day for startup projects hosted with the National Startup Association."
+        },
+        "demoDay": {
+          "title": "Demo Day",
+          "description": "FTES demoed its finished product and met investors and industry experts for funding."
         },
         "aiAssistants": {
-          "label": "AI assistants that support your learning"
+          "title": "AI assistants that support your learning",
+          "description": "A set of AI assistants across the journey: content tutor, grading, roadmap suggestions and interview practice."
         }
       }
     },

@@ -4098,24 +4098,50 @@
     "achievements": {
       "eyebrow": "Thành tựu",
       "title": "Những gì chúng tôi đạt được",
+      "viewDetail": "Xem chi tiết",
+      "regionLabel": "Thành tựu của FTES",
+      "prev": "Thành tựu trước",
+      "next": "Thành tựu tiếp theo",
       "items": {
         "techfest": {
-          "label": "Startup xuất sắc · Techfest Vietnam 2025"
+          "title": "Top 100 startup xuất sắc · Techfest Vietnam 2025",
+          "description": "Dự án FTES vào Top 100 startup xuất sắc tại Techfest Vietnam 2025 — cuộc thi tìm kiếm tài năng khởi nghiệp sáng tạo quốc gia."
         },
         "startupGiaLai": {
-          "label": "StartUp Đổi mới sáng tạo · Gia Lai 2025"
+          "title": "StartUp Đổi mới sáng tạo · Gia Lai 2025",
+          "description": "FTES được ghi nhận Top 4 startup đổi mới sáng tạo tại Gia Lai năm 2025."
         },
         "innovationQuest": {
-          "label": "Innovation Quest 2025"
+          "title": "Innovation Quest 2025",
+          "description": "Dự án FTES được tuyển chọn vào chương trình đổi mới sáng tạo, khởi nghiệp sáng tạo trên địa bàn TP. Hồ Chí Minh năm 2025."
         },
         "knstgl": {
-          "label": "Khởi nghiệp sáng tạo Gia Lai (KNSTGL)"
+          "title": "Giải Ba · Khởi nghiệp sáng tạo Gia Lai",
+          "description": "Giải Ba vòng chung kết Cuộc thi Thanh niên Gia Lai khởi nghiệp sáng tạo năm 2025."
         },
         "fptScholarship": {
-          "label": "Học bổng Khởi nghiệp Đại học FPT"
+          "title": "Học bổng Khởi nghiệp Đại học FPT",
+          "description": "FTES nhận học bổng Khởi nghiệp từ Trường Đại học FPT cho dự án của mình."
+        },
+        "openDay": {
+          "title": "Open Day",
+          "description": "Ngày hội mở của FTES — học viên và phụ huynh trực tiếp tham quan môi trường học và các chương trình đào tạo."
+        },
+        "ttsg": {
+          "title": "Tech Talent Showcase (TTSG)",
+          "description": "FTES trình bày sản phẩm cùng kế hoạch kinh doanh tại triển lãm tài năng công nghệ."
+        },
+        "fundraising": {
+          "title": "Gọi vốn lần 1",
+          "description": "FTES tham dự Ngày hội Kết nối đầu tư cho các dự án khởi nghiệp cùng Hiệp hội Khởi nghiệp Quốc gia."
+        },
+        "demoDay": {
+          "title": "Demo Day",
+          "description": "FTES trình diễn sản phẩm hoàn thiện và kết nối gọi vốn trước nhà đầu tư, chuyên gia."
         },
         "aiAssistants": {
-          "label": "Trợ lý AI đồng hành cùng việc học"
+          "title": "Trợ lý AI đồng hành cùng việc học",
+          "description": "Hệ thống trợ lý AI theo sát cả lộ trình: gia sư nội dung, chấm bài, gợi ý lộ trình và luyện phỏng vấn."
         }
       }
     },

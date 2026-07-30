@@ -26,26 +26,101 @@ export const JOURNEY_STATIONS: ReadonlyArray<JourneyStation> = [
     { key: "outcome", payoff: true },
 ] as const
 
-/** A company achievement stat card: a language-neutral highlight value + i18n label. */
+/** One FTES achievement milestone card in the achievements carousel. */
 export interface AchievementStat {
-    /** i18n key suffix under `homeLanding.achievements.items.<key>.label`. */
+    /** i18n key suffix under `homeLanding.achievements.items.<key>.{title,description}`. */
     key: string
-    /** Big highlight shown on the card (rank / percentage / count) — language-neutral. */
-    value: string
+    /** Year the milestone happened — omitted for milestones that aren't dated events. */
+    year?: string
+    /**
+     * Language-neutral highlight rendered verbatim for RANKED recognitions (rank /
+     * percentage / count, e.g. "Top 100", "100%"). Plain events have none.
+     */
+    value?: string
+    /**
+     * Cover photo of the real event/award under `public/achievements/` (downscaled +
+     * compressed from the legacy `Ftes-frontend/public/achiver/` originals). Milestones
+     * with no photo fall back to an icon tile — no photo is ever fabricated.
+     */
+    imageSrc?: string
+    /**
+     * Public evidence of the milestone (original Facebook post / press article), opened
+     * in a new tab. Omitted when no public post exists — never a placeholder link.
+     */
+    href?: string
 }
 
 /**
- * Real FTES company recognitions (legacy home "Thành tựu" + milestone slider): awards,
- * competition placements and scholarships, each with a numeric headline. Deliberately
- * distinct from the per-learner "Bảng vàng" ({@link ACHIEVERS}) and the live BE
- * course/enrollment counters (PlatformStatsSection) — no figure is duplicated.
+ * Real FTES company milestones (ported from the legacy home "Thành tựu" cards + the
+ * "Những gì chúng tôi đạt được" milestone slider): awards, competition placements,
+ * scholarships and public events, ordered awards-first. Deliberately distinct from the
+ * per-learner "Bảng vàng" ({@link ACHIEVERS}) and the live BE course/enrollment counters
+ * (PlatformStatsSection) — no figure is duplicated.
+ *
+ * Titles/descriptions are written against the evidence photos themselves (not the legacy
+ * captions, which mislabelled the Gia Lai contest as a Ho Chi Minh City one).
  */
 export const ACHIEVEMENTS: ReadonlyArray<AchievementStat> = [
-    { key: "techfest", value: "Top 100" },
-    { key: "startupGiaLai", value: "Top 4" },
-    { key: "innovationQuest", value: "Top 30" },
-    { key: "knstgl", value: "Top 3" },
-    { key: "fptScholarship", value: "100%" },
+    {
+        key: "techfest",
+        year: "2025",
+        value: "Top 100",
+        imageSrc: "/achievements/top-100-techfest.jpg",
+        href: "https://www.facebook.com/share/p/1DHzPpWe8W/",
+    },
+    {
+        key: "startupGiaLai",
+        year: "2025",
+        value: "Top 4",
+        // no photo in the legacy assets — icon fallback
+        href: "https://thuonghieutruyenthong.vn/gia-lai-tao-be-phong-cho-doanh-nghiep-khoi-nghiep-sang-tao",
+    },
+    {
+        key: "innovationQuest",
+        year: "2025",
+        value: "Top 30",
+        imageSrc: "/achievements/innovation-quest.jpg",
+        href: "https://www.facebook.com/share/p/1D2j1sS8Uo/",
+    },
+    {
+        key: "knstgl",
+        year: "2025",
+        value: "Top 3",
+        imageSrc: "/achievements/giai-3-knstgl.jpg",
+        // no public post for this one
+    },
+    {
+        key: "fptScholarship",
+        year: "2025",
+        value: "100%",
+        imageSrc: "/achievements/hoc-bong-khoi-nghiep-fpt.jpg",
+        href: "https://www.facebook.com/share/p/1ANtcVpcoY/",
+    },
+    {
+        key: "openDay",
+        year: "2025",
+        imageSrc: "/achievements/open-day.jpg",
+        href: "https://www.facebook.com/share/p/1BuQmpEM2H/",
+    },
+    {
+        key: "ttsg",
+        year: "2025",
+        imageSrc: "/achievements/ttsg.jpg",
+        // no public post for this one
+    },
+    {
+        key: "fundraising",
+        year: "2025",
+        imageSrc: "/achievements/goi-von-lan-1.jpg",
+        href: "https://www.facebook.com/share/r/1CqoWaFiN8/",
+    },
+    {
+        key: "demoDay",
+        year: "2025",
+        imageSrc: "/achievements/demo-day.jpg",
+        href: "https://www.facebook.com/share/p/1W9YWF8U1d/",
+    },
+    // not a dated event — kept from the original stat grid, icon fallback, no evidence link
     { key: "aiAssistants", value: "5" },
 ] as const
 

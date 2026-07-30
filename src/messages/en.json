@@ -4107,10 +4107,6 @@
           "title": "Top 100 outstanding startups · Techfest Vietnam 2025",
           "description": "FTES made the Top 100 outstanding startups at Techfest Vietnam 2025, the national startup talent search."
         },
-        "startupGiaLai": {
-          "title": "Innovative Startup · Gia Lai 2025",
-          "description": "FTES was recognised among the Top 4 innovative startups in Gia Lai in 2025."
-        },
         "innovationQuest": {
           "title": "Innovation Quest 2025",
           "description": "The FTES project was selected into Ho Chi Minh City's 2025 innovation and startup programme."
@@ -4138,10 +4134,6 @@
         "demoDay": {
           "title": "Demo Day",
           "description": "FTES demoed its finished product and met investors and industry experts for funding."
-        },
-        "aiAssistants": {
-          "title": "AI assistants that support your learning",
-          "description": "A set of AI assistants across the journey: content tutor, grading, roadmap suggestions and interview practice."
         }
       }
     },

@@ -13,9 +13,9 @@ The section SHALL present the milestones as a horizontal **carousel of milestone
 block hook (native CSS scroll-snap, no carousel dependency) — NOT as a static grid of
 number tiles. Each milestone card SHALL show, in this shape:
 
-- a **cover image** of the real event/award when one exists, rendered at a uniform aspect
-  ratio; milestones without an image SHALL fall back to an icon tile of the same size (the
-  card SHALL NOT be dropped and no image SHALL be fabricated);
+- a **cover image** of the real event/award, rendered at a uniform aspect ratio. The
+  carousel SHALL carry ONLY milestones there is a real photo of — no image is ever
+  fabricated and no photo-less card is shown;
 - the milestone **year as a badge overlaid on the cover**, and — for ranked recognitions —
   the language-neutral highlight value rendered as-is (a rank or percentage string such as
   "Top 100" or "100%", NOT an animated numeric KPI counter);
@@ -24,11 +24,12 @@ number tiles. Each milestone card SHALL show, in this shape:
   article) in a new tab with `rel="noopener"`, for every milestone that has one; milestones
   with no public evidence SHALL simply omit the link (no placeholder or dead `#` link).
 
-The section SHALL cover at least these ten milestones: Techfest Vietnam 2025 (Top 100
-outstanding startups), Startup Gia Lai 2025 (Top 4), Innovation Quest 2025 (Top 30), Gia Lai
-Startup & Innovation Contest (Top 3), FPT University startup scholarship (100%), AI
-assistants (5), Open Day, Tech Talent Showcase (TTSG), first fundraising round, and Demo Day.
-The figures SHALL be distinct from the live course/enrollment counters
+The section SHALL cover these eight photographed milestones: Techfest Vietnam 2025 (Top 100
+outstanding startups), Innovation Quest 2025 (Top 30), Gia Lai Startup & Innovation Contest
+(Top 3), FPT University startup scholarship (100%), Open Day, Tech Talent Showcase (TTSG),
+first fundraising round, and Demo Day. Recognitions with no photograph (Startup Gia Lai 2025
+Top 4) and product capabilities that are not dated milestones (AI assistants) SHALL NOT
+appear here. The figures SHALL be distinct from the live course/enrollment counters
 (PlatformStatsSection) and the per-learner honor board (HonorBoardSection) — no figure is
 duplicated.
 
@@ -52,9 +53,8 @@ labeled controls.
 
 #### Scenario: Milestone cards show image, year, title and description
 - **WHEN** the achievements section renders
-- **THEN** each milestone renders as a card whose cover is the real event image (or an icon
-  fallback tile when the milestone has no image), with the milestone year, a localized title
-  and a short localized description
+- **THEN** each milestone renders as a card whose cover is the real event image, with the
+  milestone year, a localized title and a short localized description
 - **AND** ranked recognitions additionally show their highlight value printed verbatim
   (e.g. "Top 100", "100%")
 - **AND** no highlight value animates or counts up

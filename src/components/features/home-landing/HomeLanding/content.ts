@@ -30,8 +30,8 @@ export const JOURNEY_STATIONS: ReadonlyArray<JourneyStation> = [
 export interface AchievementStat {
     /** i18n key suffix under `homeLanding.achievements.items.<key>.{title,description}`. */
     key: string
-    /** Year the milestone happened — omitted for milestones that aren't dated events. */
-    year?: string
+    /** Year the milestone happened. */
+    year: string
     /**
      * Language-neutral highlight rendered verbatim for RANKED recognitions (rank /
      * percentage / count, e.g. "Top 100", "100%"). Plain events have none.
@@ -39,10 +39,11 @@ export interface AchievementStat {
     value?: string
     /**
      * Cover photo of the real event/award under `public/achievements/` (downscaled +
-     * compressed from the legacy `Ftes-frontend/public/achiver/` originals). Milestones
-     * with no photo fall back to an icon tile — no photo is ever fabricated.
+     * compressed from the legacy `Ftes-frontend/public/achiver/` originals). REQUIRED —
+     * the carousel only carries milestones we have a real photo of; no photo is ever
+     * fabricated and no photo-less card is shown.
      */
-    imageSrc?: string
+    imageSrc: string
     /**
      * Public evidence of the milestone (original Facebook post / press article), opened
      * in a new tab. Omitted when no public post exists — never a placeholder link.
@@ -67,13 +68,6 @@ export const ACHIEVEMENTS: ReadonlyArray<AchievementStat> = [
         value: "Top 100",
         imageSrc: "/achievements/top-100-techfest.jpg",
         href: "https://www.facebook.com/share/p/1DHzPpWe8W/",
-    },
-    {
-        key: "startupGiaLai",
-        year: "2025",
-        value: "Top 4",
-        // no photo in the legacy assets — icon fallback
-        href: "https://thuonghieutruyenthong.vn/gia-lai-tao-be-phong-cho-doanh-nghiep-khoi-nghiep-sang-tao",
     },
     {
         key: "innovationQuest",
@@ -120,8 +114,6 @@ export const ACHIEVEMENTS: ReadonlyArray<AchievementStat> = [
         imageSrc: "/achievements/demo-day.jpg",
         href: "https://www.facebook.com/share/p/1W9YWF8U1d/",
     },
-    // not a dated event — kept from the original stat grid, icon fallback, no evidence link
-    { key: "aiAssistants", value: "5" },
 ] as const
 
 /** An AI-feature chip (static, always crawlable). i18n key under `stats.aiChips.*`. */

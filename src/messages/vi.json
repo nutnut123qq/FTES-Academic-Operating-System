@@ -4107,10 +4107,6 @@
           "title": "Top 100 startup xuất sắc · Techfest Vietnam 2025",
           "description": "Dự án FTES vào Top 100 startup xuất sắc tại Techfest Vietnam 2025 — cuộc thi tìm kiếm tài năng khởi nghiệp sáng tạo quốc gia."
         },
-        "startupGiaLai": {
-          "title": "StartUp Đổi mới sáng tạo · Gia Lai 2025",
-          "description": "FTES được ghi nhận Top 4 startup đổi mới sáng tạo tại Gia Lai năm 2025."
-        },
         "innovationQuest": {
           "title": "Innovation Quest 2025",
           "description": "Dự án FTES được tuyển chọn vào chương trình đổi mới sáng tạo, khởi nghiệp sáng tạo trên địa bàn TP. Hồ Chí Minh năm 2025."
@@ -4138,10 +4134,6 @@
         "demoDay": {
           "title": "Demo Day",
           "description": "FTES trình diễn sản phẩm hoàn thiện và kết nối gọi vốn trước nhà đầu tư, chuyên gia."
-        },
-        "aiAssistants": {
-          "title": "Trợ lý AI đồng hành cùng việc học",
-          "description": "Hệ thống trợ lý AI theo sát cả lộ trình: gia sư nội dung, chấm bài, gợi ý lộ trình và luyện phỏng vấn."
         }
       }
     },

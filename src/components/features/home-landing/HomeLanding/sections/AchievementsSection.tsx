@@ -1,22 +1,7 @@
 "use client"
 
 import React from "react"
-import {
-    ArrowRightIcon,
-    CaretLeftIcon,
-    CaretRightIcon,
-    DoorOpenIcon,
-    GraduationCapIcon,
-    HandshakeIcon,
-    LightbulbIcon,
-    MedalIcon,
-    MonitorPlayIcon,
-    PresentationChartIcon,
-    RocketLaunchIcon,
-    SparkleIcon,
-    TrophyIcon,
-    type Icon,
-} from "@phosphor-icons/react"
+import { ArrowRightIcon, CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react"
 import { Chip, Link, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { MediaCard } from "@/components/blocks/cards/MediaCard"
@@ -27,28 +12,13 @@ import type { AchievementStat } from "../content"
 /** Slower than the course hero — each card carries a title plus a two-line description. */
 const ACHIEVEMENT_INTERVAL_MS = 4_500
 
-/** Icon per achievement milestone key (also the cover fallback for photo-less milestones). */
-const ACHIEVEMENT_ICON: Record<string, Icon> = {
-    techfest: TrophyIcon,
-    startupGiaLai: RocketLaunchIcon,
-    innovationQuest: LightbulbIcon,
-    knstgl: MedalIcon,
-    fptScholarship: GraduationCapIcon,
-    openDay: DoorOpenIcon,
-    ttsg: PresentationChartIcon,
-    fundraising: HandshakeIcon,
-    demoDay: MonitorPlayIcon,
-    aiAssistants: SparkleIcon,
-}
-
 /**
- * One milestone slide: the real event photo (or an icon tile when there is none) over
- * year / rank chips, the localized title, a clamped description and — when public
+ * One milestone slide: the real event photo with the year badge on it, the localized
+ * title, a rank chip for ranked recognitions, a clamped description and — when public
  * evidence exists — a "Xem chi tiết" link out to the original post.
  */
 const AchievementSlide = ({ item }: { item: AchievementStat }) => {
     const t = useTranslations("homeLanding")
-    const AchievementIcon = ACHIEVEMENT_ICON[item.key] ?? TrophyIcon
     const title = t(`achievements.items.${item.key}.title`)
 
     return (
@@ -58,26 +28,17 @@ const AchievementSlide = ({ item }: { item: AchievementStat }) => {
             className="w-[17rem] shrink-0 snap-start sm:w-[calc(50%-0.375rem)] lg:w-[calc(33.333%-0.5rem)]"
             cover={
                 <div className="relative w-full">
-                    {item.imageSrc ? (
-                        <img
-                            src={item.imageSrc}
-                            alt={title}
-                            loading="lazy"
-                            className="aspect-video w-full object-cover"
-                        />
-                    ) : (
-                        // no photo exists for this milestone — icon tile keeps the card shape
-                        <div className="flex aspect-video w-full items-center justify-center bg-accent/10">
-                            <AchievementIcon className="size-10 text-accent" aria-hidden focusable="false" />
-                        </div>
-                    )}
+                    <img
+                        src={item.imageSrc}
+                        alt={title}
+                        loading="lazy"
+                        className="aspect-video w-full object-cover"
+                    />
                     {/* year badge sits ON the photo (legacy slider idiom), accent instead of
                         the legacy red so it stays inside the AOS palette */}
-                    {item.year ? (
-                        <Chip size="sm" className="absolute bottom-3 left-3 bg-accent text-accent-foreground">
-                            <Chip.Label>{item.year}</Chip.Label>
-                        </Chip>
-                    ) : null}
+                    <Chip size="sm" className="absolute bottom-3 left-3 bg-accent text-accent-foreground">
+                        <Chip.Label>{item.year}</Chip.Label>
+                    </Chip>
                 </div>
             }
             meta={

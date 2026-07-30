@@ -8,7 +8,7 @@ import { expect, test } from "@playwright/test"
  * description + a "Xem chi tiết" link out to the original public evidence.
  *
  * Guest surface (no auth bootstrap) — the section is fully static content, so everything
- * asserted here is what an anonymous visitor sees. The specs cover: all ten milestones
+ * asserted here is what an anonymous visitor sees. The specs cover: all milestones
  * render, every photo actually loads over HTTP (not a broken image), evidence links open
  * in a new tab with rel="noopener", milestones without evidence render no link, the
  * arrows really scroll the track, the responsive card count (1 → 2 → 3 per viewport),
@@ -16,9 +16,9 @@ import { expect, test } from "@playwright/test"
  */
 
 const REGION = "[aria-roledescription=\"carousel\"][aria-label=\"Thành tựu của FTES\"]"
-const EXPECTED_MILESTONES = 10
-/** Milestones that have public evidence (Facebook post / press article). */
-const EXPECTED_EVIDENCE_LINKS = 7
+const EXPECTED_MILESTONES = 8
+/** Milestones that have public evidence (Facebook post). */
+const EXPECTED_EVIDENCE_LINKS = 6
 
 const isDesktop = (width: number) => width >= 1024
 
@@ -42,16 +42,16 @@ const openAchievements = async (page: import("@playwright/test").Page) => {
 }
 
 test.describe("Home achievements carousel", () => {
-    test("renders all ten milestones with title, description and a loaded cover or icon tile", async ({
+    test("renders every milestone with a loaded photo, title and description", async ({
         page,
     }) => {
         const region = await openAchievements(page)
         const cards = region.locator("> div").first().locator("> *")
         await expect(cards).toHaveCount(EXPECTED_MILESTONES)
 
-        // the eight real photos all decoded; the two photo-less milestones fall back to an icon tile
+        // every milestone carries a real photo — no icon-fallback cards in the strip
         const photos = region.locator("img[src^=\"/achievements/\"]")
-        await expect(photos).toHaveCount(8)
+        await expect(photos).toHaveCount(EXPECTED_MILESTONES)
         const broken = await photos.evaluateAll((images) =>
             images.filter((image) => !(image as HTMLImageElement).naturalWidth).length,
         )
@@ -90,7 +90,9 @@ test.describe("Home achievements carousel", () => {
         }
         // no placeholder / dead links anywhere in the strip
         expect(hrefs.some((link) => link.href === "#")).toBe(false)
-        expect(hrefs.filter((link) => link.href?.includes("facebook.com")).length).toBe(6)
+        expect(hrefs.filter((link) => link.href?.includes("facebook.com")).length).toBe(
+            EXPECTED_EVIDENCE_LINKS,
+        )
     })
 
     test("next / previous arrows scroll the track", async ({ page, viewport }) => {

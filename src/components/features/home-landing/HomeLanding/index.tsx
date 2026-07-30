@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl"
 import { useRouter } from "@/i18n/navigation"
 import { JourneyHero } from "./sections/JourneyHero"
 import { MyCoursesSection } from "./sections/MyCoursesSection"
-import { HomeMascotGreeting } from "./sections/HomeMascotGreeting"
+import { HomeMascotGreetingBand } from "./sections/HomeMascotGreeting"
 import { PlatformStatsSection } from "./sections/PlatformStatsSection"
 import { AchievementsSection } from "./sections/AchievementsSection"
 import { OffersPolicySection } from "./sections/OffersPolicySection"
@@ -42,15 +42,12 @@ export const HomeLanding = () => {
             <JourneyHero />
             {/* signed-in + has-enrollments only; self-hides otherwise (no layout jump) */}
             <MyCoursesSection />
-            {/* FrosTES welcome — the page's single mascot, placed right AFTER the
-                "Continue learning" band (home-continue-image-and-mascot) so the signed-in
-                flow reads: resume your courses → small friendly greeting → rest of the
-                page. Rendered as a SMALL, low-padding one-liner footer (not a hero banner);
-                still renders for guests (self-selecting copy inside the greeting), just
-                below the hero since the courses band self-hides. */}
-            <section className="mx-auto flex w-full max-w-6xl px-4 py-6 sm:px-6">
-                <HomeMascotGreeting />
-            </section>
+            {/* FrosTES welcome — the page's single mascot, a SMALL low-padding one-liner
+                (not a hero banner). It normally renders INSIDE the "Continue learning" band
+                (under its heading, above the cards); this band is the fallback that shows it
+                after the hero when that band self-hides (guest / no enrollment), so the page
+                always has exactly one mascot. */}
+            <HomeMascotGreetingBand />
             <PlatformStatsSection />
             <AchievementsSection />
             <OffersPolicySection />

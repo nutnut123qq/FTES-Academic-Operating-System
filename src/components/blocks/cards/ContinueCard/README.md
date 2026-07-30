@@ -62,7 +62,7 @@ export const DashboardContinue = () => (
 
 - **Interactivity wrapper pattern.** HeroUI v3 `Card` / `SectionCard` has no `isPressable`, `onPress`, or `href` prop. `ContinueCard` wraps the `<SectionCard>` in a real `<a>` (for `href`) or `<button>` (for `onPress`) so the entire card surface is one accessible tap/click target. When neither prop is provided the card is a static surface.
 - **`className` placement.** When the card is interactive, `className` is placed on the outer `<a>` / `<button>` wrapper — not on `SectionCard` — so layout constraints (width, margin, grid area) apply to the true outermost element.
-- **Truncation via prop.** Both `title` and `subtitle` use the `truncate` prop on `Typography` (not `className="truncate"`), as required by LAW 2.
+- **Overflow handling.** `subtitle` uses the `truncate` prop on `Typography` (not `className="truncate"`), as required by LAW 2. `title` instead carries `className="line-clamp-2"` — a documented minimal exception (same as `MediaCard`'s description): it is a layout/overflow constraint, and `Typography` has no two-line prop. One-line truncation clipped real course names ("Làm quen cơ sở dữ liệu SQL Server + JDBC") mid-title.
 - **`ctaLabel` colour.** The `text-accent` class on the CTA `Typography` is the one allowed `className` colour exception per LAW 1 — the HeroUI `color` prop lacks an "accent" token for body text.
 - **Spacing.** The card body uses `gap-3` (same-function items, per the project spacing-scale convention). The info row uses `gap-3` between cover, text column, and CTA.
 - **`cover` sizing.** Size and shape of the cover node (rounded corners, aspect ratio) are the caller's responsibility — pass fully styled nodes.

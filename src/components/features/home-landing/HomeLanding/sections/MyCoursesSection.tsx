@@ -8,6 +8,7 @@ import { Link } from "@/i18n/navigation"
 import { ContinueCard } from "@/components/blocks/cards/ContinueCard"
 import { CoverImage } from "@/components/blocks/media/CoverImage"
 import { useQueryMyCoursesSwr } from "@/components/features/course/hooks/useQueryMyCoursesSwr"
+import { HomeMascotGreeting } from "./HomeMascotGreeting"
 
 /** Max enrolled courses shown on the landing continue-learning band. */
 const HOME_MY_COURSES_LIMIT = 4
@@ -19,6 +20,14 @@ const HOME_MY_COURSES_LIMIT = 4
  * empty band, no layout jump). Shows up to four least-finished courses as
  * resumable {@link ContinueCard}s (title · % complete · progress) with a
  * "Xem tất cả" link to `/courses/me`.
+ *
+ * Hosts the page's single {@link HomeMascotGreeting} between the heading and the
+ * cards; when this band self-hides, `HomeMascotGreetingBand` puts the greeting back
+ * in its own band instead (exactly one mascot per page either way).
+ *
+ * Cards are capped at TWO per row: {@link ContinueCard} puts cover + text + CTA on
+ * one row, so the four-column grid squeezed the text column to ~30px and truncated
+ * the course title away.
  */
 export const MyCoursesSection = () => {
     const t = useTranslations()
@@ -47,7 +56,15 @@ export const MyCoursesSection = () => {
                         <ArrowRightIcon aria-hidden focusable="false" className="size-4" />
                     </Link>
                 </div>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {/* FrosTES greets right under the heading, above the cards — a lead-in to
+                    "here's what you were doing" instead of a lone mascot band below */}
+                <div className="mb-8 flex">
+                    <HomeMascotGreeting />
+                </div>
+                {/* at most TWO cards per row: ContinueCard lays cover + text + CTA on ONE row,
+                    so at four columns the text column collapsed to ~30px and the course title
+                    was truncated away entirely */}
+                <div className="grid gap-3 sm:grid-cols-2">
                     {courses.slice(0, HOME_MY_COURSES_LIMIT).map((course) => (
                         <Link
                             key={course.courseId}

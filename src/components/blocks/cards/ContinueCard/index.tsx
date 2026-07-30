@@ -26,7 +26,8 @@ export interface ContinueCardProps extends WithClassNames<undefined> {
     cover?: React.ReactNode
     /**
      * Primary label of the item being continued (course / module / lesson title).
-     * Rendered via {@link Typography} weight="medium", truncated to one line.
+     * Rendered via {@link Typography} weight="medium", clamped to TWO lines so long
+     * course names stay readable instead of ending in an ellipsis.
      */
     title: React.ReactNode
     /**
@@ -70,7 +71,7 @@ export interface ContinueCardProps extends WithClassNames<undefined> {
  * {@link SectionCard} frame. It stacks:
  *
  * 1. An info row — `cover` (shrink-0) + a min-w-0 column with `title` (medium
- *    weight, truncated) and `subtitle` (body-xs muted, truncated) + `ctaLabel`
+ *    weight, clamped to two lines) and `subtitle` (body-xs muted, truncated) + `ctaLabel`
  *    pinned to the far right (body-sm, accent colour, shrink-0).
  * 2. A {@link ProgressMeter} spanning the full card width.
  *
@@ -105,7 +106,11 @@ export const ContinueCard = ({
 
                 {/* Text column: title + subtitle — min-w-0 allows truncation */}
                 <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                    <Typography weight="medium" truncate>
+                    {/* two-line clamp instead of a one-line truncate: real course names
+                        ("Làm quen cơ sở dữ liệu SQL Server + JDBC") lost their tail to an
+                        ellipsis. line-clamp-2 is a layout/overflow constraint (minimal
+                        exception, same as MediaCard's description). */}
+                    <Typography weight="medium" className="line-clamp-2">
                         {title}
                     </Typography>
                     {subtitle ? (

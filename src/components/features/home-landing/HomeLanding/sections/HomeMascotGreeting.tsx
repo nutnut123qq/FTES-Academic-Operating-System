@@ -4,14 +4,15 @@ import React from "react"
 import { useTranslations } from "next-intl"
 import { useAppSelector } from "@/redux/hooks"
 import { FtesMascot } from "@/components/reuseable/FtesMascot"
+import { useQueryMyCoursesSwr } from "@/components/features/course/hooks/useQueryMyCoursesSwr"
 
 /**
- * FrosTES's welcome under the "Continue learning" band — a SMALL, subtle one-liner:
- * a `sm` mascot next to a short "welcome back, {name}" line, NOT a hero-sized speech
- * bubble occupying its own band. It reads as a friendly footer beneath the
- * resume-your-courses section, never a banner. Signed-in viewers are greeted by name;
- * guests get a short invite. The second sentence of the old greeting is dropped so the
- * line stays compact.
+ * FrosTES's welcome on the landing — a SMALL, subtle one-liner (a `sm` mascot next to a
+ * short "welcome back, {name}" line, NOT a hero-sized speech bubble), rendered INSIDE the
+ * "Continue learning" band between its heading and the course cards, so it reads as a
+ * friendly lead-in to "here's what you were doing". Signed-in viewers are greeted by name;
+ * guests get a short invite. The second sentence of the old greeting stays dropped so the
+ * line remains compact.
  *
  * Deliberately NON-nagging ambient chrome: it never blocks content, shows on every
  * visit with no dismiss and no localStorage, and is the ONLY mascot on the landing
@@ -42,5 +43,27 @@ export const HomeMascotGreeting = () => {
                 {isSignedIn ? welcomeTitle : t("guestTitle")}
             </p>
         </div>
+    )
+}
+
+/**
+ * Fallback band for {@link HomeMascotGreeting} — renders the greeting in its own
+ * band right after the hero ONLY when the "Continue learning" band is not on the
+ * page (anonymous visitor, or a signed-in viewer with no active enrollment), since
+ * that band hosts the greeting itself when it renders.
+ *
+ * Reads the SAME `useQueryMyCoursesSwr` (fixed SWR key → deduped, no second
+ * request) as `MyCoursesSection` so the two can never disagree: exactly one mascot
+ * shows on the landing in every state — never two, never none.
+ */
+export const HomeMascotGreetingBand = () => {
+    const { hasCourses } = useQueryMyCoursesSwr()
+    // the courses band is rendering the greeting inside itself → don't duplicate it
+    if (hasCourses) return null
+
+    return (
+        <section className="mx-auto flex w-full max-w-6xl px-4 py-6 sm:px-6">
+            <HomeMascotGreeting />
+        </section>
     )
 }

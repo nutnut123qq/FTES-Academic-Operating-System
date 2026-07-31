@@ -216,13 +216,24 @@ export const buildMindMap = ({
         })
     }
     /**
-     * Curved (centre-to-centre) connector — the parent→child spoke drawn as a smooth cubic
-     * bezier flowing along the branch's (left/right) axis by the custom {@link CURVED_EDGE_TYPE}
-     * edge. Endpoints stay at the node centres (hidden under the cards); only the flowing arc
-     * between two cards shows.
+     * Parent→child connector, drawn as a smooth bezier by the custom {@link CURVED_EDGE_TYPE}
+     * edge. The `sign` (branch side: +1 right / −1 left) picks the handle PAIR so the link
+     * leaves the parent on its OUTWARD side and enters the child on its INWARD side — a
+     * right-branch spoke runs parent-RIGHT → child-LEFT, a left-branch spoke parent-LEFT →
+     * child-RIGHT. That keeps every connector flush to the card edge and the whole tree tidy.
      */
-    const link = (id: string, source: string, target: string, isCurrent: boolean) => {
-        edges.push({ id, source, target, type: CURVED_EDGE_TYPE, animated: isCurrent, style: edgeStyle(isCurrent) })
+    const link = (id: string, source: string, target: string, isCurrent: boolean, sign: number) => {
+        const rightBranch = sign >= 0
+        edges.push({
+            id,
+            source,
+            target,
+            sourceHandle: rightBranch ? "sr" : "sl",
+            targetHandle: rightBranch ? "tl" : "tr",
+            type: CURVED_EDGE_TYPE,
+            animated: isCurrent,
+            style: edgeStyle(isCurrent),
+        })
     }
 
     /**
@@ -251,7 +262,7 @@ export const buildMindMap = ({
             moduleId: module.id,
             lessonId: lesson.id,
         })
-        link(`e:${module.id}:${lessonNodeId}`, `m:${module.id}`, lessonNodeId, lessonIsCurrent)
+        link(`e:${module.id}:${lessonNodeId}`, `m:${module.id}`, lessonNodeId, lessonIsCurrent, sign)
 
         const exerciseCount = lesson.exercises.length
         if (exerciseCount === 0) {
@@ -274,7 +285,7 @@ export const buildMindMap = ({
                 exerciseType: exercise.type,
                 slug: exercise.slug,
             })
-            link(`e:${lesson.id}:${exId}`, lessonNodeId, exId, false)
+            link(`e:${lesson.id}:${exId}`, lessonNodeId, exId, false, sign)
             exCursor += ROW_GAP.exercise
         })
     }
@@ -301,7 +312,7 @@ export const buildMindMap = ({
             lessonsRead: module.lessons.filter((lesson) => lesson.isCompleted).length,
             lessonsTotal: module.lessons.length,
         })
-        link(`e:${rootId}:${moduleNodeId}`, rootId, moduleNodeId, moduleIsCurrent)
+        link(`e:${rootId}:${moduleNodeId}`, rootId, moduleNodeId, moduleIsCurrent, sign)
 
         // Progressive disclosure: only an EXPANDED section emits its lessons + exercises.
         if (!isExpanded) {

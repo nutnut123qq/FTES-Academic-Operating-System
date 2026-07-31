@@ -33,14 +33,14 @@ const TITLE_CLASS: Record<MindMapNodeKind, string> = {
 }
 
 /**
- * The mind map connects nodes centre-to-centre with a smooth CURVED connector (the custom
- * cubic-bezier edge), so both the source and target handles sit at the node's CENTRE
- * (invisible) rather than on the left/right edges — the curve then flows cleanly out along
- * the branch's (left/right) axis, hidden under the cards and only visible in the gap
- * between them.
+ * The mind map is a tidy two-sided tree, so every card exposes an invisible handle on BOTH
+ * side midpoints (left + right, source + target). A right-branch link leaves its parent's
+ * RIGHT and enters its child's LEFT; a left-branch link leaves the parent's LEFT and enters
+ * the child's RIGHT — the edge picks the correct pair by branch side (see `buildMindMap`).
+ * The connector then meets each card flush on its side edge, so it neither pierces the card
+ * nor falls short of it.
  */
-const CENTER_HANDLE_CLASS =
-    "!left-1/2 !top-1/2 !size-2 !min-h-0 !min-w-0 !-translate-x-1/2 !-translate-y-1/2 !border-0 !bg-transparent !opacity-0"
+const SIDE_HANDLE_CLASS = "!size-2 !min-h-0 !min-w-0 !border-0 !bg-transparent !opacity-0"
 
 /** Leading glyph for a content node. */
 const nodeIcon = (data: MindMapNodeData): Icon => {
@@ -97,7 +97,10 @@ const MindMapContentNodeBase = ({ data }: NodeProps) => {
                     {t("mindMap.progress.suggested")}
                 </span>
             ) : null}
-            <Handle type="target" position={Position.Top} isConnectable={false} className={CENTER_HANDLE_CLASS} />
+            <Handle type="target" position={Position.Left} id="tl" isConnectable={false} className={SIDE_HANDLE_CLASS} />
+            <Handle type="target" position={Position.Right} id="tr" isConnectable={false} className={SIDE_HANDLE_CLASS} />
+            <Handle type="source" position={Position.Left} id="sl" isConnectable={false} className={SIDE_HANDLE_CLASS} />
+            <Handle type="source" position={Position.Right} id="sr" isConnectable={false} className={SIDE_HANDLE_CLASS} />
             <div className="flex items-start gap-2">
                 <IconGlyph
                     aria-hidden
@@ -156,8 +159,6 @@ const MindMapContentNodeBase = ({ data }: NodeProps) => {
                     </span>
                 ) : null}
             </div>
-
-            <Handle type="source" position={Position.Bottom} isConnectable={false} className={CENTER_HANDLE_CLASS} />
         </div>
     )
 }

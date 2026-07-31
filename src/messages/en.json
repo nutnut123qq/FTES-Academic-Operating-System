@@ -2605,7 +2605,7 @@
       "scanHint": "Scan the QR code with your banking app to pay.",
       "countdownLabel": "Order expires in",
       "expired": "The QR code has expired",
-      "expiredHint": "No payment was received within 5 minutes. If you have just transferred, keep this window open — we are still reconciling and will confirm as soon as the money lands. Otherwise, create the order again.",
+      "expiredHint": "The hold on this order ran out before a payment arrived. If you have just transferred, keep this window open — we are still reconciling and will confirm as soon as the money lands. Otherwise, create the order again.",
       "awaiting": "Waiting for payment...",
       "success": "Payment successful!",
       "done": "Done",

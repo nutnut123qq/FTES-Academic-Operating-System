@@ -2617,7 +2617,7 @@
       "scanHint": "Quét mã QR bằng ứng dụng ngân hàng để thanh toán.",
       "countdownLabel": "Đơn hết hạn sau",
       "expired": "Mã QR đã hết hạn",
-      "expiredHint": "Quá 5 phút chưa nhận được thanh toán. Nếu bạn vừa chuyển khoản thì cứ để yên cửa sổ này, hệ thống vẫn đang đối soát và sẽ tự báo khi tiền vào. Chưa chuyển thì hãy tạo lại đơn.",
+      "expiredHint": "Hết thời gian giữ đơn mà chưa nhận được thanh toán. Nếu bạn vừa chuyển khoản thì cứ để yên cửa sổ này, hệ thống vẫn đang đối soát và sẽ tự báo khi tiền vào. Chưa chuyển thì hãy tạo lại đơn.",
       "awaiting": "Đang chờ thanh toán...",
       "success": "Thanh toán thành công!",
       "done": "Hoàn tất",

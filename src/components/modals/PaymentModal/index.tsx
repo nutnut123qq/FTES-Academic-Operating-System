@@ -542,11 +542,14 @@ const ChooseView = ({
 }
 
 /**
- * Cửa sổ thanh toán VietQR. BE chưa trả thời điểm hết hạn của đơn (`OrderView` không có
- * `expiresAt`), nên chốt cứng 5 phút kể từ lúc vào pha awaiting — đổi lại bằng deadline
- * thật khi BE có trường đó.
+ * Cửa sổ thanh toán VietQR, tạm suy từ hạn THẬT của BE: `CommerceProperties.paymentExpiryMinutes`
+ * mặc định 30 và `OrderExpireJob` quét theo đúng số đó (apitest không set env override).
+ *
+ * Con số 5 phút ban đầu ở đây LỆCH 6 LẦN — báo "hết hạn" khi đơn còn sống 25 phút nữa, đúng
+ * kiểu đẩy người ta đi tạo đơn mới rồi trả tiền hai lần. Đổi lại bằng `expiresAt` ngay khi BE
+ * lộ trường đó ra `OrderView`; đây chỉ là số đỡ tạm, vẫn là giả định của FE.
  */
-const AWAITING_WINDOW_SECONDS = 5 * 60
+const AWAITING_WINDOW_SECONDS = 30 * 60
 
 /** Số giây còn lại → "mm:ss". */
 const formatCountdown = (seconds: number) =>

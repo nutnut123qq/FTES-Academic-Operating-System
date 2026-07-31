@@ -48,7 +48,14 @@ export const OnThisPage = ({ className, mobile = false }: OnThisPageProps) => {
         return null
     }
 
-    const hasChallenge = Boolean(lesson?.hasChallenge && lesson?.challengeId)
+    // NHIỀU challenge/bài: 1 nút practice mỗi challenge (từ curriculum list); fallback linkage đơn cho BE cũ.
+    const challengeRows =
+        (lesson?.challenges?.length ?? 0) > 0
+            ? lesson!.challenges.map((c) => ({ id: c.id, title: c.title }))
+            : lesson?.challengeId
+              ? [{ id: lesson.challengeId, title: "" }]
+              : []
+    const hasChallenge = challengeRows.length > 0
 
     // nothing to host: no in-article outline AND no practice entry → render no chrome
     if (headings.length === 0 && !hasChallenge) {
@@ -84,18 +91,21 @@ export const OnThisPage = ({ className, mobile = false }: OnThisPageProps) => {
             {hasChallenge && lesson ? (
                 <div className="flex flex-col gap-2">
                     <Label>{t("lessonRail.challenges.title")}</Label>
-                    <Button
-                        size="sm"
-                        variant="primary"
-                        className="self-start"
-                        onPress={() => {
-                            if (lesson.challengeId) {
-                                router.push(challengeHref(courseId, lesson.moduleId, contentId, lesson.challengeId))
-                            }
-                        }}
-                    >
-                        {t("lessonRail.challenges.practice")}
-                    </Button>
+                    <div className="flex flex-col items-start gap-2">
+                        {challengeRows.map((c) => (
+                            <Button
+                                key={c.id}
+                                size="sm"
+                                variant="primary"
+                                className="self-start"
+                                onPress={() =>
+                                    router.push(challengeHref(courseId, lesson.moduleId, contentId, c.id))
+                                }
+                            >
+                                {c.title || t("lessonRail.challenges.practice")}
+                            </Button>
+                        ))}
+                    </div>
                 </div>
             ) : null}
         </>

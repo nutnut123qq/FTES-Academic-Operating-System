@@ -55,6 +55,13 @@ export interface LearnLessonView {
     minutesRead: number
     /** Number of challenges attached (meta chip). */
     challengeCount: number
+    /**
+     * ALL active challenges attached to this lesson (from the curriculum), each with its
+     * routing `slug`, display `title`, `type` and `free` flag — so the reader/rail render
+     * the full LIST (a lesson can have many active challenges) instead of only the single
+     * `challengeId` linkage. Empty on an older BE (curriculum omits the additive array).
+     */
+    challenges: Array<{ id: string; title: string; slug: string; type: string; free: boolean }>
     /** "What you'll learn" bullets (empty → the callout is hidden). */
     outcomes: Array<LessonOutcome>
     /** Languages this lesson has content for. */
@@ -162,7 +169,7 @@ interface FlatLesson {
      * its routing `slug` + the `free` flag — so the reader can find a free challenge to
      * offer as the "Làm thử thách" trial CTA without an extra call. Empty on an older BE.
      */
-    challenges: Array<{ id: string; slug: string; free: boolean }>
+    challenges: Array<{ id: string; title: string; slug: string; type: string; free: boolean }>
 }
 
 /** Flattens the course detail into an ordered lesson list (module order → lesson order). */
@@ -194,7 +201,9 @@ const flattenCurriculum = (detail: CourseDetail): Array<FlatLesson> =>
                     challengeId: lesson.challengeId ?? null,
                     challenges: (lesson.challenges ?? []).map((challenge) => ({
                         id: challenge.id,
+                        title: challenge.title,
                         slug: challenge.slug,
+                        type: challenge.type,
                         free: challenge.free ?? false,
                     })),
                 })),
@@ -254,7 +263,7 @@ const buildLessonView = (
         moduleTitle: current?.moduleTitle ?? "",
         readTimeLabel: content.readingMinutes ? `${content.readingMinutes} min` : "",
         minutesRead: minutes,
-        challengeCount: 0,
+        challengeCount: (current?.challenges ?? []).length,
         outcomes: [],
         availableLangs: [BODY_LANG],
         bodyByLang: { [BODY_LANG]: content.bodyMd ?? "" },
@@ -271,6 +280,7 @@ const buildLessonView = (
         challengeId,
         challengeFree,
         freeChallengeSlug,
+        challenges: current?.challenges ?? [],
         hasQuiz,
         quizId,
         // Trust the per-viewer curriculum lock — `content.locked` comes from

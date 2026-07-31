@@ -225,7 +225,11 @@ export const LessonReader = () => {
 
     // Gate every challenge entry point on a REAL linked challenge id (no `-c` mock):
     // BE only sets `hasChallenge` + `challengeId` for an ACTIVE (PUBLISHED/RUNNING) challenge.
-    const hasChallenge = (lesson?.hasChallenge ?? false) && Boolean(lesson?.challengeId)
+    // NHIỀU challenge/bài: có tab khi lesson có ≥1 challenge trong curriculum list; fallback linkage
+    // đơn (hasChallenge+challengeId) cho BE cũ chưa trả mảng `challenges`.
+    const hasChallenge =
+        (lesson?.challenges?.length ?? 0) > 0 ||
+        ((lesson?.hasChallenge ?? false) && Boolean(lesson?.challengeId))
     /**
      * A NON-free linked challenge the viewer hasn't unlocked stays gated even on an
      * accessible (free/preview) lesson — the BE 403s the solver, so the Challenges-tab
@@ -695,18 +699,35 @@ export const LessonReader = () => {
                     ) : (
                         <div className="mx-auto w-full max-w-3xl">
                             <ChallengesView
-                                hasChallenge={lesson.hasChallenge && Boolean(lesson.challengeId)}
-                                isLocked={challengeLocked}
-                                onOpen={() => {
-                                    // A gated non-free challenge upsells the package instead of
-                                    // routing into a solver the BE would 403.
-                                    if (challengeLocked) {
+                                // NHIỀU challenge/bài: render CẢ list từ curriculum. Mỗi challenge
+                                // khoá riêng theo cờ `free` + quyền (non-free chưa mở khoá → gate).
+                                // Fallback linkage đơn cho BE cũ chưa trả mảng.
+                                challenges={
+                                    lesson.challenges.length > 0
+                                        ? lesson.challenges.map((c) => ({
+                                              id: c.id,
+                                              title: c.title,
+                                              type: c.type,
+                                              locked: !c.free && !hasFullAccess,
+                                          }))
+                                        : lesson.challengeId
+                                          ? [
+                                                {
+                                                    id: lesson.challengeId,
+                                                    title: "",
+                                                    type: "",
+                                                    locked: challengeLocked,
+                                                },
+                                            ]
+                                          : []
+                                }
+                                onOpen={(challengeId, locked) => {
+                                    // Challenge khoá (non-free chưa mở) → upsell gói thay vì vào solver bị BE 403.
+                                    if (locked) {
                                         openGate("challenge")
                                         return
                                     }
-                                    if (lesson.challengeId) {
-                                        router.push(challengeHref(courseId, lesson.moduleId, contentId, lesson.challengeId))
-                                    }
+                                    router.push(challengeHref(courseId, lesson.moduleId, contentId, challengeId))
                                 }}
                             />
                         </div>
@@ -946,17 +967,27 @@ const LessonPager = ({
  * unlocked), it carries a lock hint (icon + premium chip) and the CTA opens the package
  * gate instead of routing into a solver the BE would 403.
  */
+interface ChallengeRow {
+    id: string
+    title: string
+    type: string
+    locked: boolean
+}
+
+/**
+ * Challenges tab body — renders ALL challenges attached to the lesson (a lesson can now carry many
+ * active challenges), one card each. Each card gates independently on its own `locked` flag (a
+ * non-free challenge the viewer hasn't unlocked opens the package gate instead of the solver).
+ */
 const ChallengesView = ({
-    hasChallenge,
-    isLocked,
+    challenges,
     onOpen,
 }: {
-    hasChallenge: boolean
-    isLocked: boolean
-    onOpen: () => void
+    challenges: Array<ChallengeRow>
+    onOpen: (challengeId: string, locked: boolean) => void
 }) => {
     const t = useTranslations("learn")
-    if (!hasChallenge) {
+    if (challenges.length === 0) {
         return (
             <Typography type="body-sm" color="muted">
                 {t("reader.noChallenge")}
@@ -964,31 +995,40 @@ const ChallengesView = ({
         )
     }
     return (
-        <div className="flex flex-col items-start gap-3 rounded-3xl border border-default bg-surface p-6">
-            <div className="flex items-center gap-2">
-                {isLocked ? (
-                    <LockSimpleIcon aria-hidden focusable="false" className="size-6 text-accent" />
-                ) : (
-                    <PuzzlePieceIcon aria-hidden focusable="false" className="size-6 text-accent" />
-                )}
-                <Typography type="body" weight="semibold">
-                    {t("reader.challengeTitle")}
-                </Typography>
-                {isLocked ? (
-                    <Chip size="sm" variant="soft" color="warning" className="shrink-0">
-                        <span className="flex items-center gap-1">
-                            <LockSimpleIcon aria-hidden focusable="false" className="size-3" />
-                            {t("content.premium")}
-                        </span>
-                    </Chip>
-                ) : null}
-            </div>
-            <Typography type="body-sm" color="muted">
-                {isLocked ? t("reader.lockedBody") : t("reader.challengeBody")}
-            </Typography>
-            <Button variant="primary" onPress={onOpen}>
-                {isLocked ? t("reader.enrollCta") : t("reader.openChallenge")}
-            </Button>
+        <div className="flex flex-col gap-3">
+            {challenges.map((c) => (
+                <div
+                    key={c.id}
+                    className="flex flex-col items-start gap-3 rounded-3xl border border-default bg-surface p-6"
+                >
+                    <div className="flex flex-wrap items-center gap-2">
+                        {c.locked ? (
+                            <LockSimpleIcon aria-hidden focusable="false" className="size-6 text-accent" />
+                        ) : (
+                            <PuzzlePieceIcon aria-hidden focusable="false" className="size-6 text-accent" />
+                        )}
+                        <Typography type="body" weight="semibold">
+                            {c.title || t("reader.challengeTitle")}
+                        </Typography>
+                        {c.type ? (
+                            <Chip size="sm" variant="soft" color="default" className="shrink-0">
+                                {c.type}
+                            </Chip>
+                        ) : null}
+                        {c.locked ? (
+                            <Chip size="sm" variant="soft" color="warning" className="shrink-0">
+                                <span className="flex items-center gap-1">
+                                    <LockSimpleIcon aria-hidden focusable="false" className="size-3" />
+                                    {t("content.premium")}
+                                </span>
+                            </Chip>
+                        ) : null}
+                    </div>
+                    <Button variant="primary" onPress={() => onOpen(c.id, c.locked)}>
+                        {c.locked ? t("reader.enrollCta") : t("reader.openChallenge")}
+                    </Button>
+                </div>
+            ))}
         </div>
     )
 }

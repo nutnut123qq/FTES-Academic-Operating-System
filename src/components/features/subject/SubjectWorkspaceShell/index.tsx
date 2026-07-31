@@ -120,27 +120,28 @@ export const SubjectWorkspaceShell = ({ subjectId, children }: SubjectWorkspaceS
             </div>
 
             <div className="min-w-0 flex-1">
-                {/* subject identity header — spans the content region top */}
-                <header className={cn("flex flex-col gap-2 border-b border-separator p-6")}>
-                    <div className="flex items-center gap-3">
-                        {imageUrl !== null && subject ? (
-                            // CONTRACT A cover: a plain <img> (not next/image) so a remote
-                            // BE-provider host renders without being registered in
-                            // next.config images.remotePatterns; broken src → initials badge.
-                            <div className="size-11 shrink-0 overflow-hidden rounded-2xl">
-                                <img
-                                    src={imageUrl}
-                                    alt={subject.name}
-                                    loading="lazy"
-                                    className="size-full object-cover"
-                                    onError={() => setBrokenImageUrl(imageUrl)}
-                                />
-                            </div>
-                        ) : (
-                            <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-accent/10 text-sm font-bold text-accent">
-                                {(subject?.code ?? subjectId).slice(0, 3).toUpperCase()}
-                            </div>
-                        )}
+                {/* subject identity header — the cover banner (ảnh bìa) spans the
+                    content region top, with the identity row beneath it */}
+                <header className={cn("border-b border-separator")}>
+                    {/* CONTRACT A cover: a full-width banner (the subject's "ảnh bìa").
+                        A plain <img> (not next/image) so a remote BE-provider host
+                        renders without a next.config images.remotePatterns entry; a
+                        broken src drops the banner and the initials chip below carries
+                        the identity instead. */}
+                    {imageUrl !== null && subject ? (
+                        <div className="h-32 w-full overflow-hidden bg-default sm:h-44">
+                            <img
+                                src={imageUrl}
+                                alt={subject.name}
+                                className="size-full object-cover"
+                                onError={() => setBrokenImageUrl(imageUrl)}
+                            />
+                        </div>
+                    ) : null}
+                    <div className="flex items-center gap-3 p-6">
+                        <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-accent/10 text-sm font-bold text-accent">
+                            {(subject?.code ?? subjectId).slice(0, 3).toUpperCase()}
+                        </div>
                         <div className="min-w-0">
                             <Typography type="h4" weight="bold" truncate>
                                 {subject ? `${subject.code} · ${subject.name}` : subjectId}

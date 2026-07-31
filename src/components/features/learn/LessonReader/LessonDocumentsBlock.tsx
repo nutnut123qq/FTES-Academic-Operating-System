@@ -1,28 +1,27 @@
 "use client"
 
-import useSWR from "swr"
 import { Card, CardContent, Typography } from "@heroui/react"
 import { FilePdfIcon, PaperclipIcon } from "@phosphor-icons/react"
-import { getLessonDocuments } from "@/modules/api/rest/course"
+import { useQueryLessonDocumentsSwr } from "../hooks/useQueryLessonDocumentsSwr"
 
 /**
  * Lesson document/slide attachments (`GET /lessons/{id}/documents`), each opening
  * its signed URL in a new tab (works for any mime — PDF/slide/etc.). Self-hides
  * when the lesson has no attachments or the viewer has no access.
+ *
+ * Shares its fetch with the reader top bar via {@link useQueryLessonDocumentsSwr}
+ * (same SWR key), and carries the stable `id="lesson-documents"` anchor the top-bar
+ * "Tài liệu buổi học" button scrolls to.
  */
 export const LessonDocumentsBlock = ({ lessonId }: { lessonId: string }) => {
-    const { data } = useSWR(
-        lessonId ? ["lesson-documents", lessonId] : null,
-        () => getLessonDocuments(lessonId).catch(() => []),
-        { shouldRetryOnError: false },
-    )
-    if (!data || data.length === 0) return null
+    const { documents } = useQueryLessonDocumentsSwr(lessonId)
+    if (documents.length === 0) return null
 
     return (
-        <div className="mx-auto w-full max-w-3xl">
+        <div id="lesson-documents" className="mx-auto w-full max-w-3xl">
             <Card>
                 <CardContent className="flex flex-col gap-1 p-3">
-                    {data.map((doc) => {
+                    {documents.map((doc) => {
                         const isPdf = (doc.mimeType ?? "").includes("pdf")
                         const Icon = isPdf ? FilePdfIcon : PaperclipIcon
                         return (

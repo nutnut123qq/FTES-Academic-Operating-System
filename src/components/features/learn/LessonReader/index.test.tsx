@@ -4,41 +4,22 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { LearnLessonView } from "../hooks/useQueryLearnLessonSwr"
 
 /**
- * Component — the lesson reader body wiring (two E2E regressions).
+ * Component — the lesson reader body wiring.
  *
- *  A. `hasChallenge` now comes from the CURRICULUM tree (via the hook), so a lesson
- *     that reports a challenge shows the Challenges tab — even a VIDEO lesson whose
- *     `/content` endpoint 404s (empty body). The tab is gated on `hasChallenge &&
- *     challengeId`, both sourced from the tree.
- *  B. The DocumentReader path used to DROP the reaction footer, silently losing
- *     like/reaction on every DOCUMENT lesson. The footer must mount on BOTH the
- *     VIDEO/legacy reading-card path AND the DocumentReader path.
+ * The Content/Challenges tab bar and the top-bar exercise/material buttons were removed
+ * (practice now lives in the right-rail "Practice this lesson" panel, documents in the
+ * "Tài liệu cho lesson này" rail panel); the reader always renders the content view.
+ * What this file still guards:
+ *  - The DocumentReader path must NOT drop the reaction footer (it once silently lost
+ *    like/reaction on every DOCUMENT lesson) — the footer mounts on BOTH the VIDEO/legacy
+ *    reading-card path AND the DocumentReader path.
+ *  - The after-content "Làm thử thách" TrialChallengeCta shows only for an accessible
+ *    lesson carrying a FREE challenge.
  */
 
 const lessonHook = vi.fn()
 vi.mock("../hooks/useQueryLearnLessonSwr", () => ({
     useQueryLearnLessonSwr: () => lessonHook(),
-}))
-
-// The reader reads the caller's course access to gate a non-free challenge entry. Default
-// to a guest (no full access); a case can override via `courseHook`.
-const courseHook = vi.fn(() => ({ access: null }))
-vi.mock("../hooks/useQueryLearnCourseSwr", () => ({
-    useQueryLearnCourseSwr: () => courseHook(),
-}))
-
-// Lesson attachments — gates the top-bar "Tài liệu buổi học" button. Defaults to an empty
-// list (no button); a case overrides via `documentsHook` to make the button appear.
-const documentsHook = vi.fn(() => ({ documents: [] as Array<{ id: string; title: string; url: string; mimeType: string | null; sizeBytes: number | null }> }))
-vi.mock("../hooks/useQueryLessonDocumentsSwr", () => ({
-    useQueryLessonDocumentsSwr: () => documentsHook(),
-}))
-
-// Lesson assignments — gates the top-bar "Làm bài tập" button. Defaults to an empty list
-// (no button); a case overrides via `assignmentsHook` to make the button appear.
-const assignmentsHook = vi.fn(() => ({ data: [] as Array<{ id: string }> }))
-vi.mock("@/hooks/swr/api/rest/queries/useGetLessonAssignmentsSwr", () => ({
-    useGetLessonAssignmentsSwr: () => assignmentsHook(),
 }))
 
 vi.mock("next-intl", () => ({
@@ -114,17 +95,6 @@ vi.mock("@/components/blocks/navigation/ResponsiveBreadcrumb", () => ({
     ResponsiveBreadcrumb: () => <nav />,
 }))
 
-// Probe the tab bar: dumps one testid per tab item so we can assert the Challenges tab.
-vi.mock("@/components/blocks/navigation/TabsCard", () => ({
-    TabsCard: ({ leftTabs }: { leftTabs: { items: Array<{ key: string; label: React.ReactNode }> } }) => (
-        <div data-testid="tabs">
-            {leftTabs.items.map((item) => (
-                <span key={item.key} data-testid={`tab-${item.key}`}>{item.label}</span>
-            ))}
-        </div>
-    ),
-}))
-
 vi.mock("@/components/blocks/cards/CheckListCard", () => ({
     CheckListCard: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
     CheckListItem: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -166,7 +136,6 @@ vi.mock("./LessonComments", () => ({ LessonComments: () => <div /> }))
 vi.mock("./LessonResourceLinks", () => ({ LessonResourceLinks: () => <div /> }))
 vi.mock("./LessonVideoBlock", () => ({ LessonVideoBlock: () => <div data-testid="video-block" /> }))
 vi.mock("./LessonDocumentHtml", () => ({ LessonDocumentHtml: () => <div /> }))
-vi.mock("./LessonDocumentsBlock", () => ({ LessonDocumentsBlock: () => <div /> }))
 vi.mock("./ContentAiSelectionAsk/SelectionHintCallout", () => ({ SelectionHintCallout: () => <div /> }))
 vi.mock("./LessonAiStudy", () => ({ LessonAiStudy: () => <div /> }))
 vi.mock("./LessonAssignmentBlock", () => ({ LessonAssignmentBlock: () => <div /> }))
@@ -193,6 +162,7 @@ const makeLesson = (over: Partial<LearnLessonView> = {}): LearnLessonView => ({
     readTimeLabel: "",
     minutesRead: 0,
     challengeCount: 0,
+    challenges: [],
     outcomes: [],
     availableLangs: ["typescript"],
     bodyByLang: { typescript: "Nội dung tài liệu." },
@@ -222,11 +192,9 @@ const makeLesson = (over: Partial<LearnLessonView> = {}): LearnLessonView => ({
 beforeEach(() => {
     lessonHook.mockReset()
     reportProgress.mockClear()
-    documentsHook.mockReturnValue({ documents: [] })
-    assignmentsHook.mockReturnValue({ data: [] })
 })
 
-describe("LessonReader — challenge tab + reaction footer wiring", () => {
+describe("LessonReader — reaction footer + trial CTA wiring", () => {
     it("mounts the reaction footer on the DocumentReader (DOCUMENT) path", () => {
         lessonHook.mockReturnValue({ lesson: makeLesson({ contentType: "DOCUMENT" }), error: undefined, mutate: vi.fn() })
         render(<LessonReader />)
@@ -234,32 +202,6 @@ describe("LessonReader — challenge tab + reaction footer wiring", () => {
         const footer = screen.getByTestId("reaction-footer")
         expect(footer).toBeTruthy()
         expect(footer.textContent).toBe("l1:FULL")
-    })
-
-    it("shows the Challenges tab for a VIDEO lesson with no content body when the tree reports a challenge", () => {
-        // VIDEO lesson, empty body (its `/content` 404'd) — the tab must still appear.
-        lessonHook.mockReturnValue({
-            lesson: makeLesson({
-                contentType: "VIDEO",
-                bodyByLang: { typescript: "" },
-                hasChallenge: true,
-                challengeId: "ch-1",
-            }),
-            error: undefined,
-            mutate: vi.fn(),
-        })
-        render(<LessonReader />)
-        expect(screen.getByTestId("tab-challenges")).toBeTruthy()
-    })
-
-    it("hides the Challenges tab when the lesson reports no challenge", () => {
-        lessonHook.mockReturnValue({
-            lesson: makeLesson({ hasChallenge: false, challengeId: null }),
-            error: undefined,
-            mutate: vi.fn(),
-        })
-        render(<LessonReader />)
-        expect(screen.queryByTestId("tabs")).toBeNull()
     })
 
     it("shows the trial 'Làm thử thách' CTA when an accessible lesson has a free challenge", () => {
@@ -384,64 +326,5 @@ describe("LessonReader — preview blur/teaser is DOCUMENT free-trial only", () 
         render(<LessonReader />)
         expect(screen.getByText("reader.lockedTitle")).toBeTruthy()
         expect(screen.queryByText("reader.previewTitle")).toBeNull()
-    })
-})
-
-/**
- * The two conditional top-bar buttons (`actions` slot of the PageHeader), each shown ONLY
- * when its target exists: the challenge button on `hasChallenge`, the materials button on a
- * non-empty document list. `freeChallengeSlug` is left null so the top-bar challenge button
- * is the sole "reader.trialChallengeCta" surface (the after-content TrialChallengeCta stays
- * hidden), keeping the text match unambiguous.
- */
-describe("LessonReader — top-bar challenge + materials buttons (conditional)", () => {
-    it("shows the top-bar challenge button when the lesson has a challenge", () => {
-        lessonHook.mockReturnValue({
-            lesson: makeLesson({ hasChallenge: true, challengeId: "ch-1", challengeFree: true, freeChallengeSlug: null }),
-            error: undefined,
-            mutate: vi.fn(),
-        })
-        render(<LessonReader />)
-        expect(screen.getByText("reader.trialChallengeCta")).toBeTruthy()
-    })
-
-    it("hides the top-bar challenge button when the lesson has no challenge", () => {
-        lessonHook.mockReturnValue({
-            lesson: makeLesson({ hasChallenge: false, challengeId: null, freeChallengeSlug: null }),
-            error: undefined,
-            mutate: vi.fn(),
-        })
-        render(<LessonReader />)
-        expect(screen.queryByText("reader.trialChallengeCta")).toBeNull()
-    })
-
-    it("shows the materials button only when the lesson has documents", () => {
-        documentsHook.mockReturnValue({
-            documents: [{ id: "d1", title: "Slide", url: "https://x/s.pdf", mimeType: "application/pdf", sizeBytes: 10 }],
-        })
-        lessonHook.mockReturnValue({ lesson: makeLesson(), error: undefined, mutate: vi.fn() })
-        render(<LessonReader />)
-        expect(screen.getByText("reader.materialButton")).toBeTruthy()
-    })
-
-    it("hides the materials button when the document list is empty", () => {
-        // documentsHook defaults to an empty list (see beforeEach).
-        lessonHook.mockReturnValue({ lesson: makeLesson(), error: undefined, mutate: vi.fn() })
-        render(<LessonReader />)
-        expect(screen.queryByText("reader.materialButton")).toBeNull()
-    })
-
-    it("shows the assignment button only when the lesson has an assignment", () => {
-        assignmentsHook.mockReturnValue({ data: [{ id: "a1" }] })
-        lessonHook.mockReturnValue({ lesson: makeLesson(), error: undefined, mutate: vi.fn() })
-        render(<LessonReader />)
-        expect(screen.getByText("reader.assignmentButton")).toBeTruthy()
-    })
-
-    it("hides the assignment button when the lesson has no assignment", () => {
-        // assignmentsHook defaults to an empty list (see beforeEach).
-        lessonHook.mockReturnValue({ lesson: makeLesson(), error: undefined, mutate: vi.fn() })
-        render(<LessonReader />)
-        expect(screen.queryByText("reader.assignmentButton")).toBeNull()
     })
 })

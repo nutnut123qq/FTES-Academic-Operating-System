@@ -86,7 +86,7 @@ export const LessonAssignmentBlock = ({ lessonId, className }: LessonAssignmentB
     }
 
     return (
-        <section className={cn("flex flex-col gap-4", className)}>
+        <section id="lesson-assignments" className={cn("flex flex-col gap-4", className)}>
             <div className="flex items-center gap-2">
                 <ClipboardTextIcon aria-hidden focusable="false" className="size-5 text-accent" />
                 <Typography type="body" weight="semibold">

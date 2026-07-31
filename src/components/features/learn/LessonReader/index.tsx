@@ -170,10 +170,20 @@ export const LessonReader = () => {
         .sort((a, b) => (packagePriceBySlug.get(a) ?? Infinity) - (packagePriceBySlug.get(b) ?? Infinity))
         .map((slug) => resolveTierLabel(slug, packageNameBySlug))
         .join(", ")
-    /** A readable lesson whose reading card would be blank (no body, no HTML, no video). */
-    const isReadingEmpty = !!lesson && !isLocked && !bodyMd && !lesson.documentHtml && !lesson.hasVideo
+    /**
+     * Link ngoài trong `videoRef` (Drive…) CHỈ hiện khi đã mở khoá. Link Drive là trọn bài giảng
+     * và không có cách nào kẹp ở mốc xem thử như player YouTube/HLS — đưa cho người chưa mua là
+     * tặng không cả bài. Người xem thử vẫn thấy tường phí như cũ.
+     */
+    const unlockedExternalRef = !isLocked ? (lesson?.externalRef ?? null) : null
+    /** A readable lesson whose reading card would be blank (no body, no HTML, no video, no link). */
+    const isReadingEmpty =
+        !!lesson && !isLocked && !bodyMd && !lesson.documentHtml && !lesson.hasVideo && !unlockedExternalRef
     /** External links when the body is essentially just link(s) → render as resource cards. */
-    const resourceLinks = bodyMd ? extractResourceLinks(bodyMd) : []
+    const resourceLinks = [
+        ...(bodyMd ? extractResourceLinks(bodyMd) : []),
+        ...(unlockedExternalRef ? [unlockedExternalRef] : []),
+    ]
     const isLinkOnly = resourceLinks.length > 0
     /** True when the lesson has real reading content (written body / HTML / resource links). */
     const hasWrittenBody = !!bodyMd || !!lesson?.documentHtml
@@ -185,7 +195,9 @@ export const LessonReader = () => {
      */
     const hasTeaserBody = hasWrittenBody || isLinkOnly
     /** Draw the reading card only when there is something to put in it (else e.g. video-only). */
-    const showReadingCard = !!lesson && (isLocked || hasWrittenBody || isReadingEmpty)
+    // `isLinkOnly` phải nằm trong điều kiện: bài chỉ có link ngoài thì không có thân bài, cũng
+    // không còn tính là "rỗng" — thiếu vế này thẻ đọc không dựng và cái link lại rơi mất lần nữa.
+    const showReadingCard = !!lesson && (isLocked || hasWrittenBody || isLinkOnly || isReadingEmpty)
 
     /** Tier-1 breadcrumb (Courses › <course> › Modules › <lesson>). */
     const breadcrumbItems = useMemo<Array<ResponsiveBreadcrumbItem>>(

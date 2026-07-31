@@ -123,6 +123,13 @@ export interface LearnLessonView {
      * and have no `/content` markdown, so the reader renders this string instead.
      */
     documentHtml: string | null
+    /**
+     * Link NGOÀI nằm trong `videoRef` mà không nhúng được (Google Drive, OneDrive…): không phải
+     * YouTube/`video_*` để dựng player, cũng không phải HTML để render làm thân bài. Trước đây
+     * loại này rơi tuột giữa hai nhánh nên bài chỉ còn cái tường phí — người ĐÃ MUA cũng không
+     * thấy gì (14 bài SLIDE của DIC201, đo apitest 2026-07-30). Reader hiện nó thành thẻ tài liệu.
+     */
+    externalRef: string | null
 }
 
 // The BE serves lesson bodies as one markdown string (no per-language variants),
@@ -251,6 +258,10 @@ const buildLessonView = (
     const ref = current?.videoRef ?? null
     const isVideoRef = !!ref && (/youtu\.?be|youtube\.com/.test(ref) || /^\s*video_/.test(ref))
     const documentHtml = ref && !isVideoRef && /^\s*</.test(ref) ? ref : null
+    // Link trần không nhúng được (Drive…): không thành player, cũng không phải HTML thân bài.
+    // Giữ lại làm thẻ tài liệu thay vì để rơi mất — xem `externalRef` ở type trên.
+    const externalRef =
+        ref && !isVideoRef && !documentHtml && /^\s*https?:\/\//.test(ref) ? ref.trim() : null
 
     return {
         id: contentId,
@@ -306,6 +317,7 @@ const buildLessonView = (
                     (accessLevel === "PREVIEW" || (current?.previewSeconds ?? 0) > 0))),
         videoRef: ref,
         documentHtml,
+        externalRef,
     }
 }
 

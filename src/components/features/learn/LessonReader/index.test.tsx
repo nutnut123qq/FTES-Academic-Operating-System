@@ -133,7 +133,12 @@ vi.mock("./LessonReactionFooter", () => ({
 }))
 
 vi.mock("./LessonComments", () => ({ LessonComments: () => <div /> }))
-vi.mock("./LessonResourceLinks", () => ({ LessonResourceLinks: () => <div /> }))
+// Phát ra chính danh sách url để test khẳng định được link nào lọt vào thẻ tài liệu.
+vi.mock("./LessonResourceLinks", () => ({
+    LessonResourceLinks: ({ urls }: { urls: Array<string> }) => (
+        <div data-testid="resource-links">{urls.join(" ")}</div>
+    ),
+}))
 vi.mock("./LessonVideoBlock", () => ({ LessonVideoBlock: () => <div data-testid="video-block" /> }))
 vi.mock("./LessonDocumentHtml", () => ({ LessonDocumentHtml: () => <div /> }))
 vi.mock("./ContentAiSelectionAsk/SelectionHintCallout", () => ({ SelectionHintCallout: () => <div /> }))
@@ -186,6 +191,7 @@ const makeLesson = (over: Partial<LearnLessonView> = {}): LearnLessonView => ({
     hasVideo: false,
     videoRef: null,
     documentHtml: null,
+    externalRef: null,
     ...over,
 })
 
@@ -307,6 +313,46 @@ describe("LessonReader — preview blur/teaser is DOCUMENT free-trial only", () 
         expect(fadeCount(container)).toBe(0)
         expect(screen.getByText("reader.previewTitle")).toBeTruthy()
         expect(screen.getByText("reader.enrollCta")).toBeTruthy()
+    })
+
+    it("bài SLIDE chỉ có link Drive: đã mở khoá thì hiện thẻ tài liệu, chưa mở khoá thì KHÔNG", () => {
+        // 14 bài SLIDE của DIC201 mang bài giảng bằng link Drive trong videoRef. Link đó không
+        // dựng được player (không phải YouTube/video_*) và không phải HTML thân bài, nên trước
+        // đây rơi mất sạch: người ĐÃ MUA mở bài ra thấy trống trơn.
+        const drive = "https://drive.google.com/file/d/1Q9whBOJY8hgZIqMdWIDodzy5hKn-hbGT/preview"
+        lessonHook.mockReturnValue({
+            lesson: makeLesson({
+                contentType: "SLIDE",
+                hasVideo: false,
+                isLocked: false,
+                accessLevel: "FULL",
+                externalRef: drive,
+                bodyByLang: { typescript: "" },
+            }),
+            error: undefined,
+            mutate: vi.fn(),
+        })
+        const unlocked = render(<LessonReader />)
+        expect(screen.getByTestId("resource-links").textContent).toContain(drive)
+        unlocked.unmount()
+
+        // Chưa mua: link Drive là TRỌN bài, không kẹp được mốc xem thử như player → tuyệt đối
+        // không lộ. Người xem thử vẫn chỉ thấy tường phí.
+        lessonHook.mockReturnValue({
+            lesson: makeLesson({
+                contentType: "SLIDE",
+                hasVideo: false,
+                isLocked: true,
+                accessLevel: "PREVIEW",
+                externalRef: drive,
+                bodyByLang: { typescript: "" },
+            }),
+            error: undefined,
+            mutate: vi.fn(),
+        })
+        render(<LessonReader />)
+        expect(screen.queryByTestId("resource-links")).toBeNull()
+        expect(screen.getByText("reader.previewTitle")).toBeTruthy()
     })
 
     it("still shows the hard paywall for a fully-locked (no-trial) VIDEO lesson", () => {

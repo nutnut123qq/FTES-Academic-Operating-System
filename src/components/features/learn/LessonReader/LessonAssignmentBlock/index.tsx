@@ -21,6 +21,13 @@ import { useGetLessonAssignmentsSwr } from "@/hooks/swr/api/rest/queries/useGetL
 import { usePostSubmitAssignmentSwr } from "@/hooks/swr/api/rest/mutations/usePostSubmitAssignmentSwr"
 import { usePostSubmitAssignmentFileSwr } from "@/hooks/swr/api/rest/mutations/usePostSubmitAssignmentFileSwr"
 import type { AssignmentView, CourseSubmissionView } from "@/modules/api/rest/course"
+import {
+    fileMatchesExtensions,
+    isHttpsUrl,
+    parseFileExtensions,
+    parseSubmitMethods,
+    type SubmitMethod,
+} from "@/components/features/learn/submissionMethods"
 
 /** Props for {@link LessonAssignmentBlock}. */
 export interface LessonAssignmentBlockProps {
@@ -29,43 +36,6 @@ export interface LessonAssignmentBlockProps {
     /** Extra classes on the section root (e.g. the reading-width cap). */
     className?: string
 }
-
-/** The two first-class assignment submission methods (contract exercise-submission-methods). */
-type SubmitMethod = "github" | "file"
-
-/** Mirror of the BE `@Pattern("^https://.+")` guard on `githubSubmissionUrl`. */
-const isHttpsUrl = (value: string): boolean => /^https:\/\/.+/.test(value.trim())
-
-/**
- * Which submission tabs to offer, from the author's `submissionMethod`. Absent /
- * unknown → GitHub only (back-compat: never surface a file tab the BE can't accept).
- */
-const parseSubmitMethods = (raw: string | null | undefined): { github: boolean, file: boolean } => {
-    switch ((raw ?? "").toUpperCase().trim()) {
-    case "BOTH":
-        return { github: true, file: true }
-    case "FILE":
-        return { github: false, file: true }
-    case "GITHUB":
-    default:
-        return { github: true, file: false }
-    }
-}
-
-/**
- * Parses the author's `fileExtension` whitelist into lowercase dot-prefixed
- * extensions (`"py, zip"` / `".py .zip"` → `[".py", ".zip"]`). Empty → no restriction.
- */
-const parseFileExtensions = (raw: string | null | undefined): Array<string> =>
-    (raw ?? "")
-        .split(/[\s,]+/)
-        .map((entry) => entry.trim().toLowerCase())
-        .filter((entry) => entry.length > 0)
-        .map((entry) => (entry.startsWith(".") ? entry : `.${entry}`))
-
-/** True when the file's name ends with one of the accepted extensions (or none are set). */
-const fileMatchesExtensions = (file: File, extensions: Array<string>): boolean =>
-    extensions.length === 0 || extensions.some((ext) => file.name.toLowerCase().endsWith(ext))
 
 /**
  * Assignment block for the lesson reader. Loads the lesson's assignments and, when

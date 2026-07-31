@@ -26,6 +26,7 @@ import {
     BookOpenIcon,
     CaretLeftIcon,
     CaretRightIcon,
+    ClipboardTextIcon,
     FileTextIcon,
     ListIcon,
     LockSimpleIcon,
@@ -35,6 +36,7 @@ import { Button } from "@heroui/react"
 import { useQueryLearnLessonSwr } from "../hooks/useQueryLearnLessonSwr"
 import { useQueryLearnCourseSwr } from "../hooks/useQueryLearnCourseSwr"
 import { useQueryLessonDocumentsSwr } from "../hooks/useQueryLessonDocumentsSwr"
+import { useGetLessonAssignmentsSwr } from "@/hooks/swr/api/rest/queries/useGetLessonAssignmentsSwr"
 import { useLearnSidebarStore } from "@/hooks/zustand/learnSidebar/store"
 
 import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
@@ -111,6 +113,12 @@ export const LessonReader = () => {
     // shows only once this resolves with a non-empty list; while loading it stays hidden.
     const { documents } = useQueryLessonDocumentsSwr(contentId)
     const hasMaterial = documents.length > 0
+    // Lesson assignments — shares the SWR key `["LESSON_ASSIGNMENTS_SWR", contentId]` with
+    // <LessonAssignmentBlock> (rendered inline lower on the page), so this gate for the
+    // top-bar "Làm bài tập" button dedupes to a single fetch. Shows only once a non-empty
+    // list resolves; hidden while loading / when the lesson has no assignment.
+    const { data: assignments } = useGetLessonAssignmentsSwr(contentId)
+    const hasAssignment = (assignments?.length ?? 0) > 0
     const { toggle: toggleSidebar } = useLearnSidebarStore()
     const [view, setView] = useState<ContentView>("content")
     const [lang, setLang] = useState("typescript")
@@ -251,6 +259,20 @@ export const LessonReader = () => {
     }, [])
 
     /**
+     * Reveals the inline assignment block (`#lesson-assignments`) for the top-bar "Làm bài
+     * tập" button — same in-page smooth scroll as {@link revealDocuments}: force the Content
+     * view first (the block is not mounted under the Challenges tab), then scroll once it commits.
+     */
+    const revealAssignments = useCallback(() => {
+        setView("content")
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                document.getElementById("lesson-assignments")?.scrollIntoView({ behavior: "smooth" })
+            })
+        })
+    }, [])
+
+    /**
      * Left tab group: Content, plus Challenges only when the lesson actually has one
      * (an always-present challenges tab that dead-ends trains distrust — omit it).
      */
@@ -353,6 +375,22 @@ export const LessonReader = () => {
                                                 <span className="flex items-center gap-1">
                                                     <PuzzlePieceIcon aria-hidden focusable="false" className="size-4" />
                                                     <span className="hidden sm:inline">{t("reader.trialChallengeCta")}</span>
+                                                </span>
+                                            </Button>
+                                        ) : null}
+                                        {/* "Làm bài tập" — CHỈ khi bài có assignment (list không
+                                            rỗng, sau khi SWR resolve). Cuộn mượt tới khối assignment
+                                            inline `#lesson-assignments`, không đổi route. */}
+                                        {hasAssignment ? (
+                                            <Button
+                                                size="sm"
+                                                variant="secondary"
+                                                aria-label={t("reader.assignmentButton")}
+                                                onPress={revealAssignments}
+                                            >
+                                                <span className="flex items-center gap-1">
+                                                    <ClipboardTextIcon aria-hidden focusable="false" className="size-4" />
+                                                    <span className="hidden sm:inline">{t("reader.assignmentButton")}</span>
                                                 </span>
                                             </Button>
                                         ) : null}

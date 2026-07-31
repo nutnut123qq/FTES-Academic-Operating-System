@@ -34,6 +34,13 @@ vi.mock("../hooks/useQueryLessonDocumentsSwr", () => ({
     useQueryLessonDocumentsSwr: () => documentsHook(),
 }))
 
+// Lesson assignments — gates the top-bar "Làm bài tập" button. Defaults to an empty list
+// (no button); a case overrides via `assignmentsHook` to make the button appear.
+const assignmentsHook = vi.fn(() => ({ data: [] as Array<{ id: string }> }))
+vi.mock("@/hooks/swr/api/rest/queries/useGetLessonAssignmentsSwr", () => ({
+    useGetLessonAssignmentsSwr: () => assignmentsHook(),
+}))
+
 vi.mock("next-intl", () => ({
     useTranslations: () => (key: string) => key,
     useFormatter: () => ({ number: (n: number) => String(n) }),
@@ -81,6 +88,7 @@ vi.mock("@phosphor-icons/react", () => ({
     BookOpenIcon: () => <span />,
     CaretLeftIcon: () => <span />,
     CaretRightIcon: () => <span />,
+    ClipboardTextIcon: () => <span />,
     FileTextIcon: () => <span />,
     ListIcon: () => <span />,
     LockSimpleIcon: () => <span />,
@@ -215,6 +223,7 @@ beforeEach(() => {
     lessonHook.mockReset()
     reportProgress.mockClear()
     documentsHook.mockReturnValue({ documents: [] })
+    assignmentsHook.mockReturnValue({ data: [] })
 })
 
 describe("LessonReader — challenge tab + reaction footer wiring", () => {
@@ -420,5 +429,19 @@ describe("LessonReader — top-bar challenge + materials buttons (conditional)",
         lessonHook.mockReturnValue({ lesson: makeLesson(), error: undefined, mutate: vi.fn() })
         render(<LessonReader />)
         expect(screen.queryByText("reader.materialButton")).toBeNull()
+    })
+
+    it("shows the assignment button only when the lesson has an assignment", () => {
+        assignmentsHook.mockReturnValue({ data: [{ id: "a1" }] })
+        lessonHook.mockReturnValue({ lesson: makeLesson(), error: undefined, mutate: vi.fn() })
+        render(<LessonReader />)
+        expect(screen.getByText("reader.assignmentButton")).toBeTruthy()
+    })
+
+    it("hides the assignment button when the lesson has no assignment", () => {
+        // assignmentsHook defaults to an empty list (see beforeEach).
+        lessonHook.mockReturnValue({ lesson: makeLesson(), error: undefined, mutate: vi.fn() })
+        render(<LessonReader />)
+        expect(screen.queryByText("reader.assignmentButton")).toBeNull()
     })
 })

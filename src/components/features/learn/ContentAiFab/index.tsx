@@ -38,6 +38,22 @@ const TOP_GUARD = 80
  */
 const FAB_SURFACE_CLASS = "bg-surface ring-1 ring-accent/40 hover:bg-default"
 
+/**
+ * Viền "LED chạy" — một vòng conic-gradient (một vệt sáng accent) quay quanh mép nút.
+ * Dựng bằng pseudo-`::before` full-size, tô conic-gradient rồi MASK content-box + exclude
+ * để CHỈ chừa vành `p-[3px]` (giữa trong suốt → không che linh vật), `animate-spin` cho chạy.
+ * `motion-safe:` tôn trọng "giảm chuyển động"; `pointer-events-none` để không chặn click.
+ */
+const FAB_LED_CLASS = cn(
+    "relative before:pointer-events-none before:absolute before:inset-0 before:content-['']",
+    "before:rounded-full before:p-[3px]",
+    "before:[background:conic-gradient(from_0deg,transparent,var(--accent),#7c9cff,transparent_65%)]",
+    "before:[mask:linear-gradient(#000_0_0)_content-box,linear-gradient(#000_0_0)]",
+    "before:[-webkit-mask:linear-gradient(#000_0_0)_content-box,linear-gradient(#000_0_0)]",
+    "before:[mask-composite:exclude] before:[-webkit-mask-composite:xor]",
+    "before:motion-safe:animate-[spin_2s_linear_infinite]",
+)
+
 /** Mặt cáo FTES trong nút nổi — ảnh trang trí, tên cho screen-reader nằm ở `aria-label` của nút. */
 const MascotFace = () => (
     <Image
@@ -46,7 +62,7 @@ const MascotFace = () => (
         aria-hidden
         width={72}
         height={72}
-        className="size-7 shrink-0 object-contain"
+        className="size-9 shrink-0 object-contain"
     />
 )
 
@@ -147,7 +163,7 @@ export const ContentAiFab = () => {
                 <FloatingActionButton
                     onPress={open}
                     ariaLabel={t("reader.ai.open")}
-                    className={FAB_SURFACE_CLASS}
+                    className={cn(FAB_SURFACE_CLASS, FAB_LED_CLASS)}
                 >
                     <MascotFace />
                 </FloatingActionButton>
@@ -184,8 +200,9 @@ export const ContentAiFab = () => {
                 onPointerUp={onPointerUp}
                 style={{ bottom }}
                 className={cn(
-                    "fixed right-4 z-40 touch-none rounded-full shadow-lg",
+                    "fixed right-6 z-40 !size-14 touch-none rounded-full shadow-lg",
                     FAB_SURFACE_CLASS,
+                    FAB_LED_CLASS,
                 )}
             >
                 <MascotFace />

@@ -33,11 +33,13 @@ import { UiUxChallengeEditor } from "@/components/features/challenge/ChallengeVi
 import { mapChallengeType } from "@/components/features/challenge/hooks/useQueryChallengesSwr"
 import type { ChallengeDetail } from "@/components/features/challenge/hooks/useQueryChallengeSwr"
 import { normalizeExerciseType } from "../exerciseType"
+import { hasSubmissionMethod } from "../submissionMethods"
 import { useQueryLearnCourseSwr } from "../hooks/useQueryLearnCourseSwr"
 import {
     isChallengeSubmissionPending,
     useQueryChallengeSubmissionSwr,
 } from "../hooks/useQueryChallengeSubmissionSwr"
+import { ChallengeMethodSolver } from "./ChallengeMethodSolver"
 
 /**
  * Adapts the REST challenge-submission view onto the richer `ChallengeDetail` the
@@ -109,6 +111,9 @@ export const ChallengeSubmission = () => {
     const type = challenge?.type ?? ""
     /** Unified solver kind — the single dispatch key across both BE type vocabularies. */
     const kind = normalizeExerciseType(type)
+    // A CODE challenge that carries a real `submissionMethod` (GITHUB|FILE|BOTH) is solved
+    // via the github-URL + file-upload solver; absent/unknown → the inline code editor.
+    const usesSubmissionMethod = hasSubmissionMethod(challenge?.submissionMethod)
     const detail = useMemo(() => (challenge ? toChallengeDetail(challenge) : null), [challenge])
     // SQL grades static-only (no language pick); everything else defaults to python.
     const language = languageOverride ?? (detail?.type === "sql" ? "sql" : "python")
@@ -318,35 +323,52 @@ export const ChallengeSubmission = () => {
                                         </Chip>
                                     </div>
 
-                                    {/* AI code-editing / feedback surface; its code + language
-                                        are lifted so the formal submission below posts the same
-                                        source (payloadType CODE). */}
-                                    <GradeCodePanel
-                                        challenge={detail}
-                                        code={code}
-                                        language={language}
-                                        onCodeChange={setCode}
-                                        onLanguageChange={setLanguageOverride}
-                                    />
-
-                                    {reachedMax ? (
-                                        <div className="flex items-center gap-2 rounded-2xl border border-default bg-default/40 p-4">
-                                            <LockSimpleIcon aria-hidden focusable="false" className="size-5 shrink-0 text-muted" />
-                                            <Typography type="body-sm" color="muted">
-                                                {t("exercises.challenge.maxReached", { max: challenge.maxSubmissions })}
-                                            </Typography>
-                                        </div>
+                                    {usesSubmissionMethod ? (
+                                        /* CODE challenge with a submissionMethod → the github-URL +
+                                           file-upload solver (ported from the lesson assignment card),
+                                           honoring GITHUB|FILE|BOTH. History + count chip stay owned
+                                           here; the solver revalidates via onSubmitted. */
+                                        <ChallengeMethodSolver
+                                            challengeId={challenge.id}
+                                            submissionMethod={challenge.submissionMethod}
+                                            gradingConfig={challenge.gradingConfig}
+                                            maxSubmissions={challenge.maxSubmissions}
+                                            reachedMax={reachedMax}
+                                            onSubmitted={() => { void mutate() }}
+                                        />
                                     ) : (
-                                        <div>
-                                            <Button
-                                                variant="primary"
-                                                isPending={submit.isMutating}
-                                                isDisabled={!canSubmit}
-                                                onPress={() => void handleSubmit()}
-                                            >
-                                                {t(submit.isMutating ? "exercises.challenge.submitting" : "exercises.challenge.submit")}
-                                            </Button>
-                                        </div>
+                                        <>
+                                            {/* AI code-editing / feedback surface; its code + language
+                                                are lifted so the formal submission below posts the same
+                                                source (payloadType CODE). */}
+                                            <GradeCodePanel
+                                                challenge={detail}
+                                                code={code}
+                                                language={language}
+                                                onCodeChange={setCode}
+                                                onLanguageChange={setLanguageOverride}
+                                            />
+
+                                            {reachedMax ? (
+                                                <div className="flex items-center gap-2 rounded-2xl border border-default bg-default/40 p-4">
+                                                    <LockSimpleIcon aria-hidden focusable="false" className="size-5 shrink-0 text-muted" />
+                                                    <Typography type="body-sm" color="muted">
+                                                        {t("exercises.challenge.maxReached", { max: challenge.maxSubmissions })}
+                                                    </Typography>
+                                                </div>
+                                            ) : (
+                                                <div>
+                                                    <Button
+                                                        variant="primary"
+                                                        isPending={submit.isMutating}
+                                                        isDisabled={!canSubmit}
+                                                        onPress={() => void handleSubmit()}
+                                                    >
+                                                        {t(submit.isMutating ? "exercises.challenge.submitting" : "exercises.challenge.submit")}
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </>
                                     )}
                                 </section>
 

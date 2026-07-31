@@ -122,6 +122,13 @@ vi.mock("@/components/features/challenge/ChallengeView/GradeCodePanel", () => ({
 vi.mock("@/components/features/challenge/ChallengeView/UiUxChallengeEditor", () => ({
     UiUxChallengeEditor: () => <div>uiux-editor</div>,
 }))
+// A CODE challenge that carries a submissionMethod routes to the github/file solver
+// (its own hooks / heroui forms are heavy — stub it so the test asserts the dispatch).
+vi.mock("./ChallengeMethodSolver", () => ({
+    ChallengeMethodSolver: ({ submissionMethod }: { submissionMethod?: string | null }) => (
+        <div>challenge-method-solver:{submissionMethod}</div>
+    ),
+}))
 
 import { ChallengeSubmission } from "./index"
 
@@ -242,6 +249,23 @@ describe("ChallengeSubmission — access gate", () => {
             }),
         )
         await waitFor(() => expect(submissionMutate).toHaveBeenCalled())
+    })
+
+    it("dispatches a CODE challenge WITH a submissionMethod to the github/file solver (not GradeCodePanel)", () => {
+        queryMock.mockReturnValue({
+            challenge: { ...mcqChallenge, type: "CODE", mcqQuestions: [], submissionMethod: "BOTH" },
+            submissions: [],
+            isLoading: false,
+            error: undefined,
+            mutate: submissionMutate,
+        })
+        render(<ChallengeSubmission />)
+
+        // A real submissionMethod → the ported github/file solver, never the inline editor.
+        expect(screen.getByText("challenge-method-solver:BOTH")).toBeTruthy()
+        expect(screen.queryByText("grade-code-panel")).toBeNull()
+        // The inline CODE "Nộp bài" button belongs to the editor path only.
+        expect(screen.queryByText("exercises.challenge.submit")).toBeNull()
     })
 
     it("dispatches an unmapped (e.g. UI_UX without a target asset) challenge to the coming-soon panel", () => {

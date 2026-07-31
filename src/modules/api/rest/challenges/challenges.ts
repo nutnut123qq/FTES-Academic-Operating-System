@@ -160,6 +160,34 @@ export const submitChallenge = async (
 }
 
 /**
+ * Submits a solution FILE (code / zip → AI graded) to a challenge, the file-upload
+ * counterpart of the JSON {@link submitChallenge} (contract
+ * challenge-submission-method-solver, mirroring the assignment `submitAssignmentFile`
+ * multipart flow).
+ *
+ * `Content-Type: null` lets the browser set the multipart boundary (same trick as
+ * `submitAssignmentFile` / `uploadAvatar`); the file part is named `file`.
+ *
+ * FE ASSUMPTION (BE lane owns the real route): multipart `POST` to
+ * `/api/v1/challenges/{id}/submissions/file`, returning the same {@link SubmissionView}
+ * as the JSON submission. Kept a distinct path so it is additive to the existing JSON
+ * `…/submissions` endpoint.
+ */
+export const submitChallengeFile = async (
+    id: string,
+    file: File,
+): Promise<SubmissionView> => {
+    const formData = new FormData()
+    formData.append("file", file)
+    return restRequest<SubmissionView>({
+        method: "POST",
+        url: `/challenges/${id}/submissions/file`,
+        data: formData,
+        headers: { "Content-Type": null as unknown as string },
+    })
+}
+
+/**
  * Lists the current user's submissions for a challenge
  * (requires `challenge.participate`).
  *

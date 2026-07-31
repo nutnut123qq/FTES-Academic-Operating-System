@@ -97,6 +97,14 @@ export interface ChallengeView {
     courseId?: string | null
     /** Visibility: `COURSE_ONLY` | `WORKSPACE_PUBLIC` (course-challenge-bank). */
     visibility?: string | null
+    /**
+     * Which submission method(s) a `CODE` challenge accepts (contract
+     * challenge-submission-method-solver): `"GITHUB"` (repo URL only) | `"FILE"` (upload
+     * a code/zip file, AI-graded) | `"BOTH"`. Additive — absent on older deployments →
+     * the code solver keeps the inline `GradeCodePanel` editor and never offers a
+     * github/file surface the BE cannot accept yet.
+     */
+    submissionMethod?: string | null
 }
 
 /** Wrapper for a batch test-case upsert. */

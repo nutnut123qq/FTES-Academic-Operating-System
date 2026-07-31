@@ -26,6 +26,7 @@ import {
     BookOpenIcon,
     CaretLeftIcon,
     CaretRightIcon,
+    FileTextIcon,
     ListIcon,
     LockSimpleIcon,
     PuzzlePieceIcon,
@@ -33,6 +34,7 @@ import {
 import { Button } from "@heroui/react"
 import { useQueryLearnLessonSwr } from "../hooks/useQueryLearnLessonSwr"
 import { useQueryLearnCourseSwr } from "../hooks/useQueryLearnCourseSwr"
+import { useQueryLessonDocumentsSwr } from "../hooks/useQueryLessonDocumentsSwr"
 import { useLearnSidebarStore } from "@/hooks/zustand/learnSidebar/store"
 
 import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
@@ -103,6 +105,12 @@ export const LessonReader = () => {
     // rail's SWR caches (GET_LEARN_COURSE / me/access), so no extra fetch. Gates the
     // Challenges-tab entry for a non-free challenge the viewer hasn't unlocked.
     const { access } = useQueryLearnCourseSwr(courseId)
+    // Lesson attachments — shares the SWR key `["lesson-documents", contentId]` with
+    // <LessonDocumentsBlock> (which renders them inline lower on the page), so this gate
+    // for the top-bar "Tài liệu buổi học" button dedupes to a single fetch. The button
+    // shows only once this resolves with a non-empty list; while loading it stays hidden.
+    const { documents } = useQueryLessonDocumentsSwr(contentId)
+    const hasMaterial = documents.length > 0
     const { toggle: toggleSidebar } = useLearnSidebarStore()
     const [view, setView] = useState<ContentView>("content")
     const [lang, setLang] = useState("typescript")
@@ -227,6 +235,22 @@ export const LessonReader = () => {
     }, [])
 
     /**
+     * Reveal the lesson's attachments for the top-bar "Tài liệu buổi học" button: the
+     * documents render inline (`<LessonDocumentsBlock id="lesson-documents">`) lower on
+     * the page, so this is a plain in-page smooth scroll — no route. Also forces the
+     * Content view first (the block is not mounted under the Challenges tab); the
+     * double rAF lets that view commit before the scroll target is resolved.
+     */
+    const revealDocuments = useCallback(() => {
+        setView("content")
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                document.getElementById("lesson-documents")?.scrollIntoView({ behavior: "smooth" })
+            })
+        })
+    }, [])
+
+    /**
      * Left tab group: Content, plus Challenges only when the lesson actually has one
      * (an always-present challenges tab that dead-ends trains distrust — omit it).
      */
@@ -299,6 +323,52 @@ export const LessonReader = () => {
                                                 <span className="flex items-center gap-1">
                                                     {t("reader.nextLesson")}
                                                     <CaretRightIcon aria-hidden focusable="false" className="size-4" />
+                                                </span>
+                                            </Button>
+                                        ) : null}
+                                        {/* "Làm thử thách" — bên cạnh nút Bài sau, CHỈ khi bài có thử
+                                            thách (hasChallenge). Điều hướng ĐÚNG một route giải như
+                                            TrialChallengeCta + tab Challenges: ưu tiên slug học-thử
+                                            (freeChallengeSlug) rồi mới tới challengeId; thử thách trả
+                                            phí chưa mở khoá thì mở gate y như ChallengesView. Nhãn
+                                            hiện từ sm: lên để đỡ chật hàng trên mobile. */}
+                                        {hasChallenge ? (
+                                            <Button
+                                                size="sm"
+                                                variant="secondary"
+                                                aria-label={t("reader.trialChallengeCta")}
+                                                onPress={() => {
+                                                    if (challengeLocked) {
+                                                        openGate("challenge")
+                                                        return
+                                                    }
+                                                    const target = lesson.freeChallengeSlug ?? lesson.challengeId
+                                                    if (target) {
+                                                        router.push(
+                                                            challengeHref(courseId, lesson.moduleId, contentId, target),
+                                                        )
+                                                    }
+                                                }}
+                                            >
+                                                <span className="flex items-center gap-1">
+                                                    <PuzzlePieceIcon aria-hidden focusable="false" className="size-4" />
+                                                    <span className="hidden sm:inline">{t("reader.trialChallengeCta")}</span>
+                                                </span>
+                                            </Button>
+                                        ) : null}
+                                        {/* "Tài liệu buổi học" — CHỈ khi bài có tài liệu đính kèm
+                                            (documents.length > 0, sau khi SWR resolve). Cuộn mượt tới
+                                            khối tài liệu inline `#lesson-documents`, không đổi route. */}
+                                        {hasMaterial ? (
+                                            <Button
+                                                size="sm"
+                                                variant="secondary"
+                                                aria-label={t("reader.materialButton")}
+                                                onPress={revealDocuments}
+                                            >
+                                                <span className="flex items-center gap-1">
+                                                    <FileTextIcon aria-hidden focusable="false" className="size-4" />
+                                                    <span className="hidden sm:inline">{t("reader.materialButton")}</span>
                                                 </span>
                                             </Button>
                                         ) : null}

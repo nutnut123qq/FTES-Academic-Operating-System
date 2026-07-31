@@ -27,6 +27,13 @@ vi.mock("../hooks/useQueryLearnCourseSwr", () => ({
     useQueryLearnCourseSwr: () => courseHook(),
 }))
 
+// Lesson attachments — gates the top-bar "Tài liệu buổi học" button. Defaults to an empty
+// list (no button); a case overrides via `documentsHook` to make the button appear.
+const documentsHook = vi.fn(() => ({ documents: [] as Array<{ id: string; title: string; url: string; mimeType: string | null; sizeBytes: number | null }> }))
+vi.mock("../hooks/useQueryLessonDocumentsSwr", () => ({
+    useQueryLessonDocumentsSwr: () => documentsHook(),
+}))
+
 vi.mock("next-intl", () => ({
     useTranslations: () => (key: string) => key,
     useFormatter: () => ({ number: (n: number) => String(n) }),
@@ -74,6 +81,7 @@ vi.mock("@phosphor-icons/react", () => ({
     BookOpenIcon: () => <span />,
     CaretLeftIcon: () => <span />,
     CaretRightIcon: () => <span />,
+    FileTextIcon: () => <span />,
     ListIcon: () => <span />,
     LockSimpleIcon: () => <span />,
     PuzzlePieceIcon: () => <span />,
@@ -88,7 +96,10 @@ vi.mock("@/components/blocks/async/AsyncContent", () => ({
 vi.mock("@/components/blocks/async/EmptyContent", () => ({ EmptyContent: () => <div data-testid="empty" /> }))
 
 vi.mock("@/components/blocks/layout/PageHeader", () => ({
-    PageHeader: ({ title }: { title: React.ReactNode }) => <div>{title}</div>,
+    // Render the `actions` slot too — the top-bar challenge / materials buttons live there.
+    PageHeader: ({ title, actions }: { title: React.ReactNode; actions?: React.ReactNode }) => (
+        <div>{title}{actions}</div>
+    ),
 }))
 
 vi.mock("@/components/blocks/navigation/ResponsiveBreadcrumb", () => ({
@@ -203,6 +214,7 @@ const makeLesson = (over: Partial<LearnLessonView> = {}): LearnLessonView => ({
 beforeEach(() => {
     lessonHook.mockReset()
     reportProgress.mockClear()
+    documentsHook.mockReturnValue({ documents: [] })
 })
 
 describe("LessonReader — challenge tab + reaction footer wiring", () => {
@@ -363,5 +375,50 @@ describe("LessonReader — preview blur/teaser is DOCUMENT free-trial only", () 
         render(<LessonReader />)
         expect(screen.getByText("reader.lockedTitle")).toBeTruthy()
         expect(screen.queryByText("reader.previewTitle")).toBeNull()
+    })
+})
+
+/**
+ * The two conditional top-bar buttons (`actions` slot of the PageHeader), each shown ONLY
+ * when its target exists: the challenge button on `hasChallenge`, the materials button on a
+ * non-empty document list. `freeChallengeSlug` is left null so the top-bar challenge button
+ * is the sole "reader.trialChallengeCta" surface (the after-content TrialChallengeCta stays
+ * hidden), keeping the text match unambiguous.
+ */
+describe("LessonReader — top-bar challenge + materials buttons (conditional)", () => {
+    it("shows the top-bar challenge button when the lesson has a challenge", () => {
+        lessonHook.mockReturnValue({
+            lesson: makeLesson({ hasChallenge: true, challengeId: "ch-1", challengeFree: true, freeChallengeSlug: null }),
+            error: undefined,
+            mutate: vi.fn(),
+        })
+        render(<LessonReader />)
+        expect(screen.getByText("reader.trialChallengeCta")).toBeTruthy()
+    })
+
+    it("hides the top-bar challenge button when the lesson has no challenge", () => {
+        lessonHook.mockReturnValue({
+            lesson: makeLesson({ hasChallenge: false, challengeId: null, freeChallengeSlug: null }),
+            error: undefined,
+            mutate: vi.fn(),
+        })
+        render(<LessonReader />)
+        expect(screen.queryByText("reader.trialChallengeCta")).toBeNull()
+    })
+
+    it("shows the materials button only when the lesson has documents", () => {
+        documentsHook.mockReturnValue({
+            documents: [{ id: "d1", title: "Slide", url: "https://x/s.pdf", mimeType: "application/pdf", sizeBytes: 10 }],
+        })
+        lessonHook.mockReturnValue({ lesson: makeLesson(), error: undefined, mutate: vi.fn() })
+        render(<LessonReader />)
+        expect(screen.getByText("reader.materialButton")).toBeTruthy()
+    })
+
+    it("hides the materials button when the document list is empty", () => {
+        // documentsHook defaults to an empty list (see beforeEach).
+        lessonHook.mockReturnValue({ lesson: makeLesson(), error: undefined, mutate: vi.fn() })
+        render(<LessonReader />)
+        expect(screen.queryByText("reader.materialButton")).toBeNull()
     })
 })

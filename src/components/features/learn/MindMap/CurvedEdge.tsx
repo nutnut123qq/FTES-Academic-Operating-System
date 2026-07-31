@@ -1,7 +1,7 @@
 "use client"
 
 import React, { memo } from "react"
-import { BaseEdge, type EdgeProps, useInternalNode } from "@xyflow/react"
+import { BaseEdge, type EdgeProps, getBezierPath } from "@xyflow/react"
 
 /** React Flow edge type id for a curved mind-map connector. */
 export const CURVED_EDGE_TYPE = "mindMapCurved" as const
@@ -9,59 +9,16 @@ export const CURVED_EDGE_TYPE = "mindMapCurved" as const
 /**
  * How far the two cubic control points slide toward the middle of the spoke's DOMINANT
  * axis, as a fraction of that axis' span. `0.5` puts both control points at the mid-span
- * (the classic React-Flow "flowing bezier" S), so the curve leaves the source and enters
- * the target parallel to that axis — a gentle sideways sweep, not a sharp elbow.
+ * (the classic "flowing bezier" S). Retained as a tested pure helper (see
+ * `MindMap/index.test.tsx`); the live edge below draws with React Flow's own
+ * {@link getBezierPath}, anchored on the nodes' SIDE handles.
  */
 const CURVE_TENSION = 0.5
 
 /**
- * The point where the ray from a node's centre `(cx, cy)` toward the OTHER node `(px, py)`
- * crosses this node's bounding-box border (half-extents `halfW`/`halfH`). Used to stop the
- * connector AT the card edge instead of at the hidden centre — otherwise the dashed line
- * pierces into the card body (the centre endpoint is only "hidden" while the card fully
- * paints over it, which the semi-transparent status fills do not). Returns the centre
- * itself while the node is still unmeasured (`halfW`/`halfH` = 0) — the first frame before
- * React Flow measures the DOM — then snaps to the border once dimensions are known.
- */
-const borderAnchor = (
-    cx: number,
-    cy: number,
-    halfW: number,
-    halfH: number,
-    px: number,
-    py: number,
-): [number, number] => {
-    const dx = px - cx
-    const dy = py - cy
-    if ((halfW === 0 && halfH === 0) || (dx === 0 && dy === 0)) {
-        return [cx, cy]
-    }
-    // Smallest scale along the centre→centre ray that reaches the vertical OR horizontal
-    // edge of the box; clamp to 1 so an overlapping pair never overshoots past the centre.
-    const scale = Math.min(
-        dx !== 0 ? halfW / Math.abs(dx) : Number.POSITIVE_INFINITY,
-        dy !== 0 ? halfH / Math.abs(dy) : Number.POSITIVE_INFINITY,
-        1,
-    )
-    return [cx + dx * scale, cy + dy * scale]
-}
-
-/**
- * Builds a CUBIC-bezier path that flows smoothly from the source anchor to the target
- * anchor. The curve is oriented along the spoke's DOMINANT axis (the larger of |dx|/|dy|):
- * a mostly-sideways spoke (a left/right branch) leaves and enters its nodes HORIZONTALLY,
- * a mostly-vertical spoke does so vertically. Both control points sit at the mid-point of
- * that axis, each held at its OWN endpoint's cross-axis value — the standard smoothstep /
- * bezier "flowing curve":
- *
- *   horizontal:  C  (sx + dx·t, sy)   (tx − dx·t, ty)
- *   vertical:    C  (sx, sy + dy·t)   (tx, ty − dy·t)
- *
- * The offset SIGN comes straight from the geometry (`dx`/`dy`), so a right-branch edge
- * curves rightward and a left-branch edge curves leftward, each entering its node smoothly
- * — no fixed rotational bow (which read as a uniform pinwheel). We build the path by hand
- * rather than using React Flow's `getBezierPath` because our handles all sit at the node
- * CENTRE with no `Position` directionality, so the built-in bezier would render near-flat.
+ * Builds a CUBIC-bezier path from source to target oriented along the spoke's DOMINANT axis
+ * (the larger of |dx|/|dy|). Kept for unit tests; the rendered edge uses
+ * {@link getBezierPath} with the connected handles' `Position`.
  */
 export const curvedEdgePath = (
     sourceX: number,
@@ -71,7 +28,6 @@ export const curvedEdgePath = (
 ): string => {
     const dx = targetX - sourceX
     const dy = targetY - sourceY
-    // Orient along the spoke's dominant axis (left/right branches are horizontal-dominant).
     const horizontal = Math.abs(dx) >= Math.abs(dy)
     const control1X = horizontal ? sourceX + dx * CURVE_TENSION : sourceX
     const control1Y = horizontal ? sourceY : sourceY + dy * CURVE_TENSION
@@ -81,43 +37,33 @@ export const curvedEdgePath = (
 }
 
 /**
- * Custom curved connector for the mind map. Its handles sit at each node's CENTRE (no
- * `Position` directionality), so the raw endpoints would land on the hidden centre and the
- * dashed arc would pierce into the target card. Instead each endpoint is snapped to the
- * card's BORDER facing the other node (via {@link borderAnchor}, using the measured node
- * size), so the connector reaches the edge of the box and stops there — exactly at the card
- * outline, never through it. Styling (muted stroke, emphasised current path, `animated`
- * dash) is carried on the edge object and flows straight through to the underlying path.
+ * Custom curved connector for the mind map. Its endpoints come from each card's SIDE handle
+ * (a right-branch link runs parent-RIGHT → child-LEFT, a left-branch link parent-LEFT →
+ * child-RIGHT — chosen in `buildMindMap`), so React Flow supplies `sourcePosition` /
+ * `targetPosition` and {@link getBezierPath} draws a smooth S that LEAVES and ENTERS each
+ * card horizontally, flush on its side edge — never piercing the card, never falling short
+ * of it. Styling (muted stroke, emphasised current path, `animated` dash) rides on the edge
+ * object straight through to the path.
  */
 const MindMapCurvedEdgeBase = ({
-    source,
-    target,
     sourceX,
     sourceY,
+    sourcePosition,
     targetX,
     targetY,
+    targetPosition,
     markerEnd,
     style,
 }: EdgeProps) => {
-    const sourceNode = useInternalNode(source)
-    const targetNode = useInternalNode(target)
-    const [sx, sy] = borderAnchor(
+    const [path] = getBezierPath({
         sourceX,
         sourceY,
-        (sourceNode?.measured?.width ?? 0) / 2,
-        (sourceNode?.measured?.height ?? 0) / 2,
+        sourcePosition,
         targetX,
         targetY,
-    )
-    const [tx, ty] = borderAnchor(
-        targetX,
-        targetY,
-        (targetNode?.measured?.width ?? 0) / 2,
-        (targetNode?.measured?.height ?? 0) / 2,
-        sourceX,
-        sourceY,
-    )
-    return <BaseEdge path={curvedEdgePath(sx, sy, tx, ty)} markerEnd={markerEnd} style={style} />
+        targetPosition,
+    })
+    return <BaseEdge path={path} markerEnd={markerEnd} style={style} />
 }
 
 export const MindMapCurvedEdge = memo(MindMapCurvedEdgeBase)

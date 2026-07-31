@@ -6,6 +6,8 @@ import { Avatar, AvatarFallback, AvatarImage, Link, Typography, cn } from "@hero
 import { FaFacebook, FaGithub, FaLinkedin } from "react-icons/fa6"
 import { useTranslations } from "next-intl"
 import { useCarousel } from "@/components/blocks/carousel/useCarousel"
+// Link nội bộ phải qua next-intl để giữ prefix locale (link ngoài vẫn dùng Link của HeroUI).
+import { Link as NextIntlLink } from "@/i18n/navigation"
 import { TESTIMONIALS } from "../content"
 import type { Testimonial } from "../content"
 
@@ -65,6 +67,24 @@ const TestimonialSlide = ({ person }: { person: Testimonial }) => {
                                 <Icon aria-hidden className="size-5" />
                             </Link>
                         ))}
+                        {/* môn đang dạy — chỉ render khi content.ts có khai `courseSlugs`; không
+                            có dữ liệu thì cụm này biến mất chứ không hiện số 0 */}
+                        {person.courseSlugs?.length ? (
+                            <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+                                <Typography type="body-sm" color="muted">
+                                    {t("mentors.teaching", { count: person.courseSlugs.length })}
+                                </Typography>
+                                {person.courseSlugs.map((slug) => (
+                                    <NextIntlLink
+                                        key={slug}
+                                        href={`/courses/${slug}`}
+                                        className="text-sm font-medium text-accent no-underline hover:underline"
+                                    >
+                                        {slug.toUpperCase()}
+                                    </NextIntlLink>
+                                ))}
+                            </div>
+                        ) : null}
                         {/* profile = "go meet + judge this mentor yourself" CTA */}
                         <Link
                             href={person.profileUrl}

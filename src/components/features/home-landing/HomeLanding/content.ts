@@ -150,6 +150,17 @@ export interface Testimonial {
     github?: string
     linkedin?: string
     facebook?: string
+    /**
+     * Các môn người này đang dạy, dạng slug khoá học (góp ý website 2026-07-26: "nên hiển thị
+     * số môn học đang dạy… click vào chuyển sang khóa học detail").
+     *
+     * Phải khai TAY vì KHÔNG suy ra được: `GET /courses/{slug}` không trả field giảng viên nào
+     * (đo apitest 2026-07-30), và danh sách mentor ở đây là tĩnh, không mang id người dùng. Bỏ
+     * trống thì cụm "đang dạy" không render — thà thiếu còn hơn đoán bừa ai dạy môn gì.
+     *
+     * Muốn tự động thì cần BE trả giảng viên của khoá (hoặc endpoint khoá-theo-giảng-viên).
+     */
+    courseSlugs?: ReadonlyArray<string>
 }
 
 /**

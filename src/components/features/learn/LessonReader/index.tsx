@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useCallback, useEffect, useMemo, useRef, useState, type Key } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Card, CardContent, Chip, Typography, cn } from "@heroui/react"
 import { CheckCircleIcon, ClockIcon, FlameIcon } from "@phosphor-icons/react"
 import { useFormatter, useTranslations } from "next-intl"
@@ -13,7 +13,6 @@ import { reportLessonProgress } from "@/modules/api/rest/course"
 import { PageHeader } from "@/components/blocks/layout/PageHeader"
 import { ResponsiveBreadcrumb } from "@/components/blocks/navigation/ResponsiveBreadcrumb"
 import type { ResponsiveBreadcrumbItem } from "@/components/blocks/navigation/ResponsiveBreadcrumb"
-import { TabsCard, type TabsCardGroup } from "@/components/blocks/navigation/TabsCard"
 import { CheckListCard, CheckListItem } from "@/components/blocks/cards/CheckListCard"
 import { LabeledCard } from "@/components/blocks/cards/LabeledCard"
 import { PressableCard } from "@/components/blocks/cards/PressableCard"
@@ -26,17 +25,12 @@ import {
     BookOpenIcon,
     CaretLeftIcon,
     CaretRightIcon,
-    ClipboardTextIcon,
-    FileTextIcon,
     ListIcon,
     LockSimpleIcon,
     PuzzlePieceIcon,
 } from "@phosphor-icons/react"
 import { Button } from "@heroui/react"
 import { useQueryLearnLessonSwr } from "../hooks/useQueryLearnLessonSwr"
-import { useQueryLearnCourseSwr } from "../hooks/useQueryLearnCourseSwr"
-import { useQueryLessonDocumentsSwr } from "../hooks/useQueryLessonDocumentsSwr"
-import { useGetLessonAssignmentsSwr } from "@/hooks/swr/api/rest/queries/useGetLessonAssignmentsSwr"
 import { useLearnSidebarStore } from "@/hooks/zustand/learnSidebar/store"
 
 import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
@@ -45,7 +39,6 @@ import { LessonComments } from "./LessonComments"
 import { LessonResourceLinks } from "./LessonResourceLinks"
 import { LessonVideoBlock } from "./LessonVideoBlock"
 import { LessonDocumentHtml } from "./LessonDocumentHtml"
-import { LessonDocumentsBlock } from "./LessonDocumentsBlock"
 import { SelectionHintCallout } from "./ContentAiSelectionAsk/SelectionHintCallout"
 import { LessonAiStudy } from "./LessonAiStudy"
 import { LessonAssignmentBlock } from "./LessonAssignmentBlock"
@@ -55,9 +48,6 @@ import { PackageGateModal } from "@/components/features/course/PackageGateModal"
 import { DocumentReader } from "@/components/features/learn/DocumentReader"
 import { useQueryCoursePackagesSwr } from "@/components/features/course/hooks/useQueryCoursePackagesSwr"
 import { resolveTierLabel } from "@/components/features/course/tierLabels"
-
-/** The two content views (reading vs challenges). */
-type ContentView = "content" | "challenges"
 
 /** Build the reader / challenge route for a lesson id shaped "m<n>-l<k>". */
 const readerHref = (courseId: string, lessonId: string) =>
@@ -103,24 +93,7 @@ export const LessonReader = () => {
     const router = useRouter()
     const { courseId, contentId } = useParams<{ courseId: string; contentId: string }>()
     const { lesson, error, mutate } = useQueryLearnLessonSwr(courseId, contentId)
-    // The caller's own course access ({enrolled, purchased, fullAccess}) — shares the
-    // rail's SWR caches (GET_LEARN_COURSE / me/access), so no extra fetch. Gates the
-    // Challenges-tab entry for a non-free challenge the viewer hasn't unlocked.
-    const { access } = useQueryLearnCourseSwr(courseId)
-    // Lesson attachments — shares the SWR key `["lesson-documents", contentId]` with
-    // <LessonDocumentsBlock> (which renders them inline lower on the page), so this gate
-    // for the top-bar "Tài liệu buổi học" button dedupes to a single fetch. The button
-    // shows only once this resolves with a non-empty list; while loading it stays hidden.
-    const { documents } = useQueryLessonDocumentsSwr(contentId)
-    const hasMaterial = documents.length > 0
-    // Lesson assignments — shares the SWR key `["LESSON_ASSIGNMENTS_SWR", contentId]` with
-    // <LessonAssignmentBlock> (rendered inline lower on the page), so this gate for the
-    // top-bar "Làm bài tập" button dedupes to a single fetch. Shows only once a non-empty
-    // list resolves; hidden while loading / when the lesson has no assignment.
-    const { data: assignments } = useGetLessonAssignmentsSwr(contentId)
-    const hasAssignment = (assignments?.length ?? 0) > 0
     const { toggle: toggleSidebar } = useLearnSidebarStore()
-    const [view, setView] = useState<ContentView>("content")
     const [lang, setLang] = useState("typescript")
     const [gateOpen, setGateOpen] = useState(false)
     /** Which paywall entry opened the shared gate modal — drives its title/context. */
@@ -223,85 +196,11 @@ export const LessonReader = () => {
         [t, router, courseId, lesson?.moduleTitle],
     )
 
-    // Gate every challenge entry point on a REAL linked challenge id (no `-c` mock):
-    // BE only sets `hasChallenge` + `challengeId` for an ACTIVE (PUBLISHED/RUNNING) challenge.
-    // NHIỀU challenge/bài: có tab khi lesson có ≥1 challenge trong curriculum list; fallback linkage
-    // đơn (hasChallenge+challengeId) cho BE cũ chưa trả mảng `challenges`.
-    const hasChallenge =
-        (lesson?.challenges?.length ?? 0) > 0 ||
-        ((lesson?.hasChallenge ?? false) && Boolean(lesson?.challengeId))
-    /**
-     * A NON-free linked challenge the viewer hasn't unlocked stays gated even on an
-     * accessible (free/preview) lesson — the BE 403s the solver, so the Challenges-tab
-     * entry carries a lock hint and opens the package gate instead of routing in. Same
-     * predicate as the ContentMap child rows (challenge-free-hardening).
-     */
-    const hasFullAccess = !!(access?.purchased || access?.fullAccess)
-    const challengeLocked =
-        hasChallenge && !(lesson?.challengeFree ?? false) && !hasFullAccess
-
     /** Open the shared package gate with the given paywall context. */
     const openGate = useCallback((context: "document" | "video" | "challenge") => {
         setGateContext(context)
         setGateOpen(true)
     }, [])
-
-    /**
-     * Reveal the lesson's attachments for the top-bar "Tài liệu buổi học" button: the
-     * documents render inline (`<LessonDocumentsBlock id="lesson-documents">`) lower on
-     * the page, so this is a plain in-page smooth scroll — no route. Also forces the
-     * Content view first (the block is not mounted under the Challenges tab); the
-     * double rAF lets that view commit before the scroll target is resolved.
-     */
-    const revealDocuments = useCallback(() => {
-        setView("content")
-        requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                document.getElementById("lesson-documents")?.scrollIntoView({ behavior: "smooth" })
-            })
-        })
-    }, [])
-
-    /**
-     * Reveals the inline assignment block (`#lesson-assignments`) for the top-bar "Làm bài
-     * tập" button — same in-page smooth scroll as {@link revealDocuments}: force the Content
-     * view first (the block is not mounted under the Challenges tab), then scroll once it commits.
-     */
-    const revealAssignments = useCallback(() => {
-        setView("content")
-        requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                document.getElementById("lesson-assignments")?.scrollIntoView({ behavior: "smooth" })
-            })
-        })
-    }, [])
-
-    /**
-     * Left tab group: Content, plus Challenges only when the lesson actually has one
-     * (an always-present challenges tab that dead-ends trains distrust — omit it).
-     */
-    const leftTabs = useMemo<TabsCardGroup>(
-        () => ({
-            ariaLabel: t("reader.tabListAria"),
-            selectedKey: view,
-            onSelectionChange: (key: Key) => setView(key as ContentView),
-            items: [
-                {
-                    key: "content",
-                    label: t("content.tabs.content"),
-                    icon: <BookOpenIcon aria-hidden focusable="false" className="size-4 shrink-0" />,
-                },
-                ...(hasChallenge
-                    ? [{
-                        key: "challenges",
-                        label: t("content.tabs.challenges"),
-                        icon: <PuzzlePieceIcon aria-hidden focusable="false" className="size-4 shrink-0" />,
-                    }]
-                    : []),
-            ],
-        }),
-        [t, view, hasChallenge],
-    )
 
     return (
         <div className="flex flex-col gap-6">
@@ -349,68 +248,6 @@ export const LessonReader = () => {
                                                 <span className="flex items-center gap-1">
                                                     {t("reader.nextLesson")}
                                                     <CaretRightIcon aria-hidden focusable="false" className="size-4" />
-                                                </span>
-                                            </Button>
-                                        ) : null}
-                                        {/* "Làm thử thách" — bên cạnh nút Bài sau, CHỈ khi bài có thử
-                                            thách (hasChallenge). Điều hướng ĐÚNG một route giải như
-                                            TrialChallengeCta + tab Challenges: ưu tiên slug học-thử
-                                            (freeChallengeSlug) rồi mới tới challengeId; thử thách trả
-                                            phí chưa mở khoá thì mở gate y như ChallengesView. Nhãn
-                                            hiện từ sm: lên để đỡ chật hàng trên mobile. */}
-                                        {hasChallenge ? (
-                                            <Button
-                                                size="sm"
-                                                variant="secondary"
-                                                aria-label={t("reader.trialChallengeCta")}
-                                                onPress={() => {
-                                                    if (challengeLocked) {
-                                                        openGate("challenge")
-                                                        return
-                                                    }
-                                                    const target = lesson.freeChallengeSlug ?? lesson.challengeId
-                                                    if (target) {
-                                                        router.push(
-                                                            challengeHref(courseId, lesson.moduleId, contentId, target),
-                                                        )
-                                                    }
-                                                }}
-                                            >
-                                                <span className="flex items-center gap-1">
-                                                    <PuzzlePieceIcon aria-hidden focusable="false" className="size-4" />
-                                                    <span className="hidden sm:inline">{t("reader.trialChallengeCta")}</span>
-                                                </span>
-                                            </Button>
-                                        ) : null}
-                                        {/* "Làm bài tập" — CHỈ khi bài có assignment (list không
-                                            rỗng, sau khi SWR resolve). Cuộn mượt tới khối assignment
-                                            inline `#lesson-assignments`, không đổi route. */}
-                                        {hasAssignment ? (
-                                            <Button
-                                                size="sm"
-                                                variant="secondary"
-                                                aria-label={t("reader.assignmentButton")}
-                                                onPress={revealAssignments}
-                                            >
-                                                <span className="flex items-center gap-1">
-                                                    <ClipboardTextIcon aria-hidden focusable="false" className="size-4" />
-                                                    <span className="hidden sm:inline">{t("reader.assignmentButton")}</span>
-                                                </span>
-                                            </Button>
-                                        ) : null}
-                                        {/* "Tài liệu buổi học" — CHỈ khi bài có tài liệu đính kèm
-                                            (documents.length > 0, sau khi SWR resolve). Cuộn mượt tới
-                                            khối tài liệu inline `#lesson-documents`, không đổi route. */}
-                                        {hasMaterial ? (
-                                            <Button
-                                                size="sm"
-                                                variant="secondary"
-                                                aria-label={t("reader.materialButton")}
-                                                onPress={revealDocuments}
-                                            >
-                                                <span className="flex items-center gap-1">
-                                                    <FileTextIcon aria-hidden focusable="false" className="size-4" />
-                                                    <span className="hidden sm:inline">{t("reader.materialButton")}</span>
                                                 </span>
                                             </Button>
                                         ) : null}
@@ -462,23 +299,16 @@ export const LessonReader = () => {
                 </AsyncContent>
             </div>
 
-            {/* tab bar — static chrome; shows immediately. Content tab carries a language switcher on the right. */}
-            {lesson ? (
+            {/* language switcher — only when the lesson body ships in more than one language */}
+            {lesson && lesson.availableLangs.length > 1 ? (
                 <div className="mx-auto w-full max-w-3xl">
-                    {/* only render the tab bar when there is a second (Challenges) tab —
-                        a lone Content tab is noise */}
-                    {hasChallenge ? <TabsCard leftTabs={leftTabs} /> : null}
-                    {view === "content" && lesson.availableLangs.length > 1 ? (
-                        <div className="mt-3">
-                            <ProgrammingLanguageTabs
-                                availableLangs={lesson.availableLangs}
-                                selectedLang={activeLang}
-                                onSelectLang={setLang}
-                                ariaLabel={t("reader.languageSwitcher")}
-                                variant={ProgrammingLanguageTabsVariant.Pill}
-                            />
-                        </div>
-                    ) : null}
+                    <ProgrammingLanguageTabs
+                        availableLangs={lesson.availableLangs}
+                        selectedLang={activeLang}
+                        onSelectLang={setLang}
+                        ariaLabel={t("reader.languageSwitcher")}
+                        variant={ProgrammingLanguageTabsVariant.Pill}
+                    />
                 </div>
             ) : null}
 
@@ -502,9 +332,8 @@ export const LessonReader = () => {
                 }}
             >
                 {lesson ? (
-                    view === "content" ? (
                         <>
-                            {/* video player (VIDEO lessons) + document attachments — above the article */}
+                            {/* video player (VIDEO lessons) — above the article */}
                             {lesson.hasVideo ? (
                                 <LessonVideoBlock
                                     key={contentId}
@@ -526,7 +355,6 @@ export const LessonReader = () => {
                             {celebratedId === contentId ? (
                                 <LessonCompleteCelebration lessonId={contentId} className="mx-auto w-full max-w-3xl" />
                             ) : null}
-                            <LessonDocumentsBlock lessonId={contentId} />
 
                             {/* reading card — DOCUMENT lessons get the dedicated DocumentReader
                                 (markdown/HTML/links + teaser fade + paywall). VIDEO lessons and
@@ -696,42 +524,6 @@ export const LessonReader = () => {
                                 </div>
                             ) : null}
                         </>
-                    ) : (
-                        <div className="mx-auto w-full max-w-3xl">
-                            <ChallengesView
-                                // NHIỀU challenge/bài: render CẢ list từ curriculum. Mỗi challenge
-                                // khoá riêng theo cờ `free` + quyền (non-free chưa mở khoá → gate).
-                                // Fallback linkage đơn cho BE cũ chưa trả mảng.
-                                challenges={
-                                    lesson.challenges.length > 0
-                                        ? lesson.challenges.map((c) => ({
-                                              id: c.id,
-                                              title: c.title,
-                                              type: c.type,
-                                              locked: !c.free && !hasFullAccess,
-                                          }))
-                                        : lesson.challengeId
-                                          ? [
-                                                {
-                                                    id: lesson.challengeId,
-                                                    title: "",
-                                                    type: "",
-                                                    locked: challengeLocked,
-                                                },
-                                            ]
-                                          : []
-                                }
-                                onOpen={(challengeId, locked) => {
-                                    // Challenge khoá (non-free chưa mở) → upsell gói thay vì vào solver bị BE 403.
-                                    if (locked) {
-                                        openGate("challenge")
-                                        return
-                                    }
-                                    router.push(challengeHref(courseId, lesson.moduleId, contentId, challengeId))
-                                }}
-                            />
-                        </div>
-                    )
                 ) : null}
             </AsyncContent>
 
@@ -957,78 +749,6 @@ const LessonPager = ({
                     </PressableCard>
                 ) : null}
             </div>
-        </div>
-    )
-}
-
-/**
- * The Challenges view — a link into the auto-grading submission surface. When the linked
- * challenge is gated for this viewer (`isLocked`: a non-free challenge they haven't
- * unlocked), it carries a lock hint (icon + premium chip) and the CTA opens the package
- * gate instead of routing into a solver the BE would 403.
- */
-interface ChallengeRow {
-    id: string
-    title: string
-    type: string
-    locked: boolean
-}
-
-/**
- * Challenges tab body — renders ALL challenges attached to the lesson (a lesson can now carry many
- * active challenges), one card each. Each card gates independently on its own `locked` flag (a
- * non-free challenge the viewer hasn't unlocked opens the package gate instead of the solver).
- */
-const ChallengesView = ({
-    challenges,
-    onOpen,
-}: {
-    challenges: Array<ChallengeRow>
-    onOpen: (challengeId: string, locked: boolean) => void
-}) => {
-    const t = useTranslations("learn")
-    if (challenges.length === 0) {
-        return (
-            <Typography type="body-sm" color="muted">
-                {t("reader.noChallenge")}
-            </Typography>
-        )
-    }
-    return (
-        <div className="flex flex-col gap-3">
-            {challenges.map((c) => (
-                <div
-                    key={c.id}
-                    className="flex flex-col items-start gap-3 rounded-3xl border border-default bg-surface p-6"
-                >
-                    <div className="flex flex-wrap items-center gap-2">
-                        {c.locked ? (
-                            <LockSimpleIcon aria-hidden focusable="false" className="size-6 text-accent" />
-                        ) : (
-                            <PuzzlePieceIcon aria-hidden focusable="false" className="size-6 text-accent" />
-                        )}
-                        <Typography type="body" weight="semibold">
-                            {c.title || t("reader.challengeTitle")}
-                        </Typography>
-                        {c.type ? (
-                            <Chip size="sm" variant="soft" color="default" className="shrink-0">
-                                {c.type}
-                            </Chip>
-                        ) : null}
-                        {c.locked ? (
-                            <Chip size="sm" variant="soft" color="warning" className="shrink-0">
-                                <span className="flex items-center gap-1">
-                                    <LockSimpleIcon aria-hidden focusable="false" className="size-3" />
-                                    {t("content.premium")}
-                                </span>
-                            </Chip>
-                        ) : null}
-                    </div>
-                    <Button variant="primary" onPress={() => onOpen(c.id, c.locked)}>
-                        {c.locked ? t("reader.enrollCta") : t("reader.openChallenge")}
-                    </Button>
-                </div>
-            ))}
         </div>
     )
 }

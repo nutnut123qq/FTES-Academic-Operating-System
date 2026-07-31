@@ -642,6 +642,9 @@
       "title": "Luyện tập bài này",
       "count": "{count} thử thách",
       "practice": "Làm thử thách"
+    },
+    "documents": {
+      "title": "Tài liệu cho lesson này"
     }
   },
   "courses": {

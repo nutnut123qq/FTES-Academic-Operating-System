@@ -6,12 +6,11 @@ import { getLessonDocuments, type LessonDocumentView } from "@/modules/api/rest/
 /**
  * Loads a lesson's document/slide attachments (`GET /lessons/{id}/documents`).
  *
- * Shared by {@link LessonDocumentsBlock} (renders the attachment list inline) and the
- * {@link LessonReader} top bar (gates the "Tài liệu buổi học" button on a non-empty list).
- * Both call this hook with the SAME SWR key `["lesson-documents", lessonId]`, so the fetch
- * dedupes to a single request per lesson (no double-fetch). The endpoint is auth-aware —
- * for a viewer with no access it 403s; the caught fallback yields an empty list so the
- * block self-hides and the reader button stays hidden.
+ * Consumed by the {@link OnThisPage} right-rail "Tài liệu cho lesson này" panel, which
+ * lists each attachment as a link the learner opens directly. The SWR key
+ * `["lesson-documents", lessonId]` dedupes any other caller on the same lesson to one
+ * request. The endpoint is auth-aware — for a viewer with no access it 403s; the caught
+ * fallback yields an empty list so the panel self-hides.
  */
 export const useQueryLessonDocumentsSwr = (lessonId: string | undefined) => {
     const { data, isLoading, error, mutate } = useSWR(

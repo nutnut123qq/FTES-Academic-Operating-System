@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
 import { useRouter } from "@/i18n/navigation"
 import { useQueryLearnLessonSwr } from "../hooks/useQueryLearnLessonSwr"
+import { useQueryLessonDocumentsSwr } from "../hooks/useQueryLessonDocumentsSwr"
 import { useTableOfContents } from "./hooks/useTableOfContents"
 
 /** Props for {@link OnThisPage}. */
@@ -42,6 +43,9 @@ export const OnThisPage = ({ className, mobile = false }: OnThisPageProps) => {
     // Shares the LessonReader SWR key — cheap; gates the practice entry on a REAL
     // linked challenge (BE sets `challengeId` only for an ACTIVE challenge).
     const { lesson } = useQueryLearnLessonSwr(courseId, contentId ?? "")
+    // Lesson document/slide attachments — same SWR key `["lesson-documents", contentId]`
+    // used elsewhere, so the fetch dedupes. Feeds the "Tài liệu cho lesson này" rail panel.
+    const { documents } = useQueryLessonDocumentsSwr(contentId)
 
     // the rail is per-lesson; nothing to host when no lesson is open
     if (!contentId) {
@@ -56,9 +60,10 @@ export const OnThisPage = ({ className, mobile = false }: OnThisPageProps) => {
               ? [{ id: lesson.challengeId, title: "" }]
               : []
     const hasChallenge = challengeRows.length > 0
+    const hasDocuments = documents.length > 0
 
-    // nothing to host: no in-article outline AND no practice entry → render no chrome
-    if (headings.length === 0 && !hasChallenge) {
+    // nothing to host: no in-article outline, no practice entry AND no documents → render no chrome
+    if (headings.length === 0 && !hasChallenge && !hasDocuments) {
         return null
     }
 
@@ -104,6 +109,28 @@ export const OnThisPage = ({ className, mobile = false }: OnThisPageProps) => {
                             >
                                 {c.title || t("lessonRail.challenges.practice")}
                             </Button>
+                        ))}
+                    </div>
+                </div>
+            ) : null}
+
+            {/* "Tài liệu cho lesson này" — lists the lesson's attachments below the
+                practice panel; each opens its signed URL directly in a new tab. Renders
+                only when the lesson actually has documents. */}
+            {hasDocuments ? (
+                <div className="flex flex-col gap-2">
+                    <Label>{t("lessonRail.documents.title")}</Label>
+                    <div className="flex flex-col items-start gap-2">
+                        {documents.map((doc) => (
+                            <Link
+                                key={doc.id}
+                                href={doc.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="cursor-pointer text-start text-sm text-muted transition-colors hover:text-foreground"
+                            >
+                                {doc.title}
+                            </Link>
                         ))}
                     </div>
                 </div>

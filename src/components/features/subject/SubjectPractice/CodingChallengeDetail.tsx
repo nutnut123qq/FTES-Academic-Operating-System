@@ -22,6 +22,7 @@ import {
     resolveCodingErrorKey,
     type CodingExecutionOutcome,
     type CodingGradeOutcome,
+    type CodingRunOutput,
     type CodingSampleCase,
 } from "./codingExecution"
 import { useMutateCodingAttemptSwr } from "./useMutateCodingAttemptSwr"
@@ -348,7 +349,19 @@ export const CodingChallengeDetail = ({ challenge, onBack }: CodingChallengeDeta
                                 </div>
                             ) : null}
 
-                            <ExecutionBlock execution={outcome.execution} kind={outcome.kind} />
+                            {outcome.runOutput?.present
+                                && outcome.execution.supported
+                                && outcome.execution.rows.length === 0 ? (
+                                    // Flat sandbox shape (PIN §7.1): no test-case rows to
+                                    // compare — show the program's output instead of the
+                                    // "no cases" placeholder.
+                                    <RunOutputBlock output={outcome.runOutput} />
+                                ) : (
+                                    <ExecutionBlock
+                                        execution={outcome.execution}
+                                        kind={outcome.kind}
+                                    />
+                                )}
 
                             {outcome.gradeErrorKey ? (
                                 <Typography type="body-xs" className="text-danger">
@@ -409,6 +422,66 @@ export const CodingChallengeDetail = ({ challenge, onBack }: CodingChallengeDeta
                     ) : null}
                 </div>
             </div>
+        </div>
+    )
+}
+
+/** Program output of a flat sandbox Run (`{stdout, stderr, exit_code, time_ms}`, PIN §7.1). */
+const RunOutputBlock = ({ output }: { output: CodingRunOutput }) => {
+    const t = useTranslations("subjects")
+    const failed = output.exitCode !== null && output.exitCode !== 0
+    const stdout = output.stdout.trim()
+    const stderr = output.stderr.trim()
+    const compileOutput = output.compileOutput.trim()
+
+    return (
+        <div className="flex flex-col gap-3 rounded-2xl border border-separator p-4">
+            <div className="flex flex-wrap items-center gap-2">
+                <Typography type="body-sm" weight="medium" className="min-w-0 flex-1">
+                    {t("practice.coding.runOutputTitle")}
+                </Typography>
+                {output.exitCode !== null ? (
+                    <Chip size="sm" variant="soft" color={failed ? "danger" : "success"}>
+                        {t("practice.coding.exitCode", { code: output.exitCode })}
+                    </Chip>
+                ) : null}
+                {output.timeMs !== null ? (
+                    <Chip size="sm" variant="soft" color="default">
+                        {t("practice.coding.runtimeMs", { ms: output.timeMs })}
+                    </Chip>
+                ) : null}
+            </div>
+
+            {compileOutput ? (
+                <div className="flex flex-col gap-1">
+                    <Typography type="body-xs" color="muted" weight="medium">
+                        {t("practice.coding.compileOutputLabel")}
+                    </Typography>
+                    <pre className="overflow-x-auto whitespace-pre-wrap break-words rounded-large border border-default bg-surface p-3 font-mono text-xs text-muted">
+                        {compileOutput}
+                    </pre>
+                </div>
+            ) : null}
+
+            <div className="flex flex-col gap-1">
+                <Typography type="body-xs" color="muted" weight="medium">
+                    {t("practice.coding.stdoutLabel")}
+                </Typography>
+                <pre className="overflow-x-auto whitespace-pre-wrap break-words rounded-large border border-default bg-surface p-3 font-mono text-xs text-foreground">
+                    {stdout !== "" ? stdout : t("practice.coding.noOutput")}
+                </pre>
+            </div>
+
+            {stderr ? (
+                <div className="flex flex-col gap-1">
+                    <Typography type="body-xs" color="muted" weight="medium">
+                        {t("practice.coding.stderr")}
+                    </Typography>
+                    <pre className="overflow-x-auto whitespace-pre-wrap break-words rounded-large border border-default bg-surface p-3 font-mono text-xs text-danger">
+                        {stderr}
+                    </pre>
+                </div>
+            ) : null}
         </div>
     )
 }

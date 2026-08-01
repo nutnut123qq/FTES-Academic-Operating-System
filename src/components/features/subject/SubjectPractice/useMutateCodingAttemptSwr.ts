@@ -10,6 +10,7 @@ import {
 import {
     normalizeExecution,
     normalizeGrade,
+    normalizeRunOutput,
     resolveCodingErrorKey,
     toApiTestCases,
     type CodingAttemptOutcome,
@@ -62,7 +63,14 @@ const runCodingAttempt = async (arg: CodingAttemptArg): Promise<CodingAttemptOut
             language: arg.language,
             test_cases: testCases,
         })
-        return { kind: "run", execution: normalizeExecution(raw) }
+        // Read BOTH shapes: the Judge0 test-case block (old/superset BE) AND the flat
+        // sandbox streams (PIN §7.1). The detail panel prefers rows when present and
+        // falls back to program output when the sandbox returns the flat shape.
+        return {
+            kind: "run",
+            execution: normalizeExecution(raw),
+            runOutput: normalizeRunOutput(raw),
+        }
     }
 
     const submission = await submitChallenge(arg.challengeId, {

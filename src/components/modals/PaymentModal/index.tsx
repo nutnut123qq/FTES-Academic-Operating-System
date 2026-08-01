@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useCallback, useEffect, useState } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 import { Button, Chip, Modal, Typography, cn } from "@heroui/react"
 import { useFormatter, useTranslations } from "next-intl"
 import { useSWRConfig } from "swr"
@@ -353,6 +353,7 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
                                             format={format}
                                             qrCode={qrCode}
                                             amount={netVnd}
+                                            expiresAt={orderPoll.data?.expiresAt}
                                             onExpire={handleExpire}
                                         />
                                     ) : null}
@@ -542,39 +543,70 @@ const ChooseView = ({
 }
 
 /**
- * Cửa sổ thanh toán VietQR, tạm suy từ hạn THẬT của BE: `CommerceProperties.paymentExpiryMinutes`
- * mặc định 30 và `OrderExpireJob` quét theo đúng số đó (apitest không set env override).
- *
- * Con số 5 phút ban đầu ở đây LỆCH 6 LẦN — báo "hết hạn" khi đơn còn sống 25 phút nữa, đúng
- * kiểu đẩy người ta đi tạo đơn mới rồi trả tiền hai lần. Đổi lại bằng `expiresAt` ngay khi BE
- * lộ trường đó ra `OrderView`; đây chỉ là số đỡ tạm, vẫn là giả định của FE.
+ * Cửa sổ đỡ tạm khi đơn KHÔNG mang `expiresAt` (đơn tạo trước change `commerce-order-expires-at`,
+ * hoặc BE chưa deploy). Suy từ `CommerceProperties.paymentExpiryMinutes` mặc định 30 mà
+ * `OrderExpireJob` quét theo. Chỉ là giả định của FE — có `expiresAt` thì luôn ưu tiên nó.
  */
-const AWAITING_WINDOW_SECONDS = 30 * 60
+const AWAITING_FALLBACK_SECONDS = 30 * 60
+
+/**
+ * Mốc hết hạn TUYỆT ĐỐI của đồng hồ đếm ngược: hạn thật của BE nếu parse được, không thì neo
+ * dự phòng. Tách riêng để test được — đây là chỗ dễ sai nhất của cả modal: đoán NGẮN hơn hạn
+ * thật thì báo "hết hạn" trong khi đơn còn sống (người ta tạo đơn mới rồi trả hai lần), đoán
+ * DÀI hơn thì để người ta ngồi quét một mã đã chết.
+ *
+ * @param expiresAt - `OrderView.expiresAt` (ISO) — có thể thiếu ở đơn cũ / BE chưa deploy.
+ * @param fallbackDeadline - mốc dự phòng đã tính sẵn (epoch ms).
+ */
+export const resolveAwaitingDeadline = (
+    expiresAt: string | undefined,
+    fallbackDeadline: number,
+): number => {
+    const parsed = expiresAt ? Date.parse(expiresAt) : Number.NaN
+    return Number.isFinite(parsed) ? parsed : fallbackDeadline
+}
 
 /** Số giây còn lại → "mm:ss". */
 const formatCountdown = (seconds: number) =>
     `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`
 
-/** VietQR: the QR to scan + a 5-minute countdown to the order expiring. */
+/** VietQR: mã QR + đồng hồ đếm ngược tới HẠN THẬT của đơn (`expiresAt`). */
 const AwaitingView = ({
     t,
     format,
     qrCode,
     amount,
+    expiresAt,
     onExpire,
 }: {
     t: Tr
     format: Fmt
     qrCode: string
     amount: number
+    /** Hạn thật của đơn (ISO) từ BE; thiếu → rơi về `AWAITING_FALLBACK_SECONDS`. */
+    expiresAt?: string
     onExpire: () => void
 }) => {
-    const [remaining, setRemaining] = useState(AWAITING_WINDOW_SECONDS)
+    /**
+     * Mốc hết hạn TUYỆT ĐỐI. Ưu tiên `expiresAt` của BE — đó mới là mốc `OrderExpireJob` thật sự
+     * huỷ đơn. Hằng số FE chỉ để đỡ khi thiếu; đoán ngắn hơn hạn thật là báo "hết hạn" trong khi
+     * đơn còn sống, đoán dài hơn là để người ta quét một mã đã chết.
+     *
+     * View mount NGAY khi vào pha awaiting, còn `expiresAt` phải đợi vòng poll đầu → không được
+     * chốt cứng lúc mount, làm vậy là khoá luôn số đoán dù hạn thật về ngay sau đó. Neo dự phòng
+     * giữ trong ref (ổn định qua mọi lần render), hạn thật về thì thay — đổi đúng MỘT lần rồi
+     * giá trị không đổi nữa nên đồng hồ không giật theo mỗi vòng poll.
+     */
+    const fallbackDeadlineRef = useRef(Date.now() + AWAITING_FALLBACK_SECONDS * 1000)
+    const deadline = resolveAwaitingDeadline(expiresAt, fallbackDeadlineRef.current)
+    const [remaining, setRemaining] = useState(() =>
+        Math.max(Math.ceil((deadline - Date.now()) / 1000), 0))
 
     // Đếm theo mốc thời gian tuyệt đối (tab bị throttle vẫn ra đúng số giây còn lại), không
     // cộng dồn tick. View chỉ tồn tại trong pha awaiting → cleanup lo cả unmount lẫn rời pha.
     useEffect(() => {
-        const deadline = Date.now() + AWAITING_WINDOW_SECONDS * 1000
+        // Cập nhật ngay khi mốc đổi (hạn thật vừa về), khỏi đợi tick kế.
+        setRemaining(Math.max(Math.ceil((deadline - Date.now()) / 1000), 0))
         const timer = window.setInterval(() => {
             const left = Math.max(Math.ceil((deadline - Date.now()) / 1000), 0)
             setRemaining(left)
@@ -584,7 +616,7 @@ const AwaitingView = ({
             }
         }, 1000)
         return () => window.clearInterval(timer)
-    }, [onExpire])
+    }, [deadline, onExpire])
 
     return (
         <div className="flex flex-col items-center gap-4 py-2">

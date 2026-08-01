@@ -144,6 +144,12 @@ export interface OrderView {
     items: Array<OrderItemView>
     /** Order creation timestamp (ISO-8601). */
     createdAt?: string
+    /**
+     * HẠN THẬT của đơn (ISO-8601) — BE change `commerce-order-expires-at`. Đồng hồ đếm ngược
+     * ở modal thanh toán bám mốc này; thiếu (đơn cũ / BE chưa deploy) thì FE rơi về hằng số
+     * đoán, xem `AWAITING_FALLBACK_SECONDS`.
+     */
+    expiresAt?: string
 }
 
 /** Checkout result returned after creating an order. */

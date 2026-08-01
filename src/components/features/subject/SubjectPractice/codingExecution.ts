@@ -39,6 +39,24 @@ export interface CodingExecutionOutcome {
     supported: boolean
 }
 
+/**
+ * Program streams of a flat sandbox `execute-code` run (PIN §7.1:
+ * `{stdout, stderr, exit_code, time_ms, compile_output}`). Surfaced when the BE returns
+ * the new sandbox shape instead of a Judge0 test-case block, so a Run still shows the
+ * program's output instead of a "no cases" placeholder.
+ */
+export interface CodingRunOutput {
+    stdout: string
+    stderr: string
+    compileOutput: string
+    /** Process exit code, or `null` when the payload omits it. */
+    exitCode: number | null
+    /** Wall-clock milliseconds, or `null` when the payload omits it. */
+    timeMs: number | null
+    /** True when the response carried any sandbox stream (vs a test-case-only block). */
+    present: boolean
+}
+
 /** One LLM-graded criterion row of a grade-code response. */
 export interface CodingGradeCriterion {
     name: string
@@ -72,6 +90,13 @@ export interface CodingAttemptOutcome {
     grade?: CodingGradeOutcome | null
     /** The persisted submission (challenge module), present on submit only. */
     submission?: CodingSubmissionSummary | null
+    /**
+     * Program streams from the new flat sandbox `execute-code` response (PIN §7.1).
+     * Present on a `run` when the BE returns the sandbox shape (`{stdout, stderr,
+     * exit_code, time_ms}`) instead of a Judge0 test-case block — the panel then shows
+     * the program output so a Run is never silently empty.
+     */
+    runOutput?: CodingRunOutput
     /**
      * Set when the submission was persisted but the AI grade failed — the panel keeps
      * the submission block and shows this error key instead of dropping everything.
@@ -174,6 +199,36 @@ export const normalizeExecution = (raw: unknown): CodingExecutionOutcome => {
         passedCount: passed ?? passedFromRows,
         total: total ?? rows.length,
         supported: block.supported !== false,
+    }
+}
+
+/**
+ * Extracts the flat sandbox streams of an `execute-code` response (PIN §7.1:
+ * `{stdout, stderr, exit_code, time_ms, compile_output}`).
+ *
+ * `present` is true only when the payload actually carried a stream field, so the panel
+ * can distinguish the new sandbox shape (show program output) from a Judge0 test-case
+ * block or garbage (fall back to the test-case rows / "no cases"). The old flat Judge0
+ * shape (`{supported, results, passed, total}`) carries none of these keys → `present:
+ * false`, leaving the existing test-case rendering untouched.
+ *
+ * @param raw - the response body as returned by the REST client.
+ */
+export const normalizeRunOutput = (raw: unknown): CodingRunOutput => {
+    const root = asRecord(raw) ?? {}
+    const present =
+        "stdout" in root
+        || "stderr" in root
+        || "exit_code" in root
+        || "compile_output" in root
+        || "time_ms" in root
+    return {
+        stdout: asText(root.stdout),
+        stderr: asText(root.stderr),
+        compileOutput: asText(root.compile_output),
+        exitCode: asNumber(root.exit_code) ?? null,
+        timeMs: asNumber(root.time_ms) ?? null,
+        present,
     }
 }
 

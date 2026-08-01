@@ -19,6 +19,8 @@ import type {
     JobView,
     ModelConfigView,
     AiSessionView,
+    SqlExecuteRequest,
+    SqlRunResult,
     StudyPlanProgressRequest,
     StudyPlanView,
     TranscriptRef,
@@ -415,9 +417,19 @@ export const gradeCode = async (body: GradeCodeRequest): Promise<CodeGradeResult
     })
 
 /**
- * Runs code against test cases only (Judge0, no LLM — no AI quota spent).
+ * The code sandbox runs one program (no LLM), capped BE-side by a short run limit.
+ * A dedicated, much shorter client timeout than the grade path (which waits on the LLM)
+ * so a hung Piston/network on a plain Run surfaces in seconds instead of leaving the
+ * panel spinning for minutes. Mirrors {@link SQL_EXECUTE_TIMEOUT_MS}.
+ */
+const CODE_EXECUTE_TIMEOUT_MS = 30_000
+
+/**
+ * Runs code in the in-browser sandbox (PIN §7.1) — no LLM, no AI quota spent. Returns
+ * the program's streams (`stdout`/`stderr`/`exit_code`/`time_ms`/`compile_output`).
  *
- * `POST /api/v1/ai/coding/execute-code` — permission `ai.coding.use` (STUDENT+).
+ * `POST /api/v1/ai/coding/execute-code` — permission `ai.coding.use` (STUDENT+). Engine
+ * unconfigured BE-side → 503 `AI_EXEC_UNAVAILABLE` (the panel shows a graceful message).
  */
 export const executeCode = async (body: ExecuteCodeRequest): Promise<CodeExecuteResult> =>
     restRequest<CodeExecuteResult>({
@@ -425,7 +437,30 @@ export const executeCode = async (body: ExecuteCodeRequest): Promise<CodeExecute
         url: "/ai/coding/execute-code",
         data: body,
         authenticated: true,
-        timeout: CODE_GRADE_TIMEOUT_MS,
+        timeout: CODE_EXECUTE_TIMEOUT_MS,
+    })
+
+/**
+ * The SQL sandbox runs one statement in a rolled-back tx, capped BE-side by a short
+ * `statement_timeout` (~4s). A dedicated, much shorter client timeout than the grade
+ * path (which waits on the LLM) so a hung engine/network surfaces in seconds instead of
+ * leaving the panel spinning for minutes.
+ */
+const SQL_EXECUTE_TIMEOUT_MS = 30_000
+
+/**
+ * Runs a SQL query against the Postgres sandbox (single rolled-back tx — no LLM, no quota).
+ *
+ * `POST /api/v1/ai/coding/execute-sql` — permission `ai.coding.use` (STUDENT+). Engine
+ * unconfigured BE-side → 503 `AI_SQL_UNAVAILABLE` (the panel shows a graceful message).
+ */
+export const executeSql = async (body: SqlExecuteRequest): Promise<SqlRunResult> =>
+    restRequest<SqlRunResult>({
+        method: "POST",
+        url: "/ai/coding/execute-sql",
+        data: body,
+        authenticated: true,
+        timeout: SQL_EXECUTE_TIMEOUT_MS,
     })
 
 // ---------------- AdminController ----------------

@@ -1,36 +1,40 @@
 "use client"
 
-import React, { useEffect, useRef, useState } from "react"
+import React, { useRef, useState } from "react"
 import {
     Button,
-    Chip,
     Dropdown,
     DropdownItem,
     DropdownMenu,
     DropdownPopover,
     DropdownTrigger,
-    Input,
     Spinner,
-    TextField,
     Typography,
     cn,
 } from "@heroui/react"
 import {
     CaretDownIcon,
+    LockSimpleIcon,
+    MagicWandIcon,
     PlayIcon,
-    PlusIcon,
     SparkleIcon,
-    TrashIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { AiModelPicker } from "@/components/reuseable/AiModelPicker"
 import { useGetAiCatalogModelsSwr } from "@/hooks/swr/api/rest/queries"
-import { usePostExecuteCodeSwr, usePostGradeCodeSwr } from "@/hooks/swr/api/rest/mutations"
+import {
+    usePostExecuteCodeSwr,
+    usePostExecuteSqlSwr,
+    usePostGradeCodeSwr,
+} from "@/hooks/swr/api/rest/mutations"
 import { RestError } from "@/modules/api/rest/client"
-import type { CodeExecutionSummary, CodeGradeResult, CodeGradeTestCase } from "@/modules/api/rest/ai"
+import type { CodeExecuteResult, CodeGradeResult, SqlRunResult } from "@/modules/api/rest/ai"
 import type { ChallengeDetail } from "../../hooks/useQueryChallengeSwr"
-import { ExecutionResultTable } from "./ExecutionResultTable"
+import { GradeCodeEditor } from "./GradeCodeEditor"
+import type { GradeCodeEditorHandle } from "./GradeCodeEditor"
 import { GradeResultCard } from "./GradeResultCard"
+import { RunOutputPanel } from "./RunOutputPanel"
+import { SqlResultTable } from "./SqlResultTable"
 
 /** Props for {@link GradeCodePanel}. */
 export interface GradeCodePanelProps {
@@ -53,20 +57,71 @@ export interface GradeCodePanelProps {
     onLanguageChange?: (language: string) => void
 }
 
-/** Languages Judge0 executes (proposal scope); SQL is static-only. */
-const EXECUTABLE_LANGUAGES = ["python", "java", "cpp", "c"] as const
+/**
+ * The FE language picker — a safe subset of the Piston runtimes (source of truth) plus
+ * `sql`. The BE does not hardcode languages; this list only shapes the picker.
+ */
+const CODE_LANGUAGES = [
+    "python",
+    "javascript",
+    "typescript",
+    "java",
+    "cpp",
+    "c",
+    "go",
+    "csharp",
+    "php",
+    "ruby",
+    "sql",
+] as const
 
-/** One editable test-case row. */
-interface TestCaseRow {
-    input: string
-    output: string
+/**
+ * Languages Monaco can actually format on the client. Monaco ships a `formatDocument`
+ * provider only for JS/TS/HTML/CSS/JSON out of the box — for every other picker language
+ * (python, java, cpp, …, sql) the Format button would be a silent no-op, so it is hidden
+ * there rather than shown enabled-but-dead.
+ */
+const FORMATTABLE_LANGUAGES = new Set(["javascript", "typescript"])
+
+/** FE language key → Monaco language id (mostly identity; kept explicit for safety). */
+const MONACO_LANGUAGE: Record<string, string> = {
+    python: "python",
+    javascript: "javascript",
+    typescript: "typescript",
+    java: "java",
+    cpp: "cpp",
+    c: "c",
+    go: "go",
+    csharp: "csharp",
+    php: "php",
+    ruby: "ruby",
+    sql: "sql",
 }
 
-/** i18n error key for a failed grade/execute call (`learn.codeGrading.errors.*`). */
+/** Small optional starter, seeded only when the editor is empty (never clobbers work). */
+const STARTER_CODE: Record<string, string> = {
+    python: 'print("Hello, world!")\n',
+    javascript: 'console.log("Hello, world!")\n',
+    typescript: 'console.log("Hello, world!")\n',
+    java: "public class Main {\n    public static void main(String[] args) {\n        System.out.println(\"Hello, world!\");\n    }\n}\n",
+    cpp: "#include <iostream>\n\nint main() {\n    std::cout << \"Hello, world!\" << std::endl;\n    return 0;\n}\n",
+    c: '#include <stdio.h>\n\nint main(void) {\n    printf("Hello, world!\\n");\n    return 0;\n}\n',
+    go: 'package main\n\nimport "fmt"\n\nfunc main() {\n    fmt.Println("Hello, world!")\n}\n',
+    csharp: "using System;\n\nclass Program {\n    static void Main() {\n        Console.WriteLine(\"Hello, world!\");\n    }\n}\n",
+    php: '<?php\necho "Hello, world!\\n";\n',
+    ruby: 'puts "Hello, world!"\n',
+    sql: "SELECT 'Hello, world!' AS greeting;\n",
+}
+
+/** i18n error key for a failed grade/run call (`learn.codeGrading.errors.*`). */
 const toErrorKey = (error: unknown): string => {
     if (error instanceof RestError) {
         if (error.status === 403) return "forbidden"
         switch (error.errorCode) {
+        case "AI_EXEC_UNAVAILABLE":
+            return "execUnavailable"
+        case "AI_SQL_UNAVAILABLE":
+            return "sqlUnavailable"
         case "AI_CODE_DOWN":
             return "down"
         case "AI_CODE_GRADING_FAILED":
@@ -83,14 +138,18 @@ const toErrorKey = (error: unknown): string => {
 }
 
 /**
- * AI code-grading panel (§ai-code-grading): a code editor + test-case rows +
- * model picker wired to the real BE — "Chạy thử" hits
- * `POST /api/v1/ai/coding/execute-code` (Judge0 only, no LLM quota) and
- * "Chấm bằng AI" hits `POST /api/v1/ai/coding/grade-code` (sync 10–60s, with a
- * two-phase progress label). Execution results are objective and kept across
- * re-grades of unchanged code (`run_code_execution:false` saves a Judge0 run);
- * the LLM grade always shows the model that produced it. SQL grades
- * static-only (no execution).
+ * In-browser code sandbox (spec §5): a Monaco editor + a language picker, a **Run**
+ * button that executes the code (or SQL) in the isolated sandbox and shows its output
+ * (`POST /ai/coding/execute-code` → stdout/stderr; `execute-sql` → a result grid), and a
+ * **"Chấm bằng AI"** button that sends the code to the LLM grader
+ * (`POST /ai/coding/grade-code`, `run_code_execution:false`) → {@link GradeResultCard}.
+ * No objective test-case scoring — grading is AI-only. When the sandbox engine is
+ * unconfigured BE-side the run 503s with `AI_EXEC_UNAVAILABLE` / `AI_SQL_UNAVAILABLE`
+ * and the panel shows a graceful "engine tạm chưa khả dụng" message rather than crashing.
+ *
+ * Shared by both solve surfaces: the standalone `ChallengeView` (internal state) and the
+ * learn-embedded `ChallengeSubmission` (controlled `code`/`language` lifted so the formal
+ * "Nộp bài" posts the same source).
  */
 export const GradeCodePanel = ({
     challenge,
@@ -101,147 +160,144 @@ export const GradeCodePanel = ({
     onLanguageChange,
 }: GradeCodePanelProps) => {
     const t = useTranslations("learn")
-    const isSql = challenge.type === "sql"
+    const isSqlChallenge = challenge.type === "sql"
 
     // Controlled/uncontrolled: a caller that owns the code (the learn challenge surface,
     // so its formal submission posts exactly this source) passes code + onCodeChange; the
     // standalone catalog solver omits both and the panel keeps its own state.
     const [internalCode, setInternalCode] = useState("")
-    const [internalLanguage, setInternalLanguage] = useState<string>(isSql ? "sql" : "python")
+    const [internalLanguage, setInternalLanguage] = useState<string>(isSqlChallenge ? "sql" : "python")
     const code = controlledCode ?? internalCode
     const setCode = onCodeChange ?? setInternalCode
     const language = controlledLanguage ?? internalLanguage
     const setLanguage = onLanguageChange ?? setInternalLanguage
-    const [testCases, setTestCases] = useState<Array<TestCaseRow>>([{ input: "", output: "" }])
+
     const [model, setModel] = useState<string | null>(null)
     const [errorKey, setErrorKey] = useState<string | null>(null)
-    /** 2-phase progress label while a grade is in flight. */
-    const [phase, setPhase] = useState<"tests" | "grading" | null>(null)
-    const phaseTimerRef = useRef<number | null>(null)
+    /** Re-run target for the error card's retry button. */
+    const [lastAction, setLastAction] = useState<"run" | "grade" | null>(null)
 
-    /** Last Judge0 execution + the code it ran (objective — reused across re-grades). */
-    const [lastExecution, setLastExecution] = useState<CodeExecutionSummary | null>(null)
-    const [lastExecutedCode, setLastExecutedCode] = useState<string | null>(null)
+    const [runResult, setRunResult] = useState<CodeExecuteResult | null>(null)
+    const [sqlResult, setSqlResult] = useState<SqlRunResult | null>(null)
     const [gradeResult, setGradeResult] = useState<CodeGradeResult | null>(null)
+
+    const [editorReady, setEditorReady] = useState(false)
+    const editorRef = useRef<GradeCodeEditorHandle>(null)
 
     const modelsSwr = useGetAiCatalogModelsSwr()
     const { trigger: triggerGrade, isMutating: isGrading } = usePostGradeCodeSwr()
-    const { trigger: triggerExecute, isMutating: isExecuting } = usePostExecuteCodeSwr()
-    const isBusy = isGrading || isExecuting
+    const { trigger: triggerExecute, isMutating: isRunningCode } = usePostExecuteCodeSwr()
+    const { trigger: triggerExecuteSql, isMutating: isRunningSql } = usePostExecuteSqlSwr()
+    const isBusy = isGrading || isRunningCode || isRunningSql
 
-    useEffect(() => () => {
-        if (phaseTimerRef.current !== null) window.clearTimeout(phaseTimerRef.current)
-    }, [])
-
-    /** Test cases with an expected output — the only ones Judge0 can verify. */
-    const validCases: Array<CodeGradeTestCase> = testCases
-        .filter((row) => row.output.trim() !== "")
-        .map((row) => ({ input: row.input, output: row.output }))
+    const isSqlLanguage = language === "sql"
+    // Monaco only formats JS/TS client-side — hide Format for the other picker
+    // languages so it is never an enabled-but-dead control.
+    const canFormat = FORMATTABLE_LANGUAGES.has(language)
 
     const exerciseQuestion = [challenge.title, challenge.description]
         .filter(Boolean)
         .join("\n\n")
 
-    const setCase = (index: number, patch: Partial<TestCaseRow>) => {
-        setTestCases((rows) => rows.map((row, i) => (i === index ? { ...row, ...patch } : row)))
+    const onPickLanguage = (next: string) => {
+        setLanguage(next)
+        // Seed a starter template only when the editor is empty — never clobber real work.
+        if (code.trim() === "") {
+            const starter = STARTER_CODE[next]
+            if (starter) setCode(starter)
+        }
     }
 
-    const onExecute = async () => {
-        if (code.trim() === "" || validCases.length === 0 || isBusy) return
+    const onRun = async () => {
+        if (code.trim() === "" || isBusy) return
         setErrorKey(null)
-        setPhase("tests")
+        setLastAction("run")
         try {
-            const result = await triggerExecute({
-                code,
-                language,
-                test_cases: validCases,
-            })
-            setLastExecution(result?.execution ?? null)
-            setLastExecutedCode(code)
+            if (isSqlLanguage) {
+                const result = await triggerExecuteSql({ query: code })
+                setSqlResult(result ?? null)
+                setRunResult(null)
+            } else {
+                const result = await triggerExecute({ code, language })
+                setRunResult(result ?? null)
+                setSqlResult(null)
+            }
         } catch (error) {
             setErrorKey(toErrorKey(error))
-        } finally {
-            setPhase(null)
         }
     }
 
     const onGrade = async () => {
         if (code.trim() === "" || isBusy) return
         setErrorKey(null)
-
-        // Execution is model-independent → skip Judge0 when re-grading unchanged code.
-        const canReuseExecution = !isSql && lastExecution !== null && lastExecutedCode === code
-        const runExecution = !isSql && !canReuseExecution && validCases.length > 0
-
-        setPhase(runExecution ? "tests" : "grading")
-        if (runExecution) {
-            // Judge0 finishes first BE-side; flip the label to the LLM phase after a beat.
-            phaseTimerRef.current = window.setTimeout(() => setPhase("grading"), 12_000)
-        }
-
+        setLastAction("grade")
         try {
             const result = await triggerGrade({
                 exercise_question: exerciseQuestion,
                 code,
                 language,
-                ...(runExecution ? { test_cases: validCases } : {}),
-                run_code_execution: runExecution,
+                // AI reads the code to grade — no objective test-case execution (spec §5).
+                run_code_execution: false,
                 ...(model ? { model } : {}),
             })
             setGradeResult(result ?? null)
-            if (runExecution) {
-                setLastExecution(result?.execution ?? null)
-                setLastExecutedCode(code)
-            }
         } catch (error) {
             const key = toErrorKey(error)
             setErrorKey(key)
             // Model rejected by the BE allowlist → fall back to the default model.
             if (key === "modelNotAllowed") setModel(null)
-        } finally {
-            if (phaseTimerRef.current !== null) {
-                window.clearTimeout(phaseTimerRef.current)
-                phaseTimerRef.current = null
-            }
-            setPhase(null)
         }
+    }
+
+    const retryLast = () => {
+        if (lastAction === "grade") void onGrade()
+        else void onRun()
     }
 
     const gradingModelLabel = model
         ?? modelsSwr.data?.defaults?.chat
         ?? t("codeGrading.defaultModel")
 
+    const languageLabel = t(`codeGrading.languages.${language}`)
+
     return (
         <div className={cn("flex flex-col gap-4", className)}>
-            {/* editor box: language row + flat code textarea */}
-            <div className="flex flex-col gap-2 rounded-3xl border border-default bg-surface p-4 focus-within:border-accent">
-                <div className="flex items-center justify-between gap-2">
-                    <Typography type="body-sm" weight="semibold">
-                        {t("codeGrading.yourCode")}
-                    </Typography>
-                    {isSql ? (
-                        <Chip size="sm" variant="soft">
-                            SQL
-                        </Chip>
+            {/* editor box: language picker + format toolbar, then the Monaco surface */}
+            <div className="flex flex-col gap-3 rounded-3xl border border-default bg-surface p-4 focus-within:border-accent">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                    {isSqlChallenge ? (
+                        // A SQL challenge is locked to SQL — a learner must not switch it to
+                        // another language and Run/submit non-SQL source against it. Render a
+                        // static locked chip instead of the picker.
+                        <div
+                            className="flex items-center gap-2 rounded-2xl border border-default px-3 py-2"
+                            aria-label={t("codeGrading.sqlLockedHint")}
+                            title={t("codeGrading.sqlLockedHint")}
+                        >
+                            <LockSimpleIcon
+                                aria-hidden
+                                focusable="false"
+                                className="size-4 text-muted"
+                            />
+                            <span className="text-sm font-medium">{languageLabel}</span>
+                        </div>
                     ) : (
                         <Dropdown>
                             <DropdownTrigger
                                 isDisabled={isBusy}
-                                className="cursor-pointer rounded-2xl border border-default px-3 py-1.5"
+                                className="cursor-pointer rounded-2xl border border-default px-3 py-2"
                             >
                                 <div className="flex items-center gap-2">
-                                    <span className="text-sm font-medium">
-                                        {t(`codeGrading.languages.${language}`)}
-                                    </span>
+                                    <span className="text-sm font-medium">{languageLabel}</span>
                                     <CaretDownIcon aria-hidden focusable="false" className="size-4" />
                                 </div>
                             </DropdownTrigger>
                             <DropdownPopover>
                                 <DropdownMenu
                                     aria-label={t("codeGrading.pickLanguage")}
-                                    onAction={(key) => setLanguage(String(key))}
+                                    onAction={(key) => onPickLanguage(String(key))}
                                 >
-                                    {EXECUTABLE_LANGUAGES.map((lang) => (
+                                    {CODE_LANGUAGES.map((lang) => (
                                         <DropdownItem
                                             key={lang}
                                             id={lang}
@@ -254,75 +310,37 @@ export const GradeCodePanel = ({
                             </DropdownPopover>
                         </Dropdown>
                     )}
+                    {canFormat ? (
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            isDisabled={!editorReady || isBusy}
+                            onPress={() => editorRef.current?.format()}
+                        >
+                            <MagicWandIcon aria-hidden focusable="false" className="size-4" />
+                            {t("codeGrading.format")}
+                        </Button>
+                    ) : null}
                 </div>
-                <textarea
+                <GradeCodeEditor
+                    ref={editorRef}
                     value={code}
-                    onChange={(event) => setCode(event.target.value)}
-                    placeholder={t("codeGrading.codePlaceholder")}
-                    aria-label={t("codeGrading.yourCode")}
-                    spellCheck={false}
+                    onChange={setCode}
+                    language={MONACO_LANGUAGE[language] ?? language}
                     disabled={isBusy}
-                    className="min-h-64 w-full resize-y bg-transparent font-mono text-sm text-foreground outline-none placeholder:text-muted"
+                    onReadyChange={setEditorReady}
                 />
             </div>
 
-            {/* test cases (executable languages) / static-only note (SQL) */}
-            {isSql ? (
+            {/* SQL sandbox scope note — the runner has no seeded course tables yet, so
+                queries must be self-contained (BE `setup_sql` is not exposed on the
+                challenge view). Sets expectations rather than silently returning
+                "relation does not exist" for table queries. */}
+            {isSqlLanguage ? (
                 <Typography type="body-xs" color="muted">
-                    {t("codeGrading.sqlStaticOnly")}
+                    {t("codeGrading.sqlScalarNote")}
                 </Typography>
-            ) : (
-                <div className="flex flex-col gap-2">
-                    <Typography type="body-sm" weight="semibold">
-                        {t("codeGrading.testCases")}
-                    </Typography>
-                    <Typography type="body-xs" color="muted">
-                        {t("codeGrading.testCasesHint")}
-                    </Typography>
-                    {testCases.map((row, index) => (
-                        <div key={index} className="flex items-center gap-2">
-                            <TextField variant="secondary" className="min-w-0 flex-1" isDisabled={isBusy}>
-                                <Input
-                                    value={row.input}
-                                    onChange={(event) => setCase(index, { input: event.target.value })}
-                                    placeholder={t("codeGrading.inputPlaceholder")}
-                                    aria-label={t("codeGrading.columns.input")}
-                                    className="font-mono"
-                                />
-                            </TextField>
-                            <TextField variant="secondary" className="min-w-0 flex-1" isDisabled={isBusy}>
-                                <Input
-                                    value={row.output}
-                                    onChange={(event) => setCase(index, { output: event.target.value })}
-                                    placeholder={t("codeGrading.outputPlaceholder")}
-                                    aria-label={t("codeGrading.columns.expected")}
-                                    className="font-mono"
-                                />
-                            </TextField>
-                            <Button
-                                size="sm"
-                                variant="tertiary"
-                                isIconOnly
-                                aria-label={t("codeGrading.removeCase")}
-                                isDisabled={isBusy || testCases.length <= 1}
-                                onPress={() => setTestCases((rows) => rows.filter((_, i) => i !== index))}
-                            >
-                                <TrashIcon aria-hidden focusable="false" className="size-4" />
-                            </Button>
-                        </div>
-                    ))}
-                    <Button
-                        size="sm"
-                        variant="secondary"
-                        className="w-fit"
-                        isDisabled={isBusy}
-                        onPress={() => setTestCases((rows) => [...rows, { input: "", output: "" }])}
-                    >
-                        <PlusIcon aria-hidden focusable="false" className="size-4" />
-                        {t("codeGrading.addCase")}
-                    </Button>
-                </div>
-            )}
+            ) : null}
 
             {/* model picker + hint */}
             <div className="flex flex-wrap items-center gap-2">
@@ -337,7 +355,7 @@ export const GradeCodePanel = ({
                 </Typography>
             </div>
 
-            {/* actions */}
+            {/* actions: Run (sandbox) + Chấm bằng AI (LLM) */}
             <div className="flex flex-wrap items-center gap-2">
                 <Button
                     variant="primary"
@@ -348,27 +366,27 @@ export const GradeCodePanel = ({
                     <SparkleIcon aria-hidden focusable="false" className="size-5" />
                     {gradeResult ? t("codeGrading.regrade") : t("codeGrading.gradeWithAi")}
                 </Button>
-                {!isSql ? (
-                    <Button
-                        variant="secondary"
-                        isPending={isExecuting}
-                        isDisabled={code.trim() === "" || validCases.length === 0 || isBusy}
-                        onPress={() => { void onExecute() }}
-                    >
-                        <PlayIcon aria-hidden focusable="false" className="size-5" />
-                        {t("codeGrading.runOnly")}
-                    </Button>
-                ) : null}
+                <Button
+                    variant="secondary"
+                    isPending={isRunningCode || isRunningSql}
+                    isDisabled={code.trim() === "" || isBusy}
+                    onPress={() => { void onRun() }}
+                >
+                    <PlayIcon aria-hidden focusable="false" className="size-5" />
+                    {t("codeGrading.run")}
+                </Button>
             </div>
 
-            {/* progress (sync 10–60s) */}
-            {phase !== null ? (
+            {/* progress (sandbox run / sync 10–60s grade) */}
+            {isBusy ? (
                 <div className="flex items-center gap-2">
                     <Spinner size="sm" />
                     <Typography type="body-sm" color="muted">
-                        {phase === "tests"
-                            ? t("codeGrading.runningTests")
-                            : t("codeGrading.gradingWith", { model: gradingModelLabel })}
+                        {isRunningSql
+                            ? t("codeGrading.runningSql")
+                            : isRunningCode
+                                ? t("codeGrading.running")
+                                : t("codeGrading.gradingWith", { model: gradingModelLabel })}
                     </Typography>
                 </div>
             ) : null}
@@ -384,7 +402,7 @@ export const GradeCodePanel = ({
                             size="sm"
                             variant="secondary"
                             className="w-fit"
-                            onPress={() => { void onGrade() }}
+                            onPress={retryLast}
                         >
                             {t("codeGrading.retry")}
                         </Button>
@@ -392,13 +410,9 @@ export const GradeCodePanel = ({
                 </div>
             ) : null}
 
-            {/* objective execution results (kept across re-grades) */}
-            {lastExecution ? <ExecutionResultTable execution={lastExecution} /> : null}
-            {gradeResult && isSql ? (
-                <Typography type="body-xs" color="muted">
-                    {t("codeGrading.sqlNoExecution")}
-                </Typography>
-            ) : null}
+            {/* sandbox run output: SQL grid or code stdout/stderr */}
+            {sqlResult ? <SqlResultTable result={sqlResult} /> : null}
+            {runResult ? <RunOutputPanel result={runResult} /> : null}
 
             {/* LLM grade (model-dependent) */}
             {gradeResult ? (

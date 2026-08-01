@@ -3,6 +3,7 @@ import { RestError } from "@/modules/api/rest/client"
 import {
     normalizeExecution,
     normalizeGrade,
+    normalizeRunOutput,
     resolveCodingErrorKey,
     toApiTestCases,
 } from "./codingExecution"
@@ -87,6 +88,51 @@ describe("normalizeExecution", () => {
         const outcome = normalizeExecution({ results: [{ passed: "true" }, {}] })
         expect(outcome.rows.map((row) => row.passed)).toEqual([false, false])
         expect(outcome.passedCount).toBe(0)
+    })
+})
+
+describe("normalizeRunOutput", () => {
+    it("reads the flat sandbox streams (PIN §7.1) and flags them present", () => {
+        const output = normalizeRunOutput({
+            stdout: "Hello, world!\n",
+            stderr: "",
+            exit_code: 0,
+            time_ms: 12,
+            compile_output: "",
+        })
+
+        expect(output).toEqual({
+            stdout: "Hello, world!\n",
+            stderr: "",
+            compileOutput: "",
+            exitCode: 0,
+            timeMs: 12,
+            present: true,
+        })
+    })
+
+    it("marks a test-case-only Judge0 block as NOT present (rows still win)", () => {
+        const output = normalizeRunOutput({ supported: true, results: [{ passed: true }], passed: 1, total: 1 })
+        expect(output.present).toBe(false)
+    })
+
+    it("treats a missing/garbage payload as nothing to show", () => {
+        expect(normalizeRunOutput(null)).toEqual({
+            stdout: "",
+            stderr: "",
+            compileOutput: "",
+            exitCode: null,
+            timeMs: null,
+            present: false,
+        })
+        expect(normalizeRunOutput("boom").present).toBe(false)
+    })
+
+    it("stays present when only stderr/compile_output came back (a crashed run)", () => {
+        const output = normalizeRunOutput({ stderr: "Traceback…", compile_output: "" })
+        expect(output.present).toBe(true)
+        expect(output.stderr).toBe("Traceback…")
+        expect(output.exitCode).toBeNull()
     })
 })
 

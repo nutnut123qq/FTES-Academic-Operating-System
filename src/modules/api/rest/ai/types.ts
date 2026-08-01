@@ -184,10 +184,18 @@ export interface GradeCodeRequest {
     language_output?: string
 }
 
-/** Body of `POST /api/v1/ai/coding/execute-code` (Judge0 only, no LLM). */
+/**
+ * Body of `POST /api/v1/ai/coding/execute-code` — the in-browser sandbox run
+ * (PIN §7.1, no LLM / no quota). `stdin` is fed to the program; `test_cases` is the
+ * LEGACY Judge0 shape still sent by `SubjectPractice` and IGNORED by the Piston
+ * sandbox — kept optional so both call sites type-check.
+ */
 export interface ExecuteCodeRequest {
     code: string
     language: string
+    /** Program stdin for the run (new sandbox contract). */
+    stdin?: string
+    /** @deprecated Legacy Judge0 test-case run — the sandbox panel no longer sends it. */
     test_cases?: Array<CodeGradeTestCase>
 }
 
@@ -233,9 +241,48 @@ export interface CodeGradeResult {
     execution?: CodeExecutionSummary | null
 }
 
-/** Response of `POST /api/v1/ai/coding/execute-code`. */
+/**
+ * Response of `POST /api/v1/ai/coding/execute-code`. The in-browser sandbox (PIN §7.1)
+ * returns one program run's streams (`stdout`/`stderr`/`exit_code`/`time_ms`, plus
+ * `compile_output` for compiled languages). `execution` is the LEGACY Judge0 test-case
+ * block still read by `SubjectPractice` — both shapes coexist for backward compatibility.
+ */
 export interface CodeExecuteResult {
+    stdout?: string
+    stderr?: string
+    exit_code?: number
+    time_ms?: number
+    compile_output?: string
     execution?: CodeExecutionSummary | null
+}
+
+/**
+ * Body of `POST /api/v1/ai/coding/execute-sql` — the Postgres sandbox run (PIN §7.2,
+ * a single rolled-back transaction, no LLM / no quota). Field names are snake_case: the
+ * BE proxies the body verbatim to ftes-ai-service (`/v2/code/execute-sql`).
+ */
+export interface SqlExecuteRequest {
+    /** The learner's query (single statement; multi-statement is rejected BE-side). */
+    query: string
+    /** Optional setup DDL/seed run before the query in the same tx (rolled back after). */
+    setup_sql?: string
+    /** Cap on returned rows (BE clamps; default 500). */
+    max_rows?: number
+}
+
+/**
+ * Response of `POST /api/v1/ai/coding/execute-sql` (PIN §7.2). Cells are stringified
+ * BE-side, so `rows` is a grid of strings addressed positionally by `columns`. A
+ * non-null `error` carries a scrubbed message for a syntax/timeout failure — render it
+ * instead of the grid, never a stacktrace.
+ */
+export interface SqlRunResult {
+    columns: Array<string>
+    rows: Array<Array<string>>
+    row_count: number
+    error?: string | null
+    truncated: boolean
+    time_ms: number
 }
 
 // ---------------- StudyPlanController (/api/v1/ai/learning/study-plan[s]) ----------------

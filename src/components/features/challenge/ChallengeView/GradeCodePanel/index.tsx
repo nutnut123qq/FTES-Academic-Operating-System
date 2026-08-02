@@ -56,6 +56,16 @@ export interface GradeCodePanelProps {
     /** Reports language changes to a controlling caller (pairs with {@link language}). */
     onLanguageChange?: (language: string) => void
     /**
+     * Controlled AI grading model id (pairs with {@link onModelChange}). Set by the learn
+     * submission sandbox so the model the learner picks in this panel's toolbar also
+     * threads into its formal `CODE` "Nộp bài" — not just the in-panel practice grade.
+     * `null` = the BE default. Omit both for the standalone catalog solver (the panel then
+     * keeps its own internal model state).
+     */
+    model?: string | null
+    /** Reports model changes to a controlling caller (pairs with {@link model}). */
+    onModelChange?: (model: string | null) => void
+    /**
      * SQL seed dataset (the challenge's `seedSql`, VISIBLE to the learner). When set on
      * a SQL exercise it is threaded into the sandbox Run path as `setup_sql` — seeded
      * fresh, run in the same rolled-back transaction as the query — and shown to the
@@ -174,6 +184,8 @@ export const GradeCodePanel = ({
     language: controlledLanguage,
     onCodeChange,
     onLanguageChange,
+    model: controlledModel,
+    onModelChange,
     setupSql,
     lockLanguage = false,
 }: GradeCodePanelProps) => {
@@ -194,7 +206,13 @@ export const GradeCodePanel = ({
     const language = controlledLanguage ?? internalLanguage
     const setLanguage = onLanguageChange ?? setInternalLanguage
 
-    const [model, setModel] = useState<string | null>(null)
+    // Controlled/uncontrolled model — a caller that threads the picked model into its own
+    // formal submission (the learn sandbox) passes model + onModelChange; the standalone
+    // catalog solver omits both and the panel keeps its own state. `null` is a valid value
+    // (the BE default), so controlled-ness keys off onModelChange, not a nullish model.
+    const [internalModel, setInternalModel] = useState<string | null>(null)
+    const model = onModelChange ? (controlledModel ?? null) : internalModel
+    const setModel = onModelChange ?? setInternalModel
     const [errorKey, setErrorKey] = useState<string | null>(null)
     /** Re-run target for the error card's retry button. */
     const [lastAction, setLastAction] = useState<"run" | "grade" | null>(null)
@@ -287,11 +305,17 @@ export const GradeCodePanel = ({
 
     const languageLabel = t(`codeGrading.languages.${language}`)
 
+    // Whether the result pane already carries something (a run/SQL/grade result). Drives
+    // the pane's empty placeholder vs. the actual output.
+    const hasAnyResult = Boolean(sqlResult || runResult || gradeResult)
+    const showResultEmpty = !isBusy && errorKey === null && !hasAnyResult
+
     return (
-        <div className={cn("flex flex-col gap-4", className)}>
-            {/* editor box: language picker + format toolbar, then the Monaco surface */}
-            <div className="flex flex-col gap-3 rounded-3xl border border-default bg-surface p-4 focus-within:border-accent">
-                <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className={cn("flex flex-col gap-3", className)}>
+            {/* TOP TOOLBAR (IDE): left = language (locked chip | picker) + Format;
+                right = model picker + Chấm bằng AI + Run — all above the editor. */}
+            <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-2">
                     {isLanguageLocked ? (
                         // The language is fixed (a SQL challenge, or a sandbox locked to the
                         // author's `fileExtension` runtime) — a learner must not switch it and
@@ -350,6 +374,41 @@ export const GradeCodePanel = ({
                         </Button>
                     ) : null}
                 </div>
+                <div className="flex flex-wrap items-center gap-2">
+                    <AiModelPicker
+                        catalog={modelsSwr.data}
+                        value={model}
+                        onChange={setModel}
+                        isDisabled={isBusy}
+                    />
+                    <Button
+                        variant="secondary"
+                        isPending={isRunningCode || isRunningSql}
+                        isDisabled={code.trim() === "" || isBusy}
+                        onPress={() => { void onRun() }}
+                    >
+                        <PlayIcon aria-hidden focusable="false" className="size-5" />
+                        {t("codeGrading.run")}
+                    </Button>
+                    <Button
+                        variant="primary"
+                        isPending={isGrading}
+                        isDisabled={code.trim() === "" || isBusy}
+                        onPress={() => { void onGrade() }}
+                    >
+                        <SparkleIcon aria-hidden focusable="false" className="size-5" />
+                        {gradeResult ? t("codeGrading.regrade") : t("codeGrading.gradeWithAi")}
+                    </Button>
+                </div>
+            </div>
+
+            {/* model hint — grading differs per model. */}
+            <Typography type="body-xs" color="muted">
+                {t("codeGrading.modelHint")}
+            </Typography>
+
+            {/* EDITOR (Monaco). */}
+            <div className="rounded-3xl border border-default bg-surface p-3 focus-within:border-accent">
                 <GradeCodeEditor
                     ref={editorRef}
                     value={code}
@@ -360,9 +419,9 @@ export const GradeCodePanel = ({
                 />
             </div>
 
-            {/* SQL sandbox scope note. With a challenge seed dataset the query runs
-                against seeded tables (shown below so the learner knows the schema);
-                without one the runner is an empty sandbox → self-contained queries only. */}
+            {/* SQL sandbox scope note. With a challenge seed dataset the query runs against
+                seeded tables (the schema/ERD is shown alongside so the learner knows what to
+                query); without one the runner is an empty sandbox → self-contained queries only. */}
             {isSqlLanguage ? (
                 hasSeed ? (
                     <div className="flex flex-col gap-2 rounded-2xl border border-default bg-default/40 p-3">
@@ -383,87 +442,68 @@ export const GradeCodePanel = ({
                 )
             ) : null}
 
-            {/* model picker + hint */}
-            <div className="flex flex-wrap items-center gap-2">
-                <AiModelPicker
-                    catalog={modelsSwr.data}
-                    value={model}
-                    onChange={setModel}
-                    isDisabled={isBusy}
-                />
-                <Typography type="body-xs" color="muted" className="min-w-0 flex-1">
-                    {t("codeGrading.modelHint")}
+            {/* OUTPUT / RESULT pane (terminal / SSMS results): titled bordered box with its
+                own scroll + a min-height, holding progress / error / the run or grade output. */}
+            <div className="flex flex-col gap-2 rounded-3xl border border-default bg-default/40 p-3">
+                <Typography type="body-xs" weight="medium" color="muted">
+                    {t("codeGrading.resultPaneTitle")}
                 </Typography>
-            </div>
+                <div className="max-h-96 min-h-40 overflow-auto rounded-2xl border border-default bg-surface p-3">
+                    {/* progress (sandbox run / sync 10–60s grade) */}
+                    {isBusy ? (
+                        <div className="flex items-center gap-2">
+                            <Spinner size="sm" />
+                            <Typography type="body-sm" color="muted">
+                                {isRunningSql
+                                    ? t("codeGrading.runningSql")
+                                    : isRunningCode
+                                        ? t("codeGrading.running")
+                                        : t("codeGrading.gradingWith", { model: gradingModelLabel })}
+                            </Typography>
+                        </div>
+                    ) : null}
 
-            {/* actions: Run (sandbox) + Chấm bằng AI (LLM) */}
-            <div className="flex flex-wrap items-center gap-2">
-                <Button
-                    variant="primary"
-                    isPending={isGrading}
-                    isDisabled={code.trim() === "" || isBusy}
-                    onPress={() => { void onGrade() }}
-                >
-                    <SparkleIcon aria-hidden focusable="false" className="size-5" />
-                    {gradeResult ? t("codeGrading.regrade") : t("codeGrading.gradeWithAi")}
-                </Button>
-                <Button
-                    variant="secondary"
-                    isPending={isRunningCode || isRunningSql}
-                    isDisabled={code.trim() === "" || isBusy}
-                    onPress={() => { void onRun() }}
-                >
-                    <PlayIcon aria-hidden focusable="false" className="size-5" />
-                    {t("codeGrading.run")}
-                </Button>
-            </div>
+                    {/* error state — the drafted code stays untouched */}
+                    {errorKey !== null ? (
+                        <div className="flex flex-col gap-2 rounded-2xl border border-danger/40 bg-danger/5 p-4">
+                            <Typography type="body-sm" className="text-danger">
+                                {t(`codeGrading.errors.${errorKey}`)}
+                            </Typography>
+                            {errorKey !== "forbidden" ? (
+                                <Button
+                                    size="sm"
+                                    variant="secondary"
+                                    className="w-fit"
+                                    onPress={retryLast}
+                                >
+                                    {t("codeGrading.retry")}
+                                </Button>
+                            ) : null}
+                        </div>
+                    ) : null}
 
-            {/* progress (sandbox run / sync 10–60s grade) */}
-            {isBusy ? (
-                <div className="flex items-center gap-2">
-                    <Spinner size="sm" />
-                    <Typography type="body-sm" color="muted">
-                        {isRunningSql
-                            ? t("codeGrading.runningSql")
-                            : isRunningCode
-                                ? t("codeGrading.running")
-                                : t("codeGrading.gradingWith", { model: gradingModelLabel })}
-                    </Typography>
-                </div>
-            ) : null}
+                    {/* sandbox run output: SQL grid or code stdout/stderr */}
+                    {sqlResult ? <SqlResultTable result={sqlResult} /> : null}
+                    {runResult ? <RunOutputPanel result={runResult} /> : null}
 
-            {/* error state — the drafted code stays untouched */}
-            {errorKey !== null ? (
-                <div className="flex flex-col gap-2 rounded-2xl border border-danger/40 bg-danger/5 p-4">
-                    <Typography type="body-sm" className="text-danger">
-                        {t(`codeGrading.errors.${errorKey}`)}
-                    </Typography>
-                    {errorKey !== "forbidden" ? (
-                        <Button
-                            size="sm"
-                            variant="secondary"
-                            className="w-fit"
-                            onPress={retryLast}
-                        >
-                            {t("codeGrading.retry")}
-                        </Button>
+                    {/* LLM grade (model-dependent) */}
+                    {gradeResult ? (
+                        <div className="flex flex-col gap-2">
+                            <GradeResultCard result={gradeResult} />
+                            <Typography type="body-xs" color="muted">
+                                {t("codeGrading.regradeHint")}
+                            </Typography>
+                        </div>
+                    ) : null}
+
+                    {/* nothing run yet — the pane keeps its shape with a hint */}
+                    {showResultEmpty ? (
+                        <Typography type="body-sm" color="muted">
+                            {t("codeGrading.resultPaneEmpty")}
+                        </Typography>
                     ) : null}
                 </div>
-            ) : null}
-
-            {/* sandbox run output: SQL grid or code stdout/stderr */}
-            {sqlResult ? <SqlResultTable result={sqlResult} /> : null}
-            {runResult ? <RunOutputPanel result={runResult} /> : null}
-
-            {/* LLM grade (model-dependent) */}
-            {gradeResult ? (
-                <>
-                    <GradeResultCard result={gradeResult} />
-                    <Typography type="body-xs" color="muted">
-                        {t("codeGrading.regradeHint")}
-                    </Typography>
-                </>
-            ) : null}
+            </div>
         </div>
     )
 }

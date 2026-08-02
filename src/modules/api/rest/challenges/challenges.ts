@@ -166,19 +166,27 @@ export const submitChallenge = async (
  * multipart flow).
  *
  * `Content-Type: null` lets the browser set the multipart boundary (same trick as
- * `submitAssignmentFile` / `uploadAvatar`); the file part is named `file`.
+ * `submitAssignmentFile` / `uploadAvatar`); the file part is named `file`, with an
+ * optional `model` form part carrying the picked AI grading model.
  *
  * FE ASSUMPTION (BE lane owns the real route): multipart `POST` to
  * `/api/v1/challenges/{id}/submissions/file`, returning the same {@link SubmissionView}
  * as the JSON submission. Kept a distinct path so it is additive to the existing JSON
  * `…/submissions` endpoint.
+ *
+ * @param model - Optional catalog model id — appended as a `model` form part; the BE
+ *   persists it (`grading_model`) and forwards it to the grader. Omit → BE default.
  */
 export const submitChallengeFile = async (
     id: string,
     file: File,
+    model?: string,
 ): Promise<SubmissionView> => {
     const formData = new FormData()
     formData.append("file", file)
+    if (model) {
+        formData.append("model", model)
+    }
     return restRequest<SubmissionView>({
         method: "POST",
         url: `/challenges/${id}/submissions/file`,

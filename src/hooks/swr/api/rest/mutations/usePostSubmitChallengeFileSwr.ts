@@ -12,6 +12,11 @@ export interface SubmitChallengeFileParams {
     id: string
     /** The code / zip file to submit for AI grading. */
     file: File
+    /**
+     * Optional catalog model id — appended as a `model` form part so the BE persists it
+     * (`grading_model`) and grades with it. Omit → the BE default model.
+     */
+    model?: string
 }
 
 /**
@@ -28,7 +33,7 @@ export const usePostSubmitChallengeFileSwr = () => {
     >(
         "POST_SUBMIT_CHALLENGE_FILE_SWR",
         async (_key, { arg }) => {
-            return submitChallengeFile(arg.id, arg.file)
+            return submitChallengeFile(arg.id, arg.file, arg.model)
         },
     )
 

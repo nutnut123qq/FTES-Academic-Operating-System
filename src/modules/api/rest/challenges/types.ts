@@ -202,6 +202,13 @@ export interface SubmitRequest {
     answers?: Record<string, Array<string>>
     /** Essay body when payload type is `ESSAY`. */
     essayText?: string
+    /**
+     * Optional AI grading model id (from the catalog `GET /api/v1/ai/models`) for a
+     * `CODE` / `URL` submission. The BE persists it (`challenge.submissions.grading_model`)
+     * and forwards it to the AI grader; it does NOT validate the allowlist (ai-service
+     * enforces). Omit → the BE grades with its configured default.
+     */
+    model?: string
 }
 
 /** Submission summary returned on submit / list. */

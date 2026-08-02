@@ -39,9 +39,11 @@ const TOP_GUARD = 80
 const FAB_SURFACE_CLASS = "bg-surface ring-1 ring-accent/40 hover:bg-default"
 
 /**
- * Viền "LED chạy" — một vòng conic-gradient (một vệt sáng accent) quay quanh mép nút.
- * Dựng bằng pseudo-`::before` full-size, tô conic-gradient rồi MASK content-box + exclude
- * để CHỈ chừa vành `p-[3px]` (giữa trong suốt → không che linh vật), `animate-spin` cho chạy.
+ * Viền "LED chạy" — một vòng conic-gradient NHIỀU MÀU phủ TRỌN vòng (không có khoảng trong
+ * suốt) quay quanh mép nút → các màu CHẠY vòng theo viền (đèn LED chạy), KHÔNG phải một vệt
+ * sáng quét. Palette mirror nút hỏi-đáp AI FTES cũ (`.rainbow-border-4side`). Dựng bằng
+ * pseudo-`::before` full-size, tô conic-gradient rồi MASK content-box + exclude để CHỈ chừa
+ * vành `p-[3px]` (giữa trong suốt → không che linh vật), `animate-spin` cho vòng màu chạy.
  * `motion-safe:` tôn trọng "giảm chuyển động"; `pointer-events-none` để không chặn click.
  *
  * ⚠️ KHÔNG thêm `relative` ở đây: nút mang class này vốn đã `fixed` (desktop) / `fixed`
@@ -52,11 +54,11 @@ const FAB_SURFACE_CLASS = "bg-surface ring-1 ring-accent/40 hover:bg-default"
 const FAB_LED_CLASS = cn(
     "before:pointer-events-none before:absolute before:inset-0 before:content-['']",
     "before:rounded-full before:p-[3px]",
-    "before:[background:conic-gradient(from_0deg,transparent,var(--accent),#7c9cff,transparent_65%)]",
+    "before:[background:conic-gradient(from_0deg,#ff6b6b,#ffd93d,#6bcb77,#4d96ff,#9b59b6,#ff6b9d,#ff6b6b)]",
     "before:[mask:linear-gradient(#000_0_0)_content-box,linear-gradient(#000_0_0)]",
     "before:[-webkit-mask:linear-gradient(#000_0_0)_content-box,linear-gradient(#000_0_0)]",
     "before:[mask-composite:exclude] before:[-webkit-mask-composite:xor]",
-    "before:motion-safe:animate-[spin_2s_linear_infinite]",
+    "before:motion-safe:animate-[spin_3s_linear_infinite]",
 )
 
 /** Mặt cáo FTES trong nút nổi — ảnh trang trí, tên cho screen-reader nằm ở `aria-label` của nút. */

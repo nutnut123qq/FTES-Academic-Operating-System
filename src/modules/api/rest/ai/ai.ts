@@ -21,6 +21,8 @@ import type {
     AiSessionView,
     SqlExecuteRequest,
     SqlRunResult,
+    SqlSchema,
+    SqlSchemaRequest,
     StudyPlanProgressRequest,
     StudyPlanView,
     TranscriptRef,
@@ -458,6 +460,24 @@ export const executeSql = async (body: SqlExecuteRequest): Promise<SqlRunResult>
     restRequest<SqlRunResult>({
         method: "POST",
         url: "/ai/coding/execute-sql",
+        data: body,
+        authenticated: true,
+        timeout: SQL_EXECUTE_TIMEOUT_MS,
+    })
+
+/**
+ * Introspects the schema of a SQL challenge's seed dataset (PIN §4C) — the BE runs the
+ * seed in a rolled-back tx and reads `information_schema` to return the tables / columns /
+ * foreign keys the learner can query. No LLM, no quota. Reuses the short SQL sandbox
+ * timeout so a hung engine surfaces fast.
+ *
+ * `POST /api/v1/ai/coding/sql-schema` — permission `ai.coding.use` (STUDENT+). Engine
+ * unconfigured BE-side → 503 `AI_SQL_UNAVAILABLE` (the panel shows a graceful message).
+ */
+export const sqlSchema = async (body: SqlSchemaRequest): Promise<SqlSchema> =>
+    restRequest<SqlSchema>({
+        method: "POST",
+        url: "/ai/coding/sql-schema",
         data: body,
         authenticated: true,
         timeout: SQL_EXECUTE_TIMEOUT_MS,

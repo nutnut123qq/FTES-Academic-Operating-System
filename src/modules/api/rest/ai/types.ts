@@ -285,6 +285,58 @@ export interface SqlRunResult {
     time_ms: number
 }
 
+/**
+ * Body of `POST /api/v1/ai/coding/sql-schema` — introspection of a SQL challenge's seed
+ * dataset (PIN §4C). Unlike execute-sql, the field is camelCase (`setupSql`): the BE
+ * proxies it to ftes-ai-service `/v2/code/sql-schema {setup_sql}`.
+ */
+export interface SqlSchemaRequest {
+    /** The mentor's seed DDL/DML — run in a rolled-back tx, then introspected for the schema. */
+    setupSql: string
+}
+
+/** One column of an introspected SQL table (PIN §4C). */
+export interface SqlSchemaColumn {
+    /** Column name. */
+    name: string
+    /** SQL data type (e.g. `integer`, `character varying`). */
+    dataType: string
+    /** Whether the column accepts NULL. */
+    nullable: boolean
+    /** Whether the column is part of the table's primary key. */
+    isPrimaryKey: boolean
+}
+
+/** One foreign-key relationship declared on an introspected SQL table (PIN §4C). */
+export interface SqlSchemaForeignKey {
+    /** The referencing column on this table. */
+    column: string
+    /** The referenced table. */
+    refTable: string
+    /** The referenced column. */
+    refColumn: string
+}
+
+/** One introspected SQL table — its columns and foreign keys (PIN §4C). */
+export interface SqlSchemaTable {
+    /** Table name. */
+    name: string
+    /** Ordered columns. */
+    columns: Array<SqlSchemaColumn>
+    /** Foreign-key relationships declared on this table. */
+    foreignKeys: Array<SqlSchemaForeignKey>
+}
+
+/**
+ * Response of `POST /api/v1/ai/coding/sql-schema` (PIN §4C) — the introspected schema of
+ * a challenge's seed dataset, so a learner sees the tables/columns/relationships they can
+ * query. `tables` is empty when the seed creates nothing. Engine unconfigured BE-side →
+ * 503 `AI_SQL_UNAVAILABLE` (surfaced as an error, never a crash).
+ */
+export interface SqlSchema {
+    tables: Array<SqlSchemaTable>
+}
+
 // ---------------- StudyPlanController (/api/v1/ai/learning/study-plan[s]) ----------------
 
 /**

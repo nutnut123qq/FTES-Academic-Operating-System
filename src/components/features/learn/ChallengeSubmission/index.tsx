@@ -107,6 +107,10 @@ export const ChallengeSubmission = () => {
     const [code, setCode] = useState("")
     /** Learner-picked language; null → derive the default from the challenge type. */
     const [languageOverride, setLanguageOverride] = useState<string | null>(null)
+    // Learner-picked AI grading model — lifted so the GradeCodePanel toolbar picker drives
+    // the model of the formal CODE "Nộp bài", not just the in-panel practice grade (pinned
+    // contract §2: a CODE submission carries an optional model). Null → the BE default.
+    const [model, setModel] = useState<string | null>(null)
 
     const type = challenge?.type ?? ""
     /** Unified solver kind — the single dispatch key across both BE type vocabularies. */
@@ -115,6 +119,10 @@ export const ChallengeSubmission = () => {
     // via the github-URL + file-upload solver; absent/unknown → the inline code editor.
     const usesSubmissionMethod = hasSubmissionMethod(challenge?.submissionMethod)
     const detail = useMemo(() => (challenge ? toChallengeDetail(challenge) : null), [challenge])
+    // The multi-method solver (github/file/sandbox) owns its own problem statement and lays
+    // the sandbox out as a split; give it a wider surface, and let it render the description
+    // (the standalone card below is suppressed for that branch so it never shows twice).
+    const usesSolver = kind === "code" && usesSubmissionMethod
     // SQL grades static-only (no language pick); everything else defaults to python.
     const language = languageOverride ?? (detail?.type === "sql" ? "sql" : "python")
     const usedCount = submissions.length
@@ -194,7 +202,7 @@ export const ChallengeSubmission = () => {
             if (code.trim() === "") {
                 return null
             }
-            return { payloadType: "CODE", code, language: language.trim() || "text" }
+            return { payloadType: "CODE", code, language: language.trim() || "text", ...(model ? { model } : {}) }
         }
         return null
     }
@@ -264,7 +272,7 @@ export const ChallengeSubmission = () => {
     }
 
     return (
-        <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+        <div className={cn("mx-auto flex w-full flex-col gap-6", usesSolver ? "max-w-6xl" : "max-w-3xl")}>
             <AsyncContent
                 isLoading={isLoading && !challenge}
                 skeleton={<SubmissionSkeleton />}
@@ -295,7 +303,10 @@ export const ChallengeSubmission = () => {
                             )}
                         />
 
-                        {challenge.description ? (
+                        {/* The multi-method solver renders its own problem statement (full-width
+                            above the tabs for github/file, in the left split column for the
+                            sandbox), so suppress the standalone card for that branch. */}
+                        {challenge.description && !usesSolver ? (
                             <div className="rounded-3xl border border-default bg-surface p-6 text-sm">
                                 <MarkdownContent reading markdown={challenge.description} />
                             </div>
@@ -350,6 +361,8 @@ export const ChallengeSubmission = () => {
                                                 language={language}
                                                 onCodeChange={setCode}
                                                 onLanguageChange={setLanguageOverride}
+                                                model={model}
+                                                onModelChange={setModel}
                                                 setupSql={challenge.seedSql ?? undefined}
                                             />
 

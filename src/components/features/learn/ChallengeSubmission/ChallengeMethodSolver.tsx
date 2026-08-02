@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useRef, useState } from "react"
+import React, { useRef, useState } from "react"
 import { Button, Input, Tabs, TextField, Typography, cn } from "@heroui/react"
 import {
     CodeIcon,
@@ -12,15 +12,11 @@ import {
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { ExtendedTabs } from "@/components/blocks/navigation/ExtendedTabs"
-import { AsyncContent } from "@/components/blocks/async/AsyncContent"
-import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
-import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
 import { AiModelPicker } from "@/components/reuseable/AiModelPicker"
 import { useRestWithToast } from "@/modules/toast/hooks"
 import { useGetAiCatalogModelsSwr } from "@/hooks/swr/api/rest/queries"
 import { usePostSubmitChallengeSwr } from "@/hooks/swr/api/rest/mutations/usePostSubmitChallengeSwr"
 import { usePostSubmitChallengeFileSwr } from "@/hooks/swr/api/rest/mutations/usePostSubmitChallengeFileSwr"
-import { usePostSqlSchemaSwr } from "@/hooks/swr/api/rest/mutations/usePostSqlSchemaSwr"
 import { GradeCodePanel } from "@/components/features/challenge/ChallengeView/GradeCodePanel"
 import type { ChallengeDetail } from "@/components/features/challenge/hooks/useQueryChallengeSwr"
 import {
@@ -32,7 +28,6 @@ import {
     runnableLanguageFromFileExtension,
     type SubmitMethod,
 } from "@/components/features/learn/submissionMethods"
-import { SqlSchemaPanel } from "./SqlSchemaPanel"
 
 /** The solver's tab keys — the two author methods plus the in-browser code sandbox. */
 type SolverTab = SubmitMethod | "sandbox"
@@ -154,30 +149,6 @@ export const ChallengeMethodSolver = ({
     const [model, setModel] = useState<string | null>(null)
     const modelsSwr = useGetAiCatalogModelsSwr()
 
-    // SQL schema/ERD (contract code-sandbox-ux §4C): when this is a SQL exercise carrying a
-    // VISIBLE seed dataset, introspect it once so the sandbox problem column can show the
-    // tables/relationships the learner queries. Non-SQL / no seed → nothing to introspect.
-    const isSql = challengeDetail.type === "sql" || sandboxLanguage === "sql"
-    const seedSqlValue = typeof seedSql === "string" ? seedSql.trim() : ""
-    const hasSeed = isSql && seedSqlValue !== ""
-    const {
-        trigger: triggerSchema,
-        data: schemaData,
-        error: schemaError,
-        isMutating: schemaLoading,
-    } = usePostSqlSchemaSwr()
-    // Introspect only once the sandbox tab is actually active (and once per seed): the
-    // schema/ERD lives solely inside the sandbox column, so a github/file default tab — or
-    // a SQL challenge that offers no sandbox at all — must never hit the SQL engine for a
-    // panel the learner never opens. Failures are recovered by the section's retry button.
-    const fetchedSeedRef = useRef<string | null>(null)
-    useEffect(() => {
-        if (hasSeed && method === "sandbox" && fetchedSeedRef.current !== seedSqlValue) {
-            fetchedSeedRef.current = seedSqlValue
-            void triggerSchema({ setupSql: seedSqlValue }).catch(() => {})
-        }
-    }, [hasSeed, method, seedSqlValue, triggerSchema])
-
     const busy = submitUrl.isMutating || submitFile.isMutating || submitCode.isMutating
     const invalid = url.trim() !== "" && !isHttpsUrl(url)
     const canSubmitUrl = !reachedMax && isHttpsUrl(url) && !busy
@@ -277,40 +248,6 @@ export const ChallengeMethodSolver = ({
                 {t("codeGrading.modelHint")}
             </Typography>
         </div>
-    )
-
-    // The problem statement, rendered full-width above the github / file tabs (the sandbox
-    // tab shows it in its own left split column instead). Owned here so the parent never
-    // renders it twice on the split surface.
-    const problemAbove = challengeDetail.description ? (
-        <div className="rounded-3xl border border-default bg-surface p-6">
-            <MarkdownContent reading markdown={challengeDetail.description} />
-        </div>
-    ) : null
-
-    // The SQL seed-dataset schema/ERD for the sandbox left column. No seed → a plain note;
-    // otherwise the introspected schema wrapped in the standard async states.
-    const sqlSchemaSection = !hasSeed ? (
-        <div className="rounded-2xl border border-default bg-default/40 p-4">
-            <Typography type="body-sm" color="muted">
-                {t("codeGrading.schemaNoSeed")}
-            </Typography>
-        </div>
-    ) : (
-        <AsyncContent
-            isLoading={schemaLoading && !schemaData && !schemaError}
-            skeleton={<SchemaSkeleton />}
-            isEmpty={Boolean(schemaData) && (schemaData?.tables.length ?? 0) === 0}
-            emptyContent={{ title: t("codeGrading.schemaEmpty") }}
-            error={!schemaData ? schemaError : undefined}
-            errorContent={{
-                title: t("codeGrading.schemaError"),
-                onRetry: () => { void triggerSchema({ setupSql: seedSqlValue }).catch(() => {}) },
-                retryLabel: t("codeGrading.retry"),
-            }}
-        >
-            {schemaData ? <SqlSchemaPanel schema={schemaData} /> : null}
-        </AsyncContent>
     )
 
     const githubForm = (
@@ -437,64 +374,46 @@ export const ChallengeMethodSolver = ({
         </div>
     )
 
-    // The in-browser sandbox: a two-column split — LEFT = the problem (title + description,
-    // plus the SQL schema/ERD) so the learner sees what to solve; RIGHT = the workspace,
-    // the embedded GradeCodePanel (IDE layout: toolbar Run/AI-grade above, editor, terminal
-    // output below) over lifted code/language, plus a formal "Nộp bài" that posts exactly
-    // that source as a CODE submission. Mobile stacks to one column (problem then workspace).
+    // The in-browser sandbox tab body = ONLY the workspace (the embedded GradeCodePanel:
+    // toolbar Run/submit above, editor, terminal output below). The problem statement + SQL
+    // schema/ERD live in the shared RIGHT column of the outer split (owned by the parent), so
+    // this stays a single column. GRADE = SUBMIT: the panel's PRIMARY button ("Nộp & Chấm AI")
+    // posts exactly the edited source as a CODE submission (consuming an attempt); the free
+    // "Run" stays for no-attempt testing.
     const sandboxForm = (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <div className="flex flex-col gap-4">
-                <div className="flex flex-col gap-3">
-                    <Typography type="body" weight="semibold">
-                        {challengeDetail.title}
-                    </Typography>
-                    {challengeDetail.description ? (
-                        <MarkdownContent reading markdown={challengeDetail.description} />
-                    ) : null}
-                </div>
-                {isSql ? sqlSchemaSection : null}
-            </div>
-            <div className="flex flex-col gap-4">
-                <GradeCodePanel
-                    challenge={challengeDetail}
-                    code={sandboxCode}
-                    language={sandboxCodeLanguage}
-                    onCodeChange={setSandboxCode}
-                    onLanguageChange={setSandboxCodeLanguage}
-                    // Thread the shared model down so the toolbar picker drives the same
-                    // state the formal CODE "Nộp bài" submits (not just the practice grade).
-                    model={model}
-                    onModelChange={setModel}
-                    setupSql={seedSql ?? undefined}
-                    // The sandbox runtime is fixed to the author's `fileExtension` language;
-                    // lock the picker so a learner can't Run/submit a mismatched language.
-                    lockLanguage
-                />
-                <div>
-                    <Button
-                        variant="primary"
-                        isPending={submitCode.isMutating}
-                        isDisabled={!canSubmitCode}
-                        onPress={() => void handleSubmitCode()}
-                    >
-                        {t("exercises.assignment.submit")}
-                    </Button>
-                </div>
-            </div>
-        </div>
+        <GradeCodePanel
+            challenge={challengeDetail}
+            code={sandboxCode}
+            language={sandboxCodeLanguage}
+            onCodeChange={setSandboxCode}
+            onLanguageChange={setSandboxCodeLanguage}
+            // Thread the shared model down so the toolbar picker drives the same state the
+            // formal CODE submission posts (not just an in-panel grade).
+            model={model}
+            onModelChange={setModel}
+            setupSql={seedSql ?? undefined}
+            // The seed's schema/ERD is rendered once in the shared right column
+            // (ChallengeProblemAside) — suppress the panel's raw-seed block here so the
+            // learner doesn't see the same dataset twice.
+            hideSeedNote
+            // The sandbox runtime is fixed to the author's `fileExtension` language; lock the
+            // picker so a learner can't Run/submit a mismatched language.
+            lockLanguage
+            onSubmit={() => void handleSubmitCode()}
+            submitLabel={t("exercises.challenge.gradeSubmit")}
+            isSubmitting={submitCode.isMutating}
+            submitDisabled={!canSubmitCode}
+        />
     )
 
     const activeForm =
         method === "sandbox" ? sandboxForm : method === "file" ? fileForm : githubForm
 
-    // The problem statement lives above the tabs for the github / file surfaces; the
-    // sandbox surface renders it in its own left split column instead (so it never shows
-    // twice). Owned here — the parent no longer renders a standalone description card for
-    // this solver branch.
+    // ONLY the work area (tabs + active form) — the LEFT column of the outer solve split.
+    // The problem statement ("Đề bài") + SQL schema/ERD live in the shared RIGHT column,
+    // owned by the parent `ChallengeSubmission`, so they render once for every tab.
     return (
-        <div className="flex flex-col gap-4">
-            {method !== "sandbox" ? problemAbove : null}
+        <div className="flex min-w-0 flex-col gap-4">
             {/* Offers the enabled surface(s): a GitHub-URL form, a file upload, and/or the
                 code sandbox; more than one → tabs (icon + label, label hidden `<sm`). */}
             {showTabs ? (
@@ -526,8 +445,3 @@ export const ChallengeMethodSolver = ({
         </div>
     )
 }
-
-/** Loading skeleton for the SQL schema/ERD panel — mirrors its single bordered card. */
-const SchemaSkeleton = () => (
-    <Skeleton className="h-40 w-full rounded-3xl" />
-)

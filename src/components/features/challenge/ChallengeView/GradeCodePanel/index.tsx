@@ -74,6 +74,14 @@ export interface GradeCodePanelProps {
      */
     setupSql?: string
     /**
+     * Suppress the panel's own SQL dataset footer (the raw seed `<pre>` / scalar note).
+     * Set by the submission surface, where the seed's schema/ERD is already rendered once
+     * in the problem column ({@link ChallengeProblemAside}) — leaving the panel's raw block
+     * on would show the same dataset twice. Omit for the standalone catalog solver, which
+     * has no problem column and so keeps the raw seed / scalar note here.
+     */
+    hideSeedNote?: boolean
+    /**
      * Lock the language picker to the current {@link language}, rendering a static chip
      * instead of the dropdown. Set by the learn submission sandbox, where the runtime
      * language is fixed by the author's `fileExtension` and the learner must not Run/submit
@@ -81,6 +89,22 @@ export interface GradeCodePanelProps {
      * (it stays on SQL); omit for the standalone catalog solver's free picker.
      */
     lockLanguage?: boolean
+    /**
+     * Submission mode. When set, the toolbar's PRIMARY button stops running the in-panel
+     * practice grade and instead calls {@link onSubmit} — the formal challenge submission
+     * (GRADE = SUBMIT: it consumes an attempt and is AI-graded server-side). The learn
+     * challenge surface passes it so a single "Nộp & Chấm AI" replaces the old
+     * grade-then-separately-submit two-step. Omit for the standalone catalog solver /
+     * subject practice — those keep the inline synchronous practice grade unchanged.
+     * The free "Run" button is always available (no attempt consumed) in either mode.
+     */
+    onSubmit?: () => void
+    /** Label for the primary button in submission mode (pairs with {@link onSubmit}). */
+    submitLabel?: string
+    /** True while {@link onSubmit} is in flight — drives the primary button's spinner. */
+    isSubmitting?: boolean
+    /** Extra caller gating for the submit button (e.g. attempts exhausted / no challenge). */
+    submitDisabled?: boolean
 }
 
 /**
@@ -187,9 +211,17 @@ export const GradeCodePanel = ({
     model: controlledModel,
     onModelChange,
     setupSql,
+    hideSeedNote = false,
     lockLanguage = false,
+    onSubmit,
+    submitLabel,
+    isSubmitting = false,
+    submitDisabled = false,
 }: GradeCodePanelProps) => {
     const t = useTranslations("learn")
+    // Submission mode (GRADE = SUBMIT): the primary button posts the formal submission
+    // instead of running the in-panel practice grade. Keys off the callback presence.
+    const submitMode = typeof onSubmit === "function"
     const isSqlChallenge = challenge.type === "sql"
     // Render the static locked chip (not the picker) when the language is fixed: a SQL
     // challenge is always SQL, and the learn sandbox locks any exercise to its author
@@ -222,6 +254,9 @@ export const GradeCodePanel = ({
     const [gradeResult, setGradeResult] = useState<CodeGradeResult | null>(null)
 
     const [editorReady, setEditorReady] = useState(false)
+    // Collapsible terminal — open by default, re-opened on every Run/submit so output is
+    // never hidden behind a stale collapse. The learner can fold it away to reclaim height.
+    const [resultOpen, setResultOpen] = useState(true)
     const editorRef = useRef<GradeCodeEditorHandle>(null)
 
     const modelsSwr = useGetAiCatalogModelsSwr()
@@ -253,6 +288,7 @@ export const GradeCodePanel = ({
 
     const onRun = async () => {
         if (code.trim() === "" || isBusy) return
+        setResultOpen(true)
         setErrorKey(null)
         setLastAction("run")
         try {
@@ -274,6 +310,10 @@ export const GradeCodePanel = ({
 
     const onGrade = async () => {
         if (code.trim() === "" || isBusy) return
+        // Re-open the (collapsible) terminal so a fresh grade is never hidden behind a
+        // stale manual collapse — mirrors onRun / the submit button. In the standalone
+        // ChallengeView this is the PRIMARY action, so a folded pane would look inert.
+        setResultOpen(true)
         setErrorKey(null)
         setLastAction("grade")
         try {
@@ -308,7 +348,7 @@ export const GradeCodePanel = ({
     // Whether the result pane already carries something (a run/SQL/grade result). Drives
     // the pane's empty placeholder vs. the actual output.
     const hasAnyResult = Boolean(sqlResult || runResult || gradeResult)
-    const showResultEmpty = !isBusy && errorKey === null && !hasAnyResult
+    const showResultEmpty = !isBusy && !isSubmitting && errorKey === null && !hasAnyResult
 
     return (
         <div className={cn("flex flex-col gap-3", className)}>
@@ -390,15 +430,35 @@ export const GradeCodePanel = ({
                         <PlayIcon aria-hidden focusable="false" className="size-5" />
                         {t("codeGrading.run")}
                     </Button>
-                    <Button
-                        variant="primary"
-                        isPending={isGrading}
-                        isDisabled={code.trim() === "" || isBusy}
-                        onPress={() => { void onGrade() }}
-                    >
-                        <SparkleIcon aria-hidden focusable="false" className="size-5" />
-                        {gradeResult ? t("codeGrading.regrade") : t("codeGrading.gradeWithAi")}
-                    </Button>
+                    {submitMode ? (
+                        // GRADE = SUBMIT: the primary action posts the formal submission
+                        // (consumes an attempt, AI-graded server-side) rather than the
+                        // in-panel practice grade. Free "Run" above stays as a no-attempt test.
+                        <Button
+                            variant="primary"
+                            isPending={isSubmitting}
+                            isDisabled={
+                                code.trim() === "" || isBusy || isSubmitting || submitDisabled
+                            }
+                            onPress={() => {
+                                setResultOpen(true)
+                                onSubmit?.()
+                            }}
+                        >
+                            <SparkleIcon aria-hidden focusable="false" className="size-5" />
+                            {submitLabel ?? t("codeGrading.gradeWithAi")}
+                        </Button>
+                    ) : (
+                        <Button
+                            variant="primary"
+                            isPending={isGrading}
+                            isDisabled={code.trim() === "" || isBusy}
+                            onPress={() => { void onGrade() }}
+                        >
+                            <SparkleIcon aria-hidden focusable="false" className="size-5" />
+                            {gradeResult ? t("codeGrading.regrade") : t("codeGrading.gradeWithAi")}
+                        </Button>
+                    )}
                 </div>
             </div>
 
@@ -419,10 +479,103 @@ export const GradeCodePanel = ({
                 />
             </div>
 
-            {/* SQL sandbox scope note. With a challenge seed dataset the query runs against
-                seeded tables (the schema/ERD is shown alongside so the learner knows what to
-                query); without one the runner is an empty sandbox → self-contained queries only. */}
-            {isSqlLanguage ? (
+            {/* OUTPUT / RESULT pane (terminal / SSMS results): a collapsible titled box docked
+                DIRECTLY below the editor, own scroll + min-height, holding progress / error /
+                the run or grade output. Auto-opens on Run/submit; foldable to reclaim height. */}
+            <div className="flex flex-col gap-2 rounded-3xl border border-default bg-default/40 p-3">
+                <button
+                    type="button"
+                    onClick={() => setResultOpen((open) => !open)}
+                    aria-expanded={resultOpen}
+                    className="flex cursor-pointer items-center justify-between gap-2 text-left"
+                >
+                    <Typography type="body-xs" weight="medium" color="muted">
+                        {t("codeGrading.resultPaneTitle")}
+                    </Typography>
+                    <CaretDownIcon
+                        aria-hidden
+                        focusable="false"
+                        className={cn(
+                            "size-4 text-muted transition-transform",
+                            resultOpen ? "" : "-rotate-90",
+                        )}
+                    />
+                </button>
+                {resultOpen ? (
+                    <div className="max-h-96 min-h-40 overflow-auto rounded-2xl border border-default bg-surface p-3">
+                        {/* progress (sandbox run / sync 10–60s practice grade) */}
+                        {isBusy ? (
+                            <div className="flex items-center gap-2">
+                                <Spinner size="sm" />
+                                <Typography type="body-sm" color="muted">
+                                    {isRunningSql
+                                        ? t("codeGrading.runningSql")
+                                        : isRunningCode
+                                            ? t("codeGrading.running")
+                                            : t("codeGrading.gradingWith", { model: gradingModelLabel })}
+                                </Typography>
+                            </div>
+                        ) : null}
+
+                        {/* submission in flight (GRADE = SUBMIT): the AI verdict lands in the
+                            attempts list, so the terminal shows a submitting indicator here. */}
+                        {isSubmitting ? (
+                            <div className="flex items-center gap-2">
+                                <Spinner size="sm" />
+                                <Typography type="body-sm" color="muted">
+                                    {t("codeGrading.submittingGrade")}
+                                </Typography>
+                            </div>
+                        ) : null}
+
+                        {/* error state — the drafted code stays untouched */}
+                        {errorKey !== null ? (
+                            <div className="flex flex-col gap-2 rounded-2xl border border-danger/40 bg-danger/5 p-4">
+                                <Typography type="body-sm" className="text-danger">
+                                    {t(`codeGrading.errors.${errorKey}`)}
+                                </Typography>
+                                {errorKey !== "forbidden" ? (
+                                    <Button
+                                        size="sm"
+                                        variant="secondary"
+                                        className="w-fit"
+                                        onPress={retryLast}
+                                    >
+                                        {t("codeGrading.retry")}
+                                    </Button>
+                                ) : null}
+                            </div>
+                        ) : null}
+
+                        {/* sandbox run output: SQL grid or code stdout/stderr */}
+                        {sqlResult ? <SqlResultTable result={sqlResult} /> : null}
+                        {runResult ? <RunOutputPanel result={runResult} /> : null}
+
+                        {/* LLM grade (model-dependent) */}
+                        {gradeResult ? (
+                            <div className="flex flex-col gap-2">
+                                <GradeResultCard result={gradeResult} />
+                                <Typography type="body-xs" color="muted">
+                                    {t("codeGrading.regradeHint")}
+                                </Typography>
+                            </div>
+                        ) : null}
+
+                        {/* nothing run yet — the pane keeps its shape with a hint */}
+                        {showResultEmpty ? (
+                            <Typography type="body-sm" color="muted">
+                                {t("codeGrading.resultPaneEmpty")}
+                            </Typography>
+                        ) : null}
+                    </div>
+                ) : null}
+            </div>
+
+            {/* SQL sandbox scope note — below the terminal, a contextual reference to the
+                dataset the query runs against. On the submission surface the schema/ERD lives
+                in the problem column (hideSeedNote), so this raw seed / scalar note is
+                suppressed there and kept only for the standalone solver. */}
+            {isSqlLanguage && !hideSeedNote ? (
                 hasSeed ? (
                     <div className="flex flex-col gap-2 rounded-2xl border border-default bg-default/40 p-3">
                         <Typography type="body-xs" weight="medium">
@@ -441,69 +594,6 @@ export const GradeCodePanel = ({
                     </Typography>
                 )
             ) : null}
-
-            {/* OUTPUT / RESULT pane (terminal / SSMS results): titled bordered box with its
-                own scroll + a min-height, holding progress / error / the run or grade output. */}
-            <div className="flex flex-col gap-2 rounded-3xl border border-default bg-default/40 p-3">
-                <Typography type="body-xs" weight="medium" color="muted">
-                    {t("codeGrading.resultPaneTitle")}
-                </Typography>
-                <div className="max-h-96 min-h-40 overflow-auto rounded-2xl border border-default bg-surface p-3">
-                    {/* progress (sandbox run / sync 10–60s grade) */}
-                    {isBusy ? (
-                        <div className="flex items-center gap-2">
-                            <Spinner size="sm" />
-                            <Typography type="body-sm" color="muted">
-                                {isRunningSql
-                                    ? t("codeGrading.runningSql")
-                                    : isRunningCode
-                                        ? t("codeGrading.running")
-                                        : t("codeGrading.gradingWith", { model: gradingModelLabel })}
-                            </Typography>
-                        </div>
-                    ) : null}
-
-                    {/* error state — the drafted code stays untouched */}
-                    {errorKey !== null ? (
-                        <div className="flex flex-col gap-2 rounded-2xl border border-danger/40 bg-danger/5 p-4">
-                            <Typography type="body-sm" className="text-danger">
-                                {t(`codeGrading.errors.${errorKey}`)}
-                            </Typography>
-                            {errorKey !== "forbidden" ? (
-                                <Button
-                                    size="sm"
-                                    variant="secondary"
-                                    className="w-fit"
-                                    onPress={retryLast}
-                                >
-                                    {t("codeGrading.retry")}
-                                </Button>
-                            ) : null}
-                        </div>
-                    ) : null}
-
-                    {/* sandbox run output: SQL grid or code stdout/stderr */}
-                    {sqlResult ? <SqlResultTable result={sqlResult} /> : null}
-                    {runResult ? <RunOutputPanel result={runResult} /> : null}
-
-                    {/* LLM grade (model-dependent) */}
-                    {gradeResult ? (
-                        <div className="flex flex-col gap-2">
-                            <GradeResultCard result={gradeResult} />
-                            <Typography type="body-xs" color="muted">
-                                {t("codeGrading.regradeHint")}
-                            </Typography>
-                        </div>
-                    ) : null}
-
-                    {/* nothing run yet — the pane keeps its shape with a hint */}
-                    {showResultEmpty ? (
-                        <Typography type="body-sm" color="muted">
-                            {t("codeGrading.resultPaneEmpty")}
-                        </Typography>
-                    ) : null}
-                </div>
-            </div>
         </div>
     )
 }

@@ -44,17 +44,19 @@ export interface LearnLesson {
     /** True when this lesson carries at least one auto-graded challenge. */
     hasChallenge?: boolean
     /**
-     * Per-lesson exercises (challenges + assignments) nested as indented child rows
-     * under the lesson in the content-map. Empty when the BE curriculum carries none
-     * (older deployment, or a lesson with no exercises).
+     * Per-lesson challenges nested as indented child rows under the lesson in the
+     * content-map. Empty when the BE curriculum carries none (older deployment, or a
+     * lesson with no challenges). (Legacy course-module assignments are no longer
+     * surfaced here — the unified challenge path covers them.)
      */
     exercises: Array<LearnExercise>
 }
 
 /**
- * One nested exercise under a lesson (a challenge or a course-module assignment).
- * `kind` picks the child-row icon and the solver route; `type` is the raw BE
- * challenge type fed to {@link normalizeExerciseType} (empty for assignments).
+ * One nested exercise under a lesson. `kind` picks the child-row icon and the solver
+ * route; `type` is the raw BE challenge type fed to {@link normalizeExerciseType}. The
+ * `"assignment"` variant is retained for the mind-map's own node model, but the learn
+ * curriculum only ever produces `"challenge"` rows now.
  */
 export interface LearnExercise {
     kind: "challenge" | "assignment"
@@ -157,13 +159,7 @@ const toLearnLesson = (lesson: LessonView): LearnLesson => {
         status: challenge.status,
         free: challenge.free ?? false,
     }))
-    const assignments: Array<LearnExercise> = (lesson.assignments ?? []).map((assignment) => ({
-        kind: "assignment",
-        id: assignment.id,
-        title: assignment.title,
-        type: "",
-    }))
-    const exercises = [...challenges, ...assignments]
+    const exercises = challenges
     return {
         id: lesson.id,
         title: lesson.name,

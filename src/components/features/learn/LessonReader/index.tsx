@@ -41,7 +41,6 @@ import { LessonVideoBlock } from "./LessonVideoBlock"
 import { LessonDocumentHtml } from "./LessonDocumentHtml"
 import { SelectionHintCallout } from "./ContentAiSelectionAsk/SelectionHintCallout"
 import { LessonAiStudy } from "./LessonAiStudy"
-import { LessonAssignmentBlock } from "./LessonAssignmentBlock"
 import { LessonQuizBlock } from "./LessonQuizBlock"
 import { LessonCompleteCelebration } from "./LessonCompleteCelebration"
 import { PackageGateModal } from "@/components/features/course/PackageGateModal"
@@ -499,9 +498,6 @@ export const LessonReader = () => {
                                             }
                                         />
                                     ) : null}
-                                    {/* real assignments for this lesson (renders only when a
-                                        non-empty list comes back) — GitHub URL submit + grading history */}
-                                    <LessonAssignmentBlock lessonId={contentId} className="mx-auto w-full max-w-3xl" />
                                     {/* quiz block — real taker contract; only for lessons that
                                         carry a PUBLISHED quiz (no request otherwise) */}
                                     {lesson.hasQuiz ? (

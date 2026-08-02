@@ -55,6 +55,22 @@ export interface GradeCodePanelProps {
     onCodeChange?: (code: string) => void
     /** Reports language changes to a controlling caller (pairs with {@link language}). */
     onLanguageChange?: (language: string) => void
+    /**
+     * SQL seed dataset (the challenge's `seedSql`, VISIBLE to the learner). When set on
+     * a SQL exercise it is threaded into the sandbox Run path as `setup_sql` — seeded
+     * fresh, run in the same rolled-back transaction as the query — and shown to the
+     * learner so they know the schema/data to query. Omit for a self-contained SQL
+     * scratchpad (the panel keeps its "scalar-only" note).
+     */
+    setupSql?: string
+    /**
+     * Lock the language picker to the current {@link language}, rendering a static chip
+     * instead of the dropdown. Set by the learn submission sandbox, where the runtime
+     * language is fixed by the author's `fileExtension` and the learner must not Run/submit
+     * a mismatched language against the rubric. A SQL challenge is always locked regardless
+     * (it stays on SQL); omit for the standalone catalog solver's free picker.
+     */
+    lockLanguage?: boolean
 }
 
 /**
@@ -158,9 +174,15 @@ export const GradeCodePanel = ({
     language: controlledLanguage,
     onCodeChange,
     onLanguageChange,
+    setupSql,
+    lockLanguage = false,
 }: GradeCodePanelProps) => {
     const t = useTranslations("learn")
     const isSqlChallenge = challenge.type === "sql"
+    // Render the static locked chip (not the picker) when the language is fixed: a SQL
+    // challenge is always SQL, and the learn sandbox locks any exercise to its author
+    // `fileExtension` runtime so a learner can't Run/submit a mismatched language.
+    const isLanguageLocked = isSqlChallenge || lockLanguage
 
     // Controlled/uncontrolled: a caller that owns the code (the learn challenge surface,
     // so its formal submission posts exactly this source) passes code + onCodeChange; the
@@ -191,6 +213,9 @@ export const GradeCodePanel = ({
     const isBusy = isGrading || isRunningCode || isRunningSql
 
     const isSqlLanguage = language === "sql"
+    // A non-empty seed dataset threads into the SQL Run as `setup_sql` (seeded fresh,
+    // rolled back after the query) and is shown to the learner as the schema to query.
+    const hasSeed = isSqlLanguage && typeof setupSql === "string" && setupSql.trim() !== ""
     // Monaco only formats JS/TS client-side — hide Format for the other picker
     // languages so it is never an enabled-but-dead control.
     const canFormat = FORMATTABLE_LANGUAGES.has(language)
@@ -214,7 +239,9 @@ export const GradeCodePanel = ({
         setLastAction("run")
         try {
             if (isSqlLanguage) {
-                const result = await triggerExecuteSql({ query: code })
+                // Thread the challenge seed dataset so the query runs against the seeded
+                // tables (fresh per run, rolled back after). Undefined → self-contained.
+                const result = await triggerExecuteSql({ query: code, setup_sql: setupSql })
                 setSqlResult(result ?? null)
                 setRunResult(null)
             } else {
@@ -265,14 +292,15 @@ export const GradeCodePanel = ({
             {/* editor box: language picker + format toolbar, then the Monaco surface */}
             <div className="flex flex-col gap-3 rounded-3xl border border-default bg-surface p-4 focus-within:border-accent">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                    {isSqlChallenge ? (
-                        // A SQL challenge is locked to SQL — a learner must not switch it to
-                        // another language and Run/submit non-SQL source against it. Render a
-                        // static locked chip instead of the picker.
+                    {isLanguageLocked ? (
+                        // The language is fixed (a SQL challenge, or a sandbox locked to the
+                        // author's `fileExtension` runtime) — a learner must not switch it and
+                        // Run/submit a mismatched language. Render a static locked chip instead
+                        // of the picker, with the reason in its label/tooltip.
                         <div
                             className="flex items-center gap-2 rounded-2xl border border-default px-3 py-2"
-                            aria-label={t("codeGrading.sqlLockedHint")}
-                            title={t("codeGrading.sqlLockedHint")}
+                            aria-label={t(isSqlChallenge ? "codeGrading.sqlLockedHint" : "codeGrading.languageLockedHint")}
+                            title={t(isSqlChallenge ? "codeGrading.sqlLockedHint" : "codeGrading.languageLockedHint")}
                         >
                             <LockSimpleIcon
                                 aria-hidden
@@ -332,14 +360,27 @@ export const GradeCodePanel = ({
                 />
             </div>
 
-            {/* SQL sandbox scope note — the runner has no seeded course tables yet, so
-                queries must be self-contained (BE `setup_sql` is not exposed on the
-                challenge view). Sets expectations rather than silently returning
-                "relation does not exist" for table queries. */}
+            {/* SQL sandbox scope note. With a challenge seed dataset the query runs
+                against seeded tables (shown below so the learner knows the schema);
+                without one the runner is an empty sandbox → self-contained queries only. */}
             {isSqlLanguage ? (
-                <Typography type="body-xs" color="muted">
-                    {t("codeGrading.sqlScalarNote")}
-                </Typography>
+                hasSeed ? (
+                    <div className="flex flex-col gap-2 rounded-2xl border border-default bg-default/40 p-3">
+                        <Typography type="body-xs" weight="medium">
+                            {t("codeGrading.sqlSeedTitle")}
+                        </Typography>
+                        <Typography type="body-xs" color="muted">
+                            {t("codeGrading.sqlSeedNote")}
+                        </Typography>
+                        <pre className="max-h-48 overflow-auto rounded-xl border border-default bg-surface p-3 text-xs">
+                            <code>{setupSql}</code>
+                        </pre>
+                    </div>
+                ) : (
+                    <Typography type="body-xs" color="muted">
+                        {t("codeGrading.sqlScalarNote")}
+                    </Typography>
+                )
             ) : null}
 
             {/* model picker + hint */}

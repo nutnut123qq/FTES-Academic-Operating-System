@@ -3,7 +3,9 @@
 import React, { useRef, useState } from "react"
 import { Button, Input, Tabs, TextField, Typography, cn } from "@heroui/react"
 import {
+    CodeIcon,
     FileArrowUpIcon,
+    GithubLogoIcon,
     LockSimpleIcon,
     UploadSimpleIcon,
     WarningCircleIcon,
@@ -13,14 +15,27 @@ import { ExtendedTabs } from "@/components/blocks/navigation/ExtendedTabs"
 import { useRestWithToast } from "@/modules/toast/hooks"
 import { usePostSubmitChallengeSwr } from "@/hooks/swr/api/rest/mutations/usePostSubmitChallengeSwr"
 import { usePostSubmitChallengeFileSwr } from "@/hooks/swr/api/rest/mutations/usePostSubmitChallengeFileSwr"
+import { GradeCodePanel } from "@/components/features/challenge/ChallengeView/GradeCodePanel"
+import type { ChallengeDetail } from "@/components/features/challenge/hooks/useQueryChallengeSwr"
 import {
     fileMatchesExtensions,
     isHttpsUrl,
     parseFileExtensions,
     parseGradingConfigFileExtension,
     parseSubmitMethods,
+    runnableLanguageFromFileExtension,
     type SubmitMethod,
 } from "@/components/features/learn/submissionMethods"
+
+/** The solver's tab keys — the two author methods plus the in-browser code sandbox. */
+type SolverTab = SubmitMethod | "sandbox"
+
+/** i18n key for each tab's label (used for the visible label + the a11y `aria-label`). */
+const TAB_LABEL_KEY: Record<SolverTab, string> = {
+    github: "exercises.assignment.tabGithub",
+    file: "exercises.assignment.tabFile",
+    sandbox: "exercises.assignment.tabSandbox",
+}
 
 /** Props for {@link ChallengeMethodSolver}. */
 export interface ChallengeMethodSolverProps {
@@ -30,6 +45,20 @@ export interface ChallengeMethodSolverProps {
     submissionMethod: string | null | undefined
     /** Opaque grading config JSON — the FILE `fileExtension` whitelist is read from it. */
     gradingConfig: string | null | undefined
+    /**
+     * The full solve-view challenge — powers the embedded "Code trực tiếp" sandbox
+     * ({@link GradeCodePanel}) so its inline Run/AI-grade practice and the formal
+     * "Nộp bài" post the same source.
+     */
+    challengeDetail: ChallengeDetail
+    /**
+     * The author's file-extension hint (top-level view field). Drives whether the
+     * in-browser sandbox tab is offered and which runtime language it locks to; falls
+     * back to the `gradingConfig` extension whitelist when absent.
+     */
+    fileExtension: string | null | undefined
+    /** SQL seed dataset threaded into the sandbox SQL Run path (visible to the learner). */
+    seedSql: string | null | undefined
     /** Cap on attempts — drives the "used all attempts" lock message. */
     maxSubmissions: number
     /** True once every attempt is used — locks the submit surface. */
@@ -39,16 +68,21 @@ export interface ChallengeMethodSolverProps {
 }
 
 /**
- * The github-URL + file-upload solver for a `CODE` challenge that carries a
- * `submissionMethod` (contract challenge-submission-method-solver). Ports the lesson
- * assignment card's two forms onto the dedicated challenge solve page, honoring the
- * author's method:
- *   - `GITHUB` → only the repo-URL form (`payloadType:"URL"`)
- *   - `FILE`   → only the file-upload form (multipart → AI graded)
- *   - `BOTH`   → both, behind a method tab
+ * The multi-method solver for a `CODE` challenge that carries a `submissionMethod`
+ * (contract challenge-submission-method-solver). Ports the lesson assignment card's
+ * forms onto the dedicated challenge solve page and adds an in-browser sandbox,
+ * honoring the author's method plus the exercise's runnable language:
+ *   - `GITHUB` → the repo-URL form (`payloadType:"URL"`)
+ *   - `FILE`   → the file-upload form (multipart → AI graded)
+ *   - `BOTH`   → both
+ *   - a runnable `fileExtension` (py/js/ts/java/c/cpp/go/csharp/php/ruby/sql) also adds
+ *     a **"Code trực tiếp"** tab: an embedded {@link GradeCodePanel} (Run + AI-grade
+ *     practice) whose formal "Nộp bài" posts `payloadType:"CODE"`.
  *
- * The URL submit goes through {@link usePostSubmitChallengeSwr} (`payloadType:"URL"`),
- * the file submit through {@link usePostSubmitChallengeFileSwr}. The learner's attempt
+ * More than one enabled surface → tabbed; a single surface renders inline. The URL
+ * submit goes through {@link usePostSubmitChallengeSwr} (`payloadType:"URL"`), the file
+ * submit through {@link usePostSubmitChallengeFileSwr}, the sandbox submit through
+ * {@link usePostSubmitChallengeSwr} (`payloadType:"CODE"`). The learner's attempt
  * history + count chip stay owned by the parent `ChallengeSubmission`, which
  * revalidates via {@link onSubmitted}. When no method is set the parent renders the
  * inline `GradeCodePanel` instead — this solver is never mounted in that case.
@@ -57,6 +91,9 @@ export const ChallengeMethodSolver = ({
     challengeId,
     submissionMethod,
     gradingConfig,
+    challengeDetail,
+    fileExtension,
+    seedSql,
     maxSubmissions,
     reachedMax,
     onSubmitted,
@@ -65,13 +102,28 @@ export const ChallengeMethodSolver = ({
     const runRest = useRestWithToast()
     const submitUrl = usePostSubmitChallengeSwr()
     const submitFile = usePostSubmitChallengeFileSwr()
+    const submitCode = usePostSubmitChallengeSwr()
 
     const methods = parseSubmitMethods(submissionMethod)
     const acceptExtensions = parseFileExtensions(parseGradingConfigFileExtension(gradingConfig))
-    const showTabs = methods.github && methods.file
+    // The sandbox runtime language, from the top-level `fileExtension` hint (falling back
+    // to the gradingConfig whitelist). Non-null → the exercise is runnable in-browser, so
+    // the "Code trực tiếp" tab is offered; null → upload-only (e.g. `.zip`/`.pdf`).
+    const sandboxLanguage = runnableLanguageFromFileExtension(
+        fileExtension ?? parseGradingConfigFileExtension(gradingConfig),
+    )
+    const showSandbox = sandboxLanguage !== null
 
-    // The active tab — default to the first allowed method.
-    const [method, setMethod] = useState<SubmitMethod>(methods.github ? "github" : "file")
+    // The enabled surfaces, in tab order: github, file, sandbox.
+    const availableTabs: Array<SolverTab> = [
+        ...(methods.github ? (["github"] as const) : []),
+        ...(methods.file ? (["file"] as const) : []),
+        ...(showSandbox ? (["sandbox"] as const) : []),
+    ]
+    const showTabs = availableTabs.length > 1
+
+    // The active tab — default to the first enabled surface.
+    const [method, setMethod] = useState<SolverTab>(availableTabs[0])
 
     const [url, setUrl] = useState("")
     const [touched, setTouched] = useState(false)
@@ -81,10 +133,18 @@ export const ChallengeMethodSolver = ({
     const fileInputRef = useRef<HTMLInputElement>(null)
     const [dragOver, setDragOver] = useState(false)
 
-    const busy = submitUrl.isMutating || submitFile.isMutating
+    // Lifted sandbox editor state — the same source the embedded GradeCodePanel edits and
+    // Runs/AI-grades is what the formal "Nộp bài" posts (payloadType CODE). The language is
+    // fixed to the exercise's runnable language; GradeCodePanel locks the picker (see the
+    // `lockLanguage` prop passed below), so it never changes after mount.
+    const [sandboxCode, setSandboxCode] = useState("")
+    const [sandboxCodeLanguage, setSandboxCodeLanguage] = useState<string>(sandboxLanguage ?? "python")
+
+    const busy = submitUrl.isMutating || submitFile.isMutating || submitCode.isMutating
     const invalid = url.trim() !== "" && !isHttpsUrl(url)
     const canSubmitUrl = !reachedMax && isHttpsUrl(url) && !busy
     const canSubmitFile = !reachedMax && file !== null && fileError === null && !busy
+    const canSubmitCode = !reachedMax && sandboxCode.trim() !== "" && !busy
 
     const handleSubmitUrl = async () => {
         setTouched(true)
@@ -125,6 +185,27 @@ export const ChallengeMethodSolver = ({
         )
         if (ok !== null) {
             setFile(null)
+            onSubmitted()
+        }
+    }
+
+    const handleSubmitCode = async () => {
+        // Client-side gate — no doomed request for empty source / a used-up quota.
+        if (sandboxCode.trim() === "" || reachedMax || busy) {
+            return
+        }
+        const ok = await runRest(
+            () => submitCode.trigger({
+                id: challengeId,
+                request: {
+                    payloadType: "CODE",
+                    code: sandboxCode,
+                    language: sandboxCodeLanguage.trim() || "text",
+                },
+            }),
+            { successMessage: t("exercises.assignment.submitted") },
+        )
+        if (ok !== null) {
             onSubmitted()
         }
     }
@@ -261,29 +342,70 @@ export const ChallengeMethodSolver = ({
         </div>
     )
 
-    // Offers the allowed method(s): a GitHub-URL form and/or a file upload; both → tabs.
+    // The in-browser sandbox: the embedded GradeCodePanel (Run + AI-grade practice, with
+    // the SQL seed threaded in) over lifted code/language, plus a formal "Nộp bài" that
+    // posts exactly that source as a CODE submission.
+    const sandboxForm = (
+        <div className="flex flex-col gap-4">
+            <GradeCodePanel
+                challenge={challengeDetail}
+                code={sandboxCode}
+                language={sandboxCodeLanguage}
+                onCodeChange={setSandboxCode}
+                onLanguageChange={setSandboxCodeLanguage}
+                setupSql={seedSql ?? undefined}
+                // The sandbox runtime is fixed to the author's `fileExtension` language;
+                // lock the picker so a learner can't Run/submit a mismatched language.
+                lockLanguage
+            />
+            <div>
+                <Button
+                    variant="primary"
+                    isPending={submitCode.isMutating}
+                    isDisabled={!canSubmitCode}
+                    onPress={() => void handleSubmitCode()}
+                >
+                    {t("exercises.assignment.submit")}
+                </Button>
+            </div>
+        </div>
+    )
+
+    const activeForm =
+        method === "sandbox" ? sandboxForm : method === "file" ? fileForm : githubForm
+
+    // Offers the enabled surface(s): a GitHub-URL form, a file upload, and/or the code
+    // sandbox; more than one → tabs (icon + label, label hidden `<sm`).
     if (showTabs) {
         return (
             <div className="flex flex-col gap-4">
                 <ExtendedTabs
                     selectedKey={method}
-                    onSelectionChange={(key) => setMethod(key as SubmitMethod)}
+                    onSelectionChange={(key) => setMethod(key as SolverTab)}
                 >
                     <Tabs.ListContainer>
                         <Tabs.List aria-label={t("exercises.assignment.methodTabsLabel")}>
-                            <Tabs.Tab key="github" id="github">
-                                {t("exercises.assignment.tabGithub")}
-                            </Tabs.Tab>
-                            <Tabs.Tab key="file" id="file">
-                                {t("exercises.assignment.tabFile")}
-                            </Tabs.Tab>
+                            {availableTabs.map((tab) => (
+                                <Tabs.Tab key={tab} id={tab} aria-label={t(TAB_LABEL_KEY[tab])}>
+                                    <span className="flex items-center gap-2">
+                                        {tab === "github" ? (
+                                            <GithubLogoIcon aria-hidden focusable="false" className="size-4" />
+                                        ) : tab === "file" ? (
+                                            <FileArrowUpIcon aria-hidden focusable="false" className="size-4" />
+                                        ) : (
+                                            <CodeIcon aria-hidden focusable="false" className="size-4" />
+                                        )}
+                                        <span className="hidden sm:inline">{t(TAB_LABEL_KEY[tab])}</span>
+                                    </span>
+                                </Tabs.Tab>
+                            ))}
                         </Tabs.List>
                     </Tabs.ListContainer>
                 </ExtendedTabs>
-                {method === "github" ? githubForm : fileForm}
+                {activeForm}
             </div>
         )
     }
 
-    return methods.file ? fileForm : githubForm
+    return activeForm
 }

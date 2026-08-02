@@ -1,10 +1,9 @@
 /**
- * Shared helpers for the two first-class "solve → submit for AI grading" surfaces
- * (contract exercise-submission-methods): the inline lesson **assignment** card
- * (`LessonAssignmentBlock`) and the **challenge** solve page's code-method solver
- * (`ChallengeMethodSolver`). Both offer a GitHub-URL form and/or a file-upload form
- * chosen by the author's `submissionMethod`, so the parsing / validation lives once
- * here instead of being copied per surface.
+ * Shared helpers for the challenge "solve → submit for AI grading" surface (contract
+ * exercise-submission-methods): the **challenge** solve page's code-method solver
+ * (`ChallengeMethodSolver`) offers a GitHub-URL form, a file-upload form, and/or the
+ * in-browser code sandbox chosen by the author's `submissionMethod` + `fileExtension`,
+ * so the parsing / validation lives once here instead of being copied per surface.
  */
 
 /** The two first-class assignment/challenge submission methods. */
@@ -61,6 +60,47 @@ export const parseFileExtensions = (raw: string | null | undefined): Array<strin
 /** True when the file's name ends with one of the accepted extensions (or none are set). */
 export const fileMatchesExtensions = (file: File, extensions: Array<string>): boolean =>
     extensions.length === 0 || extensions.some((ext) => file.name.toLowerCase().endsWith(ext))
+
+/**
+ * FE map from a code file extension to the in-browser sandbox runtime language. The
+ * runtime source of truth is Piston (BE); this only decides which picker language a
+ * learner's file extension implies and whether the "Code trực tiếp" sandbox tab is
+ * offered. Kept in sync with `GradeCodePanel`'s `CODE_LANGUAGES` picker subset.
+ */
+export const FILE_EXTENSION_LANGUAGE: Record<string, string> = {
+    ".py": "python",
+    ".js": "javascript",
+    ".ts": "typescript",
+    ".java": "java",
+    ".c": "c",
+    ".cpp": "cpp",
+    ".go": "go",
+    ".cs": "csharp",
+    ".php": "php",
+    ".rb": "ruby",
+    ".sql": "sql",
+}
+
+/**
+ * The sandbox runtime language a challenge's `fileExtension` maps to, or `null` when
+ * none of its accepted extensions names a runnable language (e.g. a `.zip` / `.pdf`
+ * upload). Reuses {@link parseFileExtensions} so a whitelist like `"py, zip"` resolves
+ * to the first runnable entry (`python`).
+ *
+ * @param fileExtension - The author's raw `fileExtension` hint / whitelist string.
+ * @returns The mapped runtime language (e.g. `"python"`, `"sql"`), or `null`.
+ */
+export const runnableLanguageFromFileExtension = (
+    fileExtension: string | null | undefined,
+): string | null => {
+    for (const ext of parseFileExtensions(fileExtension)) {
+        const language = FILE_EXTENSION_LANGUAGE[ext]
+        if (language) {
+            return language
+        }
+    }
+    return null
+}
 
 /**
  * Reads the accepted `fileExtension` whitelist out of a challenge's opaque

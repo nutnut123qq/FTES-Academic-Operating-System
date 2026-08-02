@@ -1,6 +1,5 @@
 import { restRequest } from "@/modules/api/rest/client"
 import type {
-    AssignmentView,
     BookmarkRequest,
     BookmarkView,
     CertificateVerifyView,
@@ -14,7 +13,6 @@ import type {
     CourseAccessStateView,
     CourseRatingSummary,
     CourseSummary,
-    CreateAssignmentRequest,
     CreateCourseRequest,
     CreateLessonRequest,
     CreatePackageRequest,
@@ -43,9 +41,7 @@ import type {
     QuizSummaryView,
     ReorderRequest,
     StreamViewResponse,
-    SubmitAssignmentRequest,
     SubmitQuizRequest,
-    CourseSubmissionView,
     UpdateCourseRequest,
     UpdateLessonRequest,
     UpdatePreviewDefaultRequest,
@@ -677,94 +673,6 @@ export const reportPreviewLimit = async (
 }
 
 // ---------------------------------------------------------------- assessment
-
-/**
- * Creates an assignment inside a lesson.
- *
- * `POST /api/v1/courses/lessons/{lessonId}/assignments`
- */
-export const createLessonAssignment = async (
-    lessonId: string,
-    request: CreateAssignmentRequest,
-): Promise<IdResponse> => {
-    return restRequest<IdResponse>({
-        method: "POST",
-        url: `/courses/lessons/${lessonId}/assignments`,
-        data: request,
-    })
-}
-
-/**
- * Lists assignments for a lesson.
- *
- * `GET /api/v1/courses/lessons/{lessonId}/assignments`
- */
-export const getLessonAssignments = async (
-    lessonId: string,
-): Promise<Array<AssignmentView>> => {
-    return restRequest<Array<AssignmentView>>({
-        method: "GET",
-        url: `/courses/lessons/${lessonId}/assignments`,
-    })
-}
-
-/**
- * Submits an assignment.
- *
- * `POST /api/v1/courses/assignments/{assignmentId}/submissions`
- */
-export const submitAssignment = async (
-    assignmentId: string,
-    request: SubmitAssignmentRequest,
-): Promise<CourseSubmissionView> => {
-    return restRequest<CourseSubmissionView>({
-        method: "POST",
-        url: `/courses/assignments/${assignmentId}/submissions`,
-        data: request,
-    })
-}
-
-/**
- * Submits an assignment as a FILE upload (code / zip → AI graded), the second
- * first-class submission method alongside the GitHub URL (contract
- * exercise-submission-methods, mirroring the legacy ftes `ExerciseController
- * POST /api/exercises/{id}/submit-and-grade` multipart flow).
- *
- * `Content-Type: null` lets the browser set the multipart boundary (same trick as
- * `uploadAvatar` / `uploadCommunityMedia`); the file part is named `file`.
- *
- * FE ASSUMPTION (BE lane owns the real route): multipart `POST` to
- * `/api/v1/courses/assignments/{assignmentId}/submissions/file`, returning the same
- * {@link CourseSubmissionView} as the URL submission. Kept a distinct path so it is
- * additive to the existing JSON `…/submissions` endpoint.
- */
-export const submitAssignmentFile = async (
-    assignmentId: string,
-    file: File,
-): Promise<CourseSubmissionView> => {
-    const formData = new FormData()
-    formData.append("file", file)
-    return restRequest<CourseSubmissionView>({
-        method: "POST",
-        url: `/courses/assignments/${assignmentId}/submissions/file`,
-        data: formData,
-        headers: { "Content-Type": null as unknown as string },
-    })
-}
-
-/**
- * Lists the current user's submissions for an assignment.
- *
- * `GET /api/v1/courses/assignments/{assignmentId}/submissions/me`
- */
-export const getMyAssignmentSubmissions = async (
-    assignmentId: string,
-): Promise<Array<CourseSubmissionView>> => {
-    return restRequest<Array<CourseSubmissionView>>({
-        method: "GET",
-        url: `/courses/assignments/${assignmentId}/submissions/me`,
-    })
-}
 
 /**
  * Lists the taker-safe quizzes of a lesson (no questions / correctKeys).

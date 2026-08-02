@@ -55,6 +55,7 @@ vi.mock("@heroui/react", () => {
 })
 
 vi.mock("@phosphor-icons/react", () => ({
+    CaretDownIcon: () => <span />,
     CheckSquareIcon: () => <span />,
     HammerIcon: () => <span />,
     LockSimpleIcon: () => <span />,
@@ -108,13 +109,25 @@ vi.mock("@/components/features/learn/hooks/useQueryChallengeSubmissionSwr", () =
 // UiUxChallengeEditor. Stub both so the test asserts the dispatch, not their
 // (heavy: Judge0/AI/Monaco) internals.
 vi.mock("@/components/features/challenge/ChallengeView/GradeCodePanel", () => ({
-    // Exposes onCodeChange so the test can drive the lifted code state the formal
-    // submission posts (the real panel owns a Judge0/AI editor we don't exercise here).
-    GradeCodePanel: ({ onCodeChange }: { onCodeChange?: (code: string) => void }) => (
+    // Exposes onCodeChange + onSubmit so the test can drive the lifted code state AND fire
+    // the panel's primary "Nộp & Chấm AI" (GRADE = SUBMIT) — the real panel owns a Judge0/AI
+    // editor we don't exercise here.
+    GradeCodePanel: ({
+        onCodeChange,
+        onSubmit,
+        submitLabel,
+    }: {
+        onCodeChange?: (code: string) => void
+        onSubmit?: () => void
+        submitLabel?: string
+    }) => (
         <div>
             grade-code-panel
             <button type="button" onClick={() => onCodeChange?.("print(1)")}>
                 set-code
+            </button>
+            <button type="button" onClick={() => onSubmit?.()}>
+                {submitLabel ?? "panel-submit"}
             </button>
         </div>
     ),
@@ -234,13 +247,13 @@ describe("ChallengeSubmission — access gate", () => {
         submitTrigger.mockResolvedValue({ id: "sub-1" })
         render(<ChallengeSubmission />)
 
-        // CODE/CODING/SQL render the AI code-grading panel for editing + practice...
+        // CODE/CODING/SQL render the AI code-grading panel for editing + running...
         expect(screen.getByText("grade-code-panel")).toBeTruthy()
 
-        // ...but the formal submission path is preserved: the shared code state feeds a
-        // real {payloadType:'CODE', code, language} submission via "Nộp bài".
+        // ...and GRADE = SUBMIT: the panel's PRIMARY "Nộp & Chấm AI" posts the shared code
+        // state as a real {payloadType:'CODE', code, language} submission (no separate button).
         fireEvent.click(screen.getByText("set-code"))
-        fireEvent.click(screen.getByText("exercises.challenge.submit"))
+        fireEvent.click(screen.getByText("exercises.challenge.gradeSubmit"))
 
         await waitFor(() =>
             expect(submitTrigger).toHaveBeenCalledWith({

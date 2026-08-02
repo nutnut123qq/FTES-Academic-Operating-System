@@ -14,6 +14,32 @@ import type {
 } from "./types"
 
 /**
+ * Normalizes a raw BE submission status onto the FE vocabulary the challenge surfaces
+ * poll + render against. The BE lifecycle is `PENDING → RUNNING → SCORED` (or `FAILED`);
+ * the FE speaks `PENDING / GRADING / COMPLETED / FAILED`, so `useQueryChallengeSubmissionSwr`
+ * keeps polling while `GRADING` and stops (showing "Đã chấm" + the score) at `COMPLETED`.
+ * Only the two divergent states are remapped — `PENDING` / `FAILED` / any unknown value
+ * passes through unchanged. This is the SINGLE FE-side status remap (PINNED §3): the BE stays
+ * on its own vocabulary.
+ */
+const normalizeSubmissionStatus = (status: string): string => {
+    switch (status) {
+    case "SCORED":
+        return "COMPLETED"
+    case "RUNNING":
+        return "GRADING"
+    default:
+        return status
+    }
+}
+
+/** Applies {@link normalizeSubmissionStatus} to a parsed submission view. */
+const normalizeSubmissionView = (view: SubmissionView): SubmissionView => ({
+    ...view,
+    status: normalizeSubmissionStatus(view.status),
+})
+
+/**
  * Lists all public challenges.
  *
  * `GET /api/v1/challenges`
@@ -152,11 +178,12 @@ export const submitChallenge = async (
     id: string,
     request: SubmitRequest,
 ): Promise<SubmissionView> => {
-    return restRequest<SubmissionView>({
+    const view = await restRequest<SubmissionView>({
         method: "POST",
         url: `/challenges/${id}/submissions`,
         data: request,
     })
+    return normalizeSubmissionView(view)
 }
 
 /**
@@ -187,12 +214,13 @@ export const submitChallengeFile = async (
     if (model) {
         formData.append("model", model)
     }
-    return restRequest<SubmissionView>({
+    const view = await restRequest<SubmissionView>({
         method: "POST",
         url: `/challenges/${id}/submissions/file`,
         data: formData,
         headers: { "Content-Type": null as unknown as string },
     })
+    return normalizeSubmissionView(view)
 }
 
 /**
@@ -204,10 +232,11 @@ export const submitChallengeFile = async (
 export const getMyChallengeSubmissions = async (
     id: string,
 ): Promise<Array<SubmissionView>> => {
-    return restRequest<Array<SubmissionView>>({
+    const views = await restRequest<Array<SubmissionView>>({
         method: "GET",
         url: `/challenges/${id}/submissions/me`,
     })
+    return views.map(normalizeSubmissionView)
 }
 
 /**
@@ -219,10 +248,11 @@ export const getChallengeSubmissionResults = async (
     id: string,
     submissionId: string,
 ): Promise<SubmissionResultsView> => {
-    return restRequest<SubmissionResultsView>({
+    const view = await restRequest<SubmissionResultsView>({
         method: "GET",
         url: `/challenges/${id}/submissions/${submissionId}/results`,
     })
+    return { ...view, status: normalizeSubmissionStatus(view.status) }
 }
 
 /**

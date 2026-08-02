@@ -6914,6 +6914,13 @@
         "upgradeTiersHint": "Packages that unlock this challenge:",
         "upgradeCta": "Upgrade package",
         "error": "Failed to load the challenge.",
+        "gradeSubmit": "Submit & grade with AI",
+        "viewResult": "View result",
+        "hideResult": "Hide result",
+        "resultError": "Failed to load the submission result.",
+        "resultEmpty": "No detailed result for this submission yet.",
+        "problemHeading": "Problem",
+        "datasetHeading": "Dataset",
         "comingSoonTitle": "Coming soon",
         "comingSoonBody": "The solver for this challenge type is being built."
       }
@@ -7440,6 +7447,7 @@
       "sqlErrorTitle": "Query error",
       "resultPaneTitle": "Results",
       "resultPaneEmpty": "Run your code or grade with AI to see results here.",
+      "submittingGrade": "Submitting & grading with AI…",
       "schemaTitle": "Database schema",
       "schemaViewErd": "ERD",
       "schemaViewTable": "Tables",

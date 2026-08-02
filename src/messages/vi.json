@@ -6917,6 +6917,13 @@
         "upgradeTiersHint": "Gói mở khóa thử thách này:",
         "upgradeCta": "Nâng cấp gói",
         "error": "Không tải được thử thách.",
+        "gradeSubmit": "Nộp & Chấm AI",
+        "viewResult": "Xem kết quả",
+        "hideResult": "Ẩn kết quả",
+        "resultError": "Không tải được kết quả bài nộp.",
+        "resultEmpty": "Chưa có kết quả chi tiết cho bài nộp này.",
+        "problemHeading": "Đề bài",
+        "datasetHeading": "Dữ liệu",
         "comingSoonTitle": "Sắp ra mắt",
         "comingSoonBody": "Trình giải cho loại thử thách này đang được xây dựng."
       }
@@ -7443,6 +7450,7 @@
       "sqlErrorTitle": "Lỗi truy vấn",
       "resultPaneTitle": "Kết quả",
       "resultPaneEmpty": "Chạy code hoặc chấm bằng AI để xem kết quả ở đây.",
+      "submittingGrade": "Đang nộp & chấm bằng AI…",
       "schemaTitle": "Cấu trúc cơ sở dữ liệu",
       "schemaViewErd": "Sơ đồ ERD",
       "schemaViewTable": "Bảng",

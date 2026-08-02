@@ -5,6 +5,8 @@
  * `ChallengeController`.
  */
 
+import type { CodeGradeResult } from "../ai"
+
 /** Body sent to `POST /api/v1/challenges`. */
 export interface CreateChallengeRequest {
     /** Challenge title. */
@@ -217,7 +219,12 @@ export interface SubmissionView {
     id: string
     /** Attempt number. */
     attemptNo: number
-    /** Submission status, e.g. `PENDING`, `GRADING`, `COMPLETED`. */
+    /**
+     * Submission status, FE-normalized (PINNED §3): the challenges REST layer maps the BE
+     * `SCORED → COMPLETED` and `RUNNING → GRADING`, so this is always one of
+     * `PENDING` | `GRADING` | `COMPLETED` | `FAILED` (`QUEUED` may also appear pre-grade).
+     * `GRADING` keeps the attempts list polling; `COMPLETED` shows "Đã chấm" + the score.
+     */
     status: string
     /** Auto-graded score. */
     autoScore: string | null
@@ -259,12 +266,20 @@ export interface SubmissionResultsView {
     submissionId: string
     /** Attempt number. */
     attemptNo: number
-    /** Submission status. */
+    /** Submission status (FE-normalized — see {@link SubmissionView.status}). */
     status: string
     /** Final score. */
     finalScore: string
     /** Per-test-case results. */
     results: Array<TestResultView>
+    /**
+     * The AI grader's verdict for a code/URL/file submission (BE `aiFeedback`) — score /
+     * verdict / per-criterion breakdown / feedback, the SAME shape the in-panel
+     * `GradeResultCard` renders. Present once the submission is graded (`COMPLETED`);
+     * `null` / absent while pending or for a non-AI-graded type. Lets the attempts list
+     * re-open a graded submission's feedback without re-submitting.
+     */
+    aiFeedback?: CodeGradeResult | null
 }
 
 /** Leaderboard entry row. */

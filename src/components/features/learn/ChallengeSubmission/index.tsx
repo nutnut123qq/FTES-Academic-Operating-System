@@ -8,6 +8,7 @@ import {
     cn,
 } from "@heroui/react"
 import {
+    CaretDownIcon,
     CheckSquareIcon,
     HammerIcon,
     LockSimpleIcon,
@@ -29,17 +30,24 @@ import { PackageGateModal } from "@/components/features/course/PackageGateModal"
 import { useQueryCoursePackagesSwr } from "@/components/features/course/hooks/useQueryCoursePackagesSwr"
 import { resolveTierColor, resolveTierLabel } from "@/components/features/course/tierLabels"
 import { GradeCodePanel } from "@/components/features/challenge/ChallengeView/GradeCodePanel"
+import { GradeResultCard } from "@/components/features/challenge/ChallengeView/GradeCodePanel/GradeResultCard"
 import { UiUxChallengeEditor } from "@/components/features/challenge/ChallengeView/UiUxChallengeEditor"
 import { mapChallengeType } from "@/components/features/challenge/hooks/useQueryChallengesSwr"
 import type { ChallengeDetail } from "@/components/features/challenge/hooks/useQueryChallengeSwr"
 import { normalizeExerciseType } from "../exerciseType"
-import { hasSubmissionMethod } from "../submissionMethods"
+import {
+    hasSubmissionMethod,
+    parseGradingConfigFileExtension,
+    runnableLanguageFromFileExtension,
+} from "../submissionMethods"
 import { useQueryLearnCourseSwr } from "../hooks/useQueryLearnCourseSwr"
 import {
     isChallengeSubmissionPending,
     useQueryChallengeSubmissionSwr,
 } from "../hooks/useQueryChallengeSubmissionSwr"
+import { useQueryChallengeSubmissionResultsSwr } from "../hooks/useQueryChallengeSubmissionResultsSwr"
 import { ChallengeMethodSolver } from "./ChallengeMethodSolver"
+import { ChallengeProblemAside } from "./ChallengeProblemAside"
 
 /**
  * Adapts the REST challenge-submission view onto the richer `ChallengeDetail` the
@@ -119,10 +127,21 @@ export const ChallengeSubmission = () => {
     // via the github-URL + file-upload solver; absent/unknown → the inline code editor.
     const usesSubmissionMethod = hasSubmissionMethod(challenge?.submissionMethod)
     const detail = useMemo(() => (challenge ? toChallengeDetail(challenge) : null), [challenge])
-    // The multi-method solver (github/file/sandbox) owns its own problem statement and lays
-    // the sandbox out as a split; give it a wider surface, and let it render the description
-    // (the standalone card below is suppressed for that branch so it never shows twice).
-    const usesSolver = kind === "code" && usesSubmissionMethod
+    // EVERY code challenge (inline editor OR github/file/sandbox solver) renders as the
+    // unified 2-column split — work area LEFT, problem ("Đề bài") + SQL dataset RIGHT — so it
+    // needs the wider surface, and the standalone description card is suppressed (the problem
+    // lives once in the right column via ChallengeProblemAside). MCQ/ESSAY/UI-UX keep the
+    // narrow reading column with the description card above.
+    const isSplitLayout = kind === "code"
+    // The seed schema/ERD in the right column shows for a SQL-typed challenge AND for a
+    // CODE/CODING challenge whose runnable `fileExtension` is `.sql` (its sandbox runs SQL,
+    // so the seeded dataset is what the learner queries) — mirroring how the method solver
+    // derives its sandbox language, so the schema isn't missing for that edge case.
+    const isSqlChallenge =
+        detail?.type === "sql" ||
+        runnableLanguageFromFileExtension(
+            challenge?.fileExtension ?? parseGradingConfigFileExtension(challenge?.gradingConfig),
+        ) === "sql"
     // SQL grades static-only (no language pick); everything else defaults to python.
     const language = languageOverride ?? (detail?.type === "sql" ? "sql" : "python")
     const usedCount = submissions.length
@@ -272,7 +291,7 @@ export const ChallengeSubmission = () => {
     }
 
     return (
-        <div className={cn("mx-auto flex w-full flex-col gap-6", usesSolver ? "max-w-6xl" : "max-w-3xl")}>
+        <div className={cn("mx-auto flex w-full flex-col gap-6", isSplitLayout ? "max-w-6xl" : "max-w-3xl")}>
             <AsyncContent
                 isLoading={isLoading && !challenge}
                 skeleton={<SubmissionSkeleton />}
@@ -303,10 +322,10 @@ export const ChallengeSubmission = () => {
                             )}
                         />
 
-                        {/* The multi-method solver renders its own problem statement (full-width
-                            above the tabs for github/file, in the left split column for the
-                            sandbox), so suppress the standalone card for that branch. */}
-                        {challenge.description && !usesSolver ? (
+                        {/* A code challenge moves its problem statement into the RIGHT column of
+                            the split (ChallengeProblemAside), so the standalone card is only for
+                            the narrow-column types (MCQ / ESSAY / UI-UX). */}
+                        {challenge.description && !isSplitLayout ? (
                             <div className="rounded-3xl border border-default bg-surface p-6 text-sm">
                                 <MarkdownContent reading markdown={challenge.description} />
                             </div>
@@ -318,76 +337,91 @@ export const ChallengeSubmission = () => {
                             UI-UX gets its dedicated editor; MCQ/ESSAY keep the form. */}
                         {kind === "code" && detail ? (
                             <>
-                                <section className="flex flex-col gap-4">
-                                    <div className="flex flex-wrap items-center justify-between gap-2">
-                                        <div className="flex items-center gap-2">
-                                            <PuzzlePieceIcon aria-hidden focusable="false" className="size-5 text-accent" />
-                                            <Typography type="body" weight="semibold">
-                                                {t("exercises.challenge.submitTitle")}
-                                            </Typography>
-                                        </div>
-                                        <Chip size="sm" variant="soft" className="shrink-0">
-                                            {t("exercises.challenge.submissionsCount", {
-                                                used: usedCount,
-                                                max: challenge.maxSubmissions,
-                                            })}
-                                        </Chip>
+                                {/* "Bài nộp của bạn" + attempts count — ABOVE the split, full width. */}
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                    <div className="flex items-center gap-2">
+                                        <PuzzlePieceIcon aria-hidden focusable="false" className="size-5 text-accent" />
+                                        <Typography type="body" weight="semibold">
+                                            {t("exercises.challenge.submitTitle")}
+                                        </Typography>
+                                    </div>
+                                    <Chip size="sm" variant="soft" className="shrink-0">
+                                        {t("exercises.challenge.submissionsCount", {
+                                            used: usedCount,
+                                            max: challenge.maxSubmissions,
+                                        })}
+                                    </Chip>
+                                </div>
+
+                                {/* THE 2-COLUMN SPLIT — one consistent frame for every submission
+                                    tab (github / file / code): WORK AREA left (wider), PROBLEM +
+                                    SQL dataset right. Mobile (<lg) stacks to one column: work area
+                                    first, then problem/dataset. */}
+                                <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+                                    <div className="flex min-w-0 flex-col gap-4">
+                                        {usesSubmissionMethod ? (
+                                            /* CODE challenge with a submissionMethod → the tabbed
+                                               github-URL / file-upload / sandbox work area (honoring
+                                               GITHUB|FILE|BOTH + a runnable fileExtension). History +
+                                               count chip stay owned here; it revalidates via onSubmitted. */
+                                            <ChallengeMethodSolver
+                                                challengeId={challenge.id}
+                                                submissionMethod={challenge.submissionMethod}
+                                                gradingConfig={challenge.gradingConfig}
+                                                challengeDetail={detail}
+                                                fileExtension={challenge.fileExtension}
+                                                seedSql={challenge.seedSql}
+                                                maxSubmissions={challenge.maxSubmissions}
+                                                reachedMax={reachedMax}
+                                                onSubmitted={() => { void mutate() }}
+                                            />
+                                        ) : (
+                                            <>
+                                                {/* Inline "Code trực tiếp" work area. GRADE = SUBMIT:
+                                                    the panel's PRIMARY "Nộp & Chấm AI" posts the same
+                                                    source it edits/Runs (payloadType CODE, one attempt);
+                                                    "Run" stays free. Submit is gated at max via
+                                                    submitDisabled, so Run keeps working when locked. */}
+                                                <GradeCodePanel
+                                                    challenge={detail}
+                                                    code={code}
+                                                    language={language}
+                                                    onCodeChange={setCode}
+                                                    onLanguageChange={setLanguageOverride}
+                                                    model={model}
+                                                    onModelChange={setModel}
+                                                    setupSql={challenge.seedSql ?? undefined}
+                                                    // The seed's schema/ERD is rendered once in the
+                                                    // right column (ChallengeProblemAside) — suppress
+                                                    // the panel's raw-seed block so it isn't shown twice.
+                                                    hideSeedNote
+                                                    onSubmit={() => void handleSubmit()}
+                                                    submitLabel={t("exercises.challenge.gradeSubmit")}
+                                                    isSubmitting={submit.isMutating}
+                                                    submitDisabled={!canSubmit}
+                                                />
+
+                                                {reachedMax ? (
+                                                    <div className="flex items-center gap-2 rounded-2xl border border-default bg-default/40 p-4">
+                                                        <LockSimpleIcon aria-hidden focusable="false" className="size-5 shrink-0 text-muted" />
+                                                        <Typography type="body-sm" color="muted">
+                                                            {t("exercises.challenge.maxReached", { max: challenge.maxSubmissions })}
+                                                        </Typography>
+                                                    </div>
+                                                ) : null}
+                                            </>
+                                        )}
                                     </div>
 
-                                    {usesSubmissionMethod ? (
-                                        /* CODE challenge with a submissionMethod → the github-URL +
-                                           file-upload solver (ported from the lesson assignment card),
-                                           honoring GITHUB|FILE|BOTH. History + count chip stay owned
-                                           here; the solver revalidates via onSubmitted. */
-                                        <ChallengeMethodSolver
-                                            challengeId={challenge.id}
-                                            submissionMethod={challenge.submissionMethod}
-                                            gradingConfig={challenge.gradingConfig}
-                                            challengeDetail={detail}
-                                            fileExtension={challenge.fileExtension}
-                                            seedSql={challenge.seedSql}
-                                            maxSubmissions={challenge.maxSubmissions}
-                                            reachedMax={reachedMax}
-                                            onSubmitted={() => { void mutate() }}
-                                        />
-                                    ) : (
-                                        <>
-                                            {/* AI code-editing / feedback surface; its code + language
-                                                are lifted so the formal submission below posts the same
-                                                source (payloadType CODE). */}
-                                            <GradeCodePanel
-                                                challenge={detail}
-                                                code={code}
-                                                language={language}
-                                                onCodeChange={setCode}
-                                                onLanguageChange={setLanguageOverride}
-                                                model={model}
-                                                onModelChange={setModel}
-                                                setupSql={challenge.seedSql ?? undefined}
-                                            />
-
-                                            {reachedMax ? (
-                                                <div className="flex items-center gap-2 rounded-2xl border border-default bg-default/40 p-4">
-                                                    <LockSimpleIcon aria-hidden focusable="false" className="size-5 shrink-0 text-muted" />
-                                                    <Typography type="body-sm" color="muted">
-                                                        {t("exercises.challenge.maxReached", { max: challenge.maxSubmissions })}
-                                                    </Typography>
-                                                </div>
-                                            ) : (
-                                                <div>
-                                                    <Button
-                                                        variant="primary"
-                                                        isPending={submit.isMutating}
-                                                        isDisabled={!canSubmit}
-                                                        onPress={() => void handleSubmit()}
-                                                    >
-                                                        {t(submit.isMutating ? "exercises.challenge.submitting" : "exercises.challenge.submit")}
-                                                    </Button>
-                                                </div>
-                                            )}
-                                        </>
-                                    )}
-                                </section>
+                                    {/* PROBLEM ("Đề bài") + SQL dataset — the RIGHT column, single
+                                        source shown for every tab. */}
+                                    <ChallengeProblemAside
+                                        title={challenge.title}
+                                        description={challenge.description}
+                                        isSql={Boolean(isSqlChallenge)}
+                                        seedSql={challenge.seedSql}
+                                    />
+                                </div>
 
                                 {history.length > 0 ? (
                                     <section className="flex flex-col gap-3">
@@ -395,7 +429,13 @@ export const ChallengeSubmission = () => {
                                             {t("exercises.challenge.historyTitle")}
                                         </Typography>
                                         {history.map((attempt) => (
-                                            <AttemptRow key={attempt.id} attempt={attempt} locale={locale} />
+                                            <AttemptRow
+                                                key={attempt.id}
+                                                attempt={attempt}
+                                                challengeId={challenge.id}
+                                                locale={locale}
+                                                reviewable
+                                            />
                                         ))}
                                     </section>
                                 ) : null}
@@ -477,7 +517,12 @@ export const ChallengeSubmission = () => {
                                             {t("exercises.challenge.historyTitle")}
                                         </Typography>
                                         {history.map((attempt) => (
-                                            <AttemptRow key={attempt.id} attempt={attempt} locale={locale} />
+                                            <AttemptRow
+                                                key={attempt.id}
+                                                attempt={attempt}
+                                                challengeId={challenge.id}
+                                                locale={locale}
+                                            />
                                         ))}
                                     </section>
                                 ) : null}
@@ -580,13 +625,22 @@ const McqForm = ({
     )
 }
 
-/** One row in the attempts history — attempt no, status, final/auto score. */
+/**
+ * One row in the attempts history — attempt no, status, final/auto score. For a graded
+ * ({@link reviewable}) code attempt, a "Xem kết quả" toggle lazily loads the submission's
+ * detailed AI feedback (score / verdict / criteria) and renders it via the shared
+ * {@link GradeResultCard} — the same card the in-panel practice grade uses.
+ */
 const AttemptRow = ({
     attempt,
+    challengeId,
     locale,
+    reviewable = false,
 }: {
     attempt: SubmissionView
+    challengeId: string
     locale: string
+    reviewable?: boolean
 }) => {
     const t = useTranslations("learn")
     const pending = isChallengeSubmissionPending(attempt)
@@ -599,8 +653,19 @@ const AttemptRow = ({
         ? (attempt.status === "GRADING" ? "grading" : "pending")
         : completed ? "completed" : failed ? "failed" : "pending"
 
+    // Re-view is a graded code attempt only, and fetches lazily — the results read fires
+    // once expanded, so the list never bulk-loads every attempt's feedback up front.
+    const canReview = reviewable && completed
+    const [expanded, setExpanded] = useState(false)
+    const resultsSwr = useQueryChallengeSubmissionResultsSwr(
+        challengeId,
+        attempt.id,
+        expanded && canReview,
+    )
+    const aiFeedback = resultsSwr.data?.aiFeedback
+
     return (
-        <div className="flex flex-col gap-2 rounded-2xl border border-default bg-surface p-4">
+        <div className="flex flex-col gap-3 rounded-2xl border border-default bg-surface p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                     <Typography type="body-sm" weight="medium">
@@ -623,6 +688,40 @@ const AttemptRow = ({
                 <Typography type="body-xs" color="muted">
                     {t("exercises.challenge.pendingHint")}
                 </Typography>
+            ) : null}
+
+            {canReview ? (
+                <>
+                    <button
+                        type="button"
+                        onClick={() => setExpanded((open) => !open)}
+                        aria-expanded={expanded}
+                        className="flex w-fit cursor-pointer items-center gap-1 text-sm font-medium text-accent hover:underline"
+                    >
+                        {t(expanded ? "exercises.challenge.hideResult" : "exercises.challenge.viewResult")}
+                        <CaretDownIcon
+                            aria-hidden
+                            focusable="false"
+                            className={cn("size-4 transition-transform", expanded ? "rotate-180" : "")}
+                        />
+                    </button>
+                    {expanded ? (
+                        <AsyncContent
+                            isLoading={resultsSwr.isLoading && !resultsSwr.data}
+                            skeleton={<Skeleton className="h-40 w-full rounded-3xl" />}
+                            isEmpty={Boolean(resultsSwr.data) && !aiFeedback}
+                            emptyContent={{ title: t("exercises.challenge.resultEmpty") }}
+                            error={!resultsSwr.data ? resultsSwr.error : undefined}
+                            errorContent={{
+                                title: t("exercises.challenge.resultError"),
+                                onRetry: () => { void resultsSwr.mutate() },
+                                retryLabel: t("common.retry"),
+                            }}
+                        >
+                            {aiFeedback ? <GradeResultCard result={aiFeedback} /> : null}
+                        </AsyncContent>
+                    ) : null}
+                </>
             ) : null}
         </div>
     )

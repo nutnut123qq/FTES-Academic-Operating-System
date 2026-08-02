@@ -6,7 +6,7 @@
 
 import React from "react"
 import { Canvas, useFrame, useThree, invalidate } from "@react-three/fiber"
-import { Html, Line, OrbitControls, useTexture } from "@react-three/drei"
+import { Html, Line, OrbitControls, useGLTF } from "@react-three/drei"
 import * as THREE from "three"
 import type { JourneySceneData, JourneyStationLabel, JourneyStationNode, StationKind } from "./types"
 import sceneJson from "./scene.json"
@@ -353,26 +353,17 @@ const FlowPath = ({ curve, palette }: { curve: THREE.CatmullRomCurve3; palette: 
     )
 }
 
-/** Pose mascot theo ga. `explain` dùng cho cả workplace lẫn course (cùng nghĩa "giảng cho bạn"). */
-const POSE_BY_KIND: Record<StationKind, "greeting" | "explain" | "point" | "cheer"> = {
-    home: "greeting",
-    workplace: "explain",
-    course: "explain",
-    practice: "point",
-    outcome: "cheer",
-}
-
-const MASCOT_SRC = {
-    greeting: "/mascot/plain/greeting.webp",
-    explain: "/mascot/plain/explain.webp",
-    point: "/mascot/plain/point.webp",
-    cheer: "/mascot/plain/cheer.webp",
-} as const
+/** Model 3D của FrosTES (sinh từ art pose `greeting`). KHÔNG có xương/animation — chỉ là
+ *  khối tĩnh, nên chuyển động vẫn là trượt trên ray + nhún, không phải bước chân thật. */
+const MASCOT_MODEL = "/mascot/frostes.glb"
 
 /** Cao ~1.7 đơn vị — mascot là VẬT CHUẨN kích thước của scene, đổi số này thì phải soi lại
  *  scale khối chặng và khoảng cách camera. */
 const MASCOT_HEIGHT = 1.7
-const MASCOT_ASPECT = 508 / 512
+
+/** Xoay model về đúng tư thế đứng, mặt hướng ra camera (+z). File TRELLIS sinh ra theo quy ước
+ *  Z-up nên phải hạ -90° quanh trục X; chỉnh số ở ĐÂY nếu đổi sang model khác. */
+const MODEL_ROTATION: [number, number, number] = [0, 0, 0]
 
 /** Đứng LỆCH SANG BÊN + nhích ra trước so với tâm ga. Góp ý là "đứng CẠNH những phần tử":
  *  đứng đúng tâm thì khối che mất nửa người, mà nhích thẳng ra trước thì cáo che mất khối
@@ -398,20 +389,41 @@ const Mascot = ({
     palette: Palette
     reduce: boolean
 }) => {
-    const textures = useTexture(Object.values(MASCOT_SRC) as unknown as string[])
-    const poses = Object.keys(MASCOT_SRC) as Array<keyof typeof MASCOT_SRC>
-    const byPose = React.useMemo(() => {
-        const map = {} as Record<keyof typeof MASCOT_SRC, THREE.Texture>
-        poses.forEach((pose, i) => {
-            const tex = textures[i]
-            tex.colorSpace = THREE.SRGBColorSpace
-            map[pose] = tex
+    const { scene: gltfScene } = useGLTF(MASCOT_MODEL)
+    /** Model sinh ra nằm trong hộp đơn vị quanh gốc toạ độ → chuẩn hoá về đúng chiều cao
+     *  scene VÀ hạ chân xuống mặt đất, thay vì tin vào scale/pivot của file. */
+    const model = React.useMemo(() => {
+        // Xoay TRƯỚC rồi mới đo hộp bao: file sinh ra theo trục Z-up nên nhân vật nằm ngửa,
+        // và đo chiều cao trên trục sai thì scale cũng sai theo.
+        const holder = new THREE.Group()
+        const clone = gltfScene.clone(true)
+        // File sinh ra KHÔNG khai báo metallicFactor → glTF mặc định = 1.0 (kim loại đặc). Scene
+        // này không có environment map để phản chiếu nên vật kim loại render ra khối đen xỉn.
+        // Lông + vải là phi kim → ép metalness 0, để đèn của scene ăn đúng.
+        clone.traverse((child) => {
+            const mesh = child as THREE.Mesh
+            if (!mesh.isMesh) return
+            const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
+            materials.forEach((material) => {
+                const std = material as THREE.MeshStandardMaterial
+                if (std.isMeshStandardMaterial) {
+                    std.metalness = 0
+                    std.roughness = 0.85
+                }
+            })
         })
-        return map
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [textures])
-
-    const station = stations[Math.max(0, Math.min(activeIndex, stations.length - 1))]
+        clone.rotation.set(MODEL_ROTATION[0], MODEL_ROTATION[1], MODEL_ROTATION[2])
+        holder.add(clone)
+        holder.updateMatrixWorld(true)
+        const box = new THREE.Box3().setFromObject(holder)
+        const size = box.getSize(new THREE.Vector3())
+        const center = box.getCenter(new THREE.Vector3())
+        const scale = size.y > 0 ? MASCOT_HEIGHT / size.y : 1
+        holder.scale.setScalar(scale)
+        // chân chạm đất (box.min.y), tâm trùng trục đứng
+        holder.position.set(-center.x * scale, -box.min.y * scale, -center.z * scale)
+        return holder
+    }, [gltfScene])
     /** Vị trí trên curve (0..1) của ga đang active — các ga chia đều theo control point. */
     const targetU = stations.length > 1 ? Math.max(0, Math.min(activeIndex, stations.length - 1)) / (stations.length - 1) : 0
 
@@ -436,19 +448,16 @@ const Mascot = ({
         const bob = reduce ? 0 : Math.sin(t * (moving ? 9 : 2.2)) * (moving ? 0.09 : 0.045)
         group.current.position.set(
             point.x + MASCOT_OFFSET[0],
-            point.y + MASCOT_HEIGHT / 2 + bob,
+            point.y + bob,
             point.z + MASCOT_OFFSET[1],
         )
         if (!reduce) invalidate()
     })
 
-    const pose = POSE_BY_KIND[station.kind]
     return (
         <group>
             <group ref={group}>
-                <sprite scale={[MASCOT_HEIGHT * MASCOT_ASPECT, MASCOT_HEIGHT, 1]}>
-                    <spriteMaterial map={byPose[pose]} transparent depthWrite={false} toneMapped={false} />
-                </sprite>
+                <primitive object={model} />
             </group>
             <GroundShadow curve={curve} u={u} palette={palette} />
         </group>

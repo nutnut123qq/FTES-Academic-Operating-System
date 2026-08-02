@@ -8,6 +8,7 @@ import type {
     AiModelCatalog,
     CareerSuggestionView,
     CodeExecuteResult,
+    CodeExecutionSummary,
     CodeGradeResult,
     CreateSessionRequest,
     CreateStudyPlanRequest,
@@ -15,6 +16,7 @@ import type {
     DocumentQaResponse,
     ExecuteCodeRequest,
     GradeCodeRequest,
+    RunTestsRequest,
     JobRef,
     JobView,
     ModelConfigView,
@@ -437,6 +439,24 @@ export const executeCode = async (body: ExecuteCodeRequest): Promise<CodeExecute
     restRequest<CodeExecuteResult>({
         method: "POST",
         url: "/ai/coding/execute-code",
+        data: body,
+        authenticated: true,
+        timeout: CODE_EXECUTE_TIMEOUT_MS,
+    })
+
+/**
+ * Runs the learner's code against a challenge's SAMPLE (non-hidden) test cases in the
+ * sandbox — no LLM, no AI quota spent (mirrors {@link executeCode}). Returns the per-case
+ * execution block ({@link CodeExecutionSummary}: `results[]` + `passed`/`total`). HIDDEN
+ * test cases are NEVER sent here — they stay server-side for AI grading.
+ *
+ * `POST /api/v1/ai/coding/run-tests` — permission `ai.coding.use` (STUDENT+). Engine
+ * unconfigured BE-side → 503 `AI_EXEC_UNAVAILABLE` (the panel shows a graceful message).
+ */
+export const runTests = async (body: RunTestsRequest): Promise<CodeExecutionSummary> =>
+    restRequest<CodeExecutionSummary>({
+        method: "POST",
+        url: "/ai/coding/run-tests",
         data: body,
         authenticated: true,
         timeout: CODE_EXECUTE_TIMEOUT_MS,

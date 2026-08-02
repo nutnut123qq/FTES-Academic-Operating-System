@@ -3,6 +3,8 @@
 import useSWR from "swr"
 
 import { getChallengeBySlug } from "@/modules/api/rest/challenges/challenges"
+import type { SampleTestCaseView } from "@/modules/api/rest/challenges/types"
+import { parseGradingConfigStarterCode } from "@/components/features/learn/submissionMethods"
 import { toChallenge } from "./useQueryChallengesSwr"
 import type { Challenge } from "./useQueryChallengesSwr"
 
@@ -40,6 +42,18 @@ export interface ChallengeDetail extends Challenge {
     isLocked: boolean
     /** Course containing this challenge (enroll CTA) — BE view carries none → "". */
     courseId: string
+    /**
+     * Learner-safe starter code per language (BE `grading_config.starterCode = {lang: code}`),
+     * prefilled into the code sandbox when the editor is untouched. Absent on older
+     * deployments / non-code challenges → the panel keeps its generic template fallback.
+     */
+    starterCode?: Record<string, string>
+    /**
+     * The learner-visible SAMPLE (non-hidden) test cases, each `{name?, input, expected}`.
+     * Drives the sandbox "Chạy test" action + the read-only "Ví dụ" examples. HIDDEN cases
+     * are never in this view. Absent on older deployments / non-code challenges.
+     */
+    sampleTestCases?: Array<SampleTestCaseView>
 }
 
 const EMPTY_STARTER: ChallengeStarter = { html: "", css: "", js: "" }
@@ -64,6 +78,8 @@ export const useQueryChallengeSwr = (challengeId: string) => {
                 targetImageUrl: "",
                 isLocked: false,
                 courseId: "",
+                starterCode: parseGradingConfigStarterCode(view.gradingConfig),
+                sampleTestCases: view.sampleTestCases ?? undefined,
             }
         },
     )

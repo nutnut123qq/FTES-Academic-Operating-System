@@ -257,6 +257,31 @@ export interface CodeExecuteResult {
 }
 
 /**
+ * One SAMPLE (non-hidden) test case sent to `POST /api/v1/ai/coding/run-tests` — just the
+ * learner-visible `input` + `expected`. HIDDEN cases are NEVER sent here; they stay
+ * server-side for AI grading.
+ */
+export interface RunTestsCase {
+    /** Input fed to the program (stdin / args, per the exercise contract). */
+    input: string
+    /** Expected output the program should produce. */
+    expected: string
+}
+
+/**
+ * Body of `POST /api/v1/ai/coding/run-tests` — runs the learner's code against a
+ * challenge's SAMPLE test cases in the sandbox (no LLM, no AI quota; mirrors
+ * {@link ExecuteCodeRequest}). The response reuses {@link CodeExecutionSummary}
+ * (`results[]` + `passed`/`total`) — the same per-case shape a grade's Judge0 block
+ * carries, so the FE renders it with one shared table.
+ */
+export interface RunTestsRequest {
+    code: string
+    language: string
+    testCases: Array<RunTestsCase>
+}
+
+/**
  * Body of `POST /api/v1/ai/coding/execute-sql` — the Postgres sandbox run (PIN §7.2,
  * a single rolled-back transaction, no LLM / no quota). Field names are snake_case: the
  * BE proxies the body verbatim to ftes-ai-service (`/v2/code/execute-sql`).

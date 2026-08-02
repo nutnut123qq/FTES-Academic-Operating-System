@@ -11,6 +11,7 @@ import { useTranslations } from "next-intl"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { ProgressMeter } from "@/components/blocks/stats/ProgressMeter"
+import { useGetLessonFlashcardsSwr } from "@/hooks/swr/api/rest/queries"
 import { useLessonAiStream } from "./useLessonAiStream"
 
 /** Props for {@link LessonAiFlashcards}. */
@@ -71,6 +72,26 @@ export const LessonAiFlashcards = ({ lessonId }: LessonAiFlashcardsProps) => {
     const t = useTranslations("contentAi")
     const { text, isStreaming, error, generate } = useLessonAiStream(lessonId)
 
+    /**
+     * Bộ thẻ do giảng viên soạn được HỎI TRƯỚC. Có bộ tay thì đó là nguồn duy nhất — không gọi
+     * model lần nào (góp ý website 2026-07-26: AI đề xuất câu ngoài lề, lõi nên là câu hỏi
+     * người soạn). `isLoading` của SWR quyết định thời điểm được phép sinh AI: sinh trong lúc
+     * còn đang hỏi là vừa đốt quota vừa có thể ghi đè bộ tay vừa về.
+     */
+    const authoredSwr = useGetLessonFlashcardsSwr(lessonId)
+    const authored = authoredSwr.data?.source === "AUTHORED" ? authoredSwr.data.cards : null
+    /** Chỉ thẻ PUBLISHED tới tay học viên; DRAFT là bản nháp của người soạn. */
+    const authoredCards = useMemo(
+        () =>
+            (authored ?? [])
+                .filter((card) => card.status === "PUBLISHED")
+                .slice()
+                .sort((a, b) => a.sortOrder - b.sortOrder)
+                .map((card) => ({ q: card.front, a: card.back })),
+        [authored],
+    )
+    const hasAuthored = authoredCards.length > 0
+
     const [currentIndex, setCurrentIndex] = useState(0)
     const [revealed, setRevealed] = useState(false)
 
@@ -80,14 +101,19 @@ export const LessonAiFlashcards = ({ lessonId }: LessonAiFlashcardsProps) => {
         void generate(t("flashcard.prompt"))
     }, [generate, t])
 
-    // generate once when the flashcard tool opens
+    // Sinh bằng AI CHỈ khi bài không có bộ tay. Chờ SWR xong mới quyết (kể cả khi hỏng — 403
+    // của bài chưa mở khoá vẫn để luồng AI cũ tự xử như trước).
     useEffect(() => {
+        if (authoredSwr.isLoading || hasAuthored) {
+            return
+        }
         runGenerate()
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    }, [authoredSwr.isLoading, hasAuthored])
 
     // parse the (final) streamed JSON; only trust it once the stream settles
-    const cards = useMemo(() => (isStreaming ? [] : parseFlashcards(text)), [isStreaming, text])
+    const aiCards = useMemo(() => (isStreaming ? [] : parseFlashcards(text)), [isStreaming, text])
+    const cards = hasAuthored ? authoredCards : aiCards
 
     const card = cards[currentIndex] ?? null
     const done = cards.length > 0 && currentIndex >= cards.length
@@ -108,17 +134,24 @@ export const LessonAiFlashcards = ({ lessonId }: LessonAiFlashcardsProps) => {
     }
 
     // parsing failed (stream done, text present, but no valid cards) → treat as error
-    const parseFailed = !isStreaming && text.length > 0 && cards.length === 0
-    const isLoadingFirst = isStreaming
+    const parseFailed = !hasAuthored && !isStreaming && text.length > 0 && aiCards.length === 0
+    const isLoadingFirst = authoredSwr.isLoading || (!hasAuthored && isStreaming)
 
     return (
         <div className="flex flex-col gap-4">
+            {/* Bộ do giảng viên soạn: nói rõ để học viên biết đây là câu hỏi trọng tâm người dạy
+                chọn, không phải máy đoán — đó chính là điều góp ý đòi. */}
+            {hasAuthored ? (
+                <Typography type="body-xs" color="muted">
+                    {t("flashcard.authoredBy")}
+                </Typography>
+            ) : null}
             <AsyncContent
                 isLoading={isLoadingFirst}
                 skeleton={<Skeleton className="mx-auto h-56 w-full max-w-lg rounded-large" />}
-                isEmpty={!isStreaming && !error && !parseFailed && text.length === 0}
+                isEmpty={!hasAuthored && !isStreaming && !error && !parseFailed && text.length === 0}
                 emptyContent={{ title: t("flashcard.empty") }}
-                error={error || parseFailed ? new Error(error ?? "parse") : undefined}
+                error={!hasAuthored && (error || parseFailed) ? new Error(error ?? "parse") : undefined}
                 errorContent={{
                     title: error === "quota" ? t("quotaHit") : t("flashcard.error"),
                     onRetry: runGenerate,
@@ -133,13 +166,22 @@ export const LessonAiFlashcards = ({ lessonId }: LessonAiFlashcardsProps) => {
                                 {t("flashcard.done")}
                             </Typography>
                             <div className="mt-2 flex gap-2">
-                                <Button variant="secondary" size="sm" onPress={restart}>
+                                <Button
+                                    variant={hasAuthored ? "primary" : "secondary"}
+                                    size="sm"
+                                    onPress={restart}
+                                >
                                     {t("flashcard.studyAgain")}
                                 </Button>
-                                <Button variant="primary" size="sm" onPress={runGenerate}>
-                                    <ArrowClockwiseIcon aria-hidden focusable="false" className="size-4" />
-                                    {t("flashcard.regenerate")}
-                                </Button>
+                                {/* "Tạo lại" chỉ có nghĩa với bộ AI. Bộ do giảng viên soạn mà bấm
+                                    tạo lại là đổi câu hỏi người dạy chọn lấy câu máy đoán — đúng
+                                    thứ góp ý phàn nàn. */}
+                                {hasAuthored ? null : (
+                                    <Button variant="primary" size="sm" onPress={runGenerate}>
+                                        <ArrowClockwiseIcon aria-hidden focusable="false" className="size-4" />
+                                        {t("flashcard.regenerate")}
+                                    </Button>
+                                )}
                             </div>
                         </div>
                     ) : card ? (

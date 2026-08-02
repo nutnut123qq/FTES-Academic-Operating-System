@@ -613,6 +613,7 @@
       "description": "Generate a Q&A flashcard deck from this lesson to test yourself.",
       "generate": "Generate flashcards",
       "regenerate": "Regenerate",
+      "authoredBy": "Deck written by the course instructor",
       "error": "Couldn't generate flashcards. Please try again.",
       "empty": "No cards yet. Tap “Generate flashcards” to start.",
       "questionLabel": "Question",

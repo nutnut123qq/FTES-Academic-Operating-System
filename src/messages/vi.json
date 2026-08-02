@@ -613,6 +613,7 @@
       "description": "Tạo bộ thẻ hỏi – đáp từ bài học này để tự kiểm tra.",
       "generate": "Tạo thẻ ghi nhớ",
       "regenerate": "Tạo lại",
+      "authoredBy": "Bộ thẻ do giảng viên của khoá soạn",
       "error": "Không tạo được thẻ ghi nhớ. Vui lòng thử lại.",
       "empty": "Chưa có thẻ. Bấm “Tạo thẻ ghi nhớ” để bắt đầu.",
       "questionLabel": "Câu hỏi",

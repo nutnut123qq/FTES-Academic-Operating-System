@@ -311,6 +311,36 @@ export interface LessonDocumentView {
     sizeBytes: number | null
 }
 
+/** Một thẻ ghi nhớ do người soạn (BE `FlashcardDtos.FlashcardView`). */
+export interface LessonFlashcardView {
+    id: string
+    front: string
+    back: string
+    hint: string | null
+    sortOrder: number
+    /** Chỉ `PUBLISHED` tới tay học viên; `DRAFT` chỉ người quản khoá thấy. */
+    status: string
+    /**
+     * `MANUAL` (soạn từ đầu) hoặc `AI_ACCEPTED` (nhận bản nháp AI rồi sửa). Cả hai đều đã QUA
+     * TAY NGƯỜI nên màn ôn tập KHÔNG phân biệt — trường này dành cho màn soạn của instructor.
+     */
+    origin: string
+}
+
+/**
+ * Đường đọc HỢP NHẤT của màn ôn tập (BE `GET /api/v1/courses/lessons/{id}/flashcards`).
+ *
+ * `source = "AUTHORED"` → bài CÓ bộ thẻ người soạn, dùng `cards` và KHÔNG gọi đường sinh AI.
+ * `source = "AI"` → chưa có bộ tay, `cards` rỗng, giữ nguyên luồng sinh bằng AI kèm nhãn AI.
+ */
+export interface LessonFlashcardsView {
+    lessonId: string
+    source: "AUTHORED" | "AI"
+    /** Caller có quyền soạn trên khoá này — dùng để ẩn/hiện lối vào màn soạn. */
+    canManage: boolean
+    cards: Array<LessonFlashcardView>
+}
+
 // ---------------------------------------------------------------- enrollment / packages
 
 /** Response from `POST /api/v1/courses/{id}/enroll`. */

@@ -28,6 +28,7 @@ import type {
     LessonReactionSummaryView,
     LessonContentView,
     LessonDocumentView,
+    LessonFlashcardsView,
     NoteRequest,
     PostLessonCommentRequest,
     NoteView,
@@ -367,6 +368,20 @@ export const getLessonDocuments = async (lessonId: string): Promise<Array<Lesson
     return restRequest<Array<LessonDocumentView>>({
         method: "GET",
         url: `/lessons/${lessonId}/documents`,
+        authenticated: true,
+    })
+}
+
+/**
+ * Bộ thẻ ghi nhớ của bài — đường đọc HỢP NHẤT: có bộ do giảng viên soạn thì trả bộ đó
+ * (`source: "AUTHORED"`), chưa có thì trả rỗng kèm `source: "AI"` để client giữ luồng sinh AI.
+ *
+ * `GET /api/v1/courses/lessons/{lessonId}/flashcards`
+ */
+export const getLessonFlashcards = async (lessonId: string): Promise<LessonFlashcardsView> => {
+    return restRequest<LessonFlashcardsView>({
+        method: "GET",
+        url: `/courses/lessons/${lessonId}/flashcards`,
         authenticated: true,
     })
 }

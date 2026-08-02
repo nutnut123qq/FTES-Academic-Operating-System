@@ -133,3 +133,38 @@ export const parseGradingConfigFileExtension = (
     }
     return ""
 }
+
+/**
+ * Reads the learner-safe starter code map out of a challenge's opaque `gradingConfig`
+ * JSON (BE exposes `grading_config.starterCode = {lang: code}` on a CODE challenge learner
+ * view). Returns a `{language: code}` record, keeping only string→string entries;
+ * `undefined` when the config is absent / unparseable / carries no usable `starterCode`.
+ * Never throws — a missing config simply means "no starter to prefill".
+ *
+ * FE ASSUMPTION (BE contract): the learner-safe `gradingConfig` JSON carries a
+ * `starterCode` object keyed by the FE language id (e.g. `python`, `sql`).
+ */
+export const parseGradingConfigStarterCode = (
+    gradingConfig: string | null | undefined,
+): Record<string, string> | undefined => {
+    if (!gradingConfig || gradingConfig.trim() === "") {
+        return undefined
+    }
+    try {
+        const parsed: unknown = JSON.parse(gradingConfig)
+        if (typeof parsed !== "object" || parsed === null || !("starterCode" in parsed)) {
+            return undefined
+        }
+        const raw = (parsed as { starterCode: unknown }).starterCode
+        if (typeof raw !== "object" || raw === null) {
+            return undefined
+        }
+        const entries = Object.entries(raw as Record<string, unknown>).filter(
+            (entry): entry is [string, string] => typeof entry[1] === "string",
+        )
+        return entries.length > 0 ? Object.fromEntries(entries) : undefined
+    } catch {
+        // Opaque / non-JSON config → no starter.
+        return undefined
+    }
+}

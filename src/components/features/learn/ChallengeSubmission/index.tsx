@@ -38,6 +38,7 @@ import { normalizeExerciseType } from "../exerciseType"
 import {
     hasSubmissionMethod,
     parseGradingConfigFileExtension,
+    parseGradingConfigStarterCode,
     runnableLanguageFromFileExtension,
 } from "../submissionMethods"
 import { useQueryLearnCourseSwr } from "../hooks/useQueryLearnCourseSwr"
@@ -71,6 +72,10 @@ const toChallengeDetail = (view: ChallengeView): ChallengeDetail => ({
     targetImageUrl: "",
     isLocked: false,
     courseId: view.courseId ?? "",
+    // Learner-safe starter (grading_config.starterCode) + the SAMPLE (non-hidden) test
+    // cases exposed on the view — drive the sandbox prefill + "Chạy test" / "Ví dụ".
+    starterCode: parseGradingConfigStarterCode(view.gradingConfig),
+    sampleTestCases: view.sampleTestCases ?? undefined,
 })
 
 /**
@@ -420,6 +425,7 @@ export const ChallengeSubmission = () => {
                                         description={challenge.description}
                                         isSql={Boolean(isSqlChallenge)}
                                         seedSql={challenge.seedSql}
+                                        sampleTestCases={challenge.sampleTestCases ?? undefined}
                                     />
                                 </div>
 

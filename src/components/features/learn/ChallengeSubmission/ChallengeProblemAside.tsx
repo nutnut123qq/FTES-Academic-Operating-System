@@ -1,11 +1,12 @@
 "use client"
 
 import React, { useEffect, useRef } from "react"
-import { Typography } from "@heroui/react"
+import { Typography, cn } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
+import type { SampleTestCaseView } from "@/modules/api/rest/challenges"
 import { usePostSqlSchemaSwr } from "@/hooks/swr/api/rest/mutations/usePostSqlSchemaSwr"
 import { SqlSchemaPanel } from "./SqlSchemaPanel"
 
@@ -19,6 +20,12 @@ export interface ChallengeProblemAsideProps {
     isSql: boolean
     /** The SQL seed dataset (VISIBLE to the learner) introspected for the schema/ERD. */
     seedSql: string | null | undefined
+    /**
+     * The learner-visible SAMPLE (non-hidden) test cases — rendered as read-only "Ví dụ"
+     * examples (input → expected) so the learner sees what to expect. HIDDEN cases are never
+     * here. Absent / empty → the examples section is hidden.
+     */
+    sampleTestCases?: Array<SampleTestCaseView>
 }
 
 /**
@@ -36,10 +43,12 @@ export const ChallengeProblemAside = ({
     description,
     isSql,
     seedSql,
+    sampleTestCases,
 }: ChallengeProblemAsideProps) => {
     const t = useTranslations("learn")
     const seedSqlValue = typeof seedSql === "string" ? seedSql.trim() : ""
     const hasSeed = isSql && seedSqlValue !== ""
+    const samples = sampleTestCases ?? []
 
     const {
         trigger: triggerSchema,
@@ -68,6 +77,38 @@ export const ChallengeProblemAside = ({
                 </Typography>
                 {description ? <MarkdownContent reading markdown={description} /> : null}
             </div>
+
+            {samples.length > 0 ? (
+                <div className="flex flex-col gap-2">
+                    <Typography type="body-xs" weight="medium" color="muted">
+                        {t("exercises.challenge.examplesHeading")}
+                    </Typography>
+                    <div className="flex flex-col gap-3">
+                        {samples.map((sample, index) => (
+                            <div
+                                key={index}
+                                className="flex flex-col gap-2 rounded-2xl border border-default bg-surface p-4"
+                            >
+                                <Typography type="body-xs" weight="medium">
+                                    {sample.name && sample.name.trim() !== ""
+                                        ? sample.name
+                                        : t("exercises.challenge.exampleLine", { number: index + 1 })}
+                                </Typography>
+                                <SampleField
+                                    label={t("exercises.challenge.exampleInput")}
+                                    value={sample.input}
+                                    empty={t("exercises.challenge.exampleEmpty")}
+                                />
+                                <SampleField
+                                    label={t("exercises.challenge.exampleExpected")}
+                                    value={sample.expected}
+                                    empty={t("exercises.challenge.exampleEmpty")}
+                                />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            ) : null}
 
             {isSql ? (
                 <div className="flex flex-col gap-2">
@@ -101,5 +142,39 @@ export const ChallengeProblemAside = ({
                 </div>
             ) : null}
         </aside>
+    )
+}
+
+/**
+ * One labelled read-only field of a sample example (input / expected). Renders the raw
+ * value in monospace, or a muted placeholder when the case carries none (e.g. a no-stdin
+ * exercise).
+ */
+const SampleField = ({
+    label,
+    value,
+    empty,
+}: {
+    label: string
+    value: string
+    empty: string
+}) => {
+    const hasValue = value.trim() !== ""
+    return (
+        <div className="flex flex-col gap-1">
+            <Typography type="body-xs" color="muted" weight="medium">
+                {label}
+            </Typography>
+            <div className="overflow-x-auto rounded-xl border border-default bg-default/40 p-2">
+                <pre
+                    className={cn(
+                        "whitespace-pre-wrap break-words font-mono text-xs",
+                        hasValue ? "text-foreground" : "text-muted",
+                    )}
+                >
+                    {hasValue ? value : empty}
+                </pre>
+            </div>
+        </div>
     )
 }

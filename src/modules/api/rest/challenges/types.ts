@@ -35,6 +35,20 @@ export interface CreateChallengeRequest {
     rewardConfig: string
 }
 
+/**
+ * One learner-visible SAMPLE test case on a `CODE` challenge view. The BE exposes ONLY the
+ * NON-HIDDEN (`is_hidden=false`) cases here — HIDDEN cases are never sent to the learner
+ * (they stay server-side for AI grading). Additive — absent on older deployments.
+ */
+export interface SampleTestCaseView {
+    /** Optional display name for the case. */
+    name?: string
+    /** Input fed to the program (stdin / args, per the exercise contract). */
+    input: string
+    /** Expected output the program should produce. */
+    expected: string
+}
+
 /** One selectable option of an MCQ question (taker-safe — no `correctKeys`). */
 export interface OptionItem {
     /** Stable option key, e.g. `"A"`. */
@@ -121,6 +135,14 @@ export interface ChallengeView {
      * sandbox ("Code trực tiếp") is offered. Additive — absent on older deployments.
      */
     fileExtension?: string | null
+    /**
+     * The learner-visible SAMPLE (non-hidden) test cases of a `CODE` challenge, each
+     * `{name?, input, expected}`. The BE exposes ONLY `is_hidden=false` cases here —
+     * HIDDEN cases are never sent to the learner (they stay server-side for AI grading).
+     * Drives the sandbox "Chạy test" action + the read-only "Ví dụ" examples. Additive —
+     * absent on older deployments / non-code challenges.
+     */
+    sampleTestCases?: Array<SampleTestCaseView> | null
 }
 
 /** Wrapper for a batch test-case upsert. */

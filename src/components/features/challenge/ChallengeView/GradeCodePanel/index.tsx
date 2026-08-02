@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useRef, useState } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 import {
     Button,
     Dropdown,
@@ -14,6 +14,7 @@ import {
 } from "@heroui/react"
 import {
     CaretDownIcon,
+    ListChecksIcon,
     LockSimpleIcon,
     MagicWandIcon,
     PlayIcon,
@@ -26,10 +27,17 @@ import {
     usePostExecuteCodeSwr,
     usePostExecuteSqlSwr,
     usePostGradeCodeSwr,
+    usePostRunTestsSwr,
 } from "@/hooks/swr/api/rest/mutations"
 import { RestError } from "@/modules/api/rest/client"
-import type { CodeExecuteResult, CodeGradeResult, SqlRunResult } from "@/modules/api/rest/ai"
+import type {
+    CodeExecuteResult,
+    CodeExecutionSummary,
+    CodeGradeResult,
+    SqlRunResult,
+} from "@/modules/api/rest/ai"
 import type { ChallengeDetail } from "../../hooks/useQueryChallengeSwr"
+import { ExecutionResultTable } from "./ExecutionResultTable"
 import { GradeCodeEditor } from "./GradeCodeEditor"
 import type { GradeCodeEditorHandle } from "./GradeCodeEditor"
 import { GradeResultCard } from "./GradeResultCard"
@@ -247,11 +255,28 @@ export const GradeCodePanel = ({
     const setModel = onModelChange ?? setInternalModel
     const [errorKey, setErrorKey] = useState<string | null>(null)
     /** Re-run target for the error card's retry button. */
-    const [lastAction, setLastAction] = useState<"run" | "grade" | null>(null)
+    const [lastAction, setLastAction] = useState<"run" | "grade" | "test" | null>(null)
 
     const [runResult, setRunResult] = useState<CodeExecuteResult | null>(null)
     const [sqlResult, setSqlResult] = useState<SqlRunResult | null>(null)
     const [gradeResult, setGradeResult] = useState<CodeGradeResult | null>(null)
+    /** Per-case results of the last SAMPLE "Chạy test" run (no LLM). */
+    const [testResult, setTestResult] = useState<CodeExecutionSummary | null>(null)
+
+    // The learner-visible SAMPLE (non-hidden) test cases — drive the "Chạy test" action.
+    // HIDDEN cases are never in this view (they stay server-side for AI grading).
+    const sampleTestCases = challenge.sampleTestCases ?? []
+    const hasSampleTests = sampleTestCases.length > 0
+
+    // Prefill/dirty tracking for the starter code. `autofilledRef` holds the exact source we
+    // last auto-filled (a starter template); `dirtyRef` flips true the moment the learner
+    // edits the editor to anything else. While untouched (empty / still the auto-filled
+    // starter) the panel may seed on mount and swap on a language change; once dirty it NEVER
+    // overwrites the learner's own code. Seeded from the initial code so a remount that
+    // already carries lifted learner code (e.g. re-selecting the sandbox tab) is treated as
+    // touched — it is never re-seeded / clobbered.
+    const dirtyRef = useRef(code.trim() !== "")
+    const autofilledRef = useRef<string | null>(null)
 
     const [editorReady, setEditorReady] = useState(false)
     // Collapsible terminal — open by default, re-opened on every Run/submit so output is
@@ -263,7 +288,8 @@ export const GradeCodePanel = ({
     const { trigger: triggerGrade, isMutating: isGrading } = usePostGradeCodeSwr()
     const { trigger: triggerExecute, isMutating: isRunningCode } = usePostExecuteCodeSwr()
     const { trigger: triggerExecuteSql, isMutating: isRunningSql } = usePostExecuteSqlSwr()
-    const isBusy = isGrading || isRunningCode || isRunningSql
+    const { trigger: triggerRunTests, isMutating: isRunningTests } = usePostRunTestsSwr()
+    const isBusy = isGrading || isRunningCode || isRunningSql || isRunningTests
 
     const isSqlLanguage = language === "sql"
     // A non-empty seed dataset threads into the SQL Run as `setup_sql` (seeded fresh,
@@ -277,13 +303,61 @@ export const GradeCodePanel = ({
         .filter(Boolean)
         .join("\n\n")
 
+    // The starter source for a language: the challenge's learner-safe `starterCode` takes
+    // precedence over the generic hello-world template; "" when neither exists. The generic
+    // fallback is skipped for SQL — a hello-world `SELECT 'Hello, world!'` is unrelated to the
+    // seeded dataset the learner queries (and SQL locks the language, so it would only ever
+    // be a confusing prefill); a challenge-authored `starterCode.sql` still prefills.
+    const starterForLanguage = useCallback(
+        (lang: string): string =>
+            challenge.starterCode?.[lang] ?? (lang === "sql" ? "" : STARTER_CODE[lang] ?? ""),
+        [challenge.starterCode],
+    )
+
+    // Prefill the INITIAL empty editor with the selected language's starter (challenge
+    // `starterCode` first, generic template fallback). Guarded on an empty editor + a
+    // clean dirty flag, so a restored draft / learner code is never replaced; a language
+    // switch is handled synchronously in onPickLanguage below. Re-runs cheaply on edits
+    // but returns immediately once `code` is non-empty / the learner has typed.
+    useEffect(() => {
+        if (dirtyRef.current || code.trim() !== "") return
+        const starter = starterForLanguage(language)
+        if (starter === "") return
+        autofilledRef.current = starter
+        setCode(starter)
+    }, [code, language, starterForLanguage, setCode])
+
+    // Editor edits route through here so the dirty flag flips the moment the learner types
+    // anything other than the auto-filled starter. Programmatic writes (prefill / language
+    // swap) call setCode directly and never mark dirty.
+    const handleEditorChange = (next: string) => {
+        if (next !== autofilledRef.current) {
+            dirtyRef.current = true
+        }
+        setCode(next)
+    }
+
     const onPickLanguage = (next: string) => {
         setLanguage(next)
-        // Seed a starter template only when the editor is empty — never clobber real work.
-        if (code.trim() === "") {
-            const starter = STARTER_CODE[next]
-            if (starter) setCode(starter)
+        // Swap the starter only while the editor is untouched (empty / still the auto-filled
+        // starter) — never once the learner has written real code (dirty). A language with no
+        // starter clears back to empty so the previous language's starter doesn't linger.
+        if (!dirtyRef.current) {
+            const starter = starterForLanguage(next)
+            autofilledRef.current = starter === "" ? null : starter
+            setCode(starter)
         }
+    }
+
+    // The result pane holds exactly ONE output at a time — a fresh Run/SQL/test/grade
+    // replaces the previous one so a stale table never lingers beside a newer result
+    // (e.g. yesterday's sample-test grid next to today's AI grade). Each handler calls
+    // this before setting its own result.
+    const clearResults = () => {
+        setRunResult(null)
+        setSqlResult(null)
+        setTestResult(null)
+        setGradeResult(null)
     }
 
     const onRun = async () => {
@@ -296,13 +370,36 @@ export const GradeCodePanel = ({
                 // Thread the challenge seed dataset so the query runs against the seeded
                 // tables (fresh per run, rolled back after). Undefined → self-contained.
                 const result = await triggerExecuteSql({ query: code, setup_sql: setupSql })
+                clearResults()
                 setSqlResult(result ?? null)
-                setRunResult(null)
             } else {
                 const result = await triggerExecute({ code, language })
+                clearResults()
                 setRunResult(result ?? null)
-                setSqlResult(null)
             }
+        } catch (error) {
+            setErrorKey(toErrorKey(error))
+        }
+    }
+
+    const onRunTests = async () => {
+        if (code.trim() === "" || isBusy || !hasSampleTests) return
+        setResultOpen(true)
+        setErrorKey(null)
+        setLastAction("test")
+        try {
+            // Only the learner-visible SAMPLE cases are sent (input/expected) — HIDDEN cases
+            // stay server-side for AI grading and are never in this view.
+            const result = await triggerRunTests({
+                code,
+                language,
+                testCases: sampleTestCases.map((testCase) => ({
+                    input: testCase.input,
+                    expected: testCase.expected,
+                })),
+            })
+            clearResults()
+            setTestResult(result ?? null)
         } catch (error) {
             setErrorKey(toErrorKey(error))
         }
@@ -325,6 +422,7 @@ export const GradeCodePanel = ({
                 run_code_execution: false,
                 ...(model ? { model } : {}),
             })
+            clearResults()
             setGradeResult(result ?? null)
         } catch (error) {
             const key = toErrorKey(error)
@@ -336,6 +434,7 @@ export const GradeCodePanel = ({
 
     const retryLast = () => {
         if (lastAction === "grade") void onGrade()
+        else if (lastAction === "test") void onRunTests()
         else void onRun()
     }
 
@@ -345,10 +444,18 @@ export const GradeCodePanel = ({
 
     const languageLabel = t(`codeGrading.languages.${language}`)
 
-    // Whether the result pane already carries something (a run/SQL/grade result). Drives
+    // Whether the result pane already carries something (a run/SQL/test/grade result). Drives
     // the pane's empty placeholder vs. the actual output.
-    const hasAnyResult = Boolean(sqlResult || runResult || gradeResult)
+    const hasAnyResult = Boolean(sqlResult || runResult || testResult || gradeResult)
     const showResultEmpty = !isBusy && !isSubmitting && errorKey === null && !hasAnyResult
+
+    // The editor still holds EXACTLY the seeded starter template (the learner hasn't written
+    // anything of their own). Formal submission consumes a limited attempt, so it must not fire
+    // on the raw template — `code === ""` is already gated elsewhere; this covers the
+    // non-empty-but-untouched starter. Reactive via `code`; `autofilledRef` holds the last
+    // auto-filled starter and is cleared to null once the learner edits away from it.
+    const isUntouchedStarter =
+        autofilledRef.current !== null && code === autofilledRef.current
 
     return (
         <div className={cn("flex flex-col gap-3", className)}>
@@ -430,6 +537,19 @@ export const GradeCodePanel = ({
                         <PlayIcon aria-hidden focusable="false" className="size-5" />
                         {t("codeGrading.run")}
                     </Button>
+                    {hasSampleTests ? (
+                        // Runs the code against the SAMPLE (non-hidden) test cases in the
+                        // sandbox — objective per-case pass/fail, no attempt consumed, no LLM.
+                        <Button
+                            variant="secondary"
+                            isPending={isRunningTests}
+                            isDisabled={code.trim() === "" || isBusy}
+                            onPress={() => { void onRunTests() }}
+                        >
+                            <ListChecksIcon aria-hidden focusable="false" className="size-5" />
+                            {t("codeGrading.runTests")}
+                        </Button>
+                    ) : null}
                     {submitMode ? (
                         // GRADE = SUBMIT: the primary action posts the formal submission
                         // (consumes an attempt, AI-graded server-side) rather than the
@@ -438,9 +558,14 @@ export const GradeCodePanel = ({
                             variant="primary"
                             isPending={isSubmitting}
                             isDisabled={
-                                code.trim() === "" || isBusy || isSubmitting || submitDisabled
+                                code.trim() === "" || isUntouchedStarter || isBusy || isSubmitting || submitDisabled
                             }
                             onPress={() => {
+                                // The formal verdict lands in the attempts list — clear any
+                                // stale run/test/grade output so a pre-edit table doesn't
+                                // linger beside the submit spinner.
+                                clearResults()
+                                setErrorKey(null)
                                 setResultOpen(true)
                                 onSubmit?.()
                             }}
@@ -472,7 +597,7 @@ export const GradeCodePanel = ({
                 <GradeCodeEditor
                     ref={editorRef}
                     value={code}
-                    onChange={setCode}
+                    onChange={handleEditorChange}
                     language={MONACO_LANGUAGE[language] ?? language}
                     disabled={isBusy}
                     onReadyChange={setEditorReady}
@@ -512,7 +637,9 @@ export const GradeCodePanel = ({
                                         ? t("codeGrading.runningSql")
                                         : isRunningCode
                                             ? t("codeGrading.running")
-                                            : t("codeGrading.gradingWith", { model: gradingModelLabel })}
+                                            : isRunningTests
+                                                ? t("codeGrading.runningTests")
+                                                : t("codeGrading.gradingWith", { model: gradingModelLabel })}
                                 </Typography>
                             </div>
                         ) : null}
@@ -547,9 +674,10 @@ export const GradeCodePanel = ({
                             </div>
                         ) : null}
 
-                        {/* sandbox run output: SQL grid or code stdout/stderr */}
+                        {/* sandbox run output: SQL grid, code stdout/stderr, or per-case tests */}
                         {sqlResult ? <SqlResultTable result={sqlResult} /> : null}
                         {runResult ? <RunOutputPanel result={runResult} /> : null}
+                        {testResult ? <ExecutionResultTable summary={testResult} /> : null}
 
                         {/* LLM grade (model-dependent) */}
                         {gradeResult ? (

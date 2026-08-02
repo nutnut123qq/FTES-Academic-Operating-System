@@ -43,9 +43,14 @@ const FAB_SURFACE_CLASS = "bg-surface ring-1 ring-accent/40 hover:bg-default"
  * Dựng bằng pseudo-`::before` full-size, tô conic-gradient rồi MASK content-box + exclude
  * để CHỈ chừa vành `p-[3px]` (giữa trong suốt → không che linh vật), `animate-spin` cho chạy.
  * `motion-safe:` tôn trọng "giảm chuyển động"; `pointer-events-none` để không chặn click.
+ *
+ * ⚠️ KHÔNG thêm `relative` ở đây: nút mang class này vốn đã `fixed` (desktop) / `fixed`
+ * (FloatingActionButton mobile) → đã là positioning-context cho `::before absolute`. Nếu
+ * thêm `relative`, Tailwind sinh `.relative` SAU `.fixed` nên nó ĐÈ `fixed` → nút rơi khỏi
+ * góc (biến mất). Pseudo neo thẳng vào nút `fixed`, không cần `relative`.
  */
 const FAB_LED_CLASS = cn(
-    "relative before:pointer-events-none before:absolute before:inset-0 before:content-['']",
+    "before:pointer-events-none before:absolute before:inset-0 before:content-['']",
     "before:rounded-full before:p-[3px]",
     "before:[background:conic-gradient(from_0deg,transparent,var(--accent),#7c9cff,transparent_65%)]",
     "before:[mask:linear-gradient(#000_0_0)_content-box,linear-gradient(#000_0_0)]",

@@ -105,6 +105,20 @@ export interface ChallengeView {
      * github/file surface the BE cannot accept yet.
      */
     submissionMethod?: string | null
+    /**
+     * The SQL seed dataset the learner queries against, when the challenge ships one
+     * (BE reads it from `grading_config`). VISIBLE to the learner — it is the dataset
+     * to query, NOT an answer key (`expectedOutput` / `testCases` stay manager-gated).
+     * Threaded into the sandbox SQL Run path as `setup_sql`. Additive — absent on
+     * older deployments / non-SQL challenges.
+     */
+    seedSql?: string | null
+    /**
+     * The author's file-extension hint for a code exercise (e.g. `".py"`, `".sql"`),
+     * read from `grading_config`. Drives the FE language map and whether the in-browser
+     * sandbox ("Code trực tiếp") is offered. Additive — absent on older deployments.
+     */
+    fileExtension?: string | null
 }
 
 /** Wrapper for a batch test-case upsert. */

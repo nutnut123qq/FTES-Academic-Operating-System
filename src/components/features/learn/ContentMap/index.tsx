@@ -30,15 +30,9 @@ const lessonHref = (courseId: string, lessonId: string) =>
 const challengeSolverHref = (courseId: string, lessonId: string, slug: string) =>
     `${lessonHref(courseId, lessonId)}/challenges/${slug}`
 
-/**
- * Where an exercise child row navigates: a challenge opens its solver route; an
- * assignment opens the lesson reader, where {@link LessonAssignmentBlock} renders the
- * GitHub-URL / file submission surface inline.
- */
+/** Where an exercise child row navigates: a challenge opens its solver route. */
 const exerciseHref = (courseId: string, lessonId: string, exercise: LearnExercise): string =>
-    exercise.kind === "challenge"
-        ? challengeSolverHref(courseId, lessonId, exercise.slug ?? exercise.id)
-        : lessonHref(courseId, lessonId)
+    challengeSolverHref(courseId, lessonId, exercise.slug ?? exercise.id)
 
 /** Props for {@link ContentMap}. */
 export interface ContentMapProps {
@@ -249,11 +243,11 @@ const ContentMapLessonRow = ({
     /**
      * A NON-free challenge the viewer hasn't unlocked stays gated even on an accessible
      * (free/preview) lesson — the BE 403s the solver, so the row must show a lock and open
-     * the package gate rather than route into a solver the viewer can't reach. Assignments
-     * and free challenges are never gated here (predicate challenge-free-hardening).
+     * the package gate rather than route into a solver the viewer can't reach. Free
+     * challenges are never gated here (predicate challenge-free-hardening).
      */
     const isChallengeLocked = (exercise: LearnExercise): boolean =>
-        exercise.kind === "challenge" && !exercise.free && !hasFullAccess
+        !exercise.free && !hasFullAccess
     /** This lesson carries a gated (non-free, unowned) challenge → mount the package gate. */
     const hasLockedChallenge = lesson.exercises.some(isChallengeLocked)
 
@@ -330,8 +324,7 @@ const ContentMapLessonRow = ({
                             key={`${exercise.kind}-${exercise.id}`}
                             exercise={exercise}
                             isActive={
-                                exercise.kind === "challenge"
-                                && activeChallengeId !== undefined
+                                activeChallengeId !== undefined
                                 && (exercise.slug === activeChallengeId || exercise.id === activeChallengeId)
                             }
                             isLocked={isFullyLocked || isChallengeLocked(exercise)}
@@ -363,10 +356,10 @@ const ContentMapLessonRow = ({
 }
 
 /**
- * One nested exercise child row (a challenge or assignment) under a lesson. A tick
- * smaller/quieter than the lesson row: a per-type solver icon + the title, tinted
- * when its solver is the active route. A locked parent shows the lock glyph and the
- * click bubbles up to the shared package gate (never routes into a gated solver).
+ * One nested challenge child row under a lesson. A tick smaller/quieter than the
+ * lesson row: a per-type solver icon + the title, tinted when its solver is the active
+ * route. A locked parent shows the lock glyph and the click bubbles up to the shared
+ * package gate (never routes into a gated solver).
  */
 const ContentMapExerciseRow = ({
     exercise,
@@ -382,10 +375,9 @@ const ContentMapExerciseRow = ({
     lockedLabel: string
     onOpen: () => void
 }) => {
-    // An assignment carries no BE `type` (empty → "unknown" → generic puzzle), so key its
-    // glyph off `kind` to get the dedicated assignment icon; a challenge keeps its per-type
-    // solver glyph (mcq / code / essay / uiux). Locked overrides both with the lock glyph.
-    const solverKind = exercise.kind === "assignment" ? "assignment" : normalizeExerciseType(exercise.type)
+    // A challenge keeps its per-type solver glyph (mcq / code / essay / uiux); locked
+    // overrides it with the lock glyph.
+    const solverKind = normalizeExerciseType(exercise.type)
     const Icon = isLocked ? LockSimpleIcon : exerciseSolverIcon(solverKind)
     return (
         <button

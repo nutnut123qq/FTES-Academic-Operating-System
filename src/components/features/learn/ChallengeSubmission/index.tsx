@@ -332,6 +332,9 @@ export const ChallengeSubmission = () => {
                                             challengeId={challenge.id}
                                             submissionMethod={challenge.submissionMethod}
                                             gradingConfig={challenge.gradingConfig}
+                                            challengeDetail={detail}
+                                            fileExtension={challenge.fileExtension}
+                                            seedSql={challenge.seedSql}
                                             maxSubmissions={challenge.maxSubmissions}
                                             reachedMax={reachedMax}
                                             onSubmitted={() => { void mutate() }}
@@ -347,6 +350,7 @@ export const ChallengeSubmission = () => {
                                                 language={language}
                                                 onCodeChange={setCode}
                                                 onLanguageChange={setLanguageOverride}
+                                                setupSql={challenge.seedSql ?? undefined}
                                             />
 
                                             {reachedMax ? (

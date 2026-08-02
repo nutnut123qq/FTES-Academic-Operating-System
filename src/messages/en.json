@@ -6832,6 +6832,7 @@
         "methodTabsLabel": "Submission method",
         "tabGithub": "GitHub URL",
         "tabFile": "Upload file",
+        "tabSandbox": "Code directly",
         "fileLabel": "Solution file",
         "fileCta": "Drag & drop or choose a file to upload",
         "fileHint": "Accepted formats: {extensions}",
@@ -7393,7 +7394,10 @@
         "sql": "SQL"
       },
       "sqlLockedHint": "SQL challenge — language locked to SQL.",
+      "languageLockedHint": "Language is locked to the exercise's file type.",
       "sqlScalarNote": "The SQL runner executes one standalone statement against an empty sandbox — it has no seeded tables yet, so use self-contained queries (e.g. SELECT with literal values). Querying course tables isn't supported here yet.",
+      "sqlSeedTitle": "Sample dataset",
+      "sqlSeedNote": "Your queries run against the seeded sample dataset below (refreshed on every run).",
       "pickModel": "Pick a grading model",
       "defaultModel": "Default model",
       "defaultModelWith": "Default ({model})",

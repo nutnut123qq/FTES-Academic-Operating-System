@@ -6835,6 +6835,7 @@
         "methodTabsLabel": "Cách nộp bài",
         "tabGithub": "Đường dẫn GitHub",
         "tabFile": "Tải file lên",
+        "tabSandbox": "Code trực tiếp",
         "fileLabel": "File bài làm",
         "fileCta": "Kéo thả hoặc chọn file để tải lên",
         "fileHint": "Định dạng chấp nhận: {extensions}",
@@ -7396,7 +7397,10 @@
         "sql": "SQL"
       },
       "sqlLockedHint": "Thử thách SQL — ngôn ngữ được khóa ở SQL.",
+      "languageLockedHint": "Ngôn ngữ được khóa theo loại tệp của bài tập.",
       "sqlScalarNote": "Trình chạy SQL thực thi một câu lệnh độc lập trên sandbox trống — hiện chưa có bảng dữ liệu sẵn, nên hãy dùng truy vấn tự chứa (ví dụ SELECT với giá trị hằng). Truy vấn các bảng của khóa học chưa được hỗ trợ ở đây.",
+      "sqlSeedTitle": "Tập dữ liệu mẫu",
+      "sqlSeedNote": "Truy vấn của bạn chạy trên tập dữ liệu mẫu đã nạp sẵn dưới đây (làm mới mỗi lần chạy).",
       "pickModel": "Chọn model chấm",
       "defaultModel": "Model mặc định",
       "defaultModelWith": "Mặc định ({model})",

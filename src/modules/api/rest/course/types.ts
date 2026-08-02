@@ -117,12 +117,6 @@ export interface LessonView {
      * per-type solver by {@link LessonChallengeSummary.type}.
      */
     challenges?: Array<LessonChallengeSummary>
-    /**
-     * The lesson's course-module assignments (legacy exercises: GitHub-URL / file
-     * submission + AI rubric). Additive; absent on older deployments → empty. Nested as
-     * indented child rows alongside {@link challenges}.
-     */
-    assignments?: Array<LessonAssignmentSummary>
 }
 
 /** One active challenge attached to a lesson, as listed in {@link LessonView.challenges}. */
@@ -142,12 +136,6 @@ export interface LessonChallengeSummary {
      * it, so consumers coerce `?? false` (a missing flag means a gated, non-free challenge).
      */
     free?: boolean
-}
-
-/** One course-module assignment attached to a lesson, as listed in {@link LessonView.assignments}. */
-export interface LessonAssignmentSummary {
-    id: string
-    title: string
 }
 
 /** Query params for the public catalog list `GET /api/v1/courses`. */
@@ -431,67 +419,6 @@ export interface CreateEntitlementRequest {
     freeLessonIds?: Array<string> | null
     selectedExerciseIds?: Array<string> | null
     freeExerciseIds?: Array<string> | null
-}
-
-// ---------------------------------------------------------------- assignments
-
-/** Assignment summary. */
-export interface AssignmentView {
-    id: string
-    lessonId: string
-    title: string
-    question: string
-    criteria: string
-    /**
-     * Accepted file extension(s) for a FILE submission — a comma/space-separated list
-     * that may or may not be dot-prefixed (`"py"`, `".py"`, `"py, zip"`). Empty → no
-     * client-side extension restriction. Drives the file-tab `accept` attribute and the
-     * client-side extension gate.
-     */
-    fileExtension: string
-    maxSubmissions: number
-    free: boolean
-    sortOrder: number
-    /**
-     * Which submission method(s) the author allows (contract exercise-submission-methods):
-     * `"GITHUB"` (repo URL only) | `"FILE"` (upload a code/zip file, AI-graded) | `"BOTH"`.
-     * Additive — absent on older deployments (before the `submission_method` column) →
-     * the FE treats it as `"GITHUB"` so it keeps the existing URL-only form and never
-     * offers a file tab the BE cannot accept yet.
-     */
-    submissionMethod?: string | null
-}
-
-/** Body sent to `POST /api/v1/courses/lessons/{lessonId}/assignments`. */
-export interface CreateAssignmentRequest {
-    title: string
-    question: string
-    expectedOutput?: string | null
-    criteria?: string | null
-    checkLogic: boolean
-    checkPerform: boolean
-    checkEdgeCase: boolean
-    fileExtension?: string | null
-    sortOrder: number
-    maxSubmissions?: number | null
-    free: boolean
-    testCases?: string | null
-}
-
-/** Body sent to `POST /api/v1/courses/assignments/{assignmentId}/submissions`. */
-export interface SubmitAssignmentRequest {
-    githubSubmissionUrl: string
-}
-
-/** Assignment submission summary. */
-export interface CourseSubmissionView {
-    id: string
-    submissionAttempt: number
-    status: string
-    overallGrade: string | null
-    aiScore: string | null
-    evaluation: string
-    submittedAt: string
 }
 
 // ---------------------------------------------------------------- quiz

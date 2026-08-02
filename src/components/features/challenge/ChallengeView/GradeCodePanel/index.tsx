@@ -528,15 +528,21 @@ export const GradeCodePanel = ({
                         onChange={setModel}
                         isDisabled={isBusy}
                     />
-                    <Button
-                        variant="secondary"
-                        isPending={isRunningCode || isRunningSql}
-                        isDisabled={code.trim() === "" || isBusy}
-                        onPress={() => { void onRun() }}
-                    >
-                        <PlayIcon aria-hidden focusable="false" className="size-5" />
-                        {t("codeGrading.run")}
-                    </Button>
+                    {!hasSampleTests ? (
+                        // Plain "Run" (no stdin) is only meaningful for exercises WITHOUT test
+                        // cases — SQL (runs the query on the seeded dataset) or free code. An
+                        // algorithm challenge reads its input from stdin (the test case), so a
+                        // bare Run gets no input and errors; "Run tests" is the real run there.
+                        <Button
+                            variant="secondary"
+                            isPending={isRunningCode || isRunningSql}
+                            isDisabled={code.trim() === "" || isBusy}
+                            onPress={() => { void onRun() }}
+                        >
+                            <PlayIcon aria-hidden focusable="false" className="size-5" />
+                            {t("codeGrading.run")}
+                        </Button>
+                    ) : null}
                     {hasSampleTests ? (
                         // Runs the code against the SAMPLE (non-hidden) test cases in the
                         // sandbox — objective per-case pass/fail, no attempt consumed, no LLM.

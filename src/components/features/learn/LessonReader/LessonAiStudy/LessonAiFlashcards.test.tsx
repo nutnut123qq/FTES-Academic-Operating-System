@@ -1,5 +1,5 @@
 import React from "react"
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 /**
@@ -33,6 +33,12 @@ vi.mock("@phosphor-icons/react", () => ({
     ArrowClockwiseIcon: () => <span />,
     CheckCircleIcon: () => <span />,
     CursorClickIcon: () => <span />,
+    PencilSimpleIcon: () => <span />,
+}))
+
+// Màn soạn có luồng riêng (form + 3 mutation); file này chỉ lo việc rẽ NGUỒN thẻ.
+vi.mock("./LessonFlashcardManager", () => ({
+    LessonFlashcardManager: () => <div data-testid="flashcard-manager" />,
 }))
 
 vi.mock("@/components/blocks/async/AsyncContent", () => ({
@@ -101,6 +107,29 @@ describe("LessonAiFlashcards — nguồn thẻ", () => {
         render(<LessonAiFlashcards lessonId="l1" />)
 
         expect(generate).toHaveBeenCalledTimes(1)
+    })
+
+    // Lối vào màn soạn bám canManage của BE, KHÔNG bám việc bài đã có thẻ hay chưa.
+    it("học viên thường không thấy lối vào màn soạn", () => {
+        flashcardsSwr.mockReturnValue({
+            data: { lessonId: "l1", source: "AUTHORED", canManage: false, cards: [authoredCard()] },
+            isLoading: false,
+        })
+        render(<LessonAiFlashcards lessonId="l1" />)
+
+        expect(screen.queryByText("flashcard.manage.enter")).toBeNull()
+    })
+
+    it("người quản khoá bấm 'Soạn thẻ' → mở màn soạn thay cho vùng ôn tập", () => {
+        flashcardsSwr.mockReturnValue({
+            data: { lessonId: "l1", source: "AI", canManage: true, cards: [] },
+            isLoading: false,
+        })
+        render(<LessonAiFlashcards lessonId="l1" />)
+
+        expect(screen.queryByTestId("flashcard-manager")).toBeNull()
+        fireEvent.click(screen.getByText("flashcard.manage.enter"))
+        expect(screen.getByTestId("flashcard-manager")).toBeTruthy()
     })
 
     // Thẻ DRAFT là bản nháp của người soạn, học viên không được thấy.

@@ -338,7 +338,23 @@ export interface LessonFlashcardsView {
     source: "AUTHORED" | "AI"
     /** Caller có quyền soạn trên khoá này — dùng để ẩn/hiện lối vào màn soạn. */
     canManage: boolean
+    /**
+     * Người quản khoá nhận CẢ `DRAFT` lẫn `PUBLISHED` (BE lọc theo quyền, cùng một endpoint);
+     * học viên chỉ nhận `PUBLISHED`. Thẻ đã xoá (`ARCHIVED`) không bao giờ trả về.
+     */
     cards: Array<LessonFlashcardView>
+}
+
+/** Body tạo/sửa thẻ (BE `UpsertFlashcardRequest`). Ở đường PATCH mọi field đều tuỳ chọn. */
+export interface UpsertFlashcardRequest {
+    front?: string
+    back?: string
+    hint?: string | null
+    sortOrder?: number
+    /** `DRAFT` (chỉ người quản thấy) hoặc `PUBLISHED` (tới tay học viên). */
+    status?: string
+    /** `MANUAL` khi soạn tay, `AI_ACCEPTED` khi nhận bản nháp AI rồi sửa. */
+    origin?: string
 }
 
 // ---------------------------------------------------------------- enrollment / packages

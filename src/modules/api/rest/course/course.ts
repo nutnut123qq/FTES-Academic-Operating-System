@@ -29,6 +29,8 @@ import type {
     LessonContentView,
     LessonDocumentView,
     LessonFlashcardsView,
+    LessonFlashcardView,
+    UpsertFlashcardRequest,
     NoteRequest,
     PostLessonCommentRequest,
     NoteView,
@@ -382,6 +384,53 @@ export const getLessonFlashcards = async (lessonId: string): Promise<LessonFlash
     return restRequest<LessonFlashcardsView>({
         method: "GET",
         url: `/courses/lessons/${lessonId}/flashcards`,
+        authenticated: true,
+    })
+}
+
+/**
+ * Tạo một thẻ cho bài (chỉ người quản khoá). `front`/`back` bắt buộc non-blank.
+ *
+ * `POST /api/v1/courses/lessons/{lessonId}/flashcards`
+ */
+export const createLessonFlashcard = async (
+    lessonId: string,
+    request: UpsertFlashcardRequest,
+): Promise<LessonFlashcardView> => {
+    return restRequest<LessonFlashcardView>({
+        method: "POST",
+        url: `/courses/lessons/${lessonId}/flashcards`,
+        data: request,
+        authenticated: true,
+    })
+}
+
+/**
+ * Sửa một thẻ — field nào null/thiếu thì giữ nguyên.
+ *
+ * `PATCH /api/v1/courses/flashcards/{cardId}`
+ */
+export const updateLessonFlashcard = async (
+    cardId: string,
+    request: UpsertFlashcardRequest,
+): Promise<LessonFlashcardView> => {
+    return restRequest<LessonFlashcardView>({
+        method: "PATCH",
+        url: `/courses/flashcards/${cardId}`,
+        data: request,
+        authenticated: true,
+    })
+}
+
+/**
+ * Xoá MỀM một thẻ (BE đặt `status = ARCHIVED`, không xoá hàng) — thẻ biến khỏi mọi đường đọc.
+ *
+ * `DELETE /api/v1/courses/flashcards/{cardId}`
+ */
+export const deleteLessonFlashcard = async (cardId: string): Promise<void> => {
+    return restRequest<void>({
+        method: "DELETE",
+        url: `/courses/flashcards/${cardId}`,
         authenticated: true,
     })
 }

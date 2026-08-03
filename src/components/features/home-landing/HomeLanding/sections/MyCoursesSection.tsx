@@ -2,12 +2,12 @@
 
 import React from "react"
 import { ArrowRightIcon } from "@phosphor-icons/react"
-import { Typography } from "@heroui/react"
-import { useTranslations } from "next-intl"
+import { Chip, Typography } from "@heroui/react"
+import { useFormatter, useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
 import { ContinueCard } from "@/components/blocks/cards/ContinueCard"
 import { CoverImage } from "@/components/blocks/media/CoverImage"
-import { useQueryMyCoursesSwr } from "@/components/features/course/hooks/useQueryMyCoursesSwr"
+import { useQueryMyCoursesSwr, type MyCourse } from "@/components/features/course/hooks/useQueryMyCoursesSwr"
 import { HomeMascotGreeting } from "./HomeMascotGreeting"
 
 /** Max enrolled courses shown on the landing continue-learning band. */
@@ -31,10 +31,32 @@ const HOME_MY_COURSES_LIMIT = 4
  */
 export const MyCoursesSection = () => {
     const t = useTranslations()
+    const format = useFormatter()
     const { courses, hasCourses, isLoading } = useQueryMyCoursesSwr()
 
     // signed-out / still-loading / no courses → render nothing (no empty band, no jump)
     if (isLoading || !hasCourses) return null
+
+    /** Term-status chip for a card: "term ended" (expired) or "open until {date}". */
+    const termBadge = (course: MyCourse): React.ReactNode => {
+        if (course.expired) {
+            return (
+                <Chip size="sm" variant="soft" color="danger">
+                    {t("courses.termExpired")}
+                </Chip>
+            )
+        }
+        if (course.accessUntil) {
+            return (
+                <Chip size="sm" variant="soft" color="warning">
+                    {t("courses.termUntil", {
+                        date: format.dateTime(new Date(course.accessUntil), { dateStyle: "medium" }),
+                    })}
+                </Chip>
+            )
+        }
+        return null
+    }
 
     return (
         <section className="w-full border-b border-separator bg-default/20">
@@ -84,8 +106,9 @@ export const MyCoursesSection = () => {
                                 )}
                                 title={course.title}
                                 subtitle={t("courses.percentComplete", { percent: course.completionPercent })}
+                                badge={termBadge(course)}
                                 value={course.completionPercent}
-                                ctaLabel={t("courses.continueLearning")}
+                                ctaLabel={course.expired ? t("courses.rebuy") : t("courses.continueLearning")}
                                 className="h-full"
                             />
                         </Link>

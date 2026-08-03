@@ -37,6 +37,12 @@ export interface ContinueCardProps extends WithClassNames<undefined> {
      */
     subtitle?: React.ReactNode
     /**
+     * Optional status node rendered under the subtitle — typically a `<Chip>` the
+     * caller supplies (e.g. a term "open until {date}" or "term ended" flag). The
+     * block only positions it; the caller owns its content and colour.
+     */
+    badge?: React.ReactNode
+    /**
      * Current progress value. Forwarded directly to {@link ProgressMeter}.
      * Should fall within `[0, max]`.
      */
@@ -85,6 +91,7 @@ export const ContinueCard = ({
     cover,
     title,
     subtitle,
+    badge,
     value,
     max = 100,
     ctaLabel,
@@ -118,6 +125,7 @@ export const ContinueCard = ({
                             {subtitle}
                         </Typography>
                     ) : null}
+                    {badge ? <div className="flex">{badge}</div> : null}
                 </div>
 
                 {/* CTA label pinned to the right — accent colour, shrink-0 */}

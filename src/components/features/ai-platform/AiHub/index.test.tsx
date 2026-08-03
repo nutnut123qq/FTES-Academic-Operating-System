@@ -115,6 +115,8 @@ const course = (over: Partial<MyCourse> & { courseId: string }): MyCourse => ({
     href: `/courses/${over.courseId}/learn`,
     isPurchased: true,
     coverImage: null,
+    accessUntil: null,
+    expired: false,
     ...over,
 })
 

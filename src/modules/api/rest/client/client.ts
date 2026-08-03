@@ -2,6 +2,7 @@ import axios from "axios"
 import { publicEnv } from "@/resources/env/public"
 import { LocalStorage } from "@/modules/storage/local/storage"
 import { LocalStorageId } from "@/modules/storage/local/enums/id"
+import { refreshAccessToken, shouldRefreshAccessToken } from "./refresh"
 import type { RestApiResponse, RestErrorBody, RestRequestConfig } from "./types"
 
 /**
@@ -71,23 +72,22 @@ export const createRestAxiosInstance = () => {
 }
 
 /**
- * Executes a single REST request against the backend and unwraps the standard
- * `{code,message,data}` envelope.
+ * Sends the request ONCE and unwraps the standard `{code,message,data}` envelope.
  *
- * - Attaches `Authorization: Bearer <token>` whenever a token exists in local storage
- *   (any method), unless a call explicitly opts out with `authenticated: false`. Public
- *   endpoints ignore a stale/invalid token, so always sending it is safe and prevents
- *   authenticated GETs (streak, lesson content, /me/*, admin reads) from silently 401ing.
- * - Creates a fresh axios instance per call.
- * - Throws an `Error` when the HTTP status is not 2xx or when the backend envelope
- *   `code` is neither 200 nor 1002 (1002 = "Accepted" async-job submit, data = JobRef).
+ * Reads the bearer token FRESH from local storage on every call, so a retry issued
+ * after a token refresh automatically picks up the new token. Throws {@link RestError}
+ * on any non-2xx / non-`{200,1002}` response. Refresh orchestration lives in
+ * {@link restRequest}, which wraps this.
  *
  * @param config - Axios request config plus optional `authenticated` override.
+ * @param shouldAuthenticate - Whether to attach `Authorization: Bearer <token>`.
  * @returns The unwrapped `data` payload on success.
  */
-export const restRequest = async <T>(config: RestRequestConfig): Promise<T> => {
+const sendRestRequest = async <T>(
+    config: RestRequestConfig,
+    shouldAuthenticate: boolean,
+): Promise<T> => {
     const axiosInstance = createRestAxiosInstance()
-    const shouldAuthenticate = config.authenticated ?? true
 
     if (shouldAuthenticate) {
         const accessToken = getAccessToken()
@@ -141,5 +141,58 @@ export const restRequest = async <T>(config: RestRequestConfig): Promise<T> => {
         }
 
         throw error instanceof Error ? error : new Error(String(error))
+    }
+}
+
+/**
+ * Executes a REST request against the backend and unwraps the standard
+ * `{code,message,data}` envelope, with **silent access-token refresh** around it.
+ *
+ * The access token is short-lived (15 min). Without refresh, an authenticated call that
+ * fires after the token expires — a submit after a long idle stretch, or the first call
+ * the morning after — 401s and the user is bounced. Two safety nets wrap the actual send:
+ *
+ * - **Proactive** — before an authenticated call, if the stored token is missing or
+ *   within {@link ACCESS_TOKEN_MIN_VALIDITY_SECONDS} of expiry, refresh it first so we
+ *   never send a known-stale bearer.
+ * - **Reactive** — if the call 401s anyway (expiry raced the check, or clock skew), do
+ *   ONE silent refresh + retry. The BE returns a generic 401 for both expired and
+ *   invalid tokens, so we can't pre-distinguish; we retry only when the refresh actually
+ *   minted a new token, otherwise the original 401 surfaces (session truly dead → login).
+ *
+ * Both refresh paths share a single in-flight refresh with the Apollo/GraphQL client
+ * (see {@link refreshAccessToken}) so concurrent callers never double-rotate the refresh
+ * token. The refresh call itself uses a bare axios instance, so this never recurses.
+ *
+ * `authenticated: false` calls skip both nets (public endpoints, and the refresh call).
+ *
+ * @param config - Axios request config plus optional `authenticated` override.
+ * @returns The unwrapped `data` payload on success.
+ */
+export const restRequest = async <T>(config: RestRequestConfig): Promise<T> => {
+    const shouldAuthenticate = config.authenticated ?? true
+
+    if (shouldAuthenticate && typeof window !== "undefined") {
+        const current = getAccessToken()
+        if (current && shouldRefreshAccessToken(current)) {
+            await refreshAccessToken()
+        }
+    }
+
+    try {
+        return await sendRestRequest<T>(config, shouldAuthenticate)
+    } catch (error) {
+        if (
+            shouldAuthenticate &&
+            error instanceof RestError &&
+            error.status === 401 &&
+            typeof window !== "undefined"
+        ) {
+            const newAccessToken = await refreshAccessToken()
+            if (newAccessToken) {
+                return await sendRestRequest<T>(config, shouldAuthenticate)
+            }
+        }
+        throw error
     }
 }

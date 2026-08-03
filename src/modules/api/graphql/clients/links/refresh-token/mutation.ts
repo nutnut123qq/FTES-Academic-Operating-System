@@ -1,18 +1,17 @@
-import { restRequest } from "@/modules/api/rest/client"
-import { LocalStorage } from "@/modules/storage/local/storage"
-import { LocalStorageId } from "@/modules/storage/local/enums/id"
-import { GraphQLResponse, MutateParams } from "../../../types"
+import { refreshAccessToken } from "@/modules/api/rest/client/refresh"
+import { GraphQLResponse } from "../../../types"
 
 /**
- * Token refresh.
+ * Token refresh (Apollo-facing wrapper).
  *
- * The BE GraphQL gateway is **query-only** (no `type Mutation`), so refresh CANNOT
- * go through GraphQL. Instead we mint a new access token via REST
- * `POST /api/v1/auth/refresh` using the refresh token persisted at login
- * ({@link LocalStorageId.KeycloakRefreshToken}). The return shape is kept identical
- * to the previous Apollo mutation result (`{ data: { refreshToken: { data:
- * { accessToken } } } }`) so existing callers (the proactive-refresh link) are
- * unchanged.
+ * The BE GraphQL gateway is **query-only** (no `type Mutation`), so refresh CANNOT go
+ * through GraphQL. The actual refresh — reading the stored refresh token, calling REST
+ * `POST /api/v1/auth/refresh`, persisting the rotated tokens, and coalescing concurrent
+ * callers into ONE network refresh — lives in {@link refreshAccessToken}
+ * (`@/modules/api/rest/client/refresh`), shared with the REST client so both stacks
+ * never double-rotate the refresh token. This module only re-wraps the result into the
+ * Apollo-compatible shape (`{ data: { refreshToken: { data: { accessToken } } } }`) so
+ * existing callers (the proactive-refresh link) are unchanged.
  */
 export enum MutationRefreshToken {
     Mutation1 = "mutation1",
@@ -42,78 +41,24 @@ export interface RefreshResult {
     data: MutateRefreshTokenResponse | null
 }
 
-/** Unwrapped `data` payload of `POST /api/v1/auth/refresh` (mirrors BE `TokenResponse`). */
-interface RefreshRestResponse {
-    accessToken?: string
-    refreshToken?: string
-}
-
-const emptyResult = (error: string): RefreshResult => ({
-    data: { refreshToken: { success: false, message: "", error, data: undefined } },
-})
-
-/** Performs one REST refresh: reads the stored refresh token, mints a new access token,
- *  persists the (rotated) tokens, and returns the Apollo-compatible result. */
-const doRefresh = async (): Promise<RefreshResult> => {
-    const refreshToken = LocalStorage.getItemAsString(LocalStorageId.KeycloakRefreshToken)
-    // No refresh session (e.g. anonymous, or an injected access-token-only session) →
-    // caller's optional chaining no-ops and the request is forwarded unauthenticated.
-    if (!refreshToken) return emptyResult("no refresh token")
-
-    const resp = await restRequest<RefreshRestResponse>({
-        method: "POST",
-        url: "/auth/refresh",
-        data: { refreshToken },
-        // Public endpoint — never attach the (stale/expiring) bearer token.
-        authenticated: false,
-    })
-
-    if (resp?.accessToken) {
-        LocalStorage.setItem(LocalStorageId.KeycloakAccessToken, resp.accessToken)
-    }
-    // The BE rotates the refresh token on each refresh — persist the new one so the
-    // next refresh doesn't reuse a consumed token.
-    if (resp?.refreshToken) {
-        LocalStorage.setItem(LocalStorageId.KeycloakRefreshToken, resp.refreshToken)
-    }
-
+/**
+ * The refresh token operation. Delegates to the shared single-flight
+ * {@link refreshAccessToken} (which persists the rotated tokens and coalesces
+ * overlapping calls across BOTH the REST and GraphQL stacks) and re-wraps the new access
+ * token into the Apollo-compatible result. A failed refresh resolves to a `success:false`
+ * result (never rejects) so callers treat it as non-fatal and forward the request anyway
+ * (the server enforces auth where it matters).
+ */
+export const mutateRefreshToken = async (): Promise<RefreshResult> => {
+    const accessToken = await refreshAccessToken()
     return {
         data: {
             refreshToken: {
-                success: Boolean(resp?.accessToken),
+                success: Boolean(accessToken),
                 message: "",
-                error: undefined,
-                data: resp?.accessToken ? { accessToken: resp.accessToken } : undefined,
+                error: accessToken ? undefined : "refresh failed",
+                data: accessToken ? { accessToken } : undefined,
             },
         },
     }
-}
-
-/**
- * In-flight refresh shared across concurrent callers (single-flight).
- *
- * The proactive-refresh link awaits a refresh before EVERY operation when the token
- * is near expiry, so firing N queries at once would otherwise spawn N parallel
- * refreshes — wasteful, and worse: each one would rotate the refresh token out from
- * under its siblings, invalidating them. While a refresh is in flight, everyone
- * shares the same promise.
- */
-let inFlightRefresh: Promise<RefreshResult> | null = null
-
-/**
- * The refresh token operation. Coalesces overlapping calls into one network refresh;
- * the next near-expiry after it settles triggers a fresh one. A failed refresh
- * resolves to an empty result (never rejects) so callers treat it as non-fatal and
- * forward the request anyway (the server enforces auth where it matters).
- */
-export const mutateRefreshToken = (
-    _params?: MutateParams<MutationRefreshToken, RefreshTokenRequest>,
-): Promise<RefreshResult> => {
-    if (inFlightRefresh) return inFlightRefresh
-    inFlightRefresh = doRefresh()
-        .catch((error): RefreshResult => emptyResult(String(error)))
-        .finally(() => {
-            inFlightRefresh = null
-        })
-    return inFlightRefresh
 }

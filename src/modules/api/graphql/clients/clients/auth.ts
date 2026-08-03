@@ -97,7 +97,10 @@ export const createAuthApolloClient = ({
     headers = {},
     signal,
     debug = false,
-    minValiditySeconds = 30,
+    // 60s (was 30s): the BE validates `exp` with no clock-skew leeway, so refresh a
+    // little earlier to cover a slightly-ahead server clock + a slow round-trip. Matches
+    // ACCESS_TOKEN_MIN_VALIDITY_SECONDS used by the REST client.
+    minValiditySeconds = 60,
     uri,
     getAccessToken,
     setAccessToken,

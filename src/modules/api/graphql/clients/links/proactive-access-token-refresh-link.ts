@@ -80,13 +80,7 @@ export const createProactiveAccessTokenRefreshLink = (
                             )
                         }
                         try {
-                            const result = await mutateRefreshToken(
-                                {
-                                    request: {
-                                        minValiditySeconds,
-                                    },
-                                }
-                            )
+                            const result = await mutateRefreshToken()
                             if (result.data?.refreshToken?.data?.accessToken) {
                                 persistAccessToken(result.data.refreshToken.data.accessToken)
                             }

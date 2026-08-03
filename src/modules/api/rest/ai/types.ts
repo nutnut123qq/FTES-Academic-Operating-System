@@ -225,6 +225,25 @@ export interface CodeGradeCriterion {
 }
 
 /**
+ * One GitHub-review-style change the agentic project grader flags on a file
+ * (PIN §4 — `changes:[{file,line,reason,suggestion}]`). `file` is the project-relative
+ * path (matches a `path` from the project tree), `line` is 1-based. Emitted only by the
+ * agentic project grade (`POST /api/ai/v2/code/grade-project`); a plain code grade omits
+ * `changes` entirely, so its presence is the "this is a project review" signal the result
+ * view branches on.
+ */
+export interface CodeChange {
+    /** Project-relative file path the comment anchors to (matches a tree `path`). */
+    file: string
+    /** 1-based line number the comment is pinned to. */
+    line: number
+    /** Why the line needs attention (the review comment body). */
+    reason: string
+    /** The concrete fix the grader suggests. */
+    suggestion: string
+}
+
+/**
  * Response of `POST /api/v1/ai/coding/grade-code` (raw ftes-ai-service JSON).
  * `model` + `model_note` MUST be surfaced — each model grades differently.
  * `execution` is null for static-only languages (SQL).
@@ -239,6 +258,21 @@ export interface CodeGradeResult {
     model?: string
     model_note?: string
     execution?: CodeExecutionSummary | null
+    /**
+     * GitHub-review-style per-line change suggestions (PIN §4). Present ONLY on an
+     * agentic project grade (`POST /api/ai/v2/code/grade-project`) — a plain code grade
+     * omits it. An empty array means "graded, nothing to fix" (every file clean); its
+     * presence (even empty) is how the attempts list decides to render the VS Code tree
+     * review (`ProjectReviewResult`) instead of the flat `GradeResultCard`.
+     */
+    changes?: Array<CodeChange>
+    /**
+     * The project files the agentic grader actually opened during its tool-calling loop
+     * (PIN §7 — the "trích đọc" the result view surfaces). Absent on a plain code grade.
+     */
+    files_read?: Array<string>
+    /** How many agentic tool-calling rounds the grade took (PIN §7). Absent on a plain grade. */
+    iterations?: number
 }
 
 /**

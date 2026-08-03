@@ -5,6 +5,8 @@ import type {
     CreateTeamRequest,
     LeaderboardView,
     ManualScoreItem,
+    ProjectFileView,
+    ProjectTreeEntry,
     RubricUpsert,
     SubmissionResultsView,
     SubmissionView,
@@ -253,6 +255,53 @@ export const getChallengeSubmissionResults = async (
         url: `/challenges/${id}/submissions/${submissionId}/results`,
     })
     return { ...view, status: normalizeSubmissionStatus(view.status) }
+}
+
+/**
+ * Lists the file tree of a graded PROJECT submission (PIN §3C). The BE serves it
+ * server-side (downloads the submission's uploaded zip → unzips in-memory with the
+ * SSRF/zip-bomb guards → returns the whitelisted `{path, size}` entries), ownership-gated
+ * to the submission owner (or `canManage`) — the FE never fetches Cloudinary directly.
+ *
+ * `GET /api/v1/challenges/{id}/submissions/{submissionId}/project/tree`
+ *
+ * @param id - The challenge UUID the submission belongs to.
+ * @param submissionId - The graded project submission whose tree to load.
+ * @returns The project-relative file entries; `[]` when the zip carries no code files.
+ */
+export const getSubmissionProjectTree = async (
+    id: string,
+    submissionId: string,
+): Promise<Array<ProjectTreeEntry>> => {
+    return restRequest<Array<ProjectTreeEntry>>({
+        method: "GET",
+        url: `/challenges/${id}/submissions/${submissionId}/project/tree`,
+    })
+}
+
+/**
+ * Returns the content of ONE file of a graded PROJECT submission (PIN §3C). The BE
+ * re-reads it from the submission's zip server-side (path-traversal guard, whitelist,
+ * size cap), ownership-gated like {@link getSubmissionProjectTree}. `path` is sent as a
+ * query param (encoded by axios) so a nested path (`src/app.py`) round-trips intact.
+ *
+ * `GET /api/v1/challenges/{id}/submissions/{submissionId}/project/file?path=`
+ *
+ * @param id - The challenge UUID the submission belongs to.
+ * @param submissionId - The graded project submission the file lives in.
+ * @param path - The project-relative file path (from a tree entry) to read.
+ * @returns The file's `{path, content}` (UTF-8 text).
+ */
+export const getSubmissionProjectFile = async (
+    id: string,
+    submissionId: string,
+    path: string,
+): Promise<ProjectFileView> => {
+    return restRequest<ProjectFileView>({
+        method: "GET",
+        url: `/challenges/${id}/submissions/${submissionId}/project/file`,
+        params: { path },
+    })
 }
 
 /**

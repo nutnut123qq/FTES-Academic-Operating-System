@@ -6951,6 +6951,34 @@
         "exampleEmpty": "(trống)",
         "comingSoonTitle": "Sắp ra mắt",
         "comingSoonBody": "Trình giải cho loại thử thách này đang được xây dựng."
+      },
+      "project": {
+        "uploadTitle": "Nộp project",
+        "dropHint": "Kéo & thả file .zip, hoặc chọn file .zip / cả thư mục dự án.",
+        "pickZip": "Chọn file .zip",
+        "pickFolder": "Chọn thư mục",
+        "reading": "Đang đọc project…",
+        "clear": "Chọn lại",
+        "fileCount": "{count} tệp",
+        "submit": "Nộp project",
+        "error": {
+          "empty": "Không tìm thấy tệp mã nguồn nào trong project.",
+          "tooLarge": "Project quá lớn — hãy bỏ bớt tệp không cần thiết rồi thử lại.",
+          "read": "Không đọc được project. Kiểm tra lại file .zip / thư mục rồi thử lại."
+        },
+        "treeTitle": "Cây thư mục",
+        "treeEmpty": "Bài nộp này chưa có tệp nào.",
+        "treeError": "Không tải được cây thư mục.",
+        "fileError": "Không tải được nội dung tệp.",
+        "selectFileHint": "Chọn một tệp trong cây để xem nội dung và nhận xét.",
+        "reason": "Nhận xét",
+        "suggestion": "Đề xuất",
+        "noChanges": "Không cần sửa",
+        "hasChanges": "Cần sửa",
+        "filesReadHint": "AI đã đọc {count} tệp qua {iterations} vòng.",
+        "unanchoredTitle": "Nhận xét chưa gắn được vào tệp",
+        "unanchoredHint": "Những nhận xét này trỏ tới tệp không có trong cây thư mục (hoặc chưa tải được project).",
+        "fileLine": "{file} · dòng {line}"
       }
     },
     "common": {

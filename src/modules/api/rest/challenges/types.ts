@@ -304,6 +304,34 @@ export interface SubmissionResultsView {
     aiFeedback?: CodeGradeResult | null
 }
 
+/**
+ * One node of a graded project submission's file tree (PIN §3C —
+ * `GET /api/v1/challenges/{id}/submissions/{sid}/project/tree`). The BE downloads the
+ * submission's uploaded `.zip` server-side, unzips it in-memory (guarded), and returns
+ * the whitelisted code files as `{path, size}` — `path` is project-relative (POSIX
+ * separators), `size` is the file's byte length. Ownership-gated (submission owner /
+ * `canManage`), so the FE never touches Cloudinary directly.
+ */
+export interface ProjectTreeEntry {
+    /** Project-relative path (POSIX `/` separators), e.g. `src/app.py`. */
+    path: string
+    /** File size in bytes. */
+    size: number
+}
+
+/**
+ * The content of ONE file of a graded project submission (PIN §3C —
+ * `GET /api/v1/challenges/{id}/submissions/{sid}/project/file?path=`). The BE re-reads
+ * the file from the submission's zip server-side (path-traversal guard, whitelist, size
+ * cap) and returns its UTF-8 text. Ownership-gated like {@link ProjectTreeEntry}.
+ */
+export interface ProjectFileView {
+    /** The project-relative path echoed back (matches the requested `path`). */
+    path: string
+    /** The file's UTF-8 text content. */
+    content: string
+}
+
 /** Leaderboard entry row. */
 export interface LeaderboardEntry {
     /** Participant type: `USER` or `TEAM`. */

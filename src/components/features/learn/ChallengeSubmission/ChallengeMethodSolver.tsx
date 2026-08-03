@@ -1,10 +1,12 @@
 "use client"
 
 import React, { useRef, useState } from "react"
-import { Button, Input, Tabs, TextField, Typography, cn } from "@heroui/react"
+import { Button, Input, Spinner, Tabs, TextField, Typography, cn } from "@heroui/react"
 import {
     CodeIcon,
     FileArrowUpIcon,
+    FileZipIcon,
+    FolderIcon,
     GithubLogoIcon,
     LockSimpleIcon,
     UploadSimpleIcon,
@@ -28,6 +30,14 @@ import {
     runnableLanguageFromFileExtension,
     type SubmitMethod,
 } from "@/components/features/learn/submissionMethods"
+import { ProjectTreePreview } from "./ProjectTreePreview"
+import {
+    prepareFolderProject,
+    prepareZipProject,
+    ProjectArchiveError,
+    type PreparedProject,
+    type ProjectArchiveErrorKind,
+} from "./projectArchive"
 
 /** The solver's tab keys — the two author methods plus the in-browser code sandbox. */
 type SolverTab = SubmitMethod | "sandbox"
@@ -115,6 +125,11 @@ export const ChallengeMethodSolver = ({
         fileExtension ?? parseGradingConfigFileExtension(gradingConfig),
     )
     const showSandbox = sandboxLanguage !== null
+    // When the FILE method accepts a `.zip`, the file tab becomes a PROJECT upload (zip OR
+    // whole folder → one zip) with a pre-submit tree preview, instead of the single-file
+    // picker (PIN §4A). Read from both the gradingConfig whitelist and the top-level hint.
+    const isProjectUpload =
+        acceptExtensions.includes(".zip") || (fileExtension ?? "").toLowerCase().includes(".zip")
 
     // The enabled surfaces, in tab order: github, file, sandbox.
     const availableTabs: Array<SolverTab> = [
@@ -135,6 +150,15 @@ export const ChallengeMethodSolver = ({
     const fileInputRef = useRef<HTMLInputElement>(null)
     const [dragOver, setDragOver] = useState(false)
 
+    // Project-upload state (used only when `isProjectUpload`): `prepared` holds the built
+    // `.zip` blob + the preview tree, `null` until a zip/folder is picked; `preparing` guards
+    // the async fflate zip/unzip; `projectError` maps an intake failure to an i18n message.
+    const [prepared, setPrepared] = useState<PreparedProject | null>(null)
+    const [preparing, setPreparing] = useState(false)
+    const [projectError, setProjectError] = useState<ProjectArchiveErrorKind | null>(null)
+    const zipInputRef = useRef<HTMLInputElement>(null)
+    const folderInputRef = useRef<HTMLInputElement | null>(null)
+
     // Lifted sandbox editor state — the same source the embedded GradeCodePanel edits and
     // Runs/AI-grades is what the formal "Nộp bài" posts (payloadType CODE). The language is
     // fixed to the exercise's runnable language; GradeCodePanel locks the picker (see the
@@ -154,6 +178,7 @@ export const ChallengeMethodSolver = ({
     const canSubmitUrl = !reachedMax && isHttpsUrl(url) && !busy
     const canSubmitFile = !reachedMax && file !== null && fileError === null && !busy
     const canSubmitCode = !reachedMax && sandboxCode.trim() !== "" && !busy
+    const canSubmitProject = !reachedMax && prepared !== null && !busy && !preparing
 
     const handleSubmitUrl = async () => {
         setTouched(true)
@@ -197,6 +222,52 @@ export const ChallengeMethodSolver = ({
         )
         if (ok !== null) {
             setFile(null)
+            onSubmitted()
+        }
+    }
+
+    // Runs the async fflate intake (zip OR folder), swapping the picked project in on
+    // success and mapping a typed failure to the learner-facing error.
+    const preparePicked = async (build: () => Promise<PreparedProject>) => {
+        setPreparing(true)
+        setProjectError(null)
+        setPrepared(null)
+        try {
+            setPrepared(await build())
+        } catch (error) {
+            setProjectError(error instanceof ProjectArchiveError ? error.kind : "read")
+        } finally {
+            setPreparing(false)
+        }
+    }
+
+    const handlePickZip = (candidate: File | undefined) => {
+        if (candidate) {
+            void preparePicked(() => prepareZipProject(candidate))
+        }
+    }
+
+    const handlePickFolder = (files: FileList | null) => {
+        if (files && files.length > 0) {
+            void preparePicked(() => prepareFolderProject(Array.from(files)))
+        }
+    }
+
+    const handleSubmitProject = async () => {
+        // Client-side gate — no doomed request for a missing project / used-up quota.
+        if (!prepared || reachedMax || busy) {
+            return
+        }
+        // The prepared blob is already ONE .zip — wrap it as a File and submit through the
+        // SAME multipart path as a single-file upload (grade = submit, consumes an attempt).
+        const zipFile = new File([prepared.blob], prepared.fileName, { type: "application/zip" })
+        const ok = await runRest(
+            () => submitFile.trigger({ id: challengeId, file: zipFile, model: model ?? undefined }),
+            { successMessage: t("exercises.assignment.submitted") },
+        )
+        if (ok !== null) {
+            setPrepared(null)
+            setProjectError(null)
             onSubmitted()
         }
     }
@@ -374,6 +445,134 @@ export const ChallengeMethodSolver = ({
         </div>
     )
 
+    // The PROJECT upload form (file tab when the challenge accepts `.zip`): pick a `.zip`
+    // OR a whole folder → fflate builds ONE zip + a tree preview (ProjectTreePreview) shown
+    // BEFORE Submit (replacing the plain file chip). Submit posts through the same multipart
+    // path as a single-file upload (grade = submit).
+    const projectFileForm = (
+        <div className="flex flex-col gap-3">
+            <Typography type="body-sm" weight="medium">
+                {t("exercises.project.uploadTitle")}
+            </Typography>
+
+            {prepared ? (
+                <ProjectTreePreview
+                    fileName={prepared.fileName}
+                    paths={prepared.paths}
+                    onClear={() => {
+                        setPrepared(null)
+                        setProjectError(null)
+                    }}
+                />
+            ) : (
+                <div
+                    onDragOver={(event) => {
+                        event.preventDefault()
+                        setDragOver(true)
+                    }}
+                    onDragLeave={() => setDragOver(false)}
+                    onDrop={(event) => {
+                        event.preventDefault()
+                        setDragOver(false)
+                        handlePickZip(event.dataTransfer.files?.[0])
+                    }}
+                    className={cn(
+                        "flex flex-col items-center gap-3 rounded-2xl border border-dashed border-default p-8 text-center transition-colors",
+                        dragOver && "border-accent bg-accent/5",
+                    )}
+                >
+                    <UploadSimpleIcon aria-hidden focusable="false" className="size-7 text-muted" />
+                    <Typography type="body-sm" color="muted">
+                        {t("exercises.project.dropHint")}
+                    </Typography>
+                    <div className="flex flex-wrap items-center justify-center gap-2">
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            isDisabled={preparing}
+                            onPress={() => zipInputRef.current?.click()}
+                        >
+                            <FileZipIcon aria-hidden focusable="false" className="size-4" />
+                            {t("exercises.project.pickZip")}
+                        </Button>
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            isDisabled={preparing}
+                            onPress={() => folderInputRef.current?.click()}
+                        >
+                            <FolderIcon aria-hidden focusable="false" className="size-4" />
+                            {t("exercises.project.pickFolder")}
+                        </Button>
+                    </div>
+                </div>
+            )}
+
+            {/* Hidden pickers — a `.zip` input + a folder input whose `webkitdirectory`/
+                `directory` attributes are set imperatively (they are not in React's JSX input
+                types). Value reset after each pick so re-choosing the same zip/folder fires a
+                fresh change event. */}
+            <input
+                ref={zipInputRef}
+                type="file"
+                accept=".zip,application/zip"
+                className="hidden"
+                aria-label={t("exercises.project.pickZip")}
+                onChange={(event) => {
+                    handlePickZip(event.target.files?.[0])
+                    event.target.value = ""
+                }}
+            />
+            <input
+                ref={(el) => {
+                    if (el) {
+                        el.setAttribute("webkitdirectory", "")
+                        el.setAttribute("directory", "")
+                    }
+                    folderInputRef.current = el
+                }}
+                type="file"
+                className="hidden"
+                aria-label={t("exercises.project.pickFolder")}
+                onChange={(event) => {
+                    handlePickFolder(event.target.files)
+                    event.target.value = ""
+                }}
+            />
+
+            {preparing ? (
+                <div className="flex items-center gap-2">
+                    <Spinner size="sm" />
+                    <Typography type="body-sm" color="muted">
+                        {t("exercises.project.reading")}
+                    </Typography>
+                </div>
+            ) : null}
+
+            {projectError ? (
+                <div className="flex items-center gap-2 rounded-2xl border border-danger/40 bg-danger/5 px-4 py-3">
+                    <WarningCircleIcon aria-hidden focusable="false" className="size-5 shrink-0 text-danger" />
+                    <Typography type="body-sm" color="muted">
+                        {t(`exercises.project.error.${projectError === "too-large" ? "tooLarge" : projectError}`)}
+                    </Typography>
+                </div>
+            ) : null}
+
+            {modelPicker}
+
+            <div>
+                <Button
+                    variant="primary"
+                    isPending={submitFile.isMutating}
+                    isDisabled={!canSubmitProject}
+                    onPress={() => void handleSubmitProject()}
+                >
+                    {t("exercises.project.submit")}
+                </Button>
+            </div>
+        </div>
+    )
+
     // The in-browser sandbox tab body = ONLY the workspace (the embedded GradeCodePanel:
     // toolbar Run/submit above, editor, terminal output below). The problem statement + SQL
     // schema/ERD live in the shared RIGHT column of the outer split (owned by the parent), so
@@ -407,7 +606,11 @@ export const ChallengeMethodSolver = ({
     )
 
     const activeForm =
-        method === "sandbox" ? sandboxForm : method === "file" ? fileForm : githubForm
+        method === "sandbox"
+            ? sandboxForm
+            : method === "file"
+                ? (isProjectUpload ? projectFileForm : fileForm)
+                : githubForm
 
     // ONLY the work area (tabs + active form) — the LEFT column of the outer solve split.
     // The problem statement ("Đề bài") + SQL schema/ERD live in the shared RIGHT column,

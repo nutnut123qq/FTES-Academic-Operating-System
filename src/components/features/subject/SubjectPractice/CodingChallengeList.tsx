@@ -17,7 +17,7 @@ import {
     type ChallengeType,
     type CodingChallenge,
 } from "../hooks/useQuerySubjectCodingChallengesSwr"
-import { CodingChallengeDetail } from "./CodingChallengeDetail"
+import { Link } from "@/i18n/navigation"
 
 /** lifecycle → chip color. */
 const LIFECYCLE_COLOR: Record<ChallengeLifecycle, "success" | "warning" | "default"> = {
@@ -55,7 +55,6 @@ export const CodingChallengeList = ({ subjectId, onBack }: CodingChallengeListPr
     const [type, setType] = useState<"all" | ChallengeType>("all")
     const [lifecycle, setLifecycle] = useState<"all" | ChallengeLifecycle>("all")
     const [search, setSearch] = useState("")
-    const [selectedId, setSelectedId] = useState<string | null>(null)
 
     const filtered = useMemo(() => {
         const query = search.trim().toLowerCase()
@@ -77,18 +76,6 @@ export const CodingChallengeList = ({ subjectId, onBack }: CodingChallengeListPr
             return true
         })
     }, [challenges, type, lifecycle, search])
-
-    const selected = useMemo(
-        () => challenges.find((challenge) => challenge.id === selectedId) ?? null,
-        [challenges, selectedId],
-    )
-
-    // detail view takes over the whole panel when a challenge is open
-    if (selected) {
-        return (
-            <CodingChallengeDetail challenge={selected} onBack={() => setSelectedId(null)} />
-        )
-    }
 
     return (
         <div className="flex flex-col gap-4">
@@ -169,7 +156,6 @@ export const CodingChallengeList = ({ subjectId, onBack }: CodingChallengeListPr
                             <CodingChallengeRow
                                 key={challenge.id}
                                 challenge={challenge}
-                                onOpen={() => setSelectedId(challenge.id)}
                             />
                         ))}
                     </div>
@@ -182,18 +168,15 @@ export const CodingChallengeList = ({ subjectId, onBack }: CodingChallengeListPr
 /** One challenge row — title + slug · type/mode chips · lifecycle chip + caret. */
 const CodingChallengeRow = ({
     challenge,
-    onOpen,
 }: {
     challenge: CodingChallenge
-    onOpen: () => void
 }) => {
     const t = useTranslations("subjects")
     const typeKey = challengeTypeKey(challenge.type)
 
     return (
-        <button
-            type="button"
-            onClick={onOpen}
+        <Link
+            href={`/challenges/${challenge.id}`}
             className="flex w-full items-center gap-3 rounded-2xl border border-separator p-4 text-left transition-colors hover:border-accent/50 hover:bg-accent/5"
         >
             <div className="flex min-w-0 flex-1 flex-col gap-1">
@@ -220,7 +203,7 @@ const CodingChallengeRow = ({
                 </Typography>
             </div>
             <CaretRightIcon aria-hidden focusable="false" className="size-4 shrink-0 text-muted" />
-        </button>
+        </Link>
     )
 }
 

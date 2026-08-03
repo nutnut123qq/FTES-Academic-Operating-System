@@ -406,6 +406,27 @@ export const createLessonFlashcard = async (
 }
 
 /**
+ * Nhập NHIỀU thẻ một lượt — đường "nhận bản nháp AI thành thẻ của tôi".
+ *
+ * BE validate CẢ LÔ rồi mới ghi: một thẻ hỏng thì không thẻ nào được tạo. `status` phải gửi
+ * tường minh (`DRAFT` cho bản nháp AI) — thiếu thì BE mặc định `PUBLISHED`, tức đẩy thẳng thẻ
+ * chưa ai duyệt tới học viên.
+ *
+ * `POST /api/v1/courses/lessons/{lessonId}/flashcards/bulk`
+ */
+export const createLessonFlashcardsBulk = async (
+    lessonId: string,
+    cards: Array<UpsertFlashcardRequest>,
+): Promise<Array<LessonFlashcardView>> => {
+    return restRequest<Array<LessonFlashcardView>>({
+        method: "POST",
+        url: `/courses/lessons/${lessonId}/flashcards/bulk`,
+        data: { cards },
+        authenticated: true,
+    })
+}
+
+/**
  * Sửa một thẻ — field nào null/thiếu thì giữ nguyên.
  *
  * `PATCH /api/v1/courses/flashcards/{cardId}`

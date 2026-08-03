@@ -13,6 +13,26 @@ const nextConfig: NextConfig = {
     // giữa chừng (ENOENT / JSON đứt đoạn) dù code hoàn toàn sạch. Verify thì đặt
     // `NEXT_DIST_DIR=.next-verify` để hai bên không giẫm chân nhau.
     distDir: process.env.NEXT_DIST_DIR || ".next",
+    images: {
+        // Host được phép cho `next/image` optimizer. Thiếu allowlist → optimizer trả
+        // 400 cho MỌI URL remote (ảnh bìa môn ở /en/subjects load lỗi vì host Cloudinary
+        // chưa được liệt kê). Chỉ thêm host tin cậy của hệ thống.
+        remotePatterns: [
+            // Ảnh bìa / avatar / học liệu migrate qua Cloudinary.
+            { protocol: "https", hostname: "res.cloudinary.com" },
+            // Asset tự-host của FTES (storage/upload/stream/video .ftes.vn).
+            { protocol: "https", hostname: "**.ftes.vn" },
+            // MinIO / asset host tuỳ biến qua env (vd storage prod).
+            ...(process.env.NEXT_PUBLIC_IMAGE_EXTRA_HOSTNAME
+                ? [{
+                    protocol: "https" as const,
+                    hostname: process.env.NEXT_PUBLIC_IMAGE_EXTRA_HOSTNAME,
+                }]
+                : []),
+            // Dev: MinIO cục bộ.
+            { protocol: "http", hostname: "localhost" },
+        ],
+    },
 }
 
 const withNextIntl = createNextIntlPlugin()

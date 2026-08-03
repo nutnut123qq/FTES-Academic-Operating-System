@@ -5191,6 +5191,11 @@
           "allTypes": "Mọi loại",
           "allLifecycles": "Mọi trạng thái"
         },
+        "sort": {
+          "label": "Sắp xếp",
+          "newest": "Mới nhất",
+          "hot": "Hot"
+        },
         "types": {
           "coding": "Lập trình",
           "sql": "SQL",
@@ -7543,6 +7548,8 @@
         "failed": "Chấm code thất bại. Thử lại nhé — code của bạn vẫn được giữ nguyên.",
         "invalid": "Bài gửi chưa hợp lệ — kiểm tra lại code và ngôn ngữ.",
         "modelNotAllowed": "Model này không nằm trong danh sách cho phép — đã chuyển về model mặc định, hãy chấm lại.",
+        "freeRunLimit": "Bản dùng thử: mỗi thử thách chỉ được chạy 2 lần và chấm AI 1 lần. Đăng ký khóa học để làm thoải mái.",
+        "freeGradeLimit": "Bản dùng thử: mỗi thử thách chỉ được chấm AI 1 lần và chạy 2 lần. Đăng ký khóa học để làm thoải mái.",
         "generic": "Có lỗi xảy ra khi chấm code. Vui lòng thử lại."
       }
     },

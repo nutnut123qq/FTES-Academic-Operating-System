@@ -63,6 +63,8 @@ export interface CodingChallenge {
     startsAt: string
     endsAt: string
     maxSubmissions: number
+    /** Total submissions across all participants — the popularity signal for the "Hot" sort. */
+    submissionCount: number
     /** Course-bank owner, when the challenge is scoped to a course. */
     courseId: string | null
 }
@@ -121,6 +123,7 @@ export const mapChallengeView = (view: ChallengeView, now: number): CodingChalle
     startsAt: view.startsAt,
     endsAt: view.endsAt,
     maxSubmissions: view.maxSubmissions,
+    submissionCount: view.submissionCount ?? 0,
     courseId: view.courseId ?? null,
 })
 

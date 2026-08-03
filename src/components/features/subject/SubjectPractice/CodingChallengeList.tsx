@@ -31,6 +31,11 @@ const TYPE_FILTERS: Array<"all" | ChallengeType> = ["all", ...CHALLENGE_TYPES]
 /** Lifecycle filter values (`all` = no lifecycle constraint). */
 const LIFECYCLE_FILTERS: Array<"all" | ChallengeLifecycle> = ["all", ...CHALLENGE_LIFECYCLES]
 
+/** Sort options: `newest` (startsAt desc) · `hot` (submissionCount desc). */
+const SORT_OPTIONS = ["newest", "hot"] as const
+/** One sort option. */
+type SortOption = (typeof SORT_OPTIONS)[number]
+
 /** Props for {@link CodingChallengeList}. */
 export interface CodingChallengeListProps {
     /** Owning subject (the `[subjectId]` route segment = subject CODE) — the SWR key. */
@@ -55,6 +60,7 @@ export const CodingChallengeList = ({ subjectId, onBack }: CodingChallengeListPr
     const [type, setType] = useState<"all" | ChallengeType>("all")
     const [lifecycle, setLifecycle] = useState<"all" | ChallengeLifecycle>("all")
     const [search, setSearch] = useState("")
+    const [sort, setSort] = useState<SortOption>("newest")
 
     const filtered = useMemo(() => {
         const query = search.trim().toLowerCase()
@@ -76,6 +82,18 @@ export const CodingChallengeList = ({ subjectId, onBack }: CodingChallengeListPr
             return true
         })
     }, [challenges, type, lifecycle, search])
+
+    // Apply the chosen sort to the filtered rows: "hot" = most-submitted first; "newest" =
+    // latest start first (the BE list carries no createdAt, so startsAt is the recency proxy).
+    const sorted = useMemo(() => {
+        const rows = [...filtered]
+        if (sort === "hot") {
+            rows.sort((a, b) => b.submissionCount - a.submissionCount)
+        } else {
+            rows.sort((a, b) => Date.parse(b.startsAt ?? "") - Date.parse(a.startsAt ?? ""))
+        }
+        return rows
+    }, [filtered, sort])
 
     return (
         <div className="flex flex-col gap-4">
@@ -119,6 +137,22 @@ export const CodingChallengeList = ({ subjectId, onBack }: CodingChallengeListPr
                         </Button>
                     ))}
                 </div>
+                {/* sort: newest (startsAt desc) · hot (submissionCount desc) — same pill idiom */}
+                <div className="flex flex-wrap items-center gap-2">
+                    <Typography type="body-xs" color="muted" className="mr-1">
+                        {t("practice.coding.sort.label")}
+                    </Typography>
+                    {SORT_OPTIONS.map((item) => (
+                        <Button
+                            key={item}
+                            size="sm"
+                            variant={sort === item ? "secondary" : "ghost"}
+                            onPress={() => setSort(item)}
+                        >
+                            {t(`practice.coding.sort.${item}`)}
+                        </Button>
+                    ))}
+                </div>
                 <SearchInput
                     value={search}
                     onValueChange={setSearch}
@@ -148,11 +182,11 @@ export const CodingChallengeList = ({ subjectId, onBack }: CodingChallengeListPr
                     retryLabel: t("practice.coding.retry"),
                 }}
             >
-                {filtered.length === 0 ? (
+                {sorted.length === 0 ? (
                     <EmptyContent title={t("practice.coding.empty")} />
                 ) : (
                     <div className="flex flex-col gap-2">
-                        {filtered.map((challenge) => (
+                        {sorted.map((challenge) => (
                             <CodingChallengeRow
                                 key={challenge.id}
                                 challenge={challenge}

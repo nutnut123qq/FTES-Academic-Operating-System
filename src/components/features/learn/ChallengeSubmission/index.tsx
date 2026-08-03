@@ -62,6 +62,7 @@ import { ProjectReviewResult } from "./ProjectReviewResult"
  */
 const toChallengeDetail = (view: ChallengeView): ChallengeDetail => ({
     id: view.slug,
+    challengeUuid: view.id,
     title: view.title,
     type: mapChallengeType(view.type),
     status: view.status,
@@ -391,6 +392,10 @@ export const ChallengeSubmission = () => {
                                                     submitDisabled, so Run keeps working when locked. */}
                                                 <GradeCodePanel
                                                     challenge={detail}
+                                                    // The raw REST view's `id` is the challenge
+                                                    // UUID (detail.id is the slug) — sent so the
+                                                    // BE can enforce the free-trial run/grade caps.
+                                                    challengeId={challenge.id}
                                                     code={code}
                                                     language={language}
                                                     onCodeChange={setCode}

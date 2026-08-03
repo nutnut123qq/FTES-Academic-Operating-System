@@ -5188,6 +5188,11 @@
           "allTypes": "All types",
           "allLifecycles": "All statuses"
         },
+        "sort": {
+          "label": "Sort",
+          "newest": "Newest",
+          "hot": "Hot"
+        },
         "types": {
           "coding": "Coding",
           "sql": "SQL",
@@ -7540,6 +7545,8 @@
         "failed": "Grading failed. Try again — your code is kept as-is.",
         "invalid": "The submission is invalid — check your code and language.",
         "modelNotAllowed": "This model is not on the allowlist — switched back to the default model, please grade again.",
+        "freeRunLimit": "Free trial: each challenge allows only 2 runs and 1 AI grade. Enroll in the course to keep practicing without limits.",
+        "freeGradeLimit": "Free trial: each challenge allows only 1 AI grade and 2 runs. Enroll in the course to keep grading without limits.",
         "generic": "Something went wrong while grading. Please try again."
       }
     },

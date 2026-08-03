@@ -647,6 +647,9 @@ export const ChallengeMethodSolver = ({
     const sandboxForm = (
         <GradeCodePanel
             challenge={challengeDetail}
+            // The real challenge UUID — sent on Run/AI-grade so the BE can enforce the
+            // free-trial ("học thử") per-challenge run/grade caps (no-op if non-free).
+            challengeId={challengeId}
             code={sandboxCode}
             language={sandboxCodeLanguage}
             onCodeChange={setSandboxCode}

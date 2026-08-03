@@ -175,7 +175,7 @@ export const ChallengeView = () => {
                     {challenge.type === "uiux" && challenge.targetImageUrl ? (
                         <UiUxChallengeEditor challenge={challenge} />
                     ) : challenge.type === "coding" || challenge.type === "sql" ? (
-                        <GradeCodePanel challenge={challenge} />
+                        <GradeCodePanel challenge={challenge} challengeId={challenge.challengeUuid} />
                     ) : (
                         <div className="flex flex-col items-center gap-3 rounded-2xl border border-separator p-6 py-16 text-center">
                             <HammerIcon

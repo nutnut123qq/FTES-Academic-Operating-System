@@ -182,6 +182,13 @@ export interface GradeCodeRequest {
     rubric?: Array<Record<string, unknown>>
     course_context?: string
     language_output?: string
+    /**
+     * The challenge this grade belongs to (camelCase UUID). Optional. When the challenge is a
+     * FREE "học thử" one the BE caps AI grades at 1 per (challenge, user) → 429
+     * `AI_FREE_CHALLENGE_GRADE_LIMIT`; non-free / omitted → unlimited (unchanged). The BE does
+     * not forward this field onward to ftes-ai-service.
+     */
+    challengeId?: string
 }
 
 /**
@@ -197,6 +204,13 @@ export interface ExecuteCodeRequest {
     stdin?: string
     /** @deprecated Legacy Judge0 test-case run — the sandbox panel no longer sends it. */
     test_cases?: Array<CodeGradeTestCase>
+    /**
+     * The challenge this run belongs to (camelCase UUID). Optional. When the challenge is a
+     * FREE "học thử" one the BE caps sandbox runs at 2 per (challenge, user) → 429
+     * `AI_FREE_CHALLENGE_RUN_LIMIT`; non-free / omitted → unlimited (unchanged). Not forwarded
+     * onward to ftes-ai-service.
+     */
+    challengeId?: string
 }
 
 /** One Judge0 test-case run (objective — model-independent). */
@@ -313,6 +327,12 @@ export interface RunTestsRequest {
     code: string
     language: string
     testCases: Array<RunTestsCase>
+    /**
+     * The challenge these sample-test runs belong to (camelCase UUID). Optional. Counts toward
+     * the same FREE "học thử" run cap as {@link ExecuteCodeRequest.challengeId} (2 per
+     * challenge/user → 429 `AI_FREE_CHALLENGE_RUN_LIMIT`); non-free / omitted → unlimited.
+     */
+    challengeId?: string
 }
 
 /**
@@ -327,6 +347,12 @@ export interface SqlExecuteRequest {
     setup_sql?: string
     /** Cap on returned rows (BE clamps; default 500). */
     max_rows?: number
+    /**
+     * The challenge this SQL run belongs to (camelCase UUID). Optional. Counts toward the same
+     * FREE "học thử" run cap as {@link ExecuteCodeRequest.challengeId} (2 per challenge/user →
+     * 429 `AI_FREE_CHALLENGE_RUN_LIMIT`); non-free / omitted → unlimited.
+     */
+    challengeId?: string
 }
 
 /**

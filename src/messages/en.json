@@ -631,7 +631,10 @@
         "unpublish": "Hide from learners",
         "published": "Visible",
         "draft": "Draft",
-        "empty": "No cards yet. Add the first one so learners get your deck instead of AI-generated cards."
+        "empty": "No cards yet. Add the first one so learners get your deck instead of AI-generated cards.",
+        "aiDraftTitle": "AI draft for this lesson",
+        "aiDraftHint": "Tap to load it into the editor, adjust it to the lesson's core points, then save. Nothing reaches learners until you save.",
+        "useAiDraft": "Use this card"
       },
       "error": "Couldn't generate flashcards. Please try again.",
       "empty": "No cards yet. Tap “Generate flashcards” to start.",

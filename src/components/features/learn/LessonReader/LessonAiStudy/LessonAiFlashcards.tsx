@@ -167,6 +167,7 @@ export const LessonAiFlashcards = ({ lessonId }: LessonAiFlashcardsProps) => {
                 <LessonFlashcardManager
                     lessonId={lessonId}
                     cards={authoredSwr.data?.cards ?? []}
+                    aiDrafts={aiCards}
                     onChanged={() => void authoredSwr.mutate()}
                 />
             ) : (

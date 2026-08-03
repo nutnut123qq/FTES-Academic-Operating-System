@@ -37,8 +37,11 @@ vi.mock("@phosphor-icons/react", () => ({
 }))
 
 // Màn soạn có luồng riêng (form + 3 mutation); file này chỉ lo việc rẽ NGUỒN thẻ.
+// Phát ra số bản nháp AI nhận được để khẳng định mồi soạn có tới nơi.
 vi.mock("./LessonFlashcardManager", () => ({
-    LessonFlashcardManager: () => <div data-testid="flashcard-manager" />,
+    LessonFlashcardManager: ({ aiDrafts }: { aiDrafts?: Array<{ q: string; a: string }> }) => (
+        <div data-testid="flashcard-manager">{`drafts:${aiDrafts?.length ?? 0}`}</div>
+    ),
 }))
 
 vi.mock("@/components/blocks/async/AsyncContent", () => ({
@@ -130,6 +133,23 @@ describe("LessonAiFlashcards — nguồn thẻ", () => {
         expect(screen.queryByTestId("flashcard-manager")).toBeNull()
         fireEvent.click(screen.getByText("flashcard.manage.enter"))
         expect(screen.getByTestId("flashcard-manager")).toBeTruthy()
+    })
+
+    // Thẻ AI đã sinh ra thì đưa vào màn soạn làm MỒI, đỡ phải gõ lại từ đầu — nhưng chỉ là mồi,
+    // người soạn vẫn phải bấm lưu từng thẻ (BE tạo thẻ là PUBLISHED ngay, không có đường DRAFT).
+    it("thẻ AI đã sinh được chuyển vào màn soạn làm bản nháp", () => {
+        flashcardsSwr.mockReturnValue({
+            data: { lessonId: "l1", source: "AI", canManage: true, cards: [] },
+            isLoading: false,
+        })
+        streamState.text = JSON.stringify([
+            { q: "Cổng XOR?", a: "Khác nhau thì 1" },
+            { q: "Flip-flop D?", a: "Chốt theo cạnh xung" },
+        ])
+        render(<LessonAiFlashcards lessonId="l1" />)
+
+        fireEvent.click(screen.getByText("flashcard.manage.enter"))
+        expect(screen.getByTestId("flashcard-manager").textContent).toBe("drafts:2")
     })
 
     // Thẻ DRAFT là bản nháp của người soạn, học viên không được thấy.

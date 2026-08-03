@@ -631,7 +631,10 @@
         "unpublish": "Ẩn khỏi học viên",
         "published": "Đang hiển thị",
         "draft": "Bản nháp",
-        "empty": "Bài này chưa có thẻ nào. Thêm thẻ đầu tiên để học viên dùng bộ của bạn thay vì bộ AI tự sinh."
+        "empty": "Bài này chưa có thẻ nào. Thêm thẻ đầu tiên để học viên dùng bộ của bạn thay vì bộ AI tự sinh.",
+        "aiDraftTitle": "Bản nháp AI cho bài này",
+        "aiDraftHint": "Bấm để nạp vào ô soạn, sửa lại cho đúng trọng tâm bài rồi mới lưu. Thẻ chỉ tới tay học viên sau khi bạn lưu.",
+        "useAiDraft": "Dùng thẻ này"
       },
       "error": "Không tạo được thẻ ghi nhớ. Vui lòng thử lại.",
       "empty": "Chưa có thẻ. Bấm “Tạo thẻ ghi nhớ” để bắt đầu.",

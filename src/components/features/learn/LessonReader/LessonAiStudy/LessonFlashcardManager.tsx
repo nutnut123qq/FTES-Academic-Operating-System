@@ -18,6 +18,16 @@ export interface LessonFlashcardManagerProps {
     lessonId: string
     /** Thẻ hiện có — người quản nhận CẢ `DRAFT` lẫn `PUBLISHED` từ cùng endpoint đọc. */
     cards: Array<LessonFlashcardView>
+    /**
+     * Thẻ AI vừa sinh cho bài này (nếu có) — nguồn cho nút "Dùng thẻ này": nạp vào form để
+     * người soạn sửa rồi mới lưu.
+     *
+     * CỐ Ý KHÔNG có nút "nhận tất cả": `POST /flashcards/bulk` của BE bỏ qua `status` trong
+     * request và luôn tạo thẻ `PUBLISHED` (LessonFlashcardService.newCard — `requireStatus` chỉ
+     * dùng ở đường PATCH). Nhận hàng loạt = đẩy thẳng thẻ AI CHƯA AI DUYỆT tới học viên, đúng
+     * thứ góp ý 2026-07-26 phàn nàn. Mở lại đường bulk khi BE cho tạo thẳng ở trạng thái DRAFT.
+     */
+    aiDrafts?: Array<{ q: string; a: string }>
     /** Nạp lại danh sách sau mỗi lần ghi. */
     onChanged: () => void
 }
@@ -47,6 +57,7 @@ const EMPTY: Draft = { front: "", back: "", hint: "" }
 export const LessonFlashcardManager = ({
     lessonId,
     cards,
+    aiDrafts,
     onChanged,
 }: LessonFlashcardManagerProps) => {
     const t = useTranslations("contentAi")
@@ -86,6 +97,15 @@ export const LessonFlashcardManager = ({
     const startEdit = (card: LessonFlashcardView) => {
         setEditingId(card.id)
         setDraft({ front: card.front, back: card.back, hint: card.hint ?? "" })
+    }
+
+    /**
+     * Nạp một thẻ AI vào form (KHÔNG lưu thẳng). Người soạn đọc lại, sửa cho đúng trọng tâm bài
+     * rồi mới bấm Thêm — "phải qua tay người" đúng như thiết kế BE ghi trong `createBulk`.
+     */
+    const useAiDraft = (aiCard: { q: string; a: string }) => {
+        setEditingId(null)
+        setDraft({ front: aiCard.q, back: aiCard.a, hint: "" })
     }
 
     /** Bật/tắt xuất bản — công tắc quyết định học viên có thấy thẻ hay không. */
@@ -160,6 +180,41 @@ export const LessonFlashcardManager = ({
                     ) : null}
                 </div>
             </div>
+
+            {/* Bản nháp AI của chính bài này — mồi để soạn nhanh, không phải thẻ đã lưu. */}
+            {aiDrafts && aiDrafts.length > 0 ? (
+                <div className="flex flex-col gap-2">
+                    <Typography type="body-sm" weight="semibold">
+                        {t("flashcard.manage.aiDraftTitle")}
+                    </Typography>
+                    <Typography type="body-xs" color="muted">
+                        {t("flashcard.manage.aiDraftHint")}
+                    </Typography>
+                    {aiDrafts.map((aiCard, index) => (
+                        <div
+                            key={`${index}-${aiCard.q.slice(0, 24)}`}
+                            className="flex items-start gap-3 rounded-2xl border border-dashed border-separator p-3"
+                        >
+                            <div className="flex min-w-0 flex-1 flex-col gap-1">
+                                <Typography type="body-sm" weight="medium">
+                                    {aiCard.q}
+                                </Typography>
+                                <Typography type="body-xs" color="muted">
+                                    {aiCard.a}
+                                </Typography>
+                            </div>
+                            <Button
+                                variant="tertiary"
+                                size="sm"
+                                className="shrink-0"
+                                onPress={() => useAiDraft(aiCard)}
+                            >
+                                {t("flashcard.manage.useAiDraft")}
+                            </Button>
+                        </div>
+                    ))}
+                </div>
+            ) : null}
 
             {cards.length === 0 ? (
                 <Typography type="body-sm" color="muted">

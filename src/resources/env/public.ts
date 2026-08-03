@@ -56,6 +56,15 @@ export const publicEnv = () => {
             /** The redirect URI of the Keycloak server. */
             redirectUri: process.env.NEXT_PUBLIC_KEYCLOAK_REDIRECT_URI || "http://localhost:3001/api/v1/keycloak/google/callback",
         },
+        google: {
+            /**
+             * Google OAuth **Web application** client id, used by Google Identity Services
+             * to mint a Google ID token that `POST /api/v1/auth/google` verifies. MUST equal
+             * the backend `GOOGLE_CLIENT_ID` (the BE checks the id_token `aud` == this value).
+             * Empty (unset) → the "Sign in with Google" button hides itself.
+             */
+            clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "",
+        },
         captcha: {
             /** Whether captcha is enabled. */
             enabled: process.env.NEXT_PUBLIC_CAPTCHA_ENABLED === "true",

@@ -12,7 +12,6 @@
 import React, {
     useCallback,
     useEffect,
-    useMemo,
 } from "react"
 import {
     Button,
@@ -22,8 +21,7 @@ import {
 } from "@heroui/react"
 import { useLocale, useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
-import { OAUTH_BUTTON_ITEMS } from "./map"
-import { OauthButtons } from "./OauthButtons"
+import { GoogleSignInButton } from "./GoogleSignInButton"
 import { EmailField } from "./EmailField"
 import { PasswordField } from "./PasswordField"
 import { RememberMeRow } from "./RememberMeRow"
@@ -31,13 +29,8 @@ import { SignUpPrompt } from "./SignUpPrompt"
 import { useAppDispatch } from "@/redux/hooks"
 import { AuthenticationModalTab, setAuthenticationModalTab } from "@/redux/slices/tabs"
 import { useSignInForm } from "@/hooks/zustand/signIn/useSignInForm"
-import { KeycloakIdentityProvider } from "@/modules/api/graphql/mutations/types/exchange-code-for-token"
-import { keycloakRedirect } from "@/modules/api/redirect/keycloak"
 import { LocalStorage } from "@/modules/storage/local/storage"
 import { LocalStorageId } from "@/modules/storage/local/enums/id"
-import { SessionStorage } from "@/modules/storage/session/storage"
-import { SessionStorageId } from "@/modules/storage/session/enums/id"
-import { type SessionStorageOauthIdpHint } from "@/modules/storage/session/types/oauth-idp-hint"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 import { Turnstile } from "@/components/reuseable/Turnstile"
 import { publicEnv } from "@/resources/env/public"
@@ -74,36 +67,6 @@ export const CredentialsState = () => {
             setFieldValue("rememberMe", stored)
         }
     }, [setFieldValue])
-
-    /** Stable reference to the static OAuth button catalog. */
-    const oauthButtons = useMemo(
-        () => OAUTH_BUTTON_ITEMS,
-        [],
-    )
-
-    /** Start the Keycloak OAuth redirect for the chosen provider. */
-    const onOauthPress = useCallback(
-        (provider: KeycloakIdentityProvider) => {
-            // remember which IdP was used so the callback can resume the flow
-            SessionStorage.setItem<SessionStorageOauthIdpHint>(
-                SessionStorageId.OauthIdpHint,
-                { provider },
-            )
-            // remember where the user started so the OAuth landing returns them here
-            SessionStorage.setItem<string>(
-                SessionStorageId.AuthReturnTo,
-                window.location.pathname + window.location.search,
-            )
-            const url = provider === KeycloakIdentityProvider.Google
-                ? keycloakRedirect.google
-                : keycloakRedirect.github
-            url.searchParams.set("redirect_uri", window.location.href)
-            router.push(url.toString())
-        },
-        [
-            router,
-        ],
-    )
 
     const onChangeEmail = useCallback(
         (value: string) => {
@@ -195,10 +158,7 @@ export const CredentialsState = () => {
                 </div>
             </Modal.Header>
             <Modal.Body>
-                <OauthButtons
-                    items={oauthButtons}
-                    onOauthPress={onOauthPress}
-                />
+                <GoogleSignInButton onSuccess={onAuthenticationClose} />
 
                 <div className="h-3" />
                 <div className="flex items-center justify-center">

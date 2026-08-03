@@ -6975,7 +6975,9 @@
         "filesReadHint": "The AI read {count} files across {iterations} rounds.",
         "unanchoredTitle": "Comments that couldn't open their file",
         "unanchoredHint": "These comments point to a file that isn't in the tree (or the project couldn't be loaded).",
-        "fileLine": "{file} · line {line}"
+        "fileLine": "{file} · line {line}",
+        "gradeLimitHint": "Used {used}/{limit} project grades",
+        "gradeLimitReached": "A project can be graded at most 2 times."
       }
     },
     "common": {

@@ -379,6 +379,7 @@ export const ChallengeSubmission = () => {
                                                 seedSql={challenge.seedSql}
                                                 maxSubmissions={challenge.maxSubmissions}
                                                 reachedMax={reachedMax}
+                                                submissions={submissions}
                                                 onSubmitted={() => { void mutate() }}
                                             />
                                         ) : (

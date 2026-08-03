@@ -64,8 +64,19 @@ export const CommunityShell = ({ children }: CommunityShellProps) => {
         TABS.find((tab) => tab.segment && pathname.startsWith(`${base}/${tab.segment}`))?.key ??
         "forYou"
 
+    // Cột feed thôi chốt cứng 620px (góp ý website 2026-07-26: "kích thước đang fix cứng").
+    //
+    // Phần NỞ gắn vào 2xl — nơi container cũng nở — chứ KHÔNG cho nở theo `vw` ngay từ xl. Đo
+    // thật: cho feed ăn `48vw` từ xl thì ở màn 1440 (cỡ laptop phổ biến) feed lên 691 nhưng hai
+    // rail tụt 275→246, tức nở feed bằng cách bóp rail trong cái container vẫn 1280. Đó là đổi
+    // chỗ chật chứ không phải thêm chỗ.
+    //
+    // Từ 2xl: container 1280→1520 nên feed nở 620→clamp(…) mà rail vẫn RỘNG HƠN mức 1280 hiện
+    // nay (đo: 326px ở màn 1920). Trần 820 giữ độ dài dòng còn đọc được — thả tự do thì bài
+    // trên màn siêu rộng thành một hàng lê thê. Container 1280 ở xl là bề ngang chung của site
+    // (xem CookieConsentBanner), không tự ý đổi.
     return (
-        <div className="mx-auto w-full xl:grid xl:max-w-[1280px] xl:grid-cols-[minmax(0,1fr)_minmax(0,620px)_minmax(0,1fr)] xl:items-start xl:gap-6 xl:px-6">
+        <div className="mx-auto w-full xl:grid xl:max-w-[1280px] xl:grid-cols-[minmax(0,1fr)_minmax(0,620px)_minmax(0,1fr)] xl:items-start xl:gap-6 xl:px-6 2xl:max-w-[1520px] 2xl:grid-cols-[minmax(0,1fr)_minmax(0,clamp(620px,44vw,820px))_minmax(0,1fr)]">
             {/* left nav rail — xl+ only; the ⋯ menu stays the entry point below xl */}
             <aside className="hidden pt-3 xl:sticky xl:top-20 xl:block xl:self-start">
                 <div className="flex flex-col gap-3">
@@ -73,7 +84,10 @@ export const CommunityShell = ({ children }: CommunityShellProps) => {
                     <PromoBanner />
                 </div>
             </aside>
-            <div className="mx-auto flex w-full max-w-[620px] flex-col">
+            {/* Dưới xl: 1 cột, vẫn chặn 620 cho dễ đọc trên tablet. Từ xl: bỏ trần ở đây, để
+                track của grid quyết định — không bỏ thì cái trần 620 này vô hiệu hoá clamp ở
+                trên và cột feed vẫn đứng yên đúng như cũ. */}
+            <div className="mx-auto flex w-full max-w-[620px] flex-col xl:max-w-none">
                 {/* opaque sticky tab strip — pinned below the h-16 site header; background
                     matches the site header (`bg-background`) so scrolled posts are hidden
                     behind it instead of showing through; backdrop-blur is kept but is now

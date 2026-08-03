@@ -15,6 +15,8 @@ import {
 import { useTranslations } from "next-intl"
 import { ExtendedTabs } from "@/components/blocks/navigation/ExtendedTabs"
 import { AiModelPicker } from "@/components/reuseable/AiModelPicker"
+import { RestError } from "@/modules/api/rest/client"
+import type { SubmissionView } from "@/modules/api/rest/challenges"
 import { useRestWithToast } from "@/modules/toast/hooks"
 import { useGetAiCatalogModelsSwr } from "@/hooks/swr/api/rest/queries"
 import { usePostSubmitChallengeSwr } from "@/hooks/swr/api/rest/mutations/usePostSubmitChallengeSwr"
@@ -49,6 +51,17 @@ const TAB_LABEL_KEY: Record<SolverTab, string> = {
     sandbox: "exercises.assignment.tabSandbox",
 }
 
+/**
+ * Per-learner-per-challenge cap on the HEAVY project grade — a `FILE` (zip) or `URL`
+ * (github) submission routed to the agentic `/grade-project`. Mirrors the BE
+ * `PROJECT_GRADE_LIMIT` enforced at submit time (rejecting with `PROJECT_GRADE_LIMIT_REACHED`
+ * once reached). Inline sandbox `CODE` submissions are NOT counted against this cap.
+ */
+const PROJECT_GRADE_LIMIT = 2
+
+/** The submission `payloadType`s that count as a heavy project grade (see {@link PROJECT_GRADE_LIMIT}). */
+const PROJECT_PAYLOAD_TYPES = new Set(["FILE", "URL"])
+
 /** Props for {@link ChallengeMethodSolver}. */
 export interface ChallengeMethodSolverProps {
     /** Challenge id (the real UUID, not the slug) the submissions post to. */
@@ -75,6 +88,13 @@ export interface ChallengeMethodSolverProps {
     maxSubmissions: number
     /** True once every attempt is used — locks the submit surface. */
     reachedMax: boolean
+    /**
+     * The learner's attempts on this challenge (from the parent's my-submissions query).
+     * Used to count the heavy project grades (`FILE` / `URL` payloads) against
+     * {@link PROJECT_GRADE_LIMIT} so the github + file submits can show `used/2` and lock
+     * once the cap is hit; the inline sandbox `CODE` submit is never affected.
+     */
+    submissions: Array<SubmissionView>
     /** Called after a successful submit so the parent can revalidate its history. */
     onSubmitted: () => void
 }
@@ -108,6 +128,7 @@ export const ChallengeMethodSolver = ({
     seedSql,
     maxSubmissions,
     reachedMax,
+    submissions,
     onSubmitted,
 }: ChallengeMethodSolverProps) => {
     const t = useTranslations("learn")
@@ -115,6 +136,24 @@ export const ChallengeMethodSolver = ({
     const submitUrl = usePostSubmitChallengeSwr()
     const submitFile = usePostSubmitChallengeFileSwr()
     const submitCode = usePostSubmitChallengeSwr()
+
+    // The heavy PROJECT grade cap (PIN §1): count the learner's existing FILE (zip) / URL
+    // (github) attempts — the two payloads routed to the agentic `/grade-project`. Inline
+    // sandbox CODE submissions never count. Once the count reaches PROJECT_GRADE_LIMIT the
+    // github + file submits lock (the BE also rejects with PROJECT_GRADE_LIMIT_REACHED).
+    const projectGradesUsed = submissions.filter(
+        (submission) => submission.payloadType !== undefined && PROJECT_PAYLOAD_TYPES.has(submission.payloadType),
+    ).length
+    const projectLimitReached = projectGradesUsed >= PROJECT_GRADE_LIMIT
+
+    // Translate the BE project-grade cap rejection to a clear i18n message so the submit
+    // toast reads meaningfully; anything else re-throws for the default error toast.
+    const mapSubmitError = (error: unknown): never => {
+        if (error instanceof RestError && error.errorCode === "PROJECT_GRADE_LIMIT_REACHED") {
+            throw new Error(t("exercises.project.gradeLimitReached"))
+        }
+        throw error
+    }
 
     const methods = parseSubmitMethods(submissionMethod)
     const acceptExtensions = parseFileExtensions(parseGradingConfigFileExtension(gradingConfig))
@@ -175,22 +214,25 @@ export const ChallengeMethodSolver = ({
 
     const busy = submitUrl.isMutating || submitFile.isMutating || submitCode.isMutating
     const invalid = url.trim() !== "" && !isHttpsUrl(url)
-    const canSubmitUrl = !reachedMax && isHttpsUrl(url) && !busy
-    const canSubmitFile = !reachedMax && file !== null && fileError === null && !busy
+    // URL / FILE / project are the heavy project grades → also gated by the project cap.
+    // The sandbox CODE submit is intentionally NOT gated by it.
+    const canSubmitUrl = !reachedMax && !projectLimitReached && isHttpsUrl(url) && !busy
+    const canSubmitFile = !reachedMax && !projectLimitReached && file !== null && fileError === null && !busy
     const canSubmitCode = !reachedMax && sandboxCode.trim() !== "" && !busy
-    const canSubmitProject = !reachedMax && prepared !== null && !busy && !preparing
+    const canSubmitProject = !reachedMax && !projectLimitReached && prepared !== null && !busy && !preparing
 
     const handleSubmitUrl = async () => {
         setTouched(true)
-        // Client-side gate — never fire the request for a non-https URL.
-        if (!isHttpsUrl(url) || reachedMax || busy) {
+        // Client-side gate — never fire the request for a non-https URL or a used-up
+        // project-grade quota (URL is a heavy project grade).
+        if (!isHttpsUrl(url) || reachedMax || projectLimitReached || busy) {
             return
         }
         const ok = await runRest(
             () => submitUrl.trigger({
                 id: challengeId,
                 request: { payloadType: "URL", url: url.trim(), ...(model ? { model } : {}) },
-            }),
+            }).catch(mapSubmitError),
             { successMessage: t("exercises.assignment.submitted") },
         )
         if (ok !== null) {
@@ -212,12 +254,13 @@ export const ChallengeMethodSolver = ({
     }
 
     const handleSubmitFile = async () => {
-        // Client-side gate — no doomed request for a missing / wrong-type file.
-        if (!file || fileError !== null || reachedMax || busy) {
+        // Client-side gate — no doomed request for a missing / wrong-type file or a used-up
+        // project-grade quota (FILE is a heavy project grade).
+        if (!file || fileError !== null || reachedMax || projectLimitReached || busy) {
             return
         }
         const ok = await runRest(
-            () => submitFile.trigger({ id: challengeId, file, model: model ?? undefined }),
+            () => submitFile.trigger({ id: challengeId, file, model: model ?? undefined }).catch(mapSubmitError),
             { successMessage: t("exercises.assignment.submitted") },
         )
         if (ok !== null) {
@@ -254,15 +297,16 @@ export const ChallengeMethodSolver = ({
     }
 
     const handleSubmitProject = async () => {
-        // Client-side gate — no doomed request for a missing project / used-up quota.
-        if (!prepared || reachedMax || busy) {
+        // Client-side gate — no doomed request for a missing project / used-up attempt or
+        // project-grade quota (a project upload is a heavy FILE project grade).
+        if (!prepared || reachedMax || projectLimitReached || busy) {
             return
         }
         // The prepared blob is already ONE .zip — wrap it as a File and submit through the
         // SAME multipart path as a single-file upload (grade = submit, consumes an attempt).
         const zipFile = new File([prepared.blob], prepared.fileName, { type: "application/zip" })
         const ok = await runRest(
-            () => submitFile.trigger({ id: challengeId, file: zipFile, model: model ?? undefined }),
+            () => submitFile.trigger({ id: challengeId, file: zipFile, model: model ?? undefined }).catch(mapSubmitError),
             { successMessage: t("exercises.assignment.submitted") },
         )
         if (ok !== null) {
@@ -321,6 +365,22 @@ export const ChallengeMethodSolver = ({
         </div>
     )
 
+    // The heavy PROJECT grade cap surface (PIN §3), shown on the github + file submits: a
+    // muted `used/2` hint while quota remains, or a danger note once the cap is reached. The
+    // sandbox CODE submit never renders this (it isn't a project grade).
+    const projectGradeHint = projectLimitReached ? (
+        <div className="flex items-center gap-2 rounded-2xl border border-danger/40 bg-danger/5 px-4 py-3">
+            <WarningCircleIcon aria-hidden focusable="false" className="size-5 shrink-0 text-danger" />
+            <Typography type="body-sm" color="muted">
+                {t("exercises.project.gradeLimitReached")}
+            </Typography>
+        </div>
+    ) : (
+        <Typography type="body-xs" color="muted">
+            {t("exercises.project.gradeLimitHint", { used: projectGradesUsed, limit: PROJECT_GRADE_LIMIT })}
+        </Typography>
+    )
+
     const githubForm = (
         <div className="flex flex-col gap-2">
             <Typography type="body-sm" weight="medium">
@@ -360,6 +420,7 @@ export const ChallengeMethodSolver = ({
                     {t("exercises.assignment.urlInvalid")}
                 </Typography>
             ) : null}
+            {projectGradeHint}
             {modelPicker}
         </div>
     )
@@ -429,6 +490,8 @@ export const ChallengeMethodSolver = ({
                     </Typography>
                 </div>
             ) : null}
+
+            {projectGradeHint}
 
             {modelPicker}
 
@@ -557,6 +620,8 @@ export const ChallengeMethodSolver = ({
                     </Typography>
                 </div>
             ) : null}
+
+            {projectGradeHint}
 
             {modelPicker}
 

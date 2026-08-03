@@ -6978,7 +6978,9 @@
         "filesReadHint": "AI đã đọc {count} tệp qua {iterations} vòng.",
         "unanchoredTitle": "Nhận xét chưa gắn được vào tệp",
         "unanchoredHint": "Những nhận xét này trỏ tới tệp không có trong cây thư mục (hoặc chưa tải được project).",
-        "fileLine": "{file} · dòng {line}"
+        "fileLine": "{file} · dòng {line}",
+        "gradeLimitHint": "Đã dùng {used}/{limit} lượt chấm project",
+        "gradeLimitReached": "Bài project chỉ được chấm tối đa 2 lần."
       }
     },
     "common": {

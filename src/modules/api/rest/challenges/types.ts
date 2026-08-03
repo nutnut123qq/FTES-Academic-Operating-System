@@ -242,6 +242,14 @@ export interface SubmissionView {
     /** Attempt number. */
     attemptNo: number
     /**
+     * The payload discriminator this attempt was submitted as (`MCQ` | `CODE` | `ESSAY` |
+     * `STORAGE` | `FILE` | `URL`). The FE counts the heavy PROJECT grades — `FILE` (zip
+     * upload) and `URL` (github repo), both routed to the agentic `/grade-project` — to
+     * enforce the per-learner `PROJECT_GRADE_LIMIT` cap near the submit surface. Additive —
+     * absent on older deployments (the FE then treats it as no project grade used yet).
+     */
+    payloadType?: string
+    /**
      * Submission status, FE-normalized (PINNED §3): the challenges REST layer maps the BE
      * `SCORED → COMPLETED` and `RUNNING → GRADING`, so this is always one of
      * `PENDING` | `GRADING` | `COMPLETED` | `FAILED` (`QUEUED` may also appear pre-grade).

@@ -133,6 +133,16 @@ export const ExecutionResultTable = ({ summary, className }: ExecutionResultTabl
                                                 value={result.actual}
                                                 empty={t("codeGrading.testEmpty")}
                                             />
+                                            {/* Lý do case chết (lỗi biên dịch / message DB như
+                                                "Invalid object name 'sinh_vien'."). Sandbox vẫn
+                                                trả về nhưng bảng trước đây bỏ đi, nên một case
+                                                Runtime Error chỉ còn ô Actual trống — người học
+                                                không có gì để sửa. */}
+                                            {result.stderr?.trim() ? (
+                                                <pre className="mt-1 whitespace-pre-wrap break-words font-mono text-xs text-danger">
+                                                    {result.stderr}
+                                                </pre>
+                                            ) : null}
                                         </td>
                                         <td className="px-3 py-2 align-top">
                                             <div className="flex flex-col gap-1">

@@ -207,6 +207,12 @@ export interface ExecutionCaseResult {
     status?: string
     passed?: boolean
     time?: number | string
+    /**
+     * Why the case died: compiler output, runtime trace, or the DB message for SQL
+     * exercises (e.g. `Invalid object name 'sinh_vien'.`). The sandbox has always sent it;
+     * without rendering it a Runtime Error is just an empty `actual` with nothing to fix.
+     */
+    stderr?: string
 }
 
 /** Judge0 execution block of a grade/execute response. */

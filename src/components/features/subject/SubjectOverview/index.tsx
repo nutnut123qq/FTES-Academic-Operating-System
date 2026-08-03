@@ -22,10 +22,14 @@ import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import {
     useQuerySubjectOverviewSwr,
-    type OverviewChallenge,
     type OverviewPost,
     type SubjectOverview as SubjectOverviewModel,
 } from "../hooks/useQuerySubjectOverviewSwr"
+import {
+    useQuerySubjectCodingChallengesSwr,
+    type ChallengeLifecycle,
+    type CodingChallenge,
+} from "../hooks/useQuerySubjectCodingChallengesSwr"
 import { useQuerySubjectSwr } from "../hooks/useQuerySubjectSwr"
 import { useMutateSubjectMembershipSwr } from "../hooks/useMutateSubjectMembershipSwr"
 import { useQuerySubjectFeedSwr } from "../hooks/useQuerySubjectFeedSwr"
@@ -44,12 +48,15 @@ interface LinkedCourse {
     name: string
 }
 
-/** difficulty → chip color. */
-const DIFFICULTY_COLOR: Record<OverviewChallenge["difficulty"], "success" | "warning" | "danger"> = {
-    easy: "success",
-    medium: "warning",
-    hard: "danger",
+/** lifecycle → chip color. */
+const LIFECYCLE_COLOR: Record<ChallengeLifecycle, "success" | "warning" | "default"> = {
+    running: "success",
+    upcoming: "warning",
+    closed: "default",
 }
+
+/** How many newest challenges to surface on the overview rail. */
+const OVERVIEW_CHALLENGES = 5
 
 /**
  * Subject-workspace Overview tab (§ subject hub) — direction A (chosen 2026-07-02):
@@ -96,6 +103,13 @@ export const SubjectOverview = () => {
     const linkedCourses: Array<LinkedCourse> = (subject?.courseLinks ?? []).map(
         (link) => ({ id: link.id, ...getCourseIdentity(link) }),
     )
+    // "Challenges của môn" rail — the REAL bank the Practice/Coding module lists,
+    // newest first (sorted by startsAt desc; the BE list carries no createdAt). Each
+    // row links to the full solver page (`/challenges/{id}`) = the course-side IDE.
+    const { challenges: subjectChallenges } = useQuerySubjectCodingChallengesSwr(subjectId)
+    const newestChallenges = [...subjectChallenges]
+        .sort((a, b) => Date.parse(b.startsAt ?? "") - Date.parse(a.startsAt ?? ""))
+        .slice(0, OVERVIEW_CHALLENGES)
 
     return (
         <div className="p-6">
@@ -114,6 +128,7 @@ export const SubjectOverview = () => {
                         overview={overview}
                         recentPosts={recentPosts}
                         linkedCourses={linkedCourses}
+                        newestChallenges={newestChallenges}
                         onCompose={() => router.push(`${base}/discussion`)}
                         base={base}
                         subjectName={subject?.name ?? subjectId}
@@ -135,6 +150,7 @@ const OverviewView = ({
     overview,
     recentPosts,
     linkedCourses,
+    newestChallenges,
     onCompose,
     base,
     subjectName,
@@ -148,6 +164,8 @@ const OverviewView = ({
     overview: SubjectOverviewModel
     recentPosts: Array<OverviewPost>
     linkedCourses: Array<LinkedCourse>
+    /** Newest challenges of the subject, for the "Challenges của môn" rail. */
+    newestChallenges: Array<CodingChallenge>
     onCompose: () => void
     base: string
     /** Subject name, shown in the leave confirmation. */
@@ -319,16 +337,20 @@ const OverviewView = ({
                     </RailCard>
 
                     <RailCard title={t("overview.challenges")} href={`${base}/practice`} seeAll={t("overview.seeAll")}>
-                        {overview.challenges.map((challenge) => (
-                            <div key={challenge.id} className="flex items-center gap-2">
+                        {newestChallenges.map((challenge) => (
+                            <Link
+                                key={challenge.id}
+                                href={`/challenges/${challenge.id}`}
+                                className="group flex items-center gap-2"
+                            >
                                 <TargetIcon aria-hidden focusable="false" className="size-5 shrink-0 text-accent" />
-                                <Typography type="body-sm" color="muted" className="min-w-0 flex-1" truncate>
+                                <Typography type="body-sm" color="muted" className="min-w-0 flex-1 group-hover:underline" truncate>
                                     {challenge.title}
                                 </Typography>
-                                <Chip size="sm" variant="soft" color={DIFFICULTY_COLOR[challenge.difficulty]}>
-                                    {t(`overview.difficulty.${challenge.difficulty}`)}
+                                <Chip size="sm" variant="soft" color={LIFECYCLE_COLOR[challenge.lifecycle]}>
+                                    {t(`practice.coding.lifecycle.${challenge.lifecycle}`)}
                                 </Chip>
-                            </div>
+                            </Link>
                         ))}
                     </RailCard>
 

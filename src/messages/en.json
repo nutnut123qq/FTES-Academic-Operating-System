@@ -6948,6 +6948,34 @@
         "exampleEmpty": "(empty)",
         "comingSoonTitle": "Coming soon",
         "comingSoonBody": "The solver for this challenge type is being built."
+      },
+      "project": {
+        "uploadTitle": "Submit project",
+        "dropHint": "Drag & drop a .zip, or choose a .zip file / the whole project folder.",
+        "pickZip": "Choose .zip file",
+        "pickFolder": "Choose folder",
+        "reading": "Reading project…",
+        "clear": "Choose again",
+        "fileCount": "{count} files",
+        "submit": "Submit project",
+        "error": {
+          "empty": "No source files found in the project.",
+          "tooLarge": "Project is too large — remove unnecessary files and try again.",
+          "read": "Couldn't read the project. Check the .zip / folder and try again."
+        },
+        "treeTitle": "File tree",
+        "treeEmpty": "This submission has no files yet.",
+        "treeError": "Couldn't load the file tree.",
+        "fileError": "Couldn't load the file content.",
+        "selectFileHint": "Pick a file in the tree to see its content and review comments.",
+        "reason": "Comment",
+        "suggestion": "Suggestion",
+        "noChanges": "No changes",
+        "hasChanges": "Needs changes",
+        "filesReadHint": "The AI read {count} files across {iterations} rounds.",
+        "unanchoredTitle": "Comments that couldn't open their file",
+        "unanchoredHint": "These comments point to a file that isn't in the tree (or the project couldn't be loaded).",
+        "fileLine": "{file} · line {line}"
       }
     },
     "common": {

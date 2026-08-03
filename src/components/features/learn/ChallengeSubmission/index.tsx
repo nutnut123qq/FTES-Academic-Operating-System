@@ -49,6 +49,7 @@ import {
 import { useQueryChallengeSubmissionResultsSwr } from "../hooks/useQueryChallengeSubmissionResultsSwr"
 import { ChallengeMethodSolver } from "./ChallengeMethodSolver"
 import { ChallengeProblemAside } from "./ChallengeProblemAside"
+import { ProjectReviewResult } from "./ProjectReviewResult"
 
 /**
  * Adapts the REST challenge-submission view onto the richer `ChallengeDetail` the
@@ -724,7 +725,20 @@ const AttemptRow = ({
                                 retryLabel: t("common.retry"),
                             }}
                         >
-                            {aiFeedback ? <GradeResultCard result={aiFeedback} /> : null}
+                            {aiFeedback ? (
+                                // A project grade carries `changes` (agentic per-line review) →
+                                // the VS Code tree + inline-comment review; a plain code/URL grade
+                                // keeps the flat score card.
+                                Array.isArray(aiFeedback.changes) ? (
+                                    <ProjectReviewResult
+                                        challengeId={challengeId}
+                                        submissionId={attempt.id}
+                                        aiFeedback={aiFeedback}
+                                    />
+                                ) : (
+                                    <GradeResultCard result={aiFeedback} />
+                                )
+                            ) : null}
                         </AsyncContent>
                     ) : null}
                 </>

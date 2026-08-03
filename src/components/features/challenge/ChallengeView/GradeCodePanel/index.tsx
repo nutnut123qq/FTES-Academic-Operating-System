@@ -397,6 +397,10 @@ export const GradeCodePanel = ({
                     input: testCase.input,
                     expected: testCase.expected,
                 })),
+                // SQL runs each case against the challenge's seed dataset (fresh + rolled back
+                // per case), exactly like the plain Run threads `setup_sql`. Without it the
+                // query hits an empty database and every case fails.
+                ...(isSqlLanguage && setupSql ? { setupSql } : {}),
             })
             clearResults()
             setTestResult(result ?? null)

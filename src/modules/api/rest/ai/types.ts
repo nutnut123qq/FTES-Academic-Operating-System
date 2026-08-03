@@ -296,7 +296,11 @@ export interface CodeExecuteResult {
  * server-side for AI grading.
  */
 export interface RunTestsCase {
-    /** Input fed to the program (stdin / args, per the exercise contract). */
+    /**
+     * Input fed to the program (stdin / args, per the exercise contract). For `language: "sql"`
+     * there is no stdin — this carries EXTRA SQL run after `setupSql` to build the case's data
+     * variant (e.g. a hidden case inserts one more row, then re-checks the learner's query).
+     */
     input: string
     /** Expected output the program should produce. */
     expected: string
@@ -313,6 +317,12 @@ export interface RunTestsRequest {
     code: string
     language: string
     testCases: Array<RunTestsCase>
+    /**
+     * The challenge's seed dataset (DDL + INSERT), SQL exercises only — the same value threaded
+     * into a plain Run as `setup_sql`. Each case is seeded fresh and rolled back after. Omitting
+     * it runs the learner's query against an EMPTY database, so every case fails.
+     */
+    setupSql?: string
 }
 
 /**

@@ -451,7 +451,11 @@ export const executeCode = async (body: ExecuteCodeRequest): Promise<CodeExecute
  * test cases are NEVER sent here — they stay server-side for AI grading.
  *
  * `POST /api/v1/ai/coding/run-tests` — permission `ai.coding.use` (STUDENT+). Engine
- * unconfigured BE-side → 503 `AI_EXEC_UNAVAILABLE` (the panel shows a graceful message).
+ * unconfigured BE-side → 503 `AI_EXEC_UNAVAILABLE` (the panel shows a graceful message);
+ * for SQL exercises the equivalent is `AI_SQL_UNAVAILABLE` (a separate sandbox).
+ *
+ * SQL exercises run each case on the SQL sandbox instead of the code engine — pass the
+ * challenge's `setupSql` or the query runs against an empty database.
  */
 export const runTests = async (body: RunTestsRequest): Promise<CodeExecutionSummary> =>
     restRequest<CodeExecutionSummary>({

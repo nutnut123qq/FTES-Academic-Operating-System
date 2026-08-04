@@ -6,6 +6,7 @@ import {
     type OverlayKey,
     type FollowListContext,
     type CommunityQuoteContext,
+    type CommunityPhotoContext,
     type AnchorRect,
 } from "./store"
 import type { PaymentContext } from "@/modules/types/payment"
@@ -108,6 +109,28 @@ export const useCommunityComposerOverlayState = () => {
         [setQuote, openOverlay],
     )
     return { ...base, open, openQuote, quote, setQuote }
+}
+/**
+ * Community photo lightbox overlay state (Facebook-style photo viewer). Like
+ * {@link useFollowListOverlayState}, overrides `open` to accept a
+ * {@link CommunityPhotoContext} (which post + its images + the clicked index)
+ * and stashes it so the global modal (mounted in `ModalContainer`) can render
+ * the image pane + the post's comment thread.
+ * @returns the overlay handle plus `context` and `open(context)`.
+ */
+export const useCommunityPhotoOverlayState = () => {
+    const base = useOverlayHandle("communityPhoto")
+    const context = useOverlayStore((state) => state.communityPhotoContext)
+    const setContext = useOverlayStore((state) => state.setCommunityPhotoContext)
+    const openOverlay = useOverlayStore((state) => state.openOverlay)
+    const open = useCallback(
+        (next: CommunityPhotoContext) => {
+            setContext(next)
+            openOverlay("communityPhoto")
+        },
+        [setContext, openOverlay],
+    )
+    return { ...base, open, context }
 }
 /** Content overlay state. */
 export const useContentOverlayState = () => useOverlayHandle("content")

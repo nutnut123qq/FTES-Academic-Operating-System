@@ -310,7 +310,7 @@ export const CommunityFeedRow = ({
                     </Typography>
                     <Typography type="body-sm">{post.snippet}</Typography>
                 </Link>
-                <PostMediaGrid media={post.media} imageAlt={t("composer.imageAlt")} />
+                <PostMediaGrid postId={post.id} media={post.media} imageAlt={t("composer.imageAlt")} />
                 <PostEngagementBar
                     likes={post.likes}
                     liked={post.liked}

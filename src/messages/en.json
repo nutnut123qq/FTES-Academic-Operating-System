@@ -6317,6 +6317,13 @@
       "campus": "Campus",
       "trending": "Trending"
     },
+    "photoViewer": {
+      "previous": "Previous photo",
+      "next": "Next photo",
+      "close": "Close",
+      "loading": "Loading post…",
+      "counter": "Photo {current} of {total}"
+    },
     "engagement": {
       "like": "Like",
       "unlike": "Unlike",

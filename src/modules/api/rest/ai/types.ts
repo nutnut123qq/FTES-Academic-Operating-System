@@ -255,6 +255,20 @@ export interface CodeChange {
     reason: string
     /** The concrete fix the grader suggests. */
     suggestion: string
+    /**
+     * The CURRENT line(s) the comment flags — the red "before" side of a display-only diff
+     * (agentic-project-grader). camelCase, mirroring the BE `AiChangeView.oldCode` whitelist
+     * record. Additive / backward-compatible: older graded submissions omit it, so the review
+     * still renders reason + suggestion. Render the diff ONLY when BOTH `oldCode` and `newCode`
+     * are present strings.
+     */
+    oldCode?: string
+    /**
+     * The SUGGESTED replacement for {@link oldCode} — the green "after" side of the diff
+     * (BE `AiChangeView.newCode`). Additive; render the before/after block only when both
+     * are present.
+     */
+    newCode?: string
 }
 
 /**
@@ -287,6 +301,17 @@ export interface CodeGradeResult {
     files_read?: Array<string>
     /** How many agentic tool-calling rounds the grade took (PIN §7). Absent on a plain grade. */
     iterations?: number
+    /**
+     * Whether the submission is ON-TOPIC for the exercise (agentic grader relevance gate) —
+     * camelCase, mirroring the BE `AiFeedbackView.relevance` whitelist record. `"OFF_TOPIC"`
+     * means the submission does not address the problem, so the detailed per-line project
+     * review is meaningless and the result view falls back to the flat score card. Additive /
+     * backward-compatible: absent (older grades) OR `"RELATED"` MUST read as on-topic — never
+     * hide the existing review on a missing value.
+     */
+    relevance?: "RELATED" | "OFF_TOPIC"
+    /** Short human note on WHY the submission was judged off-topic (surfaced beside the note). Optional. */
+    relevanceReason?: string
 }
 
 /**

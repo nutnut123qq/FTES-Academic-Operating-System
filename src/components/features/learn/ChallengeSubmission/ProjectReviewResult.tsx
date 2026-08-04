@@ -255,6 +255,8 @@ export const ProjectReviewResult = ({
                                         changes={changesByPath.get(selectedPath) ?? []}
                                         reasonLabel={t("exercises.project.reason")}
                                         suggestionLabel={t("exercises.project.suggestion")}
+                                        beforeLabel={t("exercises.project.before")}
+                                        afterLabel={t("exercises.project.after")}
                                     />
                                 ) : null}
                             </AsyncContent>
@@ -294,6 +296,8 @@ export const ProjectReviewResult = ({
                                     comment={change}
                                     reasonLabel={t("exercises.project.reason")}
                                     suggestionLabel={t("exercises.project.suggestion")}
+                                    beforeLabel={t("exercises.project.before")}
+                                    afterLabel={t("exercises.project.after")}
                                 />
                             </div>
                         ))}

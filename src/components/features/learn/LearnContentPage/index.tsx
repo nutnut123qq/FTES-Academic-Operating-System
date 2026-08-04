@@ -22,6 +22,7 @@ import { useCourseEnrollment } from "@/components/features/course/hooks/useCours
 import { useQueryLearnCourseSwr } from "../hooks/useQueryLearnCourseSwr"
 import { LearnToolsRail } from "../LearnToolsRail"
 import { LearnNudges } from "./LearnNudges"
+import { TermAccessBanner } from "./TermAccessBanner"
 
 /** Build the reader route for a lesson id shaped "m<n>-l<k>". */
 const lessonHref = (courseId: string, lessonId: string) =>
@@ -89,11 +90,25 @@ export const LearnContentPage = () => {
                             )}
                         />
 
+                        {/* term-access banner — a "mở đến {ngày}" notice while a
+                            term-bound access is still live, or an EXPIRED state (with a
+                            "mua lại / đăng ký lại" CTA reusing the enroll flow) once the
+                            term ended. Renders nothing for permanent access. */}
+                        <TermAccessBanner
+                            access={access}
+                            hasFullAccess={hasFullAccess}
+                            onRebuy={enrollment.onEnroll}
+                            canRebuy={enrollment.canBuy}
+                            isRebuying={enrollment.isEnrolling || enrollment.isResolvingProduct}
+                        />
+
                         {/* trial → buy nudge — hidden for anyone who already has full
                             access (purchased, free-owned, or otherwise entitled)
                             (rule premium-unlock-is-enroll-not-vip). Chỉ hiện khi access ĐÃ resolve
-                            (access !== undefined) để không nháy card lúc SWR access còn bay. */}
-                        {access !== undefined && !hasFullAccess ? (
+                            (access !== undefined) để không nháy card lúc SWR access còn bay.
+                            Ẩn khi access.expired: khối "mua lại" của TermAccessBanner đã phụ trách
+                            re-enroll, không hiện thêm card học-thử trùng lặp. */}
+                        {access !== undefined && !hasFullAccess && access?.expired !== true ? (
                             <div className="flex flex-col gap-4 rounded-3xl border border-default bg-surface p-4">
                                 <div className="flex flex-col gap-1">
                                     <div className="flex items-center gap-2">

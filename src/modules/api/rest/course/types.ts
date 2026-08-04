@@ -401,6 +401,20 @@ export interface EnrollmentView {
      * FE publish gate. Absent → fall back to {@link status}, then to "published".
      */
     published?: boolean | null
+    /**
+     * When set, this enrollment's access is time-bound to a term and ENDS at this
+     * instant (the term end). ISO-8601 (`Instant`); `null`/absent = permanent (the
+     * course is not part of a term). Additive — mirrors {@link CourseAccessStateView.accessUntil}
+     * so the my-courses band can show a "mở đến {date}" badge without an extra per-course
+     * access fetch. Absent on older deployments → no badge.
+     */
+    accessUntil?: string | null
+    /**
+     * True when this enrollment's access was revoked because its term ended AND the
+     * course still belongs to a term (the student was kicked → offer "mua lại / đăng ký
+     * lại"). Additive, defaults false. Mirrors {@link CourseAccessStateView.expired}.
+     */
+    expired?: boolean
 }
 
 /**
@@ -416,6 +430,20 @@ export interface CourseAccessStateView {
     purchased: boolean
     /** Resolves to FULL access (bought, free-owned, or otherwise entitled). */
     fullAccess: boolean
+    /**
+     * When set, the caller's access to this course is time-bound to a term and ENDS at
+     * this instant (the term end). ISO-8601 (`Instant`). `null` = permanent access (the
+     * course is not part of a term). Additive — older BE builds omit it → treat as null
+     * (no deadline banner). Drives the learn-page "Quyền học của bạn mở đến {date}" notice.
+     */
+    accessUntil?: string | null
+    /**
+     * True when the caller HAD access that was revoked because its term ended AND the
+     * course still belongs to a term — i.e. they were kicked and can re-buy / re-enroll.
+     * Additive, defaults false. Drives the learn-page EXPIRED banner + "mua lại / đăng ký
+     * lại" CTA (which reuses the canonical enroll flow, never a "VIP" upsell).
+     */
+    expired?: boolean
 }
 
 /** Course package view. */

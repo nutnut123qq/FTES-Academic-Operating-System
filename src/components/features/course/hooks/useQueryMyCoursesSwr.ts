@@ -24,6 +24,18 @@ export interface MyCourse {
      * when set and an empty framed surface when null (graceful degrade).
      */
     coverImage: string | null
+    /**
+     * ISO-8601 instant this enrollment's term-bound access ENDS, or `null` when access
+     * is permanent (the course is not part of a term / older BE build). When set (and
+     * not {@link expired}) the card shows a "mở đến {date}" badge.
+     */
+    accessUntil: string | null
+    /**
+     * True when this enrollment's access was revoked because its term ended (the student
+     * was kicked). Drives the "đăng ký lại" affordance on the card — the card still links
+     * into the course, where the full re-buy CTA lives.
+     */
+    expired: boolean
 }
 
 /**
@@ -65,9 +77,14 @@ export const useQueryMyCoursesSwr = () => {
         async (): Promise<Array<MyCourse>> => {
             const enrollments = await getMyEnrollments()
             return enrollments
-                // active enrollment AND (defensively) a published course — an
-                // unpublished course must never surface in continue-learning.
-                .filter((enrollment) => enrollment.active && isPublishedEnrollment(enrollment))
+                // (active OR term-expired) AND (defensively) a published course. An
+                // unpublished course must never surface in continue-learning; a
+                // term-expired enrollment stays visible so the viewer can re-enroll.
+                .filter(
+                    (enrollment) =>
+                        (enrollment.active || enrollment.expired === true) &&
+                        isPublishedEnrollment(enrollment),
+                )
                 .slice()
                 .sort(
                     (a, b) =>
@@ -84,6 +101,8 @@ export const useQueryMyCoursesSwr = () => {
                     href: `/courses/${enrollment.slugName}/learn`,
                     isPurchased: Boolean(enrollment.isPurchased),
                     coverImage: enrollment.imageHeader ?? null,
+                    accessUntil: enrollment.accessUntil ?? null,
+                    expired: enrollment.expired === true,
                 }))
         },
     )

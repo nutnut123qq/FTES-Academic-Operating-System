@@ -681,6 +681,9 @@
     "count": "{count} courses",
     "continueLearning": "Continue learning",
     "percentComplete": "{percent}% complete",
+    "termUntil": "Open until {date}",
+    "termExpired": "Term ended",
+    "rebuy": "Re-enroll",
     "mine": {
       "title": "My courses",
       "subtitle": "Pick up where you left off.",
@@ -7028,6 +7031,13 @@
         "subtitle": "Unlock every lesson, challenge and material in this course.",
         "unlock": "Unlock course",
         "continueTrial": "Keep trying"
+      },
+      "termAccess": {
+        "until": "Your access is open until {date}",
+        "untilSoon": "Access is expiring soon — finish or renew before the deadline.",
+        "expiredTitle": "The term has ended",
+        "expiredBody": "Your access has been paused. Your learning history is preserved.",
+        "rebuy": "Buy again / Re-enroll"
       },
       "tabs": {
         "content": "Content",

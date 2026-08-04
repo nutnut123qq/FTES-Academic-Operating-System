@@ -684,6 +684,9 @@
     "count": "{count} khóa học",
     "continueLearning": "Tiếp tục học",
     "percentComplete": "Hoàn thành {percent}%",
+    "termUntil": "Mở đến {date}",
+    "termExpired": "Kỳ học đã kết thúc",
+    "rebuy": "Đăng ký lại",
     "mine": {
       "title": "Khóa học của tôi",
       "subtitle": "Tiếp tục hành trình học của bạn.",
@@ -7031,6 +7034,13 @@
         "subtitle": "Mở khóa toàn bộ bài học, thử thách và tài liệu của khóa này.",
         "unlock": "Mở khóa học",
         "continueTrial": "Tiếp tục học thử"
+      },
+      "termAccess": {
+        "until": "Quyền học của bạn mở đến {date}",
+        "untilSoon": "Quyền truy cập sắp hết hạn — hãy hoàn thành hoặc gia hạn trước thời hạn.",
+        "expiredTitle": "Kỳ học đã kết thúc",
+        "expiredBody": "Quyền truy cập đã tạm dừng. Lịch sử học của bạn vẫn được giữ.",
+        "rebuy": "Mua lại / Đăng ký lại"
       },
       "tabs": {
         "content": "Nội dung",

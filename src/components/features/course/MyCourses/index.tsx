@@ -1,15 +1,15 @@
 "use client"
 
 import React from "react"
-import { Button, Typography } from "@heroui/react"
-import { useTranslations } from "next-intl"
+import { Button, Chip, Typography } from "@heroui/react"
+import { useFormatter, useTranslations } from "next-intl"
 import { Link, useRouter } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { ContinueCard } from "@/components/blocks/cards/ContinueCard"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { FtesMascot } from "@/components/reuseable/FtesMascot"
 import { MascotProfileNudge } from "@/components/features/mascot-moments"
-import { useQueryMyCoursesSwr } from "../hooks/useQueryMyCoursesSwr"
+import { useQueryMyCoursesSwr, type MyCourse } from "../hooks/useQueryMyCoursesSwr"
 
 /**
  * "Khóa học của tôi" (`/courses/me`) — the signed-in viewer's active enrollments as
@@ -21,8 +21,30 @@ import { useQueryMyCoursesSwr } from "../hooks/useQueryMyCoursesSwr"
  */
 export const MyCourses = () => {
     const t = useTranslations()
+    const format = useFormatter()
     const router = useRouter()
     const { courses, isLoading, error, mutate } = useQueryMyCoursesSwr()
+
+    /** Term-status chip for a card: "term ended" (expired) or "open until {date}". */
+    const termBadge = (course: MyCourse): React.ReactNode => {
+        if (course.expired) {
+            return (
+                <Chip size="sm" variant="soft" color="danger">
+                    {t("courses.termExpired")}
+                </Chip>
+            )
+        }
+        if (course.accessUntil) {
+            return (
+                <Chip size="sm" variant="soft" color="warning">
+                    {t("courses.termUntil", {
+                        date: format.dateTime(new Date(course.accessUntil), { dateStyle: "medium" }),
+                    })}
+                </Chip>
+            )
+        }
+        return null
+    }
 
     return (
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-6">
@@ -77,8 +99,9 @@ export const MyCourses = () => {
                                 <ContinueCard
                                     title={course.title}
                                     subtitle={t("courses.percentComplete", { percent: course.completionPercent })}
+                                    badge={termBadge(course)}
                                     value={course.completionPercent}
-                                    ctaLabel={t("courses.continueLearning")}
+                                    ctaLabel={course.expired ? t("courses.rebuy") : t("courses.continueLearning")}
                                     className="h-full"
                                 />
                             </Link>

@@ -7,6 +7,10 @@ import { useTranslations } from "next-intl"
 import { usePathname, useRouter } from "@/i18n/navigation"
 import { useHasPermission } from "@/hooks/useHasPermission"
 import { ExtendedTabs } from "@/components/blocks/navigation/ExtendedTabs"
+import {
+    CommunityLiveChatFab,
+    CommunityLiveChatSse,
+} from "@/components/features/community/CommunityLiveChat"
 import { NavRail } from "./NavRail"
 import { DiscoveryRail } from "./DiscoveryRail"
 import { PromoBanner } from "./PromoBanner"
@@ -143,10 +147,14 @@ export const CommunityShell = ({ children }: CommunityShellProps) => {
                 </div>
                 <div className="px-4 py-3">{children}</div>
             </div>
-            {/* right discovery rail — trending · reputation · quick poll (xl+) */}
+            {/* right discovery rail — live chat · trending · reputation · quick poll (xl+) */}
             <aside className="hidden pt-3 xl:sticky xl:top-20 xl:block xl:self-start">
                 <DiscoveryRail />
             </aside>
+            {/* live-chat realtime: ONE SSE connection for the community surface (rail xl+ /
+                floating fab < xl) + the < xl floating entry point */}
+            <CommunityLiveChatSse />
+            <CommunityLiveChatFab />
         </div>
     )
 }

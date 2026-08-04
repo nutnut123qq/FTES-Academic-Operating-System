@@ -6285,6 +6285,19 @@
       "generic": "Có lỗi xảy ra, thử lại nhé."
     }
   },
+  "communityLiveChat": {
+    "title": "Chat cộng đồng",
+    "onlineTitle": "Đang online",
+    "onlineCount": "{count} đang online",
+    "open": "Mở chat cộng đồng",
+    "send": "Gửi",
+    "placeholder": "Nhập tin nhắn…",
+    "you": "Bạn",
+    "empty": "Chưa có tin nhắn nào. Hãy chào một câu!",
+    "loadError": "Không tải được tin nhắn",
+    "sendFailed": "Không gửi được tin nhắn",
+    "signInRequired": "Đăng nhập để tham gia chat cộng đồng."
+  },
   "communityHub": {
     "title": "Cộng đồng",
     "placeholder": "Nội dung đang được xây dựng.",

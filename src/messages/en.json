@@ -6282,6 +6282,19 @@
       "generic": "Something went wrong. Please try again."
     }
   },
+  "communityLiveChat": {
+    "title": "Community chat",
+    "onlineTitle": "Online now",
+    "onlineCount": "{count} online",
+    "open": "Open community chat",
+    "send": "Send",
+    "placeholder": "Type a message…",
+    "you": "You",
+    "empty": "No messages yet. Say hi!",
+    "loadError": "Couldn't load messages",
+    "sendFailed": "Couldn't send your message",
+    "signInRequired": "Sign in to join the community chat."
+  },
   "communityHub": {
     "title": "Community",
     "placeholder": "This feed is under construction.",

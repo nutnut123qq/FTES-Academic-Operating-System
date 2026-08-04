@@ -5,6 +5,7 @@ import { Typography, cn, toast } from "@heroui/react"
 import { CaretRightIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
+import { CommunityLiveChatRail } from "@/components/features/community/CommunityLiveChat"
 import { useQueryPollSwr } from "../hooks/useQueryPollSwr"
 import { useMutatePollVoteSwr } from "../hooks/useMutatePollVoteSwr"
 
@@ -136,6 +137,7 @@ export const DiscoveryRail = () => {
 
     return (
         <div className="flex flex-col gap-3">
+            <CommunityLiveChatRail />
             <RailPanel
                 title={t("rail.poll")}
                 seeAllHref="/community/poll"

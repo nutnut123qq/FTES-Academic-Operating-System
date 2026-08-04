@@ -132,6 +132,8 @@ export const useCommunityPhotoOverlayState = () => {
     )
     return { ...base, open, context }
 }
+/** Community live-chat floating panel overlay state (< xl; the SSE + heartbeat run while open). */
+export const useCommunityLiveChatOverlayState = () => useOverlayHandle("communityLiveChat")
 /** Content overlay state. */
 export const useContentOverlayState = () => useOverlayHandle("content")
 /** Content AI chat drawer overlay state (ask FTES AOS AI about the current content). */

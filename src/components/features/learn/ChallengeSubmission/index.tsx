@@ -14,6 +14,7 @@ import {
     LockSimpleIcon,
     PuzzlePieceIcon,
     SquareIcon,
+    WarningCircleIcon,
 } from "@phosphor-icons/react"
 import { useLocale, useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
@@ -732,10 +733,30 @@ const AttemptRow = ({
                             }}
                         >
                             {aiFeedback ? (
-                                // A project grade carries `changes` (agentic per-line review) →
-                                // the VS Code tree + inline-comment review; a plain code/URL grade
-                                // keeps the flat score card.
-                                Array.isArray(aiFeedback.changes) ? (
+                                // OFF_TOPIC submission → the per-line project review is meaningless,
+                                // so show ONLY the flat score card (with a note). A missing
+                                // `relevance` reads as RELATED (backward-compatible — older grades
+                                // keep the existing review). Otherwise a project grade carries
+                                // `changes` (agentic per-line review) → the VS Code tree + inline
+                                // before/after diff; a plain code/URL grade keeps the flat card.
+                                aiFeedback.relevance === "OFF_TOPIC" ? (
+                                    <div className="flex flex-col gap-3">
+                                        <div className="flex items-start gap-2 rounded-2xl border border-warning/40 bg-warning/5 p-3">
+                                            <WarningCircleIcon aria-hidden focusable="false" className="mt-0.5 size-4 shrink-0 text-warning" />
+                                            <div className="flex min-w-0 flex-col gap-1">
+                                                <Typography type="body-sm" weight="semibold" className="text-warning">
+                                                    {t("exercises.challenge.offTopicTitle")}
+                                                </Typography>
+                                                {aiFeedback.relevanceReason ? (
+                                                    <Typography type="body-xs" color="muted">
+                                                        {aiFeedback.relevanceReason}
+                                                    </Typography>
+                                                ) : null}
+                                            </div>
+                                        </div>
+                                        <GradeResultCard result={aiFeedback} />
+                                    </div>
+                                ) : Array.isArray(aiFeedback.changes) ? (
                                     <ProjectReviewResult
                                         challengeId={challengeId}
                                         submissionId={attempt.id}

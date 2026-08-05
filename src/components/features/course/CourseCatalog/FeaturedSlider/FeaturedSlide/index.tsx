@@ -42,7 +42,7 @@ export const FeaturedSlide = ({ course, index, total, onOpen }: FeaturedSlidePro
             role="group"
             aria-roledescription="slide"
             aria-label={`${t("featured.slideLabel", { index: index + 1, total })} — ${course.name}`}
-            className="w-full shrink-0 snap-center px-2.5"
+            className="w-full shrink-0 snap-center"
         >
             <div
                 className="flex min-h-[300px] flex-col items-center gap-5 overflow-hidden rounded-[20px] p-[30px_35px] text-white md:flex-row-reverse"

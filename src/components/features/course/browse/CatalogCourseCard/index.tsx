@@ -48,12 +48,15 @@ export const CatalogCourseCard = ({ course, className }: CatalogCourseCardProps)
         <Link
             href={isEnrolled ? `/courses/${course.id}/learn` : `/courses/${course.id}`}
             className={cn(
-                "group flex flex-col overflow-hidden rounded-3xl border border-separator no-underline transition-colors hover:bg-default/40",
+                // ponytail: card pads around an INSET cover (reference layout) and is
+                // barely rounded — rounded-lg (12px), down from rounded-3xl (36px)
+                "group flex flex-col rounded-lg border border-separator p-3 no-underline transition-colors hover:bg-default/40",
                 className,
             )}
         >
-            {/* cover 16:9 — full-bleed; branded gradient fallback when missing/broken */}
-            <div className="relative aspect-video w-full overflow-hidden">
+            {/* cover 16:9 — inset by the card padding, one radius step tighter than
+                the card; branded gradient fallback when missing/broken */}
+            <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-md">
                 <div
                     aria-hidden
                     className="absolute inset-0 bg-gradient-to-br from-accent/40 via-accent/20 to-accent/5"
@@ -87,7 +90,7 @@ export const CatalogCourseCard = ({ course, className }: CatalogCourseCardProps)
                 ) : null}
             </div>
 
-            <div className="flex flex-1 flex-col gap-3 p-4">
+            <div className="flex flex-1 flex-col gap-3 pt-3">
                 <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
                         <Typography type="body-xs" color="muted">

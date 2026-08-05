@@ -9,9 +9,9 @@ import type { WithClassNames } from "@/modules/types/base/class-name"
  * and the price/view-course footer) per the house skeleton rule.
  */
 export const CatalogCourseCardSkeleton = ({ className }: WithClassNames<undefined>) => (
-    <div className={cn("flex flex-col overflow-hidden rounded-3xl border border-separator", className)}>
-        <Skeleton className="aspect-video w-full rounded-none" />
-        <div className="flex flex-col gap-3 p-4">
+    <div className={cn("flex flex-col rounded-lg border border-separator p-3", className)}>
+        <Skeleton className="aspect-video w-full rounded-md" />
+        <div className="flex flex-col gap-3 pt-3">
             {/* code + title */}
             <Skeleton className="h-3 w-16 rounded-large" />
             <Skeleton className="h-4 w-full rounded-large" />

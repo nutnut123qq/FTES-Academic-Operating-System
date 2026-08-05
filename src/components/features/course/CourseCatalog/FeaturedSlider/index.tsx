@@ -42,7 +42,10 @@ export const FeaturedSlider = () => {
             role="region"
             aria-roledescription="carousel"
             aria-label={t("featured.regionLabel")}
-            className="relative mx-auto flex w-full max-w-[1200px] flex-col gap-3 px-[30px]"
+            // ponytail: no own horizontal padding — the banner must line up with the
+            // catalog content below (the page container already pads); slide spacing
+            // lives on the track's `gap`, not on per-slide padding (that inset it).
+            className="relative flex w-full flex-col gap-3"
             onKeyDown={(event) => {
                 if (!hasMultiple) return
                 if (event.key === "ArrowRight") {
@@ -60,7 +63,7 @@ export const FeaturedSlider = () => {
                     ref={trackRef}
                     // announce slide changes only when the user drives them
                     aria-live={isAutoplaying ? "off" : "polite"}
-                    className="flex w-full snap-x snap-mandatory overflow-x-auto rounded-2xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                    className="flex w-full snap-x snap-mandatory gap-5 overflow-x-auto rounded-2xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                 >
                     {featured.map((course, index) => (
                         <FeaturedSlide
@@ -98,7 +101,7 @@ export const FeaturedSlider = () => {
             </div>
 
             {hasMultiple ? (
-                <div className="flex items-center justify-start gap-2 pl-2.5">
+                <div className="flex items-center justify-start gap-2">
                     {featured.map((course, index) => (
                         <button
                             key={course.id}

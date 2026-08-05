@@ -5,7 +5,7 @@ import { getCourses } from "@/modules/api/rest/course"
 import type { CourseSummary } from "@/modules/api/rest/course"
 
 /** Course level. */
-export type CourseLevel = "basic" | "intermediate" | "advanced"
+export type CourseLevel = "basic" | "intermediate" | "advanced" | "university"
 
 /** Merchandising badge on a catalog card (mock flag; BE defines real criteria later). */
 export type CourseBadge = "bestseller" | "new"
@@ -45,10 +45,11 @@ export interface Course {
 }
 
 /**
- * Maps the BE course level string onto the catalog's three-level facet. The BE
- * currently only seeds `UNIVERSITY`, which has no direct facet equivalent → it
- * (and any unknown value) degrades to `intermediate` for display; a wrong facet
- * label is preferable to a broken i18n key.
+ * Maps the BE course level string onto the catalog's level facet. `UNIVERSITY`
+ * (what the BE seeds on most courses) is its OWN facet — it used to degrade to
+ * `intermediate`, which labelled every university course "Trung cấp". Anything
+ * else unknown (including a null level) still falls back to `intermediate`: a
+ * wrong facet label is preferable to a broken i18n key.
  *
  * @param level - The raw BE `level` string (nullable).
  * @returns The closest catalog {@link CourseLevel}.
@@ -60,6 +61,9 @@ export const mapCourseLevel = (level: string | null | undefined): CourseLevel =>
     }
     if (value.includes("ADVANC") || value.includes("EXPERT")) {
         return "advanced"
+    }
+    if (value.includes("UNIVERSITY")) {
+        return "university"
     }
     return "intermediate"
 }

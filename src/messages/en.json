@@ -5759,7 +5759,8 @@
     "levels": {
       "basic": "Basic",
       "intermediate": "Intermediate",
-      "advanced": "Advanced"
+      "advanced": "Advanced",
+      "university": "University"
     },
     "categories": {
       "label": "Course categories",

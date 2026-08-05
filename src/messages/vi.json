@@ -5762,7 +5762,8 @@
     "levels": {
       "basic": "Cơ bản",
       "intermediate": "Trung cấp",
-      "advanced": "Nâng cao"
+      "advanced": "Nâng cao",
+      "university": "Đại học"
     },
     "categories": {
       "label": "Danh mục khóa học",

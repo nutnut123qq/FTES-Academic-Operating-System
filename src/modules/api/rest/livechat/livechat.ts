@@ -1,11 +1,38 @@
 import { restRequest } from "@/modules/api/rest/client"
-import type { LiveChatMessage, LiveChatOnline } from "./types"
+import type { LiveChatMessage, LiveChatOnline, LiveChatReplyTo } from "./types"
 
 /** Base path for the community live-chat REST + SSE controllers. */
 const BASE = "/community/live-chat"
 
 /** Default number of ring-buffer messages the panel seeds with on open. */
 export const LIVE_CHAT_RECENT_LIMIT = 30
+
+/** Max length of a reply-quote snippet (matches the BE defensive cap). */
+export const LIVE_CHAT_REPLY_SNIPPET_MAX = 200
+
+/** Trims + caps a reply snippet so the ephemeral quote stays small on the wire. */
+export const capReplySnippet = (text: string): string => {
+    const trimmed = text.trim()
+    return trimmed.length > LIVE_CHAT_REPLY_SNIPPET_MAX
+        ? trimmed.slice(0, LIVE_CHAT_REPLY_SNIPPET_MAX)
+        : trimmed
+}
+
+/**
+ * Normalizes a raw `replyTo` quote (from the send echo / recent seed) — or returns
+ * `null` when the message is not a reply / the payload is malformed. Defensive: the
+ * quote is FE-provided + never DB-backed, so a partial shape must never render.
+ */
+const toReplyTo = (raw: LiveChatReplyTo | null | undefined): LiveChatReplyTo | null => {
+    if (!raw || !raw.messageId) {
+        return null
+    }
+    return {
+        messageId: raw.messageId,
+        displayName: raw.displayName ?? "",
+        snippet: capReplySnippet(raw.snippet ?? ""),
+    }
+}
 
 /**
  * Normalizes a raw backend message onto {@link LiveChatMessage}, defaulting the
@@ -19,6 +46,7 @@ const toLiveChatMessage = (raw: LiveChatMessage): LiveChatMessage => ({
     avatar: raw.avatar ?? null,
     text: raw.text,
     ts: raw.ts,
+    replyTo: toReplyTo(raw.replyTo),
 })
 
 /**
@@ -28,15 +56,20 @@ const toLiveChatMessage = (raw: LiveChatMessage): LiveChatMessage => ({
  * pub/sub fan-out — the sender's own SSE will echo the same id (deduped client-side).
  * NEVER persisted to a database.
  *
+ * An optional `replyTo` quote is passed through verbatim (ephemeral — the BE echoes
+ * it back on the fan-out, it is never looked up or persisted).
+ *
  * `POST /api/v1/community/live-chat/messages`
  */
 export const sendLiveChatMessage = async (input: {
     text: string
+    replyTo?: LiveChatReplyTo | null
 }): Promise<LiveChatMessage> => {
+    const replyTo = toReplyTo(input.replyTo)
     const message = await restRequest<LiveChatMessage>({
         method: "POST",
         url: `${BASE}/messages`,
-        data: { text: input.text },
+        data: replyTo ? { text: input.text, replyTo } : { text: input.text },
         authenticated: true,
     })
     return toLiveChatMessage(message)

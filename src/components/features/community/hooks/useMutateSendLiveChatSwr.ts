@@ -3,7 +3,7 @@
 import { useCallback } from "react"
 import { useAppSelector } from "@/redux/hooks"
 import { sendLiveChatMessage } from "@/modules/api/rest/livechat"
-import type { LiveChatMessage } from "@/modules/api/rest/livechat"
+import type { LiveChatMessage, LiveChatReplyTo } from "@/modules/api/rest/livechat"
 import { useLiveChatStore } from "@/hooks/zustand/livechat/store"
 
 /** Client-side id for an optimistic message pending its server row. */
@@ -17,7 +17,10 @@ const tempId = (): string =>
  * the store dedupes — so the message never appears twice. On failure the temp row is
  * rolled back and `send` resolves `false` (the caller restores the input + toasts).
  *
- * @returns `send(text)` → `true` on success, `false` on empty/unauthenticated/failure.
+ * An optional `replyTo` quote (FE-built, ephemeral) rides along on the optimistic row
+ * and the POST, so the reply preview renders instantly and survives the SSE echo.
+ *
+ * @returns `send(text, replyTo?)` → `true` on success, `false` on empty/unauthenticated/failure.
  */
 export const useMutateSendLiveChatSwr = () => {
     const viewer = useAppSelector((state) => state.user.user)
@@ -25,7 +28,7 @@ export const useMutateSendLiveChatSwr = () => {
     const removeMessage = useLiveChatStore((state) => state.removeMessage)
 
     const send = useCallback(
-        async (text: string): Promise<boolean> => {
+        async (text: string, replyTo?: LiveChatReplyTo | null): Promise<boolean> => {
             const trimmed = text.trim()
             if (!trimmed || !viewer) {
                 return false
@@ -38,11 +41,12 @@ export const useMutateSendLiveChatSwr = () => {
                 avatar: viewer.avatar ?? null,
                 text: trimmed,
                 ts: Date.now(),
+                replyTo: replyTo ?? null,
             }
             appendMessage(optimistic)
 
             try {
-                const saved = await sendLiveChatMessage({ text: trimmed })
+                const saved = await sendLiveChatMessage({ text: trimmed, replyTo })
                 removeMessage(optimistic.id)
                 appendMessage(saved)
                 return true

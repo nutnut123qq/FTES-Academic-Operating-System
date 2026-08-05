@@ -11,7 +11,6 @@ import { useAppSelector } from "@/redux/hooks"
 import { useLiveChatStore } from "@/hooks/zustand/livechat/store"
 import { formatRelativeTime } from "@/components/features/community/hooks/relativeTime"
 import { useQueryLiveChatRecentSwr } from "@/components/features/community/hooks/useQueryLiveChatRecentSwr"
-import { useQueryLiveChatOnlineSwr } from "@/components/features/community/hooks/useQueryLiveChatOnlineSwr"
 import { useMutateSendLiveChatSwr } from "@/components/features/community/hooks/useMutateSendLiveChatSwr"
 import { capReplySnippet } from "@/modules/api/rest/livechat"
 import type { LiveChatMessage, LiveChatReplyTo } from "@/modules/api/rest/livechat"
@@ -36,30 +35,6 @@ const ThreadSkeleton = () => (
         ))}
     </div>
 )
-
-/**
- * A single-line online indicator ABOVE the thread (no card/box): a success dot + the
- * live count ("{n} online") or a generic "Online now" when the count is unknown/zero.
- * The count IS the SSE-patched `online` SWR cache ({@link useQueryLiveChatOnlineSwr}).
- */
-const OnlineLine = ({ active }: { active: boolean }) => {
-    const t = useTranslations("communityLiveChat")
-    const { online, isLoading } = useQueryLiveChatOnlineSwr(active)
-    const count = online?.roomOnline ?? 0
-
-    return (
-        <div className="flex items-center gap-1.5 px-0.5">
-            <span aria-hidden className="size-2 shrink-0 rounded-full bg-success" />
-            {active && isLoading && !online ? (
-                <Skeleton className="h-3 w-20 rounded-full" />
-            ) : (
-                <Typography type="body-xs" color="muted" className="whitespace-nowrap">
-                    {count > 0 ? t("onlineCount", { count }) : t("onlineNow")}
-                </Typography>
-            )}
-        </div>
-    )
-}
 
 /** A compact quoted preview of the replied-to message, rendered ABOVE the bubble text. */
 const ReplyPreview = ({ replyTo }: { replyTo: LiveChatReplyTo }) => (
@@ -138,10 +113,10 @@ const MessageRow = ({
  * {@link AsyncContent} with a layout-mirroring skeleton for the first paint.
  *
  * Layout is FIXED-HEIGHT (owned by the caller's `className`, e.g. `h-[420px]` on the
- * rail, `flex-1` inside the mobile drawer): a one-line online indicator on top, the
- * thread scrolls INTERNALLY in the middle (ScrollShadow), and the composer (plus an
- * optional "replying to …" banner) is pinned at the bottom — so short messages never
- * make the box jump.
+ * rail, `flex-1` inside the mobile drawer): the thread scrolls INTERNALLY (ScrollShadow),
+ * and the composer (plus an optional "replying to …" banner) is pinned at the bottom —
+ * so short messages never make the box jump. The online indicator
+ * ({@link import("./OnlinePresence").OnlinePresence}) sits OUTSIDE this box, above it.
  *
  * @param props - {@link CommunityLiveChatThreadProps}
  */
@@ -210,10 +185,8 @@ export const CommunityLiveChatThread = ({ enabled, className }: CommunityLiveCha
 
     return (
         <div className={cn("flex flex-col gap-2", className)}>
-            {/* online = a single text line above the thread (no box/card) */}
-            <OnlineLine active={active} />
-
-            {/* thread region — fills the fixed height, scrolls internally */}
+            {/* thread region — fills the fixed height, scrolls internally.
+                The online indicator (OnlinePresence) sits OUTSIDE this box, above it. */}
             <div className="flex min-h-0 flex-1 flex-col">
                 <AsyncContent
                     isLoading={active && isLoading && messages.length === 0}
@@ -221,7 +194,7 @@ export const CommunityLiveChatThread = ({ enabled, className }: CommunityLiveCha
                     error={messages.length === 0 ? error : undefined}
                     errorContent={{ title: t("loadError") }}
                     isEmpty={messages.length === 0}
-                    emptyContent={{ title: t("empty") }}
+                    emptyContent={{ title: t("empty"), className: "min-h-0 flex-1" }}
                 >
                     {/* thread — self-bounded scroll region (never scrolls the page/popover) */}
                     <ScrollShadow

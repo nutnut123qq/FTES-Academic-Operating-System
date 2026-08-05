@@ -9,6 +9,7 @@ import { useSmViewpoint } from "@/hooks/reuseables/useSmViewpoint"
 import { FloatingActionButton } from "@/components/blocks/buttons/FloatingActionButton"
 import { useCommunityLiveChatOverlayState } from "@/hooks/zustand/overlay/hooks"
 import { CommunityLiveChatThread } from "./CommunityLiveChatThread"
+import { OnlinePresence } from "./OnlinePresence"
 
 /** Tailwind `xl` breakpoint (1280px) — the fab is the < xl entry point (xl+ uses the rail). */
 const XL_QUERY = "(min-width: 1280px)"
@@ -46,6 +47,8 @@ export const CommunityLiveChatFab = () => {
                             <Drawer.Header>
                                 <Drawer.Heading>{t("title")}</Drawer.Heading>
                             </Drawer.Header>
+                            {/* online indicator — OUTSIDE / above the chat body (no card) */}
+                            <OnlinePresence enabled={isOpen} className="px-4" />
                             <Drawer.Body className="flex min-h-0 flex-1 flex-col gap-3 pb-6">
                                 <CommunityLiveChatThread enabled={isOpen} className="min-h-0 flex-1" />
                             </Drawer.Body>
@@ -72,6 +75,8 @@ export const CommunityLiveChatFab = () => {
                     <Typography type="body-sm" weight="semibold" className="shrink-0">
                         {t("title")}
                     </Typography>
+                    {/* online indicator — OUTSIDE / above the chat body (no card) */}
+                    <OnlinePresence enabled={isOpen} className="ml-auto" />
                 </div>
                 <div className="p-3">
                     <CommunityLiveChatThread enabled={isOpen} className="h-[420px]" />

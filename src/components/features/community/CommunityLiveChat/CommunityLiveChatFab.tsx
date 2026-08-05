@@ -8,7 +8,6 @@ import { useMediaQuery } from "usehooks-ts"
 import { useSmViewpoint } from "@/hooks/reuseables/useSmViewpoint"
 import { FloatingActionButton } from "@/components/blocks/buttons/FloatingActionButton"
 import { useCommunityLiveChatOverlayState } from "@/hooks/zustand/overlay/hooks"
-import { OnlinePresence } from "./OnlinePresence"
 import { CommunityLiveChatThread } from "./CommunityLiveChatThread"
 
 /** Tailwind `xl` breakpoint (1280px) — the fab is the < xl entry point (xl+ uses the rail). */
@@ -48,7 +47,6 @@ export const CommunityLiveChatFab = () => {
                                 <Drawer.Heading>{t("title")}</Drawer.Heading>
                             </Drawer.Header>
                             <Drawer.Body className="flex min-h-0 flex-1 flex-col gap-3 pb-6">
-                                <OnlinePresence enabled={isOpen} />
                                 <CommunityLiveChatThread enabled={isOpen} className="min-h-0 flex-1" />
                             </Drawer.Body>
                         </Drawer.Dialog>
@@ -74,10 +72,9 @@ export const CommunityLiveChatFab = () => {
                     <Typography type="body-sm" weight="semibold" className="shrink-0">
                         {t("title")}
                     </Typography>
-                    <OnlinePresence enabled={isOpen} className="ml-auto" />
                 </div>
                 <div className="p-3">
-                    <CommunityLiveChatThread enabled={isOpen} />
+                    <CommunityLiveChatThread enabled={isOpen} className="h-[420px]" />
                 </div>
             </PopoverContent>
         </Popover>

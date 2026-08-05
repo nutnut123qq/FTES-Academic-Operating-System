@@ -8,6 +8,21 @@
  */
 
 /**
+ * A lightweight quote of the message a new message is replying to. EPHEMERAL and
+ * FE-provided — the backend never looks it up, it just echoes the snapshot the sender
+ * sends (so it survives the SSE fan-out to every viewer). The `snippet` is trimmed +
+ * capped (~200 chars) client-side; the BE re-caps defensively.
+ */
+export interface LiveChatReplyTo {
+    /** Id of the message being replied to (matches a {@link LiveChatMessage.id}). */
+    messageId: string
+    /** Replied-to author's display name at reply time (snapshot). */
+    displayName: string
+    /** Short plain-text excerpt of the replied-to message body (trimmed, ~200 chars). */
+    snippet: string
+}
+
+/**
  * One live-chat message (SSE `message` event + the `POST /messages` / `GET /recent`
  * payloads). `displayName`/`avatar` are snapshotted onto the message so the UI never
  * has to JOIN a profile to render an author.
@@ -25,6 +40,8 @@ export interface LiveChatMessage {
     text: string
     /** Creation timestamp in epoch milliseconds (matches the presence ZSET `lastSeenEpochMs`). */
     ts: number
+    /** Optional quote of the message this one replies to (ephemeral, echoed as-sent). */
+    replyTo?: LiveChatReplyTo | null
 }
 
 /**

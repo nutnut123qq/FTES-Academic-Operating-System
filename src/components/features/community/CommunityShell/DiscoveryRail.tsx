@@ -137,7 +137,6 @@ export const DiscoveryRail = () => {
 
     return (
         <div className="flex flex-col gap-3">
-            <CommunityLiveChatRail />
             <RailPanel
                 title={t("rail.poll")}
                 seeAllHref="/community/poll"
@@ -145,6 +144,7 @@ export const DiscoveryRail = () => {
             >
                 <QuickPoll />
             </RailPanel>
+            <CommunityLiveChatRail />
         </div>
     )
 }

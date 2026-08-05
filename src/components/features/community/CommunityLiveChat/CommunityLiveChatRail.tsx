@@ -10,8 +10,14 @@ import { OnlinePresence } from "./OnlinePresence"
 /** Tailwind `xl` breakpoint (1280px) — the rail only fetches/streams while it is visible. */
 const XL_QUERY = "(min-width: 1280px)"
 
-/** Fixed chat height so short messages never make the panel jump (spec §5). */
-const CHAT_HEIGHT = "h-[420px]"
+/**
+ * Chat thread height. Fixed so short messages never make the panel jump (spec §5),
+ * but CLAMPED to the viewport so the whole right rail (quick poll + chat) fits on
+ * common laptop heights instead of running the chat box off the bottom of the screen:
+ * shrinks with the viewport (`38vh`) down to a usable 240px floor, capped at the
+ * original 420px on tall screens.
+ */
+const CHAT_HEIGHT = "h-[clamp(240px,38vh,420px)]"
 
 /**
  * Community live-chat rail (xl+) in the right `DiscoveryRail`: the online indicator

@@ -3,13 +3,7 @@
 import React, { useState } from "react"
 import Image from "next/image"
 import { Chip, Typography, cn } from "@heroui/react"
-import {
-    CaretRightIcon,
-    CheckCircleIcon,
-    ClockIcon,
-    StarIcon,
-    UsersIcon,
-} from "@phosphor-icons/react"
+import { CaretRightIcon, CheckCircleIcon, StarIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
 import { SaveButton } from "@/components/blocks/buttons/SaveButton"
@@ -24,14 +18,20 @@ export interface CatalogCourseCardProps extends WithClassNames<undefined> {
 }
 
 /**
- * Shared catalog course card (Coursera/Udemy anatomy), bound to the MOCK
- * `Course` — distinct from `blocks/cards/CourseCard`, which binds the GraphQL
+ * Shared catalog course card (Udemy anatomy), bound to the REST `Course` —
+ * distinct from `blocks/cards/CourseCard`, which binds the GraphQL
  * `CourseEntity` and stays untouched. Used by the category shelves, the
  * filtered browse grid and the category landing page. A hand-rolled bordered
  * panel (the course feature family's idiom — see decision/card.md) whose whole
  * surface links to the course detail; the save toggle swallows its press so it
- * never navigates. Every field degrades gracefully: a missing cover falls back
- * to the branded gradient, a missing rating/price/badge hides only its own row.
+ * never navigates.
+ *
+ * Anatomy top → bottom: an INSET cover, the title, the course code, then ONE
+ * meta row (level · rating · learners). The long-form fields (description,
+ * "what you'll learn", duration) belong to {@link CourseHoverPreview}, not the
+ * card — and the BE list endpoint does not carry them anyway. Every field
+ * degrades gracefully: a missing cover falls back to the branded gradient, a
+ * missing rating/learner count drops only its own segment.
  *
  * @param props - {@link CatalogCourseCardProps}
  */
@@ -39,8 +39,8 @@ export const CatalogCourseCard = ({ course, className }: CatalogCourseCardProps)
     const t = useTranslations()
     // hide the mock cover if it 404s (offline) — the gradient behind it takes over
     const [coverFailed, setCoverFailed] = useState(false)
-    // Already enrolled → the card jumps straight into the learn shell and the
-    // footer swaps its price + "View Course" cue for a "Tiếp tục học" one.
+    // Already enrolled → the card jumps straight into the learn shell and adds a
+    // "Tiếp tục học" cue (the only footer row left).
     const { enrolledSlugs } = useQueryMyEnrolledSlugsSwr()
     const isEnrolled = enrolledSlugs.has(course.id)
 
@@ -90,119 +90,61 @@ export const CatalogCourseCard = ({ course, className }: CatalogCourseCardProps)
                 ) : null}
             </div>
 
-            <div className="flex flex-1 flex-col gap-3 pt-3">
+            <div className="flex flex-1 flex-col gap-1.5 pt-3">
+                {/* title FIRST (what people scan), the course code under it as the
+                    secondary identifier — mirrors the reference card */}
                 <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                        <Typography type="body-xs" color="muted">
-                            {course.code}
-                        </Typography>
-                        <Typography type="body-sm" weight="semibold" className="line-clamp-2">
-                            {course.name}
-                        </Typography>
-                    </div>
+                    <Typography weight="semibold" className="line-clamp-2 min-w-0 flex-1">
+                        {course.name}
+                    </Typography>
                     {/* toggle must not trigger the card navigation (block swallows the press) */}
                     <SaveButton entityType="course" entityId={course.id} />
                 </div>
 
-                {/* rating + learners */}
-                {course.rating != null || (course.enrollmentCount ?? 0) > 0 ? (
-                    <div className="flex flex-wrap items-center gap-3">
-                        {course.rating != null ? (
-                            <div className="flex items-center gap-2">
+                <Typography type="body-xs" color="muted">
+                    {course.code}
+                </Typography>
+
+                {/* ONE meta row — level · ★ rating · learners. ponytail: plain text with
+                    middot separators, not chips: the content column is only ~230px wide
+                    (~215px on mobile) and chip padding would push this onto two lines. */}
+                <div className="flex flex-wrap items-center gap-x-1.5 text-xs text-muted">
+                    <span>{t(`courseSystem.levels.${course.level}`)}</span>
+                    {course.rating != null ? (
+                        <>
+                            <span aria-hidden>·</span>
+                            <span className="inline-flex items-center gap-0.5">
                                 <StarIcon
                                     aria-hidden
                                     focusable="false"
                                     weight="fill"
-                                    className="size-4 text-warning"
+                                    className="size-3.5 text-warning"
                                 />
-                                <Typography type="body-xs" weight="medium">
-                                    {course.rating.toFixed(1)}
-                                </Typography>
-                                {course.ratingCount != null ? (
-                                    <Typography type="body-xs" color="muted">
-                                        {t("courseSystem.browse.ratingCount", { count: course.ratingCount })}
-                                    </Typography>
-                                ) : null}
-                            </div>
-                        ) : null}
-                        {(course.enrollmentCount ?? 0) > 0 ? (
-                            <div className="flex items-center gap-2">
-                                <UsersIcon aria-hidden focusable="false" className="size-4 text-muted" />
-                                <Typography type="body-xs" color="muted">
-                                    {t("courses.learners", { count: course.enrollmentCount ?? 0 })}
-                                </Typography>
-                            </div>
-                        ) : null}
-                    </div>
-                ) : null}
-
-                {/* short description */}
-                {course.description ? (
-                    <Typography type="body-sm" color="muted" className="line-clamp-2">
-                        {course.description}
-                    </Typography>
-                ) : null}
-
-                {/* top 3 value propositions ("what you'll learn") */}
-                {course.learnOutcomes && course.learnOutcomes.length > 0 ? (
-                    <ul className="flex flex-col gap-2">
-                        {course.learnOutcomes.slice(0, 3).map((outcome, index) => (
-                            <li key={index} className="flex items-start gap-2">
-                                <CheckCircleIcon
-                                    aria-hidden
-                                    focusable="false"
-                                    className="mt-0.5 size-4 shrink-0 text-success"
-                                />
-                                <Typography type="body-xs" color="muted" className="line-clamp-1">
-                                    {outcome}
-                                </Typography>
-                            </li>
-                        ))}
-                    </ul>
-                ) : null}
-
-                {/* meta: level + duration */}
-                <div className="flex flex-wrap items-center gap-2">
-                    <Chip size="sm" variant="soft" color="accent">
-                        {t(`courseSystem.levels.${course.level}`)}
-                    </Chip>
-                    {course.durationHours != null || course.credits > 0 ? (
+                                {course.rating.toFixed(1)}
+                            </span>
+                        </>
+                    ) : null}
+                    {(course.enrollmentCount ?? 0) > 0 ? (
                         <>
-                            <ClockIcon aria-hidden focusable="false" className="size-4 text-muted" />
-                            <Typography type="body-xs" color="muted">
-                                {course.durationHours != null
-                                    ? t("courseSystem.browse.hours", { count: course.durationHours })
-                                    : t("courseSystem.detail.credits", { count: course.credits })}
-                            </Typography>
+                            <span aria-hidden>·</span>
+                            <span>{t("courses.learners", { count: course.enrollmentCount ?? 0 })}</span>
                         </>
                     ) : null}
                 </div>
 
-                {/* footer: a single CTA cue — enrolled → "Tiếp tục học", else "View Course".
-                    No price on the card (it lives on the detail page); the whole card is the
-                    link, so the caret just slides on hover. */}
-                <div className="mt-auto flex items-center justify-end gap-2 border-t border-separator pt-3">
-                    {isEnrolled ? (
-                        <span className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-success">
-                            <CheckCircleIcon aria-hidden focusable="false" weight="fill" className="size-4" />
-                            {t("courses.continueLearning")}
-                            <CaretRightIcon
-                                aria-hidden
-                                focusable="false"
-                                className="size-4 transition-transform group-hover:translate-x-0.5"
-                            />
-                        </span>
-                    ) : (
-                        <span className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-accent">
-                            {t("courses.viewCourse")}
-                            <CaretRightIcon
-                                aria-hidden
-                                focusable="false"
-                                className="size-4 transition-transform group-hover:translate-x-0.5"
-                            />
-                        </span>
-                    )}
-                </div>
+                {/* enrolled → the one cue worth a row of its own; otherwise nothing (the
+                    whole card is already the link, and there is no price on the card) */}
+                {isEnrolled ? (
+                    <span className="mt-auto inline-flex items-center gap-1 pt-1.5 text-sm font-medium text-success">
+                        <CheckCircleIcon aria-hidden focusable="false" weight="fill" className="size-4" />
+                        {t("courses.continueLearning")}
+                        <CaretRightIcon
+                            aria-hidden
+                            focusable="false"
+                            className="size-4 transition-transform group-hover:translate-x-0.5"
+                        />
+                    </span>
+                ) : null}
             </div>
         </Link>
     )

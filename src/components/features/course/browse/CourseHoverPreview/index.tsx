@@ -53,17 +53,21 @@ const parseIncludes = (infoCourse: string | null | undefined): Array<string> => 
     }
 }
 /**
- * Grace period, on leaving the card OR the panel, before the panel closes — long
- * enough for the pointer to travel across the gap from the card into the panel
- * (and back) without it closing. Re-entering either surface cancels a pending
- * close, so the panel NEVER closes while the pointer is still over the card or
- * the panel — it stays open as long as the viewer keeps hovering, and closes
- * only once the pointer has left BOTH. There is deliberately no "show for N ms
- * then hide" timer: open is not time-boxed.
+ * Close delay = 0: the panel closes as soon as the pointer leaves it (and the card) —
+ * NO lingering grace period. We still defer the close by one macrotask (a 0ms timeout
+ * that a re-enter cancels) rather than closing synchronously, ONLY so moving the pointer
+ * from the card onto the FLUSH panel ({@link GAP_PX} = 0) fires the panel's pointer-enter
+ * and cancels the just-scheduled close before it runs — a synchronous close would unmount
+ * the panel between the card's leave and the panel's enter, making the panel (and its
+ * enroll / save / cart buttons) unreachable. Open is never time-boxed.
  */
-const CLOSE_DELAY_MS = 150
-/** Gap between the card edge and the panel. */
-const GAP_PX = 12
+const CLOSE_DELAY_MS = 0
+/**
+ * No gap between card edge and panel: the panel sits FLUSH so there is no dead zone the
+ * pointer must cross. With a gap, an instant close would fire while the pointer is over
+ * the empty gap (neither card nor panel) before it reaches the panel.
+ */
+const GAP_PX = 0
 /** Minimum distance the panel keeps from the viewport edges. */
 const VIEWPORT_MARGIN_PX = 16
 

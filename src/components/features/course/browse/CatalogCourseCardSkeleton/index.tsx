@@ -17,8 +17,13 @@ export const CatalogCourseCardSkeleton = ({ className }: WithClassNames<undefine
             <Skeleton className="h-5 w-3/5 rounded-large" />
             {/* course code */}
             <Skeleton className="h-3 w-20 rounded-large" />
-            {/* meta row: level chip · rating · learners */}
-            <Skeleton className="h-5 w-40 rounded-large" />
+            {/* meta row: level chip · lessons · rating · learners */}
+            <Skeleton className="h-5 w-44 rounded-large" />
+            {/* description (2 lines) */}
+            <Skeleton className="h-3 w-full rounded-large" />
+            <Skeleton className="h-3 w-4/5 rounded-large" />
+            {/* mentor row: avatar + name */}
+            <Skeleton className="h-5 w-28 rounded-large" />
             {/* CTA footer */}
             <div className="mt-1 flex justify-end border-t border-separator pt-2">
                 <Skeleton className="h-4 w-24 rounded-large" />

@@ -54,6 +54,14 @@ export interface CourseSummary {
     categoryId: string
     /** Total number of ratings this course has received. */
     ratingCount: number
+    /** Instructor/mentor display name; null when the course has no resolvable mentor. */
+    mentorName?: string | null
+    /** Instructor/mentor avatar URL; null when absent. */
+    mentorAvatarUrl?: string | null
+    /** Number of lessons in the course (0 when none). */
+    totalLessons?: number
+    /** Short course description/summary; null when absent. */
+    description?: string | null
 }
 
 /** Full public course detail. */

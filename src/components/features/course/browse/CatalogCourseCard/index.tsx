@@ -3,7 +3,7 @@
 import React, { useState } from "react"
 import Image from "next/image"
 import { Chip, Typography, cn } from "@heroui/react"
-import { CaretRightIcon, CheckCircleIcon, StarIcon } from "@phosphor-icons/react"
+import { BookOpenIcon, CaretRightIcon, CheckCircleIcon, StarIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
 import { SaveButton } from "@/components/blocks/buttons/SaveButton"
@@ -26,13 +26,13 @@ export interface CatalogCourseCardProps extends WithClassNames<undefined> {
  * surface links to the course detail; the save toggle swallows its press so it
  * never navigates.
  *
- * Anatomy top → bottom: an INSET cover, the title, the course code, ONE meta row
- * (level chip · rating · learners) and the CTA footer. The long-form fields
- * (description, "what you'll learn", duration) belong to
- * {@link CourseHoverPreview}, not the card — and the BE list endpoint does not
- * carry them anyway. Every field
- * degrades gracefully: a missing cover falls back to the branded gradient, a
- * missing rating/learner count drops only its own segment.
+ * Anatomy top → bottom: an INSET cover, the title, the course code, a meta row
+ * (level chip · N lessons · rating + count · learners), a 2-line description, the
+ * mentor (avatar + name) and the CTA footer. Every field degrades gracefully: a
+ * missing cover falls back to the branded gradient, and each meta segment /
+ * description / mentor row drops out entirely when the BE summary omits it (so a
+ * course with no resolvable mentor or no description simply shows fewer rows). The
+ * deeper "what you'll learn" bullets still live in {@link CourseHoverPreview}.
  *
  * @param props - {@link CatalogCourseCardProps}
  */
@@ -106,31 +106,74 @@ export const CatalogCourseCard = ({ course, className }: CatalogCourseCardProps)
                     {course.code}
                 </Typography>
 
-                {/* ONE meta row — [level chip] ★ rating · learners. The chip keeps its
-                    own bounds, so no separator before the rating; the middot only
-                    splits the two plain-text segments. */}
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
+                {/* meta row — [level chip] · N bài · ★ rating (count) · learners. The
+                    chip keeps its own bounds (no dot after it); middots split the
+                    plain-text segments, each prepended only when a segment precedes it. */}
+                <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted">
                     <Chip size="sm" variant="soft" color="accent">
                         {t(`courseSystem.levels.${course.level}`)}
                     </Chip>
-                    {course.rating != null ? (
+                    {course.lessons > 0 ? (
                         <span className="inline-flex items-center gap-0.5">
-                            <StarIcon
-                                aria-hidden
-                                focusable="false"
-                                weight="fill"
-                                className="size-3.5 text-warning"
-                            />
-                            {course.rating.toFixed(1)}
+                            <BookOpenIcon aria-hidden focusable="false" className="size-3.5" />
+                            {t("courseSystem.catalog.lessonsCount", { count: course.lessons })}
                         </span>
+                    ) : null}
+                    {course.rating != null ? (
+                        <>
+                            {course.lessons > 0 ? <span aria-hidden>·</span> : null}
+                            <span className="inline-flex items-center gap-0.5">
+                                <StarIcon
+                                    aria-hidden
+                                    focusable="false"
+                                    weight="fill"
+                                    className="size-3.5 text-warning"
+                                />
+                                {course.rating.toFixed(1)}
+                                {course.ratingCount != null ? (
+                                    <span>({course.ratingCount})</span>
+                                ) : null}
+                            </span>
+                        </>
                     ) : null}
                     {(course.enrollmentCount ?? 0) > 0 ? (
                         <>
-                            {course.rating != null ? <span aria-hidden>·</span> : null}
+                            {course.lessons > 0 || course.rating != null ? (
+                                <span aria-hidden>·</span>
+                            ) : null}
                             <span>{t("courses.learners", { count: course.enrollmentCount ?? 0 })}</span>
                         </>
                     ) : null}
                 </div>
+
+                {/* short description — 2 lines, only when the BE summary carries one */}
+                {course.description ? (
+                    <Typography type="body-xs" color="muted" className="line-clamp-2">
+                        {course.description}
+                    </Typography>
+                ) : null}
+
+                {/* mentor — avatar (or initial fallback) + name, only when present */}
+                {course.mentorName ? (
+                    <div className="flex items-center gap-1.5">
+                        {course.mentorAvatarUrl ? (
+                            // plain <img> (avatar delivery URL) — no next/image optimizer config,
+                            // mirrors PostMediaGrid's remote-image handling.
+                            <img
+                                src={course.mentorAvatarUrl}
+                                alt=""
+                                className="size-5 shrink-0 rounded-full object-cover"
+                            />
+                        ) : (
+                            <div className="flex size-5 shrink-0 items-center justify-center rounded-full bg-accent/15 text-[10px] font-semibold text-accent">
+                                {course.mentorName.charAt(0).toUpperCase()}
+                            </div>
+                        )}
+                        <Typography type="body-xs" color="muted" truncate>
+                            {course.mentorName}
+                        </Typography>
+                    </div>
+                ) : null}
 
                 {/* footer: one CTA cue — enrolled → "Tiếp tục học", else "Xem khóa học".
                     The whole card is the link, so the caret just slides on hover. */}

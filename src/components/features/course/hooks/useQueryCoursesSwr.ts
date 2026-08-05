@@ -36,7 +36,11 @@ export interface Course {
     badge?: CourseBadge
     /** Sale mode — "LEGACY" (whole-course price) or "PACKAGE" (sold via packages/combo). */
     saleMode?: string
-    /** Short summary shown by the hover preview; assumed on the future BE list endpoint. */
+    /** Instructor/mentor display name; absent → the card hides its mentor row. */
+    mentorName?: string
+    /** Instructor/mentor avatar URL; absent → the mentor row shows an initial fallback. */
+    mentorAvatarUrl?: string
+    /** Short summary shown by the hover preview + the card; from the BE list endpoint. */
     description?: string
     /** "What you'll learn" bullets for the hover preview; assumed on the future BE list endpoint. */
     learnOutcomes?: Array<string>
@@ -69,10 +73,11 @@ export const mapCourseLevel = (level: string | null | undefined): CourseLevel =>
 }
 
 /**
- * Adapts a BE {@link CourseSummary} into the catalog card {@link Course}. Fields
- * the BE summary lacks (credits, lesson count, ratingCount, description,
- * learnOutcomes) stay `undefined` so each card row degrades gracefully. The
- * routing id is the `slugName` because the detail endpoint keys on it.
+ * Adapts a BE {@link CourseSummary} into the catalog card {@link Course}. The
+ * summary now carries mentor, lesson count, rating count and description; the
+ * fields it still lacks (credits, durationHours, learnOutcomes) stay `undefined`
+ * so each card row degrades gracefully. The routing id is the `slugName` because
+ * the detail endpoint keys on it.
  *
  * @param summary - One BE course summary row.
  * @returns The catalog card model.
@@ -93,17 +98,19 @@ const toCourse = (summary: CourseSummary): Course => {
         name: summary.title,
         level: mapCourseLevel(summary.level),
         credits: 0,
-        lessons: 0,
+        lessons: summary.totalLessons ?? 0,
         category: summary.categoryId,
         rating: Number.isFinite(star) && star > 0 ? star : undefined,
-        ratingCount: undefined,
+        ratingCount: summary.ratingCount || undefined,
         enrollmentCount: summary.totalUser ?? undefined,
         durationHours: undefined,
         priceVnd,
         coverUrl: summary.imageHeader || undefined,
         badge: undefined,
         saleMode: summary.saleMode,
-        description: undefined,
+        mentorName: summary.mentorName || undefined,
+        mentorAvatarUrl: summary.mentorAvatarUrl || undefined,
+        description: summary.description || undefined,
         learnOutcomes: undefined,
         updatedAt: undefined,
     }

@@ -5,8 +5,8 @@ import type { WithClassNames } from "@/modules/types/base/class-name"
 
 /**
  * Loading placeholder for one {@link CatalogCourseCard} — mirrors the real box
- * (inset 16:9 cover, 2-line title, course code, one meta row) per the house
- * skeleton rule.
+ * (inset 16:9 cover, 2-line title, course code, one meta row, CTA footer) per
+ * the house skeleton rule.
  */
 export const CatalogCourseCardSkeleton = ({ className }: WithClassNames<undefined>) => (
     <div className={cn("flex flex-col rounded-lg border border-separator p-3", className)}>
@@ -17,8 +17,12 @@ export const CatalogCourseCardSkeleton = ({ className }: WithClassNames<undefine
             <Skeleton className="h-5 w-3/5 rounded-large" />
             {/* course code */}
             <Skeleton className="h-3 w-20 rounded-large" />
-            {/* meta row: level · rating · learners */}
-            <Skeleton className="h-3 w-40 rounded-large" />
+            {/* meta row: level chip · rating · learners */}
+            <Skeleton className="h-5 w-40 rounded-large" />
+            {/* CTA footer */}
+            <div className="mt-1 flex justify-end border-t border-separator pt-2">
+                <Skeleton className="h-4 w-24 rounded-large" />
+            </div>
         </div>
     </div>
 )

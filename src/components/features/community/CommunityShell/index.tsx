@@ -147,8 +147,11 @@ export const CommunityShell = ({ children }: CommunityShellProps) => {
                 </div>
                 <div className="px-4 py-3">{children}</div>
             </div>
-            {/* right discovery rail — live chat · trending · reputation · quick poll (xl+) */}
-            <aside className="hidden pt-3 xl:sticky xl:top-20 xl:block xl:self-start">
+            {/* right discovery rail — live chat · trending · reputation · quick poll (xl+).
+                Sticky below the h-16 header; capped to the viewport height with its OWN
+                scrollbar so a tall rail (quick poll + chat) never runs off the bottom of
+                the screen unreachable — it scrolls internally instead. */}
+            <aside className="hidden pt-3 xl:sticky xl:top-20 xl:block xl:max-h-[calc(100vh-6rem)] xl:self-start xl:overflow-y-auto xl:pb-3">
                 <DiscoveryRail />
             </aside>
             {/* live-chat realtime: ONE SSE connection for the community surface (rail xl+ /

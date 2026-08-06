@@ -8,10 +8,10 @@ import type { Course } from "../../hooks/useQueryCoursesSwr"
  * `hover-preview-meta-and-timeout`, Fix 4).
  *
  * The panel must open on hover after a short delay and then STAY open the whole
- * time the pointer is over the card — it must NOT close on any fixed display
- * timer. It closes only after the pointer leaves, and only past a short grace
- * that a re-enter cancels. These tests drive the wrapper's pointer events with
- * fake timers and assert the panel never self-dismisses while hovered.
+ * time the pointer is over the card OR the panel — it must NOT close on any
+ * timer, display OR grace. Closing is driven purely by WHERE the pointer went
+ * (`relatedTarget`): still inside the card/panel → stay open; outside both (or
+ * null, off the window) → close immediately, no lingering.
  *
  * `t` echoes the message key so assertions key off ids. `createPortal` is
  * neutralised to render the panel inline (jsdom-free positioning is irrelevant
@@ -19,7 +19,6 @@ import type { Course } from "../../hooks/useQueryCoursesSwr"
  */
 
 const OPEN_DELAY_MS = 300
-const CLOSE_DELAY_MS = 150
 
 vi.mock("next-intl", () => ({
     useTranslations: () => (key: string, params?: Record<string, unknown>) =>
@@ -94,12 +93,18 @@ const renderPreview = () =>
         </CourseHoverPreview>,
     )
 
-/** Fires the pointer events React synthesises onPointerEnter/Leave from. */
+/**
+ * Fires the pointer events React synthesises onPointerEnter/Leave from.
+ * `relatedTarget` is what the close path reads — where the pointer went — so
+ * `leave` defaults to leaving for good (the body) and takes the destination
+ * when the pointer is only crossing onto the panel.
+ */
 const enter = (el: Element) => fireEvent.pointerOver(el)
-const leave = (el: Element) => fireEvent.pointerOut(el, { relatedTarget: document.body })
+const leave = (el: Element, to: Node = document.body) =>
+    fireEvent.pointerOut(el, { relatedTarget: to })
 const advance = (ms: number) => act(() => { vi.advanceTimersByTime(ms) })
 
-describe("CourseHoverPreview — opens on hover, never closes on a timer while hovered", () => {
+describe("CourseHoverPreview — opens on hover, closes on leave, never on a timer", () => {
     beforeEach(() => vi.useFakeTimers())
     afterEach(() => {
         vi.runOnlyPendingTimers()
@@ -130,7 +135,7 @@ describe("CourseHoverPreview — opens on hover, never closes on a timer while h
         expect(screen.getByText("React Testing Panel")).toBeTruthy()
     })
 
-    it("closes only after the pointer leaves, past the grace delay", () => {
+    it("closes the instant the pointer leaves for something outside — no grace", () => {
         const { container } = renderPreview()
         const wrapper = container.firstElementChild as Element
 
@@ -138,26 +143,31 @@ describe("CourseHoverPreview — opens on hover, never closes on a timer while h
         advance(OPEN_DELAY_MS)
         expect(screen.getByText("React Testing Panel")).toBeTruthy()
 
+        // gone on the leave itself: no timer to advance, nothing lingers
         leave(wrapper)
-        // still open during the grace window
-        advance(CLOSE_DELAY_MS - 50)
-        expect(screen.getByText("React Testing Panel")).toBeTruthy()
-        // closed once the grace elapses
-        advance(60)
         expect(screen.queryByText("React Testing Panel")).toBeNull()
     })
 
-    it("re-entering within the grace cancels the pending close", () => {
+    it("crossing between the panel and the card keeps it open (relatedTarget still inside)", () => {
         const { container } = renderPreview()
         const wrapper = container.firstElementChild as Element
 
         enter(wrapper)
         advance(OPEN_DELAY_MS)
-        leave(wrapper)
-        advance(CLOSE_DELAY_MS - 60)
-        // pointer comes back before the grace elapses → close is cancelled
-        enter(wrapper)
-        advance(CLOSE_DELAY_MS + 100)
+        // [card, panel] — the panel is portaled in production, inline under the
+        // mocked `createPortal` here; either way it carries the same leave handler.
+        const card = wrapper.children[0]
+        const panel = wrapper.children[1]
+
+        // pointer moves off the panel but back ONTO the card → never left the region
+        leave(panel, card)
         expect(screen.getByText("React Testing Panel")).toBeTruthy()
+        // and it stays there: nothing is pending to dismiss it later
+        advance(30_000)
+        expect(screen.getByText("React Testing Panel")).toBeTruthy()
+
+        // leaving the panel for something outside both does close it
+        leave(panel)
+        expect(screen.queryByText("React Testing Panel")).toBeNull()
     })
 })

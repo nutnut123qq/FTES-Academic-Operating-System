@@ -47,7 +47,11 @@ vi.mock("@/modules/api/rest/ai", () => ({
     submitOcrJob: vi.fn(),
 }))
 
-import { classifySubjectAiJobError, useSubjectAiJob } from "./useSubjectAiJob"
+import {
+    classifySubjectAiJobError,
+    classifySubjectAiJobFailure,
+    useSubjectAiJob,
+} from "./useSubjectAiJob"
 import { mapSummaryJobResult } from "./useMutateSubjectAiSummarySwr"
 import { mapQuizJobResult } from "./useMutateSubjectAiQuizSwr"
 import { mapFlashcardsJobResult } from "./useMutateSubjectAiFlashcardsSwr"
@@ -124,6 +128,21 @@ describe("useSubjectAiJob — polling lifecycle", () => {
         expect(failed.result.current.isBusy).toBe(false)
     })
 
+    it("reads the domain code off a FAILED job instead of showing one generic message", async () => {
+        // A lesson too short to summarise is actionable ("pick another lesson"), so it must
+        // not land on the same message as "the provider died".
+        swrData = jobView({
+            status: "FAILED",
+            errorCode: "AI_CONTEXT_INSUFFICIENT",
+            errorMessage: "Lesson content is too short",
+        })
+        const { result } = renderHook(() => useSubjectAiJob())
+        await act(async () => {
+            await result.current.run(async () => ({ jobId: "job-9", status: "PENDING" }))
+        })
+        expect(result.current.errorKey).toBe("insufficientContext")
+    })
+
     it("surfaces a rejected submit as its own message key", async () => {
         const { result } = renderHook(() => useSubjectAiJob())
         await act(async () => {
@@ -151,6 +170,20 @@ describe("classifySubjectAiJobError", () => {
         )
         expect(classifySubjectAiJobError(new RestError("x", 500))).toBe("failed")
         expect(classifySubjectAiJobError(new Error("network"))).toBe("failed")
+    })
+})
+
+describe("classifySubjectAiJobFailure", () => {
+    it("maps a job's domain code to its message key", () => {
+        expect(classifySubjectAiJobFailure("AI_CONTEXT_INSUFFICIENT")).toBe("insufficientContext")
+        expect(classifySubjectAiJobFailure("AI_QUOTA_EXCEEDED")).toBe("quota")
+    })
+
+    it("falls back to the generic message for an absent or unknown code", () => {
+        // AI_JOB_ERROR is what the BE still sends when a failure carries no domain code.
+        expect(classifySubjectAiJobFailure("AI_JOB_ERROR")).toBe("failed")
+        expect(classifySubjectAiJobFailure(undefined)).toBe("failed")
+        expect(classifySubjectAiJobFailure("")).toBe("failed")
     })
 })
 

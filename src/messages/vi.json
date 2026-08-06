@@ -5597,6 +5597,7 @@
         "forbidden": "Bạn chưa có quyền dùng AI với tài liệu này.",
         "notFound": "Không tìm thấy tài liệu đã chọn.",
         "invalid": "Tài liệu đã chọn chưa dùng được cho AI.",
+        "insufficientContext": "Bài này chưa đủ nội dung để AI xử lý. Hãy chọn bài dài hơn hoặc bổ sung nội dung cho bài.",
         "failed": "AI xử lý thất bại. Vui lòng thử lại.",
         "model": "Mô hình: {model}"
       },

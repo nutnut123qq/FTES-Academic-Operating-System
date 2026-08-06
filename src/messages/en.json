@@ -5597,6 +5597,7 @@
         "forbidden": "You don't have access to run AI on this material.",
         "notFound": "The selected material was not found.",
         "invalid": "The selected material can't be used by the AI yet.",
+        "insufficientContext": "This lesson doesn't have enough content for the AI to work with. Pick a longer lesson, or add more content to it.",
         "failed": "The AI job failed. Please try again.",
         "model": "Model: {model}"
       },

@@ -95,8 +95,8 @@ const renderPreview = () =>
     )
 
 /** Fires the pointer events React synthesises onPointerEnter/Leave from. */
-const enter = (el: Element) => act(() => { fireEvent.pointerOver(el) })
-const leave = (el: Element) => act(() => { fireEvent.pointerOut(el, { relatedTarget: document.body }) })
+const enter = (el: Element) => fireEvent.pointerOver(el)
+const leave = (el: Element) => fireEvent.pointerOut(el, { relatedTarget: document.body })
 const advance = (ms: number) => act(() => { vi.advanceTimersByTime(ms) })
 
 describe("CourseHoverPreview — opens on hover, never closes on a timer while hovered", () => {
@@ -139,7 +139,6 @@ describe("CourseHoverPreview — opens on hover, never closes on a timer while h
         expect(screen.getByText("React Testing Panel")).toBeTruthy()
 
         leave(wrapper)
-        advance(0)
         // still open during the grace window
         advance(CLOSE_DELAY_MS - 50)
         expect(screen.getByText("React Testing Panel")).toBeTruthy()
@@ -155,11 +154,9 @@ describe("CourseHoverPreview — opens on hover, never closes on a timer while h
         enter(wrapper)
         advance(OPEN_DELAY_MS)
         leave(wrapper)
-        advance(0)
         advance(CLOSE_DELAY_MS - 60)
         // pointer comes back before the grace elapses → close is cancelled
         enter(wrapper)
-        advance(0)
         advance(CLOSE_DELAY_MS + 100)
         expect(screen.getByText("React Testing Panel")).toBeTruthy()
     })

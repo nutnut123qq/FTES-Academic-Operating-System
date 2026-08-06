@@ -165,6 +165,7 @@ export const CourseHoverPreview = ({ course, children, className }: CourseHoverP
     const wrapperRef = useRef<HTMLDivElement>(null)
     const panelRef = useRef<HTMLDivElement>(null)
     const openTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+    const closeTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
     const [open, setOpen] = useState(false)
     /** Fixed-position coordinates + the card-matched height cap; `null` until the first post-open measure. */
     const [position, setPosition] = useState<{ left: number, top: number, arrowTop: number, side: "left" | "right", maxHeight: number } | null>(null)
@@ -172,6 +173,7 @@ export const CourseHoverPreview = ({ course, children, className }: CourseHoverP
     // Bound to BOTH the card wrapper and the portaled panel. Opening is delayed a
     // touch so grazing the grid doesn't flash popups.
     const onEnter = useCallback(() => {
+        clearTimeout(closeTimer.current)
         if (open) return
         clearTimeout(openTimer.current)
         openTimer.current = setTimeout(() => setOpen(true), OPEN_DELAY_MS)
@@ -190,13 +192,17 @@ export const CourseHoverPreview = ({ course, children, className }: CourseHoverP
         if (next && (wrapperRef.current?.contains(next) || panelRef.current?.contains(next))) {
             return
         }
-        setOpen(false)
-        setPosition(null)
+        clearTimeout(closeTimer.current)
+        closeTimer.current = setTimeout(() => {
+            setOpen(false)
+            setPosition(null)
+        }, 150)
     }, [])
 
     // the open timer must not fire after unmount (route change while hovering)
     useEffect(() => () => {
         clearTimeout(openTimer.current)
+        clearTimeout(closeTimer.current)
     }, [])
 
     // measure once per open: pick the side with room, cap the panel at the

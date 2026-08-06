@@ -118,6 +118,9 @@ describe("community search popover — wiring to the feed", () => {
 
     it("toggling Oldest re-sorts the list (fires communitySearch with sort ASC)", async () => {
         renderFeed()
+        const input = screen.getByLabelText("search") as HTMLInputElement
+        fireEvent.change(input, { target: { value: "kafka" } })
+        await act(async () => { vi.advanceTimersByTime(350) })
         fireEvent.click(screen.getByText("search.sortOldest"))
         await act(async () => { vi.advanceTimersByTime(350) })
         await waitFor(() => expect(queryCommunitySearch).toHaveBeenCalled())

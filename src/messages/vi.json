@@ -658,21 +658,6 @@
   "contentActions": {
     "title": "Hành động"
   },
-  "lessonRail": {
-    "flashcards": {
-      "title": "Ôn lại bài này",
-      "count": "{decks} bộ · {cards} thẻ",
-      "review": "Ôn tập"
-    },
-    "challenges": {
-      "title": "Luyện tập bài này",
-      "count": "{count} thử thách",
-      "practice": "Làm thử thách"
-    },
-    "documents": {
-      "title": "Tài liệu cho lesson này"
-    }
-  },
   "courses": {
     "featuredTitle": "Khóa học tiêu biểu",
     "viewCourse": "Xem khóa học",

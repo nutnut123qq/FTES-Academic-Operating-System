@@ -658,18 +658,6 @@
   "contentActions": {
     "title": "Actions"
   },
-  "lessonRail": {
-    "flashcards": {
-      "title": "Review this lesson",
-      "count": "{decks} decks · {cards} cards",
-      "review": "Review"
-    },
-    "challenges": {
-      "title": "Practice this lesson",
-      "count": "{count} challenges",
-      "practice": "Start challenges"
-    }
-  },
   "courses": {
     "featuredTitle": "Featured courses",
     "viewCourse": "View Course",

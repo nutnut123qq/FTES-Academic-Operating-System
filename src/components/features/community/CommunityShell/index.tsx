@@ -32,6 +32,7 @@ const TABS: Array<{ key: string; segment: string }> = [
 /** ⋯ menu entries: i18n key under `communityHub.menu.*` + absolute href. */
 const MENU_ITEMS: Array<{ key: string; href: string }> = [
     { key: "groups", href: "/groups" },
+    { key: "events", href: "/events" },
     { key: "saved", href: "/community/saved" },
     { key: "reputation", href: "/community/reputation" },
     { key: "poll", href: "/community/poll" },
@@ -46,9 +47,9 @@ const MENU_ITEMS: Array<{ key: string; href: string }> = [
  * strip (`ExtendedTabs` underline — For You / Following / Campus / Trending) with
  * a ⋯ menu (below `xl` only; desktop uses the nav rail) for the buried actions.
  * Content is a single centered reading column capped at 620px; from `xl` two
- * sticky rails flank it — NavRail (shortcuts) left, DiscoveryRail (trending · uy
- * tín · quick poll) right — both absent below `xl`. ponytail: pure layout
- * chrome; each rail + the routed children own their own live data.
+ * sticky rails flank it — NavRail (shortcuts) left, DiscoveryRail (bình chọn ·
+ * sự kiện sắp tới · live chat) right — both absent below `xl`. ponytail: pure
+ * layout chrome; each rail + the routed children own their own live data.
  */
 export const CommunityShell = ({ children }: CommunityShellProps) => {
     const t = useTranslations("communityHub")
@@ -147,10 +148,10 @@ export const CommunityShell = ({ children }: CommunityShellProps) => {
                 </div>
                 <div className="px-4 py-3">{children}</div>
             </div>
-            {/* right discovery rail — live chat · trending · reputation · quick poll (xl+).
+            {/* right discovery rail — quick poll · sự kiện sắp tới · live chat (xl+).
                 Sticky below the h-16 header; capped to the viewport height with its OWN
-                scrollbar so a tall rail (quick poll + chat) never runs off the bottom of
-                the screen unreachable — it scrolls internally instead. */}
+                scrollbar so a tall rail (quick poll + events + chat) never runs off the
+                bottom of the screen unreachable — it scrolls internally instead. */}
             <aside className="hidden pt-3 xl:sticky xl:top-20 xl:block xl:max-h-[calc(100vh-6rem)] xl:self-start xl:overflow-y-auto xl:pb-3">
                 <DiscoveryRail />
             </aside>

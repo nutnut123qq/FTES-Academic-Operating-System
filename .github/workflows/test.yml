@@ -1,0 +1,21 @@
+name: test
+
+# `npm run test` is NOT part of `next build`, so the Vercel check stays green on a
+# red suite — that is how PR #129's five failures and three collect-time deaths
+# survived for days. This job is the gate that actually reads them.
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+jobs:
+  vitest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run test

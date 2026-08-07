@@ -24,6 +24,13 @@ vi.mock("next/navigation", () => ({
     useParams: () => ({ groupId: "group-1" }),
 }))
 
+// The announcement body renders through MarkdownContent, which drags in the whole
+// markdown stack (shiki, mermaid, HeroUI Table/Link). Nothing here asserts on markdown
+// rendering — echo the raw body so text assertions still work.
+vi.mock("@/components/reuseable/MarkdownContent", () => ({
+    MarkdownContent: ({ markdown }: { markdown?: string }) => <div>{markdown}</div>,
+}))
+
 // HeroUI primitives → trivial renderers that keep aria-label + press wiring.
 vi.mock("@heroui/react", () => ({
     Button: ({

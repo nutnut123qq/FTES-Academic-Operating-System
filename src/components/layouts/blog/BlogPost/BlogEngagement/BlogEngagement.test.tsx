@@ -80,6 +80,28 @@ vi.mock("@/components/features/identity", () => ({
         <span data-testid="user-link">{username}</span>
     ),
 }))
+// The composer is a rich-text editor (its own toolbar + icon set); a plain textarea
+// keeps the placeholder and the value/onChange contract the tests exercise.
+vi.mock("@/components/reuseable/RichTextEditor", () => ({
+    RichTextEditor: ({ value, onChange, placeholder }: {
+        value: string
+        onChange: (markdown: string) => void
+        placeholder?: string
+    }) => (
+        <textarea
+            placeholder={placeholder}
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+        />
+    ),
+}))
+
+// Comment bodies render through MarkdownContent, which drags in the whole markdown
+// stack (shiki, mermaid, HeroUI Table/Link). Nothing here asserts on markdown rendering
+// — echo the raw text so the comment-body assertions still work.
+vi.mock("@/components/reuseable/MarkdownContent", () => ({
+    MarkdownContent: ({ markdown }: { markdown?: string }) => <div>{markdown}</div>,
+}))
 vi.mock("@/components/reuseable/UserAvatar", () => ({
     UserAvatar: ({ seed }: { seed?: string | null }) => <span data-testid="user-avatar">{seed}</span>,
 }))

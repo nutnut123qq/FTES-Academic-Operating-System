@@ -17,10 +17,15 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      # `npm install`, NOT `npm ci`: package-lock.json is generated on Windows and
-      # npm omits the other platforms' optional binaries from it (npm/cli#4828), so
-      # `npm ci` on linux lands without @rollup/rollup-linux-x64-gnu and vitest dies
-      # at startup. `install` resolves the host's binary. Lockfile drift is caught by
-      # the Vercel build, not here.
-      - run: npm install --no-audit --no-fund
+      - run: npm ci
+      # package-lock.json is generated on Windows and carries ONLY the win32 native
+      # binaries — npm never recorded the linux ones (npm/cli#4828), so neither
+      # `npm ci` nor `npm install` can place them here and vite/rollup dies at
+      # startup. Add them out-of-band at the exact versions npm ci just pinned, so
+      # this keeps working across upgrades without touching the shared lockfile.
+      - name: Add the linux native binaries the Windows lockfile omits
+        run: |
+          npm install --no-save --no-audit --no-fund \
+            "@rollup/rollup-linux-x64-gnu@$(node -p 'require("rollup/package.json").version')" \
+            "@esbuild/linux-x64@$(node -p 'require("esbuild/package.json").version')"
       - run: npm run test

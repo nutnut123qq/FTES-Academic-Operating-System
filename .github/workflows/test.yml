@@ -12,10 +12,15 @@ jobs:
   vitest:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      # `npm install`, NOT `npm ci`: package-lock.json is generated on Windows and
+      # npm omits the other platforms' optional binaries from it (npm/cli#4828), so
+      # `npm ci` on linux lands without @rollup/rollup-linux-x64-gnu and vitest dies
+      # at startup. `install` resolves the host's binary. Lockfile drift is caught by
+      # the Vercel build, not here.
+      - run: npm install --no-audit --no-fund
       - run: npm run test

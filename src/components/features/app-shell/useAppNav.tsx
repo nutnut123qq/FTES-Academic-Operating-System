@@ -7,7 +7,6 @@ import {
     ChatCircleIcon,
     SquaresFourIcon,
     NewspaperIcon,
-    TrophyIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { usePathname } from "@/i18n/navigation"
@@ -20,7 +19,7 @@ import { pathConfig } from "@/resources/path"
  * reached from inside each module's own landing page.
  */
 export interface AppNavModule {
-    key: "home" | "workplace" | "course" | "community" | "blog" | "quests"
+    key: "home" | "workplace" | "course" | "community" | "blog"
     label: string
     icon: React.ReactNode
     /** Destination when the module label is clicked (its landing route). */
@@ -31,7 +30,7 @@ export interface AppNavModule {
 
 /**
  * The single source of the app's primary navigation — the top-level modules
- * (Home · Workplace · Course · Community · Blog · Quests), each a PLAIN LABEL LINK to
+ * (Home · Workplace · Course · Community · Blog), each a PLAIN LABEL LINK to
  * its landing route. Consumed by the desktop {@link "../navbar/Navbar/HeaderNav"}
  * and the Navbar mobile drawer so the two surfaces never drift. The header does
  * NOT render sub-menus; nested features (resources, challenges, leaderboard,
@@ -80,7 +79,6 @@ export const useAppNav = (): Array<AppNavModule> => {
             makeModule("course", p.course().build(), <GraduationCapIcon className="size-5" />),
             makeModule("community", p.community().build(), <ChatCircleIcon className="size-5" />),
             makeModule("blog", p.blog().build(), <NewspaperIcon className="size-5" />),
-            makeModule("quests", p.quests().build(), <TrophyIcon className="size-5" />),
         ]
     }, [pathname, t])
 }

@@ -8,4 +8,5 @@
       2.167 KB → 825 KB. Chụp lại sau khi nén: render y hệt.
 - [x] 6. Verify: `tsc --noEmit` sạch · `NEXT_DIST_DIR=.next-verify npm run build` xanh · chụp thật
       3 ga (Trang chủ, Workplace, Thành quả) bằng Playwright + stub `IntersectionObserver`.
-- [ ] 7. **Người duyệt**: nhìn light theme; chốt có cần rig để nó bước đi thật không.
+- [x] 7. Thay bằng model đội tự dựng (nén 31,7 MB → 1,47 MB) + camera về [0, 3.0, 7.2].
+- [ ] 8. **Người duyệt**: nhìn light theme; chốt có cần rig để nó bước đi thật không.

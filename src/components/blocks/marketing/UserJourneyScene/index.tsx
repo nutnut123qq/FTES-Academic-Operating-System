@@ -609,7 +609,7 @@ export const UserJourneyScene = ({ labels, activeIndex, reduce = false }: UserJo
         <Canvas
             flat
             frameloop="demand"
-            camera={{ position: [9.2, 5.2, 8.5], fov: 42, near: 0.1, far: 100 }}
+            camera={{ position: [3.0, 2.6, 9.0], fov: 42, near: 0.1, far: 100 }}
             gl={{ alpha: true, antialias: true }}
             style={{ background: "transparent" }}
             dpr={[1, 2]}

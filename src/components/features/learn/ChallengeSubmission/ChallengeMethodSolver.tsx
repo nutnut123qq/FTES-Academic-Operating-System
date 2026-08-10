@@ -56,6 +56,9 @@ const TAB_LABEL_KEY: Record<SolverTab, string> = {
  * (github) submission routed to the agentic `/grade-project`. Mirrors the BE
  * `PROJECT_GRADE_LIMIT` enforced at submit time (rejecting with `PROJECT_GRADE_LIMIT_REACHED`
  * once reached). Inline sandbox `CODE` submissions are NOT counted against this cap.
+ *
+ * Dùng để HIỂN THỊ `used/limit` và cảnh báo, KHÔNG để khoá nút: BE chỉ áp cap cho học viên
+ * chưa có quyền trả phí, và FE không biết trạng thái entitlement — khoá ở đây là khoá nhầm.
  */
 const PROJECT_GRADE_LIMIT = 2
 
@@ -90,9 +93,9 @@ export interface ChallengeMethodSolverProps {
     reachedMax: boolean
     /**
      * The learner's attempts on this challenge (from the parent's my-submissions query).
-     * Used to count the heavy project grades (`FILE` / `URL` payloads) against
-     * {@link PROJECT_GRADE_LIMIT} so the github + file submits can show `used/2` and lock
-     * once the cap is hit; the inline sandbox `CODE` submit is never affected.
+     * Used to count the heavy project grades (`FILE` / `URL` payloads, trạng thái khác
+     * `FAILED`) against {@link PROJECT_GRADE_LIMIT} so the github + file submits show
+     * `used/2` và cảnh báo khi chạm trần; the inline sandbox `CODE` submit is never affected.
      */
     submissions: Array<SubmissionView>
     /** Called after a successful submit so the parent can revalidate its history. */
@@ -139,11 +142,19 @@ export const ChallengeMethodSolver = ({
 
     // The heavy PROJECT grade cap (PIN §1): count the learner's existing FILE (zip) / URL
     // (github) attempts — the two payloads routed to the agentic `/grade-project`. Inline
-    // sandbox CODE submissions never count. Once the count reaches PROJECT_GRADE_LIMIT the
-    // github + file submits lock (the BE also rejects with PROJECT_GRADE_LIMIT_REACHED).
+    // sandbox CODE submissions never count.
+    // Đếm PHẢI khớp BE (`countByChallengeIdAndParticipantIdAndPayloadTypeIn` có `status <> 'FAILED'`):
+    // bài chết vì lỗi hệ thống không tiêu lượt chấm project. Đếm cả FAILED làm học viên bị khoá nút
+    // dù BE vẫn nhận bài — đúng ca gặp thật trên [HSF302] (1 SCORED + 1 FAILED = FE tưởng 2/2).
     const projectGradesUsed = submissions.filter(
-        (submission) => submission.payloadType !== undefined && PROJECT_PAYLOAD_TYPES.has(submission.payloadType),
+        (submission) => submission.payloadType !== undefined
+            && PROJECT_PAYLOAD_TYPES.has(submission.payloadType)
+            && submission.status !== "FAILED",
     ).length
+    // CẢNH BÁO chứ KHÔNG khoá: từ change project-grade-limit-purchased, BE chỉ áp cap này cho học
+    // viên CHƯA có quyền trả phí (người đã mua / enrollment LEGACY thì chỉ còn max_submissions), mà
+    // FE không biết trạng thái entitlement. Khoá cứng ở đây là khoá nhầm người BE vẫn cho nộp; để BE
+    // phán quyết rồi dịch PROJECT_GRADE_LIMIT_REACHED thành thông báo rõ (xem mapSubmitError).
     const projectLimitReached = projectGradesUsed >= PROJECT_GRADE_LIMIT
 
     // Translate the BE project-grade cap rejection to a clear i18n message so the submit
@@ -216,16 +227,16 @@ export const ChallengeMethodSolver = ({
     const invalid = url.trim() !== "" && !isHttpsUrl(url)
     // URL / FILE / project are the heavy project grades → also gated by the project cap.
     // The sandbox CODE submit is intentionally NOT gated by it.
-    const canSubmitUrl = !reachedMax && !projectLimitReached && isHttpsUrl(url) && !busy
-    const canSubmitFile = !reachedMax && !projectLimitReached && file !== null && fileError === null && !busy
+    const canSubmitUrl = !reachedMax && isHttpsUrl(url) && !busy
+    const canSubmitFile = !reachedMax && file !== null && fileError === null && !busy
     const canSubmitCode = !reachedMax && sandboxCode.trim() !== "" && !busy
-    const canSubmitProject = !reachedMax && !projectLimitReached && prepared !== null && !busy && !preparing
+    const canSubmitProject = !reachedMax && prepared !== null && !busy && !preparing
 
     const handleSubmitUrl = async () => {
         setTouched(true)
         // Client-side gate — never fire the request for a non-https URL or a used-up
         // project-grade quota (URL is a heavy project grade).
-        if (!isHttpsUrl(url) || reachedMax || projectLimitReached || busy) {
+        if (!isHttpsUrl(url) || reachedMax || busy) {
             return
         }
         const ok = await runRest(
@@ -256,7 +267,7 @@ export const ChallengeMethodSolver = ({
     const handleSubmitFile = async () => {
         // Client-side gate — no doomed request for a missing / wrong-type file or a used-up
         // project-grade quota (FILE is a heavy project grade).
-        if (!file || fileError !== null || reachedMax || projectLimitReached || busy) {
+        if (!file || fileError !== null || reachedMax || busy) {
             return
         }
         const ok = await runRest(
@@ -299,7 +310,7 @@ export const ChallengeMethodSolver = ({
     const handleSubmitProject = async () => {
         // Client-side gate — no doomed request for a missing project / used-up attempt or
         // project-grade quota (a project upload is a heavy FILE project grade).
-        if (!prepared || reachedMax || projectLimitReached || busy) {
+        if (!prepared || reachedMax || busy) {
             return
         }
         // The prepared blob is already ONE .zip — wrap it as a File and submit through the

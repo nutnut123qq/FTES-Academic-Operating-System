@@ -113,6 +113,17 @@ export interface GradeCodePanelProps {
     isSubmitting?: boolean
     /** Extra caller gating for the submit button (e.g. attempts exhausted / no challenge). */
     submitDisabled?: boolean
+    /**
+     * WHERE the submission's score comes from — the BE decides this by challenge type and the
+     * two paths are mutually exclusive:
+     *
+     * - `"ai"` (default) — `CODE`/`ESSAY`: the LLM produces the score, so the picked model
+     *   genuinely changes the grade.
+     * - `"tests"` — `CODING`/`SQL`: hidden test cases produce the score and the model NEVER
+     *   moves it; AI only reviews quality (is the query optimal, not just correct). Saying
+     *   "each model grades differently" here would promise something the BE does not do.
+     */
+    scoreSource?: "ai" | "tests"
 }
 
 /**
@@ -225,6 +236,7 @@ export const GradeCodePanel = ({
     submitLabel,
     isSubmitting = false,
     submitDisabled = false,
+    scoreSource = "ai",
 }: GradeCodePanelProps) => {
     const t = useTranslations("learn")
     // Submission mode (GRADE = SUBMIT): the primary button posts the formal submission
@@ -597,9 +609,11 @@ export const GradeCodePanel = ({
                 </div>
             </div>
 
-            {/* model hint — grading differs per model. */}
+            {/* Model hint. On a test-case-graded exercise the model does NOT move the score
+                (hidden tests do) — it only shapes the quality review, so the generic
+                "each model grades differently" line would be a false promise. */}
             <Typography type="body-xs" color="muted">
-                {t("codeGrading.modelHint")}
+                {t(scoreSource === "tests" ? "codeGrading.modelHintReview" : "codeGrading.modelHint")}
             </Typography>
 
             {/* EDITOR (Monaco). */}

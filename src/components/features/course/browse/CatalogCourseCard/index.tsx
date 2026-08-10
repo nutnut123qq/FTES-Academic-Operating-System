@@ -10,7 +10,6 @@ import { SaveButton } from "@/components/blocks/buttons/SaveButton"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 import type { Course } from "../../hooks/useQueryCoursesSwr"
 import { useQueryMyEnrolledSlugsSwr } from "../../hooks/useQueryMyEnrolledSlugsSwr"
-import { displayCourseCode } from "../../courseCode"
 
 /** Props for {@link CatalogCourseCard}. */
 export interface CatalogCourseCardProps extends WithClassNames<undefined> {
@@ -27,7 +26,7 @@ export interface CatalogCourseCardProps extends WithClassNames<undefined> {
  * surface links to the course detail; the save toggle swallows its press so it
  * never navigates.
  *
- * Anatomy top → bottom: an INSET cover, the title, the course code, a meta row
+ * Anatomy top → bottom: an INSET cover, the title, a meta row
  * (level chip · N lessons · rating + count · learners), a 2-line description, the
  * mentor (avatar + name) and the CTA footer. Every field degrades gracefully: a
  * missing cover falls back to the branded gradient, and each meta segment /
@@ -93,8 +92,9 @@ export const CatalogCourseCard = ({ course, className }: CatalogCourseCardProps)
             </div>
 
             <div className="flex flex-1 flex-col gap-1.5 pt-3">
-                {/* title FIRST (what people scan), the course code under it as the
-                    secondary identifier — mirrors the reference card */}
+                {/* title — what people scan. The raw BE course code (an internal identifier
+                    like DEMO-JAVA-201 / *_PACKAGE_MAIN that can even mismatch the title) is
+                    intentionally NOT shown on the catalog card. */}
                 <div className="flex items-start justify-between gap-2">
                     <Typography weight="semibold" className="line-clamp-2 min-w-0 flex-1">
                         {course.name}
@@ -102,18 +102,6 @@ export const CatalogCourseCard = ({ course, className }: CatalogCourseCardProps)
                     {/* toggle must not trigger the card navigation (block swallows the press) */}
                     <SaveButton entityType="course" entityId={course.id} />
                 </div>
-
-                {/* Clean subject-code kicker (no internal package suffix), and only when the
-                    title doesn't already lead with it — so an "MAE101 - …" title shows no
-                    redundant kicker, while a title without its code still gets one. */}
-                {(() => {
-                    const kicker = displayCourseCode(course.code)
-                    return kicker && !course.name.toUpperCase().includes(kicker.toUpperCase()) ? (
-                        <Typography type="body-xs" color="muted">
-                            {kicker}
-                        </Typography>
-                    ) : null
-                })()}
 
                 {/* meta row — [level chip] · N bài · ★ rating (count) · learners. The
                     chip keeps its own bounds (no dot after it); middots split the

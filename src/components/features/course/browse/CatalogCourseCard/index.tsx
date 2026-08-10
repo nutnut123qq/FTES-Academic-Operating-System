@@ -10,6 +10,7 @@ import { SaveButton } from "@/components/blocks/buttons/SaveButton"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 import type { Course } from "../../hooks/useQueryCoursesSwr"
 import { useQueryMyEnrolledSlugsSwr } from "../../hooks/useQueryMyEnrolledSlugsSwr"
+import { displayCourseCode } from "../../courseCode"
 
 /** Props for {@link CatalogCourseCard}. */
 export interface CatalogCourseCardProps extends WithClassNames<undefined> {
@@ -102,11 +103,17 @@ export const CatalogCourseCard = ({ course, className }: CatalogCourseCardProps)
                     <SaveButton entityType="course" entityId={course.id} />
                 </div>
 
-                {course.code && !course.name.toUpperCase().includes(course.code.toUpperCase()) ? (
-                    <Typography type="body-xs" color="muted">
-                        {course.code}
-                    </Typography>
-                ) : null}
+                {/* Clean subject-code kicker (no internal package suffix), and only when the
+                    title doesn't already lead with it — so an "MAE101 - …" title shows no
+                    redundant kicker, while a title without its code still gets one. */}
+                {(() => {
+                    const kicker = displayCourseCode(course.code)
+                    return kicker && !course.name.toUpperCase().includes(kicker.toUpperCase()) ? (
+                        <Typography type="body-xs" color="muted">
+                            {kicker}
+                        </Typography>
+                    ) : null
+                })()}
 
                 {/* meta row — [level chip] · N bài · ★ rating (count) · learners. The
                     chip keeps its own bounds (no dot after it); middots split the

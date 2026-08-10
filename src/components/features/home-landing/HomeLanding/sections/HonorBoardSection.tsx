@@ -8,86 +8,16 @@ import { useRouter } from "@/i18n/navigation"
 import { ACHIEVERS } from "../content"
 import type { Achiever } from "../content"
 
-/** Metallic name gradient — built from the theme `accent` token so it matches the site palette in both themes. */
-const ACCENT_TEXT_GRADIENT =
-    "linear-gradient(100deg, color-mix(in srgb, var(--accent) 60%, var(--foreground)) 0%, var(--accent) 40%, color-mix(in srgb, var(--accent) 55%, white) 62%, var(--accent) 100%)"
-
-/** Observe once: flips true the first time the element enters the viewport, then disconnects. */
-const useInViewOnce = <T extends HTMLElement>() => {
-    const ref = React.useRef<T>(null)
-    const [inView, setInView] = React.useState(false)
-    React.useEffect(() => {
-        const el = ref.current
-        if (!el) return
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                if (entry.isIntersecting) {
-                    setInView(true)
-                    observer.disconnect()
-                }
-            },
-            { threshold: 0.3 },
-        )
-        observer.observe(el)
-        return () => observer.disconnect()
-    }, [])
-    return { ref, inView }
-}
-
-/**
- * Hero metric of a podium card — the highlight string ("GPA 9.6", "TOP 100 · 3 kỳ")
- * with its first number counting up once when the card scrolls into view.
- * `prefers-reduced-motion` (or no number at all) renders the final text immediately.
- */
-const HighlightMetric = ({ value }: { value: string }) => {
-    const { ref, inView } = useInViewOnce<HTMLSpanElement>()
-    // ponytail: first number in the string is "the" metric — enough for GPA/TOP-N highlights
-    const match = value.match(/\d+(?:\.\d+)?/)
-    const target = match ? Number.parseFloat(match[0]) : 0
-    const decimals = match?.[0].split(".")[1]?.length ?? 0
-    const [display, setDisplay] = React.useState(target)
-    React.useEffect(() => {
-        if (!inView || !match) return
-        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-            setDisplay(target)
-            return
-        }
-        const startedAt = performance.now()
-        let raf = 0
-        const tick = (now: number) => {
-            const progress = Math.min((now - startedAt) / 900, 1)
-            setDisplay(target * (1 - Math.pow(1 - progress, 3)))
-            if (progress < 1) raf = requestAnimationFrame(tick)
-        }
-        raf = requestAnimationFrame(tick)
-        return () => cancelAnimationFrame(raf)
-    }, [inView])
-    // Long highlights ("TOP 100 · 3 kỳ") drop a size so they never wrap inside the card.
-    const sizeClass = value.length > 9 ? "text-2xl" : "text-3xl"
-    if (!match) {
-        return (
-            <span ref={ref} className={cn("whitespace-nowrap font-semibold text-accent", sizeClass)}>
-                {value}
-            </span>
-        )
-    }
-    const prefix = value.slice(0, match.index)
-    const suffix = value.slice((match.index ?? 0) + match[0].length)
-    return (
-        <span ref={ref} className={cn("whitespace-nowrap font-semibold tabular-nums text-accent", sizeClass)}>
-            {prefix}
-            {display.toFixed(decimals)}
-            {suffix}
-        </span>
-    )
-}
+/** Gold metallic gradient — built from the theme-aware `warning` token so it lives in both themes. */
+const GOLD_TEXT_GRADIENT =
+    "linear-gradient(100deg, color-mix(in srgb, var(--warning) 60%, var(--foreground)) 0%, var(--warning) 40%, color-mix(in srgb, var(--warning) 55%, white) 62%, var(--warning) 100%)"
 
 /**
  * Circular portrait. `zoomFace` handles the legacy award posters (square image with the
  * name baked in around y≈75%): a scale(2.4) from origin 50% 28% frames just the face —
  * measured against the real 2480² posters (faces sit at ~47–53% x, ~31% y; baked name
  * and laurels fall outside the window). On failure (or a missing URL) an initials tile
- * in the same accent ring keeps the layout intact.
+ * in the same gold ring keeps the layout intact.
  */
 const AchieverPortrait = ({
     src,
@@ -108,10 +38,10 @@ const AchieverPortrait = ({
         .join("")
         .toUpperCase()
     return (
-        <div className={cn("aspect-square overflow-hidden rounded-full border-2 border-accent/50", className)}>
+        <div className={cn("aspect-square overflow-hidden rounded-full border-2 border-warning/50", className)}>
             {failed || !src ? (
-                <div className="flex size-full items-center justify-center bg-accent/10">
-                    <span className="text-xl font-semibold text-accent">{initials}</span>
+                <div className="flex size-full items-center justify-center bg-warning/10">
+                    <span className="text-base font-semibold text-warning">{initials}</span>
                 </div>
             ) : (
                 <img
@@ -126,62 +56,48 @@ const AchieverPortrait = ({
     )
 }
 
-/** Large glass podium card: accent-ringed portrait → gradient name → hero metric → lines. */
-const PodiumCard = ({ achiever, position }: { achiever: Achiever; position: number }) => {
+/**
+ * One ranked row of the board: rank number → portrait (top 3 only) → name → highlight chip → lines.
+ * Ranks 1–3 carry the gold emphasis (bold gold rank, portrait, gradient name); the rest stay plain
+ * so the list reads as a leaderboard rather than six equal cards.
+ */
+const HonorRow = ({ achiever, rank }: { achiever: Achiever; rank: number }) => {
     const t = useTranslations("homeLanding")
     const name = t(`honor.people.${achiever.key}.name`)
     const lines = Array.from({ length: achiever.lineCount }, (_, li) => li)
+    const isTop = rank <= 3
     return (
-        <div
-            className={cn(
-                "relative flex flex-col items-center gap-3 rounded-2xl border border-separator bg-surface/60 p-6 text-center backdrop-blur-md",
-                "transition-all duration-300 hover:border-accent/40 hover:shadow-lg hover:shadow-accent/20",
-                position === 0 && "sm:order-2",
-                position === 1 && "sm:order-1 sm:mt-6",
-                position === 2 && "sm:order-3 sm:mt-6",
-            )}
-        >
-            <div className="rounded-full border border-accent/30 p-2">
-                <AchieverPortrait src={achiever.imageUrl} name={name} zoomFace={achiever.poster} className="w-28" />
-            </div>
+        <li className="flex items-start gap-3 p-4 transition-colors duration-300 hover:bg-warning/5 sm:gap-4 sm:px-5">
             <span
-                className="bg-clip-text text-xl font-bold uppercase tracking-wide text-transparent"
-                style={{ backgroundImage: ACCENT_TEXT_GRADIENT }}
+                className={cn(
+                    "w-6 shrink-0 pt-0.5 text-center tabular-nums",
+                    isTop ? "text-lg font-bold text-warning" : "text-base font-semibold text-muted",
+                )}
             >
-                {name}
+                {rank}
             </span>
-            <HighlightMetric value={achiever.highlight} />
-            <ul className="flex flex-col gap-2">
-                {lines.map((li) => (
-                    <li key={li}>
-                        <Typography type="body-sm" color="muted">
-                            {t(`honor.people.${achiever.key}.lines.${li}`)}
-                        </Typography>
-                    </li>
-                ))}
-            </ul>
-        </div>
-    )
-}
-
-/** Compact glass row card for the non-featured achievers. */
-const AchieverRowCard = ({ achiever }: { achiever: Achiever }) => {
-    const t = useTranslations("homeLanding")
-    const name = t(`honor.people.${achiever.key}.name`)
-    const lines = Array.from({ length: achiever.lineCount }, (_, li) => li)
-    return (
-        <div className="flex gap-3 rounded-2xl border border-separator bg-surface/60 p-4 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-lg hover:shadow-accent/20">
-            <AchieverPortrait
-                src={achiever.imageUrl}
-                name={name}
-                zoomFace={achiever.poster}
-                className="w-14 shrink-0 self-start"
-            />
+            {isTop && (
+                <AchieverPortrait
+                    src={achiever.imageUrl}
+                    name={name}
+                    zoomFace={achiever.poster}
+                    className="w-14 shrink-0 sm:w-16"
+                />
+            )}
             <div className="flex min-w-0 flex-col gap-2">
-                <Typography type="body" weight="semibold">
-                    {name}
-                </Typography>
-                <Chip size="sm" variant="soft" color="accent" className="self-start">
+                {isTop ? (
+                    <span
+                        className="bg-clip-text text-base font-bold uppercase tracking-wide text-transparent"
+                        style={{ backgroundImage: GOLD_TEXT_GRADIENT }}
+                    >
+                        {name}
+                    </span>
+                ) : (
+                    <Typography type="body" weight="semibold">
+                        {name}
+                    </Typography>
+                )}
+                <Chip size="sm" variant="soft" color="warning" className="self-start">
                     {achiever.highlight}
                 </Chip>
                 <ul className="flex flex-col gap-2">
@@ -194,17 +110,16 @@ const AchieverRowCard = ({ achiever }: { achiever: Achiever }) => {
                     ))}
                 </ul>
             </div>
-        </div>
+        </li>
     )
 }
 
 /**
- * "Bảng vàng FTES" — tiered podium (2-1-3, center elevated) + compact grid, glass cards
- * with a soft accent glow over ambient accent orbs. All text lives in the DOM (gradient
- * name, count-up hero metric) — nothing depends on the baked-in poster typography.
- * Highlight color = the theme `accent` token, accent-only (recolored from gold
- * 2026-07-03: the standalone warning/gold palette clashed with the site's primary
- * accent). Links to `/leaderboard`; hides when empty.
+ * "Bảng vàng FTES" — a single ranked list (featured achievers first, then the rest) on one
+ * glass surface over ambient gold orbs; only the top 3 carry a portrait. Gold = the
+ * theme-aware `warning` token (restored 2026-08-10: the accent recolor of 2026-07-03 lost
+ * the "bảng vàng" reading). All text lives in the DOM — nothing depends on the baked-in
+ * poster typography. Links to `/leaderboard`; hides when empty.
  */
 export const HonorBoardSection = () => {
     const t = useTranslations("homeLanding")
@@ -212,18 +127,21 @@ export const HonorBoardSection = () => {
 
     if (ACHIEVERS.length === 0) return null
 
-    const podium = ACHIEVERS.filter((achiever) => achiever.featured)
-    const rest = ACHIEVERS.filter((achiever) => !achiever.featured)
+    // Featured achievers take ranks 1–3 (the only rows with a portrait), the rest follow in order.
+    const ranked = [
+        ...ACHIEVERS.filter((achiever) => achiever.featured),
+        ...ACHIEVERS.filter((achiever) => !achiever.featured),
+    ]
 
     return (
         <section className="relative isolate mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
             <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-                <div className="absolute -top-24 left-1/4 size-96 rounded-full bg-accent/10 blur-3xl" />
-                <div className="absolute right-0 top-1/3 size-80 rounded-full bg-accent/5 blur-3xl" />
+                <div className="absolute -top-24 left-1/4 size-96 rounded-full bg-warning/10 blur-3xl" />
+                <div className="absolute right-0 top-1/3 size-80 rounded-full bg-warning/5 blur-3xl" />
             </div>
 
             <div className="mb-10 flex flex-col items-center gap-2 text-center">
-                <TrophyIcon className="size-6 text-accent" aria-hidden focusable="false" />
+                <TrophyIcon className="size-6 text-warning" aria-hidden focusable="false" />
                 <Typography type="h3" weight="bold">
                     {t("honor.title")}
                 </Typography>
@@ -232,21 +150,11 @@ export const HonorBoardSection = () => {
                 </Typography>
             </div>
 
-            {podium.length > 0 && (
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-                    {podium.map((achiever, position) => (
-                        <PodiumCard key={achiever.key} achiever={achiever} position={position} />
-                    ))}
-                </div>
-            )}
-
-            {rest.length > 0 && (
-                <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                    {rest.map((achiever) => (
-                        <AchieverRowCard key={achiever.key} achiever={achiever} />
-                    ))}
-                </div>
-            )}
+            <ol className="mx-auto flex max-w-3xl flex-col divide-y divide-separator overflow-hidden rounded-2xl border border-separator bg-surface/60 backdrop-blur-md">
+                {ranked.map((achiever, index) => (
+                    <HonorRow key={achiever.key} achiever={achiever} rank={index + 1} />
+                ))}
+            </ol>
 
             <div className="mt-8 flex justify-center">
                 <Button variant="secondary" onPress={() => router.push("/leaderboard")}>

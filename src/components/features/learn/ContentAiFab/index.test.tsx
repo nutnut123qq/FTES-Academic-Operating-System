@@ -36,6 +36,8 @@ vi.mock("@/hooks/reuseables/useSmViewpoint", () => ({
 
 vi.mock("@phosphor-icons/react", () => ({
     SparkleIcon: () => <span />,
+    ArrowsOutIcon: () => <span />,
+    ArrowsInIcon: () => <span />,
 }))
 
 vi.mock("@/components/blocks/buttons/FloatingActionButton", () => ({
@@ -104,9 +106,14 @@ vi.mock("@heroui/react", () => {
         Heading: passthrough,
         Body: passthrough,
     })
+    const CloseButton = ({ onPress, ...rest }: { onPress?: () => void; [k: string]: unknown }) => {
+        const { className, ...dom } = rest
+        void className
+        return <button type="button" onClick={onPress} {...dom} />
+    }
     const Typography = ({ children }: { children?: React.ReactNode }) => <span>{children}</span>
     const cn = (...args: Array<unknown>) => args.filter(Boolean).join(" ")
-    return { Button, Drawer, Popover, PopoverContent, Typography, cn }
+    return { Button, CloseButton, Drawer, Popover, PopoverContent, Typography, cn }
 })
 
 import { ContentAiFab } from "./index"

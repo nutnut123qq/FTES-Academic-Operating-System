@@ -4,13 +4,14 @@ import React, { useCallback, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import {
     Button,
+    CloseButton,
     Drawer,
     Popover,
     PopoverContent,
     Typography,
     cn,
 } from "@heroui/react"
-import { SparkleIcon } from "@phosphor-icons/react"
+import { ArrowsInIcon, ArrowsOutIcon, SparkleIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import Image from "next/image"
 import { useParams } from "next/navigation"
@@ -76,6 +77,15 @@ export const ContentAiFab = () => {
     const { contentId } = useParams<{ contentId?: string }>()
     const { isOpen, setOpen, open } = useContentAiChatOverlayState()
     const { isMobile } = useSmViewpoint()
+    // "Mở rộng": grow the chat to a full-screen popup (desktop) / full-height sheet (mobile).
+    // Kept as local host state so ContentAiChat stays ONE mounted instance whose container
+    // merely resizes — toggling this never remounts the thread (the conversation is in-memory).
+    const [isExpanded, setIsExpanded] = useState(false)
+    // Collapsing back to docked whenever the panel closes, so re-opening starts compact.
+    const closeChat = useCallback(() => {
+        setIsExpanded(false)
+        setOpen(false)
+    }, [setOpen])
     // When a video wrapper is fullscreen, the browser paints it in a top layer above
     // everything, so a fixed FAB in <body> is hidden. Portal the whole FAB (and route
     // its popover/drawer overlay) INTO the fullscreen element so it stays usable.
@@ -135,6 +145,9 @@ export const ContentAiFab = () => {
                 draggingRef.current = false
                 return
             }
+            if (!next) {
+                setIsExpanded(false)
+            }
             setOpen(next)
         },
         [setOpen],
@@ -163,17 +176,37 @@ export const ContentAiFab = () => {
                 </FloatingActionButton>
                 <Drawer.Backdrop
                     isOpen={isOpen}
-                    onOpenChange={setOpen}
+                    onOpenChange={(next) => {
+                        if (!next) {
+                            setIsExpanded(false)
+                        }
+                        setOpen(next)
+                    }}
                     UNSTABLE_portalContainer={fullscreenEl ?? undefined}
                 >
                     <Drawer.Content placement="bottom">
-                        <Drawer.Dialog className="flex h-[80vh] flex-col">
+                        <Drawer.Dialog className={cn("flex flex-col", isExpanded ? "h-[100dvh]" : "h-[80vh]")}>
                             <Drawer.CloseTrigger />
                             <Drawer.Header>
-                                <Drawer.Heading>{t("reader.ai.title")}</Drawer.Heading>
+                                <div className="flex items-center gap-2">
+                                    <Drawer.Heading>{t("reader.ai.title")}</Drawer.Heading>
+                                    <Button
+                                        isIconOnly
+                                        size="sm"
+                                        variant="tertiary"
+                                        aria-label={t(isExpanded ? "reader.ai.collapse" : "reader.ai.expand")}
+                                        onPress={() => setIsExpanded((prev) => !prev)}
+                                    >
+                                        {isExpanded ? (
+                                            <ArrowsInIcon aria-hidden focusable="false" className="size-5" />
+                                        ) : (
+                                            <ArrowsOutIcon aria-hidden focusable="false" className="size-5" />
+                                        )}
+                                    </Button>
+                                </div>
                             </Drawer.Header>
                             <Drawer.Body className="min-h-0 flex-1 pb-6">
-                                <ContentAiChat />
+                                <ContentAiChat expanded={isExpanded} />
                             </Drawer.Body>
                         </Drawer.Dialog>
                     </Drawer.Content>
@@ -203,17 +236,56 @@ export const ContentAiFab = () => {
             </Button>
             <PopoverContent
                 placement="left bottom"
-                className="w-[380px] p-0"
+                // Expanded: strip the popover card chrome — the inner panel below goes
+                // `fixed inset-0` (react-aria positions the popover with top/left, NOT a
+                // transform, so a fixed descendant escapes to the real viewport) and covers
+                // the whole card, so no 380px box peeks behind the full-screen surface.
+                className={cn("p-0", isExpanded ? "!w-auto !border-0 !bg-transparent !shadow-none" : "w-[380px]")}
                 UNSTABLE_portalContainer={fullscreenEl ?? undefined}
             >
-                <div className="flex items-center gap-2 p-3">
-                    <SparkleIcon aria-hidden focusable="false" weight="fill" className="size-5 text-accent" />
-                    <Typography type="body" weight="semibold">
-                        {t("reader.ai.title")}
-                    </Typography>
-                </div>
-                <div className="p-3 pt-0">
-                    <ContentAiChat />
+                {/* ONE wrapper that merely RESIZES between docked (in-popover, 380px) and
+                    expanded (full-screen). ContentAiChat stays the same mounted instance either
+                    way, so "mở rộng" never resets the in-memory conversation. */}
+                <div
+                    className={cn(
+                        "flex flex-col bg-surface",
+                        isExpanded ? "fixed inset-0 z-[60] h-[100dvh] w-screen" : "w-[380px]",
+                    )}
+                >
+                    <div className="flex items-center gap-2 p-3">
+                        <SparkleIcon aria-hidden focusable="false" weight="fill" className="size-5 shrink-0 text-accent" />
+                        <Typography type="body" weight="semibold" className="min-w-0 flex-1 truncate">
+                            {t("reader.ai.title")}
+                        </Typography>
+                        <Button
+                            isIconOnly
+                            size="sm"
+                            variant="tertiary"
+                            aria-label={t(isExpanded ? "reader.ai.collapse" : "reader.ai.expand")}
+                            onPress={() => setIsExpanded((prev) => !prev)}
+                        >
+                            {isExpanded ? (
+                                <ArrowsInIcon aria-hidden focusable="false" className="size-5" />
+                            ) : (
+                                <ArrowsOutIcon aria-hidden focusable="false" className="size-5" />
+                            )}
+                        </Button>
+                        {/* A full-screen surface has no "outside" to dismiss on, so give it an
+                            explicit close; the docked popover keeps click-outside dismissal. */}
+                        {isExpanded ? (
+                            <CloseButton aria-label={t("reader.ai.close")} onPress={closeChat} />
+                        ) : null}
+                    </div>
+                    {/* ONE body div at a STABLE tree position — only its classes + the chat's
+                        props change between modes, so ContentAiChat is never remounted (its
+                        in-memory thread survives expand/collapse). Expanded: fill + centre the
+                        column; docked: the original compact padding. */}
+                    <div className={isExpanded ? "flex min-h-0 flex-1 flex-col px-4 pb-4" : "p-3 pt-0"}>
+                        <ContentAiChat
+                            expanded={isExpanded}
+                            className={isExpanded ? "mx-auto w-full max-w-3xl" : undefined}
+                        />
+                    </div>
                 </div>
             </PopoverContent>
         </Popover>,

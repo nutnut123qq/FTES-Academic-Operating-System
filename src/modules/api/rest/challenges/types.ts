@@ -149,6 +149,13 @@ export interface ChallengeView {
      * on older deployments → treated as `0`.
      */
     submissionCount?: number
+    /**
+     * "Học thử" (free-trial) flag. When true the tight per-challenge project-grade cap
+     * applies (cost protection for non-payers); when false (a paid challenge the learner
+     * bought) the mentor's `maxSubmissions` is the sole submission cap. Additive — absent
+     * on older deployments → treated as not-free (paid).
+     */
+    free?: boolean
 }
 
 /** Wrapper for a batch test-case upsert. */

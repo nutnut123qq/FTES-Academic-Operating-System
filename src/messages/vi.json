@@ -7033,7 +7033,7 @@
         "unanchoredHint": "Những nhận xét này trỏ tới tệp không có trong cây thư mục (hoặc chưa tải được project).",
         "fileLine": "{file} · dòng {line}",
         "gradeLimitHint": "Đã dùng {used}/{limit} lượt chấm project",
-        "gradeLimitReached": "Bài project chỉ được chấm tối đa 2 lần."
+        "gradeLimitReached": "Bài project chỉ được chấm tối đa {limit} lần."
       }
     },
     "common": {

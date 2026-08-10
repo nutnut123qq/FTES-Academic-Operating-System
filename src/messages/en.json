@@ -7033,7 +7033,7 @@
         "unanchoredHint": "These comments point to a file that isn't in the tree (or the project couldn't be loaded).",
         "fileLine": "{file} · line {line}",
         "gradeLimitHint": "Used {used}/{limit} project grades",
-        "gradeLimitReached": "A project can be graded at most 2 times."
+        "gradeLimitReached": "A project can be graded at most {limit} times."
       }
     },
     "common": {

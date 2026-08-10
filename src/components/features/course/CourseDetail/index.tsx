@@ -307,12 +307,12 @@ const CourseDetailView = ({
         isPackage
             ? undefined
             : {
-                  rawId: course.rawId,
-                  title: course.name,
-                  priceVnd: course.price.vnd,
-                  originalPriceVnd: course.price.originalVnd,
-                  coverUrl: course.coverUrl,
-              },
+                rawId: course.rawId,
+                title: course.name,
+                priceVnd: course.price.vnd,
+                originalPriceVnd: course.price.originalVnd,
+                coverUrl: course.coverUrl,
+            },
     )
     // ponytail: hand-rolled accordion state — first chapter open. Set, not boolean-per-row,
     // so multiple chapters can be open. Swap to HeroUI Accordion when its API is confirmed.
@@ -342,7 +342,7 @@ const CourseDetailView = ({
             <ResponsiveBreadcrumb
                 items={[
                     { key: "courses", label: t("catalog.title"), onPress: onCourses },
-                    { key: course.id, label: course.code },
+                    { key: course.id, label: course.name },
                 ]}
             />
 
@@ -353,7 +353,7 @@ const CourseDetailView = ({
                     <div className="flex flex-col gap-3">
                         <div className="flex items-start gap-3">
                             <Typography type="h4" weight="bold" className="min-w-0 flex-1">
-                                {course.code} · {course.name}
+                                {course.name}
                             </Typography>
                             <SaveButton entityType="course" entityId={course.id} />
                         </div>
@@ -518,8 +518,9 @@ const CourseDetailView = ({
                                                                 ) : null}
                                                             </div>
                                                             {(() => {
-                                                                // Render ALL paid packages that unlock this lesson (except
-                                                                // the pseudo "free" slug). Sort cheapest-first by salePrice.
+                                                                // Render ONLY the cheapest paid package that unlocks this
+                                                                // lesson (except the pseudo "free" slug) — the minimum tier
+                                                                // a learner must buy. Sort cheapest-first by salePrice.
                                                                 const paidSlugs = (lesson.packageSlugs ?? [])
                                                                     .filter((slug) => slug !== "free")
                                                                 const slugPrice = new Map(
@@ -528,21 +529,17 @@ const CourseDetailView = ({
                                                                 const sortedSlugs = [...paidSlugs].sort(
                                                                     (a, b) => (slugPrice.get(a) ?? Infinity) - (slugPrice.get(b) ?? Infinity),
                                                                 )
-                                                                if (sortedSlugs.length > 0) {
+                                                                const minSlug = sortedSlugs[0]
+                                                                if (minSlug) {
                                                                     return (
-                                                                        <div className="flex flex-wrap items-center justify-end gap-1">
-                                                                            {sortedSlugs.map((slug) => (
-                                                                                <Chip
-                                                                                    key={slug}
-                                                                                    size="sm"
-                                                                                    variant="soft"
-                                                                                    color={resolveTierColor(slug)}
-                                                                                    className="shrink-0"
-                                                                                >
-                                                                                    {resolveLessonTierLabel(slug)}
-                                                                                </Chip>
-                                                                            ))}
-                                                                        </div>
+                                                                        <Chip
+                                                                            size="sm"
+                                                                            variant="soft"
+                                                                            color={resolveTierColor(minSlug)}
+                                                                            className="shrink-0"
+                                                                        >
+                                                                            {resolveLessonTierLabel(minSlug)}
+                                                                        </Chip>
                                                                     )
                                                                 }
                                                                 // LEGACY course (no packageSlugs) still locked for the

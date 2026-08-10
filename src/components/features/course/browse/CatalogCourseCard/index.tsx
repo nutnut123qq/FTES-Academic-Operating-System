@@ -102,9 +102,11 @@ export const CatalogCourseCard = ({ course, className }: CatalogCourseCardProps)
                     <SaveButton entityType="course" entityId={course.id} />
                 </div>
 
-                <Typography type="body-xs" color="muted">
-                    {course.code}
-                </Typography>
+                {course.code && !course.name.toUpperCase().includes(course.code.toUpperCase()) ? (
+                    <Typography type="body-xs" color="muted">
+                        {course.code}
+                    </Typography>
+                ) : null}
 
                 {/* meta row — [level chip] · N bài · ★ rating (count) · learners. The
                     chip keeps its own bounds (no dot after it); middots split the

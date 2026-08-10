@@ -27,6 +27,7 @@ import { RestError } from "@/modules/api/rest/client"
 import type { ChallengeView, McqQuestionView, SubmissionView, SubmitRequest } from "@/modules/api/rest/challenges"
 import { useRestWithToast } from "@/modules/toast/hooks"
 import { usePostSubmitChallengeSwr } from "@/hooks/swr/api/rest/mutations/usePostSubmitChallengeSwr"
+import { useGetMyCourseAccessSwr } from "@/hooks/swr/api/rest/queries/useGetMyCourseAccessSwr"
 import { PackageGateModal } from "@/components/features/course/PackageGateModal"
 import { useQueryCoursePackagesSwr } from "@/components/features/course/hooks/useQueryCoursePackagesSwr"
 import { resolveTierColor, resolveTierLabel } from "@/components/features/course/tierLabels"
@@ -154,6 +155,14 @@ export const ChallengeSubmission = () => {
     const language = languageOverride ?? (detail?.type === "sql" ? "sql" : "python")
     const usedCount = submissions.length
     const reachedMax = challenge ? usedCount >= challenge.maxSubmissions : false
+    // The caller's purchase state on this course drives the HEAVY project-grade cap: a
+    // learner who BOUGHT the course is capped only by the mentor's `maxSubmissions`, while a
+    // free-enroll ("học thử") / trial learner keeps the tight PROJECT_GRADE_LIMIT (AI cost
+    // protection for non-payers). Keyed on the challenge's course UUID; degrades to
+    // not-purchased when the course id is absent or the call fails — matching the BE, which
+    // also applies the cap when it can't resolve a paid lesson entitlement.
+    const { data: courseAccess } = useGetMyCourseAccessSwr(challenge?.courseId || undefined)
+    const purchased = courseAccess?.purchased ?? false
     // newest attempt first
     const history = useMemo(
         () => [...submissions].sort((a, b) => b.attemptNo - a.attemptNo),
@@ -380,7 +389,7 @@ export const ChallengeSubmission = () => {
                                                 fileExtension={challenge.fileExtension}
                                                 seedSql={challenge.seedSql}
                                                 maxSubmissions={challenge.maxSubmissions}
-                                                free={challenge.free}
+                                                purchased={purchased}
                                                 reachedMax={reachedMax}
                                                 submissions={submissions}
                                                 onSubmitted={() => { void mutate() }}

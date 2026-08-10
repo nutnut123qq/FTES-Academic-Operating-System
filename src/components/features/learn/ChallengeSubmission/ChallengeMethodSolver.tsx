@@ -54,9 +54,10 @@ const TAB_LABEL_KEY: Record<SolverTab, string> = {
 /**
  * Per-learner-per-challenge cap on the HEAVY project grade — a `FILE` (zip) or `URL`
  * (github) submission routed to the agentic `/grade-project`. This tight cap applies
- * ONLY to FREE ("học thử") challenges (cost protection for non-payers); a PAID challenge
- * is governed solely by the mentor's `maxSubmissions`. Mirrors the BE, which enforces
- * `PROJECT_GRADE_LIMIT` at submit time for free challenges only (rejecting with
+ * ONLY to learners who have NOT purchased the course (free-enroll / "học thử" trial —
+ * cost protection for non-payers); once the learner BUYS the course the mentor's
+ * `maxSubmissions` becomes the sole cap. Mirrors the BE, which enforces
+ * `PROJECT_GRADE_LIMIT` at submit time for non-purchasers only (rejecting with
  * `PROJECT_GRADE_LIMIT_REACHED`). Inline sandbox `CODE` submissions never count here.
  */
 const PROJECT_GRADE_LIMIT = 2
@@ -89,11 +90,12 @@ export interface ChallengeMethodSolverProps {
     /** Cap on attempts — drives the "used all attempts" lock message. */
     maxSubmissions: number
     /**
-     * "Học thử" (free-trial) challenge. Free → the tight {@link PROJECT_GRADE_LIMIT}
-     * project-grade cap applies; paid (learner bought the course) → the mentor's
-     * {@link maxSubmissions} is the sole cap. Absent → treated as paid.
+     * Whether the learner has PURCHASED this course. Purchased → the mentor's
+     * {@link maxSubmissions} is the sole cap; not purchased (free-enroll / "học thử" trial)
+     * → the tight {@link PROJECT_GRADE_LIMIT} project-grade cap applies. Absent → treated as
+     * not purchased (conservative — the cap applies), matching the BE fallback.
      */
-    free?: boolean
+    purchased?: boolean
     /** True once every attempt is used — locks the submit surface. */
     reachedMax: boolean
     /**
@@ -135,7 +137,7 @@ export const ChallengeMethodSolver = ({
     fileExtension,
     seedSql,
     maxSubmissions,
-    free,
+    purchased,
     reachedMax,
     submissions,
     onSubmitted,
@@ -153,14 +155,15 @@ export const ChallengeMethodSolver = ({
     const projectGradesUsed = submissions.filter(
         (submission) => submission.payloadType !== undefined && PROJECT_PAYLOAD_TYPES.has(submission.payloadType),
     ).length
-    // FREE ("học thử") challenges keep the tight PROJECT_GRADE_LIMIT (cost protection); a
-    // PAID challenge the learner bought is capped only by the mentor's maxSubmissions.
-    const projectGradeLimit = free ? PROJECT_GRADE_LIMIT : maxSubmissions
+    // Not-purchased (free-enroll / "học thử") learners keep the tight PROJECT_GRADE_LIMIT
+    // (cost protection); once the learner BUYS the course the cap is the mentor's
+    // maxSubmissions.
+    const projectGradeLimit = purchased ? maxSubmissions : PROJECT_GRADE_LIMIT
     const projectLimitReached = projectGradesUsed >= projectGradeLimit
 
     // Translate the BE project-grade cap rejection to a clear i18n message so the submit
     // toast reads meaningfully; anything else re-throws for the default error toast. The BE
-    // only rejects with this on FREE challenges now (cap = PROJECT_GRADE_LIMIT).
+    // only rejects with this for non-purchasers now (cap = PROJECT_GRADE_LIMIT).
     const mapSubmitError = (error: unknown): never => {
         if (error instanceof RestError && error.errorCode === "PROJECT_GRADE_LIMIT_REACHED") {
             throw new Error(t("exercises.project.gradeLimitReached", { limit: PROJECT_GRADE_LIMIT }))

@@ -156,7 +156,10 @@ export const ChallengeSubmission = () => {
     )
     // SQL grades static-only (no language pick); everything else defaults to python.
     const language = languageOverride ?? (detail?.type === "sql" ? "sql" : "python")
-    const usedCount = submissions.length
+    // Lượt ĐÃ TIÊU phải khớp BE: `countConsumingAttempts` đếm với `status <> 'FAILED'` — bài
+    // chết vì lỗi hệ thống (chấm cạn retry → DLQ, không có điểm/nhận xét) KHÔNG tiêu lượt của
+    // học viên. Đếm cả FAILED ở FE làm chip hiện thừa lượt và khoá nút sớm dù BE vẫn nhận bài.
+    const usedCount = submissions.filter((submission) => submission.status !== "FAILED").length
     const reachedMax = challenge ? usedCount >= challenge.maxSubmissions : false
     // newest attempt first
     const history = useMemo(

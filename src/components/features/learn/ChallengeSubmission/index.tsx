@@ -148,6 +148,12 @@ export const ChallengeSubmission = () => {
         runnableLanguageFromFileExtension(
             challenge?.fileExtension ?? parseGradingConfigFileExtension(challenge?.gradingConfig),
         ) === "sql"
+    // BE chấm theo test case cho CODING/SQL (ChallengeType.isCodingFamily) và bằng LLM cho
+    // CODE/ESSAY — hai đường loại trừ nhau. `detail.type` KHÔNG dùng được để phân biệt vì
+    // mapChallengeType gộp cả CODE lẫn CODING thành "coding"; phải soi raw type của BE.
+    const isTestCaseGraded = ["CODING", "SQL"].includes(
+        (challenge?.type ?? "").toUpperCase().replace(/[\s_-]/g, ""),
+    )
     // SQL grades static-only (no language pick); everything else defaults to python.
     const language = languageOverride ?? (detail?.type === "sql" ? "sql" : "python")
     const usedCount = submissions.length
@@ -403,7 +409,10 @@ export const ChallengeSubmission = () => {
                                                     // the panel's raw-seed block so it isn't shown twice.
                                                     hideSeedNote
                                                     onSubmit={() => void handleSubmit()}
-                                                    submitLabel={t("exercises.challenge.gradeSubmit")}
+                                                    submitLabel={t(isTestCaseGraded
+                                                        ? "exercises.challenge.gradeSubmitTests"
+                                                        : "exercises.challenge.gradeSubmit")}
+                                                    scoreSource={isTestCaseGraded ? "tests" : "ai"}
                                                     isSubmitting={submit.isMutating}
                                                     submitDisabled={!canSubmit}
                                                 />

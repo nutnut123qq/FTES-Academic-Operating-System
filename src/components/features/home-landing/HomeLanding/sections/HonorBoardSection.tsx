@@ -4,7 +4,7 @@ import React from "react"
 import { TrophyIcon, ArrowRightIcon } from "@phosphor-icons/react"
 import { Button, Chip, Typography, cn } from "@heroui/react"
 import { useTranslations } from "next-intl"
-import { useRouter } from "@/i18n/navigation"
+import { Link, useRouter } from "@/i18n/navigation"
 import { ACHIEVERS } from "../content"
 import type { Achiever } from "../content"
 
@@ -59,13 +59,26 @@ const AchieverPortrait = ({
 /**
  * One ranked row of the board: rank number → portrait (top 3 only) → name → highlight chip → lines.
  * Ranks 1–3 carry the gold emphasis (bold gold rank, portrait, gradient name); the rest stay plain
- * so the list reads as a leaderboard rather than six equal cards.
+ * so the list reads as a leaderboard rather than seven equal cards. An achiever carrying an
+ * `href` gets its name wrapped in a locale-aware link to that learner's story.
  */
 const HonorRow = ({ achiever, rank }: { achiever: Achiever; rank: number }) => {
     const t = useTranslations("homeLanding")
     const name = t(`honor.people.${achiever.key}.name`)
     const lines = Array.from({ length: achiever.lineCount }, (_, li) => li)
     const isTop = rank <= 3
+    const nameNode = isTop ? (
+        <span
+            className="bg-clip-text text-base font-bold uppercase tracking-wide text-transparent"
+            style={{ backgroundImage: GOLD_TEXT_GRADIENT }}
+        >
+            {name}
+        </span>
+    ) : (
+        <Typography type="body" weight="semibold">
+            {name}
+        </Typography>
+    )
     return (
         <li className="flex items-start gap-3 p-4 transition-colors duration-300 hover:bg-warning/5 sm:gap-4 sm:px-5">
             <span
@@ -85,17 +98,15 @@ const HonorRow = ({ achiever, rank }: { achiever: Achiever; rank: number }) => {
                 />
             )}
             <div className="flex min-w-0 flex-col gap-2">
-                {isTop ? (
-                    <span
-                        className="bg-clip-text text-base font-bold uppercase tracking-wide text-transparent"
-                        style={{ backgroundImage: GOLD_TEXT_GRADIENT }}
-                    >
-                        {name}
-                    </span>
+                {/* `text-warning` trên anchor chỉ để gạch chân ăn màu vàng: tên bên trong là span
+                    gradient (text-transparent + bg-clip-text) nên màu anchor không đụng tới chữ, nhưng
+                    text-decoration lại vẽ theo màu anchor — bỏ đi là vạch đen dưới chữ vàng. */}
+                {achiever.href ? (
+                    <Link href={achiever.href} className="self-start text-warning hover:underline">
+                        {nameNode}
+                    </Link>
                 ) : (
-                    <Typography type="body" weight="semibold">
-                        {name}
-                    </Typography>
+                    nameNode
                 )}
                 <Chip size="sm" variant="soft" color="warning" className="self-start">
                     {achiever.highlight}

@@ -4258,6 +4258,13 @@
       "subline": "Học viên chúng tôi CHẤT cỡ nào? Đây là những gương mặt tiêu biểu của FTES.",
       "cta": "Xem bảng xếp hạng",
       "people": {
+        "thuanDuc": {
+          "name": "Trang Thuận Đức",
+          "lines": {
+            "0": "Đạt danh hiệu Cóc Vàng khối ngành Kỹ thuật kỳ Spring 2025.",
+            "1": "Bước ngoặt đến từ sự đồng hành của đội ngũ mentor FTES."
+          }
+        },
         "kimKhoa": {
           "name": "Kim Khoa",
           "lines": {

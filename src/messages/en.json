@@ -4258,6 +4258,13 @@
       "subline": "Just how good are our learners? Meet some of the standout faces of FTES.",
       "cta": "View the leaderboard",
       "people": {
+        "thuanDuc": {
+          "name": "Trang Thuan Duc",
+          "lines": {
+            "0": "Won the Golden Toad title in Engineering for the Spring 2025 term.",
+            "1": "The turning point came from the support of the FTES mentor team."
+          }
+        },
         "kimKhoa": {
           "name": "Kim Khoa",
           "lines": {

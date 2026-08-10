@@ -1,19 +1,23 @@
 "use client"
 
-import React, { useCallback, useState } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 import { Button, Chip, toast } from "@heroui/react"
 import { useTranslations } from "next-intl"
-import { useSWRConfig } from "swr"
+import useSWR, { useSWRConfig } from "swr"
 import { useRouter } from "@/i18n/navigation"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
 import { PostImagePicker } from "@/components/blocks/feed/PostImagePicker"
 import { RichTextEditor } from "@/components/reuseable/RichTextEditor"
 import { splitTitleFromMarkdown } from "@/components/reuseable/RichTextEditor/title"
+import { CampusPicker } from "@/components/reuseable/CampusPicker"
 import { createPost, sharePost } from "@/modules/api/rest/community"
 import type { MediaInput } from "@/modules/api/rest/community/types"
+import { getSelfProfile } from "@/modules/api/rest/profile"
+import { SELF_PROFILE_KEY } from "@/components/features/profile/hooks/useQueryProfileSwr"
 import { QuotedPostCard } from "@/components/reuseable/QuotedPostCard"
 import { useCommunityComposerOverlayState } from "@/hooks/zustand/overlay/hooks"
 import { revalidateCommunityFeeds } from "../hooks/useQueryCommunityFeedSwr"
+import { useQueryCampusesSwr } from "../hooks/useQueryCampusesSwr"
 
 /** Post kinds a user can attach (§6). */
 const KINDS = ["knowledge", "question", "showcase", "resource"] as const
@@ -55,7 +59,7 @@ export const CommunityComposerForm = ({
     const t = useTranslations("communityHub")
     const router = useRouter()
     const { mutate, cache } = useSWRConfig()
-    const { requireAuth } = useRequireAuth()
+    const { authenticated, requireAuth } = useRequireAuth()
     // Repost/quote mode (C-1): when a quoted post is stashed, the form embeds it and
     // routes submit to `sharePost` instead of `createPost`.
     const { quote, setQuote } = useCommunityComposerOverlayState()
@@ -66,6 +70,28 @@ export const CommunityComposerForm = ({
     const [media, setMedia] = useState<Array<MediaInput>>([])
     const [isUploading, setIsUploading] = useState(false)
     const [imagesResetToken, setImagesResetToken] = useState(0)
+    // Optional campus tag (§ Campus feed): `null` = no campus. The picker's value is a
+    // campus CODE the BE validates against the active-campus list.
+    const [campus, setCampus] = useState<string | null>(null)
+    const { campuses } = useQueryCampusesSwr()
+    // Default the pick to the author's own campus WHEN it's readily available — reads the
+    // SHARED self-profile cache (same key as the profile shell/edit), so no extra fetch on
+    // pages that already warmed it; gated on auth so guests never 401 for a default.
+    const { data: selfProfile } = useSWR(authenticated ? SELF_PROFILE_KEY : null, getSelfProfile)
+    const seededCampusRef = useRef(false)
+    useEffect(() => {
+        // Seed exactly ONCE, after both the campus list and the profile have resolved, so a
+        // later user pick is never clobbered. Only apply when the profile campus matches an
+        // active option; otherwise leave it unset ("no campus").
+        if (seededCampusRef.current || selfProfile === undefined || campuses.length === 0) {
+            return
+        }
+        seededCampusRef.current = true
+        const profileCampus = selfProfile.academic?.campus ?? null
+        if (profileCampus && campuses.some((option) => option.code === profileCampus)) {
+            setCampus(profileCampus)
+        }
+    }, [selfProfile, campuses])
 
     // Submitting while an image is still uploading would publish the post without it.
     // A repost needs no body (an empty repost is a plain share); a new post needs a
@@ -105,6 +131,8 @@ export const CommunityComposerForm = ({
                     title,
                     content,
                     media: media.length > 0 ? media : undefined,
+                    // Only tag a real campus code; the "no campus" choice omits it entirely.
+                    campus: campus ?? undefined,
                 })
                 createdId = created.id
             }
@@ -130,18 +158,29 @@ export const CommunityComposerForm = ({
             {/* kind chips + image picker are for a NEW post only; a repost embeds the
                 quoted card and takes optional commentary instead. */}
             {!isQuote ? (
-                <div className="flex flex-wrap gap-2">
-                    {KINDS.map((option) => (
-                        <button key={option} type="button" onClick={() => setKind(option)}>
-                            <Chip
-                                size="sm"
-                                variant={kind === option ? "primary" : "soft"}
-                                color="accent"
-                            >
-                                {t(`composer.kinds.${option}`)}
-                            </Chip>
-                        </button>
-                    ))}
+                <div className="flex flex-col gap-3">
+                    <div className="flex flex-wrap gap-2">
+                        {KINDS.map((option) => (
+                            <button key={option} type="button" onClick={() => setKind(option)}>
+                                <Chip
+                                    size="sm"
+                                    variant={kind === option ? "primary" : "soft"}
+                                    color="accent"
+                                >
+                                    {t(`composer.kinds.${option}`)}
+                                </Chip>
+                            </button>
+                        ))}
+                    </div>
+                    {/* Optional campus tag — placeholder = "no campus" (a global post). */}
+                    <CampusPicker
+                        campuses={campuses}
+                        value={campus}
+                        onChange={setCampus}
+                        placeholder={t("composer.campusAll")}
+                        ariaLabel={t("composer.campusLabel")}
+                        className="self-start"
+                    />
                 </div>
             ) : null}
 

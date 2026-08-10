@@ -1,6 +1,7 @@
 import { restRequest } from "@/modules/api/rest/client"
 import type {
     AcceptedAnswerRequest,
+    CampusView,
     CommentResponse,
     ContributorScoreResponse,
     CreatePostRequest,
@@ -230,6 +231,22 @@ export const getTrending = async (params?: {
             scope: params?.scope ?? "GLOBAL",
             limit: params?.limit ?? 20,
         },
+        authenticated: true,
+    })
+}
+
+/**
+ * Lists the ACTIVE campuses (admin-managed reference data), ordered by `sortOrder`.
+ * Authenticated; the standard `ApiResponse` envelope is unwrapped to the array by the
+ * REST client (same as every other community GET here). Backs the campus pickers on the
+ * post composer + profile edit; a post's `campus`/a profile's campus is a `CampusView.code`.
+ *
+ * `GET /api/v1/community/campuses`
+ */
+export const getCampuses = async (): Promise<Array<CampusView>> => {
+    return restRequest<Array<CampusView>>({
+        method: "GET",
+        url: "/community/campuses",
         authenticated: true,
     })
 }

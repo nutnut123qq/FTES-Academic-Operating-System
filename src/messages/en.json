@@ -2213,7 +2213,8 @@
     "linkedinUrl": "LinkedIn",
     "linkedinUrlPlaceholder": "https://linkedin.com/in/username",
     "workMode": "Work mode",
-    "workModeNone": "Not specified"
+    "workModeNone": "Not specified",
+    "campusNone": "No campus"
   },
   "sessions": {
     "title": "Devices",
@@ -6534,7 +6535,9 @@
       "imageInvalid": "Only PNG, JPEG, WebP or GIF images are accepted.",
       "imageUploadFailed": "Could not upload the image. Please try again.",
       "imageUploading": "Uploading…",
-      "removeImage": "Remove image"
+      "removeImage": "Remove image",
+      "campusLabel": "Campus",
+      "campusAll": "All campuses"
     },
     "reputation": {
       "title": "Reputation",

@@ -33,6 +33,21 @@ export interface MediaUploadResponse {
     secureUrl: string
 }
 
+/**
+ * An admin-managed campus (BE `CampusView`, `GET /api/v1/community/campuses`).
+ * The list is reference data: only ACTIVE campuses, ordered by `sortOrder`. A post's
+ * `campus` and a profile's campus are the `code` (e.g. "HCM"), not the `id`.
+ */
+export interface CampusView {
+    id: string
+    code: string
+    name: string
+    nameEn: string | null
+    region: string | null
+    active: boolean
+    sortOrder: number
+}
+
 /** Body sent to `POST /api/v1/community/posts`. */
 export interface CreatePostRequest {
     postType: string

@@ -2222,7 +2222,8 @@
     "websiteUrl": "Website",
     "websiteUrlPlaceholder": "https://trang-cua-ban.com",
     "workMode": "Hình thức làm việc",
-    "workModeNone": "Chưa xác định"
+    "workModeNone": "Chưa xác định",
+    "campusNone": "Không chọn"
   },
   "sessions": {
     "title": "Thiết bị",
@@ -6534,7 +6535,9 @@
       "imageInvalid": "Chỉ nhận ảnh PNG, JPEG, WebP hoặc GIF.",
       "imageUploadFailed": "Không tải được ảnh lên. Vui lòng thử lại.",
       "imageUploading": "Đang tải…",
-      "removeImage": "Bỏ ảnh"
+      "removeImage": "Bỏ ảnh",
+      "campusLabel": "Cơ sở",
+      "campusAll": "Tất cả cơ sở"
     },
     "reputation": {
       "title": "Bảng uy tín",

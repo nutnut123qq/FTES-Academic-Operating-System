@@ -7175,6 +7175,8 @@
       "ai": {
         "open": "Open AI tutor",
         "close": "Close",
+        "expand": "Expand to full screen",
+        "collapse": "Exit full screen",
         "title": "Ask AI",
         "intro": "Select a passage in the lesson to ask about it, or type a question below.",
         "placeholder": "Ask about this lesson…",

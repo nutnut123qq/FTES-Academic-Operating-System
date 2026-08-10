@@ -7175,6 +7175,8 @@
       "ai": {
         "open": "Mở trợ giảng AI",
         "close": "Đóng",
+        "expand": "Mở rộng toàn màn hình",
+        "collapse": "Thu nhỏ",
         "title": "Hỏi AI",
         "intro": "Bôi đen một đoạn trong bài để hỏi, hoặc gõ câu hỏi bên dưới.",
         "placeholder": "Hỏi về bài học…",

@@ -1,9 +1,12 @@
 import dayjs from "dayjs"
 import utc from "dayjs/plugin/utc"
+import timezone from "dayjs/plugin/timezone"
 import duration from "dayjs/plugin/duration"
 import "dayjs/locale/vi"
 
 dayjs.extend(utc)
+// `timezone` dựa trên `utc` (đã extend ngay trên) — thứ tự này là bắt buộc.
+dayjs.extend(timezone)
 dayjs.extend(duration)
 export { dayjs }
 

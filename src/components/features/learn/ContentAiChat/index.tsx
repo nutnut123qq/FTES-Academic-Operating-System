@@ -56,6 +56,14 @@ interface ChatMessage {
 /** Props for {@link ContentAiChat}. */
 export interface ContentAiChatProps {
     className?: string
+    /**
+     * Full-screen host (the FAB's "mở rộng" mode). When true the thread drops its
+     * docked `max-h-[55vh]` cap and just flexes to fill the tall container, so the
+     * conversation uses the whole screen. The component itself is UNCHANGED between
+     * modes (same instance) — only the scroll region's height ceiling differs — so
+     * toggling expand never remounts the chat or loses the in-memory thread.
+     */
+    expanded?: boolean
 }
 
 /** Cap a passage for the "about this passage" quote label. */
@@ -75,7 +83,7 @@ const truncate = (text: string) => (text.length > 120 ? `${text.slice(0, 120)}�
  *
  * @param props - {@link ContentAiChatProps}
  */
-export const ContentAiChat = ({ className }: ContentAiChatProps) => {
+export const ContentAiChat = ({ className, expanded = false }: ContentAiChatProps) => {
     const t = useTranslations("learn")
     const { selection, selectionContext, setSelection } = useContentAiSelection()
     const { selectedModel, setSelectedModel } = useContentAiSelectedModel()
@@ -225,8 +233,14 @@ export const ContentAiChat = ({ className }: ContentAiChatProps) => {
 
     return (
         <div className={cn("flex h-full flex-col gap-3", className)}>
-            {/* thread — self-bounded scroll region (never scrolls the page/popover) */}
-            <ScrollShadow ref={scrollRef} hideScrollBar className="max-h-[55vh] min-h-0 flex-1 overflow-y-auto">
+            {/* thread — self-bounded scroll region (never scrolls the page/popover). Docked:
+                capped at 55vh so the popover stays compact; expanded (full-screen): no cap, just
+                flex to fill the tall container. */}
+            <ScrollShadow
+                ref={scrollRef}
+                hideScrollBar
+                className={cn("min-h-0 flex-1 overflow-y-auto", expanded ? undefined : "max-h-[55vh]")}
+            >
                 <div className="flex flex-col gap-3">
                     {messages.length === 0 && !selection ? (
                         <div className="flex flex-col gap-2">

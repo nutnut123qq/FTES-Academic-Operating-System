@@ -1,21 +1,14 @@
 "use client"
 
 import React, { useState } from "react"
-import {
-    CalendarIcon,
-    ChalkboardTeacherIcon,
-    ConfettiIcon,
-    MapPinIcon,
-    TrophyIcon,
-    UsersIcon,
-    VideoCameraIcon,
-    WrenchIcon,
-} from "@phosphor-icons/react"
-import { Button, Chip, Typography } from "@heroui/react"
+import { CalendarIcon, MapPinIcon, UsersIcon } from "@phosphor-icons/react"
+import { Button, Chip, Typography, toast } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
+import { TYPE_ICON } from "../typeIcons"
+import { useMutateEventRegistrationSwr } from "../hooks/useMutateEventRegistrationSwr"
 import { useQueryEventsSwr } from "../hooks/useQueryEventsSwr"
 import type { Event } from "../hooks/useQueryEventsSwr"
 
@@ -29,20 +22,12 @@ const TYPES: Array<Event["type"] | "all"> = [
     "meetup",
 ]
 
-/** Icon per event type for the card badge. */
-const TYPE_ICON: Record<Event["type"], typeof CalendarIcon> = {
-    webinar: VideoCameraIcon,
-    workshop: WrenchIcon,
-    hackathon: ChalkboardTeacherIcon,
-    competition: TrophyIcon,
-    meetup: ConfettiIcon,
-}
-
 /**
  * Event catalog (§14) — the `/events` list. Mirrors the house catalog archetype
  * (see `SubjectCatalog`): text search + type filter + a grid of event cards linking
  * into each event page. Feature owns data (REST `GET /api/v1/events`) + filtering;
- * tokens own the look. Meta rows the list DTO omits (venue, exact attendee count) are hidden.
+ * tokens own the look. Meta rows the list DTO omits (exact attendee count) are hidden;
+ * nơi diễn ra chỉ hiện ở trang chi tiết `/events/{slug}`.
  */
 export const EventCatalog = () => {
     const t = useTranslations("eventSystem")
@@ -136,10 +121,34 @@ interface EventCardProps {
  * One catalog card: type-badge identity row (links into the event) above the
  * date / location / attendee meta and a register CTA. Whole surface lifts on hover
  * matching its clickable nature; the header row is the navigation affordance.
+ *
+ * CTA ghi thật qua {@link useMutateEventRegistrationSwr} (chung với trang chi tiết):
+ * khách nhận modal đăng nhập, đăng ký xong thì revalidate danh sách nên `seatsLeft` +
+ * trạng thái đăng ký lấy lại từ BE. Huỷ đăng ký chỉ có ở trang chi tiết.
  */
 const EventCard = ({ event }: EventCardProps) => {
     const t = useTranslations("eventSystem")
     const TypeIcon = TYPE_ICON[event.type] ?? CalendarIcon
+    const { submit, isPending } = useMutateEventRegistrationSwr()
+    // Chỉ CONFIRMED/WAITLISTED là đang giữ chỗ — CANCELLED/ATTENDED/NO_SHOW vẫn còn hàng đăng ký
+    // trong DB nhưng không phải chỗ đang giữ (tập CHECK constraint V73).
+    const isRegistered =
+        event.registrationStatus === "CONFIRMED" || event.registrationStatus === "WAITLISTED"
+    // Sự kiện đã qua → KHÔNG còn cho đăng ký, hiện trạng thái thay vì nút CTA. "ENDED" là
+    // status BE (scheduler flip khi qua endAt); fallback theo endAt đã-quá-khứ để bắt cả khi
+    // scheduler chưa kịp flip (đúng ca sự kiện quá ngày mà vẫn "PUBLISHED"). CANCELLED = đã huỷ.
+    const isCancelled = event.status === "CANCELLED"
+    const isEnded =
+        !isCancelled &&
+        (event.status === "ENDED" || (event.endAtMs != null && event.endAtMs < Date.now()))
+    const isOver = isEnded || isCancelled
+
+    const onRegister = async () => {
+        // registerEvent key theo UUID chứ không phải slug (slug chỉ dùng cho route + detail).
+        if ((await submit(event.eventId, "register")) === "failed") {
+            toast.danger(t("registerError"))
+        }
+    }
 
     return (
         <div className="flex flex-col gap-3 rounded-2xl border border-separator p-4 transition-colors hover:bg-default/40">
@@ -188,16 +197,23 @@ const EventCard = ({ event }: EventCardProps) => {
                 )}
             </div>
 
-            <Button
-                size="sm"
-                variant="secondary"
-                className="mt-auto self-start"
-                // Registration (POST /event/events/{id}/registrations, auth + waitlist) is a
-                // separate vertical; the list rewire leaves the CTA unwired for now.
-                onPress={() => {}}
-            >
-                {t("register")}
-            </Button>
+            {/* Sự kiện đã qua/huỷ → badge trạng thái (không hành động); còn hiệu lực → nút đăng ký. */}
+            {isOver ? (
+                <Chip size="sm" variant="soft" className="mt-auto self-start">
+                    {isCancelled ? t("cancelled") : t("ended")}
+                </Chip>
+            ) : (
+                <Button
+                    size="sm"
+                    variant="secondary"
+                    className="mt-auto self-start"
+                    isPending={isPending}
+                    isDisabled={isPending || isRegistered}
+                    onPress={() => void onRegister()}
+                >
+                    {isRegistered ? t("registered") : t("register")}
+                </Button>
+            )}
         </div>
     )
 }

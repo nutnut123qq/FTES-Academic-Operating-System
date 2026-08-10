@@ -10,7 +10,6 @@ import {
     GraduationCapIcon,
     ChalkboardTeacherIcon,
     UserIcon,
-    FileTextIcon,
     GearIcon,
     SignOutIcon,
     WalletIcon,
@@ -34,10 +33,10 @@ export type AccountMenuAuthedProps = WithClassNames<undefined>
 
 /**
  * Account dropdown menu for SIGNED-IN viewers: a labeled "Khám phá" (Explore)
- * section (Trợ lý AI · Dành cho bạn — discovery shortcuts relocated from the
- * header; Recommendations now lives inside the AI Assistant, Trending inside
- * Community), then a primary section (Profile · CV · Settings · Wallet with its
- * live balance + a top-up shortcut), and a separated destructive section (Sign
+ * section (Trợ lý AI — discovery shortcut relocated from the header;
+ * Recommendations now lives inside the AI Assistant, Trending inside Community,
+ * "Dành cho bạn" removed), then a primary section (Profile · Settings · Wallet
+ * with its live balance + a top-up shortcut), and a separated destructive section (Sign
  * out, danger). Dashboard / Activity / Integrations / Roles were removed as
  * redundant (Dashboard unused, Activity duplicated in the profile, System admin
  * links out of scope for the account menu). Self-contained — owns navigation
@@ -123,14 +122,6 @@ export const AccountMenuAuthed = ({ className }: AccountMenuAuthedProps) => {
                 >
                     <UserIcon className="size-5" />
                     <Label>{t("nav.profile")}</Label>
-                </Dropdown.Item>
-                <Dropdown.Item
-                    id="cv"
-                    textValue={t("cv.title")}
-                    onPress={() => go(pathConfig().locale().profile().cv().build())}
-                >
-                    <FileTextIcon className="size-5" />
-                    <Label>{t("cv.title")}</Label>
                 </Dropdown.Item>
                 {/* "Đã lưu / Yêu thích" — the save-for-later library (/saved). */}
                 <Dropdown.Item

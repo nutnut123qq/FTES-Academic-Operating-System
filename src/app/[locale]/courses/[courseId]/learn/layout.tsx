@@ -7,7 +7,6 @@ import { LearnShell } from "@/components/features/learn/LearnShell"
 import { ContentMap } from "@/components/features/learn/ContentMap"
 import { OnThisPage } from "@/components/features/learn/OnThisPage"
 import { LearnToolsRail } from "@/components/features/learn/LearnToolsRail"
-import { LeaderboardCategoryRail } from "@/components/features/learn/Leaderboard/LeaderboardCategoryRail"
 import { ContentAiFab } from "@/components/features/learn/ContentAiFab"
 import { ContentAiAnchoredChat } from "@/components/features/learn/ContentAiChat/ContentAiAnchoredChat"
 import { ContentAiSelectionAsk } from "@/components/features/learn/LessonReader/ContentAiSelectionAsk"
@@ -22,7 +21,7 @@ import { useLearnSidebarStore } from "@/hooks/zustand/learnSidebar/store"
  *
  *  - content / modules (reader + dashboard) → ContentMap on the LEFT.
  *  - lesson reader (a real `contents/<id>` route, not a challenge) → OnThisPage on the RIGHT.
- *  - leaderboard → the category rail on the LEFT.
+ *  - leaderboard → no rail (a single XP board, full width).
  *  - mind-map → full-bleed, no rails.
  *
  * The floating "Ask FTES AI" button and the selection-anchored "Ask AI about
@@ -40,7 +39,6 @@ const LearnLayout = ({ children }: PropsWithChildren) => {
     const isContent = segments[0] === "content"
     const isModules = segments.includes("modules")
     const isChallenge = segments.includes("challenges")
-    const isLeaderboard = segments[0] === "leaderboard"
     const isMindMap = segments[0] === "mind-map"
     const isMockInterview = segments[0] === "mock-interview"
     const isInterview = segments[0] === "interview"
@@ -67,17 +65,6 @@ const LearnLayout = ({ children }: PropsWithChildren) => {
             ariaLabel={t("contentMap.resizeRail")}
         >
             <ContentMap className="min-h-0 lg:flex-1" />
-        </ResizableRail>
-    ) : isLeaderboard ? (
-        <ResizableRail
-            className={railClass}
-            storageKey="ftes.learn.leaderboardRail.width"
-            defaultWidth={280}
-            minWidth={240}
-            maxWidth={400}
-            ariaLabel={t("leaderboard.categories.label")}
-        >
-            <LeaderboardCategoryRail variant="rail" className="min-h-0 lg:flex-1" />
         </ResizableRail>
     ) : undefined
 

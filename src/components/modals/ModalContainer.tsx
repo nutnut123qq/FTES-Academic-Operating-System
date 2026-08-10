@@ -3,6 +3,7 @@ import { AuthenticationModal } from "./AuthenticationModal"
 import { LanguageModal } from "./LanguageModal"
 import { CookieConsentModal } from "./CookieConsentModal"
 import { CommunityComposerModal } from "./CommunityComposerModal"
+import { CommunityPhotoLightboxModal } from "./CommunityPhotoLightboxModal"
 import { PaymentModal } from "./PaymentModal"
 import { SearchOverlay } from "@/components/features/search/SearchOverlay"
 
@@ -14,6 +15,7 @@ export const ModalContainer = () => {
             <LanguageModal />
             <CookieConsentModal />
             <CommunityComposerModal />
+            <CommunityPhotoLightboxModal />
             <PaymentModal />
             <SearchOverlay />
         </>

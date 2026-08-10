@@ -620,10 +620,13 @@
         "addTitle": "Add a card",
         "editTitle": "Edit card",
         "hintLabel": "Hint (optional)",
-        "add": "Add card",
+        "add": "Add as draft",
         "save": "Save changes",
         "cancel": "Cancel",
         "saved": "Card saved.",
+        "draftNotice": "New cards are saved as drafts — publish each one to make it reach learners.",
+        "acceptAll": "Accept all {count} as drafts",
+        "acceptedAll": "Accepted {count} cards as drafts.",
         "deleted": "Card deleted.",
         "delete": "Delete card",
         "edit": "Edit card",
@@ -655,18 +658,6 @@
   "contentActions": {
     "title": "Actions"
   },
-  "lessonRail": {
-    "flashcards": {
-      "title": "Review this lesson",
-      "count": "{decks} decks · {cards} cards",
-      "review": "Review"
-    },
-    "challenges": {
-      "title": "Practice this lesson",
-      "count": "{count} challenges",
-      "practice": "Start challenges"
-    }
-  },
   "courses": {
     "featuredTitle": "Featured courses",
     "viewCourse": "View Course",
@@ -678,6 +669,9 @@
     "count": "{count} courses",
     "continueLearning": "Continue learning",
     "percentComplete": "{percent}% complete",
+    "termUntil": "Open until {date}",
+    "termExpired": "Term ended",
+    "rebuy": "Re-enroll",
     "mine": {
       "title": "My courses",
       "subtitle": "Pick up where you left off.",
@@ -2219,7 +2213,8 @@
     "linkedinUrl": "LinkedIn",
     "linkedinUrlPlaceholder": "https://linkedin.com/in/username",
     "workMode": "Work mode",
-    "workModeNone": "Not specified"
+    "workModeNone": "Not specified",
+    "campusNone": "No campus"
   },
   "sessions": {
     "title": "Devices",
@@ -2545,7 +2540,8 @@
       "rate": "Sign in to rate this resource",
       "uploadResource": "Sign in to upload a resource",
       "follow": "Sign in to follow this user",
-      "feed": "Sign in to view the community feed"
+      "feed": "Sign in to view the community feed",
+      "eventRegister": "Sign in to register for this event"
     }
   },
   "priceTag": {
@@ -3879,10 +3875,37 @@
     },
     "attendeesCount": "{count} attendees",
     "register": "Register",
+    "registered": "Registered",
+    "ended": "Ended",
+    "cancelled": "Cancelled",
+    "cancelRegistration": "Cancel registration",
+    "registerError": "Couldn't register for this event. Please try again.",
+    "cancelError": "Couldn't cancel your registration. Please try again.",
     "locationTypes": {
       "onsite": "On-site",
       "online": "Online",
       "hybrid": "Hybrid"
+    },
+    "dayLabels": {
+      "today": "Today",
+      "tomorrow": "Tomorrow"
+    },
+    "statuses": {
+      "draft": "Draft",
+      "published": "Published",
+      "ongoing": "Ongoing",
+      "ended": "Ended",
+      "cancelled": "Cancelled"
+    },
+    "upcoming": {
+      "empty": "No upcoming events yet."
+    },
+    "detail": {
+      "loadError": "Couldn't load this event.",
+      "notFound": "Event not found.",
+      "notFoundDescription": "It may have been removed, or the link is wrong.",
+      "timeRange": "{start} – {end}",
+      "seatsLeft": "{count} seats left"
     }
   },
   "activity": {
@@ -4238,6 +4261,13 @@
       "subline": "Just how good are our learners? Meet some of the standout faces of FTES.",
       "cta": "View the leaderboard",
       "people": {
+        "thuanDuc": {
+          "name": "Trang Thuan Duc",
+          "lines": {
+            "0": "Won the Golden Toad title in Engineering for the Spring 2025 term.",
+            "1": "The turning point came from the support of the FTES mentor team."
+          }
+        },
         "kimKhoa": {
           "name": "Kim Khoa",
           "lines": {
@@ -5188,6 +5218,11 @@
           "allTypes": "All types",
           "allLifecycles": "All statuses"
         },
+        "sort": {
+          "label": "Sort",
+          "newest": "Newest",
+          "hot": "Hot"
+        },
         "types": {
           "coding": "Coding",
           "sql": "SQL",
@@ -5598,6 +5633,7 @@
         "forbidden": "You don't have access to run AI on this material.",
         "notFound": "The selected material was not found.",
         "invalid": "The selected material can't be used by the AI yet.",
+        "insufficientContext": "This lesson doesn't have enough content for the AI to work with. Pick a longer lesson, or add more content to it.",
         "failed": "The AI job failed. Please try again.",
         "model": "Model: {model}"
       },
@@ -5748,7 +5784,8 @@
     "levels": {
       "basic": "Basic",
       "intermediate": "Intermediate",
-      "advanced": "Advanced"
+      "advanced": "Advanced",
+      "university": "University"
     },
     "categories": {
       "label": "Course categories",
@@ -6271,12 +6308,29 @@
       "generic": "Something went wrong. Please try again."
     }
   },
+  "communityLiveChat": {
+    "title": "Community chat",
+    "onlineCount": "{count} online",
+    "onlineNow": "Online now",
+    "open": "Open community chat",
+    "send": "Send",
+    "placeholder": "Type a message…",
+    "you": "You",
+    "reply": "Reply",
+    "replyingTo": "Replying to {name}",
+    "cancelReply": "Cancel reply",
+    "empty": "No messages yet. Say hi!",
+    "loadError": "Couldn't load messages",
+    "sendFailed": "Couldn't send your message",
+    "signInRequired": "Sign in to join the community chat."
+  },
   "communityHub": {
     "title": "Community",
     "placeholder": "This feed is under construction.",
     "more": "More",
     "menu": {
       "groups": "Groups",
+      "events": "Events",
       "saved": "Saved",
       "reputation": "Reputation",
       "poll": "Poll",
@@ -6292,9 +6346,8 @@
       "member": "Member"
     },
     "rail": {
-      "trending": "Trending",
-      "reputation": "Reputation",
       "poll": "Quick poll",
+      "events": "Upcoming events",
       "seeAll": "See all"
     },
     "promo": {
@@ -6305,6 +6358,13 @@
       "following": "Following",
       "campus": "Campus",
       "trending": "Trending"
+    },
+    "photoViewer": {
+      "previous": "Previous photo",
+      "next": "Next photo",
+      "close": "Close",
+      "loading": "Loading post…",
+      "counter": "Photo {current} of {total}"
     },
     "engagement": {
       "like": "Like",
@@ -6475,7 +6535,9 @@
       "imageInvalid": "Only PNG, JPEG, WebP or GIF images are accepted.",
       "imageUploadFailed": "Could not upload the image. Please try again.",
       "imageUploading": "Uploading…",
-      "removeImage": "Remove image"
+      "removeImage": "Remove image",
+      "campusLabel": "Campus",
+      "campusAll": "All campuses"
     },
     "reputation": {
       "title": "Reputation",
@@ -6943,6 +7005,7 @@
         "hideResult": "Hide result",
         "resultError": "Failed to load the submission result.",
         "resultEmpty": "No detailed result for this submission yet.",
+        "offTopicTitle": "This submission is off-topic for the exercise",
         "problemHeading": "Problem",
         "datasetHeading": "Dataset",
         "examplesHeading": "Examples",
@@ -6974,6 +7037,8 @@
         "selectFileHint": "Pick a file in the tree to see its content and review comments.",
         "reason": "Comment",
         "suggestion": "Suggestion",
+        "before": "Before",
+        "after": "After",
         "noChanges": "No changes",
         "hasChanges": "Needs changes",
         "filesReadHint": "The AI read {count} files across {iterations} rounds.",
@@ -6981,7 +7046,7 @@
         "unanchoredHint": "These comments point to a file that isn't in the tree (or the project couldn't be loaded).",
         "fileLine": "{file} · line {line}",
         "gradeLimitHint": "Used {used}/{limit} project grades",
-        "gradeLimitReached": "A project can be graded at most 2 times."
+        "gradeLimitReached": "A project can be graded at most {limit} times."
       }
     },
     "common": {
@@ -7021,6 +7086,13 @@
         "subtitle": "Unlock every lesson, challenge and material in this course.",
         "unlock": "Unlock course",
         "continueTrial": "Keep trying"
+      },
+      "termAccess": {
+        "until": "Your access is open until {date}",
+        "untilSoon": "Access is expiring soon — finish or renew before the deadline.",
+        "expiredTitle": "The term has ended",
+        "expiredBody": "Your access has been paused. Your learning history is preserved.",
+        "rebuy": "Buy again / Re-enroll"
       },
       "tabs": {
         "content": "Content",
@@ -7116,6 +7188,8 @@
       "ai": {
         "open": "Open AI tutor",
         "close": "Close",
+        "expand": "Expand to full screen",
+        "collapse": "Exit full screen",
         "title": "Ask AI",
         "intro": "Select a passage in the lesson to ask about it, or type a question below.",
         "placeholder": "Ask about this lesson…",
@@ -7542,6 +7616,8 @@
         "failed": "Grading failed. Try again — your code is kept as-is.",
         "invalid": "The submission is invalid — check your code and language.",
         "modelNotAllowed": "This model is not on the allowlist — switched back to the default model, please grade again.",
+        "freeRunLimit": "Free trial: each challenge allows only 2 runs and 1 AI grade. Enroll in the course to keep practicing without limits.",
+        "freeGradeLimit": "Free trial: each challenge allows only 1 AI grade and 2 runs. Enroll in the course to keep grading without limits.",
         "generic": "Something went wrong while grading. Please try again."
       }
     },

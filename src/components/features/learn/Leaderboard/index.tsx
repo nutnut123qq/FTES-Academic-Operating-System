@@ -3,7 +3,7 @@
 import React, { useMemo } from "react"
 import { Button, Typography } from "@heroui/react"
 import { useLocale, useTranslations } from "next-intl"
-import { useParams, useSearchParams } from "next/navigation"
+import { useParams } from "next/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { PageHeader } from "@/components/blocks/layout/PageHeader"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
@@ -14,23 +14,22 @@ import {
 import { LeaderboardPodium } from "./LeaderboardPodium"
 import { LeaderboardTable } from "./LeaderboardTable"
 import { LeaderboardChampion } from "./LeaderboardChampion"
-import { LeaderboardCategoryRail, parseCategoryParam } from "./LeaderboardCategoryRail"
 
 /**
- * Course leaderboard (StarCI port). Ranks learners by the category chosen in the
- * layout-owned LEFT rail (mirrored to a mobile chip strip here). Shapes the board:
- * 1 entry → a champion card; ≥3 → a top-3 podium + a ranked table; else a plain
- * table. A toolbar shows the ranked-by category + last-updated time + a refresh.
+ * Course leaderboard (StarCI port). ONE board only, always ranked by total XP —
+ * matching the single board the backend computes (no category switcher, so every
+ * learner sees the same ranking). Shapes the board: 1 entry → a champion card;
+ * ≥3 → a top-3 podium + a ranked table; else a plain table. A toolbar shows the
+ * ranked-by unit + last-updated time + a refresh.
  *
- * Read-only + client-re-ranked (no sockets), mirroring StarCI. The category rail
- * lives in the route layout; this feature renders only the centered board column.
+ * Read-only (no sockets), mirroring StarCI.
  */
 export const Leaderboard = () => {
     const t = useTranslations("learn")
     const locale = useLocale()
     const { courseId } = useParams<{ courseId: string }>()
-    const searchParams = useSearchParams()
-    const selectedCategory = parseCategoryParam(searchParams.get("category"))
+    // single board: always total XP (hardcoded so a `?category=` deep-link can't re-rank it)
+    const selectedCategory = "total" as const
     const { entries, computedAt, viewerUserId, isLoading, isValidating, error, mutate } = useQueryLearnLeaderboardSwr(courseId)
 
     const ranked = useMemo(
@@ -49,9 +48,6 @@ export const Leaderboard = () => {
             <PageHeader title={t("leaderboard.title")} description={t("leaderboard.subtitle")} />
 
             <div className="flex flex-col gap-6">
-                {/* mobile category selector (rail is desktop-only, layout-owned) */}
-                <LeaderboardCategoryRail variant="chips" className="lg:hidden" />
-
                 {/* toolbar: ranked-by + updated-at + refresh */}
                 <div className="flex items-center justify-between gap-3">
                     <Typography type="body-sm" weight="medium">

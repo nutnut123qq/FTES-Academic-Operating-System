@@ -4,10 +4,10 @@
 - [x] 1.1 `ChallengeSubmission`: `usedCount` lọc `status !== "FAILED"`
 - [x] 1.2 `ChallengeMethodSolver`: `projectGradesUsed` lọc thêm `status !== "FAILED"`
 
-## 2. Cap project chỉ cảnh báo
-- [x] 2.1 Bỏ `projectLimitReached` khỏi `canSubmitUrl` / `canSubmitFile` / `canSubmitProject`
-- [x] 2.2 Bỏ khỏi guard đầu 3 handler submit
-- [x] 2.3 Giữ hint/cảnh báo + `mapSubmitError` dịch `PROJECT_GRADE_LIMIT_REACHED`
+## 2. Cap project (đã hợp nhất với master)
+- [x] 2.1 Giữ bản purchased-aware của master: `projectGradeLimit = purchased ? maxSubmissions : 2`
+- [x] 2.2 Giữ khoá nút theo cap (không còn khoá nhầm vì FE đã biết `purchased`)
+- [x] 2.3 `mapSubmitError` vẫn dịch `PROJECT_GRADE_LIMIT_REACHED`
 
 ## 3. Verify
 - [x] 3.1 `tsc --noEmit` sạch

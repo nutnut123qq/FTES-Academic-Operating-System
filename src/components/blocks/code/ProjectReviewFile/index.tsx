@@ -21,6 +21,10 @@ export interface ProjectReviewFileProps extends WithClassNames<undefined> {
     reasonLabel: string
     /** Localized caption for the review comment's suggestion block ("Đề xuất"). */
     suggestionLabel: string
+    /** Localized caption for the diff's "before" (current) block ("Trước"). */
+    beforeLabel: string
+    /** Localized caption for the diff's "after" (suggested) block ("Sau"). */
+    afterLabel: string
 }
 
 /** Escapes text for the plain (pre-highlight / fallback) line render. */
@@ -28,24 +32,104 @@ const splitLines = (content: string): Array<string> => content.replace(/\n$/, ""
 
 /** Props for {@link ReviewComment}. */
 export interface ReviewCommentProps {
-    /** The change to render (reason + suggestion). */
+    /** The change to render (reason + suggestion + optional before/after diff). */
     comment: CodeChange
     /** Localized caption for the reason block ("Nhận xét"). */
     reasonLabel: string
     /** Localized caption for the suggestion block ("Đề xuất"). */
     suggestionLabel: string
+    /** Localized caption for the diff's "before" (current) block ("Trước"). */
+    beforeLabel: string
+    /** Localized caption for the diff's "after" (suggested) block ("Sau"). */
+    afterLabel: string
 }
 
 /**
- * One GitHub-style review comment card (reason + suggestion). Reused both inline (pinned under a
- * flagged line), as a file-level banner (for `line <= 0` / out-of-range comments), and by the
- * result view's flat fallback list (comments whose file isn't in the served tree). Copy is
- * passed in so the card stays i18n-free.
+ * A display-only GitHub-style before/after diff for one flagged change: the current line(s)
+ * in red (`-`), the suggested replacement in green (`+`). Pure and props-only (copy passed in),
+ * theme-aware via semantic tokens, monospace; there is NO "apply" action — the learner reads
+ * it. Long lines soft-wrap so the diff never forces a page-level horizontal scroll.
+ */
+const BeforeAfterDiff = ({
+    oldCode,
+    newCode,
+    beforeLabel,
+    afterLabel,
+}: {
+    oldCode: string
+    newCode: string
+    beforeLabel: string
+    afterLabel: string
+}) => (
+    <div className="flex flex-col gap-2">
+        <DiffBlock label={beforeLabel} code={oldCode} tone="danger" sign="-" />
+        <DiffBlock label={afterLabel} code={newCode} tone="success" sign="+" />
+    </div>
+)
+
+/** One side of {@link BeforeAfterDiff} — a labelled monospace block tinted by `tone`. */
+const DiffBlock = ({
+    label,
+    code,
+    tone,
+    sign,
+}: {
+    label: string
+    code: string
+    tone: "danger" | "success"
+    sign: string
+}) => (
+    <div
+        className={cn(
+            "overflow-hidden rounded-lg border",
+            tone === "danger" ? "border-danger/30" : "border-success/30",
+        )}
+    >
+        <div className={cn("px-2 py-1", tone === "danger" ? "bg-danger/10" : "bg-success/10")}>
+            <Typography
+                type="body-xs"
+                weight="semibold"
+                className={tone === "danger" ? "text-danger" : "text-success"}
+            >
+                {label}
+            </Typography>
+        </div>
+        <div
+            className={cn(
+                "flex flex-col font-mono text-xs leading-relaxed",
+                tone === "danger" ? "bg-danger/5" : "bg-success/5",
+            )}
+        >
+            {splitLines(code).map((line, index) => (
+                <div key={index} className="flex items-start gap-2 px-3 py-0.5">
+                    <span
+                        aria-hidden
+                        className={cn("select-none", tone === "danger" ? "text-danger" : "text-success")}
+                    >
+                        {sign}
+                    </span>
+                    <span className="min-w-0 flex-1 whitespace-pre-wrap break-words text-foreground">
+                        {line.length > 0 ? line : " "}
+                    </span>
+                </div>
+            ))}
+        </div>
+    </div>
+)
+
+/**
+ * One GitHub-style review comment card (reason + suggestion, plus an optional display-only
+ * before/after diff when the change carries both `oldCode` and `newCode`). Reused both inline
+ * (pinned under a flagged line), as a file-level banner (for `line <= 0` / out-of-range
+ * comments), and by the result view's flat fallback list (comments whose file isn't in the
+ * served tree). Copy is passed in so the card stays i18n-free.
  */
 export const ReviewComment = ({
     comment,
     reasonLabel,
     suggestionLabel,
+    beforeLabel,
+    afterLabel,
 }: ReviewCommentProps) => (
     <div className="flex flex-col gap-3">
         <div className="flex items-start gap-2">
@@ -70,6 +154,16 @@ export const ReviewComment = ({
                 </Typography>
             </div>
         </div>
+        {/* Before/after code diff — display-only, shown ONLY when the grader emitted both
+            snippet sides (older grades / prose-only suggestions omit them). */}
+        {typeof comment.oldCode === "string" && typeof comment.newCode === "string" ? (
+            <BeforeAfterDiff
+                oldCode={comment.oldCode}
+                newCode={comment.newCode}
+                beforeLabel={beforeLabel}
+                afterLabel={afterLabel}
+            />
+        ) : null}
     </div>
 )
 
@@ -88,6 +182,8 @@ export const ProjectReviewFile = ({
     changes,
     reasonLabel,
     suggestionLabel,
+    beforeLabel,
+    afterLabel,
     className,
 }: ProjectReviewFileProps) => {
     /** Per-line highlighted innerHTML from shiki; `null` keeps the plain-text fallback. */
@@ -152,6 +248,8 @@ export const ProjectReviewFile = ({
                             comment={comment}
                             reasonLabel={reasonLabel}
                             suggestionLabel={suggestionLabel}
+                            beforeLabel={beforeLabel}
+                            afterLabel={afterLabel}
                         />
                     ))}
                 </div>
@@ -192,6 +290,8 @@ export const ProjectReviewFile = ({
                                         comment={comment}
                                         reasonLabel={reasonLabel}
                                         suggestionLabel={suggestionLabel}
+                                        beforeLabel={beforeLabel}
+                                        afterLabel={afterLabel}
                                     />
                                 </div>
                             ))}

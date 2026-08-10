@@ -35,6 +35,8 @@ export interface EventView {
     startAt: string
     endAt: string
     locationType: string
+    /** Nơi diễn ra: `ONLINE` ⇒ link phòng họp, `ONSITE` ⇒ địa chỉ. BE có thể bỏ trống. */
+    venue?: string
     capacity?: number
     seatsLeft?: number
     myRegistrationStatus?: string

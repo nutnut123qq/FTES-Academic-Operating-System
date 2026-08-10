@@ -138,7 +138,7 @@ export interface CourseDetail {
     description: string
     /** Total learning-time label, e.g. "6 giờ". */
     durationLabel: string
-    /** Numeric total learning hours — optional until the BE course contract lands. */
+    /** Numeric total learning hours (BE `totalDurationSeconds`) — absent when not measurable. */
     durationHours?: number
     price: CoursePrice
     rating: { avg: number; count: number }
@@ -222,7 +222,12 @@ const toCourseDetail = (dto: CourseDetailDto): CourseDetail => {
         coverUrl: course.imageHeader || undefined,
         description: dto.description ?? "",
         durationLabel: "",
-        durationHours: undefined,
+        // Real total learning time (BE seconds → hours). `null`/absent (nothing
+        // measurable) stays `undefined` so the chip hides; a measurable course
+        // shorter than an hour floors to 1 rather than "0 giờ".
+        durationHours: dto.totalDurationSeconds
+            ? Math.max(1, Math.round(dto.totalDurationSeconds / 3600))
+            : undefined,
         price: { vnd: priceVnd, usd: 0, originalVnd: originalPriceVnd },
         // Real aggregate: avg star + rating count from the BE CourseSummary.
         rating: { avg: Number.isFinite(star) ? star : 0, count: course.ratingCount ?? 0 },
@@ -283,15 +288,15 @@ export const useQueryCourseDetailSwr = (courseId: string) => {
     const course =
         data && enrollments
             ? {
-                  ...data,
-                  enrollment: {
-                      isEnrolled: !!matched || access?.enrolled === true,
-                      // Real paid flag: from the matched enrollment, else the
-                      // access-state fallback. Anonymous / neither → false.
-                      isPurchased:
+                ...data,
+                enrollment: {
+                    isEnrolled: !!matched || access?.enrolled === true,
+                    // Real paid flag: from the matched enrollment, else the
+                    // access-state fallback. Anonymous / neither → false.
+                    isPurchased:
                           matched?.isPurchased === true || access?.purchased === true,
-                  },
-              }
+                },
+            }
             : data
     return { course, isLoading, error, mutate }
 }

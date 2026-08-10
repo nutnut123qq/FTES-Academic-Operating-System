@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Card, CardContent, Chip, Typography, cn } from "@heroui/react"
-import { CheckCircleIcon, ClockIcon, FlameIcon } from "@phosphor-icons/react"
+import { ClockIcon, FlameIcon } from "@phosphor-icons/react"
 import { useFormatter, useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
 import { mutate as globalMutate } from "swr"
@@ -343,84 +343,84 @@ export const LessonReader = () => {
                 }}
             >
                 {lesson ? (
-                        <>
-                            {/* video player (VIDEO lessons) — above the article */}
-                            {lesson.hasVideo ? (
-                                <LessonVideoBlock
-                                    key={contentId}
+                    <>
+                        {/* video player (VIDEO lessons) — above the article */}
+                        {lesson.hasVideo ? (
+                            <LessonVideoBlock
+                                key={contentId}
+                                courseId={courseId}
+                                lessonId={contentId}
+                                courseRawId={lesson.courseRawId}
+                                courseTitle={lesson.courseTitle}
+                                courseCoverUrl={lesson.courseCoverUrl}
+                                lessonTitle={lesson.title}
+                                packageSlugs={lesson.packageSlugs}
+                                videoRef={lesson.videoRef}
+                                onHalfWatched={handleHalfWatched}
+                                onPurchased={() => { void mutate() }}
+                            />
+                        ) : null}
+                        {/* completion cheer anchored beside the player — this fires on the
+                                video ≥50% path, so the learner is looking here, not at the bottom
+                                completion block. Keyed match self-clears on lesson change. */}
+                        {celebratedId === contentId ? (
+                            <LessonCompleteCelebration lessonId={contentId} className="mx-auto w-full max-w-3xl" />
+                        ) : null}
+
+                        {/* reading card — DOCUMENT lessons get the dedicated DocumentReader
+                                (markdown/HTML/links + teaser fade + paywall). VIDEO lessons and
+                                mixed-content lessons keep the legacy reading card path. */}
+                        {lesson.contentType === "DOCUMENT" ? (
+                            <>
+                                <DocumentReader
+                                    bodyMd={bodyMd}
+                                    documentHtml={lesson.documentHtml}
+                                    locked={isLocked}
+                                    teaser={lesson.teaser}
+                                    accessLevel={accessLevel}
+                                    contentType={lesson.contentType}
                                     courseId={courseId}
-                                    lessonId={contentId}
                                     courseRawId={lesson.courseRawId}
                                     courseTitle={lesson.courseTitle}
                                     courseCoverUrl={lesson.courseCoverUrl}
+                                    lessonId={contentId}
                                     lessonTitle={lesson.title}
                                     packageSlugs={lesson.packageSlugs}
-                                    videoRef={lesson.videoRef}
-                                    onHalfWatched={handleHalfWatched}
                                     onPurchased={() => { void mutate() }}
                                 />
-                            ) : null}
-                            {/* completion cheer anchored beside the player — this fires on the
-                                video ≥50% path, so the learner is looking here, not at the bottom
-                                completion block. Keyed match self-clears on lesson change. */}
-                            {celebratedId === contentId ? (
-                                <LessonCompleteCelebration lessonId={contentId} className="mx-auto w-full max-w-3xl" />
-                            ) : null}
-
-                            {/* reading card — DOCUMENT lessons get the dedicated DocumentReader
-                                (markdown/HTML/links + teaser fade + paywall). VIDEO lessons and
-                                mixed-content lessons keep the legacy reading card path. */}
-                            {lesson.contentType === "DOCUMENT" ? (
-                                <>
-                                    <DocumentReader
-                                        bodyMd={bodyMd}
-                                        documentHtml={lesson.documentHtml}
-                                        locked={isLocked}
-                                        teaser={lesson.teaser}
-                                        accessLevel={accessLevel}
-                                        contentType={lesson.contentType}
-                                        courseId={courseId}
-                                        courseRawId={lesson.courseRawId}
-                                        courseTitle={lesson.courseTitle}
-                                        courseCoverUrl={lesson.courseCoverUrl}
-                                        lessonId={contentId}
-                                        lessonTitle={lesson.title}
-                                        packageSlugs={lesson.packageSlugs}
-                                        onPurchased={() => { void mutate() }}
-                                    />
-                                    {/* one-tap reaction + view count — the DocumentReader path used
+                                {/* one-tap reaction + view count — the DocumentReader path used
                                         to drop this footer, losing like/reaction on every DOCUMENT
                                         lesson. Mount it here on the same rule as the VIDEO/legacy
                                         reading-card path (visible + unlocked). */}
-                                    {!isLocked && !isReadingEmpty ? (
-                                        <div className="mx-auto w-full max-w-3xl">
-                                            <LessonReactionFooter contentId={contentId} accessLevel={accessLevel} />
-                                        </div>
-                                    ) : null}
-                                </>
-                            ) : showReadingCard ? (
-                                <div className="mx-auto w-full max-w-3xl">
-                                    <Card>
-                                        <CardContent>
-                                            {/* selection-hint only where there is real selectable text */}
-                                            {!isLocked && hasWrittenBody && !isLinkOnly ? <SelectionHintCallout /> : null}
-                                            <div className="relative">
-                                                <div id="lesson-article" className={cn("flex flex-col gap-4", showDocumentPreviewTeaser && "select-none")}>
-                                                    {isLinkOnly ? (
-                                                        <LessonResourceLinks urls={resourceLinks} />
-                                                    ) : bodyMd ? (
-                                                        <MarkdownContent reading markdown={bodyMd} />
-                                                    ) : lesson.documentHtml ? (
-                                                        // Fallback for un-migrated lessons whose body still lives as HTML in `videoRef`.
-                                                        <LessonDocumentHtml html={lesson.documentHtml} />
-                                                    ) : isReadingEmpty ? (
-                                                        <EmptyContent
-                                                            icon={<BookOpenIcon aria-hidden focusable="false" className="size-8 text-muted" />}
-                                                            title={t("content.empty2")}
-                                                        />
-                                                    ) : null}
-                                                </div>
-                                                {/* Medium-style teaser fade behind the paywall — ONLY for a
+                                {!isLocked && !isReadingEmpty ? (
+                                    <div className="mx-auto w-full max-w-3xl">
+                                        <LessonReactionFooter contentId={contentId} accessLevel={accessLevel} />
+                                    </div>
+                                ) : null}
+                            </>
+                        ) : showReadingCard ? (
+                            <div className="mx-auto w-full max-w-3xl">
+                                <Card>
+                                    <CardContent>
+                                        {/* selection-hint only where there is real selectable text */}
+                                        {!isLocked && hasWrittenBody && !isLinkOnly ? <SelectionHintCallout /> : null}
+                                        <div className="relative">
+                                            <div id="lesson-article" className={cn("flex flex-col gap-4", showDocumentPreviewTeaser && "select-none")}>
+                                                {isLinkOnly ? (
+                                                    <LessonResourceLinks urls={resourceLinks} />
+                                                ) : bodyMd ? (
+                                                    <MarkdownContent reading markdown={bodyMd} />
+                                                ) : lesson.documentHtml ? (
+                                                // Fallback for un-migrated lessons whose body still lives as HTML in `videoRef`.
+                                                    <LessonDocumentHtml html={lesson.documentHtml} />
+                                                ) : isReadingEmpty ? (
+                                                    <EmptyContent
+                                                        icon={<BookOpenIcon aria-hidden focusable="false" className="size-8 text-muted" />}
+                                                        title={t("content.empty2")}
+                                                    />
+                                                ) : null}
+                                            </div>
+                                            {/* Medium-style teaser fade behind the paywall — ONLY for a
                                                     DOCUMENT free-trial preview with teaser text to fade. A VIDEO
                                                     (or fully-locked) lesson never gets this article blur — the
                                                     video has its own preview clamp; `showDocumentPreviewTeaser`
@@ -428,110 +428,109 @@ export const LessonReader = () => {
                                                     `inset-0` (exactly the article box) with a transparent top
                                                     half, so on a SHORT body it can never exceed the article and
                                                     spill upward over the title. */}
-                                                {showDocumentPreviewTeaser && hasTeaserBody ? (
-                                                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent from-50% via-surface/60 to-surface" />
-                                                ) : null}
-                                            </div>
-                                            {/* one-tap reaction + view count for a finished, readable lesson */}
-                                            {!isLocked && !isReadingEmpty ? (
-                                                <LessonReactionFooter contentId={contentId} accessLevel={accessLevel} />
+                                            {showDocumentPreviewTeaser && hasTeaserBody ? (
+                                                <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent from-50% via-surface/60 to-surface" />
                                             ) : null}
-                                            {showLegacyPaywall ? (
-                                                <div className="mt-6 flex flex-col items-start gap-3 border-t border-default pt-6">
-                                                    <LockSimpleIcon aria-hidden focusable="false" className="size-8 text-accent" />
-                                                    <Typography type="body" weight="semibold">
-                                                        {isPreview
-                                                            ? t("reader.previewTitle")
-                                                            : lockedPackageNames
-                                                                ? t("reader.lockedTitlePackages", { packages: lockedPackageNames })
-                                                                : t("reader.lockedTitle")}
-                                                    </Typography>
+                                        </div>
+                                        {/* one-tap reaction + view count for a finished, readable lesson */}
+                                        {!isLocked && !isReadingEmpty ? (
+                                            <LessonReactionFooter contentId={contentId} accessLevel={accessLevel} />
+                                        ) : null}
+                                        {showLegacyPaywall ? (
+                                            <div className="mt-6 flex flex-col items-start gap-3 border-t border-default pt-6">
+                                                <LockSimpleIcon aria-hidden focusable="false" className="size-8 text-accent" />
+                                                <Typography type="body" weight="semibold">
+                                                    {isPreview
+                                                        ? t("reader.previewTitle")
+                                                        : lockedPackageNames
+                                                            ? t("reader.lockedTitlePackages", { packages: lockedPackageNames })
+                                                            : t("reader.lockedTitle")}
+                                                </Typography>
+                                                <Typography type="body-sm" color="muted">
+                                                    {isPreview
+                                                        ? t("reader.previewBody")
+                                                        : t("reader.lockedBody")}
+                                                </Typography>
+                                                {isPreview && lesson?.teaser?.cheapestPackage ? (
                                                     <Typography type="body-sm" color="muted">
-                                                        {isPreview
-                                                            ? t("reader.previewBody")
-                                                            : t("reader.lockedBody")}
+                                                        {t("reader.previewCheapest", {
+                                                            name: lesson.teaser.cheapestPackage.name,
+                                                            price: format.number(Number(lesson.teaser.cheapestPackage.salePrice)),
+                                                        })}
                                                     </Typography>
-                                                    {isPreview && lesson?.teaser?.cheapestPackage ? (
-                                                        <Typography type="body-sm" color="muted">
-                                                            {t("reader.previewCheapest", {
-                                                                name: lesson.teaser.cheapestPackage.name,
-                                                                price: format.number(Number(lesson.teaser.cheapestPackage.salePrice)),
-                                                            })}
-                                                        </Typography>
-                                                    ) : null}
-                                                    <Button variant="primary" onPress={() => openGate(lesson.isVideoLesson ? "video" : "document")}>
-                                                        {t("reader.enrollCta")}
-                                                    </Button>
-                                                </div>
-                                            ) : null}
-                                        </CardContent>
-                                    </Card>
-                                </div>
-                            ) : !isLocked ? (
-                                // video-only lesson: no empty paper — just the reaction bar
-                                <div className="mx-auto w-full max-w-3xl">
-                                    <LessonReactionFooter contentId={contentId} accessLevel={accessLevel} />
-                                </div>
-                            ) : null}
+                                                ) : null}
+                                                <Button variant="primary" onPress={() => openGate(lesson.isVideoLesson ? "video" : "document")}>
+                                                    {t("reader.enrollCta")}
+                                                </Button>
+                                            </div>
+                                        ) : null}
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        ) : !isLocked ? (
+                        // video-only lesson: no empty paper — just the reaction bar
+                            <div className="mx-auto w-full max-w-3xl">
+                                <LessonReactionFooter contentId={contentId} accessLevel={accessLevel} />
+                            </div>
+                        ) : null}
 
-                            {/* engagement + navigation OUTSIDE the reading card (hidden while locked) */}
-                            {!isLocked ? (
-                                <div className="flex flex-col gap-6 pb-6">
-                                    {/* "Làm thử thách" — a clear trial CTA after the lesson content
+                        {/* engagement + navigation OUTSIDE the reading card (hidden while locked) */}
+                        {!isLocked ? (
+                            <div className="flex flex-col gap-6 pb-6">
+                                {/* "Làm thử thách" — a clear trial CTA after the lesson content
                                         when this accessible (free/trial FULL) lesson carries a FREE
                                         challenge, so a trial learner sees the challenge to do after
                                         studying. Routes to the free challenge's solver (no paywall).
                                         Non-free challenges leave `freeChallengeSlug` null → no CTA
                                         (they keep the existing Challenges-tab + BE access gate). */}
-                                    {lesson.freeChallengeSlug ? (
-                                        <TrialChallengeCta
-                                            className="mx-auto w-full max-w-3xl"
-                                            onOpen={() =>
-                                                router.push(
-                                                    challengeHref(
-                                                        courseId,
-                                                        lesson.moduleId,
-                                                        contentId,
+                                {lesson.freeChallengeSlug ? (
+                                    <TrialChallengeCta
+                                        className="mx-auto w-full max-w-3xl"
+                                        onOpen={() =>
+                                            router.push(
+                                                challengeHref(
+                                                    courseId,
+                                                    lesson.moduleId,
+                                                    contentId,
                                                         lesson.freeChallengeSlug!,
-                                                    ),
-                                                )
-                                            }
-                                        />
-                                    ) : null}
-                                    {/* quiz block — real taker contract; only for lessons that
+                                                ),
+                                            )
+                                        }
+                                    />
+                                ) : null}
+                                {/* quiz block — real taker contract; only for lessons that
                                         carry a PUBLISHED quiz (no request otherwise) */}
-                                    {lesson.hasQuiz ? (
-                                        <LessonQuizBlock
-                                            lessonId={contentId}
-                                            courseId={courseId}
-                                            className="mx-auto w-full max-w-3xl"
-                                        />
-                                    ) : null}
-                                    <LessonCompletion
-                                        key={contentId}
-                                        contentId={contentId}
-                                        hasVideo={lesson.hasVideo}
-                                        isCompleted={lesson.isCompleted}
-                                        registerFire={registerFire}
-                                        onCelebrate={handleCelebrate}
+                                {lesson.hasQuiz ? (
+                                    <LessonQuizBlock
+                                        lessonId={contentId}
+                                        courseId={courseId}
                                         className="mx-auto w-full max-w-3xl"
                                     />
-                                    {/* on-demand AI study tools (note + flashcards) grounded on
+                                ) : null}
+                                <LessonCompletion
+                                    key={contentId}
+                                    contentId={contentId}
+                                    hasVideo={lesson.hasVideo}
+                                    isCompleted={lesson.isCompleted}
+                                    registerFire={registerFire}
+                                    onCelebrate={handleCelebrate}
+                                />
+                                {/* on-demand AI study tools (note + flashcards) grounded on
                                         this lesson — VIDEO-lesson-only, still behind the lock gate */}
-                                    {lesson.isVideoLesson ? (
-                                        <LessonAiStudy contentId={contentId} className="mx-auto w-full max-w-3xl" />
-                                    ) : null}
-                                    <LessonComments courseId={courseId} contentId={contentId} className="mx-auto w-full max-w-3xl" />
-                                    <LessonPager
-                                        className="mx-auto w-full max-w-3xl"
-                                        prevHref={lesson.prevId ? readerHref(courseId, lesson.prevId) : null}
-                                        prevTitle={lesson.prevTitle}
-                                        nextHref={lesson.nextId ? readerHref(courseId, lesson.nextId) : null}
-                                        nextTitle={lesson.nextTitle}
-                                    />
-                                </div>
-                            ) : null}
-                        </>
+                                {lesson.isVideoLesson ? (
+                                    <LessonAiStudy contentId={contentId} className="mx-auto w-full max-w-3xl" />
+                                ) : null}
+                                <LessonComments courseId={courseId} contentId={contentId} className="mx-auto w-full max-w-3xl" />
+                                <LessonPager
+                                    className="mx-auto w-full max-w-3xl"
+                                    prevHref={lesson.prevId ? readerHref(courseId, lesson.prevId) : null}
+                                    prevTitle={lesson.prevTitle}
+                                    nextHref={lesson.nextId ? readerHref(courseId, lesson.nextId) : null}
+                                    nextTitle={lesson.nextTitle}
+                                />
+                            </div>
+                        ) : null}
+                    </>
                 ) : null}
             </AsyncContent>
 
@@ -557,6 +556,8 @@ export const LessonReader = () => {
 
 /**
  * Lesson completion — now fully automatic (no manual "Mark as complete" CTA).
+ * Renders NOTHING: it is a headless progress engine (the sidebar row is where a
+ * finished lesson reads as done), so never drop it for "looking empty".
  *
  *  - VIDEO lessons complete when the learner has watched ≥ 50% of the video: the
  *    player reports that through the parent's `onHalfWatched`, which the parent
@@ -577,7 +578,6 @@ const LessonCompletion = ({
     isCompleted,
     registerFire,
     onCelebrate,
-    className,
 }: {
     contentId: string
     hasVideo: boolean
@@ -590,9 +590,7 @@ const LessonCompletion = ({
      * lesson never re-celebrates.
      */
     onCelebrate?: () => void
-    className?: string
 }) => {
-    const t = useTranslations("learn")
     const mark = usePostMarkLessonCompleteSwr()
     const [completed, setCompleted] = useState(isCompleted)
     /** Per-session once-guard: never send twice for this lesson instance. */
@@ -685,22 +683,11 @@ const LessonCompletion = ({
         }
     }, [hasVideo, fire])
 
-    // No manual CTA — just a small, unobtrusive "already completed" indicator. The
+    // Nothing to render at the bottom of the lesson: no manual CTA and no "already
+    // completed" badge (the content map turns a finished lesson green instead). The
     // transient cheer for an on-page completion is rendered by the parent beside the
-    // player (see `onCelebrate`), not here at the bottom of the lesson.
-    if (!completed) {
-        return null
-    }
-    return (
-        <div className={cn("flex flex-col gap-4", className)}>
-            <div className="flex items-center justify-center gap-2 text-success">
-                <CheckCircleIcon aria-hidden focusable="false" weight="fill" className="size-5" />
-                <Typography type="body-sm" weight="medium">
-                    {t("reader.completed")}
-                </Typography>
-            </div>
-        </div>
-    )
+    // player (see `onCelebrate`). The effects above are the whole job.
+    return null
 }
 
 /** Prev / next pager cards (StarCI port — prev left, next right). */

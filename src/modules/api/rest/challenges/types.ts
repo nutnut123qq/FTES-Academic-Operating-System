@@ -143,6 +143,19 @@ export interface ChallengeView {
      * absent on older deployments / non-code challenges.
      */
     sampleTestCases?: Array<SampleTestCaseView> | null
+    /**
+     * How many submissions this challenge has received across all participants — the BE
+     * popularity signal that drives the "Hot" sort on the practice bank. Additive — absent
+     * on older deployments → treated as `0`.
+     */
+    submissionCount?: number
+    /**
+     * "Học thử" (free-trial) flag. When true the tight per-challenge project-grade cap
+     * applies (cost protection for non-payers); when false (a paid challenge the learner
+     * bought) the mentor's `maxSubmissions` is the sole submission cap. Additive — absent
+     * on older deployments → treated as not-free (paid).
+     */
+    free?: boolean
 }
 
 /** Wrapper for a batch test-case upsert. */

@@ -620,10 +620,13 @@
         "addTitle": "Thêm thẻ mới",
         "editTitle": "Sửa thẻ",
         "hintLabel": "Gợi ý (không bắt buộc)",
-        "add": "Thêm thẻ",
+        "add": "Thêm vào bản nháp",
         "save": "Lưu thay đổi",
         "cancel": "Huỷ",
         "saved": "Đã lưu thẻ.",
+        "draftNotice": "Thẻ mới lưu vào bản nháp — bấm Xuất bản ở từng thẻ mới tới tay học viên.",
+        "acceptAll": "Nhận cả {count} thẻ vào bản nháp",
+        "acceptedAll": "Đã nhận {count} thẻ vào bản nháp.",
         "deleted": "Đã xoá thẻ.",
         "delete": "Xoá thẻ",
         "edit": "Sửa thẻ",
@@ -655,21 +658,6 @@
   "contentActions": {
     "title": "Hành động"
   },
-  "lessonRail": {
-    "flashcards": {
-      "title": "Ôn lại bài này",
-      "count": "{decks} bộ · {cards} thẻ",
-      "review": "Ôn tập"
-    },
-    "challenges": {
-      "title": "Luyện tập bài này",
-      "count": "{count} thử thách",
-      "practice": "Làm thử thách"
-    },
-    "documents": {
-      "title": "Tài liệu cho lesson này"
-    }
-  },
   "courses": {
     "featuredTitle": "Khóa học tiêu biểu",
     "viewCourse": "Xem khóa học",
@@ -681,6 +669,9 @@
     "count": "{count} khóa học",
     "continueLearning": "Tiếp tục học",
     "percentComplete": "Hoàn thành {percent}%",
+    "termUntil": "Mở đến {date}",
+    "termExpired": "Kỳ học đã kết thúc",
+    "rebuy": "Đăng ký lại",
     "mine": {
       "title": "Khóa học của tôi",
       "subtitle": "Tiếp tục hành trình học của bạn.",
@@ -2231,7 +2222,8 @@
     "websiteUrl": "Website",
     "websiteUrlPlaceholder": "https://trang-cua-ban.com",
     "workMode": "Hình thức làm việc",
-    "workModeNone": "Chưa xác định"
+    "workModeNone": "Chưa xác định",
+    "campusNone": "Không chọn"
   },
   "sessions": {
     "title": "Thiết bị",
@@ -2557,7 +2549,8 @@
       "rate": "Đăng nhập để đánh giá tài nguyên",
       "uploadResource": "Đăng nhập để đăng tài liệu",
       "follow": "Đăng nhập để theo dõi người dùng",
-      "feed": "Đăng nhập để xem bảng tin cộng đồng"
+      "feed": "Đăng nhập để xem bảng tin cộng đồng",
+      "eventRegister": "Đăng nhập để đăng ký sự kiện"
     }
   },
   "priceTag": {
@@ -3882,10 +3875,37 @@
     },
     "attendeesCount": "{count} người tham gia",
     "register": "Đăng ký",
+    "registered": "Đã đăng ký",
+    "ended": "Đã kết thúc",
+    "cancelled": "Đã huỷ",
+    "cancelRegistration": "Huỷ đăng ký",
+    "registerError": "Không đăng ký được sự kiện. Vui lòng thử lại.",
+    "cancelError": "Không huỷ được đăng ký. Vui lòng thử lại.",
     "locationTypes": {
       "onsite": "Tại địa điểm",
       "online": "Trực tuyến",
       "hybrid": "Kết hợp"
+    },
+    "dayLabels": {
+      "today": "Hôm nay",
+      "tomorrow": "Ngày mai"
+    },
+    "statuses": {
+      "draft": "Bản nháp",
+      "published": "Đã công bố",
+      "ongoing": "Đang diễn ra",
+      "ended": "Đã kết thúc",
+      "cancelled": "Đã huỷ"
+    },
+    "upcoming": {
+      "empty": "Chưa có sự kiện nào sắp diễn ra."
+    },
+    "detail": {
+      "loadError": "Không tải được sự kiện.",
+      "notFound": "Không tìm thấy sự kiện.",
+      "notFoundDescription": "Sự kiện có thể đã bị gỡ hoặc đường dẫn không đúng.",
+      "timeRange": "{start} – {end}",
+      "seatsLeft": "Còn {count} chỗ"
     }
   },
   "activity": {
@@ -4241,6 +4261,13 @@
       "subline": "Học viên chúng tôi CHẤT cỡ nào? Đây là những gương mặt tiêu biểu của FTES.",
       "cta": "Xem bảng xếp hạng",
       "people": {
+        "thuanDuc": {
+          "name": "Trang Thuận Đức",
+          "lines": {
+            "0": "Đạt danh hiệu Cóc Vàng khối ngành Kỹ thuật kỳ Spring 2025.",
+            "1": "Bước ngoặt đến từ sự đồng hành của đội ngũ mentor FTES."
+          }
+        },
         "kimKhoa": {
           "name": "Kim Khoa",
           "lines": {
@@ -5191,6 +5218,11 @@
           "allTypes": "Mọi loại",
           "allLifecycles": "Mọi trạng thái"
         },
+        "sort": {
+          "label": "Sắp xếp",
+          "newest": "Mới nhất",
+          "hot": "Hot"
+        },
         "types": {
           "coding": "Lập trình",
           "sql": "SQL",
@@ -5601,6 +5633,7 @@
         "forbidden": "Bạn chưa có quyền dùng AI với tài liệu này.",
         "notFound": "Không tìm thấy tài liệu đã chọn.",
         "invalid": "Tài liệu đã chọn chưa dùng được cho AI.",
+        "insufficientContext": "Bài này chưa đủ nội dung để AI xử lý. Hãy chọn bài dài hơn hoặc bổ sung nội dung cho bài.",
         "failed": "AI xử lý thất bại. Vui lòng thử lại.",
         "model": "Mô hình: {model}"
       },
@@ -5751,7 +5784,8 @@
     "levels": {
       "basic": "Cơ bản",
       "intermediate": "Trung cấp",
-      "advanced": "Nâng cao"
+      "advanced": "Nâng cao",
+      "university": "Đại học"
     },
     "categories": {
       "label": "Danh mục khóa học",
@@ -6274,12 +6308,29 @@
       "generic": "Có lỗi xảy ra, thử lại nhé."
     }
   },
+  "communityLiveChat": {
+    "title": "Chat cộng đồng",
+    "onlineCount": "{count} đang online",
+    "onlineNow": "Đang online",
+    "open": "Mở chat cộng đồng",
+    "send": "Gửi",
+    "placeholder": "Nhập tin nhắn…",
+    "you": "Bạn",
+    "reply": "Trả lời",
+    "replyingTo": "Đang trả lời {name}",
+    "cancelReply": "Huỷ trả lời",
+    "empty": "Chưa có tin nhắn nào. Hãy chào một câu!",
+    "loadError": "Không tải được tin nhắn",
+    "sendFailed": "Không gửi được tin nhắn",
+    "signInRequired": "Đăng nhập để tham gia chat cộng đồng."
+  },
   "communityHub": {
     "title": "Cộng đồng",
     "placeholder": "Nội dung đang được xây dựng.",
     "more": "Thêm",
     "menu": {
       "groups": "Nhóm",
+      "events": "Sự kiện",
       "saved": "Đã lưu",
       "reputation": "Bảng uy tín",
       "poll": "Bình chọn",
@@ -6295,9 +6346,8 @@
       "member": "Thành viên"
     },
     "rail": {
-      "trending": "Xu hướng",
-      "reputation": "Bảng uy tín",
       "poll": "Bình chọn nhanh",
+      "events": "Sự kiện sắp tới",
       "seeAll": "Xem tất cả"
     },
     "promo": {
@@ -6308,6 +6358,13 @@
       "following": "Đang theo dõi",
       "campus": "Cơ sở",
       "trending": "Xu hướng"
+    },
+    "photoViewer": {
+      "previous": "Ảnh trước",
+      "next": "Ảnh kế tiếp",
+      "close": "Đóng",
+      "loading": "Đang tải bài viết…",
+      "counter": "Ảnh {current} trên {total}"
     },
     "engagement": {
       "like": "Thích",
@@ -6478,7 +6535,9 @@
       "imageInvalid": "Chỉ nhận ảnh PNG, JPEG, WebP hoặc GIF.",
       "imageUploadFailed": "Không tải được ảnh lên. Vui lòng thử lại.",
       "imageUploading": "Đang tải…",
-      "removeImage": "Bỏ ảnh"
+      "removeImage": "Bỏ ảnh",
+      "campusLabel": "Cơ sở",
+      "campusAll": "Tất cả cơ sở"
     },
     "reputation": {
       "title": "Bảng uy tín",
@@ -6946,6 +7005,7 @@
         "hideResult": "Ẩn kết quả",
         "resultError": "Không tải được kết quả bài nộp.",
         "resultEmpty": "Chưa có kết quả chi tiết cho bài nộp này.",
+        "offTopicTitle": "Bài nộp chưa liên quan đến đề bài",
         "problemHeading": "Đề bài",
         "datasetHeading": "Dữ liệu",
         "examplesHeading": "Ví dụ",
@@ -6977,6 +7037,8 @@
         "selectFileHint": "Chọn một tệp trong cây để xem nội dung và nhận xét.",
         "reason": "Nhận xét",
         "suggestion": "Đề xuất",
+        "before": "Trước",
+        "after": "Sau",
         "noChanges": "Không cần sửa",
         "hasChanges": "Cần sửa",
         "filesReadHint": "AI đã đọc {count} tệp qua {iterations} vòng.",
@@ -6984,7 +7046,7 @@
         "unanchoredHint": "Những nhận xét này trỏ tới tệp không có trong cây thư mục (hoặc chưa tải được project).",
         "fileLine": "{file} · dòng {line}",
         "gradeLimitHint": "Đã dùng {used}/{limit} lượt chấm project",
-        "gradeLimitReached": "Bài project chỉ được chấm tối đa 2 lần."
+        "gradeLimitReached": "Bài project chỉ được chấm tối đa {limit} lần."
       }
     },
     "common": {
@@ -7024,6 +7086,13 @@
         "subtitle": "Mở khóa toàn bộ bài học, thử thách và tài liệu của khóa này.",
         "unlock": "Mở khóa học",
         "continueTrial": "Tiếp tục học thử"
+      },
+      "termAccess": {
+        "until": "Quyền học của bạn mở đến {date}",
+        "untilSoon": "Quyền truy cập sắp hết hạn — hãy hoàn thành hoặc gia hạn trước thời hạn.",
+        "expiredTitle": "Kỳ học đã kết thúc",
+        "expiredBody": "Quyền truy cập đã tạm dừng. Lịch sử học của bạn vẫn được giữ.",
+        "rebuy": "Mua lại / Đăng ký lại"
       },
       "tabs": {
         "content": "Nội dung",
@@ -7119,6 +7188,8 @@
       "ai": {
         "open": "Mở trợ giảng AI",
         "close": "Đóng",
+        "expand": "Mở rộng toàn màn hình",
+        "collapse": "Thu nhỏ",
         "title": "Hỏi AI",
         "intro": "Bôi đen một đoạn trong bài để hỏi, hoặc gõ câu hỏi bên dưới.",
         "placeholder": "Hỏi về bài học…",
@@ -7545,6 +7616,8 @@
         "failed": "Chấm code thất bại. Thử lại nhé — code của bạn vẫn được giữ nguyên.",
         "invalid": "Bài gửi chưa hợp lệ — kiểm tra lại code và ngôn ngữ.",
         "modelNotAllowed": "Model này không nằm trong danh sách cho phép — đã chuyển về model mặc định, hãy chấm lại.",
+        "freeRunLimit": "Bản dùng thử: mỗi thử thách chỉ được chạy 2 lần và chấm AI 1 lần. Đăng ký khóa học để làm thoải mái.",
+        "freeGradeLimit": "Bản dùng thử: mỗi thử thách chỉ được chấm AI 1 lần và chạy 2 lần. Đăng ký khóa học để làm thoải mái.",
         "generic": "Có lỗi xảy ra khi chấm code. Vui lòng thử lại."
       }
     },
@@ -7567,6 +7640,9 @@
       "challenges": {
         "title": "Luyện tập bài này",
         "practice": "Vào thử thách"
+      },
+      "documents": {
+        "title": "Tài liệu bài học"
       }
     },
     "toolsRail": {

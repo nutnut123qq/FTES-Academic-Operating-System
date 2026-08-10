@@ -23,10 +23,10 @@ không biết trạng thái entitlement nên khoá cứng ở 2 là khoá nhầm
 ## What Changes
 - **`ChallengeSubmission`**: `usedCount` bỏ qua bài `FAILED` → chip `used/max` và `reachedMax` khớp BE.
 - **`ChallengeMethodSolver`**: đếm project-grade cũng bỏ qua `FAILED`.
-- **Cap project chỉ CẢNH BÁO, không khoá nút**: bỏ `projectLimitReached` khỏi mọi `canSubmit*` và khỏi
-  các guard trong handler. BE là nơi phán quyết và đã trả `PROJECT_GRADE_LIMIT_REACHED`, mà FE đã dịch
-  sẵn lỗi đó thành thông báo rõ ràng (`mapSubmitError`) — nên bỏ khoá không làm mất trải nghiệm, chỉ
-  thôi chặn nhầm.
+- Cap project giữ nguyên cách khoá nút: nhánh `master` trong lúc đó đã có bản purchased-aware
+  (`projectGradeLimit = purchased ? maxSubmissions : PROJECT_GRADE_LIMIT`, `courseAccess.purchased`),
+  tức FE nay BIẾT entitlement nên khoá không còn nhầm. Bản nháp đầu của change này định bỏ khoá và
+  chỉ cảnh báo — đã bỏ hướng đó khi merge, giữ bản của master vì nó đúng hơn.
 
 ## Impact
 - Học viên có bài FAILED lấy lại được lượt đã bị đếm oan; người có entitlement thôi bị khoá ở 2.

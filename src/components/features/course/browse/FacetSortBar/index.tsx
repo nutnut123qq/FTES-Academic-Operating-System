@@ -17,7 +17,7 @@ import type {
 const SORTS: Array<CourseSort> = ["popular", "newest", "rating"]
 
 /** Level facet options (order = display order). */
-const LEVELS: Array<CourseLevelFacet> = ["all", "basic", "intermediate", "advanced"]
+const LEVELS: Array<CourseLevelFacet> = ["all", "basic", "intermediate", "advanced", "university"]
 
 /** Minimum-rating facet options (order = display order). */
 const RATINGS: Array<CourseRatingFacet> = ["all", "4.5", "4", "3.5"]

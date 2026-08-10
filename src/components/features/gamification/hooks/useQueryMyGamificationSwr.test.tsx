@@ -105,7 +105,7 @@ describe("useQueryMyGamificationSwr", () => {
         // 1500 XP → gold tier (rules.ts RANK_TIERS)
         expect(data?.rank.league).toBe("gold")
         expect(data?.badges).toEqual([
-            { id: "WEEK_OF_FIRE", badgeKey: "WEEK_OF_FIRE", earnedDate: "2026-07-10" },
+            { id: "WEEK_OF_FIRE", badgeKey: "WEEK_OF_FIRE", earnedDate: "2026-07-10", fallbackName: "Tuần Lửa" },
         ])
     })
 

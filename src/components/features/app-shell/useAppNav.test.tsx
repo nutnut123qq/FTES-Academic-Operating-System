@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 /**
  * Unit — `useAppNav`, the single source of the top-level modules
  * (change `blog-nav-and-engagement`, task 1.4). Asserts the Blog tab sits in the
- * fixed order Home · Workplace · Course · Community · Blog · Quests with
+ * fixed order Home · Workplace · Course · Community · Blog (Blog last) with
  * path `/blog`, and that its active state is a route-prefix match: on it at
  * `/blog` and every `/blog/<slug>`, off it on the home route and on unrelated
  * modules.
@@ -45,7 +45,6 @@ describe("useAppNav — Blog is the 5th plain-link module", () => {
             "course",
             "community",
             "blog",
-            "quests",
         ])
         expect(modules.map((m) => m.path)).toEqual([
             "/",
@@ -53,19 +52,14 @@ describe("useAppNav — Blog is the 5th plain-link module", () => {
             "/courses",
             "/community",
             "/blog",
-            "/quests",
         ])
 
         // label comes from t(nav.<key>); the mock returns the key verbatim.
-        const blog = modules.find((m) => m.key === "blog")
+        // Blog is now the LAST module (the Quests board moved to the account menu).
+        const blog = modules.at(-1)
+        expect(blog?.key).toBe("blog")
         expect(blog?.label).toBe("blog")
         expect(blog?.path).toBe("/blog")
-
-        // Quests is the daily-quest board entry appended after Blog.
-        const quests = modules.at(-1)
-        expect(quests?.key).toBe("quests")
-        expect(quests?.label).toBe("quests")
-        expect(quests?.path).toBe("/quests")
     })
 
     it("marks Blog active on the /blog index (and Home inactive there)", () => {

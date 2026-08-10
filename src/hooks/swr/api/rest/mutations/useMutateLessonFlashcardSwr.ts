@@ -1,6 +1,7 @@
 import useSWRMutation from "swr/mutation"
 import {
     createLessonFlashcard,
+    createLessonFlashcardsBulk,
     deleteLessonFlashcard,
     updateLessonFlashcard,
     type LessonFlashcardView,
@@ -20,6 +21,19 @@ export const usePostLessonFlashcardSwr = (lessonId: string) => {
     return useSWRMutation<LessonFlashcardView, Error, string, UpsertFlashcardRequest>(
         "POST_LESSON_FLASHCARD_SWR",
         async (_key, { arg }) => createLessonFlashcard(lessonId, arg),
+    )
+}
+
+/** Nhận cả lô (bản nháp AI) — BE validate hết lô rồi mới ghi, hỏng một thẻ là không ghi thẻ nào. */
+export const usePostLessonFlashcardsBulkSwr = (lessonId: string) => {
+    return useSWRMutation<
+        Array<LessonFlashcardView>,
+        Error,
+        string,
+        Array<UpsertFlashcardRequest>
+    >(
+        "POST_LESSON_FLASHCARDS_BULK_SWR",
+        async (_key, { arg }) => createLessonFlashcardsBulk(lessonId, arg),
     )
 }
 

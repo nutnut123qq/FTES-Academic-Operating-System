@@ -4,6 +4,7 @@ import React from "react"
 import { Typography } from "@heroui/react"
 import {
     BookmarkSimpleIcon,
+    CalendarIcon,
     ChartBarIcon,
     ShieldCheckIcon,
     TrophyIcon,
@@ -19,8 +20,8 @@ const ROW_CLASS =
 
 /**
  * Left community rail (`xl`+): shortcut rows for the actions hidden behind the
- * ⋯ menu on smaller screens — Nhóm, Bảng uy tín, Bình chọn, Kiểm duyệt. ponytail: plain
- * rows in the community panel idiom; no data.
+ * ⋯ menu on smaller screens — Nhóm, Sự kiện, Đã lưu, Bảng uy tín, Bình chọn, Kiểm duyệt.
+ * ponytail: plain rows in the community panel idiom; no data.
  */
 export const NavRail = () => {
     const t = useTranslations("communityHub")
@@ -38,6 +39,12 @@ export const NavRail = () => {
             <Link href="/groups" className={ROW_CLASS}>
                 <UsersThreeIcon aria-hidden focusable="false" className="size-5" />
                 <Typography type="body-sm">{t("menu.groups")}</Typography>
+            </Link>
+            {/* Danh sách này ĐỘC LẬP với `MENU_ITEMS` của `CommunityShell` (dropdown ⋯ dưới xl):
+                thêm lối tắt mới phải sửa cả hai chỗ mới đủ mọi breakpoint. */}
+            <Link href="/events" className={ROW_CLASS}>
+                <CalendarIcon aria-hidden focusable="false" className="size-5" />
+                <Typography type="body-sm">{t("menu.events")}</Typography>
             </Link>
             <Link href="/community/saved" className={ROW_CLASS}>
                 <BookmarkSimpleIcon aria-hidden focusable="false" className="size-5" />

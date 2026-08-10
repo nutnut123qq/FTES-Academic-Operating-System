@@ -17,7 +17,7 @@ import {
     type ChallengeType,
     type CodingChallenge,
 } from "../hooks/useQuerySubjectCodingChallengesSwr"
-import { CodingChallengeDetail } from "./CodingChallengeDetail"
+import { Link } from "@/i18n/navigation"
 
 /** lifecycle → chip color. */
 const LIFECYCLE_COLOR: Record<ChallengeLifecycle, "success" | "warning" | "default"> = {
@@ -30,6 +30,11 @@ const LIFECYCLE_COLOR: Record<ChallengeLifecycle, "success" | "warning" | "defau
 const TYPE_FILTERS: Array<"all" | ChallengeType> = ["all", ...CHALLENGE_TYPES]
 /** Lifecycle filter values (`all` = no lifecycle constraint). */
 const LIFECYCLE_FILTERS: Array<"all" | ChallengeLifecycle> = ["all", ...CHALLENGE_LIFECYCLES]
+
+/** Sort options: `newest` (startsAt desc) · `hot` (submissionCount desc). */
+const SORT_OPTIONS = ["newest", "hot"] as const
+/** One sort option. */
+type SortOption = (typeof SORT_OPTIONS)[number]
 
 /** Props for {@link CodingChallengeList}. */
 export interface CodingChallengeListProps {
@@ -55,7 +60,7 @@ export const CodingChallengeList = ({ subjectId, onBack }: CodingChallengeListPr
     const [type, setType] = useState<"all" | ChallengeType>("all")
     const [lifecycle, setLifecycle] = useState<"all" | ChallengeLifecycle>("all")
     const [search, setSearch] = useState("")
-    const [selectedId, setSelectedId] = useState<string | null>(null)
+    const [sort, setSort] = useState<SortOption>("newest")
 
     const filtered = useMemo(() => {
         const query = search.trim().toLowerCase()
@@ -78,17 +83,17 @@ export const CodingChallengeList = ({ subjectId, onBack }: CodingChallengeListPr
         })
     }, [challenges, type, lifecycle, search])
 
-    const selected = useMemo(
-        () => challenges.find((challenge) => challenge.id === selectedId) ?? null,
-        [challenges, selectedId],
-    )
-
-    // detail view takes over the whole panel when a challenge is open
-    if (selected) {
-        return (
-            <CodingChallengeDetail challenge={selected} onBack={() => setSelectedId(null)} />
-        )
-    }
+    // Apply the chosen sort to the filtered rows: "hot" = most-submitted first; "newest" =
+    // latest start first (the BE list carries no createdAt, so startsAt is the recency proxy).
+    const sorted = useMemo(() => {
+        const rows = [...filtered]
+        if (sort === "hot") {
+            rows.sort((a, b) => b.submissionCount - a.submissionCount)
+        } else {
+            rows.sort((a, b) => Date.parse(b.startsAt ?? "") - Date.parse(a.startsAt ?? ""))
+        }
+        return rows
+    }, [filtered, sort])
 
     return (
         <div className="flex flex-col gap-4">
@@ -132,6 +137,22 @@ export const CodingChallengeList = ({ subjectId, onBack }: CodingChallengeListPr
                         </Button>
                     ))}
                 </div>
+                {/* sort: newest (startsAt desc) · hot (submissionCount desc) — same pill idiom */}
+                <div className="flex flex-wrap items-center gap-2">
+                    <Typography type="body-xs" color="muted" className="mr-1">
+                        {t("practice.coding.sort.label")}
+                    </Typography>
+                    {SORT_OPTIONS.map((item) => (
+                        <Button
+                            key={item}
+                            size="sm"
+                            variant={sort === item ? "secondary" : "ghost"}
+                            onPress={() => setSort(item)}
+                        >
+                            {t(`practice.coding.sort.${item}`)}
+                        </Button>
+                    ))}
+                </div>
                 <SearchInput
                     value={search}
                     onValueChange={setSearch}
@@ -161,15 +182,14 @@ export const CodingChallengeList = ({ subjectId, onBack }: CodingChallengeListPr
                     retryLabel: t("practice.coding.retry"),
                 }}
             >
-                {filtered.length === 0 ? (
+                {sorted.length === 0 ? (
                     <EmptyContent title={t("practice.coding.empty")} />
                 ) : (
                     <div className="flex flex-col gap-2">
-                        {filtered.map((challenge) => (
+                        {sorted.map((challenge) => (
                             <CodingChallengeRow
                                 key={challenge.id}
                                 challenge={challenge}
-                                onOpen={() => setSelectedId(challenge.id)}
                             />
                         ))}
                     </div>
@@ -182,18 +202,15 @@ export const CodingChallengeList = ({ subjectId, onBack }: CodingChallengeListPr
 /** One challenge row — title + slug · type/mode chips · lifecycle chip + caret. */
 const CodingChallengeRow = ({
     challenge,
-    onOpen,
 }: {
     challenge: CodingChallenge
-    onOpen: () => void
 }) => {
     const t = useTranslations("subjects")
     const typeKey = challengeTypeKey(challenge.type)
 
     return (
-        <button
-            type="button"
-            onClick={onOpen}
+        <Link
+            href={`/challenges/${challenge.id}`}
             className="flex w-full items-center gap-3 rounded-2xl border border-separator p-4 text-left transition-colors hover:border-accent/50 hover:bg-accent/5"
         >
             <div className="flex min-w-0 flex-1 flex-col gap-1">
@@ -220,7 +237,7 @@ const CodingChallengeRow = ({
                 </Typography>
             </div>
             <CaretRightIcon aria-hidden focusable="false" className="size-4 shrink-0 text-muted" />
-        </button>
+        </Link>
     )
 }
 

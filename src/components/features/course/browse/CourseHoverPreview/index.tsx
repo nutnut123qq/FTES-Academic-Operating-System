@@ -53,17 +53,14 @@ const parseIncludes = (infoCourse: string | null | undefined): Array<string> => 
     }
 }
 /**
- * Grace period, on leaving the card OR the panel, before the panel closes — long
- * enough for the pointer to travel across the gap from the card into the panel
- * (and back) without it closing. Re-entering either surface cancels a pending
- * close, so the panel NEVER closes while the pointer is still over the card or
- * the panel — it stays open as long as the viewer keeps hovering, and closes
- * only once the pointer has left BOTH. There is deliberately no "show for N ms
- * then hide" timer: open is not time-boxed.
+ * No gap between card edge and panel: the panel sits FLUSH against the card so the
+ * pointer moving from one onto the other reports the other as its `relatedTarget`
+ * (see {@link CourseHoverPreview} onLeave) — there is no dead zone in between where the
+ * pointer would be over neither. Closing is driven purely by `relatedTarget` (no timer),
+ * so the panel stays open the whole time the pointer is over the card OR the panel and
+ * closes the instant it leaves both.
  */
-const CLOSE_DELAY_MS = 150
-/** Gap between the card edge and the panel. */
-const GAP_PX = 12
+const GAP_PX = 0
 /** Minimum distance the panel keeps from the viewport edges. */
 const VIEWPORT_MARGIN_PX = 16
 
@@ -168,38 +165,38 @@ export const CourseHoverPreview = ({ course, children, className }: CourseHoverP
     const wrapperRef = useRef<HTMLDivElement>(null)
     const panelRef = useRef<HTMLDivElement>(null)
     const openTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
-    const closeTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
     const [open, setOpen] = useState(false)
     /** Fixed-position coordinates + the card-matched height cap; `null` until the first post-open measure. */
     const [position, setPosition] = useState<{ left: number, top: number, arrowTop: number, side: "left" | "right", maxHeight: number } | null>(null)
 
-    // Bound to BOTH the card wrapper and the portaled panel: entering either one
-    // cancels any pending close, so the panel stays open the whole time the
-    // pointer is over the card OR the panel (moving between them never closes it).
+    // Bound to BOTH the card wrapper and the portaled panel. Opening is delayed a
+    // touch so grazing the grid doesn't flash popups.
     const onEnter = useCallback(() => {
-        clearTimeout(closeTimer.current)
         if (open) return
         clearTimeout(openTimer.current)
         openTimer.current = setTimeout(() => setOpen(true), OPEN_DELAY_MS)
     }, [open])
 
-    // Leaving the card OR the panel starts the close, but only after a short grace
-    // ({@link CLOSE_DELAY_MS}) that a re-enter cancels — the panel closes ONLY once
-    // the pointer has left both surfaces and stayed out. No timer ever hides it
-    // while it is still hovered.
-    const onLeave = useCallback(() => {
+    // Close is driven by WHERE the pointer went, not a timer. `relatedTarget` is the
+    // element the pointer entered on leaving; while it is still inside the card wrapper
+    // OR the (flush, portaled) panel, the pointer never actually left the hover region,
+    // so keep the panel open. Only when it moves to something OUTSIDE both — or to
+    // nothing (null: off the window) — hide it, immediately. No grace timer means no
+    // lingering; checking `relatedTarget` means it never closes while still hovered
+    // (including while crossing between the card and the panel).
+    const onLeave = useCallback((event: React.PointerEvent) => {
         clearTimeout(openTimer.current)
-        clearTimeout(closeTimer.current)
-        closeTimer.current = setTimeout(() => {
-            setOpen(false)
-            setPosition(null)
-        }, CLOSE_DELAY_MS)
+        const next = event.relatedTarget as Node | null
+        if (next && (wrapperRef.current?.contains(next) || panelRef.current?.contains(next))) {
+            return
+        }
+        setOpen(false)
+        setPosition(null)
     }, [])
 
-    // timers must not fire after unmount (route change while hovering)
+    // the open timer must not fire after unmount (route change while hovering)
     useEffect(() => () => {
         clearTimeout(openTimer.current)
-        clearTimeout(closeTimer.current)
     }, [])
 
     // measure once per open: pick the side with room, cap the panel at the

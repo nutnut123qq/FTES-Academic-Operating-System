@@ -282,14 +282,16 @@ const ContentMapLessonRow = ({
                 )}
             >
                 {lesson.isCompleted ? (
-                    <CheckCircleIcon aria-hidden focusable="false" weight="fill" className="size-4 shrink-0 text-accent" />
+                    <CheckCircleIcon aria-hidden focusable="false" weight="fill" className="size-4 shrink-0 text-success" />
                 ) : isFullyLocked ? (
                     <LockSimpleIcon aria-hidden focusable="false" className="size-4 shrink-0 text-muted" />
                 ) : (
                     <LessonTypeIcon aria-hidden focusable="false" className="size-4 shrink-0 text-muted" />
                 )}
                 <div className="min-w-0 flex-1">
-                    <Typography type="body-sm" weight="medium" className="line-clamp-2">
+                    {/* a finished lesson reads green (tick + title) — the reader no longer
+                        carries an "already completed" badge at the bottom of the page */}
+                    <Typography type="body-sm" weight="medium" className={cn("line-clamp-2", lesson.isCompleted && "text-success")}>
                         {lesson.description || lesson.title}
                     </Typography>
                     {lesson.description ? (

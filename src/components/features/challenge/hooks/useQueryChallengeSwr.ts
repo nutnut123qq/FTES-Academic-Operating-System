@@ -26,6 +26,13 @@ export interface ChallengeStarter {
  * rather than fabricate a mock brief.
  */
 export interface ChallengeDetail extends Challenge {
+    /**
+     * The challenge's real UUID (BE `ChallengeView.id`), distinct from {@link Challenge.id}
+     * which is the routing slug. Threaded as the optional `challengeId` on the AI run/grade
+     * calls so the BE can enforce the free-trial ("học thử") per-challenge run/grade caps.
+     * Absent on older deployments → the calls omit it (BE no-ops).
+     */
+    challengeUuid?: string
     /** Full description from the BE (markdown/plain). */
     description: string
     /** Requirement list — BE public view exposes none → empty. */
@@ -70,6 +77,7 @@ export const useQueryChallengeSwr = (challengeId: string) => {
             const view = await getChallengeBySlug(challengeId)
             return {
                 ...toChallenge(view),
+                challengeUuid: view.id,
                 description: view.description ?? "",
                 requirements: [],
                 steps: [],

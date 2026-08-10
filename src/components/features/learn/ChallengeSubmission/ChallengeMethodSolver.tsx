@@ -53,12 +53,12 @@ const TAB_LABEL_KEY: Record<SolverTab, string> = {
 
 /**
  * Per-learner-per-challenge cap on the HEAVY project grade — a `FILE` (zip) or `URL`
- * (github) submission routed to the agentic `/grade-project`. Mirrors the BE
- * `PROJECT_GRADE_LIMIT` enforced at submit time (rejecting with `PROJECT_GRADE_LIMIT_REACHED`
- * once reached). Inline sandbox `CODE` submissions are NOT counted against this cap.
- *
- * Dùng để HIỂN THỊ `used/limit` và cảnh báo, KHÔNG để khoá nút: BE chỉ áp cap cho học viên
- * chưa có quyền trả phí, và FE không biết trạng thái entitlement — khoá ở đây là khoá nhầm.
+ * (github) submission routed to the agentic `/grade-project`. This tight cap applies
+ * ONLY to learners who have NOT purchased the course (free-enroll / "học thử" trial —
+ * cost protection for non-payers); once the learner BUYS the course the mentor's
+ * `maxSubmissions` becomes the sole cap. Mirrors the BE, which enforces
+ * `PROJECT_GRADE_LIMIT` at submit time for non-purchasers only (rejecting with
+ * `PROJECT_GRADE_LIMIT_REACHED`). Inline sandbox `CODE` submissions never count here.
  */
 const PROJECT_GRADE_LIMIT = 2
 
@@ -89,6 +89,13 @@ export interface ChallengeMethodSolverProps {
     seedSql: string | null | undefined
     /** Cap on attempts — drives the "used all attempts" lock message. */
     maxSubmissions: number
+    /**
+     * Whether the learner has PURCHASED this course. Purchased → the mentor's
+     * {@link maxSubmissions} is the sole cap; not purchased (free-enroll / "học thử" trial)
+     * → the tight {@link PROJECT_GRADE_LIMIT} project-grade cap applies. Absent → treated as
+     * not purchased (conservative — the cap applies), matching the BE fallback.
+     */
+    purchased?: boolean
     /** True once every attempt is used — locks the submit surface. */
     reachedMax: boolean
     /**
@@ -130,6 +137,7 @@ export const ChallengeMethodSolver = ({
     fileExtension,
     seedSql,
     maxSubmissions,
+    purchased,
     reachedMax,
     submissions,
     onSubmitted,
@@ -151,17 +159,18 @@ export const ChallengeMethodSolver = ({
             && PROJECT_PAYLOAD_TYPES.has(submission.payloadType)
             && submission.status !== "FAILED",
     ).length
-    // CẢNH BÁO chứ KHÔNG khoá: từ change project-grade-limit-purchased, BE chỉ áp cap này cho học
-    // viên CHƯA có quyền trả phí (người đã mua / enrollment LEGACY thì chỉ còn max_submissions), mà
-    // FE không biết trạng thái entitlement. Khoá cứng ở đây là khoá nhầm người BE vẫn cho nộp; để BE
-    // phán quyết rồi dịch PROJECT_GRADE_LIMIT_REACHED thành thông báo rõ (xem mapSubmitError).
-    const projectLimitReached = projectGradesUsed >= PROJECT_GRADE_LIMIT
+    // Not-purchased (free-enroll / "học thử") learners keep the tight PROJECT_GRADE_LIMIT
+    // (cost protection); once the learner BUYS the course the cap is the mentor's
+    // maxSubmissions.
+    const projectGradeLimit = purchased ? maxSubmissions : PROJECT_GRADE_LIMIT
+    const projectLimitReached = projectGradesUsed >= projectGradeLimit
 
     // Translate the BE project-grade cap rejection to a clear i18n message so the submit
-    // toast reads meaningfully; anything else re-throws for the default error toast.
+    // toast reads meaningfully; anything else re-throws for the default error toast. The BE
+    // only rejects with this for non-purchasers now (cap = PROJECT_GRADE_LIMIT).
     const mapSubmitError = (error: unknown): never => {
         if (error instanceof RestError && error.errorCode === "PROJECT_GRADE_LIMIT_REACHED") {
-            throw new Error(t("exercises.project.gradeLimitReached"))
+            throw new Error(t("exercises.project.gradeLimitReached", { limit: PROJECT_GRADE_LIMIT }))
         }
         throw error
     }
@@ -227,16 +236,16 @@ export const ChallengeMethodSolver = ({
     const invalid = url.trim() !== "" && !isHttpsUrl(url)
     // URL / FILE / project are the heavy project grades → also gated by the project cap.
     // The sandbox CODE submit is intentionally NOT gated by it.
-    const canSubmitUrl = !reachedMax && isHttpsUrl(url) && !busy
-    const canSubmitFile = !reachedMax && file !== null && fileError === null && !busy
+    const canSubmitUrl = !reachedMax && !projectLimitReached && isHttpsUrl(url) && !busy
+    const canSubmitFile = !reachedMax && !projectLimitReached && file !== null && fileError === null && !busy
     const canSubmitCode = !reachedMax && sandboxCode.trim() !== "" && !busy
-    const canSubmitProject = !reachedMax && prepared !== null && !busy && !preparing
+    const canSubmitProject = !reachedMax && !projectLimitReached && prepared !== null && !busy && !preparing
 
     const handleSubmitUrl = async () => {
         setTouched(true)
         // Client-side gate — never fire the request for a non-https URL or a used-up
         // project-grade quota (URL is a heavy project grade).
-        if (!isHttpsUrl(url) || reachedMax || busy) {
+        if (!isHttpsUrl(url) || reachedMax || projectLimitReached || busy) {
             return
         }
         const ok = await runRest(
@@ -267,7 +276,7 @@ export const ChallengeMethodSolver = ({
     const handleSubmitFile = async () => {
         // Client-side gate — no doomed request for a missing / wrong-type file or a used-up
         // project-grade quota (FILE is a heavy project grade).
-        if (!file || fileError !== null || reachedMax || busy) {
+        if (!file || fileError !== null || reachedMax || projectLimitReached || busy) {
             return
         }
         const ok = await runRest(
@@ -310,7 +319,7 @@ export const ChallengeMethodSolver = ({
     const handleSubmitProject = async () => {
         // Client-side gate — no doomed request for a missing project / used-up attempt or
         // project-grade quota (a project upload is a heavy FILE project grade).
-        if (!prepared || reachedMax || busy) {
+        if (!prepared || reachedMax || projectLimitReached || busy) {
             return
         }
         // The prepared blob is already ONE .zip — wrap it as a File and submit through the
@@ -383,12 +392,12 @@ export const ChallengeMethodSolver = ({
         <div className="flex items-center gap-2 rounded-2xl border border-danger/40 bg-danger/5 px-4 py-3">
             <WarningCircleIcon aria-hidden focusable="false" className="size-5 shrink-0 text-danger" />
             <Typography type="body-sm" color="muted">
-                {t("exercises.project.gradeLimitReached")}
+                {t("exercises.project.gradeLimitReached", { limit: projectGradeLimit })}
             </Typography>
         </div>
     ) : (
         <Typography type="body-xs" color="muted">
-            {t("exercises.project.gradeLimitHint", { used: projectGradesUsed, limit: PROJECT_GRADE_LIMIT })}
+            {t("exercises.project.gradeLimitHint", { used: projectGradesUsed, limit: projectGradeLimit })}
         </Typography>
     )
 
@@ -658,6 +667,9 @@ export const ChallengeMethodSolver = ({
     const sandboxForm = (
         <GradeCodePanel
             challenge={challengeDetail}
+            // The real challenge UUID — sent on Run/AI-grade so the BE can enforce the
+            // free-trial ("học thử") per-challenge run/grade caps (no-op if non-free).
+            challengeId={challengeId}
             code={sandboxCode}
             language={sandboxCodeLanguage}
             onCodeChange={setSandboxCode}

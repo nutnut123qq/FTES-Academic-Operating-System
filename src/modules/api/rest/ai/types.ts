@@ -182,6 +182,13 @@ export interface GradeCodeRequest {
     rubric?: Array<Record<string, unknown>>
     course_context?: string
     language_output?: string
+    /**
+     * The challenge this grade belongs to (camelCase UUID). Optional. When the challenge is a
+     * FREE "học thử" one the BE caps AI grades at 1 per (challenge, user) → 429
+     * `AI_FREE_CHALLENGE_GRADE_LIMIT`; non-free / omitted → unlimited (unchanged). The BE does
+     * not forward this field onward to ftes-ai-service.
+     */
+    challengeId?: string
 }
 
 /**
@@ -197,6 +204,13 @@ export interface ExecuteCodeRequest {
     stdin?: string
     /** @deprecated Legacy Judge0 test-case run — the sandbox panel no longer sends it. */
     test_cases?: Array<CodeGradeTestCase>
+    /**
+     * The challenge this run belongs to (camelCase UUID). Optional. When the challenge is a
+     * FREE "học thử" one the BE caps sandbox runs at 2 per (challenge, user) → 429
+     * `AI_FREE_CHALLENGE_RUN_LIMIT`; non-free / omitted → unlimited (unchanged). Not forwarded
+     * onward to ftes-ai-service.
+     */
+    challengeId?: string
 }
 
 /** One Judge0 test-case run (objective — model-independent). */
@@ -247,6 +261,20 @@ export interface CodeChange {
     reason: string
     /** The concrete fix the grader suggests. */
     suggestion: string
+    /**
+     * The CURRENT line(s) the comment flags — the red "before" side of a display-only diff
+     * (agentic-project-grader). camelCase, mirroring the BE `AiChangeView.oldCode` whitelist
+     * record. Additive / backward-compatible: older graded submissions omit it, so the review
+     * still renders reason + suggestion. Render the diff ONLY when BOTH `oldCode` and `newCode`
+     * are present strings.
+     */
+    oldCode?: string
+    /**
+     * The SUGGESTED replacement for {@link oldCode} — the green "after" side of the diff
+     * (BE `AiChangeView.newCode`). Additive; render the before/after block only when both
+     * are present.
+     */
+    newCode?: string
 }
 
 /**
@@ -279,6 +307,17 @@ export interface CodeGradeResult {
     files_read?: Array<string>
     /** How many agentic tool-calling rounds the grade took (PIN §7). Absent on a plain grade. */
     iterations?: number
+    /**
+     * Whether the submission is ON-TOPIC for the exercise (agentic grader relevance gate) —
+     * camelCase, mirroring the BE `AiFeedbackView.relevance` whitelist record. `"OFF_TOPIC"`
+     * means the submission does not address the problem, so the detailed per-line project
+     * review is meaningless and the result view falls back to the flat score card. Additive /
+     * backward-compatible: absent (older grades) OR `"RELATED"` MUST read as on-topic — never
+     * hide the existing review on a missing value.
+     */
+    relevance?: "RELATED" | "OFF_TOPIC"
+    /** Short human note on WHY the submission was judged off-topic (surfaced beside the note). Optional. */
+    relevanceReason?: string
 }
 
 /**
@@ -329,6 +368,12 @@ export interface RunTestsRequest {
      * it runs the learner's query against an EMPTY database, so every case fails.
      */
     setupSql?: string
+    /**
+     * The challenge these sample-test runs belong to (camelCase UUID). Optional. Counts toward
+     * the same FREE "học thử" run cap as {@link ExecuteCodeRequest.challengeId} (2 per
+     * challenge/user → 429 `AI_FREE_CHALLENGE_RUN_LIMIT`); non-free / omitted → unlimited.
+     */
+    challengeId?: string
 }
 
 /**
@@ -343,6 +388,12 @@ export interface SqlExecuteRequest {
     setup_sql?: string
     /** Cap on returned rows (BE clamps; default 500). */
     max_rows?: number
+    /**
+     * The challenge this SQL run belongs to (camelCase UUID). Optional. Counts toward the same
+     * FREE "học thử" run cap as {@link ExecuteCodeRequest.challengeId} (2 per challenge/user →
+     * 429 `AI_FREE_CHALLENGE_RUN_LIMIT`); non-free / omitted → unlimited.
+     */
+    challengeId?: string
 }
 
 /**

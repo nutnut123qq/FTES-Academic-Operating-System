@@ -13,10 +13,18 @@ import { isNudgeDismissed, markNudgeDismissed } from "./persistence"
 const NUDGE_ID = "completeProfile"
 
 /**
+ * Migration placeholder written into `display_name` for legacy accounts — it is a
+ * raw id, not a name. Mirrors the backend's `profile.api.DisplayNames`.
+ */
+const LEGACY_NAME_PREFIX = "legacy_"
+
+/**
  * Whether the signed-in user's profile is missing enough to be worth nudging:
- * no avatar, no bio, or no distinct display name (still falling back to the
- * username). Kept intentionally light so the nudge only fires for genuinely
- * bare profiles.
+ * no avatar, no bio, or no real display name — meaning empty, still falling back
+ * to the username, or still the `legacy_<uuid>` migration placeholder (which
+ * differs from the username, so a plain equality check would wrongly read it as
+ * a name and never nudge the very group that needs it). Kept intentionally light
+ * so the nudge only fires for genuinely bare profiles.
  */
 const isProfileIncomplete = (user: {
     username: string
@@ -27,9 +35,8 @@ const isProfileIncomplete = (user: {
     if (!user) return false
     const hasAvatar = Boolean(user.avatar)
     const hasBio = Boolean(user.bio && user.bio.trim())
-    const hasName = Boolean(
-        user.displayName && user.displayName.trim() && user.displayName.trim() !== user.username,
-    )
+    const name = user.displayName?.trim() ?? ""
+    const hasName = Boolean(name) && name !== user.username && !name.startsWith(LEGACY_NAME_PREFIX)
     return !hasAvatar || !hasBio || !hasName
 }
 

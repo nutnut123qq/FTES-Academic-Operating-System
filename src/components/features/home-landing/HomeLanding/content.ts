@@ -218,15 +218,27 @@ export interface Achiever {
     featured?: boolean
     /** imageUrl is a legacy baked-text award poster — the card zoom-crops the face region. */
     poster?: boolean
+    /** Optional internal route (e.g. the achiever's story on the blog) — the name links there. */
+    href?: string
 }
 
 /**
- * Six real achievers for the Bảng vàng FTES section.
+ * Seven real achievers for the Bảng vàng FTES section.
  * ponytail: imageUrls still point at the legacy baked-text award posters (`poster: true`
  * triggers the face zoom-crop). When clean portrait URLs exist, swap the URL and drop
  * the `poster` flag — no code change needed.
  */
 export const ACHIEVERS: ReadonlyArray<Achiever> = [
+    {
+        key: "thuanDuc",
+        highlight: "CÓC VÀNG · SP25",
+        lineCount: 2,
+        featured: true,
+        poster: true,
+        imageUrl:
+            "https://cdn.jsdelivr.net/gh/ftesedu/funnycode-images-1757352873747@main/images/7.png_1757437141307.png?v=1757437144076",
+        href: "/blog/trang-thuan-duc--tu-no-luc-ca-nhan-den-danh-hieu-coc-vang-cung-ftes",
+    },
     {
         key: "kimKhoa",
         highlight: "TOP 100 · 3 kỳ",

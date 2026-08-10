@@ -6,5 +6,5 @@
         { "id": "practice", "kind": "practice", "pos": [3, 0, -1.4] },
         { "id": "outcome", "kind": "outcome", "pos": [6, 0, 1.6], "payoff": true }
     ],
-    "cameraOffset": [2.6, 4.4, 7.0]
+    "cameraOffset": [0, 3.0, 7.2]
 }

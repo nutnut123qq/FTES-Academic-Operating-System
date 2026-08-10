@@ -14,6 +14,7 @@ import {
     LockSimpleIcon,
     PuzzlePieceIcon,
     SquareIcon,
+    WarningCircleIcon,
 } from "@phosphor-icons/react"
 import { useLocale, useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
@@ -26,6 +27,7 @@ import { RestError } from "@/modules/api/rest/client"
 import type { ChallengeView, McqQuestionView, SubmissionView, SubmitRequest } from "@/modules/api/rest/challenges"
 import { useRestWithToast } from "@/modules/toast/hooks"
 import { usePostSubmitChallengeSwr } from "@/hooks/swr/api/rest/mutations/usePostSubmitChallengeSwr"
+import { useGetMyCourseAccessSwr } from "@/hooks/swr/api/rest/queries/useGetMyCourseAccessSwr"
 import { PackageGateModal } from "@/components/features/course/PackageGateModal"
 import { useQueryCoursePackagesSwr } from "@/components/features/course/hooks/useQueryCoursePackagesSwr"
 import { resolveTierColor, resolveTierLabel } from "@/components/features/course/tierLabels"
@@ -62,6 +64,7 @@ import { ProjectReviewResult } from "./ProjectReviewResult"
  */
 const toChallengeDetail = (view: ChallengeView): ChallengeDetail => ({
     id: view.slug,
+    challengeUuid: view.id,
     title: view.title,
     type: mapChallengeType(view.type),
     status: view.status,
@@ -161,6 +164,14 @@ export const ChallengeSubmission = () => {
     // học viên. Đếm cả FAILED ở FE làm chip hiện thừa lượt và khoá nút sớm dù BE vẫn nhận bài.
     const usedCount = submissions.filter((submission) => submission.status !== "FAILED").length
     const reachedMax = challenge ? usedCount >= challenge.maxSubmissions : false
+    // The caller's purchase state on this course drives the HEAVY project-grade cap: a
+    // learner who BOUGHT the course is capped only by the mentor's `maxSubmissions`, while a
+    // free-enroll ("học thử") / trial learner keeps the tight PROJECT_GRADE_LIMIT (AI cost
+    // protection for non-payers). Keyed on the challenge's course UUID; degrades to
+    // not-purchased when the course id is absent or the call fails — matching the BE, which
+    // also applies the cap when it can't resolve a paid lesson entitlement.
+    const { data: courseAccess } = useGetMyCourseAccessSwr(challenge?.courseId || undefined)
+    const purchased = courseAccess?.purchased ?? false
     // newest attempt first
     const history = useMemo(
         () => [...submissions].sort((a, b) => b.attemptNo - a.attemptNo),
@@ -387,6 +398,7 @@ export const ChallengeSubmission = () => {
                                                 fileExtension={challenge.fileExtension}
                                                 seedSql={challenge.seedSql}
                                                 maxSubmissions={challenge.maxSubmissions}
+                                                purchased={purchased}
                                                 reachedMax={reachedMax}
                                                 submissions={submissions}
                                                 onSubmitted={() => { void mutate() }}
@@ -400,6 +412,10 @@ export const ChallengeSubmission = () => {
                                                     submitDisabled, so Run keeps working when locked. */}
                                                 <GradeCodePanel
                                                     challenge={detail}
+                                                    // The raw REST view's `id` is the challenge
+                                                    // UUID (detail.id is the slug) — sent so the
+                                                    // BE can enforce the free-trial run/grade caps.
+                                                    challengeId={challenge.id}
                                                     code={code}
                                                     language={language}
                                                     onCodeChange={setCode}
@@ -739,10 +755,30 @@ const AttemptRow = ({
                             }}
                         >
                             {aiFeedback ? (
-                                // A project grade carries `changes` (agentic per-line review) →
-                                // the VS Code tree + inline-comment review; a plain code/URL grade
-                                // keeps the flat score card.
-                                Array.isArray(aiFeedback.changes) ? (
+                                // OFF_TOPIC submission → the per-line project review is meaningless,
+                                // so show ONLY the flat score card (with a note). A missing
+                                // `relevance` reads as RELATED (backward-compatible — older grades
+                                // keep the existing review). Otherwise a project grade carries
+                                // `changes` (agentic per-line review) → the VS Code tree + inline
+                                // before/after diff; a plain code/URL grade keeps the flat card.
+                                aiFeedback.relevance === "OFF_TOPIC" ? (
+                                    <div className="flex flex-col gap-3">
+                                        <div className="flex items-start gap-2 rounded-2xl border border-warning/40 bg-warning/5 p-3">
+                                            <WarningCircleIcon aria-hidden focusable="false" className="mt-0.5 size-4 shrink-0 text-warning" />
+                                            <div className="flex min-w-0 flex-col gap-1">
+                                                <Typography type="body-sm" weight="semibold" className="text-warning">
+                                                    {t("exercises.challenge.offTopicTitle")}
+                                                </Typography>
+                                                {aiFeedback.relevanceReason ? (
+                                                    <Typography type="body-xs" color="muted">
+                                                        {aiFeedback.relevanceReason}
+                                                    </Typography>
+                                                ) : null}
+                                            </div>
+                                        </div>
+                                        <GradeResultCard result={aiFeedback} />
+                                    </div>
+                                ) : Array.isArray(aiFeedback.changes) ? (
                                     <ProjectReviewResult
                                         challengeId={challengeId}
                                         submissionId={attempt.id}

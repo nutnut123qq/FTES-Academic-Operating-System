@@ -48,6 +48,14 @@ import { SqlResultTable } from "./SqlResultTable"
 export interface GradeCodePanelProps {
     /** The challenge being solved (prefills the exercise question). */
     challenge: ChallengeDetail
+    /**
+     * The challenge's UUID, sent as the optional `challengeId` on every Run / Run-tests /
+     * Chấm-AI call so the BE can enforce the free-trial ("học thử") per-challenge caps (2 runs
+     * / 1 AI grade). Always passed when known; the BE no-ops for non-free challenges, so this
+     * is NOT gated on free-ness in the FE. Omit for a self-contained scratchpad with no
+     * challenge → the calls omit it and the BE leaves the run/grade unlimited.
+     */
+    challengeId?: string
     /** Extra classes. */
     className?: string
     /**
@@ -169,22 +177,35 @@ const MONACO_LANGUAGE: Record<string, string> = {
 
 /** Small optional starter, seeded only when the editor is empty (never clobbers work). */
 const STARTER_CODE: Record<string, string> = {
-    python: 'print("Hello, world!")\n',
-    javascript: 'console.log("Hello, world!")\n',
-    typescript: 'console.log("Hello, world!")\n',
+    python: "print(\"Hello, world!\")\n",
+    javascript: "console.log(\"Hello, world!\")\n",
+    typescript: "console.log(\"Hello, world!\")\n",
     java: "public class Main {\n    public static void main(String[] args) {\n        System.out.println(\"Hello, world!\");\n    }\n}\n",
     cpp: "#include <iostream>\n\nint main() {\n    std::cout << \"Hello, world!\" << std::endl;\n    return 0;\n}\n",
-    c: '#include <stdio.h>\n\nint main(void) {\n    printf("Hello, world!\\n");\n    return 0;\n}\n',
-    go: 'package main\n\nimport "fmt"\n\nfunc main() {\n    fmt.Println("Hello, world!")\n}\n',
+    c: "#include <stdio.h>\n\nint main(void) {\n    printf(\"Hello, world!\\n\");\n    return 0;\n}\n",
+    go: "package main\n\nimport \"fmt\"\n\nfunc main() {\n    fmt.Println(\"Hello, world!\")\n}\n",
     csharp: "using System;\n\nclass Program {\n    static void Main() {\n        Console.WriteLine(\"Hello, world!\");\n    }\n}\n",
-    php: '<?php\necho "Hello, world!\\n";\n',
-    ruby: 'puts "Hello, world!"\n',
+    php: "<?php\necho \"Hello, world!\\n\";\n",
+    ruby: "puts \"Hello, world!\"\n",
     sql: "SELECT 'Hello, world!' AS greeting;\n",
 }
+
+/**
+ * Error keys whose card must NOT offer a "retry" button — retrying cannot succeed: the
+ * plan lacks the feature (`forbidden`), or the free-trial per-challenge cap is spent
+ * (`freeRunLimit` / `freeGradeLimit` — only enrolling unlocks more).
+ */
+const NON_RETRYABLE_ERROR_KEYS = new Set(["forbidden", "freeRunLimit", "freeGradeLimit"])
 
 /** i18n error key for a failed grade/run call (`learn.codeGrading.errors.*`). */
 const toErrorKey = (error: unknown): string => {
     if (error instanceof RestError) {
+        // Free-trial ("học thử") per-challenge caps — a DISTINCT message from a generic rate
+        // limit: the learner must đăng ký khóa học, not just wait and retry.
+        if (error.status === 429) {
+            if (error.errorCode === "AI_FREE_CHALLENGE_RUN_LIMIT") return "freeRunLimit"
+            if (error.errorCode === "AI_FREE_CHALLENGE_GRADE_LIMIT") return "freeGradeLimit"
+        }
         if (error.status === 403) return "forbidden"
         switch (error.errorCode) {
         case "AI_EXEC_UNAVAILABLE":
@@ -222,6 +243,7 @@ const toErrorKey = (error: unknown): string => {
  */
 export const GradeCodePanel = ({
     challenge,
+    challengeId,
     className,
     code: controlledCode,
     language: controlledLanguage,
@@ -381,11 +403,12 @@ export const GradeCodePanel = ({
             if (isSqlLanguage) {
                 // Thread the challenge seed dataset so the query runs against the seeded
                 // tables (fresh per run, rolled back after). Undefined → self-contained.
-                const result = await triggerExecuteSql({ query: code, setup_sql: setupSql })
+                // `challengeId` lets the BE enforce the free-trial run cap (no-op if non-free).
+                const result = await triggerExecuteSql({ query: code, setup_sql: setupSql, challengeId })
                 clearResults()
                 setSqlResult(result ?? null)
             } else {
-                const result = await triggerExecute({ code, language })
+                const result = await triggerExecute({ code, language, challengeId })
                 clearResults()
                 setRunResult(result ?? null)
             }
@@ -413,6 +436,7 @@ export const GradeCodePanel = ({
                 // per case), exactly like the plain Run threads `setup_sql`. Without it the
                 // query hits an empty database and every case fails.
                 ...(isSqlLanguage && setupSql ? { setupSql } : {}),
+                challengeId,
             })
             clearResults()
             setTestResult(result ?? null)
@@ -437,6 +461,7 @@ export const GradeCodePanel = ({
                 // AI reads the code to grade — no objective test-case execution (spec §5).
                 run_code_execution: false,
                 ...(model ? { model } : {}),
+                challengeId,
             })
             clearResults()
             setGradeResult(result ?? null)
@@ -685,7 +710,7 @@ export const GradeCodePanel = ({
                                 <Typography type="body-sm" className="text-danger">
                                     {t(`codeGrading.errors.${errorKey}`)}
                                 </Typography>
-                                {errorKey !== "forbidden" ? (
+                                {!NON_RETRYABLE_ERROR_KEYS.has(errorKey) ? (
                                     <Button
                                         size="sm"
                                         variant="secondary"

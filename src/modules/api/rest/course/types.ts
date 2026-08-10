@@ -54,6 +54,14 @@ export interface CourseSummary {
     categoryId: string
     /** Total number of ratings this course has received. */
     ratingCount: number
+    /** Instructor/mentor display name; null when the course has no resolvable mentor. */
+    mentorName?: string | null
+    /** Instructor/mentor avatar URL; null when absent. */
+    mentorAvatarUrl?: string | null
+    /** Number of lessons in the course (0 when none). */
+    totalLessons?: number
+    /** Short course description/summary; null when absent. */
+    description?: string | null
 }
 
 /** Full public course detail. */
@@ -70,6 +78,13 @@ export interface CourseDetail {
      * Additive on the BE detail projection.
      */
     subjectCode?: string | null
+    /**
+     * Total learning time of the course in SECONDS (summed over the lessons the BE can
+     * measure), or `null` when nothing is measurable — never `0`. Additive; absent on
+     * older deployments → the detail/learn headers hide the "Giờ học" chip instead of
+     * showing a fabricated figure.
+     */
+    totalDurationSeconds?: number | null
 }
 
 /** Section inside course detail. */
@@ -401,6 +416,20 @@ export interface EnrollmentView {
      * FE publish gate. Absent → fall back to {@link status}, then to "published".
      */
     published?: boolean | null
+    /**
+     * When set, this enrollment's access is time-bound to a term and ENDS at this
+     * instant (the term end). ISO-8601 (`Instant`); `null`/absent = permanent (the
+     * course is not part of a term). Additive — mirrors {@link CourseAccessStateView.accessUntil}
+     * so the my-courses band can show a "mở đến {date}" badge without an extra per-course
+     * access fetch. Absent on older deployments → no badge.
+     */
+    accessUntil?: string | null
+    /**
+     * True when this enrollment's access was revoked because its term ended AND the
+     * course still belongs to a term (the student was kicked → offer "mua lại / đăng ký
+     * lại"). Additive, defaults false. Mirrors {@link CourseAccessStateView.expired}.
+     */
+    expired?: boolean
 }
 
 /**
@@ -416,6 +445,20 @@ export interface CourseAccessStateView {
     purchased: boolean
     /** Resolves to FULL access (bought, free-owned, or otherwise entitled). */
     fullAccess: boolean
+    /**
+     * When set, the caller's access to this course is time-bound to a term and ENDS at
+     * this instant (the term end). ISO-8601 (`Instant`). `null` = permanent access (the
+     * course is not part of a term). Additive — older BE builds omit it → treat as null
+     * (no deadline banner). Drives the learn-page "Quyền học của bạn mở đến {date}" notice.
+     */
+    accessUntil?: string | null
+    /**
+     * True when the caller HAD access that was revoked because its term ended AND the
+     * course still belongs to a term — i.e. they were kicked and can re-buy / re-enroll.
+     * Additive, defaults false. Drives the learn-page EXPIRED banner + "mua lại / đăng ký
+     * lại" CTA (which reuses the canonical enroll flow, never a "VIP" upsell).
+     */
+    expired?: boolean
 }
 
 /** Course package view. */

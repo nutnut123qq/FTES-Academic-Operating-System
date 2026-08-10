@@ -99,7 +99,7 @@ const SubjectPostRow = ({
                     {post.title}
                 </Typography>
                 <MarkdownContent markdown={post.snippet} />
-                <PostMediaGrid media={post.media} imageAlt={tHub("composer.imageAlt")} />
+                <PostMediaGrid postId={post.id} media={post.media} imageAlt={tHub("composer.imageAlt")} />
                 {/* discussion = like + comment ONLY — no share, no save */}
                 <PostEngagementBar
                     className="pt-1"

@@ -65,7 +65,7 @@ export interface UseCourseEnrollmentResult {
     isResolvingProduct: boolean
     /** Enter the course content (continue learning). */
     onContinueLearning: () => void
-    /** Start a trial enrollment best-effort, then enter the course content. */
+    /** Start a trial enrollment; enter the course content ONLY when BE grants it. */
     onTryLearning: () => void
     /**
      * The resolved COURSE_UNLOCK product for this course (null when not on sale /
@@ -218,12 +218,21 @@ export const useCourseEnrollment = (
     }, [router, learnHref])
 
     const onTryLearning = guard(async () => {
-        // best-effort: record the trial enrollment so this course shows in "my courses".
-        // A failure must not block entering the content.
+        // Best-effort bookkeeping — a rejection must NOT block entry. BE rejects paid
+        // courses with 409 COURSE_REQUIRES_PURCHASE, but the enrollment and the freemium
+        // preview are independent gates: `AccessResolver` grants PREVIEW to any signed-in
+        // viewer whenever `default_preview_percent > 0`, which is on for 42 of the 43
+        // PUBLISHED courses (measured on apitest 2026-08-10). Returning early here would
+        // shut the trial funnel on effectively the whole catalogue.
+        //
+        // The "try for free shows everything" complaint is NOT fixed by refusing to
+        // navigate — `/learn` gates each lesson server-side. Whatever the reporter saw is
+        // either an over-generous preview allowance (a pricing decision) or a privileged
+        // account (`course.manage` grants fullAccess). Fix it there, not by disabling this.
         try {
             await startTrial({ courseId })
         } catch {
-            // ignore — navigate anyway
+            // ignore — preview access does not depend on the enrollment row
         }
         router.push(learnHref)
     }, "auth.context.enroll")

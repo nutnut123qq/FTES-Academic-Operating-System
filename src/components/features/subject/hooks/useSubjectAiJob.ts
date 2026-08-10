@@ -33,6 +33,9 @@ import {
  *   not APPROVED / not readable (`AiInputGuard.requireResourceAccess`).
  * - `notFound`  — 404: the resource/job vanished (or belongs to someone else).
  * - `invalid`   — 400 `AI_INPUT_INVALID`: the reference the BE guard refused.
+ * - `insufficientContext` — the job RAN and stopped at `AI_CONTEXT_INSUFFICIENT`: the
+ *   lesson simply has too little text to work from. Actionable (pick another lesson),
+ *   so it must not read as "the AI broke".
  * - `failed`    — everything else, incl. a job that ran and reached FAILED/CANCELLED.
  */
 export type SubjectAiJobErrorKey =
@@ -41,6 +44,7 @@ export type SubjectAiJobErrorKey =
     | "forbidden"
     | "notFound"
     | "invalid"
+    | "insufficientContext"
     | "failed"
 
 /**
@@ -58,6 +62,33 @@ export const classifySubjectAiJobError = (error: unknown): SubjectAiJobErrorKey 
     if (error.status === 404) return "notFound"
     if (error.status === 400) return "invalid"
     return "failed"
+}
+
+/** Domain codes a FAILED job can carry, mapped to the message its surface should show. */
+const JOB_ERROR_CODE_KEYS: Record<string, SubjectAiJobErrorKey> = {
+    AI_CONTEXT_INSUFFICIENT: "insufficientContext",
+}
+
+/**
+ * Maps the domain code on a job that RAN and FAILED to its message key.
+ *
+ * A failed job is not automatically "the AI broke": `AI_CONTEXT_INSUFFICIENT` means the
+ * lesson had too little text, which the learner can act on by picking another lesson.
+ * The BE used to flatten every failure into `AI_JOB_ERROR` and hide the real code inside
+ * `errorMessage`, so this layer deliberately showed one generic message rather than
+ * string-matching prose. Since change `ai-job-error-fidelity` the BE keeps the real
+ * domain code on the job, so it is now safe — and correct — to read it.
+ *
+ * @param errorCode - `JobView.errorCode` of a terminal FAILED job.
+ * @returns the matching {@link SubjectAiJobErrorKey}; `failed` when the code is unknown.
+ */
+export const classifySubjectAiJobFailure = (
+    errorCode: string | undefined,
+): SubjectAiJobErrorKey => {
+    if (!errorCode) return "failed"
+    // A worker-side quota rejection reaches us on the job, not as a submit rejection.
+    if (/QUOTA/i.test(errorCode)) return "quota"
+    return JOB_ERROR_CODE_KEYS[errorCode] ?? "failed"
 }
 
 /** Return shape of {@link useSubjectAiJob}. */
@@ -95,13 +126,15 @@ export const useSubjectAiJob = <TResult = unknown>(): UseSubjectAiJobReturn<TRes
     const job = useAiToolJob<TResult>()
     const { poll } = job
 
-    // A submit rejection is the most specific signal; otherwise a job that ran and
-    // FAILED/CANCELLED (or a poll that cannot reach the API) is a plain failure.
+    // A submit rejection is the most specific signal; next, a job that RAN and failed
+    // carries its own domain code; a poll that cannot reach the API is a plain failure.
     const errorKey: SubjectAiJobErrorKey | null = job.submitError
         ? classifySubjectAiJobError(job.submitError)
-        : poll.isFailed || poll.error
-            ? "failed"
-            : null
+        : poll.isFailed
+            ? classifySubjectAiJobFailure(poll.job?.errorCode)
+            : poll.error
+                ? "failed"
+                : null
 
     return {
         run: job.run,

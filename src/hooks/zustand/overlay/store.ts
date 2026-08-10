@@ -30,6 +30,21 @@ export interface CommunityQuoteContext {
 }
 
 /**
+ * Payload for the community photo lightbox: which post's photos to view, the
+ * ordered image attachments (a serializable snapshot — never a live node), and
+ * which one was clicked. The modal's LEFT pane navigates `media`; the RIGHT pane
+ * fetches the full post by `postId`.
+ */
+export interface CommunityPhotoContext {
+    /** Id of the post whose photos are being viewed (drives the right-pane fetch). */
+    postId: string
+    /** The post's image attachments in server order (re-filtered to IMAGE by the modal). */
+    media: Array<{ id: string; storageKey: string; mediaType: string }>
+    /** Index (within `media`) of the image the viewer clicked to open the lightbox. */
+    startIndex: number
+}
+
+/**
  * Serializable snapshot of a selection rect (viewport coordinates), captured
  * BEFORE the browser selection is cleared. Drives where the desktop
  * selection-anchored AI panel is placed (right of the rect → flip left → under).
@@ -57,6 +72,8 @@ export type OverlayKey =
     | "authentication"
     | "challenge"
     | "communityComposer"
+    | "communityLiveChat"
+    | "communityPhoto"
     | "content"
     | "contentAiChat"
     | "contentAiAnchored"
@@ -94,6 +111,8 @@ const OVERLAY_KEYS: ReadonlyArray<OverlayKey> = [
     "authentication",
     "challenge",
     "communityComposer",
+    "communityLiveChat",
+    "communityPhoto",
     "content",
     "contentAiChat",
     "contentAiAnchored",
@@ -138,6 +157,8 @@ interface OverlayStoreState {
     followListContext: FollowListContext | null
     /** Post being quoted/reposted in the community composer (null for a plain compose). */
     communityComposerQuote: CommunityQuoteContext | null
+    /** Community photo lightbox payload (which post + images + start index). */
+    communityPhotoContext: CommunityPhotoContext | null
     /** Content-AI selected model — shared between the chat composer + the settings modal. */
     contentAiSelectedModel: string | null
     /** Bumped by the settings modal after clearing history → signals the chat to reset its thread. */
@@ -169,6 +190,8 @@ interface OverlayStoreState {
     setFollowListContext: (context: FollowListContext | null) => void
     /** Stash (or clear) the post being quoted/reposted in the composer. */
     setCommunityComposerQuote: (context: CommunityQuoteContext | null) => void
+    /** Stash the community photo lightbox payload. */
+    setCommunityPhotoContext: (context: CommunityPhotoContext | null) => void
     /** Set the content-AI selected model. */
     setContentAiSelectedModel: (model: string | null) => void
     /** Signal the chat thread to reset (after the settings modal clears the saved history). */
@@ -204,6 +227,7 @@ export const useOverlayStore = create<OverlayStoreState>((set) => ({
     adModalContext: null,
     followListContext: null,
     communityComposerQuote: null,
+    communityPhotoContext: null,
     contentAiSelectedModel: null,
     contentAiClearNonce: 0,
     contentAiSelection: null,
@@ -222,6 +246,7 @@ export const useOverlayStore = create<OverlayStoreState>((set) => ({
     setAdModalContext: (context) => set({ adModalContext: context }),
     setFollowListContext: (context) => set({ followListContext: context }),
     setCommunityComposerQuote: (context) => set({ communityComposerQuote: context }),
+    setCommunityPhotoContext: (context) => set({ communityPhotoContext: context }),
     setContentAiSelectedModel: (model) => set({ contentAiSelectedModel: model }),
     signalContentAiCleared: () =>
         set((state) => ({ contentAiClearNonce: state.contentAiClearNonce + 1 })),

@@ -9,6 +9,7 @@ import {
     useDeleteLessonFlashcardSwr,
     usePatchLessonFlashcardSwr,
     usePostLessonFlashcardSwr,
+    usePostLessonFlashcardsBulkSwr,
 } from "@/hooks/swr/api/rest/mutations"
 import { useRestWithToast } from "@/modules/toast/hooks"
 
@@ -19,13 +20,13 @@ export interface LessonFlashcardManagerProps {
     /** Thẻ hiện có — người quản nhận CẢ `DRAFT` lẫn `PUBLISHED` từ cùng endpoint đọc. */
     cards: Array<LessonFlashcardView>
     /**
-     * Thẻ AI vừa sinh cho bài này (nếu có) — nguồn cho nút "Dùng thẻ này": nạp vào form để
-     * người soạn sửa rồi mới lưu.
+     * Thẻ AI vừa sinh cho bài này (nếu có) — nguồn cho hai đường: "Nhận tất cả" (tạo cả lô ở
+     * trạng thái DRAFT) và "Dùng thẻ này" từng thẻ (nạp vào form để sửa trước khi lưu).
      *
-     * CỐ Ý KHÔNG có nút "nhận tất cả": `POST /flashcards/bulk` của BE bỏ qua `status` trong
-     * request và luôn tạo thẻ `PUBLISHED` (LessonFlashcardService.newCard — `requireStatus` chỉ
-     * dùng ở đường PATCH). Nhận hàng loạt = đẩy thẳng thẻ AI CHƯA AI DUYỆT tới học viên, đúng
-     * thứ góp ý 2026-07-26 phàn nàn. Mở lại đường bulk khi BE cho tạo thẳng ở trạng thái DRAFT.
+     * Nhận cả lô CHỈ an toàn nhờ BE đã tôn trọng `status` ở đường tạo (change
+     * `lesson-flashcard-create-status`, deploy apitest 2026-08-03): thẻ AI vào thẳng DRAFT nên
+     * KHÔNG học viên nào thấy trước khi người soạn rà và xuất bản. Trước change đó mọi thẻ tạo
+     * ra đều PUBLISHED — nhận cả lô lúc ấy là đẩy thẳng thẻ máy chưa duyệt tới người học.
      */
     aiDrafts?: Array<{ q: string; a: string }>
     /** Nạp lại danh sách sau mỗi lần ghi. */
@@ -40,6 +41,13 @@ interface Draft {
 }
 
 const EMPTY: Draft = { front: "", back: "", hint: "" }
+
+/**
+ * Thẻ tạo mới luôn vào `DRAFT` — cả thẻ gõ tay lẫn lô nhận từ AI. Gõ dở nửa chừng mà học viên
+ * đã đọc được là chuyện không nên có; xuất bản là một hành động RIÊNG, có chủ ý (nút Xuất bản
+ * ở từng dòng). BE mặc định `PUBLISHED` khi thiếu trường này nên phải gửi TƯỜNG MINH.
+ */
+const CREATE_STATUS = "DRAFT"
 
 /**
  * Màn SOẠN thẻ ghi nhớ của một bài — chỉ mở cho người quản khoá (`canManage` từ
@@ -63,6 +71,7 @@ export const LessonFlashcardManager = ({
     const t = useTranslations("contentAi")
     const runRest = useRestWithToast()
     const { trigger: create, isMutating: creating } = usePostLessonFlashcardSwr(lessonId)
+    const { trigger: createBulk, isMutating: bulkCreating } = usePostLessonFlashcardsBulkSwr(lessonId)
     const { trigger: patch } = usePatchLessonFlashcardSwr()
     const { trigger: remove } = useDeleteLessonFlashcardSwr()
 
@@ -85,7 +94,12 @@ export const LessonFlashcardManager = ({
         // hint rỗng gửi null để BE xoá gợi ý cũ, không phải lưu chuỗi rỗng.
         const body = { front: trimmed.front, back: trimmed.back, hint: trimmed.hint || null }
         const result = await runRest(
-            () => (editingId ? patch({ cardId: editingId, request: body }) : create(body)),
+            () =>
+                editingId
+                    // SỬA thì KHÔNG đụng status — thẻ đang xuất bản mà sửa chính tả không được
+                    // âm thầm tụt về nháp, học viên đang học sẽ mất thẻ giữa chừng.
+                    ? patch({ cardId: editingId, request: body })
+                    : create({ ...body, status: CREATE_STATUS }),
             { successMessage: t("flashcard.manage.saved") },
         )
         if (result !== null) {
@@ -106,6 +120,32 @@ export const LessonFlashcardManager = ({
     const useAiDraft = (aiCard: { q: string; a: string }) => {
         setEditingId(null)
         setDraft({ front: aiCard.q, back: aiCard.a, hint: "" })
+    }
+
+    /**
+     * Nhận CẢ LÔ thẻ AI vào bản nháp. `origin: AI_ACCEPTED` để về sau đo được đường "nhận thẻ
+     * AI"; `status: DRAFT` là điều kiện sống còn — không có nó thì đây là nút đẩy thẳng thẻ máy
+     * chưa duyệt tới học viên.
+     */
+    const acceptAllAiDrafts = async () => {
+        if (!aiDrafts || aiDrafts.length === 0) {
+            return
+        }
+        const result = await runRest(
+            () =>
+                createBulk(
+                    aiDrafts.map((aiCard) => ({
+                        front: aiCard.q,
+                        back: aiCard.a,
+                        status: CREATE_STATUS,
+                        origin: "AI_ACCEPTED",
+                    })),
+                ),
+            { successMessage: t("flashcard.manage.acceptedAll", { count: aiDrafts.length }) },
+        )
+        if (result !== null) {
+            onChanged()
+        }
     }
 
     /** Bật/tắt xuất bản — công tắc quyết định học viên có thấy thẻ hay không. */
@@ -179,14 +219,32 @@ export const LessonFlashcardManager = ({
                         </Button>
                     ) : null}
                 </div>
+
+                {/* Nói trước khi bấm: thêm xong KHÔNG có nghĩa là học viên thấy ngay. */}
+                {editingId ? null : (
+                    <Typography type="body-xs" color="muted">
+                        {t("flashcard.manage.draftNotice")}
+                    </Typography>
+                )}
             </div>
 
             {/* Bản nháp AI của chính bài này — mồi để soạn nhanh, không phải thẻ đã lưu. */}
             {aiDrafts && aiDrafts.length > 0 ? (
                 <div className="flex flex-col gap-2">
-                    <Typography type="body-sm" weight="semibold">
-                        {t("flashcard.manage.aiDraftTitle")}
-                    </Typography>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                        <Typography type="body-sm" weight="semibold">
+                            {t("flashcard.manage.aiDraftTitle")}
+                        </Typography>
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            isDisabled={bulkCreating}
+                            onPress={() => void acceptAllAiDrafts()}
+                        >
+                            <PlusIcon aria-hidden focusable="false" className="size-4" />
+                            {t("flashcard.manage.acceptAll", { count: aiDrafts.length })}
+                        </Button>
+                    </div>
                     <Typography type="body-xs" color="muted">
                         {t("flashcard.manage.aiDraftHint")}
                     </Typography>

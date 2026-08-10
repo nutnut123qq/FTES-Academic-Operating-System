@@ -105,6 +105,10 @@ vi.mock("@phosphor-icons/react", () => ({
     LinkSimpleIcon: () => <span />,
     PaperPlaneTiltIcon: () => <span />,
     RepeatIcon: () => <span />,
+    // share-channel + comment-state glyphs PostEngagementBar pulls in
+    ChatCircleDotsIcon: () => <span />,
+    FacebookLogoIcon: () => <span />,
+    XLogoIcon: () => <span />,
 }))
 
 // Presentation the gate does not depend on.

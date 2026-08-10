@@ -12,8 +12,9 @@ interface StartTrialArg {
  * SWR mutation for the "Học thử" CTA: best-effort free-enroll via
  * `POST /api/v1/courses/{id}/enroll` (REST — the BE GraphQL is query-only, so
  * the old `startTrial` GraphQL mutation never resolved). Free courses get a
- * tracked enrollment; paid courses throw `COURSE_ACCESS_DENIED` (payment-bypass
- * guard) which the caller swallows and still routes into the free/preview content.
+ * tracked enrollment; paid courses throw `COURSE_REQUIRES_PURCHASE` (payment-bypass
+ * guard). The rejection IS the gate — the caller must toast it and stay put, NOT
+ * route into `/learn` (doing so rendered the full lesson list as if unlocked).
  */
 export const useMutateStartTrialSwr = () => {
     /** The SWR mutation. */

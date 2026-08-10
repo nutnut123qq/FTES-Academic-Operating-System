@@ -7,6 +7,7 @@ import { Link, useRouter } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { useQueryTeachingCoursesSwr } from "../hooks/useQueryTeachingCoursesSwr"
+import { displayCourseCode } from "../courseCode"
 
 /** Status → HeroUI Chip color. PUBLISHED = live (success), DRAFT = editable (warning). */
 const statusColor = (status: string): "success" | "warning" | "default" => {
@@ -79,8 +80,8 @@ export const TeachingCourses = () => {
                                         <Chip.Label>{t(`courses.status.${course.status}`)}</Chip.Label>
                                     </Chip>
                                 </div>
-                                {course.courseCode ? (
-                                    <Typography type="body-xs" color="muted">{course.courseCode}</Typography>
+                                {displayCourseCode(course.courseCode) ? (
+                                    <Typography type="body-xs" color="muted">{displayCourseCode(course.courseCode)}</Typography>
                                 ) : null}
                                 <Typography type="body-xs" color="muted" className="mt-auto">
                                     {t("courses.teaching.manageHint")}

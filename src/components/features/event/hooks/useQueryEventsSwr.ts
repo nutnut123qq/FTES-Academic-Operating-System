@@ -21,6 +21,18 @@ export interface Event {
     type: EventType
     /** Formatted start date+time, or `null` when the BE omits it (row hidden). */
     date: string | null
+    /**
+     * BE lifecycle status, uppercased (`DRAFT`/`PUBLISHED`/`ONGOING`/`ENDED`/`CANCELLED`),
+     * or `null` when absent. Drives the "đã kết thúc" / "đã huỷ" card state so a past event
+     * never shows a live Register CTA.
+     */
+    status: string | null
+    /**
+     * Event END time in epoch ms, or `null` when the BE omits/gives an invalid value. Used as
+     * a fallback "đã kết thúc" signal for when the server-side scheduler hasn't flipped the
+     * status to `ENDED` yet (the end time is already in the past).
+     */
+    endAtMs: number | null
     /** Location modality; `null` when the BE omits it. Nơi diễn ra chỉ hiện ở trang chi tiết. */
     locationType: EventLocationType | null
     /** Confirmed attendee count (`capacity − seatsLeft`); `null` when capacity is unbounded (row hidden). */
@@ -74,6 +86,13 @@ const toEventDate = (iso: string | null | undefined): string | null => {
     return Number.isNaN(parsed.getTime()) ? null : dateFormatter.format(parsed)
 }
 
+/** Parse an ISO instant to epoch ms; `null` when absent or unparseable. */
+const toEpochMs = (iso: string | null | undefined): number | null => {
+    if (!iso) return null
+    const parsed = new Date(iso)
+    return Number.isNaN(parsed.getTime()) ? null : parsed.getTime()
+}
+
 /** Confirmed registrations = `capacity − seatsLeft`; only known when capacity is bounded. */
 const toAttendees = (capacity?: number, seatsLeft?: number): number | null => {
     if (capacity == null || seatsLeft == null) return null
@@ -87,6 +106,8 @@ const toEvent = (view: EventView): Event => ({
     title: view.title,
     type: toEventType(view.type),
     date: toEventDate(view.startAt),
+    status: view.status ? view.status.toUpperCase() : null,
+    endAtMs: toEpochMs(view.endAt),
     locationType: toLocationType(view.locationType),
     attendees: toAttendees(view.capacity, view.seatsLeft),
     registrationStatus: view.myRegistrationStatus ?? null,

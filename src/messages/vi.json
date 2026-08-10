@@ -3875,6 +3875,8 @@
     "attendeesCount": "{count} người tham gia",
     "register": "Đăng ký",
     "registered": "Đã đăng ký",
+    "ended": "Đã kết thúc",
+    "cancelled": "Đã huỷ",
     "cancelRegistration": "Huỷ đăng ký",
     "registerError": "Không đăng ký được sự kiện. Vui lòng thử lại.",
     "cancelError": "Không huỷ được đăng ký. Vui lòng thử lại.",

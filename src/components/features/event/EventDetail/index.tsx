@@ -76,7 +76,15 @@ const EventDetailBody = ({ event }: EventDetailBodyProps) => {
     const type = toEventType(event.type)
     const TypeIcon = TYPE_ICON[type] ?? CalendarIcon
     const locationType = toLocationType(event.locationType)
-    const status = (event.status ?? "").toLowerCase()
+    const rawStatus = (event.status ?? "").toLowerCase()
+    // Sự kiện đã qua/huỷ → khoá đăng ký, chỉ hiện trạng thái. "ended"/"cancelled" là status BE
+    // (scheduler flip khi qua endAt); fallback theo endAt đã-quá-khứ để bắt cả khi scheduler chưa
+    // kịp flip (sự kiện quá ngày mà vẫn "published"). Khi đó nhãn chip cũng hiện "ended" cho khớp.
+    const endPast = event.endAt ? new Date(event.endAt).getTime() < Date.now() : false
+    const isCancelled = rawStatus === "cancelled"
+    const isEnded = !isCancelled && (rawStatus === "ended" || endPast)
+    const isOver = isEnded || isCancelled
+    const status = isEnded ? "ended" : rawStatus
 
     // BE giữ lại hàng đăng ký cả khi đã huỷ/đã kết thúc, nên phải liệt kê THUẬN hai trạng thái
     // thật sự đang giữ chỗ. Tập đầy đủ của BE: CONFIRMED|WAITLISTED|CANCELLED|ATTENDED|NO_SHOW
@@ -178,15 +186,19 @@ const EventDetailBody = ({ event }: EventDetailBodyProps) => {
                 ) : null}
             </div>
 
-            <Button
-                variant={isRegistered ? "ghost" : "secondary"}
-                className="self-start"
-                isPending={isPending}
-                isDisabled={isPending}
-                onPress={() => void onToggleRegistration()}
-            >
-                {isRegistered ? t("cancelRegistration") : t("register")}
-            </Button>
+            {/* Sự kiện còn hiệu lực mới cho đăng ký/huỷ; đã kết thúc/đã huỷ thì trạng thái đã
+                thể hiện ở chip trên đầu, không hiện CTA nữa. */}
+            {isOver ? null : (
+                <Button
+                    variant={isRegistered ? "ghost" : "secondary"}
+                    className="self-start"
+                    isPending={isPending}
+                    isDisabled={isPending}
+                    onPress={() => void onToggleRegistration()}
+                >
+                    {isRegistered ? t("cancelRegistration") : t("register")}
+                </Button>
+            )}
         </>
     )
 }

@@ -134,6 +134,14 @@ const EventCard = ({ event }: EventCardProps) => {
     // trong DB nhưng không phải chỗ đang giữ (tập CHECK constraint V73).
     const isRegistered =
         event.registrationStatus === "CONFIRMED" || event.registrationStatus === "WAITLISTED"
+    // Sự kiện đã qua → KHÔNG còn cho đăng ký, hiện trạng thái thay vì nút CTA. "ENDED" là
+    // status BE (scheduler flip khi qua endAt); fallback theo endAt đã-quá-khứ để bắt cả khi
+    // scheduler chưa kịp flip (đúng ca sự kiện quá ngày mà vẫn "PUBLISHED"). CANCELLED = đã huỷ.
+    const isCancelled = event.status === "CANCELLED"
+    const isEnded =
+        !isCancelled &&
+        (event.status === "ENDED" || (event.endAtMs != null && event.endAtMs < Date.now()))
+    const isOver = isEnded || isCancelled
 
     const onRegister = async () => {
         // registerEvent key theo UUID chứ không phải slug (slug chỉ dùng cho route + detail).
@@ -189,16 +197,23 @@ const EventCard = ({ event }: EventCardProps) => {
                 )}
             </div>
 
-            <Button
-                size="sm"
-                variant="secondary"
-                className="mt-auto self-start"
-                isPending={isPending}
-                isDisabled={isPending || isRegistered}
-                onPress={() => void onRegister()}
-            >
-                {isRegistered ? t("registered") : t("register")}
-            </Button>
+            {/* Sự kiện đã qua/huỷ → badge trạng thái (không hành động); còn hiệu lực → nút đăng ký. */}
+            {isOver ? (
+                <Chip size="sm" variant="soft" className="mt-auto self-start">
+                    {isCancelled ? t("cancelled") : t("ended")}
+                </Chip>
+            ) : (
+                <Button
+                    size="sm"
+                    variant="secondary"
+                    className="mt-auto self-start"
+                    isPending={isPending}
+                    isDisabled={isPending || isRegistered}
+                    onPress={() => void onRegister()}
+                >
+                    {isRegistered ? t("registered") : t("register")}
+                </Button>
+            )}
         </div>
     )
 }

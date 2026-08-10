@@ -3875,6 +3875,8 @@
     "attendeesCount": "{count} attendees",
     "register": "Register",
     "registered": "Registered",
+    "ended": "Ended",
+    "cancelled": "Cancelled",
     "cancelRegistration": "Cancel registration",
     "registerError": "Couldn't register for this event. Please try again.",
     "cancelError": "Couldn't cancel your registration. Please try again.",

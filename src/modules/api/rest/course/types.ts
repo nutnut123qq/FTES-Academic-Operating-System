@@ -78,6 +78,13 @@ export interface CourseDetail {
      * Additive on the BE detail projection.
      */
     subjectCode?: string | null
+    /**
+     * Total learning time of the course in SECONDS (summed over the lessons the BE can
+     * measure), or `null` when nothing is measurable — never `0`. Additive; absent on
+     * older deployments → the detail/learn headers hide the "Giờ học" chip instead of
+     * showing a fabricated figure.
+     */
+    totalDurationSeconds?: number | null
 }
 
 /** Section inside course detail. */

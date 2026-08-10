@@ -200,7 +200,11 @@ const toLearnCourse = (courseId: string, detail: CourseDetail): LearnCourse => {
             title: detail.course?.title ?? "",
             description: detail.description ?? "",
             moduleCount: modules.length,
-            durationHours: 0,
+            // Same public detail as the course page: BE seconds → hours. `null`/absent
+            // (nothing measurable) keeps 0, which the header treats as "hide".
+            durationHours: detail.totalDurationSeconds
+                ? Math.max(1, Math.round(detail.totalDurationSeconds / 3600))
+                : 0,
             learnerCount: detail.course?.totalUser ?? 0,
             progressPercent: 0,
             continueLessonId: firstLessonId,

@@ -16,6 +16,9 @@ import { useTranslations } from "next-intl"
 import { Controller, type Control } from "react-hook-form"
 import { CameraIcon } from "@phosphor-icons/react"
 import { useEditProfileForm, type EditProfileFormValues } from "@/hooks/rhf/useEditProfileForm"
+import { CampusPicker } from "@/components/reuseable/CampusPicker"
+import { useQueryCampusesSwr } from "@/components/features/community/hooks/useQueryCampusesSwr"
+import type { CampusView } from "@/modules/api/rest/community"
 
 /** The plain-text fields of the edit form (all seed/clear as strings). */
 type TextFieldName = "displayName" | "bio" | "roleTitle" | "location" | "linkedinUrl" | "websiteUrl"
@@ -56,6 +59,42 @@ const TextRow = ({
 )
 
 /**
+ * The campus row — a labeled RHF-controlled single-select (HeroUI `Dropdown` via
+ * {@link CampusPicker}, not a raw `<select>`). The form value is a campus CODE ("" =
+ * no campus); the placeholder entry clears it. Options come from the active-campus list,
+ * which equals the BE `@Pattern` set, so any pick round-trips through `PATCH /me`.
+ */
+const CampusRow = ({
+    control,
+    label,
+    placeholder,
+    campuses,
+}: {
+    control: Control<EditProfileFormValues>
+    label: string
+    placeholder: string
+    campuses: Array<CampusView>
+}) => (
+    <Controller
+        control={control}
+        name="campus"
+        render={({ field }) => (
+            <div className="flex flex-col gap-2">
+                <Label className="text-sm">{label}</Label>
+                <CampusPicker
+                    campuses={campuses}
+                    value={field.value || null}
+                    onChange={(code) => field.onChange(code ?? "")}
+                    placeholder={placeholder}
+                    ariaLabel={label}
+                    className="self-start"
+                />
+            </div>
+        )}
+    />
+)
+
+/**
  * `/profile/edit` — edit-profile form. Reuses {@link useEditProfileForm} (the
  * real REST profile flow: seeds from `GET /api/v1/profiles/me`, saves via
  * `PATCH /me` + multipart avatar upload + `PUT /me/social-links`). Only fields
@@ -65,6 +104,7 @@ const EditProfilePage = () => {
     const t = useTranslations()
     const { control, formState, onSubmit, fileInputRef, onPickAvatar, onAvatarChange, shownAvatar } =
         useEditProfileForm()
+    const { campuses } = useQueryCampusesSwr()
 
     return (
         <form onSubmit={onSubmit} className="flex max-w-2xl flex-col gap-6">
@@ -120,6 +160,13 @@ const EditProfilePage = () => {
                 name="location"
                 label={t("profileEdit.location")}
                 placeholder={t("profileEdit.locationPlaceholder")}
+            />
+
+            <CampusRow
+                control={control}
+                label={t("profile.academic.fields.campus")}
+                placeholder={t("profileEdit.campusNone")}
+                campuses={campuses}
             />
 
             <TextRow

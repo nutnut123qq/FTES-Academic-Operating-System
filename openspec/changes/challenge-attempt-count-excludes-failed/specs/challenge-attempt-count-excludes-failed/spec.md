@@ -14,3 +14,17 @@ attempts the backend would still accept.
 - **WHEN** a learner has one SCORED and one FAILED submission on a challenge with `maxSubmissions` 10
 - **THEN** the surface shows 1 attempt used, not 2
 - **AND** the submit controls stay enabled
+
+### Requirement: The project-grade cap MUST key off full course access, not the purchase flag
+The submit surface SHALL decide whether the tight project-grade cap applies by reading `fullAccess`
+from the caller's course access state, NOT `purchased`. The backend gates this cap with
+`hasEntitledLessonAccess`, which grants full access for a paid entitlement OR an active LEGACY
+enrollment, whereas `purchased` is true only when an ACTIVE `package_purchases` row exists. A learner
+on a LEGACY course therefore reports `purchased: false` while the backend still accepts their
+submissions, and keying the cap on `purchased` locks them out of attempts they are entitled to.
+
+#### Scenario: LEGACY-course learner is not capped at 2
+- **WHEN** a learner whose access comes from an active LEGACY enrollment (no `package_purchases` row)
+  opens a project challenge on that course
+- **THEN** the cap shown and enforced client-side is the mentor's `maxSubmissions`, not 2
+- **AND** the submit controls stay enabled while attempts remain

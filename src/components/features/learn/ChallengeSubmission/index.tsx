@@ -164,14 +164,16 @@ export const ChallengeSubmission = () => {
     // học viên. Đếm cả FAILED ở FE làm chip hiện thừa lượt và khoá nút sớm dù BE vẫn nhận bài.
     const usedCount = submissions.filter((submission) => submission.status !== "FAILED").length
     const reachedMax = challenge ? usedCount >= challenge.maxSubmissions : false
-    // The caller's purchase state on this course drives the HEAVY project-grade cap: a
-    // learner who BOUGHT the course is capped only by the mentor's `maxSubmissions`, while a
-    // free-enroll ("học thử") / trial learner keeps the tight PROJECT_GRADE_LIMIT (AI cost
-    // protection for non-payers). Keyed on the challenge's course UUID; degrades to
-    // not-purchased when the course id is absent or the call fails — matching the BE, which
-    // also applies the cap when it can't resolve a paid lesson entitlement.
+    // Quyền học FULL trên khoá quyết định cap chấm project: có quyền → chỉ còn `maxSubmissions`
+    // của mentor, còn học thử / free-enroll giữ PROJECT_GRADE_LIMIT (chặn chi phí AI với người
+    // chưa trả tiền). PHẢI đọc `fullAccess`, KHÔNG phải `purchased`: BE gate bằng
+    // `hasEntitledLessonAccess` (FULL access qua entitlement trả phí HOẶC enrollment LEGACY
+    // active), trong khi `purchased` theo định nghĩa của `PurchaseFlagService` chỉ true khi có
+    // `package_purchases` ACTIVE — người học khoá LEGACY (chỉ có enrollment, không có purchase
+    // row) sẽ ra false và bị FE khoá ở 2 lượt dù BE vẫn nhận bài. Keyed theo course UUID; gọi
+    // hỏng / thiếu courseId → coi như không có quyền, khớp BE (cũng áp cap khi không phân giải được).
     const { data: courseAccess } = useGetMyCourseAccessSwr(challenge?.courseId || undefined)
-    const purchased = courseAccess?.purchased ?? false
+    const hasFullAccess = courseAccess?.fullAccess ?? false
     // newest attempt first
     const history = useMemo(
         () => [...submissions].sort((a, b) => b.attemptNo - a.attemptNo),
@@ -398,7 +400,7 @@ export const ChallengeSubmission = () => {
                                                 fileExtension={challenge.fileExtension}
                                                 seedSql={challenge.seedSql}
                                                 maxSubmissions={challenge.maxSubmissions}
-                                                purchased={purchased}
+                                                purchased={hasFullAccess}
                                                 reachedMax={reachedMax}
                                                 submissions={submissions}
                                                 onSubmitted={() => { void mutate() }}

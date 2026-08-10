@@ -9,6 +9,12 @@
 - [x] 2.2 Giữ khoá nút theo cap (không còn khoá nhầm vì FE đã biết `purchased`)
 - [x] 2.3 `mapSubmitError` vẫn dịch `PROJECT_GRADE_LIMIT_REACHED`
 
+## 2b. Cap đọc đúng cờ quyền (báo lại sau khi user vẫn thấy khoá 2 lượt)
+- [x] 2b.1 `ChallengeSubmission`: cap đọc `courseAccess.fullAccess`, KHÔNG `purchased` — `purchased`
+  chỉ true khi có `package_purchases` ACTIVE (PurchaseFlagService), nên người học khoá LEGACY
+  (chỉ có enrollment) bị FE khoá ở 2 lượt dù BE `hasEntitledLessonAccess` cho qua
+- [x] 2b.2 Đổi tên biến `purchased` → `hasFullAccess` cho khỏi hiểu nhầm
+
 ## 3. Verify
 - [x] 3.1 `tsc --noEmit` sạch
 - [ ] 3.2 `npm run build` — KHÔNG chạy được trên box server: `@parcel/watcher-linux-x64-glibc`

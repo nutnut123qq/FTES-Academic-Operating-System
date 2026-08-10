@@ -53,9 +53,11 @@ const TAB_LABEL_KEY: Record<SolverTab, string> = {
 
 /**
  * Per-learner-per-challenge cap on the HEAVY project grade — a `FILE` (zip) or `URL`
- * (github) submission routed to the agentic `/grade-project`. Mirrors the BE
- * `PROJECT_GRADE_LIMIT` enforced at submit time (rejecting with `PROJECT_GRADE_LIMIT_REACHED`
- * once reached). Inline sandbox `CODE` submissions are NOT counted against this cap.
+ * (github) submission routed to the agentic `/grade-project`. This tight cap applies
+ * ONLY to FREE ("học thử") challenges (cost protection for non-payers); a PAID challenge
+ * is governed solely by the mentor's `maxSubmissions`. Mirrors the BE, which enforces
+ * `PROJECT_GRADE_LIMIT` at submit time for free challenges only (rejecting with
+ * `PROJECT_GRADE_LIMIT_REACHED`). Inline sandbox `CODE` submissions never count here.
  */
 const PROJECT_GRADE_LIMIT = 2
 
@@ -86,6 +88,12 @@ export interface ChallengeMethodSolverProps {
     seedSql: string | null | undefined
     /** Cap on attempts — drives the "used all attempts" lock message. */
     maxSubmissions: number
+    /**
+     * "Học thử" (free-trial) challenge. Free → the tight {@link PROJECT_GRADE_LIMIT}
+     * project-grade cap applies; paid (learner bought the course) → the mentor's
+     * {@link maxSubmissions} is the sole cap. Absent → treated as paid.
+     */
+    free?: boolean
     /** True once every attempt is used — locks the submit surface. */
     reachedMax: boolean
     /**
@@ -127,6 +135,7 @@ export const ChallengeMethodSolver = ({
     fileExtension,
     seedSql,
     maxSubmissions,
+    free,
     reachedMax,
     submissions,
     onSubmitted,
@@ -144,13 +153,17 @@ export const ChallengeMethodSolver = ({
     const projectGradesUsed = submissions.filter(
         (submission) => submission.payloadType !== undefined && PROJECT_PAYLOAD_TYPES.has(submission.payloadType),
     ).length
-    const projectLimitReached = projectGradesUsed >= PROJECT_GRADE_LIMIT
+    // FREE ("học thử") challenges keep the tight PROJECT_GRADE_LIMIT (cost protection); a
+    // PAID challenge the learner bought is capped only by the mentor's maxSubmissions.
+    const projectGradeLimit = free ? PROJECT_GRADE_LIMIT : maxSubmissions
+    const projectLimitReached = projectGradesUsed >= projectGradeLimit
 
     // Translate the BE project-grade cap rejection to a clear i18n message so the submit
-    // toast reads meaningfully; anything else re-throws for the default error toast.
+    // toast reads meaningfully; anything else re-throws for the default error toast. The BE
+    // only rejects with this on FREE challenges now (cap = PROJECT_GRADE_LIMIT).
     const mapSubmitError = (error: unknown): never => {
         if (error instanceof RestError && error.errorCode === "PROJECT_GRADE_LIMIT_REACHED") {
-            throw new Error(t("exercises.project.gradeLimitReached"))
+            throw new Error(t("exercises.project.gradeLimitReached", { limit: PROJECT_GRADE_LIMIT }))
         }
         throw error
     }
@@ -372,12 +385,12 @@ export const ChallengeMethodSolver = ({
         <div className="flex items-center gap-2 rounded-2xl border border-danger/40 bg-danger/5 px-4 py-3">
             <WarningCircleIcon aria-hidden focusable="false" className="size-5 shrink-0 text-danger" />
             <Typography type="body-sm" color="muted">
-                {t("exercises.project.gradeLimitReached")}
+                {t("exercises.project.gradeLimitReached", { limit: projectGradeLimit })}
             </Typography>
         </div>
     ) : (
         <Typography type="body-xs" color="muted">
-            {t("exercises.project.gradeLimitHint", { used: projectGradesUsed, limit: PROJECT_GRADE_LIMIT })}
+            {t("exercises.project.gradeLimitHint", { used: projectGradesUsed, limit: projectGradeLimit })}
         </Typography>
     )
 

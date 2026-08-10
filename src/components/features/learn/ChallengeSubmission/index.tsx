@@ -380,6 +380,7 @@ export const ChallengeSubmission = () => {
                                                 fileExtension={challenge.fileExtension}
                                                 seedSql={challenge.seedSql}
                                                 maxSubmissions={challenge.maxSubmissions}
+                                                free={challenge.free}
                                                 reachedMax={reachedMax}
                                                 submissions={submissions}
                                                 onSubmitted={() => { void mutate() }}

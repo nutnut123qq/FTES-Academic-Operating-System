@@ -19,11 +19,21 @@ import { ProgressMeter } from "@/components/blocks/stats/ProgressMeter"
  */
 export interface ContinueCardProps extends WithClassNames<undefined> {
     /**
-     * Optional media node rendered flush on the left of the info row — typically
-     * a `<img>` thumbnail or course icon (renders shrink-0 so it never
-     * compresses).
+     * Optional media node — typically a `<img>` thumbnail or course icon.
+     * {@link coverPlacement} decides where it sits.
      */
     cover?: React.ReactNode
+    /**
+     * Where {@link cover} sits.
+     *
+     * - `"inline"` (default) — flush on the LEFT of the info row, shrink-0 so it
+     *   never compresses. The caller sizes it (e.g. `className="w-24"`).
+     * - `"top"` — stacked ABOVE the info row across the FULL card width (the
+     *   catalog-card anatomy). Pass a full-width media node and do NOT put a width
+     *   class on it: `cn`/tailwind-merge lets a caller `w-24` override the media
+     *   block's own `w-full`, which shrinks the cover back to a thumbnail.
+     */
+    coverPlacement?: "inline" | "top"
     /**
      * Primary label of the item being continued (course / module / lesson title).
      * Rendered via {@link Typography} weight="medium", clamped to TWO lines so long
@@ -76,10 +86,14 @@ export interface ContinueCardProps extends WithClassNames<undefined> {
  * ContinueCard renders a "pick up where you left off" surface inside a
  * {@link SectionCard} frame. It stacks:
  *
- * 1. An info row — `cover` (shrink-0) + a min-w-0 column with `title` (medium
- *    weight, clamped to two lines) and `subtitle` (body-xs muted, truncated) + `ctaLabel`
- *    pinned to the far right (body-sm, accent colour, shrink-0).
+ * 1. An info row — `cover` (shrink-0, only when `coverPlacement="inline"`) + a
+ *    min-w-0 column with `title` (medium weight, clamped to two lines) and `subtitle`
+ *    (body-xs muted, truncated) + `ctaLabel` pinned to the far right (body-sm, accent
+ *    colour, shrink-0).
  * 2. A {@link ProgressMeter} spanning the full card width.
+ *
+ * With `coverPlacement="top"` the cover instead leads the stack, spanning the full
+ * card width above the info row.
  *
  * Because HeroUI v3 {@link Card} / {@link SectionCard} is not pressable,
  * interactivity is delivered by wrapping the `<SectionCard>` in a real
@@ -89,6 +103,7 @@ export interface ContinueCardProps extends WithClassNames<undefined> {
  */
 export const ContinueCard = ({
     cover,
+    coverPlacement = "inline",
     title,
     subtitle,
     badge,
@@ -106,10 +121,17 @@ export const ContinueCard = ({
             className={cn("flex flex-col", !interactive && className)}
             contentClassName="flex flex-col gap-3"
         >
+            {/* Cover on TOP: rendered bare so it spans the full card width (the
+                SectionCard body is a flex column) — a wrapper would only add a box
+                for the caller's node to be constrained by */}
+            {coverPlacement === "top" && cover ? cover : null}
+
             {/* Info row: cover | text column | cta label */}
             <div className="flex items-center gap-3">
                 {/* Cover thumbnail — shrink-0 so it never compresses */}
-                {cover ? <div className="shrink-0">{cover}</div> : null}
+                {coverPlacement === "inline" && cover ? (
+                    <div className="shrink-0">{cover}</div>
+                ) : null}
 
                 {/* Text column: title + subtitle — min-w-0 allows truncation */}
                 <div className="flex min-w-0 flex-1 flex-col gap-1.5">

@@ -98,7 +98,7 @@ const QuickPoll = () => {
                     disabled={isClosed}
                     onClick={() => onVote(option.id)}
                     className={cn(
-                        "relative overflow-hidden rounded-large border p-2 text-left transition-colors",
+                        "relative overflow-hidden rounded-2xl border p-2 text-left transition-colors",
                         votedId === option.id ? "border-accent" : "border-separator",
                         !revealed && "hover:bg-default/40",
                         isClosed && "cursor-default",
@@ -143,9 +143,9 @@ const UpcomingEventRow = ({ event }: { event: UpcomingEvent }) => {
     return (
         <Link
             href={`/events/${event.id}`}
-            className="flex items-center gap-2 rounded-large p-1 no-underline transition-colors hover:bg-default/40"
+            className="flex items-center gap-2 rounded-xl p-1 no-underline transition-colors hover:bg-default/40"
         >
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-large bg-accent/10 text-accent">
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-accent">
                 <TypeIcon aria-hidden focusable="false" className="size-4" />
             </div>
             <div className="flex min-w-0 flex-1 flex-col">
@@ -170,7 +170,7 @@ const UpcomingEventsSkeleton = () => (
     <div className="flex flex-col gap-2">
         {[0, 1, 2].map((row) => (
             <div key={row} className="flex items-center gap-2 p-1">
-                <Skeleton className="size-8 shrink-0 rounded-large" />
+                <Skeleton className="size-8 shrink-0 rounded-lg" />
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
                     <Skeleton.Typography type="body-xs" width="2/3" />
                     <Skeleton.Typography type="body-xs" width="1/2" />

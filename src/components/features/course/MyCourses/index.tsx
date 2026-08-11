@@ -6,6 +6,7 @@ import { useFormatter, useTranslations } from "next-intl"
 import { Link, useRouter } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { ContinueCard } from "@/components/blocks/cards/ContinueCard"
+import { CoverImage } from "@/components/blocks/media/CoverImage"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { FtesMascot } from "@/components/reuseable/FtesMascot"
 import { MascotProfileNudge } from "@/components/features/mascot-moments"
@@ -13,8 +14,9 @@ import { useQueryMyCoursesSwr, type MyCourse } from "../hooks/useQueryMyCoursesS
 
 /**
  * "Khóa học của tôi" (`/courses/me`) — the signed-in viewer's active enrollments as
- * a grid of resumable {@link ContinueCard}s (title · % complete · progress bar ·
- * "Tiếp tục học"), each linking into the course learn shell (least-finished first).
+ * a grid of resumable {@link ContinueCard}s (full-width cover · title · % complete ·
+ * progress bar · "Tiếp tục học"), each linking into the course learn shell
+ * (least-finished first).
  * Loading gates progress-card-shaped skeletons; an empty enrollment set shows an
  * onboarding empty state with a link to the catalog. Owns its container gutter,
  * mirroring {@link CourseCatalog}.
@@ -63,7 +65,7 @@ export const MyCourses = () => {
                 skeleton={(
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                         {[0, 1, 2, 3, 4, 5].map((i) => (
-                            <Skeleton key={i} className="h-32 w-full rounded-large" />
+                            <Skeleton key={i} className="h-64 w-full rounded-large" />
                         ))}
                     </div>
                 )}
@@ -97,6 +99,17 @@ export const MyCourses = () => {
                                 className="group block no-underline"
                             >
                                 <ContinueCard
+                                    cover={(
+                                        // full-width 16:9 cover on top, same anatomy as the
+                                        // /courses catalog card and the home band. NO width
+                                        // class — CoverImage merges caller classes with cn,
+                                        // so any `w-*` would beat its own `w-full`.
+                                        <CoverImage
+                                            src={course.coverImage}
+                                            alt={course.title}
+                                        />
+                                    )}
+                                    coverPlacement="top"
                                     title={course.title}
                                     subtitle={t("courses.percentComplete", { percent: course.completionPercent })}
                                     badge={termBadge(course)}

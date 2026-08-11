@@ -39,7 +39,7 @@ const TYPE_TO_CATEGORY: Record<string, ProductCategory> = {
 const toCategory = (type: string): ProductCategory => TYPE_TO_CATEGORY[type] ?? "merch"
 
 /** Maps a BE `ProductView` onto the catalog's `Product` model. */
-const toProduct = (view: ProductView): Product => ({
+export const toProduct = (view: ProductView): Product => ({
     id: view.id,
     name: view.name,
     category: toCategory(view.type),

@@ -138,18 +138,14 @@ const SubjectCard = ({ subject }: SubjectCardProps) => {
                 </div>
             ) : null}
             <div className="flex flex-col gap-3 p-4">
-                <div className="flex items-center gap-3">
-                    <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-accent/10 text-xs font-bold text-accent">
-                        {subject.code.slice(0, 3).toUpperCase()}
-                    </div>
-                    <div className="min-w-0">
-                        <Typography type="body-sm" weight="medium" truncate>
-                            {subject.code}
-                        </Typography>
-                        <Typography type="body-xs" color="muted" className="truncate">
-                            {subject.name}
-                        </Typography>
-                    </div>
+                {/* min-w-0 giữ lại vì `truncate` cần cha co được để cắt chữ. */}
+                <div className="min-w-0">
+                    <Typography type="body-sm" weight="medium" truncate>
+                        {subject.code}
+                    </Typography>
+                    <Typography type="body-xs" color="muted" className="truncate">
+                        {subject.name}
+                    </Typography>
                 </div>
                 <div className="flex items-center gap-2">
                     <Chip size="sm" variant="soft" color="accent">
@@ -171,19 +167,16 @@ const SubjectCard = ({ subject }: SubjectCardProps) => {
 }
 
 /**
- * Skeleton mirroring {@link SubjectCard}: 16:9 thumbnail box, identity row
- * (badge + two text lines), chip-row line — same boxes, same proportions.
+ * Skeleton mirroring {@link SubjectCard}: 16:9 thumbnail box, two text lines,
+ * chip-row line — same boxes, same proportions.
  */
 const SubjectCardSkeleton = () => (
     <div className="flex flex-col overflow-hidden rounded-2xl border border-separator">
         <Skeleton className="aspect-video w-full rounded-none" />
         <div className="flex flex-col gap-3 p-4">
-            <div className="flex items-center gap-3">
-                <Skeleton className="size-11 shrink-0 rounded-2xl" />
-                <div className="flex min-w-0 flex-1 flex-col">
-                    <Skeleton.Typography type="body-sm" width="1/3" />
-                    <Skeleton.Typography type="body-xs" width="2/3" />
-                </div>
+            <div className="flex min-w-0 flex-col">
+                <Skeleton.Typography type="body-sm" width="1/3" />
+                <Skeleton.Typography type="body-xs" width="2/3" />
             </div>
             <div className="flex items-center gap-2">
                 <Skeleton.Chip />

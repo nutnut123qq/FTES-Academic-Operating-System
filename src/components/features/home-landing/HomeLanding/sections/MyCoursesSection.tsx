@@ -25,9 +25,10 @@ const HOME_MY_COURSES_LIMIT = 4
  * cards; when this band self-hides, `HomeMascotGreetingBand` puts the greeting back
  * in its own band instead (exactly one mascot per page either way).
  *
- * Cards are capped at TWO per row: {@link ContinueCard} puts cover + text + CTA on
- * one row, so the four-column grid squeezed the text column to ~30px and truncated
- * the course title away.
+ * Cards are capped at TWO per row: {@link ContinueCard} puts title + CTA on one row,
+ * so the four-column grid squeezed the text column to ~30px and truncated the course
+ * title away. The cover rides on TOP at full width (`coverPlacement="top"`), matching
+ * the /courses catalog card.
  */
 export const MyCoursesSection = () => {
     const t = useTranslations()
@@ -83,9 +84,9 @@ export const MyCoursesSection = () => {
                 <div className="mb-8 flex">
                     <HomeMascotGreeting />
                 </div>
-                {/* at most TWO cards per row: ContinueCard lays cover + text + CTA on ONE row,
-                    so at four columns the text column collapsed to ~30px and the course title
-                    was truncated away entirely */}
+                {/* at most TWO cards per row: ContinueCard lays title + CTA on ONE row, so at
+                    four columns the text column collapsed to ~30px and the course title was
+                    truncated away entirely (the cover now sits on top, full width) */}
                 <div className="grid gap-3 sm:grid-cols-2">
                     {courses.slice(0, HOME_MY_COURSES_LIMIT).map((course) => (
                         <Link
@@ -95,15 +96,17 @@ export const MyCoursesSection = () => {
                         >
                             <ContinueCard
                                 cover={(
-                                    // fixed-width 16:9 course thumbnail on the left of the
-                                    // info row; CoverImage frames + rounds it and shows an
-                                    // empty surface when the course has no cover.
+                                    // full-width 16:9 course cover ON TOP, same as the
+                                    // /courses catalog card. NO width class here: CoverImage
+                                    // merges caller classes with cn, so the old `w-24 sm:w-28`
+                                    // beat its own `w-full` and cropped the cover to ~96px,
+                                    // slicing the text baked into course artwork.
                                     <CoverImage
                                         src={course.coverImage}
                                         alt={course.title}
-                                        className="w-24 sm:w-28"
                                     />
                                 )}
+                                coverPlacement="top"
                                 title={course.title}
                                 subtitle={t("courses.percentComplete", { percent: course.completionPercent })}
                                 badge={termBadge(course)}

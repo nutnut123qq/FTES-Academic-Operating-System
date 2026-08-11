@@ -16,10 +16,15 @@ import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { usePostAddCartItemSwr } from "@/hooks/swr/api/rest/mutations/usePostAddCartItemSwr"
 import { usePaymentOverlayState } from "@/hooks/zustand/overlay/hooks"
-import { useQueryProductsSwr, type Product, type ProductCategory } from "../hooks/useQueryProductsSwr"
+import type { Product, ProductCategory } from "../hooks/useQueryProductsSwr"
+import { useQueryStoreProductsSwr } from "../hooks/useQueryStoreProductsSwr"
 
-/** Category filter options: "all" + every product category. */
-const CATEGORIES: Array<ProductCategory | "all"> = ["all", "merch", "premium", "aiCredits", "voucher", "courseUnlock"]
+/**
+ * Category filter options: "all" + every category the STORE sells. "courseUnlock" is
+ * absent on purpose — a course is bought from its own detail page, not from the shop
+ * (the store hook doesn't fetch that type either).
+ */
+const CATEGORIES: Array<ProductCategory | "all"> = ["all", "merch", "premium", "aiCredits", "voucher"]
 
 /** Per-category badge icon. Phosphor; tokens own the color. */
 const CATEGORY_ICON: Record<ProductCategory, React.ComponentType<{ className?: string }>> = {
@@ -39,7 +44,7 @@ const CATEGORY_ICON: Record<ProductCategory, React.ComponentType<{ className?: s
  */
 export const MarketplaceCatalog = () => {
     const t = useTranslations("marketplace")
-    const { products, isLoading, error, mutate } = useQueryProductsSwr()
+    const { products, isLoading, error, mutate } = useQueryStoreProductsSwr()
     const [query, setQuery] = useState("")
     const [category, setCategory] = useState<ProductCategory | "all">("all")
 

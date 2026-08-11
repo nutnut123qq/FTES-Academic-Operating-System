@@ -28,6 +28,7 @@ import { SearchInput } from "@/components/reuseable/SearchInput"
 import { ExtendedTabs } from "@/components/blocks/navigation/ExtendedTabs"
 import { useQueryResourceHubSwr } from "@/components/features/resource/hooks/useQueryResourceHubSwr"
 import { useQueryCoursesSwr } from "@/components/features/course/hooks/useQueryCoursesSwr"
+import { displayCourseCode } from "@/components/features/course/courseCode"
 import {
     useQueryBookmarkedPostsSwr,
     type SavedPost,
@@ -155,10 +156,13 @@ export const SavedLibrary = () => {
             if (entry.entityType === "course") {
                 const course = courses.find((item) => item.id === entry.entityId)
                 if (!course) return null
+                // mã gói nội bộ (…_PACKAGE_MAIN) không phải mã môn → helper trả "" và kicker biến mất,
+                // nhưng haystack giữ mã THÔ để tìm theo mã (kể cả mã gói) vẫn trúng
+                const code = displayCourseCode(course.code)
                 return {
                     entry,
                     href: `/courses/${course.id}`,
-                    title: `${course.code} · ${course.name}`,
+                    title: code ? `${code} · ${course.name}` : course.name,
                     context: t("courseSystem.catalog.lessonsCount", { count: course.lessons }),
                     haystack: `${course.code} ${course.name}`,
                 }

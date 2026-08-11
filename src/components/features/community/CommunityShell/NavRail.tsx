@@ -16,7 +16,7 @@ import { useHasPermission } from "@/hooks/useHasPermission"
 
 /** Shared look for one rail row (icon + label). */
 const ROW_CLASS =
-    "flex items-center gap-2 rounded-large px-2 py-2 text-sm text-foreground no-underline transition-colors hover:bg-default/40"
+    "flex items-center gap-2 rounded-xl px-2 py-2 text-sm text-foreground no-underline transition-colors hover:bg-default/40"
 
 /**
  * Left community rail (`xl`+): shortcut rows for the actions hidden behind the

@@ -18,7 +18,8 @@ call-to-action label. Built on `SectionCard` and `ProgressMeter`.
 |---|---|---|---|
 | `title` | `React.ReactNode` | — (required) | Primary label of the item (course / lesson title). Truncated to one line. |
 | `value` | `number` | — (required) | Current progress value forwarded to `ProgressMeter`. Should be in `[0, max]`. |
-| `cover` | `React.ReactNode` | `undefined` | Optional media node (thumbnail, course icon) rendered flush-left, shrink-0. |
+| `cover` | `React.ReactNode` | `undefined` | Optional media node (thumbnail, course icon). Position set by `coverPlacement`. |
+| `coverPlacement` | `"inline" \| "top"` | `"inline"` | `"inline"` renders `cover` flush-left inside the info row (shrink-0); `"top"` stacks it above the info row across the full card width. |
 | `subtitle` | `React.ReactNode` | `undefined` | Secondary label under the title (module name, lesson number). Truncated to one line. |
 | `max` | `number` | `100` | Maximum value representing 100 % completion. Forwarded to `ProgressMeter`. |
 | `ctaLabel` | `React.ReactNode` | `undefined` | Call-to-action label pinned to the far right (e.g. "Continue"). Rendered accent-coloured. |
@@ -65,5 +66,5 @@ export const DashboardContinue = () => (
 - **Overflow handling.** `subtitle` uses the `truncate` prop on `Typography` (not `className="truncate"`), as required by LAW 2. `title` instead carries `className="line-clamp-2"` — a documented minimal exception (same as `MediaCard`'s description): it is a layout/overflow constraint, and `Typography` has no two-line prop. One-line truncation clipped real course names ("Làm quen cơ sở dữ liệu SQL Server + JDBC") mid-title.
 - **`ctaLabel` colour.** The `text-accent` class on the CTA `Typography` is the one allowed `className` colour exception per LAW 1 — the HeroUI `color` prop lacks an "accent" token for body text.
 - **Spacing.** The card body uses `gap-3` (same-function items, per the project spacing-scale convention). The info row uses `gap-3` between cover, text column, and CTA.
-- **`cover` sizing.** Size and shape of the cover node (rounded corners, aspect ratio) are the caller's responsibility — pass fully styled nodes.
+- **`cover` sizing.** Size and shape of the cover node (rounded corners, aspect ratio) are the caller's responsibility — pass fully styled nodes. With `coverPlacement="inline"` the caller sets the width (e.g. `className="w-24 sm:w-28"`). With `coverPlacement="top"` the node MUST be full-width: pass no width class at all, because blocks like `CoverImage` merge caller classes via `cn`/tailwind-merge, so a `w-24` silently overrides their own `w-full` and the "full-bleed" cover collapses back to a ~96px thumbnail.
 - **Accessibility.** When `href` is set, the outer `<a>` has no extra `aria-label`; ensure `title` is descriptive enough to serve as the link label. When `onPress` is used, the `<button>` gets `type="button"` and `text-left`.

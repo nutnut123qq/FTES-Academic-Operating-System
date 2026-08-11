@@ -36,7 +36,7 @@ export type FooterProps = WithClassNames<undefined>
 
 /**
  * Global site footer (editorial-minimal) — a single flat band with a top border.
- * 3 cột trên desktop (thương hiệu · pháp nhân · pháp lý), dồn 1 cột trên mobile;
+ * 3 cột trên desktop (thương hiệu · pháp lý · pháp nhân), dồn 1 cột trên mobile;
  * bottom bar chỉ còn copyright. Chỉ link tới route đã tồn tại (/terms, /privacy).
  *
  * @param props - optional className (placement only).
@@ -88,6 +88,12 @@ export const Footer = ({ className }: FooterProps) => {
                         </div>
                     </div>
 
+                    {/* pháp lý — cột link tới các trang điều khoản/chính sách đã có route */}
+                    <FooterNavColumn
+                        title={t("footer.legalTitle")}
+                        links={legalLinks}
+                    />
+
                     {/* pháp nhân — tên/MST/ngày thành lập/ngành nghề nguyên văn theo footer ftes.vn.
                         Địa chỉ · email · điện thoại CHƯA render: chưa có dữ liệu thật, mà footer là
                         mặt tiền toàn site nên thà thiếu còn hơn phơi "(cần điền)". Có số thật trên
@@ -111,12 +117,6 @@ export const Footer = ({ className }: FooterProps) => {
                             </Typography>
                         </div>
                     </div>
-
-                    {/* pháp lý — cột link tới các trang điều khoản/chính sách đã có route */}
-                    <FooterNavColumn
-                        title={t("footer.legalTitle")}
-                        links={legalLinks}
-                    />
                 </div>
 
                 {/* bottom bar: chỉ copyright (link pháp lý đã nằm ở cột trên) */}

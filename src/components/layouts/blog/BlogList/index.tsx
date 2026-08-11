@@ -164,7 +164,6 @@ export const BlogList = () => {
                             <FeaturedPost
                                 post={featured}
                                 categoryLabel={lookup.nameOf(featured.categoryId)}
-                                categorySlug={lookup.slugOf(featured.categoryId)}
                                 formattedDate={formatDate(featured.publishedAt ?? featured.createdAt)}
                             />
                         )}

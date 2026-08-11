@@ -1,10 +1,8 @@
 "use client"
 
 import React from "react"
-import { Chip } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
-import { blogCategoryColor } from "../../shared/category"
 import type { BlogPostSummary } from "@/modules/api/rest/blog"
 
 /** Props for {@link FeaturedPost}. */
@@ -13,8 +11,6 @@ export interface FeaturedPostProps {
     post: BlogPostSummary
     /** Resolved category display name, or `undefined` when unknown. */
     categoryLabel?: string
-    /** Resolved category slug (drives the chip color), or `undefined`. */
-    categorySlug?: string
     /** Localized, preformatted publish date (the caller owns locale formatting). */
     formattedDate: string
 }
@@ -22,23 +18,24 @@ export interface FeaturedPostProps {
 /**
  * The editorial lead — the newest post rendered flat (no card) with a display
  * title so it anchors the page even when only a few posts exist. The cover
- * (`thumbnailUrl`) shows only when present; the meta line carries the publish date
- * and view count from the backend.
+ * (`thumbnailUrl`) shows only when present; the meta line carries the category,
+ * publish date and view count from the backend.
+ *
+ * The eyebrow is the "latest" kicker ALONE — the category is NOT re-rendered as a
+ * chip here. A chip directly under the interactive `CategoryFilter` row read as a
+ * duplicate of that row's chips (same size, same soft variant, same color) while
+ * being inert. The category still shows, as accent text in the meta line, exactly
+ * the way every {@link PostRow} below already renders it.
  */
-export const FeaturedPost = ({ post, categoryLabel, categorySlug, formattedDate }: FeaturedPostProps) => {
+export const FeaturedPost = ({ post, categoryLabel, formattedDate }: FeaturedPostProps) => {
     const t = useTranslations("blog")
     return (
         <Link
             href={`/blog/${post.slug}`}
             className="group flex cursor-pointer flex-col gap-3 border-b border-default pb-6"
         >
-            {/* eyebrow: category chip · "latest" */}
+            {/* eyebrow: "latest" only — the category lives in the meta line below */}
             <div className="flex flex-wrap items-center gap-2">
-                {categoryLabel && (
-                    <Chip size="sm" variant="soft" color={blogCategoryColor(categorySlug ?? post.categoryId)}>
-                        {categoryLabel}
-                    </Chip>
-                )}
                 <span className="text-xs font-medium text-accent">
                     {t("latest")}
                 </span>
@@ -58,7 +55,14 @@ export const FeaturedPost = ({ post, categoryLabel, categorySlug, formattedDate 
                 {post.title}
             </h2>
 
-            <div className="flex items-center gap-2 text-sm text-muted">
+            {/* meta line — same anatomy as PostRow: category · date · views */}
+            <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
+                {categoryLabel && (
+                    <>
+                        <span className="text-accent">{categoryLabel}</span>
+                        <span aria-hidden>·</span>
+                    </>
+                )}
                 <span>{formattedDate}</span>
                 <span aria-hidden>·</span>
                 <span>{t("views", { count: post.viewCount })}</span>

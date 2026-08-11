@@ -193,7 +193,10 @@ export const CommunityComposerForm = ({
                     onChange={(event) => setBody(event.target.value)}
                     placeholder={t("composer.quotePlaceholder")}
                     rows={3}
-                    className="w-full resize-none rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted focus:border-accent"
+                    // Same box radius as the RichTextEditor shell used by the non-quote branch
+                    // (`rounded-2xl`): both are THE composer input of this one modal, so a
+                    // tighter `rounded-large` here read as a square box next to everything else.
+                    className="w-full resize-none rounded-2xl border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted focus:border-accent"
                 />
             ) : (
                 <RichTextEditor

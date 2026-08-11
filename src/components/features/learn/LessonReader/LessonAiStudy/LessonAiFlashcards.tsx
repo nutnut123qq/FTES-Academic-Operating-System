@@ -61,8 +61,8 @@ const parseFlashcards = (raw: string): Array<Flashcard> => {
  * AI Flashcard — generates Q/A flashcards from the CURRENT lesson (grounded via the
  * reused TUTOR_CHAT stream with a "produce N flashcards as JSON" prompt — there is
  * no lesson-scoped flashcard endpoint reachable from the client), then renders a
- * simple flip-card reviewer (mirrors `PracticeFlashcards`: one card at a time, flip
- * front↔back, a "Card i/total" meter, prev/next, and a done summary). Generation
+ * simple flip-card reviewer (one card at a time, flip front↔back, a "Card i/total"
+ * meter, prev/next, and a done summary). Generation
  * runs when the panel opens; Regenerate re-runs it.
  *
  * This component is mounted by {@link LessonAiStudy} for UNLOCKED VIDEO lessons

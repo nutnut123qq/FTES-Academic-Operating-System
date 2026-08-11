@@ -7,6 +7,7 @@ import {
     CaretLeftIcon,
     CaretRightIcon,
     ChatCircleIcon,
+    SlidersHorizontalIcon,
 } from "@phosphor-icons/react"
 import { useLocale, useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
@@ -16,8 +17,10 @@ import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { UserAvatar } from "@/components/reuseable/UserAvatar"
 import { formatRelativeTime } from "@/components/features/community/hooks/relativeTime"
+import { FE_ALBUM_MAX_IMAGES } from "@/components/features/resource/ResourceUpload/uploadRules"
 import { useQueryFeAlbumSwr } from "@/components/features/resource/hooks/useQueryFeAlbumSwr"
 import { useQueryResourceDetailSwr } from "@/components/features/resource/hooks/useQueryResourceDetailSwr"
+import { FeAlbumManager } from "./FeAlbumManager"
 import { FeImageCommentThread } from "./FeImageCommentThread"
 
 /**
@@ -38,6 +41,13 @@ import { FeImageCommentThread } from "./FeImageCommentThread"
  * A real route (`/subjects/{id}/practice/fe/{albumId}`) rather than an overlay: an album
  * is shareable, and the workspace rail keeps "Practice" highlighted because its active
  * check is `pathname.startsWith(base/practice)`.
+ *
+ * The {@link FeAlbumManager} panel (add / delete / reorder pictures) appears only when the
+ * SERVER says so: `FeAlbumView.canManage` is computed from the exact predicate the write
+ * endpoints guard with (resource owner OR subject approver). Never derive it client-side —
+ * a curator's right is granted per SUBJECT while the client only sees GLOBAL leaves, so
+ * guessing would both hide the panel from the people who hold the right and offer it to
+ * people whose click just 403s. Missing field (older BE) → hidden; it fails closed.
  */
 export const SubjectFeAlbum = () => {
     const t = useTranslations("subjects")
@@ -47,6 +57,7 @@ export const SubjectFeAlbum = () => {
     const albumSwr = useQueryFeAlbumSwr(albumId)
     const { resource } = useQueryResourceDetailSwr(albumId)
     const [index, setIndex] = useState(0)
+    const [isManaging, setIsManaging] = useState(false)
 
     const images = albumSwr.data?.images ?? []
     const clampedIndex =
@@ -107,7 +118,39 @@ export const SubjectFeAlbum = () => {
                         })}
                     </Typography>
                 </div>
+                {/* Gate on the SERVER's own answer (`canManage` = the very predicate the write
+                    endpoints guard with: resource owner OR subject approver). Never derive this
+                    from the client permission list: a CTV's approval right is granted per SUBJECT
+                    while the client only sees GLOBAL leaves, so guessing hides the controls from
+                    exactly the people who may use them. Absent (older BE) → hidden, i.e. fails
+                    closed rather than showing a button that 403s. */}
+                {albumSwr.data?.canManage === true && !isManaging ? (
+                    <Button
+                        size="sm"
+                        variant="secondary"
+                        onPress={() => setIsManaging(true)}
+                    >
+                        <SlidersHorizontalIcon
+                            aria-hidden
+                            focusable="false"
+                            className="size-4"
+                        />
+                        {t("practice.fe.manage.open")}
+                    </Button>
+                ) : null}
             </div>
+
+            {isManaging ? (
+                <FeAlbumManager
+                    resourceId={albumId}
+                    images={images}
+                    maxImages={albumSwr.data?.maxImages ?? FE_ALBUM_MAX_IMAGES}
+                    onMutated={() => {
+                        void albumSwr.mutate()
+                    }}
+                    onClose={() => setIsManaging(false)}
+                />
+            ) : null}
 
             <AsyncContent
                 isLoading={!albumSwr.data && !albumSwr.error}

@@ -88,10 +88,16 @@ const GoldName = ({ name, size }: { name: string; size: "card" | "row" }) => (
  * `text-transparent` + `bg-clip-text` gradient span, so the anchor colour never touches the glyphs —
  * but `text-decoration` is painted in the anchor's colour, and without this it draws a black rule
  * under gold text.
+ *
+ * Alignment is the CONTAINER's call, never baked in here: the anchor used to carry `self-start`,
+ * which yanked the name of the one achiever that has a `href` to the left edge of an otherwise
+ * centred podium card, so the podium read as three differently-aligned cards ("chữ lệch"). The
+ * podium centres its children (`items-center`) and the list rows start-align theirs
+ * (`items-start`), so both sides now stay consistent whether or not a name links anywhere.
  */
 const MaybeLink = ({ href, children }: { href?: string; children: React.ReactNode }) =>
     href ? (
-        <Link href={href} className="self-start text-warning hover:underline">
+        <Link href={href} className="text-warning hover:underline">
             {children}
         </Link>
     ) : (
@@ -148,7 +154,13 @@ const PodiumCard = ({ achiever, position }: { achiever: Achiever; position: numb
 
 /**
  * One list row — used from rank 4 down, where the board turns into a plain leaderboard: rank number
- * → name → highlight chip → lines. No portrait: the podium above owns the faces.
+ * → identity (name + highlight chip) on the LEFT, achievement lines on the RIGHT. No portrait: the
+ * podium above owns the faces.
+ *
+ * The two halves are one flex row from `sm` up (`sm:flex-row sm:justify-between`), so the lines sit
+ * right-aligned against the card edge instead of stacking under the name and leaving the right half
+ * of the row empty. Below `sm` the wrapper stays `flex-col`, so a phone gets the original stack
+ * (lines under the name) rather than two squashed columns.
  */
 const HonorRow = ({ achiever, rank }: { achiever: Achiever; rank: number }) => {
     const t = useTranslations("homeLanding")
@@ -159,16 +171,20 @@ const HonorRow = ({ achiever, rank }: { achiever: Achiever; rank: number }) => {
             <span className="w-6 shrink-0 pt-0.5 text-center text-base font-semibold tabular-nums text-muted">
                 {rank}
             </span>
-            <div className="flex min-w-0 flex-col gap-2">
-                <MaybeLink href={achiever.href}>
-                    <Typography type="body" weight="semibold">
-                        {name}
-                    </Typography>
-                </MaybeLink>
-                <Chip size="sm" variant="soft" color="warning" className="self-start">
-                    {achiever.highlight}
-                </Chip>
-                <ul className="flex flex-col gap-2">
+            <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+                {/* identity — start-aligned in both layouts (`items-start` also keeps the linked
+                    name from stretching, so its hover underline hugs the text) */}
+                <div className="flex min-w-0 flex-col items-start gap-2">
+                    <MaybeLink href={achiever.href}>
+                        <Typography type="body" weight="semibold">
+                            {name}
+                        </Typography>
+                    </MaybeLink>
+                    <Chip size="sm" variant="soft" color="warning">
+                        {achiever.highlight}
+                    </Chip>
+                </div>
+                <ul className="flex min-w-0 flex-col gap-2 sm:items-end sm:text-right">
                     {lines.map((li) => (
                         <li key={li}>
                             <Typography type="body-sm" color="muted">

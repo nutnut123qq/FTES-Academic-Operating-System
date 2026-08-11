@@ -198,13 +198,33 @@ export const LessonReader = () => {
     // không còn tính là "rỗng" — thiếu vế này thẻ đọc không dựng và cái link lại rơi mất lần nữa.
     const showReadingCard = !!lesson && (isLocked || hasWrittenBody || isLinkOnly || isReadingEmpty)
 
+    /**
+     * The section crumb reads the section's REAL TITLE, not its ordinal: the BE splits a
+     * section into `name` ("Phần 1") + `description` ("Làm quen với ngôn ngữ C/C++"), the
+     * same split the content-map rail resolves as `description || title`. Falls back to the
+     * ordinal when a section carries no title, and to the generic "Học phần" label when the
+     * curriculum has neither — never an empty crumb.
+     */
+    const moduleCrumbLabel =
+        lesson?.moduleDescription || lesson?.moduleTitle || t("content.moduleTitle")
+
     /** Tier-1 breadcrumb (Courses › <course> › Modules › <lesson>). */
     const breadcrumbItems = useMemo<Array<ResponsiveBreadcrumbItem>>(
         () => [
             { key: "courses", label: t("nav.sections.content"), onPress: () => router.push(`/courses/${courseId}/learn/content`) },
-            { key: "module", label: lesson?.moduleTitle ?? t("content.moduleTitle") },
+            {
+                key: "module",
+                // A real section title can be a full sentence — cap + ellipsis it (the same
+                // `truncate` the breadcrumb already uses for its mobile back-link) so a long
+                // title can never push the trail out of the header.
+                label: (
+                    <span className="block max-w-xs truncate" title={moduleCrumbLabel}>
+                        {moduleCrumbLabel}
+                    </span>
+                ),
+            },
         ],
-        [t, router, courseId, lesson?.moduleTitle],
+        [t, router, courseId, moduleCrumbLabel],
     )
 
     /** Open the shared package gate with the given paywall context. */

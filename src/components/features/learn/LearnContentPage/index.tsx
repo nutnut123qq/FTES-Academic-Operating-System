@@ -58,7 +58,14 @@ export const LearnContentPage = () => {
     )
 
     return (
-        <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+        // The dashboard is a CARD stack, not a reading column, so it does not keep the
+        // reader's `max-w-3xl` measure cap from `lg` up: this route has no right rail
+        // (the tools moved to the far-left navRail), so the shell's `flex-1` reading
+        // column is ~1300px on a wide desktop and a 3xl cap left the rest of the screen
+        // empty. `lg:max-w-6xl` is the repo's dashboard cap (PageContainer, MyCourses,
+        // LeaderboardShell …) and only binds past ~1730px; below `lg` the cap and the
+        // single-column stack stay exactly as they were.
+        <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 lg:max-w-6xl">
             <AsyncContent
                 isLoading={!header && !error}
                 skeleton={<DashboardSkeleton />}
@@ -154,7 +161,9 @@ export const LearnContentPage = () => {
                             Nằm ngay DƯỚI card mở khóa, TRÊN "Continue learning". */}
                         {header.description ? (
                             <LabeledCard frameless label={t("content.aboutTitle")}>
-                                <Typography type="body-sm" color="muted" className="whitespace-pre-line">
+                                {/* prose keeps the reading measure even though the card stack
+                                    now spans the wider dashboard column (no-op below lg) */}
+                                <Typography type="body-sm" color="muted" className="max-w-3xl whitespace-pre-line">
                                     {header.description}
                                 </Typography>
                             </LabeledCard>

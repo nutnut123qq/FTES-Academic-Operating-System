@@ -48,7 +48,18 @@ export interface LearnLessonView {
     title: string
     /** Short description under the title. */
     description: string
+    /**
+     * The owning section's ORDINAL name (`SectionView.name`, e.g. "Phần 1"). The BE keeps
+     * the real section title in {@link moduleDescription} — mirror of the lesson
+     * `name`/`description` split — so this is the fallback label, not the display title.
+     */
     moduleTitle: string
+    /**
+     * The owning section's REAL title (`SectionView.description`, e.g. "Làm quen với ngôn
+     * ngữ C/C++"). Empty when the section carries none, in which case the ordinal
+     * {@link moduleTitle} stands in (same precedence the content-map rail uses).
+     */
+    moduleDescription: string
     /** Read/watch time label. */
     readTimeLabel: string
     /** Estimated reading minutes (for the meta chip). */
@@ -143,7 +154,10 @@ interface FlatLesson {
     name: string
     description: string
     moduleId: string
+    /** Owning section ORDINAL name (`SectionView.name`, e.g. "Phần 1"). */
     moduleTitle: string
+    /** Owning section REAL title (`SectionView.description`); "" when absent. */
+    moduleDescription: string
     /** BE lesson content-type (`LessonView.type`). */
     type: string
     /** BE video processing state — "READY" means a playable video exists. */
@@ -194,6 +208,7 @@ const flattenCurriculum = (detail: CourseDetail): Array<FlatLesson> =>
                     description: lesson.description,
                     moduleId: section.id,
                     moduleTitle: section.name,
+                    moduleDescription: section.description ?? "",
                     type: lesson.type ?? "",
                     videoStatus: lesson.videoStatus ?? "",
                     videoRef: lesson.videoRef ?? null,
@@ -272,6 +287,7 @@ const buildLessonView = (
         title: current?.name ?? "",
         description: current?.description ?? "",
         moduleTitle: current?.moduleTitle ?? "",
+        moduleDescription: current?.moduleDescription ?? "",
         readTimeLabel: content.readingMinutes ? `${content.readingMinutes} min` : "",
         minutesRead: minutes,
         challengeCount: (current?.challenges ?? []).length,

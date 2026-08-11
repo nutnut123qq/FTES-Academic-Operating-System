@@ -57,6 +57,7 @@ import { SelectableCardGroup } from "@/components/blocks/navigation/SelectableCa
 import { PriceTag } from "@/components/blocks/commerce/PriceTag"
 import type { PackageView } from "@/modules/api/rest/course"
 import type { Icon } from "@phosphor-icons/react"
+import { formatLessonDuration } from "../lessonDuration"
 
 const ACHIEVEMENT_ICONS: Record<string, Icon> = {
     certificate: CertificateIcon,
@@ -265,6 +266,9 @@ const CourseDetailView = ({
     onPurchased?: () => void
 }) => {
     const t = useTranslations("courseSystem")
+    // Root-scoped: formatLessonDuration resolves the shared `courseSystem.browse.minutes`
+    // key, which a scoped translator would double-prefix.
+    const tRoot = useTranslations()
     const router = useRouter()
     // Open a non-locked syllabus lesson in the reader (same route the learn rail uses).
     // Fallback to the reader entry when a lesson id is somehow absent.
@@ -553,8 +557,11 @@ const CourseDetailView = ({
                                                                 }
                                                                 return null
                                                             })()}
+                                                            {/* Video length when the BE knows it; hidden otherwise
+                                                                (never a bare "0 phút"). */}
                                                             <Typography type="body-xs" color="muted">
-                                                                {lesson.durationLabel}
+                                                                {formatLessonDuration(lesson.durationSeconds, tRoot)
+                                                                    || lesson.durationLabel}
                                                             </Typography>
                                                         </>
                                                     )

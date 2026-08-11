@@ -109,6 +109,13 @@ export interface LessonView {
     /** Legacy streaming ref (YouTube URL or `video_*` token) from the migrated video. */
     videoRef: string | null
     previewSeconds: number
+    /**
+     * The lesson video's length in seconds, or absent/null when unknown — the BE only
+     * knows it for videos whose duration was measured (a large share of YouTube-sourced
+     * lessons carry none), so callers must HIDE the label rather than render a zero.
+     * Present on locked lessons too: duration is catalog metadata, not gated content.
+     */
+    durationSeconds?: number | null
     hasContent: boolean
     accessLevel: string | null
     /** Slugs of the packages that unlock this lesson, ordered lowest→highest tier by the BE; `[0]` is the minimum tier. */

@@ -21,10 +21,10 @@ export interface CreateChallengeRequest {
     mode: string
     /** Subject this challenge belongs to. */
     subjectId: string
-    /** Challenge start time (ISO-8601). */
-    startsAt: string
-    /** Challenge end time (ISO-8601). */
-    endsAt: string
+    /** Thời điểm mở (ISO-8601). `null` = mở ngay, không hẹn giờ. */
+    startsAt: string | null
+    /** Thời điểm đóng (ISO-8601). `null` = KHÔNG giới hạn (không bao giờ tự đóng). */
+    endsAt: string | null
     /** Maximum submissions per participant/team. */
     maxSubmissions: number
     /** Maximum team members when mode is `TEAM`; nullable. */
@@ -94,10 +94,10 @@ export interface ChallengeView {
     lessonId?: string | null
     /** Lifecycle status, e.g. `DRAFT`, `PUBLISHED`, `RUNNING`, `CLOSED`. */
     status: string
-    /** Start time (ISO-8601). */
-    startsAt: string
-    /** End time (ISO-8601). */
-    endsAt: string
+    /** Thời điểm mở (ISO-8601). `null` = mở ngay, không hẹn giờ. */
+    startsAt: string | null
+    /** Thời điểm đóng (ISO-8601). `null` = KHÔNG giới hạn (không bao giờ tự đóng). */
+    endsAt: string | null
     /** Maximum submissions. */
     maxSubmissions: number
     /** Maximum team size; nullable. */
@@ -289,18 +289,47 @@ export interface ManualScoreItem {
     comment: string
 }
 
-/** Result row for one test case. */
+/**
+ * The judge verdict of ONE executed test case (BE `challenge-testcase-judge` design §6 —
+ * persisted on `submission_results.detail`):
+ * - `AC` — accepted (output matches)
+ * - `WA` — ran to completion, wrong output
+ * - `TLE` — time limit exceeded
+ * - `MLE` — memory limit exceeded
+ * - `RE` — runtime error (non-zero exit)
+ * - `CE` — compile error
+ * - `SKIPPED` — never executed because the run stopped early (budget / too many timeouts)
+ */
+export type TestCaseVerdict = "AC" | "WA" | "TLE" | "MLE" | "RE" | "CE" | "SKIPPED"
+
+/**
+ * Result row for one test case. The BE deliberately exposes NO `input` / `expectedOutput` /
+ * captured `stdout` here — hidden cases stay hidden (`SubmissionService.resultsFor()`), so the
+ * learner view is limited to name + verdict + timing + score.
+ */
 export interface TestResultView {
     /** Test case id. */
     testCaseId: string
-    /** Test case name. */
-    testCaseName: string
+    /**
+     * Tên test case. **Có thể null**: sửa/import lại bộ test là xoá-rồi-chèn với id MỚI, mà
+     * `submission_results.test_case_id` không có FK ⇒ kết quả của bài nộp cũ thành mồ côi và BE
+     * không tra ra tên. Luôn phòng null khi render.
+     */
+    testCaseName: string | null
     /** Whether this is a hidden test case. */
     hidden: boolean
     /** Whether the submission passed this test; nullable while grading. */
     passed: boolean | null
     /** Score awarded for this test case. */
     score: string
+    /**
+     * The judge verdict for this case ({@link TestCaseVerdict}) — what distinguishes a wrong
+     * answer from a timeout / memory blow-up / compile error. `null` while the case is still
+     * being graded; additive — absent on deployments older than `challenge-testcase-judge`.
+     */
+    verdict?: TestCaseVerdict | null
+    /** Wall-clock execution time in milliseconds; `null` while grading / when unmeasured. */
+    timeMs?: number | null
 }
 
 /** Full test results for a submission. */

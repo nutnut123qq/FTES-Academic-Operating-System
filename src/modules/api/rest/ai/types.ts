@@ -213,12 +213,18 @@ export interface ExecuteCodeRequest {
     challengeId?: string
 }
 
-/** One Judge0 test-case run (objective — model-independent). */
+/** One sandbox test-case run (objective — model-independent). */
 export interface ExecutionCaseResult {
     input?: string
     expected?: string
     actual?: string
+    /**
+     * Mã trạng thái MÁY đọc: `OK` | `TIMEOUT` | `MEMORY` | `RUNTIME_ERROR` | `COMPILE_ERROR` |
+     * `INFRA_ERROR`. Để HIỂN THỊ thì dùng {@link ExecutionCaseResult.status_label}.
+     */
     status?: string
+    /** Nhãn NGƯỜI đọc ("Accepted", "Time Limit Exceeded"…) — ưu tiên field này khi render. */
+    status_label?: string
     passed?: boolean
     time?: number | string
     /**
@@ -227,13 +233,22 @@ export interface ExecutionCaseResult {
      * without rendering it a Runtime Error is just an empty `actual` with nothing to fix.
      */
     stderr?: string
+    /** Output bị cắt vì vượt trần (`output_max_bytes`). */
+    truncated?: boolean
 }
 
-/** Judge0 execution block of a grade/execute response. */
+/** Sandbox execution block of a grade/execute response. */
 export interface CodeExecutionSummary {
     results?: Array<ExecutionCaseResult>
     passed?: number
     total?: number
+    /**
+     * Lượt chạy bị DỪNG SỚM (hết ngân sách thời gian / quá nhiều case timeout liên tiếp) — các case
+     * còn lại KHÔNG được chạy, nên "ít case hơn" không có nghĩa là đã chạy hết.
+     */
+    aborted?: boolean
+    /** Lý do dừng sớm, vd `BUDGET_EXCEEDED` | `TOO_MANY_TIMEOUTS`. */
+    abort_reason?: string
 }
 
 /** One LLM-graded criterion row. */

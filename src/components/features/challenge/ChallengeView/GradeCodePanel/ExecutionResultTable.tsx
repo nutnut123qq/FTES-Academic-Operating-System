@@ -55,12 +55,20 @@ export const ExecutionResultTable = ({ summary, className }: ExecutionResultTabl
                     <Chip
                         size="sm"
                         variant="soft"
-                        color={allPassed ? "success" : "danger"}
+                        color={allPassed ? "success" : summary.aborted ? "warning" : "danger"}
                     >
                         {t("codeGrading.testSummary", { passed, total })}
                     </Chip>
                 ) : null}
             </div>
+
+            {/* Dừng sớm (hết ngân sách / quá nhiều timeout liên tiếp): số case chạy được ÍT HƠN số
+                case thật, nên phải nói rõ — nếu không, người học tưởng đã chạy hết và chỉ sai bấy nhiêu. */}
+            {summary.aborted ? (
+                <Typography type="body-xs" className="text-warning">
+                    {t("codeGrading.testAborted")}
+                </Typography>
+            ) : null}
 
             {results.length > 0 ? (
                 <div className="overflow-x-auto rounded-2xl border border-default">
@@ -99,10 +107,14 @@ export const ExecutionResultTable = ({ summary, className }: ExecutionResultTabl
                             {results.map((result, index) => {
                                 const casePassed = result.passed === true
                                 const StatusIcon = casePassed ? CheckCircleIcon : XCircleIcon
-                                // Raw judge status ("Runtime Error", "Time Limit Exceeded",
-                                // "Accepted", …) — the diagnostic the binary Pass/Fail hides;
-                                // surfaced beneath it so an errored case isn't just a bare "Fail".
-                                const statusText = result.status?.trim() ?? ""
+                                // Nhãn verdict ("Accepted", "Time Limit Exceeded", …) — chẩn đoán
+                                // mà Pass/Fail nhị phân che mất, hiện ngay dưới nó để case lỗi
+                                // không chỉ trơ một chữ "Fail".
+                                // `status_label` là nhãn NGƯỜI đọc; `status` giờ là mã MÁY đọc
+                                // (`TIMEOUT`/`RUNTIME_ERROR`…) sau khi siết judge ở ai-service —
+                                // ưu tiên nhãn, fallback mã để engine/bản cũ vẫn hiển thị được.
+                                const statusText =
+                                    result.status_label?.trim() || result.status?.trim() || ""
                                 return (
                                     <tr
                                         key={index}

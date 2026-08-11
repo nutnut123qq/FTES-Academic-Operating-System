@@ -18,7 +18,10 @@ export interface CodingRunRow {
     input: string
     expected: string
     actual: string
-    /** Judge0 verdict, e.g. `Accepted` / `Wrong Answer` / `Compilation Error`. */
+    /**
+     * Nhãn verdict để hiển thị, vd `Accepted` / `Wrong Answer` / `Time Limit Exceeded`. Lấy từ
+     * `status_label` của ai-service (nhãn người đọc); nếu engine cũ chỉ trả `status` thì dùng nó.
+     */
     status: string
     passed: boolean
     /** Compiler / runtime stderr, when the backend reports one. */
@@ -183,7 +186,10 @@ export const normalizeExecution = (raw: unknown): CodingExecutionOutcome => {
             input: asText(item.input),
             expected: asText(item.expected ?? item.output),
             actual: asText(item.actual),
-            status: asText(item.status),
+            // `status_label` là nhãn NGƯỜI đọc ("Accepted", "Time Limit Exceeded"); `status` giờ là
+            // enum MÁY đọc (`OK`/`TIMEOUT`/`RUNTIME_ERROR`…) sau khi ai-service siết judge. Ưu tiên
+            // nhãn, fallback enum để engine/bản cũ vẫn hiển thị được.
+            status: asText(item.status_label ?? item.status),
             passed: item.passed === true,
             ...(stderr ? { stderr } : {}),
             ...(time === undefined ? {} : { time }),

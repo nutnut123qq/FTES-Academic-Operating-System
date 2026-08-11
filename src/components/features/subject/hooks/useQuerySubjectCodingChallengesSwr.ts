@@ -60,8 +60,10 @@ export interface CodingChallenge {
     lifecycle: ChallengeLifecycle
     /** Owning subject id (UUID) or `null` for global challenges. */
     subjectId: string | null
-    startsAt: string
-    endsAt: string
+    /** Thời điểm mở (ISO-8601). `null` = mở ngay, không hẹn giờ. */
+    startsAt: string | null
+    /** Thời điểm đóng (ISO-8601). `null` = KHÔNG giới hạn (không bao giờ tự đóng). */
+    endsAt: string | null
     maxSubmissions: number
     /** Total submissions across all participants — the popularity signal for the "Hot" sort. */
     submissionCount: number

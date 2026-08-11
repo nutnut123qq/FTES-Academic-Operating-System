@@ -88,8 +88,11 @@ export const LessonReactionFooter = ({
 
     const summary = view ? toReactionSummary(view) : undefined
 
+    // A BOUNDED bar: border on every side + rounded, not a bare top rule. With only a
+    // `border-t` the row read as an open strip whose "bottom line" was really the next
+    // section's own separator — the react + view-count cluster now sits in its own box.
     return (
-        <div className="mt-6 border-t border-default pt-4">
+        <div className="mt-6 rounded-2xl border border-default px-4 py-3">
             <InteractionBar
                 summary={summary}
                 onReact={handleReact}

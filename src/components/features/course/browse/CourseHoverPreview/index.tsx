@@ -174,7 +174,8 @@ export const CourseHoverPreview = ({ course, children, className }: CourseHoverP
     const [position, setPosition] = useState<{ left: number, top: number, arrowTop: number, side: "left" | "right", maxHeight: number } | null>(null)
 
     // Bound to BOTH the card wrapper and the portaled panel. Opens SYNCHRONOUSLY on
-    // enter — no timer to schedule and therefore none to miss (see {@link OPEN_DELAY_MS}).
+    // enter — there is no open-delay constant any more (see the NOTE at the top of this
+    // file), so there is no timer to schedule and therefore none to miss.
     const onEnter = useCallback(() => {
         setOpen(true)
     }, [])

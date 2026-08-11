@@ -51,6 +51,27 @@ const detail = (previewSeconds: number) => ({
     ],
 })
 
+describe("useQueryLearnLessonSwr — the section's real title reaches the reader", () => {
+    it("maps the section name to the ordinal and its description to the title", async () => {
+        const titled = detail(0)
+        titled.sections[0].description = "Làm quen với ngôn ngữ C/C++"
+        detailMock.mockResolvedValue(titled)
+        const { result } = renderHook(() => useQueryLearnLessonSwr("khoa-section-title", "l1"))
+        await waitFor(() => expect(result.current.lesson).toBeTruthy())
+        // `name` is only the ordinal ("Học phần 1"); the breadcrumb shows `moduleDescription`
+        expect(result.current.lesson?.moduleTitle).toBe("Học phần 1")
+        expect(result.current.lesson?.moduleDescription).toBe("Làm quen với ngôn ngữ C/C++")
+    })
+
+    it("leaves the title empty when the section carries none (reader falls back to the ordinal)", async () => {
+        detailMock.mockResolvedValue(detail(0))
+        const { result } = renderHook(() => useQueryLearnLessonSwr("khoa-section-untitled", "l1"))
+        await waitFor(() => expect(result.current.lesson).toBeTruthy())
+        expect(result.current.lesson?.moduleDescription).toBe("")
+        expect(result.current.lesson?.moduleTitle).toBe("Học phần 1")
+    })
+})
+
 describe("useQueryLearnLessonSwr — previewSeconds keeps the preview reachable", () => {
     it("mounts the video block for a viewer with no accessLevel when a preview window exists", async () => {
         detailMock.mockResolvedValue(detail(900))

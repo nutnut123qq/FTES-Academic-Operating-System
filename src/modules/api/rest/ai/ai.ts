@@ -54,6 +54,14 @@ export interface SessionStreamHandlers {
     signal?: AbortSignal
 }
 
+/**
+ * Boundary between two SSE events: a blank line. Spring's `SseEmitter` writes `\n\n`, but the SSE
+ * spec allows CRLF and a proxy in between may rewrite it — so accept both. Keep this set identical
+ * to what {@link sendSessionMessageStream}'s per-line parser tolerates (`\n`, optional leading `\r`);
+ * widening one side without the other is exactly the bug this replaced.
+ */
+const SSE_BLOCK_SEPARATOR = /\r?\n\r?\n/
+
 const safeJson = (raw: string): unknown => {
     try {
         return JSON.parse(raw)
@@ -98,10 +106,14 @@ export const sendSessionMessageStream = async (
     }
 
     // Parse one SSE event block: an `event:` name + one/more `data:` lines (joined with newlines).
+    // Trailing `\r` is stripped per line: on a CRLF stream the `event:` branch would survive via
+    // `.trim()`, but `data:` keeps whatever follows the colon — so without this every delta fragment
+    // would carry a stray `\r` and concatenate into garbage.
     const dispatch = (block: string) => {
         let name = "message"
         const dataLines: Array<string> = []
-        for (const line of block.split("\n")) {
+        for (const rawLine of block.split("\n")) {
+            const line = rawLine.endsWith("\r") ? rawLine.slice(0, -1) : rawLine
             if (line.startsWith("event:")) name = line.slice(6).trim()
             else if (line.startsWith("data:")) dataLines.push(line.slice(5))
         }
@@ -119,13 +131,16 @@ export const sendSessionMessageStream = async (
         const { done, value } = await reader.read()
         if (done) break
         buffer += decoder.decode(value, { stream: true })
-        // Events are separated by a blank line.
-        let sep = buffer.indexOf("\n\n")
-        while (sep !== -1) {
-            const block = buffer.slice(0, sep)
-            buffer = buffer.slice(sep + 2)
+        // Events are separated by a blank line — LF *or* CRLF. `"\r\n\r\n"` holds no two adjacent
+        // `\n`, so the old `indexOf("\n\n")` missed every boundary: the whole stream piled up in the
+        // buffer and the trailing `dispatch(buffer)` parsed it as ONE block, keeping only the last
+        // `event:` and losing every delta. Boundary length varies 2↔4, so advance by the match.
+        let sep = SSE_BLOCK_SEPARATOR.exec(buffer)
+        while (sep !== null) {
+            const block = buffer.slice(0, sep.index)
+            buffer = buffer.slice(sep.index + sep[0].length)
             if (block.trim()) dispatch(block)
-            sep = buffer.indexOf("\n\n")
+            sep = SSE_BLOCK_SEPARATOR.exec(buffer)
         }
     }
     if (buffer.trim()) dispatch(buffer)

@@ -20,6 +20,7 @@ import { formatRelativeTime } from "@/components/features/community/hooks/relati
 import { FE_ALBUM_MAX_IMAGES } from "@/components/features/resource/ResourceUpload/uploadRules"
 import { useQueryFeAlbumSwr } from "@/components/features/resource/hooks/useQueryFeAlbumSwr"
 import { useQueryResourceDetailSwr } from "@/components/features/resource/hooks/useQueryResourceDetailSwr"
+import { ALBUM_INITIAL_LOAD, nextAlbumLoadCount } from "./albumLoadWindow"
 import { FeAlbumManager } from "./FeAlbumManager"
 import { FeImageCommentThread } from "./FeImageCommentThread"
 
@@ -64,6 +65,21 @@ export const SubjectFeAlbum = () => {
         images.length > 0 ? Math.min(Math.max(index, 0), images.length - 1) : 0
     const current = images[clampedIndex]
     const hasMultiple = images.length > 1
+
+    // Only fetch the pictures the reader is near. An album is up to 50 scans — pulling every one
+    // on mount costs tens of megabytes for a page that shows one at a time. `loadedCount` widens
+    // as they page (see albumLoadWindow); a thumbnail outside it renders WITHOUT a `src`, which is
+    // what actually keeps the request from being made.
+    const [loadedCount, setLoadedCount] = useState(ALBUM_INITIAL_LOAD)
+    useEffect(() => {
+        setLoadedCount((loaded) => nextAlbumLoadCount(loaded, clampedIndex, images.length))
+    }, [clampedIndex, images.length])
+    // A different album starts its own window — otherwise a long album leaves the next one
+    // fetching far more than it needs.
+    useEffect(() => {
+        setLoadedCount(ALBUM_INITIAL_LOAD)
+        setIndex(0)
+    }, [albumId])
 
     const goPrev = useCallback(() => {
         setIndex((value) => Math.max(0, value - 1))
@@ -181,6 +197,18 @@ export const SubjectFeAlbum = () => {
                                 }
                                 className="max-h-full max-w-full object-contain"
                             />
+                            {/* Warm the next picture so paging forward is instant. Hidden, and
+                                only within the load window, so it costs exactly one file — not
+                                the rest of the album. */}
+                            {clampedIndex + 1 < Math.min(loadedCount, images.length) ? (
+                                <img
+                                    src={images[clampedIndex + 1]?.imageUrl}
+                                    alt=""
+                                    aria-hidden
+                                    decoding="async"
+                                    className="pointer-events-none absolute size-0 opacity-0"
+                                />
+                            ) : null}
                             {hasMultiple ? (
                                 <>
                                     <Button
@@ -287,11 +315,21 @@ export const SubjectFeAlbum = () => {
                                     : "relative size-16 shrink-0 cursor-pointer overflow-hidden rounded-large border border-separator opacity-70 transition-opacity hover:opacity-100"
                             }
                         >
-                            <img
-                                src={image.imageUrl}
-                                alt=""
-                                className="size-full object-cover"
-                            />
+                            {/* Outside the load window the thumbnail is an empty box: no `src`
+                                means no request, which is the whole point. `loading="lazy"` on
+                                its own would not help — the filmstrip scrolls horizontally and
+                                the browser happily fetches what is just off-screen. */}
+                            {position < loadedCount ? (
+                                <img
+                                    src={image.imageUrl}
+                                    alt=""
+                                    loading="lazy"
+                                    decoding="async"
+                                    className="size-full object-cover"
+                                />
+                            ) : (
+                                <span aria-hidden className="block size-full bg-default" />
+                            )}
                             {image.commentCount > 0 ? (
                                 <span className="absolute bottom-0 right-0 rounded-tl-large bg-black/60 px-1 text-xs font-medium text-white">
                                     {image.commentCount}

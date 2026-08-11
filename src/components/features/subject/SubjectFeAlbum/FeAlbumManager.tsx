@@ -5,6 +5,7 @@ import { Button, Chip, Typography, toast } from "@heroui/react"
 import {
     ArrowDownIcon,
     ArrowUpIcon,
+    FolderIcon,
     ImageSquareIcon,
     TrashIcon,
     XIcon,
@@ -13,6 +14,7 @@ import { useTranslations } from "next-intl"
 
 import { ConfirmDialog } from "@/components/reuseable/PostEngagementBar"
 import { classifyResourceUploadError } from "@/components/features/resource/ResourceUpload/uploadFlow"
+import { triageAlbumPick } from "@/components/features/resource/ResourceUpload/albumFolderPick"
 import {
     FE_ALBUM_IMAGE_MIME,
     FE_ALBUM_MAX_IMAGE_MB,
@@ -51,8 +53,11 @@ export interface FeAlbumManagerProps {
  * The three writes mirror the endpoint contracts:
  * - **add** — one `POST /images` per picture, sequential and self-paced against the
  *   10/min · 60/hour limit, stopping cleanly on a persistent `RESOURCE_RATE_LIMITED`
- *   (see `useMutateAddFeAlbumImagesSwr`); the 50-picture cap is enforced at pick time
- *   with the overflow reported, never silently dropped;
+ *   (see `useMutateAddFeAlbumImagesSwr`); the album cap is enforced at pick time with the
+ *   overflow reported, never silently dropped. Pictures come either from a file pick or
+ *   from a WHOLE FOLDER (`<input webkitdirectory>`, sub-folders included) — both go
+ *   through the same `triageAlbumPick` filter and the same sequential upload, so a
+ *   50-image folder self-throttles exactly like a 50-file selection;
  * - **delete** — behind a {@link ConfirmDialog}, because the picture's whole comment
  *   thread goes with it;
  * - **reorder** — up/down buttons; every move ships the album's COMPLETE id permutation,
@@ -72,6 +77,7 @@ export const FeAlbumManager = ({
 }: FeAlbumManagerProps) => {
     const t = useTranslations("subjects")
     const inputRef = useRef<HTMLInputElement>(null)
+    const folderInputRef = useRef<HTMLInputElement | null>(null)
     const abortRef = useRef<AbortController | null>(null)
 
     const addImages = useMutateAddFeAlbumImagesSwr()
@@ -170,55 +176,66 @@ export const FeAlbumManager = ({
         [addImages, resourceId, onMutated, t, failureText],
     )
 
-    /** Validates the picked files against the cap + the album's picture rules. */
+    /**
+     * Validates a pick — loose files OR a whole folder — against the cap + the album's
+     * picture rules, then hands the survivors to the SAME sequential, self-paced add.
+     *
+     * A folder pick is additionally ordered naturally by relative path (`de2` before
+     * `de10`), since arrival order is the `sortOrder` the BE stamps.
+     *
+     * @param fileList - what the input produced.
+     * @param fromFolder - the pick came from the `webkitdirectory` input.
+     */
     const onPick = useCallback(
-        (fileList: FileList | null) => {
-            if (!fileList || fileList.length === 0) {
+        (fileList: FileList | null, fromFolder: boolean) => {
+            const picked = fileList ? Array.from(fileList) : []
+            if (picked.length === 0) {
+                if (fromFolder) {
+                    toast.danger(t("practice.fe.manage.folderEmpty"))
+                }
                 return
             }
             if (remaining <= 0) {
                 toast.danger(t("practice.fe.manage.full", { max: maxImages }))
                 return
             }
-            const picked = Array.from(fileList)
-            const wrongType = picked.filter(
-                (file) => !FE_ALBUM_IMAGE_MIME.includes(file.type),
-            ).length
-            const typed = picked.filter((file) => FE_ALBUM_IMAGE_MIME.includes(file.type))
-            const tooLarge = typed.filter(
-                (file) => file.size > FE_ALBUM_MAX_IMAGE_MB * 1024 * 1024,
-            ).length
-            const valid = typed.filter(
-                (file) => file.size <= FE_ALBUM_MAX_IMAGE_MB * 1024 * 1024,
-            )
+            // The cap is enforced here, and what does not fit is REPORTED — a silently
+            // truncated pick would look like an upload that lost pictures.
+            const triage = triageAlbumPick(picked, {
+                room: remaining,
+                maxImageMb: FE_ALBUM_MAX_IMAGE_MB,
+                sortByPath: fromFolder,
+            })
 
-            if (wrongType > 0) {
-                toast.danger(t("practice.fe.manage.invalidType", { count: wrongType }))
+            if (triage.wrongType > 0) {
+                toast.danger(
+                    t("practice.fe.manage.invalidType", { count: triage.wrongType }),
+                )
             }
-            if (tooLarge > 0) {
+            if (triage.tooLarge > 0) {
                 toast.danger(
                     t("practice.fe.manage.tooLargeSkipped", {
-                        count: tooLarge,
+                        count: triage.tooLarge,
                         maxSize: FE_ALBUM_MAX_IMAGE_MB,
                     }),
                 )
             }
-            if (valid.length === 0) {
-                return
-            }
-            // The cap is enforced here, and what does not fit is REPORTED — a silently
-            // truncated pick would look like an upload that lost pictures.
-            const accepted = valid.slice(0, remaining)
-            if (valid.length > accepted.length) {
+            if (triage.droppedOverCap > 0) {
                 toast.danger(
                     t("practice.fe.manage.overflow", {
-                        accepted: accepted.length,
-                        dropped: valid.length - accepted.length,
+                        accepted: triage.accepted.length,
+                        dropped: triage.droppedOverCap,
                         max: maxImages,
                     }),
                 )
             }
-            void runAdd(accepted)
+            if (triage.accepted.length === 0) {
+                if (fromFolder && triage.wrongType === 0 && triage.tooLarge === 0) {
+                    toast.danger(t("practice.fe.manage.folderEmpty"))
+                }
+                return
+            }
+            void runAdd(triage.accepted)
         },
         [remaining, maxImages, t, runAdd],
     )
@@ -295,8 +312,27 @@ export const FeAlbumManager = ({
                 multiple
                 hidden
                 onChange={(event) => {
-                    onPick(event.target.files)
+                    onPick(event.target.files, false)
                     // Let the same file be picked again after a removal.
+                    event.target.value = ""
+                }}
+            />
+            {/* Folder picker — `webkitdirectory`/`directory` are set imperatively via the
+                ref callback because React's `input` typings carry neither. */}
+            <input
+                ref={(el) => {
+                    if (el) {
+                        el.setAttribute("webkitdirectory", "")
+                        el.setAttribute("directory", "")
+                    }
+                    folderInputRef.current = el
+                }}
+                type="file"
+                hidden
+                aria-label={t("practice.fe.manage.addFolder")}
+                onChange={(event) => {
+                    onPick(event.target.files, true)
+                    // Let the same folder be picked again after a removal.
                     event.target.value = ""
                 }}
             />
@@ -310,6 +346,15 @@ export const FeAlbumManager = ({
                 >
                     <ImageSquareIcon aria-hidden focusable="false" className="size-4" />
                     {t("practice.fe.manage.add")}
+                </Button>
+                <Button
+                    size="sm"
+                    variant="secondary"
+                    isDisabled={isBusy || remaining <= 0}
+                    onPress={() => folderInputRef.current?.click()}
+                >
+                    <FolderIcon aria-hidden focusable="false" className="size-4" />
+                    {t("practice.fe.manage.addFolder")}
                 </Button>
                 <Typography type="body-xs" color="muted">
                     {t("practice.fe.manage.slots", { remaining, max: maxImages })}
@@ -332,6 +377,10 @@ export const FeAlbumManager = ({
                     </>
                 ) : null}
             </div>
+
+            <Typography type="body-xs" color="muted">
+                {t("practice.fe.manage.folderHint")}
+            </Typography>
 
             {waitingSeconds > 0 ? (
                 <Typography type="body-xs" color="muted" role="status">

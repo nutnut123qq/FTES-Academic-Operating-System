@@ -234,7 +234,7 @@ const filenameFromDisposition = (disposition: string | null): string | undefined
 }
 
 /**
- * Tải file học liệu qua ĐƯỜNG BE-STREAM và bung ra như một lượt tải xuống của trình duyệt.
+ * Kéo bytes của file học liệu qua ĐƯỜNG BE-STREAM (không bung tải xuống).
  *
  * `GET /api/v1/resources/{id}/download` — BE trả bytes trần (không envelope) kèm
  * `Content-Disposition`. PHẢI dùng đường này thay cho {@link getResourceDownloadUrl}: URL provider
@@ -244,20 +244,43 @@ const filenameFromDisposition = (disposition: string | null): string | undefined
  *
  * Không dùng `restRequest` vì nó parse envelope JSON; ở đây cần blob thô + header.
  *
+ * Đây cũng là đường DUY NHẤT để XEM TRƯỚC một PDF trong khung (`URL.createObjectURL(blob)` →
+ * `<iframe>`), vì endpoint chỉ nhận `Authorization` header nên không gắn thẳng vào `src` được.
+ * Bản trả về đã đi qua xử lý phía server (đóng dấu watermark) — không có đường vòng nào lấy
+ * file gốc, nên preview không nới lỏng thế phòng thủ.
+ *
+ * @param id - học liệu cần lấy.
+ * @returns blob + tên file (nếu `Content-Disposition` có).
  * @throws RestError khi BE từ chối (403 không có quyền, 429 quá nhiều lượt tải…).
  */
-export const downloadResourceFile = async (id: string): Promise<void> => {
+export const fetchResourceFileBlob = async (
+    id: string,
+): Promise<{ blob: Blob; filename?: string }> => {
     const response = await fetch(`${publicEnv().api.http}/resources/${id}/download`, {
         headers: authHeaders(),
     })
     if (!response.ok) {
         throw new RestError(`download failed (${response.status})`, response.status)
     }
-    const blob = await response.blob()
+    return {
+        blob: await response.blob(),
+        filename: filenameFromDisposition(response.headers.get("content-disposition")),
+    }
+}
+
+/**
+ * Tải file học liệu và bung ra như một lượt tải xuống của trình duyệt.
+ *
+ * Dựng trên {@link fetchResourceFileBlob} (xem ở đó vì sao phải đi đường BE-stream).
+ *
+ * @throws RestError khi BE từ chối (403 không có quyền, 429 quá nhiều lượt tải…).
+ */
+export const downloadResourceFile = async (id: string): Promise<void> => {
+    const { blob, filename } = await fetchResourceFileBlob(id)
     const objectUrl = URL.createObjectURL(blob)
     const anchor = document.createElement("a")
     anchor.href = objectUrl
-    anchor.download = filenameFromDisposition(response.headers.get("content-disposition")) ?? "resource"
+    anchor.download = filename ?? "resource"
     document.body.appendChild(anchor)
     anchor.click()
     anchor.remove()

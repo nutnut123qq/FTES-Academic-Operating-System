@@ -1,14 +1,8 @@
 "use client"
 
-import React, { useCallback, useEffect, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import { Button, Chip, Typography } from "@heroui/react"
-import {
-    ArrowLeftIcon,
-    CaretLeftIcon,
-    CaretRightIcon,
-    ChatCircleIcon,
-    SlidersHorizontalIcon,
-} from "@phosphor-icons/react"
+import { ArrowLeftIcon, ChatCircleIcon, SlidersHorizontalIcon } from "@phosphor-icons/react"
 import { useLocale, useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
 
@@ -20,6 +14,10 @@ import { formatRelativeTime } from "@/components/features/community/hooks/relati
 import { FE_ALBUM_MAX_IMAGES } from "@/components/features/resource/ResourceUpload/uploadRules"
 import { useQueryFeAlbumSwr } from "@/components/features/resource/hooks/useQueryFeAlbumSwr"
 import { useQueryResourceDetailSwr } from "@/components/features/resource/hooks/useQueryResourceDetailSwr"
+import {
+    ExamImageViewer,
+    type ExamImageViewerImage,
+} from "@/components/features/subject/ExamImageViewer"
 import { ALBUM_INITIAL_LOAD, nextAlbumLoadCount } from "./albumLoadWindow"
 import { FeAlbumManager } from "./FeAlbumManager"
 import { FeImageCommentThread } from "./FeImageCommentThread"
@@ -30,10 +28,16 @@ import { FeImageCommentThread } from "./FeImageCommentThread"
  *
  * The two-pane anatomy mirrors the community photo lightbox
  * (`CommunityPhotoLightboxModal`): `lg:grid-cols-[minmax(0,1fr)_400px]`, the image
- * letterboxed on black with prev/next carets and an `n/total` counter, the right pane on
- * `bg-overlay` scrolling on its own; on mobile the panes stack and the page scrolls as
- * one. ArrowLeft / ArrowRight page the album — but never while the viewer is typing in
- * the composer, whose caret owns those keys.
+ * letterboxed on black, the right pane on `bg-overlay` scrolling on its own; on mobile the
+ * panes stack and the page scrolls as one. The picture itself is the shared
+ * {@link ExamImageViewer} — carets, counter, filmstrip, ←/→ keys, zoom and pan all live
+ * there, so the PE paper page gets the identical viewer instead of a second copy.
+ *
+ * The grid pins its single row to `minmax(0,1fr)` and the viewer carries `min-h-0`: a
+ * grid/flex item's automatic minimum size is its CONTENT, so a portrait scan would
+ * otherwise refuse to shrink, inflate the row past the frame's fixed height, and get
+ * clipped by `overflow-hidden` — the reader seeing one slice of the page with the carets
+ * stranded far below the fold.
  *
  * Comments are **per image**: the thread is keyed by the image id, so paging swaps
  * threads instead of bleeding the previous picture's comments into the next one, and the
@@ -64,7 +68,18 @@ export const SubjectFeAlbum = () => {
     const clampedIndex =
         images.length > 0 ? Math.min(Math.max(index, 0), images.length - 1) : 0
     const current = images[clampedIndex]
-    const hasMultiple = images.length > 1
+
+    /** The album in the shape the shared viewer reads (thumbnail badge = comment count). */
+    const viewerImages = useMemo<Array<ExamImageViewerImage>>(
+        () =>
+            images.map((image) => ({
+                id: image.id,
+                imageUrl: image.imageUrl,
+                caption: image.caption,
+                badgeCount: image.commentCount,
+            })),
+        [images],
+    )
 
     // Only fetch the pictures the reader is near. An album is up to 50 scans — pulling every one
     // on mount costs tens of megabytes for a page that shows one at a time. `loadedCount` widens
@@ -80,37 +95,6 @@ export const SubjectFeAlbum = () => {
         setLoadedCount(ALBUM_INITIAL_LOAD)
         setIndex(0)
     }, [albumId])
-
-    const goPrev = useCallback(() => {
-        setIndex((value) => Math.max(0, value - 1))
-    }, [])
-
-    const goNext = useCallback(() => {
-        setIndex((value) => Math.min(images.length - 1, value + 1))
-    }, [images.length])
-
-    // Arrow keys page the album — but never while the viewer is typing in the comment
-    // composer (an editable target keeps its own caret movement).
-    useEffect(() => {
-        const onKey = (event: KeyboardEvent) => {
-            const target = event.target as HTMLElement | null
-            if (
-                target &&
-                (target.tagName === "INPUT" ||
-                    target.tagName === "TEXTAREA" ||
-                    target.isContentEditable)
-            ) {
-                return
-            }
-            if (event.key === "ArrowLeft") {
-                goPrev()
-            } else if (event.key === "ArrowRight") {
-                goNext()
-            }
-        }
-        window.addEventListener("keydown", onKey)
-        return () => window.removeEventListener("keydown", onKey)
-    }, [goPrev, goNext])
 
     return (
         <div className="flex flex-col gap-3 p-6">
@@ -183,74 +167,21 @@ export const SubjectFeAlbum = () => {
                 }}
             >
                 {current ? (
-                    <div className="overflow-hidden rounded-2xl border border-separator lg:grid lg:h-[calc(100dvh-16rem)] lg:grid-cols-[minmax(0,1fr)_400px]">
-                        {/* LEFT — the picture, letterboxed on black */}
-                        <div className="relative flex aspect-video max-h-[50vh] items-center justify-center bg-black lg:aspect-auto lg:h-full lg:max-h-none">
-                            {/* A plain <img>: the album URL is a remote storage host, which
-                                next/image would need an explicit remotePatterns entry for. */}
-                            <img
-                                key={current.id}
-                                src={current.imageUrl}
-                                alt={
-                                    current.caption ??
-                                    t("practice.fe.imageAlt", { index: clampedIndex + 1 })
-                                }
-                                className="max-h-full max-w-full object-contain"
-                            />
-                            {/* Warm the next picture so paging forward is instant. Hidden, and
-                                only within the load window, so it costs exactly one file — not
-                                the rest of the album. */}
-                            {clampedIndex + 1 < Math.min(loadedCount, images.length) ? (
-                                <img
-                                    src={images[clampedIndex + 1]?.imageUrl}
-                                    alt=""
-                                    aria-hidden
-                                    decoding="async"
-                                    className="pointer-events-none absolute size-0 opacity-0"
-                                />
-                            ) : null}
-                            {hasMultiple ? (
-                                <>
-                                    <Button
-                                        isIconOnly
-                                        variant="ghost"
-                                        aria-label={t("practice.fe.previous")}
-                                        isDisabled={clampedIndex === 0}
-                                        onPress={goPrev}
-                                        className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 text-white hover:bg-black/70"
-                                    >
-                                        <CaretLeftIcon
-                                            aria-hidden
-                                            focusable="false"
-                                            className="size-6"
-                                        />
-                                    </Button>
-                                    <Button
-                                        isIconOnly
-                                        variant="ghost"
-                                        aria-label={t("practice.fe.next")}
-                                        isDisabled={clampedIndex === images.length - 1}
-                                        onPress={goNext}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 text-white hover:bg-black/70"
-                                    >
-                                        <CaretRightIcon
-                                            aria-hidden
-                                            focusable="false"
-                                            className="size-6"
-                                        />
-                                    </Button>
-                                    <div
-                                        aria-label={t("practice.fe.counter", {
-                                            current: clampedIndex + 1,
-                                            total: images.length,
-                                        })}
-                                        className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white"
-                                    >
-                                        {clampedIndex + 1}/{images.length}
-                                    </div>
-                                </>
-                            ) : null}
-                        </div>
+                    /* 20rem of chrome, not 16: this page hangs under the subject workspace
+                       shell (4rem navbar + cover banner + identity row), so the old figure
+                       pushed the frame's bottom edge — filmstrip included — under the fold. */
+                    <div className="overflow-hidden rounded-2xl border border-separator lg:grid lg:h-[calc(100dvh-20rem)] lg:min-h-[26rem] lg:grid-cols-[minmax(0,1fr)_400px] lg:grid-rows-[minmax(0,1fr)]">
+                        {/* LEFT — the picture, letterboxed on black. `min-h-0` + an explicitly
+                            0-floored row are what let a PORTRAIT scan shrink to the frame
+                            instead of inflating it (a grid item's automatic minimum size is
+                            its content, and `overflow-hidden` then clips the overflow). */}
+                        <ExamImageViewer
+                            images={viewerImages}
+                            index={clampedIndex}
+                            onIndexChange={setIndex}
+                            loadedCount={loadedCount}
+                            className="h-[60dvh] min-h-0 lg:h-full"
+                        />
 
                         {/* RIGHT — poster info + THIS picture's comments (scrolls on its own on lg:) */}
                         <div className="flex min-h-0 flex-col gap-3 bg-overlay p-4 lg:overflow-y-auto">
@@ -298,47 +229,6 @@ export const SubjectFeAlbum = () => {
                     </div>
                 ) : null}
             </AsyncContent>
-
-            {/* Filmstrip — jump straight to a picture, with its comment count */}
-            {images.length > 1 ? (
-                <div className="flex gap-2 overflow-x-auto pb-2">
-                    {images.map((image, position) => (
-                        <button
-                            key={image.id}
-                            type="button"
-                            aria-label={t("practice.fe.goToImage", { index: position + 1 })}
-                            aria-current={position === clampedIndex}
-                            onClick={() => setIndex(position)}
-                            className={
-                                position === clampedIndex
-                                    ? "relative size-16 shrink-0 cursor-pointer overflow-hidden rounded-large border-2 border-accent"
-                                    : "relative size-16 shrink-0 cursor-pointer overflow-hidden rounded-large border border-separator opacity-70 transition-opacity hover:opacity-100"
-                            }
-                        >
-                            {/* Outside the load window the thumbnail is an empty box: no `src`
-                                means no request, which is the whole point. `loading="lazy"` on
-                                its own would not help — the filmstrip scrolls horizontally and
-                                the browser happily fetches what is just off-screen. */}
-                            {position < loadedCount ? (
-                                <img
-                                    src={image.imageUrl}
-                                    alt=""
-                                    loading="lazy"
-                                    decoding="async"
-                                    className="size-full object-cover"
-                                />
-                            ) : (
-                                <span aria-hidden className="block size-full bg-default" />
-                            )}
-                            {image.commentCount > 0 ? (
-                                <span className="absolute bottom-0 right-0 rounded-tl-large bg-black/60 px-1 text-xs font-medium text-white">
-                                    {image.commentCount}
-                                </span>
-                            ) : null}
-                        </button>
-                    ))}
-                </div>
-            ) : null}
         </div>
     )
 }
@@ -346,7 +236,7 @@ export const SubjectFeAlbum = () => {
 /** Loading skeleton — mirrors the two-pane viewer so the layout never jumps. */
 const FeAlbumSkeleton = () => (
     <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_400px]">
-        <Skeleton className="aspect-video w-full rounded-2xl" />
+        <Skeleton className="h-[60dvh] w-full rounded-2xl" />
         <div className="flex flex-col gap-3">
             <Skeleton className="h-10 w-full rounded-2xl" />
             <Skeleton className="h-24 w-full rounded-2xl" />

@@ -5508,17 +5508,24 @@
           "rejected": "Đã từ chối đóng góp."
         }
       },
+      "viewer": {
+        "imageAlt": "Ảnh đề số {index}",
+        "previous": "Ảnh trước",
+        "next": "Ảnh sau",
+        "counter": "Ảnh {current} trên {total}",
+        "goToImage": "Xem ảnh số {index}",
+        "zoomIn": "Phóng to",
+        "zoomOut": "Thu nhỏ",
+        "fit": "Xem vừa khung",
+        "zoomLevel": "{percent}%",
+        "panHint": "Kéo để di chuyển"
+      },
       "fe": {
         "title": "Bộ đề FE",
         "backToList": "Về trang luyện tập",
         "albumMeta": "{count}/{max} ảnh",
         "empty": "Bộ đề này chưa có ảnh nào.",
         "loadError": "Không tải được bộ đề",
-        "imageAlt": "Ảnh đề số {index}",
-        "previous": "Ảnh trước",
-        "next": "Ảnh sau",
-        "counter": "Ảnh {current} trên {total}",
-        "goToImage": "Xem ảnh số {index}",
         "uploader": "Người đăng",
         "comments": {
           "title": "Bình luận ảnh này ({count})",
@@ -5581,6 +5588,20 @@
         "paperAlt": "Ảnh đề thi",
         "paperFile": "Tệp đề thi",
         "openPaper": "Tải đề",
+        "paper": {
+          "loading": "Đang mở đề thi…",
+          "missing": "Đề thi chưa có tệp đính kèm.",
+          "noPreview": "Định dạng này không xem trực tiếp được — tải về để đọc đề.",
+          "previewFailed": "Không mở được đề ngay trong trang. Tải về để đọc nhé."
+        },
+        "comments": {
+          "title": "Thảo luận ({count})",
+          "prev": "Trước",
+          "next": "Sau",
+          "pageOf": "Trang {page}/{total}",
+          "submitError": "Không gửi được bình luận. Thử lại nhé.",
+          "deleteError": "Không xoá được bình luận. Thử lại nhé."
+        },
         "answerTitle": "Nộp bài làm",
         "attempts": "Đã nộp {used}/{limit} lượt",
         "attemptsExhausted": "Bạn đã dùng hết {limit} lượt nộp cho đề này.",

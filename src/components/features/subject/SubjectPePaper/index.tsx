@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from "react"
 import { Button, Chip, Typography, cn, toast } from "@heroui/react"
-import { ArrowLeftIcon, DownloadSimpleIcon } from "@phosphor-icons/react"
+import { ArrowLeftIcon } from "@phosphor-icons/react"
 import { useLocale, useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
 
@@ -18,6 +18,8 @@ import { downloadResourceFile } from "@/modules/api/rest/resource"
 import type { PeSubmissionView } from "@/modules/api/rest/resource"
 import { PeAnswerForm } from "./PeAnswerForm"
 import { PeAttemptResult } from "./PeAttemptResult"
+import { PePaperCommentThread } from "./PePaperCommentThread"
+import { PePaperPane } from "./PePaperPane"
 import { classifyPeSubmitError } from "./peErrors"
 import { useQueryPePaperSwr } from "./useQueryPePaperSwr"
 
@@ -33,12 +35,22 @@ const STATUS_COLOR: Record<
 }
 
 /**
- * PE (Practical Exam) paper page: read the exam sheet, hand in an answer file, watch the
- * AI grade land.
+ * PE (Practical Exam) paper page: read the exam sheet on the LEFT, hand in an answer file
+ * and watch the AI grade land on the RIGHT.
  *
- * The paper renders inline when it is a picture (the storage provider serves images
- * directly); a PDF/zip is offered as a BE-streamed download instead, because the
- * provider refuses direct delivery of its `raw` bucket.
+ * The two-pane frame is the FE album's, on purpose — same
+ * `lg:grid-cols-[minmax(0,1fr)_400px]` box, same black paper pane, same right column on
+ * `bg-overlay` scrolling on its own, same stack below `lg:` (paper first, then the submit
+ * column). The two practice surfaces are one system, and the picture branch is literally
+ * the same component ({@link ExamImageViewer} via {@link PePaperPane}).
+ *
+ * The row is pinned to `minmax(0,1fr)` and the panes carry `min-h-0` for the reason
+ * spelled out in the viewer: a grid item's automatic minimum size is its CONTENT, so a
+ * portrait scan (or a long attempt list) would otherwise inflate the row past the frame's
+ * height and get clipped.
+ *
+ * What the paper looks like per file type — picture / PDF / neither — is
+ * {@link PePaperPane}'s job.
  *
  * Grading is asynchronous: the submit answers `GRADING` and
  * `useQueryPeSubmissionsSwr` polls until every attempt has settled, so the attempt list
@@ -100,7 +112,7 @@ export const SubjectPePaper = () => {
     }, [paperId, t])
 
     return (
-        <div className="flex flex-col gap-6 p-6">
+        <div className="flex flex-col gap-3 p-6">
             <div className="flex flex-wrap items-start gap-3">
                 <Button
                     size="sm"
@@ -122,10 +134,9 @@ export const SubjectPePaper = () => {
                 </div>
             </div>
 
-            {/* the exam paper */}
             <AsyncContent
                 isLoading={isLoadingResource && !resource}
-                skeleton={<Skeleton className="h-64 w-full rounded-2xl" />}
+                skeleton={<PePaperSkeleton />}
                 error={!resource ? resourceError : undefined}
                 errorContent={{
                     title: t("practice.pe.loadError"),
@@ -135,167 +146,164 @@ export const SubjectPePaper = () => {
                     retryLabel: t("practice.exam.retry"),
                 }}
             >
-                <section className="flex flex-col gap-3">
-                    {resource?.description ? (
-                        <MarkdownContent markdown={resource.description} />
-                    ) : null}
-
-                    {paperSwr.data?.imageUrl ? (
-                        // A picture of the exam sheet — rendered inline. Plain <img>: the
-                        // URL is a remote provider host next/image would need whitelisting for.
-                        <img
-                            src={paperSwr.data.imageUrl}
-                            alt={t("practice.pe.paperAlt")}
-                            className="max-h-[70vh] w-full rounded-2xl border border-separator object-contain"
+                {/* Same frame as the FE album, down to the 20rem of workspace chrome the
+                    height leaves room for (4rem navbar + the subject cover + identity row). */}
+                <div className="overflow-hidden rounded-2xl border border-separator lg:grid lg:h-[calc(100dvh-20rem)] lg:min-h-[26rem] lg:grid-cols-[minmax(0,1fr)_400px] lg:grid-rows-[minmax(0,1fr)]">
+                    {/* LEFT — the exam paper (picture / PDF / not-previewable) */}
+                    <div className="flex h-[60dvh] min-h-0 flex-col bg-default lg:h-full">
+                        <PePaperPane
+                            resourceId={paperId}
+                            facts={paperSwr.data ?? null}
+                            isLoading={!paperSwr.data && !paperSwr.error}
+                            onDownload={() => {
+                                void onDownload()
+                            }}
+                            isDownloading={downloading}
                         />
-                    ) : (
-                        <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-separator p-4">
-                            <Typography
-                                type="body-sm"
-                                color="muted"
-                                className="min-w-0 flex-1"
-                                truncate
-                            >
-                                {paperSwr.data?.originalFilename ?? t("practice.pe.paperFile")}
+                    </div>
+
+                    {/* RIGHT — the brief, the answer upload, the attempts, the discussion
+                        (scrolls on its own on lg:) */}
+                    <div className="flex min-h-0 flex-col gap-4 bg-overlay p-4 lg:overflow-y-auto">
+                        {resource?.description ? (
+                            <MarkdownContent markdown={resource.description} />
+                        ) : null}
+
+                        {/* answer upload */}
+                        <PeAnswerForm
+                            resourceId={paperId}
+                            attemptsUsed={attemptsUsed}
+                            maxAttempts={maxAttempts}
+                            isGrading={isGrading}
+                            onSubmitted={() => {
+                                // Show the grade of the attempt just filed once it settles.
+                                setOpenAttemptId(null)
+                                void submissionsSwr.mutate()
+                            }}
+                        />
+
+                        {/* attempts + the AI grade */}
+                        <section className="flex flex-col gap-3">
+                            <Typography type="body" weight="semibold">
+                                {t("practice.pe.attemptsTitle")}
                             </Typography>
-                            <Button
-                                size="sm"
-                                variant="secondary"
-                                isPending={downloading}
-                                isDisabled={downloading}
-                                onPress={() => {
-                                    void onDownload()
+                            <AsyncContent
+                                isLoading={!submissionsSwr.data && !submissionsSwr.error}
+                                skeleton={
+                                    <div className="flex flex-col gap-2">
+                                        {[0, 1].map((row) => (
+                                            <Skeleton key={row} className="h-14 w-full rounded-2xl" />
+                                        ))}
+                                    </div>
+                                }
+                                isEmpty={submissions.length === 0}
+                                emptyContent={{ title: t("practice.pe.noAttempts") }}
+                                error={!submissionsSwr.data ? submissionsSwr.error : undefined}
+                                errorContent={{
+                                    title: t("practice.pe.attemptsError"),
+                                    onRetry: () => {
+                                        void submissionsSwr.mutate()
+                                    },
+                                    retryLabel: t("practice.exam.retry"),
                                 }}
                             >
-                                <DownloadSimpleIcon
-                                    aria-hidden
-                                    focusable="false"
-                                    className="size-4"
-                                />
-                                {t("practice.pe.openPaper")}
-                            </Button>
-                        </div>
-                    )}
-                </section>
-            </AsyncContent>
-
-            {/* answer upload */}
-            <PeAnswerForm
-                resourceId={paperId}
-                attemptsUsed={attemptsUsed}
-                maxAttempts={maxAttempts}
-                isGrading={isGrading}
-                onSubmitted={() => {
-                    // Show the grade of the attempt just filed once it settles.
-                    setOpenAttemptId(null)
-                    void submissionsSwr.mutate()
-                }}
-            />
-
-            {/* attempts + the AI grade */}
-            <section className="flex flex-col gap-3">
-                <Typography type="body" weight="semibold">
-                    {t("practice.pe.attemptsTitle")}
-                </Typography>
-                <AsyncContent
-                    isLoading={!submissionsSwr.data && !submissionsSwr.error}
-                    skeleton={
-                        <div className="flex flex-col gap-2">
-                            {[0, 1].map((row) => (
-                                <Skeleton key={row} className="h-14 w-full rounded-2xl" />
-                            ))}
-                        </div>
-                    }
-                    isEmpty={submissions.length === 0}
-                    emptyContent={{ title: t("practice.pe.noAttempts") }}
-                    error={!submissionsSwr.data ? submissionsSwr.error : undefined}
-                    errorContent={{
-                        title: t("practice.pe.attemptsError"),
-                        onRetry: () => {
-                            void submissionsSwr.mutate()
-                        },
-                        retryLabel: t("practice.exam.retry"),
-                    }}
-                >
-                    <div className="flex flex-col gap-3">
-                        {submissions.map((submission) => (
-                            <div key={submission.id} className="flex flex-col gap-3">
-                                <div
-                                    className={cn(
-                                        "flex flex-wrap items-center gap-3 rounded-2xl border p-4",
-                                        openAttemptId === submission.id
-                                            ? "border-accent/50 bg-accent/5"
-                                            : "border-separator",
-                                    )}
-                                >
-                                    <div className="min-w-0 flex-1">
-                                        <Typography type="body-sm" weight="medium">
-                                            {t("practice.pe.attemptNo", {
-                                                attempt: submission.attemptNo,
-                                            })}
-                                        </Typography>
-                                        <Typography type="body-xs" color="muted">
-                                            {[
-                                                submission.originalFilename,
-                                                formatRelativeTime(
-                                                    submission.submittedAt,
-                                                    locale,
-                                                ),
-                                            ]
-                                                .filter(Boolean)
-                                                .join(" · ")}
-                                        </Typography>
-                                    </div>
-                                    {typeof submission.finalScore === "number" ||
-                                    typeof submission.autoScore === "number" ? (
-                                            <Typography type="body-sm" weight="semibold">
-                                                {submission.finalScore ?? submission.autoScore}
-                                            </Typography>
-                                        ) : null}
-                                    <Chip
-                                        size="sm"
-                                        variant="soft"
-                                        color={STATUS_COLOR[submission.status]}
-                                    >
-                                        {t(`practice.pe.status.${submission.status}`)}
-                                    </Chip>
-                                    {submission.status === "SCORED" ? (
-                                        <Button
-                                            size="sm"
-                                            variant="tertiary"
-                                            onPress={() =>
-                                                setOpenAttemptId(
+                                <div className="flex flex-col gap-3">
+                                    {submissions.map((submission) => (
+                                        <div key={submission.id} className="flex flex-col gap-3">
+                                            <div
+                                                className={cn(
+                                                    "flex flex-wrap items-center gap-3 rounded-2xl border p-4",
                                                     openAttemptId === submission.id
-                                                        ? null
-                                                        : submission.id,
-                                                )
-                                            }
-                                        >
-                                            {openAttemptId === submission.id
-                                                ? t("practice.pe.hideResult")
-                                                : t("practice.pe.viewResult")}
-                                        </Button>
-                                    ) : null}
+                                                        ? "border-accent/50 bg-accent/5"
+                                                        : "border-separator",
+                                                )}
+                                            >
+                                                <div className="min-w-0 flex-1">
+                                                    <Typography type="body-sm" weight="medium">
+                                                        {t("practice.pe.attemptNo", {
+                                                            attempt: submission.attemptNo,
+                                                        })}
+                                                    </Typography>
+                                                    <Typography type="body-xs" color="muted">
+                                                        {[
+                                                            submission.originalFilename,
+                                                            formatRelativeTime(
+                                                                submission.submittedAt,
+                                                                locale,
+                                                            ),
+                                                        ]
+                                                            .filter(Boolean)
+                                                            .join(" · ")}
+                                                    </Typography>
+                                                </div>
+                                                {typeof submission.finalScore === "number" ||
+                                                typeof submission.autoScore === "number" ? (
+                                                        <Typography type="body-sm" weight="semibold">
+                                                            {submission.finalScore ?? submission.autoScore}
+                                                        </Typography>
+                                                    ) : null}
+                                                <Chip
+                                                    size="sm"
+                                                    variant="soft"
+                                                    color={STATUS_COLOR[submission.status]}
+                                                >
+                                                    {t(`practice.pe.status.${submission.status}`)}
+                                                </Chip>
+                                                {submission.status === "SCORED" ? (
+                                                    <Button
+                                                        size="sm"
+                                                        variant="tertiary"
+                                                        onPress={() =>
+                                                            setOpenAttemptId(
+                                                                openAttemptId === submission.id
+                                                                    ? null
+                                                                    : submission.id,
+                                                            )
+                                                        }
+                                                    >
+                                                        {openAttemptId === submission.id
+                                                            ? t("practice.pe.hideResult")
+                                                            : t("practice.pe.viewResult")}
+                                                    </Button>
+                                                ) : null}
+                                            </div>
+
+                                            {submission.status === "FAILED" && submission.failureReason ? (
+                                                <Typography type="body-xs" className="text-danger">
+                                                    {submission.failureReason}
+                                                </Typography>
+                                            ) : null}
+
+                                            {submission.status === "SCORED" &&
+                                            openAttemptId === submission.id ? (
+                                                    <PeAttemptResult
+                                                        resourceId={paperId}
+                                                        submissionId={submission.id}
+                                                    />
+                                                ) : null}
+                                        </div>
+                                    ))}
                                 </div>
+                            </AsyncContent>
+                        </section>
 
-                                {submission.status === "FAILED" && submission.failureReason ? (
-                                    <Typography type="body-xs" className="text-danger">
-                                        {submission.failureReason}
-                                    </Typography>
-                                ) : null}
-
-                                {submission.status === "SCORED" &&
-                                openAttemptId === submission.id ? (
-                                        <PeAttemptResult
-                                            resourceId={paperId}
-                                            submissionId={submission.id}
-                                        />
-                                    ) : null}
-                            </div>
-                        ))}
+                        {/* discussion — the RESOURCE-level C-4 thread, the same one
+                            `/resources/{paperId}` shows. PE has no thread of its own. */}
+                        <PePaperCommentThread resourceId={paperId} />
                     </div>
-                </AsyncContent>
-            </section>
+                </div>
+            </AsyncContent>
         </div>
     )
 }
+
+/** Loading skeleton — mirrors the two-pane frame so the layout never jumps. */
+const PePaperSkeleton = () => (
+    <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_400px]">
+        <Skeleton className="h-[60dvh] w-full rounded-2xl" />
+        <div className="flex flex-col gap-3">
+            <Skeleton className="h-32 w-full rounded-2xl" />
+            <Skeleton className="h-24 w-full rounded-2xl" />
+        </div>
+    </div>
+)

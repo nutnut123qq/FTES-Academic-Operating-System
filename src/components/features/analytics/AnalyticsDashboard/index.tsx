@@ -7,19 +7,22 @@ import { DashboardIdentity } from "./DashboardIdentity"
 import { OverviewTab } from "./OverviewTab"
 
 /**
- * Dashboard (§24) — the `/analytics` cockpit, ported from StarCI's dashboard.
+ * Dashboard (§24) — the ORIGINAL single-page cockpit, ported from StarCI's dashboard.
  * A centered 2-column body: LEFT = the viewer's identity + standing (bare, no card:
  * profile anchor · standing stats · quick actions), RIGHT = the Overview cockpit —
- * "Tiếp tục học" (resume cards) and "Đà học" (streak strip). Stacks to one column
- * on mobile. Every rendered widget self-fetches REAL BE data + owns its
- * loading/error states: resume/streak/wallet via gamification+wallet REST, the
- * sidebar AI-quota row via `GET /ai/quotas/me`.
+ * "Tiếp tục học" (resume cards), "Nhiệm vụ hôm nay" and "Đà học" (streak strip).
+ * Stacks to one column on mobile. Every rendered widget self-fetches REAL BE data +
+ * owns its loading/error states: resume/streak/wallet via gamification+wallet REST,
+ * the sidebar AI-quota row via `GET /ai/quotas/me`.
  *
- * Widgets HIDDEN chờ BE (components kept, render removed — see OverviewTab):
- * daily quest, weekly goals, weekly challenge (no gamification endpoints yet) and
- * the contribution heatmap (no per-user contributions endpoint in analytics).
- * Not ported from StarCI: the Explore/Courses/Community tabs + the navbar
- * bottom-layer tab strip (need FTES tab-store + navbar infra that isn't present).
+ * NO LONGER ROUTED. `/analytics` now redirects to `/dashboard`
+ * (`features/dashboard`), which renders the same Overview content plus the Explore /
+ * Courses / Community tabs over a navbar bottom-layer tab strip — that infra DOES
+ * exist now (`hooks/zustand/dashboardTab/store` + `useRegisterNavbarBottomLayer`),
+ * contrary to an earlier note here. This component and its widget children are kept
+ * because `features/dashboard` imports `DashboardIdentity`, `ContinueLearning`,
+ * `DailyQuest` and `StreakStrip` straight out of this subtree; the shell itself
+ * survives only as their home and as the reference layout.
  */
 export const AnalyticsDashboard = () => {
     const t = useTranslations("analytics")

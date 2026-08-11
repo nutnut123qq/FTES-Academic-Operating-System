@@ -24,12 +24,20 @@ export type OverviewTabProps = WithClassNames<undefined>
  * menu's "Nhiệm vụ" row is gone — it reads the SAME `useGetMyQuestsSwr` cache the
  * `/quests` page reads and links on to it.
  *
- * Hidden — chờ BE (components kept, render removed so no fake numbers ship):
- * `WeeklyGoals` ("Mục tiêu tuần"),
- * `WeeklyChallengeCard` (weekly-challenge event) — no gamification endpoints yet;
- * `OverviewContributions` (contribution heatmap) — analytics has no per-user
- * contribution/time-series endpoint (only the admin contributionStats zero-stub).
- * Re-add each `LabeledCard` here when its endpoint lands.
+ * Hidden here (components kept, render removed so no fake numbers ship):
+ * `WeeklyChallengeCard` (weekly-challenge event) — no endpoint exists and its
+ * adapter `useQueryWeeklyChallengeSwr` is an explicit mock; and this subtree's
+ * `OverviewContributions`, whose adapter `useQueryContributionCalendarSwr`
+ * fabricates days from a hash of the day-of-year.
+ *
+ * A per-user contribution/time-series endpoint DOES exist, though —
+ * `GET /gamification/me/activity-days` (`{ date, xp }`, sparse, Vietnam-day
+ * buckets). The shipped cockpit at `/dashboard` (`features/dashboard/OverviewTab`)
+ * renders both "Mục tiêu tuần" (`GET /gamification/me/goals`, with a real XP
+ * numerator) and an XP heatmap off those real endpoints. Only the MOCK-backed
+ * adapters named above stay unshippable. This tab, reached only through the
+ * now-unrouted `AnalyticsDashboard` shell, keeps its narrower three-section form.
+ *
  * @param props - optional root class name (placement only)
  */
 export const OverviewTab = ({ className }: OverviewTabProps) => {

@@ -7,6 +7,7 @@ import { FireIcon, LightningIcon, RankingIcon, StarIcon, TrophyIcon } from "@pho
 import { Link } from "@/i18n/navigation"
 import { pathConfig } from "@/resources/path"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { InitialsAvatar } from "@/components/blocks/identity/InitialsAvatar"
 import { useQueryLeaderboardSwr } from "../hooks/useQueryLeaderboardSwr"
 import { useQueryMyGamificationSwr } from "../hooks/useQueryMyGamificationSwr"
 import { tierFromXp } from "../leaderboardTiers"
@@ -201,9 +202,7 @@ export const LeaderboardShell = () => {
                                     >
                                         {entry.rank}
                                     </Typography>
-                                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent/10 text-sm font-bold text-accent">
-                                        {entry.avatarInitials}
-                                    </div>
+                                    <InitialsAvatar initials={entry.avatarInitials} />
                                     <div className="min-w-0 flex-1">
                                         <Typography type="body-sm" weight="medium" truncate>
                                             {entry.name}

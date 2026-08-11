@@ -47,9 +47,14 @@ const stripLocale = (pathname: string): string =>
  *   (enrollment is optional, an authenticated session is not).
  * - Public content reader (`/contents/<id>`), blog, courses catalog, community,
  *   practice, talents, headhunting, league/kpi/etc. are intentionally NOT listed.
+ * - `/dashboard` is the signed-in cockpit: every widget on it keys its query to the
+ *   session, so a guest would not see a login prompt but five EMPTY states asserting
+ *   the leaderboard is empty, nothing is trending and they own no courses. Gating it
+ *   here is what keeps those empty states honest ("no data" really means no data).
  */
 const PROTECTED_PATTERNS: RegExp[] = [
     /^\/admin(?:\/|$)/,
+    /^\/dashboard(?:\/|$)/,
 ]
 
 /**

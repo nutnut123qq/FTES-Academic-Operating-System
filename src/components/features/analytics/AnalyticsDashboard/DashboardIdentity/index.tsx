@@ -14,7 +14,9 @@ export type DashboardIdentityProps = WithClassNames<undefined>
  * Dashboard LEFT column — the viewer's own identity + standing, bare (no card),
  * mirroring StarCI's identity sidebar. Stacks: the profile anchor (avatar + name +
  * link), a compact standing row (streak · AI credit · reward), then the quick-action
- * shortcuts. Each child self-fetches its own mock leaf query.
+ * shortcuts. Each child self-fetches its own REAL leaf query (streak / AI quota /
+ * reward wallet REST) — nothing here is mocked. Mounted on every `/dashboard` tab, so
+ * each row owns a skeleton + error branch rather than silently vanishing.
  * @param props - optional className for the root column.
  */
 export const DashboardIdentity = ({ className }: DashboardIdentityProps) => {

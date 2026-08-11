@@ -6,6 +6,7 @@ import { Button, Chip, Typography, toast } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { BackLink } from "@/components/blocks/navigation/BackLink"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { TYPE_ICON } from "../typeIcons"
 import { useMutateEventRegistrationSwr } from "../hooks/useMutateEventRegistrationSwr"
@@ -46,6 +47,9 @@ export const EventCatalog = () => {
 
     return (
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-6">
+            {/* The catalog is reached from Community's rail (and from a shared link), so step
+                back through real history; a direct visit falls back to Community. */}
+            <BackLink fallbackHref="/community" />
             <div className="flex flex-col gap-0">
                 <Typography type="h4" weight="bold">
                     {t("catalog.title")}

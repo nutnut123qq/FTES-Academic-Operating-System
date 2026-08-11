@@ -6614,6 +6614,7 @@
       "accepted": "{count} accepted",
       "score": "{score} pts",
       "empty": "No contributors yet.",
+      "signedOut": "Sign in to see the reputation board.",
       "error": "Couldn't load the reputation board. Please try again."
     },
     "poll": {

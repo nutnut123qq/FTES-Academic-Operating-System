@@ -1,6 +1,7 @@
 "use client"
 
 import useSWR from "swr"
+import { useAppSelector } from "@/redux/hooks"
 import { getLeaderboard } from "@/modules/api/rest/community"
 import type { LeaderboardEntryResponse } from "@/modules/api/rest/community"
 
@@ -45,11 +46,28 @@ const toContributor = (entry: LeaderboardEntryResponse): Contributor => ({
  * Loads top contributors from the real BE `GET /api/v1/community/leaderboard`
  * (first page, sorted score desc — requires `community.leaderboard.read`, granted
  * to STUDENT and up).
+ *
+ * The endpoint is AUTHENTICATED: it 401s for a guest. Firing it anyway made the board
+ * show "Couldn't load the reputation board" to every signed-out visitor — an error card
+ * for what is simply a sign-in gate. So the fetch is gated on the session (same pattern as
+ * the cart / bookmarked-posts reads) and the caller gets `requiresAuth` to render the
+ * sign-in prompt instead of a failure.
  */
 export const useQueryContributorsSwr = () => {
-    const { data, isLoading, error, mutate } = useSWR(["contributors"], async () => {
-        const page = await getLeaderboard({ page: 0, size: LEADERBOARD_SIZE })
-        return page.items.map(toContributor)
-    })
-    return { contributors: data ?? [], isLoading, error, mutate }
+    const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const { data, isLoading, error, mutate } = useSWR(
+        authenticated ? ["contributors"] : null,
+        async () => {
+            const page = await getLeaderboard({ page: 0, size: LEADERBOARD_SIZE })
+            return page.items.map(toContributor)
+        },
+    )
+    return {
+        contributors: data ?? [],
+        isLoading: authenticated && isLoading,
+        error,
+        mutate,
+        /** True for a signed-out viewer: the board needs a session, it did not fail. */
+        requiresAuth: !authenticated,
+    }
 }

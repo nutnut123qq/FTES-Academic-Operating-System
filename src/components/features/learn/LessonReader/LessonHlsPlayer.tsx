@@ -46,6 +46,7 @@ export const LessonHlsPlayer = ({
     onEnded,
     onHalfWatched,
     onRefreshSource,
+    overlay,
 }: {
     /** Legacy `video_*` token resolved via the stream gateway. Mutually exclusive with `manifestUrl`. */
     videoRef?: string
@@ -55,8 +56,13 @@ export const LessonHlsPlayer = ({
     previewSeconds?: number
     /** Preview limit reached — hard-pause the media. From the shared preview gate. */
     isGated: boolean
-    /** Report the current playback time to the shared preview gate. */
-    onTimeUpdate: (currentTime: number) => void
+    /**
+     * Report the current playback time to the parent (shared preview gate + up-next).
+     * `duration` is the media length when known (`<video>.duration` once metadata is in,
+     * `undefined` while it is still `NaN`/`Infinity`) — the up-next window needs it to
+     * know how much is left; the preview gate ignores it.
+     */
+    onTimeUpdate: (currentTime: number, duration?: number) => void
     /** Media ended — the preview manifest may run out of segments. */
     onEnded: () => void
     onHalfWatched?: () => void
@@ -68,6 +74,11 @@ export const LessonHlsPlayer = ({
      * ignores it (it already re-resolves the playlist from the gateway on retry).
      */
     onRefreshSource?: () => void
+    /**
+     * Node rendered INSIDE the player frame (the "up next" hand-off card). It must live in
+     * here, not in the parent block, so it stays on top of the video rather than beside it.
+     */
+    overlay?: React.ReactNode
 }) => {
     const t = useTranslations("learn")
     const videoEl = useRef<HTMLVideoElement>(null)
@@ -121,10 +132,12 @@ export const LessonHlsPlayer = ({
         if (!el) return
 
         clampSeek()
-        onTimeUpdate(el.currentTime)
+        const duration = el.duration
+        // Only hand up a REAL duration: it is NaN before `loadedmetadata` and Infinity on a
+        // live manifest, and the up-next window must not arm on either.
+        onTimeUpdate(el.currentTime, Number.isFinite(duration) && duration > 0 ? duration : undefined)
 
         if (halfFiredRef.current) return
-        const duration = el.duration
         if (Number.isFinite(duration) && duration > 0 && el.currentTime / duration >= 0.5) {
             halfFiredRef.current = true
             halfWatchedRef.current?.()
@@ -270,6 +283,11 @@ export const LessonHlsPlayer = ({
                 className="aspect-video w-full rounded-2xl bg-black"
             />
             {loading ? <Skeleton className="absolute inset-0 size-full rounded-2xl" /> : null}
+            {/* Up-next card — inside the frame so it sits ON the video. Note: this player
+                keeps the NATIVE fullscreen control, which fullscreens the <video> element
+                itself, so the card is (unavoidably) hidden while the learner is fullscreen
+                here — unlike the YouTube branch, which fullscreens this container. */}
+            {overlay}
         </div>
     )
 }

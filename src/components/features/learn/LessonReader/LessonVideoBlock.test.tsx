@@ -25,6 +25,13 @@ vi.mock("./hooks/usePreviewGate", () => ({
     }),
 }))
 
+// The up-next hand-off pushes through the next-intl router; its real module pulls
+// `next/navigation` through next-intl's ESM build, which does not resolve under vitest.
+const push = vi.fn()
+vi.mock("@/i18n/navigation", () => ({
+    useRouter: () => ({ push }),
+}))
+
 const hlsProps = vi.fn()
 vi.mock("./LessonHlsPlayer", () => ({
     LessonHlsPlayer: (props: Record<string, unknown>) => {
@@ -55,6 +62,9 @@ vi.mock("next-intl", () => ({
 
 vi.mock("@phosphor-icons/react", () => ({
     LockSimpleIcon: () => null,
+    // Used by the up-next overlay, which this block now renders inside the player.
+    CaretRightIcon: () => null,
+    XIcon: () => null,
 }))
 
 vi.mock("@heroui/react", () => ({
@@ -77,11 +87,19 @@ const baseProps = {
     videoRef: null,
 }
 
+/** Where a finished video hands off (this lesson's challenge, else the next lesson). */
+const upNextLesson = {
+    href: "/courses/c1/learn/content/modules/m1/contents/l2",
+    title: "Bài 2",
+    kind: "lesson" as const,
+}
+
 describe("LessonVideoBlock — player dispatch", () => {
     beforeEach(() => {
         currentStream = undefined
         hlsProps.mockClear()
         ytProps.mockClear()
+        push.mockClear()
     })
 
     it("mounts the HLS player directly on stream.url when provider is HLS (videoRef null)", () => {
@@ -135,5 +153,66 @@ describe("LessonVideoBlock — player dispatch", () => {
         const props = hlsProps.mock.calls[0][0]
         expect(props.videoRef).toBe("video_abc123")
         expect(props.manifestUrl).toBeUndefined()
+    })
+})
+
+/**
+ * The "up next" hand-off wiring. The block is the only place that knows BOTH the
+ * preview/gated state and which player is mounted, so it decides whether the feature is
+ * live at all. The freemium exclusion is the load-bearing case: a PREVIEW video is CUT
+ * OFF at `previewSeconds`, so its `ended` is the paywall, never "finished the lesson".
+ */
+describe("LessonVideoBlock — up-next hand-off", () => {
+    beforeEach(() => {
+        currentStream = undefined
+        hlsProps.mockClear()
+        ytProps.mockClear()
+        push.mockClear()
+    })
+
+    it("tracks the YouTube video to its end when a destination exists on a FULL stream", () => {
+        currentStream = { url: "", mode: "FULL", previewSeconds: 0, videoRef: null }
+        render(
+            <LessonVideoBlock
+                {...baseProps}
+                videoRef="https://youtu.be/dQw4w9WgXcQ"
+                upNext={upNextLesson}
+            />,
+        )
+
+        const props = ytProps.mock.calls[0][0]
+        // The last-10s window sits past the ≥50% mark where the poll would otherwise stop.
+        expect(props.trackToEnd).toBe(true)
+        // Nothing to show until playback actually reaches the window.
+        expect(props.overlay).toBeNull()
+    })
+
+    it("stays OFF on a PREVIEW stream even with a destination", () => {
+        currentStream = { url: "", mode: "PREVIEW", previewSeconds: 90, videoRef: null }
+        render(
+            <LessonVideoBlock
+                {...baseProps}
+                videoRef="https://youtu.be/dQw4w9WgXcQ"
+                upNext={upNextLesson}
+            />,
+        )
+
+        expect(ytProps.mock.calls[0][0].trackToEnd).toBe(false)
+        expect(push).not.toHaveBeenCalled()
+    })
+
+    it("stays OFF when there is nowhere to go (last lesson, no challenge)", () => {
+        currentStream = { url: "", mode: "FULL", previewSeconds: 0, videoRef: null }
+        render(
+            <LessonVideoBlock
+                {...baseProps}
+                videoRef="https://youtu.be/dQw4w9WgXcQ"
+                upNext={null}
+            />,
+        )
+
+        const props = ytProps.mock.calls[0][0]
+        expect(props.trackToEnd).toBe(false)
+        expect(props.overlay).toBeNull()
     })
 })

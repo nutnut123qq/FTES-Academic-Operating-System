@@ -106,19 +106,39 @@ export const LessonYouTubePlayer = ({
     onEnded,
     onOpenGate,
     onHalfWatched,
+    trackToEnd = false,
+    overlay,
 }: {
     videoId: string
     lessonId: string
     previewSeconds?: number
     isPreview: boolean
     gated: boolean
-    /** Report the current playback time to the shared preview gate. */
-    onTimeUpdate: (currentTime: number) => void
+    /**
+     * Report the current playback time to the parent (shared preview gate + up-next).
+     * `duration` is the IFrame API's `getDuration()` when it is known (`undefined` while
+     * the player still reports 0) — the up-next window needs it; the preview gate ignores it.
+     */
+    onTimeUpdate: (currentTime: number, duration?: number) => void
     /** Media ended — the preview manifest may run out. */
     onEnded?: () => void
     /** Open the package gate modal (used by the API-failure enroll card). */
     onOpenGate: () => void
     onHalfWatched?: () => void
+    /**
+     * Keep the 1s time poll alive all the way to the end of the video.
+     *
+     * By default the poll stops once the ≥50% auto-complete has fired (and does not restart
+     * after a pause) — everything it existed for was done. The up-next window lives in the
+     * LAST 10 seconds, i.e. entirely inside that dead zone, so the parent sets this whenever
+     * an up-next destination is armed. Costs one `getCurrentTime()` per second.
+     */
+    trackToEnd?: boolean
+    /**
+     * Node rendered INSIDE the fullscreen-able container (next to {@link LessonFullscreenButton}),
+     * so the "up next" card stays visible when the learner fullscreens the player.
+     */
+    overlay?: React.ReactNode
 }) => {
     const t = useTranslations("courseSystem.preview")
     const hostRef = useRef<HTMLDivElement>(null)
@@ -158,6 +178,9 @@ export const LessonYouTubePlayer = ({
     gatedRef.current = gated
     const previewLimitRef = useRef(previewSeconds ?? 0)
     previewLimitRef.current = previewSeconds ?? 0
+    /** Latest `trackToEnd` readable inside the poll without re-creating the player. */
+    const trackToEndRef = useRef(trackToEnd)
+    trackToEndRef.current = trackToEnd
 
     useEffect(() => {
         let player: YouTubePlayer | null = null
@@ -214,8 +237,9 @@ export const LessonYouTubePlayer = ({
                 }
             }
 
-            // Countdown + single-fire modal + preview-limit report live in the hook.
-            timeUpdateRef.current(current)
+            // Countdown + single-fire modal + preview-limit report live in the hook; the
+            // duration rides along for the up-next window (0 = the API doesn't know it yet).
+            timeUpdateRef.current(current, duration > 0 ? duration : undefined)
 
             // Reached the limit this tick → pause now (the `gated` state lands next render).
             if (limit > 0 && current >= limit - 0.5) {
@@ -227,7 +251,8 @@ export const LessonYouTubePlayer = ({
             if (!fired && duration > 0 && current / duration >= 0.5) {
                 fired = true
                 halfWatchedRef.current?.()
-                if (limit <= 0) clearPoll()
+                // Keep ticking when the parent still needs the tail of the video (up-next).
+                if (limit <= 0 && !trackToEndRef.current) clearPoll()
             }
         }
 
@@ -282,7 +307,11 @@ export const LessonYouTubePlayer = ({
                                     enforceGate()
                                     return
                                 }
-                                if (fired || interval) {
+                                // Already polling → nothing to do. Otherwise resume the poll
+                                // unless the ≥50% mark already fired AND nobody needs the
+                                // tail of the video (`trackToEnd`) — that is the old
+                                // "everything is done, stop ticking" case.
+                                if (interval || (fired && !trackToEndRef.current)) {
                                     return
                                 }
                                 interval = window.setInterval(tick, 1000)
@@ -356,6 +385,9 @@ export const LessonYouTubePlayer = ({
             {canContainerFullscreen ? (
                 <LessonFullscreenButton isFullscreen={isFullscreen} onToggle={toggleFullscreen} />
             ) : null}
+            {/* Up-next card — INSIDE the fullscreen-able container (same rule as the
+                fullscreen button above), so it stays visible in fullscreen. */}
+            {overlay}
         </div>
     )
 }

@@ -125,6 +125,29 @@ export const RESOURCE_TYPE_RULES: Record<ResourceTypeCode, ResourceTypeRule> = {
     },
 }
 
+// ---------------------------------------------------------------- FE album images
+
+/**
+ * BE cap on ONE FE album (`FeAlbumView.maxImages`), mirrored so a picker can stop
+ * early. The album payload ships the live value — prefer `FeAlbumView.maxImages` when
+ * you have it and keep this only as the pre-album / fallback number.
+ */
+export const FE_ALBUM_MAX_IMAGES = 50
+
+/**
+ * Picture MIME types `POST /api/v1/resources/{id}/images` accepts. NARROWER than
+ * {@link RESOURCE_TYPE_RULES}`.FE` on purpose: the FE *resource* also allows a PDF/ZIP
+ * body, but an album *page* is always a picture.
+ */
+export const FE_ALBUM_IMAGE_MIME: ReadonlyArray<string> = [
+    "image/png",
+    "image/jpeg",
+    "image/webp",
+]
+
+/** Per-picture size cap of an FE album image, in MB (the FE resource rule). */
+export const FE_ALBUM_MAX_IMAGE_MB = RESOURCE_TYPE_RULES.FE.maxSizeMb
+
 /** Canonical MIME per extension — the fallback when the browser reports no `File.type`. */
 const EXTENSION_MIME_TYPES: Record<string, ReadonlyArray<string>> = {
     ".pdf": ["application/pdf"],

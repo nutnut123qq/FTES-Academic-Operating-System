@@ -23,6 +23,9 @@ import { ResourceUploadProgress } from "@/components/features/resource/ResourceU
 import { useResourceUploadFlow } from "@/components/features/resource/ResourceUpload/useResourceUploadFlow"
 import type { ResourceUploadStep } from "@/components/features/resource/ResourceUpload/uploadFlow"
 import {
+    FE_ALBUM_IMAGE_MIME,
+    FE_ALBUM_MAX_IMAGES,
+    FE_ALBUM_MAX_IMAGE_MB,
     RESOURCE_TYPE_RULES,
     resourceAcceptAttribute,
     validateResourceFile,
@@ -30,14 +33,11 @@ import {
 } from "@/components/features/resource/ResourceUpload/uploadRules"
 import type { SubjectExamKind } from "../hooks/useQuerySubjectExamsSwr"
 
-/** BE cap on an FE album (`FeAlbumView.maxImages`) — mirrored so the picker stops early. */
-export const FE_ALBUM_MAX_IMAGES = 50
-
-/** Picture types an FE album accepts. */
-const ALBUM_MIME = ["image/png", "image/jpeg", "image/webp"]
+/** Picture types an FE album accepts (shared with the album manager). */
+const ALBUM_MIME = FE_ALBUM_IMAGE_MIME
 
 /** Per-picture cap of an FE album, in MB (the FE resource rule). */
-const ALBUM_MAX_IMAGE_MB = RESOURCE_TYPE_RULES.FE.maxSizeMb
+const ALBUM_MAX_IMAGE_MB = FE_ALBUM_MAX_IMAGE_MB
 
 /** One locally picked album picture (not uploaded yet — see {@link AlbumImagePicker}). */
 interface AlbumPick {

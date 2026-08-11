@@ -290,6 +290,17 @@ export interface FeAlbumView {
     total: number
     /** Hard cap the BE enforces on `POST /resources/{id}/images` (50). */
     maxImages: number
+    /**
+     * Server-computed: may THIS viewer add / delete / reorder images here. Mirrors the exact
+     * predicate the BE guards the write endpoints with (`isOwnerOrApprover` = resource owner OR
+     * subject approver), so the button never disagrees with what the server permits.
+     *
+     * Gate the manage entry point on this and NOTHING else — a client-side permission check reads
+     * only GLOBAL leaves, while a CTV's approval right is granted per SUBJECT, so guessing here
+     * hides the controls from exactly the people who should have them. Optional: absent (older BE)
+     * is treated as "cannot manage", which fails closed.
+     */
+    canManage?: boolean
 }
 
 /**

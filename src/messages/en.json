@@ -5508,17 +5508,24 @@
           "rejected": "Contribution rejected."
         }
       },
+      "viewer": {
+        "imageAlt": "Exam page {index}",
+        "previous": "Previous page",
+        "next": "Next page",
+        "counter": "Page {current} of {total}",
+        "goToImage": "Go to page {index}",
+        "zoomIn": "Zoom in",
+        "zoomOut": "Zoom out",
+        "fit": "Fit the whole page",
+        "zoomLevel": "{percent}%",
+        "panHint": "Drag to move"
+      },
       "fe": {
         "title": "FE album",
         "backToList": "Back to practice",
         "albumMeta": "{count}/{max} images",
         "empty": "This album has no image yet.",
         "loadError": "Could not load the album",
-        "imageAlt": "Exam image {index}",
-        "previous": "Previous image",
-        "next": "Next image",
-        "counter": "Image {current} of {total}",
-        "goToImage": "Go to image {index}",
         "uploader": "Uploaded by",
         "comments": {
           "title": "Comments on this image ({count})",
@@ -5581,6 +5588,20 @@
         "paperAlt": "Exam paper image",
         "paperFile": "Exam paper file",
         "openPaper": "Download the paper",
+        "paper": {
+          "loading": "Opening the exam paper…",
+          "missing": "No exam paper has been attached yet.",
+          "noPreview": "This file type cannot be previewed here — download it to read the paper.",
+          "previewFailed": "The paper could not be opened in the page. Download it instead."
+        },
+        "comments": {
+          "title": "Discussion ({count})",
+          "prev": "Previous",
+          "next": "Next",
+          "pageOf": "Page {page}/{total}",
+          "submitError": "The comment could not be posted. Try again.",
+          "deleteError": "The comment could not be deleted. Try again."
+        },
         "answerTitle": "Submit your answer",
         "attempts": "{used}/{limit} attempts used",
         "attemptsExhausted": "You have used all {limit} attempts on this paper.",

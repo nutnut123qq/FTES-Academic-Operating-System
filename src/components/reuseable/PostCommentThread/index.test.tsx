@@ -10,7 +10,8 @@ import type { PostComment } from "@/components/features/community/hooks/useQuery
  *    TOP-LEVEL comments, and never on the comment already accepted (that one
  *    wears the badge instead),
  *  - the accept press reports the comment id back to the feature,
- *  - the comment OWNER GATE: "Sửa"/"Xoá" render only on rows whose
+ *  - the comment OWNER GATE: "Sửa"/"Xoá" (now entries of the row's shared ⋯
+ *    {@link PostActionsMenu}, not inline buttons) render only on rows whose
  *    `authorUsername` matches the signed-in viewer — a guest (no username) gets
  *    none at all,
  *  - REPORT: a signed-in viewer gets "Báo cáo" on OTHER people's comments (and
@@ -32,37 +33,68 @@ vi.mock("next-intl", () => ({
                 params && "name" in params ? `${key}#${params.name}` : key,
 }))
 
-vi.mock("@heroui/react", () => ({
-    Button: ({
-        children,
+// `Dropdown.Item` becomes a real button so the ⋯ menu's entries are queryable and
+// pressable without React Aria's overlay machinery (same shape the shared
+// `PostActionsMenu.test.tsx` uses — the row now renders that menu).
+vi.mock("@heroui/react", () => {
+    const Dropdown = ({ children }: { children?: React.ReactNode }) => <div>{children}</div>
+    Dropdown.Popover = ({ children }: { children?: React.ReactNode }) => <div>{children}</div>
+    Dropdown.Menu = ({ children }: { children?: React.ReactNode }) => <div>{children}</div>
+    Dropdown.Section = ({ children }: { children?: React.ReactNode }) => <div>{children}</div>
+    Dropdown.Item = ({
+        id,
+        textValue,
         onPress,
-        isDisabled,
+        children,
     }: {
-        children?: React.ReactNode
+        id: string
+        textValue: string
         onPress?: () => void
-        isDisabled?: boolean
-        isPending?: boolean
+        children?: React.ReactNode
     }) => (
-        <button type="button" disabled={isDisabled} onClick={onPress}>
+        <button type="button" data-testid={`item-${id}`} aria-label={textValue} onClick={onPress}>
             {children}
         </button>
-    ),
-    Chip: Object.assign(
-        ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
-        { Label: ({ children }: { children: React.ReactNode }) => <span>{children}</span> },
-    ),
-    Skeleton: () => <div />,
-    TextField: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-    TextArea: (props: React.ComponentProps<"textarea">) => <textarea {...props} />,
-    Typography: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
-    cn: (...values: Array<unknown>) => values.filter(Boolean).join(" "),
-}))
+    )
+    return {
+        Dropdown,
+        Button: ({
+            children,
+            onPress,
+            isDisabled,
+        }: {
+            children?: React.ReactNode
+            onPress?: () => void
+            isDisabled?: boolean
+            isPending?: boolean
+        }) => (
+            <button type="button" disabled={isDisabled} onClick={onPress}>
+                {children}
+            </button>
+        ),
+        Chip: Object.assign(
+            ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
+            { Label: ({ children }: { children: React.ReactNode }) => <span>{children}</span> },
+        ),
+        Label: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
+        Skeleton: () => <div />,
+        TextField: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+        TextArea: (props: React.ComponentProps<"textarea">) => <textarea {...props} />,
+        Typography: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
+        cn: (...values: Array<unknown>) => values.filter(Boolean).join(" "),
+    }
+})
 
 vi.mock("@phosphor-icons/react", () => ({
     ArrowClockwiseIcon: () => <span />,
     CaretUpIcon: () => <span />,
     CheckCircleIcon: () => <span />,
     XIcon: () => <span />,
+    // glyphs the shared ⋯ menu pulls in
+    DotsThreeIcon: () => <span />,
+    PencilSimpleIcon: () => <span />,
+    TrashIcon: () => <span />,
+    FlagIcon: () => <span />,
 }))
 
 vi.mock("@/components/features/identity", () => ({

@@ -55,8 +55,12 @@ interface CommunityFeedHeaderProps {
 
 /**
  * Compact, Threads-style feed header on ONE row:
- * `[current-user avatar] [ "Có gì mới?" → opens the composer ] [🔍 → search popover] [ Đăng ]`,
+ * `[current-user avatar] [ "Có gì mới?" → opens the composer ] [🔍 → search popover]`,
  * with the feed's hairline divider under it (owned by the parent `divide-y`).
+ *
+ * There is NO separate "Đăng" button here: pressing the prompt already opens the
+ * composer, so the button only duplicated it (the real submit lives inside
+ * `CommunityComposerForm`).
  *
  * The whole search + type-filter + sort cluster no longer sits always-visible in the feed — it is
  * collapsed behind the magnifier, which opens the shared {@link CommunityFilterBar} inside a HeroUI
@@ -99,7 +103,7 @@ const CommunityFeedHeader = ({
                 avatar={user?.avatar}
                 seed={user?.email ?? user?.username}
             />
-            {/* the prompt is a real button; the search + Đăng buttons are SIBLINGS (no nested interactive) */}
+            {/* the prompt is a real button; the search button is a SIBLING (no nested interactive) */}
             <button
                 type="button"
                 className="min-w-0 flex-1 cursor-text text-left text-sm text-muted"
@@ -142,9 +146,6 @@ const CommunityFeedHeader = ({
                     />
                 </Popover.Content>
             </Popover>
-            <Button size="sm" variant="secondary" className="shrink-0" onPress={open}>
-                {t("composer.submit")}
-            </Button>
         </div>
     )
 }

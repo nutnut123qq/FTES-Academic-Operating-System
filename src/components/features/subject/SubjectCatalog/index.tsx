@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
+import { SearchInput } from "@/components/reuseable/SearchInput"
 import { useQuerySubjectsSwr } from "../hooks/useQuerySubjectsSwr"
 import type { Subject } from "../hooks/useQuerySubjectSwr"
 
@@ -18,10 +19,10 @@ const THUMBNAIL_SIZES = "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100v
 
 /**
  * Subject catalog (§3) — the `/subjects` list. Mirrors the house catalog archetype
- * (see `CourseCatalog`): text search + difficulty filter + a grid of subject cards
- * linking into each subject workspace. Data is REAL — `useQuerySubjectsSwr` reads
- * `GET /api/v1/subjects`; the feature owns only the client-side filtering, tokens
- * own the look.
+ * (see `CourseCatalog`): the shared {@link SearchInput} + difficulty filter + a grid
+ * of subject cards linking into each subject workspace. Data is REAL —
+ * `useQuerySubjectsSwr` reads `GET /api/v1/subjects`; the feature owns only the
+ * client-side filtering, tokens own the look.
  */
 export const SubjectCatalog = () => {
     const t = useTranslations("subjects")
@@ -50,11 +51,15 @@ export const SubjectCatalog = () => {
 
             {/* search + difficulty filter — static chrome, stays outside the skeleton */}
             <div className="flex flex-col gap-3">
-                <input
+                {/* house search block (same one the course browse / resource hub /
+                    blog list use) — a hand-rolled <input> here shipped its own,
+                    squarer radius instead of the field token every other search
+                    field wears */}
+                <SearchInput
                     value={query}
-                    onChange={(event) => setQuery(event.target.value)}
+                    onValueChange={setQuery}
                     placeholder={t("catalog.searchPlaceholder")}
-                    className="w-full rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none placeholder:text-muted focus:border-accent"
+                    className="sm:max-w-none"
                 />
                 <div className="flex flex-wrap gap-2">
                     {DIFFICULTIES.map((option) => (

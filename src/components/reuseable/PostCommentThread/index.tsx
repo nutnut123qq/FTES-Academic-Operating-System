@@ -14,6 +14,7 @@ import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
 import { RichCommentEditor } from "@/components/reuseable/RichCommentEditor"
 import { RichTextEditor } from "@/components/reuseable/RichTextEditor"
 import { ConfirmDialog } from "@/components/reuseable/PostEngagementBar/ConfirmDialog"
+import { PostActionsMenu } from "@/components/reuseable/PostEngagementBar/PostActionsMenu"
 import { ReportDialog } from "@/components/reuseable/PostEngagementBar/ReportDialog"
 import type { ReportReasonCode } from "@/components/reuseable/PostEngagementBar/report-reasons"
 import { useMutateReportContentSwr } from "@/components/features/community/CommunityPostDetail/hooks/useMutateReportContentSwr"
@@ -58,7 +59,7 @@ export interface PostCommentThreadProps extends WithClassNames<undefined> {
     stickyComposerOnMobile?: boolean
     /**
      * Username of the signed-in viewer. A comment whose `authorUsername` matches
-     * gets the inline "Sửa" / "Xoá" affordances; guests / other users get none —
+     * gets the ⋯ menu's "Sửa" / "Xoá" entries; guests / other users get none —
      * and the "Báo cáo" entry shows on everyone ELSE's comments. Optional: when
      * omitted the thread falls back to the session user in the store.
      */
@@ -108,7 +109,11 @@ export interface PostCommentThreadProps extends WithClassNames<undefined> {
     canReportComments?: boolean
 }
 
-/** One comment row (avatar + author + time + body + optional reply affordance). */
+/**
+ * One comment row (avatar + author + time + body + optional reply affordance).
+ * Owner/report actions are NOT spelled out inline — they sit in the shared ⋯
+ * {@link PostActionsMenu}, exactly like a post's.
+ */
 export const CommentRow = ({
     comment,
     onReply,
@@ -134,8 +139,8 @@ export const CommentRow = ({
      */
     hasThreadline?: boolean
     /**
-     * Whether the viewer authored this comment — gates the inline "Sửa" / "Xoá"
-     * affordances (the server re-checks; this is UX only).
+     * Whether the viewer authored this comment — gates the ⋯ menu's "Sửa" / "Xoá"
+     * entries (the server re-checks; this is UX only).
      */
     canManage?: boolean
     /**
@@ -264,26 +269,6 @@ export const CommentRow = ({
                                 {replyLabel}
                             </Button>
                         ) : null}
-                        {showManage && onEdit ? (
-                            <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-auto px-0 text-xs"
-                                onPress={startEdit}
-                            >
-                                {t("engagement.edit")}
-                            </Button>
-                        ) : null}
-                        {showManage && onDelete ? (
-                            <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-auto px-0 text-xs"
-                                onPress={() => setConfirmOpen(true)}
-                            >
-                                {t("engagement.delete")}
-                            </Button>
-                        ) : null}
                         {canAccept && onAccept && !isAccepted ? (
                             <Button
                                 size="sm"
@@ -295,16 +280,18 @@ export const CommentRow = ({
                                 {t("engagement.acceptAnswer")}
                             </Button>
                         ) : null}
-                        {showReport ? (
-                            <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-auto px-0 text-xs"
-                                onPress={() => setReportOpen(true)}
-                            >
-                                {t("engagement.report")}
-                            </Button>
-                        ) : null}
+                        {/* "Sửa" / "Xoá" / "Báo cáo" live behind the ⋯ overflow menu — the
+                            SAME {@link PostActionsMenu} a post uses. Only "Trả lời" (and the
+                            QUESTION-author "Chấp nhận") stay spelled out inline. The gate is
+                            unchanged: the menu shows the owner entries only to the author and
+                            the report entry only to everybody else, and renders nothing at all
+                            when no entry is available. */}
+                        <PostActionsMenu
+                            isOwner={canManage}
+                            onEdit={onEdit ? startEdit : undefined}
+                            onDelete={onDelete ? () => setConfirmOpen(true) : undefined}
+                            onReport={showReport ? () => setReportOpen(true) : undefined}
+                        />
                     </div>
                 ) : null}
 
@@ -348,11 +335,12 @@ export const CommentRow = ({
  * `stickyComposerOnMobile` is set.
  *
  * Per-comment affordances (all opt-in via callbacks, so surfaces that pass none
- * render exactly as before): the viewer's OWN comments (`authorUsername ===
- * currentUsername`) get inline "Sửa" (a minimal markdown textarea, draft kept on
- * failure) and "Xoá" (confirm dialog); on a QUESTION post the post author can
- * accept a TOP-LEVEL comment as the answer, and the accepted one wears a badge
- * instead of the action. Every OTHER person's comment (top-level or reply) shows
+ * render exactly as before) all live in the row's ⋯ {@link PostActionsMenu} —
+ * only "Trả lời" (and the accept-answer action) stays inline: the viewer's OWN
+ * comments (`authorUsername === currentUsername`) get "Sửa" (a rich editor, draft
+ * kept on failure) and "Xoá" (confirm dialog); on a QUESTION post the post author
+ * can accept a TOP-LEVEL comment as the answer, and the accepted one wears a badge
+ * instead of the action. Every OTHER person's comment (top-level or reply) offers
  * "Báo cáo" to a signed-in viewer, opening the shared {@link ReportDialog} and
  * posting `targetType: "COMMENT"` — guests and the comment's own author get none,
  * and threads outside the community module opt out via `canReportComments={false}`.

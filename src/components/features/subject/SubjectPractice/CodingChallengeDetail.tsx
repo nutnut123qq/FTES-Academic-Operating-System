@@ -162,9 +162,15 @@ export const CodingChallengeDetail = ({ challenge, onBack }: CodingChallengeDeta
                         <div className="flex items-center gap-2">
                             <ClockIcon aria-hidden focusable="false" className="size-4 text-muted" />
                             <Typography type="body-xs" color="muted">
+                                {/* Lịch có thể bỏ trống: mở ngay / không giới hạn — nói thẳng thay
+                                    vì hiện gạch ngang như dữ liệu hỏng. */}
                                 {t("practice.coding.window", {
-                                    start: formatDate(challenge.startsAt),
-                                    end: formatDate(challenge.endsAt),
+                                    start: challenge.startsAt
+                                        ? formatDate(challenge.startsAt)
+                                        : t("practice.coding.openNow"),
+                                    end: challenge.endsAt
+                                        ? formatDate(challenge.endsAt)
+                                        : t("practice.coding.noDeadline"),
                                 })}
                             </Typography>
                         </div>
@@ -694,8 +700,11 @@ const GradeBlock = ({ grade }: { grade: CodingGradeOutcome }) => {
     )
 }
 
-/** ISO → `dd/MM/yyyy` (the panel only needs the day). */
-const formatDate = (iso: string): string => {
+/**
+ * ISO → `dd/MM/yyyy` (the panel only needs the day). Nhận `null`: lịch challenge có thể bỏ trống —
+ * `startsAt` null = mở ngay, `endsAt` null = KHÔNG giới hạn — nên đây không phải dữ liệu hỏng.
+ */
+const formatDate = (iso: string | null | undefined): string => {
     const parsed = Date.parse(iso ?? "")
     if (!Number.isFinite(parsed)) {
         return "—"

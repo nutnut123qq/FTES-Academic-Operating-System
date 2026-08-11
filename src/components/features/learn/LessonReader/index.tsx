@@ -199,14 +199,14 @@ export const LessonReader = () => {
     const showReadingCard = !!lesson && (isLocked || hasWrittenBody || isLinkOnly || isReadingEmpty)
 
     /**
-     * The section crumb must read as the section's TITLE, not its ordinal. On the real
-     * catalog `SectionView.name` only carries "Phần 1" / "Phần 0" and the human title
-     * lives in `description` ("Setup môi trường - SQL Server"), so this mirrors the
-     * content-map rail's `description || title` precedence and only falls back to the
-     * ordinal (then the generic "Học phần" label) when the title is genuinely missing.
+     * The section crumb reads the section's REAL TITLE, not its ordinal: the BE splits a
+     * section into `name` ("Phần 1") + `description` ("Làm quen với ngôn ngữ C/C++"), the
+     * same split the content-map rail resolves as `description || title`. Falls back to the
+     * ordinal when a section carries no title, and to the generic "Học phần" label when the
+     * curriculum has neither — never an empty crumb.
      */
     const moduleCrumbLabel =
-        lesson?.moduleDescription?.trim() || lesson?.moduleTitle?.trim() || t("content.moduleTitle")
+        lesson?.moduleDescription || lesson?.moduleTitle || t("content.moduleTitle")
 
     /** Tier-1 breadcrumb (Courses › <course> › Modules › <lesson>). */
     const breadcrumbItems = useMemo<Array<ResponsiveBreadcrumbItem>>(
@@ -214,11 +214,11 @@ export const LessonReader = () => {
             { key: "courses", label: t("nav.sections.content"), onPress: () => router.push(`/courses/${courseId}/learn/content`) },
             {
                 key: "module",
-                // A section title can be a full sentence — clamp it so a long one never
-                // pushes the trail past the header width (the crumb keeps the full text
-                // in `title` for hover / a11y).
+                // A real section title can be a full sentence — cap + ellipsis it (the same
+                // `truncate` the breadcrumb already uses for its mobile back-link) so a long
+                // title can never push the trail out of the header.
                 label: (
-                    <span className="block max-w-[18rem] truncate" title={moduleCrumbLabel}>
+                    <span className="block max-w-xs truncate" title={moduleCrumbLabel}>
                         {moduleCrumbLabel}
                     </span>
                 ),

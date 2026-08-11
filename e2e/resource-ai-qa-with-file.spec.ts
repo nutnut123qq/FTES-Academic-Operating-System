@@ -3,7 +3,7 @@ import { expect, test, type APIRequestContext } from "@playwright/test"
 import { fetchToken, loginAs, waitForViewer } from "./helpers/auth"
 
 /**
- * Nghiệm thu E2E vòng 2 (2026-07-26) — panel "Hỏi AI về tài liệu này".
+ * Nghiệm thu E2E vòng 2 (2026-07-26) — panel "Hỏi FrosTES về tài liệu này".
  *
  * Vòng 1 đánh BLOCKED-MINIO-PUBLIC: không tài liệu nào có file nên panel luôn ẩn. Cloudinary đã
  * lên apitest và upload đổi sang multipart server-side (`POST /resources/{id}/versions`), nên
@@ -65,7 +65,7 @@ test("tài liệu ĐÃ có file → panel hỏi AI hiện ra (vòng 1 luôn ẩn
     await viewer
 
     await expect(page.locator("#resource-ai-qa")).toBeVisible({ timeout: 60_000 })
-    await expect(page.getByText("Hỏi AI về tài liệu này")).toBeVisible()
+    await expect(page.getByText("Hỏi FrosTES về tài liệu này")).toBeVisible()
     await expect(page.getByRole("textbox", { name: /Hỏi về tài liệu này/ })).toBeVisible()
 })
 

@@ -242,17 +242,22 @@ export const CommunityLiveChatThread = ({ enabled, className }: CommunityLiveCha
                 </div>
             ) : null}
 
-            {/* composer — a single bounded box: flat textarea + send button (composer-in-box) */}
-            <div className="flex flex-col gap-2 rounded-2xl bg-default px-3 py-2 focus-within:ring-2 focus-within:ring-accent">
+            {/* composer — a single bounded box: flat textarea + send button (composer-in-box).
+                ONE row with `items-end`: the composer carries no other control (no model
+                picker like the AI chat panel), so a controls row of its own would only push
+                the send icon off the input's line. `items-end` keeps it level with the
+                textarea's last line as the box grows. The textarea opens ~3 rows tall
+                (min-h-16 ≈ 3 × text-sm line-height) and still grows to `max-h-24`. */}
+            <div className="flex items-end gap-2 rounded-2xl bg-default px-3 py-2 focus-within:ring-2 focus-within:ring-accent">
                 <textarea
                     ref={inputRef}
-                    rows={1}
+                    rows={3}
                     value={input}
                     onChange={(event) => setInput(event.target.value)}
                     placeholder={t("placeholder")}
                     aria-label={t("placeholder")}
                     disabled={!authenticated}
-                    className="max-h-24 min-h-6 w-full resize-none bg-transparent text-sm text-foreground outline-none placeholder:text-muted"
+                    className="max-h-24 min-h-16 w-full min-w-0 flex-1 resize-none bg-transparent text-sm text-foreground outline-none placeholder:text-muted"
                     onKeyDown={(event) => {
                         if (event.key === "Enter" && !event.shiftKey) {
                             event.preventDefault()
@@ -260,20 +265,18 @@ export const CommunityLiveChatThread = ({ enabled, className }: CommunityLiveCha
                         }
                     }}
                 />
-                <div className="flex items-center gap-2">
-                    <div className="flex-1" />
-                    <Button
-                        isIconOnly
-                        size="sm"
-                        variant="primary"
-                        isPending={sending}
-                        aria-label={t("send")}
-                        isDisabled={input.trim() === "" || !authenticated}
-                        onPress={() => void onSend()}
-                    >
-                        <PaperPlaneTiltIcon aria-hidden focusable="false" className="size-5" />
-                    </Button>
-                </div>
+                <Button
+                    isIconOnly
+                    size="sm"
+                    variant="primary"
+                    className="shrink-0"
+                    isPending={sending}
+                    aria-label={t("send")}
+                    isDisabled={input.trim() === "" || !authenticated}
+                    onPress={() => void onSend()}
+                >
+                    <PaperPlaneTiltIcon aria-hidden focusable="false" className="size-5" />
+                </Button>
             </div>
         </div>
     )

@@ -104,12 +104,12 @@ test.describe("lesson-ai-chat-fixes — desktop", () => {
         expect(passage.text.length).toBeGreaterThanOrEqual(60)
 
         // floating "ask about this" button appears on the selection
-        const ask = page.getByRole("button", { name: /Hỏi AI về đoạn này/ })
+        const ask = page.getByRole("button", { name: /Hỏi FrosTES về đoạn này/ })
         await expect(ask).toBeVisible()
         await ask.click()
 
         // desktop → the selection-anchored panel (portal dialog), with the quote banner
-        const panel = page.getByRole("dialog", { name: "Hỏi AI" })
+        const panel = page.getByRole("dialog", { name: "Hỏi FrosTES" })
         await expect(panel).toBeVisible()
         await expect(panel.getByText(passage.text.slice(0, 60))).toBeVisible()
 
@@ -169,8 +169,8 @@ test.describe("lesson-ai-chat-fixes — desktop", () => {
         // open the chat through the selection-anchored panel (its outside-click
         // handling explicitly whitelists the model dropdown's portaled menu)
         await selectPassage(page)
-        await page.getByRole("button", { name: /Hỏi AI về đoạn này/ }).click()
-        const chat = page.getByRole("dialog", { name: "Hỏi AI" })
+        await page.getByRole("button", { name: /Hỏi FrosTES về đoạn này/ }).click()
+        const chat = page.getByRole("dialog", { name: "Hỏi FrosTES" })
         await expect(chat).toBeVisible()
 
         // picker shows the catalog default's short name, then switches to the picked model
@@ -221,8 +221,8 @@ test.describe("lesson-ai-chat-fixes — desktop", () => {
 
         // wide viewport → the panel sits to the RIGHT of the selection rect
         const passage = await selectPassage(page)
-        await page.getByRole("button", { name: /Hỏi AI về đoạn này/ }).click()
-        const panel = page.getByRole("dialog", { name: "Hỏi AI" })
+        await page.getByRole("button", { name: /Hỏi FrosTES về đoạn này/ }).click()
+        const panel = page.getByRole("dialog", { name: "Hỏi FrosTES" })
         await expect(panel).toBeVisible()
         const wideBox = await panel.boundingBox()
         expect(wideBox).toBeTruthy()
@@ -247,7 +247,7 @@ test.describe("lesson-ai-chat-fixes — desktop", () => {
         // narrow viewport (no side room) → the panel clamps fully inside the viewport
         await page.setViewportSize({ width: 820, height: 800 })
         await selectPassage(page)
-        await page.getByRole("button", { name: /Hỏi AI về đoạn này/ }).click()
+        await page.getByRole("button", { name: /Hỏi FrosTES về đoạn này/ }).click()
         await expect(panel).toBeVisible()
         const narrowBox = await panel.boundingBox()
         expect(narrowBox).toBeTruthy()
@@ -271,7 +271,7 @@ test.describe("lesson-ai-chat-fixes — mobile 375px", () => {
         await dismissCookieBanner(page)
 
         await selectPassage(page)
-        const ask = page.getByRole("button", { name: /Hỏi AI về đoạn này/ })
+        const ask = page.getByRole("button", { name: /Hỏi FrosTES về đoạn này/ })
         await expect(ask).toBeVisible()
         await ask.click()
 
@@ -281,7 +281,7 @@ test.describe("lesson-ai-chat-fixes — mobile 375px", () => {
             .filter({ has: page.locator('textarea[placeholder="Hỏi về bài học…"]') })
             .last()
         await expect(dialog).toBeVisible()
-        await expect(dialog.getByText("Hỏi AI").first()).toBeVisible()
+        await expect(dialog.getByText("Hỏi FrosTES").first()).toBeVisible()
         const dialogClass = (await dialog.getAttribute("class")) ?? ""
         console.log(`[mobile] chat dialog class: ${dialogClass}`)
         expect(dialogClass).toContain("drawer")

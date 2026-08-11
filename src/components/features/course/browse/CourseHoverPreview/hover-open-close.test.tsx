@@ -18,8 +18,6 @@ import type { Course } from "../../hooks/useQueryCoursesSwr"
  * to the open/close logic under test).
  */
 
-const OPEN_DELAY_MS = 300
-
 vi.mock("next-intl", () => ({
     useTranslations: () => (key: string, params?: Record<string, unknown>) =>
         params ? `${key}:${JSON.stringify(params)}` : key,
@@ -111,14 +109,13 @@ describe("CourseHoverPreview — opens on hover, closes on leave, never on a tim
         vi.useRealTimers()
     })
 
-    it("opens only after the hover delay", () => {
+    it("opens the instant the pointer is over the card — no hover delay", () => {
         const { container } = renderPreview()
         const wrapper = container.firstElementChild as Element
 
         enter(wrapper)
-        // before the open delay elapses, nothing has popped up
-        expect(screen.queryByText("React Testing Panel")).toBeNull()
-        advance(OPEN_DELAY_MS)
+        // no timer to wait out: a quick hover must show the panel right away, otherwise a
+        // pointer that keeps moving never earns it at all
         expect(screen.getByText("React Testing Panel")).toBeTruthy()
     })
 
@@ -127,7 +124,6 @@ describe("CourseHoverPreview — opens on hover, closes on leave, never on a tim
         const wrapper = container.firstElementChild as Element
 
         enter(wrapper)
-        advance(OPEN_DELAY_MS)
         expect(screen.getByText("React Testing Panel")).toBeTruthy()
 
         // hold the hover: advance far past any plausible display timeout with NO leave
@@ -140,7 +136,6 @@ describe("CourseHoverPreview — opens on hover, closes on leave, never on a tim
         const wrapper = container.firstElementChild as Element
 
         enter(wrapper)
-        advance(OPEN_DELAY_MS)
         expect(screen.getByText("React Testing Panel")).toBeTruthy()
 
         // gone on the leave itself: no timer to advance, nothing lingers
@@ -153,7 +148,6 @@ describe("CourseHoverPreview — opens on hover, closes on leave, never on a tim
         const wrapper = container.firstElementChild as Element
 
         enter(wrapper)
-        advance(OPEN_DELAY_MS)
         // [card, panel] — the panel is portaled in production, inline under the
         // mocked `createPortal` here; either way it carries the same leave handler.
         const card = wrapper.children[0]

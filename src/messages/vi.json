@@ -6,7 +6,7 @@
       "guest": "Chào bạn! Mình là FrosTES. Đăng nhập để mình đồng hành cùng bạn nhé.",
       "home": {
         "welcomeTitle": "Chào mừng trở lại, {name}!",
-        "welcomeTitleNoName": "Chào mừng trở lại!",
+        "welcomeTitleNoName": "Chào mừng trở lại, bạn học!",
         "welcomeBody": "Cùng FrosTES tiếp tục hành trình học của bạn nhé.",
         "guestTitle": "Xin chào! Mình là FrosTES.",
         "guestBody": "Khám phá các khóa học và bắt đầu hành trình của bạn cùng mình nhé."
@@ -61,7 +61,7 @@
       },
       "account": {
         "title": "Khu vực của bạn",
-        "body": "Bấm ảnh đại diện để mở Trợ lý AI, chuỗi ngày 🔥 và nhiệm vụ, ví và cài đặt."
+        "body": "Bấm ảnh đại diện để mở Trợ lý FrosTES, chuỗi ngày 🔥 và nhiệm vụ, ví và cài đặt."
       }
     },
     "done": {
@@ -170,7 +170,7 @@
   },
   "profileSettings": {
     "title": "Cài đặt",
-    "subtitle": "Quản lý tài khoản, AI, nội dung và thành viên.",
+    "subtitle": "Quản lý tài khoản, FrosTES, nội dung và thành viên.",
     "loginMethod": "Phương thức đăng nhập",
     "loginMethodValue": {
       "github": "GitHub",
@@ -182,7 +182,7 @@
     "groups": {
       "account": "Tài khoản",
       "learning": "Học tập",
-      "ai": "AI",
+      "ai": "FrosTES",
       "content": "Nội dung"
     },
     "items": {
@@ -193,9 +193,9 @@
       "submissions": "Bài nộp",
       "attempts": "Lượt làm milestone",
       "feedback": "Phản hồi",
-      "aiSettings": "Cài đặt AI",
-      "aiSubscription": "Gói AI",
-      "aiUsage": "Sử dụng AI",
+      "aiSettings": "Cài đặt FrosTES",
+      "aiSubscription": "Gói FrosTES",
+      "aiUsage": "Sử dụng FrosTES",
       "bookmarks": "Đã lưu",
       "rewards": "Phần thưởng",
       "blog": "Blog",
@@ -551,10 +551,10 @@
     "onThisPage": "Trên trang"
   },
   "contentAi": {
-    "title": "Hỏi FTES AI",
+    "title": "Hỏi FrosTES",
     "hint": "Hỏi bất cứ điều gì về nội dung này.",
     "placeholder": "Hỏi về nội dung này...",
-    "ask": "Hỏi AI",
+    "ask": "Hỏi FrosTES",
     "send": "Gửi",
     "pickModel": "Chọn model",
     "clear": "Xoá lịch sử",
@@ -570,9 +570,9 @@
       "example": "Cho mình ví dụ thực tế",
       "remember": "Mình nên nhớ gì từ bài này?"
     },
-    "askAboutSelection": "Hỏi AI về đoạn này",
-    "selectionHintTitle": "Hỏi AI về đoạn bất kỳ",
-    "selectionHint": "Bôi đen một đoạn trong bài, nút hỏi AI sẽ hiện ra ngay.",
+    "askAboutSelection": "Hỏi FrosTES về đoạn này",
+    "selectionHintTitle": "Hỏi FrosTES về đoạn bất kỳ",
+    "selectionHint": "Bôi đen một đoạn trong bài, nút hỏi FrosTES sẽ hiện ra ngay.",
     "dismissHint": "Bỏ qua gợi ý",
     "new": "Mới",
     "clearSelection": "Bỏ chọn đoạn",
@@ -590,26 +590,26 @@
     "noConversations": "Chưa có hội thoại nào",
     "deleteConversation": "Xoá hội thoại",
     "turnsCount": "{count} tin nhắn",
-    "quotaHit": "Bạn đã dùng hết lượt hỏi AI cho hôm nay.",
+    "quotaHit": "Bạn đã dùng hết lượt hỏi FrosTES cho hôm nay.",
     "studyTools": {
-      "title": "Học với AI",
-      "description": "Dùng AI để tóm tắt bài học hoặc tạo thẻ ghi nhớ dựa trên chính nội dung bài này.",
+      "title": "Học với FrosTES",
+      "description": "Dùng FrosTES để tóm tắt bài học hoặc tạo thẻ ghi nhớ dựa trên chính nội dung bài này.",
       "back": "Quay lại"
     },
     "note": {
-      "title": "Ghi chú AI",
-      "description": "Tạo ghi chú tóm tắt bài học này bằng AI, rồi lưu lại để ôn.",
-      "generate": "Tạo ghi chú AI",
+      "title": "Ghi chú FrosTES",
+      "description": "Tạo ghi chú tóm tắt bài học này bằng FrosTES, rồi lưu lại để ôn.",
+      "generate": "Tạo ghi chú FrosTES",
       "regenerate": "Tạo lại",
       "save": "Lưu ghi chú",
       "saved": "Đã lưu ghi chú",
       "saveError": "Không lưu được ghi chú. Vui lòng thử lại.",
       "error": "Không tạo được ghi chú. Vui lòng thử lại.",
-      "empty": "Chưa có ghi chú. Bấm “Tạo ghi chú AI” để bắt đầu.",
+      "empty": "Chưa có ghi chú. Bấm “Tạo ghi chú FrosTES” để bắt đầu.",
       "prompt": "Hãy tóm tắt bài học hiện tại thành một ghi chú học tập ngắn gọn bằng tiếng Việt. Trình bày bằng Markdown gồm: một đoạn tổng quan 2–3 câu, danh sách gạch đầu dòng các ý chính, và mục “Cần ghi nhớ”. Chỉ dựa trên nội dung của bài học này."
     },
     "flashcard": {
-      "title": "Thẻ ghi nhớ AI",
+      "title": "Thẻ ghi nhớ FrosTES",
       "description": "Tạo bộ thẻ hỏi – đáp từ bài học này để tự kiểm tra.",
       "generate": "Tạo thẻ ghi nhớ",
       "regenerate": "Tạo lại",
@@ -634,8 +634,8 @@
         "unpublish": "Ẩn khỏi học viên",
         "published": "Đang hiển thị",
         "draft": "Bản nháp",
-        "empty": "Bài này chưa có thẻ nào. Thêm thẻ đầu tiên để học viên dùng bộ của bạn thay vì bộ AI tự sinh.",
-        "aiDraftTitle": "Bản nháp AI cho bài này",
+        "empty": "Bài này chưa có thẻ nào. Thêm thẻ đầu tiên để học viên dùng bộ của bạn thay vì bộ FrosTES tự sinh.",
+        "aiDraftTitle": "Bản nháp FrosTES cho bài này",
         "aiDraftHint": "Bấm để nạp vào ô soạn, sửa lại cho đúng trọng tâm bài rồi mới lưu. Thẻ chỉ tới tay học viên sau khi bạn lưu.",
         "useAiDraft": "Dùng thẻ này"
       },
@@ -681,10 +681,10 @@
     },
     "teaching": {
       "title": "Khóa tôi dạy",
-      "subtitle": "Các khóa của bạn — nháp hoặc đã xuất bản. Mở một khóa để quản lý bài phỏng vấn AI.",
+      "subtitle": "Các khóa của bạn — nháp hoặc đã xuất bản. Mở một khóa để quản lý bài phỏng vấn FrosTES.",
       "empty": "Bạn chưa sở hữu khóa học nào",
       "browse": "Khám phá khóa học",
-      "manageHint": "Mở để quản lý bài phỏng vấn AI →"
+      "manageHint": "Mở để quản lý bài phỏng vấn FrosTES →"
     },
     "status": {
       "PUBLISHED": "Đã xuất bản",
@@ -872,7 +872,7 @@
       "fileCardTitle": "Thông tin CV đã nộp",
       "submittedAtPending": "Chưa có thời gian nộp từ hệ thống.",
       "download": "Tải xuống",
-      "aiReviewSectionTitle": "Đánh giá bằng AI",
+      "aiReviewSectionTitle": "Đánh giá bằng FrosTES",
       "reviewAction": "Chạy đánh giá CV",
       "reviewActionRerun": "Đánh giá lại CV",
       "reviewLevelLabel": "Mức đánh giá",
@@ -887,13 +887,13 @@
         "selected": "Đang chọn",
         "close": "Đóng"
       },
-      "reviewPlanTitle": "Kế hoạch review (AI)",
+      "reviewPlanTitle": "Kế hoạch review (FrosTES)",
       "feedbackTitle": "Đánh giá CV",
       "feedbackSummary": "CV của bạn đã được ghi nhận. Mentor sẽ phản hồi chi tiết trong phiên review tiếp theo.",
       "updateAction": "Cập nhật CV mới",
       "attemptsTitle": "Các phiên bản CV đã nộp",
       "defaultCvFileName": "tai-lieu.pdf",
-      "aiBrand": "FTES AI",
+      "aiBrand": "FrosTES",
       "toast": {
         "errorTitle": "Có lỗi xảy ra",
         "successTitle": "Thành công",
@@ -949,7 +949,7 @@
   "finalProject": {
     "dashboard": {
       "title": "Dự án cá nhân",
-      "subtitle": "Xây dựng dự án của bạn theo từng chặng — chấm điểm bằng AI.",
+      "subtitle": "Xây dựng dự án của bạn theo từng chặng — chấm điểm bằng FrosTES.",
       "progress": "Tiến độ",
       "tasksDone": "{done}/{total} nhiệm vụ",
       "nextTask": "Nhiệm vụ kế tiếp",
@@ -974,7 +974,7 @@
     "page": {
       "title": "Dự án cá nhân",
       "searchTaskPlaceholder": "Tìm task...",
-      "description": "Hiện thực hóa dự án cá nhân qua lộ trình Milestone bài bản. Với sự đồng hành của StarCI AI, mọi dòng code và giải pháp của bạn đều được đánh giá chuyên sâu, giúp tối ưu chất lượng sản phẩm ngay trong quá trình thực hiện.",
+      "description": "Hiện thực hóa dự án cá nhân qua lộ trình Milestone bài bản. Với sự đồng hành của FrosTES, mọi dòng code và giải pháp của bạn đều được đánh giá chuyên sâu, giúp tối ưu chất lượng sản phẩm ngay trong quá trình thực hiện.",
       "submit": {
         "title": "Nộp ý tưởng dự án",
         "placeholder": "Dán link repository GitHub của bạn",
@@ -1029,7 +1029,7 @@
         "empty": "Chưa có lượt đánh giá nào."
       },
       "feedback": {
-        "title": "AI feedback",
+        "title": "FrosTES feedback",
         "content": "Tạm thời: kiến trúc dự án đã rõ ràng, cần bổ sung test cho các luồng chính và tối ưu tài liệu triển khai."
       },
       "history": {
@@ -1114,7 +1114,7 @@
     "loadingResults": "Đang tải kết quả chấm điểm...",
     "resultsTitle": "Kết quả chấm điểm",
     "previewLockedAlertTitle": "Hoàn thành bài trước trước",
-    "previewLockedAlertDescription": "Bạn vẫn xem được tiêu chí của bài này. Đánh giá AI, xem phản hồi/lịch sử và chỉnh GitHub chỉ được bật sau khi hoàn thành bước trước.",
+    "previewLockedAlertDescription": "Bạn vẫn xem được tiêu chí của bài này. Đánh giá FrosTES, xem phản hồi/lịch sử và chỉnh GitHub chỉ được bật sau khi hoàn thành bước trước.",
     "previewLockedGoToCurrentTaskButton": "Về bài hiện tại",
     "personalProjectDockerMultiStageIntro": "Đóng gói ứng dụng NestJS của bạn bằng Dockerfile multi-stage để tối ưu hóa dung lượng image. Build image và push lên một container registry như Docker Hub.",
     "attemptNumber": "Lần #{number}",
@@ -1127,7 +1127,7 @@
     "suggestionLabel": "Gợi ý",
     "jobStatus": {
       "queued": "Đang chờ chấm điểm...",
-      "processing": "Đang chấm điểm bằng AI...",
+      "processing": "Đang chấm điểm bằng FrosTES...",
       "completed": "Chấm điểm hoàn tất!",
       "failed": "Chấm điểm thất bại."
     }
@@ -1210,10 +1210,10 @@
       "failed": "Chưa đạt · {score}/{maxScore} điểm"
     },
     "quota": {
-      "overQuota": "Bạn đã hết quota AI ({used}/{quota} credit). Nâng cấp để tiếp tục chấm bài.",
+      "overQuota": "Bạn đã hết quota FrosTES ({used}/{quota} credit). Nâng cấp để tiếp tục chấm bài.",
       "addQuota": "Thêm quota",
       "resetAt": "Quota hồi lại lúc {time}",
-      "aiUsage": "AI Usage",
+      "aiUsage": "FrosTES Usage",
       "usage": "{used}/{quota} credit",
       "remaining": "Còn {remaining} credit",
       "quotaReached": "Hết quota",
@@ -1313,8 +1313,8 @@
       "lastAttemptScoreWithRequirement": "Điểm lần thử gần nhất của bạn là <n>{earned}</n><n>/</n><n>{max}</n>. Yêu cầu tối thiểu <n>{required}</n>.",
       "jobStatus": {
         "queued": "Bài của bạn đang nằm trong hàng đợi, chờ chút nhé...",
-        "processing": "FTES AI đang phân tích bài của bạn, chờ chút nhé...",
-        "completed": "Bài của bạn đã được FTES AI phân tích hoàn tất.",
+        "processing": "FrosTES đang phân tích bài của bạn, chờ chút nhé...",
+        "completed": "Bài của bạn đã được FrosTES phân tích hoàn tất.",
         "failed": "Thất bại"
       }
     },
@@ -1741,7 +1741,7 @@
       "setupHint": "Chọn cấp độ (tuỳ chọn), rồi trả lời {total} câu bằng giọng nói.",
       "expectCount": "{total} câu",
       "expectVoice": "Trả lời bằng giọng nói",
-      "expectAiGrade": "AI chấm điểm + góp ý",
+      "expectAiGrade": "FrosTES chấm điểm + góp ý",
       "levelLabel": "Cấp độ câu hỏi",
       "historyTitle": "Tiến độ phỏng vấn của bạn",
       "historyAnswered": "Đã luyện {count} câu",
@@ -1755,7 +1755,7 @@
       "readinessEmpty": "Phỏng vấn câu đầu tiên để theo dõi độ sẵn sàng.",
       "pickHint": "Chọn 1 bộ thẻ ở danh sách bên trái để bắt đầu phiên phỏng vấn.",
       "gateTitle": "Phỏng vấn thử dành cho học viên",
-      "gateDescription": "Đăng ký khóa học để luyện phỏng vấn với AI — chấm điểm và góp ý sau mỗi câu trả lời."
+      "gateDescription": "Đăng ký khóa học để luyện phỏng vấn với FrosTES — chấm điểm và góp ý sau mỗi câu trả lời."
     },
     "level": {
       "junior": "Junior",
@@ -1772,10 +1772,10 @@
     "backToOverview": "Tổng quan"
   },
   "aiSettings": {
-    "title": "Cài đặt AI",
+    "title": "Cài đặt FrosTES",
     "subtitle": "Chọn nguồn AI và quản lý khoá API của riêng bạn",
     "effectiveNow": "Đang dùng",
-    "gradeWith": "Chấm bằng AI",
+    "gradeWith": "Chấm bằng FrosTES",
     "pickModel": "Chọn mô hình",
     "subscribeToGrade": "Đăng ký gói trả phí để chấm bài bằng model này",
     "belowFloorWarning": "Model dưới mức khuyến nghị — có thể trả về kết quả không chính xác",
@@ -1789,9 +1789,9 @@
     },
     "premiumLocked": "Cần gói trả phí",
     "save": "Lưu thay đổi",
-    "saved": "Đã lưu cài đặt AI",
+    "saved": "Đã lưu cài đặt FrosTES",
     "keyRemoved": "Đã xoá khoá API",
-    "error": "Không thể cập nhật cài đặt AI",
+    "error": "Không thể cập nhật cài đặt FrosTES",
     "lanes": {
       "auto": {
         "title": "Tự động",
@@ -1815,12 +1815,12 @@
       "keyOnFile": "Đã lưu một khoá API",
       "removeKey": "Xoá khoá",
       "keyHint": "Hãy nhập khoá API để dùng chế độ BYOK.",
-      "upsellCta": "Xem các gói AI",
+      "upsellCta": "Xem các gói FrosTES",
       "upsellPrompt": "Bạn muốn dùng model premium mà không cần khóa riêng?",
       "upsellSubtitle": "ignore"
     },
     "byokSubtitle": "Thêm API key của riêng bạn để dùng model từ nhà cung cấp của bạn. Khóa được mã hóa khi lưu và sẽ không hiển thị lại.",
-    "systemDescription": "AI tự động chọn model theo độ khó của bài và gói của bạn — không cần cấu hình. Nâng gói để mở các model mạnh hơn.",
+    "systemDescription": "FrosTES tự động chọn model theo độ khó của bài và gói của bạn — không cần cấu hình. Nâng gói để mở các model mạnh hơn.",
     "upgradePrompt": "Muốn dùng model mạnh hơn để chấm bài?",
     "ceil": {
       "description": "Đặt mức trần model AI cho từng hạng mục để kiểm soát credit. Auto vẫn tự chọn model theo độ khó; trần chỉ giới hạn mức cao nhất.",
@@ -1832,10 +1832,10 @@
       "plan": "Gói {tier} · trần tối đa {max}",
       "planFree": "Gói miễn phí · trần tối đa {max}",
       "creditLine": "Credit 5h: {used5h}/{limit5h} · tuần: {usedWeek}/{limitWeek}",
-      "error": "Không tải được cài đặt AI",
+      "error": "Không tải được cài đặt FrosTES",
       "saving": "Đang lưu…",
       "surface": {
-        "chatbot": "Hỏi AI khi đọc bài",
+        "chatbot": "Hỏi FrosTES khi đọc bài",
         "grading": "Chấm bài",
         "interview": "Phỏng vấn thử"
       }
@@ -1860,8 +1860,8 @@
     "priceApprox": "Khoảng $5/tháng"
   },
   "aiSubscription": {
-    "title": "Gói AI",
-    "subtitle": "Nâng cấp để có thêm credit AI mỗi tuần",
+    "title": "Gói FrosTES",
+    "subtitle": "Nâng cấp để có thêm credit FrosTES mỗi tuần",
     "perMonth": "/tháng",
     "priceUsdHint": "≈ {amount} khi thanh toán quốc tế",
     "popular": "Phổ biến",
@@ -1872,7 +1872,7 @@
     "free": {
       "title": "Miễn phí",
       "price": "0₫",
-      "desc": "Lượt AI cơ bản kèm theo khoá học",
+      "desc": "Lượt FrosTES cơ bản kèm theo khoá học",
       "cta": "Gói mặc định"
     }
   },
@@ -1912,7 +1912,7 @@
     }
   },
   "aiQuota": {
-    "title": "Hạn mức AI",
+    "title": "Hạn mức FrosTES",
     "subtitle": "Credit chấm bài trong 5 giờ và trong tuần",
     "creditWindows": {
       "title": "Credit chấm bài (Auto)",
@@ -1924,9 +1924,9 @@
     "premiumLimits": {
       "caption": "Credit Premium — áp dụng cho cả hai cửa sổ bên dưới."
     },
-    "cardTitle": "Hạn mức AI",
+    "cardTitle": "Hạn mức FrosTES",
     "viewDetails": "Xem chi tiết",
-    "fullPageTitle": "Hạn mức & lịch sử AI",
+    "fullPageTitle": "Hạn mức & lịch sử FrosTES",
     "fullPageDescription": "Credit Auto, gói Premium và lịch sử chấm bài.",
     "remainingSummary": "Còn {remaining} credit trong tuần",
     "currentLane": "Đang dùng",
@@ -1935,7 +1935,7 @@
     "windowResetAt": "Reset lúc {time}",
     "creditsUnit": "credit",
     "noPremium": "Chưa có gói trả phí — nâng cấp để mở khoá credit Premium.",
-    "tabsAria": "Phần hạn mức AI",
+    "tabsAria": "Phần hạn mức FrosTES",
     "tabs": {
       "auto": "Tự động",
       "subscription": "Gói trả phí",
@@ -1945,9 +1945,9 @@
     "subscriptionActive": "Bạn đang dùng gói {tier}.",
     "subscriptionNone": "Bạn chưa có gói trả phí. Nâng cấp để mở khoá credit Premium và chấm bài bằng model cao cấp.",
     "history": {
-      "title": "Lịch sử dùng AI",
+      "title": "Lịch sử dùng FrosTES",
       "chartTitle": "Credit tiêu mỗi ngày (14 ngày gần nhất)",
-      "empty": "Chưa có lượt dùng AI nào.",
+      "empty": "Chưa có lượt dùng FrosTES nào.",
       "loading": "Đang tải lịch sử…",
       "purposeGrade": "Chấm challenge",
       "autoModel": "Model tự động (miễn phí)",
@@ -1980,8 +1980,8 @@
       "progress": "Tiến độ"
     },
     "cv": {
-      "title": "CV & đánh giá AI",
-      "description": "Tạo CV theo mẫu Harvard hoặc tải lên CV có sẵn, rồi nhận đánh giá từ AI. CV được lưu vào hồ sơ của bạn và có thể xuất ra file PDF."
+      "title": "CV & đánh giá FrosTES",
+      "description": "Tạo CV theo mẫu Harvard hoặc tải lên CV có sẵn, rồi nhận đánh giá từ FrosTES. CV được lưu vào hồ sơ của bạn và có thể xuất ra file PDF."
     },
     "certificates": {
       "title": "Chứng chỉ của tôi",
@@ -2182,7 +2182,7 @@
   "profileMenu": {
     "explore": {
       "title": "Khám phá",
-      "ai": "Trợ lý AI",
+      "ai": "Trợ lý FrosTES",
       "forYou": "Dành cho bạn",
       "recommendations": "Gợi ý cho bạn",
       "trending": "Thịnh hành"
@@ -2542,10 +2542,10 @@
       "save": "Đăng nhập để lưu nội dung",
       "enroll": "Đăng nhập để đăng ký khóa học",
       "search": "Đăng nhập để tìm kiếm nội dung học tập",
-      "explore": "Đăng nhập để dùng trợ lý AI và gợi ý cá nhân hoá",
+      "explore": "Đăng nhập để dùng trợ lý FrosTES và gợi ý cá nhân hoá",
       "join": "Đăng nhập để tham gia nhóm",
       "vote": "Đăng nhập để bình chọn",
-      "aiQa": "Đăng nhập để hỏi AI về tài liệu",
+      "aiQa": "Đăng nhập để hỏi FrosTES về tài liệu",
       "rate": "Đăng nhập để đánh giá tài nguyên",
       "uploadResource": "Đăng nhập để đăng tài liệu",
       "follow": "Đăng nhập để theo dõi người dùng",
@@ -2572,7 +2572,7 @@
     "intlNoUsd": "Phương thức quốc tế chưa khả dụng cho đơn này.",
     "secure": "Thanh toán được mã hoá & bảo mật.",
     "noCardStored": "FTES AOS không lưu thông tin thẻ của bạn",
-    "aiPlanName": "Gói AI",
+    "aiPlanName": "Gói FrosTES",
     "membershipName": "Hội viên FTES AOS",
     "loyalty": {
       "diligent": "Bạn duy trì streak học tập"
@@ -2655,8 +2655,8 @@
         "description": "Bài nộp của bạn đang trong hàng đợi và sẽ được xử lý ngay."
       },
       "processing": {
-        "title": "StarCI AI đang chấm bài",
-        "description": "StarCI AI đang phân tích bài nộp của bạn. Vui lòng chờ trong giây lát."
+        "title": "FrosTES đang chấm bài",
+        "description": "FrosTES đang phân tích bài nộp của bạn. Vui lòng chờ trong giây lát."
       },
       "completed": {
         "title": "Chấm bài hoàn tất",
@@ -2688,11 +2688,11 @@
     "reviewTask": {
       "queued": {
         "title": "Đang chờ review",
-        "description": "Dự án của bạn đang trong hàng đợi. StarCI AI sẽ bắt đầu review ngay."
+        "description": "Dự án của bạn đang trong hàng đợi. FrosTES sẽ bắt đầu review ngay."
       },
       "processing": {
         "title": "Đang review dự án",
-        "description": "StarCI AI đang review code, kiến trúc và chất lượng dự án của bạn. Quá trình này có thể mất vài phút."
+        "description": "FrosTES đang review code, kiến trúc và chất lượng dự án của bạn. Quá trình này có thể mất vài phút."
       },
       "completed": {
         "title": "Review dự án hoàn tất",
@@ -2706,11 +2706,11 @@
     "reviewCv": {
       "queued": {
         "title": "Đang chờ đánh giá CV",
-        "description": "CV của bạn đang trong hàng đợi. StarCI AI sẽ bắt đầu đánh giá ngay."
+        "description": "CV của bạn đang trong hàng đợi. FrosTES sẽ bắt đầu đánh giá ngay."
       },
       "processing": {
-        "title": "StarCI AI đang đánh giá CV",
-        "description": "StarCI AI đang đọc CV và so sánh với rubric đã chọn. Quá trình này có thể mất vài phút."
+        "title": "FrosTES đang đánh giá CV",
+        "description": "FrosTES đang đọc CV và so sánh với rubric đã chọn. Quá trình này có thể mất vài phút."
       },
       "completed": {
         "title": "Đánh giá CV hoàn tất",
@@ -2866,7 +2866,7 @@
     },
     "identityStats": {
       "streak": "Chuỗi",
-      "credit": "Credit AI",
+      "credit": "Credit FrosTES",
       "reward": "Điểm quà",
       "streakValue": "{count} ngày"
     },
@@ -2932,7 +2932,7 @@
       "profile": "Hồ sơ"
     },
     "aiQuota": {
-      "title": "Credit AI",
+      "title": "Credit FrosTES",
       "poolCaption": "Cùng một pool credit — làm mới theo từng cửa sổ.",
       "credits": "Còn {remaining}/{limit}",
       "upgrade": "Nâng cấp gói",
@@ -3166,8 +3166,8 @@
     }
   },
   "aiPlatform": {
-    "title": "Nền tảng AI",
-    "subtitle": "Mọi công cụ AI trong một nơi — cho học viên, học tập, lập trình, nghề nghiệp và giảng viên.",
+    "title": "Nền tảng FrosTES",
+    "subtitle": "Mọi công cụ FrosTES trong một nơi — cho học viên, học tập, lập trình, nghề nghiệp và giảng viên.",
     "open": "Mở",
     "categories": {
       "student": "Cho học viên",
@@ -3178,7 +3178,7 @@
     },
     "tools": {
       "tutor": {
-        "name": "Gia sư AI",
+        "name": "Gia sư FrosTES",
         "desc": "Hỏi bất cứ điều gì và nhận lời giải từng bước."
       },
       "planner": {
@@ -3203,7 +3203,7 @@
       },
       "cvReview": {
         "name": "Đánh giá CV",
-        "desc": "Nhận nhận xét từ AI để hoàn thiện hồ sơ xin việc."
+        "desc": "Nhận nhận xét từ FrosTES để hoàn thiện hồ sơ xin việc."
       },
       "mentor": {
         "name": "Trợ lý giảng dạy",
@@ -3211,13 +3211,13 @@
       }
     },
     "states": {
-      "empty": "Chưa có công cụ AI nào.",
-      "error": "Không tải được danh sách công cụ AI. Vui lòng thử lại.",
+      "empty": "Chưa có công cụ FrosTES nào.",
+      "error": "Không tải được danh sách công cụ FrosTES. Vui lòng thử lại.",
       "retry": "Thử lại"
     },
     "quotaRemaining": "Còn {count} lượt",
     "toolPages": {
-      "back": "Quay lại công cụ AI",
+      "back": "Quay lại công cụ FrosTES",
       "run": "Chạy",
       "running": "Đang tạo…",
       "modelLabel": "Mô hình: {model}",
@@ -3234,8 +3234,8 @@
         "noLessons": "Chưa có bài đã học — hãy tải tài liệu lên."
       },
       "states": {
-        "running": "AI đang xử lý — thường mất vài giây.",
-        "failed": "Tác vụ AI thất bại. Vui lòng thử lại.",
+        "running": "FrosTES đang xử lý — thường mất vài giây.",
+        "failed": "Tác vụ FrosTES thất bại. Vui lòng thử lại.",
         "quota": "Bạn đã dùng hết lượt cho công cụ này. Vui lòng thử lại sau.",
         "stale": "Việc này mất nhiều thời gian hơn bình thường.",
         "retry": "Thử lại"
@@ -3844,7 +3844,7 @@
     "categories": {
       "merch": "Merch",
       "premium": "Premium",
-      "aiCredits": "AI Credits",
+      "aiCredits": "FrosTES Credits",
       "voucher": "Voucher",
       "courseUnlock": "Mở khóa học"
     },
@@ -3934,7 +3934,7 @@
     "emptyColumn": "Chưa có gì ở đây",
     "stages": {
       "draft": "Bản nháp",
-      "aiReview": "AI duyệt",
+      "aiReview": "FrosTES duyệt",
       "modReview": "Kiểm duyệt",
       "approved": "Đã duyệt",
       "published": "Đã xuất bản",
@@ -3955,7 +3955,7 @@
   },
   "analytics": {
     "title": "Phân tích",
-    "subtitle": "Tổng quan sức khỏe nền tảng — học tập, cộng đồng, AI, game hóa và kinh doanh.",
+    "subtitle": "Tổng quan sức khỏe nền tảng — học tập, cộng đồng, FrosTES, game hóa và kinh doanh.",
     "chartSoon": "Biểu đồ sắp ra mắt",
     "deltaLabel": "Thay đổi so với kỳ trước: {value}%",
     "metrics": {
@@ -3969,7 +3969,7 @@
     "sections": {
       "learning": "Học tập",
       "community": "Cộng đồng",
-      "ai": "AI",
+      "ai": "FrosTES",
       "gamification": "Game hóa",
       "business": "Kinh doanh"
     },
@@ -3989,8 +3989,8 @@
       },
       "streakDays": "{count} ngày liên tiếp",
       "points": "{count, number} điểm",
-      "aiCredit": "Tín dụng AI",
-      "aiCreditValue": "Tín dụng AI · {remaining}/{limit}",
+      "aiCredit": "Tín dụng FrosTES",
+      "aiCreditValue": "Tín dụng FrosTES · {remaining}/{limit}",
       "sections": {
         "continue": "Tiếp tục học",
         "quest": "Nhiệm vụ hôm nay",
@@ -4012,7 +4012,7 @@
           "readLesson": "Đọc một bài học",
           "passChallenge": "Vượt qua một thử thách",
           "reviewFlashcards": "Ôn tập thẻ ghi nhớ",
-          "askAi": "Hỏi trợ giảng AI",
+          "askAi": "Hỏi trợ giảng FrosTES",
           "readContent": "Đọc một bài học"
         },
         "summary": "Đã hoàn thành {done}/{total} nhiệm vụ",
@@ -4046,7 +4046,7 @@
       "identityStats": {
         "streak": "Chuỗi ngày",
         "streakValue": "{count} ngày",
-        "credit": "Tín dụng AI",
+        "credit": "Tín dụng FrosTES",
         "creditValue": "{count} lượt hôm nay",
         "reward": "Phần thưởng"
       },
@@ -4077,7 +4077,7 @@
     "hero": {
       "eyebrow": "Hệ điều hành học tập của bạn",
       "headline": "Một hành trình học <accent>rõ ràng</accent>, từ nhà đến thành quả",
-      "subline": "FTES dẫn bạn đi từ trang chủ, vào workplace môn học, qua khóa học, luyện tập cùng AI, và chốt hạ bằng thành quả thật: dự án, vinh danh, sự nghiệp.",
+      "subline": "FTES dẫn bạn đi từ trang chủ, vào workplace môn học, qua khóa học, luyện tập cùng FrosTES, và chốt hạ bằng thành quả thật: dự án, vinh danh, sự nghiệp.",
       "ctaPrimary": "Bắt đầu học",
       "ctaSecondary": "Khám phá cộng đồng"
     },
@@ -4097,8 +4097,8 @@
           "caption": "Học theo khóa có cấu trúc, bài giảng và bài tập rõ ràng."
         },
         "practice": {
-          "label": "Luyện tập & AI",
-          "caption": "Luyện tập, hỏi trợ giảng AI và nhận chấm bài, gợi ý cá nhân hóa."
+          "label": "Luyện tập & FrosTES",
+          "caption": "Luyện tập, hỏi trợ giảng FrosTES và nhận chấm bài, gợi ý cá nhân hóa."
         },
         "outcome": {
           "label": "Thành quả",
@@ -4114,10 +4114,10 @@
       "courses": "Khóa học",
       "enrollments": "Lượt đăng ký học",
       "communities": "Cộng đồng",
-      "aiTitle": "Được hỗ trợ bởi AI xuyên suốt",
+      "aiTitle": "Được hỗ trợ bởi FrosTES xuyên suốt",
       "aiChips": {
-        "tutor": "Trợ giảng AI",
-        "grading": "Chấm bài & phản hồi AI",
+        "tutor": "Trợ giảng FrosTES",
+        "grading": "Chấm bài & phản hồi FrosTES",
         "recommend": "Gợi ý cá nhân hóa",
         "roadmap": "Lộ trình học thông minh"
       }
@@ -4583,7 +4583,7 @@
       "a2": "Ngược lại, kỹ năng hệ thống là thứ giúp bạn không bị đào thải. Các công cụ tự động hiện tại có thể viết code CRUD rất nhanh, nhưng chúng không thể tự thiết kế một kiến trúc chịu tải triệu user, xử lý bài toán scale, hay đứng ra bảo vệ các quyết định kỹ thuật trước hội đồng phỏng vấn và CTO. Đó mới là những gì bạn được rèn luyện ở đây.",
       "q3": "Mình mới bắt đầu. Có hợp không?",
       "a3": "Khóa học này thiết kế riêng cho những bạn đã có nền tảng lập trình cơ bản và muốn bứt phá lên tầm thiết kế kiến trúc hệ thống (System Design/DevOps). Nếu bạn chưa từng gõ dòng code nào, lộ trình này sẽ quá sức — bạn nên tích lũy kinh nghiệm code thực tế trước đã.",
-      "q4": "AI chấm thực sự hoạt động thế nào?",
+      "q4": "FrosTES chấm thực sự hoạt động thế nào?",
       "a4": "Hệ thống sẽ đánh giá bài làm của bạn dựa trên các tiêu chuẩn vận hành thực tế (production-ready). Thay vì chỉ báo Đúng/Sai, bạn sẽ nhận được các nhận xét chi tiết, chỉ rõ lỗ hổng trong logic thiết kế và gợi ý cách tối ưu để bạn tự tay sửa lại cho đến khi hoàn thiện.",
       "q5": "'Headhunt' ở đây thực sự nghĩa là gì?",
       "a5": "Khi bạn tự tin với năng lực của mình và bật chế độ tìm việc, các dự án thực chiến bạn đã hoàn thành sẽ được kết nối trực tiếp đến các doanh nghiệp đối tác đang tìm kiếm kỹ sư Senior/Architect. Không có trung gian hay làm màu CV, nhà tuyển dụng đánh giá bạn trực tiếp qua chất lượng sản phẩm bạn đã tự tay dựng."
@@ -4607,9 +4607,9 @@
         },
         "grade": {
           "step": "02",
-          "title": "Thử thách chấm AI",
+          "title": "Thử thách chấm FrosTES",
           "tag": "Phản hồi tức thì",
-          "desc": "Tự viết code, AI chấm theo tiêu chí production."
+          "desc": "Tự viết code, FrosTES chấm theo tiêu chí production."
         },
         "capstone": {
           "step": "03",
@@ -4706,7 +4706,7 @@
       "remainingRuns": "Còn {count} lượt chạy trong cửa sổ này",
       "quotaExhausted": "Bạn đã dùng hết lượt chạy trong cửa sổ này.",
       "byokNudge": "Thêm khóa API của riêng bạn để tiếp tục chạy không giới hạn.",
-      "goToAiSettings": "Mở cài đặt AI",
+      "goToAiSettings": "Mở cài đặt FrosTES",
       "runHistory": "Lịch sử chạy",
       "runHistoryEmpty": "Chưa có lượt chạy nào.",
       "failed": "Lượt chạy thất bại. Vui lòng thử lại."
@@ -5086,7 +5086,7 @@
       "discussion": "Thảo luận",
       "resources": "Tài liệu",
       "practice": "Luyện tập",
-      "ai": "AI",
+      "ai": "FrosTES",
       "members": "Thành viên",
       "statistics": "Thống kê",
       "career": "Nghề nghiệp"
@@ -5139,7 +5139,7 @@
       },
       "loadError": "Không tải được tài nguyên.",
       "retry": "Thử lại",
-      "askAi": "Hỏi AI về tài liệu này",
+      "askAi": "Hỏi FrosTES về tài liệu này",
       "downloads": "{count} lượt tải",
       "ratingLabel": "{rating}/5 · {count} đánh giá",
       "downloadError": "Không tạo được liên kết tải xuống. Vui lòng thử lại.",
@@ -5259,7 +5259,7 @@
         "exitCode": "Mã thoát: {code}",
         "runtimeMs": "{ms} ms",
         "stderr": "Lỗi",
-        "gradeTitle": "Kết quả chấm AI",
+        "gradeTitle": "Kết quả chấm FrosTES",
         "gradeScore": "{score}/{max} điểm",
         "criteria": "Tiêu chí",
         "feedback": "Nhận xét",
@@ -5349,14 +5349,14 @@
         "error": "Không tải được bảng xếp hạng"
       },
       "quizHandoff": {
-        "description": "Hệ thống chưa có ngân hàng đề trắc nghiệm cho môn này. Trong lúc chờ, dùng AI Quiz để sinh đề từ tài liệu của môn.",
-        "cta": "Mở AI Quiz"
+        "description": "Hệ thống chưa có ngân hàng đề trắc nghiệm cho môn này. Trong lúc chờ, dùng FrosTES Quiz để sinh đề từ tài liệu của môn.",
+        "cta": "Mở FrosTES Quiz"
       },
       "flashcardsHandoff": {
-        "description": "Chưa có bộ thẻ do giảng viên soạn cho môn này. Dùng AI Flashcards để sinh thẻ từ tài liệu của môn.",
-        "cta": "Mở AI Flashcards"
+        "description": "Chưa có bộ thẻ do giảng viên soạn cho môn này. Dùng FrosTES Flashcards để sinh thẻ từ tài liệu của môn.",
+        "cta": "Mở FrosTES Flashcards"
       },
-      "aiHandoffHint": "Công cụ AI nằm ở tab AI của môn học.",
+      "aiHandoffHint": "Công cụ FrosTES nằm ở tab FrosTES của môn học.",
       "quiz": {
         "intro": "Bốc ngẫu nhiên câu hỏi từ ngân hàng đề của môn. Kết quả không tính vào học bạ — bạn làm lại thoải mái.",
         "countLabel": "Số câu",
@@ -5365,7 +5365,7 @@
         "drawing": "Đang bốc đề…",
         "ephemeralNote": "Bài luyện tập không tính vào học bạ.",
         "empty": "Môn này chưa có câu hỏi luyện tập",
-        "emptyDesc": "Ngân hàng đề của môn chưa có câu hỏi nào sẵn sàng. Bạn có thể dùng AI Quiz để sinh đề từ tài liệu của môn.",
+        "emptyDesc": "Ngân hàng đề của môn chưa có câu hỏi nào sẵn sàng. Bạn có thể dùng FrosTES Quiz để sinh đề từ tài liệu của môn.",
         "retry": "Thử lại",
         "questionLine": "Câu {number}",
         "multipleHint": "Chọn tất cả đáp án đúng",
@@ -5473,20 +5473,20 @@
       }
     },
     "aiTools": {
-      "title": "Trợ lý AI",
+      "title": "Trợ lý FrosTES",
       "cta": "Mở",
       "comingSoon": "Sắp ra mắt",
       "comingSoonCta": "Sắp có",
-      "lockedHint": "Đăng ký môn học này để mở khóa các công cụ AI.",
+      "lockedHint": "Đăng ký môn học này để mở khóa các công cụ FrosTES.",
       "join": "Đăng ký môn học",
-      "errorTitle": "Không tải được công cụ AI",
+      "errorTitle": "Không tải được công cụ FrosTES",
       "retry": "Thử lại",
       "errorRetryHint": "Đã có lỗi xảy ra. Vui lòng thử lại.",
       "pickSource": "Chọn nguồn tài liệu",
       "goResources": "Mở tab Tài nguyên",
       "tools": {
         "tutor": {
-          "title": "Gia sư A",
+          "title": "Gia sư FrosTES",
           "desc": "Hỏi đáp theo bài học"
         },
         "summary": {
@@ -5507,7 +5507,7 @@
         }
       },
       "tutor": {
-        "placeholder": "Hỏi gia sư AI về môn này...",
+        "placeholder": "Hỏi gia sư FrosTES về môn này...",
         "send": "Gửi",
         "settings": "Cài đặt",
         "conversations": "Cuộc trò chuyện",
@@ -5520,7 +5520,7 @@
         "modelLabel": "Mô hình trả lời",
         "clearHint": "Xóa toàn bộ cuộc trò chuyện của môn này. Hành động không thể hoàn tác.",
         "clearAction": "Xóa toàn bộ lịch sử",
-        "emptyHint": "Bắt đầu hỏi gia sư AI về môn {subject}.",
+        "emptyHint": "Bắt đầu hỏi gia sư FrosTES về môn {subject}.",
         "thinking": "Đang trả lời...",
         "streamError": "Không tạo được câu trả lời.",
         "suggestions": {
@@ -5534,14 +5534,14 @@
         "answeredBy": "Trả lời bởi {model}",
         "loadingThread": "Đang tải cuộc trò chuyện...",
         "modelNotAllowed": "Mô hình này không được phép dùng. Đã quay lại mô hình mặc định.",
-        "quotaHit": "Bạn đã dùng hết lượt hỏi AI. Vui lòng thử lại sau.",
+        "quotaHit": "Bạn đã dùng hết lượt hỏi FrosTES. Vui lòng thử lại sau.",
         "signInRequired": "Phiên đăng nhập đã hết hạn. Đăng nhập lại để tiếp tục.",
-        "forbidden": "Bạn chưa có quyền dùng gia sư AI cho nội dung này.",
+        "forbidden": "Bạn chưa có quyền dùng gia sư FrosTES cho nội dung này.",
         "sessionBusy": "Cuộc trò chuyện đang trả lời câu hỏi trước. Đợi một chút rồi thử lại.",
         "sessionGone": "Không tìm thấy cuộc trò chuyện. Hãy bắt đầu cuộc mới.",
-        "allSubjectsHint": "Danh sách gồm mọi cuộc trò chuyện với gia sư AI của bạn (máy chủ chưa lọc theo môn).",
+        "allSubjectsHint": "Danh sách gồm mọi cuộc trò chuyện với gia sư FrosTES của bạn (máy chủ chưa lọc theo môn).",
         "deleteError": "Không xóa được cuộc trò chuyện. Vui lòng thử lại.",
-        "clearHintAll": "Xóa toàn bộ cuộc trò chuyện với gia sư AI của bạn (máy chủ chưa hỗ trợ xóa riêng theo môn). Hành động không thể hoàn tác.",
+        "clearHintAll": "Xóa toàn bộ cuộc trò chuyện với gia sư FrosTES của bạn (máy chủ chưa hỗ trợ xóa riêng theo môn). Hành động không thể hoàn tác.",
         "clearError": "Một số cuộc trò chuyện chưa xóa được. Vui lòng thử lại.",
         "subjectOnlyHint": "Chỉ hiển thị cuộc trò chuyện của môn đang xem.",
         "clearedCount": "Đã xóa {count} cuộc trò chuyện của môn này.",
@@ -5570,7 +5570,7 @@
         "emptyTitle": "Chưa có tài liệu để tạo quiz",
         "emptyDesc": "Thêm tài nguyên ở tab Tài nguyên rồi quay lại.",
         "explanation": "Giải thích",
-        "unknownAnswer": "AI không chỉ rõ đáp án đúng cho câu này."
+        "unknownAnswer": "FrosTES không chỉ rõ đáp án đúng cho câu này."
       },
       "flashcards": {
         "generate": "Tạo flashcards",
@@ -5625,16 +5625,16 @@
       "sourcesErrorTitle": "Không tải được danh sách tài liệu",
       "job": {
         "working": "Đang xử lý...",
-        "running": "AI đang xử lý — thường mất vài giây.",
+        "running": "FrosTES đang xử lý — thường mất vài giây.",
         "stale": "Lâu hơn bình thường một chút.",
         "refresh": "Kiểm tra lại",
-        "quota": "Bạn đã dùng hết lượt AI cho công cụ này. Vui lòng thử lại sau.",
+        "quota": "Bạn đã dùng hết lượt FrosTES cho công cụ này. Vui lòng thử lại sau.",
         "auth": "Phiên đăng nhập đã hết hạn. Đăng nhập lại để tiếp tục.",
-        "forbidden": "Bạn chưa có quyền dùng AI với tài liệu này.",
+        "forbidden": "Bạn chưa có quyền dùng FrosTES với tài liệu này.",
         "notFound": "Không tìm thấy tài liệu đã chọn.",
-        "invalid": "Tài liệu đã chọn chưa dùng được cho AI.",
-        "insufficientContext": "Bài này chưa đủ nội dung để AI xử lý. Hãy chọn bài dài hơn hoặc bổ sung nội dung cho bài.",
-        "failed": "AI xử lý thất bại. Vui lòng thử lại.",
+        "invalid": "Tài liệu đã chọn chưa dùng được cho FrosTES.",
+        "insufficientContext": "Bài này chưa đủ nội dung để FrosTES xử lý. Hãy chọn bài dài hơn hoặc bổ sung nội dung cho bài.",
+        "failed": "FrosTES xử lý thất bại. Vui lòng thử lại.",
         "model": "Mô hình: {model}"
       },
       "ocr": {
@@ -5711,12 +5711,12 @@
     },
     "membership": {
       "join": "Tham gia môn học",
-      "joinHint": "Tham gia để mở khóa công cụ AI, tài liệu và thảo luận của môn này.",
+      "joinHint": "Tham gia để mở khóa công cụ FrosTES, tài liệu và thảo luận của môn này.",
       "joinSuccess": "Đã tham gia môn học",
       "joinFailed": "Không tham gia được môn học. Vui lòng thử lại.",
       "leave": "Rời môn",
       "leaveConfirmTitle": "Rời môn học này?",
-      "leaveConfirmBody": "Bạn sẽ mất quyền dùng công cụ AI và các nội dung dành cho thành viên của môn {name}. Có thể tham gia lại bất cứ lúc nào.",
+      "leaveConfirmBody": "Bạn sẽ mất quyền dùng công cụ FrosTES và các nội dung dành cho thành viên của môn {name}. Có thể tham gia lại bất cứ lúc nào.",
       "leaveCancel": "Ở lại",
       "leaveConfirm": "Rời môn",
       "leaveSuccess": "Đã rời môn học",
@@ -6278,15 +6278,15 @@
     },
     "downloadsCount": "{count} lượt tải",
     "aiQa": {
-      "title": "Hỏi AI về tài liệu này",
+      "title": "Hỏi FrosTES về tài liệu này",
       "hint": "Gợi ý câu hỏi",
       "placeholder": "Hỏi về tài liệu này…",
       "send": "Gửi",
       "thinking": "Đang tìm câu trả lời…",
       "error": "Xin lỗi, mình chưa trả lời được. Vui lòng thử lại.",
-      "quotaHit": "Bạn đã dùng hết lượt hỏi AI cho hôm nay.",
+      "quotaHit": "Bạn đã dùng hết lượt hỏi FrosTES cho hôm nay.",
       "modelNotAllowed": "Model này không được phép — đã chuyển về model mặc định.",
-      "accessDenied": "Bạn không có quyền hỏi AI về tài liệu này.",
+      "accessDenied": "Bạn không có quyền hỏi FrosTES về tài liệu này.",
       "processing": "Đang xử lý tài liệu… Thử lại sau ít phút nhé.",
       "retry": "Thử lại",
       "citations": "Trích dẫn",
@@ -6927,8 +6927,8 @@
         "maxReached": "Bạn đã dùng hết {max} lượt nộp.",
         "historyTitle": "Lịch sử nộp",
         "attemptLine": "Lần {number}",
-        "aiScore": "Điểm AI: {score}",
-        "pendingHint": "AI đang chấm bài, kết quả sẽ tự cập nhật.",
+        "aiScore": "Điểm FrosTES: {score}",
+        "pendingHint": "FrosTES đang chấm bài, kết quả sẽ tự cập nhật.",
         "status": {
           "submitted": "Chờ chấm",
           "grading": "Đang chấm",
@@ -6999,7 +6999,7 @@
         "upgradeTiersHint": "Gói mở khóa thử thách này:",
         "upgradeCta": "Nâng cấp gói",
         "error": "Không tải được thử thách.",
-        "gradeSubmit": "Nộp & Chấm AI",
+        "gradeSubmit": "Nộp & Chấm FrosTES",
         "gradeSubmitTests": "Nộp & Chấm",
         "viewResult": "Xem kết quả",
         "hideResult": "Ẩn kết quả",
@@ -7041,7 +7041,7 @@
         "after": "Sau",
         "noChanges": "Không cần sửa",
         "hasChanges": "Cần sửa",
-        "filesReadHint": "AI đã đọc {count} tệp qua {iterations} vòng.",
+        "filesReadHint": "FrosTES đã đọc {count} tệp qua {iterations} vòng.",
         "unanchoredTitle": "Nhận xét chưa gắn được vào tệp",
         "unanchoredHint": "Những nhận xét này trỏ tới tệp không có trong cây thư mục (hoặc chưa tải được project).",
         "fileLine": "{file} · dòng {line}",
@@ -7156,7 +7156,7 @@
       "hasChallenge": "Có thử thách",
       "previous": "Bài trước",
       "next": "Bài sau",
-      "askAboutThis": "Hỏi AI về đoạn này",
+      "askAboutThis": "Hỏi FrosTES về đoạn này",
       "lockedTitle": "Nội dung premium",
       "lockedTitlePackages": "Nội dung của gói {packages}",
       "lockedBody": "Đăng ký khóa học để mở khóa bài học này và toàn bộ nội dung còn lại.",
@@ -7186,11 +7186,11 @@
         "body": "Làm tốt lắm! Cùng FrosTES tiếp tục sang bài tiếp theo nhé."
       },
       "ai": {
-        "open": "Mở trợ giảng AI",
+        "open": "Mở trợ giảng FrosTES",
         "close": "Đóng",
         "expand": "Mở rộng toàn màn hình",
         "collapse": "Thu nhỏ",
-        "title": "Hỏi AI",
+        "title": "Hỏi FrosTES",
         "intro": "Bôi đen một đoạn trong bài để hỏi, hoặc gõ câu hỏi bên dưới.",
         "placeholder": "Hỏi về bài học…",
         "send": "Gửi",
@@ -7200,9 +7200,9 @@
         "modelLabel": "Model trả lời",
         "answeredBy": "Trả lời bởi {model}",
         "modelNotAllowed": "Model này không được phép — đã chuyển về model mặc định.",
-        "stubReply": "Đây là câu trả lời mẫu của trợ giảng AI. Khi backend sẵn sàng, câu trả lời sẽ được tạo dựa trên nội dung bài học và đoạn bạn chọn.",
+        "stubReply": "Đây là câu trả lời mẫu của trợ giảng FrosTES. Khi backend sẵn sàng, câu trả lời sẽ được tạo dựa trên nội dung bài học và đoạn bạn chọn.",
         "error": "Xin lỗi, mình chưa trả lời được. Vui lòng thử lại.",
-        "quotaHit": "Bạn đã dùng hết lượt hỏi AI cho hôm nay.",
+        "quotaHit": "Bạn đã dùng hết lượt hỏi FrosTES cho hôm nay.",
         "quickAsks": {
           "explain": "Giải thích đoạn này",
           "example": "Cho ví dụ",
@@ -7211,8 +7211,8 @@
         "hint": "Gợi ý câu hỏi",
         "thinking": "Đang soạn câu trả lời…",
         "new": "Mới",
-        "selectionHintTitle": "Mẹo: hỏi AI về một đoạn bất kỳ",
-        "selectionHint": "Bôi đen một đoạn trong bài rồi bấm \"Hỏi AI về đoạn này\" để hỏi riêng về đoạn đó.",
+        "selectionHintTitle": "Mẹo: hỏi FrosTES về một đoạn bất kỳ",
+        "selectionHint": "Bôi đen một đoạn trong bài rồi bấm \"Hỏi FrosTES về đoạn này\" để hỏi riêng về đoạn đó.",
         "dismissHint": "Đã hiểu",
         "suggestions": {
           "summarize": "Tóm tắt bài học này",
@@ -7259,7 +7259,7 @@
     },
     "mockInterview": {
       "title": "Luyện phỏng vấn",
-      "subtitle": "Luyện phỏng vấn mô phỏng với AI — bốc đề theo khóa học, trả lời rồi nhận chấm điểm chi tiết.",
+      "subtitle": "Luyện phỏng vấn mô phỏng với FrosTES — bốc đề theo khóa học, trả lời rồi nhận chấm điểm chi tiết.",
       "tabsLabel": "Chế độ",
       "tabPractice": "Luyện tập",
       "tabHistory": "Lịch sử",
@@ -7315,22 +7315,22 @@
       "scorecardEmptyTitle": "Chưa chấm điểm",
       "scorecardEmptyBody": "Phiên này chưa được chấm. Quay lại luyện tập để nộp bài.",
       "entryTitle": "Luyện phỏng vấn",
-      "entrySubtitle": "Luyện phỏng vấn mô phỏng có AI chấm điểm"
+      "entrySubtitle": "Luyện phỏng vấn mô phỏng có FrosTES chấm điểm"
     },
     "courseInterview": {
-      "title": "Phỏng vấn AI",
-      "subtitle": "Tham gia phỏng vấn cuối khóa với AI — trắc nghiệm, luận, và vấn đáp — rồi nhận điểm và nhận xét.",
-      "entryTitle": "Phỏng vấn AI",
-      "entrySubtitle": "Phỏng vấn cuối khóa với trắc nghiệm, luận, và vấn đáp AI",
+      "title": "Phỏng vấn FrosTES",
+      "subtitle": "Tham gia phỏng vấn cuối khóa với FrosTES — trắc nghiệm, luận, và vấn đáp — rồi nhận điểm và nhận xét.",
+      "entryTitle": "Phỏng vấn FrosTES",
+      "entrySubtitle": "Phỏng vấn cuối khóa với trắc nghiệm, luận, và vấn đáp FrosTES",
       "overviewTitle": "Tổng quan phỏng vấn",
-      "overviewBody": "Trả lời các câu trắc nghiệm, luận, và vấn đáp. Phần vấn đáp là cuộc trò chuyện trực tiếp với giám khảo AI.",
+      "overviewBody": "Trả lời các câu trắc nghiệm, luận, và vấn đáp. Phần vấn đáp là cuộc trò chuyện trực tiếp với giám khảo FrosTES.",
       "questionCount": "{count} câu hỏi",
       "notReadyTitle": "Phỏng vấn chưa sẵn sàng",
       "notReadyBody": "Bộ câu hỏi phỏng vấn của khóa học này chưa được chuẩn bị xong. Vui lòng quay lại sau.",
       "emptyTitle": "Chưa có bài phỏng vấn",
-      "emptyBody": "Giảng viên chưa tạo bài phỏng vấn AI cho khóa học này. Vui lòng quay lại sau.",
+      "emptyBody": "Giảng viên chưa tạo bài phỏng vấn FrosTES cho khóa học này. Vui lòng quay lại sau.",
       "forbiddenTitle": "Bạn chưa ghi danh khóa học này",
-      "forbiddenBody": "Đăng ký khóa học để mở tính năng phỏng vấn AI.",
+      "forbiddenBody": "Đăng ký khóa học để mở tính năng phỏng vấn FrosTES.",
       "startFailed": "Không bắt đầu được phỏng vấn. Vui lòng thử lại.",
       "start": "Bắt đầu",
       "questionProgress": "Câu {index}/{total}",
@@ -7360,17 +7360,17 @@
       },
       "oral": {
         "topic": "Chủ đề",
-        "intro": "Bắt đầu phần vấn đáp để trò chuyện với giám khảo AI.",
+        "intro": "Bắt đầu phần vấn đáp để trò chuyện với giám khảo FrosTES.",
         "start": "Bắt đầu vấn đáp",
         "startPrompt": "Bắt đầu",
         "replyPlaceholder": "Nhập câu trả lời của bạn…",
         "send": "Gửi câu trả lời",
         "streamError": "Giám khảo chưa thể phản hồi. Vui lòng thử lại.",
-        "quotaError": "Bạn đã dùng hết lượt hỏi AI cho hôm nay."
+        "quotaError": "Bạn đã dùng hết lượt hỏi FrosTES cho hôm nay."
       },
       "manage": {
         "title": "Quản lý phỏng vấn",
-        "subtitle": "Tạo hoặc tạo lại bộ câu hỏi phỏng vấn AI cho khóa học này.",
+        "subtitle": "Tạo hoặc tạo lại bộ câu hỏi phỏng vấn FrosTES cho khóa học này.",
         "defaultTitle": "Phỏng vấn khóa học",
         "titleField": "Tiêu đề",
         "titlePlaceholder": "vd. Phỏng vấn cuối khóa",
@@ -7395,7 +7395,7 @@
         "generate": "Tạo bộ câu hỏi",
         "generateFailed": "Không tạo được bộ câu hỏi. Vui lòng thử lại.",
         "forbiddenTitle": "Không phải giảng viên khóa học này",
-        "forbiddenBody": "Chỉ giảng viên của khóa học mới có thể tạo bộ câu hỏi phỏng vấn AI.",
+        "forbiddenBody": "Chỉ giảng viên của khóa học mới có thể tạo bộ câu hỏi phỏng vấn FrosTES.",
         "statusLabel": "Trạng thái",
         "status": {
           "GENERATING": "Đang tạo",
@@ -7504,7 +7504,7 @@
       "lastFeedback": "Góp ý gần nhất",
       "feedbackLabel": "Góp ý",
       "noFeedback": "Không có góp ý cho lần nộp này.",
-      "processing": "AI đang chấm bài…",
+      "processing": "FrosTES đang chấm bài…",
       "requirementsTitle": "Yêu cầu",
       "servedBy": "Chấm bởi {model}",
       "severity": {
@@ -7545,8 +7545,8 @@
       "unavailableTag": "Không khả dụng",
       "geminiFallbackHint": "Model miễn phí có giới hạn lượt dùng; hết lượt sẽ tự chuyển sang Gemini.",
       "modelHint": "Mỗi model chấm khác nhau — điểm và nhận xét phụ thuộc vào model bạn chọn.",
-      "modelHintReview": "Điểm chấm theo test case (gồm cả test ẩn) nên không đổi theo model. Model bạn chọn chỉ quyết định phần AI nhận xét chất lượng bài làm.",
-      "gradeWithAi": "Chấm bằng AI",
+      "modelHintReview": "Điểm chấm theo test case (gồm cả test ẩn) nên không đổi theo model. Model bạn chọn chỉ quyết định phần FrosTES nhận xét chất lượng bài làm.",
+      "gradeWithAi": "Chấm bằng FrosTES",
       "regrade": "Chấm lại",
       "regradeHint": "Đổi model rồi chấm lại để so sánh — code của bạn được giữ nguyên.",
       "gradingWith": "Đang chấm bằng {model}…",
@@ -7593,8 +7593,8 @@
       "testEmpty": "(trống)",
       "testNoResults": "Không có test nào để chạy.",
       "resultPaneTitle": "Kết quả",
-      "resultPaneEmpty": "Chạy code hoặc chấm bằng AI để xem kết quả ở đây.",
-      "submittingGrade": "Đang nộp & chấm bằng AI…",
+      "resultPaneEmpty": "Chạy code hoặc chấm bằng FrosTES để xem kết quả ở đây.",
+      "submittingGrade": "Đang nộp & chấm bằng FrosTES…",
       "schemaTitle": "Cấu trúc cơ sở dữ liệu",
       "schemaViewErd": "Sơ đồ ERD",
       "schemaViewTable": "Bảng",
@@ -7609,15 +7609,15 @@
       "erdFigureLabel": "Sơ đồ quan hệ thực thể",
       "retry": "Thử lại",
       "errors": {
-        "forbidden": "Gói của bạn chưa có quyền chấm code bằng AI. Nâng cấp gói để dùng tính năng này.",
+        "forbidden": "Gói của bạn chưa có quyền chấm code bằng FrosTES. Nâng cấp gói để dùng tính năng này.",
         "execUnavailable": "Trình chạy code tạm chưa khả dụng. Vui lòng thử lại sau — code của bạn vẫn được giữ nguyên.",
         "sqlUnavailable": "Trình chạy SQL tạm chưa khả dụng. Vui lòng thử lại sau — truy vấn của bạn vẫn được giữ nguyên.",
         "down": "Hệ thống chấm đang bảo trì. Vui lòng thử lại sau ít phút — code của bạn vẫn được giữ nguyên.",
         "failed": "Chấm code thất bại. Thử lại nhé — code của bạn vẫn được giữ nguyên.",
         "invalid": "Bài gửi chưa hợp lệ — kiểm tra lại code và ngôn ngữ.",
         "modelNotAllowed": "Model này không nằm trong danh sách cho phép — đã chuyển về model mặc định, hãy chấm lại.",
-        "freeRunLimit": "Bản dùng thử: mỗi thử thách chỉ được chạy 2 lần và chấm AI 1 lần. Đăng ký khóa học để làm thoải mái.",
-        "freeGradeLimit": "Bản dùng thử: mỗi thử thách chỉ được chấm AI 1 lần và chạy 2 lần. Đăng ký khóa học để làm thoải mái.",
+        "freeRunLimit": "Bản dùng thử: mỗi thử thách chỉ được chạy 2 lần và chấm FrosTES 1 lần. Đăng ký khóa học để làm thoải mái.",
+        "freeGradeLimit": "Bản dùng thử: mỗi thử thách chỉ được chấm FrosTES 1 lần và chạy 2 lần. Đăng ký khóa học để làm thoải mái.",
         "generic": "Có lỗi xảy ra khi chấm code. Vui lòng thử lại."
       }
     },

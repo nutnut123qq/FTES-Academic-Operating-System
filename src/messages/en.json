@@ -6,7 +6,7 @@
       "guest": "Hi, I'm FrosTES! Sign in and I'll keep you company along the way.",
       "home": {
         "welcomeTitle": "Welcome back, {name}!",
-        "welcomeTitleNoName": "Welcome back!",
+        "welcomeTitleNoName": "Welcome back, learner!",
         "welcomeBody": "Let's pick your learning journey back up together.",
         "guestTitle": "Hi, I'm FrosTES!",
         "guestBody": "Explore the courses and start your journey with me."
@@ -61,7 +61,7 @@
       },
       "account": {
         "title": "Your space",
-        "body": "Open your avatar for the AI tutor, your streak 🔥 and quests, wallet and settings."
+        "body": "Open your avatar for the FrosTES tutor, your streak 🔥 and quests, wallet and settings."
       }
     },
     "done": {
@@ -170,7 +170,7 @@
   },
   "profileSettings": {
     "title": "Settings",
-    "subtitle": "Manage your account, AI, content and membership.",
+    "subtitle": "Manage your account, FrosTES, content and membership.",
     "loginMethod": "Login method",
     "loginMethodValue": {
       "github": "GitHub",
@@ -182,7 +182,7 @@
     "groups": {
       "account": "Account",
       "learning": "Learning",
-      "ai": "AI",
+      "ai": "FrosTES",
       "content": "Content"
     },
     "items": {
@@ -193,9 +193,9 @@
       "submissions": "Submissions",
       "attempts": "Milestone attempts",
       "feedback": "Feedback",
-      "aiSettings": "AI settings",
-      "aiSubscription": "AI plan",
-      "aiUsage": "AI usage",
+      "aiSettings": "FrosTES settings",
+      "aiSubscription": "FrosTES plan",
+      "aiUsage": "FrosTES usage",
       "bookmarks": "Bookmarks",
       "rewards": "Rewards",
       "blog": "Blog",
@@ -551,10 +551,10 @@
     "onThisPage": "On this page"
   },
   "contentAi": {
-    "title": "Ask FTES AI",
+    "title": "Ask FrosTES",
     "hint": "Ask anything about this content.",
     "placeholder": "Ask about this content...",
-    "ask": "Ask AI",
+    "ask": "Ask FrosTES",
     "send": "Send",
     "pickModel": "Pick model",
     "clear": "Clear chat",
@@ -570,9 +570,9 @@
       "example": "Give me a real-world example",
       "remember": "What should I remember from this?"
     },
-    "askAboutSelection": "Ask AI about this",
-    "selectionHintTitle": "Ask AI about any passage",
-    "selectionHint": "Highlight a passage in the lesson and an ask-AI button appears.",
+    "askAboutSelection": "Ask FrosTES about this",
+    "selectionHintTitle": "Ask FrosTES about any passage",
+    "selectionHint": "Highlight a passage in the lesson and an ask-FrosTES button appears.",
     "dismissHint": "Dismiss tip",
     "new": "New",
     "clearSelection": "Clear selection",
@@ -590,26 +590,26 @@
     "noConversations": "No conversations yet",
     "deleteConversation": "Delete conversation",
     "turnsCount": "{count} messages",
-    "quotaHit": "You've used up your AI questions for today.",
+    "quotaHit": "You've used up your FrosTES questions for today.",
     "studyTools": {
-      "title": "Study with AI",
-      "description": "Use AI to summarize this lesson or generate flashcards based on its content.",
+      "title": "Study with FrosTES",
+      "description": "Use FrosTES to summarize this lesson or generate flashcards based on its content.",
       "back": "Back"
     },
     "note": {
-      "title": "AI Note",
-      "description": "Generate an AI summary of this lesson, then save it as a note to review.",
-      "generate": "Generate AI note",
+      "title": "FrosTES Note",
+      "description": "Generate a FrosTES summary of this lesson, then save it as a note to review.",
+      "generate": "Generate FrosTES note",
       "regenerate": "Regenerate",
       "save": "Save note",
       "saved": "Note saved",
       "saveError": "Couldn't save the note. Please try again.",
       "error": "Couldn't generate the note. Please try again.",
-      "empty": "No note yet. Tap “Generate AI note” to start.",
+      "empty": "No note yet. Tap “Generate FrosTES note” to start.",
       "prompt": "Summarize the current lesson into a concise study note. Format it in Markdown with: a 2–3 sentence overview, a bullet list of the key points, and a “Remember” section. Base it only on this lesson's content. Answer in the same language as the lesson."
     },
     "flashcard": {
-      "title": "AI Flashcards",
+      "title": "FrosTES Flashcards",
       "description": "Generate a Q&A flashcard deck from this lesson to test yourself.",
       "generate": "Generate flashcards",
       "regenerate": "Regenerate",
@@ -634,8 +634,8 @@
         "unpublish": "Hide from learners",
         "published": "Visible",
         "draft": "Draft",
-        "empty": "No cards yet. Add the first one so learners get your deck instead of AI-generated cards.",
-        "aiDraftTitle": "AI draft for this lesson",
+        "empty": "No cards yet. Add the first one so learners get your deck instead of FrosTES-generated cards.",
+        "aiDraftTitle": "FrosTES draft for this lesson",
         "aiDraftHint": "Tap to load it into the editor, adjust it to the lesson's core points, then save. Nothing reaches learners until you save.",
         "useAiDraft": "Use this card"
       },
@@ -681,10 +681,10 @@
     },
     "teaching": {
       "title": "Courses I teach",
-      "subtitle": "Your courses — draft or published. Open one to manage its AI interview.",
+      "subtitle": "Your courses — draft or published. Open one to manage its FrosTES interview.",
       "empty": "You don't own any course yet",
       "browse": "Browse courses",
-      "manageHint": "Open to manage the AI interview →"
+      "manageHint": "Open to manage the FrosTES interview →"
     },
     "status": {
       "PUBLISHED": "Published",
@@ -863,9 +863,9 @@
       "fileCardTitle": "Submitted CV information",
       "submittedAtPending": "Submission time not available yet.",
       "download": "Download",
-      "aiReviewSectionTitle": "AI review",
-      "reviewAction": "Run AI review",
-      "reviewActionRerun": "Re-run AI review",
+      "aiReviewSectionTitle": "FrosTES review",
+      "reviewAction": "Run FrosTES review",
+      "reviewActionRerun": "Re-run FrosTES review",
       "reviewLevelLabel": "Review level",
       "reviewLevelPlaceholder": "Select a rubric level",
       "reviewLevelSectionDescription": "Current rubric: {level}. Use Update to open the list and pick another level.",
@@ -878,13 +878,13 @@
         "selected": "Selected",
         "close": "Close"
       },
-      "reviewPlanTitle": "AI review plan",
+      "reviewPlanTitle": "FrosTES review plan",
       "feedbackTitle": "CV feedback",
       "feedbackSummary": "Your CV has been received. Mentor feedback will be provided in the next review session.",
       "updateAction": "Update CV",
       "attemptsTitle": "Submitted CV versions",
       "defaultCvFileName": "document.pdf",
-      "aiBrand": "FTES AI",
+      "aiBrand": "FrosTES",
       "toast": {
         "errorTitle": "Something went wrong",
         "successTitle": "Done",
@@ -940,7 +940,7 @@
   "finalProject": {
     "dashboard": {
       "title": "Personal project",
-      "subtitle": "Build your project milestone by milestone — graded by AI.",
+      "subtitle": "Build your project milestone by milestone — graded by FrosTES.",
       "progress": "Progress",
       "tasksDone": "{done}/{total} tasks",
       "nextTask": "Next task",
@@ -965,7 +965,7 @@
     "page": {
       "title": "Personal project",
       "searchTaskPlaceholder": "Search tasks...",
-      "description": "Bring your personal project to life through a structured Milestone roadmap. With StarCI AI by your side, every line of code and solution is deeply evaluated, helping you optimize product quality throughout the process.",
+      "description": "Bring your personal project to life through a structured Milestone roadmap. With FrosTES by your side, every line of code and solution is deeply evaluated, helping you optimize product quality throughout the process.",
       "submit": {
         "title": "Submit project idea",
         "placeholder": "Paste your GitHub repository link",
@@ -1020,7 +1020,7 @@
         "empty": "No review attempts yet."
       },
       "feedback": {
-        "title": "AI feedback",
+        "title": "FrosTES feedback",
         "content": "Temporary: project architecture is clear, but core-flow tests and deployment documentation should be improved."
       },
       "history": {
@@ -1118,7 +1118,7 @@
     "suggestionLabel": "Suggestion",
     "jobStatus": {
       "queued": "Waiting for grading...",
-      "processing": "Grading with AI...",
+      "processing": "Grading with FrosTES...",
       "completed": "Grading complete!",
       "failed": "Grading failed."
     }
@@ -1201,10 +1201,10 @@
       "failed": "Not passed · {score}/{maxScore} pts"
     },
     "quota": {
-      "overQuota": "You've run out of AI quota ({used}/{quota} credits). Upgrade to keep grading.",
+      "overQuota": "You've run out of FrosTES quota ({used}/{quota} credits). Upgrade to keep grading.",
       "addQuota": "Add quota",
       "resetAt": "Quota recovers at {time}",
-      "aiUsage": "AI Usage",
+      "aiUsage": "FrosTES Usage",
       "usage": "{used}/{quota} credits",
       "remaining": "{remaining} credits left",
       "quotaReached": "Quota reached",
@@ -1304,8 +1304,8 @@
       "lastAttemptScoreWithRequirement": "Your last attempt score is <n>{earned}</n><n>/</n><n>{max}</n>. Minimum required <n>{required}</n>.",
       "jobStatus": {
         "queued": "Your submission is in the queue — hang tight…",
-        "processing": "FTES AI is analyzing your submission — hang tight...",
-        "completed": "Your submission has been analyzed by FTES AI.",
+        "processing": "FrosTES is analyzing your submission — hang tight...",
+        "completed": "Your submission has been analyzed by FrosTES.",
         "failed": "Failed"
       }
     },
@@ -1732,7 +1732,7 @@
       "setupHint": "Pick a seniority level (optional), then answer {total} questions aloud.",
       "expectCount": "{total} questions",
       "expectVoice": "Answer by voice",
-      "expectAiGrade": "AI scores + feedback",
+      "expectAiGrade": "FrosTES scores + feedback",
       "levelLabel": "Question level",
       "historyTitle": "Your interview progress",
       "historyAnswered": "{count} questions practiced",
@@ -1746,7 +1746,7 @@
       "readinessEmpty": "Answer your first question to track readiness.",
       "pickHint": "Pick a deck from the list on the left to start a mock interview.",
       "gateTitle": "Mock interview is for enrolled learners",
-      "gateDescription": "Enroll in the course to practice with the AI interviewer — a score and feedback after every answer."
+      "gateDescription": "Enroll in the course to practice with the FrosTES interviewer — a score and feedback after every answer."
     },
     "level": {
       "junior": "Junior",
@@ -1763,10 +1763,10 @@
     "backToOverview": "Overview"
   },
   "aiSettings": {
-    "title": "AI Settings",
+    "title": "FrosTES Settings",
     "subtitle": "Choose your AI source and manage your own API key",
     "effectiveNow": "Currently using",
-    "gradeWith": "Grade with AI",
+    "gradeWith": "Grade with FrosTES",
     "pickModel": "Pick a model",
     "subscribeToGrade": "Subscribe to a paid plan to grade with this model",
     "belowFloorWarning": "Below the recommended level — may return inaccurate results",
@@ -1780,9 +1780,9 @@
     },
     "premiumLocked": "Paid plan required",
     "save": "Save changes",
-    "saved": "AI settings saved",
+    "saved": "FrosTES settings saved",
     "keyRemoved": "API key removed",
-    "error": "Could not update AI settings",
+    "error": "Could not update FrosTES settings",
     "lanes": {
       "auto": {
         "title": "Auto",
@@ -1806,7 +1806,7 @@
       "keyOnFile": "An API key is on file",
       "removeKey": "Remove key",
       "keyHint": "Enter an API key to use BYOK mode.",
-      "upsellCta": "View AI plans",
+      "upsellCta": "View FrosTES plans",
       "upsellPrompt": "Want premium models without your own key?",
       "upsellSubtitle": "ignore"
     },
@@ -1823,10 +1823,10 @@
       "plan": "{tier} plan · max ceiling {max}",
       "planFree": "Free plan · max ceiling {max}",
       "creditLine": "Credit 5h: {used5h}/{limit5h} · week: {usedWeek}/{limitWeek}",
-      "error": "Couldn't load AI settings",
+      "error": "Couldn't load FrosTES settings",
       "saving": "Saving…",
       "surface": {
-        "chatbot": "Ask AI while reading",
+        "chatbot": "Ask FrosTES while reading",
         "grading": "Grading",
         "interview": "Mock interview"
       }
@@ -1851,8 +1851,8 @@
     "priceApprox": "Approximately $5/month"
   },
   "aiSubscription": {
-    "title": "AI Plans",
-    "subtitle": "Upgrade for more weekly AI credits",
+    "title": "FrosTES Plans",
+    "subtitle": "Upgrade for more weekly FrosTES credits",
     "perMonth": "/month",
     "priceUsdHint": "≈ {amount} for international payments",
     "popular": "Popular",
@@ -1863,7 +1863,7 @@
     "free": {
       "title": "Free",
       "price": "₫0",
-      "desc": "Basic AI allowance bundled with your course",
+      "desc": "Basic FrosTES allowance bundled with your course",
       "cta": "Default plan"
     }
   },
@@ -1903,7 +1903,7 @@
     }
   },
   "aiQuota": {
-    "title": "AI quota",
+    "title": "FrosTES quota",
     "subtitle": "Grading credits within 5 hours and within the week",
     "creditWindows": {
       "title": "Grading credits (Auto)",
@@ -1915,9 +1915,9 @@
     "premiumLimits": {
       "caption": "Premium credits — both windows below share this pool."
     },
-    "cardTitle": "AI quota",
+    "cardTitle": "FrosTES quota",
     "viewDetails": "View details",
-    "fullPageTitle": "AI quota & usage",
+    "fullPageTitle": "FrosTES quota & usage",
     "fullPageDescription": "Auto credits, Premium plan limits, and grading history.",
     "remainingSummary": "{remaining} credits left within the week",
     "currentLane": "Current",
@@ -1926,7 +1926,7 @@
     "windowResetAt": "Resets at {time}",
     "creditsUnit": "credits",
     "noPremium": "No active subscription — upgrade to unlock Premium credits.",
-    "tabsAria": "AI quota sections",
+    "tabsAria": "FrosTES quota sections",
     "tabs": {
       "auto": "Auto",
       "subscription": "Subscription",
@@ -1936,9 +1936,9 @@
     "subscriptionActive": "You are on the {tier} plan.",
     "subscriptionNone": "You don't have a paid plan yet. Upgrade to unlock Premium credits and grade with high-end models.",
     "history": {
-      "title": "AI usage history",
+      "title": "FrosTES usage history",
       "chartTitle": "Credits spent per day (last 14 days)",
-      "empty": "No AI usage yet.",
+      "empty": "No FrosTES usage yet.",
       "loading": "Loading history…",
       "purposeGrade": "Challenge grading",
       "autoModel": "Auto model (free)",
@@ -1971,8 +1971,8 @@
       "progress": "Progress"
     },
     "cv": {
-      "title": "CV & AI review",
-      "description": "Build your CV from the Harvard template or upload an existing file, then get an AI review. Your CV is saved to your profile and can be exported as a PDF."
+      "title": "CV & FrosTES review",
+      "description": "Build your CV from the Harvard template or upload an existing file, then get a FrosTES review. Your CV is saved to your profile and can be exported as a PDF."
     },
     "certificates": {
       "title": "My certificates",
@@ -2173,7 +2173,7 @@
   "profileMenu": {
     "explore": {
       "title": "Explore",
-      "ai": "AI Assistant",
+      "ai": "FrosTES Assistant",
       "forYou": "For You",
       "recommendations": "Recommendations",
       "trending": "Trending"
@@ -2533,10 +2533,10 @@
       "save": "Sign in to save this item",
       "enroll": "Sign in to enroll in this course",
       "search": "Sign in to search learning content",
-      "explore": "Sign in to use the AI assistant and personalized recommendations",
+      "explore": "Sign in to use the FrosTES assistant and personalized recommendations",
       "join": "Sign in to join this group",
       "vote": "Sign in to vote in this poll",
-      "aiQa": "Sign in to ask AI about this document",
+      "aiQa": "Sign in to ask FrosTES about this document",
       "rate": "Sign in to rate this resource",
       "uploadResource": "Sign in to upload a resource",
       "follow": "Sign in to follow this user",
@@ -2563,7 +2563,7 @@
     "intlNoUsd": "International methods aren't available for this order.",
     "secure": "Your payment is encrypted and secure.",
     "noCardStored": "FTES AOS never stores your card details",
-    "aiPlanName": "AI plan",
+    "aiPlanName": "FrosTES plan",
     "membershipName": "FTES AOS membership",
     "loyalty": {
       "diligent": "You keep a learning streak"
@@ -2646,8 +2646,8 @@
         "description": "Your submission is queued and will be processed shortly."
       },
       "processing": {
-        "title": "StarCI AI is Reviewing",
-        "description": "StarCI AI is analyzing your submission. This may take a moment."
+        "title": "FrosTES is Reviewing",
+        "description": "FrosTES is analyzing your submission. This may take a moment."
       },
       "completed": {
         "title": "Review Complete",
@@ -2679,11 +2679,11 @@
     "reviewTask": {
       "queued": {
         "title": "Queued for Review",
-        "description": "Your project is queued. StarCI AI will start reviewing shortly."
+        "description": "Your project is queued. FrosTES will start reviewing shortly."
       },
       "processing": {
         "title": "Reviewing Your Project",
-        "description": "StarCI AI is reviewing your project code, architecture, and quality. This may take a few minutes."
+        "description": "FrosTES is reviewing your project code, architecture, and quality. This may take a few minutes."
       },
       "completed": {
         "title": "Project Review Complete",
@@ -2697,11 +2697,11 @@
     "reviewCv": {
       "queued": {
         "title": "Queued for CV Review",
-        "description": "Your CV is queued. StarCI AI will start reviewing shortly."
+        "description": "Your CV is queued. FrosTES will start reviewing shortly."
       },
       "processing": {
-        "title": "StarCI AI is Reviewing Your CV",
-        "description": "StarCI AI is reading your CV and comparing it with the selected rubric. This may take a few minutes."
+        "title": "FrosTES is Reviewing Your CV",
+        "description": "FrosTES is reading your CV and comparing it with the selected rubric. This may take a few minutes."
       },
       "completed": {
         "title": "CV Review Complete",
@@ -2857,7 +2857,7 @@
     },
     "identityStats": {
       "streak": "Streak",
-      "credit": "AI credit",
+      "credit": "FrosTES credit",
       "reward": "Rewards",
       "streakValue": "{count} days"
     },
@@ -2923,7 +2923,7 @@
       "profile": "Profile"
     },
     "aiQuota": {
-      "title": "AI credits",
+      "title": "FrosTES credits",
       "poolCaption": "One shared credit pool — refreshes per window.",
       "credits": "{remaining}/{limit} left",
       "upgrade": "Upgrade plan",
@@ -3166,8 +3166,8 @@
     }
   },
   "aiPlatform": {
-    "title": "AI Platform",
-    "subtitle": "Every AI tool in one place — for students, learning, coding, careers, and teachers.",
+    "title": "FrosTES Platform",
+    "subtitle": "Every FrosTES tool in one place — for students, learning, coding, careers, and teachers.",
     "open": "Open",
     "categories": {
       "student": "For students",
@@ -3178,7 +3178,7 @@
     },
     "tools": {
       "tutor": {
-        "name": "AI Tutor",
+        "name": "FrosTES Tutor",
         "desc": "Ask anything and get step-by-step explanations."
       },
       "planner": {
@@ -3203,7 +3203,7 @@
       },
       "cvReview": {
         "name": "CV Review",
-        "desc": "Get AI feedback to polish your resume for the job market."
+        "desc": "Get FrosTES feedback to polish your resume for the job market."
       },
       "mentor": {
         "name": "Teaching Mentor",
@@ -3211,13 +3211,13 @@
       }
     },
     "states": {
-      "empty": "No AI tools yet.",
-      "error": "Couldn't load the AI tools. Please try again.",
+      "empty": "No FrosTES tools yet.",
+      "error": "Couldn't load the FrosTES tools. Please try again.",
       "retry": "Try again"
     },
     "quotaRemaining": "{count} uses left",
     "toolPages": {
-      "back": "Back to AI tools",
+      "back": "Back to FrosTES tools",
       "run": "Run",
       "running": "Generating…",
       "modelLabel": "Model: {model}",
@@ -3234,8 +3234,8 @@
         "noLessons": "No studied lessons yet — upload a document instead."
       },
       "states": {
-        "running": "The AI is working on it — this usually takes a few seconds.",
-        "failed": "The AI job failed. Please try again.",
+        "running": "FrosTES is working on it — this usually takes a few seconds.",
+        "failed": "The FrosTES job failed. Please try again.",
         "quota": "You've used all your runs for this tool. Please try again later.",
         "stale": "This is taking longer than usual.",
         "retry": "Try again"
@@ -3844,7 +3844,7 @@
     "categories": {
       "merch": "Merch",
       "premium": "Premium",
-      "aiCredits": "AI Credits",
+      "aiCredits": "FrosTES Credits",
       "voucher": "Voucher",
       "courseUnlock": "Course Unlock"
     },
@@ -3934,7 +3934,7 @@
     "emptyColumn": "Nothing here yet",
     "stages": {
       "draft": "Draft",
-      "aiReview": "AI Review",
+      "aiReview": "FrosTES Review",
       "modReview": "Mod Review",
       "approved": "Approved",
       "published": "Published",
@@ -3955,7 +3955,7 @@
   },
   "analytics": {
     "title": "Analytics",
-    "subtitle": "Platform health at a glance — learning, community, AI, gamification, and business.",
+    "subtitle": "Platform health at a glance — learning, community, FrosTES, gamification, and business.",
     "chartSoon": "Chart coming soon",
     "deltaLabel": "Change vs. previous period: {value}%",
     "metrics": {
@@ -3969,7 +3969,7 @@
     "sections": {
       "learning": "Learning",
       "community": "Community",
-      "ai": "AI",
+      "ai": "FrosTES",
       "gamification": "Gamification",
       "business": "Business"
     },
@@ -3989,8 +3989,8 @@
       },
       "streakDays": "{count}-day streak",
       "points": "{count, number} points",
-      "aiCredit": "AI credit",
-      "aiCreditValue": "AI credit · {remaining}/{limit}",
+      "aiCredit": "FrosTES credit",
+      "aiCreditValue": "FrosTES credit · {remaining}/{limit}",
       "sections": {
         "continue": "Continue learning",
         "quest": "Today's quest",
@@ -4012,7 +4012,7 @@
           "readLesson": "Read a lesson",
           "passChallenge": "Pass a challenge",
           "reviewFlashcards": "Review flashcards",
-          "askAi": "Ask the AI tutor",
+          "askAi": "Ask the FrosTES tutor",
           "readContent": "Read a lesson"
         },
         "summary": "{done}/{total} tasks done",
@@ -4046,7 +4046,7 @@
       "identityStats": {
         "streak": "Streak",
         "streakValue": "{count} days",
-        "credit": "AI credit",
+        "credit": "FrosTES credit",
         "creditValue": "{count} left today",
         "reward": "Rewards"
       },
@@ -4077,7 +4077,7 @@
     "hero": {
       "eyebrow": "Your learning operating system",
       "headline": "One <accent>clear</accent> journey, from home to real outcomes",
-      "subline": "FTES guides you from the home page into a subject workplace, through a course, into practice with AI, and lands on real outcomes: projects, honors, and a career.",
+      "subline": "FTES guides you from the home page into a subject workplace, through a course, into practice with FrosTES, and lands on real outcomes: projects, honors, and a career.",
       "ctaPrimary": "Start learning",
       "ctaSecondary": "Explore the community"
     },
@@ -4097,8 +4097,8 @@
           "caption": "Learn through structured courses with clear lessons and exercises."
         },
         "practice": {
-          "label": "Practice & AI",
-          "caption": "Practice, ask the AI tutor, and get grading and personalized hints."
+          "label": "Practice & FrosTES",
+          "caption": "Practice, ask the FrosTES tutor, and get grading and personalized hints."
         },
         "outcome": {
           "label": "Outcome",
@@ -4114,10 +4114,10 @@
       "courses": "Courses",
       "enrollments": "Course enrollments",
       "communities": "Communities",
-      "aiTitle": "Supported by AI throughout",
+      "aiTitle": "Supported by FrosTES throughout",
       "aiChips": {
-        "tutor": "AI tutor chat",
-        "grading": "AI grading & feedback",
+        "tutor": "FrosTES tutor chat",
+        "grading": "FrosTES grading & feedback",
         "recommend": "Personalized recommendations",
         "roadmap": "Smart learning roadmap"
       }
@@ -4583,7 +4583,7 @@
       "a2": "The opposite. AI writes CRUD already. What it can't do is own trade-offs, design for scale and defend decisions — which is exactly what I train.",
       "q3": "I'm a beginner. Is this for me?",
       "a3": "If you can already write basic code and want to level up to designing systems, yes. If you've never coded, start with fundamentals first.",
-      "q4": "How does the AI grading actually work?",
+      "q4": "How does FrosTES grading actually work?",
       "a4": "Each challenge is scored against production-grade criteria with written feedback. You see exactly why you passed or what to fix.",
       "q5": "What does 'headhunted' really mean here?",
       "a5": "Opt in as open-to-work and your graded work becomes visible to hiring partners browsing the talent directory. No guarantees — just real signal."
@@ -4607,7 +4607,7 @@
         },
         "grade": {
           "step": "02",
-          "title": "AI-graded challenge",
+          "title": "FrosTES-graded challenge",
           "tag": "Instant feedback",
           "desc": "Write code, scored on correctness & design."
         },
@@ -4706,7 +4706,7 @@
       "remainingRuns": "{count} runs left this window",
       "quotaExhausted": "You have used all your runs for this window.",
       "byokNudge": "Add your own API key to keep running without limits.",
-      "goToAiSettings": "Open AI settings",
+      "goToAiSettings": "Open FrosTES settings",
       "runHistory": "Run history",
       "runHistoryEmpty": "No runs yet.",
       "failed": "The run failed. Please try again."
@@ -5086,7 +5086,7 @@
       "discussion": "Discussion",
       "resources": "Resources",
       "practice": "Practice",
-      "ai": "AI",
+      "ai": "FrosTES",
       "members": "Members",
       "statistics": "Statistics",
       "career": "Career"
@@ -5139,7 +5139,7 @@
       },
       "loadError": "Couldn't load resources.",
       "retry": "Try again",
-      "askAi": "Ask AI about this document",
+      "askAi": "Ask FrosTES about this document",
       "downloads": "{count} downloads",
       "ratingLabel": "{rating}/5 · {count} ratings",
       "downloadError": "Could not create the download link. Please try again.",
@@ -5259,7 +5259,7 @@
         "exitCode": "Exit code: {code}",
         "runtimeMs": "{ms} ms",
         "stderr": "Error output",
-        "gradeTitle": "AI grading result",
+        "gradeTitle": "FrosTES grading result",
         "gradeScore": "{score}/{max} points",
         "criteria": "Criteria",
         "feedback": "Feedback",
@@ -5349,14 +5349,14 @@
         "error": "Couldn't load the leaderboard"
       },
       "quizHandoff": {
-        "description": "There is no quiz bank for this subject yet. Meanwhile, use AI Quiz to generate questions from the subject's materials.",
-        "cta": "Open AI Quiz"
+        "description": "There is no quiz bank for this subject yet. Meanwhile, use FrosTES Quiz to generate questions from the subject's materials.",
+        "cta": "Open FrosTES Quiz"
       },
       "flashcardsHandoff": {
-        "description": "No lecturer-curated deck exists for this subject yet. Use AI Flashcards to generate cards from the subject's materials.",
-        "cta": "Open AI Flashcards"
+        "description": "No lecturer-curated deck exists for this subject yet. Use FrosTES Flashcards to generate cards from the subject's materials.",
+        "cta": "Open FrosTES Flashcards"
       },
-      "aiHandoffHint": "The AI tools live in the subject's AI tab.",
+      "aiHandoffHint": "The FrosTES tools live in the subject's FrosTES tab.",
       "quiz": {
         "intro": "Draws random questions from this subject's bank. Practice is not recorded in your transcript — retake as often as you like.",
         "countLabel": "Questions",
@@ -5365,7 +5365,7 @@
         "drawing": "Drawing questions…",
         "ephemeralNote": "Practice runs are not recorded in your transcript.",
         "empty": "No practice questions for this subject yet",
-        "emptyDesc": "The subject's question bank has no ready questions. You can use AI Quiz to generate questions from its resources.",
+        "emptyDesc": "The subject's question bank has no ready questions. You can use FrosTES Quiz to generate questions from its resources.",
         "retry": "Try again",
         "questionLine": "Question {number}",
         "multipleHint": "Select every correct answer",
@@ -5473,20 +5473,20 @@
       }
     },
     "aiTools": {
-      "title": "AI assistant",
+      "title": "FrosTES assistant",
       "cta": "Open",
       "comingSoon": "Coming soon",
       "comingSoonCta": "Soon",
-      "lockedHint": "Enroll in this subject to unlock the AI tools.",
+      "lockedHint": "Enroll in this subject to unlock the FrosTES tools.",
       "join": "Enroll in subject",
-      "errorTitle": "Couldn't load AI tools",
+      "errorTitle": "Couldn't load FrosTES tools",
       "retry": "Try again",
       "errorRetryHint": "Something went wrong. Please try again.",
       "pickSource": "Pick a source",
       "goResources": "Open Resources tab",
       "tools": {
         "tutor": {
-          "title": "AI tutor",
+          "title": "FrosTES tutor",
           "desc": "Q&A grounded in lessons"
         },
         "summary": {
@@ -5507,7 +5507,7 @@
         }
       },
       "tutor": {
-        "placeholder": "Ask the AI tutor about this subject...",
+        "placeholder": "Ask the FrosTES tutor about this subject...",
         "send": "Send",
         "settings": "Settings",
         "conversations": "Conversations",
@@ -5520,7 +5520,7 @@
         "modelLabel": "Answering model",
         "clearHint": "Clear all conversations for this subject. This can't be undone.",
         "clearAction": "Clear all history",
-        "emptyHint": "Start asking the AI tutor about {subject}.",
+        "emptyHint": "Start asking the FrosTES tutor about {subject}.",
         "thinking": "Answering...",
         "streamError": "Couldn't generate an answer.",
         "suggestions": {
@@ -5534,14 +5534,14 @@
         "answeredBy": "Answered by {model}",
         "loadingThread": "Loading conversation…",
         "modelNotAllowed": "That model isn't allowed. Switched back to the default.",
-        "quotaHit": "You've used up your AI quota. Please try again later.",
+        "quotaHit": "You've used up your FrosTES quota. Please try again later.",
         "signInRequired": "Your session expired. Sign in again to continue.",
-        "forbidden": "You don't have access to the AI tutor for this content.",
+        "forbidden": "You don't have access to the FrosTES tutor for this content.",
         "sessionBusy": "This conversation is still answering the previous question. Please wait and retry.",
         "sessionGone": "Conversation not found. Start a new one.",
-        "allSubjectsHint": "This lists all of your AI tutor conversations (the server can't filter by subject yet).",
+        "allSubjectsHint": "This lists all of your FrosTES tutor conversations (the server can't filter by subject yet).",
         "deleteError": "Couldn't delete the conversation. Please try again.",
-        "clearHintAll": "Archives every AI tutor conversation you have (the server can't scope this to a single subject yet). This can't be undone.",
+        "clearHintAll": "Archives every FrosTES tutor conversation you have (the server can't scope this to a single subject yet). This can't be undone.",
         "clearError": "Some conversations couldn't be deleted. Please try again.",
         "subjectOnlyHint": "Showing only conversations for the subject you're viewing.",
         "clearedCount": "Cleared {count} conversations for this subject.",
@@ -5570,7 +5570,7 @@
         "emptyTitle": "No material to build a quiz from",
         "emptyDesc": "Add resources in the Resources tab, then come back.",
         "explanation": "Explanation",
-        "unknownAnswer": "The AI didn't mark a correct answer for this question."
+        "unknownAnswer": "FrosTES didn't mark a correct answer for this question."
       },
       "flashcards": {
         "generate": "Generate flashcards",
@@ -5625,16 +5625,16 @@
       "sourcesErrorTitle": "Couldn't load the resource list",
       "job": {
         "working": "Working…",
-        "running": "The AI is working on it — this usually takes a few seconds.",
+        "running": "FrosTES is working on it — this usually takes a few seconds.",
         "stale": "This is taking longer than usual.",
         "refresh": "Check again",
-        "quota": "You've used all your AI runs for this tool. Please try again later.",
+        "quota": "You've used all your FrosTES runs for this tool. Please try again later.",
         "auth": "Your session expired. Sign in again to continue.",
-        "forbidden": "You don't have access to run AI on this material.",
+        "forbidden": "You don't have access to run FrosTES on this material.",
         "notFound": "The selected material was not found.",
-        "invalid": "The selected material can't be used by the AI yet.",
-        "insufficientContext": "This lesson doesn't have enough content for the AI to work with. Pick a longer lesson, or add more content to it.",
-        "failed": "The AI job failed. Please try again.",
+        "invalid": "The selected material can't be used by FrosTES yet.",
+        "insufficientContext": "This lesson doesn't have enough content for FrosTES to work with. Pick a longer lesson, or add more content to it.",
+        "failed": "The FrosTES job failed. Please try again.",
         "model": "Model: {model}"
       },
       "ocr": {
@@ -5711,12 +5711,12 @@
     },
     "membership": {
       "join": "Join subject",
-      "joinHint": "Join to unlock this subject's AI tools, resources and discussions.",
+      "joinHint": "Join to unlock this subject's FrosTES tools, resources and discussions.",
       "joinSuccess": "Joined the subject",
       "joinFailed": "Could not join the subject. Please try again.",
       "leave": "Leave",
       "leaveConfirmTitle": "Leave this subject?",
-      "leaveConfirmBody": "You will lose access to the AI tools and member-only content of {name}. You can join again at any time.",
+      "leaveConfirmBody": "You will lose access to the FrosTES tools and member-only content of {name}. You can join again at any time.",
       "leaveCancel": "Stay",
       "leaveConfirm": "Leave",
       "leaveSuccess": "Left the subject",
@@ -6278,15 +6278,15 @@
     },
     "downloadsCount": "{count} downloads",
     "aiQa": {
-      "title": "Ask AI about this document",
+      "title": "Ask FrosTES about this document",
       "hint": "Suggested questions",
       "placeholder": "Ask about this document…",
       "send": "Send",
       "thinking": "Looking for an answer…",
       "error": "Sorry, I couldn't answer that. Please try again.",
-      "quotaHit": "You've used up your AI questions for today.",
+      "quotaHit": "You've used up your FrosTES questions for today.",
       "modelNotAllowed": "That model isn't allowed — switched back to the default.",
-      "accessDenied": "You don't have access to ask AI about this document.",
+      "accessDenied": "You don't have access to ask FrosTES about this document.",
       "processing": "Preparing the document… try again in a few minutes.",
       "retry": "Try again",
       "citations": "Citations",
@@ -6927,8 +6927,8 @@
         "maxReached": "You've used all {max} submissions.",
         "historyTitle": "Submission history",
         "attemptLine": "Attempt {number}",
-        "aiScore": "AI score: {score}",
-        "pendingHint": "The AI is grading your work — the result updates automatically.",
+        "aiScore": "FrosTES score: {score}",
+        "pendingHint": "FrosTES is grading your work — the result updates automatically.",
         "status": {
           "submitted": "Pending",
           "grading": "Grading",
@@ -6999,7 +6999,7 @@
         "upgradeTiersHint": "Packages that unlock this challenge:",
         "upgradeCta": "Upgrade package",
         "error": "Failed to load the challenge.",
-        "gradeSubmit": "Submit & grade with AI",
+        "gradeSubmit": "Submit & grade with FrosTES",
         "gradeSubmitTests": "Submit & grade",
         "viewResult": "View result",
         "hideResult": "Hide result",
@@ -7041,7 +7041,7 @@
         "after": "After",
         "noChanges": "No changes",
         "hasChanges": "Needs changes",
-        "filesReadHint": "The AI read {count} files across {iterations} rounds.",
+        "filesReadHint": "FrosTES read {count} files across {iterations} rounds.",
         "unanchoredTitle": "Comments that couldn't open their file",
         "unanchoredHint": "These comments point to a file that isn't in the tree (or the project couldn't be loaded).",
         "fileLine": "{file} · line {line}",
@@ -7156,7 +7156,7 @@
       "hasChallenge": "Has challenge",
       "previous": "Previous",
       "next": "Next",
-      "askAboutThis": "Ask AI about this",
+      "askAboutThis": "Ask FrosTES about this",
       "lockedTitle": "Premium content",
       "lockedTitlePackages": "Content in the {packages} package",
       "lockedBody": "Enroll in the course to unlock this lesson and the rest of the content.",
@@ -7186,11 +7186,11 @@
         "body": "Nice work! Keep the momentum going with FrosTES on the next lesson."
       },
       "ai": {
-        "open": "Open AI tutor",
+        "open": "Open FrosTES tutor",
         "close": "Close",
         "expand": "Expand to full screen",
         "collapse": "Exit full screen",
-        "title": "Ask AI",
+        "title": "Ask FrosTES",
         "intro": "Select a passage in the lesson to ask about it, or type a question below.",
         "placeholder": "Ask about this lesson…",
         "send": "Send",
@@ -7200,9 +7200,9 @@
         "modelLabel": "Reply model",
         "answeredBy": "Answered by {model}",
         "modelNotAllowed": "This model isn't allowed — switched back to the default model.",
-        "stubReply": "This is a sample AI tutor reply. Once the backend is ready, answers will be grounded in the lesson content and the passage you selected.",
+        "stubReply": "This is a sample FrosTES tutor reply. Once the backend is ready, answers will be grounded in the lesson content and the passage you selected.",
         "error": "Sorry, I couldn't answer that. Please try again.",
-        "quotaHit": "You've used up your AI questions for today.",
+        "quotaHit": "You've used up your FrosTES questions for today.",
         "quickAsks": {
           "explain": "Explain this passage",
           "example": "Give an example",
@@ -7211,8 +7211,8 @@
         "hint": "Suggested questions",
         "thinking": "Composing an answer…",
         "new": "New",
-        "selectionHintTitle": "Tip: ask AI about any passage",
-        "selectionHint": "Highlight a passage in the lesson, then press \"Ask AI about this\" to ask about it directly.",
+        "selectionHintTitle": "Tip: ask FrosTES about any passage",
+        "selectionHint": "Highlight a passage in the lesson, then press \"Ask FrosTES about this\" to ask about it directly.",
         "dismissHint": "Got it",
         "suggestions": {
           "summarize": "Summarize this lesson",
@@ -7259,7 +7259,7 @@
     },
     "mockInterview": {
       "title": "Mock interview",
-      "subtitle": "Practice a mock interview with AI — questions drawn for your course, answer then get detailed grading.",
+      "subtitle": "Practice a mock interview with FrosTES — questions drawn for your course, answer then get detailed grading.",
       "tabsLabel": "Mode",
       "tabPractice": "Practice",
       "tabHistory": "History",
@@ -7315,22 +7315,22 @@
       "scorecardEmptyTitle": "Not graded yet",
       "scorecardEmptyBody": "This session hasn't been graded. Return to practice to submit answers.",
       "entryTitle": "Mock interview",
-      "entrySubtitle": "AI-graded mock interview practice"
+      "entrySubtitle": "FrosTES-graded mock interview practice"
     },
     "courseInterview": {
-      "title": "AI interview",
-      "subtitle": "Take an end-of-course AI interview — MCQ, essay, and oral viva — then receive your score and feedback.",
-      "entryTitle": "AI interview",
-      "entrySubtitle": "End-of-course AI interview with MCQ, essay, and oral viva",
+      "title": "FrosTES interview",
+      "subtitle": "Take an end-of-course FrosTES interview — MCQ, essay, and oral viva — then receive your score and feedback.",
+      "entryTitle": "FrosTES interview",
+      "entrySubtitle": "End-of-course FrosTES interview with MCQ, essay, and oral viva",
       "overviewTitle": "Interview overview",
-      "overviewBody": "Answer multiple-choice, essay, and oral questions. The oral section is an interactive conversation with an AI examiner.",
+      "overviewBody": "Answer multiple-choice, essay, and oral questions. The oral section is an interactive conversation with a FrosTES examiner.",
       "questionCount": "{count} questions",
       "notReadyTitle": "Interview not ready",
       "notReadyBody": "This course's interview question set is not ready yet. Please check back later.",
       "emptyTitle": "No interview yet",
-      "emptyBody": "The instructor hasn't created an AI interview for this course yet. Please check back later.",
+      "emptyBody": "The instructor hasn't created a FrosTES interview for this course yet. Please check back later.",
       "forbiddenTitle": "You are not enrolled in this course",
-      "forbiddenBody": "Enroll in the course to unlock the AI interview.",
+      "forbiddenBody": "Enroll in the course to unlock the FrosTES interview.",
       "startFailed": "Couldn't start the interview. Please try again.",
       "start": "Start",
       "questionProgress": "Question {index}/{total}",
@@ -7360,17 +7360,17 @@
       },
       "oral": {
         "topic": "Topic",
-        "intro": "Start the oral viva to speak with the AI examiner.",
+        "intro": "Start the oral viva to speak with the FrosTES examiner.",
         "start": "Start viva",
         "startPrompt": "Start",
         "replyPlaceholder": "Type your reply…",
         "send": "Send reply",
         "streamError": "The examiner couldn't respond. Please try again.",
-        "quotaError": "You've used up your AI questions for today."
+        "quotaError": "You've used up your FrosTES questions for today."
       },
       "manage": {
         "title": "Manage interview",
-        "subtitle": "Generate or regenerate the AI interview question set for this course.",
+        "subtitle": "Generate or regenerate the FrosTES interview question set for this course.",
         "defaultTitle": "Course interview",
         "titleField": "Title",
         "titlePlaceholder": "e.g. Final interview",
@@ -7395,7 +7395,7 @@
         "generate": "Generate question set",
         "generateFailed": "Couldn't generate the question set. Please try again.",
         "forbiddenTitle": "Not this course's lecturer",
-        "forbiddenBody": "Only the course lecturer can generate the AI interview question set.",
+        "forbiddenBody": "Only the course lecturer can generate the FrosTES interview question set.",
         "statusLabel": "Status",
         "status": {
           "GENERATING": "Generating",
@@ -7504,7 +7504,7 @@
       "lastFeedback": "Latest feedback",
       "feedbackLabel": "Feedback",
       "noFeedback": "No feedback for this attempt.",
-      "processing": "AI is grading…",
+      "processing": "FrosTES is grading…",
       "requirementsTitle": "Requirements",
       "servedBy": "Graded by {model}",
       "severity": {
@@ -7545,8 +7545,8 @@
       "unavailableTag": "Unavailable",
       "geminiFallbackHint": "Free models have usage limits; when they run out it falls back to Gemini.",
       "modelHint": "Each model grades differently — the score and feedback depend on the model you pick.",
-      "modelHintReview": "Hidden test cases decide the score, so it never changes with the model. Your pick only shapes the AI review of code quality.",
-      "gradeWithAi": "Grade with AI",
+      "modelHintReview": "Hidden test cases decide the score, so it never changes with the model. Your pick only shapes the FrosTES review of code quality.",
+      "gradeWithAi": "Grade with FrosTES",
       "regrade": "Grade again",
       "regradeHint": "Switch model and grade again to compare — your code stays exactly as you left it.",
       "gradingWith": "Grading with {model}…",
@@ -7593,8 +7593,8 @@
       "testEmpty": "(empty)",
       "testNoResults": "No test cases to run.",
       "resultPaneTitle": "Results",
-      "resultPaneEmpty": "Run your code or grade with AI to see results here.",
-      "submittingGrade": "Submitting & grading with AI…",
+      "resultPaneEmpty": "Run your code or grade with FrosTES to see results here.",
+      "submittingGrade": "Submitting & grading with FrosTES…",
       "schemaTitle": "Database schema",
       "schemaViewErd": "ERD",
       "schemaViewTable": "Tables",
@@ -7609,15 +7609,15 @@
       "erdFigureLabel": "Entity-relationship diagram",
       "retry": "Retry",
       "errors": {
-        "forbidden": "Your plan does not include AI code grading yet. Upgrade your plan to use this feature.",
+        "forbidden": "Your plan does not include FrosTES code grading yet. Upgrade your plan to use this feature.",
         "execUnavailable": "The code runner is temporarily unavailable. Please try again later — your code is kept as-is.",
         "sqlUnavailable": "The SQL runner is temporarily unavailable. Please try again later — your query is kept as-is.",
         "down": "The grading service is under maintenance. Please try again in a few minutes — your code is kept as-is.",
         "failed": "Grading failed. Try again — your code is kept as-is.",
         "invalid": "The submission is invalid — check your code and language.",
         "modelNotAllowed": "This model is not on the allowlist — switched back to the default model, please grade again.",
-        "freeRunLimit": "Free trial: each challenge allows only 2 runs and 1 AI grade. Enroll in the course to keep practicing without limits.",
-        "freeGradeLimit": "Free trial: each challenge allows only 1 AI grade and 2 runs. Enroll in the course to keep grading without limits.",
+        "freeRunLimit": "Free trial: each challenge allows only 2 runs and 1 FrosTES grade. Enroll in the course to keep practicing without limits.",
+        "freeGradeLimit": "Free trial: each challenge allows only 1 FrosTES grade and 2 runs. Enroll in the course to keep grading without limits.",
         "generic": "Something went wrong while grading. Please try again."
       }
     },

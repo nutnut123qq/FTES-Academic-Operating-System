@@ -7,6 +7,16 @@ import { FtesMascot } from "@/components/reuseable/FtesMascot"
 import { useQueryMyCoursesSwr } from "@/components/features/course/hooks/useQueryMyCoursesSwr"
 
 /**
+ * Display names the BE hands back for an account with no profile name of its own.
+ * They are PLACEHOLDERS, not names — greeting someone as "Người dùng ẩn" reads like an
+ * error, so the greeting treats them as "no name" and falls back to the friendly
+ * name-less line ("Chào mừng trở lại, bạn học!"). Compared case-insensitively and only
+ * HERE, at the greeting call-site: everywhere else (comment authors, member lists) the
+ * placeholder is still the right thing to render.
+ */
+const PLACEHOLDER_DISPLAY_NAMES = ["người dùng ẩn", "ẩn danh", "anonymous", "anonymous user"]
+
+/**
  * FrosTES's welcome on the landing — a SMALL, subtle one-liner (a `sm` mascot next to a
  * short "welcome back, {name}" line, NOT a hero-sized speech bubble), rendered INSIDE the
  * "Continue learning" band between its heading and the course cards, so it reads as a
@@ -30,10 +40,13 @@ export const HomeMascotGreeting = () => {
     const user = useAppSelector((state) => state.user.user)
 
     const isSignedIn = authenticated && Boolean(user)
-    const name = user?.displayName?.trim() || user?.username || ""
+    const candidate = user?.displayName?.trim() || user?.username || ""
+    // A BE placeholder ("Người dùng ẩn") is not a name — drop it so the friendly
+    // name-less greeting ("… bạn học!") wins instead of echoing the placeholder.
+    const name = PLACEHOLDER_DISPLAY_NAMES.includes(candidate.toLowerCase()) ? "" : candidate
 
-    // Signed-in copy: greet by name when we have one, else a name-less "welcome
-    // back" — never interpolate an empty name into "Chào mừng trở lại, !".
+    // Signed-in copy: greet by name when we have one, else the name-less "welcome
+    // back, bạn học" — never interpolate an empty name into "Chào mừng trở lại, !".
     const welcomeTitle = name ? t("welcomeTitle", { name }) : t("welcomeTitleNoName")
 
     return (

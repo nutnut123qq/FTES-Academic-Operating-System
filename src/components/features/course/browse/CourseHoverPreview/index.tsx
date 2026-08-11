@@ -28,8 +28,13 @@ export interface CourseHoverPreviewProps extends WithClassNames<undefined> {
     children: React.ReactNode
 }
 
-/** Delay before the preview opens, so grazing the grid doesn't flash popups. */
-const OPEN_DELAY_MS = 300
+/*
+ * NOTE — no hover delay constant on purpose. The preview opens the INSTANT the pointer is
+ * over the card: a delay meant a quick hover never showed the panel at all ("hover vô mà
+ * popup vẫn có time để ngắt mất") — the pointer had to sit still to earn it. Closing is
+ * likewise immediate and `relatedTarget`-driven (see onLeave), so the whole rule is:
+ * pointer on the card or the panel → open; off both → closed. No timers either way.
+ */
 
 /**
  * Parses the "what this course includes" bullets out of the BE `infoCourse`
@@ -164,18 +169,15 @@ export const CourseHoverPreview = ({ course, children, className }: CourseHoverP
     const isEnrolled = enrolledSlugs.has(course.id)
     const wrapperRef = useRef<HTMLDivElement>(null)
     const panelRef = useRef<HTMLDivElement>(null)
-    const openTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
     const [open, setOpen] = useState(false)
     /** Fixed-position coordinates + the card-matched height cap; `null` until the first post-open measure. */
     const [position, setPosition] = useState<{ left: number, top: number, arrowTop: number, side: "left" | "right", maxHeight: number } | null>(null)
 
-    // Bound to BOTH the card wrapper and the portaled panel. Opening is delayed a
-    // touch so grazing the grid doesn't flash popups.
+    // Bound to BOTH the card wrapper and the portaled panel. Opens SYNCHRONOUSLY on
+    // enter — no timer to schedule and therefore none to miss (see {@link OPEN_DELAY_MS}).
     const onEnter = useCallback(() => {
-        if (open) return
-        clearTimeout(openTimer.current)
-        openTimer.current = setTimeout(() => setOpen(true), OPEN_DELAY_MS)
-    }, [open])
+        setOpen(true)
+    }, [])
 
     // Close is driven by WHERE the pointer went, not a timer. `relatedTarget` is the
     // element the pointer entered on leaving; while it is still inside the card wrapper
@@ -185,18 +187,12 @@ export const CourseHoverPreview = ({ course, children, className }: CourseHoverP
     // lingering; checking `relatedTarget` means it never closes while still hovered
     // (including while crossing between the card and the panel).
     const onLeave = useCallback((event: React.PointerEvent) => {
-        clearTimeout(openTimer.current)
         const next = event.relatedTarget as Node | null
         if (next && (wrapperRef.current?.contains(next) || panelRef.current?.contains(next))) {
             return
         }
         setOpen(false)
         setPosition(null)
-    }, [])
-
-    // the open timer must not fire after unmount (route change while hovering)
-    useEffect(() => () => {
-        clearTimeout(openTimer.current)
     }, [])
 
     // measure once per open: pick the side with room, cap the panel at the

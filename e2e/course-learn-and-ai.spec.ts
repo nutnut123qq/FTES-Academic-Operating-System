@@ -2,7 +2,7 @@ import { expect, request, test, type APIRequestContext, type Page } from "@playw
 import { fetchToken, loginAs } from "./helpers/auth"
 
 /**
- * E2E — nghiệm thu READER khoá học + 3 công cụ AI của người học (vòng 4).
+ * E2E — nghiệm thu READER khoá học + 3 công cụ FrosTES của người học (vòng 4).
  *
  * Khoá nghiệm thu đã dựng sẵn trên apitest (KHÔNG tạo mới ở đây):
  *   course 20214b93… / slug `e2e-v4-course-505089-ccf58cc7`, 1 chương, 3 bài
@@ -20,17 +20,17 @@ import { fetchToken, loginAs } from "./helpers/auth"
  * ─── GIẢ ĐỊNH / SỰ THẬT ĐÃ TRA (đọc trước khi sửa file này) ────────────────────
  *
  * 1. Ba endpoint `POST /ai/document-qa`, `/ai/learning/summary`, `/ai/learning/flashcards`
- *    KHÔNG được reader gọi. Trong reader cả 3 công cụ AI đều chạy qua SSE TUTOR_CHAT
+ *    KHÔNG được reader gọi. Trong reader cả 3 công cụ FrosTES đều chạy qua SSE TUTOR_CHAT
  *    (`POST /ai/sessions` + `POST /ai/sessions/{id}/messages`), xem doc-comment
  *    `LessonAiStudy/useLessonAiStream.ts` — `/ai/learning/*` trả `code=1002` Accepted mà
  *    `restRequest` coi là lỗi nên FE cố ý tránh. Vì vậy "trạng thái đang xử lý" ở đây là
  *    stream đang chảy / bubble "Đang soạn câu trả lời…", và ngưỡng chờ là 120 000 ms
  *    (đúng "tối đa 2 phút" của đề bài).
  *
- * 2. Khối "Học với AI" (Ghi chú AI + Thẻ ghi nhớ AI) chỉ mount khi
+ * 2. Khối "Học với FrosTES" (Ghi chú FrosTES + Thẻ ghi nhớ FrosTES) chỉ mount khi
  *    `!isLocked && lesson.isVideoLesson` (LessonReader/index.tsx). Bài DOCUMENT
  *    3f74ca4c KHÔNG có khối này — đó là thiết kế hiện tại, không phải bug. Nên:
- *      · (c) tóm tắt bài DOCUMENT đi qua gợi ý "Tóm tắt bài học này" của trợ giảng AI
+ *      · (c) tóm tắt bài DOCUMENT đi qua gợi ý "Tóm tắt bài học này" của trợ giảng FrosTES
  *        (cùng grounding lesson-body, và assert được con số 4271 để chứng minh tóm tắt
  *        thực sự sinh TỪ BÀI ĐÓ);
  *      · (d1) bộ thẻ trong reader chỉ chạy được trên bài VIDEO.
@@ -218,7 +218,7 @@ const openLesson = async (page: Page, contentId: string) => {
 }
 
 /**
- * Panel trợ giảng AI — PHẢI khoanh vùng, không assert ở cấp page: thân bài đang mở
+ * Panel trợ giảng FrosTES — PHẢI khoanh vùng, không assert ở cấp page: thân bài đang mở
  * cũng chứa con số 4271 nên `page.innerText()` sẽ đúng giả.
  *
  * Desktop `ContentAiFab` render `PopoverContent` KHÔNG bọc `Popover.Dialog` → react-aria
@@ -231,9 +231,9 @@ const aiPanel = (page: Page) =>
         .filter({ has: page.getByPlaceholder("Hỏi về bài học…") })
         .last()
 
-/** Mở FAB trợ giảng AI và trả về panel đã hiện. */
+/** Mở FAB trợ giảng FrosTES và trả về panel đã hiện. */
 const openAiChat = async (page: Page) => {
-    await page.getByRole("button", { name: "Mở trợ giảng AI" }).click()
+    await page.getByRole("button", { name: "Mở trợ giảng FrosTES" }).click()
     const panel = aiPanel(page)
     await expect(panel).toBeVisible({ timeout: 15_000 })
     return panel
@@ -354,9 +354,9 @@ test.describe("course reader + AI tools (khoá nghiệm thu vòng 4)", () => {
         await loginAs(page, "student")
         await openLesson(page, LESSON_DOC)
 
-        // Khối "Học với AI" (Ghi chú AI / Thẻ ghi nhớ AI) bị gate VIDEO-only → bài DOCUMENT
+        // Khối "Học với FrosTES" (Ghi chú FrosTES / Thẻ ghi nhớ FrosTES) bị gate VIDEO-only → bài DOCUMENT
         // không có. Chốt điều đó thành assert để nếu gate đổi thì spec này nói ra ngay.
-        await expect(page.getByText("Học với AI")).toHaveCount(0)
+        await expect(page.getByText("Học với FrosTES")).toHaveCount(0)
 
         const panel = await openAiChat(page)
         // gợi ý dựng sẵn = đường tóm tắt của reader
@@ -383,13 +383,13 @@ test.describe("course reader + AI tools (khoá nghiệm thu vòng 4)", () => {
         await dismissCookieBanner(page)
 
         // bài VIDEO không có bản ghi `/lessons/{id}/content` → KHÔNG có `#lesson-article`;
-        // chờ dương ở đây là chính cái card "Học với AI"
-        const studyCard = page.getByText("Học với AI").first()
+        // chờ dương ở đây là chính cái card "Học với FrosTES"
+        const studyCard = page.getByText("Học với FrosTES").first()
         await expect(studyCard).toBeVisible({ timeout: RENDER_TIMEOUT })
         await studyCard.scrollIntoViewIfNeeded()
         await page.waitForTimeout(HYDRATE_MS)
 
-        const flashTile = page.getByRole("button", { name: /Thẻ ghi nhớ AI/ })
+        const flashTile = page.getByRole("button", { name: /Thẻ ghi nhớ FrosTES/ })
         await expect(flashTile).toBeVisible()
         await flashTile.click()
 

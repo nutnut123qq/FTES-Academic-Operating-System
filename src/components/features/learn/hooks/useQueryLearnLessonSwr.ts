@@ -49,16 +49,15 @@ export interface LearnLessonView {
     /** Short description under the title. */
     description: string
     /**
-     * The owning section's RAW BE name — an ordinal on the real catalog ("Phần 1",
-     * "Phần 0"), not a human title. Prefer {@link moduleDescription} for display.
+     * The owning section's ORDINAL name (`SectionView.name`, e.g. "Phần 1"). The BE keeps
+     * the real section title in {@link moduleDescription} — mirror of the lesson
+     * `name`/`description` split — so this is the fallback label, not the display title.
      */
     moduleTitle: string
     /**
-     * The owning section's blurb (`SectionView.description`) — on the real catalog this
-     * is where the human section TITLE lives ("Setup môi trường - SQL Server"), because
-     * `name` only carries the ordinal ("Phần 1"). Same precedence the content-map rail
-     * uses (`description || title`). Empty when the BE omits it → callers fall back to
-     * {@link moduleTitle}.
+     * The owning section's REAL title (`SectionView.description`, e.g. "Làm quen với ngôn
+     * ngữ C/C++"). Empty when the section carries none, in which case the ordinal
+     * {@link moduleTitle} stands in (same precedence the content-map rail uses).
      */
     moduleDescription: string
     /** Read/watch time label. */
@@ -155,8 +154,9 @@ interface FlatLesson {
     name: string
     description: string
     moduleId: string
+    /** Owning section ORDINAL name (`SectionView.name`, e.g. "Phần 1"). */
     moduleTitle: string
-    /** Owning section's blurb (`SectionView.description`) — the human section title. */
+    /** Owning section REAL title (`SectionView.description`); "" when absent. */
     moduleDescription: string
     /** BE lesson content-type (`LessonView.type`). */
     type: string

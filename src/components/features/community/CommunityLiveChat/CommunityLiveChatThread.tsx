@@ -145,6 +145,17 @@ export const CommunityLiveChatThread = ({ enabled, className }: CommunityLiveCha
         }
     }, [messages])
 
+    // Auto-grow the composer: one row to start, then a line taller per wrapped line.
+    // Reset to `auto` FIRST so the measured `scrollHeight` shrinks again when text is
+    // deleted (otherwise the box only ever grows). The `max-h-24` class caps it — past
+    // that the textarea scrolls (with its scrollbar hidden) instead of growing further.
+    useEffect(() => {
+        const element = inputRef.current
+        if (!element) return
+        element.style.height = "auto"
+        element.style.height = `${element.scrollHeight}px`
+    }, [input])
+
     const onReply = useCallback((message: LiveChatMessage) => {
         setReplyTarget({
             messageId: message.id,
@@ -243,21 +254,23 @@ export const CommunityLiveChatThread = ({ enabled, className }: CommunityLiveCha
             ) : null}
 
             {/* composer — a single bounded box: flat textarea + send button (composer-in-box).
-                ONE row with `items-end`: the composer carries no other control (no model
+                ONE row with `items-center`: the composer carries no other control (no model
                 picker like the AI chat panel), so a controls row of its own would only push
-                the send icon off the input's line. `items-end` keeps it level with the
-                textarea's last line as the box grows. The textarea opens ~3 rows tall
-                (min-h-16 ≈ 3 × text-sm line-height) and still grows to `max-h-24`. */}
-            <div className="flex items-end gap-2 rounded-2xl bg-default px-3 py-2 focus-within:ring-2 focus-within:ring-accent">
+                the send icon off the input's line. The textarea starts at ONE row and grows a
+                line at a time as the message wraps (see the auto-grow effect), with the send
+                button staying vertically centred at every height. Past `max-h-24` it scrolls
+                instead of growing — with the scrollbar HIDDEN (`scrollbar-width:none` +
+                the WebKit pseudo-element): still scrollable, just no bar drawn over the text. */}
+            <div className="flex items-center gap-2 rounded-2xl bg-default px-3 py-2 focus-within:ring-2 focus-within:ring-accent">
                 <textarea
                     ref={inputRef}
-                    rows={3}
+                    rows={1}
                     value={input}
                     onChange={(event) => setInput(event.target.value)}
                     placeholder={t("placeholder")}
                     aria-label={t("placeholder")}
                     disabled={!authenticated}
-                    className="max-h-24 min-h-16 w-full min-w-0 flex-1 resize-none bg-transparent text-sm text-foreground outline-none placeholder:text-muted"
+                    className="max-h-24 w-full min-w-0 flex-1 resize-none overflow-y-auto bg-transparent text-sm text-foreground outline-none [scrollbar-width:none] placeholder:text-muted [&::-webkit-scrollbar]:hidden"
                     onKeyDown={(event) => {
                         if (event.key === "Enter" && !event.shiftKey) {
                             event.preventDefault()

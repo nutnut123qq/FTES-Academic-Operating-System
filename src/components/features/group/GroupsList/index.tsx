@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage, Button, Chip, Typography } from "@
 import { useTranslations } from "next-intl"
 import { Link, useRouter } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { BackLink } from "@/components/blocks/navigation/BackLink"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
 import { GroupJoinButton } from "../GroupJoinButton"
@@ -46,6 +47,9 @@ export const GroupsList = () => {
 
     return (
         <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 p-6">
+            {/* Groups is reached from Community's rail, so step back through real history;
+                a direct visit falls back to Community. */}
+            <BackLink fallbackHref="/community" />
             {/* title row — the create CTA sits beside the heading (the create page
                 exists at /groups/new but had no entry point from the hub) */}
             <div className="flex flex-wrap items-center justify-between gap-3">

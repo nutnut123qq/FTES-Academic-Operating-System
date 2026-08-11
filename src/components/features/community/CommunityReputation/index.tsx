@@ -33,7 +33,7 @@ const ReputationSkeleton = () => (
  */
 export const CommunityReputation = () => {
     const t = useTranslations("communityHub")
-    const { contributors, isLoading, error, mutate } = useQueryContributorsSwr()
+    const { contributors, isLoading, error, mutate, requiresAuth } = useQueryContributorsSwr()
 
     return (
         <div className="flex flex-col gap-3">
@@ -44,7 +44,9 @@ export const CommunityReputation = () => {
                 isLoading={isLoading && contributors.length === 0}
                 skeleton={<ReputationSkeleton />}
                 isEmpty={contributors.length === 0}
-                emptyContent={{ title: t("reputation.empty") }}
+                // A signed-out viewer isn't a failure — the board simply needs a session
+                // (the BE 401s), so say so instead of showing the load-error card.
+                emptyContent={{ title: requiresAuth ? t("reputation.signedOut") : t("reputation.empty") }}
                 error={contributors.length === 0 ? error : undefined}
                 errorContent={{
                     title: t("reputation.error"),

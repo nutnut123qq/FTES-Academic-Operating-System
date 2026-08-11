@@ -6614,6 +6614,7 @@
       "accepted": "{count} câu trả lời được chấp nhận",
       "score": "{score} điểm",
       "empty": "Chưa có người đóng góp nào.",
+      "signedOut": "Đăng nhập để xem bảng uy tín.",
       "error": "Không tải được bảng uy tín. Vui lòng thử lại."
     },
     "poll": {

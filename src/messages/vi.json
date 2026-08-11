@@ -26,18 +26,43 @@
       "title": "FrosTES giúp gì cho bạn?",
       "subtitle": "Chọn nhanh một việc bên dưới.",
       "options": {
+        "chat": {
+          "label": "Hỏi đáp / tư vấn khóa học?",
+          "description": "Mở trung tâm AI: hỏi đáp và mọi công cụ"
+        },
         "planner": {
-          "label": "Tạo lộ trình học",
+          "label": "Bạn muốn tạo lộ trình học không?",
           "description": "AI dựng kế hoạch học theo tuần từ mục tiêu của bạn"
         },
+        "summary": {
+          "label": "Bạn muốn tóm tắt tài liệu không?",
+          "description": "Biến bài học dài thành ghi chú súc tích"
+        },
+        "flashcards": {
+          "label": "Bạn muốn ôn bằng thẻ ghi nhớ không?",
+          "description": "Tự động tạo thẻ ghi nhớ từ bất kỳ bài học nào"
+        },
+        "quiz": {
+          "label": "Bạn muốn luyện đề trắc nghiệm không?",
+          "description": "Tạo bài kiểm tra luyện tập để ôn lại kiến thức"
+        },
+        "debug": {
+          "label": "Bạn muốn mình gỡ lỗi code không?",
+          "description": "Dán mã của bạn và nhận cách sửa kèm giải thích"
+        },
         "cv": {
-          "label": "Làm CV",
+          "label": "Bạn muốn làm CV không?",
           "description": "Dựng CV, tải lên và nhờ AI review"
         },
-        "chat": {
-          "label": "Hỏi đáp AI",
-          "description": "Mở trung tâm AI: hỏi đáp và mọi công cụ"
+        "cvReview": {
+          "label": "Bạn muốn mình chấm CV không?",
+          "description": "Nhận nhận xét từ FrosTES để hoàn thiện hồ sơ xin việc"
         }
+      },
+      "bubble": {
+        "hello": "Bạn có ở đó hong? 👀",
+        "day": "Ngày hôm nay thế nào?",
+        "help": "Cần mình giúp gì không nè?"
       },
       "subjectTitle": "Công cụ FrosTES của môn học",
       "subjectSubtitle": "Chọn một công cụ để mở trong không gian môn."
@@ -2199,15 +2224,6 @@
     "empty": {
       "jobReadiness": "Sắp ra mắt — mức sẵn sàng nghề nghiệp của bạn sẽ xuất hiện ở đây.",
       "skills": "Sắp ra mắt — kỹ năng của bạn sẽ xuất hiện ở đây."
-    }
-  },
-  "profileMenu": {
-    "explore": {
-      "title": "Khám phá",
-      "ai": "Trợ lý học tập FrosTES",
-      "forYou": "Dành cho bạn",
-      "recommendations": "Gợi ý cho bạn",
-      "trending": "Thịnh hành"
     }
   },
   "accountMenu": {

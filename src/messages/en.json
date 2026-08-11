@@ -26,18 +26,43 @@
       "title": "How can FrosTES help?",
       "subtitle": "Pick a shortcut below.",
       "options": {
+        "chat": {
+          "label": "Ask about a course?",
+          "description": "Open the AI hub: chat and every tool"
+        },
         "planner": {
-          "label": "Build a study plan",
+          "label": "Want a study roadmap?",
           "description": "AI drafts a weekly plan from your goal"
         },
+        "summary": {
+          "label": "Want a document summarized?",
+          "description": "Turn a long lesson into concise notes"
+        },
+        "flashcards": {
+          "label": "Want to revise with flashcards?",
+          "description": "Auto-generate flashcards from any lesson"
+        },
+        "quiz": {
+          "label": "Want a practice quiz?",
+          "description": "Generate a practice test to review what you learned"
+        },
+        "debug": {
+          "label": "Want me to debug your code?",
+          "description": "Paste your code and get a fix with an explanation"
+        },
         "cv": {
-          "label": "Build your CV",
+          "label": "Want to build your CV?",
           "description": "Create or upload a CV and get an AI review"
         },
-        "chat": {
-          "label": "Ask the AI",
-          "description": "Open the AI hub: chat and every tool"
+        "cvReview": {
+          "label": "Want me to review your CV?",
+          "description": "Get FrosTES feedback to polish your application"
         }
+      },
+      "bubble": {
+        "hello": "Are you still there? 👀",
+        "day": "How's your day going?",
+        "help": "Need a hand with anything?"
       },
       "subjectTitle": "FrosTES tools for this subject",
       "subjectSubtitle": "Pick a tool to open in the subject space."
@@ -2190,15 +2215,6 @@
     "empty": {
       "jobReadiness": "Coming soon — your job readiness will appear here.",
       "skills": "Coming soon — your skills will appear here."
-    }
-  },
-  "profileMenu": {
-    "explore": {
-      "title": "Explore",
-      "ai": "FrosTES Study Assistant",
-      "forYou": "For You",
-      "recommendations": "Recommendations",
-      "trending": "Trending"
     }
   },
   "accountMenu": {

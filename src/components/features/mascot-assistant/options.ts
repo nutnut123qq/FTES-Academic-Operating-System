@@ -1,7 +1,12 @@
 import {
     BookOpenIcon,
+    BriefcaseIcon,
+    BugIcon,
+    CardsIcon,
     FolderIcon,
     MapTrifoldIcon,
+    NotepadIcon,
+    QuestionIcon,
     ReadCvLogoIcon,
     SparkleIcon,
     SquaresFourIcon,
@@ -34,20 +39,66 @@ export interface AssistantOptionSet {
 }
 
 /**
- * Default set — the three things FrosTES can hand off to anywhere on the site.
- * `planner` is the AI STUDY-PLAN tool (`/ai/tools/planner`) — NOT the career
- * roadmap page — per the product decision recorded for that change.
+ * Default set — the WHOLE "Trợ lý AI" surface, moved into the mascot panel. The
+ * account menu no longer carries an AI entry (the `explore-shortcuts` row was
+ * deleted), so this list is now the site-wide entry point to every AI feature.
+ *
+ * The rows mirror the AI hub catalog one-for-one (`useQueryAiToolsSwr`'s
+ * `TOOL_CATALOG`: tutor · planner · summary · flashcards · quiz · debug · cvReview),
+ * plus the CV BUILDER (`/profile/cv`, which lives outside `/ai/tools` but is the
+ * "làm CV" half of the career pair). `tutor` maps to the hub itself (`/ai`) — its
+ * "continue learning" jump is resolved there from the viewer's enrollments, so the
+ * panel must not try to guess a course URL. `planner` is the AI STUDY-PLAN tool,
+ * NOT the career roadmap page, per the product decision recorded for that change.
+ *
+ * ponytail: labels stay a static list, not a fetch of `/ai/quotas/me` — a hover
+ * panel must not wait on the network, and every route here exists unconditionally.
  */
 const DEFAULT_SET: AssistantOptionSet = {
     titleKey: "mascot.assistant.title",
     subtitleKey: "mascot.assistant.subtitle",
     options: [
         {
+            key: "chat",
+            href: "/ai",
+            icon: SparkleIcon,
+            labelKey: "mascot.assistant.options.chat.label",
+            descriptionKey: "mascot.assistant.options.chat.description",
+        },
+        {
             key: "planner",
             href: "/ai/tools/planner",
             icon: MapTrifoldIcon,
             labelKey: "mascot.assistant.options.planner.label",
             descriptionKey: "mascot.assistant.options.planner.description",
+        },
+        {
+            key: "summary",
+            href: "/ai/tools/summary",
+            icon: NotepadIcon,
+            labelKey: "mascot.assistant.options.summary.label",
+            descriptionKey: "mascot.assistant.options.summary.description",
+        },
+        {
+            key: "flashcards",
+            href: "/ai/tools/flashcards",
+            icon: CardsIcon,
+            labelKey: "mascot.assistant.options.flashcards.label",
+            descriptionKey: "mascot.assistant.options.flashcards.description",
+        },
+        {
+            key: "quiz",
+            href: "/ai/tools/quiz",
+            icon: QuestionIcon,
+            labelKey: "mascot.assistant.options.quiz.label",
+            descriptionKey: "mascot.assistant.options.quiz.description",
+        },
+        {
+            key: "debug",
+            href: "/ai/tools/debug",
+            icon: BugIcon,
+            labelKey: "mascot.assistant.options.debug.label",
+            descriptionKey: "mascot.assistant.options.debug.description",
         },
         {
             key: "cv",
@@ -57,11 +108,11 @@ const DEFAULT_SET: AssistantOptionSet = {
             descriptionKey: "mascot.assistant.options.cv.description",
         },
         {
-            key: "chat",
-            href: "/ai",
-            icon: SparkleIcon,
-            labelKey: "mascot.assistant.options.chat.label",
-            descriptionKey: "mascot.assistant.options.chat.description",
+            key: "cvReview",
+            href: "/ai/tools/cv-review",
+            icon: BriefcaseIcon,
+            labelKey: "mascot.assistant.options.cvReview.label",
+            descriptionKey: "mascot.assistant.options.cvReview.description",
         },
     ],
 }

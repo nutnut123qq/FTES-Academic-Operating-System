@@ -398,38 +398,37 @@ html {
 }
 
 /*
- * Trợ lý FrosTES đứng vẫy tay (`MascotAssistant`) — animation THUẦN CSS keyframes
- * (không framer-motion, không requestAnimationFrame: môi trường nghiệm thu headless
- * không chạy rAF nên rAF sẽ không verify được).
+ * Trợ lý FrosTES vẫy tay (`MascotAssistant`). Động tác VẪY TAY nằm SẴN trong ảnh
+ * (animated WebP/GIF loop vô hạn) — CSS ở đây KHÔNG vẽ lại cú vẫy, chỉ thêm nhịp
+ * "bồng bềnh" lên xuống ~5px cho linh vật đỡ đứng chết một chỗ.
  *
- * Linh vật là 1 ảnh raster nguyên khối (không tách được cánh tay thành layer riêng),
- * nên "vẫy tay" thể hiện bằng cú lắc nhẹ quanh CHÂN (`transform-origin: 50% 100%`)
- * — bàn tay đang giơ sẵn trong artwork nên chuyển động đọc ra là vẫy chào. Chỉ dùng
+ * Thuần CSS keyframes (không framer-motion, không requestAnimationFrame: môi trường
+ * nghiệm thu headless không chạy rAF nên rAF sẽ không verify được), chỉ đụng
  * `transform` (GPU-cheap), biên độ nhỏ để không gây nhiễu ở góc màn hình.
  */
-@keyframes mascotWave {
-    0%, 100% { transform: rotate(-3deg); }
-    50% { transform: rotate(4deg); }
+@keyframes mascotFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
 }
 
-.mascot-wave {
-    transform-origin: 50% 100%;
-    animation: mascotWave 1.8s ease-in-out infinite;
+.mascot-float {
+    animation: mascotFloat 3s ease-in-out infinite;
 }
 
-/* Panel options bung ra khi rê/chạm vào linh vật — trượt lên + fade, chạy 1 lần lúc mount. */
+/* Panel options + bong bóng chat bung ra cạnh linh vật — phóng nhẹ + fade, chạy 1 lần lúc mount. */
 @keyframes mascotAssistantPanelIn {
-    from { opacity: 0; transform: translateY(6px) scale(0.98); }
+    from { opacity: 0; transform: translateY(6px) scale(0.96); }
     to { opacity: 1; transform: none; }
 }
 
 .mascot-assistant-panel {
     transform-origin: bottom right;
-    animation: mascotAssistantPanelIn 160ms ease-out;
+    animation: mascotAssistantPanelIn 200ms ease-out;
 }
 
 @media (prefers-reduced-motion: reduce) {
-    /* Tôn trọng reduced-motion: linh vật đứng yên, panel hiện thẳng (không trượt). */
-    .mascot-wave { animation: none !important; }
+    /* Tôn trọng reduced-motion: tắt nhịp bồng bềnh + panel hiện thẳng (không trượt).
+       Ảnh động vẫn vẫy — khung hình do trình duyệt decode, CSS không đóng băng được. */
+    .mascot-float { animation: none !important; }
     .mascot-assistant-panel { animation: none !important; }
 }

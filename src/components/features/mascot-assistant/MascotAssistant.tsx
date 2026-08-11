@@ -1,7 +1,6 @@
 "use client"
 
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
-import Image from "next/image"
 import { cn } from "@heroui/react"
 import { CaretRightIcon, XIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
@@ -11,14 +10,18 @@ import { useCookieConsentStore } from "@/hooks/zustand/cookieConsent/store"
 import { getAssistantOptions } from "./options"
 
 /**
- * Standing FrosTES artwork (full body, waving, transparent background) — the same
- * "plain" sticker set the learn FAB uses, so the assistant and the reader bubble
- * read as the SAME character. Intrinsic size is 365×512; the rendered width comes
- * from the wrapper class and the height follows via `h-auto` (no distortion).
+ * The waving FrosTES artwork (transparent background, white sticker outline baked
+ * in, loops forever on its own). Animated WebP with an animated-GIF fallback for
+ * the browsers that never shipped animated WebP — served through a plain
+ * `<picture>`, NOT `next/image` (the image optimizer would flatten an animated
+ * source to a single frame, and `<picture>` is the only way to express the
+ * fallback). Intrinsic size is the WebP's 260×365; the rendered width comes from
+ * the wrapper class and the height follows via `h-auto` (no distortion).
  */
-const MASCOT_SRC = "/mascot/plain/greeting.webp"
-const MASCOT_WIDTH = 365
-const MASCOT_HEIGHT = 512
+const MASCOT_WEBP = "/fes-mascot-wave.webp"
+const MASCOT_GIF = "/fes-mascot-wave.gif"
+const MASCOT_WIDTH = 260
+const MASCOT_HEIGHT = 365
 
 /**
  * Routes that already own the bottom-right corner with their own floating entry
@@ -35,33 +38,65 @@ const MASCOT_HEIGHT = 512
 const LEARN_READER_ROUTE = /^\/courses\/[^/]+\/learn(?:\/|$)/
 const COMMUNITY_ROUTE = /^\/community(?:\/|$)/
 
+/** i18n suffixes under `mascot.assistant.bubble.*` — one is picked at random per show. */
+const BUBBLE_MESSAGES = ["hello", "day", "help"] as const
+/** How many proactive bubbles one visit may ever see (anti-nag cap). */
+const BUBBLE_MAX_PER_VISIT = 3
+/** First bubble lands somewhere in this window after the visit starts (ms). */
+const BUBBLE_FIRST_DELAY: readonly [number, number] = [30_000, 60_000]
+/** Later bubbles land somewhere in this window after the previous one closed (ms). */
+const BUBBLE_REPEAT_DELAY: readonly [number, number] = [180_000, 300_000]
+/** A bubble hides itself after this long if nobody touches it (ms). */
+const BUBBLE_VISIBLE_MS = 8_000
+
 /**
- * FrosTES, the floating assistant: a STANDING, waving mascot parked in the
- * bottom-right corner of every page (no circular button frame — the character
- * itself is the affordance). Hovering with a mouse, tapping on touch, or pressing
- * Enter/Space on the keyboard opens a small panel of shortcuts.
+ * Bubbles shown SO FAR IN THIS VISIT. Deliberately a module-level counter rather
+ * than component state: the assistant remounts on some route transitions, and a
+ * state counter would reset the cap each time (a visitor who browses ten pages
+ * would get thirty bubbles). A full page load starts a new module instance = a new
+ * visit, which is exactly the "in-memory / per-session" scope the spec asks for —
+ * so no storage is involved.
+ */
+let bubblesShownThisVisit = 0
+
+/** Uniform integer in `[min, max]`. */
+const randomBetween = ([min, max]: readonly [number, number]) =>
+    min + Math.floor(Math.random() * (max - min + 1))
+
+/**
+ * FrosTES, the floating assistant: the WAVING mascot parked in the bottom-right
+ * corner of every page (no circular button frame — the character itself is the
+ * affordance, and the wave is the artwork's own animation, not code). Hovering
+ * with a mouse, tapping on touch, or pressing Enter/Space on the keyboard opens a
+ * panel of shortcuts.
  *
  * The shortcut list is CONTEXTUAL ({@link getAssistantOptions}): the default set is
- * study planner / CV / AI chat, but inside a subject workspace (`/subjects/<id>/…`)
- * the panel becomes that subject's AI toolbox — which is why the workspace rail no
- * longer carries an `AI` nav row.
+ * the ENTIRE AI feature roster (the account menu no longer has an AI entry — this
+ * panel replaced it), and inside a subject workspace (`/subjects/<id>/…`) the panel
+ * becomes that subject's AI toolbox, which is why the workspace rail no longer
+ * carries an `AI` nav row.
+ *
+ * Every so often the mascot also floats a small PROACTIVE bubble ("Bạn có ở đó
+ * hong? 👀") to invite a first interaction: the first ~30–60s into the visit, then
+ * at random 3–5 minute gaps, capped at {@link BUBBLE_MAX_PER_VISIT} per visit and
+ * never while the panel is open. Clicking it opens the panel.
  *
  * Interaction notes:
  *  - Hover open/close is bound to `pointerType === "mouse"` only, so a tap does
  *    not both "hover" and "click" (which would toggle the panel twice on touch).
  *  - The toggle is a PLAIN `<button onClick>` (not a HeroUI `onPress`) so it stays
  *    clickable in headless verification runs.
- *  - The whole wave/idle motion is CSS keyframes (`.mascot-wave` in `globals.css`),
- *    never `requestAnimationFrame`, and is fully disabled under
- *    `prefers-reduced-motion: reduce`.
+ *  - The idle bob is CSS keyframes (`.mascot-float` in `globals.css`), never
+ *    `requestAnimationFrame`, and is fully disabled under
+ *    `prefers-reduced-motion: reduce` (the artwork keeps waving — a decoded
+ *    animated image is not ours to freeze).
  *
- * Mobile: the wrapper is `pointer-events-none` (only the mascot and the panel
- * itself take taps, so the transparent parts never swallow a tap meant for the
- * page), the figure is FAB-sized (64px wide), it sits above the safe-area inset,
+ * Mobile: the wrapper is `pointer-events-none` (only the mascot, the bubble and
+ * the panel take taps, so the transparent parts never swallow a tap meant for the
+ * page), the figure is FAB-sized (80px wide), it sits above the safe-area inset,
  * and the panel is capped at `100vw - 2rem` so it never runs off screen. It is
  * also hidden while a guided tour is running (tour spotlights stay clear, and two
- * mascots never share the screen) and while the cookie-consent bar is up (that bar
- * owns the same bottom band + z-layer).
+ * mascots never share the screen).
  */
 export const MascotAssistant = () => {
     const t = useTranslations("mascot.assistant")
@@ -74,12 +109,25 @@ export const MascotAssistant = () => {
     // The cookie-consent bar is `fixed inset-x-0 bottom-0 z-40` — the SAME band and
     // z-layer this mascot sits in, so on a phone the mascot would land on top of the
     // Accept / Reject buttons. `decided`: null = store not hydrated yet, false = bar
-    // is up. Only show the mascot once the visitor has actually decided (`true`),
-    // which also makes this a client-only render (no SSR/hydration mismatch).
+    // is up. Rendering waits for hydration (no SSR mismatch); once hydrated the
+    // mascot shows either way, lifted above the bar while it is up.
     const consentDecided = useCookieConsentStore((state) => state.decided)
     const panelId = useId()
     const containerRef = useRef<HTMLDivElement>(null)
     const [isOpen, setIsOpen] = useState(false)
+    /** The bubble's i18n suffix while one is up, `null` when none is. */
+    const [bubble, setBubble] = useState<(typeof BUBBLE_MESSAGES)[number] | null>(null)
+
+    const pathnameValue = pathname ?? ""
+    // `decided === null` = store chưa hydrate → chưa render (tránh lệch SSR/hydration).
+    // `decided === false` = banner cookie đang hiện: VẪN render, chỉ đẩy linh vật lên
+    // trên banner. Ẩn hẳn ở nhánh này là sai yêu cầu "hiện ở TOÀN BỘ các trang", mà
+    // người mới — nhóm cần trợ lý nhất — lại đúng là nhóm chưa bấm đồng ý cookie.
+    // Tính TRƯỚC các effect (không phải ngay chỗ `return null`) để vòng hẹn bong bóng
+    // biết mà nằm im: trang đọc bài không có linh vật, hẹn giờ ở đó chỉ tiêu hết quota
+    // 3 bong bóng/phiên vào hư không.
+    const isHidden =
+        consentDecided === null || tourActive || LEARN_READER_ROUTE.test(pathnameValue)
 
     // Navigating away (usually BY one of the options) closes the panel — the
     // component is mounted once at the root, so it survives route changes.
@@ -110,13 +158,50 @@ export const MascotAssistant = () => {
         }
     }, [isOpen])
 
+    // Schedule the NEXT proactive bubble. Runs whenever the corner goes quiet
+    // (no panel, no bubble): the first wait is short, later ones are minutes apart.
+    // Opening the panel counts as "the visitor engaged", so the pending timer is
+    // dropped by this effect re-running with `isOpen` true.
+    useEffect(() => {
+        if (isHidden || isOpen || bubble !== null || bubblesShownThisVisit >= BUBBLE_MAX_PER_VISIT) {
+            return
+        }
+        const timer = setTimeout(
+            () => {
+                bubblesShownThisVisit += 1
+                setBubble(BUBBLE_MESSAGES[Math.floor(Math.random() * BUBBLE_MESSAGES.length)])
+            },
+            randomBetween(bubblesShownThisVisit === 0 ? BUBBLE_FIRST_DELAY : BUBBLE_REPEAT_DELAY),
+        )
+        return () => clearTimeout(timer)
+    }, [isHidden, isOpen, bubble])
+
+    // A bubble nobody answers gets out of the way on its own.
+    useEffect(() => {
+        if (bubble === null) {
+            return
+        }
+        const timer = setTimeout(() => setBubble(null), BUBBLE_VISIBLE_MS)
+        return () => clearTimeout(timer)
+    }, [bubble])
+
+    // Opening the panel (hover, tap, keyboard) always retires the bubble — the two
+    // must never share the corner.
+    const openPanel = useCallback(() => {
+        setBubble(null)
+        setIsOpen(true)
+    }, [])
+
     // Mouse only: a touch tap also fires pointerenter, and letting it open here
     // would fight the click toggle below (open → toggle back closed).
-    const onPointerEnter = useCallback((event: React.PointerEvent) => {
-        if (event.pointerType === "mouse") {
-            setIsOpen(true)
-        }
-    }, [])
+    const onPointerEnter = useCallback(
+        (event: React.PointerEvent) => {
+            if (event.pointerType === "mouse") {
+                openPanel()
+            }
+        },
+        [openPanel],
+    )
     const onPointerLeave = useCallback((event: React.PointerEvent) => {
         if (event.pointerType === "mouse") {
             setIsOpen(false)
@@ -134,15 +219,10 @@ export const MascotAssistant = () => {
         }
     }, [])
 
-    const pathnameValue = pathname ?? ""
     // Which shortcuts the panel offers depends on WHERE the visitor is (subject
-    // workspace → that subject's AI tools; everywhere else → the default three).
+    // workspace → that subject's AI tools; everywhere else → the full AI roster).
     const optionSet = useMemo(() => getAssistantOptions(pathnameValue), [pathnameValue])
-    // `decided === null` = store chưa hydrate → chưa render (tránh lệch SSR/hydration).
-    // `decided === false` = banner cookie đang hiện: VẪN render, chỉ đẩy linh vật lên
-    // trên banner. Ẩn hẳn ở nhánh này là sai yêu cầu "hiện ở TOÀN BỘ các trang", mà
-    // người mới — nhóm cần trợ lý nhất — lại đúng là nhóm chưa bấm đồng ý cookie.
-    if (consentDecided === null || tourActive || LEARN_READER_ROUTE.test(pathnameValue)) {
+    if (isHidden) {
         return null
     }
     const consentBarUp = consentDecided === false
@@ -155,15 +235,22 @@ export const MascotAssistant = () => {
             onPointerLeave={onPointerLeave}
             onBlur={onBlur}
             // `flex-col-reverse` = the TOGGLE comes first in the DOM but renders at
-            // the BOTTOM, with the panel stacked above it. That keeps the visual
-            // order (mascot low, options above) while Tab still walks toggle →
+            // the BOTTOM, with the bubble/panel stacked above it. That keeps the
+            // visual order (mascot low, options above) while Tab still walks toggle →
             // options instead of jumping past them.
             //
-            // `pointer-events-none` on the shell + `pointer-events-auto` on the two
-            // real surfaces: the gap between panel and mascot stays hoverable (the
-            // mouse can travel into the panel) without blocking taps on the page.
+            // `pointer-events-none` on the shell + `pointer-events-auto` on the real
+            // surfaces: the gap between panel and mascot stays hoverable (the mouse
+            // can travel into the panel) without blocking taps on the page.
+            //
+            // The shell is pinned top AND bottom (`top-4 … bottom-4`) even though the
+            // content sits at the bottom: that gives it a BOUNDED height, which is what
+            // lets the panel shrink to the room actually left above the mascot instead
+            // of running off the top of a short window (a `max-h-[60vh]` guess does not
+            // survive the cookie bar lifting the whole stack by 10rem). `justify-start`
+            // in `flex-col-reverse` packs everything back down at the bottom edge.
             className={cn(
-                "pointer-events-none fixed bottom-4 right-4 z-40 flex flex-col-reverse items-end gap-2 pb-[env(safe-area-inset-bottom)] sm:bottom-6 sm:right-6",
+                "pointer-events-none fixed bottom-4 right-4 top-4 z-40 flex flex-col-reverse items-end justify-start gap-2 pb-[env(safe-area-inset-bottom)] sm:bottom-6 sm:right-6 sm:top-6",
                 // Banner cookie là `fixed inset-x-0 bottom-0 z-40` — cùng dải, cùng lớp z.
                 // Nhấc linh vật lên trên nó thay vì ẩn đi, để không đè nút Đồng ý/Từ chối.
                 consentBarUp && "bottom-40 sm:bottom-44",
@@ -176,20 +263,39 @@ export const MascotAssistant = () => {
                 aria-label={t("open")}
                 aria-expanded={isOpen}
                 aria-controls={isOpen ? panelId : undefined}
-                onClick={() => setIsOpen((previous) => !previous)}
-                // NO circular frame / background: the standing character IS the button.
-                className="pointer-events-auto block w-16 cursor-pointer border-0 bg-transparent p-0 outline-none focus-visible:rounded-2xl focus-visible:ring-2 focus-visible:ring-accent sm:w-24"
+                onClick={() => (isOpen ? setIsOpen(false) : openPanel())}
+                // NO circular frame / background: the waving character IS the button.
+                className="pointer-events-auto block w-20 shrink-0 cursor-pointer border-0 bg-transparent p-0 outline-none focus-visible:rounded-2xl focus-visible:ring-2 focus-visible:ring-accent sm:w-28"
             >
-                <Image
-                    src={MASCOT_SRC}
-                    alt=""
-                    aria-hidden
-                    width={MASCOT_WIDTH}
-                    height={MASCOT_HEIGHT}
-                    draggable={false}
-                    className="mascot-wave h-auto w-full select-none object-contain drop-shadow-lg"
-                />
+                <picture>
+                    <source srcSet={MASCOT_WEBP} type="image/webp" />
+                    {/* Plain <img>, not next/image: the optimizer would flatten the
+                        animation to a single frame, and only <picture>/<source> can
+                        express the WebP→GIF fallback. */}
+                    <img
+                        src={MASCOT_GIF}
+                        alt=""
+                        aria-hidden
+                        width={MASCOT_WIDTH}
+                        height={MASCOT_HEIGHT}
+                        draggable={false}
+                        className="mascot-float h-auto w-full select-none object-contain drop-shadow-lg"
+                    />
+                </picture>
             </button>
+            {bubble !== null && !isOpen ? (
+                <button
+                    type="button"
+                    data-testid="mascot-assistant-bubble"
+                    onClick={openPanel}
+                    // The tail is the rotated corner of a second square sharing the
+                    // bubble's border + fill, tucked under the right edge so it points
+                    // down at the mascot.
+                    className="mascot-assistant-panel pointer-events-auto relative mr-4 max-w-[calc(100vw-2rem)] shrink-0 cursor-pointer rounded-2xl border border-default bg-surface px-3 py-2 text-sm text-foreground shadow-lg after:absolute after:-bottom-1.5 after:right-5 after:size-3 after:rotate-45 after:border-b after:border-r after:border-default after:bg-surface after:content-['']"
+                >
+                    {t(`bubble.${bubble}`)}
+                </button>
+            ) : null}
             {isOpen ? (
                 <nav
                     id={panelId}
@@ -197,9 +303,9 @@ export const MascotAssistant = () => {
                     // Width is capped at the viewport minus the page gutter (the same
                     // `calc(100vw-2rem)` cap the hovercard / streak popover use), so on a
                     // narrow phone the panel never runs off the right edge.
-                    className="mascot-assistant-panel pointer-events-auto w-[17rem] max-w-[calc(100vw-2rem)] rounded-3xl border border-default bg-surface p-2 shadow-lg ring-1 ring-accent/10"
+                    className="mascot-assistant-panel pointer-events-auto flex min-h-0 w-[19rem] max-w-[calc(100vw-2rem)] flex-col rounded-3xl border border-default bg-surface p-2 shadow-lg ring-1 ring-accent/10"
                 >
-                    <div className="flex items-start gap-2 px-2 pb-1 pt-1">
+                    <div className="flex shrink-0 items-start gap-2 px-2 pb-1 pt-1">
                         <div className="min-w-0 flex-1">
                             <p className="text-sm font-semibold text-foreground">
                                 {tRoot(optionSet.titleKey)}
@@ -217,7 +323,10 @@ export const MascotAssistant = () => {
                             <XIcon aria-hidden focusable="false" className="size-4" />
                         </button>
                     </div>
-                    <ul className="flex flex-col">
+                    {/* The full AI roster is 8 rows — taller than a short phone, so the
+                        LIST takes whatever height is left in the shell and scrolls,
+                        instead of the panel running off the top of the window. */}
+                    <ul className="flex min-h-0 flex-1 flex-col overflow-y-auto">
                         {optionSet.options.map(({ key, href, icon: OptionIcon, labelKey, descriptionKey }) => (
                             <li key={key}>
                                 <Link

@@ -65,6 +65,11 @@ const Layout = async ({
             <body className={`${font.className} ${font.variable} antialiased  bg-background`}>
                 {/* pre-paint accent: must run before any content renders (no flash) */}
                 <script dangerouslySetInnerHTML={{ __html: accentPrePaintScript }} />
+                {/* Linh vật trợ lý (MascotAssistant) nằm ở MỌI trang và là ảnh động ~420KB —
+                    preload để nó hiện ngay thay vì bật lên muộn ở góc màn hình. Chỉ preload
+                    bản WebP: trình duyệt nào không đọc được animated WebP sẽ tự lấy GIF qua
+                    <picture>, và preload thêm GIF thì mọi người đều tải thừa 1 file. */}
+                <link rel="preload" as="image" href="/fes-mascot-wave.webp" type="image/webp" />
                 <NextIntlClientProvider locale={locale} messages={messages}>
                     <InnerLayout>
                         <div>

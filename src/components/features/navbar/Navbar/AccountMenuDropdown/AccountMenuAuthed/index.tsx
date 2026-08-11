@@ -3,7 +3,6 @@
 import React, { useCallback } from "react"
 import {
     Dropdown,
-    Header,
     Label,
 } from "@heroui/react"
 import {
@@ -23,17 +22,13 @@ import { useHasPermission } from "@/hooks/useHasPermission"
 import { useAccountMenuOverlayState } from "@/hooks/zustand/overlay/hooks"
 import { useGetMyWalletSwr } from "@/hooks/swr/api/rest/queries/useGetMyWalletSwr"
 import { useMutateSignOutSwr } from "@/hooks/swr/api/graphql/mutations/useMutateSignOutSwr"
-import { EXPLORE_SHORTCUTS } from "../explore-shortcuts"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 
 /** Props for {@link AccountMenuAuthed}. */
 export type AccountMenuAuthedProps = WithClassNames<undefined>
 
 /**
- * Account dropdown menu for SIGNED-IN viewers: a labeled "Khám phá" (Explore)
- * section (Trợ lý học tập FrosTES — discovery shortcut relocated from the header;
- * Recommendations now lives inside the AI Assistant, Trending inside Community,
- * "Dành cho bạn" removed), then a primary section (Profile · Saved · Settings ·
+ * Account dropdown menu for SIGNED-IN viewers: a primary section (Profile · Saved · Settings ·
  * Wallet with its live balance + a top-up shortcut), and a separated destructive
  * section (Sign out, danger). Dashboard / Activity / Integrations / Roles were
  * removed as redundant (Dashboard unused, Activity duplicated in the profile,
@@ -101,22 +96,10 @@ export const AccountMenuAuthed = ({ className }: AccountMenuAuthedProps) => {
                     </Dropdown.Item>
                 ) : null}
             </Dropdown.Section>
-            {/* "Khám phá" — discovery shortcuts relocated out of the header (D8/D9);
-                sits between the gamification stats row above and the account links */}
-            <Dropdown.Section>
-                <Header>{t("profileMenu.explore.title")}</Header>
-                {EXPLORE_SHORTCUTS.map((shortcut) => (
-                    <Dropdown.Item
-                        key={shortcut.id}
-                        id={shortcut.id}
-                        textValue={t(shortcut.labelKey)}
-                        onPress={() => go(shortcut.path())}
-                    >
-                        {shortcut.icon}
-                        <Label>{t(shortcut.labelKey)}</Label>
-                    </Dropdown.Item>
-                ))}
-            </Dropdown.Section>
+            {/* Mục "Khám phá" (chỉ còn 1 dòng "Trợ lý học tập FrosTES" → /ai) đã BỎ:
+                linh vật nổi ở góc phải dưới giờ là điểm vào DUY NHẤT của mọi tính năng AI
+                (xem `mascot-assistant/options.ts`), giữ thêm lối này chỉ là 2 cửa cho cùng
+                1 chỗ. Route /ai vẫn sống, chỉ đổi chỗ bấm vào. */}
             <Dropdown.Section>
                 <Dropdown.Item
                     id="profile"

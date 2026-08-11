@@ -1,0 +1,53 @@
+# Tasks
+
+## 1. Asset
+
+- [x] 1.1 Convert `public/mascot/fes-mascot-wave.gif` → `public/fes-mascot-wave.webp` bằng `sharp` (animated, resize 260px, quality 80, effort 6, loop 0) — 23 frame, 886KB → 418KB
+- [x] 1.2 Chuyển GIF gốc ra `public/fes-mascot-wave.gif` làm fallback (2 file cùng nằm ở `public/` theo yêu cầu)
+- [x] 1.3 Không sửa/không bo/không thêm nền vào ảnh — artwork đã có viền sticker trắng + nền trong suốt
+
+## 2. Component `MascotAssistant`
+
+- [x] 2.1 `<picture><source srcSet=webp type="image/webp"><img src=gif></picture>`, `<img>` thuần (không `next/image`), `width/height` intrinsic 260×365, `draggable={false}`
+- [x] 2.2 Kích thước `w-20` (80px) mobile / `sm:w-28` (112px) desktop; `fixed bottom-4 right-4 sm:bottom-6 sm:right-6`, `z-40` (dưới modal `z-50`)
+- [x] 2.3 Vỏ ngoài ghim `top-4 … bottom-4` + `justify-start` để panel co theo chỗ trống; nút `shrink-0`; panel `flex min-h-0 flex-col`; `<ul>` `min-h-0 flex-1 overflow-y-auto`
+- [x] 2.4 Bong bóng chủ động: state `bubble`, bộ đếm `bubblesShownThisVisit` ở module scope (cap 3/phiên), effect hẹn giờ (30–60s lần đầu, 180–300s các lần sau) + effect tự ẩn 8s, click mở menu, không hiện khi `isOpen` hoặc `isHidden`
+- [x] 2.5 `isHidden` tính trước các effect để hẹn giờ không tiêu quota bong bóng ở trang không render linh vật
+- [x] 2.6 A11y giữ nguyên: nút có `aria-label` + `aria-expanded` + `aria-controls`, panel là `<nav aria-label>`, Esc đóng, click ngoài đóng, Tab đi toggle → từng option
+
+## 3. Danh sách tính năng (`options.ts`)
+
+- [x] 3.1 Default set 8 dòng khớp `TOOL_CATALOG` của AI hub: chat(`/ai`) · planner · summary · flashcards · quiz · debug · cv(`/profile/cv`) · cvReview
+- [x] 3.2 Icon lấy đúng bộ phosphor AI hub đang dùng (Notepad/Cards/Question/Bug/Briefcase) + bộ cũ (MapTrifold/ReadCvLogo/Sparkle)
+- [x] 3.3 Giữ nguyên nhánh contextual `/subjects/<id>/…` (toolbox của môn) — không đụng
+
+## 4. CSS
+
+- [x] 4.1 `globals.css`: bỏ `@keyframes mascotWave` + `.mascot-wave`, thêm `@keyframes mascotFloat` + `.mascot-float` (translateY 5px, 3s ease-in-out infinite)
+- [x] 4.2 Panel/bong bóng: `mascotAssistantPanelIn` 160ms → 200ms, scale 0.98 → 0.96 (scale + fade theo yêu cầu)
+- [x] 4.3 Khối `prefers-reduced-motion: reduce` tắt `.mascot-float` + `.mascot-assistant-panel`; ghi rõ ảnh động không tắt được bằng CSS
+
+## 5. Dọn lối vào cũ
+
+- [x] 5.1 Xoá section "Khám phá" khỏi `AccountMenuAuthed` + `AccountMenuGuest`, dọn import mồ côi (`Header`, `useRouter`, `SessionStorage`, `SessionStorageId`, `onExplore`)
+- [x] 5.2 Xoá `explore-shortcuts.tsx`
+- [x] 5.3 Xoá nhánh i18n `profileMenu.*` ở vi + en (grep: 0 consumer còn lại); GIỮ `auth.context.explore` (còn dùng ở `SubjectResources`)
+- [x] 5.4 Sửa docblock của 2 menu cho khớp thực tế
+- [x] 5.5 KHÔNG đụng `ContentAiFab` — chủ sản phẩm chốt giữ nút tròn ở trang đọc bài
+
+## 6. i18n
+
+- [x] 6.1 `mascot.assistant.options.*`: 8 cặp label/description dạng câu gợi ý, vi + en
+- [x] 6.2 `mascot.assistant.bubble.{hello,day,help}`, vi + en
+- [x] 6.3 `preload` WebP trong `src/app/[locale]/layout.tsx`
+
+## 7. Verify
+
+- [x] 7.1 `node`/`json.load` parse sạch vi.json + en.json, `mascot.assistant.options` đủ 8 key ở cả 2 ngôn ngữ
+- [x] 7.2 `npx tsc --noEmit` sạch
+- [x] 7.3 `npx eslint` sạch trên các file đã đổi
+- [x] 7.4 `npm run build` (webpack) xanh
+- [x] 7.5 Nghiệm thu trình duyệt — vị trí/z-index/kích thước: `fixed`, `z-40`, 112px desktop (cách phải 24px) / 80px mobile (cách phải 16px), trình duyệt chọn đúng `.webp`, `animation: mascotFloat 3s`
+- [x] 7.6 Nghiệm thu menu: 8 dòng đúng href; hover chuột mở, hover cảm ứng KHÔNG mở, click toggle, Esc đóng, click ngoài đóng; panel nằm trọn trong màn ở 1280×720 và 375×812, không sinh scroll ngang
+- [x] 7.7 Nghiệm thu bong bóng (hạ tạm hằng số rồi khôi phục): hiện lần đầu ~29s → tự ẩn → click mở menu → đúng 3 lần rồi dừng → không hiện khi panel đang mở
+- [x] 7.8 `openspec validate mascot-assistant-floating-hub --strict`

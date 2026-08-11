@@ -38,6 +38,7 @@ import { LessonReactionFooter } from "./LessonReactionFooter"
 import { LessonComments } from "./LessonComments"
 import { LessonResourceLinks } from "./LessonResourceLinks"
 import { LessonVideoBlock } from "./LessonVideoBlock"
+import type { LessonUpNextDestination } from "./hooks/useLessonUpNext"
 import { LessonDocumentHtml } from "./LessonDocumentHtml"
 import { SelectionHintCallout } from "./ContentAiSelectionAsk/SelectionHintCallout"
 import { LessonAiStudy } from "./LessonAiStudy"
@@ -233,6 +234,50 @@ export const LessonReader = () => {
         setGateOpen(true)
     }, [])
 
+    /**
+     * Where the video hands off when it finishes ("xem hết video tự chuyển sang bài khác,
+     * hoặc challenge nếu bài đó có challenge").
+     *
+     * Priority is the OWNER's: this lesson's own challenge first — practising what was just
+     * watched beats moving on — then the next lesson. Both legs reuse the resolution that
+     * already exists on this page rather than inventing a second one:
+     *  - the challenge leg uses the same `moduleId`/`contentId`/slug route the content-map
+     *    rail and the "Làm thử thách" CTA build (`challengeHref`), picking the LINKED
+     *    challenge (`challengeId`) out of `challenges` for its slug — the route segment is
+     *    the slug, not the id — and falling back to the first row, then to the raw id;
+     *  - the next-lesson leg uses `nextId`/`nextTitle`, the exact fields <LessonPager/>
+     *    renders below, so the button and the pager can never point at different lessons.
+     *
+     * Null when neither exists (last lesson, no challenge) → the player shows nothing and
+     * never auto-advances.
+     */
+    const upNextDestination = useMemo<LessonUpNextDestination | null>(() => {
+        if (!lesson) {
+            return null
+        }
+        if (lesson.hasChallenge) {
+            const linked =
+                lesson.challenges.find((challenge) => challenge.id === lesson.challengeId)
+                ?? lesson.challenges[0]
+            const slug = linked?.slug ?? lesson.challengeId
+            if (slug) {
+                return {
+                    href: challengeHref(courseId, lesson.moduleId, contentId, slug),
+                    title: linked?.title ?? "",
+                    kind: "challenge",
+                }
+            }
+        }
+        if (lesson.nextId) {
+            return {
+                href: readerHref(courseId, lesson.nextId),
+                title: lesson.nextTitle ?? "",
+                kind: "lesson",
+            }
+        }
+        return null
+    }, [lesson, courseId, contentId])
+
     return (
         <div className="flex flex-col gap-6">
             {/* header (tier 2) capped to the reading width */}
@@ -376,6 +421,7 @@ export const LessonReader = () => {
                                 lessonTitle={lesson.title}
                                 packageSlugs={lesson.packageSlugs}
                                 videoRef={lesson.videoRef}
+                                upNext={upNextDestination}
                                 onHalfWatched={handleHalfWatched}
                                 onPurchased={() => { void mutate() }}
                             />

@@ -1,6 +1,6 @@
 "use client"
 
-import { Gear as GearSixIcon } from "@gravity-ui/icons"
+import { GearSixIcon } from "@phosphor-icons/react"
 import React from "react"
 import {
     cn,
@@ -89,7 +89,7 @@ export const QualitySelector = ({
         <Dropdown className={cn(className)}>
             <DropdownTrigger aria-label="Quality">
                 <div className="flex h-8 min-w-8 cursor-pointer items-center justify-center rounded-medium border-none text-white hover:bg-white/20">
-                    <GearSixIcon className="h-5 w-5" />
+                    <GearSixIcon aria-hidden focusable="false" className="size-5" />
                 </div>
             </DropdownTrigger>
             <DropdownMenu

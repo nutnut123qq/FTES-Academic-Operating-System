@@ -57,7 +57,9 @@ export const KeyStatusChip = ({
             className={cn("inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium", visual.chipClassName, className)}
         >
             <StatusIcon
-                className="h-3.5 w-3.5"
+                aria-hidden
+                focusable="false"
+                className="size-4"
             />
             {label}
         </span>

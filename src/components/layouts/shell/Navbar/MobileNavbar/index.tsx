@@ -1,7 +1,7 @@
 "use client"
 
 import type { IconComponent } from "@/types"
-import { Globe as TranslateIcon, Paintbrush as PaintBrushIcon } from "@gravity-ui/icons"
+import { PaintBrushIcon, TranslateIcon } from "@phosphor-icons/react"
 import React, { useMemo, useState } from "react"
 import {
     Link,
@@ -109,7 +109,7 @@ export const MobileNavbar = ({ className }: MobileNavbarProps) => {
                 <div className="flex items-center justify-between px-2">
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-xl bg-default/40 flex items-center justify-center">
-                            <PaintBrushIcon className="size-5" />
+                            <PaintBrushIcon className="size-5" aria-hidden focusable="false" />
                         </div>
                         <div className="flex flex-col gap-0">
                             <span className="text-sm font-semibold text-foreground">{t("nav.appearance")}</span>
@@ -123,7 +123,7 @@ export const MobileNavbar = ({ className }: MobileNavbarProps) => {
                 <div className="flex items-center justify-between px-2">
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-xl bg-default/40 flex items-center justify-center">
-                            <TranslateIcon className="size-5" />
+                            <TranslateIcon className="size-5" aria-hidden focusable="false" />
                         </div>
                         <div className="flex flex-col gap-0">
                             <span className="text-sm font-semibold text-foreground">

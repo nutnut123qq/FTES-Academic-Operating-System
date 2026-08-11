@@ -1,8 +1,16 @@
 import { ComponentType, ReactNode, SVGProps } from "react"
 
 /**
- * Renderable icon component. Replaces phosphor's `Icon`/`IconProps` types after the
- * migration to `@gravity-ui/icons`, whose icons are `(props: SVGProps<SVGSVGElement>) => JSX`.
+ * Renderable icon component — `(props: SVGProps<SVGSVGElement>) => JSX`.
+ *
+ * The repo's single icon library is `@phosphor-icons/react`. `@gravity-ui/icons` (and
+ * `react-icons` / `@iconify/react` / `@icons-pack/react-simple-icons`) are leftovers of an
+ * unfinished migration (phosphor → gravity → back to phosphor) that is being undone; those
+ * packages are banned by `no-restricted-imports` in `eslint.config.mjs`.
+ *
+ * For an icon lookup table prefer `import type { Icon } from "@phosphor-icons/react"`.
+ * Keep this type only for hand-written SVG components (`src/components/svg/*`), which are
+ * plain `SVGProps` components rather than phosphor `Icon`s.
  */
 export type IconComponent = ComponentType<SVGProps<SVGSVGElement>>
 

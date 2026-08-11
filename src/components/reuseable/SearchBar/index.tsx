@@ -1,6 +1,6 @@
 "use client"
 
-import { Sliders as SlidersHorizontalIcon } from "@gravity-ui/icons"
+import { SlidersHorizontalIcon } from "@phosphor-icons/react"
 import React, { useMemo } from "react"
 import {
     Autocomplete,
@@ -98,7 +98,7 @@ export const SearchBar = ({ className }: SearchBarProps) => {
                         size="sm"
                         variant="ghost"
                     >
-                        <SlidersHorizontalIcon className="size-5" />
+                        <SlidersHorizontalIcon aria-hidden focusable="false" className="size-5" />
                     </Button>
                 </InputGroup.Suffix>
             </InputGroup>

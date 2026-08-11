@@ -148,7 +148,7 @@ export const ResourceUpload = () => {
             {isDone && resourceId ? (
                 <div className="flex flex-col gap-3 rounded-2xl border border-separator bg-default/40 p-5">
                     <div className="flex items-center gap-2">
-                        <CheckCircleIcon size={22} weight="fill" className="text-success" />
+                        <CheckCircleIcon aria-hidden focusable="false" className="size-6 text-success" />
                         <Typography type="h6" weight="bold">
                             {t("upload.success.title")}
                         </Typography>
@@ -340,7 +340,7 @@ export const ResourceUpload = () => {
                     className="flex flex-col gap-2 rounded-2xl border border-danger/40 bg-danger/10 p-4"
                 >
                     <div className="flex items-start gap-2">
-                        <WarningCircleIcon size={18} className="mt-0.5 shrink-0 text-danger" />
+                        <WarningCircleIcon aria-hidden focusable="false" className="mt-0.5 size-5 shrink-0 text-danger" />
                         <div className="flex flex-col gap-1">
                             <Typography type="body-sm" weight="medium">
                                 {t(`upload.error.${flow.error.reason}`)}

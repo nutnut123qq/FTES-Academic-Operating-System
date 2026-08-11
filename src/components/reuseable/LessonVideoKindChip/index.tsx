@@ -1,10 +1,9 @@
 "use client"
 
-import { Filmstrip as FilmReelIcon, Sparkles as SparkleIcon } from "@gravity-ui/icons"
 import React, { useMemo } from "react"
 import { Chip, Tooltip, cn } from "@heroui/react"
 import { useTranslations } from "next-intl"
-import { SiTwitch as TwitchLogoIcon } from "@icons-pack/react-simple-icons"
+import { FilmStripIcon, SparkleIcon, TwitchLogoIcon } from "@phosphor-icons/react"
 import { LessonVideoKind } from "@/modules/types/enums/lesson-video-kind"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 
@@ -26,19 +25,19 @@ export const LessonVideoKindChip = ({ kind, className }: LessonVideoKindChipProp
         switch (kind) {
         case LessonVideoKind.RawStream:
             return {
-                icon: <TwitchLogoIcon className="size-5" />,
+                icon: <TwitchLogoIcon aria-hidden focusable="false" className="size-5" />,
                 label: "lessonVideoKind.rawStream.label",
                 tooltip: "lessonVideoKind.rawStream.tooltip",
             }
         case LessonVideoKind.EditedStream:
             return {
-                icon: <SparkleIcon className="size-5" />,
+                icon: <SparkleIcon aria-hidden focusable="false" className="size-5" />,
                 label: "lessonVideoKind.editedStream.label",
                 tooltip: "lessonVideoKind.editedStream.tooltip",
             }
         case LessonVideoKind.PremiumRecord:
             return {
-                icon: <FilmReelIcon className="size-5" />,
+                icon: <FilmStripIcon aria-hidden focusable="false" className="size-5" />,
                 label: "lessonVideoKind.premiumRecord.label",
                 tooltip: "lessonVideoKind.premiumRecord.tooltip",
             }

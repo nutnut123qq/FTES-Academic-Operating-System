@@ -5,8 +5,8 @@ import {
     cn,
 } from "@heroui/react"
 import {
-    ChevronRight as ChevronRightIcon,
-} from "@gravity-ui/icons"
+    CaretRightIcon,
+} from "@phosphor-icons/react"
 import {
     PressableCard,
 } from "../PressableCard"
@@ -55,7 +55,7 @@ export const SummaryCard = ({
         >
             <div className="flex items-center justify-between gap-3">
                 <span className="text-accent">{icon}</span>
-                <ChevronRightIcon className="size-5 text-muted" />
+                <CaretRightIcon aria-hidden focusable="false" className="size-5 text-muted" />
             </div>
             <div className="flex flex-col gap-0">
                 <span className="text-2xl font-bold leading-tight text-foreground">

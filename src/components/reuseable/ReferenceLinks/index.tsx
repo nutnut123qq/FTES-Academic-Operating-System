@@ -1,4 +1,4 @@
-import { ArrowUpRightFromSquare as ArrowUpRightIcon } from "@gravity-ui/icons"
+import { ArrowSquareOutIcon } from "@phosphor-icons/react"
 import { Link, cn } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import React from "react"
@@ -46,7 +46,7 @@ export const ReferenceLinks = ({ references, titleKey, className }: ReferenceLin
                                 className="text-sm text-primary"
                             >
                                 {reference.url}
-                                <ArrowUpRightIcon className="size-5" />
+                                <ArrowSquareOutIcon aria-hidden focusable="false" className="size-5" />
                             </Link>
                         </li>
                     )

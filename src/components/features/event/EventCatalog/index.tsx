@@ -161,7 +161,7 @@ const EventCard = ({ event }: EventCardProps) => {
                 className="flex items-center gap-3 rounded-large no-underline outline-none transition-colors focus-visible:ring-2 focus-visible:ring-accent"
             >
                 <div className="flex size-11 shrink-0 items-center justify-center rounded-large bg-accent/10 text-accent">
-                    <TypeIcon size={22} aria-hidden />
+                    <TypeIcon aria-hidden focusable="false" className="size-6" />
                 </div>
                 <div className="min-w-0">
                     <Typography type="body-sm" weight="medium" truncate>
@@ -177,7 +177,7 @@ const EventCard = ({ event }: EventCardProps) => {
             <div className="flex flex-col gap-2">
                 {event.date && (
                     <div className="flex items-center gap-2">
-                        <CalendarIcon size={16} className="shrink-0 text-muted" aria-hidden />
+                        <CalendarIcon className="size-4 shrink-0 text-muted" aria-hidden focusable="false" />
                         <Typography type="body-xs" color="muted" className="truncate">
                             {event.date}
                         </Typography>
@@ -185,7 +185,7 @@ const EventCard = ({ event }: EventCardProps) => {
                 )}
                 {event.locationType && (
                     <div className="flex items-center gap-2">
-                        <MapPinIcon size={16} className="shrink-0 text-muted" aria-hidden />
+                        <MapPinIcon className="size-4 shrink-0 text-muted" aria-hidden focusable="false" />
                         <Typography type="body-xs" color="muted" className="truncate">
                             {t(`locationTypes.${event.locationType}`)}
                         </Typography>
@@ -193,7 +193,7 @@ const EventCard = ({ event }: EventCardProps) => {
                 )}
                 {event.attendees != null && (
                     <div className="flex items-center gap-2">
-                        <UsersIcon size={16} className="shrink-0 text-muted" aria-hidden />
+                        <UsersIcon className="size-4 shrink-0 text-muted" aria-hidden focusable="false" />
                         <Typography type="body-xs" color="muted">
                             {t("attendeesCount", { count: event.attendees })}
                         </Typography>

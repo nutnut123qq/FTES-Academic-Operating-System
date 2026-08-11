@@ -3,9 +3,11 @@
 import React, { useMemo } from "react"
 import { Chip, cn } from "@heroui/react"
 import { useTranslations } from "next-intl"
+import { GoogleDriveLogoIcon, YoutubeLogoIcon } from "@phosphor-icons/react"
+// NGOẠI LỆ có chủ đích (khớp allowlist trong eslint.config.mjs): @phosphor-icons/react
+// KHÔNG có VimeoLogo/CloudflareLogo, nên 2 logo này buộc phải giữ react-simple-icons.
+// YouTube + Google Drive đã chuyển sang phosphor.
 import {
-    SiGoogledrive,
-    SiYoutube,
     SiVimeo,
     SiCloudflare
 } from "@icons-pack/react-simple-icons"
@@ -33,12 +35,12 @@ export const HostPlatformChip = ({ hostPlatform, className }: HostPlatformChipPr
         switch (hostPlatform) {
         case VideoHostPlatform.Youtube:
             return {
-                icon: <SiYoutube size={16} />,
+                icon: <YoutubeLogoIcon aria-hidden focusable="false" className="size-4" />,
                 label: "videoHostPlatform.youtube",
             }
         case VideoHostPlatform.GoogleDrive:
             return {
-                icon: <SiGoogledrive size={16} />,
+                icon: <GoogleDriveLogoIcon aria-hidden focusable="false" className="size-4" />,
                 label: "videoHostPlatform.googleDrive",
             }
         case VideoHostPlatform.Vimeo:

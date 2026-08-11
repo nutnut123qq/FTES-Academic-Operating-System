@@ -1,6 +1,6 @@
 "use client"
 
-import { Magnifier as MagnifyingGlassIcon } from "@gravity-ui/icons"
+import { MagnifyingGlassIcon } from "@phosphor-icons/react"
 import React from "react"
 import {
     Button,
@@ -32,7 +32,7 @@ export const SearchButton = ({ className }: SearchButtonProps) => {
     return (
         <Button className={cn("w-[300px] justify-between px-3", className)} variant="outline" onPress={onOpenSearch}>
             <span className="inline-flex items-center gap-2">
-                <MagnifyingGlassIcon className="h-5 w-5" />
+                <MagnifyingGlassIcon className="size-5" aria-hidden focusable="false" />
                 <span className="text-sm">{t("search.label")}</span>
             </span>
             <div className="flex items-center gap-2 hidden md:inline-flex">

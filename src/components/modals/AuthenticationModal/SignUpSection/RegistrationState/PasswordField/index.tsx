@@ -1,6 +1,6 @@
 "use client"
 
-import { Eye as EyeIcon, EyeSlash as EyeClosedIcon } from "@gravity-ui/icons"
+import { EyeIcon, EyeSlashIcon } from "@phosphor-icons/react"
 import React, {
     useCallback,
     useState,
@@ -82,9 +82,9 @@ export const PasswordField = ({
                     onPress={onToggleVisibility}
                 >
                     {showPassword ? (
-                        <EyeIcon className="h-5 w-5" />
+                        <EyeIcon aria-hidden focusable="false" className="size-5" />
                     ) : (
-                        <EyeClosedIcon className="h-5 w-5" />
+                        <EyeSlashIcon aria-hidden focusable="false" className="size-5" />
                     )}
                 </Link>
                 <Input

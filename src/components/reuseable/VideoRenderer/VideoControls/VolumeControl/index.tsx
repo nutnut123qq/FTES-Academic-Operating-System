@@ -1,6 +1,6 @@
 "use client"
 
-import { Volume as SpeakerHighIcon, VolumeSlash as SpeakerSlashIcon } from "@gravity-ui/icons"
+import { SpeakerHighIcon, SpeakerSlashIcon } from "@phosphor-icons/react"
 import React from "react"
 import { Button, cn, Popover, Slider } from "@heroui/react"
 import { useCallback, useMemo } from "react"
@@ -69,9 +69,9 @@ export const VolumeControl = ({
                     className={cn("text-white hover:bg-white/20 border-none min-w-8 h-8", className)}
                 >
                     {isSilent ? (
-                        <SpeakerSlashIcon className="h-5 w-5" />
+                        <SpeakerSlashIcon aria-hidden focusable="false" className="size-5" />
                     ) : (
-                        <SpeakerHighIcon className="h-5 w-5" />
+                        <SpeakerHighIcon aria-hidden focusable="false" className="size-5" />
                     )}
                 </Button>
             </Popover.Trigger>

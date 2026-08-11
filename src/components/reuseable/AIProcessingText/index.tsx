@@ -1,6 +1,6 @@
 "use client"
 
-import { CircleCheck as CheckCircleIcon, LayoutList as QueueIcon, OctagonXmark as WarningOctagonIcon, Sparkles as SparkleIcon } from "@gravity-ui/icons"
+import { CheckCircleIcon, QueueIcon, SparkleIcon, WarningOctagonIcon } from "@phosphor-icons/react"
 import React, { useMemo } from "react"
 import {
     motion,
@@ -89,13 +89,13 @@ export const AIProcessingText = (props: AIProcessingTextProps) => {
     const statusIcon = useMemo(() => {
         switch (jobStatus) {
         case JobStatus.Queued:
-            return <QueueIcon className={cn(classNames?.icon, defaultIconClassName, "text-muted animate-pulse")} />
+            return <QueueIcon aria-hidden focusable="false" className={cn(classNames?.icon, defaultIconClassName, "text-muted animate-pulse")} />
         case JobStatus.Processing:
-            return <SparkleIcon className={cn(classNames?.icon, defaultIconClassName, "text-warning animate-pulse")} />
+            return <SparkleIcon aria-hidden focusable="false" className={cn(classNames?.icon, defaultIconClassName, "text-warning animate-pulse")} />
         case JobStatus.Completed:
-            return <CheckCircleIcon className={cn(classNames?.icon, defaultIconClassName, "text-success")} />
+            return <CheckCircleIcon aria-hidden focusable="false" className={cn(classNames?.icon, defaultIconClassName, "text-success")} />
         case JobStatus.Failed:
-            return <WarningOctagonIcon className={cn(classNames?.icon, defaultIconClassName, "text-danger")} />
+            return <WarningOctagonIcon aria-hidden focusable="false" className={cn(classNames?.icon, defaultIconClassName, "text-danger")} />
         default:
             return null
         }

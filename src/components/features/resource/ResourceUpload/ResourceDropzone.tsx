@@ -117,7 +117,7 @@ export const ResourceDropzone = ({
             >
                 {file ? (
                     <div className="flex w-full items-center justify-center gap-3">
-                        <FileIcon size={24} weight="duotone" className="shrink-0" />
+                        <FileIcon aria-hidden focusable="false" className="size-6 shrink-0" />
                         <div className="flex min-w-0 flex-col items-start">
                             <Typography type="body-sm" weight="medium" className="truncate">
                                 {file.name}
@@ -144,13 +144,13 @@ export const ResourceDropzone = ({
                                     onSelect(null)
                                 }}
                             >
-                                <XIcon size={16} />
+                                <XIcon aria-hidden focusable="false" className="size-4" />
                             </Button>
                         </span>
                     </div>
                 ) : (
                     <>
-                        <FileArrowUpIcon size={28} weight="duotone" />
+                        <FileArrowUpIcon aria-hidden focusable="false" className="size-8" />
                         <Typography type="body-sm" weight="medium">
                             {label}
                         </Typography>

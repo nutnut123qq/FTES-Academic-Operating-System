@@ -1,6 +1,6 @@
 "use client"
 
-import { Pause as PauseIcon, Play as PlayIcon } from "@gravity-ui/icons"
+import { PauseIcon, PlayIcon } from "@phosphor-icons/react"
 import React from "react"
 import { Button, cn } from "@heroui/react"
 import type { WithClassNames } from "@/modules/types/base/class-name"
@@ -33,9 +33,9 @@ export const PlayPauseButton = ({
             className={cn("text-white hover:bg-white/20 border-none min-w-8 h-8", className)}
         >
             {isPlaying ? (
-                <PauseIcon className="h-5 w-5" />
+                <PauseIcon aria-hidden focusable="false" className="size-5" />
             ) : (
-                <PlayIcon className="h-5 w-5" />
+                <PlayIcon aria-hidden focusable="false" className="size-5" />
             )}
         </Button>
     )

@@ -6,13 +6,14 @@ import { useTranslations } from "next-intl"
 import {
     CaretRightIcon,
     EnvelopeIcon,
+    GithubLogoIcon,
     GlobeIcon,
+    LinkedinLogoIcon,
     MapPinIcon,
     PhoneIcon,
     SparkleIcon,
     TrendUpIcon,
 } from "@phosphor-icons/react"
-import { FaGithub, FaLinkedin } from "react-icons/fa6"
 import { LabeledCard } from "@/components/blocks/cards/LabeledCard"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { EmptyContent } from "@/components/blocks/async/EmptyContent"
@@ -49,13 +50,13 @@ const buildSocialMeta = (social: SocialLink): SocialMeta => {
     switch (social.key) {
     case "github":
         return {
-            icon: <FaGithub className="size-5" aria-hidden focusable="false" />,
+            icon: <GithubLogoIcon className="size-5" aria-hidden focusable="false" />,
             href: url,
             label: host,
         }
     case "linkedin":
         return {
-            icon: <FaLinkedin className="size-5" aria-hidden focusable="false" />,
+            icon: <LinkedinLogoIcon className="size-5" aria-hidden focusable="false" />,
             href: url,
             label: host,
         }

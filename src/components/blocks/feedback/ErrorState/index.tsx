@@ -6,7 +6,7 @@ import {
     Typography,
     cn,
 } from "@heroui/react"
-import { TriangleExclamation } from "@gravity-ui/icons"
+import { WarningIcon } from "@phosphor-icons/react"
 import type {
     WithClassNames,
 } from "@/modules/types/base/class-name"
@@ -57,7 +57,7 @@ export const ErrorState = ({
                 className,
             )}
         >
-            <TriangleExclamation className="size-8 text-danger" />
+            <WarningIcon aria-hidden focusable="false" className="size-8 text-danger" />
             {title ? (
                 <Typography weight="medium">{title}</Typography>
             ) : null}

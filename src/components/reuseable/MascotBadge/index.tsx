@@ -5,8 +5,8 @@ import {
     cn,
 } from "@heroui/react"
 import {
-    Medal as MedalIcon,
-} from "@gravity-ui/icons"
+    MedalIcon,
+} from "@phosphor-icons/react"
 import {
     BadgeImage,
 } from "@/components/reuseable/BadgeImage"
@@ -85,6 +85,8 @@ export const MascotBadge = ({
                 )}
                 fallback={(
                     <MedalIcon
+                        role="img"
+                        aria-label={name}
                         width={innerSize}
                         height={innerSize}
                         className={cn(earned ? "text-warning" : "text-default-400")}

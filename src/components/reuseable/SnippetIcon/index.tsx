@@ -1,7 +1,6 @@
 "use client"
 
-import { Copy as CopyIcon } from "@gravity-ui/icons"
-import { CheckCircleIcon } from "@phosphor-icons/react"
+import { CheckCircleIcon, CopyIcon } from "@phosphor-icons/react"
 import React, { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 
@@ -39,7 +38,7 @@ export const SnippetIcon = ({ copyString, classNames = {}, className }: SnippetI
                         exit={{ scale: 0.85, opacity: 0 }}
                         transition={{ duration: 0.15, ease: "easeOut" }}
                     >
-                        <CheckCircleIcon className={cn(classNames.checkIcon, "w-5 h-5")} />
+                        <CheckCircleIcon aria-hidden focusable="false" className={cn(classNames.checkIcon, "size-5")} />
                     </motion.span>
                 ) : (
                     <motion.span
@@ -49,7 +48,7 @@ export const SnippetIcon = ({ copyString, classNames = {}, className }: SnippetI
                         exit={{ scale: 0.85, opacity: 0 }}
                         transition={{ duration: 0.15, ease: "easeOut" }}
                     >
-                        <CopyIcon className={cn(classNames.copyIcon, "w-5 h-5")} />
+                        <CopyIcon aria-hidden focusable="false" className={cn(classNames.copyIcon, "size-5")} />
                     </motion.span>
                 )}
             </AnimatePresence>

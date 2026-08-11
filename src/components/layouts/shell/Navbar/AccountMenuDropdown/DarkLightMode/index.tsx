@@ -1,5 +1,5 @@
 "use client"
-import { Moon as MoonIcon, Sun as SunIcon } from "@gravity-ui/icons"
+import { MoonIcon, SunIcon } from "@phosphor-icons/react"
 import { Switch, cn } from "@heroui/react"
 
 import { useTheme } from "next-themes"
@@ -30,7 +30,9 @@ export const DarkLightModeSwitch = ({ className }: DarkLightModeSwitchProps = {}
                         "size-[28px] min-w-[28px] rounded-full flex items-center justify-center", 
                         isSelected ? "ms-[22px]" : "")
                     }>
-                        {isSelected ? <MoonIcon className="size-5" /> : <SunIcon className="size-5" />}
+                        {isSelected
+                            ? <MoonIcon className="size-5" aria-hidden focusable="false" />
+                            : <SunIcon className="size-5" aria-hidden focusable="false" />}
                     </Switch.Thumb>
                 </Switch.Control>
             )}

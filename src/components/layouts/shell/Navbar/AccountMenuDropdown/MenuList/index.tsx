@@ -1,7 +1,6 @@
 "use client"
 
-import { Bookmark as BookmarkSimpleIcon, ChevronRight as CaretRightIcon } from "@gravity-ui/icons"
-import { FaGithub } from "react-icons/fa6"
+import { BookmarkSimpleIcon, CaretRightIcon, GithubLogoIcon } from "@phosphor-icons/react"
 import React, { useCallback, useMemo } from "react"
 import {
     DropdownItem,
@@ -91,7 +90,7 @@ export const MenuList = ({ className }: MenuListProps) => {
                             className="py-3"
                         >
                             <div className="flex items-center gap-3 w-full">
-                                <FaGithub className="size-5" />
+                                <GithubLogoIcon className="size-5" aria-hidden focusable="false" />
                                 <div className="text-sm">{t("linkGithub.title")}</div>
                             </div>
                         </DropdownItem>
@@ -103,7 +102,7 @@ export const MenuList = ({ className }: MenuListProps) => {
                         className="py-3"
                     >
                         <div className="flex items-center gap-3 w-full">
-                            <BookmarkSimpleIcon className="size-5" />
+                            <BookmarkSimpleIcon className="size-5" aria-hidden focusable="false" />
                             <div className="text-sm">{t("content.saved")}</div>
                         </div>
                     </DropdownItem>
@@ -120,7 +119,7 @@ export const MenuList = ({ className }: MenuListProps) => {
                         <div className="text-sm">{t("nav.toggleLanguage")}</div>
                         <div className="flex items-center gap-2 text-sm text-muted">
                             {currentLanguageLabel}
-                            <CaretRightIcon className="size-5" />
+                            <CaretRightIcon className="size-5" aria-hidden focusable="false" />
                         </div>
                     </div>
                 </DropdownItem>

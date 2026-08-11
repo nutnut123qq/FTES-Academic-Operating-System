@@ -46,7 +46,7 @@ export const CourseListSection = () => {
 
 ## Composes
 
-- **`@gravity-ui/icons` — `TriangleExclamation`**: danger-colored warning icon (`size-8 text-danger`).
+- **`@phosphor-icons/react` — `WarningIcon`**: danger-colored warning icon (`size-8 text-danger`).
 - **HeroUI `Button`**: retry button rendered with `variant="secondary"` and `size="sm"`.
 - **HeroUI `cn`**: class merging for the `className` override.
 

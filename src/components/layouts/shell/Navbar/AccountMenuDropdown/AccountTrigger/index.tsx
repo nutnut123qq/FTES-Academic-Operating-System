@@ -1,6 +1,6 @@
 "use client"
 
-import { Person as UserIcon } from "@gravity-ui/icons"
+import { UserIcon } from "@phosphor-icons/react"
 import React, { useCallback } from "react"
 import {
     Badge,
@@ -42,7 +42,7 @@ export const AccountTrigger = ({ className }: AccountTriggerProps) => {
                 className={cn("rounded-full", className)}
                 variant="tertiary"
             >
-                <UserIcon className="size-5" />
+                <UserIcon className="size-5" aria-hidden focusable="false" />
             </Button>
         )
     }

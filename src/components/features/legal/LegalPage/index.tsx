@@ -117,7 +117,7 @@ const CardGrid = ({ cards }: { cards: NonNullable<LegalSection["cards"]> }) => (
             const Ico = card.icon ? ICONS[card.icon] : undefined
             return (
                 <div key={card.label} className="flex flex-col gap-2 rounded-2xl border border-default p-4">
-                    {Ico ? <Ico className="size-5 text-accent" weight="duotone" aria-hidden /> : null}
+                    {Ico ? <Ico className="size-5 text-accent" aria-hidden focusable="false" /> : null}
                     <Typography type="body" weight="semibold" className="text-foreground">
                         {card.label}
                     </Typography>
@@ -150,19 +150,19 @@ const StepList = ({ steps }: { steps: NonNullable<LegalSection["steps"]> }) => (
 const ContactPanel = ({ contact }: { contact: NonNullable<LegalSection["contact"]> }) => (
     <div className="flex flex-col gap-2 rounded-2xl border border-default p-4">
         <div className="flex items-center gap-2">
-            <BuildingsIcon className="size-5 shrink-0 text-accent" weight="duotone" aria-hidden />
+            <BuildingsIcon className="size-5 shrink-0 text-accent" aria-hidden focusable="false" />
             <Typography type="body" weight="semibold" className="text-foreground">
                 {contact.company}
             </Typography>
         </div>
         <div className="flex items-start gap-2">
-            <MapPinIcon className="mt-0.5 size-5 shrink-0 text-muted" aria-hidden />
+            <MapPinIcon className="mt-0.5 size-5 shrink-0 text-muted" aria-hidden focusable="false" />
             <Typography type="body-sm" color="muted" className="leading-relaxed">
                 {contact.address}
             </Typography>
         </div>
         <div className="flex items-center gap-2">
-            <PhoneIcon className="size-5 shrink-0 text-muted" aria-hidden />
+            <PhoneIcon className="size-5 shrink-0 text-muted" aria-hidden focusable="false" />
             <Typography type="body-sm" color="muted">
                 {contact.phone}
             </Typography>

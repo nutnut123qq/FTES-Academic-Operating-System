@@ -1,6 +1,6 @@
 "use client"
 
-import { CircleCheck as CheckCircleIcon } from "@gravity-ui/icons"
+import { CheckCircleIcon } from "@phosphor-icons/react"
 import { Button, cn } from "@heroui/react"
 
 import React from "react"
@@ -37,7 +37,7 @@ export const LanguageCard = ({ code, label, isSelected, onPress, className }: La
                     <div className="text-sm">{label}</div>
                     <div className="text-xs font-semibold uppercase tracking-wide text-muted">{code}</div>
                 </div>
-                {isSelected ? <CheckCircleIcon className="size-5 text-primary" /> : null}
+                {isSelected ? <CheckCircleIcon aria-hidden focusable="false" weight="fill" className="size-5 text-primary" /> : null}
             </div>
         </Button>
     )

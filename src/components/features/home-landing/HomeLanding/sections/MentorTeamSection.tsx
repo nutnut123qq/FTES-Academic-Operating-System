@@ -1,9 +1,16 @@
 "use client"
 
 import React from "react"
-import { ArrowRightIcon, CaretLeftIcon, CaretRightIcon, QuotesIcon } from "@phosphor-icons/react"
+import {
+    ArrowRightIcon,
+    CaretLeftIcon,
+    CaretRightIcon,
+    FacebookLogoIcon,
+    GithubLogoIcon,
+    LinkedinLogoIcon,
+    QuotesIcon,
+} from "@phosphor-icons/react"
 import { Avatar, AvatarFallback, AvatarImage, Link, Typography, cn } from "@heroui/react"
-import { FaFacebook, FaGithub, FaLinkedin } from "react-icons/fa6"
 import { useTranslations } from "next-intl"
 import { useCarousel } from "@/components/blocks/carousel/useCarousel"
 // Link nội bộ phải qua next-intl để giữ prefix locale (link ngoài vẫn dùng Link của HeroUI).
@@ -16,9 +23,9 @@ const TESTIMONIAL_INTERVAL_MS = 6_000
 
 /** Social brand-icon columns, rendered only for the links a testimonial actually has. */
 const SOCIAL_ICONS = [
-    { key: "github", icon: FaGithub, label: "GitHub" },
-    { key: "linkedin", icon: FaLinkedin, label: "LinkedIn" },
-    { key: "facebook", icon: FaFacebook, label: "Facebook" },
+    { key: "github", icon: GithubLogoIcon, label: "GitHub" },
+    { key: "linkedin", icon: LinkedinLogoIcon, label: "LinkedIn" },
+    { key: "facebook", icon: FacebookLogoIcon, label: "Facebook" },
 ] as const
 
 /** One testimonial slide — quote card + byline (avatar · name · role · socials · profile). */
@@ -56,7 +63,7 @@ const TestimonialSlide = ({ person }: { person: Testimonial }) => {
                         </Typography>
                     </div>
                     <div className="flex items-center gap-3 sm:ml-auto">
-                        {socials.map(({ key, href, icon: Icon, label }) => (
+                        {socials.map(({ key, href, icon: SocialIcon, label }) => (
                             <Link
                                 key={key}
                                 href={href}
@@ -64,7 +71,7 @@ const TestimonialSlide = ({ person }: { person: Testimonial }) => {
                                 aria-label={label}
                                 className="text-muted transition-colors hover:text-accent"
                             >
-                                <Icon aria-hidden className="size-5" />
+                                <SocialIcon aria-hidden focusable="false" className="size-5" />
                             </Link>
                         ))}
                         {/* môn đang dạy — chỉ render khi content.ts có khai `courseSlugs`; không

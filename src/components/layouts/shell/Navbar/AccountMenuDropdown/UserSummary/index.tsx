@@ -1,6 +1,6 @@
 "use client"
 
-import { Bell as BellIcon } from "@gravity-ui/icons"
+import { BellIcon } from "@phosphor-icons/react"
 import React from "react"
 import {
     Badge,
@@ -43,7 +43,7 @@ export const UserSummary = ({ className }: UserSummaryProps) => {
                 </div>
             </div>
             <Badge size="sm" className="border-0" content="0" color="accent">
-                <BellIcon className="size-6 text-divider" />
+                <BellIcon className="size-6 text-divider" aria-hidden focusable="false" />
             </Badge>
         </div>
     )

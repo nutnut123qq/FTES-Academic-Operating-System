@@ -2,9 +2,9 @@
 
 import React from "react"
 import {
-    ChevronUp as CaretUpIcon,
-    ChevronDown as CaretDownIcon,
-} from "@gravity-ui/icons"
+    CaretUpIcon,
+    CaretDownIcon,
+} from "@phosphor-icons/react"
 import {
     cn,
 } from "@heroui/react"
@@ -56,9 +56,9 @@ export const RankDeltaCaret = ({
             )}
         >
             {climbed ? (
-                <CaretUpIcon className="size-3.5" />
+                <CaretUpIcon aria-hidden focusable="false" className="size-4" />
             ) : (
-                <CaretDownIcon className="size-3.5" />
+                <CaretDownIcon aria-hidden focusable="false" className="size-4" />
             )}
             {Math.abs(delta)}
         </span>

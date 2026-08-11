@@ -121,7 +121,7 @@ const EventDetailBody = ({ event }: EventDetailBodyProps) => {
         <>
             <div className="flex items-start gap-3">
                 <div className="flex size-12 shrink-0 items-center justify-center rounded-large bg-accent/10 text-accent">
-                    <TypeIcon size={24} aria-hidden focusable="false" />
+                    <TypeIcon aria-hidden focusable="false" className="size-6" />
                 </div>
                 <div className="flex min-w-0 flex-col gap-2">
                     <Typography type="h4" weight="bold">
@@ -150,21 +150,21 @@ const EventDetailBody = ({ event }: EventDetailBodyProps) => {
             <div className="flex flex-col gap-3 rounded-2xl border border-separator p-4">
                 {timeLabel ? (
                     <div className="flex items-center gap-2">
-                        <CalendarIcon size={16} className="shrink-0 text-muted" aria-hidden />
+                        <CalendarIcon className="size-4 shrink-0 text-muted" aria-hidden focusable="false" />
                         <Typography type="body-sm">{timeLabel}</Typography>
                     </div>
                 ) : null}
 
                 {locationType ? (
                     <div className="flex items-center gap-2">
-                        <MapPinIcon size={16} className="shrink-0 text-muted" aria-hidden />
+                        <MapPinIcon className="size-4 shrink-0 text-muted" aria-hidden focusable="false" />
                         <Typography type="body-sm">{t(`locationTypes.${locationType}`)}</Typography>
                     </div>
                 ) : null}
 
                 {event.venue ? (
                     <div className="flex items-center gap-2">
-                        <LinkSimpleIcon size={16} className="shrink-0 text-muted" aria-hidden />
+                        <LinkSimpleIcon className="size-4 shrink-0 text-muted" aria-hidden focusable="false" />
                         {meetingUrl ? (
                             <a
                                 href={meetingUrl}
@@ -184,7 +184,7 @@ const EventDetailBody = ({ event }: EventDetailBodyProps) => {
 
                 {event.seatsLeft != null ? (
                     <div className="flex items-center gap-2">
-                        <UsersIcon size={16} className="shrink-0 text-muted" aria-hidden />
+                        <UsersIcon className="size-4 shrink-0 text-muted" aria-hidden focusable="false" />
                         <Typography type="body-sm">
                             {t("detail.seatsLeft", { count: event.seatsLeft })}
                         </Typography>

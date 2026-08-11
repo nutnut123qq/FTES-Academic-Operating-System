@@ -1,6 +1,6 @@
 "use client"
 
-import { CloudArrowUpIn as CloudArrowUpIcon } from "@gravity-ui/icons"
+import { CloudArrowUpIcon } from "@phosphor-icons/react"
 import React, { useCallback } from "react"
 import { cn } from "@heroui/react"
 import { useDropzone } from "react-dropzone"
@@ -67,7 +67,7 @@ export const Dropzone = ({
             >
                 <input {...getInputProps({ onBlur })} />
                 <div className="flex flex-col items-center gap-1.5 text-center">
-                    <CloudArrowUpIcon className="size-6 text-muted" />
+                    <CloudArrowUpIcon aria-hidden focusable="false" className="size-6 text-muted" />
                     <div className="text-sm">
                         {file?.name ?? hint}
                     </div>

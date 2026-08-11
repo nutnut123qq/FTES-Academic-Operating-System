@@ -3961,6 +3961,7 @@
       "empty": "Chưa có sự kiện nào sắp diễn ra."
     },
     "detail": {
+      "back": "Tất cả sự kiện",
       "loadError": "Không tải được sự kiện.",
       "notFound": "Không tìm thấy sự kiện.",
       "notFoundDescription": "Sự kiện có thể đã bị gỡ hoặc đường dẫn không đúng.",

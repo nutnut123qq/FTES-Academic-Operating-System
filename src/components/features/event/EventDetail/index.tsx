@@ -2,9 +2,10 @@
 
 import React from "react"
 import { Button, Chip, Typography, toast } from "@heroui/react"
-import { CalendarIcon, LinkSimpleIcon, MapPinIcon, UsersIcon } from "@phosphor-icons/react"
+import { ArrowLeftIcon, CalendarIcon, LinkSimpleIcon, MapPinIcon, UsersIcon } from "@phosphor-icons/react"
 import { useLocale, useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
+import { Link } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { formatDateTime } from "@/modules/dayjs"
@@ -35,6 +36,18 @@ export const EventDetail = () => {
 
     return (
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-6">
+            {/* Back to the catalog — the card that leads here is the only way in, and a
+                standalone detail page with no way back strands the viewer. Rendered OUTSIDE
+                AsyncContent so it is there while loading and on the error/not-found states
+                too (exactly when the viewer most needs the way out). Mirrors the
+                LeaderboardGuideShell back-link. */}
+            <Link
+                href="/events"
+                className="flex w-fit items-center gap-1 text-sm text-muted no-underline hover:text-foreground"
+            >
+                <ArrowLeftIcon className="size-4" aria-hidden focusable="false" />
+                {t("detail.back")}
+            </Link>
             <AsyncContent
                 isLoading={isLoading && !event}
                 skeleton={<EventDetailSkeleton />}

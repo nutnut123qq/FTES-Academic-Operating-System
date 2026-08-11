@@ -12,7 +12,13 @@ import {
     cn,
     toast,
 } from "@heroui/react"
-import { CheckCircleIcon, ImageSquareIcon, WarningCircleIcon, XIcon } from "@phosphor-icons/react"
+import {
+    CheckCircleIcon,
+    FolderIcon,
+    ImageSquareIcon,
+    WarningCircleIcon,
+    XIcon,
+} from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 
 import { useRequireAuth } from "@/hooks/useRequireAuth"
@@ -21,6 +27,7 @@ import { useMutateCreateFeAlbumSwr } from "@/components/features/resource/hooks/
 import { ResourceDropzone } from "@/components/features/resource/ResourceUpload/ResourceDropzone"
 import { ResourceUploadProgress } from "@/components/features/resource/ResourceUpload/ResourceUploadProgress"
 import { useResourceUploadFlow } from "@/components/features/resource/ResourceUpload/useResourceUploadFlow"
+import { triageAlbumPick } from "@/components/features/resource/ResourceUpload/albumFolderPick"
 import type { ResourceUploadStep } from "@/components/features/resource/ResourceUpload/uploadFlow"
 import {
     FE_ALBUM_IMAGE_MIME,
@@ -54,6 +61,12 @@ interface AlbumPick {
  * `POST /community/media`), this one holds the files LOCALLY: an album image can only be
  * posted to `POST /resources/{id}/images`, and that id does not exist until the resource
  * is created on submit. Pick order is the album order the BE stamps as `sortOrder`.
+ *
+ * Two ways in, because both are real: **pick files** (loose scans a contributor gathered
+ * by hand, kept in the order they picked them) and **pick a whole folder** (`CSD201/`
+ * straight off the disk — sub-folders included, filtered down to pictures and sorted
+ * naturally by {@link triageAlbumPick} so `de2` precedes `de10`). Whatever a folder pick
+ * leaves out is reported, never dropped in silence.
  */
 const AlbumImagePicker = ({
     picks,
@@ -66,6 +79,18 @@ const AlbumImagePicker = ({
 }) => {
     const t = useTranslations("subjects")
     const inputRef = useRef<HTMLInputElement>(null)
+    const folderInputRef = useRef<HTMLInputElement | null>(null)
+
+    /** Wraps accepted files as local picks (thumbnail + stable key). */
+    const toPicks = useCallback(
+        (files: Array<File>): Array<AlbumPick> =>
+            files.map((file) => ({
+                id: `${file.name}-${file.lastModified}-${Math.random().toString(36).slice(2)}`,
+                file,
+                previewUrl: URL.createObjectURL(file),
+            })),
+        [],
+    )
 
     const onFiles = useCallback(
         (fileList: FileList | null) => {
@@ -103,16 +128,73 @@ const AlbumImagePicker = ({
             if (accepted.length === 0) {
                 return
             }
-            onChange([
-                ...picks,
-                ...accepted.map((file) => ({
-                    id: `${file.name}-${file.lastModified}-${Math.random().toString(36).slice(2)}`,
-                    file,
-                    previewUrl: URL.createObjectURL(file),
-                })),
-            ])
+            onChange([...picks, ...toPicks(accepted)])
         },
-        [picks, onChange, t],
+        [picks, onChange, t, toPicks],
+    )
+
+    /**
+     * Whole-folder pick: an exam folder is dirty (`Thumbs.db`, `.DS_Store`, stray PDFs,
+     * sub-folders), so the files are triaged, ordered naturally by relative path, and
+     * capped — with every skipped file accounted for in a message.
+     */
+    const onFolder = useCallback(
+        (fileList: FileList | null) => {
+            const files = fileList ? Array.from(fileList) : []
+            if (files.length === 0) {
+                toast.danger(t("practice.exam.contribute.folderEmpty"))
+                return
+            }
+            const room = FE_ALBUM_MAX_IMAGES - picks.length
+            if (room <= 0) {
+                toast.danger(
+                    t("practice.exam.contribute.albumLimit", { max: FE_ALBUM_MAX_IMAGES }),
+                )
+                return
+            }
+            const triage = triageAlbumPick(files, {
+                room,
+                maxImageMb: ALBUM_MAX_IMAGE_MB,
+                sortByPath: true,
+            })
+            if (triage.wrongType > 0) {
+                toast.danger(
+                    t("practice.exam.contribute.folderSkippedType", {
+                        count: triage.wrongType,
+                    }),
+                )
+            }
+            if (triage.tooLarge > 0) {
+                toast.danger(
+                    t("practice.exam.contribute.folderSkippedTooLarge", {
+                        count: triage.tooLarge,
+                        maxSize: ALBUM_MAX_IMAGE_MB,
+                    }),
+                )
+            }
+            if (triage.droppedOverCap > 0) {
+                toast.danger(
+                    t("practice.exam.contribute.folderOverflow", {
+                        accepted: triage.accepted.length,
+                        dropped: triage.droppedOverCap,
+                        max: FE_ALBUM_MAX_IMAGES,
+                    }),
+                )
+            }
+            if (triage.accepted.length === 0) {
+                if (triage.wrongType === 0 && triage.tooLarge === 0) {
+                    toast.danger(t("practice.exam.contribute.folderEmpty"))
+                }
+                return
+            }
+            onChange([...picks, ...toPicks(triage.accepted)])
+            toast.success(
+                t("practice.exam.contribute.folderAdded", {
+                    count: triage.accepted.length,
+                }),
+            )
+        },
+        [picks, onChange, t, toPicks],
     )
 
     const remove = useCallback(
@@ -140,6 +222,25 @@ const AlbumImagePicker = ({
                     event.target.value = ""
                 }}
             />
+            {/* Folder picker — `webkitdirectory`/`directory` are set imperatively via the
+                ref callback because React's `input` typings carry neither. */}
+            <input
+                ref={(el) => {
+                    if (el) {
+                        el.setAttribute("webkitdirectory", "")
+                        el.setAttribute("directory", "")
+                    }
+                    folderInputRef.current = el
+                }}
+                type="file"
+                hidden
+                aria-label={t("practice.exam.contribute.addFolder")}
+                onChange={(event) => {
+                    onFolder(event.target.files)
+                    // Allow re-picking the same folder after a removal.
+                    event.target.value = ""
+                }}
+            />
             <div className="flex flex-wrap items-center gap-2">
                 <Button
                     size="sm"
@@ -150,6 +251,15 @@ const AlbumImagePicker = ({
                     <ImageSquareIcon aria-hidden focusable="false" className="size-4" />
                     {t("practice.exam.contribute.addImages")}
                 </Button>
+                <Button
+                    size="sm"
+                    variant="tertiary"
+                    isDisabled={isDisabled || picks.length >= FE_ALBUM_MAX_IMAGES}
+                    onPress={() => folderInputRef.current?.click()}
+                >
+                    <FolderIcon aria-hidden focusable="false" className="size-4" />
+                    {t("practice.exam.contribute.addFolder")}
+                </Button>
                 <Typography type="body-xs" color="muted">
                     {t("practice.exam.contribute.albumCount", {
                         count: picks.length,
@@ -157,6 +267,9 @@ const AlbumImagePicker = ({
                     })}
                 </Typography>
             </div>
+            <Typography type="body-xs" color="muted">
+                {t("practice.exam.contribute.folderHint")}
+            </Typography>
 
             {picks.length > 0 ? (
                 <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">

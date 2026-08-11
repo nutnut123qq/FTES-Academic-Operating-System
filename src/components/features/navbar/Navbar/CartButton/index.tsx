@@ -61,7 +61,18 @@ export const CartButton = ({ className }: CartButtonProps) => {
             {count > 0 ? (
                 <Badge.Anchor>
                     <ShoppingCartIcon className="size-5" aria-hidden focusable="false" />
-                    <Badge size="sm" color="danger">{badgeLabel}</Badge>
+                    {/* The count has to sit dead-centre in the bubble. `badge--sm` only sets a
+                        MIN height and a fractional `leading-[1.34]`, so the label's line box and
+                        the bubble don't share a centre. Pin the box to a 16px square (`h-4` +
+                        `min-w-4`, so "99+" still grows sideways into a pill), centre it with the
+                        flex box, and match the line-height to the box — no translate nudges. */}
+                    <Badge
+                        size="sm"
+                        color="danger"
+                        className="h-4 min-w-4 items-center justify-center leading-4 tabular-nums"
+                    >
+                        {badgeLabel}
+                    </Badge>
                 </Badge.Anchor>
             ) : (
                 <ShoppingCartIcon className="size-5" aria-hidden focusable="false" />

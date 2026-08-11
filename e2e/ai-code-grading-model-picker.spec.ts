@@ -75,7 +75,7 @@ test.describe("ai-code-grading-model-picker", () => {
                 res.url().includes("/ai/coding/grade-code") && res.request().method() === "POST",
             { timeout: 240_000 },
         )
-        await page.getByRole("button", { name: "Chấm bằng AI" }).click()
+        await page.getByRole("button", { name: "Chấm bằng FrosTES" }).click()
         const gradeRes = await graded
         expect(gradeRes.status(), "grade-code must succeed").toBe(200)
         const body = gradeRes.request().postDataJSON() as Record<string, unknown>

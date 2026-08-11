@@ -60,7 +60,7 @@ test("đăng bài từ composer cộng đồng vẫn chạy (bản vá contentFo
     }
 })
 
-test("xoá 1 cuộc trò chuyện gia sư AI → tải lại trang không hiện lại", async ({ page, request }) => {
+test("xoá 1 cuộc trò chuyện gia sư FrosTES → tải lại trang không hiện lại", async ({ page, request }) => {
     const headers = { authorization: `Bearer ${await fetchToken("student")}` }
     // Seed 2 cuộc để chắc chắn có cái để xoá mà danh sách không rỗng sau đó.
     for (const n of [1, 2]) {

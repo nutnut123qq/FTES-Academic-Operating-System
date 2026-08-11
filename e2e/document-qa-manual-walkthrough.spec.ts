@@ -36,7 +36,7 @@ test("panel nằm dưới preview và trên phần bình luận", async ({ page 
         const text = document.body.innerText
         return {
             preview: text.indexOf("Xem trước tài liệu"),
-            ai: text.indexOf("Hỏi AI về tài liệu này"),
+            ai: text.indexOf("Hỏi FrosTES về tài liệu này"),
             comments: text.indexOf("Bình luận"),
         }
     })
@@ -156,14 +156,14 @@ test("khách chưa đăng nhập: panel vẫn hiện, bấm Gửi → modal đă
     await page.screenshot({ path: "test-results/vong3-khach-modal-dang-nhap.png" })
 })
 
-test("từ tab Tài liệu của môn: nút Hỏi AI → ?ask=1, tự cuộn + focus ô nhập", async ({ page }) => {
+test("từ tab Tài liệu của môn: nút Hỏi FrosTES → ?ask=1, tự cuộn + focus ô nhập", async ({ page }) => {
     await loginAs(page, "student")
     const viewer = waitForViewer(page)
     await page.goto("/vi/subjects/PRF192/resources")
     await viewer
 
-    // Nút trên dòng tài liệu là icon-only, nhãn a11y đầy đủ là "Hỏi AI về tài liệu này".
-    const askButton = page.getByRole("button", { name: "Hỏi AI về tài liệu này" })
+    // Nút trên dòng tài liệu là icon-only, nhãn a11y đầy đủ là "Hỏi FrosTES về tài liệu này".
+    const askButton = page.getByRole("button", { name: "Hỏi FrosTES về tài liệu này" })
     await expect(askButton.first()).toBeVisible({ timeout: 60_000 })
     await page.waitForTimeout(1_500) // chờ hydrate, bấm sớm thì handler điều hướng chưa gắn
     await askButton.first().click()

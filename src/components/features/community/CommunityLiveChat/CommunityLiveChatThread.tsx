@@ -147,7 +147,7 @@ export const CommunityLiveChatThread = ({ enabled, className }: CommunityLiveCha
 
     // Auto-grow the composer: one row to start, then a line taller per wrapped line.
     // Reset to `auto` FIRST so the measured `scrollHeight` shrinks again when text is
-    // deleted (otherwise the box only ever grows). The `max-h-24` class caps it — past
+    // deleted (otherwise the box only ever grows). The `max-h-15` class caps it — past
     // that the textarea scrolls (with its scrollbar hidden) instead of growing further.
     useEffect(() => {
         const element = inputRef.current
@@ -258,7 +258,8 @@ export const CommunityLiveChatThread = ({ enabled, className }: CommunityLiveCha
                 picker like the AI chat panel), so a controls row of its own would only push
                 the send icon off the input's line. The textarea starts at ONE row and grows a
                 line at a time as the message wraps (see the auto-grow effect), with the send
-                button staying vertically centred at every height. Past `max-h-24` it scrolls
+                button staying vertically centred at every height. It grows to at most THREE
+                lines (`max-h-15` = 3 × the `text-sm` 1.25rem line box); past that it scrolls
                 instead of growing — with the scrollbar HIDDEN (`scrollbar-width:none` +
                 the WebKit pseudo-element): still scrollable, just no bar drawn over the text. */}
             <div className="flex items-center gap-2 rounded-2xl bg-default px-3 py-2 focus-within:ring-2 focus-within:ring-accent">
@@ -270,7 +271,7 @@ export const CommunityLiveChatThread = ({ enabled, className }: CommunityLiveCha
                     placeholder={t("placeholder")}
                     aria-label={t("placeholder")}
                     disabled={!authenticated}
-                    className="max-h-24 w-full min-w-0 flex-1 resize-none overflow-y-auto bg-transparent text-sm text-foreground outline-none [scrollbar-width:none] placeholder:text-muted [&::-webkit-scrollbar]:hidden"
+                    className="max-h-15 w-full min-w-0 flex-1 resize-none overflow-y-auto bg-transparent text-sm text-foreground outline-none [scrollbar-width:none] placeholder:text-muted [&::-webkit-scrollbar]:hidden"
                     onKeyDown={(event) => {
                         if (event.key === "Enter" && !event.shiftKey) {
                             event.preventDefault()

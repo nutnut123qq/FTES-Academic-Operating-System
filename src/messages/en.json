@@ -3961,6 +3961,7 @@
       "empty": "No upcoming events yet."
     },
     "detail": {
+      "back": "All events",
       "loadError": "Couldn't load this event.",
       "notFound": "Event not found.",
       "notFoundDescription": "It may have been removed, or the link is wrong.",

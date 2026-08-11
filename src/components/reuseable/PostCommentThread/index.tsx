@@ -232,7 +232,12 @@ export const CommentRow = ({
             </div>
             <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                    <UserLink username={comment.authorUsername} displayName={authorName} showAvatar={false} />
+                    <UserLink
+                        username={comment.authorUsername}
+                        displayName={authorName}
+                        showAvatar={false}
+                        staffRole={comment.authorStaffRole}
+                    />
                     <Typography type="body-xs" color="muted">
                         {comment.timeLabel}
                     </Typography>

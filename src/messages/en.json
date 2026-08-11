@@ -5939,7 +5939,7 @@
         "title": "Career content admin",
         "hint": "Visible to career managers only. Everything here applies platform-wide, not just to this subject.",
         "skillTitle": "Add a skill",
-        "skillMapHint": "A new skill joins the shared catalogue. Mapping it to this subject has no API yet — the backend must do it before it shows in Related skills.",
+        "skillMapHint": "A new skill goes into the shared catalogue. To make it show up under Related skills, map it to this subject in the section just below.",
         "slugLabel": "Slug (lowercase, dash-separated)",
         "skillNameLabel": "Skill name",
         "categoryLabel": "Category",
@@ -5968,7 +5968,34 @@
         "opportunityPublished": "Posting published.",
         "draftsTitle": "Drafts waiting to be published",
         "draftsEmpty": "No drafts.",
-        "draftsError": "Could not load the drafts."
+        "draftsError": "Could not load the drafts.",
+        "map": {
+          "title": "Map a skill to this subject",
+          "hint": "Pick a skill from the catalogue and map it to the subject you are viewing. The weight (0–1) says how central the skill is to it.",
+          "skillLabel": "Skill",
+          "skillPlaceholder": "— Pick a skill —",
+          "skillsLoading": "Loading the skill catalogue…",
+          "skillsError": "Could not load the skill catalogue.",
+          "weightLabel": "Weight 0–1 (leave empty for the default)",
+          "weightInvalid": "The weight must be a number between 0 and 1.",
+          "weightValue": "Weight {weight}",
+          "attach": "Map to this subject",
+          "updateWeight": "Update the weight",
+          "detachCurrent": "Unmap from this subject",
+          "detach": "Unmap",
+          "attached": "Skill mapped to the subject.",
+          "detached": "Skill unmapped from the subject.",
+          "subjectNotFound": "The backend cannot find that subject (it may have been deleted), so it refused the change.",
+          "currentSubjectHint": "Viewing: {code} — {name}",
+          "currentSubjectLoading": "Loading the subject you are viewing…",
+          "currentSubject": "This subject",
+          "listTitle": "Subjects this skill is mapped to",
+          "listLoading": "Loading the skill's subjects…",
+          "listEmpty": "This skill is not mapped to any subject yet.",
+          "listError": "Could not load the skill's subjects.",
+          "missingSubject": "Subject name not found",
+          "catalogueUnavailable": "The subject catalogue has not loaded, so ids are shown instead of names."
+        }
       }
     },
     "membership": {
@@ -6857,7 +6884,16 @@
         "high": "High priority"
       },
       "reportedAt": "Queued {time}",
-      "targetNotLinkable": "This item can't be opened directly yet."
+      "targetNotLinkable": "This item can't be opened directly yet.",
+      "author": "Posted by {name}",
+      "reason": "Report reason: {reason}",
+      "reasonCode": {
+        "SPAM": "Spam",
+        "HARASSMENT": "Harassment",
+        "NSFW": "Sensitive content",
+        "MISINFORMATION": "Misinformation",
+        "OTHER": "Other"
+      }
     },
     "states": {
       "retry": "Try again"

@@ -97,7 +97,12 @@ const SubjectPostRow = ({
                         size="sm"
                         classNames={{ avatar: "size-8" }}
                     />
-                    <UserLink username={post.authorUsername} displayName={authorName} showAvatar={false} />
+                    <UserLink
+                        username={post.authorUsername}
+                        displayName={authorName}
+                        staffRole={post.authorStaffRole}
+                        showAvatar={false}
+                    />
                     <Typography type="body-xs" color="muted">
                         {post.timeLabel}
                     </Typography>

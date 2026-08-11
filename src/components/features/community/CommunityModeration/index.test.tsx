@@ -15,9 +15,12 @@ import type { ModerationReport } from "../hooks/useQueryReportsSwr"
  *  - a row WITH one shows it and hands the REPORT id (never the queue-row id) to the write,
  *  - keep/remove keep addressing the queue-row id.
  *
- * The queue payload is ids + enum tokens only, so the card must render TRANSLATED tokens:
- * the ids may live in the React key / the write calls / the target link href, never as
- * visible text.
+ * The card must render TRANSLATED tokens: the ids may live in the React key / the write calls /
+ * the target link href, never as visible text. On top of that the BE now resolves the reported
+ * content, its author and the report reason — all three NULLABLE — so what is pinned here is
+ * that they show when present, vanish (no empty label, no dash) when absent, and that the quote
+ * is printed as TEXT: the BE already stripped its markup and links, and re-rendering it as
+ * HTML/markdown would put the links back on a moderation console.
  *
  * `t` echoes the key (and `t.has` answers true) so assertions key off message ids.
  */
@@ -205,5 +208,51 @@ describe("CommunityModeration — reader-facing card", () => {
         reports = [row()]
         render(<CommunityModeration />)
         expect(screen.queryByText("moderation.reportedAt")).toBeNull()
+    })
+})
+
+describe("CommunityModeration — what was reported", () => {
+    /** As the BE hands it over: plain text, markup + urls already removed, ≤ 200 chars. */
+    const EXCERPT = "Mua theo doi gia re, inbox ngay hom nay de nhan uu dai"
+
+    it("shows the quote, the poster and the reason once the BE resolves them", () => {
+        reports = [
+            row({
+                targetExcerpt: EXCERPT,
+                targetAuthorName: "Nguyễn Văn A",
+                reportReason: "SPAM",
+            }),
+        ]
+        render(<CommunityModeration />)
+
+        // the quote is DATA, printed verbatim; the other two go through their messages
+        expect(screen.getByText(EXCERPT)).toBeTruthy()
+        expect(screen.getByText("moderation.author")).toBeTruthy()
+        expect(screen.getByText("moderation.reason")).toBeTruthy()
+        // context does not buy the uuid a way back onto the screen
+        expect(screen.queryByText(TARGET_UUID)).toBeNull()
+    })
+
+    it("drops all three lines when the BE has no context — no empty label, no dash", () => {
+        reports = [row()]
+        render(<CommunityModeration />)
+
+        expect(screen.queryByText("moderation.author")).toBeNull()
+        expect(screen.queryByText("moderation.reason")).toBeNull()
+        expect(screen.queryByText("—")).toBeNull()
+        expect(screen.queryByText("-")).toBeNull()
+        // the row is still readable and still decidable
+        expect(screen.getByText("moderation.targetLabel")).toBeTruthy()
+        expect(screen.getByText("moderation.keep")).toBeTruthy()
+        expect(screen.getByText("moderation.remove")).toBeTruthy()
+    })
+
+    it("prints the excerpt as text — nothing re-renders it as markup", () => {
+        const raw = "<b>khuyen mai</b> [xem tai day]"
+        reports = [row({ targetExcerpt: raw })]
+        const { container } = render(<CommunityModeration />)
+
+        expect(screen.getByText(raw)).toBeTruthy()
+        expect(container.querySelector("b")).toBeNull()
     })
 })

@@ -35,10 +35,12 @@ const COUNTS: Array<number> = [3, 5, 10]
 /**
  * Maps a failed `POST /ai/mock-interview/sessions` to the message the learner should see.
  *
- * `MOCK_INTERVIEW_INVALID_PAYLOAD` counts as "AI down" here: on the draw path the backend
- * catches every ftes-ai-service failure and re-raises it as that code
- * (`MockInterviewSessionService.drawSeedQuestions`), and the only other trigger — a blank
- * `courseRef` — is already prevented client-side by the disabled Start button.
+ * This used to fold `MOCK_INTERVIEW_INVALID_PAYLOAD` (400) into "AI down", because the draw
+ * path re-raised every ftes-ai-service failure under that one code and the UI had no way to
+ * tell an outage from a bad parameter. The backend has since split them —
+ * `MOCK_INTERVIEW_AI_UNAVAILABLE` (503) for the AI side, 400 only for genuinely bad caller
+ * input — so the guess is gone: a 400 now falls through to the generic message, which is the
+ * honest one for a request the learner cannot fix by waiting.
  */
 const classifyDrawError = (error: unknown): DrawFailure => {
     if (error instanceof RestError) {
@@ -50,7 +52,7 @@ const classifyDrawError = (error: unknown): DrawFailure => {
         ) {
             return "forbidden"
         }
-        if (isAiDownError(error) || error.errorCode === "MOCK_INTERVIEW_INVALID_PAYLOAD") {
+        if (isAiDownError(error)) {
             return "aiDown"
         }
     }

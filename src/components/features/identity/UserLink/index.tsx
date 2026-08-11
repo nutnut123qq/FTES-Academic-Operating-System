@@ -9,7 +9,9 @@ import type { WithClassNames } from "@/modules/types/base/class-name"
 import { useQueryUserHovercardSwr } from "@/hooks/swr/api/graphql/queries"
 import { RestError } from "@/modules/api/rest/client"
 import { UserAvatar } from "@/components/reuseable/UserAvatar"
+import { VerifiedBadge } from "@/components/reuseable/VerifiedBadge"
 import { UserHovercard } from "@/components/blocks/identity"
+import { STAFF_ROLE_LABEL_KEY, parseStaffRole } from "@/hooks/useViewerStaffRole"
 import { pathConfig } from "@/resources/path"
 import { useMutateFollowUserSwr } from "./useMutateFollowUserSwr"
 
@@ -51,6 +53,17 @@ export interface UserLinkProps extends WithClassNames<{ avatar?: string; name?: 
     /** Whether to hide the name and render only the avatar. */
     hideName?: boolean
     /**
+     * The user's platform staff role (BE GraphQL `PublicUser.staffRole`) — renders the
+     * shared {@link VerifiedBadge} after the name. Omitted / `null` / an unrecognized
+     * code renders NOTHING at all (no spacer, no empty tooltip): ordinary members are
+     * the overwhelming majority, so the badge-less tree must stay exactly as it was.
+     *
+     * Ignored when {@link UserLinkProps.hideName} is set — surfaces render this
+     * component TWICE for one person (avatar column + name row), and the seal belongs
+     * to the name, so the avatar-only instance must not duplicate it.
+     */
+    staffRole?: string | null
+    /**
      * Follow state supplied by the CALLER, for surfaces that already read it for the
      * whole list in one request
      * ({@link import("./useQueryFollowedUserIdsSwr").useQueryFollowedUserIdsSwr} over
@@ -91,6 +104,7 @@ export const UserLink = ({
     size = "sm",
     showAvatar = true,
     hideName = false,
+    staffRole,
     isFollowing: isFollowingProp,
     className,
     classNames,
@@ -148,6 +162,26 @@ export const UserLink = ({
         ),
         [display, classNames?.name],
     )
+
+    /**
+     * The verified seal, when this person is platform staff — `null` for everyone else,
+     * so an ordinary member's markup is untouched.
+     *
+     * It is rendered as a SIBLING of the link below rather than inside it: the shared
+     * badge wraps its icon in a tooltip trigger that react-aria makes focusable
+     * (`role="button"` + `tabIndex={0}`), and nesting that in the profile `<a>` would put
+     * an interactive control inside an interactive control — a phantom tab stop on every
+     * staff name in a feed.
+     */
+    const badge = useMemo(() => {
+        const role = hideName ? null : parseStaffRole(staffRole)
+        return role ? (
+            <VerifiedBadge
+                label={t(STAFF_ROLE_LABEL_KEY[role])}
+                description={t("verifiedBadge.description")}
+            />
+        ) : null
+    }, [hideName, staffRole, t])
 
     const identity = (
         <>
@@ -257,11 +291,22 @@ export const UserLink = ({
         </div>
     )
 
-    return username ? (
+    const node = username ? (
         <UserHovercard content={hovercardContent} onOpen={handleOpenHovercard} className={className}>
             {trigger}
         </UserHovercard>
     ) : (
         trigger
+    )
+
+    // No badge → the exact tree this component has always returned (the caller's
+    // `className` keeps landing on the hovercard/trigger it was written for).
+    return badge ? (
+        <span className="inline-flex min-w-0 items-center gap-1">
+            {node}
+            {badge}
+        </span>
+    ) : (
+        node
     )
 }

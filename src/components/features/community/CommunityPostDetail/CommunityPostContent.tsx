@@ -199,7 +199,14 @@ export const CommunityPostContent = ({
                         classNames={{ avatar: "size-9" }}
                     />
                 }
-                author={<UserLink username={post.authorUsername} displayName={authorName} showAvatar={false} />}
+                author={
+                    <UserLink
+                        username={post.authorUsername}
+                        displayName={authorName}
+                        showAvatar={false}
+                        staffRole={post.authorStaffRole}
+                    />
+                }
                 timeLabel={post.timeLabel}
                 threadline={commentsCount > 0}
             >

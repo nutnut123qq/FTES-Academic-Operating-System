@@ -36,6 +36,8 @@ export interface SubjectPost {
     authorUsername: string
     /** Author's uploaded avatar (BE `PublicUser.avatarUrl`); null/absent = no photo. */
     authorAvatar?: string | null
+    /** Author's platform staff role (BE `PublicUser.staffRole`); null/absent = no badge. */
+    authorStaffRole?: string | null
     timeLabel: string
     title: string
     snippet: string
@@ -74,6 +76,7 @@ const toSubjectPost = (post: SubjectCommunityPost, locale: string): SubjectPost 
     // useQueryCommunityFeedSwr.
     authorUsername: post.author?.username ?? "",
     authorAvatar: post.author?.avatarUrl ?? null,
+    authorStaffRole: post.author?.staffRole ?? null,
     timeLabel: formatRelativeTime(post.createdAt, locale),
     title: post.title ?? "",
     snippet: post.snippet ?? post.body ?? "",

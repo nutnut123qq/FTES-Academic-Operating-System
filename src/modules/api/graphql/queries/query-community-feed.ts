@@ -37,6 +37,14 @@ export interface FeedPostAuthor {
     username: string | null
     displayName: string | null
     avatarUrl: string | null
+    /**
+     * Platform staff role for the verified seal (BE `PublicUser.staffRole`):
+     * `SUPER_ADMIN` | `ADMIN` | `MODERATOR`, `null` for an ordinary member. The role
+     * NAME only — the type deliberately carries no permissions/grants. Typed as a plain
+     * `string` because the schema does (BE `staffRole: String`), so the render side
+     * validates it instead of trusting the wire.
+     */
+    staffRole: string | null
 }
 
 /**
@@ -115,6 +123,7 @@ export const FEED_SELECTION = `
       username
       displayName
       avatarUrl
+      staffRole
     }
     media {
       id

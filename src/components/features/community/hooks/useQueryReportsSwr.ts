@@ -26,6 +26,16 @@ export interface ModerationReport {
     priority?: number
     status: string
     createdAt?: string
+    /**
+     * Quote of the reported content — PLAIN TEXT the BE already stripped of markup/links and
+     * cut to 200 chars. Render it as-is (no second strip, no markdown/HTML rendering).
+     * `undefined` when the target is gone and there is nothing to quote.
+     */
+    targetExcerpt?: string
+    /** Poster's resolved display name, or `undefined` when the BE could not resolve one. */
+    targetAuthorName?: string
+    /** Report reason (`reasonCode`, plus `": <detail>"`), or `undefined` on an AI-raised row. */
+    reportReason?: string
 }
 
 /** SWR cache key for the moderation queue — shared with the decision mutation. */
@@ -45,6 +55,11 @@ const toReport = (item: ModerationQueueResponse): ModerationReport => ({
     priority: item.priority,
     status: item.status,
     createdAt: item.createdAt,
+    // Same normalization as reportId: the three context fields are nullable on the wire, and
+    // the renderer tests ONE "nothing to show" shape before it draws a row.
+    targetExcerpt: item.targetExcerpt ?? undefined,
+    targetAuthorName: item.targetAuthorName ?? undefined,
+    reportReason: item.reportReason ?? undefined,
 })
 
 /**

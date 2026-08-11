@@ -35,6 +35,22 @@ export const STAFF_ROLE_LABEL_KEY: Record<StaffRole, string> = {
 }
 
 /**
+ * Coerce a role code sent by the backend into a {@link StaffRole} — the rule for
+ * badging SOMEONE ELSE, matching the one the viewer badge uses above.
+ *
+ * GraphQL types `PublicUser.staffRole` as a plain `String`, and the backend already
+ * collapses multiple grants to the strongest code with the SAME ladder as
+ * {@link STAFF_ROLE_PRECEDENCE} (`PermissionEvaluationService.staffRank`), so there is
+ * nothing left to rank here — only to recognize. An unknown / future code degrades to
+ * `null` (no badge) rather than being rendered raw next to a person's name.
+ *
+ * @param roleCode - `me.scopedGrants[].roleCode` or `PublicUser.staffRole`; nullable.
+ * @returns The matching staff role, or `null` when the code is absent or unknown.
+ */
+export const parseStaffRole = (roleCode?: string | null): StaffRole | null =>
+    STAFF_ROLE_PRECEDENCE.find((role) => role === roleCode) ?? null
+
+/**
  * The CURRENT VIEWER's platform staff role, or `null` when they hold none.
  *
  * Reads `state.user.scopedGrants` (hydrated from `me.scopedGrants` by
@@ -44,8 +60,9 @@ export const STAFF_ROLE_LABEL_KEY: Record<StaffRole, string> = {
  * A MODERATOR grant scoped to one SUBJECT therefore does NOT badge the viewer
  * as platform staff.
  *
- * VIEWER-ONLY: GraphQL `PublicUser` (other people) carries no role at all, so
- * this can never be reused to badge someone else's name.
+ * VIEWER-ONLY: it reads the redux session. To badge SOMEONE ELSE, run their
+ * `PublicUser.staffRole` through {@link parseStaffRole} instead — same ladder, so
+ * the viewer's own badge and the one others see on them never disagree.
  *
  * @returns The strongest staff role held, or `null`.
  */

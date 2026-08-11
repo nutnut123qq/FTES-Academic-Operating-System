@@ -29,6 +29,12 @@ export interface PostComment {
      * the shared avatar shows its initials tile.
      */
     authorAvatar?: string | null
+    /**
+     * Author's platform staff role (BE `PublicUser.staffRole`) for the verified seal.
+     * Left undefined by comment sources with no profile join (the REST comment DTO the
+     * group thread uses), which simply means no badge.
+     */
+    authorStaffRole?: string | null
     text: string
     timeLabel: string
     /** One-level replies under this top-level comment (absent on replies). */
@@ -44,6 +50,8 @@ export interface PostDetail {
     authorUsername: string
     /** Author's uploaded avatar (BE `PublicUser.avatarUrl`); null/absent = no photo. */
     authorAvatar?: string | null
+    /** Author's platform staff role (BE `PublicUser.staffRole`); null = no badge. */
+    authorStaffRole?: string | null
     timeLabel: string
     title: string
     body: string
@@ -73,6 +81,7 @@ const toReply = (reply: CommunityPostReplyNode, locale: string): PostComment => 
     author: reply.author?.displayName ?? reply.author?.username ?? "",
     authorUsername: reply.author?.username ?? reply.author?.id ?? "",
     authorAvatar: reply.author?.avatarUrl ?? null,
+    authorStaffRole: reply.author?.staffRole ?? null,
     text: reply.body,
     timeLabel: formatRelativeTime(reply.createdAt, locale),
 })
@@ -93,6 +102,7 @@ const toPostDetail = (post: CommunityPostNode, locale: string): PostDetail => ({
     author: post.author?.displayName ?? post.author?.username ?? "",
     authorUsername: post.author?.username ?? post.author?.id ?? "",
     authorAvatar: post.author?.avatarUrl ?? null,
+    authorStaffRole: post.author?.staffRole ?? null,
     timeLabel: formatRelativeTime(post.createdAt, locale),
     title: post.title ?? "",
     body: post.body ?? "",

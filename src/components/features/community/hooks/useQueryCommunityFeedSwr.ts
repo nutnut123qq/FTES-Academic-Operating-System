@@ -41,6 +41,11 @@ export interface CommunityPost {
      */
     authorAvatar?: string | null
     /**
+     * Author's platform staff role (BE `PublicUser.staffRole`), driving the verified seal
+     * next to the name. `null`/absent = ordinary member = NO badge.
+     */
+    authorStaffRole?: string | null
+    /**
      * Author id (BE `Post.authorId`) — the owner gate compares this, since a display
      * name/username can be missing while the id is always present.
      */
@@ -187,6 +192,7 @@ export const toCommunityPost = (post: FeedPost, locale: string): CommunityPost =
     // chốt bằng `authorId` ngay dưới, không phụ thuộc trường này.)
     authorUsername: post.author?.username ?? "",
     authorAvatar: post.author?.avatarUrl ?? null,
+    authorStaffRole: post.author?.staffRole ?? null,
     authorId: post.authorId ?? post.author?.id ?? null,
     pinned: post.pinned ?? false,
     timeLabel: formatRelativeTime(post.createdAt, locale),

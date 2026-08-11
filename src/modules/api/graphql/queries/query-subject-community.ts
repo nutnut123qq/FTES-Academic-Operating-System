@@ -31,6 +31,8 @@ export interface SubjectCommunityAuthor {
     username: string | null
     displayName: string | null
     avatarUrl: string | null
+    /** Platform staff role (BE `PublicUser.staffRole`) driving the verified seal; null = member. */
+    staffRole: string | null
 }
 
 /** A one-level reply under a top-level comment (BE `PostComment.replies`). */
@@ -101,6 +103,7 @@ const COMMUNITY_SELECTION = `
       username
       displayName
       avatarUrl
+      staffRole
     }
     media {
       id
@@ -118,6 +121,7 @@ const COMMUNITY_SELECTION = `
         username
         displayName
         avatarUrl
+        staffRole
       }
       replies {
         id
@@ -128,6 +132,7 @@ const COMMUNITY_SELECTION = `
           username
           displayName
           avatarUrl
+          staffRole
         }
       }
     }

@@ -5939,7 +5939,7 @@
         "title": "Quản trị nội dung nghề nghiệp",
         "hint": "Chỉ hiện với người có quyền quản trị career. Mọi thay đổi ở đây áp dụng cho toàn nền tảng, không riêng môn này.",
         "skillTitle": "Thêm kỹ năng",
-        "skillMapHint": "Kỹ năng mới vào danh mục chung. Việc gắn kỹ năng vào môn này chưa có API — backend phải map thì mục Kỹ năng liên quan mới hiện.",
+        "skillMapHint": "Kỹ năng mới sẽ vào danh mục chung. Muốn kỹ năng hiện ở mục Kỹ năng liên quan thì gắn nó vào môn này ở phần ngay bên dưới.",
         "slugLabel": "Slug (chữ thường, nối bằng dấu -)",
         "skillNameLabel": "Tên kỹ năng",
         "categoryLabel": "Nhóm kỹ năng",
@@ -5968,7 +5968,34 @@
         "opportunityPublished": "Đã xuất bản tin.",
         "draftsTitle": "Tin nháp chờ xuất bản",
         "draftsEmpty": "Không có tin nháp nào.",
-        "draftsError": "Không tải được danh sách tin nháp."
+        "draftsError": "Không tải được danh sách tin nháp.",
+        "map": {
+          "title": "Gắn kỹ năng vào môn này",
+          "hint": "Chọn một kỹ năng trong danh mục rồi gắn vào môn đang xem. Trọng số 0–1 cho biết kỹ năng gắn với môn chặt tới đâu.",
+          "skillLabel": "Kỹ năng",
+          "skillPlaceholder": "— Chọn kỹ năng —",
+          "skillsLoading": "Đang tải danh mục kỹ năng…",
+          "skillsError": "Không tải được danh mục kỹ năng.",
+          "weightLabel": "Trọng số 0–1 (để trống thì dùng mặc định)",
+          "weightInvalid": "Trọng số phải là một số từ 0 đến 1.",
+          "weightValue": "Trọng số {weight}",
+          "attach": "Gắn vào môn này",
+          "updateWeight": "Cập nhật trọng số",
+          "detachCurrent": "Gỡ khỏi môn này",
+          "detach": "Gỡ",
+          "attached": "Đã gắn kỹ năng vào môn.",
+          "detached": "Đã gỡ kỹ năng khỏi môn.",
+          "subjectNotFound": "Backend không tìm thấy môn này (có thể đã bị xoá) nên từ chối thao tác.",
+          "currentSubjectHint": "Môn đang xem: {code} — {name}",
+          "currentSubjectLoading": "Đang tải thông tin môn đang xem…",
+          "currentSubject": "Môn đang xem",
+          "listTitle": "Các môn đang gắn với kỹ năng này",
+          "listLoading": "Đang tải danh sách môn của kỹ năng…",
+          "listEmpty": "Kỹ năng này chưa gắn với môn nào.",
+          "listError": "Không tải được danh sách môn của kỹ năng.",
+          "missingSubject": "Không tra được tên môn",
+          "catalogueUnavailable": "Chưa tải được danh mục môn nên tạm hiện mã định danh thay cho tên môn."
+        }
       }
     },
     "membership": {
@@ -6857,7 +6884,16 @@
         "high": "Ưu tiên cao"
       },
       "reportedAt": "Đưa vào hàng chờ {time}",
-      "targetNotLinkable": "Chưa mở trực tiếp được đối tượng này."
+      "targetNotLinkable": "Chưa mở trực tiếp được đối tượng này.",
+      "author": "Người đăng: {name}",
+      "reason": "Lý do báo cáo: {reason}",
+      "reasonCode": {
+        "SPAM": "Spam",
+        "HARASSMENT": "Quấy rối",
+        "NSFW": "Nội dung nhạy cảm",
+        "MISINFORMATION": "Thông tin sai lệch",
+        "OTHER": "Lý do khác"
+      }
     },
     "states": {
       "retry": "Thử lại"

@@ -45,12 +45,16 @@ const ModerationSkeleton = () => (
  * is gated off (no 403 spam) and the empty state is shown. Decisions
  * optimistically drop the row and roll back on failure.
  *
- * The queue payload is ids + enum tokens ONLY, so no raw uuid reaches the screen: the
- * ids stay in the React `key`, in the write calls and inside the target link's href,
- * while the card itself renders translated tokens (target type / source / priority) plus
- * "reported N ago". A POST target additionally gets a link to the reported post (new tab)
- * so the moderator never decides blind; a COMMENT or USER row cannot be linked (see the
- * comment at the link site) and says so instead.
+ * No raw uuid reaches the screen: the ids stay in the React `key`, in the write calls and
+ * inside the target link's href, while the card renders translated tokens (target type /
+ * source / priority), "reported N ago" and the BE-resolved context — a quote of the reported
+ * content, who posted it, why it was reported. The quote arrives PLAIN, already stripped of
+ * markup and of every url by the BE (`ModerationExcerpt`, 200 chars): it is printed as text,
+ * never re-stripped and never rendered as markdown/HTML — a moderation console must not become
+ * the link-spreading surface it exists to clear. Each context line is omitted entirely when the
+ * BE has nothing (deleted target, AI row with no report), never shown as an empty label.
+ * A POST target additionally gets a link to the reported post (new tab); a COMMENT or USER row
+ * cannot be linked (see the comment at the link site) and says so instead.
  *
  * Escalation (`POST /community/reports/{reportId}/escalate`) addresses the REPORT, not
  * the queue row, so the action is offered ONLY on rows whose `reportId` came back non-null
@@ -82,6 +86,18 @@ export const CommunityModeration = () => {
                 priority >= 2 ? "high" : priority === 1 ? "normal" : "low"
             }`,
         )
+    // The reason is the BE `reasonCode` (SPAM / HARASSMENT / NSFW / …), followed by
+    // ": <what the reporter typed>" when they typed anything. Translate the CODE and leave the
+    // reporter's own words untouched; an unknown code falls back to the token, as above.
+    const reasonLabel = (reason: string) => {
+        const separator = reason.indexOf(":")
+        const code = (separator === -1 ? reason : reason.slice(0, separator)).trim()
+        const detail = separator === -1 ? "" : reason.slice(separator + 1).trim()
+        const label = t.has(`moderation.reasonCode.${code}`)
+            ? t(`moderation.reasonCode.${code}`)
+            : code
+        return detail ? `${label}: ${detail}` : label
+    }
 
     return (
         <div className="flex flex-col gap-3">
@@ -123,6 +139,28 @@ export const CommunityModeration = () => {
                                             </Chip>
                                         ) : null}
                                     </div>
+                                    {/* Plain text on purpose: the BE already removed the markup
+                                        and the links, so anything more than printing it would
+                                        either re-strip what is clean or resurrect what was cut. */}
+                                    {report.targetExcerpt ? (
+                                        <Typography type="body-sm" className="line-clamp-3">
+                                            {report.targetExcerpt}
+                                        </Typography>
+                                    ) : null}
+                                    {report.targetAuthorName ? (
+                                        <Typography type="body-xs" color="muted">
+                                            {t("moderation.author", {
+                                                name: report.targetAuthorName,
+                                            })}
+                                        </Typography>
+                                    ) : null}
+                                    {report.reportReason ? (
+                                        <Typography type="body-xs" color="muted">
+                                            {t("moderation.reason", {
+                                                reason: reasonLabel(report.reportReason),
+                                            })}
+                                        </Typography>
+                                    ) : null}
                                     <Typography type="body-xs" color="muted">
                                         {t("moderation.source", {
                                             source: sourceLabel(report.source),

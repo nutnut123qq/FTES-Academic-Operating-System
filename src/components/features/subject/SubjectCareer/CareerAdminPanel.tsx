@@ -11,6 +11,7 @@ import { usePostPatchCareerOpportunitySwr } from "@/hooks/swr/api/rest/mutations
 import { usePostPatchCareerRoadmapSwr } from "@/hooks/swr/api/rest/mutations/usePostPatchCareerRoadmapSwr"
 import { useHasPermission } from "@/hooks/useHasPermission"
 import { useRestWithToast } from "@/modules/toast/hooks"
+import { SkillSubjectMapper } from "./SkillSubjectMapper"
 import {
     OPPORTUNITY_TYPE_KEY,
     OPPORTUNITY_TYPES,
@@ -105,6 +106,9 @@ const TokenPicker = ({
  * Every action below maps 1:1 onto an existing endpoint; nothing is invented:
  *
  * - `POST /career/skills` (`career.manage`) — a new skill + its level ladder,
+ * - `POST` / `DELETE /career/skills/{slug}/subjects/{subjectId}` + `GET
+ *   /career/skills/{slug}/subjects` (`career.manage`) — mapping a skill onto THIS
+ *   subject, i.e. what fills the tab's "related skills" (see {@link SkillSubjectMapper}),
  * - `POST /career/roadmaps` (`career.manage`) + `PATCH /career/roadmaps/{slug}` — a roadmap
  *   is born `DRAFT` and only a `PUBLISHED` one is listed/enrollable, so the publish step is
  *   offered right next to the freshly created draft,
@@ -116,10 +120,9 @@ const TokenPicker = ({
  * `career.manage` cannot post an opportunity and `career.opportunity.manage` cannot create
  * a skill or a roadmap. A viewer holding neither gets nothing at all (no dead buttons).
  *
- * NOT offered, because no write path exists: mapping a skill to THIS subject
- * (`career.skill_subject_map` is seed/migration-only) and editing an opportunity's
- * company / track / location / deadline (the create body carries none of them and the
- * PATCH body carries `status` only).
+ * NOT offered, because no write path exists: editing an opportunity's company / track /
+ * location / deadline (the create body carries none of them and the PATCH body carries
+ * `status` only).
  */
 export const CareerAdminPanel = ({ onChanged }: CareerAdminPanelProps) => {
     const t = useTranslations("subjects")
@@ -189,8 +192,8 @@ export const CareerAdminPanel = ({ onChanged }: CareerAdminPanelProps) => {
             setSkillName("")
             setSkillLevelsText("")
             // Refetches `GET /career/skills`, so the new skill is in the catalogue the tab
-            // names its rows from. It does NOT join this subject: `career.skill_subject_map`
-            // has no write endpoint (see the panel doc + the hint under the form).
+            // names its rows from. It does NOT join this subject on its own — that is the
+            // mapper below (`career.skill_subject_map`).
             onChanged()
         }
     }
@@ -368,6 +371,10 @@ export const CareerAdminPanel = ({ onChanged }: CareerAdminPanelProps) => {
                     </div>
                 </div>
             ) : null}
+
+            {/* Mounted only for `career.manage` — the gate is this branch, not a second
+              * check inside the mapper (which would 403-read for everyone else). */}
+            {canManageCareer ? <SkillSubjectMapper onChanged={onChanged} /> : null}
 
             {canManageCareer ? (
                 <div className="flex flex-col gap-2 border-t border-separator pt-4">

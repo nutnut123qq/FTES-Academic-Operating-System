@@ -51,6 +51,7 @@ const toReply = (reply: SubjectCommunityReplyNode, locale: string): PostComment 
     id: reply.id,
     author: reply.author.displayName ?? reply.author.username ?? "",
     authorUsername: reply.author.username ?? reply.author.id,
+    authorStaffRole: reply.author.staffRole ?? null,
     text: reply.body,
     timeLabel: formatRelativeTime(reply.createdAt, locale),
 })

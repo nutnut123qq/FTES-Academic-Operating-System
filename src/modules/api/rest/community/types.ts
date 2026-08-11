@@ -231,10 +231,9 @@ export interface ModerationDecisionRequest {
 /**
  * One moderation queue item.
  *
- * IDS + ENUM TOKENS ONLY — the BE record (`CommunityDtos.ModerationQueueResponse`) carries
- * no excerpt of the reported content, no author and no report reason, so a moderator UI can
- * only label the row and link to the target. Showing what was actually reported needs the BE
- * to widen this record (see the queue component's docs).
+ * Ids + enum tokens, PLUS the display context the BE resolves per page
+ * (`targetExcerpt` / `targetAuthorName` / `reportReason`). All three are nullable: an AI row
+ * has no report behind it, and a hard-deleted target has no content left to quote.
  */
 export interface ModerationQueueResponse {
     id: string
@@ -253,4 +252,14 @@ export interface ModerationQueueResponse {
     priority?: number
     status: string
     createdAt?: string
+    /**
+     * Plain-text quote of the reported content, ALREADY stripped of markup + every url and
+     * capped at 200 chars by the BE (`ModerationExcerpt`). Render as text — never re-strip it
+     * and never feed it to a markdown/HTML renderer.
+     */
+    targetExcerpt?: string | null
+    /** Poster's name, already resolved through the BE `DisplayNames` (never `legacy_<uuid>`). */
+    targetAuthorName?: string | null
+    /** Report reason: the `reasonCode` token, plus `": <detail>"` when the reporter typed one. */
+    reportReason?: string | null
 }

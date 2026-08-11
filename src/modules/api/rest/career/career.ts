@@ -260,6 +260,70 @@ export const submitCareerMentorAssessment = async (
         data: request,
     })
 
+// ---- Skill ↔ subject map (`career.skill_subject_map`) ----
+
+/**
+ * One row of `GET /api/v1/career/skills/{slug}/subjects` — the subjects ONE skill is
+ * mapped to.
+ *
+ * ⚠️ ID-ONLY: the row carries the subject UUID and the weight and NOTHING else — no
+ * code, no name. Naming it needs a join against the subject catalogue, and an id the
+ * catalogue does not resolve is a STALE mapping (the V121 dev seed left two behind),
+ * which has to read as such instead of as a blank label.
+ *
+ * WIRE SHAPE: snake_case (`subject_id`), like the roadmap step rows; the camelCase
+ * spelling is kept as an optional alias so a future DTO rename still type-checks.
+ */
+export interface CareerSkillSubjectLink {
+    subject_id: string
+    /** camelCase alias of {@link subject_id}; absent on today's wire. */
+    subjectId?: string
+    /** `career.skill_subject_map.weight` — `numeric(3,2)`, CHECK 0..1 (V120). */
+    weight: number
+}
+
+/** `GET /career/skills/{slug}/subjects` — the skill's mapped subjects (`career.manage`). */
+export const getCareerSkillSubjects = async (
+    slug: string,
+): Promise<CareerSkillSubjectLink[]> =>
+    restRequest<CareerSkillSubjectLink[]>({
+        method: "GET",
+        url: `/career/skills/${slug}/subjects`,
+        authenticated: true,
+    })
+
+/**
+ * `POST /career/skills/{slug}/subjects/{subjectId}` — maps the skill onto a subject
+ * (`career.manage`). Idempotent: re-posting an existing pair updates its weight.
+ *
+ * @param subjectId - the subject **UUID** (the route segment is the CODE — not it).
+ * @param weight - `career.skill_subject_map.weight` (0..1); omitted → the BE default.
+ */
+export const mapCareerSkillToSubject = async (
+    slug: string,
+    subjectId: string,
+    weight?: number,
+): Promise<void> =>
+    restRequest<void>({
+        method: "POST",
+        url: `/career/skills/${slug}/subjects/${subjectId}`,
+        ...(weight === undefined ? {} : { data: { weight } }),
+    })
+
+/**
+ * `DELETE /career/skills/{slug}/subjects/{subjectId}` — unmaps (`career.manage`),
+ * idempotent. A subject the backend cannot resolve answers `404
+ * CAREER_SUBJECT_NOT_FOUND`.
+ */
+export const unmapCareerSkillFromSubject = async (
+    slug: string,
+    subjectId: string,
+): Promise<void> =>
+    restRequest<void>({
+        method: "DELETE",
+        url: `/career/skills/${slug}/subjects/${subjectId}`,
+    })
+
 // ---------------- CvProfileController (Harvard CV builder) ----------------
 
 /**

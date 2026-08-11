@@ -301,6 +301,7 @@ export const CommunityFeedRow = ({
                         username={post.authorUsername}
                         displayName={authorName}
                         showAvatar={false}
+                        staffRole={post.authorStaffRole}
                         isFollowing={isFollowing}
                     />
                 }

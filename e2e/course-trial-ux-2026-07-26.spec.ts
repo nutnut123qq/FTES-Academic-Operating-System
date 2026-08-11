@@ -234,7 +234,7 @@ test.describe("course-trial-ux — features 7–14", () => {
         await page.goto("/vi/subjects/PRF192/ai")
         await viewer
         // The AI hub heading + at least one enabled tool CTA — no "join to use" wall.
-        await expect(page.getByText("Trợ lý AI")).toBeVisible({ timeout: 30_000 })
+        await expect(page.getByText("Trợ lý FrosTES")).toBeVisible({ timeout: 30_000 })
         await expect(page.getByRole("button", { name: "Mở" }).first()).toBeVisible({
             timeout: 30_000,
         })

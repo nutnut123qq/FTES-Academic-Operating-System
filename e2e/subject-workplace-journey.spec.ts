@@ -4,7 +4,7 @@ import { fetchToken, loginAs, waitForViewer } from "./helpers/auth"
 
 /**
  * Nghiệm thu E2E — hành trình "workplace" của môn PRF192: tab **Tài liệu** (xem học liệu,
- * mở được, nút "Hỏi AI về tài liệu này" đưa sang trang tài liệu với `?ask=1` và focus ô nhập)
+ * mở được, nút "Hỏi FrosTES về tài liệu này" đưa sang trang tài liệu với `?ask=1` và focus ô nhập)
  * và tab **Thảo luận** (đăng bài mới → hiện ngay trong feed → bình luận → F5 vẫn còn).
  *
  * Bài đăng trong ca thảo luận có mốc thời gian trong tiêu đề để tìm lại được, và được DỌN
@@ -24,7 +24,7 @@ const DISCUSSION = "/vi/subjects/PRF192/discussion"
 
 /** Nhãn lệch có chủ đích: rail trái ghi "Tài liệu", heading trong tab ghi "Tài nguyên". */
 const RESOURCES_HEADING = "Tài nguyên"
-const ASK_AI = "Hỏi AI về tài liệu này"
+const ASK_AI = "Hỏi FrosTES về tài liệu này"
 
 /**
  * React hydrate xong SAU khi nội dung đã render — click sớm hơn thì rơi vào hư không
@@ -85,7 +85,7 @@ test("tab Tài liệu: học liệu của môn hiện thành hàng có đủ nú
     await expect(page.getByText("Không tải được tài nguyên.")).toHaveCount(0)
 })
 
-test("tab Tài liệu: bấm 'Hỏi AI về tài liệu này' mở đúng /resources/{id}?ask=1 và focus ô nhập", async ({
+test("tab Tài liệu: bấm 'Hỏi FrosTES về tài liệu này' mở đúng /resources/{id}?ask=1 và focus ô nhập", async ({
     page,
 }) => {
     await loginAs(page, "student")
@@ -106,7 +106,7 @@ test("tab Tài liệu: bấm 'Hỏi AI về tài liệu này' mở đúng /resou
         { timeout: 120_000 },
     )
 
-    // Khối Hỏi AI chỉ render khi tài liệu có `currentVersionId` — thấy nó = mở đúng tài liệu
+    // Khối Hỏi FrosTES chỉ render khi tài liệu có `currentVersionId` — thấy nó = mở đúng tài liệu
     // có bản file để grounding, không phải trang trống.
     await expect(page.getByText(ASK_AI)).toBeVisible({ timeout: 30_000 })
 

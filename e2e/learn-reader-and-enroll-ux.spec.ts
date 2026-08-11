@@ -31,7 +31,7 @@ test.describe("learn-reader-and-enroll-ux — reader by content type", () => {
         // no video element for a DOCUMENT lesson
         await expect(page.locator("video")).toHaveCount(0)
         // AI study tools are VIDEO-lesson-only
-        await expect(page.getByText("Học với AI")).toHaveCount(0)
+        await expect(page.getByText("Học với FrosTES")).toHaveCount(0)
     })
 
     test("VIDEO lesson mounts the AI study block (player itself needs a READY video — not in seed)", async ({ page }) => {
@@ -41,7 +41,7 @@ test.describe("learn-reader-and-enroll-ux — reader by content type", () => {
 
         await expect(page.getByRole("heading", { name: "Con trỏ (video)" })).toBeVisible({ timeout: 60_000 })
         // VIDEO-lesson-only AI study tools mount
-        await expect(page.getByText("Học với AI").first()).toBeVisible()
+        await expect(page.getByText("Học với FrosTES").first()).toBeVisible()
         // challenge tab follows the real BE flag on this lesson
         await expect(
             page.getByRole("tab", { name: "Thử thách" }),

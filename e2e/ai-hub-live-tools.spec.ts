@@ -60,7 +60,7 @@ const runJob = async (page: Page, submitPath: string) => {
 
 /** No failure/quota copy may be on screen when a result rendered. */
 const expectNoFailure = async (page: Page) => {
-    await expect(page.getByText("Tác vụ AI thất bại. Vui lòng thử lại.")).toHaveCount(0)
+    await expect(page.getByText("Tác vụ FrosTES thất bại. Vui lòng thử lại.")).toHaveCount(0)
     await expect(
         page.getByText("Bạn đã dùng hết lượt cho công cụ này. Vui lòng thử lại sau."),
     ).toHaveCount(0)
@@ -75,7 +75,7 @@ test.describe("ai-hub-live-tools — hub tile wiring (2.4)", () => {
 
         // all six live tool tiles render (mentor/teacher removed from the catalog)
         for (const name of [
-            "Gia sư AI",
+            "Gia sư FrosTES",
             "Lập kế hoạch học",
             "Tóm tắt thông minh",
             "Thẻ ghi nhớ",

@@ -19,6 +19,26 @@
         "cta": "Hoàn thiện hồ sơ",
         "dismiss": "Để sau"
       }
+    },
+    "assistant": {
+      "open": "Mở trợ lý FrosTES",
+      "close": "Đóng bảng gợi ý",
+      "title": "FrosTES giúp gì cho bạn?",
+      "subtitle": "Chọn nhanh một việc bên dưới.",
+      "options": {
+        "planner": {
+          "label": "Tạo lộ trình học",
+          "description": "AI dựng kế hoạch học theo tuần từ mục tiêu của bạn"
+        },
+        "cv": {
+          "label": "Làm CV",
+          "description": "Dựng CV, tải lên và nhờ AI review"
+        },
+        "chat": {
+          "label": "Hỏi đáp AI",
+          "description": "Mở trung tâm AI: hỏi đáp và mọi công cụ"
+        }
+      }
     }
   },
   "onboarding": {
@@ -30,7 +50,7 @@
     "replay": "Xem lại hướng dẫn",
     "skipConfirm": {
       "title": "Bỏ qua hướng dẫn?",
-      "body": "Bạn có thể mở lại hướng dẫn này bất cứ lúc nào từ menu tài khoản.",
+      "body": "Bạn có thể bỏ qua — hướng dẫn này chỉ hiện một lần cho người mới.",
       "confirm": "Bỏ qua",
       "cancel": "Tiếp tục"
     },
@@ -66,7 +86,7 @@
     },
     "done": {
       "title": "Sẵn sàng rồi!",
-      "body": "Cần xem lại? Mở lại hướng dẫn này bất cứ lúc nào từ menu tài khoản của bạn."
+      "body": "Xong rồi! Cần trợ giúp thì bấm vào linh vật FrosTES ở góc phải màn hình."
     }
   },
   "community": {
@@ -2182,7 +2202,7 @@
   "profileMenu": {
     "explore": {
       "title": "Khám phá",
-      "ai": "Trợ lý FrosTES",
+      "ai": "Trợ lý học tập FrosTES",
       "forYou": "Dành cho bạn",
       "recommendations": "Gợi ý cho bạn",
       "trending": "Thịnh hành"
@@ -2278,7 +2298,9 @@
       "capstone": "Dự án",
       "skills": "Kỹ năng",
       "projects": "Dự án",
-      "challenges": "Thử thách"
+      "challenges": "Thử thách",
+      "profile": "Hồ sơ",
+      "community": "Cộng đồng"
     },
     "coding": {
       "solved": "Đã giải",
@@ -2403,6 +2425,43 @@
       "remote": "Làm từ xa",
       "hybrid": "Kết hợp",
       "onsite": "Tại văn phòng"
+    },
+    "tabsAria": "Các mục hồ sơ công khai",
+    "stats": {
+      "projects": "Dự án",
+      "achievements": "Thành tích"
+    },
+    "about": {
+      "empty": "Người dùng này chưa viết giới thiệu"
+    },
+    "projects": {
+      "featured": "Nổi bật",
+      "repo": "Mã nguồn",
+      "demo": "Bản chạy thử"
+    },
+    "academic": {
+      "fields": {
+        "studentCode": "Mã sinh viên",
+        "enrollmentYear": "Năm nhập học"
+      }
+    },
+    "contact": {
+      "email": "Email",
+      "phone": "Điện thoại"
+    },
+    "activity": {
+      "gridTitle": "Lưới hoạt động",
+      "gridSummary": "{weeks} tuần gần đây · {count} hoạt động",
+      "gridCell": "{date}: {count} hoạt động",
+      "gridUnavailable": "Chưa đủ dữ liệu để vẽ lưới hoạt động",
+      "gridPartial": "chỉ tính phần lịch sử đã tải",
+      "timelineTitle": "Dòng thời gian",
+      "empty": "Chưa có hoạt động công khai nào",
+      "signIn": "Đăng nhập để xem hoạt động của người dùng này"
+    },
+    "community": {
+      "postsTitle": "Bài viết cộng đồng",
+      "postsEmpty": "Chưa có bài viết nào"
     }
   },
   "talents": {
@@ -2741,7 +2800,8 @@
       "current": "Chuỗi hiện tại",
       "longest": "Chuỗi dài nhất",
       "count": "{count} ngày"
-    }
+    },
+    "unknownMember": "Thành viên"
   },
   "home": {
     "intro": "Khóa học IT trên mạng tràn lan, nhưng nội dung cô đọng và đi vào tư duy thực chiến lại rất ít.",
@@ -6475,7 +6535,14 @@
       "acceptAnswer": "Chấp nhận câu trả lời",
       "acceptedAnswer": "Câu trả lời được chấp nhận",
       "acceptAnswerDone": "Đã chọn câu trả lời được chấp nhận.",
-      "acceptAnswerFailed": "Không chọn được câu trả lời. Vui lòng thử lại."
+      "acceptAnswerFailed": "Không chọn được câu trả lời. Vui lòng thử lại.",
+      "commentsLoadFailedNetwork": "Không tải được bình luận — kết nối mạng đang gián đoạn. Kiểm tra mạng rồi thử lại.",
+      "commentsLoadFailedAuth": "Bạn cần đăng nhập để xem bình luận của bài viết này.",
+      "commentsLoadFailedSessionExpired": "Phiên đăng nhập đã hết hạn nên không tải được bình luận. Vui lòng thử lại.",
+      "commentsLoadFailedForbidden": "Bạn không có quyền xem bình luận của bài viết này (bài nằm trong nhóm riêng tư).",
+      "commentsLoadFailedNotFound": "Bài viết không còn tồn tại hoặc đã bị gỡ, nên không còn bình luận để hiển thị.",
+      "commentsLoadFailedServer": "Máy chủ đang gặp sự cố khi tải bình luận. Vui lòng thử lại sau ít phút.",
+      "commentsSignIn": "Đăng nhập"
     },
     "feed": {
       "likes": "{count} thích",

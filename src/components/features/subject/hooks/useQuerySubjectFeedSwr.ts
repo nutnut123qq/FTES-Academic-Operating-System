@@ -30,10 +30,12 @@ const toSubjectFeedScope = (scope: FeedScope): SubjectFeedScope => {
 /** A subject community post. */
 export interface SubjectPost {
     id: string
-    /** Display name of the author. */
+    /** Display name of the author, or `""` when the BE row carried no profile card. */
     author: string
     /** URL-facing username for profile link + hovercard. */
     authorUsername: string
+    /** Author's uploaded avatar (BE `PublicUser.avatarUrl`); null/absent = no photo. */
+    authorAvatar?: string | null
     timeLabel: string
     title: string
     snippet: string
@@ -59,11 +61,19 @@ export const subjectFeedKey = (subjectId: string, locale: string, scope: FeedSco
     scope,
 ]
 
-/** Map a BE `Post` (subjectWorkspace.community) to the discussion card contract. */
+/**
+ * Map a BE `Post` (subjectWorkspace.community) to the discussion card contract. `author`
+ * is a batched `PublicUser` the gateway may leave NULL, so every read is optional-chained;
+ * `avatarUrl` (already in the document selection) is carried through as `authorAvatar`
+ * instead of being dropped — dropping it is what pushed the card onto a generated face.
+ */
 const toSubjectPost = (post: SubjectCommunityPost, locale: string): SubjectPost => ({
     id: post.id,
-    author: post.author.displayName ?? post.author.username ?? "",
-    authorUsername: post.author.username ?? post.author.id,
+    author: post.author?.displayName ?? post.author?.username ?? "",
+    // Chỉ nhận username THẬT — rơi về id sẽ dựng link /u/<uuid> chết. Xem cùng lý do ở
+    // useQueryCommunityFeedSwr.
+    authorUsername: post.author?.username ?? "",
+    authorAvatar: post.author?.avatarUrl ?? null,
     timeLabel: formatRelativeTime(post.createdAt, locale),
     title: post.title ?? "",
     snippet: post.snippet ?? post.body ?? "",

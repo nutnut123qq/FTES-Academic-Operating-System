@@ -3,6 +3,32 @@
 @import "@heroui/styles";
 
 /*
+ * Vá token radius CHẾT. `rounded-large` đang được dùng 136 chỗ / 75 file, nhưng
+ * `--radius-large` KHÔNG hề tồn tại: thang radius của HeroUI v3 chỉ có
+ * xs/sm/md/lg/xl/2xl/3xl/4xl (+field). Tailwind v4 chỉ sinh utility cho token nằm
+ * trong theme namespace, nên 136 chỗ đó compile ra RỖNG — không có rule
+ * border-radius nào cả, tức góc vuông ở field form, ô tìm kiếm, sidebar item,
+ * picker ảnh, lưới media... Bằng chứng: trong CSS build (.next/static/css)
+ * `.rounded-large` xuất hiện 0 lần, trong khi `.rounded-lg` và `.rounded-2xl`
+ * đều có rule thật.
+ *
+ * Vì sao chọn giá trị này: `rounded-large` là tên legacy của HeroUI v2
+ * (small/medium/large), ứng với bậc `lg` của thang mới — khớp cả tên (large ~ lg)
+ * lẫn số đo: legacy large = 14px, mà với `--radius: 0.75rem` (12px) thì lg = 12px
+ * còn xl = 18px, nên lg là bậc gần nhất. Do đó bám ĐÚNG công thức heroui dùng cho
+ * lg (node_modules/@heroui/styles/dist/themes/shared/theme.css) thay vì chế số:
+ * giá trị tự đi theo mỗi khi đổi `--radius`.
+ *
+ * LƯU Ý: bắt buộc `@theme inline` + viết lại công thức, KHÔNG alias
+ * `var(--radius-lg)`. HeroUI khai thang radius trong `@theme inline` nên
+ * `--radius-lg` không hề được emit ra :root (đã kiểm: 0 lần trong CSS build),
+ * alias sẽ ra giá trị rỗng và lỗi tái diễn trong im lặng.
+ */
+@theme inline {
+  --radius-large: calc(var(--radius) * 1); /* = var(--radius) = 0.75rem (12px) */
+}
+
+/*
  * Kill the "giật giật" jitter on learn pages: their left rail is exactly
  * `calc(100dvh - 4rem)` tall, so the document lands right ON the viewport height
  * and the vertical scrollbar flickers in/out on sub-pixel reflows — each toggle
@@ -369,4 +395,41 @@ html {
 }
 @media (prefers-reduced-motion: no-preference) {
     .ai-fab-led-ring::before { animation: fabLedRotate 3s linear infinite; }
+}
+
+/*
+ * Trợ lý FrosTES đứng vẫy tay (`MascotAssistant`) — animation THUẦN CSS keyframes
+ * (không framer-motion, không requestAnimationFrame: môi trường nghiệm thu headless
+ * không chạy rAF nên rAF sẽ không verify được).
+ *
+ * Linh vật là 1 ảnh raster nguyên khối (không tách được cánh tay thành layer riêng),
+ * nên "vẫy tay" thể hiện bằng cú lắc nhẹ quanh CHÂN (`transform-origin: 50% 100%`)
+ * — bàn tay đang giơ sẵn trong artwork nên chuyển động đọc ra là vẫy chào. Chỉ dùng
+ * `transform` (GPU-cheap), biên độ nhỏ để không gây nhiễu ở góc màn hình.
+ */
+@keyframes mascotWave {
+    0%, 100% { transform: rotate(-3deg); }
+    50% { transform: rotate(4deg); }
+}
+
+.mascot-wave {
+    transform-origin: 50% 100%;
+    animation: mascotWave 1.8s ease-in-out infinite;
+}
+
+/* Panel options bung ra khi rê/chạm vào linh vật — trượt lên + fade, chạy 1 lần lúc mount. */
+@keyframes mascotAssistantPanelIn {
+    from { opacity: 0; transform: translateY(6px) scale(0.98); }
+    to { opacity: 1; transform: none; }
+}
+
+.mascot-assistant-panel {
+    transform-origin: bottom right;
+    animation: mascotAssistantPanelIn 160ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    /* Tôn trọng reduced-motion: linh vật đứng yên, panel hiện thẳng (không trượt). */
+    .mascot-wave { animation: none !important; }
+    .mascot-assistant-panel { animation: none !important; }
 }

@@ -34,6 +34,7 @@ const GroupFeedCard = ({
     canPin: boolean
 }) => {
     const t = useTranslations("groupsHub")
+    const tCommon = useTranslations("common")
     const locale = useLocale()
     const [expanded, setExpanded] = useState(false)
     const [hasOpened, setHasOpened] = useState(false)
@@ -49,6 +50,12 @@ const GroupFeedCard = ({
     // share the POST permalink (/community/{postId}), not the group page — sharing the
     // group dropped the reader on the feed with no way to tell which post was meant
     const postUrl = groupPostPermalink(locale, post.id)
+    /**
+     * Name actually rendered. The mapper leaves `author` empty when the BE sent no author
+     * card (user without a profile row), and the card must show a shared member label
+     * there — printing the author id was the old behaviour and it read as gibberish.
+     */
+    const authorName = post.author || tCommon("unknownMember")
 
     const onToggleComments = useCallback(() => {
         setHasOpened(true)
@@ -64,12 +71,13 @@ const GroupFeedCard = ({
                 <div className="flex items-center gap-3">
                     <UserLink
                         username={post.authorUsername}
-                        displayName={post.author}
+                        displayName={authorName}
+                        avatar={post.authorAvatar}
                         hideName
                         size="sm"
                         classNames={{ avatar: "size-8" }}
                     />
-                    <UserLink username={post.authorUsername} displayName={post.author} showAvatar={false} />
+                    <UserLink username={post.authorUsername} displayName={authorName} showAvatar={false} />
                     <Typography type="body-xs" color="muted">
                         {post.timeLabel}
                     </Typography>
@@ -103,7 +111,7 @@ const GroupFeedCard = ({
                     shareTitle={post.text}
                     saveEntityType="post"
                     saveEntityId={post.id}
-                    saveSource={{ kind: "group", id: groupId, label: post.author }}
+                    saveSource={{ kind: "group", id: groupId, label: authorName }}
                 />
             </div>
             {expanded ? (

@@ -26,9 +26,20 @@ export const toMediaItems = (
 /** A community post (BE `Post` mapped to the feed card contract). */
 export interface CommunityPost {
     id: string
+    /**
+     * Author display name, or `""` when the BE row carried no profile card. NEVER the
+     * author id — the card renders a shared "member" label for the empty case instead
+     * of leaking a uuid as a name.
+     */
     author: string
     /** URL-facing username for the profile link + hovercard. */
     authorUsername: string
+    /**
+     * Author's uploaded avatar (BE `PublicUser.avatarUrl`, already selected by the feed
+     * document). Optional: `null`/absent simply means "no photo" and the shared avatar
+     * falls back to the initials tile.
+     */
+    authorAvatar?: string | null
     /**
      * Author id (BE `Post.authorId`) — the owner gate compares this, since a display
      * name/username can be missing while the id is always present.
@@ -161,12 +172,22 @@ const toFeedTab = (tab: CommunityFeedTab): FeedTab => {
  * Map a BE `Post` to the feed card contract. The gateway now enriches every feed row
  * with `snippet`, `likeCount`, `likedByMe` and `commentCount`, so the card renders the
  * real excerpt and engagement instead of the previous "" / 0 / false placeholders.
+ *
+ * `author` is a batched `PublicUser` that the gateway leaves NULL when the profile card
+ * is missing (hence `authorId` existing as its own field), so every read off it is
+ * optional-chained — the row must degrade, not throw. `avatarUrl` is carried through as
+ * `authorAvatar`: it was already selected by the document but dropped here, which is why
+ * every feed face fell back to a generated one.
  */
 export const toCommunityPost = (post: FeedPost, locale: string): CommunityPost => ({
     id: post.id,
-    author: post.author.displayName ?? post.author.username ?? "",
-    authorUsername: post.author.username ?? post.author.id,
-    authorId: post.authorId ?? post.author.id ?? null,
+    author: post.author?.displayName ?? post.author?.username ?? "",
+    // Chỉ nhận username THẬT: rơi về id là dựng link hồ sơ /u/<uuid> → 404. Rỗng thì
+    // UserLink hiện tên không kèm link, thà vậy còn hơn liên kết chết. (Quyền sở hữu bài
+    // chốt bằng `authorId` ngay dưới, không phụ thuộc trường này.)
+    authorUsername: post.author?.username ?? "",
+    authorAvatar: post.author?.avatarUrl ?? null,
+    authorId: post.authorId ?? post.author?.id ?? null,
     pinned: post.pinned ?? false,
     timeLabel: formatRelativeTime(post.createdAt, locale),
     title: post.title ?? "",

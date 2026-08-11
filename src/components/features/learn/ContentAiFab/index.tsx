@@ -71,6 +71,13 @@ const MascotFace = () => (
  * Open state lives in the shared overlay store (`contentAiChat` key); the thread +
  * composer are rendered by {@link ContentAiChat}. Mounted once by the learn layout
  * alongside {@link import("../LessonReader/ContentAiSelectionAsk").ContentAiSelectionAsk}.
+ *
+ * CORNER OWNERSHIP: this FAB owns the bottom-right corner on the reader routes.
+ * The app-wide mascot assistant
+ * ({@link import("@/components/features/mascot-assistant").MascotAssistant}, mounted
+ * in `InnerLayout`) self-hides on `/courses/<id>/learn/...` for exactly that reason —
+ * the lesson-scoped, grounded chat wins where a lesson is open. Keep the two in sync
+ * if this mount point ever moves.
  */
 export const ContentAiFab = () => {
     const t = useTranslations("learn")

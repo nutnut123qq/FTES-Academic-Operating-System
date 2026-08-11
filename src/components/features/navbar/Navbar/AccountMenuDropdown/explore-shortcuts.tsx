@@ -1,6 +1,6 @@
 import React from "react"
 import {
-    RobotIcon,
+    SparkleIcon,
 } from "@phosphor-icons/react"
 import { pathConfig } from "@/resources/path"
 
@@ -10,7 +10,9 @@ import { pathConfig } from "@/resources/path"
  * the header carries plain module links only, so `/ai` enters the app from
  * HERE). Recommendations was folded into the AI Assistant hub, Trending into
  * Community, and "Dành cho bạn" (For you) removed (the community feed is reached
- * from the Community tab), so only the AI Assistant remains here.
+ * from the Community tab), so only the study assistant ("Trợ lý học tập FrosTES",
+ * `profileMenu.explore.ai`) remains here — marked with the platform's canonical AI
+ * sparkle (same mark as the in-lesson assistant FAB / the AI hub tutor tile).
  */
 export interface ExploreShortcut {
     id: "ai"
@@ -27,7 +29,7 @@ export interface ExploreShortcut {
 export const EXPLORE_SHORTCUTS: Array<ExploreShortcut> = [
     {
         id: "ai",
-        icon: <RobotIcon className="size-5" aria-hidden focusable="false" />,
+        icon: <SparkleIcon className="size-5" aria-hidden focusable="false" />,
         labelKey: "profileMenu.explore.ai",
         path: () => pathConfig().locale().ai().build(),
         authGated: true,

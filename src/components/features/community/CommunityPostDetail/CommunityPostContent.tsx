@@ -76,6 +76,7 @@ export const CommunityPostContent = ({
     loadingFallback = null,
 }: CommunityPostContentProps) => {
     const t = useTranslations("communityHub")
+    const tCommon = useTranslations("common")
     const locale = useLocale()
     const { post } = useQueryPostDetailSwr(postId)
     const { meta } = useQueryPostMetaSwr(postId)
@@ -177,6 +178,12 @@ export const CommunityPostContent = ({
         typeof window !== "undefined" ? `${window.location.origin}/${locale}/community/${postId}` : ""
     // Only the author of a QUESTION post picks the accepted answer (BE contract).
     const canAcceptAnswer = isOwner && meta?.postType === "QUESTION"
+    /**
+     * Name actually rendered. The mapper leaves `author` empty when the BE row carried no
+     * profile card, and `UserLink` would then fall back to `username` — the raw author id
+     * on those rows. One shared label keeps a uuid off the page.
+     */
+    const authorName = post.author || tCommon("unknownMember")
 
     return (
         <div className="flex flex-col gap-3 py-3">
@@ -184,14 +191,15 @@ export const CommunityPostContent = ({
                 avatar={
                     <UserLink
                         username={post.authorUsername}
-                        displayName={post.author}
+                        displayName={authorName}
+                        avatar={post.authorAvatar}
                         hideName
                         size="sm"
                         className="size-9"
                         classNames={{ avatar: "size-9" }}
                     />
                 }
-                author={<UserLink username={post.authorUsername} displayName={post.author} showAvatar={false} />}
+                author={<UserLink username={post.authorUsername} displayName={authorName} showAvatar={false} />}
                 timeLabel={post.timeLabel}
                 threadline={commentsCount > 0}
             >
@@ -220,7 +228,7 @@ export const CommunityPostContent = ({
                     onReport={() => setReportOpen(true)}
                     saveEntityType="post"
                     saveEntityId={postId}
-                    saveSource={{ kind: "community", label: post.author }}
+                    saveSource={{ kind: "community", label: authorName }}
                 />
             </ThreadsPostRow>
 

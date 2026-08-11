@@ -314,6 +314,18 @@ export interface GroupChallengeSummary {
 
 // ---------------- CommunityApi feed/pinned types ----------------
 
+/**
+ * Display card for a user, mirrors BE `GroupDtos.UserCard` (loaded per page in one batch
+ * by `GroupAuthorEnricher`). NULL when that user has no profile row — callers must render
+ * a generic member label then, never the raw `authorId`.
+ */
+export interface GroupUserCard {
+    userId: string
+    username: string | null
+    displayName: string | null
+    avatarUrl: string | null
+}
+
 export interface GroupPostSummary {
     id: string
     authorId: string
@@ -327,6 +339,12 @@ export interface GroupPostSummary {
     commentCount: number
     /** Whether the current caller has liked this post. */
     likedByMe: boolean
+    /**
+     * Author display card (BE `GroupPostSummary.author`, change group-social-engagement
+     * §3.1). Optional here because it is a THEN-added field and older cached payloads may
+     * lack it; `null` when the author has no profile row.
+     */
+    author?: GroupUserCard | null
 }
 
 export interface GroupFeedSlice {

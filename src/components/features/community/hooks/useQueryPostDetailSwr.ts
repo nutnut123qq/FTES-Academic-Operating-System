@@ -15,10 +15,20 @@ import { toMediaItems } from "./useQueryCommunityFeedSwr"
 /** A comment on a post. Replies are flat, one level deep (Threads-like). */
 export interface PostComment {
     id: string
-    /** Display name of the author. */
+    /**
+     * Display name of the author, or `""` when the source carried no profile card.
+     * Surfaces render a shared "member" label for the empty case — never the author id.
+     */
     author: string
     /** URL-facing username for profile link + hovercard. */
     authorUsername: string
+    /**
+     * Author's uploaded avatar. Optional because not every comment source carries a
+     * profile join — the REST comment DTO (`GET /community/posts/{id}/comments`, used by
+     * the group thread) has no author card at all, so those rows leave it undefined and
+     * the shared avatar shows its initials tile.
+     */
+    authorAvatar?: string | null
     text: string
     timeLabel: string
     /** One-level replies under this top-level comment (absent on replies). */
@@ -28,10 +38,12 @@ export interface PostComment {
 /** Full post detail (BE `Post` mapped to the detail view). */
 export interface PostDetail {
     id: string
-    /** Display name of the author. */
+    /** Display name of the author, or `""` when the BE row carried no profile card. */
     author: string
     /** URL-facing username for profile link + hovercard. */
     authorUsername: string
+    /** Author's uploaded avatar (BE `PublicUser.avatarUrl`); null/absent = no photo. */
+    authorAvatar?: string | null
     timeLabel: string
     title: string
     body: string
@@ -47,11 +59,20 @@ export interface PostDetail {
  * comment thread, and the like/comment mutation hooks (ONE source of truth). */
 export const postDetailKey = (postId: string) => ["post-detail", postId]
 
-/** Map a BE comment reply node to the flat `PostComment` reply contract. */
+/**
+ * Map a BE comment reply node to the flat `PostComment` reply contract. `author` is a
+ * batched `PublicUser` the gateway may leave NULL, so every read is optional-chained.
+ *
+ * `authorUsername` keeps degrading to the author id when the profile card is missing —
+ * the shared thread's owner gate compares the viewer id against it (see
+ * `PostCommentThread.isMine`), so emptying it there would hide "Sửa"/"Xoá" from people
+ * whose own profile has no username.
+ */
 const toReply = (reply: CommunityPostReplyNode, locale: string): PostComment => ({
     id: reply.id,
-    author: reply.author.displayName ?? reply.author.username ?? "",
-    authorUsername: reply.author.username ?? reply.author.id,
+    author: reply.author?.displayName ?? reply.author?.username ?? "",
+    authorUsername: reply.author?.username ?? reply.author?.id ?? "",
+    authorAvatar: reply.author?.avatarUrl ?? null,
     text: reply.body,
     timeLabel: formatRelativeTime(reply.createdAt, locale),
 })
@@ -69,8 +90,9 @@ const toComment = (comment: CommunityPostCommentNode, locale: string): PostComme
  */
 const toPostDetail = (post: CommunityPostNode, locale: string): PostDetail => ({
     id: post.id,
-    author: post.author.displayName ?? post.author.username ?? "",
-    authorUsername: post.author.username ?? post.author.id,
+    author: post.author?.displayName ?? post.author?.username ?? "",
+    authorUsername: post.author?.username ?? post.author?.id ?? "",
+    authorAvatar: post.author?.avatarUrl ?? null,
     timeLabel: formatRelativeTime(post.createdAt, locale),
     title: post.title ?? "",
     body: post.body ?? "",

@@ -2,9 +2,10 @@
 
 import React from "react"
 import { cn } from "@heroui/react"
-import { BookOpenIcon, FireIcon } from "@phosphor-icons/react"
+import { BookOpenIcon, FireIcon, TargetIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { ContinueLearning } from "../ContinueLearning"
+import { DailyQuest } from "../DailyQuest"
 import { StreakStrip } from "../StreakStrip"
 import { LabeledCard } from "@/components/blocks/cards/LabeledCard"
 import type { WithClassNames } from "@/modules/types/base/class-name"
@@ -14,12 +15,17 @@ export type OverviewTabProps = WithClassNames<undefined>
 
 /**
  * Dashboard "Overview" tab — the cockpit, every section framed by a `LabeledCard`
- * (label outside + card): "Tiếp tục học" (resume cards) and "Đà học" (streak strip),
- * both backed by real BE data. Faithful port of StarCI's OverviewTab, trimmed to the
- * widgets the BE can actually serve. Each child self-fetches + owns its states.
+ * (label outside + card): "Tiếp tục học" (resume cards), "Nhiệm vụ hôm nay" (today's
+ * quest board preview) and "Đà học" (streak strip), all backed by real BE data.
+ * Faithful port of StarCI's OverviewTab, trimmed to the widgets the BE can actually
+ * serve. Each child self-fetches + owns its states.
+ *
+ * `DailyQuest` is the dashboard's only entry to the quest board now that the account
+ * menu's "Nhiệm vụ" row is gone — it reads the SAME `useGetMyQuestsSwr` cache the
+ * `/quests` page reads and links on to it.
  *
  * Hidden — chờ BE (components kept, render removed so no fake numbers ship):
- * `DailyQuest` ("Nhiệm vụ hôm nay"), `WeeklyGoals` ("Mục tiêu tuần"),
+ * `WeeklyGoals` ("Mục tiêu tuần"),
  * `WeeklyChallengeCard` (weekly-challenge event) — no gamification endpoints yet;
  * `OverviewContributions` (contribution heatmap) — analytics has no per-user
  * contribution/time-series endpoint (only the admin contributionStats zero-stub).
@@ -37,6 +43,13 @@ export const OverviewTab = ({ className }: OverviewTabProps) => {
                 frameless
             >
                 <ContinueLearning />
+            </LabeledCard>
+            {/* today's quests — live board preview + link to the full /quests page */}
+            <LabeledCard
+                label={t("overview.sections.quest")}
+                icon={<TargetIcon aria-hidden focusable="false" className="size-5" />}
+            >
+                <DailyQuest />
             </LabeledCard>
             <LabeledCard
                 label={t("overview.sections.streak")}

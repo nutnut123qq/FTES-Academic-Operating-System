@@ -44,6 +44,7 @@ const SubjectPostRow = ({
     post: SubjectPost
 }) => {
     const tHub = useTranslations("communityHub")
+    const tCommon = useTranslations("common")
     const locale = useLocale()
     const currentUser = useAppSelector((state) => state.user.user)
     const [expanded, setExpanded] = useState(false)
@@ -58,6 +59,11 @@ const SubjectPostRow = ({
     )
 
     const regionId = `post-comments-${post.id}`
+    /**
+     * Name actually rendered — the mapper leaves `author` empty when the BE row carried no
+     * profile card, and `UserLink` would otherwise fall back to the raw author id.
+     */
+    const authorName = post.author || tCommon("unknownMember")
 
     const onToggleComments = useCallback(() => {
         setHasOpened(true)
@@ -85,12 +91,13 @@ const SubjectPostRow = ({
                 <div className="flex items-center gap-3">
                     <UserLink
                         username={post.authorUsername}
-                        displayName={post.author}
+                        displayName={authorName}
+                        avatar={post.authorAvatar}
                         hideName
                         size="sm"
                         classNames={{ avatar: "size-8" }}
                     />
-                    <UserLink username={post.authorUsername} displayName={post.author} showAvatar={false} />
+                    <UserLink username={post.authorUsername} displayName={authorName} showAvatar={false} />
                     <Typography type="body-xs" color="muted">
                         {post.timeLabel}
                     </Typography>

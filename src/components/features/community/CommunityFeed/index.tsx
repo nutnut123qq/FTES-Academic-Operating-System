@@ -193,6 +193,7 @@ export const CommunityFeedRow = ({
     isFollowing?: boolean
 }) => {
     const t = useTranslations("communityHub")
+    const tCommon = useTranslations("common")
     const locale = useLocale()
     const currentUser = useAppSelector((state) => state.user.user)
     const [expanded, setExpanded] = useState(false)
@@ -215,6 +216,12 @@ export const CommunityFeedRow = ({
     const regionId = `post-comments-${post.id}`
     const postUrl =
         typeof window !== "undefined" ? `${window.location.origin}/${locale}/community/${post.id}` : ""
+    /**
+     * Name actually rendered. The mapper leaves `author` empty when the BE row carried no
+     * profile card, and `UserLink` would then fall back to `username` — which on those rows
+     * is the raw author id. One shared label keeps a uuid off the card.
+     */
+    const authorName = post.author || tCommon("unknownMember")
 
     const onToggleComments = useCallback(() => {
         setHasOpened(true)
@@ -280,7 +287,8 @@ export const CommunityFeedRow = ({
                 avatar={
                     <UserLink
                         username={post.authorUsername}
-                        displayName={post.author}
+                        displayName={authorName}
+                        avatar={post.authorAvatar}
                         hideName
                         size="sm"
                         className="size-9"
@@ -291,7 +299,7 @@ export const CommunityFeedRow = ({
                 author={
                     <UserLink
                         username={post.authorUsername}
-                        displayName={post.author}
+                        displayName={authorName}
                         showAvatar={false}
                         isFollowing={isFollowing}
                     />
@@ -322,7 +330,7 @@ export const CommunityFeedRow = ({
                     onRepost={() =>
                         openQuote({
                             id: post.id,
-                            author: post.author,
+                            author: authorName,
                             authorUsername: post.authorUsername,
                             title: post.title,
                             snippet: post.snippet,
@@ -338,7 +346,7 @@ export const CommunityFeedRow = ({
                     onReport={guard(() => setReportOpen(true), "auth.context.generic")}
                     saveEntityType="post"
                     saveEntityId={post.id}
-                    saveSource={{ kind: "community", label: post.author }}
+                    saveSource={{ kind: "community", label: authorName }}
                 />
                 {expanded ? (
                     <PostCommentThread
@@ -346,6 +354,14 @@ export const CommunityFeedRow = ({
                         comments={detail?.comments ?? []}
                         isLoading={isLoading && !detail}
                         hasError={!detail ? Boolean(error) : false}
+                        // The read is viewer-scoped: the gateway answers a missing /
+                        // expired token with a top-level 401 PLATFORM_UNAUTHORIZED, a
+                        // private-group post with FORBIDDEN and a removed one with
+                        // COMMUNITY_POST_NOT_FOUND. Hand the rejection over so the
+                        // thread says WHICH of those happened instead of one blanket
+                        // "Không tải được bình luận" + a retry that can never succeed
+                        // (same distinction the feed-level `isAuthGate` above makes).
+                        error={error}
                         onRetry={() => void mutate()}
                         onSubmit={onSubmit}
                         onCollapse={onToggleComments}

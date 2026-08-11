@@ -8,10 +8,16 @@ import { formatRelativeTime } from "@/components/features/community/hooks/relati
 /** A group post (§7). */
 export interface GroupPost {
     id: string
-    /** Display name of the author. */
+    /**
+     * Display name of the author, or `""` when the BE sent no author card. It is NEVER
+     * the author id any more — the card renders the shared "member" label instead, so a
+     * uuid can't end up as somebody's name.
+     */
     author: string
-    /** URL-facing username for profile link + hovercard. */
+    /** URL-facing username for profile link + hovercard; `""` when there is no profile. */
     authorUsername: string
+    /** Author's uploaded avatar (BE `GroupPostSummary.author.avatarUrl`); null = no photo. */
+    authorAvatar?: string | null
     timeLabel: string
     text: string
     /** Like count (change group-social-engagement — hydrated by the group feed DTO). */
@@ -41,13 +47,20 @@ export const matchesGroupFeedKey =
 /**
  * Maps a BE group post summary to the feed-card shape. The group feed slice now
  * carries live engagement (`likeCount`/`commentCount`/`likedByMe`, hydrated by the
- * BE via `community.getPostEngagement`). The feed DTO still only carries the author
- * id (no profile join), so the author display name / username fall back to it.
+ * BE via `community.getPostEngagement`) AND an `author` display card (`GroupDtos.UserCard`,
+ * batch-loaded per page by `GroupAuthorEnricher`) — this mapper used to ignore it and
+ * degrade BOTH the name and the username to `authorId`, which is how a uuid ended up as
+ * the author's name and the avatar fell back to a face generated from that uuid.
+ *
+ * Empty (not the id) when the card is absent: the name is then supplied by the card as a
+ * shared "member" label, and an empty username makes `UserLink` render plain text rather
+ * than a profile link that could only ever 404.
  */
 const toGroupPost = (dto: GroupPostSummary, locale: string): GroupPost => ({
     id: dto.id,
-    author: dto.authorId,
-    authorUsername: dto.authorId,
+    author: dto.author?.displayName ?? dto.author?.username ?? "",
+    authorUsername: dto.author?.username ?? "",
+    authorAvatar: dto.author?.avatarUrl ?? null,
     timeLabel: formatRelativeTime(dto.createdAt, locale),
     text: dto.title,
     likes: dto.likeCount ?? 0,

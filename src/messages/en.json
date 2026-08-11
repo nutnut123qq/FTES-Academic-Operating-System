@@ -19,6 +19,26 @@
         "cta": "Complete profile",
         "dismiss": "Not now"
       }
+    },
+    "assistant": {
+      "open": "Open the FrosTES assistant",
+      "close": "Close the shortcuts",
+      "title": "How can FrosTES help?",
+      "subtitle": "Pick a shortcut below.",
+      "options": {
+        "planner": {
+          "label": "Build a study plan",
+          "description": "AI drafts a weekly plan from your goal"
+        },
+        "cv": {
+          "label": "Build your CV",
+          "description": "Create or upload a CV and get an AI review"
+        },
+        "chat": {
+          "label": "Ask the AI",
+          "description": "Open the AI hub: chat and every tool"
+        }
+      }
     }
   },
   "onboarding": {
@@ -30,7 +50,7 @@
     "replay": "Replay the guide",
     "skipConfirm": {
       "title": "Skip the guide?",
-      "body": "You can reopen this guide anytime from your account menu.",
+      "body": "Feel free to skip — this guide only shows once for new visitors.",
       "confirm": "Skip",
       "cancel": "Keep going"
     },
@@ -66,7 +86,7 @@
     },
     "done": {
       "title": "You're all set!",
-      "body": "Need a refresher? Reopen this guide any time from your account menu."
+      "body": "All done! Need a hand later? Tap the FrosTES mascot in the corner."
     }
   },
   "community": {
@@ -2173,7 +2193,7 @@
   "profileMenu": {
     "explore": {
       "title": "Explore",
-      "ai": "FrosTES Assistant",
+      "ai": "FrosTES Study Assistant",
       "forYou": "For You",
       "recommendations": "Recommendations",
       "trending": "Trending"
@@ -2269,7 +2289,9 @@
       "capstone": "Projects",
       "skills": "Skills",
       "projects": "Projects",
-      "challenges": "Challenges"
+      "challenges": "Challenges",
+      "profile": "Profile",
+      "community": "Community"
     },
     "coding": {
       "solved": "Solved",
@@ -2394,6 +2416,43 @@
       "remote": "Remote",
       "hybrid": "Hybrid",
       "onsite": "On-site"
+    },
+    "tabsAria": "Public profile sections",
+    "stats": {
+      "projects": "Projects",
+      "achievements": "Achievements"
+    },
+    "about": {
+      "empty": "This user hasn't written an introduction yet"
+    },
+    "projects": {
+      "featured": "Featured",
+      "repo": "Source code",
+      "demo": "Live demo"
+    },
+    "academic": {
+      "fields": {
+        "studentCode": "Student ID",
+        "enrollmentYear": "Enrollment year"
+      }
+    },
+    "contact": {
+      "email": "Email",
+      "phone": "Phone"
+    },
+    "activity": {
+      "gridTitle": "Activity grid",
+      "gridSummary": "Last {weeks} weeks · {count} activities",
+      "gridCell": "{date}: {count} activities",
+      "gridUnavailable": "Not enough data to draw the activity grid",
+      "gridPartial": "covers the loaded history only",
+      "timelineTitle": "Timeline",
+      "empty": "No public activity yet",
+      "signIn": "Sign in to see this user's activity"
+    },
+    "community": {
+      "postsTitle": "Community posts",
+      "postsEmpty": "No posts yet"
     }
   },
   "talents": {
@@ -2732,7 +2791,8 @@
       "current": "Current Streak",
       "longest": "Longest Streak",
       "count": "{count} days"
-    }
+    },
+    "unknownMember": "Member"
   },
   "home": {
     "intro": "IT courses are everywhere online, but content that is concise and focuses on practical thinking is rare.",
@@ -6475,7 +6535,14 @@
       "acceptAnswer": "Accept answer",
       "acceptedAnswer": "Accepted answer",
       "acceptAnswerDone": "Answer accepted.",
-      "acceptAnswerFailed": "Could not accept the answer. Please try again."
+      "acceptAnswerFailed": "Could not accept the answer. Please try again.",
+      "commentsLoadFailedNetwork": "Couldn't load the comments — your connection looks interrupted. Check it and try again.",
+      "commentsLoadFailedAuth": "Sign in to see the comments on this post.",
+      "commentsLoadFailedSessionExpired": "Your session expired, so the comments couldn't load. Please try again.",
+      "commentsLoadFailedForbidden": "You don't have permission to see the comments on this post (it lives in a private group).",
+      "commentsLoadFailedNotFound": "This post no longer exists or was removed, so there are no comments to show.",
+      "commentsLoadFailedServer": "The server hit a problem loading the comments. Please try again in a few minutes.",
+      "commentsSignIn": "Sign in"
     },
     "feed": {
       "likes": "{count} likes",

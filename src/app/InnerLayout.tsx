@@ -19,6 +19,7 @@ import { ModalContainer } from "@/components/modals/ModalContainer"
 import { UseEffects } from "@/hooks/effects/UseEffects"
 import { AuthQueryOpener } from "@/components/layouts/auth/AuthQueryOpener"
 import { TourProvider } from "@/components/features/onboarding"
+import { MascotAssistant } from "@/components/features/mascot-assistant"
 import { useAppearanceStore } from "@/hooks/zustand/appearance/store"
 
 export const InnerLayout = ({ children }: PropsWithChildren) => {
@@ -83,6 +84,12 @@ export const InnerLayout = ({ children }: PropsWithChildren) => {
                                 <DrawerContainer />
                                 <div>{children}</div>
                                 {showFooter ? <Footer /> : null}
+                                {/* Trợ lý FrosTES (linh vật đứng vẫy tay, góc phải dưới) — mount
+                                    MỘT lần ở shell gốc nên hiện ở MỌI trang. Đặt TRONG TourProvider
+                                    để nó tự ẩn khi guided tour đang chạy (không che spotlight, không
+                                    2 linh vật cùng lúc). Nó cũng tự ẩn ở trang đọc bài
+                                    (/courses/[id]/learn/…) — nơi ContentAiFab đã chiếm góc phải dưới. */}
+                                <MascotAssistant />
                             </TourProvider>
                             <CookieConsentBanner />
                             <ToastProvider />

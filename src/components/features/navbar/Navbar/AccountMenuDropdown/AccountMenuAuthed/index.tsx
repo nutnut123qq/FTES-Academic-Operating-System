@@ -15,7 +15,6 @@ import {
     WalletIcon,
     PlusCircleIcon,
     BookmarkSimpleIcon,
-    TargetIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
@@ -25,7 +24,6 @@ import { useAccountMenuOverlayState } from "@/hooks/zustand/overlay/hooks"
 import { useGetMyWalletSwr } from "@/hooks/swr/api/rest/queries/useGetMyWalletSwr"
 import { useMutateSignOutSwr } from "@/hooks/swr/api/graphql/mutations/useMutateSignOutSwr"
 import { EXPLORE_SHORTCUTS } from "../explore-shortcuts"
-import { ReplayGuideItem } from "@/components/features/onboarding"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 
 /** Props for {@link AccountMenuAuthed}. */
@@ -33,13 +31,18 @@ export type AccountMenuAuthedProps = WithClassNames<undefined>
 
 /**
  * Account dropdown menu for SIGNED-IN viewers: a labeled "Khám phá" (Explore)
- * section (Trợ lý AI — discovery shortcut relocated from the header;
+ * section (Trợ lý học tập FrosTES — discovery shortcut relocated from the header;
  * Recommendations now lives inside the AI Assistant, Trending inside Community,
- * "Dành cho bạn" removed), then a primary section (Profile · Settings · Wallet
- * with its live balance + a top-up shortcut), and a separated destructive section (Sign
- * out, danger). Dashboard / Activity / Integrations / Roles were removed as
- * redundant (Dashboard unused, Activity duplicated in the profile, System admin
- * links out of scope for the account menu). Self-contained — owns navigation
+ * "Dành cho bạn" removed), then a primary section (Profile · Saved · Settings ·
+ * Wallet with its live balance + a top-up shortcut), and a separated destructive
+ * section (Sign out, danger). Dashboard / Activity / Integrations / Roles were
+ * removed as redundant (Dashboard unused, Activity duplicated in the profile,
+ * System admin links out of scope for the account menu). "Nhiệm vụ" also left the
+ * menu — the quest board is surfaced by the `DailyQuest` widget on the dashboard
+ * (`/analytics` Overview), which links on to the full `/quests` page — and so did
+ * "Xem lại hướng dẫn" (the welcome tour still auto-starts for new users via
+ * `TourProvider`; the manual replay entry was dropped with `ReplayGuideItem`).
+ * Self-contained — owns navigation
  * (closes the menu then pushes) and the sign-out mutation; takes no data props.
  *
  * @param props - optional className (placement only).
@@ -132,16 +135,6 @@ export const AccountMenuAuthed = ({ className }: AccountMenuAuthedProps) => {
                     <BookmarkSimpleIcon className="size-5" />
                     <Label>{t("nav.saved")}</Label>
                 </Dropdown.Item>
-                {/* "Nhiệm vụ" — the daily quest board (/quests). Moved here out of the top nav
-                    (a quest board is a personal surface, not a primary section). */}
-                <Dropdown.Item
-                    id="quests"
-                    textValue={t("nav.quests")}
-                    onPress={() => go(pathConfig().locale().quests().build())}
-                >
-                    <TargetIcon className="size-5" />
-                    <Label>{t("nav.quests")}</Label>
-                </Dropdown.Item>
                 <Dropdown.Item
                     id="settings"
                     textValue={t("profileSettings.title")}
@@ -150,8 +143,6 @@ export const AccountMenuAuthed = ({ className }: AccountMenuAuthedProps) => {
                     <GearIcon className="size-5" />
                     <Label>{t("profileSettings.title")}</Label>
                 </Dropdown.Item>
-                {/* replay the onboarding welcome tour on demand */}
-                <ReplayGuideItem />
                 {/* Wallet: live balance shown inline; the trailing "+" affordance and
                     the row itself open the wallet surface (where top-up lives). */}
                 <Dropdown.Item

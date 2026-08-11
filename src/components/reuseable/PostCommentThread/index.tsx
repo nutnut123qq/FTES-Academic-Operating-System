@@ -3,7 +3,6 @@
 import React, { useCallback, useMemo, useState } from "react"
 import { Button, Chip, Skeleton, Typography, cn } from "@heroui/react"
 import {
-    ArrowClockwiseIcon,
     CaretUpIcon,
     CheckCircleIcon,
     XIcon,
@@ -20,8 +19,10 @@ import type { ReportReasonCode } from "@/components/reuseable/PostEngagementBar/
 import { useMutateReportContentSwr } from "@/components/features/community/CommunityPostDetail/hooks/useMutateReportContentSwr"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
 import { useAppSelector } from "@/redux/hooks"
+import { looksLikeUserId } from "@/utils/avatar"
 import type { PostComment } from "@/components/features/community/hooks/useQueryPostDetailSwr"
 import type { WithClassNames } from "@/modules/types/base/class-name"
+import { CommentLoadError } from "./comment-load-error"
 
 /**
  * Submit a report for ONE comment. Resolves `true` when the report was accepted
@@ -43,6 +44,13 @@ export interface PostCommentThreadProps extends WithClassNames<undefined> {
     isLoading: boolean
     /** Fetch error → inline error + retry (no toast, no collapse). */
     hasError?: boolean
+    /**
+     * The rejection behind `hasError`. Pass it and the inline error names the real
+     * cause (offline / expired session / private post / deleted post / server) and
+     * only offers a retry that can succeed — see {@link CommentLoadError}. Omitted
+     * → the generic "couldn't load the comments" line with a retry, as before.
+     */
+    error?: unknown
     /** Re-attempt the comment fetch in place. */
     onRetry?: () => void
     /**
@@ -168,6 +176,7 @@ export const CommentRow = ({
     onReport?: ReportCommentHandler
 }) => {
     const t = useTranslations("communityHub")
+    const tCommon = useTranslations("common")
     const [isEditing, setIsEditing] = useState(false)
     const [draft, setDraft] = useState(comment.text)
     const [isSaving, setIsSaving] = useState(false)
@@ -194,6 +203,16 @@ export const CommentRow = ({
 
     const showManage = canManage && (Boolean(onEdit) || Boolean(onDelete))
     const showReport = canReport && !canManage && Boolean(onReport)
+    /**
+     * Name actually rendered. Mappers with no profile join leave `author` empty and
+     * degrade `authorUsername` to the raw author id (the owner gate needs that id — see
+     * `isMine`), so without a label `UserLink` would print the uuid as the commenter's
+     * name. One shared label for every thread that lands here.
+     */
+    const authorName =
+        comment.author && !looksLikeUserId(comment.author)
+            ? comment.author
+            : tCommon("unknownMember")
 
     return (
         <div className={cn("flex items-start gap-3", isReply && "ml-9")}>
@@ -201,7 +220,8 @@ export const CommentRow = ({
             <div className="flex shrink-0 flex-col items-center self-stretch">
                 <UserLink
                     username={comment.authorUsername}
-                    displayName={comment.author}
+                    displayName={authorName}
+                    avatar={comment.authorAvatar}
                     hideName
                     size="sm"
                     classNames={{ avatar: "size-8" }}
@@ -212,7 +232,7 @@ export const CommentRow = ({
             </div>
             <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                    <UserLink username={comment.authorUsername} displayName={comment.author} showAvatar={false} />
+                    <UserLink username={comment.authorUsername} displayName={authorName} showAvatar={false} />
                     <Typography type="body-xs" color="muted">
                         {comment.timeLabel}
                     </Typography>
@@ -327,7 +347,9 @@ export const CommentRow = ({
  * flow (pure push-down — no overlay, no fixed height).
  *
  * States: `isLoading` → skeleton comment rows; `hasError` → inline localized
- * error + retry (in place, no collapse); otherwise the thread + composer. The
+ * error (in place, no collapse) that names the CAUSE when the caller also passes
+ * the `error` itself and offers only the action that can fix it (retry / sign in
+ * / nothing) — see {@link CommentLoadError}; otherwise the thread + composer. The
  * composer supports one-level reply mode (a "replying to" chip with cancel that
  * keeps the draft), an empty-input guard, and draft-preserving failure handling
  * (the caller's `onSubmit` returns `false` to keep the text). On mobile the
@@ -355,6 +377,7 @@ export const PostCommentThread = ({
     comments,
     isLoading,
     hasError,
+    error,
     onRetry,
     onSubmit,
     onCollapse,
@@ -372,6 +395,7 @@ export const PostCommentThread = ({
     className,
 }: PostCommentThreadProps) => {
     const t = useTranslations("communityHub")
+    const tCommon = useTranslations("common")
     const { authenticated } = useRequireAuth()
     const submitReport = useMutateReportContentSwr()
     /**
@@ -471,17 +495,7 @@ export const PostCommentThread = ({
                     ))}
                 </div>
             ) : hasError ? (
-                <div className="flex flex-col items-start gap-2">
-                    <Typography type="body-sm" color="muted">
-                        {t("engagement.commentsLoadFailed")}
-                    </Typography>
-                    {onRetry ? (
-                        <Button size="sm" variant="secondary" onPress={onRetry}>
-                            <ArrowClockwiseIcon aria-hidden focusable="false" className="size-4" />
-                            {t("engagement.retry")}
-                        </Button>
-                    ) : null}
-                </div>
+                <CommentLoadError error={error} onRetry={onRetry} />
             ) : (
                 <>
                     {comments.length === 0 ? (
@@ -559,7 +573,12 @@ export const PostCommentThread = ({
                         {replyTo ? (
                             <div className="flex items-center gap-2">
                                 <Typography type="body-xs" color="muted">
-                                    {t("engagement.replyingTo", { name: replyTo.author })}
+                                    {t("engagement.replyingTo", {
+                                        name:
+                                            replyTo.author && !looksLikeUserId(replyTo.author)
+                                                ? replyTo.author
+                                                : tCommon("unknownMember"),
+                                    })}
                                 </Typography>
                                 <Button
                                     isIconOnly

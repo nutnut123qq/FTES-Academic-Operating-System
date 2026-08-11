@@ -12,6 +12,12 @@ import { getSubjectDetail } from "@/modules/api/rest/subject/subject"
 /**
  * Resource type facet (§5 Resource Hub) — one entry per backend
  * `vn.ftes.aos.resource.domain.ResourceType` constant, lower-cased.
+ *
+ * `PE` and `FE` are deliberately ABSENT: exam papers and exam albums are not filing-
+ * cabinet material, they are practice surfaces with their own interactions (an answer
+ * upload graded by AI / a 50-image album with per-image comments), so they live on the
+ * Practice tab and are listed only through `GET /resources?subjectId=&type=PE|FE`
+ * (see `useQuerySubjectExamsSwr`).
  */
 export type ResourceType =
     | "pdf"
@@ -20,8 +26,6 @@ export type ResourceType =
     | "book"
     | "source"
     | "assignment"
-    | "pe"
-    | "fe"
     | "notes"
     | "templates"
 
@@ -33,8 +37,6 @@ export const SUBJECT_RESOURCE_TYPES: Array<ResourceType> = [
     "book",
     "source",
     "assignment",
-    "pe",
-    "fe",
     "notes",
     "templates",
 ]
@@ -47,11 +49,26 @@ const BE_TYPE_BY_FACET: Record<ResourceType, string> = {
     book: "BOOK",
     source: "SOURCE_CODE",
     assignment: "ASSIGNMENT",
-    pe: "PE",
-    fe: "FE",
     notes: "NOTES",
     templates: "TEMPLATES",
 }
+
+/**
+ * Backend `ResourceType` names this tab does NOT show. The BE already keeps them out of
+ * an untyped listing, but a row that slipped through would render with the wrong label
+ * (an unknown type degrades to "notes") and offer a download for material whose whole
+ * point is an interactive surface — so they are dropped here too.
+ */
+const EXAM_BE_TYPES = new Set(["PE", "FE"])
+
+/**
+ * Whether a BE list row belongs on the Resources tab at all.
+ *
+ * @param be - Raw `ResourceSummary.type`.
+ * @returns `false` for the exam types the Practice tab owns.
+ */
+export const isSubjectResourceType = (be: string | null | undefined): boolean =>
+    !EXAM_BE_TYPES.has((be ?? "").toUpperCase())
 
 /** Backend `ResourceType` name → FE facet; unknown/missing degrades to `notes`. */
 export const mapResourceType = (be: string | null | undefined): ResourceType => {
@@ -68,10 +85,6 @@ export const mapResourceType = (be: string | null | undefined): ResourceType => 
             return "source"
         case "ASSIGNMENT":
             return "assignment"
-        case "PE":
-            return "pe"
-        case "FE":
-            return "fe"
         case "TEMPLATES":
             return "templates"
         default:
@@ -177,7 +190,12 @@ const fetchSubjectResources = async (
     }
 
     return {
-        resources: (page?.items ?? []).map(toResource),
+        // PE/FE never belong here — they are the Practice tab's exam surfaces. The BE
+        // already withholds them from an untyped listing; this is the belt-and-braces
+        // so a deployment that predates that change can't leak one into the list.
+        resources: (page?.items ?? [])
+            .filter((summary) => isSubjectResourceType(summary.type))
+            .map(toResource),
         collections: collections
             .filter(
                 (collection) =>

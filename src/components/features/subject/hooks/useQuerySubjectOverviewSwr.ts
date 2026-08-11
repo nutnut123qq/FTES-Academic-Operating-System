@@ -24,11 +24,16 @@ export interface OverviewPost {
     comments: number
 }
 
-/** A resource shortcut row. `type` maps to `subjects.resources.types.*`. */
+/**
+ * A resource shortcut row. `type` maps to `subjects.resources.types.*`, so the union
+ * must stay a SUBSET of that catalog: `pe`/`fe` were dropped from it when the exam
+ * types moved to the Practice tab, and leaving them here would let the rail render a
+ * raw i18n key path as a resource's label.
+ */
 export interface OverviewResource {
     id: string
     title: string
-    type: "pdf" | "slide" | "video" | "pe" | "fe" | "source" | "notes"
+    type: "pdf" | "slide" | "video" | "source" | "notes"
 }
 
 /** Difficulty of a highlighted challenge. */

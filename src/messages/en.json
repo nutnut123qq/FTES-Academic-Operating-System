@@ -5189,8 +5189,6 @@
         "pdf": "PDF",
         "slide": "Slide",
         "video": "Video",
-        "pe": "PE",
-        "fe": "FE",
         "source": "Source code",
         "notes": "Notes",
         "book": "Book",
@@ -5216,13 +5214,13 @@
       "title": "Practice",
       "cta": "Open",
       "modules": {
-        "quiz": {
-          "title": "Quiz",
-          "meta": "{count} questions"
+        "pe": {
+          "title": "Practical Exam (PE)",
+          "meta": "{count} papers"
         },
-        "flashcards": {
-          "title": "Flashcards",
-          "meta": "{count} cards"
+        "fe": {
+          "title": "Final Exam (FE)",
+          "meta": "{count} albums"
         },
         "coding": {
           "title": "Coding challenge",
@@ -5456,6 +5454,170 @@
         "timeout": "The request timed out. Try again.",
         "network": "Lost connection to the server. Check your network and try again.",
         "generic": "Something went wrong. Try again."
+      },
+      "exam": {
+        "pe": {
+          "title": "Practical Exam (PE)",
+          "subtitle": "The subject practical exam papers — do the exam, then upload your answer for AI grading.",
+          "empty": "This subject has no PE paper yet.",
+          "open": "Take it"
+        },
+        "fe": {
+          "title": "Final Exam (FE)",
+          "subtitle": "Final exam image albums — browse them page by page and discuss right under each picture.",
+          "empty": "This subject has no FE album yet.",
+          "open": "View"
+        },
+        "emptyHint": "You could be the first to contribute — submissions are held for review.",
+        "loadError": "Could not load the exam list",
+        "retry": "Try again",
+        "ratingLabel": "{rating} stars ({count} ratings)",
+        "contributeCta": "Contribute an exam",
+        "lockedBadge": "Purchase required",
+        "lockedAria": "buy the course to unlock",
+        "unlockHint": "Buy the linked course to unlock this exam",
+        "lockedNeutralHint": "This exam is for learners who bought the course",
+        "contribute": {
+          "title": {
+            "pe": "Contribute a PE paper",
+            "fe": "Contribute an FE album"
+          },
+          "close": "Close",
+          "titleLabel": "Title",
+          "titlePlaceholder": "e.g. PE Fall 2025 — paper 1",
+          "descriptionLabel": "Description",
+          "descriptionPlaceholder": "Extra notes about the exam (optional)",
+          "paperDropzone": "Drop the exam paper here, or click to pick one",
+          "paperHint": "Accepts {extensions} · up to {maxSize}MB",
+          "clearFile": "Clear the picked file",
+          "fileError": {
+            "type": "That format is not valid for a PE paper. Allowed: {extensions}.",
+            "size": "File too large — {maxSize}MB max.",
+            "empty": "The file is empty, pick another one.",
+            "filename": "Filename too long (512 characters max)."
+          },
+          "addImages": "Add images",
+          "albumCount": "{count}/{max} images",
+          "albumLimit": "An FE album holds at most {max} images.",
+          "albumInvalid": "Only PNG, JPEG or WebP images are accepted.",
+          "albumTooLarge": "Image too large — {maxSize}MB max per image.",
+          "albumUploading": "Uploading image {uploaded}/{total}…",
+          "albumPartial": "{count} images failed to upload — you can add them later.",
+          "imageAlt": "Exam image {index}",
+          "removeImage": "Remove this image",
+          "steps": {
+            "create": "Create the exam record",
+            "upload": "Upload the file",
+            "submit": "Send for review"
+          },
+          "progressLabel": "Publishing progress",
+          "error": {
+            "auth": "Your session expired — sign in again and retry.",
+            "forbidden": "You are not allowed to contribute exams to this subject.",
+            "notFound": "The exam record was not found (it may have been deleted).",
+            "rateLimited": "Too many attempts — wait a few minutes and retry.",
+            "tooLarge": "The file is over the size limit for this exam type.",
+            "checksum": "The stored file does not match its size/checksum — upload it again.",
+            "invalidState": "This exam is not in a state that can be submitted for review.",
+            "validation": "Invalid data — check the file format and the fields you filled in.",
+            "storage": "The file could not be uploaded to storage.",
+            "network": "Network connection lost. Check your connection and retry.",
+            "server": "The server is having trouble. Try again in a few minutes.",
+            "generic": "Something went wrong while publishing the exam."
+          },
+          "retry": "Try again",
+          "submit": "Send contribution",
+          "subjectUnresolved": "The subject could not be resolved — reload the page and retry.",
+          "pendingTitle": "Sent, awaiting review",
+          "pendingHint": "Your contribution shows up once a moderator or admin approves it.",
+          "publishedTitle": "Published",
+          "publishedHint": "The exam is now listed for this subject.",
+          "rejectedReason": "Rejection reason: {reason}",
+          "done": "Done"
+        },
+        "moderation": {
+          "title": "Awaiting review",
+          "count": "{count} items",
+          "empty": "Nothing is waiting for review.",
+          "loadError": "Could not load the review queue",
+          "approve": "Approve",
+          "reject": "Reject",
+          "confirmReject": "Confirm rejection",
+          "reasonPlaceholder": "Rejection reason (required)",
+          "approved": "Contribution approved.",
+          "rejected": "Contribution rejected."
+        }
+      },
+      "fe": {
+        "title": "FE album",
+        "backToList": "Back to practice",
+        "albumMeta": "{count}/{max} images",
+        "empty": "This album has no image yet.",
+        "loadError": "Could not load the album",
+        "imageAlt": "Exam image {index}",
+        "previous": "Previous image",
+        "next": "Next image",
+        "counter": "Image {current} of {total}",
+        "goToImage": "Go to image {index}",
+        "uploader": "Uploaded by",
+        "comments": {
+          "title": "Comments on this image ({count})",
+          "prev": "Previous",
+          "next": "Next",
+          "pageOf": "Page {page}/{total}",
+          "submitError": "The comment could not be posted. Try again.",
+          "deleteError": "The comment could not be deleted. Try again."
+        }
+      },
+      "pe": {
+        "title": "PE paper",
+        "backToList": "Back to practice",
+        "loadError": "Could not load the exam paper",
+        "paperAlt": "Exam paper image",
+        "paperFile": "Exam paper file",
+        "openPaper": "Download the paper",
+        "answerTitle": "Submit your answer",
+        "attempts": "{used}/{limit} attempts used",
+        "attemptsExhausted": "You have used all {limit} attempts on this paper.",
+        "waitForGrading": "An earlier attempt is still being graded — wait for its result.",
+        "answerDropzone": "Drop your answer here, or click to pick a file",
+        "answerHint": "Accepts {extensions} · up to {maxSize}MB",
+        "clearFile": "Clear the picked file",
+        "fileError": {
+          "type": "That format is not accepted — allowed: {extensions}.",
+          "size": "File too large — {maxSize}MB max.",
+          "empty": "The file is empty, pick another one."
+        },
+        "submit": "Submit",
+        "submitted": "Submitted — FrosTES is grading it.",
+        "attemptsTitle": "Your submissions",
+        "noAttempts": "You have not submitted anything for this paper yet.",
+        "attemptsError": "Could not load your submissions",
+        "attemptNo": "Attempt {attempt}",
+        "status": {
+          "PENDING": "Queued",
+          "GRADING": "Grading",
+          "SCORED": "Graded",
+          "FAILED": "Grading failed"
+        },
+        "viewResult": "View result",
+        "hideResult": "Hide result",
+        "resultError": "Could not load the grade",
+        "relevance": "Relevance: {relevance}",
+        "errors": {
+          "attemptLimit": "You have used all your attempts on this paper.",
+          "graderUnavailable": "The grading service is down right now, try again later.",
+          "gradingFailed": "Grading failed. Submit again in a few minutes.",
+          "rateLimited": "Too fast — wait a few minutes and try again.",
+          "unauthorized": "Sign in to submit an answer.",
+          "forbidden": "You are not allowed to submit an answer for this paper.",
+          "notFound": "That exam paper was not found.",
+          "tooLarge": "File too large — 25MB max.",
+          "validation": "The file is not valid — check its format and try again.",
+          "network": "Lost connection to the server. Check your network and retry.",
+          "server": "The server is having trouble. Try again in a few minutes.",
+          "generic": "The answer could not be submitted. Try again."
+        }
       }
     },
     "community": {

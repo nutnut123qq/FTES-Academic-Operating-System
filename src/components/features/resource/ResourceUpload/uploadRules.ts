@@ -85,14 +85,28 @@ export const RESOURCE_TYPE_RULES: Record<ResourceTypeCode, ResourceTypeRule> = {
         extensions: [".pdf", ".zip", ".doc", ".docx"],
         maxSizeMb: 100,
     },
+    // PE/FE also accept pictures: a PE paper is regularly a photo/scan of the exam sheet
+    // and an FE album is images by definition (`POST /resources/{id}/images`).
     PE: {
-        mimeTypes: ["application/pdf", "application/zip"],
-        extensions: [".pdf", ".zip"],
+        mimeTypes: [
+            "application/pdf",
+            "application/zip",
+            "image/png",
+            "image/jpeg",
+            "image/webp",
+        ],
+        extensions: [".pdf", ".zip", ".png", ".jpg", ".jpeg", ".webp"],
         maxSizeMb: 100,
     },
     FE: {
-        mimeTypes: ["application/pdf", "application/zip"],
-        extensions: [".pdf", ".zip"],
+        mimeTypes: [
+            "application/pdf",
+            "application/zip",
+            "image/png",
+            "image/jpeg",
+            "image/webp",
+        ],
+        extensions: [".pdf", ".zip", ".png", ".jpg", ".jpeg", ".webp"],
         maxSizeMb: 100,
     },
     NOTES: {
@@ -132,6 +146,10 @@ const EXTENSION_MIME_TYPES: Record<string, ReadonlyArray<string>> = {
     ],
     ".md": ["text/markdown", "text/plain"],
     ".txt": ["text/plain"],
+    ".png": ["image/png"],
+    ".jpg": ["image/jpeg"],
+    ".jpeg": ["image/jpeg"],
+    ".webp": ["image/webp"],
 }
 
 /**

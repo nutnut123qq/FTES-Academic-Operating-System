@@ -5189,8 +5189,6 @@
         "pdf": "PDF",
         "slide": "Slide",
         "video": "Video",
-        "pe": "PE",
-        "fe": "FE",
         "source": "Source code",
         "notes": "Ghi chú",
         "book": "Sách",
@@ -5216,13 +5214,13 @@
       "title": "Luyện tập",
       "cta": "Mở",
       "modules": {
-        "quiz": {
-          "title": "Trắc nghiệm",
-          "meta": "{count} câu hỏi"
+        "pe": {
+          "title": "Thi thực hành (PE)",
+          "meta": "{count} đề"
         },
-        "flashcards": {
-          "title": "Flashcards",
-          "meta": "{count} thẻ"
+        "fe": {
+          "title": "Thi cuối kỳ (FE)",
+          "meta": "{count} bộ đề"
         },
         "coding": {
           "title": "Thử thách code",
@@ -5456,6 +5454,170 @@
         "timeout": "Quá thời gian chờ. Thử lại sau.",
         "network": "Mất kết nối tới máy chủ. Kiểm tra mạng rồi thử lại.",
         "generic": "Không thực hiện được. Thử lại sau."
+      },
+      "exam": {
+        "pe": {
+          "title": "Thi thực hành (PE)",
+          "subtitle": "Đề thi thực hành của môn — làm bài rồi nộp tệp để FrosTES chấm.",
+          "empty": "Môn này chưa có đề PE nào.",
+          "open": "Làm bài"
+        },
+        "fe": {
+          "title": "Thi cuối kỳ (FE)",
+          "subtitle": "Bộ đề ảnh của kỳ thi cuối — xem từng ảnh và thảo luận ngay dưới ảnh đó.",
+          "empty": "Môn này chưa có bộ đề FE nào.",
+          "open": "Xem đề"
+        },
+        "emptyHint": "Bạn có thể là người đầu tiên đóng góp — bài gửi lên sẽ chờ CTV duyệt.",
+        "loadError": "Không tải được danh sách đề",
+        "retry": "Thử lại",
+        "ratingLabel": "{rating} sao ({count} đánh giá)",
+        "contributeCta": "Đóng góp đề",
+        "lockedBadge": "Cần mua khoá",
+        "lockedAria": "cần mua khoá học để mở",
+        "unlockHint": "Mua khoá học liên kết để mở đề này",
+        "lockedNeutralHint": "Đề này chỉ dành cho học viên đã mua khoá",
+        "contribute": {
+          "title": {
+            "pe": "Đóng góp đề PE",
+            "fe": "Đóng góp bộ đề FE"
+          },
+          "close": "Đóng",
+          "titleLabel": "Tiêu đề",
+          "titlePlaceholder": "Ví dụ: PE kỳ Fall 2025 — đề 1",
+          "descriptionLabel": "Mô tả",
+          "descriptionPlaceholder": "Ghi chú thêm về đề (không bắt buộc)",
+          "paperDropzone": "Kéo thả đề thi hoặc bấm để chọn",
+          "paperHint": "Chấp nhận {extensions} · tối đa {maxSize}MB",
+          "clearFile": "Bỏ tệp đã chọn",
+          "fileError": {
+            "type": "Định dạng không hợp lệ cho đề PE. Cho phép: {extensions}.",
+            "size": "Tệp quá lớn — tối đa {maxSize}MB.",
+            "empty": "Tệp rỗng, hãy chọn tệp khác.",
+            "filename": "Tên tệp quá dài (tối đa 512 ký tự)."
+          },
+          "addImages": "Thêm ảnh",
+          "albumCount": "{count}/{max} ảnh",
+          "albumLimit": "Một bộ đề FE tối đa {max} ảnh.",
+          "albumInvalid": "Chỉ nhận ảnh PNG, JPEG hoặc WebP.",
+          "albumTooLarge": "Ảnh quá lớn — tối đa {maxSize}MB mỗi ảnh.",
+          "albumUploading": "Đang tải ảnh {uploaded}/{total}…",
+          "albumPartial": "{count} ảnh không tải lên được — bạn có thể bổ sung sau.",
+          "imageAlt": "Ảnh đề số {index}",
+          "removeImage": "Bỏ ảnh này",
+          "steps": {
+            "create": "Tạo bản ghi đề",
+            "upload": "Tải tệp lên",
+            "submit": "Gửi duyệt"
+          },
+          "progressLabel": "Tiến độ đăng đề",
+          "error": {
+            "auth": "Phiên đăng nhập đã hết hạn — đăng nhập lại rồi thử lại.",
+            "forbidden": "Bạn không có quyền đóng góp đề cho môn này.",
+            "notFound": "Không tìm thấy bản ghi đề (có thể đã bị xoá).",
+            "rateLimited": "Bạn thao tác quá nhanh — chờ vài phút rồi thử lại.",
+            "tooLarge": "Tệp vượt quá giới hạn dung lượng cho loại đề này.",
+            "checksum": "Tệp trên kho lưu trữ không khớp dung lượng/mã băm — hãy tải lại.",
+            "invalidState": "Đề không ở trạng thái cho phép gửi duyệt.",
+            "validation": "Dữ liệu không hợp lệ — kiểm tra lại định dạng tệp và các trường đã nhập.",
+            "storage": "Không tải được tệp lên kho lưu trữ.",
+            "network": "Mất kết nối mạng. Kiểm tra đường truyền rồi thử lại.",
+            "server": "Máy chủ đang gặp sự cố. Thử lại sau ít phút.",
+            "generic": "Có lỗi xảy ra khi đăng đề."
+          },
+          "retry": "Thử lại",
+          "submit": "Gửi đóng góp",
+          "subjectUnresolved": "Chưa xác định được môn học — tải lại trang rồi thử lại.",
+          "pendingTitle": "Đã gửi, đang chờ duyệt",
+          "pendingHint": "Đóng góp của bạn sẽ hiển thị sau khi CTV hoặc quản trị viên duyệt.",
+          "publishedTitle": "Đã đăng",
+          "publishedHint": "Đề đã hiển thị trong danh sách của môn.",
+          "rejectedReason": "Lý do từ chối: {reason}",
+          "done": "Xong"
+        },
+        "moderation": {
+          "title": "Chờ duyệt",
+          "count": "{count} mục",
+          "empty": "Không có đóng góp nào chờ duyệt.",
+          "loadError": "Không tải được hàng đợi duyệt",
+          "approve": "Duyệt",
+          "reject": "Từ chối",
+          "confirmReject": "Xác nhận từ chối",
+          "reasonPlaceholder": "Lý do từ chối (bắt buộc)",
+          "approved": "Đã duyệt đóng góp.",
+          "rejected": "Đã từ chối đóng góp."
+        }
+      },
+      "fe": {
+        "title": "Bộ đề FE",
+        "backToList": "Về trang luyện tập",
+        "albumMeta": "{count}/{max} ảnh",
+        "empty": "Bộ đề này chưa có ảnh nào.",
+        "loadError": "Không tải được bộ đề",
+        "imageAlt": "Ảnh đề số {index}",
+        "previous": "Ảnh trước",
+        "next": "Ảnh sau",
+        "counter": "Ảnh {current} trên {total}",
+        "goToImage": "Xem ảnh số {index}",
+        "uploader": "Người đăng",
+        "comments": {
+          "title": "Bình luận ảnh này ({count})",
+          "prev": "Trước",
+          "next": "Sau",
+          "pageOf": "Trang {page}/{total}",
+          "submitError": "Không gửi được bình luận. Thử lại nhé.",
+          "deleteError": "Không xoá được bình luận. Thử lại nhé."
+        }
+      },
+      "pe": {
+        "title": "Đề PE",
+        "backToList": "Về trang luyện tập",
+        "loadError": "Không tải được đề thi",
+        "paperAlt": "Ảnh đề thi",
+        "paperFile": "Tệp đề thi",
+        "openPaper": "Tải đề",
+        "answerTitle": "Nộp bài làm",
+        "attempts": "Đã nộp {used}/{limit} lượt",
+        "attemptsExhausted": "Bạn đã dùng hết {limit} lượt nộp cho đề này.",
+        "waitForGrading": "Đang chấm bài trước — chờ có kết quả rồi nộp tiếp.",
+        "answerDropzone": "Kéo thả bài làm hoặc bấm để chọn",
+        "answerHint": "Chấp nhận {extensions} · tối đa {maxSize}MB",
+        "clearFile": "Bỏ tệp đã chọn",
+        "fileError": {
+          "type": "Định dạng không nhận — cho phép {extensions}.",
+          "size": "Tệp quá lớn — tối đa {maxSize}MB.",
+          "empty": "Tệp rỗng, hãy chọn tệp khác."
+        },
+        "submit": "Nộp bài",
+        "submitted": "Đã nộp bài — FrosTES đang chấm.",
+        "attemptsTitle": "Bài đã nộp",
+        "noAttempts": "Bạn chưa nộp bài nào cho đề này.",
+        "attemptsError": "Không tải được danh sách bài nộp",
+        "attemptNo": "Lượt {attempt}",
+        "status": {
+          "PENDING": "Chờ chấm",
+          "GRADING": "Đang chấm",
+          "SCORED": "Đã chấm",
+          "FAILED": "Chấm lỗi"
+        },
+        "viewResult": "Xem kết quả",
+        "hideResult": "Ẩn kết quả",
+        "resultError": "Không tải được kết quả chấm",
+        "relevance": "Mức bám đề: {relevance}",
+        "errors": {
+          "attemptLimit": "Bạn đã dùng hết lượt nộp cho đề này.",
+          "graderUnavailable": "Dịch vụ chấm bài đang tạm ngưng, thử lại sau.",
+          "gradingFailed": "Chấm bài thất bại. Thử nộp lại sau ít phút.",
+          "rateLimited": "Bạn thao tác quá nhanh — chờ ít phút rồi thử lại.",
+          "unauthorized": "Bạn cần đăng nhập để nộp bài.",
+          "forbidden": "Bạn không có quyền nộp bài cho đề này.",
+          "notFound": "Không tìm thấy đề thi này.",
+          "tooLarge": "Tệp quá lớn — tối đa 25MB.",
+          "validation": "Tệp không hợp lệ — kiểm tra lại định dạng rồi thử lại.",
+          "network": "Mất kết nối máy chủ. Kiểm tra mạng rồi thử lại.",
+          "server": "Máy chủ đang gặp sự cố. Thử lại sau ít phút.",
+          "generic": "Không nộp được bài. Thử lại nhé."
+        }
       }
     },
     "community": {

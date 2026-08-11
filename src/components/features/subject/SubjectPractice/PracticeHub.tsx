@@ -3,18 +3,18 @@
 import React from "react"
 import { Button, Typography } from "@heroui/react"
 import {
-    CardsIcon,
     CodeIcon,
+    ExamIcon,
+    ImagesSquareIcon,
     RankingIcon,
-    TargetIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import type { PracticeModule, PracticeModuleKey } from "../hooks/useQuerySubjectPracticeSwr"
 
 /** icon per module (confirmed-compiling phosphor set). */
 const ICONS: Record<PracticeModuleKey, React.ReactNode> = {
-    quiz: <TargetIcon className="size-6" aria-hidden focusable="false" />,
-    flashcards: <CardsIcon className="size-6" aria-hidden focusable="false" />,
+    pe: <ExamIcon className="size-6" aria-hidden focusable="false" />,
+    fe: <ImagesSquareIcon className="size-6" aria-hidden focusable="false" />,
     coding: <CodeIcon className="size-6" aria-hidden focusable="false" />,
     leaderboard: <RankingIcon className="size-6" aria-hidden focusable="false" />,
 }
@@ -28,8 +28,8 @@ export interface PracticeHubProps {
 }
 
 /**
- * Practice hub — a 2×2 card grid of the four practice modules (Quiz · Flashcards ·
- * Coding challenges · Leaderboard). Each card carries an icon, title, a headline count
+ * Practice hub — a 2×2 card grid of the four practice modules (Practical Exam ·
+ * Final Exam · Coding challenges · Leaderboard). Each card carries an icon, title, a headline count
  * and an "Open" pill; pressing it (or the card) calls {@link PracticeHubProps.onOpen}
  * with that module's key so the parent swaps to the module's in-panel sub-view. No dead
  * buttons — every card opens something.

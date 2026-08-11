@@ -8,7 +8,11 @@ import { uploadCommunityMedia } from "@/modules/api/rest/community"
 import type { MediaInput } from "@/modules/api/rest/community/types"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 
-/** Max attachments per post — mirrors the BE `MAX_MEDIA`. */
+/**
+ * Default max attachments per post — mirrors the BE `MAX_MEDIA` for the community
+ * composers. Surfaces with a different server-side cap pass their own
+ * {@link PostImagePickerProps.maxImages} instead of forking the picker.
+ */
 export const MAX_POST_IMAGES = 4
 /** Max bytes per image — mirrors the BE `COMMUNITY_MEDIA_TOO_LARGE` threshold. */
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024
@@ -41,12 +45,17 @@ export interface PostImagePickerProps extends WithClassNames<undefined> {
     onUploadingChange: (isUploading: boolean) => void
     /** Bump this to clear every pick (the composer does it after a successful post). */
     resetToken?: number
+    /**
+     * Cap on how many images may be attached. Defaults to {@link MAX_POST_IMAGES} (the
+     * community post limit); pass the surface's own server-side cap to raise it.
+     */
+    maxImages?: number
 }
 
 /**
- * Image attachment picker for the community composers: pick up to
- * {@link MAX_POST_IMAGES} images, preview them, drop any of them, and upload each
- * one as soon as it is picked (`POST /api/v1/community/media`).
+ * Image attachment picker for the community composers: pick up to `maxImages`
+ * (default {@link MAX_POST_IMAGES}) images, preview them, drop any of them, and upload
+ * each one as soon as it is picked (`POST /api/v1/community/media`).
  *
  * Uploading on pick — rather than on submit — surfaces upload failures while the
  * author is still writing, and keeps submitting the post a single fast request.
@@ -61,6 +70,7 @@ export const PostImagePicker = ({
     onChange,
     onUploadingChange,
     resetToken = 0,
+    maxImages = MAX_POST_IMAGES,
     className,
 }: PostImagePickerProps) => {
     const t = useTranslations("communityHub")
@@ -116,9 +126,9 @@ export const PostImagePicker = ({
             // Validation + object-URL creation happen OUTSIDE the state updater: an updater must
             // stay pure (StrictMode runs it twice, which would double-toast and double-upload).
             // `picksRef` carries the current count without making this callback depend on state.
-            const room = MAX_POST_IMAGES - picksRef.current.length
+            const room = maxImages - picksRef.current.length
             if (room <= 0 || files.length > room) {
-                toast.danger(t("composer.imageLimit", { max: MAX_POST_IMAGES }))
+                toast.danger(t("composer.imageLimit", { max: maxImages }))
                 if (room <= 0) {
                     return
                 }
@@ -168,7 +178,7 @@ export const PostImagePicker = ({
                 }),
             )
         },
-        [remove, t],
+        [remove, t, maxImages],
     )
 
     return (
@@ -189,7 +199,7 @@ export const PostImagePicker = ({
                 size="sm"
                 variant="tertiary"
                 className="self-start"
-                isDisabled={picks.length >= MAX_POST_IMAGES}
+                isDisabled={picks.length >= maxImages}
                 onPress={() => inputRef.current?.click()}
             >
                 <ImageSquareIcon aria-hidden focusable="false" className="size-4" />

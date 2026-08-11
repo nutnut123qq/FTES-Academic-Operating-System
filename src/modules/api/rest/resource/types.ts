@@ -261,3 +261,147 @@ export interface ResourceCommentsPage {
     size: number
     total: number
 }
+
+// ---------------------------------------------------------------- FE album (type=FE)
+
+/**
+ * One image of an FE (Final Exam) album — a resource of `type = FE` holds an ordered
+ * album of up to `maxImages` (50) pictures, each of which carries its OWN comment
+ * thread (`commentCount` is the server-side total, roots + replies).
+ */
+export interface FeImageView {
+    id: string
+    resourceId: string
+    /** Absolute, already-signed image URL served by the storage provider. */
+    imageUrl: string
+    /** Position in the album (0-based, ascending). */
+    sortOrder: number
+    caption?: string
+    /** Id of the uploader; absent on rows the BE could not attribute. */
+    uploadedBy?: string
+    commentCount: number
+    createdAt?: string
+}
+
+/** The whole album of an FE resource (`GET /api/v1/resources/{id}/images`). */
+export interface FeAlbumView {
+    resourceId: string
+    images: Array<FeImageView>
+    total: number
+    /** Hard cap the BE enforces on `POST /resources/{id}/images` (50). */
+    maxImages: number
+}
+
+/**
+ * One per-image comment. Same one-level threading as {@link ResourceCommentView}:
+ * roots carry `replies`, a reply-of-reply is re-parented onto the root by the BE, and
+ * a soft-deleted row keeps its id/replies with `status: "DELETED"` and its `content`
+ * replaced by the BE tombstone text.
+ */
+export interface FeImageCommentView {
+    id: string
+    imageId: string
+    userId: string | null
+    parentId: string | null
+    content: string
+    /** `VISIBLE` | `DELETED`. */
+    status: string
+    createdAt: string
+    replies: Array<FeImageCommentView>
+}
+
+/**
+ * Paged per-image comments
+ * (`GET /api/v1/resources/{id}/images/{imageId}/comments?page=&size=`).
+ *
+ * `page` is **1-based** — the BE shifts it onto a 0-based `PageRequest` itself, so the
+ * number is passed through verbatim (same contract as {@link ResourceCommentsPage}).
+ */
+export interface FeImageCommentPage {
+    items: Array<FeImageCommentView>
+    page: number
+    size: number
+    total: number
+}
+
+/** Body sent to `POST /api/v1/resources/{id}/images/{imageId}/comments`. */
+export interface PostFeImageCommentRequest {
+    /** Parent comment id when replying; omit/null for a top-level comment. */
+    parentId?: string | null
+    /** Comment body — the BE caps it at 5000 characters. */
+    content: string
+}
+
+/**
+ * Body sent to `PUT /api/v1/resources/{id}/images/order`. The list MUST be a complete
+ * permutation of the album's image ids — the BE rejects a partial order.
+ */
+export interface FeImageOrderRequest {
+    imageIds: Array<string>
+}
+
+// ---------------------------------------------------------------- PE submissions (type=PE)
+
+/** Lifecycle of a PE answer submission. */
+export type PeSubmissionStatus = "PENDING" | "GRADING" | "SCORED" | "FAILED"
+
+/** One PE answer the viewer submitted for AI grading. */
+export interface PeSubmissionView {
+    id: string
+    resourceId: string
+    userId: string
+    /** 1-based attempt number within the per-student cap. */
+    attemptNo: number
+    payloadType?: string
+    fileUrl?: string
+    originalFilename?: string
+    mimeType?: string
+    sizeBytes?: number
+    status: PeSubmissionStatus
+    autoScore?: number
+    finalScore?: number
+    gradingModel?: string
+    failureReason?: string
+    submittedAt?: string
+    gradedAt?: string
+}
+
+/**
+ * The viewer's attempts on one PE paper
+ * (`GET /api/v1/resources/{id}/pe-submissions/me`), plus the server-computed attempt
+ * budget — the cap is read from `maxAttempts`, never hardcoded on the client.
+ */
+export interface PeSubmissionListView {
+    items: Array<PeSubmissionView>
+    attemptsUsed: number
+    maxAttempts: number
+}
+
+/** One rubric line of a PE grade. */
+export interface PeResultCriterion {
+    name?: string
+    score?: number
+    max?: number
+    comment?: string
+}
+
+/**
+ * The AI grade of one PE attempt
+ * (`GET /api/v1/resources/{id}/pe-submissions/{submissionId}/results`).
+ *
+ * `relevance` / `relevanceReason` are the grader's judgement of whether the uploaded
+ * answer actually addresses the paper (an off-topic upload still gets a result).
+ */
+export interface PeResultView {
+    submission: PeSubmissionView
+    score?: number
+    maxScore?: number
+    verdict?: string
+    feedback?: string
+    improvements?: Array<string>
+    criteria?: Array<PeResultCriterion>
+    relevance?: string
+    relevanceReason?: string
+    /** Raw grader payload, kept for debugging — never rendered verbatim. */
+    raw?: unknown
+}

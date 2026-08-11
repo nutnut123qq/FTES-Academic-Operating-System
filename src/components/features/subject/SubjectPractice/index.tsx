@@ -4,16 +4,14 @@ import React, { useState } from "react"
 import { Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
-import { useRouter } from "@/i18n/navigation"
 import {
     useQuerySubjectPracticeSwr,
     type PracticeModuleKey,
 } from "../hooks/useQuerySubjectPracticeSwr"
 import { PracticeHub } from "./PracticeHub"
 import { CodingChallengeList } from "./CodingChallengeList"
-import { PracticeFlashcards } from "./PracticeFlashcards"
+import { ExamList } from "./ExamList"
 import { PracticeLeaderboard } from "./PracticeLeaderboard"
-import { PracticeQuiz } from "./PracticeQuiz"
 
 /** The in-panel view: the hub, or one opened module. */
 type PracticeView = "hub" | PracticeModuleKey
@@ -22,24 +20,25 @@ type PracticeView = "hub" | PracticeModuleKey
  * Practice tab (§3 → §9 checklist). A practice HUB whose module cards open their own
  * in-panel sub-view (view-state navigation — no dead buttons).
  *
- * - **Quiz** — the subject's question bank ({@link PracticeQuiz}: `GET/POST
- *   /subjects/{code}/practice/quiz`, graded server-side).
- * - **Flashcards** — the SM-2 reviewer over the subject's curated decks, with the
- *   review state persisted server-side.
+ * - **PE — Practical Exam** — the subject's exam papers ({@link ExamList} over
+ *   `GET /resources?subjectId=&type=PE`); a paper opens its own route where the student
+ *   uploads an answer for AI grading.
+ * - **FE — Final Exam** — the subject's exam albums (`…&type=FE`); an album opens its
+ *   own route: up to 50 pictures, each with its own comment thread.
  * - **Coding** — the real challenge bank ({@link CodingChallengeList}: `GET /challenges`
  *   + run/submit against `/ai/coding/*` and `/challenges/{id}/submissions`).
  * - **Leaderboard** — the subject leaderboard.
+ *
+ * The AI quiz / AI flashcard generators are a DIFFERENT surface and stay where they are
+ * (the subject's AI tools tab) — they were never these two cards.
  */
 export const SubjectPractice = () => {
     const t = useTranslations("subjects")
-    const router = useRouter()
     const { subjectId } = useParams<{ subjectId: string }>()
     const { modules } = useQuerySubjectPracticeSwr(subjectId)
     const [view, setView] = useState<PracticeView>("hub")
 
     const backToHub = () => setView("hub")
-    /** The subject's AI tools tab hosts the AI Quiz / AI Flashcards generators. */
-    const openAiTools = () => router.push(`/subjects/${subjectId}/ai`)
 
     // the coding bank owns its whole panel (list + detail)
     if (view === "coding") {
@@ -50,31 +49,14 @@ export const SubjectPractice = () => {
         )
     }
 
-    // flashcards — SM-2 reviewer over the curated decks (progress persists server-side)
-    if (view === "flashcards") {
-        return (
-            <PracticeFlashcards
-                subjectId={subjectId}
-                onBack={backToHub}
-                onOpenAiTools={openAiTools}
-            />
-        )
-    }
-
     // leaderboard — a compact leaderboard (podium + ranked list + XP bars)
     if (view === "leaderboard") {
         return <PracticeLeaderboard subjectId={subjectId} onBack={backToHub} />
     }
 
-    // quiz — draw from the subject question bank, answer, submit (graded server-side)
-    if (view === "quiz") {
-        return (
-            <PracticeQuiz
-                subjectId={subjectId}
-                onBack={backToHub}
-                onOpenAiTools={openAiTools}
-            />
-        )
+    // PE / FE — the exam lists (a row routes to the exam's own page)
+    if (view === "pe" || view === "fe") {
+        return <ExamList subjectId={subjectId} kind={view} onBack={backToHub} />
     }
 
     return (

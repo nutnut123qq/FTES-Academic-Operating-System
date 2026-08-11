@@ -47,9 +47,10 @@ interface HeatmapCell {
 }
 
 /**
- * Fill per intensity level (0 = none → 4 = most). Theme-aware brand-pink ramp via
- * the `--heat-*` tokens (globals.css): 0 = empty track, 1→4 = rising activity,
- * with a distinct light/dark palette each so levels stay legible in both modes.
+ * Fill per intensity level (0 = none → 4 = most). Theme-aware ramp mixed from the
+ * configurable accent via the `--heat-*` tokens (globals.css): 0 = empty track,
+ * 1→4 = rising activity, with a distinct light/dark mix so levels stay legible in
+ * both modes.
  */
 const LEVEL_CLASS = [
     "bg-[var(--heat-0)]",

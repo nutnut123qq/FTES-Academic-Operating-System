@@ -21,8 +21,8 @@ export const HEATMAP_WEEKS = 12
 
 /**
  * Cell fill per XP intensity tier (index = {@link xpLevel}). Theme-aware
- * brand-pink ramp via the `--heat-*` tokens (globals.css): tier 0 = empty track,
- * 1→3 = rising XP. Mirrors the `ContributionCalendarView` heat scale.
+ * accent-derived ramp via the `--heat-*` tokens (globals.css): tier 0 = empty
+ * track, 1→3 = rising XP. Mirrors the `ContributionCalendarView` heat scale.
  */
 export const XP_LEVEL_CLASS = [
     "bg-[var(--heat-0)]",

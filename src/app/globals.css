@@ -51,7 +51,11 @@ html {
   --field-border: transparent;
   --field-foreground: oklch(21.03% 0.0015 354.13);
   --field-placeholder: oklch(55.17% 0.0030 354.13);
-  --focus: oklch(70.03% 0.2092 354.13);
+  /* Focus ring = THE configurable accent (HeroUI's own default is `var(--accent)`).
+     It used to be pinned to the legacy brand pink, so every focus ring / outline
+     baked by HeroUI (`.button`, `.input`, `.tabs__tab`, `.link`, `.menu-item`, …
+     all read `var(--focus)`) stayed pink no matter which accent the user picked. */
+  --focus: var(--accent);
   --foreground: oklch(21.03% 0.0015 354.13);
   --muted: oklch(55.17% 0.0030 354.13);
   --overlay: oklch(100.00% 0.0004 354.13);
@@ -60,12 +64,15 @@ html {
   --segment: oklch(100.00% 0.0015 354.13);
   --segment-foreground: oklch(21.03% 0.0015 354.13);
   --separator: oklch(92.00% 0.0015 354.13);
-  /* Learning-activity heatmap ramp (brand pink, hue 354) — 0 = empty track. */
+  /* Learning-activity heatmap ramp — single-hue sequential scale mixed from the
+     CONFIGURABLE accent toward the empty track, so it follows the appearance
+     setting (it used to be pinned to the legacy brand pink; tier 4 was exactly
+     the old pink accent value). 0 = empty track, 4 = the accent at full strength. */
   --heat-0: var(--default);
-  --heat-1: oklch(92.00% 0.0500 354.13);
-  --heat-2: oklch(85.00% 0.1000 354.13);
-  --heat-3: oklch(78.00% 0.1600 354.13);
-  --heat-4: oklch(70.03% 0.2092 354.13);
+  --heat-1: color-mix(in oklab, var(--accent) 18%, var(--default));
+  --heat-2: color-mix(in oklab, var(--accent) 40%, var(--default));
+  --heat-3: color-mix(in oklab, var(--accent) 68%, var(--default));
+  --heat-4: var(--accent);
   --success: oklch(73.29% 0.1941 162.85);
   --success-foreground: oklch(21.03% 0.0059 162.85);
   --surface: oklch(100.00% 0.0008 354.13);
@@ -104,7 +111,8 @@ html {
   --field-border: transparent;
   --field-foreground: oklch(99.11% 0.0015 354.13);
   --field-placeholder: oklch(70.50% 0.0030 354.13);
-  --focus: oklch(70.03% 0.2092 354.13);
+  /* Focus ring = THE configurable accent (see the light block above). */
+  --focus: var(--accent);
   --foreground: oklch(99.11% 0.0015 354.13);
   --muted: oklch(70.50% 0.0030 354.13);
   --overlay: oklch(21.03% 0.0030 354.13);
@@ -113,12 +121,14 @@ html {
   --segment: oklch(39.64% 0.0015 354.13);
   --segment-foreground: oklch(99.11% 0.0015 354.13);
   --separator: oklch(25.00% 0.0015 354.13);
-  /* Learning-activity heatmap ramp (brand pink, hue 354) — 0 = empty track. */
+  /* Learning-activity heatmap ramp — accent-derived sequential scale (see the
+     light block above); dark mode starts from the dark empty track, so the mix
+     percentages are a touch higher to keep tier 1 readable. */
   --heat-0: var(--default);
-  --heat-1: oklch(35.00% 0.0600 354.13);
-  --heat-2: oklch(45.00% 0.1100 354.13);
-  --heat-3: oklch(57.00% 0.1600 354.13);
-  --heat-4: oklch(70.03% 0.2092 354.13);
+  --heat-1: color-mix(in oklab, var(--accent) 28%, var(--default));
+  --heat-2: color-mix(in oklab, var(--accent) 52%, var(--default));
+  --heat-3: color-mix(in oklab, var(--accent) 76%, var(--default));
+  --heat-4: var(--accent);
   --success: oklch(73.29% 0.1941 162.85);
   --success-foreground: oklch(21.03% 0.0059 162.85);
   --surface: oklch(21.03% 0.0030 354.13);
@@ -214,7 +224,7 @@ html {
 }
 
 /*
- * Ambient ember background (blocks/layout/AmbientBackground) — slow brand-pink
+ * Ambient ember background (blocks/layout/AmbientBackground) — slow accent-tinted
  * sparks drifting upward behind the whole app. Each spark sets `--drift` (its
  * horizontal wander) inline; this keyframe rises it a full viewport while fading
  * in then out. Motion is transform/opacity only (GPU-cheap, no JS loop).

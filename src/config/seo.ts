@@ -28,4 +28,10 @@ export const SEO_CONFIG = {
     defaultLocale: "vi",
     /** Default share image (relative to {@link siteUrl}); per-entity pages override with a real cover. */
     ogImage: "/logo/FTES_original.png",
+    /**
+     * Brand logo for schema.org `Organization` / article publisher (relative to
+     * {@link siteUrl}). Must be the FTES mark — the old `/logo.png` was the
+     * StarCI Academy lockup inherited from the skeleton.
+     */
+    brandLogo: "/logo/FTES_original.png",
 } as const

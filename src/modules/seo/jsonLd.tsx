@@ -33,7 +33,7 @@ export const organizationSchema = (): Record<string, unknown> => ({
     "@type": "Organization",
     "name": SEO_CONFIG.siteName,
     "url": SEO_CONFIG.siteUrl,
-    "logo": `${SEO_CONFIG.siteUrl}/logo.png`,
+    "logo": `${SEO_CONFIG.siteUrl}${SEO_CONFIG.brandLogo}`,
     "sameAs": BRAND_SAME_AS,
 })
 
@@ -122,7 +122,7 @@ export const articleSchema = (input: ArticleSchemaInput): Record<string, unknown
         "url": SEO_CONFIG.siteUrl,
         "logo": {
             "@type": "ImageObject",
-            "url": `${SEO_CONFIG.siteUrl}/logo.png`,
+            "url": `${SEO_CONFIG.siteUrl}${SEO_CONFIG.brandLogo}`,
         },
     },
 })

@@ -2,7 +2,7 @@ import React from "react"
 import { fireEvent, render, screen } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { LearnExercise, LearnLesson, LearnModule } from "../hooks/useQueryLearnCourseSwr"
-import { buildMindMap, NODE_SIZE, resolveRootCode } from "./build"
+import { buildMindMap, NODE_SIZE, ROOT_LABEL_FALLBACK } from "./build"
 import type { MindMapNodeData } from "./build"
 import { CURVED_EDGE_TYPE, curvedEdgePath } from "./CurvedEdge"
 import { resolveNodeOpen } from "./open"
@@ -12,7 +12,7 @@ import { isModuleLocked, lessonStatus, moduleStatus } from "./status"
  * Course mind map (interactive React-Flow redesign — change `mindmap-interactive-redesign`).
  *
  * Covers the pure model the canvas is built from:
- *  - the root carries the SUBJECT CODE (not the long course title), with a fallback;
+ *  - the root carries the FULL COURSE TITLE (never an acronym), with a "—" fallback;
  *  - exercises (challenges / assignments) become their own child nodes, only where the
  *    data says one exists (no fabrication);
  *  - the typed 3-state completion status is derived from the per-viewer signals; the
@@ -47,8 +47,11 @@ const moduleOf = (over: Partial<LearnModule> & { id: string; lessons: Array<Lear
     ...over,
 })
 
+/** A real, long FTES course title — the case the old acronym mangled into "M-TCCC". */
+const COURSE_TITLE = "MAE101 - Toán Cao Cấp Cho Lập Trình"
+
 const baseBuildInput = (modules: Array<LearnModule>, expanded: Array<string> = []) => ({
-    subjectCode: "CSD201",
+    courseTitle: COURSE_TITLE,
     completionPercent: 40,
     modules,
     currentLessonId: null,
@@ -57,12 +60,22 @@ const baseBuildInput = (modules: Array<LearnModule>, expanded: Array<string> = [
     expandedModuleIds: new Set<string>(expanded),
 })
 
-describe("buildMindMap — subject-code root + exercise nodes", () => {
-    it("puts the SUBJECT CODE on the root node (not the course title)", () => {
+describe("buildMindMap — course-title root + exercise nodes", () => {
+    const rootOf = (nodes: ReturnType<typeof buildMindMap>["nodes"]) =>
+        nodes.find((node) => (node.data as MindMapNodeData).kind === "root")?.data as MindMapNodeData | undefined
+
+    it("puts the FULL COURSE TITLE on the root node (never an acronym)", () => {
         const { nodes } = buildMindMap(baseBuildInput([moduleOf({ id: "m1", lessons: [lesson({ id: "l1" })] })]))
-        const root = nodes.find((node) => (node.data as MindMapNodeData).kind === "root")
-        expect((root?.data as MindMapNodeData).label).toBe("CSD201")
-        expect((root?.data as MindMapNodeData).completionPercent).toBe(40)
+        expect(rootOf(nodes)?.label).toBe(COURSE_TITLE)
+        expect(rootOf(nodes)?.completionPercent).toBe(40)
+    })
+
+    it("falls back to '—' when the course has no title (never an empty box)", () => {
+        const modules = [moduleOf({ id: "m1", lessons: [lesson({ id: "l1" })] })]
+        expect(rootOf(buildMindMap({ ...baseBuildInput(modules), courseTitle: "" }).nodes)?.label)
+            .toBe(ROOT_LABEL_FALLBACK)
+        expect(rootOf(buildMindMap({ ...baseBuildInput(modules), courseTitle: "   " }).nodes)?.label)
+            .toBe(ROOT_LABEL_FALLBACK)
     })
 
     it("renders each lesson exercise as its own node, only where one exists (expanded section)", () => {
@@ -241,15 +254,6 @@ describe("buildMindMap — cards never overlap (worst case)", () => {
     })
 })
 
-describe("resolveRootCode — subject code with a short fallback", () => {
-    it("uses the linked subject code when present", () => {
-        expect(resolveRootCode("CSD201", "Cấu trúc dữ liệu", "khoa-a")).toBe("CSD201")
-    })
-    it("falls back to a short acronym of the title", () => {
-        expect(resolveRootCode(null, "Cau Truc Du Lieu", "khoa-a")).toBe("CTDL")
-    })
-})
-
 describe("status — typed 3-state derived from viewer completion", () => {
     it("module: all done → completed, some done → inProgress, none → notStarted", () => {
         const done = moduleOf({ id: "m", lessons: [lesson({ id: "a", isCompleted: true }), lesson({ id: "b", isCompleted: true })] })
@@ -351,7 +355,7 @@ vi.mock("@/components/features/course/PackageGateModal", () => ({
 }))
 vi.mock("../hooks/useQueryLearnCourseSwr", () => ({ useQueryLearnCourseSwr: () => courseMock() }))
 // The React-Flow canvas is DOM-measuring; stub it to a light surface that exposes the
-// graph + the open handler so the container wiring (subject code, routing, gate) is testable.
+// graph + the open handler so the container wiring (root label, routing, gate) is testable.
 vi.mock("./MindMapCanvas", () => ({
     MindMapCanvas: ({
         graph,
@@ -363,7 +367,7 @@ vi.mock("./MindMapCanvas", () => ({
         onToggleModule: (moduleId: string) => void
     }) => (
         <div>
-            <span data-testid="root-code">
+            <span data-testid="root-label">
                 {graph.nodes.find((node) => node.data.kind === "root")?.data.label}
             </span>
             {graph.nodes
@@ -389,11 +393,12 @@ vi.mock("./MindMapCanvas", () => ({
 
 import { MindMap } from "./index"
 
-const mountWith = (modules: Array<LearnModule>, subjectCode: string | null = "CSD201") => {
+const mountWith = (modules: Array<LearnModule>, title: string = COURSE_TITLE) => {
     courseMock.mockReturnValue({
-        course: { id: "uuid-a", header: { title: "Khóa A" } },
+        course: { id: "uuid-a", header: { title } },
         modules,
-        header: { title: "Khóa A", progressPercent: 0, continueLessonId: null, subjectCode },
+        // `subjectCode` stays populated on purpose: the root must show the TITLE anyway.
+        header: { title, progressPercent: 0, continueLessonId: null, subjectCode: "MAE101" },
         error: undefined,
         mutate: vi.fn(),
     })
@@ -404,10 +409,15 @@ beforeEach(() => {
     push.mockClear()
 })
 
-describe("MindMap container — subject code on the root, gate on a locked node", () => {
-    it("shows the linked subject code on the root node", () => {
+describe("MindMap container — course title on the root, gate on a locked node", () => {
+    it("shows the FULL course title on the root node (not the subject code / an acronym)", () => {
         mountWith([moduleOf({ id: "m1", lessons: [lesson({ id: "l1" })] })])
-        expect(screen.getByTestId("root-code").textContent).toBe("CSD201")
+        expect(screen.getByTestId("root-label").textContent).toBe(COURSE_TITLE)
+    })
+
+    it("shows '—' on the root when the course header carries no title", () => {
+        mountWith([moduleOf({ id: "m1", lessons: [lesson({ id: "l1" })] })], "")
+        expect(screen.getByTestId("root-label").textContent).toBe(ROOT_LABEL_FALLBACK)
     })
 
     it("shows only sections until one is expanded, then collapses again on a second click", () => {

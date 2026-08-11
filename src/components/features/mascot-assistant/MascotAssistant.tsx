@@ -1,20 +1,14 @@
 "use client"
 
-import React, { useCallback, useEffect, useId, useRef, useState } from "react"
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import Image from "next/image"
 import { cn } from "@heroui/react"
-import {
-    CaretRightIcon,
-    MapTrifoldIcon,
-    ReadCvLogoIcon,
-    SparkleIcon,
-    XIcon,
-    type Icon,
-} from "@phosphor-icons/react"
+import { CaretRightIcon, XIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { Link, usePathname } from "@/i18n/navigation"
 import { useTour } from "@/components/features/onboarding"
 import { useCookieConsentStore } from "@/hooks/zustand/cookieConsent/store"
+import { getAssistantOptions } from "./options"
 
 /**
  * Standing FrosTES artwork (full body, waving, transparent background) — the same
@@ -41,33 +35,16 @@ const MASCOT_HEIGHT = 512
 const LEARN_READER_ROUTE = /^\/courses\/[^/]+\/learn(?:\/|$)/
 const COMMUNITY_ROUTE = /^\/community(?:\/|$)/
 
-/** One entry in the assistant's option list. */
-interface AssistantOption {
-    /** i18n leaf under `mascot.assistant.options` (`<key>.label` + `<key>.description`). */
-    readonly key: string
-    /** Target route — every one of these is verified to exist in `src/app/[locale]`. */
-    readonly href: string
-    /** Leading icon. */
-    readonly icon: Icon
-}
-
-/**
- * The three things FrosTES can hand off to, in the order a learner needs them.
- * `planner` is the AI STUDY-PLAN tool (`/ai/tools/planner`) — NOT the career
- * roadmap page — per the product decision recorded for this change.
- */
-const OPTIONS: readonly AssistantOption[] = [
-    { key: "planner", href: "/ai/tools/planner", icon: MapTrifoldIcon },
-    { key: "cv", href: "/profile/cv", icon: ReadCvLogoIcon },
-    { key: "chat", href: "/ai", icon: SparkleIcon },
-]
-
 /**
  * FrosTES, the floating assistant: a STANDING, waving mascot parked in the
  * bottom-right corner of every page (no circular button frame — the character
  * itself is the affordance). Hovering with a mouse, tapping on touch, or pressing
- * Enter/Space on the keyboard opens a small panel of shortcuts (study planner /
- * CV / AI chat).
+ * Enter/Space on the keyboard opens a small panel of shortcuts.
+ *
+ * The shortcut list is CONTEXTUAL ({@link getAssistantOptions}): the default set is
+ * study planner / CV / AI chat, but inside a subject workspace (`/subjects/<id>/…`)
+ * the panel becomes that subject's AI toolbox — which is why the workspace rail no
+ * longer carries an `AI` nav row.
  *
  * Interaction notes:
  *  - Hover open/close is bound to `pointerType === "mouse"` only, so a tap does
@@ -88,6 +65,10 @@ const OPTIONS: readonly AssistantOption[] = [
  */
 export const MascotAssistant = () => {
     const t = useTranslations("mascot.assistant")
+    // The option rows come from `options.ts` with ABSOLUTE keys (they mix namespaces:
+    // `mascot.assistant.*` for the default set, `subjects.aiTools.*` for the subject
+    // toolbox), so they resolve against the ROOT translator, not `t`.
+    const tRoot = useTranslations()
     const pathname = usePathname()
     const { isActive: tourActive } = useTour()
     // The cookie-consent bar is `fixed inset-x-0 bottom-0 z-40` — the SAME band and
@@ -154,6 +135,9 @@ export const MascotAssistant = () => {
     }, [])
 
     const pathnameValue = pathname ?? ""
+    // Which shortcuts the panel offers depends on WHERE the visitor is (subject
+    // workspace → that subject's AI tools; everywhere else → the default three).
+    const optionSet = useMemo(() => getAssistantOptions(pathnameValue), [pathnameValue])
     // `decided === null` = store chưa hydrate → chưa render (tránh lệch SSR/hydration).
     // `decided === false` = banner cookie đang hiện: VẪN render, chỉ đẩy linh vật lên
     // trên banner. Ẩn hẳn ở nhánh này là sai yêu cầu "hiện ở TOÀN BỘ các trang", mà
@@ -209,7 +193,7 @@ export const MascotAssistant = () => {
             {isOpen ? (
                 <nav
                     id={panelId}
-                    aria-label={t("title")}
+                    aria-label={tRoot(optionSet.titleKey)}
                     // Width is capped at the viewport minus the page gutter (the same
                     // `calc(100vw-2rem)` cap the hovercard / streak popover use), so on a
                     // narrow phone the panel never runs off the right edge.
@@ -217,8 +201,10 @@ export const MascotAssistant = () => {
                 >
                     <div className="flex items-start gap-2 px-2 pb-1 pt-1">
                         <div className="min-w-0 flex-1">
-                            <p className="text-sm font-semibold text-foreground">{t("title")}</p>
-                            <p className="text-xs text-muted">{t("subtitle")}</p>
+                            <p className="text-sm font-semibold text-foreground">
+                                {tRoot(optionSet.titleKey)}
+                            </p>
+                            <p className="text-xs text-muted">{tRoot(optionSet.subtitleKey)}</p>
                         </div>
                         {/* Touch has no "move the pointer away" — give the panel an explicit
                             close so a phone user can always get the page back. */}
@@ -232,7 +218,7 @@ export const MascotAssistant = () => {
                         </button>
                     </div>
                     <ul className="flex flex-col">
-                        {OPTIONS.map(({ key, href, icon: OptionIcon }) => (
+                        {optionSet.options.map(({ key, href, icon: OptionIcon, labelKey, descriptionKey }) => (
                             <li key={key}>
                                 <Link
                                     href={href}
@@ -247,10 +233,10 @@ export const MascotAssistant = () => {
                                     />
                                     <span className="min-w-0 flex-1">
                                         <span className="block truncate text-sm font-medium text-foreground">
-                                            {t(`options.${key}.label`)}
+                                            {tRoot(labelKey)}
                                         </span>
                                         <span className="block truncate text-xs text-muted">
-                                            {t(`options.${key}.description`)}
+                                            {tRoot(descriptionKey)}
                                         </span>
                                     </span>
                                     <CaretRightIcon

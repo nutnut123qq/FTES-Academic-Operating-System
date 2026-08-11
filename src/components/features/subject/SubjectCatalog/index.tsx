@@ -123,10 +123,13 @@ const SubjectCard = ({ subject }: SubjectCardProps) => {
     return (
         <Link
             href={`/subjects/${subject.id}`}
-            className="flex flex-col overflow-hidden rounded-2xl border border-separator no-underline transition-colors hover:bg-default/40"
+            className="flex flex-col gap-3 overflow-hidden rounded-2xl border border-separator p-3 no-underline transition-colors hover:bg-default/40"
         >
             {imageUrl !== null ? (
-                <div className="relative aspect-video w-full">
+                // cover 16:9 — INSET by the card padding and carrying its OWN radius on
+                // all four corners (same anatomy as `CatalogCourseCard`). Full-bleed +
+                // relying on the card's `overflow-hidden` only rounded the TOP corners.
+                <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-md">
                     <Image
                         src={imageUrl}
                         alt={subject.name}
@@ -137,7 +140,7 @@ const SubjectCard = ({ subject }: SubjectCardProps) => {
                     />
                 </div>
             ) : null}
-            <div className="flex flex-col gap-3 p-4">
+            <div className="flex flex-col gap-3">
                 {/* min-w-0 giữ lại vì `truncate` cần cha co được để cắt chữ. */}
                 <div className="min-w-0">
                     <Typography type="body-sm" weight="medium" truncate>
@@ -171,9 +174,9 @@ const SubjectCard = ({ subject }: SubjectCardProps) => {
  * chip-row line — same boxes, same proportions.
  */
 const SubjectCardSkeleton = () => (
-    <div className="flex flex-col overflow-hidden rounded-2xl border border-separator">
-        <Skeleton className="aspect-video w-full rounded-none" />
-        <div className="flex flex-col gap-3 p-4">
+    <div className="flex flex-col gap-3 overflow-hidden rounded-2xl border border-separator p-3">
+        <Skeleton className="aspect-video w-full shrink-0 rounded-md" />
+        <div className="flex flex-col gap-3">
             <div className="flex min-w-0 flex-col">
                 <Skeleton.Typography type="body-sm" width="1/3" />
                 <Skeleton.Typography type="body-xs" width="2/3" />

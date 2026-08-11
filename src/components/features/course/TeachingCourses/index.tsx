@@ -18,10 +18,12 @@ const statusColor = (status: string): "success" | "warning" | "default" => {
 
 /**
  * "Khoá tôi dạy" (`/courses/teaching`) — courses the signed-in instructor OWNS, every
- * status, newest-updated first. Each card links into the course's AI-interview manager
- * so a lecturer can generate/curate the question set. The public catalog only shows
- * PUBLISHED courses, so this is the only place a lecturer reaches their DRAFT/ARCHIVED
- * courses. Loading gates card skeletons; an empty set shows an onboarding empty state.
+ * status, newest-updated first. Each card opens the course's learn home (`/learn/content`);
+ * it used to open the AI course-interview manager, but that surface was removed with the
+ * course-interview feature, and the learn home is the only owner-reachable course view left.
+ * The public catalog only shows PUBLISHED courses, so this is the only place a lecturer
+ * reaches their DRAFT/ARCHIVED courses. Loading gates card skeletons; an empty set shows
+ * an onboarding empty state.
  */
 export const TeachingCourses = () => {
     const t = useTranslations()
@@ -68,7 +70,7 @@ export const TeachingCourses = () => {
                     {courses.map((course) => (
                         <Link
                             key={course.id}
-                            href={`/courses/${course.slugName}/learn/interview`}
+                            href={`/courses/${course.slugName}/learn/content`}
                             className="group block no-underline"
                         >
                             <div className="flex h-full flex-col gap-3 rounded-2xl border border-default bg-surface p-4 transition-colors group-hover:border-accent">

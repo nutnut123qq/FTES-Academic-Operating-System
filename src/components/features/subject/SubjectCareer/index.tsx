@@ -34,6 +34,8 @@ import {
     type SubjectRoadmapView,
     type SubjectSkillView,
 } from "../hooks/useQuerySubjectCareerSwr"
+import { CareerAdminPanel } from "./CareerAdminPanel"
+import { OPPORTUNITY_TYPE_KEY } from "./taxonomy"
 
 /** Icon per roadmap track (lower-cased BE `track`); unknown tracks get the briefcase. */
 const ROADMAP_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -43,13 +45,6 @@ const ROADMAP_ICON: Record<string, React.ComponentType<{ className?: string }>> 
     ai: RobotIcon,
     data: ChartLineIcon,
     devops: CloudIcon,
-}
-
-/** Maps the BE opportunity `type` to an `career.opportunityTypes.*` i18n key. */
-const OPPORTUNITY_TYPE_KEY: Record<string, string> = {
-    INTERNSHIP: "internship",
-    JOB: "job",
-    PORTFOLIO_REVIEW: "portfolioReview",
 }
 
 /**
@@ -126,6 +121,18 @@ export const SubjectCareer = () => {
                     <CareerView career={career} subjectId={subjectId} mutate={mutate} />
                 ) : null}
             </AsyncContent>
+
+            {/*
+              * Authoring — OUTSIDE the async switch on purpose: the state where a curator
+              * most needs it is precisely the empty one ("the backend listed nothing"),
+              * which replaces the whole tab body. Self-hides for a viewer the career module
+              * would 403.
+              */}
+            <CareerAdminPanel
+                onChanged={() => {
+                    void mutate()
+                }}
+            />
         </div>
     )
 }
@@ -146,6 +153,10 @@ const CareerView = ({
     const t = useTranslations("subjects")
     const runRest = useRestWithToast()
     const { guard } = useRequireAuth()
+    // Raw BE tokens -> reader labels; the fallback is the TOKEN itself (a word, never an
+    // id), so a value we have no translation for still reads (cf. CommunityModeration).
+    const trackLabel = (track: string) =>
+        t.has(`career.tracks.${track}`) ? t(`career.tracks.${track}`) : track
     const { trigger: enrollRoadmap } = usePostEnrollCareerRoadmapSwr()
     const { trigger: applyToOpportunity } = usePostApplyCareerOpportunitySwr()
     const [pendingRoadmap, setPendingRoadmap] = useState<string | null>(null)
@@ -213,6 +224,32 @@ const CareerView = ({
         setPendingOpportunity(null)
     }, "auth.context.generic")
 
+    /*
+     * Every `/career/**` read sits behind platform auth while this workspace page is
+     * PUBLIC, so a guest 401s on all three at once. Repeating the identical "sign in"
+     * card in each section (and letting the skill graph fail separately next to them)
+     * says the same thing four times — one card for the whole tab instead, with the
+     * PUBLIC facet (the subject's `NEXT_SUBJECT` relations) still rendered below it.
+     */
+    const allUnauthorized =
+        career.skillCatalogueStatus === "unauthorized" &&
+        career.roadmapsStatus === "unauthorized" &&
+        career.opportunitiesStatus === "unauthorized"
+
+    if (allUnauthorized) {
+        return (
+            <div className="flex flex-col gap-6">
+                <SectionUnavailable
+                    status="unauthorized"
+                    onRetry={() => {
+                        void mutate()
+                    }}
+                />
+                <NextSubjectsSection nextSubjects={career.nextSubjects} />
+            </div>
+        )
+    }
+
     return (
         <div className="flex flex-col gap-6">
             {/* best-fit track — only when the BE actually computed one */}
@@ -226,7 +263,9 @@ const CareerView = ({
                     </div>
                     <div className="min-w-0">
                         <Typography type="body-sm" weight="medium" truncate>
-                            {t("career.careerPath", { track: career.careerPath.track })}
+                            {t("career.careerPath", {
+                                track: trackLabel(career.careerPath.track),
+                            })}
                         </Typography>
                         <Typography type="body-xs" color="muted">
                             {t("career.careerPathHint")}
@@ -278,13 +317,21 @@ const CareerView = ({
                 )}
             </section>
 
-            {/* subject-scoped skill graph (§21) */}
-            <section className="flex flex-col gap-3 border-t border-separator pt-6">
-                <Typography type="h6" weight="bold">
-                    {t("career.skillGraph")}
-                </Typography>
-                <SkillGraph subjectId={subjectId} heightClassName="h-[400px]" />
-            </section>
+            {/*
+              * Subject-scoped skill graph (§21) — only when this subject HAS mapped skills
+              * the catalogue could name. Without them the graph either falls back to the
+              * whole platform catalogue (a second, unscoped copy of the section above) or
+              * fails on its own auth-gated read, in both cases as a 400px block saying
+              * nothing about this subject.
+              */}
+            {career.skillCatalogueStatus === "loaded" && career.skills.length > 0 ? (
+                <section className="flex flex-col gap-3 border-t border-separator pt-6">
+                    <Typography type="h6" weight="bold">
+                        {t("career.skillGraph")}
+                    </Typography>
+                    <SkillGraph subjectId={subjectId} heightClassName="h-[400px]" />
+                </section>
+            ) : null}
 
             {/* roadmaps — related ones first, the rest honestly labelled as general */}
             <section className="flex flex-col gap-3 border-t border-separator pt-6">
@@ -323,6 +370,7 @@ const CareerView = ({
                             <RoadmapCard
                                 key={roadmap.id}
                                 roadmap={roadmap}
+                                trackLabel={trackLabel}
                                 isPending={pendingRoadmap === roadmap.slug}
                                 onEnroll={() => onEnroll(roadmap.slug)}
                             />
@@ -370,45 +418,59 @@ const CareerView = ({
                 )}
             </section>
 
-            {/* next subjects — hidden when the BE lists none */}
-            {career.nextSubjects.length > 0 ? (
-                <section className="flex flex-col gap-3 border-t border-separator pt-6">
-                    <div className="flex flex-col gap-0">
-                        <Typography type="h6" weight="bold">
-                            {t("career.nextSubject")}
+            <NextSubjectsSection nextSubjects={career.nextSubjects} />
+        </div>
+    )
+}
+
+/** `NEXT_SUBJECT` relations of this subject — hidden when the BE lists none. */
+const NextSubjectsSection = ({
+    nextSubjects,
+}: {
+    nextSubjects: SubjectCareerData["nextSubjects"]
+}) => {
+    const t = useTranslations("subjects")
+
+    if (nextSubjects.length === 0) {
+        return null
+    }
+
+    return (
+        <section className="flex flex-col gap-3 border-t border-separator pt-6">
+            <div className="flex flex-col gap-0">
+                <Typography type="h6" weight="bold">
+                    {t("career.nextSubject")}
+                </Typography>
+                <Typography type="body-xs" color="muted">
+                    {t("career.nextSubjectHint")}
+                </Typography>
+            </div>
+            {nextSubjects.map((next) => (
+                <Link
+                    key={next.id}
+                    href={`/subjects/${next.code}`}
+                    className="group flex items-center gap-3 rounded-2xl border border-separator p-4 transition-colors hover:border-accent/40"
+                >
+                    <div className="flex size-11 shrink-0 items-center justify-center rounded-large bg-accent/10 text-sm font-bold text-accent">
+                        {next.code.slice(0, 3).toUpperCase()}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                        <Typography
+                            type="body-sm"
+                            weight="medium"
+                            className="group-hover:underline"
+                            truncate
+                        >
+                            {next.code} · {next.name}
                         </Typography>
                         <Typography type="body-xs" color="muted">
-                            {t("career.nextSubjectHint")}
+                            {t("career.viewSubject")}
                         </Typography>
                     </div>
-                    {career.nextSubjects.map((next) => (
-                        <Link
-                            key={next.id}
-                            href={`/subjects/${next.code}`}
-                            className="group flex items-center gap-3 rounded-2xl border border-separator p-4 transition-colors hover:border-accent/40"
-                        >
-                            <div className="flex size-11 shrink-0 items-center justify-center rounded-large bg-accent/10 text-sm font-bold text-accent">
-                                {next.code.slice(0, 3).toUpperCase()}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                                <Typography
-                                    type="body-sm"
-                                    weight="medium"
-                                    className="group-hover:underline"
-                                    truncate
-                                >
-                                    {next.code} · {next.name}
-                                </Typography>
-                                <Typography type="body-xs" color="muted">
-                                    {t("career.viewSubject")}
-                                </Typography>
-                            </div>
-                            <ArrowRightIcon className="size-4 shrink-0 text-muted" aria-hidden />
-                        </Link>
-                    ))}
-                </section>
-            ) : null}
-        </div>
+                    <ArrowRightIcon className="size-4 shrink-0 text-muted" aria-hidden />
+                </Link>
+            ))}
+        </section>
     )
 }
 
@@ -461,6 +523,11 @@ const SectionUnavailable = ({
 /** One subject skill: mastery bar + the caller's level / target facets. */
 const SkillRow = ({ skill }: { skill: SubjectSkillView }) => {
     const t = useTranslations("subjects")
+    // `category` is a raw CHECK token (`LANGUAGE`, `CS_FOUNDATION`, …) — translate it, and
+    // fall back to the token itself rather than shouting SQL at the reader.
+    const categoryLabel = t.has(`career.skillCategories.${skill.category}`)
+        ? t(`career.skillCategories.${skill.category}`)
+        : skill.category
 
     return (
         <div className="flex flex-col gap-2">
@@ -476,7 +543,7 @@ const SkillRow = ({ skill }: { skill: SubjectSkillView }) => {
                 </Chip>
                 {skill.category ? (
                     <Chip size="sm" variant="soft" color="default">
-                        {skill.category}
+                        {categoryLabel}
                     </Chip>
                 ) : null}
                 {skill.targetLevel !== null ? (
@@ -500,10 +567,13 @@ const SkillRow = ({ skill }: { skill: SubjectSkillView }) => {
 /** One roadmap card: track icon + title + why-related line + the enroll action. */
 const RoadmapCard = ({
     roadmap,
+    trackLabel,
     isPending,
     onEnroll,
 }: {
     roadmap: SubjectRoadmapView
+    /** Translates a raw BE `track` token. */
+    trackLabel: (track: string) => string
     isPending: boolean
     onEnroll: () => void
 }) => {
@@ -511,7 +581,9 @@ const RoadmapCard = ({
     const Icon = ROADMAP_ICON[roadmap.track.toLowerCase()] ?? BriefcaseIcon
 
     return (
-        <div className="flex flex-col gap-3 rounded-2xl border border-separator p-4 transition-colors hover:border-accent/40">
+        // `h-full` + the `mt-auto` action: grid cells stretch, so without them the enroll
+        // buttons of a row sit at four different heights (the "related" block is optional).
+        <div className="flex h-full flex-col gap-3 rounded-2xl border border-separator p-4 transition-colors hover:border-accent/40">
             <div className="flex items-center gap-3">
                 <div
                     className="flex size-11 shrink-0 items-center justify-center rounded-large bg-accent/10 text-accent"
@@ -519,9 +591,17 @@ const RoadmapCard = ({
                 >
                     <Icon className="size-5" />
                 </div>
-                <Typography type="body-sm" weight="medium" className="min-w-0" truncate>
-                    {roadmap.title}
-                </Typography>
+                <div className="min-w-0">
+                    <Typography type="body-sm" weight="medium" truncate>
+                        {roadmap.title}
+                    </Typography>
+                    {/* the icon alone never says which track this is */}
+                    {roadmap.track ? (
+                        <Typography type="body-xs" color="muted" truncate>
+                            {trackLabel(roadmap.track)}
+                        </Typography>
+                    ) : null}
+                </div>
             </div>
             {roadmap.related ? (
                 <div className="flex flex-col gap-1">
@@ -538,6 +618,7 @@ const RoadmapCard = ({
                 </div>
             ) : null}
             <Button
+                className="mt-auto"
                 size="sm"
                 variant="ghost"
                 isPending={isPending}
@@ -595,25 +676,29 @@ const OpportunityRow = ({
                     </Typography>
                 ) : null}
             </div>
-            {opportunity.related ? (
-                <Chip size="sm" variant="soft" color="accent">
-                    {t("career.related")}
+            {/* facets + action travel together, so a narrow row wraps as one block
+                instead of scattering a lone chip onto its own line */}
+            <div className="flex flex-wrap items-center gap-2">
+                {opportunity.related ? (
+                    <Chip size="sm" variant="soft" color="accent">
+                        {t("career.related")}
+                    </Chip>
+                ) : null}
+                <Chip size="sm" variant="soft" color="default">
+                    {t(`career.opportunityTypes.${typeKey}`)}
                 </Chip>
-            ) : null}
-            <Chip size="sm" variant="soft" color="default">
-                {t(`career.opportunityTypes.${typeKey}`)}
-            </Chip>
-            <Button
-                size="sm"
-                variant="secondary"
-                isPending={isPending}
-                isDisabled={opportunity.applied || isPending}
-                onPress={onApply}
-            >
-                {opportunity.applied
-                    ? t("career.opportunityApplied")
-                    : t("career.opportunityApply")}
-            </Button>
+                <Button
+                    size="sm"
+                    variant="secondary"
+                    isPending={isPending}
+                    isDisabled={opportunity.applied || isPending}
+                    onPress={onApply}
+                >
+                    {opportunity.applied
+                        ? t("career.opportunityApplied")
+                        : t("career.opportunityApply")}
+                </Button>
+            </div>
         </div>
     )
 }

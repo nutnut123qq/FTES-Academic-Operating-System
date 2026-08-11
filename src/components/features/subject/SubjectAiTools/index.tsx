@@ -10,7 +10,7 @@ import {
     FolderIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
-import { useParams } from "next/navigation"
+import { useParams, useSearchParams } from "next/navigation"
 
 import { useRouter } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
@@ -41,9 +41,20 @@ const ICONS: Record<AiToolKey, React.ReactNode> = {
 type ActiveTool = AiToolKey
 
 /**
+ * Keys the `?tool=` deep link accepts — the SAME roster as {@link ICONS}, so an
+ * unknown / stale query value is ignored instead of opening a bogus surface.
+ * The floating FrosTES assistant links here with `?tool=<key>` now that the AI row
+ * was removed from the subject rail.
+ */
+const DEEP_LINK_TOOLS = new Set<string>(Object.keys(ICONS))
+
+/**
  * AI tab (§3 → §9): a functional per-subject AI hub. Tool cards are real entry
  * points that open working surfaces INSIDE the tab via local `activeTool` view
- * state (no sub-routes). Membership is OPTIONAL — the AI endpoints don't hard-gate
+ * state (no sub-routes); a `?tool=<key>` query deep-links straight into one of those
+ * surfaces, which is how the floating FrosTES assistant hands off to a tool now that
+ * the subject rail no longer carries an AI row.
+ * Membership is OPTIONAL — the AI endpoints don't hard-gate
  * on it, so joining the workspace is not required to use the tools.
  * Every surface runs against the real AI module: the tutor streams over SSE, and
  * summary/quiz/flashcards/OCR submit an async job and poll `GET /ai/jobs/{id}`.
@@ -52,14 +63,34 @@ export const SubjectAiTools = () => {
     const t = useTranslations("subjects")
     const router = useRouter()
     const { subjectId } = useParams<{ subjectId: string }>()
+    // Deep link from the floating FrosTES assistant: `?tool=<key>`. Read reactively
+    // (not from `window.location`) so picking ANOTHER tool from the mascot while this
+    // tab is already mounted swaps the surface instead of doing nothing. Safe without
+    // a local Suspense boundary — `InnerLayout` already wraps the whole app tree.
+    const searchParams = useSearchParams()
+    const toolParam = searchParams.get("tool")
     const { tools, isLoading, error, mutate } =
         useQuerySubjectAiToolsSwr(subjectId)
     const { subject } = useQuerySubjectSwr(subjectId)
 
     const [activeTool, setActiveTool] = React.useState<ActiveTool | null>(null)
 
+    React.useEffect(() => {
+        if (toolParam !== null && DEEP_LINK_TOOLS.has(toolParam)) {
+            setActiveTool(toolParam as ActiveTool)
+        }
+    }, [toolParam])
+
     const openTool = (key: ActiveTool) => setActiveTool(key)
-    const backToHub = () => setActiveTool(null)
+    // Leaving a surface must also drop the `?tool=` query, otherwise the effect above
+    // would re-open it on the next render pass. `replace` (not `push`) so the hub is
+    // not a second history entry over the tool.
+    const backToHub = () => {
+        setActiveTool(null)
+        if (toolParam !== null) {
+            router.replace(`/subjects/${subjectId}/ai`)
+        }
+    }
     const goResources = () => router.push(`/subjects/${subjectId}/resources`)
 
     if (activeTool && subject) {

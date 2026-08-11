@@ -38,7 +38,9 @@
           "label": "Hỏi đáp AI",
           "description": "Mở trung tâm AI: hỏi đáp và mọi công cụ"
         }
-      }
+      },
+      "subjectTitle": "Công cụ FrosTES của môn học",
+      "subjectSubtitle": "Chọn một công cụ để mở trong không gian môn."
     }
   },
   "onboarding": {
@@ -701,10 +703,10 @@
     },
     "teaching": {
       "title": "Khóa tôi dạy",
-      "subtitle": "Các khóa của bạn — nháp hoặc đã xuất bản. Mở một khóa để quản lý bài phỏng vấn FrosTES.",
+      "subtitle": "Các khóa của bạn — nháp hoặc đã xuất bản. Mở một khóa để xem nội dung học.",
       "empty": "Bạn chưa sở hữu khóa học nào",
       "browse": "Khám phá khóa học",
-      "manageHint": "Mở để quản lý bài phỏng vấn FrosTES →"
+      "manageHint": "Mở để xem nội dung khóa →"
     },
     "status": {
       "PUBLISHED": "Đã xuất bản",
@@ -2889,8 +2891,12 @@
         "seeMore": "Xem bảng xếp hạng"
       },
       "topLearners": {
-        "title": "Top học viên tuần",
-        "xp": "{points} XP"
+        "title": "Top học viên",
+        "xp": "{points} XP",
+        "you": "Bạn",
+        "emptyTitle": "Chưa có ai trên bảng xếp hạng",
+        "emptyDescription": "Mùa giải mới bắt đầu. Hoàn thành một bài học để trở thành người đầu tiên ghi điểm.",
+        "error": "Không tải được bảng xếp hạng."
       }
     },
     "sponsored": "Quảng cáo",
@@ -3058,6 +3064,30 @@
     "whoToFollow": {
       "openToWork": "Sẵn sàng nhận việc",
       "title": "Gợi ý theo dõi"
+    },
+    "featuredCourses": {
+      "title": "Khoá học nổi bật"
+    },
+    "upcomingEvents": {
+      "title": "Sự kiện sắp tới"
+    },
+    "explore": {
+      "viewAll": "Xem tất cả",
+      "trending": {
+        "title": "Đang nổi bật",
+        "engagement": "{likes} thích · {comments} bình luận",
+        "empty": {
+          "title": "Chưa có bài nào nổi bật",
+          "description": "Bảng nổi bật được làm mới mỗi 15 phút. Ghé lại sau nhé."
+        },
+        "error": {
+          "title": "Không tải được bài nổi bật."
+        }
+      },
+      "feed": {
+        "title": "Bảng tin cộng đồng",
+        "tabsAria": "Phạm vi bảng tin"
+      }
     }
   },
   "languages": {
@@ -4056,7 +4086,8 @@
         "continue": "Tiếp tục học",
         "quest": "Nhiệm vụ hôm nay",
         "streak": "Chuỗi tuần này",
-        "goals": "Mục tiêu tuần"
+        "goals": "Mục tiêu tuần",
+        "contributions": "Đóng góp"
       },
       "continue": {
         "empty": "Chưa có khóa học nào để tiếp tục",
@@ -4101,7 +4132,8 @@
         "targetValue": "Mục tiêu {target}",
         "empty": "Chưa đặt mục tiêu tuần nào",
         "progress": "{label} · {current}/{target}",
-        "summary": "Đạt {percent}% mục tiêu tuần · {completed}/{total} hoàn thành"
+        "summary": "Đạt {percent}% mục tiêu tuần · {completed}/{total} hoàn thành",
+        "progressValue": "{current}/{target}"
       },
       "rewardBalance": "{count, number} xu",
       "identityStats": {
@@ -4130,7 +4162,12 @@
         "passedCount": "{count} người đã vượt qua"
       },
       "contributions": {
-        "heading": "Hoạt động học"
+        "heading": "Hoạt động học",
+        "summary": "{xp, number} XP trong {weeks} tuần qua",
+        "empty": "Chưa có hoạt động học nào trong {weeks} tuần qua",
+        "cellLabel": "{date}: {xp} XP",
+        "less": "Ít",
+        "more": "Nhiều"
       }
     }
   },
@@ -5930,7 +5967,60 @@
       "skillsUnresolved": "{count} kỹ năng của môn chưa có trong danh mục kỹ năng.",
       "signInTitle": "Đăng nhập để xem dữ liệu nghề nghiệp.",
       "signIn": "Đăng nhập",
-      "sectionError": "Không tải được mục này."
+      "sectionError": "Không tải được mục này.",
+      "tracks": {
+        "BACKEND": "Backend",
+        "FRONTEND": "Frontend",
+        "MOBILE": "Mobile",
+        "AI": "AI",
+        "DATA": "Dữ liệu",
+        "DEVOPS": "DevOps"
+      },
+      "skillCategories": {
+        "LANGUAGE": "Ngôn ngữ",
+        "FRAMEWORK": "Framework",
+        "DATABASE": "Cơ sở dữ liệu",
+        "DEVOPS": "DevOps",
+        "SOFT_SKILL": "Kỹ năng mềm",
+        "CS_FOUNDATION": "Nền tảng khoa học máy tính",
+        "TOOL": "Công cụ",
+        "DOMAIN": "Nghiệp vụ"
+      },
+      "admin": {
+        "title": "Quản trị nội dung nghề nghiệp",
+        "hint": "Chỉ hiện với người có quyền quản trị career. Mọi thay đổi ở đây áp dụng cho toàn nền tảng, không riêng môn này.",
+        "skillTitle": "Thêm kỹ năng",
+        "skillMapHint": "Kỹ năng mới vào danh mục chung. Việc gắn kỹ năng vào môn này chưa có API — backend phải map thì mục Kỹ năng liên quan mới hiện.",
+        "slugLabel": "Slug (chữ thường, nối bằng dấu -)",
+        "skillNameLabel": "Tên kỹ năng",
+        "categoryLabel": "Nhóm kỹ năng",
+        "levelsHint": "Thang cấp độ — mỗi dòng một cấp: tên | điểm ngưỡng",
+        "levelsLabel": "Thang cấp độ",
+        "levelsPlaceholder": "Cơ bản | 0",
+        "levelsParsed": "Nhận diện {count} cấp hợp lệ",
+        "createSkill": "Tạo kỹ năng",
+        "skillCreated": "Đã tạo kỹ năng.",
+        "roadmapTitle": "Thêm lộ trình",
+        "roadmapTitleLabel": "Tên lộ trình",
+        "trackLabel": "Hướng nghề (không bắt buộc)",
+        "roadmapDraftHint": "Lộ trình tạo ra ở trạng thái nháp; phải xuất bản mới hiện và mới theo được.",
+        "createRoadmap": "Tạo lộ trình",
+        "roadmapCreated": "Đã tạo lộ trình (bản nháp).",
+        "roadmapPublished": "Đã xuất bản lộ trình.",
+        "draftBadge": "Bản nháp — chưa hiện với học viên",
+        "publish": "Xuất bản",
+        "opportunityTitle": "Đăng tin cơ hội",
+        "opportunityFieldsHint": "API tạo tin chỉ nhận loại, tiêu đề và mô tả. Công ty, hướng nghề, nơi làm và hạn nộp phải do backend bổ sung.",
+        "opportunityTitleLabel": "Tiêu đề tin",
+        "opportunityDescriptionLabel": "Mô tả",
+        "opportunityDraftHint": "Tin tạo ra ở trạng thái nháp; phải xuất bản mới nhận được ứng tuyển.",
+        "createOpportunity": "Đăng tin",
+        "opportunityCreated": "Đã tạo tin (bản nháp).",
+        "opportunityPublished": "Đã xuất bản tin.",
+        "draftsTitle": "Tin nháp chờ xuất bản",
+        "draftsEmpty": "Không có tin nháp nào.",
+        "draftsError": "Không tải được danh sách tin nháp."
+      }
     },
     "membership": {
       "join": "Tham gia môn học",
@@ -6802,7 +6892,23 @@
       "escalateFailed": "Không chuyển cấp được báo cáo. Vui lòng thử lại.",
       "openTarget": "Mở nội dung bị báo cáo",
       "escalateAlready": "Báo cáo này đã được chuyển cấp trước đó.",
-      "escalatedTag": "Đã chuyển cấp"
+      "escalatedTag": "Đã chuyển cấp",
+      "targetType": {
+        "POST": "Bài viết",
+        "COMMENT": "Bình luận",
+        "USER": "Người dùng"
+      },
+      "sourceType": {
+        "REPORT": "Thành viên báo cáo",
+        "AI": "Hệ thống AI"
+      },
+      "priorityLevel": {
+        "low": "Ưu tiên thấp",
+        "normal": "Ưu tiên thường",
+        "high": "Ưu tiên cao"
+      },
+      "reportedAt": "Đưa vào hàng chờ {time}",
+      "targetNotLinkable": "Chưa mở trực tiếp được đối tượng này."
     },
     "states": {
       "retry": "Thử lại"
@@ -7552,7 +7658,10 @@
       "scorecardEmptyTitle": "Chưa chấm điểm",
       "scorecardEmptyBody": "Phiên này chưa được chấm. Quay lại luyện tập để nộp bài.",
       "entryTitle": "Luyện phỏng vấn",
-      "entrySubtitle": "Luyện phỏng vấn mô phỏng có FrosTES chấm điểm"
+      "entrySubtitle": "Luyện phỏng vấn mô phỏng có FrosTES chấm điểm",
+      "aiDownTitle": "Trợ lý AI đang không khả dụng",
+      "aiDownBody": "Chưa sinh được câu hỏi vì dịch vụ AI đang gián đoạn. Vui lòng quay lại sau ít phút.",
+      "aiDownGradeBody": "Chưa chấm được bài vì dịch vụ AI đang gián đoạn. Câu trả lời của bạn vẫn được giữ — hãy thử nộp lại sau ít phút."
     },
     "courseInterview": {
       "title": "Phỏng vấn FrosTES",
@@ -7972,5 +8081,13 @@
     "heading3": "Đề mục phụ",
     "image": "Chèn ảnh",
     "imageAlt": "Ảnh"
+  },
+  "verifiedBadge": {
+    "role": {
+      "superAdmin": "Quản trị cấp cao",
+      "admin": "Quản trị viên",
+      "moderator": "Kiểm duyệt viên"
+    },
+    "description": "Tài khoản nhân sự chính thức của FTES, đã được xác minh."
   }
 }

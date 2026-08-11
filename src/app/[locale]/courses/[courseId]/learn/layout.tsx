@@ -41,7 +41,6 @@ const LearnLayout = ({ children }: PropsWithChildren) => {
     const isChallenge = segments.includes("challenges")
     const isMindMap = segments[0] === "mind-map"
     const isMockInterview = segments[0] === "mock-interview"
-    const isInterview = segments[0] === "interview"
     // the lesson reader is a real `contents/<id>` route (not the challenge sub-route)
     const isLessonReader = isModules && segments.includes("contents") && !isChallenge
     // the content dashboard = the course "home" (content route, not a lesson/module page)
@@ -88,7 +87,7 @@ const LearnLayout = ({ children }: PropsWithChildren) => {
             <ContentAiFab />
             <ContentAiSelectionAsk />
             <ContentAiAnchoredChat />
-            <LearnShell navRail={navRail} leftRail={leftRail} rightRail={rightRail} fullBleed={isMindMap || isMockInterview || isInterview}>
+            <LearnShell navRail={navRail} leftRail={leftRail} rightRail={rightRail} fullBleed={isMindMap || isMockInterview}>
                 {children}
             </LearnShell>
         </>

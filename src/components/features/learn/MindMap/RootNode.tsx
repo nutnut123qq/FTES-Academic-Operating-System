@@ -49,20 +49,27 @@ const CompletionRing = ({ percent }: { percent: number }) => {
 }
 
 /**
- * Custom course-root node: shows the SUBJECT CODE (e.g. "CSD201") — not the long,
- * uneven course title — over the overall completion ring. A source handle on EACH side
- * (left + right) lets the tree branch out to the sections on both sides: a right-branch
- * section links from the root's RIGHT handle, a left-branch one from its LEFT — so each
- * connector leaves the root flush on the side it heads toward.
+ * Custom course-root node: shows the FULL COURSE TITLE (e.g. "MAE101 - Toán Cao Cấp Cho
+ * Lập Trình") over the overall completion ring — no acronym, since an abbreviation reads
+ * as noise ("M-TCCC"). A long title WRAPS over up to 3 lines and is clamped there; the
+ * box is fixed at `w-[300px] min-h-[200px]`, which is exactly `NODE_SIZE.root` in
+ * `build.ts`, so the layout's gap maths still matches what is painted.
+ *
+ * A source handle on EACH side (left + right) lets the tree branch out to the sections on
+ * both sides: a right-branch section links from the root's RIGHT handle, a left-branch one
+ * from its LEFT — so each connector leaves the root flush on the side it heads toward.
  */
 const MindMapRootNodeBase = ({ data }: NodeProps) => {
     const { label, completionPercent } = data as MindMapNodeData
     return (
-        <div className="flex min-h-[128px] w-[240px] flex-col items-center justify-center gap-3 rounded-3xl border border-separator bg-surface px-4 py-4 text-center shadow-sm">
+        <div className="flex min-h-[200px] w-[300px] flex-col items-center justify-center gap-3 rounded-3xl border border-separator bg-surface px-4 py-4 text-center shadow-sm">
             {typeof completionPercent === "number" ? (
                 <CompletionRing percent={completionPercent} />
             ) : null}
-            <div className="max-w-full truncate text-2xl font-bold tracking-wide text-foreground">
+            <div
+                className="line-clamp-3 max-w-full break-words text-lg font-bold leading-snug text-foreground"
+                title={label}
+            >
                 {label}
             </div>
             <Handle

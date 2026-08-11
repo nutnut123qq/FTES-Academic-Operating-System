@@ -8,6 +8,7 @@ import { usePostSaveMockInterviewAnswerSwr } from "@/hooks/swr/api/rest/mutation
 import { usePostSyncMockInterviewTurnsSwr } from "@/hooks/swr/api/rest/mutations/usePostSyncMockInterviewTurnsSwr"
 import { usePostGradeMockInterviewSessionSwr } from "@/hooks/swr/api/rest/mutations/usePostGradeMockInterviewSessionSwr"
 import type { ScorecardView } from "@/modules/api/rest/mockinterview"
+import { isAiDownError } from "./errors"
 import type { ActiveSession } from "./index"
 
 /** Props for {@link SessionRunner}. */
@@ -40,7 +41,9 @@ export const SessionRunner = ({ session, onGraded, onCancel }: SessionRunnerProp
     const total = session.seedTopics.length
     const [answers, setAnswers] = useState<Record<number, string>>(initialAnswers)
     const [index, setIndex] = useState<number>(Math.min(Math.max(session.initialIndex, 0), total - 1))
-    const [failed, setFailed] = useState(false)
+    // null = no error; "aiDown" = the AI grader is unreachable (nothing the learner can fix by
+    // retrying now); "generic" = everything else → the plain retry line.
+    const [failure, setFailure] = useState<"aiDown" | "generic" | null>(null)
 
     const topic = session.seedTopics[index]
     const isLast = index === total - 1
@@ -63,7 +66,7 @@ export const SessionRunner = ({ session, onGraded, onCancel }: SessionRunnerProp
     }
 
     const submit = async () => {
-        setFailed(false)
+        setFailure(null)
         try {
             const turns = session.seedTopics.map((_, i) => ({
                 questionIndex: i,
@@ -72,8 +75,8 @@ export const SessionRunner = ({ session, onGraded, onCancel }: SessionRunnerProp
             await sync.trigger({ sessionId: session.sessionId, request: { turns, questionIndex: index } })
             const card = await grade.trigger(session.sessionId)
             onGraded(card)
-        } catch {
-            setFailed(true)
+        } catch (error) {
+            setFailure(isAiDownError(error) ? "aiDown" : "generic")
         }
     }
 
@@ -104,7 +107,13 @@ export const SessionRunner = ({ session, onGraded, onCancel }: SessionRunnerProp
                 />
             </TextField>
 
-            {failed ? (
+            {failure === "aiDown" ? (
+                <div className="flex flex-col gap-2 rounded-2xl border border-warning bg-warning/10 p-4">
+                    <Typography type="body-sm" weight="semibold">{t("mockInterview.aiDownTitle")}</Typography>
+                    <Typography type="body-xs" color="muted">{t("mockInterview.aiDownGradeBody")}</Typography>
+                </div>
+            ) : null}
+            {failure === "generic" ? (
                 <Typography type="body-xs" className="text-danger">{t("mockInterview.gradeFailed")}</Typography>
             ) : null}
 

@@ -3,10 +3,11 @@
 import React from "react"
 import { Button, Chip, Skeleton, Typography } from "@heroui/react"
 import { ArrowSquareOutIcon } from "@phosphor-icons/react"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Link } from "@/i18n/navigation"
 import { useHasPermission } from "@/hooks/useHasPermission"
+import { formatRelativeTime } from "../hooks/relativeTime"
 import { useQueryReportsSwr } from "../hooks/useQueryReportsSwr"
 import { useMutateModerationDecisionSwr } from "../hooks/useMutateModerationDecisionSwr"
 import {
@@ -44,8 +45,12 @@ const ModerationSkeleton = () => (
  * is gated off (no 403 spam) and the empty state is shown. Decisions
  * optimistically drop the row and roll back on failure.
  *
- * A POST target's id links to the reported post itself (new tab) so the moderator
- * never decides blind.
+ * The queue payload is ids + enum tokens ONLY, so no raw uuid reaches the screen: the
+ * ids stay in the React `key`, in the write calls and inside the target link's href,
+ * while the card itself renders translated tokens (target type / source / priority) plus
+ * "reported N ago". A POST target additionally gets a link to the reported post (new tab)
+ * so the moderator never decides blind; a COMMENT or USER row cannot be linked (see the
+ * comment at the link site) and says so instead.
  *
  * Escalation (`POST /community/reports/{reportId}/escalate`) addresses the REPORT, not
  * the queue row, so the action is offered ONLY on rows whose `reportId` came back non-null
@@ -56,11 +61,27 @@ const ModerationSkeleton = () => (
  */
 export const CommunityModeration = () => {
     const t = useTranslations("communityHub")
+    const locale = useLocale()
     const canModerate = useHasPermission("community.moderate")
     const { reports, isLoading, error, mutate } = useQueryReportsSwr(canModerate)
     const decide = useMutateModerationDecisionSwr()
     const escalate = useMutateEscalateReportSwr()
     const isEscalated = useEscalatedReports()
+
+    // Raw BE enum tokens -> reader-facing labels. The fallback is the TOKEN itself (a
+    // word, never an id), so an enum value we have no translation for still reads.
+    const targetTypeLabel = (type: string) =>
+        t.has(`moderation.targetType.${type}`) ? t(`moderation.targetType.${type}`) : type
+    const sourceLabel = (source: string) =>
+        t.has(`moderation.sourceType.${source}`) ? t(`moderation.sourceType.${source}`) : source
+    // BE priority is a Short: 0 = AI thinks it is clean, 1 = a user report, 2 = AI flagged
+    // a violation. Compared with >= / === so an unforeseen value still lands on a level.
+    const priorityLabel = (priority: number) =>
+        t(
+            `moderation.priorityLevel.${
+                priority >= 2 ? "high" : priority === 1 ? "normal" : "low"
+            }`,
+        )
 
     return (
         <div className="flex flex-col gap-3">
@@ -82,83 +103,98 @@ export const CommunityModeration = () => {
                 }}
             >
                 <div className="flex flex-col gap-3">
-                    {reports.map((report) => (
-                        <div
-                            key={report.id}
-                            className="flex flex-col gap-3 rounded-2xl border border-separator p-4"
-                        >
-                            <div className="flex flex-col gap-1">
-                                <div className="flex items-center gap-2">
-                                    <Typography type="body-sm" weight="medium">
-                                        {t("moderation.targetLabel", { type: report.targetType })}
-                                    </Typography>
-                                    {typeof report.priority === "number" ? (
-                                        <Chip size="sm" variant="soft" color="warning">
-                                            {t("moderation.priority", { priority: report.priority })}
-                                        </Chip>
-                                    ) : null}
-                                </div>
-                                {/* a POST target opens in a NEW TAB: the moderator keeps
-                                    the queue (and its optimistic state) mounted while
-                                    reviewing the reported content */}
-                                {report.targetType === "POST" ? (
-                                    <Link
-                                        href={`/community/${report.targetId}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex max-w-full items-center gap-1 text-accent hover:underline"
-                                        aria-label={t("moderation.openTarget")}
-                                    >
-                                        <Typography type="body-xs" truncate className="text-accent">
-                                            {report.targetId}
+                    {reports.map((report) => {
+                        const reportedAt = formatRelativeTime(report.createdAt, locale)
+                        return (
+                            <div
+                                key={report.id}
+                                className="flex flex-col gap-3 rounded-2xl border border-separator p-4"
+                            >
+                                <div className="flex flex-col gap-1">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <Typography type="body-sm" weight="medium">
+                                            {t("moderation.targetLabel", {
+                                                type: targetTypeLabel(report.targetType),
+                                            })}
                                         </Typography>
-                                        <ArrowSquareOutIcon
-                                            aria-hidden
-                                            focusable="false"
-                                            className="size-3.5 shrink-0"
-                                        />
-                                    </Link>
-                                ) : (
-                                    <Typography type="body-xs" color="muted" truncate>
-                                        {report.targetId}
+                                        {typeof report.priority === "number" ? (
+                                            <Chip size="sm" variant="soft" color="warning">
+                                                {priorityLabel(report.priority)}
+                                            </Chip>
+                                        ) : null}
+                                    </div>
+                                    <Typography type="body-xs" color="muted">
+                                        {t("moderation.source", {
+                                            source: sourceLabel(report.source),
+                                        })}
                                     </Typography>
-                                )}
-                                <Typography type="body-xs" color="muted">
-                                    {t("moderation.source", { source: report.source })}
-                                </Typography>
-                            </div>
-                            <div className="flex gap-2">
-                                <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onPress={() => void decide(report.id, "APPROVE")}
-                                >
-                                    {t("moderation.keep")}
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    variant="secondary"
-                                    onPress={() => void decide(report.id, "REMOVE")}
-                                >
-                                    {t("moderation.remove")}
-                                </Button>
-                                {report.reportId && !isEscalated(report.reportId) ? (
+                                    {reportedAt ? (
+                                        <Typography type="body-xs" color="muted">
+                                            {t("moderation.reportedAt", { time: reportedAt })}
+                                        </Typography>
+                                    ) : null}
+                                    {/* Only a POST can be linked: `/community/[postId]` takes the
+                                        reported object's own id. A COMMENT id needs its postId to
+                                        build a url and a USER id cannot address `/u/[username]`
+                                        (that route keys off the username) — both need the BE to
+                                        widen the queue payload, so those rows say so instead of
+                                        dumping the uuid on screen. The link opens in a NEW TAB so
+                                        the queue (and its optimistic state) stays mounted. */}
+                                    {report.targetType === "POST" ? (
+                                        <Link
+                                            href={`/community/${report.targetId}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex max-w-full items-center gap-1 text-accent hover:underline"
+                                        >
+                                            <Typography type="body-xs" truncate className="text-accent">
+                                                {t("moderation.openTarget")}
+                                            </Typography>
+                                            <ArrowSquareOutIcon
+                                                aria-hidden
+                                                focusable="false"
+                                                className="size-3.5 shrink-0"
+                                            />
+                                        </Link>
+                                    ) : (
+                                        <Typography type="body-xs" color="muted">
+                                            {t("moderation.targetNotLinkable")}
+                                        </Typography>
+                                    )}
+                                </div>
+                                <div className="flex flex-wrap gap-2">
                                     <Button
                                         size="sm"
                                         variant="ghost"
-                                        onPress={() => void escalate(report.reportId as string)}
+                                        onPress={() => void decide(report.id, "APPROVE")}
                                     >
-                                        {t("moderation.escalate")}
+                                        {t("moderation.keep")}
                                     </Button>
-                                ) : null}
-                                {isEscalated(report.reportId) ? (
-                                    <Chip size="sm" variant="soft" color="accent">
-                                        {t("moderation.escalatedTag")}
-                                    </Chip>
-                                ) : null}
+                                    <Button
+                                        size="sm"
+                                        variant="secondary"
+                                        onPress={() => void decide(report.id, "REMOVE")}
+                                    >
+                                        {t("moderation.remove")}
+                                    </Button>
+                                    {report.reportId && !isEscalated(report.reportId) ? (
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            onPress={() => void escalate(report.reportId as string)}
+                                        >
+                                            {t("moderation.escalate")}
+                                        </Button>
+                                    ) : null}
+                                    {isEscalated(report.reportId) ? (
+                                        <Chip size="sm" variant="soft" color="accent">
+                                            {t("moderation.escalatedTag")}
+                                        </Chip>
+                                    ) : null}
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        )
+                    })}
                 </div>
             </AsyncContent>
         </div>

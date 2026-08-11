@@ -34,6 +34,12 @@ export interface CatalogCourseCardProps extends WithClassNames<undefined> {
  * course with no resolvable mentor or no description simply shows fewer rows). The
  * deeper "what you'll learn" bullets still live in {@link CourseHoverPreview}.
  *
+ * Neighbours in a grid/shelf must line up, so the optional rows are never allowed to
+ * shift the fixed ones: the card is `h-full`, the title row reserves two lines
+ * (`min-h-14`) so the meta row always starts at the same y, and mentor + CTA form a
+ * single bottom-pinned group (one `mt-auto`) so the slack collects in the middle
+ * instead of between them. Keep {@link CatalogCourseCardSkeleton} on these same boxes.
+ *
  * @param props - {@link CatalogCourseCardProps}
  */
 export const CatalogCourseCard = ({ course, className }: CatalogCourseCardProps) => {
@@ -50,8 +56,10 @@ export const CatalogCourseCard = ({ course, className }: CatalogCourseCardProps)
             href={isEnrolled ? `/courses/${course.id}/learn` : `/courses/${course.id}`}
             className={cn(
                 // ponytail: card pads around an INSET cover (reference layout) and is
-                // barely rounded — rounded-lg (12px), down from rounded-3xl (36px)
-                "group flex flex-col rounded-lg border border-separator p-3 no-underline transition-colors hover:bg-default/40",
+                // barely rounded — rounded-lg (12px), down from rounded-3xl (36px).
+                // h-full is baked in (not left to the caller) so a card always fills
+                // its grid/shelf cell — neighbours share one height, never staggered.
+                "group flex h-full flex-col rounded-lg border border-separator p-3 no-underline transition-colors hover:bg-default/40",
                 className,
             )}
         >
@@ -94,8 +102,12 @@ export const CatalogCourseCard = ({ course, className }: CatalogCourseCardProps)
             <div className="flex flex-1 flex-col gap-1.5 pt-3">
                 {/* title — what people scan. The raw BE course code (an internal identifier
                     like DEMO-JAVA-201 / *_PACKAGE_MAIN that can even mismatch the title) is
-                    intentionally NOT shown on the catalog card. */}
-                <div className="flex items-start justify-between gap-2">
+                    intentionally NOT shown on the catalog card.
+                    The row reserves a FIXED two-line box (min-h-14 = 2 × the `body`
+                    line-height of 28px) whether the title wraps or not, so every card in a
+                    row starts its meta row at the same y — a 1-line title used to pull the
+                    whole stack up and stagger the neighbours. */}
+                <div className="flex min-h-14 items-start justify-between gap-2">
                     <Typography weight="semibold" className="line-clamp-2 min-w-0 flex-1">
                         {course.name}
                     </Typography>
@@ -150,47 +162,53 @@ export const CatalogCourseCard = ({ course, className }: CatalogCourseCardProps)
                     </Typography>
                 ) : null}
 
-                {/* mentor — avatar (or initial fallback) + name, only when present */}
-                {course.mentorName ? (
-                    <div className="flex items-center gap-1.5">
-                        {course.mentorAvatarUrl ? (
-                            // plain <img> (avatar delivery URL) — no next/image optimizer config,
-                            // mirrors PostMediaGrid's remote-image handling.
-                            <img
-                                src={course.mentorAvatarUrl}
-                                alt=""
-                                className="size-5 shrink-0 rounded-full object-cover"
-                            />
-                        ) : (
-                            <div className="flex size-5 shrink-0 items-center justify-center rounded-full bg-accent/15 text-[10px] font-semibold text-accent">
-                                {course.mentorName.charAt(0).toUpperCase()}
-                            </div>
-                        )}
-                        <Typography type="body-xs" color="muted" truncate>
-                            {course.mentorName}
-                        </Typography>
-                    </div>
-                ) : null}
+                {/* mentor + CTA are ONE bottom-pinned group (a single mt-auto): the
+                    optional description above absorbs the slack, so the mentor row sits at
+                    a fixed offset from the footer on every card instead of drifting with
+                    however many rows happen to render. */}
+                <div className="mt-auto flex flex-col gap-1.5">
+                    {/* mentor — avatar (or initial fallback) + name, only when present */}
+                    {course.mentorName ? (
+                        <div className="flex items-center gap-1.5">
+                            {course.mentorAvatarUrl ? (
+                                // plain <img> (avatar delivery URL) — no next/image optimizer config,
+                                // mirrors PostMediaGrid's remote-image handling.
+                                <img
+                                    src={course.mentorAvatarUrl}
+                                    alt=""
+                                    className="size-5 shrink-0 rounded-full object-cover"
+                                />
+                            ) : (
+                                <div className="flex size-5 shrink-0 items-center justify-center rounded-full bg-accent/15 text-[10px] font-semibold text-accent">
+                                    {course.mentorName.charAt(0).toUpperCase()}
+                                </div>
+                            )}
+                            <Typography type="body-xs" color="muted" truncate>
+                                {course.mentorName}
+                            </Typography>
+                        </div>
+                    ) : null}
 
-                {/* footer: one CTA cue — enrolled → "Tiếp tục học", else "Xem khóa học".
-                    The whole card is the link, so the caret just slides on hover. */}
-                <div className="mt-auto flex items-center justify-end border-t border-separator pt-2">
-                    <span
-                        className={cn(
-                            "inline-flex shrink-0 items-center gap-1 text-sm font-medium",
-                            isEnrolled ? "text-success" : "text-accent",
-                        )}
-                    >
-                        {isEnrolled ? (
-                            <CheckCircleIcon aria-hidden focusable="false" weight="fill" className="size-4" />
-                        ) : null}
-                        {isEnrolled ? t("courses.continueLearning") : t("courses.viewCourse")}
-                        <CaretRightIcon
-                            aria-hidden
-                            focusable="false"
-                            className="size-4 transition-transform group-hover:translate-x-0.5"
-                        />
-                    </span>
+                    {/* footer: one CTA cue — enrolled → "Tiếp tục học", else "Xem khóa học".
+                        The whole card is the link, so the caret just slides on hover. */}
+                    <div className="flex items-center justify-end border-t border-separator pt-2">
+                        <span
+                            className={cn(
+                                "inline-flex shrink-0 items-center gap-1 text-sm font-medium",
+                                isEnrolled ? "text-success" : "text-accent",
+                            )}
+                        >
+                            {isEnrolled ? (
+                                <CheckCircleIcon aria-hidden focusable="false" weight="fill" className="size-4" />
+                            ) : null}
+                            {isEnrolled ? t("courses.continueLearning") : t("courses.viewCourse")}
+                            <CaretRightIcon
+                                aria-hidden
+                                focusable="false"
+                                className="size-4 transition-transform group-hover:translate-x-0.5"
+                            />
+                        </span>
+                    </div>
                 </div>
             </div>
         </Link>

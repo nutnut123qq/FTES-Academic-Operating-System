@@ -38,7 +38,9 @@
           "label": "Ask the AI",
           "description": "Open the AI hub: chat and every tool"
         }
-      }
+      },
+      "subjectTitle": "FrosTES tools for this subject",
+      "subjectSubtitle": "Pick a tool to open in the subject space."
     }
   },
   "onboarding": {
@@ -701,10 +703,10 @@
     },
     "teaching": {
       "title": "Courses I teach",
-      "subtitle": "Your courses — draft or published. Open one to manage its FrosTES interview.",
+      "subtitle": "Your courses — draft or published. Open a course to view its learning content.",
       "empty": "You don't own any course yet",
       "browse": "Browse courses",
-      "manageHint": "Open to manage the FrosTES interview →"
+      "manageHint": "Open to view course content →"
     },
     "status": {
       "PUBLISHED": "Published",
@@ -2881,7 +2883,11 @@
       },
       "topLearners": {
         "title": "Top learners",
-        "xp": "{points} XP"
+        "xp": "{points} XP",
+        "you": "You",
+        "emptyTitle": "Nobody on the leaderboard yet",
+        "emptyDescription": "The season has just started. Complete a lesson to be the first to score.",
+        "error": "Could not load the leaderboard."
       }
     },
     "sponsored": "Sponsored",
@@ -3049,6 +3055,30 @@
     "whoToFollow": {
       "openToWork": "Open to work",
       "title": "Who to follow"
+    },
+    "featuredCourses": {
+      "title": "Featured courses"
+    },
+    "upcomingEvents": {
+      "title": "Upcoming events"
+    },
+    "explore": {
+      "viewAll": "View all",
+      "trending": {
+        "title": "Trending now",
+        "engagement": "{likes} likes · {comments} comments",
+        "empty": {
+          "title": "Nothing is trending yet",
+          "description": "The trending list refreshes every 15 minutes. Check back soon."
+        },
+        "error": {
+          "title": "Could not load trending posts."
+        }
+      },
+      "feed": {
+        "title": "Community feed",
+        "tabsAria": "Feed scope"
+      }
     }
   },
   "languages": {
@@ -4056,7 +4086,8 @@
         "continue": "Continue learning",
         "quest": "Today's quest",
         "streak": "This week's streak",
-        "goals": "Weekly goals"
+        "goals": "Weekly goals",
+        "contributions": "Contributions"
       },
       "continue": {
         "empty": "No courses to resume yet",
@@ -4101,7 +4132,8 @@
         "targetValue": "Target {target}",
         "empty": "No weekly goals set yet",
         "progress": "{label} · {current}/{target}",
-        "summary": "{percent}% of weekly goals · {completed}/{total} done"
+        "summary": "{percent}% of weekly goals · {completed}/{total} done",
+        "progressValue": "{current}/{target}"
       },
       "rewardBalance": "{count, number} coins",
       "identityStats": {
@@ -4130,7 +4162,12 @@
         "passedCount": "{count} people passed"
       },
       "contributions": {
-        "heading": "Learning activity"
+        "heading": "Learning activity",
+        "summary": "{xp, number} XP in the last {weeks} weeks",
+        "empty": "No learning activity in the last {weeks} weeks",
+        "cellLabel": "{date}: {xp} XP",
+        "less": "Less",
+        "more": "More"
       }
     }
   },
@@ -5930,7 +5967,60 @@
       "skillsUnresolved": "{count} skill(s) mapped to this subject are missing from the skill catalogue.",
       "signInTitle": "Sign in to see the career data.",
       "signIn": "Sign in",
-      "sectionError": "Couldn't load this section."
+      "sectionError": "Couldn't load this section.",
+      "tracks": {
+        "BACKEND": "Backend",
+        "FRONTEND": "Frontend",
+        "MOBILE": "Mobile",
+        "AI": "AI",
+        "DATA": "Data",
+        "DEVOPS": "DevOps"
+      },
+      "skillCategories": {
+        "LANGUAGE": "Language",
+        "FRAMEWORK": "Framework",
+        "DATABASE": "Database",
+        "DEVOPS": "DevOps",
+        "SOFT_SKILL": "Soft skill",
+        "CS_FOUNDATION": "CS foundation",
+        "TOOL": "Tool",
+        "DOMAIN": "Domain"
+      },
+      "admin": {
+        "title": "Career content admin",
+        "hint": "Visible to career managers only. Everything here applies platform-wide, not just to this subject.",
+        "skillTitle": "Add a skill",
+        "skillMapHint": "A new skill joins the shared catalogue. Mapping it to this subject has no API yet — the backend must do it before it shows in Related skills.",
+        "slugLabel": "Slug (lowercase, dash-separated)",
+        "skillNameLabel": "Skill name",
+        "categoryLabel": "Category",
+        "levelsHint": "Level ladder — one rung per line: name | threshold",
+        "levelsLabel": "Level ladder",
+        "levelsPlaceholder": "Beginner | 0",
+        "levelsParsed": "{count} valid levels detected",
+        "createSkill": "Create skill",
+        "skillCreated": "Skill created.",
+        "roadmapTitle": "Add a roadmap",
+        "roadmapTitleLabel": "Roadmap title",
+        "trackLabel": "Track (optional)",
+        "roadmapDraftHint": "A new roadmap starts as a draft; publish it before it is listed or can be followed.",
+        "createRoadmap": "Create roadmap",
+        "roadmapCreated": "Roadmap created as a draft.",
+        "roadmapPublished": "Roadmap published.",
+        "draftBadge": "Draft — not visible to learners yet",
+        "publish": "Publish",
+        "opportunityTitle": "Post an opportunity",
+        "opportunityFieldsHint": "The create API only accepts type, title and description. Company, track, location and deadline must be filled in by the backend.",
+        "opportunityTitleLabel": "Opportunity title",
+        "opportunityDescriptionLabel": "Description",
+        "opportunityDraftHint": "A new posting starts as a draft; publish it before it can receive applications.",
+        "createOpportunity": "Create posting",
+        "opportunityCreated": "Posting created as a draft.",
+        "opportunityPublished": "Posting published.",
+        "draftsTitle": "Drafts waiting to be published",
+        "draftsEmpty": "No drafts.",
+        "draftsError": "Could not load the drafts."
+      }
     },
     "membership": {
       "join": "Join subject",
@@ -6802,7 +6892,23 @@
       "escalateFailed": "Could not escalate the report. Please try again.",
       "openTarget": "Open reported content",
       "escalateAlready": "This report has already been escalated.",
-      "escalatedTag": "Escalated"
+      "escalatedTag": "Escalated",
+      "targetType": {
+        "POST": "Post",
+        "COMMENT": "Comment",
+        "USER": "User"
+      },
+      "sourceType": {
+        "REPORT": "Member report",
+        "AI": "AI system"
+      },
+      "priorityLevel": {
+        "low": "Low priority",
+        "normal": "Normal priority",
+        "high": "High priority"
+      },
+      "reportedAt": "Queued {time}",
+      "targetNotLinkable": "This item can't be opened directly yet."
     },
     "states": {
       "retry": "Try again"
@@ -7552,7 +7658,10 @@
       "scorecardEmptyTitle": "Not graded yet",
       "scorecardEmptyBody": "This session hasn't been graded. Return to practice to submit answers.",
       "entryTitle": "Mock interview",
-      "entrySubtitle": "FrosTES-graded mock interview practice"
+      "entrySubtitle": "FrosTES-graded mock interview practice",
+      "aiDownTitle": "The AI assistant is unavailable",
+      "aiDownBody": "We couldn't generate questions because the AI service is down. Please come back in a few minutes.",
+      "aiDownGradeBody": "We couldn't grade your session because the AI service is down. Your answers are kept — try submitting again in a few minutes."
     },
     "courseInterview": {
       "title": "FrosTES interview",
@@ -7972,5 +8081,13 @@
     "heading3": "Subheading",
     "image": "Insert image",
     "imageAlt": "Image"
+  },
+  "verifiedBadge": {
+    "role": {
+      "superAdmin": "Super admin",
+      "admin": "Administrator",
+      "moderator": "Moderator"
+    },
+    "description": "Official FTES staff account, verified."
   }
 }

@@ -9,7 +9,7 @@ import { useRouter } from "@/i18n/navigation"
 import { PackageGateModal } from "@/components/features/course/PackageGateModal"
 import { useQueryLearnCourseSwr } from "../hooks/useQueryLearnCourseSwr"
 import type { LearnLesson } from "../hooks/useQueryLearnCourseSwr"
-import { buildMindMap, resolveRootCode, type MindMapNodeData } from "./build"
+import { buildMindMap, type MindMapNodeData } from "./build"
 import { resolveNodeOpen } from "./open"
 import { moduleStatus } from "./status"
 import { analyzeProgress } from "./progress"
@@ -20,7 +20,7 @@ import { MindMapProgressPanel } from "./MindMapProgressPanel"
  * Course mind map (StarCI React-Flow port, wired to FTES's own SWR learn data).
  *
  * A draggable / pannable / zoomable {@link MindMapCanvas} lays the course out as a
- * tidy tree: the SUBJECT CODE root (not the long, uneven course title) over its
+ * tidy tree: the FULL COURSE TITLE root (wrapped over up to 3 lines) over its
  * completion ring → module cards → lesson cards → exercise cards (challenges /
  * assignments). Every content node is tinted by a typed 3-state completion status
  * (completed = green, in-progress = orange, not-started = neutral). Clicking a node
@@ -47,10 +47,8 @@ export const MindMap = () => {
         [modules, currentLessonId],
     )
 
-    const subjectCode = useMemo(
-        () => resolveRootCode(header?.subjectCode, header?.title ?? "", courseId),
-        [header?.subjectCode, header?.title, courseId],
-    )
+    /** The root node's label — the FULL course title (blank → the build's "—" fallback). */
+    const courseTitle = header?.title ?? ""
 
     /**
      * Deterministic progress read-out (overall roll-up + the one recommended next
@@ -88,7 +86,7 @@ export const MindMap = () => {
     const graph = useMemo(
         () =>
             buildMindMap({
-                subjectCode,
+                courseTitle,
                 completionPercent: header?.progressPercent ?? 0,
                 modules,
                 currentLessonId,
@@ -97,7 +95,7 @@ export const MindMap = () => {
                 expandedModuleIds,
             }),
         [
-            subjectCode,
+            courseTitle,
             header?.progressPercent,
             modules,
             currentLessonId,

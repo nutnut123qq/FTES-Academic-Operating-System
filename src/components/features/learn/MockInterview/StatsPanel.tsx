@@ -14,7 +14,7 @@ import {
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { useGetMockInterviewStatsSwr } from "@/hooks/swr/api/rest/queries/useGetMockInterviewStatsSwr"
-import { VERDICT_BAR, VERDICT_ORDER } from "./constants"
+import { COURSE_UNRESOLVED, VERDICT_BAR, VERDICT_ORDER } from "./constants"
 
 /** Props for {@link StatsPanel}. */
 export interface StatsPanelProps {
@@ -46,11 +46,13 @@ export const StatsPanel = ({ courseRef }: StatsPanelProps) => {
 
     return (
         <AsyncContent
-            isLoading={!swr.data && !swr.error}
+            // courseRef rỗng = course detail chưa/không resolve → SWR key null → không bao giờ có
+            // data lẫn error. Không chặn ở đây thì skeleton quay mãi khi detail lỗi (xem COURSE_UNRESOLVED).
+            isLoading={Boolean(courseRef) && !swr.data && !swr.error}
             skeleton={<Skeleton className="h-40 w-full rounded-2xl" />}
             isEmpty={insufficient}
             emptyContent={{ title: t("mockInterview.statsEmpty") }}
-            error={!swr.data ? swr.error : undefined}
+            error={courseRef ? (!swr.data ? swr.error : undefined) : COURSE_UNRESOLVED}
             errorContent={{
                 title: t("mockInterview.errorTitle"),
                 onRetry: () => { void swr.mutate() },

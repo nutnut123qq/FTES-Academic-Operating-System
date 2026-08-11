@@ -103,7 +103,7 @@ export const CodingChallengeList = ({ subjectId, onBack }: CodingChallengeListPr
                     {t("practice.backToHub")}
                 </Button>
                 <Typography type="h5" weight="bold" className="min-w-0 flex-1">
-                    {t("practice.modules.coding.title")}
+                    {t("practice.modes.coding.title")}
                 </Typography>
             </div>
 

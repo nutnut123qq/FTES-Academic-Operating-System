@@ -353,9 +353,11 @@ const SavedLibrarySkeleton = () => (
                 key={rowIndex}
                 className="flex items-center gap-3 rounded-2xl border border-separator px-4 py-3"
             >
-                <div className="flex min-w-0 flex-1 flex-col gap-2">
-                    <Skeleton className="h-4 w-2/3 rounded-full" />
-                    <Skeleton className="h-3 w-1/3 rounded-full" />
+                {/* title (body-sm, 24px line) + context (body-xs, 20px) = 44px, the
+                    real row's text block — sized so the list doesn't jump on hydrate */}
+                <div className="flex min-w-0 flex-1 flex-col gap-1">
+                    <Skeleton className="h-5 w-2/3 rounded-full" />
+                    <Skeleton className="h-5 w-1/3 rounded-full" />
                 </div>
                 {/* trailing type-chip + unsave bookmark, mirroring the real row */}
                 <Skeleton className="h-6 w-16 rounded-full" />

@@ -6,7 +6,7 @@ import { useFormatter, useTranslations } from "next-intl"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { useGetMockInterviewAttemptsSwr } from "@/hooks/swr/api/rest/queries/useGetMockInterviewAttemptsSwr"
-import { VERDICT_COLOR } from "./constants"
+import { COURSE_UNRESOLVED, VERDICT_COLOR } from "./constants"
 
 /** Props for {@link HistoryPanel}. */
 export interface HistoryPanelProps {
@@ -26,7 +26,10 @@ export const HistoryPanel = ({ courseRef }: HistoryPanelProps) => {
 
     return (
         <AsyncContent
-            isLoading={!swr.data && !swr.error}
+            // `courseRef` blank = the course detail has not resolved, so the SWR key is null and
+            // NEITHER `data` nor `error` will ever arrive. Without this the panel would spin
+            // forever whenever that detail request fails; surface it as an error instead.
+            isLoading={Boolean(courseRef) && !swr.data && !swr.error}
             skeleton={
                 <div className="flex flex-col gap-3">
                     {[0, 1, 2].map((i) => (
@@ -36,7 +39,7 @@ export const HistoryPanel = ({ courseRef }: HistoryPanelProps) => {
             }
             isEmpty={items.length === 0}
             emptyContent={{ title: t("mockInterview.historyEmpty") }}
-            error={!swr.data ? swr.error : undefined}
+            error={courseRef ? (!swr.data ? swr.error : undefined) : COURSE_UNRESOLVED}
             errorContent={{
                 title: t("mockInterview.errorTitle"),
                 onRetry: () => { void swr.mutate() },

@@ -10,8 +10,11 @@ import {
     type MindMapNodeStatus,
 } from "./status"
 
-/** React Flow node type id for the course root (subject code + completion ring). */
+/** React Flow node type id for the course root (course title + completion ring). */
 export const ROOT_NODE_TYPE = "mindMapRoot" as const
+
+/** Shown on the root when the course has no title at all — never an empty box. */
+export const ROOT_LABEL_FALLBACK = "—"
 
 /** React Flow node type id for a content node (module / lesson / exercise). */
 export const CONTENT_NODE_TYPE = "mindMapContent" as const
@@ -22,13 +25,13 @@ export type MindMapNodeKind = "module" | "lesson" | "exercise"
 /**
  * Data carried by every mind-map node inside React Flow. Content nodes carry the
  * typed 3-state {@link MindMapNodeStatus} (the field the backend phase will feed),
- * the routing ids, and the premium `isLocked` flag; the root carries the subject
- * code + overall completion percent.
+ * the routing ids, and the premium `isLocked` flag; the root carries the course
+ * title + overall completion percent.
  */
 export interface MindMapNodeData extends Record<string, unknown> {
-    /** "root" for the subject-code node, otherwise the content level. */
+    /** "root" for the course-title node, otherwise the content level. */
     kind: "root" | MindMapNodeKind
-    /** Primary label (subject code on the root, title otherwise). */
+    /** Primary label (full course title on the root, item title otherwise). */
     label: string
     /**
      * Short subtitle shown under the title on module + lesson nodes (the section /
@@ -73,8 +76,11 @@ export interface MindMapGraph {
 
 /** Inputs the mind-map graph is laid out from. */
 export interface BuildMindMapInput {
-    /** Resolved root label — the SUBJECT CODE (or a short fallback code). */
-    subjectCode: string
+    /**
+     * The FULL COURSE TITLE shown on the root node (`header.title`). Empty / blank →
+     * the root falls back to {@link ROOT_LABEL_FALLBACK} rather than rendering a blank box.
+     */
+    courseTitle: string
     /** Overall course completion percent 0-100 (drives the root ring). */
     completionPercent: number
     /** The course module tree (already ordered). */
@@ -100,14 +106,18 @@ export interface BuildMindMapInput {
  * node's bounding box from `build()` output and assert no two cards overlap.
  */
 export const NODE_SIZE: Record<"root" | MindMapNodeKind, { w: number; h: number }> = {
-    root: { w: 240, h: 128 },
+    // The root carries the FULL course title (wrapped, clamped at 3 lines), so it is the
+    // widest + tallest card on the map: ring 76 + gap 12 + 3 title lines ≈ 75 + padding 32.
+    // Keep in sync with the `w-[300px] min-h-[200px]` box in `RootNode.tsx` — the layout
+    // converts this footprint to React Flow's top-left origin.
+    root: { w: 300, h: 200 },
     module: { w: 280, h: 100 },
     lesson: { w: 240, h: 84 },
     exercise: { w: 220, h: 64 },
 }
 
 // ---------------------------------------------------- two-sided tidy-tree geometry
-// The map is a horizontal mind map: the subject-code root sits at the origin and the
+// The map is a horizontal mind map: the course-title root sits at the origin and the
 // sections branch to the LEFT and RIGHT (balanced, alternating by order). Each branch is
 // a tidy left-to-right tree — a section's expanded lessons stack as a VERTICAL COLUMN just
 // outward of it, and each lesson's exercises stack as a further column outward again.
@@ -132,7 +142,7 @@ const ROW_GAP: Record<MindMapNodeKind, number> = {
 /**
  * Horizontal centre-to-centre distance (px) from a parent out to its child column. Each
  * clears the parent half-width + the child half-width + a gutter, so a card and its child
- * column never share x-space (root 120 → module 140 · module 140 → lesson 120 · lesson 120 → exercise 110).
+ * column never share x-space (root 150 → module 140 · module 140 → lesson 120 · lesson 120 → exercise 110).
  */
 const COL_GAP: Record<MindMapNodeKind, number> = {
     module: 360,
@@ -173,7 +183,7 @@ const edgeStyle = (isCurrent: boolean) => ({
 })
 
 /**
- * Builds a two-sided horizontal mind map of the course: the SUBJECT-CODE root at the
+ * Builds a two-sided horizontal mind map of the course: the COURSE-TITLE root at the
  * centre, section cards branching to the LEFT and RIGHT (balanced, alternating by order),
  * and — for the sections the viewer has EXPANDED — their lesson cards stacked as a VERTICAL
  * COLUMN just outward of the section, and each lesson's exercise cards stacked as a further
@@ -188,7 +198,7 @@ const edgeStyle = (isCurrent: boolean) => ({
  * ({@link moduleStatus}/{@link lessonStatus}/{@link exerciseStatus}).
  */
 export const buildMindMap = ({
-    subjectCode,
+    courseTitle,
     completionPercent,
     modules,
     currentLessonId,
@@ -350,7 +360,8 @@ export const buildMindMap = ({
     // The root sits at the centre, between the two branches.
     placeNode(rootId, "root", { x: 0, y: 0 }, {
         kind: "root",
-        label: subjectCode,
+        // Full course title — never an abbreviation, never an empty box.
+        label: courseTitle.trim() || ROOT_LABEL_FALLBACK,
         status: "notStarted",
         isLocked: false,
         isCurrent: false,
@@ -359,34 +370,4 @@ export const buildMindMap = ({
     })
 
     return { nodes, edges }
-}
-
-/**
- * Resolves the root label: the linked SUBJECT CODE when the course has one (e.g.
- * "CSD201"), otherwise a short derived course code. Using the code — not the long,
- * uneven course title — keeps the root node compact and every map visually even.
- *
- * The fallback is a stable uppercase acronym of the title's significant words
- * (capped at 6 chars), degrading to a trimmed course-id slug when the title is empty.
- */
-export const resolveRootCode = (
-    subjectCode: string | null | undefined,
-    courseTitle: string,
-    courseId: string,
-): string => {
-    const code = subjectCode?.trim()
-    if (code) {
-        return code
-    }
-    const acronym = courseTitle
-        .trim()
-        .split(/\s+/)
-        .filter(Boolean)
-        .slice(0, 6)
-        .map((word) => word[0]?.toUpperCase() ?? "")
-        .join("")
-    if (acronym.length >= 2) {
-        return acronym
-    }
-    return courseId.slice(0, 8).toUpperCase() || "—"
 }

@@ -21,6 +21,12 @@ export const metadata: Metadata = {
             { url: "/logo/LogoFtestMini.png", media: "(prefers-color-scheme: light)" },
             { url: "/logo/ftesMiniDarkMobile.png", media: "(prefers-color-scheme: dark)" },
         ],
+        // `src/app/apple-icon.png` was the StarCI pink "S" (180²) and the app-dir
+        // file convention outranks this config, so the file was deleted rather
+        // than overridden. Stopgap: the FTES blue mark, which stays legible on
+        // the black backplate iOS paints behind a transparent touch icon. It is
+        // only 80² — a real 180², opaque-background export should replace it.
+        apple: [{ url: "/logo/LogoFtestMini.png", sizes: "80x80" }],
     },
     alternates: {
         canonical: "/",
@@ -31,11 +37,15 @@ export const metadata: Metadata = {
         title: SEO_CONFIG.siteName,
         description: SEO_CONFIG.defaultDescription,
         url: "/",
+        // Without this the root share card had no image at all; localized pages
+        // already get one via `buildPageMetadata`.
+        images: [{ url: SEO_CONFIG.ogImage }],
     },
     twitter: {
         card: "summary_large_image",
         title: SEO_CONFIG.siteName,
         description: SEO_CONFIG.defaultDescription,
+        images: [SEO_CONFIG.ogImage],
     },
     robots: {
         index: true,

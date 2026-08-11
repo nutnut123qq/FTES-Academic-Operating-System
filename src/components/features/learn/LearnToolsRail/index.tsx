@@ -14,7 +14,6 @@ import {
     TreeStructureIcon,
     TrophyIcon,
     MicrophoneStageIcon,
-    CardsThreeIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
@@ -54,9 +53,8 @@ interface ToolRow {
     /**
      * Locked feature: the row shows a lock marker and, on press, opens the
      * whole-course buy flow instead of navigating. Playground / personal project
-     * are always locked (no FTES route yet); Mock interview / Interview are locked
-     * only while the viewer lacks full course access (rule
-     * premium-unlock-is-enroll-not-vip).
+     * are always locked (no FTES route yet); Mock interview is locked only while
+     * the viewer lacks full course access (rule premium-unlock-is-enroll-not-vip).
      */
     locked?: boolean
 }
@@ -120,7 +118,7 @@ const ResumeRow = ({
  * …) stays reachable while reading/watching a lesson. Opens with the course-menu
  * header ("Mục lục khoá học") and a highlighted "Tiếp tục" resume card (next unread
  * lesson + N/total progress), then the grouped tool links: the learn tools (mind
- * map, leaderboard, mock interview, course interview) and — below — the subject
+ * map, leaderboard, mock interview) and — below — the subject
  * shortcuts routed by the course's linked `subjectCode`: "Học liệu / Ôn tập", "Flashcard
  * / Luyện tập", "Không gian môn học", "Hỏi đáp", and two LOCKED upsells (Playground,
  * Dự án cá nhân). When the course has no linked subject the whole subject group is
@@ -128,7 +126,7 @@ const ResumeRow = ({
  *
  * Locked rows show a lock marker and, on press, open the whole-course buy flow
  * instead of navigating. Playground / personal project are always locked; Mock
- * interview / Interview lock only while the viewer lacks FULL course access
+ * interview locks only while the viewer lacks FULL course access
  * (`access.fullAccess` — bought, free-owned, or otherwise entitled).
  *
  * On desktop the rail is a {@link CollapsibleSidebar}: it collapses to a thin icon
@@ -148,9 +146,9 @@ export const LearnToolsRail = ({ className, mobile = false }: LearnToolsRailProp
     const subjectCode = header?.subjectCode ?? null
     const courseRawId = course?.id ?? ""
     // Full course access (bought / free-owned / otherwise entitled). Guests and
-    // not-yet-purchased viewers get `false`, which LOCKS the interview tools (mock
-    // interview + course interview) behind the whole-course buy flow — mirroring the
-    // playground / personal-project locks (rule premium-unlock-is-enroll-not-vip).
+    // not-yet-purchased viewers get `false`, which LOCKS the mock-interview tool
+    // behind the whole-course buy flow — mirroring the playground / personal-project
+    // locks (rule premium-unlock-is-enroll-not-vip).
     const hasFullAccess = access?.fullAccess ?? false
 
     // resume card data — next unread lesson + overall N/total, computed from the same
@@ -172,8 +170,10 @@ export const LearnToolsRail = ({ className, mobile = false }: LearnToolsRailProp
     const tools: Array<ToolRow> = [
         { key: "mind-map", icon: <TreeStructureIcon className="size-5" aria-hidden focusable="false" />, label: t("mindMap"), href: `${learnBase}/mind-map` },
         { key: "leaderboard", icon: <TrophyIcon className="size-5" aria-hidden focusable="false" />, label: t("leaderboard"), href: `${learnBase}/leaderboard` },
+        // The ONLY interview entry. The lecturer-authored "course interview" surface was
+        // removed (it needed an instructor to generate a question set first, so a learner
+        // could never reach it on their own); mock interview is self-serve end to end.
         { key: "mock-interview", icon: <MicrophoneStageIcon className="size-5" aria-hidden focusable="false" />, label: t("mockInterview"), href: `${learnBase}/mock-interview`, locked: !hasFullAccess },
-        { key: "interview", icon: <CardsThreeIcon className="size-5" aria-hidden focusable="false" />, label: t("interview"), href: `${learnBase}/interview`, locked: !hasFullAccess },
     ]
 
     const subjectTools: Array<ToolRow> = subjectCode

@@ -13,9 +13,16 @@ export interface ModerationReport {
      * system with no open report. Escalation uses THIS id, never {@link id}.
      */
     reportId?: string
+    /** `POST` | `COMMENT` | `USER` — an enum token, translated before it is rendered. */
     targetType: string
+    /**
+     * Id of the reported object. NOT for display (it is a bare uuid): it only builds the
+     * link to the target, and only a POST has a route that takes it (`/community/[postId]`).
+     */
     targetId: string
+    /** `REPORT` | `AI` — an enum token, translated before it is rendered. */
     source: string
+    /** BE `Short`: 0 = AI saw nothing, 1 = member report, 2 = AI flagged a violation. */
     priority?: number
     status: string
     createdAt?: string

@@ -54,12 +54,13 @@ export const AccountTrigger = ({ className }: AccountTriggerProps) => {
             variant="tertiary"
         >
             <Badge.Anchor>
+                {/* No `seed` — it is deprecated (the generated face is gone) and it
+                was the last place the account menu still keyed off the email. */}
                 <UserAvatar
                     size="sm"
                     className="cursor-pointer"
                     username={user?.username}
                     avatar={user?.avatar}
-                    seed={user?.email ?? user?.username}
                 />
                 <Badge size="sm" color="accent">5</Badge>
             </Badge.Anchor>

@@ -228,7 +228,14 @@ export interface ModerationDecisionRequest {
     note?: string
 }
 
-/** One moderation queue item. */
+/**
+ * One moderation queue item.
+ *
+ * IDS + ENUM TOKENS ONLY — the BE record (`CommunityDtos.ModerationQueueResponse`) carries
+ * no excerpt of the reported content, no author and no report reason, so a moderator UI can
+ * only label the row and link to the target. Showing what was actually reported needs the BE
+ * to widen this record (see the queue component's docs).
+ */
 export interface ModerationQueueResponse {
     id: string
     /**
@@ -237,9 +244,12 @@ export interface ModerationQueueResponse {
      * pushed by AI/the system with no open report on the target has nothing to escalate.
      */
     reportId?: string | null
+    /** `POST` | `COMMENT` | `USER` (BE `ModerationService.REPORT_TARGET_TYPES`). */
     targetType: string
     targetId: string
+    /** `REPORT` (raised by a member) | `AI` (raised by the classifier). */
     source: string
+    /** BE `Short`: 0 = AI saw nothing, 1 = member report, 2 = AI flagged a violation. */
     priority?: number
     status: string
     createdAt?: string

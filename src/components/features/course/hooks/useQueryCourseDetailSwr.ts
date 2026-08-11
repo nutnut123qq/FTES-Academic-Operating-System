@@ -15,6 +15,12 @@ export interface CourseLesson {
     /** Human duration label, e.g. "8:20". */
     durationLabel: string
     /**
+     * The lesson video's length in seconds (`LessonView.durationSeconds`), or null when
+     * the BE doesn't know it (a large share of lessons). Raw here because formatting
+     * needs the translator; the outline row formats and hides an unknown value.
+     */
+    durationSeconds: number | null
+    /**
      * BE lesson content-type (`LessonView.type`), e.g. "VIDEO" | "DOCUMENT". Drives the
      * per-type syllabus row glyph ({@link lessonTypeIcon}) so a video row and a document
      * row never share one icon. Absent when the BE omits it → the neutral default glyph.
@@ -180,8 +186,13 @@ const toCourseDetail = (dto: CourseDetailDto): CourseDetail => {
             id: lesson.id,
             title: lesson.name,
             description: lesson.description?.trim() ? lesson.description.trim() : undefined,
-            // BE carries no per-lesson duration on the public detail.
+            // Legacy pre-formatted slot; the real value now rides on `durationSeconds`,
+            // which the row formats (the BE knows it only for measured videos).
             durationLabel: "",
+            durationSeconds:
+                typeof lesson.durationSeconds === "number" && lesson.durationSeconds > 0
+                    ? lesson.durationSeconds
+                    : null,
             contentType: lesson.type ?? undefined,
             // `!free` is the "Premium" TAG only — never the lock (an enrolled viewer
             // owns premium lessons: free=false but locked=false).

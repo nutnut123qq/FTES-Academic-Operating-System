@@ -5818,6 +5818,7 @@
       "empty": "No matching courses.",
       "ratingCount": "({count})",
       "hours": "{count} hours",
+      "minutes": "{count} min",
       "preview": {
         "updated": "Updated {date}",
         "enroll": "Enroll in this course",

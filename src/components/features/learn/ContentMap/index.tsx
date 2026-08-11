@@ -16,6 +16,7 @@ import { SearchInput } from "@/components/reuseable/SearchInput"
 import { useRouter } from "@/i18n/navigation"
 import { mutate as globalMutate } from "swr"
 import { PackageGateModal } from "@/components/features/course/PackageGateModal"
+import { formatLessonDuration, sumLessonDurations } from "@/components/features/course/lessonDuration"
 import { useQueryLearnCourseSwr } from "../hooks/useQueryLearnCourseSwr"
 import type { LearnExercise, LearnLesson } from "../hooks/useQueryLearnCourseSwr"
 import type { CourseAccessStateView } from "@/modules/api/rest/course"
@@ -48,6 +49,9 @@ export interface ContentMapProps {
  */
 export const ContentMap = ({ className }: ContentMapProps) => {
     const t = useTranslations("learn")
+    // Root-scoped translator: the duration label lives beside the other course-catalog
+    // time units (`courseSystem.browse.*`), which the "learn" scope can't reach.
+    const tRoot = useTranslations()
     const router = useRouter()
     const { courseId, contentId, challengeId } = useParams<{
         courseId: string
@@ -163,6 +167,13 @@ export const ContentMap = ({ className }: ContentMapProps) => {
                                                         total: module.lessons.length,
                                                     })}
                                                 </Chip>
+                                                {/* Section total = sum of the lessons whose duration the BE knows;
+                                                    hidden entirely when it knows none (never render a bare "0 phút"). */}
+                                                {sumLessonDurations(module.lessons) > 0 ? (
+                                                    <Typography type="body-xs" color="muted" className="shrink-0">
+                                                        {formatLessonDuration(sumLessonDurations(module.lessons), tRoot)}
+                                                    </Typography>
+                                                ) : null}
                                                 <Accordion.Indicator className="shrink-0" />
                                             </div>
                                         </Accordion.Trigger>
@@ -226,6 +237,8 @@ const ContentMapLessonRow = ({
     lockedLabel: string
 }) => {
     const t = useTranslations("learn")
+    // Root-scoped: the duration label lives under `courseSystem.browse.*` (see ContentMap).
+    const tRoot = useTranslations()
     const router = useRouter()
     const [gateOpen, setGateOpen] = useState(false)
 
@@ -312,8 +325,10 @@ const ContentMapLessonRow = ({
                         </span>
                     </Chip>
                 ) : (
+                    // Video length when the BE knows it (many lessons carry none) — the
+                    // legacy readTimeLabel stays as the fallback slot it always was.
                     <Typography type="body-xs" color="muted" className="shrink-0">
-                        {lesson.readTimeLabel}
+                        {formatLessonDuration(lesson.durationSeconds, tRoot) || lesson.readTimeLabel}
                     </Typography>
                 )}
             </button>

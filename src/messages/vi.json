@@ -5818,6 +5818,7 @@
       "empty": "Không có khóa học phù hợp.",
       "ratingCount": "({count})",
       "hours": "{count} giờ",
+      "minutes": "{count} phút",
       "preview": {
         "updated": "Cập nhật {date}",
         "enroll": "Đăng ký khóa học",

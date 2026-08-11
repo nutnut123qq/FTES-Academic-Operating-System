@@ -20,6 +20,12 @@ export interface LearnLesson {
     /** Estimated read/watch time, e.g. "6 min" — empty when the BE doesn't provide it. */
     readTimeLabel: string
     /**
+     * The lesson video's length in seconds (`LessonView.durationSeconds`), or null when
+     * the BE doesn't know it. Kept RAW alongside {@link readTimeLabel} so a section can
+     * sum its lessons; the label is what rows render.
+     */
+    durationSeconds?: number | null
+    /**
      * BE lesson content-type (`LessonView.type`), e.g. "VIDEO" | "DOCUMENT". Drives the
      * per-type content-map row glyph ({@link lessonTypeIcon}) so a video row and a document
      * row never share one icon. Empty when the BE omits it → the neutral default glyph.
@@ -165,6 +171,12 @@ const toLearnLesson = (lesson: LessonView): LearnLesson => {
         title: lesson.name,
         description: lesson.description ?? "",
         readTimeLabel: "",
+        // Raw seconds only — formatting needs the translator, which a plain mapper has no
+        // access to, so the row/section components format (and hide when unknown).
+        durationSeconds:
+            typeof lesson.durationSeconds === "number" && lesson.durationSeconds > 0
+                ? lesson.durationSeconds
+                : null,
         contentType: lesson.type ?? "",
         isCompleted: false,
         isPremium: !lesson.free,

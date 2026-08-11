@@ -198,13 +198,33 @@ export const LessonReader = () => {
     // không còn tính là "rỗng" — thiếu vế này thẻ đọc không dựng và cái link lại rơi mất lần nữa.
     const showReadingCard = !!lesson && (isLocked || hasWrittenBody || isLinkOnly || isReadingEmpty)
 
+    /**
+     * The section crumb must read as the section's TITLE, not its ordinal. On the real
+     * catalog `SectionView.name` only carries "Phần 1" / "Phần 0" and the human title
+     * lives in `description` ("Setup môi trường - SQL Server"), so this mirrors the
+     * content-map rail's `description || title` precedence and only falls back to the
+     * ordinal (then the generic "Học phần" label) when the title is genuinely missing.
+     */
+    const moduleCrumbLabel =
+        lesson?.moduleDescription?.trim() || lesson?.moduleTitle?.trim() || t("content.moduleTitle")
+
     /** Tier-1 breadcrumb (Courses › <course> › Modules › <lesson>). */
     const breadcrumbItems = useMemo<Array<ResponsiveBreadcrumbItem>>(
         () => [
             { key: "courses", label: t("nav.sections.content"), onPress: () => router.push(`/courses/${courseId}/learn/content`) },
-            { key: "module", label: lesson?.moduleTitle ?? t("content.moduleTitle") },
+            {
+                key: "module",
+                // A section title can be a full sentence — clamp it so a long one never
+                // pushes the trail past the header width (the crumb keeps the full text
+                // in `title` for hover / a11y).
+                label: (
+                    <span className="block max-w-[18rem] truncate" title={moduleCrumbLabel}>
+                        {moduleCrumbLabel}
+                    </span>
+                ),
+            },
         ],
-        [t, router, courseId, lesson?.moduleTitle],
+        [t, router, courseId, moduleCrumbLabel],
     )
 
     /** Open the shared package gate with the given paywall context. */

@@ -163,6 +163,7 @@ const makeLesson = (over: Partial<LearnLessonView> = {}): LearnLessonView => ({
     title: "Bài 1",
     description: "Mô tả",
     moduleTitle: "Học phần 1",
+    moduleDescription: "",
     readTimeLabel: "",
     minutesRead: 0,
     challengeCount: 0,

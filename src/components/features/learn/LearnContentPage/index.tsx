@@ -58,7 +58,14 @@ export const LearnContentPage = () => {
     )
 
     return (
-        <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+        // The course home is a CARD dashboard, not a reading column, and it is the one
+        // learn route with NO right rail (the layout mounts OnThisPage on the lesson
+        // reader only). Capping it at the shared `max-w-3xl` reading measure therefore
+        // left the whole right half of the shell empty on a wide desktop, so the cap
+        // opens up from `xl` instead of staying at the reader's measure. Below `xl` the
+        // rails already consume the width, so `max-w-3xl` still governs (unchanged
+        // laptop / tablet / mobile layout).
+        <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 xl:max-w-5xl 2xl:max-w-6xl">
             <AsyncContent
                 isLoading={!header && !error}
                 skeleton={<DashboardSkeleton />}
@@ -154,7 +161,10 @@ export const LearnContentPage = () => {
                             Nằm ngay DƯỚI card mở khóa, TRÊN "Continue learning". */}
                         {header.description ? (
                             <LabeledCard frameless label={t("content.aboutTitle")}>
-                                <Typography type="body-sm" color="muted" className="whitespace-pre-line">
+                                {/* the cards above may now span the widened dashboard, but this is
+                                    running prose — keep it at the reading measure so the lines stay
+                                    scannable on a wide screen */}
+                                <Typography type="body-sm" color="muted" className="max-w-3xl whitespace-pre-line">
                                     {header.description}
                                 </Typography>
                             </LabeledCard>

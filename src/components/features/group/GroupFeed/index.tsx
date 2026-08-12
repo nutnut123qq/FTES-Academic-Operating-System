@@ -12,12 +12,13 @@ import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { PostEngagementBar } from "@/components/reuseable/PostEngagementBar"
 import { PostCommentThread } from "@/components/reuseable/PostCommentThread"
 import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
+import { useQueryPostCommentsSwr } from "@/components/features/community/hooks/useQueryPostDetailSwr"
+import {
+    useMutateCreatePostCommentSwr,
+    type SubmitCommentInput,
+} from "@/components/features/community/hooks/useMutateCreatePostCommentSwr"
 import { useQueryGroupSwr } from "../hooks/useQueryGroupSwr"
 import { useQueryGroupFeedSwr, type GroupPost } from "../hooks/useQueryGroupFeedSwr"
-import {
-    useComposeGroupPostComment,
-    useQueryGroupPostCommentsSwr,
-} from "../hooks/useQueryGroupPostCommentsSwr"
 import { useMutateReactGroupPostSwr } from "../hooks/useMutateReactGroupPostSwr"
 import { useMutateGroupPinnedSwr } from "../hooks/useMutateGroupPinnedSwr"
 import { GroupFeedComposer } from "./GroupFeedComposer"
@@ -36,15 +37,23 @@ const GroupFeedCard = ({
     const t = useTranslations("groupsHub")
     const tCommon = useTranslations("common")
     const locale = useLocale()
+    const currentUser = useAppSelector((state) => state.user.user)
     const [expanded, setExpanded] = useState(false)
     const [hasOpened, setHasOpened] = useState(false)
     const reactPost = useMutateReactGroupPostSwr(groupId)
     const { pin } = useMutateGroupPinnedSwr(groupId)
-    const { thread, isLoading, error, mutate } = useQueryGroupPostCommentsSwr(
-        groupId,
-        post.id,
-        hasOpened,
-    )
+    const submitComment = useMutateCreatePostCommentSwr()
+    /**
+     * A group post IS a community post, so its comment thread is READ through the
+     * community GraphQL `post(id)` — the same lazy hook (and the same
+     * `["post-detail", postId]` cache) the community feed row uses. The REST list this
+     * used to call (`GET /community/posts/{postId}/comments`) returns a `CommentResponse`
+     * carrying only `authorId`, with no author card at all: every comment here was signed
+     * with a raw uuid, linked to a profile URL that could only 404, and showed no avatar.
+     *
+     * `post` is already the card's own prop, hence the rename to `detail`.
+     */
+    const { post: detail, isLoading, error, mutate } = useQueryPostCommentsSwr(post.id, hasOpened)
 
     const regionId = `post-comments-${post.id}`
     // share the POST permalink (/community/{postId}), not the group page — sharing the
@@ -62,8 +71,27 @@ const GroupFeedCard = ({
         setExpanded((prev) => !prev)
     }, [])
 
-    // real compose: POST /community/posts/{postId}/comments then revalidate the thread
-    const onSubmit = useComposeGroupPostComment(groupId, post.id, mutate)
+    /**
+     * Composing stays on REST (`POST /community/posts/{postId}/comments`) — only the READ
+     * moved to GraphQL. The shared community mutation owns that write, so the group feed
+     * inherits its optimistic append + rollback and, crucially, its revalidation of the
+     * `["post-detail", postId]` cache the thread now reads; the previous group-local
+     * compose refreshed the retired `["group-post-comments", …]` cache instead.
+     */
+    const onSubmit = useCallback(
+        async (body: string, parentCommentId?: string): Promise<boolean> => {
+            const input: SubmitCommentInput = {
+                postId: post.id,
+                body,
+                authorLabel: locale === "vi" ? "Bạn" : "You",
+                authorUsername: currentUser?.username ?? "you",
+                justNowLabel: locale === "vi" ? "vừa xong" : "just now",
+                parentCommentId,
+            }
+            return submitComment(input)
+        },
+        [post.id, locale, submitComment, currentUser],
+    )
 
     return (
         <div className="flex flex-col rounded-2xl border border-separator transition-colors hover:bg-default/40">
@@ -123,9 +151,16 @@ const GroupFeedCard = ({
                 <div className="px-4 pb-4">
                     <PostCommentThread
                         regionId={regionId}
-                        comments={thread?.comments ?? []}
-                        isLoading={isLoading && !thread}
-                        hasError={!thread ? Boolean(error) : false}
+                        comments={detail?.comments ?? []}
+                        isLoading={isLoading && !detail}
+                        hasError={!detail ? Boolean(error) : false}
+                        // Hand the rejection over, like the community feed row does: the
+                        // read is viewer-scoped, so the gateway answers an expired token
+                        // with 401 PLATFORM_UNAUTHORIZED, a post the viewer may not see
+                        // with FORBIDDEN and a removed one with COMMUNITY_POST_NOT_FOUND.
+                        // Passing only `hasError` collapsed all three into one blanket
+                        // line plus a retry that could never succeed.
+                        error={error}
                         onRetry={() => void mutate()}
                         onSubmit={onSubmit}
                         onCollapse={onToggleComments}
@@ -157,9 +192,10 @@ const GroupFeedSkeleton = () => (
 /**
  * Group feed (§7). Group post cards with the shared engagement bar (full bar:
  * like · comment · share · save) and inline push-down comment expansion. Engagement
- * (likes/comments) + comment thread are wired to the real BE (change
- * group-social-engagement): the feed slice carries live counters and comments go
- * through the community comment endpoints.
+ * (likes/comments) + comment thread are wired to the real BE (changes
+ * group-social-engagement, group-post-comments-graphql): the feed slice carries live
+ * counters, comments are READ through the community GraphQL `post(id)` (author cards
+ * included) and WRITTEN through the community REST comment endpoint.
  */
 export const GroupFeed = () => {
     const t = useTranslations("groupsHub")

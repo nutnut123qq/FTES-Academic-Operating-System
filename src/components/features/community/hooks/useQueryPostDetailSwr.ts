@@ -86,8 +86,14 @@ const toReply = (reply: CommunityPostReplyNode, locale: string): PostComment => 
     timeLabel: formatRelativeTime(reply.createdAt, locale),
 })
 
-/** Map a BE top-level comment node (with its one-level replies) to `PostComment`. */
-const toComment = (comment: CommunityPostCommentNode, locale: string): PostComment => ({
+/**
+ * Map a BE top-level comment node (with its one-level replies) to `PostComment`.
+ *
+ * Exported for unit tests: this mapper is what keeps a raw author uuid out of the name
+ * slot on EVERY surface reading `post(id)` — the community feed row, the post detail page
+ * and (since change `group-post-comments-graphql`) the group feed's inline thread.
+ */
+export const toComment = (comment: CommunityPostCommentNode, locale: string): PostComment => ({
     ...toReply(comment, locale),
     replies: comment.replies.map((reply) => toReply(reply, locale)),
 })

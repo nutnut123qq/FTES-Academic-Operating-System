@@ -1,9 +1,15 @@
 "use client"
 
 import React, { useMemo, useState } from "react"
-import { Button, Chip, Typography } from "@heroui/react"
-import { ArrowLeftIcon, CaretRightIcon, InfoIcon } from "@phosphor-icons/react"
+import { Button, Chip, Typography, cn } from "@heroui/react"
+import {
+    ArrowLeftIcon,
+    ArrowsDownUpIcon,
+    CaretRightIcon,
+    InfoIcon,
+} from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
+import { FilterMenu } from "./FilterMenu"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { EmptyContent } from "@/components/blocks/async/EmptyContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
@@ -73,6 +79,42 @@ export const CodingChallengeList = ({ subjectId, onBack }: CodingChallengeListPr
         [challenges, tags],
     )
 
+    /** Type menu entries — neutral first, then one per challenge type. */
+    const typeOptions = useMemo(
+        () =>
+            TYPE_FILTERS.map((item) => ({
+                value: item,
+                label:
+                    item === "all"
+                        ? t("practice.coding.filters.allTypes")
+                        : t(`practice.coding.types.${challengeTypeKey(item) ?? "coding"}`),
+            })),
+        [t],
+    )
+
+    /** Lifecycle menu entries — neutral first, then running / upcoming / closed. */
+    const lifecycleOptions = useMemo(
+        () =>
+            LIFECYCLE_FILTERS.map((item) => ({
+                value: item,
+                label:
+                    item === "all"
+                        ? t("practice.coding.filters.allLifecycles")
+                        : t(`practice.coding.lifecycle.${item}`),
+            })),
+        [t],
+    )
+
+    /** Sort menu entries — newest (startsAt desc) · hot (submissionCount desc). */
+    const sortOptions = useMemo(
+        () =>
+            SORT_OPTIONS.map((item) => ({
+                value: item,
+                label: t(`practice.coding.sort.${item}`),
+            })),
+        [t],
+    )
+
     /** Adds/removes one slug from the picked set (the query re-runs on the new key). */
     const toggleTag = (slug: string) =>
         setTags((current) =>
@@ -128,86 +170,88 @@ export const CodingChallengeList = ({ subjectId, onBack }: CodingChallengeListPr
                 </Typography>
             </div>
 
-            {/* filters: tag pills · type pills · lifecycle pills · search */}
-            <div className="flex flex-col gap-3">
-                {/* tags — the PE papers' way in; server-side AND filter, so the facets
-                    narrow to what still co-occurs with the current pick */}
+            {/* Filters, two rows instead of five: search + three facet menus on one line,
+                tags on their own scrolling line. The facets used to be four stacked rows of
+                pills that pushed every challenge below the fold on a phone. */}
+            <div className="flex flex-col gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                    <SearchInput
+                        value={search}
+                        onValueChange={setSearch}
+                        variant="secondary"
+                        placeholder={t("practice.coding.searchPlaceholder")}
+                        /* `basis-48` asks for a comfortable field; `min-w-0` lets it give
+                           that back. Without the min-w-0 the field sets a 12rem FLOOR on the
+                           row, which on a 375px screen pushes the page wider than the screen
+                           — the one thing a "make it smaller" change must not do. */
+                        className="min-w-0 flex-1 basis-64 sm:max-w-none"
+                    />
+                    {/* The three facets travel as ONE wrap unit. Left loose they break
+                        apart one per line — the search field is `flex-1`, so it claims the
+                        first line and each facet that no longer fits starts its own. That
+                        turns a two-line control into a four-line one at exactly the widths
+                        where space is tightest. Scrolls sideways below ~320px rather than
+                        widening the page. */}
+                    <div className="flex max-w-full shrink-0 items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                        <FilterMenu
+                            label={t("practice.coding.filters.typeLabel")}
+                            options={typeOptions}
+                            value={type}
+                            onChange={setType}
+                            neutralValue="all"
+                        />
+                        <FilterMenu
+                            label={t("practice.coding.filters.lifecycleLabel")}
+                            options={lifecycleOptions}
+                            value={lifecycle}
+                            onChange={setLifecycle}
+                            neutralValue="all"
+                        />
+                        {/* No `neutralValue`: sort can't be switched off, so this trigger
+                            always shows the order in force ("Newest" / "Hot") and stays
+                            plain. The icon supplies the meaning those two words lack. */}
+                        <FilterMenu
+                            label={t("practice.coding.sort.label")}
+                            options={sortOptions}
+                            value={sort}
+                            onChange={setSort}
+                            icon={
+                                <ArrowsDownUpIcon
+                                    aria-hidden
+                                    focusable="false"
+                                    className="size-3.5"
+                                />
+                            }
+                        />
+                    </div>
+                </div>
+
+                {/* Tags stay PILLS, not a menu: there are only a few, they are the way into the
+                    PE papers, and a learner has to see `PE` exists without opening anything.
+                    Server-side AND filter, so the facets narrow to what still co-occurs.
+                    Scrolls sideways rather than wrapping — a subject with many tags must not
+                    grow this row back into the block of chrome we just removed. */}
                 {tagFacets.length > 0 ? (
-                    <div className="flex flex-wrap items-center gap-2">
-                        <Typography type="body-xs" color="muted" className="mr-1">
-                            {t("practice.coding.tags.label")}
-                        </Typography>
-                        <Button
-                            size="sm"
-                            variant={tags.length === 0 ? "secondary" : "ghost"}
+                    <div
+                        role="group"
+                        aria-label={t("practice.coding.tags.label")}
+                        className="-mx-1 flex gap-2 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                    >
+                        <TagPill
+                            label={t("practice.coding.tags.all")}
+                            selected={tags.length === 0}
                             onPress={() => setTags([])}
-                        >
-                            {t("practice.coding.tags.all")}
-                        </Button>
+                        />
                         {tagFacets.map((tag) => (
-                            <Button
+                            <TagPill
                                 key={tag.slug}
-                                size="sm"
-                                variant={tags.includes(tag.slug) ? "secondary" : "ghost"}
-                                aria-pressed={tags.includes(tag.slug)}
+                                label={tag.label}
+                                selected={tags.includes(tag.slug)}
                                 onPress={() => toggleTag(tag.slug)}
-                            >
-                                {tag.label}
-                            </Button>
+                            />
                         ))}
                     </div>
                 ) : null}
-                <div className="flex flex-wrap items-center gap-2">
-                    {TYPE_FILTERS.map((item) => (
-                        <Button
-                            key={item}
-                            size="sm"
-                            variant={type === item ? "secondary" : "ghost"}
-                            onPress={() => setType(item)}
-                        >
-                            {item === "all"
-                                ? t("practice.coding.filters.allTypes")
-                                : t(`practice.coding.types.${challengeTypeKey(item) ?? "coding"}`)}
-                        </Button>
-                    ))}
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                    {LIFECYCLE_FILTERS.map((item) => (
-                        <Button
-                            key={item}
-                            size="sm"
-                            variant={lifecycle === item ? "secondary" : "ghost"}
-                            onPress={() => setLifecycle(item)}
-                        >
-                            {item === "all"
-                                ? t("practice.coding.filters.allLifecycles")
-                                : t(`practice.coding.lifecycle.${item}`)}
-                        </Button>
-                    ))}
-                </div>
-                {/* sort: newest (startsAt desc) · hot (submissionCount desc) — same pill idiom */}
-                <div className="flex flex-wrap items-center gap-2">
-                    <Typography type="body-xs" color="muted" className="mr-1">
-                        {t("practice.coding.sort.label")}
-                    </Typography>
-                    {SORT_OPTIONS.map((item) => (
-                        <Button
-                            key={item}
-                            size="sm"
-                            variant={sort === item ? "secondary" : "ghost"}
-                            onPress={() => setSort(item)}
-                        >
-                            {t(`practice.coding.sort.${item}`)}
-                        </Button>
-                    ))}
-                </div>
-                <SearchInput
-                    value={search}
-                    onValueChange={setSearch}
-                    variant="secondary"
-                    placeholder={t("practice.coding.searchPlaceholder")}
-                    className="sm:max-w-none"
-                />
             </div>
 
             {/* honesty note: the rows are NOT this subject's challenges */}
@@ -246,6 +290,35 @@ export const CodingChallengeList = ({ subjectId, onBack }: CodingChallengeListPr
         </div>
     )
 }
+
+/**
+ * One tag of the bank's tag row — a toggle, not a link (tags AND together, so several
+ * can be on at once). Deliberately smaller than a `<Button>`: this row sits directly
+ * above the results and a full-height button row reads as a second toolbar.
+ */
+const TagPill = ({
+    label,
+    selected,
+    onPress,
+}: {
+    label: string
+    selected: boolean
+    onPress: () => void
+}) => (
+    <button
+        type="button"
+        aria-pressed={selected}
+        onClick={onPress}
+        className={cn(
+            "shrink-0 cursor-pointer rounded-full border px-3 py-1 text-xs outline-none transition-colors focus-visible:ring-2 focus-visible:ring-accent",
+            selected
+                ? "border-accent bg-accent/10 font-medium text-accent"
+                : "border-separator text-muted hover:text-foreground",
+        )}
+    >
+        {label}
+    </button>
+)
 
 /** One challenge row — title + slug · type/mode chips · lifecycle chip + caret. */
 const CodingChallengeRow = ({

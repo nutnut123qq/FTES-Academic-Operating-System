@@ -2,7 +2,7 @@
 
 import React from "react"
 import { Typography } from "@heroui/react"
-import { ArrowSquareOutIcon, FileXIcon } from "@phosphor-icons/react"
+import { ArrowSquareOutIcon, FileXIcon, FileZipIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 
 import { classifyChallengePaper } from "./paperKind"
@@ -32,8 +32,11 @@ export interface ChallengePaperProps {
  *   `next/image` would need that host allow-listed in `next.config.ts`.
  * - **PDF** → embedded in a fixed-height `<iframe>` (the browser's own viewer, so it
  *   scrolls and zooms), plus the same "open in a new tab" escape hatch above it.
- * - **anything else** (DOC/DOCX/ZIP…) → says plainly that it cannot be shown inline and
- *   offers the link. No fake render.
+ * - **ZIP** → its own state, not the failure state: an archive is a legitimate paper here
+ *   (an author zips a whole folder of source and documents), so it reads as "download the
+ *   pack". It is also the only kind carrying NO watermark — archives cannot be stamped.
+ * - **anything else** (DOC/DOCX…) → says plainly that it cannot be shown inline and offers
+ *   the link. No fake render.
  *
  * @param props - {@link ChallengePaperProps}
  */
@@ -88,6 +91,16 @@ export const ChallengePaper = ({ paperUrl, paperMime, title }: ChallengePaperPro
                     title={t("paper.imageAlt", { title })}
                     className="h-[70vh] w-full rounded-2xl border border-separator bg-default"
                 />
+            ) : kind === "ARCHIVE" ? (
+                /* An archive IS a legitimate paper here (a folder of source + documents the
+                   author zipped), so this reads as an invitation to download the pack — not
+                   as the apologetic "we can't preview this" state below. */
+                <div className="flex flex-col items-center gap-3 rounded-2xl border border-separator p-6 text-center">
+                    <FileZipIcon className="size-8 text-muted" aria-hidden focusable="false" />
+                    <Typography type="body-sm" color="muted">
+                        {t("paper.archiveHint")}
+                    </Typography>
+                </div>
             ) : (
                 <div className="flex flex-col items-center gap-3 rounded-2xl border border-separator p-6 text-center">
                     <FileXIcon className="size-8 text-muted" aria-hidden focusable="false" />

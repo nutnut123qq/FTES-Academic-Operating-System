@@ -1429,6 +1429,7 @@
       "openImage": "Mở ảnh đề ở kích thước gốc",
       "imageAlt": "Đề bài của thử thách {title}",
       "noPreview": "Định dạng này không xem trực tiếp được — mở đề để đọc.",
+      "archiveHint": "Đề dạng kho nén — tải về để mở toàn bộ tệp bên trong.",
       "gradingLocked": "Đề này để bạn tự luyện. Nộp bài cho FrosTES chấm chưa mở."
     }
   },

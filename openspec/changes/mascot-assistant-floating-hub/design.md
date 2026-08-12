@@ -25,8 +25,14 @@ WebP thì lấy WebP; còn lại rơi về GIF. `width`/`height` intrinsic vẫn
 ảnh chưa tải; nút `fixed` nên không ảnh hưởng CLS của trang.
 
 Convert bằng `sharp` (đã có sẵn trong node_modules, không thêm dependency):
-`sharp(gif, {animated:true}).resize({width:260}).webp({quality:80, effort:6, loop:0})` — giữ
-nguyên 23 frame và delay gốc (2600ms khung đầu rồi 70ms), 886KB → 418KB.
+`sharp(gif, {animated:true}).resize({width:260}).webp({quality:80, effort:6, loop:0, delay})` —
+giữ nguyên 23 frame, 886KB → 418KB.
+
+**Nhịp phải sửa, không bê nguyên delay gốc.** GIF gốc giữ khung ĐẦU 2600ms trong vòng lặp 4140ms →
+63% thời gian linh vật đứng bất động, chỉ vẫy 1,54s. Nhìn thoáng qua đọc ra là "ảnh tĩnh" — đúng
+phản hồi đầu tiên nhận được khi ship. Rút khung đầu còn 800ms (các khung sau giữ 70ms) → vòng lặp
+2340ms, vẫy chiếm 66%. GIF fallback giữ nguyên bản gốc: re-encode GIF phải lượng tử hoá lại bảng
+màu, mà nhánh fallback hiếm khi chạm tới.
 
 ### 2. Vẫy tay thuộc về ẢNH, CSS chỉ lo bồng bềnh
 

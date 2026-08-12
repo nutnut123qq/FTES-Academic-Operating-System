@@ -5,6 +5,8 @@
 - [x] 1.1 Convert `public/mascot/fes-mascot-wave.gif` → `public/fes-mascot-wave.webp` bằng `sharp` (animated, resize 260px, quality 80, effort 6, loop 0) — 23 frame, 886KB → 418KB
 - [x] 1.2 Chuyển GIF gốc ra `public/fes-mascot-wave.gif` làm fallback (2 file cùng nằm ở `public/` theo yêu cầu)
 - [x] 1.3 Không sửa/không bo/không thêm nền vào ảnh — artwork đã có viền sticker trắng + nền trong suốt
+- [x] 1.4 Rút khung ĐẦU của bản WebP từ 2600ms → 800ms (các khung sau giữ nhịp gốc 70ms): GIF gốc giữ khung đầu 2,6s trong vòng lặp 4,14s, tức 63% thời gian con sói đứng yên → nhìn thoáng qua tưởng ảnh tĩnh. Sau khi rút: vòng lặp 2,34s, vẫy chiếm 66%. Kiểm lại container vẫn `VP8X + ANIM + 23×ANMF`
+- [x] 1.5 GIF fallback GIỮ NGUYÊN file gốc — re-encode GIF phải lượng tử hoá lại bảng màu (mất chất), mà đường fallback chỉ chạm tới trình duyệt không đọc được animated WebP
 
 ## 2. Component `MascotAssistant`
 

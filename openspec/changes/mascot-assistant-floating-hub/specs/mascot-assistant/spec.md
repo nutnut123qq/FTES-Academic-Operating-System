@@ -10,11 +10,14 @@ dialog. It SHALL sit above the safe-area inset and SHALL NOT affect page layout 
 character artwork itself is the button — no circular frame, no background plate, no rounding
 applied to the image.
 
-The character SHALL PEEK rather than stand: it is pushed diagonally past the corner so the
-viewport edge crops it, keeping head, waving paw and the shirt-front on screen while the legs go
-off it, and it SHALL sit FLUSH in the corner — the push absorbs the shell's own inset, so the
-character touches the screen edges even though the panel keeps its margin from them. It SHALL NOT
-be rotated: a lean swings the body out of the corner and leaves only a head poking in.
+The character SHALL PEEK rather than stand: it LEANS and is pushed diagonally into the corner so
+the viewport edge crops it, keeping head, waving paw and the shirt-front on screen while the legs
+go off it. It SHALL sit FLUSH in the corner — the push absorbs the shell's own inset, so the
+character's own pixels reach the screen edge even though the panel keeps its margin from it.
+
+Flushness SHALL be measured on the rows that are actually VISIBLE, not on the whole silhouette:
+the widest part of the body is the hips, which are cropped away, so fitting to the full outline
+leaves the visible head and chest short of the corner with a gap at the very tip of it.
 
 The part pushed past the edge SHALL NOT make the page scrollable, and the shortcut panel SHALL
 still open flush above the VISIBLE top of the character, not above the slot it was cropped out of.

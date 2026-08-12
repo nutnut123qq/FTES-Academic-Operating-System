@@ -312,19 +312,23 @@ export const MascotAssistant = () => {
                 onClick={() => (isOpen ? setIsOpen(false) : openPanel())}
                 // NO circular frame / background: the waving character IS the button.
                 //
-                // PEEKING POSE: the character is pushed diagonally past the corner so the viewport
-                // edge crops it — head, waving paw and the shirt-front stay on screen, the legs go
-                // off it. Tuned against the reference art by rendering the composite offline (the
-                // preview pane here cannot be screenshotted): 68% of the height and 90% of the
-                // width remain visible, which is exactly where the crop lands under the chest.
+                // PEEKING POSE: the character leans and is pushed diagonally into the corner, so
+                // the viewport edge crops it — head, waving paw and the shirt-front stay on
+                // screen, the legs and the outer half of the paw go off it.
                 //
-                // NO rotation. A lean was tried and is wrong: tilting swings the body out of the
-                // corner, so the same push leaves only a head poking in.
+                // THESE NUMBERS WERE SOLVED, NOT GUESSED, and they are coupled — do not nudge one
+                // by hand. The preview pane in this repo's tooling cannot be screenshotted, so the
+                // pose was fitted offline: rasterise the artwork at `w`, rotate it, find the
+                // rightmost OPAQUE pixel among the rows that will actually be on screen (the
+                // widest part of the body is the hips, which are cropped away — measuring the
+                // whole silhouette leaves the visible head/chest short of the corner), then place
+                // it so that pixel lands exactly ON the screen edge and 68% of the body height
+                // remains. Re-run that fit if the artwork, the width or the angle ever changes.
+                //   mobile  w-24 = 96px  · -14° → translate(20px, 57px)
+                //   ≥ sm    w-36 = 144px · -14° → translate(30px, 85px)
                 //
-                // The push absorbs the shell's own inset so the CHARACTER sits flush in the corner
-                // while the PANEL keeps its margin from the screen edges:
-                //   mobile  w-24 = 96px  → 135px tall; push (16px inset + 10px crop, 16 + 43)
-                //   ≥ sm    w-36 = 144px → 202px tall; push (24px inset + 14px crop, 24 + 65)
+                // The rotation uses the DEFAULT (center) origin — the fit above assumes it. An
+                // `origin-bottom-right` here silently invalidates every number.
                 //
                 // Each push is PAIRED with the negative `-mt` beside it: the translate moves only
                 // the drawn character, not its layout slot, so without an equal negative top margin
@@ -333,7 +337,7 @@ export const MascotAssistant = () => {
                 //
                 // The transform lives on the BUTTON, not the image: the hit area travels with the
                 // visual, and the `<img>` keeps its own `.mascot-float` bob independent of this pose.
-                className="pointer-events-auto -mt-[59px] block w-24 shrink-0 translate-x-[26px] translate-y-[59px] cursor-pointer border-0 bg-transparent p-0 outline-none focus-visible:rounded-2xl focus-visible:ring-2 focus-visible:ring-accent sm:-mt-[89px] sm:w-36 sm:translate-x-[38px] sm:translate-y-[89px]"
+                className="pointer-events-auto -mt-[57px] block w-24 shrink-0 translate-x-[20px] translate-y-[57px] rotate-[-14deg] cursor-pointer border-0 bg-transparent p-0 outline-none focus-visible:rounded-2xl focus-visible:ring-2 focus-visible:ring-accent sm:-mt-[85px] sm:w-36 sm:translate-x-[30px] sm:translate-y-[85px]"
             >
                 <picture>
                     <source srcSet={MASCOT_WEBP} type="image/webp" />

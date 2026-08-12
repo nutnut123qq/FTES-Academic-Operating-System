@@ -2,7 +2,7 @@
 
 import React, { useState } from "react"
 import { Button, Chip, Link, Typography, cn } from "@heroui/react"
-import { ArrowLeftIcon, LockSimpleIcon, PlusIcon } from "@phosphor-icons/react"
+import { ArrowLeftIcon, CaretRightIcon, LockSimpleIcon, PlusIcon } from "@phosphor-icons/react"
 import { useLocale, useTranslations } from "next-intl"
 
 import { useRouter } from "@/i18n/navigation"
@@ -197,9 +197,16 @@ export const ExamList = ({ subjectId, kind, onBack }: ExamListProps) => {
                                 </Chip>
                             </Link>
                         ) : (
-                            <div
+                            // The WHOLE row opens the exam. It already carried the
+                            // hover-highlight of a clickable row while only the button
+                            // actually did anything — so every press on the title (the
+                            // obvious target) did nothing at all. The locked variant
+                            // above was a real row-link the whole time; this matches it.
+                            <Link
                                 key={exam.id}
-                                className="flex items-center gap-3 rounded-2xl border border-separator p-4 transition-colors hover:border-accent/50 hover:bg-accent/5"
+                                onPress={() => openExam(exam)}
+                                aria-label={exam.title}
+                                className="flex cursor-pointer items-center gap-3 rounded-2xl border border-separator p-4 no-underline transition-colors hover:border-accent/50 hover:bg-accent/5"
                             >
                                 <div className="min-w-0 flex-1">
                                     <Typography type="body-sm" weight="medium" truncate>
@@ -209,14 +216,15 @@ export const ExamList = ({ subjectId, kind, onBack }: ExamListProps) => {
                                         {metaLabel(exam)}
                                     </Typography>
                                 </div>
-                                <Button
-                                    size="sm"
-                                    variant="secondary"
-                                    onPress={() => openExam(exam)}
-                                >
-                                    {t(`practice.exam.${kind}.open`)}
-                                </Button>
-                            </div>
+                                {/* Caret, not a button: the row IS the action now, and a
+                                    second control inside a link is a second tab stop that
+                                    goes exactly where the link already goes. */}
+                                <CaretRightIcon
+                                    aria-hidden
+                                    focusable="false"
+                                    className="size-4 shrink-0 text-muted"
+                                />
+                            </Link>
                         ),
                     )}
                 </div>

@@ -4,12 +4,13 @@ import React from "react"
 import { Accordion, Button, Chip, Skeleton, Typography } from "@heroui/react"
 import { ArrowLeftIcon, HammerIcon, MagnifyingGlassIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
-import { useParams } from "next/navigation"
+import { useParams, useSearchParams } from "next/navigation"
 import { Link, useRouter } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 
 import { useQueryChallengeSwr } from "../hooks/useQueryChallengeSwr"
 import type { ChallengeDetail } from "../hooks/useQueryChallengeSwr"
+import { challengeBackHref } from "./challengeBackHref"
 import { ChallengePaper } from "./ChallengePaper"
 import { classifyChallengePaper } from "./paperKind"
 import { GradeCodePanel } from "./GradeCodePanel"
@@ -121,6 +122,8 @@ export const ChallengeView = () => {
     const tSystem = useTranslations("challengeSystem")
     const { challengeId } = useParams<{ challengeId: string }>()
     const router = useRouter()
+    // Where the reader came from — see challengeBackHref.
+    const backHref = challengeBackHref(useSearchParams().get("subject"))
     const { challenge, isLoading, error, mutate } = useQueryChallengeSwr(challengeId)
 
     return (
@@ -146,7 +149,7 @@ export const ChallengeView = () => {
                     <Button
                         size="sm"
                         variant="secondary"
-                        onPress={() => router.push("/challenges")}
+                        onPress={() => router.push(backHref)}
                     >
                         {t("uiuxEditor.backToCatalog")}
                     </Button>
@@ -159,7 +162,7 @@ export const ChallengeView = () => {
                     {/* header: back link, then a tight title↔meta cluster */}
                     <div className="flex flex-col gap-2">
                         <Link
-                            href="/challenges"
+                            href={backHref}
                             className="flex w-fit items-center gap-2 text-sm text-muted no-underline transition-colors hover:text-foreground"
                         >
                             <ArrowLeftIcon className="size-4" aria-hidden focusable="false" />

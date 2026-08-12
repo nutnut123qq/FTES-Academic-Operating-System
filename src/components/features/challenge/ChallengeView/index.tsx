@@ -10,6 +10,8 @@ import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 
 import { useQueryChallengeSwr } from "../hooks/useQueryChallengeSwr"
 import type { ChallengeDetail } from "../hooks/useQueryChallengeSwr"
+import { ChallengePaper } from "./ChallengePaper"
+import { classifyChallengePaper } from "./paperKind"
 import { GradeCodePanel } from "./GradeCodePanel"
 import { UiUxChallengeEditor } from "./UiUxChallengeEditor"
 
@@ -78,9 +80,41 @@ const ChallengeBrief = ({ challenge }: { challenge: ChallengeDetail }) => {
 }
 
 /**
+ * The type-specific SOLVE surface of an ordinary (paper-less) challenge: the live UI/UX
+ * editor when the BE exposes a starter + target asset, the AI code-grading panel for
+ * coding/SQL, a coming-soon panel otherwise.
+ */
+const ChallengeSolveSurface = ({ challenge }: { challenge: ChallengeDetail }) => {
+    const t = useTranslations("challenge")
+
+    if (challenge.type === "uiux" && challenge.targetImageUrl) {
+        return <UiUxChallengeEditor challenge={challenge} />
+    }
+    if (challenge.type === "coding" || challenge.type === "sql") {
+        return <GradeCodePanel challenge={challenge} challengeId={challenge.challengeUuid} />
+    }
+    return (
+        <div className="flex flex-col items-center gap-3 rounded-2xl border border-separator p-6 py-16 text-center">
+            <HammerIcon className="size-8 text-muted" aria-hidden focusable="false" />
+            <Typography type="body-sm" weight="semibold">
+                {t("uiuxEditor.comingSoon.title")}
+            </Typography>
+            <Typography type="body-sm" color="muted">
+                {t("uiuxEditor.comingSoon.description")}
+            </Typography>
+        </div>
+    )
+}
+
+/**
  * The challenge solve view (§10) — `/challenges/[challengeId]`. Header + brief
  * accordions, then the type-specific solve surface: `uiux` gets the live
  * HTML/CSS/JS editor; other types show a coming-soon placeholder (out of scope).
+ *
+ * A challenge that carries an EXAM PAPER (`paperUrl` — a Practical Exam folded into the
+ * challenge bank) is a READ surface: the paper replaces the solve surface entirely, no
+ * editor and no submission, because AI grading for papers is locked. An ordinary
+ * challenge carries no paper, so nothing about the existing solvers changes.
  */
 export const ChallengeView = () => {
     const t = useTranslations("challenge")
@@ -147,6 +181,13 @@ export const ChallengeView = () => {
                                     ? tSystem(`status.${challenge.status}`)
                                     : challenge.status}
                             </Chip>
+                            {/* tags (`pe`, the subject code, …) — the same chips the list
+                                filters on, so a paper's provenance is visible here too */}
+                            {challenge.tags.map((tag) => (
+                                <Chip key={tag.slug} size="sm" variant="tertiary">
+                                    {tag.label}
+                                </Chip>
+                            ))}
                         </div>
                     </div>
 
@@ -168,29 +209,19 @@ export const ChallengeView = () => {
                             <ChallengeBrief challenge={challenge} />
                         ) : null}
 
-                    {/* The interactive UI/UX solver needs a starter + target asset the BE
-                        public view does not expose → fall back to the coming-soon panel
-                        unless those assets are present. Coding/SQL get the real AI
-                        code-grading surface (Judge0 + LLM via /api/v1/ai/coding/*). */}
-                    {challenge.type === "uiux" && challenge.targetImageUrl ? (
-                        <UiUxChallengeEditor challenge={challenge} />
-                    ) : challenge.type === "coding" || challenge.type === "sql" ? (
-                        <GradeCodePanel challenge={challenge} challengeId={challenge.challengeUuid} />
-                    ) : (
-                        <div className="flex flex-col items-center gap-3 rounded-2xl border border-separator p-6 py-16 text-center">
-                            <HammerIcon
-                                className="size-8 text-muted"
-                                aria-hidden
-                                focusable="false"
+                    {/* An exam paper OWNS the surface: read it, practise, done. Handing an
+                        answer in is not offered (AI grading for papers is locked), so the
+                        solvers are not even reached for a paper-bearing challenge. */}
+                    {classifyChallengePaper(challenge.paperUrl, challenge.paperMime)
+                        !== "MISSING" ? (
+                            <ChallengePaper
+                                paperUrl={challenge.paperUrl}
+                                paperMime={challenge.paperMime}
+                                title={challenge.title}
                             />
-                            <Typography type="body-sm" weight="semibold">
-                                {t("uiuxEditor.comingSoon.title")}
-                            </Typography>
-                            <Typography type="body-sm" color="muted">
-                                {t("uiuxEditor.comingSoon.description")}
-                            </Typography>
-                        </div>
-                    )}
+                        ) : (
+                            <ChallengeSolveSurface challenge={challenge} />
+                        )}
                 </div>
             ) : null}
         </AsyncContent>

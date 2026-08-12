@@ -57,10 +57,11 @@ export interface ExamImageViewerProps {
 }
 
 /**
- * The exam page viewer shared by BOTH practice surfaces — the FE album
- * (`/subjects/{id}/practice/fe/{albumId}`) and the PE paper
- * (`/subjects/{id}/practice/pe/{paperId}`) — so the two feel like one system and a fix
- * lands in one place.
+ * The exam page viewer of the FE album (`/subjects/{id}/practice/fe/{albumId}`).
+ *
+ * It used to be shared with the PE paper page; PE papers are challenges now (tagged `pe`,
+ * read on `/challenges/{id}`), so the album is the only caller left — the viewer stays
+ * generic all the same, it is the one place a paging/zoom fix has to land.
  *
  * **Why the stage is absolutely positioned.** The pane is a flex/grid child of a frame
  * with a fixed height and `overflow-hidden`. A tall portrait scan inside a NORMAL-flow

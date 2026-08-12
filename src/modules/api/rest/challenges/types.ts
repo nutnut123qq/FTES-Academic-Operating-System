@@ -74,6 +74,18 @@ export interface McqQuestionView {
     orderNo: number
 }
 
+/**
+ * One tag attached to a challenge (BE `challenge.tags` / `ChallengeTagView`). The `slug`
+ * is the stable machine key the `tags=` query param filters on (e.g. `pe`, `prf192`); the
+ * `label` is the human text rendered on the chip.
+ */
+export interface ChallengeTagView {
+    /** Stable machine key, lower-kebab (e.g. `pe`, `prf192`). */
+    slug: string
+    /** Human label shown on the chip. */
+    label: string
+}
+
 /** Challenge summary returned by list/detail endpoints. */
 export interface ChallengeView {
     /** Challenge id (UUID). */
@@ -156,6 +168,26 @@ export interface ChallengeView {
      * on older deployments → treated as not-free (paid).
      */
     free?: boolean
+    /**
+     * Tags classifying the challenge (`pe` + the subject code for a folded-in Practical
+     * Exam paper, contract challenge-global-bank-tags). Drives the tag chips + the tag
+     * filter row, and mirrors the `tags=` list query param. Additive — absent on older
+     * deployments → the surfaces render no tag chips.
+     */
+    tags?: Array<ChallengeTagView> | null
+    /**
+     * Direct URL of the challenge's EXAM PAPER file, when the challenge ships one (a PE
+     * paper folded into the challenge bank). `null` / absent for an ordinary challenge.
+     * The learner READS it — there is deliberately no submission surface behind it
+     * (AI grading stays locked).
+     */
+    paperUrl?: string | null
+    /**
+     * MIME type of {@link paperUrl} (`image/*` → rendered inline, `application/pdf` →
+     * embedded viewer, anything else → open/download affordance). `null` when the BE
+     * could not resolve one — the FE then falls back to the URL's file extension.
+     */
+    paperMime?: string | null
 }
 
 /** Wrapper for a batch test-case upsert. */

@@ -1422,6 +1422,14 @@
         "notFound": "Không tìm thấy thử thách này."
       },
       "backToCatalog": "Về danh sách thử thách"
+    },
+    "paper": {
+      "title": "Đề bài",
+      "open": "Mở đề gốc",
+      "openImage": "Mở ảnh đề ở kích thước gốc",
+      "imageAlt": "Đề bài của thử thách {title}",
+      "noPreview": "Định dạng này không xem trực tiếp được — mở đề để đọc.",
+      "gradingLocked": "Đề này để bạn tự luyện. Nộp bài cho FrosTES chấm chưa mở."
     }
   },
   "submissionAttempts": {
@@ -3712,7 +3720,9 @@
       "empty": "Không có thử thách nào khớp bộ lọc.",
       "errorTitle": "Không tải được thử thách",
       "errorDescription": "Đã có lỗi khi lấy danh sách thử thách. Thử lại nhé.",
-      "retry": "Thử lại"
+      "retry": "Thử lại",
+      "tagsLabel": "Thẻ",
+      "allTags": "Mọi thẻ"
     },
     "types": {
       "coding": "Lập trình",
@@ -5268,10 +5278,6 @@
       "title": "Luyện tập",
       "cta": "Mở",
       "modules": {
-        "pe": {
-          "title": "Thi thực hành (PE)",
-          "meta": "{count} đề"
-        },
         "fe": {
           "title": "Thi cuối kỳ (FE)",
           "meta": "{count} bộ đề"
@@ -5329,6 +5335,10 @@
           "allStatuses": "Mọi trạng thái",
           "allTypes": "Mọi loại",
           "allLifecycles": "Mọi trạng thái"
+        },
+        "tags": {
+          "label": "Thẻ",
+          "all": "Mọi thẻ"
         },
         "sort": {
           "label": "Sắp xếp",
@@ -5579,70 +5589,6 @@
             "server": "Máy chủ đang gặp sự cố. Thử lại sau ít phút.",
             "generic": "Không thực hiện được thao tác. Thử lại sau."
           }
-        }
-      },
-      "pe": {
-        "title": "Đề PE",
-        "backToList": "Về trang luyện tập",
-        "loadError": "Không tải được đề thi",
-        "paperAlt": "Ảnh đề thi",
-        "paperFile": "Tệp đề thi",
-        "openPaper": "Tải đề",
-        "paper": {
-          "loading": "Đang mở đề thi…",
-          "missing": "Đề thi chưa có tệp đính kèm.",
-          "noPreview": "Định dạng này không xem trực tiếp được — tải về để đọc đề.",
-          "previewFailed": "Không mở được đề ngay trong trang. Tải về để đọc nhé."
-        },
-        "comments": {
-          "title": "Thảo luận ({count})",
-          "prev": "Trước",
-          "next": "Sau",
-          "pageOf": "Trang {page}/{total}",
-          "submitError": "Không gửi được bình luận. Thử lại nhé.",
-          "deleteError": "Không xoá được bình luận. Thử lại nhé."
-        },
-        "answerTitle": "Nộp bài làm",
-        "attempts": "Đã nộp {used}/{limit} lượt",
-        "attemptsExhausted": "Bạn đã dùng hết {limit} lượt nộp cho đề này.",
-        "waitForGrading": "Đang chấm bài trước — chờ có kết quả rồi nộp tiếp.",
-        "answerDropzone": "Kéo thả bài làm hoặc bấm để chọn",
-        "answerHint": "Chấp nhận {extensions} · tối đa {maxSize}MB",
-        "clearFile": "Bỏ tệp đã chọn",
-        "fileError": {
-          "type": "Định dạng không nhận — cho phép {extensions}.",
-          "size": "Tệp quá lớn — tối đa {maxSize}MB.",
-          "empty": "Tệp rỗng, hãy chọn tệp khác."
-        },
-        "submit": "Nộp bài",
-        "submitted": "Đã nộp bài — FrosTES đang chấm.",
-        "attemptsTitle": "Bài đã nộp",
-        "noAttempts": "Bạn chưa nộp bài nào cho đề này.",
-        "attemptsError": "Không tải được danh sách bài nộp",
-        "attemptNo": "Lượt {attempt}",
-        "status": {
-          "PENDING": "Chờ chấm",
-          "GRADING": "Đang chấm",
-          "SCORED": "Đã chấm",
-          "FAILED": "Chấm lỗi"
-        },
-        "viewResult": "Xem kết quả",
-        "hideResult": "Ẩn kết quả",
-        "resultError": "Không tải được kết quả chấm",
-        "relevance": "Mức bám đề: {relevance}",
-        "errors": {
-          "attemptLimit": "Bạn đã dùng hết lượt nộp cho đề này.",
-          "graderUnavailable": "Dịch vụ chấm bài đang tạm ngưng, thử lại sau.",
-          "gradingFailed": "Chấm bài thất bại. Thử nộp lại sau ít phút.",
-          "rateLimited": "Bạn thao tác quá nhanh — chờ ít phút rồi thử lại.",
-          "unauthorized": "Bạn cần đăng nhập để nộp bài.",
-          "forbidden": "Bạn không có quyền nộp bài cho đề này.",
-          "notFound": "Không tìm thấy đề thi này.",
-          "tooLarge": "Tệp quá lớn — tối đa 25MB.",
-          "validation": "Tệp không hợp lệ — kiểm tra lại định dạng rồi thử lại.",
-          "network": "Mất kết nối máy chủ. Kiểm tra mạng rồi thử lại.",
-          "server": "Máy chủ đang gặp sự cố. Thử lại sau ít phút.",
-          "generic": "Không nộp được bài. Thử lại nhé."
         }
       }
     },

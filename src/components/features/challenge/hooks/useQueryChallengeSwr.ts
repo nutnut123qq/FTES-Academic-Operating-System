@@ -61,6 +61,14 @@ export interface ChallengeDetail extends Challenge {
      * are never in this view. Absent on older deployments / non-code challenges.
      */
     sampleTestCases?: Array<SampleTestCaseView>
+    /**
+     * Direct URL of the challenge's EXAM PAPER, when it carries one (a PE paper folded
+     * into the challenge bank). `null` for an ordinary challenge. When set, the solve page
+     * shows the paper to READ — AI grading is locked, so no submission surface is offered.
+     */
+    paperUrl: string | null
+    /** MIME of {@link paperUrl} (`image/*`, `application/pdf`, …); `null` when unknown. */
+    paperMime: string | null
 }
 
 const EMPTY_STARTER: ChallengeStarter = { html: "", css: "", js: "" }
@@ -88,6 +96,8 @@ export const useQueryChallengeSwr = (challengeId: string) => {
                 courseId: "",
                 starterCode: parseGradingConfigStarterCode(view.gradingConfig),
                 sampleTestCases: view.sampleTestCases ?? undefined,
+                paperUrl: view.paperUrl ?? null,
+                paperMime: view.paperMime ?? null,
             }
         },
     )

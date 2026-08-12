@@ -20,17 +20,18 @@ type PracticeView = "hub" | PracticeModuleKey
  * Practice tab (§3 → §9 checklist). A practice HUB whose module cards open their own
  * in-panel sub-view (view-state navigation — no dead buttons).
  *
- * - **PE — Practical Exam** — the subject's exam papers ({@link ExamList} over
- *   `GET /resources?subjectId=&type=PE`); a paper opens its own route where the student
- *   uploads an answer for AI grading.
- * - **FE — Final Exam** — the subject's exam albums (`…&type=FE`); an album opens its
- *   own route: up to 50 pictures, each with its own comment thread.
- * - **Coding** — the real challenge bank ({@link CodingChallengeList}: `GET /challenges`
- *   + run/submit against `/ai/coding/*` and `/challenges/{id}/submissions`).
+ * - **Coding** — the real challenge bank ({@link CodingChallengeList}:
+ *   `GET /challenges?subjectId=` + run/submit against `/ai/coding/*` and
+ *   `/challenges/{id}/submissions`). **Practical Exam (PE) papers live here now**, tagged
+ *   `pe` + the subject code: the learner filters the bank by that tag and READS the paper
+ *   on the challenge page. There is no PE card and no PE answer upload — grading is
+ *   locked.
+ * - **FE — Final Exam** — the subject's exam albums (`GET /resources?subjectId=&type=FE`);
+ *   an album opens its own route: up to 50 pictures, each with its own comment thread.
  * - **Leaderboard** — the subject leaderboard.
  *
  * The AI quiz / AI flashcard generators are a DIFFERENT surface and stay where they are
- * (the subject's AI tools tab) — they were never these two cards.
+ * (the subject's AI tools tab) — they were never these cards.
  */
 export const SubjectPractice = () => {
     const t = useTranslations("subjects")
@@ -54,9 +55,9 @@ export const SubjectPractice = () => {
         return <PracticeLeaderboard subjectId={subjectId} onBack={backToHub} />
     }
 
-    // PE / FE — the exam lists (a row routes to the exam's own page)
-    if (view === "pe" || view === "fe") {
-        return <ExamList subjectId={subjectId} kind={view} onBack={backToHub} />
+    // FE — the exam album list (a row routes to the album's own page)
+    if (view === "fe") {
+        return <ExamList subjectId={subjectId} kind="fe" onBack={backToHub} />
     }
 
     return (

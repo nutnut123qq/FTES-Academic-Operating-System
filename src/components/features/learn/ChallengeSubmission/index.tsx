@@ -81,6 +81,11 @@ const toChallengeDetail = (view: ChallengeView): ChallengeDetail => ({
     // cases exposed on the view — drive the sandbox prefill + "Chạy test" / "Ví dụ".
     starterCode: parseGradingConfigStarterCode(view.gradingConfig),
     sampleTestCases: view.sampleTestCases ?? undefined,
+    tags: view.tags ?? [],
+    // An exam paper is a challenge-bank thing (a PE paper read on /challenges/{id}), not
+    // a lesson exercise — the lesson solver never renders one, so it stays null here.
+    paperUrl: null,
+    paperMime: null,
 })
 
 /**

@@ -41,15 +41,44 @@ const normalizeSubmissionView = (view: SubmissionView): SubmissionView => ({
     status: normalizeSubmissionStatus(view.status),
 })
 
+/** Optional narrowing of {@link listChallenges}. */
+export interface ListChallengesParams {
+    /**
+     * Owning subject UUID — the BE filters `challenges.subject_id` server-side. Omit for
+     * the global bank.
+     */
+    subjectId?: string
+    /**
+     * Tag slugs the challenge must carry, **AND** semantics (a row must have every slug).
+     * Sent comma-separated (`tags=pe,prf192`), the form the BE documents alongside the
+     * repeated-param form. Omit / empty → no tag constraint.
+     */
+    tags?: Array<string>
+}
+
 /**
- * Lists all public challenges.
+ * Lists the public challenges, optionally narrowed to one subject and/or a set of tags.
  *
- * `GET /api/v1/challenges`
+ * `GET /api/v1/challenges?subjectId=&tags=`
+ *
+ * Both query params are server-side filters (contract challenge-global-bank-tags); an
+ * older deployment that does not know them simply ignores them and answers the global
+ * bank, so callers must stay correct — not just lucky — if a param is dropped.
+ *
+ * @param params - {@link ListChallengesParams}; omit for the whole public bank.
+ * @returns The matching challenge views.
  */
-export const listChallenges = async (): Promise<Array<ChallengeView>> => {
+export const listChallenges = async (
+    params?: ListChallengesParams,
+): Promise<Array<ChallengeView>> => {
+    const tags = params?.tags?.filter((tag) => tag.length > 0) ?? []
     return restRequest<Array<ChallengeView>>({
         method: "GET",
         url: "/challenges",
+        params: {
+            ...(params?.subjectId ? { subjectId: params.subjectId } : {}),
+            ...(tags.length > 0 ? { tags: tags.join(",") } : {}),
+        },
         // BE gates the list behind auth (anon → 401); attach the bearer token.
         authenticated: true,
     })

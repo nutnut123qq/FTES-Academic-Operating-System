@@ -98,7 +98,11 @@ export const insertFeImageComment = (
         return { ...root, replies: [...root.replies, comment] }
     })
 
-    return attached ? { ...page, items, total: page.total + 1 } : page
+    // `total` counts ROOTS only — the BE builds the page from
+    // `findByImageIdAndParentIdIsNull...` and reports `roots.getTotalElements()`, which is
+    // also what the pager pages over. Bumping it for a REPLY drifted the "Bình luận ảnh
+    // này (n)" heading upward on every reply and could invent a page that does not exist.
+    return attached ? { ...page, items } : page
 }
 
 /**

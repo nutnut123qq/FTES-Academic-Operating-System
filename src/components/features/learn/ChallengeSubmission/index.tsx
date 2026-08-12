@@ -89,8 +89,10 @@ const toChallengeDetail = (view: ChallengeView): ChallengeDetail => ({
     paperMime: null,
     // The uploader card only surfaces on the paper surface (`ChallengePaper`), which this
     // lesson solver never reaches; passed through anyway so the two mappers agree on the
-    // BE field rather than one of them quietly dropping it.
+    // BE field rather than one of them quietly dropping it. Same for the posted instant,
+    // which no BE build sends yet (see `ChallengeDetailView.createdAt`).
     author: view.author ?? null,
+    createdAt: view.createdAt ?? null,
 })
 
 /**

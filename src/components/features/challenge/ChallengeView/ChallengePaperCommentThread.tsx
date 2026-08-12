@@ -6,7 +6,10 @@ import { useLocale, useTranslations } from "next-intl"
 
 import { useRequireAuth } from "@/hooks/useRequireAuth"
 import { useAppSelector } from "@/redux/hooks"
-import { PostCommentThread } from "@/components/reuseable/PostCommentThread"
+import {
+    PostCommentThread,
+    type CommentThreadLabels,
+} from "@/components/reuseable/PostCommentThread"
 import { formatRelativeTime } from "@/components/features/community/hooks/relativeTime"
 import { CHALLENGE_COMMENT_DELETED } from "@/components/features/challenge/hooks/challengeCommentTree"
 import { useMutateCreateChallengeCommentSwr } from "@/components/features/challenge/hooks/useMutateCreateChallengeCommentSwr"
@@ -108,6 +111,28 @@ export const ChallengePaperCommentThread = ({
         [commentsSwr.data, locale],
     )
 
+    /**
+     * Paper-flavoured copy for the states that NAME the thing being discussed.
+     *
+     * The shared thread's defaults are written for a community post, so an
+     * unreachable endpoint here rendered "This post no longer exists or was
+     * removed" over a challenge the reader is looking at — the wrong object AND a
+     * deletion that never happened. Only the object-naming lines are overridden;
+     * "sign in" / "try again" / the network + server lines are the same sentence
+     * on every surface and stay shared.
+     */
+    const labels = useMemo<CommentThreadLabels>(
+        () => ({
+            empty: t("paper.comments.empty"),
+            loadFailed: t("paper.comments.loadFailed"),
+            loadFailedAuth: t("paper.comments.loadFailedAuth"),
+            loadFailedForbidden: t("paper.comments.loadFailedForbidden"),
+            loadFailedGone: t("paper.comments.loadFailedGone"),
+            loadFailedUnavailable: t("paper.comments.loadFailedUnavailable"),
+        }),
+        [t],
+    )
+
     const onSubmit = useCallback(
         async (body: string, parentCommentId?: string): Promise<boolean> => {
             if (!requireAuth("auth.context.comment")) {
@@ -169,6 +194,7 @@ export const ChallengePaperCommentThread = ({
                 onRetry={() => {
                     void commentsSwr.mutate()
                 }}
+                labels={labels}
                 onSubmit={onSubmit}
                 onDeleteComment={onDelete}
                 currentUserId={viewerId}

@@ -1448,7 +1448,13 @@
         "pageOf": "Page {page}/{total}",
         "submitError": "The comment could not be posted. Try again.",
         "rateLimited": "You're commenting too quickly. Wait a moment and try again.",
-        "deleteError": "The comment could not be deleted. Try again."
+        "deleteError": "The comment could not be deleted. Try again.",
+        "empty": "No comments on this paper yet. Be the first!",
+        "loadFailed": "Couldn't load the comments on this paper.",
+        "loadFailedAuth": "Sign in to read the comments on this paper.",
+        "loadFailedForbidden": "You don't have permission to read the comments on this paper.",
+        "loadFailedGone": "This paper no longer exists or was removed, so there are no comments to show.",
+        "loadFailedUnavailable": "Couldn't load the comments on this paper — the discussion isn't reachable right now. Please try again."
       }
     }
   },
@@ -5574,7 +5580,13 @@
           "next": "Next",
           "pageOf": "Page {page}/{total}",
           "submitError": "The comment could not be posted. Try again.",
-          "deleteError": "The comment could not be deleted. Try again."
+          "deleteError": "The comment could not be deleted. Try again.",
+          "empty": "No comments on this image yet. Be the first!",
+          "loadFailed": "Couldn't load the comments on this image.",
+          "loadFailedAuth": "Sign in to read the comments on this image.",
+          "loadFailedForbidden": "You don't have permission to read the comments on this image.",
+          "loadFailedGone": "This image no longer exists or was removed, so there are no comments to show.",
+          "loadFailedUnavailable": "Couldn't load the comments on this image — the discussion isn't reachable right now. Please try again."
         },
         "manage": {
           "open": "Manage images",
@@ -6787,7 +6799,8 @@
       "commentsLoadFailedForbidden": "You don't have permission to see the comments on this post (it lives in a private group).",
       "commentsLoadFailedNotFound": "This post no longer exists or was removed, so there are no comments to show.",
       "commentsLoadFailedServer": "The server hit a problem loading the comments. Please try again in a few minutes.",
-      "commentsSignIn": "Sign in"
+      "commentsSignIn": "Sign in",
+      "commentsLoadFailedUnavailable": "Couldn't load the comments — the discussion isn't reachable right now. Please try again."
     },
     "feed": {
       "likes": "{count} likes",

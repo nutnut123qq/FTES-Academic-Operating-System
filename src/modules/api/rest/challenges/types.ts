@@ -316,6 +316,21 @@ export interface ChallengeView {
      * DEGRADE — hide the uploader line — and never print a placeholder identity.
      */
     author?: ChallengeAuthorView | null
+    /**
+     * When the challenge (and therefore its paper) was PUT UP — ISO-8601, read next to
+     * {@link author} as "Uploaded by … / 20 hours ago", the way the FE album labels a
+     * picture with `FeImage.createdAt`.
+     *
+     * **The BE does not send this field yet.** `challenge.challenges.created_at` exists in
+     * the schema and `ChallengeEntity.createdAt` maps it, but
+     * `ChallengeViews.ChallengeView` never projects it — so this is `undefined` on every
+     * deployment today and the uploader block simply prints no time. It is declared here
+     * (rather than left out) because it is the ONE place the value has to land, and the
+     * only alternatives would be lies: `startsAt` is when the challenge OPENS, not when it
+     * was posted, and a client-side `Date.now()` is a fabricated timestamp. Adding
+     * `Instant createdAt` to the BE record lights this up with no further FE change.
+     */
+    createdAt?: string | null
 }
 
 /** Wrapper for a batch test-case upsert. */

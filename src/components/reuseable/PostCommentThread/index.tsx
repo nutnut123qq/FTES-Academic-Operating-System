@@ -22,7 +22,9 @@ import { useAppSelector } from "@/redux/hooks"
 import { looksLikeUserId } from "@/utils/avatar"
 import type { PostComment } from "@/components/features/community/hooks/useQueryPostDetailSwr"
 import type { WithClassNames } from "@/modules/types/base/class-name"
-import { CommentLoadError } from "./comment-load-error"
+import { CommentLoadError, type CommentThreadLabels } from "./comment-load-error"
+
+export type { CommentThreadLabels } from "./comment-load-error"
 
 /**
  * Submit a report for ONE comment. Resolves `true` when the report was accepted
@@ -53,6 +55,15 @@ export interface PostCommentThreadProps extends WithClassNames<undefined> {
     error?: unknown
     /** Re-attempt the comment fetch in place. */
     onRetry?: () => void
+    /**
+     * Surface-specific wording for the empty + failed states
+     * ({@link CommentThreadLabels}). The defaults are written for a community
+     * POST ("this post no longer exists…"), which is a lie on a challenge paper
+     * or an album picture — any surface that is not a post overrides the lines
+     * that name the object. Omitted / partial → the post copy, so existing
+     * callers are unchanged.
+     */
+    labels?: CommentThreadLabels
     /**
      * Submit a comment (top-level or one-level reply). Returns `true` on success
      * (clears the composer) and `false` on failure / blocked guest (keeps the
@@ -355,6 +366,10 @@ export const CommentRow = ({
  * error (in place, no collapse) that names the CAUSE when the caller also passes
  * the `error` itself and offers only the action that can fix it (retry / sign in
  * / nothing) — see {@link CommentLoadError}; otherwise the thread + composer. The
+ * wording of those two non-conversation states defaults to community-POST copy and
+ * is overridable per surface through `labels` ({@link CommentThreadLabels}), which
+ * a thread hanging off a challenge paper or an album picture must use — its object
+ * is not a post. The
  * composer supports one-level reply mode (a "replying to" chip with cancel that
  * keeps the draft), an empty-input guard, and draft-preserving failure handling
  * (the caller's `onSubmit` returns `false` to keep the text). On mobile the
@@ -384,6 +399,7 @@ export const PostCommentThread = ({
     hasError,
     error,
     onRetry,
+    labels,
     onSubmit,
     onCollapse,
     autoFocus,
@@ -500,12 +516,12 @@ export const PostCommentThread = ({
                     ))}
                 </div>
             ) : hasError ? (
-                <CommentLoadError error={error} onRetry={onRetry} />
+                <CommentLoadError error={error} onRetry={onRetry} labels={labels} />
             ) : (
                 <>
                     {comments.length === 0 ? (
                         <Typography type="body-sm" color="muted">
-                            {t("engagement.commentsEmpty")}
+                            {labels?.empty ?? t("engagement.commentsEmpty")}
                         </Typography>
                     ) : (
                         <div className="flex flex-col gap-3">

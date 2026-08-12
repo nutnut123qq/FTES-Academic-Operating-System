@@ -6,7 +6,10 @@ import { useLocale, useTranslations } from "next-intl"
 
 import { useRequireAuth } from "@/hooks/useRequireAuth"
 import { useAppSelector } from "@/redux/hooks"
-import { PostCommentThread } from "@/components/reuseable/PostCommentThread"
+import {
+    PostCommentThread,
+    type CommentThreadLabels,
+} from "@/components/reuseable/PostCommentThread"
 import { formatRelativeTime } from "@/components/features/community/hooks/relativeTime"
 import { FE_IMAGE_COMMENT_DELETED } from "@/components/features/resource/hooks/feImageCommentTree"
 import { useMutateCreateFeImageCommentSwr } from "@/components/features/resource/hooks/useMutateCreateFeImageCommentSwr"
@@ -95,6 +98,26 @@ export const FeImageCommentThread = ({
         [commentsSwr.data, locale],
     )
 
+    /**
+     * Picture-flavoured copy for the states that NAME the thing being discussed —
+     * the same leak the challenge paper had: the shared thread's defaults are
+     * written for a community post, so a failed read here announced that "this
+     * post no longer exists or was removed" about an image the reader is looking
+     * at. Only the object-naming lines are overridden; the network / server /
+     * "sign in" / "try again" lines read identically everywhere and stay shared.
+     */
+    const labels = useMemo<CommentThreadLabels>(
+        () => ({
+            empty: t("practice.fe.comments.empty"),
+            loadFailed: t("practice.fe.comments.loadFailed"),
+            loadFailedAuth: t("practice.fe.comments.loadFailedAuth"),
+            loadFailedForbidden: t("practice.fe.comments.loadFailedForbidden"),
+            loadFailedGone: t("practice.fe.comments.loadFailedGone"),
+            loadFailedUnavailable: t("practice.fe.comments.loadFailedUnavailable"),
+        }),
+        [t],
+    )
+
     const onSubmit = useCallback(
         async (body: string, parentCommentId?: string): Promise<boolean> => {
             if (!requireAuth("auth.context.comment")) {
@@ -149,6 +172,7 @@ export const FeImageCommentThread = ({
                 onRetry={() => {
                     void commentsSwr.mutate()
                 }}
+                labels={labels}
                 onSubmit={onSubmit}
                 onDeleteComment={onDelete}
                 currentUserId={viewerId}

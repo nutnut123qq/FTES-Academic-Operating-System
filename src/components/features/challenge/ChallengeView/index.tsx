@@ -227,6 +227,7 @@ export const ChallengeView = () => {
                                 // the routing SLUG — the real id is `challengeUuid`.
                                 challengeId={challenge.challengeUuid}
                                 author={challenge.author}
+                                createdAt={challenge.createdAt}
                             />
                         ) : (
                             <ChallengeSolveSurface challenge={challenge} />

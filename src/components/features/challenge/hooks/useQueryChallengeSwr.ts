@@ -79,6 +79,14 @@ export interface ChallengeDetail extends Challenge {
      * uploader line in that case rather than inventing an identity.
      */
     author: ChallengeAuthorView | null
+    /**
+     * When the challenge was posted (ISO-8601), rendered as the uploader's relative
+     * timestamp on the paper surface. `null` on every deployment today: the BE's
+     * `ChallengeView` carries no creation instant — see
+     * {@link import("@/modules/api/rest/challenges/types").ChallengeDetailView.createdAt}
+     * for the exact field that has to be added, and why nothing else may stand in for it.
+     */
+    createdAt: string | null
 }
 
 const EMPTY_STARTER: ChallengeStarter = { html: "", css: "", js: "" }
@@ -109,6 +117,7 @@ export const useQueryChallengeSwr = (challengeId: string) => {
                 paperUrl: view.paperUrl ?? null,
                 paperMime: view.paperMime ?? null,
                 author: view.author ?? null,
+                createdAt: view.createdAt ?? null,
             }
         },
     )

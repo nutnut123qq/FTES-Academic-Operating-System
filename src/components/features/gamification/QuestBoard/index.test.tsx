@@ -149,9 +149,12 @@ describe("QuestBoard", () => {
         expect(screen.getByTestId("empty-content")).toBeTruthy()
         expect(screen.getByText("signInPrompt")).toBeTruthy()
         expect(screen.queryByText("Hoàn thành bài học")).toBeNull()
-        // the guest sign-in CTA points at the auth surface
+        // The guest sign-in CTA points at the auth surface, LOCALE-LESS: the mock
+        // above swaps next-intl's `Link` for a plain <a>, so this asserts the href
+        // handed TO the locale-aware Link — which prepends the locale itself. A
+        // "/vi/..." here would ship as "/vi/vi/authentication" (404) in the browser.
         const link = screen.getByText("signIn").closest("a")
-        expect(link?.getAttribute("href")).toBe("/vi/authentication")
+        expect(link?.getAttribute("href")).toBe("/authentication")
     })
 
     it("lists every seeded quest ordered by sortOrder", () => {
@@ -178,7 +181,8 @@ describe("QuestBoard", () => {
         render(<QuestBoard />)
         const card = screen.getByText("Hoàn thành bài học").closest("div[class*='rounded-2xl']") as HTMLElement
         const link = within(card).getByRole("link")
-        expect(link.getAttribute("href")).toBe("/vi/courses/me")
+        // Locale-less — next-intl's Link adds the prefix (see the guest-gate test).
+        expect(link.getAttribute("href")).toBe("/courses/me")
     })
 
     it("renders no CTA for unknown/admin codes and for auto-complete DAILY_LOGIN", () => {

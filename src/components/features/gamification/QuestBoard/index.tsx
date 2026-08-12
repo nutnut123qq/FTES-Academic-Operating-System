@@ -57,9 +57,10 @@ interface QuestCardProps {
  */
 const QuestCard = ({ quest }: QuestCardProps) => {
     const t = useTranslations("gamification.quests")
-    const locale = useLocale()
     const { total, current, isDone } = questProgress(quest)
-    const href = isDone ? null : questCtaHref(quest.code, locale)
+    // Locale-less on purpose — the `Link` below is the locale-aware one from
+    // `@/i18n/navigation` and prepends the active locale itself.
+    const href = isDone ? null : questCtaHref(quest.code)
 
     return (
         <div
@@ -152,7 +153,7 @@ export const QuestBoard = () => {
                     description={tm("greeting.guest")}
                     action={
                         <Link
-                            href={pathConfig().locale(locale).authentication().build()}
+                            href={pathConfig().locale().authentication().build()}
                             className="inline-flex items-center gap-1 rounded-full bg-accent px-4 py-2 text-sm font-medium text-accent-foreground no-underline transition-colors hover:bg-accent/90"
                         >
                             {t("signIn")}

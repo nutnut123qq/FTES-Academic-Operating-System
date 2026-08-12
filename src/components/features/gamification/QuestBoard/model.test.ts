@@ -58,25 +58,38 @@ describe("questProgress", () => {
 })
 
 describe("questCtaHref", () => {
-    it("maps every known earning code to its surface (locale-prefixed)", () => {
-        expect(questCtaHref("LESSON_COMPLETE", "vi")).toBe("/vi/courses/me")
-        expect(questCtaHref("COMMUNITY_POST", "vi")).toBe("/vi/community/new")
-        expect(questCtaHref("COMMUNITY_COMMENT", "vi")).toBe("/vi/community")
-        expect(questCtaHref("LIKE_3_POSTS", "vi")).toBe("/vi/community")
-        expect(questCtaHref("STREAK_7_BONUS", "vi")).toBe("/vi/profile/progress")
+    it("maps every known earning code to its surface", () => {
+        expect(questCtaHref("LESSON_COMPLETE")).toBe("/courses/me")
+        expect(questCtaHref("COMMUNITY_POST")).toBe("/community/new")
+        expect(questCtaHref("COMMUNITY_COMMENT")).toBe("/community")
+        expect(questCtaHref("LIKE_3_POSTS")).toBe("/community")
+        expect(questCtaHref("STREAK_7_BONUS")).toBe("/profile/progress")
     })
 
-    it("honours the active locale in the prefix", () => {
-        expect(questCtaHref("LESSON_COMPLETE", "en")).toBe("/en/courses/me")
-        expect(questCtaHref("COMMUNITY_POST", "en")).toBe("/en/community/new")
+    // Regression: these hrefs are rendered through the locale-aware `Link` of
+    // `@/i18n/navigation`, which prepends the active locale. When the helper
+    // prefixed a locale too, every CTA resolved to `/vi/vi/...` — a real 404.
+    it("emits NO locale prefix, so the locale-aware Link can add exactly one", () => {
+        const codes = [
+            "LESSON_COMPLETE",
+            "COMMUNITY_POST",
+            "COMMUNITY_COMMENT",
+            "LIKE_3_POSTS",
+            "STREAK_7_BONUS",
+        ]
+        for (const code of codes) {
+            const href = questCtaHref(code)
+            expect(href).not.toBeNull()
+            expect(href).not.toMatch(/^\/(vi|en)(\/|$)/)
+        }
     })
 
     it("returns null for the auto-complete DAILY_LOGIN quest", () => {
-        expect(questCtaHref("DAILY_LOGIN", "vi")).toBeNull()
+        expect(questCtaHref("DAILY_LOGIN")).toBeNull()
     })
 
     it("degrades gracefully to no CTA for unknown/admin codes", () => {
-        expect(questCtaHref("SOME_ADMIN_QUEST", "vi")).toBeNull()
-        expect(questCtaHref("", "vi")).toBeNull()
+        expect(questCtaHref("SOME_ADMIN_QUEST")).toBeNull()
+        expect(questCtaHref("")).toBeNull()
     })
 })

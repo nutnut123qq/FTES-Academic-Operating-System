@@ -81,8 +81,8 @@ export const SubjectFeAlbum = () => {
         [images],
     )
 
-    // Only fetch the pictures the reader is near. An album is up to 50 scans — pulling every one
-    // on mount costs tens of megabytes for a page that shows one at a time. `loadedCount` widens
+    // Only fetch the pictures the reader is near. An album is up to 200 scans — pulling every one
+    // on mount costs hundreds of megabytes for a page that shows one at a time. `loadedCount` widens
     // as they page (see albumLoadWindow); a thumbnail outside it renders WITHOUT a `src`, which is
     // what actually keeps the request from being made.
     const [loadedCount, setLoadedCount] = useState(ALBUM_INITIAL_LOAD)
@@ -111,10 +111,14 @@ export const SubjectFeAlbum = () => {
                     <Typography type="h5" weight="bold" truncate>
                         {resource?.title ?? t("practice.fe.title")}
                     </Typography>
+                    {/* How many pictures this album HAS — nothing else. It used to read
+                        "{count}/{max} ảnh", which every reader parsed as a POSITION ("picture 4
+                        of 50") on a 4-picture album. The cap is an author's concern, so it is
+                        stated where it can be acted on (the manager's remaining-slots line),
+                        never in the reader's header. */}
                     <Typography type="body-sm" color="muted">
                         {t("practice.fe.albumMeta", {
                             count: albumSwr.data?.total ?? images.length,
-                            max: albumSwr.data?.maxImages ?? images.length,
                         })}
                     </Typography>
                 </div>

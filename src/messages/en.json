@@ -1432,7 +1432,14 @@
       "imageAlt": "Exam paper for {title}",
       "noPreview": "This format can't be shown inline — open it to read the paper.",
       "archiveHint": "The paper is an archive — download it to open everything inside.",
-      "gradingLocked": "The paper is here to practise with. Handing an answer in for AI grading isn't open yet."
+      "gradingLocked": "The paper is here to practise with. Handing an answer in for AI grading isn't open yet.",
+      "submit": {
+        "title": "Hand in for AI grading",
+        "lockedBadge": "Not open yet",
+        "dropzone": "Your answer — photos, a PDF or a ZIP",
+        "cta": "Hand in for grading",
+        "region": "Hand in for AI grading (not open yet)"
+      }
     }
   },
   "submissionAttempts": {
@@ -5547,7 +5554,7 @@
       "fe": {
         "title": "FE album",
         "backToList": "Back to practice",
-        "albumMeta": "{count}/{max} images",
+        "albumMeta": "{count, plural, =0 {No images yet} one {# image in this set} other {# images in this set}}",
         "empty": "This album has no image yet.",
         "loadError": "Could not load the album",
         "uploader": "Uploaded by",

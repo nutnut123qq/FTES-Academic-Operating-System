@@ -322,10 +322,12 @@ export const MascotAssistant = () => {
                 // rightmost OPAQUE pixel among the rows that will actually be on screen (the
                 // widest part of the body is the hips, which are cropped away — measuring the
                 // whole silhouette leaves the visible head/chest short of the corner), then place
-                // it so that pixel lands exactly ON the screen edge and 68% of the body height
-                // remains. Re-run that fit if the artwork, the width or the angle ever changes.
-                //   mobile  w-24 = 96px  · -14° → translate(20px, 57px)
-                //   ≥ sm    w-36 = 144px · -14° → translate(30px, 85px)
+                // it so that pixel lands just PAST the screen edge (a 12px / 18px overshoot, which
+                // is what tucks the paw into the corner instead of parking it beside it) and 68%
+                // of the body height remains. Re-run that fit if the artwork, the width or the
+                // angle ever changes.
+                //   mobile  84px  · -14° → translate(31px, 52px)
+                //   ≥ sm    126px · -14° → translate(47px, 78px)
                 //
                 // The rotation uses the DEFAULT (center) origin — the fit above assumes it. An
                 // `origin-bottom-right` here silently invalidates every number.
@@ -337,7 +339,7 @@ export const MascotAssistant = () => {
                 //
                 // The transform lives on the BUTTON, not the image: the hit area travels with the
                 // visual, and the `<img>` keeps its own `.mascot-float` bob independent of this pose.
-                className="pointer-events-auto -mt-[57px] block w-24 shrink-0 translate-x-[20px] translate-y-[57px] rotate-[-14deg] cursor-pointer border-0 bg-transparent p-0 outline-none focus-visible:rounded-2xl focus-visible:ring-2 focus-visible:ring-accent sm:-mt-[85px] sm:w-36 sm:translate-x-[30px] sm:translate-y-[85px]"
+                className="pointer-events-auto -mt-[52px] block w-[84px] shrink-0 translate-x-[31px] translate-y-[52px] rotate-[-14deg] cursor-pointer border-0 bg-transparent p-0 outline-none focus-visible:rounded-2xl focus-visible:ring-2 focus-visible:ring-accent sm:-mt-[78px] sm:w-[126px] sm:translate-x-[47px] sm:translate-y-[78px]"
             >
                 <picture>
                     <source srcSet={MASCOT_WEBP} type="image/webp" />

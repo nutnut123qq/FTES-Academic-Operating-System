@@ -55,7 +55,8 @@ describe("useAppNav — Blog is the 5th plain-link module", () => {
         ])
 
         // label comes from t(nav.<key>); the mock returns the key verbatim.
-        // Blog is now the LAST module (the Quests board moved to the account menu).
+        // Blog is now the LAST module. The Quests board is NOT in the account menu — it is
+        // reached from the `DailyQuest` widget on the dashboard Overview tab (5e08bf1).
         const blog = modules.at(-1)
         expect(blog?.key).toBe("blog")
         expect(blog?.label).toBe("blog")

@@ -163,7 +163,7 @@ export const AccountMenuAuthed = ({ className }: AccountMenuAuthedProps) => {
                         ) : null}
                         <PlusCircleIcon
                             className="size-5 text-accent"
-                            aria-label={t("wallet.topup")}
+                            aria-label={t("wallet.actions.topup")}
                             focusable="false"
                         />
                     </span>

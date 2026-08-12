@@ -16,7 +16,9 @@ import type { CourseDetail as CourseDetailModel } from "../hooks/useQueryCourseD
  *    way out. It must read as an error and offer a retry.
  *
  * `t` echoes the message key so assertions key off ids. This file keeps its own mock set
- * (separate from `index.test.tsx`, which is red on master for unrelated reasons).
+ * because it renders `PackageEnrollCard`, which needs Modal + checkout mocks that
+ * `index.test.tsx` does not carry. (`index.test.tsx` is NOT red — it passes on master;
+ * the old note here claiming otherwise was a standing invitation to ignore a test file.)
  */
 
 const packagesMock = vi.fn()

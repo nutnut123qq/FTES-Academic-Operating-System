@@ -28,7 +28,10 @@ test("đăng bài từ composer cộng đồng vẫn chạy (bản vá contentFo
     await viewer
     await page.waitForTimeout(1_500) // hydrate
 
-    await page.getByRole("button", { name: "Đăng bài" }).first().click()
+    // Lối vào composer là ô nhắc "Có gì mới?" — nút "Đăng bài" riêng trên thanh feed đã bị
+    // gỡ có chủ đích ở 716aa72 ("pressing the prompt already opens the composer").
+    // "Đăng bài" bên dưới vẫn đúng: đó là nút gửi BÊN TRONG dialog.
+    await page.getByRole("button", { name: "Có gì mới?" }).click()
     const dialog = page.getByRole("dialog")
     await expect(dialog).toBeVisible({ timeout: 20_000 })
     // Nút Đăng bài chỉ bật khi có ĐỦ loại bài + tiêu đề + nội dung.

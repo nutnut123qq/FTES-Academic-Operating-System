@@ -48,7 +48,8 @@ describe("welcome tour data", () => {
         expect(last.target).toBeUndefined()
     })
 
-    it("anchors the four header modules + search + account via stable data-tour ids", () => {
+    // Four of the FIVE header modules: Blog is deliberately left out of the welcome tour.
+    it("anchors four of the five header modules + search + account via stable data-tour ids", () => {
         const targets = welcomeTour.steps.map((s) => s.target).filter(Boolean)
         expect(targets).toEqual([
             "nav-home",

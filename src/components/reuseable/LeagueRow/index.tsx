@@ -38,8 +38,11 @@ export interface LeagueRowProps extends WithClassNames<undefined> {
 /**
  * One full-width row of the weekly-league board: rank · avatar · name · week
  * points · rank-movement caret. Zone tints (promote/demote) and the viewer's
- * own highlight come from the parent, which knows the cohort cut lines. Shared
- * by the dashboard {@link LeagueRow} card and the full `/league` page.
+ * own highlight come from the parent, which knows the cohort cut lines.
+ *
+ * UNUSED — nothing imports this today. The dashboard league card and the `/league`
+ * route it was written for are both gone (12c485b); it survives only in case the
+ * weekly league is rebuilt. Do not read the old "shared by …" claim as current.
  *
  * @param props - {@link LeagueRowProps}
  */

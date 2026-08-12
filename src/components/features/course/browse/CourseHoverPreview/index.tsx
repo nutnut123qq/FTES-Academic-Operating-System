@@ -136,8 +136,8 @@ const HoverAddToCartButton = ({ course, rawId }: { course: Course, rawId?: strin
 
 /**
  * Udemy-style hover preview for a catalog course card: wraps the card and — on
- * hover-capable desktop pointers only — opens a detail panel beside it after a
- * short delay, showing badges, an "updated" line, meta, description, top
+ * hover-capable desktop pointers only — opens a detail panel beside it the instant
+ * the pointer arrives, showing badges, an "updated" line, meta, description, top
  * "what you'll learn" outcomes, an enroll CTA, the save toggle and — for a course
  * that is actually on sale — the grid's only "Thêm vào giỏ" CTA. The panel is
  * a sibling of the card link (never nested inside the `<a>` — it carries its

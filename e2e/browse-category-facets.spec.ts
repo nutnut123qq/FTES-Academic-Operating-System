@@ -119,9 +119,17 @@ const pressChipAndLand = async (page: Page, tab: Locator, url: RegExp) => {
     }).toPass({ timeout: NAV_TIMEOUT })
 }
 
-/** Waits for the grid to settle on a non-empty first paint of the category. */
+/**
+ * Waits for the grid to settle on a non-empty first paint of the category.
+ *
+ * Keyed off the card's HREF, not its accessible name: the catalog card stopped
+ * printing the course code entirely (7581132 "drop the course-code kicker",
+ * "the title carries the identity"), so a name-based RegExp(code) only still
+ * matched when the code happened to be inside the title. `gridCodes` below
+ * already reads the same `/courses/<slug>` contract.
+ */
 const waitForGrid = async (page: Page, courses: Array<LiveCourse>) => {
-    await expect(page.getByRole("link", { name: new RegExp(courses[0].code) }).first()).toBeVisible({
+    await expect(page.locator(`a[href$="/courses/${courses[0].slug}"]`).first()).toBeVisible({
         timeout: 30_000,
     })
 }

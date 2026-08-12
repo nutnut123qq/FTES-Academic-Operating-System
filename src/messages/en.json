@@ -1413,6 +1413,14 @@
         "notFound": "This challenge could not be found."
       },
       "backToCatalog": "Back to challenges"
+    },
+    "paper": {
+      "title": "Exam paper",
+      "open": "Open the original",
+      "openImage": "Open the paper at full size",
+      "imageAlt": "Exam paper for {title}",
+      "noPreview": "This format can't be shown inline — open it to read the paper.",
+      "gradingLocked": "The paper is here to practise with. Handing an answer in for AI grading isn't open yet."
     }
   },
   "submissionAttempts": {
@@ -3712,7 +3720,9 @@
       "empty": "No challenges match your filters.",
       "errorTitle": "Couldn't load challenges",
       "errorDescription": "Something went wrong while fetching the challenge list. Please try again.",
-      "retry": "Try again"
+      "retry": "Try again",
+      "tagsLabel": "Tags",
+      "allTags": "All tags"
     },
     "types": {
       "coding": "Coding",
@@ -5268,10 +5278,6 @@
       "title": "Practice",
       "cta": "Open",
       "modules": {
-        "pe": {
-          "title": "Practical Exam (PE)",
-          "meta": "{count} papers"
-        },
         "fe": {
           "title": "Final Exam (FE)",
           "meta": "{count} albums"
@@ -5329,6 +5335,10 @@
           "allStatuses": "All statuses",
           "allTypes": "All types",
           "allLifecycles": "All statuses"
+        },
+        "tags": {
+          "label": "Tags",
+          "all": "All tags"
         },
         "sort": {
           "label": "Sort",
@@ -5579,70 +5589,6 @@
             "server": "The server is having trouble. Try again in a few minutes.",
             "generic": "The action did not go through. Try again later."
           }
-        }
-      },
-      "pe": {
-        "title": "PE paper",
-        "backToList": "Back to practice",
-        "loadError": "Could not load the exam paper",
-        "paperAlt": "Exam paper image",
-        "paperFile": "Exam paper file",
-        "openPaper": "Download the paper",
-        "paper": {
-          "loading": "Opening the exam paper…",
-          "missing": "No exam paper has been attached yet.",
-          "noPreview": "This file type cannot be previewed here — download it to read the paper.",
-          "previewFailed": "The paper could not be opened in the page. Download it instead."
-        },
-        "comments": {
-          "title": "Discussion ({count})",
-          "prev": "Previous",
-          "next": "Next",
-          "pageOf": "Page {page}/{total}",
-          "submitError": "The comment could not be posted. Try again.",
-          "deleteError": "The comment could not be deleted. Try again."
-        },
-        "answerTitle": "Submit your answer",
-        "attempts": "{used}/{limit} attempts used",
-        "attemptsExhausted": "You have used all {limit} attempts on this paper.",
-        "waitForGrading": "An earlier attempt is still being graded — wait for its result.",
-        "answerDropzone": "Drop your answer here, or click to pick a file",
-        "answerHint": "Accepts {extensions} · up to {maxSize}MB",
-        "clearFile": "Clear the picked file",
-        "fileError": {
-          "type": "That format is not accepted — allowed: {extensions}.",
-          "size": "File too large — {maxSize}MB max.",
-          "empty": "The file is empty, pick another one."
-        },
-        "submit": "Submit",
-        "submitted": "Submitted — FrosTES is grading it.",
-        "attemptsTitle": "Your submissions",
-        "noAttempts": "You have not submitted anything for this paper yet.",
-        "attemptsError": "Could not load your submissions",
-        "attemptNo": "Attempt {attempt}",
-        "status": {
-          "PENDING": "Queued",
-          "GRADING": "Grading",
-          "SCORED": "Graded",
-          "FAILED": "Grading failed"
-        },
-        "viewResult": "View result",
-        "hideResult": "Hide result",
-        "resultError": "Could not load the grade",
-        "relevance": "Relevance: {relevance}",
-        "errors": {
-          "attemptLimit": "You have used all your attempts on this paper.",
-          "graderUnavailable": "The grading service is down right now, try again later.",
-          "gradingFailed": "Grading failed. Submit again in a few minutes.",
-          "rateLimited": "Too fast — wait a few minutes and try again.",
-          "unauthorized": "Sign in to submit an answer.",
-          "forbidden": "You are not allowed to submit an answer for this paper.",
-          "notFound": "That exam paper was not found.",
-          "tooLarge": "File too large — 25MB max.",
-          "validation": "The file is not valid — check its format and try again.",
-          "network": "Lost connection to the server. Check your network and retry.",
-          "server": "The server is having trouble. Try again in a few minutes.",
-          "generic": "The answer could not be submitted. Try again."
         }
       }
     },

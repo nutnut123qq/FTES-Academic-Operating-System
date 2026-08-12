@@ -3,7 +3,7 @@
 import useSWR from "swr"
 
 import { listChallenges } from "@/modules/api/rest/challenges/challenges"
-import type { ChallengeView } from "@/modules/api/rest/challenges/types"
+import type { ChallengeTagView, ChallengeView } from "@/modules/api/rest/challenges/types"
 
 /** Domain of a challenge (drives the icon + type chip). */
 export type ChallengeType = "coding" | "sql" | "uiux" | "ai" | "business"
@@ -23,7 +23,18 @@ export interface Challenge {
     type: ChallengeType
     /** Lifecycle status from the BE (`PUBLISHED` | `RUNNING` | `CLOSED`). */
     status: string
+    /**
+     * Tags carried by the challenge (`pe` + the subject code for a Practical Exam paper
+     * folded into the bank). `[]` when the BE ships none.
+     */
+    tags: Array<ChallengeTagView>
 }
+
+/**
+ * Lifecycle statuses that never belong on the learner catalog (the BE list already hides
+ * them; this is the belt for the newer `PENDING_APPROVAL` contributed-paper state).
+ */
+const UNLISTED_STATUSES = new Set(["DRAFT", "PENDING_APPROVAL", "REJECTED"])
 
 /**
  * Maps a BE challenge `type` string (`CODING`, `SQL`, `UI_UX`, `AI`, `BUSINESS`)
@@ -52,13 +63,60 @@ export const toChallenge = (view: ChallengeView): Challenge => ({
     title: view.title,
     type: mapChallengeType(view.type),
     status: view.status,
+    tags: view.tags ?? [],
 })
 
-/** Loads the challenge catalog from the real BE (`GET /api/v1/challenges`). */
-export const useQueryChallengesSwr = () => {
-    const { data, isLoading, error, mutate } = useSWR(["challenges"], async () => {
-        const views = await listChallenges()
-        return views.map(toChallenge)
+/**
+ * Builds the tag facet row of a challenge list.
+ *
+ * The facets NARROW to what still co-occurs with the current (AND) selection, and an
+ * already-picked slug is always kept so it can be un-picked from an empty result.
+ *
+ * @param items - the rows currently returned.
+ * @param selected - the slugs currently picked.
+ * @returns `{slug,label}` facets, de-duplicated and sorted by label.
+ */
+export const collectCatalogTags = (
+    items: Array<Challenge>,
+    selected: Array<string> = [],
+): Array<ChallengeTagView> => {
+    const bySlug = new Map<string, string>()
+    for (const slug of selected) {
+        bySlug.set(slug, slug)
+    }
+    for (const item of items) {
+        for (const tag of item.tags) {
+            bySlug.set(tag.slug, tag.label || tag.slug)
+        }
+    }
+    return [...bySlug.entries()]
+        .map(([slug, label]) => ({ slug, label }))
+        .sort((left, right) => left.label.localeCompare(right.label))
+}
+
+/**
+ * Loads the challenge catalog from the real BE (`GET /api/v1/challenges?tags=`).
+ *
+ * @param tags - tag slugs every row must carry (AND semantics, server-side); omit for
+ * the whole bank. PE exam papers are ordinary challenges tagged `pe` + the subject code,
+ * so this is how the catalog surfaces them.
+ */
+export const useQueryChallengesSwr = (tags: Array<string> = []) => {
+    // Sorted so the key does not depend on the order the chips were picked in.
+    const tagKey = [...tags].sort().join(",")
+    const { data, isLoading, error, mutate } = useSWR(["challenges", tagKey], async () => {
+        const selected = tagKey ? tagKey.split(",") : []
+        const views = await listChallenges({ tags: selected })
+        return views
+            .filter((view) => !UNLISTED_STATUSES.has(view.status))
+            .map(toChallenge)
+            // TRANSITIONAL BELT: `tags=` ships in a parallel BE lane. A deployment that
+            // does not know the param ignores it and answers the whole bank, so re-check
+            // the constraint here — a no-op once the BE honours it. Delete then.
+            .filter((challenge) => {
+                const slugs = new Set(challenge.tags.map((tag) => tag.slug))
+                return selected.every((slug) => slugs.has(slug))
+            })
     })
     return { challenges: data ?? [], isLoading, error, mutate }
 }

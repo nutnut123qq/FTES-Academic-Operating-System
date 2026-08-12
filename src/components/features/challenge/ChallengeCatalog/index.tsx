@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useMemo, useState } from "react"
 import { Button, Chip, Typography } from "@heroui/react"
 import {
     CodeIcon,
@@ -14,7 +14,11 @@ import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
-import { useQueryChallengesSwr, type Challenge } from "../hooks/useQueryChallengesSwr"
+import {
+    collectCatalogTags,
+    useQueryChallengesSwr,
+    type Challenge,
+} from "../hooks/useQueryChallengesSwr"
 
 /** Type filter options: "all" + every challenge type. */
 const TYPES: Array<Challenge["type"] | "all"> = ["all", "coding", "sql", "uiux", "ai", "business"]
@@ -33,15 +37,30 @@ const TYPE_ICONS: Record<Challenge["type"], React.ReactNode> = {
 
 /**
  * Challenge catalog (§10) — the `/challenges` list. Mirrors the house catalog
- * archetype (see `SubjectCatalog`): text search + type filter + a grid of challenge
- * cards linking into each challenge. Feature owns data (mock) + filtering; tokens own
- * the look. ponytail: plain search input + hand-rolled cards, mock data.
+ * archetype (see `SubjectCatalog`): text search + type filter + TAG filter + a grid of
+ * challenge cards linking into each challenge.
+ *
+ * The tag row is how Practical Exam papers are found: a PE paper is an ordinary challenge
+ * tagged `pe` + its subject code, and the tag filter is a real server-side query param
+ * (`GET /challenges?tags=`, AND semantics).
  */
 export const ChallengeCatalog = () => {
     const t = useTranslations("challengeSystem")
-    const { challenges, isLoading, error, mutate } = useQueryChallengesSwr()
+    const [tags, setTags] = useState<Array<string>>([])
+    const { challenges, isLoading, error, mutate } = useQueryChallengesSwr(tags)
     const [query, setQuery] = useState("")
     const [type, setType] = useState<Challenge["type"] | "all">("all")
+
+    /** Facet row — the tags on the returned rows, plus whatever is already picked. */
+    const tagFacets = useMemo(() => collectCatalogTags(challenges, tags), [challenges, tags])
+
+    /** Adds/removes one slug from the picked set (the query re-runs on the new key). */
+    const toggleTag = (slug: string) =>
+        setTags((current) =>
+            current.includes(slug)
+                ? current.filter((item) => item !== slug)
+                : [...current, slug],
+        )
 
     const filtered = challenges.filter((challenge) => {
         const matchesType = type === "all" || challenge.type === type
@@ -82,6 +101,32 @@ export const ChallengeCatalog = () => {
                         </Button>
                     ))}
                 </div>
+                {/* tag filter — server-side AND filter; the facets narrow with the pick */}
+                {tagFacets.length > 0 ? (
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Typography type="body-xs" color="muted" className="mr-1">
+                            {t("catalog.tagsLabel")}
+                        </Typography>
+                        <Button
+                            size="sm"
+                            variant={tags.length === 0 ? "secondary" : "ghost"}
+                            onPress={() => setTags([])}
+                        >
+                            {t("catalog.allTags")}
+                        </Button>
+                        {tagFacets.map((tag) => (
+                            <Button
+                                key={tag.slug}
+                                size="sm"
+                                variant={tags.includes(tag.slug) ? "secondary" : "ghost"}
+                                aria-pressed={tags.includes(tag.slug)}
+                                onPress={() => toggleTag(tag.slug)}
+                            >
+                                {tag.label}
+                            </Button>
+                        ))}
+                    </div>
+                ) : null}
             </div>
 
             {/* challenge grid — skeleton while loading; empty + error states via house blocks */}
@@ -144,6 +189,12 @@ export const ChallengeCatalog = () => {
                                         ? t(`status.${challenge.status}`)
                                         : challenge.status}
                                 </Chip>
+                                {/* the challenge's own tags (`pe`, the subject code, …) */}
+                                {challenge.tags.map((tag) => (
+                                    <Chip key={tag.slug} size="sm" variant="tertiary">
+                                        {tag.label}
+                                    </Chip>
+                                ))}
                             </div>
                         </Link>
                     ))}

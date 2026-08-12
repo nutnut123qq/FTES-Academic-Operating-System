@@ -12,6 +12,7 @@ import {
     CHALLENGE_LIFECYCLES,
     CHALLENGE_TYPES,
     challengeTypeKey,
+    collectChallengeTags,
     useQuerySubjectCodingChallengesSwr,
     type ChallengeLifecycle,
     type ChallengeType,
@@ -45,22 +46,40 @@ export interface CodingChallengeListProps {
 }
 
 /**
- * The practice challenge BANK, backed by `GET /api/v1/challenges`.
+ * The practice challenge BANK, backed by `GET /api/v1/challenges?subjectId=&tags=`.
  *
  * Rows are the subject's own challenges when it owns any; otherwise the global public
- * bank is shown with an explicit note (the BE list endpoint has no subject filter, so
- * the narrowing happens client-side). Filters: challenge type · lifecycle · search.
- * Selecting a row swaps to the in-panel {@link CodingChallengeDetail}.
+ * bank is shown with an explicit note. **Practical Exam (PE) papers are in this bank** —
+ * they are challenges tagged `pe` + the subject code, so the TAG row is how a learner
+ * pulls them out (`Đề PE` chip → only the papers).
+ *
+ * Filters: tag (server-side, AND semantics) · challenge type · lifecycle · search.
+ * Selecting a row opens the challenge's own solve/read page.
  */
 export const CodingChallengeList = ({ subjectId, onBack }: CodingChallengeListProps) => {
     const t = useTranslations("subjects")
+    const [tags, setTags] = useState<Array<string>>([])
     const { challenges, scoped, isLoading, error, mutate } =
-        useQuerySubjectCodingChallengesSwr(subjectId)
+        useQuerySubjectCodingChallengesSwr(subjectId, tags)
 
     const [type, setType] = useState<"all" | ChallengeType>("all")
     const [lifecycle, setLifecycle] = useState<"all" | ChallengeLifecycle>("all")
     const [search, setSearch] = useState("")
     const [sort, setSort] = useState<SortOption>("newest")
+
+    /** Facet row — the tags present on the returned rows, plus whatever is picked. */
+    const tagFacets = useMemo(
+        () => collectChallengeTags(challenges, tags),
+        [challenges, tags],
+    )
+
+    /** Adds/removes one slug from the picked set (the query re-runs on the new key). */
+    const toggleTag = (slug: string) =>
+        setTags((current) =>
+            current.includes(slug)
+                ? current.filter((item) => item !== slug)
+                : [...current, slug],
+        )
 
     const filtered = useMemo(() => {
         const query = search.trim().toLowerCase()
@@ -102,13 +121,42 @@ export const CodingChallengeList = ({ subjectId, onBack }: CodingChallengeListPr
                     <ArrowLeftIcon aria-hidden focusable="false" className="size-4" />
                     {t("practice.backToHub")}
                 </Button>
+                {/* `practice.modes.*` never existed in either catalog — the header was
+                    rendering the raw key path. The hub card's title is the same string. */}
                 <Typography type="h5" weight="bold" className="min-w-0 flex-1">
-                    {t("practice.modes.coding.title")}
+                    {t("practice.modules.coding.title")}
                 </Typography>
             </div>
 
-            {/* filters: type pills · lifecycle pills · search */}
+            {/* filters: tag pills · type pills · lifecycle pills · search */}
             <div className="flex flex-col gap-3">
+                {/* tags — the PE papers' way in; server-side AND filter, so the facets
+                    narrow to what still co-occurs with the current pick */}
+                {tagFacets.length > 0 ? (
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Typography type="body-xs" color="muted" className="mr-1">
+                            {t("practice.coding.tags.label")}
+                        </Typography>
+                        <Button
+                            size="sm"
+                            variant={tags.length === 0 ? "secondary" : "ghost"}
+                            onPress={() => setTags([])}
+                        >
+                            {t("practice.coding.tags.all")}
+                        </Button>
+                        {tagFacets.map((tag) => (
+                            <Button
+                                key={tag.slug}
+                                size="sm"
+                                variant={tags.includes(tag.slug) ? "secondary" : "ghost"}
+                                aria-pressed={tags.includes(tag.slug)}
+                                onPress={() => toggleTag(tag.slug)}
+                            >
+                                {tag.label}
+                            </Button>
+                        ))}
+                    </div>
+                ) : null}
                 <div className="flex flex-wrap items-center gap-2">
                     {TYPE_FILTERS.map((item) => (
                         <Button
@@ -226,6 +274,12 @@ const CodingChallengeRow = ({
                             ? t("practice.coding.modes.team")
                             : t("practice.coding.modes.individual")}
                     </Chip>
+                    {/* the challenge's own tags (`pe`, the subject code, …) */}
+                    {challenge.tags.map((tag) => (
+                        <Chip key={tag.slug} size="sm" variant="tertiary" color="default">
+                            {tag.label}
+                        </Chip>
+                    ))}
                 </div>
             </div>
             <div className="flex shrink-0 flex-col items-end gap-1">

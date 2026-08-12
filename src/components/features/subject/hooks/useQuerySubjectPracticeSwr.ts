@@ -5,11 +5,16 @@ import { getSubjectStatistics } from "@/modules/api/rest/subject/subject"
 import { getSubjectDetail } from "@/modules/api/rest/subject"
 import { listResources } from "@/modules/api/rest/resource"
 import { listChallenges } from "@/modules/api/rest/challenges"
-import { mapChallengeView, scopeChallengesToSubject } from "./useQuerySubjectCodingChallengesSwr"
+import { narrowBankRows, toBankRows } from "./useQuerySubjectCodingChallengesSwr"
 import { BE_EXAM_TYPE } from "./useQuerySubjectExamsSwr"
 
-/** Practice module key (§10/§11 surfaces inside a subject). */
-export type PracticeModuleKey = "pe" | "fe" | "coding" | "leaderboard"
+/**
+ * Practice module key (§10/§11 surfaces inside a subject).
+ *
+ * `pe` is deliberately NOT one: Practical Exam papers are challenges now (tagged `pe` +
+ * the subject code) and live in the `coding` bank, so the hub has no PE card any more.
+ */
+export type PracticeModuleKey = "fe" | "coding" | "leaderboard"
 
 /** A practice module shell with a headline count. */
 export interface PracticeModule {
@@ -27,12 +32,11 @@ const EXAM_COUNT_PROBE = 1
 /**
  * Loads a subject's practice modules with their headline counts, all from the real BE:
  *
- * - **pe** — number of Practical Exam papers published for the subject
- *   (`GET /resources?subjectId=&type=PE` → the page `total`),
- * - **fe** — number of Final Exam albums (`…&type=FE`). These two types are no longer
- *   listed by the Resource tab, so this is the only surface that counts them,
+ * - **fe** — number of Final Exam albums (`GET /resources?subjectId=&type=FE` → the page
+ *   `total`). FE is no longer listed by the Resource tab, so this is the only surface
+ *   that counts it,
  * - **coding** — the SAME challenge bank the Coding module lists
- *   (`GET /api/v1/challenges` narrowed to the subject),
+ *   (`GET /api/v1/challenges?subjectId=`), which is where PE papers live now (tagged),
  * - **leaderboard** — the number of ranked participants in the subject's leaderboard
  *   (`GET /subjects/{code}/statistics`).
  *
@@ -56,19 +60,26 @@ export const useQuerySubjectPracticeSwr = (subjectId: string) => {
                     }).catch(() => null)
                     : Promise.resolve(null)
 
-            const [pe, fe, views, stats] = await Promise.all([
-                examPage(BE_EXAM_TYPE.pe),
+            const [fe, views, stats] = await Promise.all([
                 examPage(BE_EXAM_TYPE.fe),
-                listChallenges().catch(() => []),
+                listChallenges(detail?.id ? { subjectId: detail.id } : undefined).catch(
+                    () => [],
+                ),
                 getSubjectStatistics(code).catch(() => null),
             ])
-            const now = Date.now()
-            const items = (views ?? []).map((view) => mapChallengeView(view, now))
-            const bank = scopeChallengesToSubject(items, detail?.id ?? null)
             return [
-                { key: "pe", count: pe?.total ?? 0 },
                 { key: "fe", count: fe?.total ?? 0 },
-                { key: "coding", count: bank.items.length },
+                {
+                    key: "coding",
+                    // `narrowBankRows` is the transitional belt for a BE that does not
+                    // serve `subjectId` yet — otherwise the card would count every
+                    // subject's challenges.
+                    count: narrowBankRows(
+                        toBankRows(views, Date.now()),
+                        detail?.id ?? null,
+                        [],
+                    ).length,
+                },
                 { key: "leaderboard", count: stats?.leaderboard?.length ?? 0 },
             ]
         },

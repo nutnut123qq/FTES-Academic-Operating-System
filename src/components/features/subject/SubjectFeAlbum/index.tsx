@@ -31,7 +31,7 @@ import { FeImageCommentThread } from "./FeImageCommentThread"
  * letterboxed on black, the right pane on `bg-overlay` scrolling on its own; on mobile the
  * panes stack and the page scrolls as one. The picture itself is the shared
  * {@link ExamImageViewer} — carets, counter, filmstrip, ←/→ keys, zoom and pan all live
- * there, so the PE paper page gets the identical viewer instead of a second copy.
+ * there rather than in this page.
  *
  * The grid pins its single row to `minmax(0,1fr)` and the viewer carries `min-h-0`: a
  * grid/flex item's automatic minimum size is its CONTENT, so a portrait scan would

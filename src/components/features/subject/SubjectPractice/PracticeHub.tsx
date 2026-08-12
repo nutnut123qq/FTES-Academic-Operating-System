@@ -4,7 +4,6 @@ import React from "react"
 import { Button, Typography } from "@heroui/react"
 import {
     CodeIcon,
-    ExamIcon,
     ImagesSquareIcon,
     RankingIcon,
 } from "@phosphor-icons/react"
@@ -13,7 +12,6 @@ import type { PracticeModule, PracticeModuleKey } from "../hooks/useQuerySubject
 
 /** icon per module (confirmed-compiling phosphor set). */
 const ICONS: Record<PracticeModuleKey, React.ReactNode> = {
-    pe: <ExamIcon className="size-6" aria-hidden focusable="false" />,
     fe: <ImagesSquareIcon className="size-6" aria-hidden focusable="false" />,
     coding: <CodeIcon className="size-6" aria-hidden focusable="false" />,
     leaderboard: <RankingIcon className="size-6" aria-hidden focusable="false" />,
@@ -28,11 +26,15 @@ export interface PracticeHubProps {
 }
 
 /**
- * Practice hub — a 2×2 card grid of the four practice modules (Practical Exam ·
- * Final Exam · Coding challenges · Leaderboard). Each card carries an icon, title, a headline count
- * and an "Open" pill; pressing it (or the card) calls {@link PracticeHubProps.onOpen}
- * with that module's key so the parent swaps to the module's in-panel sub-view. No dead
- * buttons — every card opens something.
+ * Practice hub — a card grid of the three practice modules (Challenges · Final Exam ·
+ * Leaderboard). Each card carries an icon, title, a headline count and an "Open" pill;
+ * pressing it (or the card) calls {@link PracticeHubProps.onOpen} with that module's key
+ * so the parent swaps to the module's in-panel sub-view. No dead buttons — every card
+ * opens something.
+ *
+ * There is no Practical Exam (PE) card: a PE paper is a CHALLENGE now, tagged `pe` + the
+ * subject code, so it is found in the challenge bank's tag filter instead of a surface of
+ * its own.
  */
 export const PracticeHub = ({ modules, onOpen }: PracticeHubProps) => {
     const t = useTranslations("subjects")

@@ -44,12 +44,22 @@ jobs:
       # wrong: it resolved a newer @heroui/react whose RadioFieldRenderProps no longer
       # carries `isFocusVisible`, so `next build` failed type-check on code that is fine.
       # A CI job that silently upgrades dependencies reports the wrong thing.
+      # ONE npm install for all nine — this is not cosmetic. Each `npm install --no-save`
+      # reconciles the tree against package.json, so a second call REMOVES what the first
+      # one added ("added 1 package, and removed 1 package" in the run that taught us
+      # this); only the last package survived and the build still died on @parcel/watcher.
+      # Versions are read out of node_modules with `find`, because several of these
+      # (lightningcss, @swc/core, @unrs/resolver) are NESTED under a parent package and
+      # `require('<name>/package.json')` from the repo root cannot see them.
       - name: Add the linux native binaries the Windows lockfile omits
         run: |
+          args=()
           add() {
-            version=$(node -p "try{require('$2/package.json').version}catch(e){try{require('next-intl/node_modules/$2/package.json').version}catch(e2){''}}")
-            if [ -n "$version" ]; then
-              npm install --no-save --no-audit --no-fund "$1@$version"
+            # match the package.json itself, not any directory that happens to share the
+            # name — `-type d -path "*/rollup"` also hits node_modules/detect-gpu/dist/rollup
+            manifest=$(find -L node_modules -type f -path "*/$2/package.json" -print -quit)
+            if [ -n "$manifest" ]; then
+              args+=("$1@$(node -p "require('./$manifest').version")")
             else
               echo "bỏ qua $1 — không tìm thấy $2 trong node_modules"
             fi
@@ -61,8 +71,11 @@ jobs:
           add @parcel/watcher-linux-x64-glibc @parcel/watcher
           add @swc/core-linux-x64-gnu @swc/core
           add @napi-rs/canvas-linux-x64-gnu @napi-rs/canvas
-          add @unrs/resolver-binding-linux-x64-gnu @unrs/resolver
+          # the binding's parent is `unrs-resolver`, NOT an @unrs-scoped package
+          add @unrs/resolver-binding-linux-x64-gnu unrs-resolver
           add sharp sharp
+          echo "cài: ${args[*]}"
+          npm install --no-save --no-audit --no-fund "${args[@]}"
 
       - name: Cache Playwright browsers
         uses: actions/cache@v4

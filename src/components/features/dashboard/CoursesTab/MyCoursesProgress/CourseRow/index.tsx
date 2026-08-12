@@ -56,8 +56,13 @@ export const CourseRow = ({ course }: CourseRowProps) => {
                         >
                             {course.title}
                         </Typography>
-                        {/* trial = the exception worth marking; a paid enrollment shows nothing */}
-                        <CourseTrialChip isEnrolled={course.isPurchased} />
+                        {/* Trial = the exception worth marking; a paid enrollment shows
+                            nothing. The flag is the BE's own `EnrollmentView.isPurchased`
+                            (an ACTIVE `package_purchases` row for this course), mapped
+                            through `useQueryMyCoursesSwr` — so a row wearing this badge is
+                            genuinely an unpaid enrollment (free enroll / legacy import),
+                            not a field the query forgot to populate. */}
+                        <CourseTrialChip isPurchased={course.isPurchased} />
                         {course.expired ? (
                             <Chip size="sm" variant="soft" color="danger" className="shrink-0">
                                 {t("courses.termExpired")}

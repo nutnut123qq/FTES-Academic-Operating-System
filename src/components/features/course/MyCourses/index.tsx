@@ -13,9 +13,11 @@ import { useQueryMyCoursesSwr, type MyCourse } from "../hooks/useQueryMyCoursesS
 
 /**
  * "Khóa học của tôi" (`/courses/me`) — the signed-in viewer's active enrollments as
- * a grid of resumable {@link ContinueCourseCard}s (full-width cover · title · % complete ·
+ * a grid of resumable {@link ContinueCourseCard}s (cover · title · % complete ·
  * progress bar · "Tiếp tục học"), each linking into the course learn shell
- * (least-finished first).
+ * (least-finished first). TWO cards per row on desktop and one below `lg`, because the
+ * card is a horizontal row whose title only gets whatever the fixed cover and CTA leave
+ * behind — see the grid comment below.
  * Loading gates progress-card-shaped skeletons; an empty enrollment set shows an
  * onboarding empty state with a link to the catalog. Owns its container gutter,
  * mirroring {@link CourseCatalog}.
@@ -62,8 +64,10 @@ export const MyCourses = () => {
             <AsyncContent
                 isLoading={isLoading}
                 skeleton={(
-                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                        {[0, 1, 2, 3, 4, 5].map((i) => (
+                    /* same column count as the real grid (see below) so the layout does
+                       not re-flow the moment the enrollments land */
+                    <div className="grid gap-3 lg:grid-cols-2">
+                        {[0, 1, 2, 3].map((i) => (
                             <Skeleton key={i} className="h-64 w-full rounded-large" />
                         ))}
                     </div>
@@ -90,7 +94,16 @@ export const MyCourses = () => {
                     {/* profile-completion nudge sits above the list ONLY when there are
                         courses (no empty-state mascot), keeping one mascot per page */}
                     <MascotProfileNudge />
-                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {/* TWO per row on desktop, one below `lg` — NOT three.
+                        `ContinueCourseCard` is a horizontal row (128/160px cover + the
+                        "Tiếp tục học" CTA, both `shrink-0`) and only the middle text
+                        column flexes, so the column count sets the title's width directly:
+                        at three across this `max-w-6xl` page the text column collapsed to
+                        ~70px and `line-clamp-2` clipped every title to a single character
+                        ("M", "S", "H"). Two across leaves it ~175px+, which fits the
+                        two-line clamp. `sm:grid-cols-2` is gone for the same reason — a
+                        640px viewport split in two squeezed the title just as hard. */}
+                    <div className="grid gap-3 lg:grid-cols-2">
                         {courses.map((course) => (
                             <ContinueCourseCard
                                 key={course.courseId}

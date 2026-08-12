@@ -32,6 +32,8 @@ vi.mock("next-intl", () => ({
         () =>
             (key: string, params?: Record<string, unknown>) =>
                 params ? `${key}#${Object.values(params).join(",")}` : key,
+    // The uploader's posted time is formatted against the active locale.
+    useLocale: () => "vi",
 }))
 
 vi.mock("@heroui/react", () => {
@@ -133,7 +135,11 @@ const AUTHOR: ChallengeAuthorView = {
 const setup = (
     paperUrl: string | null,
     paperMime: string | null,
-    extra?: { challengeId?: string; author?: ChallengeAuthorView | null },
+    extra?: {
+        challengeId?: string
+        author?: ChallengeAuthorView | null
+        createdAt?: string | null
+    },
 ) =>
     render(
         <ChallengePaper
@@ -142,6 +148,7 @@ const setup = (
             title="PE PRF192"
             challengeId={extra?.challengeId}
             author={extra?.author}
+            createdAt={extra?.createdAt}
         />,
     )
 
@@ -278,6 +285,39 @@ describe("ChallengePaper — who uploaded the paper", () => {
         expect(screen.getByText("paper.uploader")).toBeTruthy()
         expect(screen.queryByText("@null")).toBeNull()
         expect(screen.queryByText("@")).toBeNull()
+    })
+
+    /**
+     * WHEN the paper went up, next to WHO put it up — the pairing the FE album already
+     * prints. The important half is the negative one: `ChallengeViews.ChallengeView`
+     * exposes NO creation instant today, so the surface has to stay silent rather than
+     * reach for `startsAt` (a different fact) or the client clock (a fabricated one).
+     */
+    describe("posted time", () => {
+        it("prints a relative timestamp beside the uploader when the BE sends one", () => {
+            const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+            setup("https://storage/de-pe.jpg", "image/png", {
+                author: AUTHOR,
+                createdAt: twoHoursAgo,
+            })
+            expect(screen.getByText("2 giờ trước")).toBeTruthy()
+        })
+
+        it("says nothing at all when the BE ships no timestamp (every build today)", () => {
+            const { container } = setup("https://storage/de-pe.jpg", "image/png", {
+                author: AUTHOR,
+            })
+            expect(screen.getByText("paper.uploader")).toBeTruthy()
+            expect(container.textContent).not.toMatch(/trước|ago|Invalid/)
+        })
+
+        it("ignores an unparseable instant instead of rendering 'Invalid Date'", () => {
+            const { container } = setup("https://storage/de-pe.jpg", "image/png", {
+                author: AUTHOR,
+                createdAt: "not-a-date",
+            })
+            expect(container.textContent).not.toMatch(/Invalid/)
+        })
     })
 })
 

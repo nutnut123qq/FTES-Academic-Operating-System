@@ -102,7 +102,10 @@ export const insertResourceComment = (
         return { ...root, replies: [...root.replies, comment] }
     })
 
-    return attached ? { ...page, items, total: page.total + 1 } : page
+    // `total` counts ROOTS only (`ResourceCommentService` reports
+    // `roots.getTotalElements()` off the parent-is-null query), so a reply must not bump
+    // it — the same over-count the FE-album sibling carried.
+    return attached ? { ...page, items } : page
 }
 
 /**

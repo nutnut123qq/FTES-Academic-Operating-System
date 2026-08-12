@@ -1457,7 +1457,13 @@
         "pageOf": "Trang {page}/{total}",
         "submitError": "Không gửi được bình luận. Thử lại nhé.",
         "rateLimited": "Bạn bình luận nhanh quá. Chờ một chút rồi thử lại nhé.",
-        "deleteError": "Không xoá được bình luận. Thử lại nhé."
+        "deleteError": "Không xoá được bình luận. Thử lại nhé.",
+        "empty": "Chưa có bình luận nào cho đề này. Hãy là người đầu tiên!",
+        "loadFailed": "Không tải được bình luận của đề này.",
+        "loadFailedAuth": "Bạn cần đăng nhập để xem bình luận của đề này.",
+        "loadFailedForbidden": "Bạn không có quyền xem bình luận của đề này.",
+        "loadFailedGone": "Đề này không còn tồn tại hoặc đã bị gỡ, nên không còn bình luận để hiển thị.",
+        "loadFailedUnavailable": "Chưa tải được bình luận của đề này — phần thảo luận hiện chưa kết nối được. Vui lòng thử lại."
       }
     }
   },
@@ -5574,7 +5580,13 @@
           "next": "Sau",
           "pageOf": "Trang {page}/{total}",
           "submitError": "Không gửi được bình luận. Thử lại nhé.",
-          "deleteError": "Không xoá được bình luận. Thử lại nhé."
+          "deleteError": "Không xoá được bình luận. Thử lại nhé.",
+          "empty": "Chưa có bình luận nào cho ảnh này. Hãy là người đầu tiên!",
+          "loadFailed": "Không tải được bình luận của ảnh này.",
+          "loadFailedAuth": "Bạn cần đăng nhập để xem bình luận của ảnh này.",
+          "loadFailedForbidden": "Bạn không có quyền xem bình luận của ảnh này.",
+          "loadFailedGone": "Ảnh này không còn tồn tại hoặc đã bị gỡ, nên không còn bình luận để hiển thị.",
+          "loadFailedUnavailable": "Chưa tải được bình luận của ảnh này — phần thảo luận hiện chưa kết nối được. Vui lòng thử lại."
         },
         "manage": {
           "open": "Quản lý ảnh",
@@ -6787,7 +6799,8 @@
       "commentsLoadFailedForbidden": "Bạn không có quyền xem bình luận của bài viết này (bài nằm trong nhóm riêng tư).",
       "commentsLoadFailedNotFound": "Bài viết không còn tồn tại hoặc đã bị gỡ, nên không còn bình luận để hiển thị.",
       "commentsLoadFailedServer": "Máy chủ đang gặp sự cố khi tải bình luận. Vui lòng thử lại sau ít phút.",
-      "commentsSignIn": "Đăng nhập"
+      "commentsSignIn": "Đăng nhập",
+      "commentsLoadFailedUnavailable": "Chưa tải được bình luận — phần thảo luận hiện chưa kết nối được. Vui lòng thử lại."
     },
     "feed": {
       "likes": "{count} thích",

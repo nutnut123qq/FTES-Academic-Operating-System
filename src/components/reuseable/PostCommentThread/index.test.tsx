@@ -378,3 +378,49 @@ describe("PostCommentThread — report a comment", () => {
         expect(onReportComment).toHaveBeenCalledWith("c-1", "SPAM", "spam quảng cáo")
     })
 })
+
+/**
+ * The `labels` escape hatch. The thread's own copy is written for a community POST, so
+ * every non-post surface (a challenge's exam paper, an FE album picture) has to be able to
+ * replace the lines that NAME the object — while a caller that passes nothing keeps the
+ * exact wording it had before this prop existed.
+ */
+describe("PostCommentThread — per-surface copy", () => {
+    it("keeps the shared post copy when the caller supplies no labels", () => {
+        renderThread({ comments: [], hasError: true, error: { status: 410 } })
+
+        expect(screen.getByText("engagement.commentsLoadFailedNotFound")).toBeTruthy()
+    })
+
+    it("uses the surface's own line for the state it overrode", () => {
+        renderThread({
+            comments: [],
+            hasError: true,
+            error: { status: 410 },
+            labels: { loadFailedGone: "Đề này không còn nữa." },
+        })
+
+        expect(screen.getByText("Đề này không còn nữa.")).toBeTruthy()
+        expect(screen.queryByText("engagement.commentsLoadFailedNotFound")).toBeNull()
+    })
+
+    it("falls back per-state, so a partial label set only replaces what it names", () => {
+        // `loadFailedGone` is overridden, `loadFailedServer` is not → the 500 keeps the
+        // shared line rather than borrowing the surface's unrelated one.
+        renderThread({
+            comments: [],
+            hasError: true,
+            error: { status: 500 },
+            labels: { loadFailedGone: "Đề này không còn nữa." },
+        })
+
+        expect(screen.getByText("engagement.commentsLoadFailedServer")).toBeTruthy()
+    })
+
+    it("overrides the empty state too", () => {
+        renderThread({ comments: [], labels: { empty: "Chưa có bình luận nào cho đề này." } })
+
+        expect(screen.getByText("Chưa có bình luận nào cho đề này.")).toBeTruthy()
+        expect(screen.queryByText("engagement.commentsEmpty")).toBeNull()
+    })
+})

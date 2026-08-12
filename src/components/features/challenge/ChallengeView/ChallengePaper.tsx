@@ -9,13 +9,14 @@ import {
     LockSimpleIcon,
     UploadSimpleIcon,
 } from "@phosphor-icons/react"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 
 import {
     ExamImageViewer,
     type ExamImageViewerImage,
 } from "@/components/features/subject/ExamImageViewer"
 import { UserLink } from "@/components/features/identity"
+import { formatRelativeTime } from "@/components/features/community/hooks/relativeTime"
 import type { ChallengeAuthorView } from "@/modules/api/rest/challenges/types"
 import { ChallengePaperCommentThread } from "./ChallengePaperCommentThread"
 import { classifyChallengePaper } from "./paperKind"
@@ -63,6 +64,17 @@ export interface ChallengePaperProps {
      * uploader block entirely rather than printing a placeholder identity.
      */
     author?: ChallengeAuthorView | null
+    /**
+     * WHEN the paper was put up (ISO-8601), shown under the uploader as a relative time
+     * ("20 giờ trước") — the same pairing the FE album prints over `FeImage.createdAt`.
+     *
+     * `null` / omitted → the line is dropped and the uploader stands alone. That is the
+     * state on EVERY deployment today, because `ChallengeViews.ChallengeView` exposes no
+     * creation instant; nothing is substituted for it (`startsAt` is the challenge's OPEN
+     * time and a client clock would be invented data), so the surface stays silent about
+     * a fact the server has not told it.
+     */
+    createdAt?: string | null
 }
 
 /**
@@ -116,6 +128,7 @@ export const ChallengePaper = ({
     title,
     challengeId,
     author,
+    createdAt,
 }: ChallengePaperProps) => {
     const t = useTranslations("challenge")
     const kind = classifyChallengePaper(paperUrl, paperMime)
@@ -232,7 +245,7 @@ export const ChallengePaper = ({
                     <PaperSubmitPanel />
 
                     {/* Hidden outright when the BE has no author card — see PaperUploader. */}
-                    {author ? <PaperUploader author={author} /> : null}
+                    {author ? <PaperUploader author={author} createdAt={createdAt} /> : null}
 
                     {challengeId ? (
                         <div className="border-t border-separator pt-4">
@@ -259,11 +272,27 @@ export const ChallengePaper = ({
  * `displayName` still falls back to the username because a profile row may carry one and
  * not the other, and the `@handle` line is dropped when there is no handle to print.
  *
+ * **The posted time** sits under the handle as a relative label, produced by the SHARED
+ * {@link formatRelativeTime} the album and the notification centre already use — same
+ * "Người đăng … / 20 giờ trước" shape the FE album prints. The formatter returns `""` for
+ * a missing or unparseable instant, and the line is dropped in that case, so a BE that
+ * sends no timestamp (which is every BE today — `ChallengeView` projects no creation
+ * instant) yields the uploader alone rather than an invented or "Invalid Date" time.
+ *
  * @param props.author - The BE `ChallengeView.author` card.
+ * @param props.createdAt - When the paper was posted (ISO-8601), or `null`.
  */
-const PaperUploader = ({ author }: { author: ChallengeAuthorView }) => {
+const PaperUploader = ({
+    author,
+    createdAt,
+}: {
+    author: ChallengeAuthorView
+    createdAt?: string | null
+}) => {
     const t = useTranslations("challenge")
+    const locale = useLocale()
     const displayName = author.displayName || author.username || ""
+    const postedAt = formatRelativeTime(createdAt, locale)
 
     return (
         <div className="flex items-start gap-3 border-t border-separator pt-4">
@@ -290,6 +319,11 @@ const PaperUploader = ({ author }: { author: ChallengeAuthorView }) => {
                 {author.username ? (
                     <Typography type="body-xs" color="muted" truncate>
                         {`@${author.username}`}
+                    </Typography>
+                ) : null}
+                {postedAt ? (
+                    <Typography type="body-xs" color="muted">
+                        {postedAt}
                     </Typography>
                 ) : null}
             </div>

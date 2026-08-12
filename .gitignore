@@ -50,4 +50,14 @@ next-env.d.ts
 /test-results/
 /playwright-report/
 /Mascot/
-.next-verify/
+# Build outputs written to an alternate dist dir (.next-verify, .next-e2e, …). Globbed
+# rather than listed one-by-one: `.next-verify/` was added alone, then `.next-e2e/` showed
+# up untracked at 938 MB — git was offering to commit a build cache, and Tailwind v4 (which
+# scans the project directory and skips exactly what .gitignore skips) was free to read it.
+# That cache holds turbopack's BINARY .sst files, which do contain byte noise shaped like
+# `border-[var(--x)]` — the same shape as a CSS parse failure seen 2026-08-11
+# ("Unexpected token Delim('-')" blamed on a globals.css line number that does not exist).
+# Causation was never pinned down (the directory was deleted mid-investigation, and a clean
+# `next build` passes), so treat that as a strong lead, not a proven root cause. The glob
+# stands on its own merit regardless: a dist dir must never be tracked or scanned.
+.next-*/

@@ -32,22 +32,43 @@ jobs:
           node-version: 22
           cache: npm
 
-      # NOT `npm ci`: package-lock.json is generated on Windows and records ONLY the
-      # win32 native binaries (npm/cli#4828). A full `next build` needs the linux ones for
-      # rollup, esbuild, @tailwindcss/oxide, lightningcss, @parcel/watcher, @swc/core,
-      # sharp — patching them back one at a time is whack-a-mole (the first run of this
-      # workflow died on @parcel/watcher-linux-x64-glibc alone). Resolving from
-      # package.json instead gives npm the chance to pick the right platform for every
-      # optional dep at once. Trade-off accepted here because this job is a nightly smoke
-      # check, not the merge gate — test.yml keeps `npm ci` for determinism.
-      # Real fix, when someone wants it: regenerate the lockfile on linux and commit it.
-      - run: rm -f package-lock.json && npm install --no-audit --no-fund
+      - run: npm ci
+
+      # package-lock.json is generated on Windows and records ONLY win32 native binaries
+      # (npm/cli#4828). Exactly nine families are affected — verified by reading the
+      # lockfile: rollup, esbuild, @tailwindcss/oxide, lightningcss, @parcel/watcher,
+      # @swc/core, @napi-rs/canvas, @unrs/resolver, sharp. Each is installed at the SAME
+      # version npm ci just pinned, so nothing drifts.
+      #
+      # Dropping the lockfile and running plain `npm install` was tried first and is
+      # wrong: it resolved a newer @heroui/react whose RadioFieldRenderProps no longer
+      # carries `isFocusVisible`, so `next build` failed type-check on code that is fine.
+      # A CI job that silently upgrades dependencies reports the wrong thing.
+      - name: Add the linux native binaries the Windows lockfile omits
+        run: |
+          add() {
+            version=$(node -p "try{require('$2/package.json').version}catch(e){try{require('next-intl/node_modules/$2/package.json').version}catch(e2){''}}")
+            if [ -n "$version" ]; then
+              npm install --no-save --no-audit --no-fund "$1@$version"
+            else
+              echo "bỏ qua $1 — không tìm thấy $2 trong node_modules"
+            fi
+          }
+          add @rollup/rollup-linux-x64-gnu rollup
+          add @esbuild/linux-x64 esbuild
+          add @tailwindcss/oxide-linux-x64-gnu @tailwindcss/oxide
+          add lightningcss-linux-x64-gnu lightningcss
+          add @parcel/watcher-linux-x64-glibc @parcel/watcher
+          add @swc/core-linux-x64-gnu @swc/core
+          add @napi-rs/canvas-linux-x64-gnu @napi-rs/canvas
+          add @unrs/resolver-binding-linux-x64-gnu @unrs/resolver
+          add sharp sharp
 
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('package.json') }}
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
 
       # only chromium: both projects (desktop + mobile) are Chromium devices
       - run: npx playwright install --with-deps chromium

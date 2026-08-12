@@ -15,7 +15,7 @@ import { ArrowsInIcon, ArrowsOutIcon, SparkleIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
 import { useSmViewpoint } from "@/hooks/reuseables/useSmViewpoint"
-import { useContentAiChatOverlayState } from "@/hooks/zustand/overlay/hooks"
+import { useContentAiChatOverlayState, useContentAiLessonReset } from "@/hooks/zustand/overlay/hooks"
 import { ContentAiChat } from "@/components/features/learn/ContentAiChat"
 import { useFullscreenElement } from "@/components/features/learn/LessonReader/hooks/useFullscreen"
 
@@ -64,6 +64,17 @@ export const ContentAiFab = () => {
     // everything, so a fixed FAB in <body> is hidden. Portal the whole FAB (and route
     // its popover/drawer overlay) INTO the fullscreen element so it stays usable.
     const fullscreenEl = useFullscreenElement()
+    // ★ THE one place the AI conversation is cleared. This host is mounted by the learn
+    // layout for the whole lesson (it outlives every open/close of the panel and every
+    // lesson navigation), so hanging the reset here clears the thread on a lesson change
+    // EVEN IF the chat was never opened on the new lesson — which is what stops an old
+    // thread being resurrected by navigating lesson A → B → back to A.
+    //
+    // It cannot fire on mount: the guard compares the lesson the stored conversation
+    // already carries with the live one (state kept in the STORE, not a component ref), so
+    // remounting with the same lesson is a no-op. Putting a plain reset in the PANEL's
+    // mount effect is precisely the bug being fixed here — the panel remounts on every open.
+    useContentAiLessonReset(contentId ?? null)
 
     // Closing always collapses back to docked, so re-opening starts compact.
     const onOpenChange = useCallback(
@@ -101,7 +112,12 @@ export const ContentAiFab = () => {
                     UNSTABLE_portalContainer={fullscreenEl ?? undefined}
                 >
                     <Drawer.Content placement="bottom">
-                        <Drawer.Dialog className={cn("flex flex-col", isExpanded ? "h-[100dvh]" : "h-[80vh]")}>
+                        {/* Docked keeps HeroUI's baked bottom-sheet radius; expanded is a real
+                            full-screen surface, so it goes edge-to-edge square (a rounded
+                            full-viewport panel reads as a mistake). */}
+                        <Drawer.Dialog
+                            className={cn("flex flex-col", isExpanded ? "h-[100dvh] rounded-none" : "h-[80vh]")}
+                        >
                             <Drawer.CloseTrigger />
                             <Drawer.Header>
                                 <div className="flex items-center gap-2">
@@ -161,7 +177,20 @@ export const ContentAiFab = () => {
                 // `fixed inset-0` (react-aria positions the popover with top/left, NOT a
                 // transform, so a fixed descendant escapes to the real viewport) and covers
                 // the whole card, so no 380px box peeks behind the full-screen surface.
-                className={cn("p-0", isExpanded ? "!w-auto !border-0 !bg-transparent !shadow-none" : "w-[380px]")}
+                // Docked: `overflow-hidden` is what actually ROUNDS the chat box. HeroUI's
+                // `.popover` already bakes the house popover radius
+                // (`border-radius: min(32px, var(--radius-3xl))`) but no clipping, so the
+                // full-bleed `bg-surface` wrapper below painted its own square corners
+                // straight over it and the panel read as a square box. Clipping to the
+                // popover's OWN token beats re-declaring a radius on the child: an invented
+                // `rounded-2xl`/`rounded-3xl` (24/36px) would not match the 32px the popover
+                // draws and would leave a hairline. Deliberately NOT applied while expanded:
+                // that panel is `fixed inset-0`, and clipping a full-viewport child is both
+                // pointless and risky during the popover's transform-based enter animation.
+                className={cn(
+                    "p-0",
+                    isExpanded ? "!w-auto !border-0 !bg-transparent !shadow-none" : "w-[380px] overflow-hidden",
+                )}
                 UNSTABLE_portalContainer={fullscreenEl ?? undefined}
             >
                 {/* ONE wrapper that merely RESIZES between docked (in-popover, 380px) and

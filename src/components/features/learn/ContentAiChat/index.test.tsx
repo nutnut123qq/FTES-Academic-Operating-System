@@ -2,20 +2,24 @@ import React from "react"
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { AiModelCatalog, AiSessionView } from "@/modules/api/rest/ai"
-import { useOverlayStore } from "@/hooks/zustand/overlay/store"
+import { EMPTY_CONTENT_AI_CONVERSATION, useOverlayStore } from "@/hooks/zustand/overlay/store"
 
 /**
  * Component — {@link ContentAiChat}: (1) passage-context prepend on send
  * (lesson-ai-chat-fixes task 1.3): the message SENT to the BE carries the FULL
  * selected passage + a marked reference-data block with the containing
- * paragraph, while the user bubble keeps only the truncated display; and
+ * paragraph, while the user bubble keeps only the truncated display;
  * (2) the composer model picker (task 2.6): default from the catalog, the
  * active model riding the session + stream call, store-backed persistence
  * across remounts, degrade on a broken catalog, `AI_MODEL_NOT_ALLOWED`
  * resetting to the default, and the `answeredBy` caption from the SSE `done`
- * event. Heavy primitives (HeroUI, phosphor, markdown) are mocked to trivial
- * renderers; the REAL overlay store carries selection/model so the wiring under
- * test is the one production uses. `t` echoes `key(values…)`.
+ * event; and (3) CONVERSATION SURVIVAL — the panel's hosts unmount it on every
+ * close, so the thread, the composer draft and the session id must survive an
+ * unmount/remount and may only be cleared by a real lesson change.
+ *
+ * Heavy primitives (HeroUI, phosphor, markdown) are mocked to trivial
+ * renderers; the REAL overlay store carries selection/model/conversation so the
+ * wiring under test is the one production uses. `t` echoes `key(values…)`.
  */
 
 vi.mock("next-intl", () => ({
@@ -23,13 +27,15 @@ vi.mock("next-intl", () => ({
         values ? `${key}(${Object.values(values).join(",")})` : key,
 }))
 
+// The open lesson — controllable per test so a REAL lesson change can be simulated.
 vi.mock("next/navigation", () => ({
-    useParams: () => ({ contentId: "content-1" }),
+    useParams: () => ({ contentId: h.contentId }),
 }))
 
 // Model catalog SWR — controllable per test (data + error).
 const h = vi.hoisted(() => ({
     catalog: { data: undefined, error: undefined } as { data?: AiModelCatalog; error?: Error },
+    contentId: "content-1" as string | undefined,
 }))
 vi.mock("@/hooks/swr/api/rest/queries/useGetAiCatalogModelsSwr", () => ({
     useGetAiCatalogModelsSwr: () => h.catalog,
@@ -183,6 +189,7 @@ const typeAndSend = async (text: string) => {
 beforeEach(() => {
     h.catalog.data = CATALOG
     h.catalog.error = undefined
+    h.contentId = "content-1"
     createSessionMock.mockResolvedValue({ id: "sess-1" } as AiSessionView)
     streamMock.mockImplementation(async (_sessionId, _content, handlers) => {
         handlers.onDelta("chunk")
@@ -191,6 +198,9 @@ beforeEach(() => {
         contentAiSelection: null,
         contentAiSelectionContext: null,
         contentAiSelectedModel: null,
+        // the conversation is store-backed now (that IS the fix), so it outlives a
+        // `cleanup()` — every test starts from a blank one on purpose
+        contentAiConversation: EMPTY_CONTENT_AI_CONVERSATION,
     })
 })
 
@@ -238,6 +248,162 @@ describe("ContentAiChat — passage context prepend (task 1.3)", () => {
 
         expect(streamMock.mock.calls[0][1]).toBe("Câu hỏi trần")
         expect(screen.getByTestId("bubble-user").textContent).toBe("Câu hỏi trần")
+    })
+})
+
+describe("ContentAiChat — the conversation survives the panel closing", () => {
+    /** The composer textarea (the draft input). */
+    const composer = () => screen.getByPlaceholderText("reader.ai.placeholder") as HTMLTextAreaElement
+
+    it("keeps the thread AND the half-typed draft across unmount → remount (close → re-open)", async () => {
+        const { unmount } = render(<ContentAiChat />)
+
+        await typeAndSend("Câu hỏi đã gửi")
+        // …then start typing the NEXT question without sending it
+        fireEvent.change(composer(), { target: { value: "câu hỏi đang gõ dở" } })
+
+        // clicking outside / Escape / the mascot toggle all UNMOUNT the panel
+        unmount()
+        render(<ContentAiChat />)
+
+        // the whole thread is still there — question AND streamed answer
+        expect(screen.getByTestId("bubble-user").textContent).toBe("Câu hỏi đã gửi")
+        expect(screen.getByTestId("bubble-assistant").textContent).toContain("chunk")
+        // …and so is the unsent draft
+        expect(composer().value).toBe("câu hỏi đang gõ dở")
+    })
+
+    it("re-uses the SAME BE session after a remount instead of opening a new one", async () => {
+        const { unmount } = render(<ContentAiChat />)
+        await typeAndSend("lần 1")
+
+        unmount()
+        render(<ContentAiChat />)
+        await typeAndSend("lần 2")
+
+        expect(createSessionMock).toHaveBeenCalledTimes(1)
+        expect(streamMock.mock.calls.map((call) => call[0])).toEqual(["sess-1", "sess-1"])
+    })
+
+    it("MOUNTING does not clear anything — the regression that reintroduces the bug", () => {
+        // a conversation already in the store for THIS lesson (as if the panel had just closed)
+        useOverlayStore.setState({
+            contentAiConversation: {
+                contentId: "content-1",
+                messages: [{ role: "user", content: "đã hỏi", display: "đã hỏi" }],
+                draft: "đang gõ",
+                sessionId: "sess-1",
+                isStreaming: false,
+            },
+        })
+
+        // mount, unmount, mount again — a reset-on-mount effect would eat it on any of these
+        const first = render(<ContentAiChat />)
+        first.unmount()
+        render(<ContentAiChat />)
+
+        const conversation = useOverlayStore.getState().contentAiConversation
+        expect(conversation.messages).toHaveLength(1)
+        expect(conversation.draft).toBe("đang gõ")
+        expect(conversation.sessionId).toBe("sess-1")
+        expect(screen.getByTestId("bubble-user").textContent).toBe("đã hỏi")
+        expect(composer().value).toBe("đang gõ")
+    })
+
+    it("a REAL lesson change clears the thread, the draft and the session id", async () => {
+        const { unmount } = render(<ContentAiChat />)
+        await typeAndSend("hỏi ở bài 1")
+        fireEvent.change(composer(), { target: { value: "nháp bài 1" } })
+        expect(useOverlayStore.getState().contentAiConversation.messages).toHaveLength(2)
+
+        // the learner opens a DIFFERENT lesson
+        unmount()
+        h.contentId = "content-2"
+        render(<ContentAiChat />)
+
+        expect(screen.queryByTestId("bubble-user")).toBeNull()
+        expect(composer().value).toBe("")
+        const conversation = useOverlayStore.getState().contentAiConversation
+        expect(conversation.contentId).toBe("content-2")
+        expect(conversation.messages).toEqual([])
+        expect(conversation.sessionId).toBeNull()
+
+        // …and the next send opens a FRESH session grounded on the new lesson
+        await typeAndSend("hỏi ở bài 2")
+        expect(createSessionMock).toHaveBeenLastCalledWith({
+            feature: "TUTOR_CHAT",
+            contextRef: { lessonId: "content-2" },
+            model: "prov/model-x",
+        })
+    })
+
+    it("does not resurrect the old thread when the learner comes BACK to the first lesson", async () => {
+        const { unmount } = render(<ContentAiChat />)
+        await typeAndSend("hỏi ở bài 1")
+
+        // bài 1 → bài 2 → bài 1
+        unmount()
+        h.contentId = "content-2"
+        const second = render(<ContentAiChat />)
+        second.unmount()
+        h.contentId = "content-1"
+        render(<ContentAiChat />)
+
+        expect(screen.queryByTestId("bubble-user")).toBeNull()
+        expect(useOverlayStore.getState().contentAiConversation.messages).toEqual([])
+    })
+
+    it("a stream that finishes AFTER the panel closed still lands in the thread", async () => {
+        // hold the stream open so it is still in flight when the panel unmounts
+        let deliver: ((text: string) => void) | undefined
+        let release: (() => void) | undefined
+        streamMock.mockImplementation(
+            (_sessionId, _content, handlers) =>
+                new Promise<void>((resolve) => {
+                    deliver = handlers.onDelta
+                    release = resolve
+                }),
+        )
+        const { unmount } = render(<ContentAiChat />)
+        await typeAndSend("hỏi rồi bấm ra ngoài")
+
+        unmount()
+        // the SSE keeps writing into the store while nothing is mounted
+        await act(async () => {
+            deliver?.("câu trả lời đến muộn")
+            release?.()
+        })
+
+        render(<ContentAiChat />)
+        expect(screen.getByTestId("bubble-assistant").textContent).toContain("câu trả lời đến muộn")
+        expect(useOverlayStore.getState().contentAiConversation.isStreaming).toBe(false)
+    })
+
+    it("drops a late stream chunk that arrives after the learner moved to another lesson", async () => {
+        let deliver: ((text: string) => void) | undefined
+        let release: (() => void) | undefined
+        streamMock.mockImplementation(
+            (_sessionId, _content, handlers) =>
+                new Promise<void>((resolve) => {
+                    deliver = handlers.onDelta
+                    release = resolve
+                }),
+        )
+        const { unmount } = render(<ContentAiChat />)
+        await typeAndSend("hỏi ở bài 1")
+
+        unmount()
+        h.contentId = "content-2"
+        render(<ContentAiChat />)
+
+        await act(async () => {
+            deliver?.("trả lời của bài 1")
+            release?.()
+        })
+
+        // bài 2's fresh thread is untouched by bài 1's orphaned stream
+        expect(screen.queryByTestId("bubble-assistant")).toBeNull()
+        expect(useOverlayStore.getState().contentAiConversation.messages).toEqual([])
     })
 })
 

@@ -60,6 +60,57 @@ export interface AnchorRect {
 }
 
 /**
+ * One turn in the lesson-scoped content-AI conversation.
+ *
+ * Lives in the STORE rather than in `ContentAiChat`'s local state because the popover /
+ * bottom-sheet that hosts the chat UNMOUNTS on every close (click-outside, Escape, the
+ * mascot toggle) — component state would throw the whole thread away each time.
+ */
+export interface ContentAiMessage {
+    /** Who spoke. */
+    role: "user" | "assistant"
+    /** The message text (assistant content may be markdown; a user turn carries the grounding block). */
+    content: string
+    /** What to show in the bubble (user turns hide the prepended quote context). */
+    display: string
+    /** Model that served this assistant answer (from the SSE `done` event); rendered as a caption. */
+    modelUsed?: string
+}
+
+/**
+ * The content-AI conversation for ONE lesson: the thread, the unsent composer draft, the
+ * lazily-created TUTOR_CHAT session id, and whether an answer is currently streaming.
+ *
+ * `contentId` is the lesson the conversation BELONGS TO, and doubles as the reset guard:
+ * everything survives closing/reopening the panel and is discarded only when the learner
+ * opens a DIFFERENT lesson (see {@link OverlayStoreState.syncContentAiLesson}).
+ *
+ * Memory only — deliberately NOT persisted: the owner asked for "the session", not across
+ * reloads.
+ */
+export interface ContentAiConversation {
+    /** Lesson the conversation belongs to (`null` = none claimed yet). */
+    contentId: string | null
+    /** The thread, oldest turn first. */
+    messages: Array<ContentAiMessage>
+    /** Unsent composer text — preserved across closes exactly like the thread. */
+    draft: string
+    /** Reused TUTOR_CHAT session id, created lazily on the first send. */
+    sessionId: string | null
+    /** Whether an answer is streaming right now (a stream OUTLIVES the panel — see the chat). */
+    isStreaming: boolean
+}
+
+/** An empty conversation — the initial value, and what a FOREIGN lesson reads as. */
+export const EMPTY_CONTENT_AI_CONVERSATION: ContentAiConversation = {
+    contentId: null,
+    messages: [],
+    draft: "",
+    sessionId: null,
+    isStreaming: false,
+}
+
+/**
  * Identifier for each overlay (modal/drawer/popover) in the app. Each key holds an independent
  * open state in {@link useOverlayStore}.
  */
@@ -172,6 +223,9 @@ interface OverlayStoreState {
     /** Snapshot of the selection rect the desktop anchored AI panel is placed against
      * (captured before the browser selection is cleared). Null when no anchored panel. */
     contentAiAnchorRect: AnchorRect | null
+    /** Lesson-scoped content-AI conversation (thread + draft + session id + streaming flag),
+     * held here so closing the chat panel — which UNMOUNTS it — never destroys it. */
+    contentAiConversation: ContentAiConversation
     /** Stash (or clear) the authentication modal context message key. */
     setAuthenticationContext: (context: string | null) => void
     /** Set the open state of an overlay (used by `onOpenChange`). */
@@ -200,6 +254,32 @@ interface OverlayStoreState {
     setContentAiSelection: (passage: string | null, context?: string | null) => void
     /** Set (or clear) the selection rect the desktop anchored AI panel anchors to. */
     setContentAiAnchorRect: (rect: AnchorRect | null) => void
+    /**
+     * Point the stored conversation at `contentId`, DISCARDING it when it belongs to a
+     * different lesson. This is the one and only clear-the-chat rule.
+     *
+     * The "previous lesson" it compares against is the one the CONVERSATION carries, held in
+     * the store — never a component ref. That is what makes this safe to call from a surface
+     * that remounts on every open (the chat popover/drawer does): a remount calls it again
+     * with the SAME `contentId` and takes the no-op branch, so it can NOT clear on mount.
+     * A `useRef` previous-value would be wiped by that same remount, and a plain
+     * reset-on-mount effect would eat the thread every time the panel opened — exactly the
+     * bug this replaces (rules ai-selection-anchored-ask-passage /
+     * content-ai-multi-session-conversations).
+     * @returns whether a conversation was actually discarded.
+     */
+    syncContentAiLesson: (contentId: string | null) => boolean
+    /**
+     * Patch the conversation, but ONLY while it still belongs to `contentId`.
+     *
+     * A stream OUTLIVES the panel (closing the chat does not abort it), so a late `onDelta` /
+     * `onDone` can land after the learner has already moved on. Scoping every write to the
+     * lesson it was started for drops those instead of polluting the next lesson's fresh thread.
+     */
+    updateContentAiConversation: (
+        contentId: string | null,
+        update: (previous: ContentAiConversation) => Partial<ContentAiConversation>,
+    ) => void
 }
 
 /** Initial open map — every overlay closed. */
@@ -220,7 +300,7 @@ const buildInitialOpenMap = (): Record<OverlayKey, boolean> =>
  * other overlays — unlike the old mega-context (changing one re-rendered all 25). Actions are
  * stable references (never change), so selecting an action never triggers a re-render.
  */
-export const useOverlayStore = create<OverlayStoreState>((set) => ({
+export const useOverlayStore = create<OverlayStoreState>((set, get) => ({
     openMap: buildInitialOpenMap(),
     authenticationContext: null,
     paymentContext: null,
@@ -233,6 +313,7 @@ export const useOverlayStore = create<OverlayStoreState>((set) => ({
     contentAiSelection: null,
     contentAiSelectionContext: null,
     contentAiAnchorRect: null,
+    contentAiConversation: EMPTY_CONTENT_AI_CONVERSATION,
     setOpenFor: (key, isOpen) =>
         set((state) => ({ openMap: { ...state.openMap, [key]: isOpen } })),
     openOverlay: (key) =>
@@ -255,4 +336,21 @@ export const useOverlayStore = create<OverlayStoreState>((set) => ({
         contentAiSelectionContext: passage ? (context ?? null) : null,
     }),
     setContentAiAnchorRect: (rect) => set({ contentAiAnchorRect: rect }),
+    syncContentAiLesson: (contentId) => {
+        // Same lesson (including EVERY remount of the panel) → keep the conversation.
+        if (get().contentAiConversation.contentId === contentId) {
+            return false
+        }
+        set({ contentAiConversation: { ...EMPTY_CONTENT_AI_CONVERSATION, contentId } })
+        return true
+    },
+    updateContentAiConversation: (contentId, update) =>
+        set((state) => {
+            const previous = state.contentAiConversation
+            // a write for a lesson the learner already left is dropped, not applied
+            if (previous.contentId !== contentId) {
+                return {}
+            }
+            return { contentAiConversation: { ...previous, ...update(previous) } }
+        }),
 }))

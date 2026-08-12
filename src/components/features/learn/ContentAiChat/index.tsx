@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useCallback, useEffect, useRef, useState } from "react"
+import React, { useCallback, useEffect, useRef } from "react"
 import { useParams } from "next/navigation"
 import {
     Button,
@@ -24,7 +24,11 @@ import { useTranslations } from "next-intl"
 import { ChatBubble } from "@/components/blocks/feed/ChatBubble"
 import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
 import { useGetAiCatalogModelsSwr } from "@/hooks/swr/api/rest/queries/useGetAiCatalogModelsSwr"
-import { useContentAiSelectedModel, useContentAiSelection } from "@/hooks/zustand/overlay/hooks"
+import {
+    useContentAiConversation,
+    useContentAiSelectedModel,
+    useContentAiSelection,
+} from "@/hooks/zustand/overlay/hooks"
 import { createSession, isFreeModel, isModelDown, sendSessionMessageStream } from "@/modules/api/rest/ai"
 
 /** BE default chat model when the catalog omits `defaults.chat`. */
@@ -42,17 +46,6 @@ const SUGGESTION_KEYS = ["summarize", "hardest", "example", "remember"] as const
 /** Scoped quick-asks shown when a lesson passage is selected. */
 const SELECTION_SUGGESTION_KEYS = ["explain", "example", "simplify"] as const
 
-/** One turn in the content-AI conversation. */
-interface ChatMessage {
-    role: "user" | "assistant"
-    /** The message text (assistant content may be markdown). */
-    content: string
-    /** What to show in the bubble (user turns hide the prepended quote context). */
-    display: string
-    /** Model that served this assistant answer (from the SSE `done` event); rendered as a caption. */
-    modelUsed?: string
-}
-
 /** Props for {@link ContentAiChat}. */
 export interface ContentAiChatProps {
     className?: string
@@ -60,8 +53,9 @@ export interface ContentAiChatProps {
      * Full-screen host (the FAB's "mở rộng" mode). When true the thread drops its
      * docked `max-h-[55vh]` cap and just flexes to fill the tall container, so the
      * conversation uses the whole screen. The component itself is UNCHANGED between
-     * modes (same instance) — only the scroll region's height ceiling differs — so
-     * toggling expand never remounts the chat or loses the in-memory thread.
+     * modes (same instance) — only the scroll region's height ceiling differs. (The
+     * conversation is store-backed now, so even a remount would keep it; the stable
+     * tree position is still worth keeping for scroll position + focus.)
      */
     expanded?: boolean
 }
@@ -77,9 +71,15 @@ const truncate = (text: string) => (text.length > 120 ? `${text.slice(0, 120)}�
  * When a passage is selected (via {@link import("../LessonReader/ContentAiSelectionAsk").ContentAiSelectionAsk}),
  * the message SENT to the BE carries the full selected passage plus the containing
  * paragraph as a marked reference-data block, while the user bubble keeps showing only
- * the truncated-quote label + question. The answer is a mocked reply (a real BE streams
- * token-by-token over a socket — see the content-ai rules); the streaming UI is
- * wired to an obvious mock so the swap is a one-liner.
+ * the truncated-quote label + question. The answer streams token-by-token over SSE
+ * (`sendSessionMessageStream`) into a lazily-created TUTOR_CHAT session.
+ *
+ * ★ STATELESS about the conversation. The thread, the composer draft, the session id and
+ * the streaming flag all live in the overlay store
+ * ({@link import("@/hooks/zustand/overlay/hooks").useContentAiConversation}), because every
+ * host of this panel unmounts it on close. Both hosts — the FAB popover/drawer and the
+ * selection-anchored panel — therefore share ONE conversation per lesson, which is what a
+ * learner expects from a single lesson tutor.
  *
  * @param props - {@link ContentAiChatProps}
  */
@@ -100,25 +100,32 @@ export const ContentAiChat = ({ className, expanded = false }: ContentAiChatProp
     /** The model to actually send: the picked one, else the catalog default (when a catalog exists). */
     const activeModel = hasCatalog ? (selectedModel ?? defaultChatModel) : undefined
 
-    const [messages, setMessages] = useState<Array<ChatMessage>>([])
-    const [input, setInput] = useState("")
-    const [isStreaming, setIsStreaming] = useState(false)
+    // ★ The conversation lives in the OVERLAY STORE, not in this component. The popover /
+    // bottom-sheet that hosts this panel UNMOUNTS it on every close (click-outside, Escape,
+    // the mascot toggle), so component state lost the thread, the half-typed question and
+    // the session id each time. Store-backed, all of it survives close→reopen; only a real
+    // lesson change clears it (`useContentAiLessonReset`, guarded on the lesson the
+    // conversation already carries — never on mount).
+    const {
+        messages,
+        draft: input,
+        sessionId,
+        isStreaming,
+        setDraft: setInput,
+        setMessages,
+        setSessionId,
+        setStreaming: setIsStreaming,
+    } = useContentAiConversation(contentId ?? null)
     const scrollRef = useRef<HTMLDivElement>(null)
-    /** Reused TUTOR_CHAT session id — created lazily on the first send. */
-    const sessionIdRef = useRef<string | null>(null)
-    /** Aborts the in-flight SSE stream on unmount. */
-    const abortRef = useRef<AbortController | null>(null)
 
-    // follow the thread to the bottom as turns append / the answer streams
+    // follow the thread to the bottom as turns append / the answer streams (also on
+    // re-open: the restored thread lands scrolled to the newest turn)
     useEffect(() => {
         const element = scrollRef.current
         if (element) {
             element.scrollTop = element.scrollHeight
         }
     }, [messages])
-
-    // abort any in-flight stream on unmount (BE releases its Redis lock on client disconnect)
-    useEffect(() => () => abortRef.current?.abort(), [])
 
     /** Send a question; stream the real AI tutor answer over SSE (TUTOR_CHAT session). */
     const onSend = useCallback(
@@ -201,25 +208,33 @@ export const ContentAiChat = ({ className, expanded = false }: ContentAiChatProp
 
             try {
                 // Lazy TUTOR_CHAT session, grounded on the lesson when a contentId is present.
-                if (!sessionIdRef.current) {
+                // Reused across closes now that the id lives in the store, so re-opening the
+                // panel continues the SAME BE conversation instead of starting a new one.
+                let activeSessionId = sessionId
+                if (!activeSessionId) {
                     const session = await createSession({
                         feature: "TUTOR_CHAT",
                         ...(contentId ? { contextRef: { lessonId: contentId } } : {}),
                         ...(activeModel ? { model: activeModel } : {}),
                     })
-                    sessionIdRef.current = session.id
+                    activeSessionId = session.id
+                    setSessionId(activeSessionId)
                 }
-                const controller = new AbortController()
-                abortRef.current = controller
+                // NO AbortController: an in-flight stream deliberately OUTLIVES this panel.
+                // Closing the chat used to abort it, so re-opening showed a half-written
+                // answer — the very loss the store lift exists to stop. The handlers write
+                // into the store, which is alive whether or not the panel is mounted, so the
+                // answer finishes in the background and is complete when the learner comes
+                // back. Writes are lesson-scoped, so a delta arriving after the learner has
+                // moved to another lesson is dropped rather than pasted into the new thread.
                 await sendSessionMessageStream(
-                    sessionIdRef.current,
+                    activeSessionId,
                     sent,
                     {
                         onDelta: appendDelta,
                         onDone,
                         onError,
                         onQuota: () => finish(t("reader.ai.quotaHit")),
-                        signal: controller.signal,
                     },
                     activeModel,
                 )
@@ -228,7 +243,22 @@ export const ContentAiChat = ({ className, expanded = false }: ContentAiChatProp
                 finish(t("reader.ai.error"))
             }
         },
-        [input, isStreaming, selection, selectionContext, setSelection, t, contentId, activeModel, setSelectedModel],
+        [
+            input,
+            isStreaming,
+            selection,
+            selectionContext,
+            setSelection,
+            t,
+            contentId,
+            activeModel,
+            setSelectedModel,
+            sessionId,
+            setInput,
+            setMessages,
+            setSessionId,
+            setIsStreaming,
+        ],
     )
 
     return (

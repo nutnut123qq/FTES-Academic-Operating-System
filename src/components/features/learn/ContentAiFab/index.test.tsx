@@ -1,7 +1,7 @@
 import React from "react"
-import { act, cleanup, render, screen } from "@testing-library/react"
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { useOverlayStore } from "@/hooks/zustand/overlay/store"
+import { EMPTY_CONTENT_AI_CONVERSATION, useOverlayStore } from "@/hooks/zustand/overlay/store"
 
 /**
  * Component — {@link ContentAiFab}: the HOST for the lesson-scoped AI chat.
@@ -17,7 +17,10 @@ import { useOverlayStore } from "@/hooks/zustand/overlay/store"
  * What is pinned instead is the contract the mascot depends on: (1) render by route
  * param, (2) the store — not a press — is what opens the chat, (3) nothing here is
  * reachable by pointer, keyboard or screen reader, so the page has exactly ONE AI
- * affordance, and (4) the mobile bottom-sheet branch.
+ * affordance, (4) the mobile bottom-sheet branch, (5) this host — which outlives every
+ * open/close of the panel — is the ONE place the AI conversation is cleared, and it
+ * clears it only on a real lesson change, and (6) the docked panel is rounded (it clips
+ * its full-bleed child) while the expanded full-screen surface stays edge-to-edge.
  */
 
 const h = vi.hoisted(() => ({
@@ -90,7 +93,14 @@ vi.mock("@heroui/react", () => {
         h.popoverOnOpenChange = onOpenChange
         return <div data-testid="popover" data-open={String(isOpen)}>{children}</div>
     }
-    const PopoverContent = ({ children }: { children?: React.ReactNode }) => <div>{children}</div>
+    // `className` is passed THROUGH: the docked panel's ROUNDING depends on the
+    // popover clipping its full-bleed child (`overflow-hidden`), so a mock that
+    // dropped the class could not tell a rounded panel from a square one.
+    const PopoverContent = ({ children, className }: { children?: React.ReactNode; className?: string }) => (
+        <div data-testid="popover-content" className={className}>
+            {children}
+        </div>
+    )
     const Drawer = Object.assign(passthrough, {
         Backdrop: ({ isOpen, children }: { isOpen?: boolean; children?: React.ReactNode }) =>
             isOpen ? <div data-testid="drawer">{children}</div> : null,
@@ -125,8 +135,21 @@ beforeEach(() => {
     h.popoverOnOpenChange = undefined
     useOverlayStore.setState((state) => ({
         openMap: { ...state.openMap, contentAiChat: false },
+        contentAiConversation: EMPTY_CONTENT_AI_CONVERSATION,
     }))
 })
+
+/** Seed a conversation as if the learner had already chatted on `contentId`. */
+const seedConversation = (contentId: string) =>
+    useOverlayStore.setState({
+        contentAiConversation: {
+            contentId,
+            messages: [{ role: "user", content: "đã hỏi", display: "đã hỏi" }],
+            draft: "đang gõ",
+            sessionId: "sess-1",
+            isStreaming: false,
+        },
+    })
 
 afterEach(() => {
     cleanup()
@@ -182,6 +205,70 @@ describe("ContentAiFab — opened by the shared overlay store", () => {
         act(() => h.popoverOnOpenChange?.(false))
 
         expect(useOverlayStore.getState().openMap.contentAiChat).toBe(false)
+    })
+})
+
+describe("ContentAiFab — owns the clear-on-lesson-change rule", () => {
+    it("keeps the conversation across open → close → re-open (the reported bug)", () => {
+        seedConversation("content-1")
+        render(<ContentAiFab />)
+
+        openChatFromStore()
+        act(() => h.popoverOnOpenChange?.(false))
+        openChatFromStore()
+
+        const conversation = useOverlayStore.getState().contentAiConversation
+        expect(conversation.messages).toHaveLength(1)
+        expect(conversation.draft).toBe("đang gõ")
+        expect(conversation.sessionId).toBe("sess-1")
+    })
+
+    it("does NOT clear on its own mount, or on a remount for the same lesson", () => {
+        seedConversation("content-1")
+        const { unmount } = render(<ContentAiFab />)
+        unmount()
+        render(<ContentAiFab />)
+
+        expect(useOverlayStore.getState().contentAiConversation.messages).toHaveLength(1)
+    })
+
+    it("clears on a real lesson change even when the chat was never opened there", () => {
+        seedConversation("content-1")
+        const { rerender } = render(<ContentAiFab />)
+
+        h.contentId = "content-2"
+        act(() => rerender(<ContentAiFab />))
+
+        const conversation = useOverlayStore.getState().contentAiConversation
+        expect(conversation.contentId).toBe("content-2")
+        expect(conversation.messages).toEqual([])
+        expect(conversation.draft).toBe("")
+        expect(conversation.sessionId).toBeNull()
+    })
+})
+
+describe("ContentAiFab — panel rounding", () => {
+    it("clips the docked popover so its baked radius rounds the full-bleed panel", () => {
+        render(<ContentAiFab />)
+        openChatFromStore()
+
+        const content = screen.getByTestId("popover-content")
+        expect(content.className).toContain("overflow-hidden")
+        expect(content.className).toContain("w-[380px]")
+    })
+
+    it("leaves the expanded full-screen surface unclipped and edge-to-edge", () => {
+        render(<ContentAiFab />)
+        openChatFromStore()
+
+        act(() => {
+            fireEvent.click(screen.getByLabelText("reader.ai.expand"))
+        })
+
+        const content = screen.getByTestId("popover-content")
+        // no clipping (the panel is `fixed inset-0`) and no card chrome to round
+        expect(content.className).not.toContain("overflow-hidden")
+        expect(content.className).toContain("!bg-transparent")
     })
 })
 

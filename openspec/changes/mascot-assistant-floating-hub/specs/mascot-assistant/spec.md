@@ -10,17 +10,20 @@ dialog. It SHALL sit above the safe-area inset and SHALL NOT affect page layout 
 character artwork itself is the button — no circular frame, no background plate, no rounding
 applied to the image.
 
-The character SHALL PEEK rather than stand: it is drawn larger than its slot and pushed
-diagonally past the corner with a slight lean, so the viewport edge crops away roughly the lower
-half and a slice of the right side, leaving head, waving paw and chest leaning in from off-screen.
+The character SHALL PEEK rather than stand: it is pushed diagonally past the corner so the
+viewport edge crops it, keeping head, waving paw and the shirt-front on screen while the legs go
+off it, and it SHALL sit FLUSH in the corner — the push absorbs the shell's own inset, so the
+character touches the screen edges even though the panel keeps its margin from them. It SHALL NOT
+be rotated: a lean swings the body out of the corner and leaves only a head poking in.
+
 The part pushed past the edge SHALL NOT make the page scrollable, and the shortcut panel SHALL
 still open flush above the VISIBLE top of the character, not above the slot it was cropped out of.
 
 #### Scenario: The mascot reads as peeking in from the corner
 
 - **WHEN** the visitor looks at the bottom-right corner of any page
-- **THEN** roughly the lower half of the character is cropped by the viewport edge, and no
-  horizontal scrollbar appears
+- **THEN** the character is cropped below the chest — head, waving paw and shirt-front visible,
+  legs off-screen — sitting flush in the corner with no horizontal scrollbar
 
 #### Scenario: The panel stays attached to the visible character
 

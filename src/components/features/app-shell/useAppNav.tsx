@@ -34,10 +34,15 @@ export interface AppNavModule {
  * its landing route. Consumed by the desktop {@link "../navbar/Navbar/HeaderNav"}
  * and the Navbar mobile drawer so the two surfaces never drift. The header does
  * NOT render sub-menus; nested features (resources, challenges, leaderboard,
- * workflow, analytics, career, marketplace, groups, events, chat, feed) live
- * inside each module's landing page. Discovery shortcuts (`/ai`,
- * `/recommendations`) live in the profile/avatar popup, and personal/system
+ * career, groups, events, feed) live inside each module's landing page.
+ * `/ai` is entered from the floating mascot panel, and personal/system
  * destinations live in the Account menu — none belong to a module here.
+ *
+ * DEBT — routes this comment used to claim were reachable "inside a module" but
+ * that have NO entry point anywhere today (verified: zero non-test callers of the
+ * path builders): `/workflow`, `/marketplace`, `/chat`, `/recommendations`,
+ * `/activity`, `/integrations`. Keep or delete is still an open product call;
+ * do not read this list as "they live under some module".
  *
  * Paths are built locale-less via `pathConfig().locale()` because `@/i18n/navigation`
  * strips the locale from `usePathname` and re-adds it on `router.push`.

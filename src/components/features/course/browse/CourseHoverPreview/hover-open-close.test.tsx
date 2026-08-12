@@ -7,7 +7,8 @@ import type { Course } from "../../hooks/useQueryCoursesSwr"
  * Component — the catalog hover-preview panel's OPEN/CLOSE lifecycle (change
  * `hover-preview-meta-and-timeout`, Fix 4).
  *
- * The panel must open on hover after a short delay and then STAY open the whole
+ * The panel opens the INSTANT the pointer is over the card (the 300ms open delay
+ * was dropped in 96a3a4e — a quick hover never earned the panel) and then STAYs open the whole
  * time the pointer is over the card OR the panel — it must NOT close on any
  * timer, display OR grace. Closing is driven purely by WHERE the pointer went
  * (`relatedTarget`): still inside the card/panel → stay open; outside both (or

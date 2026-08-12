@@ -667,10 +667,12 @@ type EnrollCardProps = {
  * The sticky purchase/enroll card for a LEGACY course (or one with no `saleMode`).
  *
  * - Not enrolled: an OPTION PICKER in the SAME shape as the PACKAGE card
- *   ({@link SelectableCardGroup}) — a paid "Trọn khoá" row (default) and, only when the
- *   course has free lessons, a "Học thử miễn phí" row. The selection drives the headline
- *   price and the single primary CTA (buy → checkout, or free trial → reader). A course
- *   with no free lessons shows the paid buy alone (no pointless one-row picker).
+ *   ({@link SelectableCardGroup}) — a paid "Trọn khoá" row (default) and a
+ *   "Học thử miễn phí" row. BOTH rows show on EVERY course regardless of
+ *   `freeLessonCount` (0a7ddb8): login → free-enroll already grants preview access,
+ *   so the trial is never gated on the lesson count (rule premium-unlock-is-enroll-not-vip).
+ *   The selection drives the headline price and the single primary CTA
+ *   (buy → checkout, or free trial → reader).
  * - Enrolled: collapses to a single "Tiếp tục học" primary CTA.
  */
 export const EnrollCard = ({

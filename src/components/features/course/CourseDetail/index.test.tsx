@@ -7,7 +7,7 @@ import type { CourseDetail as CourseDetailModel } from "../hooks/useQueryCourseD
  * Component — the LEGACY enroll card (change `course-legacy-enroll-card-parity`).
  * Covers the spec scenarios: a discounted paid course renders ONE option (price +
  * struck original + −% chip, no fabricated Free/Premium tier), the "try free" entry
- * only exists when the course has free lessons, no challenge row without a real
+ * is offered on EVERY course regardless of `freeLessonCount` (0a7ddb8), no challenge row without a real
  * `challengeCount`, and an enrolled viewer collapses to "Tiếp tục học".
  *
  * `t` is mocked to echo the message key (+ params), so assertions key off ids.

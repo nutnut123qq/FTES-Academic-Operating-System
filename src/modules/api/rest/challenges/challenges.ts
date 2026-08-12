@@ -1,10 +1,13 @@
 import { restRequest } from "@/modules/api/rest/client"
 import type {
+    ChallengeCommentPage,
+    ChallengeCommentView,
     ChallengeView,
     CreateChallengeRequest,
     CreateTeamRequest,
     LeaderboardView,
     ManualScoreItem,
+    PostChallengeCommentRequest,
     ProjectFileView,
     ProjectTreeEntry,
     RubricUpsert,
@@ -364,5 +367,80 @@ export const getChallengeLeaderboard = async (
         url: `/challenges/${id}/leaderboard`,
         params: { limit },
         authenticated: false,
+    })
+}
+
+// ---------------------------------------------------------------- comments
+
+/**
+ * Returns ONE page of a challenge's discussion thread — roots newest-first, each carrying
+ * its one level of `replies` oldest-first, with every author card already resolved.
+ *
+ * `GET /api/v1/challenges/{id}/comments?page=&size=`
+ *
+ * `page` is **1-based** (the BE owns the shift onto its 0-based `PageRequest`) and `size`
+ * is clamped to 50 server-side, so a caller asking for more silently gets 50 — never an
+ * error, and never the whole thread.
+ *
+ * @param id - The challenge UUID whose thread to read.
+ * @param params - 1-based `page` (default 1) and `size` (default 20, BE cap 50).
+ * @returns The page of root comments.
+ */
+export const getChallengeComments = async (
+    id: string,
+    params?: { page?: number; size?: number },
+): Promise<ChallengeCommentPage> => {
+    return restRequest<ChallengeCommentPage>({
+        method: "GET",
+        url: `/challenges/${id}/comments`,
+        params: {
+            page: params?.page ?? 1,
+            size: params?.size ?? 20,
+        },
+    })
+}
+
+/**
+ * Posts a comment (or a one-level reply via `parentId`) on a challenge. A reply-of-reply
+ * is re-parented onto the root by the BE, so the returned view's `parentId` may differ
+ * from the one sent.
+ *
+ * `POST /api/v1/challenges/{id}/comments`
+ *
+ * @param id - The challenge UUID being commented on.
+ * @param request - The body (`content` ≤ 5000 chars, optional `parentId`).
+ * @returns The comment the server actually stored, with the author card attached.
+ * @throws RestError with `CHALLENGE_TOO_MANY_REQUESTS` (429) past 10 comments/minute,
+ * `CHALLENGE_INVALID_PAYLOAD` (400) on an empty/oversized body, or a 403 from the
+ * challenge access guard.
+ */
+export const postChallengeComment = async (
+    id: string,
+    request: PostChallengeCommentRequest,
+): Promise<ChallengeCommentView> => {
+    return restRequest<ChallengeCommentView>({
+        method: "POST",
+        url: `/challenges/${id}/comments`,
+        data: request,
+    })
+}
+
+/**
+ * Soft-deletes one challenge comment (its AUTHOR, or a subject approver). The row
+ * survives with `status: "DELETED"`, a tombstone body and its author nulled, so replies
+ * under it stay readable.
+ *
+ * `DELETE /api/v1/challenges/comments/{commentId}`
+ *
+ * Note the path: the comment id alone identifies it, so this is NOT nested under the
+ * challenge (mirrors the resource thread's `/resources/comments/...`).
+ *
+ * @param commentId - The comment to delete.
+ * @throws RestError 403 when the caller is neither the author nor an approver.
+ */
+export const deleteChallengeComment = async (commentId: string): Promise<void> => {
+    return restRequest<void>({
+        method: "DELETE",
+        url: `/challenges/comments/${commentId}`,
     })
 }

@@ -20,6 +20,10 @@ import { describe, expect, it, vi } from "vitest"
  *    to start: the action disabled, the reason stated, and — the part that actually
  *    matters — no file input anywhere in the tree.
  *
+ * 3. **The uploader block DEGRADES.** `ChallengeView.author` is nullable by contract (no
+ *    `created_by`, no profile, or an older BE), so the block must vanish entirely rather
+ *    than print a placeholder identity — and must render the real card when there is one.
+ *
  * `t` echoes the key, with any params appended after `#`, so assertions key off message ids.
  */
 
@@ -73,11 +77,73 @@ vi.mock("@/components/features/subject/ExamImageViewer", () => ({
     ),
 }))
 
+/**
+ * The SHARED identity link is stubbed down to what it was handed — this spec is about
+ * whether the uploader is named AT ALL and with which card; the hovercard, profile link
+ * and avatar fallback are pinned in `UserLink/index.test.tsx`. `showAvatar={false}` is
+ * echoed so the double-render (avatar column + name row) stays visible to assertions.
+ */
+vi.mock("@/components/features/identity", () => ({
+    UserLink: ({
+        username,
+        displayName,
+        avatar,
+        showAvatar = true,
+    }: {
+        username?: string | null
+        displayName?: string | null
+        avatar?: string | null
+        showAvatar?: boolean
+    }) => (
+        <span
+            data-testid="user-link"
+            data-username={username ?? ""}
+            data-avatar={avatar ?? ""}
+            data-with-avatar={String(showAvatar)}
+        >
+            {displayName}
+        </span>
+    ),
+}))
+
+/**
+ * The comment thread is stubbed to its INPUTS: it owns its own SWR reads, composer and
+ * pager (and has its own adapter concerns), while what this spec pins is that the paper
+ * surface mounts it and keys it off the challenge's real UUID. Stubbing it also keeps the
+ * "no input / no form" pin about the HAND-IN block, which is what that pin is for.
+ */
+vi.mock("./ChallengePaperCommentThread", () => ({
+    ChallengePaperCommentThread: ({ challengeId }: { challengeId: string }) => (
+        <div data-testid="challenge-comments" data-challenge-id={challengeId} />
+    ),
+}))
+
 import { ChallengePaper, IS_PAPER_GRADING_OPEN } from "./ChallengePaper"
+import type { ChallengeAuthorView } from "@/modules/api/rest/challenges/types"
+
+/** A resolved uploader card, the shape the BE `AuthorView` ships. */
+const AUTHOR: ChallengeAuthorView = {
+    userId: "11111111-1111-1111-1111-111111111111",
+    username: "minhdev",
+    displayName: "Minh Dev",
+    avatarUrl: "https://cdn/avatar.png",
+}
 
 /** Renders the paper surface for one BE (`paperUrl`, `paperMime`) pair. */
-const setup = (paperUrl: string | null, paperMime: string | null) =>
-    render(<ChallengePaper paperUrl={paperUrl} paperMime={paperMime} title="PE PRF192" />)
+const setup = (
+    paperUrl: string | null,
+    paperMime: string | null,
+    extra?: { challengeId?: string; author?: ChallengeAuthorView | null },
+) =>
+    render(
+        <ChallengePaper
+            paperUrl={paperUrl}
+            paperMime={paperMime}
+            title="PE PRF192"
+            challengeId={extra?.challengeId}
+            author={extra?.author}
+        />,
+    )
 
 describe("ChallengePaper — left pane by paper kind", () => {
     it("sends a photographed sheet to the SHARED viewer, as exactly one image", () => {
@@ -150,5 +216,86 @@ describe("ChallengePaper — the gated hand-in column", () => {
     it("accompanies every paper kind, not just the ones with a viewer", () => {
         setup("https://storage/de-pe.docx", "application/msword")
         expect(screen.getByText("paper.submit.title")).toBeTruthy()
+    })
+
+    it("stays inert once the uploader + thread share the column with it", () => {
+        const { container } = setup("https://storage/de-pe.jpg", "image/png", {
+            challengeId: "c-1",
+            author: AUTHOR,
+        })
+        const action = screen.getByText("paper.submit.cta").closest("button")
+        expect((action as HTMLButtonElement).disabled).toBe(true)
+        expect(container.querySelector("input")).toBeNull()
+        expect(container.querySelector("form")).toBeNull()
+    })
+})
+
+describe("ChallengePaper — who uploaded the paper", () => {
+    it("names the uploader from the BE card, with the handle", () => {
+        setup("https://storage/de-pe.jpg", "image/png", { author: AUTHOR })
+        expect(screen.getByText("paper.uploader")).toBeTruthy()
+        expect(screen.getAllByText("Minh Dev").length).toBeGreaterThan(0)
+        expect(screen.getByText("@minhdev")).toBeTruthy()
+    })
+
+    it("hands the shared identity component the real card", () => {
+        setup("https://storage/de-pe.jpg", "image/png", { author: AUTHOR })
+        const links = screen.getAllByTestId("user-link")
+        expect(links.length).toBe(2)
+        expect(links.every((link) => link.getAttribute("data-username") === "minhdev")).toBe(
+            true,
+        )
+        // One instance carries the avatar column, the other the name row.
+        expect(links.map((link) => link.getAttribute("data-with-avatar")).sort()).toEqual([
+            "false",
+            "true",
+        ])
+        expect(links[0]?.getAttribute("data-avatar")).toBe("https://cdn/avatar.png")
+    })
+
+    it("HIDES the block entirely when the BE ships no author", () => {
+        setup("https://storage/de-pe.jpg", "image/png", { author: null })
+        expect(screen.queryByText("paper.uploader")).toBeNull()
+        expect(screen.queryAllByTestId("user-link").length).toBe(0)
+    })
+
+    it("hides it just the same when the field is absent (older BE)", () => {
+        setup("https://storage/de-pe.pdf", "application/pdf")
+        expect(screen.queryByText("paper.uploader")).toBeNull()
+    })
+
+    it("falls back to the username when the profile carries no display name", () => {
+        setup("https://storage/de-pe.jpg", "image/png", {
+            author: { ...AUTHOR, displayName: null },
+        })
+        expect(screen.getAllByText("minhdev").length).toBeGreaterThan(0)
+    })
+
+    it("drops the handle line when the profile carries no username", () => {
+        setup("https://storage/de-pe.jpg", "image/png", {
+            author: { ...AUTHOR, username: null },
+        })
+        expect(screen.getByText("paper.uploader")).toBeTruthy()
+        expect(screen.queryByText("@null")).toBeNull()
+        expect(screen.queryByText("@")).toBeNull()
+    })
+})
+
+describe("ChallengePaper — the discussion thread", () => {
+    it("mounts the thread keyed off the challenge's real UUID", () => {
+        setup("https://storage/de-pe.jpg", "image/png", { challengeId: "chal-uuid-1" })
+        const thread = screen.getByTestId("challenge-comments")
+        expect(thread.getAttribute("data-challenge-id")).toBe("chal-uuid-1")
+    })
+
+    it("accompanies every paper kind, uploader or not", () => {
+        setup("https://storage/de-pe.zip", "application/zip", { challengeId: "chal-uuid-2" })
+        expect(screen.getByTestId("challenge-comments")).toBeTruthy()
+        expect(screen.queryByText("paper.uploader")).toBeNull()
+    })
+
+    it("is not mounted at all without an id to key it off", () => {
+        setup("https://storage/de-pe.jpg", "image/png", { author: AUTHOR })
+        expect(screen.queryByTestId("challenge-comments")).toBeNull()
     })
 })

@@ -15,6 +15,9 @@ import {
     ExamImageViewer,
     type ExamImageViewerImage,
 } from "@/components/features/subject/ExamImageViewer"
+import { UserLink } from "@/components/features/identity"
+import type { ChallengeAuthorView } from "@/modules/api/rest/challenges/types"
+import { ChallengePaperCommentThread } from "./ChallengePaperCommentThread"
 import { classifyChallengePaper } from "./paperKind"
 
 /**
@@ -47,6 +50,19 @@ export interface ChallengePaperProps {
     paperMime: string | null
     /** Challenge title — used as the accessible name of the picture / embedded viewer. */
     title: string
+    /**
+     * The challenge's real UUID (BE `ChallengeView.id`) — NOT the routing slug, because
+     * the comment endpoints bind a `UUID` path variable. Omitted / empty → the discussion
+     * thread is not mounted at all (nothing to key it off), and the column is the uploader
+     * plus the hand-in block alone.
+     */
+    challengeId?: string
+    /**
+     * Who UPLOADED the paper (BE `ChallengeView.author`). `null` / omitted — no
+     * `created_by`, no profile for that user, or a BE older than the contract — hides the
+     * uploader block entirely rather than printing a placeholder identity.
+     */
+    author?: ChallengeAuthorView | null
 }
 
 /**
@@ -67,14 +83,14 @@ export interface ChallengePaperProps {
  * behind — a surface that has to be re-laid-out on the day it is unlocked is a surface
  * that gets re-argued. Flipping one constant is not.)
  *
- * **No comment thread.** The FE album pairs its picture with per-image comments, and the
- * owner asked for the same here — but there is no challenge-level comment contract on the
- * BE: `src/modules/api/rest/challenges` exposes 17 endpoints and not one of them touches
- * comments, and `ChallengeView` carries `paperUrl`/`paperMime` only (no `resourceId`), so
- * the album's `/resources/{id}/images/{imageId}/comments` thread cannot be keyed off a
- * challenge either. Rather than ship a composer that drops what the reader types, the
- * right pane carries the hand-in block alone. A thread lands here the day the BE grows
- * one (challenge id → comments); {@link FeImageCommentThread} is the adapter to copy.
+ * **The right column also says WHO put the paper up and carries the discussion.** Both
+ * arrived with the BE contract `challenge-paper-comments`: `ChallengeView.author` (the
+ * uploader's resolved profile card) and `/challenges/{id}/comments`. The thread is the
+ * house {@link import("@/components/reuseable/PostCommentThread").PostCommentThread},
+ * adapted by {@link ChallengePaperCommentThread} exactly the way the FE album adapts it —
+ * no likes (the BE ships no reaction table for it), no report (a challenge comment id does
+ * not resolve in the community moderation module). The uploader block simply disappears
+ * when the BE has no card to give, which is the whole degradation: never a fabricated name.
  *
  * The paper itself renders by kind ({@link classifyChallengePaper}):
  * - **IMAGE** → the SHARED {@link ExamImageViewer} — zoom, pan, ←/→, the lot, already
@@ -94,7 +110,13 @@ export interface ChallengePaperProps {
  *
  * @param props - {@link ChallengePaperProps}
  */
-export const ChallengePaper = ({ paperUrl, paperMime, title }: ChallengePaperProps) => {
+export const ChallengePaper = ({
+    paperUrl,
+    paperMime,
+    title,
+    challengeId,
+    author,
+}: ChallengePaperProps) => {
     const t = useTranslations("challenge")
     const kind = classifyChallengePaper(paperUrl, paperMime)
 
@@ -203,10 +225,75 @@ export const ChallengePaper = ({ paperUrl, paperMime, title }: ChallengePaperPro
                     </div>
                 )}
 
-                {/* RIGHT — hand in for AI grading, laid out and switched off */}
-                <PaperSubmitPanel />
+                {/* RIGHT — the hand-in block (laid out and switched off), then who put the
+                    paper up, then the discussion. The COLUMN owns the surface + its own
+                    scroll so the three blocks stack inside one scrollable pane. */}
+                <div className="flex min-h-0 flex-col gap-4 bg-overlay p-4 lg:overflow-y-auto">
+                    <PaperSubmitPanel />
+
+                    {/* Hidden outright when the BE has no author card — see PaperUploader. */}
+                    {author ? <PaperUploader author={author} /> : null}
+
+                    {challengeId ? (
+                        <div className="border-t border-separator pt-4">
+                            <ChallengePaperCommentThread challengeId={challengeId} />
+                        </div>
+                    ) : null}
+                </div>
             </div>
         </section>
+    )
+}
+
+/**
+ * "Người đăng" — who uploaded this paper.
+ *
+ * Rendered with the SHARED {@link UserLink} rather than a hand-rolled avatar + name pair,
+ * so the uploader gets the same hovercard, profile link, avatar fallback and staff seal as
+ * their name anywhere else on the platform. It appears twice for one person on purpose —
+ * the avatar column and the name row — which is the arrangement `UserLink` documents for
+ * exactly this shape.
+ *
+ * The caller renders this ONLY when the BE shipped a card, so there is no "unknown
+ * uploader" state here: the block is present with a real identity, or it is absent.
+ * `displayName` still falls back to the username because a profile row may carry one and
+ * not the other, and the `@handle` line is dropped when there is no handle to print.
+ *
+ * @param props.author - The BE `ChallengeView.author` card.
+ */
+const PaperUploader = ({ author }: { author: ChallengeAuthorView }) => {
+    const t = useTranslations("challenge")
+    const displayName = author.displayName || author.username || ""
+
+    return (
+        <div className="flex items-start gap-3 border-t border-separator pt-4">
+            <UserLink
+                username={author.username}
+                displayName={displayName}
+                avatar={author.avatarUrl}
+                seed={author.username ?? author.userId}
+                hideName
+                size="sm"
+                classNames={{ avatar: "size-9" }}
+            />
+            <div className="flex min-w-0 flex-1 flex-col">
+                <Typography type="body-xs" color="muted">
+                    {t("paper.uploader")}
+                </Typography>
+                <UserLink
+                    username={author.username}
+                    displayName={displayName}
+                    avatar={author.avatarUrl}
+                    showAvatar={false}
+                    size="sm"
+                />
+                {author.username ? (
+                    <Typography type="body-xs" color="muted" truncate>
+                        {`@${author.username}`}
+                    </Typography>
+                ) : null}
+            </div>
+        </div>
     )
 }
 
@@ -219,16 +306,17 @@ export const ChallengePaper = ({ paperUrl, paperMime, title }: ChallengePaperPro
  * The dropzone is a dashed panel and the action is a disabled `Button`, so a reader can
  * see exactly what the surface will do without being able to start it, and nothing has to
  * be un-wired on the day {@link IS_PAPER_GRADING_OPEN} flips — only wired.
+ *
+ * It is one block among three in the right column now (uploader + discussion sit below),
+ * so the surface colour, padding and scroll live on the COLUMN — this block only lays out
+ * its own contents. Nothing about the lock changed.
  */
 const PaperSubmitPanel = () => {
     const t = useTranslations("challenge")
     const isOpen = IS_PAPER_GRADING_OPEN
 
     return (
-        <div
-            aria-label={t("paper.submit.region")}
-            className="flex min-h-0 flex-col gap-4 bg-overlay p-4 lg:overflow-y-auto"
-        >
+        <div aria-label={t("paper.submit.region")} className="flex flex-col gap-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
                 <Typography type="body-sm" weight="semibold">
                     {t("paper.submit.title")}

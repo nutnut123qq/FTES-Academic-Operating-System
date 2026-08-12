@@ -223,6 +223,10 @@ export const ChallengeView = () => {
                                 paperUrl={challenge.paperUrl}
                                 paperMime={challenge.paperMime}
                                 title={challenge.title}
+                                // The comment endpoints bind a UUID, and `challenge.id` is
+                                // the routing SLUG — the real id is `challengeUuid`.
+                                challengeId={challenge.challengeUuid}
+                                author={challenge.author}
                             />
                         ) : (
                             <ChallengeSolveSurface challenge={challenge} />

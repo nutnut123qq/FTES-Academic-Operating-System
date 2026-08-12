@@ -3,7 +3,10 @@
 import useSWR from "swr"
 
 import { getChallengeBySlug } from "@/modules/api/rest/challenges/challenges"
-import type { SampleTestCaseView } from "@/modules/api/rest/challenges/types"
+import type {
+    ChallengeAuthorView,
+    SampleTestCaseView,
+} from "@/modules/api/rest/challenges/types"
 import { parseGradingConfigStarterCode } from "@/components/features/learn/submissionMethods"
 import { toChallenge } from "./useQueryChallengesSwr"
 import type { Challenge } from "./useQueryChallengesSwr"
@@ -69,6 +72,13 @@ export interface ChallengeDetail extends Challenge {
     paperUrl: string | null
     /** MIME of {@link paperUrl} (`image/*`, `application/pdf`, …); `null` when unknown. */
     paperMime: string | null
+    /**
+     * Who UPLOADED the challenge — the BE's `created_by` resolved to a profile card
+     * (`ChallengeView.author`). `null` when the challenge has no creator on record, when
+     * that user has no profile, or on a BE older than the contract; every reader hides its
+     * uploader line in that case rather than inventing an identity.
+     */
+    author: ChallengeAuthorView | null
 }
 
 const EMPTY_STARTER: ChallengeStarter = { html: "", css: "", js: "" }
@@ -98,6 +108,7 @@ export const useQueryChallengeSwr = (challengeId: string) => {
                 sampleTestCases: view.sampleTestCases ?? undefined,
                 paperUrl: view.paperUrl ?? null,
                 paperMime: view.paperMime ?? null,
+                author: view.author ?? null,
             }
         },
     )

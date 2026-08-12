@@ -19,13 +19,19 @@ test.describe("Blog tab — desktop header (≥ md)", () => {
         test.skip(!viewport || !isDesktop(viewport.width), "desktop-only surface")
     })
 
-    test("renders the six modules including Blog, and navigates to /blog", async ({ page }) => {
+    test("renders the five modules with Blog last, and navigates to /blog", async ({ page }) => {
         await page.goto("/")
 
         const nav = page.getByRole("navigation").first()
         const links = nav.getByRole("link")
-        // Home · Workplace · Course · Community · Blog · Quests
-        await expect(links).toHaveCount(6)
+        // Pin the LIST + ORDER, not a bare count: a count survives "one module added,
+        // another dropped" — the exact drift that let the header and this spec disagree
+        // for 11 days (Quests left the header in 5e08bf1 and only the unit test followed).
+        // Keyed off `data-tour` (HeaderNav stamps `nav-${module.key}`) rather than the
+        // visible labels, which are localized ("Trang chủ", "Không gian học", …).
+        await expect(links).toHaveCount(5)
+        const keys = await links.evaluateAll((els) => els.map((el) => el.getAttribute("data-tour")))
+        expect(keys).toEqual(["nav-home", "nav-workplace", "nav-course", "nav-community", "nav-blog"])
 
         const blog = nav.getByRole("link", { name: "Blog" })
         await expect(blog).toBeVisible()

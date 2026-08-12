@@ -1433,12 +1433,22 @@
       "noPreview": "This format can't be shown inline — open it to read the paper.",
       "archiveHint": "The paper is an archive — download it to open everything inside.",
       "gradingLocked": "The paper is here to practise with. Handing an answer in for AI grading isn't open yet.",
+      "uploader": "Uploaded by",
       "submit": {
         "title": "Hand in for AI grading",
         "lockedBadge": "Not open yet",
         "dropzone": "Your answer — photos, a PDF or a ZIP",
         "cta": "Hand in for grading",
         "region": "Hand in for AI grading (not open yet)"
+      },
+      "comments": {
+        "title": "Comments ({count})",
+        "prev": "Previous",
+        "next": "Next",
+        "pageOf": "Page {page}/{total}",
+        "submitError": "The comment could not be posted. Try again.",
+        "rateLimited": "You're commenting too quickly. Wait a moment and try again.",
+        "deleteError": "The comment could not be deleted. Try again."
       }
     }
   },

@@ -86,6 +86,88 @@ export interface ChallengeTagView {
     label: string
 }
 
+/**
+ * Display card of one person on a challenge surface — the challenge's UPLOADER and any
+ * comment author (BE `ChallengeViews.AuthorView`).
+ *
+ * The field names are deliberately the same four as the community
+ * {@link import("../community").PostAuthor} / group `UserCard`, so the shared identity
+ * components (`UserLink`, `UserAvatar`) read this straight with no second mapper.
+ *
+ * Resolved BE-side in ONE batched `profile.api` call per page, so a comment page never
+ * costs a profile read per row. Every field but `userId` is nullable: the card comes from
+ * a profile row that may not carry a display name or an avatar, and inventing one here
+ * would print a placeholder the server never stored.
+ */
+export interface ChallengeAuthorView {
+    /** The user's id (UUID) — always present when the card itself exists. */
+    userId: string
+    /** URL-facing handle, for the profile link + hovercard. */
+    username?: string | null
+    /** Preferred display name; falls back to the username at render time. */
+    displayName?: string | null
+    /** Uploaded avatar URL; absent → the shared avatar's generated tile. */
+    avatarUrl?: string | null
+}
+
+/**
+ * One comment on a challenge (BE `ChallengeCommentDtos.CommentView`).
+ *
+ * Threading is ONE level: roots carry `replies`, and a reply-of-reply is re-parented onto
+ * the root by the BE — so this structure never nests deeper than shown here.
+ *
+ * A soft-deleted row keeps its id and its replies (the thread must not collapse under a
+ * deleted parent) with `status: "DELETED"`, its `content` replaced by the BE tombstone
+ * text, and BOTH `authorId` and `author` nulled — the server deliberately stops saying who
+ * wrote it.
+ *
+ * There is **no like/reaction count**: the BE ships no reaction table for this thread
+ * (V316 creates none), so any such field could only ever be a constant zero.
+ */
+export interface ChallengeCommentView {
+    /** Comment id (UUID as a string). */
+    id: string
+    /** Author's user id; `null` on a tombstoned row. */
+    authorId: string | null
+    /**
+     * The author's already-resolved display card; `null` on a tombstoned row, and also
+     * when the author simply has no profile — the FE degrades, it never re-fetches.
+     */
+    author?: ChallengeAuthorView | null
+    /** Root comment id when this is a reply; `null` on a root. */
+    parentId: string | null
+    /** Comment body, or the BE tombstone text once deleted. */
+    content: string
+    /** `VISIBLE` | `HIDDEN` | `DELETED`. */
+    status: string
+    /** Creation instant (ISO-8601). */
+    createdAt: string
+    /** One-level replies under a root, oldest-first (empty on a reply). */
+    replies: Array<ChallengeCommentView>
+}
+
+/**
+ * Paged challenge comments (`GET /api/v1/challenges/{id}/comments?page=&size=`).
+ *
+ * `page` is **1-based** — the BE shifts it onto its own 0-based `PageRequest`, so the
+ * number is passed through verbatim (same contract as the resource/FE-image threads).
+ * `total` counts ROOT comments only, which is what the pager pages over.
+ */
+export interface ChallengeCommentPage {
+    items: Array<ChallengeCommentView>
+    page: number
+    size: number
+    total: number
+}
+
+/** Body sent to `POST /api/v1/challenges/{id}/comments`. */
+export interface PostChallengeCommentRequest {
+    /** Parent comment id when replying; omit/null for a top-level comment. */
+    parentId?: string | null
+    /** Comment body — the BE caps it at 5000 characters. */
+    content: string
+}
+
 /** Challenge summary returned by list/detail endpoints. */
 export interface ChallengeView {
     /** Challenge id (UUID). */
@@ -224,6 +306,16 @@ export interface ChallengeView {
      * cache. `null` / absent → unknown, treated as none used.
      */
     aiFeedbackUsed?: number | null
+    /**
+     * Display card of whoever UPLOADED this challenge — the BE's `created_by` resolved
+     * through `profile.api` (contract challenge-paper-comments §1). A PE paper surface has
+     * to be able to say who put the paper up.
+     *
+     * `null` / absent when the challenge has no `created_by`, when that user has no
+     * profile, or on a deployment older than the contract. Every reader must therefore
+     * DEGRADE — hide the uploader line — and never print a placeholder identity.
+     */
+    author?: ChallengeAuthorView | null
 }
 
 /** Wrapper for a batch test-case upsert. */

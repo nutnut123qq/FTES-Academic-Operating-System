@@ -1442,12 +1442,22 @@
       "noPreview": "Định dạng này không xem trực tiếp được — mở đề để đọc.",
       "archiveHint": "Đề dạng kho nén — tải về để mở toàn bộ tệp bên trong.",
       "gradingLocked": "Đề này để bạn tự luyện. Nộp bài cho FrosTES chấm chưa mở.",
+      "uploader": "Người đăng",
       "submit": {
         "title": "Nộp bài cho FrosTES chấm",
         "lockedBadge": "Chưa mở",
         "dropzone": "Bài làm của bạn — ảnh chụp, PDF hoặc tệp nén ZIP",
         "cta": "Nộp bài chấm",
         "region": "Nộp bài cho FrosTES chấm (chưa mở)"
+      },
+      "comments": {
+        "title": "Bình luận ({count})",
+        "prev": "Trước",
+        "next": "Sau",
+        "pageOf": "Trang {page}/{total}",
+        "submitError": "Không gửi được bình luận. Thử lại nhé.",
+        "rateLimited": "Bạn bình luận nhanh quá. Chờ một chút rồi thử lại nhé.",
+        "deleteError": "Không xoá được bình luận. Thử lại nhé."
       }
     }
   },

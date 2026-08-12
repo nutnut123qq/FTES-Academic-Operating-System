@@ -29,7 +29,7 @@
 
 - [x] 4.1 `node -e JSON.parse(...)` sạch trên vi.json + en.json
 - [x] 4.2 `npx vitest run src/messages/messages.icu.test.ts` xanh (6/6 — ICU parse + parity vi/en)
-- [~] 4.3 `npx tsc --noEmit`: KHÔNG còn lỗi nào ở `features/dashboard/**`, `features/analytics/**` hay `app/[locale]/analytics`. Còn 15 lỗi CÓ SẴN của worktree chung (session khác đang sửa dở), ngoài phạm vi change này: 4 × `.next/types` stale (route `learn/interview` đã xoá khỏi cây nguồn), 11 × `ModerationReport.reportId` (`features/community/**`)
-- [ ] 4.4 `npm run build` (webpack) xanh — phase Verify chạy tập trung
-- [ ] 4.5 Xác minh bằng mắt: tab strip dưới navbar, 4 tab render, `/analytics` bật sang `/dashboard`
+- [x] 4.3 `npx tsc --noEmit` SẠCH. 15 lỗi ghi nhận lúc đầu đều đã hết và không cái nào thuộc change này: 4 × `.next/types` stale tự tan sau khi xoá `.next` (route `learn/interview` đã bị xoá khỏi cây nguồn), 11 × `ModerationReport.reportId` là do một pass thêm JSDoc của session khác đạp mất đúng dòng khai báo — khôi phục 1 dòng trong `features/community/hooks/useQueryReportsSwr.ts`
+- [x] 4.4 Build xanh trên đúng commit đã push: `npm run build:webpack` EXIT=0, 0 dòng error, route `ƒ /[locale]/dashboard` có trong bảng. Sau đó chạy lại bằng turbopack (`npm run build`, tức lệnh Vercel deploy dùng): EXIT=0, compiled 101s. Test 860/860
+- [x] 4.5 Xác minh bằng mắt trên trình duyệt thật, tài khoản đã đăng nhập: tab strip render flush dưới navbar (consumer ĐẦU TIÊN của `useRegisterNavbarBottomLayer` trong repo); hẹp → icon-only, 1440px → hiện nhãn; DOM xác nhận CHỈ panel đang mở được mount. Dữ liệu THẬT cả 4 tab (3 khoá 0/9/83%, quest 1/6, heatmap 389 XP/12 tuần, top-5 leaderboard highlight đúng viewer), 0 lỗi console. `/vi/analytics` → `/vi/dashboard`; khách chưa đăng nhập bị cổng bật về `/vi`
 - [x] 4.6 `openspec validate dashboard-cockpit-tabs --strict`

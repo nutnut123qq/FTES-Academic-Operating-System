@@ -5,11 +5,28 @@
 ### Requirement: The floating mascot is the site-wide AI entry point
 
 A floating FrosTES mascot SHALL be mounted once in the app shell so it appears on every page,
-fixed to the bottom-right corner 16–24px from both edges, at a z-index above page content but
-below any open modal or dialog. It SHALL render 96–130px wide on desktop and 72–90px wide on
-mobile, sit above the safe-area inset, and SHALL NOT affect page layout or CLS. The character
-artwork itself is the button — no circular frame, no background plate, no rounding applied to the
-image.
+fixed to the bottom-right corner, at a z-index above page content but below any open modal or
+dialog. It SHALL sit above the safe-area inset and SHALL NOT affect page layout or CLS. The
+character artwork itself is the button — no circular frame, no background plate, no rounding
+applied to the image.
+
+The character SHALL PEEK rather than stand: it is drawn larger than its slot and pushed
+diagonally past the corner with a slight lean, so the viewport edge crops away roughly the lower
+half and a slice of the right side, leaving head, waving paw and chest leaning in from off-screen.
+The part pushed past the edge SHALL NOT make the page scrollable, and the shortcut panel SHALL
+still open flush above the VISIBLE top of the character, not above the slot it was cropped out of.
+
+#### Scenario: The mascot reads as peeking in from the corner
+
+- **WHEN** the visitor looks at the bottom-right corner of any page
+- **THEN** roughly the lower half of the character is cropped by the viewport edge, and no
+  horizontal scrollbar appears
+
+#### Scenario: The panel stays attached to the visible character
+
+- **WHEN** the panel opens
+- **THEN** it sits directly above the character's visible top rather than leaving a gap the size
+  of the cropped-away part
 
 The mascot SHALL stand down on the routes that already own the bottom-right corner with a
 lesson-scoped floating entry point, so two AI buttons never share the screen.

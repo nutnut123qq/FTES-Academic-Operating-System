@@ -91,12 +91,16 @@ const randomBetween = ([min, max]: readonly [number, number]) =>
  *    `prefers-reduced-motion: reduce` (the artwork keeps waving — a decoded
  *    animated image is not ours to freeze).
  *
+ * The character PEEKS: it is drawn larger than its slot and pushed diagonally past
+ * the bottom-right corner, so the viewport edge crops it to a half-body leaning in
+ * from off-screen rather than a whole figurine standing in the page.
+ *
  * Mobile: the wrapper is `pointer-events-none` (only the mascot, the bubble and
  * the panel take taps, so the transparent parts never swallow a tap meant for the
- * page), the figure is FAB-sized (80px wide), it sits above the safe-area inset,
- * and the panel is capped at `100vw - 2rem` so it never runs off screen. It is
- * also hidden while a guided tour is running (tour spotlights stay clear, and two
- * mascots never share the screen).
+ * page), the figure is 128px wide before cropping, it sits above the safe-area
+ * inset, and the panel is capped at `100vw - 2rem` so it never runs off screen. It
+ * is also hidden while a guided tour is running (tour spotlights stay clear, and
+ * two mascots never share the screen).
  */
 export const MascotAssistant = () => {
     const t = useTranslations("mascot.assistant")
@@ -265,7 +269,24 @@ export const MascotAssistant = () => {
                 aria-controls={isOpen ? panelId : undefined}
                 onClick={() => (isOpen ? setIsOpen(false) : openPanel())}
                 // NO circular frame / background: the waving character IS the button.
-                className="pointer-events-auto block w-20 shrink-0 cursor-pointer border-0 bg-transparent p-0 outline-none focus-visible:rounded-2xl focus-visible:ring-2 focus-visible:ring-accent sm:w-28"
+                //
+                // PEEKING POSE: the character is drawn LARGER than the space it occupies and then
+                // pushed diagonally past the corner with a slight lean, so the viewport edge crops
+                // it to a HALF-BODY leaning in from the bottom-right — a sticker peeking into the
+                // page, not a figurine standing in it. Roughly 40% of the height and 19% of the
+                // width end up off-screen, which leaves head + waving paw + chest.
+                //
+                // The push is written in `rem`, not `%`, and each value is PAIRED with the negative
+                // `-mt` beside it: the translate moves only the drawn character, so without an
+                // equal negative top margin the panel would still open from where the character
+                // USED to be and float ~90px above its head. Change one, change the other.
+                //   mobile  w-32 = 128px wide → 180px tall; push (2.5rem, 5.75rem)
+                //   ≥ sm    w-48 = 192px wide → 270px tall; push (3.75rem, 8.5rem)
+                //
+                // The transform lives on the BUTTON, not the image: the hit area travels with the
+                // visual (a rotated/translated box hit-tests where it is drawn), and the `<img>`
+                // keeps its own `.mascot-float` bob independent of this pose.
+                className="pointer-events-auto -mt-[5.75rem] block w-32 shrink-0 origin-bottom-right translate-x-[2.5rem] translate-y-[5.75rem] rotate-[-8deg] cursor-pointer border-0 bg-transparent p-0 outline-none focus-visible:rounded-2xl focus-visible:ring-2 focus-visible:ring-accent sm:-mt-[8.5rem] sm:w-48 sm:translate-x-[3.75rem] sm:translate-y-[8.5rem]"
             >
                 <picture>
                     <source srcSet={MASCOT_WEBP} type="image/webp" />

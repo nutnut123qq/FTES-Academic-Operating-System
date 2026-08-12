@@ -9,8 +9,17 @@ import { formatRelativeTime } from "@/components/features/community/hooks/relati
 export interface GroupThread {
     id: string
     title: string
-    /** Author display — falls back to the author id (feed DTO has no profile join). */
+    /**
+     * Author display name, or `""` when the BE sent no profile card. NEVER the author id —
+     * printing the uuid is exactly what this surface used to do.
+     */
     author: string
+    /** URL-facing username for the profile link + hovercard; `""` when unknown. */
+    authorUsername: string
+    /** Author's avatar (BE `UserCard.avatarUrl`); null = no photo, initials tile instead. */
+    authorAvatar: string | null
+    /** Author's platform staff role (BE `UserCard.staffRole`); null = ordinary member. */
+    authorStaffRole: string | null
     /** Thread body (markdown). */
     content: string
     /** Reply count. */
@@ -38,10 +47,23 @@ export const matchesGroupThreadsKey =
         return Array.isArray(key) && key[0] === base[0] && key[1] === base[1]
     }
 
-const toGroupThread = (dto: GroupThreadDto, locale: string): GroupThread => ({
+/**
+ * Maps a BE thread onto the row contract. The BE has been sending an `author` card
+ * (`GroupDtos.UserCard`, batch-loaded by `GroupAuthorEnricher`) all along — this mapper
+ * used to ignore it and put `authorId` in the name slot, which is how a raw uuid ended up
+ * printed under every discussion title.
+ *
+ * Empty string (not the id) when the card is absent: `UserLink` then renders a shared
+ * "member" label, and a blank username makes it plain text instead of a profile link that
+ * could only ever 404.
+ */
+export const toGroupThread = (dto: GroupThreadDto, locale: string): GroupThread => ({
     id: dto.id,
     title: dto.title,
-    author: dto.authorId,
+    author: dto.author?.displayName ?? dto.author?.username ?? "",
+    authorUsername: dto.author?.username ?? "",
+    authorAvatar: dto.author?.avatarUrl ?? null,
+    authorStaffRole: dto.author?.staffRole ?? null,
     content: dto.content,
     replies: dto.replyCount,
     likes: dto.likeCount,

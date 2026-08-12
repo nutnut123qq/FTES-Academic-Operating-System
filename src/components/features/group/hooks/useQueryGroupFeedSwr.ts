@@ -18,6 +18,8 @@ export interface GroupPost {
     authorUsername: string
     /** Author's uploaded avatar (BE `GroupPostSummary.author.avatarUrl`); null = no photo. */
     authorAvatar?: string | null
+    /** Author's platform staff role (BE `UserCard.staffRole`); null = ordinary member. */
+    authorStaffRole?: string | null
     timeLabel: string
     text: string
     /** Like count (change group-social-engagement — hydrated by the group feed DTO). */
@@ -61,6 +63,7 @@ const toGroupPost = (dto: GroupPostSummary, locale: string): GroupPost => ({
     author: dto.author?.displayName ?? dto.author?.username ?? "",
     authorUsername: dto.author?.username ?? "",
     authorAvatar: dto.author?.avatarUrl ?? null,
+    authorStaffRole: dto.author?.staffRole ?? null,
     timeLabel: formatRelativeTime(dto.createdAt, locale),
     text: dto.title,
     likes: dto.likeCount ?? 0,

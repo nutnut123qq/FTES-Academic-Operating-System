@@ -131,10 +131,22 @@ export interface GroupTransferOwnershipRequest {
     newOwnerId: string
 }
 
+/**
+ * A membership row (BE `GroupDtos.MemberDto`). The identity fields are FLAT here, not a
+ * nested {@link GroupUserCard}: the BE enriches the row through the same
+ * `GroupAuthorEnricher` and then spreads the card out. Every one of them is nullable —
+ * a user with no profile row still gets a row back, with nulls.
+ */
 export interface GroupMember {
     userId: string
+    /** Role INSIDE the group (OWNER/ADMIN/MODERATOR/MEMBER) — not a platform role. */
     role: string
     joinedAt: string
+    displayName?: string | null
+    username?: string | null
+    avatarUrl?: string | null
+    /** Platform staff role — see {@link GroupUserCard.staffRole}. Distinct from `role`. */
+    staffRole?: string | null
 }
 
 export interface GroupAnnouncementRequest {
@@ -273,6 +285,12 @@ export interface GroupThreadDto {
     likedByMe: boolean
     lastActivityAt: string
     createdAt: string
+    /**
+     * Author display card, batch-loaded per page by the BE `GroupAuthorEnricher`.
+     * `null` when the author has no profile row — the BE deliberately sends no card
+     * rather than inventing an "unknown" one.
+     */
+    author?: GroupUserCard | null
 }
 
 /** Mirrors BE `GroupDtos.ThreadCommentDto` — a threaded comment (≤ 2 levels). */
@@ -287,6 +305,8 @@ export interface GroupThreadCommentDto {
     likeCount: number
     likedByMe: boolean
     createdAt: string
+    /** Author display card (see {@link GroupThreadDto.author}); replies carry it too. */
+    author?: GroupUserCard | null
 }
 
 /** Body for `POST /groups/{id}/discussion/threads`. */
@@ -324,6 +344,14 @@ export interface GroupUserCard {
     username: string | null
     displayName: string | null
     avatarUrl: string | null
+    /**
+     * Platform staff role (BE `GroupDtos.UserCard.staffRole`, batch-resolved by
+     * `GroupAuthorEnricher` via `AccessControl.publicStaffRoles`) — drives the verified
+     * seal. `"SUPER_ADMIN" | "ADMIN" | "MODERATOR"`, `null` for an ordinary member.
+     *
+     * NOT the same thing as {@link GroupMember.role}, which is the role INSIDE the group.
+     */
+    staffRole: string | null
 }
 
 export interface GroupPostSummary {

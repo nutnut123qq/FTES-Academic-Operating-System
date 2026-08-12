@@ -27,17 +27,23 @@ export const groupThreadCommentsKey = (groupId: string, threadId: string) => [
 
 /**
  * Builds the nested one-level `PostComment` tree from the flat BE thread-comment
- * list. Comments carry only `authorId` (no profile join) → author display falls
- * back to the id. Replies (depth ≥ 1) attach to their root via `rootId`/`parentId`.
+ * list. Replies (depth ≥ 1) attach to their root via `rootId`/`parentId`.
+ *
+ * Each comment carries an `author` card (`GroupDtos.UserCard`, batch-loaded by
+ * `GroupAuthorEnricher` — replies included). This used to read `authorId` into BOTH the
+ * name and the username slot, so every comment was signed with a raw uuid and linked to a
+ * profile route that could only 404. Absent card → empty strings, which is what the shared
+ * thread renders its "member" fallback from.
  */
-const buildThreadCommentTree = (
+export const buildThreadCommentTree = (
     items: Array<GroupThreadCommentDto>,
     locale: string,
 ): Array<PostComment> => {
     const toComment = (dto: GroupThreadCommentDto): PostComment => ({
         id: dto.id,
-        author: dto.authorId,
-        authorUsername: dto.authorId,
+        author: dto.author?.displayName ?? dto.author?.username ?? "",
+        authorUsername: dto.author?.username ?? "",
+        authorStaffRole: dto.author?.staffRole ?? null,
         text: dto.content,
         timeLabel: dto.createdAt ? formatRelativeTime(dto.createdAt, locale) : "",
     })

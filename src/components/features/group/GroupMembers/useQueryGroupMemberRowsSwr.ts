@@ -35,6 +35,13 @@ export interface GroupMemberRow {
     avatarUrl: string | null
     /** Membership role. */
     role: GroupMemberRole
+    /**
+     * PLATFORM staff role (BE `MemberDto.staffRole`) driving the verified seal — a
+     * different axis from {@link GroupMemberRow.role}, which is the role inside this
+     * group. A group OWNER is usually not staff, and an ADMIN of the platform is usually
+     * an ordinary member here; never collapse the two.
+     */
+    staffRole: string | null
 }
 
 /**
@@ -57,19 +64,6 @@ export const toGroupMemberRole = (role: string): GroupMemberRole => {
 /** BE role name sent on the wire for an assignable role. */
 export const toBackendRole = (role: GroupAssignableRole): string => role.toUpperCase()
 
-/**
- * Shape the membership DTO grew when the BE started enriching members with their
- * profile card (`GroupDtos.MemberDto` → displayName/username/avatarUrl, batch-loaded
- * by `GroupAuthorEnricher`). The shared REST type has not caught up yet, and a user
- * with no profile row still gets nulls back, so every field is read DEFENSIVELY:
- * present + non-blank wins, otherwise the row falls back to the raw user id.
- */
-type EnrichedGroupMemberDto = GroupMemberDto & {
-    displayName?: string | null
-    username?: string | null
-    avatarUrl?: string | null
-}
-
 /** Trims a possibly-missing string field down to `string | null`. */
 const text = (value: unknown): string | null => {
     if (typeof value !== "string") {
@@ -79,17 +73,20 @@ const text = (value: unknown): string | null => {
     return trimmed.length > 0 ? trimmed : null
 }
 
-/** Maps a (possibly enriched) BE membership record onto a member row. */
-export const toGroupMemberRow = (dto: GroupMemberDto): GroupMemberRow => {
-    const enriched = dto as EnrichedGroupMemberDto
-    return {
-        id: dto.userId,
-        username: text(enriched.username),
-        displayName: text(enriched.displayName),
-        avatarUrl: text(enriched.avatarUrl),
-        role: toGroupMemberRole(dto.role),
-    }
-}
+/**
+ * Maps a BE membership record onto a member row. The identity fields arrive FLAT (the BE
+ * enriches through `GroupAuthorEnricher` then spreads the card out), and a user with no
+ * profile row still gets a row back with nulls — so every field is read defensively:
+ * present + non-blank wins, otherwise the row falls back to the raw user id at render.
+ */
+export const toGroupMemberRow = (dto: GroupMemberDto): GroupMemberRow => ({
+    id: dto.userId,
+    username: text(dto.username),
+    displayName: text(dto.displayName),
+    avatarUrl: text(dto.avatarUrl),
+    role: toGroupMemberRole(dto.role),
+    staffRole: text(dto.staffRole),
+})
 
 /** SWR cache key of a group's member rows (shared by the members tab + manage transfer picker). */
 export const groupMemberRowsKey = (groupId: string) => ["group-member-rows", groupId]

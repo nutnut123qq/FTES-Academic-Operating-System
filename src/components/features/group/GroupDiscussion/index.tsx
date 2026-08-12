@@ -13,6 +13,7 @@ import {
     DISCUSSION_ENGAGEMENT_ACTIONS,
 } from "@/components/reuseable/PostEngagementBar"
 import { PostCommentThread } from "@/components/reuseable/PostCommentThread"
+import { UserLink } from "@/components/features/identity"
 import { useQueryGroupThreadsSwr, type GroupThread } from "../hooks/useQueryGroupThreadsSwr"
 import {
     useComposeGroupThreadComment,
@@ -23,6 +24,7 @@ import { useMutateCreateGroupThreadSwr } from "../hooks/useMutateCreateGroupThre
 
 /** One discussion thread row + inline (lazy) comment thread. Like + comment ONLY. */
 const GroupDiscussionRow = ({ groupId, thread }: { groupId: string; thread: GroupThread }) => {
+    const tCommon = useTranslations("common")
     const [expanded, setExpanded] = useState(false)
     const [hasOpened, setHasOpened] = useState(false)
     const reactThread = useMutateReactGroupThreadSwr(groupId)
@@ -45,13 +47,18 @@ const GroupDiscussionRow = ({ groupId, thread }: { groupId: string; thread: Grou
     return (
         <div className="flex flex-col rounded-2xl border border-separator transition-colors hover:bg-default/40">
             <div className="flex flex-col gap-2 p-4">
-                <div className="min-w-0">
+                <div className="flex min-w-0 flex-col gap-1">
                     <Typography type="body-sm" weight="medium" truncate>
                         {thread.title}
                     </Typography>
-                    <Typography type="body-xs" color="muted">
-                        {thread.author}
-                    </Typography>
+                    <UserLink
+                        username={thread.authorUsername}
+                        displayName={thread.author || tCommon("unknownMember")}
+                        avatar={thread.authorAvatar}
+                        staffRole={thread.authorStaffRole}
+                        size="sm"
+                        classNames={{ avatar: "size-6" }}
+                    />
                 </div>
                 {/* discussion = like + comment ONLY — no share, no save */}
                 <PostEngagementBar

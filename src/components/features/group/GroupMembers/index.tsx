@@ -192,6 +192,7 @@ export const GroupMembers = () => {
                                 displayName={member.displayName ?? member.username ?? member.id}
                                 avatar={member.avatarUrl}
                                 seed={member.username ?? member.id}
+                                staffRole={member.staffRole}
                                 size="sm"
                                 className="min-w-0 flex-1"
                                 classNames={{ avatar: "size-9" }}

@@ -27,16 +27,20 @@ export interface ContinueCourseCardProps {
  * A course the viewer is part-way through, as shown on the home "Tiếp tục học" band
  * and on `/courses/me`.
  *
- * DELIBERATELY NOT the catalog card: this mirrors `CatalogCourseCard`'s SHAPE (flat
- * `rounded-lg` frame, inset 16:9 cover one radius step tighter, branded gradient
- * behind a missing/broken cover, two-line title box, bottom-pinned CTA rule) so the
- * two grids read as one design system — but it imports nothing from it and shares no
- * code with it, so either surface can change without dragging the other along. What
- * it carries instead of the catalog's meta/description/mentor rows is the progress
- * story: percent complete, the meter, and the resume CTA.
+ * Layout is a ROW — thumbnail left, title + percent centre, resume CTA right, progress
+ * meter spanning the foot — NOT the catalog card's full-width cover on top. A build
+ * shipped the stacked version and the card grew about three times taller, so one screen
+ * held two courses instead of six; someone mid-course wants to spot the right one and
+ * click on, not admire the artwork. The thumbnail is 128px (160px from `sm`): the 96/112px
+ * it used before sliced the text baked into course covers ("VỚI JAVA" → "…ỚI JAVA").
  *
- * It replaced a `SectionCard`-based block whose 36px card radius and 24px cover
- * radius sat visibly apart from the 12px/9px pair used everywhere else.
+ * It borrows only the catalog card's SURFACE grammar — flat `rounded-lg` frame, cover one
+ * radius step tighter, branded gradient behind a missing/broken cover — so the two grids
+ * read as one design system while staying independent: it imports nothing from
+ * `CatalogCourseCard`, so either surface can change without dragging the other along.
+ *
+ * It replaced a `SectionCard`-based block whose 36px card radius and 24px cover radius
+ * sat visibly apart from the 12px/9px pair used everywhere else.
  *
  * @param props - {@link ContinueCourseCardProps}
  */
@@ -57,65 +61,69 @@ export const ContinueCourseCard = ({
             href={href}
             // h-full is baked in (not left to the caller) so a card always fills its grid
             // cell — neighbours in a row share one height instead of staggering.
-            className="group flex h-full flex-col rounded-lg border border-separator p-3 no-underline transition-colors hover:bg-default/40"
+            className="group flex h-full flex-col gap-3 rounded-lg border border-separator p-3 no-underline transition-colors hover:bg-default/40"
         >
-            {/* cover 16:9 — inset by the card padding, one radius step tighter than the
-                card, with the branded gradient underneath so a cover-less course shows a
-                branded block rather than an empty grey panel. */}
-            <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-md">
-                <div
-                    aria-hidden
-                    className="absolute inset-0 bg-gradient-to-br from-accent/40 via-accent/20 to-accent/5"
-                />
-                {coverUrl && !coverFailed ? (
-                    // plain <img>: the cover comes from the BE image-delivery host, so this
-                    // needs no `next.config` remotePatterns entry (mirrors CoverImage).
-                    <img
-                        src={coverUrl}
-                        alt={title}
-                        loading="lazy"
-                        onError={() => setCoverFailed(true)}
-                        className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
+            {/* Hàng thông tin: [ảnh] │ [tiêu đề + %] │ [CTA] — bố cục NGANG, không phải
+                cover full bề ngang như thẻ danh mục. Đây là chủ ý: ở đây người học đang
+                học dở, cần nhiều khoá lọt trong một màn để bấm tiếp, nên thẻ phải THẤP.
+                Có một quãng bản build để ảnh nằm trên full bề ngang — thẻ cao gấp ~3 và
+                một màn chỉ còn thấy 2 khoá, nên đã trả về hàng ngang. */}
+            <div className="flex items-center gap-3">
+                {/* Ảnh 16:9 cố định bề ngang, `shrink-0` để không bao giờ bị bóp. 128px
+                    (160px từ `sm`) là mức đã cân: bản cũ 96/112px cắt mất chữ nướng trên
+                    bìa khoá ("VỚI JAVA" ra "...ỚI JAVA"), còn full bề ngang thì quá cao.
+                    Gradient nằm DƯỚI ảnh nên khoá thiếu bìa ra khối có thương hiệu chứ
+                    không phải ô xám rỗng; ảnh 404 cũng rơi về đó. */}
+                <div className="relative aspect-video w-32 shrink-0 overflow-hidden rounded-md sm:w-40">
+                    <div
+                        aria-hidden
+                        className="absolute inset-0 bg-gradient-to-br from-accent/40 via-accent/20 to-accent/5"
                     />
-                ) : null}
-            </div>
+                    {coverUrl && !coverFailed ? (
+                        // plain <img>: ảnh đến từ host image-delivery của BE nên không cần
+                        // khai remotePatterns trong next.config (giống CoverImage).
+                        <img
+                            src={coverUrl}
+                            alt={title}
+                            loading="lazy"
+                            onError={() => setCoverFailed(true)}
+                            className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                    ) : null}
+                </div>
 
-            <div className="flex flex-1 flex-col gap-1.5 pt-3">
-                {/* Fixed two-line title box (min-h-14 = 2 × the `body` line height) so every
-                    card in a row starts its progress block at the same y — a one-line title
-                    used to pull the stack up and stagger its neighbours. */}
-                <div className="flex min-h-14 items-start">
+                {/* Cột chữ — `min-w-0` cho phép cắt chữ; tên khoá kẹp 2 dòng thay vì
+                    truncate 1 dòng (tên thật hay dài, cắt 1 dòng là mất đuôi). */}
+                <div className="flex min-w-0 flex-1 flex-col gap-1">
                     <Typography weight="semibold" className="line-clamp-2">
                         {title}
                     </Typography>
+                    <Typography type="body-xs" color="muted">
+                        {t("courses.percentComplete", { percent: completionPercent })}
+                    </Typography>
+                    {badge ? <div className="flex">{badge}</div> : null}
                 </div>
 
-                {badge ? <div className="flex">{badge}</div> : null}
-
-                <Typography type="body-xs" color="muted">
-                    {t("courses.percentComplete", { percent: completionPercent })}
-                </Typography>
-                <ProgressMeter value={completionPercent} max={100} />
-
-                {/* footer: the resume cue, pinned to the bottom by mt-auto so the optional
-                    term chip above absorbs the slack and the rule sits at the same offset
-                    on every card. Mirrors the catalog card's footer treatment. */}
-                <div className="mt-auto flex items-center justify-end border-t border-separator pt-2">
-                    <span
-                        className={cn(
-                            "inline-flex shrink-0 items-center gap-1 text-sm font-medium",
-                            expired ? "text-warning" : "text-accent",
-                        )}
-                    >
-                        {expired ? t("courses.rebuy") : t("courses.continueLearning")}
-                        <CaretRightIcon
-                            aria-hidden
-                            focusable="false"
-                            className="size-4 transition-transform group-hover:translate-x-0.5"
-                        />
-                    </span>
-                </div>
+                {/* CTA ghim mép phải cùng hàng — `self-start` để nó bám đỉnh hàng thay vì
+                    trôi theo chiều cao cột chữ (tên 1 dòng hay 2 dòng đều cùng chỗ). */}
+                <span
+                    className={cn(
+                        "inline-flex shrink-0 items-center gap-1 self-start text-sm font-medium",
+                        expired ? "text-warning" : "text-accent",
+                    )}
+                >
+                    {expired ? t("courses.rebuy") : t("courses.continueLearning")}
+                    <CaretRightIcon
+                        aria-hidden
+                        focusable="false"
+                        className="size-4 transition-transform group-hover:translate-x-0.5"
+                    />
+                </span>
             </div>
+
+            {/* Thanh tiến độ trải hết bề ngang thẻ, dưới cùng — `mt-auto` để nó luôn nằm
+                đáy dù cột chữ cao thấp khác nhau, các thẻ cùng hàng thẳng thanh với nhau. */}
+            <ProgressMeter value={completionPercent} max={100} className="mt-auto" />
         </Link>
     )
 }

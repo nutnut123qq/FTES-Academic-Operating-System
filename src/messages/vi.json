@@ -25,44 +25,55 @@
       "close": "Đóng bảng gợi ý",
       "title": "FrosTES giúp gì cho bạn?",
       "subtitle": "Chọn nhanh một việc bên dưới.",
+      "lessonSubtitle": "Mình đang đọc bài này cùng bạn.",
       "options": {
+        "lessonChat": {
+          "label": "Hỏi về bài đang đọc",
+          "description": "Chat với FrosTES, lấy sẵn nội dung bài này làm ngữ cảnh"
+        },
         "chat": {
-          "label": "Hỏi đáp / tư vấn khóa học?",
-          "description": "Mở trung tâm AI: hỏi đáp và mọi công cụ"
+          "label": "Trung tâm AI",
+          "description": "Hỏi đáp và toàn bộ công cụ AI"
         },
         "planner": {
-          "label": "Bạn muốn tạo lộ trình học không?",
+          "label": "Lộ trình học",
           "description": "AI dựng kế hoạch học theo tuần từ mục tiêu của bạn"
         },
         "summary": {
-          "label": "Bạn muốn tóm tắt tài liệu không?",
+          "label": "Tóm tắt tài liệu",
           "description": "Biến bài học dài thành ghi chú súc tích"
         },
         "flashcards": {
-          "label": "Bạn muốn ôn bằng thẻ ghi nhớ không?",
+          "label": "Thẻ ghi nhớ",
           "description": "Tự động tạo thẻ ghi nhớ từ bất kỳ bài học nào"
         },
         "quiz": {
-          "label": "Bạn muốn luyện đề trắc nghiệm không?",
+          "label": "Tạo câu hỏi ôn tập",
           "description": "Tạo bài kiểm tra luyện tập để ôn lại kiến thức"
         },
         "debug": {
-          "label": "Bạn muốn mình gỡ lỗi code không?",
+          "label": "Gỡ lỗi code",
           "description": "Dán mã của bạn và nhận cách sửa kèm giải thích"
         },
         "cv": {
-          "label": "Bạn muốn làm CV không?",
+          "label": "Làm CV",
           "description": "Dựng CV, tải lên và nhờ AI review"
         },
         "cvReview": {
-          "label": "Bạn muốn mình chấm CV không?",
+          "label": "Đánh giá CV",
           "description": "Nhận nhận xét từ FrosTES để hoàn thiện hồ sơ xin việc"
         }
       },
       "bubble": {
         "hello": "Bạn có ở đó hong? 👀",
         "day": "Ngày hôm nay thế nào?",
-        "help": "Cần mình giúp gì không nè?"
+        "help": "Cần mình giúp gì không nè?",
+        "lessonQuestion": "Cần mình giải đáp thắc mắc buổi học không?",
+        "lessonStuck": "Chỗ nào khó hiểu, hỏi mình nhé?",
+        "subjectFlashcards": "Ôn lại môn này bằng thẻ ghi nhớ nhé?",
+        "subjectQuiz": "Làm thử vài câu ôn tập môn này không?",
+        "coursePlanner": "Bạn muốn mình dựng lộ trình học không?",
+        "profileCv": "Bạn muốn làm CV không?"
       },
       "subjectTitle": "Công cụ FrosTES của môn học",
       "subjectSubtitle": "Chọn một công cụ để mở trong không gian môn."

@@ -25,44 +25,55 @@
       "close": "Close the shortcuts",
       "title": "How can FrosTES help?",
       "subtitle": "Pick a shortcut below.",
+      "lessonSubtitle": "I'm reading this lesson with you.",
       "options": {
+        "lessonChat": {
+          "label": "Ask about this lesson",
+          "description": "Chat with FrosTES, grounded in this lesson's content"
+        },
         "chat": {
-          "label": "Ask about a course?",
-          "description": "Open the AI hub: chat and every tool"
+          "label": "AI hub",
+          "description": "Chat and every AI tool"
         },
         "planner": {
-          "label": "Want a study roadmap?",
+          "label": "Study roadmap",
           "description": "AI drafts a weekly plan from your goal"
         },
         "summary": {
-          "label": "Want a document summarized?",
+          "label": "Summarize a document",
           "description": "Turn a long lesson into concise notes"
         },
         "flashcards": {
-          "label": "Want to revise with flashcards?",
+          "label": "Flashcards",
           "description": "Auto-generate flashcards from any lesson"
         },
         "quiz": {
-          "label": "Want a practice quiz?",
+          "label": "Practice quiz",
           "description": "Generate a practice test to review what you learned"
         },
         "debug": {
-          "label": "Want me to debug your code?",
+          "label": "Debug code",
           "description": "Paste your code and get a fix with an explanation"
         },
         "cv": {
-          "label": "Want to build your CV?",
+          "label": "Build a CV",
           "description": "Create or upload a CV and get an AI review"
         },
         "cvReview": {
-          "label": "Want me to review your CV?",
+          "label": "CV review",
           "description": "Get FrosTES feedback to polish your application"
         }
       },
       "bubble": {
         "hello": "Are you still there? 👀",
         "day": "How's your day going?",
-        "help": "Need a hand with anything?"
+        "help": "Need a hand with anything?",
+        "lessonQuestion": "Any questions about this lesson?",
+        "lessonStuck": "Stuck on something? Just ask me.",
+        "subjectFlashcards": "Fancy revising this subject with flashcards?",
+        "subjectQuiz": "Want to try a few practice questions?",
+        "coursePlanner": "Shall I draft a study roadmap for you?",
+        "profileCv": "Want to build your CV?"
       },
       "subjectTitle": "FrosTES tools for this subject",
       "subjectSubtitle": "Pick a tool to open in the subject space."

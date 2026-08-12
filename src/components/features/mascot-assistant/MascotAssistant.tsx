@@ -4,10 +4,11 @@ import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 
 import { cn } from "@heroui/react"
 import { CaretRightIcon, XIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
-import { Link, usePathname } from "@/i18n/navigation"
+import { Link, usePathname, useRouter } from "@/i18n/navigation"
 import { useTour } from "@/components/features/onboarding"
 import { useCookieConsentStore } from "@/hooks/zustand/cookieConsent/store"
-import { getAssistantOptions } from "./options"
+import { useContentAiChatOverlayState } from "@/hooks/zustand/overlay/hooks"
+import { getAssistantBubbles, getAssistantOptions, type AssistantBubble } from "./options"
 
 /**
  * The waving FrosTES artwork (transparent background, white sticker outline baked
@@ -24,22 +25,14 @@ const MASCOT_WIDTH = 260
 const MASCOT_HEIGHT = 365
 
 /**
- * Routes that already own the bottom-right corner with their own floating entry
- * point, where a second floating mascot would sit ON TOP of the existing button:
- *
- *  - `/courses/<id>/learn/...` → `ContentAiFab` (lesson-scoped, grounded AI chat,
- *    and draggable, so it can be parked anywhere down the right edge).
- *  - `/community/...` → `CommunityLiveChatFab`, which only exists BELOW `xl`
- *    (from `xl` the live-chat rail replaces it) — so the mascot is hidden there
- *    with the `max-xl:hidden` class rather than removed outright.
- *
- * Everywhere else the assistant shows.
+ * `/community/...` carries `CommunityLiveChatFab`, which only exists BELOW `xl`
+ * (from `xl` the live-chat rail replaces it) — so the mascot steps aside there with
+ * `max-xl:hidden` rather than being removed outright. Everywhere else it shows,
+ * INCLUDING the lesson reader: the reader's old circular button was retired in
+ * favour of this mascot, whose panel and proactive line open the same grounded chat.
  */
-const LEARN_READER_ROUTE = /^\/courses\/[^/]+\/learn(?:\/|$)/
 const COMMUNITY_ROUTE = /^\/community(?:\/|$)/
 
-/** i18n suffixes under `mascot.assistant.bubble.*` — one is picked at random per show. */
-const BUBBLE_MESSAGES = ["hello", "day", "help"] as const
 /** How many proactive bubbles one visit may ever see (anti-nag cap). */
 const BUBBLE_MAX_PER_VISIT = 3
 /** First bubble lands somewhere in this window after the visit starts (ms). */
@@ -87,14 +80,17 @@ const randomBetween = ([min, max]: readonly [number, number]) =>
  *
  * The shortcut list is CONTEXTUAL ({@link getAssistantOptions}): the default set is
  * the ENTIRE AI feature roster (the account menu no longer has an AI entry — this
- * panel replaced it), and inside a subject workspace (`/subjects/<id>/…`) the panel
- * becomes that subject's AI toolbox, which is why the workspace rail no longer
- * carries an `AI` nav row.
+ * panel replaced it); on a lesson the grounded lesson chat leads; and inside a
+ * subject workspace (`/subjects/<id>/…`) the panel becomes that subject's AI
+ * toolbox, which is why the workspace rail no longer carries an `AI` nav row.
  *
- * Every so often the mascot also floats a small PROACTIVE bubble ("Bạn có ở đó
- * hong? 👀") to invite a first interaction: the first ~30–60s into the visit, then
- * at random 3–5 minute gaps, capped at {@link BUBBLE_MAX_PER_VISIT} per visit and
- * never while the panel is open. Clicking it opens the panel.
+ * Every so often the mascot also floats a PROACTIVE bubble to invite a first
+ * interaction: the first ~30–60s into the visit, then at random 3–5 minute gaps,
+ * capped at {@link BUBBLE_MAX_PER_VISIT} per visit and never while the panel is
+ * open. The LINE MATCHES THE PAGE ({@link getAssistantBubbles}) and so does what
+ * clicking it does — on a lesson it asks whether you have a question and opens the
+ * grounded chat directly, and only where the route suggests nothing does it fall
+ * back to small talk that merely opens the menu.
  *
  * Interaction notes:
  *  - Hover open/close is bound to `pointerType === "mouse"` only, so a tap does
@@ -133,11 +129,16 @@ export const MascotAssistant = () => {
     // is up. Rendering waits for hydration (no SSR mismatch); once hydrated the
     // mascot shows either way, lifted above the bar while it is up.
     const consentDecided = useCookieConsentStore((state) => state.decided)
+    const router = useRouter()
+    // The lesson chat has no route: it is a floating panel hosted by the learn layout
+    // and opened through the shared overlay store. That is what an `openLessonChat`
+    // target drives.
+    const { open: openLessonChat } = useContentAiChatOverlayState()
     const panelId = useId()
     const containerRef = useRef<HTMLDivElement>(null)
     const [isOpen, setIsOpen] = useState(false)
-    /** The bubble's i18n suffix while one is up, `null` when none is. */
-    const [bubble, setBubble] = useState<(typeof BUBBLE_MESSAGES)[number] | null>(null)
+    /** The line currently floating above the mascot, `null` when none is. */
+    const [bubble, setBubble] = useState<AssistantBubble | null>(null)
 
     const pathnameValue = pathname ?? ""
     // `decided === null` = store chưa hydrate → chưa render (tránh lệch SSR/hydration).
@@ -145,10 +146,9 @@ export const MascotAssistant = () => {
     // trên banner. Ẩn hẳn ở nhánh này là sai yêu cầu "hiện ở TOÀN BỘ các trang", mà
     // người mới — nhóm cần trợ lý nhất — lại đúng là nhóm chưa bấm đồng ý cookie.
     // Tính TRƯỚC các effect (không phải ngay chỗ `return null`) để vòng hẹn bong bóng
-    // biết mà nằm im: trang đọc bài không có linh vật, hẹn giờ ở đó chỉ tiêu hết quota
-    // 3 bong bóng/phiên vào hư không.
-    const isHidden =
-        consentDecided === null || tourActive || LEARN_READER_ROUTE.test(pathnameValue)
+    // biết mà nằm im: trang đang chạy tour thì không có linh vật, hẹn giờ ở đó chỉ
+    // tiêu hết quota 3 bong bóng/phiên vào hư không.
+    const isHidden = consentDecided === null || tourActive
 
     // Navigating away (usually BY one of the options) closes the panel — the
     // component is mounted once at the root, so it survives route changes.
@@ -190,12 +190,16 @@ export const MascotAssistant = () => {
         const timer = setTimeout(
             () => {
                 bubblesShownThisVisit += 1
-                setBubble(BUBBLE_MESSAGES[Math.floor(Math.random() * BUBBLE_MESSAGES.length)])
+                // Read the candidates AT FIRING TIME, not when the timer was armed:
+                // the visitor may have walked from a course page into a lesson during
+                // the wait, and the line must match where they are NOW.
+                const candidates = getAssistantBubbles(pathnameValue)
+                setBubble(candidates[Math.floor(Math.random() * candidates.length)])
             },
             randomBetween(bubblesShownThisVisit === 0 ? BUBBLE_FIRST_DELAY : BUBBLE_REPEAT_DELAY),
         )
         return () => clearTimeout(timer)
-    }, [isHidden, isOpen, bubble])
+    }, [isHidden, isOpen, bubble, pathnameValue])
 
     // A bubble nobody answers gets out of the way on its own.
     useEffect(() => {
@@ -225,6 +229,26 @@ export const MascotAssistant = () => {
         setBubble(null)
         setIsOpen(true)
     }, [cancelPendingClose])
+
+    /**
+     * Send the visitor where a row or a bubble points. A route navigates; the lesson
+     * tutor has no route, so it opens the grounded chat that the learn layout already
+     * hosts. Small talk (neither) simply opens the menu instead of going nowhere.
+     */
+    const runTarget = useCallback(
+        (target: { href?: string; action?: "openLessonChat" }) => {
+            setBubble(null)
+            setIsOpen(false)
+            if (target.action === "openLessonChat") {
+                openLessonChat()
+                return
+            }
+            if (target.href !== undefined) {
+                router.push(target.href)
+            }
+        },
+        [openLessonChat, router],
+    )
 
     // Mouse only: a touch tap also fires pointerenter, and letting it open here
     // would fight the click toggle below (open → toggle back closed). Entering ANY
@@ -361,13 +385,20 @@ export const MascotAssistant = () => {
                 <button
                     type="button"
                     data-testid="mascot-assistant-bubble"
-                    onClick={openPanel}
+                    // A line that names a feature goes STRAIGHT there — that is the whole
+                    // point of asking "cần giải đáp buổi học không?" instead of "xin chào".
+                    // Small talk has nowhere to go, so it opens the menu.
+                    onClick={() =>
+                        bubble.href !== undefined || bubble.action !== undefined
+                            ? runTarget(bubble)
+                            : openPanel()
+                    }
                     // The tail is the rotated corner of a second square sharing the
                     // bubble's border + fill, tucked under the right edge so it points
                     // down at the mascot.
-                    className="mascot-assistant-panel pointer-events-auto relative mr-4 max-w-[calc(100vw-2rem)] shrink-0 cursor-pointer rounded-2xl border border-default bg-surface px-3 py-2 text-sm text-foreground shadow-lg after:absolute after:-bottom-1.5 after:right-5 after:size-3 after:rotate-45 after:border-b after:border-r after:border-default after:bg-surface after:content-['']"
+                    className="mascot-assistant-panel pointer-events-auto relative mr-4 max-w-[calc(100vw-2rem)] shrink-0 cursor-pointer rounded-2xl border border-default bg-surface px-3 py-2 text-left text-sm text-foreground shadow-lg after:absolute after:-bottom-1.5 after:right-5 after:size-3 after:rotate-45 after:border-b after:border-r after:border-default after:bg-surface after:content-['']"
                 >
-                    {t(`bubble.${bubble}`)}
+                    {tRoot(bubble.messageKey)}
                 </button>
             ) : null}
             {isOpen ? (
@@ -401,13 +432,9 @@ export const MascotAssistant = () => {
                         LIST takes whatever height is left in the shell and scrolls,
                         instead of the panel running off the top of the window. */}
                     <ul className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-                        {optionSet.options.map(({ key, href, icon: OptionIcon, labelKey, descriptionKey }) => (
-                            <li key={key}>
-                                <Link
-                                    href={href}
-                                    onClick={() => setIsOpen(false)}
-                                    className="flex items-center gap-3 rounded-2xl px-2 py-2 hover:bg-default"
-                                >
+                        {optionSet.options.map(({ key, href, action, icon: OptionIcon, labelKey, descriptionKey }) => {
+                            const body = (
+                                <>
                                     <OptionIcon
                                         aria-hidden
                                         focusable="false"
@@ -418,7 +445,9 @@ export const MascotAssistant = () => {
                                         <span className="block truncate text-sm font-medium text-foreground">
                                             {tRoot(labelKey)}
                                         </span>
-                                        <span className="block truncate text-xs text-muted">
+                                        {/* Two lines, not `truncate`: at 19rem the one-line
+                                            version clipped 6 of 8 descriptions mid-word. */}
+                                        <span className="line-clamp-2 block text-xs text-muted">
                                             {tRoot(descriptionKey)}
                                         </span>
                                     </span>
@@ -427,9 +456,31 @@ export const MascotAssistant = () => {
                                         focusable="false"
                                         className="size-4 shrink-0 text-muted"
                                     />
-                                </Link>
-                            </li>
-                        ))}
+                                </>
+                            )
+                            const rowClass =
+                                "flex w-full items-center gap-3 rounded-2xl px-2 py-2 text-left hover:bg-default"
+                            return (
+                                <li key={key}>
+                                    {/* A row without a route (the lesson tutor) opens a panel on
+                                        THIS page, so it must be a button — an <a href> would have
+                                        nowhere to point and would break middle-click / copy-link. */}
+                                    {href !== undefined ? (
+                                        <Link href={href} onClick={() => setIsOpen(false)} className={rowClass}>
+                                            {body}
+                                        </Link>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={() => runTarget({ action })}
+                                            className={rowClass}
+                                        >
+                                            {body}
+                                        </button>
+                                    )}
+                                </li>
+                            )
+                        })}
                     </ul>
                 </nav>
             ) : null}

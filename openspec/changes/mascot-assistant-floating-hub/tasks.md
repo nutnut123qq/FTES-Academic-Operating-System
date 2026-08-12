@@ -24,6 +24,9 @@
 - [x] 3.1 Default set 8 dòng khớp `TOOL_CATALOG` của AI hub: chat(`/ai`) · planner · summary · flashcards · quiz · debug · cv(`/profile/cv`) · cvReview
 - [x] 3.2 Icon lấy đúng bộ phosphor AI hub đang dùng (Notepad/Cards/Question/Bug/Briefcase) + bộ cũ (MapTrifold/ReadCvLogo/Sparkle)
 - [x] 3.3 Giữ nguyên nhánh contextual `/subjects/<id>/…` (toolbox của môn) — không đụng
+- [x] 3.4 **Dòng panel = TÊN tính năng, không phải câu hỏi.** Nhãn dạng câu hỏi bị cắt cụt 6/8 dòng ở bề rộng 19rem (chủ sản phẩm chụp màn hình chỉ ra). Giọng câu hỏi chuyển hẳn sang bong bóng; mô tả đổi `truncate` → `line-clamp-2`. Đo lại: 0/8 nhãn và 0/8 mô tả bị cắt
+- [x] 3.5 **Bộ câu theo TRANG** (`getAssistantBubbles`): bài học → "Cần mình giải đáp thắc mắc buổi học không?" mở thẳng chat bám bài · workspace môn → thẻ ghi nhớ / câu hỏi ôn tập của môn đó · trang khoá học → lộ trình học · hồ sơ → làm CV · còn lại → 3 câu xã giao chỉ mở menu. Danh sách ứng viên đọc LÚC BONG BÓNG HIỆN chứ không phải lúc hẹn giờ, vì người dùng có thể đã chuyển trang trong lúc chờ
+- [x] 3.6 **Đích của dòng/bong bóng có 2 dạng**: `href` (điều hướng) hoặc `action` (chạy tại chỗ). Chat bám bài KHÔNG có route riêng — nó là panel trên chính trang đang mở — nên phải là `action` + render bằng `<button>`; để `<a href>` thì trỏ vào hư không và hỏng cả bấm-giữa/copy-link
 
 ## 4. CSS
 
@@ -37,7 +40,7 @@
 - [x] 5.2 Xoá `explore-shortcuts.tsx`
 - [x] 5.3 Xoá nhánh i18n `profileMenu.*` ở vi + en (grep: 0 consumer còn lại); GIỮ `auth.context.explore` (còn dùng ở `SubjectResources`)
 - [x] 5.4 Sửa docblock của 2 menu cho khớp thực tế
-- [x] 5.5 KHÔNG đụng `ContentAiFab` — chủ sản phẩm chốt giữ nút tròn ở trang đọc bài
+- [x] 5.5 **ĐẢO quyết định trước đó: bỏ nút tròn ở trang đọc bài, linh vật thay hẳn.** Chủ sản phẩm chọn lại khi muốn có bong bóng hỏi về buổi học. `ContentAiFab` GIỮ NGUYÊN vai trò host panel (popover desktop / drawer mobile), chỉ mất cái nút: nút tròn trở thành **neo vô hình** (`opacity-0 pointer-events-none excludeFromTabOrder aria-hidden`, `size-1`). Lý do không xoá hẳn: react-aria định vị Popover THEO PHẦN TỬ TRIGGER — xoá là panel mất chỗ neo. Giữ neo thì placement / dismiss / portal-fullscreen / chế độ mở rộng nguyên vẹn, mà chuột-bàn phím-screen reader đều không chạm tới được. Bỏ luôn kéo-thả + vị trí lưu localStorage (không còn nút nằm chắn cột đọc để mà kéo ra)
 
 ## 6. i18n
 
@@ -57,4 +60,6 @@
 - [x] 7.5c Nghiệm thu hover-intent (bắn PointerEvent `pointerType:"mouse"` thật): hover linh vật → mở; rời chuột 700ms → CÒN; di vào card rồi chờ 2,6s → CÒN (hẹn đóng đã huỷ); rời hẳn → còn ở 1,2s, đóng ở 2,4s. Chạm (`pointerType:"touch"`) mở panel và KHÔNG tự đóng sau 2,6s — timer chỉ dành cho chuột
 - [x] 7.6 Nghiệm thu menu: 8 dòng đúng href; hover chuột mở, hover cảm ứng KHÔNG mở, click toggle, Esc đóng, click ngoài đóng; panel nằm trọn trong màn ở 1280×720 và 375×812, không sinh scroll ngang
 - [x] 7.7 Nghiệm thu bong bóng (hạ tạm hằng số rồi khôi phục): hiện lần đầu ~29s → tự ẩn → click mở menu → đúng 3 lần rồi dừng → không hiện khi panel đang mở
+- [x] 7.9 **Nghiệm thu ngữ cảnh trên đúng route bài học** (`/vi/courses/…/learn/content/modules/…/contents/…`): panel đổi phụ đề sang "Mình đang đọc bài này cùng bạn", dòng đầu là `<button>` (không phải `<a>`) nhãn "Hỏi về bài đang đọc", KHÔNG còn nút tròn nào trên màn; bong bóng nói đúng "Cần mình giải đáp thắc mắc buổi học không?", bấm vào thì `panelOpened=false` mà `chatDialogOpened=true` — tức mở THẲNG chat chứ không mở menu
+- [x] 7.10 Nghiệm thu bề rộng chữ: 0/8 nhãn và 0/8 mô tả bị cắt (trước đó 6/8 mô tả bị cắt); panel vẫn nằm trọn trong màn, danh sách cuộn trong
 - [x] 7.8 `openspec validate mascot-assistant-floating-hub --strict`

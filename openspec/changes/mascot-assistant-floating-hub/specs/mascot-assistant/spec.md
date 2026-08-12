@@ -121,10 +121,13 @@ period applies to mouse input only; touch, which has no "pointer left", is unaff
 ### Requirement: The panel carries every AI feature, phrased as an invitation
 
 The panel SHALL list the complete AI feature roster of the site — one row per feature, matching
-the AI hub's tool catalog plus the CV builder — with each row phrased as a friendly suggestion
-("Bạn muốn tạo lộ trình học không?") over a short description, and activating a row SHALL open
-that feature's existing surface. No AI feature that exists in the hub may be missing from the
-panel.
+the AI hub's tool catalog plus the CV builder — and activating a row SHALL open that feature's
+existing surface. No AI feature that exists in the hub may be missing from the panel.
+
+Rows SHALL be NAMED, not phrased as questions: a row is a menu entry to scan, and question-shaped
+labels ("Bạn muốn tạo lộ trình học không?") do not fit the panel width and were clipped mid-word.
+The question voice belongs to the proactive bubble instead. No row label or description SHALL be
+clipped at the panel's width.
 
 The roster SHALL be a static list rather than a quota-gated fetch, because a hover panel must not
 wait on the network and every listed route exists regardless of remaining quota. Inside a subject
@@ -151,12 +154,41 @@ past the top of the viewport.
 - **WHEN** the visitor opens the panel inside a subject workspace route
 - **THEN** the panel offers that subject's AI tools instead of the site-wide roster
 
+### Requirement: The lesson reader has no floating button of its own
+
+On a lesson route the mascot SHALL be the only floating AI entry point: the circular
+lesson-chat button is retired, and the mascot's panel SHALL lead with the grounded chat
+about the OPEN LESSON. That row has no route — the chat is a panel on the page already
+open — so it SHALL be a button that opens the existing chat host rather than a link.
+
+The chat host itself SHALL keep its placement, dismissal, fullscreen portalling and
+expand behaviour unchanged; only its trigger moves to the mascot.
+
+#### Scenario: One AI entry point while reading
+
+- **WHEN** the learner opens a lesson
+- **THEN** the mascot is present and no separate circular AI button is drawn
+
+#### Scenario: The panel opens the grounded chat
+
+- **WHEN** the learner picks the lesson row from the mascot panel
+- **THEN** the lesson-scoped chat opens on the same page, with no navigation
+
 ### Requirement: The mascot floats an occasional proactive bubble
 
-The mascot SHALL float a small speech bubble above itself with a randomly chosen friendly line,
-first appearing 30–60 seconds into a visit and then at random 3–5 minute gaps. A bubble SHALL
-disappear on its own after about 8 seconds, and clicking it SHALL open the shortcut panel. No
-bubble SHALL appear while the panel is open or on a page where the mascot itself does not render.
+The mascot SHALL float a small speech bubble above itself, first appearing 30–60 seconds into a
+visit and then at random 3–5 minute gaps. A bubble SHALL disappear on its own after about 8
+seconds. No bubble SHALL appear while the panel is open or on a page where the mascot itself does
+not render.
+
+The LINE SHALL MATCH THE PAGE, and so SHALL what clicking it does: on a lesson it offers to answer
+questions about that lesson and opens the grounded chat directly; in a subject workspace it offers
+that subject's revision tools; on course and profile surfaces it offers the tool that fits. Only
+where the route suggests nothing SHALL it fall back to small talk, which merely opens the menu.
+Clicking a line that names a feature SHALL go to that feature WITHOUT opening the menu first.
+
+The candidate lines SHALL be resolved when the bubble is shown, not when its timer was armed, so a
+visitor who moved between pages during the wait is offered something about where they are now.
 
 At most 3 bubbles SHALL appear per visit, counted in memory for the lifetime of the page session
 (no persistent storage), and the count SHALL survive the assistant remounting during client-side
@@ -165,12 +197,17 @@ navigation so browsing many pages cannot multiply the allowance.
 #### Scenario: First bubble invites interaction
 
 - **WHEN** a visitor has been on the site for 30–60 seconds without opening the panel
-- **THEN** a bubble appears above the mascot with one of the friendly lines and hides itself after
-  about 8 seconds
+- **THEN** a bubble appears above the mascot and hides itself after about 8 seconds
 
-#### Scenario: Clicking the bubble opens the panel
+#### Scenario: On a lesson the bubble asks about the lesson
 
-- **WHEN** the visitor clicks a bubble
+- **WHEN** a bubble appears while a lesson is open
+- **THEN** it offers to answer questions about that lesson, and clicking it opens the grounded
+  lesson chat instead of the shortcut menu
+
+#### Scenario: Small talk opens the menu
+
+- **WHEN** the visitor clicks a bubble on a page whose route suggests no particular tool
 - **THEN** the bubble disappears and the AI shortcut panel opens
 
 #### Scenario: Bubbles stop after three

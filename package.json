@@ -4,11 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build --webpack",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "build:webpack": "next build --webpack"
   },
   "dependencies": {
     "@apollo/client": "^4.1.6",

@@ -16,8 +16,14 @@ StarCi Academy. Scope tổng: [`ftes.txt`](ftes.txt). Kế hoạch: [`docs/ROADM
 
 ## Build/run
 
-- `npm run build` → **webpack** (`next build --webpack`). Turbopack build panic trong env này
-  (Windows + path có dấu cách) — đừng đổi lại turbopack cho build.
+- `npm run build` → **turbopack** (mặc định của Next 16). Đây là lệnh **Vercel chạy khi deploy**.
+  Đo 2026-08-11 trên máy Windows này, sau `rm -rf .next`: **6m01s, exit 0, KHÔNG panic** — cú panic
+  ghi trong ghi chú cũ (Windows + path có dấu cách) không còn tái hiện, nhiều khả năng vì
+  `next.config.ts` đã ghim `turbopack.root`. **Đừng đổi ngược `build` về `--webpack`**: chính cờ đó
+  làm build trên Vercel vượt trần 45 phút và deploy chết.
+- `npm run build:webpack` → **webpack** (`next build --webpack`), giữ làm lối thoát nếu máy nào đó
+  gặp lại panic turbopack. Chậm hơn: riêng khâu compile đã 4,1 phút, còn cộng TypeScript + thu thập
+  page data.
 - `npm run dev` → turbopack, chạy tốt.
 
 ## Ranh giới

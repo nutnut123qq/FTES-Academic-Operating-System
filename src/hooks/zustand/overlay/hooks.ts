@@ -1,13 +1,15 @@
 "use client"
 
-import { useCallback } from "react"
+import { useCallback, useEffect } from "react"
 import {
     useOverlayStore,
+    EMPTY_CONTENT_AI_CONVERSATION,
     type OverlayKey,
     type FollowListContext,
     type CommunityQuoteContext,
     type CommunityPhotoContext,
     type AnchorRect,
+    type ContentAiMessage,
 } from "./store"
 import type { PaymentContext } from "@/modules/types/payment"
 import type { QueryActiveAdvertisementData } from "@/modules/api/graphql/queries/types/active-advertisement"
@@ -298,6 +300,92 @@ export const useContentAiClearSignal = (): {
     const clearNonce = useOverlayStore((state) => state.contentAiClearNonce)
     const signalCleared = useOverlayStore((state) => state.signalContentAiCleared)
     return { clearNonce, signalCleared }
+}
+
+/**
+ * Discard the stored content-AI conversation when the learner opens a DIFFERENT lesson —
+ * and only then. Mount this in a host that lives for the whole lesson (`ContentAiFab`) so a
+ * lesson change clears the thread even when the chat is never opened on the new lesson,
+ * which is what stops an old thread from being resurrected by navigating A → B → A.
+ *
+ * ★ It CANNOT clear on mount: the guard lives in
+ * {@link import("./store").OverlayStoreState.syncContentAiLesson} and compares the lesson the
+ * stored conversation already carries against the live one, so remounting with the same
+ * lesson is a no-op. (Rules: ai-selection-anchored-ask-passage,
+ * content-ai-multi-session-conversations — never reset shared state in an effect-on-mount.)
+ * @param contentId - the lesson currently open (`null` when none).
+ */
+export const useContentAiLessonReset = (contentId: string | null): void => {
+    const syncLesson = useOverlayStore((state) => state.syncContentAiLesson)
+    useEffect(() => {
+        syncLesson(contentId)
+    }, [syncLesson, contentId])
+}
+
+/** Handle over the lesson-scoped content-AI conversation (thread + draft + session + streaming). */
+export interface ContentAiConversationHandle {
+    /** The thread, oldest turn first. */
+    readonly messages: ReadonlyArray<ContentAiMessage>
+    /** Unsent composer text. */
+    readonly draft: string
+    /** Reused TUTOR_CHAT session id (null until the first send creates one). */
+    readonly sessionId: string | null
+    /** Whether an answer is streaming right now. */
+    readonly isStreaming: boolean
+    /** Replace the composer draft. */
+    setDraft: (draft: string) => void
+    /** Patch the thread from its previous value. */
+    setMessages: (update: (previous: ReadonlyArray<ContentAiMessage>) => Array<ContentAiMessage>) => void
+    /** Remember the lazily-created session id. */
+    setSessionId: (sessionId: string | null) => void
+    /** Flag/unflag an in-flight stream. */
+    setStreaming: (isStreaming: boolean) => void
+}
+
+/**
+ * The lesson-scoped content-AI conversation, lifted OUT of the chat panel so closing the
+ * panel (which unmounts it) preserves both the thread and the half-typed question. Only a
+ * real lesson change clears them — see {@link useContentAiLessonReset}.
+ *
+ * Reads are SCOPED: a conversation belonging to another lesson reads as empty, so a stale
+ * thread can never be shown against the wrong lesson even for one frame. Writes are scoped
+ * the same way, which is what makes it safe for a stream to outlive the panel.
+ *
+ * @param contentId - the lesson the caller is rendering for (`null` when none).
+ * @returns the conversation plus its setters.
+ */
+export const useContentAiConversation = (contentId: string | null): ContentAiConversationHandle => {
+    useContentAiLessonReset(contentId)
+    const stored = useOverlayStore((state) => state.contentAiConversation)
+    const update = useOverlayStore((state) => state.updateContentAiConversation)
+    const conversation = stored.contentId === contentId ? stored : EMPTY_CONTENT_AI_CONVERSATION
+    const setDraft = useCallback(
+        (draft: string) => update(contentId, () => ({ draft })),
+        [update, contentId],
+    )
+    const setMessages = useCallback(
+        (nextMessages: (previous: ReadonlyArray<ContentAiMessage>) => Array<ContentAiMessage>) =>
+            update(contentId, (previous) => ({ messages: nextMessages(previous.messages) })),
+        [update, contentId],
+    )
+    const setSessionId = useCallback(
+        (sessionId: string | null) => update(contentId, () => ({ sessionId })),
+        [update, contentId],
+    )
+    const setStreaming = useCallback(
+        (isStreaming: boolean) => update(contentId, () => ({ isStreaming })),
+        [update, contentId],
+    )
+    return {
+        messages: conversation.messages,
+        draft: conversation.draft,
+        sessionId: conversation.sessionId,
+        isStreaming: conversation.isStreaming,
+        setDraft,
+        setMessages,
+        setSessionId,
+        setStreaming,
+    }
 }
 
 /**

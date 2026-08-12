@@ -112,6 +112,11 @@ export interface SubjectSummary {
     code: string
     name: string
     nameVi: string
+    /**
+     * Mô tả ngắn của môn. Optional vì BE mới thêm vào DTO danh sách (f0819bb3) — bản
+     * apitest chưa deploy sẽ không có trường này, thẻ khi đó tự ẩn dòng mô tả.
+     */
+    description?: string | null
     credits: number
     recommendedSemester: number | null
     difficulty: string

@@ -53,6 +53,11 @@ export interface Subject {
     code: string
     /** Human name in the ACTIVE locale — see {@link pickSubjectName}. */
     name: string
+    /**
+     * Mô tả ngắn (BE `description`), `null` khi môn chưa có mô tả hoặc khi BE chưa
+     * deploy bản trả trường này ở danh mục — thẻ ẩn dòng mô tả thay vì để khoảng trống.
+     */
+    description: string | null
     /** Credit count. */
     credits: number
     /**
@@ -98,15 +103,15 @@ export const mapSubjectDifficulty = (
     be: string | null | undefined,
 ): Subject["difficulty"] => {
     switch (be) {
-        case "EASY":
-            return "basic"
-        case "MEDIUM":
-            return "intermediate"
-        case "HARD":
-        case "VERY_HARD":
-            return "advanced"
-        default:
-            return "intermediate"
+    case "EASY":
+        return "basic"
+    case "MEDIUM":
+        return "intermediate"
+    case "HARD":
+    case "VERY_HARD":
+        return "advanced"
+    default:
+        return "intermediate"
     }
 }
 
@@ -128,6 +133,7 @@ export const toSubjectFromSummary = (summary: SubjectSummary, locale: string): S
     uuid: summary.id,
     code: summary.code,
     name: pickSubjectName(locale, summary.name, summary.nameVi),
+    description: summary.description || null,
     credits: summary.credits,
     recommendedSemester: summary.recommendedSemester ?? null,
     difficulty: mapSubjectDifficulty(summary.difficulty),
@@ -154,6 +160,7 @@ export const toSubjectFromDetail = (
     uuid: detail.id,
     code: detail.code,
     name: pickSubjectName(locale, detail.name, detail.nameVi),
+    description: detail.description || null,
     credits: detail.credits,
     recommendedSemester: detail.recommendedSemester ?? null,
     difficulty: mapSubjectDifficulty(detail.difficulty),
@@ -261,14 +268,14 @@ interface QuerySubjectMasteryResponse {
  */
 const subjectMasteryDocument = (userId: string, subjectId: string): DocumentNode =>
     gql(
-        `query SubjectMastery {\n` +
+        "query SubjectMastery {\n" +
             `  subjectMastery(userId: ${JSON.stringify(userId)}, subjectId: ${JSON.stringify(subjectId)}) {\n` +
-            `    completionPct\n` +
-            `    consistencyScore\n` +
-            `    subjectXp\n` +
-            `    masteryLevel\n` +
-            `  }\n` +
-            `}`,
+            "    completionPct\n" +
+            "    consistencyScore\n" +
+            "    subjectXp\n" +
+            "    masteryLevel\n" +
+            "  }\n" +
+            "}",
     )
 
 /**
@@ -337,10 +344,10 @@ export const useQuerySubjectSwr = (subjectId: string) => {
     return {
         subject: detail
             ? toSubjectFromDetail(detail, locale, {
-                  membership: readCallerMembership(workspace),
-                  courseLinks: toSubjectCourseLinks(workspace),
-                  progress: mastery?.completionPct ?? null,
-              })
+                membership: readCallerMembership(workspace),
+                courseLinks: toSubjectCourseLinks(workspace),
+                progress: mastery?.completionPct ?? null,
+            })
             : undefined,
         isLoading,
         /** Membership/linked-course read still in flight (gate join/leave CTAs on it). */

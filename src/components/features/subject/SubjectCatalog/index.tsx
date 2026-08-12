@@ -123,68 +123,95 @@ const SubjectCard = ({ subject }: SubjectCardProps) => {
     return (
         <Link
             href={`/subjects/${subject.id}`}
-            className="flex flex-col gap-3 overflow-hidden rounded-2xl border border-separator p-3 no-underline transition-colors hover:bg-default/40"
+            // Cùng một bộ khung với `CatalogCourseCard` (rounded-lg + p-3 + h-full + group):
+            // hai lưới này nằm cạnh nhau trong cùng sản phẩm nên thẻ môn từng bo 24px
+            // trong khi thẻ khoá bo 12px trông như hai hệ thiết kế khác nhau. `h-full`
+            // để các thẻ cùng hàng bằng chiều cao, không so le.
+            className="group flex h-full flex-col rounded-lg border border-separator p-3 no-underline transition-colors hover:bg-default/40"
         >
-            {imageUrl !== null ? (
-                // cover 16:9 — INSET by the card padding and carrying its OWN radius on
-                // all four corners (same anatomy as `CatalogCourseCard`). Full-bleed +
-                // relying on the card's `overflow-hidden` only rounded the TOP corners.
-                <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-md">
+            {/* cover 16:9 — INSET trong padding của thẻ và tự mang radius ở CẢ BỐN góc
+                (đúng anatomy của `CatalogCourseCard`). Full-bleed + dựa vào `overflow-hidden`
+                của thẻ thì chỉ bo được 2 góc TRÊN, chân ảnh vẫn vuông. Nền gradient nằm
+                DƯỚI ảnh nên môn không có artwork vẫn ra một khối có thương hiệu chứ không
+                phải ô trống. */}
+            <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-md">
+                <div
+                    aria-hidden
+                    className="absolute inset-0 bg-gradient-to-br from-accent/40 via-accent/20 to-accent/5"
+                />
+                {imageUrl !== null ? (
                     <Image
                         src={imageUrl}
                         alt={subject.name}
                         fill
                         sizes={THUMBNAIL_SIZES}
-                        className="object-cover"
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
                         onError={() => setImageBroken(true)}
                     />
-                </div>
-            ) : null}
-            <div className="flex flex-col gap-3">
-                {/* min-w-0 giữ lại vì `truncate` cần cha co được để cắt chữ. */}
-                <div className="min-w-0">
-                    <Typography type="body-sm" weight="medium" truncate>
-                        {subject.code}
-                    </Typography>
-                    <Typography type="body-xs" color="muted" className="truncate">
+                ) : null}
+            </div>
+
+            <div className="flex flex-1 flex-col gap-1.5 pt-3">
+                {/* Tên môn là thứ người ta quét mắt, nên nó đứng chính; mã môn thành dòng
+                    phụ (khác thẻ KHOÁ HỌC — mã khoá là chuỗi máy sinh nên bị giấu hẳn, còn
+                    mã môn là thứ sinh viên gọi hằng ngày). Hộp tiêu đề khoá CỨNG hai dòng
+                    (min-h-14) để mọi thẻ trong một hàng bắt đầu hàng meta ở cùng độ cao —
+                    tên 1 dòng mà không chốt thì kéo cả chồng nội dung lên, so le hàng xóm. */}
+                <div className="flex min-h-14 flex-col">
+                    <Typography weight="semibold" className="line-clamp-2">
                         {subject.name}
                     </Typography>
+                    <Typography type="body-xs" color="muted" truncate>
+                        {subject.code}
+                    </Typography>
                 </div>
-                <div className="flex items-center gap-2">
+
+                {/* hàng meta — [chip độ khó] · tín chỉ · kỳ. Chip tự giữ bờ (không có middot
+                    ngay sau nó); middot chỉ chèn giữa hai đoạn chữ thường. */}
+                <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted">
                     <Chip size="sm" variant="soft" color="accent">
                         {t(`difficulty.${subject.difficulty}`)}
                     </Chip>
-                    <Typography type="body-xs" color="muted">
-                        {t("credits", { count: subject.credits })}
-                    </Typography>
+                    <span>{t("credits", { count: subject.credits })}</span>
                     {/* Kỳ khuyến nghị chỉ hiện khi môn có gắn kỳ — null thì ẩn, không đoán. */}
                     {subject.recommendedSemester !== null ? (
-                        <Typography type="body-xs" color="muted">
-                            {t("semester", { count: subject.recommendedSemester })}
-                        </Typography>
+                        <>
+                            <span aria-hidden>·</span>
+                            <span>{t("semester", { count: subject.recommendedSemester })}</span>
+                        </>
                     ) : null}
                 </div>
+
+                {/* mô tả ngắn — 2 dòng, chỉ khi BE có trả. Đây là phần thẻ môn thiếu so với
+                    thẻ khoá: trước đó dưới ảnh chỉ có mã/tên/chip nên trống một mảng. */}
+                {subject.description ? (
+                    <Typography type="body-xs" color="muted" className="line-clamp-2">
+                        {subject.description}
+                    </Typography>
+                ) : null}
             </div>
         </Link>
     )
 }
 
 /**
- * Skeleton mirroring {@link SubjectCard}: 16:9 thumbnail box, two text lines,
- * chip-row line — same boxes, same proportions.
+ * Skeleton mirroring {@link SubjectCard}: cover 16:9, hộp tiêu đề hai dòng cứng,
+ * hàng chip, hai dòng mô tả — cùng hộp, cùng tỉ lệ, cùng radius.
  */
 const SubjectCardSkeleton = () => (
-    <div className="flex flex-col gap-3 overflow-hidden rounded-2xl border border-separator p-3">
+    <div className="flex h-full flex-col rounded-lg border border-separator p-3">
         <Skeleton className="aspect-video w-full shrink-0 rounded-md" />
-        <div className="flex flex-col gap-3">
-            <div className="flex min-w-0 flex-col">
-                <Skeleton.Typography type="body-sm" width="1/3" />
-                <Skeleton.Typography type="body-xs" width="2/3" />
+        <div className="flex flex-1 flex-col gap-1.5 pt-3">
+            <div className="flex min-h-14 flex-col">
+                <Skeleton.Typography width="2/3" />
+                <Skeleton.Typography type="body-xs" width="1/3" />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
                 <Skeleton.Chip />
                 <Skeleton.Typography type="body-xs" width="1/4" />
             </div>
+            <Skeleton.Typography type="body-xs" width="full" />
+            <Skeleton.Typography type="body-xs" width="2/3" />
         </div>
     </div>
 )

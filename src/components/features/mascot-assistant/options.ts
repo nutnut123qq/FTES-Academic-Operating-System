@@ -79,68 +79,50 @@ export interface AssistantOptionSet {
  * ponytail: labels stay a static list, not a fetch of `/ai/quotas/me` — a hover
  * panel must not wait on the network, and every route here exists unconditionally.
  */
-const DEFAULT_SET: AssistantOptionSet = {
-    titleKey: "mascot.assistant.title",
-    subtitleKey: "mascot.assistant.subtitle",
-    options: [
-        {
-            key: "chat",
-            href: "/ai",
-            icon: SparkleIcon,
-            labelKey: "mascot.assistant.options.chat.label",
-            descriptionKey: "mascot.assistant.options.chat.description",
-        },
-        {
-            key: "planner",
-            href: "/ai/tools/planner",
-            icon: MapTrifoldIcon,
-            labelKey: "mascot.assistant.options.planner.label",
-            descriptionKey: "mascot.assistant.options.planner.description",
-        },
-        {
-            key: "summary",
-            href: "/ai/tools/summary",
-            icon: NotepadIcon,
-            labelKey: "mascot.assistant.options.summary.label",
-            descriptionKey: "mascot.assistant.options.summary.description",
-        },
-        {
-            key: "flashcards",
-            href: "/ai/tools/flashcards",
-            icon: CardsIcon,
-            labelKey: "mascot.assistant.options.flashcards.label",
-            descriptionKey: "mascot.assistant.options.flashcards.description",
-        },
-        {
-            key: "quiz",
-            href: "/ai/tools/quiz",
-            icon: QuestionIcon,
-            labelKey: "mascot.assistant.options.quiz.label",
-            descriptionKey: "mascot.assistant.options.quiz.description",
-        },
-        {
-            key: "debug",
-            href: "/ai/tools/debug",
-            icon: BugIcon,
-            labelKey: "mascot.assistant.options.debug.label",
-            descriptionKey: "mascot.assistant.options.debug.description",
-        },
-        {
-            key: "cv",
-            href: "/profile/cv",
-            icon: ReadCvLogoIcon,
-            labelKey: "mascot.assistant.options.cv.label",
-            descriptionKey: "mascot.assistant.options.cv.description",
-        },
-        {
-            key: "cvReview",
-            href: "/ai/tools/cv-review",
-            icon: BriefcaseIcon,
-            labelKey: "mascot.assistant.options.cvReview.label",
-            descriptionKey: "mascot.assistant.options.cvReview.description",
-        },
-    ],
-}
+const CATALOG = {
+    lessonChat: {
+        key: "lessonChat",
+        action: "openLessonChat",
+        icon: ChatCircleDotsIcon,
+    },
+    chat: { key: "chat", href: "/ai", icon: SparkleIcon },
+    planner: { key: "planner", href: "/ai/tools/planner", icon: MapTrifoldIcon },
+    summary: { key: "summary", href: "/ai/tools/summary", icon: NotepadIcon },
+    flashcards: { key: "flashcards", href: "/ai/tools/flashcards", icon: CardsIcon },
+    quiz: { key: "quiz", href: "/ai/tools/quiz", icon: QuestionIcon },
+    debug: { key: "debug", href: "/ai/tools/debug", icon: BugIcon },
+    cv: { key: "cv", href: "/profile/cv", icon: ReadCvLogoIcon },
+    cvReview: { key: "cvReview", href: "/ai/tools/cv-review", icon: BriefcaseIcon },
+} as const satisfies Record<string, AssistantTarget & { key: string; icon: Icon }>
+
+/** Catalog key → a full option row, with the i18n keys derived from the key itself. */
+const row = (key: keyof typeof CATALOG): AssistantOption => ({
+    ...CATALOG[key],
+    labelKey: `mascot.assistant.options.${key}.label`,
+    descriptionKey: `mascot.assistant.options.${key}.description`,
+})
+
+/**
+ * WHICH tools each surface offers. Short lists on purpose — the panel is a nudge
+ * toward the two or three things worth doing HERE, not a directory. `chat` (the AI
+ * hub) closes every list as the way to everything else, so a short list never becomes
+ * a dead end. Landing on the hub itself is the one place that does show the lot.
+ */
+const ROUTE_SETS: ReadonlyArray<{ pattern: RegExp; keys: ReadonlyArray<keyof typeof CATALOG> }> = [
+    // the AI hub itself — the visitor came looking for tools, so show them all
+    { pattern: /^\/ai(?:\/|$)/, keys: ["chat", "planner", "summary", "flashcards", "quiz", "debug", "cv", "cvReview"] },
+    // course surfaces: planning and digesting material
+    { pattern: /^\/courses(?:\/|$)/, keys: ["planner", "summary", "flashcards", "chat"] },
+    // coding surfaces: fixing and drilling code
+    { pattern: /^\/(?:challenges|practice|workflow)(?:\/|$)/, keys: ["debug", "quiz", "chat"] },
+    // career surfaces
+    { pattern: /^\/(?:profile|career|marketplace)(?:\/|$)/, keys: ["cv", "cvReview", "chat"] },
+    // study material
+    { pattern: /^\/(?:resources|blog|search)(?:\/|$)/, keys: ["summary", "flashcards", "chat"] },
+]
+
+/** Everywhere else (home, community, dashboard…): three starters + the hub. */
+const DEFAULT_KEYS: ReadonlyArray<keyof typeof CATALOG> = ["chat", "planner", "cv"]
 
 /**
  * A subject workspace route: `/subjects/<subjectId>[/...]`. The bare `/subjects`
@@ -172,36 +154,19 @@ const COURSE_ROUTE = /^\/courses(?:\/|$)/
 const PROFILE_ROUTE = /^\/profile(?:\/|$)/
 
 /**
- * Lesson-reader set. `tutor` is the grounded chat about the OPEN LESSON — it has no
- * route of its own (the chat is a floating panel on this very page), so it is an
- * ACTION. It leads, because on this page it is the thing a stuck learner wants; the
- * generic tools follow so the panel is never a dead end.
- */
-const LESSON_SET: AssistantOptionSet = {
-    titleKey: "mascot.assistant.title",
-    subtitleKey: "mascot.assistant.lessonSubtitle",
-    options: [
-        {
-            key: "lessonChat",
-            action: "openLessonChat",
-            icon: ChatCircleDotsIcon,
-            labelKey: "mascot.assistant.options.lessonChat.label",
-            descriptionKey: "mascot.assistant.options.lessonChat.description",
-        },
-        ...DEFAULT_SET.options.filter((option) => option.key !== "chat"),
-    ],
-}
-
-/**
- * Picks the option list for the CURRENT route:
+ * Picks the option list for the CURRENT route. The panel is CONTEXTUAL — it offers
+ * the two or three tools that fit where the visitor is standing, not the whole
+ * roster everywhere. Dumping all eight on the home page reads as a directory and
+ * pushes the useful row off the first glance; the full list already has a home of
+ * its own at `/ai`, which every short list links to.
  *
- *  - lesson reader (`/courses/<id>/learn/...`) → the grounded lesson chat first,
- *    then the generic tools.
- *  - inside a subject workspace (`/subjects/<id>/...`) → the subject's AI tools,
- *    each deep-linking into the AI tab with `?tool=<key>` (the tab reads that
- *    query and opens the matching surface). The `AI` nav row was removed from the
- *    workspace rail, so this panel is now the entry point to those tools.
- *  - everywhere else → the full roster.
+ *  - lesson reader (`/courses/<id>/learn/...`) → the grounded lesson chat FIRST
+ *    (the thing a stuck learner wants), then what helps digest a lesson.
+ *  - subject workspace (`/subjects/<id>/...`) → that subject's own AI tools, each
+ *    deep-linking into the AI tab with `?tool=<key>`. The `AI` nav row was removed
+ *    from the workspace rail, so this panel is the entry point to them.
+ *  - other surfaces → see {@link ROUTE_SETS}.
+ *  - everywhere else → three starters.
  *
  * Pure function of the LOCALE-STRIPPED pathname (`@/i18n/navigation`'s
  * `usePathname`), so it stays a plain call — no hook, no provider.
@@ -211,23 +176,32 @@ const LESSON_SET: AssistantOptionSet = {
  */
 export const getAssistantOptions = (pathname: string): AssistantOptionSet => {
     if (LESSON_READER_ROUTE.test(pathname)) {
-        return LESSON_SET
+        return {
+            titleKey: "mascot.assistant.title",
+            subtitleKey: "mascot.assistant.lessonSubtitle",
+            options: (["lessonChat", "summary", "flashcards", "quiz"] as const).map(row),
+        }
     }
-    const match = SUBJECT_WORKSPACE_ROUTE.exec(pathname)
-    if (match === null) {
-        return DEFAULT_SET
+    const subject = SUBJECT_WORKSPACE_ROUTE.exec(pathname)
+    if (subject !== null) {
+        const subjectId = subject[1]
+        return {
+            titleKey: "mascot.assistant.subjectTitle",
+            subtitleKey: "mascot.assistant.subjectSubtitle",
+            options: SUBJECT_AI_TOOLS.map(({ key, icon }) => ({
+                key,
+                href: `/subjects/${subjectId}/ai?tool=${key}`,
+                icon,
+                labelKey: `subjects.aiTools.tools.${key}.title`,
+                descriptionKey: `subjects.aiTools.tools.${key}.desc`,
+            })),
+        }
     }
-    const subjectId = match[1]
+    const matched = ROUTE_SETS.find((entry) => entry.pattern.test(pathname))
     return {
-        titleKey: "mascot.assistant.subjectTitle",
-        subtitleKey: "mascot.assistant.subjectSubtitle",
-        options: SUBJECT_AI_TOOLS.map(({ key, icon }) => ({
-            key,
-            href: `/subjects/${subjectId}/ai?tool=${key}`,
-            icon,
-            labelKey: `subjects.aiTools.tools.${key}.title`,
-            descriptionKey: `subjects.aiTools.tools.${key}.desc`,
-        })),
+        titleKey: "mascot.assistant.title",
+        subtitleKey: "mascot.assistant.subtitle",
+        options: (matched?.keys ?? DEFAULT_KEYS).map(row),
     }
 }
 

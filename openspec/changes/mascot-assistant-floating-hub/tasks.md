@@ -21,7 +21,7 @@
 
 ## 3. Danh sách tính năng (`options.ts`)
 
-- [x] 3.1 Default set 8 dòng khớp `TOOL_CATALOG` của AI hub: chat(`/ai`) · planner · summary · flashcards · quiz · debug · cv(`/profile/cv`) · cvReview
+- [x] 3.1 **Panel cũng bám TRANG, không đổ cả 8 dòng ở mọi nơi.** Gom 9 tính năng vào 1 `CATALOG` rồi mỗi route chọn 2-4 khoá (`ROUTE_SETS`): home → Trung tâm AI · Lộ trình học · Làm CV · khoá học → planner/summary/flashcards · challenges|practice|workflow → debug/quiz · profile|career|marketplace → cv/cvReview · resources|blog|search → summary/flashcards · `/ai` → cả 8 (vào đây là để tìm công cụ) · bài học → lessonChat/summary/flashcards/quiz. **Mọi danh sách ngắn đều kết bằng dòng "Trung tâm AI"** nên không bao giờ là ngõ cụt, và bộ đầy đủ luôn cách 1 bước
 - [x] 3.2 Icon lấy đúng bộ phosphor AI hub đang dùng (Notepad/Cards/Question/Bug/Briefcase) + bộ cũ (MapTrifold/ReadCvLogo/Sparkle)
 - [x] 3.3 Giữ nguyên nhánh contextual `/subjects/<id>/…` (toolbox của môn) — không đụng
 - [x] 3.4 **Dòng panel = TÊN tính năng, không phải câu hỏi.** Nhãn dạng câu hỏi bị cắt cụt 6/8 dòng ở bề rộng 19rem (chủ sản phẩm chụp màn hình chỉ ra). Giọng câu hỏi chuyển hẳn sang bong bóng; mô tả đổi `truncate` → `line-clamp-2`. Đo lại: 0/8 nhãn và 0/8 mô tả bị cắt
@@ -62,4 +62,5 @@
 - [x] 7.7 Nghiệm thu bong bóng (hạ tạm hằng số rồi khôi phục): hiện lần đầu ~29s → tự ẩn → click mở menu → đúng 3 lần rồi dừng → không hiện khi panel đang mở
 - [x] 7.9 **Nghiệm thu ngữ cảnh trên đúng route bài học** (`/vi/courses/…/learn/content/modules/…/contents/…`): panel đổi phụ đề sang "Mình đang đọc bài này cùng bạn", dòng đầu là `<button>` (không phải `<a>`) nhãn "Hỏi về bài đang đọc", KHÔNG còn nút tròn nào trên màn; bong bóng nói đúng "Cần mình giải đáp thắc mắc buổi học không?", bấm vào thì `panelOpened=false` mà `chatDialogOpened=true` — tức mở THẲNG chat chứ không mở menu
 - [x] 7.10 Nghiệm thu bề rộng chữ: 0/8 nhãn và 0/8 mô tả bị cắt (trước đó 6/8 mô tả bị cắt); panel vẫn nằm trọn trong màn, danh sách cuộn trong
+- [x] 7.11 Nghiệm thu panel theo trang (đọc thẳng DOM ở từng route): `/vi` → 3 dòng (Trung tâm AI · Lộ trình học · Làm CV) · `/vi/courses` → 4 (planner/summary/flashcards/hub) · `/vi/challenges` → 3 (debug/quiz/hub) · `/vi/profile` → 3 (cv/cvReview/hub) · `/vi/ai` → đủ 8 · route bài học → 4 (Hỏi về bài đang đọc/summary/flashcards/quiz) + phụ đề đổi ngữ cảnh
 - [x] 7.8 `openspec validate mascot-assistant-floating-hub --strict`

@@ -120,9 +120,13 @@ period applies to mouse input only; touch, which has no "pointer left", is unaff
 
 ### Requirement: The panel carries every AI feature, phrased as an invitation
 
-The panel SHALL list the complete AI feature roster of the site — one row per feature, matching
-the AI hub's tool catalog plus the CV builder — and activating a row SHALL open that feature's
-existing surface. No AI feature that exists in the hub may be missing from the panel.
+The panel SHALL offer the tools that fit WHERE THE VISITOR IS — a short list of two to four rows,
+not the whole roster on every page. Activating a row SHALL open that feature's existing surface.
+
+Every short list SHALL end with a row leading to the AI hub, so a contextual list is never a dead
+end and the complete roster is always one step away; the hub's own page is the one surface that
+shows every tool. Dumping the full roster everywhere turns a nudge into a directory and pushes the
+row that actually matters below the fold.
 
 Rows SHALL be NAMED, not phrased as questions: a row is a menu entry to scan, and question-shaped
 labels ("Bạn muốn tạo lộ trình học không?") do not fit the panel width and were clipped mid-word.
@@ -137,11 +141,21 @@ Because the panel can be taller than a short window, the shell SHALL be height-b
 list takes the space actually left above the mascot and scrolls within it, instead of overflowing
 past the top of the viewport.
 
-#### Scenario: Every hub tool is reachable from the mascot
+#### Scenario: An ordinary page offers a short, fitting list
 
-- **WHEN** the visitor opens the panel on any ordinary page
-- **THEN** it lists the AI hub, study planner, summariser, flashcards, quiz generator, code
-  debugger, CV builder and CV review, each linking to its own surface
+- **WHEN** the visitor opens the panel on the home page
+- **THEN** it shows a handful of starter rows rather than the whole roster, ending with the AI hub
+
+#### Scenario: The list follows the surface
+
+- **WHEN** the visitor opens the panel on a coding surface, then on their profile
+- **THEN** the first offers code debugging and practice questions, the second offers building and
+  reviewing a CV — each still ending with the AI hub
+
+#### Scenario: The hub itself shows everything
+
+- **WHEN** the visitor opens the panel on the AI hub
+- **THEN** every tool is listed, because looking for tools is why they are there
 
 #### Scenario: The panel fits a short window
 

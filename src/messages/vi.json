@@ -5284,7 +5284,7 @@
           "meta": "{count} bộ đề"
         },
         "coding": {
-          "title": "Thử thách code",
+          "title": "Challenge (PE)",
           "meta": "{count} bài"
         },
         "leaderboard": {
@@ -5335,7 +5335,9 @@
           "allDifficulties": "Mọi độ khó",
           "allStatuses": "Mọi trạng thái",
           "allTypes": "Mọi loại",
-          "allLifecycles": "Mọi trạng thái"
+          "allLifecycles": "Mọi trạng thái",
+          "typeLabel": "Loại",
+          "lifecycleLabel": "Trạng thái"
         },
         "tags": {
           "label": "Thẻ",

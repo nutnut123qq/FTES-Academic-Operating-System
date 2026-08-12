@@ -5284,7 +5284,7 @@
           "meta": "{count} albums"
         },
         "coding": {
-          "title": "Coding challenge",
+          "title": "Challenge (PE)",
           "meta": "{count} problems"
         },
         "leaderboard": {
@@ -5335,7 +5335,9 @@
           "allDifficulties": "All difficulties",
           "allStatuses": "All statuses",
           "allTypes": "All types",
-          "allLifecycles": "All statuses"
+          "allLifecycles": "All statuses",
+          "typeLabel": "Type",
+          "lifecycleLabel": "Status"
         },
         "tags": {
           "label": "Tags",

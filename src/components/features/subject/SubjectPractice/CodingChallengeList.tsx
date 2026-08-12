@@ -282,6 +282,7 @@ export const CodingChallengeList = ({ subjectId, onBack }: CodingChallengeListPr
                             <CodingChallengeRow
                                 key={challenge.id}
                                 challenge={challenge}
+                                subjectId={subjectId}
                             />
                         ))}
                     </div>
@@ -323,15 +324,23 @@ const TagPill = ({
 /** One challenge row — title + slug · type/mode chips · lifecycle chip + caret. */
 const CodingChallengeRow = ({
     challenge,
+    subjectId,
 }: {
     challenge: CodingChallenge
+    /** Subject the reader came from — travels so the solve page can send them back. */
+    subjectId: string
 }) => {
     const t = useTranslations("subjects")
     const typeKey = challengeTypeKey(challenge.type)
 
     return (
         <Link
-            href={`/challenges/${challenge.id}`}
+            /* `?subject=` is what makes the solve page's back link land HERE instead of
+               the global catalogue. The challenge itself only knows its subject as a
+               UUID, while this route is keyed by the subject CODE, so the code has to
+               travel with the reader. It rides in the URL rather than in memory so a
+               reload or a shared link keeps the way back. */
+            href={`/challenges/${challenge.id}?subject=${encodeURIComponent(subjectId)}`}
             className="flex w-full items-center gap-3 rounded-2xl border border-separator p-4 text-left transition-colors hover:border-accent/50 hover:bg-accent/5"
         >
             <div className="flex min-w-0 flex-1 flex-col gap-1">

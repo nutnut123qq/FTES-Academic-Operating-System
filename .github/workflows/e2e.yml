@@ -13,9 +13,9 @@ on:
   workflow_dispatch:
     inputs:
       scope:
-        description: "smoke = 2 spec không cần backend/mật khẩu · full = cả suite (cần secrets, GHI vào apitest)"
+        description: "smoke = 4 spec không cần backend · read-only = thêm 11 spec đọc dữ liệu thật (cần secrets) · write = cả suite, GHI vào apitest"
         type: choice
-        options: [smoke, full]
+        options: [smoke, read-only, write]
         default: smoke
   schedule:
     # 01:00 giờ VN, chỉ chạy smoke (xem bước dưới) — không đụng dữ liệu staging
@@ -88,18 +88,40 @@ jobs:
 
       - run: npm run build
 
-      # A scheduled run always takes the credential-free path; `full` is a deliberate,
-      # human-triggered choice because it writes to shared staging data.
+      # Three tiers by how far a spec reaches into shared state. A scheduled run has no
+      # inputs, so it always falls through to `smoke` — nightly can never write to apitest.
+      #
+      # Classification came from reading all 43 specs, not from grepping for HTTP verbs:
+      # six of the writers only create data through the UI (add to cart, submit a quiz,
+      # post a comment, run an AI tool), so a method-based sort would have filed them as
+      # read-only and quietly polluted staging.
       - name: Run Playwright
         env:
           FTES_TEST_PASSWORD: ${{ secrets.FTES_TEST_PASSWORD }}
           FTES_ADMIN_PASSWORD: ${{ secrets.FTES_ADMIN_PASSWORD }}
         run: |
-          if [ "${{ github.event.inputs.scope }}" = "full" ]; then
-            npx playwright test
-          else
-            npx playwright test e2e/blog-nav.spec.ts e2e/home-achievements-carousel.spec.ts
-          fi
+          # no login, no API — safe to run any time, needs no secrets
+          SMOKE="e2e/blog-nav.spec.ts \
+                 e2e/home-achievements-carousel.spec.ts \
+                 e2e/home-continue-mascot-and-cards.spec.ts \
+                 e2e/navbar-search-inline.spec.ts"
+          # sign in and/or read apitest, but create/modify nothing
+          READ_ONLY="e2e/browse-category-facets.spec.ts \
+                     e2e/challenge-per-lesson-2026-07-26.spec.ts \
+                     e2e/challenge-tier-gate-cta.spec.ts \
+                     e2e/community-feed-row-actions-ui.spec.ts \
+                     e2e/content-live-wire.spec.ts \
+                     e2e/learn-gate-uses-real-signals.spec.ts \
+                     e2e/learn-preview-player-gate.spec.ts \
+                     e2e/lecturer-teaching-nav-link.spec.ts \
+                     e2e/resource-ai-qa.spec.ts \
+                     e2e/subject-career-and-community-ui.spec.ts \
+                     e2e/subject-practice-ui.spec.ts"
+          case "${{ github.event.inputs.scope }}" in
+            write)     npx playwright test ;;
+            read-only) npx playwright test $SMOKE $READ_ONLY ;;
+            *)         npx playwright test $SMOKE ;;
+          esac
 
       - uses: actions/upload-artifact@v4
         if: failure()

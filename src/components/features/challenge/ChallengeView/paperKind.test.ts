@@ -40,17 +40,30 @@ describe("classifyChallengePaper", () => {
         expect(classifyChallengePaper("https://cdn/x/de.webp", "binary/octet-stream")).toBe(
             "IMAGE",
         )
+        // A generic MIME on a .zip: the extension decides, and a zip is a real paper kind.
         expect(classifyChallengePaper("https://cdn/x/de.zip", "application/octet-stream")).toBe(
+            "ARCHIVE",
+        )
+    })
+
+    it("an office MIME stays UNSUPPORTED — no fake render", () => {
+        expect(classifyChallengePaper("https://cdn/x/de.docx", "application/msword")).toBe(
             "UNSUPPORTED",
         )
     })
 
-    it("an office/archive MIME stays UNSUPPORTED — no fake render", () => {
-        expect(classifyChallengePaper("https://cdn/x/de.docx", "application/msword")).toBe(
-            "UNSUPPORTED",
-        )
-        expect(classifyChallengePaper("https://cdn/x/de.zip", "application/zip")).toBe(
-            "UNSUPPORTED",
-        )
+    it("a zip is ARCHIVE, not the failure state — it is a legitimate paper", () => {
+        // Browsers and operating systems disagree on the zip MIME; all spellings must land
+        // on the same kind, otherwise the same file reads as "broken" on one machine.
+        expect(classifyChallengePaper("https://cdn/x/de.zip", "application/zip")).toBe("ARCHIVE")
+        expect(classifyChallengePaper("https://cdn/x/de.zip", "application/x-zip-compressed"))
+            .toBe("ARCHIVE")
+        expect(classifyChallengePaper("https://cdn/x/de.zip", "multipart/x-zip")).toBe("ARCHIVE")
+    })
+
+    it("falls back to the extension for archives when the MIME is absent", () => {
+        expect(classifyChallengePaper("https://cdn/x/bo-de.zip", null)).toBe("ARCHIVE")
+        // Signed delivery URLs carry a query string — it must not defeat the extension read.
+        expect(classifyChallengePaper("https://cdn/x/bo-de.ZIP?sig=abc123", "")).toBe("ARCHIVE")
     })
 })

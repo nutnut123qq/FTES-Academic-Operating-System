@@ -13,13 +13,28 @@ export type ChallengePaperKind =
     | "IMAGE"
     /** A PDF — embedded in a scrollable frame, with an "open" escape hatch. */
     | "PDF"
-    /** DOC/DOCX/ZIP/… — no honest inline preview; offer opening/downloading it instead. */
+    /**
+     * A ZIP the author uploaded as the paper — typically a whole folder of source code
+     * and documents. Deliberately its OWN kind rather than `UNSUPPORTED`: an archive is a
+     * perfectly valid paper here, so it deserves "download the pack" wording instead of
+     * the apologetic "can't preview this" copy. It is also the one kind that carries NO
+     * watermark (archives cannot be stamped), so never imply otherwise.
+     */
+    | "ARCHIVE"
+    /** DOC/DOCX/… — no honest inline preview; offer opening/downloading it instead. */
     | "UNSUPPORTED"
     /** The challenge ships no paper at all. */
     | "MISSING"
 
 /** Picture extensions worth trusting when the BE ships no / a generic MIME. */
 const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp", "gif", "bmp", "heic", "avif"]
+
+/**
+ * Archive extensions. Only `.zip` is actually accepted on upload, but a paper carried over
+ * from elsewhere may use a sibling format — classifying it as an archive still yields the
+ * right affordance (download), which is all this kind decides.
+ */
+const ARCHIVE_EXTENSIONS = ["zip", "zipx", "rar", "7z", "tar", "gz", "tgz"]
 
 /**
  * Lower-cased extension of a URL's last path segment (`".../de-thi.PDF?v=2"` → `"pdf"`),
@@ -69,6 +84,16 @@ export const classifyChallengePaper = (
     if (mime === "" && extension === "pdf") {
         return "PDF"
     }
+    // Browsers and operating systems disagree on the zip MIME, so accept the known spellings
+    // and fall back to the extension — the same leniency the upload guard applies.
+    if (
+        mime === "application/zip"
+        || mime === "application/x-zip-compressed"
+        || mime === "multipart/x-zip"
+        || (mime === "" && ARCHIVE_EXTENSIONS.includes(extension))
+    ) {
+        return "ARCHIVE"
+    }
     // A generic binary MIME says nothing — let the extension decide before giving up.
     if (mime === "application/octet-stream" || mime === "binary/octet-stream") {
         if (IMAGE_EXTENSIONS.includes(extension)) {
@@ -76,6 +101,9 @@ export const classifyChallengePaper = (
         }
         if (extension === "pdf") {
             return "PDF"
+        }
+        if (ARCHIVE_EXTENSIONS.includes(extension)) {
+            return "ARCHIVE"
         }
     }
     return "UNSUPPORTED"

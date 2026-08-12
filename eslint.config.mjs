@@ -84,17 +84,10 @@ export default defineConfig([
         // - HostPlatformChip/index.tsx: CHỈ còn Vimeo + Cloudflare (react-simple-icons) — phosphor không
         //   có VimeoLogo/CloudflareLogo. YouTube và Google Drive ĐÃ chuyển sang phosphor, nên đừng nới
         //   ngoại lệ này ra thêm glyph nào khác.
-        // - LeagueTierBadge/index.tsx: bảng TIER_VISUAL dùng fluent-emoji qua @iconify/react. Không map
-        //   sang phosphor được mà không mất nghĩa: đồng/bạc/vàng hiện là BA glyph huy chương hạng 1/2/3
-        //   khác nhau, còn phosphor chỉ có Medal + MedalMilitary nên ba hạng thấp sẽ đổ về cùng một hình
-        //   — đúng thứ docblock của component nói là đã cố tránh. Nó cũng là ảnh dự phòng ĐA SẮC cho art
-        //   PNG thật, và khớp cỡ theo px runtime (prop `size`) nên không dùng được class size-* cố định.
-        //   LƯU Ý: component này hiện KHÔNG có caller nào trong src — khi quyết định dùng thật hoặc xoá
-        //   hẳn thì xem lại ngoại lệ này.
+        // (LeagueTierBadge/index.tsx đã bị xoá cùng cụm league chết — ngoại lệ của nó gỡ theo.)
         files: [
             "src/components/reuseable/ProgrammingLanguageTabs/map.tsx",
             "src/components/reuseable/HostPlatformChip/index.tsx",
-            "src/components/reuseable/LeagueTierBadge/index.tsx",
         ],
         rules: {
             "no-restricted-imports": "off",

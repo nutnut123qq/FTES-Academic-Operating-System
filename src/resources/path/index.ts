@@ -149,15 +149,6 @@ export const pathConfig = () => {
                     build,
                 }
             }
-            const cv = () => {
-                const cvPath = `${profilePath}/cv`
-                const build = () => {
-                    return cvPath
-                }
-                return {
-                    build,
-                }
-            }
             const progress = () => {
                 // profile Progress tab (gamification dashboard + skill graph)
                 const progressPath = `${profilePath}/progress`
@@ -183,7 +174,6 @@ export const pathConfig = () => {
                 submissions,
                 attempts,
                 feedback,
-                cv,
                 progress,
             }
         }
@@ -297,26 +287,6 @@ export const pathConfig = () => {
                         build,
                     }
                 }
-                const cv = () => {
-                    const cvPath = `${learnPath}/cv`
-                    const build = () => {
-                        return cvPath
-                    }
-                    return {
-                        build,
-                    }
-                }
-                const personalProject = (taskId?: string) => {
-                    const personalProjectPath = taskId
-                        ? `${learnPath}/personal-project/tasks/${taskId}`
-                        : `${learnPath}/personal-project`
-                    const build = () => {
-                        return personalProjectPath
-                    }
-                    return {
-                        build,
-                    }
-                }
                 const leaderboard = () => {
                     const leaderboardPath = `${learnPath}/leaderboard`
                     const build = () => {
@@ -324,56 +294,6 @@ export const pathConfig = () => {
                     }
                     return {
                         build,
-                    }
-                }
-                const headhuntings = () => {
-                    const headhuntingsPath = `${learnPath}/headhuntings`
-                    const build = () => {
-                        return headhuntingsPath
-                    }
-                    return {
-                        build,
-                    }
-                }
-                const flashcards = () => {
-                    const flashcardsPath = `${learnPath}/flashcards`
-                    const build = () => {
-                        return flashcardsPath
-                    }
-                    return {
-                        build,
-                    }
-                }
-                const practice = () => {
-                    const practicePath = `${learnPath}/practice`
-                    const build = () => {
-                        return practicePath
-                    }
-                    return {
-                        build,
-                    }
-                }
-                const foundations = (categoryId?: string) => {
-                    const foundationsPath = categoryId
-                        ? `${learnPath}/foundations/${categoryId}`
-                        : `${learnPath}/foundations`
-                    const build = () => {
-                        return foundationsPath
-                    }
-                    const item = (foundationId?: string) => {
-                        const itemPath = foundationId
-                            ? `${foundationsPath}/${foundationId}`
-                            : foundationsPath
-                        const buildItem = () => {
-                            return itemPath
-                        }
-                        return {
-                            build: buildItem,
-                        }
-                    }
-                    return {
-                        build,
-                        item,
                     }
                 }
                 const module = (moduleId?: string) => {
@@ -402,25 +322,8 @@ export const pathConfig = () => {
                     content,
                     mindMap,
                     mockInterview,
-                    cv,
-                    personalProject,
                     leaderboard,
-                    headhuntings,
-                    flashcards,
-                    practice,
-                    foundations,
                     module,
-                }
-            }
-            const headhuntingCompanies = (companyId?: string) => {
-                const headhuntingCompaniesPath = companyId
-                    ? `${coursePath}/headhunting-companies/${companyId}`
-                    : `${coursePath}/headhunting-companies`
-                const build = () => {
-                    return headhuntingCompaniesPath
-                }
-                return {
-                    build,
                 }
             }
             // "Khóa học của tôi" — the viewer's enrolled courses. A fixed group-level
@@ -449,7 +352,6 @@ export const pathConfig = () => {
             return {
                 build,
                 learn,
-                headhuntingCompanies,
                 mine,
                 teaching,
             }
@@ -487,16 +389,6 @@ export const pathConfig = () => {
             const privacyPath = `${localePath}/privacy`
             const build = () => {
                 return privacyPath
-            }
-            return {
-                build,
-            }
-        }
-        const talents = () => {
-            // talent directory: users who opted into "open to work"
-            const talentsPath = `${localePath}/talents`
-            const build = () => {
-                return talentsPath
             }
             return {
                 build,
@@ -600,64 +492,6 @@ export const pathConfig = () => {
         const career = makeSimplePath("career")
         const integrations = makeSimplePath("integrations")
         const roles = makeSimplePath("admin/roles")
-        const practice = () => {
-            const practicePath = `${localePath}/practice`
-            const build = () => {
-                return practicePath
-            }
-            return {
-                build,
-            }
-        }
-        const review = () => {
-            // flashcard review session (SM-2): all due cards across courses
-            const reviewPath = `${localePath}/review`
-            const build = () => {
-                return reviewPath
-            }
-            return {
-                build,
-            }
-        }
-        const rewards = () => {
-            // reward points store: spend reward points earned from learning on gifts
-            const rewardsPath = `${localePath}/rewards`
-            const build = () => {
-                return rewardsPath
-            }
-            return {
-                build,
-            }
-        }
-        const league = () => {
-            // weekly league + global leaderboard (full board behind the dashboard card)
-            const leaguePath = `${localePath}/league`
-            const build = () => {
-                return leaguePath
-            }
-            return {
-                build,
-            }
-        }
-        const kpi = () => {
-            // weekly KPI editor (set per-metric targets behind the dashboard summary)
-            const kpiPath = `${localePath}/kpi`
-            const build = () => {
-                return kpiPath
-            }
-            return {
-                build,
-            }
-        }
-        const publicContent = (contentId?: string) => {
-            const publicContentPath = contentId ? `${localePath}/contents/${contentId}` : `${localePath}/content`
-            const build = () => {
-                return publicContentPath
-            }
-            return {
-                build,
-            }
-        }
         return {
             build,
             home,
@@ -665,11 +499,7 @@ export const pathConfig = () => {
             profile,
             authentication,
             contact,
-            publicContent,
             dashboard,
-            practice,
-            review,
-            talents,
             blog,
             community,
             groups,
@@ -693,9 +523,6 @@ export const pathConfig = () => {
             career,
             integrations,
             roles,
-            rewards,
-            league,
-            kpi,
             terms,
             privacy,
         }

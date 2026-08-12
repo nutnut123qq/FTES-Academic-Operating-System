@@ -84,10 +84,22 @@ The mascot SHALL expose an accessible name, its expanded state and the id of the
 controls; the panel SHALL be a labelled navigation region whose options are reachable by keyboard
 in visual order.
 
-#### Scenario: Mouse hover opens, leaving closes
+Leaving with the mouse SHALL NOT close the panel outright: it SHALL arm a short grace period,
+which entering either the character or the panel cancels. The gap between the two is not
+hoverable (the shell must stay click-through), so an immediate close makes the panel unreachable —
+the pointer's natural diagonal travel from character to panel crosses dead space. The grace
+period applies to mouse input only; touch, which has no "pointer left", is unaffected.
 
-- **WHEN** a visitor moves a mouse pointer onto the mascot
-- **THEN** the panel opens, and it closes again when the pointer leaves the assistant
+#### Scenario: Mouse hover opens, leaving closes after a grace period
+
+- **WHEN** a visitor moves a mouse pointer onto the mascot and then away without reaching the panel
+- **THEN** the panel stays up for the grace period and then closes on its own
+
+#### Scenario: The pointer can cross the gap into the panel
+
+- **WHEN** the visitor leaves the character and moves onto the panel within the grace period
+- **THEN** the pending close is cancelled and the panel stays open for as long as the pointer
+  rests on it
 
 #### Scenario: A touch tap opens the panel and keeps it open
 

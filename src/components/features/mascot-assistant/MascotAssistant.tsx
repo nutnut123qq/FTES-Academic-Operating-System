@@ -50,6 +50,21 @@ const BUBBLE_REPEAT_DELAY: readonly [number, number] = [180_000, 300_000]
 const BUBBLE_VISIBLE_MS = 8_000
 
 /**
+ * Grace period between the mouse leaving the assistant and the panel closing (ms).
+ *
+ * Without it the panel is nearly unusable with a mouse: the shell is
+ * `pointer-events-none` so the GAP between the character and the panel is not
+ * hoverable, and the character sits in the corner while the panel opens up-and-left
+ * of it — so the natural diagonal travel from one to the other crosses dead space,
+ * fires `pointerleave`, and the panel vanishes before the pointer arrives.
+ *
+ * With it, leaving only ARMS a close; entering the character or the panel disarms it
+ * again. So the panel lingers just long enough to be walked into, and still closes on
+ * its own if the visitor was only passing by.
+ */
+const HOVER_CLOSE_DELAY_MS = 2_000
+
+/**
  * Bubbles shown SO FAR IN THIS VISIT. Deliberately a module-level counter rather
  * than component state: the assistant remounts on some route transitions, and a
  * state counter would reset the cap each time (a visitor who browses ten pages
@@ -84,6 +99,8 @@ const randomBetween = ([min, max]: readonly [number, number]) =>
  * Interaction notes:
  *  - Hover open/close is bound to `pointerType === "mouse"` only, so a tap does
  *    not both "hover" and "click" (which would toggle the panel twice on touch).
+ *  - Leaving with the mouse ARMS a close ({@link HOVER_CLOSE_DELAY_MS}) instead of
+ *    closing outright, so the pointer can cross the un-hoverable gap into the panel.
  *  - The toggle is a PLAIN `<button onClick>` (not a HeroUI `onPress`) so it stays
  *    clickable in headless verification runs.
  *  - The idle bob is CSS keyframes (`.mascot-float` in `globals.css`), never
@@ -189,15 +206,30 @@ export const MascotAssistant = () => {
         return () => clearTimeout(timer)
     }, [bubble])
 
+    /** Pending "close because the mouse left" timer, `null` when none is armed. */
+    const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const cancelPendingClose = useCallback(() => {
+        if (closeTimerRef.current !== null) {
+            clearTimeout(closeTimerRef.current)
+            closeTimerRef.current = null
+        }
+    }, [])
+    // A timer must never outlive the component.
+    useEffect(() => cancelPendingClose, [cancelPendingClose])
+
     // Opening the panel (hover, tap, keyboard) always retires the bubble — the two
-    // must never share the corner.
+    // must never share the corner — and disarms any pending close, so a panel that
+    // was just reopened can never be shut by a timer armed before it.
     const openPanel = useCallback(() => {
+        cancelPendingClose()
         setBubble(null)
         setIsOpen(true)
-    }, [])
+    }, [cancelPendingClose])
 
     // Mouse only: a touch tap also fires pointerenter, and letting it open here
-    // would fight the click toggle below (open → toggle back closed).
+    // would fight the click toggle below (open → toggle back closed). Entering ANY
+    // part of the assistant — character or panel — lands here, which is what makes
+    // the walk from one to the other survivable.
     const onPointerEnter = useCallback(
         (event: React.PointerEvent) => {
             if (event.pointerType === "mouse") {
@@ -206,11 +238,21 @@ export const MascotAssistant = () => {
         },
         [openPanel],
     )
-    const onPointerLeave = useCallback((event: React.PointerEvent) => {
-        if (event.pointerType === "mouse") {
-            setIsOpen(false)
-        }
-    }, [])
+    // Leaving only ARMS the close; it does not close. See HOVER_CLOSE_DELAY_MS for why
+    // an immediate close makes the panel nearly unreachable with a mouse.
+    const onPointerLeave = useCallback(
+        (event: React.PointerEvent) => {
+            if (event.pointerType !== "mouse") {
+                return
+            }
+            cancelPendingClose()
+            closeTimerRef.current = setTimeout(() => {
+                closeTimerRef.current = null
+                setIsOpen(false)
+            }, HOVER_CLOSE_DELAY_MS)
+        },
+        [cancelPendingClose],
+    )
 
     // Deliberately NO "open on focus": a tap/click focuses the toggle FIRST and
     // then fires `click`, so open-on-focus + toggle-on-click would cancel each
@@ -280,13 +322,13 @@ export const MascotAssistant = () => {
                 // `-mt` beside it: the translate moves only the drawn character, so without an
                 // equal negative top margin the panel would still open from where the character
                 // USED to be and float ~90px above its head. Change one, change the other.
-                //   mobile  w-32 = 128px wide → 180px tall; push (2.5rem, 5.75rem)
-                //   ≥ sm    w-48 = 192px wide → 270px tall; push (3.75rem, 8.5rem)
+                //   mobile  w-28 = 112px wide → 157px tall; push (2.25rem, 5.5rem)
+                //   ≥ sm    w-40 = 160px wide → 225px tall; push (3rem, 7.75rem)
                 //
                 // The transform lives on the BUTTON, not the image: the hit area travels with the
                 // visual (a rotated/translated box hit-tests where it is drawn), and the `<img>`
                 // keeps its own `.mascot-float` bob independent of this pose.
-                className="pointer-events-auto -mt-[5.75rem] block w-32 shrink-0 origin-bottom-right translate-x-[2.5rem] translate-y-[5.75rem] rotate-[-8deg] cursor-pointer border-0 bg-transparent p-0 outline-none focus-visible:rounded-2xl focus-visible:ring-2 focus-visible:ring-accent sm:-mt-[8.5rem] sm:w-48 sm:translate-x-[3.75rem] sm:translate-y-[8.5rem]"
+                className="pointer-events-auto -mt-[5.5rem] block w-28 shrink-0 origin-bottom-right translate-x-[2.25rem] translate-y-[5.5rem] rotate-[-8deg] cursor-pointer border-0 bg-transparent p-0 outline-none focus-visible:rounded-2xl focus-visible:ring-2 focus-visible:ring-accent sm:-mt-[7.75rem] sm:w-40 sm:translate-x-[3rem] sm:translate-y-[7.75rem]"
             >
                 <picture>
                     <source srcSet={MASCOT_WEBP} type="image/webp" />

@@ -11,7 +11,8 @@
 ## 2. Component `MascotAssistant`
 
 - [x] 2.1 `<picture><source srcSet=webp type="image/webp"><img src=gif></picture>`, `<img>` thuần (không `next/image`), `width/height` intrinsic 260×365, `draggable={false}`
-- [x] 2.2 **Tư thế LÓ NỬA THÂN từ góc chéo phải dưới** (theo mẫu ảnh chủ sản phẩm gửi): vẽ to hơn ô của nó (`w-32` mobile / `sm:w-48`) rồi đẩy chéo qua mép (`translate-x`/`translate-y`) + nghiêng `rotate-[-8deg]`, để mép màn cắt mất ~48% chiều cao và ~16% bề ngang. Transform đặt trên NÚT (vùng bấm đi theo hình), không đặt trên ảnh (ảnh còn giữ `.mascot-float`). Kèm `-mt` ĐỐI XỨNG với `translate-y` để panel mở ra bám sát đỉnh THẤY ĐƯỢC của linh vật thay vì lơ lửng cách ~90px. `z-40` (dưới modal `z-50`)
+- [x] 2.2 **Tư thế LÓ NỬA THÂN từ góc chéo phải dưới** (theo mẫu ảnh chủ sản phẩm gửi): vẽ to hơn ô của nó (`w-28` mobile / `sm:w-40`) rồi đẩy chéo qua mép (`translate-x`/`translate-y`) + nghiêng `rotate-[-8deg]`, để mép màn cắt mất ~51% chiều cao. Transform đặt trên NÚT (vùng bấm đi theo hình), không đặt trên ảnh (ảnh còn giữ `.mascot-float`). Kèm `-mt` ĐỐI XỨNG với `translate-y` để panel mở ra bám sát đỉnh THẤY ĐƯỢC của linh vật thay vì lơ lửng cách ~90px. `z-40` (dưới modal `z-50`)
+- [x] 2.2b **Hover-intent — rời chuột chỉ HẸN đóng, không đóng ngay** (`HOVER_CLOSE_DELAY_MS` = 2000ms): vỏ ngoài `pointer-events-none` nên KHOẢNG TRỐNG giữa linh vật và panel không bắt được chuột; linh vật lại nằm sát góc còn panel bung lên phía trên-trái, nên đường đi chéo tự nhiên từ cái này sang cái kia cắt qua vùng chết → `pointerleave` bắn → panel biến mất trước khi chuột tới. Vào lại linh vật HOẶC panel đều huỷ hẹn (`openPanel` gọi `cancelPendingClose`, nên cả mở-bằng-phím lẫn mở-bằng-chạm cũng không bị timer cũ đóng nhầm). Timer dọn khi unmount
 - [x] 2.3 Vỏ ngoài ghim `top-4 … bottom-4` + `justify-start` để panel co theo chỗ trống; nút `shrink-0`; panel `flex min-h-0 flex-col`; `<ul>` `min-h-0 flex-1 overflow-y-auto`
 - [x] 2.4 Bong bóng chủ động: state `bubble`, bộ đếm `bubblesShownThisVisit` ở module scope (cap 3/phiên), effect hẹn giờ (30–60s lần đầu, 180–300s các lần sau) + effect tự ẩn 8s, click mở menu, không hiện khi `isOpen` hoặc `isHidden`
 - [x] 2.5 `isHidden` tính trước các effect để hẹn giờ không tiêu quota bong bóng ở trang không render linh vật
@@ -50,7 +51,8 @@
 - [x] 7.3 `npx eslint` sạch trên các file đã đổi
 - [x] 7.4 `npm run build` (webpack) xanh
 - [x] 7.5 Nghiệm thu trình duyệt — vị trí/z-index/kích thước: `fixed`, `z-40`, trình duyệt chọn đúng `.webp`, `animation: mascotFloat 3s`
-- [x] 7.5b Nghiệm thu tư thế ló nửa thân: 412×915 → cắt 48% đáy, 16% phải; 1280×720 → cắt 139px đáy, 21px phải; **không sinh cuộn ngang** ở cả hai; panel mở ra vẫn nằm trọn trong màn và cách đỉnh thấy được của linh vật 4-5px
+- [x] 7.5b Nghiệm thu tư thế ló nửa thân (sau khi thu nhỏ): 412×915 → vẽ 112px, thấy 113×84, cắt 51% đáy + 20px phải; 1280×720 → vẽ 160px, thấy 181×122, cắt 122px đáy; **không sinh cuộn ngang** ở cả hai; panel mở ra vẫn nằm trọn trong màn
+- [x] 7.5c Nghiệm thu hover-intent (bắn PointerEvent `pointerType:"mouse"` thật): hover linh vật → mở; rời chuột 700ms → CÒN; di vào card rồi chờ 2,6s → CÒN (hẹn đóng đã huỷ); rời hẳn → còn ở 1,2s, đóng ở 2,4s. Chạm (`pointerType:"touch"`) mở panel và KHÔNG tự đóng sau 2,6s — timer chỉ dành cho chuột
 - [x] 7.6 Nghiệm thu menu: 8 dòng đúng href; hover chuột mở, hover cảm ứng KHÔNG mở, click toggle, Esc đóng, click ngoài đóng; panel nằm trọn trong màn ở 1280×720 và 375×812, không sinh scroll ngang
 - [x] 7.7 Nghiệm thu bong bóng (hạ tạm hằng số rồi khôi phục): hiện lần đầu ~29s → tự ẩn → click mở menu → đúng 3 lần rồi dừng → không hiện khi panel đang mở
 - [x] 7.8 `openspec validate mascot-assistant-floating-hub --strict`

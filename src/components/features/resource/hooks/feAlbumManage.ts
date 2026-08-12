@@ -7,7 +7,7 @@
  * 1. **`PUT /images/order` wants a COMPLETE permutation.** A partial list is a `400`,
  *    so a "move one picture" gesture must still ship every id of the album.
  * 2. **The upload endpoint is rate limited** (10/min, 60/hour per viewer). A bulk add of
- *    up to 50 pictures therefore has to pace itself instead of firing everything at
+ *    up to 200 pictures therefore has to pace itself instead of firing everything at
  *    once and collecting `RESOURCE_RATE_LIMITED` 429s.
  */
 

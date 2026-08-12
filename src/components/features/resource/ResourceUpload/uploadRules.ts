@@ -131,8 +131,14 @@ export const RESOURCE_TYPE_RULES: Record<ResourceTypeCode, ResourceTypeRule> = {
  * BE cap on ONE FE album (`FeAlbumView.maxImages`), mirrored so a picker can stop
  * early. The album payload ships the live value — prefer `FeAlbumView.maxImages` when
  * you have it and keep this only as the pre-album / fallback number.
+ *
+ * 200, not 50: a real Final Exam runs 60–100+ questions, so a photographed paper needs
+ * far more than 50 pages before the cap stops being a technical guard and starts
+ * truncating the exam. Raised in step with the BE — this constant is only the fallback,
+ * so a client that still says 50 while the server says 200 would silently refuse
+ * pictures the server would have taken.
  */
-export const FE_ALBUM_MAX_IMAGES = 50
+export const FE_ALBUM_MAX_IMAGES = 200
 
 /**
  * Picture MIME types `POST /api/v1/resources/{id}/images` accepts. NARROWER than

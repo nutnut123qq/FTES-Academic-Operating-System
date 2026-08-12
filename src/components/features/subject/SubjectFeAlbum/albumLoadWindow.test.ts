@@ -3,8 +3,12 @@ import { describe, expect, it } from "vitest"
 import {
     ALBUM_INITIAL_LOAD,
     ALBUM_LOAD_BATCH,
+    ALBUM_LOAD_LOOKAHEAD,
     nextAlbumLoadCount,
 } from "./albumLoadWindow"
+
+/** The BE/FE cap on one album, raised from 50 for exams of 60–100+ questions. */
+const FULL_ALBUM = 200
 
 describe("nextAlbumLoadCount", () => {
     it("starts at the initial window on the first picture", () => {
@@ -44,5 +48,45 @@ describe("nextAlbumLoadCount", () => {
 
     it("returns zero for an empty album", () => {
         expect(nextAlbumLoadCount(0, 0, 0)).toBe(0)
+    })
+})
+
+/**
+ * The window was tuned when an album capped at 50. At 200 the question is whether it is
+ * still a WINDOW or has quietly become "fetch the album": these pin that reading a full
+ * 200-page exam front to back never runs more than a batch and a bit ahead of the reader,
+ * and that reaching the last page still terminates and clamps.
+ */
+describe("nextAlbumLoadCount — a 200-picture album", () => {
+    it("still opens on the initial window, not on the cap", () => {
+        expect(nextAlbumLoadCount(0, 0, FULL_ALBUM)).toBe(ALBUM_INITIAL_LOAD)
+    })
+
+    it("stays a window: reading forward never runs more than one batch ahead", () => {
+        let loaded = ALBUM_INITIAL_LOAD
+        for (let index = 0; index < FULL_ALBUM; index += 1) {
+            loaded = nextAlbumLoadCount(loaded, index, FULL_ALBUM)
+            // The reader is on `index`; the window may run ahead by the lookahead plus one
+            // batch, and no further — that bound is what keeps it from becoming the album.
+            expect(loaded).toBeLessThanOrEqual(
+                index + ALBUM_LOAD_LOOKAHEAD + ALBUM_LOAD_BATCH + 1,
+            )
+            expect(loaded).toBeGreaterThan(index)
+        }
+        expect(loaded).toBe(FULL_ALBUM)
+    })
+
+    it("is far from the whole album at the front of a long one", () => {
+        // Page 10 of 200 must not have pulled anything like 200 pictures.
+        let loaded = ALBUM_INITIAL_LOAD
+        for (let index = 0; index <= 9; index += 1) {
+            loaded = nextAlbumLoadCount(loaded, index, FULL_ALBUM)
+        }
+        expect(loaded).toBeLessThan(FULL_ALBUM / 4)
+    })
+
+    it("reaches the last page and clamps there", () => {
+        expect(nextAlbumLoadCount(5, FULL_ALBUM - 1, FULL_ALBUM)).toBe(FULL_ALBUM)
+        expect(nextAlbumLoadCount(FULL_ALBUM, FULL_ALBUM - 1, FULL_ALBUM)).toBe(FULL_ALBUM)
     })
 })

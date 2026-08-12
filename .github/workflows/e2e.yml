@@ -32,26 +32,22 @@ jobs:
           node-version: 22
           cache: npm
 
-      - run: npm ci
-
-      # package-lock.json is generated on Windows and carries ONLY win32 native binaries
-      # (npm/cli#4828). vitest needs rollup+esbuild; `next build` additionally needs the
-      # Tailwind v4 and SWC binaries, and `next start` needs sharp for next/image.
-      # Versions are read back from what npm ci just pinned, so this survives upgrades.
-      - name: Add the linux native binaries the Windows lockfile omits
-        run: |
-          npm install --no-save --no-audit --no-fund \
-            "@rollup/rollup-linux-x64-gnu@$(node -p 'require("rollup/package.json").version')" \
-            "@esbuild/linux-x64@$(node -p 'require("esbuild/package.json").version')" \
-            "@tailwindcss/oxide-linux-x64-gnu@$(node -p 'require("@tailwindcss/oxide/package.json").version')" \
-            "lightningcss-linux-x64-gnu@$(node -p 'require("lightningcss/package.json").version')" \
-            "sharp@$(node -p 'require("sharp/package.json").version')"
+      # NOT `npm ci`: package-lock.json is generated on Windows and records ONLY the
+      # win32 native binaries (npm/cli#4828). A full `next build` needs the linux ones for
+      # rollup, esbuild, @tailwindcss/oxide, lightningcss, @parcel/watcher, @swc/core,
+      # sharp — patching them back one at a time is whack-a-mole (the first run of this
+      # workflow died on @parcel/watcher-linux-x64-glibc alone). Resolving from
+      # package.json instead gives npm the chance to pick the right platform for every
+      # optional dep at once. Trade-off accepted here because this job is a nightly smoke
+      # check, not the merge gate — test.yml keeps `npm ci` for determinism.
+      # Real fix, when someone wants it: regenerate the lockfile on linux and commit it.
+      - run: rm -f package-lock.json && npm install --no-audit --no-fund
 
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          key: playwright-${{ runner.os }}-${{ hashFiles('package.json') }}
 
       # only chromium: both projects (desktop + mobile) are Chromium devices
       - run: npx playwright install --with-deps chromium

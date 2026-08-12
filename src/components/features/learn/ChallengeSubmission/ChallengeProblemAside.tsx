@@ -2,12 +2,14 @@
 
 import React, { useEffect, useRef } from "react"
 import { Typography, cn } from "@heroui/react"
+import { TimerIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
 import type { SampleTestCaseView } from "@/modules/api/rest/challenges"
 import { usePostSqlSchemaSwr } from "@/hooks/swr/api/rest/mutations/usePostSqlSchemaSwr"
+import { resolveChallengeLimitParts } from "./challenge-limits"
 import { SqlSchemaPanel } from "./SqlSchemaPanel"
 
 /** Props for {@link ChallengeProblemAside}. */
@@ -26,13 +28,22 @@ export interface ChallengeProblemAsideProps {
      * here. Absent / empty → the examples section is hidden.
      */
     sampleTestCases?: Array<SampleTestCaseView>
+    /**
+     * Wall-clock budget one submission must fit, in milliseconds (BE
+     * `challenge-testcase-samples` — the max across the challenge's test cases). Rendered as
+     * the "Giới hạn" line under the statement, HackerRank-style. Nullish → no line.
+     */
+    timeLimitMs?: number | null
+    /** Memory budget in megabytes; same source and nullability as {@link timeLimitMs}. */
+    memoryLimitMb?: number | null
 }
 
 /**
  * The RIGHT column of the unified challenge solve split (contract): the problem statement
- * ("Đề bài" — title + description) and, for a SQL challenge, the seed-dataset schema/ERD
- * ({@link SqlSchemaPanel}) below it. Single source of the "de bai" for EVERY submission tab
- * (github / file / code) — the work area (left column) owns the tabs + active form.
+ * ("Đề bài" — title + description + the challenge's time/memory budget) and, for a SQL
+ * challenge, the seed-dataset schema/ERD ({@link SqlSchemaPanel}) below it. Single source of
+ * the "de bai" for EVERY submission tab (github / file / code) — the work area (left column)
+ * owns the tabs + active form.
  *
  * Owns the schema introspection SWR: whenever the challenge is SQL and ships a seed, the
  * dataset is introspected once (per seed) so the learner sees the tables/relationships they
@@ -44,11 +55,26 @@ export const ChallengeProblemAside = ({
     isSql,
     seedSql,
     sampleTestCases,
+    timeLimitMs,
+    memoryLimitMb,
 }: ChallengeProblemAsideProps) => {
     const t = useTranslations("learn")
     const seedSqlValue = typeof seedSql === "string" ? seedSql.trim() : ""
     const hasSeed = isSql && seedSqlValue !== ""
     const samples = sampleTestCases ?? []
+    // "Giới hạn: 2s · 256MB" — only what the BE actually reports. The unit wording lives in
+    // i18n, the pure mapper only decides seconds-vs-ms and drops anything unusable, so an
+    // older deployment (or a challenge with no test cases) renders no line at all.
+    const limitParts = resolveChallengeLimitParts(timeLimitMs, memoryLimitMb)
+    const limitsLabel = limitParts
+        .map((part) =>
+            part.kind === "timeSeconds"
+                ? t("exercises.challenge.limitTimeSeconds", { seconds: part.value })
+                : part.kind === "timeMs"
+                    ? t("exercises.challenge.limitTimeMs", { ms: part.value })
+                    : t("exercises.challenge.limitMemory", { mb: part.value }),
+        )
+        .join(" · ")
 
     const {
         trigger: triggerSchema,
@@ -75,6 +101,20 @@ export const ChallengeProblemAside = ({
                 <Typography type="body" weight="semibold">
                     {title}
                 </Typography>
+                {/* The budget the solution must fit — stated WITH the problem, because it is
+                    what decides which algorithm is viable. Hidden when the BE reports none. */}
+                {limitsLabel !== "" ? (
+                    <div className="flex items-center gap-2">
+                        <TimerIcon
+                            aria-hidden
+                            focusable="false"
+                            className="size-4 shrink-0 text-muted"
+                        />
+                        <Typography type="body-xs" color="muted">
+                            {t("exercises.challenge.limitsLine", { limits: limitsLabel })}
+                        </Typography>
+                    </div>
+                ) : null}
                 {description ? <MarkdownContent reading markdown={description} /> : null}
             </div>
 

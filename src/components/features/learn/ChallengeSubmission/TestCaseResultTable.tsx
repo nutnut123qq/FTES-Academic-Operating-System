@@ -1,17 +1,25 @@
 "use client"
 
-import React from "react"
+import React, { useMemo, useState } from "react"
 import { Chip, Typography, cn } from "@heroui/react"
-import { CheckCircleIcon, WarningCircleIcon, XCircleIcon } from "@phosphor-icons/react"
+import {
+    CaretDownIcon,
+    CheckCircleIcon,
+    EyeSlashIcon,
+    WarningCircleIcon,
+    XCircleIcon,
+} from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import type { TestResultView } from "@/modules/api/rest/challenges"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 import {
+    groupTestCaseResults,
     normalizeTestCaseVerdict,
     resolveTestCaseVerdictColor,
     resolveTestCaseVerdictRowClass,
     summarizeTestCaseResults,
     testCaseVerdictLabelKey,
+    type IndexedTestCaseResult,
 } from "./test-case-verdict"
 
 /** Props for {@link TestCaseResultTable}. */
@@ -27,11 +35,17 @@ export interface TestCaseResultTableProps extends WithClassNames<undefined> {
  * under a "Qua X/Y test case" summary. This is the objective judge result — NOT the LLM
  * grade, which stays in {@link GradeResultCard}; a submission can show both.
  *
+ * GROUPING (challenge-samples-and-limits): a test-case graded challenge commonly ships up to
+ * a hundred cases, so only the SAMPLE ones (`hidden === false`) get a detailed row. Every
+ * HIDDEN case folds into ONE expandable summary ({@link HiddenTestCaseGroup} — "Test ẩn:
+ * 47/50 đạt") whose expansion shows verdicts and nothing else. The overall "Qua X/Y" summary
+ * and the aborted-run warning still cover ALL cases, sample and hidden alike.
+ *
  * SECURITY — hidden cases: the table renders ONLY name / verdict / time / score / pass for
- * every row. It never reads an input, an expected output or the program's captured output
- * from the payload (the learner view carries none by contract), so a hidden case can never
- * leak its data through this surface. Do not add such a column without re-checking
- * `SubmissionService.resultsFor()`.
+ * every row, and the hidden group renders ONLY a positional label + a verdict. Neither reads
+ * an input, an expected output or the program's captured output from the payload (the learner
+ * view carries none by contract), so a hidden case can never leak its data through this
+ * surface. Do not add such a column without re-checking `SubmissionService.resultsFor()`.
  *
  * A run stopped early (budget exhausted / too many consecutive timeouts) leaves `SKIPPED`
  * cases behind — those get an explicit warning line so an aborted run is not read as a wall
@@ -41,6 +55,9 @@ export const TestCaseResultTable = ({ results, className }: TestCaseResultTableP
     const t = useTranslations("learn")
     const { passed, total, skipped, aborted } = summarizeTestCaseResults(results)
     const allPassed = total > 0 && passed === total
+    // Sample rows stay detailed; hidden rows collapse behind one summary. Re-grouped only
+    // when the payload changes — a graded submission can carry ~100 rows.
+    const grouped = useMemo(() => groupTestCaseResults(results), [results])
 
     if (results.length === 0) {
         return null
@@ -80,60 +97,200 @@ export const TestCaseResultTable = ({ results, className }: TestCaseResultTableP
                 </div>
             ) : null}
 
-            <div className="overflow-x-auto rounded-2xl border border-default">
-                <table className="w-full border-collapse text-left text-sm">
-                    <caption className="sr-only">
-                        {t("exercises.challenge.testCases.title")}
-                    </caption>
-                    <thead>
-                        <tr className="border-b border-separator">
-                            <th scope="col" className="px-3 py-2">
-                                <Typography type="body-xs" color="muted" weight="medium">
-                                    {t("exercises.challenge.testCases.columnCase")}
-                                </Typography>
-                            </th>
-                            <th scope="col" className="px-3 py-2">
-                                <Typography type="body-xs" color="muted" weight="medium">
-                                    {t("exercises.challenge.testCases.columnVerdict")}
-                                </Typography>
-                            </th>
-                            <th scope="col" className="px-3 py-2">
-                                <Typography type="body-xs" color="muted" weight="medium">
-                                    {t("exercises.challenge.testCases.columnTime")}
-                                </Typography>
-                            </th>
-                            <th scope="col" className="px-3 py-2">
-                                <Typography type="body-xs" color="muted" weight="medium">
-                                    {t("exercises.challenge.testCases.columnScore")}
-                                </Typography>
-                            </th>
-                            <th scope="col" className="px-3 py-2">
-                                <Typography type="body-xs" color="muted" weight="medium">
-                                    {t("exercises.challenge.testCases.columnStatus")}
-                                </Typography>
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {results.map((result, index) => (
-                            <TestCaseResultRow
-                                key={result.testCaseId || index}
-                                result={result}
-                                index={index}
-                            />
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+            {/* SAMPLE cases only — the learner already knows their input/expected from the
+                problem side, so each keeps a full row. An all-hidden run renders no table at
+                all, just the group below. */}
+            {grouped.samples.length > 0 ? (
+                <div className="overflow-x-auto rounded-2xl border border-default">
+                    <table className="w-full border-collapse text-left text-sm">
+                        <caption className="sr-only">
+                            {t("exercises.challenge.testCases.sampleTitle")}
+                        </caption>
+                        <thead>
+                            <tr className="border-b border-separator">
+                                <th scope="col" className="px-3 py-2">
+                                    <Typography type="body-xs" color="muted" weight="medium">
+                                        {t("exercises.challenge.testCases.columnCase")}
+                                    </Typography>
+                                </th>
+                                <th scope="col" className="px-3 py-2">
+                                    <Typography type="body-xs" color="muted" weight="medium">
+                                        {t("exercises.challenge.testCases.columnVerdict")}
+                                    </Typography>
+                                </th>
+                                <th scope="col" className="px-3 py-2">
+                                    <Typography type="body-xs" color="muted" weight="medium">
+                                        {t("exercises.challenge.testCases.columnTime")}
+                                    </Typography>
+                                </th>
+                                <th scope="col" className="px-3 py-2">
+                                    <Typography type="body-xs" color="muted" weight="medium">
+                                        {t("exercises.challenge.testCases.columnScore")}
+                                    </Typography>
+                                </th>
+                                <th scope="col" className="px-3 py-2">
+                                    <Typography type="body-xs" color="muted" weight="medium">
+                                        {t("exercises.challenge.testCases.columnStatus")}
+                                    </Typography>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {grouped.samples.map(({ result, index }) => (
+                                <TestCaseResultRow
+                                    key={result.testCaseId || index}
+                                    result={result}
+                                    index={index}
+                                />
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            ) : null}
+
+            {/* Every HIDDEN case, folded into one expandable tally. */}
+            {grouped.hiddenTotal > 0 ? (
+                <HiddenTestCaseGroup
+                    hidden={grouped.hidden}
+                    passed={grouped.hiddenPassed}
+                    total={grouped.hiddenTotal}
+                    aborted={grouped.hiddenAborted}
+                />
+            ) : null}
         </div>
     )
 }
 
 /**
- * One case row. Renders the case name (a hidden case keeps its name + a "hidden" chip and
- * nothing else), the verdict chip, the run time, the awarded score and the pass state.
- * An un-graded row (`verdict`/`passed` still null) shows the muted "grading" placeholder
- * instead of a wrong verdict.
+ * The HIDDEN cases of a run, collapsed into ONE row ("Test ẩn: 47/50 đạt") that expands into
+ * a verdict-only list. Replaces the wall of up-to-100 rows the table used to print.
+ *
+ * SECURITY: an entry renders a POSITIONAL label ("Test ẩn 12" — computed here, never the
+ * authored `testCaseName`) plus the verdict chip. No input, expected output, captured output,
+ * timing or per-case score is rendered for a hidden case at any point, collapsed or expanded.
+ */
+const HiddenTestCaseGroup = ({
+    hidden,
+    passed,
+    total,
+    aborted,
+}: {
+    /** The hidden rows, in payload order. */
+    hidden: Array<IndexedTestCaseResult>
+    /** How many of them passed. */
+    passed: number
+    /** How many there are. */
+    total: number
+    /** True when at least one hidden case was never executed. */
+    aborted: boolean
+}) => {
+    const t = useTranslations("learn")
+    const [expanded, setExpanded] = useState(false)
+    const allPassed = passed === total
+
+    return (
+        <div className="overflow-hidden rounded-2xl border border-default">
+            <button
+                type="button"
+                onClick={() => setExpanded((open) => !open)}
+                aria-expanded={expanded}
+                className={cn(
+                    "flex w-full cursor-pointer items-center justify-between gap-2 px-3 py-2 text-left transition-colors hover:bg-default/40",
+                    allPassed ? "bg-success/5" : aborted ? "bg-warning/5" : "bg-danger/5",
+                )}
+            >
+                <span className="flex min-w-0 flex-wrap items-center gap-2">
+                    <EyeSlashIcon
+                        aria-hidden
+                        focusable="false"
+                        className="size-4 shrink-0 text-muted"
+                    />
+                    <Typography type="body-sm" weight="medium">
+                        {t("exercises.challenge.testCases.hiddenGroupTitle")}
+                    </Typography>
+                    <Chip
+                        size="sm"
+                        variant="soft"
+                        color={allPassed ? "success" : aborted ? "warning" : "danger"}
+                        className="shrink-0"
+                    >
+                        {t("exercises.challenge.testCases.hiddenSummary", { passed, total })}
+                    </Chip>
+                </span>
+                <CaretDownIcon
+                    aria-hidden
+                    focusable="false"
+                    className={cn(
+                        "size-4 shrink-0 text-muted transition-transform",
+                        expanded ? "rotate-180" : "",
+                    )}
+                />
+            </button>
+            {expanded ? (
+                <div className="flex flex-col gap-2 border-t border-separator p-3">
+                    <Typography type="body-xs" color="muted">
+                        {t("exercises.challenge.testCases.hiddenExpandedHint")}
+                    </Typography>
+                    <ul className="flex flex-wrap gap-2">
+                        {hidden.map((entry, position) => (
+                            <li key={entry.result.testCaseId || entry.index}>
+                                <HiddenTestCaseVerdict
+                                    result={entry.result}
+                                    number={position + 1}
+                                />
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            ) : null}
+        </div>
+    )
+}
+
+/**
+ * ONE hidden case inside the expanded group: its position in the hidden set plus its verdict,
+ * as a single chip tinted with the verdict's semantic color. Deliberately carries no other
+ * field — see the security note on {@link HiddenTestCaseGroup}.
+ */
+const HiddenTestCaseVerdict = ({
+    result,
+    number,
+}: {
+    result: TestResultView
+    number: number
+}) => {
+    const t = useTranslations("learn")
+    const verdict = normalizeTestCaseVerdict(result.verdict)
+    // Same fallback ladder as the sample rows: known verdict → its label; an unrecognised one
+    // (newer BE) → raw; none at all → "—" once graded, "Đang chấm" while it still runs.
+    const rawVerdict = (result.verdict ?? "").trim()
+    const graded = result.passed !== null && result.passed !== undefined
+    const verdictLabel = verdict
+        ? t(testCaseVerdictLabelKey(verdict))
+        : rawVerdict !== ""
+            ? rawVerdict
+            : t(graded
+                ? "exercises.challenge.testCases.none"
+                : "exercises.challenge.testCases.grading")
+
+    return (
+        <Chip size="sm" variant="soft" color={resolveTestCaseVerdictColor(verdict)}>
+            {t("exercises.challenge.testCases.hiddenCaseVerdict", {
+                number,
+                verdict: verdictLabel,
+            })}
+        </Chip>
+    )
+}
+
+/**
+ * One SAMPLE case row: the case name, the verdict chip, the run time, the awarded score and
+ * the pass state. An un-graded row (`verdict`/`passed` still null) shows the muted "grading"
+ * placeholder instead of a wrong verdict.
+ *
+ * Only sample cases reach this row — {@link groupTestCaseResults} routes every hidden case to
+ * {@link HiddenTestCaseGroup} instead, so no hidden case is ever rendered with a timing or a
+ * per-case score.
  */
 const TestCaseResultRow = ({ result, index }: { result: TestResultView, index: number }) => {
     const t = useTranslations("learn")
@@ -165,13 +322,9 @@ const TestCaseResultRow = ({ result, index }: { result: TestResultView, index: n
                             ? name
                             : t("exercises.challenge.testCases.unnamedCase", { number: index + 1 })}
                     </Typography>
-                    {/* Hidden case: the marker is the ONLY extra thing shown — its input /
-                        expected / captured output are never rendered here. */}
-                    {result.hidden ? (
-                        <Chip size="sm" variant="soft" className="shrink-0">
-                            {t("exercises.challenge.testCases.hiddenBadge")}
-                        </Chip>
-                    ) : null}
+                    <Chip size="sm" variant="soft" className="shrink-0">
+                        {t("exercises.challenge.testCases.sampleBadge")}
+                    </Chip>
                 </div>
             </td>
             <td className="px-3 py-2 align-top">

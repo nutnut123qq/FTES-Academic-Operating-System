@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import type { TestResultView } from "@/modules/api/rest/challenges"
 import {
+    groupTestCaseResults,
     normalizeTestCaseVerdict,
     resolveTestCaseVerdictColor,
     resolveTestCaseVerdictRowClass,
@@ -91,5 +92,75 @@ describe("summarizeTestCaseResults", () => {
     it("handles an older payload with no verdict at all", () => {
         const summary = summarizeTestCaseResults([row({ passed: true }), row({ passed: false })])
         expect(summary).toEqual({ passed: 1, total: 2, skipped: 0, aborted: false })
+    })
+})
+
+describe("groupTestCaseResults", () => {
+    it("lists sample cases individually and folds the hidden ones into one tally", () => {
+        const grouped = groupTestCaseResults([
+            row({ testCaseId: "s1", hidden: false, passed: true, verdict: "AC" }),
+            row({ testCaseId: "h1", hidden: true, passed: true, verdict: "AC" }),
+            row({ testCaseId: "s2", hidden: false, passed: false, verdict: "WA" }),
+            row({ testCaseId: "h2", hidden: true, passed: false, verdict: "TLE" }),
+            row({ testCaseId: "h3", hidden: true, passed: true, verdict: "AC" }),
+        ])
+        expect(grouped.samples.map((entry) => entry.result.testCaseId)).toEqual(["s1", "s2"])
+        expect(grouped.hidden.map((entry) => entry.result.testCaseId)).toEqual(["h1", "h2", "h3"])
+        expect(grouped.hiddenPassed).toBe(2)
+        expect(grouped.hiddenTotal).toBe(3)
+        expect(grouped.hiddenAborted).toBe(false)
+    })
+
+    it("keeps each row's ORIGINAL position so a nameless case keeps its number", () => {
+        const grouped = groupTestCaseResults([
+            row({ hidden: true }),
+            row({ hidden: false }),
+            row({ hidden: true }),
+            row({ hidden: false }),
+        ])
+        expect(grouped.samples.map((entry) => entry.index)).toEqual([1, 3])
+        expect(grouped.hidden.map((entry) => entry.index)).toEqual([0, 2])
+    })
+
+    it("flags a hidden group whose run stopped early", () => {
+        const grouped = groupTestCaseResults([
+            row({ hidden: true, passed: true, verdict: "AC" }),
+            row({ hidden: true, passed: null, verdict: "SKIPPED" }),
+        ])
+        expect(grouped.hiddenPassed).toBe(1)
+        expect(grouped.hiddenTotal).toBe(2)
+        expect(grouped.hiddenAborted).toBe(true)
+    })
+
+    it("treats an absent hidden flag as HIDDEN — only an explicit false is a sample", () => {
+        // An older payload that omits `hidden` entirely must never be published as a sample.
+        const legacy = {
+            testCaseId: "legacy",
+            testCaseName: null,
+            passed: true,
+            score: "1",
+        } as unknown as TestResultView
+        const grouped = groupTestCaseResults([legacy, row({ hidden: false })])
+        expect(grouped.hiddenTotal).toBe(1)
+        expect(grouped.samples).toHaveLength(1)
+    })
+
+    it("handles the all-hidden and all-sample extremes", () => {
+        const allHidden = groupTestCaseResults([row({ hidden: true }), row({ hidden: true })])
+        expect(allHidden.samples).toEqual([])
+        expect(allHidden.hiddenTotal).toBe(2)
+
+        const allSamples = groupTestCaseResults([row({ hidden: false })])
+        expect(allSamples.hidden).toEqual([])
+        expect(allSamples.hiddenTotal).toBe(0)
+        expect(allSamples.hiddenPassed).toBe(0)
+
+        expect(groupTestCaseResults([])).toEqual({
+            samples: [],
+            hidden: [],
+            hiddenPassed: 0,
+            hiddenTotal: 0,
+            hiddenAborted: false,
+        })
     })
 })

@@ -188,6 +188,42 @@ export interface ChallengeView {
      * could not resolve one — the FE then falls back to the URL's file extension.
      */
     paperMime?: string | null
+    /**
+     * Whether the CALLER may approve/reject this contributed challenge (BE
+     * `challenge-paper-review` §3). The BE computes it per-challenge because approval rights
+     * are granted PER SUBJECT and never appear in the JWT authorities — so the FE must gate
+     * any review affordance on this flag and must NEVER infer it from the caller's global
+     * permission list. Additive — absent on older deployments → treated as `false`.
+     */
+    canApprove?: boolean
+    /**
+     * Wall-clock budget ONE submission must fit, in milliseconds — the LARGEST `timeLimitMs`
+     * across the challenge's test cases (BE `challenge-testcase-samples`). Shown to the
+     * learner beside the problem statement, HackerRank-style, because it decides which
+     * algorithm is viable. `null` when the challenge has no test cases; absent on
+     * deployments older than the contract → the FE renders no limit line either way.
+     */
+    timeLimitMs?: number | null
+    /**
+     * Memory budget ONE submission must fit, in megabytes — the LARGEST `memoryLimitMb`
+     * across the challenge's test cases (BE `challenge-testcase-samples`). Same nullability
+     * rule as {@link timeLimitMs}.
+     */
+    memoryLimitMb?: number | null
+    /**
+     * How many AI-feedback attempts this learner gets on this challenge — the mentor's
+     * configured value (default 1, clamped 1..5, kept in `grading_config`). On a test-case
+     * graded challenge the AI only COMMENTS: the score always comes from the test cases, so
+     * exhausting the allowance never blocks submitting. `null` / absent on deployments older
+     * than `challenge-testcase-samples` → the FE shows no allowance at all.
+     */
+    aiFeedbackLimit?: number | null
+    /**
+     * How many of {@link aiFeedbackLimit} this learner has already spent — counted BE-side
+     * from stored grading results (`submission_results kind=AI`), not from an expiring
+     * cache. `null` / absent → unknown, treated as none used.
+     */
+    aiFeedbackUsed?: number | null
 }
 
 /** Wrapper for a batch test-case upsert. */

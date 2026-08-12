@@ -1,0 +1,81 @@
+name: e2e
+
+# NOT a PR gate, on purpose:
+#  - 22 of the specs WRITE to apitest, a shared staging DB (they create courses, groups
+#    — capped at 3/day —, upload files, buy courses). Running that on every PR poisons
+#    the data and makes two concurrent PRs fight each other.
+#  - apitest is a self-hosted box behind a Cloudflare tunnel that has been down for a
+#    full day before, so a PR gate would go red for infra reasons, not code reasons.
+#  - PRs from forks never receive secrets.
+#  - ~450 test runs with 240-300s timeouts in the AI specs is far too slow to block merges.
+# So: nightly for the part that needs no credentials, and manual for everything else.
+on:
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: "smoke = 2 spec không cần backend/mật khẩu · full = cả suite (cần secrets, GHI vào apitest)"
+        type: choice
+        options: [smoke, full]
+        default: smoke
+  schedule:
+    # 01:00 giờ VN, chỉ chạy smoke (xem bước dưới) — không đụng dữ liệu staging
+    - cron: "0 18 * * *"
+
+jobs:
+  playwright:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # package-lock.json is generated on Windows and carries ONLY win32 native binaries
+      # (npm/cli#4828). vitest needs rollup+esbuild; `next build` additionally needs the
+      # Tailwind v4 and SWC binaries, and `next start` needs sharp for next/image.
+      # Versions are read back from what npm ci just pinned, so this survives upgrades.
+      - name: Add the linux native binaries the Windows lockfile omits
+        run: |
+          npm install --no-save --no-audit --no-fund \
+            "@rollup/rollup-linux-x64-gnu@$(node -p 'require("rollup/package.json").version')" \
+            "@esbuild/linux-x64@$(node -p 'require("esbuild/package.json").version')" \
+            "@tailwindcss/oxide-linux-x64-gnu@$(node -p 'require("@tailwindcss/oxide/package.json").version')" \
+            "lightningcss-linux-x64-gnu@$(node -p 'require("lightningcss/package.json").version')" \
+            "sharp@$(node -p 'require("sharp/package.json").version')"
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      # only chromium: both projects (desktop + mobile) are Chromium devices
+      - run: npx playwright install --with-deps chromium
+
+      - run: npm run build
+
+      # A scheduled run always takes the credential-free path; `full` is a deliberate,
+      # human-triggered choice because it writes to shared staging data.
+      - name: Run Playwright
+        env:
+          FTES_TEST_PASSWORD: ${{ secrets.FTES_TEST_PASSWORD }}
+          FTES_ADMIN_PASSWORD: ${{ secrets.FTES_ADMIN_PASSWORD }}
+        run: |
+          if [ "${{ github.event.inputs.scope }}" = "full" ]; then
+            npx playwright test
+          else
+            npx playwright test e2e/blog-nav.spec.ts e2e/home-achievements-carousel.spec.ts
+          fi
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

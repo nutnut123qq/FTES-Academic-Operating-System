@@ -8,7 +8,7 @@ import type { ContentEntity } from "@/modules/types/entities/content"
  * The slice for public content (non-premium, shareable content).
  */
 export interface PublicContentSlice {
-    /** When set, `useQueryPublicContentSwr` fetches this row. */
+    /** When set, the public-content reader targets this row. */
     displayId?: string
     /** The public content entity. */
     entity?: ContentEntity

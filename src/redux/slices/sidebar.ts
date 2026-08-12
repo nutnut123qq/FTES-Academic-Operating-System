@@ -6,13 +6,7 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
 export enum SidebarTab {
     MindMap = "mindMap",
     Modules = "modules",
-    Cv = "cv",
-    PersonalProject = "personalProject",
     Leaderboard = "leaderboard",
-    Foundations = "foundations",
-    Headhuntings = "headhuntings",
-    Flashcards = "flashcards",
-    Practice = "practice",
 }
 
 /**

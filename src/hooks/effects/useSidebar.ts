@@ -16,7 +16,7 @@ export const useSidebar = () => {
     useEffect(() => {
         if (hasSyncedFromUrlRef.current) return
         if (!pathname.includes(`/${locale}/courses/`)) return
-        if (!pathname.includes("/learn") && !pathname.includes("/headhunting-companies")) return
+        if (!pathname.includes("/learn")) return
         hasSyncedFromUrlRef.current = true
 
         if (pathname.includes("/mind-map")) {
@@ -27,29 +27,11 @@ export const useSidebar = () => {
             dispatch(setSidebar({ tab: SidebarTab.Modules, extraId: undefined }))
             return
         }
-        if (pathname.includes("/personal-project")) {
-            dispatch(setSidebar({ tab: SidebarTab.PersonalProject, extraId: undefined }))
-            return
-        }
         if (pathname.includes("/leaderboard")) {
             dispatch(setSidebar({ tab: SidebarTab.Leaderboard, extraId: undefined }))
             return
         }
-        if (pathname.includes("/foundations")) {
-            dispatch(setSidebar({ tab: SidebarTab.Foundations, extraId: undefined }))
-            return
-        }
-        if (pathname.includes("/practice")) {
-            dispatch(setSidebar({ tab: SidebarTab.Practice, extraId: undefined }))
-            return
-        }
-        if (pathname.includes("/flashcards")) {
-            dispatch(setSidebar({ tab: SidebarTab.Flashcards, extraId: undefined }))
-            return
-        }
-        if (pathname.includes("/headhuntings") || pathname.includes("/headhunting-companies")) {
-            dispatch(setSidebar({ tab: SidebarTab.Headhuntings, extraId: undefined }))
-            return
-        }
+        // Các nhánh /personal-project, /foundations, /practice, /flashcards, /headhuntings
+        // đã gỡ: route tương ứng bị xoá ở 12c485b nên điều kiện không bao giờ đúng.
     }, [dispatch, locale, pathname])
 }

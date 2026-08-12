@@ -49,6 +49,7 @@ import {
     useQueryChallengeSubmissionSwr,
 } from "../hooks/useQueryChallengeSubmissionSwr"
 import { useQueryChallengeSubmissionResultsSwr } from "../hooks/useQueryChallengeSubmissionResultsSwr"
+import { resolveAiFeedbackAllowance } from "./challenge-limits"
 import { ChallengeMethodSolver } from "./ChallengeMethodSolver"
 import { ChallengeProblemAside } from "./ChallengeProblemAside"
 import { ProjectReviewResult } from "./ProjectReviewResult"
@@ -98,6 +99,13 @@ const toChallengeDetail = (view: ChallengeView): ChallengeDetail => ({
  *   - `code` (`CODE`/`CODING`/`SQL`) → the AI code-grading panel (GradeCodePanel)
  *   - `uiux` (`UI_UX`) → the live HTML/CSS/JS editor when a target asset exists, else coming-soon
  *   - anything else → coming-soon (no reachable solver yet)
+ *
+ * A code challenge also surfaces the two budgets the BE now reports
+ * (`challenge-testcase-samples`): the challenge's time/memory limits, shown with the problem
+ * statement ({@link ChallengeProblemAside}), and the learner's remaining AI-feedback attempts,
+ * shown beside the attempts chip. The AI allowance NEVER gates submitting — this flow is
+ * GRADE = SUBMIT and the score comes from the test cases, so running out only means the
+ * submission lands without FrosTES comments.
  *
  * MCQ/ESSAY grading is async (auto-grade / ftes-ai-service); the attempts list self-polls until
  * every submission is terminal. The form locks once `maxSubmissions` is reached. A
@@ -162,6 +170,15 @@ export const ChallengeSubmission = () => {
     // mapChallengeType gộp cả CODE lẫn CODING thành "coding"; phải soi raw type của BE.
     const isTestCaseGraded = ["CODING", "SQL"].includes(
         (challenge?.type ?? "").toUpperCase().replace(/[\s_-]/g, ""),
+    )
+    // Lượt FrosTES NHẬN XÉT (BE challenge-testcase-samples) — khác hẳn "lượt nộp": mentor đặt
+    // 1..5 lượt/(bài, học viên), BE đếm bền vững từ kết quả đã lưu. Hết lượt thì AI thôi nhận
+    // xét, bài VẪN nộp được và VẪN được test case chấm điểm — nên nó không bao giờ khoá nút nộp.
+    // `null` khi BE chưa trả (deployment cũ) ⇒ không hiện gì, tránh nói "còn 0 lượt" khi thực ra
+    // là "không biết".
+    const aiFeedback = resolveAiFeedbackAllowance(
+        challenge?.aiFeedbackLimit,
+        challenge?.aiFeedbackUsed,
     )
     // SQL grades static-only (no language pick); everything else defaults to python.
     const language = languageOverride ?? (detail?.type === "sql" ? "sql" : "python")
@@ -379,13 +396,63 @@ export const ChallengeSubmission = () => {
                                             {t("exercises.challenge.submitTitle")}
                                         </Typography>
                                     </div>
-                                    <Chip size="sm" variant="soft" className="shrink-0">
-                                        {t("exercises.challenge.submissionsCount", {
-                                            used: usedCount,
-                                            max: challenge.maxSubmissions,
-                                        })}
-                                    </Chip>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        {/* Lượt AI nhận xét còn lại — chip RIÊNG cạnh lượt nộp,
+                                            vì hai hạn mức khác nhau: hết lượt AI vẫn nộp được. */}
+                                        {aiFeedback ? (
+                                            <Chip
+                                                size="sm"
+                                                variant="soft"
+                                                color={aiFeedback.exhausted ? "warning" : undefined}
+                                                className="shrink-0"
+                                            >
+                                                {t("exercises.challenge.aiFeedbackCount", {
+                                                    remaining: aiFeedback.remaining,
+                                                    limit: aiFeedback.limit,
+                                                })}
+                                            </Chip>
+                                        ) : null}
+                                        <Chip size="sm" variant="soft" className="shrink-0">
+                                            {t("exercises.challenge.submissionsCount", {
+                                                used: usedCount,
+                                                max: challenge.maxSubmissions,
+                                            })}
+                                        </Chip>
+                                    </div>
                                 </div>
+
+                                {/* Điểm do TEST CASE chấm, AI chỉ nhận xét — nói rõ ngay cạnh
+                                    nút nộp. Hết lượt: nêu lý do + khẳng định vẫn nộp được (nút
+                                    nộp KHÔNG bị khoá bởi hạn mức này). */}
+                                {aiFeedback ? (
+                                    aiFeedback.exhausted ? (
+                                        <div className="flex items-start gap-2 rounded-2xl border border-warning/40 bg-warning/5 p-3">
+                                            <WarningCircleIcon
+                                                aria-hidden
+                                                focusable="false"
+                                                className="mt-0.5 size-4 shrink-0 text-warning"
+                                            />
+                                            <div className="flex min-w-0 flex-col gap-0">
+                                                <Typography type="body-xs" color="muted">
+                                                    {t("exercises.challenge.aiFeedbackExhausted", {
+                                                        limit: aiFeedback.limit,
+                                                    })}
+                                                </Typography>
+                                                {isTestCaseGraded ? (
+                                                    <Typography type="body-xs" color="muted">
+                                                        {t("exercises.challenge.aiFeedbackHintTests")}
+                                                    </Typography>
+                                                ) : null}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <Typography type="body-xs" color="muted">
+                                            {t(isTestCaseGraded
+                                                ? "exercises.challenge.aiFeedbackHintTests"
+                                                : "exercises.challenge.aiFeedbackHint")}
+                                        </Typography>
+                                    )
+                                ) : null}
 
                                 {/* THE 2-COLUMN SPLIT — one consistent frame for every submission
                                     tab (github / file / code): WORK AREA left (wider), PROBLEM +
@@ -464,6 +531,10 @@ export const ChallengeSubmission = () => {
                                         isSql={Boolean(isSqlChallenge)}
                                         seedSql={challenge.seedSql}
                                         sampleTestCases={challenge.sampleTestCases ?? undefined}
+                                        // Ngân sách thời gian/bộ nhớ của bài (BE trả max trong
+                                        // bộ test) — hiện cùng đề, ẩn khi BE không trả.
+                                        timeLimitMs={challenge.timeLimitMs}
+                                        memoryLimitMb={challenge.memoryLimitMb}
                                     />
                                 </div>
 

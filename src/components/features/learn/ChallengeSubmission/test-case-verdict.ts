@@ -110,3 +110,64 @@ export const summarizeTestCaseResults = (
         aborted: skipped > 0,
     }
 }
+
+/** One case row paired with its 0-based position in the submission's full result list. */
+export interface IndexedTestCaseResult {
+    /** The row itself, untouched. */
+    result: TestResultView
+    /** Its original position — the "Test case {n}" fallback for a nameless case. */
+    index: number
+}
+
+/** Sample rows kept in full, hidden rows folded behind one summary (see {@link groupTestCaseResults}). */
+export interface GroupedTestCaseResults {
+    /** SAMPLE (`hidden === false`) cases, in payload order — listed row by row. */
+    samples: Array<IndexedTestCaseResult>
+    /** HIDDEN cases, in payload order — collapsed behind one expandable summary row. */
+    hidden: Array<IndexedTestCaseResult>
+    /** How many hidden cases passed — the "Test ẩn: X/Y đạt" numerator. */
+    hiddenPassed: number
+    /** How many hidden cases there are — the denominator (`hidden.length`). */
+    hiddenTotal: number
+    /** True when at least one hidden case was never executed (`SKIPPED`). */
+    hiddenAborted: boolean
+}
+
+/**
+ * Splits a submission's per-case rows into the two groups the result view renders very
+ * differently: SAMPLE cases (the learner already sees their input/expected on the problem
+ * side, so each keeps its own detailed row) and HIDDEN cases (up to ~100 of them — folded
+ * into ONE summary row that expands to verdicts only). A row with an absent/odd `hidden`
+ * flag is treated as HIDDEN: the conservative side, since only an explicit `false` marks a
+ * case the BE published as a sample.
+ *
+ * Pure — it re-groups the rows it is given and reads nothing but `hidden` / `passed` /
+ * `verdict`; it never touches (nor could expose) a case's input, expected or captured output,
+ * which the learner payload does not carry by contract.
+ *
+ * @param results - The per-test-case rows of one submission, in the BE's order.
+ * @returns The sample rows, the hidden rows and the hidden group's pass tally.
+ */
+export const groupTestCaseResults = (
+    results: Array<TestResultView>,
+): GroupedTestCaseResults => {
+    const samples: Array<IndexedTestCaseResult> = []
+    const hidden: Array<IndexedTestCaseResult> = []
+    results.forEach((result, index) => {
+        // Only an explicit `false` is a published sample — anything else stays hidden.
+        if (result.hidden === false) {
+            samples.push({ result, index })
+        } else {
+            hidden.push({ result, index })
+        }
+    })
+    return {
+        samples,
+        hidden,
+        hiddenPassed: hidden.filter((entry) => entry.result.passed === true).length,
+        hiddenTotal: hidden.length,
+        hiddenAborted: hidden.some(
+            (entry) => normalizeTestCaseVerdict(entry.result.verdict) === "SKIPPED",
+        ),
+    }
+}

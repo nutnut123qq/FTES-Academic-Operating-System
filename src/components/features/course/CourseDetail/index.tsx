@@ -1094,6 +1094,7 @@ export const PackageEnrollCard = ({
                 // On success the modal cheers and offers "start learning" into this
                 // course's content — same as the plain enroll CTA (useCourseEnrollment).
                 learnHref,
+                onSuccess: onPurchased,
             })
         } catch {
             // add-to-cart failed → SWR surfaces the error; leave the CTA idle

@@ -1,0 +1,133 @@
+name: e2e
+
+# NOT a PR gate, on purpose:
+#  - 22 of the specs WRITE to apitest, a shared staging DB (they create courses, groups
+#    — capped at 3/day —, upload files, buy courses). Running that on every PR poisons
+#    the data and makes two concurrent PRs fight each other.
+#  - apitest is a self-hosted box behind a Cloudflare tunnel that has been down for a
+#    full day before, so a PR gate would go red for infra reasons, not code reasons.
+#  - PRs from forks never receive secrets.
+#  - ~450 test runs with 240-300s timeouts in the AI specs is far too slow to block merges.
+# So: nightly for the part that needs no credentials, and manual for everything else.
+on:
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: "smoke = 4 spec không cần backend · read-only = thêm 11 spec đọc dữ liệu thật (cần secrets) · write = cả suite, GHI vào apitest"
+        type: choice
+        options: [smoke, read-only, write]
+        default: smoke
+  schedule:
+    # 01:00 giờ VN, chỉ chạy smoke (xem bước dưới) — không đụng dữ liệu staging
+    - cron: "0 18 * * *"
+
+jobs:
+  playwright:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # package-lock.json is generated on Windows and records ONLY win32 native binaries
+      # (npm/cli#4828). Exactly nine families are affected — verified by reading the
+      # lockfile: rollup, esbuild, @tailwindcss/oxide, lightningcss, @parcel/watcher,
+      # @swc/core, @napi-rs/canvas, @unrs/resolver, sharp. Each is installed at the SAME
+      # version npm ci just pinned, so nothing drifts.
+      #
+      # Dropping the lockfile and running plain `npm install` was tried first and is
+      # wrong: it resolved a newer @heroui/react whose RadioFieldRenderProps no longer
+      # carries `isFocusVisible`, so `next build` failed type-check on code that is fine.
+      # A CI job that silently upgrades dependencies reports the wrong thing.
+      # ONE npm install for all nine — this is not cosmetic. Each `npm install --no-save`
+      # reconciles the tree against package.json, so a second call REMOVES what the first
+      # one added ("added 1 package, and removed 1 package" in the run that taught us
+      # this); only the last package survived and the build still died on @parcel/watcher.
+      # Versions are read out of node_modules with `find`, because several of these
+      # (lightningcss, @swc/core, @unrs/resolver) are NESTED under a parent package and
+      # `require('<name>/package.json')` from the repo root cannot see them.
+      - name: Add the linux native binaries the Windows lockfile omits
+        run: |
+          args=()
+          add() {
+            # match the package.json itself, not any directory that happens to share the
+            # name — `-type d -path "*/rollup"` also hits node_modules/detect-gpu/dist/rollup
+            manifest=$(find -L node_modules -type f -path "*/$2/package.json" -print -quit)
+            if [ -n "$manifest" ]; then
+              args+=("$1@$(node -p "require('./$manifest').version")")
+            else
+              echo "bỏ qua $1 — không tìm thấy $2 trong node_modules"
+            fi
+          }
+          add @rollup/rollup-linux-x64-gnu rollup
+          add @esbuild/linux-x64 esbuild
+          add @tailwindcss/oxide-linux-x64-gnu @tailwindcss/oxide
+          add lightningcss-linux-x64-gnu lightningcss
+          add @parcel/watcher-linux-x64-glibc @parcel/watcher
+          add @swc/core-linux-x64-gnu @swc/core
+          add @napi-rs/canvas-linux-x64-gnu @napi-rs/canvas
+          # the binding's parent is `unrs-resolver`, NOT an @unrs-scoped package
+          add @unrs/resolver-binding-linux-x64-gnu unrs-resolver
+          add sharp sharp
+          echo "cài: ${args[*]}"
+          npm install --no-save --no-audit --no-fund "${args[@]}"
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      # only chromium: both projects (desktop + mobile) are Chromium devices
+      - run: npx playwright install --with-deps chromium
+
+      - run: npm run build
+
+      # Three tiers by how far a spec reaches into shared state. A scheduled run has no
+      # inputs, so it always falls through to `smoke` — nightly can never write to apitest.
+      #
+      # Classification came from reading all 43 specs, not from grepping for HTTP verbs:
+      # six of the writers only create data through the UI (add to cart, submit a quiz,
+      # post a comment, run an AI tool), so a method-based sort would have filed them as
+      # read-only and quietly polluted staging.
+      - name: Run Playwright
+        env:
+          FTES_TEST_PASSWORD: ${{ secrets.FTES_TEST_PASSWORD }}
+          FTES_ADMIN_PASSWORD: ${{ secrets.FTES_ADMIN_PASSWORD }}
+        run: |
+          # no login, no API — safe to run any time, needs no secrets
+          SMOKE="e2e/blog-nav.spec.ts \
+                 e2e/home-achievements-carousel.spec.ts \
+                 e2e/home-continue-mascot-and-cards.spec.ts \
+                 e2e/navbar-search-inline.spec.ts"
+          # sign in and/or read apitest, but create/modify nothing
+          READ_ONLY="e2e/browse-category-facets.spec.ts \
+                     e2e/challenge-per-lesson-2026-07-26.spec.ts \
+                     e2e/challenge-tier-gate-cta.spec.ts \
+                     e2e/community-feed-row-actions-ui.spec.ts \
+                     e2e/content-live-wire.spec.ts \
+                     e2e/learn-gate-uses-real-signals.spec.ts \
+                     e2e/learn-preview-player-gate.spec.ts \
+                     e2e/lecturer-teaching-nav-link.spec.ts \
+                     e2e/resource-ai-qa.spec.ts \
+                     e2e/subject-career-and-community-ui.spec.ts \
+                     e2e/subject-practice-ui.spec.ts"
+          case "${{ github.event.inputs.scope }}" in
+            write)     npx playwright test ;;
+            read-only) npx playwright test $SMOKE $READ_ONLY ;;
+            *)         npx playwright test $SMOKE ;;
+          esac
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

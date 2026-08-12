@@ -10,6 +10,10 @@ import { defineConfig, devices } from "@playwright/test"
  */
 export default defineConfig({
     testDir: "./e2e",
+    // These two drive the Admin CMS on :5173, which lives in a DIFFERENT repo
+    // (FTES-AOS-Admin) — nothing in this checkout can serve it, so they can only ever
+    // time out here. Run them from a workspace that has both apps.
+    testIgnore: ["**/course-authoring-admin.spec.ts", "**/course-authoring-closed-loop.spec.ts"],
     fullyParallel: true,
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 2 : 0,
@@ -28,4 +32,15 @@ export default defineConfig({
             use: { ...devices["Pixel 7"] },
         },
     ],
+    // Serve the app ourselves so CI does not have to hand-roll a "wait for :3000" loop.
+    // `next start` needs a prior `next build`; locally an already-running dev server is
+    // reused instead. The login helper hard-codes cookie domain "localhost", so the
+    // origin must stay localhost:3000 — pointing BASE_URL at a preview deploy silently
+    // breaks auth (proxy.ts bounces /admin and /dashboard without the session cookie).
+    webServer: {
+        command: "npm run start",
+        url: "http://localhost:3000",
+        reuseExistingServer: !process.env.CI,
+        timeout: 180_000,
+    },
 })

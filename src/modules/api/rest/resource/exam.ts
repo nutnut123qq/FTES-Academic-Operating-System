@@ -1,7 +1,7 @@
 /**
  * REST wrappers for the two EXAM flavours of a resource:
  *
- * - **FE** (`type = FE`) — an album of up to 50 images, each with its own one-level
+ * - **FE** (`type = FE`) — an album of up to 200 images, each with its own one-level
  *   comment thread (`/resources/{id}/images*`).
  * - **PE** (`type = PE`) — an exam paper the student answers by uploading a file that
  *   the AI grader scores (`/resources/{id}/pe-submissions*`).

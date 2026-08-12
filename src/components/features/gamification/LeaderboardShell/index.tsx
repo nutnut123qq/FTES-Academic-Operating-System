@@ -60,8 +60,10 @@ export const LeaderboardShell = () => {
     const toNext = my ? my.levelProgress.nextThreshold - my.levelProgress.current : 0
     // Guide is a child route of /leaderboard. pathConfig has no dedicated
     // builder for it (shared file, owned elsewhere); derive it from the
-    // leaderboard base rather than hand-templating the whole path.
-    const guideHref = `${pathConfig().locale(locale).leaderboard().build()}/guide`
+    // leaderboard base rather than hand-templating the whole path. The base is
+    // built LOCALE-LESS (`.locale()` with no argument) because the `Link` below
+    // is the locale-aware one from `@/i18n/navigation` and adds the prefix itself.
+    const guideHref = `${pathConfig().locale().leaderboard().build()}/guide`
 
     // Viewer stats come from the composed snapshot; `null` (no snapshot yet /
     // guest) renders as an em-dash instead of a misleading zero.

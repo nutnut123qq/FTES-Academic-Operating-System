@@ -25,13 +25,15 @@ vi.mock("@/hooks/swr/api/rest/queries/useGetCourseProductSwr", () => ({
 vi.mock("@/hooks/swr/api/rest/queries/useGetCartSwr", () => ({
     useGetCartSwr: () => ({ data: undefined }),
 }))
+vi.mock("@/resources/path", () => ({ pathConfig: () => ({ locale: () => ({ course: () => ({ learn: () => ({ build: () => "/learn" }) }) }) }) }))
 vi.mock("@/hooks/swr/api/rest/mutations/usePostAddCartItemSwr", () => ({
-    usePostAddCartItemSwr: () => ({ trigger: vi.fn(), isMutating: false }),
+    usePostAddCartItemSwr: () => ({ trigger: vi.fn().mockResolvedValue({ id: "item1" }), isMutating: false }),
 }))
 vi.mock("@/hooks/swr/api/rest/mutations/usePostRemoveCartItemSwr", () => ({
     usePostRemoveCartItemSwr: () => ({ trigger: vi.fn(), isMutating: false }),
 }))
-vi.mock("@/hooks/zustand/overlay/hooks", () => ({ usePaymentOverlayState: () => ({ open: vi.fn() }) }))
+const mockPaymentOpen = vi.fn()
+vi.mock("@/hooks/zustand/overlay/hooks", () => ({ usePaymentOverlayState: () => ({ open: mockPaymentOpen }) }))
 vi.mock("@/hooks/useRequireAuth", () => ({
     useRequireAuth: () => ({ guard: (fn: () => unknown) => fn }),
 }))
@@ -39,7 +41,7 @@ vi.mock("@/redux/hooks", () => ({ useAppSelector: () => false }))
 
 import { useCourseEnrollment } from "./useCourseEnrollment"
 
-describe("useCourseEnrollment — no product means no fake navigation", () => {
+describe("useCourseEnrollment", () => {
     it("reports canBuy false and navigates nowhere when the product is unresolved", async () => {
         push.mockClear()
         productMock.mockReturnValue({ data: null, isLoading: false })
@@ -59,5 +61,20 @@ describe("useCourseEnrollment — no product means no fake navigation", () => {
             useCourseEnrollment("khoa-a", { isEnrolled: false }, { rawId: "uuid-a", title: "Khóa A" }),
         )
         expect(result.current.canBuy).toBe(true)
+    })
+
+    it("passes onSuccess to payment.open to fix the stale UI bug", async () => {
+        mockPaymentOpen.mockClear()
+        productMock.mockReturnValue({ data: { id: "p1", priceVnd: 399000 }, isLoading: false })
+        const onSuccess = vi.fn()
+        const { result } = renderHook(() =>
+            useCourseEnrollment("khoa-a", undefined, { rawId: "uuid-a", title: "Khóa A", onSuccess })
+        )
+        await act(async () => {
+            await result.current.onEnroll()
+        })
+        expect(mockPaymentOpen).toHaveBeenCalled()
+        const callArgs = mockPaymentOpen.mock.calls[0][0]
+        expect(callArgs.onSuccess).toBe(onSuccess)
     })
 })

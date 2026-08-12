@@ -145,7 +145,6 @@ const ProductCard = ({ product }: { product: Product }) => {
                 title: product.name,
                 amountVnd: product.priceVnd ?? 0,
                 amountCoin: product.priceCoin ?? undefined,
-                onSuccess: () => { void mutate("GET_CART_SWR") },
             })
         } catch {
             // add-to-cart failed → leave the button idle; SWR surfaces the error

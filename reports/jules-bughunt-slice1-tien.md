@@ -1,4 +1,4 @@
-## [P1] Lỗi Stale UI "Đăng ký học" sau khi thanh toán Course qua thẻ Legacy Buy
+## [P0] Stale UI "Đăng ký học" sau khi thanh toán Course qua thẻ Legacy Buy
 - File: src/components/features/course/hooks/useCourseEnrollment.ts:110
 - Trigger: User vào trang chi tiết khóa học LEGACY (không phải PACKAGE), nhấn "Đăng ký học". Modal payment mở lên và user thanh toán qua VietQR (hoặc Xu). Sau khi thanh toán thành công, user nhấn Done và modal đóng lại.
 - Expected vs Actual: Expected: Giao diện khóa học tự tải lại và cập nhật thay nút "Đăng ký học" bằng "Tiếp tục học" (vì người dùng đã mua khóa học). Actual: Vì lời gọi `payment.open({ ... })` trong `useCourseEnrollment` không hề chứa hàm `onSuccess` để gọi mutate, dữ liệu SWR `useQueryCourseDetailSwr` không tự động revalidate sau thanh toán thành công. Kết quả là nút "Đăng ký học" không bị disable hay ẩn đi, user nếu không F5 lại trang có thể bấm nhầm thêm một lần nữa và bị charge lần 2. (Trái ngược với `PackageGateModal` gọi `onPurchased`, ở đây `CourseDetail` có sẵn `onPurchased={() => { void mutate() }}` nhưng `EnrollCard` / `useCourseEnrollment` bị thiếu luồng pass prop này).

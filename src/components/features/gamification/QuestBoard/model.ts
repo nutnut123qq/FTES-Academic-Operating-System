@@ -1,4 +1,3 @@
-import type { Locale } from "next-intl"
 import { pathConfig } from "@/resources/path"
 import type { QuestItemView } from "@/modules/api/rest/gamification"
 
@@ -55,17 +54,21 @@ export const questProgress = (quest: QuestItemView): QuestProgress => {
 /**
  * Map a quest code to the in-app surface where the user earns it.
  *
- * Returns a locale-prefixed href for the codes the client knows, or `null` for
- * codes with no user action (`DAILY_LOGIN` auto-completes on sign-in) and for any
+ * Returns a LOCALE-LESS href for the codes the client knows, or `null` for codes
+ * with no user action (`DAILY_LOGIN` auto-completes on sign-in) and for any
  * unmapped code (admin-created quests) — the caller renders those cards without a
  * CTA rather than failing.
  *
+ * The href carries NO locale prefix on purpose: the only consumer renders it
+ * through the locale-aware `Link` of `@/i18n/navigation`, which prepends the
+ * active locale itself. Prefixing here too produced `/vi/vi/...` (a real 404).
+ * See the contract docblock in `src/i18n/navigation.ts`.
+ *
  * @param code - the quest `code` from the backend
- * @param locale - active locale for the path prefix
- * @returns an href string, or `null` when the quest has no CTA
+ * @returns an href string without a locale prefix, or `null` when the quest has no CTA
  */
-export const questCtaHref = (code: string, locale: Locale): string | null => {
-    const path = pathConfig().locale(locale)
+export const questCtaHref = (code: string): string | null => {
+    const path = pathConfig().locale()
     switch (code as KnownQuestCode) {
     case "LESSON_COMPLETE":
         return path.course().mine().build()

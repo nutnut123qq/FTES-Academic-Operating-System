@@ -9,15 +9,31 @@ import {routing} from "@/i18n/routing"
 const intlMiddleware = createMiddleware(routing)
 
 /**
- * Server-readable "is logged in" signal.
+ * Server-readable "is logged in" signal — ⚠️ NOTHING SETS IT. Treat `has(...)` below
+ * as permanently FALSE in every real browser.
  *
- * The HttpOnly `keycloak_refresh_token` is host-only on the API host, so the FE
- * edge cannot see it. The BE therefore issues a parallel, JS-readable `session_hint`
- * cookie alongside the refresh token — same lifetime, parent-domain scope
- * (`.academy.starci.org`) — so it reaches this FE host. It exists exactly while a
- * refresh session is active. It only decides which shell to show first; the SPA
- * still verifies the real session (token refresh) once the page mounts, so it is
- * never trusted for authorization.
+ * Inherited from StarCi (arrived in `6de7d46`, the pre-strip backup). There, the BE
+ * issued this cookie beside the refresh token at parent-domain scope
+ * (`.academy.starci.org`) so it reached the frontend host. FTES never built that half,
+ * and cannot reuse it as-is:
+ * - `FTES-AOS-Backend` sets no cookie at all — no `ResponseCookie`, no `Set-Cookie`.
+ * - The FTES frontend is deployed on `*.vercel.app` while the API is `apitest.ftes.vn`.
+ *   `vercel.app` is on the Public Suffix List, so a cookie from the API domain can
+ *   never be sent here — no backend change alone can fix this.
+ *
+ * Verified on production 2026-08-12: `/vi/dashboard` and `/vi/admin` answer 307 → `/vi`
+ * without the cookie and 200 with it, so the mechanism works exactly as written — it
+ * just never receives its input. `/admin` has therefore been unreachable since the
+ * strip (`12c485b`); it stays listed because failing CLOSED on an admin surface is the
+ * safe direction, and the real admin console is a separate app.
+ *
+ * ⚠️ `e2e/helpers/auth.ts` injects this cookie into every Playwright context, so the
+ * whole e2e suite passes while real users are bounced. A green suite proves nothing
+ * about this gate.
+ *
+ * Before adding ANY path to {@link PROTECTED_PATTERNS}, make something set this cookie
+ * on the frontend origin (or gate in the page instead). It only picks the first-paint
+ * shell; the SPA re-verifies the real session on mount, so it is never authorization.
  */
 const AUTH_SIGNAL_COOKIE = "session_hint"
 
@@ -47,14 +63,17 @@ const stripLocale = (pathname: string): string =>
  *   (enrollment is optional, an authenticated session is not).
  * - Public content reader (`/contents/<id>`), blog, courses catalog, community,
  *   practice, talents, headhunting, league/kpi/etc. are intentionally NOT listed.
- * - `/dashboard` is the signed-in cockpit: every widget on it keys its query to the
- *   session, so a guest would not see a login prompt but five EMPTY states asserting
- *   the leaderboard is empty, nothing is trending and they own no courses. Gating it
- *   here is what keeps those empty states honest ("no data" really means no data).
+ * - `/dashboard` is deliberately NOT listed, even though every widget on it is
+ *   session-scoped. It WAS listed for a day (cca21d4) and that took the page down for
+ *   EVERYONE: {@link AUTH_SIGNAL_COOKIE} never reaches this frontend, so the check
+ *   below is false for signed-in visitors too and they were bounced in silence — no
+ *   login prompt, no error. Do not re-add it unless something actually sets that
+ *   cookie. The concern that motivated the gate is real (a guest reads five empty
+ *   states as fact) but belongs IN THE PAGE as a "sign in to see this" state, not at
+ *   the edge, where a missing cookie cannot be told apart from a missing session.
  */
 const PROTECTED_PATTERNS: RegExp[] = [
     /^\/admin(?:\/|$)/,
-    /^\/dashboard(?:\/|$)/,
 ]
 
 /**

@@ -113,9 +113,11 @@ const ChallengeSolveSurface = ({ challenge }: { challenge: ChallengeDetail }) =>
  * HTML/CSS/JS editor; other types show a coming-soon placeholder (out of scope).
  *
  * A challenge that carries an EXAM PAPER (`paperUrl` — a Practical Exam folded into the
- * challenge bank) is a READ surface: the paper replaces the solve surface entirely, no
- * editor and no submission, because AI grading for papers is locked. An ordinary
- * challenge carries no paper, so nothing about the existing solvers changes.
+ * challenge bank) replaces the solve surface entirely with {@link ChallengePaper}: the
+ * paper to read on the left, the hand-in block on the right — laid out but switched off
+ * while AI grading for papers is unsold (`IS_PAPER_GRADING_OPEN`). None of the code
+ * solvers are reached for a paper-bearing challenge. An ordinary challenge carries no
+ * paper, so nothing about the existing solvers changes.
  */
 export const ChallengeView = () => {
     const t = useTranslations("challenge")
@@ -212,15 +214,19 @@ export const ChallengeView = () => {
                             <ChallengeBrief challenge={challenge} />
                         ) : null}
 
-                    {/* An exam paper OWNS the surface: read it, practise, done. Handing an
-                        answer in is not offered (AI grading for papers is locked), so the
-                        solvers are not even reached for a paper-bearing challenge. */}
+                    {/* An exam paper OWNS the surface: read it on the left, hand it in on the
+                        right (gated until AI grading for papers is sold), so the code solvers
+                        are not even reached for a paper-bearing challenge. */}
                     {classifyChallengePaper(challenge.paperUrl, challenge.paperMime)
                         !== "MISSING" ? (
                             <ChallengePaper
                                 paperUrl={challenge.paperUrl}
                                 paperMime={challenge.paperMime}
                                 title={challenge.title}
+                                // The comment endpoints bind a UUID, and `challenge.id` is
+                                // the routing SLUG — the real id is `challengeUuid`.
+                                challengeId={challenge.challengeUuid}
+                                author={challenge.author}
                             />
                         ) : (
                             <ChallengeSolveSurface challenge={challenge} />

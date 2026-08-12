@@ -266,7 +266,7 @@ export interface ResourceCommentsPage {
 
 /**
  * One image of an FE (Final Exam) album — a resource of `type = FE` holds an ordered
- * album of up to `maxImages` (50) pictures, each of which carries its OWN comment
+ * album of up to `maxImages` (200) pictures, each of which carries its OWN comment
  * thread (`commentCount` is the server-side total, roots + replies).
  */
 export interface FeImageView {
@@ -288,7 +288,7 @@ export interface FeAlbumView {
     resourceId: string
     images: Array<FeImageView>
     total: number
-    /** Hard cap the BE enforces on `POST /resources/{id}/images` (50). */
+    /** Hard cap the BE enforces on `POST /resources/{id}/images` (200 — a full FE paper). */
     maxImages: number
     /**
      * Server-computed: may THIS viewer add / delete / reorder images here. Mirrors the exact

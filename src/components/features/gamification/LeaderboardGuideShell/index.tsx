@@ -87,7 +87,9 @@ export const LeaderboardGuideShell = () => {
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 p-6">
             <div className="flex flex-col gap-2">
                 <Link
-                    href={pathConfig().locale(locale).leaderboard().build()}
+                    // Locale-less — this `Link` is the locale-aware one from
+                    // `@/i18n/navigation` and prepends the active locale itself.
+                    href={pathConfig().locale().leaderboard().build()}
                     className="flex w-fit items-center gap-1 text-sm text-muted no-underline hover:text-foreground"
                 >
                     <ArrowLeftIcon className="size-4" aria-hidden focusable="false" />

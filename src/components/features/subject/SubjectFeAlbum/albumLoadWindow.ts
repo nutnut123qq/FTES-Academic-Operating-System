@@ -1,10 +1,19 @@
 /**
  * How many album pictures are actually fetched at a time.
  *
- * An exam album holds up to 50 photos of scanned paper — tens of megabytes if the page pulls
- * them all on mount, and the viewer only ever looks at one at a time. So the album keeps a
- * sliding WINDOW of pictures it is willing to fetch: the first {@link ALBUM_INITIAL_LOAD}, then
- * another {@link ALBUM_LOAD_BATCH} whenever the reader gets close to the edge of what is loaded.
+ * An exam album holds up to 200 photos of scanned paper (a Final Exam runs 60–100+ questions) —
+ * hundreds of megabytes if the page pulls them all on mount, and the viewer only ever looks at
+ * one at a time. So the album keeps a sliding WINDOW of pictures it is willing to fetch: the
+ * first {@link ALBUM_INITIAL_LOAD}, then another {@link ALBUM_LOAD_BATCH} whenever the reader
+ * gets close to the edge of what is loaded.
+ *
+ * The window is a PREFIX bound and monotone, which is what keeps it honest at 200: reading
+ * forward page by page never lets it run more than
+ * `ALBUM_LOAD_LOOKAHEAD + ALBUM_LOAD_BATCH` (7) pictures ahead of the reader, so an album of
+ * 200 still starts at 5 and grows a batch at a time regardless of the cap. The one place the
+ * prefix shape shows is a filmstrip JUMP far down the album: everything before the target
+ * becomes "loaded" in one step, because a prefix cannot express a hole. That is the deliberate
+ * trade for never re-fetching on the way back; it simply costs more at 200 than it did at 50.
  *
  * Only the window bound lives here (a pure function, hence testable); the component decides what
  * to do with it — inside the window a thumbnail gets a real `src`, outside it renders an empty

@@ -14,7 +14,18 @@ import { expect, test, type Page } from "@playwright/test"
  * PLACEMENT and card layout, not the personalized copy.
  */
 
-const MASCOT_IMAGE = "img[alt*=\"FrosTES\" i], img[src*=\"mascot\" i]"
+/**
+ * The GREETING mascot: `FtesMascot` is the only component that emits
+ * `<img src="/mascot/<pose>.webp">` (reuseable/FtesMascot/art.tsx). The hero's 3D model is
+ * `/mascot/frostes.glb` loaded into a WebGL canvas, not an <img>, so it cannot match.
+ *
+ * Deliberately NOT `img[src*="mascot"]`: the floating AI assistant draws
+ * `/fes-mascot-wave.gif` — that string contains "mascot" too, so the old selector counted a
+ * SECOND, intentional mascot that `MascotAssistant` mounts app-wide (31b11dd) and turned the
+ * "no duplicate greeting band" check into a permanent red. The counts below are about one
+ * GREETING per page, never about "anything that looks like a mascot".
+ */
+const MASCOT_IMAGE = "img[src*=\"/mascot/\" i]"
 const LONG_TITLE = "Làm quen cơ sở dữ liệu SQL Server + JDBC cho người mới bắt đầu"
 
 /** Signed-in-looking session with three enrollments (one very long title, one cover-less). */
@@ -109,7 +120,7 @@ test.describe("Home continue-learning band — signed-in (mocked enrollments)", 
         expect(cardBox!.y).toBeGreaterThan(mascotBox!.y)
     })
 
-    test("exactly one mascot on the page (no duplicate band below)", async ({ page }) => {
+    test("exactly one GREETING mascot on the page (no duplicate band below)", async ({ page }) => {
         await expect(continueBand(page).first()).toBeVisible()
         await expect(page.locator(MASCOT_IMAGE)).toHaveCount(1)
     })
@@ -167,7 +178,7 @@ test.describe("Home continue-learning band — signed-in (mocked enrollments)", 
 })
 
 test.describe("Home continue-learning band — guest", () => {
-    test("band self-hides but the page still shows exactly one mascot", async ({ page }) => {
+    test("band self-hides but the page still shows exactly one GREETING mascot", async ({ page }) => {
         await page.goto("/vi")
         await expect(page.getByRole("heading", { name: /Tiếp tục học/i })).toHaveCount(0)
         await expect(page.locator(MASCOT_IMAGE)).toHaveCount(1)

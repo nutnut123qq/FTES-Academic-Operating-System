@@ -3,7 +3,7 @@
 import React from "react"
 import { Chip, Typography, cn } from "@heroui/react"
 import { ArrowRightIcon, CheckCircleIcon, CircleIcon, CoinsIcon } from "@phosphor-icons/react"
-import { useLocale, useTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
 import { pathConfig } from "@/resources/path"
 import { dailyQuestIcon } from "./map"
@@ -28,9 +28,10 @@ const PREVIEW_ROWS = 4
  */
 export const DailyQuest = ({ className }: DailyQuestProps) => {
     const t = useTranslations("analytics")
-    const locale = useLocale()
     const { data, isLoading, error, mutate } = useQueryDailyQuestSwr()
-    const questsHref = pathConfig().locale(locale).quests().build()
+    // Locale-less on purpose — rendered through the locale-aware `Link` of
+    // `@/i18n/navigation`, which prepends the active locale itself.
+    const questsHref = pathConfig().locale().quests().build()
 
     return (
         <AsyncContent

@@ -48,6 +48,13 @@
 - [x] 6.2 `mascot.assistant.bubble.{hello,day,help}`, vi + en
 - [x] 6.3 `preload` WebP trong `src/app/[locale]/layout.tsx`
 
+## 6b. Test đi theo quyết định sản phẩm
+
+- [x] 6b.1 **CI đỏ vì `ContentAiFab/index.test.tsx` — do em, không phải hạ tầng.** 7 test đang ghim cái nút tròn + kéo-thả vừa bị bỏ: `getByLabelText("reader.ai.open")`, khôi phục vị trí từ localStorage, ngưỡng kéo, kẹp biên, nuốt toggle cuối cú kéo
+- [x] 6b.2 **VIẾT LẠI theo hành vi mới, KHÔNG xoá cho xanh.** Phần kéo-thả mất cùng tính năng (đúng), phần còn lại ghim đúng hợp đồng mà linh vật dựa vào: (1) render theo route param · (2) **STORE mở chat, không phải cú bấm** · (3) neo popover `aria-hidden` + `tabIndex=-1` + `pointer-events-none opacity-0` → cả trang chỉ còn ĐÚNG MỘT lối vào AI · (4) nhánh drawer mobile
+- [x] 6b.3 Mock HeroUI `Button` cho `className` đi XUYÊN qua (khác các prop HeroUI-only bị nuốt): tính vô hình + bất động của neo nằm ở chính mấy class đó, nuốt đi thì test không phân biệt nổi neo bất động với nút thật. `excludeFromTabOrder` map sang `tabIndex={-1}` cho khớp react-aria
+- [x] 6b.4 `npx vitest run` toàn bộ: **131 file / 855 test xanh**
+
 ## 7. Verify
 
 - [x] 7.1 `node`/`json.load` parse sạch vi.json + en.json, `mascot.assistant.options` đủ 8 key ở cả 2 ngôn ngữ

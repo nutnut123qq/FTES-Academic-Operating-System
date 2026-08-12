@@ -1,19 +1,23 @@
 import React from "react"
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
+import { act, cleanup, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { useOverlayStore } from "@/hooks/zustand/overlay/store"
 
 /**
- * Component — {@link ContentAiFab} (course-reliability-pass B.3): the draggable
- * desktop FAB. Pins (1) render-by-route-param (no `contentId` → nothing), (2)
- * the vertical drag: pointer-capture, threshold, clamping to
- * `[MIN_BOTTOM, innerHeight − TOP_GUARD]`, and persistence to
- * `localStorage["contentAiFabBottom"]` on release + restore on mount, (3) the
- * drag-release swallow: the popover toggle React Aria fires at the END of a
- * drag must NOT open the chat (but the next real press must), and (4) the
- * mobile bottom-sheet branch. `setPointerCapture`/`releasePointerCapture` are
- * mocked onto the element prototype (happy-dom lacks pointer capture) and the
- * REAL overlay store carries the open state.
+ * Component — {@link ContentAiFab}: the HOST for the lesson-scoped AI chat.
+ *
+ * This suite was rewritten when the circular "Ask FTES AI" button was retired
+ * (change `mascot-assistant-floating-hub`): the floating mascot assistant is the
+ * single AI entry point on every page now, and it opens this chat by flipping the
+ * shared overlay store. With the button went its vertical DRAG — position capture,
+ * threshold, clamping, `localStorage["contentAiFabBottom"]` persistence and the
+ * swallow of the toggle React Aria fired at the end of a drag-release. Those tests
+ * are gone WITH the feature, not because they were inconvenient.
+ *
+ * What is pinned instead is the contract the mascot depends on: (1) render by route
+ * param, (2) the store — not a press — is what opens the chat, (3) nothing here is
+ * reachable by pointer, keyboard or screen reader, so the page has exactly ONE AI
+ * affordance, and (4) the mobile bottom-sheet branch.
  */
 
 const h = vi.hoisted(() => ({
@@ -40,22 +44,6 @@ vi.mock("@phosphor-icons/react", () => ({
     ArrowsInIcon: () => <span />,
 }))
 
-vi.mock("@/components/blocks/buttons/FloatingActionButton", () => ({
-    FloatingActionButton: ({
-        onPress,
-        ariaLabel,
-        children,
-    }: {
-        onPress?: () => void
-        ariaLabel?: string
-        children?: React.ReactNode
-    }) => (
-        <button type="button" aria-label={ariaLabel} onClick={onPress}>
-            {children}
-        </button>
-    ),
-}))
-
 vi.mock("@/components/features/learn/ContentAiChat", () => ({
     ContentAiChat: () => <div data-testid="chat-body" />,
 }))
@@ -71,18 +59,25 @@ vi.mock("@heroui/react", () => {
         onPress?: () => void
         [k: string]: unknown
     }) => {
-        const { isIconOnly, variant, className, ...dom } = rest
+        // `className` is passed THROUGH (unlike the other HeroUI-only props): the
+        // anchor's invisibility and inertness live in those classes, so a test that
+        // stripped them could not tell an inert anchor from a visible button.
+        const { isIconOnly, variant, excludeFromTabOrder, ...dom } = rest
         void isIconOnly
         void variant
-        void className
+        // Mirror react-aria: `excludeFromTabOrder` lands as `tabIndex={-1}` on the DOM
+        // node, which is what makes the invisible popover anchor unreachable by Tab.
         return (
-            <button type="button" onClick={onPress} {...dom}>
+            <button
+                type="button"
+                onClick={onPress}
+                {...(excludeFromTabOrder ? { tabIndex: -1 } : {})}
+                {...dom}
+            >
                 {children}
             </button>
         )
     }
-    // Capture `onOpenChange` so tests can replay the toggle React Aria fires
-    // at the end of a drag-release.
     const Popover = ({
         children,
         isOpen,
@@ -93,7 +88,7 @@ vi.mock("@heroui/react", () => {
         onOpenChange?: (next: boolean) => void
     }) => {
         h.popoverOnOpenChange = onOpenChange
-        return <div data-open={String(isOpen)}>{children}</div>
+        return <div data-testid="popover" data-open={String(isOpen)}>{children}</div>
     }
     const PopoverContent = ({ children }: { children?: React.ReactNode }) => <div>{children}</div>
     const Drawer = Object.assign(passthrough, {
@@ -118,19 +113,16 @@ vi.mock("@heroui/react", () => {
 
 import { ContentAiFab } from "./index"
 
-// happy-dom elements have no pointer capture — mock it on the prototype.
-const setPointerCapture = vi.fn()
-const releasePointerCapture = vi.fn()
-
-const fab = () => screen.getByLabelText("reader.ai.open")
+/** Flip the shared overlay store the way the mascot assistant does. */
+const openChatFromStore = () =>
+    act(() => {
+        useOverlayStore.setState((state) => ({ openMap: { ...state.openMap, contentAiChat: true } }))
+    })
 
 beforeEach(() => {
     h.contentId = "content-1"
     h.isMobile = false
     h.popoverOnOpenChange = undefined
-    Object.assign(HTMLElement.prototype, { setPointerCapture, releasePointerCapture })
-    Object.defineProperty(window, "innerHeight", { value: 800, configurable: true, writable: true })
-    window.localStorage.clear()
     useOverlayStore.setState((state) => ({
         openMap: { ...state.openMap, contentAiChat: false },
     }))
@@ -144,97 +136,64 @@ afterEach(() => {
 describe("ContentAiFab — render by route param", () => {
     it("renders nothing without a contentId route param", () => {
         h.contentId = undefined
+        const { container } = render(<ContentAiFab />)
+        expect(container.innerHTML).toBe("")
+    })
+
+    it("renders the chat host while a lesson is open", () => {
+        render(<ContentAiFab />)
+        expect(screen.getByTestId("popover")).toBeTruthy()
+    })
+})
+
+describe("ContentAiFab — no AI affordance of its own", () => {
+    it("no longer exposes the retired 'Ask FTES AI' button", () => {
         render(<ContentAiFab />)
         expect(screen.queryByLabelText("reader.ai.open")).toBeNull()
     })
 
-    it("renders the FAB at the default offset while a lesson is open", () => {
-        render(<ContentAiFab />)
-        expect(fab().style.bottom).toBe("96px")
+    it("keeps the popover anchor out of reach of pointer, Tab and screen readers", () => {
+        const { container } = render(<ContentAiFab />)
+        // the anchor is the only <button> outside the (closed) panel
+        const anchor = container.querySelector("button")
+        expect(anchor).not.toBeNull()
+        expect(anchor?.getAttribute("aria-hidden")).toBe("true")
+        expect(anchor?.tabIndex).toBe(-1)
+        expect(anchor?.className).toContain("pointer-events-none")
+        expect(anchor?.className).toContain("opacity-0")
     })
 })
 
-describe("ContentAiFab — drag-persist (desktop)", () => {
-    it("restores the persisted bottom offset from localStorage on mount", () => {
-        window.localStorage.setItem("contentAiFabBottom", "222")
+describe("ContentAiFab — opened by the shared overlay store", () => {
+    it("shows the chat body once the store opens it (desktop)", () => {
         render(<ContentAiFab />)
-        expect(fab().style.bottom).toBe("222px")
+        expect(screen.getByTestId("popover").dataset.open).toBe("false")
+
+        openChatFromStore()
+
+        expect(screen.getByTestId("popover").dataset.open).toBe("true")
+        expect(screen.getByTestId("chat-body")).toBeTruthy()
     })
 
-    it("ignores a corrupt persisted value and keeps the default", () => {
-        window.localStorage.setItem("contentAiFabBottom", "not-a-number")
+    it("dismissing the popover writes the closed state back to the store", () => {
         render(<ContentAiFab />)
-        expect(fab().style.bottom).toBe("96px")
-    })
+        openChatFromStore()
 
-    it("a drag beyond the threshold captures the pointer, moves the FAB, and persists on release", () => {
-        render(<ContentAiFab />)
+        act(() => h.popoverOnOpenChange?.(false))
 
-        fireEvent.pointerDown(fab(), { clientY: 500, pointerId: 7 })
-        expect(setPointerCapture).toHaveBeenCalledWith(7)
-
-        // 60px up → bottom 96 + 60
-        fireEvent.pointerMove(fab(), { clientY: 440 })
-        expect(fab().style.bottom).toBe("156px")
-
-        fireEvent.pointerUp(fab(), { pointerId: 7 })
-        expect(window.localStorage.getItem("contentAiFabBottom")).toBe("156")
-        expect(releasePointerCapture).toHaveBeenCalledWith(7)
-    })
-
-    it("clamps the drag between MIN_BOTTOM and innerHeight − TOP_GUARD", () => {
-        render(<ContentAiFab />)
-        fireEvent.pointerDown(fab(), { clientY: 500, pointerId: 1 })
-
-        // way past the top → 800 − 80
-        fireEvent.pointerMove(fab(), { clientY: -10000 })
-        expect(fab().style.bottom).toBe("720px")
-
-        // way past the bottom → MIN_BOTTOM
-        fireEvent.pointerMove(fab(), { clientY: 20000 })
-        expect(fab().style.bottom).toBe("16px")
-    })
-
-    it("a plain press (micro-jitter under the threshold) opens the chat and persists nothing", () => {
-        render(<ContentAiFab />)
-
-        fireEvent.pointerDown(fab(), { clientY: 500, pointerId: 1 })
-        fireEvent.pointerMove(fab(), { clientY: 497 })
-        fireEvent.pointerUp(fab(), { pointerId: 1 })
-
-        // React Aria fires the press toggle after pointer-up
-        act(() => h.popoverOnOpenChange?.(true))
-
-        expect(useOverlayStore.getState().openMap.contentAiChat).toBe(true)
-        expect(window.localStorage.getItem("contentAiFabBottom")).toBeNull()
-    })
-
-    it("swallows the toggle fired at the END of a drag-release — the next real press opens", () => {
-        render(<ContentAiFab />)
-
-        fireEvent.pointerDown(fab(), { clientY: 500, pointerId: 1 })
-        fireEvent.pointerMove(fab(), { clientY: 400 })
-        fireEvent.pointerUp(fab(), { pointerId: 1 })
-
-        // the drag-release toggle → swallowed, chat stays closed
-        act(() => h.popoverOnOpenChange?.(true))
         expect(useOverlayStore.getState().openMap.contentAiChat).toBe(false)
-
-        // the swallow consumes the flag — a following real press opens
-        act(() => h.popoverOnOpenChange?.(true))
-        expect(useOverlayStore.getState().openMap.contentAiChat).toBe(true)
     })
 })
 
 describe("ContentAiFab — mobile bottom-sheet", () => {
-    it("opens the drawer with the chat body on press", () => {
+    it("opens the drawer with the chat body when the store opens", () => {
         h.isMobile = true
         render(<ContentAiFab />)
 
         expect(screen.queryByTestId("drawer")).toBeNull()
-        fireEvent.click(fab())
 
-        expect(useOverlayStore.getState().openMap.contentAiChat).toBe(true)
+        openChatFromStore()
+
         expect(screen.getByTestId("drawer")).toBeTruthy()
         expect(screen.getByTestId("chat-body")).toBeTruthy()
     })

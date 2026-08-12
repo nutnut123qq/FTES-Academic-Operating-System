@@ -42,6 +42,8 @@ export interface CourseEnrollmentBuyContext {
      * is treated as absent.
      */
     coverUrl?: string
+    /** Revalidate the caller once a purchase completes. */
+    onSuccess?: () => void
 }
 
 /** Result of {@link useCourseEnrollment}. */
@@ -170,6 +172,7 @@ export const useCourseEnrollment = (
                     // On success the modal cheers and offers "start learning" straight
                     // into this course's content (mirrors onContinueLearning's route).
                     learnHref,
+                    onSuccess: buy?.onSuccess,
                 })
             } catch {
                 // add-to-cart failed → SWR surfaces the error; leave the CTA idle

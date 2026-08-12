@@ -54,6 +54,7 @@ export const CartShell = () => {
             title: t("summary", { count: items.length }),
             amountVnd: subtotal,
             originalAmountVnd: hasSavings ? originalTotal : undefined,
+            onSuccess: () => { void cartSwr.mutate() },
         })
     }
 

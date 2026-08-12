@@ -316,6 +316,7 @@ const CourseDetailView = ({
                 priceVnd: course.price.vnd,
                 originalPriceVnd: course.price.originalVnd,
                 coverUrl: course.coverUrl,
+                onSuccess: onPurchased,
             },
     )
     // ponytail: hand-rolled accordion state — first chapter open. Set, not boolean-per-row,

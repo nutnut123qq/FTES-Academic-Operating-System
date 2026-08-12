@@ -5,8 +5,7 @@ import { ArrowRightIcon } from "@phosphor-icons/react"
 import { Chip, Typography } from "@heroui/react"
 import { useFormatter, useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
-import { ContinueCard } from "@/components/blocks/cards/ContinueCard"
-import { CoverImage } from "@/components/blocks/media/CoverImage"
+import { ContinueCourseCard } from "@/components/features/course/ContinueCourseCard"
 import { useQueryMyCoursesSwr, type MyCourse } from "@/components/features/course/hooks/useQueryMyCoursesSwr"
 import { HomeMascotGreeting } from "./HomeMascotGreeting"
 
@@ -18,17 +17,16 @@ const HOME_MY_COURSES_LIMIT = 4
  * into the viewer's courses, sitting right under the hero. Renders NOTHING for
  * anonymous viewers, while loading, or when there are no active enrollments (no
  * empty band, no layout jump). Shows up to four least-finished courses as
- * resumable {@link ContinueCard}s (title · % complete · progress) with a
+ * resumable {@link ContinueCourseCard}s (title · % complete · progress) with a
  * "Xem tất cả" link to `/courses/me`.
  *
  * Hosts the page's single {@link HomeMascotGreeting} between the heading and the
  * cards; when this band self-hides, `HomeMascotGreetingBand` puts the greeting back
  * in its own band instead (exactly one mascot per page either way).
  *
- * Cards are capped at TWO per row: {@link ContinueCard} puts title + CTA on one row,
- * so the four-column grid squeezed the text column to ~30px and truncated the course
- * title away. The cover rides on TOP at full width (`coverPlacement="top"`), matching
- * the /courses catalog card.
+ * Cards are capped at TWO per row so the course title keeps a readable column; the
+ * card itself mirrors the /courses catalog SHAPE without sharing its code (see
+ * {@link ContinueCourseCard}).
  */
 export const MyCoursesSection = () => {
     const t = useTranslations()
@@ -89,32 +87,15 @@ export const MyCoursesSection = () => {
                     truncated away entirely (the cover now sits on top, full width) */}
                 <div className="grid gap-3 sm:grid-cols-2">
                     {courses.slice(0, HOME_MY_COURSES_LIMIT).map((course) => (
-                        <Link
+                        <ContinueCourseCard
                             key={course.courseId}
                             href={course.href}
-                            className="group block no-underline"
-                        >
-                            <ContinueCard
-                                cover={(
-                                    // full-width 16:9 course cover ON TOP, same as the
-                                    // /courses catalog card. NO width class here: CoverImage
-                                    // merges caller classes with cn, so the old `w-24 sm:w-28`
-                                    // beat its own `w-full` and cropped the cover to ~96px,
-                                    // slicing the text baked into course artwork.
-                                    <CoverImage
-                                        src={course.coverImage}
-                                        alt={course.title}
-                                    />
-                                )}
-                                coverPlacement="top"
-                                title={course.title}
-                                subtitle={t("courses.percentComplete", { percent: course.completionPercent })}
-                                badge={termBadge(course)}
-                                value={course.completionPercent}
-                                ctaLabel={course.expired ? t("courses.rebuy") : t("courses.continueLearning")}
-                                className="h-full"
-                            />
-                        </Link>
+                            coverUrl={course.coverImage}
+                            title={course.title}
+                            completionPercent={course.completionPercent}
+                            badge={termBadge(course)}
+                            expired={course.expired}
+                        />
                     ))}
                 </div>
             </div>

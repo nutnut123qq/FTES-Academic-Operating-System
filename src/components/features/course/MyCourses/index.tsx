@@ -3,10 +3,9 @@
 import React from "react"
 import { Button, Chip, Typography } from "@heroui/react"
 import { useFormatter, useTranslations } from "next-intl"
-import { Link, useRouter } from "@/i18n/navigation"
+import { useRouter } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
-import { ContinueCard } from "@/components/blocks/cards/ContinueCard"
-import { CoverImage } from "@/components/blocks/media/CoverImage"
+import { ContinueCourseCard } from "@/components/features/course/ContinueCourseCard"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { FtesMascot } from "@/components/reuseable/FtesMascot"
 import { MascotProfileNudge } from "@/components/features/mascot-moments"
@@ -14,7 +13,7 @@ import { useQueryMyCoursesSwr, type MyCourse } from "../hooks/useQueryMyCoursesS
 
 /**
  * "Khóa học của tôi" (`/courses/me`) — the signed-in viewer's active enrollments as
- * a grid of resumable {@link ContinueCard}s (full-width cover · title · % complete ·
+ * a grid of resumable {@link ContinueCourseCard}s (full-width cover · title · % complete ·
  * progress bar · "Tiếp tục học"), each linking into the course learn shell
  * (least-finished first).
  * Loading gates progress-card-shaped skeletons; an empty enrollment set shows an
@@ -93,31 +92,15 @@ export const MyCourses = () => {
                     <MascotProfileNudge />
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                         {courses.map((course) => (
-                            <Link
+                            <ContinueCourseCard
                                 key={course.courseId}
                                 href={course.href}
-                                className="group block no-underline"
-                            >
-                                <ContinueCard
-                                    cover={(
-                                        // full-width 16:9 cover on top, same anatomy as the
-                                        // /courses catalog card and the home band. NO width
-                                        // class — CoverImage merges caller classes with cn,
-                                        // so any `w-*` would beat its own `w-full`.
-                                        <CoverImage
-                                            src={course.coverImage}
-                                            alt={course.title}
-                                        />
-                                    )}
-                                    coverPlacement="top"
-                                    title={course.title}
-                                    subtitle={t("courses.percentComplete", { percent: course.completionPercent })}
-                                    badge={termBadge(course)}
-                                    value={course.completionPercent}
-                                    ctaLabel={course.expired ? t("courses.rebuy") : t("courses.continueLearning")}
-                                    className="h-full"
-                                />
-                            </Link>
+                                coverUrl={course.coverImage}
+                                title={course.title}
+                                completionPercent={course.completionPercent}
+                                badge={termBadge(course)}
+                                expired={course.expired}
+                            />
                         ))}
                     </div>
                 </div>

@@ -6,6 +6,7 @@ import {
     Label,
 } from "@heroui/react"
 import {
+    SquaresFourIcon,
     GraduationCapIcon,
     ChalkboardTeacherIcon,
     UserIcon,
@@ -28,15 +29,20 @@ import type { WithClassNames } from "@/modules/types/base/class-name"
 export type AccountMenuAuthedProps = WithClassNames<undefined>
 
 /**
- * Account dropdown menu for SIGNED-IN viewers: a primary section (Profile · Saved · Settings ·
- * Wallet with its live balance + a top-up shortcut), and a separated destructive
- * section (Sign out, danger). Dashboard / Activity / Integrations / Roles were
- * removed as redundant (Dashboard unused, Activity duplicated in the profile,
- * System admin links out of scope for the account menu). "Nhiệm vụ" also left the
- * menu — the quest board is surfaced by the `DailyQuest` widget on the dashboard
- * (`/analytics` Overview), which links on to the full `/quests` page — and so did
- * "Xem lại hướng dẫn" (the welcome tour still auto-starts for new users via
- * `TourProvider`; the manual replay entry was dropped with `ReplayGuideItem`).
+ * Account dropdown menu for SIGNED-IN viewers: the dashboard hub, then the learning
+ * section (My courses · Teaching for lecturers), then a primary section (Profile ·
+ * Saved · Settings · Wallet with its live balance + a top-up shortcut), and a
+ * separated destructive section (Sign out, danger).
+ *
+ * "Bảng điều khiển" is back as the FIRST row: it was dropped while `/dashboard` did
+ * not exist, but the 4-tab cockpit now does and nothing else in the app links to it
+ * (the navbar logo goes to the marketing landing), so removing it left the page
+ * unreachable. Activity / Integrations / Roles stay out (Activity duplicated in the
+ * profile, system-admin links out of scope). "Nhiệm vụ" also stays out — the quest
+ * board is surfaced by the `DailyQuest` widget on the dashboard Overview tab, which
+ * links on to the full `/quests` page — and so does "Xem lại hướng dẫn" (the welcome
+ * tour still auto-starts for new users via `TourProvider`; the manual replay entry
+ * was dropped with `ReplayGuideItem`).
  * Self-contained — owns navigation
  * (closes the menu then pushes) and the sign-out mutation; takes no data props.
  *
@@ -74,6 +80,20 @@ export const AccountMenuAuthed = ({ className }: AccountMenuAuthedProps) => {
 
     return (
         <Dropdown.Menu className={className}>
+            {/* "Bảng điều khiển" (/dashboard) — the signed-in home: 4-tab cockpit over
+                progress, feed, courses and standing. First row because it is the hub the
+                other entries are reachable FROM; the navbar logo deliberately still points
+                at the marketing landing, so this menu is the only way in. */}
+            <Dropdown.Section>
+                <Dropdown.Item
+                    id="dashboard"
+                    textValue={t("nav.dashboard")}
+                    onPress={() => go(pathConfig().locale().dashboard().build())}
+                >
+                    <SquaresFourIcon className="size-5" />
+                    <Label>{t("nav.dashboard")}</Label>
+                </Dropdown.Item>
+            </Dropdown.Section>
             {/* "Khóa học của tôi" — the learner's own enrolled courses, first for
                 one-tap resume (ahead of the discovery shortcuts) */}
             <Dropdown.Section>

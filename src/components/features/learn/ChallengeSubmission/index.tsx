@@ -88,6 +88,7 @@ const toChallengeDetail = (view: ChallengeView): ChallengeDetail => ({
     // a lesson exercise — the lesson solver never renders one, so it stays null here.
     paperUrl: null,
     paperMime: null,
+    paperFiles: null,
     // The uploader card only surfaces on the paper surface (`ChallengePaper`), which this
     // lesson solver never reaches; passed through anyway so the two mappers agree on the
     // BE field rather than one of them quietly dropping it. Same for the posted instant,

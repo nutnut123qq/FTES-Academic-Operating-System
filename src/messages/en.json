@@ -1442,6 +1442,11 @@
       "archiveHint": "The paper is an archive — download it to open everything inside.",
       "gradingLocked": "The paper is here to practise with. Handing an answer in for AI grading isn't open yet.",
       "uploader": "Uploaded by",
+      "attachments": {
+        "title": "Attachments",
+        "download": "Download",
+        "unnamed": "Untitled file"
+      },
       "submit": {
         "title": "Hand in for AI grading",
         "lockedBadge": "Not open yet",

@@ -111,6 +111,46 @@ export interface ChallengeAuthorView {
 }
 
 /**
+ * ONE file of a challenge's exam paper (BE `ChallengeViews.PaperFileView`, contract
+ * `challenge-paper-multifile`).
+ *
+ * A real Practical Exam paper is several files with different jobs: a few page images or a
+ * PDF the candidate READS, plus a `.zip`/`.docx`/`.xlsx` template they DOWNLOAD and fill
+ * in. `challenge.paper_files` holds them as an ordered set, and this is one row of it.
+ *
+ * The four scalar `paper*` fields on {@link ChallengeView} did not go away — they describe
+ * the PRIMARY file of this same set (the first {@link role} `VIEW` file by
+ * {@link sortOrder}, or the first file when none is viewable), which is what keeps every
+ * reader written before this contract working untouched.
+ */
+export interface ChallengePaperFileView {
+    /** Row id (UUID) — stable React key and the id the manage endpoints address. */
+    id: string
+    /** Absolute, already-signed delivery URL of this file. */
+    url: string
+    /** Stored MIME type — normalised BE-side (a ZIP is always `application/zip`). */
+    mime: string
+    /** Original filename the author uploaded, shown in the attachments list. */
+    filename: string
+    /** Size on storage, in bytes — the size AFTER watermarking/optimisation. */
+    sizeBytes: number
+    /**
+     * What this file is FOR, decided SERVER-SIDE from {@link mime} and never by the author:
+     * `"VIEW"` (`image/*` + `application/pdf` — an exam page to render in place) or
+     * `"DOWNLOAD"` (archive/document/spreadsheet — a template to download).
+     *
+     * Typed as a plain `string` rather than a union because the BE deliberately publishes
+     * it as a string so a future role is not a breaking change. Readers must therefore
+     * treat ONLY the exact value `"VIEW"` as permission to embed the file, and default
+     * anything else — including a role they do not know — to download-only, which mirrors
+     * the BE's own `PaperFileRole.of` fallback. Never re-derive this from the filename.
+     */
+    role: string
+    /** The author's ordering, ascending and contiguous from 0 after every mutation. */
+    sortOrder: number
+}
+
+/**
  * One comment on a challenge (BE `ChallengeCommentDtos.CommentView`).
  *
  * Threading is ONE level: roots carry `replies`, and a reply-of-reply is re-parented onto
@@ -270,6 +310,21 @@ export interface ChallengeView {
      * could not resolve one — the FE then falls back to the URL's file extension.
      */
     paperMime?: string | null
+    /**
+     * The WHOLE exam paper — every attached file in the author's order, each carrying its
+     * own filename, size and server-derived {@link ChallengePaperFileView.role} (BE
+     * `challenge-paper-multifile` §3.5).
+     *
+     * {@link paperUrl} / {@link paperMime} above stay the PRIMARY file of this same set, so
+     * this field is purely additive: absent on deployments older than the contract, and
+     * deliberately EMPTY on the list and mutation paths (a card only needs the primary
+     * file; reading the set per row would be an N+1 on the hottest path). Only the detail
+     * read (`GET /api/v1/challenges/{slug}`) populates it.
+     *
+     * Absent / empty → the reader MUST fall back to the single-file fields and behave
+     * exactly as it did before, which is what keeps an older deployment intact.
+     */
+    paperFiles?: Array<ChallengePaperFileView> | null
     /**
      * Whether the CALLER may approve/reject this contributed challenge (BE
      * `challenge-paper-review` §3). The BE computes it per-challenge because approval rights

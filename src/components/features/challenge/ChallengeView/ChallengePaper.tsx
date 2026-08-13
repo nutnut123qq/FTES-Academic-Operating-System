@@ -1,12 +1,14 @@
 "use client"
 
-import React, { useCallback, useMemo } from "react"
+import React, { useCallback, useMemo, useState } from "react"
 import { Button, Chip, Typography, cn } from "@heroui/react"
 import {
     ArrowSquareOutIcon,
+    DownloadSimpleIcon,
     FileXIcon,
     FileZipIcon,
     LockSimpleIcon,
+    PaperclipIcon,
     UploadSimpleIcon,
 } from "@phosphor-icons/react"
 import { useLocale, useTranslations } from "next-intl"
@@ -15,10 +17,19 @@ import {
     ExamImageViewer,
     type ExamImageViewerImage,
 } from "@/components/features/subject/ExamImageViewer"
+import {
+    ALBUM_INITIAL_LOAD,
+    nextAlbumLoadCount,
+} from "@/components/features/subject/SubjectFeAlbum/albumLoadWindow"
 import { UserLink } from "@/components/features/identity"
+import { formatFileSize } from "@/components/features/resource/ResourceUpload/uploadRules"
 import { formatRelativeTime } from "@/components/features/community/hooks/relativeTime"
-import type { ChallengeAuthorView } from "@/modules/api/rest/challenges/types"
+import type {
+    ChallengeAuthorView,
+    ChallengePaperFileView,
+} from "@/modules/api/rest/challenges/types"
 import { ChallengePaperCommentThread } from "./ChallengePaperCommentThread"
+import { groupChallengePaperFiles, type ChallengePaperSection } from "./paperFileSet"
 import { classifyChallengePaper } from "./paperKind"
 
 /**
@@ -49,6 +60,19 @@ export interface ChallengePaperProps {
     paperUrl: string | null
     /** MIME of the paper (BE `ChallengeView.paperMime`); `null` when unknown. */
     paperMime: string | null
+    /**
+     * The WHOLE paper — every attached file in the author's order (BE
+     * `ChallengeView.paperFiles`, contract `challenge-paper-multifile`), each carrying the
+     * `role` the SERVER derived from its MIME: `"VIEW"` (an exam page to read in place) or
+     * download-only (a template to fill in).
+     *
+     * Absent / empty — an older BE, or the list/mutation paths that deliberately omit the
+     * set — means the surface renders EXACTLY as it always has from {@link paperUrl} +
+     * {@link paperMime} alone. Non-empty means those two fields still describe the PRIMARY
+     * file of this same set, so nothing about them changes either; they simply stop being
+     * the only thing shown.
+     */
+    paperFiles?: Array<ChallengePaperFileView> | null
     /** Challenge title — used as the accessible name of the picture / embedded viewer. */
     title: string
     /**
@@ -104,6 +128,22 @@ export interface ChallengePaperProps {
  * not resolve in the community moderation module). The uploader block simply disappears
  * when the BE has no card to give, which is the whole degradation: never a fabricated name.
  *
+ * **A paper is a SET of files, not one file.** With `challenge-paper-multifile` the BE
+ * ships `paperFiles` — the page images / PDF the candidate READS plus the `.zip`/`.docx`
+ * template they DOWNLOAD and fill in — each already marked viewable or download-only
+ * SERVER-SIDE from its stored MIME. {@link groupChallengePaperFiles} splits that set:
+ * viewable files render inline in the author's order (consecutive pictures collapsing into
+ * ONE paged {@link ExamImageViewer} album — the multi-page paper the single-`paperUrl` era
+ * could only ask for), and download-only files collect in the right column as "Tệp đính
+ * kèm" with their name, size and a download link. The BE's `role` is the ONLY authority on
+ * that split; `classifyChallengePaper` is used purely to pick the renderer (picture vs
+ * document frame) of a file the server already permitted.
+ *
+ * When `paperFiles` is absent or empty — an older deployment, or the list path that omits
+ * it — every branch below is exactly what it was before that contract, driven by
+ * `paperUrl` + `paperMime` alone. That fallback is the compatibility guarantee, not a
+ * courtesy.
+ *
  * The paper itself renders by kind ({@link classifyChallengePaper}):
  * - **IMAGE** → the SHARED {@link ExamImageViewer} — zoom, pan, ←/→, the lot, already
  *   built for photographed exam pages. The challenge contract carries a SINGLE
@@ -125,6 +165,7 @@ export interface ChallengePaperProps {
 export const ChallengePaper = ({
     paperUrl,
     paperMime,
+    paperFiles,
     title,
     challengeId,
     author,
@@ -132,6 +173,16 @@ export const ChallengePaper = ({
 }: ChallengePaperProps) => {
     const t = useTranslations("challenge")
     const kind = classifyChallengePaper(paperUrl, paperMime)
+
+    /**
+     * The paper split into what is read in place and what is downloaded. Both halves are
+     * empty when the BE sent no attachment list, which is precisely the signal to fall back
+     * to the single-file branches below — see {@link groupChallengePaperFiles}.
+     */
+    const { sections, attachments } = useMemo(
+        () => groupChallengePaperFiles(paperFiles),
+        [paperFiles],
+    )
 
     /**
      * The paper in the shape the shared viewer reads. ONE entry, because the challenge
@@ -181,8 +232,12 @@ export const ChallengePaper = ({
      * Only IMAGE and PDF earn the tall pinned frame: they are surfaces the reader scrolls
      * and zooms inside, so they want the viewport. The ARCHIVE / UNSUPPORTED cards are two
      * lines of copy — pinning them to `100dvh` would leave a screen of empty box.
+     *
+     * Any inline section earns it for the same reason; a set of nothing but templates has
+     * no inline section at all and falls back to the single-file answer, so a
+     * templates-only paper keeps the short card rather than a screen of empty frame.
      */
-    const isFramed = kind === "IMAGE" || kind === "PDF"
+    const isFramed = sections.length > 0 || kind === "IMAGE" || kind === "PDF"
 
     return (
         <section className="flex flex-col gap-3">
@@ -203,8 +258,11 @@ export const ChallengePaper = ({
                         && "lg:h-[calc(100dvh-16rem)] lg:min-h-[26rem] lg:grid-rows-[minmax(0,1fr)]",
                 )}
             >
-                {/* LEFT — the paper */}
-                {kind === "IMAGE" ? (
+                {/* LEFT — the paper. A multi-file set owns this pane; with no set (or a set
+                    of templates only) the single-file branches below are untouched. */}
+                {sections.length > 0 ? (
+                    <PaperSections sections={sections} title={title} />
+                ) : kind === "IMAGE" ? (
                     <ExamImageViewer
                         images={viewerImages}
                         index={0}
@@ -242,6 +300,10 @@ export const ChallengePaper = ({
                     paper up, then the discussion. The COLUMN owns the surface + its own
                     scroll so the three blocks stack inside one scrollable pane. */}
                 <div className="flex min-h-0 flex-col gap-4 bg-overlay p-4 lg:overflow-y-auto">
+                    {/* The templates come FIRST: they are what the candidate needs in hand to
+                        start working, and the block below them is switched off anyway. */}
+                    {attachments.length > 0 ? <PaperAttachments files={attachments} /> : null}
+
                     <PaperSubmitPanel />
 
                     {/* Hidden outright when the BE has no author card — see PaperUploader. */}
@@ -255,6 +317,215 @@ export const ChallengePaper = ({
                 </div>
             </div>
         </section>
+    )
+}
+
+/**
+ * The paper's INLINE half: every section the reader looks at, in the author's order.
+ *
+ * One section is the overwhelmingly common case (a set of scans, or a single PDF) and it
+ * fills the pane exactly the way a single-file paper always has — same heights, same
+ * pinned frame — so the multi-file path costs a one-page exam nothing. Two or more
+ * sections turn the pane into a scrolling column of cards, each pinned to a readable
+ * height, because a PDF appendix after the page images has to be reachable without
+ * shrinking the pages to postage stamps.
+ *
+ * @param props.sections - inline sections from {@link groupChallengePaperFiles}, in order.
+ * @param props.title - the challenge title, the fallback accessible name of a file.
+ */
+const PaperSections = ({
+    sections,
+    title,
+}: {
+    sections: Array<ChallengePaperSection>
+    title: string
+}) => {
+    const only = sections.length === 1 ? sections[0] : undefined
+    if (only) {
+        return <PaperSection section={only} title={title} className="h-[60dvh] lg:h-full" />
+    }
+
+    return (
+        <div className="flex min-h-0 flex-col gap-3 overflow-y-auto p-3 lg:h-full">
+            {sections.map((section) => (
+                <div
+                    key={sectionKey(section)}
+                    className="h-[60dvh] shrink-0 overflow-hidden rounded-2xl border border-separator"
+                >
+                    <PaperSection section={section} title={title} className="h-full" />
+                </div>
+            ))}
+        </div>
+    )
+}
+
+/**
+ * React key of an inline section — the id of the file it is built from (its FIRST file for
+ * a picture run), which is stable across a re-order because it is the BE row id.
+ *
+ * @param section - the section to key.
+ * @returns a stable key, `""` for the impossible empty run.
+ */
+const sectionKey = (section: ChallengePaperSection): string =>
+    section.kind === "IMAGES" ? (section.files[0]?.id ?? "") : section.file.id
+
+/**
+ * ONE inline section, rendered by what it is — the only place `paperKind`'s answer is
+ * consulted for a set file, and only ever to choose the RENDERER of a file the backend
+ * already marked viewable.
+ *
+ * @param props.section - the section to render.
+ * @param props.title - the challenge title, used when a file carries no filename.
+ * @param props.className - the height the caller wants the frame to take.
+ */
+const PaperSection = ({
+    section,
+    title,
+    className,
+}: {
+    section: ChallengePaperSection
+    title: string
+    className: string
+}) => {
+    const t = useTranslations("challenge")
+
+    if (section.kind === "IMAGES") {
+        return <PaperImagesSection files={section.files} title={title} className={className} />
+    }
+
+    /* No border/radius of its own — the frame around it owns them. */
+    return (
+        <iframe
+            src={section.file.url}
+            title={section.file.filename || t("paper.imageAlt", { title })}
+            className={cn("w-full bg-default", className)}
+        />
+    )
+}
+
+/**
+ * A run of consecutive exam PAGES, handed to the SHARED {@link ExamImageViewer} as one
+ * album.
+ *
+ * This is the thing the single-`paperUrl` era could not do: the viewer's carets, `n/total`
+ * counter, filmstrip and ←/→ keys were built for exactly this — a photographed multi-page
+ * exam — and they light up on their own as soon as there is more than one page. The old
+ * one-image array was never a design choice, only the shape of the contract; now that the
+ * BE ships the ordered set, the pages go in as they are.
+ *
+ * The fetch WINDOW is the album's, reused rather than reinvented
+ * ({@link nextAlbumLoadCount}): a 20-page paper must not pull twenty scans on mount for a
+ * reader who is on page one.
+ *
+ * Each page's `caption` is its own filename — that is the viewer's alt text, and the
+ * author's "trang-2.png" says more than a per-challenge label repeated N times. A file
+ * with no filename falls back to the paper's alt copy.
+ *
+ * @param props.files - the pages of this run, in order.
+ * @param props.title - the challenge title, used for the fallback alt text.
+ * @param props.className - the height the caller wants the pane to take.
+ */
+const PaperImagesSection = ({
+    files,
+    title,
+    className,
+}: {
+    files: Array<ChallengePaperFileView>
+    title: string
+    className: string
+}) => {
+    const t = useTranslations("challenge")
+    const [index, setIndex] = useState(0)
+    const [loadedCount, setLoadedCount] = useState(ALBUM_INITIAL_LOAD)
+
+    const images = useMemo<Array<ExamImageViewerImage>>(
+        () =>
+            files.map((file) => ({
+                id: file.id,
+                imageUrl: file.url,
+                caption: file.filename || t("paper.imageAlt", { title }),
+            })),
+        [files, title, t],
+    )
+
+    const onIndexChange = useCallback(
+        (next: number) => {
+            setIndex(next)
+            setLoadedCount((loaded) => nextAlbumLoadCount(loaded, next, files.length))
+        },
+        [files.length],
+    )
+
+    return (
+        <ExamImageViewer
+            images={images}
+            index={index}
+            onIndexChange={onIndexChange}
+            loadedCount={loadedCount}
+            className={cn("min-h-0", className)}
+        />
+    )
+}
+
+/**
+ * "Tệp đính kèm" — the paper's DOWNLOAD half: the templates a candidate fills in.
+ *
+ * Separated from the pages on purpose, and the whole point of the contract: an author's
+ * `.docx` answer sheet used to be buried inside the same ZIP as the exam, so reading the
+ * paper meant downloading and unzipping it first. Here the exam is already on screen and
+ * this list is only what has to leave the browser — each row naming the file and its size,
+ * so a 40 MB starter project is not a surprise on a phone connection.
+ *
+ * Nothing here decides WHAT belongs in the list: {@link groupChallengePaperFiles} put it
+ * there because the SERVER said the file is download-only.
+ *
+ * @param props.files - the download-only files, in the author's order.
+ */
+const PaperAttachments = ({ files }: { files: Array<ChallengePaperFileView> }) => {
+    const t = useTranslations("challenge")
+
+    return (
+        <div className="flex flex-col gap-3">
+            <Typography type="body-sm" weight="semibold">
+                {t("paper.attachments.title")}
+            </Typography>
+            <ul className="flex flex-col gap-2">
+                {files.map((file) => (
+                    <li
+                        key={file.id}
+                        className="flex items-center gap-3 rounded-2xl border border-default p-3"
+                    >
+                        <PaperclipIcon
+                            aria-hidden
+                            focusable="false"
+                            className="size-5 shrink-0 text-muted"
+                        />
+                        <div className="flex min-w-0 flex-1 flex-col">
+                            <Typography type="body-sm" truncate>
+                                {file.filename || t("paper.attachments.unnamed")}
+                            </Typography>
+                            {file.sizeBytes > 0 ? (
+                                <Typography type="body-xs" color="muted">
+                                    {formatFileSize(file.sizeBytes)}
+                                </Typography>
+                            ) : null}
+                        </div>
+                        {/* `download` is a hint the storage host's cross-origin response may
+                            ignore; the link still reaches the file either way. */}
+                        <a
+                            href={file.url}
+                            download={file.filename || undefined}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex shrink-0 items-center gap-2 text-sm text-accent no-underline transition-colors hover:text-foreground"
+                        >
+                            <DownloadSimpleIcon className="size-4" aria-hidden focusable="false" />
+                            {t("paper.attachments.download")}
+                        </a>
+                    </li>
+                ))}
+            </ul>
+        </div>
     )
 }
 

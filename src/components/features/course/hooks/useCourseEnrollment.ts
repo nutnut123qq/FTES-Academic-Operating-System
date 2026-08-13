@@ -42,6 +42,13 @@ export interface CourseEnrollmentBuyContext {
      * is treated as absent.
      */
     coverUrl?: string
+    /**
+     * Revalidate the CALLER's own view once the purchase settles. PaymentModal already
+     * refreshes the cart and the wallet on its own; without this the page that opened
+     * checkout keeps its pre-purchase state (the buy CTA stays up on a course the viewer
+     * has just paid for) until a manual reload.
+     */
+    onSuccess?: () => void
 }
 
 /** Result of {@link useCourseEnrollment}. */
@@ -170,6 +177,7 @@ export const useCourseEnrollment = (
                     // On success the modal cheers and offers "start learning" straight
                     // into this course's content (mirrors onContinueLearning's route).
                     learnHref,
+                    onSuccess: buy?.onSuccess,
                 })
             } catch {
                 // add-to-cart failed → SWR surfaces the error; leave the CTA idle

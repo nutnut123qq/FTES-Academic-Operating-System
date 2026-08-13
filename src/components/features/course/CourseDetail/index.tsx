@@ -316,6 +316,7 @@ const CourseDetailView = ({
                 priceVnd: course.price.vnd,
                 originalPriceVnd: course.price.originalVnd,
                 coverUrl: course.coverUrl,
+                onSuccess: onPurchased,
             },
     )
     // ponytail: hand-rolled accordion state — first chapter open. Set, not boolean-per-row,
@@ -1093,6 +1094,9 @@ export const PackageEnrollCard = ({
                 // On success the modal cheers and offers "start learning" into this
                 // course's content — same as the plain enroll CTA (useCourseEnrollment).
                 learnHref,
+                // …and the detail page revalidates, so the CTA flips to "Vào học" instead
+                // of still inviting a second payment for a package just bought.
+                onSuccess: onPurchased,
             })
         } catch {
             // add-to-cart failed → SWR surfaces the error; leave the CTA idle

@@ -21,6 +21,8 @@ import type {
     CreateSectionRequest,
     EnrollResponse,
     EnrollmentView,
+    GoldenBoardTermOptionView,
+    GoldenBoardView,
     IdResponse,
     LessonAiChatLimitRequest,
     LessonCommentsPage,
@@ -1116,5 +1118,57 @@ export const getMyLearnedLessons = async (limit?: number): Promise<Array<Learned
         url: "/courses/me/learned-lessons",
         authenticated: true,
         params: { limit: limit ?? undefined },
+    })
+}
+
+// ---------------------------------------------------------------- golden board (public)
+
+/**
+ * Bảng vàng của kỳ MỚI NHẤT — nguồn của section "FTES Hall of Fame" trên trang chủ.
+ *
+ * `GET /api/v1/golden-board/latest`. **Anonymous**: BE mở `permitAll` cho ba GET dưới
+ * `/golden-board` (`GoldenBoardPublicSecurityConfig`), nên `authenticated: false` để một khách
+ * chưa đăng nhập không bao giờ kích hoạt vòng refresh-token / 401 chỉ vì xem trang chủ.
+ *
+ * Chưa kỳ nào có bảng → **200** với `{ term: null, entries: [] }` (KHÔNG 404): gọi xong cứ đọc
+ * `entries`, đừng bắt lỗi.
+ */
+export const getLatestGoldenBoard = async (): Promise<GoldenBoardView> => {
+    return restRequest<GoldenBoardView>({
+        method: "GET",
+        url: "/golden-board/latest",
+        authenticated: false,
+    })
+}
+
+/**
+ * Các kỳ CÓ bảng vàng, mới nhất đứng đầu, kèm `entryCount` — nguồn DUY NHẤT của picker kỳ ở
+ * trang `/goldenboard`.
+ *
+ * `GET /api/v1/golden-board/terms` (anonymous). Đừng lấy toàn bộ kỳ học rồi dò từng kỳ: endpoint
+ * này đã lọc sẵn kỳ có ít nhất một dòng active.
+ */
+export const getGoldenBoardTerms = async (): Promise<Array<GoldenBoardTermOptionView>> => {
+    return restRequest<Array<GoldenBoardTermOptionView>>({
+        method: "GET",
+        url: "/golden-board/terms",
+        authenticated: false,
+    })
+}
+
+/**
+ * Bảng vàng của MỘT kỳ — nhận **id kỳ HOẶC mã kỳ** (`"SP26"`), nên link chia sẻ theo mã kỳ đọc
+ * được vẫn chạy.
+ *
+ * `GET /api/v1/golden-board/terms/{termIdOrCode}` (anonymous). Kỳ KHÔNG tồn tại → lỗi
+ * `TERM_NOT_FOUND` (khác hẳn kỳ có thật mà chưa có dòng nào: 200 + `entries: []`).
+ */
+export const getGoldenBoardForTerm = async (
+    termIdOrCode: string,
+): Promise<GoldenBoardView> => {
+    return restRequest<GoldenBoardView>({
+        method: "GET",
+        url: `/golden-board/terms/${encodeURIComponent(termIdOrCode)}`,
+        authenticated: false,
     })
 }

@@ -2,11 +2,13 @@
  * Static typed content for the home landing sections. STRUCTURE only (ordering,
  * ids, avatar/image URLs, external profile links) lives here; all human-readable
  * copy lives in i18n under `homeLanding.*` and is looked up by `key`. There is no
- * plausible near-term BE contract for mentors / achievers / offers / FAQ, so these
- * are static content modules rather than API-shaped hooks (design D7).
+ * plausible near-term BE contract for mentors / offers / FAQ, so these are static
+ * content modules rather than API-shaped hooks (design D7). The one exception, the
+ * per-learner "Bảng vàng", HAS a BE contract now and left this file — see the note
+ * where its data used to sit.
  *
- * Real content sourced from the legacy `Ftes-frontend` home view (mentors +
- * achievers) — the names, roles, GPAs, achievements and quote authors are REAL.
+ * Real content sourced from the legacy `Ftes-frontend` home view — the names, roles,
+ * GPAs, achievements and quote authors are REAL.
  */
 
 /** A journey station rendered both in the 3D scene and the text stepper/fallback. */
@@ -55,7 +57,8 @@ export interface AchievementStat {
  * Real FTES company milestones (ported from the legacy home "Thành tựu" cards + the
  * "Những gì chúng tôi đạt được" milestone slider): awards, competition placements,
  * scholarships and public events, ordered awards-first. Deliberately distinct from the
- * per-learner "Bảng vàng" ({@link ACHIEVERS}) and the live BE course/enrollment counters
+ * per-learner "Bảng vàng" (now BE-backed — `GET /api/v1/golden-board/latest`, rendered by
+ * `features/goldenboard/GoldenBoard`) and the live BE course/enrollment counters
  * (PlatformStatsSection) — no figure is duplicated.
  *
  * Titles/descriptions are written against the evidence photos themselves (not the legacy
@@ -204,93 +207,13 @@ export const TESTIMONIALS: ReadonlyArray<Testimonial> = [
     },
 ] as const
 
-/** An honored achiever — real FTES learners (legacy home "Bảng vàng"). */
-export interface Achiever {
-    /** i18n key suffix under `homeLanding.honor.people.*` (name + achievement lines). */
-    key: string
-    /** Number of achievement lines in i18n (`honor.people.<key>.lines.0..n`). */
-    lineCount: number
-    /** Short headline badge (rank / GPA) — language-neutral. */
-    highlight: string
-    /** Portrait image URL (legacy CDN). Falls back to initials on error. */
-    imageUrl: string
-    /** Featured achievers render on the large podium row; the rest in the compact grid. */
-    featured?: boolean
-    /** imageUrl is a legacy baked-text award poster — the card zoom-crops the face region. */
-    poster?: boolean
-    /** Optional internal route (e.g. the achiever's story on the blog) — the name links there. */
-    href?: string
-}
-
-/**
- * Seven real achievers for the Bảng vàng FTES section.
- * ponytail: imageUrls still point at the legacy baked-text award posters (`poster: true`
- * triggers the face zoom-crop). When clean portrait URLs exist, swap the URL and drop
- * the `poster` flag — no code change needed.
+/*
+ * REMOVED (golden-board-fe, 2026-08-13): the `Achiever` interface + the seven-entry `ACHIEVERS`
+ * array that used to drive the "Bảng vàng FTES" section, together with their `homeLanding.honor
+ * .people.*` i18n copy. The board is BE data now — `GET /api/v1/golden-board/latest` per term —
+ * so changing one name no longer needs an FE deploy. Rendering lives in
+ * `features/goldenboard/GoldenBoard`, shared by the home section and the `/goldenboard` page.
  */
-export const ACHIEVERS: ReadonlyArray<Achiever> = [
-    {
-        key: "thuanDuc",
-        highlight: "CÓC VÀNG · SP25",
-        lineCount: 2,
-        featured: true,
-        poster: true,
-        imageUrl:
-            "https://cdn.jsdelivr.net/gh/ftesedu/funnycode-images-1757352873747@main/images/7.png_1757437141307.png?v=1757437144076",
-        href: "/blog/trang-thuan-duc--tu-no-luc-ca-nhan-den-danh-hieu-coc-vang-cung-ftes",
-    },
-    {
-        key: "kimKhoa",
-        highlight: "TOP 100 · 3 kỳ",
-        lineCount: 3,
-        featured: true,
-        poster: true,
-        imageUrl:
-            "https://cdn.jsdelivr.net/gh/ftesedu/funnycode-images-1757352873747@main/images/4.png_1757436769364.png?v=1757436772039",
-    },
-    {
-        key: "hoangBlue",
-        highlight: "GPA 9.4",
-        lineCount: 2,
-        featured: true,
-        poster: true,
-        imageUrl:
-            "https://cdn.jsdelivr.net/gh/ftesedu/funnycode-images-1757352873747@main/images/1.png_1757436678874.png?v=1757436681722",
-    },
-    {
-        key: "hoangDuy",
-        highlight: "GPA 9.6",
-        lineCount: 3,
-        featured: true,
-        poster: true,
-        imageUrl:
-            "https://cdn.jsdelivr.net/gh/ftesedu/funnycode-images-1757352873747@main/images/2.png_1757436714804.png?v=1757436718361",
-    },
-    {
-        key: "hongPhuc",
-        highlight: "Hackathon",
-        lineCount: 2,
-        poster: true,
-        imageUrl:
-            "https://cdn.jsdelivr.net/gh/ftesedu/funnycode-images-1757352873747@main/images/3.png_1757436740942.png?v=1757436743766",
-    },
-    {
-        key: "chiThong",
-        highlight: "TOP 5 · Spring 2025",
-        lineCount: 1,
-        poster: true,
-        imageUrl:
-            "https://cdn.jsdelivr.net/gh/ftesedu/funnycode-images-1757352873747@main/images/5.png_1757436795210.png?v=1757436798094",
-    },
-    {
-        key: "tranViet",
-        highlight: "Distinction SU25",
-        lineCount: 1,
-        poster: true,
-        imageUrl:
-            "https://cdn.jsdelivr.net/gh/ftesedu/funnycode-images-1757352873747@main/images/6.png_1757436830366.png?v=1757436833271",
-    },
-] as const
 
 /**
  * FAQ item keys — copy under `homeLanding.faq.items.<key>.{q,a}`. `refund` is mandatory.

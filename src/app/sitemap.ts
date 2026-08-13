@@ -10,6 +10,8 @@ const STATIC_ROUTES: ReadonlyArray<{ path: string, priority: number }> = [
     { path: "/home", priority: 1 },
     { path: "/courses", priority: 0.9 },
     { path: "/blog", priority: 0.7 },
+    // Bảng vàng / Hall of Fame browser — public and anonymous-readable, like the catalog.
+    { path: "/goldenboard", priority: 0.5 },
     // no "/contact": there is no such route under app/[locale], so submitting it
     // only earned Search Console a 404. Re-add the entry when the page exists.
     { path: "/privacy", priority: 0.2 },

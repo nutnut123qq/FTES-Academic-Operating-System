@@ -4484,58 +4484,8 @@
     "honor": {
       "title": "Bảng vàng FTES",
       "subline": "Học viên chúng tôi CHẤT cỡ nào? Đây là những gương mặt tiêu biểu của FTES.",
-      "cta": "Xem bảng xếp hạng",
-      "people": {
-        "thuanDuc": {
-          "name": "Trang Thuận Đức",
-          "lines": {
-            "0": "Đạt danh hiệu Cóc Vàng khối ngành Kỹ thuật kỳ Spring 2025.",
-            "1": "Bước ngoặt đến từ sự đồng hành của đội ngũ mentor FTES."
-          }
-        },
-        "kimKhoa": {
-          "name": "Kim Khoa",
-          "lines": {
-            "0": "TOP 100 sinh viên xuất sắc 3 kỳ liên tiếp.",
-            "1": "Điểm GPA ổn định và ấn tượng: 9.35 – 9.42 – 9.1.",
-            "2": "Học Bá kì FA25 tại FTES."
-          }
-        },
-        "hoangBlue": {
-          "name": "Hoàng Blue",
-          "lines": {
-            "0": "Sinh viên xuất sắc học kỳ SP25 & SU25: GPA 9.4.",
-            "1": "Danh hiệu “Học Tốt FTES” - Học bổng Tài Năng FTES."
-          }
-        },
-        "hoangDuy": {
-          "name": "Hoàng Duy",
-          "lines": {
-            "0": "Sinh viên giỏi kỳ 1.",
-            "1": "Top 100 Sinh Viên Xuất Sắc tại FPTU TP.HCM kỳ 2.",
-            "2": "Top 100 Sinh Viên Xuất Sắc tại FPTU TP.HCM kỳ 3 với GPA 9.6."
-          }
-        },
-        "hongPhuc": {
-          "name": "Hồng Phúc",
-          "lines": {
-            "0": "Hoàn thành khoá học Data nền tảng.",
-            "1": "Triển khai dashboard đầu tiên."
-          }
-        },
-        "chiThong": {
-          "name": "Phan Chi Thông",
-          "lines": {
-            "0": "Top 5 sinh viên kỳ Spring 2025 tại Đại học FPT Quy Nhơn."
-          }
-        },
-        "tranViet": {
-          "name": "Trần Việt",
-          "lines": {
-            "0": "Sinh viên giỏi kỳ SU25."
-          }
-        }
-      }
+      "cta": "Xem bảng vàng",
+      "term": "Kỳ {term}"
     },
     "mentors": {
       "eyebrow": "Người đồng hành cùng bạn",
@@ -8214,5 +8164,29 @@
       "moderator": "Kiểm duyệt viên"
     },
     "description": "Tài khoản nhân sự chính thức của FTES, đã được xác minh."
+  },
+  "goldenboard": {
+    "title": "Bảng vàng FTES",
+    "subtitle": "Bảng vinh danh của từng kỳ học — chọn một kỳ để xem những gương mặt được ghi tên.",
+    "pickTerm": "Chọn kỳ học",
+    "boardOfTerm": "Bảng vàng · {term}",
+    "empty": {
+      "title": "Chưa có bảng vàng",
+      "description": "Chưa kỳ học nào có bảng vàng. Quay lại khi bảng đầu tiên được công bố nhé."
+    },
+    "emptyTerm": {
+      "title": "Kỳ này chưa có tên ai",
+      "description": "Bảng vàng của kỳ này chưa có dòng nào. Chọn một kỳ khác ở trên nhé."
+    },
+    "loadFailed": {
+      "title": "Không tải được bảng vàng",
+      "description": "Có lỗi phía hệ thống. Thử lại sau một lát nhé.",
+      "action": "Thử lại"
+    },
+    "unknownTerm": {
+      "title": "Không tìm thấy kỳ học",
+      "description": "Kỳ học trong đường dẫn này không tồn tại. Chọn một kỳ ở trên, hoặc quay về bảng của kỳ mới nhất.",
+      "action": "Xem kỳ mới nhất"
+    }
   }
 }

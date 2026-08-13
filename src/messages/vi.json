@@ -416,7 +416,6 @@
     "contact": "Liên hệ",
     "logout": "Đăng xuất",
     "profile": "Hồ sơ",
-    "saved": "Đã lưu / Yêu thích",
     "settings": "Cài đặt",
     "signIn": "Đăng nhập",
     "learn": "Học",
@@ -424,6 +423,8 @@
     "appearance": "Giao diện",
     "mobileMenu": "Điều hướng mobile",
     "courseMenu": "Mục lục khoá học",
+    "accountMenu": "Menu tài khoản",
+    "accountMenuWithStreak": "Menu tài khoản — chuỗi {count} ngày",
     "contentOutline": "Nội dung học phần",
     "collapseLeftRail": "Thu gọn thanh bên trái",
     "expandLeftRail": "Mở rộng thanh bên trái",
@@ -451,8 +452,8 @@
     },
     "social": {
       "facebook": "Facebook FTES",
-      "youtube": "YouTube FunnyCode",
-      "tiktok": "TikTok FunnyCode"
+      "youtube": "YouTube FTES",
+      "tiktok": "TikTok FTES"
     },
     "exploreTitle": "Khám phá",
     "supportTitle": "Hỗ trợ",
@@ -820,6 +821,9 @@
     }
   },
   "settings": {
+    "groups": {
+      "notifications": "Thông báo"
+    },
     "language": {
       "title": "Ngôn ngữ",
       "confirm": "Xác nhận",
@@ -2319,7 +2323,12 @@
     "thisDevice": "Thiết bị này",
     "revoke": "Đăng xuất",
     "empty": "Không có phiên đăng nhập nào.",
-    "unknownDevice": "Thiết bị không xác định"
+    "unknownDevice": "Thiết bị không xác định",
+    "lastUsed": "Hoạt động {date}",
+    "revokeSuccess": "Đã đăng xuất thiết bị.",
+    "revokeFailed": "Không đăng xuất được thiết bị.",
+    "loadFailed": "Không tải được danh sách thiết bị.",
+    "retry": "Thử lại"
   },
   "follow": {
     "follow": "Theo dõi",
@@ -2327,7 +2336,21 @@
   },
   "security": {
     "title": "Bảo mật",
-    "subtitle": "Bảo vệ tài khoản bằng xác thực hai lớp.",
+    "subtitle": "Mật khẩu, xác thực hai lớp và các thiết bị đang đăng nhập.",
+    "password": {
+      "title": "Đổi mật khẩu",
+      "subtitle": "Cập nhật mật khẩu đăng nhập của bạn.",
+      "current": "Mật khẩu hiện tại",
+      "newPassword": "Mật khẩu mới",
+      "confirm": "Nhập lại mật khẩu mới",
+      "submit": "Đổi mật khẩu",
+      "policy": "Mật khẩu mới phải có ít nhất 8 ký tự, gồm cả chữ và số.",
+      "mismatch": "Mật khẩu nhập lại không khớp.",
+      "failed": "Đổi mật khẩu thất bại. Kiểm tra lại mật khẩu hiện tại và độ mạnh của mật khẩu mới.",
+      "success": "Đã đổi mật khẩu.",
+      "revokesOtherSessions": "Đổi mật khẩu sẽ đăng xuất mọi thiết bị khác.",
+      "revokesOtherSessionsHint": "Thiết bị bạn đang dùng vẫn giữ đăng nhập."
+    },
     "twoFactor": "Xác thực hai lớp",
     "enabledLabel": "Đang bật",
     "disabledLabel": "Đang tắt",
@@ -2556,6 +2579,13 @@
       "or": "HOẶC",
       "title": "Đăng nhập",
       "desc": "Đăng nhập để tiếp tục",
+      "identifier": {
+        "label": "Email hoặc tên đăng nhập",
+        "placeholder": "Nhập email hoặc tên đăng nhập",
+        "required": "Vui lòng nhập email hoặc tên đăng nhập",
+        "invalid": "Email không hợp lệ",
+        "minLength": "Tên đăng nhập phải có ít nhất 3 ký tự"
+      },
       "email": {
         "label": "Email",
         "placeholder": "Nhập email của bạn",
@@ -2600,6 +2630,12 @@
     "signUp": {
       "title": "Đăng ký",
       "desc": "Tạo tài khoản để tiếp tục",
+      "fullName": {
+        "label": "Họ và tên",
+        "placeholder": "Nhập họ và tên của bạn",
+        "required": "Vui lòng nhập họ và tên",
+        "maxLength": "Họ và tên tối đa 128 ký tự"
+      },
       "email": {
         "label": "Email",
         "placeholder": "Nhập email của bạn",
@@ -3021,8 +3057,8 @@
       "forYou": "Khám phá",
       "overview": "Tổng quan",
       "explore": "Khám phá",
-      "courses": "Khóa học",
-      "community": "Cộng đồng",
+      "courses": "Khóa học của tôi",
+      "community": "Tài nguyên của tôi",
       "following": "Đang theo dõi"
     },
     "loadError": "Không tải được bảng điều khiển. Phiên đăng nhập của bạn có thể đã hết hạn.",
@@ -3139,6 +3175,16 @@
     },
     "explore": {
       "viewAll": "Xem tất cả",
+      "marketplace": {
+        "title": "Cửa hàng",
+        "empty": {
+          "title": "Cửa hàng chưa có sản phẩm nào",
+          "description": "Hàng mới sẽ xuất hiện ở đây. Ghé lại sau nhé."
+        },
+        "error": {
+          "title": "Không tải được cửa hàng."
+        }
+      },
       "trending": {
         "title": "Đang nổi bật",
         "engagement": "{likes} thích · {comments} bình luận",
@@ -3153,6 +3199,21 @@
       "feed": {
         "title": "Bảng tin cộng đồng",
         "tabsAria": "Phạm vi bảng tin"
+      }
+    },
+    "myResource": {
+      "myPosts": {
+        "title": "Bài viết của tôi",
+        "seeMore": "Xem trang cá nhân",
+        "emptyTitle": "Bạn chưa đăng bài viết nào",
+        "emptyDescription": "Bài viết bạn đăng ở cộng đồng sẽ xuất hiện tại đây.",
+        "guestTitle": "Đăng nhập để xem bài viết của bạn",
+        "guestDescription": "Danh sách này lấy theo tài khoản đang đăng nhập.",
+        "error": "Không tải được bài viết của bạn."
+      },
+      "saved": {
+        "title": "Đã lưu",
+        "localOnlyNote": "Bài viết đã lưu gắn với tài khoản của bạn. Tài liệu và khoá học đã lưu chỉ nằm trên trình duyệt này — đổi máy hoặc xoá dữ liệu trình duyệt là mất."
       }
     }
   },
@@ -4139,12 +4200,10 @@
       "retry": "Thử lại",
       "quickActions": "Truy cập nhanh",
       "actions": {
-        "courses": "Khóa học",
         "review": "Ôn tập",
         "practice": "Luyện tập",
         "league": "Bảng xếp hạng",
-        "rewards": "Phần thưởng",
-        "blog": "Bài viết"
+        "rewards": "Phần thưởng"
       },
       "streakDays": "{count} ngày liên tiếp",
       "points": "{count, number} điểm",
@@ -6091,6 +6150,13 @@
       "level": "Mức độ thành thạo",
       "related": "Môn học & khóa học liên quan"
     },
+    "summary": {},
+    "buckets": {},
+    "progress": {},
+    "unlock": {},
+    "list": {},
+    "noCourseMapped": {},
+    "guest": {},
     "retry": "Thử lại"
   },
   "certificateVerify": {

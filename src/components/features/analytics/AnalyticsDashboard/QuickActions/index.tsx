@@ -4,12 +4,10 @@ import React from "react"
 import { Chip, cn } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import {
-    GraduationCapIcon,
     CardsIcon,
     CodeIcon,
     TrophyIcon,
     GiftIcon,
-    ArticleIcon,
     type Icon,
 } from "@phosphor-icons/react"
 import { useRouter } from "@/i18n/navigation"
@@ -26,19 +24,21 @@ interface QuickAction {
     href: string
 }
 
-/** The shortcut rows, ordered by everyday frequency (static, no data). */
+/**
+ * The shortcut rows, ordered by everyday frequency (static, no data). Deliberately
+ * excludes catalog + blog: both already sit in the top navbar, so repeating them here
+ * only lengthens the rail without adding a reachable surface.
+ */
 const ACTIONS: Array<QuickAction> = [
-    { key: "courses", Icon: GraduationCapIcon, href: "/courses" },
     { key: "review", Icon: CardsIcon, href: "/subjects" },
     { key: "practice", Icon: CodeIcon, href: "/challenges" },
     { key: "league", Icon: TrophyIcon, href: "/leaderboard" },
     { key: "rewards", Icon: GiftIcon, href: "/wallet" },
-    { key: "blog", Icon: ArticleIcon, href: "/blog" },
 ]
 
 /**
  * Left-rail "quick access" list — one-tap shortcuts to the surfaces a learner
- * reaches for most (catalog, practice, leaderboard, rewards). Pure navigation;
+ * reaches for most (review, practice, leaderboard, rewards). Pure navigation;
  * rows are flush-left (aligned with the heading + identity stats above), hover
  * underlines the label (go-there). Surfaces the spendable reward balance as a
  * chip on the rewards row. `"use client"` for the router + reward leaf query.

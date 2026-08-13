@@ -14,9 +14,8 @@ import {
     SignOutIcon,
     WalletIcon,
     PlusCircleIcon,
-    BookmarkSimpleIcon,
 } from "@phosphor-icons/react"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
 import { pathConfig } from "@/resources/path"
 import { useHasPermission } from "@/hooks/useHasPermission"
@@ -31,8 +30,8 @@ export type AccountMenuAuthedProps = WithClassNames<undefined>
 /**
  * Account dropdown menu for SIGNED-IN viewers: the dashboard hub, then the learning
  * section (My courses · Teaching for lecturers), then a primary section (Profile ·
- * Saved · Settings · Wallet with its live balance + a top-up shortcut), and a
- * separated destructive section (Sign out, danger).
+ * Settings · Wallet with its live balance + a top-up shortcut), and a separated
+ * destructive section (Sign out, danger).
  *
  * "Bảng điều khiển" is back as the FIRST row: it was dropped while `/dashboard` did
  * not exist, but the 4-tab cockpit now does and nothing else in the app links to it
@@ -43,13 +42,21 @@ export type AccountMenuAuthedProps = WithClassNames<undefined>
  * links on to the full `/quests` page — and so does "Xem lại hướng dẫn" (the welcome
  * tour still auto-starts for new users via `TourProvider`; the manual replay entry
  * was dropped with `ReplayGuideItem`).
- * Self-contained — owns navigation
- * (closes the menu then pushes) and the sign-out mutation; takes no data props.
+ *
+ * "Đã lưu / Yêu thích" (`/saved`) is now OUT of the primary section too (product call
+ * 2026-08-13: trim the menu to the rows people actually use). Note the side effect —
+ * this row was the ONLY in-app link to `/saved`, so the route is now reachable by URL
+ * only; the community shell's "Đã lưu" tab is a DIFFERENT surface (`/community/saved`).
+ * Re-add a link elsewhere before treating `/saved` as live navigation.
+ *
+ * Self-contained — owns navigation (closes the menu then pushes) and the sign-out
+ * mutation; takes no data props.
  *
  * @param props - optional className (placement only).
  */
 export const AccountMenuAuthed = ({ className }: AccountMenuAuthedProps) => {
     const t = useTranslations()
+    const locale = useLocale()
     const router = useRouter()
     const { close } = useAccountMenuOverlayState()
     const signOut = useMutateSignOutSwr()
@@ -69,13 +76,29 @@ export const AccountMenuAuthed = ({ className }: AccountMenuAuthedProps) => {
         [close, router],
     )
 
-    /** Close the menu, then sign out. */
+    /**
+     * Close the menu, sign out, then LEAVE the current route.
+     *
+     * The redirect is not cosmetic: the mutation only clears the token + redux session,
+     * it does not navigate, so signing out from a session-scoped page (`/dashboard`,
+     * `/courses/me`, `/wallet`) left the just-signed-out viewer parked on it reading
+     * empty widgets. `replace`, not `push` — Back must not walk into the page they were
+     * signed out of. `home()` is the UNGATED `/home` landing; the bare locale root `/`
+     * is proxy-gated and would bounce.
+     *
+     * Order: `close()` runs FIRST, while it is still synchronous — the awaited sign-out
+     * flips `authenticated` to false in its `finally`, which swaps this menu for
+     * `AccountMenuGuest` and unmounts us, so anything queued after the await fires from
+     * a dead component. `router` (a stable app-router handle) and the zustand `close`
+     * both survive that, but only `router.replace` still needs to run by then.
+     */
     const onLogout = useCallback(
         async () => {
             close()
             await signOut.trigger()
+            router.replace(pathConfig().locale(locale).home().build())
         },
-        [close, signOut],
+        [close, locale, router, signOut],
     )
 
     return (
@@ -129,15 +152,7 @@ export const AccountMenuAuthed = ({ className }: AccountMenuAuthedProps) => {
                     <UserIcon className="size-5" />
                     <Label>{t("nav.profile")}</Label>
                 </Dropdown.Item>
-                {/* "Đã lưu / Yêu thích" — the save-for-later library (/saved). */}
-                <Dropdown.Item
-                    id="saved"
-                    textValue={t("nav.saved")}
-                    onPress={() => go(pathConfig().locale().saved().build())}
-                >
-                    <BookmarkSimpleIcon className="size-5" />
-                    <Label>{t("nav.saved")}</Label>
-                </Dropdown.Item>
+                {/* "Đã lưu / Yêu thích" (/saved) đã BỎ khỏi mục này — xem docblock. */}
                 <Dropdown.Item
                     id="settings"
                     textValue={t("profileSettings.title")}

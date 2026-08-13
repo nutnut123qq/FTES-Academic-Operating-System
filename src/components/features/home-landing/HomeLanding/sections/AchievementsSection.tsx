@@ -28,11 +28,15 @@ const AchievementSlide = ({ item }: { item: AchievementStat }) => {
             className="w-[17rem] shrink-0 snap-start sm:w-[calc(50%-0.375rem)] lg:w-[calc(33.333%-0.5rem)]"
             cover={
                 <div className="relative w-full">
+                    {/* rounded-xl on the <img> itself: the HeroUI card pads its body (p-4) so the
+                        cover is INSET rather than bleeding to the card edge — without its own
+                        radius all four corners read square inside the rounded card. Radius stays
+                        here, not on MediaCard/globals, so other covers are untouched. */}
                     <img
                         src={item.imageSrc}
                         alt={title}
                         loading="lazy"
-                        className="aspect-video w-full object-cover"
+                        className="aspect-video w-full rounded-xl object-cover"
                     />
                     {/* year badge sits ON the photo (legacy slider idiom), accent instead of
                         the legacy red so it stays inside the AOS palette */}

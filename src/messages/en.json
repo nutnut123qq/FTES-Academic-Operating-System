@@ -416,7 +416,6 @@
     "contact": "Contact",
     "logout": "Logout",
     "profile": "Profile",
-    "saved": "Saved / Favorites",
     "settings": "Settings",
     "signIn": "Sign In",
     "learn": "Learn",
@@ -424,6 +423,8 @@
     "appearance": "Appearance",
     "mobileMenu": "Mobile navigation",
     "courseMenu": "Course menu",
+    "accountMenu": "Account menu",
+    "accountMenuWithStreak": "Account menu — {count}-day streak",
     "contentOutline": "Lesson outline",
     "collapseLeftRail": "Collapse left rail",
     "expandLeftRail": "Expand left rail",
@@ -451,8 +452,8 @@
     },
     "social": {
       "facebook": "FTES on Facebook",
-      "youtube": "FunnyCode on YouTube",
-      "tiktok": "FunnyCode on TikTok"
+      "youtube": "FTES on YouTube",
+      "tiktok": "FTES on TikTok"
     },
     "exploreTitle": "Explore",
     "supportTitle": "Support",
@@ -2310,7 +2311,12 @@
     "thisDevice": "This device",
     "revoke": "Log out",
     "empty": "No active sessions.",
-    "unknownDevice": "Unknown device"
+    "unknownDevice": "Unknown device",
+    "lastUsed": "Active {date}",
+    "revokeSuccess": "Device signed out.",
+    "revokeFailed": "Could not sign that device out.",
+    "loadFailed": "Could not load your devices.",
+    "retry": "Try again"
   },
   "follow": {
     "follow": "Follow",
@@ -2318,7 +2324,21 @@
   },
   "security": {
     "title": "Security",
-    "subtitle": "Protect your account with two-factor authentication.",
+    "subtitle": "Password, two-factor authentication and signed-in devices.",
+    "password": {
+      "title": "Change password",
+      "subtitle": "Update the password you sign in with.",
+      "current": "Current password",
+      "newPassword": "New password",
+      "confirm": "Confirm new password",
+      "submit": "Change password",
+      "policy": "The new password must be at least 8 characters and contain a letter and a digit.",
+      "mismatch": "The passwords do not match.",
+      "failed": "Could not change the password. Check your current password and the strength of the new one.",
+      "success": "Password changed.",
+      "revokesOtherSessions": "Changing your password signs out every other device.",
+      "revokesOtherSessionsHint": "The device you are using now stays signed in."
+    },
     "twoFactor": "Two-factor authentication",
     "enabledLabel": "Enabled",
     "disabledLabel": "Disabled",
@@ -2547,6 +2567,13 @@
       "or": "OR",
       "title": "Sign In",
       "desc": "Sign in to your account to continue",
+      "identifier": {
+        "label": "Email or username",
+        "placeholder": "Enter your email or username",
+        "required": "Email or username is required",
+        "invalid": "Invalid email",
+        "minLength": "Username must be at least 3 characters"
+      },
       "email": {
         "label": "Email",
         "placeholder": "Enter your email",
@@ -2591,6 +2618,12 @@
     "signUp": {
       "title": "Sign Up",
       "desc": "Create an account to continue",
+      "fullName": {
+        "label": "Full name",
+        "placeholder": "Enter your full name",
+        "required": "Full name is required",
+        "maxLength": "Full name must be at most 128 characters"
+      },
       "email": {
         "label": "Email",
         "placeholder": "Enter your email",
@@ -3012,8 +3045,8 @@
       "forYou": "Explore",
       "overview": "Overview",
       "explore": "Explore",
-      "courses": "Courses",
-      "community": "Community",
+      "courses": "My Courses",
+      "community": "My Resource",
       "following": "Following"
     },
     "loadError": "Could not load your dashboard. Your session may have expired.",
@@ -3130,6 +3163,16 @@
     },
     "explore": {
       "viewAll": "View all",
+      "marketplace": {
+        "title": "Marketplace",
+        "empty": {
+          "title": "Nothing in the shop yet",
+          "description": "New items will show up here. Check back later."
+        },
+        "error": {
+          "title": "Could not load the shop."
+        }
+      },
       "trending": {
         "title": "Trending now",
         "engagement": "{likes} likes · {comments} comments",
@@ -3144,6 +3187,21 @@
       "feed": {
         "title": "Community feed",
         "tabsAria": "Feed scope"
+      }
+    },
+    "myResource": {
+      "myPosts": {
+        "title": "My posts",
+        "seeMore": "View profile",
+        "emptyTitle": "You haven't posted anything yet",
+        "emptyDescription": "Posts you publish in the community will show up here.",
+        "guestTitle": "Sign in to see your posts",
+        "guestDescription": "This list is scoped to the signed-in account.",
+        "error": "Couldn't load your posts."
+      },
+      "saved": {
+        "title": "Saved",
+        "localOnlyNote": "Saved posts follow your account. Saved resources and courses live only in this browser — switch devices or clear browser data and they're gone."
       }
     }
   },
@@ -3172,6 +3230,9 @@
     }
   },
   "settings": {
+    "groups": {
+      "notifications": "Notifications"
+    },
     "language": {
       "title": "Language",
       "confirm": "Confirm",
@@ -4139,12 +4200,10 @@
       "retry": "Try again",
       "quickActions": "Quick actions",
       "actions": {
-        "courses": "Courses",
         "review": "Review",
         "practice": "Practice",
         "league": "Leaderboard",
-        "rewards": "Rewards",
-        "blog": "Blog"
+        "rewards": "Rewards"
       },
       "streakDays": "{count}-day streak",
       "points": "{count, number} points",
@@ -6091,6 +6150,13 @@
       "level": "Mastery level",
       "related": "Related subjects & courses"
     },
+    "summary": {},
+    "buckets": {},
+    "progress": {},
+    "unlock": {},
+    "list": {},
+    "noCourseMapped": {},
+    "guest": {},
     "retry": "Try again"
   },
   "certificateVerify": {

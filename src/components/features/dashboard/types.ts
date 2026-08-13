@@ -6,7 +6,12 @@ export type { DashboardTab }
 /**
  * Dashboard tabs in display order. "overview" = the cockpit (next action + pace);
  * "explore" = feed/discovery; "courses" = my courses + recommended; "community" =
- * leaderboard + standing. i18n labels live under `dashboard.tabs.*`.
+ * the learner's own material ("my resource" — it no longer shows leaderboard +
+ * standing). i18n labels live under `dashboard.tabs.*`.
+ *
+ * The ids are URL contract (`?tab=<id>`, read back by `useDashboardTabUrlSync`), so
+ * they stay put when a label is reworded — renaming "community" would silently bounce
+ * every existing link back to Overview. Reword the i18n value, never the id.
  */
 export const DASHBOARD_TABS: ReadonlyArray<DashboardTab> = [
     "overview",

@@ -8,10 +8,19 @@ import type { RestApiResponse, RestErrorBody, RestRequestConfig } from "./types"
 /**
  * Error thrown by {@link restRequest} on any non-2xx / non-`code:{200,1002}` response.
  *
- * A plain `Error` subclass — `.message` is identical to the legacy throw, so every
- * existing `catch`/`.message` consumer keeps working — augmented with the HTTP
- * `status` and backend `errorCode` so callers can branch (e.g. `401/403` →
- * entitlement invitation vs `5xx`/network → transient error).
+ * A plain `Error` subclass augmented with the HTTP `status`, the backend `errorCode`
+ * and the full error `body`, so callers can branch (e.g. `401/403` → entitlement
+ * invitation vs `5xx`/network → transient error).
+ *
+ * `.message` is the backend `message` ALONE. It used to be the machine details glued
+ * onto it (`"Invalid credentials — IDENTITY_INVALID_CREDENTIALS — c04147bb-…"`) — the
+ * toast wrappers pass `.message` straight through as the description, so every failure
+ * showed the user an error code and a trace uuid. Nothing is lost: the code and the
+ * trace id are carried as {@link RestError.errorCode} / {@link RestError.body} for the
+ * callers that branch on them.
+ *
+ * ⚠️ Read the code from `.errorCode`, never by sniffing `.message` for it — a
+ * `message.includes("<CODE>")` check silently stops matching now.
  */
 export class RestError extends Error {
     /** HTTP status code (0 when no response reached, e.g. a network failure). */
@@ -115,8 +124,12 @@ const sendRestRequest = async <T>(
         if (envelope.code !== 200 && envelope.code !== 1002) {
             const errorBody = envelope.data as unknown as RestErrorBody | undefined
             const errorCode = errorBody?.errorCode
-            const message = [envelope.message, errorCode].filter(Boolean).join(" — ")
-            throw new RestError(message || "REST request failed", envelope.code, errorCode, errorBody)
+            throw new RestError(
+                envelope.message || "REST request failed",
+                envelope.code,
+                errorCode,
+                errorBody,
+            )
         }
 
         // data có thể null hợp lệ (endpoint void) — caller khai T=void cho các call đó.
@@ -129,11 +142,8 @@ const sendRestRequest = async <T>(
             const envelope = error.response.data as RestApiResponse<RestErrorBody> | undefined
             const errorBody = envelope?.data
             const errorCode = errorBody?.errorCode
-            const message = [envelope?.message, errorCode, errorBody?.traceId]
-                .filter(Boolean)
-                .join(" — ")
             throw new RestError(
-                message || error.message || "REST request failed",
+                envelope?.message || error.message || "REST request failed",
                 error.response.status,
                 errorCode,
                 errorBody ?? undefined,

@@ -23,12 +23,13 @@ import type {
 import { BrandLogo } from "@/components/blocks/identity/BrandLogo"
 import { FooterNavColumn } from "./FooterNavColumn"
 
-/** Kênh mạng xã hội chính thức (chủ box cung cấp 2026-07-28). YouTube/TikTok vẫn là kênh
- *  FunnyCode — cố ý, FTES chưa mở kênh riêng. */
+/** Kênh mạng xã hội chính thức. FTES ĐÃ mở kênh riêng cho YouTube/TikTok — chủ box chốt
+ *  2026-08-13: `@ftes-edu` (YouTube) và `@ftes_vn` (TikTok). Thay cho ghi chú cũ 2026-07-28
+ *  ("vẫn là kênh FunnyCode, cố ý") — quyết định đó đã hết hiệu lực, ĐỪNG revert về @funnycode. */
 const SOCIALS = [
     { key: "facebook", href: "https://www.facebook.com/ftes.edu/", Icon: FacebookLogoIcon },
-    { key: "youtube", href: "https://www.youtube.com/@funnycode", Icon: YoutubeLogoIcon },
-    { key: "tiktok", href: "https://www.tiktok.com/@funnycode_vn", Icon: TiktokLogoIcon },
+    { key: "youtube", href: "https://www.youtube.com/@ftes-edu", Icon: YoutubeLogoIcon },
+    { key: "tiktok", href: "https://www.tiktok.com/@ftes_vn", Icon: TiktokLogoIcon },
 ] as const
 
 /** Props for {@link Footer}. */

@@ -309,7 +309,18 @@ export const ProfilePortfolio = () => {
             {portfolio ? (
                 <div className="flex flex-col gap-6">
                     {isEmpty && editing === null ? (
-                        <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-separator p-6 text-center">
+                        /*
+                         * Empty state = MỘT vùng bấm được (dashed placeholder cả khối), không nút CTA
+                         * riêng: dấu cộng + tiêu đề + mô tả đã nói đủ hành động, thêm nút primary là
+                         * lặp lại chính nó lần thứ hai. Chữ trên nút biến mất nên nhãn hành động
+                         * chuyển sang aria-label (key empty.cta giữ nguyên, chỉ đổi chỗ dùng).
+                         */
+                        <button
+                            type="button"
+                            aria-label={t("profile.portfolio.empty.cta")}
+                            onClick={() => setEditing({ kind: "addProject" })}
+                            className="flex w-full cursor-pointer flex-col items-center gap-3 rounded-2xl border border-dashed border-separator p-6 text-center transition-colors hover:border-accent hover:bg-default/40 focus-visible:outline-2 focus-visible:outline-accent"
+                        >
                             <PlusIcon className="size-8 text-muted" aria-hidden focusable="false" />
                             <div className="flex flex-col gap-2">
                                 <Typography type="body" weight="medium">
@@ -319,15 +330,7 @@ export const ProfilePortfolio = () => {
                                     {t("profile.portfolio.empty.description")}
                                 </Typography>
                             </div>
-                            <Button
-                                size="sm"
-                                variant="primary"
-                                onPress={() => setEditing({ kind: "addProject" })}
-                            >
-                                <PlusIcon className="size-4" aria-hidden focusable="false" />
-                                {t("profile.portfolio.empty.cta")}
-                            </Button>
-                        </div>
+                        </button>
                     ) : (
                         <>
                             {/* resume */}

@@ -32,13 +32,23 @@ const USERNAME_MIN_LENGTH = 3
 const USERNAME_MAX_LENGTH = 64
 
 /**
+ * Full name is `@Size(max = 128)` and OPTIONAL on the backend, but the FE makes it REQUIRED: the
+ * identity module publishes `identity.user.registered` and the profile module seeds `displayName`
+ * from `fullName`, so an account registered without one gets no real display name at all — and
+ * sign-up is the only place we ask for it. Requiring it here is a deliberate FE-side tightening of
+ * the backend contract, not a mirror of it.
+ */
+const FULL_NAME_MAX_LENGTH = 128
+
+/**
  * Sign-up form hook (replaces the formik singleton) — state SHARED via {@link useSignUpStore} so it
  * survives the Registration→OTP step transition. Returns a formik-compatible shape. The current step
  * comes from redux `state.signUpState`.
  *
  * Sign-up is REST (`POST /api/v1/auth/register` → `POST /api/v1/auth/register/verify`): the backend
  * exposes no GraphQL auth mutations, so the old `signUpInit`/`signUpVerifyOtp` GraphQL flow (and its
- * `challengeId`) is gone. Step 1 creates a `PENDING_VERIFICATION` account and emails a 6-digit OTP;
+ * `challengeId`) is gone. Step 1 posts `{email, password, fullName, username?}`, creates a
+ * `PENDING_VERIFICATION` account and emails a 6-digit OTP;
  * an existing ACTIVE email fails with `409 IDENTITY_EMAIL_TAKEN`, mapped to the inline
  * `auth.signUp.email.alreadyExists` error (the old debounced GraphQL `checkEmailExists` bloom-filter
  * probe was GraphQL-only and has been removed — the 409 is now the source of truth). Step 2 verifies
@@ -58,6 +68,7 @@ export const useSignUpForm = () => {
 
     const email = useSignUpStore((state) => state.email)
     const emailExists = useSignUpStore((state) => state.emailExists)
+    const fullName = useSignUpStore((state) => state.fullName)
     const username = useSignUpStore((state) => state.username)
     const password = useSignUpStore((state) => state.password)
     const confirmPassword = useSignUpStore((state) => state.confirmPassword)
@@ -73,12 +84,12 @@ export const useSignUpForm = () => {
     const reset = useSignUpStore((state) => state.reset)
 
     const values = useMemo(
-        () => ({ state: signUpState, email, emailExists, username, password, confirmPassword, agreeToTerms, challengeId, captchaToken, otp }),
-        [signUpState, email, emailExists, username, password, confirmPassword, agreeToTerms, challengeId, captchaToken, otp],
+        () => ({ state: signUpState, email, emailExists, fullName, username, password, confirmPassword, agreeToTerms, challengeId, captchaToken, otp }),
+        [signUpState, email, emailExists, fullName, username, password, confirmPassword, agreeToTerms, challengeId, captchaToken, otp],
     )
 
     const errors = useMemo(() => {
-        const result: { email?: string, username?: string, password?: string, confirmPassword?: string, agreeToTerms?: string, otp?: string } = {}
+        const result: { email?: string, fullName?: string, username?: string, password?: string, confirmPassword?: string, agreeToTerms?: string, otp?: string } = {}
         const trimmedEmail = email.trim()
         if (!trimmedEmail) {
             result.email = t("auth.signUp.email.required")
@@ -88,6 +99,14 @@ export const useSignUpForm = () => {
             result.email = t("auth.signUp.email.alreadyExists")
         }
         if (signUpState === SignUpState.Registration) {
+            // Full name is REQUIRED here even though the backend accepts it as optional — see
+            // FULL_NAME_MAX_LENGTH for why the FE tightens the contract.
+            const trimmedFullName = fullName.trim()
+            if (!trimmedFullName) {
+                result.fullName = t("auth.signUp.fullName.required")
+            } else if (trimmedFullName.length > FULL_NAME_MAX_LENGTH) {
+                result.fullName = t("auth.signUp.fullName.maxLength")
+            }
             // Username is OPTIONAL — validate ONLY when the user typed something; blank stays valid
             // (the backend derives the username from the email local-part).
             const trimmedUsername = username.trim()
@@ -122,7 +141,7 @@ export const useSignUpForm = () => {
             }
         }
         return result
-    }, [email, emailExists, username, password, confirmPassword, agreeToTerms, otp, signUpState, t])
+    }, [email, emailExists, fullName, username, password, confirmPassword, agreeToTerms, otp, signUpState, t])
 
     const setFieldValue = useCallback(
         (field: string, value: string | boolean | undefined, shouldValidate?: boolean) => {
@@ -134,7 +153,7 @@ export const useSignUpForm = () => {
     const setFieldTouched = useCallback(
         (field: string, value = true, shouldValidate?: boolean) => {
             void shouldValidate
-            if (field === "email" || field === "username" || field === "password" || field === "confirmPassword" || field === "agreeToTerms" || field === "otp") {
+            if (field === "email" || field === "fullName" || field === "username" || field === "password" || field === "confirmPassword" || field === "agreeToTerms" || field === "otp") {
                 setTouchedStore(field, value)
             }
         },
@@ -153,6 +172,9 @@ export const useSignUpForm = () => {
                     await mutateRegister({
                         email: email.trim(),
                         password,
+                        // required by the FE (validated above) — the backend forwards it to the
+                        // profile module as the initial displayName.
+                        fullName: fullName.trim(),
                         username: trimmedUsername ? trimmedUsername.toLowerCase() : undefined,
                     })
                 } catch (error) {
@@ -193,7 +215,7 @@ export const useSignUpForm = () => {
         } finally {
             setIsSubmitting(false)
         }
-    }, [signUpState, email, username, password, otp, mutateRegister, mutateVerifyRegistration, runRest, setValue, setTouchedStore, dispatch, reset, onAuthenticationClose, setIsSubmitting, t])
+    }, [signUpState, email, fullName, username, password, otp, mutateRegister, mutateVerifyRegistration, runRest, setValue, setTouchedStore, dispatch, reset, onAuthenticationClose, setIsSubmitting, t])
 
     // the 409-driven "email already registered" flag is only valid for the email it was raised
     // for — editing the email clears it (the next submit re-checks against the backend).

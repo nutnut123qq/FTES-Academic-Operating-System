@@ -4,13 +4,24 @@ import React from "react"
 import { Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { AppearanceSection } from "@/components/features/profile/Settings/AppearanceSection"
+import { SecuritySection } from "@/components/features/profile/Settings/SecuritySection"
+import { PreferencesSurface } from "@/components/features/notification/NotificationCenter/PreferencesSurface"
 
 /**
  * `/profile/settings` — the account settings hub the account menu's "Cài đặt"
- * entry points at. Renders inside `ProfileShell` (same frame as `/profile/edit`).
- * Currently holds a single block, Appearance — the rest of the settings tree
- * declared in `pathConfig` (security, sessions, ai-settings…) has no surface yet
- * and is deliberately NOT listed here as dead links.
+ * entry points at. Rendered standalone (the profile layout skips `ProfileShell`
+ * for this segment), one column, three groups stacked in order: appearance →
+ * notifications → security.
+ *
+ * ONE PAGE, not three: `pathConfig` also declares `/settings/security` and
+ * `/settings/sessions`, but splitting the groups across sub-routes costs a
+ * router shell + nav per group and buys nothing — the three groups are short
+ * enough to scan in a single scroll.
+ *
+ * Appearance and security carry their own headings; the notification group gets
+ * its heading here because `PreferencesSurface` is shared with `/notifications`
+ * (where its in-card title is the whole heading) and must not be restyled for
+ * this page.
  */
 const SettingsPage = () => {
     const t = useTranslations()
@@ -25,7 +36,17 @@ const SettingsPage = () => {
                     {t("profileSettings.subtitle")}
                 </Typography>
             </div>
+
             <AppearanceSection />
+
+            <section className="flex max-w-xl flex-col gap-6">
+                <Typography type="h6" weight="bold">
+                    {t("settings.groups.notifications")}
+                </Typography>
+                <PreferencesSurface />
+            </section>
+
+            <SecuritySection />
         </div>
     )
 }

@@ -1,11 +1,13 @@
 "use client"
 
 /**
- * **Sign-in step 1** — OAuth shortcuts, email/password, link to sign-up tab.
+ * **Sign-in step 1** — OAuth shortcuts, identifier (email OR username) + password, link to the
+ * sign-up tab.
  *
  * Container: owns the sign-in formik (singleton `useSignInForm()`), the
  * router/dispatch wiring, and the OAuth redirect action; renders presentational
- * children inside the modal chrome (`Modal.CloseTrigger`, `Header`, `Body`).
+ * children inside the modal chrome (`Modal.CloseTrigger`, `Header`, `Body`). The credential fields
+ * live in a real `<form>` (Enter submits); the OAuth button sits outside it on purpose.
  *
  * @see {@link SignInSection} for Redux step routing and folder conventions.
  */
@@ -114,9 +116,18 @@ export const CredentialsState = () => {
         ],
     )
 
+    /**
+     * Native form submit — also fires when the user presses Enter inside any field.
+     *
+     * The submit Button deliberately carries NO `onPress`: HeroUI's `Button` spreads `type` into
+     * `react-aria`'s `useButton`, which puts `type="submit"` on the real DOM `<button>`, so a click
+     * already submits the form through this handler. Keeping `onPress` as well would call the login
+     * endpoint TWICE per click. Same pattern as the `OtpVerifyForm` / `ForgotPasswordForm` pages.
+     */
     const onSubmit = useCallback(
-        () => {
-            submitForm()
+        (event: React.FormEvent) => {
+            event.preventDefault()
+            void submitForm()
         },
         [
             submitForm,
@@ -167,55 +178,60 @@ export const CredentialsState = () => {
                     <Separator className="flex-1" />
                 </div>
 
-                <div className="h-3" />
-                <EmailField
-                    value={values.email}
-                    error={errors.email}
-                    touched={touched.email}
-                    onChangeValue={onChangeEmail}
-                    onBlurField={onBlurEmail}
-                />
-
-                <div className="h-3" />
-                <PasswordField
-                    value={values.password}
-                    error={errors.password}
-                    touched={touched.password}
-                    onChangeValue={onChangePassword}
-                    onBlurField={onBlurPassword}
-                />
-
-                <div className="h-3" />
-                <RememberMeRow
-                    isSelected={values.rememberMe}
-                    onChangeSelected={onChangeRememberMe}
-                    onForgotPassword={onForgotPassword}
-                />
-
-                {publicEnv().captcha.enabled && (
-                    <Turnstile
-                        onVerify={(token) => setFieldValue("captchaToken", token)}
-                        onExpire={() => setFieldValue("captchaToken", undefined)}
-                        onError={() => setFieldValue("captchaToken", undefined)}
+                {/*
+                  * Real <form> so Enter inside a field submits (the Google button stays OUTSIDE it,
+                  * otherwise pressing it would submit the credentials form too).
+                  */}
+                <form onSubmit={onSubmit} noValidate>
+                    <div className="h-3" />
+                    <EmailField
+                        value={values.email}
+                        error={errors.email}
+                        touched={touched.email}
+                        onChangeValue={onChangeEmail}
+                        onBlurField={onBlurEmail}
                     />
-                )}
 
-                <div className="h-3" />
-                <Button
-                    type="submit"
-                    variant="primary"
-                    fullWidth
-                    isPending={isSubmitting}
-                    isDisabled={isSubmitDisabled}
-                    onPress={onSubmit}
-                >
-                    {({ isPending }) => (
-                        <>
-                            {isPending ? <Spinner color="current" size="sm" /> : null}
-                            {t("auth.signIn.submit")}
-                        </>
+                    <div className="h-3" />
+                    <PasswordField
+                        value={values.password}
+                        error={errors.password}
+                        touched={touched.password}
+                        onChangeValue={onChangePassword}
+                        onBlurField={onBlurPassword}
+                    />
+
+                    <div className="h-3" />
+                    <RememberMeRow
+                        isSelected={values.rememberMe}
+                        onChangeSelected={onChangeRememberMe}
+                        onForgotPassword={onForgotPassword}
+                    />
+
+                    {publicEnv().captcha.enabled && (
+                        <Turnstile
+                            onVerify={(token) => setFieldValue("captchaToken", token)}
+                            onExpire={() => setFieldValue("captchaToken", undefined)}
+                            onError={() => setFieldValue("captchaToken", undefined)}
+                        />
                     )}
-                </Button>
+
+                    <div className="h-3" />
+                    <Button
+                        type="submit"
+                        variant="primary"
+                        fullWidth
+                        isPending={isSubmitting}
+                        isDisabled={isSubmitDisabled}
+                    >
+                        {({ isPending }) => (
+                            <>
+                                {isPending ? <Spinner color="current" size="sm" /> : null}
+                                {t("auth.signIn.submit")}
+                            </>
+                        )}
+                    </Button>
+                </form>
 
                 <div className="h-3" />
                 <SignUpPrompt onSwitchToSignUp={onSwitchToSignUp} />

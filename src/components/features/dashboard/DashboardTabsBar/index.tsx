@@ -6,7 +6,7 @@ import {
     HouseIcon,
     CompassIcon,
     GraduationCapIcon,
-    TrophyIcon,
+    BookmarkSimpleIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import type { WithClassNames } from "@/modules/types/base/class-name"
@@ -15,12 +15,16 @@ import type { DashboardTab } from "../types"
 import { ExtendedTabs } from "@/components/blocks/navigation/ExtendedTabs"
 import { useDashboardTabStore } from "@/hooks/zustand/dashboardTab/store"
 
-/** Leading icon shown on each dashboard tab, keyed by tab id. */
+/**
+ * Leading icon shown on each dashboard tab, keyed by tab id. The icon follows the
+ * label, not the id: "community" is labelled "my resource", so it carries a bookmark
+ * (saved material) rather than a trophy (leaderboard, its earlier framing).
+ */
 const TAB_ICONS: Record<DashboardTab, typeof HouseIcon> = {
     overview: HouseIcon,
     explore: CompassIcon,
     courses: GraduationCapIcon,
-    community: TrophyIcon,
+    community: BookmarkSimpleIcon,
 }
 
 /** Props for {@link DashboardTabsBar}. */

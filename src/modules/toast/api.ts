@@ -21,6 +21,27 @@ export interface ToastMessages {
     defaultError: string
 }
 
+/**
+ * Whether a rejection is an AUTHORIZATION failure, so the caller can swap the raw backend
+ * text for the friendly "you are not authorized" toast.
+ *
+ * Reads `errorCode` FIRST and only then sniffs the message. `RestError.message` used to be
+ * the backend message with the machine code glued onto it (`"… — PLATFORM_UNAUTHORIZED — <trace>"`),
+ * so the message sniff alone used to catch REST auth failures by their CODE. The code is no
+ * longer in the text (it moved to `RestError.errorCode`), so sniffing alone silently stopped
+ * matching and an auth failure started rendering the raw backend string. Duck-typed rather than
+ * `instanceof RestError` on purpose — this module is the pure toast core and must not pull the
+ * REST client (and its interceptors) in behind it; GraphQL rejections carry no `errorCode` and
+ * still fall through to the message check that has always served them.
+ */
+const isUnauthorizedError = (error: Error): boolean => {
+    const errorCode = (error as { errorCode?: unknown }).errorCode
+    if (typeof errorCode === "string" && errorCode.toLowerCase().includes("unauthorized")) {
+        return true
+    }
+    return error.message.toLowerCase().includes("unauthorized")
+}
+
 /** English fallbacks so the pure core works without i18n (e.g. tests, server contexts). */
 const DEFAULT_TOAST_MESSAGES: ToastMessages = {
     successTitle: "Success",
@@ -110,7 +131,7 @@ export const runGraphQLWithToast = async <T>(
         return true
     } catch (error) {
         const _error = error as Error
-        if (_error.message.toLowerCase().includes("unauthorized")) {
+        if (isUnauthorizedError(_error)) {
             if (showErrorToast) {
                 showUnauthorizedToast(messages)
             }
@@ -166,7 +187,7 @@ export const runRestWithToast = async <T>(
         return response
     } catch (error) {
         const _error = error as Error
-        if (_error.message.toLowerCase().includes("unauthorized")) {
+        if (isUnauthorizedError(_error)) {
             if (showErrorToast) {
                 showUnauthorizedToast(messages)
             }

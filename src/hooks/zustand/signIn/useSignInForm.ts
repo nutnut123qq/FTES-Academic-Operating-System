@@ -13,6 +13,12 @@ import { useAppDispatch, useAppSelector } from "@/redux/hooks"
 import { resetSignInState, setSignInState, SignInState } from "@/redux/slices/state"
 
 /**
+ * Shortest accepted username identifier, aligned with the sign-up username rule (3–64 chars). Only
+ * applied when the typed identifier has no "@" — with one it is validated as an email instead.
+ */
+const IDENTIFIER_MIN_LENGTH = 3
+
+/**
  * Sign-in form hook (replaces the formik singleton) — state SHARED via {@link useSignInStore} so it
  * survives any step transition. Returns a formik-compatible shape (`values/errors/touched/submitForm/
  * setFieldValue/setFieldTouched/isSubmitting`) so consumers need no changes.
@@ -53,16 +59,27 @@ export const useSignInForm = () => {
     )
 
     /**
-     * Errors computed live. Email is validated for format only (required + `isEmail`) — the old
-     * `checkEmailExists` "notExists" gate is gone (backend has no such endpoint; it blocked login).
+     * Errors computed live. The `email` field is really the LOGIN IDENTIFIER: the backend resolves
+     * it with `findByUsernameOrEmailIgnoreCase`, so a username is just as valid as an email and the
+     * blanket `isEmail` check used to reject perfectly good accounts. It now runs ONLY when the
+     * value contains "@" — that still catches a mistyped email ("abc@gmial") while letting a plain
+     * username through on its own rule (min length). The store field keeps the name `email` so the
+     * OTP / two-factor / remember-me steps that read it need no change; only the labels the user
+     * sees moved to the `auth.signIn.identifier.*` keys. The old `checkEmailExists` "notExists"
+     * gate is gone (backend has no such endpoint; it blocked login).
      */
     const errors = useMemo(() => {
         const result: { email?: string, password?: string, otp?: string } = {}
         const trimmedEmail = email.trim()
         if (!trimmedEmail) {
-            result.email = t("auth.signIn.email.required")
-        } else if (!validator.isEmail(trimmedEmail)) {
-            result.email = t("auth.signIn.email.invalid")
+            result.email = t("auth.signIn.identifier.required")
+        } else if (trimmedEmail.includes("@")) {
+            // contains "@" => the user meant an email, so hold it to the email format
+            if (!validator.isEmail(trimmedEmail)) {
+                result.email = t("auth.signIn.identifier.invalid")
+            }
+        } else if (trimmedEmail.length < IDENTIFIER_MIN_LENGTH) {
+            result.email = t("auth.signIn.identifier.minLength")
         }
         if (signInState === SignInState.Credentials) {
             if (!password) {

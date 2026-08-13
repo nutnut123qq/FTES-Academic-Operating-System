@@ -1,0 +1,388 @@
+"use client"
+
+import React, { useEffect, useMemo, useState } from "react"
+import { Button, Chip, Tabs, Typography } from "@heroui/react"
+import {
+    BookmarkSimpleIcon,
+    ChatCircleTextIcon,
+    FileTextIcon,
+    GraduationCapIcon,
+    SquaresFourIcon,
+} from "@phosphor-icons/react"
+import { useTranslations } from "next-intl"
+import { Link, useRouter } from "@/i18n/navigation"
+import { useAppDispatch, useAppSelector } from "@/redux/hooks"
+import { AuthenticationModalTab, setAuthenticationModalTab } from "@/redux/slices/tabs"
+import { useAuthenticationOverlayState } from "@/hooks/zustand/overlay/hooks"
+import {
+    useHydrateSavedItems,
+    useSavedItemsStore,
+    type SavedEntityType,
+    type SavedItem,
+} from "@/hooks/zustand/savedItems"
+import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { EmptyContent } from "@/components/blocks/async/EmptyContent"
+import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
+import { LabeledCard } from "@/components/blocks/cards/LabeledCard"
+import { SaveButton } from "@/components/blocks/buttons/SaveButton"
+import { ExtendedTabs } from "@/components/blocks/navigation/ExtendedTabs"
+import { SearchInput } from "@/components/reuseable/SearchInput"
+import { FtesMascot } from "@/components/reuseable/FtesMascot"
+import { useQueryResourceHubSwr } from "@/components/features/resource/hooks/useQueryResourceHubSwr"
+import { useQueryCoursesSwr } from "@/components/features/course/hooks/useQueryCoursesSwr"
+import { displayCourseCode } from "@/components/features/course/courseCode"
+import {
+    useQueryBookmarkedPostsSwr,
+    type SavedPost,
+} from "@/components/features/community/hooks/useQueryBookmarkedPostsSwr"
+import type { WithClassNames } from "@/modules/types/base/class-name"
+
+/** The type tabs: "all" + one per saveable entity type. */
+type SavedTab = "all" | SavedEntityType
+
+/** Tab order + icon per tab (icon+label tabs hide the label `<sm`). */
+const TABS: Array<{ key: SavedTab; Icon: typeof SquaresFourIcon }> = [
+    { key: "all", Icon: SquaresFourIcon },
+    { key: "resource", Icon: FileTextIcon },
+    { key: "course", Icon: GraduationCapIcon },
+    { key: "post", Icon: ChatCircleTextIcon },
+]
+
+/** One resolved row: a saved entry joined against its dataset. */
+interface SavedRow {
+    entry: SavedItem
+    /** Detail-page href (locale-relative, rendered via i18n Link). */
+    href: string
+    /** Primary display text (title; posts: content snippet). */
+    title: string
+    /** Secondary context line (resource subject/size; course name; post source). */
+    context: string
+    /** Post-only author name (avatar + name row). */
+    author?: string
+    /** Search haystack (title; posts add the author). */
+    haystack: string
+}
+
+/** Props for {@link SavedSection}. */
+export type SavedSectionProps = WithClassNames<undefined>
+
+/**
+ * "Đã lưu" on the dashboard — the SAME library `/saved` renders (tất cả / tài liệu /
+ * khoá học / bài viết, search, unsave-in-place, per-tab empty states), minus the page
+ * heading + page container, wrapped in the dashboard's `LabeledCard`.
+ *
+ * ⚠️ THIS IS A COPY OF THE `SavedLibrary` BODY, not a shared component — and it is meant
+ * to stop being one. The intended end state is a single header-less body used by BOTH
+ * `/saved` and this panel; that move needs an edit to
+ * `features/saved/SavedLibrary/index.tsx`, which sits outside this change's file scope.
+ * Until then, any fix to the join / row / search logic must be made in both places.
+ *
+ * The mixed durability of the three tabs is stated IN THE UI (see the note under the
+ * label) because it is not guessable: saved RESOURCES and COURSES live only in this
+ * browser's localStorage (`ftes.savedItems.v1`) and are lost on another device or a
+ * storage clear, while saved POSTS are real backend bookmarks
+ * (`GET /api/v1/community/bookmarks/posts`) that follow the account.
+ *
+ * The server bookmark list is reconciled into the store on load (additive merge), so a
+ * post bookmarked elsewhere still renders here. The merge is idempotent and only ever
+ * one of the two surfaces (`/saved` or this panel) is mounted at a time, so nothing runs
+ * twice — and even mounted together it would no-op once the ids are present.
+ *
+ * @param props - optional root class name (placement only)
+ */
+export const SavedSection = ({ className }: SavedSectionProps) => {
+    const t = useTranslations()
+    const router = useRouter()
+    const dispatch = useAppDispatch()
+    const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const { open: openAuthentication } = useAuthenticationOverlayState()
+
+    useHydrateSavedItems()
+    const items = useSavedItemsStore((state) => state.items)
+    const isHydrated = useSavedItemsStore((state) => state.isHydrated)
+    const mergeSavedPosts = useSavedItemsStore((state) => state.mergeSavedPosts)
+
+    const [tab, setTab] = useState<SavedTab>("all")
+    const [query, setQuery] = useState("")
+
+    // resource/course display data joins against the hub/catalog datasets;
+    // saved POSTS hydrate from the caller's real BE bookmarks (no fake-id feed calls).
+    const { resources, isLoading: resourcesLoading, error: resourcesError, mutate: mutateResources } = useQueryResourceHubSwr()
+    const { courses, isLoading: coursesLoading, error: coursesError, mutate: mutateCourses } = useQueryCoursesSwr()
+    const { posts: bookmarkedPosts, isLoading: postsLoading, error: postsError, mutate: mutatePosts } = useQueryBookmarkedPostsSwr()
+
+    /** Real bookmarked posts keyed by id — the display source for saved post rows. */
+    const postsById = useMemo(() => {
+        const map = new Map<string, SavedPost>()
+        for (const post of bookmarkedPosts) {
+            map.set(post.id, post)
+        }
+        return map
+    }, [bookmarkedPosts])
+
+    // Reconcile the store with the REAL server bookmark list: the BE bookmark endpoint —
+    // not this browser's localStorage — is the source of truth for which POSTS are saved.
+    // `mergeSavedPosts` is additive + no-ops once every id is present, so this is loop-safe
+    // despite `bookmarkedPosts` changing identity each render.
+    useEffect(() => {
+        if (bookmarkedPosts.length === 0) {
+            return
+        }
+        mergeSavedPosts(bookmarkedPosts.map((post) => ({ entityId: post.id })))
+    }, [bookmarkedPosts, mergeSavedPosts])
+
+    const isJoining =
+        !isHydrated ||
+        resourcesLoading ||
+        coursesLoading ||
+        postsLoading
+
+    // any join dataset failing → the library can't resolve rows: show one error + retry all
+    const joinError = resourcesError || coursesError || postsError
+    const retryJoins = () => {
+        void mutateResources()
+        void mutateCourses()
+        void mutatePosts()
+    }
+
+    /** Saved entries resolved against the datasets, newest-saved first. */
+    const rows = useMemo<Array<SavedRow>>(() => {
+        const resolve = (entry: SavedItem): SavedRow | null => {
+            if (entry.entityType === "resource") {
+                const resource = resources.find((item) => item.id === entry.entityId)
+                if (!resource) return null
+                return {
+                    entry,
+                    href: `/resources/${resource.id}`,
+                    title: resource.title,
+                    context: `${resource.subject} · ${resource.sizeLabel}`,
+                    haystack: resource.title,
+                }
+            }
+            if (entry.entityType === "course") {
+                const course = courses.find((item) => item.id === entry.entityId)
+                if (!course) return null
+                // mã gói nội bộ (…_PACKAGE_MAIN) không phải mã môn → helper trả "" và kicker biến mất,
+                // nhưng haystack giữ mã THÔ để tìm theo mã (kể cả mã gói) vẫn trúng
+                const code = displayCourseCode(course.code)
+                return {
+                    entry,
+                    href: `/courses/${course.id}`,
+                    title: code ? `${code} · ${course.name}` : course.name,
+                    context: t("courseSystem.catalog.lessonsCount", { count: course.lessons }),
+                    haystack: `${course.code} ${course.name}`,
+                }
+            }
+            // post: author/title/snippet come from the real BE bookmark endpoint; the
+            // source label comes from the entry captured at save time
+            const post = postsById.get(entry.entityId)
+            if (!post) return null
+            const snippet = post.title ? `${post.title} — ${post.snippet}` : post.snippet
+            const sourceLabel =
+                entry.source?.kind === "community" || !entry.source
+                    ? t("savedItems.source.community")
+                    : entry.source.label
+            return {
+                entry,
+                href: `/community/${entry.entityId}`,
+                title: snippet,
+                context: sourceLabel,
+                author: post.authorName,
+                haystack: `${post.authorName} ${snippet}`,
+            }
+        }
+        return [...items]
+            .sort((a, b) => b.savedAt - a.savedAt)
+            .map(resolve)
+            .filter((row): row is SavedRow => row !== null)
+    }, [items, resources, courses, postsById, t])
+
+    const tabRows = rows.filter((row) => tab === "all" || row.entry.entityType === tab)
+    const trimmedQuery = query.trim().toLowerCase()
+    const visibleRows = tabRows.filter(
+        (row) => trimmedQuery === "" || row.haystack.toLowerCase().includes(trimmedQuery),
+    )
+
+    /** Gate: guests see the inline sign-in prompt instead of the library. */
+    const onSignIn = () => {
+        dispatch(setAuthenticationModalTab(AuthenticationModalTab.SignIn))
+        openAuthentication()
+    }
+
+    /** Per-tab browse CTA target (resources / courses / community feed). */
+    const onBrowse = () => {
+        if (tab === "resource") {
+            router.push("/resources")
+            return
+        }
+        if (tab === "post") {
+            router.push("/community")
+            return
+        }
+        router.push("/courses")
+    }
+
+    return (
+        <LabeledCard
+            className={className}
+            label={t("dashboard.myResource.saved.title")}
+            icon={<BookmarkSimpleIcon aria-hidden focusable="false" className="size-5" />}
+            onSeeMore={() => router.push("/saved")}
+            seeMoreLabel={t("dashboard.explore.viewAll")}
+            // the rows are bordered boxes of their own → no card-in-card
+            frameless
+            contentClassName="flex flex-col gap-3"
+        >
+            {/* durability of a "saved" item differs per tab — say so, it is not guessable */}
+            <Typography type="body-xs" color="muted">
+                {t("dashboard.myResource.saved.localOnlyNote")}
+            </Typography>
+
+            {!authenticated ? (
+                <EmptyContent
+                    icon={<FtesMascot pose="greeting" size="lg" />}
+                    title={t("savedItems.signInTitle")}
+                    description={t("savedItems.signInHint")}
+                    action={
+                        <Button size="sm" variant="primary" onPress={onSignIn}>
+                            {t("savedItems.signInCta")}
+                        </Button>
+                    }
+                />
+            ) : (
+                <>
+                    {/* type tabs — icon + label; the label hides `<sm` (aria-label keeps the name) */}
+                    <ExtendedTabs selectedKey={tab} onSelectionChange={(key) => setTab(key as SavedTab)}>
+                        <Tabs.ListContainer>
+                            <Tabs.List aria-label={t("savedItems.title")}>
+                                {TABS.map(({ key, Icon }) => (
+                                    <Tabs.Tab key={key} id={key} aria-label={t(`savedItems.tabs.${key}`)}>
+                                        <span className="flex items-center gap-2">
+                                            <Icon aria-hidden focusable="false" className="size-4" />
+                                            <span className="hidden sm:inline">{t(`savedItems.tabs.${key}`)}</span>
+                                        </span>
+                                    </Tabs.Tab>
+                                ))}
+                            </Tabs.List>
+                        </Tabs.ListContainer>
+                    </ExtendedTabs>
+
+                    <SearchInput
+                        value={query}
+                        onValueChange={setQuery}
+                        placeholder={t("savedItems.searchPlaceholder")}
+                        className="sm:max-w-none"
+                    />
+
+                    <AsyncContent
+                        isLoading={isJoining}
+                        skeleton={<SavedSectionSkeleton />}
+                        error={joinError}
+                        errorContent={{
+                            title: t("savedItems.error.title"),
+                            description: t("savedItems.error.hint"),
+                            onRetry: retryJoins,
+                            retryLabel: t("savedItems.error.retry"),
+                        }}
+                        isEmpty={tabRows.length === 0 || visibleRows.length === 0}
+                        emptyContent={
+                            tabRows.length === 0
+                                ? {
+                                    icon: <FtesMascot pose="explain" size="lg" />,
+                                    title: t(`savedItems.empty.${tab}.title`),
+                                    description: t(`savedItems.empty.${tab}.hint`),
+                                    action: (
+                                        <Button size="sm" variant="secondary" onPress={onBrowse}>
+                                            {t(`savedItems.empty.${tab}.cta`)}
+                                        </Button>
+                                    ),
+                                }
+                                : {
+                                    icon: <BookmarkSimpleIcon aria-hidden focusable="false" className="size-8 text-muted" />,
+                                    title: t("savedItems.noResults"),
+                                }
+                        }
+                    >
+                        <div className="flex flex-col gap-3">
+                            {visibleRows.map((row) => (
+                                <SavedRowItem
+                                    key={`${row.entry.entityType}:${row.entry.entityId}`}
+                                    row={row}
+                                    showType={tab === "all"}
+                                />
+                            ))}
+                        </div>
+                    </AsyncContent>
+                </>
+            )}
+        </LabeledCard>
+    )
+}
+
+/** One saved row: link to the detail page + unsave-in-place bookmark. */
+const SavedRowItem = ({ row, showType }: { row: SavedRow; showType: boolean }) => {
+    const t = useTranslations()
+    const { entry } = row
+
+    return (
+        <Link
+            href={row.href}
+            className="flex items-center gap-3 rounded-2xl border border-separator px-4 py-3 no-underline transition-colors hover:bg-default/40"
+        >
+            {entry.entityType === "post" && row.author ? (
+                <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent/10 text-xs font-bold text-accent">
+                    {row.author.slice(0, 1).toUpperCase()}
+                </div>
+            ) : null}
+            <div className="min-w-0 flex-1">
+                {entry.entityType === "post" && row.author ? (
+                    <Typography type="body-xs" weight="medium">
+                        {row.author}
+                    </Typography>
+                ) : null}
+                <Typography
+                    type="body-sm"
+                    weight="medium"
+                    className={entry.entityType === "post" ? "line-clamp-2" : "truncate"}
+                >
+                    {row.title}
+                </Typography>
+                <Typography type="body-xs" color="muted" className="truncate">
+                    {row.context}
+                </Typography>
+            </div>
+            {showType ? (
+                <Chip size="sm" variant="soft" color="accent">
+                    {t(`savedItems.tabs.${entry.entityType}`)}
+                </Chip>
+            ) : null}
+            <SaveButton
+                entityType={entry.entityType}
+                entityId={entry.entityId}
+                source={entry.source}
+            />
+        </Link>
+    )
+}
+
+/** Skeleton mirroring the saved row list (label/tabs/search stay outside). */
+const SavedSectionSkeleton = () => (
+    <div className="flex flex-col gap-3">
+        {[0, 1, 2].map((rowIndex) => (
+            <div
+                key={rowIndex}
+                className="flex items-center gap-3 rounded-2xl border border-separator px-4 py-3"
+            >
+                {/* title (body-sm) + context (body-xs) = the real row's text block, so
+                    the list doesn't jump on hydrate */}
+                <div className="flex min-w-0 flex-1 flex-col gap-1">
+                    <Skeleton.Typography type="body-sm" width="2/3" />
+                    <Skeleton.Typography type="body-xs" width="1/3" />
+                </div>
+                {/* trailing type-chip + unsave bookmark, mirroring the real row */}
+                <Skeleton.Chip />
+                <Skeleton className="size-8 rounded-full" />
+            </div>
+        ))}
+    </div>
+)

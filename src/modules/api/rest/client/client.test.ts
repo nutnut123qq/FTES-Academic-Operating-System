@@ -112,7 +112,13 @@ describe("restRequest envelope unwrap", () => {
         expect(error).toBeInstanceOf(RestError)
         expect((error as RestError).status).toBe(403)
         expect((error as RestError).errorCode).toBe("COURSE_FORBIDDEN")
-        expect((error as RestError).message).toContain("COURSE_FORBIDDEN")
+        // `.message` is the backend message ALONE — the machine details are NOT glued onto
+        // it any more (the toast wrappers pass `.message` straight through as the user-facing
+        // description, and it used to read "Forbidden — COURSE_FORBIDDEN — <trace uuid>").
+        // Callers branch on `.errorCode` / `.body`, never on the text.
+        expect((error as RestError).message).toBe("Forbidden")
+        expect((error as RestError).message).not.toContain("COURSE_FORBIDDEN")
+        expect((error as RestError).body?.traceId).toBe("t-1")
     })
 
     it("normalises an axios error (non-2xx HTTP) to a RestError with status", async () => {

@@ -166,9 +166,19 @@ export const NotificationBell = ({ className }: NotificationBellProps) => {
                 aria-label={t("notificationCenter.title")}
             >
                 {unreadCount > 0 ? (
-                    <Badge.Anchor>
-                        <BellIcon className="size-5" aria-hidden focusable="false" />
-                        <Badge size="sm" color="danger">{badgeLabel}</Badge>
+                    /* Anchor box + badge box are shared verbatim with
+                       {@link import("../CartButton").CartButton} (which carries the why): the
+                       32px square keeps the bubble on the button's corner instead of on the
+                       icon's margin-dented box, and the 16px badge centres the digit. */
+                    <Badge.Anchor className="size-8 items-center justify-center">
+                        <BellIcon className="m-0 size-5" aria-hidden focusable="false" />
+                        <Badge
+                            size="sm"
+                            color="danger"
+                            className="h-4 min-w-4 items-center justify-center leading-4 tabular-nums"
+                        >
+                            {badgeLabel}
+                        </Badge>
                     </Badge.Anchor>
                 ) : (
                     <BellIcon className="size-5" aria-hidden focusable="false" />

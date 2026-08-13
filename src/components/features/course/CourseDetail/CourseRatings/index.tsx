@@ -9,6 +9,7 @@ import { useGetCourseRatingsSwr } from "@/hooks/swr/api/rest/queries/useGetCours
 import { useGetMyCourseRatingSwr } from "@/hooks/swr/api/rest/queries/useGetMyCourseRatingSwr"
 import { usePostRateCourseSwr } from "@/hooks/swr/api/rest/mutations/usePostRateCourseSwr"
 import { useDeleteCourseRatingSwr } from "@/hooks/swr/api/rest/mutations/useDeleteCourseRatingSwr"
+import { RestError } from "@/modules/api/rest/client"
 import { useRestWithToast } from "@/modules/toast/hooks"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { UserAvatar } from "@/components/reuseable/UserAvatar"
@@ -180,7 +181,12 @@ export const CourseRatings = ({ courseId, isEnrolled, className }: CourseRatings
                 } catch (error) {
                     // Surface the "must enroll" case as friendly copy; re-throw so
                     // the toast wrapper renders it as the error description.
-                    if (error instanceof Error && error.message.includes("COURSE_ACCESS_DENIED")) {
+                    //
+                    // Read the code off `RestError.errorCode`, NOT off `.message`: the message
+                    // is the backend text alone (it no longer has the code glued onto it), so a
+                    // `message.includes("COURSE_ACCESS_DENIED")` sniff matches nothing and the
+                    // not-enrolled rater would get the raw backend string instead of this copy.
+                    if (error instanceof RestError && error.errorCode === "COURSE_ACCESS_DENIED") {
                         throw new Error(t("detail.rating.accessDenied"))
                     }
                     throw error

@@ -59,13 +59,22 @@ export const CartButton = ({ className }: CartButtonProps) => {
             onPress={openMiniCart}
         >
             {count > 0 ? (
-                <Badge.Anchor>
-                    <ShoppingCartIcon className="size-5" aria-hidden focusable="false" />
+                /* `badge--top-right` pins the bubble to the corner of THIS anchor box, so the
+                   box decides where the badge lands. Left to shrink-wrap it takes the icon's
+                   size MINUS the `-mx-0.5 my-0.5 sm:my-1` that HeroUI bakes onto every `svg`
+                   inside a `.button` (16px wide, 24/28px tall) — a dented box that pulled the
+                   badge off the button's corner and out of line with the avatar's. Pin it to
+                   the same 32px square the avatar badge anchors to (`avatar--sm` = `size-8`,
+                   see {@link import("../AccountMenuDropdown/AccountTrigger").AccountTrigger})
+                   and zero the icon's margins, so all three navbar badges sit in one spot. */
+                <Badge.Anchor className="size-8 items-center justify-center">
+                    <ShoppingCartIcon className="m-0 size-5" aria-hidden focusable="false" />
                     {/* The count has to sit dead-centre in the bubble. `badge--sm` only sets a
                         MIN height and a fractional `leading-[1.34]`, so the label's line box and
                         the bubble don't share a centre. Pin the box to a 16px square (`h-4` +
                         `min-w-4`, so "99+" still grows sideways into a pill), centre it with the
-                        flex box, and match the line-height to the box — no translate nudges. */}
+                        flex box, and match the line-height to the box — no translate nudges.
+                        The bell and the avatar streak badge reuse this exact class list. */}
                     <Badge
                         size="sm"
                         color="danger"

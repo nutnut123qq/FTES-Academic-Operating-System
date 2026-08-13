@@ -3,17 +3,24 @@
 import { create } from "zustand"
 
 /** Touched field of the sign-up form. */
-type SignUpField = "email" | "username" | "password" | "confirmPassword" | "agreeToTerms" | "otp"
+type SignUpField = "email" | "fullName" | "username" | "password" | "confirmPassword" | "agreeToTerms" | "otp"
 
 /**
  * Zustand store for the sign-up form — SHARED so values survive the Registration → OTP step
  * transition. Previously a formik singleton.
+ *
+ * NOTE when adding a field: it must be listed in FOUR independent places — this interface, the
+ * `setValue` field union, `initialState`, and `initialState.touched` (plus {@link SignUpField} when
+ * the field is validated). TypeScript flags none of the misses, they surface as a silently
+ * un-settable / undefined value at runtime.
  */
 interface SignUpStoreState {
     /** Email address. */
     email: string
     /** Whether the email already exists (for sign-up, existing = error). */
     emailExists: boolean
+    /** Full name (required by the FE, <=128) — becomes the profile displayName. */
+    fullName: string
     /** Optional user-chosen username; blank => backend derives it from the email local-part. */
     username: string
     /** Password. */
@@ -33,7 +40,7 @@ interface SignUpStoreState {
     /** Whether a submit is in flight. */
     isSubmitting: boolean
     /** Set one field's value. */
-    setValue: (field: "email" | "emailExists" | "username" | "password" | "confirmPassword" | "agreeToTerms" | "otp" | "challengeId" | "captchaToken", value: string | boolean | undefined) => void
+    setValue: (field: "email" | "emailExists" | "fullName" | "username" | "password" | "confirmPassword" | "agreeToTerms" | "otp" | "challengeId" | "captchaToken", value: string | boolean | undefined) => void
     /** Mark one field as touched. */
     setTouched: (field: SignUpField, value: boolean) => void
     /** Set the submitting flag. */
@@ -45,6 +52,7 @@ interface SignUpStoreState {
 const initialState = {
     email: "",
     emailExists: false,
+    fullName: "",
     username: "",
     password: "",
     confirmPassword: "",
@@ -52,7 +60,7 @@ const initialState = {
     otp: "",
     challengeId: undefined as string | undefined,
     captchaToken: undefined as string | undefined,
-    touched: { email: false, username: false, password: false, confirmPassword: false, agreeToTerms: false, otp: false },
+    touched: { email: false, fullName: false, username: false, password: false, confirmPassword: false, agreeToTerms: false, otp: false },
     isSubmitting: false,
 }
 

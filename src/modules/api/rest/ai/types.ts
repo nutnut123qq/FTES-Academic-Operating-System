@@ -183,12 +183,16 @@ export interface GradeCodeRequest {
     course_context?: string
     language_output?: string
     /**
-     * The challenge this grade belongs to (camelCase UUID). Optional. When the challenge is a
-     * FREE "học thử" one the BE caps AI grades at 1 per (challenge, user) → 429
-     * `AI_FREE_CHALLENGE_GRADE_LIMIT`; non-free / omitted → unlimited (unchanged). The BE does
+     * The challenge this grade belongs to (camelCase UUID). **REQUIRED** since the BE
+     * `CodeGradeController` grew a per-challenge AI-grade cap: it resolves the challenge before
+     * spending a quota unit, so a missing / non-UUID value is rejected outright with 400
+     * `AI_CODE_INVALID` ("Thiếu 'challengeId'"), and a challenge that is not CODING/SQL with the
+     * same code. Typed non-optional on purpose — the caller that forgot it (SubjectPractice)
+     * compiled fine while every grade it sent 400'd. When the challenge is a FREE "học thử" one
+     * the cap is 1 grade per (challenge, user) → 429 `AI_FREE_CHALLENGE_GRADE_LIMIT`. The BE does
      * not forward this field onward to ftes-ai-service.
      */
-    challengeId?: string
+    challengeId: string
 }
 
 /**

@@ -97,6 +97,10 @@ const runCodingAttempt = async (arg: CodingAttemptArg): Promise<CodingAttemptOut
             language: arg.language,
             test_cases: testCases,
             run_code_execution: true,
+            // Bắt buộc từ khi BE áp trần chấm AI theo challenge — thiếu là 400 AI_CODE_INVALID,
+            // tức MỌI lượt "Chấm" ở màn luyện tập môn đều hỏng. Cùng id đang dùng để nộp bài
+            // và đọc kết quả ngay dưới đây, không phải id mới.
+            challengeId: arg.challengeId,
         })
         const grade = normalizeGrade(graded)
         outcome.grade = grade

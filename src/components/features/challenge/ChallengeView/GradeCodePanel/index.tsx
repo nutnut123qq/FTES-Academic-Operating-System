@@ -447,6 +447,10 @@ export const GradeCodePanel = ({
 
     const onGrade = async () => {
         if (code.trim() === "" || isBusy) return
+        // Chấm AI đòi challengeId (BE resolve bài trước khi trừ trần chấm; thiếu → 400
+        // AI_CODE_INVALID). Không có id thì nút đã xám ở dưới — chốt lại ở đây để đường
+        // retryLast() không lách qua, và để TypeScript thu hẹp kiểu cho lời gọi.
+        if (!challengeId) return
         // Re-open the (collapsible) terminal so a fresh grade is never hidden behind a
         // stale manual collapse — mirrors onRun / the submit button. In the standalone
         // ChallengeView this is the PRIMARY action, so a folded pane would look inert.
@@ -624,7 +628,9 @@ export const GradeCodePanel = ({
                         <Button
                             variant="primary"
                             isPending={isGrading}
-                            isDisabled={code.trim() === "" || isBusy}
+                            // Không có challengeId thì BE từ chối chấm — nút XÁM còn hơn để người
+                            // học bấm rồi ăn lỗi đỏ (scratchpad không gắn bài rơi vào nhánh này).
+                            isDisabled={code.trim() === "" || isBusy || !challengeId}
                             onPress={() => { void onGrade() }}
                         >
                             <SparkleIcon aria-hidden focusable="false" className="size-5" />

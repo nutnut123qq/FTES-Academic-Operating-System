@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
+import { revalidateLearnData } from "@/components/features/learn/hooks/revalidateLearnData"
 import { useRouter } from "@/i18n/navigation"
 import { PackageGateModal } from "@/components/features/course/PackageGateModal"
 import { useQueryLearnCourseSwr } from "../hooks/useQueryLearnCourseSwr"
@@ -194,7 +195,7 @@ export const MindMap = () => {
                     packageSlugs={gateLesson.packageSlugs}
                     context="document"
                     onPurchased={() => {
-                        void mutate()
+                        void revalidateLearnData(courseId)
                     }}
                 />
             ) : null}

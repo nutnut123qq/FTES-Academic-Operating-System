@@ -8,6 +8,7 @@ import { useParams } from "next/navigation"
 import { mutate as globalMutate } from "swr"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { EmptyContent } from "@/components/blocks/async/EmptyContent"
+import { revalidateLearnData } from "@/components/features/learn/hooks/revalidateLearnData"
 import { usePostMarkLessonCompleteSwr } from "@/hooks/swr/api/rest/mutations/usePostMarkLessonCompleteSwr"
 import { reportLessonProgress } from "@/modules/api/rest/course"
 import { PageHeader } from "@/components/blocks/layout/PageHeader"
@@ -423,7 +424,7 @@ export const LessonReader = () => {
                                 videoRef={lesson.videoRef}
                                 upNext={upNextDestination}
                                 onHalfWatched={handleHalfWatched}
-                                onPurchased={() => { void mutate() }}
+                                onPurchased={() => { void revalidateLearnData(courseId) }}
                             />
                         ) : null}
                         {/* completion cheer anchored beside the player — this fires on the
@@ -452,7 +453,7 @@ export const LessonReader = () => {
                                     lessonId={contentId}
                                     lessonTitle={lesson.title}
                                     packageSlugs={lesson.packageSlugs}
-                                    onPurchased={() => { void mutate() }}
+                                    onPurchased={() => { void revalidateLearnData(courseId) }}
                                 />
                                 {/* one-tap reaction + view count — the DocumentReader path used
                                         to drop this footer, losing like/reaction on every DOCUMENT
@@ -613,7 +614,7 @@ export const LessonReader = () => {
                     packageSlugs={lesson.packageSlugs}
                     cheapestPackage={lesson.teaser?.cheapestPackage}
                     context={gateContext}
-                    onPurchased={() => { void mutate() }}
+                    onPurchased={() => { void revalidateLearnData(courseId) }}
                 />
             ) : null}
         </div>

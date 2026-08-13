@@ -14,8 +14,8 @@ import { ProgressMeter } from "@/components/blocks/stats/ProgressMeter"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { SearchInput } from "@/components/reuseable/SearchInput"
 import { useRouter } from "@/i18n/navigation"
-import { mutate as globalMutate } from "swr"
 import { PackageGateModal } from "@/components/features/course/PackageGateModal"
+import { revalidateLearnData } from "@/components/features/learn/hooks/revalidateLearnData"
 import { formatLessonDuration, sumLessonDurations } from "@/components/features/course/lessonDuration"
 import { useQueryLearnCourseSwr } from "../hooks/useQueryLearnCourseSwr"
 import type { LearnExercise, LearnLesson } from "../hooks/useQueryLearnCourseSwr"
@@ -424,13 +424,6 @@ const ContentMapExerciseRow = ({
             ) : null}
         </button>
     )
-}
-
-/** Revalidates the learn course + lesson queries after a purchase from the outline. */
-const revalidateLearnData = async (courseId: string) => {
-    await globalMutate((key) => Array.isArray(key) && key[0] === "GET_LEARN_COURSE" && key[1] === courseId)
-    await globalMutate((key) => Array.isArray(key) && key[0] === "GET_LEARN_LESSON")
-    await globalMutate((key) => Array.isArray(key) && key[0] === "GET_COURSE_PROGRESS")
 }
 
 /** Content-map skeleton — mirrors a few accordion rows. */

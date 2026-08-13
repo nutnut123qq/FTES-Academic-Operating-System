@@ -19,6 +19,7 @@ import {
 import { useLocale, useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { revalidateLearnData } from "@/components/features/learn/hooks/revalidateLearnData"
 import { PageHeader } from "@/components/blocks/layout/PageHeader"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
@@ -335,7 +336,12 @@ export const ChallengeSubmission = () => {
                             lessonId={contentId}
                             packageSlugs={requiredPackageSlugs}
                             context="challenge"
-                            onPurchased={() => { void mutate() }}
+                            // the challenge is this surface's own query; the rest of the learn
+                            // shell (outline locks, sibling lessons, progress) needs the helper
+                            onPurchased={() => {
+                                void mutate()
+                                void revalidateLearnData(courseId)
+                            }}
                         />
                     </>
                 ) : (

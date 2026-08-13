@@ -252,6 +252,8 @@
     },
     "items": {
       "editProfile": "Chỉnh sửa hồ sơ",
+      "appearance": "Giao diện",
+      "notifications": "Thông báo",
       "security": "Bảo mật",
       "sessions": "Thiết bị",
       "courseHistory": "Lịch sử học",
@@ -1454,6 +1456,11 @@
       "archiveHint": "Đề dạng kho nén — tải về để mở toàn bộ tệp bên trong.",
       "gradingLocked": "Đề này để bạn tự luyện. Nộp bài cho FrosTES chấm chưa mở.",
       "uploader": "Người đăng",
+      "attachments": {
+        "title": "Tệp đính kèm",
+        "download": "Tải về",
+        "unnamed": "Tệp không tên"
+      },
       "submit": {
         "title": "Nộp bài cho FrosTES chấm",
         "lockedBadge": "Chưa mở",
@@ -2324,11 +2331,14 @@
     "revoke": "Đăng xuất",
     "empty": "Không có phiên đăng nhập nào.",
     "unknownDevice": "Thiết bị không xác định",
-    "lastUsed": "Hoạt động {date}",
-    "revokeSuccess": "Đã đăng xuất thiết bị.",
-    "revokeFailed": "Không đăng xuất được thiết bị.",
-    "loadFailed": "Không tải được danh sách thiết bị.",
-    "retry": "Thử lại"
+    "lastUsed": "Dùng lần cuối {at}",
+    "loadError": "Không tải được danh sách thiết bị.",
+    "revokeOthers": "Đăng xuất mọi nơi trừ đây",
+    "revokedToast": "Đã đăng xuất thiết bị.",
+    "revokeConfirmTitle": "Đăng xuất thiết bị này?",
+    "revokeConfirmDescription": "\"{device}\" sẽ bị đăng xuất ngay và phải đăng nhập lại.",
+    "revokeOthersConfirmTitle": "Đăng xuất mọi nơi trừ đây?",
+    "revokeOthersConfirmDescription": "Mọi thiết bị khác sẽ bị đăng xuất ngay. Thiết bị này vẫn giữ nguyên."
   },
   "follow": {
     "follow": "Theo dõi",
@@ -2368,7 +2378,43 @@
     "disabledToast": "Đã tắt xác thực hai lớp.",
     "invalidCode": "Mã không đúng. Vui lòng thử lại.",
     "error": "Có lỗi xảy ra. Vui lòng thử lại.",
-    "note": "Có thể cấu hình xác thực hai lớp ngay bây giờ; việc bắt buộc khi đăng nhập sẽ bổ sung sau."
+    "note": "Có thể cấu hình xác thực hai lớp ngay bây giờ; việc bắt buộc khi đăng nhập sẽ bổ sung sau.",
+    "sectionSubtitle": "Mật khẩu, xác thực hai lớp, thiết bị đăng nhập và hoạt động gần đây.",
+    "retry": "Thử lại",
+    "recoveryCodesHint": "Lưu các mã khôi phục này ở nơi an toàn — mỗi mã chỉ dùng được một lần và sẽ không hiện lại.",
+    "twoFactorApp": {
+      "title": "Ứng dụng xác thực"
+    },
+    "twoFactorEmail": {
+      "title": "Mã gửi qua email",
+      "description": "Gửi mã 6 chữ số tới email của bạn khi đăng nhập từ thiết bị chưa tin cậy.",
+      "passwordHint": "Nhập lại mật khẩu hiện tại để đổi thiết lập này.",
+      "enabled": "Đã bật mã qua email.",
+      "disabled": "Đã tắt mã qua email."
+    },
+    "password": {
+      "title": "Mật khẩu",
+      "subtitle": "Đổi mật khẩu đăng nhập của tài khoản.",
+      "signsOutOthers": "Đổi mật khẩu xong, mọi thiết bị khác sẽ bị đăng xuất. Thiết bị này vẫn đăng nhập.",
+      "currentPassword": "Mật khẩu hiện tại",
+      "newPassword": "Mật khẩu mới",
+      "confirmPassword": "Nhập lại mật khẩu mới",
+      "submit": "Đổi mật khẩu",
+      "changed": "Đã đổi mật khẩu.",
+      "required": "Vui lòng nhập trường này.",
+      "tooShort": "Mật khẩu phải có ít nhất {min} ký tự.",
+      "weak": "Mật khẩu phải có cả chữ và số.",
+      "mismatch": "Hai mật khẩu không khớp.",
+      "sameAsCurrent": "Mật khẩu mới phải khác mật khẩu hiện tại."
+    },
+    "loginHistory": {
+      "title": "Lịch sử đăng nhập",
+      "subtitle": "Các lần đăng nhập gần đây, kể cả lần thất bại.",
+      "empty": "Chưa có lượt đăng nhập nào được ghi nhận.",
+      "loadError": "Không tải được lịch sử đăng nhập.",
+      "success": "Thành công",
+      "failure": "Thất bại"
+    }
   },
   "publicProfile": {
     "title": "Hồ sơ",
@@ -2713,7 +2759,8 @@
       "uploadResource": "Đăng nhập để đăng tài liệu",
       "follow": "Đăng nhập để theo dõi người dùng",
       "feed": "Đăng nhập để xem bảng tin cộng đồng",
-      "eventRegister": "Đăng nhập để đăng ký sự kiện"
+      "eventRegister": "Đăng nhập để đăng ký sự kiện",
+      "sessionRevoked": "Phiên đăng nhập đã bị thu hồi. Vui lòng đăng nhập lại."
     }
   },
   "priceTag": {
@@ -6158,6 +6205,29 @@
     "noCourseMapped": {},
     "guest": {},
     "retry": "Thử lại"
+  },
+  "skillExp": {
+    "title": "EXP kỹ năng",
+    "expValue": "{exp} EXP",
+    "axisHint": "Cột là EXP thô, trục tự giãn theo nhóm cao nhất của bạn. Học thêm khóa là EXP cộng tiếp, không có trần.",
+    "empty": {
+      "title": "Chưa có EXP kỹ năng nào",
+      "description": "Học và hoàn thành khóa để cộng EXP cho từng nhóm kỹ năng."
+    },
+    "error": "Không tải được EXP kỹ năng.",
+    "retry": "Thử lại",
+    "categories": {
+      "programming": "Lập trình",
+      "cs-fundamentals": "Nền tảng khoa học máy tính",
+      "software-design": "Thiết kế phần mềm",
+      "database": "Cơ sở dữ liệu",
+      "app-development": "Phát triển ứng dụng",
+      "software-engineering": "Kỹ thuật phần mềm",
+      "testing": "Kiểm thử",
+      "devops": "DevOps",
+      "security": "Bảo mật",
+      "professional": "Kỹ năng nghề nghiệp"
+    }
   },
   "certificateVerify": {
     "title": "Xác minh chứng chỉ",

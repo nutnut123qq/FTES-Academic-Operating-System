@@ -171,6 +171,15 @@ export interface SessionView {
 export interface MfaStatusResponse {
     /** True when TOTP MFA is active for the current user. */
     totpEnabled: boolean
+    /**
+     * True when email-OTP MFA is active for the current user.
+     *
+     * OPTIONAL on purpose: the field only exists once the backend change
+     * `identity-session-liveness-email-2fa` ships. `undefined` means "this backend does
+     * not know about the method" — the settings UI then does NOT offer it, rather than
+     * rendering an unknown/false state it cannot honour.
+     */
+    emailOtpEnabled?: boolean
 }
 
 /** Response from `POST /api/v1/identity/mfa/totp/enroll`. */
@@ -191,6 +200,18 @@ export interface MfaActivateRequest {
 export interface MfaActivateResponse {
     /** Single-use recovery codes. */
     recoveryCodes: Array<string>
+}
+
+/**
+ * Body sent to `POST /api/v1/identity/mfa/email/enable` and
+ * `DELETE /api/v1/identity/mfa/email`.
+ *
+ * The current password is MANDATORY for both — a bearer token alone must not be able
+ * to change a second factor (backend change `identity-session-liveness-email-2fa`).
+ */
+export interface MfaEmailRequest {
+    /** The current account password, re-entered by the learner. */
+    password: string
 }
 
 /** Body sent to `DELETE /api/v1/identity/mfa/totp`. */

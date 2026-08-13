@@ -7,6 +7,7 @@ import type {
     MfaActivateRequest,
     MfaActivateResponse,
     MfaDisableRequest,
+    MfaEmailRequest,
     MfaEnrollResponse,
     MfaStatusResponse,
     MfaVerifyRequest,
@@ -225,6 +226,37 @@ export const disableMfaTotp = async (
     return restRequest<void>({
         method: "DELETE",
         url: "/identity/mfa/totp",
+        data: request,
+    })
+}
+
+/**
+ * Enables email-OTP MFA for the current user. Requires the current password —
+ * a bearer token alone must not be able to change a second factor.
+ *
+ * Added by the backend change `identity-session-liveness-email-2fa`; on a backend
+ * without it the call 404s, which is why the settings UI gates the control on
+ * `emailOtpEnabled` being reported at all by {@link getMfaStatus}.
+ *
+ * `POST /api/v1/identity/mfa/email/enable`
+ */
+export const enableMfaEmail = async (request: MfaEmailRequest): Promise<void> => {
+    return restRequest<void>({
+        method: "POST",
+        url: "/identity/mfa/email/enable",
+        data: request,
+    })
+}
+
+/**
+ * Disables email-OTP MFA for the current user. Requires the current password.
+ *
+ * `DELETE /api/v1/identity/mfa/email`
+ */
+export const disableMfaEmail = async (request: MfaEmailRequest): Promise<void> => {
+    return restRequest<void>({
+        method: "DELETE",
+        url: "/identity/mfa/email",
         data: request,
     })
 }

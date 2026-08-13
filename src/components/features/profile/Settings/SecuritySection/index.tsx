@@ -3,37 +3,37 @@
 import React from "react"
 import { Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
-import { ChangePasswordCard } from "./ChangePasswordCard"
-import { TwoFactorCard } from "./TwoFactorCard"
-import { SessionsCard } from "./SessionsCard"
+import { ChangePasswordSection } from "./ChangePasswordSection"
+import { TwoFactorSection } from "./TwoFactorSection"
+import { DevicesSection } from "./DevicesSection"
+import { LoginHistorySection } from "./LoginHistorySection"
 
 /**
- * SecuritySection — the "Bảo mật" block of the settings page (§1 Identity):
- * change password, two-factor authentication and the signed-in sessions the
- * user can log out. Every card writes through the real identity REST endpoints;
- * there is no page-level save button, each card owns its own submit.
+ * SecuritySection — the "Bảo mật" section of settings, in the order a learner reasons
+ * about their account: the password, then the second factor, then where they are signed
+ * in, then what has been happening.
  *
- * Changing the account e-mail is deliberately absent: the BE has no
- * self-service endpoint for it (see the task notes) and a dead field would be
- * worse than none. `profile.contactEmail` — editable on `/profile/edit` — is a
- * public contact field, NOT the login identity, so it is not a substitute.
+ * Every part is a data owner in its own right (each on its own SWR key), so a backend
+ * that cannot answer one of them degrades that card alone instead of blanking the page.
  */
 export const SecuritySection = () => {
-    const t = useTranslations("security")
+    const t = useTranslations()
 
     return (
-        <section className="flex max-w-xl flex-col gap-6">
-            <div className="flex flex-col gap-1">
+        <section className="flex flex-col gap-6">
+            <div className="flex flex-col gap-0">
                 <Typography type="h6" weight="bold">
-                    {t("title")}
+                    {t("security.title")}
                 </Typography>
                 <Typography type="body-sm" color="muted">
-                    {t("subtitle")}
+                    {t("security.sectionSubtitle")}
                 </Typography>
             </div>
-            <ChangePasswordCard />
-            <TwoFactorCard />
-            <SessionsCard />
+
+            <ChangePasswordSection />
+            <TwoFactorSection />
+            <DevicesSection />
+            <LoginHistorySection />
         </section>
     )
 }

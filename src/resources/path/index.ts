@@ -52,9 +52,21 @@ export const pathConfig = () => {
                 }
             }
             const edit = () => {
-                const editPath = `${settingsPath}/edit`
+                // profile editor — a PROFILE page, not a settings page: the real route is
+                // `/profile/edit` (`app/[locale]/profile/edit`). It used to build
+                // `/profile/settings/edit`, which 404s.
+                const editPath = `${profilePath}/edit`
                 const build = () => {
                     return editPath
+                }
+                return {
+                    build,
+                }
+            }
+            const notifications = () => {
+                const notificationsPath = `${settingsPath}/notifications`
+                const build = () => {
+                    return notificationsPath
                 }
                 return {
                     build,
@@ -168,6 +180,7 @@ export const pathConfig = () => {
                 membership,
                 settings,
                 edit,
+                notifications,
                 sessions,
                 security,
                 learning,

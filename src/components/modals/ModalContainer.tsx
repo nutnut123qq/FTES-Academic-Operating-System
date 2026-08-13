@@ -5,6 +5,7 @@ import { CookieConsentModal } from "./CookieConsentModal"
 import { CommunityComposerModal } from "./CommunityComposerModal"
 import { CommunityPhotoLightboxModal } from "./CommunityPhotoLightboxModal"
 import { PaymentModal } from "./PaymentModal"
+import { SessionRevokeModal } from "./SessionRevokeModal"
 import { SearchOverlay } from "@/components/features/search/SearchOverlay"
 
 /** Global modal mount point — feature modals stripped for the skeleton; add new ones here. */
@@ -17,6 +18,7 @@ export const ModalContainer = () => {
             <CommunityComposerModal />
             <CommunityPhotoLightboxModal />
             <PaymentModal />
+            <SessionRevokeModal />
             <SearchOverlay />
         </>
     )

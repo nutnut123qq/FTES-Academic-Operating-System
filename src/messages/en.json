@@ -252,6 +252,8 @@
     },
     "items": {
       "editProfile": "Edit profile",
+      "appearance": "Appearance",
+      "notifications": "Notifications",
       "security": "Security",
       "sessions": "Devices",
       "courseHistory": "Course history",
@@ -1442,6 +1444,11 @@
       "archiveHint": "The paper is an archive — download it to open everything inside.",
       "gradingLocked": "The paper is here to practise with. Handing an answer in for AI grading isn't open yet.",
       "uploader": "Uploaded by",
+      "attachments": {
+        "title": "Attachments",
+        "download": "Download",
+        "unnamed": "Untitled file"
+      },
       "submit": {
         "title": "Hand in for AI grading",
         "lockedBadge": "Not open yet",
@@ -2312,11 +2319,14 @@
     "revoke": "Log out",
     "empty": "No active sessions.",
     "unknownDevice": "Unknown device",
-    "lastUsed": "Active {date}",
-    "revokeSuccess": "Device signed out.",
-    "revokeFailed": "Could not sign that device out.",
-    "loadFailed": "Could not load your devices.",
-    "retry": "Try again"
+    "lastUsed": "Last used {at}",
+    "loadError": "Couldn't load your devices.",
+    "revokeOthers": "Sign out everywhere else",
+    "revokedToast": "Device signed out.",
+    "revokeConfirmTitle": "Sign this device out?",
+    "revokeConfirmDescription": "\"{device}\" will be signed out immediately and will have to sign in again.",
+    "revokeOthersConfirmTitle": "Sign out everywhere else?",
+    "revokeOthersConfirmDescription": "Every other device will be signed out immediately. This device stays signed in."
   },
   "follow": {
     "follow": "Follow",
@@ -2356,7 +2366,43 @@
     "disabledToast": "Two-factor authentication is now off.",
     "invalidCode": "Invalid code. Please try again.",
     "error": "Something went wrong. Please try again.",
-    "note": "Two-factor authentication can be configured now; enforcing it at sign-in will come later."
+    "note": "Two-factor authentication can be configured now; enforcing it at sign-in will come later.",
+    "sectionSubtitle": "Password, two-factor authentication, signed-in devices and recent activity.",
+    "retry": "Try again",
+    "recoveryCodesHint": "Keep these recovery codes somewhere safe — each one works once and they are never shown again.",
+    "twoFactorApp": {
+      "title": "Authenticator app"
+    },
+    "twoFactorEmail": {
+      "title": "Email code",
+      "description": "Emails you a 6-digit code when you sign in from a device that isn't trusted.",
+      "passwordHint": "Re-enter your current password to change this setting.",
+      "enabled": "Email codes are now on.",
+      "disabled": "Email codes are now off."
+    },
+    "password": {
+      "title": "Password",
+      "subtitle": "Change the password you sign in with.",
+      "signsOutOthers": "Changing your password signs every other device out. This device stays signed in.",
+      "currentPassword": "Current password",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm new password",
+      "submit": "Change password",
+      "changed": "Password changed.",
+      "required": "This field is required.",
+      "tooShort": "Use at least {min} characters.",
+      "weak": "Use both letters and numbers.",
+      "mismatch": "The two passwords don't match.",
+      "sameAsCurrent": "The new password must differ from the current one."
+    },
+    "loginHistory": {
+      "title": "Sign-in activity",
+      "subtitle": "Recent sign-in attempts, including failed ones.",
+      "empty": "No sign-in attempts recorded yet.",
+      "loadError": "Couldn't load your sign-in activity.",
+      "success": "Succeeded",
+      "failure": "Failed"
+    }
   },
   "publicProfile": {
     "title": "Profile",
@@ -2701,7 +2747,8 @@
       "uploadResource": "Sign in to upload a resource",
       "follow": "Sign in to follow this user",
       "feed": "Sign in to view the community feed",
-      "eventRegister": "Sign in to register for this event"
+      "eventRegister": "Sign in to register for this event",
+      "sessionRevoked": "Your session was revoked. Please sign in again."
     }
   },
   "priceTag": {
@@ -6158,6 +6205,29 @@
     "noCourseMapped": {},
     "guest": {},
     "retry": "Try again"
+  },
+  "skillExp": {
+    "title": "Skill EXP",
+    "expValue": "{exp} EXP",
+    "axisHint": "Bars show raw EXP and the axis scales to your strongest category. Studying more courses keeps adding EXP — there is no ceiling.",
+    "empty": {
+      "title": "No skill EXP yet",
+      "description": "Study and complete courses to earn EXP in each skill category."
+    },
+    "error": "Could not load your skill EXP.",
+    "retry": "Try again",
+    "categories": {
+      "programming": "Programming",
+      "cs-fundamentals": "CS fundamentals",
+      "software-design": "Software design",
+      "database": "Database",
+      "app-development": "App development",
+      "software-engineering": "Software engineering",
+      "testing": "Testing",
+      "devops": "DevOps",
+      "security": "Security",
+      "professional": "Professional skills"
+    }
   },
   "certificateVerify": {
     "title": "Verify certificate",

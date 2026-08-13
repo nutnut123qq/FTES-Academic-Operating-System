@@ -15,6 +15,7 @@ import { useSyncFoundationCategory } from "./useSyncFoundationCategory"
 import { useSyncReduxFoundationId } from "./useSyncReduxFoundationId"
 import { useSyncFoundationEntity } from "./useSyncFoundationEntity"
 import { useSessionSuperseded } from "./useSessionSuperseded"
+import { useSessionRevoked } from "./useSessionRevoked"
 import { useInitializeFingerprint } from "./useInitializeFingerprint"
 
 /**
@@ -28,6 +29,8 @@ export const UseEffects = () => {
     useInitializeFingerprint()
     /** Show warning toast if user session was superseded on another device. */
     useSessionSuperseded()
+    /** Clear credentials + return to sign-in when the backend reports the session revoked. */
+    useSessionRevoked()
     /** The useEffect to sync the redux course id. */
     useSyncReduxCourseId()
     /** The useEffect to sync the redux module id. */

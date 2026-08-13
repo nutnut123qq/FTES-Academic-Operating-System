@@ -5,6 +5,7 @@ import { Button, Typography, cn } from "@heroui/react"
 import { LockSimpleIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { useWatchPositionReporter } from "./hooks/useWatchPositionReporter"
+import { isPastLimit, pollIntervalMs } from "./previewPoll"
 import {
     isElementFullscreenSupported,
     useElementFullscreen,
@@ -203,6 +204,21 @@ export const LessonYouTubePlayer = ({
             }
         }
 
+        /**
+         * Push the playhead back inside the preview window WITHOUT pausing — the gate
+         * itself pauses once the limit is genuinely reached. Cheap enough to call on every
+         * player state change, which is how a scrub gets caught before the next poll.
+         */
+        const clampToLimit = () => {
+            const limit = previewLimitRef.current
+            if (!isPastLimit(player?.getCurrentTime?.() ?? 0, limit)) return
+            try {
+                player?.seekTo?.(limit, true)
+            } catch {
+                // ignore player errors
+            }
+        }
+
         /** Force playback back inside the preview window. */
         const enforceGate = () => {
             pauseAt()
@@ -229,13 +245,7 @@ export const LessonYouTubePlayer = ({
 
             // Clamp seeking past the limit BEFORE reporting (fixes the old dead code:
             // the clamp used to sit after `fireGate(); return`, so it never ran).
-            if (limit > 0 && current > limit) {
-                try {
-                    player?.seekTo?.(limit, true)
-                } catch {
-                    // ignore player errors
-                }
-            }
+            clampToLimit()
 
             // Countdown + single-fire modal + preview-limit report live in the hook; the
             // duration rides along for the up-next window (0 = the API doesn't know it yet).
@@ -298,6 +308,10 @@ export const LessonYouTubePlayer = ({
                             }
                         },
                         onStateChange: (event) => {
+                            // A scrub shows up here (BUFFERING → PLAYING) long before the
+                            // next poll would run, so snap back on ANY transition: this is
+                            // what keeps paid content off the screen, the poll is the backstop.
+                            clampToLimit()
                             if (event.data === YT_STATE_PLAYING) {
                                 // Playing → start the 30s watch-position cadence.
                                 reporterRef.current.onPlaying()
@@ -314,7 +328,11 @@ export const LessonYouTubePlayer = ({
                                 if (interval || (fired && !trackToEndRef.current)) {
                                     return
                                 }
-                                interval = window.setInterval(tick, 1000)
+                                // ponytail: cadence is chosen when the poll starts; a limit
+                                // that only arrives mid-playback keeps the slower tick until
+                                // the next play/pause. Restart on limit change if that ever
+                                // becomes real.
+                                interval = window.setInterval(tick, pollIntervalMs(previewLimitRef.current))
                                 return
                             }
                             // Chỉ PAUSED/ENDED mới dừng cadence + flush vị trí. BUFFERING(3)/CUED(5)/

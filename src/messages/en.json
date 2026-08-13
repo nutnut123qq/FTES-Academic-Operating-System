@@ -6109,6 +6109,29 @@
       "rateLimited": "Too many attempts. Please wait a moment and try again."
     }
   },
+  "skillExp": {
+    "title": "Skill EXP",
+    "expValue": "{exp} EXP",
+    "axisHint": "EXP accumulated across every course you study — there is no cap.",
+    "error": "Could not load your skill EXP.",
+    "retry": "Try again",
+    "empty": {
+      "title": "No skill EXP yet",
+      "description": "Reach 30% of a course that awards EXP to start accumulating."
+    },
+    "categories": {
+      "programming": "Programming",
+      "cs-fundamentals": "CS fundamentals",
+      "software-design": "Software design",
+      "database": "Databases",
+      "app-development": "App development",
+      "software-engineering": "Software engineering",
+      "testing": "Testing",
+      "devops": "DevOps",
+      "security": "Security",
+      "professional": "Professional skills"
+    }
+  },
   "skillGraph": {
     "title": "Skill graph",
     "you": "You",

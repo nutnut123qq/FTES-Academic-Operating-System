@@ -6109,6 +6109,29 @@
       "rateLimited": "Bạn thao tác hơi nhanh. Đợi một lát rồi thử lại nhé."
     }
   },
+  "skillExp": {
+    "title": "EXP kỹ năng",
+    "expValue": "{exp} EXP",
+    "axisHint": "EXP cộng dồn từ mọi khoá bạn đã học — không có mức trần.",
+    "error": "Không tải được EXP kỹ năng.",
+    "retry": "Thử lại",
+    "empty": {
+      "title": "Chưa có EXP kỹ năng",
+      "description": "Học tới mốc 30% của một khoá có cấu hình EXP để bắt đầu tích luỹ."
+    },
+    "categories": {
+      "programming": "Lập trình",
+      "cs-fundamentals": "Nền tảng KHMT",
+      "software-design": "Thiết kế phần mềm",
+      "database": "Cơ sở dữ liệu",
+      "app-development": "Phát triển ứng dụng",
+      "software-engineering": "Công nghệ phần mềm",
+      "testing": "Kiểm thử",
+      "devops": "DevOps",
+      "security": "An toàn thông tin",
+      "professional": "Kỹ năng nghề nghiệp"
+    }
+  },
   "skillGraph": {
     "title": "Bản đồ kỹ năng",
     "you": "Bạn",

@@ -13,8 +13,10 @@ import type {
     CareerSelfAssessmentRequest,
     CareerSkill,
     CareerSkillAssessment,
+    CareerSkillCategory,
     CareerSkillGraph,
     CareerSkillProgress,
+    CareerUserSkillExp,
     CreateCareerOpportunityRequest,
     CreateCareerRoadmapRequest,
     CareerMentorAssessmentRequest,
@@ -236,6 +238,31 @@ export const getMyCareerSkills = async (): Promise<CareerSkillProgress[]> =>
     restRequest<CareerSkillProgress[]>({
         method: "GET",
         url: "/career/me/skills",
+        authenticated: true,
+    })
+
+/**
+ * Reads the managed skill-category catalogue (change `course-skill-exp`).
+ *
+ * @returns every category in catalogue order — the buckets of the profile EXP chart.
+ */
+export const getCareerSkillCategories = async (): Promise<Array<CareerSkillCategory>> =>
+    restRequest<Array<CareerSkillCategory>>({
+        method: "GET",
+        url: "/career/skill-categories",
+        authenticated: true,
+    })
+
+/**
+ * Reads the CURRENT learner's accumulated EXP per skill category.
+ *
+ * @returns every category with its running total; categories not earned in yet come
+ *          back at `0`, so the caller never has to fill gaps itself.
+ */
+export const getMyCareerSkillExp = async (): Promise<Array<CareerUserSkillExp>> =>
+    restRequest<Array<CareerUserSkillExp>>({
+        method: "GET",
+        url: "/career/me/skill-exp",
         authenticated: true,
     })
 

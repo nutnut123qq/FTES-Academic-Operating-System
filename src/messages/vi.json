@@ -1454,6 +1454,11 @@
       "archiveHint": "Đề dạng kho nén — tải về để mở toàn bộ tệp bên trong.",
       "gradingLocked": "Đề này để bạn tự luyện. Nộp bài cho FrosTES chấm chưa mở.",
       "uploader": "Người đăng",
+      "attachments": {
+        "title": "Tệp đính kèm",
+        "download": "Tải về",
+        "unnamed": "Tệp không tên"
+      },
       "submit": {
         "title": "Nộp bài cho FrosTES chấm",
         "lockedBadge": "Chưa mở",

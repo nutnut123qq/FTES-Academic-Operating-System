@@ -5,6 +5,7 @@ import useSWR from "swr"
 import { getChallengeBySlug } from "@/modules/api/rest/challenges/challenges"
 import type {
     ChallengeAuthorView,
+    ChallengePaperFileView,
     SampleTestCaseView,
 } from "@/modules/api/rest/challenges/types"
 import { parseGradingConfigStarterCode } from "@/components/features/learn/submissionMethods"
@@ -73,6 +74,16 @@ export interface ChallengeDetail extends Challenge {
     /** MIME of {@link paperUrl} (`image/*`, `application/pdf`, …); `null` when unknown. */
     paperMime: string | null
     /**
+     * The WHOLE paper — every attached file in the author's order, each with the role the
+     * BE derived from its MIME (BE `challenge-paper-multifile`). {@link paperUrl} /
+     * {@link paperMime} stay the PRIMARY file of this same set.
+     *
+     * `null` when the BE sent no list: an older deployment, or a challenge with no paper.
+     * The paper surface then behaves exactly as it did before the contract, from the two
+     * single-file fields alone.
+     */
+    paperFiles: Array<ChallengePaperFileView> | null
+    /**
      * Who UPLOADED the challenge — the BE's `created_by` resolved to a profile card
      * (`ChallengeView.author`). `null` when the challenge has no creator on record, when
      * that user has no profile, or on a BE older than the contract; every reader hides its
@@ -116,6 +127,7 @@ export const useQueryChallengeSwr = (challengeId: string) => {
                 sampleTestCases: view.sampleTestCases ?? undefined,
                 paperUrl: view.paperUrl ?? null,
                 paperMime: view.paperMime ?? null,
+                paperFiles: view.paperFiles ?? null,
                 author: view.author ?? null,
                 createdAt: view.createdAt ?? null,
             }

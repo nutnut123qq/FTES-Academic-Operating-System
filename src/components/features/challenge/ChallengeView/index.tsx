@@ -222,6 +222,10 @@ export const ChallengeView = () => {
                             <ChallengePaper
                                 paperUrl={challenge.paperUrl}
                                 paperMime={challenge.paperMime}
+                                // The rest of the paper (pages + templates) when the BE
+                                // ships the set; `null` on an older one, which keeps the
+                                // surface on its single-file behaviour.
+                                paperFiles={challenge.paperFiles}
                                 title={challenge.title}
                                 // The comment endpoints bind a UUID, and `challenge.id` is
                                 // the routing SLUG — the real id is `challengeUuid`.

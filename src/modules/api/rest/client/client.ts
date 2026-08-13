@@ -3,6 +3,7 @@ import { publicEnv } from "@/resources/env/public"
 import { LocalStorage } from "@/modules/storage/local/storage"
 import { LocalStorageId } from "@/modules/storage/local/enums/id"
 import { refreshAccessToken, shouldRefreshAccessToken } from "./refresh"
+import { handleSessionRevoked, isSessionRevokedError } from "./session-revoked"
 import type { RestApiResponse, RestErrorBody, RestRequestConfig } from "./types"
 
 /**
@@ -192,6 +193,13 @@ export const restRequest = async <T>(config: RestRequestConfig): Promise<T> => {
     try {
         return await sendRestRequest<T>(config, shouldAuthenticate)
     } catch (error) {
+        // The session itself is gone (signed out from another device, account locked,
+        // refresh-token reuse). Refreshing would fail too — it is the same dead session —
+        // so tear the local session down and surface the original error instead of retrying.
+        if (isSessionRevokedError(error)) {
+            handleSessionRevoked()
+            throw error
+        }
         if (
             shouldAuthenticate &&
             error instanceof RestError &&

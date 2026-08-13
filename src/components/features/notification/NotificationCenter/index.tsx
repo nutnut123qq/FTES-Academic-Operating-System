@@ -23,7 +23,7 @@ import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { InfiniteScrollSentinel } from "@/components/blocks/async/InfiniteScrollSentinel"
 import { resolveNotificationIcon } from "../typeIcon"
 import { filterNotificationsByPreferences } from "../preferences"
-import { PreferencesSurface } from "./PreferencesSurface"
+import { PreferencesSurface } from "../PreferencesSurface"
 
 /** Filter options: everything, or unread only. */
 type Filter = "all" | "unread"

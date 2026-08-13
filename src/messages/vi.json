@@ -2620,6 +2620,22 @@
       "resendCooldown": "Gửi lại sau {seconds}s"
     },
     "signIn": {
+      "locked": {
+        "title": "Tài khoản đang bị khoá",
+        "reasonLabel": "Lý do",
+        "reasonUnknown": "Quản trị viên chưa ghi lý do cụ thể.",
+        "lockedAt": "Bị khoá lúc {date}",
+        "unlockAt": "Tự mở khoá lúc {date}",
+        "violationCount": "Tài khoản này đã bị khoá {count} lần trước đây.",
+        "appealIntro": "Nếu bạn cho rằng đây là nhầm lẫn, hãy trình bày ngắn gọn để quản trị viên xem xét mở lại tài khoản.",
+        "appealPlaceholder": "Ví dụ: em học một mình, có đăng nhập ở máy trường và điện thoại…",
+        "appealSubmit": "Gửi đơn xin mở khoá",
+        "appealFailed": "Không gửi được đơn. Thử lại sau ít phút.",
+        "appealSentTitle": "Đã gửi đơn",
+        "appealSentDesc": "Quản trị viên sẽ xem xét và bạn nhận email báo kết quả. Trong lúc chờ, tài khoản vẫn bị khoá.",
+        "appealPending": "Bạn đã có một đơn đang chờ duyệt. Vui lòng đợi kết quả trước khi gửi đơn mới.",
+        "appealUnavailable": "Khoá này sẽ tự mở sau ít phút, không cần gửi đơn."
+      },
       "google": "Đăng nhập với Google",
       "github": "Đăng nhập với GitHub",
       "or": "HOẶC",
@@ -2933,6 +2949,7 @@
     }
   },
   "common": {
+    "close": "Đóng",
     "loading": "Đang tải…",
     "tagsMore": "+{count}",
     "tagsMenuAria": "Tất cả thẻ",

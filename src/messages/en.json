@@ -2608,6 +2608,22 @@
       "resendCooldown": "Resend in {seconds}s"
     },
     "signIn": {
+      "locked": {
+        "title": "Account locked",
+        "reasonLabel": "Reason",
+        "reasonUnknown": "The administrator did not record a specific reason.",
+        "lockedAt": "Locked on {date}",
+        "unlockAt": "Unlocks automatically on {date}",
+        "violationCount": "This account has been locked {count} times before.",
+        "appealIntro": "If you believe this is a mistake, explain briefly so an administrator can review it.",
+        "appealPlaceholder": "For example: I study alone; I signed in from a campus computer and my phone…",
+        "appealSubmit": "Submit unlock appeal",
+        "appealFailed": "Could not submit the appeal. Try again in a few minutes.",
+        "appealSentTitle": "Appeal submitted",
+        "appealSentDesc": "An administrator will review it and you will receive an email with the outcome. The account stays locked meanwhile.",
+        "appealPending": "You already have an appeal awaiting review. Please wait for the outcome before sending another.",
+        "appealUnavailable": "This lock clears by itself in a few minutes — no appeal needed."
+      },
       "google": "Sign In With Google",
       "github": "Sign In With GitHub",
       "or": "OR",
@@ -2921,6 +2937,7 @@
     }
   },
   "common": {
+    "close": "Close",
     "loading": "Loading…",
     "tagsMore": "+{count}",
     "tagsMenuAria": "All tags",

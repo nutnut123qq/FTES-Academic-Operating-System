@@ -45,7 +45,9 @@
 ## 6. i18n
 
 - [x] 6.1 `mascot.assistant.options.*`: 8 cặp label/description dạng câu gợi ý, vi + en
-- [x] 6.2 `mascot.assistant.bubble.{hello,day,help}`, vi + en
+- [x] 6.2 `mascot.assistant.bubble.*`, vi + en — **16 câu**: 10 câu xã giao (hello · day · help · progress · todayLearned · break · reviewHabit · goal · welcomeBack · stuck) + 6 câu bám trang. Bộ xã giao nâng từ 3 lên 10 theo yêu cầu của sếp chủ sản phẩm ("lâu lâu hiện lên kiểu ngày hôm nay bạn thế nào / học hành thế nào"): 3 câu thì lặp lại quá nhanh so với trần 3 lần mỗi phiên
+- [x] 6.2b **NHỊP GIỮ NGUYÊN** (chủ sản phẩm chốt): lần đầu 30–60s · sau đó 3–5 phút · trần 3 lần/phiên · hiện 8s. Em từng đề xuất giãn ra 5–8 phút / trần 5 để rải đều cả buổi (với trần 3 thì con sói nói hết phần của nó trong ~12 phút đầu rồi im hẳn) — **đã bị bác, đừng tự đổi lại**
+- [x] 6.2c Danh sách xã giao viết bằng `["hello", …].map()` chứ không liệt kê 10 object: thêm câu mới = thêm 1 chuỗi + 2 dòng i18n, không phải chép object
 - [x] 6.3 `preload` WebP trong `src/app/[locale]/layout.tsx`
 
 ## 6b. Test đi theo quyết định sản phẩm
@@ -54,6 +56,9 @@
 - [x] 6b.2 **VIẾT LẠI theo hành vi mới, KHÔNG xoá cho xanh.** Phần kéo-thả mất cùng tính năng (đúng), phần còn lại ghim đúng hợp đồng mà linh vật dựa vào: (1) render theo route param · (2) **STORE mở chat, không phải cú bấm** · (3) neo popover `aria-hidden` + `tabIndex=-1` + `pointer-events-none opacity-0` → cả trang chỉ còn ĐÚNG MỘT lối vào AI · (4) nhánh drawer mobile
 - [x] 6b.3 Mock HeroUI `Button` cho `className` đi XUYÊN qua (khác các prop HeroUI-only bị nuốt): tính vô hình + bất động của neo nằm ở chính mấy class đó, nuốt đi thì test không phân biệt nổi neo bất động với nút thật. `excludeFromTabOrder` map sang `tabIndex={-1}` cho khớp react-aria
 - [x] 6b.4 `npx vitest run` toàn bộ: **131 file / 855 test xanh**
+
+- [x] 6.2d **Test thường trực `options.test.ts` (47 test)**: mọi khoá i18n mà linh vật với tới — panel lẫn bong bóng, 21 route — phải có ở CẢ vi lẫn en. Khoá dựng bằng template string nên typo vô hình với cả TypeScript lẫn mắt người: next-intl render thẳng đường dẫn khoá, học viên nhìn thấy `mascot.assistant.bubble.progress` chình ình. Test ghim thêm HÌNH DẠNG: trang thường ≤ 4 dòng, `/ai` > 4, mọi danh sách ngắn đều có dòng `chat`, mọi dòng đều có `href` hoặc `action`, bài học dẫn đầu bằng `lessonChat` (không `href`), câu xã giao không có đích
+- [x] 6.2e **Mutation-check**: đổi `"progress"` → `"progresss"` thì test ĐỎ đúng chỗ ("vi missing mascot.assistant.bubble.progresss"), rồi khôi phục — test không rỗng
 
 ## 7. Verify
 

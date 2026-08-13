@@ -210,10 +210,17 @@ export const getAssistantOptions = (pathname: string): AssistantOptionSet => {
  * the page suggests a particular tool; clicking one simply opens the menu.
  */
 const GENERIC_BUBBLES: readonly AssistantBubble[] = [
-    { messageKey: "mascot.assistant.bubble.hello" },
-    { messageKey: "mascot.assistant.bubble.day" },
-    { messageKey: "mascot.assistant.bubble.help" },
-]
+    "hello",
+    "day",
+    "help",
+    "progress",
+    "todayLearned",
+    "break",
+    "reviewHabit",
+    "goal",
+    "welcomeBack",
+    "stuck",
+].map((key) => ({ messageKey: `mascot.assistant.bubble.${key}` }))
 
 /**
  * Picks what the mascot may say UNPROMPTED on the current route, and where each line

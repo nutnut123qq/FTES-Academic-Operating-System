@@ -11,6 +11,7 @@ import { LocalStorage } from "@/modules/storage/local/storage"
 import { LocalStorageId } from "@/modules/storage/local/enums/id"
 import { useAppDispatch, useAppSelector } from "@/redux/hooks"
 import { resetSignInState, setSignInState, SignInState } from "@/redux/slices/state"
+import { readAccountLockedPayload } from "./accountLocked"
 
 /**
  * Shortest accepted username identifier, aligned with the sign-up username rule (3–64 chars). Only
@@ -51,6 +52,7 @@ export const useSignInForm = () => {
     const setValue = useSignInStore((state) => state.setValue)
     const setTouchedStore = useSignInStore((state) => state.setTouched)
     const setIsSubmitting = useSignInStore((state) => state.setIsSubmitting)
+    const setLockInfo = useSignInStore((state) => state.setLockInfo)
     const reset = useSignInStore((state) => state.reset)
 
     const values = useMemo(
@@ -126,15 +128,28 @@ export const useSignInForm = () => {
      */
     const submitForm = useCallback(async () => {
         setIsSubmitting(true)
+        // Chi tiết khoá được nhặt BÊN TRONG action rồi vẫn ném tiếp: `runRest` không trả error ra
+        // ngoài (nó nuốt và toast), nên đây là cách duy nhất vừa giữ được đường toast chuẩn của
+        // nhà vừa đọc được `data` của 423. Toast vẫn hiện một dòng ngắn; màn Locked mới là chỗ nói
+        // đủ lý do + cho gửi đơn.
+        let lockedPayload: ReturnType<typeof readAccountLockedPayload> = null
         try {
             const result = await runRest(
                 () => keycloakLogin({
                     identifier: email.trim(),
                     password,
                     captchaToken: captchaToken || undefined,
+                }).catch((error: unknown) => {
+                    lockedPayload = readAccountLockedPayload(error)
+                    throw error
                 }),
                 { showErrorToast: true, showSuccessToast: true },
             )
+            if (lockedPayload) {
+                setLockInfo(lockedPayload)
+                dispatch(setSignInState(SignInState.Locked))
+                return
+            }
             // MFA-gated account: no token yet — stash the challengeId and advance to the TOTP step
             // (spec auth-two-factor, login challenge scenario). TwoFactorState completes the login
             // via `POST /auth/mfa/verify`.
@@ -155,7 +170,7 @@ export const useSignInForm = () => {
         } finally {
             setIsSubmitting(false)
         }
-    }, [email, password, captchaToken, rememberMe, keycloakLogin, runRest, dispatch, reset, setValue, onAuthenticationClose, setIsSubmitting])
+    }, [email, password, captchaToken, rememberMe, keycloakLogin, runRest, dispatch, reset, setValue, setLockInfo, onAuthenticationClose, setIsSubmitting])
 
     return { values, errors, touched, submitForm, setFieldValue, setFieldTouched, isSubmitting }
 }

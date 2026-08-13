@@ -87,6 +87,21 @@ export interface MfaVerifyRequest {
     code: string
 }
 
+/**
+ * Body sent to `POST /api/v1/auth/appeals` — đơn xin mở khoá tài khoản.
+ *
+ * Mật khẩu là BẰNG CHỨNG SỞ HỮU chứ không phải để đăng nhập: tài khoản đang bị khoá nên không có
+ * phiên nào, và backend từ chối đơn nếu mật khẩu sai (cùng mã lỗi chung như login).
+ */
+export interface UnlockAppealRequest {
+    /** Username hoặc email của tài khoản đang bị khoá. */
+    identifier: string
+    /** Mật khẩu hiện tại. */
+    password: string
+    /** Lời trình bày gửi cho quản trị viên. */
+    message: string
+}
+
 /** Body sent to `POST /api/v1/auth/google`. */
 export interface GoogleLoginRequest {
     /** Google ID token. */

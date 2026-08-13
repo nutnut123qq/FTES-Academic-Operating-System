@@ -10,6 +10,7 @@ import type {
     MfaEnrollResponse,
     MfaStatusResponse,
     MfaVerifyRequest,
+    UnlockAppealRequest,
     OtpRequestRequest,
     OtpVerifyRequest,
     RegisterRequest,
@@ -98,6 +99,25 @@ export const verifyMfaChallenge = async (
         method: "POST",
         url: "/auth/mfa/verify",
         data: request,
+    })
+}
+
+/**
+ * Submits an appeal to unlock a locked account.
+ *
+ * Authenticated by the ACCOUNT PASSWORD, not a bearer token: locking revokes every session, so the
+ * person who needs to appeal is exactly the person with no token to send. The backend verifies the
+ * credentials the same way login does and rate-limits the endpoint on its own bucket.
+ *
+ * `POST /api/v1/auth/appeals`
+ */
+export const submitUnlockAppeal = async (request: UnlockAppealRequest): Promise<void> => {
+    return restRequest<void>({
+        method: "POST",
+        url: "/auth/appeals",
+        data: request,
+        // Public endpoint by necessity — attaching the dead token would only invite a 401 detour.
+        authenticated: false,
     })
 }
 

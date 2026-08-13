@@ -32,6 +32,7 @@ import React from "react"
 import { CredentialsState } from "./CredentialsState"
 import { OtpState } from "./OtpState"
 import { TwoFactorState } from "./TwoFactorState"
+import { LockedState } from "./LockedState"
 import { useAppSelector } from "@/redux/hooks"
 import { SignInState } from "@/redux/slices/state"
 
@@ -48,6 +49,8 @@ export const SignInSection = () => {
             return <OtpState />
         case SignInState.TwoFactor:
             return <TwoFactorState />
+        case SignInState.Locked:
+            return <LockedState />
         default:
             return null
         }

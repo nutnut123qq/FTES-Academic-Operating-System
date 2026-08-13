@@ -8,6 +8,12 @@ export enum SignInState {
     OTP = "otp",
     /** TOTP challenge after OTP verify, shown only when the account has 2FA enabled. */
     TwoFactor = "twoFactor",
+    /**
+     * Tài khoản bị khoá. Bước RIÊNG chứ không phải một toast: người bị khoá cần đọc LÝ DO (backend
+     * soạn từ thiết bị có thật) và cần một chỗ để gửi đơn xin mở lại — cả hai không nhét vừa một
+     * dòng toast, mà toast thì biến mất sau vài giây.
+     */
+    Locked = "locked",
 }
 
 /**

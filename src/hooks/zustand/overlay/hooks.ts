@@ -8,6 +8,7 @@ import {
     type FollowListContext,
     type CommunityQuoteContext,
     type CommunityPhotoContext,
+    type SessionRevokeContext,
     type AnchorRect,
     type ContentAiMessage,
 } from "./store"
@@ -269,6 +270,30 @@ export const usePinnedProjectsOverlayState = () => useOverlayHandle("pinnedProje
 export const usePremiumGateOverlayState = () => useOverlayHandle("premiumGate")
 /** Search overlay state. */
 export const useSearchOverlayState = () => useOverlayHandle("search")
+/**
+ * Security-settings "sign this device out" confirm overlay.
+ *
+ * Like {@link useFollowListOverlayState}, overrides `open` to take a
+ * {@link SessionRevokeContext} — a serializable descriptor of WHICH sign-out is being
+ * confirmed (one session, or every session but this one). The global modal (mounted in
+ * `ModalContainer`) reads it and owns the revoke mutation, so the device list never
+ * hand-rolls a `useState` dialog nor stashes a callback in the store.
+ * @returns the overlay handle plus `context` and `open(context)`.
+ */
+export const useSessionRevokeOverlayState = () => {
+    const base = useOverlayHandle("sessionRevoke")
+    const context = useOverlayStore((state) => state.sessionRevokeContext)
+    const setContext = useOverlayStore((state) => state.setSessionRevokeContext)
+    const openOverlay = useOverlayStore((state) => state.openOverlay)
+    const open = useCallback(
+        (next: SessionRevokeContext) => {
+            setContext(next)
+            openOverlay("sessionRevoke")
+        },
+        [setContext, openOverlay],
+    )
+    return { ...base, open, context }
+}
 /** Share overlay state. */
 export const useShareOverlayState = () => useOverlayHandle("share")
 /** Submission attempts overlay state. */

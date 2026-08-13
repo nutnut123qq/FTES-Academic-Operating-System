@@ -1,8 +1,8 @@
 "use client"
 
 import React from "react"
-import { Button, Modal, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
+import { ConfirmDialog as ConfirmDialogBlock } from "@/components/blocks/feedback/ConfirmDialog"
 
 /** Props for {@link ConfirmDialog}. */
 export interface ConfirmDialogProps {
@@ -23,10 +23,13 @@ export interface ConfirmDialogProps {
 }
 
 /**
- * Tiny confirm-before-destroy dialog shared by the post ⋯ menu ("Xoá bài viết")
- * and the comment row's delete action. Kept intentionally minimal — a headline,
- * one explanatory line, and a cancel / confirm pair — so both destructive flows
- * read the same and neither hand-rolls `window.confirm`.
+ * Community-flavoured confirm dialog: the props-only
+ * {@link import("@/components/blocks/feedback/ConfirmDialog").ConfirmDialog} block with
+ * the `communityHub` cancel/delete labels filled in, kept so the ~12 community/group
+ * call sites need no change.
+ *
+ * NEW areas should use the block directly and pass their own labels — this wrapper
+ * exists only to keep the community copy in one place, not to be the shared dialog.
  *
  * @param props - {@link ConfirmDialogProps}
  */
@@ -42,46 +45,15 @@ export const ConfirmDialog = ({
     const t = useTranslations("communityHub")
 
     return (
-        <Modal
+        <ConfirmDialogBlock
             isOpen={isOpen}
-            onOpenChange={(open) => {
-                if (!open) {
-                    onClose()
-                }
-            }}
-        >
-            <Modal.Backdrop>
-                <Modal.Container>
-                    <Modal.Dialog className="w-full max-w-md">
-                        <Modal.Header>
-                            <Typography type="body" weight="bold">
-                                {title}
-                            </Typography>
-                        </Modal.Header>
-                        {description ? (
-                            <Modal.Body>
-                                <Typography type="body-sm" color="muted">
-                                    {description}
-                                </Typography>
-                            </Modal.Body>
-                        ) : null}
-                        <Modal.Footer className="justify-end gap-2">
-                            <Button size="sm" variant="ghost" onPress={onClose} isDisabled={isPending}>
-                                {t("engagement.cancel")}
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="danger"
-                                onPress={onConfirm}
-                                isPending={isPending}
-                                isDisabled={isPending}
-                            >
-                                {confirmLabel ?? t("engagement.delete")}
-                            </Button>
-                        </Modal.Footer>
-                    </Modal.Dialog>
-                </Modal.Container>
-            </Modal.Backdrop>
-        </Modal>
+            onClose={onClose}
+            onConfirm={onConfirm}
+            title={title}
+            description={description}
+            confirmLabel={confirmLabel ?? t("engagement.delete")}
+            cancelLabel={t("engagement.cancel")}
+            isPending={isPending}
+        />
     )
 }

@@ -45,6 +45,28 @@ export interface CommunityPhotoContext {
 }
 
 /**
+ * Payload of the "sign this device out" confirm modal in security settings.
+ *
+ * A serializable DESCRIPTOR of the destructive action — never a callback: the modal
+ * owns the revoke mutation itself, so the store keeps only what identifies the target.
+ * `scope: "one"` revokes the named session; `scope: "others"` revokes every session
+ * except the current one (`revokeAllSessions(keepCurrent = true)`).
+ */
+export type SessionRevokeContext =
+    | {
+        /** Sign out ONE listed session. */
+        scope: "one"
+        /** Session id (`sid`) to revoke. */
+        sid: string
+        /** Device label shown in the confirm copy (already resolved by the caller). */
+        deviceLabel: string
+    }
+    | {
+        /** Sign out every session except the current one. */
+        scope: "others"
+    }
+
+/**
  * Serializable snapshot of a selection rect (viewport coordinates), captured
  * BEFORE the browser selection is cleared. Drives where the desktop
  * selection-anchored AI panel is placed (right of the rect → flip left → under).
@@ -149,6 +171,7 @@ export type OverlayKey =
     | "pinnedProjects"
     | "premiumGate"
     | "search"
+    | "sessionRevoke"
     | "share"
     | "submissionAttempts"
 
@@ -188,6 +211,7 @@ const OVERLAY_KEYS: ReadonlyArray<OverlayKey> = [
     "pinnedProjects",
     "premiumGate",
     "search",
+    "sessionRevoke",
     "share",
     "submissionAttempts",
 ]
@@ -210,6 +234,8 @@ interface OverlayStoreState {
     communityComposerQuote: CommunityQuoteContext | null
     /** Community photo lightbox payload (which post + images + start index). */
     communityPhotoContext: CommunityPhotoContext | null
+    /** Security-settings sign-out confirm payload (which session, or "all others"). */
+    sessionRevokeContext: SessionRevokeContext | null
     /** Content-AI selected model — shared between the chat composer + the settings modal. */
     contentAiSelectedModel: string | null
     /** Bumped by the settings modal after clearing history → signals the chat to reset its thread. */
@@ -246,6 +272,8 @@ interface OverlayStoreState {
     setCommunityComposerQuote: (context: CommunityQuoteContext | null) => void
     /** Stash the community photo lightbox payload. */
     setCommunityPhotoContext: (context: CommunityPhotoContext | null) => void
+    /** Stash the security-settings sign-out confirm payload. */
+    setSessionRevokeContext: (context: SessionRevokeContext | null) => void
     /** Set the content-AI selected model. */
     setContentAiSelectedModel: (model: string | null) => void
     /** Signal the chat thread to reset (after the settings modal clears the saved history). */
@@ -308,6 +336,7 @@ export const useOverlayStore = create<OverlayStoreState>((set, get) => ({
     followListContext: null,
     communityComposerQuote: null,
     communityPhotoContext: null,
+    sessionRevokeContext: null,
     contentAiSelectedModel: null,
     contentAiClearNonce: 0,
     contentAiSelection: null,
@@ -328,6 +357,7 @@ export const useOverlayStore = create<OverlayStoreState>((set, get) => ({
     setFollowListContext: (context) => set({ followListContext: context }),
     setCommunityComposerQuote: (context) => set({ communityComposerQuote: context }),
     setCommunityPhotoContext: (context) => set({ communityPhotoContext: context }),
+    setSessionRevokeContext: (context) => set({ sessionRevokeContext: context }),
     setContentAiSelectedModel: (model) => set({ contentAiSelectedModel: model }),
     signalContentAiCleared: () =>
         set((state) => ({ contentAiClearNonce: state.contentAiClearNonce + 1 })),

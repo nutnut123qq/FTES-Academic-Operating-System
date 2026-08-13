@@ -128,23 +128,18 @@ export const UiUxChallengeEditor = ({ challenge }: UiUxChallengeEditorProps) => 
             </ExtendedTabs>
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:grid-rows-[auto_auto]">
-                {/* editor pane (gated by enroll when premium) */}
+                {/* Editor pane, khoá bằng ENROLL khi là bài premium. Tấm chắn render THAY CHO
+                    EditorPane chứ không phủ lên trên: bản cũ vẫn dựng editor rồi đắp một lớp
+                    bg-background/70, nên mã khởi tạo nằm nguyên trong DOM và mở devtools là đọc
+                    được. Che bằng CSS không phải là che. */}
                 <div
                     className={cn(
                         mobilePane === "editor" ? "flex" : "hidden",
                         "relative min-h-[480px] flex-col lg:row-span-2 lg:flex",
                     )}
                 >
-                    <EditorPane
-                        code={code}
-                        onChangeCode={onChangeCode}
-                        onReset={onReset}
-                        draftSaved={draftSaved}
-                        readOnly={challenge.isLocked}
-                        className="h-full"
-                    />
                     {challenge.isLocked ? (
-                        <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-background/70 p-6">
+                        <div className="flex h-full items-center justify-center rounded-2xl border border-separator bg-default p-6">
                             <div className="flex max-w-sm flex-col items-center gap-3 rounded-2xl border border-separator bg-surface p-6 text-center">
                                 <LockIcon
                                     className="size-8 text-accent"
@@ -168,7 +163,17 @@ export const UiUxChallengeEditor = ({ challenge }: UiUxChallengeEditorProps) => 
                                 </Button>
                             </div>
                         </div>
-                    ) : null}
+                    ) : (
+                        <EditorPane
+                            code={code}
+                            onChangeCode={onChangeCode}
+                            onReset={onReset}
+                            draftSaved={draftSaved}
+                            // nhánh này chỉ chạy khi CHƯA khoá, nên không bao giờ read-only
+                            readOnly={false}
+                            className="h-full"
+                        />
+                    )}
                 </div>
 
                 {/* live preview — sandboxed, no allow-same-origin so learner JS can't

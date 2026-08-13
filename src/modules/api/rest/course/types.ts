@@ -795,3 +795,77 @@ export interface LearnedLessonView {
     /** ISO-8601. */
     lastLearnedAt: string
 }
+
+// ---------------------------------------------------------------- golden board
+
+/**
+ * Kỳ học gắn với một bảng vàng (`GoldenBoardDtos.BoardTermView`) — tiêu đề "Kỳ Thu 2026"
+ * trên trang chủ / trang `/goldenboard`.
+ */
+export interface GoldenBoardTermView {
+    /** Term id — a short opaque string (`varchar(64)`), NOT a uuid. */
+    id: string
+    /** Human-readable term code, e.g. `"SP26"` — also accepted as the path variable. */
+    code: string
+    name: string
+    /** ISO-8601 instant. */
+    startsAt: string
+    /** ISO-8601 instant. */
+    endsAt: string
+    /** `PLANNED` | `ACTIVE` | `ENDED` (BE `TermStatus`). */
+    status: string
+}
+
+/**
+ * Một kỳ CÓ bảng (`GoldenBoardDtos.BoardTermOptionView`) — nguồn DUY NHẤT của picker kỳ ở
+ * `/goldenboard`. `GET /api/v1/golden-board/terms` chỉ trả kỳ có ít nhất một dòng active, mới
+ * nhất đứng đầu, nên FE KHÔNG phải lấy mọi kỳ rồi dò từng kỳ xem có bảng không.
+ */
+export interface GoldenBoardTermOptionView extends GoldenBoardTermView {
+    /** Số dòng active của kỳ — badge cạnh tên kỳ trong picker. */
+    entryCount: number
+}
+
+/**
+ * Một dòng trên bảng vàng (`GoldenBoardDtos.GoldenBoardEntryView`).
+ *
+ * `displayName`/`photoUrl` là giá trị BE đã RESOLVE (ưu tiên field lưu trong dòng, chỉ bù từ
+ * profile khi trống) → render thẳng. `userId`/`username` chỉ khác null khi dòng có link tài
+ * khoản thật CÒN profile — dùng để link sang trang cá nhân `/u/{username}`.
+ */
+export interface GoldenBoardEntryView {
+    /** Row uuid — the React key. */
+    id: string
+    /**
+     * Khoá SẮP XẾP do admin đặt (>= 0, CÓ THỂ TRÙNG, thường 0-based) — KHÔNG phải số thứ hạng
+     * để hiển thị. BE đã `ORDER BY rank, created_at, id`; số 1/2/3… hiện trên bảng suy từ VỊ TRÍ
+     * trong mảng, không in thẳng `rank` ra (rank 0 sẽ hiện "0").
+     */
+    rank: number
+    /** Non-null chỉ khi dòng link tài khoản thật có profile. */
+    userId: string | null
+    /** Non-null cùng lúc với {@link userId} — nguồn của link `/u/{username}`. */
+    username: string | null
+    /** Tên hiện trên bảng (đã resolve). */
+    displayName: string | null
+    /** Ảnh chân dung (đã resolve). Có thể là đường dẫn tương đối của FE (`/1.png`). */
+    photoUrl: string | null
+    /** Dòng nổi bật lớn, vd `"CÓC VÀNG · SP25"`, `"GPA 9.4"`. */
+    headline: string | null
+    /** Chip ngắn, vd `"GPA 9.6"`, `"Hackathon"`. */
+    badgeLabel: string | null
+    /** 0..3 dòng thành tích, giữ nguyên thứ tự admin nhập. */
+    lines: Array<string>
+}
+
+/**
+ * Bảng vàng của MỘT kỳ (`GoldenBoardDtos.GoldenBoardView`).
+ *
+ * `term = null` + `entries = []` là trạng thái HỢP LỆ (HTTP 200) của `/golden-board/latest` khi
+ * chưa kỳ nào có bảng — trang chủ ẩn section, KHÔNG hiện lỗi. Một kỳ có thật nhưng chưa có dòng
+ * nào cũng trả 200 với `entries: []` (term khác null).
+ */
+export interface GoldenBoardView {
+    term: GoldenBoardTermView | null
+    entries: Array<GoldenBoardEntryView>
+}

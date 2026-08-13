@@ -4484,58 +4484,8 @@
     "honor": {
       "title": "FTES Hall of Fame",
       "subline": "Just how good are our learners? Meet some of the standout faces of FTES.",
-      "cta": "View the leaderboard",
-      "people": {
-        "thuanDuc": {
-          "name": "Trang Thuan Duc",
-          "lines": {
-            "0": "Won the Golden Toad title in Engineering for the Spring 2025 term.",
-            "1": "The turning point came from the support of the FTES mentor team."
-          }
-        },
-        "kimKhoa": {
-          "name": "Kim Khoa",
-          "lines": {
-            "0": "TOP 100 outstanding students for 3 consecutive terms.",
-            "1": "Steady, impressive GPA: 9.35 – 9.42 – 9.1.",
-            "2": "Top Scholar of term FA25 at FTES."
-          }
-        },
-        "hoangBlue": {
-          "name": "Hoang Blue",
-          "lines": {
-            "0": "Outstanding student SP25 & SU25: GPA 9.4.",
-            "1": "“Hoc Tot FTES” title - FTES Talent Scholarship."
-          }
-        },
-        "hoangDuy": {
-          "name": "Hoang Duy",
-          "lines": {
-            "0": "Distinction, term 1.",
-            "1": "Top 100 Outstanding Students at FPTU HCMC, term 2.",
-            "2": "Top 100 Outstanding Students at FPTU HCMC, term 3 with GPA 9.6."
-          }
-        },
-        "hongPhuc": {
-          "name": "Hong Phuc",
-          "lines": {
-            "0": "Completed the Data fundamentals course.",
-            "1": "Shipped a first dashboard."
-          }
-        },
-        "chiThong": {
-          "name": "Phan Chi Thong",
-          "lines": {
-            "0": "Top 5 students, Spring 2025 at FPT University Quy Nhon."
-          }
-        },
-        "tranViet": {
-          "name": "Tran Viet",
-          "lines": {
-            "0": "Distinction, term SU25."
-          }
-        }
-      }
+      "cta": "View the Goldenboard",
+      "term": "Term {term}"
     },
     "mentors": {
       "eyebrow": "The people beside you",
@@ -8214,5 +8164,29 @@
       "moderator": "Moderator"
     },
     "description": "Official FTES staff account, verified."
+  },
+  "goldenboard": {
+    "title": "FTES Goldenboard",
+    "subtitle": "The honour board of every term — pick a term to see the learners who made it.",
+    "pickTerm": "Pick a term",
+    "boardOfTerm": "Goldenboard · {term}",
+    "empty": {
+      "title": "No Goldenboard yet",
+      "description": "No term has an honour board yet. Come back once the first one is published."
+    },
+    "emptyTerm": {
+      "title": "Nothing on this term's board",
+      "description": "This term has no honoured learners yet. Pick another term above."
+    },
+    "loadFailed": {
+      "title": "Could not load the Goldenboard",
+      "description": "Something went wrong on our side. Try again in a moment.",
+      "action": "Try again"
+    },
+    "unknownTerm": {
+      "title": "Term not found",
+      "description": "The term in this link does not exist. Pick a term above, or go back to the latest board.",
+      "action": "Show the latest term"
+    }
   }
 }

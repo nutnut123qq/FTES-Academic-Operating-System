@@ -12,7 +12,7 @@ import { LabeledCard } from "@/components/blocks/cards/LabeledCard"
 import { MetricCard } from "@/components/blocks/stats/MetricCard"
 import { ProgressMeter } from "@/components/blocks/stats/ProgressMeter"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
-import { SkillGraph } from "@/components/features/skill-graph"
+import { SkillExpChart } from "@/components/features/skill-exp"
 import { useQueryMyGamificationSwr } from "@/components/features/gamification/hooks/useQueryMyGamificationSwr"
 import { StreakHeatmap, type HeatmapCell } from "@/components/features/gamification/StreakHeatmap"
 
@@ -54,13 +54,17 @@ const ProgressSkeleton = () => (
                 <Skeleton className="h-24 rounded-2xl" />
             </div>
         </div>
+        <div className="flex flex-col gap-3">
+            <Skeleton.Typography type="h6" width="1/3" />
+            <Skeleton className="h-64 w-full rounded-3xl" />
+        </div>
     </div>
 )
 
 /**
  * Progress section of the profile (§2/§11). Gamification dashboard redesigned
- * into labeled cards: XP/level, rank/league, streak heatmap, badges, and skill
- * graph.
+ * into labeled cards: XP/level, rank/league, streak heatmap, badges, and the
+ * skill-EXP chart (raw EXP per skill category, auto-scaling axis).
  */
 export const ProfileProgress = () => {
     const t = useTranslations()
@@ -210,9 +214,9 @@ export const ProfileProgress = () => {
                             )}
                         </LabeledCard>
 
-                        {/* skill graph */}
-                        <LabeledCard label={t("skillGraph.title")} frameless>
-                            <SkillGraph />
+                        {/* skill EXP per category — raw EXP, auto-scaling axis */}
+                        <LabeledCard label={t("skillExp.title")}>
+                            <SkillExpChart />
                         </LabeledCard>
                     </div>
                 ) : null}

@@ -259,6 +259,42 @@ export interface CareerSkillAssessment {
     createdAt: string
 }
 
+// ---- Skill categories & EXP (change `course-skill-exp`) ----
+//
+// A SECOND, coarser taxonomy that sits beside the per-skill graph above: ten managed
+// CATEGORIES (`career.skill_categories`) plus a learner's uncapped running EXP total per
+// category (`career.user_category_exp`), credited as they cross 30/50/80/100% of a course.
+// Kept separate on purpose — `CareerSkill` / `CareerSkillProgress` and the skill graph are
+// untouched by this taxonomy.
+
+/**
+ * One bucket of the managed skill-category catalogue (`GET /career/skill-categories`).
+ * Mirrors `SkillExpDtos.CategoryView` — the row id stays server-side; the slug is the
+ * public key.
+ */
+export interface CareerSkillCategory {
+    /** Stable slug (`programming`, `cs-fundamentals`, …) — also the i18n key suffix. */
+    slug: string
+    /** Backend display label; the FE falls back to it when a slug has no translation. */
+    label: string
+    /** Catalogue display order (`sort_order`). */
+    sortOrder: number
+}
+
+/**
+ * One category total from `GET /career/me/skill-exp` (`SkillExpDtos.CategoryExpView`).
+ * The endpoint returns EVERY category — categories the learner has not earned in yet
+ * come back with `totalExp: 0` — so a chart over this payload always has a full set
+ * of bars.
+ */
+export interface CareerUserSkillExp {
+    slug: string
+    label: string
+    sortOrder: number
+    /** Accumulated EXP for the category. Uncapped: more courses keep adding. */
+    totalExp: number
+}
+
 // ---- CV Builder (Harvard) ----
 //
 // Mirrors the jsonb `career.cv_profiles.sections` shape validated in the backend

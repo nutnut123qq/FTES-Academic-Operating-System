@@ -20,6 +20,11 @@ export interface SkillListFallbackProps {
  * Mobile (`<sm`) fallback: skills grouped by domain as tappable rows opening the
  * same detail panel. Preserves browse + filter + detail — a list is friendlier
  * than a force graph on a 380px screen.
+ *
+ * ⚠️ MÃ CHẾT — chờ dọn. Từ bản "Bảng kỹ năng theo nhóm nghề", danh sách là MẶT TIỀN
+ * (`SkillsByDomain`) chứ không còn là bản dự phòng cho mobile, và tab "Sơ đồ" không
+ * render dưới `sm` nên không còn ai gọi component này. Giữ lại một nhịp để việc dọn đi
+ * riêng thay vì lẫn vào task đổi UI.
  */
 export const SkillListFallback = ({ nodes, activeDomains, onSelect }: SkillListFallbackProps) => {
     const t = useTranslations()

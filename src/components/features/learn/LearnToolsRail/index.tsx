@@ -262,7 +262,9 @@ export const LearnToolsRail = ({ className, mobile = false }: LearnToolsRailProp
     return (
         <div
             className={cn(
-                "relative hidden shrink-0 lg:sticky lg:top-16 lg:flex lg:h-[calc(100dvh-4rem)] lg:self-start",
+                // KHÔNG thêm `relative` ở đây: nó thắng `lg:sticky` nên rail bị đẩy xuống
+                // 64px (top-16) và để lại dải trắng dưới header. Xem learn/layout.tsx.
+                "hidden shrink-0 lg:sticky lg:top-16 lg:flex lg:h-[calc(100dvh-4rem)] lg:self-start",
                 className,
             )}
         >

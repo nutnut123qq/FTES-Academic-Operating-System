@@ -9,29 +9,45 @@ import { buildSkillGraph, scopeGraphToSkills, type SkillGraphData, type SkillGra
 // tested); they are re-exported here so every consumer keeps a single import path.
 export * from "./skillGraphModel"
 
+/** Kết quả của một lần tải: đồ thị + việc đường tiến độ có đọc được hay không. */
+interface SkillGraphResult {
+    graph: SkillGraphData
+    /**
+     * `true` khi `GET /career/me/skills` hỏng (khách chưa đăng nhập, hoặc token hết hạn
+     * giữa chừng — TTL 15'). Mọi kỹ năng khi đó đọc thành "chưa mở", nên UI phải nói rõ
+     * đó là do thiếu phiên đăng nhập chứ không phải người học chưa học gì.
+     */
+    progressUnavailable: boolean
+}
+
 /**
  * Loads the learner's skill graph from the career module.
  *
  * - `GET /api/v1/career/skills` → the public skill catalogue + relations,
  * - `GET /api/v1/career/me/skills` → the learner's per-skill level (guests / callers
  *   without the career permission simply get no progress, so every node reads as
- *   `locked` instead of the whole graph failing),
+ *   `locked` instead of the whole graph failing — the failure is REPORTED back as
+ *   `progressUnavailable` so the UI can explain the all-locked board),
  * - when scoped, `GET /api/v1/subjects/{code}/workspace` → `careerBridge.relatedSkills`
  *   (the skill UUIDs mapped to that subject) narrows the graph to those skills + their
  *   1-hop neighbors.
  *
  * @param scope - optional `{ subjectId }` (the route segment = subject CODE).
- * @returns `{ graph, isLoading, error, mutate }` — `mutate` re-runs the fetch.
+ * @returns `{ graph, progressUnavailable, isLoading, error, mutate }` — `mutate` re-runs the fetch.
  */
 export const useQuerySkillGraphSwr = (scope?: SkillGraphScope) => {
     const code = scope?.subjectId ? scope.subjectId.toUpperCase() : ""
     const { data, isLoading, error, mutate } = useSWR(
         ["skill-graph", code || "full"] as const,
-        async (): Promise<SkillGraphData> => {
+        async (): Promise<SkillGraphResult> => {
+            let progressUnavailable = false
             const [catalogue, progress, relatedSkills] = await Promise.all([
                 getCareerSkills(),
                 // Guests / callers without `career` access still get a readable graph.
-                getMyCareerSkills().catch(() => []),
+                getMyCareerSkills().catch(() => {
+                    progressUnavailable = true
+                    return []
+                }),
                 code
                     ? getSubjectWorkspace(code)
                         .then((workspace) => workspace.careerBridge.data?.relatedSkills ?? [])
@@ -44,9 +60,18 @@ export const useQuerySkillGraphSwr = (scope?: SkillGraphScope) => {
                 (catalogue?.relations ?? []) as Array<unknown>,
                 progress ?? [],
             )
-            return relatedSkills.length > 0 ? scopeGraphToSkills(full, relatedSkills) : full
+            return {
+                graph: relatedSkills.length > 0 ? scopeGraphToSkills(full, relatedSkills) : full,
+                progressUnavailable,
+            }
         },
     )
 
-    return { graph: data, isLoading, error, mutate }
+    return {
+        graph: data?.graph,
+        progressUnavailable: data?.progressUnavailable ?? false,
+        isLoading,
+        error,
+        mutate,
+    }
 }

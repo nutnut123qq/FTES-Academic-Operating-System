@@ -176,20 +176,9 @@ export const ProfileShell = ({ children }: ProfileShellProps) => {
                                     </Typography>
                                 </div>
                             ) : null}
-                            {profile.campus ? (
-                                <div className="flex items-center gap-2">
-                                    <MapPinIcon
-                                        className="size-4 text-muted"
-                                        aria-hidden
-                                        focusable="false"
-                                    />
-                                    <Typography type="body-xs" color="muted">
-                                        {profile.campus}
-                                    </Typography>
-                                </div>
-                            ) : null}
                             {gamification ? (
-                                <div className="flex flex-wrap justify-center gap-2">
+                                // chips + huy hiệu CÙNG một hàng wrap (không tách 2 dòng)
+                                <div className="flex flex-wrap items-center justify-center gap-2">
                                     <GamificationChip
                                         icon={
                                             <MedalIcon
@@ -230,10 +219,6 @@ export const ProfileShell = ({ children }: ProfileShellProps) => {
                                             position: gamification.rank.position,
                                         })}
                                     />
-                                </div>
-                            ) : null}
-                            {gamification && gamification.badges.length > 0 ? (
-                                <div className="flex flex-wrap justify-center gap-2">
                                     {gamification.badges.slice(0, 6).map((badge) => (
                                         <span
                                             key={badge.id}
@@ -289,6 +274,19 @@ export const ProfileShell = ({ children }: ProfileShellProps) => {
                                     />
                                     <Typography type="body-xs" color="muted">
                                         {joinedLabel}
+                                    </Typography>
+                                </div>
+                            ) : null}
+                            {/* campus nằm DƯỚI dòng "tham gia từ", cuối sidebar */}
+                            {profile.campus ? (
+                                <div className="flex items-center gap-2">
+                                    <MapPinIcon
+                                        className="size-4 text-muted"
+                                        aria-hidden
+                                        focusable="false"
+                                    />
+                                    <Typography type="body-xs" color="muted">
+                                        {profile.campus}
                                     </Typography>
                                 </div>
                             ) : null}

@@ -2072,7 +2072,7 @@
       "cv": "CV",
       "portfolio": "Portfolio",
       "certificates": "Certificates",
-      "community": "Community",
+      "community": "Connections",
       "progress": "Progress"
     },
     "cv": {
@@ -2425,7 +2425,7 @@
       "projects": "Projects",
       "challenges": "Challenges",
       "profile": "Profile",
-      "community": "Community"
+      "community": "Connections"
     },
     "coding": {
       "solved": "Solved",
@@ -6187,13 +6187,51 @@
       "level": "Mastery level",
       "related": "Related subjects & courses"
     },
-    "summary": {},
-    "buckets": {},
-    "progress": {},
-    "unlock": {},
-    "list": {},
-    "noCourseMapped": {},
-    "guest": {},
+    "summary": {
+      "title": "Skills overview",
+      "total": "{count} skills",
+      "ariaLabel": "Breakdown of {count} skills by status",
+      "nextUp": "Up next: {skill} — {percent}% left in {course}"
+    },
+    "buckets": {
+      "mastered": "Mastered",
+      "learning": "Learning",
+      "nearly": "Almost unlocked",
+      "locked": "Locked"
+    },
+    "progress": {
+      "mastery": "Mastery level",
+      "course": "{course} course",
+      "unlock": "Unlock progress"
+    },
+    "unlock": {
+      "by": "Unlocked by: <course></course> — {percent}%",
+      "at": "Unlocks at {threshold}% of <course></course> — you are at {percent}%",
+      "already": "Unlocked by <course></course> ({percent}%)",
+      "more": "+{count} more courses",
+      "none": "Not mapped to any course yet",
+      "prereq": "Needs first: {names}",
+      "eligible": "Eligible for Lv {level}"
+    },
+    "list": {
+      "tabsLabel": "Skill map view",
+      "tabList": "List",
+      "tabGraph": "Diagram",
+      "searchPlaceholder": "Search skills…",
+      "searchEmpty": "No skill matches your search.",
+      "groupProgress": "{done}/{total} unlocked",
+      "levelChip": "Lv {level}/{max}",
+      "continue": "Keep learning",
+      "showLocked": "+{count} locked skills",
+      "hideLocked": "Collapse locked skills"
+    },
+    "noCourseMapped": {
+      "title": "No course declares its skills yet",
+      "description": "This page lists the skill catalogue; unlock progress is not available yet."
+    },
+    "guest": {
+      "title": "Sign in to see your progress"
+    },
     "retry": "Try again"
   },
   "skillExp": {

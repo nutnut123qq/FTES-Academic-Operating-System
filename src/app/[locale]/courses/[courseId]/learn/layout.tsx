@@ -47,9 +47,13 @@ const LearnLayout = ({ children }: PropsWithChildren) => {
     const isContentDashboard = isContent && !isModules
 
     // sticky, viewport-tall rail chrome (hidden below lg — mobile stacks the content).
-    // `relative` positions the ResizableRail's absolute drag handle.
+    // KHÔNG thêm `relative`: utility đó THẮNG `lg:sticky` (cùng lớp utility, `relative`
+    // đứng sau trong CSS xuất ra) → rail hoá `position: relative` + `top: 64px`, tức bị
+    // ĐẨY XUỐNG 64px để lại một dải trắng dưới header, và cũng không dính khi cuộn.
+    // `sticky` tự nó đã là positioned element nên tay kéo `absolute` của ResizableRail
+    // vẫn neo đúng — không cần `relative`.
     const railClass =
-        "relative hidden shrink-0 lg:sticky lg:top-16 lg:flex lg:h-[calc(100dvh-4rem)] lg:flex-col lg:self-start lg:border-r lg:border-default"
+        "hidden shrink-0 lg:sticky lg:top-16 lg:flex lg:h-[calc(100dvh-4rem)] lg:flex-col lg:self-start lg:border-r lg:border-default"
 
     // Collapsing the content-map rail on the lesson reader widens the reading column.
     // The toggle lives in the reader header; the layout simply reads the shared store.

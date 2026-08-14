@@ -2084,7 +2084,7 @@
       "cv": "CV",
       "portfolio": "Hồ sơ",
       "certificates": "Chứng chỉ",
-      "community": "Cộng đồng",
+      "community": "Kết nối",
       "progress": "Tiến độ"
     },
     "cv": {
@@ -2437,7 +2437,7 @@
       "projects": "Dự án",
       "challenges": "Thử thách",
       "profile": "Hồ sơ",
-      "community": "Cộng đồng"
+      "community": "Kết nối"
     },
     "coding": {
       "solved": "Đã giải",
@@ -6187,13 +6187,51 @@
       "level": "Mức độ thành thạo",
       "related": "Môn học & khóa học liên quan"
     },
-    "summary": {},
-    "buckets": {},
-    "progress": {},
-    "unlock": {},
-    "list": {},
-    "noCourseMapped": {},
-    "guest": {},
+    "summary": {
+      "title": "Tổng quan kỹ năng",
+      "total": "{count} kỹ năng",
+      "ariaLabel": "Phân bố {count} kỹ năng theo trạng thái",
+      "nextUp": "Sắp mở: {skill} — còn {percent}% khoá {course}"
+    },
+    "buckets": {
+      "mastered": "Thành thạo",
+      "learning": "Đang học",
+      "nearly": "Sắp mở",
+      "locked": "Chưa mở"
+    },
+    "progress": {
+      "mastery": "Mức thành thạo",
+      "course": "Khoá {course}",
+      "unlock": "Tiến độ mở khoá"
+    },
+    "unlock": {
+      "by": "Mở khoá bởi: <course></course> — {percent}%",
+      "at": "Mở khi hoàn thành {threshold}% khoá <course></course> — bạn đang {percent}%",
+      "already": "Đã mở bởi <course></course> ({percent}%)",
+      "more": "+{count} khoá khác",
+      "none": "Chưa gắn với khoá học nào",
+      "prereq": "Cần trước: {names}",
+      "eligible": "Đủ điều kiện lên Lv {level}"
+    },
+    "list": {
+      "tabsLabel": "Chế độ xem bản đồ kỹ năng",
+      "tabList": "Danh sách",
+      "tabGraph": "Sơ đồ",
+      "searchPlaceholder": "Tìm kỹ năng…",
+      "searchEmpty": "Không có kỹ năng nào khớp với từ khoá.",
+      "groupProgress": "{done}/{total} đã mở",
+      "levelChip": "Lv {level}/{max}",
+      "continue": "Học tiếp",
+      "showLocked": "+{count} kỹ năng chưa mở",
+      "hideLocked": "Thu gọn kỹ năng chưa mở"
+    },
+    "noCourseMapped": {
+      "title": "Chưa có khoá học nào khai báo kỹ năng",
+      "description": "Trang đang hiện danh mục kỹ năng, chưa có tiến độ mở khoá."
+    },
+    "guest": {
+      "title": "Đăng nhập để xem tiến độ của bạn"
+    },
     "retry": "Thử lại"
   },
   "skillExp": {

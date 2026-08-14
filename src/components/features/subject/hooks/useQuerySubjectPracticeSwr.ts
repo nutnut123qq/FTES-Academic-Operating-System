@@ -62,9 +62,14 @@ export const useQuerySubjectPracticeSwr = (subjectId: string) => {
 
             const [fe, views, stats] = await Promise.all([
                 examPage(BE_EXAM_TYPE.fe),
-                listChallenges(detail?.id ? { subjectId: detail.id } : undefined).catch(
-                    () => [],
-                ),
+                // Không có UUID môn thì KHÔNG hỏi kho. Trước đây chỗ này gọi
+                // `listChallenges(undefined)` = cả kho toàn cục, rồi `narrowBankRows`
+                // với `null` lại không lọc gì → thẻ "Coding" khoe số bài của MỌI môn,
+                // bấm vào thì danh sách (đã thu hẹp đúng môn) rỗng. Đếm 0 là câu trả lời
+                // trung thực khi chưa biết môn nào.
+                detail?.id
+                    ? listChallenges({ subjectId: detail.id }).catch(() => [])
+                    : Promise.resolve([]),
                 getSubjectStatistics(code).catch(() => null),
             ])
             return [

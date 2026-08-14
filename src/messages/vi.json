@@ -5384,6 +5384,7 @@
       "noDiscussions": "Chưa có thảo luận nào trong môn này. Hãy là người mở đầu!",
       "newResources": "Tài liệu mới",
       "challenges": "Challenge nổi bật",
+      "noChallenges": "Môn này chưa có challenge nào.",
       "activeMembers": "Thành viên tích cực",
       "seeAll": "Tất cả",
       "loadError": "Không tải được tổng quan.",
@@ -5475,6 +5476,8 @@
         "loadError": "Không tải được danh sách bài",
         "retry": "Thử lại",
         "empty": "Không có bài nào khớp bộ lọc",
+        "emptySubject": "Môn này chưa có bài nào",
+        "emptySubjectHint": "Bài của môn được gắn theo mã môn. Khi giảng viên thêm bài cho môn này, bài sẽ hiện ở đây.",
         "status": {
           "solved": "Đã giải",
           "unsolved": "Chưa giải"
@@ -5516,7 +5519,6 @@
           "upcoming": "Sắp mở",
           "closed": "Đã đóng"
         },
-        "scopeNote": "Môn này chưa có thử thách riêng — đang hiển thị toàn bộ thử thách công khai của hệ thống.",
         "window": "Diễn ra: {start} → {end}",
         "openNow": "mở ngay",
         "noDeadline": "không giới hạn",

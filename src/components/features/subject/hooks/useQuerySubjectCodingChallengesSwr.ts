@@ -81,15 +81,16 @@ export interface CodingChallenge {
     tags: Array<ChallengeTagView>
 }
 
-/** The bank payload: the rows plus whether they were narrowed to the subject. */
+/**
+ * Bank payload của một môn: CHỈ gồm challenge của chính môn đó.
+ *
+ * Không còn cờ `scoped`. Trước đây cờ này tồn tại vì hook có nhánh "môn rỗng → đổ cả
+ * kho công khai", và màn hình phải treo banner xin lỗi vì đang chiếu đề của môn khác.
+ * Nhánh đó đã bị bỏ (đề JPD113 phải là đề JPD113), nên không còn trạng thái nào để
+ * mà báo — một danh sách rỗng giờ có nghĩa đúng nghĩa đen: môn này chưa có bài nào.
+ */
 export interface CodingChallengeBank {
     items: Array<CodingChallenge>
-    /**
-     * `true` when the rows are the subject's own challenges; `false` when the subject
-     * owns none and the full public list is shown instead (the list renders a note so
-     * the learner is not misled).
-     */
-    scoped: boolean
 }
 
 /**
@@ -180,7 +181,11 @@ export const toBankRows = (
  * the constraint on the rows costs nothing when the BE honours the params (it drops
  * nothing) and keeps the surface truthful when it does not.
  *
- * Delete once every deployment serves the params.
+ * ĐỪNG XOÁ NHẦM đây tưởng là nhánh fallback "môn rỗng → đổ cả kho" (nhánh đó đã bị bỏ).
+ * Đây là chiều NGƯỢC LẠI: nó CHẶN kho toàn cục tràn vào khi BE cũ bỏ qua param. Từ khi
+ * banner cảnh báo bị gỡ, bỏ đai này còn tệ hơn trước: cả kho lại tràn vào trang môn mà
+ * lần này KHÔNG còn một dòng nào nói cho người học biết. Chỉ xoá khi MỌI deployment đã
+ * phục vụ `subjectId`/`tags`.
  *
  * @param items - the rows the list endpoint answered with.
  * @param subjectUuid - the subject the rows were asked for, or `null` for the global bank.
@@ -232,23 +237,56 @@ export const collectChallengeTags = (
 }
 
 /**
- * Loads the practice challenge bank for a subject.
+ * Đọc kho challenge CỦA MỘT MÔN — và chỉ của môn đó.
  *
- * Real data: `GET /api/v1/subjects/{code}` (resolves the subject UUID) +
- * `GET /api/v1/challenges?subjectId=&tags=` — the narrowing is the BE's own query param
- * now, NOT a client-side `subjectId` filter over the global bank (the workaround that
- * lived here while the param was missing). The BE already hides DRAFT/ARCHIVED and
- * COURSE_ONLY course challenges from the list; {@link isListableChallenge} is the belt
- * for the newer `PENDING_APPROVAL` status.
+ * Dữ liệu thật: `GET /api/v1/subjects/{code}` (đổi mã môn → UUID) +
+ * `GET /api/v1/challenges?subjectId=&tags=`. Việc thu hẹp do CHÍNH BE làm bằng query
+ * param, không phải lọc client trên kho toàn cục. BE đã ẩn DRAFT/ARCHIVED và challenge
+ * COURSE_ONLY của khoá; {@link isListableChallenge} là đai cho status `PENDING_APPROVAL`.
  *
- * The "subject owns nothing → show the global bank with `scoped: false`" behaviour is
- * kept, just moved server-side: an empty subject-scoped page re-asks WITHOUT `subjectId`
- * (carrying the same tags), so the learner sees the public bank instead of a bogus empty
- * state and the list can say so.
+ * VÌ SAO không còn nhánh "môn rỗng → hỏi lại KHÔNG kèm subjectId":
+ * nhánh đó là nguồn duy nhất khiến đề PE của CSD201/PRF192 hiện dưới tab Luyện tập của
+ * JPD113. Nó có HAI đường rơi, không phải một, và cả hai đều đã bị bỏ:
+ *   (a) môn resolve được nhưng trả 0 dòng → trước đây chảy tiếp xuống truy vấn toàn cục;
+ *   (b) `getSubjectDetail` lỗi/404 bị `.catch(() => null)` nuốt → cũng chảy xuống toàn cục.
+ * Chỉ vá (a) mà quên (b) thì hễ endpoint môn hỏng là cả kho lại tràn vào.
  *
- * @param subjectId - the `[subjectId]` route segment (the subject CODE).
- * @param tags - tag slugs the rows must ALL carry (AND semantics); omit for no constraint.
- * @returns `{ challenges, scoped, isLoading, error, mutate }`.
+ * BẪY khi sửa tiếp: lỗi đọc môn PHẢI ném lên SWR chứ không được nuốt thành danh sách
+ * rỗng. "Không đọc được môn" khác "môn không có bài" — nuốt lỗi là đổi một câu nói dối
+ * (chiếu đề môn khác) lấy một câu nói dối khác (bảo môn này trống).
+ *
+ * @param code - mã môn (đã viết hoa).
+ * @param tags - slug tag mà mọi dòng phải mang ĐỦ (AND); mảng rỗng = không ràng buộc.
+ * @returns kho challenge của môn.
+ * @throws khi không đọc được môn, hoặc môn trả về không có UUID.
+ */
+export const fetchSubjectCodingBank = async (
+    code: string,
+    tags: Array<string>,
+): Promise<CodingChallengeBank> => {
+    const detail = await getSubjectDetail(code)
+    // Không có UUID thì KHÔNG được hỏi kho mà bỏ trống `subjectId` — làm thế là hỏi cả
+    // kho toàn cục rồi trình bày nó như đề của môn này. Thà báo lỗi để người học bấm
+    // "Thử lại" còn hơn chiếu đề môn khác.
+    if (!detail?.id) {
+        throw new Error(`Subject ${code} resolved without an id`)
+    }
+    const now = Date.now()
+    return {
+        items: narrowBankRows(
+            toBankRows(await listChallenges({ subjectId: detail.id, tags }), now),
+            detail.id,
+            tags,
+        ),
+    }
+}
+
+/**
+ * Hook SWR quanh {@link fetchSubjectCodingBank}.
+ *
+ * @param subjectId - đoạn route `[subjectId]` (chính là MÃ môn).
+ * @param tags - slug tag mà mọi dòng phải mang đủ (AND); bỏ trống = không ràng buộc.
+ * @returns `{ challenges, isLoading, error, mutate }`.
  */
 export const useQuerySubjectCodingChallengesSwr = (
     subjectId: string,
@@ -260,29 +298,12 @@ export const useQuerySubjectCodingChallengesSwr = (
     const tagKey = [...tags].sort().join(",")
     const { data, isLoading, error, mutate } = useSWR(
         code ? (["subject-coding-challenges", code, tagKey] as const) : null,
-        async (): Promise<CodingChallengeBank> => {
-            const selected = tagKey ? tagKey.split(",") : []
-            // A missing/forbidden subject must not sink the bank — fall back to global.
-            const detail = await getSubjectDetail(code).catch(() => null)
-            const now = Date.now()
-            if (detail?.id) {
-                const mine = narrowBankRows(
-                    toBankRows(await listChallenges({ subjectId: detail.id, tags: selected }), now),
-                    detail.id,
-                    selected,
-                )
-                if (mine.length > 0) {
-                    return { items: mine, scoped: true }
-                }
-            }
-            const all = toBankRows(await listChallenges({ tags: selected }), now)
-            return { items: narrowBankRows(all, null, selected), scoped: false }
-        },
+        (): Promise<CodingChallengeBank> =>
+            fetchSubjectCodingBank(code, tagKey ? tagKey.split(",") : []),
     )
 
     return {
         challenges: data?.items ?? [],
-        scoped: data?.scoped ?? false,
         isLoading,
         error,
         mutate,

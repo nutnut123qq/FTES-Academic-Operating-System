@@ -5384,6 +5384,7 @@
       "noDiscussions": "No discussions in this subject yet. Be the first to start one!",
       "newResources": "New resources",
       "challenges": "Featured challenges",
+      "noChallenges": "This subject has no challenges yet.",
       "activeMembers": "Active members",
       "seeAll": "See all",
       "loadError": "Couldn't load the overview.",
@@ -5475,6 +5476,8 @@
         "loadError": "Couldn't load the problems",
         "retry": "Retry",
         "empty": "No problems match your filters",
+        "emptySubject": "This subject has no problems yet",
+        "emptySubjectHint": "Problems belong to a subject by its code. Once an instructor adds one for this subject, it shows up here.",
         "status": {
           "solved": "Solved",
           "unsolved": "Unsolved"
@@ -5516,7 +5519,6 @@
           "upcoming": "Upcoming",
           "closed": "Closed"
         },
-        "scopeNote": "This subject has no challenges of its own yet — showing every public challenge instead.",
         "window": "Window: {start} → {end}",
         "openNow": "open now",
         "noDeadline": "no deadline",

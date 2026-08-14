@@ -106,7 +106,13 @@ export const SubjectOverview = () => {
     // "Challenges của môn" rail — the REAL bank the Practice/Coding module lists,
     // newest first (sorted by startsAt desc; the BE list carries no createdAt). Each
     // row links to the full solver page (`/challenges/{id}`) = the course-side IDE.
-    const { challenges: subjectChallenges } = useQuerySubjectCodingChallengesSwr(subjectId)
+    //
+    // Lấy cả `error`: hook nay NÉM lỗi khi không đọc được môn thay vì lặng lẽ trả kho
+    // toàn cục, nên "rỗng vì lỗi" phải phân biệt với "môn chưa có bài". Rail không có
+    // chỗ cho nút thử lại — link "Xem tất cả" dẫn sang tab Luyện tập, nơi CÓ trạng thái
+    // lỗi + retry thật.
+    const { challenges: subjectChallenges, error: challengesError } =
+        useQuerySubjectCodingChallengesSwr(subjectId)
     const newestChallenges = [...subjectChallenges]
         .sort((a, b) => Date.parse(b.startsAt ?? "") - Date.parse(a.startsAt ?? ""))
         .slice(0, OVERVIEW_CHALLENGES)
@@ -129,6 +135,7 @@ export const SubjectOverview = () => {
                         recentPosts={recentPosts}
                         linkedCourses={linkedCourses}
                         newestChallenges={newestChallenges}
+                        challengesFailed={Boolean(challengesError)}
                         onCompose={() => router.push(`${base}/discussion`)}
                         base={base}
                         subjectName={subject?.name ?? subjectId}
@@ -151,6 +158,7 @@ const OverviewView = ({
     recentPosts,
     linkedCourses,
     newestChallenges,
+    challengesFailed,
     onCompose,
     base,
     subjectName,
@@ -166,6 +174,11 @@ const OverviewView = ({
     linkedCourses: Array<LinkedCourse>
     /** Newest challenges of the subject, for the "Challenges của môn" rail. */
     newestChallenges: Array<CodingChallenge>
+    /**
+     * Đọc kho challenge của môn THẤT BẠI (khác với môn chưa có bài nào). Rail phải im
+     * lặng trong ca này thay vì khẳng định "chưa có challenge nào" — một câu sai.
+     */
+    challengesFailed: boolean
     onCompose: () => void
     base: string
     /** Subject name, shown in the leave confirmation. */
@@ -336,22 +349,33 @@ const OverviewView = ({
                         ))}
                     </RailCard>
 
+                    {/* Rail này ăn CHUNG hook với tab Luyện tập nhưng trước đây bỏ qua cờ
+                        `scoped`, nên nó lặng lẽ chiếu đề của môn khác mà không một dòng
+                        cảnh báo nào — tệ hơn cả tab Luyện tập (ở đó ít ra còn có banner).
+                        Bỏ fallback trong hook là rail tự đúng; đổi lại nó nay rỗng thật
+                        được, nên phải có câu cho trạng thái rỗng của chính nó. */}
                     <RailCard title={t("overview.challenges")} href={`${base}/practice`} seeAll={t("overview.seeAll")}>
-                        {newestChallenges.map((challenge) => (
-                            <Link
-                                key={challenge.id}
-                                href={`/challenges/${challenge.id}`}
-                                className="group flex items-center gap-2"
-                            >
-                                <TargetIcon aria-hidden focusable="false" className="size-5 shrink-0 text-accent" />
-                                <Typography type="body-sm" color="muted" className="min-w-0 flex-1 group-hover:underline" truncate>
-                                    {challenge.title}
-                                </Typography>
-                                <Chip size="sm" variant="soft" color={LIFECYCLE_COLOR[challenge.lifecycle]}>
-                                    {t(`practice.coding.lifecycle.${challenge.lifecycle}`)}
-                                </Chip>
-                            </Link>
-                        ))}
+                        {newestChallenges.length > 0 ? (
+                            newestChallenges.map((challenge) => (
+                                <Link
+                                    key={challenge.id}
+                                    href={`/challenges/${challenge.id}`}
+                                    className="group flex items-center gap-2"
+                                >
+                                    <TargetIcon aria-hidden focusable="false" className="size-5 shrink-0 text-accent" />
+                                    <Typography type="body-sm" color="muted" className="min-w-0 flex-1 group-hover:underline" truncate>
+                                        {challenge.title}
+                                    </Typography>
+                                    <Chip size="sm" variant="soft" color={LIFECYCLE_COLOR[challenge.lifecycle]}>
+                                        {t(`practice.coding.lifecycle.${challenge.lifecycle}`)}
+                                    </Chip>
+                                </Link>
+                            ))
+                        ) : challengesFailed ? null : (
+                            <Typography type="body-sm" color="muted">
+                                {t("overview.noChallenges")}
+                            </Typography>
+                        )}
                     </RailCard>
 
                     <RailCard title={t("overview.activeMembers")} href={`${base}/members`} seeAll={t("overview.seeAll")}>

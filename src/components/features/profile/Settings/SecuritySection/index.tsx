@@ -3,18 +3,15 @@
 import React from "react"
 import { Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
+import { ChangeEmailSection } from "./ChangeEmailSection"
 import { ChangePasswordSection } from "./ChangePasswordSection"
 import { TwoFactorSection } from "./TwoFactorSection"
-import { DevicesSection } from "./DevicesSection"
-import { LoginHistorySection } from "./LoginHistorySection"
 
 /**
- * SecuritySection — the "Bảo mật" section of settings, in the order a learner reasons
- * about their account: the password, then the second factor, then where they are signed
- * in, then what has been happening.
- *
- * Every part is a data owner in its own right (each on its own SWR key), so a backend
- * that cannot answer one of them degrades that card alone instead of blanking the page.
+ * SecuritySection — "Bảo mật" section of settings:
+ * 1. Email address management
+ * 2. Password change (discrete summary card with modal)
+ * 3. Two-factor authentication (2FA)
  */
 export const SecuritySection = () => {
     const t = useTranslations()
@@ -30,10 +27,9 @@ export const SecuritySection = () => {
                 </Typography>
             </div>
 
+            <ChangeEmailSection />
             <ChangePasswordSection />
             <TwoFactorSection />
-            <DevicesSection />
-            <LoginHistorySection />
         </section>
     )
 }

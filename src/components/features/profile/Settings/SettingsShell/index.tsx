@@ -3,7 +3,7 @@
 import React from "react"
 import { useRouter, useSelectedLayoutSegments } from "next/navigation"
 import { useLocale, useTranslations } from "next-intl"
-import { BellIcon, PaletteIcon, ShieldCheckIcon } from "@phosphor-icons/react"
+import { BellIcon, DevicesIcon, PaletteIcon, ShieldCheckIcon } from "@phosphor-icons/react"
 import { CollapsibleSidebar } from "@/components/blocks/navigation/CollapsibleSidebar"
 import { SidebarNavGroup } from "@/components/blocks/navigation/SidebarNavGroup"
 import { SidebarNavItem } from "@/components/blocks/navigation/SidebarNavItem"
@@ -30,7 +30,7 @@ interface SettingsNavItem {
     href: (locale: string) => string
 }
 
-/** The three settings sections, in rail order. */
+/** The four settings sections, in rail order: Appearance, Security, Manage Devices, Notifications. */
 const NAV_ITEMS: Array<SettingsNavItem> = [
     {
         key: "appearance",
@@ -39,16 +39,22 @@ const NAV_ITEMS: Array<SettingsNavItem> = [
         href: (locale) => pathConfig().locale(locale).profile().settings().build(),
     },
     {
-        key: "notifications",
-        icon: <BellIcon className="size-5" aria-hidden focusable="false" />,
-        segment: "notifications",
-        href: (locale) => pathConfig().locale(locale).profile().notifications().build(),
-    },
-    {
         key: "security",
         icon: <ShieldCheckIcon className="size-5" aria-hidden focusable="false" />,
         segment: "security",
         href: (locale) => pathConfig().locale(locale).profile().security().build(),
+    },
+    {
+        key: "sessions",
+        icon: <DevicesIcon className="size-5" aria-hidden focusable="false" />,
+        segment: "sessions",
+        href: (locale) => pathConfig().locale(locale).profile().sessions().build(),
+    },
+    {
+        key: "notifications",
+        icon: <BellIcon className="size-5" aria-hidden focusable="false" />,
+        segment: "notifications",
+        href: (locale) => pathConfig().locale(locale).profile().notifications().build(),
     },
 ]
 

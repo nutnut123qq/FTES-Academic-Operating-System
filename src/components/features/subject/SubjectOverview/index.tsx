@@ -106,7 +106,28 @@ export const SubjectOverview = () => {
     // "Challenges của môn" rail — the REAL bank the Practice/Coding module lists,
     // newest first (sorted by startsAt desc; the BE list carries no createdAt). Each
     // row links to the full solver page (`/challenges/{id}`) = the course-side IDE.
-    const { challenges: subjectChallenges } = useQuerySubjectCodingChallengesSwr(subjectId)
+    //
+    // Rail có BA trạng thái, không phải hai — nên lấy CẢ `isLoading` lẫn `error`:
+    //   - đang tải: chưa biết gì → KHÔNG được nói câu nào về số bài của môn;
+    //   - lỗi: hook NÉM khi không đọc được môn thay vì lặng lẽ trả kho toàn cục, nên
+    //     "rỗng vì lỗi" phải phân biệt với "môn chưa có bài". Rail không có chỗ cho nút
+    //     thử lại — link "Xem tất cả" dẫn sang tab Luyện tập, nơi CÓ lỗi + retry thật;
+    //   - rỗng thật: chỉ lúc này mới được nói "môn này chưa có challenge nào".
+    //
+    // VÌ SAO nhánh đang-tải là BẮT BUỘC chứ không phải phòng xa: SwrProvider đặt
+    // `keepPreviousData: false` và không bật suspense, nên trước khi fetch xong
+    // `data === undefined` → `challenges = []` VÀ `error = undefined`. Cổng loading của cả
+    // trang (AsyncContent bên dưới) lại đo bằng hook KHÁC (`getSubjectWorkspace`, MỘT
+    // request), còn hook này phải chạy HAI request TUẦN TỰ (`getSubjectDetail` →
+    // `listChallenges`) nên luôn xong sau. Thiếu nhánh này thì mỗi lần mở trang môn,
+    // skeleton trang vừa tắt là rail khẳng định "chưa có challenge nào" rồi mới nhảy sang
+    // danh sách — sai chắc chắn, không phải hên xui. Đổi môn cũng lặp lại y hệt vì
+    // keepPreviousData=false xoá data theo key.
+    const {
+        challenges: subjectChallenges,
+        isLoading: challengesLoading,
+        error: challengesError,
+    } = useQuerySubjectCodingChallengesSwr(subjectId)
     const newestChallenges = [...subjectChallenges]
         .sort((a, b) => Date.parse(b.startsAt ?? "") - Date.parse(a.startsAt ?? ""))
         .slice(0, OVERVIEW_CHALLENGES)
@@ -129,6 +150,8 @@ export const SubjectOverview = () => {
                         recentPosts={recentPosts}
                         linkedCourses={linkedCourses}
                         newestChallenges={newestChallenges}
+                        challengesLoading={challengesLoading}
+                        challengesFailed={Boolean(challengesError)}
                         onCompose={() => router.push(`${base}/discussion`)}
                         base={base}
                         subjectName={subject?.name ?? subjectId}
@@ -151,6 +174,8 @@ const OverviewView = ({
     recentPosts,
     linkedCourses,
     newestChallenges,
+    challengesLoading,
+    challengesFailed,
     onCompose,
     base,
     subjectName,
@@ -166,6 +191,17 @@ const OverviewView = ({
     linkedCourses: Array<LinkedCourse>
     /** Newest challenges of the subject, for the "Challenges của môn" rail. */
     newestChallenges: Array<CodingChallenge>
+    /**
+     * Kho challenge của môn ĐANG ĐỌC (chưa có câu trả lời nào). Rail phải hiện skeleton
+     * chứ tuyệt đối không được khẳng định "chưa có challenge nào": lúc này danh sách rỗng
+     * chỉ vì chưa fetch xong, chưa phải vì môn trống.
+     */
+    challengesLoading: boolean
+    /**
+     * Đọc kho challenge của môn THẤT BẠI (khác với môn chưa có bài nào). Rail phải im
+     * lặng trong ca này thay vì khẳng định "chưa có challenge nào" — một câu sai.
+     */
+    challengesFailed: boolean
     onCompose: () => void
     base: string
     /** Subject name, shown in the leave confirmation. */
@@ -336,22 +372,40 @@ const OverviewView = ({
                         ))}
                     </RailCard>
 
+                    {/* Rail này ăn CHUNG hook với tab Luyện tập nhưng trước đây bỏ qua cờ
+                        `scoped`, nên nó lặng lẽ chiếu đề của môn khác mà không một dòng
+                        cảnh báo nào — tệ hơn cả tab Luyện tập (ở đó ít ra còn có banner).
+                        Bỏ fallback trong hook là rail tự đúng; đổi lại nó nay rỗng thật
+                        được, nên phải có câu cho trạng thái rỗng của chính nó.
+
+                        Thứ tự nhánh BẮT BUỘC là tải → có dòng → lỗi → rỗng, cùng cách gác
+                        như bề mặt anh em CodingChallengeList (`isLoading && length === 0`
+                        → skeleton). Đảo thứ tự (hỏi "rỗng?" trước) là quay lại đúng lỗi cũ:
+                        nói "chưa có challenge nào" trong lúc còn chưa đọc xong. */}
                     <RailCard title={t("overview.challenges")} href={`${base}/practice`} seeAll={t("overview.seeAll")}>
-                        {newestChallenges.map((challenge) => (
-                            <Link
-                                key={challenge.id}
-                                href={`/challenges/${challenge.id}`}
-                                className="group flex items-center gap-2"
-                            >
-                                <TargetIcon aria-hidden focusable="false" className="size-5 shrink-0 text-accent" />
-                                <Typography type="body-sm" color="muted" className="min-w-0 flex-1 group-hover:underline" truncate>
-                                    {challenge.title}
-                                </Typography>
-                                <Chip size="sm" variant="soft" color={LIFECYCLE_COLOR[challenge.lifecycle]}>
-                                    {t(`practice.coding.lifecycle.${challenge.lifecycle}`)}
-                                </Chip>
-                            </Link>
-                        ))}
+                        {challengesLoading && newestChallenges.length === 0 ? (
+                            <ChallengeRailSkeleton />
+                        ) : newestChallenges.length > 0 ? (
+                            newestChallenges.map((challenge) => (
+                                <Link
+                                    key={challenge.id}
+                                    href={`/challenges/${challenge.id}`}
+                                    className="group flex items-center gap-2"
+                                >
+                                    <TargetIcon aria-hidden focusable="false" className="size-5 shrink-0 text-accent" />
+                                    <Typography type="body-sm" color="muted" className="min-w-0 flex-1 group-hover:underline" truncate>
+                                        {challenge.title}
+                                    </Typography>
+                                    <Chip size="sm" variant="soft" color={LIFECYCLE_COLOR[challenge.lifecycle]}>
+                                        {t(`practice.coding.lifecycle.${challenge.lifecycle}`)}
+                                    </Chip>
+                                </Link>
+                            ))
+                        ) : challengesFailed ? null : (
+                            <Typography type="body-sm" color="muted">
+                                {t("overview.noChallenges")}
+                            </Typography>
+                        )}
                     </RailCard>
 
                     <RailCard title={t("overview.activeMembers")} href={`${base}/members`} seeAll={t("overview.seeAll")}>
@@ -538,6 +592,22 @@ const LinkedCoursesCard = ({ courses }: { courses: Array<LinkedCourse> }) => {
         </div>
     )
 }
+
+/**
+ * Trạng thái ĐANG TẢI của rail "Challenges của môn" — ba dòng shimmer cỡ đúng một dòng
+ * challenge (icon + tên + chip lifecycle), để rail không nhảy cao khi dữ liệu về.
+ *
+ * Đây là câu trả lời trung thực duy nhất khi chưa đọc xong: rail không biết môn có bao
+ * nhiêu bài, nên nó không nói gì về số lượng — khác hẳn "Môn này chưa có challenge nào",
+ * vốn là một lời KHẲNG ĐỊNH và sẽ sai suốt quãng thời gian fetch.
+ */
+const ChallengeRailSkeleton = () => (
+    <div className="flex flex-col gap-3" aria-hidden>
+        <Skeleton className="h-5 w-full rounded-sm" />
+        <Skeleton className="h-5 w-full rounded-sm" />
+        <Skeleton className="h-5 w-2/3 rounded-sm" />
+    </div>
+)
 
 /** A right-rail shortcut card: a title + "see all" link over a small list. */
 const RailCard = ({

@@ -1,12 +1,11 @@
 "use client"
 
-import React, { useMemo, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import { Button, Chip, Typography, cn } from "@heroui/react"
 import {
     ArrowLeftIcon,
     ArrowsDownUpIcon,
     CaretRightIcon,
-    InfoIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { FilterMenu } from "./FilterMenu"
@@ -54,10 +53,10 @@ export interface CodingChallengeListProps {
 /**
  * The practice challenge BANK, backed by `GET /api/v1/challenges?subjectId=&tags=`.
  *
- * Rows are the subject's own challenges when it owns any; otherwise the global public
- * bank is shown with an explicit note. **Practical Exam (PE) papers are in this bank** —
- * they are challenges tagged `pe` + the subject code, so the TAG row is how a learner
- * pulls them out (`Đề PE` chip → only the papers).
+ * Các dòng LUÔN là challenge của chính môn này — không còn nhánh "môn rỗng → chiếu cả
+ * kho công khai" (và cùng với nó, không còn banner xin lỗi). **Đề Practical Exam (PE)
+ * nằm trong kho này** — chúng là challenge gắn tag `pe` + mã môn, nên hàng TAG là đường
+ * để người học lọc ra (chip `Đề PE` → chỉ còn đề).
  *
  * Filters: tag (server-side, AND semantics) · challenge type · lifecycle · search.
  * Selecting a row opens the challenge's own solve/read page.
@@ -65,13 +64,26 @@ export interface CodingChallengeListProps {
 export const CodingChallengeList = ({ subjectId, onBack }: CodingChallengeListProps) => {
     const t = useTranslations("subjects")
     const [tags, setTags] = useState<Array<string>>([])
-    const { challenges, scoped, isLoading, error, mutate } =
+    const { challenges, isLoading, error, mutate } =
         useQuerySubjectCodingChallengesSwr(subjectId, tags)
 
     const [type, setType] = useState<"all" | ChallengeType>("all")
     const [lifecycle, setLifecycle] = useState<"all" | ChallengeLifecycle>("all")
     const [search, setSearch] = useState("")
     const [sort, setSort] = useState<SortOption>("newest")
+
+    // Bỏ chọn hết tag khi ĐỔI MÔN.
+    //
+    // VÌ SAO: bộ lọc tag sống trong state của component, mà route chỉ đổi param
+    // `[subjectId]` nên Next giữ nguyên instance — chip `csd201` chọn ở môn cũ đi thẳng
+    // sang môn mới. Nó không tự biến mất: `collectChallengeTags` CỐ Ý luôn giữ lại slug
+    // đang chọn (để người dùng còn bỏ chọn được thay vì kẹt trên danh sách rỗng), nên
+    // chip môn khác vẫn hiện và vẫn thu hẹp truy vấn về 0 dòng. Đây là dư âm của thời
+    // fallback còn sống: ai đã lỡ chọn tag môn khác thì chip đó theo họ đi khắp nơi.
+    // Chạy cả lúc mount cũng vô hại (state khởi tạo đã là []).
+    useEffect(() => {
+        setTags([])
+    }, [subjectId])
 
     /** Facet row — the tags present on the returned rows, plus whatever is picked. */
     const tagFacets = useMemo(
@@ -143,6 +155,20 @@ export const CodingChallengeList = ({ subjectId, onBack }: CodingChallengeListPr
             return true
         })
     }, [challenges, type, lifecycle, search])
+
+    /**
+     * Môn này THẬT SỰ chưa có bài nào (khác với "có bài nhưng không cái nào khớp lọc").
+     *
+     * VÌ SAO phải phân biệt: hai trạng thái rỗng nói hai chuyện khác hẳn nhau, mà trước
+     * đây cả hai dùng chung đúng một câu — "Không có bài nào khớp bộ lọc". Khi môn thật
+     * sự trống, câu đó đổ lỗi cho một bộ lọc người học không hề đặt.
+     *
+     * Điều kiện đo bằng `tags` + `challenges` (dòng THÔ từ server), KHÔNG đo bằng
+     * type/lifecycle/search: ba cái sau lọc phía client, nên nếu server đã trả 0 dòng
+     * thì chúng không thể là nguyên nhân. Ngược lại `tags` lọc phía server — đang chọn
+     * tag thì không được phép kết luận "môn trống", vì chính tag mới là thứ cắt hết.
+     */
+    const subjectHasNothing = tags.length === 0 && challenges.length === 0
 
     // Apply the chosen sort to the filtered rows: "hot" = most-submitted first; "newest" =
     // latest start first (the BE list carries no createdAt, so startsAt is the recency proxy).
@@ -254,16 +280,6 @@ export const CodingChallengeList = ({ subjectId, onBack }: CodingChallengeListPr
                 ) : null}
             </div>
 
-            {/* honesty note: the rows are NOT this subject's challenges */}
-            {!scoped && challenges.length > 0 ? (
-                <div className="flex items-start gap-2 rounded-2xl border border-separator p-3">
-                    <InfoIcon aria-hidden focusable="false" className="mt-0.5 size-4 shrink-0 text-muted" />
-                    <Typography type="body-xs" color="muted">
-                        {t("practice.coding.scopeNote")}
-                    </Typography>
-                </div>
-            ) : null}
-
             <AsyncContent
                 isLoading={isLoading && challenges.length === 0}
                 skeleton={<CodingListSkeleton />}
@@ -275,7 +291,14 @@ export const CodingChallengeList = ({ subjectId, onBack }: CodingChallengeListPr
                 }}
             >
                 {sorted.length === 0 ? (
-                    <EmptyContent title={t("practice.coding.empty")} />
+                    subjectHasNothing ? (
+                        <EmptyContent
+                            title={t("practice.coding.emptySubject")}
+                            description={t("practice.coding.emptySubjectHint")}
+                        />
+                    ) : (
+                        <EmptyContent title={t("practice.coding.empty")} />
+                    )
                 ) : (
                     <div className="flex flex-col gap-2">
                         {sorted.map((challenge) => (

@@ -5384,6 +5384,7 @@
       "noDiscussions": "Chưa có thảo luận nào trong môn này. Hãy là người mở đầu!",
       "newResources": "Tài liệu mới",
       "challenges": "Challenge nổi bật",
+      "noChallenges": "Môn này chưa có challenge nào.",
       "activeMembers": "Thành viên tích cực",
       "seeAll": "Tất cả",
       "loadError": "Không tải được tổng quan.",
@@ -5446,6 +5447,8 @@
       },
       "backToHub": "Về trang luyện tập",
       "comingSoon": "Tính năng này sẽ sớm ra mắt.",
+      "loadError": "Không tải được phần luyện tập của môn",
+      "retry": "Thử lại",
       "difficulty": {
         "easy": "Dễ",
         "medium": "Trung bình",
@@ -5475,6 +5478,8 @@
         "loadError": "Không tải được danh sách bài",
         "retry": "Thử lại",
         "empty": "Không có bài nào khớp bộ lọc",
+        "emptySubject": "Môn này chưa có bài nào",
+        "emptySubjectHint": "Danh sách này chỉ hiện bài đã được đặt THUỘC môn này; chỉ gắn thêm tag mã môn thì bài vẫn không hiện ở đây. Khi giảng viên thêm bài cho môn, bài sẽ xuất hiện.",
         "status": {
           "solved": "Đã giải",
           "unsolved": "Chưa giải"
@@ -5516,7 +5521,6 @@
           "upcoming": "Sắp mở",
           "closed": "Đã đóng"
         },
-        "scopeNote": "Môn này chưa có thử thách riêng — đang hiển thị toàn bộ thử thách công khai của hệ thống.",
         "window": "Diễn ra: {start} → {end}",
         "openNow": "mở ngay",
         "noDeadline": "không giới hạn",

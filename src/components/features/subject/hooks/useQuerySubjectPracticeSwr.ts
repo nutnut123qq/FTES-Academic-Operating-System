@@ -77,7 +77,16 @@ export const useQuerySubjectPracticeSwr = (subjectId: string) => {
                 // = cả kho toàn cục, rồi `narrowBankRows` với `null` lại không lọc gì →
                 // thẻ "Coding" khoe số bài của MỌI môn, bấm vào thì danh sách (đã thu hẹp
                 // đúng môn) rỗng.
-                listChallenges({ subjectId: detail.id }),
+                // BEST-EFFORT CÓ CHỦ ĐÍCH, đừng "sửa" thành ném:
+                // GET /api/v1/challenges là endpoint CHỈ CHO NGƯỜI ĐÃ ĐĂNG NHẬP
+                // (SecurityConfig kết bằng anyRequest().authenticated()), trong khi trang môn
+                // là PUBLIC (SubjectPublicSecurityConfig permitAll). Để nó ném lên SWR thì
+                // khách CHƯA đăng nhập mở /subjects/{code}/practice sẽ mất TOÀN BỘ hub — thay
+                // bằng "Không tải được" + nút Thử lại mà bấm bao nhiêu lần cũng 401, và không
+                // một chữ nào gợi ý đăng nhập. Thà thẻ Coding đếm 0 cho khách còn hơn khoá cả
+                // lối vào FE/Bảng xếp hạng. Đọc MÔN thì vẫn ném (ở trên) — không đọc được môn
+                // là hỏng thật, khác hẳn "chưa đăng nhập nên không thấy kho bài".
+                listChallenges({ subjectId: detail.id }).catch(() => []),
                 getSubjectStatistics(code).catch(() => null),
             ])
             return [

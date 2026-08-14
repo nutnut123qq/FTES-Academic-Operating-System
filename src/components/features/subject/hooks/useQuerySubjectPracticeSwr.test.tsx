@@ -104,9 +104,18 @@ describe("useQuerySubjectPracticeSwr", () => {
         expect(listChallenges).not.toHaveBeenCalled()
     })
 
-    it("đọc kho challenge HỎNG cũng NÉM — thẻ Coding không được nói ngược danh sách bài", async () => {
-        listChallenges.mockRejectedValue(new Error("500 challenges"))
-        await expect(runFetcher()).rejects.toThrow()
+    it("đọc kho challenge hỏng thì thẻ Coding về 0 — KHÔNG được khoá cả hub", async () => {
+        // GET /api/v1/challenges chỉ cho người ĐÃ đăng nhập, còn trang môn là PUBLIC. Nếu để
+        // lượt đọc này ném lên SWR thì khách chưa đăng nhập mất TOÀN BỘ hub (kể cả lối vào FE
+        // và Bảng xếp hạng vốn đọc được), thay bằng một nút "Thử lại" mà bấm mãi vẫn 401.
+        // Thẻ Coding hiện 0 là cái giá rẻ hơn nhiều — và đúng với thứ khách được phép thấy.
+        listChallenges.mockRejectedValue(new Error("401 challenges"))
+        const modules = await runFetcher()
+        expect(modules).toEqual([
+            { key: "fe", count: 4 },
+            { key: "coding", count: 0 },
+            { key: "leaderboard", count: 2 },
+        ])
     })
 
     it("đọc được thì đếm bài của ĐÚNG môn, và luôn hỏi kho kèm UUID môn", async () => {

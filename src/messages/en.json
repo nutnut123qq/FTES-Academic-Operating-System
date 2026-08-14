@@ -5447,6 +5447,8 @@
       },
       "backToHub": "Back to practice",
       "comingSoon": "This module is coming soon.",
+      "loadError": "Couldn't load this subject's practice modules",
+      "retry": "Retry",
       "difficulty": {
         "easy": "Easy",
         "medium": "Medium",
@@ -5477,7 +5479,7 @@
         "retry": "Retry",
         "empty": "No problems match your filters",
         "emptySubject": "This subject has no problems yet",
-        "emptySubjectHint": "Problems belong to a subject by its code. Once an instructor adds one for this subject, it shows up here.",
+        "emptySubjectHint": "This list only shows problems that were assigned to this subject; adding the subject code as a tag alone does not put a problem here. Once an instructor adds one for this subject, it shows up.",
         "status": {
           "solved": "Solved",
           "unsolved": "Unsolved"

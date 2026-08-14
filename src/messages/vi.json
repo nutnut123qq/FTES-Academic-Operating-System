@@ -5447,6 +5447,8 @@
       },
       "backToHub": "Về trang luyện tập",
       "comingSoon": "Tính năng này sẽ sớm ra mắt.",
+      "loadError": "Không tải được phần luyện tập của môn",
+      "retry": "Thử lại",
       "difficulty": {
         "easy": "Dễ",
         "medium": "Trung bình",
@@ -5477,7 +5479,7 @@
         "retry": "Thử lại",
         "empty": "Không có bài nào khớp bộ lọc",
         "emptySubject": "Môn này chưa có bài nào",
-        "emptySubjectHint": "Bài của môn được gắn theo mã môn. Khi giảng viên thêm bài cho môn này, bài sẽ hiện ở đây.",
+        "emptySubjectHint": "Danh sách này chỉ hiện bài đã được đặt THUỘC môn này; chỉ gắn thêm tag mã môn thì bài vẫn không hiện ở đây. Khi giảng viên thêm bài cho môn, bài sẽ xuất hiện.",
         "status": {
           "solved": "Đã giải",
           "unsolved": "Chưa giải"

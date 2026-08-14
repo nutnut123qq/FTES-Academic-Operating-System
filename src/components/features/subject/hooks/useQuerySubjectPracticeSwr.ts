@@ -40,36 +40,44 @@ const EXAM_COUNT_PROBE = 1
  * - **leaderboard** — the number of ranked participants in the subject's leaderboard
  *   (`GET /subjects/{code}/statistics`).
  *
- * Every read is best-effort (auth-gated / may be empty): a failure degrades that one
- * count to `0` rather than failing the hub.
+ * Ranh giới "được phép degrade" nằm ở chỗ đọc đó có phải TIỀN ĐỀ hay không:
+ * - **đọc môn** (`getSubjectDetail`) và **đọc kho challenge** đều NÉM lên SWR. Không đọc
+ *   được môn thì không biết đang nói về môn nào, nên mọi con số đều vô nghĩa; còn kho
+ *   challenge là đúng lượt đọc mà {@link import("./useQuerySubjectCodingChallengesSwr")}
+ *   dùng cho danh sách bài. Hai bề mặt cạnh nhau (thẻ "Coding" và danh sách bài) KHÔNG
+ *   được nói ngược nhau về cùng một lượt đọc,
+ * - **FE albums** và **leaderboard** vẫn best-effort: chúng auth-gated / có thể rỗng thật,
+ *   và hỏng một cái chỉ làm mờ ĐÚNG con số của nó, không kéo theo cả hub.
  */
 export const useQuerySubjectPracticeSwr = (subjectId: string) => {
     const code = subjectId ? subjectId.toUpperCase() : ""
-    const { data, isLoading, error } = useSWR(
+    const { data, isLoading, error, mutate } = useSWR(
         code ? (["subject-practice", code] as const) : null,
         async (): Promise<Array<PracticeModule>> => {
-            const detail = await getSubjectDetail(code).catch(() => null)
-            // The resource list keys on the subject UUID; without it the exam counts
-            // simply degrade to 0 instead of listing every subject's exams.
+            // KHÔNG `.catch(() => null)` ở đây. Nuốt lỗi đọc môn rồi trả count = 0 là đổi
+            // "không đọc được môn" thành "môn có 0 bài" — đúng câu nói dối mà hook challenge
+            // đã bị cấm nói. 0 là một con số KHẲNG ĐỊNH, không phải "chưa biết". Ném lên để
+            // SWR có `error`, màn hình hiện lỗi + nút Thử lại.
+            const detail = await getSubjectDetail(code)
+            if (!detail?.id) {
+                throw new Error(`Subject ${code} resolved without an id`)
+            }
+            // The resource list keys on the subject UUID; a failed FE read degrades that
+            // one count to 0 instead of failing the hub.
             const examPage = (type: string) =>
-                detail
-                    ? listResources({
-                        subjectId: detail.id,
-                        type,
-                        size: EXAM_COUNT_PROBE,
-                    }).catch(() => null)
-                    : Promise.resolve(null)
+                listResources({
+                    subjectId: detail.id,
+                    type,
+                    size: EXAM_COUNT_PROBE,
+                }).catch(() => null)
 
             const [fe, views, stats] = await Promise.all([
                 examPage(BE_EXAM_TYPE.fe),
-                // Không có UUID môn thì KHÔNG hỏi kho. Trước đây chỗ này gọi
-                // `listChallenges(undefined)` = cả kho toàn cục, rồi `narrowBankRows`
-                // với `null` lại không lọc gì → thẻ "Coding" khoe số bài của MỌI môn,
-                // bấm vào thì danh sách (đã thu hẹp đúng môn) rỗng. Đếm 0 là câu trả lời
-                // trung thực khi chưa biết môn nào.
-                detail?.id
-                    ? listChallenges({ subjectId: detail.id }).catch(() => [])
-                    : Promise.resolve([]),
+                // Luôn kèm `subjectId`. Trước đây chỗ này gọi `listChallenges(undefined)`
+                // = cả kho toàn cục, rồi `narrowBankRows` với `null` lại không lọc gì →
+                // thẻ "Coding" khoe số bài của MỌI môn, bấm vào thì danh sách (đã thu hẹp
+                // đúng môn) rỗng.
+                listChallenges({ subjectId: detail.id }),
                 getSubjectStatistics(code).catch(() => null),
             ])
             return [
@@ -81,7 +89,7 @@ export const useQuerySubjectPracticeSwr = (subjectId: string) => {
                     // subject's challenges.
                     count: narrowBankRows(
                         toBankRows(views, Date.now()),
-                        detail?.id ?? null,
+                        detail.id,
                         [],
                     ).length,
                 },
@@ -89,5 +97,5 @@ export const useQuerySubjectPracticeSwr = (subjectId: string) => {
             ]
         },
     )
-    return { modules: data ?? [], isLoading, error }
+    return { modules: data ?? [], isLoading, error, mutate }
 }

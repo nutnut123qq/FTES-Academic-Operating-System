@@ -4,6 +4,8 @@ import React, { useState } from "react"
 import { Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
+import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import {
     useQuerySubjectPracticeSwr,
     type PracticeModuleKey,
@@ -36,7 +38,11 @@ type PracticeView = "hub" | PracticeModuleKey
 export const SubjectPractice = () => {
     const t = useTranslations("subjects")
     const { subjectId } = useParams<{ subjectId: string }>()
-    const { modules } = useQuerySubjectPracticeSwr(subjectId)
+    // `error` + `isLoading` phải đi cùng `modules`: hook nay NÉM khi không đọc được môn
+    // (hoặc không đọc được kho challenge) thay vì nuốt thành count = 0. Không bắt lấy
+    // thì hub sẽ render một lưới RỖNG — mất sạch lối vào FE/Coding/Bảng xếp hạng mà
+    // không nói vì sao. Đọc hỏng phải hiện lỗi + nút Thử lại, giống hệt danh sách bài.
+    const { modules, isLoading, error, mutate } = useQuerySubjectPracticeSwr(subjectId)
     const [view, setView] = useState<PracticeView>("hub")
 
     const backToHub = () => setView("hub")
@@ -65,7 +71,27 @@ export const SubjectPractice = () => {
             <Typography type="h5" weight="bold">
                 {t("practice.title")}
             </Typography>
-            <PracticeHub modules={modules} onOpen={(key) => setView(key)} />
+            <AsyncContent
+                isLoading={isLoading && modules.length === 0}
+                skeleton={<PracticeHubSkeleton />}
+                error={modules.length === 0 ? error : undefined}
+                errorContent={{
+                    title: t("practice.loadError"),
+                    onRetry: () => { void mutate() },
+                    retryLabel: t("practice.retry"),
+                }}
+            >
+                <PracticeHub modules={modules} onOpen={(key) => setView(key)} />
+            </AsyncContent>
         </div>
     )
 }
+
+/** Skeleton của lưới hub — ba thẻ module, đúng khung `PracticeHub` để không nhảy layout. */
+const PracticeHubSkeleton = () => (
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <Skeleton className="h-36 w-full rounded-2xl" />
+        <Skeleton className="h-36 w-full rounded-2xl" />
+        <Skeleton className="h-36 w-full rounded-2xl" />
+    </div>
+)

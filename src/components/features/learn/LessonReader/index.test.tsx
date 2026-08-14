@@ -142,7 +142,6 @@ vi.mock("./LessonResourceLinks", () => ({
 vi.mock("./LessonVideoBlock", () => ({ LessonVideoBlock: () => <div data-testid="video-block" /> }))
 vi.mock("./LessonDocumentHtml", () => ({ LessonDocumentHtml: () => <div /> }))
 vi.mock("./ContentAiSelectionAsk/SelectionHintCallout", () => ({ SelectionHintCallout: () => <div /> }))
-vi.mock("./LessonAiStudy", () => ({ LessonAiStudy: () => <div /> }))
 vi.mock("./LessonQuizBlock", () => ({ LessonQuizBlock: () => <div /> }))
 vi.mock("@/components/features/course/PackageGateModal", () => ({ PackageGateModal: () => <div /> }))
 // Danh sách gói cho tiêu đề tường phí — `swr` ở đây chỉ mock `mutate`, nên hook thật

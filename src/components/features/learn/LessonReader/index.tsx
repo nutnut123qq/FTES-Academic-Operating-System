@@ -42,7 +42,6 @@ import { LessonVideoBlock } from "./LessonVideoBlock"
 import type { LessonUpNextDestination } from "./hooks/useLessonUpNext"
 import { LessonDocumentHtml } from "./LessonDocumentHtml"
 import { SelectionHintCallout } from "./ContentAiSelectionAsk/SelectionHintCallout"
-import { LessonAiStudy } from "./LessonAiStudy"
 import { LessonQuizBlock } from "./LessonQuizBlock"
 import { LessonCompleteCelebration } from "./LessonCompleteCelebration"
 import { PackageGateModal } from "@/components/features/course/PackageGateModal"
@@ -582,11 +581,6 @@ export const LessonReader = () => {
                                     registerFire={registerFire}
                                     onCelebrate={handleCelebrate}
                                 />
-                                {/* on-demand AI study tools (note + flashcards) grounded on
-                                        this lesson — VIDEO-lesson-only, still behind the lock gate */}
-                                {lesson.isVideoLesson ? (
-                                    <LessonAiStudy contentId={contentId} className="mx-auto w-full max-w-3xl" />
-                                ) : null}
                                 <LessonComments courseId={courseId} contentId={contentId} className="mx-auto w-full max-w-3xl" />
                                 <LessonPager
                                     className="mx-auto w-full max-w-3xl"

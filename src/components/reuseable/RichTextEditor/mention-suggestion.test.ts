@@ -1,21 +1,25 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 /**
- * Unit — the `@` mention typeahead (de-mock: static list → real user search index).
+ * Unit — the `@` mention typeahead (prefix lookup over `/profiles/mentionable`).
  *
- * `GET /api/v1/search` is mocked so these pin the contract Tiptap depends on:
+ * The lookup is mocked so these pin the contract Tiptap depends on:
  *  - keystrokes are COALESCED into one request per 250ms quiet period, and every
  *    superseded caller still settles (Tiptap awaits one promise per keystroke —
  *    a dropped promise would freeze the popup, a late stale one would flicker it),
- *  - a `USER` hit maps to the `MentionUser` shape (`slug` → username,
- *    `title` → displayName), hits of other types and slug-less hits are dropped,
+ *  - a row maps to the `MentionUser` shape (`username`, `displayName`), and rows
+ *    without a username are dropped (the serialized link needs one),
  *  - a failed/forbidden lookup degrades to an empty list, never a rejection.
+ *
+ * It reads `/profiles/mentionable` rather than the search index on purpose: the
+ * index matches whole words, so `fro` never found `frostes` and the popup only
+ * ever appeared once the full username had been typed.
  */
 
-const search = vi.fn()
+const getMentionableUsers = vi.fn()
 
-vi.mock("@/modules/api/rest/search", () => ({
-    search: (request: unknown) => search(request),
+vi.mock("@/modules/api/rest/profile", () => ({
+    getMentionableUsers: (q: string, limit?: number) => getMentionableUsers(q, limit),
 }))
 
 import {
@@ -25,14 +29,8 @@ import {
     type MentionUser,
 } from "./mention-suggestion"
 
-/** One `USER` group as the BE serializes it (`DocType.name()` → upper-case). */
-const userGroup = (hits: Array<Record<string, unknown>>) => ({
-    mode: "keyword",
-    groups: [{ type: "USER", total: hits.length, hits }],
-})
-
 beforeEach(() => {
-    search.mockReset()
+    getMentionableUsers.mockReset()
 })
 
 afterEach(() => {
@@ -40,33 +38,36 @@ afterEach(() => {
 })
 
 describe("searchMentionUsers", () => {
-    it("maps USER hits to the MentionUser shape", async () => {
-        search.mockResolvedValue(
-            userGroup([
-                { docId: "u1", type: "USER", title: "Minh Trần", slug: "minh-tran", score: 1 },
-                { docId: "u2", type: "USER", title: null, slug: "an-nguyen", score: 0.5 },
-            ]),
-        )
+    it("maps rows to the MentionUser shape", async () => {
+        getMentionableUsers.mockResolvedValue([
+            { userId: "u1", username: "minh-tran", displayName: "Minh Trần", avatarUrl: null },
+            { userId: "u2", username: "an-nguyen", displayName: null, avatarUrl: null },
+        ])
 
         await expect(searchMentionUsers("minh")).resolves.toEqual([
             { username: "minh-tran", displayName: "Minh Trần" },
-            // title absent → the handle is the label (never an empty row)
+            // displayName absent → the handle is the label (never an empty row)
             { username: "an-nguyen", displayName: "an-nguyen" },
         ] satisfies Array<MentionUser>)
-        expect(search).toHaveBeenCalledWith({ q: "minh", types: ["user"], page: 0, size: 5 })
+        expect(getMentionableUsers).toHaveBeenCalledWith("minh", 5)
     })
 
-    it("drops slug-less hits and ignores non-USER groups", async () => {
-        search.mockResolvedValue({
-            mode: "keyword",
-            groups: [
-                { type: "COURSE", total: 1, hits: [{ docId: "c1", type: "COURSE", title: "Java", slug: "java", score: 1 }] },
-                { type: "USER", total: 2, hits: [
-                    { docId: "u1", type: "USER", title: "No Slug", score: 1 },
-                    { docId: "u2", type: "USER", title: "Hoa Lê", slug: "hoa-le", score: 1 },
-                ] },
-            ],
-        })
+    // The whole point of the endpoint swap: a few leading characters must match.
+    it("looks up on a short prefix", async () => {
+        getMentionableUsers.mockResolvedValue([
+            { userId: "b", username: "frostes", displayName: "FrosTES", avatarUrl: null },
+        ])
+
+        await expect(searchMentionUsers("fro")).resolves.toEqual([
+            { username: "frostes", displayName: "FrosTES" },
+        ])
+    })
+
+    it("drops rows without a username", async () => {
+        getMentionableUsers.mockResolvedValue([
+            { userId: "u1", username: "", displayName: "No Handle", avatarUrl: null },
+            { userId: "u2", username: "hoa-le", displayName: "Hoa Lê", avatarUrl: null },
+        ])
 
         await expect(searchMentionUsers("h")).resolves.toEqual([
             { username: "hoa-le", displayName: "Hoa Lê" },
@@ -75,9 +76,9 @@ describe("searchMentionUsers", () => {
 
     it("returns an empty list for a blank query and for a failed lookup", async () => {
         await expect(searchMentionUsers("   ")).resolves.toEqual([])
-        expect(search).not.toHaveBeenCalled()
+        expect(getMentionableUsers).not.toHaveBeenCalled()
 
-        search.mockRejectedValue(new Error("403"))
+        getMentionableUsers.mockRejectedValue(new Error("403"))
         await expect(searchMentionUsers("minh")).resolves.toEqual([])
     })
 })

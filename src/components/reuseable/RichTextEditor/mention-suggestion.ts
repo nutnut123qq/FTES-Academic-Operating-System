@@ -1,8 +1,8 @@
 "use client"
 
 import type { SuggestionProps, SuggestionKeyDownProps } from "@tiptap/suggestion"
-import { search } from "@/modules/api/rest/search"
-import type { SearchDocType, SearchHitView } from "@/modules/api/rest/search"
+import { getMentionableUsers } from "@/modules/api/rest/profile"
+import type { FollowEntry } from "@/modules/api/rest/profile"
 
 /** One mentionable user rendered in the `@` typeahead. */
 export interface MentionUser {
@@ -18,27 +18,26 @@ export const MENTION_DEBOUNCE_MS = 250
 /** Max suggestions rendered in the popup. */
 export const MENTION_LIMIT = 5
 
-/** Only `USER` documents are mentionable. */
-const MENTION_SEARCH_TYPES: Array<SearchDocType> = ["user"]
-
 /**
- * Adapts a search hit into a mention entry. The backend indexes a user document as
- * `slug = username`, `title = displayName ?? username` (see `UserSearchFeed`), so a
- * hit without a slug is not mentionable and is dropped by {@link searchMentionUsers}.
+ * Adapts a mentionable-user row into a mention entry. A row without a username
+ * cannot be mentioned (the serialized link needs it), so it is dropped by
+ * {@link searchMentionUsers}.
  *
- * @param hit - one `USER` hit from `GET /api/v1/search`.
+ * @param entry - one row from `GET /api/v1/profiles/mentionable`.
  */
-const toMentionUser = (hit: SearchHitView): MentionUser => ({
-    username: hit.slug ?? "",
-    displayName: hit.title || hit.slug || "",
+const toMentionUser = (entry: FollowEntry): MentionUser => ({
+    username: entry.username ?? "",
+    displayName: entry.displayName || entry.username || "",
 })
 
 /**
- * Looks up mentionable users by keyword. Uses the REST search endpoint
- * (`GET /api/v1/search?types=user`) rather than the GraphQL `search(q, types: [USER])`
- * operation: they hit the SAME index and return the same hits, but the GraphQL
- * gateway 401s guests/expired sessions while the REST route degrades to
- * PUBLIC-visibility results (same reasoning as the global search overlay).
+ * Looks up mentionable users by PREFIX.
+ *
+ * Uses `GET /api/v1/profiles/mentionable`, NOT the search index. The index runs on
+ * `websearch_to_tsquery`, which matches whole words: typing `fro` returns nothing
+ * for `frostes`, and `manhhd` nothing for `manhhdss180112`. A typeahead that only
+ * answers once you have typed the full username is a typeahead that never fires —
+ * which is exactly how this surface behaved.
  *
  * Never rejects: a failed or forbidden lookup yields an empty list so a typing
  * user is never interrupted by an editor-level error.
@@ -52,15 +51,8 @@ export const searchMentionUsers = async (query: string): Promise<Array<MentionUs
         return []
     }
     try {
-        const response = await search({
-            q,
-            types: MENTION_SEARCH_TYPES,
-            page: 0,
-            size: MENTION_LIMIT,
-        })
-        const hits =
-            response.groups?.find((group) => group.type === "USER")?.hits ?? []
-        return hits
+        const entries = await getMentionableUsers(q, MENTION_LIMIT)
+        return (entries ?? [])
             .map(toMentionUser)
             .filter((user) => Boolean(user.username))
             .slice(0, MENTION_LIMIT)

@@ -247,6 +247,30 @@ export const getPublicProfile = async (username: string): Promise<PublicProfile>
 }
 
 /**
+ * Looks up mentionable users by PREFIX, for the `@` typeahead.
+ *
+ * Deliberately NOT the search index: `GET /search?types=user` runs on
+ * `websearch_to_tsquery`, which matches whole words — typing `fro` never finds
+ * `frostes`, and `manhhd` never finds `manhhdss180112`. The author would have to
+ * type the entire username before a suggestion appeared, which is the one moment
+ * a typeahead is useless. This endpoint prefix-matches username AND display name.
+ *
+ * `GET /api/v1/profiles/mentionable?q=&limit=` (authenticated — user documents are
+ * only visible to signed-in callers).
+ */
+export const getMentionableUsers = async (
+    q: string,
+    limit?: number,
+): Promise<Array<FollowEntry>> => {
+    return restRequest<Array<FollowEntry>>({
+        method: "GET",
+        url: "/profiles/mentionable",
+        authenticated: true,
+        params: { q, limit },
+    })
+}
+
+/**
  * Returns a page of a user's followers.
  *
  * `GET /api/v1/profiles/{username}/followers?cursor=&limit=`

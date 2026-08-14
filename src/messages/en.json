@@ -4094,7 +4094,35 @@
     "actions": {
       "topup": "Top up",
       "transfer": "Transfer",
-      "redeem": "Redeem"
+      "redeem": "Redeem",
+      "inviteFriend": "Invite friend"
+    },
+    "referral": {
+      "inviteTitle": "Invite Friends & Earn Rewards",
+      "inviteSubtitle": "Share your referral code or link. Earn FTES Coin when your friends sign up and learn!",
+      "yourCode": "Your referral code",
+      "copyCode": "Copy",
+      "copiedCode": "Copied",
+      "yourLink": "Your referral link",
+      "copyLink": "Copy",
+      "copiedLink": "Copied",
+      "statsTitle": "Your stats",
+      "referredFriends": "Friends joined",
+      "totalBonusEarned": "Total bonus earned",
+      "howItWorksTitle": "How it works",
+      "step1Title": "Share link",
+      "step1Desc": "Send your referral link to friends",
+      "step2Title": "Friends sign up",
+      "step2Desc": "They create an account and learn",
+      "step3Title": "Earn rewards",
+      "step3Desc": "Get FTES Coin in your wallet",
+      "applyCodeTitle": "Were you referred by someone?",
+      "applyCodeSubtitle": "Enter a referral code to claim your welcome reward.",
+      "applyCodePlaceholder": "Enter referral code...",
+      "applyButton": "Apply",
+      "appliedSuccess": "Referral code applied successfully!",
+      "appliedFailed": "Could not apply referral code. Please check the code and try again.",
+      "close": "Close"
     },
     "history": "Transaction history",
     "txTypes": {

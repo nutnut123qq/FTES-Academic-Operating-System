@@ -4094,7 +4094,35 @@
     "actions": {
       "topup": "Nạp",
       "transfer": "Chuyển",
-      "redeem": "Đổi"
+      "redeem": "Đổi",
+      "inviteFriend": "Mời bạn bè"
+    },
+    "referral": {
+      "inviteTitle": "Mời bạn bè & Nhận thưởng",
+      "inviteSubtitle": "Chia sẻ mã hoặc liên kết giới thiệu của bạn. Nhận ngay FTES Coin khi bạn bè tham gia và học tập!",
+      "yourCode": "Mã giới thiệu của bạn",
+      "copyCode": "Sao chép",
+      "copiedCode": "Đã sao chép",
+      "yourLink": "Liên kết giới thiệu",
+      "copyLink": "Sao chép",
+      "copiedLink": "Đã sao chép",
+      "statsTitle": "Thống kê của bạn",
+      "referredFriends": "Bạn bè đã tham gia",
+      "totalBonusEarned": "Tổng thưởng đã nhận",
+      "howItWorksTitle": "Cách thức nhận thưởng",
+      "step1Title": "Gửi liên kết",
+      "step1Desc": "Chia sẻ link cho bạn bè",
+      "step2Title": "Bạn đăng ký",
+      "step2Desc": "Bạn bè tạo tài khoản học tập",
+      "step3Title": "Cùng nhận quà",
+      "step3Desc": "Nhận FTES Coin vào ví",
+      "applyCodeTitle": "Bạn được ai đó giới thiệu?",
+      "applyCodeSubtitle": "Nhập mã giới thiệu của người khác để nhận ưu đãi.",
+      "applyCodePlaceholder": "Nhập mã giới thiệu...",
+      "applyButton": "Áp dụng",
+      "appliedSuccess": "Đã áp dụng mã giới thiệu thành công!",
+      "appliedFailed": "Không thể áp dụng mã giới thiệu. Vui lòng kiểm tra lại mã.",
+      "close": "Đóng"
     },
     "history": "Lịch sử giao dịch",
     "txTypes": {

@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react"
+import React, { useState } from "react"
 import { Button, Chip, Skeleton, Typography } from "@heroui/react"
 import { useLocale, useTranslations } from "next-intl"
 import {
@@ -10,7 +10,6 @@ import {
     ArrowUpIcon,
     CoinsIcon,
     GiftIcon,
-    PlusIcon,
     ShoppingBagIcon,
     SlidersHorizontalIcon,
     TicketIcon,
@@ -19,6 +18,8 @@ import {
 } from "@phosphor-icons/react"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { useQueryWalletSwr, type WalletTransaction } from "../hooks/useQueryWalletSwr"
+import { useGetMyReferralSwr } from "@/hooks/swr/api/rest/queries/useGetMyReferralSwr"
+import { InviteFriendModal } from "../InviteFriendModal"
 
 /** Icon per BE `TransactionType` — mirrors the semantic of the ledger row. */
 const TYPE_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -119,13 +120,14 @@ const HistorySkeleton = () => (
 
 /**
  * Wallet & FTES Coin shell (§12) — the `/wallet` surface. A hero balance card
- * (FTES Coin, accent) + action buttons (top-up / transfer / redeem — payment out of
- * scope) + a signed, colored transaction history. Data comes from the real BE wallet
- * REST endpoints (`GET /wallet/me` + `/wallet/me/transactions`); tokens own the look.
+ * (FTES Coin, accent) + Invite friend (Affiliate) action + a signed, colored transaction history.
+ * Data comes from the real BE wallet REST endpoints (`GET /wallet/me` + `/wallet/me/transactions`).
  */
 export const WalletShell = () => {
     const t = useTranslations("wallet")
     const { balance, transactions, isLoading, error, mutate } = useQueryWalletSwr()
+    const { data: referral } = useGetMyReferralSwr()
+    const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
     const isEmpty = transactions.length === 0
 
     return (
@@ -163,20 +165,23 @@ export const WalletShell = () => {
                     </div>
                 </div>
 
-                {/* actions — payment (top-up/withdraw) out of scope; buttons left as-is */}
-                <div className="flex flex-wrap gap-2">
-                    <Button size="sm" variant="primary">
-                        <PlusIcon className="size-4" />
-                        {t("actions.topup")}
+                {/* affiliate & invite friend action */}
+                <div className="flex flex-wrap items-center gap-3">
+                    <Button
+                        size="sm"
+                        variant="primary"
+                        onPress={() => setIsInviteModalOpen(true)}
+                    >
+                        <GiftIcon className="size-4" />
+                        {t("actions.inviteFriend")}
                     </Button>
-                    <Button size="sm" variant="secondary">
-                        <ArrowUpIcon className="size-4" />
-                        {t("actions.transfer")}
-                    </Button>
-                    <Button size="sm" variant="secondary">
-                        <CoinsIcon className="size-4" />
-                        {t("actions.redeem")}
-                    </Button>
+
+                    {referral?.referralCode ? (
+                        <div className="flex items-center gap-2 rounded-xl border border-separator/60 bg-surface/80 px-3 py-1 text-xs">
+                            <span className="text-muted">{t("referral.yourCode")}:</span>
+                            <span className="font-mono font-bold text-accent">{referral.referralCode}</span>
+                        </div>
+                    ) : null}
                 </div>
             </div>
 
@@ -207,6 +212,11 @@ export const WalletShell = () => {
                     </ul>
                 </AsyncContent>
             </div>
+
+            <InviteFriendModal
+                isOpen={isInviteModalOpen}
+                onClose={() => setIsInviteModalOpen(false)}
+            />
         </div>
     )
 }

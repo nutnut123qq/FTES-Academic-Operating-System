@@ -62,7 +62,10 @@ export const AnnouncementForm = ({
             return
         }
         setIsSubmitting(true)
-        const { title, body: content } = splitTitleFromMarkdown(draft)
+        // `fallbackTitle` vì `AnnouncementRequest` phía BE gắn `@NotBlank title` — thông báo không
+        // có H1 dẫn đầu mà gửi tiêu đề rỗng là 400. Đây là bề mặt DUY NHẤT cần opt-in; các composer
+        // còn lại ghi qua endpoint có title tuỳ chọn nên để rỗng, tránh in lặp một dòng thành hai.
+        const { title, body: content } = splitTitleFromMarkdown(draft, { fallbackTitle: true })
         const saved = await onSubmit({ title, content, pinned })
         setIsSubmitting(false)
         if (saved && initialValues == null) {

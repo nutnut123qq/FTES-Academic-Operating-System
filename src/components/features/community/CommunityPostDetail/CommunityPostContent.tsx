@@ -210,9 +210,13 @@ export const CommunityPostContent = ({
                 timeLabel={post.timeLabel}
                 threadline={commentsCount > 0}
             >
-                <Typography type="h5" weight="bold">
-                    {post.title}
-                </Typography>
+                {/* Bài kiểu Threads không có tiêu đề (tác giả không đánh H1) → không render khối
+                    heading, nếu không dòng đầu của thân bài sẽ bị in lặp ngay bên trên nó. */}
+                {post.title ? (
+                    <Typography type="h5" weight="bold">
+                        {post.title}
+                    </Typography>
+                ) : null}
                 <MarkdownContent markdown={post.body} />
                 {showMedia ? (
                     <PostMediaGrid postId={postId} media={post.media} imageAlt={t("composer.imageAlt")} />

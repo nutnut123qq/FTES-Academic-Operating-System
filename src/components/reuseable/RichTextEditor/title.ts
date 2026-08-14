@@ -47,10 +47,27 @@ const stripLeadingBlockMarker = (line: string): string =>
 
 /** Result of {@link splitTitleFromMarkdown}. */
 export interface TitleSplit {
-    /** Plain-text title (H1 text, or the first non-empty line as a fallback). */
+    /** Plain-text title — the leading H1's text, or `""` when the author marked none. */
     title: string
-    /** Markdown body to store: the leading H1 line removed (empty on fallback edit). */
+    /** Markdown body to store: the leading H1 line removed (whole text when there was none). */
     body: string
+}
+
+/** Options for {@link splitTitleFromMarkdown}. */
+export interface SplitTitleOptions {
+    /**
+     * Promote the first non-empty line to the title when there is NO leading H1.
+     *
+     * Off by default, and that default is the point: with it on, the first line
+     * ends up in BOTH `title` and `body`, and every surface that renders a title
+     * above a body then shows the same line twice — which is exactly how a
+     * one-line post came out as two.
+     *
+     * Turn it on ONLY where the write endpoint REJECTS a blank title (group
+     * announcements — BE `@NotBlank`). There the duplicated line is the lesser
+     * evil against a 400.
+     */
+    fallbackTitle?: boolean
 }
 
 /**
@@ -59,15 +76,19 @@ export interface TitleSplit {
  * - If the FIRST non-blank block is an H1 (`# …`), its text (inline marks
  *   stripped, capped at {@link DERIVED_TITLE_MAX}) becomes the title and that H1
  *   line is REMOVED from the body (leading blank lines after it collapsed).
- * - Otherwise the title falls back to the first non-empty line's plain text and
- *   the body is kept AS-IS (title then duplicates that line, which is acceptable
- *   for a fallback label).
+ * - Otherwise the title is EMPTY and the body keeps the whole text. A short
+ *   Threads-style post genuinely has no title, and inventing one from the first
+ *   line renders it twice (see {@link SplitTitleOptions.fallbackTitle}).
  * - Empty/blank input yields an empty title and empty body.
  *
  * @param markdown - the raw Markdown from the editor.
+ * @param options - {@link SplitTitleOptions}.
  * @returns the derived {@link TitleSplit}.
  */
-export const splitTitleFromMarkdown = (markdown: string): TitleSplit => {
+export const splitTitleFromMarkdown = (
+    markdown: string,
+    { fallbackTitle = false }: SplitTitleOptions = {},
+): TitleSplit => {
     const source = markdown ?? ""
     const lines = source.split("\n")
 
@@ -91,11 +112,17 @@ export const splitTitleFromMarkdown = (markdown: string): TitleSplit => {
         return { title, body: rest.join("\n").replace(/\s+$/g, "") }
     }
 
-    // Fallback: first non-empty line as a plain-text title; body untouched.
+    // No leading H1. The body is the WHOLE text either way; only the title differs.
+    const body = source.replace(/\s+$/g, "")
+    if (!fallbackTitle) {
+        return { title: "", body }
+    }
+    // Opt-in fallback: first non-empty line as a plain-text title. This DOES duplicate that
+    // line into the title, so only surfaces that cannot accept a blank title ask for it.
     const title = stripInlineMarks(stripLeadingBlockMarker(lines[first]))
         .slice(0, DERIVED_TITLE_MAX)
         .trim()
-    return { title, body: source.replace(/\s+$/g, "") }
+    return { title, body }
 }
 
 /**

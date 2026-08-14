@@ -315,9 +315,13 @@ export const CommunityFeedRow = ({
                     tuyệt đối không sắp xếp lại phía FE theo cờ này. */}
                 {post.pinned ? <PinnedBadge label={t("feed.pinned")} className="mb-1" /> : null}
                 <Link href={`/community/${post.id}`} className="flex flex-col gap-0 no-underline">
-                    <Typography type="body-sm" weight="medium">
-                        {post.title}
-                    </Typography>
+                    {/* Bài không có tiêu đề (tác giả không đánh H1) → chỉ còn snippet. Render khối
+                        đậm vô điều kiện là in dòng đầu hai lần trên đúng những bài ngắn nhất. */}
+                    {post.title ? (
+                        <Typography type="body-sm" weight="medium">
+                            {post.title}
+                        </Typography>
+                    ) : null}
                     <Typography type="body-sm">{post.snippet}</Typography>
                 </Link>
                 <PostMediaGrid postId={post.id} media={post.media} imageAlt={t("composer.imageAlt")} />
@@ -506,19 +510,19 @@ export const CommunityFeed = ({ tab = "forYou" }: { tab?: CommunityFeedTab } = {
             ),
         }
         : searching
-        ? { title: t("search.resultsEmpty"), description: t("search.resultsEmptyHint") }
-        : isCampus
-            ? { title: t("feed.campusEmpty"), description: t("feed.campusEmptyHint") }
-            : {
-                icon: <FtesMascot pose="explain" size="lg" />,
-                title: t("feed.empty"),
-                description: t("feed.emptyHint"),
-                action: (
-                    <Button size="sm" variant="primary" onPress={openComposer}>
-                        {t("feed.emptyCompose")}
-                    </Button>
-                ),
-            }
+            ? { title: t("search.resultsEmpty"), description: t("search.resultsEmptyHint") }
+            : isCampus
+                ? { title: t("feed.campusEmpty"), description: t("feed.campusEmptyHint") }
+                : {
+                    icon: <FtesMascot pose="explain" size="lg" />,
+                    title: t("feed.empty"),
+                    description: t("feed.emptyHint"),
+                    action: (
+                        <Button size="sm" variant="primary" onPress={openComposer}>
+                            {t("feed.emptyCompose")}
+                        </Button>
+                    ),
+                }
 
     return (
         <div className="flex flex-col divide-y divide-separator">

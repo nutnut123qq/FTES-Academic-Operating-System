@@ -23,7 +23,7 @@ describe("splitTitleFromMarkdown", () => {
 
     it("keeps H2/H3 in the body (only a single-# H1 is the title)", () => {
         const { title, body } = splitTitleFromMarkdown("## Not a title\n\nrest")
-        expect(title).toBe("Not a title") // fallback: first line's plain text…
+        expect(title).toBe("") // only a single-# H1 is a title; no fallback by default
         expect(body).toBe("## Not a title\n\nrest") // …but the body is untouched
     })
 
@@ -44,10 +44,34 @@ describe("splitTitleFromMarkdown", () => {
         expect(body).toBe("Body")
     })
 
-    it("falls back to the first non-empty line when there is no H1", () => {
+    it("leaves the title empty when there is no H1, keeping the whole text as the body", () => {
         const { title, body } = splitTitleFromMarkdown("Just a plain first line\nsecond line")
+        expect(title).toBe("")
+        expect(body).toBe("Just a plain first line\nsecond line")
+    })
+
+    // The bug this default exists to prevent: a one-line post rendered as two identical lines
+    // because the first line landed in BOTH title and body.
+    it("never repeats a one-line post in both fields", () => {
+        const { title, body } = splitTitleFromMarkdown("Làm thế nào để ăn cơm")
+        expect(title).toBe("")
+        expect(body).toBe("Làm thế nào để ăn cơm")
+    })
+
+    it("falls back to the first non-empty line only when explicitly asked", () => {
+        const { title, body } = splitTitleFromMarkdown("Just a plain first line\nsecond line", {
+            fallbackTitle: true,
+        })
         expect(title).toBe("Just a plain first line")
         expect(body).toBe("Just a plain first line\nsecond line")
+    })
+
+    it("prefers a leading H1 over the fallback even when the fallback is enabled", () => {
+        const { title, body } = splitTitleFromMarkdown("# Real title\n\nBody", {
+            fallbackTitle: true,
+        })
+        expect(title).toBe("Real title")
+        expect(body).toBe("Body")
     })
 
     it("returns empty title and body for blank input", () => {
@@ -96,5 +120,13 @@ describe("edit round-trip (join → split is lossless)", () => {
     it("round-trips a title-only post", () => {
         const joined = joinTitleIntoMarkdown("Solo title", "")
         expect(splitTitleFromMarkdown(joined)).toEqual({ title: "Solo title", body: "" })
+    })
+
+    // Editing an untitled post must not GROW a title: join emits the bare body, and split must
+    // hand back the same empty title rather than inventing one from the first line.
+    it("round-trips an untitled post without inventing a title", () => {
+        const body = "Một dòng thôi"
+        const joined = joinTitleIntoMarkdown("", body)
+        expect(splitTitleFromMarkdown(joined)).toEqual({ title: "", body })
     })
 })

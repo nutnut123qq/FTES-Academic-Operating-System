@@ -1,17 +1,19 @@
-import { usePathname } from "next/navigation"
 import useSWR from "swr"
 import { queryAiSubscriptionTiers } from "@/modules/api/graphql/queries/query-ai-subscription-tiers"
 
 /**
  * SWR query wrapper for {@link queryAiSubscriptionTiers}. `data` is the tier
- * array (empty when none are enabled). Only fetches on the AI subscription page
- * (its only consumer) — mounted at root, so without a gate it would fetch on every page.
+ * array (empty when none are enabled).
+ *
+ * No page gate: its only consumer is the dashboard "My Plan" panel (`AiPlanSection`),
+ * and the dashboard mounts ONLY the open tab — so the fetch already happens exactly
+ * when that tab is opened. The gate this hook used to carry pointed at
+ * `/profile/settings/ai-subscription`, a route that no longer exists; keeping it would
+ * have left the tiers permanently unfetched.
  */
 export const useQueryAiSubscriptionTiersSwr = () => {
-    const pathname = usePathname()
-    const onPage = pathname.includes("/profile/settings/ai-subscription")
     const swr = useSWR(
-        onPage ? ["QUERY_AI_SUBSCRIPTION_TIERS_SWR"] : null,
+        ["QUERY_AI_SUBSCRIPTION_TIERS_SWR"],
         async () => {
             const data = await queryAiSubscriptionTiers({})
 

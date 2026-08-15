@@ -28,6 +28,9 @@ import {
 import {
     CommunityTab,
 } from "./CommunityTab"
+import {
+    PlanTab,
+} from "./PlanTab"
 import type {
     WithClassNames,
 } from "@/modules/types/base/class-name"
@@ -48,7 +51,7 @@ export type DashboardProps = WithClassNames<undefined>
  * layer, then a centered 2-column body: left = the viewer's identity + standing
  * (bare, stable across tabs, reusing the analytics `DashboardIdentity`), right = the
  * selected tab's content. Tabs: Overview (cockpit) · Explore (feed) · Courses ·
- * Community. The open tab lives in the shared store and mirrors `?tab=` (shareable);
+ * Community · My Plan (membership + FrosTES AI plans). The open tab lives in the shared store and mirrors `?tab=` (shareable);
  * only the active panel MOUNTS — closed tabs are unmounted rather than hidden, so
  * each tab's leaf queries fetch lazily on first open. Mobile stacks the identity then
  * the content (no rail, no drawer). `"use client"` for the tab store + URL sync.
@@ -165,6 +168,16 @@ export const Dashboard = ({
                             className="flex flex-col gap-6"
                         >
                             <CommunityTab />
+                        </div>
+                    ) : null}
+                    {tab === "plan" ? (
+                        <div
+                            id="dashboard-panel-plan"
+                            role="tabpanel"
+                            aria-labelledby="plan"
+                            className="flex flex-col gap-6"
+                        >
+                            <PlanTab />
                         </div>
                     ) : null}
                 </main>

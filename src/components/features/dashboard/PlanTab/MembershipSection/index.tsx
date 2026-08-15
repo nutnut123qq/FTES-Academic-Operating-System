@@ -26,8 +26,9 @@ const MEMBERSHIP_METHODS = [
 ] as const
 
 /**
- * MembershipSection — the "Thành viên" settings screen: what the community
- * membership includes, its price, and the action that starts checkout.
+ * MembershipSection — the "Membership" half of the dashboard "My Plan" tab: what
+ * the community membership includes, its price, and the action that starts
+ * checkout.
  *
  * DELIBERATELY STATELESS about the viewer. The repo exposes exactly one
  * membership endpoint, the `purchaseMembership` mutation — there is no query that

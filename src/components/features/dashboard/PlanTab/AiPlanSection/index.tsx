@@ -21,9 +21,9 @@ import { PurchaseConfirmModal } from "../PurchaseConfirmModal"
 const AI_PLAN_METHODS = [PaymentType.PayOS, PaymentType.Sepay] as const
 
 /**
- * AiPlanSection — the "Gói FrosTES" settings screen: the purchasable AI
- * subscription tiers beside the free default, with the viewer's current tier
- * marked.
+ * AiPlanSection — the "FrosTES Plans" half of the dashboard "My Plan" tab: the
+ * purchasable AI subscription tiers beside the free default, with the viewer's
+ * current tier marked.
  *
  * Two reads: `aiSubscriptionTiers` for the catalogue and `myAiSettings` for the
  * tier the account is actually on (there is no dedicated "my subscription" query,

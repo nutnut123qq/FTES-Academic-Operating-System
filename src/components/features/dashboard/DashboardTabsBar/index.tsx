@@ -7,6 +7,7 @@ import {
     CompassIcon,
     GraduationCapIcon,
     BookmarkSimpleIcon,
+    CrownIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import type { WithClassNames } from "@/modules/types/base/class-name"
@@ -25,6 +26,7 @@ const TAB_ICONS: Record<DashboardTab, typeof HouseIcon> = {
     explore: CompassIcon,
     courses: GraduationCapIcon,
     community: BookmarkSimpleIcon,
+    plan: CrownIcon,
 }
 
 /** Props for {@link DashboardTabsBar}. */

@@ -8,13 +8,11 @@ import {
     ArrowLeftIcon,
     BellIcon,
     ClockCounterClockwiseIcon,
-    CrownIcon,
     DevicesIcon,
     EyeSlashIcon,
     PaletteIcon,
     PencilSimpleIcon,
     RobotIcon,
-    SealCheckIcon,
     ShieldCheckIcon,
 } from "@phosphor-icons/react"
 import { CollapsibleSidebar } from "@/components/blocks/navigation/CollapsibleSidebar"
@@ -57,10 +55,14 @@ interface SettingsNavGroup {
 
 /**
  * The settings destinations, grouped the way the rail renders them: "Account"
- * (profile editor, appearance, security, devices, membership), "Learning" (course
- * history), "FrosTES" (AI settings, AI plan) then "Preferences" (privacy,
- * notifications). Only destinations that already exist are listed — the rail is
- * navigation, not a menu of intentions.
+ * (profile editor, appearance, security, devices), "Learning" (course history),
+ * "FrosTES" (AI settings) then "Preferences" (privacy, notifications). Only
+ * destinations that already exist are listed — the rail is navigation, not a menu of
+ * intentions.
+ *
+ * The two PURCHASE screens (community membership, FrosTES plans) are deliberately
+ * absent: they moved to the dashboard's "My Plan" tab (`/dashboard?tab=plan`) — buying
+ * a plan is not a preference, and their settings routes no longer exist.
  */
 const NAV_GROUPS: Array<SettingsNavGroup> = [
     {
@@ -91,12 +93,6 @@ const NAV_GROUPS: Array<SettingsNavGroup> = [
                 segment: "sessions",
                 href: (locale) => pathConfig().locale(locale).profile().sessions().build(),
             },
-            {
-                key: "membership",
-                icon: <SealCheckIcon className="size-5" aria-hidden focusable="false" />,
-                segment: "membership",
-                href: (locale) => pathConfig().locale(locale).profile().membership().build(),
-            },
         ],
     },
     {
@@ -118,12 +114,6 @@ const NAV_GROUPS: Array<SettingsNavGroup> = [
                 icon: <RobotIcon className="size-5" aria-hidden focusable="false" />,
                 segment: "ai-settings",
                 href: (locale) => pathConfig().locale(locale).profile().aiSettings().build(),
-            },
-            {
-                key: "aiSubscription",
-                icon: <CrownIcon className="size-5" aria-hidden focusable="false" />,
-                segment: "ai-subscription",
-                href: (locale) => pathConfig().locale(locale).profile().aiSubscription().build(),
             },
         ],
     },

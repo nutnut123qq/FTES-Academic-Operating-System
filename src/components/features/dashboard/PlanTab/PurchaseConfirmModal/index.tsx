@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react"
 import { Button, Modal, Typography, cn } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { PaymentType } from "@/modules/types/enums/payment-type"
-import { handleRadioGroupKeyDown } from "../radio-group"
+import { handleRadioGroupKeyDown } from "@/components/features/profile/Settings/radio-group"
 
 /** Props for {@link PurchaseConfirmModal}. */
 export interface PurchaseConfirmModalProps {
@@ -29,8 +29,8 @@ export interface PurchaseConfirmModalProps {
 }
 
 /**
- * The confirm-before-you-pay step shared by every settings screen that starts a
- * checkout (FrosTES plan, community membership).
+ * The confirm-before-you-pay step shared by both purchase screens of the
+ * dashboard "My Plan" tab (FrosTES plan, community membership).
  *
  * Nothing charges from this dialog: it states WHAT is bought and HOW MUCH, lets
  * the user pick a gateway, and only then runs the caller's mutation — which

@@ -108,24 +108,6 @@ export const pathConfig = () => {
                     build,
                 }
             }
-            const aiSubscription = () => {
-                const aiSubscriptionPath = `${settingsPath}/ai-subscription`
-                const build = () => {
-                    return aiSubscriptionPath
-                }
-                return {
-                    build,
-                }
-            }
-            const membership = () => {
-                const membershipPath = `${settingsPath}/membership`
-                const build = () => {
-                    return membershipPath
-                }
-                return {
-                    build,
-                }
-            }
             const settings = () => {
                 const build = () => {
                     return settingsPath
@@ -185,8 +167,6 @@ export const pathConfig = () => {
                 bookmarks,
                 aiUsage,
                 aiSettings,
-                aiSubscription,
-                membership,
                 settings,
                 edit,
                 notifications,

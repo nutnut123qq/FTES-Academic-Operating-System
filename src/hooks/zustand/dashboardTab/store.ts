@@ -7,7 +7,7 @@ import { create } from "zustand"
  * state) so the tab strip and any jump-to-tab action drive the same selection
  * without prop-drilling. Mirrors the profile-page tab pattern.
  */
-export type DashboardTab = "overview" | "explore" | "courses" | "community"
+export type DashboardTab = "overview" | "explore" | "courses" | "community" | "plan"
 
 /** Shared store shape for the dashboard tab. */
 interface DashboardTabStoreState {

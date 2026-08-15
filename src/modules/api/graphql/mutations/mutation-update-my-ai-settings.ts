@@ -28,7 +28,7 @@ export type MutateUpdateMyAiSettingsParams = MutateParams<
 >
 
 /**
- * Updates the current user's AI lane settings (lane preference + BYOK key).
+ * Updates the current user's AI lane settings (lane preference).
  *
  * Mirrors `updateMyAiSettings` (mutations/ai/update-my-ai-settings.resolver.ts).
  */

@@ -1,7 +1,6 @@
 import type { GraphQLResponse } from "../../types"
 import type {
     AiMode,
-    ModelProvider,
     AiSubTier,
 } from "../query-my-ai-settings"
 
@@ -13,14 +12,6 @@ export interface QueryMyAiSettingsResponseData {
     effectiveMode: AiMode
     /** Whether the user is eligible to use the Premium AI lane. */
     canPremium: boolean
-    /** Whether the user is eligible to use the BYOK (bring-your-own-key) AI lane. */
-    canByok: boolean
-    /** The BYOK provider the user has configured; null when none is set. */
-    byokProvider: ModelProvider | null
-    /** True when the user has stored an encrypted BYOK API key server-side. */
-    hasByokKey: boolean
-    /** Last 4 chars of the stored BYOK key (masked hint); null when none. */
-    byokKeyLast4?: string | null
     /** The user's active paid subscription tier; null when on the free tier. */
     tier: AiSubTier | null
 }

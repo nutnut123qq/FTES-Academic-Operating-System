@@ -7,10 +7,9 @@ import type { QueryMyAiSettingsResponse } from "./types"
 export enum AiMode {
     Auto = "auto",
     Premium = "premium",
-    Byok = "byok",
 }
 
-/** BYOK provider (mirrors backend `ModelProvider`). */
+/** Model provider an AI model / key belongs to. */
 export enum ModelProvider {
     Gemini = "gemini",
     OpenAI = "openai",
@@ -33,10 +32,6 @@ const query1 = gql`
         preferredMode
         effectiveMode
         canPremium
-        canByok
-        byokProvider
-        hasByokKey
-        byokKeyLast4
         tier
       }
     }
@@ -53,7 +48,7 @@ const queryMap: Record<QueryMyAiSettings, DocumentNode> = {
 
 /**
  * Fetches the current user's AI lane settings (preferred + effective lane,
- * BYOK provider/availability, Premium/BYOK capability flags).
+ * Premium eligibility, paid tier).
  *
  * Mirrors `myAiSettings` (queries/ai/my-ai-settings.resolver.ts).
  */

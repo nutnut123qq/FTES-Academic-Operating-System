@@ -37,15 +37,10 @@ const SECTIONS: Array<{ key: string; segment: string }> = [
     { key: "progress", segment: "progress" },
 ]
 
-/** Skeleton mirroring the identity sidebar with cover + avatar. */
+/** Skeleton mirroring the identity sidebar (avatar-first, no cover). */
 const IdentitySkeleton = () => (
     <div className="flex flex-col items-center gap-4 text-center">
-        <div className="flex w-full flex-col gap-0">
-            <Skeleton className="h-32 w-full rounded-2xl" />
-            <div className="relative -mt-10 flex justify-center">
-                <Skeleton.Avatar size="lg" className="size-20 md:size-24" />
-            </div>
-        </div>
+        <Skeleton.Avatar size="lg" className="size-20 md:size-24" />
         <div className="flex w-full flex-col gap-0">
             <Skeleton.Typography type="h4" width="2/3" />
         </div>
@@ -128,28 +123,15 @@ export const ProfileShell = ({ children }: ProfileShellProps) => {
                 >
                     {profile ? (
                         <div className="flex flex-col items-center gap-4 text-center">
-                            <div className="flex w-full flex-col gap-0">
-                                {profile.coverUrl ? (
-                                    <img
-                                        src={profile.coverUrl}
-                                        alt={t("profile.hero.coverAlt")}
-                                        className="h-32 w-full rounded-2xl object-cover"
-                                    />
-                                ) : (
-                                    <div className="h-32 w-full rounded-2xl bg-gradient-to-tr from-accent/20 to-success/20" />
-                                )}
-                                <div className="relative -mt-10 flex justify-center">
-                                    <div className="rounded-full bg-gradient-to-tr from-accent to-success p-0.5">
-                                        <Avatar className="size-20 rounded-full border-2 border-background md:size-24">
-                                            {profile.avatarUrl ? (
-                                                <AvatarImage src={profile.avatarUrl} alt={profile.name} />
-                                            ) : null}
-                                            <AvatarFallback className="bg-accent/10 text-xl font-bold text-accent md:text-2xl">
-                                                {(profile.name ?? "?").slice(0, 1).toUpperCase()}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                    </div>
-                                </div>
+                            <div className="rounded-full bg-gradient-to-tr from-accent to-success p-0.5">
+                                <Avatar className="size-20 rounded-full border-2 border-background md:size-24">
+                                    {profile.avatarUrl ? (
+                                        <AvatarImage src={profile.avatarUrl} alt={profile.name} />
+                                    ) : null}
+                                    <AvatarFallback className="bg-accent/10 text-xl font-bold text-accent md:text-2xl">
+                                        {(profile.name ?? "?").slice(0, 1).toUpperCase()}
+                                    </AvatarFallback>
+                                </Avatar>
                             </div>
                             <div className="flex flex-col gap-0">
                                 <Typography type="h4" weight="bold">
@@ -265,19 +247,7 @@ export const ProfileShell = ({ children }: ProfileShellProps) => {
                                     {t("profile.shareProfile")}
                                 </Button>
                             </div>
-                            {joinedLabel ? (
-                                <div className="flex items-center gap-2">
-                                    <CalendarBlankIcon
-                                        className="size-4 text-muted"
-                                        aria-hidden
-                                        focusable="false"
-                                    />
-                                    <Typography type="body-xs" color="muted">
-                                        {joinedLabel}
-                                    </Typography>
-                                </div>
-                            ) : null}
-                            {/* campus nằm DƯỚI dòng "tham gia từ", cuối sidebar */}
+                            {/* campus nằm TRÊN dòng "tham gia từ" */}
                             {profile.campus ? (
                                 <div className="flex items-center gap-2">
                                     <MapPinIcon
@@ -287,6 +257,18 @@ export const ProfileShell = ({ children }: ProfileShellProps) => {
                                     />
                                     <Typography type="body-xs" color="muted">
                                         {profile.campus}
+                                    </Typography>
+                                </div>
+                            ) : null}
+                            {joinedLabel ? (
+                                <div className="flex items-center gap-2">
+                                    <CalendarBlankIcon
+                                        className="size-4 text-muted"
+                                        aria-hidden
+                                        focusable="false"
+                                    />
+                                    <Typography type="body-xs" color="muted">
+                                        {joinedLabel}
                                     </Typography>
                                 </div>
                             ) : null}

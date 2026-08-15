@@ -39,7 +39,6 @@ export interface PublicProfile {
     /** Users this profile follows (from `counters.following`). */
     following: number
     avatarUrl: string
-    coverUrl: string
     /** Contact email — "" when unset or hidden by the owner's privacy settings. */
     contactEmail: string
     /** Phone — "" when unset or hidden by the owner's privacy settings. */
@@ -77,7 +76,6 @@ export const toPublicProfile = (dto: PublicProfileDto): PublicProfile => ({
     followers: dto.counters?.followers ?? 0,
     following: dto.counters?.following ?? 0,
     avatarUrl: dto.avatarUrl ?? "",
-    coverUrl: dto.coverUrl ?? "",
     contactEmail: dto.contactEmail ?? "",
     phone: dto.phone ?? "",
     academic: dto.academic

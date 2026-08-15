@@ -72,13 +72,6 @@ export const ProfilePublic = () => {
                     <div className="flex flex-col gap-6">
                         {/* identity header */}
                         <div className="overflow-hidden rounded-2xl border border-separator">
-                            {profile.coverUrl ? (
-                                <img
-                                    src={profile.coverUrl}
-                                    alt={t("profile.hero.coverAlt")}
-                                    className="h-28 w-full object-cover sm:h-36"
-                                />
-                            ) : null}
                             <div className="flex items-center gap-4 p-6">
                                 <Avatar className="size-16 shrink-0 rounded-full">
                                     {profile.avatarUrl ? (

@@ -19,8 +19,6 @@ export interface Profile {
     campus: string
     /** Uploaded avatar image URL (empty when unset). */
     avatarUrl: string
-    /** Uploaded cover/banner image URL (empty when unset). */
-    coverUrl: string
     /** Account creation date (ISO), rendered as the "Joined" line — empty when unset. */
     joinedAt: string
 }
@@ -39,7 +37,6 @@ export const toShellProfile = (profile: SelfProfile): Profile => ({
         .filter(Boolean)
         .join(" · "),
     avatarUrl: profile.avatarUrl ?? "",
-    coverUrl: profile.coverUrl ?? "",
     joinedAt: profile.createdAt ?? "",
 })
 

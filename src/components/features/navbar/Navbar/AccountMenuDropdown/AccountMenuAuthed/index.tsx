@@ -7,7 +7,6 @@ import {
 } from "@heroui/react"
 import {
     SquaresFourIcon,
-    GraduationCapIcon,
     ChalkboardTeacherIcon,
     UserIcon,
     GearIcon,
@@ -28,10 +27,18 @@ import type { WithClassNames } from "@/modules/types/base/class-name"
 export type AccountMenuAuthedProps = WithClassNames<undefined>
 
 /**
- * Account dropdown menu for SIGNED-IN viewers: the dashboard hub, then the learning
- * section (My courses · Teaching for lecturers), then a primary section (Profile ·
- * Settings · Wallet with its live balance + a top-up shortcut), and a separated
- * destructive section (Sign out, danger).
+ * Account dropdown menu for SIGNED-IN viewers: the dashboard hub, then "Khoá tôi dạy"
+ * for lecturers only, then a primary section (Profile · Settings · Wallet with its live
+ * balance + a top-up shortcut), and a separated destructive section (Sign out, danger).
+ *
+ * "Khóa học của tôi" (`/courses/me`) is OUT (2026-08-15): the dashboard Courses tab
+ * already carries the same list — `MyCoursesProgress` reads the SAME
+ * `GET /courses/me/enrollments` adapter (`useQueryMyCoursesSwr`) and renders EVERY
+ * enrolment with its progress and resume link, not a truncated preview — so this row was
+ * a second door onto content the row above it (Bảng điều khiển) already opens. Unlike
+ * the `/saved` removal below, this orphans nothing: `/courses/me` is still linked from
+ * the home landing's "Xem tất cả" and from the quest board's LESSON_COMPLETE CTA.
+ * "Khoá tôi dạy" stays — the dashboard has no teaching surface at all.
  *
  * "Bảng điều khiển" is back as the FIRST row: it was dropped while `/dashboard` did
  * not exist, but the 4-tab cockpit now does and nothing else in the app links to it
@@ -117,18 +124,11 @@ export const AccountMenuAuthed = ({ className }: AccountMenuAuthedProps) => {
                     <Label>{t("nav.dashboard")}</Label>
                 </Dropdown.Item>
             </Dropdown.Section>
-            {/* "Khóa học của tôi" — the learner's own enrolled courses, first for
-                one-tap resume (ahead of the discovery shortcuts) */}
-            <Dropdown.Section>
-                <Dropdown.Item
-                    id="my-courses"
-                    textValue={t("nav.myCourses")}
-                    onPress={() => go(pathConfig().locale().course().mine().build())}
-                >
-                    <GraduationCapIcon className="size-5" />
-                    <Label>{t("nav.myCourses")}</Label>
-                </Dropdown.Item>
-                {isLecturer ? (
+            {/* "Khóa học của tôi" (`/courses/me`) đã BỎ khỏi menu này — xem docblock.
+                Chỉ còn "Khoá tôi dạy", và cả mục này biến mất với người không phải giảng
+                viên (section rỗng chỉ đẻ thêm một đường kẻ). */}
+            {isLecturer ? (
+                <Dropdown.Section>
                     <Dropdown.Item
                         id="teaching"
                         textValue={t("nav.teaching")}
@@ -137,8 +137,8 @@ export const AccountMenuAuthed = ({ className }: AccountMenuAuthedProps) => {
                         <ChalkboardTeacherIcon className="size-5" />
                         <Label>{t("nav.teaching")}</Label>
                     </Dropdown.Item>
-                ) : null}
-            </Dropdown.Section>
+                </Dropdown.Section>
+            ) : null}
             {/* Mục "Khám phá" (chỉ còn 1 dòng "Trợ lý học tập FrosTES" → /ai) đã BỎ:
                 linh vật nổi ở góc phải dưới giờ là điểm vào DUY NHẤT của mọi tính năng AI
                 (xem `mascot-assistant/options.ts`), giữ thêm lối này chỉ là 2 cửa cho cùng

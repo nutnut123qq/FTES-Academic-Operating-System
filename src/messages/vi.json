@@ -18,6 +18,12 @@
         "body": "Thêm ảnh đại diện và giới thiệu ngắn để bạn học và mentor hiểu bạn hơn.",
         "cta": "Hoàn thiện hồ sơ",
         "dismiss": "Để sau"
+      },
+      "pickMajor": {
+        "title": "Bạn học ngành nào?",
+        "body": "Chọn ngành để workspace chỉ hiện các môn của ngành bạn. Bạn đổi lại được bất cứ lúc nào trong hồ sơ.",
+        "dismiss": "Để sau",
+        "error": "Chưa lưu được lựa chọn. Bạn thử lại giúp nhé."
       }
     },
     "assistant": {
@@ -2152,6 +2158,7 @@
       "fields": {
         "university": "Trường",
         "campus": "Cơ sở",
+        "majorFromCatalog": "Ngành học",
         "major": "Chuyên ngành",
         "semester": "Học kỳ",
         "gpa": "GPA"
@@ -5477,7 +5484,9 @@
       "subtitle": "Các workspace môn học của bạn — mở một môn để học tiếp.",
       "searchPlaceholder": "Tìm môn học",
       "all": "Tất cả",
-      "empty": "Không có môn nào khớp tìm kiếm."
+      "allMajors": "Tất cả ngành",
+      "empty": "Không có môn nào khớp tìm kiếm.",
+      "emptyMajor": "Ngành này chưa có môn nào."
     },
     "difficulty": {
       "basic": "Cơ bản",

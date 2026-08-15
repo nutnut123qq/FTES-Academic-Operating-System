@@ -15,7 +15,18 @@ export interface CursorPage<T> {
 export interface AcademicSection {
     university: string | null
     campus: string | null
+    /** Chuyên ngành CHỮ TỰ DO người dùng tự gõ (cột cũ `profiles.major`). */
     major: string | null
+    /**
+     * NGÀNH chọn từ danh mục (BE V335, mã trong `subject.majors` — vd `"SE"`), `null` = CHƯA chọn.
+     * Khác {@link major} ngay trên: cái đó là chữ tự do, cái này tra được và dùng để lọc workplace.
+     * Optional vì bản BE chưa deploy V335 không trả ba trường này.
+     */
+    majorCode?: string | null
+    /** Tên ngành (tiếng Anh) đã dịch sẵn BE-side để FE khỏi gọi thêm `GET /majors` chỉ để dịch mã. */
+    majorName?: string | null
+    /** Tên ngành tiếng Việt — dùng cho locale `vi`. */
+    majorNameVi?: string | null
     currentSemester: number | null
     gpa: number | null
     studentCode: string | null
@@ -165,6 +176,11 @@ export interface ProfileUpdateRequest {
     university?: string | null
     campus?: string | null
     major?: string | null
+    /**
+     * Mã ngành chọn từ danh mục (BE V335). `undefined`/`null` = KHÔNG ĐỔI; chuỗi RỖNG = bỏ chọn
+     * ngành. Mã không có trong danh mục bị BE từ chối 400 `PROFILE_INVALID_MAJOR`.
+     */
+    majorCode?: string | null
     currentSemester?: number | null
     gpa?: number | null
     studentCode?: string | null

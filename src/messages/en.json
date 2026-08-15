@@ -18,6 +18,12 @@
         "body": "Add a photo and a short bio so classmates and mentors get to know you.",
         "cta": "Complete profile",
         "dismiss": "Not now"
+      },
+      "pickMajor": {
+        "title": "Which major are you in?",
+        "body": "Pick a major so your workspace shows only your subjects. You can change it any time in your profile.",
+        "dismiss": "Later",
+        "error": "Could not save your choice. Please try again."
       }
     },
     "assistant": {
@@ -2140,7 +2146,8 @@
       "fields": {
         "university": "University",
         "campus": "Campus",
-        "major": "Major",
+        "majorFromCatalog": "Major",
+        "major": "Field of study",
         "semester": "Semester",
         "gpa": "GPA"
       },
@@ -5477,7 +5484,9 @@
       "subtitle": "Your subject workspaces — open one to keep learning.",
       "searchPlaceholder": "Search subjects",
       "all": "All",
-      "empty": "No subjects match your search."
+      "allMajors": "All majors",
+      "empty": "No subjects match your search.",
+      "emptyMajor": "This major has no subjects yet."
     },
     "difficulty": {
       "basic": "Basic",

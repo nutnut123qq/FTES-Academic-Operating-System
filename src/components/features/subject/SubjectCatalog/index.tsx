@@ -8,6 +8,9 @@ import { Link } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { SearchInput } from "@/components/reuseable/SearchInput"
+import { MascotMajorPicker } from "@/components/features/mascot-moments"
+import { useMyMajor } from "@/components/features/profile/hooks/useMyMajor"
+import { useQueryMajorsSwr } from "../hooks/useQueryMajorsSwr"
 import {
     SUBJECT_SEMESTERS,
     useQuerySubjectsSwr,
@@ -27,18 +30,46 @@ const THUMBNAIL_SIZES = "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100v
  */
 export const SubjectCatalog = () => {
     const t = useTranslations("subjects")
+    const { subjects, isLoading, error } = useQuerySubjectsSwr()
+    const { majors } = useQueryMajorsSwr()
+    const { majorCode: myMajor } = useMyMajor()
     const [query, setQuery] = useState("")
+    // `undefined` = người dùng CHƯA tự chọn trong phiên này ⇒ lấy ngành trên hồ sơ làm mặc định.
+    // `"all"` = họ đã bấm "Tất cả ngành" — phải phân biệt được với "chưa chọn", nếu không thì
+    // mỗi lần hồ sơ load xong lại nhảy ngược về ngành của họ và nút "Tất cả" trông như hỏng.
+    const [majorFilter, setMajorFilter] = useState<string | undefined>(undefined)
+    const activeMajor = majorFilter ?? myMajor ?? "all"
     const [semester, setSemester] = useState<SubjectSemesterFilter>(null)
-    const { subjects, isLoading, error } = useQuerySubjectsSwr(semester)
 
-    const filtered = subjects.filter(
-        (subject) =>
-            query.trim() === "" ||
-            `${subject.code} ${subject.name}`.toLowerCase().includes(query.trim().toLowerCase()),
+    const inMajor = subjects.filter(
+        // Môn chưa gắn ngành nào chỉ hiện ở "Tất cả ngành" — không đoán bừa nó thuộc ngành gì.
+        (subject) => activeMajor === "all" || subject.majorCodes.includes(activeMajor),
     )
+
+    // Chỉ liệt kê kỳ CÓ MÔN trong ngành đang chọn. Đo trên dữ liệu thật: chương trình có 9 kỳ
+    // nhưng catalog mới phủ kỳ 1-3, nên hàng 9 nút cứng sẽ có 6 nút bấm vào là trắng — người
+    // dùng đọc ra "hỏng" chứ không đọc ra "chưa có môn".
+    const semestersWithSubjects = [...SUBJECT_SEMESTERS].filter((option) =>
+        inMajor.some((subject) => subject.recommendedSemester === option),
+    )
+    // Đổi ngành mà kỳ đang chọn không còn môn thì coi như chưa lọc kỳ, đừng để lưới trống.
+    const activeSemester = semester !== null && semestersWithSubjects.includes(semester)
+        ? semester
+        : null
+
+    const filtered = inMajor.filter((subject) => {
+        const matchesSemester = activeSemester === null || subject.recommendedSemester === activeSemester
+        const matchesQuery =
+            query.trim() === "" ||
+            `${subject.code} ${subject.name}`.toLowerCase().includes(query.trim().toLowerCase())
+        return matchesSemester && matchesQuery
+    })
 
     return (
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-6">
+            {/* Lời mời chọn ngành cho người mới — tự ẩn khi đã chọn / đã bỏ qua / danh mục rỗng.
+                Đặt ở đây vì workplace chính là chỗ việc chọn ngành có tác dụng thấy được. */}
+            <MascotMajorPicker />
             <div className="flex flex-col gap-1">
                 <Typography type="h4" weight="bold">
                     {t("catalog.title")}
@@ -60,27 +91,59 @@ export const SubjectCatalog = () => {
                     placeholder={t("catalog.searchPlaceholder")}
                     className="sm:max-w-none"
                 />
-                {/* 10 nút (Tất cả + 9 kỳ) không vừa một dòng điện thoại: cuộn ngang ở
-                    bề rộng tự nhiên (`w-max`) đúng như hàng filter của CommunityFilterBar,
-                    thay vì `flex-wrap` xuống 3 dòng. `-mx-1 px-1` chừa chỗ cho vòng focus. */}
-                <div className="-mx-1 overflow-x-auto px-1">
-                    <div className="flex w-max gap-2">
-                        {([null, ...SUBJECT_SEMESTERS] as Array<SubjectSemesterFilter>).map(
-                            (option) => (
+                {/* bộ lọc NGÀNH — chỉ hiện khi danh mục có dữ liệu (danh mục rỗng ⇒ ẩn hẳn hàng
+                    này thay vì hiện một hàng chỉ có "Tất cả"). */}
+                {majors.length > 0 ? (
+                    <div className="-mx-1 overflow-x-auto px-1">
+                        <div className="flex w-max gap-2">
+                            <Button
+                                size="sm"
+                                variant={activeMajor === "all" ? "secondary" : "ghost"}
+                                onPress={() => setMajorFilter("all")}
+                            >
+                                {t("catalog.allMajors")}
+                            </Button>
+                            {majors.map((major) => (
                                 <Button
-                                    key={option ?? "all"}
+                                    key={major.code}
                                     size="sm"
-                                    variant={semester === option ? "secondary" : "ghost"}
+                                    variant={activeMajor === major.code ? "secondary" : "ghost"}
+                                    onPress={() => setMajorFilter(major.code)}
+                                >
+                                    {major.name}
+                                </Button>
+                            ))}
+                        </div>
+                    </div>
+                ) : null}
+
+                {/* Hàng KỲ chỉ xuất hiện SAU khi đã chọn một ngành cụ thể — "pick ngành xong mới
+                    hiện ra các kỳ". Ở "Tất cả ngành" thì kỳ không nói lên điều gì: kỳ 1 của ngành
+                    này và kỳ 1 của ngành kia là hai lộ trình khác nhau. Hàng cuộn ngang ở bề rộng
+                    tự nhiên (`w-max`) như CommunityFilterBar; `-mx-1 px-1` chừa chỗ cho vòng focus. */}
+                {activeMajor !== "all" && semestersWithSubjects.length > 0 ? (
+                    <div className="-mx-1 overflow-x-auto px-1">
+                        <div className="flex w-max gap-2">
+                            <Button
+                                size="sm"
+                                variant={activeSemester === null ? "secondary" : "ghost"}
+                                onPress={() => setSemester(null)}
+                            >
+                                {t("catalog.all")}
+                            </Button>
+                            {semestersWithSubjects.map((option) => (
+                                <Button
+                                    key={option}
+                                    size="sm"
+                                    variant={activeSemester === option ? "secondary" : "ghost"}
                                     onPress={() => setSemester(option)}
                                 >
-                                    {option === null
-                                        ? t("catalog.all")
-                                        : t("semester", { count: option })}
+                                    {t("semester", { count: option })}
                                 </Button>
-                            ),
-                        )}
+                            ))}
+                        </div>
                     </div>
-                </div>
+                ) : null}
             </div>
 
             {/* subject grid — skeleton while loading (or errored with no data) */}
@@ -96,7 +159,12 @@ export const SubjectCatalog = () => {
             >
                 {filtered.length === 0 ? (
                     <Typography type="body-sm" color="muted">
-                        {t("catalog.empty")}
+                        {/* Ngành có thật nhưng chưa môn nào (vd Vi Mạch / Toán Học trên dữ liệu
+                            hiện tại) là trạng thái HỢP LỆ — nói đúng thế thay vì "không khớp
+                            tìm kiếm", để người dùng không tưởng mình gõ sai. */}
+                        {activeMajor !== "all" && query.trim() === "" && activeSemester === null
+                            ? t("catalog.emptyMajor")
+                            : t("catalog.empty")}
                     </Typography>
                 ) : (
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">

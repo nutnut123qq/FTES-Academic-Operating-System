@@ -38,6 +38,7 @@ export const ProfileInfoTab = ({ profile }: { profile: PublicProfile }) => {
         ? ([
             [t("profile.academic.fields.university"), academic.university],
             [t("profile.academic.fields.campus"), academic.campus],
+            [t("profile.academic.fields.majorFromCatalog"), academic.majorFromCatalog],
             [t("profile.academic.fields.major"), academic.major],
             [t("profile.academic.fields.semester"), academic.semester],
             [t("profile.academic.fields.gpa"), academic.gpa],

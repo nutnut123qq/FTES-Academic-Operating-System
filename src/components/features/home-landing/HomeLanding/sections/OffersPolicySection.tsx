@@ -85,9 +85,13 @@ const OfferGroupBody = ({ groupKey, lineCount }: { groupKey: string; lineCount: 
  * BELOW `lg` the tab rail is hidden entirely — eight chips wrapped into a ragged three-line block
  * that pushed the panel off screen. The groups become a horizontal SWIPE strip instead: plain CSS
  * scroll-snap (`overflow-x-auto` + `snap-x snap-mandatory` on the track, `snap-center` per card),
- * no carousel library, with dots underneath that both report and set the position. The mockup
- * chrome is dropped on that path: its 16:9 `aspect-video` content box CLIPS a four-line offer group
- * at phone widths, so the cards render as ordinary bordered surfaces there.
+ * no carousel library, with dots underneath that both report and set the position.
+ *
+ * Each swipe card is the SAME {@link ShowcaseMockup} frame as the desktop panel — the browser
+ * chrome IS the look being swiped, not decoration to drop on small screens. What gets dropped is
+ * only the `aspect="video"` lock: a 16:9 content box clips a four-line offer group at phone widths,
+ * so the mobile frame grows to its content instead. (`tilt` is already a `md:`-only transform in the
+ * block, so a phone gets the flat frame for free.)
  */
 export const OffersPolicySection = () => {
     const t = useTranslations("homeLanding")
@@ -211,9 +215,15 @@ export const OffersPolicySection = () => {
                             >
                                 {OFFER_GROUPS.map((group) => (
                                     <li key={group.key} className="w-[85%] shrink-0 snap-center">
-                                        <div className="flex h-full flex-col rounded-2xl border border-default bg-surface p-5">
+                                        <ShowcaseMockup
+                                            url="ftes.edu.vn/uu-dai"
+                                            tilt="left"
+                                            backdrop="none"
+                                            theme={NEUTRAL_DEPTH}
+                                            contentClassName="flex flex-col justify-center p-5"
+                                        >
                                             <OfferGroupBody groupKey={group.key} lineCount={group.lineCount} />
-                                        </div>
+                                        </ShowcaseMockup>
                                     </li>
                                 ))}
                             </ul>

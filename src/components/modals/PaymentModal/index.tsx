@@ -72,6 +72,11 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
     const checkoutSwr = usePostCheckoutSwr()
     const couponSwr = usePostValidateCouponSwr()
     const walletSwr = useGetMyWalletSwr()
+    // Refresh the balance through the hook's BOUND mutate. The wallet key now carries the
+    // viewer id, and a hand-written `mutate(["GET_MY_WALLET_SWR"])` would no longer match
+    // it — a SILENT no-op that leaves a stale balance on screen after a purchase. The
+    // bound mutate cannot drift because it is the key.
+    const mutateWallet = walletSwr.mutate
 
     const [step, setStep] = useState<Step>("summary")
     const [method, setMethod] = useState<PayMethod>("VIETQR")
@@ -137,7 +142,7 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
         if (isPaidOrderStatus(polledStatus)) {
             setPhase("success")
             void mutate("GET_CART_SWR")
-            void mutate(["GET_MY_WALLET_SWR"])
+            void mutateWallet()
             context?.onSuccess?.()
         } else if (
             polledStatus === "FAILED" ||
@@ -146,7 +151,7 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
         ) {
             setPhase("failed")
         }
-    }, [phase, expired, polledStatus, mutate, context])
+    }, [phase, expired, polledStatus, mutate, mutateWallet, context])
 
     // Hết đồng hồ: rời pha awaiting nhưng KHÔNG ngừng theo dõi đơn (poll bám thêm cờ expired),
     // để tiền vào muộn vẫn lật sang success. Giữ identity ổn định để đồng hồ trong AwaitingView
@@ -192,7 +197,7 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
             if (method === "COIN") {
                 if (isPaidOrderStatus(result.status)) {
                     setPhase("success")
-                    void mutate(["GET_MY_WALLET_SWR"])
+                    void mutateWallet()
                     void mutate("GET_CART_SWR")
                     context?.onSuccess?.()
                 } else {

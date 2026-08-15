@@ -9,6 +9,7 @@ import {
     type ChatMessageResponse,
     type ConversationResponse,
 } from "@/modules/api/rest/chat"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 import { useAppSelector } from "@/redux/hooks"
 
 /** One row in the conversation list (left pane). */
@@ -54,19 +55,36 @@ const toTimeLabel = (iso: string | undefined): string => {
 }
 
 /** Maps a BE message to the bubble shape, resolving `fromMe` against the viewer. */
-const toChatMessage = (dto: ChatMessageResponse, viewerId: string | undefined): ChatMessage => ({
+const toChatMessage = (dto: ChatMessageResponse, viewerId: string | null): ChatMessage => ({
     id: dto.id,
     fromMe: Boolean(viewerId) && dto.senderId === viewerId,
     text: dto.content ?? "",
     time: toTimeLabel(dto.createdAt),
 })
 
-/** Loads the conversation list from the real chat REST API (BE returns [] when empty). */
+/**
+ * Loads the conversation list from the real chat REST API (BE returns [] when empty).
+ *
+ * The key carries the VIEWER ID ({@link useViewerScopeId}) and doubles as the fetch
+ * gate. This one is not a cosmetic leak: on the bare `["GET_CHAT_CONVERSATIONS"]`
+ * key, signing out of A and into B in the same tab re-keys to the SAME cache entry,
+ * so B is shown A's private conversation titles, last-message previews and unread
+ * counts — and inside `dedupingInterval` SWR does not even refetch to correct it.
+ * A signed-out viewer keeps a null key, so the token-only endpoint is never called.
+ *
+ * Callers must revalidate through the returned `mutate` (send, mark-read); a
+ * hand-rebuilt key array would no longer match and would silently refresh nothing.
+ */
 export const useQueryConversationsSwr = () => {
-    const { data, isLoading, error, mutate } = useSWR(["GET_CHAT_CONVERSATIONS"], async () => {
-        const page = await getConversations({ limit: 50 })
-        return (page.items ?? []).map(toConversation)
-    })
+    const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
+    const { data, isLoading, error, mutate } = useSWR(
+        authenticated && viewerId ? ["GET_CHAT_CONVERSATIONS", viewerId] : null,
+        async () => {
+            const page = await getConversations({ limit: 50 })
+            return (page.items ?? []).map(toConversation)
+        },
+    )
     return { conversations: data ?? [], isLoading, error, mutate }
 }
 
@@ -74,11 +92,19 @@ export const useQueryConversationsSwr = () => {
  * Loads the thread for one conversation from the real chat REST API. Keyed by id
  * so it refetches on selection change; messages are sorted oldest→newest for the
  * bubble column. `fromMe` is resolved against the signed-in viewer id.
+ *
+ * The key already carried the viewer id, but an UNRESOLVED viewer collapsed it to
+ * `undefined` — one entry shared by every not-yet-hydrated session, and a thread
+ * rendered with every bubble as somebody else's. Requiring a real id (same gate as
+ * the conversation list) makes both impossible.
  */
 export const useQueryConversationMessagesSwr = (conversationId: string | null) => {
-    const viewerId = useAppSelector((state) => state.user.user?.id)
+    const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
     const { data, isLoading, error, mutate } = useSWR(
-        conversationId ? ["GET_CHAT_MESSAGES", conversationId, viewerId] : null,
+        authenticated && viewerId && conversationId
+            ? ["GET_CHAT_MESSAGES", conversationId, viewerId]
+            : null,
         async () => {
             const page = await getMessages(conversationId as string, { limit: 50 })
             return (page.items ?? [])

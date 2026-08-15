@@ -2,6 +2,8 @@
 
 import useSWR from "swr"
 import { getMyTransactions, getMyWallet } from "@/modules/api/rest/wallet"
+import { useAppSelector } from "@/redux/hooks"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 import type { TransactionView } from "@/modules/api/rest/wallet"
 
 /**
@@ -34,8 +36,18 @@ export interface Wallet {
     transactions: Array<WalletTransaction>
 }
 
-/** Shared SWR key so the wallet page + profile-progress tile dedupe the same fetch. */
-export const WALLET_KEY = ["wallet", "me"] as const
+/**
+ * Shared SWR key builder so the wallet page + profile-progress tile dedupe the same
+ * fetch — and so nobody rebuilds the key array by hand somewhere else (a hand-written
+ * copy drifts the moment the shape changes, and the mismatch is a SILENT no-op).
+ *
+ * The key carries the VIEWER ID: this is a wallet balance + ledger, so serving it from
+ * another account's cache entry is the worst leak in this codebase. `["wallet","me"]`
+ * without an identity is ONE entry for everybody — sign out of A and into B in the same
+ * tab and B reads A's balance straight from the cache (stale-while-revalidate paints it
+ * instantly, and inside `dedupingInterval` no re-fetch even runs).
+ */
+export const walletSwrKey = (viewerId: string) => ["wallet", "me", viewerId] as const
 
 /** History page size — the shell shows a single recent page (no pager yet). */
 const HISTORY_PAGE_SIZE = 20
@@ -72,14 +84,29 @@ const fetchWallet = async (): Promise<Wallet> => {
     }
 }
 
-/** Loads the FTES Coin wallet (balance + ledger) from the BE wallet REST endpoints. */
+/**
+ * Loads the FTES Coin wallet (balance + ledger) from the BE wallet REST endpoints.
+ *
+ * Gated on a signed-in, IDENTIFIED viewer: guests (and the sliver right after sign-in
+ * while the `me` query is still in flight) key to `null`, so no request goes out and
+ * the balance falls through to 0. That fetch gate is a DELIBERATE behaviour change —
+ * `/wallet/me` without a token only ever returned 401 — and it is what keeps an
+ * unattributable answer from landing in a cache entry that a later viewer can read.
+ */
 export const useQueryWalletSwr = () => {
-    const { data, isLoading, error, mutate } = useSWR(WALLET_KEY, fetchWallet)
+    const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
+    const { data, isLoading, error, mutate } = useSWR(
+        authenticated && viewerId ? walletSwrKey(viewerId) : null,
+        fetchWallet,
+    )
     return {
         balance: data?.balance ?? 0,
         status: data?.status,
         transactions: data?.transactions ?? [],
-        isLoading,
+        // A null key never "loads": SWR leaves data undefined with isLoading false, so
+        // the shell renders its empty state instead of an eternal skeleton.
+        isLoading: Boolean(authenticated && viewerId) && isLoading,
         error,
         mutate,
     }

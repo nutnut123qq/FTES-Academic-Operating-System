@@ -4,6 +4,9 @@ import { useEffect } from "react"
 import { useSWRConfig } from "swr"
 import { unstable_serialize } from "swr/infinite"
 import { useAppSelector } from "@/redux/hooks"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
+import { buildMyNotificationsBadgeKey } from "@/hooks/swr/api/graphql/queries/useQueryMyNotificationsSwr"
+import { buildMyNotificationsInfiniteKey } from "@/hooks/swr/api/graphql/queries/useQueryMyNotificationsInfiniteSwr"
 import { openNotificationStream } from "@/modules/api/rest/notification/stream"
 import type { NotificationBadge } from "@/modules/api/rest/notification/types"
 
@@ -31,6 +34,7 @@ export const MAX_BACKOFF_MS = 30_000
  */
 export const useNotificationSseLifecycle = () => {
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
     const { mutate } = useSWRConfig()
 
     useEffect(() => {
@@ -45,8 +49,11 @@ export const useNotificationSseLifecycle = () => {
 
         // Patch the pushed unread count into the badge cache (no refetch — the count IS the data).
         const applyUnreadCount = (count: number) => {
+            if (!viewerId) {
+                return
+            }
             void mutate<NotificationBadge | null>(
-                ["QUERY_MY_NOTIFICATIONS_SWR"],
+                buildMyNotificationsBadgeKey(viewerId),
                 (current) => (current ? { ...current, unreadCount: count } : current),
                 { revalidate: false },
             )
@@ -61,14 +68,21 @@ export const useNotificationSseLifecycle = () => {
         // useQueryMyNotificationsInfiniteSwr's getKey — mutating the meta key re-runs
         // the infinite fetcher (revalidateFirstPage refetches page 0, where a pushed
         // notification lands).
+        //
+        // The page key comes from the hook's own exported `buildMyNotificationsInfiniteKey`
+        // and is NEVER re-typed here: it is viewer-scoped, and a mutate whose key no longer
+        // matches the hook's key fails SILENTLY — pushed notifications would just stop
+        // appearing until a reload, with nothing in the console to see. While no viewer id
+        // has resolved yet (`me` still in flight) the list's own key is null too, so there
+        // is nothing to revalidate.
         const revalidateNotifications = () => {
-            void mutate(["QUERY_MY_NOTIFICATIONS_SWR"])
+            if (!viewerId) {
+                return
+            }
+            void mutate(buildMyNotificationsBadgeKey(viewerId))
             for (const unreadOnly of [false, true]) {
                 void mutate(
-                    unstable_serialize(
-                        (index: number) =>
-                            ["QUERY_MY_NOTIFICATIONS_INFINITE_SWR", unreadOnly, index] as const,
-                    ),
+                    unstable_serialize(buildMyNotificationsInfiniteKey(unreadOnly, viewerId)),
                 )
             }
         }
@@ -114,5 +128,8 @@ export const useNotificationSseLifecycle = () => {
             }
             controller.abort()
         }
-    }, [authenticated, mutate])
+        // `viewerId` is a dep because the revalidation targets are keyed on it: when the
+        // viewer resolves (or changes, on an in-tab account switch) the stream is reopened
+        // with a closure that mutates the RIGHT viewer's list keys.
+    }, [authenticated, viewerId, mutate])
 }

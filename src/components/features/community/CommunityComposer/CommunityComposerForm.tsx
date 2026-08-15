@@ -13,7 +13,7 @@ import { CampusPicker } from "@/components/reuseable/CampusPicker"
 import { createPost, sharePost } from "@/modules/api/rest/community"
 import type { MediaInput } from "@/modules/api/rest/community/types"
 import { getSelfProfile } from "@/modules/api/rest/profile"
-import { SELF_PROFILE_KEY } from "@/components/features/profile/hooks/useQueryProfileSwr"
+import { useSelfProfileKey } from "@/components/features/profile/hooks/useQueryProfileSwr"
 import { QuotedPostCard } from "@/components/reuseable/QuotedPostCard"
 import { useCommunityComposerOverlayState } from "@/hooks/zustand/overlay/hooks"
 import { revalidateCommunityFeeds } from "../hooks/useQueryCommunityFeedSwr"
@@ -59,7 +59,7 @@ export const CommunityComposerForm = ({
     const t = useTranslations("communityHub")
     const router = useRouter()
     const { mutate, cache } = useSWRConfig()
-    const { authenticated, requireAuth } = useRequireAuth()
+    const { requireAuth } = useRequireAuth()
     // Repost/quote mode (C-1): when a quoted post is stashed, the form embeds it and
     // routes submit to `sharePost` instead of `createPost`.
     const { quote, setQuote } = useCommunityComposerOverlayState()
@@ -76,8 +76,9 @@ export const CommunityComposerForm = ({
     const { campuses } = useQueryCampusesSwr()
     // Default the pick to the author's own campus WHEN it's readily available — reads the
     // SHARED self-profile cache (same key as the profile shell/edit), so no extra fetch on
-    // pages that already warmed it; gated on auth so guests never 401 for a default.
-    const { data: selfProfile } = useSWR(authenticated ? SELF_PROFILE_KEY : null, getSelfProfile)
+    // pages that already warmed it; the key is null for guests (never 401 for a default)
+    // AND carries the viewer id, so B never seeds the composer with A's campus.
+    const { data: selfProfile } = useSWR(useSelfProfileKey(), getSelfProfile)
     const seededCampusRef = useRef(false)
     useEffect(() => {
         // Seed exactly ONCE, after both the campus list and the profile have resolved, so a

@@ -3,7 +3,7 @@
 import useSWR from "swr"
 import { getSelfProfile } from "@/modules/api/rest/profile"
 import type { SelfProfile } from "@/modules/api/rest/profile"
-import { SELF_PROFILE_KEY } from "./useQueryProfileSwr"
+import { useSelfProfileKey } from "./useQueryProfileSwr"
 
 /** Academic info fields (all rendered as strings in the metric grid). */
 export interface ProfileAcademic {
@@ -33,6 +33,6 @@ export const toAcademic = (profile: SelfProfile): ProfileAcademic => {
 
 /** Loads the viewer's academic info from the real BE (`GET /profiles/me`). */
 export const useQueryProfileAcademicSwr = () => {
-    const { data, isLoading, error, mutate } = useSWR(SELF_PROFILE_KEY, getSelfProfile)
+    const { data, isLoading, error, mutate } = useSWR(useSelfProfileKey(), getSelfProfile)
     return { academic: data ? toAcademic(data) : undefined, isLoading, error, mutate }
 }

@@ -14,6 +14,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
  *  - the fetcher delegates to the matching client fn,
  *  - the quest board polls on a 60s `refreshInterval`,
  *  - the activity-days window is part of the key so windows cache apart.
+ *
+ * The keys now also carry the VIEWER ID, so the fake state has a `user` slice too —
+ * see `gamificationViewerScopedSwrKey.test.tsx` for the cross-user leak this closes.
  */
 
 type SwrCall = { key: unknown; fetcher: (() => unknown) | undefined; config: Record<string, unknown> | undefined }
@@ -27,11 +30,17 @@ vi.mock("swr", () => ({
     },
 }))
 
-// useAppSelector applies the caller's selector to a controllable fake state.
+// useAppSelector applies the caller's selector to a controllable fake state —
+// both the session flag AND the viewer identity the keys are scoped to.
 let authenticated = false
+let viewerId: string | null = "viewer-1"
+type FakeState = { keycloak: { authenticated: boolean }; user: { user: { id: string } | null } }
 vi.mock("@/redux/hooks", () => ({
-    useAppSelector: (selector: (state: { keycloak: { authenticated: boolean } }) => unknown) =>
-        selector({ keycloak: { authenticated } }),
+    useAppSelector: (selector: (state: FakeState) => unknown) =>
+        selector({
+            keycloak: { authenticated },
+            user: { user: viewerId === null ? null : { id: viewerId } },
+        }),
 }))
 
 const getMyQuests = vi.fn()
@@ -52,6 +61,7 @@ const lastCall = () => swrCalls[swrCalls.length - 1]
 beforeEach(() => {
     swrCalls.length = 0
     authenticated = false
+    viewerId = "viewer-1"
     getMyQuests.mockReset()
     getMyActivityDays.mockReset()
     getMyProgression.mockReset()
@@ -64,11 +74,18 @@ describe("useGetMyQuestsSwr", () => {
         expect(lastCall().key).toBeNull()
     })
 
-    it("uses a stable key and 60s refreshInterval when authenticated", () => {
+    it("uses a stable viewer-scoped key and 60s refreshInterval when authenticated", () => {
         authenticated = true
         renderHook(() => useGetMyQuestsSwr())
-        expect(lastCall().key).toEqual(["GET_MY_QUESTS_SWR"])
+        expect(lastCall().key).toEqual(["GET_MY_QUESTS_SWR", "viewer-1"])
         expect(lastCall().config).toMatchObject({ refreshInterval: 60_000 })
+    })
+
+    it("keys to null while the session flag is on but the viewer has not hydrated", () => {
+        authenticated = true
+        viewerId = null
+        renderHook(() => useGetMyQuestsSwr())
+        expect(lastCall().key).toBeNull()
     })
 
     it("fetcher delegates to getMyQuests", () => {
@@ -92,10 +109,10 @@ describe("useGetMyActivityDaysSwr", () => {
         expect(lastCall().key).toBeNull()
     })
 
-    it("defaults to a 12-week key when authenticated", () => {
+    it("defaults to a 12-week viewer-scoped key when authenticated", () => {
         authenticated = true
         renderHook(() => useGetMyActivityDaysSwr())
-        expect(lastCall().key).toEqual(["GET_MY_ACTIVITY_DAYS_SWR", 12])
+        expect(lastCall().key).toEqual(["GET_MY_ACTIVITY_DAYS_SWR", "viewer-1", 12])
     })
 
     it("polls on a 60s refreshInterval so the heatmap is not frozen under the global no-focus-revalidate provider", () => {
@@ -107,7 +124,7 @@ describe("useGetMyActivityDaysSwr", () => {
     it("puts the weeks window in the key so windows cache apart", () => {
         authenticated = true
         renderHook(() => useGetMyActivityDaysSwr(4))
-        expect(lastCall().key).toEqual(["GET_MY_ACTIVITY_DAYS_SWR", 4])
+        expect(lastCall().key).toEqual(["GET_MY_ACTIVITY_DAYS_SWR", "viewer-1", 4])
     })
 
     it("fetcher forwards the weeks window to getMyActivityDays", () => {
@@ -125,10 +142,10 @@ describe("useGetMyProgressionSwr", () => {
         expect(lastCall().key).toBeNull()
     })
 
-    it("uses a stable key when authenticated", () => {
+    it("uses a stable viewer-scoped key when authenticated", () => {
         authenticated = true
         renderHook(() => useGetMyProgressionSwr())
-        expect(lastCall().key).toEqual(["GET_MY_PROGRESSION_SWR"])
+        expect(lastCall().key).toEqual(["GET_MY_PROGRESSION_SWR", "viewer-1"])
     })
 
     it("polls on a 60s refreshInterval so XP/level does not freeze under the global no-focus-revalidate provider", () => {

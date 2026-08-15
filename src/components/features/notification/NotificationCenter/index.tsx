@@ -22,14 +22,17 @@ import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { InfiniteScrollSentinel } from "@/components/blocks/async/InfiniteScrollSentinel"
 import { resolveNotificationIcon } from "../typeIcon"
+import { buildMyNotificationsBadgeKey } from "@/hooks/swr/api/graphql/queries/useQueryMyNotificationsSwr"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 import { filterNotificationsByPreferences } from "../preferences"
 import { PreferencesSurface } from "../PreferencesSurface"
 
 /** Filter options: everything, or unread only. */
 type Filter = "all" | "unread"
 
-/** SWR key of the shared badge cache (bell + badge) — revalidated on mutation. */
-const BADGE_SWR_KEY = "QUERY_MY_NOTIFICATIONS_SWR"
+// Badge cache key comes from the hook that owns it. Re-typing it here is how the two
+// sides silently drift apart: a mutate whose key stopped matching throws nothing and
+// logs nothing, the bell just stops updating after marking things read.
 
 /**
  * NotificationCenter — the `/notifications` page, backed by the SAME real BE
@@ -51,6 +54,7 @@ export const NotificationCenter = () => {
     const locale = useLocale()
     const router = useRouter()
     const runRest = useRestWithToast()
+    const viewerId = useViewerScopeId()
 
     const [filter, setFilter] = useState<Filter>("all")
     const [showPreferences, setShowPreferences] = useState(false)
@@ -109,8 +113,11 @@ export const NotificationCenter = () => {
 
     /** Revalidate both the infinite list and the shared badge cache. */
     const revalidateAll = useCallback(async () => {
-        await Promise.all([mutate(), globalMutate([BADGE_SWR_KEY])])
-    }, [mutate])
+        await Promise.all([
+            mutate(),
+            viewerId ? globalMutate(buildMyNotificationsBadgeKey(viewerId)) : Promise.resolve(),
+        ])
+    }, [mutate, viewerId])
 
     /** Switch the all/unread filter, resetting pagination to the first page. */
     const onSelectFilter = useCallback(

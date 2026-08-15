@@ -2,6 +2,8 @@
 
 import useSWR from "swr"
 import { getMyStreak } from "@/modules/api/rest/gamification"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
+import { useAppSelector } from "@/redux/hooks"
 
 /** One cell of the weekly streak strip. */
 export interface StreakDay {
@@ -56,10 +58,18 @@ const buildDays = (currentStreak: number, lastActiveDate: string | null): Array<
     })
 }
 
-/** Loads the viewer's weekly streak strip from the real gamification REST API. */
+/**
+ * Loads the viewer's weekly streak strip from the real gamification REST API.
+ *
+ * The key carries the VIEWER ID ({@link useViewerScopeId}) and doubles as the fetch
+ * gate: `GET` streak facts are token-only and per-account, so B must never inherit
+ * A's streak from the cache after an account swap in the same tab.
+ */
 export const useQueryWeeklyStreakSwr = () => {
+    const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
     const { data, isLoading, error, mutate } = useSWR(
-        ["analytics", "overview", "streak"],
+        authenticated && viewerId ? ["analytics", "overview", "streak", viewerId] : null,
         async (): Promise<WeeklyStreak> => {
             const streak = await getMyStreak()
             return {

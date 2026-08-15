@@ -46,11 +46,12 @@ export const AccountTrigger = ({ className }: AccountTriggerProps) => {
     const isAuthenticated = useAppSelector((state) => state.keycloak.authenticated)
     const user = useAppSelector((state) => state.user.user)
     const { open } = useAccountMenuOverlayState()
-    // Auth-gated inside the hook — guests key to `null`, so the navbar never fires
-    // a `/me/*` request for a signed-out viewer. Signed in, the array key
-    // `GET_MY_STREAK_SWR` is the SAME cache entry every other streak surface uses,
-    // so mounting this in the navbar adds a request only on the pages that had no
-    // streak reader at all.
+    // Auth-gated inside the hook — guests (and a signed-in viewer whose identity has
+    // not hydrated yet) key to `null`, so the navbar never fires a `/me/*` request it
+    // could not attribute to an account. Signed in, the key is `myStreakSwrKey(viewerId)`
+    // — the SAME cache entry every other streak surface uses for THIS viewer, so mounting
+    // this in the navbar adds a request only on the pages that had no streak reader at
+    // all, while user A's badge can never be served to user B in the same tab.
     const { data: streak } = useGetMyStreakSwr()
 
     /** Open the account dropdown. */

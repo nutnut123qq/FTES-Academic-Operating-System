@@ -6,10 +6,22 @@ import {
     type ProgressionView,
 } from "@/modules/api/rest/gamification"
 import { useAppSelector } from "@/redux/hooks"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 
-/** Shared SWR key — the composed viewer snapshot (dropdown + profile) and the
- * level-up toast host read ONE cache. */
-export const GET_MY_PROGRESSION_SWR_KEY = "GET_MY_PROGRESSION_SWR"
+/** Key prefix — module-private on purpose (see {@link myProgressionSwrKey}). */
+const GET_MY_PROGRESSION_SWR_KEY = "GET_MY_PROGRESSION_SWR"
+
+/**
+ * The SWR key this hook subscribes to — the composed viewer snapshot (dropdown +
+ * profile) and the level-up toast host read ONE cache.
+ *
+ * Exported as a BUILDER rather than a bare prefix so a call site cannot rebuild the
+ * array by hand and silently drift from the hook: the viewer id is part of the key,
+ * and a hand-written `["GET_MY_PROGRESSION_SWR"]` would match nothing.
+ *
+ * @param viewerId - the signed-in viewer's id ({@link useViewerScopeId}).
+ */
+export const myProgressionSwrKey = (viewerId: string) => [GET_MY_PROGRESSION_SWR_KEY, viewerId]
 
 /**
  * SWR query for the current user's XP/level progression snapshot
@@ -17,6 +29,11 @@ export const GET_MY_PROGRESSION_SWR_KEY = "GET_MY_PROGRESSION_SWR"
  *
  * Auth-gated: guests key to `null` so the `/me/*` endpoint is never fired and
  * `data === undefined`.
+ *
+ * The key also carries the VIEWER ID ({@link useViewerScopeId}). "Somebody is signed
+ * in" is not an identity: on the bare key, signing out of A and into B in the same tab
+ * re-keys to the same cache entry and B reads A's XP/level straight from the cache —
+ * which ALSO makes the diff-based level-up toast fire off A's numbers.
  *
  * Polls on a 60s `refreshInterval`. The global {@link SwrProvider} disables
  * `revalidateOnFocus`/`revalidateOnReconnect`, so without an explicit interval
@@ -28,8 +45,9 @@ export const GET_MY_PROGRESSION_SWR_KEY = "GET_MY_PROGRESSION_SWR"
  */
 export const useGetMyProgressionSwr = () => {
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
     const swr = useSWR<ProgressionView, Error>(
-        authenticated ? [GET_MY_PROGRESSION_SWR_KEY] : null,
+        authenticated && viewerId ? myProgressionSwrKey(viewerId) : null,
         () => getMyProgression(),
         { refreshInterval: 60_000 },
     )

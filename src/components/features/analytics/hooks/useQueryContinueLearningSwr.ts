@@ -2,6 +2,8 @@
 
 import useSWR from "swr"
 import { getMyEnrollments } from "@/modules/api/rest/course"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
+import { useAppSelector } from "@/redux/hooks"
 
 /** Kind of resume target — drives the chip icon + label. */
 export type ResumeKind = "challenge" | "lesson"
@@ -29,10 +31,16 @@ export const RESUME_LIMIT = 3
  * enrollments (`GET /courses/me/enrollments`) + a `hasCourses` flag so the widget
  * can show onboarding instead of an empty void. Unfinished courses lead (lowest
  * completion first); the destination is each course's learn shell.
+ *
+ * The key carries the VIEWER ID ({@link useViewerScopeId}) and doubles as the fetch
+ * gate: enrollments are per-account and the endpoint is token-only, so signing out
+ * of A and into B in the same tab must not resume A's courses from the cache.
  */
 export const useQueryContinueLearningSwr = () => {
+    const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
     const { data, isLoading, error, mutate } = useSWR(
-        ["analytics", "overview", "continue"],
+        authenticated && viewerId ? ["analytics", "overview", "continue", viewerId] : null,
         async (): Promise<Array<ResumeItem>> => {
             const enrollments = await getMyEnrollments()
             return enrollments

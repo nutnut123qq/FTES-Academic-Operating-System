@@ -3,7 +3,7 @@
 import useSWR from "swr"
 import { getSelfProfile } from "@/modules/api/rest/profile"
 import type { SelfProfile } from "@/modules/api/rest/profile"
-import { SELF_PROFILE_KEY } from "./useQueryProfileSwr"
+import { useSelfProfileKey } from "./useQueryProfileSwr"
 
 /** A social link entry. */
 export interface SocialLink {
@@ -55,6 +55,6 @@ export const toPersonalDetail = (profile: SelfProfile): ProfilePersonalDetail =>
 
 /** Loads the viewer's personal detail from the real BE (`GET /profiles/me`). */
 export const useQueryProfilePersonalSwr = () => {
-    const { data, isLoading, error, mutate } = useSWR(SELF_PROFILE_KEY, getSelfProfile)
+    const { data, isLoading, error, mutate } = useSWR(useSelfProfileKey(), getSelfProfile)
     return { detail: data ? toPersonalDetail(data) : undefined, isLoading, error, mutate }
 }

@@ -99,6 +99,14 @@ vi.mock("@/modules/toast/hooks", () => ({
 vi.mock("@/hooks/swr/api/rest/mutations/usePostSubmitChallengeSwr", () => ({
     usePostSubmitChallengeSwr: () => ({ trigger: submitTrigger, isMutating: false }),
 }))
+// The course-access query is viewer-scoped, so it reads the signed-in user out of redux
+// (`useViewerScopeId`) — a bare `render()` with no <Provider> would throw inside the hook.
+// This suite is about the access-gate dispatch, not about access resolution, so stub the
+// hook at its "no access state resolved" answer: exactly what the un-provided real hook
+// produced before (the fetch fails → `.catch(() => null)` → `fullAccess` stays false).
+vi.mock("@/hooks/swr/api/rest/queries/useGetMyCourseAccessSwr", () => ({
+    useGetMyCourseAccessSwr: () => ({ data: null }),
+}))
 vi.mock("@/components/features/learn/hooks/useQueryChallengeSubmissionSwr", () => ({
     useQueryChallengeSubmissionSwr: () => queryMock(),
     isChallengeSubmissionPending: (submission: { status: string }) =>

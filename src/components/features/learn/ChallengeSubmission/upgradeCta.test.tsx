@@ -108,6 +108,15 @@ vi.mock("../hooks/useQueryLearnCourseSwr", () => ({
     }),
 }))
 
+// The course-access query is viewer-scoped, so it reads the signed-in user out of redux
+// (`useViewerScopeId`) — a bare `render()` with no <Provider> would throw inside the hook.
+// This suite asserts the access-DENIED CTA, so stub the hook at "no access state
+// resolved": exactly what the un-provided real hook produced before (the fetch fails →
+// `.catch(() => null)` → `fullAccess` stays false).
+vi.mock("@/hooks/swr/api/rest/queries/useGetMyCourseAccessSwr", () => ({
+    useGetMyCourseAccessSwr: () => ({ data: null }),
+}))
+
 vi.mock("../hooks/useQueryChallengeSubmissionSwr", () => ({
     isChallengeSubmissionPending: () => false,
     useQueryChallengeSubmissionSwr: () => ({

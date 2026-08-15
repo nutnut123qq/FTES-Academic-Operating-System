@@ -5,6 +5,7 @@ import {
     INITIAL_BACKOFF_MS,
     useNotificationSseLifecycle,
 } from "./useNotificationSseLifecycle"
+import { buildMyNotificationsInfiniteKey } from "@/hooks/swr/api/graphql/queries/useQueryMyNotificationsInfiniteSwr"
 import type { NotificationBadge } from "@/modules/api/rest/notification/types"
 
 // ---------------------------------------------------------------- module mocks
@@ -18,11 +19,20 @@ vi.mock("swr", () => ({
     useSWRConfig: () => ({ mutate: mutateMock }),
 }))
 
-/** Auth flag consumed via useAppSelector — flipped per test. */
+/** Session state consumed via useAppSelector (auth flag + viewer) — set per test. */
 let authenticated = true
+/** The signed-in viewer's id — the SSE revalidation keys are scoped to it. */
+let viewerId: string | null = "user-a"
+interface MockState {
+    keycloak: { authenticated: boolean }
+    user: { user: { id: string } | null }
+}
 vi.mock("@/redux/hooks", () => ({
-    useAppSelector: (selector: (state: { keycloak: { authenticated: boolean } }) => unknown) =>
-        selector({ keycloak: { authenticated } }),
+    useAppSelector: (selector: (state: MockState) => unknown) =>
+        selector({
+            keycloak: { authenticated },
+            user: { user: viewerId ? { id: viewerId } : null },
+        }),
 }))
 
 // ---------------------------------------------------------------- fetch stream harness
@@ -77,6 +87,7 @@ const flushMicrotasks = async () => {
 beforeEach(() => {
     vi.useFakeTimers()
     authenticated = true
+    viewerId = "user-a"
     streams = []
     mutateMock.mockReset()
     fetchMock.mockReset()
@@ -155,11 +166,12 @@ describe("useNotificationSseLifecycle", () => {
         ).toBe(true)
         // the center infinite list is revalidated via its serialized `$inf$` meta
         // keys (both unreadOnly variants) — a key-filter mutate would silently skip
-        // `$inf$` keys in SWR, so the hook must target them directly
+        // `$inf$` keys in SWR, so the hook must target them directly. The expected key
+        // comes from the LIST HOOK's exported builder, so this assertion goes red the
+        // day the two sides drift apart (which is otherwise a silent no-op).
         for (const unreadOnly of [false, true]) {
             const expectedKey = unstable_serialize(
-                (index: number) =>
-                    ["QUERY_MY_NOTIFICATIONS_INFINITE_SWR", unreadOnly, index] as const,
+                buildMyNotificationsInfiniteKey(unreadOnly, "user-a"),
             )
             // guard: this really is the infinite meta key, not a page key
             expect(expectedKey).toMatch(/^\$inf\$/)
@@ -171,6 +183,42 @@ describe("useNotificationSseLifecycle", () => {
         }
         // and no function-matcher mutate remains (it was a silent no-op)
         expect(mutateMock.mock.calls.some(([key]) => typeof key === "function")).toBe(false)
+
+        // the revalidated key belongs to THIS viewer only — another account's list key
+        // is a different string and is never touched by this viewer's stream
+        const otherViewerKey = unstable_serialize(
+            buildMyNotificationsInfiniteKey(false, "user-b"),
+        )
+        expect(otherViewerKey).not.toBe(
+            unstable_serialize(buildMyNotificationsInfiniteKey(false, "user-a")),
+        )
+        expect(mutateMock.mock.calls.some(([key]) => key === otherViewerKey)).toBe(false)
+    })
+
+    it("revalidates nothing while no viewer id has resolved yet", async () => {
+        // authenticated, but the `me` query is still in flight. BOTH caches are now
+        // viewer-scoped, so neither has an entry yet: the badge key and the list key are
+        // both null. Pushing an unscoped key here would not "refresh the bell", it would
+        // create a stray cache entry no hook ever reads.
+        viewerId = null
+        respondWithStream()
+        renderHook(() => useNotificationSseLifecycle())
+        await flushMicrotasks()
+        mutateMock.mockClear()
+
+        streams[0]?.emit("event:notification\ndata:{\"id\":\"n1\"}\n\n")
+        await flushMicrotasks()
+
+        expect(
+            mutateMock.mock.calls.some(
+                ([key]) => Array.isArray(key) && key[0] === "QUERY_MY_NOTIFICATIONS_SWR",
+            ),
+        ).toBe(false)
+        expect(
+            mutateMock.mock.calls.some(
+                ([key]) => typeof key === "string" && key.startsWith("$inf$"),
+            ),
+        ).toBe(false)
     })
 
     it("reconnects with exponential backoff after failures", async () => {

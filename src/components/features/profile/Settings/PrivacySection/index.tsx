@@ -10,7 +10,7 @@ import { usePostUpdatePrivacySettingsSwr } from "@/hooks/swr/api/rest/mutations/
 import { getSelfProfile } from "@/modules/api/rest/profile"
 import type { ProfilePrivacySettings, SelfProfile } from "@/modules/api/rest/profile"
 import { useRestWithToast } from "@/modules/toast/hooks"
-import { SELF_PROFILE_KEY } from "../../hooks/useQueryProfileSwr"
+import { useSelfProfileKey } from "../../hooks/useQueryProfileSwr"
 import { handleRadioGroupKeyDown } from "../radio-group"
 
 /**
@@ -58,15 +58,16 @@ type ToggleField = (typeof TOGGLE_FIELDS)[number]
  * followers).
  *
  * Reads the settings off the shared `GET /profiles/me` cache (the same
- * {@link SELF_PROFILE_KEY} every other profile tab uses, so a change here is
- * visible everywhere without a refetch) and writes them with
+ * {@link useSelfProfileKey} every other profile tab uses, so a change here is
+ * visible everywhere without a refetch — and so the optimistic write lands on the
+ * entry those tabs read) and writes them with
  * `PUT /profiles/me/privacy`, which is a PARTIAL update — only the changed field
  * is sent. Every write is optimistic and rolls back with an error toast.
  */
 export const PrivacySection = () => {
     const t = useTranslations()
     const runRest = useRestWithToast()
-    const { data, isLoading, mutate } = useSWR(SELF_PROFILE_KEY, getSelfProfile)
+    const { data, isLoading, mutate } = useSWR(useSelfProfileKey(), getSelfProfile)
     const { trigger, isMutating } = usePostUpdatePrivacySettingsSwr()
 
     const privacy = data?.privacy

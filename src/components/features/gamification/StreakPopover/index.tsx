@@ -7,11 +7,13 @@ import { useLocale, useTranslations } from "next-intl"
 import { FireIcon, SnowflakeIcon } from "@phosphor-icons/react"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 import {
-    GET_MY_ACTIVITY_DAYS_SWR_KEY,
+    myActivityDaysSwrKey,
+    myStreakSwrKey,
     useGetMyActivityDaysSwr,
     useGetMyStreakSwr,
 } from "@/hooks/swr/api/rest/queries"
 import { usePostUseStreakFreezeSwr } from "@/hooks/swr/api/rest/mutations"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 import { useRestWithToast } from "@/modules/toast/hooks"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { StreakHeatmap, HEATMAP_WEEKS, type HeatmapCell } from "../StreakHeatmap"
@@ -24,9 +26,6 @@ export type StreakPopoverPlacement =
     | "top"
     | "top start"
     | "top end"
-
-/** SWR key the streak hook subscribes to — mutated after a freeze is consumed. */
-const STREAK_SWR_KEY = ["GET_MY_STREAK_SWR"]
 
 /** Props for {@link StreakPopover}. */
 export interface StreakPopoverProps extends WithClassNames<undefined> {
@@ -53,6 +52,12 @@ export const StreakPopover = ({ children, placement = "bottom", className }: Str
     const locale = useLocale()
     const { mutate } = useSWRConfig()
     const runRest = useRestWithToast()
+    // The streak + activity keys are VIEWER-SCOPED, so revalidating them needs the
+    // same id the hooks keyed on. Built through the hooks' own key builders
+    // (`myStreakSwrKey` / `myActivityDaysSwrKey`) rather than a hand-written array:
+    // a locally rebuilt key that drifts from the hook's would not throw — the mutate
+    // would simply match nothing and the popover would stop updating after a freeze.
+    const viewerId = useViewerScopeId()
 
     const { data: streak, isLoading: streakLoading } = useGetMyStreakSwr()
     const { data: activity } = useGetMyActivityDaysSwr(HEATMAP_WEEKS)
@@ -75,11 +80,13 @@ export const StreakPopover = ({ children, placement = "bottom", className }: Str
         const result = await runRest(() => useFreeze(), {
             successMessage: t("streak.freezeUsed"),
         })
-        if (result !== null) {
-            void mutate(STREAK_SWR_KEY)
-            void mutate([GET_MY_ACTIVITY_DAYS_SWR_KEY, HEATMAP_WEEKS])
+        // No viewer id means both hooks keyed to `null` and nothing was cached for
+        // this viewer, so there is nothing to revalidate.
+        if (result !== null && viewerId) {
+            void mutate(myStreakSwrKey(viewerId))
+            void mutate(myActivityDaysSwrKey(viewerId, HEATMAP_WEEKS))
         }
-    }, [runRest, useFreeze, mutate, t])
+    }, [runRest, useFreeze, mutate, t, viewerId])
 
     return (
         <Popover>

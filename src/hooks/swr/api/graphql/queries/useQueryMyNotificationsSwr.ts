@@ -2,9 +2,21 @@ import useSWR from "swr"
 import { getNotificationBadge } from "@/modules/api/rest/notification/notification"
 import type { NotificationBadge } from "@/modules/api/rest/notification/types"
 import { useAppSelector } from "@/redux/hooks"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 
 /** Throttle window (ms) for on-focus revalidation, so tab-switching isn't chatty. */
 const FOCUS_THROTTLE_MS = 5_000
+
+/**
+ * The badge's cache key, viewer-scoped.
+ *
+ * Exported because `useNotificationSseLifecycle` and `NotificationCenter` both push into
+ * this cache and used to rebuild the key by hand. That is the silent-drift trap: once the
+ * two sides disagree the mutate matches nothing — no throw, no log, notifications just
+ * stop refreshing until a reload. One builder, one shape.
+ */
+export const buildMyNotificationsBadgeKey = (viewerId: string) =>
+    ["QUERY_MY_NOTIFICATIONS_SWR", viewerId]
 
 /**
  * SWR wrapper for the bell/badge. `data` is the viewer's recent notification
@@ -26,8 +38,9 @@ const FOCUS_THROTTLE_MS = 5_000
  */
 export const useQueryMyNotificationsSwr = () => {
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
     return useSWR<NotificationBadge | null>(
-        authenticated ? ["QUERY_MY_NOTIFICATIONS_SWR"] : null,
+        authenticated && viewerId ? buildMyNotificationsBadgeKey(viewerId) : null,
         () => getNotificationBadge(),
         {
             // polling = delivery: 60s cadence, paused while the tab is hidden

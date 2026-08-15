@@ -1,6 +1,8 @@
 "use client"
 
 import useSWR from "swr"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
+import { useAppSelector } from "@/redux/hooks"
 
 /** A recent finisher of the weekly challenge. */
 export interface WeeklyChallengeFinisher {
@@ -44,10 +46,20 @@ const fetchWeeklyChallengeMock = async (): Promise<WeeklyChallenge> => {
     }
 }
 
-/** Loads the featured weekly-challenge event. Mocked; SWR-shaped. */
+/**
+ * Loads the featured weekly-challenge event. Mocked; SWR-shaped.
+ *
+ * The key carries the VIEWER ID ({@link useViewerScopeId}) and doubles as the fetch
+ * gate: the payload is not purely public — `viewerPassed` is the CURRENT viewer's
+ * answer, so a shared entry would tell B that they had already passed because A had.
+ */
 export const useQueryWeeklyChallengeSwr = () => {
+    const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
     const { data, isLoading, error, mutate } = useSWR(
-        ["analytics", "overview", "weeklyChallenge"],
+        authenticated && viewerId
+            ? ["analytics", "overview", "weeklyChallenge", viewerId]
+            : null,
         () => fetchWeeklyChallengeMock(),
     )
     return { data, isLoading, error, mutate }

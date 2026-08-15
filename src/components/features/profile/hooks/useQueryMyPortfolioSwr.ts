@@ -3,7 +3,7 @@
 import useSWR from "swr"
 import { getSelfProfile } from "@/modules/api/rest/profile"
 import type { SelfProfile } from "@/modules/api/rest/profile"
-import { SELF_PROFILE_KEY } from "./useQueryProfileSwr"
+import { useSelfProfileKey } from "./useQueryProfileSwr"
 
 /** A portfolio project. */
 export interface MyPortfolioProject {
@@ -105,8 +105,12 @@ export const toPortfolio = (profile: SelfProfile): MyPortfolio => ({
     })),
 })
 
-/** Loads the viewer's portfolio from the real BE (`GET /profiles/me`). */
+/**
+ * Loads the viewer's portfolio from the real BE (`GET /profiles/me`), on the shared
+ * per-viewer key ({@link useSelfProfileKey}) — so it still dedupes with the other
+ * profile tabs, but never serves account A's projects/links to account B.
+ */
 export const useQueryMyPortfolioSwr = () => {
-    const { data, isLoading, error, mutate } = useSWR(SELF_PROFILE_KEY, getSelfProfile)
+    const { data, isLoading, error, mutate } = useSWR(useSelfProfileKey(), getSelfProfile)
     return { data: data ? toPortfolio(data) : undefined, isLoading, error, mutate }
 }

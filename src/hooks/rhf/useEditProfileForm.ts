@@ -12,7 +12,7 @@ import {
     uploadAvatar,
 } from "@/modules/api/rest/profile"
 import type { ProfileSocialLinkInput, SelfProfile } from "@/modules/api/rest/profile"
-import { SELF_PROFILE_KEY } from "@/components/features/profile/hooks/useQueryProfileSwr"
+import { useSelfProfileKey } from "@/components/features/profile/hooks/useQueryProfileSwr"
 import { useRestWithToast } from "@/modules/toast/hooks"
 
 /** Max length of the display name (mirrors the BE `display_name` column). */
@@ -70,8 +70,10 @@ const findLink = (profile: SelfProfile | undefined, match: (platform: string) =>
 export const useEditProfileForm = () => {
     const runRest = useRestWithToast()
 
-    // shared key → dedupes with the profile pages' `GET /profiles/me` fetch
-    const { data: profile, mutate } = useSWR(SELF_PROFILE_KEY, getSelfProfile)
+    // shared per-viewer key → dedupes with the profile pages' `GET /profiles/me` fetch,
+    // AND keeps the post-save `mutate()` pointed at the entry those pages actually read
+    // (a hand-rebuilt key array would revalidate nothing and leave the pages stale)
+    const { data: profile, mutate } = useSWR(useSelfProfileKey(), getSelfProfile)
 
     // hidden <input type=file>, opened by the avatar button
     const fileInputRef = useRef<HTMLInputElement>(null)

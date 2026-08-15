@@ -18,7 +18,11 @@ import { StatusChip } from "@/components/blocks/chips/StatusChip"
 import { useAppDispatch, useAppSelector } from "@/redux/hooks"
 import { setUser } from "@/redux/slices/user"
 import { getSelfProfile, updateSelfProfile } from "@/modules/api/rest/profile"
-import { useGetMyVerificationStatusSwr } from "@/hooks/swr/api/rest/queries/useGetMyVerificationStatusSwr"
+import {
+    myVerificationStatusKey,
+    useGetMyVerificationStatusSwr,
+} from "@/hooks/swr/api/rest/queries/useGetMyVerificationStatusSwr"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 import { useRestWithToast } from "@/modules/toast/hooks"
 
 const isValidEmail = (email: string) =>
@@ -36,6 +40,7 @@ export const ChangeEmailSection = () => {
     const runRest = useRestWithToast()
 
     const currentUser = useAppSelector((state) => state.user.user)
+    const viewerId = useViewerScopeId()
     const { data: profile } = useSWR("GET_SELF_PROFILE_SWR", () => getSelfProfile(), {
         revalidateOnFocus: false,
     })
@@ -85,7 +90,12 @@ export const ChangeEmailSection = () => {
                     )
                 }
                 await mutate("GET_SELF_PROFILE_SWR", updatedProfile, { revalidate: false })
-                await mutate("GET_MY_VERIFICATION_STATUS_SWR")
+                // Revalidate through the SHARED key builder, not a hand-written string:
+                // the verification-status key is now viewer-scoped (a tuple), so the old
+                // literal would match no cache entry and the "chưa xác thực" chip would
+                // keep showing the pre-change state with nothing to indicate a miss.
+                const statusKey = myVerificationStatusKey(viewerId)
+                if (statusKey) await mutate(statusKey)
                 handleClose()
             }
         } catch {

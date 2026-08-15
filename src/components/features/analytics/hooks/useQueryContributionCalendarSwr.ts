@@ -1,6 +1,8 @@
 "use client"
 
 import useSWR from "swr"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
+import { useAppSelector } from "@/redux/hooks"
 import type { QueryMyContributionDayData } from "@/modules/api/graphql/queries/types/my-dashboard"
 
 // ponytail: mock BE — no contribution-calendar endpoint yet. Deterministically
@@ -39,10 +41,20 @@ const fetchContributionCalendarMock = async (
     return days
 }
 
-/** Loads the viewer's contribution calendar for a given year. Mocked; SWR-shaped. */
+/**
+ * Loads the viewer's contribution calendar for a given year. Mocked; SWR-shaped.
+ *
+ * The key carries the VIEWER ID ({@link useViewerScopeId}) and doubles as the fetch
+ * gate, matching the real endpoint this swaps to: a contribution heatmap is the
+ * viewer's own activity, so the cache entry must be per-account from day one.
+ */
 export const useQueryContributionCalendarSwr = (year: number) => {
+    const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
     const { data, isLoading, error, mutate } = useSWR(
-        ["analytics", "overview", "contributions", year],
+        authenticated && viewerId
+            ? ["analytics", "overview", "contributions", year, viewerId]
+            : null,
         () => fetchContributionCalendarMock(year),
     )
     return { data, isLoading, error, mutate }

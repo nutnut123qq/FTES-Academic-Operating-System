@@ -17,13 +17,34 @@ vi.mock("next-intl", () => ({
     useLocale: () => "vi",
 }))
 
-// The streak + activity-days query hooks — controllable per test.
+/*
+ * The streak + activity-days query hooks — controllable per test.
+ *
+ * The KEY BUILDERS are stubbed to the literal key SHAPE the real hooks subscribe to
+ * (prefix + viewer id [+ window]). This test therefore pins "the popover revalidates
+ * the key for THIS viewer, built through the hook's builder"; that the builder really
+ * produces those literals — and that mutating them hits the hook's own cache entry —
+ * is pinned in `hooks/swr/api/rest/queries/gamificationViewerScopedSwrKey.test.tsx`.
+ * Between the two, a key that drifts on either side goes red instead of turning into
+ * a mutate that silently matches nothing.
+ */
 let streakResult: { data: StreakView | undefined; isLoading: boolean }
 let activityResult: { data: ActivityDaysView | undefined }
 vi.mock("@/hooks/swr/api/rest/queries", () => ({
     useGetMyStreakSwr: () => streakResult,
     useGetMyActivityDaysSwr: () => activityResult,
-    GET_MY_ACTIVITY_DAYS_SWR_KEY: "GET_MY_ACTIVITY_DAYS_SWR",
+    myStreakSwrKey: (viewer: string) => ["GET_MY_STREAK_SWR", viewer],
+    myActivityDaysSwrKey: (viewer: string, weeks: number) => [
+        "GET_MY_ACTIVITY_DAYS_SWR",
+        viewer,
+        weeks,
+    ],
+}))
+
+// The signed-in viewer the popover scopes its revalidation to.
+let viewerId: string | null = "user-a"
+vi.mock("@/hooks/swr/viewerScope", () => ({
+    useViewerScopeId: () => viewerId,
 }))
 
 // The freeze mutation — trigger is a spy so we can assert it fired.
@@ -76,6 +97,7 @@ vi.mock("@/components/blocks/skeleton/Skeleton", () => ({
 import { StreakPopover } from "./index"
 
 beforeEach(() => {
+    viewerId = "user-a"
     streakResult = {
         data: { currentStreak: 7, longestStreak: 21, lastActiveDate: "2026-07-16", freezeAvailable: 2 },
         isLoading: false,
@@ -101,12 +123,29 @@ describe("StreakPopover", () => {
         expect(screen.getAllByRole("gridcell")).toHaveLength(12 * 7)
     })
 
-    it("consumes a freeze and revalidates the streak + activity windows", async () => {
+    it("consumes a freeze and revalidates the CURRENT VIEWER's streak + activity windows", async () => {
         render(<StreakPopover><span>trigger</span></StreakPopover>)
         fireEvent.click(screen.getByText("streak.useFreeze"))
         await waitFor(() => expect(freezeTrigger).toHaveBeenCalledTimes(1))
-        expect(mutateSpy).toHaveBeenCalledWith(["GET_MY_STREAK_SWR"])
-        expect(mutateSpy).toHaveBeenCalledWith(["GET_MY_ACTIVITY_DAYS_SWR", 12])
+        expect(mutateSpy).toHaveBeenCalledWith(["GET_MY_STREAK_SWR", "user-a"])
+        expect(mutateSpy).toHaveBeenCalledWith(["GET_MY_ACTIVITY_DAYS_SWR", "user-a", 12])
+    })
+
+    it("revalidates a DIFFERENT viewer's keys after the account in the tab changes", async () => {
+        viewerId = "user-b"
+        render(<StreakPopover><span>trigger</span></StreakPopover>)
+        fireEvent.click(screen.getByText("streak.useFreeze"))
+        await waitFor(() => expect(freezeTrigger).toHaveBeenCalledTimes(1))
+        expect(mutateSpy).toHaveBeenCalledWith(["GET_MY_STREAK_SWR", "user-b"])
+        expect(mutateSpy).not.toHaveBeenCalledWith(["GET_MY_STREAK_SWR", "user-a"])
+    })
+
+    it("skips revalidation when no viewer has resolved (nothing was cached for them)", async () => {
+        viewerId = null
+        render(<StreakPopover><span>trigger</span></StreakPopover>)
+        fireEvent.click(screen.getByText("streak.useFreeze"))
+        await waitFor(() => expect(freezeTrigger).toHaveBeenCalledTimes(1))
+        expect(mutateSpy).not.toHaveBeenCalled()
     })
 
     it("disables the freeze action when no freeze is available", () => {

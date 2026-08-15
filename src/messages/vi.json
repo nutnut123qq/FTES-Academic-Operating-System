@@ -287,13 +287,11 @@
       "attempts": "Lượt làm milestone",
       "feedback": "Phản hồi",
       "aiSettings": "Cài đặt FrosTES",
-      "aiSubscription": "Gói FrosTES",
       "aiUsage": "Sử dụng FrosTES",
       "bookmarks": "Đã lưu",
       "rewards": "Phần thưởng",
       "blog": "Blog",
-      "talents": "Nhân tài",
-      "membership": "Thành viên"
+      "talents": "Nhân tài"
     },
     "purchase": {
       "title": "Xác nhận thanh toán",
@@ -1926,16 +1924,11 @@
   },
   "aiSettings": {
     "title": "Cài đặt FrosTES",
-    "subtitle": "Chọn nguồn AI và quản lý khoá API của riêng bạn",
+    "subtitle": "Chọn nguồn AI dùng cho tài khoản của bạn",
     "retry": "Thử lại",
     "laneLabel": "Nguồn AI",
     "planLabel": "Gói hiện tại",
     "planFree": "Miễn phí",
-    "byokKeyRequired": "Nhập khoá API cho nhà cung cấp này trước khi lưu.",
-    "providerName": {
-      "gemini": "Google Gemini",
-      "openai": "OpenAI"
-    },
     "effectiveNow": "Đang dùng",
     "gradeWith": "Chấm bằng FrosTES",
     "pickModel": "Chọn mô hình",
@@ -1952,7 +1945,6 @@
     "premiumLocked": "Cần gói trả phí",
     "save": "Lưu thay đổi",
     "saved": "Đã lưu cài đặt FrosTES",
-    "keyRemoved": "Đã xoá khoá API",
     "error": "Không thể cập nhật cài đặt FrosTES",
     "lanes": {
       "auto": {
@@ -1962,26 +1954,8 @@
       "premium": {
         "title": "Premium",
         "desc": "Dùng credit của gói trả phí cho mọi loại mô hình, chất lượng cao hơn."
-      },
-      "byok": {
-        "title": "Dùng khoá riêng (BYOK)",
-        "desc": "Tự cung cấp khoá API của bạn — không bị trừ hạn mức hệ thống."
       }
     },
-    "byok": {
-      "heading": "Khoá API của bạn",
-      "provider": "Nhà cung cấp",
-      "apiKey": "Khoá API",
-      "apiKeyPlaceholder": "Dán khoá API của bạn",
-      "apiKeyPlaceholderReplace": "Nhập khoá mới để thay thế khoá hiện tại",
-      "keyOnFile": "Đã lưu một khoá API",
-      "removeKey": "Xoá khoá",
-      "keyHint": "Hãy nhập khoá API để dùng chế độ BYOK.",
-      "upsellCta": "Xem các gói FrosTES",
-      "upsellPrompt": "Bạn muốn dùng model premium mà không cần khóa riêng?",
-      "upsellSubtitle": "ignore"
-    },
-    "byokSubtitle": "Thêm API key của riêng bạn để dùng model từ nhà cung cấp của bạn. Khóa được mã hóa khi lưu và sẽ không hiển thị lại.",
     "systemDescription": "FrosTES tự động chọn model theo độ khó của bài và gói của bạn — không cần cấu hình. Nâng gói để mở các model mạnh hơn.",
     "upgradePrompt": "Muốn dùng model mạnh hơn để chấm bài?",
     "ceil": {
@@ -3188,6 +3162,7 @@
       "explore": "Khám phá",
       "courses": "Khóa học của tôi",
       "community": "Tài nguyên của tôi",
+      "plan": "Gói của tôi",
       "following": "Đang theo dõi"
     },
     "loadError": "Không tải được bảng điều khiển. Phiên đăng nhập của bạn có thể đã hết hạn.",

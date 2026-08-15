@@ -8,35 +8,34 @@ import { Link } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { SearchInput } from "@/components/reuseable/SearchInput"
-import { useQuerySubjectsSwr } from "../hooks/useQuerySubjectsSwr"
+import {
+    SUBJECT_SEMESTERS,
+    useQuerySubjectsSwr,
+    type SubjectSemesterFilter,
+} from "../hooks/useQuerySubjectsSwr"
 import type { Subject } from "../hooks/useQuerySubjectSwr"
-
-/** Difficulty filter options: "all" + every difficulty. */
-const DIFFICULTIES: Array<Subject["difficulty"] | "all"> = ["all", "basic", "intermediate", "advanced"]
 
 /** `next/image` sizes matching the 1 / 2 / 3-column catalog grid. */
 const THUMBNAIL_SIZES = "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
 
 /**
  * Subject catalog (§3) — the `/subjects` list. Mirrors the house catalog archetype
- * (see `CourseCatalog`): the shared {@link SearchInput} + difficulty filter + a grid
+ * (see `CourseCatalog`): the shared {@link SearchInput} + bộ lọc KỲ HỌC + a grid
  * of subject cards linking into each subject workspace. Data is REAL —
- * `useQuerySubjectsSwr` reads `GET /api/v1/subjects`; the feature owns only the
- * client-side filtering, tokens own the look.
+ * `useQuerySubjectsSwr` reads `GET /api/v1/subjects`; lọc kỳ chạy server-side qua
+ * tham số `semester`, chỉ ô tìm kiếm còn lọc client-side, tokens own the look.
  */
 export const SubjectCatalog = () => {
     const t = useTranslations("subjects")
-    const { subjects, isLoading, error } = useQuerySubjectsSwr()
     const [query, setQuery] = useState("")
-    const [difficulty, setDifficulty] = useState<Subject["difficulty"] | "all">("all")
+    const [semester, setSemester] = useState<SubjectSemesterFilter>(null)
+    const { subjects, isLoading, error } = useQuerySubjectsSwr(semester)
 
-    const filtered = subjects.filter((subject) => {
-        const matchesDifficulty = difficulty === "all" || subject.difficulty === difficulty
-        const matchesQuery =
+    const filtered = subjects.filter(
+        (subject) =>
             query.trim() === "" ||
-            `${subject.code} ${subject.name}`.toLowerCase().includes(query.trim().toLowerCase())
-        return matchesDifficulty && matchesQuery
-    })
+            `${subject.code} ${subject.name}`.toLowerCase().includes(query.trim().toLowerCase()),
+    )
 
     return (
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-6">
@@ -49,7 +48,7 @@ export const SubjectCatalog = () => {
                 </Typography>
             </div>
 
-            {/* search + difficulty filter — static chrome, stays outside the skeleton */}
+            {/* search + bộ lọc kỳ — static chrome, stays outside the skeleton */}
             <div className="flex flex-col gap-3">
                 {/* house search block (same one the course browse / resource hub /
                     blog list use) — a hand-rolled <input> here shipped its own,
@@ -61,17 +60,26 @@ export const SubjectCatalog = () => {
                     placeholder={t("catalog.searchPlaceholder")}
                     className="sm:max-w-none"
                 />
-                <div className="flex flex-wrap gap-2">
-                    {DIFFICULTIES.map((option) => (
-                        <Button
-                            key={option}
-                            size="sm"
-                            variant={difficulty === option ? "secondary" : "ghost"}
-                            onPress={() => setDifficulty(option)}
-                        >
-                            {option === "all" ? t("catalog.all") : t(`difficulty.${option}`)}
-                        </Button>
-                    ))}
+                {/* 10 nút (Tất cả + 9 kỳ) không vừa một dòng điện thoại: cuộn ngang ở
+                    bề rộng tự nhiên (`w-max`) đúng như hàng filter của CommunityFilterBar,
+                    thay vì `flex-wrap` xuống 3 dòng. `-mx-1 px-1` chừa chỗ cho vòng focus. */}
+                <div className="-mx-1 overflow-x-auto px-1">
+                    <div className="flex w-max gap-2">
+                        {([null, ...SUBJECT_SEMESTERS] as Array<SubjectSemesterFilter>).map(
+                            (option) => (
+                                <Button
+                                    key={option ?? "all"}
+                                    size="sm"
+                                    variant={semester === option ? "secondary" : "ghost"}
+                                    onPress={() => setSemester(option)}
+                                >
+                                    {option === null
+                                        ? t("catalog.all")
+                                        : t("semester", { count: option })}
+                                </Button>
+                            ),
+                        )}
+                    </div>
                 </div>
             </div>
 

@@ -287,13 +287,11 @@
       "attempts": "Milestone attempts",
       "feedback": "Feedback",
       "aiSettings": "FrosTES settings",
-      "aiSubscription": "FrosTES plan",
       "aiUsage": "FrosTES usage",
       "bookmarks": "Bookmarks",
       "rewards": "Rewards",
       "blog": "Blog",
-      "talents": "Talents",
-      "membership": "Membership"
+      "talents": "Talents"
     },
     "purchase": {
       "title": "Confirm your purchase",
@@ -1914,16 +1912,11 @@
   },
   "aiSettings": {
     "title": "FrosTES Settings",
-    "subtitle": "Choose your AI source and manage your own API key",
+    "subtitle": "Choose the AI source used for your account",
     "retry": "Try again",
     "laneLabel": "AI source",
     "planLabel": "Current plan",
     "planFree": "Free",
-    "byokKeyRequired": "Enter an API key for this provider before saving.",
-    "providerName": {
-      "gemini": "Google Gemini",
-      "openai": "OpenAI"
-    },
     "effectiveNow": "Currently using",
     "gradeWith": "Grade with FrosTES",
     "pickModel": "Pick a model",
@@ -1940,7 +1933,6 @@
     "premiumLocked": "Paid plan required",
     "save": "Save changes",
     "saved": "FrosTES settings saved",
-    "keyRemoved": "API key removed",
     "error": "Could not update FrosTES settings",
     "lanes": {
       "auto": {
@@ -1950,26 +1942,8 @@
       "premium": {
         "title": "Premium",
         "desc": "Spend your paid-plan credits on any model category for higher quality."
-      },
-      "byok": {
-        "title": "Bring your own key (BYOK)",
-        "desc": "Supply your own API key — no system quota is consumed."
       }
     },
-    "byok": {
-      "heading": "Your API key",
-      "provider": "Provider",
-      "apiKey": "API key",
-      "apiKeyPlaceholder": "Paste your API key",
-      "apiKeyPlaceholderReplace": "Enter a new key to replace the current one",
-      "keyOnFile": "An API key is on file",
-      "removeKey": "Remove key",
-      "keyHint": "Enter an API key to use BYOK mode.",
-      "upsellCta": "View FrosTES plans",
-      "upsellPrompt": "Want premium models without your own key?",
-      "upsellSubtitle": "ignore"
-    },
-    "byokSubtitle": "Add your own API key to use your provider's models. Your key is stored encrypted and never shown again.",
     "systemDescription": "The system auto-picks a model by task difficulty and your plan — no setup needed. Upgrade to unlock stronger models.",
     "upgradePrompt": "Want stronger models for grading?",
     "ceil": {
@@ -3176,6 +3150,7 @@
       "explore": "Explore",
       "courses": "My Courses",
       "community": "My Resource",
+      "plan": "My Plan",
       "following": "Following"
     },
     "loadError": "Could not load your dashboard. Your session may have expired.",

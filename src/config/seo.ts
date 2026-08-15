@@ -12,7 +12,7 @@
  */
 export const SEO_CONFIG = {
     /** Human-readable site / brand name used in titles + OG. */
-    siteName: "FTES AOS",
+    siteName: "FTES - AI Learning",
     /** Absolute origin for canonical / OpenGraph / sitemap urls (no trailing slash). */
     siteUrl: (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, ""),
     /** GA4 Measurement Id; empty disables the Google Analytics tag. */
@@ -21,7 +21,7 @@ export const SEO_CONFIG = {
     googleSiteVerification: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ?? "",
     /** Default site description (fallback when a page has none). */
     defaultDescription:
-        "FTES AOS — nền tảng khởi tạo dự án.",
+        "FTES - AI Learning — nền tảng khởi tạo dự án.",
     /** Locales the public site is served under (mirrors the `[locale]` segment). */
     locales: ["vi", "en"] as ReadonlyArray<string>,
     /** Default locale — used for `x-default` hreflang + the canonical sitemap url. */

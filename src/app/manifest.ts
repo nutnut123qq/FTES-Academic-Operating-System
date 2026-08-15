@@ -7,7 +7,10 @@ import { SEO_CONFIG } from "@/config/seo"
  */
 const manifest = (): MetadataRoute.Manifest => ({
     name: SEO_CONFIG.siteName,
-    short_name: "FTES AOS",
+    // `name` follows SEO_CONFIG.siteName ("FTES - AI Learning"); `short_name` is the
+    // home-screen label, which launchers truncate past ~12 chars — so it stays the
+    // bare brand root rather than the full lockup.
+    short_name: "FTES",
     description: SEO_CONFIG.defaultDescription,
     start_url: "/",
     display: "standalone",

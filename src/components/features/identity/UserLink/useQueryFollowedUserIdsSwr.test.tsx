@@ -26,7 +26,11 @@ vi.mock("@/modules/api/rest/community", () => ({
 
 vi.mock("@/redux/hooks", () => ({
     useAppSelector: (selector: (state: unknown) => unknown) =>
-        selector({ keycloak: { authenticated: hoisted.authenticated } }),
+        // The viewer id is part of the key — one account never reads another's cache.
+        selector({
+            keycloak: { authenticated: hoisted.authenticated },
+            user: { user: hoisted.authenticated ? { id: "viewer-1" } : null },
+        }),
 }))
 
 import {

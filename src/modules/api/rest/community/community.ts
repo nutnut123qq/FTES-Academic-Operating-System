@@ -14,6 +14,7 @@ import type {
     PollResponse,
     PollVoteRequest,
     PostResponse,
+    PublicPostCard,
     ShareRequest,
     UpdateCommentRequest,
     UpdatePostRequest,
@@ -137,6 +138,29 @@ export const getPost = async (id: string): Promise<PostResponse> => {
         method: "GET",
         url: `/community/posts/${id}`,
         authenticated: true,
+    })
+}
+
+/**
+ * Returns the public share card of a post: title, plain-text excerpt, cover image and
+ * author display name — nothing else.
+ *
+ * The one community read path that works WITHOUT a token, which is exactly why it exists:
+ * `generateMetadata` runs on the server, where no bearer is available, so {@link getPost}
+ * can only 401 there. `authenticated: false` is load-bearing — leave it on and the client
+ * spends a pointless refresh attempt on every render.
+ *
+ * The BE 404s for anything that is not publicly readable (private-group post, draft/hidden,
+ * soft-deleted, unknown id) with one indistinguishable error, so callers must treat a
+ * failure as "no card" rather than "post missing".
+ *
+ * `GET /api/v1/community/public/posts/{id}`
+ */
+export const getPublicPostCard = async (id: string): Promise<PublicPostCard> => {
+    return restRequest<PublicPostCard>({
+        method: "GET",
+        url: `/community/public/posts/${id}`,
+        authenticated: false,
     })
 }
 

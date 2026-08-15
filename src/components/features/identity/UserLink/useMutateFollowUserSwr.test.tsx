@@ -31,10 +31,10 @@ vi.mock("@/modules/api/rest/community", () => ({
     FOLLOW_BATCH_LIMIT: 100,
 }))
 
-// the batch hook only fetches for a signed-in viewer
+// the batch hook only fetches for a signed-in viewer, and keys its cache by that viewer
 vi.mock("@/redux/hooks", () => ({
     useAppSelector: (selector: (state: unknown) => unknown) =>
-        selector({ keycloak: { authenticated: true } }),
+        selector({ keycloak: { authenticated: true }, user: { user: { id: "viewer-1" } } }),
 }))
 
 vi.mock("@/modules/api/rest/profile", () => ({

@@ -3,6 +3,7 @@
 import { useCallback, useMemo } from "react"
 import useSWR from "swr"
 import { useAppSelector } from "@/redux/hooks"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 import { FOLLOW_BATCH_LIMIT, getFollowedUserIds } from "@/modules/api/rest/community"
 
 /** SWR key prefix of every batch follow-state entry (see {@link followedUserIdsKey}). */
@@ -26,8 +27,10 @@ export const normalizeFollowTargets = (
  *
  * @param normalized - output of {@link normalizeFollowTargets}.
  */
-export const followedUserIdsKey = (normalized: ReadonlyArray<string>) =>
-    [FOLLOWED_USER_IDS_SWR_KEY, normalized.join(",")] as const
+export const followedUserIdsKey = (
+    normalized: ReadonlyArray<string>,
+    viewerId: string,
+) => [FOLLOWED_USER_IDS_SWR_KEY, normalized.join(","), viewerId] as const
 
 /**
  * Whether an arbitrary SWR key is a batch follow-state entry that COVERS `userId` —
@@ -110,12 +113,15 @@ export const useQueryFollowedUserIdsSwr = (
     userIds: ReadonlyArray<string | null | undefined>,
 ) => {
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
     const normalized = normalizeFollowTargets(userIds)
     const idsKey = normalized.join(",")
 
     const swr = useSWR(
-        authenticated && normalized.length > 0 ? followedUserIdsKey(normalized) : null,
-        ([, ids]: readonly [string, string]) =>
+        authenticated && viewerId && normalized.length > 0
+            ? followedUserIdsKey(normalized, viewerId)
+            : null,
+        ([, ids]: readonly [string, string, string]) =>
             fetchFollowedUserIds(ids ? ids.split(",") : []),
         {
             revalidateOnFocus: false,

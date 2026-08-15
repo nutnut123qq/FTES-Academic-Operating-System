@@ -68,7 +68,11 @@ vi.mock("@phosphor-icons/react", () => ({
 vi.mock("@/redux/hooks", () => ({
     useAppDispatch: () => hoisted.dispatch,
     useAppSelector: (selector: (state: unknown) => unknown) =>
-        selector({ keycloak: { authenticated: hoisted.authenticated } }),
+        // The bookmarks key carries the viewer id, so the mocked state needs a viewer.
+        selector({
+            keycloak: { authenticated: hoisted.authenticated },
+            user: { user: hoisted.authenticated ? { id: "viewer-1" } : null },
+        }),
 }))
 
 vi.mock("@/redux/slices/tabs", () => ({

@@ -106,6 +106,27 @@ export interface PostResponse {
     author?: PostAuthor | null
 }
 
+/**
+ * Public share card of one community post — the anonymous projection served by
+ * `GET /api/v1/community/public/posts/{id}`.
+ *
+ * Deliberately NOT a subset of {@link PostResponse}: it is what an unauthenticated
+ * caller (our own server render, plus every link crawler) is allowed to see, so it
+ * carries no body, no counters and no ids beyond the post's own. `excerpt` already
+ * has markup and every URL stripped by the BE, and `authorName` is the resolved
+ * display name.
+ */
+export interface PublicPostCard {
+    id: string
+    title?: string | null
+    /** Plain-text summary of the body, markup + links removed, capped by the BE. */
+    excerpt?: string | null
+    /** First image attached to the post; null when it has none. */
+    imageUrl?: string | null
+    authorName?: string | null
+    createdAt?: string | null
+}
+
 /** Body sent to `POST /api/v1/community/posts/{id}/poll-votes`. */
 export interface PollVoteRequest {
     optionId: string

@@ -2,6 +2,7 @@
 
 import useSWR from "swr"
 import { useAppSelector } from "@/redux/hooks"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 import { listMyBookmarks } from "@/modules/api/rest/resource"
 
 /** SWR cache tag of the signed-in user's bookmarked resource ids. */
@@ -11,7 +12,8 @@ export const RESOURCE_BOOKMARKS_TAG = "resource-bookmarks"
  * The single SWR key every {@link SaveButton} on the page shares, so one row
  * hydrating the list serves all of them (and a toggle patches one cache entry).
  */
-export const resourceBookmarksKey = () => [RESOURCE_BOOKMARKS_TAG] as const
+export const resourceBookmarksKey = (viewerId: string) =>
+    [RESOURCE_BOOKMARKS_TAG, viewerId] as const
 
 /** How many bookmark ids are hydrated in one shot (BE caps the page size). */
 const BOOKMARKS_PAGE_SIZE = 200
@@ -31,10 +33,11 @@ const BOOKMARKS_PAGE_SIZE = 200
  */
 export const useResourceBookmarksSwr = (enabled: boolean) => {
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
     const active = enabled && Boolean(authenticated)
 
     const { data, isLoading, mutate } = useSWR(
-        active ? resourceBookmarksKey() : null,
+        active && viewerId ? resourceBookmarksKey(viewerId) : null,
         async () => {
             const ids = await listMyBookmarks({ page: 0, size: BOOKMARKS_PAGE_SIZE })
             return new Set<string>(ids ?? [])

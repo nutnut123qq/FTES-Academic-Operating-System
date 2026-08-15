@@ -246,13 +246,39 @@
     "expandMenu": "Mở rộng menu",
     "groups": {
       "account": "Tài khoản",
+      "preferences": "Tuỳ chỉnh",
       "learning": "Học tập",
       "ai": "FrosTES",
       "content": "Nội dung"
     },
+    "privacy": {
+      "title": "Riêng tư",
+      "subtitle": "Chọn ai được xem hồ sơ của bạn và hồ sơ hiển thị những gì.",
+      "visibility": {
+        "label": "Ai xem được hồ sơ",
+        "PUBLIC": "Công khai",
+        "MEMBERS": "Thành viên",
+        "PRIVATE": "Riêng tư",
+        "PUBLICHint": "Bất kỳ ai có đường dẫn đều mở được hồ sơ của bạn.",
+        "MEMBERSHint": "Chỉ thành viên FTES đã đăng nhập mới mở được hồ sơ của bạn.",
+        "PRIVATEHint": "Không ai ngoài bạn mở được hồ sơ."
+      },
+      "fieldsTitle": "Thông tin hiển thị trên hồ sơ",
+      "fieldsSubtitle": "Tắt những mục bạn muốn giữ riêng.",
+      "fields": {
+        "showEmail": "Địa chỉ email",
+        "showPhone": "Số điện thoại",
+        "showGpa": "Điểm GPA",
+        "showAcademic": "Thông tin học tập",
+        "showProgress": "Tiến độ học",
+        "showTimeline": "Dòng thời gian hoạt động",
+        "showFollowers": "Người theo dõi"
+      }
+    },
     "items": {
       "editProfile": "Chỉnh sửa hồ sơ",
       "appearance": "Giao diện",
+      "privacy": "Riêng tư",
       "notifications": "Thông báo",
       "security": "Bảo mật",
       "sessions": "Thiết bị",
@@ -268,6 +294,22 @@
       "blog": "Blog",
       "talents": "Nhân tài",
       "membership": "Thành viên"
+    },
+    "purchase": {
+      "title": "Xác nhận thanh toán",
+      "planLabel": "Bạn đang mua",
+      "amountLabel": "Số tiền",
+      "methodLabel": "Phương thức thanh toán",
+      "notice": "Bấm tiếp tục sẽ chuyển bạn sang cổng thanh toán. Chưa có khoản tiền nào bị trừ cho tới khi bạn hoàn tất ở đó.",
+      "confirm": "Tiếp tục thanh toán",
+      "failed": "Không mở được cổng thanh toán. Chưa trừ tiền — vui lòng thử lại.",
+      "methods": {
+        "payos": "PayOS",
+        "sepay": "SePay",
+        "stripe": "Stripe",
+        "paypal": "PayPal",
+        "crypto": "Crypto"
+      }
     },
     "learning": {
       "loadMore": "Tải thêm",
@@ -322,7 +364,11 @@
         "lessonsEmpty": "Chưa có bài học nào được đọc gần đây.",
         "lessonsProgress": "Bài học: {completed}/{total} ({percent}%)",
         "challengesProgress": "Challenge: {completed}/{total}",
-        "milestonesProgress": "Milestone: {completed}/{total}"
+        "milestonesProgress": "Milestone: {completed}/{total}",
+        "error": "Không tải được danh sách khóa học của bạn.",
+        "retry": "Thử lại",
+        "progress": "Hoàn thành {percent}%",
+        "open": "Mở khóa học"
       },
       "detail": {
         "searchLessons": "Tìm bài học",
@@ -433,7 +479,6 @@
     "collapseRightRail": "Ẩn thanh bên phải",
     "expandRightRail": "Hiện thanh bên phải",
     "dashboard": "Bảng điều khiển",
-    "myCourses": "Khóa học của tôi",
     "teaching": "Khoá tôi dạy",
     "guestPrompt": "Đăng nhập để theo dõi tiến độ của bạn",
     "systemTheme": "Theo hệ thống"
@@ -1882,6 +1927,15 @@
   "aiSettings": {
     "title": "Cài đặt FrosTES",
     "subtitle": "Chọn nguồn AI và quản lý khoá API của riêng bạn",
+    "retry": "Thử lại",
+    "laneLabel": "Nguồn AI",
+    "planLabel": "Gói hiện tại",
+    "planFree": "Miễn phí",
+    "byokKeyRequired": "Nhập khoá API cho nhà cung cấp này trước khi lưu.",
+    "providerName": {
+      "gemini": "Google Gemini",
+      "openai": "OpenAI"
+    },
     "effectiveNow": "Đang dùng",
     "gradeWith": "Chấm bằng FrosTES",
     "pickModel": "Chọn mô hình",
@@ -1965,11 +2019,15 @@
       "discount": "Giảm 20% mọi khóa học FTES AOS",
       "recruitment": "Đưa hồ sơ của bạn đến nhà tuyển dụng đối tác"
     },
-    "priceApprox": "Khoảng $5/tháng"
+    "priceApprox": "Khoảng $5/tháng",
+    "perksTitle": "Bạn nhận được gì"
   },
   "aiSubscription": {
     "title": "Gói FrosTES",
     "subtitle": "Nâng cấp để có thêm credit FrosTES mỗi tuần",
+    "error": "Không tải được danh sách gói FrosTES.",
+    "retry": "Thử lại",
+    "empty": "Hiện chưa có gói FrosTES nào đang mở bán.",
     "perMonth": "/tháng",
     "priceUsdHint": "≈ {amount} khi thanh toán quốc tế",
     "popular": "Phổ biến",
@@ -2097,9 +2155,6 @@
       "meta": "Cấp ngày {date} · Mã xác minh {code}",
       "view": "Xem trang xác minh",
       "revoked": "Đã thu hồi"
-    },
-    "hero": {
-      "coverAlt": "Ảnh bìa hồ sơ"
     },
     "personal": {
       "about": "Giới thiệu",
@@ -4472,6 +4527,7 @@
       "eyebrow": "Thành tựu",
       "title": "Những gì chúng tôi đạt được",
       "viewDetail": "Xem chi tiết",
+      "press": "Báo chí viết về",
       "regionLabel": "Thành tựu của FTES",
       "prev": "Thành tựu trước",
       "next": "Thành tựu tiếp theo",
@@ -4514,6 +4570,7 @@
       "eyebrow": "Quyền lợi khi học tại FTES",
       "title": "Ưu đãi & chính sách",
       "tabsAria": "Các nhóm ưu đãi và chính sách",
+      "swipeAria": "Vuốt ngang để xem các nhóm ưu đãi và chính sách",
       "cta": "Xem các khóa học",
       "groups": {
         "newLearner": {
@@ -5368,6 +5425,7 @@
       "statistics": "Thống kê",
       "career": "Nghề nghiệp"
     },
+    "navLabel": "Khu vực môn học",
     "overview": {
       "title": "Tổng quan môn học",
       "linkedCourses": "Khóa học của môn này",
@@ -7429,6 +7487,8 @@
     "accent": {
       "label": "Màu chủ đạo",
       "default": "Mặc định",
+      "custom": "Màu tuỳ chọn",
+      "reset": "Đặt lại",
       "names": {
         "indigo": "Xanh indigo",
         "pink": "Hồng",
@@ -7440,10 +7500,21 @@
     },
     "effect": {
       "label": "Hiệu ứng nền",
-      "enabled": "Bật hiệu ứng",
       "direction": "Hướng",
       "rise": "Bay lên",
-      "fall": "Rơi xuống như sao băng"
+      "fall": "Rơi xuống như sao băng",
+      "names": {
+        "none": "Tắt",
+        "ember": "Tàn lửa",
+        "wave": "Sóng nước",
+        "snow": "Tuyết rơi",
+        "rain": "Mưa",
+        "bubbles": "Bong bóng",
+        "fireflies": "Đom đóm",
+        "stars": "Bầu trời sao",
+        "aurora": "Cực quang",
+        "circuit": "Mạch điện"
+      }
     },
     "speed": {
       "label": "Tốc độ",
@@ -8377,6 +8448,16 @@
       "title": "Không tìm thấy kỳ học",
       "description": "Kỳ học trong đường dẫn này không tồn tại. Chọn một kỳ ở trên, hoặc quay về bảng của kỳ mới nhất.",
       "action": "Xem kỳ mới nhất"
+    }
+  },
+  "linkPreview": {
+    "ariaLabel": "Xem trước liên kết: {title}",
+    "imageAlt": "Ảnh xem trước liên kết"
+  },
+  "seo": {
+    "communityPost": {
+      "title": "Bài viết cộng đồng",
+      "description": "Đọc và tham gia thảo luận cùng cộng đồng FTES."
     }
   }
 }

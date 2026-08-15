@@ -114,6 +114,14 @@ export interface SelfProfile {
     dateOfBirth: string | null
     gender: string | null
     academic: AcademicSection | null
+    /**
+     * Appearance synced with the ACCOUNT (not just this browser): an accent preset
+     * id (`"indigo"`) or a free-form hex (`"#3f51b5"`). `null` = never chosen, in
+     * which case this device's localStorage value stands.
+     */
+    accentColor: string | null
+    /** Ambient background effect name (`"none"` = off); `null` = never chosen. */
+    backgroundEffect: string | null
     socialLinks: Array<SocialLinkView>
     projects: Array<ProjectView>
     assets: Array<AssetView>
@@ -161,6 +169,10 @@ export interface ProfileUpdateRequest {
     gpa?: number | null
     studentCode?: string | null
     enrollmentYear?: number | null
+    /** Accent preset id or `#rrggbb`; the BE rejects anything else. */
+    accentColor?: string | null
+    /** One of the known background effect names; the BE rejects anything else. */
+    backgroundEffect?: string | null
 }
 
 /** Body of `PUT /api/v1/profiles/me/social-links`. */

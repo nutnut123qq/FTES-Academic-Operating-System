@@ -17,10 +17,13 @@ const font = Open_Sans({
  * Pre-paint accent script (appearance-settings) — same strategy next-themes uses
  * for the `dark` class: read the persisted zustand state from localStorage and set
  * `data-accent` on `<html>` BEFORE first paint so the stored accent never flashes
- * the default. Swallows every error (private mode / garbage JSON) → falls back to
- * the default accent baked into the theme tokens.
+ * the default. A free-form `accentCustom` colour additionally goes on as an inline
+ * `--accent` / `--accent-foreground` pair (inline styles outrank the `[data-accent]`
+ * blocks) — the YIQ branch here MUST stay in sync with `accentForeground()` in
+ * `resources/constants/appearance.ts`. Swallows every error (private mode /
+ * garbage JSON) → falls back to the default accent baked into the theme tokens.
  */
-const accentPrePaintScript = `(function(){try{var raw=localStorage.getItem(${JSON.stringify(APPEARANCE_STORAGE_KEY)});if(!raw)return;var accent=JSON.parse(raw).state.accent;if(${JSON.stringify(ACCENT_PRESETS.map((preset) => preset.id))}.indexOf(accent)>=0){document.documentElement.setAttribute("data-accent",accent)}}catch(e){}})()`
+const accentPrePaintScript = `(function(){try{var raw=localStorage.getItem(${JSON.stringify(APPEARANCE_STORAGE_KEY)});if(!raw)return;var s=JSON.parse(raw).state;var e=document.documentElement;if(${JSON.stringify(ACCENT_PRESETS.map((preset) => preset.id))}.indexOf(s.accent)>=0){e.setAttribute("data-accent",s.accent)}var c=s.accentCustom;if(typeof c==="string"&&/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(c)){var h=c.slice(1);if(h.length===3){h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2]}var y=(parseInt(h.slice(0,2),16)*299+parseInt(h.slice(2,4),16)*587+parseInt(h.slice(4,6),16)*114)/1000;e.style.setProperty("--accent",c);e.style.setProperty("--accent-foreground",y>=150?"oklch(21.03% 0.0015 354.13)":"oklch(100% 0 0)")}}catch(e){}})()`
 
 /** Route params for the `[locale]` segment. */
 interface LocaleRouteParams {

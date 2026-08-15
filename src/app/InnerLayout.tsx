@@ -33,8 +33,9 @@ export const InnerLayout = ({ children }: PropsWithChildren) => {
     const pathname = usePathname()
     const isContentRoute = /\/(?:learn|community|subjects)(?:\/|$)/.test(pathname ?? "")
     // Ambient effect config (appearance-settings) — narrow selectors so InnerLayout
-    // only re-renders when these two fields change (a rare user action).
-    const effectEnabled = useAppearanceStore((state) => state.effectEnabled)
+    // only re-renders when these fields change (a rare user action). `effect` is
+    // the picked look ("none" = off); direction/speed only apply to `ember`.
+    const effect = useAppearanceStore((state) => state.effect)
     const effectDirection = useAppearanceStore((state) => state.effectDirection)
     const effectSpeed = useAppearanceStore((state) => state.effectSpeed)
     // The store persists with `skipHydration` (server markup == first client render,
@@ -72,8 +73,12 @@ export const InnerLayout = ({ children }: PropsWithChildren) => {
                             </Suspense>
                             <AppSplash />
                             <TopLoader />
-                            {!isContentRoute && effectEnabled ? (
-                                <AmbientBackground direction={effectDirection} speed={effectSpeed} />
+                            {!isContentRoute ? (
+                                <AmbientBackground
+                                    effect={effect}
+                                    direction={effectDirection}
+                                    speed={effectSpeed}
+                                />
                             ) : null}
                             {/* Onboarding tour engine — wraps the shell so it can spotlight the
                                 Navbar anchors and the account-menu replay entry shares its context.

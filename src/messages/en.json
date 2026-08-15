@@ -246,13 +246,39 @@
     "expandMenu": "Expand menu",
     "groups": {
       "account": "Account",
+      "preferences": "Preferences",
       "learning": "Learning",
       "ai": "FrosTES",
       "content": "Content"
     },
+    "privacy": {
+      "title": "Privacy",
+      "subtitle": "Choose who can see your profile and which details it shows.",
+      "visibility": {
+        "label": "Profile visibility",
+        "PUBLIC": "Public",
+        "MEMBERS": "Members",
+        "PRIVATE": "Private",
+        "PUBLICHint": "Anyone with the link can open your profile.",
+        "MEMBERSHint": "Only signed-in FTES members can open your profile.",
+        "PRIVATEHint": "Nobody but you can open your profile."
+      },
+      "fieldsTitle": "Details shown on your profile",
+      "fieldsSubtitle": "Turn off anything you would rather keep to yourself.",
+      "fields": {
+        "showEmail": "Email address",
+        "showPhone": "Phone number",
+        "showGpa": "GPA",
+        "showAcademic": "Academic information",
+        "showProgress": "Learning progress",
+        "showTimeline": "Activity timeline",
+        "showFollowers": "Followers"
+      }
+    },
     "items": {
       "editProfile": "Edit profile",
       "appearance": "Appearance",
+      "privacy": "Privacy",
       "notifications": "Notifications",
       "security": "Security",
       "sessions": "Devices",
@@ -268,6 +294,22 @@
       "blog": "Blog",
       "talents": "Talents",
       "membership": "Membership"
+    },
+    "purchase": {
+      "title": "Confirm your purchase",
+      "planLabel": "You are buying",
+      "amountLabel": "Amount due",
+      "methodLabel": "Payment method",
+      "notice": "Pressing continue takes you to the payment gateway. Nothing is charged until you complete the payment there.",
+      "confirm": "Continue to payment",
+      "failed": "Could not start the checkout. No payment was taken — please try again.",
+      "methods": {
+        "payos": "PayOS",
+        "sepay": "SePay",
+        "stripe": "Stripe",
+        "paypal": "PayPal",
+        "crypto": "Crypto"
+      }
     },
     "learning": {
       "loadMore": "Load more",
@@ -322,7 +364,11 @@
         "lessonsEmpty": "No lessons read recently.",
         "lessonsProgress": "Lessons: {completed}/{total} ({percent}%)",
         "challengesProgress": "Challenges: {completed}/{total}",
-        "milestonesProgress": "Milestones: {completed}/{total}"
+        "milestonesProgress": "Milestones: {completed}/{total}",
+        "error": "Couldn't load your courses.",
+        "retry": "Try again",
+        "progress": "{percent}% complete",
+        "open": "Open course"
       },
       "detail": {
         "searchLessons": "Search lessons",
@@ -433,7 +479,6 @@
     "collapseRightRail": "Hide right rail",
     "expandRightRail": "Show right rail",
     "dashboard": "Dashboard",
-    "myCourses": "My courses",
     "teaching": "Courses I teach",
     "guestPrompt": "Sign in to track your progress",
     "systemTheme": "System theme"
@@ -1870,6 +1915,15 @@
   "aiSettings": {
     "title": "FrosTES Settings",
     "subtitle": "Choose your AI source and manage your own API key",
+    "retry": "Try again",
+    "laneLabel": "AI source",
+    "planLabel": "Current plan",
+    "planFree": "Free",
+    "byokKeyRequired": "Enter an API key for this provider before saving.",
+    "providerName": {
+      "gemini": "Google Gemini",
+      "openai": "OpenAI"
+    },
     "effectiveNow": "Currently using",
     "gradeWith": "Grade with FrosTES",
     "pickModel": "Pick a model",
@@ -1953,11 +2007,15 @@
       "discount": "20% off every FTES AOS course",
       "recruitment": "Get your profile in front of hiring partners"
     },
-    "priceApprox": "Approximately $5/month"
+    "priceApprox": "Approximately $5/month",
+    "perksTitle": "What you get"
   },
   "aiSubscription": {
     "title": "FrosTES Plans",
     "subtitle": "Upgrade for more weekly FrosTES credits",
+    "error": "Couldn't load the FrosTES plans.",
+    "retry": "Try again",
+    "empty": "No FrosTES plan is on sale right now.",
     "perMonth": "/month",
     "priceUsdHint": "≈ {amount} for international payments",
     "popular": "Popular",
@@ -2085,9 +2143,6 @@
       "meta": "Issued {date} · Verify code {code}",
       "view": "Open verification page",
       "revoked": "Revoked"
-    },
-    "hero": {
-      "coverAlt": "Profile cover"
     },
     "personal": {
       "about": "About",
@@ -4472,6 +4527,7 @@
       "eyebrow": "Achievements",
       "title": "What we've achieved",
       "viewDetail": "View details",
+      "press": "In the press",
       "regionLabel": "FTES achievements",
       "prev": "Previous achievement",
       "next": "Next achievement",
@@ -4514,6 +4570,7 @@
       "eyebrow": "What you get at FTES",
       "title": "Offers & policies",
       "tabsAria": "Offer and policy groups",
+      "swipeAria": "Swipe through the offer and policy groups",
       "cta": "Browse courses",
       "groups": {
         "newLearner": {
@@ -5368,6 +5425,7 @@
       "statistics": "Statistics",
       "career": "Career"
     },
+    "navLabel": "Subject areas",
     "overview": {
       "title": "Subject overview",
       "linkedCourses": "Courses for this subject",
@@ -7429,6 +7487,8 @@
     "accent": {
       "label": "Accent color",
       "default": "Default",
+      "custom": "Custom color",
+      "reset": "Reset",
       "names": {
         "indigo": "Indigo blue",
         "pink": "Pink",
@@ -7440,10 +7500,21 @@
     },
     "effect": {
       "label": "Background effect",
-      "enabled": "Enable effect",
       "direction": "Direction",
       "rise": "Rise up",
-      "fall": "Fall like meteors"
+      "fall": "Fall like meteors",
+      "names": {
+        "none": "Off",
+        "ember": "Embers",
+        "wave": "Waves",
+        "snow": "Snow",
+        "rain": "Rain",
+        "bubbles": "Bubbles",
+        "fireflies": "Fireflies",
+        "stars": "Starfield",
+        "aurora": "Aurora",
+        "circuit": "Circuit"
+      }
     },
     "speed": {
       "label": "Speed",
@@ -8377,6 +8448,16 @@
       "title": "Term not found",
       "description": "The term in this link does not exist. Pick a term above, or go back to the latest board.",
       "action": "Show the latest term"
+    }
+  },
+  "linkPreview": {
+    "ariaLabel": "Link preview: {title}",
+    "imageAlt": "Link preview image"
+  },
+  "seo": {
+    "communityPost": {
+      "title": "Community post",
+      "description": "Read this discussion and join in on the FTES community."
     }
   }
 }

@@ -90,6 +90,15 @@ export const pathConfig = () => {
                     build,
                 }
             }
+            const privacy = () => {
+                const privacyPath = `${settingsPath}/privacy`
+                const build = () => {
+                    return privacyPath
+                }
+                return {
+                    build,
+                }
+            }
             const aiSettings = () => {
                 const aiSettingsPath = `${settingsPath}/ai-settings`
                 const build = () => {
@@ -183,6 +192,7 @@ export const pathConfig = () => {
                 notifications,
                 sessions,
                 security,
+                privacy,
                 learning,
                 submissions,
                 attempts,

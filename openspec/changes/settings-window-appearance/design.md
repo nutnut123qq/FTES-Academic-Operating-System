@@ -25,7 +25,7 @@
 Sếp nói "cửa sổ setting"; chọn **trang** vì link + i18n + path builder đã có sẵn và đang chết — dựng trang là vừa làm đúng yêu cầu vừa vá link 404 bằng cùng một diff. Modal thì `/profile/settings` vẫn 404 và cây `pathConfig` vẫn mồ côi.
 *Đã cân nhắc:* giữ modal đổi tên thành `SettingsModal` (rẻ hơn ~30 dòng nhưng để lại link chết); làm cả hai (2 nguồn sự thật cho cùng một thứ — loại).
 
-**2. Trang nằm trong `ProfileShell`, không tự dựng layout.**
+**2. Trang nằm trong `ProfileShell`, không tự dựng layout.** *(ĐÃ BỊ ĐẢO NGƯỢC — xem "Ghi chú thứ tự archive" trong proposal: `/profile/settings/*` nay đứng riêng với `SettingsShell`, theo change `profile-menu-quests-and-standalone-settings`. Giữ lại đây làm lịch sử quyết định, KHÔNG phải mô tả hiện trạng.)*
 `src/app/[locale]/profile/settings/page.tsx` tự động ăn `profile/layout.tsx` → cùng khung identity + tabs như `/profile/edit`. Không thêm tab "Cài đặt" vào `SECTIONS` của `ProfileShell`: Cài đặt không phải một section hồ sơ công khai, và `/profile/edit` hôm nay cũng đã sống ngoài tab-set (tab rơi về "personal"). Nhất quán với hiện trạng, 0 dòng thêm.
 *Đã cân nhắc:* route group riêng `(settings)` với sidebar nav trái kiểu `starci-academy` — thừa khi chỉ có một mục.
 

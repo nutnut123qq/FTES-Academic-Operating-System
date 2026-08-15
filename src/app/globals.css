@@ -314,12 +314,87 @@ html {
 
 .mascot-bob { animation: mascotBob 2.8s ease-in-out infinite; }
 
+/*
+ * Ambient background effects (blocks/layout/AmbientBackground/effects) — the eight
+ * named looks besides the app's own spark field, picked in Settings → Appearance.
+ * All transform/opacity only (compositor thread), all tinted via `var(--accent)` so
+ * they retint automatically with the chosen accent colour, and all guarded under
+ * `prefers-reduced-motion` below. Never rendered over content-dense routes.
+ */
+
+/* snowFall — flakes drifting straight down with a light horizontal wander. */
+@keyframes snowFall {
+    0% { transform: translateY(-10vh) translateX(0); opacity: 0; }
+    8% { opacity: 0.9; }
+    92% { opacity: 0.9; }
+    100% { transform: translateY(110vh) translateX(var(--drift, 0)); opacity: 0; }
+}
+
+/* rainFall — thin streaks falling fast, slightly tilted. */
+@keyframes rainFall {
+    0% { transform: translateY(-20vh) rotate(8deg); opacity: 0; }
+    10% { opacity: 0.7; }
+    100% { transform: translateY(120vh) rotate(8deg); opacity: 0; }
+}
+
+/* bubbleRise — hollow circles rising with a wobble (reuses the ember rise arc;
+   a wider drift reads as a wobble rather than a straight line). */
+@keyframes bubbleRise {
+    0% { transform: translateY(0) translateX(0) scale(0.85); opacity: 0; }
+    12% { opacity: 0.8; }
+    85% { opacity: 0.6; }
+    100% { transform: translateY(-100vh) translateX(var(--drift, 0)) scale(1.05); opacity: 0; }
+}
+
+/* fireflyDrift — small aimless wander + flicker, scattered across the viewport
+   (not bottom-anchored like the rising effects). */
+@keyframes fireflyDrift {
+    0%, 100% { transform: translate(0, 0); opacity: 0.15; }
+    25% { transform: translate(var(--drift, 0), -14px); opacity: 0.9; }
+    50% { transform: translate(calc(var(--drift, 0) * -1), 6px); opacity: 0.3; }
+    75% { transform: translate(calc(var(--drift, 0) * 0.5), -8px); opacity: 0.85; }
+}
+
+/* starTwinkle — fixed-position dots, opacity pulse only (no motion at all). */
+@keyframes starTwinkle {
+    0%, 100% { opacity: 0.15; }
+    50% { opacity: 0.95; }
+}
+
+/* auroraDrift — large soft blurred ribbons swaying slowly side to side. */
+@keyframes auroraDrift {
+    0%, 100% { transform: translateX(-6%) translateY(0) scale(1); }
+    50% { transform: translateX(6%) translateY(-3%) scale(1.08); }
+}
+
+/* waveDrift — layered wave tiles scrolling horizontally at different speeds
+   (each layer sets its own animation-duration inline for the parallax). */
+@keyframes waveDrift {
+    to { transform: translateX(-50%); }
+}
+
+/* circuitPulse — the whole grid overlay breathing in and out. */
+@keyframes circuitPulse {
+    0%, 100% { opacity: 0.35; }
+    50% { opacity: 0.75; }
+}
+
 @media (prefers-reduced-motion: reduce) {
     /* reduced-motion always wins over the appearance setting — both ambient modes
        are fully hidden (not just frozen), regardless of the stored config */
     .ambient-ember, .ambient-meteor { animation: none !important; opacity: 0 !important; }
     .app-splash-bar { animation: none !important; width: 40% !important; }
     .mascot-bob { animation: none !important; }
+    /* ambient background effects: kill motion, keep a faint static hint (except
+       the fully-particle effects, which just disappear — a frozen mid-flight
+       snowflake/raindrop/bubble reads as debris, not atmosphere) */
+    .ambient-snow, .ambient-rain, .ambient-bubble, .ambient-firefly {
+        animation: none !important; opacity: 0 !important;
+    }
+    .ambient-star { animation: none !important; opacity: 0.4 !important; }
+    .ambient-aurora { animation: none !important; }
+    .ambient-wave { animation: none !important; }
+    .ambient-circuit { animation: none !important; opacity: 0.35 !important; }
 }
 
 /*

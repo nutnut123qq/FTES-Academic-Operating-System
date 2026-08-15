@@ -200,10 +200,15 @@ export const JourneyHero = () => {
                 </div>
             </div>
 
-            {/* visual column — 3D scene (>= lg, motion, WebGL) or static journey */}
+            {/* visual column — 3D scene (>= lg, motion, WebGL) or static journey.
+                HIDDEN below `lg`: the static fallback repeats the SAME five stations the stepper
+                on the left already lists, so on a phone the section read as the journey twice
+                (a vertical list, then a squeezed icon+arrow row that collided with itself). The
+                node stays MOUNTED and only CSS-hidden, so the fallback copy is still in the
+                server-rendered HTML for crawlers, and >= lg is untouched. */}
             <div
                 ref={heroRef}
-                className="relative min-h-[360px] w-full lg:min-h-[480px]"
+                className="relative hidden w-full lg:block lg:min-h-[480px]"
                 onMouseEnter={() => setPaused(true)}
                 onMouseLeave={() => setPaused(false)}
             >

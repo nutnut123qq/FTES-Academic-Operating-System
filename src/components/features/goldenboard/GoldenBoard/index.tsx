@@ -78,12 +78,19 @@ const PODIUM_CELL = [
     "sm:col-start-3 sm:row-start-1 sm:mt-6",
 ] as const
 
-/** Name in the gold metallic gradient — shared by the podium cards and the list rows. */
+/**
+ * Name in the gold metallic gradient — shared by the podium cards and the list rows.
+ *
+ * `break-words` + a smaller card size below `md`: an uppercase full name at `text-xl` is wider
+ * than a podium card once the grid goes three-up at `sm` (~190px of content), and the card is a
+ * `flex-col items-center` box, so anything that cannot wrap simply hangs out of the border.
+ * Desktop (`md:` and up) keeps the original `text-xl`.
+ */
 const GoldName = ({ name, size }: { name: string; size: "card" | "row" }) => (
     <span
         className={cn(
-            "bg-clip-text font-bold uppercase tracking-wide text-transparent",
-            size === "card" ? "text-xl" : "text-base",
+            "max-w-full break-words bg-clip-text font-bold uppercase tracking-wide text-transparent",
+            size === "card" ? "text-lg md:text-xl" : "text-base",
         )}
         style={{ backgroundImage: GOLD_TEXT_GRADIENT }}
     >
@@ -168,7 +175,7 @@ export const splitGoldenBoard = (entries: ReadonlyArray<GoldenBoardEntryView>) =
 const PodiumCard = ({ row, position }: { row: BoardRow; position: number }) => (
     <div
         className={cn(
-            "relative flex flex-col items-center gap-3 rounded-2xl border border-separator bg-surface/60 p-6 text-center backdrop-blur-md",
+            "relative flex min-w-0 flex-col items-center gap-3 rounded-2xl border border-separator bg-surface/60 p-5 text-center backdrop-blur-md sm:p-6",
             "transition-all duration-300 hover:border-warning/40 hover:shadow-lg hover:shadow-warning/20",
             PODIUM_CELL[position],
         )}
@@ -182,19 +189,23 @@ const PodiumCard = ({ row, position }: { row: BoardRow; position: number }) => (
         <MaybeLink href={row.href}>
             <GoldName name={row.name} size="card" />
         </MaybeLink>
-        {/* Long highlights ("CÓC VÀNG · SP25") drop a size so they never wrap inside the card. */}
+        {/* Long highlights ("CÓC VÀNG · SP25") drop a size so they never wrap inside the card.
+            Below `md` that is not enough: `whitespace-nowrap` at `text-3xl` is wider than the card
+            on a phone (and than a third of the row once the podium goes three-up at `sm`), and it
+            escaped the border instead of clipping. So under `md` the highlight is allowed to wrap
+            (`break-words`) at one size down; `md:` and up keep the original nowrap look exactly. */}
         {row.headline ? (
             <span
                 className={cn(
-                    "whitespace-nowrap font-semibold text-warning",
-                    row.headline.length > 9 ? "text-2xl" : "text-3xl",
+                    "max-w-full break-words font-semibold text-warning md:whitespace-nowrap",
+                    row.headline.length > 9 ? "text-xl md:text-2xl" : "text-2xl md:text-3xl",
                 )}
             >
                 {row.headline}
             </span>
         ) : null}
         {row.lines.length > 0 ? (
-            <ul className="flex flex-col gap-2">
+            <ul className="flex max-w-full flex-col gap-2 break-words">
                 {row.lines.map((line, index) => (
                     <li key={index}>
                         <Typography type="body-sm" color="muted">
@@ -225,7 +236,7 @@ const BoardListRow = ({ row, position }: { row: BoardRow; position: number }) =>
         <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
             {/* identity — start-aligned in both layouts (`items-start` also keeps the linked
                 name from stretching, so its hover underline hugs the text) */}
-            <div className="flex min-w-0 flex-col items-start gap-2">
+            <div className="flex min-w-0 max-w-full flex-col items-start gap-2 break-words">
                 <MaybeLink href={row.href}>
                     <Typography type="body" weight="semibold">
                         {row.name}
@@ -238,7 +249,7 @@ const BoardListRow = ({ row, position }: { row: BoardRow; position: number }) =>
                 ) : null}
             </div>
             {row.lines.length > 0 ? (
-                <ul className="flex min-w-0 flex-col gap-2 sm:items-end sm:text-right">
+                <ul className="flex min-w-0 flex-col gap-2 break-words sm:items-end sm:text-right">
                     {row.lines.map((line, index) => (
                         <li key={index}>
                             <Typography type="body-sm" color="muted">

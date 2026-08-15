@@ -44,16 +44,78 @@ const GROUP_ICON: Record<string, Icon> = {
 }
 
 /**
- * "Ưu đãi & chính sách" — the eight verbatim FTES offer/policy groups. Desktop: a tab
- * rail on the left, one detail panel on the right. Every panel is kept MOUNTED and only
- * CSS-hidden for the inactive ones, so ALL offer copy exists in the server-rendered HTML
- * (SEO — spec: inactive panels hidden, not unmounted). Keyboard-operable tabs. A closing
- * CTA routes to `/courses`.
+ * One offer group's copy (icon + title + verbatim bullet lines) — the SAME body rendered by
+ * the desktop tab panel and by the mobile swipe card, so the two surfaces cannot drift.
+ */
+const OfferGroupBody = ({ groupKey, lineCount }: { groupKey: string; lineCount: number }) => {
+    const t = useTranslations("homeLanding")
+    const GroupIcon = GROUP_ICON[groupKey] ?? GiftIcon
+    return (
+        <>
+            <div className="mb-6 flex items-center gap-3">
+                <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
+                    <GroupIcon className="size-6" aria-hidden focusable="false" />
+                </div>
+                <Typography type="h5" weight="bold">
+                    {t(`offers.groups.${groupKey}.title`)}
+                </Typography>
+            </div>
+            <ul className="flex flex-col gap-3">
+                {Array.from({ length: lineCount }, (_, li) => (
+                    <li key={li} className="flex items-start gap-2">
+                        <CheckCircleIcon className="mt-0.5 size-5 shrink-0 text-success" aria-hidden focusable="false" />
+                        <Typography type="body" color="muted">
+                            {t(`offers.groups.${groupKey}.lines.${li}`)}
+                        </Typography>
+                    </li>
+                ))}
+            </ul>
+        </>
+    )
+}
+
+/**
+ * "Ưu đãi & chính sách" — the eight verbatim FTES offer/policy groups.
+ *
+ * Desktop (`lg:`) is unchanged: a tab rail on the left, one detail panel on the right inside the
+ * showcase mockup. Every panel is kept MOUNTED and only CSS-hidden for the inactive ones, so ALL
+ * offer copy exists in the server-rendered HTML (SEO — spec: inactive panels hidden, not
+ * unmounted). Keyboard-operable tabs. A closing CTA routes to `/courses`.
+ *
+ * BELOW `lg` the tab rail is hidden entirely — eight chips wrapped into a ragged three-line block
+ * that pushed the panel off screen. The groups become a horizontal SWIPE strip instead: plain CSS
+ * scroll-snap (`overflow-x-auto` + `snap-x snap-mandatory` on the track, `snap-center` per card),
+ * no carousel library, with dots underneath that both report and set the position. The mockup
+ * chrome is dropped on that path: its 16:9 `aspect-video` content box CLIPS a four-line offer group
+ * at phone widths, so the cards render as ordinary bordered surfaces there.
  */
 export const OffersPolicySection = () => {
     const t = useTranslations("homeLanding")
     const router = useRouter()
     const [active, setActive] = React.useState(0)
+
+    // mobile swipe strip: which card is centred (dots only — the scroll itself is native CSS).
+    const trackRef = React.useRef<HTMLUListElement>(null)
+    const [slide, setSlide] = React.useState(0)
+
+    /**
+     * Card whose box crosses the middle of the track = the one the reader is on. Measured with
+     * `getBoundingClientRect` rather than `offsetLeft`, which is relative to whatever positioned
+     * ancestor happens to exist above the track and would drift by that offset.
+     */
+    const syncSlide = () => {
+        const track = trackRef.current
+        if (!track) return
+        const middle = track.getBoundingClientRect().left + track.clientWidth / 2
+        const cards = Array.from(track.children)
+        const index = cards.findIndex((card) => card.getBoundingClientRect().right > middle)
+        setSlide(index === -1 ? cards.length - 1 : index)
+    }
+
+    const goToSlide = (index: number) => {
+        const card = trackRef.current?.children[index]
+        card?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" })
+    }
 
     return (
         <section className="w-full border-y border-separator bg-default/20">
@@ -68,9 +130,9 @@ export const OffersPolicySection = () => {
                 </div>
 
                 <div className="mx-auto grid max-w-4xl grid-cols-1 items-center gap-6 lg:grid-cols-[15rem_1fr] lg:gap-8">
-                    {/* tab rail */}
+                    {/* tab rail — desktop only; below `lg` the swipe strip replaces it */}
                     <div
-                        className="flex flex-row flex-wrap gap-2 lg:flex-col"
+                        className="hidden gap-2 lg:flex lg:flex-col"
                         role="tablist"
                         aria-label={t("offers.tabsAria")}
                     >
@@ -116,18 +178,16 @@ export const OffersPolicySection = () => {
                         đồng bộ hero look. 8 panel VẪN mounted, inactive chỉ `hidden` (không
                         unmount) → mọi copy ưu đãi vẫn trong HTML server-render (crawlable). */}
                     <div>
-                        <ShowcaseMockup
-                            url="ftes.edu.vn/uu-dai"
-                            tilt="left"
-                            aspect="video"
-                            backdrop="none"
-                            theme={NEUTRAL_DEPTH}
-                            contentClassName="flex flex-col justify-center p-6"
-                        >
-                            {OFFER_GROUPS.map((group, i) => {
-                                const GroupIcon = GROUP_ICON[group.key] ?? GiftIcon
-                                const lines = Array.from({ length: group.lineCount }, (_, li) => li)
-                                return (
+                        <div className="hidden lg:block">
+                            <ShowcaseMockup
+                                url="ftes.edu.vn/uu-dai"
+                                tilt="left"
+                                aspect="video"
+                                backdrop="none"
+                                theme={NEUTRAL_DEPTH}
+                                contentClassName="flex flex-col justify-center p-6"
+                            >
+                                {OFFER_GROUPS.map((group, i) => (
                                     <div
                                         key={group.key}
                                         id={`offer-panel-${group.key}`}
@@ -135,29 +195,46 @@ export const OffersPolicySection = () => {
                                         aria-labelledby={`offer-tab-${group.key}`}
                                         hidden={i !== active}
                                     >
-                                        <div className="mb-6 flex items-center gap-3">
-                                            <div className="flex size-11 items-center justify-center rounded-full bg-accent/10 text-accent">
-                                                <GroupIcon className="size-6" aria-hidden focusable="false" />
-                                            </div>
-                                            <Typography type="h5" weight="bold">
-                                                {t(`offers.groups.${group.key}.title`)}
-                                            </Typography>
-                                        </div>
-                                        <ul className="flex flex-col gap-3">
-                                            {lines.map((li) => (
-                                                <li key={li} className="flex items-start gap-2">
-                                                    <CheckCircleIcon className="mt-0.5 size-5 shrink-0 text-success" aria-hidden focusable="false" />
-                                                    <Typography type="body" color="muted">
-                                                        {t(`offers.groups.${group.key}.lines.${li}`)}
-                                                    </Typography>
-                                                </li>
-                                            ))}
-                                        </ul>
+                                        <OfferGroupBody groupKey={group.key} lineCount={group.lineCount} />
                                     </div>
-                                )
-                            })}
-                        </ShowcaseMockup>
-                        <div className="mt-6 flex justify-start">
+                                ))}
+                            </ShowcaseMockup>
+                        </div>
+
+                        {/* mobile: swipe strip (CSS scroll-snap) + position dots */}
+                        <div className="lg:hidden">
+                            <ul
+                                ref={trackRef}
+                                onScroll={syncSlide}
+                                aria-label={t("offers.swipeAria")}
+                                className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:-mx-6 sm:px-6 [&::-webkit-scrollbar]:hidden"
+                            >
+                                {OFFER_GROUPS.map((group) => (
+                                    <li key={group.key} className="w-[85%] shrink-0 snap-center">
+                                        <div className="flex h-full flex-col rounded-2xl border border-default bg-surface p-5">
+                                            <OfferGroupBody groupKey={group.key} lineCount={group.lineCount} />
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                            <div className="mt-4 flex justify-center gap-2">
+                                {OFFER_GROUPS.map((group, i) => (
+                                    <button
+                                        key={group.key}
+                                        type="button"
+                                        aria-label={t(`offers.groups.${group.key}.title`)}
+                                        aria-current={i === slide}
+                                        onClick={() => goToSlide(i)}
+                                        className={cn(
+                                            "size-2 rounded-full transition-colors",
+                                            i === slide ? "bg-accent" : "bg-default",
+                                        )}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="mt-6 flex justify-center lg:justify-start">
                             <Button variant="primary" onPress={() => router.push("/courses")}>
                                 {t("offers.cta")}
                                 <ArrowRightIcon className="size-4" aria-hidden focusable="false" />

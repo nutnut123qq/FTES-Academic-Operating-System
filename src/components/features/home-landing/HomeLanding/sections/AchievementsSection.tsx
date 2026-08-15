@@ -15,7 +15,8 @@ const ACHIEVEMENT_INTERVAL_MS = 4_500
 /**
  * One milestone slide: the real event photo with the year badge on it, the localized
  * title, a rank chip for ranked recognitions, a clamped description and — when public
- * evidence exists — a "Xem chi tiết" link out to the original post.
+ * evidence exists — a "Xem chi tiết" link out to the original post plus the list of
+ * newspaper articles covering the milestone (each opened in a new tab).
  */
 const AchievementSlide = ({ item }: { item: AchievementStat }) => {
     const t = useTranslations("homeLanding")
@@ -56,16 +57,43 @@ const AchievementSlide = ({ item }: { item: AchievementStat }) => {
             title={title}
             description={t(`achievements.items.${item.key}.description`)}
             footer={
-                item.href ? (
-                    <Link
-                        href={item.href}
-                        target="_blank"
-                        rel="noopener"
-                        className="inline-flex items-center gap-2 text-sm text-accent"
-                    >
-                        {t("achievements.viewDetail")}
-                        <ArrowRightIcon aria-hidden focusable="false" className="size-4" />
-                    </Link>
+                item.href || item.press?.length ? (
+                    <div className="flex flex-col gap-3">
+                        {item.href ? (
+                            <Link
+                                href={item.href}
+                                target="_blank"
+                                rel="noopener"
+                                className="inline-flex items-center gap-2 text-sm text-accent"
+                            >
+                                {t("achievements.viewDetail")}
+                                <ArrowRightIcon aria-hidden focusable="false" className="size-4" />
+                            </Link>
+                        ) : null}
+                        {item.press?.length ? (
+                            <div className="flex flex-col gap-1">
+                                <Typography type="body-sm" color="muted">
+                                    {t("achievements.press")}
+                                </Typography>
+                                <ul className="flex flex-col gap-1">
+                                    {item.press.map((article) => (
+                                        <li key={article.url}>
+                                            <Link
+                                                href={article.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                // line-clamp-1 keeps one headline to one row so a
+                                                // five-article card stays the height of a card
+                                                className="line-clamp-1 text-sm text-accent"
+                                            >
+                                                {article.source} — {article.title}
+                                            </Link>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        ) : null}
+                    </div>
                 ) : null
             }
         />

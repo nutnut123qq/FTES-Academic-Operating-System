@@ -16,6 +16,7 @@ import { usePathname, useRouter } from "@/i18n/navigation"
 import { CollapsibleSidebar } from "@/components/blocks/navigation/CollapsibleSidebar"
 import { SidebarNavGroup } from "@/components/blocks/navigation/SidebarNavGroup"
 import { SidebarNavItem } from "@/components/blocks/navigation/SidebarNavItem"
+import { TabsCard } from "@/components/blocks/navigation/TabsCard"
 import { ProgressMeter } from "@/components/blocks/stats/ProgressMeter"
 import { useQuerySubjectSwr } from "../hooks/useQuerySubjectSwr"
 
@@ -67,6 +68,9 @@ const NAV_GROUPS: Array<{ label: string; items: Array<NavItem> }> = [
     },
 ]
 
+/** The same rows, flattened — the mobile tab strip has no group captions. */
+const NAV_ITEMS: Array<NavItem> = NAV_GROUPS.flatMap((group) => group.items)
+
 /**
  * Subject Workspace shell (archetype A · sidebar rail — chosen 2026-07-01). The
  * subject identity header (cover banner + identity row) sits ABOVE both columns;
@@ -74,6 +78,10 @@ const NAV_GROUPS: Array<{ label: string; items: Array<NavItem> }> = [
  * separator-divided clusters and the content region carries the active tab — so
  * the rail and the tab content share one top edge at every breakpoint. Sticky
  * one-scroll (the body scrolls; the rail sticks under the 4rem navbar).
+ *
+ * Under `md` the rail is dropped from the layout (not just collapsed) so the tab
+ * content gets the FULL phone width; the same areas are reached from a horizontally
+ * scrolling tab strip pinned above the content.
  *
  * Feature owns data (mock subject) + active-route detection + navigation; the
  * blocks own all styling.
@@ -95,6 +103,9 @@ export const SubjectWorkspaceShell = ({ subjectId, children }: SubjectWorkspaceS
     const hrefFor = (segment: string) => (segment ? `${base}/${segment}` : base)
     const isActive = (segment: string) =>
         segment ? pathname.startsWith(`${base}/${segment}`) : pathname === base
+    // mobile strip is a controlled tab group → it needs the active row as a KEY
+    // (falls back to overview on a page outside the rail, e.g. `/ai`)
+    const activeKey = NAV_ITEMS.find((item) => isActive(item.segment))?.key ?? "overview"
 
     return (
         // Column stack, NOT a bare row: the identity header spans the FULL width ABOVE
@@ -159,7 +170,10 @@ export const SubjectWorkspaceShell = ({ subjectId, children }: SubjectWorkspaceS
             </header>
 
             <div className="flex w-full flex-1">
-                <div className="shrink-0 md:sticky md:top-16 md:h-[calc(100dvh-4rem)]">
+                {/* the rail is DESKTOP-ONLY: on a phone a 16rem column (even collapsed
+                    to 4rem) eats the content width, so it is dropped from the layout
+                    entirely and the same areas ride the mobile strip below instead. */}
+                <div className="hidden shrink-0 md:sticky md:top-16 md:block md:h-[calc(100dvh-4rem)]">
                     <CollapsibleSidebar
                         title={subject?.code ?? subjectId.toUpperCase()}
                         collapseLabel={t("collapse")}
@@ -187,7 +201,34 @@ export const SubjectWorkspaceShell = ({ subjectId, children }: SubjectWorkspaceS
                     </CollapsibleSidebar>
                 </div>
 
-                <div className="min-w-0 flex-1">{children}</div>
+                <div className="min-w-0 flex-1">
+                    {/* mobile replacement for the rail: the SAME rows as one underline
+                        tab strip above the content, scrolling horizontally at its
+                        natural width (`w-max`) instead of squeezing 7 labels into a
+                        phone width — the repo's canonical overflow pattern. Labels stay
+                        visible (no icons passed): an icon-only strip would be the block's
+                        mobile mode, which drops the label on exactly this breakpoint. */}
+                    <div className="overflow-x-auto border-b border-separator px-4 md:hidden">
+                        <TabsCard
+                            className="w-max"
+                            leftTabs={{
+                                ariaLabel: t("navLabel"),
+                                selectedKey: activeKey,
+                                items: NAV_ITEMS.map((item) => ({
+                                    key: item.key,
+                                    label: t(`nav.${item.key}`),
+                                })),
+                                onSelectionChange: (key) => {
+                                    const next = NAV_ITEMS.find((item) => item.key === String(key))
+                                    if (next) {
+                                        router.push(hrefFor(next.segment))
+                                    }
+                                },
+                            }}
+                        />
+                    </div>
+                    {children}
+                </div>
             </div>
         </div>
     )

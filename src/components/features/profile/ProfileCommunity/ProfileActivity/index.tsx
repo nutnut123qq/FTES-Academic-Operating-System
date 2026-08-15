@@ -1,10 +1,12 @@
 "use client"
 
-import React from "react"
-import { Avatar, AvatarFallback, AvatarImage, Typography } from "@heroui/react"
+import React, { useState } from "react"
+import { Avatar, AvatarFallback, AvatarImage, Button, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import {
     CalendarCheckIcon,
+    CaretDownIcon,
+    CaretUpIcon,
     ChatCircleIcon,
     CheckCircleIcon,
     CoinsIcon,
@@ -15,7 +17,8 @@ import {
     UsersThreeIcon,
     type Icon,
 } from "@phosphor-icons/react"
-import { useQueryActivitySwr, type ActivityKind } from "@/components/features/activity/hooks/useQueryActivitySwr"
+import { useQueryActivitySwr } from "@/components/features/activity/hooks/useQueryActivitySwr"
+import { activityMessageKey, type ActivityKind } from "@/components/features/activity/model"
 
 /** Kind → phosphor icon. */
 const KIND_ICON: Record<ActivityKind, Icon> = {
@@ -42,13 +45,25 @@ const relativeTime = (iso: string): string => {
     return `${days}d`
 }
 
+/** Rows shown before the reader asks for more. */
+const ROWS_VISIBLE = 5
+
 /**
  * Profile-flavored activity timeline. Reuses the same data hook as the global
  * Activity Timeline but renders compact rows that fit inside a `LabeledCard`.
+ *
+ * Each row is ONE sentence (`activity.events.*`, resolved from the dotted BE type by
+ * `activityMessageKey`) plus its timestamp. The kind caption that used to sit above the
+ * sentence is gone: the icon already carries the kind, and as text it printed the word
+ * "Activity" on every row whose type fell outside the small hand-mapped set.
+ *
+ * The hook loads one page (30 rows) in a single request, so "show more" only expands
+ * what is already in memory — no extra fetch, no pagination state.
  */
 export const ProfileActivity = () => {
     const t = useTranslations("activity")
     const { activity } = useQueryActivitySwr()
+    const [expanded, setExpanded] = useState(false)
 
     if (activity.length === 0) {
         return (
@@ -58,30 +73,46 @@ export const ProfileActivity = () => {
         )
     }
 
+    const visible = expanded ? activity : activity.slice(0, ROWS_VISIBLE)
+    const hidden = activity.length - ROWS_VISIBLE
+
     return (
-        <ul className="flex flex-col divide-y divide-separator">
-            {activity.map((item) => {
-                const Icon = KIND_ICON[item.kind]
-                return (
-                    <li key={item.id} className="flex items-start gap-3 py-3">
-                        <div className="flex size-9 shrink-0 items-center justify-center rounded-large bg-accent/10 text-accent">
-                            <Icon className="size-4" aria-hidden focusable="false" />
-                        </div>
-                        <div className="flex min-w-0 flex-1 flex-col gap-0">
-                            <Typography type="body-xs" weight="medium" className="text-accent">
-                                {t(`kinds.${item.kind}`)}
+        <div className="flex flex-col gap-0">
+            <ul className="flex flex-col divide-y divide-separator">
+                {visible.map((item) => {
+                    const Icon = KIND_ICON[item.kind]
+                    return (
+                        <li key={item.id} className="flex items-center gap-3 py-3">
+                            <div className="flex size-9 shrink-0 items-center justify-center rounded-large bg-accent/10 text-accent">
+                                <Icon className="size-4" aria-hidden focusable="false" />
+                            </div>
+                            <Typography type="body-sm" className="min-w-0 flex-1 text-foreground">
+                                {t(`events.${activityMessageKey(item.type)}`)}
                             </Typography>
-                            <Typography type="body-sm" className="text-foreground">
-                                {item.text}
+                            <Typography type="body-xs" color="muted" className="shrink-0 whitespace-nowrap">
+                                {relativeTime(item.time)}
                             </Typography>
-                        </div>
-                        <Typography type="body-xs" color="muted" className="shrink-0 whitespace-nowrap">
-                            {relativeTime(item.time)}
-                        </Typography>
-                    </li>
-                )
-            })}
-        </ul>
+                        </li>
+                    )
+                })}
+            </ul>
+            {hidden > 0 ? (
+                <div className="mt-3 flex justify-center">
+                    <Button
+                        variant="tertiary"
+                        size="sm"
+                        onPress={() => setExpanded((prev) => !prev)}
+                    >
+                        {expanded ? t("showLess") : t("showMore", { count: hidden })}
+                        {expanded ? (
+                            <CaretUpIcon aria-hidden focusable="false" className="size-4" />
+                        ) : (
+                            <CaretDownIcon aria-hidden focusable="false" className="size-4" />
+                        )}
+                    </Button>
+                </div>
+            ) : null}
+        </div>
     )
 }
 

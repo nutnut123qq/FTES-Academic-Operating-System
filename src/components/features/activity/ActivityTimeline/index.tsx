@@ -17,7 +17,8 @@ import {
 import { useTranslations } from "next-intl"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
-import { useQueryActivitySwr, type ActivityKind } from "../hooks/useQueryActivitySwr"
+import { useQueryActivitySwr } from "../hooks/useQueryActivitySwr"
+import { activityMessageKey, type ActivityKind } from "../model"
 
 /** Kind → phosphor icon. Each row's badge uses the accent-tinted token pair. */
 const KIND_ICON: Record<ActivityKind, Icon> = {
@@ -63,9 +64,9 @@ const TimelineSkeleton = () => (
 /**
  * Activity timeline (§18) — the FE surface of the Activity Engine backbone (which is
  * BE). A vertical feed of the user's recent actions: each row is an accent-tinted
- * icon badge (by kind) + the event text + a relative timestamp, separated by rows.
- * Feature owns data (mock) + kind→icon map; tokens own the look. ponytail: plain
- * divided rows, coarse relative time, mock feed — no BE contract yet.
+ * icon badge (by kind) + one localized sentence for the event + a relative timestamp.
+ * The sentence comes from `activityMessageKey` + `activity.events.*`; unknown BE types
+ * read "Other activity" rather than leaking their dotted identifier.
  */
 export const ActivityTimeline = () => {
     const t = useTranslations("activity")
@@ -102,18 +103,16 @@ export const ActivityTimeline = () => {
                     {activity.map((item) => {
                         const Icon = KIND_ICON[item.kind]
                         return (
-                            <li key={item.id} className="flex items-start gap-4 py-4">
+                            <li key={item.id} className="flex items-center gap-4 py-4">
                                 <div className="flex size-10 shrink-0 items-center justify-center rounded-large bg-accent/10 text-accent">
                                     <Icon className="size-5" aria-hidden />
                                 </div>
-                                <div className="flex min-w-0 flex-1 flex-col gap-0">
-                                    <Typography type="body-xs" weight="medium" className="text-accent">
-                                        {t(`kinds.${item.kind}`)}
-                                    </Typography>
-                                    <Typography type="body-sm" className="line-clamp-2 text-foreground">
-                                        {item.text}
-                                    </Typography>
-                                </div>
+                                <Typography
+                                    type="body-sm"
+                                    className="line-clamp-2 min-w-0 flex-1 text-foreground"
+                                >
+                                    {t(`events.${activityMessageKey(item.type)}`)}
+                                </Typography>
                                 <Typography type="body-xs" color="muted" className="shrink-0 whitespace-nowrap">
                                     {relativeTime(item.time)}
                                 </Typography>

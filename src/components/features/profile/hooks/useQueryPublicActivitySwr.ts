@@ -1,9 +1,9 @@
 "use client"
 
 import useSWR from "swr"
-import { getActivityTimeline, getActivityTypes } from "@/modules/api/rest/activity"
+import { getActivityTimeline } from "@/modules/api/rest/activity"
 import type { ActivityView } from "@/modules/api/rest/activity"
-import type { ActivityKind } from "@/components/features/activity/hooks/useQueryActivitySwr"
+import { toActivityKind, type ActivityKind } from "@/components/features/activity/model"
 import { shiftIso, vnTodayIso } from "@/components/features/gamification/StreakHeatmap/model"
 import { useAppSelector } from "@/redux/hooks"
 
@@ -11,8 +11,8 @@ import { useAppSelector } from "@/redux/hooks"
 export interface PublicActivityItem {
     id: string
     kind: ActivityKind
-    /** Localized sentence from the BE type catalog (falls back to the raw dotted type). */
-    text: string
+    /** Dotted BE event type; rendered through `activityMessageKey` + i18n, never raw. */
+    type: string
     /** ISO timestamp of the event. */
     time: string
 }
@@ -54,23 +54,6 @@ const TIMELINE_ROWS = 20
  */
 const vnDayOf = (iso: string): string =>
     new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ho_Chi_Minh" }).format(new Date(iso))
-
-/**
- * Buckets the ~55 dotted BE event types into the handful of icon-bearing kinds the FE
- * renders, by DOTTED PREFIX (`course.*`, `lesson.*`, …) so new BE types keep landing on a
- * sensible icon instead of falling to "other".
- */
-const toKind = (type: string): ActivityKind => {
-    if (type.startsWith("course.")) return "courseEnrolled"
-    if (type.startsWith("lesson.")) return "lessonCompleted"
-    if (type.startsWith("resource.")) return "resourceUploaded"
-    if (type.startsWith("community.") || type.startsWith("answer.")) return "questionPosted"
-    if (type.startsWith("badge.") || type.startsWith("gamification.")) return "badgeEarned"
-    if (type.startsWith("coin.") || type.startsWith("wallet.")) return "coinEarned"
-    if (type.startsWith("event.")) return "eventJoined"
-    if (type.startsWith("group.")) return "groupJoined"
-    return "other"
-}
 
 /** Inclusive day span between two `yyyy-mm-dd` dates. */
 const daysBetween = (fromIso: string, toIso: string): number => {
@@ -124,12 +107,6 @@ export const fetchPublicActivity = async (userId: string): Promise<PublicActivit
         }
     }
 
-    // localized row text comes from the BE type catalog; best-effort (it needs the same
-    // `activity.read` grant, and a failure here must not blank out the whole tab)
-    const describe = await getActivityTypes()
-        .then((types) => new Map(types.map((type) => [type.type, type.description])))
-        .catch(() => new Map<string, string | undefined>())
-
     const countByDay = new Map<string, number>()
     let oldestDay = today
     for (const event of events) {
@@ -155,8 +132,8 @@ export const fetchPublicActivity = async (userId: string): Promise<PublicActivit
     return {
         timeline: events.slice(0, TIMELINE_ROWS).map((event) => ({
             id: event.eventId,
-            kind: toKind(event.type),
-            text: describe.get(event.type) || event.type,
+            kind: toActivityKind(event.type),
+            type: event.type,
             time: event.occurredAt,
         })),
         days: [...countByDay].map(([date, count]) => ({ date, count })),

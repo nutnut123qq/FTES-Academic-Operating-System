@@ -1,10 +1,12 @@
 "use client"
 
-import React from "react"
-import { Typography } from "@heroui/react"
+import React, { useState } from "react"
+import { Button, Typography } from "@heroui/react"
 import { useLocale, useTranslations } from "next-intl"
 import {
     CalendarCheckIcon,
+    CaretDownIcon,
+    CaretUpIcon,
     ChatCircleIcon,
     CheckCircleIcon,
     CoinsIcon,
@@ -19,7 +21,7 @@ import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { EmptyContent } from "@/components/blocks/async/EmptyContent"
 import { LabeledCard } from "@/components/blocks/cards/LabeledCard"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
-import type { ActivityKind } from "@/components/features/activity/hooks/useQueryActivitySwr"
+import { activityMessageKey, type ActivityKind } from "@/components/features/activity/model"
 import { useQueryPublicActivitySwr } from "../../hooks/useQueryPublicActivitySwr"
 import { ProfileActivityGrid } from "../ProfileActivityGrid"
 import { toDateLabel } from "../ProfileEntries"
@@ -53,6 +55,9 @@ const ActivitySkeleton = () => (
     </div>
 )
 
+/** Timeline rows shown before the reader asks for more (the hook loads up to 20). */
+const ROWS_VISIBLE = 5
+
 /**
  * Activity tab — a contribution grid plus the recent activity timeline, both built from
  * `GET /activities?userId=` (the only real per-user activity source; the profile module's
@@ -63,18 +68,25 @@ const ActivitySkeleton = () => (
  *   so an anonymous viewer would otherwise get a blank grid that reads as "did nothing".
  * - **The grid spans only PROVEN coverage** (`coveredWeeks`, computed in the hook). Under a
  *   week of coverage it is not drawn at all.
+ *
+ * Timeline rows read as one sentence each (`activity.events.*`, resolved from the dotted BE
+ * type by `activityMessageKey`); the icon carries the kind, so no kind caption is printed.
  */
 export const ProfileActivityTab = ({ userId }: { userId: string }) => {
     const t = useTranslations()
     const locale = useLocale()
     const { activity, isLoading, error, mutate, authenticated } =
         useQueryPublicActivitySwr(userId)
+    const [expanded, setExpanded] = useState(false)
 
     if (!authenticated) {
         return <EmptyContent title={t("publicProfile.activity.signIn")} />
     }
 
     const totalEvents = activity?.days.reduce((sum, day) => sum + day.count, 0) ?? 0
+    const timeline = activity?.timeline ?? []
+    const visibleTimeline = expanded ? timeline : timeline.slice(0, ROWS_VISIBLE)
+    const hiddenTimeline = timeline.length - ROWS_VISIBLE
 
     return (
         <AsyncContent
@@ -118,47 +130,73 @@ export const ProfileActivityTab = ({ userId }: { userId: string }) => {
                     </LabeledCard>
 
                     <LabeledCard label={t("publicProfile.activity.timelineTitle")}>
-                        {activity.timeline.length === 0 ? (
+                        {timeline.length === 0 ? (
                             <EmptyContent title={t("publicProfile.activity.empty")} />
                         ) : (
-                            <ul className="flex flex-col divide-y divide-separator">
-                                {activity.timeline.map((item) => {
-                                    const ItemIcon = KIND_ICON[item.kind]
-                                    return (
-                                        <li key={item.id} className="flex items-start gap-3 py-3">
-                                            <div className="flex size-9 shrink-0 items-center justify-center rounded-large bg-accent/10 text-accent">
-                                                <ItemIcon
-                                                    className="size-4"
-                                                    aria-hidden
-                                                    focusable="false"
-                                                />
-                                            </div>
-                                            <div className="flex min-w-0 flex-1 flex-col gap-0">
-                                                <Typography
-                                                    type="body-xs"
-                                                    weight="medium"
-                                                    className="text-accent"
-                                                >
-                                                    {t(`activity.kinds.${item.kind}`)}
-                                                </Typography>
+                            <div className="flex flex-col gap-0">
+                                <ul className="flex flex-col divide-y divide-separator">
+                                    {visibleTimeline.map((item) => {
+                                        const ItemIcon = KIND_ICON[item.kind]
+                                        return (
+                                            <li
+                                                key={item.id}
+                                                className="flex items-center gap-3 py-3"
+                                            >
+                                                <div className="flex size-9 shrink-0 items-center justify-center rounded-large bg-accent/10 text-accent">
+                                                    <ItemIcon
+                                                        className="size-4"
+                                                        aria-hidden
+                                                        focusable="false"
+                                                    />
+                                                </div>
                                                 <Typography
                                                     type="body-sm"
-                                                    className="text-foreground"
+                                                    className="min-w-0 flex-1 text-foreground"
                                                 >
-                                                    {item.text}
+                                                    {t(
+                                                        `activity.events.${activityMessageKey(item.type)}`,
+                                                    )}
                                                 </Typography>
-                                            </div>
-                                            <Typography
-                                                type="body-xs"
-                                                color="muted"
-                                                className="shrink-0 whitespace-nowrap"
-                                            >
-                                                {toDateLabel(item.time, locale)}
-                                            </Typography>
-                                        </li>
-                                    )
-                                })}
-                            </ul>
+                                                <Typography
+                                                    type="body-xs"
+                                                    color="muted"
+                                                    className="shrink-0 whitespace-nowrap"
+                                                >
+                                                    {toDateLabel(item.time, locale)}
+                                                </Typography>
+                                            </li>
+                                        )
+                                    })}
+                                </ul>
+                                {hiddenTimeline > 0 ? (
+                                    <div className="mt-3 flex justify-center">
+                                        <Button
+                                            variant="tertiary"
+                                            size="sm"
+                                            onPress={() => setExpanded((prev) => !prev)}
+                                        >
+                                            {expanded
+                                                ? t("activity.showLess")
+                                                : t("activity.showMore", {
+                                                    count: hiddenTimeline,
+                                                })}
+                                            {expanded ? (
+                                                <CaretUpIcon
+                                                    aria-hidden
+                                                    focusable="false"
+                                                    className="size-4"
+                                                />
+                                            ) : (
+                                                <CaretDownIcon
+                                                    aria-hidden
+                                                    focusable="false"
+                                                    className="size-4"
+                                                />
+                                            )}
+                                        </Button>
+                                    </div>
+                                ) : null}
+                            </div>
                         )}
                     </LabeledCard>
                 </div>

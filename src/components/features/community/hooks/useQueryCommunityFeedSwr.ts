@@ -141,12 +141,54 @@ export const mutateCommunityFeeds = (
         ),
     )
 
-/** Revalidate (refetch) every mounted community-feed infinite cache. */
-export const revalidateCommunityFeeds = (
+/**
+ * Enumerate the community-feed PAGE caches — the serialized
+ * `["community-feed", tab, sort, campus, cursor]` array keys that `useSWRInfinite`
+ * stores each page under. They carry the tag exactly like the aggregates do, so the
+ * `$inf$` prefix is what tells the two apart (mirror of {@link communityFeedCacheKeys}).
+ */
+export const communityFeedPageCacheKeys = (cache: Cache): Array<string> => {
+    const keys: Array<string> = []
+    for (const key of cache.keys()) {
+        if (
+            typeof key === "string" &&
+            !key.startsWith(INFINITE_PREFIX) &&
+            key.includes(COMMUNITY_FEED_TAG)
+        ) {
+            keys.push(key)
+        }
+    }
+    return keys
+}
+
+/**
+ * Force every community feed to refetch from the BE — called after a post is created
+ * so the new row shows up on back-navigation instead of only after a hard reload.
+ *
+ * The PAGE caches are dropped FIRST, and that is the whole point. `mutate(<$inf$ key>)`
+ * on its own is a SILENT NO-OP here: the infinite fetcher only refetches a page when
+ * `revalidateAll`, the hook's own force flag (`_i`, set exclusively by the mutate that
+ * `useSWRInfinite` RETURNS), `revalidateFirstPage`, or a missing page cache says so —
+ * and this feed runs with `revalidateFirstPage: false`, while a GLOBAL mutate never sets
+ * `_i`. So every page came back straight from cache and not a single request left the
+ * browser. Emptying the page caches leaves "the cache is missing" as the trigger, which
+ * a global caller CAN reach.
+ *
+ * Clearing also fixes the case where no feed is mounted (the `/community/new` page):
+ * global mutate can't revalidate a key nobody subscribes to, but the emptied pages make
+ * the feed refetch when it mounts again.
+ */
+export const revalidateCommunityFeeds = async (
     cache: Cache,
     mutate: ScopedMutator,
-): Promise<Array<unknown>> =>
-    Promise.all(communityFeedCacheKeys(cache).map((key) => mutate(key)))
+): Promise<Array<unknown>> => {
+    await Promise.all(
+        communityFeedPageCacheKeys(cache).map((key) =>
+            mutate(key, undefined, { revalidate: false }),
+        ),
+    )
+    return Promise.all(communityFeedCacheKeys(cache).map((key) => mutate(key)))
+}
 
 /** Apply `patch` to the target post across every loaded feed page (identity elsewhere). */
 export const patchFeedPostInPages = (

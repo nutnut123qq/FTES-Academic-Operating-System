@@ -16,7 +16,8 @@ vi.mock("@/modules/api/rest/resource", () => ({
 
 vi.mock("@/redux/hooks", () => ({
     useAppSelector: (selector: (state: unknown) => unknown) =>
-        selector({ keycloak: { authenticated: true } }),
+        // The viewer id is part of the SWR key (one account never reads another's cache).
+        selector({ keycloak: { authenticated: true }, user: { user: { id: "viewer-1" } } }),
 }))
 
 import { useQueryCollectionDetailSwr } from "./useQueryCollectionDetailSwr"

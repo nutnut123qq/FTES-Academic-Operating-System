@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl"
 import useSWR from "swr"
 import { getRecommendations, type RecommendationItem } from "@/modules/api/rest/recommendation"
 import { useAppSelector } from "@/redux/hooks"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 
 /** A recommended resource row (§5/§17). */
 export interface RecommendedResource {
@@ -137,9 +138,10 @@ export const toRecommendedResource = (
 export const useQueryRecommendedSwr = () => {
     const t = useTranslations("resourceHub")
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
 
     const { data, isLoading, error, mutate } = useSWR(
-        authenticated ? [RECOMMENDED_RESOURCES_SWR_KEY] : null,
+        authenticated && viewerId ? [RECOMMENDED_RESOURCES_SWR_KEY, viewerId] : null,
         async () =>
             (await getRecommendations({ type: RECOMMENDATION_TYPE, limit: LIMIT })) ?? [],
     )

@@ -1,6 +1,7 @@
 import useSWR from "swr"
 import { queryCourseEnrollmentStatus } from "@/modules/api/graphql/queries/query-course-enrollment-status"
 import { useAppDispatch, useAppSelector } from "@/redux/hooks"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 import { setEnrolled, setEnrollment } from "@/redux/slices/user"
 
 /**
@@ -10,12 +11,14 @@ export const useQueryCourseEnrollmentStatusSwr = () => {
     const dispatch = useAppDispatch()
     const course = useAppSelector((state) => state.course.entity)
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
     const swr = useSWR(
-        course?.id && authenticated
+        course?.id && authenticated && viewerId
             ? [
                 "QUERY_COURSE_ENROLLMENT_STATUS_SWR",
                 course?.id,
                 authenticated,
+                viewerId,
             ]
             : null,
         async () => {

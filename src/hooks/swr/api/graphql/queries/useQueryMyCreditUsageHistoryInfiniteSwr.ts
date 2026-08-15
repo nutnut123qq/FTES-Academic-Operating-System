@@ -2,6 +2,7 @@ import useSWRInfinite from "swr/infinite"
 import { queryMyCreditUsageHistory } from "@/modules/api/graphql/queries/query-my-credit-usage-history"
 import type { QueryMyCreditUsageHistoryResponseData } from "@/modules/api/graphql/queries/types/my-credit-usage-history"
 import { useAppSelector } from "@/redux/hooks"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 
 /** Charge rows per page (offset pagination). */
 export const CREDIT_USAGE_HISTORY_PAGE_LIMIT = 20
@@ -17,18 +18,19 @@ export const CREDIT_USAGE_HISTORY_PAGE_LIMIT = 20
  */
 export const useQueryMyCreditUsageHistoryInfiniteSwr = () => {
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
 
     const getKey = (
         index: number,
         previous: QueryMyCreditUsageHistoryResponseData | null,
-    ): readonly [string, number] | null => {
-        if (!authenticated) {
+    ): readonly [string, number, string] | null => {
+        if (!authenticated || !viewerId) {
             return null
         }
         if (previous && previous.items.length < CREDIT_USAGE_HISTORY_PAGE_LIMIT) {
             return null
         }
-        return ["QUERY_MY_CREDIT_USAGE_HISTORY_INFINITE_SWR", index]
+        return ["QUERY_MY_CREDIT_USAGE_HISTORY_INFINITE_SWR", index, viewerId]
     }
 
     return useSWRInfinite(

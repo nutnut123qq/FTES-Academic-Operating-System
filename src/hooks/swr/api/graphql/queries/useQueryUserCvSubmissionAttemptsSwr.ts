@@ -3,6 +3,7 @@ import useSWR from "swr"
 import { defaultUserCvSubmissionAttemptsSorts, queryUserCvSubmissionAttempts } from "@/modules/api/graphql/queries/query-user-cv-submission-attempts"
 import { useCvSubmissionAttemptsDrawerOverlayState } from "@/hooks/zustand/overlay/hooks"
 import { useAppSelector } from "@/redux/hooks"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 
 export const USER_CV_SUBMISSION_ATTEMPTS_PAGE_SIZE = 5
 
@@ -12,15 +13,17 @@ export const USER_CV_SUBMISSION_ATTEMPTS_PAGE_SIZE = 5
  */
 export const useQueryUserCvSubmissionAttemptsSwr = () => {
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
     const { isOpen } = useCvSubmissionAttemptsDrawerOverlayState()
     const [pageNumber, setPageNumber] = useState(0)
     const swr = useSWR(
-        authenticated && isOpen
+        authenticated && viewerId && isOpen
             ? [
                 "QUERY_USER_CV_SUBMISSION_ATTEMPTS_SWR",
                 authenticated,
                 isOpen,
                 pageNumber,
+                viewerId,
             ]
             : null,
         async () => {

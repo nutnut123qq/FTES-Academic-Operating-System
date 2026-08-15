@@ -2,6 +2,7 @@ import useSWR from "swr"
 import { GraphQLHeadersKey } from "@/modules/api/graphql/types"
 import { queryMilestoneTaskProgress } from "@/modules/api/graphql/queries/query-milestone-task-progress"
 import { useAppSelector } from "@/redux/hooks"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 
 /**
  * SWR query core for the milestone task progress query. Progress is per-user, so
@@ -11,10 +12,11 @@ import { useAppSelector } from "@/redux/hooks"
 export const useQueryMilestoneTaskProgressSwr = () => {
     const course = useAppSelector((state) => state.course.entity)
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
 
     const swr = useSWR(
-        authenticated && course?.id
-            ? ["QUERY_MILESTONE_TASK_PROGRESS_SWR", course.id]
+        authenticated && viewerId && course?.id
+            ? ["QUERY_MILESTONE_TASK_PROGRESS_SWR", course.id, viewerId]
             : null,
         async () => {
             if (!course?.id) {

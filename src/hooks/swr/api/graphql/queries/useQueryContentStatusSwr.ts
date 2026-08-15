@@ -1,6 +1,7 @@
 import useSWR from "swr"
 import { queryContentStatus } from "@/modules/api/graphql/queries/query-content-status"
 import { useAppDispatch, useAppSelector } from "@/redux/hooks"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 import { setContentIsRead, setContentIsFavorite } from "@/redux/slices/content"
 
 /**
@@ -9,13 +10,15 @@ import { setContentIsRead, setContentIsFavorite } from "@/redux/slices/content"
 export const useQueryContentStatusSwr = () => {
     const id = useAppSelector((state) => state.content.id)
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
     const dispatch = useAppDispatch()
     const swr = useSWR(
-        authenticated && id
+        authenticated && viewerId && id
             ? [
                 "QUERY_CONTENT_STATUS_SWR",
                 id,
                 authenticated,
+                viewerId,
             ]
             : null,
         async () => {

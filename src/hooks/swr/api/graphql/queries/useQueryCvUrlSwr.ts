@@ -3,6 +3,7 @@ import { usePathname } from "next/navigation"
 import useSWR from "swr"
 import { queryCvUrl } from "@/modules/api/graphql/queries/query-cv-url"
 import { useAppDispatch, useAppSelector } from "@/redux/hooks"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 
 /**
  * Fetches the presigned CV view URL for the Keycloak user and mirrors it into Redux.
@@ -10,14 +11,16 @@ import { useAppDispatch, useAppSelector } from "@/redux/hooks"
  */
 export const useQueryCvUrlSwr = () => {
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
     const pathname = usePathname()
     const onCvPage = pathname.includes("/profile/cv")
     const dispatch = useAppDispatch()
     const swr = useSWR(
-        authenticated && onCvPage
+        authenticated && viewerId && onCvPage
             ? [
                 "QUERY_CV_URL_SWR",
                 authenticated,
+                viewerId,
             ]
             : null,
         async () => {

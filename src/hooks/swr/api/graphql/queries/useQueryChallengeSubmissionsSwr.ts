@@ -2,6 +2,7 @@ import useSWR from "swr"
 import { defaultChallengeSubmissionsSorts, queryChallengeSubmissions } from "@/modules/api/graphql/queries/query-challenge-submissions"
 import { GraphQLHeadersKey } from "@/modules/api/graphql/types"
 import { useAppDispatch, useAppSelector } from "@/redux/hooks"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 import { setChallengeSubmissions } from "@/redux/slices/challenge"
 
 /**
@@ -10,6 +11,7 @@ import { setChallengeSubmissions } from "@/redux/slices/challenge"
  */
 export const useQueryChallengeSubmissionsSwr = () => {
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
     const enrolled = useAppSelector((state) => state.user.enrolled)
     const course = useAppSelector((state) => state.course.entity)
     const challengeId = useAppSelector(
@@ -17,13 +19,14 @@ export const useQueryChallengeSubmissionsSwr = () => {
     )
     const dispatch = useAppDispatch()
     const swr = useSWR(
-        authenticated && course?.id && challengeId
+        authenticated && viewerId && course?.id && challengeId
             ? [
                 "QUERY_CHALLENGE_SUBMISSIONS_SWR",
                 challengeId,
                 course.id,
                 enrolled,
                 authenticated,
+                viewerId,
             ]
             : null,
         async () => {

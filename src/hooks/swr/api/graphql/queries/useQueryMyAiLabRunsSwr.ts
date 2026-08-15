@@ -1,6 +1,7 @@
 import useSWR from "swr"
 import { queryMyAiLabRuns } from "@/modules/api/graphql/queries/query-my-ai-lab-runs"
 import { useAppSelector } from "@/redux/hooks"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 
 /**
  * SWR query wrapper for {@link queryMyAiLabRuns}. `data` is the unwrapped list of
@@ -9,8 +10,11 @@ import { useAppSelector } from "@/redux/hooks"
  */
 export const useQueryMyAiLabRunsSwr = (playgroundId?: string) => {
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
     const swr = useSWR(
-        authenticated && playgroundId ? ["QUERY_MY_AI_LAB_RUNS_SWR", playgroundId] : null,
+        authenticated && viewerId && playgroundId
+            ? ["QUERY_MY_AI_LAB_RUNS_SWR", playgroundId, viewerId]
+            : null,
         async () => {
             if (!playgroundId) {
                 throw new Error("Playground id not found")

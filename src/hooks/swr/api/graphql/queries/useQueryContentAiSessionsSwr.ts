@@ -2,6 +2,7 @@ import useSWR from "swr"
 import { queryContentAiSessions } from "@/modules/api/graphql/queries/query-content-ai-sessions"
 import type { ContentAiSessionSummary } from "@/modules/api/graphql/queries/types/content-ai-sessions"
 import { useAppSelector } from "@/redux/hooks"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 
 /**
  * SWR query wrapper for {@link queryContentAiSessions}. Lists the current user's
@@ -14,10 +15,11 @@ export const useQueryContentAiSessionsSwr = (
     search?: string,
 ) => {
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
     const trimmed = (search ?? "").trim()
     const swr = useSWR<Array<ContentAiSessionSummary>>(
-        authenticated && contentId
-            ? ["QUERY_CONTENT_AI_SESSIONS_SWR", contentId, trimmed]
+        authenticated && viewerId && contentId
+            ? ["QUERY_CONTENT_AI_SESSIONS_SWR", contentId, trimmed, viewerId]
             : null,
         async () => {
             const data = await queryContentAiSessions({

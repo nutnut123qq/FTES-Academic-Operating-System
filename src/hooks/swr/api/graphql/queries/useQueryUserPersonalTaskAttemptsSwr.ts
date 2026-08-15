@@ -2,6 +2,7 @@ import useSWR from "swr"
 import { defaultUserPersonalTaskAttemptsListSorts, queryUserPersonalTaskAttempts } from "@/modules/api/graphql/queries/query-user-personal-task-attempts"
 import { GraphQLHeadersKey } from "@/modules/api/graphql/types"
 import { useAppSelector } from "@/redux/hooks"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 
 /**
  * SWR hook for querying paginated user personal task attempts
@@ -11,10 +12,11 @@ export const useQueryUserPersonalTaskAttemptsSwr = () => {
     const course = useAppSelector((state) => state.course.entity)
     const selectedTaskId = useAppSelector((state) => state.milestone.selectedTaskId)
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
 
     const swr = useSWR(
-        authenticated && course?.id && selectedTaskId
-            ? ["QUERY_USER_PERSONAL_TASK_ATTEMPTS_SWR", course.id, selectedTaskId, 50]
+        authenticated && viewerId && course?.id && selectedTaskId
+            ? ["QUERY_USER_PERSONAL_TASK_ATTEMPTS_SWR", course.id, selectedTaskId, 50, viewerId]
             : null,
         async () => {
             if (!course?.id || !selectedTaskId) {

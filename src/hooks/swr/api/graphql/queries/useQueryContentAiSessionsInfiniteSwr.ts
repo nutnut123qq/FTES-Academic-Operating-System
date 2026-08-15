@@ -2,6 +2,7 @@ import useSWRInfinite from "swr/infinite"
 import { queryContentAiSessions } from "@/modules/api/graphql/queries/query-content-ai-sessions"
 import type { ContentAiSessionSummary } from "@/modules/api/graphql/queries/types/content-ai-sessions"
 import { useAppSelector } from "@/redux/hooks"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 
 /** Conversations per page (recency-first); a short page ends the list. */
 export const CONTENT_AI_SESSIONS_PAGE_LIMIT = 20
@@ -23,13 +24,14 @@ export const useQueryContentAiSessionsInfiniteSwr = (
     enabled = true,
 ) => {
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
     const trimmed = (search ?? "").trim()
 
     const getKey = (
         index: number,
         previous: ReadonlyArray<ContentAiSessionSummary> | null,
-    ): readonly [string, string, string, number] | null => {
-        if (!enabled || !authenticated || !contentId) {
+    ): readonly [string, string, string, number, string] | null => {
+        if (!enabled || !authenticated || !viewerId || !contentId) {
             return null
         }
         if (previous && previous.length < CONTENT_AI_SESSIONS_PAGE_LIMIT) {
@@ -40,6 +42,7 @@ export const useQueryContentAiSessionsInfiniteSwr = (
             contentId,
             trimmed,
             index * CONTENT_AI_SESSIONS_PAGE_LIMIT,
+            viewerId,
         ]
     }
 

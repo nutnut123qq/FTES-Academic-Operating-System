@@ -38,9 +38,11 @@ vi.mock("@/modules/api/rest/resource", () => ({
 }))
 
 let authenticated = true
+/** The signed-in viewer — part of the SWR key so one account never reads another's. */
+let viewerId: string | null = "viewer-1"
 vi.mock("@/redux/hooks", () => ({
     useAppSelector: (selector: (state: unknown) => unknown) =>
-        selector({ keycloak: { authenticated } }),
+        selector({ keycloak: { authenticated }, user: { user: viewerId ? { id: viewerId } : null } }),
 }))
 
 import { RestError } from "@/modules/api/rest/client"
@@ -85,11 +87,11 @@ describe("toResourceCollection", () => {
 })
 
 describe("useQueryCollectionsSwr", () => {
-    it("fetches the caller's collections under a stable key", async () => {
+    it("fetches the caller's collections under a viewer-scoped key", async () => {
         getMyCollections.mockResolvedValue([BE_ROW])
         renderHook(() => useQueryCollectionsSwr())
         const { key, fetcher } = swrCalls[swrCalls.length - 1]
-        expect(key).toEqual([COLLECTIONS_SWR_KEY])
+        expect(key).toEqual([COLLECTIONS_SWR_KEY, "viewer-1"])
         await expect(fetcher?.(key)).resolves.toEqual([BE_ROW])
         expect(getMyCollections).toHaveBeenCalledWith({ page: 0, size: 50 })
     })

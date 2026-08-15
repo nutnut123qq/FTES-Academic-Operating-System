@@ -9,6 +9,7 @@ import {
     type CollectionDetailResponse,
 } from "@/modules/api/rest/resource"
 import { useAppSelector } from "@/redux/hooks"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 
 /** SWR key prefix of a single collection detail aggregate. */
 export const COLLECTION_DETAIL_SWR_KEY = "QUERY_RESOURCE_COLLECTION_DETAIL_SWR"
@@ -28,10 +29,11 @@ export const COLLECTION_DETAIL_SWR_KEY = "QUERY_RESOURCE_COLLECTION_DETAIL_SWR"
  */
 export const useQueryCollectionDetailSwr = (collectionId?: string | null) => {
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
     const enabled = authenticated && Boolean(collectionId)
 
     const { data, isLoading, error, mutate } = useSWR(
-        enabled ? [COLLECTION_DETAIL_SWR_KEY, collectionId] : null,
+        enabled && viewerId ? [COLLECTION_DETAIL_SWR_KEY, collectionId, viewerId] : null,
         ([, id]) => getCollectionDetail(id as string),
     )
 

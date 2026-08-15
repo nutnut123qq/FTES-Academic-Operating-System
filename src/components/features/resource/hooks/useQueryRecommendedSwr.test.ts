@@ -28,9 +28,11 @@ vi.mock("@/modules/api/rest/recommendation", () => ({
 }))
 
 let authenticated = true
+/** The signed-in viewer — part of the SWR key so one account never reads another's. */
+let viewerId: string | null = "viewer-1"
 vi.mock("@/redux/hooks", () => ({
     useAppSelector: (selector: (state: unknown) => unknown) =>
-        selector({ keycloak: { authenticated } }),
+        selector({ keycloak: { authenticated }, user: { user: viewerId ? { id: viewerId } : null } }),
 }))
 
 // `t("recommended.reasons.X", values)` → the key + the ICU values, so the test can
@@ -124,11 +126,11 @@ describe("pickReason", () => {
 })
 
 describe("useQueryRecommendedSwr", () => {
-    it("asks the engine for RESOURCE suggestions under a stable key", async () => {
+    it("asks the engine for RESOURCE suggestions under a viewer-scoped key", async () => {
         getRecommendations.mockResolvedValue([])
         renderHook(() => useQueryRecommendedSwr())
         const { key, fetcher } = swrCalls[swrCalls.length - 1]
-        expect(key).toEqual([RECOMMENDED_RESOURCES_SWR_KEY])
+        expect(key).toEqual([RECOMMENDED_RESOURCES_SWR_KEY, "viewer-1"])
         await fetcher?.(key)
         expect(getRecommendations).toHaveBeenCalledWith({ type: RECOMMENDATION_TYPE, limit: 20 })
         expect(RECOMMENDATION_TYPE).toBe("RESOURCE")

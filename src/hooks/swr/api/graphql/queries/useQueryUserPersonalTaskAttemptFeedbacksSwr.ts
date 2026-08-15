@@ -2,6 +2,7 @@ import useSWR from "swr"
 import { defaultUserPersonalTaskAttemptFeedbacksListSorts, queryUserPersonalTaskAttemptFeedbacks } from "@/modules/api/graphql/queries/query-user-personal-task-attempt-feedbacks"
 import { GraphQLHeadersKey } from "@/modules/api/graphql/types"
 import { useAppSelector } from "@/redux/hooks"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 
 /**
  * SWR hook for querying paginated feedbacks for a specific
@@ -10,11 +11,17 @@ import { useAppSelector } from "@/redux/hooks"
 export const useQueryUserPersonalTaskAttemptFeedbacksSwr = () => {
     const course = useAppSelector((state) => state.course.entity)
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
     const selectedAttemptId = useAppSelector((state) => state.milestone.selectedAttemptId)
 
     const swr = useSWR(
-        authenticated && course?.id && selectedAttemptId
-            ? ["QUERY_USER_PERSONAL_TASK_ATTEMPT_FEEDBACKS_SWR", course.id, selectedAttemptId]
+        authenticated && viewerId && course?.id && selectedAttemptId
+            ? [
+                "QUERY_USER_PERSONAL_TASK_ATTEMPT_FEEDBACKS_SWR",
+                course.id,
+                selectedAttemptId,
+                viewerId,
+            ]
             : null,
         async () => {
             if (!course?.id || !selectedAttemptId) {

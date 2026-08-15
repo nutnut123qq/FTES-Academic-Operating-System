@@ -15,6 +15,7 @@ import {
     type EventType,
 } from "@/components/features/event/hooks/useQueryEventsSwr"
 import { useAppSelector } from "@/redux/hooks"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 
 /** How many upcoming events the dashboard rail lists — the rest live on `/events`. */
 export const UPCOMING_EVENT_LIMIT = 3
@@ -105,8 +106,9 @@ const toRegisteredEventIds = (
 export const useQueryDashboardCoursesEventsSwr = () => {
     const locale = useLocale()
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
     const { data, isLoading, error, mutate } = useSWR(
-        ["dashboard", "courses", "events", locale, authenticated],
+        ["dashboard", "courses", "events", locale, authenticated, viewerId],
         async (): Promise<Array<DashboardUpcomingEvent>> => {
             const [views, registrations] = await Promise.all([
                 getEvents(),

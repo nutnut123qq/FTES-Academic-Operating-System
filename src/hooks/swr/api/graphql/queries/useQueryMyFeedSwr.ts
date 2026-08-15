@@ -3,6 +3,7 @@ import { queryMyFeed } from "@/modules/api/graphql/queries/query-my-feed"
 import { MyFeedTab, MyFeedCategory } from "@/modules/api/graphql/queries/types/my-feed"
 import type { QueryMyFeedResponseData } from "@/modules/api/graphql/queries/types/my-feed"
 import { useAppSelector } from "@/redux/hooks"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 
 /** Items per feed page. */
 const PAGE_LIMIT = 5
@@ -22,13 +23,14 @@ export const useQueryMyFeedSwr = (
     category: MyFeedCategory = MyFeedCategory.All,
 ) => {
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
 
     const getKey = (
         index: number,
         previous: QueryMyFeedResponseData | null,
-    ): readonly [string, MyFeedTab, MyFeedCategory, string] | null => {
-        // don't fetch when signed out
-        if (!authenticated) {
+    ): readonly [string, MyFeedTab, MyFeedCategory, string, string] | null => {
+        // don't fetch when signed out (or before the viewer identity resolved)
+        if (!authenticated || !viewerId) {
             return null
         }
         // previous page had no next cursor → end of feed, stop
@@ -37,7 +39,7 @@ export const useQueryMyFeedSwr = (
         }
         // page 1 has no cursor; later pages use the previous page's nextCursor
         const cursor = index === 0 ? "" : previous?.nextCursor ?? ""
-        return ["QUERY_MY_FEED_SWR", tab, category, cursor]
+        return ["QUERY_MY_FEED_SWR", tab, category, cursor, viewerId]
     }
 
     return useSWRInfinite(

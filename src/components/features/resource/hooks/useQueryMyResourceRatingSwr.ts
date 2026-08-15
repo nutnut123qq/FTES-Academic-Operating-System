@@ -4,10 +4,11 @@ import useSWR from "swr"
 
 import { getMyResourceRating, type RatingResponse } from "@/modules/api/rest/resource"
 import { useAppSelector } from "@/redux/hooks"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 
 /** SWR key of the caller's own rating for one resource (shared by the query + the delete). */
-export const myResourceRatingSwrKey = (resourceId: string) =>
-    ["RESOURCE_MY_RATING_SWR", resourceId] as const
+export const myResourceRatingSwrKey = (resourceId: string, viewerId: string) =>
+    ["RESOURCE_MY_RATING_SWR", resourceId, viewerId] as const
 
 /**
  * Loads the caller's OWN rating of a resource (`GET /api/v1/resources/{id}/ratings/me`) so
@@ -22,10 +23,11 @@ export const myResourceRatingSwrKey = (resourceId: string) =>
  */
 export const useQueryMyResourceRatingSwr = (resourceId: string) => {
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
     const enabled = authenticated && Boolean(resourceId)
 
     const { data, isLoading, error, mutate } = useSWR<RatingResponse | null, Error>(
-        enabled ? myResourceRatingSwrKey(resourceId) : null,
+        enabled && viewerId ? myResourceRatingSwrKey(resourceId, viewerId) : null,
         () => getMyResourceRating(resourceId),
     )
 

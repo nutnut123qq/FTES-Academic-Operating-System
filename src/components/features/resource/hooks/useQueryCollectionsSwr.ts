@@ -9,6 +9,7 @@ import {
 } from "@/modules/api/rest/resource"
 import { RestError } from "@/modules/api/rest/client"
 import { useAppSelector } from "@/redux/hooks"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 
 /** A learning pack / resource collection row, mapped from the BE `CollectionResponse`. */
 export interface ResourceCollection {
@@ -83,9 +84,10 @@ export const resolveResourceErrorKey = (
  */
 export const useQueryCollectionsSwr = () => {
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
 
     const { data, isLoading, error, mutate } = useSWR(
-        authenticated ? [COLLECTIONS_SWR_KEY] : null,
+        authenticated && viewerId ? [COLLECTIONS_SWR_KEY, viewerId] : null,
         async () => (await getMyCollections({ page: 0, size: PAGE_SIZE })) ?? [],
     )
 

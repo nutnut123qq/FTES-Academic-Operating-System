@@ -2,6 +2,7 @@ import useSWRInfinite from "swr/infinite"
 import { queryCourseLearningHistory } from "@/modules/api/graphql/queries/query-course-learning-history"
 import type { CourseLearningHistoryResponseData } from "@/modules/api/graphql/queries/types/course-learning-history"
 import { useAppSelector } from "@/redux/hooks"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 
 /** Events per learning-history page. */
 const PAGE_LIMIT = 20
@@ -19,13 +20,14 @@ const PAGE_LIMIT = 20
  */
 export const useQueryCourseLearningHistorySwr = (courseId: string | null) => {
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
 
     const getKey = (
         index: number,
         previous: CourseLearningHistoryResponseData | null,
-    ): readonly [string, string, string] | null => {
-        // nothing to fetch until authenticated with a selected course
-        if (!authenticated || !courseId) {
+    ): readonly [string, string, string, string] | null => {
+        // nothing to fetch until an identified viewer has a selected course
+        if (!authenticated || !viewerId || !courseId) {
             return null
         }
         // previous page had no next cursor → end of history, stop
@@ -34,7 +36,7 @@ export const useQueryCourseLearningHistorySwr = (courseId: string | null) => {
         }
         // page 1 has no cursor; later pages use the previous page's nextCursor
         const cursor = index === 0 ? "" : previous?.nextCursor ?? ""
-        return ["QUERY_COURSE_LEARNING_HISTORY_SWR", courseId, cursor]
+        return ["QUERY_COURSE_LEARNING_HISTORY_SWR", courseId, cursor, viewerId]
     }
 
     return useSWRInfinite(

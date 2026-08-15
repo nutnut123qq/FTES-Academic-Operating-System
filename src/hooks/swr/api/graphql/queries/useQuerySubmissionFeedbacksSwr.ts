@@ -3,6 +3,7 @@ import { useFeedbackDetailsOverlayState } from "@/hooks/zustand/overlay/hooks"
 import { defaultSubmissionFeedbacksListSorts, querySubmissionFeedbacks } from "@/modules/api/graphql/queries/query-submission-feedbacks"
 import { GraphQLHeadersKey } from "@/modules/api/graphql/types"
 import { useAppDispatch, useAppSelector } from "@/redux/hooks"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 import { setSubmissionFeedbacks, setSubmissionFeedbacksCount } from "@/redux/slices/submission-feedback"
 
 /**
@@ -11,6 +12,7 @@ import { setSubmissionFeedbacks, setSubmissionFeedbacksCount } from "@/redux/sli
  */
 export const useQuerySubmissionFeedbacksSwr = () => {
     const enrolled = useAppSelector((state) => state.user.enrolled)
+    const viewerId = useViewerScopeId()
     const course = useAppSelector((state) => state.course.entity)
     const dispatch = useAppDispatch()
     const { isOpen } = useFeedbackDetailsOverlayState()
@@ -18,9 +20,10 @@ export const useQuerySubmissionFeedbacksSwr = () => {
         (state) => state.submissionAttempt.id
     )
     const swr = useSWR(
-        enrolled && course?.id && submissionAttemptId && isOpen
+        enrolled && viewerId && course?.id && submissionAttemptId && isOpen
             ? [
                 "QUERY_SUBMISSION_FEEDBACKS_SWR",
+                viewerId,
                 submissionAttemptId,
                 course.id,
                 enrolled,

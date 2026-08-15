@@ -3,6 +3,7 @@ import { defaultSubmissionAttemptsListSorts, querySubmissionAttempts } from "@/m
 import { GraphQLHeadersKey } from "@/modules/api/graphql/types"
 import { useSubmissionAttemptsOverlayState } from "@/hooks/zustand/overlay/hooks"
 import { useAppDispatch, useAppSelector } from "@/redux/hooks"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 import { setSubmissionAttempts, setSubmissionAttemptsCount } from "@/redux/slices/submission-attempt"
 
 /**
@@ -11,6 +12,7 @@ import { setSubmissionAttempts, setSubmissionAttemptsCount } from "@/redux/slice
  */
 export const useQuerySubmissionAttemptsSwr = () => {
     const enrolled = useAppSelector((state) => state.user.enrolled)
+    const viewerId = useViewerScopeId()
     const course = useAppSelector((state) => state.course.entity)
     const dispatch = useAppDispatch()
     const activeChallengeSubmissionId = useAppSelector(
@@ -20,9 +22,10 @@ export const useQuerySubmissionAttemptsSwr = () => {
     const limit = useAppSelector((state) => state.submissionAttempt.limit)
     const { isOpen } = useSubmissionAttemptsOverlayState()
     const swr = useSWR(
-        enrolled && course?.id && activeChallengeSubmissionId && isOpen
+        enrolled && viewerId && course?.id && activeChallengeSubmissionId && isOpen
             ? [
                 "QUERY_SUBMISSION_ATTEMPTS_SWR",
+                viewerId,
                 activeChallengeSubmissionId,
                 course.id,
                 enrolled,

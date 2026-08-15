@@ -1,6 +1,7 @@
 import useSWR from "swr"
 import { queryMyCreditUsage } from "@/modules/api/graphql/queries/query-my-credit-usage"
 import { useAppSelector } from "@/redux/hooks"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 
 /**
  * SWR query wrapper for {@link queryMyCreditUsage}. `data` is the unwrapped
@@ -9,8 +10,9 @@ import { useAppSelector } from "@/redux/hooks"
  */
 export const useQueryMyCreditUsageSwr = () => {
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
     const swr = useSWR(
-        authenticated ? ["QUERY_MY_CREDIT_USAGE_SWR"] : null,
+        authenticated && viewerId ? ["QUERY_MY_CREDIT_USAGE_SWR", viewerId] : null,
         async () => {
             const data = await queryMyCreditUsage({})
 

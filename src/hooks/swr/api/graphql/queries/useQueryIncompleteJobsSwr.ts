@@ -2,6 +2,7 @@ import useSWR from "swr"
 import { GraphQLHeadersKey } from "@/modules/api/graphql/types"
 import { queryIncompleteJobs } from "@/modules/api/graphql/queries/query-incomplete-jobs"
 import { useAppDispatch, useAppSelector } from "@/redux/hooks"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 import { setIncompleteJobs } from "@/redux/slices/job"
 
 /**
@@ -10,16 +11,18 @@ import { setIncompleteJobs } from "@/redux/slices/job"
  */
 export const useQueryIncompleteJobsSwr = () => {
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
     const enrolled = useAppSelector((state) => state.user.enrolled)
     const course = useAppSelector((state) => state.course.entity)
     const dispatch = useAppDispatch()
     const swr = useSWR(
-        authenticated && enrolled && course?.id
+        authenticated && viewerId && enrolled && course?.id
             ? [
                 "QUERY_INCOMPLETE_JOBS_SWR",
                 course.id,
                 enrolled,
                 authenticated,
+                viewerId,
             ]
             : null,
         async () => {

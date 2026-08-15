@@ -2,6 +2,7 @@ import useSWR from "swr"
 import { queryContentAiHistory } from "@/modules/api/graphql/queries/query-content-ai-history"
 import type { ContentAiHistoryTurn } from "@/modules/api/graphql/queries/types/content-ai-history"
 import { useAppSelector } from "@/redux/hooks"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 
 /**
  * SWR query wrapper for {@link queryContentAiHistory}. Returns a conversation's
@@ -10,9 +11,10 @@ import { useAppSelector } from "@/redux/hooks"
  */
 export const useQueryContentAiHistorySwr = (sessionId: string | undefined) => {
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
     const swr = useSWR<Array<ContentAiHistoryTurn>>(
-        authenticated && sessionId
-            ? ["QUERY_CONTENT_AI_HISTORY_SWR", sessionId]
+        authenticated && viewerId && sessionId
+            ? ["QUERY_CONTENT_AI_HISTORY_SWR", sessionId, viewerId]
             : null,
         async () => {
             const data = await queryContentAiHistory({ sessionId: sessionId as string })

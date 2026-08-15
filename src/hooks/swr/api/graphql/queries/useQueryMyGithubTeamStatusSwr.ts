@@ -1,6 +1,7 @@
 import useSWR from "swr"
 import { queryMyGithubTeamStatus } from "@/modules/api/graphql/queries/query-my-github-team-status"
 import { useAppSelector } from "@/redux/hooks"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 
 /**
  * SWR core for the viewer's GitHub link + team-membership status. Runs only when
@@ -10,9 +11,10 @@ import { useAppSelector } from "@/redux/hooks"
  */
 export const useQueryMyGithubTeamStatusSwr = () => {
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
 
     const swr = useSWR(
-        authenticated ? ["QUERY_MY_GITHUB_TEAM_STATUS_SWR"] : null,
+        authenticated && viewerId ? ["QUERY_MY_GITHUB_TEAM_STATUS_SWR", viewerId] : null,
         async () => {
             const data = await queryMyGithubTeamStatus({})
 

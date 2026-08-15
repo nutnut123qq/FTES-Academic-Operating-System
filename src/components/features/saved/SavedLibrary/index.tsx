@@ -168,7 +168,9 @@ export const SavedLibrary = () => {
                 }
             }
             // post: author/title/snippet come from the real BE bookmark endpoint; the
-            // source label comes from the entry captured at save time
+            // source label comes from the entry captured at save time.
+            // `post.snippet` đã bỏ cặp `<>` của autolink ngay ở mapper `toSavedPost`, nên
+            // chuỗi ghép dưới đây sạch cho CẢ tiêu đề hàng LẪN haystack tìm kiếm.
             const post = postsById.get(entry.entityId)
             if (!post) return null
             const snippet = post.title ? `${post.title} — ${post.snippet}` : post.snippet

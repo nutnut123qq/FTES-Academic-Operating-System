@@ -15,6 +15,8 @@ import {
 } from "@/components/reuseable/PostEngagementBar"
 import { PostCommentThread } from "@/components/reuseable/PostCommentThread"
 import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
+import { LinkPreview } from "@/components/reuseable/LinkPreview"
+import { firstLinkUrl, unwrapAutolinks } from "./postLinks"
 import { useQueryPostDetailSwr } from "../hooks/useQueryPostDetailSwr"
 import { useMutateReactPostSwr } from "../hooks/useMutateReactPostSwr"
 import { useMutateCreatePostCommentSwr, type SubmitCommentInput } from "../hooks/useMutateCreatePostCommentSwr"
@@ -95,6 +97,16 @@ export const CommunityPostContent = ({
     const currentUser = useAppSelector((state) => state.user.user)
 
     const commentsRegionId = regionId ?? `post-comments-${postId}`
+
+    /**
+     * Body actually rendered: `<https://…>` unwrapped to a bare url so the reader
+     * shows `https://…` (a real `<a>` either way — GFM autolinks the bare form)
+     * instead of the authored angle brackets, plus the FIRST link in the post —
+     * the one, and only one, the preview card unfurls.
+     */
+    const rawBody = post?.body ?? ""
+    const renderedBody = useMemo(() => unwrapAutolinks(rawBody), [rawBody])
+    const previewUrl = useMemo(() => firstLinkUrl(rawBody), [rawBody])
 
     useEffect(() => {
         if (typeof window !== "undefined" && window.location.hash === "#comments") {
@@ -217,7 +229,8 @@ export const CommunityPostContent = ({
                         {post.title}
                     </Typography>
                 ) : null}
-                <MarkdownContent markdown={post.body} />
+                <MarkdownContent markdown={renderedBody} />
+                {previewUrl ? <LinkPreview url={previewUrl} /> : null}
                 {showMedia ? (
                     <PostMediaGrid postId={postId} media={post.media} imageAlt={t("composer.imageAlt")} />
                 ) : null}

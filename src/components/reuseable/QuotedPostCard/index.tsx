@@ -3,6 +3,7 @@
 import React from "react"
 import { Typography, cn } from "@heroui/react"
 import { UserLink } from "@/components/features/identity"
+import { unwrapAutolinks } from "@/components/features/community/CommunityPostDetail/postLinks"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 
 /** The embedded post shown inside a repost/quote. */
@@ -26,6 +27,11 @@ export interface QuotedPostCardProps extends WithClassNames<undefined> {
  * preview and (when the feed exposes share data) inside a repost feed row. Purely
  * presentational; the author is a real {@link UserLink} hovercard.
  *
+ * `snippet` in ra dưới dạng TEXT THUẦN nên chạy qua {@link unwrapAutolinks} ngay tại đây:
+ * card này không có mapper riêng — quote mở từ dòng feed đã sạch (`toCommunityPost`), nhưng
+ * caller nào dựng `QuotedPost` từ snippet THÔ thì cặp `<>` của autolink `<https://…>` vẫn
+ * lộ ra. Helper idempotent nên chạy hai lần vô hại.
+ *
  * @param props - {@link QuotedPostCardProps}
  */
 export const QuotedPostCard = ({ post, className }: QuotedPostCardProps) => {
@@ -48,7 +54,7 @@ export const QuotedPostCard = ({ post, className }: QuotedPostCardProps) => {
             ) : null}
             {post.snippet ? (
                 <Typography type="body-sm" color="muted" className="line-clamp-3">
-                    {post.snippet}
+                    {unwrapAutolinks(post.snippet)}
                 </Typography>
             ) : null}
         </div>

@@ -1,5 +1,6 @@
 import type { Locale } from "next-intl"
 import { pathConfig } from "@/resources/path"
+import { unwrapAutolinks } from "@/components/features/community/CommunityPostDetail/postLinks"
 import type { SearchDocTypeName, SearchGroupView, SearchHitView } from "@/modules/api/rest/search"
 import type { SearchCategoryKind, SearchRow } from "../types"
 
@@ -75,12 +76,18 @@ const hrefForHit = (
  *  re-highlights the query client-side via SearchHighlight, so raw tags must not reach the DOM. */
 const stripMarks = (value: string): string => value.replace(/<\/?mark>/gi, "")
 
-/** Map one BE hit into the shared presentational {@link SearchRow}. */
+/**
+ * Map one BE hit into the shared presentational {@link SearchRow}.
+ *
+ * `snippet` là trích đoạn thân bài (bài cộng đồng, tài liệu…) và hàng kết quả in nó dưới
+ * dạng TEXT THUẦN, nên autolink CommonMark `<https://…>` của tác giả sẽ lộ nguyên cặp `<>`
+ * ra ô tìm kiếm — {@link unwrapAutolinks} bỏ cặp dấu đó sau khi gỡ `<mark>` của ts_headline.
+ */
 const toRow = (kind: SearchCategoryKind, hit: SearchHitView, locale: Locale): SearchRow => ({
     id: `${kind}-${hit.docId}`,
     kind,
     title: hit.title ?? hit.slug ?? hit.docId,
-    snippet: hit.snippet ? stripMarks(hit.snippet) : undefined,
+    snippet: hit.snippet ? unwrapAutolinks(stripMarks(hit.snippet)) : undefined,
     href: hrefForHit(kind, hit.slug, locale),
 })
 

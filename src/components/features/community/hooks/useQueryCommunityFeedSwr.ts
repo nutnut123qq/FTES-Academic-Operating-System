@@ -11,6 +11,7 @@ import {
 } from "@/modules/api/graphql/queries/query-community-feed"
 import { CommunitySearchSort } from "@/modules/api/graphql/queries/query-community-search"
 import type { PostMediaItem } from "@/components/blocks/feed/PostMediaGrid"
+import { unwrapAutolinks } from "@/components/features/community/CommunityPostDetail/postLinks"
 import { formatRelativeTime } from "./relativeTime"
 
 /** Map BE `Post.media` onto the render contract of the shared media grid. */
@@ -183,6 +184,11 @@ const toFeedTab = (tab: CommunityFeedTab): FeedTab => {
  * optional-chained — the row must degrade, not throw. `avatarUrl` is carried through as
  * `authorAvatar`: it was already selected by the document but dropped here, which is why
  * every feed face fell back to a generated one.
+ *
+ * `snippet` chạy qua {@link unwrapAutolinks}: dòng feed in snippet dưới dạng TEXT THUẦN
+ * (cả hàng đã nằm trong một `<Link>` phủ toàn bộ, chèn `<a>` vào đây là lồng anchor), nên
+ * autolink CommonMark `<https://…>` của tác giả sẽ lộ nguyên cặp `<>` ra màn hình. Bỏ cặp
+ * dấu đó là đủ để đọc ra như một URL bình thường mà không đụng gì tới cấu trúc link của hàng.
  */
 export const toCommunityPost = (post: FeedPost, locale: string): CommunityPost => ({
     id: post.id,
@@ -197,7 +203,7 @@ export const toCommunityPost = (post: FeedPost, locale: string): CommunityPost =
     pinned: post.pinned ?? false,
     timeLabel: formatRelativeTime(post.createdAt, locale),
     title: post.title ?? "",
-    snippet: post.snippet ?? "",
+    snippet: unwrapAutolinks(post.snippet ?? ""),
     likes: post.likeCount,
     liked: post.likedByMe,
     comments: post.commentCount,

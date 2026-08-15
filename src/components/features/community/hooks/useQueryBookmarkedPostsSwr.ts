@@ -5,7 +5,9 @@ import useSWRInfinite from "swr/infinite"
 import { useLocale } from "next-intl"
 import { getBookmarkedPosts, unbookmarkPost } from "@/modules/api/rest/community/community"
 import type { FeedPage, PostResponse } from "@/modules/api/rest/community/types"
+import { unwrapAutolinks } from "@/components/features/community/CommunityPostDetail/postLinks"
 import { useAppSelector } from "@/redux/hooks"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 import { formatRelativeTime } from "./relativeTime"
 
 /** A bookmarked post mapped to the saved-card contract. */
@@ -29,8 +31,17 @@ export interface SavedPost {
 /** Items per saved-page cursor page (BE `limit`, default 20). */
 const PAGE_LIMIT = 20
 
-/** Map a BE `PostResponse` to the saved-card contract. */
-const toSavedPost = (post: PostResponse, locale: string): SavedPost => ({
+/**
+ * Map a BE `PostResponse` to the saved-card contract.
+ *
+ * `snippet` chạy qua {@link unwrapAutolinks} ngay tại MAPPER vì mọi bề mặt đọc nó đều in
+ * dưới dạng TEXT THUẦN: hàng `/community/saved`, hàng `/saved` (ghép `title — snippet` làm
+ * tiêu đề hàng VÀ làm chuỗi tìm kiếm) và khối "Đã lưu" ở dashboard. Autolink CommonMark
+ * `<https://…>` của tác giả nếu để nguyên sẽ lộ cặp `<>` ra màn hình — và ở `/saved` còn
+ * lọt vào cả haystack, khiến gõ "https://…" không khớp. Vá ở đây thay vì rắc lời gọi ở
+ * từng chỗ render (cùng cách đã làm cho dòng feed trong `toCommunityPost`).
+ */
+export const toSavedPost = (post: PostResponse, locale: string): SavedPost => ({
     id: post.id,
     authorName: post.author?.displayName ?? post.author?.username ?? "",
     authorUsername: post.author?.username,
@@ -38,7 +49,7 @@ const toSavedPost = (post: PostResponse, locale: string): SavedPost => ({
     seed: post.author?.userId ?? post.authorId,
     timeLabel: formatRelativeTime(post.createdAt, locale),
     title: post.title ?? "",
-    snippet: post.content ?? "",
+    snippet: unwrapAutolinks(post.content ?? ""),
     likes: post.likeCount,
     comments: post.commentCount,
 })
@@ -57,12 +68,13 @@ const toSavedPost = (post: PostResponse, locale: string): SavedPost => ({
 export const useQueryBookmarkedPostsSwr = () => {
     const locale = useLocale()
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
 
     const getKey = (
         index: number,
         previous: FeedPage<PostResponse> | null,
-    ): readonly [string, string] | null => {
-        if (!authenticated) {
+    ): readonly [string, string, string] | null => {
+        if (!authenticated || !viewerId) {
             return null
         }
         // previous page had no next cursor → end of list, stop
@@ -71,7 +83,7 @@ export const useQueryBookmarkedPostsSwr = () => {
         }
         // page 1 has no cursor; later pages use the previous page's nextCursor
         const cursor = index === 0 ? "" : previous?.nextCursor ?? ""
-        return ["QUERY_BOOKMARKED_POSTS_SWR", cursor]
+        return ["QUERY_BOOKMARKED_POSTS_SWR", cursor, viewerId]
     }
 
     const { data, error, isLoading, isValidating, size, setSize, mutate } = useSWRInfinite(

@@ -2,6 +2,8 @@
 
 import useSWR from "swr"
 import { getMyEnrollments } from "@/modules/api/rest/course"
+import { useAppSelector } from "@/redux/hooks"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 import type { EnrollmentView } from "@/modules/api/rest/course"
 
 /** One enrolled course the viewer can resume — title + rounded progress + learn href. */
@@ -62,18 +64,28 @@ const isPublishedEnrollment = (enrollment: EnrollmentView): boolean => {
  * The viewer's ACTIVE course enrollments as resumable cards (title + progress +
  * learn href), reusing the shared `GET /courses/me/enrollments` fetcher. Least-
  * finished courses lead so "continue learning" surfaces the next thing to do.
- * Gated on a stored access token (mirrors {@link useQueryMyEnrolledSlugsSwr}) so
- * anonymous viewers get an empty list — no 401 spam, and the home band can
- * self-hide without a layout jump. With no token the SWR key is null, so the
- * fetch never runs, `isLoading` stays false and callers fall through to the
- * empty / hidden branch.
+ * Gated on the REACTIVE session flag `state.keycloak.authenticated` (mirrors
+ * {@link useQueryMyEnrolledSlugsSwr} and the app-shell viewer query) so anonymous
+ * viewers get an empty list — no 401 spam, and the home band can self-hide. While
+ * signed out the SWR key is null, so the fetch never runs, `isLoading` stays false
+ * and callers fall through to the empty / hidden branch.
+ *
+ * The gate MUST come from redux, not from a `localStorage` read taken during render:
+ * local storage is not reactive, so a sign-in that happens without a page load wrote
+ * the token but never re-rendered this hook — the key stayed null, the fetch never
+ * ran, and the "continue learning" band stayed empty until the user pressed F5.
+ * Every sign-in path dispatches `setAuthenticated(true)`, which re-renders every
+ * subscriber, so keying off it is what makes the band appear on sign-in.
+ *
+ * The key also carries the VIEWER ID ({@link useViewerScopeId}). "Somebody is signed
+ * in" is not an identity: on the bare key, signing out of A and into B in the same tab
+ * re-keys to the same entry and B reads A's enrollments straight from the cache.
  */
 export const useQueryMyCoursesSwr = () => {
-    const hasToken =
-        typeof window !== "undefined" &&
-        !!window.localStorage.getItem("keycloak:access_token")
+    const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
     const { data, isLoading, error, mutate } = useSWR(
-        hasToken ? ["course-my-courses"] : null,
+        authenticated && viewerId ? ["course-my-courses", viewerId] : null,
         async (): Promise<Array<MyCourse>> => {
             const enrollments = await getMyEnrollments()
             return enrollments
@@ -111,7 +123,7 @@ export const useQueryMyCoursesSwr = () => {
         hasCourses: (data ?? []).length > 0,
         // Anonymous (null key) never "loads": SWR leaves data undefined with
         // isLoading false, so the page shows the empty state and the home band hides.
-        isLoading: hasToken && isLoading,
+        isLoading: authenticated && isLoading,
         error,
         mutate,
     }

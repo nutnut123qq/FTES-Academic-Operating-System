@@ -5,6 +5,7 @@ import { LocalStorage } from "@/modules/storage/local/storage"
 import { LocalStorageId } from "@/modules/storage/local/enums/id"
 import { setAccessToken, setAuthenticated } from "@/redux/slices/keycloak"
 import { useAppDispatch } from "@/redux/hooks"
+import { useRevalidateViewerSwr } from "@/hooks/swr/api/graphql/queries/useQueryUserSwr"
 
 /**
  * SWR mutation wrapper for {@link keycloakLogin}.
@@ -14,9 +15,21 @@ import { useAppDispatch } from "@/redux/hooks"
  * reads) and to redux, so downstream requests attach `Authorization: Bearer <token>`.
  * When the backend returns an MFA challenge (`mfaRequired`, no `accessToken`) nothing
  * is stored and the caller must complete `/auth/mfa/verify`.
+ *
+ * The token is only HALF the session. The signed-in UI (account menu, avatar, gated
+ * controls) renders from `state.user.user`, which nothing here writes — the `me` query
+ * does, from inside its own fetcher. Storing the token used to be the whole login step
+ * and the viewer was expected to re-fetch on its own because flipping `authenticated`
+ * changes that query's SWR key; it does not when the tab has already resolved the
+ * signed-in key once (sign out → sign in again, or signing in after a revoked session),
+ * because SWR then serves the settled entry without running the fetcher. The result was
+ * a "success" toast over a navbar still showing the signed-out avatar until the user
+ * pressed F5. {@link useRevalidateViewerSwr} makes that hydration an explicit part of
+ * signing in instead of a side effect we hope for.
  */
 export const usePostKeycloakLoginSwr = () => {
     const dispatch = useAppDispatch()
+    const revalidateViewer = useRevalidateViewerSwr()
     const swr = useSWRMutation<
         KeycloakLoginResponse,
         Error,
@@ -35,6 +48,10 @@ export const usePostKeycloakLoginSwr = () => {
                 }
                 dispatch(setAccessToken(response.accessToken))
                 dispatch(setAuthenticated(true))
+                // Pull the viewer for the session that just started, so the shell has an
+                // identity to render without a reload. Awaited: `trigger()` resolves only
+                // once the signed-in UI can actually paint.
+                await revalidateViewer()
             }
             return response
         }

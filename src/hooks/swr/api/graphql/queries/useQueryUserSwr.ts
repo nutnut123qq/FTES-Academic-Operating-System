@@ -1,9 +1,11 @@
-import useSWR from "swr"
+import { useCallback } from "react"
+import useSWR, { useSWRConfig } from "swr"
 import { queryMe } from "@/modules/api/graphql/queries/query-me"
 import { getSelfProfile } from "@/modules/api/rest/profile"
 import { useAppDispatch, useAppSelector } from "@/redux/hooks"
 import { setAuthenticated } from "@/redux/slices/keycloak"
 import { setUser, setViewerAccess } from "@/redux/slices/user"
+import { hydrateAppearanceFromServer } from "@/hooks/zustand/appearance/store"
 import { LocalStorage } from "@/modules/storage/local/storage"
 import { LocalStorageId } from "@/modules/storage/local/enums/id"
 import type { UserEntity } from "@/modules/types/entities/user"
@@ -61,6 +63,47 @@ const buildUserEntity = (
 }
 
 /**
+ * SWR key of the app-shell viewer query, one per auth state.
+ *
+ * Exported because the sign-in paths must be able to ASK for this query to run again:
+ * everything the navbar renders (`state.user.user`) is written as a side effect INSIDE
+ * this query's fetcher, and a session that starts without a page load cannot rely on the
+ * key merely flipping (see {@link useRevalidateViewerSwr}).
+ */
+export const queryUserSwrKey = (authenticated: boolean) => [
+    "QUERY_USER_SWR",
+    String(authenticated),
+]
+
+/**
+ * Forces the viewer query ({@link useQueryUserSwr}) to fetch again — the hydration step
+ * every "a new session just started" path must run.
+ *
+ * Why it is needed: signing in only writes the token (local storage + redux
+ * `keycloak.*`). The identity the header renders lives in `state.user.user`, and the
+ * ONLY writer is the `me` fetcher above. Flipping `authenticated` changes that query's
+ * SWR key, which LOOKS like it is enough — but a key change only fetches when SWR has
+ * nothing settled for the new key. In a tab that has already been signed in once
+ * (previous session, sign-out, revoked session), the signed-in key is already settled,
+ * so SWR serves it deduped, the fetcher never runs, `setUser` is never dispatched and
+ * the account menu stays in its signed-out state until a full page reload.
+ *
+ * Only the SIGNED-IN key is touched, and it is touched through `mutate` rather than by
+ * waiting for the re-render: `mutate` drops the settled entry even while the hook is
+ * still rendered on the signed-out key, so the mount that follows the re-render fetches
+ * for real — one `me` request, not two.
+ */
+export const useRevalidateViewerSwr = () => {
+    const { mutate } = useSWRConfig()
+    return useCallback(
+        async () => {
+            await mutate(queryUserSwrKey(true))
+        },
+        [mutate],
+    )
+}
+
+/**
  * App-shell current-user query. Fetches the real BE `me: Viewer`, merges the rich
  * REST self-profile, and hydrates redux (`user`, `authenticated`, RBAC access).
  */
@@ -69,7 +112,7 @@ export const useQueryUserSwr = () => {
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
     /** The SWR. */
     const swr = useSWR(
-        ["QUERY_USER_SWR", authenticated.toString()],
+        queryUserSwrKey(authenticated),
         async () => {
             if (
                 !LocalStorage.getItemAsString(
@@ -90,6 +133,15 @@ export const useQueryUserSwr = () => {
             } catch {
                 profile = null
             }
+            /**
+             * Appearance follows the ACCOUNT, not the machine: whatever accent /
+             * background effect this user picked elsewhere is applied here (and
+             * written back to localStorage, so the pre-paint script has it on the
+             * next load). Guests never get here, so they stay localStorage-only.
+             * Best-effort like the merge above — a look is not worth failing the
+             * shell over.
+             */
+            void hydrateAppearanceFromServer(profile).catch(() => undefined)
             /** Set the user + auth + RBAC access. */
             dispatch(setAuthenticated(true))
             dispatch(setUser(buildUserEntity(viewer, profile)))

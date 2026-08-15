@@ -8,6 +8,7 @@ import { LocalStorage } from "@/modules/storage/local/storage"
 import { LocalStorageId } from "@/modules/storage/local/enums/id"
 import { setAccessToken, setAuthenticated } from "@/redux/slices/keycloak"
 import { useAppDispatch } from "@/redux/hooks"
+import { useRevalidateViewerSwr } from "@/hooks/swr/api/graphql/queries/useQueryUserSwr"
 
 /**
  * SWR mutation wrapper for {@link loginWithGoogle} (`POST /api/v1/auth/google`).
@@ -21,6 +22,7 @@ import { useAppDispatch } from "@/redux/hooks"
  */
 export const usePostLoginWithGoogleSwr = () => {
     const dispatch = useAppDispatch()
+    const revalidateViewer = useRevalidateViewerSwr()
     const swr = useSWRMutation<
         TokenResponse,
         Error,
@@ -39,6 +41,10 @@ export const usePostLoginWithGoogleSwr = () => {
                 }
                 dispatch(setAccessToken(response.accessToken))
                 dispatch(setAuthenticated(true))
+                // Same reason as password login: flipping `authenticated` does not re-run the
+                // `me` fetcher once this tab has settled the signed-in SWR key, so the navbar
+                // would keep the signed-out avatar until F5. Hydrate the viewer explicitly.
+                await revalidateViewer()
             }
             return response
         },

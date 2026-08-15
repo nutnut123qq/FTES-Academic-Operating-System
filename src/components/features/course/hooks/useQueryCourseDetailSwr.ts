@@ -4,6 +4,8 @@ import useSWR from "swr"
 import { getCourseDetail, getMyEnrollments } from "@/modules/api/rest/course"
 import type { CourseDetail as CourseDetailDto, EnrollmentView } from "@/modules/api/rest/course"
 import { useGetMyCourseAccessSwr } from "@/hooks/swr/api/rest/queries"
+import { useAppSelector } from "@/redux/hooks"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 import { mapCourseLevel, type CourseLevel } from "./useQueryCoursesSwr"
 
 /** A lesson in a course section (syllabus preview row). */
@@ -275,12 +277,18 @@ export const useQueryCourseDetailSwr = (courseId: string) => {
     )
     // Real viewer enrollment: mark this course enrolled when it appears in the
     // viewer's active enrollments (`GET /courses/me/enrollments`). Auth-gated —
-    // anon or a 401 degrades silently to the sales card.
-    const hasToken =
-        typeof window !== "undefined" &&
-        !!window.localStorage.getItem("keycloak:access_token")
+    // signed out or a 401 degrades silently to the sales card.
+    //
+    // The gate reads the REACTIVE redux session flag, not `localStorage` during
+    // render: local storage is not reactive, so signing in from this very page left
+    // the key null forever and the card kept selling a course the viewer had just
+    // gained access to, until F5.
+    const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
     const { data: enrollments } = useSWR(
-        hasToken && courseId ? ["my-enrollments", courseId] : null,
+        authenticated && viewerId && courseId
+            ? ["my-enrollments", courseId, viewerId]
+            : null,
         () => getMyEnrollments().catch(() => [] as Array<EnrollmentView>),
     )
     // The viewer's active enrollment for THIS course, if any. It carries the real
@@ -292,7 +300,7 @@ export const useQueryCourseDetailSwr = (courseId: string) => {
     // loaded (we need the course UUID for the path), and no enrollment matched,
     // ask `GET /courses/{rawId}/me/access` to recover `purchased`/`enrolled`.
     const needAccessFallback =
-        hasToken && enrollments !== undefined && !matched
+        authenticated && enrollments !== undefined && !matched
     const { data: access } = useGetMyCourseAccessSwr(
         needAccessFallback ? data?.rawId : undefined,
     )

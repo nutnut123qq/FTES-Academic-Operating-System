@@ -1,4 +1,6 @@
+import React from "react"
 import { renderHook, waitFor } from "@testing-library/react"
+import { Provider } from "react-redux"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 /**
@@ -24,7 +26,27 @@ vi.mock("@/hooks/swr/api/rest/queries", () => ({
     useGetMyCourseAccessSwr: (courseRawId: string | undefined) => accessMock(courseRawId),
 }))
 
+import { store } from "@/redux/store"
+import { setAuthenticated } from "@/redux/slices/keycloak"
+import { setUser } from "@/redux/slices/user"
 import { useQueryCourseDetailSwr } from "./useQueryCourseDetailSwr"
+import type { UserEntity } from "@/modules/types/entities/user"
+
+/** The hook reads the session flag from redux, so every render needs the store. */
+const wrapper = ({ children }: { children: React.ReactNode }) => (
+    <Provider store={store}>{children}</Provider>
+)
+
+/**
+ * Sign the viewer in the way every real sign-in path does: token stored, session flag
+ * set AND the viewer resolved (the `me` query hydrates `state.user.user`). The identity
+ * matters because the enrollment key is viewer-scoped.
+ */
+const signIn = (id = "viewer-1") => {
+    window.localStorage.setItem("keycloak:access_token", "tok")
+    store.dispatch(setAuthenticated(true))
+    store.dispatch(setUser({ id } as UserEntity))
+}
 
 /** Minimal BE detail DTO for a course routed by `slug`. */
 const detailDto = (slug: string) => ({
@@ -62,17 +84,20 @@ beforeEach(() => {
     accessMock.mockReset()
     accessMock.mockReturnValue({ data: undefined })
     window.localStorage.clear()
+    // the redux store is a module singleton — start every case signed out
+    store.dispatch(setAuthenticated(false))
+    store.dispatch(setUser(null))
 })
 
 // NOTE: SWR's cache is module-global — every test uses a distinct course slug.
 
 describe("useQueryCourseDetailSwr — isPurchased resolution", () => {
     it("reads isPurchased from the matching active enrollment (no access fallback)", async () => {
-        window.localStorage.setItem("keycloak:access_token", "tok")
+        signIn()
         detailMock.mockResolvedValue(detailDto("khoa-paid"))
         enrollmentsMock.mockResolvedValue([enrollment("khoa-paid", true)])
 
-        const { result } = renderHook(() => useQueryCourseDetailSwr("khoa-paid"))
+        const { result } = renderHook(() => useQueryCourseDetailSwr("khoa-paid"), { wrapper })
         await waitFor(() => expect(result.current.course?.enrollment?.isPurchased).toBe(true))
         expect(result.current.course?.enrollment?.isEnrolled).toBe(true)
         // The matched enrollment answers everything — me/access must stay disabled.
@@ -80,17 +105,17 @@ describe("useQueryCourseDetailSwr — isPurchased resolution", () => {
     })
 
     it("keeps a FREE enrollment enrolled but NOT purchased", async () => {
-        window.localStorage.setItem("keycloak:access_token", "tok")
+        signIn()
         detailMock.mockResolvedValue(detailDto("khoa-free"))
         enrollmentsMock.mockResolvedValue([enrollment("khoa-free", false)])
 
-        const { result } = renderHook(() => useQueryCourseDetailSwr("khoa-free"))
+        const { result } = renderHook(() => useQueryCourseDetailSwr("khoa-free"), { wrapper })
         await waitFor(() => expect(result.current.course?.enrollment?.isEnrolled).toBe(true))
         expect(result.current.course?.enrollment?.isPurchased).toBe(false)
     })
 
     it("falls back to me/access when a package buyer has no enrollment row", async () => {
-        window.localStorage.setItem("keycloak:access_token", "tok")
+        signIn()
         detailMock.mockResolvedValue(detailDto("khoa-pkg"))
         enrollmentsMock.mockResolvedValue([])
         accessMock.mockImplementation((courseRawId: string | undefined) =>
@@ -106,7 +131,7 @@ describe("useQueryCourseDetailSwr — isPurchased resolution", () => {
                 : { data: undefined },
         )
 
-        const { result } = renderHook(() => useQueryCourseDetailSwr("khoa-pkg"))
+        const { result } = renderHook(() => useQueryCourseDetailSwr("khoa-pkg"), { wrapper })
         await waitFor(() => expect(result.current.course?.enrollment?.isPurchased).toBe(true))
         expect(result.current.course?.enrollment?.isEnrolled).toBe(true)
         // The fallback was keyed on the REAL course UUID from the detail.
@@ -114,11 +139,11 @@ describe("useQueryCourseDetailSwr — isPurchased resolution", () => {
     })
 
     it("degrades to the sales card when the enrollments call fails", async () => {
-        window.localStorage.setItem("keycloak:access_token", "tok")
+        signIn()
         detailMock.mockResolvedValue(detailDto("khoa-err"))
         enrollmentsMock.mockRejectedValue(new Error("500"))
 
-        const { result } = renderHook(() => useQueryCourseDetailSwr("khoa-err"))
+        const { result } = renderHook(() => useQueryCourseDetailSwr("khoa-err"), { wrapper })
         await waitFor(() => expect(result.current.course).toBeTruthy())
         await waitFor(() => expect(result.current.course?.enrollment).toBeTruthy())
         expect(result.current.course?.enrollment?.isPurchased).toBe(false)
@@ -128,7 +153,7 @@ describe("useQueryCourseDetailSwr — isPurchased resolution", () => {
     it("never calls enrollments for an anonymous viewer and defaults to the sales card", async () => {
         detailMock.mockResolvedValue(detailDto("khoa-anon"))
 
-        const { result } = renderHook(() => useQueryCourseDetailSwr("khoa-anon"))
+        const { result } = renderHook(() => useQueryCourseDetailSwr("khoa-anon"), { wrapper })
         await waitFor(() => expect(result.current.course).toBeTruthy())
         expect(enrollmentsMock).not.toHaveBeenCalled()
         expect(result.current.course?.enrollment?.isPurchased).toBe(false)

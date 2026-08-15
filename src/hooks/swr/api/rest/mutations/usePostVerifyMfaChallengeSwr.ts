@@ -8,6 +8,7 @@ import { LocalStorage } from "@/modules/storage/local/storage"
 import { LocalStorageId } from "@/modules/storage/local/enums/id"
 import { setAccessToken, setAuthenticated } from "@/redux/slices/keycloak"
 import { useAppDispatch } from "@/redux/hooks"
+import { useRevalidateViewerSwr } from "@/hooks/swr/api/graphql/queries/useQueryUserSwr"
 
 /**
  * SWR mutation wrapper for {@link verifyMfaChallenge}.
@@ -19,6 +20,7 @@ import { useAppDispatch } from "@/redux/hooks"
  */
 export const usePostVerifyMfaChallengeSwr = () => {
     const dispatch = useAppDispatch()
+    const revalidateViewer = useRevalidateViewerSwr()
     const swr = useSWRMutation<
         TokenResponse,
         Error,
@@ -35,6 +37,10 @@ export const usePostVerifyMfaChallengeSwr = () => {
                 }
                 dispatch(setAccessToken(response.accessToken))
                 dispatch(setAuthenticated(true))
+                // Hydrate the viewer for the session that just started — flipping
+                // `authenticated` alone does not re-run the `me` fetcher in a tab that has
+                // already settled the signed-in key, leaving a signed-out navbar until F5.
+                await revalidateViewer()
             }
             return response
         },

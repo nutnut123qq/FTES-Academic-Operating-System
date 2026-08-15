@@ -2,6 +2,7 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useLayoutEffect, useRef } from "react"
 import { useMutateExchangeCodeForTokenSwr } from "@/hooks/swr/api/graphql/mutations/useMutateExchangeCodeForTokenSwr"
+import { useRevalidateViewerSwr } from "@/hooks/swr/api/graphql/queries/useQueryUserSwr"
 import { KeycloakIdentityProvider } from "@/modules/api/graphql/mutations/types/exchange-code-for-token"
 import { setAccessToken, setAuthenticated } from "@/redux/slices/keycloak"
 import { useAppDispatch } from "@/redux/hooks"
@@ -55,6 +56,7 @@ export const useExchangeCodeForToken = () => {
     const pathname = usePathname()
     const router = useRouter()
     const swr = useMutateExchangeCodeForTokenSwr()
+    const revalidateViewer = useRevalidateViewerSwr()
     /** Processed code — idempotent guard BY VALUE (not a one-shot boolean flag). */
     const processedCodeRef = useRef<string | null>(null)
     useLayoutEffect(() => {
@@ -98,6 +100,10 @@ export const useExchangeCodeForToken = () => {
                 )
                 dispatch(setAccessToken(data.accessToken))
                 dispatch(setAuthenticated(true))
+                // Hydrate the viewer for the session that just started — flipping
+                // `authenticated` does not re-run the `me` fetcher in a tab that already
+                // settled the signed-in key, leaving a signed-out navbar until F5.
+                await revalidateViewer()
             } finally {
                 SessionStorage.removeItem(SessionStorageId.OauthIdpHint)
                 router.replace(cleanUrl, { scroll: false })
@@ -105,9 +111,10 @@ export const useExchangeCodeForToken = () => {
         }
         handleEffect()
     }, [
-        dispatch, 
-        pathname, 
-        router, 
+        dispatch,
+        pathname,
+        revalidateViewer,
+        router,
         searchParams
     ]
     )

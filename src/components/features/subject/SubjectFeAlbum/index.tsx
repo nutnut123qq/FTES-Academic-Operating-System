@@ -190,11 +190,21 @@ export const SubjectFeAlbum = () => {
                         {/* RIGHT — poster info + THIS picture's comments (scrolls on its own on lg:) */}
                         <div className="flex min-h-0 flex-col gap-3 bg-overlay p-4 lg:overflow-y-auto">
                             <div className="flex items-start gap-3">
-                                {/* The album view carries only an uploader id (no profile
-                                    join), so the avatar falls back to its neutral tile
-                                    rather than inventing a face or printing a uuid. */}
+                                {/* The album view carries only an uploader id — no profile
+                                    join, so neither a name nor an uploaded photo ever
+                                    reaches this row.
+                                    `seed=""` is what actually keeps the avatar on its
+                                    neutral tile: `UserAvatar` seeds the GENERATED face on
+                                    `seed ?? username`, so leaving it off would hash the
+                                    uuid into a face — a face that looks exactly like "this
+                                    person has no photo" while the truth is that their photo
+                                    is simply not fetched here (the trap documented on
+                                    `UserAvatar`). "" is the documented "no seed to hash"
+                                    value. The uuid is never PRINTED either: `avatarInitials`
+                                    rejects a raw id, so the fallback is the person glyph. */}
                                 <UserAvatar
                                     username={current.uploadedBy}
+                                    seed=""
                                     size="sm"
                                     className="size-9 shrink-0"
                                 />

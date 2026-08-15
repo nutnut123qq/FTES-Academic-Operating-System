@@ -29,6 +29,10 @@ const nextConfig: NextConfig = {
                     hostname: process.env.NEXT_PUBLIC_IMAGE_EXTRA_HOSTNAME,
                 }]
                 : []),
+            // Avatar mặc định sinh theo seed (UserAvatar → utils/avatar.dicebearAvatarUrl).
+            // Hôm nay HeroUI Avatar render bằng <img> thuần (Radix) nên KHÔNG qua optimizer;
+            // liệt kê sẵn để chỗ nào bọc avatar bằng next/image sau này không ăn 400.
+            { protocol: "https", hostname: "api.dicebear.com" },
             // Dev: MinIO cục bộ.
             { protocol: "http", hostname: "localhost" },
         ],

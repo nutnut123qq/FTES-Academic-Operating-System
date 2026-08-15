@@ -56,7 +56,15 @@ export const GroupIdentityFields = ({
                 <AvatarUploadButton
                     avatar={avatar.shown}
                     displayName={name.trim() || null}
-                    seed={name.trim() || null}
+                    /* A group is NOT a person. The generated (DiceBear) default draws a
+                       FACE, so seeding it here gave every photo-less group a human head —
+                       it reads as "a member", not "a study group". An entity avatar must
+                       stay on the initials tile.
+                       It has to be the EMPTY STRING, not null/undefined: `UserAvatar`
+                       seeds on `seed ?? username`, so a nullish seed would just fall
+                       through to the group name and draw the face anyway. "" is the
+                       documented "no seed to hash" value (see `dicebearAvatarUrl`). */
+                    seed=""
                     label={t("identity.avatarLabel")}
                     onPress={() => avatarInputRef.current?.click()}
                 />

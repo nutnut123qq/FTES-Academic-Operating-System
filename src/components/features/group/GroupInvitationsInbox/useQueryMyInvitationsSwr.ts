@@ -3,9 +3,10 @@
 import useSWR from "swr"
 import { getMyInvitations, type GroupMyInvitation } from "@/modules/api/rest/group"
 import { useAppSelector } from "@/redux/hooks"
+import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 
 /** SWR cache key of the caller's pending group invitations. */
-export const MY_INVITATIONS_KEY = ["GET_MY_INVITATIONS"]
+export const MY_INVITATIONS_KEY = "GET_MY_INVITATIONS"
 
 /** How many invitations the inbox pulls (BE caps the parameter at 50). */
 const LIMIT = 20
@@ -20,8 +21,9 @@ const LIMIT = 20
  */
 export const useQueryMyInvitationsSwr = () => {
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const viewerId = useViewerScopeId()
     const { data, isLoading, error, mutate } = useSWR(
-        authenticated ? MY_INVITATIONS_KEY : null,
+        authenticated && viewerId ? [MY_INVITATIONS_KEY, viewerId] : null,
         async (): Promise<Array<GroupMyInvitation>> => {
             const invitations = await getMyInvitations({ limit: LIMIT })
             return invitations ?? []

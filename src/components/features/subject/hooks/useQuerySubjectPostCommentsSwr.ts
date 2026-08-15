@@ -50,14 +50,32 @@ export const subjectPostCommentsKey = (
 const toReply = (reply: SubjectCommunityReplyNode, locale: string): PostComment => ({
     id: reply.id,
     author: reply.author.displayName ?? reply.author.username ?? "",
-    authorUsername: reply.author.username ?? reply.author.id,
+    // Chỉ nhận username THẬT. Rơi về `author.id` là dựng liên kết hồ sơ `/u/<uuid>`:
+    // `UserLink` dựng `href` ngay khi trường này khác rỗng, nên một uuid ở đây thành
+    // link CHẾT (404) kèm một lượt gọi hovercard cũng 404. Rỗng thì `UserLink` in tên
+    // mà KHÔNG bọc link — thà vậy còn hơn liên kết chết. Cùng quy ước với
+    // `toCommunityPost`/`toSubjectPost`.
+    // Không có cổng sở hữu nào phụ thuộc trường này ở luồng này: `SubjectCommunity`
+    // dựng `PostCommentThread` không truyền `onEdit`/`onDelete`, tức luồng thảo luận
+    // môn học không có sửa/xoá để mà mất. (Khác `useQueryPostDetailSwr`, nơi id được
+    // GIỮ có chủ đích vì `PostCommentThread.isMine` so viewer id với chính trường này.)
+    authorUsername: reply.author.username ?? "",
     authorStaffRole: reply.author.staffRole ?? null,
+    // The document already selects `avatarUrl`; dropping it here made every commenter
+    // render the seeded fallback face, which reads as "this person has no photo" even
+    // when they do. Same defect the community feed mappers were fixed for.
+    authorAvatar: reply.author.avatarUrl ?? null,
     text: reply.body,
     timeLabel: formatRelativeTime(reply.createdAt, locale),
 })
 
-/** Map a BE top-level comment node (with its one-level replies) to `PostComment`. */
-const toComment = (comment: SubjectCommunityCommentNode, locale: string): PostComment => ({
+/**
+ * Map a BE top-level comment node (with its one-level replies) to `PostComment`.
+ *
+ * Exported for unit tests: this mapper is what keeps a raw author uuid out of the
+ * URL-facing slot on the subject discussion thread (see `toReply`).
+ */
+export const toComment = (comment: SubjectCommunityCommentNode, locale: string): PostComment => ({
     ...toReply(comment, locale),
     replies: comment.replies.map((reply) => toReply(reply, locale)),
 })

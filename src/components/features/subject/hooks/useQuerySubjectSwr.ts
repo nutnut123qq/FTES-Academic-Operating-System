@@ -96,6 +96,12 @@ export interface Subject {
     isMember: boolean
     /** Membership role (`MEMBER` / `MODERATOR` / …) when a member, else `null`. */
     membershipRole: string | null
+    /**
+     * Mã ngành mà môn thuộc về (BE V336) — nhiều-nhiều nên là MẢNG, và rỗng có hai nghĩa gộp
+     * lại: môn chưa được gắn ngành nào, hoặc BE chưa deploy V336. Bộ lọc ngành ở catalog đối
+     * xử cả hai như nhau (môn chỉ hiện ở "Tất cả ngành").
+     */
+    majorCodes: Array<string>
 }
 
 /** Maps the BE `Difficulty` enum (EASY|MEDIUM|HARD|VERY_HARD) to the FE 3-bucket facet. */
@@ -142,6 +148,7 @@ export const toSubjectFromSummary = (summary: SubjectSummary, locale: string): S
     courseLinks: [],
     isMember: false,
     membershipRole: null,
+    majorCodes: (summary.majors ?? []).map((major) => major.code),
 })
 
 /**
@@ -169,6 +176,7 @@ export const toSubjectFromDetail = (
     courseLinks: context?.courseLinks ?? [],
     isMember: (context?.membership ?? null) !== null,
     membershipRole: context?.membership?.role ?? null,
+    majorCodes: (detail.majors ?? []).map((major) => major.code),
 })
 
 // ------------------------------------------------------------------ workspace

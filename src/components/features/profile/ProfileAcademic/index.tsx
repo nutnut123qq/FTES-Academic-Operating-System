@@ -7,6 +7,7 @@ import {
     BuildingIcon,
     CalendarBlankIcon,
     ChartLineUpIcon,
+    GraduationCapIcon,
     MapPinIcon,
 } from "@phosphor-icons/react"
 import { LabeledCard } from "@/components/blocks/cards/LabeledCard"
@@ -26,6 +27,9 @@ const FIELDS: Array<{
 }> = [
     { key: "university", icon: <BuildingIcon className="size-5 text-accent" aria-hidden focusable="false" /> },
     { key: "campus", icon: <MapPinIcon className="size-5 text-accent" aria-hidden focusable="false" /> },
+    // Ngành CHỌN TỪ DANH MỤC (V336) đứng trước chuyên ngành chữ tự do — chủ dự án muốn ngành học
+    // hiện ở hồ sơ, và đây là trường tra được, không phải chữ người dùng tự khai.
+    { key: "majorFromCatalog", icon: <GraduationCapIcon className="size-5 text-accent" aria-hidden focusable="false" /> },
     { key: "major", icon: <BookBookmarkIcon className="size-5 text-accent" aria-hidden focusable="false" /> },
     { key: "semester", icon: <CalendarBlankIcon className="size-5 text-accent" aria-hidden focusable="false" /> },
     { key: "gpa", icon: <ChartLineUpIcon className="size-5 text-accent" aria-hidden focusable="false" /> },

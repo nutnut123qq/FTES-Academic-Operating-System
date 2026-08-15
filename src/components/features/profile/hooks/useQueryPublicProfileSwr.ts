@@ -1,6 +1,7 @@
 "use client"
 
 import useSWR from "swr"
+import { useLocale } from "next-intl"
 import { getPublicProfile } from "@/modules/api/rest/profile"
 import type {
     AchievementView,
@@ -14,7 +15,10 @@ import type {
 export interface PublicProfileAcademic {
     university: string
     campus: string
+    /** Chuyên ngành chữ tự do (cột cũ). */
     major: string
+    /** NGÀNH chọn từ danh mục (BE V336), đã dịch tên theo locale; "" = chưa chọn. */
+    majorFromCatalog: string
     /** Current semester, stringified ("" when unset). */
     semester: string
     /** GPA — "" when unset OR when the owner's privacy hides it (`showGpa=false`). */
@@ -65,7 +69,7 @@ export interface PublicProfile {
  * `progress` (ProgressPort → always `null`), `certificates` (CertificatePort → always
  * `[]`). The BE exposes no free-form "skills" list either, so `skills` stays empty.
  */
-export const toPublicProfile = (dto: PublicProfileDto): PublicProfile => ({
+export const toPublicProfile = (dto: PublicProfileDto, locale = "vi"): PublicProfile => ({
     userId: dto.userId,
     username: dto.username,
     name: dto.displayName ?? dto.username,
@@ -83,6 +87,11 @@ export const toPublicProfile = (dto: PublicProfileDto): PublicProfile => ({
             university: dto.academic.university ?? "",
             campus: dto.academic.campus ?? "",
             major: dto.academic.major ?? "",
+            majorFromCatalog:
+                (locale.startsWith("vi") ? dto.academic.majorNameVi : dto.academic.majorName)
+                || dto.academic.majorNameVi
+                || dto.academic.majorName
+                || "",
             semester:
                 dto.academic.currentSemester != null
                     ? String(dto.academic.currentSemester)
@@ -106,9 +115,12 @@ export const toPublicProfile = (dto: PublicProfileDto): PublicProfile => ({
 
 /** Loads a public profile by username from the real BE (`GET /profiles/{username}`). */
 export const useQueryPublicProfileSwr = (username: string) => {
+    const locale = useLocale()
     const { data, isLoading, error, mutate } = useSWR(
-        username ? ["public-profile", username] : null,
-        () => getPublicProfile(username).then(toPublicProfile),
+        // locale nằm TRONG key: tên ngành phụ thuộc ngôn ngữ nên bản đã map phải cache riêng
+        // từng locale, nếu không đổi ngôn ngữ vẫn thấy tên cũ.
+        username ? ["public-profile", username, locale] : null,
+        () => getPublicProfile(username).then((dto) => toPublicProfile(dto, locale)),
     )
     return { profile: data, isLoading, error, mutate }
 }

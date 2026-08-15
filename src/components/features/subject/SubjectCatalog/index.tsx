@@ -8,6 +8,9 @@ import { Link } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { SearchInput } from "@/components/reuseable/SearchInput"
+import { MascotMajorPicker } from "@/components/features/mascot-moments"
+import { useMyMajor } from "@/components/features/profile/hooks/useMyMajor"
+import { useQueryMajorsSwr } from "../hooks/useQueryMajorsSwr"
 import { useQuerySubjectsSwr } from "../hooks/useQuerySubjectsSwr"
 import type { Subject } from "../hooks/useQuerySubjectSwr"
 
@@ -27,19 +30,32 @@ const THUMBNAIL_SIZES = "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100v
 export const SubjectCatalog = () => {
     const t = useTranslations("subjects")
     const { subjects, isLoading, error } = useQuerySubjectsSwr()
+    const { majors } = useQueryMajorsSwr()
+    const { majorCode: myMajor } = useMyMajor()
     const [query, setQuery] = useState("")
     const [difficulty, setDifficulty] = useState<Subject["difficulty"] | "all">("all")
+    // `undefined` = người dùng CHƯA tự chọn trong phiên này ⇒ lấy ngành trên hồ sơ làm mặc định.
+    // `"all"` = họ đã bấm "Tất cả ngành" — phải phân biệt được với "chưa chọn", nếu không thì
+    // mỗi lần hồ sơ load xong lại nhảy ngược về ngành của họ và nút "Tất cả" trông như hỏng.
+    const [majorFilter, setMajorFilter] = useState<string | undefined>(undefined)
+    const activeMajor = majorFilter ?? myMajor ?? "all"
 
     const filtered = subjects.filter((subject) => {
         const matchesDifficulty = difficulty === "all" || subject.difficulty === difficulty
+        // Lọc ngành ở CLIENT trên `majorCodes` (cùng lý do với bộ lọc độ khó: danh mục môn nhỏ,
+        // đã tải sẵn size=100). Môn chưa gắn ngành nào chỉ hiện ở "Tất cả ngành" — không đoán bừa.
+        const matchesMajor = activeMajor === "all" || subject.majorCodes.includes(activeMajor)
         const matchesQuery =
             query.trim() === "" ||
             `${subject.code} ${subject.name}`.toLowerCase().includes(query.trim().toLowerCase())
-        return matchesDifficulty && matchesQuery
+        return matchesDifficulty && matchesMajor && matchesQuery
     })
 
     return (
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-6">
+            {/* Lời mời chọn ngành cho người mới — tự ẩn khi đã chọn / đã bỏ qua / danh mục rỗng.
+                Đặt ở đây vì workplace chính là chỗ việc chọn ngành có tác dụng thấy được. */}
+            <MascotMajorPicker />
             <div className="flex flex-col gap-1">
                 <Typography type="h4" weight="bold">
                     {t("catalog.title")}
@@ -61,6 +77,29 @@ export const SubjectCatalog = () => {
                     placeholder={t("catalog.searchPlaceholder")}
                     className="sm:max-w-none"
                 />
+                {/* bộ lọc NGÀNH — chỉ hiện khi danh mục có dữ liệu (BE chưa deploy V336 hoặc
+                    danh mục rỗng ⇒ ẩn hẳn hàng này thay vì hiện một hàng chỉ có "Tất cả"). */}
+                {majors.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                        <Button
+                            size="sm"
+                            variant={activeMajor === "all" ? "secondary" : "ghost"}
+                            onPress={() => setMajorFilter("all")}
+                        >
+                            {t("catalog.allMajors")}
+                        </Button>
+                        {majors.map((major) => (
+                            <Button
+                                key={major.code}
+                                size="sm"
+                                variant={activeMajor === major.code ? "secondary" : "ghost"}
+                                onPress={() => setMajorFilter(major.code)}
+                            >
+                                {major.name}
+                            </Button>
+                        ))}
+                    </div>
+                ) : null}
                 <div className="flex flex-wrap gap-2">
                     {DIFFICULTIES.map((option) => (
                         <Button
@@ -88,7 +127,12 @@ export const SubjectCatalog = () => {
             >
                 {filtered.length === 0 ? (
                     <Typography type="body-sm" color="muted">
-                        {t("catalog.empty")}
+                        {/* Ngành có thật nhưng chưa môn nào (vd Vi Mạch / Toán Học trên dữ liệu
+                            hiện tại) là trạng thái HỢP LỆ — nói đúng thế thay vì "không khớp
+                            tìm kiếm", để người dùng không tưởng mình gõ sai. */}
+                        {activeMajor !== "all" && query.trim() === "" && difficulty === "all"
+                            ? t("catalog.emptyMajor")
+                            : t("catalog.empty")}
                     </Typography>
                 ) : (
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">

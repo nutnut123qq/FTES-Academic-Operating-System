@@ -102,8 +102,24 @@ export interface SubjectDetail {
     prerequisites: Array<PrerequisiteView>
     related: Array<RelatedView>
     lecturers: Array<LecturerView>
+    /** Ngành của môn (BE V336) — xem {@link SubjectSummary.majors}. */
+    majors?: Array<MajorView>
     createdAt: string
     updatedAt: string
+}
+
+/**
+ * Một NGÀNH HỌC trong danh mục (BE V336, `GET /api/v1/majors`).
+ *
+ * `code` là thứ đi qua API và lưu trên hồ sơ (`academic.majorCode`); hai tên dùng để hiển thị
+ * theo locale đang bật.
+ */
+export interface MajorView {
+    id: string
+    code: string
+    name: string
+    nameVi: string
+    description?: string | null
 }
 
 /** Subject summary row in catalog list. */
@@ -124,6 +140,11 @@ export interface SubjectSummary {
     /** Cover/identity image URL (CONTRACT A); falls back to {@link thumbnailUrl}. */
     imageUrl?: string | null
     status: string
+    /**
+     * Ngành mà môn thuộc về (BE V336). Optional: bản BE chưa deploy V336 không trả trường này —
+     * thẻ khi đó ẩn chip ngành, và bộ lọc ngành coi môn như "chưa gắn ngành" thay vì vỡ.
+     */
+    majors?: Array<MajorView>
 }
 
 /** Generic paginated response returned by backend list endpoints. */

@@ -10,6 +10,7 @@ import type {
     FlashcardDecksView,
     JoinResponse,
     LinkView,
+    MajorView,
     MemberView,
     MyMembershipView,
     PageResponse,
@@ -42,6 +43,12 @@ import type {
 export const listSubjects = async (params?: {
     semester?: number | null
     difficulty?: string | null
+    /**
+     * Mã ngành (BE V336) — chỉ trả môn thuộc ngành đó. Bỏ trống = TẤT CẢ ngành.
+     * Mã không có trong danh mục bị BE trả 400 (cố ý: để mã gõ sai không trông giống
+     * "ngành này chưa có môn nào").
+     */
+    major?: string | null
     q?: string | null
     page?: number
     size?: number
@@ -52,10 +59,25 @@ export const listSubjects = async (params?: {
         params: {
             semester: params?.semester ?? undefined,
             difficulty: params?.difficulty ?? undefined,
+            major: params?.major ?? undefined,
             q: params?.q ?? undefined,
             page: params?.page ?? 0,
             size: params?.size ?? 20,
         },
+        authenticated: false,
+    })
+}
+
+/**
+ * Danh mục NGÀNH HỌC (BE V336).
+ *
+ * `GET /api/v1/majors` — PUBLIC, không cần token: màn chọn ngành lúc đăng ký lần đầu gọi nó khi
+ * người dùng chưa có gì trong hồ sơ.
+ */
+export const listMajors = async (): Promise<Array<MajorView>> => {
+    return restRequest<Array<MajorView>>({
+        method: "GET",
+        url: "/majors",
         authenticated: false,
     })
 }

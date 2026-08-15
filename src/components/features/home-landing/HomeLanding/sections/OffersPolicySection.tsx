@@ -92,6 +92,15 @@ const OfferGroupBody = ({ groupKey, lineCount }: { groupKey: string; lineCount: 
  * only the `aspect="video"` lock: a 16:9 content box clips a four-line offer group at phone widths,
  * so the mobile frame grows to its content instead. (`tilt` is already a `md:`-only transform in the
  * block, so a phone gets the flat frame for free.)
+ *
+ * ONE card fills the width (`w-full`), so a phone shows a single frame at a time rather than a row
+ * of peeking neighbours. The card being swiped away dims and shrinks while the incoming one comes up
+ * to full — a plain CSS transition driven by the `slide` index that `onScroll` already tracks.
+ *
+ * A scroll-DRIVEN version (`animation-timeline: view(x)`) reads nicer because it follows the finger
+ * mid-swipe, but it is unsupported in Safari (iOS included) and the headless preview here never
+ * ticks it, so it could be neither shipped everywhere nor verified. One mechanism that runs in every
+ * browser beats two where one is invisible on half the phones.
  */
 export const OffersPolicySection = () => {
     const t = useTranslations("homeLanding")
@@ -213,8 +222,17 @@ export const OffersPolicySection = () => {
                                 aria-label={t("offers.swipeAria")}
                                 className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:-mx-6 sm:px-6 [&::-webkit-scrollbar]:hidden"
                             >
-                                {OFFER_GROUPS.map((group) => (
-                                    <li key={group.key} className="w-[85%] shrink-0 snap-center">
+                                {OFFER_GROUPS.map((group, i) => (
+                                    <li
+                                        key={group.key}
+                                        className={cn(
+                                            // `scale-*` sets the standalone `scale` property in Tailwind v4, NOT `transform`,
+                                            // so transitioning `transform` would leave the shrink snapping while only the fade
+                                            // eased — name `scale` explicitly.
+                                            "w-full shrink-0 snap-center transition-[opacity,scale] duration-300 ease-out motion-reduce:transition-none",
+                                            i === slide ? "scale-100 opacity-100" : "scale-95 opacity-40",
+                                        )}
+                                    >
                                         <ShowcaseMockup
                                             url="ftes.edu.vn/uu-dai"
                                             tilt="left"

@@ -2159,11 +2159,14 @@
             "summary": "Đã đạt {earned}/{total}",
             "earned": "Đã đạt",
             "locked": "Chưa đạt",
+            "howToEarn": "Cách đạt: {how}",
             "earnedOn": "Đạt ngày {date}",
             "earnedNoDate": "Đã đạt",
             "progress": "{current}/{total}",
             "empty": "Chưa có huy hiệu nào được thiết lập",
+            "emptyDescription": "Quản trị viên chưa tạo huy hiệu nào. Quay lại sau nhé.",
             "error": "Không tải được danh sách huy hiệu",
+            "errorDescription": "Máy chủ chưa trả về được danh sách. Thử lại sau ít phút.",
             "retry": "Thử lại",
             "close": "Đóng"
         },
@@ -2410,7 +2413,10 @@
         "websiteUrlPlaceholder": "https://trang-cua-ban.com",
         "workMode": "Hình thức làm việc",
         "workModeNone": "Chưa xác định",
-        "campusNone": "Không chọn"
+        "campusNone": "Không chọn",
+        "majorNone": "Chưa chọn ngành",
+        "majorHint": "Ngành quyết định bộ kỹ năng hiện trong biểu đồ EXP kỹ năng ở hồ sơ.",
+        "majorEmptyHint": "Chưa tải được danh mục ngành nên tạm thời không chọn được. Thử lại sau ít phút; ngành đang lưu trong hồ sơ của bạn KHÔNG bị thay đổi."
     },
     "sessions": {
         "title": "Thiết bị",
@@ -6448,9 +6454,15 @@
         "title": "EXP kỹ năng",
         "expValue": "{exp} EXP",
         "axisHint": "Cột là EXP thô, trục tự giãn theo nhóm cao nhất của bạn. Học thêm khóa là EXP cộng tiếp, không có trần.",
+        "zeroHint": "Đây là các nhóm kỹ năng bạn sẽ tích EXP. Học và hoàn thành khóa để bắt đầu cộng.",
+        "majorSet": "Bộ kỹ năng của ngành {major}.",
+        "noMajorHint": "Chưa rõ ngành của bạn nên đang hiện toàn bộ nhóm kỹ năng.",
+        "majorWithoutSetHint": "Ngành {major} chưa khai bộ nhóm kỹ năng riêng nên đang hiện toàn bộ danh mục.",
+        "readUnavailableHint": "Chưa đọc được EXP của bạn (chưa đăng nhập hoặc không đủ quyền) — đây là danh mục nhóm kỹ năng chung ở mức 0, KHÔNG phải EXP thật của bạn.",
+        "chooseMajor": "Chọn ngành",
         "empty": {
-            "title": "Chưa có EXP kỹ năng nào",
-            "description": "Học và hoàn thành khóa để cộng EXP cho từng nhóm kỹ năng."
+            "title": "Chưa có nhóm kỹ năng nào",
+            "description": "Danh mục nhóm kỹ năng đang trống — quản trị viên cần thêm nhóm trước."
         },
         "error": "Không tải được EXP kỹ năng.",
         "retry": "Thử lại",
@@ -6464,7 +6476,10 @@
             "testing": "Kiểm thử",
             "devops": "DevOps",
             "security": "Bảo mật",
-            "professional": "Kỹ năng nghề nghiệp"
+            "professional": "Kỹ năng nghề nghiệp",
+            "hardware-ic": "Vi mạch & phần cứng",
+            "mathematics": "Toán học",
+            "foreign-language": "Ngoại ngữ"
         }
     },
     "skillGraph": {

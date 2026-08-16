@@ -14,6 +14,7 @@ import { ProgressMeter } from "@/components/blocks/stats/ProgressMeter"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { SkillExpChart } from "@/components/features/skill-exp"
 import { useQueryMyGamificationSwr } from "@/components/features/gamification/hooks/useQueryMyGamificationSwr"
+import { useBadgeLabel } from "@/components/features/gamification/useBadgeLabel"
 import { StreakHeatmap, type HeatmapCell } from "@/components/features/gamification/StreakHeatmap"
 
 /** Nominal XP for an active day, so the heatmap shades it (the profile snapshot
@@ -70,6 +71,10 @@ export const ProfileProgress = () => {
     const t = useTranslations()
     const locale = useLocale()
     const router = useRouter()
+    // Badge names go through the shared resolver, never a raw `t(milestones.…)`
+    // lookup: the milestone set is backend DATA, so a code with no translation
+    // would otherwise paint its key path in the grid.
+    const badgeLabel = useBadgeLabel()
     const { data, isLoading, error } = useQueryMyGamificationSwr()
     const { balance } = useQueryWalletSwr()
     const { data: communitySummary } = useQueryMyCommunitySummarySwr()
@@ -199,7 +204,7 @@ export const ProfileProgress = () => {
                                                 focusable="false"
                                             />
                                             <Typography type="body-xs" weight="medium">
-                                                {t(`gamification.milestones.${badge.badgeKey}.name`)}
+                                                {badgeLabel(badge.badgeKey, badge.fallbackName)}
                                             </Typography>
                                             <Typography type="body-xs" color="muted">
                                                 {t("profile.progress.badges.earnedOn", {

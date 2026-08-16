@@ -7,6 +7,7 @@ import { ArrowLeftIcon } from "@phosphor-icons/react"
 import { Link } from "@/i18n/navigation"
 import { pathConfig } from "@/resources/path"
 import { RANK_TIERS } from "../leaderboardTiers"
+import { useBadgeLabel } from "../useBadgeLabel"
 
 // Gamification economics for the "Cách tính điểm" explainer. These display
 // constants mirror the backend `gamification-quest-coin-engine` config; with the
@@ -71,6 +72,7 @@ interface XpRow {
 export const LeaderboardGuideShell = () => {
     const t = useTranslations("gamification")
     const locale = useLocale()
+    const badgeLabel = useBadgeLabel()
 
     const xpRows: Array<XpRow> = [
         { key: "lessonComplete", xp: 20 },
@@ -229,7 +231,9 @@ export const LeaderboardGuideShell = () => {
                         <Typography key={milestone.days} type="body-sm" color="muted">
                             {t("guide.milestoneRow", {
                                 days: milestone.days,
-                                name: t(`milestones.${milestone.badgeKey}.name`),
+                                // Static table → no backend name to fall back to; the shared
+                                // resolver still humanizes the code rather than show a key path.
+                                name: badgeLabel(milestone.badgeKey),
                                 coin: milestone.coin,
                             })}
                         </Typography>

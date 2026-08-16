@@ -19,6 +19,7 @@ import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { StaffBadge } from "@/components/reuseable/StaffBadge"
 import { useViewerStaffRole } from "@/hooks/useViewerStaffRole"
 import { useQueryMyGamificationSwr } from "@/components/features/gamification/hooks/useQueryMyGamificationSwr"
+import { useBadgeLabel } from "@/components/features/gamification/useBadgeLabel"
 import { useQueryProfileSwr } from "../hooks/useQueryProfileSwr"
 import { useQueryPublicProfileSwr } from "../hooks/useQueryPublicProfileSwr"
 
@@ -68,6 +69,9 @@ export const ProfileShell = ({ children }: ProfileShellProps) => {
     const pathname = usePathname()
     const { profile, isLoading, error, mutate } = useQueryProfileSwr()
     const { data: gamification } = useQueryMyGamificationSwr()
+    // Shared resolver — see `useBadgeLabel`. The identity card must never show a
+    // `gamification.milestones.<CODE>.name` path for a badge the catalog misses.
+    const badgeLabel = useBadgeLabel()
     /**
      * The viewer's OWN staff role, read from the redux session rather than from the
      * profile payload: `GET /profiles/me` (`ProfileViews.SelfProfile`) carries no role
@@ -233,7 +237,7 @@ export const ProfileShell = ({ children }: ProfileShellProps) => {
                                                 />
                                             }
                                             value={null}
-                                            label={t(`gamification.milestones.${badge.badgeKey}.name`)}
+                                            label={badgeLabel(badge.badgeKey, badge.fallbackName)}
                                         />
                                     ))}
                                     {gamification.badges.length > 6 ? (

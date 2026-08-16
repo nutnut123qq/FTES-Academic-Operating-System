@@ -12,7 +12,10 @@ import { useQueryLeaderboardSwr } from "./useQueryLeaderboardSwr"
 /** One earned badge in the viewer's gamification snapshot. */
 export interface MyGamificationBadge {
     id: string
-    /** Backend badge `code` — also the i18n key under `gamification.milestones.<badgeKey>.name`. */
+    /**
+     * Backend badge `code`. KHÔNG render thẳng qua `t(...)` — mọi nơi hiển thị tên
+     * badge phải đi qua `useBadgeLabel` (xem `../badgeLabel.ts`).
+     */
     badgeKey: string
     /**
      * Tên badge do BE trả (đã có tiếng Việt trong seed). Dùng làm fallback khi

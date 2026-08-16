@@ -4090,6 +4090,18 @@
       },
       "CHALLENGER": {
         "name": "Challenger"
+      },
+      "FIRST_ENROLL": {
+        "name": "First Enrollment"
+      },
+      "STREAK_3": {
+        "name": "Three Days of Fire"
+      },
+      "FIRST_POST": {
+        "name": "First Post"
+      },
+      "FIRST_COMMENT": {
+        "name": "First Comment"
       }
     },
     "goals": {

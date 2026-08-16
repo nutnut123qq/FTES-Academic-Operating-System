@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { badgeCodeFromTitle, humanizeBadgeCode, toEarnedDateLabel } from "./model"
+import { badgeCodeFromTitle, toEarnedDateLabel } from "./model"
 
 /**
  * Unit — the read-path guards behind the profile achievements section.
@@ -54,13 +54,5 @@ describe("badgeCodeFromTitle", () => {
         expect(badgeCodeFromTitle("Badge of Honour is mine")).toBeNull()
         expect(badgeCodeFromTitle("")).toBeNull()
         expect(badgeCodeFromTitle(null)).toBeNull()
-    })
-})
-
-describe("humanizeBadgeCode", () => {
-    it("never leaves an underscore or an all-caps code on screen", () => {
-        expect(humanizeBadgeCode("FIRST_LESSON")).toBe("First Lesson")
-        expect(humanizeBadgeCode("STREAK_100")).toBe("Streak 100")
-        expect(humanizeBadgeCode("CHALLENGER")).toBe("Challenger")
     })
 })

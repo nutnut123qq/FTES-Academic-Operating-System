@@ -4090,6 +4090,18 @@
       },
       "CHALLENGER": {
         "name": "Đấu sĩ"
+      },
+      "FIRST_ENROLL": {
+        "name": "Khóa học đầu tiên"
+      },
+      "STREAK_3": {
+        "name": "Ba Ngày Lửa"
+      },
+      "FIRST_POST": {
+        "name": "Bài đăng đầu tiên"
+      },
+      "FIRST_COMMENT": {
+        "name": "Bình luận đầu tiên"
       }
     },
     "goals": {

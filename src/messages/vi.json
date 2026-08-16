@@ -6038,7 +6038,9 @@
                         "generic": "Không thực hiện được thao tác. Thử lại sau."
                     },
                     "addText": "Thêm đề dạng văn bản (.txt/.md)",
-                    "textImported": "Đã nạp {count} trang đề từ file văn bản."
+                    "textImported": "Đã nạp {count} trang đề từ file văn bản.",
+                    "addScan": "Nạp ảnh đề → số hoá thành chữ",
+                    "scanImported": "Đã số hoá {count} trang đề từ ảnh."
                 }
             }
         },

@@ -55,6 +55,21 @@ export interface ExamImageViewerImage {
     sourceFilename?: string | null
 }
 
+/**
+ * Repeating "FTES" watermark drawn over a text page, as an inline SVG data URI.
+ *
+ * SVG rather than a bitmap so it stays crisp at any zoom and costs no network request; `rotate`
+ * plus a tile bigger than the glyph gives the diagonal, spaced-out look a burnt-in watermark has.
+ * Opacity is low enough to read straight through — a watermark that fights the text would push
+ * curators to screenshot the page instead, which is exactly the behaviour this replaces.
+ */
+const FTES_WATERMARK =
+    "url(\"data:image/svg+xml;utf8,"
+    + "<svg xmlns='http://www.w3.org/2000/svg' width='220' height='160'>"
+    + "<text x='30' y='100' transform='rotate(-24 30 100)' "
+    + "font-family='sans-serif' font-size='34' font-weight='700' "
+    + "fill='rgb(15 23 42)' fill-opacity='0.06'>FTES</text></svg>\")"
+
 /** A page is text only when it SAYS so — never inferred from a missing url (see below). */
 const isTextPage = (page?: ExamImageViewerImage | null): boolean => page?.kind === "TEXT"
 
@@ -344,12 +359,37 @@ export const ExamImageViewer = ({
                         /* TEXT page: an article, not a picture. No zoom/pan — text reflows, so the
                            whole pinch/drag apparatus would be solving a problem it does not have.
                            Rendered through the house Markdown block so a typed exam looks like every
-                           other piece of prose on the site. */
+                           other piece of prose on the site.
+
+                           WHITE sheet, not the theme background: a page of an exam should read like
+                           a page of an exam next to the scans it sits beside in the same album —
+                           and in dark mode a theme-coloured sheet would put the two kinds of page
+                           in visibly different worlds. `text-black` is pinned for the same reason:
+                           the sheet is white in both themes, so the ink has to be too.
+
+                           The FTES watermark is a repeating CSS layer. It is BRANDING, not
+                           protection — anyone can remove it from devtools and the text still
+                           selects and copies cleanly. Burning it in would mean rendering the page
+                           to an image, which throws away the searchability, selection and
+                           bot-readability this whole feature exists to gain. */
                         <div
                             key={current.id}
-                            className="absolute inset-0 overflow-y-auto bg-background px-4 py-6 sm:px-8"
+                            /* data-theme="light" chứ KHÔNG phải `text-black` trên wrapper: khối
+                               Markdown của nhà tự gắn `text-foreground` lên gốc của nó, nên ở dark
+                               mode trang đề sẽ là CHỮ TRẮNG TRÊN GIẤY TRẮNG — không đọc được gì, và
+                               một wrapper `text-black` bên ngoài không thắng được cái class nằm bên
+                               trong. Ghim theme sáng cho tờ giấy làm MỌI token bên trong (chữ, viền,
+                               link, khối mã) resolve về bộ sáng, tức đúng thứ một tờ đề in ra giấy
+                               phải trông như. */
+                            data-theme="light"
+                            className="absolute inset-0 overflow-y-auto bg-white px-4 py-6 sm:px-8"
                         >
-                            <article className="mx-auto max-w-3xl">
+                            <div
+                                aria-hidden
+                                className="pointer-events-none absolute inset-0 select-none"
+                                style={{ backgroundImage: FTES_WATERMARK, backgroundRepeat: "repeat" }}
+                            />
+                            <article className="relative mx-auto max-w-3xl">
                                 <MarkdownContent markdown={current.textContent ?? ""} reading />
                             </article>
                         </div>

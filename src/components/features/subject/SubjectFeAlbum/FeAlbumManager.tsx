@@ -8,6 +8,7 @@ import {
     FileTextIcon,
     FolderIcon,
     ImageSquareIcon,
+    ScanIcon,
     TrashIcon,
     XIcon,
 } from "@phosphor-icons/react"
@@ -23,6 +24,7 @@ import {
 import { FE_IMAGE_UPLOAD_RATE, moveFeAlbumImage } from "@/components/features/resource/hooks/feAlbumManage"
 import { useMutateAddFeAlbumImagesSwr } from "@/components/features/resource/hooks/useMutateAddFeAlbumImagesSwr"
 import { useMutateImportFeAlbumTextsSwr } from "@/components/features/resource/hooks/useMutateImportFeAlbumTextsSwr"
+import { useMutateImportFeAlbumImageTextsSwr } from "@/components/features/resource/hooks/useMutateImportFeAlbumImageTextsSwr"
 import { useMutateDeleteFeAlbumImageSwr } from "@/components/features/resource/hooks/useMutateDeleteFeAlbumImageSwr"
 import { useMutateReorderFeAlbumImagesSwr } from "@/components/features/resource/hooks/useMutateReorderFeAlbumImagesSwr"
 import type { FeImageView } from "@/modules/api/rest/resource"
@@ -84,7 +86,9 @@ export const FeAlbumManager = ({
 
     const addImages = useMutateAddFeAlbumImagesSwr()
     const importTexts = useMutateImportFeAlbumTextsSwr()
+    const importImageTexts = useMutateImportFeAlbumImageTextsSwr()
     const textInputRef = useRef<HTMLInputElement>(null)
+    const scanInputRef = useRef<HTMLInputElement>(null)
     const deleteImage = useMutateDeleteFeAlbumImageSwr()
     const reorderImages = useMutateReorderFeAlbumImagesSwr()
 
@@ -118,6 +122,7 @@ export const FeAlbumManager = ({
     const isBusy =
         addImages.isMutating
         || importTexts.isMutating
+        || importImageTexts.isMutating
         || deleteImage.isMutating
         || reorderImages.isMutating
 
@@ -128,6 +133,47 @@ export const FeAlbumManager = ({
      * warnings ("câu 7 thiếu phương án") are surfaced too: they are the whole reason a curator
      * would go back and fix the source file, so swallowing them defeats the feature.
      */
+    /**
+     * Import PICTURES of exam pages and have the backend turn them into text.
+     *
+     * Deliberately a SEPARATE button from "add pictures", not a mode toggle on it: the two do
+     * opposite things to the same file. One keeps the scan as a picture; this one throws the scan
+     * away and keeps the text. A toggle would let a curator destroy the scan by mistake.
+     */
+    const onPickScans = useCallback(
+        async (fileList: FileList | null) => {
+            const picked = Array.from(fileList ?? [])
+            if (picked.length === 0) {
+                return
+            }
+            const room = Math.max(0, maxImages - images.length)
+            if (room === 0) {
+                toast.danger(t("practice.fe.manage.full"))
+                return
+            }
+            const accepted = picked.slice(0, room)
+            if (accepted.length < picked.length) {
+                toast.warning(
+                    t("practice.fe.manage.overflow", { dropped: picked.length - accepted.length }),
+                )
+            }
+            const outcome = await importImageTexts.trigger({
+                resourceId,
+                files: accepted,
+                onProgress: (done, total) => setProgress({ done, total }),
+            })
+            onMutated()
+            if (outcome && outcome.imported > 0) {
+                toast.success(t("practice.fe.manage.scanImported", { count: outcome.imported }))
+            }
+            outcome?.warnings.slice(0, 3).forEach((warning) => toast.warning(warning))
+            outcome?.failed.slice(0, 3).forEach((failure) => {
+                toast.danger(`${failure.filename}: ${failure.reason}`)
+            })
+        },
+        [importImageTexts, resourceId, maxImages, images.length, onMutated, t],
+    )
+
     const onPickTexts = useCallback(
         async (fileList: FileList | null) => {
             const picked = Array.from(fileList ?? [])
@@ -401,6 +447,20 @@ export const FeAlbumManager = ({
                 }}
             />
 
+            {/* Ảnh trang đề để SỐ HOÁ. Cùng định dạng với nút "thêm ảnh" nhưng kết quả ngược
+                nhau, nên là hai nút tách bạch chứ không phải một công tắc. */}
+            <input
+                ref={scanInputRef}
+                type="file"
+                accept={FE_ALBUM_IMAGE_MIME.join(",")}
+                multiple
+                hidden
+                onChange={(event) => {
+                    void onPickScans(event.target.files)
+                    event.target.value = ""
+                }}
+            />
+
             <div className="flex flex-wrap items-center gap-2">
                 <Button
                     size="sm"
@@ -424,6 +484,15 @@ export const FeAlbumManager = ({
                     size="sm"
                     variant="secondary"
                     isDisabled={isBusy || remaining <= 0}
+                    onPress={() => scanInputRef.current?.click()}
+                >
+                    <ScanIcon aria-hidden focusable="false" className="size-4" />
+                    {t("practice.fe.manage.addScan")}
+                </Button>
+                <Button
+                    size="sm"
+                    variant="secondary"
+                    isDisabled={isBusy || remaining <= 0}
                     onPress={() => folderInputRef.current?.click()}
                 >
                     <FolderIcon aria-hidden focusable="false" className="size-4" />
@@ -432,7 +501,7 @@ export const FeAlbumManager = ({
                 <Typography type="body-xs" color="muted">
                     {t("practice.fe.manage.slots", { remaining, max: maxImages })}
                 </Typography>
-                {addImages.isMutating || importTexts.isMutating ? (
+                {addImages.isMutating || importTexts.isMutating || importImageTexts.isMutating ? (
                     <>
                         <Chip size="sm" variant="soft" color="accent">
                             {t("practice.fe.manage.uploading", {

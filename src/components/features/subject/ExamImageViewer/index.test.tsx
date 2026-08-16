@@ -195,6 +195,18 @@ describe("ExamImageViewer — text pages", () => {
         expect(onIndexChange).toHaveBeenCalledWith(2)
     })
 
+    it("pins the sheet to the light theme so dark mode does not print white on white", () => {
+        // MarkdownContent tự gắn `text-foreground`; ở dark mode token đó gần trắng. Tờ giấy trắng
+        // PHẢI mang scope theme sáng, nếu không trang đề trống trơn với người dùng dark mode — lỗi
+        // không ai phát hiện được nếu chỉ xem ở light mode.
+        const { view } = setup(1, mixed)
+
+        const sheet = view.container.querySelector('[data-theme="light"]')
+
+        expect(sheet).not.toBeNull()
+        expect(sheet?.textContent).toContain("Câu 1.")
+    })
+
     it("labels the text page in the filmstrip by its source filename", () => {
         setup(0, mixed)
 

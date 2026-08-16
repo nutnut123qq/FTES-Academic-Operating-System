@@ -22,6 +22,16 @@ vi.mock("next-intl", () => ({
                 params ? `${key}#${Object.values(params).join(",")}` : key,
 }))
 
+/* Trang chữ render qua block Markdown của nhà. Import thật kéo theo `next-intl/navigation`
+   (→ `next/navigation`), thứ môi trường test không resolve được — và cũng không liên quan gì tới
+   hợp đồng đang được ghim ở đây. Thay bằng một hộp phẳng để vẫn khẳng định được "trang chữ hiện
+   nội dung, không hiện ảnh". */
+vi.mock("@/components/reuseable/MarkdownContent", () => ({
+    MarkdownContent: ({ markdown }: { markdown: string }) => (
+        <div data-testid="markdown">{markdown}</div>
+    ),
+}))
+
 vi.mock("@heroui/react", () => ({
     Button: ({
         children,
@@ -151,6 +161,44 @@ describe("ExamImageViewer — paging", () => {
     it("renders nothing at all for an empty album", () => {
         const { view } = setup(0, [])
         expect(view.container.firstChild).toBeNull()
+    })
+})
+
+describe("ExamImageViewer — text pages", () => {
+    /** Album trộn: trang scan, trang chữ, trang scan. */
+    const mixed: Array<ExamImageViewerImage> = [
+        { id: "a", imageUrl: "https://storage/a.jpg" },
+        {
+            id: "t",
+            imageUrl: null,
+            kind: "TEXT",
+            textContent: "**Câu 1.** 1 + 1 = ?",
+            sourceFilename: "de-prf192.txt",
+        },
+        { id: "c", imageUrl: "https://storage/c.jpg" },
+    ]
+
+    it("renders the exam text instead of a picture", () => {
+        setup(1, mixed)
+
+        expect(screen.getByTestId("markdown").textContent).toContain("Câu 1.")
+        // Sân khấu không được có ảnh nào: trang chữ không có url, và một <img src=""> là một
+        // request hỏng + một ô ảnh vỡ trên màn hình học viên.
+        expect(screen.queryByAltText(/practice\.viewer\.imageAlt/)).toBeNull()
+    })
+
+    it("keeps paging identical across mixed pages", () => {
+        const { onIndexChange } = setup(1, mixed)
+
+        fireEvent.click(screen.getByLabelText("practice.viewer.next"))
+
+        expect(onIndexChange).toHaveBeenCalledWith(2)
+    })
+
+    it("labels the text page in the filmstrip by its source filename", () => {
+        setup(0, mixed)
+
+        expect(screen.getByText("de-prf192.txt")).toBeTruthy()
     })
 })
 

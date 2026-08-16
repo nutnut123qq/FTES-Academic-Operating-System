@@ -15,6 +15,7 @@ import { ProfileActivityTab } from "./ProfileActivityTab"
 import { ProfileCommunityTab } from "./ProfileCommunityTab"
 import { ProfileInfoTab } from "./ProfileInfoTab"
 import { ProfileOverviewTab } from "./ProfileOverviewTab"
+import { ProfileStatsRow } from "./ProfileStatsRow"
 
 /** The public profile's tabs. Kept local — this surface owns its own tab set. */
 type PublicTab = "overview" | "profile" | "activity" | "community"
@@ -123,12 +124,11 @@ export const ProfilePublic = () => {
                                             @{profile.username}
                                             {profile.headline ? ` · ${profile.headline}` : ""}
                                         </Typography>
-                                        <Typography type="body-xs" color="muted">
-                                            {t("profile.public.followers", {
-                                                count: profile.followers,
-                                            })}
-                                            {profile.campus ? ` · ${profile.campus}` : ""}
-                                        </Typography>
+                                        {profile.campus ? (
+                                            <Typography type="body-xs" color="muted">
+                                                {profile.campus}
+                                            </Typography>
+                                        ) : null}
                                     </div>
                                 </div>
                                 {profile.about ? (
@@ -140,6 +140,7 @@ export const ProfilePublic = () => {
                                         {profile.about}
                                     </Typography>
                                 ) : null}
+                                <ProfileStatsRow profile={profile} />
                             </div>
                         </div>
 

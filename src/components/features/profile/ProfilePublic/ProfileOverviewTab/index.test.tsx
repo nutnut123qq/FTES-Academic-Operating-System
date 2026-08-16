@@ -5,7 +5,8 @@ import type { PublicProfile } from "../../hooks/useQueryPublicProfileSwr"
 
 /**
  * Component — the public profile's Overview tab after the profile-page cleanup:
- *  - the counter row is FRAMELESS (icon + number), so no `MetricCard` is rendered,
+ *  - the counter row is NOT here any more — it moved into the identity card, above the
+ *    tab strip (see `ProfileStatsRow`, which carries that test now),
  *  - projects / achievements no longer preview here (they live in the Profile tab),
  *  - this person's community posts DO render here (moved off the Connections tab),
  *  - with no posts the tab still shows an empty state, never a blank panel.
@@ -127,16 +128,6 @@ afterEach(() => {
 })
 
 describe("ProfileOverviewTab", () => {
-    it("shows the four counters as bare numbers, with no metric card frame", () => {
-        render(<ProfileOverviewTab profile={PROFILE} />)
-
-        expect(screen.getByText("128")).toBeTruthy() // followers
-        expect(screen.getByText("34")).toBeTruthy() // following
-        expect(screen.getByText("2")).toBeTruthy() // projects (array length, not a page)
-        expect(screen.getByText("1")).toBeTruthy() // achievements
-        expect(screen.queryByTestId("metric-card")).toBeNull()
-    })
-
     it("no longer previews projects or achievements — those moved to the Profile tab", () => {
         render(<ProfileOverviewTab profile={PROFILE} />)
 

@@ -6,7 +6,7 @@ import { Chip, Link, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { MediaCard } from "@/components/blocks/cards/MediaCard"
 import { useCarousel } from "@/components/blocks/carousel/useCarousel"
-import { ACHIEVEMENTS } from "../content"
+import { ACHIEVEMENTS, PRESS_ARTICLES } from "../content"
 import type { AchievementStat } from "../content"
 
 /** Slower than the course hero — each card carries a title plus a two-line description. */
@@ -57,43 +57,16 @@ const AchievementSlide = ({ item }: { item: AchievementStat }) => {
             title={title}
             description={t(`achievements.items.${item.key}.description`)}
             footer={
-                item.href || item.press?.length ? (
-                    <div className="flex flex-col gap-3">
-                        {item.href ? (
-                            <Link
-                                href={item.href}
-                                target="_blank"
-                                rel="noopener"
-                                className="inline-flex items-center gap-2 text-sm text-accent"
-                            >
-                                {t("achievements.viewDetail")}
-                                <ArrowRightIcon aria-hidden focusable="false" className="size-4" />
-                            </Link>
-                        ) : null}
-                        {item.press?.length ? (
-                            <div className="flex flex-col gap-1">
-                                <Typography type="body-sm" color="muted">
-                                    {t("achievements.press")}
-                                </Typography>
-                                <ul className="flex flex-col gap-1">
-                                    {item.press.map((article) => (
-                                        <li key={article.url}>
-                                            <Link
-                                                href={article.url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                // line-clamp-1 keeps one headline to one row so a
-                                                // five-article card stays the height of a card
-                                                className="line-clamp-1 text-sm text-accent"
-                                            >
-                                                {article.source} — {article.title}
-                                            </Link>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        ) : null}
-                    </div>
+                item.href ? (
+                    <Link
+                        href={item.href}
+                        target="_blank"
+                        rel="noopener"
+                        className="inline-flex items-center gap-2 text-sm text-accent"
+                    >
+                        {t("achievements.viewDetail")}
+                        <ArrowRightIcon aria-hidden focusable="false" className="size-4" />
+                    </Link>
                 ) : null
             }
         />
@@ -184,6 +157,44 @@ export const AchievementsSection = () => {
                         </button>
                     </>
                 ) : null}
+            </div>
+
+            {/* Bao chi: MOT O MOT BAI. Truoc day chin bai co lai thanh may dong chu nho trong
+                hai the thanh tuu; moi bai bao la mot bang chung doc lap nen dung rieng mot o.
+                Luoi tu gian theo be ngang, dien thoai mot cot. */}
+            <div className="mt-12 flex flex-col gap-4">
+                <Typography type="h5" weight="bold" className="text-center">
+                    {t("achievements.press")}
+                </Typography>
+                <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {PRESS_ARTICLES.map((article) => (
+                        <li key={article.url} className="h-full">
+                            <Link
+                                href={article.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group flex h-full flex-col gap-2 rounded-2xl border border-separator bg-surface p-4 transition hover:border-accent"
+                            >
+                                <Typography type="body-xs" color="muted">
+                                    {article.source}
+                                </Typography>
+                                {/* line-clamp-3: tieu de bao dai ngan khac nhau, khong kep thi
+                                    luoi rang cua; ba dong du doc ra bai noi ve gi */}
+                                <Typography
+                                    type="body-sm"
+                                    weight="medium"
+                                    className="line-clamp-3 group-hover:text-accent"
+                                >
+                                    {article.title}
+                                </Typography>
+                                <span className="mt-auto inline-flex items-center gap-1.5 text-sm text-accent">
+                                    {t("achievements.readArticle")}
+                                    <ArrowRightIcon aria-hidden focusable="false" className="size-4" />
+                                </span>
+                            </Link>
+                        </li>
+                    ))}
+                </ul>
             </div>
         </section>
     )

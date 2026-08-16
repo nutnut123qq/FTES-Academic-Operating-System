@@ -1,7 +1,7 @@
 import React from "react"
 import { render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
-import { ACHIEVEMENTS } from "../content"
+import { ACHIEVEMENTS, PRESS_ARTICLES } from "../content"
 
 /**
  * Component — {@link AchievementsSection}, the home "Thành tựu" carousel.
@@ -53,7 +53,7 @@ vi.mock("@/components/blocks/carousel/useCarousel", () => ({
 
 import { AchievementsSection } from "./AchievementsSection"
 
-const pressLinks = ACHIEVEMENTS.flatMap((item) => item.press ?? [])
+const pressLinks = PRESS_ARTICLES
 
 describe("AchievementsSection", () => {
     it("renders every configured press article as an external link", () => {
@@ -77,13 +77,28 @@ describe("AchievementsSection", () => {
         }
     })
 
-    it("shows the press list on a milestone that has no FTES post of its own", () => {
-        const noPost = ACHIEVEMENTS.find((item) => !item.href && item.press?.length)
-        expect(noPost).toBeTruthy()
-
+    /**
+     * Chu du an chot: MOT O MOT BAI, khong nhet ca danh sach vao trong the thanh tuu. Ban
+     * dau chin bai nam long trong hai the duoi dang danh sach link — test nay ghim lai hinh
+     * dang moi de khong ai gop chung tro lai.
+     */
+    it("moi bai bao dung thanh MOT o rieng, du chin o", () => {
         const { container } = render(<AchievementsSection />)
 
-        expect(screen.getAllByText("achievements.press").length).toBeGreaterThan(0)
-        expect(container.querySelector(`a[href="${noPost?.press?.[0].url}"]`)).toBeTruthy()
+        const cards = Array.from(container.querySelectorAll("ul li a"))
+            .filter((a) => PRESS_ARTICLES.some((p) => p.url === a.getAttribute("href")))
+        expect(cards).toHaveLength(PRESS_ARTICLES.length)
+        // moi o mang ten toa soan + tieu de, khong phai mot dong link tron
+        for (const article of PRESS_ARTICLES) {
+            const card = container.querySelector(`a[href="${article.url}"]`)
+            expect(card?.textContent).toContain(article.source)
+            expect(card?.textContent).toContain(article.title)
+        }
+    })
+
+    it("khoi bao chi co tieu de rieng, khong con nam trong the thanh tuu", () => {
+        render(<AchievementsSection />)
+
+        expect(screen.getAllByText("achievements.press").length).toBe(1)
     })
 })

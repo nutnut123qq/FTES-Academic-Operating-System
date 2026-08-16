@@ -24,31 +24,6 @@ import { useQueryPublicCommunitySwr } from "../../hooks/useQueryPublicCommunityS
  * out-weighed the content around them. The metric NAME is not painted: it rides along as
  * the tooltip + screen-reader text so the row stays a row of numbers.
  */
-const ProfileStat = ({
-    icon,
-    value,
-    label,
-}: {
-    icon: React.ReactNode
-    /** Already-localised number string. */
-    value: string
-    /** Full accessible name of the metric (e.g. "Người theo dõi"). */
-    label: string
-}) => {
-    const t = useTranslations()
-    const srLabel = t("publicProfile.stats.srLabel", { label, value })
-
-    return (
-        <span title={srLabel} className="inline-flex items-center gap-1.5">
-            <span className="text-muted">{icon}</span>
-            <Typography type="body-sm" weight="semibold">
-                {value}
-            </Typography>
-            <span className="sr-only">{srLabel}</span>
-        </span>
-    )
-}
-
 /**
  * Overview tab — the profile's front page: the counters the BE can actually back, then
  * the community posts this person wrote.
@@ -71,29 +46,6 @@ export const ProfileOverviewTab = ({ profile }: { profile: PublicProfile }) => {
 
     return (
         <div className="flex flex-col gap-6">
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-                <ProfileStat
-                    icon={<UsersThreeIcon className="size-5" aria-hidden focusable="false" />}
-                    value={profile.followers.toLocaleString()}
-                    label={t("profile.community.connections.followers")}
-                />
-                <ProfileStat
-                    icon={<UserPlusIcon className="size-5" aria-hidden focusable="false" />}
-                    value={profile.following.toLocaleString()}
-                    label={t("profile.community.connections.following")}
-                />
-                <ProfileStat
-                    icon={<StackIcon className="size-5" aria-hidden focusable="false" />}
-                    value={profile.projects.length.toLocaleString()}
-                    label={t("publicProfile.stats.projects")}
-                />
-                <ProfileStat
-                    icon={<MedalIcon className="size-5" aria-hidden focusable="false" />}
-                    value={profile.achievements.length.toLocaleString()}
-                    label={t("publicProfile.stats.achievements")}
-                />
-            </div>
-
             <LabeledCard
                 label={t("publicProfile.community.postsTitle")}
                 frameless={Boolean(data && data.recentPosts.length > 0)}

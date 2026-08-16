@@ -1,4 +1,5 @@
 import type {
+    ChallengeAuthorView,
     ChallengeCommentPage,
     ChallengeCommentView,
 } from "@/modules/api/rest/challenges/types"
@@ -10,25 +11,36 @@ export const CHALLENGE_COMMENT_DELETED = "DELETED"
  * Builds the placeholder node shown while a challenge comment write is in flight.
  *
  * The node keeps the BE shape ({@link ChallengeCommentView}) so the renderer needs no
- * "is this optimistic?" branch. The author card is left `null` and only `authorId` is
- * filled from the viewer: the card is a PROFILE fact the server resolves, so guessing a
- * display name here would flash a name the BE might not agree with — while `authorId`
- * alone is enough for the owner gate to already offer the row's ⋯ menu. The temporary id
- * is swapped for the server's as soon as the POST resolves.
+ * "is this optimistic?" branch, and it is SIGNED: the author card is filled from the
+ * viewer's own session card, so the comment shows the writer's name and avatar the instant
+ * it appears and does not change identity when {@link replaceChallengeComment} swaps in the
+ * stored row. The temporary id is swapped for the server's as soon as the POST resolves.
+ *
+ * The card used to be left `null` here, on the rule "a profile card is a server fact, do not
+ * guess it". That rule is right for an ARBITRARY author and wrong for this one: the author
+ * IS the viewer, the server will echo back that same account, and the fields come from the
+ * profile the session was hydrated from — so there is nothing for the BE to disagree with,
+ * while the anonymous row everybody saw for the length of a round-trip was a real,
+ * reported regression ("my comment shows up without my name or my photo"). Do NOT put the
+ * `null` back.
  *
  * @param content - The comment body as typed.
  * @param parentId - Parent comment id when replying; `null`/omitted for a root comment.
  * @param viewerId - The signed-in viewer's id, so the row renders as their own.
+ * @param viewer - The viewer's author card
+ *   (`useViewerAuthorCard`). `null`/omitted — guest, or a session that has not hydrated —
+ *   degrades to the old id-only row rather than to a half-filled identity.
  * @returns A `ChallengeCommentView`-shaped placeholder carrying a temporary id.
  */
 export const buildOptimisticChallengeComment = (
     content: string,
     parentId: string | null | undefined,
     viewerId: string | null | undefined,
+    viewer?: ChallengeAuthorView | null,
 ): ChallengeCommentView => ({
     id: `optimistic-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    authorId: viewerId ?? null,
-    author: null,
+    authorId: viewer?.userId ?? viewerId ?? null,
+    author: viewer ?? null,
     parentId: parentId ?? null,
     content,
     status: "VISIBLE",
@@ -108,6 +120,10 @@ export const insertChallengeComment = (
 /**
  * Swaps a placeholder node for the row the BE actually stored — real id, server
  * `createdAt`, the resolved author card, and the root the BE re-parented the reply onto.
+ *
+ * The IDENTITY is expected to be a no-op across this swap: the placeholder was already
+ * signed with the viewer's own card ({@link buildOptimisticChallengeComment}) and the server
+ * resolves that same account, so nothing visible about who wrote the comment changes here.
  *
  * @param page - The cached page holding the placeholder.
  * @param optimisticId - Id created by {@link buildOptimisticChallengeComment}.

@@ -2,7 +2,7 @@
 
 import React from "react"
 import { Typography } from "@heroui/react"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import {
     CaretRightIcon,
     MedalIcon,
@@ -10,11 +10,14 @@ import {
     UserPlusIcon,
     UsersThreeIcon,
 } from "@phosphor-icons/react"
+import { useRouter } from "next/navigation"
 import { Link } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { EmptyContent } from "@/components/blocks/async/EmptyContent"
 import { LabeledCard } from "@/components/blocks/cards/LabeledCard"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
+import { PostEngagementBar } from "@/components/reuseable/PostEngagementBar"
+import { useMutateReactPostSwr } from "@/components/features/community/hooks/useMutateReactPostSwr"
 import type { PublicProfile } from "../../hooks/useQueryPublicProfileSwr"
 import { useQueryPublicCommunitySwr } from "../../hooks/useQueryPublicCommunitySwr"
 
@@ -24,31 +27,6 @@ import { useQueryPublicCommunitySwr } from "../../hooks/useQueryPublicCommunityS
  * out-weighed the content around them. The metric NAME is not painted: it rides along as
  * the tooltip + screen-reader text so the row stays a row of numbers.
  */
-const ProfileStat = ({
-    icon,
-    value,
-    label,
-}: {
-    icon: React.ReactNode
-    /** Already-localised number string. */
-    value: string
-    /** Full accessible name of the metric (e.g. "Người theo dõi"). */
-    label: string
-}) => {
-    const t = useTranslations()
-    const srLabel = t("publicProfile.stats.srLabel", { label, value })
-
-    return (
-        <span title={srLabel} className="inline-flex items-center gap-1.5">
-            <span className="text-muted">{icon}</span>
-            <Typography type="body-sm" weight="semibold">
-                {value}
-            </Typography>
-            <span className="sr-only">{srLabel}</span>
-        </span>
-    )
-}
-
 /**
  * Overview tab — the profile's front page: the counters the BE can actually back, then
  * the community posts this person wrote.
@@ -64,6 +42,9 @@ const ProfileStat = ({
  */
 export const ProfileOverviewTab = ({ profile }: { profile: PublicProfile }) => {
     const t = useTranslations()
+    const locale = useLocale()
+    const router = useRouter()
+    const reactPost = useMutateReactPostSwr()
     const { data, isLoading, error, mutate } = useQueryPublicCommunitySwr(
         profile.username,
         profile.userId,
@@ -71,29 +52,6 @@ export const ProfileOverviewTab = ({ profile }: { profile: PublicProfile }) => {
 
     return (
         <div className="flex flex-col gap-6">
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-                <ProfileStat
-                    icon={<UsersThreeIcon className="size-5" aria-hidden focusable="false" />}
-                    value={profile.followers.toLocaleString()}
-                    label={t("profile.community.connections.followers")}
-                />
-                <ProfileStat
-                    icon={<UserPlusIcon className="size-5" aria-hidden focusable="false" />}
-                    value={profile.following.toLocaleString()}
-                    label={t("profile.community.connections.following")}
-                />
-                <ProfileStat
-                    icon={<StackIcon className="size-5" aria-hidden focusable="false" />}
-                    value={profile.projects.length.toLocaleString()}
-                    label={t("publicProfile.stats.projects")}
-                />
-                <ProfileStat
-                    icon={<MedalIcon className="size-5" aria-hidden focusable="false" />}
-                    value={profile.achievements.length.toLocaleString()}
-                    label={t("publicProfile.stats.achievements")}
-                />
-            </div>
-
             <LabeledCard
                 label={t("publicProfile.community.postsTitle")}
                 frameless={Boolean(data && data.recentPosts.length > 0)}
@@ -116,38 +74,53 @@ export const ProfileOverviewTab = ({ profile }: { profile: PublicProfile }) => {
                     {data && data.recentPosts.length > 0 ? (
                         <div className="flex flex-col gap-3">
                             {data.recentPosts.map((post) => (
-                                <Link
+                                /* Thẻ KHÔNG phải một link phủ cả hàng: thanh tương tác bên dưới
+                                   toàn nút bấm, nhét chúng vào trong <a> là lồng anchor — HTML
+                                   không hợp lệ và bấm thích lại hoá ra mở bài. Chỉ TIÊU ĐỀ là
+                                   link, giống hàng bài ngoài feed cộng đồng. */
+                                <div
                                     key={post.id}
-                                    href={`/community/${post.id}`}
-                                    className="group flex items-center gap-3 rounded-2xl border border-separator p-4 no-underline transition-colors hover:bg-default/40"
+                                    className="flex flex-col gap-2 rounded-2xl border border-separator p-4"
                                 >
-                                    <Typography
-                                        type="body-sm"
-                                        weight="medium"
-                                        className="min-w-0 flex-1"
-                                        truncate
-                                    >
-                                        {post.title}
-                                    </Typography>
-                                    <Typography
-                                        type="body-xs"
-                                        color="muted"
-                                        className="hidden shrink-0 sm:block"
-                                    >
-                                        {t("profile.community.recentPosts.engagement", {
-                                            likes: post.likeCount,
-                                            comments: post.commentCount,
-                                        })}
-                                    </Typography>
-                                    <Typography type="body-xs" color="muted" className="shrink-0">
-                                        {post.dateLabel}
-                                    </Typography>
-                                    <CaretRightIcon
-                                        className="size-4 shrink-0 text-muted transition-transform group-hover:translate-x-1"
-                                        aria-hidden
-                                        focusable="false"
+                                    <div className="flex items-center gap-3">
+                                        <Link
+                                            href={`/community/${post.id}`}
+                                            className="group min-w-0 flex-1 no-underline"
+                                        >
+                                            <Typography
+                                                type="body-sm"
+                                                weight="medium"
+                                                className="group-hover:underline"
+                                                truncate
+                                            >
+                                                {post.title}
+                                            </Typography>
+                                        </Link>
+                                        <Typography
+                                            type="body-xs"
+                                            color="muted"
+                                            className="shrink-0"
+                                        >
+                                            {post.dateLabel}
+                                        </Typography>
+                                    </div>
+                                    <PostEngagementBar
+                                        likes={post.likeCount}
+                                        liked={post.likedByMe}
+                                        commentsCount={post.commentCount}
+                                        onToggleLike={() => {
+                                            void reactPost(post.id, !post.likedByMe)
+                                            void mutate()
+                                        }}
+                                        // bình luận sống ở trang bài; ở đây bấm là đi tới đó
+                                        onCommentClick={() => router.push(`/${locale}/community/${post.id}`)}
+                                        postUrl={`/community/${post.id}`}
+                                        shareTitle={post.title}
+                                        saveEntityType="post"
+                                        saveEntityId={post.id}
+                                        hideZeroCounts
                                     />
-                                </Link>
+                                </div>
                             ))}
                         </div>
                     ) : (

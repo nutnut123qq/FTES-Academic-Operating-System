@@ -5,7 +5,8 @@ import type { PublicProfile } from "../../hooks/useQueryPublicProfileSwr"
 
 /**
  * Component — the public profile's Overview tab after the profile-page cleanup:
- *  - the counter row is FRAMELESS (icon + number), so no `MetricCard` is rendered,
+ *  - the counter row is NOT here any more — it moved into the identity card, above the
+ *    tab strip (see `ProfileStatsRow`, which carries that test now),
  *  - projects / achievements no longer preview here (they live in the Profile tab),
  *  - this person's community posts DO render here (moved off the Connections tab),
  *  - with no posts the tab still shows an empty state, never a blank panel.
@@ -34,6 +35,31 @@ vi.mock("@heroui/react", () => ({
     Typography: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
     cn: (...a: Array<unknown>) => a.filter(Boolean).join(" "),
 }))
+
+/**
+ * `PostEngagementBar` là component THẬT có test riêng (và kéo theo cả hook lưu bài, chia sẻ,
+ * chục icon). Ở đây chỉ cần biết mỗi bài được gắn một thanh tương tác và nhận đúng dữ liệu,
+ * nên mock nó thành một nhãn phơi props ra DOM.
+ */
+vi.mock("@/components/reuseable/PostEngagementBar", () => ({
+    PostEngagementBar: ({ likes, liked, commentsCount, saveEntityId }: {
+        likes: number; liked: boolean; commentsCount: number; saveEntityId?: string
+    }) => (
+        <div
+            data-testid="engagement-bar"
+            data-likes={likes}
+            data-liked={String(liked)}
+            data-comments={commentsCount}
+            data-save-id={saveEntityId}
+        />
+    ),
+}))
+
+vi.mock("@/components/features/community/hooks/useMutateReactPostSwr", () => ({
+    useMutateReactPostSwr: () => vi.fn(),
+}))
+
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }))
 
 vi.mock("@/i18n/navigation", () => ({
     Link: ({ href, children }: { href: string; children: React.ReactNode }) => (
@@ -73,7 +99,7 @@ vi.mock("@/components/blocks/stats/MetricCard", () => ({
 
 // The shared community hook — controllable per test.
 let communityResult: {
-    data: { recentPosts: Array<{ id: string; title: string; likeCount: number; commentCount: number; dateLabel: string }> } | undefined
+    data: { recentPosts: Array<{ id: string; title: string; likeCount: number; commentCount: number; dateLabel: string; likedByMe: boolean; bookmarkedByMe: boolean }> } | undefined
     isLoading: boolean
     error: unknown
     mutate: () => void
@@ -113,7 +139,7 @@ beforeEach(() => {
     communityResult = {
         data: {
             recentPosts: [
-                { id: "post-1", title: "Bài viết đầu", likeCount: 2, commentCount: 1, dateLabel: "01/07/2026" },
+                { id: "post-1", title: "Bài viết đầu", likeCount: 3, commentCount: 2, dateLabel: "01/07/2026", likedByMe: true, bookmarkedByMe: false },
             ],
         },
         isLoading: false,
@@ -127,16 +153,6 @@ afterEach(() => {
 })
 
 describe("ProfileOverviewTab", () => {
-    it("shows the four counters as bare numbers, with no metric card frame", () => {
-        render(<ProfileOverviewTab profile={PROFILE} />)
-
-        expect(screen.getByText("128")).toBeTruthy() // followers
-        expect(screen.getByText("34")).toBeTruthy() // following
-        expect(screen.getByText("2")).toBeTruthy() // projects (array length, not a page)
-        expect(screen.getByText("1")).toBeTruthy() // achievements
-        expect(screen.queryByTestId("metric-card")).toBeNull()
-    })
-
     it("no longer previews projects or achievements — those moved to the Profile tab", () => {
         render(<ProfileOverviewTab profile={PROFILE} />)
 
@@ -160,5 +176,19 @@ describe("ProfileOverviewTab", () => {
 
         expect(screen.getByTestId("empty-content")).toBeTruthy()
         expect(screen.getByText("publicProfile.community.postsEmpty")).toBeTruthy()
+    })
+
+    /**
+     * Chủ dự án chốt: hồ sơ người khác phải có thích / bình luận / chia sẻ / lưu ngay trên
+     * từng bài, giống ngoài cộng đồng — trước đó hàng bài chỉ là một dòng chữ đếm số.
+     */
+    it("mỗi bài có thanh tương tác mang đúng số liệu và trạng thái của người xem", () => {
+        render(<ProfileOverviewTab profile={PROFILE} />)
+
+        const bars = screen.getAllByTestId("engagement-bar")
+        expect(bars.length).toBe(1)
+        expect(bars[0].getAttribute("data-likes")).toBe("3")
+        expect(bars[0].getAttribute("data-comments")).toBe("2")
+        expect(bars[0].getAttribute("data-save-id")).toBe("post-1")
     })
 })

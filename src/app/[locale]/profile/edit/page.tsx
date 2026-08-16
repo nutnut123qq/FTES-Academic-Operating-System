@@ -17,7 +17,9 @@ import { Controller, type Control } from "react-hook-form"
 import { CameraIcon } from "@phosphor-icons/react"
 import { useEditProfileForm, type EditProfileFormValues } from "@/hooks/rhf/useEditProfileForm"
 import { CampusPicker } from "@/components/reuseable/CampusPicker"
+import { MajorPicker } from "@/components/reuseable/MajorPicker"
 import { useQueryCampusesSwr } from "@/components/features/community/hooks/useQueryCampusesSwr"
+import { useQueryMajorsSwr, type Major } from "@/components/features/subject/hooks/useQueryMajorsSwr"
 import type { CampusView } from "@/modules/api/rest/community"
 
 /** The plain-text fields of the edit form (all seed/clear as strings). */
@@ -95,6 +97,55 @@ const CampusRow = ({
 )
 
 /**
+ * The major row — same shape as {@link CampusRow}. The form value is a major CODE
+ * ("" = not chosen).
+ *
+ * This row is what makes the profile's Skill-EXP panel work: that panel picks its skill
+ * categories from the learner's major, and when none is set it prompts them here. A
+ * prompt pointing at a form that cannot set the field is worse than no prompt.
+ */
+const MajorRow = ({
+    control,
+    label,
+    placeholder,
+    hint,
+    emptyHint,
+    majors,
+}: {
+    control: Control<EditProfileFormValues>
+    label: string
+    placeholder: string
+    hint: string
+    emptyHint: string
+    majors: Array<Major>
+}) => (
+    <Controller
+        control={control}
+        name="majorCode"
+        render={({ field }) => (
+            <div className="flex flex-col gap-2">
+                <Label className="text-sm">{label}</Label>
+                <MajorPicker
+                    majors={majors}
+                    value={field.value || null}
+                    onChange={(code) => field.onChange(code ?? "")}
+                    placeholder={placeholder}
+                    ariaLabel={label}
+                    // Danh mục ngành rỗng là trạng thái hợp lệ (BE chưa có `/majors`) — ô sẽ tự
+                    // khoá, nên phải kèm câu nói VÌ SAO, nhất là khi người dùng vừa bấm lời mời
+                    // "Chọn ngành" từ biểu đồ EXP và sang đây chỉ thấy một ô xám.
+                    emptyHint={emptyHint}
+                    className="self-start"
+                />
+                <Typography type="body-xs" color="muted">
+                    {hint}
+                </Typography>
+            </div>
+        )}
+    />
+)
+
+/**
  * `/profile/edit` — edit-profile form. Reuses {@link useEditProfileForm} (the
  * real REST profile flow: seeds from `GET /api/v1/profiles/me`, saves via
  * `PATCH /me` + multipart avatar upload + `PUT /me/social-links`). Only fields
@@ -105,6 +156,7 @@ const EditProfilePage = () => {
     const { control, formState, onSubmit, fileInputRef, onPickAvatar, onAvatarChange, shownAvatar } =
         useEditProfileForm()
     const { campuses } = useQueryCampusesSwr()
+    const { majors } = useQueryMajorsSwr()
 
     return (
         <form onSubmit={onSubmit} className="flex max-w-2xl flex-col gap-6">
@@ -167,6 +219,15 @@ const EditProfilePage = () => {
                 label={t("profile.academic.fields.campus")}
                 placeholder={t("profileEdit.campusNone")}
                 campuses={campuses}
+            />
+
+            <MajorRow
+                control={control}
+                label={t("profile.academic.fields.majorFromCatalog")}
+                placeholder={t("profileEdit.majorNone")}
+                hint={t("profileEdit.majorHint")}
+                emptyHint={t("profileEdit.majorEmptyHint")}
+                majors={majors}
             />
 
             <TextRow

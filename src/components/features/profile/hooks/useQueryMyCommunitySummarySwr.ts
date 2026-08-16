@@ -21,6 +21,13 @@ export interface MyCommunityPost {
     dateLabel: string
     likeCount: number
     commentCount: number
+    /**
+     * Viewer đã thích / đã lưu bài này chưa — cần cho thanh tương tác ở trang hồ sơ hiển thị
+     * ĐÚNG trạng thái ngay từ lần vẽ đầu. Bỏ qua hai trường này thì tim luôn rỗng dù người
+     * xem đã thích, và bấm vào là gửi lệnh thích lần hai.
+     */
+    likedByMe: boolean
+    bookmarkedByMe: boolean
 }
 
 /** A follower / following user stub. */
@@ -92,6 +99,8 @@ export const toMyCommunityPost = (
     dateLabel: toDateLabel(post.createdAt, locale),
     likeCount: post.likeCount ?? 0,
     commentCount: post.commentCount ?? 0,
+    likedByMe: post.likedByMe ?? false,
+    bookmarkedByMe: post.bookmarkedByMe ?? false,
 })
 
 /**

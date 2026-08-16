@@ -5,6 +5,7 @@ import { useSWRConfig } from "swr"
 import { useTranslations } from "next-intl"
 import { toast } from "@heroui/react"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
+import { useViewerAuthorCard, viewerAuthorName } from "@/hooks/useViewerAuthorCard"
 import { addComment } from "@/modules/api/rest/community"
 import {
     mutateCommunityFeeds,
@@ -27,9 +28,18 @@ export interface SubmitCommentInput {
     postId: string
     /** The comment body (already trimmed non-empty by the caller). */
     body: string
-    /** Author label for the optimistic node ("Bạn"/"You"). */
+    /**
+     * FALLBACK author label for the optimistic node ("Bạn"/"You"). Used only when the
+     * viewer's own session card is unavailable: with a card the node is signed with the
+     * REAL display name, because that is what the server row replacing it will carry — a
+     * "Bạn" that turns into "Nguyễn Văn A" one round-trip later is the rename this
+     * fallback exists to avoid, not to cause.
+     */
     authorLabel: string
-    /** URL-facing username for the optimistic node's profile link + hovercard. */
+    /**
+     * FALLBACK URL-facing username for the optimistic node's profile link + hovercard,
+     * used on the same terms as {@link SubmitCommentInput.authorLabel}.
+     */
     authorUsername: string
     /** Localized "just now" time label for the optimistic node. */
     justNowLabel: string
@@ -47,6 +57,14 @@ export interface SubmitCommentInput {
  * is removed, the count is reverted symmetrically, and the caller is told to
  * restore the draft (via the thrown error / false return).
  *
+ * The optimistic node is SIGNED with the viewer's own identity — name, handle AND
+ * avatar — read from the session card already in the store ({@link useViewerAuthorCard},
+ * no extra request). It used to carry a bare "Bạn"/"You" and no avatar at all, so the
+ * writer's own comment appeared unphotographed under a pronoun and then silently renamed
+ * itself to their real name + photo when the revalidation landed. The card is the same
+ * profile the BE resolves for that account, so the swap is now invisible. Only a viewer
+ * the store cannot name (guest / unhydrated session) falls back to the caller's labels.
+ *
  * Guests get the `AuthenticationModal` and nothing is appended.
  *
  * @returns `submit(input)` resolving `true` on success, `false` on failure or a
@@ -56,6 +74,7 @@ export const useMutateCreatePostCommentSwr = () => {
     const t = useTranslations("communityHub")
     const { mutate, cache } = useSWRConfig()
     const { requireAuth } = useRequireAuth()
+    const viewer = useViewerAuthorCard()
 
     return useCallback(
         async (input: SubmitCommentInput): Promise<boolean> => {
@@ -66,8 +85,9 @@ export const useMutateCreatePostCommentSwr = () => {
             const tempId = `tmp-${Date.now()}`
             const optimistic: PostComment = {
                 id: tempId,
-                author: input.authorLabel,
-                authorUsername: input.authorUsername,
+                author: viewerAuthorName(viewer, input.authorLabel),
+                authorUsername: viewer?.username ?? input.authorUsername,
+                authorAvatar: viewer?.avatarUrl ?? null,
                 text: input.body,
                 timeLabel: input.justNowLabel,
             }
@@ -122,6 +142,6 @@ export const useMutateCreatePostCommentSwr = () => {
             await mutate(postDetailKey(input.postId)).catch(() => {})
             return true
         },
-        [mutate, cache, requireAuth, t],
+        [mutate, cache, requireAuth, viewer, t],
     )
 }

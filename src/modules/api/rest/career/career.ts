@@ -3,6 +3,7 @@ import type {
     ApplyCareerOpportunityRequest,
     CareerMentorship,
     CareerMentorshipActionRequest,
+    CareerMySkillExp,
     CareerMyRoadmap,
     CareerOpportunity,
     CareerOpportunityApplication,
@@ -254,13 +255,21 @@ export const getCareerSkillCategories = async (): Promise<Array<CareerSkillCateg
     })
 
 /**
- * Reads the CURRENT learner's accumulated EXP per skill category.
+ * Reads the CURRENT learner's skill set and their accumulated EXP in each bucket.
  *
- * @returns every category with its running total; categories not earned in yet come
- *          back at `0`, so the caller never has to fill gaps itself.
+ * The buckets are their MAJOR's default skill set; categories not earned in yet come
+ * back at `0`, so the caller never has to fill gaps itself.
+ *
+ * WIRE SHAPE: an object since change `default-skills-by-major`; it used to be a bare
+ * array. The return type keeps both so a browser holding a newer FE against an older
+ * backend still type-checks — {@link buildSkillExpChart} reads either.
+ *
+ * @returns the skill-set envelope, or the legacy bare array from an older backend.
  */
-export const getMyCareerSkillExp = async (): Promise<Array<CareerUserSkillExp>> =>
-    restRequest<Array<CareerUserSkillExp>>({
+export const getMyCareerSkillExp = async (): Promise<
+    CareerMySkillExp | Array<CareerUserSkillExp>
+> =>
+    restRequest<CareerMySkillExp | Array<CareerUserSkillExp>>({
         method: "GET",
         url: "/career/me/skill-exp",
         authenticated: true,

@@ -20,7 +20,13 @@ const ACHIEVEMENT_INTERVAL_MS = 4_500
  */
 const AchievementSlide = ({ item }: { item: AchievementStat }) => {
     const t = useTranslations("homeLanding")
-    const title = t(`achievements.items.${item.key}.title`)
+    // Thẻ BÁO CHÍ không có khoá i18n (`press1..9` không nằm trong messages): tiêu đề và
+    // nguồn lấy thẳng từ dữ liệu trích dẫn. Gọi `t()` cho chúng thì màn hình in ra đường
+    // khoá thô — đúng lỗi vừa phải vá ở dòng thời gian hoạt động.
+    const title = item.press ? item.press.title : t(`achievements.items.${item.key}.title`)
+    const description = item.press
+        ? item.press.source
+        : t(`achievements.items.${item.key}.description`)
 
     return (
         <MediaCard
@@ -55,45 +61,20 @@ const AchievementSlide = ({ item }: { item: AchievementStat }) => {
                 ) : null
             }
             title={title}
-            description={t(`achievements.items.${item.key}.description`)}
+            description={description}
             footer={
-                item.href || item.press?.length ? (
-                    <div className="flex flex-col gap-3">
-                        {item.href ? (
-                            <Link
-                                href={item.href}
-                                target="_blank"
-                                rel="noopener"
-                                className="inline-flex items-center gap-2 text-sm text-accent"
-                            >
-                                {t("achievements.viewDetail")}
-                                <ArrowRightIcon aria-hidden focusable="false" className="size-4" />
-                            </Link>
-                        ) : null}
-                        {item.press?.length ? (
-                            <div className="flex flex-col gap-1">
-                                <Typography type="body-sm" color="muted">
-                                    {t("achievements.press")}
-                                </Typography>
-                                <ul className="flex flex-col gap-1">
-                                    {item.press.map((article) => (
-                                        <li key={article.url}>
-                                            <Link
-                                                href={article.url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                // line-clamp-1 keeps one headline to one row so a
-                                                // five-article card stays the height of a card
-                                                className="line-clamp-1 text-sm text-accent"
-                                            >
-                                                {article.source} — {article.title}
-                                            </Link>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        ) : null}
-                    </div>
+                item.href ? (
+                    <Link
+                        href={item.href}
+                        target="_blank"
+                        // noreferrer đi kèm noopener cho MỌI link ra ngoài: thẻ báo chí trỏ
+                        // sang toà soạn thứ ba, không có lý do gửi kèm đường dẫn trang mình
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-sm text-accent"
+                    >
+                        {item.press ? t("achievements.readArticle") : t("achievements.viewDetail")}
+                        <ArrowRightIcon aria-hidden focusable="false" className="size-4" />
+                    </Link>
                 ) : null
             }
         />
@@ -185,6 +166,7 @@ export const AchievementsSection = () => {
                     </>
                 ) : null}
             </div>
+
         </section>
     )
 }

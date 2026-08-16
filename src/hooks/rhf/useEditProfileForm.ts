@@ -38,10 +38,49 @@ export interface EditProfileFormValues {
     location: string
     /** Campus CODE → BE academic `campus` (empty = clear / no campus). */
     campus: string
+    /**
+     * Major CODE → BE academic `majorCode` (empty = clear / not chosen).
+     *
+     * This is the field the profile Skill-EXP panel reads to work out which skill
+     * categories to show; without a way to set it here, the panel's "pick your major"
+     * prompt had nowhere to send anyone.
+     */
+    majorCode: string
     /** Public LinkedIn URL → BE social link `linkedin` (empty = clear). */
     linkedinUrl: string
     /** Personal website URL → BE social link `website` (empty = clear). */
     websiteUrl: string
+}
+
+/**
+ * Giá trị `majorCode` gửi kèm `PATCH /profiles/me`, hoặc `null` = ĐỪNG ĐỤNG TỚI trường này.
+ *
+ * VÌ SAO không gửi vô điều kiện như mọi trường khác — trường này có ba thứ chồng lên nhau:
+ *
+ * 1. **Quy ước PATCH của nó ngược với phần còn lại**: `null` = giữ nguyên, chuỗi RỖNG = XOÁ
+ *    (`UpdateProfileRequest#majorCode`; BE chỉ ghi khi `req.majorCode() != null`).
+ * 2. **Giá trị seed đến từ một service KHÁC**: `ProfileMapper.academic` chỉ trả `majorCode` khi tra
+ *    được mã qua `MajorCatalogApi` (danh mục ngành nằm ở Workspace), và bean RPC đó có đường lùi
+ *    trả empty khi service kia không với tới ⇒ về tới FE thì "không đọc được danh mục" và "chưa
+ *    chọn ngành" là CÙNG MỘT `null`.
+ * 3. Gộp (1) với (2): Workspace nghẽn 30 giây → form seed `""` → người dùng chỉ sửa bio, bấm Lưu →
+ *    gửi `majorCode: ""` → `profile.profiles.major_code` bị XOÁ vĩnh viễn, không một lời cảnh báo,
+ *    và MajorPicker lúc đó cũng rỗng nên không đặt lại được ngay. Một lỗi ĐỌC biến thành một lệnh
+ *    GHI XOÁ. Chiều ngược lại cũng hỏng: ngành bị chuyển INACTIVE thì đường đọc vẫn trả mã
+ *    (`findAnyByCode`) còn đường ghi từ chối (`findActiveByCode`) ⇒ MỌI lần lưu hồ sơ đều 400
+ *    `PROFILE_INVALID_MAJOR` ở một trường người dùng không hề đụng tới.
+ *
+ * Nên: chỉ gửi khi giá trị THẬT SỰ khác cái server vừa trả. Người dùng chủ động bỏ chọn ngành vẫn
+ * gửi được `""` (khác giá trị seed), tức khả năng xoá có chủ đích không mất.
+ *
+ * @param seeded - `academic.majorCode` mà `GET /profiles/me` trả về (null khi không rõ).
+ * @param edited - giá trị hiện tại trong form.
+ * @returns mã ngành cần ghi, hoặc `null` khi không có gì để ghi.
+ */
+export const majorCodePatch = (seeded: string | null | undefined, edited: string): string | null => {
+    const next = edited.trim()
+    const current = (seeded ?? "").trim()
+    return next === current ? null : next
 }
 
 /** True when a BE social-link platform matches the "linkedin" slot. */
@@ -90,6 +129,9 @@ export const useEditProfileForm = () => {
             // campus CODE from the active-campus list (empty = clear); the picker only
             // ever emits a valid code or "", so no further constraint is needed here.
             campus: z.string(),
+            // major CODE from the majors catalogue (empty = clear); the picker only ever
+            // emits a real code or "", and the BE re-checks it against the catalogue.
+            majorCode: z.string(),
             // empty = clear; otherwise must be a real URL within the length cap
             linkedinUrl: z.union([z.literal(""), z.string().trim().url().max(URL_MAX)]),
             websiteUrl: z.union([z.literal(""), z.string().trim().url().max(URL_MAX)]),
@@ -106,6 +148,7 @@ export const useEditProfileForm = () => {
             roleTitle: profile?.jobTitle ?? "",
             location: profile?.address ?? "",
             campus: profile?.academic?.campus ?? "",
+            majorCode: profile?.academic?.majorCode ?? "",
             linkedinUrl: findLink(profile, isLinkedin),
             websiteUrl: findLink(profile, isWebsite),
         },
@@ -152,6 +195,10 @@ export const useEditProfileForm = () => {
                     address: value.location.trim() ? value.location.trim() : null,
                     // empty = clear the campus (a @Pattern-validated code otherwise)
                     campus: value.campus.trim() ? value.campus.trim() : null,
+                    // KHÔNG gửi vô điều kiện: quy ước của trường này ngược với mọi trường trên
+                    // (`null` = giữ nguyên, `""` = XOÁ) và giá trị seed phụ thuộc một service khác,
+                    // nên gửi mù là biến lỗi đọc thành lệnh xoá ngành. Xem `majorCodePatch`.
+                    majorCode: majorCodePatch(profile?.academic?.majorCode, value.majorCode),
                 })
                 // 3) social links (replace-all): keep any non-linkedin/website links the
                 // BE already stores, then re-add the two the form controls

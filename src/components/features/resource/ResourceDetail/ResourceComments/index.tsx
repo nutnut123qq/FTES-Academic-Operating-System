@@ -9,6 +9,11 @@ import { useParams } from "next/navigation"
 
 import { useAppSelector } from "@/redux/hooks"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
+import {
+    useViewerAuthorCard,
+    viewerOwnRowCard,
+    type ViewerAuthorCard,
+} from "@/hooks/useViewerAuthorCard"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton as SkeletonBlock } from "@/components/blocks/skeleton/Skeleton"
 import { UserAvatar } from "@/components/reuseable/UserAvatar"
@@ -104,6 +109,7 @@ const ReplyComposer = ({
 const CommentNode = ({
     comment,
     viewerId,
+    viewer,
     locale,
     isReply,
     onReply,
@@ -113,6 +119,13 @@ const CommentNode = ({
 }: {
     comment: ResourceCommentView
     viewerId?: string
+    /**
+     * The reader's own session card, used ONLY to put their real photo on their own rows —
+     * the C-4 comment view carries no author card, so every other row keeps the generated
+     * face seeded by its `userId`. `null` (guest / unhydrated session) keeps every row on
+     * that generated face, exactly as before.
+     */
+    viewer: ViewerAuthorCard | null
     locale: string
     isReply: boolean
     onReply?: (commentId: string) => void
@@ -124,6 +137,11 @@ const CommentNode = ({
     const isDeleted = comment.status === DELETED_STATUS || comment.userId === null
     const isOwner = !isDeleted && !!comment.userId && comment.userId === viewerId
     const authorLabel = isDeleted ? "—" : comment.userId === viewerId ? t("you") : t("member")
+    /**
+     * The viewer's own row — placeholder AND stored row alike, since both carry the same
+     * `userId` — so the photo is on screen from the first frame and never swaps.
+     */
+    const mine = viewerOwnRowCard(viewer, comment.userId, isDeleted)
     // Both come straight from `GET /resources/{id}/comments` (root rows AND replies) — the
     // count is never derived client-side.
     const liked = comment.likedByMe ?? false
@@ -132,7 +150,8 @@ const CommentNode = ({
     return (
         <div className="flex items-start gap-3">
             <UserAvatar
-                username={comment.userId ?? undefined}
+                username={mine?.displayName ?? mine?.username ?? comment.userId ?? undefined}
+                avatar={mine?.avatarUrl ?? null}
                 seed={comment.userId ?? "deleted"}
                 size="sm"
                 className={cn("size-8 shrink-0", isDeleted && "opacity-50")}
@@ -227,7 +246,11 @@ const ResourceCommentsSkeleton = () => (
  * page/size pagination. Writes are optimistic and roll back on failure (the write hooks
  * own the cache patching). Guests are gated into the auth modal on submit. Mirrors
  * the course `LessonComments` real-`CommentView` pattern (author shown from
- * `userId` as "you"/"member" — the C-4 view carries no author card). Free-form
+ * `userId` as "you"/"member" — the C-4 view carries no author card, so nobody ELSE'S name
+ * is guessed at; the reader's own rows additionally wear their real photo, taken from the
+ * session the composer above already renders and matched by `userId`, which is a field the
+ * optimistic row and the stored row carry alike — so the face appears with the comment and
+ * never swaps). Free-form
  * discussion only; star rating lives on `/resources/[resourceId]/reviews`.
  */
 export const ResourceComments = () => {
@@ -237,6 +260,9 @@ export const ResourceComments = () => {
     const viewer = useAppSelector((state) => state.user.user)
     const viewerId = viewer?.id
     const currentUser = viewer ? { username: viewer.username, avatar: viewer.avatar } : null
+    // Same session the composer above already renders the reader's face from — so their own
+    // comment wears the same photo as the box they typed it in, with no extra request.
+    const viewerCard = useViewerAuthorCard()
     const { requireAuth: requireAuthBase } = useRequireAuth()
 
     const [page, setPage] = useState(1)
@@ -385,6 +411,7 @@ export const ResourceComments = () => {
                             <CommentNode
                                 comment={comment}
                                 viewerId={viewerId}
+                                viewer={viewerCard}
                                 locale={locale}
                                 isReply={false}
                                 onReply={onRequestReply}
@@ -400,6 +427,7 @@ export const ResourceComments = () => {
                                             key={reply.id}
                                             comment={reply}
                                             viewerId={viewerId}
+                                            viewer={viewerCard}
                                             locale={locale}
                                             isReply
                                             onDelete={onDelete}

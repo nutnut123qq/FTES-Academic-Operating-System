@@ -6050,7 +6050,9 @@
                         "generic": "The action did not go through. Try again later."
                     },
                     "addText": "Add text exam (.txt/.md)",
-                    "textImported": "Imported {count} exam page(s) from text files."
+                    "textImported": "Imported {count} exam page(s) from text files.",
+                    "addScan": "Scan exam pictures into text",
+                    "scanImported": "Digitised {count} exam page(s) from pictures."
                 }
             }
         },

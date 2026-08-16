@@ -10,15 +10,9 @@ import { useQueryAiSubscriptionTiersSwr } from "@/hooks/swr/api/graphql/queries/
 import { useQueryMyAiSettingsSwr } from "@/hooks/swr/api/graphql/queries/useQueryMyAiSettingsSwr"
 import { useMutatePurchaseAiSubscriptionSwr } from "@/hooks/swr/api/graphql/mutations/useMutatePurchaseAiSubscriptionSwr"
 import type { AiSubscriptionTier } from "@/modules/api/graphql/queries/types/ai-subscription-tiers"
-import { submitCheckout } from "@/modules/payment/submit-checkout"
-import { PaymentType } from "@/modules/types/enums/payment-type"
-import { PurchaseConfirmModal } from "../PurchaseConfirmModal"
-
-/**
- * Gateways `purchaseAiSubscription` accepts (its request type documents PayOS and
- * SePay only — the international gateways are membership-side).
- */
-const AI_PLAN_METHODS = [PaymentType.PayOS, PaymentType.Sepay] as const
+import { PLAN_PAY_METHOD } from "@/modules/api/graphql/mutations/types/purchase-checkout"
+import { usePlanPurchase } from "../usePlanPurchase"
+import { PlanPurchaseModal } from "../PlanPurchaseModal"
 
 /**
  * AiPlanSection — the "FrosTES Plans" half of the dashboard "My Plan" tab: the
@@ -29,50 +23,47 @@ const AI_PLAN_METHODS = [PaymentType.PayOS, PaymentType.Sepay] as const
  * tier the account is actually on (there is no dedicated "my subscription" query,
  * and `myAiSettings.tier` is the same fact). Only the catalogue gates the
  * loading / error states — a missing settings read costs the "current plan" badge,
- * not the page.
+ * not the page. No tier published means no tier is on sale, and the empty state
+ * says exactly that.
  *
- * Buying is a TWO-step flow: pressing Buy opens {@link PurchaseConfirmModal},
- * which states the plan, the amount and the gateway; only the confirm inside it
- * runs `purchaseAiSubscription`, and the answer is a checkout URL the user still
- * has to complete on the gateway. A failure keeps the dialog open with an explicit
- * "nothing was charged" line rather than navigating away.
+ * Buying is a TWO-step flow: pressing Buy opens {@link PlanPurchaseModal}, which
+ * states the plan and the amount; only the confirm inside it creates an order. What
+ * comes back is a bank-transfer QR, not a gateway link — this backend has no redirect
+ * checkout — so the dialog then shows the QR and polls the order until the bank settles
+ * it ({@link usePlanPurchase}). A checkout that fails to start keeps the dialog open
+ * with an explicit "nothing was charged" line rather than navigating away.
  */
 export const AiPlanSection = () => {
     const t = useTranslations()
     const tiersSwr = useQueryAiSubscriptionTiersSwr()
     const settingsSwr = useQueryMyAiSettingsSwr()
-    const { trigger, isMutating } = useMutatePurchaseAiSubscriptionSwr()
+    const { trigger } = useMutatePurchaseAiSubscriptionSwr()
 
     const [pendingTier, setPendingTier] = useState<AiSubscriptionTier | null>(null)
-    const [checkoutError, setCheckoutError] = useState<string | null>(null)
 
     const tiers = tiersSwr.data ?? []
     const currentTier = settingsSwr.data?.tier ?? null
 
-    /** Run the checkout for the confirmed tier and hand the user to the gateway. */
-    const onConfirm = async (method: PaymentType) => {
-        if (!pendingTier) return
-        setCheckoutError(null)
-        try {
+    const purchase = usePlanPurchase({
+        start: async () => {
+            if (!pendingTier) return null
             const result = await trigger({
                 tier: pendingTier.tier,
-                paymentType: method,
-                // the gateway sends the user back to this very screen either way
-                payosReturnUrl: window.location.href,
-                payosCancelUrl: window.location.href,
+                paymentType: PLAN_PAY_METHOD,
             })
-            const envelope = result?.data?.purchaseAiSubscription
-            if (!envelope?.success || !envelope.data?.checkoutUrl) {
-                setCheckoutError(envelope?.message || t("profileSettings.purchase.failed"))
-                return
-            }
-            submitCheckout({
-                checkoutUrl: envelope.data.checkoutUrl,
-                checkoutFields: envelope.data.checkoutFields,
-            })
-        } catch {
-            setCheckoutError(t("profileSettings.purchase.failed"))
-        }
+            return result?.data?.purchaseAiSubscription
+        },
+        // paid → the account is on a new tier; re-read instead of guessing it locally
+        onPaid: () => { void settingsSwr.mutate() },
+        failureMessage: t("profileSettings.purchase.failed"),
+    })
+
+    const closeModal = () => {
+        // An order still awaiting payment is deliberately kept alive: closing the dialog
+        // must not abandon a live QR, and the poll keeps running so the badge updates
+        // once the money lands.
+        if (purchase.phase !== "awaiting") purchase.reset()
+        setPendingTier(null)
     }
 
     return (
@@ -171,11 +162,6 @@ export const AiPlanSection = () => {
                                         {t("aiSubscription.perMonth")}
                                     </Typography>
                                 </div>
-                                <Typography type="body-xs" color="muted">
-                                    {t("aiSubscription.priceUsdHint", {
-                                        amount: `$${tier.priceUsd}`,
-                                    })}
-                                </Typography>
 
                                 <Typography type="body-xs" color="muted">
                                     {tier.description}
@@ -201,9 +187,9 @@ export const AiPlanSection = () => {
                                     size="sm"
                                     variant={isCurrent ? "secondary" : "primary"}
                                     className="mt-auto"
-                                    isDisabled={isCurrent || isMutating}
+                                    isDisabled={isCurrent || purchase.isStarting}
                                     onPress={() => {
-                                        setCheckoutError(null)
+                                        purchase.reset()
                                         setPendingTier(tier)
                                     }}
                                 >
@@ -215,21 +201,20 @@ export const AiPlanSection = () => {
                 </div>
             </AsyncContent>
 
-            <PurchaseConfirmModal
+            <PlanPurchaseModal
                 isOpen={pendingTier !== null}
-                onClose={() => {
-                    setPendingTier(null)
-                    setCheckoutError(null)
-                }}
+                onClose={closeModal}
                 planLabel={pendingTier?.displayName ?? ""}
                 amountLabel={pendingTier ? formatVnd(pendingTier.priceVnd) : ""}
-                amountHint={pendingTier
-                    ? t("aiSubscription.priceUsdHint", { amount: `$${pendingTier.priceUsd}` })
-                    : null}
-                methods={[...AI_PLAN_METHODS]}
-                isPending={isMutating}
-                errorMessage={checkoutError}
-                onConfirm={(method) => { void onConfirm(method) }}
+                // no USD line: there is no international gateway on this backend, so the
+                // dollar figure was never an amount anyone could be charged
+                amountHint={null}
+                isStarting={purchase.isStarting}
+                errorMessage={purchase.errorMessage}
+                ticket={purchase.ticket}
+                phase={purchase.phase}
+                onConfirm={() => { void purchase.confirm() }}
+                onRetry={purchase.reset}
             />
         </section>
     )

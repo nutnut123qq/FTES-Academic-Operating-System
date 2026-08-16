@@ -303,17 +303,20 @@
       "title": "Confirm your purchase",
       "planLabel": "You are buying",
       "amountLabel": "Amount due",
-      "methodLabel": "Payment method",
-      "notice": "Pressing continue takes you to the payment gateway. Nothing is charged until you complete the payment there.",
-      "confirm": "Continue to payment",
-      "failed": "Could not start the checkout. No payment was taken — please try again.",
-      "methods": {
-        "payos": "PayOS",
-        "sepay": "SePay",
-        "stripe": "Stripe",
-        "paypal": "PayPal",
-        "crypto": "Crypto"
-      }
+      "notice": "Confirming creates the order and shows a bank-transfer QR code. Nothing is charged until your transfer goes through.",
+      "confirm": "Create payment QR",
+      "failed": "Could not create the order. No payment was taken — please try again.",
+      "scanHint": "Scan this QR code with your banking app to pay.",
+      "orderLabel": "Order reference",
+      "awaiting": "Waiting for your payment…",
+      "awaitingHint": "This window updates itself when the bank confirms. Please don't transfer a second time.",
+      "paid": "Payment received",
+      "paidHint": "Your plan is being activated. It may take a moment to show up.",
+      "expired": "This QR code has expired",
+      "expiredHint": "The hold on the order ran out before a payment arrived. If you have just transferred, keep this window open — we are still reconciling. Otherwise create the order again.",
+      "orderFailed": "The order did not complete",
+      "orderFailedHint": "This order ended without granting the plan. If you were charged, contact support with the order reference above.",
+      "retry": "Create a new order"
     },
     "learning": {
       "loadMore": "Load more",
@@ -1974,11 +1977,9 @@
   "membership": {
     "title": "Membership",
     "subtitle": "Join the FTES AOS community",
-    "price": "$5",
-    "priceHint": "/ month",
+    "priceHint": "/ {days} days",
     "cta": "Become a member",
     "card": {
-      "title": "FTES AOS Community Membership",
       "desc": "Everything you need to learn faster and get hired — in one membership."
     },
     "perks": {
@@ -1987,8 +1988,16 @@
       "discount": "20% off every FTES AOS course",
       "recruitment": "Get your profile in front of hiring partners"
     },
-    "priceApprox": "Approximately $5/month",
-    "perksTitle": "What you get"
+    "perksTitle": "What you get",
+    "error": "Couldn't load your membership.",
+    "retry": "Try again",
+    "empty": "No membership plan is on sale right now.",
+    "emptyActiveHint": "Your current membership is unaffected — only new purchases are paused.",
+    "active": "Member",
+    "activeUntil": "Member until {date}",
+    "renew": "Extend membership",
+    "durationHint": "One purchase adds {days} days",
+    "priceUnavailable": "Price unavailable"
   },
   "aiSubscription": {
     "title": "FrosTES Plans",
@@ -1997,7 +2006,6 @@
     "retry": "Try again",
     "empty": "No FrosTES plan is on sale right now.",
     "perMonth": "/month",
-    "priceUsdHint": "≈ {amount} for international payments",
     "popular": "Popular",
     "currentPlan": "Current plan",
     "buy": "Buy now",
@@ -2841,20 +2849,7 @@
       "domestic": "Domestic",
       "international": "International"
     },
-    "payos": {
-      "desc": "Pay with PayOS"
-    },
-    "stripe": {
-      "desc": "Pay with cards worldwide via Stripe"
-    },
-    "paypal": {
-      "desc": "Pay with your PayPal balance or linked cards"
-    },
-    "crypto": {
-      "desc": "Pay with stablecoins (USDT/USDC)"
-    },
     "sepay": {
-      "desc": "Pay with Sepay",
       "instruction": "Scan the QR code below using your banking app to pay.",
       "bank": "Bank",
       "account": "Account Number",
@@ -6309,18 +6304,18 @@
   "skillExp": {
     "title": "Skill EXP",
     "expValue": "{exp} EXP",
-    "axisHint": "EXP accumulated across every course you study — there is no cap.",
-    "error": "Could not load your skill EXP.",
-    "retry": "Try again",
+    "axisHint": "Bars show raw EXP and the axis scales to your strongest category. Studying more courses keeps adding EXP — there is no ceiling.",
     "empty": {
       "title": "No skill EXP yet",
-      "description": "Reach 30% of a course that awards EXP to start accumulating."
+      "description": "Study and complete courses to earn EXP in each skill category."
     },
+    "error": "Could not load your skill EXP.",
+    "retry": "Try again",
     "categories": {
       "programming": "Programming",
       "cs-fundamentals": "CS fundamentals",
       "software-design": "Software design",
-      "database": "Databases",
+      "database": "Database",
       "app-development": "App development",
       "software-engineering": "Software engineering",
       "testing": "Testing",
@@ -6416,29 +6411,6 @@
       "title": "Sign in to see your progress"
     },
     "retry": "Try again"
-  },
-  "skillExp": {
-    "title": "Skill EXP",
-    "expValue": "{exp} EXP",
-    "axisHint": "Bars show raw EXP and the axis scales to your strongest category. Studying more courses keeps adding EXP — there is no ceiling.",
-    "empty": {
-      "title": "No skill EXP yet",
-      "description": "Study and complete courses to earn EXP in each skill category."
-    },
-    "error": "Could not load your skill EXP.",
-    "retry": "Try again",
-    "categories": {
-      "programming": "Programming",
-      "cs-fundamentals": "CS fundamentals",
-      "software-design": "Software design",
-      "database": "Database",
-      "app-development": "App development",
-      "software-engineering": "Software engineering",
-      "testing": "Testing",
-      "devops": "DevOps",
-      "security": "Security",
-      "professional": "Professional skills"
-    }
   },
   "certificateVerify": {
     "title": "Verify certificate",

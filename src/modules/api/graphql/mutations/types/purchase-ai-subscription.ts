@@ -1,30 +1,22 @@
-﻿import type { GraphQLResponse } from "../../types"
-import type { PaymentType } from "@/modules/types/enums/payment-type"
+import type { GraphQLResponse } from "../../types"
+import type { PurchaseCheckoutData } from "./purchase-checkout"
 
-/** Payload inside `purchaseAiSubscription.data` after the standard API wrapper. */
-export interface PurchaseAiSubscriptionData {
-    /** URL the user should be redirected to complete payment. */
-    checkoutUrl: string
-    /** Payment-gateway reference ID for reconciliation. */
-    referenceId: string
-    /** Internal transaction row ID. */
-    transactionId: string
-    /** Checkout amount in VND. */
-    amount: number
-    /** SePay PG only: JSON of signed fields to POST as a form to `checkoutUrl`. */
-    checkoutFields?: string | null
-}
+/**
+ * Payload inside `purchaseAiSubscription.data` — the shared plan checkout ticket
+ * ({@link PurchaseCheckoutData}): a VietQR payload plus the order id to poll.
+ */
+export type PurchaseAiSubscriptionData = PurchaseCheckoutData
 
 /** GraphQL `PurchaseAiSubscriptionRequest` body. */
 export interface PurchaseAiSubscriptionRequest {
-    /** AI subscription tier slug to purchase. */
+    /** AI subscription tier slug to purchase (the product slug from `aiSubscriptionTiers`). */
     tier: string
-    /** Payment gateway to use (PayOS or SePay). */
-    paymentType: PaymentType
-    /** PayOS return URL after successful payment. */
-    payosReturnUrl?: string
-    /** PayOS cancel URL if user aborts checkout. */
-    payosCancelUrl?: string
+    /**
+     * Pay method of THIS backend — `VIETQR` (default when omitted) or `COIN`. External
+     * gateway names are rejected server-side without creating an order, so this screen
+     * only ever sends `VIETQR`.
+     */
+    paymentType?: string
 }
 
 /** Apollo response shape for `purchaseAiSubscription`. */

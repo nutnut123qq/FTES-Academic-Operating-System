@@ -303,17 +303,20 @@
       "title": "Xác nhận thanh toán",
       "planLabel": "Bạn đang mua",
       "amountLabel": "Số tiền",
-      "methodLabel": "Phương thức thanh toán",
-      "notice": "Bấm tiếp tục sẽ chuyển bạn sang cổng thanh toán. Chưa có khoản tiền nào bị trừ cho tới khi bạn hoàn tất ở đó.",
-      "confirm": "Tiếp tục thanh toán",
-      "failed": "Không mở được cổng thanh toán. Chưa trừ tiền — vui lòng thử lại.",
-      "methods": {
-        "payos": "PayOS",
-        "sepay": "SePay",
-        "stripe": "Stripe",
-        "paypal": "PayPal",
-        "crypto": "Crypto"
-      }
+      "notice": "Bấm xác nhận sẽ tạo đơn và hiện mã QR chuyển khoản. Chưa có khoản tiền nào bị trừ cho tới khi bạn chuyển khoản thành công.",
+      "confirm": "Tạo mã QR thanh toán",
+      "failed": "Không tạo được đơn thanh toán. Chưa trừ tiền — vui lòng thử lại.",
+      "scanHint": "Quét mã QR này bằng app ngân hàng để thanh toán.",
+      "orderLabel": "Mã đơn",
+      "awaiting": "Đang chờ bạn thanh toán…",
+      "awaitingHint": "Cửa sổ này tự cập nhật khi ngân hàng báo có. Đừng chuyển khoản lần thứ hai.",
+      "paid": "Đã nhận được thanh toán",
+      "paidHint": "Gói của bạn đang được kích hoạt, có thể mất một chút thời gian để hiển thị.",
+      "expired": "Mã QR đã hết hạn",
+      "expiredHint": "Hết thời gian giữ đơn mà chưa nhận được tiền. Nếu bạn vừa chuyển khoản, cứ để cửa sổ này mở — hệ thống vẫn đang đối soát. Nếu chưa, hãy tạo đơn mới.",
+      "orderFailed": "Đơn hàng không hoàn tất",
+      "orderFailedHint": "Đơn này đã kết thúc mà chưa cấp gói. Nếu bạn đã bị trừ tiền, hãy liên hệ hỗ trợ kèm mã đơn ở trên.",
+      "retry": "Tạo đơn mới"
     },
     "learning": {
       "loadMore": "Tải thêm",
@@ -1986,11 +1989,9 @@
   "membership": {
     "title": "Hội viên",
     "subtitle": "Gia nhập cộng đồng FTES AOS",
-    "price": "$5",
-    "priceHint": "/ tháng",
+    "priceHint": "/ {days} ngày",
     "cta": "Trở thành hội viên",
     "card": {
-      "title": "Hội viên cộng đồng FTES AOS",
       "desc": "Tất cả những gì bạn cần để học nhanh hơn và có việc — trong một gói hội viên."
     },
     "perks": {
@@ -1999,8 +2000,16 @@
       "discount": "Giảm 20% mọi khóa học FTES AOS",
       "recruitment": "Đưa hồ sơ của bạn đến nhà tuyển dụng đối tác"
     },
-    "priceApprox": "Khoảng $5/tháng",
-    "perksTitle": "Bạn nhận được gì"
+    "perksTitle": "Bạn nhận được gì",
+    "error": "Không tải được thông tin hội viên.",
+    "retry": "Thử lại",
+    "empty": "Hiện chưa có gói hội viên nào đang mở bán.",
+    "emptyActiveHint": "Gói hội viên hiện tại của bạn không bị ảnh hưởng — chỉ tạm ngưng bán gói mới.",
+    "active": "Đang là hội viên",
+    "activeUntil": "Hội viên đến {date}",
+    "renew": "Gia hạn hội viên",
+    "durationHint": "Mỗi lần mua cộng thêm {days} ngày",
+    "priceUnavailable": "Chưa có giá"
   },
   "aiSubscription": {
     "title": "Gói FrosTES",
@@ -2009,7 +2018,6 @@
     "retry": "Thử lại",
     "empty": "Hiện chưa có gói FrosTES nào đang mở bán.",
     "perMonth": "/tháng",
-    "priceUsdHint": "≈ {amount} khi thanh toán quốc tế",
     "popular": "Phổ biến",
     "currentPlan": "Đang dùng",
     "buy": "Mua ngay",
@@ -2853,20 +2861,7 @@
       "domestic": "Thanh toán trong nước",
       "international": "Thanh toán quốc tế"
     },
-    "payos": {
-      "desc": "Thanh toán qua PayOS"
-    },
-    "stripe": {
-      "desc": "Thanh toán bằng thẻ quốc tế qua Stripe"
-    },
-    "paypal": {
-      "desc": "Thanh toán bằng số dư PayPal hoặc thẻ liên kết"
-    },
-    "crypto": {
-      "desc": "Thanh toán bằng stablecoin (USDT/USDC)"
-    },
     "sepay": {
-      "desc": "Thanh toán qua Sepay",
       "instruction": "Quét mã QR bằng ứng dụng ngân hàng để thanh toán.",
       "bank": "Ngân hàng",
       "account": "Số tài khoản",
@@ -6309,23 +6304,23 @@
   "skillExp": {
     "title": "EXP kỹ năng",
     "expValue": "{exp} EXP",
-    "axisHint": "EXP cộng dồn từ mọi khoá bạn đã học — không có mức trần.",
+    "axisHint": "Cột là EXP thô, trục tự giãn theo nhóm cao nhất của bạn. Học thêm khóa là EXP cộng tiếp, không có trần.",
+    "empty": {
+      "title": "Chưa có EXP kỹ năng nào",
+      "description": "Học và hoàn thành khóa để cộng EXP cho từng nhóm kỹ năng."
+    },
     "error": "Không tải được EXP kỹ năng.",
     "retry": "Thử lại",
-    "empty": {
-      "title": "Chưa có EXP kỹ năng",
-      "description": "Học tới mốc 30% của một khoá có cấu hình EXP để bắt đầu tích luỹ."
-    },
     "categories": {
       "programming": "Lập trình",
-      "cs-fundamentals": "Nền tảng KHMT",
+      "cs-fundamentals": "Nền tảng khoa học máy tính",
       "software-design": "Thiết kế phần mềm",
       "database": "Cơ sở dữ liệu",
       "app-development": "Phát triển ứng dụng",
-      "software-engineering": "Công nghệ phần mềm",
+      "software-engineering": "Kỹ thuật phần mềm",
       "testing": "Kiểm thử",
       "devops": "DevOps",
-      "security": "An toàn thông tin",
+      "security": "Bảo mật",
       "professional": "Kỹ năng nghề nghiệp"
     }
   },
@@ -6416,29 +6411,6 @@
       "title": "Đăng nhập để xem tiến độ của bạn"
     },
     "retry": "Thử lại"
-  },
-  "skillExp": {
-    "title": "EXP kỹ năng",
-    "expValue": "{exp} EXP",
-    "axisHint": "Cột là EXP thô, trục tự giãn theo nhóm cao nhất của bạn. Học thêm khóa là EXP cộng tiếp, không có trần.",
-    "empty": {
-      "title": "Chưa có EXP kỹ năng nào",
-      "description": "Học và hoàn thành khóa để cộng EXP cho từng nhóm kỹ năng."
-    },
-    "error": "Không tải được EXP kỹ năng.",
-    "retry": "Thử lại",
-    "categories": {
-      "programming": "Lập trình",
-      "cs-fundamentals": "Nền tảng khoa học máy tính",
-      "software-design": "Thiết kế phần mềm",
-      "database": "Cơ sở dữ liệu",
-      "app-development": "Phát triển ứng dụng",
-      "software-engineering": "Kỹ thuật phần mềm",
-      "testing": "Kiểm thử",
-      "devops": "DevOps",
-      "security": "Bảo mật",
-      "professional": "Kỹ năng nghề nghiệp"
-    }
   },
   "certificateVerify": {
     "title": "Xác minh chứng chỉ",

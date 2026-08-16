@@ -10,11 +10,11 @@ const mutation1 = gql`
       message
       error
       data {
-        checkoutUrl
         referenceId
         transactionId
         amount
-        checkoutFields
+        qrCode
+        orderStatus
       }
     }
   }
@@ -35,10 +35,15 @@ export type MutatePurchaseAiSubscriptionParams = MutateParams<
 >
 
 /**
- * Starts AI subscription checkout (PayOS / Sepay): creates a pending transaction
- * and returns the checkout URL.
+ * Opens checkout for an AI subscription tier. Same machinery as the course purchase
+ * (cart → order → VietQR → bank webhook → fulfillment), so the answer is a **VietQR
+ * payload + the order id to poll**, not a gateway URL — `checkoutUrl` /
+ * `checkoutFields` are always null server-side and are not selected.
  *
- * Mirrors backend `purchaseAiSubscription` (mutations/ai/purchase-ai-subscription).
+ * Pressing twice is safe: an open, unexpired order for the same (viewer, product) is
+ * returned again instead of a second order being created.
+ *
+ * Mirrors backend `purchaseAiSubscription` (`SubscriptionCommerceController`).
  */
 export const mutatePurchaseAiSubscription = async ({
     mutation = MutationPurchaseAiSubscription.Mutation1,

@@ -10,11 +10,11 @@ const mutation1 = gql`
       message
       error
       data {
-        checkoutUrl
         referenceId
         transactionId
         amount
-        checkoutFields
+        qrCode
+        orderStatus
       }
     }
   }
@@ -35,10 +35,16 @@ export type MutatePurchaseMembershipParams = MutateParams<
 >
 
 /**
- * Starts community-membership checkout (PayOS / Sepay / Stripe / PayPal /
- * Crypto): creates a pending transaction and returns the checkout URL.
+ * Opens checkout for the community membership. The backend delegates to the SAME
+ * commerce checkout a course purchase runs (cart → order → VietQR → bank webhook →
+ * fulfillment), so the answer is a **VietQR payload + the order id to poll**, not a
+ * gateway URL — `checkoutUrl` / `checkoutFields` exist in the schema but are documented
+ * as always null, and are therefore not selected.
  *
- * Mirrors backend `purchaseMembership` (mutations/membership/purchase-membership).
+ * Pressing twice is safe: an open, unexpired order for the same (viewer, product) is
+ * returned again instead of a second order being created.
+ *
+ * Mirrors backend `purchaseMembership` (`SubscriptionCommerceController`).
  */
 export const mutatePurchaseMembership = async ({
     mutation = MutationPurchaseMembership.Mutation1,

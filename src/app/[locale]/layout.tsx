@@ -64,15 +64,30 @@ const Layout = async ({
     const { locale } = await params
     const messages = await getMessages()
     return (
-        <html lang={locale}>
+        // `suppressHydrationWarning` covers the two scripts that stamp `<html>` BEFORE
+        // React hydrates: the accent pre-paint script below and `next-themes`' own
+        // theme-class script. Both are deliberate pre-paint mutations, and without this
+        // the tag they touch reports a hydration mismatch on every load.
+        <html lang={locale} suppressHydrationWarning>
             <body className={`${font.className} ${font.variable} antialiased  bg-background`}>
                 {/* pre-paint accent: must run before any content renders (no flash) */}
                 <script dangerouslySetInnerHTML={{ __html: accentPrePaintScript }} />
                 {/* Linh vật trợ lý (MascotAssistant) nằm ở MỌI trang và là ảnh động ~420KB —
                     preload để nó hiện ngay thay vì bật lên muộn ở góc màn hình. Chỉ preload
                     bản WebP: trình duyệt nào không đọc được animated WebP sẽ tự lấy GIF qua
-                    <picture>, và preload thêm GIF thì mọi người đều tải thừa 1 file. */}
-                <link rel="preload" as="image" href="/fes-mascot-wave.webp" type="image/webp" />
+                    <picture>, và preload thêm GIF thì mọi người đều tải thừa 1 file.
+                    `fetchPriority="low"`: đo trên bản deploy, file này là 427KB và được xếp
+                    hàng NGAY ĐẦU <head> ở mức ưu tiên cao — tức 427KB pixel trang trí ở góc
+                    màn hình tranh băng thông với chính JS/CSS đang chặn nội dung hiện ra.
+                    Hạ ưu tiên vẫn giữ nguyên ý đồ (nạp sớm, không bật lên muộn) nhưng để
+                    trình duyệt phục vụ nội dung trước. */}
+                <link
+                    rel="preload"
+                    as="image"
+                    href="/fes-mascot-wave.webp"
+                    type="image/webp"
+                    fetchPriority="low"
+                />
                 <NextIntlClientProvider locale={locale} messages={messages}>
                     <InnerLayout>
                         <div>

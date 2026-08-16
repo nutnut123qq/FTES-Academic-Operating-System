@@ -65,14 +65,24 @@ export const InnerLayout = ({ children }: PropsWithChildren) => {
                         <SwrProvider>
                             <SwrSideEffects />
                             <SseSideEffects />
-                            <UseEffects />
+                            {/* Every `useSearchParams()` consumer needs its OWN Suspense boundary.
+                                On a prerendered route that hook bails its nearest boundary out to
+                                client rendering — and the only boundary above these three is the
+                                one wrapping this entire tree, so a missing wrapper here costs the
+                                whole app its server-rendered HTML (a blank white first paint).
+                                All three render nothing visible, so `fallback={null}` is exact. */}
+                            <Suspense fallback={null}>
+                                <UseEffects />
+                            </Suspense>
                             {/* `?auth=signin|signup` deep link → opens the auth modal (needs its
                                 own Suspense: useSearchParams) */}
                             <Suspense fallback={null}>
                                 <AuthQueryOpener />
                             </Suspense>
                             <AppSplash />
-                            <TopLoader />
+                            <Suspense fallback={null}>
+                                <TopLoader />
+                            </Suspense>
                             {!isContentRoute ? (
                                 <AmbientBackground
                                     effect={effect}

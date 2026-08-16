@@ -292,7 +292,17 @@ export const UserLink = ({
     )
 
     const node = username ? (
-        <UserHovercard content={hovercardContent} onOpen={handleOpenHovercard} className={className}>
+        <UserHovercard
+            content={hovercardContent}
+            // Start the profile read on hover INTENT, not on open: the card takes 400ms to
+            // appear and the read ~150-400ms, so fetching only at open guaranteed every
+            // hovercard in the feed opened on a skeleton and popped its content in after.
+            // Firing ~120ms into the hover instead usually lands the data before the card
+            // does. `onOpen` stays wired for the paths that open without that dwell.
+            onIntent={handleOpenHovercard}
+            onOpen={handleOpenHovercard}
+            className={className}
+        >
             {trigger}
         </UserHovercard>
     ) : (

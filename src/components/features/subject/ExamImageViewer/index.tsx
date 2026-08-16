@@ -5,11 +5,14 @@ import { Button, cn } from "@heroui/react"
 import {
     CaretLeftIcon,
     CaretRightIcon,
+    FileTextIcon,
     FrameCornersIcon,
     MagnifyingGlassMinusIcon,
     MagnifyingGlassPlusIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
+
+import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
 
 import {
     FIT_ZOOM,
@@ -26,17 +29,34 @@ import {
     type ViewportMetrics,
 } from "./examImageViewport"
 
-/** One page of an exam, in the shape the viewer needs. */
+/**
+ * One page of an exam, in the shape the viewer needs.
+ *
+ * A page is either a SCAN or TYPED TEXT. Both live in the same album and page with the same
+ * carets, because a reader flipping through an exam does not care which one a page happens to be.
+ */
 export interface ExamImageViewerImage {
     /** Stable id — the React key AND the trigger that resets zoom/pan on a page change. */
     id: string
-    /** Absolute, already-signed URL of the picture. */
-    imageUrl: string
+    /** Absolute, already-signed URL of the picture. `null` on text pages. */
+    imageUrl: string | null
     /** Caption, used as the alt text when the uploader wrote one. */
     caption?: string | null
     /** Optional badge on the thumbnail (the FE album shows the comment count). */
     badgeCount?: number
+    /**
+     * What the page holds. Absent → picture, which is what every album held before text pages
+     * existed.
+     */
+    kind?: "IMAGE" | "TEXT"
+    /** The exam as Markdown; text pages only. */
+    textContent?: string | null
+    /** Original filename, shown on the thumbnail of a text page so the pages stay tellable apart. */
+    sourceFilename?: string | null
 }
+
+/** A page is text only when it SAYS so — never inferred from a missing url (see below). */
+const isTextPage = (page?: ExamImageViewerImage | null): boolean => page?.kind === "TEXT"
 
 /** Props for {@link ExamImageViewer}. */
 export interface ExamImageViewerProps {
@@ -320,36 +340,53 @@ export const ExamImageViewer = ({
                     onPointerCancel={endDrag}
                     onDoubleClick={() => applyZoom(toggleZoom(zoomRef.current))}
                 >
-                    {/* A plain <img>: the URL is a remote storage host, which next/image
-                        would need an explicit remotePatterns entry for. */}
-                    <img
-                        ref={imageRef}
-                        key={current.id}
-                        src={current.imageUrl}
-                        alt={altText}
-                        draggable={false}
-                        className="max-h-full max-w-full origin-center select-none object-contain"
-                        style={{
-                            transform: `translate3d(${offset.x}px, ${offset.y}px, 0) scale(${zoom})`,
-                            // No easing mid-drag: the picture must track the pointer 1:1.
-                            transition: isDragging ? "none" : "transform 120ms ease-out",
-                            cursor: atFit ? "default" : isDragging ? "grabbing" : "grab",
-                        }}
-                    />
+                    {isTextPage(current) ? (
+                        /* TEXT page: an article, not a picture. No zoom/pan — text reflows, so the
+                           whole pinch/drag apparatus would be solving a problem it does not have.
+                           Rendered through the house Markdown block so a typed exam looks like every
+                           other piece of prose on the site. */
+                        <div
+                            key={current.id}
+                            className="absolute inset-0 overflow-y-auto bg-background px-4 py-6 sm:px-8"
+                        >
+                            <article className="mx-auto max-w-3xl">
+                                <MarkdownContent markdown={current.textContent ?? ""} reading />
+                            </article>
+                        </div>
+                    ) : (
+                        /* A plain <img>: the URL is a remote storage host, which next/image
+                           would need an explicit remotePatterns entry for. */
+                        <img
+                            ref={imageRef}
+                            key={current.id}
+                            src={current.imageUrl ?? undefined}
+                            alt={altText}
+                            draggable={false}
+                            className="max-h-full max-w-full origin-center select-none object-contain"
+                            style={{
+                                transform: `translate3d(${offset.x}px, ${offset.y}px, 0) scale(${zoom})`,
+                                // No easing mid-drag: the picture must track the pointer 1:1.
+                                transition: isDragging ? "none" : "transform 120ms ease-out",
+                                cursor: atFit ? "default" : isDragging ? "grabbing" : "grab",
+                            }}
+                        />
+                    )}
                 </div>
 
                 {/* Warm the next picture so paging forward is instant. Hidden, and only
                     within the caller's load window, so it costs exactly one file — not the
                     rest of the album. */}
-                {clampedIndex + 1 < Math.min(loadBound, total) ? (
-                    <img
-                        src={images[clampedIndex + 1]?.imageUrl}
-                        alt=""
-                        aria-hidden
-                        decoding="async"
-                        className="pointer-events-none absolute size-0 opacity-0"
-                    />
-                ) : null}
+                {clampedIndex + 1 < Math.min(loadBound, total)
+                && !isTextPage(images[clampedIndex + 1])
+                && images[clampedIndex + 1]?.imageUrl ? (
+                        <img
+                            src={images[clampedIndex + 1]?.imageUrl ?? undefined}
+                            alt=""
+                            aria-hidden
+                            decoding="async"
+                            className="pointer-events-none absolute size-0 opacity-0"
+                        />
+                    ) : null}
 
                 {/* ZOOM toolbar — top-right, clear of the carets */}
                 <div className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-black/60 p-1">
@@ -455,7 +492,21 @@ export const ExamImageViewer = ({
                                 means no request, which is the whole point. `loading="lazy"` on
                                 its own would not help — the filmstrip scrolls horizontally and
                                 the browser happily fetches what is just off-screen. */}
-                            {position < loadBound ? (
+                            {isTextPage(image) ? (
+                                /* Text page: no picture to show. A file glyph + the source
+                                   filename is what actually tells two typed pages apart in a
+                                   strip — an identical grey box would not. */
+                                <span className="flex size-full flex-col items-center justify-center gap-1 bg-default px-1 text-center">
+                                    <FileTextIcon
+                                        aria-hidden
+                                        focusable="false"
+                                        className="size-5 text-muted"
+                                    />
+                                    <span className="line-clamp-2 text-[10px] leading-tight text-muted">
+                                        {image.sourceFilename ?? position + 1}
+                                    </span>
+                                </span>
+                            ) : position < loadBound && image.imageUrl ? (
                                 <img
                                     src={image.imageUrl}
                                     alt=""

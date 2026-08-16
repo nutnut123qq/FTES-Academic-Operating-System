@@ -269,11 +269,25 @@ export interface ResourceCommentsPage {
  * album of up to `maxImages` (200) pictures, each of which carries its OWN comment
  * thread (`commentCount` is the server-side total, roots + replies).
  */
+/**
+ * What an album page holds.
+ *
+ * `IMAGE` — a scanned page (`imageUrl`). `TEXT` — an exam typed as text and normalised by the
+ * backend's AI step (`textContent`, Markdown).
+ */
+export type FeImageKind = "IMAGE" | "TEXT"
+
 export interface FeImageView {
     id: string
     resourceId: string
-    /** Absolute, already-signed image URL served by the storage provider. */
-    imageUrl: string
+    /**
+     * Absolute, already-signed image URL — **null on `TEXT` pages**.
+     *
+     * Read `kind` to branch, never "does it have a url": a signing failure on a picture page also
+     * yields no url, and treating that as "this must be a text page" renders an empty article
+     * instead of the picture's error state.
+     */
+    imageUrl: string | null
     /** Position in the album (0-based, ascending). */
     sortOrder: number
     caption?: string
@@ -281,6 +295,30 @@ export interface FeImageView {
     uploadedBy?: string
     commentCount: number
     createdAt?: string
+    /**
+     * OPTIONAL on purpose: the field only exists once the backend change `subject-fe-text-exams`
+     * ships. `undefined` from an older backend means every page is a picture — which is exactly
+     * what those albums contain.
+     */
+    kind?: FeImageKind
+    /** Normalised exam in Markdown; present on `TEXT` pages only. */
+    textContent?: string | null
+    /** Original filename of the uploaded text file; `TEXT` pages only. */
+    sourceFilename?: string | null
+}
+
+/** One file that could not be imported, with a reason meant for the uploader. */
+export interface FeTextImportFailure {
+    filename: string
+    reason: string
+}
+
+/** Result of `POST /api/v1/resources/{id}/text-items`. */
+export interface FeTextImportResult {
+    created: Array<FeImageView>
+    failed: Array<FeTextImportFailure>
+    /** What the AI had to guess — shown to the uploader rather than swallowed. */
+    warnings: Array<string>
 }
 
 /** The whole album of an FE resource (`GET /api/v1/resources/{id}/images`). */

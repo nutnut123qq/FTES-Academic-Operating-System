@@ -2401,7 +2401,10 @@
     "linkedinUrlPlaceholder": "https://linkedin.com/in/username",
     "workMode": "Work mode",
     "workModeNone": "Not specified",
-    "campusNone": "No campus"
+    "campusNone": "No campus",
+    "majorNone": "No major yet",
+    "majorHint": "Your major decides which skills appear in the Skill EXP chart on your profile.",
+    "majorEmptyHint": "The major catalogue could not be loaded, so this cannot be changed right now. Try again in a few minutes — the major saved on your profile is NOT affected."
   },
   "sessions": {
     "title": "Devices",
@@ -6449,9 +6452,15 @@
     "title": "Skill EXP",
     "expValue": "{exp} EXP",
     "axisHint": "Bars show raw EXP and the axis scales to your strongest category. Studying more courses keeps adding EXP — there is no ceiling.",
+    "zeroHint": "These are the skill categories you will earn EXP in. Study and complete courses to start adding.",
+    "majorSet": "Skill set for {major}.",
+    "noMajorHint": "We do not know your major yet, so every skill category is shown.",
+    "majorWithoutSetHint": "{major} has no skill set of its own yet, so every category is shown.",
+    "readUnavailableHint": "We could not read your EXP (not signed in, or missing permission) — this is the shared category list at zero, NOT your real EXP.",
+    "chooseMajor": "Choose your major",
     "empty": {
-      "title": "No skill EXP yet",
-      "description": "Study and complete courses to earn EXP in each skill category."
+      "title": "No skill categories yet",
+      "description": "The skill-category catalogue is empty — an administrator has to add categories first."
     },
     "error": "Could not load your skill EXP.",
     "retry": "Try again",
@@ -6465,7 +6474,10 @@
       "testing": "Testing",
       "devops": "DevOps",
       "security": "Security",
-      "professional": "Professional skills"
+      "professional": "Professional skills",
+      "hardware-ic": "IC & hardware",
+      "mathematics": "Mathematics",
+      "foreign-language": "Foreign languages"
     }
   },
   "skillGraph": {

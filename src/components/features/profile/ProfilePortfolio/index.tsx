@@ -483,11 +483,10 @@ export const ProfilePortfolio = () => {
 
                             {/* achievements */}
                             <LabeledCard label={t("profile.portfolio.achievements.title")} frameless>
-                                {portfolio.achievements.length === 0 ? (
-                                    <EmptyContent title={t("profile.portfolio.achievements.empty")} />
-                                ) : (
-                                    <ProfileAchievements achievements={portfolio.achievements} />
-                                )}
+                                {/* Renders its own empty state: the "see all badges" action must
+                                    stay reachable for a learner who has earned nothing yet — that
+                                    is exactly who needs to read how the badges are earned. */}
+                                <ProfileAchievements achievements={portfolio.achievements} />
                             </LabeledCard>
 
                             {/* external links */}

@@ -316,7 +316,34 @@
       "expiredHint": "Hết thời gian giữ đơn mà chưa nhận được tiền. Nếu bạn vừa chuyển khoản, cứ để cửa sổ này mở — hệ thống vẫn đang đối soát. Nếu chưa, hãy tạo đơn mới.",
       "orderFailed": "Đơn hàng không hoàn tất",
       "orderFailedHint": "Đơn này đã kết thúc mà chưa cấp gói. Nếu bạn đã bị trừ tiền, hãy liên hệ hỗ trợ kèm mã đơn ở trên.",
-      "retry": "Tạo đơn mới"
+      "retry": "Tạo đơn mới",
+      "coin": {
+        "title": "Dùng Xu",
+        "balance": "Số dư: {balance} Xu",
+        "sliderLabel": "Số Xu áp vào gói này",
+        "selected": "Áp {coin} Xu",
+        "useMax": "Dùng tối đa",
+        "clear": "Bỏ dùng Xu",
+        "rateHint": "1 Xu = {vnd}",
+        "loading": "Đang tính số Xu có thể dùng…",
+        "quoteError": "Không đọc được số dư Xu. Bạn vẫn có thể chuyển khoản trả đủ.",
+        "none": "Gói này chưa dùng được Xu (số dư: {balance} Xu).",
+        "discountLabel": "Trả bằng {coin} Xu",
+        "remainingLabel": "Còn phải chuyển khoản",
+        "noticeCoinOnly": "Số Xu bạn chọn phủ trọn gói này. Bấm xác nhận là trừ Xu và mở đơn — không cần chuyển khoản đồng nào.",
+        "confirmCoinOnly": "Thanh toán bằng Xu",
+        "heldHint": "{coin} Xu đã bị trừ khỏi ví cho đơn này. Xu quay lại ví nếu bạn huỷ đơn hoặc đơn hết hạn.",
+        "cancelOrder": "Huỷ đơn & lấy lại Xu",
+        "cancelFailed": "Không huỷ được đơn. Xu chưa quay về ví — vui lòng thử lại.",
+        "paidByCoinHint": "Đã trả bằng {coin} Xu. Không cần chuyển khoản.",
+        "releasedHint": "{coin} Xu giữ cho đơn này đã được hoàn về ví.",
+        "errors": {
+          "insufficientCoin": "Số Xu này vượt mức đơn nhận được. Chưa trừ đồng nào — hãy chọn mức thấp hơn.",
+          "coinNotSupported": "Không áp được Xu cho phương thức thanh toán này. Chưa trừ đồng nào.",
+          "notOnSale": "Gói này không còn được bán. Chưa trừ đồng nào.",
+          "priceChanged": "Giá gói vừa thay đổi. Chưa trừ đồng nào — hãy đóng rồi mở lại để xem giá mới."
+        }
+      }
     },
     "learning": {
       "loadMore": "Tải thêm",
@@ -454,7 +481,7 @@
     "blog": "Blog",
     "quests": "Nhiệm vụ",
     "activity": "Hoạt động",
-    "wallet": "Ví",
+    "wallet": "F.Wallet",
     "search": "Tìm kiếm",
     "notifications": "Thông báo",
     "cart": "Giỏ hàng",
@@ -2028,7 +2055,8 @@
       "price": "0₫",
       "desc": "Lượt FrosTES cơ bản kèm theo khoá học",
       "cta": "Gói mặc định"
-    }
+    },
+    "emptyHint": "Gói đang ở trạng thái nháp sẽ không hiện ở đây."
   },
   "admin": {
     "aiBalancer": {
@@ -2124,6 +2152,21 @@
     "tabListAria": "Các mục hồ sơ",
     "loadingError": "Không tải được hồ sơ",
     "retry": "Thử lại",
+    "badgeCatalog": {
+      "seeAll": "Xem thêm huy hiệu",
+      "title": "Tất cả huy hiệu",
+      "subtitle": "Mọi huy hiệu trong hệ thống và cách đạt được",
+      "summary": "Đã đạt {earned}/{total}",
+      "earned": "Đã đạt",
+      "locked": "Chưa đạt",
+      "earnedOn": "Đạt ngày {date}",
+      "earnedNoDate": "Đã đạt",
+      "progress": "{current}/{total}",
+      "empty": "Chưa có huy hiệu nào được thiết lập",
+      "error": "Không tải được danh sách huy hiệu",
+      "retry": "Thử lại",
+      "close": "Đóng"
+    },
     "sections": {
       "personal": "Cá nhân",
       "academic": "Học vấn",
@@ -2263,7 +2306,7 @@
     },
     "progress": {
       "wallet": {
-        "coin": "FTES Coin",
+        "coin": "FCoin",
         "viewWallet": "Xem ví",
         "reputation": "Uy tín",
         "viewCommunity": "Xem cộng đồng"
@@ -2300,6 +2343,7 @@
     },
     "joined": "Tham gia {date}",
     "level": "Cấp {level}",
+    "badgesMore": "Thêm {count} huy hiệu",
     "followers": "{count} người theo dõi",
     "following": "{count} đang theo dõi",
     "shareProfile": "Chia sẻ hồ sơ",
@@ -2620,7 +2664,8 @@
     "tabsAria": "Các mục hồ sơ công khai",
     "stats": {
       "projects": "Dự án",
-      "achievements": "Thành tích"
+      "achievements": "Thành tích",
+      "srLabel": "{label}: {value}"
     },
     "about": {
       "empty": "Người dùng này chưa viết giới thiệu"
@@ -2882,8 +2927,17 @@
       "amountVnd": "{amount}₫",
       "amountCoin": "{amount} Coin",
       "savings": "Tiết kiệm {amount}₫ (−{percent}%)",
+      "itemsTitle": "Đang mua ({count} khoá)",
+      "subtotal": "Tạm tính",
+      "saleDiscount": "Khuyến mãi",
+      "couponDiscount": "Mã giảm giá",
+      "coinDiscount": "Xu đã dùng",
+      "total": "Tổng cộng",
+      "transferAmount": "Số tiền cần chuyển",
+      "notCharged": "Chưa trừ tiền và chưa trừ Xu của bạn.",
       "method": {
         "vietqr": "Chuyển khoản QR",
+        "wallet": "Thanh toán bằng Ví",
         "coin": "Trả bằng Xu"
       },
       "coupon": {
@@ -2892,6 +2946,20 @@
         "apply": "Áp dụng",
         "clear": "Bỏ mã",
         "invalid": "Mã không hợp lệ hoặc đã hết hạn."
+      },
+      "coin": {
+        "title": "Dùng Xu để giảm tiền",
+        "balance": "Số dư: {amount} Xu",
+        "sliderLabel": "Số Xu áp vào đơn",
+        "applied": "Áp {amount} Xu",
+        "appliedHint": "Đã dùng {amount} Xu để giảm giá đơn này.",
+        "max": "Dùng tối đa",
+        "none": "Bỏ dùng Xu",
+        "loading": "Đang tính số Xu có thể dùng…",
+        "unavailable": "Đơn này chưa dùng được Xu.",
+        "overLimit": "Số Xu vượt mức áp được cho đơn này. Vui lòng chọn lại.",
+        "walletCharge": "Trừ từ ví",
+        "walletNoQr": "Không cần quét QR"
       },
       "discount": "Giảm {amount}₫",
       "coinBalance": "Số dư ví",
@@ -3956,7 +4024,7 @@
   "gamification": {
     "quests": {
       "title": "Nhiệm vụ hằng ngày",
-      "subtitle": "Hoàn thành nhiệm vụ mỗi ngày để nhận FTES Coin.",
+      "subtitle": "Hoàn thành nhiệm vụ mỗi ngày để nhận FCoin.",
       "todayEarned": "Xu hôm nay",
       "todayEarnedLabel": "Xu nhận hôm nay: {coin}",
       "walletBalance": "Số dư ví",
@@ -4119,10 +4187,61 @@
     "leaderboardError": "Không tải được bảng xếp hạng. Vui lòng thử lại."
   },
   "wallet": {
-    "title": "Ví & FTES Coin",
-    "subtitle": "Số dư FTES Coin và lịch sử giao dịch của bạn.",
+    "title": "F.Wallet",
+    "subtitle": "Số dư FCoin và lịch sử giao dịch của bạn.",
     "balanceLabel": "Số dư hiện tại",
-    "coin": "FTES Coin",
+    "coin": "FCoin",
+    "showMore": "Xem thêm",
+    "topup": {
+      "title": "Nạp FCoin",
+      "subtitle": "Chọn gói và thanh toán bằng chuyển khoản.",
+      "paySubtitle": "Quét mã QR để hoàn tất chuyển khoản.",
+      "createOrder": "Lấy mã QR thanh toán",
+      "orderCreated": "Đã tạo mã QR thanh toán.",
+      "awaitingBank": "Đang chờ ngân hàng xác nhận…",
+      "awaitingHint": "FCoin sẽ vào ví ngay khi giao dịch được xác nhận. Bạn có thể để cửa sổ này mở.",
+      "paidTitle": "Đã nhận thanh toán",
+      "paidDescription": "{coin} {unit} đã được cộng vào ví của bạn.",
+      "notPaidTitle": "Lượt nạp này chưa hoàn tất",
+      "notPaidDescription": "Đơn đã bị huỷ hoặc hết hạn. Không có FCoin nào được cộng và bạn cũng chưa bị trừ tiền.",
+      "noPacks": "Hiện chưa có gói nạp nào được mở bán.",
+      "packsError": "Không tải được danh sách gói nạp.",
+      "retry": "Thử lại",
+      "close": "Đóng"
+    },
+    "earnGuide": {
+      "trigger": "Bí Kíp Cày Xu",
+      "title": "Bí Kíp Cày Xu",
+      "subtitle": "Tất cả cách kiếm FCoin trên FTES — và mỗi cách được bao nhiêu.",
+      "footnote": "Thưởng được cộng tự động khi bạn đạt điều kiện. Các mức ở trên là mức mặc định hiện tại và có thể được điều chỉnh.",
+      "close": "Đóng",
+      "ways": {
+        "quests": {
+          "title": "Nhiệm vụ hằng ngày",
+          "reward": "50–100 FCoin mỗi nhiệm vụ",
+          "description": "Đăng nhập, hoàn thành một bài học, đăng bài hoặc bình luận trong cộng đồng, thả cảm xúc cho 3 bài viết, giữ chuỗi học 7 ngày. Mỗi nhiệm vụ nhận thưởng một lần trong ngày.",
+          "cta": "Mở bảng nhiệm vụ"
+        },
+        "contribute": {
+          "title": "Đóng góp tài liệu",
+          "reward": "+500 FCoin",
+          "description": "Tải ghi chú, slide hoặc mã nguồn lên kho học liệu. Khi tài liệu của bạn được duyệt, bạn nhận 500 FCoin — mỗi tài liệu tính một lần.",
+          "cta": "Vào kho học liệu"
+        },
+        "invite": {
+          "title": "Mời bạn học",
+          "reward": "+500 FCoin cho cả hai",
+          "description": "Chia sẻ mã giới thiệu của bạn. Cả hai bên nhận thưởng khi người được mời MUA khoá học đầu tiên — chỉ đăng ký tài khoản thì chưa được tính.",
+          "cta": "Lấy mã giới thiệu"
+        },
+        "topup": {
+          "title": "Nạp bằng chuyển khoản",
+          "reward": "Là mua, không phải thưởng",
+          "description": "Cần gấp? Mua thẳng FCoin bằng chuyển khoản. Đây là giao dịch mua — bản thân nó không sinh ra thưởng.",
+          "cta": "Nạp ngay"
+        }
+      }
+    },
     "actions": {
       "topup": "Nạp",
       "transfer": "Chuyển",
@@ -4131,7 +4250,7 @@
     },
     "referral": {
       "inviteTitle": "Mời bạn bè & Nhận thưởng",
-      "inviteSubtitle": "Chia sẻ mã hoặc liên kết giới thiệu của bạn. Nhận ngay FTES Coin khi bạn bè tham gia và học tập!",
+      "inviteSubtitle": "Chia sẻ mã hoặc liên kết giới thiệu của bạn. Nhận FCoin khi bạn bè đăng ký khoá học đầu tiên!",
       "yourCode": "Mã giới thiệu của bạn",
       "copyCode": "Sao chép",
       "copiedCode": "Đã sao chép",
@@ -4145,9 +4264,9 @@
       "step1Title": "Gửi liên kết",
       "step1Desc": "Chia sẻ link cho bạn bè",
       "step2Title": "Bạn đăng ký",
-      "step2Desc": "Bạn bè tạo tài khoản học tập",
+      "step2Desc": "Bạn bè tạo tài khoản và mua khoá học",
       "step3Title": "Cùng nhận quà",
-      "step3Desc": "Nhận FTES Coin vào ví",
+      "step3Desc": "Nhận FCoin vào ví",
       "applyCodeTitle": "Bạn được ai đó giới thiệu?",
       "applyCodeSubtitle": "Nhập mã giới thiệu của người khác để nhận ưu đãi.",
       "applyCodePlaceholder": "Nhập mã giới thiệu...",
@@ -4186,7 +4305,7 @@
   "marketplace": {
     "catalog": {
       "title": "Cửa hàng",
-      "subtitle": "Dùng FTES Coin để đổi merch, premium và nhiều hơn nữa.",
+      "subtitle": "Dùng FCoin để đổi merch, premium và nhiều hơn nữa.",
       "searchPlaceholder": "Tìm sản phẩm",
       "all": "Tất cả",
       "empty": "Không có sản phẩm nào khớp tìm kiếm.",
@@ -4344,11 +4463,11 @@
       "goalCompleted": "Đã hoàn thành một mục tiêu",
       "xpGranted": "Đã nhận điểm kinh nghiệm",
       "seasonClosed": "Đã kết thúc một mùa giải",
-      "coinEarned": "Đã nhận FTES Coin",
-      "coinSpent": "Đã dùng FTES Coin",
-      "coinTransferred": "Đã chuyển FTES Coin",
-      "coinRefunded": "Đã được hoàn FTES Coin",
-      "coinAdjusted": "Đã được điều chỉnh số dư FTES Coin",
+      "coinEarned": "Đã nhận FCoin",
+      "coinSpent": "Đã dùng FCoin",
+      "coinTransferred": "Đã chuyển FCoin",
+      "coinRefunded": "Đã được hoàn FCoin",
+      "coinAdjusted": "Đã được điều chỉnh số dư FCoin",
       "orderCreated": "Đã tạo một đơn hàng",
       "orderPaid": "Đã thanh toán một đơn hàng",
       "orderFulfilled": "Đã hoàn tất một đơn hàng",
@@ -5312,6 +5431,25 @@
     "retry": "Thử lại",
     "title": "Thông báo",
     "mutedHint": "Bạn đã tắt toàn bộ thông báo.",
+    "typeFallback": {
+      "MENTION": "Có người nhắc đến bạn",
+      "COURSE": "Có cập nhật trong khóa học của bạn",
+      "EVENT": "Có cập nhật về một sự kiện",
+      "DEADLINE": "Sắp tới một hạn nộp",
+      "CHALLENGE": "Có cập nhật về một thử thách",
+      "COIN": "Số dư xu của bạn vừa thay đổi",
+      "GROUP": "Có hoạt động mới trong nhóm của bạn",
+      "SYSTEM": "Thông báo từ FTES",
+      "EMAIL_VERIFY": "Xác nhận địa chỉ email của bạn",
+      "PASSWORD_RESET": "Đặt lại mật khẩu",
+      "EMAIL_OTP": "Mã xác thực của bạn",
+      "SMS_OTP": "Mã xác thực của bạn",
+      "SECURITY_ALERT": "Cảnh báo bảo mật cho tài khoản của bạn",
+      "RBAC_CHANGE": "Quyền của bạn vừa thay đổi",
+      "EXPORT_DONE": "Bản xuất dữ liệu của bạn đã sẵn sàng",
+      "CTV_INVITE": "Bạn được mời tham gia đội ngũ",
+      "UNKNOWN": "Bạn có một thông báo mới"
+    },
     "preferences": {
       "title": "Tùy chọn thông báo",
       "subtitle": "Chọn loại thông báo bạn muốn nhận.",
@@ -8477,9 +8615,11 @@
     "role": {
       "superAdmin": "Quản trị cấp cao",
       "admin": "Quản trị viên",
+      "mentor": "Mentor",
       "moderator": "Kiểm duyệt viên"
     },
-    "description": "Tài khoản nhân sự chính thức của FTES, đã được xác minh."
+    "description": "Tài khoản nhân sự chính thức của FTES, đã được xác minh.",
+    "moderatorDescription": "Kiểm duyệt viên cộng đồng — giữ an toàn cho thảo luận trên FTES."
   },
   "goldenboard": {
     "title": "Bảng vàng FTES",

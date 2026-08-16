@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
-import { Button, Chip, Skeleton, Typography } from "@heroui/react"
+import { Button, Chip, Skeleton, Spinner, Typography } from "@heroui/react"
 import { useLocale, useTranslations } from "next-intl"
 import {
     ArrowClockwiseIcon,
@@ -10,6 +10,8 @@ import {
     ArrowUpIcon,
     CoinsIcon,
     GiftIcon,
+    LightbulbIcon,
+    PlusIcon,
     ShoppingBagIcon,
     SlidersHorizontalIcon,
     TicketIcon,
@@ -20,6 +22,8 @@ import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { useQueryWalletSwr, type WalletTransaction } from "../hooks/useQueryWalletSwr"
 import { useGetMyReferralSwr } from "@/hooks/swr/api/rest/queries/useGetMyReferralSwr"
 import { InviteFriendModal } from "../InviteFriendModal"
+import { TopupModal } from "../TopupModal"
+import { EarnGuideModal } from "../EarnGuideModal"
 
 /** Icon per BE `TransactionType` — mirrors the semantic of the ledger row. */
 const TYPE_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -119,15 +123,29 @@ const HistorySkeleton = () => (
 )
 
 /**
- * Wallet & FTES Coin shell (§12) — the `/wallet` surface. A hero balance card
- * (FTES Coin, accent) + Invite friend (Affiliate) action + a signed, colored transaction history.
- * Data comes from the real BE wallet REST endpoints (`GET /wallet/me` + `/wallet/me/transactions`).
+ * F.Wallet shell (§12) — the `/wallet` surface. A hero balance card (FCoin, accent) with
+ * top-up / invite / "how do I earn these" actions, then a signed, colored ledger showing
+ * the ten most recent rows with a way to ask for more.
+ *
+ * Data comes from the real BE wallet REST endpoints (`GET /wallet/me` +
+ * `/wallet/me/transactions`).
  */
 export const WalletShell = () => {
     const t = useTranslations("wallet")
-    const { balance, transactions, isLoading, error, mutate } = useQueryWalletSwr()
+    const {
+        balance,
+        transactions,
+        hasMore,
+        loadMore,
+        isLoadingMore,
+        isLoading,
+        error,
+        mutate,
+    } = useQueryWalletSwr()
     const { data: referral } = useGetMyReferralSwr()
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
+    const [isTopupModalOpen, setIsTopupModalOpen] = useState(false)
+    const [isEarnGuideOpen, setIsEarnGuideOpen] = useState(false)
     const isEmpty = transactions.length === 0
 
     return (
@@ -165,15 +183,35 @@ export const WalletShell = () => {
                     </div>
                 </div>
 
-                {/* affiliate & invite friend action */}
+                {/* top-up · affiliate · earning guide */}
                 <div className="flex flex-wrap items-center gap-3">
                     <Button
                         size="sm"
                         variant="primary"
+                        onPress={() => setIsTopupModalOpen(true)}
+                    >
+                        <PlusIcon className="size-4" />
+                        {t("actions.topup")}
+                    </Button>
+
+                    <Button
+                        size="sm"
+                        variant="secondary"
                         onPress={() => setIsInviteModalOpen(true)}
                     >
                         <GiftIcon className="size-4" />
                         {t("actions.inviteFriend")}
+                    </Button>
+
+                    {/* The lightbulb is the whole point of the affordance — it reads as
+                        "here's the trick", which is what the guide behind it is. */}
+                    <Button
+                        size="sm"
+                        variant="tertiary"
+                        onPress={() => setIsEarnGuideOpen(true)}
+                    >
+                        <LightbulbIcon className="size-4 text-warning" />
+                        {t("earnGuide.trigger")}
                     </Button>
 
                     {referral?.referralCode ? (
@@ -205,17 +243,54 @@ export const WalletShell = () => {
                         retryLabel: t("states.retry"),
                     }}
                 >
-                    <ul className="flex flex-col divide-y divide-separator rounded-2xl border border-separator px-4">
-                        {transactions.map((tx) => (
-                            <TransactionRow key={tx.id} tx={tx} />
-                        ))}
-                    </ul>
+                    <div className="flex flex-col gap-3">
+                        <ul className="flex flex-col divide-y divide-separator rounded-2xl border border-separator px-4">
+                            {transactions.map((tx) => (
+                                <TransactionRow key={tx.id} tx={tx} />
+                            ))}
+                        </ul>
+                        {hasMore ? (
+                            <div className="flex justify-center">
+                                <Button
+                                    size="sm"
+                                    variant="secondary"
+                                    isDisabled={isLoadingMore}
+                                    isPending={isLoadingMore}
+                                    onPress={loadMore}
+                                >
+                                    {({ isPending }) => (
+                                        <>
+                                            {isPending ? <Spinner color="current" size="sm" /> : null}
+                                            {t("showMore")}
+                                        </>
+                                    )}
+                                </Button>
+                            </div>
+                        ) : null}
+                    </div>
                 </AsyncContent>
             </div>
 
             <InviteFriendModal
                 isOpen={isInviteModalOpen}
                 onClose={() => setIsInviteModalOpen(false)}
+            />
+
+            <TopupModal
+                isOpen={isTopupModalOpen}
+                onClose={() => setIsTopupModalOpen(false)}
+                // The coins land through the bank webhook, so the balance on screen is
+                // stale until this revalidation runs. It goes through the hook's BOUND
+                // mutate — a hand-built key would miss the viewer segment and silently
+                // refresh nothing.
+                onCredited={() => void mutate()}
+            />
+
+            <EarnGuideModal
+                isOpen={isEarnGuideOpen}
+                onClose={() => setIsEarnGuideOpen(false)}
+                onInviteFriend={() => setIsInviteModalOpen(true)}
+                onTopup={() => setIsTopupModalOpen(true)}
             />
         </div>
     )

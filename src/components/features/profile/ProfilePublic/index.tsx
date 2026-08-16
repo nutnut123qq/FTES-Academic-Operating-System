@@ -7,6 +7,9 @@ import { useParams } from "next/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { ExtendedTabs } from "@/components/blocks/navigation/ExtendedTabs"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
+import { StaffBadge } from "@/components/reuseable/StaffBadge"
+import { useViewerStaffRole } from "@/hooks/useViewerStaffRole"
+import { useAppSelector } from "@/redux/hooks"
 import { useQueryPublicProfileSwr } from "../hooks/useQueryPublicProfileSwr"
 import { ProfileActivityTab } from "./ProfileActivityTab"
 import { ProfileCommunityTab } from "./ProfileCommunityTab"
@@ -36,8 +39,11 @@ const PublicProfileSkeleton = () => (
 )
 
 /**
- * Public (read-only) profile view (§2) for `/u/[username]` — an identity hero plus four
- * tabs: Overview · Profile · Activity · Community.
+ * Public (read-only) profile view (§2) for `/u/[username]` — an identity hero (avatar,
+ * name, handle, headline, followers AND the About text) plus four tabs:
+ * Overview (counters + this profile's community posts) · Profile (academic, contact,
+ * links, the full project + achievement lists) · Activity · Community (followers /
+ * following).
  *
  * The tab set is deliberately narrower than a coding-portfolio site's: every tab is backed
  * by data FTES actually holds. Three blocks a richer profile would carry are NOT built
@@ -55,6 +61,29 @@ export const ProfilePublic = () => {
     const { username } = useParams<{ username: string }>()
     const { profile, isLoading, error, mutate } = useQueryPublicProfileSwr(username)
     const [tab, setTab] = useState<PublicTab>("overview")
+    const viewer = useAppSelector((state) => state.user.user)
+    const viewerStaffRole = useViewerStaffRole()
+    /**
+     * Staff role of the person this page is ABOUT.
+     *
+     * The backend public-profile read cannot supply it: `ProfileViews.PublicProfile`
+     * (`GET /api/v1/profiles/{username}`) has no role field, and the batch resolver that
+     * feeds every other surface (`AccessControl.publicStaffRoles`, used by
+     * `PublicUserBatchLoader` / `FeedController`) is never called on this path. So the
+     * only role this page can prove is the VIEWER'S OWN, from their hydrated grants —
+     * which at least makes "my own profile, seen from /u/<me>" agree with the account
+     * menu and with my posts in the feed.
+     *
+     * Viewing SOMEONE ELSE therefore still shows no badge until the backend adds
+     * `staffRole` to `PublicProfile` (see the handoff note). It renders nothing rather
+     * than guessing — a wrong seal on a stranger is worse than a missing one.
+     */
+    const staffRole =
+        profile
+            && ((viewer?.id && viewer.id === profile.userId)
+                || (viewer?.username && viewer.username === profile.username))
+            ? viewerStaffRole
+            : null
 
     return (
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-6">
@@ -70,32 +99,47 @@ export const ProfilePublic = () => {
             >
                 {profile ? (
                     <div className="flex flex-col gap-6">
-                        {/* identity header */}
+                        {/* identity header — tên, @username, ngành, follower VÀ phần About
+                            (About không còn là khối riêng dưới tab Tổng quan) */}
                         <div className="overflow-hidden rounded-2xl border border-separator">
-                            <div className="flex items-center gap-4 p-6">
-                                <Avatar className="size-16 shrink-0 rounded-full">
-                                    {profile.avatarUrl ? (
-                                        <AvatarImage src={profile.avatarUrl} alt={profile.name} />
-                                    ) : null}
-                                    <AvatarFallback className="bg-accent/10 text-xl font-bold text-accent">
-                                        {profile.name.slice(0, 1).toUpperCase()}
-                                    </AvatarFallback>
-                                </Avatar>
-                                <div className="min-w-0">
-                                    <Typography type="h4" weight="bold" truncate>
-                                        {profile.name}
-                                    </Typography>
-                                    <Typography type="body-sm" color="muted">
-                                        @{profile.username}
-                                        {profile.headline ? ` · ${profile.headline}` : ""}
-                                    </Typography>
-                                    <Typography type="body-xs" color="muted">
-                                        {t("profile.public.followers", {
-                                            count: profile.followers,
-                                        })}
-                                        {profile.campus ? ` · ${profile.campus}` : ""}
-                                    </Typography>
+                            <div className="flex flex-col gap-4 p-6">
+                                <div className="flex items-center gap-4">
+                                    <Avatar className="size-16 shrink-0 rounded-full">
+                                        {profile.avatarUrl ? (
+                                            <AvatarImage src={profile.avatarUrl} alt={profile.name} />
+                                        ) : null}
+                                        <AvatarFallback className="bg-accent/10 text-xl font-bold text-accent">
+                                            {profile.name.slice(0, 1).toUpperCase()}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div className="min-w-0">
+                                        <div className="flex min-w-0 items-center gap-1">
+                                            <Typography type="h4" weight="bold" truncate>
+                                                {profile.name}
+                                            </Typography>
+                                            <StaffBadge role={staffRole} size="md" />
+                                        </div>
+                                        <Typography type="body-sm" color="muted">
+                                            @{profile.username}
+                                            {profile.headline ? ` · ${profile.headline}` : ""}
+                                        </Typography>
+                                        <Typography type="body-xs" color="muted">
+                                            {t("profile.public.followers", {
+                                                count: profile.followers,
+                                            })}
+                                            {profile.campus ? ` · ${profile.campus}` : ""}
+                                        </Typography>
+                                    </div>
                                 </div>
+                                {profile.about ? (
+                                    <Typography
+                                        type="body-sm"
+                                        color="muted"
+                                        className="whitespace-pre-line"
+                                    >
+                                        {profile.about}
+                                    </Typography>
+                                ) : null}
                             </div>
                         </div>
 
@@ -121,12 +165,7 @@ export const ProfilePublic = () => {
                             </Tabs.ListContainer>
                         </ExtendedTabs>
 
-                        {tab === "overview" ? (
-                            <ProfileOverviewTab
-                                profile={profile}
-                                onSeeProjects={() => setTab("profile")}
-                            />
-                        ) : null}
+                        {tab === "overview" ? <ProfileOverviewTab profile={profile} /> : null}
                         {tab === "profile" ? <ProfileInfoTab profile={profile} /> : null}
                         {tab === "activity" ? (
                             <ProfileActivityTab userId={profile.userId} />

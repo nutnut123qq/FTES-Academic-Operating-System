@@ -1,10 +1,14 @@
 "use client"
 
 import React from "react"
-import { Typography } from "@heroui/react"
-import { useTranslations } from "next-intl"
-import { MedalIcon, TrophyIcon } from "@phosphor-icons/react"
+import { Button, Typography } from "@heroui/react"
+import { useLocale, useTranslations } from "next-intl"
+import { ListPlusIcon, MedalIcon, TrophyIcon } from "@phosphor-icons/react"
+import { EmptyContent } from "@/components/blocks/async/EmptyContent"
 import type { WithClassNames } from "@/modules/types/base/class-name"
+import { BadgeCatalogModal } from "../../ProfileBadges/BadgeCatalogModal"
+import { toEarnedDateLabel } from "../../ProfileBadges/model"
+import { useBadgeTitle } from "../../ProfileBadges/useBadgeTitle"
 import type { MyPortfolioAchievement } from "../../hooks/useQueryMyPortfolioSwr"
 
 /** Props for {@link ProfileAchievements}. */
@@ -23,11 +27,22 @@ const CATEGORY_ICON: Record<MyPortfolioAchievement["category"], typeof TrophyIco
 }
 
 /**
- * Achievement wall for the Portfolio tab. Groups achievements by category and
- * renders each as a small badge cell with icon, title, and earned date.
+ * Achievement wall for the Portfolio tab. Groups the EARNED achievements by
+ * category and renders each as a small badge cell with icon, title, and earned
+ * date, plus a "see all" action that opens the full badge catalog — every badge
+ * in the system with how it is earned and whether the viewer has it yet.
+ *
+ * Two read-path fixes live here because the backend rows cannot be trusted raw:
+ * titles arrive as `"Badge FIRST_LESSON"` whenever the award event carried no
+ * name ({@link useBadgeTitle} resolves them), and `achievedAt` is frequently
+ * absent, which used to render literally as "Earned Invalid Date"
+ * ({@link toEarnedDateLabel} degrades it to a dateless line).
  */
 export const ProfileAchievements = ({ achievements, className }: ProfileAchievementsProps) => {
     const t = useTranslations()
+    const locale = useLocale()
+    const badgeTitle = useBadgeTitle()
+    const [isCatalogOpen, setIsCatalogOpen] = React.useState(false)
 
     const grouped = React.useMemo(() => {
         const map = new Map<MyPortfolioAchievement["category"], Array<MyPortfolioAchievement>>()
@@ -41,6 +56,10 @@ export const ProfileAchievements = ({ achievements, className }: ProfileAchievem
 
     return (
         <div className={`flex flex-col gap-6 ${className ?? ""}`}>
+            {achievements.length === 0 ? (
+                <EmptyContent title={t("profile.portfolio.achievements.empty")} />
+            ) : null}
+
             {Array.from(grouped.entries()).map(([category, list]) => (
                 <section key={category} className="flex flex-col gap-3">
                     <Typography type="body-xs" weight="medium" color="muted">
@@ -49,7 +68,7 @@ export const ProfileAchievements = ({ achievements, className }: ProfileAchievem
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         {list.map((achievement) => {
                             const Icon = CATEGORY_ICON[achievement.category]
-                            const earnedDate = new Date(`${achievement.earnedDate}T00:00:00`).toLocaleDateString()
+                            const earnedOn = toEarnedDateLabel(achievement.earnedDate, locale)
                             return (
                                 <div
                                     key={achievement.id}
@@ -60,13 +79,15 @@ export const ProfileAchievements = ({ achievements, className }: ProfileAchievem
                                     </div>
                                     <div className="flex min-w-0 flex-1 flex-col gap-0">
                                         <Typography type="body-sm" weight="medium">
-                                            {achievement.title}
+                                            {badgeTitle(achievement.title)}
                                         </Typography>
                                         <Typography type="body-xs" color="muted" truncate>
                                             {achievement.description}
                                         </Typography>
                                         <Typography type="body-xs" color="muted">
-                                            {t("profile.portfolio.achievements.earnedOn", { date: earnedDate })}
+                                            {earnedOn
+                                                ? t("profile.portfolio.achievements.earnedOn", { date: earnedOn })
+                                                : t("profile.badgeCatalog.earnedNoDate")}
                                         </Typography>
                                     </div>
                                 </div>
@@ -75,6 +96,15 @@ export const ProfileAchievements = ({ achievements, className }: ProfileAchievem
                     </div>
                 </section>
             ))}
+
+            <div className="flex">
+                <Button variant="tertiary" size="sm" onPress={() => setIsCatalogOpen(true)}>
+                    <ListPlusIcon className="size-4" aria-hidden focusable="false" />
+                    {t("profile.badgeCatalog.seeAll")}
+                </Button>
+            </div>
+
+            <BadgeCatalogModal isOpen={isCatalogOpen} onClose={() => setIsCatalogOpen(false)} />
         </div>
     )
 }

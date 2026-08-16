@@ -4,9 +4,9 @@ import React from "react"
 import { cn, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { UserAvatar } from "@/components/reuseable/UserAvatar"
-import { VerifiedBadge } from "@/components/reuseable/VerifiedBadge"
+import { StaffBadge } from "@/components/reuseable/StaffBadge"
 import { useAppSelector } from "@/redux/hooks"
-import { STAFF_ROLE_LABEL_KEY, useViewerStaffRole } from "@/hooks/useViewerStaffRole"
+import { useViewerStaffRole } from "@/hooks/useViewerStaffRole"
 import { useQueryMyGamificationSwr } from "@/components/features/gamification/hooks/useQueryMyGamificationSwr"
 import { LevelRing } from "../LevelRing"
 import type { WithClassNames } from "@/modules/types/base/class-name"
@@ -19,7 +19,7 @@ export type UserSummaryProps = WithClassNames<undefined>
 /**
  * Header row for the account menu: the signed-in user's avatar wrapped in a
  * {@link LevelRing} (arc = progress toward the next level, current level
- * badged) + display name (with a {@link VerifiedBadge} when the viewer is
+ * badged) + display name (with a {@link StaffBadge} when the viewer is
  * platform staff) + `@username`. Mirrors the `UserCell` row shape (avatar +
  * truncating text column) so `Skeleton.UserCell` still fits. Container: reads
  * the user + staff role from redux and the level from the shared gamification
@@ -63,12 +63,7 @@ export const UserSummary = ({ className }: UserSummaryProps) => {
                     <Typography type="body-sm" weight="medium" truncate className="min-w-0 leading-5">
                         {user?.displayName || user?.username || ""}
                     </Typography>
-                    {staffRole ? (
-                        <VerifiedBadge
-                            label={t(STAFF_ROLE_LABEL_KEY[staffRole])}
-                            description={t("verifiedBadge.description")}
-                        />
-                    ) : null}
+                    <StaffBadge role={staffRole} />
                 </div>
                 {handle ? (
                     <Typography type="body-xs" color="muted" truncate className="leading-4">

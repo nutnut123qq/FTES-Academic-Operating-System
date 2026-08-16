@@ -50,9 +50,28 @@ export const MembershipSection = () => {
     const priceVnd = offer?.priceVnd ?? null
 
     const purchase = usePlanPurchase({
+        // Gói hội viên vẫn đi mutation GraphQL (không đổi): mutation không nhận Xu, và màn này
+        // chưa bán bằng Xu — chỉ đổi hình dạng KẾT QUẢ cho khớp hook dùng chung.
         start: async () => {
             const result = await trigger({ paymentType: PLAN_PAY_METHOD })
-            return result?.data?.purchaseMembership
+            const envelope = result?.data?.purchaseMembership
+            const data = envelope?.data
+            // Không nhận là "có đơn" khi thiếu QR hoặc thiếu mã đơn: một QR không quét được
+            // hay một đơn không theo dõi được thì thà báo hỏng còn hơn để người mua ngồi chờ.
+            if (!envelope?.success || !data?.qrCode || !data?.referenceId) {
+                return { ok: false, message: envelope?.message }
+            }
+            return {
+                ok: true,
+                status: data.orderStatus ?? null,
+                ticket: {
+                    orderId: data.referenceId,
+                    qrCode: data.qrCode,
+                    amount: data.amount ?? 0,
+                    coinApplied: 0,
+                    coinDiscountVnd: 0,
+                },
+            }
         },
         // paid → the viewer's plan/expiry has changed; re-read rather than assume it
         onPaid: () => { void membershipSwr.mutate() },

@@ -1,7 +1,7 @@
 import React from "react"
 import { WalletShell } from "@/components/features/wallet/WalletShell"
 
-/** `/wallet` — Wallet & FTES Coin (§12): balance + transaction history. */
+/** `/wallet` — F.Wallet (§12): FCoin balance, top-up and transaction history. */
 const Page = () => <WalletShell />
 
 export default Page

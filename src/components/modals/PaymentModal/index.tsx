@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useCallback, useEffect, useRef, useState } from "react"
-import { Button, Chip, Modal, Typography, cn } from "@heroui/react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { Button, Chip, Modal, Slider, Typography, cn } from "@heroui/react"
 import { useFormatter, useTranslations } from "next-intl"
 import { useSWRConfig } from "swr"
 import { useRouter } from "next/navigation"
@@ -10,10 +10,13 @@ import {
     BankIcon,
     ClockIcon,
     CoinsIcon,
+    WalletIcon,
     XCircleIcon,
 } from "@phosphor-icons/react"
 import type { WithClassNames } from "@/modules/types/base/class-name"
+import type { PaymentLine } from "@/modules/types/payment"
 import { isPaidOrderStatus } from "@/modules/api/rest/commerce"
+import { RestError } from "@/modules/api/rest/client"
 import { SegmentedControl } from "@/components/blocks/navigation/SegmentedControl"
 import { CoverImage } from "@/components/blocks/media/CoverImage"
 import { PriceTag } from "@/components/blocks/commerce/PriceTag"
@@ -22,10 +25,19 @@ import { usePaymentOverlayState } from "@/hooks/zustand/overlay/hooks"
 import { usePostCheckoutSwr } from "@/hooks/swr/api/rest/mutations/usePostCheckoutSwr"
 import { usePostValidateCouponSwr } from "@/hooks/swr/api/rest/mutations/usePostValidateCouponSwr"
 import { useGetMyWalletSwr } from "@/hooks/swr/api/rest/queries/useGetMyWalletSwr"
+import { useGetCoinQuoteSwr } from "@/hooks/swr/api/rest/queries/useGetCoinQuoteSwr"
 import { useGetOrderSwr } from "@/hooks/swr/api/rest/queries/useGetOrderSwr"
 import { QRCode } from "@/components/reuseable/QRCode"
+import { clampCoinToApply, coinBreakdown, walletCoversAll } from "./coinDiscount"
 
-type PayMethod = "VIETQR" | "COIN"
+/**
+ * Cách người mua trả tiền, theo cách NGƯỜI MUA hiểu — không phải `payMethod` của backend:
+ * - `VIETQR`  → chuyển khoản QR (có thể kèm một phần Xu để giảm tiền),
+ * - `WALLET`  → trả TRỌN bằng Xu trong ví (vẫn đi rail `VIETQR` + `coinToApply` tối đa,
+ *               backend thấy số tiền còn lại bằng 0 nên chốt `PAID` ngay, không sinh QR),
+ * - `COIN`    → giá Xu RIÊNG của sản phẩm (rail `COIN` của backend), khác hẳn `WALLET`.
+ */
+type PayMethod = "VIETQR" | "WALLET" | "COIN"
 type Phase = "choose" | "awaiting" | "success" | "failed"
 /** Which wizard step is shown — a "Summary → Payment" two-step over the pay machinery. */
 type Step = "summary" | "payment"
@@ -37,6 +49,14 @@ type Step = "summary" | "payment"
  * is pinned to the Payment step. Exported for the step-gating test.
  */
 export const isSummaryLocked = (phase: Phase): boolean => phase !== "choose"
+
+/**
+ * `payMethod` thật sự gửi lên `POST /commerce/checkout`. `WALLET` KHÔNG phải một rail
+ * riêng của backend — nó là `VIETQR` với `coinToApply` phủ trọn số tiền; áp Xu vào rail
+ * `COIN` thì backend trả 400 `COMMERCE_UNSUPPORTED_PAY_METHOD`.
+ */
+export const backendPayMethod = (method: PayMethod): "VIETQR" | "COIN" =>
+    method === "COIN" ? "COIN" : "VIETQR"
 
 /**
  * Số tiền hiển thị ở dòng tóm tắt phải là số SẼ BỊ TRỪ theo phương thức ĐANG CHỌN, không phải
@@ -52,15 +72,17 @@ export const summaryAmount = (
 
 /**
  * PaymentModal (§13) — the single global checkout modal, opened by every purchase
- * entry point via `usePaymentOverlayState().open(context)`. Two settlement paths:
+ * entry point via `usePaymentOverlayState().open(context)`. Settlement paths:
  *
- * - **VietQR**: optional coupon → `checkout` → render the returned QR + poll the
- *   order until the webhook flips it to `PAID` (or it expires/fails).
- * - **Xu (COIN)**: pay from the wallet balance; the backend charges synchronously
- *   so the checkout response is final (no polling).
+ * - **VietQR**: mã giảm giá + (tuỳ chọn) áp Xu → `checkout` → render QR trả về + poll
+ *   đơn tới khi webhook lật `PAID` (hoặc hết hạn/thất bại).
+ * - **Ví (WALLET)**: áp trọn Xu nên số tiền còn lại bằng 0 → backend chốt `PAID` ngay,
+ *   không có QR để quét.
+ * - **Xu (COIN)**: giá Xu riêng của sản phẩm; backend trừ đồng bộ nên không cần poll.
  *
- * ponytail: one file, one small state machine (choose → awaiting → success/failed);
- * the QR is a demo until the backend returns a real gateway payload.
+ * Đường tiền: mọi con số về Xu (trần áp được, tỉ lệ quy đổi) đều lấy từ
+ * `GET /commerce/coin/quote`; FE chỉ gửi lên SỐ XU (`coinToApply`), số tiền cuối do
+ * backend tính. Lỗi thì ở lại trong modal kèm câu "chưa trừ tiền", không điều hướng đi.
  */
 export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
     const { isOpen, setOpen, context } = usePaymentOverlayState()
@@ -85,26 +107,57 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
     const [discount, setDiscount] = useState(0)
     const [couponError, setCouponError] = useState(false)
     const [payError, setPayError] = useState<string | null>(null)
+    /** Số Xu người mua chọn áp (chỉ có nghĩa trên rail VND; luôn kẹp theo trần của backend). */
+    const [requestedCoin, setRequestedCoin] = useState(0)
     // Hết giờ đếm ngược → vẫn dùng nhánh `failed`, cờ này chỉ đổi copy/icon sang "hết hạn".
     const [expired, setExpired] = useState(false)
     const [orderId, setOrderId] = useState("")
     const [qrCode, setQrCode] = useState("")
+
+    /**
+     * Chốt chống BẤM ĐÚP (đường tiền). `checkoutSwr.isMutating` chỉ true SAU một vòng
+     * render, nên hai cú bấm liên tiếp trong cùng một tick vẫn lọt cả hai — ref chặn ngay
+     * trong handler, trước cả khi React kịp vẽ lại.
+     */
+    const payInFlightRef = useRef(false)
+    /**
+     * Khoá idempotency cho ĐÚNG một "ý định trả tiền" (cùng món · cùng mã giảm giá · cùng
+     * số Xu · cùng phương thức). Sinh MỚI mỗi lần ý định đổi, nhưng GIỮ NGUYÊN khi bấm lại
+     * cùng một ý định — nhờ vậy nếu có hai request cùng lọt tới backend thì backend gộp về
+     * MỘT đơn thay vì tạo hai đơn cùng nội dung. Đây là chốt thật; ref in-flight chỉ là lớp
+     * chặn sớm ở FE.
+     */
+    const idempotencyKeyRef = useRef("")
+    const payIntentRef = useRef("")
 
     const amountVnd = context?.amountVnd ?? 0
     const amountCoin = context?.amountCoin
     const showVietqr = amountVnd > 0
     const showCoin = amountCoin != null && amountCoin > 0
     const balance = walletSwr.data?.balance ?? 0
+    /** Số tiền sau mã giảm giá, TRƯỚC khi áp Xu. */
     const netVnd = Math.max(amountVnd - discount, 0)
 
-    // List → sale saving for the summary box: only on the VND path, and only when the
-    // caller passed a real pre-discount list total above the payable amount. The COIN
-    // path has no list price, so it never shows savings. This is the product's
-    // list→sale gap; any coupon is a SEPARATE discount shown inside ChooseView.
-    const originalAmountVnd = context?.originalAmountVnd ?? 0
-    const showSavings = method === "VIETQR" && originalAmountVnd > amountVnd
-    const savedVnd = showSavings ? originalAmountVnd - amountVnd : 0
-    const savedPercent = showSavings ? Math.round((savedVnd / originalAmountVnd) * 100) : 0
+    // Báo giá Xu bám ĐÚNG số tiền sau mã giảm giá: đổi mã là trần áp được đổi theo, FE
+    // không tự suy. Chỉ chạy khi modal mở + còn ở bước chọn (đơn đã tạo thì Xu không áp
+    // được nữa) + đang ở rail VND.
+    const coinQuoteSwr = useGetCoinQuoteSwr(
+        netVnd,
+        isOpen && phase === "choose" && method !== "COIN",
+    )
+    const quote = coinQuoteSwr.data
+
+    // Kẹp lại mỗi khi báo giá đổi (đổi mã giảm giá, số dư vừa bị trừ ở tab khác…): số Xu
+    // đang chọn không được vượt trần MỚI, kẻo bấm trả là 422.
+    const coinPlan = useMemo(
+        () =>
+            method === "WALLET"
+                ? coinBreakdown(netVnd, quote?.maxApplicableCoin ?? 0, quote)
+                : coinBreakdown(netVnd, requestedCoin, quote),
+        [method, netVnd, requestedCoin, quote],
+    )
+    const coinCeiling = clampCoinToApply(Number.MAX_SAFE_INTEGER, quote)
+    const canPayByWallet = walletCoversAll(quote)
 
     // Reset the machine each time the modal opens; default to whichever method the
     // item supports (coin-only items open straight on the Xu tab).
@@ -117,10 +170,20 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
         setDiscount(0)
         setCouponError(false)
         setPayError(null)
+        setRequestedCoin(0)
         setExpired(false)
         setOrderId("")
         setQrCode("")
+        payInFlightRef.current = false
+        idempotencyKeyRef.current = ""
+        payIntentRef.current = ""
     }, [isOpen, amountVnd])
+
+    // Ví hết khả năng trả trọn (đổi mã giảm giá làm số tiền vượt số dư, hoặc báo giá vừa
+    // về) → rơi về chuyển khoản, không để nút "trả bằng Ví" đứng đó rồi checkout 422.
+    useEffect(() => {
+        if (method === "WALLET" && !canPayByWallet) setMethod("VIETQR")
+    }, [method, canPayByWallet])
 
     // Guard: once a QR/pay is in flight or settled, pin the modal to the Payment step so
     // the buyer can't rewind to the Summary mid-payment (the Summary segment is disabled
@@ -130,10 +193,10 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
         if (isSummaryLocked(phase)) setStep("payment")
     }, [phase])
 
-    // VietQR: poll the created order until the webhook settles it. Đồng hồ 5 phút là con số
-    // của FE (BE chưa trả expiresAt), KHÔNG phải hạn thật của đơn — nên hết giờ vẫn PHẢI poll
-    // tiếp: app ngân hàng chậm/OTP lâu, tiền vào ở phút thứ 6 mà UI đã bỏ theo dõi thì người
-    // học thấy "hết hạn" rồi trả lần hai.
+    // VietQR: poll the created order until the webhook settles it. Đồng hồ đếm ngược là hạn
+    // THẬT của đơn (`expiresAt`); thiếu thì rơi về hằng số đoán, và hết giờ vẫn PHẢI poll
+    // tiếp: app ngân hàng chậm/OTP lâu, tiền vào muộn mà UI đã bỏ theo dõi thì người học
+    // thấy "hết hạn" rồi trả lần hai.
     const orderPoll = useGetOrderSwr(orderId, { poll: phase === "awaiting" || expired })
     const polledStatus = orderPoll.data?.status
     useEffect(() => {
@@ -143,6 +206,13 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
             setPhase("success")
             void mutate("GET_CART_SWR")
             void mutateWallet()
+            // Đơn vừa chốt có thể đã trừ Xu (chuyển khoản + áp một phần Xu) → mọi báo giá
+            // Xu trong cache đã cũ, xem `invalidateCoinQuotes`.
+            void mutate(
+                (key) => Array.isArray(key) && key[0] === "GET_COIN_QUOTE_SWR",
+                undefined,
+                { revalidate: true },
+            )
             context?.onSuccess?.()
         } else if (
             polledStatus === "FAILED" ||
@@ -162,6 +232,48 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
     }, [])
 
     if (!context) return null
+
+    /**
+     * Các dòng hàng đang mua. Người gọi truyền `lines` (giỏ nhiều món) thì dùng nguyên;
+     * lối mua-ngay một khoá chỉ có `title`/`imageUrl` nên dựng MỘT dòng từ đó — bước Tóm
+     * tắt không bao giờ được rỗng.
+     */
+    const lines: Array<PaymentLine> =
+        context.lines && context.lines.length > 0
+            ? context.lines
+            : [
+                {
+                    id: context.itemIds[0] ?? "single",
+                    name: context.title,
+                    priceVnd: amountVnd,
+                    originalPriceVnd: context.originalAmountVnd ?? null,
+                    imageUrl: context.imageUrl ?? null,
+                },
+            ]
+
+    /** Tạm tính = tổng giá NIÊM YẾT các dòng (chưa trừ khuyến mãi/mã/Xu). */
+    const subtotalVnd = lines.reduce(
+        (sum, line) => sum + Math.max(line.originalPriceVnd ?? 0, line.priceVnd),
+        0,
+    )
+    /** Phần giảm do giá bán thấp hơn giá niêm yết (khác hẳn mã giảm giá và Xu). */
+    const listSavingVnd = Math.max(subtotalVnd - amountVnd, 0)
+
+    /**
+     * Nạp lại MỌI báo giá Xu đang nằm trong cache, không chỉ báo giá của số tiền hiện tại.
+     *
+     * Báo giá mang SỐ DƯ và TRẦN áp được; trả tiền xong là số dư đổi, nên mọi entry
+     * `["GET_COIN_QUOTE_SWR", viewer, amount]` khác đều đã cũ. Mở lại modal cho một khoá
+     * có cùng số tiền mà đọc trúng entry cũ thì thanh trượt cho kéo quá số dư thật → 422
+     * ngay lúc bấm trả. Lọc theo tiền tố key nên không cần biết trước các số tiền.
+     */
+    const invalidateCoinQuotes = () => {
+        void mutate(
+            (key) => Array.isArray(key) && key[0] === "GET_COIN_QUOTE_SWR",
+            undefined,
+            { revalidate: true },
+        )
+    }
 
     const applyCoupon = async () => {
         const code = coupon.trim()
@@ -186,39 +298,74 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
     }
 
     const pay = async () => {
+        if (payInFlightRef.current) return
         setPayError(null)
+        const payMethod = backendPayMethod(method)
+        const couponName = payMethod === "VIETQR" && discount > 0 ? coupon.trim() : undefined
+        const coinToApply =
+            payMethod === "VIETQR" && coinPlan.coinApplied > 0 ? coinPlan.coinApplied : undefined
+        // Ý định trả tiền đổi (đổi mã / kéo lại thanh Xu / đổi phương thức) ⇒ khoá mới;
+        // bấm lại CÙNG một ý định ⇒ dùng lại khoá cũ để backend gộp về một đơn.
+        const intent = `${payMethod}|${couponName ?? ""}|${coinToApply ?? 0}|${context.itemIds.join(",")}`
+        if (payIntentRef.current !== intent || !idempotencyKeyRef.current) {
+            payIntentRef.current = intent
+            idempotencyKeyRef.current = crypto.randomUUID()
+        }
+        payInFlightRef.current = true
         try {
             const result = await checkoutSwr.trigger({
                 itemIds: context.itemIds,
-                couponName: method === "VIETQR" && discount > 0 ? coupon.trim() : undefined,
-                payMethod: method,
-                idempotencyKey: crypto.randomUUID(),
+                couponName,
+                payMethod,
+                // Gửi SỐ XU, không gửi số tiền: backend tự tính lại phần còn phải trả.
+                coinToApply,
+                idempotencyKey: idempotencyKeyRef.current,
             })
-            if (method === "COIN") {
-                if (isPaidOrderStatus(result.status)) {
-                    setPhase("success")
-                    void mutateWallet()
-                    void mutate("GET_CART_SWR")
-                    context?.onSuccess?.()
-                } else {
-                    setPayError(t("checkout.failedHint"))
-                }
+            // Đơn đã thanh toán xong ngay tại đây: rail COIN luôn đồng bộ, và rail VND khi
+            // Xu phủ trọn số tiền (amount = 0 ⇒ status PAID, qrCode rỗng) — KHÔNG hiện màn
+            // quét QR trong trường hợp đó.
+            if (isPaidOrderStatus(result.status)) {
+                setPhase("success")
+                void mutateWallet()
+                void mutate("GET_CART_SWR")
+                invalidateCoinQuotes()
+                context?.onSuccess?.()
+                return
+            }
+            if (payMethod === "COIN" || method === "WALLET") {
+                // Trả trọn bằng ví mà đơn KHÔNG chốt ngay là bất thường (số tiền còn lại
+                // đáng lẽ bằng 0). Không dựng QR từ payload rỗng — báo lỗi, giữ trong modal.
+                setPayError(t("checkout.failedHint"))
+                invalidateCoinQuotes()
                 return
             }
             // VietQR → show the QR and start polling
             setOrderId(result.orderId)
             setQrCode(result.qrCode ?? "")
             setPhase("awaiting")
-        } catch {
-            setPayError(method === "COIN" ? t("checkout.insufficient") : t("checkout.failedHint"))
+        } catch (error) {
+            // Ở LẠI trong modal (không điều hướng đi) và nói rõ CHƯA TRỪ TIỀN: checkout hỏng
+            // nghĩa là đơn không được tạo, ví chưa bị chạm.
+            const code = error instanceof RestError ? error.errorCode : undefined
+            if (code === "COMMERCE_INSUFFICIENT_COIN") {
+                setPayError(t("checkout.coin.overLimit"))
+                // Trần vừa đổi phía backend → nạp lại báo giá để thanh trượt về đúng trần mới.
+                invalidateCoinQuotes()
+            } else if (payMethod === "COIN") {
+                setPayError(t("checkout.insufficient"))
+            } else {
+                setPayError(t("checkout.failedHint"))
+            }
+        } finally {
+            payInFlightRef.current = false
         }
     }
 
     const close = () => setOpen(false)
 
     // The payable amount shown per the ACTIVE method (VND or Xu) — reused by the Summary
-    // step's plain-amount line and the Payment step's slim recap.
-    const shown = summaryAmount(method, amountVnd, amountCoin)
+    // step's total line and the Payment step's slim recap.
+    const shown = summaryAmount(method, coinPlan.payableVnd, amountCoin)
     const shownAmountLabel =
         shown.unit === "vnd"
             ? t("checkout.amountVnd", { amount: format.number(shown.value) })
@@ -249,47 +396,44 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
                         <Modal.Body className="flex flex-col gap-5">
                             {step === "summary" ? (
                                 <div className="flex flex-col gap-5">
-                                    {/* course thumbnail + title */}
-                                    <div className="flex items-start gap-3">
-                                        {context.imageUrl ? (
-                                            <CoverImage
-                                                src={context.imageUrl}
-                                                alt={context.title}
-                                                className="size-14 shrink-0"
-                                            />
-                                        ) : null}
-                                        <Typography
-                                            type="body"
-                                            weight="semibold"
-                                            className="min-w-0 flex-1 line-clamp-2"
-                                        >
-                                            {context.title}
-                                        </Typography>
-                                    </div>
+                                    <OrderLines t={t} format={format} lines={lines} />
 
-                                    {/* payable amount — large/bold; discounted VND buys strike the
-                                        original + show the −X% chip (PriceTag) and the savings line. */}
-                                    <div className="flex flex-col gap-1">
-                                        {showSavings ? (
-                                            <PriceTag
-                                                discounted={amountVnd}
-                                                original={originalAmountVnd}
-                                                size="lg"
-                                            />
-                                        ) : (
-                                            <Typography type="h3" weight="bold" className="text-accent">
-                                                {shownAmountLabel}
-                                            </Typography>
-                                        )}
-                                        {showSavings ? (
-                                            <Typography type="body-sm" className="text-success">
-                                                {t("checkout.savings", {
-                                                    amount: format.number(savedVnd),
-                                                    percent: savedPercent,
-                                                })}
-                                            </Typography>
-                                        ) : null}
-                                    </div>
+                                    {/* Mã giảm giá ngay tại Tóm tắt — không bắt sang tab khác mới thấy. */}
+                                    <CouponField
+                                        t={t}
+                                        coupon={coupon}
+                                        setCoupon={setCoupon}
+                                        discount={discount}
+                                        couponError={couponError}
+                                        couponPending={couponSwr.isMutating}
+                                        applyCoupon={applyCoupon}
+                                        clearCoupon={clearCoupon}
+                                    />
+
+                                    {/* Dùng Xu trong ví để giảm tiền — trần + tỉ lệ đều của backend. */}
+                                    {showVietqr && method !== "COIN" ? (
+                                        <CoinApplyField
+                                            t={t}
+                                            format={format}
+                                            balance={quote?.balance ?? balance}
+                                            ceiling={coinCeiling}
+                                            value={coinPlan.coinApplied}
+                                            discountVnd={coinPlan.coinDiscountVnd}
+                                            isLoading={coinQuoteSwr.isLoading}
+                                            isLocked={method === "WALLET"}
+                                            onChange={setRequestedCoin}
+                                        />
+                                    ) : null}
+
+                                    <CostBreakdown
+                                        t={t}
+                                        format={format}
+                                        subtotalVnd={subtotalVnd}
+                                        listSavingVnd={listSavingVnd}
+                                        couponDiscountVnd={discount}
+                                        coinDiscountVnd={coinPlan.coinDiscountVnd}
+                                        totalLabel={shownAmountLabel}
+                                    />
 
                                     <Button
                                         variant="primary"
@@ -303,12 +447,12 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
                                 </div>
                             ) : (
                                 <div className="flex flex-col gap-5">
-                                    {/* slim recap — small thumbnail + title + payable amount */}
+                                    {/* slim recap — số dòng hàng + số tiền còn phải trả */}
                                     <div className="flex items-center gap-3 rounded-2xl border border-separator p-3">
-                                        {context.imageUrl ? (
+                                        {lines[0]?.imageUrl ? (
                                             <CoverImage
-                                                src={context.imageUrl}
-                                                alt={context.title}
+                                                src={lines[0].imageUrl}
+                                                alt={lines[0].name}
                                                 className="size-10 shrink-0"
                                             />
                                         ) : null}
@@ -336,16 +480,14 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
                                             setMethod={setMethod}
                                             showVietqr={showVietqr}
                                             showCoin={showCoin}
-                                            coupon={coupon}
-                                            setCoupon={setCoupon}
-                                            discount={discount}
-                                            couponError={couponError}
-                                            couponPending={couponSwr.isMutating}
-                                            applyCoupon={applyCoupon}
-                                            clearCoupon={clearCoupon}
-                                            netVnd={netVnd}
+                                            canPayByWallet={canPayByWallet}
+                                            walletCoinCost={coinPlan.coinApplied}
+                                            coinApplied={
+                                                method === "WALLET" ? 0 : coinPlan.coinApplied
+                                            }
+                                            payableVnd={coinPlan.payableVnd}
                                             amountCoin={amountCoin ?? 0}
-                                            balance={balance}
+                                            balance={quote?.balance ?? balance}
                                             payError={payError}
                                             payPending={checkoutSwr.isMutating}
                                             pay={pay}
@@ -357,7 +499,7 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
                                             t={t}
                                             format={format}
                                             qrCode={qrCode}
-                                            amount={netVnd}
+                                            amount={coinPlan.payableVnd}
                                             expiresAt={orderPoll.data?.expiresAt}
                                             onExpire={handleExpire}
                                         />
@@ -402,14 +544,62 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
 type Tr = ReturnType<typeof useTranslations>
 type Fmt = ReturnType<typeof useFormatter>
 
-/** Method choice + coupon (VietQR) / balance (Xu) + pay button. */
-const ChooseView = ({
+/**
+ * Danh sách TỪNG khoá đang mua (ảnh · tên · giá, gạch giá niêm yết khi có giảm).
+ * Người mua phải đối chiếu được mình đang trả cho cái gì trước khi bấm.
+ */
+const OrderLines = ({
     t,
     format,
-    method,
-    setMethod,
-    showVietqr,
-    showCoin,
+    lines,
+}: {
+    t: Tr
+    format: Fmt
+    lines: Array<PaymentLine>
+}) => (
+    <div className="flex flex-col gap-3">
+        <Typography type="body-sm" weight="semibold" color="muted">
+            {t("checkout.itemsTitle", { count: lines.length })}
+        </Typography>
+        <ul className="flex flex-col gap-3">
+            {lines.map((line) => (
+                <li key={line.id} className="flex items-start gap-3">
+                    {line.imageUrl ? (
+                        <CoverImage
+                            src={line.imageUrl}
+                            alt={line.name}
+                            className="size-14 shrink-0"
+                        />
+                    ) : null}
+                    <Typography
+                        type="body-sm"
+                        weight="medium"
+                        className="min-w-0 flex-1 line-clamp-2"
+                    >
+                        {line.name}
+                    </Typography>
+                    <div className="shrink-0 text-right">
+                        {line.originalPriceVnd != null && line.originalPriceVnd > line.priceVnd ? (
+                            <PriceTag
+                                discounted={line.priceVnd}
+                                original={line.originalPriceVnd}
+                                size="sm"
+                            />
+                        ) : (
+                            <Typography type="body-sm" weight="semibold">
+                                {t("checkout.amountVnd", { amount: format.number(line.priceVnd) })}
+                            </Typography>
+                        )}
+                    </div>
+                </li>
+            ))}
+        </ul>
+    </div>
+)
+
+/** Ô nhập mã giảm giá (sống ở bước Tóm tắt). */
+const CouponField = ({
+    t,
     coupon,
     setCoupon,
     discount,
@@ -417,7 +607,229 @@ const ChooseView = ({
     couponPending,
     applyCoupon,
     clearCoupon,
-    netVnd,
+}: {
+    t: Tr
+    coupon: string
+    setCoupon: (v: string) => void
+    discount: number
+    couponError: boolean
+    couponPending: boolean
+    applyCoupon: () => void
+    clearCoupon: () => void
+}) => (
+    <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+            <input
+                value={coupon}
+                onChange={(event) => setCoupon(event.target.value)}
+                placeholder={t("checkout.coupon.placeholder")}
+                aria-label={t("checkout.coupon.label")}
+                className="w-full rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted focus:border-accent"
+            />
+            {discount > 0 ? (
+                <Button variant="ghost" onPress={clearCoupon}>
+                    {t("checkout.coupon.clear")}
+                </Button>
+            ) : (
+                <Button variant="secondary" onPress={applyCoupon} isDisabled={couponPending}>
+                    {t("checkout.coupon.apply")}
+                </Button>
+            )}
+        </div>
+        {couponError ? (
+            <Typography type="body-xs" className="text-danger">
+                {t("checkout.coupon.invalid")}
+            </Typography>
+        ) : null}
+    </div>
+)
+
+/**
+ * "Dùng Xu để giảm tiền": số dư + thanh trượt chọn số Xu áp vào.
+ *
+ * Trần thanh trượt (`ceiling`) là TRẦN CỦA BACKEND đã kẹp theo số dư — FE không tự suy ra
+ * từ số tiền đơn, nên số kéo được luôn là số backend chấp nhận. Không có Xu nào áp được
+ * thì vẫn hiện số dư (để người mua biết ví đang có gì) nhưng không hiện thanh trượt.
+ */
+const CoinApplyField = ({
+    t,
+    format,
+    balance,
+    ceiling,
+    value,
+    discountVnd,
+    isLoading,
+    isLocked,
+    onChange,
+}: {
+    t: Tr
+    format: Fmt
+    balance: number
+    /** Trần Xu áp được (của backend). */
+    ceiling: number
+    /** Số Xu đang áp (đã kẹp). */
+    value: number
+    /** Số VND giảm được tương ứng. */
+    discountVnd: number
+    isLoading: boolean
+    /** `true` khi đang chọn "trả trọn bằng Ví" — số Xu do phương thức quyết, không kéo tay. */
+    isLocked: boolean
+    onChange: (coin: number) => void
+}) => (
+    <div className="flex flex-col gap-3 rounded-2xl border border-separator p-4">
+        <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+                <CoinsIcon aria-hidden focusable="false" className="size-4 text-accent" />
+                <Typography type="body-sm" weight="semibold">
+                    {t("checkout.coin.title")}
+                </Typography>
+            </div>
+            <Typography type="body-sm" color="muted">
+                {t("checkout.coin.balance", { amount: format.number(balance) })}
+            </Typography>
+        </div>
+
+        {isLoading ? (
+            <Typography type="body-xs" color="muted">
+                {t("checkout.coin.loading")}
+            </Typography>
+        ) : ceiling <= 0 ? (
+            <Typography type="body-xs" color="muted">
+                {t("checkout.coin.unavailable")}
+            </Typography>
+        ) : (
+            <>
+                <Slider
+                    aria-label={t("checkout.coin.sliderLabel")}
+                    minValue={0}
+                    maxValue={ceiling}
+                    step={1}
+                    value={value}
+                    isDisabled={isLocked}
+                    onChange={(next) => onChange(typeof next === "number" ? next : next[0] ?? 0)}
+                >
+                    <Slider.Track>
+                        <Slider.Fill />
+                        <Slider.Thumb />
+                    </Slider.Track>
+                </Slider>
+                <div className="flex items-center justify-between gap-2">
+                    <Typography type="body-sm" weight="medium">
+                        {t("checkout.coin.applied", { amount: format.number(value) })}
+                    </Typography>
+                    <div className="flex items-center gap-2">
+                        {discountVnd > 0 ? (
+                            <Chip size="sm" variant="soft" color="success">
+                                {t("checkout.discount", { amount: format.number(discountVnd) })}
+                            </Chip>
+                        ) : null}
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            isDisabled={isLocked}
+                            onPress={() => onChange(value >= ceiling ? 0 : ceiling)}
+                        >
+                            {value >= ceiling ? t("checkout.coin.none") : t("checkout.coin.max")}
+                        </Button>
+                    </div>
+                </div>
+            </>
+        )}
+    </div>
+)
+
+/** Bảng tiền: tạm tính → các khoản giảm → tổng cuối. */
+const CostBreakdown = ({
+    t,
+    format,
+    subtotalVnd,
+    listSavingVnd,
+    couponDiscountVnd,
+    coinDiscountVnd,
+    totalLabel,
+}: {
+    t: Tr
+    format: Fmt
+    subtotalVnd: number
+    listSavingVnd: number
+    couponDiscountVnd: number
+    coinDiscountVnd: number
+    /** Tổng cuối đã định dạng theo đơn vị của phương thức đang chọn (VND hoặc Xu). */
+    totalLabel: string
+}) => (
+    <div className="flex flex-col gap-2 border-t border-separator pt-4">
+        <Row
+            label={t("checkout.subtotal")}
+            value={t("checkout.amountVnd", { amount: format.number(subtotalVnd) })}
+        />
+        {listSavingVnd > 0 ? (
+            <Row
+                label={t("checkout.saleDiscount")}
+                value={`− ${t("checkout.amountVnd", { amount: format.number(listSavingVnd) })}`}
+                tone="success"
+            />
+        ) : null}
+        {couponDiscountVnd > 0 ? (
+            <Row
+                label={t("checkout.couponDiscount")}
+                value={`− ${t("checkout.amountVnd", { amount: format.number(couponDiscountVnd) })}`}
+                tone="success"
+            />
+        ) : null}
+        {coinDiscountVnd > 0 ? (
+            <Row
+                label={t("checkout.coinDiscount")}
+                value={`− ${t("checkout.amountVnd", { amount: format.number(coinDiscountVnd) })}`}
+                tone="success"
+            />
+        ) : null}
+        <div className="flex items-center justify-between gap-2 pt-1">
+            <Typography type="body" weight="semibold">
+                {t("checkout.total")}
+            </Typography>
+            <Typography type="h4" weight="bold" className="text-accent">
+                {totalLabel}
+            </Typography>
+        </div>
+    </div>
+)
+
+/** Một dòng nhãn — số tiền trong bảng tiền. */
+const Row = ({
+    label,
+    value,
+    tone,
+}: {
+    label: string
+    value: string
+    tone?: "success"
+}) => (
+    <div className="flex items-center justify-between gap-2">
+        <Typography type="body-sm" color="muted">
+            {label}
+        </Typography>
+        <Typography
+            type="body-sm"
+            weight="medium"
+            className={cn(tone === "success" ? "text-success" : undefined)}
+        >
+            {value}
+        </Typography>
+    </div>
+)
+
+/** Chọn phương thức trả tiền + nút thanh toán. */
+const ChooseView = ({
+    t,
+    format,
+    method,
+    setMethod,
+    showVietqr,
+    showCoin,
+    canPayByWallet,
+    walletCoinCost,
+    coinApplied,
+    payableVnd,
     amountCoin,
     balance,
     payError,
@@ -430,26 +842,27 @@ const ChooseView = ({
     setMethod: (m: PayMethod) => void
     showVietqr: boolean
     showCoin: boolean
-    coupon: string
-    setCoupon: (v: string) => void
-    discount: number
-    couponError: boolean
-    couponPending: boolean
-    applyCoupon: () => void
-    clearCoupon: () => void
-    netVnd: number
+    /** Ví đủ trả trọn đơn (theo báo giá backend) → mở lựa chọn "Thanh toán bằng Ví". */
+    canPayByWallet: boolean
+    /** Số Xu sẽ bị trừ nếu trả trọn bằng Ví. */
+    walletCoinCost: number
+    /** Số Xu đang áp để GIẢM tiền trên rail chuyển khoản (0 khi đang chọn Ví). */
+    coinApplied: number
+    /** Số VND còn phải trả sau khi trừ Xu. */
+    payableVnd: number
     amountCoin: number
     balance: number
     payError: string | null
     payPending: boolean
     pay: () => void
 }) => {
+    // Rail COIN (giá Xu riêng của sản phẩm) — thiếu Xu thì chặn ngay ở FE.
     const insufficient = method === "COIN" && balance < amountCoin
     return (
         <div className="flex flex-col gap-4">
-            {/* method toggle — only when both paths are available */}
-            {showVietqr && showCoin ? (
-                <div className="flex gap-2">
+            {/* phương thức — chỉ hiện khi có nhiều hơn một lựa chọn */}
+            {showVietqr && (showCoin || canPayByWallet) ? (
+                <div className="flex flex-col gap-2">
                     <Button
                         variant={method === "VIETQR" ? "secondary" : "ghost"}
                         onPress={() => setMethod("VIETQR")}
@@ -458,57 +871,71 @@ const ChooseView = ({
                         <BankIcon className="size-4" aria-hidden />
                         {t("checkout.method.vietqr")}
                     </Button>
-                    <Button
-                        variant={method === "COIN" ? "secondary" : "ghost"}
-                        onPress={() => setMethod("COIN")}
-                        fullWidth
-                    >
-                        <CoinsIcon className="size-4" aria-hidden />
-                        {t("checkout.method.coin")}
-                    </Button>
+                    {canPayByWallet ? (
+                        <Button
+                            variant={method === "WALLET" ? "secondary" : "ghost"}
+                            onPress={() => setMethod("WALLET")}
+                            fullWidth
+                        >
+                            <WalletIcon className="size-4" aria-hidden />
+                            {t("checkout.method.wallet")}
+                        </Button>
+                    ) : null}
+                    {showCoin ? (
+                        <Button
+                            variant={method === "COIN" ? "secondary" : "ghost"}
+                            onPress={() => setMethod("COIN")}
+                            fullWidth
+                        >
+                            <CoinsIcon className="size-4" aria-hidden />
+                            {t("checkout.method.coin")}
+                        </Button>
+                    ) : null}
                 </div>
             ) : null}
 
-            {/* VietQR: coupon input + discount summary */}
+            {/* Chuyển khoản: nói rõ Xu đã áp giảm bao nhiêu, còn phải chuyển bao nhiêu */}
             {method === "VIETQR" ? (
-                <div className="flex flex-col gap-2">
-                    <div className="flex items-center gap-2">
-                        <input
-                            value={coupon}
-                            onChange={(event) => setCoupon(event.target.value)}
-                            placeholder={t("checkout.coupon.placeholder")}
-                            aria-label={t("checkout.coupon.label")}
-                            className="w-full rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted focus:border-accent"
-                        />
-                        {discount > 0 ? (
-                            <Button variant="ghost" onPress={clearCoupon}>
-                                {t("checkout.coupon.clear")}
-                            </Button>
-                        ) : (
-                            <Button variant="secondary" onPress={applyCoupon} isDisabled={couponPending}>
-                                {t("checkout.coupon.apply")}
-                            </Button>
-                        )}
-                    </div>
-                    {couponError ? (
-                        <Typography type="body-xs" className="text-danger">
-                            {t("checkout.coupon.invalid")}
+                <div className="flex flex-col gap-2 rounded-2xl border border-separator p-4">
+                    {coinApplied > 0 ? (
+                        <Typography type="body-sm" color="muted">
+                            {t("checkout.coin.appliedHint", { amount: format.number(coinApplied) })}
                         </Typography>
                     ) : null}
-                    {discount > 0 ? (
-                        <div className="flex items-center justify-between gap-2">
-                            <Chip size="sm" variant="soft" color="success">
-                                {t("checkout.discount", { amount: format.number(discount) })}
-                            </Chip>
-                            <Typography type="body-sm" weight="bold">
-                                {t("checkout.amountVnd", { amount: format.number(netVnd) })}
-                            </Typography>
-                        </div>
-                    ) : null}
+                    <div className="flex items-center justify-between gap-2">
+                        <Typography type="body-sm" color="muted">
+                            {t("checkout.transferAmount")}
+                        </Typography>
+                        <Typography type="body-sm" weight="bold" className="text-accent">
+                            {t("checkout.amountVnd", { amount: format.number(payableVnd) })}
+                        </Typography>
+                    </div>
                 </div>
             ) : null}
 
-            {/* Xu: wallet balance */}
+            {/* Ví: trả trọn bằng Xu — không sinh QR */}
+            {method === "WALLET" ? (
+                <div className="flex flex-col gap-2 rounded-2xl border border-separator p-4">
+                    <div className="flex items-center justify-between gap-2">
+                        <Typography type="body-sm" color="muted">
+                            {t("checkout.coin.walletCharge")}
+                        </Typography>
+                        <Typography type="body-sm" weight="bold" className="text-accent">
+                            {t("checkout.amountCoin", { amount: format.number(walletCoinCost) })}
+                        </Typography>
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                        <Typography type="body-sm" color="muted">
+                            {t("checkout.coin.balance", { amount: format.number(balance) })}
+                        </Typography>
+                        <Typography type="body-xs" color="muted">
+                            {t("checkout.coin.walletNoQr")}
+                        </Typography>
+                    </div>
+                </div>
+            ) : null}
+
+            {/* Rail Xu riêng của sản phẩm: số dư ví */}
             {method === "COIN" ? (
                 <div className="flex items-center justify-between gap-2 rounded-2xl border border-separator p-4">
                     <Typography type="body-sm" color="muted">
@@ -530,9 +957,14 @@ const ChooseView = ({
                 </Typography>
             ) : null}
             {payError ? (
-                <Typography type="body-xs" className="text-danger">
-                    {payError}
-                </Typography>
+                <div className="flex flex-col gap-1">
+                    <Typography type="body-xs" className="text-danger">
+                        {payError}
+                    </Typography>
+                    <Typography type="body-xs" color="muted">
+                        {t("checkout.notCharged")}
+                    </Typography>
+                </div>
             ) : null}
 
             <Button

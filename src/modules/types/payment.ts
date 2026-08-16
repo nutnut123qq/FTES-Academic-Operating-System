@@ -8,9 +8,34 @@
  * The checkout endpoint keys off cart-item ids (not product ids), so callers add
  * the product(s) to the cart first and pass the resulting item ids here.
  */
+/**
+ * MỘT dòng hàng đang mua, hiện ở bước Tóm tắt của {@link PaymentContext}.
+ *
+ * Người mua phải thấy MÌNH ĐANG MUA CÁI GÌ trước khi trả tiền: chỉ hiện
+ * "Giỏ hàng (3 sản phẩm)" + một cục tiền là không đủ để đối chiếu.
+ */
+export interface PaymentLine {
+    /** Khoá React (cart-item id hoặc product id). */
+    id: string
+    /** Tên khoá học/sản phẩm. */
+    name: string
+    /** Giá THỰC TRẢ của dòng này (VND). */
+    priceVnd: number
+    /** Giá niêm yết trước giảm; gạch ngang khi lớn hơn `priceVnd`. */
+    originalPriceVnd?: number | null
+    /** Ảnh bìa của dòng; thiếu thì ô ảnh để trống. */
+    imageUrl?: string | null
+}
+
 export interface PaymentContext {
     /** Cart-item ids to check out (one for buy-now, many for a cart). */
     itemIds: Array<string>
+    /**
+     * Từng dòng hàng đang mua (tên · ảnh · giá) cho bước Tóm tắt. Bỏ trống thì modal
+     * tự dựng MỘT dòng từ `title`/`imageUrl`/`amountVnd` — đúng cho lối mua-ngay một
+     * khoá; giỏ hàng nhiều món BẮT BUỘC truyền để người mua đối chiếu được.
+     */
+    lines?: Array<PaymentLine>
     /** Human-readable summary shown at the top of the modal (product or cart label). */
     title: string
     /** Amount payable in VND — drives the VietQR flow. `0` when the item is coin-only. */

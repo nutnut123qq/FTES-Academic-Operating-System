@@ -54,6 +54,15 @@ export const CartShell = () => {
             title: t("summary", { count: items.length }),
             amountVnd: subtotal,
             originalAmountVnd: hasSavings ? originalTotal : undefined,
+            // Từng dòng hàng để bước Tóm tắt của modal liệt kê ĐÚNG những khoá đang mua
+            // (tên · ảnh · giá) chứ không chỉ "Giỏ hàng (N sản phẩm)" + một cục tiền.
+            lines: items.map((item) => ({
+                id: item.id,
+                name: nameOf(item.productId),
+                priceVnd: item.unitPrice ?? 0,
+                originalPriceVnd: item.originalPriceVnd ?? null,
+                imageUrl: item.imageUrl ?? null,
+            })),
         })
     }
 

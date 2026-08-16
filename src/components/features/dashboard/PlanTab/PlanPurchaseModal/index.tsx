@@ -1,13 +1,45 @@
 "use client"
 
 import React from "react"
-import { Button, Modal, Typography } from "@heroui/react"
+import { Button, Modal, Slider, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
-import { CheckCircleIcon, ClockIcon, XCircleIcon } from "@phosphor-icons/react"
+import { CheckCircleIcon, ClockIcon, CoinsIcon, XCircleIcon } from "@phosphor-icons/react"
 import { QRCode } from "@/components/reuseable/QRCode"
 import { formatVnd } from "@/components/blocks/commerce/PriceTag"
 import type { PlanOrderPhase } from "../planOrderPhase"
 import type { PlanPurchaseTicket } from "../usePlanPurchase"
+
+/**
+ * Phần "dùng Xu" của hộp thoại. Vắng ⇒ màn đó không bán bằng Xu và không có gì đổi so với
+ * trước. Mọi con số ở đây do backend cấp (báo giá `GET /commerce/coin/quote`), component
+ * chỉ vẽ lại.
+ */
+export interface PlanPurchaseCoinProps {
+    /** Đang hỏi báo giá. */
+    isLoading: boolean
+    /** Không hỏi được báo giá — vẫn trả đủ bằng chuyển khoản được. */
+    hasError: boolean
+    /** Số dư Xu của người mua. */
+    balance: number
+    /** Tỉ lệ quy đổi: 1 Xu = bao nhiêu VND. */
+    vndPerCoin: number
+    /** TRẦN Xu áp được cho đơn này (`0` ⇒ không có gì để chọn). */
+    maxCoin: number
+    /** Số Xu đang chọn. */
+    coin: number
+    /** Số VND đang được giảm nhờ lựa chọn hiện tại. */
+    discountVnd: number
+    /** Số VND còn phải trả sau khi trừ Xu. */
+    payableVnd: number
+    /** Lựa chọn hiện tại phủ trọn đơn (không còn gì để chuyển khoản). */
+    coversAll: boolean
+    /** Đổi số Xu muốn dùng. */
+    onChange: (coin: number) => void
+    /** Huỷ đơn đang chờ để lấy lại Xu đã trừ. */
+    onCancelOrder?: () => void
+    /** Đang gọi huỷ đơn. */
+    isCancelling?: boolean
+}
 
 /** Props for {@link PlanPurchaseModal}. */
 export interface PlanPurchaseModalProps {
@@ -33,6 +65,8 @@ export interface PlanPurchaseModalProps {
     onConfirm: () => void
     /** Throw the dead order away and return to the confirm step. */
     onRetry: () => void
+    /** Bật phần "dùng Xu"; vắng ⇒ màn này không dùng Xu. */
+    coin?: PlanPurchaseCoinProps
 }
 
 /**
@@ -43,13 +77,20 @@ export interface PlanPurchaseModalProps {
  * There is no payment gateway to be sent to, so the dialog never navigates: the buyer
  * stays here from confirm → QR → settled, and every outcome is stated in place.
  *
- * - **Confirm** — plan, amount, and a notice that nothing is charged yet. This step is
- *   what makes the purchase deliberate; the order is created only by the confirm press.
+ * - **Confirm** — plan, amount, chỗ chọn số Xu muốn dùng, and a notice that nothing is
+ *   charged yet. This step is what makes the purchase deliberate; the order is created
+ *   only by the confirm press.
  * - **Awaiting** — the VietQR payload plus the order id (which is also the transfer
  *   reference). It says the screen updates itself, because the usual reaction to silence
  *   on this screen is to transfer a second time.
  * - **Paid / expired / failed** — the settled outcome. Expired is kept separate from
  *   failed: the hold ran out, nothing broke, and a late transfer can still be reconciled.
+ *
+ * **Xu trên đường tiền.** Số Xu là thứ bị TRỪ NGAY khi đơn được tạo, nên: (1) sau khi có
+ * đơn, ô chọn Xu biến mất — số Xu đã áp là con số của backend trong `ticket`, không phải
+ * lựa chọn đang treo ở FE; (2) đơn đang chờ mà có Xu thì luôn kèm nút huỷ, vì đó là đường
+ * duy nhất lấy Xu về ví; (3) Xu phủ trọn đơn ⇒ không có QR nào để hiện, và màn hình nói
+ * thẳng là không cần chuyển khoản.
  *
  * A checkout that fails to start keeps the dialog open with the failure and an explicit
  * "nothing was charged" line, rather than closing or routing away.
@@ -68,8 +109,14 @@ export const PlanPurchaseModal = ({
     phase,
     onConfirm,
     onRetry,
+    coin,
 }: PlanPurchaseModalProps) => {
     const t = useTranslations()
+
+    /** Xu đã áp THẬT vào đơn (số của backend) — chỉ có khi đơn đã tồn tại. */
+    const appliedCoin = ticket?.coinApplied ?? 0
+    /** Lựa chọn đang treo ở bước xác nhận (chưa có đơn ⇒ chưa trừ gì). */
+    const pendingCoin = phase === null ? (coin?.coin ?? 0) : 0
 
     return (
         <Modal
@@ -107,6 +154,34 @@ export const PlanPurchaseModal = ({
                                             {ticket ? formatVnd(ticket.amount) : amountLabel}
                                         </Typography>
                                     </div>
+                                    {/* Xu đã áp: ở bước xác nhận là lựa chọn đang treo, sau khi có đơn
+                                        là con số backend đã trừ. Hai nguồn khác nhau nên không gộp. */}
+                                    {appliedCoin > 0 || pendingCoin > 0 ? (
+                                        <div className="flex items-baseline justify-between gap-3">
+                                            <Typography type="body-xs" color="muted">
+                                                {t("profileSettings.purchase.coin.discountLabel", {
+                                                    coin: appliedCoin > 0 ? appliedCoin : pendingCoin,
+                                                })}
+                                            </Typography>
+                                            <Typography type="body-sm" weight="semibold" className="text-success">
+                                                {`−${formatVnd(
+                                                    appliedCoin > 0
+                                                        ? ticket?.coinDiscountVnd ?? 0
+                                                        : coin?.discountVnd ?? 0,
+                                                )}`}
+                                            </Typography>
+                                        </div>
+                                    ) : null}
+                                    {phase === null && pendingCoin > 0 ? (
+                                        <div className="flex items-baseline justify-between gap-3">
+                                            <Typography type="body-xs" color="muted">
+                                                {t("profileSettings.purchase.coin.remainingLabel")}
+                                            </Typography>
+                                            <Typography type="body" weight="bold">
+                                                {formatVnd(coin?.payableVnd ?? 0)}
+                                            </Typography>
+                                        </div>
+                                    ) : null}
                                     {amountHint ? (
                                         <Typography type="body-xs" color="muted" className="text-right">
                                             {amountHint}
@@ -114,9 +189,17 @@ export const PlanPurchaseModal = ({
                                     ) : null}
                                 </div>
 
+                                {phase === null && coin ? (
+                                    <CoinPicker coin={coin} />
+                                ) : null}
+
                                 {phase === null ? (
                                     <Typography type="body-xs" color="muted">
-                                        {t("profileSettings.purchase.notice")}
+                                        {t(
+                                            coin?.coversAll
+                                                ? "profileSettings.purchase.coin.noticeCoinOnly"
+                                                : "profileSettings.purchase.notice",
+                                        )}
                                     </Typography>
                                 ) : null}
 
@@ -149,6 +232,27 @@ export const PlanPurchaseModal = ({
                                         <Typography type="body-xs" color="muted" className="text-center">
                                             {t("profileSettings.purchase.awaitingHint")}
                                         </Typography>
+                                        {/* Xu đã rời ví rồi: nói thẳng, và luôn để sẵn đường lấy lại. */}
+                                        {appliedCoin > 0 ? (
+                                            <div className="flex w-full flex-col items-center gap-2 rounded-2xl bg-default p-3">
+                                                <Typography type="body-xs" color="muted" className="text-center">
+                                                    {t("profileSettings.purchase.coin.heldHint", {
+                                                        coin: appliedCoin,
+                                                    })}
+                                                </Typography>
+                                                {coin?.onCancelOrder ? (
+                                                    <Button
+                                                        size="sm"
+                                                        variant="secondary"
+                                                        onPress={coin.onCancelOrder}
+                                                        isPending={coin.isCancelling}
+                                                        isDisabled={coin.isCancelling}
+                                                    >
+                                                        {t("profileSettings.purchase.coin.cancelOrder")}
+                                                    </Button>
+                                                ) : null}
+                                            </div>
+                                        ) : null}
                                     </div>
                                 ) : null}
 
@@ -169,6 +273,13 @@ export const PlanPurchaseModal = ({
                                         <Typography type="body-xs" color="muted" className="text-center">
                                             {t("profileSettings.purchase.paidHint")}
                                         </Typography>
+                                        {appliedCoin > 0 && (ticket?.amount ?? 0) === 0 ? (
+                                            <Typography type="body-xs" color="muted" className="text-center">
+                                                {t("profileSettings.purchase.coin.paidByCoinHint", {
+                                                    coin: appliedCoin,
+                                                })}
+                                            </Typography>
+                                        ) : null}
                                     </div>
                                 ) : null}
 
@@ -206,6 +317,13 @@ export const PlanPurchaseModal = ({
                                                     : "profileSettings.purchase.orderFailedHint",
                                             )}
                                         </Typography>
+                                        {appliedCoin > 0 ? (
+                                            <Typography type="body-xs" color="muted" className="text-center">
+                                                {t("profileSettings.purchase.coin.releasedHint", {
+                                                    coin: appliedCoin,
+                                                })}
+                                            </Typography>
+                                        ) : null}
                                     </div>
                                 ) : null}
 
@@ -233,7 +351,11 @@ export const PlanPurchaseModal = ({
                                     isPending={isStarting}
                                     isDisabled={isStarting}
                                 >
-                                    {t("profileSettings.purchase.confirm")}
+                                    {t(
+                                        coin?.coversAll
+                                            ? "profileSettings.purchase.coin.confirmCoinOnly"
+                                            : "profileSettings.purchase.confirm",
+                                    )}
                                 </Button>
                             ) : null}
                             {phase === "expired" || phase === "failed" ? (
@@ -246,5 +368,100 @@ export const PlanPurchaseModal = ({
                 </Modal.Container>
             </Modal.Backdrop>
         </Modal>
+    )
+}
+
+/**
+ * Chọn số Xu muốn dùng cho đơn này.
+ *
+ * Bốn trạng thái, không trạng thái nào được nói dối: đang hỏi báo giá · hỏi không được (vẫn
+ * mua được, chỉ là không giảm) · không có Xu nào áp được cho đơn này · và trường hợp thường —
+ * thanh trượt từ 0 tới TRẦN do backend cấp.
+ *
+ * Mặc định là 0: Xu là tiền, không tiêu hộ ai. "Dùng tối đa" là một lần bấm.
+ */
+const CoinPicker = ({ coin }: { coin: PlanPurchaseCoinProps }) => {
+    const t = useTranslations()
+
+    if (coin.isLoading) {
+        return (
+            <Typography type="body-xs" color="muted">
+                {t("profileSettings.purchase.coin.loading")}
+            </Typography>
+        )
+    }
+    if (coin.hasError) {
+        return (
+            <Typography type="body-xs" color="muted">
+                {t("profileSettings.purchase.coin.quoteError")}
+            </Typography>
+        )
+    }
+    if (coin.maxCoin <= 0) {
+        return (
+            <Typography type="body-xs" color="muted">
+                {t("profileSettings.purchase.coin.none", { balance: coin.balance })}
+            </Typography>
+        )
+    }
+
+    return (
+        <div className="flex flex-col gap-3 rounded-2xl border border-separator p-3">
+            <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                    <CoinsIcon className="size-4 text-warning" aria-hidden focusable="false" />
+                    <Typography type="body-sm" weight="semibold">
+                        {t("profileSettings.purchase.coin.title")}
+                    </Typography>
+                </div>
+                <Typography type="body-xs" color="muted">
+                    {t("profileSettings.purchase.coin.balance", { balance: coin.balance })}
+                </Typography>
+            </div>
+
+            <Slider
+                aria-label={t("profileSettings.purchase.coin.sliderLabel")}
+                minValue={0}
+                maxValue={coin.maxCoin}
+                step={1}
+                value={coin.coin}
+                onChange={(value) => coin.onChange(Array.isArray(value) ? value[0] : value)}
+            >
+                <Slider.Track>
+                    <Slider.Fill />
+                    <Slider.Thumb />
+                </Slider.Track>
+            </Slider>
+
+            <div className="flex items-center justify-between gap-2">
+                <Typography type="body-sm" weight="semibold">
+                    {t("profileSettings.purchase.coin.selected", { coin: coin.coin })}
+                </Typography>
+                <div className="flex gap-2">
+                    <Button
+                        size="sm"
+                        variant="tertiary"
+                        onPress={() => coin.onChange(0)}
+                        isDisabled={coin.coin === 0}
+                    >
+                        {t("profileSettings.purchase.coin.clear")}
+                    </Button>
+                    <Button
+                        size="sm"
+                        variant="secondary"
+                        onPress={() => coin.onChange(coin.maxCoin)}
+                        isDisabled={coin.coin === coin.maxCoin}
+                    >
+                        {t("profileSettings.purchase.coin.useMax")}
+                    </Button>
+                </div>
+            </div>
+
+            <Typography type="body-xs" color="muted">
+                {t("profileSettings.purchase.coin.rateHint", {
+                    vnd: formatVnd(coin.vndPerCoin),
+                })}
+            </Typography>
+        </div>
     )
 }

@@ -316,7 +316,34 @@
       "expiredHint": "The hold on the order ran out before a payment arrived. If you have just transferred, keep this window open — we are still reconciling. Otherwise create the order again.",
       "orderFailed": "The order did not complete",
       "orderFailedHint": "This order ended without granting the plan. If you were charged, contact support with the order reference above.",
-      "retry": "Create a new order"
+      "retry": "Create a new order",
+      "coin": {
+        "title": "Use Coins",
+        "balance": "Balance: {balance} Coins",
+        "sliderLabel": "Coins applied to this plan",
+        "selected": "Applying {coin} Coins",
+        "useMax": "Use max",
+        "clear": "Use no Coins",
+        "rateHint": "1 Coin = {vnd}",
+        "loading": "Working out how many Coins you can use…",
+        "quoteError": "Could not read your Coin balance. You can still pay the full amount by transfer.",
+        "none": "Coins cannot be used on this plan (balance: {balance} Coins).",
+        "discountLabel": "Paid with {coin} Coins",
+        "remainingLabel": "Left to transfer",
+        "noticeCoinOnly": "Your Coins cover this whole plan. Confirming spends them and opens the order — there is nothing to transfer.",
+        "confirmCoinOnly": "Pay with Coins",
+        "heldHint": "{coin} Coins have already left your wallet for this order. They come back if you cancel it or it expires.",
+        "cancelOrder": "Cancel order & get the Coins back",
+        "cancelFailed": "Could not cancel the order. Your Coins have not come back yet — please try again.",
+        "paidByCoinHint": "Paid with {coin} Coins. No bank transfer was needed.",
+        "releasedHint": "The {coin} Coins held for this order have been returned to your wallet.",
+        "errors": {
+          "insufficientCoin": "That is more Coins than this order allows. Nothing was charged — pick a smaller amount.",
+          "coinNotSupported": "Coins cannot be applied to this payment method. Nothing was charged.",
+          "notOnSale": "This plan is no longer on sale. Nothing was charged.",
+          "priceChanged": "The price of this plan just changed. Nothing was charged — close and reopen to see the new price."
+        }
+      }
     },
     "learning": {
       "loadMore": "Load more",
@@ -454,7 +481,7 @@
     "blog": "Blog",
     "quests": "Quests",
     "activity": "Activity",
-    "wallet": "Wallet",
+    "wallet": "F.Wallet",
     "search": "Search",
     "notifications": "Notifications",
     "cart": "Cart",
@@ -2016,7 +2043,8 @@
       "price": "₫0",
       "desc": "Basic FrosTES allowance bundled with your course",
       "cta": "Default plan"
-    }
+    },
+    "emptyHint": "Plans that are still in draft do not appear here."
   },
   "admin": {
     "aiBalancer": {
@@ -2112,6 +2140,21 @@
     "tabListAria": "Profile sections",
     "loadingError": "Could not load profile",
     "retry": "Retry",
+    "badgeCatalog": {
+      "seeAll": "See all badges",
+      "title": "All badges",
+      "subtitle": "Every badge in the system and how to earn it",
+      "summary": "Earned {earned} of {total}",
+      "earned": "Earned",
+      "locked": "Not earned yet",
+      "earnedOn": "Earned {date}",
+      "earnedNoDate": "Earned",
+      "progress": "{current}/{total}",
+      "empty": "No badges have been set up yet",
+      "error": "Could not load the badge list",
+      "retry": "Try again",
+      "close": "Close"
+    },
     "sections": {
       "personal": "Personal",
       "academic": "Academic",
@@ -2251,7 +2294,7 @@
     },
     "progress": {
       "wallet": {
-        "coin": "FTES Coin",
+        "coin": "FCoin",
         "viewWallet": "View wallet",
         "reputation": "Reputation",
         "viewCommunity": "View community"
@@ -2288,6 +2331,7 @@
     },
     "joined": "Joined {date}",
     "level": "Level {level}",
+    "badgesMore": "{count} more badges",
     "followers": "{count} followers",
     "following": "{count} following",
     "shareProfile": "Share profile",
@@ -2608,7 +2652,8 @@
     "tabsAria": "Public profile sections",
     "stats": {
       "projects": "Projects",
-      "achievements": "Achievements"
+      "achievements": "Achievements",
+      "srLabel": "{label}: {value}"
     },
     "about": {
       "empty": "This user hasn't written an introduction yet"
@@ -2870,8 +2915,17 @@
       "amountVnd": "₫{amount}",
       "amountCoin": "{amount} Coin",
       "savings": "Save ₫{amount} (−{percent}%)",
+      "itemsTitle": "Buying ({count} courses)",
+      "subtotal": "Subtotal",
+      "saleDiscount": "Sale discount",
+      "couponDiscount": "Coupon",
+      "coinDiscount": "Coins applied",
+      "total": "Total",
+      "transferAmount": "Amount to transfer",
+      "notCharged": "You have not been charged — no money, no coins.",
       "method": {
         "vietqr": "Bank QR",
+        "wallet": "Pay with Wallet",
         "coin": "Pay with Coins"
       },
       "coupon": {
@@ -2880,6 +2934,20 @@
         "apply": "Apply",
         "clear": "Remove",
         "invalid": "Coupon is invalid or expired."
+      },
+      "coin": {
+        "title": "Use Coins for a discount",
+        "balance": "Balance: {amount} Coins",
+        "sliderLabel": "Coins applied to this order",
+        "applied": "Apply {amount} Coins",
+        "appliedHint": "{amount} Coins applied to this order.",
+        "max": "Use max",
+        "none": "Use no Coins",
+        "loading": "Working out how many Coins you can use…",
+        "unavailable": "Coins cannot be used on this order.",
+        "overLimit": "That is more Coins than this order allows. Please pick again.",
+        "walletCharge": "Charged from wallet",
+        "walletNoQr": "No QR scan needed"
       },
       "discount": "−₫{amount}",
       "coinBalance": "Wallet balance",
@@ -3956,7 +4024,7 @@
   "gamification": {
     "quests": {
       "title": "Daily quests",
-      "subtitle": "Complete quests each day to earn FTES Coin.",
+      "subtitle": "Complete quests each day to earn FCoin.",
       "todayEarned": "Coins today",
       "todayEarnedLabel": "Coins earned today: {coin}",
       "walletBalance": "Wallet balance",
@@ -4119,10 +4187,61 @@
     "leaderboardError": "Couldn't load the leaderboard. Please try again."
   },
   "wallet": {
-    "title": "Wallet & FTES Coin",
-    "subtitle": "Your FTES Coin balance and transaction history.",
+    "title": "F.Wallet",
+    "subtitle": "Your FCoin balance and transaction history.",
     "balanceLabel": "Current balance",
-    "coin": "FTES Coin",
+    "coin": "FCoin",
+    "showMore": "Show more",
+    "topup": {
+      "title": "Top up FCoin",
+      "subtitle": "Pick a pack and pay by bank transfer.",
+      "paySubtitle": "Scan the QR code to complete your transfer.",
+      "createOrder": "Get payment QR",
+      "orderCreated": "Payment QR is ready.",
+      "awaitingBank": "Waiting for your bank to confirm…",
+      "awaitingHint": "Your FCoin arrives as soon as the transfer is confirmed. You can keep this open.",
+      "paidTitle": "Payment confirmed",
+      "paidDescription": "{coin} {unit} has been added to your wallet.",
+      "notPaidTitle": "This top-up did not go through",
+      "notPaidDescription": "The order was cancelled or expired. No FCoin was added and you have not been charged.",
+      "noPacks": "No top-up packs are on sale right now.",
+      "packsError": "Couldn't load the top-up packs.",
+      "retry": "Try again",
+      "close": "Close"
+    },
+    "earnGuide": {
+      "trigger": "Coin Farming Playbook",
+      "title": "Coin Farming Playbook",
+      "subtitle": "Every way to get FCoin on FTES — and what each one actually pays.",
+      "footnote": "Rewards are credited automatically once the condition is met. Amounts are the current defaults and may be adjusted.",
+      "close": "Close",
+      "ways": {
+        "quests": {
+          "title": "Daily quests",
+          "reward": "50–100 FCoin each",
+          "description": "Sign in, finish a lesson, post or comment in the community, react to 3 posts, keep a 7-day streak. Each quest pays once per day.",
+          "cta": "Open the quest board"
+        },
+        "contribute": {
+          "title": "Contribute study material",
+          "reward": "+500 FCoin",
+          "description": "Upload notes, slides or source code to the resource hub. When a moderator approves your upload, 500 FCoin is credited — once per resource.",
+          "cta": "Go to the resource hub"
+        },
+        "invite": {
+          "title": "Invite a friend",
+          "reward": "+500 FCoin for both",
+          "description": "Share your referral code. The bonus is paid to both of you once your friend PAYS for their first course — signing up alone doesn't count.",
+          "cta": "Get my referral code"
+        },
+        "topup": {
+          "title": "Top up with a bank transfer",
+          "reward": "Purchase, not a reward",
+          "description": "In a hurry? Buy FCoin directly. This is a purchase — it earns you nothing on its own.",
+          "cta": "Top up now"
+        }
+      }
+    },
     "actions": {
       "topup": "Top up",
       "transfer": "Transfer",
@@ -4131,7 +4250,7 @@
     },
     "referral": {
       "inviteTitle": "Invite Friends & Earn Rewards",
-      "inviteSubtitle": "Share your referral code or link. Earn FTES Coin when your friends sign up and learn!",
+      "inviteSubtitle": "Share your referral code or link. Earn FCoin when a friend buys their first course!",
       "yourCode": "Your referral code",
       "copyCode": "Copy",
       "copiedCode": "Copied",
@@ -4145,9 +4264,9 @@
       "step1Title": "Share link",
       "step1Desc": "Send your referral link to friends",
       "step2Title": "Friends sign up",
-      "step2Desc": "They create an account and learn",
+      "step2Desc": "They create an account and buy a course",
       "step3Title": "Earn rewards",
-      "step3Desc": "Get FTES Coin in your wallet",
+      "step3Desc": "Get FCoin in your wallet",
       "applyCodeTitle": "Were you referred by someone?",
       "applyCodeSubtitle": "Enter a referral code to claim your welcome reward.",
       "applyCodePlaceholder": "Enter referral code...",
@@ -4186,7 +4305,7 @@
   "marketplace": {
     "catalog": {
       "title": "Marketplace",
-      "subtitle": "Spend your FTES Coin on merch, premium, and more.",
+      "subtitle": "Spend your FCoin on merch, premium, and more.",
       "searchPlaceholder": "Search products",
       "all": "All",
       "empty": "No products match your search.",
@@ -4344,11 +4463,11 @@
       "goalCompleted": "Completed a goal",
       "xpGranted": "Earned XP",
       "seasonClosed": "Finished a season",
-      "coinEarned": "Earned FTES Coin",
-      "coinSpent": "Spent FTES Coin",
-      "coinTransferred": "Transferred FTES Coin",
-      "coinRefunded": "Was refunded FTES Coin",
-      "coinAdjusted": "Had the FTES Coin balance adjusted",
+      "coinEarned": "Earned FCoin",
+      "coinSpent": "Spent FCoin",
+      "coinTransferred": "Transferred FCoin",
+      "coinRefunded": "Was refunded FCoin",
+      "coinAdjusted": "Had the FCoin balance adjusted",
       "orderCreated": "Placed an order",
       "orderPaid": "Paid for an order",
       "orderFulfilled": "Had an order fulfilled",
@@ -5312,6 +5431,25 @@
     "retry": "Try again",
     "title": "Notifications",
     "mutedHint": "You've muted all notifications.",
+    "typeFallback": {
+      "MENTION": "Someone mentioned you",
+      "COURSE": "There's an update in one of your courses",
+      "EVENT": "There's an update about an event",
+      "DEADLINE": "A deadline is coming up",
+      "CHALLENGE": "There's an update about a challenge",
+      "COIN": "Your coin balance changed",
+      "GROUP": "There's activity in one of your groups",
+      "SYSTEM": "A message from FTES",
+      "EMAIL_VERIFY": "Confirm your email address",
+      "PASSWORD_RESET": "Reset your password",
+      "EMAIL_OTP": "Your verification code",
+      "SMS_OTP": "Your verification code",
+      "SECURITY_ALERT": "A security alert for your account",
+      "RBAC_CHANGE": "Your permissions changed",
+      "EXPORT_DONE": "Your export is ready",
+      "CTV_INVITE": "You've been invited to join the team",
+      "UNKNOWN": "You have a new notification"
+    },
     "preferences": {
       "title": "Notification preferences",
       "subtitle": "Choose which notifications you want to receive.",
@@ -8477,9 +8615,11 @@
     "role": {
       "superAdmin": "Super admin",
       "admin": "Administrator",
+      "mentor": "Mentor",
       "moderator": "Moderator"
     },
-    "description": "Official FTES staff account, verified."
+    "description": "Official FTES staff account, verified.",
+    "moderatorDescription": "Community moderator — keeps FTES discussions safe."
   },
   "goldenboard": {
     "title": "FTES Goldenboard",

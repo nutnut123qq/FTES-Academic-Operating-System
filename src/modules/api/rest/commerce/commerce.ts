@@ -5,6 +5,7 @@ import type {
     CartView,
     CheckoutRequest,
     CheckoutResult,
+    CoinQuoteView,
     CouponPreview,
     CouponValidateRequest,
     InvoiceView,
@@ -76,6 +77,30 @@ export const checkout = async (
         method: "POST",
         url: "/commerce/checkout",
         data: request,
+    })
+}
+
+/**
+ * Báo giá "dùng Xu" cho một số tiền (hoặc để XEM trên một đơn đã tạo).
+ *
+ * `GET /api/v1/commerce/coin/quote?amountVnd={n}` hoặc `?orderId={id}`
+ *
+ * Dùng dựng thanh trượt áp Xu: `maxApplicableCoin` là TRẦN, `vndPerCoin` là tỉ lệ
+ * quy đổi. Backend tính bằng CÙNG một hàm với lúc checkout nên số hiện trước khi bấm
+ * không lệch số bị trừ. Dạng `?orderId` chỉ để XEM (Xu chỉ áp được LÚC CHECKOUT).
+ */
+export const getCoinQuote = async (params: {
+    amountVnd?: number
+    orderId?: string
+}): Promise<CoinQuoteView> => {
+    return restRequest<CoinQuoteView>({
+        method: "GET",
+        url: "/commerce/coin/quote",
+        params: {
+            amountVnd: params.amountVnd,
+            orderId: params.orderId,
+        },
+        authenticated: true,
     })
 }
 

@@ -9,9 +9,9 @@ import type { WithClassNames } from "@/modules/types/base/class-name"
 import { useQueryUserHovercardSwr } from "@/hooks/swr/api/graphql/queries"
 import { RestError } from "@/modules/api/rest/client"
 import { UserAvatar } from "@/components/reuseable/UserAvatar"
-import { VerifiedBadge } from "@/components/reuseable/VerifiedBadge"
+import { StaffBadge } from "@/components/reuseable/StaffBadge"
 import { UserHovercard } from "@/components/blocks/identity"
-import { STAFF_ROLE_LABEL_KEY, parseStaffRole } from "@/hooks/useViewerStaffRole"
+import { staffBadgeFor } from "@/hooks/useViewerStaffRole"
 import { pathConfig } from "@/resources/path"
 import { useMutateFollowUserSwr } from "./useMutateFollowUserSwr"
 
@@ -54,7 +54,7 @@ export interface UserLinkProps extends WithClassNames<{ avatar?: string; name?: 
     hideName?: boolean
     /**
      * The user's platform staff role (BE GraphQL `PublicUser.staffRole`) — renders the
-     * shared {@link VerifiedBadge} after the name. Omitted / `null` / an unrecognized
+     * shared {@link StaffBadge} after the name. Omitted / `null` / an unrecognized
      * code renders NOTHING at all (no spacer, no empty tooltip): ordinary members are
      * the overwhelming majority, so the badge-less tree must stay exactly as it was.
      *
@@ -164,8 +164,9 @@ export const UserLink = ({
     )
 
     /**
-     * The verified seal, when this person is platform staff — `null` for everyone else,
-     * so an ordinary member's markup is untouched.
+     * The staff mark (seal or shield), when this person is platform staff — `null` for
+     * everyone else, so an ordinary member's markup is untouched. Which mark belongs to
+     * which role is decided ONLY inside {@link StaffBadge}.
      *
      * It is rendered as a SIBLING of the link below rather than inside it: the shared
      * badge wraps its icon in a tooltip trigger that react-aria makes focusable
@@ -173,15 +174,14 @@ export const UserLink = ({
      * an interactive control inside an interactive control — a phantom tab stop on every
      * staff name in a feed.
      */
-    const badge = useMemo(() => {
-        const role = hideName ? null : parseStaffRole(staffRole)
-        return role ? (
-            <VerifiedBadge
-                label={t(STAFF_ROLE_LABEL_KEY[role])}
-                description={t("verifiedBadge.description")}
-            />
-        ) : null
-    }, [hideName, staffRole, t])
+    const badge = useMemo(
+        () =>
+            // `staffBadgeFor` is consulted (not re-implemented) so this component knows
+            // whether the badge will draw ANYTHING before it commits to the extra wrapper
+            // span below — `<StaffBadge>` self-nulls, but a JSX element is always truthy.
+            !hideName && staffBadgeFor(staffRole) ? <StaffBadge role={staffRole} /> : null,
+        [hideName, staffRole],
+    )
 
     const identity = (
         <>

@@ -37,6 +37,7 @@ import { useGetNotificationPreferencesSwr } from "@/hooks/swr/api/rest/queries/u
 import { useAppSelector } from "@/redux/hooks"
 import { useRestWithToast } from "@/modules/toast/hooks"
 import { resolveNotificationIcon } from "@/components/features/notification/typeIcon"
+import { resolveNotificationDisplay } from "@/components/features/notification/model"
 import {
     deriveMutedAwareUnreadCount,
     filterNotificationsByPreferences,
@@ -232,6 +233,11 @@ export const NotificationBell = ({ className }: NotificationBellProps) => {
                                 {recent.map((item, index) => {
                                     const Icon = resolveNotificationIcon(item.type)
                                     const unread = !item.isRead
+                                    // Same guard as the centre: a templateCode with no
+                                    // IN_APP row makes the BE store the raw type name as
+                                    // the title — see notification/model.ts.
+                                    const display = resolveNotificationDisplay(item, (key) =>
+                                        t(`notifications.typeFallback.${key}`))
                                     return (
                                         <ListRow
                                             key={item.id}
@@ -241,7 +247,7 @@ export const NotificationBell = ({ className }: NotificationBellProps) => {
                                                     <Icon className="size-5" aria-hidden focusable="false" />
                                                 </div>
                                             )}
-                                            title={item.title}
+                                            title={display.title}
                                             meta={(
                                                 <div className="flex items-center gap-2">
                                                     <Typography type="body-xs" color="muted">

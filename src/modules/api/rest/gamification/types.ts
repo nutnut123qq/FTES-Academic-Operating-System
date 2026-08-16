@@ -95,6 +95,45 @@ export interface BadgeView {
     awardedAt: string
 }
 
+/**
+ * One badge of the SYSTEM-WIDE catalog (`GET /api/v1/gamification/badges`) —
+ * every badge that exists, not just the earned ones, with the human name, HOW to
+ * earn it (`description`) and the viewer's own progress/earned state.
+ */
+export interface BadgeCatalogItem {
+    /** Stable backend code, e.g. `FIRST_LESSON`. Never render this raw. */
+    code: string
+    kind: "BADGE" | "TITLE" | "TROPHY"
+    /** Display name, already human ("Bài học đầu tiên"). */
+    name: string
+    /** How the badge is earned ("Hoàn thành 100 bài học"). */
+    description: string
+    iconUrl: string | null
+    /**
+     * Counter the progress is measured on. `null` ⇒ the badge has no measurable
+     * progress and NO progress bar must be drawn.
+     */
+    counterKey: string | null
+    /** Counter value the badge unlocks at. */
+    threshold: number
+    /** Viewer's progress, already clamped by the backend to `[0, threshold]`. */
+    progress: number
+    earned: boolean
+    /** ISO-8601 timestamp of the award; `null` when not earned (or unknown). */
+    awardedAt: string | null
+    sortOrder: number
+}
+
+/**
+ * Whole badge catalog plus the viewer's tally. `items` arrives pre-sorted
+ * (`sortOrder` then `code`) — call sites must not re-sort.
+ */
+export interface BadgeCatalogView {
+    earnedCount: number
+    totalCount: number
+    items: Array<BadgeCatalogItem>
+}
+
 /** One entry on a gamification leaderboard. */
 export interface GamificationLeaderboardEntry {
     userId: string

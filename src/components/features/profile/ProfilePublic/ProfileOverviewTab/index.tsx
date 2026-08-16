@@ -4,112 +4,156 @@ import React from "react"
 import { Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import {
+    CaretRightIcon,
     MedalIcon,
     StackIcon,
     UserPlusIcon,
     UsersThreeIcon,
 } from "@phosphor-icons/react"
+import { Link } from "@/i18n/navigation"
+import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { EmptyContent } from "@/components/blocks/async/EmptyContent"
 import { LabeledCard } from "@/components/blocks/cards/LabeledCard"
-import { MetricCard } from "@/components/blocks/stats/MetricCard"
+import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import type { PublicProfile } from "../../hooks/useQueryPublicProfileSwr"
-import { AchievementRow, ProjectCard } from "../ProfileEntries"
-
-/** How many rows each overview preview block shows before deferring to its own tab. */
-const PREVIEW_LIMIT = 3
+import { useQueryPublicCommunitySwr } from "../../hooks/useQueryPublicCommunitySwr"
 
 /**
- * Overview tab — the profile's front page: the four counters that the BE can actually
- * back, the bio, and a short preview of projects + achievements (full lists live in the
- * Profile tab).
- *
- * Counters come from `counters` (followers/following are authoritative server totals) and
- * from the length of the `projects` / `achievements` arrays, which the public-profile
- * endpoint returns IN FULL — so those two are exact, not a page count.
+ * One counter on the stats row: icon + number, nothing else. Deliberately FRAMELESS —
+ * the row used to be four `MetricCard`s, i.e. four boxed cards for four numbers, which
+ * out-weighed the content around them. The metric NAME is not painted: it rides along as
+ * the tooltip + screen-reader text so the row stays a row of numbers.
  */
-export const ProfileOverviewTab = ({
-    profile,
-    onSeeProjects,
+const ProfileStat = ({
+    icon,
+    value,
+    label,
 }: {
-    profile: PublicProfile
-    /** Jumps to the Profile tab, where the full project + achievement lists render. */
-    onSeeProjects: () => void
+    icon: React.ReactNode
+    /** Already-localised number string. */
+    value: string
+    /** Full accessible name of the metric (e.g. "Người theo dõi"). */
+    label: string
 }) => {
     const t = useTranslations()
+    const srLabel = t("publicProfile.stats.srLabel", { label, value })
 
-    // highlighted projects lead; fall back to the natural sort order when none are flagged
-    const highlighted = profile.projects.filter((project) => project.highlighted)
-    const previewProjects = (highlighted.length > 0 ? highlighted : profile.projects).slice(
-        0,
-        PREVIEW_LIMIT,
+    return (
+        <span title={srLabel} className="inline-flex items-center gap-1.5">
+            <span className="text-muted">{icon}</span>
+            <Typography type="body-sm" weight="semibold">
+                {value}
+            </Typography>
+            <span className="sr-only">{srLabel}</span>
+        </span>
     )
-    const previewAchievements = profile.achievements.slice(0, PREVIEW_LIMIT)
+}
+
+/**
+ * Overview tab — the profile's front page: the counters the BE can actually back, then
+ * the community posts this person wrote.
+ *
+ * Counters come from `counters` (followers / following are authoritative server totals)
+ * and from the length of the `projects` / `achievements` arrays, which the public-profile
+ * endpoint returns IN FULL — so those two are exact, not a page count. The lists
+ * themselves live in the Profile tab; this tab does not preview them.
+ *
+ * The post list shares `useQueryPublicCommunitySwr` with the Community tab (same SWR key
+ * → one fetch, whichever tab opens first); that call is best-effort per block, so a
+ * hidden/auth-gated search degrades to the empty state instead of an error.
+ */
+export const ProfileOverviewTab = ({ profile }: { profile: PublicProfile }) => {
+    const t = useTranslations()
+    const { data, isLoading, error, mutate } = useQueryPublicCommunitySwr(
+        profile.username,
+        profile.userId,
+    )
 
     return (
         <div className="flex flex-col gap-6">
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <MetricCard
-                    icon={<UsersThreeIcon className="size-5 text-accent" aria-hidden focusable="false" />}
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+                <ProfileStat
+                    icon={<UsersThreeIcon className="size-5" aria-hidden focusable="false" />}
                     value={profile.followers.toLocaleString()}
                     label={t("profile.community.connections.followers")}
                 />
-                <MetricCard
-                    icon={<UserPlusIcon className="size-5 text-accent" aria-hidden focusable="false" />}
+                <ProfileStat
+                    icon={<UserPlusIcon className="size-5" aria-hidden focusable="false" />}
                     value={profile.following.toLocaleString()}
                     label={t("profile.community.connections.following")}
                 />
-                <MetricCard
-                    icon={<StackIcon className="size-5 text-accent" aria-hidden focusable="false" />}
+                <ProfileStat
+                    icon={<StackIcon className="size-5" aria-hidden focusable="false" />}
                     value={profile.projects.length.toLocaleString()}
                     label={t("publicProfile.stats.projects")}
                 />
-                <MetricCard
-                    icon={<MedalIcon className="size-5 text-accent" aria-hidden focusable="false" />}
+                <ProfileStat
+                    icon={<MedalIcon className="size-5" aria-hidden focusable="false" />}
                     value={profile.achievements.length.toLocaleString()}
                     label={t("publicProfile.stats.achievements")}
                 />
             </div>
 
-            <LabeledCard label={t("profile.personal.about")}>
-                {profile.about ? (
-                    <Typography type="body-sm" color="muted" className="whitespace-pre-line">
-                        {profile.about}
-                    </Typography>
-                ) : (
-                    <EmptyContent title={t("publicProfile.about.empty")} />
-                )}
-            </LabeledCard>
-
             <LabeledCard
-                label={t("profile.portfolio.projects")}
-                frameless={previewProjects.length > 0}
-                onSeeMore={profile.projects.length > PREVIEW_LIMIT ? onSeeProjects : undefined}
+                label={t("publicProfile.community.postsTitle")}
+                frameless={Boolean(data && data.recentPosts.length > 0)}
             >
-                {previewProjects.length === 0 ? (
-                    <EmptyContent title={t("profile.portfolio.empty.title")} />
-                ) : (
-                    <div className="flex flex-col gap-3">
-                        {previewProjects.map((project) => (
-                            <ProjectCard key={project.id} project={project} />
-                        ))}
-                    </div>
-                )}
-            </LabeledCard>
-
-            <LabeledCard
-                label={t("publicProfile.stats.achievements")}
-                frameless={previewAchievements.length > 0}
-                onSeeMore={profile.achievements.length > PREVIEW_LIMIT ? onSeeProjects : undefined}
-            >
-                {previewAchievements.length === 0 ? (
-                    <EmptyContent title={t("profile.portfolio.achievements.empty")} />
-                ) : (
-                    <div className="flex flex-col gap-3">
-                        {previewAchievements.map((achievement) => (
-                            <AchievementRow key={achievement.id} achievement={achievement} />
-                        ))}
-                    </div>
-                )}
+                <AsyncContent
+                    isLoading={isLoading && !data}
+                    skeleton={
+                        <div className="flex flex-col gap-3">
+                            <Skeleton.ListRow />
+                            <Skeleton.ListRow />
+                        </div>
+                    }
+                    error={!data ? error : undefined}
+                    errorContent={{
+                        title: t("profile.loadingError"),
+                        retryLabel: t("profile.retry"),
+                        onRetry: () => void mutate(),
+                    }}
+                >
+                    {data && data.recentPosts.length > 0 ? (
+                        <div className="flex flex-col gap-3">
+                            {data.recentPosts.map((post) => (
+                                <Link
+                                    key={post.id}
+                                    href={`/community/${post.id}`}
+                                    className="group flex items-center gap-3 rounded-2xl border border-separator p-4 no-underline transition-colors hover:bg-default/40"
+                                >
+                                    <Typography
+                                        type="body-sm"
+                                        weight="medium"
+                                        className="min-w-0 flex-1"
+                                        truncate
+                                    >
+                                        {post.title}
+                                    </Typography>
+                                    <Typography
+                                        type="body-xs"
+                                        color="muted"
+                                        className="hidden shrink-0 sm:block"
+                                    >
+                                        {t("profile.community.recentPosts.engagement", {
+                                            likes: post.likeCount,
+                                            comments: post.commentCount,
+                                        })}
+                                    </Typography>
+                                    <Typography type="body-xs" color="muted" className="shrink-0">
+                                        {post.dateLabel}
+                                    </Typography>
+                                    <CaretRightIcon
+                                        className="size-4 shrink-0 text-muted transition-transform group-hover:translate-x-1"
+                                        aria-hidden
+                                        focusable="false"
+                                    />
+                                </Link>
+                            ))}
+                        </div>
+                    ) : (
+                        <EmptyContent title={t("publicProfile.community.postsEmpty")} />
+                    )}
+                </AsyncContent>
             </LabeledCard>
         </div>
     )

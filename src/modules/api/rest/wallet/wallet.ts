@@ -6,6 +6,9 @@ import type {
     GiftRequest,
     RedeemVoucherRequest,
     ReferralView,
+    TopupOrderRequest,
+    TopupOrderView,
+    TopupPackView,
     TransactionView,
     TransferRequest,
     TransferView,
@@ -51,6 +54,46 @@ export const getMyTransactions = async (params?: {
             page: params?.page ?? 0,
             size: params?.size ?? 20,
         },
+    })
+}
+
+/**
+ * Lists the purchasable top-up packs.
+ *
+ * `GET /api/v1/wallet/topup/packs`
+ *
+ * An empty array means nothing is on sale right now (or every pack is hidden
+ * because its price no longer matches the conversion rate) — a normal answer,
+ * which the top-up surface renders as an empty state rather than an error.
+ */
+export const getTopupPacks = async (): Promise<Array<TopupPackView>> => {
+    return restRequest<Array<TopupPackView>>({
+        method: "GET",
+        url: "/wallet/topup/packs",
+        authenticated: true,
+    })
+}
+
+/**
+ * Opens a top-up order for one pack and returns the VietQR payload to pay it.
+ *
+ * `POST /api/v1/wallet/topup/orders`
+ *
+ * MONEY PATH: coins are credited only after the bank webhook marks the order
+ * paid, so the caller must poll `GET /commerce/orders/{orderId}` until the
+ * status settles instead of assuming success on the 200 here. Pressing the
+ * button twice returns the SAME pending order (the BE reuses it), so a double
+ * click cannot open two orders — but the caller still guards its own button so
+ * the user is never shown two QR codes.
+ */
+export const createTopupOrder = async (
+    request: TopupOrderRequest,
+): Promise<TopupOrderView> => {
+    return restRequest<TopupOrderView>({
+        method: "POST",
+        url: "/wallet/topup/orders",
+        authenticated: true,
+        data: request,
     })
 }
 

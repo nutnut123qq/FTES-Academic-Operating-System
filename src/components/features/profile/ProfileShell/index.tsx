@@ -16,6 +16,8 @@ import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { GamificationChip } from "@/components/blocks/gamification/GamificationChip"
 import { ExtendedTabs } from "@/components/blocks/navigation/ExtendedTabs"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
+import { StaffBadge } from "@/components/reuseable/StaffBadge"
+import { useViewerStaffRole } from "@/hooks/useViewerStaffRole"
 import { useQueryMyGamificationSwr } from "@/components/features/gamification/hooks/useQueryMyGamificationSwr"
 import { useQueryProfileSwr } from "../hooks/useQueryProfileSwr"
 import { useQueryPublicProfileSwr } from "../hooks/useQueryPublicProfileSwr"
@@ -66,6 +68,14 @@ export const ProfileShell = ({ children }: ProfileShellProps) => {
     const pathname = usePathname()
     const { profile, isLoading, error, mutate } = useQueryProfileSwr()
     const { data: gamification } = useQueryMyGamificationSwr()
+    /**
+     * The viewer's OWN staff role, read from the redux session rather than from the
+     * profile payload: `GET /profiles/me` (`ProfileViews.SelfProfile`) carries no role
+     * field at all, which is exactly why this page showed no seal for an admin while the
+     * account menu and the community feed both did. The grants are already hydrated for
+     * every signed-in viewer, so no extra request is involved.
+     */
+    const staffRole = useViewerStaffRole()
     // real follower/following counters (public-profile view of the signed-in user);
     // keyed on the username so it only fires once the self profile has loaded.
     const { profile: social } = useQueryPublicProfileSwr(profile?.username ?? "")
@@ -134,9 +144,12 @@ export const ProfileShell = ({ children }: ProfileShellProps) => {
                                 </Avatar>
                             </div>
                             <div className="flex flex-col gap-0">
-                                <Typography type="h4" weight="bold">
-                                    {profile.name}
-                                </Typography>
+                                <div className="flex min-w-0 items-center justify-center gap-1">
+                                    <Typography type="h4" weight="bold" truncate>
+                                        {profile.name}
+                                    </Typography>
+                                    <StaffBadge role={staffRole} size="md" />
+                                </div>
                                 {profile.headline ? (
                                     <Typography type="body-sm" color="muted">
                                         {profile.headline}
@@ -201,27 +214,36 @@ export const ProfileShell = ({ children }: ProfileShellProps) => {
                                             position: gamification.rank.position,
                                         })}
                                     />
+                                    {/*
+                                      * Huy hiệu dùng CHÍNH GamificationChip như 3 chip trước nó.
+                                      * Trước đây chúng là vòng tròn `size-8` (32px) tự chế nên cao
+                                      * hơn hẳn pill của chip (px-2 py-0.5 + icon size-4 = 20px) —
+                                      * cái thứ 4 trên hàng trông to hơn 3 cái đầu. Dùng chung block
+                                      * = chung hộp, không cần ép width/height.
+                                      */}
                                     {gamification.badges.slice(0, 6).map((badge) => (
-                                        <span
+                                        <GamificationChip
                                             key={badge.id}
-                                            title={t(`gamification.milestones.${badge.badgeKey}.name`)}
-                                            className="flex size-8 items-center justify-center rounded-full bg-accent/10 text-accent"
-                                        >
-                                            <TrophyIcon
-                                                weight="fill"
-                                                className="size-4"
-                                                aria-hidden
-                                                focusable="false"
-                                            />
-                                            <span className="sr-only">
-                                                {t(`gamification.milestones.${badge.badgeKey}.name`)}
-                                            </span>
-                                        </span>
+                                            icon={
+                                                <TrophyIcon
+                                                    weight="fill"
+                                                    className="size-4"
+                                                    aria-hidden
+                                                    focusable="false"
+                                                />
+                                            }
+                                            value={null}
+                                            label={t(`gamification.milestones.${badge.badgeKey}.name`)}
+                                        />
                                     ))}
                                     {gamification.badges.length > 6 ? (
-                                        <span className="flex size-8 items-center justify-center rounded-full bg-default text-xs font-medium text-muted">
-                                            +{gamification.badges.length - 6}
-                                        </span>
+                                        <GamificationChip
+                                            icon={null}
+                                            value={`+${gamification.badges.length - 6}`}
+                                            label={t("profile.badgesMore", {
+                                                count: gamification.badges.length - 6,
+                                            })}
+                                        />
                                     ) : null}
                                 </div>
                             ) : null}

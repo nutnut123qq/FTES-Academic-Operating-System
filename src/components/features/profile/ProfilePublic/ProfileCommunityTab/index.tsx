@@ -14,10 +14,10 @@ import {
     type PublicCommunityUser,
 } from "../../hooks/useQueryPublicCommunitySwr"
 
-/** Skeleton mirroring the two relation lists + the post list. */
+/** Skeleton mirroring the two relation lists. */
 const CommunitySkeleton = () => (
     <div className="flex flex-col gap-6">
-        {Array.from({ length: 3 }).map((_, index) => (
+        {Array.from({ length: 2 }).map((_, index) => (
             <div key={index} className="flex flex-col gap-3">
                 <Skeleton.Typography type="h6" width="1/3" />
                 <Skeleton.ListRow />
@@ -56,14 +56,16 @@ const UserRow = ({ user }: { user: PublicCommunityUser }) => (
 )
 
 /**
- * Community tab — who follows this profile, who it follows, and its newest community
- * posts.
+ * Community tab — who follows this profile and who it follows. The person's own community
+ * POSTS are not here: they moved to the Overview tab, where a reader looking for "what has
+ * this person written" finds them without hunting through a connections list. Both tabs
+ * call `useQueryPublicCommunitySwr` with the same key, so that is one shared fetch.
  *
  * The follower / following COUNTS in each card label are the authoritative server totals
  * from `counters`; the rows below them are only the FIRST page (the follow-list endpoints
  * are cursor-paginated), which is why a label may read a larger number than the rows show.
  * Each block degrades to its empty state independently — hidden follow lists
- * (`showFollowers=false`) and the auth-gated community search fail soft in the hook.
+ * (`showFollowers=false`) fail soft in the hook.
  */
 export const ProfileCommunityTab = ({
     username,
@@ -125,56 +127,6 @@ export const ProfileCommunityTab = ({
                             <div className="flex flex-col gap-3">
                                 {data.following.map((user) => (
                                     <UserRow key={user.id} user={user} />
-                                ))}
-                            </div>
-                        )}
-                    </LabeledCard>
-
-                    <LabeledCard
-                        label={t("publicProfile.community.postsTitle")}
-                        frameless={data.recentPosts.length > 0}
-                    >
-                        {data.recentPosts.length === 0 ? (
-                            <EmptyContent title={t("publicProfile.community.postsEmpty")} />
-                        ) : (
-                            <div className="flex flex-col gap-3">
-                                {data.recentPosts.map((post) => (
-                                    <Link
-                                        key={post.id}
-                                        href={`/community/${post.id}`}
-                                        className="group flex items-center gap-3 rounded-2xl border border-separator p-4 no-underline transition-colors hover:bg-default/40"
-                                    >
-                                        <Typography
-                                            type="body-sm"
-                                            weight="medium"
-                                            className="min-w-0 flex-1"
-                                            truncate
-                                        >
-                                            {post.title}
-                                        </Typography>
-                                        <Typography
-                                            type="body-xs"
-                                            color="muted"
-                                            className="hidden shrink-0 sm:block"
-                                        >
-                                            {t("profile.community.recentPosts.engagement", {
-                                                likes: post.likeCount,
-                                                comments: post.commentCount,
-                                            })}
-                                        </Typography>
-                                        <Typography
-                                            type="body-xs"
-                                            color="muted"
-                                            className="shrink-0"
-                                        >
-                                            {post.dateLabel}
-                                        </Typography>
-                                        <CaretRightIcon
-                                            className="size-4 shrink-0 text-muted transition-transform group-hover:translate-x-1"
-                                            aria-hidden
-                                            focusable="false"
-                                        />
-                                    </Link>
                                 ))}
                             </div>
                         )}

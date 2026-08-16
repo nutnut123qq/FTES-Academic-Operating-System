@@ -1,6 +1,7 @@
 import { restRequest } from "@/modules/api/rest/client"
 import type {
     ActivityDaysView,
+    BadgeCatalogView,
     BadgeView,
     ClaimRequest,
     ClaimResultView,
@@ -147,6 +148,21 @@ export const getMyBadges = async (): Promise<Array<BadgeView>> => {
     return restRequest<Array<BadgeView>>({
         method: "GET",
         url: "/gamification/me/badges",
+    })
+}
+
+/**
+ * Returns the WHOLE badge catalog — every badge in the system with its display
+ * name, how it is earned, and the viewer's earned/progress state.
+ *
+ * `GET /api/v1/gamification/badges`
+ *
+ * Distinct from {@link getMyBadges}, which returns only the awarded ones.
+ */
+export const getBadgeCatalog = async (): Promise<BadgeCatalogView> => {
+    return restRequest<BadgeCatalogView>({
+        method: "GET",
+        url: "/gamification/badges",
     })
 }
 

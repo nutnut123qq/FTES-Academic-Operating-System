@@ -22,6 +22,7 @@ import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { InfiniteScrollSentinel } from "@/components/blocks/async/InfiniteScrollSentinel"
 import { resolveNotificationIcon } from "../typeIcon"
+import { resolveNotificationDisplay } from "../model"
 import { buildMyNotificationsBadgeKey } from "@/hooks/swr/api/graphql/queries/useQueryMyNotificationsSwr"
 import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 import { filterNotificationsByPreferences } from "../preferences"
@@ -250,12 +251,17 @@ export const NotificationCenter = () => {
                     <ul className="flex flex-col gap-2">
                         {items.map((item) => {
                             const Icon = resolveNotificationIcon(item.type)
+                            // Server-rendered text, but it degrades to the raw type name
+                            // (or a stray `{{var}}`) when a templateCode has no IN_APP row
+                            // — see ../model.ts.
+                            const display = resolveNotificationDisplay(item, (key) =>
+                                t(`notifications.typeFallback.${key}`))
                             return (
                                 <li key={item.id}>
                                     <button
                                         type="button"
                                         onClick={() => onPressItem(item)}
-                                        aria-label={item.title}
+                                        aria-label={display.title}
                                         className={cn(
                                             "flex w-full items-start gap-3 rounded-2xl border border-separator px-4 py-3 text-left transition-colors hover:bg-default/40 focus-visible:bg-default/40 focus-visible:outline-none",
                                             !item.isRead && "bg-default/40",
@@ -273,15 +279,15 @@ export const NotificationCenter = () => {
                                                 type="body-sm"
                                                 className="line-clamp-2"
                                             >
-                                                {item.title}
+                                                {display.title}
                                             </Typography>
-                                            {item.body ? (
+                                            {display.body ? (
                                                 <Typography
                                                     type="body-xs"
                                                     color="muted"
                                                     className="line-clamp-2"
                                                 >
-                                                    {item.body}
+                                                    {display.body}
                                                 </Typography>
                                             ) : null}
                                             <Typography type="body-xs" color="muted">

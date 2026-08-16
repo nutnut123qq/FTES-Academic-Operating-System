@@ -144,6 +144,10 @@ export interface OrderView {
     items: Array<OrderItemView>
     /** Order creation timestamp (ISO-8601). */
     createdAt?: string
+    /** Số Xu đã áp vào đơn (0 khi không dùng Xu). */
+    coinApplied?: number
+    /** Phần VND được giảm nhờ Xu đã áp (`coinApplied × vndPerCoin`). */
+    coinDiscountVnd?: number
     /**
      * HẠN THẬT của đơn (ISO-8601) — BE change `commerce-order-expires-at`. Đồng hồ đếm ngược
      * ở modal thanh toán bám mốc này; thiếu (đơn cũ / BE chưa deploy) thì FE rơi về hằng số
@@ -156,7 +160,10 @@ export interface OrderView {
 export interface CheckoutResult {
     /** Created order id. */
     orderId: string
-    /** Amount to pay in VND. */
+    /**
+     * Amount to pay in VND — phần CÒN PHẢI TRẢ sau khi trừ Xu đã áp. `0` ⇒ đơn đã
+     * `PAID` ngay và `qrCode` rỗng (KHÔNG hiện màn quét QR).
+     */
     amount?: number
     /** Amount to pay in coins. */
     amountCoin?: number
@@ -164,6 +171,35 @@ export interface CheckoutResult {
     qrCode?: string
     /** Order status. */
     status: string
+    /** Số Xu backend THỰC SỰ trừ (không phải số FE xin) — số này mới là sự thật. */
+    coinApplied?: number
+    /** Phần VND được giảm nhờ Xu, do backend tính. */
+    coinDiscountVnd?: number
+}
+
+/**
+ * Báo giá "dùng Xu" của backend cho MỘT số tiền VND (`GET /commerce/coin/quote`).
+ *
+ * Đây là NGUỒN SỰ THẬT DUY NHẤT của đường tiền phía FE: trần Xu áp được
+ * (`maxApplicableCoin`) và tỉ lệ quy đổi (`vndPerCoin`) đều do backend cấp, FE chỉ
+ * hiển thị. FE KHÔNG bao giờ gửi số tiền lên — checkout chỉ nhận `coinToApply`, còn
+ * số tiền cuối do backend tính lại bằng CÙNG hàm sinh ra báo giá này.
+ */
+export interface CoinQuoteView {
+    /** Số dư Xu hiện có của người mua. */
+    balance: number
+    /** Tỉ lệ quy đổi: 1 Xu = bao nhiêu VND. */
+    vndPerCoin: number
+    /** TRẦN số Xu áp được cho số tiền này (đã kẹp theo số dư lẫn theo số tiền đơn). */
+    maxApplicableCoin: number
+    /** Số VND giảm được khi áp trọn `maxApplicableCoin`. */
+    maxDiscountVnd: number
+    /**
+     * SỐ TIỀN ĐƯỢC HỎI báo giá, KHÔNG phải phần dư sau khi áp Xu — `OrderController.coinQuote`
+     * trả thẳng tham số `amountVnd` (hoặc `order.totalPrice` khi hỏi theo `orderId`) vào đây.
+     * Ví trả trọn được hay không thì so `maxDiscountVnd >= payableVnd`.
+     */
+    payableVnd: number
 }
 
 /** Paginated view used by several commerce endpoints. */
@@ -258,6 +294,15 @@ export interface CheckoutRequest {
     payMethod: string
     /** Idempotency key to avoid duplicate orders. */
     idempotencyKey: string
+    /**
+     * Số Xu muốn áp để giảm tiền (`>= 0`; bỏ trống/0 = không dùng Xu). CHỈ hợp lệ với
+     * `payMethod: "VIETQR"` — áp vào đơn `COIN` thì backend trả 400
+     * `COMMERCE_UNSUPPORTED_PAY_METHOD`. Xin quá trần ⇒ 422
+     * `COMMERCE_INSUFFICIENT_COIN` (backend KHÔNG tự hạ xuống mức tối đa).
+     *
+     * FE gửi SỐ XU, không gửi số tiền: mọi phép tính tiền nằm ở backend.
+     */
+    coinToApply?: number | null
 }
 
 /** Body sent to `POST /api/v1/commerce/coupons/validate`. */

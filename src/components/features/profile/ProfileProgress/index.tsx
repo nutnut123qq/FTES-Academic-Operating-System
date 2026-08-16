@@ -132,6 +132,11 @@ export const ProfileProgress = () => {
                         {/* XP/level + rank/league cards */}
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                             <LabeledCard
+                                // Side-by-side with the rank MetricCard: the meter is a single
+                                // short row while the metric card stacks icon + value + label +
+                                // link, so without fillHeight this cell renders visibly shorter
+                                // than its neighbour (what `fillHeight` exists for).
+                                fillHeight
                                 label={t("profile.progress.xpCard.level", { level: data.level })}
                                 labelEnd={t("profile.progress.xpCard.totalXp", { xp: data.xp.toLocaleString(locale) })}
                             >

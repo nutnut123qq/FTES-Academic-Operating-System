@@ -9,16 +9,20 @@ import { buildSkillExpChart, type SkillExpChartData } from "./skillExpModel"
 export * from "./skillExpModel"
 
 /**
- * Loads the learner's EXP per skill category (change `course-skill-exp`).
+ * Loads the learner's skill set and their EXP in it (changes `course-skill-exp` and
+ * `default-skills-by-major`).
  *
- * - `GET /api/v1/career/skill-categories` → the managed catalogue (which bars exist),
- * - `GET /api/v1/career/me/skill-exp` → the learner's accumulated total per category.
+ * - `GET /api/v1/career/me/skill-exp` → the default skill set of the learner's MAJOR
+ *   plus their real EXP per category (zeros included). This drives which bars exist.
+ * - `GET /api/v1/career/skill-categories` → the managed catalogue, consulted only for
+ *   display labels and as the stand-in bucket list when the learner read is missing.
  *
- * Failure handling mirrors the sibling skill-graph reader: the learner's own totals
- * are tolerated (a caller without the career permission simply gets none, so every
- * category reads `0` and the surface shows its EMPTY state instead of failing),
- * while a catalogue that cannot be read surfaces as the SWR `error` so the section
- * shows its retryable error state rather than pretending the learner has no EXP.
+ * Failure handling, and why the two reads are NOT treated alike: the learner read is
+ * tolerated (a caller without the career permission simply gets none, and the chart
+ * degrades to the catalogue at zero), while a catalogue that cannot be read surfaces
+ * as the SWR `error` so the section shows its retryable ERROR state. An error must
+ * never be dressed up as "you have not earned anything yet" — those are different
+ * facts and the reader has to be able to tell which one they are looking at.
  *
  * @returns `{ chart, isLoading, error, mutate }` — `mutate` re-runs the fetch.
  */
@@ -30,7 +34,7 @@ export const useQuerySkillExpSwr = () => {
                 getCareerSkillCategories(),
                 getMyCareerSkillExp().catch(() => []),
             ])
-            return buildSkillExpChart(categories ?? [], totals ?? [])
+            return buildSkillExpChart(categories ?? [], totals)
         },
     )
 

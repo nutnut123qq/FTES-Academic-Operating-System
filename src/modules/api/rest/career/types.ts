@@ -283,9 +283,8 @@ export interface CareerSkillCategory {
 
 /**
  * One category total from `GET /career/me/skill-exp` (`SkillExpDtos.CategoryExpView`).
- * The endpoint returns EVERY category — categories the learner has not earned in yet
- * come back with `totalExp: 0` — so a chart over this payload always has a full set
- * of bars.
+ * Categories the learner has not earned in yet come back with `totalExp: 0` — so a
+ * chart over this payload always has a full set of bars.
  */
 export interface CareerUserSkillExp {
     slug: string
@@ -293,6 +292,35 @@ export interface CareerUserSkillExp {
     sortOrder: number
     /** Accumulated EXP for the category. Uncapped: more courses keep adding. */
     totalExp: number
+}
+
+/**
+ * Where the returned set of categories came from (`SkillExpDtos.SkillSetSource`).
+ *
+ * Keep the two apart in the UI: `MAJOR_DEFAULTS` means "this is your major's skill
+ * set", `FULL_CATALOGUE` means "we don't know your major yet, so here is everything"
+ * — the second one earns a prompt to pick a major, the first one does not.
+ */
+export type CareerSkillSetSource = "MAJOR_DEFAULTS" | "FULL_CATALOGUE"
+
+/**
+ * `GET /career/me/skill-exp` (`SkillExpDtos.MySkillExpView`) — the learner's skill set
+ * plus their REAL EXP in each bucket.
+ *
+ * The buckets are the DEFAULT SKILL SET OF THE LEARNER'S MAJOR (change
+ * `default-skills-by-major`), which is what stops a brand-new learner from getting an
+ * empty panel: every category of their major comes back at `totalExp: 0`. Zeros are
+ * DERIVED server-side — no placeholder progress row is ever written — so "not studied
+ * yet" stays distinguishable from "studied but below the first milestone".
+ *
+ * `majorLabel` is `null` both when no major is chosen and when the major catalogue
+ * (a separate service) could not be reached; the chart must still draw its bars.
+ */
+export interface CareerMySkillExp {
+    majorCode: string | null
+    majorLabel: string | null
+    source: CareerSkillSetSource
+    items: Array<CareerUserSkillExp>
 }
 
 // ---- CV Builder (Harvard) ----

@@ -38,6 +38,14 @@ export interface EditProfileFormValues {
     location: string
     /** Campus CODE → BE academic `campus` (empty = clear / no campus). */
     campus: string
+    /**
+     * Major CODE → BE academic `majorCode` (empty = clear / not chosen).
+     *
+     * This is the field the profile Skill-EXP panel reads to work out which skill
+     * categories to show; without a way to set it here, the panel's "pick your major"
+     * prompt had nowhere to send anyone.
+     */
+    majorCode: string
     /** Public LinkedIn URL → BE social link `linkedin` (empty = clear). */
     linkedinUrl: string
     /** Personal website URL → BE social link `website` (empty = clear). */
@@ -90,6 +98,9 @@ export const useEditProfileForm = () => {
             // campus CODE from the active-campus list (empty = clear); the picker only
             // ever emits a valid code or "", so no further constraint is needed here.
             campus: z.string(),
+            // major CODE from the majors catalogue (empty = clear); the picker only ever
+            // emits a real code or "", and the BE re-checks it against the catalogue.
+            majorCode: z.string(),
             // empty = clear; otherwise must be a real URL within the length cap
             linkedinUrl: z.union([z.literal(""), z.string().trim().url().max(URL_MAX)]),
             websiteUrl: z.union([z.literal(""), z.string().trim().url().max(URL_MAX)]),
@@ -106,6 +117,7 @@ export const useEditProfileForm = () => {
             roleTitle: profile?.jobTitle ?? "",
             location: profile?.address ?? "",
             campus: profile?.academic?.campus ?? "",
+            majorCode: profile?.academic?.majorCode ?? "",
             linkedinUrl: findLink(profile, isLinkedin),
             websiteUrl: findLink(profile, isWebsite),
         },
@@ -152,6 +164,11 @@ export const useEditProfileForm = () => {
                     address: value.location.trim() ? value.location.trim() : null,
                     // empty = clear the campus (a @Pattern-validated code otherwise)
                     campus: value.campus.trim() ? value.campus.trim() : null,
+                    // The BE PATCH convention differs from every field above: `null` means
+                    // LEAVE UNCHANGED for majorCode, and the EMPTY STRING is what clears it
+                    // (see `UpdateProfileRequest#majorCode`). Sending null to clear would
+                    // silently keep the old major.
+                    majorCode: value.majorCode.trim(),
                 })
                 // 3) social links (replace-all): keep any non-linkedin/website links the
                 // BE already stores, then re-add the two the form controls

@@ -2410,7 +2410,9 @@
     "websiteUrlPlaceholder": "https://trang-cua-ban.com",
     "workMode": "Hình thức làm việc",
     "workModeNone": "Chưa xác định",
-    "campusNone": "Không chọn"
+    "campusNone": "Không chọn",
+    "majorNone": "Chưa chọn ngành",
+    "majorHint": "Ngành quyết định bộ kỹ năng hiện trong biểu đồ EXP kỹ năng ở hồ sơ."
   },
   "sessions": {
     "title": "Thiết bị",
@@ -6443,9 +6445,13 @@
     "title": "EXP kỹ năng",
     "expValue": "{exp} EXP",
     "axisHint": "Cột là EXP thô, trục tự giãn theo nhóm cao nhất của bạn. Học thêm khóa là EXP cộng tiếp, không có trần.",
+    "zeroHint": "Đây là các nhóm kỹ năng bạn sẽ tích EXP. Học và hoàn thành khóa để bắt đầu cộng.",
+    "majorSet": "Bộ kỹ năng của ngành {major}.",
+    "noMajorHint": "Chưa rõ ngành của bạn nên đang hiện toàn bộ nhóm kỹ năng.",
+    "chooseMajor": "Chọn ngành",
     "empty": {
-      "title": "Chưa có EXP kỹ năng nào",
-      "description": "Học và hoàn thành khóa để cộng EXP cho từng nhóm kỹ năng."
+      "title": "Chưa có nhóm kỹ năng nào",
+      "description": "Danh mục nhóm kỹ năng đang trống — quản trị viên cần thêm nhóm trước."
     },
     "error": "Không tải được EXP kỹ năng.",
     "retry": "Thử lại",
@@ -6459,7 +6465,10 @@
       "testing": "Kiểm thử",
       "devops": "DevOps",
       "security": "Bảo mật",
-      "professional": "Kỹ năng nghề nghiệp"
+      "professional": "Kỹ năng nghề nghiệp",
+      "hardware-ic": "Vi mạch & phần cứng",
+      "mathematics": "Toán học",
+      "foreign-language": "Ngoại ngữ"
     }
   },
   "skillGraph": {

@@ -54,53 +54,6 @@ export interface PressLink {
  * đăng (tiếng Việt, nguyên văn) — dữ liệu trích dẫn chứ không phải chữ giao diện, dịch đi là
  * trích sai nguồn. Chỉ nhãn của khối mới localise.
  */
-export const PRESS_ARTICLES: ReadonlyArray<PressLink> = [
-    {
-        source: "Báo Gia Lai",
-        title: "10 dự án được chọn vào vòng chung kết cuộc thi \"Thanh niên Gia Lai khởi nghiệp sáng tạo\"",
-        url: "https://baogialai.com.vn/10-du-an-vao-chung-ket-cuoc-thi-thanh-nien-gia-lai-khoi-nghiep-sang-tao-post573678.html",
-    },
-    {
-        source: "Báo Mới",
-        title: "10 dự án vào chung kết cuộc thi \"Thanh niên Gia Lai khởi nghiệp sáng tạo\"",
-        url: "https://baomoi.com/10-du-an-vao-chung-ket-cuoc-thi-thanh-nien-gia-lai-khoi-nghiep-sang-tao-c53883239.epi",
-    },
-    {
-        source: "Báo Gia Lai",
-        title: "30 dự án được chọn vào vòng bán kết cuộc thi \"Thanh niên Gia Lai khởi nghiệp sáng tạo\"",
-        url: "https://baogialai.com.vn/30-du-an-vao-vong-ban-ket-cuoc-thi-thanh-nien-gia-lai-khoi-nghiep-sang-tao-post572244.html",
-    },
-    {
-        source: "Thương hiệu & Truyền thông",
-        title: "Gia Lai tạo bệ phóng cho doanh nghiệp khởi nghiệp sáng tạo",
-        url: "https://thuonghieutruyenthong.vn/gia-lai-tao-be-phong-cho-doanh-nghiep-khoi-nghiep-sang-tao",
-    },
-    {
-        source: "Báo Gia Lai",
-        title: "Gia Lai: Kết nối và gọi vốn đầu tư cho 4 dự án khởi nghiệp năm 2025",
-        url: "https://baogialai.com.vn/gia-lai-ket-noi-va-goi-von-dau-tu-cho-4-du-an-khoi-nghiep-nam-2025-post575022.html",
-    },
-    {
-        source: "Đại học FPT",
-        title: "Đồ án khởi nghiệp của sinh viên FPTU đạt doanh thu gần 1 tỷ đồng sau 1 năm",
-        url: "https://daihoc.fpt.edu.vn/tin-tuc/do-an-khoi-nghiep-cua-sinh-vien-fptu-dat-doanh-thu-gan-1-ty-dong-sau-1-nam/",
-    },
-    {
-        source: "aFamily",
-        title: "Đồ án khởi nghiệp của sinh viên FPTU đạt doanh thu gần 1 tỷ đồng sau 1 năm",
-        url: "https://m.afamily.vn/do-an-khoi-nghiep-cua-sinh-vien-fptu-dat-doanh-thu-gan-1-ty-dong-sau-1-nam-23626071014333084.chn",
-    },
-    {
-        source: "CafeF",
-        title: "Học khởi nghiệp ở trường đại học: Không phải ai cũng thành founder, nhưng ai cũng cần tư duy làm chủ",
-        url: "https://cafef.vn/hoc-khoi-nghiep-o-truong-dai-hoc-khong-phai-ai-cung-thanh-founder-nhung-ai-cung-can-tu-duy-lam-chu-188260623192001525.chn",
-    },
-    {
-        source: "CafeF",
-        title: "Không chờ tốt nghiệp, sinh viên trường này đã kiếm gần 1 tỷ đồng từ ý tưởng làm đồ án",
-        url: "https://cafef.vn/khong-cho-tot-nghiep-sinh-vien-truong-nay-da-kiem-gan-1-ty-dong-tu-y-tuong-lam-do-an-188260616171224173.chn",
-    },
-]
 
 /** One FTES achievement milestone card in the achievements carousel. */
 export interface AchievementStat {
@@ -125,6 +78,14 @@ export interface AchievementStat {
      * in a new tab. Omitted when no public post exists — never a placeholder link.
      */
     href?: string
+    /**
+     * Thẻ này là MỘT BÀI BÁO viết về FTES (không phải một mốc thành tựu tự công bố).
+     * `source` và `title` cố ý KHÔNG qua i18n: đó là tên toà soạn và tiêu đề đúng như đã
+     * đăng — dữ liệu trích dẫn, dịch đi là trích sai nguồn. Thẻ báo chí dùng ẢNH CỦA FTES
+     * chụp tại chính sự kiện bài báo nói tới, KHÔNG lấy ảnh trong bài: ảnh đó là tác phẩm
+     * có bản quyền của toà soạn.
+     */
+    press?: { source: string; title: string }
 }
 
 /**
@@ -189,6 +150,77 @@ export const ACHIEVEMENTS: ReadonlyArray<AchievementStat> = [
         year: "2025",
         imageSrc: "/achievements/demo-day.jpg",
         href: "https://www.facebook.com/share/p/1W9YWF8U1d/",
+    },
+    {
+        key: "press1",
+        year: "2025",
+        // TAM: bai nay khong lay duoc anh tu trang bao (Bao Gia Lai/Bao Moi nap anh bang JS,
+        // og:image chi la logo). Dang muon anh FTES chup tai chinh su kien — CHO ANH BAI BAO.
+        imageSrc: "/achievements/giai-3-knstgl.jpg",
+        href: "https://baogialai.com.vn/10-du-an-vao-chung-ket-cuoc-thi-thanh-nien-gia-lai-khoi-nghiep-sang-tao-post573678.html",
+        press: { source: "Báo Gia Lai", title: "10 dự án được chọn vào vòng chung kết cuộc thi \"Thanh niên Gia Lai khởi nghiệp sáng tạo\"" },
+    },
+    {
+        key: "press2",
+        year: "2025",
+        // TAM: bai nay khong lay duoc anh tu trang bao (Bao Gia Lai/Bao Moi nap anh bang JS,
+        // og:image chi la logo). Dang muon anh FTES chup tai chinh su kien — CHO ANH BAI BAO.
+        imageSrc: "/achievements/giai-3-knstgl.jpg",
+        href: "https://baomoi.com/10-du-an-vao-chung-ket-cuoc-thi-thanh-nien-gia-lai-khoi-nghiep-sang-tao-c53883239.epi",
+        press: { source: "Báo Mới", title: "10 dự án vào chung kết cuộc thi \"Thanh niên Gia Lai khởi nghiệp sáng tạo\"" },
+    },
+    {
+        key: "press3",
+        year: "2025",
+        // TAM: bai nay khong lay duoc anh tu trang bao (Bao Gia Lai/Bao Moi nap anh bang JS,
+        // og:image chi la logo). Dang muon anh FTES chup tai chinh su kien — CHO ANH BAI BAO.
+        imageSrc: "/achievements/innovation-quest.jpg",
+        href: "https://baogialai.com.vn/30-du-an-vao-vong-ban-ket-cuoc-thi-thanh-nien-gia-lai-khoi-nghiep-sang-tao-post572244.html",
+        press: { source: "Báo Gia Lai", title: "30 dự án được chọn vào vòng bán kết cuộc thi \"Thanh niên Gia Lai khởi nghiệp sáng tạo\"" },
+    },
+    {
+        key: "press4",
+        year: "2025",
+        imageSrc: "/achievements/ttsg.jpg",
+        href: "https://thuonghieutruyenthong.vn/gia-lai-tao-be-phong-cho-doanh-nghiep-khoi-nghiep-sang-tao",
+        press: { source: "Thương hiệu & Truyền thông", title: "Gia Lai tạo bệ phóng cho doanh nghiệp khởi nghiệp sáng tạo" },
+    },
+    {
+        key: "press5",
+        year: "2025",
+        // TAM: bai nay khong lay duoc anh tu trang bao (Bao Gia Lai/Bao Moi nap anh bang JS,
+        // og:image chi la logo). Dang muon anh FTES chup tai chinh su kien — CHO ANH BAI BAO.
+        imageSrc: "/achievements/goi-von-lan-1.jpg",
+        href: "https://baogialai.com.vn/gia-lai-ket-noi-va-goi-von-dau-tu-cho-4-du-an-khoi-nghiep-nam-2025-post575022.html",
+        press: { source: "Báo Gia Lai", title: "Gia Lai: Kết nối và gọi vốn đầu tư cho 4 dự án khởi nghiệp năm 2025" },
+    },
+    {
+        key: "press6",
+        year: "2025",
+        imageSrc: "/achievements/hoc-bong-khoi-nghiep-fpt.jpg",
+        href: "https://daihoc.fpt.edu.vn/tin-tuc/do-an-khoi-nghiep-cua-sinh-vien-fptu-dat-doanh-thu-gan-1-ty-dong-sau-1-nam/",
+        press: { source: "Đại học FPT", title: "Đồ án khởi nghiệp của sinh viên FPTU đạt doanh thu gần 1 tỷ đồng sau 1 năm" },
+    },
+    {
+        key: "press7",
+        year: "2025",
+        imageSrc: "/achievements/demo-day.jpg",
+        href: "https://m.afamily.vn/do-an-khoi-nghiep-cua-sinh-vien-fptu-dat-doanh-thu-gan-1-ty-dong-sau-1-nam-23626071014333084.chn",
+        press: { source: "aFamily", title: "Đồ án khởi nghiệp của sinh viên FPTU đạt doanh thu gần 1 tỷ đồng sau 1 năm" },
+    },
+    {
+        key: "press8",
+        year: "2025",
+        imageSrc: "/achievements/open-day.jpg",
+        href: "https://cafef.vn/hoc-khoi-nghiep-o-truong-dai-hoc-khong-phai-ai-cung-thanh-founder-nhung-ai-cung-can-tu-duy-lam-chu-188260623192001525.chn",
+        press: { source: "CafeF", title: "Học khởi nghiệp ở trường đại học: Không phải ai cũng thành founder, nhưng ai cũng cần tư duy làm chủ" },
+    },
+    {
+        key: "press9",
+        year: "2025",
+        imageSrc: "/achievements/top-100-techfest.jpg",
+        href: "https://cafef.vn/khong-cho-tot-nghiep-sinh-vien-truong-nay-da-kiem-gan-1-ty-dong-tu-y-tuong-lam-do-an-188260616171224173.chn",
+        press: { source: "CafeF", title: "Không chờ tốt nghiệp, sinh viên trường này đã kiếm gần 1 tỷ đồng từ ý tưởng làm đồ án" },
     },
 ] as const
 

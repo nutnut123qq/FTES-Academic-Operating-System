@@ -1,6 +1,8 @@
 "use client"
 
-import React from "react"
+import React, { useState } from "react"
+import { Button } from "@heroui/react"
+import { CaretDownIcon, CaretUpIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { CourseRow } from "./CourseRow"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
@@ -27,10 +29,19 @@ export type MyCoursesProgressProps = WithClassNames<undefined>
  *
  * @param props - optional root class name (placement only)
  */
+/**
+ * Số khoá hiện sẵn trước khi phải bấm "Xem thêm". Người học lâu năm có vài chục khoá; đổ hết
+ * ra thì thẻ này nuốt trọn trang tổng quan và đẩy mọi thứ khác xuống dưới màn hình.
+ */
+const ROWS_VISIBLE = 10
+
 export const MyCoursesProgress = ({ className }: MyCoursesProgressProps) => {
     const t = useTranslations()
     const { courses, isLoading, error, mutate } = useQueryMyCoursesSwr()
     const hasCourses = !isLoading && !error && courses.length > 0
+    const [expanded, setExpanded] = useState(false)
+    const visible = expanded ? courses : courses.slice(0, ROWS_VISIBLE)
+    const hidden = courses.length - ROWS_VISIBLE
 
     return (
         <LabeledCard
@@ -67,11 +78,31 @@ export const MyCoursesProgress = ({ className }: MyCoursesProgressProps) => {
                     retryLabel: t("dashboard.retry"),
                 }}
             >
-                <SurfaceListCard>
-                    {courses.map((course) => (
-                        <CourseRow key={course.courseId} course={course} />
-                    ))}
-                </SurfaceListCard>
+                <div className="flex flex-col gap-3">
+                    <SurfaceListCard>
+                        {visible.map((course) => (
+                            <CourseRow key={course.courseId} course={course} />
+                        ))}
+                    </SurfaceListCard>
+                    {hidden > 0 ? (
+                        <div className="flex justify-center">
+                            <Button
+                                variant="tertiary"
+                                size="sm"
+                                onPress={() => setExpanded((prev) => !prev)}
+                            >
+                                {expanded
+                                    ? t("dashboard.coursesShowLess")
+                                    : t("dashboard.coursesShowMore", { count: hidden })}
+                                {expanded ? (
+                                    <CaretUpIcon aria-hidden focusable="false" className="size-4" />
+                                ) : (
+                                    <CaretDownIcon aria-hidden focusable="false" className="size-4" />
+                                )}
+                            </Button>
+                        </div>
+                    ) : null}
+                </div>
             </AsyncContent>
         </LabeledCard>
     )

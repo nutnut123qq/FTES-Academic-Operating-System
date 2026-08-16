@@ -1,7 +1,9 @@
+import { existsSync } from "node:fs"
+import { join } from "node:path"
 import React from "react"
 import { render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
-import { ACHIEVEMENTS, PRESS_ARTICLES } from "../content"
+import { ACHIEVEMENTS } from "../content"
 
 /**
  * Component — {@link AchievementsSection}, the home "Thành tựu" carousel.
@@ -53,24 +55,25 @@ vi.mock("@/components/blocks/carousel/useCarousel", () => ({
 
 import { AchievementsSection } from "./AchievementsSection"
 
-const pressLinks = PRESS_ARTICLES
+/** Các thẻ BÁO CHÍ trong chính carousel thành tựu (không phải một section riêng). */
+const pressCards = ACHIEVEMENTS.filter((item) => item.press)
 
 describe("AchievementsSection", () => {
     it("renders every configured press article as an external link", () => {
         const { container } = render(<AchievementsSection />)
 
         const hrefs = Array.from(container.querySelectorAll("a")).map((a) => a.getAttribute("href"))
-        expect(pressLinks.length).toBeGreaterThan(0)
-        for (const article of pressLinks) {
-            expect(hrefs).toContain(article.url)
+        expect(pressCards.length).toBeGreaterThan(0)
+        for (const article of pressCards) {
+            expect(hrefs).toContain(article.href)
         }
     })
 
     it("opens press articles in a new tab without leaking the referrer", () => {
         const { container } = render(<AchievementsSection />)
 
-        for (const article of pressLinks) {
-            const anchor = container.querySelector(`a[href="${article.url}"]`)
+        for (const article of pressCards) {
+            const anchor = container.querySelector(`a[href="${article.href}"]`)
             expect(anchor?.getAttribute("target")).toBe("_blank")
             expect(anchor?.getAttribute("rel")).toContain("noopener")
             expect(anchor?.getAttribute("rel")).toContain("noreferrer")
@@ -82,23 +85,60 @@ describe("AchievementsSection", () => {
      * dau chin bai nam long trong hai the duoi dang danh sach link — test nay ghim lai hinh
      * dang moi de khong ai gop chung tro lai.
      */
-    it("moi bai bao dung thanh MOT o rieng, du chin o", () => {
-        const { container } = render(<AchievementsSection />)
+    /**
+     * Chủ dự án chốt: bài báo là THẺ TRONG carousel thành tựu sẵn có, mỗi bài một thẻ —
+     * không phải một section thứ hai, cũng không phải danh sách link nhét trong thẻ khác.
+     */
+    it("mỗi bài báo là MỘT thẻ trong carousel, đủ chín thẻ", () => {
+        expect(pressCards).toHaveLength(9)
 
-        const cards = Array.from(container.querySelectorAll("ul li a"))
-            .filter((a) => PRESS_ARTICLES.some((p) => p.url === a.getAttribute("href")))
-        expect(cards).toHaveLength(PRESS_ARTICLES.length)
-        // moi o mang ten toa soan + tieu de, khong phai mot dong link tron
-        for (const article of PRESS_ARTICLES) {
-            const card = container.querySelector(`a[href="${article.url}"]`)
-            expect(card?.textContent).toContain(article.source)
-            expect(card?.textContent).toContain(article.title)
+        const { container } = render(<AchievementsSection />)
+        for (const card of pressCards) {
+            const anchor = container.querySelector(`a[href="${card.href}"]`)
+            expect(anchor).toBeTruthy()
         }
     })
 
-    it("khoi bao chi co tieu de rieng, khong con nam trong the thanh tuu", () => {
+    /**
+     * Thẻ báo chí KHÔNG có khoá i18n (`press1..9` không nằm trong messages). Nếu ai đó nối
+     * lại tiêu đề qua `t()` thì màn hình in ra đường khoá thô — test này bắt đúng ca đó.
+     */
+    it("thẻ báo chí hiện tiêu đề bài và tên toà soạn, không phải khoá i18n", () => {
         render(<AchievementsSection />)
 
-        expect(screen.getAllByText("achievements.press").length).toBe(1)
+        for (const card of pressCards) {
+            expect(screen.getAllByText(card.press!.title).length).toBeGreaterThan(0)
+        }
+        expect(screen.queryByText(/achievements\.items\.press/)).toBeNull()
+    })
+
+    /**
+     * Ảnh thẻ báo chí: ưu tiên ảnh CỦA CHÍNH BÀI BÁO (`/press/`). Bốn bài mà trang báo nạp
+     * ảnh bằng JS (Báo Gia Lai) hoặc chỉ trả logo (Báo Mới) tạm mượn ảnh FTES chụp tại chính
+     * sự kiện đó — đánh dấu trong `content.ts` để thay khi có ảnh thật.
+     *
+     * Test ghim: mọi ảnh phải là file tự host. Trỏ thẳng vào CDN của toà soạn là để trang chủ
+     * phụ thuộc một host ngoài — họ đổi đường dẫn là thẻ mất ảnh, và không có gì báo.
+     */
+    it("mọi thẻ báo chí dùng ảnh tự host, không hotlink CDN toà soạn", () => {
+        for (const card of pressCards) {
+            expect(card.imageSrc.startsWith("/")).toBe(true)
+            expect(card.imageSrc).not.toMatch(/^https?:/)
+        }
+    })
+
+    /**
+     * Chủ dự án chốt: thẻ báo chí dùng ẢNH CỦA FTES chụp tại chính sự kiện bài báo nói tới,
+     * KHÔNG lấy ảnh trong bài — ảnh đó là tác phẩm có bản quyền của toà soạn.
+     *
+     * Ghim luôn rằng FILE PHẢI TỒN TẠI. Bản trước trỏ 5 thẻ vào `/press/…` trong khi chỉ 2
+     * file được tải về: 3 thẻ vỡ ảnh mà tsc lẫn test đều xanh, vì đường dẫn ảnh chỉ là chuỗi.
+     * Test cũ ở đây còn khẳng định "đúng 5 thẻ dùng /press/", tức là ghim chặt hành vi sai.
+     */
+    it("mọi thẻ dùng ảnh FTES, và file ảnh có thật trong public/", () => {
+        for (const card of ACHIEVEMENTS) {
+            expect(card.imageSrc.startsWith("/achievements/")).toBe(true)
+            expect(existsSync(join(process.cwd(), "public", card.imageSrc))).toBe(true)
+        }
     })
 })

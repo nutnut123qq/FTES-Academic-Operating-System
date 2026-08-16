@@ -3111,6 +3111,8 @@
     "history": "Bài đã học",
     "historySearch": "Tìm...",
     "enrolledCourses": "Khóa học của tôi",
+    "coursesShowMore": "Xem thêm ({count})",
+    "coursesShowLess": "Thu gọn",
     "enrolledCoursesEmpty": "Bạn chưa tham gia khóa nào.",
     "courseProgress": {
       "content": "Nội dung hoàn thành",

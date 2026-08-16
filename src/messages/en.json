@@ -3099,6 +3099,8 @@
     "history": "Learned lessons",
     "historySearch": "Search...",
     "enrolledCourses": "My courses",
+    "coursesShowMore": "Show {count} more",
+    "coursesShowLess": "Show less",
     "enrolledCoursesEmpty": "You haven't joined any course yet.",
     "courseProgress": {
       "content": "Content completed",

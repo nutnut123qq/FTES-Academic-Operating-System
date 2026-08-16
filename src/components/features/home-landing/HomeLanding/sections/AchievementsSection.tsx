@@ -6,7 +6,7 @@ import { Chip, Link, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { MediaCard } from "@/components/blocks/cards/MediaCard"
 import { useCarousel } from "@/components/blocks/carousel/useCarousel"
-import { ACHIEVEMENTS, PRESS_ARTICLES } from "../content"
+import { ACHIEVEMENTS } from "../content"
 import type { AchievementStat } from "../content"
 
 /** Slower than the course hero — each card carries a title plus a two-line description. */
@@ -20,7 +20,13 @@ const ACHIEVEMENT_INTERVAL_MS = 4_500
  */
 const AchievementSlide = ({ item }: { item: AchievementStat }) => {
     const t = useTranslations("homeLanding")
-    const title = t(`achievements.items.${item.key}.title`)
+    // Thẻ BÁO CHÍ không có khoá i18n (`press1..9` không nằm trong messages): tiêu đề và
+    // nguồn lấy thẳng từ dữ liệu trích dẫn. Gọi `t()` cho chúng thì màn hình in ra đường
+    // khoá thô — đúng lỗi vừa phải vá ở dòng thời gian hoạt động.
+    const title = item.press ? item.press.title : t(`achievements.items.${item.key}.title`)
+    const description = item.press
+        ? item.press.source
+        : t(`achievements.items.${item.key}.description`)
 
     return (
         <MediaCard
@@ -55,16 +61,18 @@ const AchievementSlide = ({ item }: { item: AchievementStat }) => {
                 ) : null
             }
             title={title}
-            description={t(`achievements.items.${item.key}.description`)}
+            description={description}
             footer={
                 item.href ? (
                     <Link
                         href={item.href}
                         target="_blank"
-                        rel="noopener"
+                        // noreferrer đi kèm noopener cho MỌI link ra ngoài: thẻ báo chí trỏ
+                        // sang toà soạn thứ ba, không có lý do gửi kèm đường dẫn trang mình
+                        rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 text-sm text-accent"
                     >
-                        {t("achievements.viewDetail")}
+                        {item.press ? t("achievements.readArticle") : t("achievements.viewDetail")}
                         <ArrowRightIcon aria-hidden focusable="false" className="size-4" />
                     </Link>
                 ) : null
@@ -159,43 +167,6 @@ export const AchievementsSection = () => {
                 ) : null}
             </div>
 
-            {/* Bao chi: MOT O MOT BAI. Truoc day chin bai co lai thanh may dong chu nho trong
-                hai the thanh tuu; moi bai bao la mot bang chung doc lap nen dung rieng mot o.
-                Luoi tu gian theo be ngang, dien thoai mot cot. */}
-            <div className="mt-12 flex flex-col gap-4">
-                <Typography type="h5" weight="bold" className="text-center">
-                    {t("achievements.press")}
-                </Typography>
-                <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {PRESS_ARTICLES.map((article) => (
-                        <li key={article.url} className="h-full">
-                            <Link
-                                href={article.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="group flex h-full flex-col gap-2 rounded-2xl border border-separator bg-surface p-4 transition hover:border-accent"
-                            >
-                                <Typography type="body-xs" color="muted">
-                                    {article.source}
-                                </Typography>
-                                {/* line-clamp-3: tieu de bao dai ngan khac nhau, khong kep thi
-                                    luoi rang cua; ba dong du doc ra bai noi ve gi */}
-                                <Typography
-                                    type="body-sm"
-                                    weight="medium"
-                                    className="line-clamp-3 group-hover:text-accent"
-                                >
-                                    {article.title}
-                                </Typography>
-                                <span className="mt-auto inline-flex items-center gap-1.5 text-sm text-accent">
-                                    {t("achievements.readArticle")}
-                                    <ArrowRightIcon aria-hidden focusable="false" className="size-4" />
-                                </span>
-                            </Link>
-                        </li>
-                    ))}
-                </ul>
-            </div>
         </section>
     )
 }

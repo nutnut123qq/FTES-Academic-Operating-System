@@ -2,7 +2,7 @@
 
 import React from "react"
 import { Typography } from "@heroui/react"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import {
     CaretRightIcon,
     MedalIcon,
@@ -10,11 +10,14 @@ import {
     UserPlusIcon,
     UsersThreeIcon,
 } from "@phosphor-icons/react"
+import { useRouter } from "next/navigation"
 import { Link } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { EmptyContent } from "@/components/blocks/async/EmptyContent"
 import { LabeledCard } from "@/components/blocks/cards/LabeledCard"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
+import { PostEngagementBar } from "@/components/reuseable/PostEngagementBar"
+import { useMutateReactPostSwr } from "@/components/features/community/hooks/useMutateReactPostSwr"
 import type { PublicProfile } from "../../hooks/useQueryPublicProfileSwr"
 import { useQueryPublicCommunitySwr } from "../../hooks/useQueryPublicCommunitySwr"
 
@@ -39,6 +42,9 @@ import { useQueryPublicCommunitySwr } from "../../hooks/useQueryPublicCommunityS
  */
 export const ProfileOverviewTab = ({ profile }: { profile: PublicProfile }) => {
     const t = useTranslations()
+    const locale = useLocale()
+    const router = useRouter()
+    const reactPost = useMutateReactPostSwr()
     const { data, isLoading, error, mutate } = useQueryPublicCommunitySwr(
         profile.username,
         profile.userId,
@@ -68,38 +74,53 @@ export const ProfileOverviewTab = ({ profile }: { profile: PublicProfile }) => {
                     {data && data.recentPosts.length > 0 ? (
                         <div className="flex flex-col gap-3">
                             {data.recentPosts.map((post) => (
-                                <Link
+                                /* Thẻ KHÔNG phải một link phủ cả hàng: thanh tương tác bên dưới
+                                   toàn nút bấm, nhét chúng vào trong <a> là lồng anchor — HTML
+                                   không hợp lệ và bấm thích lại hoá ra mở bài. Chỉ TIÊU ĐỀ là
+                                   link, giống hàng bài ngoài feed cộng đồng. */
+                                <div
                                     key={post.id}
-                                    href={`/community/${post.id}`}
-                                    className="group flex items-center gap-3 rounded-2xl border border-separator p-4 no-underline transition-colors hover:bg-default/40"
+                                    className="flex flex-col gap-2 rounded-2xl border border-separator p-4"
                                 >
-                                    <Typography
-                                        type="body-sm"
-                                        weight="medium"
-                                        className="min-w-0 flex-1"
-                                        truncate
-                                    >
-                                        {post.title}
-                                    </Typography>
-                                    <Typography
-                                        type="body-xs"
-                                        color="muted"
-                                        className="hidden shrink-0 sm:block"
-                                    >
-                                        {t("profile.community.recentPosts.engagement", {
-                                            likes: post.likeCount,
-                                            comments: post.commentCount,
-                                        })}
-                                    </Typography>
-                                    <Typography type="body-xs" color="muted" className="shrink-0">
-                                        {post.dateLabel}
-                                    </Typography>
-                                    <CaretRightIcon
-                                        className="size-4 shrink-0 text-muted transition-transform group-hover:translate-x-1"
-                                        aria-hidden
-                                        focusable="false"
+                                    <div className="flex items-center gap-3">
+                                        <Link
+                                            href={`/community/${post.id}`}
+                                            className="group min-w-0 flex-1 no-underline"
+                                        >
+                                            <Typography
+                                                type="body-sm"
+                                                weight="medium"
+                                                className="group-hover:underline"
+                                                truncate
+                                            >
+                                                {post.title}
+                                            </Typography>
+                                        </Link>
+                                        <Typography
+                                            type="body-xs"
+                                            color="muted"
+                                            className="shrink-0"
+                                        >
+                                            {post.dateLabel}
+                                        </Typography>
+                                    </div>
+                                    <PostEngagementBar
+                                        likes={post.likeCount}
+                                        liked={post.likedByMe}
+                                        commentsCount={post.commentCount}
+                                        onToggleLike={() => {
+                                            void reactPost(post.id, !post.likedByMe)
+                                            void mutate()
+                                        }}
+                                        // bình luận sống ở trang bài; ở đây bấm là đi tới đó
+                                        onCommentClick={() => router.push(`/${locale}/community/${post.id}`)}
+                                        postUrl={`/community/${post.id}`}
+                                        shareTitle={post.title}
+                                        saveEntityType="post"
+                                        saveEntityId={post.id}
+                                        hideZeroCounts
                                     />
-                                </Link>
+                                </div>
                             ))}
                         </div>
                     ) : (

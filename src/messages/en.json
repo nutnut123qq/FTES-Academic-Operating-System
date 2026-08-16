@@ -2400,7 +2400,8 @@
     "workModeNone": "Not specified",
     "campusNone": "No campus",
     "majorNone": "No major yet",
-    "majorHint": "Your major decides which skills appear in the Skill EXP chart on your profile."
+    "majorHint": "Your major decides which skills appear in the Skill EXP chart on your profile.",
+    "majorEmptyHint": "The major catalogue could not be loaded, so this cannot be changed right now. Try again in a few minutes — the major saved on your profile is NOT affected."
   },
   "sessions": {
     "title": "Devices",
@@ -6448,6 +6449,8 @@
     "zeroHint": "These are the skill categories you will earn EXP in. Study and complete courses to start adding.",
     "majorSet": "Skill set for {major}.",
     "noMajorHint": "We do not know your major yet, so every skill category is shown.",
+    "majorWithoutSetHint": "{major} has no skill set of its own yet, so every category is shown.",
+    "readUnavailableHint": "We could not read your EXP (not signed in, or missing permission) — this is the shared category list at zero, NOT your real EXP.",
     "chooseMajor": "Choose your major",
     "empty": {
       "title": "No skill categories yet",

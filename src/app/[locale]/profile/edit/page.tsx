@@ -109,12 +109,14 @@ const MajorRow = ({
     label,
     placeholder,
     hint,
+    emptyHint,
     majors,
 }: {
     control: Control<EditProfileFormValues>
     label: string
     placeholder: string
     hint: string
+    emptyHint: string
     majors: Array<Major>
 }) => (
     <Controller
@@ -129,6 +131,10 @@ const MajorRow = ({
                     onChange={(code) => field.onChange(code ?? "")}
                     placeholder={placeholder}
                     ariaLabel={label}
+                    // Danh mục ngành rỗng là trạng thái hợp lệ (BE chưa có `/majors`) — ô sẽ tự
+                    // khoá, nên phải kèm câu nói VÌ SAO, nhất là khi người dùng vừa bấm lời mời
+                    // "Chọn ngành" từ biểu đồ EXP và sang đây chỉ thấy một ô xám.
+                    emptyHint={emptyHint}
                     className="self-start"
                 />
                 <Typography type="body-xs" color="muted">
@@ -220,6 +226,7 @@ const EditProfilePage = () => {
                 label={t("profile.academic.fields.majorFromCatalog")}
                 placeholder={t("profileEdit.majorNone")}
                 hint={t("profileEdit.majorHint")}
+                emptyHint={t("profileEdit.majorEmptyHint")}
                 majors={majors}
             />
 

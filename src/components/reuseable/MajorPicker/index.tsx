@@ -7,6 +7,7 @@ import {
     DropdownMenu,
     DropdownPopover,
     DropdownTrigger,
+    Typography,
     cn,
 } from "@heroui/react"
 import { CaretDownIcon, GraduationCapIcon } from "@phosphor-icons/react"
@@ -29,6 +30,17 @@ export interface MajorPickerProps {
     ariaLabel: string
     /** Disables the trigger. */
     isDisabled?: boolean
+    /**
+     * Câu giải thích in ra khi danh mục ngành RỖNG (trigger tự khoá).
+     *
+     * VÌ SAO cần: rỗng là trạng thái HỢP LỆ (`useQueryMajorsSwr` — BE chưa deploy endpoint
+     * `/api/v1/majors` thì trả 404, hoặc danh mục chưa ai nhập), không phải chuyện hiếm. Không có
+     * câu này thì người dùng — thường là người vừa bấm lời mời "Chọn ngành" từ biểu đồ EXP — gặp
+     * một ô xám bấm không được, dưới nó là dòng hint "Ngành quyết định bộ kỹ năng…" như thể mọi thứ
+     * bình thường. Chính lane này đã ghi "lời mời trỏ tới form không đặt được field còn tệ hơn
+     * không mời"; ô khoá câm là đúng cảnh đó ở một điều kiện khác.
+     */
+    emptyHint?: string
     /** Extra classes on the trigger. */
     className?: string
 }
@@ -42,7 +54,8 @@ export interface MajorPickerProps {
  * The trigger disables itself on an EMPTY catalogue: `useQueryMajorsSwr` documents that
  * an empty list is a legitimate state (backend without the majors endpoint, or a
  * catalogue nobody has filled in), and a dropdown that opens onto nothing reads as
- * broken.
+ * broken. Khoá thì phải NÓI VÌ SAO — truyền {@link MajorPickerProps.emptyHint} để câu giải thích
+ * hiện ngay dưới ô; ô xám câm là chỗ người dùng đứng lại và không biết làm gì tiếp.
  */
 export const MajorPicker = ({
     majors,
@@ -51,14 +64,16 @@ export const MajorPicker = ({
     placeholder,
     ariaLabel,
     isDisabled,
+    emptyHint,
     className,
 }: MajorPickerProps) => {
     const activeLabel = majors.find((major) => major.code === value)?.name ?? placeholder
+    const isEmpty = majors.length === 0
 
-    return (
+    const dropdown = (
         <Dropdown>
             <DropdownTrigger
-                isDisabled={isDisabled || majors.length === 0}
+                isDisabled={isDisabled || isEmpty}
                 className={cn(
                     "cursor-pointer rounded-2xl border border-default px-3 py-2",
                     className,
@@ -86,5 +101,22 @@ export const MajorPicker = ({
                 </DropdownMenu>
             </DropdownPopover>
         </Dropdown>
+    )
+
+    // Không có gì để giải thích ⇒ trả đúng cây DOM cũ: hai nơi dùng khác (bộ lọc workplace, linh
+    // vật onboarding) đang canh layout theo nó, thêm wrapper vô cớ là đổi layout của chúng.
+    if (!isEmpty || !emptyHint) {
+        return dropdown
+    }
+
+    return (
+        <div className="flex flex-col gap-1">
+            {dropdown}
+            {/* `role="note"` để trình đọc màn hình thấy được lý do ô bị khoá — người dùng bàn phím
+                chỉ nghe "disabled" thì vẫn không biết vì sao. */}
+            <Typography type="body-xs" color="muted" role="note">
+                {emptyHint}
+            </Typography>
+        </div>
     )
 }

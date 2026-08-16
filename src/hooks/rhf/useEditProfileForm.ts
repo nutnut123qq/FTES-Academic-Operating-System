@@ -52,6 +52,37 @@ export interface EditProfileFormValues {
     websiteUrl: string
 }
 
+/**
+ * Giá trị `majorCode` gửi kèm `PATCH /profiles/me`, hoặc `null` = ĐỪNG ĐỤNG TỚI trường này.
+ *
+ * VÌ SAO không gửi vô điều kiện như mọi trường khác — trường này có ba thứ chồng lên nhau:
+ *
+ * 1. **Quy ước PATCH của nó ngược với phần còn lại**: `null` = giữ nguyên, chuỗi RỖNG = XOÁ
+ *    (`UpdateProfileRequest#majorCode`; BE chỉ ghi khi `req.majorCode() != null`).
+ * 2. **Giá trị seed đến từ một service KHÁC**: `ProfileMapper.academic` chỉ trả `majorCode` khi tra
+ *    được mã qua `MajorCatalogApi` (danh mục ngành nằm ở Workspace), và bean RPC đó có đường lùi
+ *    trả empty khi service kia không với tới ⇒ về tới FE thì "không đọc được danh mục" và "chưa
+ *    chọn ngành" là CÙNG MỘT `null`.
+ * 3. Gộp (1) với (2): Workspace nghẽn 30 giây → form seed `""` → người dùng chỉ sửa bio, bấm Lưu →
+ *    gửi `majorCode: ""` → `profile.profiles.major_code` bị XOÁ vĩnh viễn, không một lời cảnh báo,
+ *    và MajorPicker lúc đó cũng rỗng nên không đặt lại được ngay. Một lỗi ĐỌC biến thành một lệnh
+ *    GHI XOÁ. Chiều ngược lại cũng hỏng: ngành bị chuyển INACTIVE thì đường đọc vẫn trả mã
+ *    (`findAnyByCode`) còn đường ghi từ chối (`findActiveByCode`) ⇒ MỌI lần lưu hồ sơ đều 400
+ *    `PROFILE_INVALID_MAJOR` ở một trường người dùng không hề đụng tới.
+ *
+ * Nên: chỉ gửi khi giá trị THẬT SỰ khác cái server vừa trả. Người dùng chủ động bỏ chọn ngành vẫn
+ * gửi được `""` (khác giá trị seed), tức khả năng xoá có chủ đích không mất.
+ *
+ * @param seeded - `academic.majorCode` mà `GET /profiles/me` trả về (null khi không rõ).
+ * @param edited - giá trị hiện tại trong form.
+ * @returns mã ngành cần ghi, hoặc `null` khi không có gì để ghi.
+ */
+export const majorCodePatch = (seeded: string | null | undefined, edited: string): string | null => {
+    const next = edited.trim()
+    const current = (seeded ?? "").trim()
+    return next === current ? null : next
+}
+
 /** True when a BE social-link platform matches the "linkedin" slot. */
 const isLinkedin = (platform: string): boolean => platform.toLowerCase().includes("linkedin")
 /** True when a BE social-link platform matches the "website" slot. */
@@ -164,11 +195,10 @@ export const useEditProfileForm = () => {
                     address: value.location.trim() ? value.location.trim() : null,
                     // empty = clear the campus (a @Pattern-validated code otherwise)
                     campus: value.campus.trim() ? value.campus.trim() : null,
-                    // The BE PATCH convention differs from every field above: `null` means
-                    // LEAVE UNCHANGED for majorCode, and the EMPTY STRING is what clears it
-                    // (see `UpdateProfileRequest#majorCode`). Sending null to clear would
-                    // silently keep the old major.
-                    majorCode: value.majorCode.trim(),
+                    // KHÔNG gửi vô điều kiện: quy ước của trường này ngược với mọi trường trên
+                    // (`null` = giữ nguyên, `""` = XOÁ) và giá trị seed phụ thuộc một service khác,
+                    // nên gửi mù là biến lỗi đọc thành lệnh xoá ngành. Xem `majorCodePatch`.
+                    majorCode: majorCodePatch(profile?.academic?.majorCode, value.majorCode),
                 })
                 // 3) social links (replace-all): keep any non-linkedin/website links the
                 // BE already stores, then re-add the two the form controls

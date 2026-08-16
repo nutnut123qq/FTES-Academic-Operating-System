@@ -2412,7 +2412,8 @@
     "workModeNone": "Chưa xác định",
     "campusNone": "Không chọn",
     "majorNone": "Chưa chọn ngành",
-    "majorHint": "Ngành quyết định bộ kỹ năng hiện trong biểu đồ EXP kỹ năng ở hồ sơ."
+    "majorHint": "Ngành quyết định bộ kỹ năng hiện trong biểu đồ EXP kỹ năng ở hồ sơ.",
+    "majorEmptyHint": "Chưa tải được danh mục ngành nên tạm thời không chọn được. Thử lại sau ít phút; ngành đang lưu trong hồ sơ của bạn KHÔNG bị thay đổi."
   },
   "sessions": {
     "title": "Thiết bị",
@@ -6448,6 +6449,8 @@
     "zeroHint": "Đây là các nhóm kỹ năng bạn sẽ tích EXP. Học và hoàn thành khóa để bắt đầu cộng.",
     "majorSet": "Bộ kỹ năng của ngành {major}.",
     "noMajorHint": "Chưa rõ ngành của bạn nên đang hiện toàn bộ nhóm kỹ năng.",
+    "majorWithoutSetHint": "Ngành {major} chưa khai bộ nhóm kỹ năng riêng nên đang hiện toàn bộ danh mục.",
+    "readUnavailableHint": "Chưa đọc được EXP của bạn (chưa đăng nhập hoặc không đủ quyền) — đây là danh mục nhóm kỹ năng chung ở mức 0, KHÔNG phải EXP thật của bạn.",
     "chooseMajor": "Chọn ngành",
     "empty": {
       "title": "Chưa có nhóm kỹ năng nào",

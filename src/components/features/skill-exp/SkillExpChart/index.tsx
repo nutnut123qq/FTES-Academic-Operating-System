@@ -8,6 +8,7 @@ import { Link } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { RankedBarChart } from "@/components/blocks/stats/RankedBarChart"
 import { useQuerySkillExpSwr } from "../hooks/useQuerySkillExpSwr"
+import { skillSetNotice } from "../hooks/skillExpModel"
 import { SkillExpChartSkeleton } from "./SkillExpChartSkeleton"
 
 /** Props for {@link SkillExpChart}. */
@@ -28,14 +29,16 @@ export interface SkillExpChartProps extends WithClassNames<undefined> {
  * than a blank panel. Three states have to stay distinguishable here, and collapsing
  * any two of them is the bug this component was rewritten to fix:
  *
- * 1. **error** — the catalogue read failed. Retryable, and never dressed up as "no EXP".
+ * 1. **error** — a read failed for real (5xx / timeout / mạng). Retryable, and never dressed up
+ *    as "no EXP".
  * 2. **no buckets at all** — an empty catalogue. Genuinely nothing to draw.
  * 3. **buckets, all at zero** — a new learner. Draws the bars plus a line saying so.
  *
- * When the backend could not work out the learner's major it says so
- * (`source === "FULL_CATALOGUE"`) and the chart shows every category plus a prompt to
- * pick one — the reader is told WHY the list looks generic instead of being left to
- * guess.
+ * Câu giải thích dưới các cột do {@link skillSetNotice} quyết định, KHÔNG phải `source` trần: BE cố
+ * tình gộp "chưa chọn ngành" và "đã chọn ngành nhưng ngành chưa khai bộ mặc định" vào cùng một
+ * `FULL_CATALOGUE`, nên chỉ nhìn `source` là nói sai với nhóm thứ hai (và mời họ chọn lại ngành mà
+ * họ đã chọn). Thêm nhánh thứ tư: không đọc được EXP ⇒ nói thẳng là chưa đọc được, đừng để người
+ * dùng tưởng mình vừa mất sạch EXP.
  *
  * Owns SWR + i18n; the drawing is delegated to the {@link RankedBarChart} block.
  *
@@ -45,6 +48,8 @@ export const SkillExpChart = ({ barCount = 8, className }: SkillExpChartProps) =
     const t = useTranslations()
     const locale = useLocale()
     const { chart, error, mutate } = useQuerySkillExpSwr()
+    // Một sự thật → một câu; xem `skillSetNotice` để biết vì sao không nhìn `source` trần.
+    const notice = chart ? skillSetNotice(chart) : "NONE"
 
     const bars = useMemo(
         () =>
@@ -94,16 +99,29 @@ export const SkillExpChart = ({ barCount = 8, className }: SkillExpChartProps) =
                             }
                         />
                         <Typography type="body-xs" color="muted">
-                            {chart.hasEarnedExp
-                                ? t("skillExp.axisHint")
-                                : t("skillExp.zeroHint")}
+                            {/* Chưa đọc được EXP thì KHÔNG được nói "bạn chưa tích được gì" — đó là
+                                kết luận về dữ liệu mình còn chưa cầm trên tay. */}
+                            {notice === "READ_UNAVAILABLE"
+                                ? t("skillExp.readUnavailableHint")
+                                : chart.hasEarnedExp
+                                    ? t("skillExp.axisHint")
+                                    : t("skillExp.zeroHint")}
                         </Typography>
-                        {chart.source === "MAJOR_DEFAULTS" && chart.majorLabel ? (
+                        {notice === "MAJOR_SET" && chart.majorLabel ? (
                             <Typography type="body-xs" color="muted">
                                 {t("skillExp.majorSet", { major: chart.majorLabel })}
                             </Typography>
                         ) : null}
-                        {chart.source === "FULL_CATALOGUE" ? (
+                        {notice === "MAJOR_WITHOUT_SET" ? (
+                            <Typography type="body-xs" color="muted">
+                                {/* Ngành đã chọn nhưng chưa khai bộ kỹ năng: nhãn có thể null khi
+                                    danh mục ngành không với tới được, khi đó in tạm mã ngành. */}
+                                {t("skillExp.majorWithoutSetHint", {
+                                    major: chart.majorLabel ?? chart.majorCode ?? "",
+                                })}
+                            </Typography>
+                        ) : null}
+                        {notice === "NO_MAJOR" ? (
                             <Typography type="body-xs" color="muted">
                                 {t("skillExp.noMajorHint")}{" "}
                                 <Link

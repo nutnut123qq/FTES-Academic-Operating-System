@@ -39,6 +39,25 @@ export interface SkillCategoryRow {
 /** Where the learner's bucket list came from (`SkillExpDtos.SkillSetSource`). */
 export type SkillExpSource = "MAJOR_DEFAULTS" | "FULL_CATALOGUE"
 
+/**
+ * Lý do bộ cột đang hiện như vậy — mỗi giá trị ứng với ĐÚNG MỘT câu trên màn hình.
+ *
+ * `MAJOR_WITHOUT_SET` là nhánh thứ ba mà trước đây không có tiếng nói nào: BE trả
+ * `source = FULL_CATALOGUE` cho CẢ "chưa chọn ngành" LẪN "đã chọn ngành nhưng ngành đó chưa khai
+ * bộ mặc định", và chỉ `majorCode` mới tách được hai cái đó ra.
+ */
+export type SkillSetNotice =
+    /** Đây là bộ kỹ năng của ngành X (có nhãn ngành để in). */
+    | "MAJOR_SET"
+    /** Chưa chọn ngành ⇒ hiện toàn bộ danh mục + mời chọn ngành. */
+    | "NO_MAJOR"
+    /** ĐÃ chọn ngành, nhưng ngành đó chưa khai bộ kỹ năng riêng ⇒ KHÔNG mời chọn lại. */
+    | "MAJOR_WITHOUT_SET"
+    /** Không đọc được EXP của học viên ⇒ các cột là danh mục chung ở 0, không phải EXP thật. */
+    | "READ_UNAVAILABLE"
+    /** Không có gì phải giải thích thêm. */
+    | "NONE"
+
 /** A learner-total row after tolerant reading. */
 export interface SkillExpRow {
     slug: string
@@ -82,6 +101,18 @@ export interface SkillExpChartData {
     source: SkillExpSource
     /** The learner's major code, or `null` when they have not chosen one. */
     majorCode: string | null
+    /**
+     * TRUE khi đường đọc EXP của học viên KHÔNG dùng được (khách chưa đăng nhập / thiếu quyền /
+     * endpoint chưa deploy), nên các cột dưới đây là DANH MỤC CHUNG ở mức 0 chứ không phải EXP thật.
+     *
+     * VÌ SAO phải có cờ riêng thay vì cứ để rỗng: "đọc được và rỗng" (chưa học nên chưa có EXP) với
+     * "không đọc được" là HAI SỰ THẬT KHÁC NHAU. Gộp chúng lại chính là lớp bug mà cả thay đổi này
+     * sinh ra để diệt — người đang có 1.200 EXP mà nhìn thấy một biểu đồ đầy số 0 sẽ đọc thành
+     * "hệ thống mất sạch EXP của tôi". Lỗi HỎNG THẬT (5xx/timeout) thì không tới được đây: nó được
+     * ném lên cho SWR để màn hình hiện trạng thái lỗi có nút Thử lại
+     * (xem `useQuerySkillExpSwr#loadSkillExpChart`).
+     */
+    learnerReadUnavailable: boolean
     /**
      * Display name of the major. `null` when unchosen AND when the major catalogue
      * service could not be reached — never assume a `MAJOR_DEFAULTS` source implies
@@ -241,13 +272,18 @@ export const readSkillExpPayload = (raw: unknown): SkillExpPayload => {
  *
  * @param categories - `GET /career/skill-categories` (either spelling).
  * @param totals - `GET /career/me/skill-exp`: the envelope, the legacy bare array, or
- *                 `[]` when that read failed.
+ *                 `[]` when that read was UNAVAILABLE (and only then — see the flag below).
+ * @param learnerReadUnavailable - `true` chỉ khi đường đọc EXP học viên không dùng được
+ *                 (401/403/404). Mặc định `false` = payload này là sự thật đã đọc được, kể cả khi
+ *                 nó rỗng. Truyền bừa `true` sẽ nói dối theo chiều ngược lại, nên nơi gọi phải tự
+ *                 biết mình đang ở nhánh nào.
  * @returns bars sorted strongest-first, the peak, the auto-scaled axis top, the total
  *          and the skill-set metadata.
  */
 export const buildSkillExpChart = (
     categories: Array<unknown>,
     totals: unknown,
+    learnerReadUnavailable = false,
 ): SkillExpChartData => {
     const payload = readSkillExpPayload(totals)
     const expBySlug = new Map<string, SkillExpRow>()
@@ -318,5 +354,37 @@ export const buildSkillExpChart = (
         source: payload.source,
         majorCode: payload.majorCode,
         majorLabel: payload.majorLabel,
+        learnerReadUnavailable,
     }
+}
+
+/**
+ * Câu giải thích DUY NHẤT mà biểu đồ được phép in dưới các cột — mỗi giá trị là một sự thật khác
+ * nhau về bộ cột đang hiện.
+ *
+ * VÌ SAO tách thành hàm thuần thay vì `if` trong component: quyết định này chính là chỗ đã sai.
+ * Trước đây màn hình chỉ nhìn `source === "FULL_CATALOGUE"` rồi in "Chưa rõ ngành của bạn" + lời mời
+ * chọn ngành, trong khi BE cố tình gộp HAI tình huống vào cùng một `source` (xem javadoc
+ * `SkillExpDtos.SkillSetSource`: "chưa chọn ngành, HOẶC ngành chưa khai bộ mặc định"). Học viên
+ * ngành mới (admin thêm ngành nhưng `career.major_skill_categories` chỉ được seed bằng migration)
+ * bị nói sai về hồ sơ của chính mình rồi mời sang `/profile/edit` — nơi ngành họ đã chọn nằm sẵn ở
+ * đó, không có gì để sửa. `majorCode` là thứ BE trả kèm để phân biệt, dùng nó.
+ *
+ * @param chart - view model đã dựng bởi {@link buildSkillExpChart}.
+ * @returns loại câu cần in (`NONE` = không có gì phải giải thích).
+ */
+export const skillSetNotice = (chart: SkillExpChartData): SkillSetNotice => {
+    // Không đọc được EXP thì mọi câu khác đều là suy đoán trên dữ liệu không có: nói đúng chuyện đó
+    // trước, và TUYỆT ĐỐI không mời chọn ngành (ngành có thể đang được chọn sẵn, ta chỉ không đọc nổi).
+    if (chart.learnerReadUnavailable) {
+        return "READ_UNAVAILABLE"
+    }
+    if (chart.source === "MAJOR_DEFAULTS") {
+        // Không có nhãn ngành (danh mục ngành ở service khác không với tới được) thì im lặng còn hơn
+        // in ra một mã trần kiểu "Bộ kỹ năng của ngành SE".
+        return chart.majorLabel ? "MAJOR_SET" : "NONE"
+    }
+    // FULL_CATALOGUE + CÓ mã ngành = đã chọn ngành, chỉ là ngành đó chưa khai bộ kỹ năng riêng.
+    // Mời chọn lại ngành ở đây là vô nghĩa và nói sai về hồ sơ người dùng.
+    return chart.majorCode ? "MAJOR_WITHOUT_SET" : "NO_MAJOR"
 }

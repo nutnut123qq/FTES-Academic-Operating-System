@@ -4078,6 +4078,18 @@
             "levelUpBody": "You reached level {level}"
         },
         "milestones": {
+            "FIRST_ENROLL": {
+                "name": "First Enrollment"
+            },
+            "STREAK_3": {
+                "name": "Three Days of Fire"
+            },
+            "FIRST_POST": {
+                "name": "First Post"
+            },
+            "FIRST_COMMENT": {
+                "name": "First Comment"
+            },
             "FIRST_LESSON": {
                 "name": "First Lesson"
             },

@@ -1,8 +1,8 @@
 "use client"
 
 import { useCallback } from "react"
-import { useTranslations } from "next-intl"
-import { badgeCodeFromTitle, humanizeBadgeCode } from "./model"
+import { useBadgeLabel } from "@/components/features/gamification/useBadgeLabel"
+import { badgeCodeFromTitle } from "./model"
 
 /**
  * Returns a resolver that turns a stored achievement title into something a
@@ -14,12 +14,12 @@ import { badgeCodeFromTitle, humanizeBadgeCode } from "./model"
  * Resolution order:
  *
  *   1. the title is already human → returned verbatim;
- *   2. `gamification.milestones.<CODE>.name` when the locale has that badge;
- *   3. the humanized code (`FIRST_LESSON` → `First Lesson`) — a badge the
- *      backend seeded after this release still never shows as a raw code.
+ *   2. otherwise the recovered code goes through the SHARED badge-label
+ *      resolver ({@link useBadgeLabel}): curated translation, else the
+ *      humanized code (an achievement row carries no backend badge name).
  */
 export const useBadgeTitle = () => {
-    const t = useTranslations()
+    const badgeLabel = useBadgeLabel()
 
     return useCallback(
         (title: string | null | undefined): string => {
@@ -28,9 +28,8 @@ export const useBadgeTitle = () => {
             if (!code) {
                 return raw
             }
-            const key = `gamification.milestones.${code}.name`
-            return t.has(key) ? t(key) : humanizeBadgeCode(code)
+            return badgeLabel(code)
         },
-        [t],
+        [badgeLabel],
     )
 }

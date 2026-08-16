@@ -11,6 +11,7 @@ import { InitialsAvatar } from "@/components/blocks/identity/InitialsAvatar"
 import { useQueryLeaderboardSwr } from "../hooks/useQueryLeaderboardSwr"
 import { useQueryMyGamificationSwr } from "../hooks/useQueryMyGamificationSwr"
 import { tierFromXp } from "../leaderboardTiers"
+import { useBadgeLabel } from "../useBadgeLabel"
 import { StreakPopover } from "../StreakPopover"
 import { GoalsCard } from "../GoalsCard"
 import { GamificationEventHost } from "../GamificationEventHost"
@@ -53,6 +54,7 @@ export const LeaderboardShell = () => {
     const locale = useLocale()
     const { board, myUserId, isLoading, error, mutate } = useQueryLeaderboardSwr()
     const { data: my } = useQueryMyGamificationSwr()
+    const badgeLabel = useBadgeLabel()
 
     const { tier } = tierFromXp(my?.xp ?? 0)
     // XP still needed to reach the next level — the BE exposes only the next
@@ -250,9 +252,7 @@ export const LeaderboardShell = () => {
                                 <Typography type="body-xs" weight="medium" className="text-center">
                                     {/* BE seed badge mới lúc nào không báo → thiếu bản dịch là
                                         lộ nguyên đường key ra mặt người dùng. Rơi về tên BE trả. */}
-                                    {t.has(`milestones.${badge.badgeKey}.name`)
-                                        ? t(`milestones.${badge.badgeKey}.name`)
-                                        : badge.fallbackName}
+                                    {badgeLabel(badge.badgeKey, badge.fallbackName)}
                                 </Typography>
                             </div>
                         ))}

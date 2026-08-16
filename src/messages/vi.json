@@ -4078,6 +4078,18 @@
             "levelUpBody": "Bạn đã đạt cấp {level}"
         },
         "milestones": {
+            "FIRST_ENROLL": {
+                "name": "Khóa học đầu tiên"
+            },
+            "STREAK_3": {
+                "name": "Ba Ngày Lửa"
+            },
+            "FIRST_POST": {
+                "name": "Bài đăng đầu tiên"
+            },
+            "FIRST_COMMENT": {
+                "name": "Bình luận đầu tiên"
+            },
             "FIRST_LESSON": {
                 "name": "Bài học đầu tiên"
             },

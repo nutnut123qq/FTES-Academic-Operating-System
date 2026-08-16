@@ -11,9 +11,17 @@ export const RESOURCE_COMMENT_DELETED = "DELETED"
  * Builds the placeholder node shown while a comment write is in flight.
  *
  * The node keeps the BE shape ({@link ResourceCommentView}) so the renderer needs no
- * "is this optimistic?" branch: the author is derived from `userId` exactly like a real
- * row (the C-4 view carries NO author card, so nothing is invented client-side), and the
- * temporary id is swapped for the server's as soon as the POST resolves.
+ * "is this optimistic?" branch, and the temporary id is swapped for the server's as soon as
+ * the POST resolves.
+ *
+ * NO author card is filled in here — and none is missing either: the C-4 view has no author
+ * field at all, on the placeholder OR on the stored row. `userId` is the whole identity the
+ * BE ships, so a placeholder carrying the viewer's id is exactly as identified as the row
+ * that replaces it. Showing the WRITER their own name ("Bạn") and photo is therefore the
+ * renderer's job, not this builder's: `ResourceComments` matches `userId` against the
+ * session card, which lands on the placeholder and on the server row alike — the only
+ * arrangement in which the comment cannot change identity mid-swap. Do not "fix" this by
+ * inventing an author field the contract does not have.
  *
  * @param content - The comment body as typed.
  * @param parentId - Parent comment id when replying; `null`/omitted for a root comment.

@@ -13,7 +13,7 @@ import type {
 } from "@/modules/api/rest/challenges/types"
 
 /**
- * Cache surgery for the challenge comment thread. Three things are pinned because each is
+ * Cache surgery for the challenge comment thread. Four things are pinned because each is
  * a decision the BE contract forced, not a convenience:
  *
  * 1. **`total` counts ROOTS.** The BE pages over root comments (`roots.getTotalElements()`),
@@ -21,6 +21,11 @@ import type {
  * 2. **A soft delete keeps the row and its replies**, and drops BOTH the author id and the
  *    author card, exactly as the server does — a deleted comment stops naming who wrote it.
  * 3. **A reply-of-reply attaches to the ROOT**, because that is where the BE re-parents it.
+ * 4. **An unsaved comment is SIGNED by whoever wrote it**, and the identity survives the
+ *    swap for the stored row untouched. The placeholder used to ship `author: null`, so a
+ *    person's own comment appeared anonymous until the POST answered — the bug this pins
+ *    shut. The card is the viewer's own, never a guess about a third party, so there is
+ *    nothing the server can contradict.
  */
 
 const comment = (over: Partial<ChallengeCommentView> = {}): ChallengeCommentView => ({
@@ -74,11 +79,44 @@ describe("insertChallengeComment", () => {
     })
 })
 
-describe("replaceChallengeComment", () => {
-    it("swaps the placeholder for the stored row, keeping replies already rendered", () => {
-        const optimistic = buildOptimisticChallengeComment("hi", null, "u1")
+/** The viewer's own session card, as `useViewerAuthorCard` hands it to the builder. */
+const viewerCard = {
+    userId: "u1",
+    username: "minh",
+    displayName: "Minh",
+    avatarUrl: "https://cdn/minh.png",
+}
+
+describe("buildOptimisticChallengeComment", () => {
+    it("signs the unsaved comment with the writer's name, handle and photo", () => {
+        const optimistic = buildOptimisticChallengeComment("hi", null, "u1", viewerCard)
+
+        expect(optimistic.authorId).toBe("u1")
+        expect(optimistic.author).toEqual(viewerCard)
+        expect(optimistic.content).toBe("hi")
+        expect(optimistic.status).toBe("VISIBLE")
+    })
+
+    it("degrades to the id-only row when the session cannot name the viewer", () => {
+        // Guest, or a session that has not hydrated yet: `useViewerAuthorCard` answers
+        // `null` and the placeholder must fall back to exactly what it did before — an
+        // owner-gated row with no invented identity, never a half-filled card.
+        const optimistic = buildOptimisticChallengeComment("hi", null, "u1", null)
+
         expect(optimistic.author).toBeNull()
         expect(optimistic.authorId).toBe("u1")
+    })
+
+    it("carries no author id at all when there is no viewer either", () => {
+        const optimistic = buildOptimisticChallengeComment("hi", null, undefined)
+        expect(optimistic.authorId).toBeNull()
+        expect(optimistic.author).toBeNull()
+    })
+})
+
+describe("replaceChallengeComment", () => {
+    it("swaps the placeholder for the stored row, keeping replies already rendered", () => {
+        const optimistic = buildOptimisticChallengeComment("hi", null, "u1", viewerCard)
 
         const withReply = { ...optimistic, replies: [comment({ id: "r1" })] }
         const saved = comment({ id: "real", content: "hi" })
@@ -87,6 +125,33 @@ describe("replaceChallengeComment", () => {
         expect(next.items[0]?.id).toBe("real")
         expect(next.items[0]?.author?.displayName).toBe("Minh")
         expect(next.items[0]?.replies.map((reply) => reply.id)).toEqual(["r1"])
+    })
+
+    it("does not change WHO wrote the comment — the reader sees no name or avatar swap", () => {
+        const optimistic = buildOptimisticChallengeComment("hi", null, "u1", viewerCard)
+        // What the BE answers for that same account: the card it resolves from the very
+        // profile the session was hydrated from.
+        const saved = comment({
+            id: "real",
+            content: "hi",
+            authorId: "u1",
+            author: {
+                userId: "u1",
+                username: "minh",
+                displayName: "Minh",
+                avatarUrl: "https://cdn/minh.png",
+            },
+        })
+
+        const next = replaceChallengeComment(page([optimistic]), optimistic.id, saved)
+        const row = next.items[0]
+
+        expect(row?.authorId).toBe(optimistic.authorId)
+        expect(row?.author?.displayName).toBe(optimistic.author?.displayName)
+        expect(row?.author?.username).toBe(optimistic.author?.username)
+        expect(row?.author?.avatarUrl).toBe(optimistic.author?.avatarUrl)
+        // Only the server-owned fields move.
+        expect(row?.id).not.toBe(optimistic.id)
     })
 })
 

@@ -5,6 +5,7 @@ import { useSWRConfig } from "swr"
 import { useTranslations } from "next-intl"
 import { toast } from "@heroui/react"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
+import { useViewerAuthorCard, viewerAuthorName } from "@/hooks/useViewerAuthorCard"
 import { addComment } from "@/modules/api/rest/community"
 import type { PostComment } from "@/components/features/community/hooks/useQueryPostDetailSwr"
 import {
@@ -17,9 +18,12 @@ import {
 export interface SubmitSubjectCommentInput {
     postId: string
     body: string
-    /** Author label for the optimistic node ("Bạn"/"You"). */
+    /**
+     * FALLBACK author label for the optimistic node ("Bạn"/"You") — used only when the
+     * viewer's own session card is unavailable; see the community-hub sibling.
+     */
     authorLabel: string
-    /** URL-facing username for the optimistic node's profile link. */
+    /** FALLBACK URL-facing username for the optimistic node's profile link. */
     authorUsername: string
     /** Localized "just now" label for the optimistic node. */
     justNowLabel: string
@@ -37,6 +41,11 @@ export interface SubmitSubjectCommentInput {
  * be saved when it was not (the previous behaviour patched the cache and never called the API at
  * all, so comments vanished on reload).
  *
+ * Like the community-hub sibling, the optimistic node is signed with the viewer's own name,
+ * handle and avatar from the session card already in the store ({@link useViewerAuthorCard} —
+ * no extra request), so the writer's comment carries their identity from the first frame
+ * instead of renaming itself from "Bạn" to their real name when the refetch lands.
+ *
  * @returns `submit(input)` resolving `true` on success, `false` on failure or a blocked guest —
  * `false` tells the composer to keep the draft.
  */
@@ -44,6 +53,7 @@ export const useMutateCreateSubjectPostCommentSwr = (subjectId: string, scope: F
     const t = useTranslations("communityHub")
     const { mutate } = useSWRConfig()
     const { requireAuth } = useRequireAuth()
+    const viewer = useViewerAuthorCard()
 
     return useCallback(
         async (input: SubmitSubjectCommentInput): Promise<boolean> => {
@@ -54,8 +64,9 @@ export const useMutateCreateSubjectPostCommentSwr = (subjectId: string, scope: F
             const key = subjectPostCommentsKey(subjectId, input.postId, scope)
             const optimistic: PostComment = {
                 id: `tmp-${Date.now()}`,
-                author: input.authorLabel,
-                authorUsername: input.authorUsername,
+                author: viewerAuthorName(viewer, input.authorLabel),
+                authorUsername: viewer?.username ?? input.authorUsername,
+                authorAvatar: viewer?.avatarUrl ?? null,
                 text: input.body,
                 timeLabel: input.justNowLabel,
             }
@@ -99,6 +110,6 @@ export const useMutateCreateSubjectPostCommentSwr = (subjectId: string, scope: F
             await mutate(key).catch(() => {})
             return true
         },
-        [subjectId, scope, mutate, requireAuth, t],
+        [subjectId, scope, mutate, requireAuth, viewer, t],
     )
 }

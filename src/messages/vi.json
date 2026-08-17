@@ -4162,20 +4162,17 @@
             "xpSection": "Điểm kinh nghiệm (XP)",
             "actionHeader": "Hành động",
             "xpHeader": "XP",
-            "quizBanded": "Theo điểm",
-            "quizBand": "≥{min}% → +{xp} XP",
-            "multiplierNote": "Các hành động HỌC (bài học/quiz/challenge) được nhân theo streak; đăng nhập/upvote/mục tiêu thì không.",
+            "multiplierNote": "Các hành động HỌC (bài học/quiz/challenge) được nhân theo streak; đăng bài/bình luận/tym thì không.",
             "actions": {
                 "lessonComplete": "Hoàn thành 1 bài học",
-                "quizSubmit": "Nộp quiz",
+                "quizSubmit": "Vượt qua 1 quiz",
                 "challengeComplete": "Hoàn thành 1 challenge",
                 "courseComplete": "Hoàn thành trọn 1 khoá học",
                 "resourcePublish": "Đăng 1 đề / học liệu được duyệt",
-                "dailyLogin": "Đăng nhập lần đầu trong ngày",
-                "postUpvote": "Bài viết được tym",
-                "commentUpvote": "Bình luận được tym",
-                "dailyGoal": "Hoàn thành mục tiêu ngày",
-                "weeklyGoal": "Hoàn thành mục tiêu tuần"
+                "courseEnrolled": "Đăng ký 1 khoá học mới",
+                "postCreated": "Đăng 1 bài cộng đồng",
+                "commentCreated": "Viết 1 bình luận",
+                "reactionGiven": "BẠN tym một bài / bài học"
             },
             "levelSection": "Cấp độ",
             "levelFormula": "Tổng XP tối thiểu để đạt cấp L = {factor} × (L − 1)².",
@@ -4205,7 +4202,8 @@
             "interactionCapNote": "EXP đến từ TƯƠNG TÁC (tym, bình luận) có TRẦN theo ngày. Chạm trần thì phần tym sau trong ngày không cộng nữa.",
             "likeEligibilityNote": "Tym chỉ sinh EXP khi NGƯỜI BẤM đã có hoạt động học thật trong ngày. Mười tài khoản không học tym cho nhau sẽ ra 0 EXP.",
             "levelKeepNote": "Ngưỡng cấp độ GIỮ NGUYÊN sau lần cân thang này, nên từ nay lên cấp nhanh hơn trước — có chủ đích. Không ai bị tụt cấp: nâng ngưỡng cho “công bằng” sẽ khiến người dùng cũ mất cấp qua một đêm vì một thay đổi họ không gây ra.",
-            "seasonNote": "Ba bảng xếp hạng đều RESET theo kì học, nên XP kiếm ở kì cũ không bao giờ đua với XP kì mới. Chỉ thang cấp độ là trọn đời."
+            "seasonNote": "Ba bảng xếp hạng đều RESET theo kì học, nên XP kiếm ở kì cũ không bao giờ đua với XP kì mới. Chỉ thang cấp độ là trọn đời.",
+            "questCoinNote": "Nhiệm vụ hằng ngày trả XU, và nay trả THÊM EXP — nhưng cả ngày cày nhiệm vụ vẫn không vượt quá một lần hoàn thành khoá. Điểm danh và mục tiêu ngày/tuần KHÔNG có phần thưởng EXP riêng."
         },
         "states": {
             "retry": "Thử lại"
@@ -4213,53 +4211,39 @@
         "leaderboardEmpty": "Chưa có ai trên bảng xếp hạng.",
         "leaderboardError": "Không tải được bảng xếp hạng. Vui lòng thử lại.",
         "seasonBoards": {
-            "title": "Bảng xếp hạng theo kì",
-            "subtitle": "Ba bảng, CÙNG một đơn vị EXP — chỉ khác nhau ở chỗ đếm EXP kiếm từ đâu.",
+            "title": "Bảng xếp hạng theo kỳ",
+            "subtitle": "Hai bảng, CÙNG một đơn vị EXP — chỉ khác nhau ở chỗ đếm EXP kiếm từ đâu.",
             "season": {
-                "label": "Kì hiện tại",
-                "window": "{start} → {end}",
-                "remaining": "Còn {days} ngày {hours} giờ là hết kì",
-                "remainingHours": "Còn {hours} giờ là hết kì",
-                "ended": "Kì đã hết hạn, đang chờ chốt bảng",
-                "none": "Chưa có kì nào đang chạy",
-                "noneHint": "Ban quản trị chưa mở kì mới. Thứ hạng chỉ có nghĩa khi gắn với một kì, nên ba bảng đang tạm nghỉ.",
-                "resetNote": "Hết kì là cả ba bảng reset — EXP kì cũ không đua với EXP kì mới."
+                "label": "Kỳ hiện tại",
+                "none": "Chưa có kỳ nào đang chạy",
+                "noneHint": "Ban quản trị chưa mở kỳ mới. Đây KHÔNG phải là bảng trống — thứ hạng chỉ có nghĩa khi gắn với một kỳ, nên bảng đang tạm nghỉ.",
+                "resetNote": "Hết kỳ là bảng reset — EXP kỳ cũ không đua với EXP kỳ mới."
             },
             "tabs": {
-                "course": "Khoá học",
-                "community": "Cộng đồng & Workplace",
-                "total": "Tổng"
+                "total": "Tổng",
+                "social": "Cộng đồng & Workplace"
             },
             "counts": {
-                "course": "Chỉ tính EXP bạn kiếm được TRONG chính khoá này. Xếp hạng nội bộ khoá — không so với người học khoá khác.",
-                "community": "Tính EXP từ cộng đồng (bài viết, bình luận, tym) và từ workplace. Hai nguồn riêng nhưng rank chung một bảng.",
-                "total": "Gộp cả ba nguồn: khoá học + cộng đồng + workplace. Đây là bảng đua giải, có phần thưởng thật."
+                "total": "Gộp mọi nguồn EXP bạn kiếm trong kỳ: khoá học + cộng đồng + workplace. Đây là bảng đua giải, có phần thưởng thật.",
+                "social": "Tính EXP từ cộng đồng (bài viết, bình luận, tym) và từ workplace. Hai nguồn riêng nhưng rank chung một bảng."
             },
             "countsLabel": "Bảng này đếm gì",
-            "whyDifferent": "Hạng của bạn khác nhau giữa ba bảng vì mỗi bảng đếm một LÁT CẮT EXP khác nhau — không phải hệ thống tính sai.",
-            "sources": {
-                "course": "Khoá học",
-                "community": "Cộng đồng",
-                "workplace": "Workplace"
-            },
-            "breakdownLabel": "EXP đến từ: {parts}",
-            "sourceValue": "{source} {xp}",
+            "whyDifferent": "Hạng của bạn khác nhau giữa hai bảng vì mỗi bảng đếm một LÁT CẮT EXP khác nhau — không phải hệ thống tính sai.",
             "xp": "{xp} EXP",
             "you": "Bạn",
-            "myRank": "Hạng của bạn trong kì này: {rank}",
-            "myRankUnranked": "Bạn chưa có hạng trong kì này.",
-            "updatedAt": "Cập nhật lúc {time}",
+            "myRank": "Hạng của bạn trong kỳ này: {rank}",
+            "myRankUnranked": "Bạn chưa có hạng trong kỳ này.",
             "refresh": "Làm mới",
-            "empty": "Chưa có ai lên bảng trong kì này.",
-            "emptyHint": "Bảng trống thật — kì vừa mở hoặc chưa ai kiếm EXP ở lát cắt này.",
+            "guest": "Đăng nhập để xem bảng xếp hạng theo kỳ.",
+            "empty": "Chưa có ai lên bảng trong kỳ này.",
+            "emptyHint": "Kỳ đang chạy nhưng chưa ai kiếm EXP ở lát cắt này — bảng trống là câu trả lời đúng.",
             "coursePicker": {
-                "label": "Chọn khoá để xem bảng",
-                "empty": "Bạn chưa đăng ký khoá nào.",
-                "emptyHint": "Bảng khoá học xếp hạng NỘI BỘ từng khoá, nên phải có ít nhất một khoá mới xem được.",
-                "openFull": "Mở bảng đầy đủ của khoá"
+                "entryLabel": "Tìm bảng xếp hạng của một khoá?",
+                "label": "Chọn khoá",
+                "openFull": "Mở bảng của khoá"
             },
             "failure": {
-                "notDeployedTitle": "Máy chủ chưa có bảng xếp hạng theo kì",
+                "notDeployedTitle": "Máy chủ chưa có bảng xếp hạng theo kỳ",
                 "notDeployedDescription": "{endpoint} trả về {status}. Phần backend của tính năng này chưa được deploy — đây KHÔNG phải là “chưa có ai lên bảng”.",
                 "unauthenticatedTitle": "Cần đăng nhập để xem bảng này",
                 "unauthenticatedDescription": "{endpoint} trả về {status}.",
@@ -4267,29 +4251,6 @@
                 "failedDescription": "{endpoint} trả về {status}.",
                 "retry": "Thử lại"
             }
-        },
-        "frames": {
-            "title": "Khung avatar",
-            "subtitle": "Khung mở theo EXP trọn đời thì giữ VĨNH VIỄN. Riêng khung top mùa có thời hạn — hết kì sau là mất.",
-            "worn": "Đang đeo",
-            "wornNone": "Chưa đeo khung nào",
-            "lifetimeXp": "EXP trọn đời: {xp}",
-            "lifetimeSection": "Mở theo EXP trọn đời — giữ vĩnh viễn",
-            "seasonSection": "Khung top mùa — có thời hạn, hết kì phải giành lại",
-            "next": "Bậc kế tiếp: {name} — còn {xp} EXP",
-            "maxed": "Bạn đã mở hết mọi bậc khung trọn đời.",
-            "locked": "Chưa mở",
-            "unlocked": "Đã mở",
-            "expiredChip": "Đã hết hạn",
-            "requirement": "Cần {xp} EXP trọn đời",
-            "seasonRequirement": "Hạng {rank} bảng “{board}” trong một kì",
-            "howToUnlock": "Điều kiện mở: {how}",
-            "expiresOn": "Hết hạn {date}",
-            "permanent": "Giữ vĩnh viễn",
-            "progress": "{current}/{total} EXP",
-            "guest": "Đăng nhập để xem thang khung avatar của bạn.",
-            "empty": "Chưa có khung nào trong danh mục.",
-            "emptyHint": "Danh mục khung do quản trị seed — trống nghĩa là chưa seed, không phải lỗi tải."
         }
     },
     "wallet": {
@@ -8471,7 +8432,8 @@
             "refresh": "Làm mới",
             "xpLabel": "XP",
             "you": "Bạn",
-            "champion": "Nhà vô địch khóa học"
+            "champion": "Nhà vô địch khóa học",
+            "countsNote": "Bảng này xếp hạng NỘI BỘ khoá, theo công thức riêng của khoá (điểm challenge + số bài đã đọc + % hoàn thành) — KHÔNG phải EXP theo kỳ. Vì thế hạng ở đây và hạng ở bảng theo kỳ là hai con số khác nhau, cả hai đều đúng."
         },
         "submission": {
             "title": "Nộp bài",

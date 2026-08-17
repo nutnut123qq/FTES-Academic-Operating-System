@@ -10,8 +10,6 @@ import { PageHeader } from "@/components/blocks/layout/PageHeader"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { Link } from "@/i18n/navigation"
 import { pathConfig } from "@/resources/path"
-import { useQueryCurrentSeasonSwr } from "@/components/features/gamification/hooks/useQueryCurrentSeasonSwr"
-import { SeasonHeader } from "@/components/features/gamification/SeasonBoards/SeasonHeader"
 import {
     rankEntriesByCategory,
     useQueryLearnLeaderboardSwr,
@@ -33,7 +31,6 @@ export const Leaderboard = () => {
     const t = useTranslations("learn")
     const tSeason = useTranslations("gamification.seasonBoards")
     const locale = useLocale()
-    const season = useQueryCurrentSeasonSwr()
     const { courseId } = useParams<{ courseId: string }>()
     // single board: always total XP (hardcoded so a `?category=` deep-link can't re-rank it)
     const selectedCategory = "total" as const
@@ -54,17 +51,12 @@ export const Leaderboard = () => {
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-10">
             <PageHeader title={t("leaderboard.title")} description={t("leaderboard.subtitle")} />
 
-            {/* Bảng này cũng reset theo KÌ HỌC. Thiếu dòng "đang là kì nào, còn bao lâu"
-                thì con số thứ hạng bên dưới không neo vào đâu cả — và người dùng sẽ tưởng
-                hệ thống mất dữ liệu vào cái ngày nó reset. */}
-            <SeasonHeader
-                season={season.season}
-                isLoading={season.isLoading}
-                error={season.error}
-                onRetry={() => void season.mutate()}
-            />
+            {/* ★ KHÔNG gắn dải "kỳ" ở đây. Trang này chạy bằng GraphQL `courseLeaderboard`
+                và ĐANG HOẠT ĐỘNG; backend không có endpoint công khai nào trả kỳ đang chạy,
+                nên thêm một khối hỏi endpoint không tồn tại chỉ mọc ra một hộp lỗi đỏ nằm
+                vĩnh viễn trên một bảng vẫn hiển thị bình thường ngay bên dưới. */}
 
-            {/* Bảng này ĐẾM GÌ + lối sang hai bảng còn lại. Không nói rõ thì người hạng 3
+            {/* Bảng này ĐẾM GÌ + lối sang bảng theo kỳ. Không nói rõ thì người hạng 3
                 ở đây mà hạng 40 ở bảng Tổng sẽ kết luận hệ thống tính sai. */}
             <div className="flex flex-col gap-1 rounded-2xl bg-default/40 p-4">
                 <div className="flex items-center gap-2">
@@ -73,7 +65,7 @@ export const Leaderboard = () => {
                         {tSeason("countsLabel")}
                     </Typography>
                 </div>
-                <Typography type="body-sm">{tSeason("counts.course")}</Typography>
+                <Typography type="body-sm">{t("leaderboard.countsNote")}</Typography>
                 <Link
                     // Locale-less: `Link` của `@/i18n/navigation` tự gắn tiền tố locale.
                     href={pathConfig().locale().leaderboard().build()}

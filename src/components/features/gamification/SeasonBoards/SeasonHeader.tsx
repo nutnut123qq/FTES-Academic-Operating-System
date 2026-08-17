@@ -1,71 +1,37 @@
 "use client"
 
 import React from "react"
-import { Chip, Skeleton, Typography } from "@heroui/react"
-import { useLocale, useTranslations } from "next-intl"
-import { CalendarBlankIcon, HourglassMediumIcon } from "@phosphor-icons/react"
-import { ErrorContent } from "@/components/blocks/async/ErrorContent"
-import type { SeasonWindowView } from "@/modules/api/rest/gamification"
-import { seasonCountdown } from "./model"
-import { useBoardFailureContent } from "./useBoardFailureContent"
+import { Typography } from "@heroui/react"
+import { useTranslations } from "next-intl"
+import { CalendarBlankIcon } from "@phosphor-icons/react"
 
 /** Props for {@link SeasonHeader}. */
 export interface SeasonHeaderProps {
-    season: SeasonWindowView | null
-    isLoading: boolean
-    error: unknown
-    onRetry: () => void
-    /** Tiêm được để test tất định; mặc định là bây giờ. */
-    now?: Date
-}
-
-/** Ngày ngắn gọn theo locale; chuỗi hỏng ⇒ null (không in "Invalid Date"). */
-const shortDate = (value: string, locale: string): string | null => {
-    const date = new Date(value)
-    if (Number.isNaN(date.getTime())) {
-        return null
-    }
-    return date.toLocaleDateString(locale, { day: "2-digit", month: "2-digit", year: "numeric" })
+    /** Mã kỳ backend đã đọc (`seasonCode`); `null` = không có kỳ nào đang chạy. */
+    seasonCode: string | null
+    /** `true` khi backend trả cờ `NO_SEASON` — khác hẳn "chưa tải xong". */
+    noSeason: boolean
 }
 
 /**
- * Dải "đang là kì nào, còn bao lâu" đứng trên cả ba bảng.
+ * Dải "đang là kỳ nào" đứng trên bảng.
  *
- * VÌ SAO bắt buộc phải có: cả ba bảng đều reset theo kì. Một con số thứ hạng không nói
- * rõ nó thuộc kì nào là con số vô nghĩa — người dùng không biết mình đang đua trong bao
- * lâu nữa, và không hiểu vì sao sáng mai bảng về trống.
+ * VÌ SAO bắt buộc phải có: bảng reset theo kỳ. Một con số thứ hạng không nói rõ nó
+ * thuộc kỳ nào là con số vô nghĩa — người dùng sẽ tưởng hệ thống mất dữ liệu vào đúng
+ * cái ngày nó reset.
  *
- * Ba trạng thái KHÔNG được trộn vào nhau:
- *  - lỗi tải (kể cả "máy chủ chưa có endpoint") → {@link ErrorContent} nói rõ,
- *  - tải xong nhưng KHÔNG có kì nào chạy → câu "chưa có kì nào" + lý do,
- *  - có kì → tên kì + khoảng ngày + đếm ngược.
+ * ★ Dữ liệu kỳ lấy TỪ CHÍNH phản hồi bảng (`seasonCode` / cờ `NO_SEASON`), không gọi
+ * thêm endpoint nào. Backend không mở endpoint "kỳ đang chạy" cho người học
+ * (`/gamification/admin/seasons` là admin-only), nên header này KHÔNG được đi hỏi một
+ * đường dẫn không tồn tại rồi hiện lỗi trên một bảng đang chạy tốt.
+ *
+ * KHÔNG có đếm ngược: contract bảng không mang `startsAt`/`endsAt`. Đếm ngược bịa từ
+ * dữ liệu không có là đúng thứ "nói một mốc thời gian không ai bảo đảm".
  */
-export const SeasonHeader = ({ season, isLoading, error, onRetry, now }: SeasonHeaderProps) => {
+export const SeasonHeader = ({ seasonCode, noSeason }: SeasonHeaderProps) => {
     const t = useTranslations("gamification.seasonBoards")
-    const locale = useLocale()
-    const failureContent = useBoardFailureContent()
 
-    const failure = failureContent(error, "GET /gamification/seasons/current", onRetry)
-    if (failure) {
-        return (
-            <div className="rounded-2xl border border-dashed border-separator">
-                <ErrorContent {...failure} />
-            </div>
-        )
-    }
-
-    if (isLoading) {
-        return (
-            <div className="flex flex-col gap-2 rounded-2xl bg-default/40 p-4">
-                <Skeleton className="h-3 w-24 rounded-full" />
-                <Skeleton className="h-5 w-48 rounded-full" />
-                <Skeleton className="h-3 w-64 rounded-full" />
-            </div>
-        )
-    }
-
-    // Tải xong, không có kì nào: một trạng thái RỖNG hợp lệ, khác hẳn lỗi ở trên.
-    if (!season) {
+    if (noSeason) {
         return (
             <div className="flex flex-col gap-1 rounded-2xl bg-default/40 p-4">
                 <Typography type="body-sm" weight="medium">
@@ -78,9 +44,11 @@ export const SeasonHeader = ({ season, isLoading, error, onRetry, now }: SeasonH
         )
     }
 
-    const countdown = seasonCountdown(season, now ?? new Date())
-    const startLabel = shortDate(season.startsAt, locale)
-    const endLabel = shortDate(season.endsAt, locale)
+    if (!seasonCode) {
+        // Chưa tải xong / chưa đăng nhập: im lặng. Nói "chưa có kỳ nào" ở đây là khẳng
+        // định một điều mình chưa hỏi được máy chủ.
+        return null
+    }
 
     return (
         <div className="flex flex-col gap-2 rounded-2xl bg-default/40 p-4">
@@ -90,38 +58,9 @@ export const SeasonHeader = ({ season, isLoading, error, onRetry, now }: SeasonH
                     {t("season.label")}
                 </Typography>
                 <Typography type="body-sm" weight="semibold">
-                    {/* Kì chưa gắn tên thì rơi về MÃ mùa — không bịa một cái tên đẹp. */}
-                    {season.termName ?? season.code}
-                </Typography>
-                {startLabel && endLabel ? (
-                    <Chip size="sm" variant="soft" color="default">
-                        {t("season.window", { start: startLabel, end: endLabel })}
-                    </Chip>
-                ) : null}
-            </div>
-
-            <div className="flex items-center gap-2">
-                <HourglassMediumIcon
-                    className="size-4 text-accent"
-                    aria-hidden
-                    focusable="false"
-                />
-                <Typography type="body-sm" weight="medium">
-                    {/* `countdown === null` chỉ xảy ra khi endsAt hỏng — nói "đã hết hạn"
-                        lúc đó là bịa, nên rơi về đúng khoảng ngày ở dòng trên. */}
-                    {countdown === null
-                        ? t("season.ended")
-                        : countdown.ended
-                            ? t("season.ended")
-                            : countdown.days > 0
-                                ? t("season.remaining", {
-                                    days: countdown.days,
-                                    hours: countdown.hours,
-                                })
-                                : t("season.remainingHours", { hours: countdown.hours })}
+                    {seasonCode}
                 </Typography>
             </div>
-
             <Typography type="body-xs" color="muted">
                 {t("season.resetNote")}
             </Typography>

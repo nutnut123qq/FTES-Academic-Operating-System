@@ -6,16 +6,14 @@ import { useLocale, useTranslations } from "next-intl"
 import { FireIcon, LightningIcon, RankingIcon, StarIcon, TrophyIcon } from "@phosphor-icons/react"
 import { Link } from "@/i18n/navigation"
 import { pathConfig } from "@/resources/path"
-import { useQueryCurrentSeasonSwr } from "../hooks/useQueryCurrentSeasonSwr"
+import { formatXpShort } from "@/utils/xp-format"
 import { useQueryMyGamificationSwr } from "../hooks/useQueryMyGamificationSwr"
-import { useQuerySeasonBoardSwr } from "../hooks/useQuerySeasonBoardSwr"
 import { tierFromXp } from "../leaderboardTiers"
 import { useBadgeLabel } from "../useBadgeLabel"
 import { StreakPopover } from "../StreakPopover"
 import { GoalsCard } from "../GoalsCard"
 import { GamificationEventHost } from "../GamificationEventHost"
 import { SeasonBoards } from "../SeasonBoards"
-import { AvatarFrameLadder } from "../AvatarFrames/AvatarFrameLadder"
 
 /**
  * Gamification leaderboard + progression surface (§11) — the `/leaderboard` page.
@@ -23,8 +21,8 @@ import { AvatarFrameLadder } from "../AvatarFrames/AvatarFrameLadder"
  * A dashboard driven by the live REST snapshots (`useQueryMyGamificationSwr`
  * composes the `/me/*` progression / streak / activity / badge endpoints): stat
  * cards (XP · Level · Streak · Rank+tier) where the Streak card opens the detail
- * popover; a "Cách tính điểm" guide link; the THREE season boards
- * ({@link SeasonBoards}); the avatar-frame ladder ({@link AvatarFrameLadder}); the
+ * popover; a "Cách tính điểm" guide link; the season boards
+ * ({@link SeasonBoards}); the
  * Daily/Weekly goals block; and the viewer's earned badges. Quest-completion toasts
  * and the level-up moment are raised by the mounted {@link GamificationEventHost},
  * which diffs the same SWR caches. Guests see the public boards with dashed viewer
@@ -36,21 +34,16 @@ import { AvatarFrameLadder } from "../AvatarFrames/AvatarFrameLadder"
  * một trang mà số không khớp nhau. Hook cũ (`useQueryLeaderboardSwr`) VẪN CÒN vì thẻ
  * cộng đồng ở dashboard dùng nó.
  *
- * ⚠️ Hạng ở thẻ thống kê giờ lấy từ `myRank` của bảng TỔNG theo kì. Máy chủ chưa có
- * endpoint đó (hai lane BE chưa merge) ⇒ hạng hiện "—" và phần bảng bên dưới hiện LỖI
- * đọc được — có chủ đích, không được đổi thành màn rỗng.
+ * ★ THẺ "HẠNG" DÙNG CHUNG MỘT NGUỒN VỚI NAVBAR VÀ TRANG HỒ SƠ
+ * (`useQueryMyGamificationSwr`). Đừng đổi riêng chỗ này sang `myRank` của bảng theo KỲ:
+ * chip "#7" ở menu tài khoản điều hướng thẳng tới đúng trang này, nên hai con số cùng
+ * tên "Hạng" mà khác nguồn (toàn sàn vs theo kỳ) sẽ đọc thành "hệ thống tính sai".
+ * Hạng THEO KỲ vẫn có — nó nằm trong chính khối {@link SeasonBoards} bên dưới, ngay
+ * cạnh cái bảng sinh ra nó, nơi câu chữ nói rõ nó là hạng của kỳ nào.
  */
 export const LeaderboardShell = () => {
     const t = useTranslations("gamification")
     const locale = useLocale()
-    // Cùng KÌ và cùng BẢNG với tab mặc định của `SeasonBoards` ⇒ SWR trùng key và chỉ
-    // bắn MỘT request; nếu bỏ `seasonId` ở đây, key lệch và thẻ "Hạng" sẽ đọc một bảng
-    // khác với bảng đang hiện ngay bên dưới nó.
-    const { season } = useQueryCurrentSeasonSwr()
-    const { myRank } = useQuerySeasonBoardSwr({
-        board: "total",
-        seasonId: season?.seasonId ?? null,
-    })
     const { data: my } = useQueryMyGamificationSwr()
     const badgeLabel = useBadgeLabel()
 
@@ -67,12 +60,14 @@ export const LeaderboardShell = () => {
 
     // Viewer stats come from the composed snapshot; `null` (no snapshot yet /
     // guest) renders as an em-dash instead of a misleading zero.
-    const stats: Array<{ key: "xp" | "level" | "streak" | "rank"; icon: React.ReactNode; value: number | null; hint: string | undefined }> = [
+    const stats: Array<{ key: "xp" | "level" | "streak" | "rank"; icon: React.ReactNode; value: number | null; hint: string | undefined; short?: boolean }> = [
         {
             key: "xp",
             icon: <LightningIcon className="size-5" aria-hidden focusable="false" />,
             value: my ? my.xp : null,
             hint: undefined,
+            /** XP là con số duy nhất ở đây đủ lớn để cần rút gọn (thang đã nâng 166 lần). */
+            short: true,
         },
         {
             key: "level",
@@ -88,10 +83,10 @@ export const LeaderboardShell = () => {
         },
         {
             key: "rank",
-            // Hạng trong bảng TỔNG của kì đang chạy. `null` khi chưa có hạng (chưa kiếm
-            // EXP nào trong kì, hoặc máy chủ chưa có endpoint) → hiện "—", không hiện 0.
+            // CÙNG nguồn với chip hạng ở navbar và ở trang hồ sơ. `position` bằng 0 nghĩa
+            // là người xem không nằm trong bảng đang tải về → hiện "—", KHÔNG hiện 0.
             icon: <RankingIcon className="size-5" aria-hidden focusable="false" />,
-            value: myRank?.rank ?? null,
+            value: my ? my.rank.position : null,
             hint: my ? t(`tiers.${tier.key}`) : undefined,
         },
     ]
@@ -140,7 +135,9 @@ export const LeaderboardShell = () => {
                                     unranked (board empty/unseeded) or has no snapshot, not "0". */}
                                 {stat.value == null || (stat.key === "rank" && stat.value < 1)
                                     ? "—"
-                                    : Math.round(stat.value).toLocaleString(locale)}
+                                    : stat.short
+                                        ? formatXpShort(stat.value)
+                                        : Math.round(stat.value).toLocaleString(locale)}
                             </Typography>
                             {stat.hint ? (
                                 <Typography type="body-xs" color="muted">
@@ -169,11 +166,8 @@ export const LeaderboardShell = () => {
             {/* goals */}
             <GoalsCard />
 
-            {/* Ba bảng xếp hạng theo kì (khoá học · cộng đồng+workplace · tổng) */}
+            {/* Bảng xếp hạng theo kỳ (tổng · cộng đồng+workplace) */}
             <SeasonBoards />
-
-            {/* Thang khung avatar: đang đeo + các bậc kế tiếp + điều kiện mở */}
-            <AvatarFrameLadder />
 
             {/* badges row — the viewer's earned badges from the real snapshot */}
             <div className="flex flex-col gap-3">

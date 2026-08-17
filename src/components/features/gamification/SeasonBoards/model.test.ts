@@ -1,197 +1,113 @@
 import { describe, expect, it } from "vitest"
 
-/**
- * Unit — mô hình ba bảng xếp hạng theo kì.
- *
- * Điều được GHIM ở đây, theo đúng thứ tự quan trọng:
- *
- *  1. "Máy chủ CHƯA CÓ endpoint" (404/501/405) là một LỖI, không phải bảng rỗng. Đây là
- *     lỗi đã tái diễn ba lần trong dự án: hai trạng thái khác hẳn nhau bị vẽ chung một
- *     màn "chưa có ai", nên không ai biết là BE chưa deploy.
- *  2. Không có kì nào đang chạy ⇒ `seasonCountdown` trả `null`, KHÔNG phải "còn 0 ngày".
- *  3. Hạng giữ nguyên thứ tự máy chủ (hạng tính trên toàn dân số, không sắp lại ở client).
- *  4. Tên `legacy_<uuid>` không bao giờ lọt ra mặt người dùng.
- */
-
 import { RestError } from "@/modules/api/rest/client"
-import type { SeasonBoardEntryView, SeasonBoardView } from "@/modules/api/rest/gamification"
+import type { SeasonBoardView } from "@/modules/api/rest/gamification"
 import {
+    SEASON_BOARDS,
+    boardOutcome,
     classifyBoardFailure,
-    seasonCountdown,
+    shortUserLabel,
     toSeasonBoardRows,
-    xpBreakdown,
 } from "./model"
 
-const entry = (over: Partial<SeasonBoardEntryView> = {}): SeasonBoardEntryView => ({
-    userId: "11111111-2222-3333-4444-555555555555",
-    rank: 1,
-    displayName: "Minh Nguyễn",
-    username: "minh",
-    avatarUrl: null,
-    avatarFrame: null,
-    xp: 5000,
-    courseXp: 3000,
-    communityXp: 1500,
-    workplaceXp: 500,
-    badges: [],
+/**
+ * Unit — mô hình bảng xếp hạng theo kỳ.
+ *
+ * Thứ đáng ghim ở đây không phải phép ánh xạ mà là BỐN KẾT CỤC KHÔNG ĐƯỢC GỘP: lỗi tải ·
+ * chưa khai kỳ nào · kỳ đang chạy nhưng bảng rỗng · có dữ liệu. Backend cấp hẳn một cờ
+ * (`state`) chỉ để tách hai cái giữa, và javadoc của `SeasonBoardController` nói thẳng:
+ * gộp chúng là nói với người dùng "chưa ai có điểm" trong khi sự thật là "chưa khai kỳ
+ * nào". Đó là lỗi đã tái diễn nhiều lần trong dự án này.
+ */
+
+const view = (over: Partial<SeasonBoardView> = {}): SeasonBoardView => ({
+    state: "OK",
+    board: "TOTAL",
+    seasonCode: "T2026S1",
+    termId: "term-1",
+    entries: [],
+    myRank: null,
     ...over,
 })
 
-describe("classifyBoardFailure — RỖNG không được gộp với LỖI", () => {
-    it("không có lỗi ⇒ null (bảng rỗng thật vẫn là rỗng)", () => {
-        expect(classifyBoardFailure(undefined)).toBeNull()
-        expect(classifyBoardFailure(null)).toBeNull()
-        expect(classifyBoardFailure(false)).toBeNull()
-    })
-
-    it("404/501/405 ⇒ NOT_DEPLOYED — lane BE chưa merge, phải nói thành lời", () => {
-        expect(classifyBoardFailure(new RestError("Not Found", 404))).toBe("NOT_DEPLOYED")
-        expect(classifyBoardFailure(new RestError("Not Implemented", 501))).toBe("NOT_DEPLOYED")
-        expect(classifyBoardFailure(new RestError("Method Not Allowed", 405))).toBe("NOT_DEPLOYED")
-    })
-
-    it("401/403 ⇒ UNAUTHENTICATED", () => {
-        expect(classifyBoardFailure(new RestError("Unauthenticated", 401))).toBe("UNAUTHENTICATED")
-        expect(classifyBoardFailure(new RestError("Forbidden", 403))).toBe("UNAUTHENTICATED")
-    })
-
-    it("5xx / đứt mạng (status 0) / lỗi lạ ⇒ FAILED", () => {
-        expect(classifyBoardFailure(new RestError("Server Error", 500))).toBe("FAILED")
-        expect(classifyBoardFailure(new RestError("Network Error", 0))).toBe("FAILED")
-        expect(classifyBoardFailure(new TypeError("Failed to fetch"))).toBe("FAILED")
-    })
-
-    it("★ 404 KHÔNG được rơi về null — nếu rơi, màn hình sẽ vẽ empty và không ai biết BE thiếu", () => {
-        expect(classifyBoardFailure(new RestError("Not Found", 404))).not.toBeNull()
+describe("SEASON_BOARDS", () => {
+    it("chỉ hai bảng backend phục vụ — KHÔNG có `course`", () => {
+        // `SeasonBoardController.parseBoard` ném 404 cho mọi giá trị khác total/social;
+        // bảng khoá học là GraphQL `courseLeaderboard`, dựng bản thứ hai sẽ đẻ ra hai con
+        // số cùng tên gọi.
+        expect([...SEASON_BOARDS]).toEqual(["total", "social"])
     })
 })
 
-describe("seasonCountdown", () => {
-    const now = new Date("2026-08-18T10:00:00Z")
-
-    it("trả số ngày + giờ lẻ còn lại", () => {
-        const countdown = seasonCountdown(
-            {
-                seasonId: "s-1",
-                code: "FA26",
-                termName: "Kì Thu 2026",
-                startsAt: "2026-08-01T00:00:00Z",
-                endsAt: "2026-08-21T15:00:00Z",
-                status: "RUNNING",
-            },
-            now,
+describe("boardOutcome", () => {
+    it("state=NO_SEASON KHÔNG được đọc thành bảng rỗng", () => {
+        expect(boardOutcome(view({ state: "NO_SEASON", seasonCode: null, termId: null }))).toBe(
+            "NO_SEASON",
         )
-        expect(countdown).toEqual({ days: 3, hours: 5, ended: false })
     })
 
-    it("★ KHÔNG có kì ⇒ null, KHÔNG phải 'còn 0 ngày'", () => {
-        expect(seasonCountdown(null, now)).toBeNull()
-        expect(seasonCountdown(undefined, now)).toBeNull()
+    it("state=OK + entries rỗng LÀ bảng rỗng thật — câu trả lời đúng", () => {
+        expect(boardOutcome(view({ state: "OK", entries: [] }))).toBe("EMPTY")
     })
 
-    it("endsAt không đọc được ⇒ null (không bịa ra một mốc)", () => {
+    it("hai ca trên cho ra hai kết cục KHÁC NHAU (không được gộp)", () => {
+        const noSeason = boardOutcome(view({ state: "NO_SEASON", entries: [] }))
+        const empty = boardOutcome(view({ state: "OK", entries: [] }))
+        expect(noSeason).not.toBe(empty)
+    })
+
+    it("có dòng ⇒ OK", () => {
         expect(
-            seasonCountdown(
-                {
-                    seasonId: "s-1",
-                    code: "FA26",
-                    termName: null,
-                    startsAt: "2026-08-01T00:00:00Z",
-                    endsAt: "không-phải-ngày",
-                    status: "RUNNING",
-                },
-                now,
-            ),
-        ).toBeNull()
+            boardOutcome(view({ entries: [{ userId: "u1", xp: 10, rank: 1 }] })),
+        ).toBe("OK")
     })
 
-    it("kì đã qua hạn ⇒ ended:true (khác hẳn 'không có kì')", () => {
+    it("lỗi đi TRƯỚC mọi thứ, kể cả khi còn dữ liệu cache", () => {
+        expect(boardOutcome(view({ state: "NO_SEASON" }), new RestError("boom", 500))).toBe(
+            "FAILED",
+        )
         expect(
-            seasonCountdown(
-                {
-                    seasonId: "s-1",
-                    code: "SU26",
-                    termName: "Kì Hè 2026",
-                    startsAt: "2026-05-01T00:00:00Z",
-                    endsAt: "2026-08-01T00:00:00Z",
-                    status: "RUNNING",
-                },
-                now,
-            ),
-        ).toEqual({ days: 0, hours: 0, ended: true })
+            boardOutcome(view({ entries: [{ userId: "u1", xp: 10, rank: 1 }] }), new Error("net")),
+        ).toBe("FAILED")
+    })
+})
+
+describe("classifyBoardFailure", () => {
+    it("404/501/405 ⇒ backend chưa có tính năng", () => {
+        expect(classifyBoardFailure(new RestError("x", 404))).toBe("NOT_DEPLOYED")
+        expect(classifyBoardFailure(new RestError("x", 501))).toBe("NOT_DEPLOYED")
+        expect(classifyBoardFailure(new RestError("x", 405))).toBe("NOT_DEPLOYED")
+    })
+
+    it("401/403 ⇒ cần đăng nhập / thiếu quyền", () => {
+        expect(classifyBoardFailure(new RestError("x", 401))).toBe("UNAUTHENTICATED")
+        expect(classifyBoardFailure(new RestError("x", 403))).toBe("UNAUTHENTICATED")
+    })
+
+    it("không có lỗi ⇒ null, KHÔNG phải 'không có dữ liệu'", () => {
+        expect(classifyBoardFailure(undefined)).toBeNull()
+        expect(classifyBoardFailure(null)).toBeNull()
     })
 })
 
 describe("toSeasonBoardRows", () => {
-    const view = (entries: Array<SeasonBoardEntryView>): SeasonBoardView => ({
-        board: "total",
-        seasonId: "s-1",
-        computedAt: "2026-08-18T09:00:00Z",
-        entries,
-        myRank: null,
-    })
-
-    it("giữ NGUYÊN thứ tự máy chủ (hạng tính trên toàn dân số)", () => {
+    it("giữ nguyên thứ tự + hạng máy chủ trả, đánh dấu dòng của người xem", () => {
         const rows = toSeasonBoardRows(
-            view([
-                entry({ userId: "u-1", rank: 7, xp: 100 }),
-                entry({ userId: "u-2", rank: 8, xp: 9000 }),
-            ]),
+            view({
+                entries: [
+                    { userId: "u1", xp: 900, rank: 1 },
+                    { userId: "u2", xp: 800, rank: 2 },
+                ],
+            }),
+            "u2",
         )
-        expect(rows.map((row) => row.userId)).toEqual(["u-1", "u-2"])
-        expect(rows.map((row) => row.rank)).toEqual([7, 8])
-    })
-
-    it("thiếu tên ⇒ rơi về username rồi #id ngắn, không in uuid trần", () => {
-        const rows = toSeasonBoardRows(
-            view([
-                entry({ userId: "u-1", displayName: null, username: "minh" }),
-                entry({ userId: "abcdefgh-1111", displayName: null, username: null }),
-            ]),
-        )
-        expect(rows[0].displayName).toBe("minh")
-        expect(rows[1].displayName).toBe("#abcdefgh")
-    })
-
-    it("★ lọc tên rác legacy_<uuid> ở CẢ displayName lẫn username", () => {
-        const [row] = toSeasonBoardRows(
-            view([
-                entry({
-                    userId: "abcdefgh-1111",
-                    displayName: "legacy_9f2c",
-                    username: "legacy_9f2c",
-                }),
-            ]),
-        )
-        expect(row.displayName).toBe("#abcdefgh")
-        expect(row.username).toBe("")
-    })
-
-    it("đánh dấu đúng dòng của người xem", () => {
-        const rows = toSeasonBoardRows(
-            view([entry({ userId: "u-1" }), entry({ userId: "u-2" })]),
-            "u-2",
-        )
-        expect(rows.filter((row) => row.isViewer).map((row) => row.userId)).toEqual(["u-2"])
-    })
-
-    it("không có dữ liệu ⇒ mảng rỗng (đây MỚI là trạng thái rỗng hợp lệ)", () => {
-        expect(toSeasonBoardRows(undefined)).toEqual([])
-        expect(toSeasonBoardRows(view([]))).toEqual([])
+        expect(rows.map((row) => row.rank)).toEqual([1, 2])
+        expect(rows.map((row) => row.isViewer)).toEqual([false, true])
     })
 })
 
-describe("xpBreakdown — ba nguồn là ba LÁT CẮT của một đơn vị EXP", () => {
-    it("tách đúng ba nguồn và tổng khớp EXP bảng tổng", () => {
-        const [row] = toSeasonBoardRows({
-            board: "total",
-            seasonId: "s-1",
-            computedAt: null,
-            entries: [entry()],
-            myRank: null,
-        })
-        const slices = xpBreakdown(row)
-        expect(slices.map((slice) => slice.key)).toEqual(["course", "community", "workplace"])
-        expect(slices.reduce((sum, slice) => sum + slice.value, 0)).toBe(row.xp)
+describe("shortUserLabel", () => {
+    it("mã rút gọn — thứ duy nhất THẬT khi contract backend không mang tên", () => {
+        expect(shortUserLabel("7b1e2c44-0a55-4f0a-9a71-9d5a3f2b1c00")).toBe("#7b1e2c44")
     })
 })

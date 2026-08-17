@@ -1,14 +1,14 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import React, { useState } from "react"
 import { Button, Skeleton, Tabs, Typography } from "@heroui/react"
-import { useLocale, useTranslations } from "next-intl"
-import { BuildingsIcon, GraduationCapIcon, InfoIcon, TrophyIcon } from "@phosphor-icons/react"
+import { useTranslations } from "next-intl"
+import { BuildingsIcon, InfoIcon, TrophyIcon } from "@phosphor-icons/react"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { ExtendedTabs } from "@/components/blocks/navigation/ExtendedTabs"
 import { useQueryMyCoursesSwr } from "@/components/features/course/hooks/useQueryMyCoursesSwr"
+import { useAppSelector } from "@/redux/hooks"
 import type { SeasonBoardKey } from "@/modules/api/rest/gamification"
-import { useQueryCurrentSeasonSwr } from "../hooks/useQueryCurrentSeasonSwr"
 import { useQuerySeasonBoardSwr } from "../hooks/useQuerySeasonBoardSwr"
 import { CourseBoardPicker } from "./CourseBoardPicker"
 import { SeasonBoardList } from "./SeasonBoardList"
@@ -18,9 +18,8 @@ import { useBoardFailureContent } from "./useBoardFailureContent"
 
 /** Icon từng bảng — nói ngay lát cắt EXP mà bảng đó đếm. */
 const BOARD_ICON: Record<SeasonBoardKey, typeof TrophyIcon> = {
-    course: GraduationCapIcon,
-    community: BuildingsIcon,
     total: TrophyIcon,
+    social: BuildingsIcon,
 }
 
 /** Khung xương khớp với danh sách thật (bục + vài dòng) nên hộp không nhảy khi có dữ liệu. */
@@ -40,57 +39,44 @@ const BoardSkeleton = () => (
 )
 
 /**
- * Ba bảng xếp hạng theo kì — bề mặt chính của `/leaderboard`.
+ * Hai bảng xếp hạng theo kỳ — bề mặt chính của `/leaderboard`.
  *
- * BA BẢNG KHÁC NHAU Ở CHỖ ĐẾM LÁT CẮT EXP NÀO, không phải khác đơn vị (EXP là một đơn
+ * HAI BẢNG KHÁC NHAU Ở CHỖ ĐẾM LÁT CẮT EXP NÀO, không phải khác đơn vị (EXP là một đơn
  * vị duy nhất, không quy đổi, không hệ số):
- *   1. Khoá học   — chỉ EXP kiếm trong CHÍNH khoá đó, xếp hạng nội bộ khoá.
- *   2. Cộng đồng & Workplace — hai nguồn riêng, rank chung một bảng.
- *   3. Tổng       — gom cả ba; đây là bảng đua giải có phần thưởng thật.
+ *   1. Tổng   — mọi dòng sổ cái EXP trong kỳ; bảng đua giải có phần thưởng thật.
+ *   2. Cộng đồng & Workplace — hai mảng riêng, rank chung một bảng.
  *
- * Mỗi bảng nói thẳng nó ĐẾM GÌ ngay dưới tab: không giải thích thì người xếp hạng 3 ở
- * bảng này mà hạng 40 ở bảng kia sẽ kết luận hệ thống tính sai.
+ * ★ BẢNG KHOÁ HỌC KHÔNG Ở ĐÂY. Nó đã có sẵn ở `/courses/{slug}/learn/leaderboard`
+ * (GraphQL `courseLeaderboard`, công thức riêng: điểm challenge + bài đã đọc + % hoàn
+ * thành), và backend TỪ CHỐI phục vụ `board=course` có chủ đích. Dựng bản thứ hai ở đây
+ * sẽ cho ra hai con số cùng tên "hạng trong khoá" mà không con nào giải thích được con
+ * kia — nên chỗ này chỉ là LỐI VÀO bảng đã có, không phải một bảng mới.
  *
- * ★ TRẠNG THÁI "BE CHƯA CÓ" LÀ LỖI, KHÔNG PHẢI MÀN RỖNG. Hai lane BE của đợt này chưa
- * merge nên `GET /gamification/leaderboards/*` có thể trả 404 — lúc đó bề mặt hiện một
- * câu nói rõ endpoint nào trả mã gì, chứ tuyệt đối không giả vờ "chưa có ai lên bảng".
+ * ★ BỐN KẾT CỤC, BỐN CÂU NÓI. Lỗi tải · chưa khai kỳ nào (`NO_SEASON`, cờ backend cấp
+ * riêng cho việc này) · kỳ đang chạy nhưng chưa ai lên bảng · có dữ liệu. Gộp bất kỳ hai
+ * cái nào là nói với người dùng một điều không đúng.
  */
 export const SeasonBoards = () => {
     const t = useTranslations("gamification.seasonBoards")
-    const locale = useLocale()
     const failureContent = useBoardFailureContent()
+    const viewer = useAppSelector((state) => state.user.user)
 
     const [board, setBoard] = useState<SeasonBoardKey>("total")
-    const [courseSlug, setCourseSlug] = useState<string | null>(null)
-
-    const season = useQueryCurrentSeasonSwr()
-    const { courses, isLoading: coursesLoading } = useQueryMyCoursesSwr()
-
-    // Tab khoá học mở ra mà chưa chọn gì thì chọn sẵn khoá đầu (khoá ít hoàn thành
-    // nhất — thứ tự của `useQueryMyCoursesSwr`). Chỉ tự chọn MỘT LẦN: ghi đè lựa chọn
-    // của người dùng mỗi lần danh sách khoá revalidate là cướp quyền điều khiển.
-    useEffect(() => {
-        if (courseSlug === null && courses.length > 0) {
-            setCourseSlug(courses[0].slug)
-        }
-    }, [courseSlug, courses])
+    const { courses } = useQueryMyCoursesSwr()
 
     const {
         rows,
         myRank,
-        computedAt,
-        awaitingCourse,
+        seasonCode,
+        outcome,
+        isGuest,
         isLoading,
         isValidating,
         error,
         mutate,
-    } = useQuerySeasonBoardSwr({
-        board,
-        seasonId: season.season?.seasonId ?? null,
-        courseId: board === "course" ? courseSlug : null,
-    })
+    } = useQuerySeasonBoardSwr({ board })
 
-    const endpoint = `GET /gamification/leaderboards/${board}`
+    const endpoint = `GET /gamification/boards/${board}`
     const boardFailure = failureContent(error, endpoint, () => void mutate())
 
     return (
@@ -104,12 +90,7 @@ export const SeasonBoards = () => {
                 </Typography>
             </div>
 
-            <SeasonHeader
-                season={season.season}
-                isLoading={season.isLoading}
-                error={season.error}
-                onRetry={() => void season.mutate()}
-            />
+            <SeasonHeader seasonCode={seasonCode} noSeason={outcome === "NO_SEASON"} />
 
             <ExtendedTabs
                 selectedKey={board}
@@ -154,65 +135,60 @@ export const SeasonBoards = () => {
                 </Typography>
             </div>
 
-            {board === "course" ? (
-                coursesLoading ? (
-                    <Skeleton className="h-9 w-56 rounded-full" />
-                ) : (
-                    <CourseBoardPicker
-                        courses={courses}
-                        selectedSlug={courseSlug}
-                        onSelect={setCourseSlug}
-                    />
-                )
-            ) : null}
+            {/* Lối vào bảng KHOÁ HỌC đã có — KHÔNG dựng lại bảng đó ở đây. */}
+            <CourseBoardPicker courses={courses} />
 
-            {/* Thanh công cụ: hạng của mình + lúc chốt số + làm mới.
-                "Bạn chưa có hạng" CHỈ được nói khi bảng đã tải xong và thật sự không có
-                hạng — nói câu đó lúc đang tải, đang lỗi, hay chưa chọn khoá là biến ba
-                tình huống khác nhau thành cùng một lời khẳng định sai. */}
+            {/* Thanh công cụ: hạng của mình + làm mới.
+                "Bạn chưa có hạng" CHỈ được nói khi bảng đã tải xong, có kỳ, và thật sự
+                không có hạng — nói câu đó lúc đang tải, đang lỗi, hay chưa khai kỳ nào là
+                biến mấy tình huống khác nhau thành cùng một lời khẳng định sai. */}
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <Typography type="body-sm" weight="medium">
-                    {boardFailure || isLoading || awaitingCourse
-                        ? " "
-                        : myRank
-                            ? t("myRank", { rank: myRank.rank })
+                    {isGuest || isLoading || outcome === "FAILED" || outcome === "NO_SEASON"
+                        ? " "
+                        : myRank !== null
+                            ? t("myRank", { rank: myRank })
                             : t("myRankUnranked")}
                 </Typography>
-                <div className="flex shrink-0 items-center gap-3">
-                    {computedAt ? (
-                        <Typography type="body-xs" color="muted" className="hidden sm:block">
-                            {t("updatedAt", {
-                                time: new Date(computedAt).toLocaleTimeString(locale),
-                            })}
-                        </Typography>
-                    ) : null}
-                    <Button
-                        size="sm"
-                        variant="ghost"
-                        isPending={isValidating}
-                        onPress={() => {
-                            void mutate()
-                        }}
-                    >
-                        {t("refresh")}
-                    </Button>
-                </div>
+                <Button
+                    size="sm"
+                    variant="ghost"
+                    isPending={isValidating}
+                    onPress={() => {
+                        void mutate()
+                    }}
+                >
+                    {t("refresh")}
+                </Button>
             </div>
 
-            {/* Bảng khoá học chưa chọn khoá: KHÔNG phải rỗng, cũng KHÔNG phải lỗi —
-                bộ chọn ở trên đã nói phải làm gì, nên chỗ này im lặng. */}
-            {awaitingCourse ? null : (
+            {isGuest ? (
+                // Endpoint đòi đăng nhập. Đây KHÔNG phải lỗi và cũng KHÔNG phải bảng rỗng —
+                // nói đúng việc phải làm thay vì hiện một khối 401.
+                <Typography type="body-sm" color="muted">
+                    {t("guest")}
+                </Typography>
+            ) : outcome === "NO_SEASON" ? (
+                // Cờ NO_SEASON của backend: KHÔNG có kỳ nào đang chạy. Câu này phải khác
+                // hẳn câu "chưa ai lên bảng" ở nhánh rỗng bên dưới — `SeasonHeader` đã nói
+                // rõ, nên chỗ này im lặng chứ không vẽ thêm một màn rỗng nói sai.
+                null
+            ) : (
                 <AsyncContent
                     isLoading={isLoading && rows.length === 0}
                     skeleton={<BoardSkeleton />}
                     isEmpty={rows.length === 0}
                     emptyContent={{ title: t("empty"), description: t("emptyHint") }}
-                    // ★ Lỗi ĐI TRƯỚC rỗng: 404 vì lane BE chưa deploy phải hiện ra thành
-                    // câu chữ, không được rơi vào nhánh "chưa có ai lên bảng".
+                    // ★ Lỗi ĐI TRƯỚC rỗng: lỗi tải phải hiện ra thành câu chữ, không được
+                    // rơi vào nhánh "chưa có ai lên bảng".
                     error={boardFailure ? error : undefined}
                     errorContent={boardFailure ?? undefined}
                 >
-                    <SeasonBoardList rows={rows} />
+                    <SeasonBoardList
+                        rows={rows}
+                        viewerName={viewer?.displayName ?? viewer?.username ?? null}
+                        viewerAvatar={viewer?.avatar ?? null}
+                    />
                 </AsyncContent>
             )}
         </section>

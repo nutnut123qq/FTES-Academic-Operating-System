@@ -21,13 +21,6 @@ const LEVEL_CURVE = { factor: 35 } as const
 /** Total XP required to reach a given level: `factor × (L − 1)²`. */
 const xpForLevel = (level: number): number =>
     LEVEL_CURVE.factor * Math.pow(Math.max(1, level) - 1, 2)
-/** Quiz XP by score band (descending by threshold). */
-const QUIZ_XP_TIERS: ReadonlyArray<{ minPercent: number; xp: number }> = [
-    { minPercent: 100, xp: 500 },
-    { minPercent: 85, xp: 350 },
-    { minPercent: 60, xp: 200 },
-    { minPercent: 0, xp: 100 },
-]
 /** Streak XP multiplier: +5%/day, capped at +50%. */
 const STREAK_MULTIPLIER_STEP = 0.05
 const STREAK_MULTIPLIER_CAP = 0.5
@@ -51,10 +44,10 @@ const STREAK_MILESTONES: ReadonlyArray<{ days: number; badgeKey: string; coin: n
     { days: 100, badgeKey: "STREAK_100", coin: 1000 },
 ]
 
-/** A row in the XP table. `xp` null → the value is score-banded (shown inline). */
+/** A row in the XP table. */
 interface XpRow {
     key: string
-    xp: number | null
+    xp: number
 }
 
 /**
@@ -85,20 +78,24 @@ export const LeaderboardGuideShell = () => {
     // Tương tác (tym/bình luận) giữ ở mức rất thấp và còn bị TRẦN NGÀY chặn thêm, vì đó
     // là nguồn EXP rẻ nhất để farm chéo giữa các tài khoản.
     //
-    // ⚠️ Đây là bảng HIỂN THỊ, phản chiếu `gamification.xp_rules` của backend. Lane BE
-    // của đợt này seed số thật; nếu hai bên lệch thì trang này đang quảng cáo một con số
-    // không ai được trả — đối chiếu lại khi lane BE merge.
+    // ⚠️ MỖI DÒNG DƯỚI ĐÂY PHẢI CÓ MỘT `rule_key` THẬT TRONG `gamification.xp_rules`
+    // (V349). Trang này là lời hứa: quảng cáo một con số không hệ thống nào trả thì người
+    // học làm xong sẽ đi tìm chỗ bị mất EXP. Ba dòng "điểm danh / mục tiêu ngày / mục tiêu
+    // tuần" đã bị GỠ vì không có rule nào tương ứng — nhiệm vụ hằng ngày trả XU, không trả
+    // EXP. `quizSubmit` là 1.000 PHẲNG (`quiz.passed`), không phải thang theo điểm.
     const xpRows: Array<XpRow> = [
         { key: "lessonComplete", xp: 500 },
-        { key: "quizSubmit", xp: null },
+        { key: "quizSubmit", xp: 1000 },
         { key: "challengeComplete", xp: 1500 },
         { key: "courseComplete", xp: 5000 },
         { key: "resourcePublish", xp: 1000 },
-        { key: "dailyLogin", xp: 100 },
-        { key: "postUpvote", xp: 1 },
-        { key: "commentUpvote", xp: 1 },
-        { key: "dailyGoal", xp: 200 },
-        { key: "weeklyGoal", xp: 1000 },
+        { key: "courseEnrolled", xp: 250 },
+        { key: "postCreated", xp: 50 },
+        { key: "commentCreated", xp: 10 },
+        // community.reaction.added / lesson.liked — EXP về NGƯỜI BẤM tym (chống farm), KHÔNG
+        // về tác giả. Nhãn phải nói đúng chiều đó, nếu không người ta đi rủ nhau tym bài
+        // mình rồi thấy EXP không nhúc nhích.
+        { key: "reactionGiven", xp: 1 },
     ]
 
     return (
@@ -146,9 +143,7 @@ export const LeaderboardGuideShell = () => {
                                     {t(`guide.actions.${row.key}`)}
                                 </th>
                                 <td className="py-2 text-right font-medium">
-                                    {row.xp === null
-                                        ? t("guide.quizBanded")
-                                        : t("xpValue", { xp: row.xp })}
+                                    {t("xpValue", { xp: row.xp })}
                                 </td>
                             </tr>
                         ))}
@@ -157,17 +152,6 @@ export const LeaderboardGuideShell = () => {
                 <Typography type="body-xs" color="muted">
                     {t("guide.multiplierNote")}
                 </Typography>
-                {/* Quiz score bands */}
-                <div className="flex flex-wrap gap-2">
-                    {QUIZ_XP_TIERS.slice().reverse().map((band) => (
-                        <span
-                            key={band.minPercent}
-                            className="rounded-medium bg-default/40 px-2 py-1 text-xs"
-                        >
-                            {t("guide.quizBand", { min: band.minPercent, xp: band.xp })}
-                        </span>
-                    ))}
-                </div>
                 {/* Vì sao thang đổi + hai lớp chống farm + bảng reset theo kì. Không phải
                     chú thích trang trí: người dùng thấy con số nhảy từ 20 lên 500 mà không
                     ai giải thích sẽ đoán là hệ thống lỗi. */}
@@ -177,6 +161,9 @@ export const LeaderboardGuideShell = () => {
                     </Typography>
                     <Typography type="body-xs" color="muted">
                         {t("guide.interactionCapNote")}
+                    </Typography>
+                    <Typography type="body-xs" color="muted">
+                        {t("guide.questCoinNote")}
                     </Typography>
                     <Typography type="body-xs" color="muted">
                         {t("guide.likeEligibilityNote")}

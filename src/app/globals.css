@@ -110,9 +110,11 @@ html {
   --warning: oklch(78.19% 0.1590 84.37);
   --warning-foreground: oklch(21.03% 0.0059 84.37);
 
-  /* Border Radius — bumped one notch for softer corners (ui-polish-pass) */
-  --radius: 0.75rem;
-  --field-radius: 1rem;
+  /* Border Radius. Cả thang `rounded-*` của HeroUI v3 dẫn xuất từ 2 số này
+     (xs .25× · sm .5× · md .75× · lg 1× · xl 1.5× · 2xl 2× · 3xl 3×), nên hạ
+     --radius là hạ toàn bộ. Về đúng mức starci-academy-fe: rounded-2xl 24px→16px. */
+  --radius: 0.5rem;
+  --field-radius: 0.75rem;
 
   /* Font Family */
   /* Make sure to load Inter font in your app */

@@ -10,14 +10,14 @@ export interface SkeletonCardProps extends WithClassNames<undefined> {
 
 /**
  * Skeleton matching a HeroUI <Card/> box: bordered container (p-4, gap-3,
- * rounded-[32px]) with a title bar (text-sm/leading-6 -> h-[14px] my-[5px])
+ * rounded-3xl) with a title bar (text-sm/leading-6 -> h-[14px] my-[5px])
  * over a body block of placeholder lines.
  */
 export const SkeletonCard = ({ className, lines = 3 }: SkeletonCardProps) => {
     return (
         <div
             className={cn(
-                "flex flex-col gap-3 rounded-[32px] bg-surface p-4 shadow-surface",
+                "flex flex-col gap-3 rounded-3xl bg-surface p-4 shadow-surface",
                 className,
             )}
         >

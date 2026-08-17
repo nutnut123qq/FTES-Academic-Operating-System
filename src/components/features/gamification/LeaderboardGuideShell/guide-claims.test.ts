@@ -150,16 +150,28 @@ describe("Cách tính điểm — lời hứa đã gỡ thì không được qua
 })
 
 describe("Bảng Cộng đồng & Workplace — câu 'đếm gì' khớp leaderboard_sources (V351)", () => {
-    it("KHÔNG khai là đếm tym", () => {
-        // V351 khai đúng ba key COMMUNITY (post.created · comment.created · answer.accepted) và
-        // bốn key WORKPLACE; `community.reaction.added` / `lesson.liked` (V349) chưa có mảng nào,
-        // nên EXP từ tym CHỈ vào bảng Tổng. Ai sửa lại câu này phải mở V351 kiểm trước.
-        expect(socialCountsOf(vi_messages)).not.toMatch(/bình luận, tym\)/)
-        expect(socialCountsOf(en_messages)).not.toMatch(/comments, likes\)/)
+    // ĐÍNH CHÍNH bản trước: nó ghim rằng câu này KHÔNG được nói "đếm tym", kèm chú thích khẳng định
+    // `community.reaction.added` / `lesson.liked` "chưa có mảng nào". Mở V351 ra thì hai key đó nằm
+    // ngay trong khối COMMUNITY:
+    //     ('community.reaction.added', 'COMMUNITY', 'Tym bài/bình luận cộng đồng'),
+    //     ('lesson.liked',             'COMMUNITY', 'Tym một bài học'),
+    // Nên bản trước ghim NGƯỢC sự thật, và ghim rất chắc — đúng kiểu test giữ cho một lời nói dối
+    // sống sót qua mọi lần refactor. Bài học: câu mô tả "bảng này đếm gì" phải đối chiếu file
+    // migration THẬT, không đối chiếu trí nhớ về nó.
+    it("khai là CÓ đếm tym, khớp hai key COMMUNITY của V351", () => {
+        expect(socialCountsOf(vi_messages)).toMatch(/tym/i)
+        expect(socialCountsOf(en_messages)).toMatch(/likes/i)
     })
 
-    it("nói rõ tym rơi vào bảng Tổng, để hai bảng lệch nhau không bị đọc thành lỗi máy tính", () => {
-        expect(socialCountsOf(vi_messages)).toContain("Tym KHÔNG được tính")
-        expect(socialCountsOf(en_messages)).toContain("Likes are NOT counted")
+    it("KHÔNG còn câu nói tym bị loại khỏi bảng này", () => {
+        // Câu cũ vừa sai vừa nguy hiểm: người dùng thấy tym không làm hạng nhúc nhích sẽ tưởng hỏng.
+        expect(socialCountsOf(vi_messages)).not.toContain("Tym KHÔNG được tính")
+        expect(socialCountsOf(en_messages)).not.toContain("Likes are NOT counted")
+    })
+
+    it("nói rõ tym một BÀI HỌC vào bảng này chứ không vào bảng Khoá học", () => {
+        // Đây là chỗ người dùng dễ tưởng máy tính sai nhất: tym bài học mà hạng khoá không đổi.
+        expect(socialCountsOf(vi_messages)).toMatch(/bài học/i)
+        expect(socialCountsOf(en_messages)).toMatch(/lesson/i)
     })
 })

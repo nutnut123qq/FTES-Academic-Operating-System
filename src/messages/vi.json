@@ -4222,7 +4222,7 @@
             },
             "counts": {
                 "total": "Gộp mọi nguồn EXP bạn kiếm trong kỳ: khoá học + cộng đồng + workplace. Đây là bảng đua giải, có phần thưởng thật.",
-                "social": "Tính EXP từ cộng đồng (đăng bài, bình luận, câu trả lời được chấp nhận) và từ workplace (challenge, học liệu gửi cho môn). Hai nguồn riêng nhưng rank chung một bảng. Tym KHÔNG được tính ở bảng này — EXP từ tym vẫn vào bảng Tổng."
+                "social": "Tính EXP từ cộng đồng (đăng bài, bình luận, câu trả lời được chấp nhận, tym) và từ workplace (challenge, học liệu gửi cho môn). Hai nguồn riêng nhưng rank chung một bảng. Tym một bài học cũng tính ở đây chứ không tính ở bảng Khoá học — bấm tym là tương tác, không phải học."
             },
             "countsLabel": "Bảng này đếm gì",
             "whyDifferent": "Hạng của bạn khác nhau giữa hai bảng vì mỗi bảng đếm một LÁT CẮT EXP khác nhau — không phải hệ thống tính sai.",

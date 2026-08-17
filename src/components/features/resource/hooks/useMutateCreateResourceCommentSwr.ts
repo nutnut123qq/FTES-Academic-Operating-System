@@ -34,8 +34,9 @@ export interface CreateResourceCommentArg {
  * stored — real id, server `createdAt`, and the root the BE re-parented a reply-of-reply
  * onto — once the POST resolves, and the page is restored from the pre-write snapshot when
  * the write fails, so a comment is never left looking saved when it was not. Nothing about
- * the author is fabricated client-side: the placeholder carries the viewer's `userId` and
- * the renderer derives its label from that exactly as it does for a BE row.
+ * the author is fabricated in the CACHE: the placeholder carries the viewer's `userId` and
+ * the renderer derives the whole identity — "Bạn" plus the reader's own photo — from that
+ * id exactly as it does for a BE row, so the two are indistinguishable across the swap.
  *
  * `submit` REJECTS on a failed write (after rolling the cache back) so the caller keeps the
  * draft and toasts; a refetch failure AFTER a successful write is swallowed — the comment

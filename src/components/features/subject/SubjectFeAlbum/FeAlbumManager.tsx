@@ -5,8 +5,10 @@ import { Button, Chip, Typography, toast } from "@heroui/react"
 import {
     ArrowDownIcon,
     ArrowUpIcon,
+    FileTextIcon,
     FolderIcon,
     ImageSquareIcon,
+    ScanIcon,
     TrashIcon,
     XIcon,
 } from "@phosphor-icons/react"
@@ -21,6 +23,8 @@ import {
 } from "@/components/features/resource/ResourceUpload/uploadRules"
 import { FE_IMAGE_UPLOAD_RATE, moveFeAlbumImage } from "@/components/features/resource/hooks/feAlbumManage"
 import { useMutateAddFeAlbumImagesSwr } from "@/components/features/resource/hooks/useMutateAddFeAlbumImagesSwr"
+import { useMutateImportFeAlbumTextsSwr } from "@/components/features/resource/hooks/useMutateImportFeAlbumTextsSwr"
+import { useMutateImportFeAlbumImageTextsSwr } from "@/components/features/resource/hooks/useMutateImportFeAlbumImageTextsSwr"
 import { useMutateDeleteFeAlbumImageSwr } from "@/components/features/resource/hooks/useMutateDeleteFeAlbumImageSwr"
 import { useMutateReorderFeAlbumImagesSwr } from "@/components/features/resource/hooks/useMutateReorderFeAlbumImagesSwr"
 import type { FeImageView } from "@/modules/api/rest/resource"
@@ -81,6 +85,10 @@ export const FeAlbumManager = ({
     const abortRef = useRef<AbortController | null>(null)
 
     const addImages = useMutateAddFeAlbumImagesSwr()
+    const importTexts = useMutateImportFeAlbumTextsSwr()
+    const importImageTexts = useMutateImportFeAlbumImageTextsSwr()
+    const textInputRef = useRef<HTMLInputElement>(null)
+    const scanInputRef = useRef<HTMLInputElement>(null)
     const deleteImage = useMutateDeleteFeAlbumImageSwr()
     const reorderImages = useMutateReorderFeAlbumImagesSwr()
 
@@ -111,7 +119,94 @@ export const FeAlbumManager = ({
     }, [images, pendingOrder])
 
     const remaining = Math.max(0, maxImages - images.length)
-    const isBusy = addImages.isMutating || deleteImage.isMutating || reorderImages.isMutating
+    const isBusy =
+        addImages.isMutating
+        || importTexts.isMutating
+        || importImageTexts.isMutating
+        || deleteImage.isMutating
+        || reorderImages.isMutating
+
+    /**
+     * Import typed exam files (`.txt` / `.md`).
+     *
+     * The overflow is reported, never silently dropped — same rule the picture pick follows. AI
+     * warnings ("câu 7 thiếu phương án") are surfaced too: they are the whole reason a curator
+     * would go back and fix the source file, so swallowing them defeats the feature.
+     */
+    /**
+     * Import PICTURES of exam pages and have the backend turn them into text.
+     *
+     * Deliberately a SEPARATE button from "add pictures", not a mode toggle on it: the two do
+     * opposite things to the same file. One keeps the scan as a picture; this one throws the scan
+     * away and keeps the text. A toggle would let a curator destroy the scan by mistake.
+     */
+    const onPickScans = useCallback(
+        async (fileList: FileList | null) => {
+            const picked = Array.from(fileList ?? [])
+            if (picked.length === 0) {
+                return
+            }
+            const room = Math.max(0, maxImages - images.length)
+            if (room === 0) {
+                toast.danger(t("practice.fe.manage.full"))
+                return
+            }
+            const accepted = picked.slice(0, room)
+            if (accepted.length < picked.length) {
+                toast.warning(
+                    t("practice.fe.manage.overflow", { dropped: picked.length - accepted.length }),
+                )
+            }
+            const outcome = await importImageTexts.trigger({
+                resourceId,
+                files: accepted,
+                onProgress: (done, total) => setProgress({ done, total }),
+            })
+            onMutated()
+            if (outcome && outcome.imported > 0) {
+                toast.success(t("practice.fe.manage.scanImported", { count: outcome.imported }))
+            }
+            outcome?.warnings.slice(0, 3).forEach((warning) => toast.warning(warning))
+            outcome?.failed.slice(0, 3).forEach((failure) => {
+                toast.danger(`${failure.filename}: ${failure.reason}`)
+            })
+        },
+        [importImageTexts, resourceId, maxImages, images.length, onMutated, t],
+    )
+
+    const onPickTexts = useCallback(
+        async (fileList: FileList | null) => {
+            const picked = Array.from(fileList ?? [])
+            if (picked.length === 0) {
+                return
+            }
+            const room = Math.max(0, maxImages - images.length)
+            if (room === 0) {
+                toast.danger(t("practice.fe.manage.full"))
+                return
+            }
+            const accepted = picked.slice(0, room)
+            if (accepted.length < picked.length) {
+                toast.warning(
+                    t("practice.fe.manage.overflow", { dropped: picked.length - accepted.length }),
+                )
+            }
+            const outcome = await importTexts.trigger({
+                resourceId,
+                files: accepted,
+                onProgress: (done, total) => setProgress({ done, total }),
+            })
+            onMutated()
+            if (outcome && outcome.imported > 0) {
+                toast.success(t("practice.fe.manage.textImported", { count: outcome.imported }))
+            }
+            outcome?.warnings.slice(0, 3).forEach((warning) => toast.warning(warning))
+            outcome?.failed.slice(0, 3).forEach((failure) => {
+                toast.danger(`${failure.filename}: ${failure.reason}`)
+            })
+        },
+        [importTexts, resourceId, maxImages, images.length, onMutated, t],
+    )
 
     /** Maps any refusal onto the panel's own copy (403 included). */
     const failureText = useCallback(
@@ -337,6 +432,35 @@ export const FeAlbumManager = ({
                 }}
             />
 
+            {/* Text exam picker. `accept` lists BOTH the extensions and the MIME types: browsers
+                report `.md` as `application/octet-stream` on many machines, so a MIME-only accept
+                greys out exactly the files a curator most often has. */}
+            <input
+                ref={textInputRef}
+                type="file"
+                accept=".txt,.md,.markdown,text/plain,text/markdown"
+                multiple
+                hidden
+                onChange={(event) => {
+                    void onPickTexts(event.target.files)
+                    event.target.value = ""
+                }}
+            />
+
+            {/* Ảnh trang đề để SỐ HOÁ. Cùng định dạng với nút "thêm ảnh" nhưng kết quả ngược
+                nhau, nên là hai nút tách bạch chứ không phải một công tắc. */}
+            <input
+                ref={scanInputRef}
+                type="file"
+                accept={FE_ALBUM_IMAGE_MIME.join(",")}
+                multiple
+                hidden
+                onChange={(event) => {
+                    void onPickScans(event.target.files)
+                    event.target.value = ""
+                }}
+            />
+
             <div className="flex flex-wrap items-center gap-2">
                 <Button
                     size="sm"
@@ -351,6 +475,24 @@ export const FeAlbumManager = ({
                     size="sm"
                     variant="secondary"
                     isDisabled={isBusy || remaining <= 0}
+                    onPress={() => textInputRef.current?.click()}
+                >
+                    <FileTextIcon aria-hidden focusable="false" className="size-4" />
+                    {t("practice.fe.manage.addText")}
+                </Button>
+                <Button
+                    size="sm"
+                    variant="secondary"
+                    isDisabled={isBusy || remaining <= 0}
+                    onPress={() => scanInputRef.current?.click()}
+                >
+                    <ScanIcon aria-hidden focusable="false" className="size-4" />
+                    {t("practice.fe.manage.addScan")}
+                </Button>
+                <Button
+                    size="sm"
+                    variant="secondary"
+                    isDisabled={isBusy || remaining <= 0}
                     onPress={() => folderInputRef.current?.click()}
                 >
                     <FolderIcon aria-hidden focusable="false" className="size-4" />
@@ -359,7 +501,7 @@ export const FeAlbumManager = ({
                 <Typography type="body-xs" color="muted">
                     {t("practice.fe.manage.slots", { remaining, max: maxImages })}
                 </Typography>
-                {addImages.isMutating ? (
+                {addImages.isMutating || importTexts.isMutating || importImageTexts.isMutating ? (
                     <>
                         <Chip size="sm" variant="soft" color="accent">
                             {t("practice.fe.manage.uploading", {
@@ -398,13 +540,23 @@ export const FeAlbumManager = ({
                             key={image.id}
                             className="flex items-center gap-3 rounded-large border border-separator p-2"
                         >
-                            {/* Remote storage host — next/image would need a
-                                remotePatterns entry it does not have. */}
-                            <img
-                                src={image.imageUrl}
-                                alt=""
-                                className="size-12 shrink-0 rounded-large object-cover"
-                            />
+                            {image.kind === "TEXT" ? (
+                                <span className="flex size-12 shrink-0 items-center justify-center rounded-large bg-default">
+                                    <FileTextIcon
+                                        aria-hidden
+                                        focusable="false"
+                                        className="size-5 text-muted"
+                                    />
+                                </span>
+                            ) : (
+                                /* Remote storage host — next/image would need a
+                                   remotePatterns entry it does not have. */
+                                <img
+                                    src={image.imageUrl ?? undefined}
+                                    alt=""
+                                    className="size-12 shrink-0 rounded-large object-cover"
+                                />
+                            )}
                             <div className="min-w-0 flex-1">
                                 <Typography type="body-sm" weight="medium">
                                     {t("practice.fe.manage.position", {

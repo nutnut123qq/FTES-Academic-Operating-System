@@ -13,8 +13,22 @@ export interface UserHovercardProps extends WithClassNames<{ content?: string }>
     content: React.ReactNode
     /** Called when the hover/focus delay completes and the popup should open. */
     onOpen?: () => void
+    /**
+     * Called once hover INTENT is established — earlier than {@link onOpen}, while the
+     * card is still counting down to open. Callers that fetch on demand should start
+     * the request here so the card usually opens already populated instead of opening
+     * on a skeleton and popping the content in a moment later.
+     */
+    onIntent?: () => void
     /** Delay in ms before opening on hover/focus. */
     openDelay?: number
+    /**
+     * Delay in ms before {@link onIntent} fires. Deliberately non-zero: a pointer
+     * sweeping across a feed crosses many avatars, and firing on the first pixel would
+     * turn one scroll into a request per author passed over. Short enough to still buy
+     * most of the request back before the card opens.
+     */
+    intentDelay?: number
     /**
      * Grace period in ms before closing after leaving trigger or popup.
      * Default is generous so users can cross small gaps between trigger and popup.
@@ -39,7 +53,9 @@ export const UserHovercard = ({
     children,
     content,
     onOpen,
+    onIntent,
     openDelay = 400,
+    intentDelay = 120,
     closeDelay = 1000,
     className,
     classNames,
@@ -47,12 +63,17 @@ export const UserHovercard = ({
 }: UserHovercardProps) => {
     const [isOpen, setIsOpen] = useState(false)
     const openTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const intentTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     const clearTimers = useCallback(() => {
         if (openTimerRef.current) {
             clearTimeout(openTimerRef.current)
             openTimerRef.current = null
+        }
+        if (intentTimerRef.current) {
+            clearTimeout(intentTimerRef.current)
+            intentTimerRef.current = null
         }
         if (closeTimerRef.current) {
             clearTimeout(closeTimerRef.current)
@@ -63,12 +84,18 @@ export const UserHovercard = ({
     const scheduleOpen = useCallback(() => {
         if (isOpen) return
         clearTimers()
+        // Warm the data first, then open. The card's own fetch is deduped and cached by
+        // the caller, so a second hover on the same person still costs nothing.
+        intentTimerRef.current = setTimeout(() => {
+            intentTimerRef.current = null
+            onIntent?.()
+        }, Math.min(intentDelay, openDelay))
         openTimerRef.current = setTimeout(() => {
             openTimerRef.current = null
             setIsOpen(true)
             onOpen?.()
         }, openDelay)
-    }, [isOpen, openDelay, onOpen, clearTimers])
+    }, [isOpen, openDelay, intentDelay, onOpen, onIntent, clearTimers])
 
     const scheduleClose = useCallback(() => {
         clearTimers()

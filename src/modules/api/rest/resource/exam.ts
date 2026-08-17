@@ -16,6 +16,7 @@ import type {
     FeImageCommentView,
     FeImageOrderRequest,
     FeImageView,
+    FeTextImportResult,
     PeResultView,
     PeSubmissionListView,
     PeSubmissionView,
@@ -69,6 +70,56 @@ export const uploadFeAlbumImage = async (
     return restRequest<FeImageView>({
         method: "POST",
         url: `/resources/${resourceId}/images`,
+        data: form,
+        headers: MULTIPART_HEADERS,
+    })
+}
+
+/**
+ * Imports exam files typed as TEXT (`.txt` / `.md`) into an FE album.
+ *
+ * Each accepted file becomes ONE album page after the backend has had the AI normalise its
+ * formatting. The endpoint takes a list, but the caller sends **one file per request**: every file
+ * is a sequential AI call with a 90s server-side budget, so batching them into a single request
+ * only invites the gateway to cut the connection after some pages have already landed.
+ *
+ * `POST /api/v1/resources/{id}/text-items`
+ */
+export const importFeAlbumTextFile = async (
+    resourceId: string,
+    file: File,
+): Promise<FeTextImportResult> => {
+    const form = new FormData()
+    form.append("files", file)
+    return restRequest<FeTextImportResult>({
+        method: "POST",
+        url: `/resources/${resourceId}/text-items`,
+        data: form,
+        headers: MULTIPART_HEADERS,
+    })
+}
+
+/**
+ * Imports PICTURES of exam pages and has the backend turn each into a TEXT page.
+ *
+ * Different from {@link uploadFeAlbumImage}, which keeps the scan as a picture: this route produces
+ * a page that is searchable, selectable, and readable by the exam-solving bot. Graphs and geometric
+ * drawings — the parts no text can stand in for — are cut out of the scan and embedded back in.
+ *
+ * One picture per request, sequentially, for the same reason the text import is: each picture is a
+ * separate vision call the server runs under a 90-second budget.
+ *
+ * `POST /api/v1/resources/{id}/image-text-items`
+ */
+export const importFeAlbumImageAsText = async (
+    resourceId: string,
+    file: File,
+): Promise<FeTextImportResult> => {
+    const form = new FormData()
+    form.append("files", file)
+    return restRequest<FeTextImportResult>({
+        method: "POST",
+        url: `/resources/${resourceId}/image-text-items`,
         data: form,
         headers: MULTIPART_HEADERS,
     })

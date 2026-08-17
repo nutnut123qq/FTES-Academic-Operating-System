@@ -83,6 +83,11 @@ export const SubjectFeAlbum = () => {
                 imageUrl: image.imageUrl,
                 caption: image.caption,
                 badgeCount: image.commentCount,
+                // Trang chữ và trang scan đi chung một bộ đếm/phân trang — người đọc lật đề không
+                // quan tâm trang này vốn là ảnh hay là chữ.
+                kind: image.kind,
+                textContent: image.textContent,
+                sourceFilename: image.sourceFilename,
             })),
         [images],
     )

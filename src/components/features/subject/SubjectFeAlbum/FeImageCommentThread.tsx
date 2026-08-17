@@ -5,47 +5,19 @@ import { Button, Typography, toast } from "@heroui/react"
 import { useLocale, useTranslations } from "next-intl"
 
 import { useRequireAuth } from "@/hooks/useRequireAuth"
+import { useViewerAuthorCard } from "@/hooks/useViewerAuthorCard"
 import { useAppSelector } from "@/redux/hooks"
 import {
     PostCommentThread,
     type CommentThreadLabels,
 } from "@/components/reuseable/PostCommentThread"
-import { formatRelativeTime } from "@/components/features/community/hooks/relativeTime"
-import { FE_IMAGE_COMMENT_DELETED } from "@/components/features/resource/hooks/feImageCommentTree"
 import { useMutateCreateFeImageCommentSwr } from "@/components/features/resource/hooks/useMutateCreateFeImageCommentSwr"
 import { useMutateDeleteFeImageCommentSwr } from "@/components/features/resource/hooks/useMutateDeleteFeImageCommentSwr"
 import { useQueryFeImageCommentsSwr } from "@/components/features/resource/hooks/useQueryFeImageCommentsSwr"
-import type { FeImageCommentView } from "@/modules/api/rest/resource"
-import type { PostComment } from "@/components/features/community/hooks/useQueryPostDetailSwr"
+import { toFeImagePostComment } from "./feImageCommentRow"
 
 /** Page size for one image's comment thread (mirrors the BE default). */
 const COMMENTS_PAGE_SIZE = 20
-
-/**
- * Adapts ONE BE comment onto the shared {@link PostComment} contract.
- *
- * The FE-image comment view carries NO author card — only a `userId` — so nothing about
- * the author is invented here: `authorUsername` is set to that raw id, which is exactly
- * the degradation `PostCommentThread` documents (its owner gate compares the viewer id
- * too, and its row prints the shared "member" label instead of a uuid). A tombstoned row
- * gets an EMPTY author id on purpose: it must never match the viewer, so the ⋯ menu
- * offers nothing on a comment that is already deleted.
- *
- * @param comment - The BE row.
- * @param locale - Active locale, for the relative timestamp.
- * @returns The row in the shape every thread surface renders.
- */
-const toPostComment = (comment: FeImageCommentView, locale: string): PostComment => {
-    const isDeleted = comment.status === FE_IMAGE_COMMENT_DELETED || comment.userId === null
-    return {
-        id: comment.id,
-        author: comment.userId ?? "",
-        authorUsername: isDeleted ? "" : (comment.userId ?? ""),
-        text: comment.content,
-        timeLabel: formatRelativeTime(comment.createdAt, locale),
-        replies: (comment.replies ?? []).map((reply) => toPostComment(reply, locale)),
-    }
-}
 
 /** Props for {@link FeImageCommentThread}. */
 export interface FeImageCommentThreadProps {
@@ -83,6 +55,9 @@ export const FeImageCommentThread = ({
     const t = useTranslations("subjects")
     const locale = useLocale()
     const viewerId = useAppSelector((state) => state.user.user?.id)
+    // Session card straight from the store the shell already hydrated — no extra request,
+    // and the same slice `viewerId` above comes from.
+    const viewer = useViewerAuthorCard()
     const { requireAuth } = useRequireAuth()
 
     const [page, setPage] = useState(1)
@@ -94,8 +69,11 @@ export const FeImageCommentThread = ({
     const pageCount = Math.max(1, Math.ceil(total / COMMENTS_PAGE_SIZE))
 
     const comments = useMemo(
-        () => (commentsSwr.data?.items ?? []).map((item) => toPostComment(item, locale)),
-        [commentsSwr.data, locale],
+        () =>
+            (commentsSwr.data?.items ?? []).map((item) =>
+                toFeImagePostComment(item, locale, viewer),
+            ),
+        [commentsSwr.data, locale, viewer],
     )
 
     /**
@@ -209,6 +187,11 @@ export const FeImageCommentThread = ({
                 onSubmit={onSubmit}
                 onDeleteComment={onDelete}
                 currentUserId={viewerId}
+                // The viewer's own rows now sign with their HANDLE rather than their raw
+                // id, so the owner gate has to be told the handle as well — otherwise it
+                // would compare a username against a uuid and hide "Xoá" from the one
+                // person allowed to use it. Both values come from the same session card.
+                currentUsername={viewer?.username ?? undefined}
                 canReportComments={false}
             />
         </div>

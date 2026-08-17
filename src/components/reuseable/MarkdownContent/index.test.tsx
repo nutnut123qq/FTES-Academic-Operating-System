@@ -40,6 +40,15 @@ describe("MarkdownContent — data-image URIs", () => {
         expect(img?.getAttribute("src")).toBe(PNG_DATA_URI)
     })
 
+    // Đề bài challenge lưu HTML (rich-text editor của admin) — `allowHtml` phải render
+    // thành thẻ thật, không in `<ul><li>` ra màn hình như text.
+    it("renders stored HTML as real elements when allowHtml is on", () => {
+        const html = "<ul><li>Nhập số phần tử n.</li></ul><p>Đầu vào mẫu</p>"
+        const { container } = render(<MarkdownContent allowHtml markdown={html} />)
+        expect(container.querySelectorAll("li")).toHaveLength(1)
+        expect(container.textContent).not.toContain("<li>")
+    })
+
     it("still strips a javascript: URI on an image (security guard)", () => {
         const { container } = render(<MarkdownContent markdown={"![x](javascript:alert(1))"} />)
         // The image node may still render, but its src must be scrubbed to empty —

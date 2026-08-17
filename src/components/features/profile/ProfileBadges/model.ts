@@ -46,17 +46,6 @@ export const badgeCodeFromTitle = (title: string | null | undefined): string | n
 }
 
 /**
- * Last-resort readable label for a badge code the app has no name for —
- * `"FIRST_LESSON"` → `"First Lesson"`. Never returns the raw code.
- */
-export const humanizeBadgeCode = (code: string): string =>
-    code
-        .split("_")
-        .filter(Boolean)
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-        .join(" ")
-
-/**
  * Formats an award timestamp for display.
  *
  * The backend sends either a full ISO-8601 instant (`awardedAt`) or a plain

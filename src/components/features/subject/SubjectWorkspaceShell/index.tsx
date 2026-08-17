@@ -26,6 +26,13 @@ interface SubjectWorkspaceShellProps {
     subjectId: string
     /** The active tab page. */
     children: React.ReactNode
+    /**
+     * Muc rail dang mo, do NGUOI GOI chi dinh — cho cac trang muon workspace nhung
+     * KHONG song duoi `/subjects/<code>/<segment>` (mot de challenge mo tu tab Thuc hanh
+     * nam o `/challenges/<id>?subject=<code>`). Khong truyen thi active van suy ra tu
+     * pathname nhu cu, nen moi trang trong `/subjects/...` khong doi gi.
+     */
+    activeSegment?: string
 }
 
 /** One nav row: i18n label key, icon, and the path segment (empty = overview root). */
@@ -88,7 +95,11 @@ const NAV_ITEMS: Array<NavItem> = NAV_GROUPS.flatMap((group) => group.items)
  *
  * @param props - {@link SubjectWorkspaceShellProps}
  */
-export const SubjectWorkspaceShell = ({ subjectId, children }: SubjectWorkspaceShellProps) => {
+export const SubjectWorkspaceShell = ({
+    subjectId,
+    children,
+    activeSegment,
+}: SubjectWorkspaceShellProps) => {
     const t = useTranslations("subjects")
     const router = useRouter()
     const pathname = usePathname()
@@ -101,8 +112,14 @@ export const SubjectWorkspaceShell = ({ subjectId, children }: SubjectWorkspaceS
 
     const base = `/subjects/${subjectId}`
     const hrefFor = (segment: string) => (segment ? `${base}/${segment}` : base)
+    // ponytail: nguoi goi chi dinh thi tin nguoi goi, khong doan tu URL nua — trang o
+    // ngoai cay `/subjects/...` khong co segment nao trong pathname de suy ra.
     const isActive = (segment: string) =>
-        segment ? pathname.startsWith(`${base}/${segment}`) : pathname === base
+        activeSegment !== undefined
+            ? segment === activeSegment
+            : segment
+                ? pathname.startsWith(`${base}/${segment}`)
+                : pathname === base
     // mobile strip is a controlled tab group → it needs the active row as a KEY
     // (falls back to overview on a page outside the rail, e.g. `/ai`)
     const activeKey = NAV_ITEMS.find((item) => isActive(item.segment))?.key ?? "overview"
@@ -120,8 +137,8 @@ export const SubjectWorkspaceShell = ({ subjectId, children }: SubjectWorkspaceS
                 {/* CONTRACT A cover: a full-width banner (the subject's "ảnh bìa").
                     A plain <img> (not next/image) so a remote BE-provider host
                     renders without a next.config images.remotePatterns entry; a
-                    broken src drops the banner and the initials chip below carries
-                    the identity instead. */}
+                    broken src simply drops the banner and the identity row below
+                    carries the subject on its own. */}
                 {imageUrl !== null && subject ? (
                     <div className="h-32 w-full overflow-hidden bg-default sm:h-44">
                         <img
@@ -132,10 +149,10 @@ export const SubjectWorkspaceShell = ({ subjectId, children }: SubjectWorkspaceS
                         />
                     </div>
                 ) : null}
-                <div className="flex items-center gap-3 p-6">
-                    <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-accent/10 text-sm font-bold text-accent">
-                        {(subject?.code ?? subjectId).slice(0, 3).toUpperCase()}
-                    </div>
+                {/* ponytail: initials badge removed (2026-08-17) — the title already
+                    carries the code, so the chip was pure duplication; the row is a
+                    plain block now instead of a 2-column flex. */}
+                <div className="p-6">
                     <div className="min-w-0">
                         <Typography type="h4" weight="bold" truncate>
                             {subject ? `${subject.code} · ${subject.name}` : subjectId}

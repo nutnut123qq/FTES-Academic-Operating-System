@@ -158,12 +158,45 @@ export const FeImageCommentThread = ({
     )
 
     return (
-        <div className="flex flex-col gap-3">
-            <Typography type="body-sm" weight="semibold">
-                {t("practice.fe.comments.title", { count: total })}
-            </Typography>
+        // ponytail: chat anatomy with no new component — the thread FILLS the column
+        // (`min-h-0 flex-1`), and the scroll split (comment list scrolls, composer pinned
+        // to the bottom edge) now lives INSIDE `PostCommentThread` itself, so the
+        // `[&>*:first-child]:…` rules that used to reach into its children from out here
+        // are gone.
+        <div className="flex min-h-0 flex-1 flex-col gap-3">
+            {/* Header strip: the count, and the pager BESIDE it rather than under the
+                thread — anything below the composer would unpin it from the bottom. */}
+            <div className="flex shrink-0 items-center justify-between gap-2">
+                <Typography type="body-sm" weight="semibold">
+                    {t("practice.fe.comments.title", { count: total })}
+                </Typography>
+                {pageCount > 1 ? (
+                    <div className="flex items-center gap-1">
+                        <Button
+                            size="sm"
+                            variant="tertiary"
+                            isDisabled={page <= 1 || commentsSwr.isValidating}
+                            onPress={() => setPage((prev) => Math.max(1, prev - 1))}
+                        >
+                            {t("practice.fe.comments.prev")}
+                        </Button>
+                        <Typography type="body-xs" color="muted">
+                            {t("practice.fe.comments.pageOf", { page, total: pageCount })}
+                        </Typography>
+                        <Button
+                            size="sm"
+                            variant="tertiary"
+                            isDisabled={page >= pageCount || commentsSwr.isValidating}
+                            onPress={() => setPage((prev) => Math.min(pageCount, prev + 1))}
+                        >
+                            {t("practice.fe.comments.next")}
+                        </Button>
+                    </div>
+                ) : null}
+            </div>
 
             <PostCommentThread
+                className="min-h-0 flex-1"
                 regionId={`fe-image-comments-${imageId}`}
                 comments={comments}
                 isLoading={!commentsSwr.data && !commentsSwr.error}
@@ -178,30 +211,6 @@ export const FeImageCommentThread = ({
                 currentUserId={viewerId}
                 canReportComments={false}
             />
-
-            {pageCount > 1 ? (
-                <div className="flex items-center justify-center gap-3">
-                    <Button
-                        size="sm"
-                        variant="tertiary"
-                        isDisabled={page <= 1 || commentsSwr.isValidating}
-                        onPress={() => setPage((prev) => Math.max(1, prev - 1))}
-                    >
-                        {t("practice.fe.comments.prev")}
-                    </Button>
-                    <Typography type="body-xs" color="muted">
-                        {t("practice.fe.comments.pageOf", { page, total: pageCount })}
-                    </Typography>
-                    <Button
-                        size="sm"
-                        variant="tertiary"
-                        isDisabled={page >= pageCount || commentsSwr.isValidating}
-                        onPress={() => setPage((prev) => Math.min(pageCount, prev + 1))}
-                    >
-                        {t("practice.fe.comments.next")}
-                    </Button>
-                </div>
-            ) : null}
         </div>
     )
 }

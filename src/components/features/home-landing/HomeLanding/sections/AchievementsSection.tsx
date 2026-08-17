@@ -131,7 +131,13 @@ export const AchievementsSection = () => {
                     }
                 }}
                 {...pauseHandlers}
-                className="relative"
+                // ponytail: từ `sm` (mốc hai nút mũi tên hiện ra) chừa sẵn máng 56px hai bên
+                // để nút đứng NGOÀI đường ray, thay vì `-left-3/-right-3` cũ — offset âm đó
+                // tuy đối xứng trên giấy nhưng nút rộng 40px nên vẫn liếm 28px vào thẻ, và
+                // thẻ đầu (luôn dính mép trái) bị che rõ hơn hẳn thẻ cuối. Máng nằm TRONG
+                // section nên không tràn ra ngoài `max-w-6xl`, khác với việc đẩy nút ra ngoài
+                // bằng offset âm lớn (màn hình vừa đúng 1152px sẽ cắt mất nút).
+                className="relative sm:px-14"
             >
                 <div
                     ref={trackRef}
@@ -144,14 +150,16 @@ export const AchievementsSection = () => {
 
                 {/* arrows flank the track (legacy slider idiom) instead of sitting under it,
                     vertically centered on the cover strip and hidden on phones where the
-                    native swipe is the primary gesture */}
+                    native swipe is the primary gesture. `left-0`/`right-0` = mép máng
+                    `sm:px-14` của vùng carousel: hai nút đối xứng tuyệt đối và KHÔNG nằm đè
+                    lên thẻ nào */}
                 {hasMultiple ? (
                     <>
                         <button
                             type="button"
                             aria-label={t("achievements.prev")}
                             onClick={prev}
-                            className="absolute -left-3 top-1/2 hidden size-10 -translate-y-1/2 items-center justify-center rounded-full border border-separator bg-surface text-foreground shadow-md transition hover:bg-default sm:flex"
+                            className="absolute left-0 top-1/2 hidden size-10 -translate-y-1/2 items-center justify-center rounded-full border border-separator bg-surface text-foreground shadow-md transition hover:bg-default sm:flex"
                         >
                             <CaretLeftIcon className="size-5" aria-hidden focusable="false" />
                         </button>
@@ -159,7 +167,7 @@ export const AchievementsSection = () => {
                             type="button"
                             aria-label={t("achievements.next")}
                             onClick={next}
-                            className="absolute -right-3 top-1/2 hidden size-10 -translate-y-1/2 items-center justify-center rounded-full border border-separator bg-surface text-foreground shadow-md transition hover:bg-default sm:flex"
+                            className="absolute right-0 top-1/2 hidden size-10 -translate-y-1/2 items-center justify-center rounded-full border border-separator bg-surface text-foreground shadow-md transition hover:bg-default sm:flex"
                         >
                             <CaretRightIcon className="size-5" aria-hidden focusable="false" />
                         </button>

@@ -217,6 +217,9 @@ export const CommunityPostContent = ({
                         displayName={authorName}
                         showAvatar={false}
                         staffRole={post.authorStaffRole}
+                        // Tên tác giả ĐẬM + màu chữ chính (mặc định `font-semibold` của UserLink
+                        // đọc còn mảnh) — khớp với hàng tên ở feed.
+                        classNames={{ name: "font-bold text-foreground" }}
                     />
                 }
                 timeLabel={post.timeLabel}

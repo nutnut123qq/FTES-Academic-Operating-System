@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { challengeBackHref } from "./challengeBackHref"
+import { challengeBackHref, challengeSubjectCode } from "./challengeBackHref"
 
 /**
  * Unit — where "back" goes from a challenge solve page.
@@ -39,5 +39,25 @@ describe("challengeBackHref", () => {
         expect(challengeBackHref("MAD101")).toBe("/subjects/MAD101/practice")
         expect(challengeBackHref("swp-391")).toBe("/subjects/swp-391/practice")
         expect(challengeBackHref("PRN_212")).toBe("/subjects/PRN_212/practice")
+    })
+})
+
+/**
+ * Unit — the same gate, read on its own by the page that mounts the subject workspace
+ * rail around a challenge. It has to reject exactly what the back link rejects: the
+ * value is handed to `SubjectWorkspaceShell` as a route segment.
+ */
+describe("challengeSubjectCode", () => {
+    it("gives the code back when it is one", () => {
+        expect(challengeSubjectCode("CSD201")).toBe("CSD201")
+        expect(challengeSubjectCode("swp-391")).toBe("swp-391")
+    })
+
+    it("gives null for absent or untrusted values", () => {
+        expect(challengeSubjectCode(null)).toBeNull()
+        expect(challengeSubjectCode("")).toBeNull()
+        expect(challengeSubjectCode("../../admin")).toBeNull()
+        expect(challengeSubjectCode("https://evil.com")).toBeNull()
+        expect(challengeSubjectCode("C".repeat(33))).toBeNull()
     })
 })

@@ -5972,7 +5972,6 @@
         "albumMeta": "{count, plural, =0 {No images yet} one {# image in this set} other {# images in this set}}",
         "empty": "This album has no image yet.",
         "loadError": "Could not load the album",
-        "uploader": "Uploaded by",
         "comments": {
           "title": "Comments on this image ({count})",
           "prev": "Previous",
@@ -7098,6 +7097,9 @@
     "onlineCount": "{count} online",
     "onlineNow": "Online now",
     "open": "Open community chat",
+    "expand": "Open the full chat",
+    "expandHint": "Click to open the full chat",
+    "close": "Close",
     "send": "Send",
     "placeholder": "Type a message…",
     "you": "You",
@@ -7282,7 +7284,9 @@
       "pinned": "Pinned",
       "guestTitle": "Sign in to see the feed",
       "guestHint": "The community feed is personalised, so sign in to see posts relevant to you.",
-      "guestCta": "Sign in"
+      "guestCta": "Sign in",
+      "heading": "News feed",
+      "closePost": "Close post"
     },
     "search": {
       "placeholder": "Search posts by title or content…",

@@ -61,7 +61,14 @@ export const ContinueCourseCard = ({
             href={href}
             // h-full is baked in (not left to the caller) so a card always fills its grid
             // cell — neighbours in a row share one height instead of staggering.
-            className="group flex h-full flex-col gap-3 rounded-lg border border-separator p-3 no-underline transition-colors hover:bg-default/40"
+            //
+            // ponytail: viền + bóng đổ nằm Ở ĐÂY chứ không phải do lưới bên ngoài đè CSS
+            // vào. `--separator` ở theme sáng nhạt tới mức thẻ gần như không có mép; kéo
+            // về `#E2E8F0` cộng một lớp bóng mảnh thì thẻ nổi khỏi nền trang. Nền TỐI giữ
+            // viền trắng mờ — `#E2E8F0` trên nền tối là một vệt sáng chói. Biến thể `dark:`
+            // của Tailwind KHÔNG dùng được (repo chưa khai `@custom-variant dark`, nó vẫn
+            // bám `prefers-color-scheme`), nên nhánh tối bắt theo class `.dark` trên <html>.
+            className="group flex h-full flex-col gap-3 rounded-lg border border-[#E2E8F0] p-3 no-underline shadow-sm transition-colors hover:bg-default/40 [.dark_&]:border-white/15"
         >
             {/* Hàng thông tin: [ảnh] │ [tiêu đề + %] │ [CTA] — bố cục NGANG, không phải
                 cover full bề ngang như thẻ danh mục. Đây là chủ ý: ở đây người học đang
@@ -98,7 +105,13 @@ export const ContinueCourseCard = ({
                     <Typography weight="semibold" className="line-clamp-2">
                         {title}
                     </Typography>
-                    <Typography type="body-xs" color="muted">
+                    {/* ponytail: "Hoàn thành x%" to hơn một bậc (xs → sm) và đậm hơn
+                        `--muted`: nó là con số người học tìm, không phải chú thích. Nền
+                        tối trả về token `muted` (xám sáng) — `#666666` ở đó là mù chữ. */}
+                    <Typography
+                        type="body-sm"
+                        className="text-[#666666] [.dark_&]:text-muted"
+                    >
                         {t("courses.percentComplete", { percent: completionPercent })}
                     </Typography>
                     {badge ? <div className="flex">{badge}</div> : null}
@@ -123,7 +136,17 @@ export const ContinueCourseCard = ({
 
             {/* Thanh tiến độ trải hết bề ngang thẻ, dưới cùng — `mt-auto` để nó luôn nằm
                 đáy dù cột chữ cao thấp khác nhau, các thẻ cùng hàng thẳng thanh với nhau. */}
-            <ProgressMeter value={completionPercent} max={100} className="mt-auto" />
+            {/* ponytail: thanh cao gấp đôi (4px → 8px) và rãnh đậm hơn nền thẻ, nên phần
+                đã học (màu accent) đọc được từ xa thay vì là một sợi chỉ. Bóng lõm nhẹ để
+                rãnh không lẫn vào mặt thẻ; nền tối đổi rãnh sang trắng mờ. */}
+            <ProgressMeter
+                value={completionPercent}
+                max={100}
+                className="mt-auto"
+                classNames={{
+                    track: "h-2 bg-[#E2E8F0] shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] [.dark_&]:bg-white/15",
+                }}
+            />
         </Link>
     )
 }

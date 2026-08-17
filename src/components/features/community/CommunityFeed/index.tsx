@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useCallback, useEffect, useMemo, useState } from "react"
-import { Button, Popover, Skeleton, Typography, cn, toast } from "@heroui/react"
+import { Button, Modal, Popover, Skeleton, Spinner, Typography, cn, toast } from "@heroui/react"
 import { MagnifyingGlassIcon } from "@phosphor-icons/react"
 import { useLocale, useTranslations } from "next-intl"
 import { useAppSelector } from "@/redux/hooks"
@@ -39,6 +39,7 @@ import { useMutateCreatePostCommentSwr, type SubmitCommentInput } from "../hooks
 import { useQueryPostMetaSwr } from "../CommunityPostDetail/hooks/useQueryPostMetaSwr"
 import { useMutateReportContentSwr } from "../CommunityPostDetail/hooks/useMutateReportContentSwr"
 import { PostEditDialog } from "../CommunityPostDetail/PostEditDialog"
+import { CommunityPostContent } from "../CommunityPostDetail/CommunityPostContent"
 import { useMutateFeedPostOwnerActionsSwr } from "./hooks/useMutateFeedPostOwnerActionsSwr"
 
 /** Props for {@link CommunityFeedHeader} — the search/filter state it relocates into the popover. */
@@ -56,7 +57,9 @@ interface CommunityFeedHeaderProps {
 /**
  * Compact, Threads-style feed header on ONE row:
  * `[current-user avatar] [ "Có gì mới?" → opens the composer ] [🔍 → search popover]`,
- * with the feed's hairline divider under it (owned by the parent `divide-y`).
+ * rendered as its OWN card (surface fill + border + rounding + light shadow) so the
+ * "post something" entry point reads as a distinct surface above the "Bảng tin" list
+ * instead of blending into the rows.
  *
  * There is NO separate "Đăng" button here: pressing the prompt already opens the
  * composer, so the button only duplicated it (the real submit lives inside
@@ -95,7 +98,9 @@ const CommunityFeedHeader = ({
         (showSortControl && sort !== CommunitySearchSort.Newest)
 
     return (
-        <div className="flex items-center gap-3 px-4 py-3">
+        // ponytail: composer = card riêng (nền surface + viền + bo góc + shadow) để nó nổi hẳn
+        // khỏi danh sách bài, thay vì chìm vào hàng divider của feed.
+        <div className="flex items-center gap-3 rounded-2xl border border-default bg-surface px-4 py-4 shadow-sm">
             <UserAvatar
                 size="sm"
                 className="size-9 shrink-0"
@@ -150,11 +155,14 @@ const CommunityFeedHeader = ({
     )
 }
 
-/** Loading skeleton — mirrors the Threads post-row anatomy so the feed never jumps. */
+/** Loading skeleton — mirrors the post CARD anatomy so the feed never jumps. */
 const FeedSkeleton = () => (
-    <div className="flex flex-col divide-y divide-separator">
+    <div className="flex flex-col gap-3">
         {[0, 1, 2].map((index) => (
-            <div key={index} className="px-4 py-3">
+            <div
+                key={index}
+                className="rounded-2xl border border-default bg-surface px-4 py-3 shadow-sm"
+            >
                 <div className="grid grid-cols-[48px_minmax(0,1fr)] gap-x-2">
                     <Skeleton className="size-9 rounded-full" />
                     <div className="flex min-w-0 flex-col gap-2">
@@ -198,6 +206,9 @@ export const CommunityFeedRow = ({
     const currentUser = useAppSelector((state) => state.user.user)
     const [expanded, setExpanded] = useState(false)
     const [hasOpened, setHasOpened] = useState(false)
+    // ponytail: "mở bài" = modal tại chỗ (kiểu Facebook), state cục bộ của row — không cần
+    // overlay store toàn cục vì chỉ đúng row đang bấm mới phải biết.
+    const [isPostOpen, setPostOpen] = useState(false)
     const [isEditOpen, setEditOpen] = useState(false)
     const [isDeleteOpen, setDeleteOpen] = useState(false)
     const [isReportOpen, setReportOpen] = useState(false)
@@ -282,7 +293,9 @@ export const CommunityFeedRow = ({
     )
 
     return (
-        <div className="px-4 py-3 transition-colors hover:bg-default/40">
+        // ponytail: mỗi bài = 1 CARD (surface + viền + bo góc + shadow nhẹ) thay cho hàng
+        // dính liền chỉ cách nhau bằng đường kẻ; khoảng cách giữa các card do parent `gap-3` lo.
+        <div className="rounded-2xl border border-default bg-surface px-4 py-3 shadow-sm transition-colors hover:bg-default/40">
             <ThreadsPostRow
                 avatar={
                     <UserLink
@@ -303,6 +316,9 @@ export const CommunityFeedRow = ({
                         showAvatar={false}
                         staffRole={post.authorStaffRole}
                         isFollowing={isFollowing}
+                        // Tên tác giả phải ĐẬM và ăn màu chữ chính — mặc định của UserLink là
+                        // `font-semibold`, đọc trên nền card vẫn mảnh so với thân bài.
+                        classNames={{ name: "font-bold text-foreground" }}
                     />
                 }
                 timeLabel={post.timeLabel}
@@ -314,7 +330,20 @@ export const CommunityFeedRow = ({
                 {/* Bài admin ghim — CHỈ là nhãn: BE đã đẩy bài ghim lên đầu trang đầu,
                     tuyệt đối không sắp xếp lại phía FE theo cờ này. */}
                 {post.pinned ? <PinnedBadge label={t("feed.pinned")} className="mb-1" /> : null}
-                <Link href={`/community/${post.id}`} className="flex flex-col gap-0 no-underline">
+                {/* ponytail: vẫn là <Link href> thật — deep link /community/<id>, mở tab mới bằng
+                    ctrl/⌘/chuột giữa và crawler đều còn nguyên; chỉ cú click THƯỜNG bị chặn điều
+                    hướng để mở modal chi tiết tại chỗ (kiểu Facebook). */}
+                <Link
+                    href={`/community/${post.id}`}
+                    className="flex flex-col gap-0 no-underline"
+                    onClick={(event) => {
+                        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+                            return
+                        }
+                        event.preventDefault()
+                        setPostOpen(true)
+                    }}
+                >
                     {/* Bài không có tiêu đề (tác giả không đánh H1) → chỉ còn snippet. Render khối
                         đậm vô điều kiện là in dòng đầu hai lần trên đúng những bài ngắn nhất. */}
                     {post.title ? (
@@ -375,6 +404,39 @@ export const CommunityFeedRow = ({
                 ) : null}
             </ThreadsPostRow>
 
+            {/* Bài viết mở TẠI CHỖ trong modal (kiểu Facebook) — nội dung là chính
+                {@link CommunityPostContent} mà trang /community/<id> và lightbox ảnh đang dùng,
+                nên phần bình luận / engagement / quyền sở hữu không bao giờ lệch nhau.
+                Esc + click nền đóng modal (mặc định HeroUI qua `onOpenChange`). */}
+            <Modal
+                isOpen={isPostOpen}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setPostOpen(false)
+                    }
+                }}
+            >
+                <Modal.Backdrop>
+                    <Modal.Container className="p-3 sm:p-6">
+                        <Modal.Dialog className="max-h-[90vh] w-full max-w-2xl overflow-y-auto px-4">
+                            <Modal.CloseTrigger aria-label={t("feed.closePost")} className="z-20" />
+                            {isPostOpen ? (
+                                <CommunityPostContent
+                                    postId={post.id}
+                                    regionId={`modal-post-comments-${post.id}`}
+                                    commentsAnchorId={`modal-comments-${post.id}`}
+                                    loadingFallback={
+                                        <div className="flex items-center justify-center py-16">
+                                            <Spinner aria-label={t("photoViewer.loading")} />
+                                        </div>
+                                    }
+                                />
+                            ) : null}
+                        </Modal.Dialog>
+                    </Modal.Container>
+                </Modal.Backdrop>
+            </Modal>
+
             {/* opens only once the raw title/body landed — see the metadata note above */}
             <PostEditDialog
                 isOpen={isEditOpen && Boolean(meta)}
@@ -402,11 +464,18 @@ export const CommunityFeedRow = ({
 }
 
 /**
- * Community feed (§6), Threads-style. The composer trigger row ("Có gì mới?" →
- * modal composer) and post rows sit FLAT on the page — no card fill, no border,
- * no rounding — separated only by hairline dividers (`divide-separator`), so the
- * whole feed sinks into the page instead of reading as a white panel. Each row
- * uses the `ThreadsPostRow` anatomy (48px avatar column + content column) with
+ * Community feed (§6). Three stacked surfaces, spaced (no hairline dividers):
+ * the composer trigger CARD ("Có gì mới?" → modal composer), the "Bảng tin"
+ * heading, then one CARD PER POST (`bg-surface` + `border-default` + `rounded-2xl`
+ * + light shadow — theme tokens, so dark mode follows). The rows used to sit flat
+ * and glued together by `divide-separator`, which made the composer and the posts
+ * read as one undifferentiated column.
+ *
+ * Clicking a row's title/body opens that post in a MODAL (Facebook-style) over the
+ * feed rather than navigating away; the `/community/{postId}` route still renders
+ * the same content for deep links and new-tab clicks — see {@link CommunityFeedRow}.
+ *
+ * Each row keeps the `ThreadsPostRow` anatomy (48px avatar column + content column) with
  * the shared engagement bar (zero counts suppressed) and inline push-down
  * comment expansion; a threadline connects the avatar to the expanded thread.
  * Every row carries the SAME ⋯ owner menu as the post detail page (see
@@ -525,7 +594,7 @@ export const CommunityFeed = ({ tab = "forYou" }: { tab?: CommunityFeedTab } = {
                 }
 
     return (
-        <div className="flex flex-col divide-y divide-separator">
+        <div className="flex flex-col gap-4">
             <CommunityFeedHeader
                 query={query}
                 onQueryChange={setQuery}
@@ -535,6 +604,11 @@ export const CommunityFeed = ({ tab = "forYou" }: { tab?: CommunityFeedTab } = {
                 onPostTypeChange={setPostType}
                 showSortControl={!isTrending}
             />
+            {/* Heading đứng NGOÀI AsyncContent: nó là nhãn của khu vực, phải còn khi danh sách
+                rỗng / đang tải / lỗi — không phải một phần của dữ liệu. */}
+            <Typography type="h5" weight="bold">
+                {t("feed.heading")}
+            </Typography>
             <AsyncContent
                 isLoading={isLoading && posts.length === 0}
                 skeleton={<FeedSkeleton />}
@@ -547,7 +621,7 @@ export const CommunityFeed = ({ tab = "forYou" }: { tab?: CommunityFeedTab } = {
                     retryLabel: t("states.retry"),
                 }}
             >
-                <div className="flex flex-col divide-y divide-separator">
+                <div className="flex flex-col gap-3">
                     {posts.map((post) => (
                         <CommunityFeedRow
                             key={post.id}

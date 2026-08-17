@@ -229,15 +229,20 @@ export const ChallengePaper = ({
     )
 
     /**
-     * Only IMAGE and PDF earn the tall pinned frame: they are surfaces the reader scrolls
-     * and zooms inside, so they want the viewport. The ARCHIVE / UNSUPPORTED cards are two
-     * lines of copy — pinning them to `100dvh` would leave a screen of empty box.
+     * IMAGE and PDF earn the tall pinned frame outright: they are surfaces the reader
+     * scrolls and zooms inside, so they want the viewport. Any inline section earns it for
+     * the same reason.
      *
-     * Any inline section earns it for the same reason; a set of nothing but templates has
-     * no inline section at all and falls back to the single-file answer, so a
-     * templates-only paper keeps the short card rather than a screen of empty frame.
+     * ponytail: a DISCUSSION earns it too. The old rule pinned the frame on the LEFT pane
+     * alone, so an archive / unsupported paper (two lines of copy) fell back to a short
+     * card — and the right column, which now carries the whole comment thread, grew down
+     * the page instead of scrolling inside the frame: the reader had to scroll a screenful
+     * of nothing to reach the comments. With a thread to hold, the pinned height is a
+     * full column of comments, never an empty box. A paper with no thread at all
+     * (`challengeId` absent) keeps the old short card.
      */
-    const isFramed = sections.length > 0 || kind === "IMAGE" || kind === "PDF"
+    const isFramed =
+        sections.length > 0 || kind === "IMAGE" || kind === "PDF" || Boolean(challengeId)
 
     return (
         <section className="flex flex-col gap-3">
@@ -254,8 +259,11 @@ export const ChallengePaper = ({
                     // A 0-floored row + `min-h-0` on the pane are what let a PORTRAIT scan
                     // shrink to the frame instead of inflating it: a grid item's automatic
                     // minimum size is its CONTENT, and `overflow-hidden` then clips it.
+                    // ponytail: 12rem, not 16 — the frame is what the reader came for, so
+                    // it takes nearly the whole viewport once scrolled to; the header
+                    // above it scrolls away.
                     isFramed
-                        && "lg:h-[calc(100dvh-16rem)] lg:min-h-[26rem] lg:grid-rows-[minmax(0,1fr)]",
+                        && "lg:h-[calc(100dvh-12rem)] lg:min-h-[30rem] lg:grid-rows-[minmax(0,1fr)]",
                 )}
             >
                 {/* LEFT — the paper. A multi-file set owns this pane; with no set (or a set
@@ -297,20 +305,39 @@ export const ChallengePaper = ({
                 )}
 
                 {/* RIGHT — the hand-in block (laid out and switched off), then who put the
-                    paper up, then the discussion. The COLUMN owns the surface + its own
-                    scroll so the three blocks stack inside one scrollable pane. */}
-                <div className="flex min-h-0 flex-col gap-4 bg-overlay p-4 lg:overflow-y-auto">
-                    {/* The templates come FIRST: they are what the candidate needs in hand to
-                        start working, and the block below them is switched off anyway. */}
-                    {attachments.length > 0 ? <PaperAttachments files={attachments} /> : null}
+                    paper up, then the discussion.
+                    ponytail: the column no longer scrolls as ONE piece. It used to, and the
+                    composer therefore sat at the bottom of a long scroll — to type you had
+                    to scroll past the templates, the dropzone and the uploader every time.
+                    Now the paper-side blocks scroll in their own capped strip and the
+                    DISCUSSION takes the rest of the column, which is what lets the thread
+                    pin its composer to the bottom edge (see PostCommentThread). All of it
+                    is `lg:`-only: below that the panes stack and the page scrolls as one. */}
+                <div className="flex min-h-0 flex-col gap-4 bg-overlay p-4 lg:overflow-hidden">
+                    <div
+                        className={cn(
+                            "flex flex-col gap-4",
+                            // With a thread underneath, the paper-side strip is capped so a
+                            // long template list can never push the discussion out of the
+                            // frame; with no thread it simply owns the whole column, exactly
+                            // as the pane did before.
+                            challengeId
+                                ? "lg:max-h-[45%] lg:overflow-y-auto"
+                                : "lg:min-h-0 lg:flex-1 lg:overflow-y-auto",
+                        )}
+                    >
+                        {/* The templates come FIRST: they are what the candidate needs in hand to
+                            start working, and the block below them is switched off anyway. */}
+                        {attachments.length > 0 ? <PaperAttachments files={attachments} /> : null}
 
-                    <PaperSubmitPanel />
+                        <PaperSubmitPanel />
 
-                    {/* Hidden outright when the BE has no author card — see PaperUploader. */}
-                    {author ? <PaperUploader author={author} createdAt={createdAt} /> : null}
+                        {/* Hidden outright when the BE has no author card — see PaperUploader. */}
+                        {author ? <PaperUploader author={author} createdAt={createdAt} /> : null}
+                    </div>
 
                     {challengeId ? (
-                        <div className="border-t border-separator pt-4">
+                        <div className="flex min-h-0 flex-1 flex-col border-t border-separator pt-4">
                             <ChallengePaperCommentThread challengeId={challengeId} />
                         </div>
                     ) : null}

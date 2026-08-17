@@ -1,16 +1,18 @@
 "use client"
 
 import React from "react"
-import { Accordion, Button, Chip, Skeleton, Typography } from "@heroui/react"
+import { Accordion, Button, Chip, Skeleton, Typography, cn } from "@heroui/react"
 import { ArrowLeftIcon, HammerIcon, MagnifyingGlassIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { useParams, useSearchParams } from "next/navigation"
 import { Link, useRouter } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
+import { SubjectWorkspaceShell } from "@/components/features/subject/SubjectWorkspaceShell"
 
 import { useQueryChallengeSwr } from "../hooks/useQueryChallengeSwr"
 import type { ChallengeDetail } from "../hooks/useQueryChallengeSwr"
-import { challengeBackHref } from "./challengeBackHref"
+import { challengeBackHref, challengeSubjectCode } from "./challengeBackHref"
 import { ChallengePaper } from "./ChallengePaper"
 import { classifyChallengePaper } from "./paperKind"
 import { GradeCodePanel } from "./GradeCodePanel"
@@ -125,10 +127,23 @@ export const ChallengeView = () => {
     const { challengeId } = useParams<{ challengeId: string }>()
     const router = useRouter()
     // Where the reader came from — see challengeBackHref.
-    const backHref = challengeBackHref(useSearchParams().get("subject"))
+    const subjectParam = useSearchParams().get("subject")
+    const backHref = challengeBackHref(subjectParam)
+    // …and the workspace they came from, which the page STAYS INSIDE (see below).
+    const subjectCode = challengeSubjectCode(subjectParam)
     const { challenge, isLoading, error, mutate } = useQueryChallengeSwr(challengeId)
 
-    return (
+    /**
+     * Does this challenge carry an exam paper? Read once: it picks the surface below AND
+     * the page width — a paper is a two-pane reader (paper ⇄ discussion) that wants the
+     * whole content column, the way the FE album does, while an ordinary solve surface
+     * stays inside the comfortable `max-w-6xl` measure.
+     */
+    const hasPaper = challenge
+        ? classifyChallengePaper(challenge.paperUrl, challenge.paperMime) !== "MISSING"
+        : false
+
+    const view = (
         <AsyncContent
             isLoading={isLoading}
             skeleton={<ChallengeViewSkeleton />}
@@ -160,7 +175,15 @@ export const ChallengeView = () => {
             }}
         >
             {challenge ? (
-                <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-6">
+                <div
+                    className={cn(
+                        "mx-auto flex w-full flex-col gap-6 p-6",
+                        // ponytail: a paper drops the measure cap instead of getting its
+                        // own layout — 1152px minus the 400px discussion column left the
+                        // exam pane narrower than the scan it has to show.
+                        !hasPaper && "max-w-6xl",
+                    )}
+                >
                     {/* header: back link, then a tight title↔meta cluster */}
                     <div className="flex flex-col gap-2">
                         <Link
@@ -196,14 +219,14 @@ export const ChallengeView = () => {
                         </div>
                     </div>
 
+                    {/* Đề bài có thể là markdown HOẶC HTML (admin soạn bằng rich-text editor) —
+                        render bằng MarkdownContent kẻo thẻ `<ul><li>` lòi ra dạng text. */}
                     {challenge.description ? (
-                        <Typography
-                            type="body-sm"
-                            color="muted"
-                            className="whitespace-pre-line"
-                        >
-                            {challenge.description}
-                        </Typography>
+                        <MarkdownContent
+                            allowHtml
+                            markdown={challenge.description}
+                            className="text-muted"
+                        />
                     ) : null}
 
                     {/* Structured brief (requirements/steps/hints) — only when the BE
@@ -217,27 +240,50 @@ export const ChallengeView = () => {
                     {/* An exam paper OWNS the surface: read it on the left, hand it in on the
                         right (gated until AI grading for papers is sold), so the code solvers
                         are not even reached for a paper-bearing challenge. */}
-                    {classifyChallengePaper(challenge.paperUrl, challenge.paperMime)
-                        !== "MISSING" ? (
-                            <ChallengePaper
-                                paperUrl={challenge.paperUrl}
-                                paperMime={challenge.paperMime}
-                                // The rest of the paper (pages + templates) when the BE
-                                // ships the set; `null` on an older one, which keeps the
-                                // surface on its single-file behaviour.
-                                paperFiles={challenge.paperFiles}
-                                title={challenge.title}
-                                // The comment endpoints bind a UUID, and `challenge.id` is
-                                // the routing SLUG — the real id is `challengeUuid`.
-                                challengeId={challenge.challengeUuid}
-                                author={challenge.author}
-                                createdAt={challenge.createdAt}
-                            />
-                        ) : (
-                            <ChallengeSolveSurface challenge={challenge} />
-                        )}
+                    {hasPaper ? (
+                        <ChallengePaper
+                            paperUrl={challenge.paperUrl}
+                            paperMime={challenge.paperMime}
+                            // The rest of the paper (pages + templates) when the BE
+                            // ships the set; `null` on an older one, which keeps the
+                            // surface on its single-file behaviour.
+                            paperFiles={challenge.paperFiles}
+                            title={challenge.title}
+                            // The comment endpoints bind a UUID, and `challenge.id` is
+                            // the routing SLUG — the real id is `challengeUuid`.
+                            challengeId={challenge.challengeUuid}
+                            author={challenge.author}
+                            createdAt={challenge.createdAt}
+                        />
+                    ) : (
+                        <ChallengeSolveSurface challenge={challenge} />
+                    )}
                 </div>
             ) : null}
         </AsyncContent>
+    )
+
+    /**
+     * Opened FROM a subject workspace (`?subject=CSD201`) → the page stays INSIDE that
+     * workspace: the same {@link SubjectWorkspaceShell} the `/subjects/<code>/…` layout
+     * mounts, reused as-is rather than copied, so the rail (Tổng quan · Thảo luận ·
+     * Tài nguyên · Thực hành · Thành viên · Thống kê · Nghề nghiệp) is exactly the one
+     * the reader just left — a challenge is reached from the Practice tab, and dropping
+     * the rail on the way in made it feel like leaving the subject.
+     *
+     * No subject in the query (the global catalogue, a shared link) → no workspace to
+     * claim, so the page stands on its own exactly as before.
+     *
+     * The rail marks "Thực hành" as the open area. It cannot work that out on its own —
+     * it derives active from `pathname.startsWith("/subjects/<code>/<segment>")` and this
+     * route lives at `/challenges/…`, so every row came up cold — hence the explicit
+     * `activeSegment`: a challenge is only ever reached from that tab.
+     */
+    return subjectCode ? (
+        <SubjectWorkspaceShell subjectId={subjectCode} activeSegment="practice">
+            {view}
+        </SubjectWorkspaceShell>
+    ) : (
+        view
     )
 }

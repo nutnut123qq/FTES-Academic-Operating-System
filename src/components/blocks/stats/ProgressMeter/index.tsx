@@ -13,7 +13,13 @@ import type { WithClassNames } from "@/modules/types/base/class-name"
  * label / value row above a HeroUI {@link ProgressBar}. It performs no data
  * fetching and reads no global store — all content arrives via props.
  */
-export interface ProgressMeterProps extends WithClassNames<undefined> {
+export interface ProgressMeterProps
+    extends WithClassNames<{
+        /** Extra classes on the bar's TRACK (the groove) — height, fill, inner shadow. */
+        track?: string
+        /** Extra classes on the bar's FILL (the coloured part). */
+        fill?: string
+    }> {
     /**
      * Current progress value. Should fall within the range `[0, max]`.
      */
@@ -59,6 +65,7 @@ export const ProgressMeter = ({
     label,
     showValue = false,
     className,
+    classNames,
     "aria-label": ariaLabel,
 }: ProgressMeterProps) => {
     const safeMax = max > 0 ? max : 1
@@ -82,8 +89,11 @@ export const ProgressMeter = ({
                 color="accent"
                 size="sm"
             >
-                <ProgressBar.Track>
-                    <ProgressBar.Fill />
+                {/* ponytail: track/fill nhận class TRỰC TIẾP (HeroUI đã hở sẵn `className`
+                    trên hai slot này) thay vì để người gọi bắn selector `[data-slot=…]` từ
+                    ngoài — selector kia vỡ câm lặng nếu HeroUI đổi tên slot. */}
+                <ProgressBar.Track className={classNames?.track}>
+                    <ProgressBar.Fill className={classNames?.fill} />
                 </ProgressBar.Track>
             </ProgressBar>
         </div>

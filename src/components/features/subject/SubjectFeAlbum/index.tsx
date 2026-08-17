@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useMemo, useState } from "react"
-import { Button, Chip, Typography } from "@heroui/react"
+import { Button, Chip, Typography, cn } from "@heroui/react"
 import { ArrowLeftIcon, ChatCircleIcon, SlidersHorizontalIcon } from "@phosphor-icons/react"
 import { useLocale, useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
@@ -9,7 +9,6 @@ import { useParams } from "next/navigation"
 import { useRouter } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
-import { UserAvatar } from "@/components/reuseable/UserAvatar"
 import { formatRelativeTime } from "@/components/features/community/hooks/relativeTime"
 import { FE_ALBUM_MAX_IMAGES } from "@/components/features/resource/ResourceUpload/uploadRules"
 import { useQueryFeAlbumSwr } from "@/components/features/resource/hooks/useQueryFeAlbumSwr"
@@ -24,14 +23,21 @@ import { FeImageCommentThread } from "./FeImageCommentThread"
 
 /**
  * FE (Final Exam) album viewer — the image-post layout the spec asked for: the picture
- * on the LEFT, the poster's info + that picture's comment thread on the RIGHT.
+ * on the LEFT, that picture's meta + comment thread on the RIGHT.
  *
  * The two-pane anatomy mirrors the community photo lightbox
  * (`CommunityPhotoLightboxModal`): `lg:grid-cols-[minmax(0,1fr)_400px]`, the image
- * letterboxed on black, the right pane on `bg-overlay` scrolling on its own; on mobile the
+ * letterboxed on black, the right pane on `bg-overlay` shaped like a chat (meta on top,
+ * the thread scrolling in the middle, the composer on the bottom edge); on mobile the
  * panes stack and the page scrolls as one. The picture itself is the shared
  * {@link ExamImageViewer} — carets, counter, filmstrip, ←/→ keys, zoom and pan all live
  * there rather than in this page.
+ *
+ * From `lg` the PAGE is the height of the workspace rail beside it
+ * (`calc(100dvh-4rem)`) and the frame simply takes what is left, rather than naming a
+ * height of its own. A frame shorter than the rail is what left the acre of white space
+ * under the album, and it shrank the picture for nothing: the scan is `object-contain`,
+ * so every pixel the frame gains is a pixel of exam paper.
  *
  * The grid pins its single row to `minmax(0,1fr)` and the viewer carries `min-h-0`: a
  * grid/flex item's automatic minimum size is its CONTENT, so a portrait scan would
@@ -97,8 +103,23 @@ export const SubjectFeAlbum = () => {
     }, [albumId])
 
     return (
-        <div className="flex flex-col gap-3 p-6">
-            <div className="flex flex-wrap items-start gap-3">
+        // ponytail: the page OWNS the height instead of the frame guessing at it. The
+        // workspace rail next door is `md:h-[calc(100dvh-4rem)]`, so a shorter content
+        // column left that difference as dead white space under the album — and the
+        // picture inside a fixed `100dvh-20rem` frame was small for no reason. Matching
+        // the rail's own height makes the column end exactly where the rail does (no gap)
+        // and hands every spare pixel to the picture, which is `object-contain` and grows
+        // with its frame. Only from `lg`: below it the panes STACK, so a capped height
+        // would squeeze the comment column instead — the page scrolls there, as before.
+        // Dropped while the manager panel is open: that panel is tall and would be the
+        // thing squeezed out of a viewport-locked column.
+        <div
+            className={cn(
+                "flex flex-col gap-3 p-6",
+                !isManaging && "lg:h-[calc(100dvh-4rem)]",
+            )}
+        >
+            <div className="flex shrink-0 flex-wrap items-start gap-3">
                 <Button
                     size="sm"
                     variant="ghost"
@@ -171,10 +192,12 @@ export const SubjectFeAlbum = () => {
                 }}
             >
                 {current ? (
-                    /* 20rem of chrome, not 16: this page hangs under the subject workspace
-                       shell (4rem navbar + cover banner + identity row), so the old figure
-                       pushed the frame's bottom edge — filmstrip included — under the fold. */
-                    <div className="overflow-hidden rounded-2xl border border-separator lg:grid lg:h-[calc(100dvh-20rem)] lg:min-h-[26rem] lg:grid-cols-[minmax(0,1fr)_400px] lg:grid-rows-[minmax(0,1fr)]">
+                    /* The frame no longer names a height: it TAKES what the column has
+                       left (`lg:flex-1`), which is the viewport minus the navbar minus this
+                       page's own header row. `lg:min-h-[26rem]` is the floor for the one
+                       case the column is not height-locked (the manager panel is open) —
+                       without it the auto-height row would collapse onto the filmstrip. */
+                    <div className="overflow-hidden rounded-2xl border border-separator lg:grid lg:min-h-[26rem] lg:flex-1 lg:grid-cols-[minmax(0,1fr)_400px] lg:grid-rows-[minmax(0,1fr)]">
                         {/* LEFT — the picture, letterboxed on black. `min-h-0` + an explicitly
                             0-floored row are what let a PORTRAIT scan shrink to the frame
                             instead of inflating it (a grid item's automatic minimum size is
@@ -187,35 +210,25 @@ export const SubjectFeAlbum = () => {
                             className="h-[60dvh] min-h-0 lg:h-full"
                         />
 
-                        {/* RIGHT — poster info + THIS picture's comments (scrolls on its own on lg:) */}
-                        <div className="flex min-h-0 flex-col gap-3 bg-overlay p-4 lg:overflow-y-auto">
-                            <div className="flex items-start gap-3">
-                                {/* The album view carries only an uploader id — no profile
-                                    join, so neither a name nor an uploaded photo ever
-                                    reaches this row.
-                                    `seed=""` is what actually keeps the avatar on its
-                                    neutral tile: `UserAvatar` seeds the GENERATED face on
-                                    `seed ?? username`, so leaving it off would hash the
-                                    uuid into a face — a face that looks exactly like "this
-                                    person has no photo" while the truth is that their photo
-                                    is simply not fetched here (the trap documented on
-                                    `UserAvatar`). "" is the documented "no seed to hash"
-                                    value. The uuid is never PRINTED either: `avatarInitials`
-                                    rejects a raw id, so the fallback is the person glyph. */}
-                                <UserAvatar
-                                    username={current.uploadedBy}
-                                    seed=""
-                                    size="sm"
-                                    className="size-9 shrink-0"
-                                />
-                                <div className="min-w-0 flex-1">
-                                    <Typography type="body-sm" weight="medium">
-                                        {t("practice.fe.uploader")}
-                                    </Typography>
-                                    <Typography type="body-xs" color="muted">
-                                        {formatRelativeTime(current.createdAt, locale)}
-                                    </Typography>
-                                </div>
+                        {/* RIGHT — a chat-shaped column: this meta strip on top, the thread
+                            filling the rest with its OWN scroll, the composer pinned to the
+                            bottom edge (see FeImageCommentThread). It no longer scrolls as a
+                            whole, which is what used to let the composer drift up into the
+                            empty space under a short thread. */}
+                        <div className="flex min-h-0 flex-col gap-3 bg-overlay p-4">
+                            {/* ponytail: the "Uploaded by" line is GONE, not fixed — there is
+                                nobody to name. `FeImageView` (src/modules/api/rest/resource/types.ts:281)
+                                ships `uploadedBy` as a raw uuid and the FE has no
+                                name-resolution endpoint to trade it for a display name (the
+                                PE paper only names its uploader because the challenge
+                                contract sends a resolved `AuthorView`). So the row printed a
+                                label with an empty name beside a placeholder avatar. What is
+                                left is the meta the BE actually ships: when the picture was
+                                posted, and how many comments it carries. */}
+                            <div className="flex shrink-0 items-center justify-between gap-2">
+                                <Typography type="body-xs" color="muted">
+                                    {formatRelativeTime(current.createdAt, locale)}
+                                </Typography>
                                 <Chip size="sm" variant="soft" color="accent">
                                     <span className="flex items-center gap-1">
                                         <ChatCircleIcon
@@ -229,7 +242,9 @@ export const SubjectFeAlbum = () => {
                             </div>
 
                             {current.caption ? (
-                                <Typography type="body-sm">{current.caption}</Typography>
+                                <Typography type="body-sm" className="shrink-0">
+                                    {current.caption}
+                                </Typography>
                             ) : null}
 
                             {/* Keyed by the image: paging resets the thread's page + reply
@@ -247,10 +262,10 @@ export const SubjectFeAlbum = () => {
     )
 }
 
-/** Loading skeleton — mirrors the two-pane viewer so the layout never jumps. */
+/** Loading skeleton — mirrors the two-pane viewer (and its height) so nothing jumps. */
 const FeAlbumSkeleton = () => (
-    <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_400px]">
-        <Skeleton className="h-[60dvh] w-full rounded-2xl" />
+    <div className="grid gap-3 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1fr)_400px]">
+        <Skeleton className="h-[60dvh] w-full rounded-2xl lg:h-full" />
         <div className="flex flex-col gap-3">
             <Skeleton className="h-10 w-full rounded-2xl" />
             <Skeleton className="h-24 w-full rounded-2xl" />

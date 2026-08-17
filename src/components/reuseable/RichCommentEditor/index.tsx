@@ -51,6 +51,15 @@ export interface RichCommentEditorProps extends WithClassNames<undefined> {
      * Useful when switching into reply mode while preserving the draft.
      */
     focusTrigger?: number | string
+    /**
+     * Chuỗi chèn SẴN vào ô soạn khi {@link RichCommentEditorProps.focusTrigger} đổi và ô
+     * đang RỖNG — dùng cho auto-tag "@Tên " lúc bấm trả lời, để người dùng THẤY cái tag
+     * trong ô chứ không phải đoán là nó sẽ được ghép lúc gửi.
+     *
+     * Ô đang có chữ thì KHÔNG chèn: người dùng gõ dở rồi đổi ý bấm trả lời hàng khác vẫn
+     * giữ nguyên bản nháp, không bị đạp chữ.
+     */
+    prefill?: string
     /** Called when the editor receives focus. */
     onFocus?: () => void
     /** Called when the editor loses focus. */
@@ -72,6 +81,7 @@ export const RichCommentEditor = ({
     isPending,
     onSubmit,
     focusTrigger,
+    prefill,
     onFocus,
     onBlur,
     className,
@@ -165,10 +175,24 @@ export const RichCommentEditor = ({
     // current instance rather than the null captured when the editor was created.
     editorRef.current = editor
 
+    // ponytail: `prefill` đọc qua ref chứ không nằm trong deps — nó đổi CÙNG LÚC với
+    // `focusTrigger` khi bấm trả lời, còn lúc huỷ trả lời thì chỉ mình nó đổi và ta KHÔNG
+    // muốn cú đó kéo con trỏ về ô soạn. Một nguồn kích hoạt duy nhất: `focusTrigger`.
+    const prefillRef = useRef(prefill)
+    prefillRef.current = prefill
+
     useEffect(() => {
-        if (editor && focusTrigger !== undefined) {
-            editor.commands.focus("end")
+        if (!editor || focusTrigger === undefined) {
+            return
         }
+        const text = prefillRef.current
+        // Chèn dạng text node (không phải chuỗi HTML) để dấu cách cuối "@Tên " sống sót —
+        // parser HTML sẽ nuốt mất khoảng trắng đó.
+        if (text && editor.isEmpty) {
+            editor.chain().focus("end").insertContent({ type: "text", text }).run()
+            return
+        }
+        editor.commands.focus("end")
     }, [editor, focusTrigger])
 
     const insertSticker = useCallback((sticker: Sticker) => {

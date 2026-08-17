@@ -13,6 +13,21 @@ import { AI_CHIP_KEYS } from "../content"
 const COUNT_DURATION = 1500
 
 /**
+ * ponytail: mọi dòng chữ phụ của section này (eyebrow, nhãn dưới con số, tiêu đề hàng
+ * chip AI) dùng chung một chuỗi class thay cho `color="muted"`.
+ *
+ * Token `--muted` ở theme SÁNG là xám ~55% độ sáng; đặt trên nền `bg-default/20` gần
+ * trắng thì tương phản rơi xuống dưới ngưỡng đọc được. `#666666` kéo lại đủ đậm mà vẫn
+ * là chữ phụ (không bằng `--foreground`).
+ *
+ * Nền TỐI giữ nguyên `muted` (xám sáng ~70%) — `#666666` trên nền tối thì mù chữ. App
+ * để dark làm theme mặc định (next-themes `attribute="class"` → `.dark` trên `<html>`),
+ * nên phải có nhánh này; biến thể `dark:` của Tailwind KHÔNG dùng được vì repo chưa khai
+ * `@custom-variant dark`, nó vẫn đang bám `prefers-color-scheme`.
+ */
+const SUBTLE_TEXT = "text-[#666666] [.dark_&]:text-muted"
+
+/**
  * Counts 0 → `target` the first time it scrolls into view (ease-out cubic via rAF).
  * Respects `prefers-reduced-motion` — snaps to the final figure. Returns the ref to
  * attach + the current value.
@@ -64,7 +79,7 @@ const Stat = ({ icon, value, label }: { icon: React.ReactNode; value: number; la
             <div className="text-4xl font-semibold tracking-tight tabular-nums text-foreground md:text-5xl">
                 {shown.toLocaleString(locale)}
             </div>
-            <Typography type="body-sm" color="muted" align="center">
+            <Typography type="body-sm" align="center" className={SUBTLE_TEXT}>
                 {label}
             </Typography>
         </div>
@@ -99,7 +114,7 @@ export const PlatformStatsSection = () => {
         <section className="w-full border-y border-separator bg-default/20">
             <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
                 <div className="mb-10 flex flex-col items-center gap-2 text-center">
-                    <Typography type="body-sm" color="muted">
+                    <Typography type="body-sm" className={SUBTLE_TEXT}>
                         {t("stats.eyebrow")}
                     </Typography>
                     <Typography type="h3" weight="bold">
@@ -135,7 +150,7 @@ export const PlatformStatsSection = () => {
 
                 {/* AI-feature chips — static, always rendered, crawlable */}
                 <div className="mt-10 flex flex-col items-center gap-3">
-                    <Typography type="body-sm" color="muted">
+                    <Typography type="body-sm" className={SUBTLE_TEXT}>
                         {t("stats.aiTitle")}
                     </Typography>
                     <div className="flex flex-wrap items-center justify-center gap-2">

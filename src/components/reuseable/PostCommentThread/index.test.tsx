@@ -1,5 +1,5 @@
 import React from "react"
-import { fireEvent, render, screen } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { PostComment } from "@/components/features/community/hooks/useQueryPostDetailSwr"
 
@@ -21,7 +21,13 @@ import type { PostComment } from "@/components/features/community/hooks/useQuery
  *    profile join (group feed / discussion) map `authorUsername` to the raw
  *    author id — otherwise the viewer's own comment would offer "Báo cáo",
  *  - `canReportComments={false}` (threads outside the community module) drops
- *    the built-in report entry entirely.
+ *    the built-in report entry entirely,
+ *  - "Trả lời" nay có ở MỌI cấp, và trả lời một comment CON vẫn gắn vào comment
+ *    cấp 1 của nhánh (cây phẳng 2 cấp) với "@Tên " CHÈN SẴN vào ô soạn (prop
+ *    `prefill` của RichCommentEditor) — không còn ghép lúc gửi, nên tag hiện ra
+ *    cho người dùng thấy và chỉ xuất hiện đúng một lần,
+ *  - tên tác giả: hàng không mang tên mà là của chính người đang đăng nhập thì
+ *    lấy tên trong store, còn hàng của người khác giữ nhãn chung.
  *
  * `t` echoes the key so assertions key off message ids.
  */
@@ -105,13 +111,38 @@ vi.mock("@/components/reuseable/MarkdownContent", () => ({
     MarkdownContent: ({ markdown }: { markdown: string }) => <p>{markdown}</p>,
 }))
 
+// Ô soạn giả lập ĐÚNG hợp đồng thật: `prefill` là chữ nằm sẵn TRONG ô (bản thật chèn nó
+// vào Tiptap khi `focusTrigger` đổi và ô đang rỗng), còn bấm "composer" = gửi nguyên văn
+// những gì đang có trong ô + phần người dùng gõ. Nhờ vậy test bắt được cả hai lỗi: tag
+// không hiện trong ô, và tag bị ghép HAI lần (một lần ở ô, một lần lúc gửi).
 vi.mock("@/components/reuseable/RichCommentEditor", () => ({
-    RichCommentEditor: () => <div data-testid="composer" />,
+    RichCommentEditor: ({
+        prefill,
+        onSubmit,
+    }: {
+        prefill?: string
+        onSubmit?: (body: string) => boolean | Promise<boolean>
+    }) => (
+        <div>
+            <span data-testid="composer-draft">{prefill ?? ""}</span>
+            <button
+                type="button"
+                data-testid="composer"
+                onClick={() => void onSubmit?.(`${prefill ?? ""}Rõ rồi.`)}
+            >
+                composer
+            </button>
+        </div>
+    ),
 }))
 
 /** Mutable session flag + the shared report mutation, shared with the factories. */
 const session = vi.hoisted(() => ({ authenticated: true }))
 const submitReport = vi.hoisted(() => vi.fn())
+/** Người đang đăng nhập trong store (mặc định: khách). */
+const store = vi.hoisted(() => ({
+    user: null as { id: string; username: string; displayName?: string | null } | null,
+}))
 
 vi.mock("@/hooks/useRequireAuth", () => ({
     useRequireAuth: () => ({
@@ -122,9 +153,9 @@ vi.mock("@/hooks/useRequireAuth", () => ({
 }))
 
 vi.mock("@/redux/hooks", () => ({
-    // no session user in the store → the `currentUsername` prop is the only viewer
-    useAppSelector: (selector: (state: { user: { user: null } }) => unknown) =>
-        selector({ user: { user: null } }),
+    // mặc định không có session user → prop `currentUsername` là viewer duy nhất
+    useAppSelector: (selector: (state: { user: { user: unknown } }) => unknown) =>
+        selector({ user: { user: store.user } }),
 }))
 
 vi.mock(
@@ -194,6 +225,10 @@ const comments = (): Array<PostComment> => [
         timeLabel: "30 phút",
     },
 ]
+
+beforeEach(() => {
+    store.user = null
+})
 
 /** Render the thread with the accept/owner wiring under test. */
 const renderThread = (props: Partial<React.ComponentProps<typeof PostCommentThread>> = {}) =>
@@ -422,5 +457,118 @@ describe("PostCommentThread — per-surface copy", () => {
 
         expect(screen.getByText("Chưa có bình luận nào cho đề này.")).toBeTruthy()
         expect(screen.queryByText("engagement.commentsEmpty")).toBeNull()
+    })
+})
+
+/**
+ * "Trả lời" ở mọi cấp + auto-tag. Trước đây chỉ comment cấp 1 có nút, nên một câu trả
+ * lời nhắm vào comment con không có đường nào để viết. Nay mọi hàng đều có nút, nhưng
+ * cây KHÔNG sâu thêm: hàng mới gắn vào comment cấp 1 của nhánh — bù lại nội dung được
+ * ghép sẵn "@Tên " để không mất địa chỉ (đúng cách Facebook làm).
+ */
+describe("PostCommentThread — trả lời ở mọi cấp", () => {
+    it("hiện nút trả lời trên cả comment con", () => {
+        renderThread()
+
+        // 2 comment cấp 1 + 1 comment con
+        expect(screen.getAllByText("engagement.reply")).toHaveLength(3)
+    })
+
+    it("trả lời comment CON: tag hiện SẴN trong ô soạn, và chỉ MỘT lần khi gửi", async () => {
+        const onSubmit = vi.fn().mockResolvedValue(true)
+        renderThread({ onSubmit })
+
+        // ô soạn trống trước khi bấm trả lời
+        expect(screen.getByTestId("composer-draft").textContent).toBe("")
+
+        // thứ tự DOM: c-1 (Minh) → r-1 (Lan, con của c-1) → c-2
+        fireEvent.click(screen.getAllByText("engagement.reply")[1])
+        // người dùng NHÌN THẤY "@Lan " trong ô ngay lúc bấm, không phải đợi tới lúc gửi
+        expect(screen.getByTestId("composer-draft").textContent).toBe("@Lan ")
+
+        fireEvent.click(screen.getByTestId("composer"))
+
+        await waitFor(() => {
+            // đúng một lần tag (không phải "@Lan @Lan …") và gắn vào comment CẤP 1
+            expect(onSubmit).toHaveBeenCalledWith("@Lan Rõ rồi.", "c-1")
+        })
+    })
+
+    it("trả lời comment cấp 1 thì KHÔNG tag (hàng mới nằm ngay dưới nó)", async () => {
+        const onSubmit = vi.fn().mockResolvedValue(true)
+        renderThread({ onSubmit })
+
+        fireEvent.click(screen.getAllByText("engagement.reply")[0])
+        expect(screen.getByTestId("composer-draft").textContent).toBe("")
+
+        fireEvent.click(screen.getByTestId("composer"))
+
+        await waitFor(() => {
+            expect(onSubmit).toHaveBeenCalledWith("Rõ rồi.", "c-1")
+        })
+    })
+})
+
+/**
+ * Nhãn "Thành viên" chỉ được dùng khi THẬT SỰ không biết người viết là ai. Với comment
+ * của chính người đang đăng nhập (node lạc quan vừa gửi, hoặc nguồn không join profile)
+ * thì tên đã nằm sẵn trong store — không có cớ gì hiện nhãn chung.
+ */
+describe("PostCommentThread — tên tác giả", () => {
+    /** Một comment của chính viewer, hàng KHÔNG mang tên (chưa có author card). */
+    const ownComment = (): Array<PostComment> => [
+        {
+            id: "opt-1",
+            author: "",
+            authorUsername: "11111111-2222-3333-4444-555555555555",
+            text: "Vừa gửi xong.",
+            timeLabel: "vài giây",
+        },
+    ]
+
+    it("dùng tên người đang đăng nhập cho comment CỦA HỌ khi hàng chưa mang tên", () => {
+        store.user = {
+            id: "11111111-2222-3333-4444-555555555555",
+            username: "khoa",
+            displayName: "Khoa Trần",
+        }
+        renderThread({ comments: ownComment() })
+
+        expect(screen.getAllByText("Khoa Trần").length).toBeGreaterThan(0)
+        expect(screen.queryByText("unknownMember")).toBeNull()
+    })
+
+    it("rơi về username khi tài khoản chưa đặt tên hiển thị", () => {
+        store.user = {
+            id: "11111111-2222-3333-4444-555555555555",
+            username: "khoa",
+            displayName: null,
+        }
+        renderThread({ comments: ownComment() })
+
+        expect(screen.getAllByText("khoa").length).toBeGreaterThan(0)
+        expect(screen.queryByText("unknownMember")).toBeNull()
+    })
+
+    it("KHÔNG đoán tên cho comment của người khác — giữ nhãn chung", () => {
+        store.user = {
+            id: "11111111-2222-3333-4444-555555555555",
+            username: "khoa",
+            displayName: "Khoa Trần",
+        }
+        renderThread({
+            comments: [
+                {
+                    id: "c-9",
+                    author: "",
+                    authorUsername: "99999999-8888-7777-6666-555555555555",
+                    text: "Của người khác.",
+                    timeLabel: "1 phút",
+                },
+            ],
+        })
+
+        expect(screen.getAllByText("unknownMember").length).toBeGreaterThan(0)
+        expect(screen.queryByText("Khoa Trần")).toBeNull()
     })
 })

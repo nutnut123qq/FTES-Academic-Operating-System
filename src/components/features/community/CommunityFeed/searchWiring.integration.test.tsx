@@ -22,8 +22,17 @@ vi.mock("@heroui/react", () => {
     const Popover = ({ children }: { children?: React.ReactNode }) => <div>{children}</div>
     Popover.Trigger = Passthrough
     Popover.Content = Passthrough
+    // The row's in-place post modal: closed renders nothing, so the feed assertions stay clean.
+    const Modal = ({ isOpen, children }: { isOpen?: boolean; children?: React.ReactNode }) =>
+        isOpen ? <div>{children}</div> : null
+    Modal.Backdrop = Passthrough
+    Modal.Container = Passthrough
+    Modal.Dialog = Passthrough
+    Modal.CloseTrigger = () => <button type="button" />
     return {
         Popover,
+        Modal,
+        Spinner: () => <div />,
         Button: ({ children, onPress, "aria-label": al }: { children?: React.ReactNode; onPress?: () => void; "aria-label"?: string }) => (
             <button type="button" onClick={onPress} aria-label={al}>{children}</button>
         ),
@@ -71,6 +80,7 @@ vi.mock("../hooks/useMutateCreatePostCommentSwr", () => ({ useMutateCreatePostCo
 vi.mock("../CommunityPostDetail/hooks/useQueryPostMetaSwr", () => ({ useQueryPostMetaSwr: () => ({ meta: undefined, error: undefined }) }))
 vi.mock("../CommunityPostDetail/hooks/useMutateReportContentSwr", () => ({ useMutateReportContentSwr: () => vi.fn() }))
 vi.mock("../CommunityPostDetail/PostEditDialog", () => ({ PostEditDialog: () => null }))
+vi.mock("../CommunityPostDetail/CommunityPostContent", () => ({ CommunityPostContent: () => <div /> }))
 vi.mock("./hooks/useMutateFeedPostOwnerActionsSwr", () => ({ useMutateFeedPostOwnerActionsSwr: () => ({ deleteFeedPost: vi.fn(), editFeedPost: vi.fn() }) }))
 
 // The GraphQL layer — spied. Real enums preserved.

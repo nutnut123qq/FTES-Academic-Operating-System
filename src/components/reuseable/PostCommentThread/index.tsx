@@ -36,6 +36,30 @@ export type ReportCommentHandler = (
     detail?: string,
 ) => Promise<boolean>
 
+/**
+ * Trạng thái "đang trả lời ai" của ô soạn thảo.
+ *
+ * `target` là hàng người dùng BẤM (để hiện tên trong chip), còn `parentId` là comment
+ * CẤP 1 mà hàng mới sẽ gắn vào — hai thứ này khác nhau khi trả lời một comment con: cây
+ * giữ đúng 2 cấp, nên `mention` mang chuỗi "@Tên " để người đọc biết câu trả lời nhắm
+ * vào ai (đúng cách Facebook làm).
+ */
+interface ReplyTarget {
+    /** Hàng được bấm "Trả lời". */
+    target: PostComment
+    /** Id comment cấp 1 nhận hàng mới (chính `target.id` khi bấm ở cấp 1). */
+    parentId: string
+    /**
+     * "@Tên " CHÈN SẴN vào ô soạn (`RichCommentEditor.prefill`), hoặc `""` khi trả lời
+     * thẳng comment cấp 1.
+     *
+     * ponytail: chèn vào ô soạn chứ KHÔNG ghép lúc gửi — ghép lúc gửi thì comment lưu
+     * xuống đúng nhưng người dùng không thấy tag đâu cả, cảm giác như chưa bấm reply.
+     * Ghép cả hai chỗ thì tag ra hai lần, nên `handleSubmit` gửi nguyên văn bản nháp.
+     */
+    mention: string
+}
+
 /** Props for {@link PostCommentThread}. */
 export interface PostCommentThreadProps extends WithClassNames<undefined> {
     /** DOM id of the region (referenced by the bar's `aria-controls`). */
@@ -129,6 +153,20 @@ export interface PostCommentThreadProps extends WithClassNames<undefined> {
 }
 
 /**
+ * Tên hiển thị của tác giả MỘT comment — một chỗ duy nhất quyết, dùng cho cả hàng
+ * comment, chip "đang trả lời" và chuỗi auto-tag "@Tên".
+ *
+ * `author` rỗng (nguồn không có profile join) hoặc bị mapper degrade thành uuid thì
+ * trả `fallback` — không bao giờ in uuid ra làm tên người.
+ *
+ * @param comment - Hàng comment.
+ * @param fallback - Tên thay thế khi hàng không mang tên thật.
+ * @returns Tên để render.
+ */
+const resolveAuthorName = (comment: PostComment, fallback: string): string =>
+    comment.author && !looksLikeUserId(comment.author) ? comment.author : fallback
+
+/**
  * One comment row (avatar + author + time + body + optional reply affordance).
  * Owner/report actions are NOT spelled out inline — they sit in the shared ⋯
  * {@link PostActionsMenu}, exactly like a post's.
@@ -138,6 +176,7 @@ export const CommentRow = ({
     onReply,
     replyLabel,
     isReply,
+    fallbackName,
     hasThreadline,
     canManage = false,
     onEdit,
@@ -152,6 +191,12 @@ export const CommentRow = ({
     onReply?: (comment: PostComment) => void
     replyLabel: string
     isReply?: boolean
+    /**
+     * Tên dùng khi hàng comment KHÔNG mang tên thật (nguồn không có profile join, hoặc
+     * node lạc quan vừa gửi chưa có author card). Chỉ truyền khi biết chắc người viết là
+     * ai — trên thực tế là chính người đang đăng nhập; bỏ trống → nhãn "Thành viên" cũ.
+     */
+    fallbackName?: string
     /**
      * Draw the Threads-style vertical connector under this (top-level) comment's
      * avatar, running down to its replies. Set when the comment has replies.
@@ -218,12 +263,10 @@ export const CommentRow = ({
      * Name actually rendered. Mappers with no profile join leave `author` empty and
      * degrade `authorUsername` to the raw author id (the owner gate needs that id — see
      * `isMine`), so without a label `UserLink` would print the uuid as the commenter's
-     * name. One shared label for every thread that lands here.
+     * name. `fallbackName` (viewer's own name) wins over the shared "member" label when
+     * the caller knows who wrote the row; otherwise the label is unchanged.
      */
-    const authorName =
-        comment.author && !looksLikeUserId(comment.author)
-            ? comment.author
-            : tCommon("unknownMember")
+    const authorName = resolveAuthorName(comment, fallbackName ?? tCommon("unknownMember"))
 
     return (
         <div className={cn("flex items-start gap-3", isReply && "ml-9")}>
@@ -248,6 +291,9 @@ export const CommentRow = ({
                         displayName={authorName}
                         showAvatar={false}
                         staffRole={comment.authorStaffRole}
+                        // Tên người bình luận ĐẬM như tên tác giả bài viết ở CommunityFeed —
+                        // mặc định `font-semibold` của UserLink đọc còn mảnh so với thân bình luận.
+                        classNames={{ name: "font-bold text-foreground" }}
                     />
                     <Typography type="body-xs" color="muted">
                         {comment.timeLabel}
@@ -295,7 +341,9 @@ export const CommentRow = ({
 
                 {!isEditing ? (
                     <div className="mt-1 flex flex-wrap items-center gap-2">
-                        {!isReply && onReply ? (
+                        {/* ponytail: bỏ điều kiện `!isReply` — MỌI cấp đều có "Trả lời";
+                            cây vẫn phẳng 2 cấp, cha do người gọi quyết (xem `startReply`). */}
+                        {onReply ? (
                             <Button
                                 size="sm"
                                 variant="ghost"
@@ -376,6 +424,12 @@ export const CommentRow = ({
  * composer sticks to the bottom of the viewport while focused when
  * `stickyComposerOnMobile` is set.
  *
+ * **"Trả lời" ở MỌI cấp, cây vẫn phẳng 2 cấp.** Comment con cũng có nút trả lời, nhưng
+ * hàng mới KHÔNG lồng sâu thêm — nó gắn vào đúng comment cấp 1 của nhánh đó
+ * (`onSubmit(body, rootId)`), giống Facebook. Đổi lại, ô soạn được CHÈN SẴN "@Tên " của
+ * người được trả lời (`RichCommentEditor.prefill`) để câu trả lời không mất địa chỉ —
+ * người dùng nhìn thấy tag ngay trong ô và sửa/xoá được ({@link ReplyTarget}).
+ *
  * Per-comment affordances (all opt-in via callbacks, so surfaces that pass none
  * render exactly as before) all live in the row's ⋯ {@link PostActionsMenu} —
  * only "Trả lời" (and the accept-answer action) stays inline: the viewer's OWN
@@ -389,6 +443,11 @@ export const CommentRow = ({
  *
  * The region is focusable (`tabIndex={-1}` + localized accessible name) so the
  * bar can move focus into it on expand.
+ *
+ * **Tên tác giả.** Hàng nào không mang tên thật (nguồn không join profile, hoặc node lạc
+ * quan vừa gửi chưa có author card) mà LÀ CỦA NGƯỜI ĐANG ĐĂNG NHẬP thì lấy tên trong
+ * store thay cho nhãn "Thành viên"; comment của người khác thì KHÔNG đoán — thiếu dữ
+ * liệu là thiếu, không bịa.
  *
  * @param props - {@link PostCommentThreadProps}
  */
@@ -427,7 +486,14 @@ export const PostCommentThread = ({
      */
     const sessionUsername = useAppSelector((state) => state.user.user?.username)
     const sessionUserId = useAppSelector((state) => state.user.user?.id)
-    const [replyTo, setReplyTo] = useState<PostComment | null>(null)
+    /**
+     * Tên của chính người đang đăng nhập, dùng làm nhãn cho comment CỦA HỌ khi hàng
+     * không mang tên (node lạc quan vừa gửi, hoặc nguồn không join profile). Không suy
+     * đoán tên cho người khác — những hàng đó vẫn là "Thành viên".
+     */
+    const sessionDisplayName = useAppSelector((state) => state.user.user?.displayName)
+    const viewerLabel = sessionDisplayName?.trim() || sessionUsername
+    const [replyTo, setReplyTo] = useState<ReplyTarget | null>(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [isFocused, setIsFocused] = useState(false)
     const [replyFocusTrigger, setReplyFocusTrigger] = useState(0)
@@ -465,10 +531,38 @@ export const PostCommentThread = ({
      */
     const reportEnabled = authenticated && (Boolean(onReportComment) || canReportComments)
 
-    const onReply = useCallback((comment: PostComment) => {
-        setReplyTo(comment)
-        setReplyFocusTrigger((value) => value + 1)
-    }, [])
+    /**
+     * Tên hiển thị của một hàng, có tính tới trường hợp hàng đó là của chính người đang
+     * đăng nhập (dùng cho chip "đang trả lời" và chuỗi auto-tag).
+     */
+    const nameOf = useCallback(
+        (comment: PostComment) =>
+            resolveAuthorName(
+                comment,
+                (isMine(comment.authorUsername) ? viewerLabel : undefined) ??
+                    tCommon("unknownMember"),
+            ),
+        [isMine, viewerLabel, tCommon],
+    )
+
+    /**
+     * Mở chế độ trả lời. `parentId` LUÔN là comment cấp 1 (gốc): trả lời một comment con
+     * vẫn gắn vào cùng gốc — cây phẳng đúng 2 cấp như Facebook — nên phải tag tên người
+     * được trả lời thì người đọc mới biết câu đó nhắm vào ai.
+     */
+    const startReply = useCallback(
+        (target: PostComment, parentId: string) => {
+            setReplyTo({
+                target,
+                parentId,
+                // ponytail: chỉ tag khi trả lời comment CON; trả lời gốc thì hàng nằm ngay
+                // dưới nó, tag chỉ tổ thừa.
+                mention: target.id === parentId ? "" : `@${nameOf(target)} `,
+            })
+            setReplyFocusTrigger((value) => value + 1)
+        },
+        [nameOf],
+    )
 
     const cancelReply = useCallback(() => {
         setReplyTo(null)
@@ -480,7 +574,9 @@ export const PostCommentThread = ({
                 return false
             }
             setIsSubmitting(true)
-            const ok = await onSubmit(body, replyTo?.id)
+            // Bản nháp gửi NGUYÊN VĂN: "@Tên " đã nằm sẵn trong ô soạn từ lúc bấm trả lời
+            // (xem `ReplyTarget.mention`), ghép lại ở đây là tag hai lần.
+            const ok = await onSubmit(body, replyTo?.parentId)
             setIsSubmitting(false)
             if (ok) {
                 setReplyTo(null)
@@ -519,21 +615,33 @@ export const PostCommentThread = ({
                 <CommentLoadError error={error} onRetry={onRetry} labels={labels} />
             ) : (
                 <>
-                    {comments.length === 0 ? (
-                        <Typography type="body-sm" color="muted">
-                            {labels?.empty ?? t("engagement.commentsEmpty")}
-                        </Typography>
-                    ) : (
-                        <div className="flex flex-col gap-3">
-                            {comments.map((comment) => {
+                    {/* ponytail: DANH SÁCH là vùng cuộn, composer là anh em `shrink-0` NGOÀI
+                        nó — nên trong một cột có chiều cao (khung đề challenge/PE, album FE)
+                        ô soạn ghim đáy cột và chỉ phần bình luận trôi. Đặt trong trang cuộn
+                        bình thường (feed cộng đồng, chi tiết bài, nhóm) thì cột này cao tự
+                        động: `flex-1` không có khoảng trống nào để ăn và `overflow-y-auto`
+                        không có gì để cắt, nên mấy chỗ đó giữ nguyên hành vi cũ. Cố tình
+                        KHÔNG ép chiều cao cứng ở đây — chiều cao là việc của người gọi. */}
+                    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
+                        {comments.length === 0 ? (
+                            <Typography type="body-sm" color="muted">
+                                {labels?.empty ?? t("engagement.commentsEmpty")}
+                            </Typography>
+                        ) : (
+                            comments.map((comment) => {
                                 const replies = comment.replies ?? []
                                 return (
                                     <div key={comment.id} className="flex flex-col gap-3">
                                         <CommentRow
                                             comment={comment}
-                                            onReply={onReply}
+                                            onReply={(row) => startReply(row, comment.id)}
                                             replyLabel={t("engagement.reply")}
                                             hasThreadline={replies.length > 0}
+                                            fallbackName={
+                                                isMine(comment.authorUsername)
+                                                    ? viewerLabel
+                                                    : undefined
+                                            }
                                             canManage={isMine(comment.authorUsername)}
                                             onEdit={onEditComment}
                                             onDelete={onDeleteComment}
@@ -563,8 +671,17 @@ export const PostCommentThread = ({
                                                     />
                                                     <CommentRow
                                                         comment={reply}
+                                                        // Trả lời một comment con vẫn gắn vào
+                                                        // GỐC (cây phẳng 2 cấp) — vì thế mới
+                                                        // cần auto-tag tên người được trả lời.
+                                                        onReply={(row) => startReply(row, comment.id)}
                                                         replyLabel={t("engagement.reply")}
                                                         isReply
+                                                        fallbackName={
+                                                            isMine(reply.authorUsername)
+                                                                ? viewerLabel
+                                                                : undefined
+                                                        }
                                                         canManage={isMine(reply.authorUsername)}
                                                         onEdit={onEditComment}
                                                         onDelete={onDeleteComment}
@@ -578,14 +695,14 @@ export const PostCommentThread = ({
                                         })}
                                     </div>
                                 )
-                            })}
-                        </div>
-                    )}
+                            })
+                        )}
+                    </div>
 
-                    {/* composer */}
+                    {/* composer — NGOÀI vùng cuộn ở trên, nên nó là mép đáy của cột */}
                     <div
                         className={cn(
-                            "flex flex-col gap-2",
+                            "flex shrink-0 flex-col gap-2",
                             stickyComposerOnMobile &&
                                 isFocused &&
                                 "max-sm:fixed max-sm:inset-x-0 max-sm:bottom-0 max-sm:z-30 max-sm:border-t max-sm:border-separator max-sm:bg-background max-sm:p-3",
@@ -594,12 +711,7 @@ export const PostCommentThread = ({
                         {replyTo ? (
                             <div className="flex items-center gap-2">
                                 <Typography type="body-xs" color="muted">
-                                    {t("engagement.replyingTo", {
-                                        name:
-                                            replyTo.author && !looksLikeUserId(replyTo.author)
-                                                ? replyTo.author
-                                                : tCommon("unknownMember"),
-                                    })}
+                                    {t("engagement.replyingTo", { name: nameOf(replyTo.target) })}
                                 </Typography>
                                 <Button
                                     isIconOnly
@@ -618,6 +730,7 @@ export const PostCommentThread = ({
                             autoFocus={autoFocus}
                             isPending={isSubmitting}
                             focusTrigger={replyFocusTrigger}
+                            prefill={replyTo?.mention ?? ""}
                             onFocus={() => setIsFocused(true)}
                             onBlur={() => setIsFocused(false)}
                             onSubmit={handleSubmit}
@@ -628,7 +741,7 @@ export const PostCommentThread = ({
                         <Button
                             size="sm"
                             variant="ghost"
-                            className="self-start px-0 text-xs"
+                            className="shrink-0 self-start px-0 text-xs"
                             onPress={onCollapse}
                         >
                             <CaretUpIcon aria-hidden focusable="false" className="size-4" />

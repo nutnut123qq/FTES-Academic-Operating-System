@@ -57,6 +57,9 @@ vi.mock("@heroui/react", () => {
     Modal.Header = Passthrough
     Modal.Body = Passthrough
     Modal.Footer = Passthrough
+    Modal.CloseTrigger = ({ "aria-label": ariaLabel }: { "aria-label"?: string }) => (
+        <button type="button" aria-label={ariaLabel} />
+    )
     // Compact feed-header search popover — render its trigger + content inline so the header mounts.
     const Popover = ({ children }: { children?: React.ReactNode }) => <div>{children}</div>
     Popover.Trigger = Passthrough
@@ -83,6 +86,7 @@ vi.mock("@heroui/react", () => {
         Label: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
         Typography: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
         Skeleton: () => <div />,
+        Spinner: () => <div />,
         Radio: Passthrough,
         RadioGroup: Passthrough,
         TextArea: () => <textarea />,
@@ -141,8 +145,29 @@ vi.mock("@/components/blocks/async/AsyncContent", () => ({
 vi.mock("@/components/blocks/async/InfiniteScrollSentinel", () => ({
     InfiniteScrollSentinel: () => <div />,
 }))
+// The row's title/body link now ALSO opens the in-place post modal, so the stub has to
+// forward `href` + `onClick` (a bare <a> would swallow the handler under test).
 vi.mock("@/i18n/navigation", () => ({
-    Link: ({ children }: { children?: React.ReactNode }) => <a>{children}</a>,
+    Link: ({
+        children,
+        href,
+        onClick,
+    }: {
+        children?: React.ReactNode
+        href?: string
+        onClick?: (event: React.MouseEvent<HTMLAnchorElement>) => void
+    }) => (
+        <a href={href} onClick={onClick}>
+            {children}
+        </a>
+    ),
+}))
+// The modal body is the shared post-detail component (covered by its own surface); the
+// row only decides WHEN it mounts.
+vi.mock("../CommunityPostDetail/CommunityPostContent", () => ({
+    CommunityPostContent: ({ postId }: { postId: string }) => (
+        <div data-testid="post-modal-content">{postId}</div>
+    ),
 }))
 vi.mock("../CommunityFilterBar", () => ({ CommunityFilterBar: () => <div /> }))
 vi.mock("../CommunityPostDetail/PostEditDialog", () => ({
@@ -317,6 +342,40 @@ describe("CommunityFeedRow — ⋯ menu", () => {
         // the truncated snippet, which a save would write over the real body
         fireEvent.click(screen.getByTestId("item-edit"))
         expect(screen.queryByTestId("edit-dialog")).toBeNull()
+    })
+})
+
+/**
+ * Opening a post from the feed is an IN-PLACE modal (Facebook-style), not a route
+ * change — but the row must stay a real link so `/community/{postId}` keeps working
+ * for deep links, new-tab clicks and crawlers.
+ */
+describe("CommunityFeedRow — opening the post", () => {
+    it("opens the post modal instead of navigating on a plain click", () => {
+        render(<CommunityFeedRow post={row} />)
+
+        expect(screen.queryByTestId("post-modal-content")).toBeNull()
+
+        const link = screen.getByText("Tiêu đề").closest("a") as HTMLAnchorElement
+        // the href survives — deep link / new tab / crawler still reach the route
+        expect(link.getAttribute("href")).toBe("/community/p1")
+
+        const event = new MouseEvent("click", { bubbles: true, cancelable: true })
+        fireEvent(link, event)
+
+        expect(event.defaultPrevented).toBe(true)
+        expect(screen.getByTestId("post-modal-content").textContent).toBe("p1")
+    })
+
+    it("lets a modifier click through to the route (new tab)", () => {
+        render(<CommunityFeedRow post={row} />)
+
+        const link = screen.getByText("Tiêu đề").closest("a") as HTMLAnchorElement
+        const event = new MouseEvent("click", { bubbles: true, cancelable: true, ctrlKey: true })
+        fireEvent(link, event)
+
+        expect(event.defaultPrevented).toBe(false)
+        expect(screen.queryByTestId("post-modal-content")).toBeNull()
     })
 })
 

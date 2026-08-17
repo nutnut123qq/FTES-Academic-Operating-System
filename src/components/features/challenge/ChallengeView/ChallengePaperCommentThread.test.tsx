@@ -223,3 +223,39 @@ describe("ChallengePaperCommentThread — surface copy", () => {
         expect(screen.queryByText("communityHub.engagement.commentsEmpty")).toBeNull()
     })
 })
+
+/**
+ * Tên tác giả của hàng comment. Adapter này từng chỉ đọc `displayName`, nên mọi tài
+ * khoản chưa đặt tên hiển thị — phần lớn hồ sơ import — hiện nhãn chung "Thành viên"
+ * dù DTO có `username` hẳn hoi. Mọi mapper comment khác trong repo đều rơi về username;
+ * test này ghim lại cho khỏi trượt về cũ.
+ */
+describe("ChallengePaperCommentThread — tên tác giả", () => {
+    it("rơi về username khi author card không có displayName", () => {
+        commentsSwr.current.data = {
+            items: [
+                {
+                    id: "cm-1",
+                    authorId: "11111111-2222-3333-4444-555555555555",
+                    author: {
+                        userId: "11111111-2222-3333-4444-555555555555",
+                        username: "lan.nguyen",
+                        displayName: null,
+                    },
+                    parentId: null,
+                    content: "Đề này chấm theo rubric nào ạ?",
+                    status: "VISIBLE",
+                    createdAt: new Date().toISOString(),
+                    replies: [],
+                },
+            ],
+            page: 1,
+            size: 20,
+            total: 1,
+        }
+        renderThread()
+
+        expect(screen.getAllByText("lan.nguyen").length).toBeGreaterThan(0)
+        expect(screen.queryByText("common.unknownMember")).toBeNull()
+    })
+})

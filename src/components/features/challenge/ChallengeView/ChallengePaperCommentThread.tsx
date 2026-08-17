@@ -29,6 +29,12 @@ const COMMENTS_PAGE_SIZE = 20
  * card ({@link ChallengeCommentView.author}), so the display name and avatar are REAL —
  * nothing is invented and no per-comment profile read is needed.
  *
+ * `author` rơi về `username` khi `displayName` rỗng — đúng như mọi mapper comment khác
+ * (`useQueryPostDetailSwr.toReply`, `useQueryGroupThreadCommentsSwr`,
+ * `useQuerySubjectPostCommentsSwr`). Trước đây chỗ này chỉ đọc `displayName`, nên tài
+ * khoản chưa đặt tên hiển thị (phần lớn hồ sơ import) hiện nhãn chung "Thành viên" dù DTO
+ * có username hẳn hoi — bug FE, không phải thiếu dữ liệu BE.
+ *
  * `authorUsername` doubles as the thread's owner key: it prefers the real username and
  * falls back to the raw `authorId`, because {@link PostCommentThread} matches it against
  * BOTH the viewer's username and id. A commenter with no profile card therefore still gets
@@ -44,7 +50,7 @@ const toPostComment = (comment: ChallengeCommentView, locale: string): PostComme
     const author = isDeleted ? null : comment.author
     return {
         id: comment.id,
-        author: author?.displayName ?? "",
+        author: author?.displayName ?? author?.username ?? "",
         authorUsername: isDeleted ? "" : (author?.username ?? comment.authorId ?? ""),
         authorAvatar: author?.avatarUrl ?? null,
         text: comment.content,
@@ -180,12 +186,43 @@ export const ChallengePaperCommentThread = ({
     )
 
     return (
-        <div className="flex flex-col gap-3">
-            <Typography type="body-sm" weight="semibold">
-                {t("paper.comments.title", { count: total })}
-            </Typography>
+        // ponytail: same chat anatomy as the FE album — the thread FILLS the column it is
+        // given (`min-h-0 flex-1`) so its composer lands on the column's bottom edge, and
+        // the PAGER moved up beside the count: anything rendered after the composer would
+        // push it off that edge again. In a column with no height of its own (mobile, where
+        // the panes stack) `flex-1` has no free space to take, so nothing changes there.
+        <div className="flex min-h-0 flex-1 flex-col gap-3">
+            <div className="flex shrink-0 items-center justify-between gap-2">
+                <Typography type="body-sm" weight="semibold">
+                    {t("paper.comments.title", { count: total })}
+                </Typography>
+                {pageCount > 1 ? (
+                    <div className="flex items-center gap-1">
+                        <Button
+                            size="sm"
+                            variant="tertiary"
+                            isDisabled={page <= 1 || commentsSwr.isValidating}
+                            onPress={() => setPage((prev) => Math.max(1, prev - 1))}
+                        >
+                            {t("paper.comments.prev")}
+                        </Button>
+                        <Typography type="body-xs" color="muted">
+                            {t("paper.comments.pageOf", { page, total: pageCount })}
+                        </Typography>
+                        <Button
+                            size="sm"
+                            variant="tertiary"
+                            isDisabled={page >= pageCount || commentsSwr.isValidating}
+                            onPress={() => setPage((prev) => Math.min(pageCount, prev + 1))}
+                        >
+                            {t("paper.comments.next")}
+                        </Button>
+                    </div>
+                ) : null}
+            </div>
 
             <PostCommentThread
+                className="min-h-0 flex-1"
                 regionId={`challenge-comments-${challengeId}`}
                 comments={comments}
                 isLoading={!commentsSwr.data && !commentsSwr.error}
@@ -200,30 +237,6 @@ export const ChallengePaperCommentThread = ({
                 currentUserId={viewerId}
                 canReportComments={false}
             />
-
-            {pageCount > 1 ? (
-                <div className="flex items-center justify-center gap-3">
-                    <Button
-                        size="sm"
-                        variant="tertiary"
-                        isDisabled={page <= 1 || commentsSwr.isValidating}
-                        onPress={() => setPage((prev) => Math.max(1, prev - 1))}
-                    >
-                        {t("paper.comments.prev")}
-                    </Button>
-                    <Typography type="body-xs" color="muted">
-                        {t("paper.comments.pageOf", { page, total: pageCount })}
-                    </Typography>
-                    <Button
-                        size="sm"
-                        variant="tertiary"
-                        isDisabled={page >= pageCount || commentsSwr.isValidating}
-                        onPress={() => setPage((prev) => Math.min(pageCount, prev + 1))}
-                    >
-                        {t("paper.comments.next")}
-                    </Button>
-                </div>
-            ) : null}
         </div>
     )
 }

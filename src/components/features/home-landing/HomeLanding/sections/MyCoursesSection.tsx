@@ -85,6 +85,10 @@ export const MyCoursesSection = () => {
                 {/* at most TWO cards per row: ContinueCard lays title + CTA on ONE row, so at
                     four columns the text column collapsed to ~30px and the course title was
                     truncated away entirely (the cover now sits on top, full width) */}
+                {/* ponytail: viền thẻ / dòng "Hoàn thành x%" / thanh tiến độ nay do CHÍNH
+                    `ContinueCourseCard` lo — trước đây lưới này đè bằng arbitrary-variant bám
+                    `data-slot`/`data-type` của HeroUI, kiểu đó vỡ CÂM LẶNG khi HeroUI đổi tên
+                    slot và `/courses/me` (dùng cùng thẻ) thì không được hưởng gì. */}
                 <div className="grid gap-3 sm:grid-cols-2">
                     {courses.slice(0, HOME_MY_COURSES_LIMIT).map((course) => (
                         <ContinueCourseCard

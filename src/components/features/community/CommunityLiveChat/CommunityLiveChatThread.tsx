@@ -20,6 +20,12 @@ export interface CommunityLiveChatThreadProps {
     /** Whether the chat surface is open (drives the gated recent seed + SSE ownership). */
     enabled: boolean
     className?: string
+    /**
+     * ponytail: preview mode — renders the scrolling thread ONLY (no composer, no reply
+     * buttons). Used by the rail, which is now a click-to-expand preview: the real
+     * chatting happens in the roomy modal it opens.
+     */
+    readOnly?: boolean
 }
 
 /** Loading skeleton mirroring the thread region only (the composer is always present). */
@@ -61,6 +67,7 @@ const MessageRow = ({
     youLabel,
     replyLabel,
     onReply,
+    showReply,
 }: {
     message: LiveChatMessage
     fromMe: boolean
@@ -68,6 +75,7 @@ const MessageRow = ({
     youLabel: string
     replyLabel: string
     onReply: (message: LiveChatMessage) => void
+    showReply: boolean
 }) => (
     <div className="group relative">
         <ChatBubble role={fromMe ? "user" : "assistant"}>
@@ -86,23 +94,25 @@ const MessageRow = ({
                 <MarkdownContent markdown={message.text} />
             </div>
         </ChatBubble>
-        <Button
-            isIconOnly
-            size="sm"
-            variant="ghost"
-            aria-label={replyLabel}
-            onPress={() => onReply(message)}
-            className={cn(
-                "absolute top-1/2 size-7 min-w-0 -translate-y-1/2 opacity-0 transition-opacity",
-                "group-hover:opacity-100 group-focus-within:opacity-100",
-                // Touch surfaces (drawer/popover fab) can't hover — keep the reply icon
-                // reachable there by revealing it at reduced opacity always-on.
-                "[@media(hover:none)]:opacity-70",
-                fromMe ? "left-1" : "right-1",
-            )}
-        >
-            <ArrowBendUpLeftIcon aria-hidden focusable="false" className="size-4" />
-        </Button>
+        {showReply ? (
+            <Button
+                isIconOnly
+                size="sm"
+                variant="ghost"
+                aria-label={replyLabel}
+                onPress={() => onReply(message)}
+                className={cn(
+                    "absolute top-1/2 size-7 min-w-0 -translate-y-1/2 opacity-0 transition-opacity",
+                    "group-hover:opacity-100 group-focus-within:opacity-100",
+                    // Touch surfaces (drawer/popover fab) can't hover — keep the reply icon
+                    // reachable there by revealing it at reduced opacity always-on.
+                    "[@media(hover:none)]:opacity-70",
+                    fromMe ? "left-1" : "right-1",
+                )}
+            >
+                <ArrowBendUpLeftIcon aria-hidden focusable="false" className="size-4" />
+            </Button>
+        ) : null}
     </div>
 )
 
@@ -120,7 +130,11 @@ const MessageRow = ({
  *
  * @param props - {@link CommunityLiveChatThreadProps}
  */
-export const CommunityLiveChatThread = ({ enabled, className }: CommunityLiveChatThreadProps) => {
+export const CommunityLiveChatThread = ({
+    enabled,
+    className,
+    readOnly = false,
+}: CommunityLiveChatThreadProps) => {
     const t = useTranslations("communityLiveChat")
     const locale = useLocale()
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
@@ -223,6 +237,7 @@ export const CommunityLiveChatThread = ({ enabled, className }: CommunityLiveCha
                                     youLabel={t("you")}
                                     replyLabel={t("reply")}
                                     onReply={onReply}
+                                    showReply={!readOnly}
                                 />
                             ))}
                         </div>
@@ -231,7 +246,7 @@ export const CommunityLiveChatThread = ({ enabled, className }: CommunityLiveCha
             </div>
 
             {/* "replying to …" banner — sits directly above the composer, cancellable */}
-            {replyTarget ? (
+            {!readOnly && replyTarget ? (
                 <div className="flex items-center gap-2 rounded-xl bg-default px-3 py-1.5">
                     <div className="min-w-0 flex-1">
                         <Typography type="body-xs" color="muted" className="line-clamp-1">
@@ -261,37 +276,40 @@ export const CommunityLiveChatThread = ({ enabled, className }: CommunityLiveCha
                 button staying vertically centred at every height. It grows to at most THREE
                 lines (`max-h-15` = 3 × the `text-sm` 1.25rem line box); past that it scrolls
                 instead of growing — with the scrollbar HIDDEN (`scrollbar-width:none` +
-                the WebKit pseudo-element): still scrollable, just no bar drawn over the text. */}
-            <div className="flex items-center gap-2 rounded-2xl bg-default px-3 py-2 focus-within:ring-2 focus-within:ring-accent">
-                <textarea
-                    ref={inputRef}
-                    rows={1}
-                    value={input}
-                    onChange={(event) => setInput(event.target.value)}
-                    placeholder={t("placeholder")}
-                    aria-label={t("placeholder")}
-                    disabled={!authenticated}
-                    className="max-h-15 w-full min-w-0 flex-1 resize-none overflow-y-auto bg-transparent text-sm text-foreground outline-none [scrollbar-width:none] placeholder:text-muted [&::-webkit-scrollbar]:hidden"
-                    onKeyDown={(event) => {
-                        if (event.key === "Enter" && !event.shiftKey) {
-                            event.preventDefault()
-                            void onSend()
-                        }
-                    }}
-                />
-                <Button
-                    isIconOnly
-                    size="sm"
-                    variant="primary"
-                    className="shrink-0"
-                    isPending={sending}
-                    aria-label={t("send")}
-                    isDisabled={input.trim() === "" || !authenticated}
-                    onPress={() => void onSend()}
-                >
-                    <PaperPlaneTiltIcon aria-hidden focusable="false" className="size-5" />
-                </Button>
-            </div>
+                the WebKit pseudo-element): still scrollable, just no bar drawn over the text.
+                ponytail: hidden in `readOnly` preview mode (the rail) — typing happens in the modal. */}
+            {readOnly ? null : (
+                <div className="flex items-center gap-2 rounded-2xl bg-default px-3 py-2 focus-within:ring-2 focus-within:ring-accent">
+                    <textarea
+                        ref={inputRef}
+                        rows={1}
+                        value={input}
+                        onChange={(event) => setInput(event.target.value)}
+                        placeholder={t("placeholder")}
+                        aria-label={t("placeholder")}
+                        disabled={!authenticated}
+                        className="max-h-15 w-full min-w-0 flex-1 resize-none overflow-y-auto bg-transparent text-sm text-foreground outline-none [scrollbar-width:none] placeholder:text-muted [&::-webkit-scrollbar]:hidden"
+                        onKeyDown={(event) => {
+                            if (event.key === "Enter" && !event.shiftKey) {
+                                event.preventDefault()
+                                void onSend()
+                            }
+                        }}
+                    />
+                    <Button
+                        isIconOnly
+                        size="sm"
+                        variant="primary"
+                        className="shrink-0"
+                        isPending={sending}
+                        aria-label={t("send")}
+                        isDisabled={input.trim() === "" || !authenticated}
+                        onPress={() => void onSend()}
+                    >
+                        <PaperPlaneTiltIcon aria-hidden focusable="false" className="size-5" />
+                    </Button>
+                </div>
+            )}
         </div>
     )
 }

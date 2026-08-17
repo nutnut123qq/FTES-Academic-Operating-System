@@ -4162,7 +4162,7 @@
             "xpSection": "Điểm kinh nghiệm (XP)",
             "actionHeader": "Hành động",
             "xpHeader": "XP",
-            "multiplierNote": "Các hành động HỌC (bài học/quiz/challenge) được nhân theo streak; đăng bài/bình luận/tym thì không.",
+            "noStreakMultiplierNote": "Mỗi hành động trả ĐÚNG con số trong bảng — không có hệ số nhân nào theo streak. Streak dùng để giữ chuỗi ngày và mở các mốc huy hiệu, không nhân EXP.",
             "actions": {
                 "lessonComplete": "Hoàn thành 1 bài học",
                 "quizSubmit": "Vượt qua 1 quiz",
@@ -4172,7 +4172,8 @@
                 "courseEnrolled": "Đăng ký 1 khoá học mới",
                 "postCreated": "Đăng 1 bài cộng đồng",
                 "commentCreated": "Viết 1 bình luận",
-                "reactionGiven": "BẠN tym một bài / bài học"
+                "reactionGiven": "BẠN tym một bài / bài học",
+                "questComplete": "Hoàn thành 1 nhiệm vụ hằng ngày"
             },
             "levelSection": "Cấp độ",
             "levelFormula": "Tổng XP tối thiểu để đạt cấp L = {factor} × (L − 1)².",
@@ -4183,19 +4184,15 @@
             "tierFrom": "từ {xp} XP",
             "streakSection": "Chuỗi ngày (streak)",
             "streakQualifying": "Ngày streak hợp lệ = có ít nhất 1 hành động học (bài học/quiz/challenge). Chỉ đăng nhập KHÔNG giữ streak.",
-            "streakMultiplier": "Nhân XP +{step}% mỗi ngày liên tiếp, trần +{cap}%.",
             "streakReset": "Lỡ 1 ngày không học và không có freeze → streak về 0.",
             "streakFreeze": "Streak Freeze: giữ tối đa {max}, tự cứu 1 ngày lỡ; đổi {cost} coin/cái.",
             "streakRepair": "Streak Repair: trong {window} giờ sau khi mất, khôi phục với 10 × số ngày (trần {cap} coin).",
             "streakReminder": "Nhắc lúc {hour}:00 khi streak ≥ {min} mà chưa học hôm nay.",
             "milestoneRow": "{days} ngày → {name} + {coin} coin",
-            "goalsSection": "Mục tiêu",
-            "dailyGoalRule": "Mục tiêu ngày: hoàn thành {target} hành động học → +{xp} XP.",
-            "weeklyGoalRule": "Mục tiêu tuần: {target} ngày học hợp lệ trong tuần → +{xp} XP.",
             "comingSoonSection": "Sắp ra mắt",
             "comingSoon": {
                 "league": "League & Season (giải đấu tuần)",
-                "monthly": "Mục tiêu tháng",
+                "monthly": "Mục tiêu học theo ngày/tuần/tháng",
                 "mysteryBox": "Mystery Box & Lucky Spin"
             },
             "scaleNote": "Thang XP đã được cân lại: phần HỌC được nâng lên, phần nhiệm vụ giữ nguyên. Trước đây một ngày điểm danh ăn đứt việc hoàn thành cả một khoá, nên bảng Tổng phản ánh sai ai đang học thật.",
@@ -4203,7 +4200,7 @@
             "likeEligibilityNote": "Tym chỉ sinh EXP khi NGƯỜI BẤM đã có hoạt động học thật trong ngày. Mười tài khoản không học tym cho nhau sẽ ra 0 EXP.",
             "levelKeepNote": "Ngưỡng cấp độ GIỮ NGUYÊN sau lần cân thang này, nên từ nay lên cấp nhanh hơn trước — có chủ đích. Không ai bị tụt cấp: nâng ngưỡng cho “công bằng” sẽ khiến người dùng cũ mất cấp qua một đêm vì một thay đổi họ không gây ra.",
             "seasonNote": "Ba bảng xếp hạng đều RESET theo kì học, nên XP kiếm ở kì cũ không bao giờ đua với XP kì mới. Chỉ thang cấp độ là trọn đời.",
-            "questCoinNote": "Nhiệm vụ hằng ngày trả XU, và nay trả THÊM EXP — nhưng cả ngày cày nhiệm vụ vẫn không vượt quá một lần hoàn thành khoá. Điểm danh và mục tiêu ngày/tuần KHÔNG có phần thưởng EXP riêng."
+            "questCoinNote": "Nhiệm vụ hằng ngày trả XU, và nay trả THÊM EXP: 100 EXP mỗi lượt, trần 5.000 EXP/ngày — cả ngày cày nhiệm vụ vẫn không vượt quá một lần hoàn thành khoá. Điểm danh sinh EXP qua chính nhiệm vụ “đăng nhập hằng ngày” đó, không có khoản riêng."
         },
         "states": {
             "retry": "Thử lại"
@@ -4225,7 +4222,7 @@
             },
             "counts": {
                 "total": "Gộp mọi nguồn EXP bạn kiếm trong kỳ: khoá học + cộng đồng + workplace. Đây là bảng đua giải, có phần thưởng thật.",
-                "social": "Tính EXP từ cộng đồng (bài viết, bình luận, tym) và từ workplace. Hai nguồn riêng nhưng rank chung một bảng."
+                "social": "Tính EXP từ cộng đồng (đăng bài, bình luận, câu trả lời được chấp nhận) và từ workplace (challenge, học liệu gửi cho môn). Hai nguồn riêng nhưng rank chung một bảng. Tym KHÔNG được tính ở bảng này — EXP từ tym vẫn vào bảng Tổng."
             },
             "countsLabel": "Bảng này đếm gì",
             "whyDifferent": "Hạng của bạn khác nhau giữa hai bảng vì mỗi bảng đếm một LÁT CẮT EXP khác nhau — không phải hệ thống tính sai.",

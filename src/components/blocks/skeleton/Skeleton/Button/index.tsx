@@ -10,8 +10,9 @@ export interface SkeletonButtonProps extends WithClassNames<undefined> {
 
 /**
  * Skeleton matching a HeroUI <Button/> box.
- * Button is h-10 on mobile / md:h-9 (36px) with rounded-3xl — a full pill at this height.
+ * Button is h-10 on mobile / md:h-9 (36px) with rounded-3xl (24px) — a rounded
+ * rect, not a pill, so mirror the class instead of hardcoding rounded-full.
  */
 export const SkeletonButton = ({ className, width = "w-24" }: SkeletonButtonProps) => {
-    return <Skeleton className={cn("h-10 md:h-9 rounded-full", width, className)} />
+    return <Skeleton className={cn("h-10 md:h-9 rounded-3xl", width, className)} />
 }

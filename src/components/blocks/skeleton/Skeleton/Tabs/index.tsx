@@ -10,7 +10,7 @@ export interface SkeletonTabsProps extends WithClassNames<undefined> {
 
 /**
  * Skeleton matching a HeroUI <Tabs/> list: an inline pill container (p-1)
- * holding count tab bars, each h-8 (rounded-3xl pill). The container box is
+ * holding count tab bars, each h-8 (rounded-3xl). The container box is
  * 32 + 8 = 40px tall, matching the real tab list.
  */
 export const SkeletonTabs = ({ className, count = 3 }: SkeletonTabsProps) => {

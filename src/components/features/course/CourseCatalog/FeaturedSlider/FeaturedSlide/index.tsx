@@ -45,7 +45,7 @@ export const FeaturedSlide = ({ course, index, total, onOpen }: FeaturedSlidePro
             className="w-full shrink-0 snap-center"
         >
             <div
-                className="flex min-h-[300px] flex-col items-center gap-5 overflow-hidden rounded-[20px] p-[30px_35px] text-white md:flex-row-reverse"
+                className="flex min-h-[300px] flex-col items-center gap-5 overflow-hidden rounded-2xl p-[30px_35px] text-white md:flex-row-reverse"
                 style={{ background: course.theme || FALLBACK_THEME }}
             >
                 {/* RIGHT (desktop) — merchandising copy; flex-row-reverse puts the cover on the LEFT */}

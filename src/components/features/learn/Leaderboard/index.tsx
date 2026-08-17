@@ -4,9 +4,14 @@ import React, { useMemo } from "react"
 import { Button, Typography } from "@heroui/react"
 import { useLocale, useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
+import { InfoIcon } from "@phosphor-icons/react"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { PageHeader } from "@/components/blocks/layout/PageHeader"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
+import { Link } from "@/i18n/navigation"
+import { pathConfig } from "@/resources/path"
+import { useQueryCurrentSeasonSwr } from "@/components/features/gamification/hooks/useQueryCurrentSeasonSwr"
+import { SeasonHeader } from "@/components/features/gamification/SeasonBoards/SeasonHeader"
 import {
     rankEntriesByCategory,
     useQueryLearnLeaderboardSwr,
@@ -26,7 +31,9 @@ import { LeaderboardChampion } from "./LeaderboardChampion"
  */
 export const Leaderboard = () => {
     const t = useTranslations("learn")
+    const tSeason = useTranslations("gamification.seasonBoards")
     const locale = useLocale()
+    const season = useQueryCurrentSeasonSwr()
     const { courseId } = useParams<{ courseId: string }>()
     // single board: always total XP (hardcoded so a `?category=` deep-link can't re-rank it)
     const selectedCategory = "total" as const
@@ -46,6 +53,35 @@ export const Leaderboard = () => {
     return (
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-10">
             <PageHeader title={t("leaderboard.title")} description={t("leaderboard.subtitle")} />
+
+            {/* Bảng này cũng reset theo KÌ HỌC. Thiếu dòng "đang là kì nào, còn bao lâu"
+                thì con số thứ hạng bên dưới không neo vào đâu cả — và người dùng sẽ tưởng
+                hệ thống mất dữ liệu vào cái ngày nó reset. */}
+            <SeasonHeader
+                season={season.season}
+                isLoading={season.isLoading}
+                error={season.error}
+                onRetry={() => void season.mutate()}
+            />
+
+            {/* Bảng này ĐẾM GÌ + lối sang hai bảng còn lại. Không nói rõ thì người hạng 3
+                ở đây mà hạng 40 ở bảng Tổng sẽ kết luận hệ thống tính sai. */}
+            <div className="flex flex-col gap-1 rounded-2xl bg-default/40 p-4">
+                <div className="flex items-center gap-2">
+                    <InfoIcon className="size-4 text-muted" aria-hidden focusable="false" />
+                    <Typography type="body-xs" color="muted">
+                        {tSeason("countsLabel")}
+                    </Typography>
+                </div>
+                <Typography type="body-sm">{tSeason("counts.course")}</Typography>
+                <Link
+                    // Locale-less: `Link` của `@/i18n/navigation` tự gắn tiền tố locale.
+                    href={pathConfig().locale().leaderboard().build()}
+                    className="w-fit text-sm font-medium text-accent no-underline hover:underline"
+                >
+                    {tSeason("title")}
+                </Link>
+            </div>
 
             <div className="flex flex-col gap-6">
                 {/* toolbar: ranked-by + updated-at + refresh */}

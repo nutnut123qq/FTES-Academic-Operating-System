@@ -147,6 +147,132 @@ export interface GamificationLeaderboardView {
     myRank: number | null
 }
 
+// ---------------------------------------------------------------- Season boards (kì học)
+
+/**
+ * Bảng nào đang được xem. BA bảng chỉ khác nhau ở chỗ ĐẾM LÁT CẮT EXP NÀO — cùng
+ * một đơn vị EXP, không quy đổi, không hệ số:
+ *
+ *  - `course`    — chỉ EXP kiếm trong CHÍNH một khoá; xếp hạng NỘI BỘ khoá đó.
+ *  - `community` — EXP cộng đồng + EXP workplace, hai nguồn riêng nhưng RANK CHUNG một bảng.
+ *  - `total`     — gom cả ba nguồn; đây là bảng đua giải có phần thưởng thật.
+ */
+export type SeasonBoardKey = "course" | "community" | "total"
+
+/**
+ * Kì học đang chạy (`GET /api/v1/gamification/seasons/current`).
+ *
+ * MÙA = KÌ HỌC (V291 course term) — KHÔNG có lịch mùa thứ hai. `gamification.seasons`
+ * (V65) được nối vào kì học, nên `termName` là tên người dùng đọc được còn `code` là
+ * mã mùa kỹ thuật.
+ */
+export interface SeasonWindowView {
+    seasonId: string
+    /** Mã mùa (`gamification.seasons.code`). */
+    code: string
+    /** Tên kì học nối vào mùa; `null` khi mùa chưa gắn kì nào. */
+    termName: string | null
+    startsAt: string
+    endsAt: string
+    /** `SCHEDULED` | `RUNNING` | `CLOSED` (chuỗi mở — BE có thể thêm trạng thái). */
+    status: string
+}
+
+/** Khung avatar một người đang ĐEO, kèm theo hàng xếp hạng (đủ để vẽ vòng viền). */
+export interface SeasonBoardFrameView {
+    code: string
+    nameVi: string
+    /** Giá trị CSS background do quản trị seed → an toàn vẽ thẳng (V341). */
+    cssGradient: string
+    /** Khung dạng PNG chồng lên avatar; `null` ⇒ vẽ bằng {@link cssGradient}. */
+    assetUrl: string | null
+}
+
+/** Huy hiệu hiển thị cạnh tên trên bảng xếp hạng. */
+export interface SeasonBoardBadgeView {
+    code: string
+    name: string
+    iconUrl: string | null
+}
+
+/** Một dòng trên bảng xếp hạng theo kì. */
+export interface SeasonBoardEntryView {
+    userId: string
+    /** Hạng 1-based do máy chủ tính trên TOÀN dân số, không phải chỉ trong cửa sổ trả về. */
+    rank: number
+    displayName: string | null
+    username: string | null
+    avatarUrl: string | null
+    avatarFrame: SeasonBoardFrameView | null
+    /** EXP của LÁT CẮT mà bảng này đếm, trong kì hiện tại. */
+    xp: number
+    /** Ba nguồn tách ra để giải thích "vì sao hạng này khác hạng kia". */
+    courseXp: number
+    communityXp: number
+    workplaceXp: number
+    badges: Array<SeasonBoardBadgeView>
+}
+
+/** Vị trí của chính người xem — có cả khi họ nằm ngoài cửa sổ top-N. */
+export interface SeasonBoardMyRankView {
+    rank: number
+    xp: number
+    courseXp: number
+    communityXp: number
+    workplaceXp: number
+}
+
+/**
+ * Bảng xếp hạng theo kì
+ * (`GET /api/v1/gamification/leaderboards/{board}?seasonId=&courseId=&limit=`).
+ */
+export interface SeasonBoardView {
+    board: SeasonBoardKey
+    /** Mùa (kì) mà bảng này thuộc về; `null` khi không có kì nào đang chạy. */
+    seasonId: string | null
+    computedAt: string | null
+    entries: Array<SeasonBoardEntryView>
+    myRank: SeasonBoardMyRankView | null
+}
+
+// ---------------------------------------------------------------- Avatar frames (khung)
+
+/**
+ * Một bậc khung avatar trong thang mở khoá
+ * (`GET /api/v1/gamification/me/avatar-frames`).
+ *
+ * Hai LOẠI khung, khác nhau ở chỗ có mất hay không:
+ *  - `LIFETIME`   — mở theo EXP TRỌN ĐỜI, giữ VĨNH VIỄN. Mất khung khi sang kì mới là
+ *                   phạt người dùng vì thời gian trôi, nên không bao giờ thu lại.
+ *  - `SEASON_TOP` — khung hạng 1/2/3 của một bảng trong một kì; CÓ HẠN, hết kì sau là mất.
+ */
+export interface AvatarFrameLadderItemView {
+    code: string
+    nameVi: string
+    description: string | null
+    cssGradient: string
+    assetUrl: string | null
+    kind: "LIFETIME" | "SEASON_TOP"
+    /** Mốc EXP trọn đời để mở (chỉ `LIFETIME`); `null` với khung top mùa. */
+    requiredXp: number | null
+    /** Khung top mùa thuộc BẢNG nào (`null` với khung `LIFETIME`). */
+    board: SeasonBoardKey | null
+    /** Hạng phải giành (1/2/3) — chỉ `SEASON_TOP`. */
+    topRank: number | null
+    unlocked: boolean
+    /** Hạn dùng của khung top mùa; `null` = vĩnh viễn. */
+    expiresAt: string | null
+}
+
+/** Thang khung avatar của người xem + khung đang đeo. */
+export interface AvatarFrameLadderView {
+    /** EXP TRỌN ĐỜI (không reset theo kì) — thứ quyết định mở khung `LIFETIME`. */
+    lifetimeXp: number
+    /** Mã khung đang đeo; `null` = chưa đeo khung nào. */
+    currentCode: string | null
+    items: Array<AvatarFrameLadderItemView>
+}
+
 /** Per-subject mastery summary. */
 export interface MasteryView {
     subjectId: string

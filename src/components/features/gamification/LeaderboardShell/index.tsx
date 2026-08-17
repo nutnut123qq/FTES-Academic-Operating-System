@@ -1,58 +1,56 @@
 "use client"
 
 import React from "react"
-import { Skeleton, Typography } from "@heroui/react"
+import { Typography } from "@heroui/react"
 import { useLocale, useTranslations } from "next-intl"
 import { FireIcon, LightningIcon, RankingIcon, StarIcon, TrophyIcon } from "@phosphor-icons/react"
 import { Link } from "@/i18n/navigation"
 import { pathConfig } from "@/resources/path"
-import { AsyncContent } from "@/components/blocks/async/AsyncContent"
-import { InitialsAvatar } from "@/components/blocks/identity/InitialsAvatar"
-import { useQueryLeaderboardSwr } from "../hooks/useQueryLeaderboardSwr"
+import { useQueryCurrentSeasonSwr } from "../hooks/useQueryCurrentSeasonSwr"
 import { useQueryMyGamificationSwr } from "../hooks/useQueryMyGamificationSwr"
+import { useQuerySeasonBoardSwr } from "../hooks/useQuerySeasonBoardSwr"
 import { tierFromXp } from "../leaderboardTiers"
 import { useBadgeLabel } from "../useBadgeLabel"
 import { StreakPopover } from "../StreakPopover"
 import { GoalsCard } from "../GoalsCard"
 import { GamificationEventHost } from "../GamificationEventHost"
-
-/** Loading skeleton — mirrors the ranked leaderboard rows so the list never jumps. */
-const LeaderboardSkeleton = () => (
-    <div className="flex flex-col gap-2">
-        {[0, 1, 2, 3, 4].map((index) => (
-            <div
-                key={index}
-                className="flex items-center gap-3 rounded-2xl border border-separator p-4"
-            >
-                <Skeleton className="h-4 w-6 shrink-0 rounded-full" />
-                <Skeleton className="size-9 shrink-0 rounded-full" />
-                <div className="flex min-w-0 flex-1 flex-col gap-2">
-                    <Skeleton className="h-3 w-32 rounded-full" />
-                    <Skeleton className="h-3 w-20 rounded-full" />
-                </div>
-                <Skeleton className="h-4 w-16 shrink-0 rounded-full" />
-            </div>
-        ))}
-    </div>
-)
+import { SeasonBoards } from "../SeasonBoards"
+import { AvatarFrameLadder } from "../AvatarFrames/AvatarFrameLadder"
 
 /**
  * Gamification leaderboard + progression surface (§11) — the `/leaderboard` page.
  *
  * A dashboard driven by the live REST snapshots (`useQueryMyGamificationSwr`
- * composes the `/me/*` progression / streak / activity / badge endpoints, the
- * ranked board comes from `useQueryLeaderboardSwr`): stat cards (XP · Level ·
- * Streak · Rank+tier) where the Streak card opens the detail popover; a "Cách
- * tính điểm" guide link; a ranked board; the Daily/Weekly goals block; and the
- * viewer's earned badges. Quest-completion toasts and the level-up moment are
- * raised by the mounted {@link GamificationEventHost}, which diffs the same SWR
- * caches. Guests see the public board with dashed viewer stats (no `/me/*` call
- * fires). The mock engine has been removed — every number is real backend data.
+ * composes the `/me/*` progression / streak / activity / badge endpoints): stat
+ * cards (XP · Level · Streak · Rank+tier) where the Streak card opens the detail
+ * popover; a "Cách tính điểm" guide link; the THREE season boards
+ * ({@link SeasonBoards}); the avatar-frame ladder ({@link AvatarFrameLadder}); the
+ * Daily/Weekly goals block; and the viewer's earned badges. Quest-completion toasts
+ * and the level-up moment are raised by the mounted {@link GamificationEventHost},
+ * which diffs the same SWR caches. Guests see the public boards with dashed viewer
+ * stats (no `/me/*` call fires). Every number is real backend data.
+ *
+ * ★ BẢNG CŨ ĐÃ ĐƯỢC THAY, KHÔNG PHẢI THÊM VÀO. Bảng phẳng `leaderboard(scope: GLOBAL)`
+ * trước đây chính là "EXP mùa, gộp mọi nguồn" — tức là bảng TỔNG, chỉ thiếu phần chia
+ * theo kì và phần tách nguồn. Giữ cả hai sẽ có hai bảng cùng tên "Bảng xếp hạng" trên
+ * một trang mà số không khớp nhau. Hook cũ (`useQueryLeaderboardSwr`) VẪN CÒN vì thẻ
+ * cộng đồng ở dashboard dùng nó.
+ *
+ * ⚠️ Hạng ở thẻ thống kê giờ lấy từ `myRank` của bảng TỔNG theo kì. Máy chủ chưa có
+ * endpoint đó (hai lane BE chưa merge) ⇒ hạng hiện "—" và phần bảng bên dưới hiện LỖI
+ * đọc được — có chủ đích, không được đổi thành màn rỗng.
  */
 export const LeaderboardShell = () => {
     const t = useTranslations("gamification")
     const locale = useLocale()
-    const { board, myUserId, isLoading, error, mutate } = useQueryLeaderboardSwr()
+    // Cùng KÌ và cùng BẢNG với tab mặc định của `SeasonBoards` ⇒ SWR trùng key và chỉ
+    // bắn MỘT request; nếu bỏ `seasonId` ở đây, key lệch và thẻ "Hạng" sẽ đọc một bảng
+    // khác với bảng đang hiện ngay bên dưới nó.
+    const { season } = useQueryCurrentSeasonSwr()
+    const { myRank } = useQuerySeasonBoardSwr({
+        board: "total",
+        seasonId: season?.seasonId ?? null,
+    })
     const { data: my } = useQueryMyGamificationSwr()
     const badgeLabel = useBadgeLabel()
 
@@ -90,8 +88,10 @@ export const LeaderboardShell = () => {
         },
         {
             key: "rank",
+            // Hạng trong bảng TỔNG của kì đang chạy. `null` khi chưa có hạng (chưa kiếm
+            // EXP nào trong kì, hoặc máy chủ chưa có endpoint) → hiện "—", không hiện 0.
             icon: <RankingIcon className="size-5" aria-hidden focusable="false" />,
-            value: board.findIndex((entry) => entry.id === myUserId) + 1,
+            value: myRank?.rank ?? null,
             hint: my ? t(`tiers.${tier.key}`) : undefined,
         },
     ]
@@ -169,64 +169,11 @@ export const LeaderboardShell = () => {
             {/* goals */}
             <GoalsCard />
 
-            {/* leaderboard list */}
-            <div className="flex flex-col gap-3">
-                <div className="flex items-center gap-2">
-                    <TrophyIcon className="size-5 text-accent" aria-hidden focusable="false" />
-                    <Typography type="body" weight="medium">
-                        {t("leaderboard")}
-                    </Typography>
-                </div>
-                <AsyncContent
-                    isLoading={isLoading && board.length === 0}
-                    skeleton={<LeaderboardSkeleton />}
-                    isEmpty={board.length === 0}
-                    emptyContent={{ title: t("leaderboardEmpty") }}
-                    error={board.length === 0 ? error : undefined}
-                    errorContent={{
-                        title: t("leaderboardError"),
-                        onRetry: () => void mutate(),
-                        retryLabel: t("states.retry"),
-                    }}
-                >
-                    <div className="flex flex-col gap-2">
-                        {board.map((entry) => {
-                            const isMe = entry.id === myUserId
-                            return (
-                                <div
-                                    key={entry.id}
-                                    className={`flex items-center gap-3 rounded-2xl border border-separator p-4 ${
-                                        isMe ? "bg-accent/10" : ""
-                                    }`}
-                                >
-                                    <Typography
-                                        type="body-sm"
-                                        weight="bold"
-                                        className={`w-6 shrink-0 text-center ${isMe ? "text-accent" : "text-muted"}`}
-                                    >
-                                        {entry.rank}
-                                    </Typography>
-                                    <InitialsAvatar initials={entry.avatarInitials} />
-                                    <div className="min-w-0 flex-1">
-                                        <Typography type="body-sm" weight="medium" truncate>
-                                            {entry.name}
-                                        </Typography>
-                                        {/* BE leaderboard carries no per-user level → hide the line rather than fabricate it. */}
-                                        {entry.level != null ? (
-                                            <Typography type="body-xs" color="muted">
-                                                {t("stats.level")} {Math.round(entry.level)}
-                                            </Typography>
-                                        ) : null}
-                                    </div>
-                                    <Typography type="body-sm" weight="medium" className="shrink-0">
-                                        {t("xpValue", { xp: Math.round(entry.xp).toLocaleString(locale) })}
-                                    </Typography>
-                                </div>
-                            )
-                        })}
-                    </div>
-                </AsyncContent>
-            </div>
+            {/* Ba bảng xếp hạng theo kì (khoá học · cộng đồng+workplace · tổng) */}
+            <SeasonBoards />
+
+            {/* Thang khung avatar: đang đeo + các bậc kế tiếp + điều kiện mở */}
+            <AvatarFrameLadder />
 
             {/* badges row — the viewer's earned badges from the real snapshot */}
             <div className="flex flex-col gap-3">

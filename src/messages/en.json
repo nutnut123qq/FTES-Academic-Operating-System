@@ -4166,14 +4166,16 @@
             "quizBand": "≥{min}% → +{xp} XP",
             "multiplierNote": "LEARNING actions (lesson/quiz/challenge) are multiplied by streak; login/upvote/goals are not.",
             "actions": {
-                "lessonComplete": "Complete a lesson",
+                "lessonComplete": "Complete one lesson",
                 "quizSubmit": "Submit a quiz",
-                "challengeComplete": "Complete a challenge",
-                "dailyLogin": "First login of the day",
-                "postUpvote": "Post upvoted (cap +20/day)",
-                "commentUpvote": "Comment upvoted (cap +10/day)",
-                "dailyGoal": "Complete the daily goal",
-                "weeklyGoal": "Complete the weekly goal"
+                "challengeComplete": "Complete one challenge",
+                "courseComplete": "Finish a whole course",
+                "resourcePublish": "Publish an approved exam / resource",
+                "dailyLogin": "First sign-in of the day",
+                "postUpvote": "Your post gets a like",
+                "commentUpvote": "Your comment gets a like",
+                "dailyGoal": "Hit the daily goal",
+                "weeklyGoal": "Hit the weekly goal"
             },
             "levelSection": "Levels",
             "levelFormula": "Total XP to reach level L = {factor} × (L − 1)².",
@@ -4198,13 +4200,97 @@
                 "league": "League & Season (weekly competition)",
                 "monthly": "Monthly goal",
                 "mysteryBox": "Mystery Box & Lucky Spin"
-            }
+            },
+            "scaleNote": "The XP scale was rebalanced: LEARNING was raised, quests kept as they were. A single day of check-ins used to beat finishing an entire course, so the Total board reported the wrong winner.",
+            "interactionCapNote": "EXP from INTERACTION (likes, comments) has a DAILY CAP. Once it is hit, further likes that day add nothing.",
+            "likeEligibilityNote": "A like only produces EXP when the PERSON CLICKING has real learning activity that day. Ten idle accounts liking each other earn 0 EXP.",
+            "levelKeepNote": "Level thresholds were deliberately LEFT UNCHANGED by this rebalance, so levelling up is faster from now on — on purpose. Nobody is demoted: raising thresholds “for fairness” would cost existing users levels overnight for a change they did not cause.",
+            "seasonNote": "All three leaderboards RESET each term, so XP from an old term never competes with new XP. Only the lifetime level ladder carries over."
         },
         "states": {
             "retry": "Try again"
         },
         "leaderboardEmpty": "No one is on the leaderboard yet.",
-        "leaderboardError": "Couldn't load the leaderboard. Please try again."
+        "leaderboardError": "Couldn't load the leaderboard. Please try again.",
+        "seasonBoards": {
+            "title": "Season leaderboards",
+            "subtitle": "Three boards, ONE unit of EXP — they differ only in which EXP they count.",
+            "season": {
+                "label": "Current term",
+                "window": "{start} → {end}",
+                "remaining": "{days}d {hours}h left in the term",
+                "remainingHours": "{hours}h left in the term",
+                "ended": "Term is over, board is being finalised",
+                "none": "No term is running",
+                "noneHint": "Admins have not opened a new term. A rank only means something inside a term, so the boards are paused.",
+                "resetNote": "All three boards reset at the end of the term — old EXP never competes with new EXP."
+            },
+            "tabs": {
+                "course": "Course",
+                "community": "Community & Workplace",
+                "total": "Total"
+            },
+            "counts": {
+                "course": "Counts only the EXP you earned INSIDE this course. Ranked within the course — not against learners of other courses.",
+                "community": "Counts community EXP (posts, comments, likes) and workplace EXP. Two sources, one shared ranking.",
+                "total": "Adds all three sources: course + community + workplace. This is the board with the real prizes."
+            },
+            "countsLabel": "What this board counts",
+            "whyDifferent": "Your rank differs across the three boards because each one counts a different SLICE of EXP — not because the system miscounted.",
+            "sources": {
+                "course": "Course",
+                "community": "Community",
+                "workplace": "Workplace"
+            },
+            "breakdownLabel": "EXP from: {parts}",
+            "sourceValue": "{source} {xp}",
+            "xp": "{xp} EXP",
+            "you": "You",
+            "myRank": "Your rank this term: {rank}",
+            "myRankUnranked": "You are not ranked this term yet.",
+            "updatedAt": "Updated at {time}",
+            "refresh": "Refresh",
+            "empty": "Nobody is on this board yet this term.",
+            "emptyHint": "Genuinely empty — the term just opened, or nobody earned EXP in this slice yet.",
+            "coursePicker": {
+                "label": "Pick a course",
+                "empty": "You are not enrolled in any course.",
+                "emptyHint": "The course board ranks learners WITHIN one course, so it needs at least one course.",
+                "openFull": "Open the full course board"
+            },
+            "failure": {
+                "notDeployedTitle": "The server has no season leaderboard yet",
+                "notDeployedDescription": "{endpoint} returned {status}. The backend half of this feature is not deployed — this is NOT “nobody is on the board”.",
+                "unauthenticatedTitle": "Sign in to see this board",
+                "unauthenticatedDescription": "{endpoint} returned {status}.",
+                "failedTitle": "Could not load the leaderboard",
+                "failedDescription": "{endpoint} returned {status}.",
+                "retry": "Try again"
+            }
+        },
+        "frames": {
+            "title": "Avatar frames",
+            "subtitle": "Frames unlocked with lifetime EXP are kept FOREVER. Season-top frames expire at the end of the next term.",
+            "worn": "Worn",
+            "wornNone": "No frame worn",
+            "lifetimeXp": "Lifetime EXP: {xp}",
+            "lifetimeSection": "Unlocked by lifetime EXP — kept forever",
+            "seasonSection": "Season-top frames — timed, win them back each term",
+            "next": "Next tier: {name} — {xp} EXP to go",
+            "maxed": "You have unlocked every lifetime frame tier.",
+            "locked": "Locked",
+            "unlocked": "Unlocked",
+            "expiredChip": "Expired",
+            "requirement": "Needs {xp} lifetime EXP",
+            "seasonRequirement": "Rank {rank} on the “{board}” board in a term",
+            "howToUnlock": "How to unlock: {how}",
+            "expiresOn": "Expires {date}",
+            "permanent": "Kept forever",
+            "progress": "{current}/{total} EXP",
+            "guest": "Sign in to see your avatar frame ladder.",
+            "empty": "No frames in the catalogue.",
+            "emptyHint": "The frame catalogue is admin-seeded — empty means unseeded, not a load failure."
+        }
     },
     "wallet": {
         "title": "F.Wallet",

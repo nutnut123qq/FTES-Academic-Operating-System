@@ -23,10 +23,10 @@ const xpForLevel = (level: number): number =>
     LEVEL_CURVE.factor * Math.pow(Math.max(1, level) - 1, 2)
 /** Quiz XP by score band (descending by threshold). */
 const QUIZ_XP_TIERS: ReadonlyArray<{ minPercent: number; xp: number }> = [
-    { minPercent: 100, xp: 50 },
-    { minPercent: 85, xp: 35 },
-    { minPercent: 60, xp: 20 },
-    { minPercent: 0, xp: 10 },
+    { minPercent: 100, xp: 500 },
+    { minPercent: 85, xp: 350 },
+    { minPercent: 60, xp: 200 },
+    { minPercent: 0, xp: 100 },
 ]
 /** Streak XP multiplier: +5%/day, capped at +50%. */
 const STREAK_MULTIPLIER_STEP = 0.05
@@ -74,15 +74,31 @@ export const LeaderboardGuideShell = () => {
     const locale = useLocale()
     const badgeLabel = useBadgeLabel()
 
+    // ★ THANG XP ĐÃ ĐƯỢC CÂN LẠI — nâng phần HỌC lên, KHÔNG hạ phần nhiệm vụ.
+    //
+    // VÌ SAO: nhiệm vụ hằng ngày cho tới 5.000 XP/ngày, trong khi hoàn thành trọn một
+    // khoá trước đây chỉ được 30. Chênh 166 lần nghĩa là bảng TỔNG — bảng duy nhất có
+    // phần thưởng thật — do người điểm danh đều thắng, không phải người học. Nâng phần
+    // học giữ được cảm giác "XP cao" mà vẫn làm bảng Tổng nói đúng sự thật. Tỉ lệ phải
+    // giữ: MỘT NGÀY nhiệm vụ không được vượt quá cỡ MỘT LẦN hoàn thành khoá.
+    //
+    // Tương tác (tym/bình luận) giữ ở mức rất thấp và còn bị TRẦN NGÀY chặn thêm, vì đó
+    // là nguồn EXP rẻ nhất để farm chéo giữa các tài khoản.
+    //
+    // ⚠️ Đây là bảng HIỂN THỊ, phản chiếu `gamification.xp_rules` của backend. Lane BE
+    // của đợt này seed số thật; nếu hai bên lệch thì trang này đang quảng cáo một con số
+    // không ai được trả — đối chiếu lại khi lane BE merge.
     const xpRows: Array<XpRow> = [
-        { key: "lessonComplete", xp: 20 },
+        { key: "lessonComplete", xp: 500 },
         { key: "quizSubmit", xp: null },
-        { key: "challengeComplete", xp: 40 },
-        { key: "dailyLogin", xp: 5 },
-        { key: "postUpvote", xp: 2 },
+        { key: "challengeComplete", xp: 1500 },
+        { key: "courseComplete", xp: 5000 },
+        { key: "resourcePublish", xp: 1000 },
+        { key: "dailyLogin", xp: 100 },
+        { key: "postUpvote", xp: 1 },
         { key: "commentUpvote", xp: 1 },
-        { key: "dailyGoal", xp: 10 },
-        { key: "weeklyGoal", xp: 50 },
+        { key: "dailyGoal", xp: 200 },
+        { key: "weeklyGoal", xp: 1000 },
     ]
 
     return (
@@ -152,6 +168,23 @@ export const LeaderboardGuideShell = () => {
                         </span>
                     ))}
                 </div>
+                {/* Vì sao thang đổi + hai lớp chống farm + bảng reset theo kì. Không phải
+                    chú thích trang trí: người dùng thấy con số nhảy từ 20 lên 500 mà không
+                    ai giải thích sẽ đoán là hệ thống lỗi. */}
+                <div className="flex flex-col gap-1 rounded-2xl bg-default/40 p-4">
+                    <Typography type="body-xs" color="muted">
+                        {t("guide.scaleNote")}
+                    </Typography>
+                    <Typography type="body-xs" color="muted">
+                        {t("guide.interactionCapNote")}
+                    </Typography>
+                    <Typography type="body-xs" color="muted">
+                        {t("guide.likeEligibilityNote")}
+                    </Typography>
+                    <Typography type="body-xs" color="muted">
+                        {t("guide.seasonNote")}
+                    </Typography>
+                </div>
             </section>
 
             {/* Level curve */}
@@ -167,6 +200,11 @@ export const LeaderboardGuideShell = () => {
                         level: 13,
                         xp: xpForLevel(13).toLocaleString(locale),
                     })}
+                </Typography>
+                {/* Ngưỡng cấp GIỮ NGUYÊN khi cân lại thang XP ⇒ lên cấp nhanh hơn. Phải nói
+                    ra: người dùng cũ thấy mình nhảy mấy cấp trong một tuần sẽ tưởng lỗi. */}
+                <Typography type="body-xs" color="muted">
+                    {t("guide.levelKeepNote")}
                 </Typography>
             </section>
 

@@ -1,6 +1,7 @@
 import { restRequest } from "@/modules/api/rest/client"
 import type {
     ActivityDaysView,
+    AvatarFrameLadderView,
     BadgeCatalogView,
     BadgeView,
     ClaimRequest,
@@ -16,8 +17,11 @@ import type {
     RewardItemResponse,
     RewardPoolRequest,
     RewardPoolResponse,
+    SeasonBoardKey,
+    SeasonBoardView,
     SeasonRequest,
     SeasonResponse,
+    SeasonWindowView,
     StreakView,
     SummaryView,
     XpAdjustRequest,
@@ -198,6 +202,66 @@ export const getGamificationLeaderboard = async (params?: {
             season: params?.season ?? undefined,
             limit: params?.limit ?? 20,
         },
+    })
+}
+
+/**
+ * Kì học đang chạy — mùa của CẢ BA bảng xếp hạng.
+ *
+ * `GET /api/v1/gamification/seasons/current`
+ *
+ * Khác {@link listSeasons} (admin-only, liệt kê mọi mùa): cái này công khai cho
+ * người học và chỉ trả về mùa đang mở, vì thứ hạng không có nghĩa nếu không nói
+ * được nó thuộc kì nào.
+ *
+ * ⚠️ Endpoint do lane BE "bảng xếp hạng theo kì" cấp và CHƯA merge lúc viết FE này.
+ * Máy chủ chưa có ⇒ ném {@link RestError} 404/501 — người gọi PHẢI hiển thị lỗi
+ * đọc được, KHÔNG được nuốt thành "chưa có kì nào".
+ */
+export const getCurrentSeason = async (): Promise<SeasonWindowView> => {
+    return restRequest<SeasonWindowView>({
+        method: "GET",
+        url: "/gamification/seasons/current",
+    })
+}
+
+/**
+ * Một trong ba bảng xếp hạng theo kì.
+ *
+ * `GET /api/v1/gamification/leaderboards/{board}?seasonId=&courseId=&limit=`
+ *
+ * @param board - `course` | `community` | `total` ({@link SeasonBoardKey}).
+ * @param params - `courseId` CHỈ dùng với `board="course"` (bảng đó xếp hạng nội bộ
+ *   một khoá); `seasonId` bỏ trống = kì đang chạy.
+ *
+ * ⚠️ Cùng cảnh báo "BE chưa có" như {@link getCurrentSeason}.
+ */
+export const getSeasonBoard = async (
+    board: SeasonBoardKey,
+    params?: { seasonId?: string | null; courseId?: string | null; limit?: number },
+): Promise<SeasonBoardView> => {
+    return restRequest<SeasonBoardView>({
+        method: "GET",
+        url: `/gamification/leaderboards/${board}`,
+        params: {
+            seasonId: params?.seasonId ?? undefined,
+            courseId: params?.courseId ?? undefined,
+            limit: params?.limit ?? 50,
+        },
+    })
+}
+
+/**
+ * Thang khung avatar của người xem: khung đang đeo + mọi bậc và điều kiện mở.
+ *
+ * `GET /api/v1/gamification/me/avatar-frames`
+ *
+ * ⚠️ Cùng cảnh báo "BE chưa có" như {@link getCurrentSeason}.
+ */
+export const getMyAvatarFrameLadder = async (): Promise<AvatarFrameLadderView> => {
+    return restRequest<AvatarFrameLadderView>({
+        method: "GET",
+        url: "/gamification/me/avatar-frames",
     })
 }
 

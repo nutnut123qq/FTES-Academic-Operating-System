@@ -277,6 +277,30 @@ export interface ResourceCommentsPage {
  */
 export type FeImageKind = "IMAGE" | "TEXT"
 
+/**
+ * Display card of one person on a resource surface — an album picture's UPLOADER and any
+ * image-comment author (BE `AuthorCard`, the shared record the challenge module's
+ * `AuthorView` is now a thin mapping of).
+ *
+ * The four field names deliberately match the community `PostAuthor` and
+ * {@link import("../challenges").ChallengeAuthorView}, so `UserLink` / `UserAvatar` read this
+ * straight with no second mapper.
+ *
+ * Every field but `userId` is optional: the BE strips nulls from the JSON, so a profile with
+ * no avatar simply has no `avatarUrl` key. Read each one defensively rather than assuming the
+ * key exists — and never substitute a made-up name for a missing one.
+ */
+export interface ResourceAuthorView {
+    /** The user's id — always present when the card itself exists. */
+    userId: string
+    /** URL-facing handle, for the profile link + hovercard. */
+    username?: string | null
+    /** Preferred display name; falls back to the username at render time. */
+    displayName?: string | null
+    /** Uploaded avatar URL; absent → the shared avatar's generated tile. */
+    avatarUrl?: string | null
+}
+
 export interface FeImageView {
     id: string
     resourceId: string
@@ -293,6 +317,18 @@ export interface FeImageView {
     caption?: string
     /** Id of the uploader; absent on rows the BE could not attribute. */
     uploadedBy?: string
+    /**
+     * Display card of the uploader (BE `AuthorCard`), resolved in ONE batched profile call
+     * per page.
+     *
+     * OPTIONAL TWICE OVER, and both cases mean "show nothing", never a placeholder:
+     * - the field is absent entirely on a backend older than `fe-album-author-cards`;
+     * - it is `null` when that user has no profile row.
+     *
+     * It is also absent on the row a POST returns — the BE fills the card on the next album
+     * read, by design — so an upload must not expect a name back straight away.
+     */
+    uploader?: ResourceAuthorView | null
     commentCount: number
     createdAt?: string
     /**
@@ -351,6 +387,15 @@ export interface FeImageCommentView {
     id: string
     imageId: string
     userId: string | null
+    /**
+     * Display card of the comment's author (BE `AuthorCard`), present on nested `replies`
+     * too — the BE resolves root rows and their replies in the SAME batch.
+     *
+     * Absent on an older backend, `null` when the author has no profile, and `null` on a
+     * tombstoned row (where `userId` is `null` as well). All three mean "print no author",
+     * never "Thành viên".
+     */
+    author?: ResourceAuthorView | null
     parentId: string | null
     content: string
     /** `VISIBLE` | `DELETED`. */

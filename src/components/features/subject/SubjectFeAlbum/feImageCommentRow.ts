@@ -11,17 +11,22 @@ import type { PostComment } from "@/components/features/community/hooks/useQuery
 /**
  * Adapts ONE FE-album comment onto the shared {@link PostComment} contract.
  *
- * The FE-image comment view carries NO author card — only a `userId` — so for SOMEBODY ELSE
- * nothing about the author is invented: `authorUsername` is set to that raw id, which is
- * exactly the degradation `PostCommentThread` documents (its owner gate compares the viewer
- * id too, and its row prints the shared "member" label instead of a uuid). A tombstoned row
- * gets an EMPTY author id on purpose: it must never match the viewer, so the ⋯ menu offers
- * nothing on a comment that is already deleted.
+ * Three sources of a name, tried in this order, and the order is the point:
  *
- * The READER'S OWN rows are the exception, and they are named. `userId` identifies them
- * unambiguously, and their name / handle / photo are already in the session card — so a
- * person's own comment stops being signed "thành viên" under a stranger's generated face,
- * which is the whole complaint this mapper answers.
+ * 1. **The BE's author card** (`comment.author`, shipped by `fe-album-author-cards`) — the
+ *    only one that can name SOMEBODY ELSE, so it wins whenever it is there.
+ * 2. **The reader's own session card**, for the reader's own rows. Still needed after (1)
+ *    exists: it names the optimistic row a POST has not come back for yet, and it keeps the
+ *    thread readable against a backend that predates the card.
+ * 3. **Nothing.** `authorUsername` falls back to the raw `userId`, which is exactly the
+ *    degradation `PostCommentThread` documents — its row prints the shared "member" label
+ *    rather than a uuid, and its owner gate still compares the viewer id.
+ *
+ * Never invent a name to fill (3). A row the server could not attribute must read as
+ * unattributed; printing a plausible name is the bug this whole change removes.
+ *
+ * A tombstoned row gets an EMPTY author id on purpose: it must never match the viewer, so
+ * the ⋯ menu offers nothing on a comment that is already deleted.
  *
  * Naming happens HERE and not in the optimistic insert, on purpose: the placeholder and the
  * stored row it is swapped for carry the same `userId`, so a rule applied at render time
@@ -44,11 +49,19 @@ export const toFeImagePostComment = (
 ): PostComment => {
     const isDeleted = comment.status === FE_IMAGE_COMMENT_DELETED || comment.userId === null
     const mine = viewerOwnRowCard(viewer, comment.userId, isDeleted)
+    // A tombstone drops the card with the id: a deleted comment names nobody.
+    const card = isDeleted ? null : (comment.author ?? null)
     return {
         id: comment.id,
-        author: mine ? viewerAuthorName(mine, "") : (comment.userId ?? ""),
-        authorUsername: isDeleted ? "" : (mine?.username ?? comment.userId ?? ""),
-        authorAvatar: mine?.avatarUrl ?? null,
+        author: card
+            ? (card.displayName ?? card.username ?? "")
+            : mine
+                ? viewerAuthorName(mine, "")
+                : (comment.userId ?? ""),
+        authorUsername: isDeleted
+            ? ""
+            : (card?.username ?? mine?.username ?? comment.userId ?? ""),
+        authorAvatar: card?.avatarUrl ?? mine?.avatarUrl ?? null,
         text: comment.content,
         timeLabel: formatRelativeTime(comment.createdAt, locale),
         replies: (comment.replies ?? []).map((reply) =>

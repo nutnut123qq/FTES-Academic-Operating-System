@@ -10,6 +10,7 @@ import { useRouter } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { formatRelativeTime } from "@/components/features/community/hooks/relativeTime"
+import { UserLink } from "@/components/features/identity/UserLink"
 import { FE_ALBUM_MAX_IMAGES } from "@/components/features/resource/ResourceUpload/uploadRules"
 import { useQueryFeAlbumSwr } from "@/components/features/resource/hooks/useQueryFeAlbumSwr"
 import { useQueryResourceDetailSwr } from "@/components/features/resource/hooks/useQueryResourceDetailSwr"
@@ -221,19 +222,34 @@ export const SubjectFeAlbum = () => {
                             whole, which is what used to let the composer drift up into the
                             empty space under a short thread. */}
                         <div className="flex min-h-0 flex-col gap-3 bg-overlay p-4">
-                            {/* ponytail: the "Uploaded by" line is GONE, not fixed — there is
-                                nobody to name. `FeImageView` (src/modules/api/rest/resource/types.ts:281)
-                                ships `uploadedBy` as a raw uuid and the FE has no
-                                name-resolution endpoint to trade it for a display name (the
-                                PE paper only names its uploader because the challenge
-                                contract sends a resolved `AuthorView`). So the row printed a
-                                label with an empty name beside a placeholder avatar. What is
-                                left is the meta the BE actually ships: when the picture was
-                                posted, and how many comments it carries. */}
+                            {/* The uploader line renders ONLY when the BE actually sent a
+                                card. It was removed outright while `FeImageView` carried a
+                                bare `uploadedBy` uuid — a label with an empty name beside a
+                                generated face reads as "this person has no photo" when the
+                                truth was that nothing had been fetched. `fe-album-author-cards`
+                                resolves the card BE-side, so the row is back, gated: no card
+                                (older backend, or an uploader with no profile) falls through
+                                to the timestamp alone rather than to an anonymous placeholder. */}
                             <div className="flex shrink-0 items-center justify-between gap-2">
-                                <Typography type="body-xs" color="muted">
-                                    {formatRelativeTime(current.createdAt, locale)}
-                                </Typography>
+                                {current.uploader ? (
+                                    <div className="flex min-w-0 items-center gap-2">
+                                        <UserLink
+                                            username={current.uploader.username}
+                                            displayName={current.uploader.displayName}
+                                            avatar={current.uploader.avatarUrl}
+                                            size="sm"
+                                            showAvatar
+                                            classNames={{ name: "font-semibold" }}
+                                        />
+                                        <Typography type="body-xs" color="muted">
+                                            {formatRelativeTime(current.createdAt, locale)}
+                                        </Typography>
+                                    </div>
+                                ) : (
+                                    <Typography type="body-xs" color="muted">
+                                        {formatRelativeTime(current.createdAt, locale)}
+                                    </Typography>
+                                )}
                                 <Chip size="sm" variant="soft" color="accent">
                                     <span className="flex items-center gap-1">
                                         <ChatCircleIcon

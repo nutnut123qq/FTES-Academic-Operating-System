@@ -6,15 +6,17 @@ import type { FeImageCommentView } from "@/modules/api/rest/resource"
 /**
  * Unit — how an FE-album comment is signed.
  *
- * This thread's BE contract ships NO author card: every row, stored or unsaved, is just a
- * `userId`. That is why the reader's own name and photo are applied HERE and not in the
- * optimistic insert — a rule that runs at render time lands on the placeholder AND on the
- * row the POST returns, which is the only arrangement where a comment cannot re-identify
- * itself halfway through. The test that matters most is therefore the last one: placeholder
- * in, server row in, identical identity out.
+ * There are three sources of a name and the PRECEDENCE between them is the contract:
+ * the BE's author card (`fe-album-author-cards`) outranks the viewer's session card, which
+ * outranks nothing at all. Only the first can name somebody else; the second exists for the
+ * optimistic row a POST has not returned yet, and for a backend that predates the card.
  *
- * Nobody ELSE is named: with no card to read from, another member's row keeps the raw-id
- * degradation the shared thread block already renders its "member" label from.
+ * The viewer-card path is applied at RENDER time rather than in the optimistic insert, so it
+ * lands on the placeholder AND on the row the POST returns — the only arrangement where a
+ * comment cannot re-identify itself halfway through.
+ *
+ * What must never happen, and is asserted below: a row the server could not attribute
+ * acquiring a plausible name.
  */
 
 const viewer = {
@@ -82,6 +84,93 @@ describe("toFeImagePostComment", () => {
         expect(mapped.author).toBe("u2")
         expect(mapped.replies?.[0]?.author).toBe("Minh Dev")
         expect(mapped.replies?.[0]?.authorAvatar).toBe("https://cdn/minh.png")
+    })
+
+    it("names SOMEBODY ELSE from the BE card — the case the viewer card can never cover", () => {
+        const mapped = toFeImagePostComment(
+            row({
+                userId: "u9",
+                author: {
+                    userId: "u9",
+                    username: "khoana71",
+                    displayName: "Nguyễn Anh Khoa",
+                    avatarUrl: "https://cdn/khoa.jpg",
+                },
+            }),
+            "vi",
+            viewer,
+        )
+
+        expect(mapped.author).toBe("Nguyễn Anh Khoa")
+        expect(mapped.authorUsername).toBe("khoana71")
+        expect(mapped.authorAvatar).toBe("https://cdn/khoa.jpg")
+    })
+
+    it("carries the card into nested replies — the BE resolves them in the same batch", () => {
+        const mapped = toFeImagePostComment(
+            row({
+                userId: "u9",
+                author: { userId: "u9", username: "khoana71", displayName: "Nguyễn Anh Khoa" },
+                replies: [
+                    row({
+                        id: "r1",
+                        parentId: "c1",
+                        userId: "u8",
+                        author: { userId: "u8", displayName: "Trần Bình" },
+                    }),
+                ],
+            }),
+            "vi",
+            viewer,
+        )
+
+        expect(mapped.replies?.[0]?.author).toBe("Trần Bình")
+    })
+
+    it("falls back to the handle when the profile carries no display name", () => {
+        const mapped = toFeImagePostComment(
+            row({ userId: "u9", author: { userId: "u9", username: "khoana71" } }),
+            "vi",
+            viewer,
+        )
+
+        expect(mapped.author).toBe("khoana71")
+    })
+
+    it("lets the BE card outrank the viewer card on the reader's OWN row", () => {
+        // Same person, but the server knows a newer display name than the cached session.
+        const mapped = toFeImagePostComment(
+            row({ author: { userId: "u1", username: "minhdev", displayName: "Minh Đã Đổi Tên" } }),
+            "vi",
+            viewer,
+        )
+
+        expect(mapped.author).toBe("Minh Đã Đổi Tên")
+    })
+
+    it("still prints NO name when the server could not attribute the row", () => {
+        // Stranger, no card (older backend, or an author with no profile row). The row must
+        // stay unattributed — the shared thread renders its "member" label from this.
+        const mapped = toFeImagePostComment(row({ userId: "u9" }), "vi", viewer)
+
+        expect(mapped.author).toBe("u9")
+        expect(mapped.authorAvatar).toBeNull()
+    })
+
+    it("drops the card on a tombstone — a deleted comment names nobody", () => {
+        const mapped = toFeImagePostComment(
+            row({
+                status: "DELETED",
+                userId: null,
+                author: { userId: "u9", displayName: "Nguyễn Anh Khoa" },
+            }),
+            "vi",
+            viewer,
+        )
+
+        expect(mapped.author).not.toBe("Nguyễn Anh Khoa")
+        expect(mapped.authorUsername).toBe("")
+        expect(mapped.authorAvatar).toBeNull()
     })
 
     it("gives the placeholder and the stored row the SAME identity — nothing swaps", () => {

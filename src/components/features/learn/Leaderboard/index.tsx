@@ -4,9 +4,12 @@ import React, { useMemo } from "react"
 import { Button, Typography } from "@heroui/react"
 import { useLocale, useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
+import { InfoIcon } from "@phosphor-icons/react"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { PageHeader } from "@/components/blocks/layout/PageHeader"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
+import { Link } from "@/i18n/navigation"
+import { pathConfig } from "@/resources/path"
 import {
     rankEntriesByCategory,
     useQueryLearnLeaderboardSwr,
@@ -26,6 +29,7 @@ import { LeaderboardChampion } from "./LeaderboardChampion"
  */
 export const Leaderboard = () => {
     const t = useTranslations("learn")
+    const tSeason = useTranslations("gamification.seasonBoards")
     const locale = useLocale()
     const { courseId } = useParams<{ courseId: string }>()
     // single board: always total XP (hardcoded so a `?category=` deep-link can't re-rank it)
@@ -46,6 +50,30 @@ export const Leaderboard = () => {
     return (
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-10">
             <PageHeader title={t("leaderboard.title")} description={t("leaderboard.subtitle")} />
+
+            {/* ★ KHÔNG gắn dải "kỳ" ở đây. Trang này chạy bằng GraphQL `courseLeaderboard`
+                và ĐANG HOẠT ĐỘNG; backend không có endpoint công khai nào trả kỳ đang chạy,
+                nên thêm một khối hỏi endpoint không tồn tại chỉ mọc ra một hộp lỗi đỏ nằm
+                vĩnh viễn trên một bảng vẫn hiển thị bình thường ngay bên dưới. */}
+
+            {/* Bảng này ĐẾM GÌ + lối sang bảng theo kỳ. Không nói rõ thì người hạng 3
+                ở đây mà hạng 40 ở bảng Tổng sẽ kết luận hệ thống tính sai. */}
+            <div className="flex flex-col gap-1 rounded-2xl bg-default/40 p-4">
+                <div className="flex items-center gap-2">
+                    <InfoIcon className="size-4 text-muted" aria-hidden focusable="false" />
+                    <Typography type="body-xs" color="muted">
+                        {tSeason("countsLabel")}
+                    </Typography>
+                </div>
+                <Typography type="body-sm">{t("leaderboard.countsNote")}</Typography>
+                <Link
+                    // Locale-less: `Link` của `@/i18n/navigation` tự gắn tiền tố locale.
+                    href={pathConfig().locale().leaderboard().build()}
+                    className="w-fit text-sm font-medium text-accent no-underline hover:underline"
+                >
+                    {tSeason("title")}
+                </Link>
+            </div>
 
             <div className="flex flex-col gap-6">
                 {/* toolbar: ranked-by + updated-at + refresh */}

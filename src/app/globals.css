@@ -14,10 +14,11 @@
  *
  * Vì sao chọn giá trị này: `rounded-large` là tên legacy của HeroUI v2
  * (small/medium/large), ứng với bậc `lg` của thang mới — khớp cả tên (large ~ lg)
- * lẫn số đo: legacy large = 14px, mà với `--radius: 0.75rem` (12px) thì lg = 12px
+ * lẫn số đo: legacy large = 14px, mà lúc chọn (`--radius: 0.75rem`) thì lg = 12px
  * còn xl = 18px, nên lg là bậc gần nhất. Do đó bám ĐÚNG công thức heroui dùng cho
  * lg (node_modules/@heroui/styles/dist/themes/shared/theme.css) thay vì chế số:
- * giá trị tự đi theo mỗi khi đổi `--radius`.
+ * giá trị tự đi theo mỗi khi đổi `--radius` — nay `--radius` = 0.375rem nên
+ * `rounded-large` = 6px, tự co mà không phải sửa lại chỗ này.
  *
  * LƯU Ý: bắt buộc `@theme inline` + viết lại công thức, KHÔNG alias
  * `var(--radius-lg)`. HeroUI khai thang radius trong `@theme inline` nên
@@ -25,7 +26,7 @@
  * alias sẽ ra giá trị rỗng và lỗi tái diễn trong im lặng.
  */
 @theme inline {
-  --radius-large: calc(var(--radius) * 1); /* = var(--radius) = 0.75rem (12px) */
+  --radius-large: calc(var(--radius) * 1); /* = var(--radius), bằng rounded-lg */
 }
 
 /*
@@ -111,9 +112,14 @@ html {
   --warning-foreground: oklch(21.03% 0.0059 84.37);
 
   /* Border Radius. Cả thang `rounded-*` của HeroUI v3 dẫn xuất từ 2 số này
-     (xs .25× · sm .5× · md .75× · lg 1× · xl 1.5× · 2xl 2× · 3xl 3×), nên hạ
-     --radius là hạ toàn bộ. Về đúng mức starci-academy-fe: rounded-2xl 24px→16px. */
-  --radius: 0.5rem;
+     (xs .25× · sm .5× · md .75× · lg 1× · xl 1.5× · 2xl 2× · 3xl 3×), và CSS của
+     vendor cũng đọc thẳng `--radius-3xl` cho .card/.modal/.popover/.toast/.button,
+     nên đây là nút vặn DUY NHẤT cho cả app — không cần đè từng component.
+     0.375rem: thẻ lớn 18px, panel 12px. Thấp hơn starci-academy-fe (0.5rem) một
+     bậc, có chủ ý — 24px bị đánh giá là bo quá căng.
+     `--field-radius` đi trục RIÊNG (vendor đọc --radius-field), cố tình giữ 12px
+     để ô nhập không co theo. */
+  --radius: 0.375rem;
   --field-radius: 0.75rem;
 
   /* Font Family */

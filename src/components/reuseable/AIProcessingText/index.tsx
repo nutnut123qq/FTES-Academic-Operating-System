@@ -164,7 +164,9 @@ export const AIProcessingText = (props: AIProcessingTextProps) => {
                             }
                     }
                 />
-                <div className={cn("relative z-[1] rounded-[calc(1rem-2px)] bg-background p-3", classNames?.innerPanel)}>
+                {/* Lõi phải trừ đúng 2px viền gradient của khung ngoài (rounded-2xl = --radius*2),
+                    nên tính từ token thay vì viết cứng 1rem — đổi --radius là hở góc. */}
+                <div className={cn("relative z-[1] rounded-[calc(var(--radius)*2-2px)] bg-background p-3", classNames?.innerPanel)}>
                     {innerBody}
                 </div>
             </div>

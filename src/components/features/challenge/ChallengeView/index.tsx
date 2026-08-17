@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl"
 import { useParams, useSearchParams } from "next/navigation"
 import { Link, useRouter } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
 
 import { useQueryChallengeSwr } from "../hooks/useQueryChallengeSwr"
 import type { ChallengeDetail } from "../hooks/useQueryChallengeSwr"
@@ -196,14 +197,14 @@ export const ChallengeView = () => {
                         </div>
                     </div>
 
+                    {/* Đề bài có thể là markdown HOẶC HTML (admin soạn bằng rich-text editor) —
+                        render bằng MarkdownContent kẻo thẻ `<ul><li>` lòi ra dạng text. */}
                     {challenge.description ? (
-                        <Typography
-                            type="body-sm"
-                            color="muted"
-                            className="whitespace-pre-line"
-                        >
-                            {challenge.description}
-                        </Typography>
+                        <MarkdownContent
+                            allowHtml
+                            markdown={challenge.description}
+                            className="text-muted"
+                        />
                     ) : null}
 
                     {/* Structured brief (requirements/steps/hints) — only when the BE

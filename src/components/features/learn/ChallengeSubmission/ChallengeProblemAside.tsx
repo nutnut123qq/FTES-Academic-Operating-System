@@ -115,7 +115,10 @@ export const ChallengeProblemAside = ({
                         </Typography>
                     </div>
                 ) : null}
-                {description ? <MarkdownContent reading markdown={description} /> : null}
+                {/* Đề bài từ admin soạn bằng rich-text editor → lưu HTML (`<ul><li>`, `<pre
+                    class="ql-syntax">`). Không bật allowHtml thì react-markdown in thẻ ra dạng
+                    text. rehype-raw + sanitize lo XSS; markdown thuần không đổi. */}
+                {description ? <MarkdownContent reading allowHtml markdown={description} /> : null}
             </div>
 
             {samples.length > 0 ? (

@@ -102,12 +102,18 @@ export const OnThisPage = ({ className, mobile = false }: OnThisPageProps) => {
                                 key={c.id}
                                 size="sm"
                                 variant="primary"
-                                className="self-start"
+                                // `.button` bake sẵn `w-fit whitespace-nowrap` → tiêu đề dài
+                                // ("[PREMIUM-MASTER] Bài 2 …") kéo pill tràn khỏi rail w-64.
+                                // Chặn bằng max-w-full (không xung đột class baked) + truncate
+                                // nhãn bên trong; title= để vẫn đọc được tên đầy đủ khi hover.
+                                className="max-w-full self-start"
                                 onPress={() =>
                                     router.push(challengeHref(courseId, lesson.moduleId, contentId, c.id))
                                 }
                             >
-                                {c.title || t("lessonRail.challenges.practice")}
+                                <span className="min-w-0 truncate" title={c.title || undefined}>
+                                    {c.title || t("lessonRail.challenges.practice")}
+                                </span>
                             </Button>
                         ))}
                     </div>

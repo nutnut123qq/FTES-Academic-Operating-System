@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useMemo, useState } from "react"
+import React, { useState } from "react"
 import { Button, Chip, Typography, cn } from "@heroui/react"
 import {
     ArrowLeftIcon,
@@ -13,6 +13,7 @@ import {
     XCircleIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
+import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
 import {
     challengeTypeKey,
@@ -91,14 +92,9 @@ export const CodingChallengeDetail = ({ challenge, onBack }: CodingChallengeDeta
     const [samples, setSamples] = useState<Array<CodingSampleCase>>(() => [newSample()])
     const { attempt, isAttempting, outcome, error, reset } = useMutateCodingAttemptSwr()
 
-    const paragraphs = useMemo(
-        () =>
-            challenge.description
-                .split(/\n{2,}/)
-                .map((block) => block.trim())
-                .filter((block) => block.length > 0),
-        [challenge.description],
-    )
+    // Đề bài có thể là markdown HOẶC HTML (admin soạn bằng rich-text editor) → để
+    // MarkdownContent render, không tự tách đoạn nữa (tách tay thì thẻ HTML lòi ra dạng text).
+    const hasDescription = challenge.description.trim().length > 0
 
     const typeKey = challengeTypeKey(challenge.type)
     const isOpen = challenge.lifecycle === "running"
@@ -185,21 +181,16 @@ export const CodingChallengeDetail = ({ challenge, onBack }: CodingChallengeDeta
                         <Typography type="body" weight="medium">
                             {t("practice.coding.problem")}
                         </Typography>
-                        {paragraphs.length === 0 ? (
+                        {hasDescription ? (
+                            <MarkdownContent
+                                allowHtml
+                                markdown={challenge.description}
+                                className="text-muted"
+                            />
+                        ) : (
                             <Typography type="body-sm" color="muted">
                                 {t("practice.coding.noDescription")}
                             </Typography>
-                        ) : (
-                            paragraphs.map((paragraph, index) => (
-                                <Typography
-                                    key={index}
-                                    type="body-sm"
-                                    color="muted"
-                                    className="whitespace-pre-wrap"
-                                >
-                                    {paragraph}
-                                </Typography>
-                            ))
                         )}
                     </div>
                 </div>

@@ -281,11 +281,21 @@ export const buildMarkdownRenderers = ({
             )
         },
         pre: ({ children }) => {
-            const child = React.Children.only(children) as React.ReactElement
-            const className = (child.props as { className?: string }).className || ""
+            // Fence markdown → <pre><code class="language-x">; NHƯNG HTML thô (allowHtml, nội dung
+            // soạn bằng rich-text editor) cho <pre class="ql-syntax"> chứa TEXT TRẦN — không có
+            // <code> con. React.Children.only NÉM LỖI ở ca đó → cả trang chết. Nên: có <code> con
+            // thì đọc lang từ nó, không thì lấy thẳng text và dùng ngôn ngữ mặc định.
+            const nodes = React.Children.toArray(children)
+            const child = nodes.length === 1 && React.isValidElement(nodes[0])
+                ? (nodes[0] as React.ReactElement)
+                : null
+            const className = child ? ((child.props as { className?: string }).className || "") : ""
             const match = /language-(\w+)/.exec(className)
             const lang = match?.[1] || "bash"
-            const code = String((child.props as { children?: React.ReactNode }).children || "").replace(/\n$/, "")
+            const rawChildren = child
+                ? (child.props as { children?: React.ReactNode }).children
+                : nodes.filter((node) => typeof node === "string").join("")
+            const code = String(rawChildren || "").replace(/\n$/, "")
             if (lang.toLowerCase() === "mermaid") {
                 return (
                     <MermaidDiagram

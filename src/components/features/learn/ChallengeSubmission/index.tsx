@@ -391,7 +391,8 @@ export const ChallengeSubmission = () => {
                             the narrow-column types (MCQ / ESSAY / UI-UX). */}
                         {challenge.description && !isSplitLayout ? (
                             <div className="rounded-3xl border border-default bg-surface p-6 text-sm">
-                                <MarkdownContent reading markdown={challenge.description} />
+                                {/* HTML từ rich-text editor của admin — xem ChallengeProblemAside. */}
+                                <MarkdownContent reading allowHtml markdown={challenge.description} />
                             </div>
                         ) : null}
 

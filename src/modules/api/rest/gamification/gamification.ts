@@ -18,6 +18,7 @@ import type {
     RewardPoolResponse,
     SeasonBoardKey,
     SeasonBoardView,
+    SeasonOptionView,
     SeasonRequest,
     SeasonResponse,
     StreakView,
@@ -228,6 +229,25 @@ export const getSeasonBoard = async (
             // Trần cứng phía backend là 100 (`SeasonBoardService.MAX_LIMIT`).
             limit: params?.limit ?? 50,
         },
+    })
+}
+
+/**
+ * Các KỲ chọn được trên ô chọn mùa, mới nhất trước.
+ *
+ * `GET /api/v1/gamification/boards/seasons`
+ *
+ * Backend chỉ trả `RUNNING` và `CLOSED`; kỳ `DRAFT` bị loại có chủ đích. Danh sách KHÔNG
+ * chứa mục "tích luỹ" — tích luỹ không phải một kỳ mà là một cửa sổ thời gian
+ * ({@link LIFETIME_SEASON}), nên tầng vẽ tự thêm nó vào cuối danh sách.
+ *
+ * Gác bằng CÙNG leaf `gamification.board.read` với chính bảng ⇒ khách chưa đăng nhập
+ * nhận 401, người gọi phải khoá key SWR như với bảng.
+ */
+export const getSeasonOptions = async (): Promise<Array<SeasonOptionView>> => {
+    return restRequest<Array<SeasonOptionView>>({
+        method: "GET",
+        url: "/gamification/boards/seasons",
     })
 }
 

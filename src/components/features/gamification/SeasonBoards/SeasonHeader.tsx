@@ -3,33 +3,69 @@
 import React from "react"
 import { Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
-import { CalendarBlankIcon } from "@phosphor-icons/react"
+import { CalendarBlankIcon, ClockIcon, InfinityIcon } from "@phosphor-icons/react"
+import { formatXpShort } from "@/utils/xp-format"
 
 /** Props for {@link SeasonHeader}. */
 export interface SeasonHeaderProps {
     /** Mã kỳ backend đã đọc (`seasonCode`); `null` = không có kỳ nào đang chạy. */
     seasonCode: string | null
+    /** Tên kỳ đọc được (V356); `null` ⇒ rơi về {@link SeasonHeaderProps.seasonCode}. */
+    seasonName?: string | null
+    /** Thời điểm chốt kỳ (ISO). `null` ở bảng tích luỹ — nó không bao giờ chốt. */
+    endsAt?: string | null
+    /** `true` = đang xem TÍCH LUỸ. */
+    lifetime?: boolean
     /** `true` khi backend trả cờ `NO_SEASON` — khác hẳn "chưa tải xong". */
     noSeason: boolean
+    /** Hạng người xem trong lát cắt đang hiện; `null` = chưa có hạng. */
+    myRank?: number | null
+    /** EXP người xem trong lát cắt đang hiện; `null` = chưa biết. */
+    myXp?: number | null
 }
 
 /**
- * Dải "đang là kỳ nào" đứng trên bảng.
+ * Dải MÙA GIẢI trên đầu bảng: đang là kỳ nào · còn bao lâu · bạn đứng đâu.
  *
- * VÌ SAO bắt buộc phải có: bảng reset theo kỳ. Một con số thứ hạng không nói rõ nó
- * thuộc kỳ nào là con số vô nghĩa — người dùng sẽ tưởng hệ thống mất dữ liệu vào đúng
- * cái ngày nó reset.
+ * <p><b>Vì sao ba thứ này đi cùng nhau.</b> Một thứ hạng không kèm "hạng của kỳ nào, còn
+ * bao lâu" là con số không giải thích được — người dùng không biết nên cày tiếp hay đã hết
+ * cơ hội. Trước đợt này dải chỉ in ra `seasonCode`, mà mã được dựng dạng
+ * {@code T-<mã kỳ>-<8 ký tự băm>}, nên người dùng đang nhìn thấy nguyên chuỗi
+ * "T-SU26-bfd6f768" trên trang thật.
  *
- * ★ Dữ liệu kỳ lấy TỪ CHÍNH phản hồi bảng (`seasonCode` / cờ `NO_SEASON`), không gọi
- * thêm endpoint nào. Backend không mở endpoint "kỳ đang chạy" cho người học
- * (`/gamification/admin/seasons` là admin-only), nên header này KHÔNG được đi hỏi một
- * đường dẫn không tồn tại rồi hiện lỗi trên một bảng đang chạy tốt.
+ * <p><b>Đếm ngược tính ở CLIENT sau khi gắn (mount).</b> Server và trình duyệt ở hai múi
+ * giờ/hai thời điểm khác nhau, nên tính "còn bao nhiêu ngày" ngay lúc render sẽ cho hai kết
+ * quả khác nhau và React báo lệch hydrate. Khoảng lặng một nhịp là cái giá đúng để đổi lấy
+ * việc không bao giờ hiện sai số ngày.
  *
- * KHÔNG có đếm ngược: contract bảng không mang `startsAt`/`endsAt`. Đếm ngược bịa từ
- * dữ liệu không có là đúng thứ "nói một mốc thời gian không ai bảo đảm".
+ * <p><b>BỐN kết cục, bốn câu nói</b> — gộp bất kỳ hai cái nào là nói sai: chưa khai kỳ nào
+ * (`noSeason`) · chưa tải xong (chưa có mã) · tích luỹ (không có kỳ, KHÔNG đếm ngược) · kỳ
+ * đang chạy.
  */
-export const SeasonHeader = ({ seasonCode, noSeason }: SeasonHeaderProps) => {
+export const SeasonHeader = ({
+    seasonCode,
+    seasonName = null,
+    endsAt = null,
+    lifetime = false,
+    noSeason,
+    myRank = null,
+    myXp = null,
+}: SeasonHeaderProps) => {
     const t = useTranslations("gamification.seasonBoards")
+
+    const [daysLeft, setDaysLeft] = React.useState<number | null>(null)
+    React.useEffect(() => {
+        if (!endsAt) {
+            setDaysLeft(null)
+            return
+        }
+        const end = new Date(endsAt).getTime()
+        if (Number.isNaN(end)) {
+            setDaysLeft(null)
+            return
+        }
+        setDaysLeft(Math.max(0, Math.ceil((end - Date.now()) / 86_400_000)))
+    }, [endsAt])
 
     if (noSeason) {
         return (
@@ -50,20 +86,52 @@ export const SeasonHeader = ({ seasonCode, noSeason }: SeasonHeaderProps) => {
         return null
     }
 
+    const title = lifetime ? t("picker.lifetime") : seasonName?.trim() || seasonCode
+
     return (
-        <div className="flex flex-col gap-2 rounded-2xl bg-default/40 p-4">
-            <div className="flex flex-wrap items-center gap-2">
-                <CalendarBlankIcon className="size-4 text-muted" aria-hidden focusable="false" />
-                <Typography type="body-xs" color="muted">
-                    {t("season.label")}
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-separator p-4">
+            <div className="flex min-w-0 flex-col gap-0.5">
+                <Typography type="body" weight="semibold" className="line-clamp-1">
+                    {title}
                 </Typography>
-                <Typography type="body-sm" weight="semibold">
-                    {seasonCode}
-                </Typography>
+                <div className="flex items-center gap-1.5 text-muted">
+                    {lifetime ? (
+                        <>
+                            <InfinityIcon className="size-4" aria-hidden focusable="false" />
+                            <Typography type="body-xs" color="muted">
+                                {t("picker.lifetimeHint")}
+                            </Typography>
+                        </>
+                    ) : daysLeft === null ? (
+                        <>
+                            <CalendarBlankIcon className="size-4" aria-hidden focusable="false" />
+                            <Typography type="body-xs" color="muted">
+                                {t("season.resetNote")}
+                            </Typography>
+                        </>
+                    ) : (
+                        <>
+                            <ClockIcon className="size-4" aria-hidden focusable="false" />
+                            <Typography type="body-xs" color="muted">
+                                {t("season.daysLeft", { days: daysLeft })}
+                            </Typography>
+                        </>
+                    )}
+                </div>
             </div>
-            <Typography type="body-xs" color="muted">
-                {t("season.resetNote")}
-            </Typography>
+
+            {/* Hạng của người xem trong CHÍNH lát cắt đang hiện — đặt cạnh dải mùa để không
+                ai phải cuộn xuống mới biết mình đứng đâu. `—` khi chưa có hạng (KHÁC 0). */}
+            <div className="flex shrink-0 flex-col items-end gap-0.5">
+                <Typography type="h5" weight="bold">
+                    {myRank && myRank > 0 ? `#${myRank}` : "—"}
+                </Typography>
+                {myXp != null ? (
+                    <Typography type="body-xs" color="muted">
+                        {t("xp", { xp: formatXpShort(myXp) })}
+                    </Typography>
+                ) : null}
+            </div>
         </div>
     )
 }

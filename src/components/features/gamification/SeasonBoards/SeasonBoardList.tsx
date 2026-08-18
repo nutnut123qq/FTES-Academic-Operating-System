@@ -4,7 +4,7 @@ import React from "react"
 import { Chip, Typography, cn } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { CrownIcon } from "@phosphor-icons/react"
-import { UserAvatar } from "@/components/reuseable/UserAvatar"
+import { AvatarWithFrame } from "../AvatarWithFrame"
 import { formatXpShort } from "@/utils/xp-format"
 import { shortUserLabel, type SeasonBoardRow } from "./model"
 
@@ -57,13 +57,27 @@ export const SeasonBoardList = ({ rows, viewerName, viewerAvatar }: SeasonBoardL
     )
 }
 
-/** Nhãn của một dòng: tên thật CHỈ khi đó là người xem, còn lại là mã rút gọn. */
+/**
+ * Nhãn của một dòng.
+ *
+ * Thứ tự ưu tiên có lý do: tên backend gắn (V356) đi TRƯỚC tên trong store của người xem,
+ * để cả bảng dùng chung MỘT nguồn tên — hai nguồn sẽ cho ra cảnh dòng của mình hiện tên
+ * khác với dòng của mình ở bảng khác. Store chỉ là lưới đỡ cho lúc backend chưa deploy
+ * V356; mã rút gọn là lưới đỡ cuối cho người chưa lập hồ sơ.
+ */
 const rowLabel = (row: SeasonBoardRow, viewerName?: string | null): string => {
+    if (row.name) {
+        return row.name
+    }
     if (row.isViewer && viewerName) {
         return viewerName
     }
     return shortUserLabel(row.userId)
 }
+
+/** Ảnh của một dòng — cùng luật ưu tiên với {@link rowLabel}. */
+const rowAvatar = (row: SeasonBoardRow, viewerAvatar?: string | null): string | null =>
+    row.avatarUrl ?? (row.isViewer ? viewerAvatar ?? null : null)
 
 /** Bục top-3. */
 const SeasonPodium = ({
@@ -97,12 +111,13 @@ const SeasonPodium = ({
                                     className="absolute -top-4 left-1/2 size-5 -translate-x-1/2 text-warning"
                                 />
                             ) : null}
-                            <UserAvatar
+                            <AvatarWithFrame
                                 username={rowLabel(row, viewerName)}
-                                avatar={row.isViewer ? viewerAvatar ?? null : null}
+                                avatar={rowAvatar(row, viewerAvatar)}
                                 seed={row.userId}
                                 size={isLeader ? "lg" : "md"}
-                                className={cn(row.isViewer && "ring-2 ring-accent rounded-full")}
+                                frameCode={row.avatarFrame}
+                                highlighted={row.isViewer}
                             />
                         </div>
                         <Typography
@@ -168,11 +183,12 @@ const SeasonBoardRowView = ({
                 )}
             </div>
 
-            <UserAvatar
+            <AvatarWithFrame
                 username={label}
-                avatar={row.isViewer ? viewerAvatar ?? null : null}
+                avatar={rowAvatar(row, viewerAvatar)}
                 seed={row.userId}
                 size="sm"
+                frameCode={row.avatarFrame}
             />
 
             <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">

@@ -4209,20 +4209,23 @@
         "leaderboardError": "Couldn't load the leaderboard. Please try again.",
         "seasonBoards": {
             "title": "Season leaderboards",
-            "subtitle": "Two boards, ONE unit of EXP — they differ only in which EXP they count.",
+            "subtitle": "Three boards, ONE unit of EXP — they differ only in which EXP they count.",
             "season": {
                 "label": "Current term",
                 "none": "No term is running",
                 "noneHint": "Admins have not opened a new term. This is NOT an empty board — a rank only means something inside a term, so the board is paused.",
-                "resetNote": "The board resets at the end of the term — old EXP never competes with new EXP."
+                "resetNote": "The board resets at the end of the term — old EXP never competes with new EXP.",
+                "daysLeft": "{days} days left in this term"
             },
             "tabs": {
                 "total": "Total",
-                "social": "Community & Workplace"
+                "social": "Community & Workplace",
+                "course": "Course"
             },
             "counts": {
                 "total": "Adds every EXP source you earned this term: course + community + workplace. This is the board with the real prizes.",
-                "social": "Counts community EXP (posts, comments, accepted answers, likes) and workplace EXP (challenges, resources submitted to a subject). Two sources, one shared ranking. Liking a lesson counts here rather than on the Course board — a like is interaction, not study."
+                "social": "Counts community EXP (posts, comments, accepted answers, likes) and workplace EXP (challenges, resources submitted to a subject). Two sources, one shared ranking. Liking a lesson counts here rather than on the Course board — a like is interaction, not study.",
+                "course": "EXP you earned INSIDE one course, ranked against that course’s own learners."
             },
             "countsLabel": "What this board counts",
             "whyDifferent": "Your rank differs between the two boards because each one counts a different SLICE of EXP — not because the system miscounted.",
@@ -4247,6 +4250,13 @@
                 "failedTitle": "Could not load the leaderboard",
                 "failedDescription": "{endpoint} returned {status}.",
                 "retry": "Try again"
+            },
+            "picker": {
+                "label": "Pick a term",
+                "current": "Current term",
+                "runningHint": "running",
+                "lifetime": "All-time",
+                "lifetimeHint": "every term, never resets"
             }
         }
     },

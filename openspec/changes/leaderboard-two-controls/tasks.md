@@ -1,0 +1,10 @@
+- [x] Hợp đồng REST: `SeasonBoardEntryView` + danh tính, `SeasonBoardView` + tên kỳ/ngày/lifetime, `SeasonOptionView`, `LIFETIME_SEASON`
+- [x] `getSeasonOptions()` + `useQuerySeasonOptionsSwr`
+- [x] `SeasonPicker` (idiom chọn-một của nhà, có Tích luỹ)
+- [x] Thanh chọn bảng 3 lát cắt + `SEASON_SCOPES`
+- [x] `SeasonHeader` thành dải mùa giải (tên · đếm ngược · hạng/EXP)
+- [x] `AvatarWithFrame` + `useAvatarFrames` (danh mục `/profiles/me/appearance/catalog`)
+- [x] Dòng và bục top 3 dùng tên/ảnh/khung thật
+- [x] Chuyển `GoalsCard` sang `/profile/progress`
+- [x] Chuỗi vi/en cho lát cắt khoá học, ô chọn mùa, đếm ngược
+- [x] Verify: tsc sạch · vitest 112/112 · `next build --webpack` xanh

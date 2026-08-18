@@ -5,6 +5,7 @@ import { Label, Typography } from "@heroui/react"
 import { useLocale, useTranslations } from "next-intl"
 import { CoinsIcon, FireIcon, TrophyIcon } from "@phosphor-icons/react"
 import { Link, useRouter } from "@/i18n/navigation"
+import { GoalsCard } from "@/components/features/gamification/GoalsCard"
 import { useQueryWalletSwr } from "@/components/features/wallet/hooks/useQueryWalletSwr"
 import { useQueryMyCommunitySummarySwr } from "../hooks/useQueryMyCommunitySummarySwr"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
@@ -105,6 +106,11 @@ export const ProfileProgress = () => {
 
     return (
         <div className="flex flex-col gap-6">
+            {/* Mục tiêu cá nhân — chuyển về đây từ /leaderboard. Đặt mục tiêu ngày/tuần
+                là việc riêng của từng người, không phải chuyện đua hạng; ở trang xếp hạng
+                nó chiếm tám trong mười hai nút và đẩy chính cái bảng xuống dưới màn hình. */}
+            <GoalsCard />
+
             {/* FTES Coin + Reputation — own SWR (wallet + community summary), so they
                 render even when the gamification fetch is loading/failing. */}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

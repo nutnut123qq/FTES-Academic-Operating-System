@@ -47,8 +47,16 @@ export const useQuerySeasonBoardSwr = ({
         rows,
         /** Hạng người xem trên toàn dân số; `null` = chưa có EXP nào trong kỳ. */
         myRank: data?.myRank ?? null,
+        /** EXP của người xem trong lát cắt này — lấy từ chính dòng của họ nếu có mặt. */
+        myXp: data?.entries.find((entry) => entry.userId === viewerUserId)?.xp ?? null,
         /** Mã kỳ backend đã đọc; `null` khi không có kỳ nào đang chạy. */
         seasonCode: data?.seasonCode ?? null,
+        /** Tên kỳ đọc được (V356); `null` ⇒ tầng vẽ rơi về `seasonCode`. */
+        seasonName: data?.seasonName ?? null,
+        /** Ngày chốt kỳ, cho đếm ngược; `null` ở bảng tích luỹ. */
+        endsAt: data?.endsAt ?? null,
+        /** `true` = đang xem TÍCH LUỸ. */
+        lifetime: data?.lifetime ?? false,
         termId: data?.termId ?? null,
         /** `FAILED` | `NO_SEASON` | `EMPTY` | `OK` — bốn câu nói khác nhau, không gộp. */
         outcome: boardOutcome(data, error),

@@ -10,8 +10,22 @@ import type {
     SeasonBoardView,
 } from "@/modules/api/rest/gamification"
 
-/** Hai bảng backend phục vụ, đúng thứ tự hiển thị trên tab. */
+/** Hai bảng backend phục vụ. */
 export const SEASON_BOARDS: ReadonlyArray<SeasonBoardKey> = ["total", "social"]
+
+/**
+ * BA lát cắt người dùng chọn được trên thanh chọn bảng.
+ *
+ * <p>Khác {@link SEASON_BOARDS} một mục: `course`. Với người dùng thì cả ba là "xem bảng
+ * nào", nhưng chỉ hai cái đầu là bảng của `GET /gamification/boards/{board}` — bảng khoá
+ * học có công thức riêng ở GraphQL `courseLeaderboard`, và backend TỪ CHỐI `board=course`
+ * có chủ đích để không đẻ ra hai con số cùng tên gọi.
+ *
+ * <p>Thứ tự cố ý: `total` đứng đầu vì đó là bảng đua giải có phần thưởng thật.
+ */
+export const SEASON_SCOPES = ["total", "course", "social"] as const
+
+export type SeasonScope = (typeof SEASON_SCOPES)[number]
 
 /**
  * VÌ SAO một bảng không vẽ được. `null` = không có sự cố nào (dữ liệu về bình thường,
@@ -101,15 +115,27 @@ export interface SeasonBoardRow {
     /** EXP của lát cắt bảng này đếm. */
     xp: number
     isViewer: boolean
+    /**
+     * Tên hiển thị; `null` khi người này chưa có hồ sơ — tầng vẽ rơi về
+     * {@link shortUserLabel}. Tài khoản không hồ sơ vẫn kiếm được EXP nên đây là trạng
+     * thái BÌNH THƯỜNG, không phải sự cố.
+     */
+    name: string | null
+    avatarUrl: string | null
+    /** Mã khung viền đang đeo; `null` = không đeo khung nào. */
+    avatarFrame: string | null
 }
 
 /**
  * Đổi một dòng máy chủ thành {@link SeasonBoardRow}.
  *
- * ⚠️ KHÔNG có tên ở đây, và đó không phải thiếu sót của hàm này: `EntryView` của backend
- * chỉ mang `(userId, xp, rank)`. FE không có endpoint nào đổi một mớ userId sang hồ sơ,
- * nên tầng vẽ hiện mã rút gọn cho người khác và tên thật cho chính người xem (danh tính
- * đó FE đã cầm sẵn trong store). Bịa một cái tên ở đây thì cả bảng thành vô nghĩa.
+ * Danh tính do backend gắn từ V356 (`SeasonBoardController#withIdentity`). Trước đó dòng
+ * chỉ có `(userId, xp, rank)` nên bảng vẽ mọi người thành mã rút gọn — và KHUNG VIỀN,
+ * thứ cả cơ chế mùa giải dựng lên để trao, không có đường nào hiện lên chính cái bảng
+ * trao nó.
+ *
+ * ⚠️ `displayName` rỗng cũng phải rơi về `null`, không chỉ `undefined`: chuỗi rỗng lọt
+ * qua `??` và cho ra một dòng KHÔNG có nhãn nào cả.
  */
 export const toSeasonBoardRow = (
     entry: SeasonBoardEntryView,
@@ -119,7 +145,16 @@ export const toSeasonBoardRow = (
     rank: entry.rank,
     xp: entry.xp,
     isViewer: Boolean(viewerUserId) && entry.userId === viewerUserId,
+    name: blankToNull(entry.displayName) ?? blankToNull(entry.username),
+    avatarUrl: blankToNull(entry.avatarUrl),
+    avatarFrame: blankToNull(entry.avatarFrame),
 })
+
+/** `""` và `"   "` là "không có", y như `null` — xem chú thích ở {@link toSeasonBoardRow}. */
+const blankToNull = (raw: string | null | undefined): string | null => {
+    const trimmed = raw?.trim()
+    return trimmed ? trimmed : null
+}
 
 /**
  * Chuẩn hoá cả bảng. GIỮ NGUYÊN thứ tự máy chủ trả — hạng do backend tính trên toàn dân
@@ -132,9 +167,9 @@ export const toSeasonBoardRows = (
     (view?.entries ?? []).map((entry) => toSeasonBoardRow(entry, viewerUserId))
 
 /**
- * Nhãn thay tên cho một dòng KHÔNG phải người xem.
+ * Nhãn DỰ PHÒNG cho một dòng không có tên (người chưa lập hồ sơ).
  *
- * Mã rút gọn của userId là thứ DUY NHẤT thật mà FE đang có. Nó xấu, và nó phải xấu:
- * một cái tên đẹp bịa ra sẽ khiến không ai đi bổ sung tên vào contract backend.
+ * Mã rút gọn của userId là thứ duy nhất thật còn lại. Nó xấu, và nó phải xấu: một cái tên
+ * đẹp bịa ra ở đây sẽ che mất việc người đó chưa có hồ sơ.
  */
 export const shortUserLabel = (userId: string): string => `#${userId.slice(0, 8)}`

@@ -1,5 +1,6 @@
 import { restRequest } from "@/modules/api/rest/client"
 import type {
+    AppearanceCatalogView,
     AssetView,
     CursorPage,
     FollowEntry,
@@ -343,5 +344,21 @@ export const moderateProfile = async (
         method: "PATCH",
         url: `/profiles/${userId}/moderate`,
         data: request,
+    })
+}
+
+/**
+ * Danh mục ngoại hình (khung viền avatar + album ảnh mặc định).
+ *
+ * `GET /api/v1/profiles/me/appearance/catalog`
+ *
+ * Route nằm dưới `/me` nên ĐÒI ĐĂNG NHẬP, dù nội dung là danh mục dùng chung — người gọi
+ * phải khoá key SWR cho khách vãng lai. Danh mục gần như không đổi (chỉ đổi khi seed), nên
+ * người gọi nên tắt revalidate và để một bản chụp dùng cho cả trang.
+ */
+export const getAppearanceCatalog = async (): Promise<AppearanceCatalogView> => {
+    return restRequest<AppearanceCatalogView>({
+        method: "GET",
+        url: "/profiles/me/appearance/catalog",
     })
 }

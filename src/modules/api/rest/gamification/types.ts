@@ -180,10 +180,13 @@ export type SeasonBoardState = "OK" | "NO_SEASON"
 /**
  * Một dòng bảng.
  *
- * ⚠️ Backend trả `userId` THÔ — không tên, không avatar (xem `SeasonBoardService
- * .BoardEntry`: "caller tự gắn tên/avatar"). FE hiện chưa có đường nào đổi userId sang
- * hồ sơ hàng loạt, nên dòng của người khác chỉ hiện mã rút gọn. Xem ghi chú ở
- * `SeasonBoards/model.ts`.
+ * Backend gắn sẵn danh tính từ V356 (`SeasonBoardController#withIdentity`). Trước đó dòng
+ * chỉ có `userId` nên bảng vẽ người khác thành "Học viên a1b2c3", và KHUNG VIỀN — thứ cả
+ * cơ chế mùa giải dựng lên để trao — không có đường nào hiện lên chính cái bảng trao nó.
+ *
+ * ⚠️ Bốn trường danh tính đều NULLABLE: tài khoản không có hồ sơ vẫn kiếm được EXP, nên
+ * "thiếu hồ sơ" là chuyện bình thường chứ không phải sự cố. Rơi về nhãn rút gọn từ
+ * `userId`, KHÔNG in chuỗi rỗng.
  */
 export interface SeasonBoardEntryView {
     userId: string
@@ -191,7 +194,41 @@ export interface SeasonBoardEntryView {
     xp: number
     /** Hạng 1-based do backend tính trên TOÀN dân số, không phải trong cửa sổ trả về. */
     rank: number
+    username: string | null
+    displayName: string | null
+    avatarUrl: string | null
+    /** Mã khung viền đang đeo (`profile.avatar_frames.code`); `null` = không đeo khung nào. */
+    avatarFrame: string | null
 }
+
+/**
+ * Một mục của ô CHỌN MÙA (`GET /api/v1/gamification/boards/seasons`).
+ *
+ * Backend chỉ trả kỳ `RUNNING` và `CLOSED` — kỳ `DRAFT` là kỳ tương lai chưa mở, chọn ra
+ * chỉ được bảng rỗng mà người dùng đọc thành "hệ thống mất điểm của tôi".
+ *
+ * ★ Mục "tích luỹ" KHÔNG nằm trong danh sách này. Nó không phải một kỳ — xem
+ * {@link LIFETIME_SEASON}.
+ */
+export interface SeasonOptionView {
+    code: string
+    /** Tên đọc được (V356); `null` với kỳ chưa đồng bộ ⇒ rơi về `code`. */
+    name: string | null
+    termId: string | null
+    status: string
+    startsAt: string
+    endsAt: string
+}
+
+/**
+ * Giá trị `season` nghĩa là "TÍCH LUỸ — mọi kỳ cộng lại, không bao giờ reset".
+ *
+ * ★ Tích luỹ là một CỬA SỔ THỜI GIAN, không phải bảng thứ ba. EXP là một đơn vị duy nhất;
+ * các bảng khác nhau ở lát cắt NGUỒN, còn tích luỹ đổi KHOẢNG THỜI GIAN — nhờ vậy nó áp
+ * được cho mọi bảng ("tích luỹ của riêng cộng đồng"). Đó cũng là lý do trên giao diện nó
+ * nằm trong ô chọn mùa chứ không phải một nút riêng.
+ */
+export const LIFETIME_SEASON = "lifetime"
 
 /** Một trang bảng (`GET /api/v1/gamification/boards/{board}?season=&limit=`). */
 export interface SeasonBoardView {
@@ -205,6 +242,18 @@ export interface SeasonBoardView {
     entries: Array<SeasonBoardEntryView>
     /** Hạng người xem trên toàn dân số; `null` = chưa có EXP nào trong kỳ (KHÁC hạng chót). */
     myRank: number | null
+    /**
+     * Tên kỳ ĐỌC ĐƯỢC (V356). `null` = kỳ chưa đồng bộ lại ⇒ rơi về `seasonCode`.
+     *
+     * ⚠️ ĐỪNG in `seasonCode` khi đã có tên: mã được dựng dạng `T-<mã kỳ>-<8 ký tự băm>`
+     * và người dùng đang nhìn thấy nguyên chuỗi `T-SU26-bfd6f768` trên trang thật.
+     */
+    seasonName: string | null
+    startsAt: string | null
+    /** Thời điểm chốt kỳ, cho phần đếm ngược. `null` ở bảng TÍCH LUỸ — nó không bao giờ chốt. */
+    endsAt: string | null
+    /** `true` = đang xem TÍCH LUỸ (mọi kỳ cộng lại, không reset). */
+    lifetime: boolean
 }
 
 /** Per-subject mastery summary. */

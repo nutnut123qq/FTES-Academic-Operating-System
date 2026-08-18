@@ -18,12 +18,11 @@ import React, {
 import {
     Button,
     Modal,
-    Separator,
     Spinner,
 } from "@heroui/react"
 import { useLocale, useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
-import { GoogleSignInButton } from "./GoogleSignInButton"
+import { FederatedAuthButtons } from "../../FederatedAuthButtons"
 import { EmailField } from "./EmailField"
 import { PasswordField } from "./PasswordField"
 import { RememberMeRow } from "./RememberMeRow"
@@ -38,6 +37,7 @@ import { Turnstile } from "@/components/reuseable/Turnstile"
 import { publicEnv } from "@/resources/env/public"
 import { pathConfig } from "@/resources/path"
 import { useAuthenticationOverlayState } from "@/hooks/zustand/overlay/hooks"
+import { useFederatedLoginComplete } from "@/hooks/auth"
 
 /** Props for {@link CredentialsState}; no own props (singleton-driven). */
 export type CredentialsStateProps = WithClassNames<undefined>
@@ -61,6 +61,17 @@ export const CredentialsState = () => {
     const dispatch = useAppDispatch()
     const locale = useLocale()
     const { close: onAuthenticationClose } = useAuthenticationOverlayState()
+    const completeFederatedLogin = useFederatedLoginComplete()
+
+    /**
+     * After a Google login: close the auth modal, then run the shared federated gate. When
+     * the account has no password the gate opens the (global) forced-set-password modal;
+     * otherwise it is a no-op and the user is simply signed in.
+     */
+    const onGoogleSuccess = useCallback(() => {
+        onAuthenticationClose()
+        void completeFederatedLogin()
+    }, [onAuthenticationClose, completeFederatedLogin])
 
     // pre-check remember-me from the stored preference (spec auth-session-preferences)
     useEffect(() => {
@@ -169,18 +180,11 @@ export const CredentialsState = () => {
                 </div>
             </Modal.Header>
             <Modal.Body>
-                <GoogleSignInButton onSuccess={onAuthenticationClose} />
-
-                <div className="h-3" />
-                <div className="flex items-center justify-center">
-                    <Separator className="flex-1" />
-                    <div className="text-xs text-muted">{t("auth.signIn.or")}</div>
-                    <Separator className="flex-1" />
-                </div>
+                <FederatedAuthButtons onGoogleSuccess={onGoogleSuccess} />
 
                 {/*
-                  * Real <form> so Enter inside a field submits (the Google button stays OUTSIDE it,
-                  * otherwise pressing it would submit the credentials form too).
+                  * Real <form> so Enter inside a field submits (the OAuth buttons stay OUTSIDE it,
+                  * otherwise pressing one would submit the credentials form too).
                   */}
                 <form onSubmit={onSubmit} noValidate>
                     <div className="h-3" />

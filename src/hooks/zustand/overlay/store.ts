@@ -67,6 +67,20 @@ export type SessionRevokeContext =
     }
 
 /**
+ * Payload of the forced set-password gate shown right after a federated (Google/GitHub)
+ * login when the account has no password yet.
+ *
+ * Serializable by design (no callback): `redirectTo` is a LOCALE-LESS path the modal
+ * navigates to once a password is set — `null` means "stay where you are" (the Google
+ * in-modal flow), a path (e.g. `"/"`) is used by the full-page GitHub callback so the
+ * user lands home only after completing the step.
+ */
+export interface ForcedSetPasswordContext {
+    /** Locale-less path to navigate to after the password is set, or `null` to stay put. */
+    redirectTo: string | null
+}
+
+/**
  * Serializable snapshot of a selection rect (viewport coordinates), captured
  * BEFORE the browser selection is cleared. Drives where the desktop
  * selection-anchored AI panel is placed (right of the rect → flip left → under).
@@ -159,6 +173,7 @@ export type OverlayKey =
     | "e2eResult"
     | "feedbackDetails"
     | "followList"
+    | "forcedSetPassword"
     | "foundation"
     | "headhunter"
     | "language"
@@ -199,6 +214,7 @@ const OVERLAY_KEYS: ReadonlyArray<OverlayKey> = [
     "e2eResult",
     "feedbackDetails",
     "followList",
+    "forcedSetPassword",
     "foundation",
     "headhunter",
     "language",
@@ -236,6 +252,8 @@ interface OverlayStoreState {
     communityPhotoContext: CommunityPhotoContext | null
     /** Security-settings sign-out confirm payload (which session, or "all others"). */
     sessionRevokeContext: SessionRevokeContext | null
+    /** Forced set-password gate payload (where to go after a federated login sets a password). */
+    forcedSetPasswordContext: ForcedSetPasswordContext | null
     /** Content-AI selected model — shared between the chat composer + the settings modal. */
     contentAiSelectedModel: string | null
     /** Bumped by the settings modal after clearing history → signals the chat to reset its thread. */
@@ -274,6 +292,8 @@ interface OverlayStoreState {
     setCommunityPhotoContext: (context: CommunityPhotoContext | null) => void
     /** Stash the security-settings sign-out confirm payload. */
     setSessionRevokeContext: (context: SessionRevokeContext | null) => void
+    /** Stash (or clear) the forced set-password gate payload. */
+    setForcedSetPasswordContext: (context: ForcedSetPasswordContext | null) => void
     /** Set the content-AI selected model. */
     setContentAiSelectedModel: (model: string | null) => void
     /** Signal the chat thread to reset (after the settings modal clears the saved history). */
@@ -337,6 +357,7 @@ export const useOverlayStore = create<OverlayStoreState>((set, get) => ({
     communityComposerQuote: null,
     communityPhotoContext: null,
     sessionRevokeContext: null,
+    forcedSetPasswordContext: null,
     contentAiSelectedModel: null,
     contentAiClearNonce: 0,
     contentAiSelection: null,
@@ -358,6 +379,7 @@ export const useOverlayStore = create<OverlayStoreState>((set, get) => ({
     setCommunityComposerQuote: (context) => set({ communityComposerQuote: context }),
     setCommunityPhotoContext: (context) => set({ communityPhotoContext: context }),
     setSessionRevokeContext: (context) => set({ sessionRevokeContext: context }),
+    setForcedSetPasswordContext: (context) => set({ forcedSetPasswordContext: context }),
     setContentAiSelectedModel: (model) => set({ contentAiSelectedModel: model }),
     signalContentAiCleared: () =>
         set((state) => ({ contentAiClearNonce: state.contentAiClearNonce + 1 })),

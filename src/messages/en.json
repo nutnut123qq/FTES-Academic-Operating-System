@@ -2469,6 +2469,18 @@
             "mismatch": "The two passwords don't match.",
             "sameAsCurrent": "The new password must differ from the current one."
         },
+        "linkedAccounts": {
+            "title": "Linked accounts",
+            "connectGithub": "Connect GitHub",
+            "unlink": "Unlink",
+            "linkedAt": "Linked {at}",
+            "emptyTitle": "No accounts linked yet.",
+            "loadError": "Couldn't load your linked accounts.",
+            "unlinkedToast": "Account unlinked.",
+            "lastLoginError": "This is your only way to sign in. Set a password first, then you can unlink it.",
+            "unlinkConfirmTitle": "Unlink this account?",
+            "unlinkConfirmDescription": "You will no longer be able to sign in with {provider}."
+        },
         "twoFactor": "Two-factor authentication",
         "enabledLabel": "Enabled",
         "disabledLabel": "Disabled",
@@ -2851,7 +2863,27 @@
         "oauth": {
             "authenticating": "Authenticating you…",
             "signingIn": "Signing you in…",
-            "signingOut": "Signing you out…"
+            "signingOut": "Signing you out…",
+            "or": "OR",
+            "continueGithub": "Continue with GitHub"
+        },
+        "setPassword": {
+            "title": "Create a password",
+            "body": "You signed in with a social account. Set a password so you can also sign in with your email.",
+            "password": "New password",
+            "confirmPassword": "Confirm password",
+            "submit": "Set password",
+            "passwordMinLength": "Password must be at least {min} characters.",
+            "passwordMismatch": "Passwords do not match.",
+            "success": "Your password has been set."
+        },
+        "github": {
+            "connecting": "Connecting your GitHub account…",
+            "signedInToast": "Signed in with GitHub.",
+            "linkedToast": "GitHub account connected.",
+            "errorTitle": "GitHub sign-in failed",
+            "errorBody": "We couldn't complete the GitHub sign-in. Please try again.",
+            "backHome": "Back to home"
         },
         "context": {
             "generic": "Sign in to continue",

@@ -65,6 +65,17 @@ export const publicEnv = () => {
              */
             clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "",
         },
+        github: {
+            /**
+             * GitHub OAuth **App** client id, used to start the redirect sign-in flow
+             * (`https://github.com/login/oauth/authorize?client_id=…`). The callback route
+             * exchanges the returned `code` at `POST /api/v1/auth/github` (login) or
+             * `POST /api/v1/identity/linked-accounts/github` (link). MUST match the backend
+             * `GITHUB_CLIENT_ID`. Empty (unset) → the "Continue with GitHub" button hides
+             * itself, exactly like the Google button.
+             */
+            clientId: process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID || "",
+        },
         captcha: {
             /** Whether captcha is enabled. */
             enabled: process.env.NEXT_PUBLIC_CAPTCHA_ENABLED === "true",

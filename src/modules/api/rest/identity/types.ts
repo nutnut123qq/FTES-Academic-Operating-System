@@ -237,6 +237,59 @@ export interface MfaDisableRequest {
     password?: string
 }
 
+// ---------------------------------------------------------------- Federated identity (account linking)
+
+/**
+ * Response from `GET /api/v1/identity/me` — the caller's identity snapshot.
+ *
+ * `hasPassword` is the load-bearing field for the forced-set-password gate: a user who
+ * signed up purely through Google/GitHub has NO password credential yet (`false`), and
+ * the FE must make them set one before proceeding.
+ */
+export interface IdentityMe {
+    /** Stable user id. */
+    userId: string
+    /** Legacy/profile username. */
+    username: string
+    /** Primary email. */
+    email: string
+    /** Whether the email is verified. */
+    emailVerified: boolean
+    /** Account status (e.g. "ACTIVE"). */
+    status: string
+    /** `false` for a Google/GitHub-only account that has never set a password. */
+    hasPassword: boolean
+}
+
+/** Body sent to `POST /api/v1/identity/password/set`. */
+export interface SetPasswordRequest {
+    /** The password to create for a passwordless (federated) account. */
+    newPassword: string
+}
+
+/** OAuth provider a federated identity can be linked to. Mirrors the backend enum. */
+export type LinkedAccountProvider = "GOOGLE" | "GITHUB"
+
+/** One linked federated identity, from `GET /api/v1/identity/linked-accounts`. */
+export interface LinkedAccount {
+    /** Which provider this login is. */
+    provider: LinkedAccountProvider
+    /** Email the provider reported for the account. */
+    emailAtProvider: string
+    /** ISO-8601 timestamp the link was created. */
+    linkedAt: string
+}
+
+/**
+ * Body carrying a GitHub OAuth authorization `code`, sent to BOTH
+ * `POST /api/v1/auth/github` (public login/signup) and
+ * `POST /api/v1/identity/linked-accounts/github` (authed link-to-current-user).
+ */
+export interface GithubCodeRequest {
+    /** The short-lived `?code` GitHub returned to the callback route. */
+    code: string
+}
+
 // ---------------------------------------------------------------- Generic ack
 
 /** Generic "ok" response body used by several void-ish endpoints. */

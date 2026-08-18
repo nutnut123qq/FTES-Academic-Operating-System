@@ -2481,6 +2481,18 @@
             "mismatch": "Hai mật khẩu không khớp.",
             "sameAsCurrent": "Mật khẩu mới phải khác mật khẩu hiện tại."
         },
+        "linkedAccounts": {
+            "title": "Tài khoản liên kết",
+            "connectGithub": "Kết nối GitHub",
+            "unlink": "Gỡ liên kết",
+            "linkedAt": "Liên kết {at}",
+            "emptyTitle": "Chưa liên kết tài khoản nào.",
+            "loadError": "Không tải được các tài khoản liên kết.",
+            "unlinkedToast": "Đã gỡ liên kết tài khoản.",
+            "lastLoginError": "Đây là cách đăng nhập duy nhất của bạn. Hãy đặt mật khẩu trước, rồi mới gỡ liên kết được.",
+            "unlinkConfirmTitle": "Gỡ liên kết tài khoản này?",
+            "unlinkConfirmDescription": "Bạn sẽ không thể đăng nhập bằng {provider} nữa."
+        },
         "twoFactor": "Xác thực hai lớp",
         "enabledLabel": "Đang bật",
         "disabledLabel": "Đang tắt",
@@ -2863,7 +2875,27 @@
         "oauth": {
             "authenticating": "Đang xác thực…",
             "signingIn": "Đang đăng nhập…",
-            "signingOut": "Đang đăng xuất…"
+            "signingOut": "Đang đăng xuất…",
+            "or": "HOẶC",
+            "continueGithub": "Tiếp tục với GitHub"
+        },
+        "setPassword": {
+            "title": "Tạo mật khẩu",
+            "body": "Bạn đã đăng nhập bằng tài khoản mạng xã hội. Hãy đặt mật khẩu để có thể đăng nhập bằng email nữa.",
+            "password": "Mật khẩu mới",
+            "confirmPassword": "Xác nhận mật khẩu",
+            "submit": "Đặt mật khẩu",
+            "passwordMinLength": "Mật khẩu phải có ít nhất {min} ký tự.",
+            "passwordMismatch": "Mật khẩu không khớp.",
+            "success": "Đã đặt mật khẩu của bạn."
+        },
+        "github": {
+            "connecting": "Đang kết nối tài khoản GitHub của bạn…",
+            "signedInToast": "Đã đăng nhập bằng GitHub.",
+            "linkedToast": "Đã kết nối tài khoản GitHub.",
+            "errorTitle": "Đăng nhập GitHub thất bại",
+            "errorBody": "Không thể hoàn tất đăng nhập GitHub. Vui lòng thử lại.",
+            "backHome": "Về trang chủ"
         },
         "context": {
             "generic": "Đăng nhập để tiếp tục",

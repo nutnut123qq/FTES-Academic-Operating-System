@@ -1,13 +1,13 @@
 "use client"
 
 import { useCallback } from "react"
-import { useLocale, useTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useSWRConfig } from "swr"
 import { toast } from "@heroui/react"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
 import { createPost } from "@/modules/api/rest/community"
 import type { MediaInput } from "@/modules/api/rest/community/types"
-import { subjectFeedKey, type FeedScope } from "./useQuerySubjectFeedSwr"
+import { revalidateCommunityFeeds } from "@/components/features/community/hooks/useQueryCommunityFeedSwr"
 
 /** A discussion draft submitted from the subject workspace composer. */
 export interface SubmitSubjectPostInput {
@@ -28,15 +28,18 @@ export interface SubmitSubjectPostInput {
  * disabled until it exists.
  *
  * On success the subject feed cache is revalidated so the new post appears without a reload;
- * a revalidation error must NOT be reported as a failed publish.
+ * a revalidation error must NOT be reported as a failed publish. That revalidation goes through
+ * the SHARED {@link revalidateCommunityFeeds}: the subject feed is now a `useSWRInfinite` source
+ * tagged under `COMMUNITY_FEED_TAG` (see `SUBJECT_FEED_TAG`), and a plain `mutate(<array key>)`
+ * on such a feed is a SILENT NO-OP — the helper drops the page caches first, which is the only
+ * thing a global caller can use to force the refetch.
  *
  * @returns `submit(input)` resolving `true` on success, `false` on failure or a blocked guest —
  * `false` tells the composer to keep the draft.
  */
-export const useMutateCreateSubjectPostSwr = (subjectId: string, scope: FeedScope) => {
+export const useMutateCreateSubjectPostSwr = (subjectId: string) => {
     const t = useTranslations("subjects")
-    const locale = useLocale()
-    const { mutate } = useSWRConfig()
+    const { cache, mutate } = useSWRConfig()
     const { requireAuth } = useRequireAuth()
 
     return useCallback(
@@ -59,9 +62,9 @@ export const useMutateCreateSubjectPostSwr = (subjectId: string, scope: FeedScop
                 toast.danger(t("community.createFailed"))
                 return false
             }
-            await mutate(subjectFeedKey(subjectId, locale, scope)).catch(() => {})
+            await revalidateCommunityFeeds(cache, mutate).catch(() => {})
             return true
         },
-        [subjectId, scope, locale, mutate, requireAuth, t],
+        [subjectId, cache, mutate, requireAuth, t],
     )
 }

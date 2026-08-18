@@ -300,7 +300,11 @@ export const CodingChallengeList = ({ subjectId, onBack }: CodingChallengeListPr
                         <EmptyContent title={t("practice.coding.empty")} />
                     )
                 ) : (
-                    <div className="flex flex-col gap-2">
+                    /* ponytail: cùng khuôn lưới với danh sách đề thi (ExamList) — 1 cột dưới
+                       `sm`, 2 cột từ `sm` trở lên. `h-full` trên từng thẻ ở dưới lo phần
+                       "card đều nhau": ô lưới vốn stretch sẵn, nhưng thẻ tự co về
+                       `height: fit-content` nếu không ép. */
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         {sorted.map((challenge) => (
                             <CodingChallengeRow
                                 key={challenge.id}
@@ -364,7 +368,7 @@ const CodingChallengeRow = ({
                travel with the reader. It rides in the URL rather than in memory so a
                reload or a shared link keeps the way back. */
             href={`/challenges/${challenge.id}?subject=${encodeURIComponent(subjectId)}`}
-            className="flex w-full items-center gap-3 rounded-2xl border border-separator p-4 text-left transition-colors hover:border-accent/50 hover:bg-accent/5"
+            className="flex h-full w-full items-center gap-3 rounded-2xl border border-separator p-4 text-left transition-colors hover:border-accent/50 hover:bg-accent/5"
         >
             <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <Typography type="body-sm" weight="medium" truncate>
@@ -402,7 +406,7 @@ const CodingChallengeRow = ({
 
 /** Loading skeleton — mirrors the challenge rows. */
 const CodingListSkeleton = () => (
-    <div className="flex flex-col gap-2">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {Array.from({ length: 5 }).map((_, index) => (
             <Skeleton key={index} className="h-20 w-full rounded-2xl" />
         ))}

@@ -1,14 +1,20 @@
 "use client"
 
 import { useLocale } from "next-intl"
-import useSWR from "swr"
+import useSWRInfinite from "swr/infinite"
 import {
     querySubjectCommunity,
     SubjectFeedScope,
     type SubjectCommunityPost,
 } from "@/modules/api/graphql/queries/query-subject-community"
 import { formatRelativeTime } from "@/components/features/community/hooks/relativeTime"
-import { toMediaItems } from "@/components/features/community/hooks/useQueryCommunityFeedSwr"
+import {
+    COMMUNITY_FEED_TAG,
+    toMediaItems,
+    type CommunityFeedPage,
+    type CommunityPost,
+} from "@/components/features/community/hooks/useQueryCommunityFeedSwr"
+import { unwrapAutolinks } from "@/components/features/community/CommunityPostDetail/postLinks"
 import type { PostMediaItem } from "@/components/blocks/feed/PostMediaGrid"
 
 /** Feed filter scope. */
@@ -27,7 +33,14 @@ const toSubjectFeedScope = (scope: FeedScope): SubjectFeedScope => {
     }
 }
 
-/** A subject community post. */
+/**
+ * A subject community post.
+ *
+ * ponytail: MÃ CHẾT kể từ khi tab Thảo luận chuyển sang dùng thẳng `CommunityFeedRow`
+ * (bài trong môn LÀ bài community có `subjectId`, nên card dùng chung `CommunityPost`).
+ * Còn sống chỉ vì `useMutateReactSubjectPostSwr` — cũng đã mồ côi — vẫn tham chiếu tới nó.
+ * Xoá cả cụm trong một lượt dọn riêng.
+ */
 export interface SubjectPost {
     id: string
     /** Display name of the author, or `""` when the BE row carried no profile card. */
@@ -51,10 +64,10 @@ export interface SubjectPost {
 }
 
 /**
- * SWR cache key for a subject's "Thảo luận" feed (shared with the like hook).
- * Keyed on `locale` (the mapped rows carry locale-formatted `timeLabel`s, so an
- * in-place locale switch must re-derive them) AND on `scope` now that the BE
- * `subjectWorkspace.community` is scope-aware.
+ * SWR cache key of the OLD flat subject feed.
+ *
+ * ponytail: mồ côi cùng {@link SubjectPost} — chỉ còn `useMutateReactSubjectPostSwr` (đã chết)
+ * dùng. Feed thật giờ nằm dưới {@link SUBJECT_FEED_TAG}.
  */
 export const subjectFeedKey = (subjectId: string, locale: string, scope: FeedScope) => [
     "subject-feed",
@@ -64,12 +77,30 @@ export const subjectFeedKey = (subjectId: string, locale: string, scope: FeedSco
 ]
 
 /**
- * Map a BE `Post` (subjectWorkspace.community) to the discussion card contract. `author`
- * is a batched `PublicUser` the gateway may leave NULL, so every read is optional-chained;
- * `avatarUrl` (already in the document selection) is carried through as `authorAvatar`
- * instead of being dropped — dropping it is what pushed the card onto a generated face.
+ * SWR cache tag for a subject's "Thảo luận" feed. It deliberately STARTS WITH
+ * {@link COMMUNITY_FEED_TAG} — exactly like `COMMUNITY_SEARCH_TAG` does — because the tab
+ * renders the shared `CommunityFeedRow`, whose like / comment / edit / delete writes patch
+ * every cache picked up by `communityFeedCacheKeys` (`$inf$…` keys containing the community
+ * tag, holding an `Array<CommunityFeedPage>`). Drop the prefix and the row still renders but
+ * every optimistic update silently misses this feed. Keep it.
  */
-const toSubjectPost = (post: SubjectCommunityPost, locale: string): SubjectPost => ({
+export const SUBJECT_FEED_TAG = `${COMMUNITY_FEED_TAG}-subject`
+
+/** Page key: `["community-feed-subject", subjectId, locale, scope]`. */
+export type SubjectFeedPageKey = readonly [string, string, string, FeedScope]
+
+/**
+ * Map a BE `Post` (subjectWorkspace.community) onto the SHARED community feed card contract —
+ * a discussion post IS a community post carrying `subjectId`, so the tab renders the very same
+ * row as `/community` instead of a second, drifting card.
+ *
+ * `author` is a batched `PublicUser` the gateway may leave NULL, so every read is
+ * optional-chained; `avatarUrl` is carried through as `authorAvatar` instead of being dropped —
+ * dropping it is what pushed the card onto a generated face. `snippet` goes through
+ * {@link unwrapAutolinks} for the same reason the community mapper does it: the card prints the
+ * excerpt as plain text, so a CommonMark autolink would leak its `<>` onto the screen.
+ */
+const toSubjectFeedPost = (post: SubjectCommunityPost, locale: string): CommunityPost => ({
     id: post.id,
     author: post.author?.displayName ?? post.author?.username ?? "",
     // Chỉ nhận username THẬT — rơi về id sẽ dựng link /u/<uuid> chết. Xem cùng lý do ở
@@ -77,10 +108,12 @@ const toSubjectPost = (post: SubjectCommunityPost, locale: string): SubjectPost 
     authorUsername: post.author?.username ?? "",
     authorAvatar: post.author?.avatarUrl ?? null,
     authorStaffRole: post.author?.staffRole ?? null,
+    authorId: post.authorId ?? post.author?.id ?? null,
+    pinned: post.pinned ?? false,
     timeLabel: formatRelativeTime(post.createdAt, locale),
     title: post.title ?? "",
-    snippet: post.snippet ?? post.body ?? "",
-    reactions: post.likeCount,
+    snippet: unwrapAutolinks(post.snippet ?? post.body ?? ""),
+    likes: post.likeCount,
     liked: post.likedByMe,
     comments: post.commentCount,
     media: toMediaItems(post.media),
@@ -91,19 +124,39 @@ const toSubjectPost = (post: SubjectCommunityPost, locale: string): SubjectPost 
  * `subjectWorkspace(subjectId).community(scope: ...)` (a subject-scoped `PostConnection`).
  * Requires auth (viewer-scoped visibility); a guest / error surfaces via `error`
  * and the tab renders its empty/error state.
+ *
+ * ponytail: `useSWRInfinite` với ĐÚNG MỘT trang. Nó không phải phân trang thật —
+ * `SubjectWorkspace.community(scope:)` không nhận `page: CursorInput`, resolver chốt cứng 20 bài
+ * — mà là hình dạng cache bắt buộc: mutation lạc quan của `CommunityFeedRow` chỉ chạm các key
+ * `$inf$` mang {@link COMMUNITY_FEED_TAG} và giả định giá trị là `Array<CommunityFeedPage>`.
+ * Vì chỉ một trang nên tuyệt đối ĐỪNG gắn `InfiniteScrollSentinel` vào đây.
  */
 export const useQuerySubjectFeedSwr = (subjectId: string, scope: FeedScope) => {
     const locale = useLocale()
-    const { data, isLoading, error, mutate } = useSWR(
-        subjectId ? subjectFeedKey(subjectId, locale, scope) : null,
-        async (): Promise<Array<SubjectPost>> => {
-            const result = await querySubjectCommunity({
-                subjectId,
-                scope: toSubjectFeedScope(scope),
-            })
-            const connection = result.data?.subjectWorkspace?.community
-            return (connection?.items ?? []).map((item) => toSubjectPost(item, locale))
-        },
+
+    const getKey = (index: number): SubjectFeedPageKey | null =>
+        subjectId && index === 0 ? [SUBJECT_FEED_TAG, subjectId, locale, scope] : null
+
+    const fetchPage = async (): Promise<CommunityFeedPage> => {
+        const result = await querySubjectCommunity({
+            subjectId,
+            scope: toSubjectFeedScope(scope),
+        })
+        const connection = result.data?.subjectWorkspace?.community
+        return {
+            items: (connection?.items ?? []).map((item) => toSubjectFeedPost(item, locale)),
+            nextCursor: null,
+        }
+    }
+
+    const { data, isLoading, isValidating, error, mutate } = useSWRInfinite<CommunityFeedPage>(
+        getKey,
+        fetchPage,
+        { revalidateFirstPage: false },
     )
-    return { posts: data ?? [], isLoading, error, mutate }
+
+    const posts: Array<CommunityPost> = (data ?? []).flatMap((page) => page.items)
+    const isLoadingInitial = isLoading || (isValidating && (data?.length ?? 0) === 0)
+
+    return { posts, isLoading: isLoadingInitial, error, mutate }
 }

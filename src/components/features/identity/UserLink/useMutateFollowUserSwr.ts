@@ -9,6 +9,10 @@ import { followUser, unfollowUser } from "@/modules/api/rest/community"
 import { RestError } from "@/modules/api/rest/client"
 import type { UserHovercardData } from "@/modules/types/user-hovercard"
 import { userHovercardKey } from "@/hooks/swr/api/graphql/queries/useQueryUserHovercardSwr"
+import {
+    isPublicProfileKeyFor,
+    type PublicProfile,
+} from "@/components/features/profile/hooks/useQueryPublicProfileSwr"
 import { isFollowedUserIdsKeyFor } from "./useQueryFollowedUserIdsSwr"
 
 /**
@@ -64,7 +68,8 @@ const applyBatchFollow = (
  * optimistic write into the hovercard cache keyed by USERNAME
  * ({@link userHovercardKey}) so every `<UserLink>` for that user flips at once, plus
  * the same flip into every BATCH follow-state lot that covers the user
- * ({@link isFollowedUserIdsKeyFor}) so list rows agree with the card.
+ * ({@link isFollowedUserIdsKeyFor}) and into the public-profile lot
+ * ({@link isPublicProfileKeyFor}) so list rows and `/u/{username}` agree with the card.
  *
  * Guests never reach the network: {@link useRequireAuth} opens the
  * `AuthenticationModal` with the `auth.context.follow` message and the toggle
@@ -91,6 +96,7 @@ export const useMutateFollowUserSwr = () => {
             const nextFollow = !target.isFollowedByMe
             const key = userHovercardKey(target.username)
             const userId = target.id
+            const username = target.username
             let snapshot: UserHovercardData | undefined
 
             // Every batch lot that ASKED about this user (a feed / member list read
@@ -104,6 +110,19 @@ export const useMutateFollowUserSwr = () => {
                     { revalidate: false },
                 )
 
+            // The public profile (`/u/{username}`) reads its own flag out of a THIRD lot
+            // (`["public-profile", …]`, one entry per locale), so its button has to flip in
+            // the same breath — otherwise following from the hovercard and then opening the
+            // profile still says "Theo dõi" until the next revalidate.
+            // Only the FLAG moves: the hero's follower count is `profile.follows` while this
+            // write lands in `community.follows`, so a bumped number would be pulled back.
+            const patchPublicProfile = (follow: boolean) =>
+                mutate<PublicProfile>(
+                    (cacheKey) => isPublicProfileKeyFor(cacheKey, username),
+                    (current) => (current ? { ...current, isFollowedByMe: follow } : current),
+                    { revalidate: false },
+                )
+
             setIsPending(true)
             await mutate<UserHovercardData>(
                 key,
@@ -114,6 +133,7 @@ export const useMutateFollowUserSwr = () => {
                 { revalidate: false },
             )
             await patchBatches(nextFollow)
+            await patchPublicProfile(nextFollow)
 
             try {
                 if (nextFollow) {
@@ -125,6 +145,7 @@ export const useMutateFollowUserSwr = () => {
                 // Only a failed WRITE rolls back — restore the pre-toggle snapshot.
                 await mutate<UserHovercardData>(key, snapshot, { revalidate: false })
                 await patchBatches(!nextFollow)
+                await patchPublicProfile(!nextFollow)
                 toast.danger(t(followErrorMessageKey(error)))
             } finally {
                 setIsPending(false)

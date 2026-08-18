@@ -35,7 +35,15 @@ export interface SubjectCommunityAuthor {
     staffRole: string | null
 }
 
-/** A one-level reply under a top-level comment (BE `PostComment.replies`). */
+/**
+ * A one-level reply under a top-level comment (BE `PostComment.replies`).
+ *
+ * KHÔNG chọn `likeCount`/`likedByMe` ở đây, dù `PostComment` của BE có cả hai: thread bình
+ * luận của tab "Thảo luận" đọc qua `useQueryPostCommentsSwr` (document khác), nên cây
+ * `comments` trong document NÀY không còn ai render. Mà `likedByMe` lại là `@BatchMapping`
+ * — chọn nó thêm một truy vấn `community.reactions` cho MỖI tầng, mỗi lần mở tab, để lấy
+ * một giá trị không ai vẽ. Đừng thêm lại.
+ */
 export interface SubjectCommunityReplyNode {
     id: string
     author: SubjectCommunityAuthor
@@ -51,6 +59,19 @@ export interface SubjectCommunityCommentNode extends SubjectCommunityReplyNode {
 /** One subject discussion post (BE `Post`). */
 export interface SubjectCommunityPost {
     id: string
+    /**
+     * Author id (BE `Post.authorId`) — read straight off the post identity, so selecting it
+     * costs no extra query. The shared feed card gates edit/delete on it because a display
+     * name / username can be missing on a row while the id is always there.
+     */
+    authorId: string | null
+    /**
+     * Pinned by an admin (BE `Post.pinned`). Badge only, và ở feed MÔN thì nó CHỈ là badge:
+     * `FeedService.subjectFeed` gọi thẳng `findSubjectFeedCursor` (`ORDER BY p.createdAt DESC,
+     * p.id DESC`) và KHÔNG đi qua `mergePinned` như feed công khai / trending — bài ghim của
+     * môn không được kéo lên đầu. Đừng dựa vào thứ tự trả về để suy ra "đã ghim".
+     */
+    pinned: boolean
     /** Post type / kind (BE `kind`, e.g. DISCUSSION / QUESTION). */
     kind: string
     title: string | null
@@ -90,6 +111,8 @@ export interface QuerySubjectCommunityResponse {
 const COMMUNITY_SELECTION = `
   items {
     id
+    authorId
+    pinned
     kind
     title
     body

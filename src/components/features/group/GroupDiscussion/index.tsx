@@ -13,6 +13,7 @@ import {
     DISCUSSION_ENGAGEMENT_ACTIONS,
 } from "@/components/reuseable/PostEngagementBar"
 import { PostCommentThread } from "@/components/reuseable/PostCommentThread"
+import { likeGroupThreadComment, unlikeGroupThreadComment } from "@/modules/api/rest/group"
 import { UserLink } from "@/components/features/identity"
 import { useQueryGroupThreadsSwr, type GroupThread } from "../hooks/useQueryGroupThreadsSwr"
 import {
@@ -82,6 +83,17 @@ const GroupDiscussionRow = ({ groupId, thread }: { groupId: string; thread: Grou
                         hasError={!comments ? Boolean(error) : false}
                         onRetry={() => void mutate()}
                         onSubmit={onSubmit}
+                        // Discussion comments have their OWN reaction table
+                        // (`group_thread_reactions`) and their own endpoints — the community
+                        // reaction call would carry an id that table never saw. Non-members of
+                        // a PUBLIC group, and anyone in a locked group, get a 403 here (BE
+                        // `requireWriteMember` / `requireNotLocked`) → the heart rolls back
+                        // and toasts, same as any other write failure.
+                        onToggleCommentLike={(commentId, nextLiked) =>
+                            nextLiked
+                                ? likeGroupThreadComment(groupId, commentId)
+                                : unlikeGroupThreadComment(groupId, commentId)
+                        }
                         onCollapse={onToggleComments}
                         stickyComposerOnMobile
                         // discussion comments live in the GROUP module, not community —

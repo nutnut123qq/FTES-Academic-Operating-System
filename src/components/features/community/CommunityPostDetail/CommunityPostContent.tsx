@@ -14,8 +14,10 @@ import {
     type ReportReasonCode,
 } from "@/components/reuseable/PostEngagementBar"
 import { PostCommentThread } from "@/components/reuseable/PostCommentThread"
+import { toggleCommentReaction } from "@/modules/api/rest/community"
 import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
 import { LinkPreview } from "@/components/reuseable/LinkPreview"
+import { CommunityPoll } from "../CommunityPoll"
 import { firstLinkUrl, unwrapAutolinks } from "./postLinks"
 import { useQueryPostDetailSwr } from "../hooks/useQueryPostDetailSwr"
 import { useMutateReactPostSwr } from "../hooks/useMutateReactPostSwr"
@@ -233,6 +235,12 @@ export const CommunityPostContent = ({
                     </Typography>
                 ) : null}
                 <MarkdownContent markdown={renderedBody} />
+                {/* Bài KHẢO SÁT: phương án + nút bỏ phiếu là một phần THÂN BÀI, không phải
+                    khối rời. Đây là đường đọc duy nhất theo từng bài — composer đẩy tác giả
+                    về đúng trang này sau khi đăng, còn `/community/poll` chỉ mở được bài
+                    POLL mới nhất trong feed, nên thiếu nhánh này thì mọi poll cũ hơn không
+                    còn chỗ nào bỏ phiếu. `CommunityPoll` tự lo loading/rỗng/lỗi + vote. */}
+                {meta?.postType === "POLL" ? <CommunityPoll postId={postId} /> : null}
                 {previewUrl ? <LinkPreview url={previewUrl} /> : null}
                 {showMedia ? (
                     <PostMediaGrid postId={postId} media={post.media} imageAlt={t("composer.imageAlt")} />
@@ -269,6 +277,7 @@ export const CommunityPostContent = ({
                     comments={post.comments}
                     isLoading={false}
                     onSubmit={onSubmit}
+                    onToggleCommentLike={toggleCommentReaction}
                     autoFocus={deepLinked}
                     stickyComposerOnMobile
                     currentUsername={currentUser?.username}

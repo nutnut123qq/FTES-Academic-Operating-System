@@ -43,6 +43,12 @@ export interface CollapsibleSidebarProps extends WithClassNames<undefined> {
      * choice survives navigation between pages that share this sidebar.
      */
     storageKey: string
+    /**
+     * Mép nào của trang panel dán vào. Quyết định đúng hai thứ: viền nằm bên nào
+     * (`border-r` cho cột trái, `border-l` cho cột phải) và chiều lật của icon toggle.
+     * Mặc định `"left"` — call-site cũ giữ nguyên hành vi, không phải sửa gì.
+     */
+    side?: "left" | "right"
     /** The panel body — typically grouped {@link import("../SidebarNavGroup").SidebarNavGroup}s. */
     children: React.ReactNode
 }
@@ -66,6 +72,7 @@ export const CollapsibleSidebar = ({
     collapseLabel,
     expandLabel,
     storageKey,
+    side = "left",
     children,
     className,
 }: CollapsibleSidebarProps) => {
@@ -99,8 +106,9 @@ export const CollapsibleSidebar = ({
                     // ONE padding wrapper for the whole rail: p-6 expanded / px-3 py-6
                     // collapsed. Header, rows and group dividers all sit inside it, so
                     // the dividers span the PADDED width (lined up with the rows), not
-                    // edge-to-edge. The border-r is on the box → flush, full-height.
-                    "flex h-full shrink-0 flex-col overflow-hidden border-r border-separator",
+                    // edge-to-edge. Viền nằm trên chính hộp → sát mép, cao hết cột.
+                    "flex h-full shrink-0 flex-col overflow-hidden border-separator",
+                    side === "right" ? "border-l" : "border-r",
                     collapsed ? "px-3 py-6" : "p-6",
                     className,
                 )}
@@ -137,7 +145,9 @@ export const CollapsibleSidebar = ({
                         aria-expanded={!collapsed}
                         onPress={toggle}
                     >
-                        <SidebarSimpleIcon className="size-5" />
+                        {/* Icon vẽ cho cột TRÁI (mảng đặc bên trái). Cột phải lật ngang để mảng
+                            đặc quay ra mép ngoài, không thì nó chỉ ngược hướng. */}
+                        <SidebarSimpleIcon className={cn("size-5", side === "right" && "-scale-x-100")} />
                     </Button>
                 </div>
 

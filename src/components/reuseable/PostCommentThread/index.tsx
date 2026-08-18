@@ -1,15 +1,20 @@
 "use client"
 
-import React, { useCallback, useMemo, useState } from "react"
-import { Button, Chip, Skeleton, Typography, cn } from "@heroui/react"
+import React, { useCallback, useMemo, useRef, useState } from "react"
+import { Button, Chip, Skeleton, Typography, cn, toast } from "@heroui/react"
 import {
     CaretUpIcon,
     CheckCircleIcon,
+    HeartIcon,
     XIcon,
 } from "@phosphor-icons/react"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { UserLink } from "@/components/features/identity"
 import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
+// Straight from the formatter's own module, NOT the PostEngagementBar barrel: the barrel
+// pulls the whole bar in (share channels, their icons, the dialogs) for one number formatter,
+// which every test rendering a thread would then have to mock.
+import { formatCompactCount } from "@/components/reuseable/PostEngagementBar/format-compact-count"
 import { RichCommentEditor } from "@/components/reuseable/RichCommentEditor"
 import { RichTextEditor } from "@/components/reuseable/RichTextEditor"
 import { ConfirmDialog } from "@/components/reuseable/PostEngagementBar/ConfirmDialog"
@@ -150,6 +155,18 @@ export interface PostCommentThreadProps extends WithClassNames<undefined> {
      * supplied: that surface owns the wiring.
      */
     canReportComments?: boolean
+    /**
+     * Persist a like toggle on ONE comment. Resolve = committed; REJECT = the thread rolls
+     * the optimistic heart back and toasts. The thread owns the optimistic state, the
+     * guest gate and the double-click guard, so a surface only supplies the write.
+     *
+     * Omitted → no heart is rendered at all. That is the per-surface switch: comment
+     * reactions live in three different backends (`community.reactions`,
+     * `group_thread_reactions`, `challenge_comment_likes`) and the album-picture thread has
+     * none yet, so there is no shared default that could be right everywhere — unlike
+     * "Báo cáo", whose community path IS the default (`canReportComments`).
+     */
+    onToggleCommentLike?: (commentId: string, nextLiked: boolean) => Promise<void>
 }
 
 /**
@@ -186,6 +203,9 @@ export const CommentRow = ({
     onAccept,
     canReport = false,
     onReport,
+    liked = false,
+    likeCount = 0,
+    onToggleLike,
 }: {
     comment: PostComment
     onReply?: (comment: PostComment) => void
@@ -230,9 +250,19 @@ export const CommentRow = ({
     canReport?: boolean
     /** Send the report for this comment (the row owns the dialog). */
     onReport?: ReportCommentHandler
+    /** Whether the viewer has liked this comment (already reconciled with the pending toggle). */
+    liked?: boolean
+    /** Like counter to print next to the heart; 0 renders the icon alone. */
+    likeCount?: number
+    /**
+     * Toggle the like on this comment. Omitted → NO heart at all, which is how a surface
+     * whose backend has no comment reactions opts out (see `PostCommentThread`).
+     */
+    onToggleLike?: (comment: PostComment) => void
 }) => {
     const t = useTranslations("communityHub")
     const tCommon = useTranslations("common")
+    const locale = useLocale()
     const [isEditing, setIsEditing] = useState(false)
     const [draft, setDraft] = useState(comment.text)
     const [isSaving, setIsSaving] = useState(false)
@@ -341,6 +371,32 @@ export const CommentRow = ({
 
                 {!isEditing ? (
                     <div className="mt-1 flex flex-wrap items-center gap-2">
+                        {/* Tym — cùng khuôn với nút tym của BÀI VIẾT (`PostEngagementBar`):
+                            cùng icon, cùng `weight="fill"` + `text-danger` khi đã thích, cùng
+                            `formatCompactCount`. Chỉ nhỏ hơn một cỡ vì đây là hàng bình luận. */}
+                        {onToggleLike ? (
+                            <Button
+                                isIconOnly
+                                size="sm"
+                                variant="ghost"
+                                aria-pressed={liked}
+                                aria-label={liked ? t("engagement.unlike") : t("engagement.like")}
+                                className="h-auto gap-1 px-0 text-xs"
+                                onPress={() => onToggleLike(comment)}
+                            >
+                                <HeartIcon
+                                    aria-hidden
+                                    focusable="false"
+                                    className={cn("size-4", liked && "text-danger")}
+                                    weight={liked ? "fill" : "regular"}
+                                />
+                                {likeCount > 0 ? (
+                                    <span className="text-xs tabular-nums text-muted">
+                                        {formatCompactCount(likeCount, locale)}
+                                    </span>
+                                ) : null}
+                            </Button>
+                        ) : null}
                         {/* ponytail: bỏ điều kiện `!isReply` — MỌI cấp đều có "Trả lời";
                             cây vẫn phẳng 2 cấp, cha do người gọi quyết (xem `startReply`). */}
                         {onReply ? (
@@ -472,11 +528,12 @@ export const PostCommentThread = ({
     onAcceptAnswer,
     onReportComment,
     canReportComments = true,
+    onToggleCommentLike,
     className,
 }: PostCommentThreadProps) => {
     const t = useTranslations("communityHub")
     const tCommon = useTranslations("common")
-    const { authenticated } = useRequireAuth()
+    const { authenticated, requireAuth } = useRequireAuth()
     const submitReport = useMutateReportContentSwr()
     /**
      * Viewer identity for the owner gate. Surfaces that already pass
@@ -568,6 +625,78 @@ export const PostCommentThread = ({
         setReplyTo(null)
     }, [])
 
+    /**
+     * ponytail: trạng thái tym lạc quan sống NGAY TRONG thread — một map nhỏ đè lên giá trị
+     * server — thay vì vá ba cache SWR khác nhau (bài cộng đồng dùng chung `["post-detail"]`,
+     * thảo luận môn, thảo luận nhóm) chỉ để đổi một trái tim. Đánh đổi có chủ đích: một lần
+     * refetch KHÔNG xoá override của chính người vừa bấm (vô hại — nó đúng bằng thứ họ vừa
+     * làm), và lượt tym từ tab khác chỉ hiện sau khi thread remount.
+     */
+    const [likeOverrides, setLikeOverrides] = useState<
+        Record<string, { liked: boolean; count: number }>
+    >({})
+    /**
+     * Comment đang có request tym BAY GIỮA CHỪNG. Bấm tiếp trong lúc đó bị bỏ qua, nên
+     * double-click không đẩy counter đi hai bước rồi gửi hai lệnh ngược nhau đua nhau về.
+     * Dùng ref chứ không dùng state: nó là cổng chặn, không phải thứ để vẽ lại.
+     */
+    const pendingLikes = useRef<Set<string>>(new Set())
+
+    /** Trạng thái tym HIỂN THỊ của một hàng: override lạc quan thắng giá trị server. */
+    const likeStateOf = useCallback(
+        (comment: PostComment) =>
+            likeOverrides[comment.id] ?? {
+                liked: comment.likedByMe ?? false,
+                count: comment.likeCount ?? 0,
+            },
+        [likeOverrides],
+    )
+
+    /**
+     * Bật/tắt tym một comment: khách chưa đăng nhập ra modal đăng nhập, người dùng thật thì
+     * thấy trái tim đổi NGAY rồi mới gửi request; request hỏng thì trả lại đúng trạng thái cũ
+     * kèm toast (cùng thông điệp nút tym của bài viết dùng).
+     */
+    const toggleLike = useCallback(
+        async (comment: PostComment) => {
+            if (!onToggleCommentLike || pendingLikes.current.has(comment.id)) {
+                return
+            }
+            if (!requireAuth("auth.context.like")) {
+                return
+            }
+            const previous = likeStateOf(comment)
+            const next = {
+                liked: !previous.liked,
+                count: Math.max(0, previous.count + (previous.liked ? -1 : 1)),
+            }
+            pendingLikes.current.add(comment.id)
+            setLikeOverrides((current) => ({ ...current, [comment.id]: next }))
+            try {
+                await onToggleCommentLike(comment.id, next.liked)
+            } catch {
+                setLikeOverrides((current) => ({ ...current, [comment.id]: previous }))
+                toast.danger(t("engagement.likeFailed"))
+            } finally {
+                pendingLikes.current.delete(comment.id)
+            }
+        },
+        [onToggleCommentLike, requireAuth, likeStateOf, t],
+    )
+
+    /** Handler truyền xuống hàng — `undefined` khi bề mặt không bật tym (khỏi render trái tim). */
+    const onToggleLike = onToggleCommentLike ? (row: PostComment) => void toggleLike(row) : undefined
+
+    /**
+     * Hàng đã có id THẬT từ server chưa. Comment vừa gửi được chèn lạc quan với id tạm
+     * (`tmp-<ts>` ở community, `optimistic-<ts>-<rand>` ở challenge) và mọi đường ghi tym đều
+     * ép UUID (`ReactionRequest.targetId`, `@PathVariable UUID commentId`), nên tym một hàng
+     * như vậy chắc chắn 400 rồi rollback + toast. Ẩn trái tim tới khi refetch trả id thật —
+     * gác ở ĐÂY nên cả ba bề mặt được che cùng lúc, không phải vá từng hook lạc quan.
+     */
+    const isPersisted = (commentId: string) =>
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(commentId)
+
     const handleSubmit = useCallback(
         async (body: string) => {
             if (isSubmitting) {
@@ -650,6 +779,11 @@ export const PostCommentThread = ({
                                             onAccept={onAcceptAnswer}
                                             canReport={reportEnabled && !isMine(comment.authorUsername)}
                                             onReport={reportComment}
+                                            liked={likeStateOf(comment).liked}
+                                            likeCount={likeStateOf(comment).count}
+                                            onToggleLike={
+                                                isPersisted(comment.id) ? onToggleLike : undefined
+                                            }
                                         />
                                         {replies.map((reply, index) => {
                                             const isLast = index === replies.length - 1
@@ -689,6 +823,13 @@ export const PostCommentThread = ({
                                                             reportEnabled && !isMine(reply.authorUsername)
                                                         }
                                                         onReport={reportComment}
+                                                        liked={likeStateOf(reply).liked}
+                                                        likeCount={likeStateOf(reply).count}
+                                                        onToggleLike={
+                                                            isPersisted(reply.id)
+                                                                ? onToggleLike
+                                                                : undefined
+                                                        }
                                                     />
                                                 </div>
                                             )

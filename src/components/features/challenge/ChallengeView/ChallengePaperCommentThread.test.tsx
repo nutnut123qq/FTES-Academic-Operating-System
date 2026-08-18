@@ -71,6 +71,7 @@ vi.mock("@phosphor-icons/react", () => ({
     ArrowClockwiseIcon: () => <span />,
     CaretUpIcon: () => <span />,
     CheckCircleIcon: () => <span />,
+    HeartIcon: () => <span />,
     XIcon: () => <span />,
     DotsThreeIcon: () => <span />,
     PencilSimpleIcon: () => <span />,

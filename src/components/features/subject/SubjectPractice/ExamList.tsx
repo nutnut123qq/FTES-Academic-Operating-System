@@ -187,8 +187,13 @@ export const ExamList = ({ subjectId, kind, onBack }: ExamListProps) => {
                  * 4 chiều rộng khác nhau. `w-full` (layer utilities) thắng `.link` (layer
                  * components) nên đè được. Có `w-full` thì `min-w-0 flex-1` + `truncate` bên
                  * dưới mới thực sự cắt tiêu đề dài thay vì kéo dãn thẻ.
+                 *
+                 * `h-full` cùng gốc đó: lưới 2 cột vốn `stretch` sẵn, nhưng `height: fit-content`
+                 * của `.link` KHÔNG phải `auto` nên stretch không kéo cao được → hai thẻ cùng hàng
+                 * lệch chiều cao khi `metaLabel()` trả rỗng (đề chưa có rating lẫn ngày → dòng meta
+                 * mất hẳn line box). Đè bằng utility, y hệt `w-full`.
                  */}
-                <div className="flex flex-col gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     {exams.map((exam) =>
                         exam.lockedForViewer ? (
                             // Purchasers-only exam the viewer hasn't bought: no body/URL
@@ -202,7 +207,7 @@ export const ExamList = ({ subjectId, kind, onBack }: ExamListProps) => {
                                 }}
                                 aria-label={`${exam.title} — ${t("practice.exam.lockedAria")}`}
                                 className={cn(
-                                    "flex w-full items-center gap-3 rounded-2xl border border-separator p-4 no-underline transition-colors",
+                                    "flex h-full w-full items-center gap-3 rounded-2xl border border-separator p-4 no-underline transition-colors",
                                     lockedCourseId
                                         ? "cursor-pointer hover:border-accent/50 hover:bg-accent/5"
                                         : "cursor-default",
@@ -239,7 +244,7 @@ export const ExamList = ({ subjectId, kind, onBack }: ExamListProps) => {
                                 key={exam.id}
                                 onPress={() => setOpenedExam(exam)}
                                 aria-label={exam.title}
-                                className="flex w-full cursor-pointer items-center gap-3 rounded-2xl border border-separator p-4 no-underline transition-colors hover:border-accent/50 hover:bg-accent/5"
+                                className="flex h-full w-full cursor-pointer items-center gap-3 rounded-2xl border border-separator p-4 no-underline transition-colors hover:border-accent/50 hover:bg-accent/5"
                             >
                                 <div className="min-w-0 flex-1">
                                     <Typography type="body-sm" weight="medium" truncate>
@@ -278,18 +283,25 @@ export const ExamList = ({ subjectId, kind, onBack }: ExamListProps) => {
                 <Modal.Backdrop>
                     <Modal.Container className="p-3 sm:p-6">
                         {/*
-                         * Bề ngang lấy theo `CommunityPhotoLightboxModal` (`w-[95vw] max-w-6xl`) —
-                         * ảnh đề cần rộng, `max-w-2xl` của modal bài viết thì chật.
+                         * Khuôn lấy NGUYÊN theo `CommunityPhotoLightboxModal`
+                         * (`h-[90vh] max-h-[90vh] w-[95vw] max-w-6xl overflow-hidden`). Bề ngang
+                         * vốn đã bằng nhau rồi; thứ còn thiếu là CHIỀU CAO CỐ ĐỊNH. Để dialog co
+                         * theo nội dung là bài toán con gà quả trứng: popup chỉ cao bằng khung ảnh,
+                         * mà khung ảnh thì đang đợi popup cho chỗ — nên ảnh đề mãi kẹt ở cái sàn
+                         * `60dvh`. Ghim `h-[90vh]` là `SubjectFeAlbum` có cái để `flex-1` vào, và
+                         * ảnh (`object-contain`) lớn theo khung.
                          *
-                         * ponytail: CHIỀU CAO chỉ đặt cho PE. `SubjectFeAlbum` khi `inModal` đã tự
-                         * `max-h-[80dvh] overflow-y-auto`, thêm một tầng cuộn nữa ở đây là hai
-                         * thanh cuộn lồng nhau. `ChallengeView` trong modal thì KHÔNG tạo vùng cuộn
-                         * con nào (nó xếp dọc hết), nên vùng cuộn phải nằm ở chính dialog.
+                         * ponytail: vùng cuộn vẫn chia y như cũ — nhánh FE để dialog KHÔNG cuộn,
+                         * phần cuộn nằm trong album (thêm một tầng nữa là hai thanh cuộn lồng nhau);
+                         * `ChallengeView` (PE) không tạo vùng cuộn con nào (nó xếp dọc hết) nên
+                         * nhánh PE giữ nguyên `max-h` + cuộn ở chính dialog.
                          */}
                         <Modal.Dialog
                             className={cn(
                                 "w-[95vw] max-w-6xl",
-                                kind === "pe" && "max-h-[90vh] overflow-y-auto",
+                                kind === "pe"
+                                    ? "max-h-[90vh] overflow-y-auto"
+                                    : "h-[90vh] max-h-[90vh] overflow-hidden",
                             )}
                         >
                             <Modal.CloseTrigger
@@ -340,7 +352,7 @@ export const ExamList = ({ subjectId, kind, onBack }: ExamListProps) => {
 
 /** Loading skeleton — mirrors the exam rows (title/meta text + open button). */
 const ExamListSkeleton = () => (
-    <div className="flex flex-col gap-3">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {Array.from({ length: 4 }).map((_, index) => (
             <Skeleton key={index} className="h-[68px] w-full rounded-2xl" />
         ))}

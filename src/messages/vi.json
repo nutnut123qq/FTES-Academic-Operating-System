@@ -2346,7 +2346,6 @@
         },
         "joined": "Tham gia {date}",
         "level": "Cấp {level}",
-        "badgesMore": "Thêm {count} huy hiệu",
         "followers": "{count} người theo dõi",
         "following": "{count} đang theo dõi",
         "shareProfile": "Chia sẻ hồ sơ",
@@ -2376,7 +2375,8 @@
         "empty": {
             "jobReadiness": "Sắp ra mắt — mức sẵn sàng nghề nghiệp của bạn sẽ xuất hiện ở đây.",
             "skills": "Sắp ra mắt — kỹ năng của bạn sẽ xuất hiện ở đây."
-        }
+        },
+        "badgesCount": "Đã đạt {count} huy hiệu — xem tất cả"
     },
     "accountMenu": {
         "gamification": {
@@ -5733,7 +5733,13 @@
                 "medium": "Vừa",
                 "hard": "Khó"
             },
-            "viewCourseNameAria": "Xem khóa học {name}"
+            "viewCourseNameAria": "Xem khóa học {name}",
+            "actions": "Thao tác môn học",
+            "myContent": "Bài của tôi",
+            "myContentClear": "Xem lại toàn bộ thảo luận",
+            "noMyPosts": "Bạn chưa có bài nào trong 20 thảo luận gần đây nhất của môn.",
+            "pinPost": "Ghim bài thảo luận",
+            "pinPostUnavailable": "Chưa dùng được: máy chủ không đưa bài ghim lên đầu feed của môn."
         },
         "resources": {
             "title": "Tài nguyên",
@@ -6506,6 +6512,9 @@
             "forbidden": "Bạn không có quyền thực hiện thao tác này.",
             "notFound": "Không tìm thấy môn học này.",
             "rateLimited": "Bạn thao tác hơi nhanh. Đợi một lát rồi thử lại nhé."
+        },
+        "rail": {
+            "title": "Lối tắt"
         }
     },
     "skillExp": {
@@ -7209,9 +7218,12 @@
             "member": "Thành viên"
         },
         "rail": {
-            "poll": "Bình chọn nhanh",
             "events": "Sự kiện sắp tới",
-            "seeAll": "Xem tất cả"
+            "seeAll": "Xem tất cả",
+            "leaderboard": "Bảng xếp hạng",
+            "leaderboardEmpty": "Bảng xếp hạng chưa có dữ liệu.",
+            "leaderboardError": "Không tải được bảng xếp hạng.",
+            "xp": "{xp} EXP"
         },
         "promo": {
             "sponsored": "Được tài trợ"
@@ -7399,7 +7411,8 @@
                 "knowledge": "Kiến thức",
                 "question": "Câu hỏi",
                 "showcase": "Khoe dự án",
-                "resource": "Chia sẻ tài nguyên"
+                "resource": "Chia sẻ tài nguyên",
+                "poll": "Khảo sát"
             },
             "addImage": "Thêm ảnh",
             "imageAlt": "Ảnh đính kèm bài viết",
@@ -7410,7 +7423,12 @@
             "imageUploading": "Đang tải…",
             "removeImage": "Bỏ ảnh",
             "campusLabel": "Cơ sở",
-            "campusAll": "Tất cả cơ sở"
+            "campusAll": "Tất cả cơ sở",
+            "pollOptionsLabel": "Các phương án",
+            "pollOptionPlaceholder": "Phương án {index}",
+            "pollAddOption": "Thêm phương án",
+            "pollRemoveOption": "Xoá phương án",
+            "pollHint": "Khảo sát cần có câu hỏi (dòng đầu tiên) và ít nhất 2 phương án."
         },
         "reputation": {
             "title": "Bảng uy tín",

@@ -15,6 +15,7 @@ import { CHALLENGE_COMMENT_DELETED } from "@/components/features/challenge/hooks
 import { useMutateCreateChallengeCommentSwr } from "@/components/features/challenge/hooks/useMutateCreateChallengeCommentSwr"
 import { useMutateDeleteChallengeCommentSwr } from "@/components/features/challenge/hooks/useMutateDeleteChallengeCommentSwr"
 import { useQueryChallengeCommentsSwr } from "@/components/features/challenge/hooks/useQueryChallengeCommentsSwr"
+import { toggleChallengeCommentLike } from "@/modules/api/rest/challenges"
 import { RestError } from "@/modules/api/rest/client"
 import type { ChallengeCommentView } from "@/modules/api/rest/challenges/types"
 import type { PostComment } from "@/components/features/community/hooks/useQueryPostDetailSwr"
@@ -55,6 +56,8 @@ const toPostComment = (comment: ChallengeCommentView, locale: string): PostComme
         authorAvatar: author?.avatarUrl ?? null,
         text: comment.content,
         timeLabel: formatRelativeTime(comment.createdAt, locale),
+        likeCount: comment.likeCount,
+        likedByMe: comment.likedByMe,
         replies: (comment.replies ?? []).map((reply) => toPostComment(reply, locale)),
     }
 }
@@ -74,10 +77,12 @@ export interface ChallengePaperCommentThreadProps {
  * thin adapter over `GET/POST /challenges/{id}/comments` — the same trade
  * `FeImageCommentThread` makes.
  *
- * Three affordances are deliberately withheld:
- * - **likes / reactions** — the BE ships no reaction table for this thread (its DTO drops
- *   the fields rather than answering a constant zero), and the shared block has no like
- *   slot anyway;
+ * Likes DO work here: V318 gave the thread its own `challenge_comment_likes` table and a
+ * `PUT|DELETE /challenges/comments/{id}/like` pair, so the shared heart is wired to those.
+ * (This block used to say the BE had no reaction table — true when it was written, wrong
+ * since V318.)
+ *
+ * Two affordances are still deliberately withheld:
  * - **edit** — there is no update endpoint for a challenge comment, so offering "Sửa"
  *   would be a dead button;
  * - **report** — the thread's built-in report posts `targetType: "COMMENT"` into the
@@ -234,6 +239,7 @@ export const ChallengePaperCommentThread = ({
                 labels={labels}
                 onSubmit={onSubmit}
                 onDeleteComment={onDelete}
+                onToggleCommentLike={toggleChallengeCommentLike}
                 currentUserId={viewerId}
                 canReportComments={false}
             />

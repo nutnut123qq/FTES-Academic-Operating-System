@@ -30,7 +30,8 @@ export interface SubjectFeAlbumProps {
     albumId?: string
     /**
      * Rendered inside a dialog rather than on its own page: the column stops locking itself
-     * to the workspace-rail height (it caps + scrolls inside the dialog instead) and the
+     * to the workspace-rail height (it takes the dialog's leftover height and scrolls inside
+     * instead), the horizontal header row moves to the top of the comment column, and the
      * "back to practice" button is dropped, since the modal's × already leaves.
      */
     inModal?: boolean
@@ -54,13 +55,15 @@ export interface SubjectFeAlbumProps {
  * under the album, and it shrank the picture for nothing: the scan is `object-contain`,
  * so every pixel the frame gains is a pixel of exam paper.
  *
- * IN A MODAL (`inModal`) that rail number is meaningless — there is no rail, and a column
- * locked to the viewport height inside a dialog that is itself capped would simply be
- * clipped. So the modal variant drops the lock, caps itself at `max-h-[80dvh]` and owns
- * `overflow-y-auto`: long content (the manager panel open, a long thread) SCROLLS rather
- * than being cut, whatever height the dialog around it happens to have. The picture keeps
- * a generous frame there through the grid's `lg:min-h-[60dvh]` floor instead of `h-full`,
- * which has nothing definite to resolve against once the column is no longer height-locked.
+ * IN A MODAL (`inModal`) that rail number is meaningless — there is no rail. The dialog
+ * hosting it names a height of its own (`h-[90vh]`, the community lightbox's number), so
+ * the column drops the lock and simply TAKES what is left of the dialog (`flex-1` +
+ * `min-h-0`) while owning `overflow-y-auto`: long content (the manager panel open, a long
+ * thread) SCROLLS rather than being cut. The header row does not survive there — it moves
+ * into the comment column, because a HORIZONTAL header spends its height on both panes at
+ * once and the left one is exam paper. The grid's `lg:min-h-[60dvh]` floor stays as the
+ * net for the case `flex-1` has nothing definite to resolve against (the manager panel
+ * open, or a host that forgot to give the dialog a height).
  *
  * The grid pins its single row to `minmax(0,1fr)` and the viewer carries `min-h-0`: a
  * grid/flex item's automatic minimum size is its CONTENT, so a portrait scan would
@@ -152,6 +155,58 @@ export const SubjectFeAlbum = ({
         setIndex(0)
     }, [albumId])
 
+    // ponytail: ONE header, two places to stand. On the route it is the top row of the page;
+    // in the modal it moves to the TOP OF THE COMMENT COLUMN (see below), where its height
+    // costs the reader nothing — a row spanning both panes is paid for out of the picture's
+    // frame too. Declared once and placed twice rather than duplicated into two branches.
+    const headerRow = (
+        <div className="flex shrink-0 flex-wrap items-start gap-3">
+            {/* On the route this is the way back; in the modal the × is, so a second
+                exit that ALSO navigated away would be a trap. */}
+            {inModal ? null : (
+                <Button
+                    size="sm"
+                    variant="ghost"
+                    onPress={() => router.push(`/subjects/${subjectId}/practice`)}
+                >
+                    <ArrowLeftIcon aria-hidden focusable="false" className="size-4" />
+                    {t("practice.fe.backToList")}
+                </Button>
+            )}
+            <div className="min-w-0 flex-1">
+                <Typography type="h5" weight="bold" truncate>
+                    {resource?.title ?? t("practice.fe.title")}
+                </Typography>
+                {/* How many pictures this album HAS — nothing else. It used to read
+                    "{count}/{max} ảnh", which every reader parsed as a POSITION ("picture 4
+                    of 50") on a 4-picture album. The cap is an author's concern, so it is
+                    stated where it can be acted on (the manager's remaining-slots line),
+                    never in the reader's header. */}
+                <Typography type="body-sm" color="muted">
+                    {t("practice.fe.albumMeta", {
+                        count: albumSwr.data?.total ?? images.length,
+                    })}
+                </Typography>
+            </div>
+            {/* Gate on the SERVER's own answer (`canManage` = the very predicate the write
+                endpoints guard with: resource owner OR subject approver). Never derive this
+                from the client permission list: a CTV's approval right is granted per SUBJECT
+                while the client only sees GLOBAL leaves, so guessing hides the controls from
+                exactly the people who may use them. Absent (older BE) → hidden, i.e. fails
+                closed rather than showing a button that 403s. */}
+            {albumSwr.data?.canManage === true && !isManaging ? (
+                <Button size="sm" variant="secondary" onPress={() => setIsManaging(true)}>
+                    <SlidersHorizontalIcon
+                        aria-hidden
+                        focusable="false"
+                        className="size-4"
+                    />
+                    {t("practice.fe.manage.open")}
+                </Button>
+            ) : null}
+        </div>
+    )
+
     return (
         // ponytail: the page OWNS the height instead of the frame guessing at it. The
         // workspace rail next door is `md:h-[calc(100dvh-4rem)]`, so a shorter content
@@ -165,72 +220,19 @@ export const SubjectFeAlbum = ({
         // thing squeezed out of a viewport-locked column.
         //
         // ponytail: in a modal there IS no rail, so the same lock would just make the
-        // column taller than the dialog and get it clipped. The modal variant caps itself
-        // and takes the scroll instead — one `cn` branch, no second layout.
+        // column taller than the dialog and get it clipped. The dialog names its own
+        // `h-[90vh]` instead, so the column takes the remainder (`flex-1`) and carries the
+        // scroll — one `cn` branch, no second layout. No padding of its own there either:
+        // the dialog's gutter (`.modal__dialog` is forced to 16px app-wide in globals.css)
+        // is already the frame, and a second one would only shrink the picture.
         <div
             className={cn(
-                "flex flex-col gap-3 p-6",
+                "flex flex-col gap-3",
+                inModal ? "min-h-0 flex-1 overflow-y-auto" : "p-6",
                 !inModal && !isManaging && "lg:h-[calc(100dvh-4rem)]",
-                inModal && "max-h-[80dvh] overflow-y-auto",
             )}
         >
-            {/* In the modal the header has to stay clear of `Modal.CloseTrigger`, which is
-                absolutely positioned at `top-4 right-4` — without the reserve the "Quản lý"
-                button sits underneath it. */}
-            <div
-                className={cn(
-                    "flex shrink-0 flex-wrap items-start gap-3",
-                    inModal && "pe-10",
-                )}
-            >
-                {/* On the route this is the way back; in the modal the × is, so a second
-                    exit that ALSO navigated away would be a trap. */}
-                {inModal ? null : (
-                    <Button
-                        size="sm"
-                        variant="ghost"
-                        onPress={() => router.push(`/subjects/${subjectId}/practice`)}
-                    >
-                        <ArrowLeftIcon aria-hidden focusable="false" className="size-4" />
-                        {t("practice.fe.backToList")}
-                    </Button>
-                )}
-                <div className="min-w-0 flex-1">
-                    <Typography type="h5" weight="bold" truncate>
-                        {resource?.title ?? t("practice.fe.title")}
-                    </Typography>
-                    {/* How many pictures this album HAS — nothing else. It used to read
-                        "{count}/{max} ảnh", which every reader parsed as a POSITION ("picture 4
-                        of 50") on a 4-picture album. The cap is an author's concern, so it is
-                        stated where it can be acted on (the manager's remaining-slots line),
-                        never in the reader's header. */}
-                    <Typography type="body-sm" color="muted">
-                        {t("practice.fe.albumMeta", {
-                            count: albumSwr.data?.total ?? images.length,
-                        })}
-                    </Typography>
-                </div>
-                {/* Gate on the SERVER's own answer (`canManage` = the very predicate the write
-                    endpoints guard with: resource owner OR subject approver). Never derive this
-                    from the client permission list: a CTV's approval right is granted per SUBJECT
-                    while the client only sees GLOBAL leaves, so guessing hides the controls from
-                    exactly the people who may use them. Absent (older BE) → hidden, i.e. fails
-                    closed rather than showing a button that 403s. */}
-                {albumSwr.data?.canManage === true && !isManaging ? (
-                    <Button
-                        size="sm"
-                        variant="secondary"
-                        onPress={() => setIsManaging(true)}
-                    >
-                        <SlidersHorizontalIcon
-                            aria-hidden
-                            focusable="false"
-                            className="size-4"
-                        />
-                        {t("practice.fe.manage.open")}
-                    </Button>
-                ) : null}
-            </div>
+            {inModal ? null : headerRow}
 
             {isManaging ? (
                 <FeAlbumManager
@@ -294,6 +296,14 @@ export const SubjectFeAlbum = ({
                             whole, which is what used to let the composer drift up into the
                             empty space under a short thread. */}
                         <div className="flex min-h-0 flex-col gap-3 bg-overlay p-4">
+                            {/* The title + "N images in this set" (+ Quản lý) live HERE in
+                                the modal — see `headerRow` above. The dialog is a fixed
+                                90vh, so every row above the grid is taken straight out of
+                                the picture; in this column the same rows cost only comment
+                                thread, which scrolls anyway. On the route the header stays
+                                on top, where there is a back button to sit beside. */}
+                            {inModal ? headerRow : null}
+
                             {/* The uploader line renders ONLY when the BE actually sent a
                                 card. It was removed outright while `FeImageView` carried a
                                 bare `uploadedBy` uuid — a label with an empty name beside a

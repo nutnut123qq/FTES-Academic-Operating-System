@@ -37,7 +37,12 @@ vi.mock("next-intl", () => ({
         () =>
             (key: string, params?: Record<string, unknown>) =>
                 params && "name" in params ? `${key}#${params.name}` : key,
+    // the row formats its like counter with the active locale
+    useLocale: () => "vi",
 }))
+
+/** Toast spy shared with the `@heroui/react` factory (the like failure path toasts). */
+const toastDanger = vi.hoisted(() => vi.fn())
 
 // `Dropdown.Item` becomes a real button so the ⋯ menu's entries are queryable and
 // pressable without React Aria's overlay machinery (same shape the shared
@@ -64,17 +69,30 @@ vi.mock("@heroui/react", () => {
     )
     return {
         Dropdown,
+        // `aria-label`/`aria-pressed` are forwarded because the like button is
+        // icon-only: its accessible name IS the label, and the pressed state is the
+        // only way a test (or a screen reader) can tell liked from not-liked.
         Button: ({
             children,
             onPress,
             isDisabled,
+            "aria-label": ariaLabel,
+            "aria-pressed": ariaPressed,
         }: {
             children?: React.ReactNode
             onPress?: () => void
             isDisabled?: boolean
             isPending?: boolean
+            "aria-label"?: string
+            "aria-pressed"?: boolean
         }) => (
-            <button type="button" disabled={isDisabled} onClick={onPress}>
+            <button
+                type="button"
+                disabled={isDisabled}
+                aria-label={ariaLabel}
+                aria-pressed={ariaPressed}
+                onClick={onPress}
+            >
                 {children}
             </button>
         ),
@@ -88,6 +106,7 @@ vi.mock("@heroui/react", () => {
         TextArea: (props: React.ComponentProps<"textarea">) => <textarea {...props} />,
         Typography: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
         cn: (...values: Array<unknown>) => values.filter(Boolean).join(" "),
+        toast: { danger: toastDanger },
     }
 })
 
@@ -95,6 +114,7 @@ vi.mock("@phosphor-icons/react", () => ({
     ArrowClockwiseIcon: () => <span />,
     CaretUpIcon: () => <span />,
     CheckCircleIcon: () => <span />,
+    HeartIcon: () => <span />,
     XIcon: () => <span />,
     // glyphs the shared ⋯ menu pulls in
     DotsThreeIcon: () => <span />,
@@ -228,6 +248,8 @@ const comments = (): Array<PostComment> => [
 
 beforeEach(() => {
     store.user = null
+    session.authenticated = true
+    toastDanger.mockClear()
 })
 
 /** Render the thread with the accept/owner wiring under test. */
@@ -570,5 +592,127 @@ describe("PostCommentThread — tên tác giả", () => {
 
         expect(screen.getAllByText("unknownMember").length).toBeGreaterThan(0)
         expect(screen.queryByText("Khoa Trần")).toBeNull()
+    })
+})
+
+describe("PostCommentThread — tym một bình luận", () => {
+    /**
+     * Id ở đây phải là UUID THẬT chứ không phải nhãn tuỳ ý như các fixture khác trong file:
+     * trái tim CHỈ hiện trên hàng đã có id server, vì hàng lạc quan mang id tạm (`tmp-…` /
+     * `optimistic-…`) mà mọi đường ghi tym đều ép uuid. Fixture mang sai hình dạng id thì
+     * đang đo một bề mặt production không bao giờ dựng.
+     */
+    const COMMENT_ID = "aaaaaaaa-1111-4111-8111-aaaaaaaaaaaa"
+    const REPLY_ID = "bbbbbbbb-2222-4222-8222-bbbbbbbbbbbb"
+
+    /** Một comment gốc đã có 3 tym (viewer CHƯA thích) + một reply chưa ai thích. */
+    const likeable = (): Array<PostComment> => [
+        {
+            id: COMMENT_ID,
+            author: "Minh",
+            authorUsername: "minh",
+            text: "Dùng index cho cột join là được.",
+            timeLabel: "2 giờ",
+            likeCount: 3,
+            likedByMe: false,
+            replies: [
+                {
+                    id: REPLY_ID,
+                    author: "Lan",
+                    authorUsername: "lan",
+                    text: "Chuẩn luôn.",
+                    timeLabel: "1 giờ",
+                    likeCount: 0,
+                    likedByMe: false,
+                },
+            ],
+        },
+    ]
+
+    it("KHÔNG render trái tim khi bề mặt không truyền handler", () => {
+        renderThread({ comments: likeable() })
+        expect(screen.queryByLabelText("engagement.like")).toBeNull()
+    })
+
+    it("đổi trái tim + số đếm NGAY rồi mới ghi (lạc quan), cả trên reply", async () => {
+        const onToggleCommentLike = vi.fn().mockResolvedValue(undefined)
+        renderThread({ comments: likeable(), onToggleCommentLike })
+
+        // gốc: 3 tym, chưa thích → nhãn "thích"; reply: 0 tym nên không in số
+        const hearts = screen.getAllByLabelText("engagement.like")
+        expect(hearts).toHaveLength(2)
+        expect(screen.getByText("3")).toBeTruthy()
+
+        fireEvent.click(hearts[0])
+
+        // số nhảy lên trước khi promise ghi xong, nhãn đảo sang "bỏ thích"
+        await waitFor(() => expect(screen.getByText("4")).toBeTruthy())
+        expect(screen.getByLabelText("engagement.unlike").getAttribute("aria-pressed")).toBe("true")
+        expect(onToggleCommentLike).toHaveBeenCalledWith(COMMENT_ID, true)
+
+        // bấm lại = bỏ thích, quay đúng về 3
+        fireEvent.click(screen.getByLabelText("engagement.unlike"))
+        await waitFor(() => expect(screen.getByText("3")).toBeTruthy())
+        expect(onToggleCommentLike).toHaveBeenLastCalledWith(COMMENT_ID, false)
+    })
+
+    it("KHÔNG render trái tim trên bình luận LẠC QUAN chưa có id server", () => {
+        const onToggleCommentLike = vi.fn().mockResolvedValue(undefined)
+        renderThread({
+            comments: [{ ...likeable()[0], id: "tmp-1755000000000", replies: [] }],
+            onToggleCommentLike,
+        })
+
+        // `ReactionRequest.targetId` và `@PathVariable UUID commentId` đều ép uuid, nên tym một
+        // hàng `tmp-…` chắc chắn 400 → rollback + toast lỗi ngay trên bình luận người dùng vừa
+        // gửi. Chưa có id thật thì chưa hiện trái tim.
+        expect(screen.queryByLabelText("engagement.like")).toBeNull()
+    })
+
+    it("ghi hỏng thì TRẢ LẠI trạng thái cũ và báo lỗi", async () => {
+        const onToggleCommentLike = vi.fn().mockRejectedValue(new Error("500"))
+        renderThread({ comments: likeable(), onToggleCommentLike })
+
+        fireEvent.click(screen.getAllByLabelText("engagement.like")[0])
+
+        await waitFor(() => expect(toastDanger).toHaveBeenCalledWith("engagement.likeFailed"))
+        expect(screen.getByText("3")).toBeTruthy()
+        // hai hàng cùng chưa-thích trở lại (gốc + reply) → lấy hàng gốc
+        expect(
+            screen.getAllByLabelText("engagement.like")[0].getAttribute("aria-pressed"),
+        ).toBe("false")
+    })
+
+    it("bấm nhanh HAI lần khi request chưa về: chỉ ghi MỘT lần, không đếm hai", async () => {
+        let settle: () => void = () => undefined
+        const onToggleCommentLike = vi
+            .fn()
+            .mockReturnValue(new Promise<void>((resolve) => {
+                settle = resolve
+            }))
+        renderThread({ comments: likeable(), onToggleCommentLike })
+
+        const heart = screen.getAllByLabelText("engagement.like")[0]
+        fireEvent.click(heart)
+        await waitFor(() => expect(screen.getByText("4")).toBeTruthy())
+        // lượt bấm thứ hai rơi vào lúc request đầu còn bay → bị bỏ qua
+        fireEvent.click(screen.getByLabelText("engagement.unlike"))
+
+        expect(onToggleCommentLike).toHaveBeenCalledTimes(1)
+        expect(screen.getByText("4")).toBeTruthy()
+
+        settle()
+        await waitFor(() => expect(screen.getByText("4")).toBeTruthy())
+    })
+
+    it("khách chưa đăng nhập: mở modal đăng nhập, KHÔNG ghi và KHÔNG đổi số", () => {
+        session.authenticated = false
+        const onToggleCommentLike = vi.fn().mockResolvedValue(undefined)
+        renderThread({ comments: likeable(), onToggleCommentLike })
+
+        fireEvent.click(screen.getAllByLabelText("engagement.like")[0])
+
+        expect(onToggleCommentLike).not.toHaveBeenCalled()
+        expect(screen.getByText("3")).toBeTruthy()
     })
 })

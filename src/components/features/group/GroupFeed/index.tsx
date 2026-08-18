@@ -11,6 +11,7 @@ import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { PostEngagementBar } from "@/components/reuseable/PostEngagementBar"
 import { PostCommentThread } from "@/components/reuseable/PostCommentThread"
+import { toggleCommentReaction } from "@/modules/api/rest/community"
 import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
 import { useQueryPostCommentsSwr } from "@/components/features/community/hooks/useQueryPostDetailSwr"
 import {
@@ -163,6 +164,7 @@ const GroupFeedCard = ({
                         error={error}
                         onRetry={() => void mutate()}
                         onSubmit={onSubmit}
+                        onToggleCommentLike={toggleCommentReaction}
                         onCollapse={onToggleComments}
                         stickyComposerOnMobile
                     />

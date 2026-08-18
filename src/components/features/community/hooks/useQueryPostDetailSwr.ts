@@ -37,6 +37,17 @@ export interface PostComment {
     authorStaffRole?: string | null
     text: string
     timeLabel: string
+    /**
+     * Denormalized like counter for this comment.
+     *
+     * Optional on purpose: not every comment source carries one (the optimistic node a
+     * composer appends has nothing to count yet, and the album-picture thread has no
+     * reaction table at all), and a required field would force those callers to invent a
+     * zero. Absent reads as 0 in the thread's heart button.
+     */
+    likeCount?: number
+    /** Whether the viewer already liked this comment; absent = not liked / unknowable (guest). */
+    likedByMe?: boolean
     /** One-level replies under this top-level comment (absent on replies). */
     replies?: Array<PostComment>
 }
@@ -84,6 +95,8 @@ const toReply = (reply: CommunityPostReplyNode, locale: string): PostComment => 
     authorStaffRole: reply.author?.staffRole ?? null,
     text: reply.body,
     timeLabel: formatRelativeTime(reply.createdAt, locale),
+    likeCount: reply.likeCount,
+    likedByMe: reply.likedByMe,
 })
 
 /**

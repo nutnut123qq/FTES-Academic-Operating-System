@@ -1,7 +1,8 @@
 "use client"
 
 import React, { useCallback, useEffect, useRef, useState } from "react"
-import { Button, Chip, toast } from "@heroui/react"
+import { Button, Chip, Input, TextField, Typography, toast } from "@heroui/react"
+import { XIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import useSWR, { useSWRConfig } from "swr"
 import { useRouter } from "@/i18n/navigation"
@@ -20,7 +21,7 @@ import { revalidateCommunityFeeds } from "../hooks/useQueryCommunityFeedSwr"
 import { useQueryCampusesSwr } from "../hooks/useQueryCampusesSwr"
 
 /** Post kinds a user can attach (§6). */
-const KINDS = ["knowledge", "question", "showcase", "resource"] as const
+const KINDS = ["knowledge", "question", "showcase", "resource", "poll"] as const
 
 /**
  * Maps a composer kind chip to the BE `postType` (PostService allow-list). "resource"
@@ -32,7 +33,22 @@ const KIND_TO_POST_TYPE: Record<(typeof KINDS)[number], string> = {
     question: "QUESTION",
     showcase: "PROJECT_SHOWCASE",
     resource: "DISCUSSION",
+    poll: "POLL",
 }
+
+/**
+ * ponytail: FE-only cap. The BE puts NO ceiling on `pollOptions` (PostService only
+ * rejects fewer than 2), so 6 is a UI judgement — enough for a real question, few
+ * enough that the option list stays a list and not a scroll area.
+ */
+const POLL_MAX_OPTIONS = 6
+
+/**
+ * Hard cap per option label, mirroring the column (`poll_options.label varchar(200)`).
+ * Past it the BE does NOT answer 400 — the insert blows up as a constraint violation
+ * (500), so the input has to stop the author instead of letting them find out.
+ */
+const POLL_LABEL_MAX = 200
 
 /** Props for {@link CommunityComposerForm}. */
 interface CommunityComposerFormProps {
@@ -68,6 +84,10 @@ export const CommunityComposerForm = ({
     const [kind, setKind] = useState<(typeof KINDS)[number]>("knowledge")
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [media, setMedia] = useState<Array<MediaInput>>([])
+    // Poll answers, in display order (the BE stamps `sortOrder` from the array index).
+    // ponytail: a plain string array — two rows are the empty state, so the author sees
+    // the BE minimum instead of reading about it.
+    const [pollOptions, setPollOptions] = useState<Array<string>>(["", ""])
     const [isUploading, setIsUploading] = useState(false)
     const [imagesResetToken, setImagesResetToken] = useState(0)
     // Optional campus tag (§ Campus feed): `null` = no campus. The picker's value is a
@@ -94,12 +114,37 @@ export const CommunityComposerForm = ({
         }
     }, [selfProfile, campuses])
 
+    // A repost goes through `sharePost`, which takes NO `pollOptions` — so the poll kind
+    // simply doesn't exist in quote mode (the chip row is already hidden there).
+    const isPoll = !isQuote && kind === "poll"
+    // Blank rows are the author leaving spare inputs empty, not an answer: drop them
+    // before counting and before sending (BE `List<@NotBlank String>` 400s on a blank one).
+    // Duplicates go too — the BE writes every label as-is (no unique index on
+    // `(post_id, label)`) and `UpdatePostRequest` carries only title+content, so two
+    // identical rows would be a permanently unfixable poll that splits its own votes.
+    const validPollOptions = pollOptions
+        .map((option) => option.trim())
+        .filter(
+            (option, index, all) =>
+                option !== ""
+                && all.findIndex((other) => other.toLowerCase() === option.toLowerCase())
+                    === index,
+        )
+    // A poll's QUESTION is `post.title` on the read side (`CommunityApiImpl` builds
+    // `PollView` from it), and the composer derives the title from the body — so a poll
+    // whose body yields no title would publish as a question-less poll, silently. Gate on
+    // the same value submit will send.
+    const pollQuestion = isPoll ? splitTitleFromMarkdown(body, { fallbackTitle: true }).title : ""
+
     // Submitting while an image is still uploading would publish the post without it.
     // A repost needs no body (an empty repost is a plain share); a new post needs a
     // non-empty editor (its leading H1 becomes the title, the rest is the content).
     const canSubmit = isQuote
         ? !isSubmitting
-        : body.trim() !== "" && !isSubmitting && !isUploading
+        : body.trim() !== "" &&
+          !isSubmitting &&
+          !isUploading &&
+          (!isPoll || (pollQuestion !== "" && validPollOptions.length >= 2))
 
     const onImagesChange = useCallback((next: Array<MediaInput>) => setMedia(next), [])
     const onUploadingChange = useCallback((uploading: boolean) => setIsUploading(uploading), [])
@@ -126,7 +171,11 @@ export const CommunityComposerForm = ({
             } else {
                 // Single editor: the leading H1 is the title (stripped from the body
                 // so the detail render never shows it twice); no H1 → first line.
-                const { title, body: content } = splitTitleFromMarkdown(body)
+                // A POLL asks for the fallback because its title IS the poll question —
+                // an empty one would render a poll with nothing to answer.
+                const { title, body: content } = splitTitleFromMarkdown(body, {
+                    fallbackTitle: isPoll,
+                })
                 const created = await createPost({
                     postType: KIND_TO_POST_TYPE[kind],
                     title,
@@ -134,11 +183,18 @@ export const CommunityComposerForm = ({
                     media: media.length > 0 ? media : undefined,
                     // Only tag a real campus code; the "no campus" choice omits it entirely.
                     campus: campus ?? undefined,
+                    // ponytail: no closing-date input in v1 — a null `pollClosesAt` is a poll
+                    // that never closes, which every read path already handles. Note it is
+                    // one-way: `UpdatePostRequest` carries only title+content, so a deadline
+                    // skipped here can't be PATCHed in later. Adding one means a native
+                    // `<input type="datetime-local">` like `GroupEvents/EventForm`.
+                    pollOptions: isPoll ? validPollOptions : undefined,
                 })
                 createdId = created.id
             }
             setBody("")
             setMedia([])
+            setPollOptions(["", ""])
             setImagesResetToken((token) => token + 1)
             // The create/share is the sole success signal. Revalidate every community-feed
             // infinite cache so an already-loaded feed shows the new post on
@@ -209,6 +265,68 @@ export const CommunityComposerForm = ({
                     autoFocus={autoFocus}
                 />
             )}
+
+            {/* Poll answers. Gated on `isPoll`, which is already false in quote mode —
+                `sharePost` takes no options, so they must never be collectable there. */}
+            {isPoll ? (
+                <div className="flex flex-col gap-2">
+                    <Typography type="body-sm" weight="medium">
+                        {t("composer.pollOptionsLabel")}
+                    </Typography>
+                    {pollOptions.map((option, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                            <TextField variant="secondary" className="w-full">
+                                <Input
+                                    value={option}
+                                    maxLength={POLL_LABEL_MAX}
+                                    placeholder={t("composer.pollOptionPlaceholder", {
+                                        index: index + 1,
+                                    })}
+                                    aria-label={t("composer.pollOptionPlaceholder", {
+                                        index: index + 1,
+                                    })}
+                                    onChange={(event) =>
+                                        setPollOptions((current) =>
+                                            current.map((value, position) =>
+                                                position === index ? event.target.value : value,
+                                            ),
+                                        )
+                                    }
+                                />
+                            </TextField>
+                            {/* Below 3 rows there is nothing to remove — the BE floor is 2. */}
+                            {pollOptions.length > 2 ? (
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    isIconOnly
+                                    aria-label={t("composer.pollRemoveOption")}
+                                    onPress={() =>
+                                        setPollOptions((current) =>
+                                            current.filter((_, position) => position !== index),
+                                        )
+                                    }
+                                >
+                                    <XIcon className="size-4" />
+                                </Button>
+                            ) : null}
+                        </div>
+                    ))}
+                    <div className="flex flex-wrap items-center gap-3">
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            isDisabled={pollOptions.length >= POLL_MAX_OPTIONS}
+                            onPress={() => setPollOptions((current) => [...current, ""])}
+                        >
+                            {t("composer.pollAddOption")}
+                        </Button>
+                        <Typography type="body-xs" color="muted">
+                            {t("composer.pollHint")}
+                        </Typography>
+                    </div>
+                </div>
+            ) : null}
 
             {quote ? (
                 <QuotedPostCard post={quote} />

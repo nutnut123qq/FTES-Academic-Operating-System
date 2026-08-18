@@ -2334,7 +2334,6 @@
         },
         "joined": "Joined {date}",
         "level": "Level {level}",
-        "badgesMore": "{count} more badges",
         "followers": "{count} followers",
         "following": "{count} following",
         "shareProfile": "Share profile",
@@ -2364,7 +2363,8 @@
         "empty": {
             "jobReadiness": "Coming soon — your job readiness will appear here.",
             "skills": "Coming soon — your skills will appear here."
-        }
+        },
+        "badgesCount": "{count} badges earned — see all"
     },
     "accountMenu": {
         "gamification": {
@@ -5733,7 +5733,13 @@
                 "medium": "Medium",
                 "hard": "Hard"
             },
-            "viewCourseNameAria": "View the course {name}"
+            "viewCourseNameAria": "View the course {name}",
+            "actions": "Subject actions",
+            "myContent": "My content",
+            "myContentClear": "Show every discussion again",
+            "noMyPosts": "You have no posts among this subject's 20 most recent discussions.",
+            "pinPost": "Pin a discussion",
+            "pinPostUnavailable": "Unavailable: the server never hoists pinned posts in a subject feed."
         },
         "resources": {
             "title": "Resources",
@@ -6506,6 +6512,9 @@
             "forbidden": "You are not allowed to do this.",
             "notFound": "This subject no longer exists.",
             "rateLimited": "Too many attempts. Please wait a moment and try again."
+        },
+        "rail": {
+            "title": "Shortcuts"
         }
     },
     "skillExp": {
@@ -7209,9 +7218,12 @@
             "member": "Member"
         },
         "rail": {
-            "poll": "Quick poll",
             "events": "Upcoming events",
-            "seeAll": "See all"
+            "seeAll": "See all",
+            "leaderboard": "Leaderboard",
+            "leaderboardEmpty": "No leaderboard data yet.",
+            "leaderboardError": "Couldn't load the leaderboard.",
+            "xp": "{xp} EXP"
         },
         "promo": {
             "sponsored": "Sponsored"
@@ -7399,7 +7411,8 @@
                 "knowledge": "Knowledge",
                 "question": "Question",
                 "showcase": "Showcase",
-                "resource": "Resource"
+                "resource": "Resource",
+                "poll": "Poll"
             },
             "addImage": "Add image",
             "imageAlt": "Post attachment",
@@ -7410,7 +7423,12 @@
             "imageUploading": "Uploading…",
             "removeImage": "Remove image",
             "campusLabel": "Campus",
-            "campusAll": "All campuses"
+            "campusAll": "All campuses",
+            "pollOptionsLabel": "Poll options",
+            "pollOptionPlaceholder": "Option {index}",
+            "pollAddOption": "Add option",
+            "pollRemoveOption": "Remove option",
+            "pollHint": "A poll needs a question (the first line) and at least 2 options."
         },
         "reputation": {
             "title": "Reputation",

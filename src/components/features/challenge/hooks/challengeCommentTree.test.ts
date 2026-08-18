@@ -36,6 +36,8 @@ const comment = (over: Partial<ChallengeCommentView> = {}): ChallengeCommentView
     content: "body",
     status: "VISIBLE",
     createdAt: "2026-08-12T00:00:00Z",
+    likeCount: 0,
+    likedByMe: false,
     replies: [],
     ...over,
 })

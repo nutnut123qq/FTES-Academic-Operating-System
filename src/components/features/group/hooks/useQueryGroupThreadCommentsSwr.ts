@@ -46,6 +46,11 @@ export const buildThreadCommentTree = (
         authorStaffRole: dto.author?.staffRole ?? null,
         text: dto.content,
         timeLabel: dto.createdAt ? formatRelativeTime(dto.createdAt, locale) : "",
+        // `ThreadCommentDto` has carried these since the BE shipped comment reactions
+        // (`PUT|DELETE /groups/{id}/discussion/comments/{commentId}/reactions`); the mapper
+        // simply dropped them, so the heart had nothing to render.
+        likeCount: dto.likeCount,
+        likedByMe: dto.likedByMe,
     })
 
     const roots: Array<PostComment> = []

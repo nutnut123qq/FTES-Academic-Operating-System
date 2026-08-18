@@ -161,8 +161,10 @@ export interface ChallengePaperFileView {
  * text, and BOTH `authorId` and `author` nulled — the server deliberately stops saying who
  * wrote it.
  *
- * There is **no like/reaction count**: the BE ships no reaction table for this thread
- * (V316 creates none), so any such field could only ever be a constant zero.
+ * Likes arrived in V318 (`challenge_comment_likes`), so `likeCount`/`likedByMe` are real
+ * numbers now — the earlier note here saying this thread had no reaction table is obsolete.
+ * A deleted row keeps its true count on purpose: the like rows are not deleted with it, and
+ * a like is somebody ELSE's act, not the content the deletion hides.
  */
 export interface ChallengeCommentView {
     /** Comment id (UUID as a string). */
@@ -182,6 +184,10 @@ export interface ChallengeCommentView {
     status: string
     /** Creation instant (ISO-8601). */
     createdAt: string
+    /** Like counter (BE `challenge_comment_likes`, batch-filled per page). */
+    likeCount: number
+    /** Whether the viewer already liked it; always `false` for an anonymous reader. */
+    likedByMe: boolean
     /** One-level replies under a root, oldest-first (empty on a reply). */
     replies: Array<ChallengeCommentView>
 }

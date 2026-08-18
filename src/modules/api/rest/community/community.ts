@@ -313,6 +313,58 @@ export const unreactPost = async (postId: string): Promise<void> => {
 }
 
 /**
+ * Likes a COMMENT. Same target-typed endpoint as {@link reactToPost} — only `targetType`
+ * differs, because a comment reaction is a row in the very same `community.reactions`
+ * table. The write is idempotent server-side (`ON CONFLICT DO NOTHING`), so a repeat
+ * neither errors nor double-counts.
+ *
+ * Only comments living in the COMMUNITY module resolve here (post threads, group post
+ * threads, subject discussion). Group DISCUSSION threads and challenge papers keep their
+ * own like endpoints.
+ *
+ * `PUT /api/v1/community/reactions`
+ */
+export const reactToComment = async (
+    commentId: string,
+    request?: { reactionType?: string },
+): Promise<void> => {
+    return restRequest<void>({
+        method: "PUT",
+        url: "/community/reactions",
+        data: {
+            targetType: "COMMENT",
+            targetId: commentId,
+            reaction: request?.reactionType ?? "LIKE",
+        },
+    })
+}
+
+/**
+ * Removes the current user's reaction from a comment.
+ *
+ * `DELETE /api/v1/community/reactions`
+ */
+export const unreactComment = async (commentId: string): Promise<void> => {
+    return restRequest<void>({
+        method: "DELETE",
+        url: "/community/reactions",
+        data: { targetType: "COMMENT", targetId: commentId },
+    })
+}
+
+/**
+ * `PostCommentThread.onToggleCommentLike` for every COMMUNITY-backed thread (post feed,
+ * post detail, group post feed, subject discussion).
+ *
+ * ponytail: a module-level function, not a hook — its identity is already stable, it needs
+ * no cache and no session (the thread owns the optimistic state, the rollback and the guest
+ * gate), and rejecting is exactly the failure signal the thread waits for. A `useMutate…Swr`
+ * wrapper would add a file and a `useCallback` around one ternary.
+ */
+export const toggleCommentReaction = (commentId: string, nextLiked: boolean): Promise<void> =>
+    nextLiked ? reactToComment(commentId) : unreactComment(commentId)
+
+/**
  * Casts an upvote/downvote on a target.
  *
  * `PUT /api/v1/community/votes`

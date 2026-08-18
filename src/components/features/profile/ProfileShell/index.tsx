@@ -9,6 +9,7 @@ import {
     MapPinIcon,
     MedalIcon,
     ShareNetworkIcon,
+    StarIcon,
     TrophyIcon,
 } from "@phosphor-icons/react"
 import { usePathname, useRouter } from "@/i18n/navigation"
@@ -19,7 +20,7 @@ import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { StaffBadge } from "@/components/reuseable/StaffBadge"
 import { useViewerStaffRole } from "@/hooks/useViewerStaffRole"
 import { useQueryMyGamificationSwr } from "@/components/features/gamification/hooks/useQueryMyGamificationSwr"
-import { useBadgeLabel } from "@/components/features/gamification/useBadgeLabel"
+import { BadgeCatalogModal } from "../ProfileBadges/BadgeCatalogModal"
 import { useQueryProfileSwr } from "../hooks/useQueryProfileSwr"
 import { useQueryPublicProfileSwr } from "../hooks/useQueryPublicProfileSwr"
 
@@ -69,9 +70,7 @@ export const ProfileShell = ({ children }: ProfileShellProps) => {
     const pathname = usePathname()
     const { profile, isLoading, error, mutate } = useQueryProfileSwr()
     const { data: gamification } = useQueryMyGamificationSwr()
-    // Shared resolver — see `useBadgeLabel`. The identity card must never show a
-    // `gamification.milestones.<CODE>.name` path for a badge the catalog misses.
-    const badgeLabel = useBadgeLabel()
+    const [isBadgeCatalogOpen, setIsBadgeCatalogOpen] = React.useState(false)
     /**
      * The viewer's OWN staff role, read from the redux session rather than from the
      * profile payload: `GET /profiles/me` (`ProfileViews.SelfProfile`) carries no role
@@ -219,34 +218,35 @@ export const ProfileShell = ({ children }: ProfileShellProps) => {
                                         })}
                                     />
                                     {/*
-                                      * Huy hiệu dùng CHÍNH GamificationChip như 3 chip trước nó.
-                                      * Trước đây chúng là vòng tròn `size-8` (32px) tự chế nên cao
-                                      * hơn hẳn pill của chip (px-2 py-0.5 + icon size-4 = 20px) —
-                                      * cái thứ 4 trên hàng trông to hơn 3 cái đầu. Dùng chung block
-                                      * = chung hộp, không cần ép width/height.
+                                      * MỘT chip cho cả bộ huy hiệu, không phải mỗi huy hiệu một chip.
+                                      * Trước đây mỗi badge là một pill `TrophyIcon` + `value={null}`:
+                                      * trùng đúng icon với chip hạng ngay bên trái, lại không có chữ
+                                      * (tên chỉ nằm trong `title`/`sr-only`), nên hồ sơ 4 huy hiệu hiện
+                                      * ra 5 cái cúp y hệt nhau xếp hàng trong cột 288px. Gộp thành
+                                      * `⭐ N` mở `BadgeCatalogModal` sẵn có (fetch lazy theo `isOpen`).
+                                      * StarIcon là icon "Huy hiệu" của LeaderboardShell; TrophyIcon để
+                                      * dành riêng cho hạng.
+                                      *
+                                      * ponytail: thẻ nhận diện chỉ còn CON SỐ, không kèm tên từng huy
+                                      * hiệu — tên đã hiển thị đầy đủ ở tab Tiến độ, tab Portfolio và
+                                      * trong chính modal danh mục, nên không dựng thêm tooltip/list ở
+                                      * đây.
                                       */}
-                                    {gamification.badges.slice(0, 6).map((badge) => (
+                                    {gamification.badges.length > 0 ? (
                                         <GamificationChip
-                                            key={badge.id}
                                             icon={
-                                                <TrophyIcon
+                                                <StarIcon
                                                     weight="fill"
                                                     className="size-4"
                                                     aria-hidden
                                                     focusable="false"
                                                 />
                                             }
-                                            value={null}
-                                            label={badgeLabel(badge.badgeKey, badge.fallbackName)}
-                                        />
-                                    ))}
-                                    {gamification.badges.length > 6 ? (
-                                        <GamificationChip
-                                            icon={null}
-                                            value={`+${gamification.badges.length - 6}`}
-                                            label={t("profile.badgesMore", {
-                                                count: gamification.badges.length - 6,
+                                            value={gamification.badges.length}
+                                            label={t("profile.badgesCount", {
+                                                count: gamification.badges.length,
                                             })}
+                                            onPress={() => setIsBadgeCatalogOpen(true)}
                                         />
                                     ) : null}
                                 </div>
@@ -298,6 +298,10 @@ export const ProfileShell = ({ children }: ProfileShellProps) => {
                                     </Typography>
                                 </div>
                             ) : null}
+                            <BadgeCatalogModal
+                                isOpen={isBadgeCatalogOpen}
+                                onClose={() => setIsBadgeCatalogOpen(false)}
+                            />
                         </div>
                     ) : null}
                 </AsyncContent>

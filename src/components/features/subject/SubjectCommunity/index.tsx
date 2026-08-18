@@ -1,153 +1,40 @@
 "use client"
 
 import React, { useCallback, useState } from "react"
-import { Button, Typography } from "@heroui/react"
-import { useLocale, useTranslations } from "next-intl"
+import { Button, Modal, Typography } from "@heroui/react"
+import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
 import { useAppSelector } from "@/redux/hooks"
-import { UserLink } from "@/components/features/identity"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
-import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
-import {
-    PostEngagementBar,
-    DISCUSSION_ENGAGEMENT_ACTIONS,
-} from "@/components/reuseable/PostEngagementBar"
-import { PostCommentThread } from "@/components/reuseable/PostCommentThread"
-import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
+import { UserAvatar } from "@/components/reuseable/UserAvatar"
+import { DISCUSSION_ENGAGEMENT_ACTIONS } from "@/components/reuseable/PostEngagementBar"
+// FeedSkeleton đi kèm CommunityFeedRow: cùng render một giải phẫu card, nên phải là CÙNG MỘT
+// khối — bản sao riêng ở đây sẽ đứng im khi card bên kia đổi và tab môn nhảy khung khi tải xong.
+import { CommunityFeedRow, FeedSkeleton } from "@/components/features/community/CommunityFeed"
 import { RichTextEditor } from "@/components/reuseable/RichTextEditor"
 import { splitTitleFromMarkdown } from "@/components/reuseable/RichTextEditor/title"
-import { PostMediaGrid } from "@/components/blocks/feed/PostMediaGrid"
 import { PostImagePicker } from "@/components/blocks/feed/PostImagePicker"
 import type { MediaInput } from "@/modules/api/rest/community/types"
-import {
-    useQuerySubjectFeedSwr,
-    type FeedScope,
-    type SubjectPost,
-} from "../hooks/useQuerySubjectFeedSwr"
-import { useQuerySubjectPostCommentsSwr } from "../hooks/useQuerySubjectPostCommentsSwr"
-import { useMutateReactSubjectPostSwr } from "../hooks/useMutateReactSubjectPostSwr"
+import { useQuerySubjectFeedSwr, type FeedScope } from "../hooks/useQuerySubjectFeedSwr"
 import { useMutateCreateSubjectPostSwr } from "../hooks/useMutateCreateSubjectPostSwr"
-import { useMutateCreateSubjectPostCommentSwr } from "../hooks/useMutateCreateSubjectPostCommentSwr"
 import { useQuerySubjectSwr } from "../hooks/useQuerySubjectSwr"
 
-/** Feed scope tabs. */
-const SCOPES: Array<FeedScope> = ["forYou", "following", "trending"]
-
-/** One "Thảo luận" post row + inline comment thread. Like + comment ONLY. */
-const SubjectPostRow = ({
+/**
+ * Discussion composer — single body editor + images, publishing into the current subject.
+ * Rendered as the body of the composer MODAL, so it carries no surface of its own
+ * (`Modal.Dialog` already owns the border/padding) and no heading (that is the modal header).
+ */
+const SubjectComposer = ({
     subjectId,
-    scope,
-    post,
+    onSubmitted,
 }: {
     subjectId: string
-    scope: FeedScope
-    post: SubjectPost
+    /** Called after a post really landed — the modal closes on it. */
+    onSubmitted?: () => void
 }) => {
-    const tHub = useTranslations("communityHub")
-    const tCommon = useTranslations("common")
-    const locale = useLocale()
-    const currentUser = useAppSelector((state) => state.user.user)
-    const [expanded, setExpanded] = useState(false)
-    const [hasOpened, setHasOpened] = useState(false)
-    const reactPost = useMutateReactSubjectPostSwr(subjectId, scope)
-    const submitComment = useMutateCreateSubjectPostCommentSwr(subjectId, scope)
-    const { thread, isLoading, error, mutate } = useQuerySubjectPostCommentsSwr(
-        subjectId,
-        post.id,
-        hasOpened,
-        scope,
-    )
-
-    const regionId = `post-comments-${post.id}`
-    /**
-     * Name actually rendered — the mapper leaves `author` empty when the BE row carried no
-     * profile card, and `UserLink` would otherwise fall back to the raw author id.
-     */
-    const authorName = post.author || tCommon("unknownMember")
-
-    const onToggleComments = useCallback(() => {
-        setHasOpened(true)
-        setExpanded((prev) => !prev)
-    }, [])
-
-    // The comment is written through the community REST API (the GraphQL gateway is read-only);
-    // the hook owns the optimistic append + rollback on the discussion thread cache.
-    const onSubmit = useCallback(
-        async (body: string, parentCommentId?: string): Promise<boolean> =>
-            submitComment({
-                postId: post.id,
-                body,
-                authorLabel: locale === "vi" ? "Bạn" : "You",
-                authorUsername: currentUser?.username ?? "you",
-                justNowLabel: locale === "vi" ? "vừa xong" : "just now",
-                parentCommentId,
-            }),
-        [submitComment, post.id, locale, currentUser],
-    )
-
-    return (
-        <div className="flex flex-col rounded-2xl border border-separator">
-            <div className="flex flex-col gap-2 p-4">
-                <div className="flex items-center gap-3">
-                    <UserLink
-                        username={post.authorUsername}
-                        displayName={authorName}
-                        avatar={post.authorAvatar}
-                        hideName
-                        size="sm"
-                        classNames={{ avatar: "size-8" }}
-                    />
-                    <UserLink
-                        username={post.authorUsername}
-                        displayName={authorName}
-                        staffRole={post.authorStaffRole}
-                        showAvatar={false}
-                    />
-                    <Typography type="body-xs" color="muted">
-                        {post.timeLabel}
-                    </Typography>
-                </div>
-                <Typography type="body" weight="medium">
-                    {post.title}
-                </Typography>
-                <MarkdownContent markdown={post.snippet} />
-                <PostMediaGrid postId={post.id} media={post.media} imageAlt={tHub("composer.imageAlt")} />
-                {/* discussion = like + comment ONLY — no share, no save */}
-                <PostEngagementBar
-                    className="pt-1"
-                    actions={DISCUSSION_ENGAGEMENT_ACTIONS}
-                    likes={post.reactions}
-                    liked={post.liked}
-                    commentsCount={post.comments}
-                    onToggleLike={() => void reactPost(post.id)}
-                    onToggleComments={onToggleComments}
-                    commentsExpanded={expanded}
-                    commentsRegionId={regionId}
-                />
-            </div>
-            {expanded ? (
-                <div className="px-4 pb-4">
-                    <PostCommentThread
-                        regionId={regionId}
-                        comments={thread?.comments ?? []}
-                        isLoading={isLoading && !thread}
-                        hasError={!thread ? Boolean(error) : false}
-                        onRetry={() => void mutate()}
-                        onSubmit={onSubmit}
-                        onCollapse={onToggleComments}
-                        stickyComposerOnMobile
-                    />
-                </div>
-            ) : null}
-        </div>
-    )
-}
-
-/** Discussion composer — single body editor + images, publishing into the current subject. */
-const SubjectComposer = ({ subjectId, scope }: { subjectId: string; scope: FeedScope }) => {
     const t = useTranslations("subjects")
     const tHub = useTranslations("communityHub")
-    const submitPost = useMutateCreateSubjectPostSwr(subjectId, scope)
+    const submitPost = useMutateCreateSubjectPostSwr(subjectId)
     const [body, setBody] = useState("")
     const [media, setMedia] = useState<Array<MediaInput>>([])
     const [isUploading, setIsUploading] = useState(false)
@@ -175,20 +62,19 @@ const SubjectComposer = ({ subjectId, scope }: { subjectId: string; scope: FeedS
             setBody("")
             setMedia([])
             setImagesResetToken((token) => token + 1)
+            onSubmitted?.()
         }
-    }, [submitPost, body, media])
+    }, [submitPost, body, media, onSubmitted])
 
     return (
-        <div className="flex flex-col gap-3 rounded-2xl border border-separator p-4">
-            <Typography type="body-sm" weight="semibold">
-                {t("community.compose")}
-            </Typography>
+        <div className="flex flex-col gap-3">
             <RichTextEditor
                 value={body}
                 onChange={setBody}
                 toolbar="full"
                 placeholder={t("community.bodyField")}
                 minHeight={120}
+                autoFocus
             />
             <PostImagePicker
                 onChange={onImagesChange}
@@ -210,17 +96,25 @@ const SubjectComposer = ({ subjectId, scope }: { subjectId: string; scope: FeedS
 }
 
 /**
- * Subject workspace "Thảo luận" tab (renamed by subject-workspace-ia). A scope
- * filter over post rows carrying the shared engagement bar configured for
- * DISCUSSION (like + comment ONLY — no share, no save) with inline push-down
- * comment expansion. Reads go through `subjectWorkspace.community` (GraphQL); writes —
- * publishing a post and adding a comment — go through the community REST API, since a
- * discussion post IS a community post anchored to the subject.
+ * Subject workspace "Thảo luận" tab (renamed by subject-workspace-ia). The list is the
+ * SHARED community feed card ({@link CommunityFeedRow}) — a discussion post IS a community
+ * post anchored to the subject, so the tab gets the same detached cards, the same in-place
+ * detail modal and the same owner menu as `/community` instead of a second card that drifts.
+ * The engagement bar stays on the DISCUSSION preset (like + comment ONLY — no share, no save).
+ *
+ * Reads go through `subjectWorkspace.community` (GraphQL); writes — publishing a post and
+ * adding a comment — go through the community REST API.
  */
 export const SubjectCommunity = () => {
     const t = useTranslations("subjects")
     const { subjectId: code } = useParams<{ subjectId: string }>()
-    const [scope, setScope] = useState<FeedScope>("forYou")
+    const user = useAppSelector((state) => state.user.user)
+    // ponytail: composer mở trong modal, state cục bộ ngay tại đây — chỉ có ĐÚNG MỘT chỗ mở
+    // nó, và nó cần `subjectId` (thứ overlay store toàn cục của community không mang được).
+    const [isComposerOpen, setComposerOpen] = useState(false)
+    // ponytail: bỏ 3 tab lọc (Dành cho bạn / Đang theo dõi / Xu hướng) — thảo luận môn chỉ còn
+    // một feed. Giữ `scope` như hằng để chữ ký hook + cache key bên dưới không phải đổi.
+    const scope: FeedScope = "forYou"
     // The route segment is the course code, but `subjectWorkspace.community` (GraphQL)
     // keys on the subject UUID — resolve it via the detail fetch before querying the feed.
     const { subject, isLoading: subjectLoading } = useQuerySubjectSwr(code)
@@ -230,26 +124,47 @@ export const SubjectCommunity = () => {
 
     return (
         <div className="flex flex-col gap-6 p-6">
-            {/* scope filter — static chrome, stays outside the skeleton */}
-            <div className="flex flex-col gap-3">
-                <Typography type="h5" weight="bold">
-                    {t("community.title")}
-                </Typography>
-                <div className="flex flex-wrap gap-2">
-                    {SCOPES.map((item) => (
-                        <Button
-                            key={item}
-                            size="sm"
-                            variant={scope === item ? "secondary" : "ghost"}
-                            onPress={() => setScope(item)}
-                        >
-                            {t(`community.scopes.${item}`)}
-                        </Button>
-                    ))}
-                </div>
+            {/* heading — static chrome, stays outside the skeleton */}
+            <Typography type="h5" weight="bold">
+                {t("community.title")}
+            </Typography>
+
+            {/* Hàng mở composer, mirror của trigger bên /community: bấm vào là mở modal soạn bài. */}
+            <div className="flex items-center gap-3 rounded-2xl border border-default bg-surface px-4 py-4 shadow-sm">
+                <UserAvatar
+                    size="sm"
+                    className="size-9 shrink-0"
+                    username={user?.username}
+                    avatar={user?.avatar}
+                    seed={user?.email ?? user?.username}
+                />
+                <button
+                    type="button"
+                    className="min-w-0 flex-1 cursor-text text-left text-sm text-muted"
+                    onClick={() => setComposerOpen(true)}
+                >
+                    {t("community.bodyField")}
+                </button>
             </div>
 
-            <SubjectComposer subjectId={subjectId} scope={scope} />
+            <Modal isOpen={isComposerOpen} onOpenChange={setComposerOpen}>
+                <Modal.Backdrop>
+                    <Modal.Container>
+                        <Modal.Dialog>
+                            <Modal.CloseTrigger />
+                            <Modal.Header>
+                                <div className="text-2xl font-bold">{t("community.compose")}</div>
+                            </Modal.Header>
+                            <Modal.Body>
+                                <SubjectComposer
+                                    subjectId={subjectId}
+                                    onSubmitted={() => setComposerOpen(false)}
+                                />
+                            </Modal.Body>
+                        </Modal.Dialog>
+                    </Modal.Container>
+                </Modal.Backdrop>
+            </Modal>
 
             <AsyncContent
                 isLoading={isLoading && posts.length === 0}
@@ -265,11 +180,10 @@ export const SubjectCommunity = () => {
             >
                 <div className="flex flex-col gap-3">
                     {posts.map((post) => (
-                        <SubjectPostRow
+                        <CommunityFeedRow
                             key={post.id}
-                            subjectId={subjectId}
-                            scope={scope}
                             post={post}
+                            actions={DISCUSSION_ENGAGEMENT_ACTIONS}
                         />
                     ))}
                 </div>
@@ -277,12 +191,3 @@ export const SubjectCommunity = () => {
         </div>
     )
 }
-
-/** Loading skeleton — mirrors the discussion post rows. */
-const FeedSkeleton = () => (
-    <div className="flex flex-col gap-3">
-        {Array.from({ length: 3 }).map((_, index) => (
-            <Skeleton key={index} className="h-32 w-full rounded-2xl" />
-        ))}
-    </div>
-)

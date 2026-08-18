@@ -18,9 +18,11 @@ import {
     ConfirmDialog,
     PostEngagementBar,
     ReportDialog,
+    type EngagementActions,
     type ReportReasonCode,
 } from "@/components/reuseable/PostEngagementBar"
 import { PostCommentThread } from "@/components/reuseable/PostCommentThread"
+import { toggleCommentReaction } from "@/modules/api/rest/community"
 import { useCommunityComposerOverlayState } from "@/hooks/zustand/overlay/hooks"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
 import {
@@ -155,8 +157,14 @@ const CommunityFeedHeader = ({
     )
 }
 
-/** Loading skeleton — mirrors the post CARD anatomy so the feed never jumps. */
-const FeedSkeleton = () => (
+/**
+ * Loading skeleton — mirrors the post CARD anatomy so the feed never jumps.
+ *
+ * Exported because the subject workspace "Thảo luận" tab renders the SAME
+ * {@link CommunityFeedRow}: một bản sao riêng bên đó sẽ đứng im khi giải phẫu card ở đây đổi,
+ * và tab môn nhấp nháy khung cũ rồi vẽ lại khung mới — đúng cú giật khối này sinh ra để chặn.
+ */
+export const FeedSkeleton = () => (
     <div className="flex flex-col gap-3">
         {[0, 1, 2].map((index) => (
             <div
@@ -195,10 +203,20 @@ const FeedSkeleton = () => (
 export const CommunityFeedRow = ({
     post,
     isFollowing,
+    actions,
 }: {
     post: CommunityPost
     /** Whether the viewer already follows this author; `undefined` = not read yet. */
     isFollowing?: boolean
+    /**
+     * Which engagement buttons the bar renders. `undefined` (the default, and what
+     * `/community` passes) keeps the FULL bar — like + comment + share + save. A surface
+     * with a narrower contract hands its own preset down: the subject workspace "Thảo luận"
+     * tab passes `DISCUSSION_ENGAGEMENT_ACTIONS` (like + comment ONLY), which is the
+     * decision recorded in `PostEngagementBar/actions.ts` and also keeps the repost flow —
+     * it navigates to `/community/{id}` — from throwing the reader out of the subject.
+     */
+    actions?: EngagementActions
 }) => {
     const t = useTranslations("communityHub")
     const tCommon = useTranslations("common")
@@ -355,20 +373,29 @@ export const CommunityFeedRow = ({
                 </Link>
                 <PostMediaGrid postId={post.id} media={post.media} imageAlt={t("composer.imageAlt")} />
                 <PostEngagementBar
+                    actions={actions}
                     likes={post.likes}
                     liked={post.liked}
                     commentsCount={post.comments}
                     hideZeroCounts
                     onToggleLike={() => void reactPost(post.id, !post.liked)}
                     onToggleComments={onToggleComments}
-                    onRepost={() =>
-                        openQuote({
-                            id: post.id,
-                            author: authorName,
-                            authorUsername: post.authorUsername,
-                            title: post.title,
-                            snippet: post.snippet,
-                        })
+                    // 🔁 chỉ có ở bề mặt cho phép share. `PostEngagementBar` gác nút repost bằng
+                    // `onRepost != null` chứ KHÔNG đọc `actions.share` (mọi bề mặt khác đang dựa
+                    // vào đúng hành vi đó), nên bề mặt tắt share phải tự không truyền handler —
+                    // bằng không tab "Thảo luận" của môn vẫn hiện 🔁, và một lượt đăng lại sẽ
+                    // đẩy người đọc thẳng ra /community.
+                    onRepost={
+                        actions?.share === false
+                            ? undefined
+                            : () =>
+                                openQuote({
+                                    id: post.id,
+                                    author: authorName,
+                                    authorUsername: post.authorUsername,
+                                    title: post.title,
+                                    snippet: post.snippet,
+                                })
                     }
                     commentsExpanded={expanded}
                     commentsRegionId={regionId}
@@ -398,6 +425,7 @@ export const CommunityFeedRow = ({
                         error={error}
                         onRetry={() => void mutate()}
                         onSubmit={onSubmit}
+                        onToggleCommentLike={toggleCommentReaction}
                         onCollapse={onToggleComments}
                         stickyComposerOnMobile
                     />

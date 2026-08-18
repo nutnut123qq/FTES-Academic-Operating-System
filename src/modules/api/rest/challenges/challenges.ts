@@ -444,3 +444,27 @@ export const deleteChallengeComment = async (commentId: string): Promise<void> =
         url: `/challenges/comments/${commentId}`,
     })
 }
+
+/**
+ * Toggles the viewer's like on one challenge comment (V318). Idempotent: the BE holds a
+ * UNIQUE `(comment_id, user_id)`, so a repeated PUT is still one row.
+ *
+ * `PUT | DELETE /api/v1/challenges/comments/{commentId}/like`
+ *
+ * Not nested under the challenge — the comment id alone identifies it, same as
+ * {@link deleteChallengeComment}. The response carries `{ active, likeCount }`; the caller
+ * here ignores it because the thread already keeps its own optimistic counter.
+ *
+ * @param commentId - The comment to like / unlike.
+ * @param nextLiked - `true` to like, `false` to remove the like.
+ * @throws RestError 401 when signed out, 403 when the challenge gate rejects the viewer.
+ */
+export const toggleChallengeCommentLike = async (
+    commentId: string,
+    nextLiked: boolean,
+): Promise<void> => {
+    return restRequest<void>({
+        method: nextLiked ? "PUT" : "DELETE",
+        url: `/challenges/comments/${commentId}/like`,
+    })
+}

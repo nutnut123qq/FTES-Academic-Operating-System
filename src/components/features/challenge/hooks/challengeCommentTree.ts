@@ -45,6 +45,9 @@ export const buildOptimisticChallengeComment = (
     content,
     status: "VISIBLE",
     createdAt: new Date().toISOString(),
+    // A comment nobody has seen yet has no likes — the real values arrive with the POST answer.
+    likeCount: 0,
+    likedByMe: false,
     replies: [],
 })
 

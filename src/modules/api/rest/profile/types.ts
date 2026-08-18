@@ -161,6 +161,12 @@ export interface PublicProfile {
     certificates: Array<ProfileCertificateView>
     progress: ProfileProgressView | null
     counters: FollowCounters
+    /**
+     * Whether the CALLER follows this profile. Always `false` for anonymous visitors and
+     * when looking at your own profile (`PublicProfileAssembler.resolveFollowedByMe`), and
+     * it degrades to `false` rather than failing when the community module is unreachable.
+     */
+    isFollowedByMe: boolean
 }
 
 /** Body of `PATCH /api/v1/profiles/me` (null fields are ignored). */

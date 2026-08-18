@@ -46,6 +46,10 @@ export interface SubmitSubjectCommentInput {
  * no extra request), so the writer's comment carries their identity from the first frame
  * instead of renaming itself from "Bạn" to their real name when the refetch lands.
  *
+ * ponytail: MÃ CHẾT — tab Thảo luận nay render `CommunityFeedRow`, nên bình luận đi qua chính
+ * `useMutateCreatePostCommentSwr` của community. Để lại chờ một lượt dọn riêng (có test riêng,
+ * đừng xoá kèm trong cùng lượt).
+ *
  * @returns `submit(input)` resolving `true` on success, `false` on failure or a blocked guest —
  * `false` tells the composer to keep the draft.
  */

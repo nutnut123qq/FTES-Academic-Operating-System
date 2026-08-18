@@ -1,9 +1,11 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage, Tabs, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
+import { LocalStorage } from "@/modules/storage/local/storage"
+import { LocalStorageId } from "@/modules/storage/local/enums/id"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { ExtendedTabs } from "@/components/blocks/navigation/ExtendedTabs"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
@@ -13,6 +15,7 @@ import { useAppSelector } from "@/redux/hooks"
 import { useQueryPublicProfileSwr } from "../hooks/useQueryPublicProfileSwr"
 import { ProfileActivityTab } from "./ProfileActivityTab"
 import { ProfileCommunityTab } from "./ProfileCommunityTab"
+import { ProfileFollowButton } from "./ProfileFollowButton"
 import { ProfileInfoTab } from "./ProfileInfoTab"
 import { ProfileOverviewTab } from "./ProfileOverviewTab"
 import { ProfileStatsRow } from "./ProfileStatsRow"
@@ -79,12 +82,33 @@ export const ProfilePublic = () => {
      * `staffRole` to `PublicProfile` (see the handoff note). It renders nothing rather
      * than guessing — a wrong seal on a stranger is worse than a missing one.
      */
-    const staffRole =
+    /** Trang này có phải hồ sơ của CHÍNH người đang xem không (id khớp, hoặc handle khớp). */
+    const isSelf = Boolean(
         profile
             && ((viewer?.id && viewer.id === profile.userId)
-                || (viewer?.username && viewer.username === profile.username))
-            ? viewerStaffRole
-            : null
+                || (viewer?.username && viewer.username === profile.username)),
+    )
+    const staffRole = isSelf ? viewerStaffRole : null
+    /**
+     * `viewer` LUÔN null ở đầu mỗi lần tải cứng: redux không persist, và nó chỉ được set ở
+     * cuối `useQueryUserSwr` (GraphQL `me` rồi mới `GET /profiles/me`), trong khi trang này
+     * chỉ tốn một lượt REST. Trong cửa sổ đó `isSelf` là false, nên nếu chỉ dựa vào nó thì
+     * nút "Theo dõi" hiện ngay trên hồ sơ của CHÍNH MÌNH — bấm vào còn mở modal đăng nhập
+     * (`state.keycloak.authenticated` cũng chưa hydrate) dù người dùng đang đăng nhập.
+     *
+     * Còn token trong LocalStorage nghĩa là phiên đang RESOLVE chứ không phải vắng mặt —
+     * cùng phép đọc tiền-hydrate mà `Dashboard`/`AuthQueryOpener` dùng. Đọc SAU khi mount
+     * (localStorage là client-only) và khởi tạo lạc quan, nên nút chỉ xuất hiện khi đã chắc
+     * người xem là khách (hiện nút để họ biết chức năng tồn tại → modal đăng nhập) hoặc đã
+     * biết đích danh người xem là ai.
+     */
+    const [hasStoredToken, setHasStoredToken] = useState(true)
+    useEffect(() => {
+        setHasStoredToken(
+            Boolean(LocalStorage.getItemAsString(LocalStorageId.KeycloakAccessToken)),
+        )
+    }, [])
+    const isViewerUnknown = !viewer && hasStoredToken
 
     return (
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-6">
@@ -130,6 +154,9 @@ export const ProfilePublic = () => {
                                             </Typography>
                                         ) : null}
                                     </div>
+                                    {!isSelf && !isViewerUnknown ? (
+                                        <ProfileFollowButton profile={profile} />
+                                    ) : null}
                                 </div>
                                 {profile.about ? (
                                     <Typography

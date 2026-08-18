@@ -14,6 +14,7 @@ import {
 import { useTranslations } from "next-intl"
 import { usePathname, useRouter } from "@/i18n/navigation"
 import { CollapsibleSidebar } from "@/components/blocks/navigation/CollapsibleSidebar"
+import { SubjectWorkspaceRail } from "../SubjectWorkspaceRail"
 import { SidebarNavGroup } from "@/components/blocks/navigation/SidebarNavGroup"
 import { SidebarNavItem } from "@/components/blocks/navigation/SidebarNavItem"
 import { TabsCard } from "@/components/blocks/navigation/TabsCard"
@@ -196,13 +197,20 @@ export const SubjectWorkspaceShell = ({
                 </CollapsibleSidebar>
             </div>
 
-            {/* ponytail: cùng container canh giữa như mọi trang khác (PageContainer =
-                `mx-auto w-full max-w-6xl`). Từ `xl` rail đã ra khỏi flow nên `mx-auto`
-                ở đây canh giữa theo TÂM VIEWPORT — mở hay thu rail thì khối này đứng
-                yên tại chỗ. Trần `100vw - 34rem` (16rem rail + 1rem hở, nhân đôi cho
-                cân) là thứ giữ mép trái của nội dung luôn nằm ngoài rail: rộng ≥1696px
-                thì trần 72rem thắng và không ảnh hưởng gì. Trang tab tự lo padding. */}
-            <div className="mx-auto w-full min-w-0 max-w-6xl xl:max-w-[min(72rem,100vw_-_34rem)]">
+            {/* Nội dung ĂN HẾT khoảng giữa hai rail, không còn trần 72rem.
+                `100vw - 34rem` = 17rem mỗi bên (16rem rail + 1rem hở) — đúng bằng chỗ hai
+                rail chiếm, nên mép nội dung luôn dừng sát rail chứ không chui xuống dưới.
+                Trần `max-w-6xl` cũ khoá ở 1152px: tại 1920 khoảng trống giữa hai rail là
+                1396px nên nó bỏ phí 122px MỖI BÊN, và càng màn rộng càng phí.
+
+                `mx-auto` giữ lại cho dải dưới `xl`: ở đó rail còn nằm trong flow nên khối
+                này là một ô flex bình thường, canh giữa phần còn lại.
+
+                ponytail: bỏ trần nghĩa là trên màn siêu rộng (≥2560px) dòng văn bản dài
+                theo — đây là lựa chọn có chủ đích "chiếm toàn bộ chiều rộng". Muốn kẹp lại
+                thì đặt trần MỚI ở đây, đừng trả về 72rem (nó tính theo cỡ chữ, không theo
+                chỗ trống thật giữa hai rail). Trang tab tự lo padding. */}
+            <div className="mx-auto w-full min-w-0 xl:max-w-[calc(100vw_-_34rem)]">
                 {/* subject identity header — cover banner (ảnh bìa) then identity row */}
                 <header className={cn("border-b border-separator")}>
                     {/* CONTRACT A cover: an INSET banner (the subject's "ảnh bìa") —
@@ -288,6 +296,35 @@ export const SubjectWorkspaceShell = ({
                     />
                 </div>
                 {children}
+            </div>
+
+            {/* Cột PHẢI — gương của cột trái, cùng một khối định vị nên hai bên cư xử giống
+                hệt nhau: `md:sticky top-16` + `h-[calc(100dvh-4rem)]` dưới `xl`, `xl:fixed
+                right-0` từ 1280px trở lên để nó rời khỏi flow y như rail trái.
+
+                KHÔNG phải nới trần bề rộng nội dung: `xl:max-w-[min(72rem,100vw-34rem)]` ở
+                trên vốn đã trừ 17rem cho MỖI bên ("nhân đôi cho cân" trong docblock của nó),
+                nhưng trước nay chỉ bên trái có rail — 17rem bên phải bị bỏ trống. Rail này
+                rơi đúng vào chỗ đang để không, nên nội dung không hẹp đi một pixel nào.
+
+                Ẩn dưới `md` cùng ngưỡng với rail trái: dưới đó workspace dùng tab strip
+                ngang, nhét thêm một cột nữa là hết chỗ đọc.
+
+                ponytail: rail hiện ở CẢ 7 tab và KHÔNG ẩn thẻ trùng với tab đang mở (ví dụ
+                thẻ Challenges vẫn hiện khi đang ở tab Luyện tập). Rail là chỗ đứng yên để
+                nhảy đi nơi khác — đổi nội dung theo tab thì nó thành một phần của trang,
+                đúng thứ vừa gỡ bỏ. */}
+            <div className="hidden shrink-0 md:sticky md:top-16 md:block md:h-[calc(100dvh-4rem)] xl:fixed xl:right-0">
+                <CollapsibleSidebar
+                    title={t("rail.title")}
+                    collapseLabel={t("collapse")}
+                    expandLabel={t("expand")}
+                    storageKey="subject-workspace-rail-collapsed"
+                    side="right"
+                    className="h-full"
+                >
+                    <SubjectWorkspaceRail subjectId={subjectId} />
+                </CollapsibleSidebar>
             </div>
         </div>
     )

@@ -29,10 +29,10 @@ const postDocument = (id: string): DocumentNode =>
             `    media { id mediaType storageKey mimeType sortOrder }\n` +
             `    author { id username displayName avatarUrl staffRole }\n` +
             `    comments {\n` +
-            `      id\n      body\n      createdAt\n      parentCommentId\n` +
+            `      id\n      body\n      createdAt\n      parentCommentId\n      likeCount\n      likedByMe\n` +
             `      author { id username displayName avatarUrl staffRole }\n` +
             `      replies {\n` +
-            `        id\n        body\n        createdAt\n` +
+            `        id\n        body\n        createdAt\n        likeCount\n        likedByMe\n` +
             `        author { id username displayName avatarUrl staffRole }\n` +
             `      }\n` +
             `    }\n` +
@@ -48,6 +48,15 @@ export interface CommunityPostReplyNode {
     author: FeedPostAuthor
     body: string
     createdAt: string | null
+    /**
+     * Comment engagement (BE `PostComment.likeCount`/`likedByMe`, same
+     * `community.reactions` table as a post's, `target_type='COMMENT'`).
+     *
+     * Optional so a gateway that predates change `comment-reactions` — or a test fixture
+     * built before it — still typechecks; the mapper degrades to "no likes yet".
+     */
+    likeCount?: number
+    likedByMe?: boolean
 }
 
 /** A top-level comment on a post (BE `PostComment`) with its one-level replies. */

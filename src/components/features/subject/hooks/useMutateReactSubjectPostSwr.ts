@@ -16,6 +16,10 @@ import { subjectFeedKey, type FeedScope, type SubjectPost } from "./useQuerySubj
  * `["subject-feed", subjectId, locale, scope]` cache and rollback on failure. Guests get
  * the `AuthenticationModal` and nothing toggles.
  *
+ * ponytail: MÃ CHẾT — tab Thảo luận nay render `CommunityFeedRow`, và nút tym của nó đi qua
+ * `useMutateReactPostSwr` của community. Cache `["subject-feed", …]` mà hook này vá cũng không
+ * còn ai ghi vào. Để lại nguyên (cùng `SubjectPost`/`subjectFeedKey`) chờ một lượt dọn riêng.
+ *
  * @param subjectId - the owning subject id.
  * @param scope - the current feed scope so the optimistic update targets the right cache.
  */

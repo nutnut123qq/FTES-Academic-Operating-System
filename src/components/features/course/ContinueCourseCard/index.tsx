@@ -27,8 +27,8 @@ export interface ContinueCourseCardProps {
  * A course the viewer is part-way through, as shown on the home "Tiếp tục học" band
  * and on `/courses/me`.
  *
- * Layout is a ROW — thumbnail left, title + percent centre, resume CTA right, progress
- * meter spanning the foot — NOT the catalog card's full-width cover on top. A build
+ * Layout is a ROW — thumbnail left, title centre, resume CTA right, progress meter and
+ * its percent spanning the foot — NOT the catalog card's full-width cover on top. A build
  * shipped the stacked version and the card grew about three times taller, so one screen
  * held two courses instead of six; someone mid-course wants to spot the right one and
  * click on, not admire the artwork. The thumbnail is 128px (160px from `sm`): the 96/112px
@@ -70,7 +70,7 @@ export const ContinueCourseCard = ({
             // bám `prefers-color-scheme`), nên nhánh tối bắt theo class `.dark` trên <html>.
             className="group flex h-full flex-col gap-3 rounded-lg border border-[#E2E8F0] p-3 no-underline shadow-sm transition-colors hover:bg-default/40 [.dark_&]:border-white/15"
         >
-            {/* Hàng thông tin: [ảnh] │ [tiêu đề + %] │ [CTA] — bố cục NGANG, không phải
+            {/* Hàng thông tin: [ảnh] │ [tiêu đề] │ [CTA] — bố cục NGANG, không phải
                 cover full bề ngang như thẻ danh mục. Đây là chủ ý: ở đây người học đang
                 học dở, cần nhiều khoá lọt trong một màn để bấm tiếp, nên thẻ phải THẤP.
                 Có một quãng bản build để ảnh nằm trên full bề ngang — thẻ cao gấp ~3 và
@@ -105,15 +105,6 @@ export const ContinueCourseCard = ({
                     <Typography weight="semibold" className="line-clamp-2">
                         {title}
                     </Typography>
-                    {/* ponytail: "Hoàn thành x%" to hơn một bậc (xs → sm) và đậm hơn
-                        `--muted`: nó là con số người học tìm, không phải chú thích. Nền
-                        tối trả về token `muted` (xám sáng) — `#666666` ở đó là mù chữ. */}
-                    <Typography
-                        type="body-sm"
-                        className="text-[#666666] [.dark_&]:text-muted"
-                    >
-                        {t("courses.percentComplete", { percent: completionPercent })}
-                    </Typography>
                     {badge ? <div className="flex">{badge}</div> : null}
                 </div>
 
@@ -139,14 +130,37 @@ export const ContinueCourseCard = ({
             {/* ponytail: thanh cao gấp đôi (4px → 8px) và rãnh đậm hơn nền thẻ, nên phần
                 đã học (màu accent) đọc được từ xa thay vì là một sợi chỉ. Bóng lõm nhẹ để
                 rãnh không lẫn vào mặt thẻ; nền tối đổi rãnh sang trắng mờ. */}
-            <ProgressMeter
-                value={completionPercent}
-                max={100}
-                className="mt-auto"
-                classNames={{
-                    track: "h-2 bg-[#E2E8F0] shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] [.dark_&]:bg-white/15",
-                }}
-            />
+            {/* ponytail: con số % nằm CÙNG HÀNG, sát mép phải thanh (mirror
+                `SubjectWorkspaceShell`) thay vì đứng riêng trong cột chữ — mắt đọc thanh
+                xong bắt ngay số, không phải nhảy ngược lên. `ProgressMeter` giữ NGUYÊN:
+                bố cục sẵn có của nó là hàng label/% Ở TRÊN thanh và đang phục vụ 11 bề
+                mặt khác, đổi nó là rủi ro lan. `w-10 text-right tabular-nums` ghim bề
+                rộng cột số: "0%" và "100%" lệch nhau vài pixel, không ghim thì hai thẻ
+                cạnh nhau có thanh dài ngắn khác nhau. Chữ "Hoàn thành x%" chuyển vào
+                `aria-label` của thanh — phần nhìn thấy rút còn số trần, nhưng screen
+                reader vẫn nghe đủ nghĩa (trước đây thanh rơi về fallback "Progress"). */}
+            <div className="mt-auto flex items-center gap-2">
+                <ProgressMeter
+                    value={completionPercent}
+                    max={100}
+                    className="min-w-0 flex-1"
+                    aria-label={t("courses.percentComplete", {
+                        percent: completionPercent,
+                    })}
+                    classNames={{
+                        track: "h-2 bg-[#E2E8F0] shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] [.dark_&]:bg-white/15",
+                    }}
+                />
+                {/* ponytail: giữ nguyên cỡ/màu cũ của con số (sm + `#666666`, nền tối đảo
+                    về token `muted`) — nó là con số người học tìm, không phải chú thích,
+                    và `#666666` trên nền tối là mù chữ. */}
+                <Typography
+                    type="body-sm"
+                    className="w-10 shrink-0 text-right tabular-nums text-[#666666] [.dark_&]:text-muted"
+                >
+                    {`${completionPercent}%`}
+                </Typography>
+            </div>
         </Link>
     )
 }

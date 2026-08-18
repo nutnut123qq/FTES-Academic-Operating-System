@@ -83,6 +83,10 @@ export const toComment = (comment: SubjectCommunityCommentNode, locale: string):
 /**
  * Lazily loads a subject post's comment thread (only once expanded) from the real BE.
  *
+ * ponytail: MÃ CHẾT — tab Thảo luận nay render `CommunityFeedRow`, thread bình luận của nó đọc
+ * qua `useQueryPostCommentsSwr` của community. Để lại chờ một lượt dọn riêng (`toComment` vẫn
+ * có test riêng, đừng xoá kèm trong cùng lượt).
+ *
  * @param subjectId - the owning subject id.
  * @param postId - the subject post whose comments to load.
  * @param enabled - true once the post has been expanded at least once.

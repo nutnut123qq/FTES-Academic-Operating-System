@@ -53,6 +53,8 @@ export interface PublicProfile {
     projects: Array<ProjectView>
     achievements: Array<AchievementView>
     assets: Array<AssetView>
+    /** Whether the VIEWER follows this profile — `false` for guests and for your own page. */
+    isFollowedByMe: boolean
 }
 
 /**
@@ -111,7 +113,18 @@ export const toPublicProfile = (dto: PublicProfileDto, locale = "vi"): PublicPro
         (a, b) => (b.achievedAt ?? "").localeCompare(a.achievedAt ?? ""),
     ),
     assets: dto.assets ?? [],
+    isFollowedByMe: dto.isFollowedByMe ?? false,
 })
+
+/**
+ * Whether an arbitrary SWR key is a public-profile entry for `username` — EVERY locale
+ * variant of it, so the follow toggle patches them all instead of only the active one.
+ *
+ * @param key - any key from the SWR cache.
+ * @param username - the handle whose follow state changed.
+ */
+export const isPublicProfileKeyFor = (key: unknown, username: string): boolean =>
+    Array.isArray(key) && key[0] === "public-profile" && key[1] === username
 
 /** Loads a public profile by username from the real BE (`GET /profiles/{username}`). */
 export const useQueryPublicProfileSwr = (username: string) => {

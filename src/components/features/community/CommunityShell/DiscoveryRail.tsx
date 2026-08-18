@@ -1,16 +1,17 @@
 "use client"
 
-import React, { useState } from "react"
-import { Chip, Typography, cn, toast } from "@heroui/react"
+import React from "react"
+import { Chip, Typography, cn } from "@heroui/react"
 import { CalendarIcon, CaretRightIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
+import { InitialsAvatar } from "@/components/blocks/identity/InitialsAvatar"
 import { CommunityLiveChatRail } from "@/components/features/community/CommunityLiveChat"
 import { TYPE_ICON } from "@/components/features/event/typeIcons"
-import { useQueryPollSwr } from "../hooks/useQueryPollSwr"
-import { useMutatePollVoteSwr } from "../hooks/useMutatePollVoteSwr"
+import { useQueryLeaderboardSwr } from "@/components/features/gamification/hooks/useQueryLeaderboardSwr"
+import { formatXpShort } from "@/utils/xp-format"
 import { useQueryUpcomingEventsSwr, type UpcomingEvent } from "../hooks/useQueryUpcomingEventsSwr"
 
 /** One discovery panel shell: title row (+ optional see-all link) over content. */
@@ -46,88 +47,103 @@ const RailPanel = ({
     </section>
 )
 
-/** Compact in-place poll — REAL read + vote, mirroring `CommunityPoll` (server truth wins). */
-const QuickPoll = () => {
+/** Rail chỉ vừa 5 dòng — phần còn lại đi qua link "Xem tất cả" của panel. */
+const RAIL_LEADERS = 5
+
+/** Skeleton khớp 5 dòng xếp hạng — cùng ô hạng, cùng avatar tròn, cùng một dòng tên. */
+const TopLeadersSkeleton = () => (
+    <div className="flex flex-col gap-1">
+        {[0, 1, 2, 3, 4].map((row) => (
+            <div key={row} className="flex items-center gap-2 p-1">
+                <Skeleton className="h-3 w-4 shrink-0 rounded" />
+                <Skeleton className="size-8 shrink-0 rounded-full" />
+                <div className="min-w-0 flex-1">
+                    <Skeleton.Typography type="body-xs" width="2/3" />
+                </div>
+                <Skeleton className="h-3 w-8 shrink-0 rounded" />
+            </div>
+        ))}
+    </div>
+)
+
+/**
+ * Top 5 bảng xếp hạng toàn sàn — dữ liệu THẬT từ `leaderboard(scope: GLOBAL)` qua
+ * `useQueryLeaderboardSwr`, dùng chung cache SWR với trang `/leaderboard` và thẻ dashboard
+ * "Top học viên" nên rail không phát sinh request thứ hai.
+ *
+ * Rỗng là trạng thái nghỉ HỢP LỆ và có hai đường vào: khách chưa đăng nhập (hook không gọi
+ * query, `isLoading` cũng false) và mùa chưa trao XP nào (ZSET rỗng). Câu rỗng vì thế phải
+ * đúng cho cả hai — đừng viết "chưa có ai" hay "đăng nhập để xem".
+ *
+ * ponytail: bảng chỉ đọc — không phân trang, không lọc, hàng không bấm được. Rail hẹp nên
+ * mỗi dòng chỉ mang hạng · avatar chữ cái · tên · EXP rút gọn; đường đi tiếp nằm ở link
+ * "Xem tất cả". BE không trả level từng người nên không có dòng level.
+ */
+const TopLeaders = () => {
     const t = useTranslations("communityHub")
-    const { poll } = useQueryPollSwr()
-    const submitVote = useMutatePollVoteSwr()
-    const [localVotedId, setLocalVotedId] = useState<string | null>(null)
-
-    if (!poll) {
-        return null
-    }
-
-    // Server truth wins once revalidate lands; local id only covers the optimistic window.
-    const votedId = poll.myOptionId ?? localVotedId
-    const pending = localVotedId !== null && !poll.myOptionId
-    // Hết hạn thì BE từ chối mọi vote (`COMMUNITY_POLL_CLOSED`) — khoá click, chỉ hiện kết quả.
-    const isClosed = poll.closesAt != null && new Date(poll.closesAt).getTime() <= Date.now()
-
-    const onVote = (optionId: string) => {
-        if (votedId !== null || isClosed) {
-            return
-        }
-        setLocalVotedId(optionId)
-        submitVote(poll.postId, optionId)
-            .then((ok) => {
-                if (!ok) {
-                    setLocalVotedId(null)
-                }
-            })
-            .catch(() => {
-                setLocalVotedId(null)
-                toast.danger(t("poll.voteFailed"))
-            })
-    }
-
-    const extra = pending ? 1 : 0
-    const total = poll.options.reduce((sum, option) => sum + option.votes, 0) + extra
-    const percentOf = (option: { id: string; votes: number }) => {
-        const votes = option.votes + (pending && localVotedId === option.id ? 1 : 0)
-        return total === 0 ? 0 : Math.round((votes / total) * 100)
-    }
-    const revealed = votedId !== null || isClosed
+    const { board, myUserId, isLoading, error, mutate } = useQueryLeaderboardSwr()
+    const leaders = board.slice(0, RAIL_LEADERS)
 
     return (
-        <div className="flex flex-col gap-2">
-            <Typography type="body-sm">{poll.question}</Typography>
-            {poll.options.map((option) => (
-                <button
-                    key={option.id}
-                    type="button"
-                    disabled={isClosed}
-                    onClick={() => onVote(option.id)}
-                    className={cn(
-                        "relative overflow-hidden rounded-2xl border p-2 text-left transition-colors",
-                        votedId === option.id ? "border-accent" : "border-separator",
-                        !revealed && "hover:bg-default/40",
-                        isClosed && "cursor-default",
-                    )}
-                >
-                    {revealed ? (
+        <AsyncContent
+            isLoading={isLoading && leaders.length === 0}
+            skeleton={<TopLeadersSkeleton />}
+            error={leaders.length === 0 ? error : undefined}
+            errorContent={{
+                title: t("rail.leaderboardError"),
+                retryLabel: t("states.retry"),
+                onRetry: () => {
+                    void mutate()
+                },
+            }}
+            isEmpty={leaders.length === 0}
+            emptyContent={{ title: t("rail.leaderboardEmpty") }}
+        >
+            <div className="flex flex-col gap-1">
+                {leaders.map((entry) => {
+                    const isMe = entry.id === myUserId
+                    return (
                         <div
-                            className="absolute inset-y-0 left-0 bg-accent/10"
-                            style={{ width: `${percentOf(option)}%` }}
-                        />
-                    ) : null}
-                    <div className="relative flex items-center justify-between gap-2">
-                        <Typography type="body-xs" weight="medium">
-                            {option.label}
-                        </Typography>
-                        {revealed ? (
-                            <Typography type="body-xs" color="muted">
-                                {percentOf(option)}%
+                            key={entry.id}
+                            className={cn(
+                                "flex items-center gap-2 rounded-xl p-1",
+                                isMe && "bg-accent/10",
+                            )}
+                        >
+                            <Typography
+                                type="body-xs"
+                                weight="bold"
+                                className={cn(
+                                    "w-4 shrink-0 text-center tabular-nums",
+                                    isMe ? "text-accent" : "text-muted",
+                                )}
+                            >
+                                {entry.rank}
                             </Typography>
-                        ) : null}
-                    </div>
-                </button>
-            ))}
-            {isClosed ? (
-                <Typography type="body-xs" color="muted">
-                    {t("poll.closed")}
-                </Typography>
-            ) : null}
-        </div>
+                            <InitialsAvatar
+                                initials={entry.avatarInitials}
+                                className="size-8 text-xs"
+                            />
+                            <Typography
+                                type="body-xs"
+                                weight="medium"
+                                truncate
+                                className="min-w-0 flex-1"
+                            >
+                                {entry.name}
+                            </Typography>
+                            <Typography
+                                type="body-xs"
+                                color="muted"
+                                className="shrink-0 tabular-nums"
+                            >
+                                {t("rail.xp", { xp: formatXpShort(entry.xp) })}
+                            </Typography>
+                        </div>
+                    )
+                })}
+            </div>
+        </AsyncContent>
     )
 }
 
@@ -210,10 +226,9 @@ const UpcomingEvents = () => {
 }
 
 /**
- * Right community rail (`xl`+): the community poll with in-place voting, the three
- * nearest upcoming events, then the live chat. Poll votes and the event list are REAL
- * (`useQueryPollSwr` + `useMutatePollVoteSwr` + `useQueryUpcomingEventsSwr`); pure
- * composition otherwise.
+ * Right community rail (`xl`+): the global leaderboard's top five, the three nearest
+ * upcoming events, then the live chat. Both lists are REAL
+ * (`useQueryLeaderboardSwr` + `useQueryUpcomingEventsSwr`); pure composition otherwise.
  */
 export const DiscoveryRail = () => {
     const t = useTranslations("communityHub")
@@ -221,11 +236,11 @@ export const DiscoveryRail = () => {
     return (
         <div className="flex flex-col gap-3">
             <RailPanel
-                title={t("rail.poll")}
-                seeAllHref="/community/poll"
+                title={t("rail.leaderboard")}
+                seeAllHref="/leaderboard"
                 seeAllLabel={t("rail.seeAll")}
             >
-                <QuickPoll />
+                <TopLeaders />
             </RailPanel>
             <RailPanel
                 title={t("rail.events")}

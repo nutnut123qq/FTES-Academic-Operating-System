@@ -19,6 +19,7 @@ import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
 import { LinkPreview } from "@/components/reuseable/LinkPreview"
 import { CommunityPoll } from "../CommunityPoll"
 import { firstLinkUrl, unwrapAutolinks } from "./postLinks"
+import { CommentLoadError } from "@/components/reuseable/PostCommentThread/comment-load-error"
 import { useQueryPostDetailSwr } from "../hooks/useQueryPostDetailSwr"
 import { useMutateReactPostSwr } from "../hooks/useMutateReactPostSwr"
 import { useMutateCreatePostCommentSwr, type SubmitCommentInput } from "../hooks/useMutateCreatePostCommentSwr"
@@ -89,7 +90,7 @@ export const CommunityPostContent = ({
     const t = useTranslations("communityHub")
     const tCommon = useTranslations("common")
     const locale = useLocale()
-    const { post } = useQueryPostDetailSwr(postId)
+    const { post, isLoading, error, mutate } = useQueryPostDetailSwr(postId)
     const { meta } = useQueryPostMetaSwr(postId)
     const reactPost = useMutateReactPostSwr()
     const submitComment = useMutateCreatePostCommentSwr()
@@ -187,7 +188,22 @@ export const CommunityPostContent = ({
         [postId, acceptAnswer],
     )
 
-    if (!post) {
+    // A FAILED read is not a slow one. This used to be a single `!post` branch, so an
+    // expired session, a deleted post or a dropped connection all rendered the loading
+    // fallback — forever, with no way back. The reader saw a spinner that never resolved
+    // and nobody could tell "still fetching" from "already dead". Ask the hook which it is:
+    // it has always returned `error`/`isLoading`, they were simply never read.
+    if (error && !post) {
+        return (
+            <CommentLoadError
+                error={error}
+                onRetry={() => {
+                    void mutate()
+                }}
+            />
+        )
+    }
+    if (isLoading || !post) {
         return <>{loadingFallback}</>
     }
 

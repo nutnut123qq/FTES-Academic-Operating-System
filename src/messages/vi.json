@@ -8598,7 +8598,10 @@
                 "generic": "Có lỗi xảy ra khi chấm code. Vui lòng thử lại."
             },
             "reviewTitle": "Nhận xét của FrosTES",
-            "reviewScoreNote": "Điểm của bài do bộ test quyết định. Phần này là nhận xét chất lượng lời giải."
+            "reviewScoreNote": "Điểm của bài do bộ test quyết định. Phần này là nhận xét chất lượng lời giải.",
+            "testHidden": "đã ẩn",
+            "testHiddenTag": "Ẩn",
+            "testTruncated": "Đề có nhiều test case hơn một lượt chạy cho phép — {omitted} case chưa được chạy."
         },
         "contentMap": {
             "title": "Nội dung khóa học",

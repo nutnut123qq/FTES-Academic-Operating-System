@@ -2,7 +2,7 @@
 
 import React from "react"
 import { Chip, Typography, cn } from "@heroui/react"
-import { CheckCircleIcon, XCircleIcon } from "@phosphor-icons/react"
+import { CheckCircleIcon, LockSimpleIcon, XCircleIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import type { CodeExecutionSummary } from "@/modules/api/rest/ai"
 
@@ -13,6 +13,22 @@ export interface ExecutionResultTableProps {
     /** Extra classes. */
     className?: string
 }
+
+/**
+ * The cell of a HIDDEN case — data the learner is not allowed to read.
+ *
+ * Says "đã ẩn" rather than rendering nothing: an empty cell reads as "this case had no input",
+ * which is a different fact. The lock icon carries the same meaning for anyone scanning the
+ * column rather than reading it.
+ */
+const HiddenCell = ({ label }: { label: string }) => (
+    <span className="inline-flex items-center gap-1 text-muted">
+        <LockSimpleIcon aria-hidden focusable="false" className="size-3.5 shrink-0" />
+        <Typography type="body-xs" color="muted">
+            {label}
+        </Typography>
+    </span>
+)
 
 /** Renders one cell's raw value in monospace, or a muted placeholder when empty. */
 const CellValue = ({ value, empty }: { value: string | undefined, empty: string }) => {
@@ -29,11 +45,20 @@ const CellValue = ({ value, empty }: { value: string | undefined, empty: string 
 }
 
 /**
- * The per-case result grid of a sample-test run (`POST /ai/coding/run-tests`) — columns
+ * The per-case result grid of a test run (`POST /ai/coding/run-tests`) — columns
  * `#` / input / expected / actual / status, each row tinted by pass/fail, with a
  * passed/total summary chip. Reused wherever a {@link CodeExecutionSummary} is shown (the
- * sample "Chạy test" run in {@link GradeCodePanel}). Objective + model-independent: this is
+ * "Chạy test" run in {@link GradeCodePanel}). Objective + model-independent: this is
  * sandbox execution, NOT the LLM grade ({@link GradeResultCard}).
+ *
+ * HIDDEN CASES (run-all-test-cases): the run now covers the challenge's WHOLE test set, so most
+ * rows are cases the learner may not read. Those arrive already stripped by the server — no
+ * input, expected, actual or stderr, and a positional label instead of the authored name. This
+ * table renders that state EXPLICITLY ("đã ẩn") rather than as empty cells, because an empty
+ * cell reads as "the case had no input", which is a different and misleading thing.
+ *
+ * The row still shows pass/fail, verdict and time — the learner has to be able to see WHICH case
+ * broke and how, otherwise running the full set tells them nothing they can act on.
  */
 export const ExecutionResultTable = ({ summary, className }: ExecutionResultTableProps) => {
     const t = useTranslations("learn")
@@ -61,6 +86,14 @@ export const ExecutionResultTable = ({ summary, className }: ExecutionResultTabl
                     </Chip>
                 ) : null}
             </div>
+
+            {/* Trần CẮT bộ test: khác `aborted` (dừng giữa chừng) — phần bị bỏ chưa từng được gửi
+                đi chạy. Im lặng thì "50/50 đạt" đọc như đã chạy hết đề. */}
+            {summary.truncated ? (
+                <Typography type="body-xs" className="text-warning">
+                    {t("codeGrading.testTruncated", { omitted: summary.omitted ?? 0 })}
+                </Typography>
+            ) : null}
 
             {/* Dừng sớm (hết ngân sách / quá nhiều timeout liên tiếp): số case chạy được ÍT HƠN số
                 case thật, nên phải nói rõ — nếu không, người học tưởng đã chạy hết và chỉ sai bấy nhiêu. */}
@@ -115,6 +148,9 @@ export const ExecutionResultTable = ({ summary, className }: ExecutionResultTabl
                                 // ưu tiên nhãn, fallback mã để engine/bản cũ vẫn hiển thị được.
                                 const statusText =
                                     result.status_label?.trim() || result.status?.trim() || ""
+                                // Server đã gỡ dữ liệu của case ẩn; ở đây chỉ quyết định NÓI GÌ vào
+                                // chỗ trống đó. Cờ vắng mặt = backend cũ ⇒ đọc như case mẫu.
+                                const isHidden = result.hidden === true
                                 return (
                                     <tr
                                         key={index}
@@ -124,27 +160,46 @@ export const ExecutionResultTable = ({ summary, className }: ExecutionResultTabl
                                         )}
                                     >
                                         <td className="whitespace-nowrap px-3 py-2 align-top">
-                                            <Typography type="body-sm" weight="medium">
-                                                {index + 1}
-                                            </Typography>
+                                            <div className="flex items-center gap-2">
+                                                <Typography type="body-sm" weight="medium">
+                                                    {index + 1}
+                                                </Typography>
+                                                {isHidden ? (
+                                                    <Chip size="sm" variant="soft">
+                                                        {t("codeGrading.testHiddenTag")}
+                                                    </Chip>
+                                                ) : null}
+                                            </div>
                                         </td>
                                         <td className="px-3 py-2 align-top">
-                                            <CellValue
-                                                value={result.input}
-                                                empty={t("codeGrading.testEmpty")}
-                                            />
+                                            {isHidden ? (
+                                                <HiddenCell label={t("codeGrading.testHidden")} />
+                                            ) : (
+                                                <CellValue
+                                                    value={result.input}
+                                                    empty={t("codeGrading.testEmpty")}
+                                                />
+                                            )}
                                         </td>
                                         <td className="px-3 py-2 align-top">
-                                            <CellValue
-                                                value={result.expected}
-                                                empty={t("codeGrading.testEmpty")}
-                                            />
+                                            {isHidden ? (
+                                                <HiddenCell label={t("codeGrading.testHidden")} />
+                                            ) : (
+                                                <CellValue
+                                                    value={result.expected}
+                                                    empty={t("codeGrading.testEmpty")}
+                                                />
+                                            )}
                                         </td>
                                         <td className="px-3 py-2 align-top">
-                                            <CellValue
-                                                value={result.actual}
-                                                empty={t("codeGrading.testEmpty")}
-                                            />
+                                            {isHidden ? (
+                                                <HiddenCell label={t("codeGrading.testHidden")} />
+                                            ) : (
+                                                <CellValue
+                                                    value={result.actual}
+                                                    empty={t("codeGrading.testEmpty")}
+                                                />
+                                            )}
                                             {/* Lý do case chết (lỗi biên dịch / message DB như
                                                 "Invalid object name 'sinh_vien'."). Sandbox vẫn
                                                 trả về nhưng bảng trước đây bỏ đi, nên một case

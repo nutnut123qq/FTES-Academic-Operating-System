@@ -8598,7 +8598,10 @@
                 "generic": "Something went wrong while grading. Please try again."
             },
             "reviewTitle": "FrosTES review",
-            "reviewScoreNote": "The score comes from the test cases. This is a review of the solution's quality."
+            "reviewScoreNote": "The score comes from the test cases. This is a review of the solution's quality.",
+            "testHidden": "hidden",
+            "testHiddenTag": "Hidden",
+            "testTruncated": "This problem has more test cases than one run allows — {omitted} were not run."
         },
         "contentMap": {
             "title": "Course content",

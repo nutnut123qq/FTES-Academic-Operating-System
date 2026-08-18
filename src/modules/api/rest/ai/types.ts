@@ -239,6 +239,17 @@ export interface ExecutionCaseResult {
     stderr?: string
     /** Output bị cắt vì vượt trần (`output_max_bytes`). */
     truncated?: boolean
+    /**
+     * Case ẨN của đề (run-all-test-cases). Nút "Chạy test" nay chạy TOÀN BỘ bộ test phía server,
+     * nên kết quả có cả case học viên không được đọc: với những dòng này server đã GỠ
+     * `input`/`expected`/`actual`/`stderr` và thay `name` bằng nhãn vị trí.
+     *
+     * Cờ có mặt trên MỌI dòng (cả case mẫu, `false`) — suy "ẩn" từ việc thiếu `input` sẽ sai với
+     * một case mẫu có input rỗng thật. Vắng cờ = backend cũ ⇒ mọi dòng đọc như case mẫu.
+     */
+    hidden?: boolean
+    /** Nhãn của case — case ẩn nhận nhãn theo vị trí, không phải tên người soạn đề đặt. */
+    name?: string
 }
 
 /** Sandbox execution block of a grade/execute response. */
@@ -253,6 +264,13 @@ export interface CodeExecutionSummary {
     aborted?: boolean
     /** Lý do dừng sớm, vd `BUDGET_EXCEEDED` | `TOO_MANY_TIMEOUTS`. */
     abort_reason?: string
+    /**
+     * Bộ test bị TRẦN cắt bớt (run-all-test-cases) — khác `aborted` (dừng giữa chừng): ở đây phần
+     * bị bỏ chưa từng được gửi đi chạy. Không nói ra thì "50/50 đạt" đọc như đã chạy hết đề.
+     */
+    truncated?: boolean
+    /** Số case bị trần bỏ lại. */
+    omitted?: number
 }
 
 /** One LLM-graded criterion row. */

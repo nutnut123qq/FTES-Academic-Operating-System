@@ -4228,7 +4228,7 @@
                 "course": "EXP you earned INSIDE one course, ranked against that course’s own learners."
             },
             "countsLabel": "What this board counts",
-            "whyDifferent": "Your rank differs between the two boards because each one counts a different SLICE of EXP — not because the system miscounted.",
+            "whyDifferent": "Your rank differs between boards because each one counts a different SLICE of EXP — not because the system miscounted.",
             "xp": "{xp} EXP",
             "you": "You",
             "myRank": "Your rank this term: {rank}",

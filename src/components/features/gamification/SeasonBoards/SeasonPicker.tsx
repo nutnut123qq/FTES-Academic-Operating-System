@@ -6,6 +6,7 @@ import { CalendarBlankIcon, CaretDownIcon } from "@phosphor-icons/react"
 import { Dropdown, Label, cn } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { LIFETIME_SEASON, type SeasonOptionView } from "@/modules/api/rest/gamification"
+import { seasonDisplayName } from "./model"
 
 /** Props for {@link SeasonPicker}. */
 export interface SeasonPickerProps {
@@ -39,13 +40,17 @@ export const SeasonPicker = ({ seasons, value, onChange, currentLabel }: SeasonP
     const selectedKey = value ?? CURRENT
     const isLifetime = value === LIFETIME_SEASON
 
-    /** Nhãn của một kỳ: tên đọc được, rơi về mã khi kỳ chưa đồng bộ (V356). */
-    const seasonLabel = (season: SeasonOptionView) => season.name?.trim() || season.code
+    /**
+     * Nhãn của một kỳ. Đi qua {@link seasonDisplayName} nên KHÔNG bao giờ in mã thô; kỳ chưa
+     * đồng bộ tên (V356) hiện phần mã kỳ cắt ra ("SU26") thay vì "T-SU26-bfd6f768".
+     */
+    const seasonLabel = (season: SeasonOptionView) =>
+        seasonDisplayName(season.name, season.code) ?? t("current")
 
     const triggerLabel = isLifetime
         ? t("lifetime")
         : value === null
-            ? currentLabel ?? t("current")
+            ? seasonDisplayName(null, currentLabel) ?? t("current")
             : seasonLabel(seasons.find((s) => s.code === value) ?? ({ code: value, name: null } as SeasonOptionView))
 
     const onSelectionChange = (keys: Selection) => {

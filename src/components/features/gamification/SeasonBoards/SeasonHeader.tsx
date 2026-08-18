@@ -5,6 +5,7 @@ import { Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { CalendarBlankIcon, ClockIcon, InfinityIcon } from "@phosphor-icons/react"
 import { formatXpShort } from "@/utils/xp-format"
+import { seasonDisplayName } from "./model"
 
 /** Props for {@link SeasonHeader}. */
 export interface SeasonHeaderProps {
@@ -86,7 +87,11 @@ export const SeasonHeader = ({
         return null
     }
 
-    const title = lifetime ? t("picker.lifetime") : seasonName?.trim() || seasonCode
+    // KHÔNG in mã thô: kỳ chưa có tên thì cắt phần mã kỳ ra ("SU26"); không có cả thứ đó thì nói
+    // "Kỳ đang chạy" — chứ không dội lại đúng chuỗi băm mà ô chọn mùa ngay trên vừa hiện.
+    const title = lifetime
+        ? t("picker.lifetime")
+        : seasonDisplayName(seasonName, seasonCode) ?? t("picker.current")
 
     return (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-separator p-4">

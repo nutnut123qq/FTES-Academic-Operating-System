@@ -107,6 +107,23 @@ export const SeasonBoards = () => {
                 </Typography>
             </div>
 
+            {/* Dải mùa giải ĐỨNG TRƯỚC hai nút: câu hỏi đầu tiên của người mở trang là "mình
+                đang đứng đâu, kỳ này còn bao lâu", không phải "đổi sang bảng nào". Đặt nút lên
+                trước là bắt người ta lướt qua một hàng điều khiển mới tới được câu trả lời.
+                Lát cắt khoá học không đi qua endpoint này nên không có kỳ để hiện — vẽ dải ở đó
+                là hiện số của bảng KHÁC ngay trên bảng đang xem. */}
+            {isCourseScope ? null : (
+                <SeasonHeader
+                    seasonCode={seasonCode}
+                    seasonName={seasonName}
+                    endsAt={endsAt}
+                    lifetime={lifetime}
+                    noSeason={outcome === "NO_SEASON"}
+                    myRank={myRank}
+                    myXp={myXp}
+                />
+            )}
+
             {/* HAI nút điều khiển, hết. Trước đợt này trang có mười hai: ba nút kỳ hạn mục
                 tiêu, ba nút chỉ số, ô nhập, nút lưu, hai tab, ô chọn khoá và một link mở
                 bảng khoá. Khối mục tiêu đã dọn sang trang hồ sơ (nó là việc riêng của từng
@@ -151,21 +168,6 @@ export const SeasonBoards = () => {
                     </ExtendedTabs>
                 </div>
             </div>
-
-            {/* Dải mùa giải: kỳ nào · còn bao lâu · bạn đứng đâu. Lát cắt khoá học không đi
-                qua endpoint này nên không có kỳ để hiện — vẽ dải ở đó là hiện số của bảng
-                KHÁC ngay bên trên bảng đang xem. */}
-            {isCourseScope ? null : (
-                <SeasonHeader
-                    seasonCode={seasonCode}
-                    seasonName={seasonName}
-                    endsAt={endsAt}
-                    lifetime={lifetime}
-                    noSeason={outcome === "NO_SEASON"}
-                    myRank={myRank}
-                    myXp={myXp}
-                />
-            )}
 
             {/* "Bảng này đếm gì" — phần bắt buộc, không phải trang trí. Người hạng 3 bảng
                 này mà hạng 40 bảng kia sẽ đọc thành "hệ thống tính sai" nếu không có nó. */}

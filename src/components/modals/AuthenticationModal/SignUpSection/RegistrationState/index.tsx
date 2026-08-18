@@ -17,6 +17,7 @@ import {
     Spinner,
 } from "@heroui/react"
 import { useTranslations } from "next-intl"
+import { FederatedAuthButtons } from "../../FederatedAuthButtons"
 import { EmailField } from "./EmailField"
 import { FullNameField } from "./FullNameField"
 import { UsernameField } from "./UsernameField"
@@ -30,6 +31,8 @@ import { useSignUpForm } from "@/hooks/zustand/signUp/useSignUpForm"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 import { Turnstile } from "@/components/reuseable/Turnstile"
 import { publicEnv } from "@/resources/env/public"
+import { useAuthenticationOverlayState } from "@/hooks/zustand/overlay/hooks"
+import { useFederatedLoginComplete } from "@/hooks/auth"
 
 /** Props for {@link RegistrationState}; no own props (singleton-driven). */
 export type RegistrationStateProps = WithClassNames<undefined>
@@ -40,6 +43,8 @@ export type RegistrationStateProps = WithClassNames<undefined>
 export const RegistrationState = () => {
     const dispatch = useAppDispatch()
     const t = useTranslations()
+    const { close: onAuthenticationClose } = useAuthenticationOverlayState()
+    const completeFederatedLogin = useFederatedLoginComplete()
     const {
         values,
         errors,
@@ -51,6 +56,15 @@ export const RegistrationState = () => {
         resetForm,
         isValid,
     } = useSignUpForm()
+
+    /**
+     * Google signup === Google login (the BE creates on first use): close the modal, then run
+     * the shared federated gate so a brand-new account is forced to set a password.
+     */
+    const onGoogleSuccess = useCallback(() => {
+        onAuthenticationClose()
+        void completeFederatedLogin()
+    }, [onAuthenticationClose, completeFederatedLogin])
 
     const onChangeEmail = useCallback(
         (value: string) => {
@@ -194,6 +208,8 @@ export const RegistrationState = () => {
                 </div>
             </Modal.Header>
             <Modal.Body>
+                <FederatedAuthButtons onGoogleSuccess={onGoogleSuccess} />
+
                 {/* Real <form> so Enter inside a field submits (mirrors the sign-in tab). */}
                 <form onSubmit={onSubmit} noValidate>
                     <FullNameField

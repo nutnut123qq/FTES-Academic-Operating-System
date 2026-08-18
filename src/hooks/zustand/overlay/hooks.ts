@@ -9,6 +9,7 @@ import {
     type CommunityQuoteContext,
     type CommunityPhotoContext,
     type SessionRevokeContext,
+    type ForcedSetPasswordContext,
     type AnchorRect,
     type ContentAiMessage,
 } from "./store"
@@ -220,6 +221,28 @@ export const useAdModalOverlayState = () => {
  * stashes it so the global modal (mounted in `ModalContainer`) can render it.
  * @returns the overlay handle plus `context` and `open(context)`.
  */
+/**
+ * Forced set-password gate overlay — the base handle plus a serializable CONTEXT
+ * ({@link ForcedSetPasswordContext}) describing where to go once the password is set.
+ * The global {@link ForcedSetPasswordModal} (mounted in `ModalContainer`) reads it and owns
+ * the `POST /identity/password/set` mutation, so both providers share one implementation.
+ * @returns the overlay handle plus `context` and `open(context)`.
+ */
+export const useForcedSetPasswordOverlayState = () => {
+    const base = useOverlayHandle("forcedSetPassword")
+    const context = useOverlayStore((state) => state.forcedSetPasswordContext)
+    const setContext = useOverlayStore((state) => state.setForcedSetPasswordContext)
+    const openOverlay = useOverlayStore((state) => state.openOverlay)
+    const open = useCallback(
+        (next: ForcedSetPasswordContext) => {
+            setContext(next)
+            openOverlay("forcedSetPassword")
+        },
+        [setContext, openOverlay],
+    )
+    return { ...base, open, context }
+}
+
 export const useFollowListOverlayState = () => {
     const base = useOverlayHandle("followList")
     const context = useOverlayStore((state) => state.followListContext)

@@ -5,13 +5,15 @@ import { Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { ChangeEmailSection } from "./ChangeEmailSection"
 import { ChangePasswordSection } from "./ChangePasswordSection"
+import { LinkedAccountsSection } from "./LinkedAccountsSection"
 import { TwoFactorSection } from "./TwoFactorSection"
 
 /**
  * SecuritySection — "Bảo mật" section of settings:
  * 1. Email address management
  * 2. Password change (discrete summary card with modal)
- * 3. Two-factor authentication (2FA)
+ * 3. Linked federated accounts (Google / GitHub)
+ * 4. Two-factor authentication (2FA)
  */
 export const SecuritySection = () => {
     const t = useTranslations()
@@ -29,6 +31,7 @@ export const SecuritySection = () => {
 
             <ChangeEmailSection />
             <ChangePasswordSection />
+            <LinkedAccountsSection />
             <TwoFactorSection />
         </section>
     )

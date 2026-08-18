@@ -2,7 +2,11 @@ import { restRequest } from "@/modules/api/rest/client"
 import type {
     ChangePasswordRequest,
     ForgotPasswordRequest,
+    GithubCodeRequest,
     GoogleLoginRequest,
+    IdentityMe,
+    LinkedAccount,
+    LinkedAccountProvider,
     MessageResponse,
     MfaActivateRequest,
     MfaActivateResponse,
@@ -19,6 +23,7 @@ import type {
     ResendVerificationRequest,
     ResetPasswordRequest,
     SessionView,
+    SetPasswordRequest,
     TokenResponse,
     VerifyEmailRequest,
 } from "./types"
@@ -133,6 +138,25 @@ export const loginWithGoogle = async (
     return restRequest<TokenResponse>({
         method: "POST",
         url: "/auth/google",
+        data: request,
+    })
+}
+
+/**
+ * Logs in (or signs up on first use) with a GitHub OAuth authorization code.
+ *
+ * The shape mirrors {@link loginWithGoogle}: a public endpoint that returns the same
+ * {@link TokenResponse} token pair. The FE obtains `code` via the GitHub redirect flow
+ * and posts it here from the callback route (no session required).
+ *
+ * `POST /api/v1/auth/github`
+ */
+export const loginWithGithub = async (
+    request: GithubCodeRequest,
+): Promise<TokenResponse> => {
+    return restRequest<TokenResponse>({
+        method: "POST",
+        url: "/auth/github",
         data: request,
     })
 }
@@ -294,6 +318,89 @@ export const changePassword = async (
     return restRequest<void>({
         method: "PUT",
         url: "/identity/password",
+        data: request,
+    })
+}
+
+// ---------------------------------------------------------------- Account / federated linking (authenticated)
+
+/**
+ * Returns the caller's identity snapshot, including whether a password credential exists.
+ *
+ * The forced-set-password gate reads `hasPassword`: right after a Google/GitHub login the
+ * FE calls this and, when `false`, makes the user create a password before proceeding.
+ *
+ * `GET /api/v1/identity/me`
+ */
+export const getIdentityMe = async (): Promise<IdentityMe> => {
+    return restRequest<IdentityMe>({
+        method: "GET",
+        url: "/identity/me",
+        authenticated: true,
+    })
+}
+
+/**
+ * Creates a password for an account that has none (a federated-only login).
+ *
+ * Returns 409 `IDENTITY_CREDENTIAL_ALREADY_SET` when the account already has a password —
+ * use {@link changePassword} for that case instead.
+ *
+ * `POST /api/v1/identity/password/set`
+ */
+export const setPassword = async (
+    request: SetPasswordRequest,
+): Promise<MessageResponse> => {
+    return restRequest<MessageResponse>({
+        method: "POST",
+        url: "/identity/password/set",
+        data: request,
+    })
+}
+
+/**
+ * Lists the caller's linked federated identities (Google / GitHub).
+ *
+ * `GET /api/v1/identity/linked-accounts`
+ */
+export const getLinkedAccounts = async (): Promise<Array<LinkedAccount>> => {
+    return restRequest<Array<LinkedAccount>>({
+        method: "GET",
+        url: "/identity/linked-accounts",
+        authenticated: true,
+    })
+}
+
+/**
+ * Unlinks a federated provider from the caller.
+ *
+ * Returns 409 `IDENTITY_CANNOT_UNLINK_LAST_LOGIN` when it is the only login method of a
+ * passwordless account, and 404 `IDENTITY_IDENTITY_NOT_LINKED` when nothing is linked for
+ * that provider.
+ *
+ * `DELETE /api/v1/identity/linked-accounts/{provider}`
+ */
+export const unlinkAccount = async (
+    provider: LinkedAccountProvider,
+): Promise<MessageResponse> => {
+    return restRequest<MessageResponse>({
+        method: "DELETE",
+        url: `/identity/linked-accounts/${provider}`,
+    })
+}
+
+/**
+ * Links a GitHub account to the CURRENT user (no session hand-off — the caller is already
+ * authenticated). Uses the same `code` the GitHub redirect flow returns.
+ *
+ * `POST /api/v1/identity/linked-accounts/github`
+ */
+export const linkGithub = async (
+    request: GithubCodeRequest,
+): Promise<MessageResponse> => {
+    return restRequest<MessageResponse>({
+        method: "POST",
+        url: "/identity/linked-accounts/github",
         data: request,
     })
 }

@@ -39,7 +39,7 @@ export const SeasonPicker = ({ seasons, value, onChange, currentLabel }: SeasonP
     const selectedKey = value ?? CURRENT
     const isLifetime = value === LIFETIME_SEASON
 
-    /** Nhãn của một kỳ: tên đọc được, rơi về mã khi kỳ chưa đồng bộ (V354). */
+    /** Nhãn của một kỳ: tên đọc được, rơi về mã khi kỳ chưa đồng bộ (V356). */
     const seasonLabel = (season: SeasonOptionView) => season.name?.trim() || season.code
 
     const triggerLabel = isLifetime

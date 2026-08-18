@@ -51,7 +51,7 @@ export const useQuerySeasonBoardSwr = ({
         myXp: data?.entries.find((entry) => entry.userId === viewerUserId)?.xp ?? null,
         /** Mã kỳ backend đã đọc; `null` khi không có kỳ nào đang chạy. */
         seasonCode: data?.seasonCode ?? null,
-        /** Tên kỳ đọc được (V354); `null` ⇒ tầng vẽ rơi về `seasonCode`. */
+        /** Tên kỳ đọc được (V356); `null` ⇒ tầng vẽ rơi về `seasonCode`. */
         seasonName: data?.seasonName ?? null,
         /** Ngày chốt kỳ, cho đếm ngược; `null` ở bảng tích luỹ. */
         endsAt: data?.endsAt ?? null,

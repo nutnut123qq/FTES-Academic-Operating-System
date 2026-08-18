@@ -45,7 +45,7 @@ describe("SeasonHeader", () => {
     it("có TÊN kỳ ⇒ hiện tên, KHÔNG hiện mã thô", () => {
         // Mã kỳ được dựng dạng `T-<mã kỳ>-<8 ký tự băm>` (SeasonTermSyncService) nên nó
         // KHÔNG phải thứ để đọc — người dùng đã nhìn thấy nguyên chuỗi "T-SU26-bfd6f768"
-        // trên trang thật. Có tên (V354) thì tên phải thắng.
+        // trên trang thật. Có tên (V356) thì tên phải thắng.
         render(<SeasonHeader seasonCode="T-SU26-bfd6f768" seasonName="Kỳ Summer 2026" noSeason={false} />)
         expect(screen.getByText("Kỳ Summer 2026")).toBeTruthy()
         expect(screen.queryByText("T-SU26-bfd6f768")).toBeNull()

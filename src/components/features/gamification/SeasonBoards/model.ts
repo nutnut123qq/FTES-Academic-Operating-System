@@ -129,7 +129,7 @@ export interface SeasonBoardRow {
 /**
  * Đổi một dòng máy chủ thành {@link SeasonBoardRow}.
  *
- * Danh tính do backend gắn từ V354 (`SeasonBoardController#withIdentity`). Trước đó dòng
+ * Danh tính do backend gắn từ V356 (`SeasonBoardController#withIdentity`). Trước đó dòng
  * chỉ có `(userId, xp, rank)` nên bảng vẽ mọi người thành mã rút gọn — và KHUNG VIỀN,
  * thứ cả cơ chế mùa giải dựng lên để trao, không có đường nào hiện lên chính cái bảng
  * trao nó.

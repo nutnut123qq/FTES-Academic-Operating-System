@@ -10,7 +10,7 @@ import { formatXpShort } from "@/utils/xp-format"
 export interface SeasonHeaderProps {
     /** Mã kỳ backend đã đọc (`seasonCode`); `null` = không có kỳ nào đang chạy. */
     seasonCode: string | null
-    /** Tên kỳ đọc được (V354); `null` ⇒ rơi về {@link SeasonHeaderProps.seasonCode}. */
+    /** Tên kỳ đọc được (V356); `null` ⇒ rơi về {@link SeasonHeaderProps.seasonCode}. */
     seasonName?: string | null
     /** Thời điểm chốt kỳ (ISO). `null` ở bảng tích luỹ — nó không bao giờ chốt. */
     endsAt?: string | null

@@ -30,7 +30,7 @@ Ngoài số nút, ba cơ chế đã chốt không hiện được lên trang:
 
 ## Phụ thuộc
 
-Backend PR #151 (V354). Chưa deploy thì các trường mới về `null`/`false` và trang rơi về
+Backend PR #151 (V356). Chưa deploy thì các trường mới về `null`/`false` và trang rơi về
 đúng hành vi cũ — không vỡ.
 
 ## Không làm

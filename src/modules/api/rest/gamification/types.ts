@@ -180,7 +180,7 @@ export type SeasonBoardState = "OK" | "NO_SEASON"
 /**
  * Một dòng bảng.
  *
- * Backend gắn sẵn danh tính từ V354 (`SeasonBoardController#withIdentity`). Trước đó dòng
+ * Backend gắn sẵn danh tính từ V356 (`SeasonBoardController#withIdentity`). Trước đó dòng
  * chỉ có `userId` nên bảng vẽ người khác thành "Học viên a1b2c3", và KHUNG VIỀN — thứ cả
  * cơ chế mùa giải dựng lên để trao — không có đường nào hiện lên chính cái bảng trao nó.
  *
@@ -212,7 +212,7 @@ export interface SeasonBoardEntryView {
  */
 export interface SeasonOptionView {
     code: string
-    /** Tên đọc được (V354); `null` với kỳ chưa đồng bộ ⇒ rơi về `code`. */
+    /** Tên đọc được (V356); `null` với kỳ chưa đồng bộ ⇒ rơi về `code`. */
     name: string | null
     termId: string | null
     status: string
@@ -243,7 +243,7 @@ export interface SeasonBoardView {
     /** Hạng người xem trên toàn dân số; `null` = chưa có EXP nào trong kỳ (KHÁC hạng chót). */
     myRank: number | null
     /**
-     * Tên kỳ ĐỌC ĐƯỢC (V354). `null` = kỳ chưa đồng bộ lại ⇒ rơi về `seasonCode`.
+     * Tên kỳ ĐỌC ĐƯỢC (V356). `null` = kỳ chưa đồng bộ lại ⇒ rơi về `seasonCode`.
      *
      * ⚠️ ĐỪNG in `seasonCode` khi đã có tên: mã được dựng dạng `T-<mã kỳ>-<8 ký tự băm>`
      * và người dùng đang nhìn thấy nguyên chuỗi `T-SU26-bfd6f768` trên trang thật.

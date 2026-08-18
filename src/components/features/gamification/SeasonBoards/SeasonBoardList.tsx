@@ -60,10 +60,10 @@ export const SeasonBoardList = ({ rows, viewerName, viewerAvatar }: SeasonBoardL
 /**
  * Nhãn của một dòng.
  *
- * Thứ tự ưu tiên có lý do: tên backend gắn (V354) đi TRƯỚC tên trong store của người xem,
+ * Thứ tự ưu tiên có lý do: tên backend gắn (V356) đi TRƯỚC tên trong store của người xem,
  * để cả bảng dùng chung MỘT nguồn tên — hai nguồn sẽ cho ra cảnh dòng của mình hiện tên
  * khác với dòng của mình ở bảng khác. Store chỉ là lưới đỡ cho lúc backend chưa deploy
- * V354; mã rút gọn là lưới đỡ cuối cho người chưa lập hồ sơ.
+ * V356; mã rút gọn là lưới đỡ cuối cho người chưa lập hồ sơ.
  */
 const rowLabel = (row: SeasonBoardRow, viewerName?: string | null): string => {
     if (row.name) {

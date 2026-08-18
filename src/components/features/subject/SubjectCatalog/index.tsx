@@ -2,7 +2,16 @@
 
 import React, { useState } from "react"
 import Image from "next/image"
-import { Button, Chip, Typography } from "@heroui/react"
+import {
+    Chip,
+    Dropdown,
+    DropdownItem,
+    DropdownMenu,
+    DropdownPopover,
+    DropdownTrigger,
+    Typography,
+} from "@heroui/react"
+import { CaretDownIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
@@ -46,24 +55,23 @@ export const SubjectCatalog = () => {
         (subject) => activeMajor === "all" || subject.majorCodes.includes(activeMajor),
     )
 
-    // Chỉ liệt kê kỳ CÓ MÔN trong ngành đang chọn. Đo trên dữ liệu thật: chương trình có 9 kỳ
-    // nhưng catalog mới phủ kỳ 1-3, nên hàng 9 nút cứng sẽ có 6 nút bấm vào là trắng — người
-    // dùng đọc ra "hỏng" chứ không đọc ra "chưa có môn".
-    const semestersWithSubjects = [...SUBJECT_SEMESTERS].filter((option) =>
-        inMajor.some((subject) => subject.recommendedSemester === option),
-    )
-    // Đổi ngành mà kỳ đang chọn không còn môn thì coi như chưa lọc kỳ, đừng để lưới trống.
-    const activeSemester = semester !== null && semestersWithSubjects.includes(semester)
-        ? semester
-        : null
-
     const filtered = inMajor.filter((subject) => {
-        const matchesSemester = activeSemester === null || subject.recommendedSemester === activeSemester
+        // Dropdown Kì liệt kê đủ 1..9; chọn kỳ chưa có môn → lưới trống (đúng: "kỳ này chưa có môn"),
+        // không tự bỏ lọc như bản nút cũ.
+        const matchesSemester = semester === null || subject.recommendedSemester === semester
         const matchesQuery =
             query.trim() === "" ||
             `${subject.code} ${subject.name}`.toLowerCase().includes(query.trim().toLowerCase())
         return matchesSemester && matchesQuery
     })
+
+    // Nhãn hiển thị trên trigger của 2 dropdown lọc.
+    const activeMajorLabel =
+        activeMajor === "all"
+            ? t("catalog.allMajors")
+            : (majors.find((major) => major.code === activeMajor)?.name ?? t("catalog.allMajors"))
+    const activeSemesterLabel =
+        semester === null ? t("catalog.all") : t("semester", { count: semester })
 
     return (
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-6">
@@ -91,59 +99,74 @@ export const SubjectCatalog = () => {
                     placeholder={t("catalog.searchPlaceholder")}
                     className="sm:max-w-none"
                 />
-                {/* bộ lọc NGÀNH — chỉ hiện khi danh mục có dữ liệu (danh mục rỗng ⇒ ẩn hẳn hàng
-                    này thay vì hiện một hàng chỉ có "Tất cả"). */}
-                {majors.length > 0 ? (
-                    <div className="-mx-1 overflow-x-auto px-1">
-                        <div className="flex w-max gap-2">
-                            <Button
-                                size="sm"
-                                variant={activeMajor === "all" ? "secondary" : "ghost"}
-                                onPress={() => setMajorFilter("all")}
-                            >
-                                {t("catalog.allMajors")}
-                            </Button>
-                            {majors.map((major) => (
-                                <Button
-                                    key={major.code}
-                                    size="sm"
-                                    variant={activeMajor === major.code ? "secondary" : "ghost"}
-                                    onPress={() => setMajorFilter(major.code)}
+                {/* Gọn lại thành 2 dropdown: NGÀNH + KỲ (trước đây là hai hàng nút cuộn ngang).
+                    Kỳ liệt kê đủ 1..9 (SUBJECT_SEMESTERS) để chọn bất kỳ kỳ nào, kể cả kỳ chưa có
+                    môn (lưới trống = "kỳ này chưa có môn", không phải hỏng). */}
+                <div className="flex flex-wrap gap-2">
+                    {majors.length > 0 ? (
+                        <Dropdown>
+                            <DropdownTrigger className="cursor-pointer rounded-2xl border border-default px-3 py-2">
+                                <div className="flex items-center gap-2">
+                                    <span className="max-w-56 truncate text-sm font-medium">
+                                        {activeMajorLabel}
+                                    </span>
+                                    <CaretDownIcon aria-hidden focusable="false" className="size-4" />
+                                </div>
+                            </DropdownTrigger>
+                            <DropdownPopover className="min-w-56">
+                                <DropdownMenu
+                                    aria-label={t("catalog.allMajors")}
+                                    onAction={(key) => setMajorFilter(String(key))}
                                 >
-                                    {major.name}
-                                </Button>
-                            ))}
-                        </div>
-                    </div>
-                ) : null}
+                                    <DropdownItem key="all" id="all" textValue={t("catalog.allMajors")}>
+                                        {t("catalog.allMajors")}
+                                    </DropdownItem>
+                                    {majors.map((major) => (
+                                        <DropdownItem
+                                            key={major.code}
+                                            id={major.code}
+                                            textValue={major.name}
+                                        >
+                                            {major.name}
+                                        </DropdownItem>
+                                    ))}
+                                </DropdownMenu>
+                            </DropdownPopover>
+                        </Dropdown>
+                    ) : null}
 
-                {/* Hàng KỲ chỉ xuất hiện SAU khi đã chọn một ngành cụ thể — "pick ngành xong mới
-                    hiện ra các kỳ". Ở "Tất cả ngành" thì kỳ không nói lên điều gì: kỳ 1 của ngành
-                    này và kỳ 1 của ngành kia là hai lộ trình khác nhau. Hàng cuộn ngang ở bề rộng
-                    tự nhiên (`w-max`) như CommunityFilterBar; `-mx-1 px-1` chừa chỗ cho vòng focus. */}
-                {activeMajor !== "all" && semestersWithSubjects.length > 0 ? (
-                    <div className="-mx-1 overflow-x-auto px-1">
-                        <div className="flex w-max gap-2">
-                            <Button
-                                size="sm"
-                                variant={activeSemester === null ? "secondary" : "ghost"}
-                                onPress={() => setSemester(null)}
+                    <Dropdown>
+                        <DropdownTrigger className="cursor-pointer rounded-2xl border border-default px-3 py-2">
+                            <div className="flex items-center gap-2">
+                                <span className="max-w-56 truncate text-sm font-medium">
+                                    {activeSemesterLabel}
+                                </span>
+                                <CaretDownIcon aria-hidden focusable="false" className="size-4" />
+                            </div>
+                        </DropdownTrigger>
+                        <DropdownPopover className="min-w-56">
+                            <DropdownMenu
+                                aria-label={t("catalog.all")}
+                                onAction={(key) =>
+                                    setSemester(key === "all" ? null : (Number(key) as SubjectSemesterFilter))
+                                }
                             >
-                                {t("catalog.all")}
-                            </Button>
-                            {semestersWithSubjects.map((option) => (
-                                <Button
-                                    key={option}
-                                    size="sm"
-                                    variant={activeSemester === option ? "secondary" : "ghost"}
-                                    onPress={() => setSemester(option)}
-                                >
-                                    {t("semester", { count: option })}
-                                </Button>
-                            ))}
-                        </div>
-                    </div>
-                ) : null}
+                                <DropdownItem key="all" id="all" textValue={t("catalog.all")}>
+                                    {t("catalog.all")}
+                                </DropdownItem>
+                                {SUBJECT_SEMESTERS.map((option) => (
+                                    <DropdownItem
+                                        key={String(option)}
+                                        id={String(option)}
+                                        textValue={t("semester", { count: option })}
+                                    >
+                                        {t("semester", { count: option })}
+                                    </DropdownItem>
+                                ))}
+                            </DropdownMenu>
+                        </DropdownPopover>
+                    </Dropdown>
+                </div>
             </div>
 
             {/* subject grid — skeleton while loading (or errored with no data) */}
@@ -162,7 +185,7 @@ export const SubjectCatalog = () => {
                         {/* Ngành có thật nhưng chưa môn nào (vd Vi Mạch / Toán Học trên dữ liệu
                             hiện tại) là trạng thái HỢP LỆ — nói đúng thế thay vì "không khớp
                             tìm kiếm", để người dùng không tưởng mình gõ sai. */}
-                        {activeMajor !== "all" && query.trim() === "" && activeSemester === null
+                        {activeMajor !== "all" && query.trim() === "" && semester === null
                             ? t("catalog.emptyMajor")
                             : t("catalog.empty")}
                     </Typography>

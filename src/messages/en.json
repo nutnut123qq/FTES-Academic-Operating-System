@@ -4162,18 +4162,18 @@
             "xpSection": "Experience points (XP)",
             "actionHeader": "Action",
             "xpHeader": "XP",
-            "quizBanded": "By score",
-            "quizBand": "≥{min}% → +{xp} XP",
-            "multiplierNote": "LEARNING actions (lesson/quiz/challenge) are multiplied by streak; login/upvote/goals are not.",
+            "noStreakMultiplierNote": "Every action pays EXACTLY the number in the table — there is no streak multiplier. Streaks keep the chain alive and unlock milestones; they do not multiply EXP.",
             "actions": {
                 "lessonComplete": "Complete a lesson",
-                "quizSubmit": "Submit a quiz",
+                "quizSubmit": "Pass a quiz",
                 "challengeComplete": "Complete a challenge",
-                "dailyLogin": "First login of the day",
-                "postUpvote": "Post upvoted (cap +20/day)",
-                "commentUpvote": "Comment upvoted (cap +10/day)",
-                "dailyGoal": "Complete the daily goal",
-                "weeklyGoal": "Complete the weekly goal"
+                "courseComplete": "Complete a whole course",
+                "resourcePublish": "Publish an approved exam / resource",
+                "courseEnrolled": "Enrol in a new course",
+                "postCreated": "Publish a community post",
+                "commentCreated": "Write a comment",
+                "reactionGiven": "YOU like a post / lesson",
+                "questComplete": "Complete a daily quest"
             },
             "levelSection": "Levels",
             "levelFormula": "Total XP to reach level L = {factor} × (L − 1)².",
@@ -4184,27 +4184,71 @@
             "tierFrom": "from {xp} XP",
             "streakSection": "Streaks",
             "streakQualifying": "A qualifying streak day = at least one learning action (lesson/quiz/challenge). Login alone does NOT hold a streak.",
-            "streakMultiplier": "XP multiplier +{step}% per consecutive day, capped at +{cap}%.",
             "streakReset": "Miss a day with no learning and no freeze → streak resets to 0.",
             "streakFreeze": "Streak Freeze: hold up to {max}, auto-saves one missed day; buy for {cost} coins each.",
             "streakRepair": "Streak Repair: within {window}h of a reset, restore for 10 × days (cap {cap} coins).",
             "streakReminder": "Reminder at {hour}:00 when streak ≥ {min} and you haven't learned today.",
             "milestoneRow": "{days} days → {name} + {coin} coins",
-            "goalsSection": "Goals",
-            "dailyGoalRule": "Daily goal: complete {target} learning actions → +{xp} XP.",
-            "weeklyGoalRule": "Weekly goal: {target} qualifying days in a week → +{xp} XP.",
             "comingSoonSection": "Coming soon",
             "comingSoon": {
                 "league": "League & Season (weekly competition)",
-                "monthly": "Monthly goal",
+                "monthly": "Daily / weekly / monthly learning goals",
                 "mysteryBox": "Mystery Box & Lucky Spin"
-            }
+            },
+            "scaleNote": "The XP scale was rebalanced: LEARNING was raised, quests kept as they were. A single day of check-ins used to beat finishing an entire course, so the Total board reported the wrong winner.",
+            "interactionCapNote": "EXP from INTERACTION (likes, comments) has a DAILY CAP. Once it is hit, further likes that day add nothing.",
+            "likeEligibilityNote": "A like only produces EXP when the PERSON CLICKING has real learning activity that day. Ten idle accounts liking each other earn 0 EXP.",
+            "levelKeepNote": "Level thresholds were deliberately LEFT UNCHANGED by this rebalance, so levelling up is faster from now on — on purpose. Nobody is demoted: raising thresholds “for fairness” would cost existing users levels overnight for a change they did not cause.",
+            "seasonNote": "All three leaderboards RESET each term, so XP from an old term never competes with new XP. Only the lifetime level ladder carries over.",
+            "questCoinNote": "Daily quests pay coins, and now also EXP: 100 EXP each, capped at 5,000 EXP a day — a whole day of questing still cannot beat one course completion. Checking in earns EXP through that “daily login” quest itself, with no separate reward."
         },
         "states": {
             "retry": "Try again"
         },
         "leaderboardEmpty": "No one is on the leaderboard yet.",
-        "leaderboardError": "Couldn't load the leaderboard. Please try again."
+        "leaderboardError": "Couldn't load the leaderboard. Please try again.",
+        "seasonBoards": {
+            "title": "Season leaderboards",
+            "subtitle": "Two boards, ONE unit of EXP — they differ only in which EXP they count.",
+            "season": {
+                "label": "Current term",
+                "none": "No term is running",
+                "noneHint": "Admins have not opened a new term. This is NOT an empty board — a rank only means something inside a term, so the board is paused.",
+                "resetNote": "The board resets at the end of the term — old EXP never competes with new EXP."
+            },
+            "tabs": {
+                "total": "Total",
+                "social": "Community & Workplace"
+            },
+            "counts": {
+                "total": "Adds every EXP source you earned this term: course + community + workplace. This is the board with the real prizes.",
+                "social": "Counts community EXP (posts, comments, accepted answers, likes) and workplace EXP (challenges, resources submitted to a subject). Two sources, one shared ranking. Liking a lesson counts here rather than on the Course board — a like is interaction, not study."
+            },
+            "countsLabel": "What this board counts",
+            "whyDifferent": "Your rank differs between the two boards because each one counts a different SLICE of EXP — not because the system miscounted.",
+            "xp": "{xp} EXP",
+            "you": "You",
+            "myRank": "Your rank this term: {rank}",
+            "myRankUnranked": "You are not ranked this term yet.",
+            "refresh": "Refresh",
+            "guest": "Sign in to see the season leaderboards.",
+            "empty": "Nobody is on this board yet this term.",
+            "emptyHint": "The term is running but nobody has earned EXP in this slice yet — an empty board is the correct answer.",
+            "coursePicker": {
+                "entryLabel": "Looking for a course leaderboard?",
+                "label": "Pick a course",
+                "openFull": "Open the course board"
+            },
+            "failure": {
+                "notDeployedTitle": "The server has no season leaderboard yet",
+                "notDeployedDescription": "{endpoint} returned {status}. The backend half of this feature is not deployed — this is NOT “nobody is on the board”.",
+                "unauthenticatedTitle": "Sign in to see this board",
+                "unauthenticatedDescription": "{endpoint} returned {status}.",
+                "failedTitle": "Could not load the leaderboard",
+                "failedDescription": "{endpoint} returned {status}.",
+                "retry": "Try again"
+            }
+        }
     },
     "wallet": {
         "title": "F.Wallet",
@@ -8386,7 +8430,8 @@
             "refresh": "Refresh",
             "xpLabel": "XP",
             "you": "You",
-            "champion": "Course champion"
+            "champion": "Course champion",
+            "countsNote": "This board ranks learners WITHIN the course, using the course formula (challenge score + lessons read + completion %) — not season EXP. That is why your rank here and your rank on the season board are two different numbers, and both are correct."
         },
         "submission": {
             "title": "Submit your work",

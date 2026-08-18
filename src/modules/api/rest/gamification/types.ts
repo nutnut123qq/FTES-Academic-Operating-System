@@ -147,6 +147,66 @@ export interface GamificationLeaderboardView {
     myRank: number | null
 }
 
+// ---------------------------------------------------------------- Season boards (bảng theo KỲ)
+//
+// ★ Mọi kiểu dưới đây SAO CHÉP ĐÚNG `SeasonBoardController` của backend
+// (`vn.ftes.aos.gamification.web.SeasonBoardController`). Không thêm trường nào backend
+// không trả: một trường "mong sẽ có" nằm trong contract sẽ được tầng vẽ tin là có thật,
+// và biến thành `undefined` chảy vào phép tính ngay khi bản thật về.
+
+/**
+ * Bảng nào đang được xem. Backend CHỈ phục vụ hai bảng (`parseBoard`):
+ *
+ *  - `total`  — mọi dòng sổ cái EXP trong kỳ; đây là bảng đua giải có phần thưởng thật.
+ *  - `social` — EXP cộng đồng + workplace, hai mảng nhưng rank CHUNG một bảng.
+ *
+ * KHÔNG có `course` ở đây: bảng khoá học là query GraphQL `courseLeaderboard` đã có từ
+ * trước với công thức riêng, và backend TỪ CHỐI `board=course` có chủ đích
+ * (`GAMIFICATION_NOT_FOUND`) — dựng bản thứ hai sẽ đẻ ra hai con số cùng tên gọi.
+ */
+export type SeasonBoardKey = "total" | "social"
+
+/**
+ * Cờ trạng thái của một lần đọc bảng (`SeasonBoardService.State`).
+ *
+ * ★ HAI CA NÀY KHÔNG ĐƯỢC GỘP — backend cấp cờ này chính là để tách chúng:
+ *  - `OK` + `entries` rỗng: kỳ đang chạy, chưa ai kiếm được EXP. Bảng trống là câu trả
+ *    lời ĐÚNG.
+ *  - `NO_SEASON`: KHÔNG có kỳ nào đang chạy. Bảng trống ở đây không phải câu trả lời —
+ *    nó là "chưa có gì để hỏi". Nói "chưa ai có điểm" lúc này là một khẳng định SAI.
+ */
+export type SeasonBoardState = "OK" | "NO_SEASON"
+
+/**
+ * Một dòng bảng.
+ *
+ * ⚠️ Backend trả `userId` THÔ — không tên, không avatar (xem `SeasonBoardService
+ * .BoardEntry`: "caller tự gắn tên/avatar"). FE hiện chưa có đường nào đổi userId sang
+ * hồ sơ hàng loạt, nên dòng của người khác chỉ hiện mã rút gọn. Xem ghi chú ở
+ * `SeasonBoards/model.ts`.
+ */
+export interface SeasonBoardEntryView {
+    userId: string
+    /** EXP của lát cắt bảng này đếm, trong kỳ. */
+    xp: number
+    /** Hạng 1-based do backend tính trên TOÀN dân số, không phải trong cửa sổ trả về. */
+    rank: number
+}
+
+/** Một trang bảng (`GET /api/v1/gamification/boards/{board}?season=&limit=`). */
+export interface SeasonBoardView {
+    state: SeasonBoardState
+    /** Mã bảng backend đã phục vụ (`TOTAL` / `SOCIAL`) — chữ HOA, khác key FE gửi đi. */
+    board: string
+    /** Mã kỳ (`gamification.seasons.code`); `null` khi `state = NO_SEASON`. */
+    seasonCode: string | null
+    /** Kỳ học (V291) nối vào mùa; `null` khi mùa chưa gắn kỳ nào. */
+    termId: string | null
+    entries: Array<SeasonBoardEntryView>
+    /** Hạng người xem trên toàn dân số; `null` = chưa có EXP nào trong kỳ (KHÁC hạng chót). */
+    myRank: number | null
+}
+
 /** Per-subject mastery summary. */
 export interface MasteryView {
     subjectId: string

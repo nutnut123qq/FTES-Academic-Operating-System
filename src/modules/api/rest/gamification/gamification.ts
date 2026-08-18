@@ -16,6 +16,8 @@ import type {
     RewardItemResponse,
     RewardPoolRequest,
     RewardPoolResponse,
+    SeasonBoardKey,
+    SeasonBoardView,
     SeasonRequest,
     SeasonResponse,
     StreakView,
@@ -197,6 +199,34 @@ export const getGamificationLeaderboard = async (params?: {
             scope: params?.scope ?? "global",
             season: params?.season ?? undefined,
             limit: params?.limit ?? 20,
+        },
+    })
+}
+
+/**
+ * Một trong hai bảng xếp hạng theo KỲ.
+ *
+ * `GET /api/v1/gamification/boards/{board}?season=&limit=`
+ *
+ * @param board - `total` | `social` ({@link SeasonBoardKey}). Backend từ chối mọi giá
+ *   trị khác bằng 404 — bảng khoá học nằm ở GraphQL `courseLeaderboard`, không ở đây.
+ * @param params - `season` là MÃ kỳ (`seasonCode`), bỏ trống = kỳ đang chạy; mã không
+ *   tồn tại ⇒ backend trả 404 chứ KHÔNG lặng lẽ rơi về kỳ hiện tại.
+ *
+ * Đường dẫn/tham số bám đúng `SeasonBoardController`. Không có `seasonId` (backend làm
+ * việc theo mã kỳ) và không có `courseId`.
+ */
+export const getSeasonBoard = async (
+    board: SeasonBoardKey,
+    params?: { season?: string | null; limit?: number },
+): Promise<SeasonBoardView> => {
+    return restRequest<SeasonBoardView>({
+        method: "GET",
+        url: `/gamification/boards/${board}`,
+        params: {
+            season: params?.season ?? undefined,
+            // Trần cứng phía backend là 100 (`SeasonBoardService.MAX_LIMIT`).
+            limit: params?.limit ?? 50,
         },
     })
 }

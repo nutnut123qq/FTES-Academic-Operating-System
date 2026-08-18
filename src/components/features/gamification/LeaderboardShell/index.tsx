@@ -2,13 +2,11 @@
 
 import React from "react"
 import { Typography } from "@heroui/react"
-import { useLocale, useTranslations } from "next-intl"
-import { FireIcon, LightningIcon, RankingIcon, StarIcon, TrophyIcon } from "@phosphor-icons/react"
+import { useTranslations } from "next-intl"
+import { FireIcon, StarIcon, TrophyIcon } from "@phosphor-icons/react"
 import { Link } from "@/i18n/navigation"
 import { pathConfig } from "@/resources/path"
-import { formatXpShort } from "@/utils/xp-format"
 import { useQueryMyGamificationSwr } from "../hooks/useQueryMyGamificationSwr"
-import { tierFromXp } from "../leaderboardTiers"
 import { useBadgeLabel } from "../useBadgeLabel"
 import { StreakPopover } from "../StreakPopover"
 import { GamificationEventHost } from "../GamificationEventHost"
@@ -45,53 +43,15 @@ import { SeasonBoards } from "../SeasonBoards"
  */
 export const LeaderboardShell = () => {
     const t = useTranslations("gamification")
-    const locale = useLocale()
     const { data: my } = useQueryMyGamificationSwr()
     const badgeLabel = useBadgeLabel()
 
-    const { tier } = tierFromXp(my?.xp ?? 0)
-    // XP still needed to reach the next level — the BE exposes only the next
-    // threshold, so this is `nextThreshold − total` (0 while there is no snapshot).
-    const toNext = my ? my.levelProgress.nextThreshold - my.levelProgress.current : 0
     // Guide is a child route of /leaderboard. pathConfig has no dedicated
     // builder for it (shared file, owned elsewhere); derive it from the
     // leaderboard base rather than hand-templating the whole path. The base is
     // built LOCALE-LESS (`.locale()` with no argument) because the `Link` below
     // is the locale-aware one from `@/i18n/navigation` and adds the prefix itself.
     const guideHref = `${pathConfig().locale().leaderboard().build()}/guide`
-
-    // Viewer stats come from the composed snapshot; `null` (no snapshot yet /
-    // guest) renders as an em-dash instead of a misleading zero.
-    const stats: Array<{ key: "xp" | "level" | "streak" | "rank"; icon: React.ReactNode; value: number | null; hint: string | undefined; short?: boolean }> = [
-        {
-            key: "xp",
-            icon: <LightningIcon className="size-5" aria-hidden focusable="false" />,
-            value: my ? my.xp : null,
-            hint: undefined,
-            /** XP là con số duy nhất ở đây đủ lớn để cần rút gọn (thang đã nâng 166 lần). */
-            short: true,
-        },
-        {
-            key: "level",
-            icon: <StarIcon className="size-5" aria-hidden focusable="false" />,
-            value: my ? my.level : null,
-            hint: my ? t("levelHint", { xp: toNext.toLocaleString(locale) }) : undefined,
-        },
-        {
-            key: "streak",
-            icon: <FireIcon className="size-5" aria-hidden focusable="false" />,
-            value: my ? my.streak.current : null,
-            hint: undefined,
-        },
-        {
-            key: "rank",
-            // CÙNG nguồn với chip hạng ở navbar và ở trang hồ sơ. `position` bằng 0 nghĩa
-            // là người xem không nằm trong bảng đang tải về → hiện "—", KHÔNG hiện 0.
-            icon: <RankingIcon className="size-5" aria-hidden focusable="false" />,
-            value: my ? my.rank.position : null,
-            hint: my ? t(`tiers.${tier.key}`) : undefined,
-        },
-    ]
 
     return (
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-6">
@@ -114,55 +74,22 @@ export const LeaderboardShell = () => {
                 </Link>
             </div>
 
-            {/* stat cards — the Streak card opens the detail popover */}
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                {stats.map((stat) => {
-                    // The streak card is clickable (opens the detail popover) → it
-                    // gets the house interactive hover; the other three are static.
-                    const interactive = stat.key === "streak"
-                    const card = (
-                        <div
-                            className={`flex h-full flex-col gap-2 rounded-2xl bg-default/40 p-4 text-left ${
-                                interactive ? "transition-colors group-hover:bg-default/60" : ""
-                            }`}
-                        >
-                            <div className="flex items-center gap-2 text-muted">
-                                {stat.icon}
-                                <Typography type="body-xs" color="muted">
-                                    {t(`stats.${stat.key}`)}
-                                </Typography>
-                            </div>
-                            <Typography type="h5" weight="bold">
-                                {/* Rank rides the real BE board — show "—" when the viewer is
-                                    unranked (board empty/unseeded) or has no snapshot, not "0". */}
-                                {stat.value == null || (stat.key === "rank" && stat.value < 1)
-                                    ? "—"
-                                    : stat.short
-                                        ? formatXpShort(stat.value)
-                                        : Math.round(stat.value).toLocaleString(locale)}
-                            </Typography>
-                            {stat.hint ? (
-                                <Typography type="body-xs" color="muted">
-                                    {stat.hint}
-                                </Typography>
-                            ) : null}
-                        </div>
-                    )
-                    if (interactive) {
-                        return (
-                            <StreakPopover key={stat.key} placement="bottom start" className="text-left">
-                                <button
-                                    type="button"
-                                    className="group h-full w-full rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                                    aria-label={t("streak.openDetail")}
-                                >
-                                    {card}
-                                </button>
-                            </StreakPopover>
-                        )
-                    }
-                    return <React.Fragment key={stat.key}>{card}</React.Fragment>
-                })}
+            {/* Chuỗi ngày: giữ đường vào popover chi tiết, nhưng là MỘT DÒNG chứ không phải
+                một thẻ to. Bốn thẻ cũ (XP · Cấp · Chuỗi · Hạng) đã gỡ: ba trong bốn con số đó
+                lặp lại đúng thứ dải mùa giải đang nói, và thẻ "Hạng" còn mâu thuẫn ra mặt —
+                nó đọc hạng TOÀN SÀN nên hiện "—" ngay cạnh dải ghi "#5" của kỳ. Hai con số
+                cùng tên mà khác nhau thì người dùng đọc thành "hệ thống tính sai". */}
+            <div className="flex items-center gap-2">
+                <StreakPopover placement="bottom start" className="text-left">
+                    <button
+                        type="button"
+                        className="flex items-center gap-1.5 rounded-full px-2 py-1 text-sm text-muted transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                        aria-label={t("streak.openDetail")}
+                    >
+                        <FireIcon className="size-4" aria-hidden focusable="false" />
+                        <span>{t("stats.streak")}: {my ? my.streak.current : "—"}</span>
+                    </button>
+                </StreakPopover>
             </div>
 
             {/* Bảng xếp hạng theo kỳ (tổng · cộng đồng+workplace) */}

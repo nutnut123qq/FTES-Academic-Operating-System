@@ -14,16 +14,14 @@ import type {
 export const SEASON_BOARDS: ReadonlyArray<SeasonBoardKey> = ["total", "social"]
 
 /**
- * BA lát cắt người dùng chọn được trên thanh chọn bảng.
+ * HAI lát cắt của trang xếp hạng — đúng bằng hai bảng backend phục vụ.
  *
- * <p>Khác {@link SEASON_BOARDS} một mục: `course`. Với người dùng thì cả ba là "xem bảng
- * nào", nhưng chỉ hai cái đầu là bảng của `GET /gamification/boards/{board}` — bảng khoá
- * học có công thức riêng ở GraphQL `courseLeaderboard`, và backend TỪ CHỐI `board=course`
- * có chủ đích để không đẻ ra hai con số cùng tên gọi.
- *
- * <p>Thứ tự cố ý: `total` đứng đầu vì đó là bảng đua giải có phần thưởng thật.
+ * <p><b>Không có `course` ở đây.</b> Bảng của một khoá chỉ có nghĩa khi đã biết đang nói tới
+ * khoá NÀO, nên nó sống trong chính khoá đó (`/courses/{slug}/learn/leaderboard`). Đặt nó
+ * thành một lát cắt ở trang chung buộc phải kèm một ô chọn khoá — tức thêm một nút cho một
+ * câu hỏi mà trang này không có ngữ cảnh để trả lời.
  */
-export const SEASON_SCOPES = ["total", "course", "social"] as const
+export const SEASON_SCOPES = ["total", "social"] as const
 
 export type SeasonScope = (typeof SEASON_SCOPES)[number]
 

@@ -69,6 +69,12 @@ export interface ChallengePaperCommentThreadProps {
      * comment endpoints bind a `UUID` path variable.
      */
     challengeId: string
+    /**
+     * Rendered inside the paper's DIALOG, where the whole box scrolls as one piece — the
+     * composer then has to stick to that box's bottom edge or it lands past the last
+     * comment. See `PostCommentThread.stickyComposer`.
+     */
+    inModal?: boolean
 }
 
 /**
@@ -103,6 +109,7 @@ export interface ChallengePaperCommentThreadProps {
  */
 export const ChallengePaperCommentThread = ({
     challengeId,
+    inModal,
 }: ChallengePaperCommentThreadProps) => {
     const t = useTranslations("challenge")
     const locale = useLocale()
@@ -227,6 +234,7 @@ export const ChallengePaperCommentThread = ({
             </div>
 
             <PostCommentThread
+                stickyComposer={inModal}
                 className="min-h-0 flex-1"
                 regionId={`challenge-comments-${challengeId}`}
                 comments={comments}

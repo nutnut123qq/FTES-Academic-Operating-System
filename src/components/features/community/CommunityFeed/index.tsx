@@ -453,6 +453,7 @@ export const CommunityFeedRow = ({
                                     postId={post.id}
                                     regionId={`modal-post-comments-${post.id}`}
                                     commentsAnchorId={`modal-comments-${post.id}`}
+                                    stickyComposer
                                     loadingFallback={
                                         <div className="flex items-center justify-center py-16">
                                             <Spinner aria-label={t("photoViewer.loading")} />

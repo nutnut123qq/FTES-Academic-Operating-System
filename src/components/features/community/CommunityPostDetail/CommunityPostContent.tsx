@@ -50,6 +50,12 @@ export interface CommunityPostContentProps {
     commentsAnchorId?: string
     /** Rendered while the post detail is still loading (detail page → nothing; lightbox → spinner). */
     loadingFallback?: React.ReactNode
+    /**
+     * Pin the comment composer to the bottom of the scrolling box around this body — for
+     * the popup, where the whole dialog scrolls as one piece. Off on the detail page,
+     * whose scrolling ancestor is the viewport.
+     */
+    stickyComposer?: boolean
 }
 
 /**
@@ -78,6 +84,7 @@ export const CommunityPostContent = ({
     regionId,
     commentsAnchorId = "comments",
     loadingFallback = null,
+    stickyComposer,
 }: CommunityPostContentProps) => {
     const t = useTranslations("communityHub")
     const tCommon = useTranslations("common")
@@ -280,6 +287,7 @@ export const CommunityPostContent = ({
                     onToggleCommentLike={toggleCommentReaction}
                     autoFocus={deepLinked}
                     stickyComposerOnMobile
+                    stickyComposer={stickyComposer}
                     currentUsername={currentUser?.username}
                     onEditComment={onEditComment}
                     onDeleteComment={onDeleteComment}

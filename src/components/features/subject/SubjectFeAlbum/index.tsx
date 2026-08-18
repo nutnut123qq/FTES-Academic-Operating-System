@@ -356,6 +356,7 @@ export const SubjectFeAlbum = ({
                                 key={current.id}
                                 resourceId={albumId}
                                 imageId={current.id}
+                                inModal={inModal}
                             />
                         </div>
                     </div>

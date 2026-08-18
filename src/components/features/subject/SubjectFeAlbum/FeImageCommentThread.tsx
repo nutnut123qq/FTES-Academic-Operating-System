@@ -25,6 +25,12 @@ export interface FeImageCommentThreadProps {
     resourceId: string
     /** The album image whose thread this is. */
     imageId: string
+    /**
+     * Rendered inside the album's DIALOG. On the route the column has a height to divide,
+     * so the flex split already pins the composer; in a dialog that scrolls as one piece
+     * there is no such height and it needs `sticky` instead.
+     */
+    inModal?: boolean
 }
 
 /**
@@ -51,6 +57,7 @@ export interface FeImageCommentThreadProps {
 export const FeImageCommentThread = ({
     resourceId,
     imageId,
+    inModal,
 }: FeImageCommentThreadProps) => {
     const t = useTranslations("subjects")
     const locale = useLocale()
@@ -174,6 +181,7 @@ export const FeImageCommentThread = ({
             </div>
 
             <PostCommentThread
+                stickyComposer={inModal}
                 className="min-h-0 flex-1"
                 regionId={`fe-image-comments-${imageId}`}
                 comments={comments}

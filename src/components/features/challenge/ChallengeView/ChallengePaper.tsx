@@ -368,7 +368,10 @@ export const ChallengePaper = ({
 
                     {challengeId ? (
                         <div className="flex min-h-0 flex-1 flex-col border-t border-separator pt-4">
-                            <ChallengePaperCommentThread challengeId={challengeId} />
+                            <ChallengePaperCommentThread
+                                challengeId={challengeId}
+                                inModal={inModal}
+                            />
                         </div>
                     ) : null}
                 </div>

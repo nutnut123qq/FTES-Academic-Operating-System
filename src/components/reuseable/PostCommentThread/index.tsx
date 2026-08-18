@@ -106,6 +106,20 @@ export interface PostCommentThreadProps extends WithClassNames<undefined> {
     /** Pin the composer to the bottom of the viewport on mobile while focused. */
     stickyComposerOnMobile?: boolean
     /**
+     * Keep the composer against the bottom edge of whatever scrolls around it, at every
+     * width — for a thread inside a SCROLLING BOX rather than on a page.
+     *
+     * The flex split above (list scrolls, composer outside it) only pins the composer when
+     * the column has a height to divide. Inside a dialog that scrolls as one piece there is
+     * no such height: `flex-1` has nothing to resolve against, so the composer lands after
+     * the last comment and the reader must scroll the whole thread before they can type.
+     * `sticky` needs no bounded height — it pins against the nearest scrolling ancestor.
+     *
+     * Off on ordinary pages, where that ancestor is the viewport and a composer glued to
+     * the bottom of the screen would follow the reader everywhere.
+     */
+    stickyComposer?: boolean
+    /**
      * Username of the signed-in viewer. A comment whose `authorUsername` matches
      * gets the ⋯ menu's "Sửa" / "Xoá" entries; guests / other users get none —
      * and the "Báo cáo" entry shows on everyone ELSE's comments. Optional: when
@@ -519,6 +533,7 @@ export const PostCommentThread = ({
     onCollapse,
     autoFocus,
     stickyComposerOnMobile,
+    stickyComposer,
     currentUsername,
     currentUserId,
     onEditComment,
@@ -844,6 +859,10 @@ export const PostCommentThread = ({
                     <div
                         className={cn(
                             "flex shrink-0 flex-col gap-2",
+                            // `-mx-4 px-4` để dải nền phủ hết bề ngang kể cả padding của
+                            // dialog — thiếu nó thì bình luận trôi lộ ra hai bên composer.
+                            stickyComposer &&
+                                "sticky bottom-0 z-10 -mx-4 border-t border-separator bg-surface px-4 pb-3 pt-2",
                             stickyComposerOnMobile &&
                                 isFocused &&
                                 "max-sm:fixed max-sm:inset-x-0 max-sm:bottom-0 max-sm:z-30 max-sm:border-t max-sm:border-separator max-sm:bg-background max-sm:p-3",

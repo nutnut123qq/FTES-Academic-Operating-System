@@ -9,6 +9,15 @@ import type { CodeGradeResult } from "@/modules/api/rest/ai"
 export interface GradeResultCardProps {
     /** Grade response (LLM part — model-dependent). */
     result: CodeGradeResult
+    /**
+     * The submission was graded by TEST CASES, so this card is commentary and its `score` is not
+     * the grade. Swaps the score headline for a review heading plus a line saying where the real
+     * score comes from.
+     *
+     * Without it a learner who passed 21/21 can read "4/100" right underneath and have no way to
+     * tell which number counts — two authoritative-looking scores for one submission.
+     */
+    scoreOwnedByTests?: boolean
     /** Extra classes. */
     className?: string
 }
@@ -33,7 +42,7 @@ const verdictColor = (verdict: string): "success" | "warning" | "danger" | undef
  * {model}" + `model_note` caption) is MANDATORY — each model grades
  * differently, so two grades of the same code may legitimately differ.
  */
-export const GradeResultCard = ({ result, className }: GradeResultCardProps) => {
+export const GradeResultCard = ({ result, scoreOwnedByTests, className }: GradeResultCardProps) => {
     const t = useTranslations("learn")
     const verdict = (result.verdict ?? "").toUpperCase()
     const criteria = result.criteria ?? []
@@ -46,22 +55,35 @@ export const GradeResultCard = ({ result, className }: GradeResultCardProps) => 
                 className,
             )}
         >
-            {/* score + verdict */}
-            <div className="flex flex-wrap items-center gap-3">
-                <Typography type="h5" weight="bold">
-                    {t("codeGrading.score", {
-                        score: result.score ?? 0,
-                        max: result.max ?? 100,
-                    })}
-                </Typography>
-                {verdict ? (
-                    <Chip size="sm" variant="soft" color={verdictColor(verdict)}>
-                        {["PASS", "PARTIAL", "FAIL"].includes(verdict)
-                            ? t(`codeGrading.verdict.${verdict}`)
-                            : verdict}
-                    </Chip>
-                ) : null}
-            </div>
+            {/* score + verdict — or, when the test cases own the score, a review heading instead.
+                The verdict chip goes with the score: it is the model's PASS/FAIL call, and next to
+                a real judge verdict it is one more thing claiming to be the result. */}
+            {scoreOwnedByTests ? (
+                <div className="flex flex-col gap-1">
+                    <Typography type="h5" weight="bold">
+                        {t("codeGrading.reviewTitle")}
+                    </Typography>
+                    <Typography type="body-xs" color="muted">
+                        {t("codeGrading.reviewScoreNote")}
+                    </Typography>
+                </div>
+            ) : (
+                <div className="flex flex-wrap items-center gap-3">
+                    <Typography type="h5" weight="bold">
+                        {t("codeGrading.score", {
+                            score: result.score ?? 0,
+                            max: result.max ?? 100,
+                        })}
+                    </Typography>
+                    {verdict ? (
+                        <Chip size="sm" variant="soft" color={verdictColor(verdict)}>
+                            {["PASS", "PARTIAL", "FAIL"].includes(verdict)
+                                ? t(`codeGrading.verdict.${verdict}`)
+                                : verdict}
+                        </Chip>
+                    ) : null}
+                </div>
+            )}
 
             {/* model attribution — mandatory */}
             <div className="flex flex-col gap-1">

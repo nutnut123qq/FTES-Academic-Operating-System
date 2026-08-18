@@ -8528,7 +8528,9 @@
                 "freeRunLimit": "Free trial: each challenge allows only 2 runs and 1 FrosTES grade. Enroll in the course to keep practicing without limits.",
                 "freeGradeLimit": "Free trial: each challenge allows only 1 FrosTES grade and 2 runs. Enroll in the course to keep grading without limits.",
                 "generic": "Something went wrong while grading. Please try again."
-            }
+            },
+            "reviewTitle": "FrosTES review",
+            "reviewScoreNote": "The score comes from the test cases. This is a review of the solution's quality."
         },
         "contentMap": {
             "title": "Course content",

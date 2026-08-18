@@ -8528,7 +8528,9 @@
                 "freeRunLimit": "Bản dùng thử: mỗi thử thách chỉ được chạy 2 lần và chấm FrosTES 1 lần. Đăng ký khóa học để làm thoải mái.",
                 "freeGradeLimit": "Bản dùng thử: mỗi thử thách chỉ được chấm FrosTES 1 lần và chạy 2 lần. Đăng ký khóa học để làm thoải mái.",
                 "generic": "Có lỗi xảy ra khi chấm code. Vui lòng thử lại."
-            }
+            },
+            "reviewTitle": "Nhận xét của FrosTES",
+            "reviewScoreNote": "Điểm của bài do bộ test quyết định. Phần này là nhận xét chất lượng lời giải."
         },
         "contentMap": {
             "title": "Nội dung khóa học",

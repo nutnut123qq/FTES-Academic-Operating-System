@@ -16,6 +16,9 @@ vi.mock("@heroui/react", () => ({
     Table: Object.assign(() => null, { Body: () => null, Cell: () => null }),
     Chip: () => null,
     Accordion: Object.assign(() => null, { Item: () => null }),
+    // Real (joining) `cn`: MathFormula styles display math with it, and a stub returning
+    // undefined would silently drop the class the assertions below read.
+    cn: (...args: Array<unknown>) => args.filter(Boolean).join(" "),
 }))
 vi.mock("./MarkdownTableParts", () => ({
     MarkdownTable: () => null,
@@ -42,6 +45,42 @@ const renderers = buildMarkdownRenderers({
     t: ((key: string) => key) as never,
     mermaidCaptions: {},
     reading: false,
+})
+
+/**
+ * The math tags → KaTeX. This is the one seam the pipeline test in `index.test.tsx` cannot
+ * cover (it mocks this map away to assert on the raw tags), so the `tex` attribute reaching
+ * a real typeset formula is pinned here.
+ */
+describe("MarkdownContent map — math", () => {
+    // The custom tags are not part of react-markdown's `Components` type (the map is cast
+    // on the way out of buildMarkdownRenderers), so they are read back the same way.
+    const custom = renderers as unknown as Record<
+        string,
+        React.ComponentType<{ tex?: string }>
+    >
+
+    it("typesets an inline math tag", () => {
+        const Inline = custom.inlinemath
+        const { container } = render(<Inline tex="x^2" />)
+
+        expect(container.querySelector(".katex")).not.toBeNull()
+        expect(container.querySelector(".katex-display")).toBeNull()
+    })
+
+    it("typesets a block math tag as DISPLAY math", () => {
+        const Block = custom.blockmath
+        const { container } = render(<Block tex="\\int_0^1 x^2 dx" />)
+
+        expect(container.querySelector(".katex-display")).not.toBeNull()
+    })
+
+    it("falls back to the source when there is no TeX to typeset", () => {
+        const Inline = custom.inlinemath
+        const { container } = render(<Inline />)
+
+        expect(container.textContent).toBe("")
+    })
 })
 
 describe("MarkdownContent map — pre", () => {

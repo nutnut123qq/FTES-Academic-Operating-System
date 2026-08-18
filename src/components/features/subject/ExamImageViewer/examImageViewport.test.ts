@@ -21,7 +21,8 @@ import {
 /**
  * Unit — the exam viewer's viewport maths. These are the invariants the viewer is
  * useless without: a zoom that cannot run away, a pan that cannot throw the page out of
- * the frame, and paging that stops at both ends of the album.
+ * the frame, and paging that always lands on a real page — wrapping round the ends rather
+ * than running off them.
  */
 
 /** A portrait scan fitted into a landscape frame: black bars left and right. */
@@ -167,8 +168,22 @@ describe("clampIndex / stepIndex", () => {
         expect(stepIndex(2, -1, 3)).toBe(1)
     })
 
-    it("stops at both ends instead of wrapping around", () => {
-        expect(stepIndex(0, -1, 3)).toBe(0)
-        expect(stepIndex(2, 1, 3)).toBe(2)
+    // Was "stops at both ends instead of wrapping around" — the owner asked for the
+    // opposite ("ở trang cuối bấm nút qua phải thì quay về câu 1"), so the invariant is
+    // inverted rather than dropped: paging must still be total, and must still land inside
+    // the album, only now by looping instead of by sticking.
+    it("wraps around at both ends", () => {
+        expect(stepIndex(2, 1, 3)).toBe(0)
+        expect(stepIndex(0, -1, 3)).toBe(2)
+    })
+
+    it("keeps a jump bigger than the album inside it", () => {
+        expect(stepIndex(0, 7, 3)).toBe(1)
+        expect(stepIndex(0, -7, 3)).toBe(2)
+    })
+
+    it("cannot page a single-page album off itself", () => {
+        expect(stepIndex(0, 1, 1)).toBe(0)
+        expect(stepIndex(0, -1, 1)).toBe(0)
     })
 })

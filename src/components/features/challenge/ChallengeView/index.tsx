@@ -271,10 +271,13 @@ export const ChallengeView = ({
                     </div>
 
                     {/* Đề bài có thể là markdown HOẶC HTML (admin soạn bằng rich-text editor) —
-                        render bằng MarkdownContent kẻo thẻ `<ul><li>` lòi ra dạng text. */}
+                        render bằng MarkdownContent kẻo thẻ `<ul><li>` lòi ra dạng text.
+                        `math`: đây là ĐỀ BÀI — challenge gắn tag PE/FE mang đề toán, nên
+                        `$…$` phải được typeset thay vì hiện ra dạng LaTeX thô. */}
                     {challenge.description ? (
                         <MarkdownContent
                             allowHtml
+                            math
                             markdown={challenge.description}
                             className="text-muted"
                         />

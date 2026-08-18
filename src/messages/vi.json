@@ -6043,7 +6043,11 @@
                 "zoomOut": "Thu nhỏ",
                 "fit": "Xem vừa khung",
                 "zoomLevel": "{percent}%",
-                "panHint": "Kéo để di chuyển"
+                "panHint": "Kéo để di chuyển",
+                "expand": "Mở toàn màn hình",
+                "collapse": "Thoát toàn màn hình",
+                "hideComments": "Ẩn bình luận cho đề rộng hết cỡ",
+                "showComments": "Hiện lại bình luận"
             },
             "fe": {
                 "title": "Bộ đề FE",

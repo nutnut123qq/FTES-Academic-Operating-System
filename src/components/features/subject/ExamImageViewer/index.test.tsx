@@ -7,10 +7,12 @@ import { describe, expect, it, vi } from "vitest"
  * depend on.
  *
  * What is pinned here is exactly what the owner reported missing: the paging affordances
- * must EXIST and work (carets, counter, ←/→), the ends must not wrap, the arrows must not
- * fight the comment composer's caret, and the zoom must clamp and reset per page. The pan
- * maths lives in `examImageViewport.test.ts` — happy-dom reports every layout box as 0, so
- * the DOM cannot say anything true about dragging.
+ * must EXIST and work (carets, counter, ←/→), the ends must WRAP (last → first, first →
+ * last — the owner asked for it in those words, and the tests that used to pin the opposite
+ * are inverted below rather than deleted), the arrows must not fight the comment composer's
+ * caret, the zoom must clamp and reset per page, and full-screen mode must be reachable AND
+ * escapable. The pan maths lives in `examImageViewport.test.ts` — happy-dom reports every
+ * layout box as 0, so the DOM cannot say anything true about dragging.
  *
  * There is deliberately NOTHING here about a thumbnail filmstrip: it was removed because
  * scans of one exam look identical at thumbnail size (see the component docblock). What
@@ -104,17 +106,20 @@ describe("ExamImageViewer — paging", () => {
         expect(onIndexChange).toHaveBeenCalledWith(0)
     })
 
-    it("disables the caret at each end instead of wrapping around", () => {
+    // Was "disables the caret at each end instead of wrapping around". The owner asked for
+    // the loop ("ở trang cuối bấm nút qua phải thì quay về câu 1"), so the same two clicks
+    // are still made — they now have to DO something, and neither caret may be inert.
+    it("wraps at each end instead of disabling the caret", () => {
         const first = setup(0)
-        expect((prevButton() as HTMLButtonElement).disabled).toBe(true)
+        expect((prevButton() as HTMLButtonElement).disabled).toBe(false)
         fireEvent.click(prevButton())
-        expect(first.onIndexChange).not.toHaveBeenCalled()
+        expect(first.onIndexChange).toHaveBeenCalledWith(2)
         first.view.unmount()
 
         const last = setup(2)
-        expect((nextButton() as HTMLButtonElement).disabled).toBe(true)
+        expect((nextButton() as HTMLButtonElement).disabled).toBe(false)
         fireEvent.click(nextButton())
-        expect(last.onIndexChange).not.toHaveBeenCalled()
+        expect(last.onIndexChange).toHaveBeenCalledWith(0)
     })
 
     it("pages with ← / →", () => {
@@ -125,10 +130,17 @@ describe("ExamImageViewer — paging", () => {
         expect(onIndexChange).toHaveBeenCalledWith(0)
     })
 
-    it("stops at the ends on the keyboard too", () => {
-        const { onIndexChange } = setup(0)
+    // Was "stops at the ends on the keyboard too". The keys go through the same
+    // `goPrev`/`goNext` as the carets, and this is the test that keeps them agreeing.
+    it("wraps at the ends on the keyboard too", () => {
+        const first = setup(0)
         fireEvent.keyDown(window, { key: "ArrowLeft" })
-        expect(onIndexChange).not.toHaveBeenCalled()
+        expect(first.onIndexChange).toHaveBeenCalledWith(2)
+        first.view.unmount()
+
+        const last = setup(2)
+        fireEvent.keyDown(window, { key: "ArrowRight" })
+        expect(last.onIndexChange).toHaveBeenCalledWith(0)
     })
 
     it("leaves the arrows alone while the reader is typing a comment", () => {
@@ -214,6 +226,110 @@ describe("ExamImageViewer — text pages", () => {
         setup(1, mixed)
 
         expect(screen.getByText("2/3")).toBeTruthy()
+    })
+})
+
+describe("ExamImageViewer — full screen", () => {
+    /** Renders with the expand pair wired, and hands back both spies. */
+    const setupExpand = (
+        props: Partial<React.ComponentProps<typeof ExamImageViewer>> = {},
+    ) => {
+        const onExpandedChange = vi.fn()
+        const onCommentsHiddenChange = vi.fn()
+        const view = render(
+            <ExamImageViewer
+                images={album}
+                index={0}
+                onIndexChange={vi.fn()}
+                onExpandedChange={onExpandedChange}
+                onCommentsHiddenChange={onCommentsHiddenChange}
+                {...props}
+            />,
+        )
+        return { onExpandedChange, onCommentsHiddenChange, view }
+    }
+
+    const expandButton = () => screen.queryByLabelText("practice.viewer.expand")
+    const collapseButton = () => screen.queryByLabelText("practice.viewer.collapse")
+    const hideCommentsButton = () => screen.queryByLabelText("practice.viewer.hideComments")
+    const showCommentsButton = () => screen.queryByLabelText("practice.viewer.showComments")
+
+    it("draws NO expand control when the host passed no handler", () => {
+        // A host with nowhere to expand into (a viewer inside a dialog) must not get a
+        // button that looks like it should fill the screen and then does nothing.
+        setup(0)
+        expect(screen.queryByLabelText("practice.viewer.expand")).toBeNull()
+        expect(screen.queryByLabelText("practice.viewer.hideComments")).toBeNull()
+    })
+
+    it("asks the host to expand, and to collapse once expanded", () => {
+        const docked = setupExpand()
+        expect(collapseButton()).toBeNull()
+        fireEvent.click(expandButton() as HTMLElement)
+        expect(docked.onExpandedChange).toHaveBeenCalledWith(true)
+        docked.view.unmount()
+
+        const expanded = setupExpand({ isExpanded: true })
+        expect(expandButton()).toBeNull()
+        fireEvent.click(collapseButton() as HTMLElement)
+        expect(expanded.onExpandedChange).toHaveBeenCalledWith(false)
+    })
+
+    it("offers the comments switch ONLY while expanded", () => {
+        const docked = setupExpand()
+        // Docked, the two panes share the page: dropping one would leave a hole, not width.
+        expect(hideCommentsButton()).toBeNull()
+        docked.view.unmount()
+
+        setupExpand({ isExpanded: true })
+        expect(hideCommentsButton()).not.toBeNull()
+    })
+
+    it("toggles the comments column both ways, starting from SHOWING", () => {
+        const showing = setupExpand({ isExpanded: true })
+        fireEvent.click(hideCommentsButton() as HTMLElement)
+        expect(showing.onCommentsHiddenChange).toHaveBeenCalledWith(true)
+        showing.view.unmount()
+
+        const hidden = setupExpand({ isExpanded: true, areCommentsHidden: true })
+        expect(hideCommentsButton()).toBeNull()
+        fireEvent.click(showCommentsButton() as HTMLElement)
+        expect(hidden.onCommentsHiddenChange).toHaveBeenCalledWith(false)
+    })
+
+    it("leaves full screen on Escape", () => {
+        const { onExpandedChange } = setupExpand({ isExpanded: true })
+        fireEvent.keyDown(window, { key: "Escape" })
+        expect(onExpandedChange).toHaveBeenCalledWith(false)
+    })
+
+    it("leaves full screen on Escape even from inside the comment composer", () => {
+        // The overlay covers the page, so the way out must not depend on where the caret is
+        // — unlike the arrows, which the composer owns while typing.
+        const { onExpandedChange } = setupExpand({ isExpanded: true })
+        const composer = document.createElement("textarea")
+        document.body.appendChild(composer)
+        fireEvent.keyDown(composer, { key: "Escape" })
+        expect(onExpandedChange).toHaveBeenCalledWith(false)
+        composer.remove()
+    })
+
+    it("ignores Escape when nothing is expanded", () => {
+        const { onExpandedChange } = setupExpand()
+        fireEvent.keyDown(window, { key: "Escape" })
+        expect(onExpandedChange).not.toHaveBeenCalled()
+    })
+
+    it("keeps zoom, paging and the counter working while expanded", () => {
+        // The affordances an earlier bug left stranded outside the visible box: they must
+        // all still be here, and still be the same controls.
+        const { view } = setupExpand({ isExpanded: true, index: 1 })
+        expect(screen.getByText("2/3")).toBeTruthy()
+        expect(screen.getByLabelText("practice.viewer.previous")).toBeTruthy()
+        expect(screen.getByLabelText("practice.viewer.next")).toBeTruthy()
+        fireEvent.click(screen.getByLabelText("practice.viewer.zoomIn"))
+        expect(screen.getByText("practice.viewer.zoomLevel#150")).toBeTruthy()
+        view.unmount()
     })
 })
 

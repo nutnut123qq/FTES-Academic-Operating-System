@@ -6043,7 +6043,11 @@
                 "zoomOut": "Zoom out",
                 "fit": "Fit the whole page",
                 "zoomLevel": "{percent}%",
-                "panHint": "Drag to move"
+                "panHint": "Drag to move",
+                "expand": "Open full screen",
+                "collapse": "Leave full screen",
+                "hideComments": "Hide comments so the paper fills the width",
+                "showComments": "Show comments again"
             },
             "fe": {
                 "title": "FE album",

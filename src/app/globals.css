@@ -1,5 +1,11 @@
 @import "tailwindcss";
 @import "@xyflow/react/dist/style.css";
+/* KaTeX: bảng style BẮT BUỘC của công thức toán (xem MarkdownContent/MathFormula) — markup
+   KaTeX sinh ra chỉ là <span> lồng nhau, không có file này thì công thức vỡ thành một dòng
+   chữ chồng lên nhau. Nạp ở đây, đúng chỗ app nạp CSS của thư viện ngoài, vì trang đề nằm
+   trong portal/modal lẫn route thường — nạp cục bộ sẽ có nơi thiếu. Tailwind v4 rewrite
+   `url()` tương đối khi inline @import, nên đường dẫn font woff2 của KaTeX vẫn đúng. */
+@import "katex/dist/katex.min.css";
 @import "@heroui/styles";
 
 /*

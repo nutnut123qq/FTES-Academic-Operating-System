@@ -18,6 +18,10 @@ import {
     type ExamImageViewerImage,
 } from "@/components/features/subject/ExamImageViewer"
 import {
+    useExamExpand,
+    type ExamExpandControls,
+} from "@/components/features/subject/ExamImageViewer/useExamExpand"
+import {
     ALBUM_INITIAL_LOAD,
     nextAlbumLoadCount,
 } from "@/components/features/subject/SubjectFeAlbum/albumLoadWindow"
@@ -189,6 +193,10 @@ export const ChallengePaper = ({
 }: ChallengePaperProps) => {
     const t = useTranslations("challenge")
     const kind = classifyChallengePaper(paperUrl, paperMime)
+    // Full-screen reading, and the switch that hands the right column's width to the paper.
+    // Owned here for the same reason the album owns it: the frame and that column are this
+    // component's layout, not the viewer's. In a dialog it is left unwired (see below).
+    const expand = useExamExpand()
 
     /**
      * The paper split into what is read in place and what is downloaded. Both halves are
@@ -270,34 +278,57 @@ export const ChallengePaper = ({
             </div>
 
             <div
-                className={cn(
-                    "overflow-hidden rounded-2xl border border-separator",
-                    // ponytail: ONE switch for the whole viewport-pinned layout — in a
-                    // dialog every `lg:` rule below is simply not emitted, which leaves the
-                    // stacked layout this surface already ships below `lg`. No modal-only
-                    // sizing was invented; the box that contains it does the scrolling.
-                    !inModal && "lg:grid lg:grid-cols-[minmax(0,1fr)_400px]",
-                    // A 0-floored row + `min-h-0` on the pane are what let a PORTRAIT scan
-                    // shrink to the frame instead of inflating it: a grid item's automatic
-                    // minimum size is its CONTENT, and `overflow-hidden` then clips it.
-                    // ponytail: 12rem, not 16 — the frame is what the reader came for, so
-                    // it takes nearly the whole viewport once scrolled to; the header
-                    // above it scrolls away.
-                    isFramed
-                        && !inModal
-                        && "lg:h-[calc(100dvh-12rem)] lg:min-h-[30rem] lg:grid-rows-[minmax(0,1fr)]",
-                )}
+                className={
+                    // Expanded replaces the frame OUTRIGHT (see useExamExpand) — keeping the
+                    // docked `lg:grid-cols-[…_400px]` alongside the expanded `lg:grid-cols-1`
+                    // would leave Tailwind to settle the tie by stylesheet order.
+                    expand.isExpanded
+                        ? expand.frameClassName
+                        : cn(
+                            "overflow-hidden rounded-2xl border border-separator",
+                            // ponytail: ONE switch for the whole viewport-pinned layout — in a
+                            // dialog every `lg:` rule below is simply not emitted, which leaves the
+                            // stacked layout this surface already ships below `lg`. No modal-only
+                            // sizing was invented; the box that contains it does the scrolling.
+                            !inModal && "lg:grid lg:grid-cols-[minmax(0,1fr)_400px]",
+                            // A 0-floored row + `min-h-0` on the pane are what let a PORTRAIT scan
+                            // shrink to the frame instead of inflating it: a grid item's automatic
+                            // minimum size is its CONTENT, and `overflow-hidden` then clips it.
+                            // ponytail: 12rem, not 16 — the frame is what the reader came for, so
+                            // it takes nearly the whole viewport once scrolled to; the header
+                            // above it scrolls away.
+                            isFramed
+                                && !inModal
+                                && "lg:h-[calc(100dvh-12rem)] lg:min-h-[30rem] lg:grid-rows-[minmax(0,1fr)]",
+                        )
+                }
             >
                 {/* LEFT — the paper. A multi-file set owns this pane; with no set (or a set
                     of templates only) the single-file branches below are untouched. */}
                 {sections.length > 0 ? (
-                    <PaperSections sections={sections} title={title} inModal={inModal} />
+                    <PaperSections
+                        sections={sections}
+                        title={title}
+                        inModal={inModal}
+                        expand={inModal ? undefined : expand}
+                    />
                 ) : kind === "IMAGE" ? (
                     <ExamImageViewer
                         images={viewerImages}
                         index={0}
                         onIndexChange={onIndexChange}
-                        className={cn("h-[60dvh] min-h-0", !inModal && "lg:h-full")}
+                        className={
+                            expand.isExpanded
+                                ? expand.paneClassName
+                                : cn("h-[60dvh] min-h-0", !inModal && "lg:h-full")
+                        }
+                        isExpanded={expand.isExpanded}
+                        // Not in a dialog: it already covers the page, and a `fixed` overlay
+                        // inside one resolves against the dialog's box rather than the
+                        // viewport. No handler → no button, instead of a broken one.
+                        onExpandedChange={inModal ? undefined : expand.setExpanded}
+                        areCommentsHidden={expand.areCommentsHidden}
+                        onCommentsHiddenChange={inModal ? undefined : expand.setCommentsHidden}
                     />
                 ) : kind === "PDF" ? (
                     /* No border/radius of its own: the frame around both panes owns them,
@@ -339,6 +370,11 @@ export const ChallengePaper = ({
                     className={cn(
                         "flex min-h-0 flex-col gap-4 bg-overlay p-4",
                         !inModal && "lg:overflow-hidden",
+                        // Full screen + "hide the comments": `display:none` drops the column
+                        // from the layout AND the a11y tree while the thread keeps its scroll,
+                        // its page and any half-typed comment. The width it frees goes to the
+                        // paper through the frame's `lg:grid-cols-1` (see useExamExpand).
+                        !expand.areCommentsVisible && "hidden",
                     )}
                 >
                     <div
@@ -394,15 +430,21 @@ export const ChallengePaper = ({
  * @param props.title - the challenge title, the fallback accessible name of a file.
  * @param props.inModal - in a dialog the pane keeps its own `60dvh` instead of filling a
  *   viewport-tall frame that does not exist there (see {@link ChallengePaperProps.inModal}).
+ * @param props.expand - full-screen controls, forwarded to the ONE-section case only. A
+ *   multi-section paper is a scrolling column of cards, and a card growing to the viewport
+ *   from inside a column the reader is scrolling is a jump, not an expansion — so those
+ *   viewers simply do not draw the button.
  */
 const PaperSections = ({
     sections,
     title,
     inModal,
+    expand,
 }: {
     sections: Array<ChallengePaperSection>
     title: string
     inModal: boolean
+    expand?: ExamExpandControls
 }) => {
     const only = sections.length === 1 ? sections[0] : undefined
     if (only) {
@@ -410,7 +452,14 @@ const PaperSections = ({
             <PaperSection
                 section={only}
                 title={title}
-                className={inModal ? "h-[60dvh]" : "h-[60dvh] lg:h-full"}
+                className={
+                    expand?.isExpanded
+                        ? expand.paneClassName
+                        : inModal
+                            ? "h-[60dvh]"
+                            : "h-[60dvh] lg:h-full"
+                }
+                expand={expand}
             />
         )
     }
@@ -452,20 +501,30 @@ const sectionKey = (section: ChallengePaperSection): string =>
  * @param props.section - the section to render.
  * @param props.title - the challenge title, used when a file carries no filename.
  * @param props.className - the height the caller wants the frame to take.
+ * @param props.expand - full-screen controls, when this section is allowed to offer them.
  */
 const PaperSection = ({
     section,
     title,
     className,
+    expand,
 }: {
     section: ChallengePaperSection
     title: string
     className: string
+    expand?: ExamExpandControls
 }) => {
     const t = useTranslations("challenge")
 
     if (section.kind === "IMAGES") {
-        return <PaperImagesSection files={section.files} title={title} className={className} />
+        return (
+            <PaperImagesSection
+                files={section.files}
+                title={title}
+                className={className}
+                expand={expand}
+            />
+        )
     }
 
     /* No border/radius of its own — the frame around it owns them. */
@@ -499,15 +558,18 @@ const PaperSection = ({
  * @param props.files - the pages of this run, in order.
  * @param props.title - the challenge title, used for the fallback alt text.
  * @param props.className - the height the caller wants the pane to take.
+ * @param props.expand - full-screen controls; omitted → the viewer draws no expand button.
  */
 const PaperImagesSection = ({
     files,
     title,
     className,
+    expand,
 }: {
     files: Array<ChallengePaperFileView>
     title: string
     className: string
+    expand?: ExamExpandControls
 }) => {
     const t = useTranslations("challenge")
     const [index, setIndex] = useState(0)
@@ -538,6 +600,10 @@ const PaperImagesSection = ({
             onIndexChange={onIndexChange}
             loadedCount={loadedCount}
             className={cn("min-h-0", className)}
+            isExpanded={expand?.isExpanded ?? false}
+            onExpandedChange={expand?.setExpanded}
+            areCommentsHidden={expand?.areCommentsHidden ?? false}
+            onCommentsHiddenChange={expand?.setCommentsHidden}
         />
     )
 }

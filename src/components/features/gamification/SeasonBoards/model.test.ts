@@ -27,6 +27,10 @@ const view = (over: Partial<SeasonBoardView> = {}): SeasonBoardView => ({
     termId: "term-1",
     entries: [],
     myRank: null,
+    seasonName: null,
+    startsAt: null,
+    endsAt: null,
+    lifetime: false,
     ...over,
 })
 
@@ -58,7 +62,7 @@ describe("boardOutcome", () => {
 
     it("có dòng ⇒ OK", () => {
         expect(
-            boardOutcome(view({ entries: [{ userId: "u1", xp: 10, rank: 1 }] })),
+            boardOutcome(view({ entries: [{ userId: "u1", xp: 10, rank: 1, username: null, displayName: null, avatarUrl: null, avatarFrame: null }] })),
         ).toBe("OK")
     })
 
@@ -67,7 +71,7 @@ describe("boardOutcome", () => {
             "FAILED",
         )
         expect(
-            boardOutcome(view({ entries: [{ userId: "u1", xp: 10, rank: 1 }] }), new Error("net")),
+            boardOutcome(view({ entries: [{ userId: "u1", xp: 10, rank: 1, username: null, displayName: null, avatarUrl: null, avatarFrame: null }] }), new Error("net")),
         ).toBe("FAILED")
     })
 })
@@ -95,8 +99,8 @@ describe("toSeasonBoardRows", () => {
         const rows = toSeasonBoardRows(
             view({
                 entries: [
-                    { userId: "u1", xp: 900, rank: 1 },
-                    { userId: "u2", xp: 800, rank: 2 },
+                    { userId: "u1", xp: 900, rank: 1, username: null, displayName: null, avatarUrl: null, avatarFrame: null },
+                    { userId: "u2", xp: 800, rank: 2, username: null, displayName: null, avatarUrl: null, avatarFrame: null },
                 ],
             }),
             "u2",

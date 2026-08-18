@@ -41,4 +41,20 @@ describe("SeasonHeader", () => {
         expect(screen.getByText("T2026S1")).toBeTruthy()
         expect(screen.queryByText("season.none")).toBeNull()
     })
+
+    it("có TÊN kỳ ⇒ hiện tên, KHÔNG hiện mã thô", () => {
+        // Mã kỳ được dựng dạng `T-<mã kỳ>-<8 ký tự băm>` (SeasonTermSyncService) nên nó
+        // KHÔNG phải thứ để đọc — người dùng đã nhìn thấy nguyên chuỗi "T-SU26-bfd6f768"
+        // trên trang thật. Có tên (V354) thì tên phải thắng.
+        render(<SeasonHeader seasonCode="T-SU26-bfd6f768" seasonName="Kỳ Summer 2026" noSeason={false} />)
+        expect(screen.getByText("Kỳ Summer 2026")).toBeTruthy()
+        expect(screen.queryByText("T-SU26-bfd6f768")).toBeNull()
+    })
+
+    it("tên rỗng/toàn khoảng trắng ⇒ rơi về mã, KHÔNG để trống nhãn", () => {
+        // Chuỗi rỗng lọt qua `??`; chỉ `||` sau khi trim mới chặn được. Không chặn thì dải
+        // mùa giải hiện một dòng tiêu đề TRỐNG.
+        render(<SeasonHeader seasonCode="T2026S1" seasonName="   " noSeason={false} />)
+        expect(screen.getByText("T2026S1")).toBeTruthy()
+    })
 })

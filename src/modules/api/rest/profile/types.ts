@@ -254,3 +254,25 @@ export interface TimelineEntry {
     summary: string
     occurredAt: string
 }
+
+/**
+ * Một khung viền avatar trong danh mục (`profile.avatar_frames`, V341).
+ *
+ * `cssGradient` là chuỗi CSS backend cấp để vẽ vòng viền; `assetUrl` là ảnh khung cho các
+ * khung có hoạ tiết. Khung có thể có một trong hai, hoặc cả hai — tầng vẽ ưu tiên ảnh.
+ */
+export interface AvatarFrameView {
+    code: string
+    name: string
+    nameVi: string | null
+    description: string | null
+    cssGradient: string | null
+    assetUrl: string | null
+    sortOrder: number
+}
+
+/** `GET /api/v1/profiles/me/appearance/catalog`. */
+export interface AppearanceCatalogView {
+    frames: Array<AvatarFrameView>
+    avatars?: Array<unknown>
+}

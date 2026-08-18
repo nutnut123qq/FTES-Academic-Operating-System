@@ -11,7 +11,6 @@ import { useQueryMyGamificationSwr } from "../hooks/useQueryMyGamificationSwr"
 import { tierFromXp } from "../leaderboardTiers"
 import { useBadgeLabel } from "../useBadgeLabel"
 import { StreakPopover } from "../StreakPopover"
-import { GoalsCard } from "../GoalsCard"
 import { GamificationEventHost } from "../GamificationEventHost"
 import { SeasonBoards } from "../SeasonBoards"
 
@@ -22,8 +21,11 @@ import { SeasonBoards } from "../SeasonBoards"
  * composes the `/me/*` progression / streak / activity / badge endpoints): stat
  * cards (XP · Level · Streak · Rank+tier) where the Streak card opens the detail
  * popover; a "Cách tính điểm" guide link; the season boards
- * ({@link SeasonBoards}); the
- * Daily/Weekly goals block; and the viewer's earned badges. Quest-completion toasts
+ * ({@link SeasonBoards}); and the viewer's earned badges.
+ *
+ * ★ KHỐI MỤC TIÊU ĐÃ CHUYỂN sang `/profile/progress`. Nó là việc riêng của từng người
+ * (đặt mục tiêu ngày/tuần cho chính mình), không liên quan tới đua hạng — mà nó chiếm
+ * TÁM trong mười hai nút của trang này, đẩy bảng xếp hạng xuống dưới màn hình đầu tiên. Quest-completion toasts
  * and the level-up moment are raised by the mounted {@link GamificationEventHost},
  * which diffs the same SWR caches. Guests see the public boards with dashed viewer
  * stats (no `/me/*` call fires). Every number is real backend data.
@@ -162,9 +164,6 @@ export const LeaderboardShell = () => {
                     return <React.Fragment key={stat.key}>{card}</React.Fragment>
                 })}
             </div>
-
-            {/* goals */}
-            <GoalsCard />
 
             {/* Bảng xếp hạng theo kỳ (tổng · cộng đồng+workplace) */}
             <SeasonBoards />

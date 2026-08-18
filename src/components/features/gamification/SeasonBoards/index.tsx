@@ -3,7 +3,7 @@
 import React, { useState } from "react"
 import { Button, Skeleton, Tabs, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
-import { BuildingsIcon, InfoIcon, TrophyIcon } from "@phosphor-icons/react"
+import { BuildingsIcon, InfoIcon, TrophyIcon, GraduationCapIcon} from "@phosphor-icons/react"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { ExtendedTabs } from "@/components/blocks/navigation/ExtendedTabs"
 import { useQueryMyCoursesSwr } from "@/components/features/course/hooks/useQueryMyCoursesSwr"
@@ -13,12 +13,15 @@ import { useQuerySeasonBoardSwr } from "../hooks/useQuerySeasonBoardSwr"
 import { CourseBoardPicker } from "./CourseBoardPicker"
 import { SeasonBoardList } from "./SeasonBoardList"
 import { SeasonHeader } from "./SeasonHeader"
-import { SEASON_BOARDS } from "./model"
+import { SEASON_SCOPES, type SeasonScope } from "./model"
+import { SeasonPicker } from "./SeasonPicker"
+import { useQuerySeasonOptionsSwr } from "../hooks/useQuerySeasonOptionsSwr"
 import { useBoardFailureContent } from "./useBoardFailureContent"
 
-/** Icon từng bảng — nói ngay lát cắt EXP mà bảng đó đếm. */
-const BOARD_ICON: Record<SeasonBoardKey, typeof TrophyIcon> = {
+/** Icon từng lát cắt — nói ngay bảng đó đếm EXP từ đâu. */
+const BOARD_ICON: Record<SeasonScope, typeof TrophyIcon> = {
     total: TrophyIcon,
+    course: GraduationCapIcon,
     social: BuildingsIcon,
 }
 
@@ -61,20 +64,34 @@ export const SeasonBoards = () => {
     const failureContent = useBoardFailureContent()
     const viewer = useAppSelector((state) => state.user.user)
 
-    const [board, setBoard] = useState<SeasonBoardKey>("total")
+    // HAI trục điều khiển, và chỉ hai: LÁT CẮT (bảng nào) và CỬA SỔ (kỳ nào / tích luỹ).
+    // "Khoá học" là một lát cắt thứ ba nhưng KHÔNG phải một bảng của endpoint này — nó có
+    // công thức riêng ở GraphQL `courseLeaderboard`. Gộp nó vào cùng thanh chọn là đúng
+    // với cách người dùng nghĩ ("xem bảng nào"), nên trạng thái ở đây là `scope` chứ không
+    // phải `board`, và chỉ hai giá trị đầu mới ánh xạ sang một lần gọi bảng.
+    const [scope, setScope] = useState<SeasonScope>("total")
+    const [season, setSeason] = useState<string | null>(null)
     const { courses } = useQueryMyCoursesSwr()
+    const { seasons } = useQuerySeasonOptionsSwr()
+
+    const board: SeasonBoardKey = scope === "social" ? "social" : "total"
+    const isCourseScope = scope === "course"
 
     const {
         rows,
         myRank,
+        myXp,
         seasonCode,
+        seasonName,
+        endsAt,
+        lifetime,
         outcome,
         isGuest,
         isLoading,
         isValidating,
         error,
         mutate,
-    } = useQuerySeasonBoardSwr({ board })
+    } = useQuerySeasonBoardSwr({ board, season, enabled: !isCourseScope })
 
     const endpoint = `GET /gamification/boards/${board}`
     const boardFailure = failureContent(error, endpoint, () => void mutate())
@@ -90,38 +107,68 @@ export const SeasonBoards = () => {
                 </Typography>
             </div>
 
-            <SeasonHeader seasonCode={seasonCode} noSeason={outcome === "NO_SEASON"} />
+            {/* HAI nút điều khiển, hết. Trước đợt này trang có mười hai: ba nút kỳ hạn mục
+                tiêu, ba nút chỉ số, ô nhập, nút lưu, hai tab, ô chọn khoá và một link mở
+                bảng khoá. Khối mục tiêu đã dọn sang trang hồ sơ (nó là việc riêng của từng
+                người, không liên quan đua hạng), còn ô chọn khoá nay chỉ hiện KHI chọn lát
+                cắt "khoá học" — nên lúc nào trên màn hình cũng chỉ có đúng hai nút. */}
+            <div className="flex flex-wrap items-center gap-2">
+                <SeasonPicker
+                    seasons={seasons}
+                    value={season}
+                    onChange={setSeason}
+                    currentLabel={seasonName ?? seasonCode}
+                />
+                <div className="min-w-0 flex-1">
+                    <ExtendedTabs
+                        selectedKey={scope}
+                        onSelectionChange={(key) => setScope(key as SeasonScope)}
+                    >
+                        <Tabs.ListContainer>
+                            <Tabs.List aria-label={t("title")}>
+                                {SEASON_SCOPES.map((key) => {
+                                    const BoardIcon = BOARD_ICON[key]
+                                    const label = t(`tabs.${key}`)
+                                    return (
+                                        <Tabs.Tab key={key} id={key}>
+                                            <span className="flex items-center gap-2">
+                                                <BoardIcon
+                                                    aria-hidden
+                                                    focusable="false"
+                                                    className="size-5 shrink-0"
+                                                />
+                                                {/* Nhãn hiện từ sm trở lên; dưới đó giữ bản
+                                                    sr-only để tab icon-only vẫn có tên cho
+                                                    trình đọc màn hình. */}
+                                                <span className="hidden sm:inline">{label}</span>
+                                                <span className="sr-only sm:hidden">{label}</span>
+                                            </span>
+                                        </Tabs.Tab>
+                                    )
+                                })}
+                            </Tabs.List>
+                        </Tabs.ListContainer>
+                    </ExtendedTabs>
+                </div>
+            </div>
 
-            <ExtendedTabs
-                selectedKey={board}
-                onSelectionChange={(key) => setBoard(key as SeasonBoardKey)}
-            >
-                <Tabs.ListContainer>
-                    <Tabs.List aria-label={t("title")}>
-                        {SEASON_BOARDS.map((key) => {
-                            const BoardIcon = BOARD_ICON[key]
-                            const label = t(`tabs.${key}`)
-                            return (
-                                <Tabs.Tab key={key} id={key}>
-                                    <span className="flex items-center gap-2">
-                                        <BoardIcon
-                                            aria-hidden
-                                            focusable="false"
-                                            className="size-5 shrink-0"
-                                        />
-                                        {/* Nhãn hiện từ sm trở lên; dưới đó giữ bản sr-only
-                                            để tab icon-only vẫn có tên cho trình đọc màn hình. */}
-                                        <span className="hidden sm:inline">{label}</span>
-                                        <span className="sr-only sm:hidden">{label}</span>
-                                    </span>
-                                </Tabs.Tab>
-                            )
-                        })}
-                    </Tabs.List>
-                </Tabs.ListContainer>
-            </ExtendedTabs>
+            {/* Dải mùa giải: kỳ nào · còn bao lâu · bạn đứng đâu. Lát cắt khoá học không đi
+                qua endpoint này nên không có kỳ để hiện — vẽ dải ở đó là hiện số của bảng
+                KHÁC ngay bên trên bảng đang xem. */}
+            {isCourseScope ? null : (
+                <SeasonHeader
+                    seasonCode={seasonCode}
+                    seasonName={seasonName}
+                    endsAt={endsAt}
+                    lifetime={lifetime}
+                    noSeason={outcome === "NO_SEASON"}
+                    myRank={myRank}
+                    myXp={myXp}
+                />
+            )}
 
-            {/* "Bảng này đếm gì" — phần bắt buộc, không phải trang trí. */}
+            {/* "Bảng này đếm gì" — phần bắt buộc, không phải trang trí. Người hạng 3 bảng
+                này mà hạng 40 bảng kia sẽ đọc thành "hệ thống tính sai" nếu không có nó. */}
             <div className="flex flex-col gap-1 rounded-2xl bg-default/40 p-4">
                 <div className="flex items-center gap-2">
                     <InfoIcon className="size-4 text-muted" aria-hidden focusable="false" />
@@ -129,67 +176,62 @@ export const SeasonBoards = () => {
                         {t("countsLabel")}
                     </Typography>
                 </div>
-                <Typography type="body-sm">{t(`counts.${board}`)}</Typography>
+                <Typography type="body-sm">{t(`counts.${scope}`)}</Typography>
                 <Typography type="body-xs" color="muted">
                     {t("whyDifferent")}
                 </Typography>
             </div>
 
-            {/* Lối vào bảng KHOÁ HỌC đã có — KHÔNG dựng lại bảng đó ở đây. */}
-            <CourseBoardPicker courses={courses} />
-
-            {/* Thanh công cụ: hạng của mình + làm mới.
-                "Bạn chưa có hạng" CHỈ được nói khi bảng đã tải xong, có kỳ, và thật sự
-                không có hạng — nói câu đó lúc đang tải, đang lỗi, hay chưa khai kỳ nào là
-                biến mấy tình huống khác nhau thành cùng một lời khẳng định sai. */}
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <Typography type="body-sm" weight="medium">
-                    {isGuest || isLoading || outcome === "FAILED" || outcome === "NO_SEASON"
-                        ? " "
-                        : myRank !== null
-                            ? t("myRank", { rank: myRank })
-                            : t("myRankUnranked")}
-                </Typography>
-                <Button
-                    size="sm"
-                    variant="ghost"
-                    isPending={isValidating}
-                    onPress={() => {
-                        void mutate()
-                    }}
-                >
-                    {t("refresh")}
-                </Button>
-            </div>
-
-            {isGuest ? (
-                // Endpoint đòi đăng nhập. Đây KHÔNG phải lỗi và cũng KHÔNG phải bảng rỗng —
-                // nói đúng việc phải làm thay vì hiện một khối 401.
-                <Typography type="body-sm" color="muted">
-                    {t("guest")}
-                </Typography>
-            ) : outcome === "NO_SEASON" ? (
-                // Cờ NO_SEASON của backend: KHÔNG có kỳ nào đang chạy. Câu này phải khác
-                // hẳn câu "chưa ai lên bảng" ở nhánh rỗng bên dưới — `SeasonHeader` đã nói
-                // rõ, nên chỗ này im lặng chứ không vẽ thêm một màn rỗng nói sai.
-                null
+            {isCourseScope ? (
+                // Bảng khoá học ĐÃ CÓ ở /courses/{slug}/learn/leaderboard với công thức
+                // riêng. Dựng lại bản thứ hai ở đây sẽ đẻ ra hai con số cùng tên "hạng
+                // trong khoá" mà không khớp nhau — hỏng nặng hơn hẳn một cú điều hướng.
+                <CourseBoardPicker courses={courses} />
             ) : (
-                <AsyncContent
-                    isLoading={isLoading && rows.length === 0}
-                    skeleton={<BoardSkeleton />}
-                    isEmpty={rows.length === 0}
-                    emptyContent={{ title: t("empty"), description: t("emptyHint") }}
-                    // ★ Lỗi ĐI TRƯỚC rỗng: lỗi tải phải hiện ra thành câu chữ, không được
-                    // rơi vào nhánh "chưa có ai lên bảng".
-                    error={boardFailure ? error : undefined}
-                    errorContent={boardFailure ?? undefined}
-                >
-                    <SeasonBoardList
-                        rows={rows}
-                        viewerName={viewer?.displayName ?? viewer?.username ?? null}
-                        viewerAvatar={viewer?.avatar ?? null}
-                    />
-                </AsyncContent>
+                <>
+                    <div className="flex flex-wrap items-center justify-end gap-3">
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            isPending={isValidating}
+                            onPress={() => {
+                                void mutate()
+                            }}
+                        >
+                            {t("refresh")}
+                        </Button>
+                    </div>
+
+                    {isGuest ? (
+                        // Endpoint đòi đăng nhập. Đây KHÔNG phải lỗi và cũng KHÔNG phải bảng
+                        // rỗng — nói đúng việc phải làm thay vì hiện một khối 401.
+                        <Typography type="body-sm" color="muted">
+                            {t("guest")}
+                        </Typography>
+                    ) : outcome === "NO_SEASON" ? (
+                        // Cờ NO_SEASON: KHÔNG có kỳ nào đang chạy. Câu này phải khác hẳn câu
+                        // "chưa ai lên bảng" ở nhánh rỗng bên dưới — SeasonHeader đã nói rõ,
+                        // nên chỗ này im lặng chứ không vẽ thêm một màn rỗng nói sai.
+                        null
+                    ) : (
+                        <AsyncContent
+                            isLoading={isLoading && rows.length === 0}
+                            skeleton={<BoardSkeleton />}
+                            isEmpty={rows.length === 0}
+                            emptyContent={{ title: t("empty"), description: t("emptyHint") }}
+                            // ★ Lỗi ĐI TRƯỚC rỗng: lỗi tải phải hiện ra thành câu chữ, không
+                            // được rơi vào nhánh "chưa có ai lên bảng".
+                            error={boardFailure ? error : undefined}
+                            errorContent={boardFailure ?? undefined}
+                        >
+                            <SeasonBoardList
+                                rows={rows}
+                                viewerName={viewer?.displayName ?? viewer?.username ?? null}
+                                viewerAvatar={viewer?.avatar ?? null}
+                            />
+                        </AsyncContent>
+                    )}
+                </>
             )}
         </section>
     )

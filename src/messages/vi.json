@@ -2972,6 +2972,7 @@
             "insufficient": "Số dư xu không đủ để thanh toán.",
             "pay": "Thanh toán",
             "scanHint": "Quét mã QR bằng ứng dụng ngân hàng để thanh toán.",
+            "qrError": "Không tạo được mã QR. Vui lòng thử lại, hoặc liên hệ hỗ trợ nếu vẫn lỗi.",
             "countdownLabel": "Đơn hết hạn sau",
             "expired": "Mã QR đã hết hạn",
             "expiredHint": "Hết thời gian giữ đơn mà chưa nhận được thanh toán. Nếu bạn vừa chuyển khoản thì cứ để yên cửa sổ này, hệ thống vẫn đang đối soát và sẽ tự báo khi tiền vào. Chưa chuyển thì hãy tạo lại đơn.",

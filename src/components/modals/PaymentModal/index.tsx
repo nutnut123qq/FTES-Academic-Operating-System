@@ -1057,7 +1057,19 @@ const AwaitingView = ({
 
     return (
         <div className="flex flex-col items-center gap-4 py-2">
-            <QRCode size={220} data={qrCode || "FTES"} />
+            {qrCode ? (
+                <QRCode size={220} data={qrCode} />
+            ) : (
+                // Đơn VIETQR nhưng BE trả payload rỗng → báo lỗi, KHÔNG vẽ QR mồi (mã rác không quét được).
+                <div
+                    role="alert"
+                    className="flex size-[220px] items-center justify-center rounded-lg border border-dashed border-default bg-default px-5 text-center"
+                >
+                    <Typography type="body-sm" color="muted">
+                        {t("checkout.qrError")}
+                    </Typography>
+                </div>
+            )}
             <Typography type="body-sm" color="muted" className="text-center">
                 {t("checkout.scanHint")}
             </Typography>

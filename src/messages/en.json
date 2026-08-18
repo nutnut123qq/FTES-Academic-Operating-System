@@ -2960,6 +2960,7 @@
             "insufficient": "Not enough coins to pay.",
             "pay": "Pay",
             "scanHint": "Scan the QR code with your banking app to pay.",
+            "qrError": "Couldn't create the QR code. Please try again, or contact support if it keeps happening.",
             "countdownLabel": "Order expires in",
             "expired": "The QR code has expired",
             "expiredHint": "The hold on this order ran out before a payment arrived. If you have just transferred, keep this window open — we are still reconciling and will confirm as soon as the money lands. Otherwise, create the order again.",

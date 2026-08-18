@@ -41,7 +41,7 @@ export interface EditProfileFormValues {
     /**
      * Major CODE → BE academic `majorCode` (empty = clear / not chosen).
      *
-     * This is the field the profile Skill-EXP panel reads to work out which skill
+     * This is the field the profile skill-Elo panel reads to work out which skill
      * categories to show; without a way to set it here, the panel's "pick your major"
      * prompt had nowhere to send anyone.
      */

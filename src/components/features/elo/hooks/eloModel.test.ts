@@ -1,18 +1,18 @@
 import { describe, expect, it } from "vitest"
 import {
-    buildSkillExpChart,
+    buildEloChart,
     niceAxisMax,
     readSkillCategory,
-    readSkillExp,
-    readSkillExpPayload,
-    skillSetNotice,
-} from "./skillExpModel"
+    readEloRow,
+    readEloPayload,
+    eloSetNotice,
+} from "./eloModel"
 
 /** A catalogue row as `GET /career/skill-categories` serves it. */
 const category = (slug: string, label: string, sortOrder: number) => ({ slug, label, sortOrder })
 
-/** A learner row as the `items[]` of `GET /career/me/skill-exp` serves it. */
-const total = (slug: string, totalExp: number) => ({ slug, label: slug, sortOrder: 0, totalExp })
+/** A learner row as the `items[]` of `GET /career/me/elo` serves it. */
+const total = (slug: string, totalElo: number) => ({ slug, label: slug, sortOrder: 0, totalElo })
 
 /** The envelope the backend answers with since change `default-skills-by-major`. */
 const skillSet = (
@@ -61,33 +61,48 @@ describe("niceAxisMax", () => {
     })
 })
 
-describe("readSkillCategory / readSkillExp", () => {
+describe("readSkillCategory / readEloRow", () => {
     it("reads snake_case as well as camelCase", () => {
         expect(readSkillCategory({ slug: "devops", label: "DevOps", sort_order: 8 })).toEqual({
             slug: "devops",
             label: "DevOps",
             sortOrder: 8,
         })
-        // `total_exp` is a bigint column — a stringified total must still add up.
-        expect(readSkillExp({ slug: "devops", total_exp: "120" })).toEqual({
+        // `total_elo` is a bigint column — a stringified total must still add up.
+        expect(readEloRow({ slug: "devops", total_elo: "120" })).toEqual({
             slug: "devops",
             label: undefined,
             sortOrder: undefined,
-            totalExp: 120,
+            totalElo: 120,
         })
     })
 
     it("drops rows with no slug and clamps a negative total", () => {
         expect(readSkillCategory({ label: "DevOps" })).toBeNull()
         expect(readSkillCategory(null)).toBeNull()
-        expect(readSkillExp("nope")).toBeNull()
-        expect(readSkillExp({ slug: "testing", totalExp: -40 })?.totalExp).toBe(0)
+        expect(readEloRow("nope")).toBeNull()
+        expect(readEloRow({ slug: "testing", totalElo: -40 })?.totalElo).toBe(0)
+    })
+
+    /**
+     * CÁI NÀY LÀ NỬA CÒN LẠI CỦA ĐƯỜNG LÙI, và thiếu nó thì đường lùi kia vô nghĩa.
+     *
+     * `getMyCareerElo` gặp 404 sẽ gọi alias cũ `/career/me/skill-exp` — alias đó trả hình dạng CŨ
+     * (`totalExp`). Nếu chỗ này chỉ đọc `totalElo` thì lời gọi lùi vẫn "thành công" nhưng mọi cột
+     * về 0: học viên đang có 250 Elo nhìn thấy một biểu đồ trắng mà KHÔNG có lỗi nào để mà thấy.
+     * Đó là kiểu hỏng tệ nhất — im lặng và trông y như dữ liệu thật.
+     */
+    it("đọc được CẢ hình dạng trước-đổi-tên (totalExp) mà alias cũ trả về", () => {
+        expect(readEloRow({ slug: "programming", totalExp: 250 })?.totalElo).toBe(250)
+        expect(readEloRow({ slug: "programming", total_exp: "250" })?.totalElo).toBe(250)
+        // Hình dạng MỚI vẫn thắng khi có cả hai (bản BE mới, không lẫn lộn).
+        expect(readEloRow({ slug: "programming", totalElo: 9, totalExp: 250 })?.totalElo).toBe(9)
     })
 })
 
-describe("readSkillExpPayload", () => {
+describe("readEloPayload", () => {
     it("reads the envelope shape", () => {
-        const payload = readSkillExpPayload(
+        const payload = readEloPayload(
             skillSet([total("programming", 10)], { majorCode: "SE", majorLabel: "Kỹ Thuật Phần Mềm" }),
         )
         expect(payload.rows.map((row) => row.slug)).toEqual(["programming"])
@@ -97,7 +112,7 @@ describe("readSkillExpPayload", () => {
     })
 
     it("still reads the legacy bare array, so BE/FE deploy order cannot break the panel", () => {
-        const payload = readSkillExpPayload([total("database", 40)])
+        const payload = readEloPayload([total("database", 40)])
         expect(payload.rows.map((row) => row.slug)).toEqual(["database"])
         // A payload with no major information reads as "we do not know" — which is what
         // the array shape meant — so the surface still prompts for a major.
@@ -106,15 +121,15 @@ describe("readSkillExpPayload", () => {
     })
 
     it("treats an unrecognised source as FULL_CATALOGUE (never suppresses the prompt)", () => {
-        expect(readSkillExpPayload({ source: "SOMETHING_NEW", items: [] }).source).toBe("FULL_CATALOGUE")
-        expect(readSkillExpPayload(null).source).toBe("FULL_CATALOGUE")
-        expect(readSkillExpPayload(undefined).rows).toEqual([])
+        expect(readEloPayload({ source: "SOMETHING_NEW", items: [] }).source).toBe("FULL_CATALOGUE")
+        expect(readEloPayload(null).source).toBe("FULL_CATALOGUE")
+        expect(readEloPayload(undefined).rows).toEqual([])
     })
 })
 
-describe("buildSkillExpChart", () => {
+describe("buildEloChart", () => {
     it("ranks the learner's own skill set strongest first, zeros included", () => {
-        const chart = buildSkillExpChart(
+        const chart = buildEloChart(
             CATALOGUE,
             skillSet([total("programming", 340), total("database", 150), total("testing", 0)], {
                 majorCode: "SE",
@@ -122,16 +137,16 @@ describe("buildSkillExpChart", () => {
         )
 
         expect(chart.bars.map((bar) => bar.slug)).toEqual(["programming", "database", "testing"])
-        expect(chart.bars.map((bar) => bar.exp)).toEqual([340, 150, 0])
+        expect(chart.bars.map((bar) => bar.elo)).toEqual([340, 150, 0])
         expect(chart.peak).toBe(340)
         expect(chart.total).toBe(490)
         expect(chart.isEmpty).toBe(false)
-        expect(chart.hasEarnedExp).toBe(true)
+        expect(chart.hasEarnedElo).toBe(true)
     })
 
     /** THE BUG THIS CHANGE FIXES: a brand-new learner used to get the empty state. */
     it("draws the major's skill set at zero instead of falling into the empty state", () => {
-        const chart = buildSkillExpChart(
+        const chart = buildEloChart(
             CATALOGUE,
             skillSet([total("programming", 0), total("database", 0)], {
                 majorCode: "SE",
@@ -143,7 +158,7 @@ describe("buildSkillExpChart", () => {
         expect(chart.isEmpty).toBe(false)
         // ...but the surface still has to SAY nothing has been earned — that is a
         // different message from the axis hint, not a hidden chart.
-        expect(chart.hasEarnedExp).toBe(false)
+        expect(chart.hasEarnedElo).toBe(false)
         expect(chart.axisMax).toBe(0)
         expect(chart.majorLabel).toBe("Kỹ Thuật Phần Mềm")
         expect(chart.source).toBe("MAJOR_DEFAULTS")
@@ -151,22 +166,22 @@ describe("buildSkillExpChart", () => {
 
     /** A Foreign-Languages learner must not get DevOps bars back from the catalogue. */
     it("does not widen the skill set back to the full catalogue", () => {
-        const chart = buildSkillExpChart(CATALOGUE, skillSet([total("database", 0)], { majorCode: "LANG" }))
+        const chart = buildEloChart(CATALOGUE, skillSet([total("database", 0)], { majorCode: "LANG" }))
         expect(chart.bars.map((bar) => bar.slug)).toEqual(["database"])
     })
 
     it("scales the axis to the learner's own peak, never to a fixed maximum", () => {
-        expect(buildSkillExpChart(CATALOGUE, skillSet([total("programming", 340)])).axisMax).toBe(400)
-        // Ten times the EXP → ten times the axis; the bars stay raw, nothing is normalised.
-        expect(buildSkillExpChart(CATALOGUE, skillSet([total("programming", 3400)])).axisMax).toBe(4000)
+        expect(buildEloChart(CATALOGUE, skillSet([total("programming", 340)])).axisMax).toBe(400)
+        // Ten times the Elo → ten times the axis; the bars stay raw, nothing is normalised.
+        expect(buildEloChart(CATALOGUE, skillSet([total("programming", 3400)])).axisMax).toBe(4000)
     })
 
     /**
      * Ties keep the ORDER THE BACKEND SENT (the major's own order), not `sortOrder` —
      * which is the position in the global catalogue and disagrees on purpose.
      */
-    it("breaks EXP ties on the backend's order, then label — stable across re-renders", () => {
-        const chart = buildSkillExpChart(
+    it("breaks Elo ties on the backend's order, then label — stable across re-renders", () => {
+        const chart = buildEloChart(
             CATALOGUE,
             skillSet([total("testing", 0), total("database", 0), total("programming", 0)], {
                 majorCode: "MATH",
@@ -176,41 +191,41 @@ describe("buildSkillExpChart", () => {
     })
 
     it("labels bars from the catalogue so an admin rename lands in one place", () => {
-        const chart = buildSkillExpChart(CATALOGUE, skillSet([total("database", 0)]))
+        const chart = buildEloChart(CATALOGUE, skillSet([total("database", 0)]))
         expect(chart.bars[0]?.fallbackLabel).toBe("Database")
     })
 
     it("falls back to the catalogue when the learner read failed (guest / no permission)", () => {
-        const chart = buildSkillExpChart(CATALOGUE, [], true)
+        const chart = buildEloChart(CATALOGUE, [], true)
         expect(chart.bars.map((bar) => bar.slug)).toEqual(["programming", "database", "testing"])
-        expect(chart.bars.every((bar) => bar.exp === 0)).toBe(true)
+        expect(chart.bars.every((bar) => bar.elo === 0)).toBe(true)
         expect(chart.isEmpty).toBe(false)
         expect(chart.source).toBe("FULL_CATALOGUE")
-        // ...và PHẢI mang cờ nói rằng đây là danh mục thay thế, không phải EXP đã đọc được.
+        // ...và PHẢI mang cờ nói rằng đây là danh mục thay thế, không phải Elo đã đọc được.
         expect(chart.learnerReadUnavailable).toBe(true)
     })
 
     /**
      * "Đọc được và rỗng" KHÁC "không đọc được" — gộp hai cái này chính là lớp bug đang chữa.
      * Payload rỗng ĐỌC ĐƯỢC (học viên chưa học gì, BE cũ trả mảng trần) tuyệt đối không được
-     * mang cờ hỏng, nếu không màn hình sẽ đi bảo người dùng là hệ thống chưa đọc được EXP.
+     * mang cờ hỏng, nếu không màn hình sẽ đi bảo người dùng là hệ thống chưa đọc được Elo.
      */
     it("keeps an EMPTY-but-read payload apart from an UNREADABLE one", () => {
-        expect(buildSkillExpChart(CATALOGUE, []).learnerReadUnavailable).toBe(false)
-        expect(buildSkillExpChart(CATALOGUE, skillSet([])).learnerReadUnavailable).toBe(false)
-        expect(buildSkillExpChart(CATALOGUE, [], true).learnerReadUnavailable).toBe(true)
+        expect(buildEloChart(CATALOGUE, []).learnerReadUnavailable).toBe(false)
+        expect(buildEloChart(CATALOGUE, skillSet([])).learnerReadUnavailable).toBe(false)
+        expect(buildEloChart(CATALOGUE, [], true).learnerReadUnavailable).toBe(true)
     })
 
     it("is empty ONLY when there is not a single bucket to draw", () => {
-        const chart = buildSkillExpChart([], [])
+        const chart = buildEloChart([], [])
         expect(chart.isEmpty).toBe(true)
         expect(chart.bars).toEqual([])
     })
 
     it("still draws when the catalogue read fails but the learner payload arrives", () => {
-        const chart = buildSkillExpChart([], skillSet([
-            { slug: "security", label: "An toàn thông tin", sortOrder: 90, totalExp: 20 },
-            { slug: "devops", label: "DevOps", sortOrder: 80, totalExp: 80 },
+        const chart = buildEloChart([], skillSet([
+            { slug: "security", label: "An toàn thông tin", sortOrder: 90, totalElo: 20 },
+            { slug: "devops", label: "DevOps", sortOrder: 80, totalElo: 80 },
         ], { majorCode: "SE" }))
         expect(chart.bars.map((bar) => bar.slug)).toEqual(["devops", "security"])
         expect(chart.bars[0]?.fallbackLabel).toBe("DevOps")
@@ -220,7 +235,7 @@ describe("buildSkillExpChart", () => {
     it("carries the major code even when the skill set fell back to the catalogue", () => {
         // BE trả kèm majorCode ngay cả khi source=FULL_CATALOGUE (ngành chưa khai bộ mặc định) —
         // đó là thứ duy nhất tách được "chưa chọn ngành" khỏi "ngành chưa có bộ".
-        const chart = buildSkillExpChart(CATALOGUE, {
+        const chart = buildEloChart(CATALOGUE, {
             majorCode: "AI",
             majorLabel: "Trí tuệ nhân tạo",
             source: "FULL_CATALOGUE",
@@ -232,9 +247,9 @@ describe("buildSkillExpChart", () => {
     })
 
     it("ignores malformed rows instead of throwing", () => {
-        const chart = buildSkillExpChart(
+        const chart = buildEloChart(
             [...CATALOGUE, null, { label: "no slug" }],
-            { source: "MAJOR_DEFAULTS", items: [total("programming", 100), "nope", { totalExp: 999 }] },
+            { source: "MAJOR_DEFAULTS", items: [total("programming", 100), "nope", { totalElo: 999 }] },
         )
         expect(chart.bars).toHaveLength(1)
         expect(chart.total).toBe(100)
@@ -246,14 +261,14 @@ describe("buildSkillExpChart", () => {
  * kết luận "chưa rõ ngành của bạn", trong khi BE cố tình gộp hai tình huống khác hẳn nhau vào cùng
  * một `source` và trả `majorCode` kèm theo để tách chúng ra.
  */
-describe("skillSetNotice", () => {
+describe("eloSetNotice", () => {
     const chartOf = (totals: unknown, learnerReadUnavailable = false) =>
-        buildSkillExpChart(CATALOGUE, totals, learnerReadUnavailable)
+        buildEloChart(CATALOGUE, totals, learnerReadUnavailable)
 
     it("mời chọn ngành CHỈ khi thật sự chưa chọn ngành", () => {
-        expect(skillSetNotice(chartOf(skillSet([total("database", 0)])))).toBe("NO_MAJOR")
+        expect(eloSetNotice(chartOf(skillSet([total("database", 0)])))).toBe("NO_MAJOR")
         // Bản BE cũ (mảng trần, không có tin gì về ngành) cũng là "chưa biết ngành".
-        expect(skillSetNotice(chartOf([total("database", 0)]))).toBe("NO_MAJOR")
+        expect(eloSetNotice(chartOf([total("database", 0)]))).toBe("NO_MAJOR")
     })
 
     /**
@@ -270,18 +285,18 @@ describe("skillSetNotice", () => {
             source: "FULL_CATALOGUE",
             items: [],
         })
-        expect(skillSetNotice(chart)).toBe("MAJOR_WITHOUT_SET")
+        expect(eloSetNotice(chart)).toBe("MAJOR_WITHOUT_SET")
     })
 
     it("nói đúng khi bộ cột là của ngành, và im lặng khi thiếu nhãn ngành", () => {
         expect(
-            skillSetNotice(chartOf(skillSet([total("database", 10)], {
+            eloSetNotice(chartOf(skillSet([total("database", 10)], {
                 majorCode: "SE",
                 majorLabel: "Kỹ Thuật Phần Mềm",
             }))),
         ).toBe("MAJOR_SET")
         // Danh mục ngành (service khác) không với tới được ⇒ không nhãn ⇒ đừng in mã trần.
-        expect(skillSetNotice(chartOf({
+        expect(eloSetNotice(chartOf({
             majorCode: "SE",
             majorLabel: null,
             source: "MAJOR_DEFAULTS",
@@ -289,8 +304,8 @@ describe("skillSetNotice", () => {
         }))).toBe("NONE")
     })
 
-    /** Không đọc được EXP thì mọi câu khác đều là suy đoán — kể cả lời mời chọn ngành. */
+    /** Không đọc được Elo thì mọi câu khác đều là suy đoán — kể cả lời mời chọn ngành. */
     it("nói 'chưa đọc được' thay vì mời chọn ngành khi đường đọc học viên hỏng", () => {
-        expect(skillSetNotice(chartOf([], true))).toBe("READ_UNAVAILABLE")
+        expect(eloSetNotice(chartOf([], true))).toBe("READ_UNAVAILABLE")
     })
 })

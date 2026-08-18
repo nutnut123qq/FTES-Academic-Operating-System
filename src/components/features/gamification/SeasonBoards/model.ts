@@ -173,3 +173,34 @@ export const toSeasonBoardRows = (
  * đẹp bịa ra ở đây sẽ che mất việc người đó chưa có hồ sơ.
  */
 export const shortUserLabel = (userId: string): string => `#${userId.slice(0, 8)}`
+
+/**
+ * Nhãn ĐỌC ĐƯỢC của một kỳ. Đây là hàm duy nhất được phép quyết định "hiện chữ gì cho kỳ này".
+ *
+ * <p><b>Mã kỳ KHÔNG BAO GIỜ được in nguyên ra màn hình.</b> Nó được dựng ở
+ * {@code SeasonTermSyncService} theo công thức {@code T-<mã kỳ>-<8 ký tự băm md5(termId)>}; phần
+ * băm có mặt để hai kỳ trùng mã ở hai năm khác nhau không đụng nhau, nó không mang thông tin nào
+ * cho người đọc. In thẳng ra cho người dùng thấy "T-SU26-bfd6f768" — đã xảy ra thật trên
+ * production.
+ *
+ * <p>Thứ tự rơi: tên backend (V356) → phần MÃ KỲ cắt ra từ mã mùa ("SU26") → `null`. Trả `null`
+ * thay vì một chuỗi bịa để người gọi tự chọn câu phù hợp với chỗ của mình (ô chọn nói "Kỳ đang
+ * chạy", dải mùa nói câu khác) — hàm này không biết nó đang được vẽ ở đâu.
+ */
+export const seasonDisplayName = (
+    name: string | null | undefined,
+    code: string | null | undefined,
+): string | null => {
+    const trimmedName = name?.trim()
+    if (trimmedName) {
+        return trimmedName
+    }
+    const trimmedCode = code?.trim()
+    if (!trimmedCode) {
+        return null
+    }
+    // `T-<mã kỳ>-<8 hex>`. Chỉ cắt khi khớp ĐÚNG khuôn — mã seed tay không theo khuôn này thì để
+    // nguyên còn hơn cắt bừa mất nghĩa.
+    const match = /^T-(.+)-[0-9a-f]{8}$/.exec(trimmedCode)
+    return match ? match[1] : trimmedCode
+}

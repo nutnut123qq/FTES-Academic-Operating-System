@@ -4228,7 +4228,7 @@
                 "course": "EXP bạn kiếm được TRONG một khoá, xếp hạng với chính học viên khoá đó."
             },
             "countsLabel": "Bảng này đếm gì",
-            "whyDifferent": "Hạng của bạn khác nhau giữa hai bảng vì mỗi bảng đếm một LÁT CẮT EXP khác nhau — không phải hệ thống tính sai.",
+            "whyDifferent": "Hạng của bạn khác nhau giữa các bảng vì mỗi bảng đếm một LÁT CẮT EXP khác nhau — không phải hệ thống tính sai.",
             "xp": "{xp} EXP",
             "you": "Bạn",
             "myRank": "Hạng của bạn trong kỳ này: {rank}",

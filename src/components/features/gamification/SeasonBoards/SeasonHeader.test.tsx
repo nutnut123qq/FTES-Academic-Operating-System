@@ -51,10 +51,18 @@ describe("SeasonHeader", () => {
         expect(screen.queryByText("T-SU26-bfd6f768")).toBeNull()
     })
 
-    it("tên rỗng/toàn khoảng trắng ⇒ rơi về mã, KHÔNG để trống nhãn", () => {
-        // Chuỗi rỗng lọt qua `??`; chỉ `||` sau khi trim mới chặn được. Không chặn thì dải
-        // mùa giải hiện một dòng tiêu đề TRỐNG.
+    it("tên rỗng/toàn khoảng trắng ⇒ vẫn có nhãn, KHÔNG để trống", () => {
+        // Chuỗi rỗng lọt qua `??`; chỉ `||` sau khi trim mới chặn được. Không chặn thì dải mùa
+        // giải hiện một dòng tiêu đề TRỐNG.
         render(<SeasonHeader seasonCode="T2026S1" seasonName="   " noSeason={false} />)
         expect(screen.getByText("T2026S1")).toBeTruthy()
+    })
+
+    it("chưa có tên ⇒ cắt phần băm khỏi mã, KHÔNG in mã thô", () => {
+        // Đã lộ ra production: dải mùa in nguyên "T-SU26-bfd6f768", lặp lại đúng chuỗi mà ô chọn
+        // mùa ngay bên trên vừa hiện.
+        render(<SeasonHeader seasonCode="T-SU26-bfd6f768" noSeason={false} />)
+        expect(screen.getByText("SU26")).toBeTruthy()
+        expect(screen.queryByText("T-SU26-bfd6f768")).toBeNull()
     })
 })

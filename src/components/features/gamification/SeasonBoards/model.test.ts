@@ -6,6 +6,7 @@ import {
     SEASON_BOARDS,
     boardOutcome,
     classifyBoardFailure,
+    seasonDisplayName,
     shortUserLabel,
     toSeasonBoardRows,
 } from "./model"
@@ -113,5 +114,30 @@ describe("toSeasonBoardRows", () => {
 describe("shortUserLabel", () => {
     it("mã rút gọn — thứ duy nhất THẬT khi contract backend không mang tên", () => {
         expect(shortUserLabel("7b1e2c44-0a55-4f0a-9a71-9d5a3f2b1c00")).toBe("#7b1e2c44")
+    })
+})
+
+describe("seasonDisplayName", () => {
+    it("có tên ⇒ dùng tên", () => {
+        expect(seasonDisplayName("Kỳ Summer 2026", "T-SU26-bfd6f768")).toBe("Kỳ Summer 2026")
+    })
+
+    it("chưa có tên ⇒ cắt phần băm, KHÔNG in mã thô", () => {
+        // Đã lộ ra production: người dùng nhìn thấy nguyên chuỗi "T-SU26-bfd6f768". Phần băm chỉ
+        // để hai kỳ trùng mã ở hai năm không đụng nhau — nó không mang thông tin cho người đọc.
+        expect(seasonDisplayName(null, "T-SU26-bfd6f768")).toBe("SU26")
+    })
+
+    it("mã không theo khuôn ⇒ để NGUYÊN, không cắt bừa", () => {
+        // Kỳ seed tay không có phần băm; cắt theo khuôn không khớp là làm mất nghĩa.
+        expect(seasonDisplayName(null, "T2026S1")).toBe("T2026S1")
+    })
+
+    it("tên toàn khoảng trắng ⇒ coi như không có", () => {
+        expect(seasonDisplayName("   ", "T-FA25-0a1b2c3d")).toBe("FA25")
+    })
+
+    it("không có gì ⇒ null, để người gọi tự chọn câu", () => {
+        expect(seasonDisplayName(null, null)).toBeNull()
     })
 })

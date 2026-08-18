@@ -18,7 +18,7 @@ import { useGetMyQuestsSwr } from "@/hooks/swr/api/rest/queries/useGetMyQuestsSw
 import { useGetMyWalletSwr } from "@/hooks/swr/api/rest/queries/useGetMyWalletSwr"
 import type { QuestItemView } from "@/modules/api/rest/gamification"
 import { QUEST_CTA_ICON, QUEST_FALLBACK_ICON, QUEST_ICON_MAP } from "./map"
-import { questCtaHref, questProgress } from "./model"
+import { questCtaHref, questProgress, questRewardXp } from "./model"
 
 /** Skeleton for a single quest card — mirrors the real card so the list never jumps. */
 const QuestCardSkeleton = () => (
@@ -50,14 +50,27 @@ interface QuestCardProps {
 }
 
 /**
- * One quest row: icon + title + reward chip, an optional description, a progress
+ * One quest row: icon + title + reward chips, an optional description, a progress
  * meter over the day's ceiling, the claimed-of-limit status, and — while there is
  * still a claim left AND the code maps to an earning surface — a "go do it" CTA.
  * Fully claimed quests dim and swap the CTA for a done marker.
+ *
+ * Two reward chips sit side by side, both per-CLAIM and presented identically
+ * (soft chip, `+N .../lượt`) because they are the same kind of fact: coins in
+ * warning, EXP in accent. The EXP chip renders only when the backend actually
+ * quoted a number — see {@link questRewardXp} for why a missing value must not
+ * become "+0 EXP".
+ *
+ * `quest.triggerEventXp` is deliberately NOT drawn here. It answers a different
+ * question (what the underlying ACTIVITY is worth, earned quest or no quest), it
+ * is `null` for `DAILY_LOGIN`/`STREAK_7_BONUS` so cards would disagree row to row,
+ * and a card carrying two EXP numbers reads as one total — "+600 EXP" off a quest
+ * that pays 100. It belongs to the activity's own surface, not the quest card.
  */
 const QuestCard = ({ quest }: QuestCardProps) => {
     const t = useTranslations("gamification.quests")
     const { total, current, isDone } = questProgress(quest)
+    const rewardXp = questRewardXp(quest)
     // Locale-less on purpose — the `Link` below is the locale-aware one from
     // `@/i18n/navigation` and prepends the active locale itself.
     const href = isDone ? null : questCtaHref(quest.code)
@@ -74,13 +87,24 @@ const QuestCard = ({ quest }: QuestCardProps) => {
                     {QUEST_ICON_MAP[quest.code] ?? QUEST_FALLBACK_ICON}
                 </div>
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
-                    <div className="flex items-center gap-2">
-                        <Typography type="body-sm" weight="medium" className="min-w-0 flex-1 truncate">
+                    {/* Wraps, and the title keeps a floor width: two reward chips are
+                        ~185px, so on a 360px phone a `min-w-0` title would be squeezed
+                        to about four characters. Below the floor the chip group drops
+                        to its own line instead; on any normal viewport nothing moves. */}
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Typography type="body-sm" weight="medium" className="min-w-32 flex-1 truncate">
                             {quest.title}
                         </Typography>
-                        <Chip color="warning" variant="soft" size="sm" className="shrink-0">
-                            <Chip.Label>{t("perClaim", { coin: quest.rewardCoin })}</Chip.Label>
-                        </Chip>
+                        <div className="flex shrink-0 items-center gap-1.5">
+                            <Chip color="warning" variant="soft" size="sm">
+                                <Chip.Label>{t("perClaim", { coin: quest.rewardCoin })}</Chip.Label>
+                            </Chip>
+                            {rewardXp !== null ? (
+                                <Chip color="accent" variant="soft" size="sm">
+                                    <Chip.Label>{t("perClaimXp", { xp: rewardXp })}</Chip.Label>
+                                </Chip>
+                            ) : null}
+                        </div>
                     </div>
                     {quest.description ? (
                         <Typography type="body-xs" color="muted">
@@ -123,8 +147,8 @@ const QuestCard = ({ quest }: QuestCardProps) => {
 /**
  * The `/quests` daily quest board — today's quests from
  * `GET /api/v1/gamification/me/quests` (change `gamification-quest-coin-engine`),
- * each with live progress, the coin reward per claim, the claimed-of-limit status
- * and a CTA to the surface that earns it. The header sums today's coins
+ * each with live progress, the coin AND EXP rewards per claim, the claimed-of-limit
+ * status and a CTA to the surface that earns it. The header sums today's coins
  * (`totalCoinToday`) and shows the wallet balance (`GET /api/v1/wallet/me`,
  * 1000 xu = 1000đ). Guests are gated with a sign-in empty-state (no `/me/*`
  * request fires). Coins auto-credit on a backend worker, so the quest hook polls

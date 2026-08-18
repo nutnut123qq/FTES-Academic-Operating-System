@@ -42,6 +42,40 @@ export interface QuestItemView {
     completedCount: number
     coinEarnedToday: number
     sortOrder: number
+    /**
+     * EXP the QUEST ITSELF pays per claim — the direct analogue of
+     * {@link rewardCoin}, and the number a learner means by "how much EXP does this
+     * quest give". It comes from one shared config row, so today every quest reads
+     * the same value; that is a config fact, not a bug to "fix" by inventing
+     * per-quest numbers here.
+     *
+     * ⚠️ `null` means NO EXP and is deliberately DIFFERENT from `0` (a rule may
+     * genuinely pay zero). Never coerce it — `?? 0` would print "+0 EXP" on a quest
+     * whose reward is simply unknown to this client, which is a claim the backend
+     * never made. Render nothing at all instead.
+     *
+     * ⚠️ Optional as well as nullable: a backend that has not shipped
+     * `QuestItemView.rewardXp` yet omits the key entirely. `quest.rewardXp != null`
+     * covers absent AND null in one test.
+     *
+     * ⚠️ A per-claim LIST PRICE, not a guaranteed daily total: a daily EXP cap can
+     * hold the real grant below it and an EXP-multiplier promo can push it above.
+     * Copy must stay per-claim ("+N EXP/lượt"), never "N EXP hôm nay".
+     */
+    rewardXp?: number | null
+    /**
+     * EXP of ONE underlying trigger event (500 for `lesson.completed`, 10 for a
+     * comment) — what the ACTIVITY is worth, which the learner earns whether or not
+     * the quest exists.
+     *
+     * ★ This is NOT what the quest pays; that is {@link rewardXp}. The two must
+     * never be summed and this one must never be labelled as the quest reward: a
+     * card showing both invites the learner to read "+600 EXP" off a single quest.
+     * `null` for quests with no learning trigger of their own (`DAILY_LOGIN`,
+     * `STREAK_7_BONUS`). Carried on the DTO for completeness; the quest card
+     * deliberately does not render it.
+     */
+    triggerEventXp?: number | null
 }
 
 /** The current user's quest board for the active Vietnam day. */

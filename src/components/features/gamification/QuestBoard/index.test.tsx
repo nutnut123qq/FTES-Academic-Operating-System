@@ -13,14 +13,25 @@ import type { QuestBoardView, QuestItemView } from "@/modules/api/rest/gamificat
  *  - a fully-claimed quest shows a done marker and drops its CTA,
  *  - known codes render a CTA linking to the earning surface; unknown/admin codes
  *    and the auto-complete DAILY_LOGIN render no CTA,
- *  - the header echoes today's coins and the wallet balance.
+ *  - the header echoes today's coins and the wallet balance,
+ *  - the per-claim EXP reward renders beside the coin when the backend quotes
+ *    one, and renders NOTHING when it does not.
  *
- * `t` is mocked to echo the message key, so assertions key off the message id.
+ * `t` is mocked to echo the message key PLUS its interpolation values
+ * (`perClaimXp(xp=100)`), so assertions key off the message id AND can pin the
+ * actual number rendered — a test that only matched the key would still pass if
+ * a null EXP leaked through as "+0".
  */
 
-// next-intl: echo the key; useLocale → "vi".
+// next-intl: echo the key and any interpolation values; useLocale → "vi".
 vi.mock("next-intl", () => ({
-    useTranslations: () => (key: string) => key,
+    useTranslations: () => (key: string, values?: Record<string, unknown>) => {
+        if (!values) return key
+        const args = Object.entries(values)
+            .map(([name, value]) => `${name}=${String(value)}`)
+            .join(",")
+        return `${key}(${args})`
+    },
     useLocale: () => "vi",
 }))
 
@@ -118,13 +129,42 @@ const q = (over: Partial<QuestItemView>): QuestItemView => ({
 })
 
 // Six seeded quests, supplied OUT of order to prove the board sorts by sortOrder.
+//
+// The EXP fields deliberately cover all four backend states across the six cards:
+//  - a quoted number (`LESSON_COMPLETE`, `COMMUNITY_POST`, `LIKE_3_POSTS`),
+//  - an explicit `null` (`DAILY_LOGIN` — no EXP; also null trigger),
+//  - a genuine `0` (`COMMUNITY_COMMENT` — a rule that really pays zero),
+//  - the field ABSENT (`UNKNOWN_ADMIN` — a backend that predates `rewardXp`).
 const SEED: Array<QuestItemView> = [
     q({ code: "UNKNOWN_ADMIN", title: "Admin quest", sortOrder: 5 }),
-    q({ code: "DAILY_LOGIN", title: "Đăng nhập", sortOrder: 0, completedCount: 1, coinEarnedToday: 50 }),
-    q({ code: "LESSON_COMPLETE", title: "Hoàn thành bài học", sortOrder: 1, dailyLimit: 3 }),
-    q({ code: "COMMUNITY_POST", title: "Đăng bài", sortOrder: 2 }),
-    q({ code: "COMMUNITY_COMMENT", title: "Bình luận", sortOrder: 3, dailyLimit: 2, completedCount: 2 }),
-    q({ code: "LIKE_3_POSTS", title: "Thả tim", sortOrder: 4 }),
+    q({
+        code: "DAILY_LOGIN",
+        title: "Đăng nhập",
+        sortOrder: 0,
+        completedCount: 1,
+        coinEarnedToday: 50,
+        rewardXp: null,
+        triggerEventXp: null,
+    }),
+    q({
+        code: "LESSON_COMPLETE",
+        title: "Hoàn thành bài học",
+        sortOrder: 1,
+        dailyLimit: 3,
+        rewardXp: 100,
+        triggerEventXp: 500,
+    }),
+    q({ code: "COMMUNITY_POST", title: "Đăng bài", sortOrder: 2, rewardXp: 100, triggerEventXp: 20 }),
+    q({
+        code: "COMMUNITY_COMMENT",
+        title: "Bình luận",
+        sortOrder: 3,
+        dailyLimit: 2,
+        completedCount: 2,
+        rewardXp: 0,
+        triggerEventXp: 10,
+    }),
+    q({ code: "LIKE_3_POSTS", title: "Thả tim", sortOrder: 4, rewardXp: 100, triggerEventXp: 10 }),
 ]
 
 beforeEach(() => {
@@ -199,5 +239,57 @@ describe("QuestBoard", () => {
         const chips = screen.getAllByTestId("stat-chip").map((el) => el.textContent)
         expect(chips).toContain("50") // totalCoinToday
         expect(chips).toContain("1.200") // wallet balance, vi-VN grouped
+    })
+
+    // ------------------------------------------------------------------ EXP reward
+    //
+    // The owner's report was "the quest board never shows the EXP". These pin BOTH
+    // halves of the fix: the number appears when the backend quotes one, and
+    // absolutely nothing appears when it does not.
+
+    /** The card element wrapping a quest title. */
+    const cardOf = (title: string) =>
+        screen.getByText(title).closest("div[class*='rounded-2xl']") as HTMLElement
+
+    it("shows the per-claim EXP beside the coin reward", () => {
+        render(<QuestBoard />)
+        const card = cardOf("Hoàn thành bài học")
+        // both rewards are on the card, both per-CLAIM, neither replacing the other
+        expect(within(card).getByText("perClaim(coin=50)")).toBeTruthy()
+        expect(within(card).getByText("perClaimXp(xp=100)")).toBeTruthy()
+    })
+
+    // ★ The regression that matters: `null` must render NOTHING. Asserting only
+    // "the 100 shows up" would still pass with a `?? 0` bug printing "+0 EXP" on
+    // every quest the backend said pays none.
+    it("renders NO EXP at all when rewardXp is null — never '+0'", () => {
+        render(<QuestBoard />)
+        const card = cardOf("Đăng nhập")
+        expect(within(card).queryByText(/^perClaimXp/)).toBeNull()
+        // the coin reward is untouched — this is about EXP only
+        expect(within(card).getByText("perClaim(coin=50)")).toBeTruthy()
+    })
+
+    it("renders no EXP when the backend predates the field entirely", () => {
+        render(<QuestBoard />)
+        expect(within(cardOf("Admin quest")).queryByText(/^perClaimXp/)).toBeNull()
+    })
+
+    // The other side of the same distinction: a rule that genuinely pays 0 must
+    // SHOW its zero. If a null-guard were written as a truthiness check, this
+    // card would silently lose its reward line.
+    it("shows a genuine zero, so 0 and null stay distinguishable on screen", () => {
+        render(<QuestBoard />)
+        expect(within(cardOf("Bình luận")).getByText("perClaimXp(xp=0)")).toBeTruthy()
+    })
+
+    // `triggerEventXp` is what the ACTIVITY pays, not what the QUEST pays. Putting
+    // it on the card lets a learner read "+600 EXP" off a quest that pays 100.
+    it("never renders triggerEventXp, and never the sum of the two", () => {
+        render(<QuestBoard />)
+        const body = document.body.textContent ?? ""
+        expect(body).toContain("perClaimXp(xp=100)")
+        expect(body).not.toContain("500") // the lesson.completed trigger value
+        expect(body).not.toContain("600") // rewardXp + triggerEventXp
     })
 })

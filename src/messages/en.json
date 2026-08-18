@@ -4032,12 +4032,13 @@
     "gamification": {
         "quests": {
             "title": "Daily quests",
-            "subtitle": "Complete quests each day to earn FCoin.",
+            "subtitle": "Complete quests each day to earn FCoin and XP.",
             "todayEarned": "Coins today",
             "todayEarnedLabel": "Coins earned today: {coin}",
             "walletBalance": "Wallet balance",
             "walletBalanceLabel": "Wallet balance: {coin} coin",
             "perClaim": "+{coin} coin/claim",
+            "perClaimXp": "+{xp} XP/claim",
             "progressLabel": "{current}/{total}",
             "claimedOfLimit": "Claimed {claimed}/{limit} today",
             "done": "Completed",

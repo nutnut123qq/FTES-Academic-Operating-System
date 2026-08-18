@@ -4219,13 +4219,11 @@
             },
             "tabs": {
                 "total": "Total",
-                "social": "Community & Workplace",
-                "course": "Course"
+                "social": "Community & Workplace"
             },
             "counts": {
                 "total": "Adds every EXP source you earned this term: course + community + workplace. This is the board with the real prizes.",
-                "social": "Counts community EXP (posts, comments, accepted answers, likes) and workplace EXP (challenges, resources submitted to a subject). Two sources, one shared ranking. Liking a lesson counts here rather than on the Course board — a like is interaction, not study.",
-                "course": "EXP you earned INSIDE one course, ranked against that course’s own learners."
+                "social": "Counts community EXP (posts, comments, accepted answers, likes) and workplace EXP (challenges, resources submitted to a subject). Two sources, one shared ranking. Liking a lesson counts here rather than on the Course board — a like is interaction, not study."
             },
             "countsLabel": "What this board counts",
             "whyDifferent": "Your rank differs between boards because each one counts a different SLICE of EXP — not because the system miscounted.",

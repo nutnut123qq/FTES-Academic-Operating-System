@@ -66,19 +66,20 @@ export interface ExamImageViewerImage {
  */
 
 /**
- * Repeating "FTES" watermark drawn over a text page, as an inline SVG data URI.
+ * Repeating FTES-LOGO watermark drawn over a text page.
  *
- * SVG rather than a bitmap so it stays crisp at any zoom and costs no network request; `rotate`
- * plus a tile bigger than the glyph gives the diagonal, spaced-out look a burnt-in watermark has.
- * Opacity is low enough to read straight through — a watermark that fights the text would push
- * curators to screenshot the page instead, which is exactly the behaviour this replaces.
+ * The tile is a real asset (`public/logo/ftes-watermark-tile.svg`) generated from
+ * `public/logo/FTES_black.svg`, so the mark is the BRAND LOGO rather than the word "FTES", and
+ * swapping the logo means regenerating one file instead of editing a string in here. Rotation
+ * (-24deg) and the padding that gives the spaced-out, burnt-in look are baked into the tile's
+ * own viewBox, which is why this can stay a plain repeating background: a CSS background cannot
+ * rotate, and an external SVG cannot be referenced from inside a data: URI.
+ *
+ * Vector, so it stays crisp at any zoom; fill-opacity lives in the asset and is low enough to
+ * read straight through — a watermark that fights the text would push curators to screenshot the
+ * page instead, which is exactly the behaviour this replaces.
  */
-const FTES_WATERMARK =
-    "url(\"data:image/svg+xml;utf8,"
-    + "<svg xmlns='http://www.w3.org/2000/svg' width='220' height='160'>"
-    + "<text x='30' y='100' transform='rotate(-24 30 100)' "
-    + "font-family='sans-serif' font-size='34' font-weight='700' "
-    + "fill='rgb(15 23 42)' fill-opacity='0.06'>FTES</text></svg>\")"
+const FTES_WATERMARK = "url(\"/logo/ftes-watermark-tile.svg\")"
 
 /** A page is text only when it SAYS so — never inferred from a missing url (see below). */
 const isTextPage = (page?: ExamImageViewerImage | null): boolean => page?.kind === "TEXT"

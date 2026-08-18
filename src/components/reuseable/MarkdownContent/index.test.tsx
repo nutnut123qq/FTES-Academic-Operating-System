@@ -58,3 +58,75 @@ describe("MarkdownContent — data-image URIs", () => {
         expect(img?.getAttribute("src") ?? "").toBe("")
     })
 })
+
+/**
+ * The `math` prop's PIPELINE — that the scanner runs (or doesn't), and that the tags it
+ * makes survive the sanitize step on the `allowHtml` branch. What KaTeX does with them is
+ * pinned in `math.test.ts`; here `./map` is mocked away, so the math nodes come out as the
+ * bare `<inlinemath tex="…">` / `<blockmath tex="…">` this component hands the renderer map.
+ */
+describe("MarkdownContent — TeX math", () => {
+    it("turns $…$ and $$…$$ into math nodes carrying the TeX source", () => {
+        const { container } = render(
+            <MarkdownContent math markdown={"Domain of $F(x)=\\sqrt{x-3}$\n\n$$x^2$$"} />,
+        )
+
+        expect(container.querySelector("inlinemath")?.getAttribute("tex")).toBe(
+            "F(x)=\\sqrt{x-3}",
+        )
+        expect(container.querySelector("blockmath")?.getAttribute("tex")).toBe("x^2")
+    })
+
+    it("does nothing at all without the prop — every other surface is untouched", () => {
+        const { container } = render(<MarkdownContent markdown={"Domain of $F(x)$"} />)
+
+        expect(container.querySelector("inlinemath")).toBeNull()
+        expect(container.textContent).toContain("$F(x)$")
+    })
+
+    it("leaves a price list alone even with math on", () => {
+        const { container } = render(<MarkdownContent math markdown="Giá $5 và $10." />)
+
+        expect(container.querySelector("inlinemath")).toBeNull()
+        expect(container.textContent).toContain("$5 và $10.")
+    })
+
+    it("keeps the math tags through rehype-sanitize on the allowHtml branch", () => {
+        // The whole reason the sanitize schema was widened: HTML-stored exam statements go
+        // through rehype-raw + rehype-sanitize, which strips every tag not on the list.
+        const { container } = render(
+            <MarkdownContent allowHtml math markdown="<p>Cho $x^2$ nhé</p>" />,
+        )
+
+        expect(container.querySelector("inlinemath")?.getAttribute("tex")).toBe("x^2")
+    })
+
+    it("still strips a script tag on that branch — the schema was widened, not opened", () => {
+        const { container } = render(
+            <MarkdownContent
+                allowHtml
+                math
+                markdown={"<p>$x$</p><script>alert(1)</script><p onclick=\"alert(1)\">hi</p>"}
+            />,
+        )
+
+        expect(container.querySelector("script")).toBeNull()
+        expect(container.querySelector("[onclick]")).toBeNull()
+        expect(container.querySelector("inlinemath")).not.toBeNull()
+    })
+
+    it("allows nothing but `tex` on a math tag, even one the author typed by hand", () => {
+        const { container } = render(
+            <MarkdownContent
+                allowHtml
+                math
+                markdown={"<inlinemath tex=\"x\" onclick=\"alert(1)\" class=\"evil\"></inlinemath>"}
+            />,
+        )
+
+        const node = container.querySelector("inlinemath")
+        expect(node?.getAttribute("tex")).toBe("x")
+        expect(node?.getAttribute("onclick")).toBeNull()
+        expect(node?.getAttribute("class")).toBeNull()
+    })
+})

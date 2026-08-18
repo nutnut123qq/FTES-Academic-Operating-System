@@ -11,6 +11,7 @@ import {
 } from "./MarkdownTableParts"
 import { CodeToHtml } from "./CodeToHtml"
 import { LayoutWidget } from "./LayoutWidget"
+import { MathFormula } from "./MathFormula"
 import { MermaidDiagram } from "./MermaidDiagram"
 import { RenderReactComponent } from "./RenderReactComponent"
 import { TabsBlock, TabPane } from "./TabsBlock"
@@ -194,6 +195,13 @@ export const buildMarkdownRenderers = ({
         ),
         mutedtext: ({ children }: { children?: React.ReactNode }) => (
             <ProseText elementType="span" size="sm" className="font-semibold text-muted">{children}</ProseText>
+        ),
+        // TeX math tags (see remarkMath in ./math), present only on the surfaces that opt in
+        // with `MarkdownContent math`. They carry the TeX SOURCE as a plain-text `tex`
+        // attribute; the typesetting happens inside MathFormula, never in the markdown tree.
+        inlinemath: ({ tex }: { tex?: string }) => <MathFormula tex={String(tex ?? "")} />,
+        blockmath: ({ tex }: { tex?: string }) => (
+            <MathFormula tex={String(tex ?? "")} display className={blockMy} />
         ),
         // Custom `:::chip` directive tag (see remarkChip in ./index): a wrapped row of soft chips,
         // one per authored keyword line. `items` is the `|`-joined keyword list.

@@ -12,6 +12,7 @@ import { cn } from "@heroui/react"
 import { useTheme } from "next-themes"
 import { useTranslations } from "next-intl"
 import { buildMarkdownRenderers } from "./map"
+import { MATH_TAG_NAMES, MATH_TEX_ATTRIBUTE, rehypeMath } from "./math"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 
 // Re-export the colocated sub-renderers so the reuseable barrel surface stays identical.
@@ -207,6 +208,28 @@ const DATA_IMAGE_SANITIZE_SCHEMA = {
         ...defaultSchema.protocols,
         src: [...(defaultSchema.protocols?.src ?? []), "data"],
     },
+    /**
+     * Hai thẻ công thức (`inlinemath`/`blockmath`) sống sót qua sanitize — CHỈ hai thẻ đó,
+     * và mỗi thẻ CHỈ một thuộc tính `tex` dạng text thuần.
+     *
+     * Vì sao hẹp đến vậy: bản thân sanitize không hề biết KaTeX là gì. Cách làm phổ thông
+     * (remark-math + rehype-katex) nhét MARKUP KaTeX vào tree TRƯỚC sanitize, nên schema
+     * buộc phải mở hàng chục class, thẻ MathML và cả `style` nội tuyến thì công thức mới
+     * không bị lột sạch — mở tới mức đó trên nội dung người dùng nộp là tự đục lỗ XSS.
+     * Ở đây tree chỉ mang NGUỒN TeX; KaTeX chạy lúc render trong MathFormula, sau sanitize,
+     * nên không có markup nào cần được tha. Chuỗi trong `tex` không bao giờ thành thẻ: nó đi
+     * thẳng vào `katex.renderToString` (`trust: false` → cấm `\href`/`\url`/`\html*`), thứ
+     * escape mọi ký tự nó in ra.
+     *
+     * Kể cả khi tác giả tự gõ `<inlinemath tex="…">` trong HTML thô (nhánh `allowHtml`),
+     * điều tệ nhất họ đạt được là… một công thức toán.
+     */
+    tagNames: [...(defaultSchema.tagNames ?? []), ...MATH_TAG_NAMES],
+    attributes: {
+        ...defaultSchema.attributes,
+        [MATH_TAG_NAMES[0]]: [MATH_TEX_ATTRIBUTE],
+        [MATH_TAG_NAMES[1]]: [MATH_TEX_ATTRIBUTE],
+    },
 }
 
 /**
@@ -218,6 +241,35 @@ const DATA_IMAGE_SANITIZE_SCHEMA = {
  * rehype-raw là no-op.
  */
 const RAW_HTML_REHYPE_PLUGINS: PluggableList = [rehypeRaw, [rehypeSanitize, DATA_IMAGE_SANITIZE_SCHEMA]]
+
+/** Math on a plain-markdown surface: the scanner alone; nothing else about the tree changes. */
+const MATH_REHYPE_PLUGINS: PluggableList = [rehypeMath]
+
+/**
+ * Math on an HTML-stored surface. The ORDER is the point: `rehype-raw` first (so the
+ * formulas inside `<p>…</p>` exist as text at all), then the scanner, then sanitize LAST —
+ * so nothing this pipeline produces, math included, escapes the security pass.
+ */
+const RAW_HTML_MATH_REHYPE_PLUGINS: PluggableList = [
+    rehypeRaw,
+    rehypeMath,
+    [rehypeSanitize, DATA_IMAGE_SANITIZE_SCHEMA],
+]
+
+/**
+ * Picks the rehype pipeline for one pair of switches. Four module-level constants rather
+ * than an array built inline: a new array on every render would re-run the whole rehype stage.
+ *
+ * @param allowHtml - Render raw HTML embedded in the source.
+ * @param math - Typeset `$…$` / `$$…$$`.
+ * @returns The plugin list, or `undefined` when neither switch is on (the historical shape).
+ */
+const pickRehypePlugins = (allowHtml: boolean, math: boolean): PluggableList | undefined => {
+    if (allowHtml) {
+        return math ? RAW_HTML_MATH_REHYPE_PLUGINS : RAW_HTML_REHYPE_PLUGINS
+    }
+    return math ? MATH_REHYPE_PLUGINS : undefined
+}
 
 // Matches each ```mermaid fence and the figure caption paragraph that follows it.
 // Group 1 = diagram source; group 2 = the first non-blank line after the fence.
@@ -280,6 +332,18 @@ export interface MarkdownContentProps extends WithClassNames<undefined> {
      * nơi khác (lesson/community/chat) giữ nguyên hành vi không render HTML người dùng nhập.
      */
     allowHtml?: boolean
+    /**
+     * Bật typeset công thức TeX: `$…$` (trong dòng) và `$$…$$` (khối) render bằng KaTeX
+     * thay vì hiện ra dạng chữ thô.
+     *
+     * MẶC ĐỊNH TẮT, và bật theo TỪNG BỀ MẶT — chỉ nơi nào thật sự là ĐỀ BÀI mới cần: trang
+     * chữ của album đề FE ({@link import("@/components/features/subject/ExamImageViewer").ExamImageViewer})
+     * và phần đề của challenge (ChallengeView / CodingChallengeDetail). Lý do không bật toàn
+     * cục: `$` là ký tự bình thường trong văn xuôi (giá tiền, biến shell), nên mọi bề mặt
+     * chat/community/lesson giữ nguyên đúng từng ký tự như hôm nay. Bộ quét trong `./math`
+     * đã rất dè dặt, nhưng "dè dặt" vẫn kém "không chạy".
+     */
+    math?: boolean
 }
 
 /**
@@ -290,7 +354,13 @@ export interface MarkdownContentProps extends WithClassNames<undefined> {
  * theme hook and client-side markdown rendering.
  * @param props - {@link MarkdownContentProps}
  */
-export const MarkdownContent = ({ markdown, reading = false, allowHtml = false, className }: MarkdownContentProps) => {
+export const MarkdownContent = ({
+    markdown,
+    reading = false,
+    allowHtml = false,
+    math = false,
+    className,
+}: MarkdownContentProps) => {
     const theme = useTheme()
     const t = useTranslations()
     const mermaidCaptions = useMemo(() => extractMermaidCaptions(markdown), [markdown])
@@ -327,7 +397,7 @@ export const MarkdownContent = ({ markdown, reading = false, allowHtml = false, 
         >
             <ReactMarkdown
                 remarkPlugins={REMARK_PLUGINS}
-                rehypePlugins={allowHtml ? RAW_HTML_REHYPE_PLUGINS : undefined}
+                rehypePlugins={pickRehypePlugins(allowHtml, math)}
                 urlTransform={permitDataImageUrl}
                 components={components}
             >

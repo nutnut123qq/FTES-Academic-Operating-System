@@ -3,8 +3,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Button, cn } from "@heroui/react"
 import {
+    ArrowsInIcon,
+    ArrowsOutIcon,
     CaretLeftIcon,
     CaretRightIcon,
+    ChatCircleIcon,
+    ChatCircleSlashIcon,
     FrameCornersIcon,
     MagnifyingGlassMinusIcon,
     MagnifyingGlassPlusIcon,
@@ -97,6 +101,31 @@ export interface ExamImageViewerProps {
     loadedCount?: number
     /** Extra classes for the pane (the caller owns its height: `h-[55dvh] lg:h-full`). */
     className?: string
+    /**
+     * Full-screen reading mode is ON.
+     *
+     * The viewer only DRAWS the switch — what expanding actually changes (the two-pane
+     * frame becoming the viewport, the comment column disappearing) is the host's layout,
+     * so the state lives there. {@link import("./useExamExpand").useExamExpand} is that
+     * state, class strings included.
+     */
+    isExpanded?: boolean
+    /**
+     * Asked to enter / leave full screen (the toolbar button, or Escape while expanded).
+     *
+     * OMITTED → no expand control is drawn at all. That is the honest default for a host
+     * that has nowhere to expand INTO (a viewer already inside a dialog, a paper embedded
+     * in a scrolling column of sections): a button that looks like it should fill the
+     * screen and then does nothing is worse than no button.
+     */
+    onExpandedChange?: (expanded: boolean) => void
+    /** The host's comment column is hidden right now. Only meaningful while expanded. */
+    areCommentsHidden?: boolean
+    /**
+     * Asked to hide / show the comment column. Omitted → the toggle is not drawn (a host
+     * with no comment column has nothing to hide).
+     */
+    onCommentsHiddenChange?: (hidden: boolean) => void
 }
 
 /**
@@ -127,6 +156,18 @@ export interface ExamImageViewerProps {
  * a double-click toggles fit ⇄ 2.5×. Every page change snaps back to the fit — carrying a
  * previous page's pan onto the next scan lands the reader in a blank margin.
  *
+ * **Paging WRAPS at both ends** — Next on the last page is page 1, Previous on page 1 is
+ * the last page — so neither caret is ever disabled. It used to stop dead at the ends; see
+ * {@link stepIndex} for why that was wrong. The keys agree with the buttons because both go
+ * through the same `goPrev`/`goNext`.
+ *
+ * **Full screen** is a pair of props, not state: `isExpanded` + `onExpandedChange` draw the
+ * expand button and Escape leaves; `areCommentsHidden` + `onCommentsHiddenChange` draw a
+ * second switch, expanded only, that hands the comment column's width to the paper. Both
+ * pairs are optional and both are drawn ONLY when the host passes a handler, because what
+ * expanding actually changes is the host's layout —
+ * {@link import("./useExamExpand").useExamExpand} is the ready-made state.
+ *
  * **Paging is signalled three ways**, all INSIDE the frame: carets, an `n/total` counter
  * and ←/→ keys. There USED to be a fourth — a thumbnail filmstrip along the bottom edge —
  * and it is gone on purpose. Pages of one exam are photographs of near-identical sheets of
@@ -152,6 +193,10 @@ export const ExamImageViewer = ({
     onIndexChange,
     loadedCount,
     className,
+    isExpanded = false,
+    onExpandedChange,
+    areCommentsHidden = false,
+    onCommentsHiddenChange,
 }: ExamImageViewerProps) => {
     const t = useTranslations("subjects")
     const stageRef = useRef<HTMLDivElement | null>(null)
@@ -238,12 +283,25 @@ export const ExamImageViewer = ({
     useEffect(() => {
         const onKey = (event: KeyboardEvent) => {
             const target = event.target as HTMLElement | null
-            if (
+            const isTyping = Boolean(
                 target &&
-                (target.tagName === "INPUT" ||
-                    target.tagName === "TEXTAREA" ||
-                    target.isContentEditable)
-            ) {
+                    (target.tagName === "INPUT" ||
+                        target.tagName === "TEXTAREA" ||
+                        target.isContentEditable),
+            )
+            // Escape is the ONE key that fires even mid-sentence: the full-screen overlay
+            // covers the page, so "how do I get out of this" must not depend on where the
+            // caret happens to be. (The toolbar button is the other way out, and it is
+            // always on screen.) It is also ignored entirely when nothing is expanded, so
+            // no other surface's Escape handling changes.
+            if (event.key === "Escape") {
+                if (isExpanded && onExpandedChange) {
+                    event.preventDefault()
+                    onExpandedChange(false)
+                }
+                return
+            }
+            if (isTyping) {
                 return
             }
             if (event.key === "ArrowLeft") {
@@ -260,7 +318,7 @@ export const ExamImageViewer = ({
         }
         window.addEventListener("keydown", onKey)
         return () => window.removeEventListener("keydown", onKey)
-    }, [goPrev, goNext, onZoomIn, onZoomOut, onFit])
+    }, [goPrev, goNext, onZoomIn, onZoomOut, onFit, isExpanded, onExpandedChange])
 
     // Ctrl/⌘ + wheel zooms; a bare wheel keeps scrolling the page. Registered by hand
     // because React's `onWheel` is passive — `preventDefault()` there is a no-op, and
@@ -407,7 +465,11 @@ export const ExamImageViewer = ({
                                 style={{ backgroundImage: FTES_WATERMARK, backgroundRepeat: "repeat" }}
                             />
                             <article className="relative mx-auto max-w-3xl">
-                                <MarkdownContent markdown={current.textContent ?? ""} reading />
+                                {/* `math`: một trang đề gõ tay là chỗ DUY NHẤT trên album này
+                                    chắc chắn có công thức — `$F(x)=\sqrt{x-3}$` phải ra công
+                                    thức, không phải ra đúng chuỗi ký tự đó. Bật theo bề mặt
+                                    chứ không bật toàn cục: xem prop `math` của MarkdownContent. */}
+                                <MarkdownContent markdown={current.textContent ?? ""} reading math />
                             </article>
                         </div>
                     ) : (
@@ -483,6 +545,59 @@ export const ExamImageViewer = ({
                     >
                         <FrameCornersIcon aria-hidden focusable="false" className="size-5" />
                     </Button>
+
+                    {/* FULL SCREEN — a different job from the frame-corners button beside it,
+                        which zooms the PICTURE back to fit inside whatever frame it has. This
+                        one grows the FRAME to the whole viewport (and is why the two carry
+                        different icons: `ArrowsOut` is the app's established expand mark, see
+                        ContentAiFab). Only drawn when a host said it can host it. */}
+                    {onExpandedChange ? (
+                        <Button
+                            isIconOnly
+                            size="sm"
+                            variant="ghost"
+                            aria-label={t(
+                                isExpanded ? "practice.viewer.collapse" : "practice.viewer.expand",
+                            )}
+                            onPress={() => onExpandedChange(!isExpanded)}
+                            className="rounded-full text-white hover:bg-white/20"
+                        >
+                            {isExpanded ? (
+                                <ArrowsInIcon aria-hidden focusable="false" className="size-5" />
+                            ) : (
+                                <ArrowsOutIcon aria-hidden focusable="false" className="size-5" />
+                            )}
+                        </Button>
+                    ) : null}
+
+                    {/* HIDE THE COMMENTS — expanded only. Docked, the two panes share the page
+                        and dropping one would just leave a 400px hole; expanded, giving the
+                        paper that column is the entire point ("được quyền ẩn cmt để đề full").
+                        Starts SHOWING: hiding the thread is something the reader opts into. */}
+                    {isExpanded && onCommentsHiddenChange ? (
+                        <Button
+                            isIconOnly
+                            size="sm"
+                            variant="ghost"
+                            aria-label={t(
+                                areCommentsHidden
+                                    ? "practice.viewer.showComments"
+                                    : "practice.viewer.hideComments",
+                            )}
+                            onPress={() => onCommentsHiddenChange(!areCommentsHidden)}
+                            className="rounded-full text-white hover:bg-white/20"
+                        >
+                            {areCommentsHidden ? (
+                                <ChatCircleIcon aria-hidden focusable="false" className="size-5" />
+                            ) : (
+                                <ChatCircleSlashIcon
+                                    aria-hidden
+                                    focusable="false"
+                                    className="size-5"
+                                />
+                            )}
+                        </Button>
+                    ) : null}
                 </div>
 
                 {/* Tells the reader the picture is draggable the moment it stops fitting */}
@@ -494,11 +609,13 @@ export const ExamImageViewer = ({
 
                 {hasMultiple ? (
                     <>
+                        {/* Neither caret is ever disabled: paging WRAPS (see `stepIndex`), so
+                            there is no end to stop at. An inert arrow on the last page was
+                            read as the viewer having broken. */}
                         <Button
                             isIconOnly
                             variant="ghost"
                             aria-label={t("practice.viewer.previous")}
-                            isDisabled={clampedIndex === 0}
                             onPress={goPrev}
                             className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 text-white hover:bg-black/70"
                         >
@@ -508,7 +625,6 @@ export const ExamImageViewer = ({
                             isIconOnly
                             variant="ghost"
                             aria-label={t("practice.viewer.next")}
-                            isDisabled={clampedIndex === total - 1}
                             onPress={goNext}
                             className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 text-white hover:bg-black/70"
                         >

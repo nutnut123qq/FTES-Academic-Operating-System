@@ -18,6 +18,7 @@ import {
     ExamImageViewer,
     type ExamImageViewerImage,
 } from "@/components/features/subject/ExamImageViewer"
+import { useExamExpand } from "@/components/features/subject/ExamImageViewer/useExamExpand"
 import { ALBUM_INITIAL_LOAD, nextAlbumLoadCount } from "./albumLoadWindow"
 import { FeAlbumManager } from "./FeAlbumManager"
 import { FeImageCommentThread } from "./FeImageCommentThread"
@@ -111,6 +112,10 @@ export const SubjectFeAlbum = ({
     const { resource } = useQueryResourceDetailSwr(albumId)
     const [index, setIndex] = useState(0)
     const [isManaging, setIsManaging] = useState(false)
+    // Full-screen reading + "hide the comments so the paper gets the whole width". Lives
+    // here rather than in the viewer because BOTH of those are this component's layout: the
+    // two-pane frame and the comment column are ours, not the viewer's.
+    const expand = useExamExpand()
 
     const images = albumSwr.data?.images ?? []
     const clampedIndex =
@@ -273,10 +278,18 @@ export const SubjectFeAlbum = ({
                        floor is the one that decides how big the scan gets: `60dvh` rather
                        than the bare 26rem minimum. */
                     <div
-                        className={cn(
-                            "overflow-hidden rounded-2xl border border-separator lg:grid lg:flex-1 lg:grid-cols-[minmax(0,1fr)_400px] lg:grid-rows-[minmax(0,1fr)]",
-                            inModal ? "lg:min-h-[60dvh]" : "lg:min-h-[26rem]",
-                        )}
+                        className={
+                            // Expanded swaps the frame WHOLE (see useExamExpand): merging an
+                            // override onto the docked classes would leave two `lg:grid-cols-*`
+                            // utilities fighting, and Tailwind settles that by stylesheet
+                            // order, not by which one is written last here.
+                            expand.isExpanded
+                                ? expand.frameClassName
+                                : cn(
+                                    "overflow-hidden rounded-2xl border border-separator lg:grid lg:flex-1 lg:grid-cols-[minmax(0,1fr)_400px] lg:grid-rows-[minmax(0,1fr)]",
+                                    inModal ? "lg:min-h-[60dvh]" : "lg:min-h-[26rem]",
+                                )
+                        }
                     >
                         {/* LEFT — the picture, letterboxed on black. `min-h-0` + an explicitly
                             0-floored row are what let a PORTRAIT scan shrink to the frame
@@ -287,7 +300,20 @@ export const SubjectFeAlbum = ({
                             index={clampedIndex}
                             onIndexChange={setIndex}
                             loadedCount={loadedCount}
-                            className="h-[60dvh] min-h-0 lg:h-full"
+                            className={
+                                expand.isExpanded
+                                    ? expand.paneClassName
+                                    : "h-[60dvh] min-h-0 lg:h-full"
+                            }
+                            isExpanded={expand.isExpanded}
+                            // No expanding OUT of a dialog: the album in the practice modal is
+                            // already covering the page, and a `fixed` overlay inside an
+                            // animating dialog resolves against the dialog's own box, not the
+                            // viewport. Omitting the handler drops the button rather than
+                            // shipping one that half-works.
+                            onExpandedChange={inModal ? undefined : expand.setExpanded}
+                            areCommentsHidden={expand.areCommentsHidden}
+                            onCommentsHiddenChange={expand.setCommentsHidden}
                         />
 
                         {/* RIGHT — a chat-shaped column: this meta strip on top, the thread
@@ -295,7 +321,21 @@ export const SubjectFeAlbum = ({
                             bottom edge (see FeImageCommentThread). It no longer scrolls as a
                             whole, which is what used to let the composer drift up into the
                             empty space under a short thread. */}
-                        <div className="flex min-h-0 flex-col gap-3 bg-overlay p-4">
+                        {/* Hidden only while EXPANDED, and only because the reader asked
+                            ("được quyền ẩn cmt để đề full"); useExamExpand puts it back on the
+                            way out. `hidden` rather than unmounting: `display:none` already
+                            takes it out of the layout AND the accessibility tree, while the
+                            thread keeps its page, its scroll and any half-typed comment — an
+                            unmount would throw all three away every time the reader wanted a
+                            wider look at one question. The column it leaves behind is
+                            reclaimed by the frame's `lg:grid-cols-1` (see useExamExpand),
+                            which is what actually widens the paper. */}
+                        <div
+                            className={cn(
+                                "flex min-h-0 flex-col gap-3 bg-overlay p-4",
+                                !expand.areCommentsVisible && "hidden",
+                            )}
+                        >
                             {/* The title + "N images in this set" (+ Quản lý) live HERE in
                                 the modal — see `headerRow` above. The dialog is a fixed
                                 90vh, so every row above the grid is taken straight out of

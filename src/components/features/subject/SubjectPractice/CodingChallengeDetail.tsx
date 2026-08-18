@@ -182,8 +182,12 @@ export const CodingChallengeDetail = ({ challenge, onBack }: CodingChallengeDeta
                             {t("practice.coding.problem")}
                         </Typography>
                         {hasDescription ? (
+                            /* `math`: cùng một trường `challenge.description` với ChallengeView —
+                               đề bài render ở đâu cũng phải typeset công thức như nhau, kẻo
+                               cùng một đề mở bằng hai đường lại hiện hai kiểu. */
                             <MarkdownContent
                                 allowHtml
+                                math
                                 markdown={challenge.description}
                                 className="text-muted"
                             />

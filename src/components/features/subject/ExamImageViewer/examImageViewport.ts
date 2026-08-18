@@ -185,13 +185,29 @@ export const clampIndex = (index: number, total: number): number => {
 }
 
 /**
- * Paging: move `delta` pictures and stop at the ends (no wrap-around — an exam album is
- * ordered paper, and looping from the last page back to the first reads as a bug).
+ * Paging: move `delta` pages, WRAPPING at both ends — past the last page is page 1, before
+ * page 1 is the last page.
+ *
+ * This used to stop dead at the ends, on the theory that an exam album is ordered paper and
+ * a loop reads as a bug. Readers said otherwise: an album here is a set of practice
+ * questions people go round more than once, and the caret going inert on the last page
+ * reads as the viewer having broken rather than as the album having ended (the counter
+ * already says which page it is, so nobody loses their place). The wrap goes BOTH ways on
+ * purpose — a one-way loop is the genuinely surprising design.
+ *
+ * The double modulo is what makes a negative step land inside the album: `-1 % 3` is `-1`
+ * in JS, not `2`.
  *
  * @param index - Current position.
- * @param delta - `-1` / `+1` (or any jump).
+ * @param delta - `-1` / `+1` (or any jump, including one larger than the album).
  * @param total - Album size.
- * @returns The new position, clamped.
+ * @returns The new position, always inside `[0, total - 1]`.
  */
-export const stepIndex = (index: number, delta: number, total: number): number =>
-    clampIndex(clampIndex(index, total) + delta, total)
+export const stepIndex = (index: number, delta: number, total: number): number => {
+    if (total <= 0) {
+        return 0
+    }
+    const from = clampIndex(index, total)
+    const step = Number.isFinite(delta) ? Math.trunc(delta) : 0
+    return (((from + step) % total) + total) % total
+}

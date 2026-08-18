@@ -2368,7 +2368,7 @@
     },
     "accountMenu": {
         "gamification": {
-            "streakLabel": "Learning streak: {count} days",
+            "streakLabel": "Day streak: {count} days",
             "rankLabel": "Rank: #{position}",
             "xpLabel": "Experience: {xp} XP",
             "levelRing": "Level {level} — {percent}% to the next level"
@@ -2894,7 +2894,7 @@
         "aiPlanName": "FrosTES plan",
         "membershipName": "FTES AOS membership",
         "loyalty": {
-            "diligent": "You keep a learning streak"
+            "diligent": "You keep a daily streak"
         },
         "group": {
             "domestic": "Domestic",
@@ -3137,8 +3137,8 @@
         "streak": {
             "current": "{count}-day streak",
             "longest": "Longest {count}",
-            "empty": "Read content to start your streak",
-            "help": "Learn at least one piece of content each day to keep your streak going."
+            "empty": "Visit FTES today to start your streak",
+            "help": "Visit FTES each day while signed in to keep your streak going."
         },
         "league": {
             "resetIn": "Resets in {days}d {hours}h",
@@ -3286,8 +3286,8 @@
         },
         "dailyGoal": {
             "cta": "Learn content",
-            "done": "Today's done — {count}-day streak safe",
-            "nudge": "Learn content today to keep your streak"
+            "done": "Today's done — you're on a {count}-day streak",
+            "nudge": "Learn content today to keep up your momentum"
         },
         "kpi": {
             "clear": "Clear",
@@ -4184,11 +4184,11 @@
             "tierXpHeader": "Total XP",
             "tierFrom": "from {xp} XP",
             "streakSection": "Streaks",
-            "streakQualifying": "A qualifying streak day = at least one learning action (lesson/quiz/challenge). Login alone does NOT hold a streak.",
-            "streakReset": "Miss a day with no learning and no freeze → streak resets to 0.",
+            "streakQualifying": "A qualifying streak day = you open FTES that day while signed in. Just visiting is enough (a silent session refresh counts too) — no learning action required.",
+            "streakReset": "Miss a day with no visit and no freeze → streak resets to 0.",
             "streakFreeze": "Streak Freeze: hold up to {max}, auto-saves one missed day; buy for {cost} coins each.",
             "streakRepair": "Streak Repair: within {window}h of a reset, restore for 10 × days (cap {cap} coins).",
-            "streakReminder": "Reminder at {hour}:00 when streak ≥ {min} and you haven't learned today.",
+            "streakReminder": "Reminder at {hour}:00 when streak ≥ {min} and you haven't visited today.",
             "milestoneRow": "{days} days → {name} + {coin} coins",
             "comingSoonSection": "Coming soon",
             "comingSoon": {
@@ -4530,7 +4530,7 @@
             "badgeEarned": "Earned a badge",
             "levelUp": "Leveled up",
             "masteryLevelUp": "Reached a new mastery level",
-            "streakMilestone": "Hit a learning streak milestone",
+            "streakMilestone": "Hit a day streak milestone",
             "rewardClaimed": "Claimed a reward",
             "questCompleted": "Completed a quest",
             "goalCompleted": "Completed a goal",
@@ -4697,13 +4697,13 @@
             },
             "streak": {
                 "label": "Streak",
-                "help": "The number of days you've studied in a row.",
+                "help": "The number of days you've visited FTES in a row.",
                 "current": "{count}-day streak",
                 "longest": "Best {count} days",
                 "empty": "No streak yet"
             },
             "dailyGoal": {
-                "nudge": "You haven't studied today — keep your streak alive!",
+                "nudge": "You haven't studied today — keep up your momentum!",
                 "cta": "Study now"
             },
             "weeklyChallenge": {

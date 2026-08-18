@@ -2380,7 +2380,7 @@
     },
     "accountMenu": {
         "gamification": {
-            "streakLabel": "Chuỗi ngày học: {count} ngày",
+            "streakLabel": "Chuỗi ngày: {count} ngày",
             "rankLabel": "Hạng: #{position}",
             "xpLabel": "Điểm kinh nghiệm: {xp} XP",
             "levelRing": "Cấp {level} — {percent}% tới cấp tiếp theo"
@@ -2906,7 +2906,7 @@
         "aiPlanName": "Gói FrosTES",
         "membershipName": "Hội viên FTES AOS",
         "loyalty": {
-            "diligent": "Bạn duy trì streak học tập"
+            "diligent": "Bạn duy trì chuỗi ngày đều đặn"
         },
         "group": {
             "domestic": "Thanh toán trong nước",
@@ -3149,8 +3149,8 @@
         "streak": {
             "current": "Chuỗi {count} ngày",
             "longest": "Dài nhất {count}",
-            "empty": "Học một nội dung để nhóm lửa chuỗi của bạn",
-            "help": "Học ít nhất một nội dung mỗi ngày để duy trì chuỗi của bạn."
+            "empty": "Ghé thăm FTES hôm nay để nhóm lửa chuỗi của bạn",
+            "help": "Ghé thăm FTES mỗi ngày khi đã đăng nhập để duy trì chuỗi của bạn."
         },
         "league": {
             "resetIn": "Reset sau {days} ngày {hours} giờ",
@@ -3298,8 +3298,8 @@
         },
         "dailyGoal": {
             "cta": "Học một nội dung",
-            "done": "Hôm nay xong rồi — chuỗi {count} ngày được giữ vững",
-            "nudge": "Học một nội dung hôm nay để giữ chuỗi của bạn"
+            "done": "Hôm nay xong rồi — bạn đang giữ chuỗi {count} ngày",
+            "nudge": "Học một nội dung hôm nay để giữ đà học của bạn"
         },
         "kpi": {
             "clear": "Xóa",
@@ -4184,11 +4184,11 @@
             "tierXpHeader": "Tổng XP",
             "tierFrom": "từ {xp} XP",
             "streakSection": "Chuỗi ngày (streak)",
-            "streakQualifying": "Ngày streak hợp lệ = có ít nhất 1 hành động học (bài học/quiz/challenge). Chỉ đăng nhập KHÔNG giữ streak.",
-            "streakReset": "Lỡ 1 ngày không học và không có freeze → streak về 0.",
+            "streakQualifying": "Ngày streak hợp lệ = có truy cập FTES trong ngày bằng tài khoản đã đăng nhập. Chỉ cần ghé thăm là đủ (phiên tự làm mới cũng tính) — không bắt buộc phải học.",
+            "streakReset": "Lỡ 1 ngày không ghé thăm và không có freeze → streak về 0.",
             "streakFreeze": "Streak Freeze: giữ tối đa {max}, tự cứu 1 ngày lỡ; đổi {cost} coin/cái.",
             "streakRepair": "Streak Repair: trong {window} giờ sau khi mất, khôi phục với 10 × số ngày (trần {cap} coin).",
-            "streakReminder": "Nhắc lúc {hour}:00 khi streak ≥ {min} mà chưa học hôm nay.",
+            "streakReminder": "Nhắc lúc {hour}:00 khi streak ≥ {min} mà chưa ghé thăm hôm nay.",
             "milestoneRow": "{days} ngày → {name} + {coin} coin",
             "comingSoonSection": "Sắp ra mắt",
             "comingSoon": {
@@ -4292,7 +4292,7 @@
                 "quests": {
                     "title": "Nhiệm vụ hằng ngày",
                     "reward": "50–100 FCoin mỗi nhiệm vụ",
-                    "description": "Đăng nhập, hoàn thành một bài học, đăng bài hoặc bình luận trong cộng đồng, thả cảm xúc cho 3 bài viết, giữ chuỗi học 7 ngày. Mỗi nhiệm vụ nhận thưởng một lần trong ngày.",
+                    "description": "Đăng nhập, hoàn thành một bài học, đăng bài hoặc bình luận trong cộng đồng, thả cảm xúc cho 3 bài viết, giữ chuỗi 7 ngày. Mỗi nhiệm vụ nhận thưởng một lần trong ngày.",
                     "cta": "Mở bảng nhiệm vụ"
                 },
                 "contribute": {
@@ -4530,7 +4530,7 @@
             "badgeEarned": "Đã nhận một huy hiệu",
             "levelUp": "Đã lên cấp",
             "masteryLevelUp": "Đã lên một bậc thành thạo",
-            "streakMilestone": "Đã đạt một mốc chuỗi ngày học",
+            "streakMilestone": "Đã đạt một mốc chuỗi ngày",
             "rewardClaimed": "Đã nhận một phần thưởng",
             "questCompleted": "Đã hoàn thành một nhiệm vụ",
             "goalCompleted": "Đã hoàn thành một mục tiêu",
@@ -4697,13 +4697,13 @@
             },
             "streak": {
                 "label": "Chuỗi ngày",
-                "help": "Số ngày bạn học liên tiếp không gián đoạn.",
+                "help": "Số ngày bạn ghé thăm FTES liên tiếp không gián đoạn.",
                 "current": "Chuỗi {count} ngày",
                 "longest": "Kỷ lục {count} ngày",
                 "empty": "Chưa có chuỗi ngày nào"
             },
             "dailyGoal": {
-                "nudge": "Hôm nay bạn chưa học — giữ chuỗi ngày nhé!",
+                "nudge": "Hôm nay bạn chưa học — giữ đà học nhé!",
                 "cta": "Học ngay"
             },
             "weeklyChallenge": {

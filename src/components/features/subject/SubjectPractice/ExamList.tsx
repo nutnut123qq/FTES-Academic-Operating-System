@@ -1,13 +1,20 @@
 "use client"
 
 import React, { useState } from "react"
-import { Button, Chip, Link, Typography, cn } from "@heroui/react"
-import { ArrowLeftIcon, CaretRightIcon, LockSimpleIcon, PlusIcon } from "@phosphor-icons/react"
+import { Button, Chip, Link, Modal, Typography, cn } from "@heroui/react"
+import {
+    ArrowLeftIcon,
+    ArrowSquareOutIcon,
+    CaretRightIcon,
+    LockSimpleIcon,
+    PlusIcon,
+} from "@phosphor-icons/react"
 import { useLocale, useTranslations } from "next-intl"
 
 import { useRouter } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
+import { SubjectFeAlbum } from "@/components/features/subject/SubjectFeAlbum"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
 import { useQuerySubjectSwr } from "../hooks/useQuerySubjectSwr"
 import {
@@ -34,9 +41,18 @@ export interface ExamListProps {
  * (FE)** — the only surface that lists these two resource types now that they are gone
  * from the Resource tab's taxonomy.
  *
- * A row opens its own route (`/subjects/{id}/practice/{pe|fe}/{resourceId}`) rather than
- * an in-panel view, so an exam is linkable and the workspace rail keeps "Practice"
- * highlighted (its active check is `pathname.startsWith(base/practice)`).
+ * A row opens the exam **in a modal, on the spot** — the URL does NOT change, exactly the
+ * way `CommunityFeed` opens a post over the feed. The body inside the dialog is the SAME
+ * component the exam's own route renders ({@link SubjectFeAlbum}), so the two hosts can
+ * never drift apart; the route keeps existing untouched, which is what keeps
+ * `/subjects/{id}/practice/fe/{albumId}` alive as a deep link. "Mở trang đầy đủ" inside
+ * the dialog is the one control that actually navigates there. Esc + backdrop close
+ * (HeroUI default via `onOpenChange`).
+ *
+ * The dialog hosts **FE albums only**. `kind` still selects which list is fetched and
+ * labelled, but the practice page only ever renders this with `kind="fe"` — a PE paper is
+ * reached from the subject overview's challenge rail, which opens {@link ChallengeView}
+ * itself. A PE arm here would be a branch nothing could execute.
  *
  * Also hosts the two moderation-adjacent surfaces: any signed-in member can contribute
  * an exam (held for review), and a viewer holding a resource-moderation permission gets
@@ -58,6 +74,9 @@ export const ExamList = ({ subjectId, kind, onBack }: ExamListProps) => {
     const { subject } = useQuerySubjectSwr(subjectId)
     const lockedCourseId = subject?.courseLinks?.[0]?.id ?? null
     const [contributing, setContributing] = useState(false)
+    // The exam being read in the modal — `null` = closed. Holding the ROW (not just an id)
+    // costs nothing and keeps the dialog's own labels available if they are ever needed.
+    const [openedExam, setOpenedExam] = useState<SubjectExam | null>(null)
 
     const openContribute = guard(() => {
         setContributing(true)
@@ -83,9 +102,14 @@ export const ExamList = ({ subjectId, kind, onBack }: ExamListProps) => {
         return parts.join(" · ")
     }
 
-    const openExam = (exam: SubjectExam) => {
-        router.push(`/subjects/${subjectId}/practice/${EXAM_ROUTE_SEGMENT[kind]}/${exam.id}`)
-    }
+    /**
+     * The exam's own page — the deep link the modal deliberately does NOT navigate to.
+     *
+     * FE albums only: this list is rendered with `kind="fe"` and no other value, so the PE
+     * arm this used to carry was a branch nothing could reach.
+     */
+    const fullPageHref = (exam: SubjectExam) =>
+        `/subjects/${subjectId}/practice/${EXAM_ROUTE_SEGMENT.fe}/${exam.id}`
 
     return (
         <div className="flex flex-col gap-6 p-6">
@@ -155,6 +179,15 @@ export const ExamList = ({ subjectId, kind, onBack }: ExamListProps) => {
                     retryLabel: t("practice.exam.retry"),
                 }}
             >
+                {/*
+                 * ponytail: `w-full` trên MỖI row là bắt buộc, không phải thừa. HeroUI bake
+                 * `@apply ... h-fit w-fit ...` vào `.link` (@heroui/styles/dist/components/link.css),
+                 * mà `width: fit-content` KHÔNG phải `auto` nên `align-items: stretch` của flex
+                 * column không kéo item ra được → mỗi thẻ co đúng bằng độ dài tiêu đề, ra 4 thẻ
+                 * 4 chiều rộng khác nhau. `w-full` (layer utilities) thắng `.link` (layer
+                 * components) nên đè được. Có `w-full` thì `min-w-0 flex-1` + `truncate` bên
+                 * dưới mới thực sự cắt tiêu đề dài thay vì kéo dãn thẻ.
+                 */}
                 <div className="flex flex-col gap-3">
                     {exams.map((exam) =>
                         exam.lockedForViewer ? (
@@ -169,7 +202,7 @@ export const ExamList = ({ subjectId, kind, onBack }: ExamListProps) => {
                                 }}
                                 aria-label={`${exam.title} — ${t("practice.exam.lockedAria")}`}
                                 className={cn(
-                                    "flex items-center gap-3 rounded-2xl border border-separator p-4 no-underline transition-colors",
+                                    "flex w-full items-center gap-3 rounded-2xl border border-separator p-4 no-underline transition-colors",
                                     lockedCourseId
                                         ? "cursor-pointer hover:border-accent/50 hover:bg-accent/5"
                                         : "cursor-default",
@@ -204,9 +237,9 @@ export const ExamList = ({ subjectId, kind, onBack }: ExamListProps) => {
                             // above was a real row-link the whole time; this matches it.
                             <Link
                                 key={exam.id}
-                                onPress={() => openExam(exam)}
+                                onPress={() => setOpenedExam(exam)}
                                 aria-label={exam.title}
-                                className="flex cursor-pointer items-center gap-3 rounded-2xl border border-separator p-4 no-underline transition-colors hover:border-accent/50 hover:bg-accent/5"
+                                className="flex w-full cursor-pointer items-center gap-3 rounded-2xl border border-separator p-4 no-underline transition-colors hover:border-accent/50 hover:bg-accent/5"
                             >
                                 <div className="min-w-0 flex-1">
                                     <Typography type="body-sm" weight="medium" truncate>
@@ -229,6 +262,78 @@ export const ExamList = ({ subjectId, kind, onBack }: ExamListProps) => {
                     )}
                 </div>
             </AsyncContent>
+
+            {/* Đề mở TẠI CHỖ trong modal (khuôn CommunityFeed): thân dialog chính là component
+                mà route của đề đang render, nên modal và deep link không bao giờ lệch nhau.
+                URL KHÔNG đổi — muốn sang trang thật thì bấm "Mở trang đầy đủ".
+                Esc + bấm nền đóng (mặc định HeroUI qua `onOpenChange`). */}
+            <Modal
+                isOpen={openedExam !== null}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setOpenedExam(null)
+                    }
+                }}
+            >
+                <Modal.Backdrop>
+                    <Modal.Container className="p-3 sm:p-6">
+                        {/*
+                         * Bề ngang lấy theo `CommunityPhotoLightboxModal` (`w-[95vw] max-w-6xl`) —
+                         * ảnh đề cần rộng, `max-w-2xl` của modal bài viết thì chật.
+                         *
+                         * ponytail: CHIỀU CAO chỉ đặt cho PE. `SubjectFeAlbum` khi `inModal` đã tự
+                         * `max-h-[80dvh] overflow-y-auto`, thêm một tầng cuộn nữa ở đây là hai
+                         * thanh cuộn lồng nhau. `ChallengeView` trong modal thì KHÔNG tạo vùng cuộn
+                         * con nào (nó xếp dọc hết), nên vùng cuộn phải nằm ở chính dialog.
+                         */}
+                        <Modal.Dialog
+                            className={cn(
+                                "w-[95vw] max-w-6xl",
+                                kind === "pe" && "max-h-[90vh] overflow-y-auto",
+                            )}
+                        >
+                            <Modal.CloseTrigger
+                                aria-label={t("practice.exam.closeExam")}
+                                className="z-20"
+                            />
+                            {openedExam ? (
+                                <>
+                                    {/* `pe-10` chừa chỗ cho × (absolute `top-4 right-4`). */}
+                                    <div className="mb-2 flex pe-10">
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            onPress={() => {
+                                                router.push(fullPageHref(openedExam))
+                                            }}
+                                        >
+                                            <ArrowSquareOutIcon
+                                                aria-hidden
+                                                focusable="false"
+                                                className="size-4"
+                                            />
+                                            {t("practice.exam.openFullPage")}
+                                        </Button>
+                                    </div>
+                                    {/* FE only. PE never reaches this component — the practice
+                                        page renders ExamList with kind="fe" and nothing else
+                                        (SubjectPractice/index.tsx), and a PE paper is opened
+                                        from the subject overview's challenge rail instead.
+                                        Two traps if anyone wires PE in here: `SubjectExam.id`
+                                        is a RESOURCE uuid while ChallengeView wants a routing
+                                        SLUG, and `EXAM_ROUTE_SEGMENT.pe` names a
+                                        `practice/pe/...` route that has never existed. */}
+                                    <SubjectFeAlbum
+                                        albumId={openedExam.id}
+                                        subjectId={subjectId}
+                                        inModal
+                                    />
+                                </>
+                            ) : null}
+                        </Modal.Dialog>
+                    </Modal.Container>
+                </Modal.Backdrop>
+            </Modal>
         </div>
     )
 }

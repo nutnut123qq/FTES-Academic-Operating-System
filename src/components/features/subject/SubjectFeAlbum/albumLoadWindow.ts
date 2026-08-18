@@ -10,14 +10,21 @@
  * The window is a PREFIX bound and monotone, which is what keeps it honest at 200: reading
  * forward page by page never lets it run more than
  * `ALBUM_LOAD_LOOKAHEAD + ALBUM_LOAD_BATCH` (7) pictures ahead of the reader, so an album of
- * 200 still starts at 5 and grows a batch at a time regardless of the cap. The one place the
- * prefix shape shows is a filmstrip JUMP far down the album: everything before the target
- * becomes "loaded" in one step, because a prefix cannot express a hole. That is the deliberate
- * trade for never re-fetching on the way back; it simply costs more at 200 than it did at 50.
+ * 200 still starts at 5 and grows a batch at a time regardless of the cap. A prefix cannot
+ * express a hole, so it would over-fetch if the reader could LAND far down the album in one
+ * move — everything before the target would be "loaded" at once. Today nothing can: the viewer
+ * pages ±1 (carets, ←/→) and a new album resets to page 1, so the prefix shape costs nothing.
+ * That changes the day a jump-to-page control is added, and it is the deliberate trade for
+ * never re-fetching on the way back.
  *
  * Only the window bound lives here (a pure function, hence testable); the component decides what
- * to do with it — inside the window a thumbnail gets a real `src`, outside it renders an empty
- * placeholder box, which is what actually stops the browser from requesting the file.
+ * to do with it. What it decides today: the page being READ always loads, and the viewer
+ * prefetches the NEXT picture only while that one falls inside the bound. No other page is ever
+ * handed a `src`, so at most TWO files are ever asked for — and that, not this bound, is what
+ * keeps a 200-scan album off the network. The bound is a ceiling the ±1 paging never actually
+ * reaches: widening at `ALBUM_LOAD_LOOKAHEAD` from the edge always runs ahead of the reader,
+ * so the prefetch has never once been refused. Like the `while` below, it is here for the day
+ * an index can land further away than one step.
  */
 
 /** Pictures fetched up front. */
@@ -49,7 +56,10 @@ export const nextAlbumLoadCount = (loaded: number, index: number, total: number)
         return 0
     }
     let next = Math.max(loaded, Math.min(ALBUM_INITIAL_LOAD, total))
-    // `while`, not a single step: a filmstrip click can jump far past the window in one go.
+    // `while`, not a single step — a SAFETY NET, not a live path: the only navigation the
+    // viewer offers moves ±1, so one iteration is all that ever runs. It stays a loop so that
+    // an index arriving from further away (a jump-to-page control, a deep link into page 40)
+    // still comes back with the target inside the window instead of one batch short of it.
     while (index >= next - ALBUM_LOAD_LOOKAHEAD && next < total) {
         next += ALBUM_LOAD_BATCH
     }

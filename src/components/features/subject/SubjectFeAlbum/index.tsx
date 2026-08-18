@@ -22,6 +22,20 @@ import { ALBUM_INITIAL_LOAD, nextAlbumLoadCount } from "./albumLoadWindow"
 import { FeAlbumManager } from "./FeAlbumManager"
 import { FeImageCommentThread } from "./FeImageCommentThread"
 
+/** Props for {@link SubjectFeAlbum}. Every one is optional: the route renders it bare. */
+export interface SubjectFeAlbumProps {
+    /** Subject owning the album; falls back to the route param. Only the back link uses it. */
+    subjectId?: string
+    /** The FE album resource id; falls back to the route param. */
+    albumId?: string
+    /**
+     * Rendered inside a dialog rather than on its own page: the column stops locking itself
+     * to the workspace-rail height (it caps + scrolls inside the dialog instead) and the
+     * "back to practice" button is dropped, since the modal's × already leaves.
+     */
+    inModal?: boolean
+}
+
 /**
  * FE (Final Exam) album viewer — the image-post layout the spec asked for: the picture
  * on the LEFT, that picture's meta + comment thread on the RIGHT.
@@ -31,14 +45,22 @@ import { FeImageCommentThread } from "./FeImageCommentThread"
  * letterboxed on black, the right pane on `bg-overlay` shaped like a chat (meta on top,
  * the thread scrolling in the middle, the composer on the bottom edge); on mobile the
  * panes stack and the page scrolls as one. The picture itself is the shared
- * {@link ExamImageViewer} — carets, counter, filmstrip, ←/→ keys, zoom and pan all live
+ * {@link ExamImageViewer} — carets, the `n/total` counter, ←/→ keys, zoom and pan all live
  * there rather than in this page.
  *
- * From `lg` the PAGE is the height of the workspace rail beside it
+ * ON THE ROUTE, from `lg` the PAGE is the height of the workspace rail beside it
  * (`calc(100dvh-4rem)`) and the frame simply takes what is left, rather than naming a
  * height of its own. A frame shorter than the rail is what left the acre of white space
  * under the album, and it shrank the picture for nothing: the scan is `object-contain`,
  * so every pixel the frame gains is a pixel of exam paper.
+ *
+ * IN A MODAL (`inModal`) that rail number is meaningless — there is no rail, and a column
+ * locked to the viewport height inside a dialog that is itself capped would simply be
+ * clipped. So the modal variant drops the lock, caps itself at `max-h-[80dvh]` and owns
+ * `overflow-y-auto`: long content (the manager panel open, a long thread) SCROLLS rather
+ * than being cut, whatever height the dialog around it happens to have. The picture keeps
+ * a generous frame there through the grid's `lg:min-h-[60dvh]` floor instead of `h-full`,
+ * which has nothing definite to resolve against once the column is no longer height-locked.
  *
  * The grid pins its single row to `minmax(0,1fr)` and the viewer carries `min-h-0`: a
  * grid/flex item's automatic minimum size is its CONTENT, so a portrait scan would
@@ -50,9 +72,13 @@ import { FeImageCommentThread } from "./FeImageCommentThread"
  * threads instead of bleeding the previous picture's comments into the next one, and the
  * `commentCount` the BE ships per image is shown as a badge.
  *
- * A real route (`/subjects/{id}/practice/fe/{albumId}`) rather than an overlay: an album
- * is shareable, and the workspace rail keeps "Practice" highlighted because its active
- * check is `pathname.startsWith(base/practice)`.
+ * The component renders in TWO places — the real route
+ * (`/subjects/{id}/practice/fe/{albumId}`) and a modal opened from the practice list —
+ * exactly the way `CommunityFeed` reuses `CommunityPostContent`. The route stays the
+ * shareable deep link (and keeps the workspace rail's "Practice" highlighted, since its
+ * active check is `pathname.startsWith(base/practice)`); the modal does not change the URL.
+ * Ids therefore arrive as PROPS, falling back to `useParams()` so the route keeps working
+ * without passing anything.
  *
  * The {@link FeAlbumManager} panel (add / delete / reorder pictures) appears only when the
  * SERVER says so: `FeAlbumView.canManage` is computed from the exact predicate the write
@@ -60,12 +86,24 @@ import { FeImageCommentThread } from "./FeImageCommentThread"
  * a curator's right is granted per SUBJECT while the client only sees GLOBAL leaves, so
  * guessing would both hide the panel from the people who hold the right and offer it to
  * people whose click just 403s. Missing field (older BE) → hidden; it fails closed.
+ *
+ * @param props - {@link SubjectFeAlbumProps}
  */
-export const SubjectFeAlbum = () => {
+export const SubjectFeAlbum = ({
+    subjectId: subjectIdProp,
+    albumId: albumIdProp,
+    inModal = false,
+}: SubjectFeAlbumProps) => {
     const t = useTranslations("subjects")
     const locale = useLocale()
     const router = useRouter()
-    const { subjectId, albumId } = useParams<{ subjectId: string; albumId: string }>()
+    // ponytail: props first, route params as the fallback — one component, two hosts. The
+    // modal has no route params of its own (`useParams()` there answers for whatever page
+    // is underneath, or for nothing), so the ids MUST be passable; the fallback is what
+    // keeps the deep-link route rendering with no props at all.
+    const params = useParams<{ subjectId: string; albumId: string }>()
+    const subjectId = subjectIdProp ?? params?.subjectId ?? ""
+    const albumId = albumIdProp ?? params?.albumId ?? ""
     const albumSwr = useQueryFeAlbumSwr(albumId)
     const { resource } = useQueryResourceDetailSwr(albumId)
     const [index, setIndex] = useState(0)
@@ -76,27 +114,33 @@ export const SubjectFeAlbum = () => {
         images.length > 0 ? Math.min(Math.max(index, 0), images.length - 1) : 0
     const current = images[clampedIndex]
 
-    /** The album in the shape the shared viewer reads (thumbnail badge = comment count). */
+    /**
+     * The album in the shape the shared viewer reads — id, picture, caption and, for a typed
+     * page, its Markdown. Nothing more: `commentCount` and `sourceFilename` used to be passed
+     * too, for a thumbnail strip the viewer no longer has, so they were handed over for nobody
+     * to paint. The comment count still reaches the reader — from the meta strip on the right,
+     * for the page actually in front of them.
+     */
     const viewerImages = useMemo<Array<ExamImageViewerImage>>(
         () =>
             images.map((image) => ({
                 id: image.id,
                 imageUrl: image.imageUrl,
                 caption: image.caption,
-                badgeCount: image.commentCount,
                 // Trang chữ và trang scan đi chung một bộ đếm/phân trang — người đọc lật đề không
                 // quan tâm trang này vốn là ảnh hay là chữ.
                 kind: image.kind,
                 textContent: image.textContent,
-                sourceFilename: image.sourceFilename,
             })),
         [images],
     )
 
     // Only fetch the pictures the reader is near. An album is up to 200 scans — pulling every one
-    // on mount costs hundreds of megabytes for a page that shows one at a time. `loadedCount` widens
-    // as they page (see albumLoadWindow); a thumbnail outside it renders WITHOUT a `src`, which is
-    // what actually keeps the request from being made.
+    // on mount costs hundreds of megabytes for a page that shows one at a time. What actually
+    // keeps that from happening is the viewer itself: it gives a `src` to the page being read and
+    // to the ONE it prefetches next, and to nothing else. `loadedCount` (see albumLoadWindow) is
+    // the ceiling on that prefetch — it widens ahead of the reader, so ±1 paging never reaches it;
+    // it is the guard for an index that could arrive from further away.
     const [loadedCount, setLoadedCount] = useState(ALBUM_INITIAL_LOAD)
     useEffect(() => {
         setLoadedCount((loaded) => nextAlbumLoadCount(loaded, clampedIndex, images.length))
@@ -119,21 +163,38 @@ export const SubjectFeAlbum = () => {
         // would squeeze the comment column instead — the page scrolls there, as before.
         // Dropped while the manager panel is open: that panel is tall and would be the
         // thing squeezed out of a viewport-locked column.
+        //
+        // ponytail: in a modal there IS no rail, so the same lock would just make the
+        // column taller than the dialog and get it clipped. The modal variant caps itself
+        // and takes the scroll instead — one `cn` branch, no second layout.
         <div
             className={cn(
                 "flex flex-col gap-3 p-6",
-                !isManaging && "lg:h-[calc(100dvh-4rem)]",
+                !inModal && !isManaging && "lg:h-[calc(100dvh-4rem)]",
+                inModal && "max-h-[80dvh] overflow-y-auto",
             )}
         >
-            <div className="flex shrink-0 flex-wrap items-start gap-3">
-                <Button
-                    size="sm"
-                    variant="ghost"
-                    onPress={() => router.push(`/subjects/${subjectId}/practice`)}
-                >
-                    <ArrowLeftIcon aria-hidden focusable="false" className="size-4" />
-                    {t("practice.fe.backToList")}
-                </Button>
+            {/* In the modal the header has to stay clear of `Modal.CloseTrigger`, which is
+                absolutely positioned at `top-4 right-4` — without the reserve the "Quản lý"
+                button sits underneath it. */}
+            <div
+                className={cn(
+                    "flex shrink-0 flex-wrap items-start gap-3",
+                    inModal && "pe-10",
+                )}
+            >
+                {/* On the route this is the way back; in the modal the × is, so a second
+                    exit that ALSO navigated away would be a trap. */}
+                {inModal ? null : (
+                    <Button
+                        size="sm"
+                        variant="ghost"
+                        onPress={() => router.push(`/subjects/${subjectId}/practice`)}
+                    >
+                        <ArrowLeftIcon aria-hidden focusable="false" className="size-4" />
+                        {t("practice.fe.backToList")}
+                    </Button>
+                )}
                 <div className="min-w-0 flex-1">
                     <Typography type="h5" weight="bold" truncate>
                         {resource?.title ?? t("practice.fe.title")}
@@ -185,7 +246,7 @@ export const SubjectFeAlbum = () => {
 
             <AsyncContent
                 isLoading={!albumSwr.data && !albumSwr.error}
-                skeleton={<FeAlbumSkeleton />}
+                skeleton={<FeAlbumSkeleton inModal={inModal} />}
                 isEmpty={images.length === 0}
                 emptyContent={{ title: t("practice.fe.empty") }}
                 error={!albumSwr.data ? albumSwr.error : undefined}
@@ -201,9 +262,20 @@ export const SubjectFeAlbum = () => {
                     /* The frame no longer names a height: it TAKES what the column has
                        left (`lg:flex-1`), which is the viewport minus the navbar minus this
                        page's own header row. `lg:min-h-[26rem]` is the floor for the one
-                       case the column is not height-locked (the manager panel is open) —
-                       without it the auto-height row would collapse onto the filmstrip. */
-                    <div className="overflow-hidden rounded-2xl border border-separator lg:grid lg:min-h-[26rem] lg:flex-1 lg:grid-cols-[minmax(0,1fr)_400px] lg:grid-rows-[minmax(0,1fr)]">
+                       case the column is not height-locked (the manager panel is open):
+                       in an AUTO row the viewer's `lg:h-full` has no definite height to
+                       resolve against and its stage is out of flow, so the pane
+                       contributes nothing — the row would take the height of the comment
+                       column beside it, and a picture next to a short thread would be a
+                       sliver. The modal is permanently in that un-locked case, so its
+                       floor is the one that decides how big the scan gets: `60dvh` rather
+                       than the bare 26rem minimum. */
+                    <div
+                        className={cn(
+                            "overflow-hidden rounded-2xl border border-separator lg:grid lg:flex-1 lg:grid-cols-[minmax(0,1fr)_400px] lg:grid-rows-[minmax(0,1fr)]",
+                            inModal ? "lg:min-h-[60dvh]" : "lg:min-h-[26rem]",
+                        )}
+                    >
                         {/* LEFT — the picture, letterboxed on black. `min-h-0` + an explicitly
                             0-floored row are what let a PORTRAIT scan shrink to the frame
                             instead of inflating it (a grid item's automatic minimum size is
@@ -283,9 +355,18 @@ export const SubjectFeAlbum = () => {
     )
 }
 
-/** Loading skeleton — mirrors the two-pane viewer (and its height) so nothing jumps. */
-const FeAlbumSkeleton = () => (
-    <div className="grid gap-3 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1fr)_400px]">
+/**
+ * Loading skeleton — mirrors the two-pane viewer (and its height) so nothing jumps. In the
+ * modal the column is not height-locked, so `lg:min-h-0 lg:flex-1` would resolve to ZERO
+ * and the skeleton would vanish; it takes the same `60dvh` floor the real frame does there.
+ */
+const FeAlbumSkeleton = ({ inModal = false }: { inModal?: boolean }) => (
+    <div
+        className={cn(
+            "grid gap-3 lg:flex-1 lg:grid-cols-[minmax(0,1fr)_400px]",
+            inModal ? "lg:min-h-[60dvh]" : "lg:min-h-0",
+        )}
+    >
         <Skeleton className="h-[60dvh] w-full rounded-2xl lg:h-full" />
         <div className="flex flex-col gap-3">
             <Skeleton className="h-10 w-full rounded-2xl" />

@@ -31,8 +31,11 @@ describe("nextAlbumLoadCount", () => {
         expect(nextAlbumLoadCount(20, 0, 50)).toBe(20)
     })
 
-    it("catches up in one call when the filmstrip jumps far ahead", () => {
-        // Clicking thumbnail 40 must not leave it outside the window.
+    it("catches up in one call when an index arrives from far ahead", () => {
+        // The safety net, not a live path: today the viewer only steps ±1, so nothing can hand
+        // in page 40 out of the blue. Pinned anyway, because the day something can (a
+        // jump-to-page control, a deep link), the page the reader landed on must be inside the
+        // window — a bound one batch short of it means an exam page that never loads.
         const loaded = nextAlbumLoadCount(5, 39, 50)
         expect(loaded).toBeGreaterThan(39)
     })

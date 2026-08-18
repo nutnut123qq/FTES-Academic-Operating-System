@@ -37,10 +37,95 @@
  * own a vertical scrollbar (no appear/disappear) AND reserve its gutter (stable on
  * overlay-scrollbar OSes + during modal scroll-lock). `overflow-y: scroll` also
  * pins `html` as the scroll container, so the gutter reserves on the right element.
+ *
+ * Bề rộng của cái gutter đó KHÔNG còn là mặc định OS (~15–17px) mà là 12px, do khối
+ * "thanh cuộn toàn cục" ngay bên dưới định nghĩa. Cơ chế không đổi (vẫn luôn có thanh
+ * cuộn + vẫn chừa chỗ), chỉ hẹp lại — không ảnh hưởng chuyện chống nhảy layout.
  */
 html {
   overflow-y: scroll;
   scrollbar-gutter: stable;
+}
+
+/*
+ * Thanh cuộn toàn cục — thay thanh cuộn mặc định của Windows (xám, to, vuông, có 2 nút
+ * mũi tên) bằng thanh mảnh bo tròn theo token của app.
+ *
+ * VÌ SAO 1 KHỐI TOÀN CỤC, KHÔNG SỬA TỪNG COMPONENT: selector trần
+ * (`*`, `::-webkit-scrollbar`) phủ mọi vùng cuộn — kể cả vùng cuộn nằm TRONG
+ * modal/popover/drawer/dropdown do HeroUI dựng qua portal, nơi không có class nào của
+ * mình để bám vào. Sửa 1 chỗ, ăn cả app.
+ *
+ * VÌ SAO PHẢI NẰM TRONG `@layer base` (đừng gỡ ra): Tailwind v4 đẩy utility vào
+ * `@layer utilities`, mà CSS KHÔNG-layer thắng MỌI layer bất kể specificity. Trong repo
+ * có ~10 chỗ CỐ Ý ẩn thanh cuộn bằng utility `[scrollbar-width:none]` +
+ * `[&::-webkit-scrollbar]:hidden` (CategoryChipBar, CategoryShelf, FeaturedSlider,
+ * MentorTeamSection, OffersPolicySection, ResourceHub, CodingChallengeList,
+ * DragScrollArea, composer chat…). Để khối này không-layer thì nó sẽ đè ngược, làm
+ * thanh cuộn hiện lại ở đúng những carousel/chip-bar mà người ta đã chủ động giấu.
+ * Nằm ở `base` (đứng trước `utilities`) thì utility vẫn thắng → hành vi cũ giữ nguyên.
+ *
+ * VÌ SAO `var(--scrollbar)`: token này đã khai sẵn ở CẢ nhánh sáng (87.10%) lẫn tối
+ * (70.50%) nhưng trước đó không nơi nào dùng. Xài thẳng nó thì khỏi cần viết nhánh tối
+ * riêng, và nếu ai chỉnh token thì thanh cuộn tự theo.
+ *
+ * KHÔNG ẨN THANH CUỘN ở đây (không `width: 0`, không `scrollbar-width: none`): yêu cầu
+ * là "cho đẹp", không phải "giấu đi" — ẩn thì mất luôn manh mối là vùng đó cuộn được.
+ * Tay cuộn giữ ĐÚNG 8px bề ngang thật (rãnh 12px trừ 2px viền trong suốt mỗi bên qua
+ * `background-clip: content-box` — viền trong suốt là phần đệm để tay cuộn không dính
+ * sát mép) — đủ to để bấm và kéo bằng chuột.
+ */
+/* ponytail: CSS thuần, 0 dependency, 0 component mới, 0 JS — và KHÔNG chế màu mới:
+   xài lại token `--scrollbar` khai sẵn nhưng bỏ quên, nên nhánh tối tự có. */
+@layer base {
+  /* ★ CỔNG CHIA 2 ENGINE — ĐỪNG GỠ `@supports`, ĐỪNG ĐƯA `scrollbar-width` RA NGOÀI.
+     Chromium: HỄ element có `scrollbar-width`/`scrollbar-color` thì nó VỨT TOÀN BỘ rule
+     `::-webkit-scrollbar` của element đó. Đo thật trên Chrome 2026-08-17: để `*
+     { scrollbar-width: thin }` không cổng thì rãnh ra 10px (thanh dựng sẵn của Chrome,
+     mình không nắn được bo góc/nút mũi tên/hover); gỡ 2 dòng đó ra thì đúng 12px như
+     khối webkit bên dưới đặt. `selector(::-webkit-scrollbar)` = true ở Chrome/Edge/Safari,
+     false ở Firefox → `not` chừa nhánh chuẩn ĐÚNG cho mỗi Firefox, còn Chromium/WebKit
+     đi hết bằng pseudo-element (nắn được nhiều hơn). */
+  @supports not selector(::-webkit-scrollbar) {
+    /* Firefox: chỉ có 2 thuộc tính này, không có pseudo-element để bo góc.
+       `scrollbar-width` KHÔNG kế thừa nên phải quét `*`. */
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: var(--scrollbar) transparent;
+    }
+  }
+
+  /* Chrome/Edge/Safari. Đặt cả `width` (dọc) lẫn `height` (ngang) vì vùng cuộn NGANG
+     — khối code dài, bảng tràn, dải tab ngang — cũng phải đẹp, không chỉ vùng cuộn dọc. */
+  ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+
+  /* Rãnh trong suốt: thanh cuộn nổi trên chính nền của vùng cuộn, không kẻ thêm một
+     vệt xám dọc mép mọi panel. */
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar);
+    background-clip: content-box;
+    border: 2px solid transparent;
+    border-radius: 9999px;
+  }
+
+  /* Đậm lên khi rê chuột. `color-mix` hướng về `--foreground` nên tự đúng cả hai nền:
+     sáng thì tối lại, tối thì sáng lên — một dòng, không cần nhánh `.dark`. */
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in oklab, var(--scrollbar) 65%, var(--foreground));
+  }
+
+  /* Bỏ 2 nút mũi tên đầu/cuối kiểu Windows — thứ làm thanh cuộn trông "hệ điều hành". */
+  ::-webkit-scrollbar-button {
+    display: none;
+  }
 }
 
 /* A data "packet" travelling down a vertical wire — the hero architecture diagram's

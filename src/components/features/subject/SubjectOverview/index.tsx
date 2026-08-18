@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react"
 import { Button, Chip, Modal, Typography } from "@heroui/react"
 import {
+    ArrowSquareOutIcon,
     CaretRightIcon,
     ChatCircleIcon,
     FileTextIcon,
@@ -15,6 +16,7 @@ import {
     XIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
+import dynamic from "next/dynamic"
 import { useParams } from "next/navigation"
 import { Link, useRouter } from "@/i18n/navigation"
 import { UserLink } from "@/components/features/identity"
@@ -54,6 +56,22 @@ const LIFECYCLE_COLOR: Record<ChallengeLifecycle, "success" | "warning" | "defau
     upcoming: "warning",
     closed: "default",
 }
+
+/**
+ * The challenge solver, loaded only once a reader actually opens one.
+ *
+ * A STATIC import would pull the whole solver — markdown renderer, code grader, the UI/UX
+ * editor — into the subject landing page, which is the most-walked page of the workspace
+ * and where most readers never open a challenge at all. `ssr: false` because the dialog
+ * only ever exists after a click, so there is no server pass to render it in.
+ */
+const ChallengeView = dynamic(
+    () =>
+        import("@/components/features/challenge/ChallengeView").then(
+            (mod) => mod.ChallengeView,
+        ),
+    { ssr: false },
+)
 
 /** How many newest challenges to surface on the overview rail. */
 const OVERVIEW_CHALLENGES = 5
@@ -154,6 +172,7 @@ export const SubjectOverview = () => {
                         challengesFailed={Boolean(challengesError)}
                         onCompose={() => router.push(`${base}/discussion`)}
                         base={base}
+                        subjectId={subjectId}
                         subjectName={subject?.name ?? subjectId}
                         isMember={subject?.isMember ?? false}
                         isMembershipLoading={isMembershipLoading}
@@ -178,6 +197,7 @@ const OverviewView = ({
     challengesFailed,
     onCompose,
     base,
+    subjectId,
     subjectName,
     isMember,
     isMembershipLoading,
@@ -204,6 +224,11 @@ const OverviewView = ({
     challengesFailed: boolean
     onCompose: () => void
     base: string
+    /**
+     * The subject code (`CSD201`) — handed to {@link ChallengeView} when a challenge opens
+     * in the dialog, the same value `?subject=` carries on the route.
+     */
+    subjectId: string
     /** Subject name, shown in the leave confirmation. */
     subjectName: string
     /** Real membership (workspace `callerMembership`), NOT a hardcoded flag. */
@@ -216,6 +241,7 @@ const OverviewView = ({
     isLeaving: boolean
 }) => {
     const t = useTranslations("subjects")
+    const router = useRouter()
 
     // "Đã tham gia" giờ chỉ là 1 thông báo tắt được (STT 29C) — nhớ trạng thái tắt
     // theo từng workspace qua localStorage (key = base, duy nhất theo subjectId).
@@ -229,6 +255,10 @@ const OverviewView = ({
         setJoinedDismissed(true)
     }
     const [leaveOpen, setLeaveOpen] = useState(false)
+    // The challenge being read in the dialog — `null` = closed. This rail is the entry the
+    // reader actually uses for a PE paper, so the popup lives here rather than in ExamList
+    // (which only ever lists FE albums).
+    const [openedChallengeId, setOpenedChallengeId] = useState<string | null>(null)
 
     return (
         <div className="flex flex-col gap-6">
@@ -307,6 +337,59 @@ const OverviewView = ({
                     onLeave()
                 }}
             />
+
+            {/* A challenge read in place. Same shape as the FE album's dialog in ExamList
+                and as CommunityFeed's post: the body is the SAME component the route
+                renders, so the popup and `/challenges/{id}` cannot drift apart. The dialog
+                owns the scroll — inside it `ChallengeView` creates no scroll region of its
+                own, so a tall paper (attachment + hand-in panel + thread) would otherwise
+                be cut. */}
+            <Modal
+                isOpen={openedChallengeId !== null}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setOpenedChallengeId(null)
+                    }
+                }}
+            >
+                <Modal.Backdrop>
+                    <Modal.Container className="p-3 sm:p-6">
+                        <Modal.Dialog className="max-h-[90vh] w-[95vw] max-w-6xl overflow-y-auto">
+                            <Modal.CloseTrigger
+                                aria-label={t("practice.exam.closeExam")}
+                                className="z-20"
+                            />
+                            {openedChallengeId !== null ? (
+                                <>
+                                    <div className="flex justify-end pe-10">
+                                        <Button
+                                            size="sm"
+                                            variant="tertiary"
+                                            onPress={() =>
+                                                router.push(
+                                                    `/challenges/${openedChallengeId}?subject=${encodeURIComponent(subjectId)}`,
+                                                )
+                                            }
+                                        >
+                                            <ArrowSquareOutIcon
+                                                aria-hidden
+                                                focusable="false"
+                                                className="size-4"
+                                            />
+                                            {t("practice.exam.openFullPage")}
+                                        </Button>
+                                    </div>
+                                    <ChallengeView
+                                        challengeId={openedChallengeId}
+                                        subjectCode={subjectId}
+                                        inModal
+                                    />
+                                </>
+                            ) : null}
+                        </Modal.Dialog>
+                    </Modal.Container>
+                </Modal.Backdrop>
+            </Modal>
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                 {/* feed */}
@@ -387,10 +470,16 @@ const OverviewView = ({
                             <ChallengeRailSkeleton />
                         ) : newestChallenges.length > 0 ? (
                             newestChallenges.map((challenge) => (
-                                <Link
+                                // Opens ON THE SPOT rather than navigating — this rail is
+                                // where a PE paper is actually reached, so it is the rail
+                                // that owns the dialog. The URL does not change; the row's
+                                // page still exists at `/challenges/{id}` and the dialog
+                                // offers it explicitly.
+                                <button
                                     key={challenge.id}
-                                    href={`/challenges/${challenge.id}`}
-                                    className="group flex items-center gap-2"
+                                    type="button"
+                                    onClick={() => setOpenedChallengeId(challenge.id)}
+                                    className="group flex w-full items-center gap-2 text-start"
                                 >
                                     <TargetIcon aria-hidden focusable="false" className="size-5 shrink-0 text-accent" />
                                     <Typography type="body-sm" color="muted" className="min-w-0 flex-1 group-hover:underline" truncate>
@@ -399,7 +488,7 @@ const OverviewView = ({
                                     <Chip size="sm" variant="soft" color={LIFECYCLE_COLOR[challenge.lifecycle]}>
                                         {t(`practice.coding.lifecycle.${challenge.lifecycle}`)}
                                     </Chip>
-                                </Link>
+                                </button>
                             ))
                         ) : challengesFailed ? null : (
                             <Typography type="body-sm" color="muted">

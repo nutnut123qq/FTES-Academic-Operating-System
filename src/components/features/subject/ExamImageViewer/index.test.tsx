@@ -7,10 +7,16 @@ import { describe, expect, it, vi } from "vitest"
  * depend on.
  *
  * What is pinned here is exactly what the owner reported missing: the paging affordances
- * must EXIST and work (carets, counter, filmstrip, ←/→), the ends must not wrap, the
- * arrows must not fight the comment composer's caret, and the zoom must clamp and reset
- * per page. The pan maths lives in `examImageViewport.test.ts` — happy-dom reports every
- * layout box as 0, so the DOM cannot say anything true about dragging.
+ * must EXIST and work (carets, counter, ←/→), the ends must not wrap, the arrows must not
+ * fight the comment composer's caret, and the zoom must clamp and reset per page. The pan
+ * maths lives in `examImageViewport.test.ts` — happy-dom reports every layout box as 0, so
+ * the DOM cannot say anything true about dragging.
+ *
+ * There is deliberately NOTHING here about a thumbnail filmstrip: it was removed because
+ * scans of one exam look identical at thumbnail size (see the component docblock). What
+ * survives of it is `loadedCount`, which now bounds only the next-page prefetch — pinned
+ * below, because that bound is the only thing standing between a 200-scan album and a
+ * couple of hundred megabytes of requests.
  *
  * `t` echoes the key, with any params appended after `#`, so assertions key off message ids.
  */
@@ -60,7 +66,7 @@ import { ExamImageViewer, type ExamImageViewerImage } from "./index"
 
 /** A three-page album. */
 const album: Array<ExamImageViewerImage> = [
-    { id: "a", imageUrl: "https://storage/a.jpg", badgeCount: 2 },
+    { id: "a", imageUrl: "https://storage/a.jpg" },
     { id: "b", imageUrl: "https://storage/b.jpg" },
     { id: "c", imageUrl: "https://storage/c.jpg" },
 ]
@@ -134,20 +140,17 @@ describe("ExamImageViewer — paging", () => {
         composer.remove()
     })
 
-    it("jumps straight to a page from the filmstrip", () => {
-        const { onIndexChange } = setup(0)
-        fireEvent.click(screen.getByLabelText("practice.viewer.goToImage#3"))
-        expect(onIndexChange).toHaveBeenCalledWith(2)
+    it("warms the NEXT picture so paging forward is instant", () => {
+        const { view } = setup(0, album, 2)
+        const prefetch = view.container.querySelector("img[aria-hidden='true']")
+        expect(prefetch?.getAttribute("src")).toBe("https://storage/b.jpg")
     })
 
-    it("renders NO src for a thumbnail outside the caller's load window", () => {
-        setup(0, album, 2)
-        const thumbnails = screen
-            .getAllByRole("button")
-            .filter((node) => node.getAttribute("aria-label")?.startsWith("practice.viewer.goToImage"))
-        expect(thumbnails).toHaveLength(3)
-        expect(thumbnails[1].querySelector("img")).toBeTruthy()
-        expect(thumbnails[2].querySelector("img")).toBeNull()
+    it("fetches nothing past the caller's load window", () => {
+        // The window is the ONLY brake on a 200-scan album: with it at 1 the reader is on the
+        // only picture allowed, so the warm-up must not fire.
+        const { view } = setup(0, album, 1)
+        expect(view.container.querySelector("img[aria-hidden='true']")).toBeNull()
     })
 
     it("drops every paging affordance for a single-page paper", () => {
@@ -155,7 +158,6 @@ describe("ExamImageViewer — paging", () => {
         expect(screen.queryByLabelText("practice.viewer.previous")).toBeNull()
         expect(screen.queryByLabelText("practice.viewer.next")).toBeNull()
         expect(screen.queryByText("1/1")).toBeNull()
-        expect(screen.queryByLabelText("practice.viewer.goToImage#1")).toBeNull()
     })
 
     it("renders nothing at all for an empty album", () => {
@@ -173,7 +175,6 @@ describe("ExamImageViewer — text pages", () => {
             imageUrl: null,
             kind: "TEXT",
             textContent: "**Câu 1.** 1 + 1 = ?",
-            sourceFilename: "de-prf192.txt",
         },
         { id: "c", imageUrl: "https://storage/c.jpg" },
     ]
@@ -201,16 +202,18 @@ describe("ExamImageViewer — text pages", () => {
         // không ai phát hiện được nếu chỉ xem ở light mode.
         const { view } = setup(1, mixed)
 
-        const sheet = view.container.querySelector('[data-theme="light"]')
+        const sheet = view.container.querySelector("[data-theme='light']")
 
         expect(sheet).not.toBeNull()
         expect(sheet?.textContent).toContain("Câu 1.")
     })
 
-    it("labels the text page in the filmstrip by its source filename", () => {
-        setup(0, mixed)
+    it("counts a text page like any other, so the reader keeps one page number", () => {
+        // Mixed albums used to be told apart by a filename on the filmstrip. With the strip
+        // gone the counter is the whole story — and it must not skip or renumber text pages.
+        setup(1, mixed)
 
-        expect(screen.getByText("de-prf192.txt")).toBeTruthy()
+        expect(screen.getByText("2/3")).toBeTruthy()
     })
 })
 

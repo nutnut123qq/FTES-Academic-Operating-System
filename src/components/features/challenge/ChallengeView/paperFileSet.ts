@@ -36,8 +36,8 @@ const VIEWABLE_ROLE = "VIEW"
  * One INLINE block of the paper, in the author's order.
  *
  * Consecutive pictures collapse into a single `IMAGES` run on purpose: the shared
- * `ExamImageViewer` is an ALBUM (carets, `n/total` counter, filmstrip, ←/→ keys, zoom and
- * pan), so a three-page photographed exam belongs in ONE viewer the reader pages through,
+ * `ExamImageViewer` is an ALBUM (carets, `n/total` counter, ←/→ keys, zoom and pan), so a
+ * three-page photographed exam belongs in ONE viewer the reader pages through,
  * not three stacked viewers each with its own zoom state. A PDF cannot join that run — the
  * browser's own PDF viewer is a different frame — so it breaks the run and gets its own
  * section, which is what keeps "pages 1-2, a PDF appendix, then page 3" in the order the

@@ -5894,6 +5894,8 @@
                 "lockedAria": "cần mua khoá học để mở",
                 "unlockHint": "Mua khoá học liên kết để mở đề này",
                 "lockedNeutralHint": "Đề này chỉ dành cho học viên đã mua khoá",
+                "openFullPage": "Mở trang đầy đủ",
+                "closeExam": "Đóng đề",
                 "contribute": {
                     "title": {
                         "pe": "Đóng góp đề PE",
@@ -5977,7 +5979,6 @@
                 "previous": "Ảnh trước",
                 "next": "Ảnh sau",
                 "counter": "Ảnh {current} trên {total}",
-                "goToImage": "Xem ảnh số {index}",
                 "zoomIn": "Phóng to",
                 "zoomOut": "Thu nhỏ",
                 "fit": "Xem vừa khung",

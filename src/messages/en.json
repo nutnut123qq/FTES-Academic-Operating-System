@@ -5894,6 +5894,8 @@
                 "lockedAria": "buy the course to unlock",
                 "unlockHint": "Buy the linked course to unlock this exam",
                 "lockedNeutralHint": "This exam is for learners who bought the course",
+                "openFullPage": "Open full page",
+                "closeExam": "Close exam",
                 "contribute": {
                     "title": {
                         "pe": "Contribute a PE paper",
@@ -5977,7 +5979,6 @@
                 "previous": "Previous page",
                 "next": "Next page",
                 "counter": "Page {current} of {total}",
-                "goToImage": "Go to page {index}",
                 "zoomIn": "Zoom in",
                 "zoomOut": "Zoom out",
                 "fit": "Fit the whole page",

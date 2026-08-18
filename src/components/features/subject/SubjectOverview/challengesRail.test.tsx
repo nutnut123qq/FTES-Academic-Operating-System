@@ -1,5 +1,5 @@
 import React from "react"
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { CodingChallenge } from "../hooks/useQuerySubjectCodingChallengesSwr"
 
@@ -49,6 +49,9 @@ vi.mock("@heroui/react", () => {
     Modal.Header = Passthrough
     Modal.Body = Passthrough
     Modal.Footer = Passthrough
+    Modal.CloseTrigger = ({ "aria-label": label }: { "aria-label"?: string }) => (
+        <button type="button" aria-label={label} />
+    )
     return {
         Modal,
         Button: ({ children, onPress }: { children?: React.ReactNode; onPress?: () => void }) => (
@@ -64,6 +67,7 @@ vi.mock("@heroui/react", () => {
 vi.mock("@phosphor-icons/react", () => {
     const Icon = () => <span />
     return {
+        ArrowSquareOutIcon: Icon,
         CaretRightIcon: Icon,
         ChatCircleIcon: Icon,
         FileTextIcon: Icon,
@@ -196,11 +200,37 @@ describe("SubjectOverview — rail Challenges của môn", () => {
             error: undefined,
         }
         render(<SubjectOverview />)
-        expect(screen.getByText("Bài JPD113 số 1").closest("a")?.getAttribute("href")).toBe(
-            "/challenges/c1",
-        )
+        expect(screen.getByText("Bài JPD113 số 1")).toBeTruthy()
         expect(screen.queryByText("overview.noChallenges")).toBeNull()
         expect(screen.queryAllByTestId("skeleton")).toHaveLength(0)
+    })
+
+    /**
+     * The row OPENS IN PLACE — it is not a link any more.
+     *
+     * This rail is where a PE paper is actually reached, so it is the rail that owns the
+     * dialog. The assertion is deliberately "no anchor, and the dialog appears": the body
+     * of the dialog is loaded with `next/dynamic`, so waiting for the solver itself would
+     * be testing the loader rather than the wiring.
+     */
+    it("BẤM MỘT BÀI: mở ngay tại chỗ, không phải link điều hướng đi", async () => {
+        challengesResult = {
+            challenges: [challenge({ id: "c1", title: "Bài JPD113 số 1" })],
+            isLoading: false,
+            error: undefined,
+        }
+        render(<SubjectOverview />)
+
+        const row = screen.getByText("Bài JPD113 số 1").closest("button")
+        expect(row).toBeTruthy()
+        expect(screen.getByText("Bài JPD113 số 1").closest("a")).toBeNull()
+        expect(screen.queryByText("practice.exam.openFullPage")).toBeNull()
+
+        fireEvent.click(row as HTMLButtonElement)
+
+        // The dialog is open: its own control back to the real page is on screen, and that
+        // page is still the deep link the row used to navigate to.
+        expect(await screen.findByText("practice.exam.openFullPage")).toBeTruthy()
     })
 
     it("ĐỌC HỎNG: im lặng — không nói môn trống, cũng không treo shimmer vĩnh viễn", () => {

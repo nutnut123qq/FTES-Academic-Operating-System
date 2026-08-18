@@ -5,7 +5,6 @@ import { Button, cn } from "@heroui/react"
 import {
     CaretLeftIcon,
     CaretRightIcon,
-    FileTextIcon,
     FrameCornersIcon,
     MagnifyingGlassMinusIcon,
     MagnifyingGlassPlusIcon,
@@ -42,8 +41,6 @@ export interface ExamImageViewerImage {
     imageUrl: string | null
     /** Caption, used as the alt text when the uploader wrote one. */
     caption?: string | null
-    /** Optional badge on the thumbnail (the FE album shows the comment count). */
-    badgeCount?: number
     /**
      * What the page holds. Absent → picture, which is what every album held before text pages
      * existed.
@@ -51,9 +48,18 @@ export interface ExamImageViewerImage {
     kind?: "IMAGE" | "TEXT"
     /** The exam as Markdown; text pages only. */
     textContent?: string | null
-    /** Original filename, shown on the thumbnail of a text page so the pages stay tellable apart. */
-    sourceFilename?: string | null
 }
+
+/*
+ * Two fields left this shape on 2026-08-17: `badgeCount` (per-page comment count) and
+ * `sourceFilename` (a typed page's original filename). Both existed for the thumbnail
+ * strip along the bottom edge — the only place either was ever painted — so when the strip
+ * went, they became values the album computed and handed over for nobody to read. What the
+ * reader sees instead is the album's own comment column (the count for the page in front of
+ * them, the only one they can act on) and the `n/total` counter (which tells two typed pages
+ * apart just as well as a filename did). The REST field `FeImageView.sourceFilename` stays
+ * — that is the BE contract, and unrelated to what this viewer chooses to draw.
+ */
 
 /**
  * Repeating "FTES" watermark drawn over a text page, as an inline SVG data URI.
@@ -82,9 +88,11 @@ export interface ExamImageViewerProps {
     /** Asked to page. The caller clamps/stores; the viewer only ever proposes a valid index. */
     onIndexChange: (index: number) => void
     /**
-     * How many pictures the caller is willing to FETCH (its sliding load window). A
-     * thumbnail past this bound renders with no `src`, which is what actually stops the
-     * request. Omitted → every thumbnail loads (fine for a one- or two-page paper).
+     * How many pictures the caller is willing to FETCH (its sliding load window). Only the
+     * page being read and the PREFETCH of the next one ever hit the network, and the
+     * prefetch is skipped past this bound — so a 200-scan album never pulls more than the
+     * reader has walked to. Omitted → the whole album is fair game (fine for a one- or
+     * two-page paper).
      */
     loadedCount?: number
     /** Extra classes for the pane (the caller owns its height: `h-[55dvh] lg:h-full`). */
@@ -119,10 +127,19 @@ export interface ExamImageViewerProps {
  * a double-click toggles fit ⇄ 2.5×. Every page change snaps back to the fit — carrying a
  * previous page's pan onto the next scan lands the reader in a blank margin.
  *
- * **Paging is deliberately over-signalled**: carets, an `n/total` counter, a thumbnail
- * filmstrip and ←/→ keys, all INSIDE the frame. The filmstrip used to sit outside it,
- * below a frame taller than the viewport, which is how an album with 50 pages could look
- * like it had no way to reach page 2.
+ * **Paging is signalled three ways**, all INSIDE the frame: carets, an `n/total` counter
+ * and ←/→ keys. There USED to be a fourth — a thumbnail filmstrip along the bottom edge —
+ * and it is gone on purpose. Pages of one exam are photographs of near-identical sheets of
+ * paper, so at 64 px the thumbnails were interchangeable grey rectangles: they could not
+ * answer "which page is this?", which is the only question a strip exists to answer. On an
+ * album of any size the strip also overflowed into a horizontal scrollbar of its own, i.e.
+ * a second thing to navigate in order to navigate. The counter alone carries the page
+ * number, which is what a reader actually goes by.
+ *
+ * (The strip had earlier been moved from OUTSIDE the frame to inside it, because below a
+ * frame taller than the viewport it was invisible and a 50-page album looked like it had
+ * no way to reach page 2. That reason retires with the strip: carets and the counter are
+ * inside the frame and always in sight.)
  *
  * The `<img>` is deliberately not `next/image`: these URLs come from the storage provider's
  * host, which has no `images.remotePatterns` entry.
@@ -509,63 +526,6 @@ export const ExamImageViewer = ({
                     </>
                 ) : null}
             </div>
-
-            {/* FILMSTRIP — inside the frame on purpose: outside it, below a frame taller
-                than the viewport, it was invisible without scrolling the page. */}
-            {hasMultiple ? (
-                <div className="flex shrink-0 gap-2 overflow-x-auto border-t border-white/10 bg-black/80 p-2">
-                    {images.map((image, position) => (
-                        <button
-                            key={image.id}
-                            type="button"
-                            aria-label={t("practice.viewer.goToImage", { index: position + 1 })}
-                            aria-current={position === clampedIndex}
-                            onClick={() => goTo(position)}
-                            className={cn(
-                                "relative size-16 shrink-0 cursor-pointer overflow-hidden rounded-large",
-                                position === clampedIndex
-                                    ? "border-2 border-accent"
-                                    : "border border-white/20 opacity-70 transition-opacity hover:opacity-100",
-                            )}
-                        >
-                            {/* Outside the load window the thumbnail is an empty box: no `src`
-                                means no request, which is the whole point. `loading="lazy"` on
-                                its own would not help — the filmstrip scrolls horizontally and
-                                the browser happily fetches what is just off-screen. */}
-                            {isTextPage(image) ? (
-                                /* Text page: no picture to show. A file glyph + the source
-                                   filename is what actually tells two typed pages apart in a
-                                   strip — an identical grey box would not. */
-                                <span className="flex size-full flex-col items-center justify-center gap-1 bg-default px-1 text-center">
-                                    <FileTextIcon
-                                        aria-hidden
-                                        focusable="false"
-                                        className="size-5 text-muted"
-                                    />
-                                    <span className="line-clamp-2 text-[10px] leading-tight text-muted">
-                                        {image.sourceFilename ?? position + 1}
-                                    </span>
-                                </span>
-                            ) : position < loadBound && image.imageUrl ? (
-                                <img
-                                    src={image.imageUrl}
-                                    alt=""
-                                    loading="lazy"
-                                    decoding="async"
-                                    className="size-full object-cover"
-                                />
-                            ) : (
-                                <span aria-hidden className="block size-full bg-default" />
-                            )}
-                            {(image.badgeCount ?? 0) > 0 ? (
-                                <span className="absolute bottom-0 right-0 rounded-tl-large bg-black/60 px-1 text-xs font-medium text-white">
-                                    {image.badgeCount}
-                                </span>
-                            ) : null}
-                        </button>
-                    ))}
-                </div>
-            ) : null}
         </div>
     )
 }

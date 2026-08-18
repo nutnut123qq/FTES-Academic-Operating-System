@@ -99,6 +99,19 @@ export interface ChallengePaperProps {
      * a fact the server has not told it.
      */
     createdAt?: string | null
+    /**
+     * Rendered inside a DIALOG rather than on a page. The paper's whole `lg:` layout sizes
+     * itself off the VIEWPORT — a pinned two-pane frame `calc(100dvh-12rem)` tall whose
+     * right column scrolls in two capped strips — which a dialog cannot honour: the box is
+     * shorter than the viewport, so the frame overflows it and the hand-in panel ends up
+     * trapped in a 45%-tall strip nested inside a scrolling dialog.
+     *
+     * Set it and the surface falls back to the layout it ALREADY has below `lg`: panes
+     * stacked, nothing pinned, everything at its natural height, scrolled by whatever box
+     * contains it. Nothing is hidden or trimmed — the hand-in panel renders whole and is
+     * reached by scrolling the dialog.
+     */
+    inModal?: boolean
 }
 
 /**
@@ -109,7 +122,9 @@ export interface ChallengePaperProps {
  * answer in on the RIGHT — the two-pane shape of the FE album
  * (`SubjectFeAlbum`): `lg:grid-cols-[minmax(0,1fr)_400px]`, the paper letterboxed on
  * black, the right pane on `bg-overlay` scrolling on its own; below `lg` the panes stack
- * with the paper first, because the paper is what the reader came for.
+ * with the paper first, because the paper is what the reader came for. That stacked layout
+ * is also what a DIALOG gets at every width ({@link ChallengePaperProps.inModal}): the
+ * two-pane frame is measured against the viewport, which a dialog box is not.
  *
  * **The hand-in block exists but is GATED** — see {@link IS_PAPER_GRADING_OPEN}. AI
  * grading for papers is sold later, so the block renders in full and does nothing: no file
@@ -148,7 +163,7 @@ export interface ChallengePaperProps {
  * - **IMAGE** → the SHARED {@link ExamImageViewer} — zoom, pan, ←/→, the lot, already
  *   built for photographed exam pages. The challenge contract carries a SINGLE
  *   `paperUrl`, so it is handed a one-image array and the viewer drops its own paging
- *   affordances (carets, counter, filmstrip) on its own. No `loadedCount`: a one-page
+ *   affordances (carets, `n/total` counter) on its own. No `loadedCount`: a one-page
  *   window is the whole album.
  * - **PDF** → embedded in an `<iframe>` (the browser's own viewer, so it scrolls and
  *   zooms), plus the same "open in a new tab" escape hatch above it.
@@ -170,6 +185,7 @@ export const ChallengePaper = ({
     challengeId,
     author,
     createdAt,
+    inModal = false,
 }: ChallengePaperProps) => {
     const t = useTranslations("challenge")
     const kind = classifyChallengePaper(paperUrl, paperMime)
@@ -187,7 +203,7 @@ export const ChallengePaper = ({
     /**
      * The paper in the shape the shared viewer reads. ONE entry, because the challenge
      * contract carries one `paperUrl` — never fabricate a multi-page array here: the
-     * viewer would then offer carets and a filmstrip for pages that do not exist. A
+     * viewer would then offer carets and an `n/total` counter for pages that do not exist. A
      * genuinely multi-page challenge paper needs a BE field first (an ordered
      * `ChallengeView.paperPages`, the way `FeAlbumView.images` works).
      *
@@ -255,7 +271,12 @@ export const ChallengePaper = ({
 
             <div
                 className={cn(
-                    "overflow-hidden rounded-2xl border border-separator lg:grid lg:grid-cols-[minmax(0,1fr)_400px]",
+                    "overflow-hidden rounded-2xl border border-separator",
+                    // ponytail: ONE switch for the whole viewport-pinned layout — in a
+                    // dialog every `lg:` rule below is simply not emitted, which leaves the
+                    // stacked layout this surface already ships below `lg`. No modal-only
+                    // sizing was invented; the box that contains it does the scrolling.
+                    !inModal && "lg:grid lg:grid-cols-[minmax(0,1fr)_400px]",
                     // A 0-floored row + `min-h-0` on the pane are what let a PORTRAIT scan
                     // shrink to the frame instead of inflating it: a grid item's automatic
                     // minimum size is its CONTENT, and `overflow-hidden` then clips it.
@@ -263,19 +284,20 @@ export const ChallengePaper = ({
                     // it takes nearly the whole viewport once scrolled to; the header
                     // above it scrolls away.
                     isFramed
+                        && !inModal
                         && "lg:h-[calc(100dvh-12rem)] lg:min-h-[30rem] lg:grid-rows-[minmax(0,1fr)]",
                 )}
             >
                 {/* LEFT — the paper. A multi-file set owns this pane; with no set (or a set
                     of templates only) the single-file branches below are untouched. */}
                 {sections.length > 0 ? (
-                    <PaperSections sections={sections} title={title} />
+                    <PaperSections sections={sections} title={title} inModal={inModal} />
                 ) : kind === "IMAGE" ? (
                     <ExamImageViewer
                         images={viewerImages}
                         index={0}
                         onIndexChange={onIndexChange}
-                        className="h-[60dvh] min-h-0 lg:h-full"
+                        className={cn("h-[60dvh] min-h-0", !inModal && "lg:h-full")}
                     />
                 ) : kind === "PDF" ? (
                     /* No border/radius of its own: the frame around both panes owns them,
@@ -283,7 +305,7 @@ export const ChallengePaper = ({
                     <iframe
                         src={paperUrl}
                         title={t("paper.imageAlt", { title })}
-                        className="h-[60dvh] w-full bg-default lg:h-full"
+                        className={cn("h-[60dvh] w-full bg-default", !inModal && "lg:h-full")}
                     />
                 ) : kind === "ARCHIVE" ? (
                     /* An archive IS a legitimate paper here (a folder of source + documents the
@@ -313,17 +335,25 @@ export const ChallengePaper = ({
                     DISCUSSION takes the rest of the column, which is what lets the thread
                     pin its composer to the bottom edge (see PostCommentThread). All of it
                     is `lg:`-only: below that the panes stack and the page scrolls as one. */}
-                <div className="flex min-h-0 flex-col gap-4 bg-overlay p-4 lg:overflow-hidden">
+                <div
+                    className={cn(
+                        "flex min-h-0 flex-col gap-4 bg-overlay p-4",
+                        !inModal && "lg:overflow-hidden",
+                    )}
+                >
                     <div
                         className={cn(
                             "flex flex-col gap-4",
                             // With a thread underneath, the paper-side strip is capped so a
                             // long template list can never push the discussion out of the
                             // frame; with no thread it simply owns the whole column, exactly
-                            // as the pane did before.
-                            challengeId
-                                ? "lg:max-h-[45%] lg:overflow-y-auto"
-                                : "lg:min-h-0 lg:flex-1 lg:overflow-y-auto",
+                            // as the pane did before. In a dialog neither cap applies: the
+                            // hand-in panel is TALL and must stay whole, so it keeps its
+                            // natural height and the dialog scrolls to it.
+                            !inModal
+                                && (challengeId
+                                    ? "lg:max-h-[45%] lg:overflow-y-auto"
+                                    : "lg:min-h-0 lg:flex-1 lg:overflow-y-auto"),
                         )}
                     >
                         {/* The templates come FIRST: they are what the candidate needs in hand to
@@ -359,21 +389,36 @@ export const ChallengePaper = ({
  *
  * @param props.sections - inline sections from {@link groupChallengePaperFiles}, in order.
  * @param props.title - the challenge title, the fallback accessible name of a file.
+ * @param props.inModal - in a dialog the pane keeps its own `60dvh` instead of filling a
+ *   viewport-tall frame that does not exist there (see {@link ChallengePaperProps.inModal}).
  */
 const PaperSections = ({
     sections,
     title,
+    inModal,
 }: {
     sections: Array<ChallengePaperSection>
     title: string
+    inModal: boolean
 }) => {
     const only = sections.length === 1 ? sections[0] : undefined
     if (only) {
-        return <PaperSection section={only} title={title} className="h-[60dvh] lg:h-full" />
+        return (
+            <PaperSection
+                section={only}
+                title={title}
+                className={inModal ? "h-[60dvh]" : "h-[60dvh] lg:h-full"}
+            />
+        )
     }
 
     return (
-        <div className="flex min-h-0 flex-col gap-3 overflow-y-auto p-3 lg:h-full">
+        <div
+            className={cn(
+                "flex min-h-0 flex-col gap-3 overflow-y-auto p-3",
+                !inModal && "lg:h-full",
+            )}
+        >
             {sections.map((section) => (
                 <div
                     key={sectionKey(section)}
@@ -435,7 +480,7 @@ const PaperSection = ({
  * album.
  *
  * This is the thing the single-`paperUrl` era could not do: the viewer's carets, `n/total`
- * counter, filmstrip and ←/→ keys were built for exactly this — a photographed multi-page
+ * counter and ←/→ keys were built for exactly this — a photographed multi-page
  * exam — and they light up on their own as soon as there is more than one page. The old
  * one-image array was never a design choice, only the shape of the contract; now that the
  * BE ships the ordered set, the pages go in as they are.

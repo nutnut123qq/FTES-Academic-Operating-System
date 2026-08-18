@@ -67,8 +67,8 @@ export interface FeAlbumManagerProps {
  * - **reorder** — up/down buttons; every move ships the album's COMPLETE id permutation,
  *   which is what `PUT /images/order` demands.
  *
- * Every settled write calls `onMutated`, so the viewer's carousel, filmstrip and
- * per-image comment pane re-read the same album SWR entry.
+ * Every settled write calls `onMutated`, so the viewer's pages and the per-image comment
+ * pane re-read the same album SWR entry.
  *
  * @param props - {@link FeAlbumManagerProps}
  */

@@ -109,6 +109,30 @@ const ChallengeSolveSurface = ({ challenge }: { challenge: ChallengeDetail }) =>
     )
 }
 
+/** Props for {@link ChallengeView}. */
+export interface ChallengeViewProps {
+    /**
+     * Which challenge to solve — the ROUTING SLUG, exactly what `/challenges/[challengeId]`
+     * carries. Omitted on the route itself, where `useParams()` is the source of truth;
+     * REQUIRED in a modal, which has no route segment to read.
+     */
+    challengeId?: string
+    /**
+     * The subject workspace the challenge was opened FROM (`CSD201`), the value the route
+     * takes from `?subject=`. Omitted → the query string answers, so deep links keep
+     * working unchanged. It is validated here either way ({@link challengeSubjectCode}):
+     * a caller-supplied code goes through the same gate a hand-edited URL does.
+     */
+    subjectCode?: string | null
+    /**
+     * Rendered INSIDE a dialog rather than as a page. A modal is not a page, so it drops
+     * the two page-frames — the subject rail around the view and the "back to the list"
+     * link (the × already closes it) — and it stops pinning anything to the VIEWPORT: the
+     * dialog box is what scrolls (see {@link ChallengePaper}).
+     */
+    inModal?: boolean
+}
+
 /**
  * The challenge solve view (§10) — `/challenges/[challengeId]`. Header + brief
  * accordions, then the type-specific solve surface: `uiux` gets the live
@@ -120,14 +144,31 @@ const ChallengeSolveSurface = ({ challenge }: { challenge: ChallengeDetail }) =>
  * while AI grading for papers is unsold (`IS_PAPER_GRADING_OPEN`). None of the code
  * solvers are reached for a paper-bearing challenge. An ordinary challenge carries no
  * paper, so nothing about the existing solvers changes.
+ *
+ * **The same view serves the ROUTE and a MODAL** — the way the community feed opens a post
+ * in place: one component rendered in both, so the deep link `/challenges/<id>` and the
+ * popup can never drift apart. What it needs from the URL (`challengeId`, `?subject=`) is
+ * therefore accepted as PROPS and only FALLS BACK to `useParams()`/`useSearchParams()`,
+ * which is what keeps the route caller (`page.tsx`) prop-less and unchanged. Opening the
+ * modal does NOT change the URL; the route stays the deep link.
+ *
+ * @param props - {@link ChallengeViewProps}
  */
-export const ChallengeView = () => {
+export const ChallengeView = ({
+    challengeId: challengeIdProp,
+    subjectCode: subjectCodeProp,
+    inModal = false,
+}: ChallengeViewProps = {}) => {
     const t = useTranslations("challenge")
     const tSystem = useTranslations("challengeSystem")
-    const { challengeId } = useParams<{ challengeId: string }>()
+    // ponytail: the hooks stay UNCONDITIONAL (rules of hooks) and simply lose to the
+    // props — in a modal they read the host page's URL, which carries neither field.
+    const routeParams = useParams<{ challengeId: string }>()
+    const routeSearch = useSearchParams()
     const router = useRouter()
+    const challengeId = challengeIdProp ?? routeParams.challengeId
     // Where the reader came from — see challengeBackHref.
-    const subjectParam = useSearchParams().get("subject")
+    const subjectParam = subjectCodeProp ?? routeSearch.get("subject")
     const backHref = challengeBackHref(subjectParam)
     // …and the workspace they came from, which the page STAYS INSIDE (see below).
     const subjectCode = challengeSubjectCode(subjectParam)
@@ -162,7 +203,12 @@ export const ChallengeView = () => {
                     <MagnifyingGlassIcon className="size-8 text-muted" aria-hidden focusable="false" />
                 ),
                 title: t("uiuxEditor.state.notFound"),
-                action: (
+                // ponytail: no way out offered INSIDE a dialog. The button navigates the
+                // page the dialog is sitting on top of — so a reader who opened a challenge
+                // that turns out to be missing would lose the page they came from, which is
+                // the exact trap hiding the header's back link was meant to avoid. The ×
+                // is the way out here; on the route the button is still the only one.
+                action: inModal ? undefined : (
                     <Button
                         size="sm"
                         variant="secondary"
@@ -184,15 +230,20 @@ export const ChallengeView = () => {
                         !hasPaper && "max-w-6xl",
                     )}
                 >
-                    {/* header: back link, then a tight title↔meta cluster */}
+                    {/* header: back link, then a tight title↔meta cluster.
+                        In a modal the back link is dropped — the dialog's × (and Esc, and
+                        the backdrop) is the way out, and a link that NAVIGATES would take
+                        the reader off the page they popped this open from. */}
                     <div className="flex flex-col gap-2">
-                        <Link
-                            href={backHref}
-                            className="flex w-fit items-center gap-2 text-sm text-muted no-underline transition-colors hover:text-foreground"
-                        >
-                            <ArrowLeftIcon className="size-4" aria-hidden focusable="false" />
-                            {t("uiuxEditor.backToCatalog")}
-                        </Link>
+                        {inModal ? null : (
+                            <Link
+                                href={backHref}
+                                className="flex w-fit items-center gap-2 text-sm text-muted no-underline transition-colors hover:text-foreground"
+                            >
+                                <ArrowLeftIcon className="size-4" aria-hidden focusable="false" />
+                                {t("uiuxEditor.backToCatalog")}
+                            </Link>
+                        )}
                         <Typography type="h4" weight="bold">
                             {challenge.title}
                         </Typography>
@@ -254,6 +305,10 @@ export const ChallengeView = () => {
                             challengeId={challenge.challengeUuid}
                             author={challenge.author}
                             createdAt={challenge.createdAt}
+                            // In a dialog the paper stops sizing itself off the VIEWPORT —
+                            // the box scrolls instead, so the hand-in panel stays whole and
+                            // reachable rather than being trapped in a 45%-tall strip.
+                            inModal={inModal}
                         />
                     ) : (
                         <ChallengeSolveSurface challenge={challenge} />
@@ -278,8 +333,12 @@ export const ChallengeView = () => {
      * it derives active from `pathname.startsWith("/subjects/<code>/<segment>")` and this
      * route lives at `/challenges/…`, so every row came up cold — hence the explicit
      * `activeSegment`: a challenge is only ever reached from that tab.
+     *
+     * A MODAL never mounts the rail, whatever the subject: the reader is still standing on
+     * the workspace page underneath, so a second copy of its navigation inside the dialog
+     * would be the same rail twice — and a dialog is one thing to do, not a whole page.
      */
-    return subjectCode ? (
+    return subjectCode && !inModal ? (
         <SubjectWorkspaceShell subjectId={subjectCode} activeSegment="practice">
             {view}
         </SubjectWorkspaceShell>

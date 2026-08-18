@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Huy hiệu Ngòi bút vàng — đăng 100 bài viết cộng đồng">
+  <title>Ngòi bút vàng</title>
+  <desc>Huy hiệu đạt được khi đăng 100 bài viết trong cộng đồng FTES.</desc>
+  <defs>
+    <path id="a15_blob" d="M480.6 238C479.8 250.5 477.7 262.9 475.2 275.1C472.6 287.3 469.6 299.4 465.3 311.1C461 322.8 456 334.6 449.6 345.3C443.2 356 435.3 366.3 426.7 375.5C418.1 384.7 408.1 392.9 398 400.5C387.9 408 377 414.6 366.1 421.1C355.1 427.5 344 433.7 332.3 439.3C320.6 444.9 308.5 450.7 295.8 454.8C283.1 459 269.5 462.7 256 464C242.5 465.3 228.1 465 214.7 462.7C201.3 460.4 187.9 455.7 175.6 450.2C163.2 444.6 151.7 437.1 140.8 429.5C130 421.9 119.9 413.4 110.4 404.6C100.9 395.8 91.8 386.6 83.8 376.7C75.8 366.8 68.3 356.3 62.4 345.3C56.5 334.3 51.8 322.4 48.4 310.5C45.1 298.7 43.5 286.3 42.3 274.2C41.2 262.1 41.4 250 41.6 238C41.8 226 42.4 214.1 43.6 202C44.8 190 45.9 177.6 48.8 165.6C51.6 153.6 55.2 141 60.8 129.8C66.3 118.5 73.7 107.4 82.2 98C90.8 88.6 101.4 80.4 112.1 73.4C122.9 66.4 134.9 61 146.6 56.1C158.3 51.1 170.4 47.3 182.4 43.9C194.5 40.5 206.6 37.6 218.9 35.8C231.1 34 243.7 32.7 256 33C268.3 33.3 280.9 34.9 292.8 37.5C304.8 40.2 316.4 44.5 327.7 49C338.9 53.5 349.6 59 360.3 64.5C371.1 70.1 381.6 75.8 392.1 82.3C402.6 88.7 413.5 95.2 423.4 103.2C433.3 111.1 443.3 119.8 451.2 129.8C459.2 139.7 466.2 151.2 471 162.9C475.9 174.6 478.7 187.5 480.3 200C481.9 212.6 481.5 225.5 480.6 238Z"/>
+    <radialGradient id="a15_field" cx="50%" cy="42%" r="66%">
+      <stop offset="0" stop-color="#16336c"/>
+      <stop offset=".6" stop-color="#112a58"/>
+      <stop offset="1" stop-color="#0c1f44"/>
+    </radialGradient>
+    <linearGradient id="a15_band" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#aee8dc"/>
+      <stop offset=".3" stop-color="#7ed4c4"/>
+      <stop offset=".5" stop-color="#c2f0e6"/>
+      <stop offset=".75" stop-color="#7ed4c4"/>
+      <stop offset="1" stop-color="#aee8dc"/>
+    </linearGradient>
+    <filter id="a15_shadow" x="-18%" y="-14%" width="136%" height="136%">
+      <feDropShadow dx="0" dy="7" stdDeviation="9" flood-color="#0a1733" flood-opacity="0.38"/>
+    </filter>
+    <filter id="a15_soft" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="10"/>
+    </filter>
+    <clipPath id="a15_clip"><use href="#a15_blob" transform="translate(256 248) scale(0.966) translate(-256 -248)"/></clipPath>
+  </defs>
+  <g filter="url(#a15_shadow)">
+    <use href="#a15_blob" fill="#0e6e63"/>
+    <use href="#a15_blob" fill="url(#a15_band)" transform="translate(256 248) scale(0.966) translate(-256 -248)"/>
+    <use href="#a15_blob" fill="#0e6e63" transform="translate(256 248) scale(0.858) translate(-256 -248)"/>
+    <use href="#a15_blob" fill="url(#a15_field)" transform="translate(256 248) scale(0.836) translate(-256 -248)"/>
+    <g clip-path="url(#a15_clip)">
+      <ellipse cx="256" cy="52" rx="172" ry="34" fill="#ffffff" opacity=".22" filter="url(#a15_soft)"/>
+    </g>
+    <g transform="translate(256 238) scale(1.06) translate(-256 -238)"><g>
+      <path d="M346 126C258 136 196 204 174 300L166 336L200 316C218 320 236 314 248 300C244 296 238 294 232 294C258 282 280 262 292 238C286 234 278 234 272 236C306 208 336 170 346 126Z" fill="#f8f1de"/>
+      <path d="M346 126C258 136 196 204 174 300L166 336L182 326C208 250 268 176 346 126Z" fill="#efe4c6"/>
+      <path d="M338 140C276 186 216 252 186 322" stroke="#16b3a0" stroke-width="9" fill="none" stroke-linecap="round"/>
+      <path d="M166 336L200 316L184 300Z" fill="#0e8a7a"/>
+      <circle cx="150" cy="330" r="8" fill="#0e8a7a"/>
+      <path d="M136 354C190 372 268 372 332 356" stroke="#16b3a0" stroke-width="13" fill="none" stroke-linecap="round"/>
+    </g></g>
+    <path d="M0 -13C1.8 -3.6 3.6 -1.8 13 0C3.6 1.8 1.8 3.6 0 13C-1.8 3.6 -3.6 1.8 -13 0C-3.6 -1.8 -1.8 -3.6 0 -13Z" transform="translate(396 96) scale(1.05)" fill="#fff8e8" opacity="0.95"/><path d="M0 -13C1.8 -3.6 3.6 -1.8 13 0C3.6 1.8 1.8 3.6 0 13C-1.8 3.6 -3.6 1.8 -13 0C-3.6 -1.8 -1.8 -3.6 0 -13Z" transform="translate(426 132) scale(0.6)" fill="#fff8e8" opacity="0.85"/>
+    <path d="M256 376c28 0 50 19 50 48c0 30 -22 48 -50 48c-28 0 -50 -18 -50 -48c0 -29 22 -48 50 -48z" fill="#99e0d2" stroke="#0e6e63" stroke-width="8"/>
+    <g fill="#fdfaf2">
+      <circle cx="225" cy="414" r="9"/>
+      <circle cx="245" cy="403" r="10"/>
+      <circle cx="267" cy="403" r="10"/>
+      <circle cx="287" cy="414" r="9"/>
+      <path d="M256 424c13 0 24 9 24 21c0 12 -11 19 -24 19c-13 0 -24 -7 -24 -19c0 -12 11 -21 24 -21z"/>
+    </g>
+  </g>
+</svg>

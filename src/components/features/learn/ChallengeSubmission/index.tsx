@@ -882,7 +882,7 @@ const AttemptRow = ({
                                                     ) : null}
                                                 </div>
                                             </div>
-                                            <GradeResultCard result={aiFeedback} />
+                                            <GradeResultCard result={aiFeedback} scoreOwnedByTests={hasTestResults} />
                                         </div>
                                     ) : Array.isArray(aiFeedback.changes) ? (
                                         <ProjectReviewResult
@@ -891,7 +891,7 @@ const AttemptRow = ({
                                             aiFeedback={aiFeedback}
                                         />
                                     ) : (
-                                        <GradeResultCard result={aiFeedback} />
+                                        <GradeResultCard result={aiFeedback} scoreOwnedByTests={hasTestResults} />
                                     )
                                 ) : null}
                             </div>

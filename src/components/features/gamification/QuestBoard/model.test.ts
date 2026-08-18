@@ -1,14 +1,18 @@
 import { describe, expect, it } from "vitest"
 import type { QuestItemView } from "@/modules/api/rest/gamification"
-import { questCtaHref, questProgress } from "./model"
+import { questCtaHref, questProgress, questRewardXp } from "./model"
 
 /**
- * Unit — the pure quest-board helpers (`questProgress`, `questCtaHref`) that back
- * the `/quests` page. These own the two things the spec pins:
+ * Unit — the pure quest-board helpers (`questProgress`, `questCtaHref`,
+ * `questRewardXp`) that back the `/quests` page. These own the three things the
+ * spec pins:
  *  - the progress arithmetic (ceiling = targetCount × dailyLimit, clamped, no
  *    divide-by-zero) and the "done" state (`completedCount ≥ dailyLimit`),
  *  - the code → CTA route map, including graceful degradation for auto-complete
- *    quests (`DAILY_LOGIN`) and unknown/admin codes (→ no CTA).
+ *    quests (`DAILY_LOGIN`) and unknown/admin codes (→ no CTA),
+ *  - the EXP reward's THREE-valued input (number / `null` / absent) collapsing to
+ *    "render this number" vs "render nothing" — with `0` on the RENDER side, so
+ *    `null` and `0` can never be confused for one another.
  */
 
 /** Build a quest row with sensible defaults, overridable per test. */
@@ -54,6 +58,42 @@ describe("questProgress", () => {
         expect(questProgress(quest({ dailyLimit: 2, completedCount: 1 })).isDone).toBe(false)
         expect(questProgress(quest({ dailyLimit: 2, completedCount: 2 })).isDone).toBe(true)
         expect(questProgress(quest({ dailyLimit: 2, completedCount: 3 })).isDone).toBe(true)
+    })
+})
+
+describe("questRewardXp", () => {
+    it("returns the quoted per-claim EXP", () => {
+        expect(questRewardXp(quest({ rewardXp: 100 }))).toBe(100)
+    })
+
+    // ★ The pin that matters. `null` and `0` are DIFFERENT backend answers:
+    // `null` = "this quest pays no EXP / I have nothing to quote", `0` = "this
+    // rule genuinely pays zero". A `?? 0` here would erase the difference and
+    // print a precise-looking "+0 EXP" the backend never said.
+    it("keeps `null` and `0` apart — null is nothing to render, 0 is a real zero", () => {
+        expect(questRewardXp(quest({ rewardXp: null }))).toBeNull()
+        expect(questRewardXp(quest({ rewardXp: 0 }))).toBe(0)
+        // and the two must not be interchangeable
+        expect(questRewardXp(quest({ rewardXp: null }))).not.toBe(0)
+    })
+
+    // A backend that has not deployed `rewardXp` omits the key entirely; the UI
+    // must survive it exactly like an explicit null — no chip, no fabricated 0.
+    it("treats an absent field (undeployed backend) as nothing to render", () => {
+        const legacy = quest()
+        expect("rewardXp" in legacy).toBe(false)
+        expect(questRewardXp(legacy)).toBeNull()
+    })
+
+    it("treats a non-finite value as nothing to render rather than printing NaN", () => {
+        expect(questRewardXp(quest({ rewardXp: Number.NaN }))).toBeNull()
+    })
+
+    // `triggerEventXp` is what the ACTIVITY pays, not what the QUEST pays. The
+    // reward helper must ignore it outright — never return it, never add it in.
+    it("ignores triggerEventXp entirely and never sums the two", () => {
+        expect(questRewardXp(quest({ rewardXp: 100, triggerEventXp: 500 }))).toBe(100)
+        expect(questRewardXp(quest({ rewardXp: null, triggerEventXp: 500 }))).toBeNull()
     })
 })
 

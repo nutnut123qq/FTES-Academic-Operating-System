@@ -52,6 +52,28 @@ export const questProgress = (quest: QuestItemView): QuestProgress => {
 }
 
 /**
+ * The EXP one claim of this quest pays, or `null` when there is nothing to show.
+ *
+ * Three input states collapse to two outputs, and the collapse is the whole point:
+ *  - a number (INCLUDING `0`) → that number, rendered verbatim. `0` is a real
+ *    answer — a rule may pay zero — so it is shown, not hidden.
+ *  - `null` (backend says "no EXP") or MISSING (backend predates `rewardXp`) →
+ *    `null`, and the caller renders NO chip.
+ *
+ * The distinction `null` ≠ `0` is why this is not written `quest.rewardXp ?? 0`:
+ * that would print "+0 EXP/lượt" on every card served by a backend that has not
+ * deployed the field yet — a precise-looking number the backend never said.
+ *
+ * Non-finite values (a malformed payload sending `NaN`) are treated as absent for
+ * the same reason: better no chip than "+NaN EXP".
+ *
+ * @param quest - the raw quest row from `GET /gamification/me/quests`
+ * @returns the per-claim EXP, or `null` when nothing may be rendered
+ */
+export const questRewardXp = (quest: QuestItemView): number | null =>
+    typeof quest.rewardXp === "number" && Number.isFinite(quest.rewardXp) ? quest.rewardXp : null
+
+/**
  * Map a quest code to the in-app surface where the user earns it.
  *
  * Returns a LOCALE-LESS href for the codes the client knows, or `null` for codes

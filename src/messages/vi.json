@@ -4033,12 +4033,13 @@
     "gamification": {
         "quests": {
             "title": "Nhiệm vụ hằng ngày",
-            "subtitle": "Hoàn thành nhiệm vụ mỗi ngày để nhận FCoin.",
+            "subtitle": "Hoàn thành nhiệm vụ mỗi ngày để nhận FCoin và EXP.",
             "todayEarned": "Xu hôm nay",
             "todayEarnedLabel": "Xu nhận hôm nay: {coin}",
             "walletBalance": "Số dư ví",
             "walletBalanceLabel": "Số dư ví: {coin} xu",
             "perClaim": "+{coin} xu/lượt",
+            "perClaimXp": "+{xp} EXP/lượt",
             "progressLabel": "{current}/{total}",
             "claimedOfLimit": "Đã nhận {claimed}/{limit} lượt hôm nay",
             "done": "Đã hoàn thành",

@@ -1,9 +1,9 @@
-import { restRequest } from "@/modules/api/rest/client"
+import { RestError, restRequest } from "@/modules/api/rest/client"
 import type {
     ApplyCareerOpportunityRequest,
     CareerMentorship,
     CareerMentorshipActionRequest,
-    CareerMySkillExp,
+    CareerMyElo,
     CareerMyRoadmap,
     CareerOpportunity,
     CareerOpportunityApplication,
@@ -17,7 +17,7 @@ import type {
     CareerSkillCategory,
     CareerSkillGraph,
     CareerSkillProgress,
-    CareerUserSkillExp,
+    CareerUserElo,
     CreateCareerOpportunityRequest,
     CreateCareerRoadmapRequest,
     CareerMentorAssessmentRequest,
@@ -245,7 +245,7 @@ export const getMyCareerSkills = async (): Promise<CareerSkillProgress[]> =>
 /**
  * Reads the managed skill-category catalogue (change `course-skill-exp`).
  *
- * @returns every category in catalogue order — the buckets of the profile EXP chart.
+ * @returns every category in catalogue order — the buckets of the profile Elo chart.
  */
 export const getCareerSkillCategories = async (): Promise<Array<CareerSkillCategory>> =>
     restRequest<Array<CareerSkillCategory>>({
@@ -254,26 +254,60 @@ export const getCareerSkillCategories = async (): Promise<Array<CareerSkillCateg
         authenticated: true,
     })
 
+/** `GET /career/me/elo` — the post-rename path. */
+const MY_ELO_PATH = "/career/me/elo"
+
 /**
- * Reads the CURRENT learner's skill set and their accumulated EXP in each bucket.
+ * `GET /career/me/skill-exp` — the PRE-RENAME path, kept alive on the backend as a
+ * deprecated alias. Only reached by the fallback below; delete both this constant and
+ * the fallback once the renamed backend is deployed everywhere.
+ */
+const MY_ELO_LEGACY_PATH = "/career/me/skill-exp"
+
+/**
+ * Reads the CURRENT learner's skill set and their accumulated **Elo** in each bucket.
  *
  * The buckets are their MAJOR's default skill set; categories not earned in yet come
  * back at `0`, so the caller never has to fill gaps itself.
  *
+ * DEPLOY ORDER, and why this function is not a one-liner: this app deploys itself
+ * through Vercel the moment the branch merges, while the backend is deployed BY HAND.
+ * So there is always a window where this build is live and the backend still only
+ * serves the old `/career/me/skill-exp`. Calling only the new path in that window
+ * answers `404`, which the chart reports as "we could not read your Elo" — the exact
+ * shape of the "Could not load the badge list" incident this project already had. So:
+ * try the new path, and on `404` ONLY (not 401/403/5xx — those are real answers about
+ * permission or breakage and must reach the caller) retry the deprecated alias.
+ *
  * WIRE SHAPE: an object since change `default-skills-by-major`; it used to be a bare
- * array. The return type keeps both so a browser holding a newer FE against an older
- * backend still type-checks — {@link buildSkillExpChart} reads either.
+ * array, and the legacy alias answers with `totalExp` instead of `totalElo`. The return
+ * type keeps every variant, and {@link buildEloChart} reads all of them.
  *
  * @returns the skill-set envelope, or the legacy bare array from an older backend.
  */
-export const getMyCareerSkillExp = async (): Promise<
-    CareerMySkillExp | Array<CareerUserSkillExp>
-> =>
-    restRequest<CareerMySkillExp | Array<CareerUserSkillExp>>({
-        method: "GET",
-        url: "/career/me/skill-exp",
-        authenticated: true,
-    })
+export const getMyCareerElo = async (): Promise<
+    CareerMyElo | Array<CareerUserElo>
+> => {
+    try {
+        return await restRequest<CareerMyElo | Array<CareerUserElo>>({
+            method: "GET",
+            url: MY_ELO_PATH,
+            authenticated: true,
+        })
+    } catch (cause) {
+        // 404 here means "this backend does not know the new route yet" — anything else
+        // (401, 403, 500, network) is an answer about THIS request and must not be retried
+        // against a different URL, or the caller would branch on the wrong failure.
+        if (!(cause instanceof RestError) || cause.status !== 404) {
+            throw cause
+        }
+        return await restRequest<CareerMyElo | Array<CareerUserElo>>({
+            method: "GET",
+            url: MY_ELO_LEGACY_PATH,
+            authenticated: true,
+        })
+    }
+}
 
 export const submitCareerSelfAssessment = async (
     slug: string,

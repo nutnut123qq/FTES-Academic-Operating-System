@@ -2415,7 +2415,7 @@
         "workModeNone": "Chưa xác định",
         "campusNone": "Không chọn",
         "majorNone": "Chưa chọn ngành",
-        "majorHint": "Ngành quyết định bộ kỹ năng hiện trong biểu đồ EXP kỹ năng ở hồ sơ.",
+        "majorHint": "Ngành quyết định bộ kỹ năng hiện trong biểu đồ Elo kỹ năng ở hồ sơ.",
         "majorEmptyHint": "Chưa tải được danh mục ngành nên tạm thời không chọn được. Thử lại sau ít phút; ngành đang lưu trong hồ sơ của bạn KHÔNG bị thay đổi."
     },
     "sessions": {
@@ -6527,21 +6527,21 @@
             "title": "Lối tắt"
         }
     },
-    "skillExp": {
-        "title": "EXP kỹ năng",
-        "expValue": "{exp} EXP",
-        "axisHint": "Cột là EXP thô, trục tự giãn theo nhóm cao nhất của bạn. Học thêm khóa là EXP cộng tiếp, không có trần.",
-        "zeroHint": "Đây là các nhóm kỹ năng bạn sẽ tích EXP. Học và hoàn thành khóa để bắt đầu cộng.",
+    "elo": {
+        "title": "Elo kỹ năng",
+        "eloValue": "{elo} Elo",
+        "axisHint": "Cột là Elo thô, trục tự giãn theo nhóm cao nhất của bạn. Học thêm khóa là Elo cộng tiếp, không có trần.",
+        "zeroHint": "Đây là các nhóm kỹ năng bạn sẽ tích Elo. Học và hoàn thành khóa để bắt đầu cộng.",
         "majorSet": "Bộ kỹ năng của ngành {major}.",
         "noMajorHint": "Chưa rõ ngành của bạn nên đang hiện toàn bộ nhóm kỹ năng.",
         "majorWithoutSetHint": "Ngành {major} chưa khai bộ nhóm kỹ năng riêng nên đang hiện toàn bộ danh mục.",
-        "readUnavailableHint": "Chưa đọc được EXP của bạn (chưa đăng nhập hoặc không đủ quyền) — đây là danh mục nhóm kỹ năng chung ở mức 0, KHÔNG phải EXP thật của bạn.",
+        "readUnavailableHint": "Chưa đọc được Elo của bạn (chưa đăng nhập hoặc không đủ quyền) — đây là danh mục nhóm kỹ năng chung ở mức 0, KHÔNG phải Elo thật của bạn.",
         "chooseMajor": "Chọn ngành",
         "empty": {
             "title": "Chưa có nhóm kỹ năng nào",
             "description": "Danh mục nhóm kỹ năng đang trống — quản trị viên cần thêm nhóm trước."
         },
-        "error": "Không tải được EXP kỹ năng.",
+        "error": "Không tải được Elo kỹ năng.",
         "retry": "Thử lại",
         "categories": {
             "programming": "Lập trình",

@@ -14,7 +14,7 @@ import { SectionCard } from "@/components/reuseable/SectionCard"
 import { MetricCard } from "@/components/blocks/stats/MetricCard"
 import { ProgressMeter } from "@/components/blocks/stats/ProgressMeter"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
-import { SkillExpChart } from "@/components/features/skill-exp"
+import { EloChart } from "@/components/features/elo"
 import { useGetMyActivityDaysSwr } from "@/hooks/swr/api/rest/queries/useGetMyActivityDaysSwr"
 import { useQueryMyGamificationSwr } from "@/components/features/gamification/hooks/useQueryMyGamificationSwr"
 import { useBadgeLabel } from "@/components/features/gamification/useBadgeLabel"
@@ -73,7 +73,7 @@ const ProgressSkeleton = () => (
  * at `/profile/progress` (no username param; another user's profile is served by
  * `ProfilePublic`), so every source here is `me`-scoped. Gamification
  * dashboard: a 2×2 of framed cards (FTES Coin, reputation, level/XP, rank/league),
- * then the year-long learning-activity calendar, badges, and the skill-EXP chart
+ * then the year-long learning-activity calendar, badges, and the skill-Elo chart
  * (raw EXP per skill category, auto-scaling axis).
  */
 export const ProfileProgress = () => {
@@ -276,9 +276,9 @@ export const ProfileProgress = () => {
                             )}
                         </LabeledCard>
 
-                        {/* skill EXP per category — raw EXP, auto-scaling axis */}
-                        <LabeledCard label={t("skillExp.title")}>
-                            <SkillExpChart />
+                        {/* Elo kỹ năng theo nhóm — số thô, trục tự giãn */}
+                        <LabeledCard label={t("elo.title")}>
+                            <EloChart />
                         </LabeledCard>
                     </div>
                 ) : null}

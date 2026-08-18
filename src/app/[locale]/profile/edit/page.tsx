@@ -100,7 +100,7 @@ const CampusRow = ({
  * The major row — same shape as {@link CampusRow}. The form value is a major CODE
  * ("" = not chosen).
  *
- * This row is what makes the profile's Skill-EXP panel work: that panel picks its skill
+ * This row is what makes the profile's skill-Elo panel work: that panel picks its skill
  * categories from the learner's major, and when none is set it prompts them here. A
  * prompt pointing at a form that cannot set the field is worse than no prompt.
  */

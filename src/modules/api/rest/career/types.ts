@@ -259,17 +259,22 @@ export interface CareerSkillAssessment {
     createdAt: string
 }
 
-// ---- Skill categories & EXP (change `course-skill-exp`) ----
+// ---- Skill categories & Elo (change `course-skill-exp`, renamed in `skill-elo-rename`) ----
 //
 // A SECOND, coarser taxonomy that sits beside the per-skill graph above: ten managed
-// CATEGORIES (`career.skill_categories`) plus a learner's uncapped running EXP total per
-// category (`career.user_category_exp`), credited as they cross 30/50/80/100% of a course.
+// CATEGORIES (`career.skill_categories`) plus a learner's uncapped running Elo total per
+// category (`career.user_category_elo`), credited as they cross 30/50/80/100% of a course.
 // Kept separate on purpose — `CareerSkill` / `CareerSkillProgress` and the skill graph are
 // untouched by this taxonomy.
+//
+// NAME: this was called "skill EXP" until `skill-elo-rename`. It was renamed because
+// gamification XP — level, league, leaderboards — is a DIFFERENT number, and two labels
+// both reading "EXP" made users treat them as one. Elo here ONLY ACCUMULATES; there is
+// no opponent and no deduction, so do not add one because the chess meaning suggests it.
 
 /**
  * One bucket of the managed skill-category catalogue (`GET /career/skill-categories`).
- * Mirrors `SkillExpDtos.CategoryView` — the row id stays server-side; the slug is the
+ * Mirrors `EloDtos.CategoryView` — the row id stays server-side; the slug is the
  * public key.
  */
 export interface CareerSkillCategory {
@@ -282,45 +287,51 @@ export interface CareerSkillCategory {
 }
 
 /**
- * One category total from `GET /career/me/skill-exp` (`SkillExpDtos.CategoryExpView`).
- * Categories the learner has not earned in yet come back with `totalExp: 0` — so a
+ * One category total from `GET /career/me/elo` (`EloDtos.CategoryEloView`).
+ * Categories the learner has not earned in yet come back with `totalElo: 0` — so a
  * chart over this payload always has a full set of bars.
  */
-export interface CareerUserSkillExp {
+export interface CareerUserElo {
     slug: string
     label: string
     sortOrder: number
-    /** Accumulated EXP for the category. Uncapped: more courses keep adding. */
-    totalExp: number
+    /** Accumulated Elo for the category. Uncapped: more courses keep adding. */
+    totalElo: number
+    /**
+     * PRE-RENAME spelling, still served by the deprecated `/career/me/skill-exp` alias
+     * this client falls back to while the renamed backend is not deployed yet. Optional
+     * so today's payload type-checks; delete together with the fallback.
+     */
+    totalExp?: number
 }
 
 /**
- * Where the returned set of categories came from (`SkillExpDtos.SkillSetSource`).
+ * Where the returned set of categories came from (`EloDtos.SkillSetSource`).
  *
  * Keep the two apart in the UI: `MAJOR_DEFAULTS` means "this is your major's skill
  * set", `FULL_CATALOGUE` means "we don't know your major yet, so here is everything"
  * — the second one earns a prompt to pick a major, the first one does not.
  */
-export type CareerSkillSetSource = "MAJOR_DEFAULTS" | "FULL_CATALOGUE"
+export type CareerEloSetSource = "MAJOR_DEFAULTS" | "FULL_CATALOGUE"
 
 /**
- * `GET /career/me/skill-exp` (`SkillExpDtos.MySkillExpView`) — the learner's skill set
- * plus their REAL EXP in each bucket.
+ * `GET /career/me/elo` (`EloDtos.MyEloView`) — the learner's skill set plus their REAL
+ * Elo in each bucket.
  *
  * The buckets are the DEFAULT SKILL SET OF THE LEARNER'S MAJOR (change
  * `default-skills-by-major`), which is what stops a brand-new learner from getting an
- * empty panel: every category of their major comes back at `totalExp: 0`. Zeros are
+ * empty panel: every category of their major comes back at `totalElo: 0`. Zeros are
  * DERIVED server-side — no placeholder progress row is ever written — so "not studied
  * yet" stays distinguishable from "studied but below the first milestone".
  *
  * `majorLabel` is `null` both when no major is chosen and when the major catalogue
  * (a separate service) could not be reached; the chart must still draw its bars.
  */
-export interface CareerMySkillExp {
+export interface CareerMyElo {
     majorCode: string | null
     majorLabel: string | null
-    source: CareerSkillSetSource
-    items: Array<CareerUserSkillExp>
+    source: CareerEloSetSource
+    items: Array<CareerUserElo>
 }
 
 // ---- CV Builder (Harvard) ----

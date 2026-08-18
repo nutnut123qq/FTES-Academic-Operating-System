@@ -2403,7 +2403,7 @@
         "workModeNone": "Not specified",
         "campusNone": "No campus",
         "majorNone": "No major yet",
-        "majorHint": "Your major decides which skills appear in the Skill EXP chart on your profile.",
+        "majorHint": "Your major decides which skills appear in the Skill Elo chart on your profile.",
         "majorEmptyHint": "The major catalogue could not be loaded, so this cannot be changed right now. Try again in a few minutes — the major saved on your profile is NOT affected."
     },
     "sessions": {
@@ -6527,21 +6527,21 @@
             "title": "Shortcuts"
         }
     },
-    "skillExp": {
-        "title": "Skill EXP",
-        "expValue": "{exp} EXP",
-        "axisHint": "Bars show raw EXP and the axis scales to your strongest category. Studying more courses keeps adding EXP — there is no ceiling.",
-        "zeroHint": "These are the skill categories you will earn EXP in. Study and complete courses to start adding.",
+    "elo": {
+        "title": "Skill Elo",
+        "eloValue": "{elo} Elo",
+        "axisHint": "Bars show raw Elo and the axis scales to your strongest category. Studying more courses keeps adding Elo — there is no ceiling.",
+        "zeroHint": "These are the skill categories you will earn Elo in. Study and complete courses to start adding.",
         "majorSet": "Skill set for {major}.",
         "noMajorHint": "We do not know your major yet, so every skill category is shown.",
         "majorWithoutSetHint": "{major} has no skill set of its own yet, so every category is shown.",
-        "readUnavailableHint": "We could not read your EXP (not signed in, or missing permission) — this is the shared category list at zero, NOT your real EXP.",
+        "readUnavailableHint": "We could not read your Elo (not signed in, or missing permission) — this is the shared category list at zero, NOT your real Elo.",
         "chooseMajor": "Choose your major",
         "empty": {
             "title": "No skill categories yet",
             "description": "The skill-category catalogue is empty — an administrator has to add categories first."
         },
-        "error": "Could not load your skill EXP.",
+        "error": "Could not load your skill Elo.",
         "retry": "Try again",
         "categories": {
             "programming": "Programming",

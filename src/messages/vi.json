@@ -7218,7 +7218,6 @@
             "groups": "Nhóm",
             "events": "Sự kiện",
             "saved": "Đã lưu",
-            "reputation": "Bảng uy tín",
             "poll": "Bình chọn",
             "moderation": "Kiểm duyệt"
         },
@@ -7443,15 +7442,6 @@
             "pollAddOption": "Thêm phương án",
             "pollRemoveOption": "Xoá phương án",
             "pollHint": "Khảo sát cần có câu hỏi (dòng đầu tiên) và ít nhất 2 phương án."
-        },
-        "reputation": {
-            "title": "Bảng uy tín",
-            "votes": "▲{up} ▼{down}",
-            "accepted": "{count} câu trả lời được chấp nhận",
-            "score": "{score} điểm",
-            "empty": "Chưa có người đóng góp nào.",
-            "signedOut": "Đăng nhập để xem bảng uy tín.",
-            "error": "Không tải được bảng uy tín. Vui lòng thử lại."
         },
         "poll": {
             "totalVotes": "{count} lượt bình chọn",

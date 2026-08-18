@@ -7218,7 +7218,6 @@
             "groups": "Groups",
             "events": "Events",
             "saved": "Saved",
-            "reputation": "Reputation",
             "poll": "Poll",
             "moderation": "Moderation"
         },
@@ -7443,15 +7442,6 @@
             "pollAddOption": "Add option",
             "pollRemoveOption": "Remove option",
             "pollHint": "A poll needs a question (the first line) and at least 2 options."
-        },
-        "reputation": {
-            "title": "Reputation",
-            "votes": "▲{up} ▼{down}",
-            "accepted": "{count} accepted",
-            "score": "{score} pts",
-            "empty": "No contributors yet.",
-            "signedOut": "Sign in to see the reputation board.",
-            "error": "Couldn't load the reputation board. Please try again."
         },
         "poll": {
             "totalVotes": "{count} votes",

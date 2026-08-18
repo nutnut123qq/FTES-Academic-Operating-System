@@ -34,7 +34,6 @@ const MENU_ITEMS: Array<{ key: string; href: string }> = [
     { key: "groups", href: "/groups" },
     { key: "events", href: "/events" },
     { key: "saved", href: "/community/saved" },
-    { key: "reputation", href: "/community/reputation" },
     { key: "poll", href: "/community/poll" },
     { key: "moderation", href: "/community/moderation" },
 ]

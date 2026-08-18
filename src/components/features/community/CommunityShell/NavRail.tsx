@@ -50,10 +50,6 @@ export const NavRail = () => {
                 <BookmarkSimpleIcon aria-hidden focusable="false" className="size-5" />
                 <Typography type="body-sm">{t("menu.saved")}</Typography>
             </Link>
-            <Link href="/community/reputation" className={ROW_CLASS}>
-                <TrophyIcon aria-hidden focusable="false" className="size-5" />
-                <Typography type="body-sm">{t("menu.reputation")}</Typography>
-            </Link>
             <Link href="/community/poll" className={ROW_CLASS}>
                 <ChartBarIcon aria-hidden focusable="false" className="size-5" />
                 <Typography type="body-sm">{t("menu.poll")}</Typography>

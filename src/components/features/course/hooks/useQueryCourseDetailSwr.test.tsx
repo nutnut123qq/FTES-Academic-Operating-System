@@ -49,7 +49,7 @@ const signIn = (id = "viewer-1") => {
 }
 
 /** Minimal BE detail DTO for a course routed by `slug`. */
-const detailDto = (slug: string) => ({
+const detailDto = (slug: string, courseOverrides: Record<string, unknown> = {}) => ({
     course: {
         id: `uuid-${slug}`,
         slugName: slug,
@@ -63,6 +63,7 @@ const detailDto = (slug: string) => ({
         avgStar: "4.5",
         ratingCount: 3,
         totalUser: 10,
+        ...courseOverrides,
     },
     description: "",
     contentCourse: "",
@@ -159,5 +160,40 @@ describe("useQueryCourseDetailSwr — isPurchased resolution", () => {
         expect(result.current.course?.enrollment?.isPurchased).toBe(false)
         // access fallback stays disabled without a token
         expect(accessMock).not.toHaveBeenCalledWith(expect.stringContaining("uuid-"))
+    })
+})
+
+/**
+ * Thẻ giảng viên trên trang chi tiết chỉ bấm sang hồ sơ được khi `mentorUsername` đi trọn
+ * chuỗi BE → DTO → view-model. Đây là mắt xích dễ đứt im lặng: thiếu nó thì thẻ vẫn hiện
+ * tên + ảnh nên nhìn qua tưởng chạy đúng, chỉ có điều không bấm được — đúng triệu chứng đã
+ * gặp với `mentorName` trước đó (BE trả null suốt, không ai thấy vì thẻ chỉ lặng lẽ ẩn).
+ */
+describe("useQueryCourseDetailSwr — danh tính giảng viên", () => {
+    it("map mentorName/avatar/username sang instructor để thẻ bấm được sang hồ sơ", async () => {
+        detailMock.mockResolvedValue(detailDto("khoa-mentor", {
+            mentorName: "Phan Thanh Huy",
+            mentorAvatarUrl: "https://cdn/huy.jpg",
+            mentorUsername: "huypt",
+        }))
+
+        const { result } = renderHook(() => useQueryCourseDetailSwr("khoa-mentor"), { wrapper })
+        await waitFor(() => expect(result.current.course?.instructor?.name).toBe("Phan Thanh Huy"))
+        expect(result.current.course?.instructor?.username).toBe("huypt")
+        expect(result.current.course?.instructor?.avatarUrl).toBe("https://cdn/huy.jpg")
+    })
+
+    it("khoá chưa có profile giảng viên: username undefined, KHÔNG bịa link hồ sơ", async () => {
+        // Khoá legacy/seed: instructor_id không phải UUID nên BE trả mentor rỗng. Thẻ được
+        // phép ẩn, nhưng tuyệt đối không được sinh username giả → route chết.
+        detailMock.mockResolvedValue(detailDto("khoa-legacy", {
+            mentorName: null,
+            mentorAvatarUrl: null,
+            mentorUsername: null,
+        }))
+
+        const { result } = renderHook(() => useQueryCourseDetailSwr("khoa-legacy"), { wrapper })
+        await waitFor(() => expect(result.current.course?.name).toBe("Khóa test"))
+        expect(result.current.course?.instructor).toBeUndefined()
     })
 })

@@ -119,6 +119,12 @@ export interface CourseInstructorLinks {
  * lights up unchanged the day the BE detail carries richer instructor data. */
 export interface CourseInstructor {
     name: string
+    /**
+     * Định danh trên URL (`/u/{username}`) — thứ DUY NHẤT cho phép bấm từ thẻ giảng viên sang
+     * hồ sơ. Vắng (khoá legacy chưa có profile) → thẻ vẫn hiện tên + ảnh nhưng KHÔNG bấm được,
+     * thay vì trỏ tới một route chết.
+     */
+    username?: string
     /** Formal title, e.g. "Giảng viên Kỹ thuật phần mềm". Absent → hidden. */
     title?: string
     /** Display role line, e.g. degree + affiliation. Absent → hidden. */
@@ -275,6 +281,7 @@ const toCourseDetail = (dto: CourseDetailDto): CourseDetail => {
         instructor: course.mentorName
             ? {
                 name: course.mentorName,
+                username: course.mentorUsername ?? undefined,
                 avatarUrl: course.mentorAvatarUrl ?? undefined,
             }
             : undefined,

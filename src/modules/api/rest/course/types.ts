@@ -58,6 +58,8 @@ export interface CourseSummary {
     mentorName?: string | null
     /** Instructor/mentor avatar URL; null when absent. */
     mentorAvatarUrl?: string | null
+    /** Định danh trên URL của giảng viên (`/u/{username}`); null khi chưa có profile. */
+    mentorUsername?: string | null
     /** Number of lessons in the course (0 when none). */
     totalLessons?: number
     /** Short course description/summary; null when absent. */

@@ -43,6 +43,7 @@ import { HighlightChip } from "@/components/blocks/chips/HighlightChip"
 import { ResponsiveBreadcrumb } from "@/components/blocks/navigation/ResponsiveBreadcrumb"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { StatRibbon } from "@/components/reuseable/StatRibbon"
+import { UserLink } from "@/components/features/identity"
 import { UserAvatar } from "@/components/reuseable/UserAvatar"
 import { lessonTypeIcon } from "../../learn/lessonType"
 import { useQueryCourseDetailSwr, type CourseDetail as CourseDetailModel, type CourseInstructor } from "../hooks/useQueryCourseDetailSwr"
@@ -92,16 +93,40 @@ const InstructorCard = ({ instructor }: { instructor: CourseInstructor }) => {
             </Typography>
             <div className="flex flex-col gap-4 rounded-2xl border border-separator p-4">
                 <div className="flex items-start gap-3">
-                    <UserAvatar
-                        username={instructor.name}
-                        avatar={instructor.avatarUrl}
-                        seed={instructor.name}
-                        size="lg"
-                    />
+                    {/* Có username thì cả ảnh lẫn tên đi qua UserLink — CÙNG component danh tính
+                        mà feed cộng đồng dùng, nên được luôn hovercard (tiểu sử + nút Theo dõi)
+                        và bấm sang /u/{username}, không phải dựng lại thẻ hover thứ hai.
+                        Vắng username (khoá legacy chưa có profile) thì giữ ảnh + tên tĩnh: thà
+                        không bấm được còn hơn trỏ vào một route chết. */}
+                    {instructor.username ? (
+                        <UserLink
+                            username={instructor.username}
+                            displayName={instructor.name}
+                            avatar={instructor.avatarUrl}
+                            size="lg"
+                            hideName
+                        />
+                    ) : (
+                        <UserAvatar
+                            username={instructor.name}
+                            avatar={instructor.avatarUrl}
+                            seed={instructor.name}
+                            size="lg"
+                        />
+                    )}
                     <div className="flex min-w-0 flex-1 flex-col gap-0">
-                        <Typography type="body" weight="semibold">
-                            {instructor.name}
-                        </Typography>
+                        {instructor.username ? (
+                            <UserLink
+                                username={instructor.username}
+                                displayName={instructor.name}
+                                showAvatar={false}
+                                classNames={{ name: "text-base font-semibold text-foreground" }}
+                            />
+                        ) : (
+                            <Typography type="body" weight="semibold">
+                                {instructor.name}
+                            </Typography>
+                        )}
                         {/* title / role degrade to hidden — the BE detail carries neither. */}
                         {instructor.title ? (
                             <Typography type="body-sm" color="muted">

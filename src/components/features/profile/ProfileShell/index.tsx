@@ -36,6 +36,7 @@ const SECTIONS: Array<{ key: string; segment: string }> = [
     { key: "academic", segment: "academic" },
     { key: "cv", segment: "cv" },
     { key: "portfolio", segment: "portfolio" },
+    { key: "achievements", segment: "achievements" },
     { key: "certificates", segment: "certificates" },
     { key: "community", segment: "community" },
     { key: "progress", segment: "progress" },

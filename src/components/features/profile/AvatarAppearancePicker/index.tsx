@@ -2,7 +2,7 @@
 
 import React, { useState } from "react"
 import { Typography, cn } from "@heroui/react"
-import { CheckIcon, ProhibitIcon } from "@phosphor-icons/react"
+import { CheckIcon, LockSimpleIcon, ProhibitIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import useSWR from "swr"
 import { getSelfProfile, setDefaultAvatar, updateSelfProfile } from "@/modules/api/rest/profile"
@@ -166,26 +166,59 @@ export const AvatarAppearancePicker = () => {
                                 {t("frameNone")}
                             </Typography>
                         </Tile>
-                        {sortByOrder(frames).map((frame: AvatarFrameView) => (
-                            <Tile
-                                key={frame.code}
-                                selected={currentFrameCode === frame.code}
-                                disabled={pending !== null}
-                                onSelect={() => onPickFrame(frame.code)}
-                                ariaLabel={frame.nameVi ?? frame.name}
-                            >
-                                <AvatarWithFrame
-                                    username={profile.username}
-                                    avatar={profile.avatarUrl}
-                                    seed={profile.userId}
-                                    size="md"
-                                    frameCode={frame.code}
-                                />
-                                <Typography type="body-xs" color="muted" className="line-clamp-1">
-                                    {frame.nameVi ?? frame.name}
-                                </Typography>
-                            </Tile>
-                        ))}
+                        {sortByOrder(frames).map((frame: AvatarFrameView) => {
+                            // Khung chưa đủ điều kiện (EXP/hạng mùa) → khoá ô: không cho bấm
+                            // (tránh 400 "chưa mở khoá"), làm mờ preview + gắn ổ khoá, và hiện
+                            // ĐIỀU KIỆN mở (description) làm lời nhắc ngay dưới tên.
+                            const locked = frame.locked ?? false
+                            return (
+                                <Tile
+                                    key={frame.code}
+                                    selected={currentFrameCode === frame.code}
+                                    disabled={pending !== null || locked}
+                                    onSelect={() => onPickFrame(frame.code)}
+                                    ariaLabel={
+                                        locked
+                                            ? `${frame.nameVi ?? frame.name} — ${frame.description ?? t("frameLocked")}`
+                                            : (frame.nameVi ?? frame.name)
+                                    }
+                                >
+                                    <span className="relative inline-flex">
+                                        <span className={cn(locked && "opacity-40 grayscale")}>
+                                            <AvatarWithFrame
+                                                username={profile.username}
+                                                avatar={profile.avatarUrl}
+                                                seed={profile.userId}
+                                                size="md"
+                                                frameCode={frame.code}
+                                            />
+                                        </span>
+                                        {locked ? (
+                                            <span className="absolute inset-0 flex items-center justify-center">
+                                                <LockSimpleIcon
+                                                    className="size-5 text-foreground/80"
+                                                    weight="fill"
+                                                    aria-hidden
+                                                    focusable="false"
+                                                />
+                                            </span>
+                                        ) : null}
+                                    </span>
+                                    <Typography type="body-xs" color="muted" className="line-clamp-1">
+                                        {frame.nameVi ?? frame.name}
+                                    </Typography>
+                                    {locked && frame.description ? (
+                                        <Typography
+                                            type="body-xs"
+                                            color="muted"
+                                            className="line-clamp-2 text-[11px] leading-tight opacity-80"
+                                        >
+                                            {frame.description}
+                                        </Typography>
+                                    ) : null}
+                                </Tile>
+                            )
+                        })}
                     </div>
                 </div>
             ) : null}

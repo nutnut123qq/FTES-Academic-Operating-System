@@ -70,12 +70,15 @@ export const AvatarWithFrame = ({
             ) : null}
             <span className="relative inline-flex">{avatarNode}</span>
             {frame.assetUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
+                // Khung ảnh 512×512 (nền trong suốt) đè lên avatar. Phải ép kích thước
+                // TƯỜNG MINH theo avatar (w-[132%] + vuông + căn giữa): nếu chỉ dùng
+                // `absolute -inset-[15%] max-w-none` thì `<img>` giữ kích thước gốc 512px
+                // và tràn kín màn — nhánh assetUrl trước đây chưa từng chạy với ảnh thật.
                 <img
                     src={frame.assetUrl}
                     alt=""
                     aria-hidden
-                    className="pointer-events-none absolute -inset-[15%] max-w-none"
+                    className="pointer-events-none absolute left-1/2 top-1/2 aspect-square w-[132%] max-w-none -translate-x-1/2 -translate-y-1/2 object-contain"
                 />
             ) : null}
         </span>

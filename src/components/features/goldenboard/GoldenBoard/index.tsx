@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import React from "react"
 import { Chip, Typography, cn } from "@heroui/react"
 import { Link } from "@/i18n/navigation"
@@ -36,9 +37,19 @@ const BoardPortrait = ({
     className?: string
 }) => {
     const [failed, setFailed] = React.useState(false)
+    // LÙI HAI BẬC: optimizer lỗi → thử `<img>` thô → mới tới chữ viết tắt.
+    //
+    // Vì sao không gộp làm một: `onError` không phân biệt được "ảnh 404 thật" với "optimizer từ
+    // chối vì host chưa khai trong remotePatterns". Gộp lại thì một host thiếu khai sẽ biến TOÀN
+    // BỘ chân dung thành chữ viết tắt mà không lỗi nào kêu — đúng kiểu mất ảnh lặng lẽ đã xảy ra
+    // với ảnh banner. Bậc giữa giữ được ảnh (nặng hơn), và chỉ khi chính ảnh hỏng mới rơi về chữ.
+    const [optimizerFailed, setOptimizerFailed] = React.useState(false)
     // Reset on src change: a failed row must not stay stuck on initials when the board re-renders
     // with a different photo (term switch reuses the same DOM position).
-    React.useEffect(() => setFailed(false), [src])
+    React.useEffect(() => {
+        setFailed(false)
+        setOptimizerFailed(false)
+    }, [src])
     const initials = name
         .split(/\s+/)
         .map((word) => word[0])
@@ -46,19 +57,34 @@ const BoardPortrait = ({
         .join("")
         .toUpperCase()
     return (
-        <div className={cn("aspect-square overflow-hidden rounded-full border-2 border-warning/50", className)}>
+        <div className={cn("relative aspect-square overflow-hidden rounded-full border-2 border-warning/50", className)}>
             {failed || !src ? (
                 <div className="flex size-full items-center justify-center bg-warning/10">
                     <span className="text-base font-semibold text-warning">{initials}</span>
                 </div>
             ) : (
-                <img
+                optimizerFailed ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                        src={src}
+                        alt={name}
+                        loading="lazy"
+                        onError={() => setFailed(true)}
+                        className="size-full object-cover"
+                    />
+                ) : (
+                <Image
                     src={src}
                     alt={name}
-                    loading="lazy"
-                    onError={() => setFailed(true)}
-                    className="size-full object-cover"
+                    fill
+                    /* Chân dung tròn rộng ĐÚNG 112px (w-28). Trước đây là `<img>` thô nên nó tải
+                       nguyên ảnh gốc do người dùng nộp — đo trên trang chủ có tấm 1.420 KB và
+                       2.197 KB cho đúng cái vòng tròn 112px này. */
+                    sizes="112px"
+                    onError={() => setOptimizerFailed(true)}
+                    className="object-cover"
                 />
+                )
             )}
         </div>
     )

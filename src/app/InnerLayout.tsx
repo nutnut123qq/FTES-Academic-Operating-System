@@ -20,6 +20,7 @@ import { UseEffects } from "@/hooks/effects/UseEffects"
 import { AuthQueryOpener } from "@/components/layouts/auth/AuthQueryOpener"
 import { TourProvider } from "@/components/features/onboarding"
 import { MascotAssistant } from "@/components/features/mascot-assistant"
+import { BadgeUnlockHost } from "@/components/features/gamification/BadgeUnlockHost"
 import { useAppearanceStore } from "@/hooks/zustand/appearance/store"
 
 export const InnerLayout = ({ children }: PropsWithChildren) => {
@@ -97,6 +98,10 @@ export const InnerLayout = ({ children }: PropsWithChildren) => {
                                 <Navbar />
                                 <ModalContainer />
                                 <DrawerContainer />
+                                {/* Achievement-unlock celebration — mounted ONCE here so a badge
+                                    earned anywhere pops its moment on the viewer's next page load,
+                                    wherever they are. Inert for guests (its hooks are auth-gated). */}
+                                <BadgeUnlockHost />
                                 <div>{children}</div>
                                 {showFooter ? <Footer /> : null}
                                 {/* Trợ lý FrosTES (linh vật đứng vẫy tay, góc phải dưới) — mount

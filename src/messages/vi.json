@@ -5958,7 +5958,6 @@
                 "emptyHint": "Bạn có thể là người đầu tiên đóng góp — bài gửi lên sẽ chờ CTV duyệt.",
                 "loadError": "Không tải được danh sách đề",
                 "retry": "Thử lại",
-                "ratingLabel": "{rating} sao ({count} đánh giá)",
                 "contributeCta": "Đóng góp đề",
                 "lockedBadge": "Cần mua khoá",
                 "lockedAria": "cần mua khoá học để mở",

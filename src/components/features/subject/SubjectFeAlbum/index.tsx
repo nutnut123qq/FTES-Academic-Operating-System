@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useMemo, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useState } from "react"
 import { Button, Chip, Typography, cn } from "@heroui/react"
 import { ArrowLeftIcon, ChatCircleIcon, SlidersHorizontalIcon } from "@phosphor-icons/react"
 import { useLocale, useTranslations } from "next-intl"
@@ -36,6 +36,20 @@ export interface SubjectFeAlbumProps {
      * "back to practice" button is dropped, since the modal's × already leaves.
      */
     inModal?: boolean
+    /**
+     * Told that the reader turned full-screen reading on / off.
+     *
+     * NOTIFY, not control: the state stays here (in {@link useExamExpand}), because
+     * everything expanding changes — the two-pane frame, the comment column — is this
+     * component's own layout, and a host forced to own it would be owning layout it never
+     * draws. All a host ever needs is the BOOLEAN, and only when the host itself is the
+     * thing that has to grow: a dialog cannot be enlarged from the inside, so the modal
+     * host takes this and swaps its own box for the viewport (see `ExamList`).
+     *
+     * Omitted → nothing changes for the host. That is the route, where the album expands
+     * into a `fixed` overlay of its own and there is no dialog to tell.
+     */
+    onExpandedChange?: (expanded: boolean) => void
 }
 
 /**
@@ -65,6 +79,13 @@ export interface SubjectFeAlbumProps {
  * once and the left one is exam paper. The grid's `lg:min-h-[60dvh]` floor stays as the
  * net for the case `flex-1` has nothing definite to resolve against (the manager panel
  * open, or a host that forgot to give the dialog a height).
+ *
+ * FULL SCREEN works in both hosts, by two different mechanisms, because "the whole
+ * viewport" means two different things. On the route the album puts up its own `fixed`
+ * overlay ({@link useExamExpand}). In a dialog that overlay would resolve against the
+ * DIALOG — so instead the dialog is what grows, and this component's part is simply to say
+ * so through {@link SubjectFeAlbumProps.onExpandedChange}; its own frame stays the docked
+ * one and only gives the comment column's 400px back to the paper when the reader hides it.
  *
  * The grid pins its single row to `minmax(0,1fr)` and the viewer carries `min-h-0`: a
  * grid/flex item's automatic minimum size is its CONTENT, so a portrait scan would
@@ -97,6 +118,7 @@ export const SubjectFeAlbum = ({
     subjectId: subjectIdProp,
     albumId: albumIdProp,
     inModal = false,
+    onExpandedChange,
 }: SubjectFeAlbumProps) => {
     const t = useTranslations("subjects")
     const locale = useLocale()
@@ -116,6 +138,17 @@ export const SubjectFeAlbum = ({
     // here rather than in the viewer because BOTH of those are this component's layout: the
     // two-pane frame and the comment column are ours, not the viewer's.
     const expand = useExamExpand()
+    // ...and the host is told, for the one part of "full screen" this component genuinely
+    // cannot do: growing the DIALOG it is sitting in. Memoised because the viewer keys its
+    // Escape listener on this identity — a fresh closure every render would tear the
+    // `keydown` handler down and re-register it on every keystroke in the composer.
+    const handleExpandedChange = useCallback(
+        (expanded: boolean) => {
+            expand.setExpanded(expanded)
+            onExpandedChange?.(expanded)
+        },
+        [expand.setExpanded, onExpandedChange],
+    )
 
     const images = albumSwr.data?.images ?? []
     const clampedIndex =
@@ -165,7 +198,17 @@ export const SubjectFeAlbum = ({
     // costs the reader nothing — a row spanning both panes is paid for out of the picture's
     // frame too. Declared once and placed twice rather than duplicated into two branches.
     const headerRow = (
-        <div className="flex shrink-0 flex-wrap items-start gap-3">
+        // `pe-10` only in the modal, and only since the dialog stopped carrying a toolbar
+        // row of its own ("Mở trang đầy đủ" is gone): this header is now the topmost thing
+        // at the dialog's right edge, which is exactly where the × sits
+        // (`.modal__close-trigger` = `absolute top-4 right-4`). Without the gutter the ×
+        // lands on top of "Quản lý".
+        <div
+            className={cn(
+                "flex shrink-0 flex-wrap items-start gap-3",
+                inModal && "pe-10",
+            )}
+        >
             {/* On the route this is the way back; in the modal the × is, so a second
                 exit that ALSO navigated away would be a trap. */}
             {inModal ? null : (
@@ -279,14 +322,26 @@ export const SubjectFeAlbum = ({
                        than the bare 26rem minimum. */
                     <div
                         className={
-                            // Expanded swaps the frame WHOLE (see useExamExpand): merging an
-                            // override onto the docked classes would leave two `lg:grid-cols-*`
-                            // utilities fighting, and Tailwind settles that by stylesheet
-                            // order, not by which one is written last here.
-                            expand.isExpanded
+                            // Expanded ON THE ROUTE swaps the frame WHOLE for the overlay
+                            // (see useExamExpand): merging an override onto the docked classes
+                            // would leave two `lg:grid-cols-*` utilities fighting, and Tailwind
+                            // settles that by stylesheet order, not by which one is written
+                            // last here.
+                            //
+                            // IN A MODAL the overlay is the wrong tool and always was: a
+                            // `fixed inset-0` box inside an animating dialog resolves against
+                            // the DIALOG, not the viewport. What goes full screen there is the
+                            // dialog itself (`ExamList` grows it on our say-so), so the frame
+                            // stays exactly the docked one and only the COLUMNS move — the
+                            // reader hid the comments, so the paper takes the whole width.
+                            // Still one `lg:grid-cols-*` in the string either way.
+                            expand.isExpanded && !inModal
                                 ? expand.frameClassName
                                 : cn(
-                                    "overflow-hidden rounded-2xl border border-separator lg:grid lg:flex-1 lg:grid-cols-[minmax(0,1fr)_400px] lg:grid-rows-[minmax(0,1fr)]",
+                                    "overflow-hidden rounded-2xl border border-separator lg:grid lg:flex-1 lg:grid-rows-[minmax(0,1fr)]",
+                                    expand.areCommentsVisible
+                                        ? "lg:grid-cols-[minmax(0,1fr)_400px]"
+                                        : "lg:grid-cols-1",
                                     inModal ? "lg:min-h-[60dvh]" : "lg:min-h-[26rem]",
                                 )
                         }
@@ -306,12 +361,14 @@ export const SubjectFeAlbum = ({
                                     : "h-[60dvh] min-h-0 lg:h-full"
                             }
                             isExpanded={expand.isExpanded}
-                            // No expanding OUT of a dialog: the album in the practice modal is
-                            // already covering the page, and a `fixed` overlay inside an
-                            // animating dialog resolves against the dialog's own box, not the
-                            // viewport. Omitting the handler drops the button rather than
-                            // shipping one that half-works.
-                            onExpandedChange={inModal ? undefined : expand.setExpanded}
+                            // Both hosts draw the switch now. It used to be withheld in a
+                            // dialog because the only expansion on offer was a `fixed` overlay,
+                            // which resolves against the dialog's own box rather than the
+                            // viewport — so the button would have "expanded" into the same
+                            // popup. The modal host now grows the DIALOG instead (it is told
+                            // by `handleExpandedChange`), which is a real full screen, so the
+                            // honest thing is to draw the button.
+                            onExpandedChange={handleExpandedChange}
                             areCommentsHidden={expand.areCommentsHidden}
                             onCommentsHiddenChange={expand.setCommentsHidden}
                         />
@@ -328,8 +385,9 @@ export const SubjectFeAlbum = ({
                             thread keeps its page, its scroll and any half-typed comment — an
                             unmount would throw all three away every time the reader wanted a
                             wider look at one question. The column it leaves behind is
-                            reclaimed by the frame's `lg:grid-cols-1` (see useExamExpand),
-                            which is what actually widens the paper. */}
+                            reclaimed by the frame's `lg:grid-cols-1` — from useExamExpand on
+                            the route, from the frame's own branch in a dialog — which is what
+                            actually widens the paper. */}
                         <div
                             className={cn(
                                 "flex min-h-0 flex-col gap-3 bg-overlay p-4",

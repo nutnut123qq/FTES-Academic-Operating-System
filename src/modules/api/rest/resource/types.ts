@@ -85,6 +85,24 @@ export interface ResourceSummary {
     downloadCount: number
     createdAt?: string
     /**
+     * Display card of whoever uploaded the row (BE `AuthorCard`), resolved server-side in
+     * ONE batched profile call per page — the same shape and the same treatment
+     * {@link FeImageView.uploader} already gets.
+     *
+     * `null` is the backend's honest "no uploader to name", and it covers THREE real cases:
+     * the profile is missing or deleted; the row has a null / non-UUID `uploaderId`
+     * (legacy, seed and bot rows); and — deliberately — every row where
+     * {@link ResourceSummary.lockedForViewer} is true. Never paper over it with a
+     * fabricated name: the BE refused to invent one on purpose, and re-adding "Ẩn danh" on
+     * the client would just undo that decision one layer up.
+     *
+     * `?` on top of that nullability is for DEPLOYMENTS, not for the contract: the field is
+     * appended last and always sent by a backend carrying `resource-summary-uploader`, but
+     * an older one omits it entirely — same treatment as `lockedForViewer` below. Both the
+     * absent and the null case read the same at every call site (`summary.uploader?.…`).
+     */
+    uploader?: ResourceAuthorView | null
+    /**
      * Server-computed lock flag (CONTRACT B): `true` when the material is
      * purchasers-only (`visibility` = enrolled/purchasers-only) AND the viewer has
      * NOT purchased the linked course. The BE never leaks the body/URL of a locked

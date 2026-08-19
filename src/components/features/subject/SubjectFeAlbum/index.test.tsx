@@ -1,5 +1,5 @@
 import React from "react"
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 /**
@@ -33,8 +33,27 @@ vi.mock("@/i18n/navigation", () => ({
 }))
 
 // Khung ảnh + luồng bình luận không liên quan tới việc lấy id — stub cho test nhẹ và ổn định.
+// Stub GIỮ đúng một chi tiết: viewer chỉ vẽ nút toàn màn hình khi host trao `onExpandedChange`
+// (điều kiện đó được ghim ở `ExamImageViewer/index.test.tsx`), nên "có nút hay không" ở đây
+// đọc thẳng ra "album có trao cần gạt cho viewer hay không".
 vi.mock("@/components/features/subject/ExamImageViewer", () => ({
-    ExamImageViewer: () => <div data-testid="viewer" />,
+    ExamImageViewer: ({
+        onExpandedChange,
+    }: {
+        onExpandedChange?: (expanded: boolean) => void
+    }) => (
+        <div data-testid="viewer">
+            {onExpandedChange ? (
+                <button
+                    type="button"
+                    data-testid="viewer-expand"
+                    onClick={() => onExpandedChange(true)}
+                >
+                    expand
+                </button>
+            ) : null}
+        </div>
+    ),
 }))
 vi.mock("./FeImageCommentThread", () => ({ FeImageCommentThread: () => null }))
 vi.mock("./FeAlbumManager", () => ({ FeAlbumManager: () => null }))
@@ -118,5 +137,50 @@ describe("SubjectFeAlbum — route vs modal", () => {
         render(<SubjectFeAlbum subjectId="PRF192" albumId="album-2" inModal />)
 
         expect(useQueryFeAlbumSwr).toHaveBeenCalledWith("album-2")
+    })
+})
+
+/**
+ * Toàn màn hình: TRONG modal trước đây bị tắt hẳn (`onExpandedChange={inModal ? undefined : …}`)
+ * vì lớp phủ `fixed` của album resolve theo hộp dialog chứ không theo khung nhìn — nên nút biến
+ * mất khỏi thanh dưới. Giờ album vẫn giữ state, còn phần nó KHÔNG tự làm được (phóng to chính cái
+ * dialog) thì báo ngược lên host. Ghim cả hai vế: nút có mặt ở CẢ hai host, và host được báo.
+ */
+describe("SubjectFeAlbum — cần gạt toàn màn hình", () => {
+    beforeEach(() => {
+        vi.clearAllMocks()
+        useQueryFeAlbumSwr.mockReturnValue(album())
+        useQueryResourceDetailSwr.mockReturnValue({
+            resource: { title: "Đề FE kỳ Xuân" },
+            isLoading: false,
+            error: undefined,
+            mutate: vi.fn(),
+        })
+        useParams.mockReturnValue({})
+    })
+
+    it("MODAL: viewer VẪN được trao cần gạt, và host được báo khi bật", () => {
+        const onExpandedChange = vi.fn()
+
+        render(
+            <SubjectFeAlbum
+                subjectId="CSD201"
+                albumId="album-2"
+                inModal
+                onExpandedChange={onExpandedChange}
+            />,
+        )
+
+        fireEvent.click(screen.getByTestId("viewer-expand"))
+
+        expect(onExpandedChange).toHaveBeenCalledWith(true)
+    })
+
+    it("ROUTE: không có host để báo thì nút vẫn còn nguyên (lớp phủ của chính album)", () => {
+        useParams.mockReturnValue({ subjectId: "CSD201", albumId: "album-1" })
+
+        render(<SubjectFeAlbum />)
+
+        expect(screen.getByTestId("viewer-expand")).toBeTruthy()
     })
 })

@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import React from "react"
 import { ArrowRightIcon, CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react"
 import { Chip, Link, Typography } from "@heroui/react"
@@ -39,10 +40,15 @@ const AchievementSlide = ({ item }: { item: AchievementStat }) => {
                         cover is INSET rather than bleeding to the card edge — without its own
                         radius all four corners read square inside the rounded card. Radius stays
                         here, not on MediaCard/globals, so other covers are untouched. */}
-                    <img
+                    <Image
                         src={item.imageSrc}
                         alt={title}
-                        loading="lazy"
+                        width={640}
+                        height={360}
+                        /* Ảnh thành tích là ảnh chụp cỡ gốc: đo trên trang chủ có tấm 1.824 KB và
+                           2.184 KB cho một khung aspect-video vài trăm pixel. `width`/`height` cố
+                           định (thay vì `fill`) vì thẻ này tự giãn theo cột, và Next tự dựng
+                           srcset quanh bề rộng đó. */
                         className="aspect-video w-full rounded-xl object-cover"
                     />
                     {/* year badge sits ON the photo (legacy slider idiom), accent instead of

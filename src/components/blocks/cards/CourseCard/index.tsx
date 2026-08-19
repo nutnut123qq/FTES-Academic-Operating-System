@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import React, {
     useCallback,
     useMemo,
@@ -147,10 +148,14 @@ export const CourseCard = ({
                         rounded-2xl = the "inner" step under the card's rounded-3xl. */}
                     <div className="relative hidden aspect-video w-36 shrink-0 overflow-hidden rounded-2xl bg-surface sm:block">
                         {showCover ? (
-                            <img
-                                src={course.coverImageUrl ?? undefined}
+                            <Image
+                                src={course.coverImageUrl ?? ""}
                                 alt={course.title}
-                                className="size-full object-cover"
+                                fill
+                                /* Rộng ĐÚNG 144px (w-36) — khai theo lưới sẽ bắt optimizer dựng
+                                   bản gấp nhiều lần bề rộng thật. */
+                                sizes="144px"
+                                className="object-cover"
                                 onError={() => setCoverFailed(true)}
                             />
                         ) : (
@@ -212,10 +217,12 @@ export const CourseCard = ({
                     branded gradient fallback when missing/broken */}
                 <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-surface">
                     {showCover ? (
-                        <img
-                            src={course.coverImageUrl ?? undefined}
+                        <Image
+                            src={course.coverImageUrl ?? ""}
                             alt={course.title}
-                            className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            fill
+                            sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                            className="object-cover transition-transform duration-300 group-hover:scale-105"
                             onError={() => setCoverFailed(true)}
                         />
                     ) : (

@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import React, { useState } from "react"
 import { CaretRightIcon } from "@phosphor-icons/react"
 import { Typography, cn } from "@heroui/react"
@@ -87,14 +88,24 @@ export const ContinueCourseCard = ({
                         className="absolute inset-0 bg-gradient-to-br from-accent/40 via-accent/20 to-accent/5"
                     />
                     {coverUrl && !coverFailed ? (
-                        // plain <img>: ảnh đến từ host image-delivery của BE nên không cần
-                        // khai remotePatterns trong next.config (giống CoverImage).
-                        <img
+                        /* Qua optimizer. Bản trước dùng `<img>` thô kèm chú thích "không cần khai
+                           remotePatterns" — đường tắt đó đổi một dòng cấu hình lấy việc tải NGUYÊN
+                           ảnh gốc: đo trên trang chủ, những tấm 611 KB - 2.197 KB đi thẳng từ host
+                           gốc cho một thẻ rộng vài trăm pixel.
+
+                           `onError` vẫn giữ nguyên vai trò cũ (ảnh 404 → hiện nền gradient), và
+                           nay gánh thêm ca optimizer từ chối host lạ. Thẻ này đã có sẵn nền
+                           gradient nên mất ảnh không để lại ô trống. */
+                        <Image
                             src={coverUrl}
                             alt={title}
-                            loading="lazy"
+                            fill
+                            /* Thẻ này rộng ĐÚNG 128px (w-32) / 160px (sm:w-40) — không phải một
+                               cột lưới. Khai theo lưới (33vw) sẽ bắt optimizer dựng bản gấp
+                               nhiều lần bề rộng thật, tức làm hỏng chính việc mình đang sửa. */
+                            sizes="(min-width: 640px) 160px, 128px"
                             onError={() => setCoverFailed(true)}
-                            className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            className="object-cover transition-transform duration-300 group-hover:scale-105"
                         />
                     ) : null}
                 </div>

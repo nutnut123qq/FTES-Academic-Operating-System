@@ -25,11 +25,17 @@ const tsxFiles = (dir: string): Array<string> =>
         return name.endsWith(".tsx") && !name.includes(".test.") ? [full] : []
     })
 
+/** Bo comment khoi va comment dong truoc khi tim the. */
+const boComment = (src: string): string =>
+    src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "")
+
 /** Mỗi phần tử `<Image ... />` trong file, kèm đường dẫn để báo lỗi chỉ đúng chỗ. */
 const imageElements = (): Array<{ file: string; jsx: string }> =>
     tsxFiles(SRC).flatMap((file) => {
-        const src = readFileSync(file, "utf8")
-        if (!src.includes('from "next/image"')) {
+        // Quét trên bản ĐÃ BỎ CHÚ THÍCH: chữ "fill" hay "<img>" nằm trong comment từng làm cả hai
+        // phép kiểm dưới đây báo nhầm — chính test này đã dính một lần.
+        const src = boComment(readFileSync(file, "utf8"))
+        if (!src.includes("next/image")) {
             return []
         }
         return [...src.matchAll(/<Image\b[\s\S]*?\/>/g)].map((m) => ({
@@ -79,5 +85,82 @@ describe("remotePatterns phủ đủ host ảnh đang dùng", () => {
         ["res.cloudinary.com", "ảnh migrate qua Cloudinary"],
     ])("có %s — %s", (host) => {
         expect(config).toContain(host)
+    })
+})
+
+/**
+ * The `<img>` THO — chot HIEN TRANG de khong phat sinh them.
+ *
+ * <p><b>Vi sao guard cu chua du.</b> Hai phep kiem ben tren chi soi the `<Image>` cua Next nen mu
+ * hoan toan voi `<img>` tho — ma do moi la duong pho bien de lot anh co goc. Da tra gia that:
+ * `CoverImage`, `ContinueCourseCard`, `CourseCard` va `AchievementsSection` deu dung `<img>` kem
+ * chu thich "khong can khai remotePatterns"; trang chu vi the tai nhung tam 611 KB - 2.197 KB cho
+ * khung chi vai tram pixel. Bon cho do da chuyen sang `next/image`.
+ *
+ * <p><b>Danh sach duoi la HIEN TRANG, khong phai loi chuc phuc.</b> Trong do co nhung cho DUNG la
+ * phai dung `<img>`: duong lui cua `CoverImage`, art linh vat (anh DONG, file cuc bo), anh trong
+ * noi dung markdown do nguoi dung nhap (host tuy y, khong khai truoc duoc), sticker/emoji, ma QR
+ * dang `data:`. So con lai la NO, go dan tung dot. Viec cua test nay la: them file MOI vao danh
+ * sach phai la mot quyet dinh co y thuc, khong phai chuyen lot qua im lang.
+ *
+ * <p>Quet SAU KHI BO CHU THICH — ban dau cua test nay bao nham 3 file chi vi chu "img" nam trong
+ * comment.
+ */
+const IMG_THO_HIEN_TRANG: ReadonlyArray<string> = [
+    "components/blocks/feed/PostImagePicker/index.tsx",
+    "components/blocks/feed/PostMediaGrid/index.tsx",
+    "components/blocks/identity/IconTile/index.tsx",
+    "components/blocks/identity/Logo/index.tsx",
+    "components/blocks/media/CoverImage/index.tsx",
+    "components/features/challenge/ChallengeView/UiUxChallengeEditor/TargetPanel.tsx",
+    "components/features/community/CommunityShell/PromoBanner.tsx",
+    "components/features/course/browse/CatalogCourseCard/index.tsx",
+    "components/features/gamification/AvatarWithFrame.tsx",
+    "components/features/gamification/BadgeUnlockHost/index.tsx",
+    "components/features/goldenboard/GoldenBoard/index.tsx",
+    "components/features/group/GroupDetailShell/index.tsx",
+    "components/features/group/GroupIdentityFields/index.tsx",
+    "components/features/mascot-assistant/MascotAssistant.tsx",
+    "components/features/profile/ProfileBadges/BadgeCatalogGrid/BadgeCatalogCell.tsx",
+    "components/features/profile/ProfileBadges/BadgeCatalogGrid/BadgeDetailModal.tsx",
+    "components/features/profile/ProfileBadges/BadgeCatalogModal/BadgeCatalogRow.tsx",
+    "components/features/subject/ExamImageViewer/index.tsx",
+    "components/features/subject/SubjectFeAlbum/FeAlbumManager.tsx",
+    "components/features/subject/SubjectPractice/ExamContribute.tsx",
+    "components/features/subject/SubjectWorkspaceShell/index.tsx",
+    "components/layouts/blog/BlogList/FeaturedPost/index.tsx",
+    "components/layouts/blog/BlogPost/index.tsx",
+    "components/modals/CommunityPhotoLightboxModal/index.tsx",
+    "components/reuseable/BadgeImage/index.tsx",
+    "components/reuseable/CommentComposerTools/StickerPicker.tsx",
+    "components/reuseable/Discussion/ReactionEmoji.tsx",
+    "components/reuseable/FtesMascot/art.tsx",
+    "components/reuseable/LinkPreview/index.tsx",
+    "components/reuseable/MarkdownContent/map.tsx",
+]
+
+/** Duong tuong doi kieu "components/..." cho mot file tsx. */
+const asKey = (file: string): string =>
+    "components/" + relative(SRC, file).split("\\").join("/")
+
+const filesCoImgTho = (): Array<string> =>
+    tsxFiles(SRC)
+        .filter((file) => /<img[\s>]/.test(boComment(readFileSync(file, "utf8"))))
+        .map(asKey)
+
+describe("the <img> tho", () => {
+    it("khong phat sinh cho moi ngoai hien trang", () => {
+        const moi = filesCoImgTho().filter((f) => !IMG_THO_HIEN_TRANG.includes(f))
+        expect(moi, "the <img> tho tai NGUYEN anh goc: khong resize, khong WebP, khong srcset. "
+            + "Hay dung next/image + sizes (kem onError roi ve <img> neu host co the chua duoc "
+            + "khai). Neu that su phai giu <img>, them vao IMG_THO_HIEN_TRANG kem ly do trong PR")
+            .toEqual([])
+    })
+
+    it("danh sach hien trang khong co muc THUA — da sua thi phai xoa khoi danh sach", () => {
+        const hienTai = new Set(filesCoImgTho())
+        const thua = IMG_THO_HIEN_TRANG.filter((f) => !hienTai.has(f))
+        expect(thua, "file da chuyen sang next/image nhung con nam trong danh sach: xoa di, "
+            + "de danh sach chi con dung phan no that").toEqual([])
     })
 })

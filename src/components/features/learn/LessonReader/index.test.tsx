@@ -10,9 +10,9 @@ import type { LearnLessonView } from "../hooks/useQueryLearnLessonSwr"
  * (practice now lives in the right-rail "Practice this lesson" panel, documents in the
  * "Tài liệu cho lesson này" rail panel); the reader always renders the content view.
  * What this file still guards:
- *  - The DocumentReader (DOCUMENT) path carries NO reaction footer — reactions were
- *    dropped from document lessons by product decision; the footer mounts only on the
- *    VIDEO/legacy reading-card path.
+ *  - Bài DOCUMENT VẪN mount footer để giữ LƯỢT XEM, nhưng tắt thả cảm xúc
+ *    (`showReactions={false}`). Bỏ cảm xúc là quyết định sản phẩm; lượt xem thì không —
+ *    hai thứ đi chung một thanh nên gỡ cả cụm là gỡ nhầm.
  *  - The after-content "Làm thử thách" TrialChallengeCta shows only for an accessible
  *    lesson carrying a FREE challenge.
  */
@@ -127,8 +127,18 @@ vi.mock("@/components/features/learn/DocumentReader", () => ({
     DocumentReader: () => <div data-testid="document-reader" />,
 }))
 vi.mock("./LessonReactionFooter", () => ({
-    LessonReactionFooter: ({ contentId, accessLevel }: { contentId: string; accessLevel: string | null }) => (
-        <div data-testid="reaction-footer">{`${contentId}:${String(accessLevel)}`}</div>
+    LessonReactionFooter: ({
+        contentId,
+        accessLevel,
+        showReactions = true,
+    }: {
+        contentId: string
+        accessLevel: string | null
+        showReactions?: boolean
+    }) => (
+        <div data-testid="reaction-footer" data-show-reactions={String(showReactions)}>
+            {`${contentId}:${String(accessLevel)}`}
+        </div>
     ),
 }))
 
@@ -200,13 +210,15 @@ beforeEach(() => {
 })
 
 describe("LessonReader — reaction footer + trial CTA wiring", () => {
-    it("does not mount the reaction footer on the DocumentReader (DOCUMENT) path", () => {
-        // Spec change (user decision): reactions are removed from DOCUMENT lessons — the
-        // DocumentReader path renders alone, with no reaction footer.
+    it("bài DOCUMENT: vẫn mount footer (giữ lượt xem) nhưng TẮT thả cảm xúc", () => {
+        // Ghim đúng ranh giới: bỏ cảm xúc KHÔNG được kéo theo lượt xem. Assert cả hai vế —
+        // footer có mặt, và cờ showReactions là false — vì chỉ assert một vế thì bản gỡ sạch
+        // cụm footer (đã từng xảy ra) cũng lọt qua.
         lessonHook.mockReturnValue({ lesson: makeLesson({ contentType: "DOCUMENT" }), error: undefined, mutate: vi.fn() })
         render(<LessonReader />)
         expect(screen.getByTestId("document-reader")).toBeTruthy()
-        expect(screen.queryByTestId("reaction-footer")).toBeNull()
+        const footer = screen.getByTestId("reaction-footer")
+        expect(footer.getAttribute("data-show-reactions")).toBe("false")
     })
 
     it("shows the trial 'Làm thử thách' CTA when an accessible lesson has a free challenge", () => {

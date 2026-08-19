@@ -437,22 +437,37 @@ export const LessonReader = () => {
                                 (markdown/HTML/links + teaser fade + paywall). VIDEO lessons and
                                 mixed-content lessons keep the legacy reading card path. */}
                         {lesson.contentType === "DOCUMENT" ? (
-                            <DocumentReader
-                                bodyMd={bodyMd}
-                                documentHtml={lesson.documentHtml}
-                                locked={isLocked}
-                                teaser={lesson.teaser}
-                                accessLevel={accessLevel}
-                                contentType={lesson.contentType}
-                                courseId={courseId}
-                                courseRawId={lesson.courseRawId}
-                                courseTitle={lesson.courseTitle}
-                                courseCoverUrl={lesson.courseCoverUrl}
-                                lessonId={contentId}
-                                lessonTitle={lesson.title}
-                                packageSlugs={lesson.packageSlugs}
-                                onPurchased={() => { void revalidateLearnData(courseId) }}
-                            />
+                            <>
+                                <DocumentReader
+                                    bodyMd={bodyMd}
+                                    documentHtml={lesson.documentHtml}
+                                    locked={isLocked}
+                                    teaser={lesson.teaser}
+                                    accessLevel={accessLevel}
+                                    contentType={lesson.contentType}
+                                    courseId={courseId}
+                                    courseRawId={lesson.courseRawId}
+                                    courseTitle={lesson.courseTitle}
+                                    courseCoverUrl={lesson.courseCoverUrl}
+                                    lessonId={contentId}
+                                    lessonTitle={lesson.title}
+                                    packageSlugs={lesson.packageSlugs}
+                                    onPurchased={() => { void revalidateLearnData(courseId) }}
+                                />
+                                {/* Bài TÀI LIỆU: giữ LƯỢT XEM, bỏ thả cảm xúc (`showReactions={false}`).
+                                    Gỡ nguyên cụm footer thì mất luôn lượt xem, vì hai thứ nằm chung
+                                    một thanh và chung một endpoint. Điều kiện mount y hệt đường
+                                    VIDEO/legacy: chỉ khi đã mở khoá và có nội dung để đọc. */}
+                                {!isLocked && !isReadingEmpty ? (
+                                    <div className="mx-auto w-full max-w-3xl">
+                                        <LessonReactionFooter
+                                            contentId={contentId}
+                                            accessLevel={accessLevel}
+                                            showReactions={false}
+                                        />
+                                    </div>
+                                ) : null}
+                            </>
                         ) : showReadingCard ? (
                             <div className="mx-auto w-full max-w-3xl">
                                 <Card>

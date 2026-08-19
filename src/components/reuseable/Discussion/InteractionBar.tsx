@@ -19,6 +19,14 @@ export interface InteractionBarProps extends WithClassNames<undefined> {
     disabled?: boolean
     /** When set, shows this text in a tooltip on the disabled reaction control. */
     disabledReason?: string
+    /**
+     * Hiện cụm thả cảm xúc hay không. Mặc định `true`.
+     *
+     * Tách ra vì hai nửa của thanh này phục vụ hai việc khác nhau: bên trái là HÀNH ĐỘNG
+     * (thả cảm xúc), bên phải là SỐ LIỆU (lượt xem). Bài tài liệu bỏ phần hành động nhưng
+     * vẫn phải đếm lượt xem, nên gỡ cả thanh là gỡ nhầm nửa còn lại.
+     */
+    showReactions?: boolean
 }
 
 /**
@@ -36,14 +44,17 @@ export const InteractionBar = ({
     viewCount,
     disabled = false,
     disabledReason,
+    showReactions = true,
     className,
 }: InteractionBarProps) => {
     const reactions = <ReactionBar summary={summary} onReact={onReact} disabled={disabled} />
 
     return (
-        <div className={cn("flex items-center justify-between gap-3", className)}>
+        // `justify-between` đẩy hai nửa ra hai mép. Khi ẩn cụm cảm xúc thì chỉ còn lượt xem,
+        // `justify-end` giữ nó ở mép phải thay vì nhảy sang trái — cùng chỗ với lúc có đủ hai nửa.
+        <div className={cn("flex items-center gap-3", showReactions ? "justify-between" : "justify-end", className)}>
             {/* reaction trigger + summary — same control as the comment reactions */}
-            {disabled && disabledReason ? (
+            {!showReactions ? null : disabled && disabledReason ? (
                 <Tooltip>
                     <Tooltip.Trigger>
                         {/* span keeps the tooltip target hoverable while the button is disabled */}

@@ -34,9 +34,18 @@ export const toReactionSummary = (view: LessonReactionSummaryView): ReactionSumm
 export const LessonReactionFooter = ({
     contentId,
     accessLevel,
+    showReactions = true,
 }: {
     contentId: string
     accessLevel: string | null
+    /**
+     * Hiện cụm thả cảm xúc hay không (mặc định `true`).
+     *
+     * Bài TÀI LIỆU đặt `false`: bỏ thả cảm xúc nhưng GIỮ lượt xem. Vẫn phải gọi hook đọc
+     * vì `viewCount` đi CHUNG một endpoint với like (`GET /courses/lessons/{id}/reactions`
+     * trả `{viewCount, likeCount, myReaction}`) — không có đường nào lấy riêng lượt xem.
+     */
+    showReactions?: boolean
 }) => {
     const t = useTranslations("learn")
     const reactionsSwr = useGetLessonReactionsSwr(contentId)
@@ -98,7 +107,8 @@ export const LessonReactionFooter = ({
                 onReact={handleReact}
                 viewCount={view?.viewCount}
                 disabled={!canLike}
-                disabledReason={!canLike ? t("reactions.likeGated") : undefined}
+                disabledReason={!canLike && showReactions ? t("reactions.likeGated") : undefined}
+                showReactions={showReactions}
             />
         </div>
     )

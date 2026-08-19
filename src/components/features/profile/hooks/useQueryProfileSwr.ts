@@ -44,6 +44,8 @@ export interface Profile {
     campus: string
     /** Uploaded avatar image URL (empty when unset). */
     avatarUrl: string
+    /** Mã khung viền đang đeo (V341); "" = không đeo → header vẽ viền gradient mặc định. */
+    avatarFrameCode: string
     /** Account creation date (ISO), rendered as the "Joined" line — empty when unset. */
     joinedAt: string
 }
@@ -62,6 +64,7 @@ export const toShellProfile = (profile: SelfProfile): Profile => ({
         .filter(Boolean)
         .join(" · "),
     avatarUrl: profile.avatarUrl ?? "",
+    avatarFrameCode: profile.avatarFrame?.code ?? "",
     joinedAt: profile.createdAt ?? "",
 })
 

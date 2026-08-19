@@ -2,6 +2,7 @@
 
 import React, { useCallback } from "react"
 import { Avatar, AvatarFallback, AvatarImage, Button, Tabs, Typography, toast } from "@heroui/react"
+import { UserAvatar } from "@/components/reuseable/UserAvatar"
 import { useLocale, useTranslations } from "next-intl"
 import {
     CalendarBlankIcon,
@@ -137,16 +138,29 @@ export const ProfileShell = ({ children }: ProfileShellProps) => {
                 >
                     {profile ? (
                         <div className="flex flex-col items-center gap-4 text-center">
-                            <div className="rounded-full bg-gradient-to-tr from-accent to-success p-0.5">
-                                <Avatar className="size-20 rounded-full border-2 border-background md:size-24">
-                                    {profile.avatarUrl ? (
-                                        <AvatarImage src={profile.avatarUrl} alt={profile.name} />
-                                    ) : null}
-                                    <AvatarFallback className="bg-accent/10 text-xl font-bold text-accent md:text-2xl">
-                                        {(profile.name ?? "?").slice(0, 1).toUpperCase()}
-                                    </AvatarFallback>
-                                </Avatar>
-                            </div>
+                            {profile.avatarFrameCode ? (
+                                // Có khung viền → vẽ đúng khung (bản thân khung đã là viền, bỏ
+                                // vòng gradient mặc định để không lồng 2 viền).
+                                <UserAvatar
+                                    size="lg"
+                                    className="size-20 rounded-full border-2 border-background md:size-24"
+                                    username={profile.name}
+                                    avatar={profile.avatarUrl}
+                                    seed={profile.username}
+                                    frameCode={profile.avatarFrameCode}
+                                />
+                            ) : (
+                                <div className="rounded-full bg-gradient-to-tr from-accent to-success p-0.5">
+                                    <Avatar className="size-20 rounded-full border-2 border-background md:size-24">
+                                        {profile.avatarUrl ? (
+                                            <AvatarImage src={profile.avatarUrl} alt={profile.name} />
+                                        ) : null}
+                                        <AvatarFallback className="bg-accent/10 text-xl font-bold text-accent md:text-2xl">
+                                            {(profile.name ?? "?").slice(0, 1).toUpperCase()}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                </div>
+                            )}
                             <div className="flex flex-col gap-0">
                                 <div className="flex min-w-0 items-center justify-center gap-1">
                                     <Typography type="h4" weight="bold" truncate>

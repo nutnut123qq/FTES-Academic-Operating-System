@@ -115,7 +115,6 @@ const IMG_THO_HIEN_TRANG: ReadonlyArray<string> = [
     "components/features/challenge/ChallengeView/UiUxChallengeEditor/TargetPanel.tsx",
     "components/features/community/CommunityShell/PromoBanner.tsx",
     "components/features/course/browse/CatalogCourseCard/index.tsx",
-    "components/features/gamification/AvatarWithFrame.tsx",
     "components/features/gamification/BadgeUnlockHost/index.tsx",
     "components/features/goldenboard/GoldenBoard/index.tsx",
     "components/features/group/GroupDetailShell/index.tsx",
@@ -137,6 +136,10 @@ const IMG_THO_HIEN_TRANG: ReadonlyArray<string> = [
     "components/reuseable/FtesMascot/art.tsx",
     "components/reuseable/LinkPreview/index.tsx",
     "components/reuseable/MarkdownContent/map.tsx",
+    // Ảnh KHUNG VIỀN avatar (assetUrl, 512×512 nền trong suốt) đè lên avatar. Host ảnh do BE
+    // seed nên không ghim được vào next/image remotePatterns → giữ <img>. (Chuyển từ
+    // AvatarWithFrame sang đây khi gộp việc vẽ khung vào UserAvatar.)
+    "components/reuseable/UserAvatar/index.tsx",
 ]
 
 /** Duong tuong doi kieu "components/..." cho mot file tsx. */

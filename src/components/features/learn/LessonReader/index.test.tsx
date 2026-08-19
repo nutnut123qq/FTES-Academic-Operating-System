@@ -10,9 +10,9 @@ import type { LearnLessonView } from "../hooks/useQueryLearnLessonSwr"
  * (practice now lives in the right-rail "Practice this lesson" panel, documents in the
  * "Tài liệu cho lesson này" rail panel); the reader always renders the content view.
  * What this file still guards:
- *  - The DocumentReader path must NOT drop the reaction footer (it once silently lost
- *    like/reaction on every DOCUMENT lesson) — the footer mounts on BOTH the VIDEO/legacy
- *    reading-card path AND the DocumentReader path.
+ *  - The DocumentReader (DOCUMENT) path carries NO reaction footer — reactions were
+ *    dropped from document lessons by product decision; the footer mounts only on the
+ *    VIDEO/legacy reading-card path.
  *  - The after-content "Làm thử thách" TrialChallengeCta shows only for an accessible
  *    lesson carrying a FREE challenge.
  */
@@ -46,7 +46,7 @@ vi.mock("@/hooks/swr/api/rest/mutations/usePostMarkLessonCompleteSwr", () => ({
 }))
 
 /** `PUT /courses/lessons/{id}/progress` — the "lesson was opened" signal (case C). */
-const reportProgress = vi.fn((_lessonId: string, _request: unknown) => Promise.resolve({}))
+const reportProgress = vi.fn<(lessonId: string, request: unknown) => Promise<object>>(() => Promise.resolve({}))
 vi.mock("@/modules/api/rest/course", () => ({
     reportLessonProgress: (lessonId: string, request: unknown) => reportProgress(lessonId, request),
 }))
@@ -200,13 +200,13 @@ beforeEach(() => {
 })
 
 describe("LessonReader — reaction footer + trial CTA wiring", () => {
-    it("mounts the reaction footer on the DocumentReader (DOCUMENT) path", () => {
+    it("does not mount the reaction footer on the DocumentReader (DOCUMENT) path", () => {
+        // Spec change (user decision): reactions are removed from DOCUMENT lessons — the
+        // DocumentReader path renders alone, with no reaction footer.
         lessonHook.mockReturnValue({ lesson: makeLesson({ contentType: "DOCUMENT" }), error: undefined, mutate: vi.fn() })
         render(<LessonReader />)
         expect(screen.getByTestId("document-reader")).toBeTruthy()
-        const footer = screen.getByTestId("reaction-footer")
-        expect(footer).toBeTruthy()
-        expect(footer.textContent).toBe("l1:FULL")
+        expect(screen.queryByTestId("reaction-footer")).toBeNull()
     })
 
     it("shows the trial 'Làm thử thách' CTA when an accessible lesson has a free challenge", () => {
@@ -289,7 +289,7 @@ describe("LessonReader — bài DOCUMENT báo 'đã mở' để mark-complete kh
 describe("LessonReader — preview blur/teaser is DOCUMENT free-trial only", () => {
     /** The teaser fade is the only bottom-gradient in this tree. */
     const fadeCount = (container: HTMLElement) =>
-        container.querySelectorAll('[class*="bg-gradient-to-b"]').length
+        container.querySelectorAll("[class*=\"bg-gradient-to-b\"]").length
 
     it("renders NO article fade but DOES show the enroll card for a VIDEO free-trial preview", () => {
         // A VIDEO lesson served as a PREVIEW (locked, accessLevel PREVIEW) with teaser text:

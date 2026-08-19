@@ -9,7 +9,7 @@ import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { LabeledCard } from "@/components/blocks/cards/LabeledCard"
 import { SurfaceListCard, SurfaceListCardItem } from "@/components/blocks/cards/SurfaceListCard"
 import { IconTile } from "@/components/blocks/identity/IconTile"
-import { InitialsAvatar } from "@/components/blocks/identity/InitialsAvatar"
+import { UserAvatar } from "@/components/reuseable/UserAvatar"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 import { TopLearnersSkeleton } from "./TopLearnersSkeleton"
 import { useQueryDashboardCommunityBoardSwr } from "../../hooks/useQueryDashboardCommunityBoardSwr"
@@ -117,10 +117,12 @@ export const TopLearners = ({ className }: TopLearnersProps) => {
                                         >
                                             {t("rank", { rank: entry.rank })}
                                         </Typography>
-                                        {/* initials tile — the BE entry carries an avatar URL but the
-                                            shared board hook maps initials only, so no image is claimed.
-                                            Decorative: the name is rendered right beside it. */}
-                                        <InitialsAvatar initials={entry.avatarInitials} />
+                                        <UserAvatar
+                                            username={entry.name}
+                                            avatar={entry.avatarUrl}
+                                            seed={entry.id}
+                                            size="sm"
+                                        />
                                         <Typography
                                             type="body-sm"
                                             weight="medium"

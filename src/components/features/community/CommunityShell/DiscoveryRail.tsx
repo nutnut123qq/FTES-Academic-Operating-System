@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
-import { InitialsAvatar } from "@/components/blocks/identity/InitialsAvatar"
+import { UserAvatar } from "@/components/reuseable/UserAvatar"
 import { CommunityLiveChatRail } from "@/components/features/community/CommunityLiveChat"
 import { TYPE_ICON } from "@/components/features/event/typeIcons"
 import { useQueryLeaderboardSwr } from "@/components/features/gamification/hooks/useQueryLeaderboardSwr"
@@ -76,7 +76,7 @@ const TopLeadersSkeleton = () => (
  * đúng cho cả hai — đừng viết "chưa có ai" hay "đăng nhập để xem".
  *
  * ponytail: bảng chỉ đọc — không phân trang, không lọc, hàng không bấm được. Rail hẹp nên
- * mỗi dòng chỉ mang hạng · avatar chữ cái · tên · EXP rút gọn; đường đi tiếp nằm ở link
+ * mỗi dòng chỉ mang hạng · avatar · tên · EXP rút gọn; đường đi tiếp nằm ở link
  * "Xem tất cả". BE không trả level từng người nên không có dòng level.
  */
 const TopLeaders = () => {
@@ -120,9 +120,11 @@ const TopLeaders = () => {
                             >
                                 {entry.rank}
                             </Typography>
-                            <InitialsAvatar
-                                initials={entry.avatarInitials}
-                                className="size-8 text-xs"
+                            <UserAvatar
+                                username={entry.name}
+                                avatar={entry.avatarUrl}
+                                seed={entry.id}
+                                size="sm"
                             />
                             <Typography
                                 type="body-xs"

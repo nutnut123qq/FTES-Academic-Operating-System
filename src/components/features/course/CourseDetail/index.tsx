@@ -42,7 +42,6 @@ import { SaveButton } from "@/components/blocks/buttons/SaveButton"
 import { HighlightChip } from "@/components/blocks/chips/HighlightChip"
 import { ResponsiveBreadcrumb } from "@/components/blocks/navigation/ResponsiveBreadcrumb"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
-import { FollowButton } from "@/components/reuseable/FollowButton"
 import { StatRibbon } from "@/components/reuseable/StatRibbon"
 import { UserAvatar } from "@/components/reuseable/UserAvatar"
 import { lessonTypeIcon } from "../../learn/lessonType"
@@ -83,7 +82,6 @@ const lessonReaderHref = (courseId: string, lessonId: string) =>
  */
 const InstructorCard = ({ instructor }: { instructor: CourseInstructor }) => {
     const t = useTranslations("courseSystem")
-    const [following, setFollowing] = useState(false)
     const links = instructor.links
     const hasLinks = links && (links.github || links.linkedin || links.website)
 
@@ -104,67 +102,79 @@ const InstructorCard = ({ instructor }: { instructor: CourseInstructor }) => {
                         <Typography type="body" weight="semibold">
                             {instructor.name}
                         </Typography>
-                        <Typography type="body-sm" color="muted">
-                            {instructor.title}
-                        </Typography>
-                        <Typography type="body-xs" color="muted">
-                            {instructor.role}
-                        </Typography>
+                        {/* title / role degrade to hidden — the BE detail carries neither. */}
+                        {instructor.title ? (
+                            <Typography type="body-sm" color="muted">
+                                {instructor.title}
+                            </Typography>
+                        ) : null}
+                        {instructor.role ? (
+                            <Typography type="body-xs" color="muted">
+                                {instructor.role}
+                            </Typography>
+                        ) : null}
                     </div>
-                    <FollowButton following={following} onToggle={() => setFollowing((prev) => !prev)} />
                 </div>
 
-                <StatRibbon
-                    items={[
-                        {
-                            key: "courses",
-                            icon: <GraduationCapIcon aria-hidden focusable="false" className="size-4" />,
-                            value: instructor.stats.courses,
-                            label: t("detail.instructor.stats.courses", { count: instructor.stats.courses }),
-                        },
-                        {
-                            key: "students",
-                            icon: <UsersIcon aria-hidden focusable="false" className="size-4" />,
-                            value: instructor.stats.students.toLocaleString(),
-                            label: t("detail.instructor.stats.students", { count: instructor.stats.students }),
-                        },
-                        {
-                            key: "rating",
-                            icon: <StarIcon aria-hidden focusable="false" className="size-4" weight="fill" />,
-                            value: instructor.stats.rating.toFixed(1),
-                            label: t("detail.instructor.stats.rating", { rating: instructor.stats.rating }),
-                        },
-                    ]}
-                />
+                {/* headline stats — hidden unless the contract carries real per-mentor
+                    figures (never a fabricated "0 khoá · 0 học viên · 0★"). */}
+                {instructor.stats ? (
+                    <StatRibbon
+                        items={[
+                            {
+                                key: "courses",
+                                icon: <GraduationCapIcon aria-hidden focusable="false" className="size-4" />,
+                                value: instructor.stats.courses,
+                                label: t("detail.instructor.stats.courses", { count: instructor.stats.courses }),
+                            },
+                            {
+                                key: "students",
+                                icon: <UsersIcon aria-hidden focusable="false" className="size-4" />,
+                                value: instructor.stats.students.toLocaleString(),
+                                label: t("detail.instructor.stats.students", { count: instructor.stats.students }),
+                            },
+                            {
+                                key: "rating",
+                                icon: <StarIcon aria-hidden focusable="false" className="size-4" weight="fill" />,
+                                value: instructor.stats.rating.toFixed(1),
+                                label: t("detail.instructor.stats.rating", { rating: instructor.stats.rating }),
+                            },
+                        ]}
+                    />
+                ) : null}
 
-                <Typography type="body-sm" color="muted">
-                    {instructor.bio}
-                </Typography>
-
-                <div className="flex flex-col gap-2">
-                    <Typography type="body-sm" weight="medium">
-                        {t("detail.instructor.achievements")}
+                {instructor.bio ? (
+                    <Typography type="body-sm" color="muted">
+                        {instructor.bio}
                     </Typography>
-                    <ul className="flex flex-col gap-2">
-                        {instructor.achievements.map((achievement) => {
-                            const IconComponent = ACHIEVEMENT_ICONS[achievement.icon]
-                            return (
-                                <li key={achievement.id} className="flex items-start gap-2">
-                                    {IconComponent ? (
-                                        <IconComponent
-                                            aria-hidden
-                                            focusable="false"
-                                            className="mt-0.5 size-4 shrink-0 text-accent"
-                                        />
-                                    ) : null}
-                                    <Typography type="body-sm" color="muted">
-                                        {achievement.text}
-                                    </Typography>
-                                </li>
-                            )
-                        })}
-                    </ul>
-                </div>
+                ) : null}
+
+                {instructor.achievements && instructor.achievements.length > 0 ? (
+                    <div className="flex flex-col gap-2">
+                        <Typography type="body-sm" weight="medium">
+                            {t("detail.instructor.achievements")}
+                        </Typography>
+                        <ul className="flex flex-col gap-2">
+                            {instructor.achievements.map((achievement) => {
+                                const IconComponent = ACHIEVEMENT_ICONS[achievement.icon]
+                                return (
+                                    <li key={achievement.id} className="flex items-start gap-2">
+                                        {IconComponent ? (
+                                            <IconComponent
+                                                aria-hidden
+                                                focusable="false"
+                                                className="mt-0.5 size-4 shrink-0 text-accent"
+                                            />
+                                        ) : null}
+                                        <Typography type="body-sm" color="muted">
+                                            {achievement.text}
+                                        </Typography>
+                                    </li>
+                                )
+                            })}
+                        </ul>
+                    </div>
+                ) : null}
 
                 {hasLinks ? (
                     <div className="flex items-center gap-3">

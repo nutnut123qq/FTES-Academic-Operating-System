@@ -109,18 +109,28 @@ export interface CourseInstructorLinks {
     website?: string
 }
 
-/** The course instructor identity shown on the detail page. */
+/** The course instructor identity shown on the detail page.
+ *
+ * The public detail endpoint (`GET /courses/{slugName}`) carries ONLY the mentor's
+ * `mentorName` + `mentorAvatarUrl` (and today even those are null — the detail
+ * projection resolves the mentor via the thin summary overload, unlike the catalog
+ * list which enriches it). Every other field below is therefore optional and its
+ * section hides when absent — never fabricated. They stay in the type so the card
+ * lights up unchanged the day the BE detail carries richer instructor data. */
 export interface CourseInstructor {
     name: string
-    /** Formal title, e.g. "Giảng viên Kỹ thuật phần mềm". */
-    title: string
-    /** Display role line, e.g. degree + affiliation. */
-    role: string
-    bio: string
+    /** Formal title, e.g. "Giảng viên Kỹ thuật phần mềm". Absent → hidden. */
+    title?: string
+    /** Display role line, e.g. degree + affiliation. Absent → hidden. */
+    role?: string
+    /** Absent → hidden. */
+    bio?: string
     /** Uploaded avatar URL; empty → fallback to generated avatar / initials. */
     avatarUrl?: string
-    stats: CourseInstructorStats
-    achievements: Array<CourseInstructorAchievement>
+    /** Headline stats — absent (BE detail has no per-mentor figures) → ribbon hidden. */
+    stats?: CourseInstructorStats
+    /** Absent/empty → the achievements block hides. */
+    achievements?: Array<CourseInstructorAchievement>
     links?: CourseInstructorLinks
 }
 
@@ -257,7 +267,17 @@ const toCourseDetail = (dto: CourseDetailDto): CourseDetail => {
             .split(",")
             .map((topic) => topic.trim())
             .filter(Boolean),
-        instructor: undefined,
+        // Real mentor from the BE summary: name (+ avatar when present). Gated on
+        // `mentorName` so a course with no resolvable mentor keeps the card hidden.
+        // The detail projection currently sends null here (only the catalog list
+        // enriches the mentor), so this stays hidden until the BE populates it — but
+        // we NEVER fabricate: no title/role/bio/stats/achievements exist on detail.
+        instructor: course.mentorName
+            ? {
+                name: course.mentorName,
+                avatarUrl: course.mentorAvatarUrl ?? undefined,
+            }
+            : undefined,
         sections,
         reviews: [],
     }

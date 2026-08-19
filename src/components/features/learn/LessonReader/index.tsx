@@ -437,33 +437,22 @@ export const LessonReader = () => {
                                 (markdown/HTML/links + teaser fade + paywall). VIDEO lessons and
                                 mixed-content lessons keep the legacy reading card path. */}
                         {lesson.contentType === "DOCUMENT" ? (
-                            <>
-                                <DocumentReader
-                                    bodyMd={bodyMd}
-                                    documentHtml={lesson.documentHtml}
-                                    locked={isLocked}
-                                    teaser={lesson.teaser}
-                                    accessLevel={accessLevel}
-                                    contentType={lesson.contentType}
-                                    courseId={courseId}
-                                    courseRawId={lesson.courseRawId}
-                                    courseTitle={lesson.courseTitle}
-                                    courseCoverUrl={lesson.courseCoverUrl}
-                                    lessonId={contentId}
-                                    lessonTitle={lesson.title}
-                                    packageSlugs={lesson.packageSlugs}
-                                    onPurchased={() => { void revalidateLearnData(courseId) }}
-                                />
-                                {/* one-tap reaction + view count — the DocumentReader path used
-                                        to drop this footer, losing like/reaction on every DOCUMENT
-                                        lesson. Mount it here on the same rule as the VIDEO/legacy
-                                        reading-card path (visible + unlocked). */}
-                                {!isLocked && !isReadingEmpty ? (
-                                    <div className="mx-auto w-full max-w-3xl">
-                                        <LessonReactionFooter contentId={contentId} accessLevel={accessLevel} />
-                                    </div>
-                                ) : null}
-                            </>
+                            <DocumentReader
+                                bodyMd={bodyMd}
+                                documentHtml={lesson.documentHtml}
+                                locked={isLocked}
+                                teaser={lesson.teaser}
+                                accessLevel={accessLevel}
+                                contentType={lesson.contentType}
+                                courseId={courseId}
+                                courseRawId={lesson.courseRawId}
+                                courseTitle={lesson.courseTitle}
+                                courseCoverUrl={lesson.courseCoverUrl}
+                                lessonId={contentId}
+                                lessonTitle={lesson.title}
+                                packageSlugs={lesson.packageSlugs}
+                                onPurchased={() => { void revalidateLearnData(courseId) }}
+                            />
                         ) : showReadingCard ? (
                             <div className="mx-auto w-full max-w-3xl">
                                 <Card>

@@ -22,6 +22,8 @@ export interface LeaderboardEntry {
     level?: number
     /** Uppercase initials derived from {@link name} for the avatar tile. */
     avatarInitials: string
+    /** Uploaded avatar URL (BE `PublicUser.avatarUrl`); null when the user has no photo. */
+    avatarUrl: string | null
 }
 
 /** Anonymous fallback name when the BE `PublicUser` has neither displayName nor username. */
@@ -44,6 +46,7 @@ const toBoardEntry = (entry: LeaderboardEntryData): LeaderboardEntry => {
         name,
         xp: entry.score,
         avatarInitials: initialsFrom(name),
+        avatarUrl: entry.user.avatarUrl,
     }
 }
 

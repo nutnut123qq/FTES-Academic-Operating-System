@@ -127,6 +127,17 @@ export interface BadgeView {
     kind: string
     name: string
     awardedAt: string
+    /**
+     * Seeded badge ARTWORK, mirroring {@link BadgeCatalogItem.iconUrl} — same
+     * field name on purpose, so the earned list and the catalog can never
+     * disagree about what a badge looks like.
+     *
+     * OPTIONAL as well as nullable: the field is being added to this endpoint
+     * backend-side, so a not-yet-deployed backend simply omits it. `undefined`
+     * (no field) and `null` (badge has no art) mean the same thing to every call
+     * site — fall back to the kind glyph, never render an empty `<img>`.
+     */
+    iconUrl?: string | null
 }
 
 /**

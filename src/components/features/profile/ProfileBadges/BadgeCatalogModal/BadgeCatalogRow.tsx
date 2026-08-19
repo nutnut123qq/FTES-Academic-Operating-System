@@ -3,17 +3,11 @@
 import React from "react"
 import { Chip, Typography, cn } from "@heroui/react"
 import { useLocale, useTranslations } from "next-intl"
-import { CheckCircleIcon, LockSimpleIcon, MedalIcon, TrophyIcon } from "@phosphor-icons/react"
+import { CheckCircleIcon, LockSimpleIcon } from "@phosphor-icons/react"
 import { ProgressMeter } from "@/components/blocks/stats/ProgressMeter"
+import { badgeKindIcon } from "@/components/features/gamification/badgeIcon"
 import type { BadgeCatalogItem } from "@/modules/api/rest/gamification"
 import { toEarnedDateLabel } from "../model"
-
-/** Badge kind → icon. Falls back to the medal for any kind added later. */
-const KIND_ICON: Record<string, typeof TrophyIcon> = {
-    BADGE: MedalIcon,
-    TITLE: MedalIcon,
-    TROPHY: TrophyIcon,
-}
 
 /** Props for {@link BadgeCatalogRow}. */
 export interface BadgeCatalogRowProps {
@@ -34,7 +28,7 @@ export interface BadgeCatalogRowProps {
 export const BadgeCatalogRow = ({ badge }: BadgeCatalogRowProps) => {
     const t = useTranslations("profile.badgeCatalog")
     const locale = useLocale()
-    const Icon = KIND_ICON[badge.kind] ?? MedalIcon
+    const Icon = badgeKindIcon(badge.kind)
     const earnedOn = toEarnedDateLabel(badge.awardedAt, locale)
     // `counterKey === null` ⇒ the badge has no measurable counter; the contract is
     // explicit that no progress bar may be drawn for it.

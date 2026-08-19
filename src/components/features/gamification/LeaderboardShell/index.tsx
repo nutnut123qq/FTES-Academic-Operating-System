@@ -3,10 +3,11 @@
 import React from "react"
 import { Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
-import { FireIcon, StarIcon, TrophyIcon } from "@phosphor-icons/react"
+import { FireIcon, StarIcon } from "@phosphor-icons/react"
 import { Link } from "@/i18n/navigation"
 import { pathConfig } from "@/resources/path"
 import { useQueryMyGamificationSwr } from "../hooks/useQueryMyGamificationSwr"
+import { badgeKindIcon } from "../badgeIcon"
 import { useBadgeLabel } from "../useBadgeLabel"
 import { StreakPopover } from "../StreakPopover"
 import { GamificationEventHost } from "../GamificationEventHost"
@@ -105,24 +106,43 @@ export const LeaderboardShell = () => {
                 </div>
                 {my && my.badges.length > 0 ? (
                     <div className="flex flex-wrap gap-3">
-                        {my.badges.map((badge) => (
-                            <div
-                                key={badge.id}
-                                className="flex flex-col items-center gap-2 rounded-2xl bg-default/40 p-4"
-                            >
-                                <TrophyIcon
-                                    className="size-6 text-accent"
-                                    weight="fill"
-                                    aria-hidden
-                                    focusable="false"
-                                />
-                                <Typography type="body-xs" weight="medium" className="text-center">
-                                    {/* BE seed badge mới lúc nào không báo → thiếu bản dịch là
-                                        lộ nguyên đường key ra mặt người dùng. Rơi về tên BE trả. */}
-                                    {badgeLabel(badge.badgeKey, badge.fallbackName)}
-                                </Typography>
-                            </div>
-                        ))}
+                        {my.badges.map((badge) => {
+                            // Same fallback the profile badge catalog uses — one shared
+                            // mapping (`badgeKindIcon`), so a badge without artwork can
+                            // never read as a trophy here and a medal there.
+                            const Icon = badgeKindIcon(badge.kind)
+                            return (
+                                <div
+                                    key={badge.id}
+                                    className="flex flex-col items-center gap-2 rounded-2xl bg-default/40 p-4"
+                                >
+                                    {badge.iconUrl ? (
+                                        // Plain <img>: the icon host is whatever the backend
+                                        // seeded, so it cannot be pinned in the next/image
+                                        // remote-pattern allowlist. Decorative — the label
+                                        // right below already names the badge.
+                                        <img
+                                            src={badge.iconUrl}
+                                            alt=""
+                                            aria-hidden
+                                            className="size-6 object-contain"
+                                        />
+                                    ) : (
+                                        <Icon
+                                            className="size-6 text-accent"
+                                            weight="fill"
+                                            aria-hidden
+                                            focusable="false"
+                                        />
+                                    )}
+                                    <Typography type="body-xs" weight="medium" className="text-center">
+                                        {/* BE seed badge mới lúc nào không báo → thiếu bản dịch là
+                                            lộ nguyên đường key ra mặt người dùng. Rơi về tên BE trả. */}
+                                        {badgeLabel(badge.badgeKey, badge.fallbackName)}
+                                    </Typography>
+                                </div>
+                            )
+                        })}
                     </div>
                 ) : (
                     <Typography type="body-sm" color="muted">

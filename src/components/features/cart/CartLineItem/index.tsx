@@ -22,7 +22,7 @@ export interface CartLineItemProps {
 
 /**
  * The square course thumbnail for a cart line. Uses the line's `imageUrl` (the linked
- * course cover) with a graceful icon fallback when it is absent or 404s. `unoptimized`
+ * course cover) with a graceful icon fallback when it is absent or 404s. optimizer
  * skips the Next optimizer so no `remotePatterns` config is needed for arbitrary covers.
  */
 const CartThumbnail = ({ imageUrl, alt }: { imageUrl: string | null; alt: string }) => {
@@ -40,7 +40,6 @@ const CartThumbnail = ({ imageUrl, alt }: { imageUrl: string | null; alt: string
                 src={imageUrl}
                 alt={alt}
                 fill
-                unoptimized
                 sizes="56px"
                 className="object-cover"
                 onError={() => setFailed(true)}

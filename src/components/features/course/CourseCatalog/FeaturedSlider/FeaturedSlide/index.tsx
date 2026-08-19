@@ -70,15 +70,14 @@ export const FeaturedSlide = ({ course, index, total, onOpen }: FeaturedSlidePro
                 {/* RIGHT — cover; hidden on mobile (flex-col drops the image) */}
                 {showImage ? (
                     <div className="hidden shrink-0 items-center justify-center md:flex md:max-w-[45%]">
-                        {/* ponytail: mock/remote cover — `unoptimized` skips the Next optimizer
-                            so no remotePatterns config is needed; explicit dims keep aspect
-                            while `max-h-[280px] w-auto` caps the rendered height. */}
+                        {/* Qua optimizer: bìa gốc là ảnh 2-4 MB, ở đây chỉ vẽ tối đa 480x280.
+                            `width`/`height` cố định nên KHÔNG cần `sizes` — Next tự dựng srcset
+                            quanh đúng bề rộng đó. */}
                         <Image
                             src={course.coverUrl}
                             alt=""
                             width={480}
                             height={280}
-                            unoptimized
                             className="max-h-[280px] w-auto object-contain"
                             onError={() => setCoverFailed(true)}
                         />

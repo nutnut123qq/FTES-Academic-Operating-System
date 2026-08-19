@@ -70,6 +70,18 @@ const nextConfig: NextConfig = {
         },
     },
     images: {
+        /**
+         * Bao lâu một ảnh ĐÃ TỐI ƯU còn dùng được — cả ở cache của optimizer lẫn ở `max-age`
+         * gửi cho trình duyệt. Mặc định Next là 4 giờ, quá ngắn cho thứ gần như không đổi.
+         *
+         * <p><b>Vì sao 30 ngày là AN TOÀN ở đây, dù nghe rất dài.</b> Ảnh bìa nằm ở
+         * `document.ftes.vn/ftes/migrated/<băm>.png` — tên file là BĂM NỘI DUNG. Đổi ảnh bìa
+         * nghĩa là sinh ra file mới, URL mới, nên cache cũ không bao giờ che được ảnh mới; TTL dài
+         * chỉ giữ lại đúng những ảnh KHÔNG đổi. Nếu một ngày ảnh bìa chuyển sang tên cố định
+         * (`cover.png` ghi đè tại chỗ) thì phải hạ số này xuống, nếu không người dùng sẽ thấy ảnh
+         * cũ cả tháng.
+         */
+        minimumCacheTTL: 2_592_000,
         // Host được phép cho `next/image` optimizer. Thiếu allowlist → optimizer trả
         // 400 cho MỌI URL remote (ảnh bìa môn ở /en/subjects load lỗi vì host Cloudinary
         // chưa được liệt kê). Chỉ thêm host tin cậy của hệ thống.
@@ -85,6 +97,8 @@ const nextConfig: NextConfig = {
                     hostname: process.env.NEXT_PUBLIC_IMAGE_EXTRA_HOSTNAME,
                 }]
                 : []),
+            // Avatar giảng viên đăng nhập bằng Google (trường `mentorAvatarUrl` của API khoá học).
+            { protocol: "https", hostname: "lh3.googleusercontent.com" },
             // Avatar mặc định sinh theo seed (UserAvatar → utils/avatar.dicebearAvatarUrl).
             // Hôm nay HeroUI Avatar render bằng <img> thuần (Radix) nên KHÔNG qua optimizer;
             // liệt kê sẵn để chỗ nào bọc avatar bằng next/image sau này không ăn 400.

@@ -922,8 +922,15 @@ const PurchaseOptionHeadline = ({
 const CardCover = ({ coverUrl, alt }: { coverUrl?: string; alt: string }) => (
     <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-2xl bg-default/40">
         {coverUrl ? (
-            // ponytail: `unoptimized` skips the Next optimizer (no remotePatterns needed)
-            <Image src={coverUrl} alt={alt} fill unoptimized className="object-cover" />
+            // Qua optimizer. `sizes` bắt buộc khi dùng `fill`: thẻ enroll rộng ~1/3 màn ở
+            // desktop, thiếu `sizes` là Next mặc định 100vw và tải bản to nhất cho ô nhỏ.
+            <Image
+                src={coverUrl}
+                alt={alt}
+                fill
+                sizes="(min-width: 1024px) 33vw, 100vw"
+                className="object-cover"
+            />
         ) : (
             <PlayCircleIcon aria-hidden focusable="false" className="size-10 text-muted" />
         )}

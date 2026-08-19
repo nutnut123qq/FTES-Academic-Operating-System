@@ -42,6 +42,9 @@ export interface CatalogCourseCardProps extends WithClassNames<undefined> {
  *
  * @param props - {@link CatalogCourseCardProps}
  */
+/** `next/image` sizes khớp lưới danh mục 1 / 2 / 3 cột. */
+const COVER_SIZES = "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+
 export const CatalogCourseCard = ({ course, className }: CatalogCourseCardProps) => {
     const t = useTranslations()
     // hide the mock cover if it 404s (offline) — the gradient behind it takes over
@@ -71,13 +74,19 @@ export const CatalogCourseCard = ({ course, className }: CatalogCourseCardProps)
                     className="absolute inset-0 bg-gradient-to-br from-accent/40 via-accent/20 to-accent/5"
                 />
                 {course.coverUrl && !coverFailed ? (
-                    // ponytail: mock picsum cover — `unoptimized` skips the Next
-                    // optimizer (no remotePatterns needed); drop when real covers land
+                    /* Ảnh bìa đi QUA optimizer. Trước đây gắn `unoptimized` vì bìa còn là ảnh
+                       picsum giả; bìa thật đã lên rồi, và bỏ sót cờ này rất đắt: đo trên
+                       production, một thẻ 16:9 rộng ~300px đang tải nguyên bản gốc 2,2–4,0 MB,
+                       cả trang danh mục 73 MB. Qua optimizer ở w=640 còn ~73 KB — nhỏ hơn 30–55
+                       lần, và trình duyệt thật còn nhận WebP nên nhỏ hơn nữa.
+
+                       `sizes` là BẮT BUỘC khi dùng `fill`: thiếu nó Next mặc định 100vw và
+                       trình duyệt chọn ảnh to nhất trong srcset cho một ô bé xíu. */
                     <Image
                         src={course.coverUrl}
                         alt={course.name}
                         fill
-                        unoptimized
+                        sizes={COVER_SIZES}
                         className="object-cover transition-transform duration-300 group-hover:scale-105"
                         onError={() => setCoverFailed(true)}
                     />

@@ -7,6 +7,7 @@ import { useLocale, useTranslations } from "next-intl"
 import { useAppSelector } from "@/redux/hooks"
 import { Link } from "@/i18n/navigation"
 import { FtesMascot } from "@/components/reuseable/FtesMascot"
+import { CampusPicker, campusLabel } from "@/components/reuseable/CampusPicker"
 import { UserAvatar } from "@/components/reuseable/UserAvatar"
 import { UserLink, useQueryFollowedUserIdsSwr } from "@/components/features/identity"
 import { ThreadsPostRow } from "@/components/blocks/feed/ThreadsPostRow"
@@ -23,6 +24,7 @@ import {
 } from "@/components/reuseable/PostEngagementBar"
 import { PostCommentThread } from "@/components/reuseable/PostCommentThread"
 import { toggleCommentReaction } from "@/modules/api/rest/community"
+import type { CampusView } from "@/modules/api/rest/community"
 import { useCommunityComposerOverlayState } from "@/hooks/zustand/overlay/hooks"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
 import {
@@ -35,6 +37,7 @@ import {
     CommunitySearchSort,
 } from "../hooks/useQueryCommunitySearchSwr"
 import { CommunityFilterBar } from "../CommunityFilterBar"
+import { useQueryCampusesSwr } from "../hooks/useQueryCampusesSwr"
 import { useQueryPostCommentsSwr } from "../hooks/useQueryPostDetailSwr"
 import { useMutateReactPostSwr } from "../hooks/useMutateReactPostSwr"
 import { useMutateCreatePostCommentSwr, type SubmitCommentInput } from "../hooks/useMutateCreatePostCommentSwr"
@@ -54,6 +57,16 @@ interface CommunityFeedHeaderProps {
     onPostTypeChange: (postType: string) => void
     /** Whether the Newest/Oldest control is meaningful here — hidden on the TRENDING tab. */
     showSortControl: boolean
+    /**
+     * Whether the campus scope picker is meaningful here — shown ONLY on the CAMPUS tab, the
+     * one feed the `campus` argument reaches (mirror of {@link showSortControl}).
+     */
+    showCampusControl: boolean
+    /** Picked campus CODE, or `null` for "my campus" (BE falls back to the profile campus). */
+    campus: string | null
+    onCampusChange: (campus: string | null) => void
+    /** Options for the campus picker — owned by the feed, which also labels its empty state. */
+    campuses: Array<CampusView>
 }
 
 /**
@@ -77,6 +90,11 @@ interface CommunityFeedHeaderProps {
  * The avatar is the CURRENT user's (Redux `user.user`, same source as the navbar account avatar via
  * {@link UserAvatar}); it falls back to a generated/initials face for guests or when no avatar URL
  * is set.
+ *
+ * On the CAMPUS tab the card grows a SECOND row carrying the campus scope picker. That one stays
+ * out of the search popover on purpose: it is not a filter over the current feed, it chooses WHICH
+ * campus feed is being read — the tab used to be silently locked to the viewer's own campus with no
+ * way to look at another one.
  */
 const CommunityFeedHeader = ({
     query,
@@ -86,6 +104,10 @@ const CommunityFeedHeader = ({
     postType,
     onPostTypeChange,
     showSortControl,
+    showCampusControl,
+    campus,
+    onCampusChange,
+    campuses,
 }: CommunityFeedHeaderProps) => {
     const t = useTranslations("communityHub")
     const { open } = useCommunityComposerOverlayState()
@@ -102,57 +124,72 @@ const CommunityFeedHeader = ({
     return (
         // ponytail: composer = card riêng (nền surface + viền + bo góc + shadow) để nó nổi hẳn
         // khỏi danh sách bài, thay vì chìm vào hàng divider của feed.
-        <div className="flex items-center gap-3 rounded-2xl border border-default bg-surface px-4 py-4 shadow-sm">
-            <UserAvatar
-                size="sm"
-                className="size-9 shrink-0"
-                username={user?.username}
-                avatar={user?.avatar}
-                seed={user?.email ?? user?.username}
-            />
-            {/* the prompt is a real button; the search button is a SIBLING (no nested interactive) */}
-            <button
-                type="button"
-                className="min-w-0 flex-1 cursor-text text-left text-sm text-muted"
-                onClick={open}
-            >
-                {t("composer.whatsNew")}
-            </button>
-            <Popover>
-                <Popover.Trigger>
-                    <Button
-                        isIconOnly
-                        size="sm"
-                        variant="ghost"
-                        className="shrink-0"
-                        aria-label={filtersActive ? t("search.openActive") : t("search.open")}
-                    >
-                        <span className="relative inline-flex">
-                            <MagnifyingGlassIcon aria-hidden focusable="false" className="size-5" />
-                            {filtersActive ? (
-                                <span
-                                    aria-hidden
-                                    className="absolute -right-0.5 -top-0.5 size-2 rounded-full bg-accent ring-2 ring-background"
-                                />
-                            ) : null}
-                        </span>
-                    </Button>
-                </Popover.Trigger>
-                <Popover.Content
-                    placement="bottom end"
-                    className={cn("w-[calc(100vw-2rem)] p-0 sm:w-[26rem]")}
+        <div className="flex flex-col gap-3 rounded-2xl border border-default bg-surface px-4 py-4 shadow-sm">
+            <div className="flex items-center gap-3">
+                <UserAvatar
+                    size="sm"
+                    className="size-9 shrink-0"
+                    username={user?.username}
+                    avatar={user?.avatar}
+                    seed={user?.email ?? user?.username}
+                />
+                {/* the prompt is a real button; the search button is a SIBLING (no nested interactive) */}
+                <button
+                    type="button"
+                    className="min-w-0 flex-1 cursor-text text-left text-sm text-muted"
+                    onClick={open}
                 >
-                    <CommunityFilterBar
-                        query={query}
-                        onQueryChange={onQueryChange}
-                        sort={sort}
-                        onSortChange={onSortChange}
-                        postType={postType}
-                        onPostTypeChange={onPostTypeChange}
-                        showSortControl={showSortControl}
-                    />
-                </Popover.Content>
-            </Popover>
+                    {t("composer.whatsNew")}
+                </button>
+                <Popover>
+                    <Popover.Trigger>
+                        <Button
+                            isIconOnly
+                            size="sm"
+                            variant="ghost"
+                            className="shrink-0"
+                            aria-label={filtersActive ? t("search.openActive") : t("search.open")}
+                        >
+                            <span className="relative inline-flex">
+                                <MagnifyingGlassIcon aria-hidden focusable="false" className="size-5" />
+                                {filtersActive ? (
+                                    <span
+                                        aria-hidden
+                                        className="absolute -right-0.5 -top-0.5 size-2 rounded-full bg-accent ring-2 ring-background"
+                                    />
+                                ) : null}
+                            </span>
+                        </Button>
+                    </Popover.Trigger>
+                    <Popover.Content
+                        placement="bottom end"
+                        className={cn("w-[calc(100vw-2rem)] p-0 sm:w-[26rem]")}
+                    >
+                        <CommunityFilterBar
+                            query={query}
+                            onQueryChange={onQueryChange}
+                            sort={sort}
+                            onSortChange={onSortChange}
+                            postType={postType}
+                            onPostTypeChange={onPostTypeChange}
+                            showSortControl={showSortControl}
+                        />
+                    </Popover.Content>
+                </Popover>
+            </div>
+            {/* Campus scope — visible ONLY on the campus tab. `null` = "my campus", which the
+                parent turns into "send no campus argument" so the BE keeps resolving the viewer's
+                profile campus itself (never re-derived here — two sources would drift). */}
+            {showCampusControl ? (
+                <CampusPicker
+                    campuses={campuses}
+                    value={campus}
+                    onChange={onCampusChange}
+                    placeholder={t("feed.campusMine")}
+                    ariaLabel={t("feed.campusFilterLabel")}
+                    className="self-start"
+                />
+            ) : null}
         </div>
     )
 }
@@ -517,6 +554,10 @@ export const CommunityFeedRow = ({
  * pages through the `InfiniteScrollSentinel` until the BE stops returning a `nextCursor` —
  * there is no fixed first-page ceiling on either.
  *
+ * On the CAMPUS tab the header also carries a campus picker: the `campus` argument is part of the
+ * SWR key, so switching campuses refetches from page 1. The default choice sends NOTHING, which is
+ * what makes the BE fall back to the viewer's own profile campus.
+ *
  * Follow state for the authors on screen is read ONCE PER PAGE-SET
  * ({@link useQueryFollowedUserIdsSwr}) and pushed into every row, so the hovercard CTA
  * already says "Đang theo dõi" the first time it opens — and a toggle fired from any
@@ -525,6 +566,7 @@ export const CommunityFeedRow = ({
  */
 export const CommunityFeed = ({ tab = "forYou" }: { tab?: CommunityFeedTab } = {}) => {
     const t = useTranslations("communityHub")
+    const locale = useLocale()
     const { open: openComposer } = useCommunityComposerOverlayState()
     // Guests get 401 from the viewer-scoped feed read — see `isAuthGate` below.
     const { authenticated, requireAuth } = useRequireAuth()
@@ -534,6 +576,12 @@ export const CommunityFeed = ({ tab = "forYou" }: { tab?: CommunityFeedTab } = {
     const [query, setQuery] = useState("")
     const [sort, setSort] = useState<CommunitySearchSort>(CommunitySearchSort.Newest)
     const [postType, setPostType] = useState("")
+    /**
+     * Campus scope of the CAMPUS tab. `null` = "my campus" and is deliberately sent to the hook as
+     * `undefined`: the BE already resolves the viewer's profile campus when the argument is absent,
+     * and re-deriving it here would give the page a second, drifting source of truth.
+     */
+    const [campus, setCampus] = useState<string | null>(null)
     // Debounce the keyword so the SWR key (and refetch) don't fire on every keystroke.
     const [debouncedQuery, setDebouncedQuery] = useState("")
     useEffect(() => {
@@ -550,7 +598,11 @@ export const CommunityFeed = ({ tab = "forYou" }: { tab?: CommunityFeedTab } = {
     // Newest/Oldest control (see CommunityFeedHeader). Feed the hook Newest there so its SWR key
     // stays stable regardless of the (hidden) sort state.
     const isTrending = tab === "trending"
-    const feed = useQueryCommunityFeedSwr(tab, isTrending ? CommunitySearchSort.Newest : sort)
+    const feed = useQueryCommunityFeedSwr(
+        tab,
+        isTrending ? CommunitySearchSort.Newest : sort,
+        campus ?? undefined,
+    )
 
     // Search mode and the tab feed are BOTH cursor-paginated `useSWRInfinite` sources with the
     // same page shape, so the list/sentinel below reads from whichever one is active.
@@ -575,10 +627,25 @@ export const CommunityFeed = ({ tab = "forYou" }: { tab?: CommunityFeedTab } = {
     const authorIds = useMemo(() => posts.map((post) => post.authorId), [posts])
     const { isFollowing } = useQueryFollowedUserIdsSwr(authorIds)
 
-    // CAMPUS tab is scoped to the viewer's campus (BE falls back to the profile campus).
-    // When empty it usually means the viewer hasn't set a campus on their profile, so the
-    // empty state guides them there instead of showing the generic "be the first to post".
+    /**
+     * CAMPUS tab. It reads ONE campus at a time, chosen by the header picker: `campus === null`
+     * means "my campus" and sends no argument, so the BE resolves the viewer's profile campus.
+     *
+     * That split is what the empty state has to respect. In the DEFAULT mode an empty feed can
+     * still mean "you never set a campus on your profile", so the hint that points at the profile
+     * stays. Once the reader has EXPLICITLY picked a campus, the same hint would be nonsense —
+     * their profile has nothing to do with the campus they asked for — so the explicit case names
+     * the campus and offers the only useful next move instead.
+     *
+     * Reference data comes off the SAME shared SWR key the composer/profile pickers use, so this
+     * costs no extra request; the picked campus is worded with {@link campusLabel} so the empty
+     * state and the option that produced it read identically (falling back to the raw code only
+     * while the list is still loading).
+     */
     const isCampus = tab === "campus"
+    const { campuses } = useQueryCampusesSwr()
+    const pickedCampus = campus ? campuses.find((option) => option.code === campus) : undefined
+    const pickedCampusLabel = pickedCampus ? campusLabel(pickedCampus, locale) : campus ?? ""
 
     /**
      * The BE feed read is viewer-scoped, so a guest gets 401 `PLATFORM_UNAUTHORIZED`
@@ -610,7 +677,12 @@ export const CommunityFeed = ({ tab = "forYou" }: { tab?: CommunityFeedTab } = {
         : searching
             ? { title: t("search.resultsEmpty"), description: t("search.resultsEmptyHint") }
             : isCampus
-                ? { title: t("feed.campusEmpty"), description: t("feed.campusEmptyHint") }
+                ? campus
+                    ? {
+                        title: t("feed.campusPickedEmpty", { campus: pickedCampusLabel }),
+                        description: t("feed.campusPickedEmptyHint"),
+                    }
+                    : { title: t("feed.campusEmpty"), description: t("feed.campusEmptyHint") }
                 : {
                     icon: <FtesMascot pose="explain" size="lg" />,
                     title: t("feed.empty"),
@@ -632,6 +704,10 @@ export const CommunityFeed = ({ tab = "forYou" }: { tab?: CommunityFeedTab } = {
                 postType={postType}
                 onPostTypeChange={setPostType}
                 showSortControl={!isTrending}
+                showCampusControl={isCampus}
+                campus={campus}
+                onCampusChange={setCampus}
+                campuses={campuses}
             />
             {/* Heading đứng NGOÀI AsyncContent: nó là nhãn của khu vực, phải còn khi danh sách
                 rỗng / đang tải / lỗi — không phải một phần của dữ liệu. */}

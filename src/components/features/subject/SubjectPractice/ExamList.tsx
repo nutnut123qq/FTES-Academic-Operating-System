@@ -4,7 +4,6 @@ import React, { useState } from "react"
 import { Button, Chip, Link, Modal, Typography, cn } from "@heroui/react"
 import {
     ArrowLeftIcon,
-    ArrowSquareOutIcon,
     CaretRightIcon,
     LockSimpleIcon,
     PlusIcon,
@@ -14,11 +13,11 @@ import { useLocale, useTranslations } from "next-intl"
 import { useRouter } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
+import { formatRelativeTime } from "@/components/features/community/hooks/relativeTime"
 import { SubjectFeAlbum } from "@/components/features/subject/SubjectFeAlbum"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
 import { useQuerySubjectSwr } from "../hooks/useQuerySubjectSwr"
 import {
-    EXAM_ROUTE_SEGMENT,
     useQuerySubjectExamsSwr,
     type SubjectExam,
     type SubjectExamKind,
@@ -45,9 +44,16 @@ export interface ExamListProps {
  * way `CommunityFeed` opens a post over the feed. The body inside the dialog is the SAME
  * component the exam's own route renders ({@link SubjectFeAlbum}), so the two hosts can
  * never drift apart; the route keeps existing untouched, which is what keeps
- * `/subjects/{id}/practice/fe/{albumId}` alive as a deep link. "Mở trang đầy đủ" inside
- * the dialog is the one control that actually navigates there. Esc + backdrop close
- * (HeroUI default via `onOpenChange`).
+ * `/subjects/{id}/practice/fe/{albumId}` alive as a deep link — reachable by URL, just no
+ * longer advertised by a button in here. Esc + backdrop close (HeroUI default via
+ * `onOpenChange`).
+ *
+ * **Full screen is the DIALOG's job.** The viewer's bottom toolbar draws the expand switch
+ * (`ArrowsOut`), but what expanding has to grow is this dialog — so `SubjectFeAlbum` reports
+ * the toggle up here and the dialog swaps its 95vw/90vh box for the whole viewport. The
+ * album's own expanded frame (a `fixed inset-0` overlay) is deliberately NOT used in this
+ * host: a fixed box inside an animating dialog resolves against the dialog, not the
+ * viewport, which is exactly why the button used to be withheld here.
  *
  * The dialog hosts **FE albums only**. `kind` still selects which list is fetched and
  * labelled, but the practice page only ever renders this with `kind="fe"` — a PE paper is
@@ -77,39 +83,33 @@ export const ExamList = ({ subjectId, kind, onBack }: ExamListProps) => {
     // The exam being read in the modal — `null` = closed. Holding the ROW (not just an id)
     // costs nothing and keeps the dialog's own labels available if they are ever needed.
     const [openedExam, setOpenedExam] = useState<SubjectExam | null>(null)
+    // Mirrors the album's full-screen switch. The state it MIRRORS still lives in the album
+    // (`useExamExpand`) — this is only what the dialog needs to know to grow, which is the
+    // one thing the album cannot do for itself.
+    const [isExamExpanded, setIsExamExpanded] = useState(false)
 
     const openContribute = guard(() => {
         setContributing(true)
     }, "auth.context.uploadResource")
 
-    /** Human meta line: rating · created date (each part degrades away). */
-    const metaLabel = (exam: SubjectExam) => {
-        const parts: Array<string> = []
-        if (exam.rating !== null) {
-            parts.push(
-                t("practice.exam.ratingLabel", {
-                    rating: exam.rating.toFixed(1),
-                    count: exam.ratingCount,
-                }),
-            )
-        }
-        if (exam.createdAt) {
-            const date = new Date(exam.createdAt)
-            if (!Number.isNaN(date.getTime())) {
-                parts.push(date.toLocaleDateString(locale))
-            }
-        }
-        return parts.join(" · ")
-    }
-
     /**
-     * The exam's own page — the deep link the modal deliberately does NOT navigate to.
+     * Human meta line: **who uploaded it · when** — each part degrading away on its own.
      *
-     * FE albums only: this list is rendered with `kind="fe"` and no other value, so the PE
-     * arm this used to carry was a branch nothing could reach.
+     * The rating it used to lead with ("0.0 sao (0 đánh giá)") was a number nobody has ever
+     * given: no surface in the app rates an exam, so every row on every subject read the
+     * same zero, and the one fact a reader actually wants from a contributed paper — who
+     * put it there — was missing.
+     *
+     * The time is the SAME relative label the album's own header prints for the picture in
+     * front of the reader ({@link formatRelativeTime}, the community feed's), so opening a
+     * row does not restate the same fact in a second wording. It returns `""` for a
+     * missing/invalid timestamp, which the filter below drops — so a row with neither part
+     * renders an empty line rather than a dangling " · ".
      */
-    const fullPageHref = (exam: SubjectExam) =>
-        `/subjects/${subjectId}/practice/${EXAM_ROUTE_SEGMENT.fe}/${exam.id}`
+    const metaLabel = (exam: SubjectExam) =>
+        [exam.uploaderName, formatRelativeTime(exam.createdAt, locale)]
+            .filter((part): part is string => Boolean(part))
+            .join(" · ")
 
     return (
         <div className="flex flex-col gap-6 p-6">
@@ -270,18 +270,37 @@ export const ExamList = ({ subjectId, kind, onBack }: ExamListProps) => {
 
             {/* Đề mở TẠI CHỖ trong modal (khuôn CommunityFeed): thân dialog chính là component
                 mà route của đề đang render, nên modal và deep link không bao giờ lệch nhau.
-                URL KHÔNG đổi — muốn sang trang thật thì bấm "Mở trang đầy đủ".
+                URL KHÔNG đổi; `/subjects/{id}/practice/fe/{albumId}` vẫn sống nguyên như deep
+                link, chỉ là không còn nút nào trong này quảng cáo nó nữa.
                 Esc + bấm nền đóng (mặc định HeroUI qua `onOpenChange`). */}
             <Modal
                 isOpen={openedExam !== null}
                 onOpenChange={(open) => {
                     if (!open) {
                         setOpenedExam(null)
+                        // Đóng lúc đang toàn màn hình thì lần mở sau phải bắt đầu lại ở khuôn
+                        // neo: album unmount nên `useExamExpand` tự về false, còn cờ MIRROR ở
+                        // đây thì không ai gỡ hộ — để sót là mở đề kế tiếp ra đã full màn hình.
+                        setIsExamExpanded(false)
                     }
                 }}
             >
-                <Modal.Backdrop>
-                    <Modal.Container className="p-3 sm:p-6">
+                {/* Escape hands the dialog back to the ALBUM while it is full screen: the
+                    viewer's own Escape handler collapses it there ("how do I get out of this"
+                    must answer the layer the reader is actually in), and only once docked does
+                    Escape mean "close the exam" again. React Aria checks this flag BEFORE it
+                    stops the event, so the viewer's window listener still sees the keypress. */}
+                <Modal.Backdrop isKeyboardDismissDisabled={isExamExpanded}>
+                    {/* Full screen bleeds to the edges: `size="full"` is HeroUI's own recipe
+                        for that (it drops the container gutter and the dialog's radius/shadow,
+                        and swaps the zoom-in entrance for a straight one). `sm:w-full` is the
+                        one thing the recipe leaves behind — `.modal__container` bakes
+                        `sm:w-fit`, and a `w-full` dialog inside a `w-fit` container has nothing
+                        definite to resolve against. */}
+                    <Modal.Container
+                        size={isExamExpanded ? "full" : undefined}
+                        className={isExamExpanded ? "sm:w-full" : "p-3 sm:p-6"}
+                    >
                         {/*
                          * Khuôn lấy NGUYÊN theo `CommunityPhotoLightboxModal`
                          * (`h-[90vh] max-h-[90vh] w-[95vw] max-w-6xl overflow-hidden`). Bề ngang
@@ -295,52 +314,43 @@ export const ExamList = ({ subjectId, kind, onBack }: ExamListProps) => {
                          * phần cuộn nằm trong album (thêm một tầng nữa là hai thanh cuộn lồng nhau);
                          * `ChallengeView` (PE) không tạo vùng cuộn con nào (nó xếp dọc hết) nên
                          * nhánh PE giữ nguyên `max-h` + cuộn ở chính dialog.
+                         *
+                         * EXPANDED thì cái hộp đó chính là thứ phải biến mất: `95vw/6xl/90vh`
+                         * mà giữ nguyên thì bấm "toàn màn hình" xong vẫn là cái popup cũ — nút
+                         * trông như hỏng. Ghi thẳng bằng utility (không nhờ `.modal__dialog--full`)
+                         * để không có utility nào phải tranh với utility ngược lại: chuỗi class
+                         * được HOÁN nguyên cụm, đúng lối `useExamExpand` làm với khung 2 cột.
                          */}
                         <Modal.Dialog
-                            className={cn(
-                                "w-[95vw] max-w-6xl",
-                                kind === "pe"
-                                    ? "max-h-[90vh] overflow-y-auto"
-                                    : "h-[90vh] max-h-[90vh] overflow-hidden",
-                            )}
+                            className={
+                                isExamExpanded
+                                    ? "h-full max-h-full w-full overflow-hidden rounded-none"
+                                    : cn(
+                                        "w-[95vw] max-w-6xl",
+                                        kind === "pe"
+                                            ? "max-h-[90vh] overflow-y-auto"
+                                            : "h-[90vh] max-h-[90vh] overflow-hidden",
+                                    )
+                            }
                         >
                             <Modal.CloseTrigger
                                 aria-label={t("practice.exam.closeExam")}
                                 className="z-20"
                             />
+                            {/* FE only. PE never reaches this component — the practice page
+                                renders ExamList with kind="fe" and nothing else
+                                (SubjectPractice/index.tsx), and a PE paper is opened from the
+                                subject overview's challenge rail instead. Two traps if anyone
+                                wires PE in here: `SubjectExam.id` is a RESOURCE uuid while
+                                ChallengeView wants a routing SLUG, and a `practice/pe/...`
+                                route has never existed at all. */}
                             {openedExam ? (
-                                <>
-                                    {/* `pe-10` chừa chỗ cho × (absolute `top-4 right-4`). */}
-                                    <div className="mb-2 flex pe-10">
-                                        <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            onPress={() => {
-                                                router.push(fullPageHref(openedExam))
-                                            }}
-                                        >
-                                            <ArrowSquareOutIcon
-                                                aria-hidden
-                                                focusable="false"
-                                                className="size-4"
-                                            />
-                                            {t("practice.exam.openFullPage")}
-                                        </Button>
-                                    </div>
-                                    {/* FE only. PE never reaches this component — the practice
-                                        page renders ExamList with kind="fe" and nothing else
-                                        (SubjectPractice/index.tsx), and a PE paper is opened
-                                        from the subject overview's challenge rail instead.
-                                        Two traps if anyone wires PE in here: `SubjectExam.id`
-                                        is a RESOURCE uuid while ChallengeView wants a routing
-                                        SLUG, and `EXAM_ROUTE_SEGMENT.pe` names a
-                                        `practice/pe/...` route that has never existed. */}
-                                    <SubjectFeAlbum
-                                        albumId={openedExam.id}
-                                        subjectId={subjectId}
-                                        inModal
-                                    />
-                                </>
+                                <SubjectFeAlbum
+                                    albumId={openedExam.id}
+                                    subjectId={subjectId}
+                                    inModal
+                                    onExpandedChange={setIsExamExpanded}
+                                />
                             ) : null}
                         </Modal.Dialog>
                     </Modal.Container>

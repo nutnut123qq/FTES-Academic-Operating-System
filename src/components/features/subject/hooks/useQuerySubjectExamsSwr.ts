@@ -13,21 +13,28 @@ export const BE_EXAM_TYPE: Record<SubjectExamKind, string> = {
     fe: "FE",
 }
 
-/** Route segment of each exam kind under `/subjects/{id}/practice`. */
-export const EXAM_ROUTE_SEGMENT: Record<SubjectExamKind, string> = {
-    pe: "pe",
-    fe: "fe",
-}
-
 /** One PE paper / FE album row in the Practice tab's exam list. */
 export interface SubjectExam {
     /** Real resource UUID — routes to the PE/FE detail page. */
     id: string
     title: string
-    /** Average rating, or `null` when nobody has rated it yet. */
-    rating: number | null
-    /** Number of ratings behind {@link rating}. */
-    ratingCount: number
+    /**
+     * Who uploaded it, flattened to the ONE string a row can paint: `displayName ??
+     * username` — the same real-data fallback `UserLink` and every community list already
+     * use. NOT a placeholder: the BE deliberately declines to fabricate a name, so a row
+     * with no card must show none either.
+     *
+     * `null` whenever there is no honest name — a backend predating
+     * `resource-summary-uploader`, a deleted / profile-less uploader, a legacy row with no
+     * usable `uploaderId`, and by design every purchasers-only row the viewer has not
+     * bought. The row then prints the timestamp ALONE; never "undefined", never a stand-in
+     * name. (The locked rows never reach the meta line anyway — they render the unlock
+     * hint instead — so that case costs the reader nothing.)
+     *
+     * Flattened rather than carried whole because the row IS a `<Link>`: a `UserLink`
+     * inside it would be an anchor nested in an anchor, so only the text is usable here.
+     */
+    uploaderName: string | null
     /** ISO creation timestamp, or `null` when the BE omits it. */
     createdAt: string | null
     /** Raw BE visibility value (e.g. `PUBLIC` | `ENROLLED_ONLY`). */
@@ -44,8 +51,9 @@ export interface SubjectExam {
 const toExam = (summary: ResourceSummary): SubjectExam => ({
     id: summary.id,
     title: summary.title,
-    rating: typeof summary.avgRating === "number" ? summary.avgRating : null,
-    ratingCount: summary.ratingCount ?? 0,
+    // `?? null`, never `?? ""`: the row branches on "is there a name", and an empty string
+    // would sail through a truthiness check somewhere downstream as a name that renders blank.
+    uploaderName: summary.uploader?.displayName ?? summary.uploader?.username ?? null,
     createdAt: summary.createdAt ?? null,
     visibility: summary.visibility ?? "",
     lockedForViewer: summary.lockedForViewer === true,

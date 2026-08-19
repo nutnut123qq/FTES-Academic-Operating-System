@@ -5958,7 +5958,6 @@
                 "emptyHint": "You could be the first to contribute — submissions are held for review.",
                 "loadError": "Could not load the exam list",
                 "retry": "Try again",
-                "ratingLabel": "{rating} stars ({count} ratings)",
                 "contributeCta": "Contribute an exam",
                 "lockedBadge": "Purchase required",
                 "lockedAria": "buy the course to unlock",

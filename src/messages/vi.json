@@ -2394,6 +2394,13 @@
         "bioPlaceholder": "Giới thiệu đôi nét về bạn",
         "changeAvatar": "Đổi ảnh đại diện",
         "avatarHint": "PNG, JPG, WEBP hoặc GIF, tối đa 5 MB.",
+        "appearance": {
+            "previewTitle": "Diện mạo của bạn",
+            "previewHint": "Chọn ảnh và khung viền bên dưới — áp dụng ngay khi bấm.",
+            "albumTitle": "Chọn ảnh đại diện",
+            "framesTitle": "Khung viền avatar",
+            "frameNone": "Không viền"
+        },
         "save": "Lưu thay đổi",
         "saved": "Cập nhật hồ sơ thành công.",
         "error": "Không thể cập nhật hồ sơ. Vui lòng thử lại.",

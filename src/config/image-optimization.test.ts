@@ -55,3 +55,29 @@ describe("tối ưu ảnh (next/image)", () => {
             + "cho một ô nhỏ").toEqual([])
     })
 })
+
+/**
+ * Host ảnh mà sản phẩm THẬT SỰ dùng phải nằm trong `remotePatterns`.
+ *
+ * <p><b>Vì sao đáng ghim.</b> Thiếu một host thì optimizer trả 400, `onError` của thẻ bật cờ
+ * "ảnh hỏng" và ảnh BIẾN MẤT lặng lẽ — không lỗi đỏ, không log, build vẫn xanh. Đã trả giá thật:
+ * bỏ `unoptimized` ở hero slider mà quên `cdn.jsdelivr.net` (nơi đặt ảnh banner) ⇒ mất sạch banner
+ * trên production.
+ *
+ * <p>Danh sách này là HỢP ĐỒNG với dữ liệu backend đang trả về, không phải sở thích:
+ * `/admin-content/banners` → jsDelivr; `/courses` → document.ftes.vn + lh3.googleusercontent.com.
+ * Backend đổi nơi lưu ảnh thì phải sửa cả hai chỗ cùng lúc.
+ */
+describe("remotePatterns phủ đủ host ảnh đang dùng", () => {
+    const config = readFileSync(join(process.cwd(), "next.config.ts"), "utf8")
+
+    it.each([
+        ["cdn.jsdelivr.net", "ảnh banner (/admin-content/banners → imageUrl)"],
+        ["**.ftes.vn", "ảnh bìa khoá/môn (document.ftes.vn)"],
+        ["lh3.googleusercontent.com", "avatar giảng viên đăng nhập Google (mentorAvatarUrl)"],
+        ["picsum.photos", "slide giả của hero slider khi endpoint banner lỗi"],
+        ["res.cloudinary.com", "ảnh migrate qua Cloudinary"],
+    ])("có %s — %s", (host) => {
+        expect(config).toContain(host)
+    })
+})

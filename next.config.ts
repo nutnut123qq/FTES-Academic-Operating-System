@@ -97,6 +97,15 @@ const nextConfig: NextConfig = {
                     hostname: process.env.NEXT_PUBLIC_IMAGE_EXTRA_HOSTNAME,
                 }]
                 : []),
+            // Ảnh BANNER trang danh mục (`GET /admin-content/banners?placement=courses` →
+            // `imageUrl`). Kho ảnh banner đang đặt trên jsDelivr trỏ vào một repo GitHub của
+            // trường. Thiếu host này thì optimizer trả 400, `onError` của slide bật
+            // `coverFailed` và banner BIẾN MẤT lặng lẽ — không lỗi đỏ, không log.
+            { protocol: "https", hostname: "cdn.jsdelivr.net" },
+            // Slide GIẢ của hero slider, chỉ dùng khi endpoint banner LỖI (xem
+            // `useQueryFeaturedCoursesSwr`). Vẫn phải liệt kê: bỏ sót thì đúng lúc backend hỏng,
+            // đường dự phòng cũng mất ảnh theo.
+            { protocol: "https", hostname: "picsum.photos" },
             // Avatar giảng viên đăng nhập bằng Google (trường `mentorAvatarUrl` của API khoá học).
             { protocol: "https", hostname: "lh3.googleusercontent.com" },
             // Avatar mặc định sinh theo seed (UserAvatar → utils/avatar.dicebearAvatarUrl).

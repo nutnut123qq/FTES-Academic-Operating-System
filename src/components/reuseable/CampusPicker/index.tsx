@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react"
+import React, { useMemo } from "react"
 import {
     Dropdown,
     DropdownItem,
@@ -10,14 +10,30 @@ import {
     cn,
 } from "@heroui/react"
 import { CaretDownIcon, MapPinIcon } from "@phosphor-icons/react"
+import { useLocale } from "next-intl"
 import type { CampusView } from "@/modules/api/rest/community"
 
 /** Menu key for the "no campus" entry — kept distinct from any real campus code. */
 const NONE_KEY = "__none"
 
+/**
+ * The campus name to SHOW for the active locale: `nameEn` on `en`, `name` everywhere else,
+ * falling back to `name` whenever `nameEn` is null (the BE leaves it optional).
+ *
+ * Exported so every surface that has to word a campus OUTSIDE the picker — the campus feed's
+ * empty state names the campus the reader picked — says exactly the same thing as the option
+ * they picked it from. Two wordings for one campus in one screen is the bug this prevents.
+ */
+export const campusLabel = (campus: CampusView, locale: string): string =>
+    locale === "en" ? campus.nameEn ?? campus.name : campus.name
+
 /** Props for {@link CampusPicker}. */
 export interface CampusPickerProps {
-    /** Active campuses (from `useQueryCampusesSwr`) — options show each `name`. */
+    /**
+     * Active campuses (from `useQueryCampusesSwr`). Options are rendered in `sortOrder`
+     * (the admin-curated order the BE already sorts by) and labelled per locale, so no
+     * caller has to sort or translate the list itself.
+     */
     campuses: Array<CampusView>
     /** Selected campus CODE, or `null` for no campus. */
     value: string | null
@@ -36,9 +52,13 @@ export interface CampusPickerProps {
 /**
  * Single-select campus dropdown built on HeroUI `Dropdown`
  * pattern (the repo carries no HeroUI `Select`): a bordered trigger showing the
- * selected campus `name` — or the {@link placeholder} when unset — over a menu whose
- * first entry clears the choice back to "no campus". Options render each campus `name`
- * but the selected VALUE is the campus `code`, which is what the BE stores.
+ * selected campus name — or the {@link placeholder} when unset — over a menu whose
+ * first entry resets the choice to the {@link placeholder} meaning. Options render each
+ * campus name but the selected VALUE is the campus `code`, which is what the BE stores.
+ *
+ * The list is ordered by `sortOrder` and each option is labelled with {@link campusLabel}
+ * HERE rather than at the call sites, so the composer, profile edit and the campus-feed
+ * filter all show the same campus with the same order and the same wording.
  */
 export const CampusPicker = ({
     campuses,
@@ -49,7 +69,14 @@ export const CampusPicker = ({
     isDisabled,
     className,
 }: CampusPickerProps) => {
-    const activeLabel = campuses.find((campus) => campus.code === value)?.name ?? placeholder
+    const locale = useLocale()
+    // Copy before sorting: the array comes from a shared SWR cache entry, and `sort` mutates.
+    const options = useMemo(
+        () => [...campuses].sort((a, b) => a.sortOrder - b.sortOrder),
+        [campuses],
+    )
+    const active = options.find((campus) => campus.code === value)
+    const activeLabel = active ? campusLabel(active, locale) : placeholder
 
     return (
         <Dropdown>
@@ -74,9 +101,13 @@ export const CampusPicker = ({
                     <DropdownItem key={NONE_KEY} id={NONE_KEY} textValue={placeholder}>
                         {placeholder}
                     </DropdownItem>
-                    {campuses.map((campus) => (
-                        <DropdownItem key={campus.code} id={campus.code} textValue={campus.name}>
-                            {campus.name}
+                    {options.map((campus) => (
+                        <DropdownItem
+                            key={campus.code}
+                            id={campus.code}
+                            textValue={campusLabel(campus, locale)}
+                        >
+                            {campusLabel(campus, locale)}
                         </DropdownItem>
                     ))}
                 </DropdownMenu>

@@ -6,7 +6,6 @@ import type {
     AiBulkArchiveResult,
     AiInsights,
     AiModelCatalog,
-    CareerSuggestionView,
     CodeExecuteResult,
     CodeExecutionSummary,
     CodeGradeResult,
@@ -251,15 +250,6 @@ export const submitCodeReviewJob = async (body: Record<string, unknown>): Promis
 
 export const submitCvReviewJob = async (body: Record<string, unknown>): Promise<JobRef> =>
     submitJob("/ai/career/cv-review", body)
-
-export const getCareerSuggestion = async (
-    body?: Record<string, unknown>,
-): Promise<CareerSuggestionView> =>
-    restRequest<CareerSuggestionView>({
-        method: "POST",
-        url: "/ai/career/suggestion",
-        data: body,
-    })
 
 export const submitExamGenerateJob = async (body: Record<string, unknown>): Promise<JobRef> =>
     submitJob("/ai/teacher/exam-generate", body)

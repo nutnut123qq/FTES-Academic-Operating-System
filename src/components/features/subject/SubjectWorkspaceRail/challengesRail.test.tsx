@@ -77,11 +77,7 @@ vi.mock("@/components/blocks/skeleton/Skeleton", () => ({
     Skeleton: () => <div data-testid="skeleton" />,
 }))
 
-vi.mock("@/components/features/identity", () => ({
-    UserLink: ({ displayName }: { displayName?: string }) => <span>{displayName}</span>,
-}))
-
-// Ba hook còn lại của rail: cố định ở trạng thái "đã tải xong" để chỉ còn MỘT biến số là
+// Hai hook còn lại của rail: cố định ở trạng thái "đã tải xong" để chỉ còn MỘT biến số là
 // trạng thái của hook challenge.
 vi.mock("../hooks/useQuerySubjectOverviewSwr", () => ({
     useQuerySubjectOverviewSwr: () => ({
@@ -96,9 +92,6 @@ vi.mock("../hooks/useQuerySubjectSwr", () => ({
         error: undefined,
         isMembershipLoading: false,
     }),
-}))
-vi.mock("../hooks/useQuerySubjectMembersSwr", () => ({
-    useQuerySubjectMembersSwr: () => ({ members: [], isLoading: false, error: undefined }),
 }))
 
 // Hook challenge — biến số duy nhất của bài test.

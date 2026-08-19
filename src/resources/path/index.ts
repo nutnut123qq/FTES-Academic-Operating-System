@@ -492,7 +492,6 @@ export const pathConfig = () => {
         const notifications = makeSimplePath("notifications")
         const search = makeSimplePath("search")
         const recommendations = makeSimplePath("recommendations")
-        const career = makeSimplePath("career")
         const integrations = makeSimplePath("integrations")
         const roles = makeSimplePath("admin/roles")
         return {
@@ -523,7 +522,6 @@ export const pathConfig = () => {
             notifications,
             search,
             recommendations,
-            career,
             integrations,
             roles,
             terms,

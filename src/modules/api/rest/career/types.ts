@@ -1,202 +1,17 @@
 /**
  * Request/response DTOs for the career REST controllers.
  *
- * Mirrors the backend records in `vn.ftes.aos.career.web.CareerController`,
- * `CareerSkillController`, and the `vn.ftes.aos.career.domain` entities they return.
- * StarCI identifiers are kept exactly as named in the backend contract.
- */
-
-// ---- Roadmap ----
-
-export interface CreateCareerRoadmapRequest {
-    slug: string
-    title: string
-    track?: string
-}
-
-export interface PatchCareerRoadmapRequest {
-    title?: string
-    status?: string
-}
-
-export interface CareerRoadmap {
-    id: string
-    slug: string
-    title: string
-    description?: string
-    track?: string
-    starciRoadmapId?: string
-    status: string
-    createdAt: string
-    updatedAt: string
-}
-
-/**
- * One step of `GET /career/roadmaps/{slug}` → `steps[]`.
+ * Mirrors the backend records in `vn.ftes.aos.career.web.CareerSkillController`, the
+ * Elo endpoints, and `CvProfileController`. StarCI identifiers are kept exactly as
+ * named in the backend contract.
  *
- * WIRE SHAPE: the backend serves these rows straight from a
- * `JdbcTemplate.queryForList` (`RoadmapService#steps`), so the keys arrive
- * **snake_case** (`step_order`, `skill_ids`, `subject_ids`, `target_levels`,
- * `starci_course_refs`); `uuid[]` columns are flattened to `string[]` and `jsonb`
- * columns to plain JSON before serialisation. The camelCase spellings are kept as
- * optional aliases so a future DTO-based response keeps type-checking — read the row
- * tolerantly (accept both) instead of assuming one.
+ * SCOPE (2026-08-19): the roadmap / opportunity / mentorship / recommendation DTOs
+ * lived here for the Career Center and the subject Career Bridge tab. Both surfaces
+ * were removed from the product, so those DTOs went with them — what is left is what
+ * the skill graph, the profile Elo chart and the CV builder still read.
  */
-export interface CareerRoadmapStep {
-    id: string
-    title: string
-    description?: string
-    /** Step position; `step_order` on the wire today. */
-    stepOrder?: number
-    step_order?: number
-    /** Skill UUIDs required by the step (`uuid[]` → `string[]`). */
-    skillIds?: unknown
-    skill_ids?: unknown
-    /** `{skillId: targetLevel}` object. */
-    targetLevels?: unknown
-    target_levels?: unknown
-    /** Subject UUIDs the step points at (`uuid[]` → `string[]`). */
-    subjectIds?: unknown
-    subject_ids?: unknown
-    /** StarCI course refs; only filled once the integration hub syncs them. */
-    starciCourseRefs?: unknown
-    starci_course_refs?: unknown
-}
-
-export interface CareerRoadmapDetail {
-    roadmap: CareerRoadmap
-    steps: CareerRoadmapStep[]
-}
-
-export interface CareerRoadmapEnrollment {
-    userId: string
-    roadmapId: string
-    currentStep: number
-    status: string
-    enrolledAt: string
-    updatedAt: string
-}
-
-export interface CareerMyRoadmapStepSkill {
-    skillId: string
-    currentLevel: number
-    targetLevel: number
-    met: boolean
-}
-
-export interface CareerMyRoadmapStep {
-    stepOrder: number
-    title: string
-    skills: CareerMyRoadmapStepSkill[]
-    completed: boolean
-}
-
-export interface CareerMyRoadmap {
-    roadmapId: string
-    currentStep: number
-    status: string
-    steps: CareerMyRoadmapStep[]
-}
-
-// ---- Opportunity ----
-
-export interface CreateCareerOpportunityRequest {
-    type: string
-    title: string
-    description: string
-}
-
-export interface PatchCareerOpportunityRequest {
-    status: string
-}
-
-export interface ApplyCareerOpportunityRequest {
-    coverNote?: string
-    resumeAssetRef?: string
-}
-
-export interface PatchCareerApplicationStatusRequest {
-    status: string
-}
-
-export interface CareerOpportunity {
-    id: string
-    type: string
-    title: string
-    company?: string
-    description: string
-    /** Backend JSON string of required skills. */
-    requiredSkills: string
-    track?: string
-    location?: string
-    remote: boolean
-    source: string
-    starciRef?: string
-    applyDeadline?: string
-    status: string
-    createdBy?: string
-    createdAt: string
-    updatedAt: string
-}
-
-export interface CareerOpportunityApplication {
-    id: string
-    opportunityId: string
-    userId: string
-    coverNote?: string
-    resumeAssetRef?: string
-    status: string
-    createdAt: string
-    updatedAt: string
-}
-
-// ---- Mentorship ----
-
-export interface RequestCareerMentorRequest {
-    track: string
-    message: string
-}
-
-export interface CareerMentorshipActionRequest {
-    action: string
-}
-
-export interface CareerMentorship {
-    id: string
-    mentorId: string
-    menteeId: string
-    track?: string
-    status: string
-    message?: string
-    startedAt?: string
-    endedAt?: string
-    createdAt: string
-}
-
-// ---- Recommendation ----
-
-export interface CareerRecommendation {
-    userId: string
-    kind: string
-    /** Backend JSON string payload. */
-    payload: string
-    computedAt: string
-}
 
 // ---- Skill ----
-
-export interface CreateCareerSkillRequest {
-    slug: string
-    name: string
-    category: string
-    levels: string
-}
-
-export interface PatchCareerSkillRequest {
-    name?: string
-    description?: string
-    levels?: string
-}
 
 export interface CareerSkill {
     id: string
@@ -233,30 +48,6 @@ export interface CareerSkillProgress {
     sourceBreakdown: string
     lastAssessedAt?: string
     updatedAt: string
-}
-
-export interface CareerSelfAssessmentRequest {
-    resultingLevel?: number
-    attemptId?: string
-}
-
-export interface CareerMentorAssessmentRequest {
-    kind?: string
-    score?: number
-    resultingLevel?: number
-    evidenceRef?: string
-}
-
-export interface CareerSkillAssessment {
-    id: string
-    userId: string
-    skillId: string
-    kind: string
-    score?: number
-    resultingLevel?: number
-    assessedBy?: string
-    evidenceRef?: string
-    createdAt: string
 }
 
 // ---- Skill categories & Elo (change `course-skill-exp`, renamed in `skill-elo-rename`) ----

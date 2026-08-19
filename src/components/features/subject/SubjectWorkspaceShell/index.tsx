@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
-import { Typography, cn } from "@heroui/react"
+import { Button, Dropdown, Label, Modal, Typography } from "@heroui/react"
 import {
     SquaresFourIcon,
     FolderIcon,
@@ -9,9 +9,13 @@ import {
     ChatCircleIcon,
     UsersIcon,
     ChartBarIcon,
-    BriefcaseIcon,
+    DotsThreeIcon,
+    PushPinIcon,
+    SignOutIcon,
+    UserIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
+import { useSearchParams } from "next/navigation"
 import { usePathname, useRouter } from "@/i18n/navigation"
 import { CollapsibleSidebar } from "@/components/blocks/navigation/CollapsibleSidebar"
 import { SubjectWorkspaceRail } from "../SubjectWorkspaceRail"
@@ -19,7 +23,10 @@ import { SidebarNavGroup } from "@/components/blocks/navigation/SidebarNavGroup"
 import { SidebarNavItem } from "@/components/blocks/navigation/SidebarNavItem"
 import { TabsCard } from "@/components/blocks/navigation/TabsCard"
 import { ProgressMeter } from "@/components/blocks/stats/ProgressMeter"
+import { UserLink } from "@/components/features/identity"
 import { useQuerySubjectSwr } from "../hooks/useQuerySubjectSwr"
+import { useQuerySubjectMembersSwr } from "../hooks/useQuerySubjectMembersSwr"
+import { useMutateSubjectMembershipSwr } from "../hooks/useMutateSubjectMembershipSwr"
 
 /** Props for {@link SubjectWorkspaceShell}. */
 interface SubjectWorkspaceShellProps {
@@ -57,8 +64,8 @@ const NAV_GROUPS: Array<{ label: string; items: Array<NavItem> }> = [
         items: [
             { key: "overview", icon: <SquaresFourIcon className="size-5" aria-hidden focusable="false" />, segment: "" },
             { key: "discussion", icon: <ChatCircleIcon className="size-5" aria-hidden focusable="false" />, segment: "discussion" },
-            { key: "resources", icon: <FolderIcon className="size-5" aria-hidden focusable="false" />, segment: "resources" },
             { key: "practice", icon: <TargetIcon className="size-5" aria-hidden focusable="false" />, segment: "practice" },
+            { key: "resources", icon: <FolderIcon className="size-5" aria-hidden focusable="false" />, segment: "resources" },
         ],
     },
     {
@@ -71,13 +78,15 @@ const NAV_GROUPS: Array<{ label: string; items: Array<NavItem> }> = [
         label: "insight",
         items: [
             { key: "statistics", icon: <ChartBarIcon className="size-5" aria-hidden focusable="false" />, segment: "statistics" },
-            { key: "career", icon: <BriefcaseIcon className="size-5" aria-hidden focusable="false" />, segment: "career" },
         ],
     },
 ]
 
 /** The same rows, flattened — the mobile tab strip has no group captions. */
 const NAV_ITEMS: Array<NavItem> = NAV_GROUPS.flatMap((group) => group.items)
+
+/** How many member avatars the identity facepile shows before the "+N" pill takes over. */
+const FACEPILE_MEMBERS = 6
 
 /**
  * Subject Workspace shell (archetype A · sidebar rail — chosen 2026-07-01).
@@ -131,13 +140,26 @@ export const SubjectWorkspaceShell = ({
     const router = useRouter()
     const pathname = usePathname()
     const { subject } = useQuerySubjectSwr(subjectId)
+    // Facepile của hàng danh tính đọc CHÍNH hook mà tab Thành viên dùng — cùng key SWR
+    // với lời gọi cũ ở rail, nên dời thẻ "Thành viên" lên header không đẻ request thứ hai.
+    const { members } = useQuerySubjectMembersSwr(subjectId)
+    const { leave, isLeaving } = useMutateSubjectMembershipSwr(subjectId)
     // broken header image → initials badge (spec: never show a broken glyph);
     // keyed by src so a subject change retries its own image
     const [brokenImageUrl, setBrokenImageUrl] = useState<string | null>(null)
+    const [leaveOpen, setLeaveOpen] = useState(false)
     const imageUrl =
         subject?.imageUrl && subject.imageUrl !== brokenImageUrl ? subject.imageUrl : null
+    const shownMembers = members.slice(0, FACEPILE_MEMBERS)
+    const memberOverflow = members.length - shownMembers.length
 
     const base = `/subjects/${subjectId}`
+    // Bộ lọc "Bài của tôi" SỐNG Ở URL (`?mine=1`), không phải state của component. Menu ⋯
+    // nay đứng ở header của SHELL còn feed nằm trong tab Tổng quan (`children`) — hai cây
+    // React rời nhau, nên query là kênh duy nhất nối được mà không phải dựng store; cùng
+    // lối `?tool=` mà tab AI của môn đã dùng để trỏ vào một bề mặt con.
+    const searchParams = useSearchParams()
+    const mineFilterOn = searchParams.get("mine") === "1"
     const hrefFor = (segment: string) => (segment ? `${base}/${segment}` : base)
     // ponytail: nguoi goi chi dinh thi tin nguoi goi, khong doan tu URL nua — trang o
     // ngoai cay `/subjects/...` khong co segment nao trong pathname de suy ra.
@@ -212,60 +234,169 @@ export const SubjectWorkspaceShell = ({
                 chỗ trống thật giữa hai rail). Trang tab tự lo padding. */}
             <div className="mx-auto w-full min-w-0 xl:max-w-[calc(100vw_-_34rem)]">
                 {/* subject identity header — cover banner (ảnh bìa) then identity row */}
-                <header className={cn("border-b border-separator")}>
-                    {/* CONTRACT A cover: an INSET banner (the subject's "ảnh bìa") —
-                        centered at `max-w-4xl` with empty gutters either side, tall
-                        enough to read the artwork (a Facebook-group cover, not a
-                        full-bleed strip). A plain <img> (not next/image) so a remote
-                        BE-provider host renders without a next.config
-                        images.remotePatterns entry; a broken src simply drops the
-                        banner and the identity row below carries the subject on its
-                        own. */}
-                    {imageUrl !== null && subject ? (
-                        <div className="px-4 pt-4 sm:px-6">
-                            <div className="mx-auto h-48 w-full max-w-4xl overflow-hidden rounded-2xl bg-default sm:h-64 lg:h-80">
-                                <img
-                                    src={imageUrl}
-                                    alt={subject.name}
-                                    className="size-full object-cover"
-                                    onError={() => setBrokenImageUrl(imageUrl)}
-                                />
-                            </div>
-                        </div>
-                    ) : null}
-                    {/* ponytail: initials badge removed (2026-08-17) — the title already
-                        carries the code, so the chip was pure duplication; the row is a
-                        plain block now instead of a 2-column flex. */}
-                    <div className="p-6">
-                        <div className="min-w-0">
-                            <Typography type="h4" weight="bold" truncate>
-                                {subject ? `${subject.code} · ${subject.name}` : subjectId}
-                            </Typography>
-                            <Typography type="body-sm" color="muted">
-                                {subject
-                                    ? `${t("credits", { count: subject.credits })} · ${t(`difficulty.${subject.difficulty}`)}`
-                                    : ""}
-                            </Typography>
-                            {/* real per-viewer progress: GraphQL `subjectMastery.completionPct`
-                                (0..100). `null` for a guest / no mastery row → no meter,
-                                never a fabricated figure. Clamped defensively so a stray
-                                out-of-range percent can't overflow the bar. */}
-                            {subject && subject.progress !== null ? (
-                                <div className="mt-1 flex items-center gap-2">
-                                    <ProgressMeter
-                                        value={Math.min(100, Math.max(0, subject.progress))}
-                                        aria-label={t("progressLabel")}
-                                        className="min-w-0 flex-1"
+                <header className="border-b border-separator">
+                    {/* Ảnh bìa và hàng danh tính DÙNG CHUNG đúng một khung (`p-4 sm:p-6`
+                        ngoài + `mx-auto max-w-4xl` trong), nên mép trái ảnh luôn thẳng mép
+                        trái tên môn ở mọi bề rộng. Trước đây ảnh có trần `max-w-4xl` + canh
+                        giữa còn hàng danh tính thì không, nên màn rộng đẩy hai mép ra xa
+                        nhau; padding cũng lệch (16px của ảnh so với 24px của hàng chữ). */}
+                    <div className="p-4 sm:p-6">
+                        <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
+                            {/* CONTRACT A cover: an INSET banner (the subject's "ảnh bìa"),
+                                tall enough to read the artwork (a Facebook-group cover, not
+                                a full-bleed strip). A plain <img> (not next/image) so a
+                                remote BE-provider host renders without a next.config
+                                images.remotePatterns entry; a broken src simply drops the
+                                banner and the identity row below carries the subject on its
+                                own. */}
+                            {imageUrl !== null && subject ? (
+                                <div className="h-48 w-full overflow-hidden rounded-2xl bg-default sm:h-64 lg:h-80">
+                                    <img
+                                        src={imageUrl}
+                                        alt={subject.name}
+                                        className="size-full object-cover"
+                                        onError={() => setBrokenImageUrl(imageUrl)}
                                     />
-                                    <Typography
-                                        type="body-xs"
-                                        color="muted"
-                                        className="shrink-0 tabular-nums"
-                                    >
-                                        {Math.round(Math.min(100, Math.max(0, subject.progress)))}%
-                                    </Typography>
                                 </div>
                             ) : null}
+                            {/* ponytail: initials badge removed (2026-08-17) — the title already
+                                carries the code, so the chip was pure duplication; the row is a
+                                plain block now instead of a 2-column flex. */}
+                            <div className="min-w-0">
+                                {/* Tên môn và menu ⋯ CÙNG MỘT HÀNG (menu dời lên từ tab Tổng
+                                    quan): tiêu đề nuốt hết chỗ thừa và cắt bớt khi hẹp, nút
+                                    giữ nguyên cỡ ở mép phải. */}
+                                <div className="flex items-center gap-3">
+                                    <Typography
+                                        type="h4"
+                                        weight="bold"
+                                        truncate
+                                        className="min-w-0 flex-1"
+                                    >
+                                        {subject ? `${subject.code} · ${subject.name}` : subjectId}
+                                    </Typography>
+                                    {subject?.isMember ? (
+                                        // Cùng khung ⋯ với MemberActionsMenu của tab Thành viên
+                                        // (Dropdown + Button isIconOnly ghost + DotsThreeIcon),
+                                        // không dựng menu riêng.
+                                        <Dropdown>
+                                            <Button
+                                                isIconOnly
+                                                size="sm"
+                                                variant="ghost"
+                                                className="shrink-0"
+                                                aria-label={t("overview.actions")}
+                                                isDisabled={isLeaving}
+                                            >
+                                                <DotsThreeIcon aria-hidden focusable="false" className="size-5" weight="bold" />
+                                            </Button>
+                                            <Dropdown.Popover>
+                                                <Dropdown.Menu aria-label={t("overview.actions")}>
+                                                    <Dropdown.Section>
+                                                        {/* react-aria cần `id` thật, không lấy được từ React key */}
+                                                        <Dropdown.Item
+                                                            id="my-content"
+                                                            textValue={t("overview.myContent")}
+                                                            onPress={() =>
+                                                                router.replace(
+                                                                    mineFilterOn ? base : `${base}?mine=1`,
+                                                                )
+                                                            }
+                                                        >
+                                                            <UserIcon aria-hidden focusable="false" className="size-5" />
+                                                            <Label>{t("overview.myContent")}</Label>
+                                                        </Dropdown.Item>
+
+                                                        {/* GHIM BÀI THẢO LUẬN — VÔ HIỆU HOÁ, chặn ở BE, không phải ở đây.
+                                                            Cờ `Post.pinned` có thật và feed môn đã trả về, nhưng:
+                                                              1. đường ghim duy nhất là POST /api/v1/admin/community/posts/{id}/pin,
+                                                                 gác `access.require("admin.community.moderate")` — quyền admin
+                                                                 NỀN TẢNG, không phải moderator của môn, nên thành viên bấm sẽ 403;
+                                                              2. và kể cả ghim được thì bài VẪN không lên đầu: `subjectFeed` gọi thẳng
+                                                                 `findSubjectFeedCursor`, câu JPQL sắp `ORDER BY p.createdAt DESC, p.id DESC`
+                                                                 và không đi qua `mergePinned` như feed công khai.
+                                                            Nút "chạy" mà không có tác dụng nhìn thấy được là kiểu hỏng tệ nhất, nên
+                                                            mục này hiện ra kèm lý do thay vì giả vờ hoạt động. Mở khoá = việc BE. */}
+                                                        <Dropdown.Item
+                                                            id="pin-post"
+                                                            isDisabled
+                                                            textValue={t("overview.pinPost")}
+                                                        >
+                                                            <PushPinIcon aria-hidden focusable="false" className="size-5" />
+                                                            <div className="flex min-w-0 flex-col">
+                                                                <Label>{t("overview.pinPost")}</Label>
+                                                                <Typography type="body-xs" color="muted">
+                                                                    {t("overview.pinPostUnavailable")}
+                                                                </Typography>
+                                                            </div>
+                                                        </Dropdown.Item>
+                                                    </Dropdown.Section>
+                                                    <Dropdown.Section>
+                                                        {/* rời môn vẫn đi qua ĐÚNG modal xác nhận cũ */}
+                                                        <Dropdown.Item
+                                                            id="leave"
+                                                            textValue={t("membership.leave")}
+                                                            onPress={() => setLeaveOpen(true)}
+                                                        >
+                                                            <SignOutIcon aria-hidden focusable="false" className="size-5" />
+                                                            <Label>{t("membership.leave")}</Label>
+                                                        </Dropdown.Item>
+                                                    </Dropdown.Section>
+                                                </Dropdown.Menu>
+                                            </Dropdown.Popover>
+                                        </Dropdown>
+                                    ) : null}
+                                </div>
+                                {/* Hàng nhận diện kiểu header nhóm Facebook: số thành viên + dãy
+                                    avatar chồng. Thay cho dòng "tín chỉ · độ khó" cũ — hai con
+                                    số đó là thuộc tính chương trình học, không nói gì về việc
+                                    đây là một không gian có người ở. */}
+                                {members.length > 0 ? (
+                                    <div className="mt-1 flex items-center gap-3">
+                                        <Typography type="body-sm" color="muted" className="shrink-0">
+                                            {t("members.count", { count: members.length })}
+                                        </Typography>
+                                        <div className="flex items-center">
+                                            {shownMembers.map((member, index) => (
+                                                <UserLink
+                                                    key={member.id}
+                                                    username={member.username}
+                                                    displayName={member.name}
+                                                    hideName
+                                                    size="sm"
+                                                    className={index > 0 ? "-ml-2" : undefined}
+                                                    classNames={{ avatar: "size-8 ring-2 ring-background" }}
+                                                />
+                                            ))}
+                                            {memberOverflow > 0 ? (
+                                                <div className="-ml-2 flex size-8 items-center justify-center rounded-full bg-default/40 text-xs text-muted ring-2 ring-background">
+                                                    +{memberOverflow}
+                                                </div>
+                                            ) : null}
+                                        </div>
+                                    </div>
+                                ) : null}
+                                {/* real per-viewer progress: GraphQL `subjectMastery.completionPct`
+                                    (0..100). `null` for a guest / no mastery row → no meter,
+                                    never a fabricated figure. Clamped defensively so a stray
+                                    out-of-range percent can't overflow the bar. */}
+                                {subject && subject.progress !== null ? (
+                                    <div className="mt-1 flex items-center gap-2">
+                                        <ProgressMeter
+                                            value={Math.min(100, Math.max(0, subject.progress))}
+                                            aria-label={t("progressLabel")}
+                                            className="min-w-0 flex-1"
+                                        />
+                                        <Typography
+                                            type="body-xs"
+                                            color="muted"
+                                            className="shrink-0 tabular-nums"
+                                        >
+                                            {Math.round(Math.min(100, Math.max(0, subject.progress)))}%
+                                        </Typography>
+                                    </div>
+                                ) : null}
+                            </div>
                         </div>
                     </div>
                 </header>
@@ -315,8 +446,10 @@ export const SubjectWorkspaceShell = ({
                 nhảy đi nơi khác — đổi nội dung theo tab thì nó thành một phần của trang,
                 đúng thứ vừa gỡ bỏ. */}
             <div className="hidden shrink-0 md:sticky md:top-16 md:block md:h-[calc(100dvh-4rem)] xl:fixed xl:right-0">
+                {/* KHÔNG có `title`: các thẻ bên trong đã tự xưng tên (Khoá học liên kết ·
+                    Tài liệu mới · Challenges), nên một dòng "Lối tắt" phía trên chỉ lặp lại
+                    điều mắt đã thấy. Nút thu/mở vẫn đứng nguyên chỗ cũ. */}
                 <CollapsibleSidebar
-                    title={t("rail.title")}
                     collapseLabel={t("collapse")}
                     expandLabel={t("expand")}
                     storageKey="subject-workspace-rail-collapsed"
@@ -326,6 +459,70 @@ export const SubjectWorkspaceShell = ({
                     <SubjectWorkspaceRail subjectId={subjectId} />
                 </CollapsibleSidebar>
             </div>
+
+            <LeaveConfirmModal
+                isOpen={leaveOpen}
+                subjectName={subject?.name ?? subjectId}
+                isLeaving={isLeaving}
+                onClose={() => setLeaveOpen(false)}
+                onConfirm={() => {
+                    setLeaveOpen(false)
+                    void leave()
+                }}
+            />
         </div>
+    )
+}
+
+/**
+ * Confirmation before leaving the workspace — leaving drops the AI tools + member-only
+ * surfaces, so it is never a one-tap action.
+ */
+const LeaveConfirmModal = ({
+    isOpen,
+    subjectName,
+    isLeaving,
+    onClose,
+    onConfirm,
+}: {
+    isOpen: boolean
+    subjectName: string
+    isLeaving: boolean
+    onClose: () => void
+    onConfirm: () => void
+}) => {
+    const t = useTranslations("subjects")
+    return (
+        <Modal isOpen={isOpen} onOpenChange={(open) => { if (!open) onClose() }}>
+            <Modal.Backdrop>
+                <Modal.Container>
+                    <Modal.Dialog className="w-full max-w-md">
+                        <Modal.Header>
+                            <Typography type="body" weight="bold">
+                                {t("membership.leaveConfirmTitle")}
+                            </Typography>
+                        </Modal.Header>
+                        <Modal.Body>
+                            <Typography type="body-sm" color="muted">
+                                {t("membership.leaveConfirmBody", { name: subjectName })}
+                            </Typography>
+                        </Modal.Body>
+                        <Modal.Footer className="justify-end gap-2">
+                            <Button variant="tertiary" onPress={onClose}>
+                                {t("membership.leaveCancel")}
+                            </Button>
+                            <Button
+                                variant="danger"
+                                isDisabled={isLeaving}
+                                isPending={isLeaving}
+                                onPress={onConfirm}
+                            >
+                                {t("membership.leaveConfirm")}
+                            </Button>
+                        </Modal.Footer>
+                    </Modal.Dialog>
+                </Modal.Container>
+            </Modal.Backdrop>
+        </Modal>
     )
 }

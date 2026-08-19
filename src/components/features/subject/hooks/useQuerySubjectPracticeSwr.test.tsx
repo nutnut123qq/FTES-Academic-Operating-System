@@ -14,8 +14,8 @@ import type { PracticeModule } from "./useQuerySubjectPracticeSwr"
  * `swr` bị mock để bắt lấy cặp `(key, fetcher)` rồi gọi thẳng fetcher — không phải chờ
  * vòng đời SWR, nên khẳng định "fetcher NÉM" là khẳng định về đúng thứ SWR sẽ nhận.
  *
- * Ranh giới còn lại vẫn giữ: FE albums / leaderboard là đọc auth-gated, hỏng thì chỉ mờ
- * ĐÚNG con số của nó chứ không kéo cả hub xuống.
+ * Ranh giới còn lại vẫn giữ: FE albums là đọc auth-gated, hỏng thì chỉ mờ ĐÚNG con số của
+ * nó chứ không kéo cả hub xuống.
  */
 
 type SwrCall = { key: unknown; fetcher: (() => unknown) | undefined }
@@ -30,19 +30,16 @@ vi.mock("swr", () => ({
 }))
 
 const getSubjectDetail = vi.fn()
-const getSubjectStatistics = vi.fn()
 const listResources = vi.fn()
 const listChallenges = vi.fn()
 
-// `@/modules/api/rest/subject` chỉ `export * from "./subject"`, nhưng hook đọc
-// `getSubjectDetail` qua index còn `getSubjectStatistics` qua module thật → mock cả hai lối.
+// `@/modules/api/rest/subject` chỉ `export * from "./subject"`; hook đọc `getSubjectDetail`
+// qua index, mock luôn cả module thật để không lệ thuộc vào lối import.
 vi.mock("@/modules/api/rest/subject/subject", () => ({
     getSubjectDetail: (...a: Array<unknown>) => getSubjectDetail(...a),
-    getSubjectStatistics: (...a: Array<unknown>) => getSubjectStatistics(...a),
 }))
 vi.mock("@/modules/api/rest/subject", () => ({
     getSubjectDetail: (...a: Array<unknown>) => getSubjectDetail(...a),
-    getSubjectStatistics: (...a: Array<unknown>) => getSubjectStatistics(...a),
 }))
 vi.mock("@/modules/api/rest/resource", () => ({
     listResources: (...a: Array<unknown>) => listResources(...a),
@@ -81,11 +78,9 @@ const view = (id: string) => ({
 beforeEach(() => {
     swrCalls.length = 0
     getSubjectDetail.mockReset()
-    getSubjectStatistics.mockReset()
     listResources.mockReset()
     listChallenges.mockReset()
     getSubjectDetail.mockResolvedValue({ id: "uuid-jpd113" })
-    getSubjectStatistics.mockResolvedValue({ leaderboard: [{}, {}] })
     listResources.mockResolvedValue({ total: 4 })
     listChallenges.mockResolvedValue([view("c1"), view("c2"), view("c3")])
 })
@@ -107,14 +102,13 @@ describe("useQuerySubjectPracticeSwr", () => {
     it("đọc kho challenge hỏng thì thẻ Coding về 0 — KHÔNG được khoá cả hub", async () => {
         // GET /api/v1/challenges chỉ cho người ĐÃ đăng nhập, còn trang môn là PUBLIC. Nếu để
         // lượt đọc này ném lên SWR thì khách chưa đăng nhập mất TOÀN BỘ hub (kể cả lối vào FE
-        // và Bảng xếp hạng vốn đọc được), thay bằng một nút "Thử lại" mà bấm mãi vẫn 401.
+        // vốn đọc được), thay bằng một nút "Thử lại" mà bấm mãi vẫn 401.
         // Thẻ Coding hiện 0 là cái giá rẻ hơn nhiều — và đúng với thứ khách được phép thấy.
         listChallenges.mockRejectedValue(new Error("401 challenges"))
         const modules = await runFetcher()
         expect(modules).toEqual([
             { key: "fe", count: 4 },
             { key: "coding", count: 0 },
-            { key: "leaderboard", count: 2 },
         ])
     })
 
@@ -124,7 +118,6 @@ describe("useQuerySubjectPracticeSwr", () => {
         expect(modules).toEqual([
             { key: "fe", count: 4 },
             { key: "coding", count: 3 },
-            { key: "leaderboard", count: 2 },
         ])
     })
 
@@ -138,14 +131,12 @@ describe("useQuerySubjectPracticeSwr", () => {
         expect(modules.find((m) => m.key === "coding")?.count).toBe(1)
     })
 
-    it("FE albums / leaderboard vẫn best-effort: hỏng thì mờ ĐÚNG số của nó, hub vẫn sống", async () => {
+    it("FE albums vẫn best-effort: hỏng thì mờ ĐÚNG số của nó, hub vẫn sống", async () => {
         listResources.mockRejectedValue(new Error("401"))
-        getSubjectStatistics.mockRejectedValue(new Error("401"))
         const modules = await runFetcher()
         expect(modules).toEqual([
             { key: "fe", count: 0 },
             { key: "coding", count: 3 },
-            { key: "leaderboard", count: 0 },
         ])
     })
 })

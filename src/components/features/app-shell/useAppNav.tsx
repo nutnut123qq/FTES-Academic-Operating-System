@@ -6,7 +6,7 @@ import {
     GraduationCapIcon,
     ChatCircleIcon,
     SquaresFourIcon,
-    NewspaperIcon,
+    RankingIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { usePathname } from "@/i18n/navigation"
@@ -19,7 +19,7 @@ import { pathConfig } from "@/resources/path"
  * reached from inside each module's own landing page.
  */
 export interface AppNavModule {
-    key: "home" | "workplace" | "course" | "community" | "blog"
+    key: "home" | "workplace" | "course" | "community" | "leaderboard"
     label: string
     icon: React.ReactNode
     /** Destination when the module label is clicked (its landing route). */
@@ -30,13 +30,17 @@ export interface AppNavModule {
 
 /**
  * The single source of the app's primary navigation — the top-level modules
- * (Home · Workplace · Course · Community · Blog), each a PLAIN LABEL LINK to
+ * (Home · Workplace · Course · Community · Leaderboard), each a PLAIN LABEL LINK to
  * its landing route. Consumed by the desktop {@link "../navbar/Navbar/HeaderNav"}
  * and the Navbar mobile drawer so the two surfaces never drift. The header does
- * NOT render sub-menus; nested features (resources, challenges, leaderboard,
- * career, groups, events, feed) live inside each module's landing page.
+ * NOT render sub-menus; nested features (resources, challenges, groups, events,
+ * feed) live inside each module's landing page.
  * `/ai` is entered from the floating mascot panel, and personal/system
  * destinations live in the Account menu — none belong to a module here.
+ *
+ * Blog swapped out of the header for Leaderboard (2026-08-19): `/blog` is still a
+ * live route, reached from the Community page's left rail
+ * ({@link "../community/CommunityShell/NavRail"}) instead of the top bar.
  *
  * DEBT — routes this comment used to claim were reachable "inside a module" but
  * that have NO entry point anywhere today (verified: zero non-test callers of the
@@ -83,7 +87,7 @@ export const useAppNav = (): Array<AppNavModule> => {
             makeModule("workplace", p.subjects().build(), <SquaresFourIcon className="size-5" />),
             makeModule("course", p.course().build(), <GraduationCapIcon className="size-5" />),
             makeModule("community", p.community().build(), <ChatCircleIcon className="size-5" />),
-            makeModule("blog", p.blog().build(), <NewspaperIcon className="size-5" />),
+            makeModule("leaderboard", p.leaderboard().build(), <RankingIcon className="size-5" />),
         ]
     }, [pathname, t])
 }

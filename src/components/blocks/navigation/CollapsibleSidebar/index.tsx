@@ -32,8 +32,12 @@ const COLLAPSED_WIDTH = "4rem"
 
 /** Props for the {@link CollapsibleSidebar} block. */
 export interface CollapsibleSidebarProps extends WithClassNames<undefined> {
-    /** Heading shown in the panel header (hidden while collapsed). */
-    title: string
+    /**
+     * Heading shown in the panel header (hidden while collapsed). Optional: a rail
+     * whose rows already say what the column is (the subject workspace shortcut rail)
+     * renders the toggle alone rather than a caption that names nothing new.
+     */
+    title?: string
     /** Accessible label for the collapse toggle (expanded state). */
     collapseLabel: string
     /** Accessible label for the expand toggle (collapsed state). */
@@ -121,7 +125,7 @@ export const CollapsibleSidebar = ({
                     )}
                 >
                     <AnimatePresence initial={false}>
-                        {!collapsed ? (
+                        {!collapsed && title !== undefined ? (
                             <motion.div
                                 key="title"
                                 initial={{ opacity: 0 }}

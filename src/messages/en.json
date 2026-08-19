@@ -478,7 +478,7 @@
         "primary": "Primary navigation",
         "courses": "Courses",
         "community": "Community",
-        "blog": "Blog",
+        "leaderboard": "Leaderboard",
         "quests": "Quests",
         "activity": "Activity",
         "wallet": "F.Wallet",
@@ -3932,33 +3932,6 @@
             "LESSON_COMPLETED": "Based on a lesson you completed"
         }
     },
-    "careerCenter": {
-        "title": "Career Center",
-        "subtitle": "Turn your skills into a career: track your skill graph, follow a roadmap, and find jobs.",
-        "skills": "Skill graph",
-        "roadmaps": "Career roadmaps",
-        "jobs": "Jobs",
-        "viewRoadmap": "View roadmap",
-        "apply": "Apply",
-        "progressLabel": "{skill} progress",
-        "roadmapKeys": {
-            "backend": "Backend Developer",
-            "frontend": "Frontend Developer",
-            "mobile": "Mobile Developer",
-            "ai": "AI / Machine Learning",
-            "data": "Data Engineer",
-            "devops": "DevOps Engineer"
-        },
-        "jobTypes": {
-            "internship": "Internship",
-            "fulltime": "Full-time"
-        },
-        "loadError": "Couldn't load career data.",
-        "retry": "Try again",
-        "skillsEmpty": "No skills are being tracked yet.",
-        "roadmapsEmpty": "No career roadmaps yet.",
-        "jobsEmpty": "No matching jobs yet."
-    },
     "rbac": {
         "title": "Roles & Permissions",
         "subtitle": "Review the system roles and exactly which permissions each one grants.",
@@ -5755,8 +5728,7 @@
             "practice": "Practice",
             "ai": "FrosTES",
             "members": "Members",
-            "statistics": "Statistics",
-            "career": "Career"
+            "statistics": "Statistics"
         },
         "navLabel": "Subject areas",
         "overview": {
@@ -5768,7 +5740,6 @@
             "commentsAria": "{count} comments",
             "joined": "You've joined this space",
             "dismiss": "Dismiss notice",
-            "statsLine": "{members} members · {moderators} moderators · {resources} resources",
             "compose": "New post",
             "pinned": "Pinned by moderator",
             "discussions": "Recent discussions",
@@ -5836,10 +5807,6 @@
                 "coding": {
                     "title": "Challenge (PE)",
                     "meta": "{count} problems"
-                },
-                "leaderboard": {
-                    "title": "Leaderboard",
-                    "meta": "{count} participants"
                 }
             },
             "backToHub": "Back to practice",
@@ -5965,14 +5932,6 @@
                     "notOpen": "This challenge is not open for submissions.",
                     "courseLocked": "This challenge belongs to a course — enroll in it first."
                 }
-            },
-            "leaderboard": {
-                "title": "Leaderboard",
-                "subtitle": "Ranked by the subject's experience points (XP).",
-                "xp": "{xp} XP",
-                "you": "You",
-                "empty": "No one on the leaderboard yet",
-                "error": "Couldn't load the leaderboard"
             },
             "exam": {
                 "pe": {
@@ -6180,6 +6139,7 @@
         },
         "members": {
             "title": "Members",
+            "count": "{count} members",
             "all": "All",
             "roles": {
                 "student": "Student",
@@ -6418,141 +6378,6 @@
                 }
             }
         },
-        "career": {
-            "title": "Career bridge",
-            "skills": "Related skills",
-            "careers": "Related careers",
-            "nextSubject": "Suggested next subject",
-            "nextSubjectHint": "Recommended by roadmap",
-            "skillGraph": "Skill map",
-            "demand": {
-                "high": "High demand",
-                "medium": "Medium demand",
-                "low": "Low demand"
-            },
-            "loadError": "Couldn't load career info.",
-            "retry": "Try again",
-            "subtitle": "Skills, roadmaps and opportunities tied to this subject",
-            "openCenter": "Career Center",
-            "empty": "No career data for this subject yet.",
-            "skillsHint": "Skills mapped to this subject and your mastery",
-            "skillsEmpty": "No skill is mapped to this subject yet.",
-            "skillLevel": "Level {level}/{max}",
-            "skillTarget": "Target level {level} · {gap} to go",
-            "skillEligible": "Eligible for level {level}",
-            "roadmaps": "Career roadmaps",
-            "roadmapsRelatedHint": "Roadmaps with a step requiring this subject's skills are flagged below",
-            "roadmapsGeneralHint": "Platform-wide suggestions — no roadmap is tied to this subject yet",
-            "roadmapsEmpty": "No roadmap has been published yet.",
-            "related": "Related to this subject",
-            "roadmapMatched": "Requires: {skills}",
-            "roadmapEnroll": "Follow roadmap",
-            "roadmapEnrolled": "Following",
-            "roadmapEnrollSuccess": "You joined the roadmap.",
-            "opportunities": "Opportunities",
-            "opportunitiesRelatedHint": "Postings on this subject's track are flagged below",
-            "opportunitiesGeneralHint": "All open postings — not filtered by subject",
-            "opportunitiesEmpty": "No open opportunity right now.",
-            "opportunityApply": "Apply",
-            "opportunityApplied": "Applied",
-            "opportunityApplySuccess": "Your application was sent.",
-            "opportunityTypes": {
-                "internship": "Internship",
-                "job": "Full-time",
-                "portfolioReview": "Portfolio review",
-                "other": "Other"
-            },
-            "remote": "Remote",
-            "deadline": "Deadline {date}",
-            "careerPath": "Best-fit track: {track}",
-            "careerPathHint": "Derived from your skill levels across the roadmaps",
-            "viewSubject": "View subject",
-            "roadmapsPartialHint": "Platform-wide suggestions — only {checked} of {total} roadmaps were checked against this subject",
-            "skillsUnresolved": "{count} skill(s) mapped to this subject are missing from the skill catalogue.",
-            "signInTitle": "Sign in to see the career data.",
-            "signIn": "Sign in",
-            "sectionError": "Couldn't load this section.",
-            "tracks": {
-                "BACKEND": "Backend",
-                "FRONTEND": "Frontend",
-                "MOBILE": "Mobile",
-                "AI": "AI",
-                "DATA": "Data",
-                "DEVOPS": "DevOps"
-            },
-            "skillCategories": {
-                "LANGUAGE": "Language",
-                "FRAMEWORK": "Framework",
-                "DATABASE": "Database",
-                "DEVOPS": "DevOps",
-                "SOFT_SKILL": "Soft skill",
-                "CS_FOUNDATION": "CS foundation",
-                "TOOL": "Tool",
-                "DOMAIN": "Domain"
-            },
-            "admin": {
-                "title": "Career content admin",
-                "hint": "Visible to career managers only. Everything here applies platform-wide, not just to this subject.",
-                "skillTitle": "Add a skill",
-                "skillMapHint": "A new skill goes into the shared catalogue. To make it show up under Related skills, map it to this subject in the section just below.",
-                "slugLabel": "Slug (lowercase, dash-separated)",
-                "skillNameLabel": "Skill name",
-                "categoryLabel": "Category",
-                "levelsHint": "Level ladder — one rung per line: name | threshold",
-                "levelsLabel": "Level ladder",
-                "levelsPlaceholder": "Beginner | 0",
-                "levelsParsed": "{count} valid levels detected",
-                "createSkill": "Create skill",
-                "skillCreated": "Skill created.",
-                "roadmapTitle": "Add a roadmap",
-                "roadmapTitleLabel": "Roadmap title",
-                "trackLabel": "Track (optional)",
-                "roadmapDraftHint": "A new roadmap starts as a draft; publish it before it is listed or can be followed.",
-                "createRoadmap": "Create roadmap",
-                "roadmapCreated": "Roadmap created as a draft.",
-                "roadmapPublished": "Roadmap published.",
-                "draftBadge": "Draft — not visible to learners yet",
-                "publish": "Publish",
-                "opportunityTitle": "Post an opportunity",
-                "opportunityFieldsHint": "The create API only accepts type, title and description. Company, track, location and deadline must be filled in by the backend.",
-                "opportunityTitleLabel": "Opportunity title",
-                "opportunityDescriptionLabel": "Description",
-                "opportunityDraftHint": "A new posting starts as a draft; publish it before it can receive applications.",
-                "createOpportunity": "Create posting",
-                "opportunityCreated": "Posting created as a draft.",
-                "opportunityPublished": "Posting published.",
-                "draftsTitle": "Drafts waiting to be published",
-                "draftsEmpty": "No drafts.",
-                "draftsError": "Could not load the drafts.",
-                "map": {
-                    "title": "Map a skill to this subject",
-                    "hint": "Pick a skill from the catalogue and map it to the subject you are viewing. The weight (0–1) says how central the skill is to it.",
-                    "skillLabel": "Skill",
-                    "skillPlaceholder": "— Pick a skill —",
-                    "skillsLoading": "Loading the skill catalogue…",
-                    "skillsError": "Could not load the skill catalogue.",
-                    "weightLabel": "Weight 0–1 (leave empty for the default)",
-                    "weightInvalid": "The weight must be a number between 0 and 1.",
-                    "weightValue": "Weight {weight}",
-                    "attach": "Map to this subject",
-                    "updateWeight": "Update the weight",
-                    "detachCurrent": "Unmap from this subject",
-                    "detach": "Unmap",
-                    "attached": "Skill mapped to the subject.",
-                    "detached": "Skill unmapped from the subject.",
-                    "subjectNotFound": "The backend cannot find that subject (it may have been deleted), so it refused the change.",
-                    "currentSubjectHint": "Viewing: {code} — {name}",
-                    "currentSubjectLoading": "Loading the subject you are viewing…",
-                    "currentSubject": "This subject",
-                    "listTitle": "Subjects this skill is mapped to",
-                    "listLoading": "Loading the skill's subjects…",
-                    "listEmpty": "This skill is not mapped to any subject yet.",
-                    "listError": "Could not load the skill's subjects.",
-                    "missingSubject": "Subject name not found",
-                    "catalogueUnavailable": "The subject catalogue has not loaded, so ids are shown instead of names."
-                }
-            }
-        },
         "membership": {
             "join": "Join subject",
             "joinHint": "Join to unlock this subject's FrosTES tools, resources and discussions.",
@@ -6568,9 +6393,6 @@
             "forbidden": "You are not allowed to do this.",
             "notFound": "This subject no longer exists.",
             "rateLimited": "Too many attempts. Please wait a moment and try again."
-        },
-        "rail": {
-            "title": "Shortcuts"
         }
     },
     "elo": {
@@ -7054,7 +6876,6 @@
             "justNow": "just now",
             "reply": "Reply",
             "replyPlaceholder": "Write a reply…",
-            "cancelReply": "Cancel",
             "like": "Like",
             "unlike": "Unlike",
             "likeCount": "{count} likes",
@@ -7259,6 +7080,7 @@
         "menu": {
             "groups": "Groups",
             "events": "Events",
+            "blog": "Blog",
             "saved": "Saved",
             "poll": "Poll",
             "moderation": "Moderation"

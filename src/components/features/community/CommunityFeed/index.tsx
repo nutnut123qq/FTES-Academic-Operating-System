@@ -583,9 +583,8 @@ export const CommunityFeed = ({ tab = "forYou" }: { tab?: CommunityFeedTab } = {
      * The BE feed read is viewer-scoped, so a guest gets 401 `PLATFORM_UNAUTHORIZED`
      * rather than a public feed. That is an AUTH GATE, not a broken request — routing
      * it into the generic error state showed "Không tải được bảng tin" with a Retry
-     * button that could never succeed. Detect the gate (duck-typed `status`, mirroring
-     * `sectionStatusOf` in the subject-career hook, plus the platform error code that
-     * the GraphQL gateway returns) and invite sign-in instead.
+     * button that could never succeed. Detect the gate (duck-typed `status`, plus the
+     * platform error code that the GraphQL gateway returns) and invite sign-in instead.
      */
     const isAuthGate =
         !authenticated &&

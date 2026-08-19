@@ -13,7 +13,6 @@ import {
 import { PracticeHub } from "./PracticeHub"
 import { CodingChallengeList } from "./CodingChallengeList"
 import { ExamList } from "./ExamList"
-import { PracticeLeaderboard } from "./PracticeLeaderboard"
 
 /** The in-panel view: the hub, or one opened module. */
 type PracticeView = "hub" | PracticeModuleKey
@@ -30,7 +29,9 @@ type PracticeView = "hub" | PracticeModuleKey
  *   locked.
  * - **FE — Final Exam** — the subject's exam albums (`GET /resources?subjectId=&type=FE`);
  *   an album opens its own route: up to 50 pictures, each with its own comment thread.
- * - **Leaderboard** — the subject leaderboard.
+ *
+ * There is no Leaderboard module here any more (removed 2026-08-19) — the subject's XP
+ * board is read from the Statistics tab, and the global board owns `/leaderboard`.
  *
  * The AI quiz / AI flashcard generators are a DIFFERENT surface and stay where they are
  * (the subject's AI tools tab) — they were never these cards.
@@ -54,11 +55,6 @@ export const SubjectPractice = () => {
                 <CodingChallengeList subjectId={subjectId} onBack={backToHub} />
             </div>
         )
-    }
-
-    // leaderboard — a compact leaderboard (podium + ranked list + XP bars)
-    if (view === "leaderboard") {
-        return <PracticeLeaderboard subjectId={subjectId} onBack={backToHub} />
     }
 
     // FE — the exam album list (a row routes to the album's own page)
@@ -87,10 +83,9 @@ export const SubjectPractice = () => {
     )
 }
 
-/** Skeleton của lưới hub — ba thẻ module, đúng khung `PracticeHub` để không nhảy layout. */
+/** Skeleton của lưới hub — hai thẻ module, đúng khung `PracticeHub` để không nhảy layout. */
 const PracticeHubSkeleton = () => (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Skeleton className="h-36 w-full rounded-2xl" />
         <Skeleton className="h-36 w-full rounded-2xl" />
         <Skeleton className="h-36 w-full rounded-2xl" />
     </div>

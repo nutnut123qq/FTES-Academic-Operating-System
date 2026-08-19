@@ -10,7 +10,17 @@ import type { WithClassNames } from "@/modules/types/base/class-name"
 /** Props for {@link CommentComposer}. */
 export interface CommentComposerProps extends WithClassNames<undefined> {
     /** Called with the trimmed body when the user submits a non-empty comment. */
-    onSubmit: (body: string) => void
+    /**
+     * Hands the trimmed draft over. Return `false` (or a promise of it) to say the send
+     * FAILED and keep the draft in the box; anything else — including the plain `void`
+     * every older caller returns — clears it as before.
+     *
+     * The escape hatch exists because clearing unconditionally loses what the reader
+     * typed the moment the network hiccups: they watch a long reply vanish and have
+     * nothing to retry with. Opt-in rather than required, so callers that genuinely
+     * cannot fail (or do their own optimistic insert) stay untouched.
+     */
+    onSubmit: (body: string) => void | boolean | Promise<void | boolean>
     /** Placeholder text for the textarea. */
     placeholder?: string
     /** Label for the submit button (defaults to a generic "post" copy). */
@@ -38,6 +48,16 @@ export interface CommentComposerProps extends WithClassNames<undefined> {
      * draft is never lost at a submit-time gate. No-op for non-collapsible composers.
      */
     onBeforeExpand?: () => boolean
+    /**
+     * Focus the editor as soon as it renders. Defaults to `collapsible`, i.e. a composer
+     * that just expanded keeps the caret.
+     *
+     * A REPLY composer is NOT collapsible, so it does not get this by default and has to
+     * ask for it explicitly — which it should: it only exists because the reader just
+     * pressed "reply", and making them click again to type is a regression. Do not drop
+     * the prop at those call sites on the assumption that the default covers it.
+     */
+    autoFocus?: boolean
 }
 
 /**
@@ -60,6 +80,7 @@ export const CommentComposer = ({
     currentUser,
     collapsible,
     onBeforeExpand,
+    autoFocus = collapsible,
     className,
 }: CommentComposerProps) => {
     const t = useTranslations()
@@ -75,11 +96,17 @@ export const CommentComposer = ({
     const resolvedPlaceholder = placeholder ?? t("discussion.placeholder")
 
     // submit only non-empty drafts, then clear (and re-collapse a collapsible composer)
-    const handleSubmit = () => {
+    // — unless the caller says the send failed, in which case the draft stays put so the
+    // reader can retry instead of retyping. `await` handles the async callers; a `void`
+    // return resolves to `undefined`, which is not `false`, so old behaviour is intact.
+    const handleSubmit = async () => {
         if (!trimmed) {
             return
         }
-        onSubmit(trimmed)
+        const sent = await onSubmit(trimmed)
+        if (sent === false) {
+            return
+        }
         setBody("")
         if (collapsible) {
             setExpanded(false)
@@ -133,7 +160,7 @@ export const CommentComposer = ({
                 toolbar="comment"
                 placeholder={resolvedPlaceholder}
                 ariaLabel={resolvedPlaceholder}
-                autoFocus={collapsible}
+                autoFocus={autoFocus}
             />
             <div className="flex items-center justify-start gap-2">
                 <Button

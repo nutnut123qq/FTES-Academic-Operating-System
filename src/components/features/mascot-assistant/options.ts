@@ -73,8 +73,7 @@ export interface AssistantOptionSet {
  * plus the CV BUILDER (`/profile/cv`, which lives outside `/ai/tools` but is the
  * "làm CV" half of the career pair). `tutor` maps to the hub itself (`/ai`) — its
  * "continue learning" jump is resolved there from the viewer's enrollments, so the
- * panel must not try to guess a course URL. `planner` is the AI STUDY-PLAN tool,
- * NOT the career roadmap page, per the product decision recorded for that change.
+ * panel must not try to guess a course URL. `planner` is the AI STUDY-PLAN tool.
  *
  * ponytail: labels stay a static list, not a fetch of `/ai/quotas/me` — a hover
  * panel must not wait on the network, and every route here exists unconditionally.
@@ -116,7 +115,7 @@ const ROUTE_SETS: ReadonlyArray<{ pattern: RegExp; keys: ReadonlyArray<keyof typ
     // coding surfaces: fixing and drilling code
     { pattern: /^\/(?:challenges|practice|workflow)(?:\/|$)/, keys: ["debug", "quiz", "chat"] },
     // career surfaces
-    { pattern: /^\/(?:profile|career|marketplace)(?:\/|$)/, keys: ["cv", "cvReview", "chat"] },
+    { pattern: /^\/(?:profile|marketplace)(?:\/|$)/, keys: ["cv", "cvReview", "chat"] },
     // study material
     { pattern: /^\/(?:resources|blog|search)(?:\/|$)/, keys: ["summary", "flashcards", "chat"] },
 ]

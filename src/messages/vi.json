@@ -478,7 +478,7 @@
         "primary": "Điều hướng chính",
         "courses": "Khóa học",
         "community": "Cộng đồng",
-        "blog": "Blog",
+        "leaderboard": "Bảng xếp hạng",
         "quests": "Nhiệm vụ",
         "activity": "Hoạt động",
         "wallet": "F.Wallet",
@@ -3932,33 +3932,6 @@
             "LESSON_COMPLETED": "Dựa trên bài bạn đã hoàn thành"
         }
     },
-    "careerCenter": {
-        "title": "Trung tâm Hướng nghiệp",
-        "subtitle": "Biến kỹ năng thành sự nghiệp: theo dõi biểu đồ kỹ năng, đi theo lộ trình và tìm việc làm.",
-        "skills": "Biểu đồ kỹ năng",
-        "roadmaps": "Lộ trình nghề nghiệp",
-        "jobs": "Việc làm",
-        "viewRoadmap": "Xem lộ trình",
-        "apply": "Ứng tuyển",
-        "progressLabel": "Tiến độ {skill}",
-        "roadmapKeys": {
-            "backend": "Lập trình viên Backend",
-            "frontend": "Lập trình viên Frontend",
-            "mobile": "Lập trình viên Mobile",
-            "ai": "AI / Học máy",
-            "data": "Kỹ sư Dữ liệu",
-            "devops": "Kỹ sư DevOps"
-        },
-        "jobTypes": {
-            "internship": "Thực tập",
-            "fulltime": "Toàn thời gian"
-        },
-        "loadError": "Không tải được dữ liệu hướng nghiệp.",
-        "retry": "Thử lại",
-        "skillsEmpty": "Chưa có kỹ năng nào được theo dõi.",
-        "roadmapsEmpty": "Chưa có lộ trình nghề nghiệp nào.",
-        "jobsEmpty": "Chưa có việc làm phù hợp."
-    },
     "rbac": {
         "title": "Vai trò & Quyền hạn",
         "subtitle": "Xem các vai trò hệ thống và chính xác những quyền mà mỗi vai trò được cấp.",
@@ -5755,8 +5728,7 @@
             "practice": "Luyện tập",
             "ai": "FrosTES",
             "members": "Thành viên",
-            "statistics": "Thống kê",
-            "career": "Nghề nghiệp"
+            "statistics": "Thống kê"
         },
         "navLabel": "Khu vực môn học",
         "overview": {
@@ -5768,7 +5740,6 @@
             "commentsAria": "{count} bình luận",
             "joined": "Bạn đã tham gia không gian này",
             "dismiss": "Ẩn thông báo",
-            "statsLine": "{members} thành viên · {moderators} moderator · {resources} tài liệu",
             "compose": "Đăng bài",
             "pinned": "Ghim bởi moderator",
             "discussions": "Thảo luận gần đây",
@@ -5836,10 +5807,6 @@
                 "coding": {
                     "title": "Challenge (PE)",
                     "meta": "{count} bài"
-                },
-                "leaderboard": {
-                    "title": "Bảng xếp hạng",
-                    "meta": "{count} người tham gia"
                 }
             },
             "backToHub": "Về trang luyện tập",
@@ -5965,14 +5932,6 @@
                     "notOpen": "Thử thách chưa mở hoặc đã đóng nộp bài.",
                     "courseLocked": "Thử thách thuộc khoá học — bạn cần ghi danh khoá đó trước."
                 }
-            },
-            "leaderboard": {
-                "title": "Bảng xếp hạng",
-                "subtitle": "Xếp hạng theo điểm kinh nghiệm (XP) của môn học.",
-                "xp": "{xp} XP",
-                "you": "Bạn",
-                "empty": "Chưa có ai trên bảng xếp hạng",
-                "error": "Không tải được bảng xếp hạng"
             },
             "exam": {
                 "pe": {
@@ -6180,6 +6139,7 @@
         },
         "members": {
             "title": "Thành viên",
+            "count": "{count} thành viên",
             "all": "Tất cả",
             "roles": {
                 "student": "Học viên",
@@ -6418,141 +6378,6 @@
                 }
             }
         },
-        "career": {
-            "title": "Cầu nối nghề nghiệp",
-            "skills": "Kỹ năng liên quan",
-            "careers": "Nghề liên quan",
-            "nextSubject": "Môn học tiếp theo",
-            "nextSubjectHint": "Gợi ý theo lộ trình",
-            "skillGraph": "Bản đồ kỹ năng",
-            "demand": {
-                "high": "Nhu cầu cao",
-                "medium": "Nhu cầu vừa",
-                "low": "Nhu cầu thấp"
-            },
-            "loadError": "Không tải được thông tin nghề nghiệp.",
-            "retry": "Thử lại",
-            "subtitle": "Kỹ năng, lộ trình và cơ hội liên quan tới môn này",
-            "openCenter": "Trung tâm nghề nghiệp",
-            "empty": "Chưa có dữ liệu định hướng nghề cho môn này.",
-            "skillsHint": "Kỹ năng hệ thống gắn với môn này và mức thành thạo của bạn",
-            "skillsEmpty": "Môn này chưa được gắn kỹ năng nào.",
-            "skillLevel": "Cấp {level}/{max}",
-            "skillTarget": "Mục tiêu cấp {level} · còn {gap}",
-            "skillEligible": "Đủ điều kiện lên cấp {level}",
-            "roadmaps": "Lộ trình nghề nghiệp",
-            "roadmapsRelatedHint": "Lộ trình có bước cần kỹ năng của môn này được đánh dấu bên dưới",
-            "roadmapsGeneralHint": "Gợi ý chung toàn nền tảng — chưa có lộ trình nào gắn với môn này",
-            "roadmapsEmpty": "Chưa có lộ trình nào được xuất bản.",
-            "related": "Liên quan môn này",
-            "roadmapMatched": "Cần kỹ năng: {skills}",
-            "roadmapEnroll": "Theo lộ trình",
-            "roadmapEnrolled": "Đang theo",
-            "roadmapEnrollSuccess": "Đã tham gia lộ trình.",
-            "opportunities": "Cơ hội việc làm",
-            "opportunitiesRelatedHint": "Tin thuộc hướng nghề của môn này được đánh dấu bên dưới",
-            "opportunitiesGeneralHint": "Tin đang mở toàn nền tảng — chưa lọc theo môn",
-            "opportunitiesEmpty": "Chưa có tin tuyển dụng nào đang mở.",
-            "opportunityApply": "Ứng tuyển",
-            "opportunityApplied": "Đã ứng tuyển",
-            "opportunityApplySuccess": "Đã gửi đơn ứng tuyển.",
-            "opportunityTypes": {
-                "internship": "Thực tập",
-                "job": "Toàn thời gian",
-                "portfolioReview": "Review hồ sơ",
-                "other": "Khác"
-            },
-            "remote": "Làm từ xa",
-            "deadline": "Hạn nộp {date}",
-            "careerPath": "Định hướng phù hợp nhất: {track}",
-            "careerPathHint": "Suy ra từ cấp kỹ năng của bạn trên các lộ trình",
-            "viewSubject": "Xem môn học",
-            "roadmapsPartialHint": "Gợi ý chung toàn nền tảng — mới đối chiếu {checked}/{total} lộ trình với môn này",
-            "skillsUnresolved": "{count} kỹ năng của môn chưa có trong danh mục kỹ năng.",
-            "signInTitle": "Đăng nhập để xem dữ liệu nghề nghiệp.",
-            "signIn": "Đăng nhập",
-            "sectionError": "Không tải được mục này.",
-            "tracks": {
-                "BACKEND": "Backend",
-                "FRONTEND": "Frontend",
-                "MOBILE": "Mobile",
-                "AI": "AI",
-                "DATA": "Dữ liệu",
-                "DEVOPS": "DevOps"
-            },
-            "skillCategories": {
-                "LANGUAGE": "Ngôn ngữ",
-                "FRAMEWORK": "Framework",
-                "DATABASE": "Cơ sở dữ liệu",
-                "DEVOPS": "DevOps",
-                "SOFT_SKILL": "Kỹ năng mềm",
-                "CS_FOUNDATION": "Nền tảng khoa học máy tính",
-                "TOOL": "Công cụ",
-                "DOMAIN": "Nghiệp vụ"
-            },
-            "admin": {
-                "title": "Quản trị nội dung nghề nghiệp",
-                "hint": "Chỉ hiện với người có quyền quản trị career. Mọi thay đổi ở đây áp dụng cho toàn nền tảng, không riêng môn này.",
-                "skillTitle": "Thêm kỹ năng",
-                "skillMapHint": "Kỹ năng mới sẽ vào danh mục chung. Muốn kỹ năng hiện ở mục Kỹ năng liên quan thì gắn nó vào môn này ở phần ngay bên dưới.",
-                "slugLabel": "Slug (chữ thường, nối bằng dấu -)",
-                "skillNameLabel": "Tên kỹ năng",
-                "categoryLabel": "Nhóm kỹ năng",
-                "levelsHint": "Thang cấp độ — mỗi dòng một cấp: tên | điểm ngưỡng",
-                "levelsLabel": "Thang cấp độ",
-                "levelsPlaceholder": "Cơ bản | 0",
-                "levelsParsed": "Nhận diện {count} cấp hợp lệ",
-                "createSkill": "Tạo kỹ năng",
-                "skillCreated": "Đã tạo kỹ năng.",
-                "roadmapTitle": "Thêm lộ trình",
-                "roadmapTitleLabel": "Tên lộ trình",
-                "trackLabel": "Hướng nghề (không bắt buộc)",
-                "roadmapDraftHint": "Lộ trình tạo ra ở trạng thái nháp; phải xuất bản mới hiện và mới theo được.",
-                "createRoadmap": "Tạo lộ trình",
-                "roadmapCreated": "Đã tạo lộ trình (bản nháp).",
-                "roadmapPublished": "Đã xuất bản lộ trình.",
-                "draftBadge": "Bản nháp — chưa hiện với học viên",
-                "publish": "Xuất bản",
-                "opportunityTitle": "Đăng tin cơ hội",
-                "opportunityFieldsHint": "API tạo tin chỉ nhận loại, tiêu đề và mô tả. Công ty, hướng nghề, nơi làm và hạn nộp phải do backend bổ sung.",
-                "opportunityTitleLabel": "Tiêu đề tin",
-                "opportunityDescriptionLabel": "Mô tả",
-                "opportunityDraftHint": "Tin tạo ra ở trạng thái nháp; phải xuất bản mới nhận được ứng tuyển.",
-                "createOpportunity": "Đăng tin",
-                "opportunityCreated": "Đã tạo tin (bản nháp).",
-                "opportunityPublished": "Đã xuất bản tin.",
-                "draftsTitle": "Tin nháp chờ xuất bản",
-                "draftsEmpty": "Không có tin nháp nào.",
-                "draftsError": "Không tải được danh sách tin nháp.",
-                "map": {
-                    "title": "Gắn kỹ năng vào môn này",
-                    "hint": "Chọn một kỹ năng trong danh mục rồi gắn vào môn đang xem. Trọng số 0–1 cho biết kỹ năng gắn với môn chặt tới đâu.",
-                    "skillLabel": "Kỹ năng",
-                    "skillPlaceholder": "— Chọn kỹ năng —",
-                    "skillsLoading": "Đang tải danh mục kỹ năng…",
-                    "skillsError": "Không tải được danh mục kỹ năng.",
-                    "weightLabel": "Trọng số 0–1 (để trống thì dùng mặc định)",
-                    "weightInvalid": "Trọng số phải là một số từ 0 đến 1.",
-                    "weightValue": "Trọng số {weight}",
-                    "attach": "Gắn vào môn này",
-                    "updateWeight": "Cập nhật trọng số",
-                    "detachCurrent": "Gỡ khỏi môn này",
-                    "detach": "Gỡ",
-                    "attached": "Đã gắn kỹ năng vào môn.",
-                    "detached": "Đã gỡ kỹ năng khỏi môn.",
-                    "subjectNotFound": "Backend không tìm thấy môn này (có thể đã bị xoá) nên từ chối thao tác.",
-                    "currentSubjectHint": "Môn đang xem: {code} — {name}",
-                    "currentSubjectLoading": "Đang tải thông tin môn đang xem…",
-                    "currentSubject": "Môn đang xem",
-                    "listTitle": "Các môn đang gắn với kỹ năng này",
-                    "listLoading": "Đang tải danh sách môn của kỹ năng…",
-                    "listEmpty": "Kỹ năng này chưa gắn với môn nào.",
-                    "listError": "Không tải được danh sách môn của kỹ năng.",
-                    "missingSubject": "Không tra được tên môn",
-                    "catalogueUnavailable": "Chưa tải được danh mục môn nên tạm hiện mã định danh thay cho tên môn."
-                }
-            }
-        },
         "membership": {
             "join": "Tham gia môn học",
             "joinHint": "Tham gia để mở khóa công cụ FrosTES, tài liệu và thảo luận của môn này.",
@@ -6568,9 +6393,6 @@
             "forbidden": "Bạn không có quyền thực hiện thao tác này.",
             "notFound": "Không tìm thấy môn học này.",
             "rateLimited": "Bạn thao tác hơi nhanh. Đợi một lát rồi thử lại nhé."
-        },
-        "rail": {
-            "title": "Lối tắt"
         }
     },
     "elo": {
@@ -7054,7 +6876,6 @@
             "justNow": "vừa xong",
             "reply": "Trả lời",
             "replyPlaceholder": "Viết trả lời…",
-            "cancelReply": "Hủy",
             "like": "Thích",
             "unlike": "Bỏ thích",
             "likeCount": "{count} lượt thích",
@@ -7259,6 +7080,7 @@
         "menu": {
             "groups": "Nhóm",
             "events": "Sự kiện",
+            "blog": "Blog",
             "saved": "Đã lưu",
             "poll": "Bình chọn",
             "moderation": "Kiểm duyệt"

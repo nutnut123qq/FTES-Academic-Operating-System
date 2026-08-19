@@ -1,17 +1,14 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { Button, Dropdown, Label, Modal, Typography } from "@heroui/react"
+import { Button, Typography } from "@heroui/react"
 import {
-    DotsThreeIcon,
     PushPinIcon,
-    SignOutIcon,
-    UserIcon,
     UsersIcon,
     XIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
-import { useParams } from "next/navigation"
+import { useParams, useSearchParams } from "next/navigation"
 import { useRouter } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { CommunityFeedRow } from "@/components/features/community/CommunityFeed"
@@ -52,8 +49,7 @@ export const SubjectOverview = () => {
         error: subjectError,
         isMembershipLoading,
     } = useQuerySubjectSwr(subjectId)
-    const { join, leave, isJoining, isLeaving } =
-        useMutateSubjectMembershipSwr(subjectId)
+    const { join, isJoining } = useMutateSubjectMembershipSwr(subjectId)
     // "Recent discussions" are the REAL subject community feed (the workspace REST aggregate carries no
     // posts — the overview hook returns []). Fetch the newest (FOR_YOU) via the same GraphQL the Discussion
     // tab uses; needs the subject UUID (route param is the code), gated until `subject` resolves.
@@ -68,7 +64,11 @@ export const SubjectOverview = () => {
     // ponytail: trần của bộ lọc là 20 bài gần nhất — resolver `SubjectWorkspace.community`
     // chốt cứng `limit = 20` và feed môn không phân trang (xem docblock `useQuerySubjectFeedSwr`),
     // nên bài của tôi nằm ngoài cửa sổ đó thì danh sách rỗng. Đó là CỬA SỔ, không phải trang 2 hỏng.
-    const [feedFilter, setFeedFilter] = useState<"mine" | null>(null)
+    //
+    // Cờ bật/tắt nằm ở URL (`?mine=1`) chứ không phải state: menu ⋯ bật nó nay đứng ở header
+    // của `SubjectWorkspaceShell` — trang này là `children` của shell, hai cây React rời nhau.
+    const searchParams = useSearchParams()
+    const feedFilter: "mine" | null = searchParams.get("mine") === "1" ? "mine" : null
     const viewerId = useAppSelector((state) => state.user.user)?.id ?? null
     // Chưa biết mình là ai (viewer chưa hydrate) thì lọc ra RỖNG, không rơi về "hiện tất cả":
     // nhãn ghi "Bài của tôi" mà liệt bài người khác là nói dối, còn rỗng thì chỉ là chưa biết.
@@ -101,15 +101,12 @@ export const SubjectOverview = () => {
                         onCompose={() => router.push(`${base}/discussion`)}
                         base={base}
                         subjectId={subjectId}
-                        subjectName={subject?.name ?? subjectId}
                         isMember={subject?.isMember ?? false}
                         isMembershipLoading={isMembershipLoading}
                         onJoin={() => { void join() }}
                         isJoining={isJoining}
-                        onLeave={() => { void leave() }}
-                        isLeaving={isLeaving}
                         feedFilter={feedFilter}
-                        onFeedFilter={setFeedFilter}
+                        onClearFeedFilter={() => router.replace(base)}
                     />
                 ) : null}
             </AsyncContent>
@@ -123,15 +120,12 @@ const OverviewView = ({
     recentPosts,
     onCompose,
     base,
-    subjectName,
     isMember,
     isMembershipLoading,
     onJoin,
     isJoining,
-    onLeave,
-    isLeaving,
     feedFilter,
-    onFeedFilter,
+    onClearFeedFilter,
 }: {
     overview: SubjectOverviewModel
     recentPosts: Array<CommunityPost>
@@ -139,23 +133,20 @@ const OverviewView = ({
     base: string
     /** The subject code (`CSD201`) — the value `?subject=` carries on the route. */
     subjectId: string
-    /** Subject name, shown in the leave confirmation. */
-    subjectName: string
     /** Real membership (workspace `callerMembership`), NOT a hardcoded flag. */
     isMember: boolean
     /** Membership read still in flight — neither banner nor CTA is honest yet. */
     isMembershipLoading: boolean
     onJoin: () => void
     isJoining: boolean
-    onLeave: () => void
-    isLeaving: boolean
     /**
-     * Bộ lọc feed đang bật: `"mine"` = chỉ bài của chính người đọc, `null` = toàn bộ. Trạng
-     * thái nằm ở component CHA vì lát cắt `RECENT_DISCUSSIONS` cũng nằm ở đó — lọc sau khi
-     * cắt thì bộ lọc chỉ soi được 5 bài.
+     * Bộ lọc feed đang bật: `"mine"` = chỉ bài của chính người đọc, `null` = toàn bộ. Đọc
+     * ở component CHA vì lát cắt `RECENT_DISCUSSIONS` cũng nằm ở đó — lọc sau khi cắt thì
+     * bộ lọc chỉ soi được 5 bài.
      */
     feedFilter: "mine" | null
-    onFeedFilter: (filter: "mine" | null) => void
+    /** Gỡ bộ lọc (xoá `?mine=1`); bật nó là việc của menu ⋯ trên header workspace. */
+    onClearFeedFilter: () => void
 }) => {
     const t = useTranslations("subjects")
 
@@ -170,106 +161,14 @@ const OverviewView = ({
         localStorage.setItem(dismissKey, "1")
         setJoinedDismissed(true)
     }
-    const [leaveOpen, setLeaveOpen] = useState(false)
 
     return (
         <div className="flex flex-col gap-6">
-            <LeaveConfirmModal
-                isOpen={leaveOpen}
-                subjectName={subjectName}
-                isLeaving={isLeaving}
-                onClose={() => setLeaveOpen(false)}
-                onConfirm={() => {
-                    setLeaveOpen(false)
-                    onLeave()
-                }}
-            />
-
-
             {/* MỘT cột trải hết bề ngang. Lưới 2 cột cũ ở đây đã hết lý do tồn tại từ khi
                 rail lối tắt dời sang `SubjectWorkspaceShell` làm sidebar phải của cả
                 workspace: cột 16rem thứ hai không còn ai ở, nhưng grid vẫn giữ chỗ cho nó nên
                 nội dung bị ép vào 1fr và chừa một mảng trống bên phải. */}
             <div className="flex flex-col gap-6">
-                {/* stats line + the member-only "⋯" menu (my content · pin · leave) */}
-                <div className="flex items-center gap-3">
-                    <Typography type="body-sm" color="muted" className="min-w-0 flex-1">
-                        {t("overview.statsLine", {
-                            members: overview.stats.members,
-                            moderators: overview.stats.moderators,
-                            resources: overview.stats.resources,
-                        })}
-                    </Typography>
-                    {isMember ? (
-                        // Cùng khung ⋯ với MemberActionsMenu của tab Thành viên (Dropdown + Button
-                        // isIconOnly ghost + DotsThreeIcon), không dựng menu riêng.
-                        <Dropdown>
-                            <Button
-                                isIconOnly
-                                size="sm"
-                                variant="ghost"
-                                className="shrink-0"
-                                aria-label={t("overview.actions")}
-                                isDisabled={isLeaving}
-                            >
-                                <DotsThreeIcon aria-hidden focusable="false" className="size-5" weight="bold" />
-                            </Button>
-                            <Dropdown.Popover>
-                                <Dropdown.Menu aria-label={t("overview.actions")}>
-                                    <Dropdown.Section>
-                                        {/* react-aria cần `id` thật, không lấy được từ React key */}
-                                        <Dropdown.Item
-                                            id="my-content"
-                                            textValue={t("overview.myContent")}
-                                            onPress={() =>
-                                                onFeedFilter(feedFilter === "mine" ? null : "mine")
-                                            }
-                                        >
-                                            <UserIcon aria-hidden focusable="false" className="size-5" />
-                                            <Label>{t("overview.myContent")}</Label>
-                                        </Dropdown.Item>
-
-                                        {/* GHIM BÀI THẢO LUẬN — VÔ HIỆU HOÁ, chặn ở BE, không phải ở đây.
-                                            Cờ `Post.pinned` có thật và feed môn đã trả về, nhưng:
-                                              1. đường ghim duy nhất là POST /api/v1/admin/community/posts/{id}/pin,
-                                                 gác `access.require("admin.community.moderate")` — quyền admin
-                                                 NỀN TẢNG, không phải moderator của môn, nên thành viên bấm sẽ 403;
-                                              2. và kể cả ghim được thì bài VẪN không lên đầu: `subjectFeed` gọi thẳng
-                                                 `findSubjectFeedCursor`, câu JPQL sắp `ORDER BY p.createdAt DESC, p.id DESC`
-                                                 và không đi qua `mergePinned` như feed công khai.
-                                            Nút "chạy" mà không có tác dụng nhìn thấy được là kiểu hỏng tệ nhất, nên
-                                            mục này hiện ra kèm lý do thay vì giả vờ hoạt động. Mở khoá = việc BE. */}
-                                        <Dropdown.Item
-                                            id="pin-post"
-                                            isDisabled
-                                            textValue={t("overview.pinPost")}
-                                        >
-                                            <PushPinIcon aria-hidden focusable="false" className="size-5" />
-                                            <div className="flex min-w-0 flex-col">
-                                                <Label>{t("overview.pinPost")}</Label>
-                                                <Typography type="body-xs" color="muted">
-                                                    {t("overview.pinPostUnavailable")}
-                                                </Typography>
-                                            </div>
-                                        </Dropdown.Item>
-                                    </Dropdown.Section>
-                                    <Dropdown.Section>
-                                        {/* rời môn vẫn đi qua ĐÚNG modal xác nhận cũ */}
-                                        <Dropdown.Item
-                                            id="leave"
-                                            textValue={t("membership.leave")}
-                                            onPress={() => setLeaveOpen(true)}
-                                        >
-                                            <SignOutIcon aria-hidden focusable="false" className="size-5" />
-                                            <Label>{t("membership.leave")}</Label>
-                                        </Dropdown.Item>
-                                    </Dropdown.Section>
-                                </Dropdown.Menu>
-                            </Dropdown.Popover>
-                        </Dropdown>
-                    ) : null}
-                </div>
-
                 {/* membership state: the "đã tham gia" notice is ONLY for real members
                     (workspace `callerMembership` != null); a non-member gets the join CTA. */}
                 {isMembershipLoading ? null : isMember ? (
@@ -341,7 +240,7 @@ const OverviewView = ({
                                 variant="tertiary"
                                 className="shrink-0"
                                 aria-label={t("overview.myContentClear")}
-                                onPress={() => onFeedFilter(null)}
+                                onPress={onClearFeedFilter}
                             >
                                 {t("overview.myContent")}
                                 <XIcon aria-hidden focusable="false" className="size-4" />
@@ -379,58 +278,6 @@ const OverviewView = ({
     )
 }
 
-/**
- * Confirmation before leaving the workspace — leaving drops the AI tools + member-only
- * surfaces, so it is never a one-tap action.
- */
-const LeaveConfirmModal = ({
-    isOpen,
-    subjectName,
-    isLeaving,
-    onClose,
-    onConfirm,
-}: {
-    isOpen: boolean
-    subjectName: string
-    isLeaving: boolean
-    onClose: () => void
-    onConfirm: () => void
-}) => {
-    const t = useTranslations("subjects")
-    return (
-        <Modal isOpen={isOpen} onOpenChange={(open) => { if (!open) onClose() }}>
-            <Modal.Backdrop>
-                <Modal.Container>
-                    <Modal.Dialog className="w-full max-w-md">
-                        <Modal.Header>
-                            <Typography type="body" weight="bold">
-                                {t("membership.leaveConfirmTitle")}
-                            </Typography>
-                        </Modal.Header>
-                        <Modal.Body>
-                            <Typography type="body-sm" color="muted">
-                                {t("membership.leaveConfirmBody", { name: subjectName })}
-                            </Typography>
-                        </Modal.Body>
-                        <Modal.Footer className="justify-end gap-2">
-                            <Button variant="tertiary" onPress={onClose}>
-                                {t("membership.leaveCancel")}
-                            </Button>
-                            <Button
-                                variant="danger"
-                                isDisabled={isLeaving}
-                                isPending={isLeaving}
-                                onPress={onConfirm}
-                            >
-                                {t("membership.leaveConfirm")}
-                            </Button>
-                        </Modal.Footer>
-                    </Modal.Dialog>
-                </Modal.Container>
-            </Modal.Backdrop>
-        </Modal>
-    )
-}
 
 
 /**

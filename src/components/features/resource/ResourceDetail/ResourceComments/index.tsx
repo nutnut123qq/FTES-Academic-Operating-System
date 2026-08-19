@@ -2,8 +2,7 @@
 
 import React, { useCallback, useState } from "react"
 import { Button, Typography, cn, toast } from "@heroui/react"
-import { HeartIcon, PaperPlaneTiltIcon, TrashIcon } from "@phosphor-icons/react"
-import { TextArea, TextField } from "@heroui/react"
+import { HeartIcon, TrashIcon } from "@phosphor-icons/react"
 import { useLocale, useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
 
@@ -31,79 +30,6 @@ const DELETED_STATUS = "DELETED"
 
 /** Page size for the top-level comment list (mirrors the BE default). */
 const COMMENTS_PAGE_SIZE = 20
-
-/** Inline composer for a reply (returns `true` on success so the caller clears/collapses). */
-const ReplyComposer = ({
-    placeholder,
-    submitLabel,
-    isSubmitting,
-    onSubmit,
-    onCancel,
-    cancelLabel,
-}: {
-    placeholder: string
-    submitLabel: string
-    isSubmitting: boolean
-    onSubmit: (text: string) => Promise<boolean>
-    onCancel: () => void
-    cancelLabel: string
-}) => {
-    const [draft, setDraft] = useState("")
-    const trimmed = draft.trim()
-
-    const handleSubmit = async () => {
-        if (trimmed === "" || isSubmitting) {
-            return
-        }
-        const ok = await onSubmit(trimmed)
-        if (ok) {
-            setDraft("")
-        }
-    }
-
-    return (
-        <div className="flex flex-col gap-2">
-            <div className="flex items-end gap-2">
-                <TextField variant="primary" className="flex-1">
-                    <TextArea
-                        rows={2}
-                        value={draft}
-                        onChange={(event) => setDraft(event.target.value)}
-                        placeholder={placeholder}
-                        aria-label={placeholder}
-                        autoFocus
-                        className="resize-none"
-                        onKeyDown={(event) => {
-                            if (event.key === "Enter" && !event.shiftKey) {
-                                event.preventDefault()
-                                void handleSubmit()
-                            }
-                        }}
-                    />
-                </TextField>
-                <Button
-                    variant="primary"
-                    isIconOnly
-                    aria-label={submitLabel}
-                    isPending={isSubmitting}
-                    isDisabled={trimmed === "" || isSubmitting}
-                    onPress={() => void handleSubmit()}
-                >
-                    <PaperPlaneTiltIcon aria-hidden focusable="false" className="size-5" />
-                </Button>
-            </div>
-            <Button
-                size="sm"
-                variant="tertiary"
-                className="self-start"
-                isDisabled={isSubmitting}
-                onPress={onCancel}
-            >
-                {cancelLabel}
-            </Button>
-        </div>
-    )
-}
 
 /** One comment row (avatar + author + time + body + reply/delete affordances). */
 const CommentNode = ({
@@ -240,7 +166,8 @@ const ResourceCommentsSkeleton = () => (
  * the real BE (`GET/POST /api/v1/resources/{id}/comments`, `DELETE
  * /api/v1/resources/comments/{commentId}`). Top-level comments each carry one
  * level of nested replies; a soft-deleted comment renders as a greyed tombstone
- * with its replies preserved. Owner-only delete, a per-thread reply composer, a heart on
+ * with its replies preserved. Owner-only delete, a per-thread reply composer (the SAME
+ * rich {@link CommentComposer} as the top-level box above it, so @-mentions work in both), a heart on
  * every row (`PUT`/`DELETE /api/v1/resources/comments/{commentId}/like`, rendered from the
  * `likeCount`/`likedByMe` the list already carries — nothing is counted client-side), and
  * page/size pagination. Writes are optimistic and roll back on failure (the write hooks
@@ -385,9 +312,9 @@ export const ResourceComments = () => {
                     // Gate guests BEFORE they type: a blocked expand opens the auth modal
                     // (via requireAuth) so a draft is never erased at the submit-time gate.
                     onBeforeExpand={requireAuth}
-                    onSubmit={(text) => {
-                        void submitComment(text)
-                    }}
+                    // Hand the result back so a failed send KEEPS the draft — the composer
+                    // only clears when this is not `false`.
+                    onSubmit={(text) => submitComment(text)}
                 />
             </div>
 
@@ -440,13 +367,20 @@ export const ResourceComments = () => {
 
                             {replyingTo === comment.id ? (
                                 <div className="sm:ml-11">
-                                    <ReplyComposer
+                                    {/* ĐÚNG ô soạn của bình luận cấp 1 ngay phía trên (cùng
+                                        `RichTextEditor`), nên trả lời cũng gõ được tag @ —
+                                        trước đây chỗ này là TextArea thô, lệch nhau ngay
+                                        trong một màn hình. */}
+                                    <CollapsibleComposer
+                                        currentUser={currentUser}
                                         placeholder={t("replyPlaceholder")}
                                         submitLabel={t("submit")}
-                                        isSubmitting={create.isMutating && replyingTo === comment.id}
+                                        busy={create.isMutating && replyingTo === comment.id}
+                                        autoFocus
+                                        // Same as the top-level composer: a failed reply
+                                        // must not wipe what the reader typed.
                                         onSubmit={(text) => submitComment(text, comment.id)}
                                         onCancel={() => setReplyingTo(null)}
-                                        cancelLabel={t("cancelReply")}
                                     />
                                 </div>
                             ) : null}

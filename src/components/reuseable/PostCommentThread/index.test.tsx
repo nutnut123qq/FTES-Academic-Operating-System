@@ -1,5 +1,5 @@
 import React from "react"
-import { fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { PostComment } from "@/components/features/community/hooks/useQueryPostDetailSwr"
 
@@ -22,9 +22,11 @@ import type { PostComment } from "@/components/features/community/hooks/useQuery
  *    author id — otherwise the viewer's own comment would offer "Báo cáo",
  *  - `canReportComments={false}` (threads outside the community module) drops
  *    the built-in report entry entirely,
- *  - "Trả lời" nay có ở MỌI cấp, và trả lời một comment CON vẫn gắn vào comment
- *    cấp 1 của nhánh (cây phẳng 2 cấp) với "@Tên " CHÈN SẴN vào ô soạn (prop
- *    `prefill` của RichCommentEditor) — không còn ghép lúc gửi, nên tag hiện ra
+ *  - "Trả lời" nay có ở MỌI cấp và mở một ô soạn RIÊNG ngay dưới hàng vừa bấm
+ *    (ô đáy chỉ còn dùng cho bình luận mới, chip "Đang trả lời X" đã bỏ); mỗi
+ *    lúc chỉ một ô mở, ✕ / Esc đóng sạch, và trả lời một comment CON vẫn gắn vào
+ *    comment cấp 1 của nhánh (cây phẳng 2 cấp) với "@Tên " CHÈN SẴN vào ô soạn
+ *    (prop `prefill` của RichCommentEditor) — không ghép lúc gửi, nên tag hiện ra
  *    cho người dùng thấy và chỉ xuất hiện đúng một lần,
  *  - tên tác giả: hàng không mang tên mà là của chính người đang đăng nhập thì
  *    lấy tên trong store, còn hàng của người khác giữ nhãn chung.
@@ -132,18 +134,23 @@ vi.mock("@/components/reuseable/MarkdownContent", () => ({
 }))
 
 // Ô soạn giả lập ĐÚNG hợp đồng thật: `prefill` là chữ nằm sẵn TRONG ô (bản thật chèn nó
-// vào Tiptap khi `focusTrigger` đổi và ô đang rỗng), còn bấm "composer" = gửi nguyên văn
-// những gì đang có trong ô + phần người dùng gõ. Nhờ vậy test bắt được cả hai lỗi: tag
-// không hiện trong ô, và tag bị ghép HAI lần (một lần ở ô, một lần lúc gửi).
+// vào Tiptap khi `focusTrigger` đổi và ô đang rỗng), còn bấm nút = gửi nguyên văn những gì
+// đang có trong ô + phần người dùng gõ. Nhờ vậy test bắt được cả hai lỗi: tag không hiện
+// trong ô, và tag bị ghép HAI lần (một lần ở ô, một lần lúc gửi).
+//
+// `data-testid` là chính placeholder vì thread nay render HAI ô soạn cùng lúc — ô đáy
+// (bình luận mới) và ô trả lời inline — nên test phải chỉ đích danh ô nào.
 vi.mock("@/components/reuseable/RichCommentEditor", () => ({
     RichCommentEditor: ({
+        placeholder,
         prefill,
         onSubmit,
     }: {
+        placeholder?: string
         prefill?: string
         onSubmit?: (body: string) => boolean | Promise<boolean>
     }) => (
-        <div>
+        <div data-testid={placeholder}>
             <span data-testid="composer-draft">{prefill ?? ""}</span>
             <button
                 type="button"
@@ -488,6 +495,16 @@ describe("PostCommentThread — per-surface copy", () => {
  * cây KHÔNG sâu thêm: hàng mới gắn vào comment cấp 1 của nhánh — bù lại nội dung được
  * ghép sẵn "@Tên " để không mất địa chỉ (đúng cách Facebook làm).
  */
+/** Ô soạn ĐÁY — nơi viết bình luận cấp 1; luôn có mặt. */
+const bottomComposer = () => screen.getByTestId("engagement.commentPlaceholder")
+
+/** Ô soạn TRẢ LỜI inline; `null` khi không có ô nào đang mở. */
+const inlineComposer = () => screen.queryByTestId("engagement.replyPlaceholder")
+
+/** `true` khi `node` đứng SAU `reference` trong thứ tự tài liệu. */
+const isAfter = (reference: Element, node: Element) =>
+    Boolean(reference.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING)
+
 describe("PostCommentThread — trả lời ở mọi cấp", () => {
     it("hiện nút trả lời trên cả comment con", () => {
         renderThread()
@@ -496,24 +513,75 @@ describe("PostCommentThread — trả lời ở mọi cấp", () => {
         expect(screen.getAllByText("engagement.reply")).toHaveLength(3)
     })
 
-    it("trả lời comment CON: tag hiện SẴN trong ô soạn, và chỉ MỘT lần khi gửi", async () => {
-        const onSubmit = vi.fn().mockResolvedValue(true)
-        renderThread({ onSubmit })
+    it("mở ô soạn NGAY DƯỚI đúng comment được trả lời, không phải ở đáy", () => {
+        renderThread()
 
-        // ô soạn trống trước khi bấm trả lời
-        expect(screen.getByTestId("composer-draft").textContent).toBe("")
+        // chưa bấm gì thì chỉ có ô đáy
+        expect(inlineComposer()).toBeNull()
 
         // thứ tự DOM: c-1 (Minh) → r-1 (Lan, con của c-1) → c-2
         fireEvent.click(screen.getAllByText("engagement.reply")[1])
-        // người dùng NHÌN THẤY "@Lan " trong ô ngay lúc bấm, không phải đợi tới lúc gửi
-        expect(screen.getByTestId("composer-draft").textContent).toBe("@Lan ")
 
-        fireEvent.click(screen.getByTestId("composer"))
+        const composer = inlineComposer()
+        expect(composer).not.toBeNull()
+        // đứng SAU thân comment r-1 và TRƯỚC comment kế tiếp → nằm đúng dưới r-1
+        expect(isAfter(screen.getByText("Chuẩn luôn."), composer!)).toBe(true)
+        expect(isAfter(composer!, screen.getByText("Mình thử rồi, nhanh hơn hẳn."))).toBe(true)
+        // và nó nằm TRÊN ô soạn đáy (ô đáy vẫn là mép cuối vùng bình luận)
+        expect(isAfter(composer!, bottomComposer())).toBe(true)
+    })
+
+    it("bấm trả lời ở comment khác thì ô cũ ĐÓNG, chỉ một ô mở mỗi lúc", () => {
+        renderThread()
+
+        fireEvent.click(screen.getAllByText("engagement.reply")[1])
+        expect(screen.getAllByTestId("engagement.replyPlaceholder")).toHaveLength(1)
+        expect(isAfter(screen.getByText("Chuẩn luôn."), inlineComposer()!)).toBe(true)
+
+        fireEvent.click(screen.getAllByText("engagement.reply")[2])
+        expect(screen.getAllByTestId("engagement.replyPlaceholder")).toHaveLength(1)
+        // ô mới nằm dưới c-2, tức SAU thân của c-2
+        expect(isAfter(screen.getByText("Mình thử rồi, nhanh hơn hẳn."), inlineComposer()!)).toBe(
+            true,
+        )
+    })
+
+    it("huỷ bằng nút ✕ đóng ô inline và trả về trạng thái sạch", () => {
+        renderThread()
+
+        fireEvent.click(screen.getAllByText("engagement.reply")[1])
+        fireEvent.click(screen.getByLabelText("engagement.cancelReply"))
+
+        expect(inlineComposer()).toBeNull()
+        expect(screen.queryByLabelText("engagement.cancelReply")).toBeNull()
+    })
+
+    it("Esc trong ô inline cũng đóng ô đó", () => {
+        renderThread()
+
+        fireEvent.click(screen.getAllByText("engagement.reply")[1])
+        fireEvent.keyDown(inlineComposer()!, { key: "Escape" })
+
+        expect(inlineComposer()).toBeNull()
+    })
+
+    it("trả lời comment CON: tag hiện SẴN trong ô inline, và chỉ MỘT lần khi gửi", async () => {
+        const onSubmit = vi.fn().mockResolvedValue(true)
+        renderThread({ onSubmit })
+
+        fireEvent.click(screen.getAllByText("engagement.reply")[1])
+        // người dùng NHÌN THẤY "@Lan " trong ô ngay lúc bấm, không phải đợi tới lúc gửi
+        const composer = inlineComposer()!
+        expect(within(composer).getByTestId("composer-draft").textContent).toBe("@Lan ")
+
+        fireEvent.click(within(composer).getByTestId("composer"))
 
         await waitFor(() => {
             // đúng một lần tag (không phải "@Lan @Lan …") và gắn vào comment CẤP 1
             expect(onSubmit).toHaveBeenCalledWith("@Lan Rõ rồi.", "c-1")
         })
+        // gửi xong ô inline đóng lại
+        await waitFor(() => expect(inlineComposer()).toBeNull())
     })
 
     it("trả lời comment cấp 1 thì KHÔNG tag (hàng mới nằm ngay dưới nó)", async () => {
@@ -521,13 +589,39 @@ describe("PostCommentThread — trả lời ở mọi cấp", () => {
         renderThread({ onSubmit })
 
         fireEvent.click(screen.getAllByText("engagement.reply")[0])
-        expect(screen.getByTestId("composer-draft").textContent).toBe("")
+        const composer = inlineComposer()!
+        expect(within(composer).getByTestId("composer-draft").textContent).toBe("")
 
-        fireEvent.click(screen.getByTestId("composer"))
+        fireEvent.click(within(composer).getByTestId("composer"))
 
         await waitFor(() => {
             expect(onSubmit).toHaveBeenCalledWith("Rõ rồi.", "c-1")
         })
+    })
+
+    it("ô soạn ĐÁY vẫn gửi bình luận cấp 1 kể cả khi đang mở ô trả lời", async () => {
+        const onSubmit = vi.fn().mockResolvedValue(true)
+        renderThread({ onSubmit })
+
+        fireEvent.click(screen.getAllByText("engagement.reply")[1])
+        fireEvent.click(within(bottomComposer()).getByTestId("composer"))
+
+        await waitFor(() => {
+            // KHÔNG kèm cha → là bình luận mới, không phải trả lời
+            // (`toHaveBeenCalledWith` khớp cả số đối số, nên đây vẫn bắt được nếu ô đáy
+            // lỡ gửi kèm `parentCommentId`)
+            expect(onSubmit).toHaveBeenCalledWith("Rõ rồi.")
+        })
+    })
+
+    it("KHÔNG còn chip 'Đang trả lời X' ở ô đáy (nhãn giờ thuộc về ô inline)", () => {
+        renderThread()
+
+        fireEvent.click(screen.getAllByText("engagement.reply")[1])
+
+        // nhãn chỉ tồn tại dưới dạng tên vùng của ô inline, không in ra chữ lần nữa
+        expect(screen.queryByText("engagement.replyingTo#Lan")).toBeNull()
+        expect(screen.getByRole("group", { name: "engagement.replyingTo#Lan" })).toBeTruthy()
     })
 })
 

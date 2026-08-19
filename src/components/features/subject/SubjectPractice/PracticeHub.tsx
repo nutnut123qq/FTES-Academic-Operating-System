@@ -5,7 +5,6 @@ import { Button, Typography } from "@heroui/react"
 import {
     CodeIcon,
     ImagesSquareIcon,
-    RankingIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import type { PracticeModule, PracticeModuleKey } from "../hooks/useQuerySubjectPracticeSwr"
@@ -14,7 +13,6 @@ import type { PracticeModule, PracticeModuleKey } from "../hooks/useQuerySubject
 const ICONS: Record<PracticeModuleKey, React.ReactNode> = {
     fe: <ImagesSquareIcon className="size-6" aria-hidden focusable="false" />,
     coding: <CodeIcon className="size-6" aria-hidden focusable="false" />,
-    leaderboard: <RankingIcon className="size-6" aria-hidden focusable="false" />,
 }
 
 /** Props for {@link PracticeHub}. */
@@ -26,15 +24,18 @@ export interface PracticeHubProps {
 }
 
 /**
- * Practice hub — a card grid of the three practice modules (Challenges · Final Exam ·
- * Leaderboard). Each card carries an icon, title, a headline count and an "Open" pill;
- * pressing it (or the card) calls {@link PracticeHubProps.onOpen} with that module's key
- * so the parent swaps to the module's in-panel sub-view. No dead buttons — every card
- * opens something.
+ * Practice hub — a card grid of the practice modules (Challenges · Final Exam). Each card
+ * carries an icon, title, a headline count and an "Open" pill; pressing it (or the card)
+ * calls {@link PracticeHubProps.onOpen} with that module's key so the parent swaps to the
+ * module's in-panel sub-view. No dead buttons — every card opens something.
  *
  * There is no Practical Exam (PE) card: a PE paper is a CHALLENGE now, tagged `pe` + the
  * subject code, so it is found in the challenge bank's tag filter instead of a surface of
  * its own.
+ *
+ * There is no Leaderboard card either (removed 2026-08-19): ranking is not a practice
+ * surface — the subject's own XP board still lives in the Statistics tab, and the global
+ * board has its own `/leaderboard` route in the header nav.
  */
 export const PracticeHub = ({ modules, onOpen }: PracticeHubProps) => {
     const t = useTranslations("subjects")

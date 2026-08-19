@@ -13,7 +13,7 @@ export type HeaderNavProps = WithClassNames<undefined>
 /**
  * HeaderNav — desktop global navigation in the top bar (header-first shell,
  * NO global left sidebar anywhere). The top-level modules from
- * {@link useAppNav} (Home · Workplace · Course · Community · Blog), each a PLAIN LABEL
+ * {@link useAppNav} (Home · Workplace · Course · Community · Leaderboard), each a PLAIN LABEL
  * LINK to its landing route. Per product directive (design D9) there are NO
  * dropdowns, carets, hover sub-menus, or mega-menus — nested features are
  * reached from inside each module's own landing page.
@@ -37,7 +37,7 @@ export const HeaderNav = ({ className }: HeaderNavProps) => {
                     key={module.key}
                     href={module.path}
                     // stable anchor for the onboarding tour (nav-home / nav-workplace /
-                    // nav-course / nav-community / nav-blog) — see `features/onboarding`
+                    // nav-course / nav-community / nav-leaderboard) — see `features/onboarding`
                     data-tour={`nav-${module.key}`}
                     aria-current={module.isActive ? "page" : undefined}
                     className={cn(

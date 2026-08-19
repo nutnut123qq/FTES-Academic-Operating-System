@@ -67,10 +67,6 @@ export interface JobView {
     errorMessage?: string
 }
 
-export interface CareerSuggestionView {
-    suggestion: string
-}
-
 export interface TranscriptRef {
     jobId: string
     status: string

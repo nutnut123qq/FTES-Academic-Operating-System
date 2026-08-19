@@ -12,7 +12,6 @@ import {
 import { useTranslations } from "next-intl"
 import dynamic from "next/dynamic"
 import { Link, useRouter } from "@/i18n/navigation"
-import { UserLink } from "@/components/features/identity"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { useQuerySubjectOverviewSwr } from "../hooks/useQuerySubjectOverviewSwr"
 import {
@@ -20,7 +19,6 @@ import {
     type ChallengeLifecycle,
 } from "../hooks/useQuerySubjectCodingChallengesSwr"
 import { useQuerySubjectSwr } from "../hooks/useQuerySubjectSwr"
-import { useQuerySubjectMembersSwr } from "../hooks/useQuerySubjectMembersSwr"
 import { getCourseIdentity } from "../SubjectOverview/course-identity"
 
 /** lifecycle → chip color. */
@@ -32,9 +30,6 @@ const LIFECYCLE_COLOR: Record<ChallengeLifecycle, "success" | "warning" | "defau
 
 /** How many newest challenges to surface on the rail. */
 const RAIL_CHALLENGES = 5
-
-/** How many member avatars fit the 16rem column before the "+N" pill takes over. */
-const RAIL_MEMBERS = 6
 
 /**
  * The challenge solver, loaded only once a reader actually opens one.
@@ -96,19 +91,16 @@ const RailCard = ({
 
 /**
  * Right-hand rail of the subject workspace — the shortcut column that mirrors the left
- * nav sidebar: linked courses · newest resources · newest challenges · members.
+ * nav sidebar: linked courses · newest resources · newest challenges.
  *
  * SELF-FETCHING on purpose. It is mounted by {@link import("../SubjectWorkspaceShell").SubjectWorkspaceShell},
- * which owns no subject data of its own beyond the code in the route, and threading four
+ * which owns no subject data of its own beyond the code in the route, and threading three
  * more payloads through the shell into every tab would make every tab page carry props it
  * never reads. Every hook here is keyed by the subject code and SWR dedupes by key, so the
  * Overview tab asking for the same workspace aggregate costs no second request.
  *
- * ponytail: "Thành viên" reads `GET /subjects/{code}/members` through the hook the Members
- * tab already uses, NOT `overview.activeMembers` — that field is hardcoded `[]` because the
- * workspace aggregate only carries `countsByRole` + `totalActive`, no people. The card is
- * therefore labelled plainly "Thành viên": the endpoint has no activity signal at all, so
- * calling these six "tích cực" would be a claim the data cannot back.
+ * The "Thành viên" facepile that used to live here moved UP into the workspace header
+ * (the Facebook-group identity row) — the rail keeps only the go-somewhere shortcuts.
  */
 export const SubjectWorkspaceRail = ({ subjectId }: { subjectId: string }) => {
     const t = useTranslations("subjects")
@@ -123,7 +115,6 @@ export const SubjectWorkspaceRail = ({ subjectId }: { subjectId: string }) => {
         isLoading: challengesLoading,
         error: challengesError,
     } = useQuerySubjectCodingChallengesSwr(subjectId)
-    const { members } = useQuerySubjectMembersSwr(subjectId)
 
     const linkedCourses = (subject?.courseLinks ?? []).map((link) => ({
         id: link.id,
@@ -133,8 +124,6 @@ export const SubjectWorkspaceRail = ({ subjectId }: { subjectId: string }) => {
         .sort((a, b) => Date.parse(b.startsAt ?? "") - Date.parse(a.startsAt ?? ""))
         .slice(0, RAIL_CHALLENGES)
     const newResources = overview?.newResources ?? []
-    const shownMembers = members.slice(0, RAIL_MEMBERS)
-    const memberOverflow = members.length - shownMembers.length
 
     return (
         <div className="flex flex-col gap-6">
@@ -222,29 +211,6 @@ export const SubjectWorkspaceRail = ({ subjectId }: { subjectId: string }) => {
                     </Typography>
                 )}
             </RailCard>
-
-            {members.length > 0 ? (
-                <RailCard title={t("members.title")} href={`${base}/members`} seeAll={t("overview.seeAll")}>
-                    <div className="flex items-center">
-                        {shownMembers.map((member, index) => (
-                            <UserLink
-                                key={member.id}
-                                username={member.username}
-                                displayName={member.name}
-                                hideName
-                                size="sm"
-                                className={index > 0 ? "-ml-2" : undefined}
-                                classNames={{ avatar: "size-8 ring-2 ring-background" }}
-                            />
-                        ))}
-                        {memberOverflow > 0 ? (
-                            <div className="-ml-2 flex size-8 items-center justify-center rounded-full bg-default/40 text-xs text-muted ring-2 ring-background">
-                                +{memberOverflow}
-                            </div>
-                        ) : null}
-                    </div>
-                </RailCard>
-            ) : null}
 
             {/* Đề mở TẠI CHỖ. Cùng khuôn với dialog của ExamList và popup bài viết của
                 CommunityFeed: thân dialog là CHÍNH component mà route render, nên popup và

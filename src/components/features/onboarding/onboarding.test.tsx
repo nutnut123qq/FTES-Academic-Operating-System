@@ -48,7 +48,8 @@ describe("welcome tour data", () => {
         expect(last.target).toBeUndefined()
     })
 
-    // Four of the FIVE header modules: Blog is deliberately left out of the welcome tour.
+    // Four of the FIVE header modules: the last slot (Leaderboard since 2026-08-19, Blog
+    // before it) is deliberately left out of the welcome tour.
     it("anchors four of the five header modules + search + account via stable data-tour ids", () => {
         const targets = welcomeTour.steps.map((s) => s.target).filter(Boolean)
         expect(targets).toEqual([

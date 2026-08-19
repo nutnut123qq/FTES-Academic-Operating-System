@@ -6,8 +6,8 @@ import {
     BookmarkSimpleIcon,
     CalendarIcon,
     ChartBarIcon,
+    NewspaperIcon,
     ShieldCheckIcon,
-    TrophyIcon,
     UsersThreeIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
@@ -20,8 +20,11 @@ const ROW_CLASS =
 
 /**
  * Left community rail (`xl`+): shortcut rows for the actions hidden behind the
- * ⋯ menu on smaller screens — Nhóm, Sự kiện, Đã lưu, Bảng uy tín, Bình chọn, Kiểm duyệt.
+ * ⋯ menu on smaller screens — Nhóm, Sự kiện, Blog, Đã lưu, Bình chọn, Kiểm duyệt.
  * ponytail: plain rows in the community panel idiom; no data.
+ *
+ * Blog moved here (2026-08-19) when Leaderboard took its slot in the header nav:
+ * editorial posts are a reading surface of the community, not a top-level module.
  */
 export const NavRail = () => {
     const t = useTranslations("communityHub")
@@ -45,6 +48,10 @@ export const NavRail = () => {
             <Link href="/events" className={ROW_CLASS}>
                 <CalendarIcon aria-hidden focusable="false" className="size-5" />
                 <Typography type="body-sm">{t("menu.events")}</Typography>
+            </Link>
+            <Link href="/blog" className={ROW_CLASS}>
+                <NewspaperIcon aria-hidden focusable="false" className="size-5" />
+                <Typography type="body-sm">{t("menu.blog")}</Typography>
             </Link>
             <Link href="/community/saved" className={ROW_CLASS}>
                 <BookmarkSimpleIcon aria-hidden focusable="false" className="size-5" />

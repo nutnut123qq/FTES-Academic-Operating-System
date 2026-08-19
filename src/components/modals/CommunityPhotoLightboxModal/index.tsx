@@ -154,6 +154,11 @@ export const CommunityPhotoLightboxModal = () => {
                                         showMedia={false}
                                         regionId={`photo-post-comments-${context.postId}`}
                                         commentsAnchorId={`photo-comments-${context.postId}`}
+                                        // Pane này mới là thứ cuộn (`lg:overflow-y-auto`, và
+                                        // `<lg` thì cả dialog cuộn), nên ô soạn phải ghim đáy —
+                                        // giống popup bài của feed. Thiếu nó thì người xem phải
+                                        // cuộn hết bình luận mới thấy chỗ gõ.
+                                        stickyComposer
                                         loadingFallback={
                                             <div className="flex flex-1 items-center justify-center py-16">
                                                 <Spinner aria-label={t("photoViewer.loading")} />

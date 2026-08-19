@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useCallback, useMemo, useRef, useState } from "react"
+import React, { useCallback, useRef, useState } from "react"
 import { Button, Chip, Skeleton, Typography, cn, toast } from "@heroui/react"
 import {
     CaretUpIcon,
@@ -42,15 +42,15 @@ export type ReportCommentHandler = (
 ) => Promise<boolean>
 
 /**
- * Trạng thái "đang trả lời ai" của ô soạn thảo.
+ * Trạng thái "đang trả lời ai".
  *
- * `target` là hàng người dùng BẤM (để hiện tên trong chip), còn `parentId` là comment
- * CẤP 1 mà hàng mới sẽ gắn vào — hai thứ này khác nhau khi trả lời một comment con: cây
- * giữ đúng 2 cấp, nên `mention` mang chuỗi "@Tên " để người đọc biết câu trả lời nhắm
- * vào ai (đúng cách Facebook làm).
+ * `target` là hàng người dùng BẤM — ô soạn trả lời mọc ra NGAY DƯỚI hàng đó — còn
+ * `parentId` là comment CẤP 1 mà hàng mới sẽ gắn vào: hai thứ này khác nhau khi trả lời
+ * một comment con, vì cây giữ đúng 2 cấp. Chính vì thế `mention` mang chuỗi "@Tên " để
+ * người đọc biết câu trả lời nhắm vào ai (đúng cách Facebook làm).
  */
 interface ReplyTarget {
-    /** Hàng được bấm "Trả lời". */
+    /** Hàng được bấm "Trả lời" — ô soạn inline hiện ngay dưới nó. */
     target: PostComment
     /** Id comment cấp 1 nhận hàng mới (chính `target.id` khi bấm ở cấp 1). */
     parentId: string
@@ -60,7 +60,13 @@ interface ReplyTarget {
      *
      * ponytail: chèn vào ô soạn chứ KHÔNG ghép lúc gửi — ghép lúc gửi thì comment lưu
      * xuống đúng nhưng người dùng không thấy tag đâu cả, cảm giác như chưa bấm reply.
-     * Ghép cả hai chỗ thì tag ra hai lần, nên `handleSubmit` gửi nguyên văn bản nháp.
+     * Ghép cả hai chỗ thì tag ra hai lần, nên `handleReply` gửi nguyên văn bản nháp.
+     *
+     * Là TEXT THUẦN, cố ý KHÔNG phải mention node: node `ProfileMention` serialize ra
+     * `[@label](/u/<id>)`, mà `PostComment.authorUsername` ở đây không đáng tin cho việc
+     * dựng link — mấy bề mặt không join profile degrade nó thành uuid tác giả (xem
+     * `isMine`), nên biến nó thành mention sẽ đẻ ra link `/u/<uuid>` chết ở đúng những
+     * luồng đó. Tag hiển thị đủ để người đọc biết địa chỉ; link thì không bịa.
      */
     mention: string
 }
@@ -487,12 +493,16 @@ export const CommentRow = ({
  * wording of those two non-conversation states defaults to community-POST copy and
  * is overridable per surface through `labels` ({@link CommentThreadLabels}), which
  * a thread hanging off a challenge paper or an album picture must use — its object
- * is not a post. The
- * composer supports one-level reply mode (a "replying to" chip with cancel that
- * keeps the draft), an empty-input guard, and draft-preserving failure handling
- * (the caller's `onSubmit` returns `false` to keep the text). On mobile the
- * composer sticks to the bottom of the viewport while focused when
- * `stickyComposerOnMobile` is set.
+ * is not a post. The composer
+ * has an empty-input guard and draft-preserving failure handling (the caller's
+ * `onSubmit` returns `false` to keep the text). On mobile the composer sticks to
+ * the bottom of the viewport while focused when `stickyComposerOnMobile` is set.
+ *
+ * **Ô soạn đáy = bình luận MỚI; trả lời có ô RIÊNG.** Bấm "Trả lời" mở một
+ * {@link RichCommentEditor} thứ hai NGAY DƯỚI hàng vừa bấm (`replyComposerFor`) — đúng
+ * chỗ câu trả lời sẽ xuất hiện — thay vì đẩy người dùng xuống ô đáy. Mỗi lúc chỉ một ô
+ * mở (state `replyTo` là một chỗ duy nhất): bấm "Trả lời" ở hàng khác thì ô cũ đóng, nút
+ * ✕ và phím Esc đóng sạch.
  *
  * **"Trả lời" ở MỌI cấp, cây vẫn phẳng 2 cấp.** Comment con cũng có nút trả lời, nhưng
  * hàng mới KHÔNG lồng sâu thêm — nó gắn vào đúng comment cấp 1 của nhánh đó
@@ -568,7 +578,6 @@ export const PostCommentThread = ({
     const [replyTo, setReplyTo] = useState<ReplyTarget | null>(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [isFocused, setIsFocused] = useState(false)
-    const [replyFocusTrigger, setReplyFocusTrigger] = useState(0)
 
     /**
      * Owner gate for the inline comment affordances (guest → never mine). The row
@@ -618,9 +627,11 @@ export const PostCommentThread = ({
     )
 
     /**
-     * Mở chế độ trả lời. `parentId` LUÔN là comment cấp 1 (gốc): trả lời một comment con
-     * vẫn gắn vào cùng gốc — cây phẳng đúng 2 cấp như Facebook — nên phải tag tên người
-     * được trả lời thì người đọc mới biết câu đó nhắm vào ai.
+     * Mở ô soạn trả lời DƯỚI hàng vừa bấm. `parentId` LUÔN là comment cấp 1 (gốc): trả
+     * lời một comment con vẫn gắn vào cùng gốc — cây phẳng đúng 2 cấp như Facebook — nên
+     * phải tag tên người được trả lời thì người đọc mới biết câu đó nhắm vào ai.
+     *
+     * State là MỘT ô duy nhất, nên bấm "Trả lời" ở hàng khác tự đóng ô đang mở.
      */
     const startReply = useCallback(
         (target: PostComment, parentId: string) => {
@@ -631,7 +642,6 @@ export const PostCommentThread = ({
                 // dưới nó, tag chỉ tổ thừa.
                 mention: target.id === parentId ? "" : `@${nameOf(target)} `,
             })
-            setReplyFocusTrigger((value) => value + 1)
         },
         [nameOf],
     )
@@ -712,15 +722,30 @@ export const PostCommentThread = ({
     const isPersisted = (commentId: string) =>
         /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(commentId)
 
-    const handleSubmit = useCallback(
+    /** Gửi bình luận MỚI (cấp 1) — ô soạn ĐÁY, không bao giờ mang cha. */
+    const handleNewComment = useCallback(
         async (body: string) => {
             if (isSubmitting) {
                 return false
             }
             setIsSubmitting(true)
+            const ok = await onSubmit(body)
+            setIsSubmitting(false)
+            return ok
+        },
+        [isSubmitting, onSubmit],
+    )
+
+    /** Gửi TRẢ LỜI từ ô soạn inline; gửi xong thì ô đóng lại. */
+    const handleReply = useCallback(
+        async (body: string) => {
+            if (isSubmitting || !replyTo) {
+                return false
+            }
+            setIsSubmitting(true)
             // Bản nháp gửi NGUYÊN VĂN: "@Tên " đã nằm sẵn trong ô soạn từ lúc bấm trả lời
             // (xem `ReplyTarget.mention`), ghép lại ở đây là tag hai lần.
-            const ok = await onSubmit(body, replyTo?.parentId)
+            const ok = await onSubmit(body, replyTo.parentId)
             setIsSubmitting(false)
             if (ok) {
                 setReplyTo(null)
@@ -730,10 +755,50 @@ export const PostCommentThread = ({
         [isSubmitting, onSubmit, replyTo],
     )
 
-    const placeholder = useMemo(
-        () => (replyTo ? t("engagement.replyPlaceholder") : t("engagement.commentPlaceholder")),
-        [replyTo, t],
-    )
+    /**
+     * Ô soạn TRẢ LỜI hiện ngay dưới `row` khi chính hàng đó đang được trả lời — `null` với
+     * mọi hàng khác, nên tại một thời điểm chỉ có đúng MỘT ô mở.
+     *
+     * Dùng cùng {@link RichCommentEditor} như ô soạn đáy (nên có sẵn tag @, emoji, sticker).
+     * `focusTrigger` là id hàng: ô mount mới mỗi lần đổi hàng, và chính cú mount đó vừa
+     * chèn "@Tên " vừa đưa con trỏ vào ô. Esc chặn lại ở đây (`stopPropagation`) để phím
+     * đầu tiên đóng ô trả lời chứ không đóng luôn cả dialog đang bao quanh.
+     *
+     * @param row - Hàng comment đang xét.
+     * @returns Ô soạn inline, hoặc `null`.
+     */
+    const replyComposerFor = (row: PostComment) =>
+        replyTo?.target.id === row.id ? (
+            <div
+                role="group"
+                aria-label={t("engagement.replyingTo", { name: nameOf(replyTo.target) })}
+                className="ml-9 flex items-start gap-2"
+                onKeyDown={(event) => {
+                    if (event.key === "Escape") {
+                        event.stopPropagation()
+                        cancelReply()
+                    }
+                }}
+            >
+                <RichCommentEditor
+                    className="min-w-0 flex-1"
+                    placeholder={t("engagement.replyPlaceholder")}
+                    isPending={isSubmitting}
+                    focusTrigger={replyTo.target.id}
+                    prefill={replyTo.mention}
+                    onSubmit={handleReply}
+                />
+                <Button
+                    isIconOnly
+                    size="sm"
+                    variant="ghost"
+                    aria-label={t("engagement.cancelReply")}
+                    onPress={cancelReply}
+                >
+                    <XIcon aria-hidden focusable="false" className="size-4" />
+                </Button>
+            </div>
+        ) : null
 
     return (
         <div
@@ -800,53 +865,57 @@ export const PostCommentThread = ({
                                                 isPersisted(comment.id) ? onToggleLike : undefined
                                             }
                                         />
+                                        {replyComposerFor(comment)}
                                         {replies.map((reply, index) => {
                                             const isLast = index === replies.length - 1
                                             return (
-                                                <div key={reply.id} className="relative">
-                                                    {/* trunk: continues the avatar threadline; the
-                                                        last reply stops at the avatar center */}
-                                                    <span
-                                                        aria-hidden
-                                                        className={cn(
-                                                            "pointer-events-none absolute left-4 -top-3 w-0.5 -translate-x-1/2 bg-separator",
-                                                            isLast ? "h-7" : "bottom-0",
-                                                        )}
-                                                    />
-                                                    {/* elbow: connects the trunk to the reply avatar */}
-                                                    <span
-                                                        aria-hidden
-                                                        className="pointer-events-none absolute left-4 top-4 h-0.5 w-5 bg-separator"
-                                                    />
-                                                    <CommentRow
-                                                        comment={reply}
-                                                        // Trả lời một comment con vẫn gắn vào
-                                                        // GỐC (cây phẳng 2 cấp) — vì thế mới
-                                                        // cần auto-tag tên người được trả lời.
-                                                        onReply={(row) => startReply(row, comment.id)}
-                                                        replyLabel={t("engagement.reply")}
-                                                        isReply
-                                                        fallbackName={
-                                                            isMine(reply.authorUsername)
-                                                                ? viewerLabel
-                                                                : undefined
-                                                        }
-                                                        canManage={isMine(reply.authorUsername)}
-                                                        onEdit={onEditComment}
-                                                        onDelete={onDeleteComment}
-                                                        canReport={
-                                                            reportEnabled && !isMine(reply.authorUsername)
-                                                        }
-                                                        onReport={reportComment}
-                                                        liked={likeStateOf(reply).liked}
-                                                        likeCount={likeStateOf(reply).count}
-                                                        onToggleLike={
-                                                            isPersisted(reply.id)
-                                                                ? onToggleLike
-                                                                : undefined
-                                                        }
-                                                    />
-                                                </div>
+                                                <React.Fragment key={reply.id}>
+                                                    <div className="relative">
+                                                        {/* trunk: continues the avatar threadline; the
+                                                            last reply stops at the avatar center */}
+                                                        <span
+                                                            aria-hidden
+                                                            className={cn(
+                                                                "pointer-events-none absolute left-4 -top-3 w-0.5 -translate-x-1/2 bg-separator",
+                                                                isLast ? "h-7" : "bottom-0",
+                                                            )}
+                                                        />
+                                                        {/* elbow: connects the trunk to the reply avatar */}
+                                                        <span
+                                                            aria-hidden
+                                                            className="pointer-events-none absolute left-4 top-4 h-0.5 w-5 bg-separator"
+                                                        />
+                                                        <CommentRow
+                                                            comment={reply}
+                                                            // Trả lời một comment con vẫn gắn vào
+                                                            // GỐC (cây phẳng 2 cấp) — vì thế mới
+                                                            // cần auto-tag tên người được trả lời.
+                                                            onReply={(row) => startReply(row, comment.id)}
+                                                            replyLabel={t("engagement.reply")}
+                                                            isReply
+                                                            fallbackName={
+                                                                isMine(reply.authorUsername)
+                                                                    ? viewerLabel
+                                                                    : undefined
+                                                            }
+                                                            canManage={isMine(reply.authorUsername)}
+                                                            onEdit={onEditComment}
+                                                            onDelete={onDeleteComment}
+                                                            canReport={
+                                                                reportEnabled && !isMine(reply.authorUsername)
+                                                            }
+                                                            onReport={reportComment}
+                                                            liked={likeStateOf(reply).liked}
+                                                            likeCount={likeStateOf(reply).count}
+                                                            onToggleLike={
+                                                                isPersisted(reply.id)
+                                                                    ? onToggleLike
+                                                                    : undefined
+                                                            }
+                                                        />
+                                                    </div>
+                                                    {replyComposerFor(reply)}
+                                                </React.Fragment>
                                             )
                                         })}
                                     </div>
@@ -868,32 +937,17 @@ export const PostCommentThread = ({
                                 "max-sm:fixed max-sm:inset-x-0 max-sm:bottom-0 max-sm:z-30 max-sm:border-t max-sm:border-separator max-sm:bg-background max-sm:p-3",
                         )}
                     >
-                        {replyTo ? (
-                            <div className="flex items-center gap-2">
-                                <Typography type="body-xs" color="muted">
-                                    {t("engagement.replyingTo", { name: nameOf(replyTo.target) })}
-                                </Typography>
-                                <Button
-                                    isIconOnly
-                                    size="sm"
-                                    variant="ghost"
-                                    aria-label={t("engagement.cancelReply")}
-                                    onPress={cancelReply}
-                                >
-                                    <XIcon aria-hidden focusable="false" className="size-4" />
-                                </Button>
-                            </div>
-                        ) : null}
-
+                        {/* Ô này CHỈ viết bình luận mới — trả lời có ô riêng ngay dưới
+                            hàng được trả lời (`replyComposerFor`), nên không còn chip
+                            "Đang trả lời X" ở đây: chỗ ô soạn hiện ra đã nói rõ đang trả
+                            lời ai, hiện thêm chip là nói hai lần. */}
                         <RichCommentEditor
-                            placeholder={placeholder}
+                            placeholder={t("engagement.commentPlaceholder")}
                             autoFocus={autoFocus}
-                            isPending={isSubmitting}
-                            focusTrigger={replyFocusTrigger}
-                            prefill={replyTo?.mention ?? ""}
+                            isPending={isSubmitting && !replyTo}
                             onFocus={() => setIsFocused(true)}
                             onBlur={() => setIsFocused(false)}
-                            onSubmit={handleSubmit}
+                            onSubmit={handleNewComment}
                         />
                     </div>
 

@@ -33,6 +33,9 @@ const TABS: Array<{ key: string; segment: string }> = [
 const MENU_ITEMS: Array<{ key: string; href: string }> = [
     { key: "groups", href: "/groups" },
     { key: "events", href: "/events" },
+    // Blog phải có mặt Ở ĐÂY nữa: rail trái chỉ render từ `xl`, mà Blog vừa rời khỏi
+    // header nav — thiếu dòng này thì dưới xl không còn lối vào /blog nào.
+    { key: "blog", href: "/blog" },
     { key: "saved", href: "/community/saved" },
     { key: "poll", href: "/community/poll" },
     { key: "moderation", href: "/community/moderation" },

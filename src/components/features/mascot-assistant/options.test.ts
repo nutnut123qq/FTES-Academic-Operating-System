@@ -45,7 +45,6 @@ const ROUTES = [
     "/workflow",
     "/profile",
     "/profile/cv",
-    "/career",
     "/marketplace",
     "/resources",
     "/blog",

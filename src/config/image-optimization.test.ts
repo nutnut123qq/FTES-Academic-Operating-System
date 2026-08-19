@@ -116,6 +116,11 @@ const IMG_THO_HIEN_TRANG: ReadonlyArray<string> = [
     "components/features/community/CommunityShell/PromoBanner.tsx",
     "components/features/course/browse/CatalogCourseCard/index.tsx",
     "components/features/gamification/BadgeUnlockHost/index.tsx",
+    // Art badge (iconUrl do BE seed, ví dụ /gamification/achievements/*.png|svg) — CÙNG nguồn,
+    // CÙNG cách xử lý với 3 bề mặt danh mục badge đã có trong danh sách này (BadgeCatalogRow /
+    // BadgeCatalogCell / BadgeDetailModal). Host do BE seed nên không ghim được vào next/image
+    // remotePatterns → giữ <img>, có glyph theo kind làm phương án dự phòng.
+    "components/features/gamification/LeaderboardShell/index.tsx",
     "components/features/goldenboard/GoldenBoard/index.tsx",
     "components/features/group/GroupDetailShell/index.tsx",
     "components/features/group/GroupIdentityFields/index.tsx",
@@ -123,6 +128,7 @@ const IMG_THO_HIEN_TRANG: ReadonlyArray<string> = [
     "components/features/profile/ProfileBadges/BadgeCatalogGrid/BadgeCatalogCell.tsx",
     "components/features/profile/ProfileBadges/BadgeCatalogGrid/BadgeDetailModal.tsx",
     "components/features/profile/ProfileBadges/BadgeCatalogModal/BadgeCatalogRow.tsx",
+    "components/features/profile/ProfileProgress/index.tsx",
     "components/features/subject/ExamImageViewer/index.tsx",
     "components/features/subject/SubjectFeAlbum/FeAlbumManager.tsx",
     "components/features/subject/SubjectPractice/ExamContribute.tsx",

@@ -35,6 +35,15 @@ vi.mock("@/redux/hooks", () => ({
         }),
 }))
 
+const refreshMock = vi.fn(async () => "token-moi")
+const shouldRefreshMock = vi.fn(() => false)
+
+vi.mock("@/modules/api/rest/client/refresh", () => ({
+    refreshAccessToken: (...a: Array<unknown>) => refreshMock(...(a as [])),
+    shouldRefreshAccessToken: (...a: Array<unknown>) => shouldRefreshMock(...(a as [])),
+    ACCESS_TOKEN_MIN_VALIDITY_SECONDS: 60,
+}))
+
 // ---------------------------------------------------------------- fetch stream harness
 
 const encoder = new TextEncoder()
@@ -91,6 +100,9 @@ beforeEach(() => {
     streams = []
     mutateMock.mockReset()
     fetchMock.mockReset()
+    refreshMock.mockClear()
+    shouldRefreshMock.mockClear()
+    shouldRefreshMock.mockReturnValue(false)
     // default: network failure — tests opt into streams with respondWithStream()
     fetchMock.mockRejectedValue(new Error("network down"))
     vi.stubGlobal("fetch", fetchMock)
@@ -275,5 +287,42 @@ describe("useNotificationSseLifecycle", () => {
         const calls = fetchMock.mock.calls.length
         await act(() => vi.advanceTimersByTimeAsync(10 * INITIAL_BACKOFF_MS))
         expect(fetchMock).toHaveBeenCalledTimes(calls)
+    })
+
+    it("token đã hết hạn ⇒ LÀM MỚI trước khi nối, không mang token chết đi", async () => {
+        // Kịch bản thật đo được trên production: token sống 15 phút, người dùng để yên tab, không
+        // lời gọi REST nào làm mới hộ ⇒ lúc stream nối lại thì token đã chết 13,4 phút.
+        shouldRefreshMock.mockReturnValue(true)
+        respondWithStream()
+
+        renderHook(() => useNotificationSseLifecycle())
+        await vi.advanceTimersByTimeAsync(0)
+
+        expect(refreshMock).toHaveBeenCalled()
+    })
+
+    it("stream trả 401 ⇒ làm mới token TRƯỚC lần nối lại", async () => {
+        // Không làm mới thì lần nối lại mang đúng token chết đó và nhận lại đúng 401 — thành vòng
+        // lặp vô tận theo nhịp backoff, đúng thứ người dùng thấy trong tab Network.
+        const { NotificationStreamHttpError } = await import(
+            "@/modules/api/rest/notification/stream")
+        fetchMock.mockRejectedValueOnce(new NotificationStreamHttpError(401))
+
+        renderHook(() => useNotificationSseLifecycle())
+        await vi.advanceTimersByTimeAsync(0)
+
+        expect(refreshMock).toHaveBeenCalled()
+    })
+
+    it("refresh HỎNG cũng không làm vỡ vòng lặp nối lại", async () => {
+        // Refresh token cũng hết hạn là chuyện có thật; ném ra ngoài ở đây sẽ giết luôn cơ chế
+        // backoff và stream không bao giờ thử lại nữa.
+        const { NotificationStreamHttpError } = await import(
+            "@/modules/api/rest/notification/stream")
+        fetchMock.mockRejectedValueOnce(new NotificationStreamHttpError(401))
+        refreshMock.mockRejectedValueOnce(new Error("refresh token cũng hết hạn"))
+
+        renderHook(() => useNotificationSseLifecycle())
+        await expect(vi.advanceTimersByTimeAsync(2000)).resolves.not.toThrow()
     })
 })

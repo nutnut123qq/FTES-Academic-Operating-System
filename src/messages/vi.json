@@ -2400,7 +2400,8 @@
             "previewHint": "Chọn ảnh và khung viền bên dưới — áp dụng ngay khi bấm.",
             "albumTitle": "Chọn ảnh đại diện",
             "framesTitle": "Khung viền avatar",
-            "frameNone": "Không viền"
+            "frameNone": "Không viền",
+            "frameLocked": "Chưa mở khoá"
         },
         "save": "Lưu thay đổi",
         "saved": "Cập nhật hồ sơ thành công.",

@@ -2388,7 +2388,8 @@
             "previewHint": "Pick an avatar and frame below — changes apply instantly.",
             "albumTitle": "Choose an avatar",
             "framesTitle": "Avatar frame",
-            "frameNone": "No frame"
+            "frameNone": "No frame",
+            "frameLocked": "Locked"
         },
         "save": "Save changes",
         "saved": "Profile updated successfully.",

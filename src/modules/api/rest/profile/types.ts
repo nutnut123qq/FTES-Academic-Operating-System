@@ -285,6 +285,12 @@ export interface AvatarFrameView {
     cssGradient: string | null
     assetUrl: string | null
     sortOrder: number
+    /**
+     * V353: TRONG danh mục chọn khung — `true` = người xem chưa đủ điều kiện mở khoá
+     * (EXP/hạng mùa) nên màn chọn khoá ô + hiện `description` làm lời nhắc. Khung ĐANG
+     * ĐEO (trên hồ sơ) luôn `false`/vắng.
+     */
+    locked?: boolean
 }
 
 /**

@@ -202,7 +202,20 @@ export const CommunityComposerForm = ({
             // SUCCESSFUL write must not be reported as a failure nor block nav.
             revalidateCommunityFeeds(cache, mutate).catch(() => {})
             onSubmitted?.()
-            router.push(`/community/${createdId}`)
+            // VỀ FEED, không nhảy vào trang chi tiết bài vừa đăng (góp ý #17). Nhảy vào
+            // chi tiết thì màn hình sau khi đăng chỉ còn ĐÚNG bài đó — người đăng tưởng
+            // feed biến mất và không rõ phải quay lại kiểu gì. Feed vừa được revalidate ở
+            // trên nên bài mới nằm ngay đầu danh sách, đúng chỗ mắt đang nhìn.
+            //
+            // NGOẠI LỆ: bài KHẢO SÁT. Trang chi tiết là nơi DUY NHẤT bỏ phiếu được cho một
+            // poll cụ thể (`/community/poll` chỉ mở poll mới nhất), nên tác giả vẫn được
+            // đưa tới đó — bỏ nhánh này là poll vừa tạo không còn lối vào.
+            if (isPoll) {
+                router.push(`/community/${createdId}`)
+            } else {
+                router.push("/community")
+                window.scrollTo({ top: 0 })
+            }
         } catch {
             toast.danger(isQuote ? t("composer.repostFailed") : t("composer.createFailed"))
         } finally {

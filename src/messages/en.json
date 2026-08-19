@@ -502,6 +502,7 @@
         "signIn": "Sign In",
         "learn": "Learn",
         "toggleLanguage": "Toggle Language",
+        "toggleTheme": "Toggle light/dark theme",
         "appearance": "Appearance",
         "mobileMenu": "Mobile navigation",
         "courseMenu": "Course menu",
@@ -2956,8 +2957,7 @@
         },
         "checkout": {
             "title": "Checkout",
-            "summaryTab": "Summary",
-            "paymentTab": "Payment",
+            "backToSummary": "Back to summary",
             "continueToPayment": "Continue to payment",
             "amountVnd": "₫{amount}",
             "amountCoin": "{amount} Coin",
@@ -5468,7 +5468,15 @@
             "deleteError": "Couldn't delete, please try again.",
             "confirmDeleteTitle": "Delete comment?",
             "confirmDeleteBody": "This comment will be permanently deleted. This can't be undone.",
-            "confirmDelete": "Delete"
+            "confirmDelete": "Delete",
+            "reply": "Reply",
+            "replyPlaceholder": "Write a reply…",
+            "sortLabel": "Sort comments",
+            "sort": {
+                "newest": "Newest",
+                "oldest": "Oldest",
+                "mostLiked": "Most liked"
+            }
         },
         "startHere": "Start here",
         "viewSource": "View on GitHub",
@@ -7079,6 +7087,7 @@
         "placeholder": "This feed is under construction.",
         "more": "More",
         "menu": {
+            "feed": "Community",
             "groups": "Groups",
             "events": "Events",
             "blog": "Blog",
@@ -8389,8 +8398,8 @@
             "freeTag": "Free",
             "unavailableTag": "Unavailable",
             "geminiFallbackHint": "Free models have usage limits; when they run out it falls back to Gemini.",
-            "modelHint": "Each model grades differently — the score and feedback depend on the model you pick.",
-            "modelHintReview": "Hidden test cases decide the score, so it never changes with the model. Your pick only shapes the FrosTES review of code quality.",
+            "modelHint": "The system picks a suitable grading model — you don't have to.",
+            "modelHintReview": "The score comes from the test cases (hidden ones included), so it never moves with the model. The model the system picks only shapes FrosTES's quality review.",
             "gradeWithAi": "Grade with FrosTES",
             "regrade": "Grade again",
             "regradeHint": "Switch model and grade again to compare — your code stays exactly as you left it.",

@@ -200,6 +200,21 @@ describe("ExamImageViewer — text pages", () => {
         expect(screen.queryByAltText(/practice\.viewer\.imageAlt/)).toBeNull()
     })
 
+    it("zooms the TEXT of a text page — the toolbar is shown there, so it must do something", () => {
+        // Regression (góp ý #11): the zoom transform used to live only on the <img>, so on a
+        // typed page the toolbar happily counted up to 600% while the text never moved.
+        const { view } = setup(1, mixed)
+
+        const article = view.container.querySelector("article")
+        expect(article?.getAttribute("style")).toContain("font-size: 1em")
+
+        fireEvent.click(screen.getByLabelText("practice.viewer.zoomIn"))
+
+        expect(screen.getByText("practice.viewer.zoomLevel#150")).toBeTruthy()
+        expect(view.container.querySelector("article")?.getAttribute("style"))
+            .toContain("font-size: 1.5em")
+    })
+
     it("keeps paging identical across mixed pages", () => {
         const { onIndexChange } = setup(1, mixed)
 

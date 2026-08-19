@@ -69,3 +69,41 @@ export const applyProgress = (
     const progress: StudyPlanProgress = { ...(view.progress ?? {}), done: nextDone }
     return { ...view, progress, percentDone: computePercentDone(view.plan, progress) }
 }
+
+/** A `resource_hint` split into the text to show and the link to open (null = no link). */
+export interface ResourceHintLink {
+    /** The hint as written by the AI service, trimmed. Empty when there is nothing to show. */
+    label: string
+    /** First safe `http(s)` URL found inside the hint, or null when the hint is plain text. */
+    href: string | null
+}
+
+/** Only `http`/`https` may become an `href` — anything else (`javascript:`, `ftp:`…) stays text. */
+const HTTP_URL_PATTERN = /https?:\/\/[^\s<>"'`]+/i
+
+/**
+ * Splits a study-plan task's `resource_hint` into `{ label, href }`. ftes-ai-service returns
+ * this field as free text: sometimes a bare URL, sometimes "Docs — https://…", often just a
+ * title with no link at all. The FE used to print it verbatim, so a URL sitting in the hint
+ * was dead text the learner had to copy by hand — hence this extraction.
+ *
+ * Pure (no React) so it can be unit-tested. Matching only `http(s)://` is the security guard:
+ * a `javascript:`/`data:` hint can never reach an `href`.
+ */
+export const parseResourceHint = (hint: string | null | undefined): ResourceHintLink => {
+    const label = (hint ?? "").trim()
+    if (!label) return { label: "", href: null }
+
+    const match = label.match(HTTP_URL_PATTERN)
+    if (!match) return { label, href: null }
+
+    // Prose thường kết câu ngay sau URL ("… https://x.dev/docs."), dấu câu đó không thuộc link.
+    const candidate = match[0].replace(/[.,;:!?)\]]+$/, "")
+    try {
+        const parsed = new URL(candidate)
+        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return { label, href: null }
+        return { label, href: candidate }
+    } catch {
+        return { label, href: null }
+    }
+}

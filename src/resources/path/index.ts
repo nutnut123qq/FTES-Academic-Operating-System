@@ -7,13 +7,14 @@ export const pathConfig = () => {
         const build = () => {
             // With no locale supplied, the bare root is "" — which is an empty href the router
             // won't navigate to. Fall back to "/" so "go home" links (breadcrumbs) navigate to
-            // the locale root. NOTE: the root `/` is GitHub-style gated by the proxy (logged-in
-            // visitors are bounced to the dashboard); use `home()` below to reach the landing
-            // page on purpose without being gated.
+            // the locale root. NOTE: the landing itself is GitHub-style gated (a logged-in
+            // visitor is sent to the dashboard by `HomeLanding`), and that applies to `/home`
+            // just as much as to `/` — both render the same landing.
             return localePath || "/"
         }
-        /** The marketing landing at an explicit, UNGATED url (`/home`) — proxy never bounces it,
-         *  so the logo / "Trang chủ" reach the landing even while signed in. */
+        /** The marketing landing (`/home`). Signed-in visitors are forwarded to the
+         *  dashboard by the page itself, so for them the logo / "Trang chủ" lands on the
+         *  app home rather than on the sales page (góp ý #23). */
         const home = () => {
             const homePath = `${localePath}/home`
             const build = () => homePath

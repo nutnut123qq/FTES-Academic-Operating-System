@@ -40,10 +40,15 @@ export interface CommentItemProps extends WithClassNames<undefined> {
     onSubmitEdit: (comment: BlogCommentResponse, text: string) => Promise<boolean>
     /** Request deletion of this comment (opens the shared confirm modal; owner only). */
     onRequestDelete: (comment: BlogCommentResponse) => void
+    /**
+     * Open the reply composer for this comment. Omit on a row that cannot be replied to —
+     * a reply itself, since the BE allows exactly one level of nesting.
+     */
+    onReply?: (comment: BlogCommentResponse) => void
 }
 
 /**
- * One flat blog comment row: avatar on the left, then author · relative time
+ * One blog comment row: avatar on the left, then author · relative time
  * (with an "edited" suffix when the body was changed), the plain-text body, and a
  * thin action line — a heart toggle with its count plus owner-only Edit/Delete.
  *
@@ -65,6 +70,7 @@ export const CommentItem = ({
     onCancelEdit,
     onSubmitEdit,
     onRequestDelete,
+    onReply,
     className,
 }: CommentItemProps) => {
     const t = useTranslations("blog.engagement")
@@ -157,6 +163,17 @@ export const CommentItem = ({
                                 {t("likeCount", { count: comment.emojiCount })}
                             </span>
                         </button>
+
+                        {onReply ? (
+                            <Button
+                                variant="tertiary"
+                                size="sm"
+                                className="h-auto min-w-0 px-1 py-0 text-xs text-muted hover:text-accent"
+                                onPress={() => onReply(comment)}
+                            >
+                                {t("reply")}
+                            </Button>
+                        ) : null}
 
                         {isOwn ? (
                             <>

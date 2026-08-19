@@ -85,7 +85,13 @@ export const CommentComposer = ({
                 toolbar="comment"
                 placeholder={placeholder}
                 ariaLabel={placeholder}
-                autoFocus={autoFocus}
+                // Must be an explicit `false`, never `undefined`: the prop lands on
+                // tiptap's `autofocus` option, and tiptap only skips its mount-time
+                // focus when the value is exactly `false` or `null`
+                // (`autofocus !== false && autofocus !== null` in @tiptap/core
+                // Editor.mount). An `undefined` therefore focused the editor and its
+                // `scrollIntoView` jumped the article straight to the composer.
+                autoFocus={autoFocus ?? false}
             />
             <div className="flex flex-wrap items-center gap-2">
                 <span

@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
-import { Button, Chip, Modal, Typography } from "@heroui/react"
+import { Button, Chip, Modal, Typography, cn } from "@heroui/react"
 import {
     ArrowSquareOutIcon,
     CaretRightIcon,
@@ -20,16 +20,27 @@ import {
 } from "../hooks/useQuerySubjectCodingChallengesSwr"
 import { useQuerySubjectSwr } from "../hooks/useQuerySubjectSwr"
 import { getCourseIdentity } from "../SubjectOverview/course-identity"
+import { useSidebarCollapsed } from "@/components/blocks/navigation/CollapsibleSidebar/context"
 
-/** lifecycle → chip color. */
-const LIFECYCLE_COLOR: Record<ChallengeLifecycle, "success" | "warning" | "default"> = {
-    running: "success",
-    upcoming: "warning",
-    closed: "default",
+/** lifecycle → status-dot fill (rail rows are too narrow for a text chip). */
+const LIFECYCLE_DOT: Record<ChallengeLifecycle, string> = {
+    running: "bg-success",
+    upcoming: "bg-warning",
+    closed: "bg-muted",
 }
 
 /** How many newest challenges to surface on the rail. */
 const RAIL_CHALLENGES = 5
+
+/**
+ * What the rail becomes once it is collapsed: the same destinations as the
+ * expanded cards, as icon links. A collapsed rail is ~4rem wide — enough for an icon
+ * and nothing else — so it stops being a preview of content and becomes pure nav.
+ */
+const COLLAPSED_SHORTCUTS = [
+    { segment: "resources", labelKey: "overview.newResources", icon: FileTextIcon },
+    { segment: "practice", labelKey: "overview.challenges", icon: TargetIcon },
+] as const
 
 /**
  * The challenge solver, loaded only once a reader actually opens one.
@@ -107,6 +118,11 @@ export const SubjectWorkspaceRail = ({ subjectId }: { subjectId: string }) => {
     const router = useRouter()
     const base = `/subjects/${subjectId}`
     const [openedChallengeId, setOpenedChallengeId] = useState<string | null>(null)
+    // THU NHỎ = đổi hẳn cách vẽ, không phải để nguyên rồi bóp bề ngang (góp ý #10).
+    // `CollapsibleSidebar` chỉ co cột xuống ~4rem và vẫn render nguyên children, nên
+    // trước đây ba thẻ này bị ép vào cột hẹp và tiêu đề rơi thành chữ DỌC từng ký tự.
+    // Các rail khác đã tự xử qua `useSidebarCollapsed`; rail này thì chưa — giờ có.
+    const collapsed = useSidebarCollapsed()
 
     const { overview } = useQuerySubjectOverviewSwr(subjectId)
     const { subject } = useQuerySubjectSwr(subjectId)
@@ -124,6 +140,24 @@ export const SubjectWorkspaceRail = ({ subjectId }: { subjectId: string }) => {
         .sort((a, b) => Date.parse(b.startsAt ?? "") - Date.parse(a.startsAt ?? ""))
         .slice(0, RAIL_CHALLENGES)
     const newResources = overview?.newResources ?? []
+
+    if (collapsed) {
+        return (
+            <div className="flex flex-col items-center gap-2">
+                {COLLAPSED_SHORTCUTS.map((shortcut) => (
+                    <Link
+                        key={shortcut.segment}
+                        href={`${base}/${shortcut.segment}`}
+                        aria-label={t(shortcut.labelKey)}
+                        title={t(shortcut.labelKey)}
+                        className="flex size-10 items-center justify-center rounded-2xl text-accent no-underline hover:bg-default"
+                    >
+                        <shortcut.icon aria-hidden focusable="false" className="size-5" />
+                    </Link>
+                ))}
+            </div>
+        )
+    }
 
     return (
         <div className="flex flex-col gap-6">
@@ -200,9 +234,22 @@ export const SubjectWorkspaceRail = ({ subjectId }: { subjectId: string }) => {
                             <Typography type="body-sm" color="muted" className="min-w-0 flex-1 group-hover:underline" truncate>
                                 {challenge.title}
                             </Typography>
-                            <Chip size="sm" variant="soft" color={LIFECYCLE_COLOR[challenge.lifecycle]}>
-                                {t(`practice.coding.lifecycle.${challenge.lifecycle}`)}
-                            </Chip>
+                            {/* CHẤM màu, không phải chip chữ (góp ý #22): trong một cột rộng
+                                ~17rem, chip "Đang diễn ra" ăn quá nửa hàng nên mọi challenge
+                                đều cụt còn "Đề thi…" — tức là mất đúng thứ cần đọc. Màu nói
+                                được trạng thái trong 12px; chữ vẫn còn nguyên cho screen
+                                reader + tooltip, nên không mất thông tin cho ai cả. */}
+                            <span
+                                title={t(`practice.coding.lifecycle.${challenge.lifecycle}`)}
+                                className={cn(
+                                    "size-2.5 shrink-0 rounded-full",
+                                    LIFECYCLE_DOT[challenge.lifecycle],
+                                )}
+                            >
+                                <span className="sr-only">
+                                    {t(`practice.coding.lifecycle.${challenge.lifecycle}`)}
+                                </span>
+                            </span>
                         </button>
                     ))
                 ) : challengesError ? null : (

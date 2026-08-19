@@ -7,6 +7,7 @@ import { Button } from "@heroui/react"
 import { useLocale, useTranslations } from "next-intl"
 import { PageHeader } from "@/components/blocks/layout/PageHeader"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { BackLink } from "@/components/blocks/navigation/BackLink"
 import { SearchInput } from "@/components/reuseable/SearchInput"
 import { CategoryFilter } from "./CategoryFilter"
 import { FeaturedPost } from "./FeaturedPost"
@@ -100,6 +101,11 @@ export const BlogList = () => {
 
     return (
         <div className="mx-auto flex max-w-3xl flex-col gap-6 p-6">
+            {/* Dưới `xl` rail cộng đồng bị ẩn, nên blog — một đích CỦA cộng đồng — không
+                còn lối về nào ngoài nút "<" của trình duyệt. Cùng lý do (và cùng kiểu) với
+                `EventCatalog` / `GroupsList`. */}
+            <BackLink fallbackHref="/community" />
+
             {/* identity — reframed as an engineering publication */}
             <PageHeader title={t("title")} description={t("subtitle")} />
 

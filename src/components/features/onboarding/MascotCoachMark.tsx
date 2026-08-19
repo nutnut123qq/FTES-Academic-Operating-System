@@ -89,7 +89,7 @@ export const MascotCoachMark = ({
             animated={animated}
             actions={
                 <div className="flex w-full items-center justify-between gap-3">
-                    <span className="text-xs font-medium tabular-nums text-muted">
+                    <span className="shrink-0 whitespace-nowrap text-xs font-medium tabular-nums text-muted">
                         {t("onboarding.progress", { current: index + 1, total })}
                     </span>
                     <div className="flex items-center gap-2">

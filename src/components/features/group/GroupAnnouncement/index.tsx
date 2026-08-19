@@ -17,6 +17,7 @@ import { usePatchGroupAnnouncementSwr } from "@/hooks/swr/api/rest/mutations/use
 import { useDeleteGroupAnnouncementSwr } from "@/hooks/swr/api/rest/mutations/useDeleteGroupAnnouncementSwr"
 import { useQueryGroupSwr } from "../hooks/useQueryGroupSwr"
 import { AnnouncementForm, type AnnouncementFormValues } from "./AnnouncementForm"
+import { titleEchoesBody } from "./title-echo"
 import {
     useGroupAnnouncementRowsSwr,
     type GroupAnnouncementRow,
@@ -104,9 +105,14 @@ const GroupAnnouncementCard = ({
         <div className="flex flex-col gap-2 rounded-2xl border border-separator p-4">
             <div className="flex items-center justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-2">
-                    <Typography type="body-sm" weight="medium" className="min-w-0" truncate>
-                        {announcement.title}
-                    </Typography>
+                    {/* Tiêu đề chỉ hiện khi nó NÓI THÊM điều gì (góp ý #15). Với thông báo
+                        một dòng, tiêu đề chính là dòng đó — in cả hai ra thành "test 23 /
+                        test 23". Xem `titleEchoesBody` để biết cái lặp từ đâu ra. */}
+                    {titleEchoesBody(announcement.title, announcement.body) ? null : (
+                        <Typography type="body-sm" weight="medium" className="min-w-0" truncate>
+                            {announcement.title}
+                        </Typography>
+                    )}
                     {announcement.pinned ? (
                         <Chip size="sm" variant="soft" color="accent" className="shrink-0">
                             {t("announcements.pinnedBadge")}

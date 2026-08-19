@@ -169,7 +169,15 @@ export interface ExamImageViewerProps {
  * expanding actually changes is the host's layout —
  * {@link import("./useExamExpand").useExamExpand} is the ready-made state.
  *
- * **Paging is signalled three ways**, all INSIDE the frame: carets, an `n/total` counter
+ * **The chrome does not stand on the paper.** Zoom, the `n/total` counter, full screen and
+ * the comments switch all live in one bar UNDER the stage, not floating over the page.
+ * Floating them was actively costly on a TYPED page, whose white sheet covers the stage
+ * edge to edge, so a pill in the top-right corner sat on the exam's own header; and fading
+ * a pill does not make what is beneath it readable. Only the two carets stay on the stage,
+ * pinned to the extreme edges (where a portrait page leaves letterbox black) and dimmed
+ * until hovered or focused.
+ *
+ * **Paging is signalled three ways**: carets, an `n/total` counter
  * and ←/→ keys. There USED to be a fourth — a thumbnail filmstrip along the bottom edge —
  * and it is gone on purpose. Pages of one exam are photographs of near-identical sheets of
  * paper, so at 64 px the thumbnails were interchangeable grey rectangles: they could not
@@ -465,7 +473,18 @@ export const ExamImageViewer = ({
                                 className="pointer-events-none absolute inset-0 select-none"
                                 style={{ backgroundImage: FTES_WATERMARK, backgroundRepeat: "repeat" }}
                             />
-                            <article className="relative mx-auto max-w-3xl">
+                            {/* ZOOM CHỮ, không phải zoom ảnh (góp ý #11). Thanh zoom nằm ngoài
+                                nhánh điều kiện nên nó hiện ở CẢ trang gõ tay, nhưng `scale()`
+                                lại chỉ gắn trên `<img>` ở nhánh kia — bấm lên 600% thì con số
+                                đổi mà chữ y nguyên, tức là cái nút nói dối. Trang chữ thì
+                                phóng to = tăng cỡ chữ (rồi reflow + cuộn), KHÔNG phải phóng
+                                một tấm ảnh: `scale()` ở đây sẽ làm chữ tràn ngang phải kéo
+                                qua kéo lại mới đọc hết một dòng. `em` để mọi cỡ chữ con
+                                (h1/code/chú thích) nở theo cùng một tỉ lệ. */}
+                            <article
+                                className="relative mx-auto max-w-3xl"
+                                style={{ fontSize: `${zoom}em` }}
+                            >
                                 {/* `math`: một trang đề gõ tay là chỗ DUY NHẤT trên album này
                                     chắc chắn có công thức — `$F(x)=\sqrt{x-3}$` phải ra công
                                     thức, không phải ra đúng chuỗi ký tự đó. Bật theo bề mặt
@@ -508,8 +527,69 @@ export const ExamImageViewer = ({
                         />
                     ) : null}
 
-                {/* ZOOM toolbar — top-right, clear of the carets */}
-                <div className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-black/60 p-1">
+                {/* Tells the reader the picture is draggable the moment it stops fitting */}
+                {!atFit ? (
+                    <div className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white">
+                        {t("practice.viewer.panHint")}
+                    </div>
+                ) : null}
+
+                {hasMultiple ? (
+                    <>
+                        {/* Neither caret is ever disabled: paging WRAPS (see `stepIndex`), so
+                            there is no end to stop at. An inert arrow on the last page was
+                            read as the viewer having broken.
+
+                            Sát mép (`left-1`) và MỜ lúc không đụng tới: sau khi thanh công cụ
+                            dời xuống thanh chrome, hai caret là thứ DUY NHẤT còn đứng trên
+                            tờ giấy — mà một trang đề dựng đứng trong khung ngang thì hai mép
+                            là dải đen thừa, đẩy ra đó gần như là đẩy ra khỏi chữ. Mờ chứ
+                            không ẩn: nút chỉ hiện khi rê chuột là nút không ai tìm ra, và
+                            trên màn cảm ứng thì không có "rê chuột". `focus:opacity-100` giữ
+                            đường bàn phím nhìn thấy được khi tab tới. */}
+                        <Button
+                            isIconOnly
+                            variant="ghost"
+                            aria-label={t("practice.viewer.previous")}
+                            onPress={goPrev}
+                            className="absolute left-1 top-1/2 -translate-y-1/2 rounded-full bg-black/50 text-white opacity-60 transition-opacity hover:bg-black/70 hover:opacity-100 focus:opacity-100"
+                        >
+                            <CaretLeftIcon aria-hidden focusable="false" className="size-6" />
+                        </Button>
+                        <Button
+                            isIconOnly
+                            variant="ghost"
+                            aria-label={t("practice.viewer.next")}
+                            onPress={goNext}
+                            className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full bg-black/50 text-white opacity-60 transition-opacity hover:bg-black/70 hover:opacity-100 focus:opacity-100"
+                        >
+                            <CaretRightIcon aria-hidden focusable="false" className="size-6" />
+                        </Button>
+                    </>
+                ) : null}
+            </div>
+
+            {/* CHROME BAR — mọi nút điều khiển gom về MỘT hàng NGOÀI sân khấu.
+                Trước đây thanh zoom nổi ở `right-3 top-3` và số trang nổi ở đáy, tức là nằm
+                ĐÈ lên mặt giấy: với trang gõ tay (tờ giấy trắng `inset-0`, phủ kín sân khấu)
+                thì chúng che thẳng vào chữ, và góc trên bên phải lại đúng chỗ đề hay ghi mã
+                đề / số trang. Làm mờ đi cũng không đọc được thứ nằm dưới, nên chúng ra hẳn
+                ngoài khung giấy. Giá phải trả là ~2.5rem chiều cao của sân khấu — đổi lại
+                không còn một pixel đề nào bị che, và bảy nút rải rác ba góc giờ là một cụm
+                đọc một lượt. Sân khấu vẫn `flex-1` nên nó tự co lại vừa phần còn dư. */}
+            <div className="flex shrink-0 items-center gap-1 border-t border-white/10 px-2 py-1">
+                {hasMultiple ? (
+                    <span
+                        aria-label={t("practice.viewer.counter", {
+                            current: clampedIndex + 1,
+                            total,
+                        })}
+                        className="px-2 text-xs font-medium tabular-nums text-white/80"
+                    >
+                        {clampedIndex + 1}/{total}
+                    </span>
+                ) : null}
+                <div className="ml-auto flex items-center gap-1">
                     <Button
                         isIconOnly
                         size="sm"
@@ -600,48 +680,6 @@ export const ExamImageViewer = ({
                         </Button>
                     ) : null}
                 </div>
-
-                {/* Tells the reader the picture is draggable the moment it stops fitting */}
-                {!atFit ? (
-                    <div className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white">
-                        {t("practice.viewer.panHint")}
-                    </div>
-                ) : null}
-
-                {hasMultiple ? (
-                    <>
-                        {/* Neither caret is ever disabled: paging WRAPS (see `stepIndex`), so
-                            there is no end to stop at. An inert arrow on the last page was
-                            read as the viewer having broken. */}
-                        <Button
-                            isIconOnly
-                            variant="ghost"
-                            aria-label={t("practice.viewer.previous")}
-                            onPress={goPrev}
-                            className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 text-white hover:bg-black/70"
-                        >
-                            <CaretLeftIcon aria-hidden focusable="false" className="size-6" />
-                        </Button>
-                        <Button
-                            isIconOnly
-                            variant="ghost"
-                            aria-label={t("practice.viewer.next")}
-                            onPress={goNext}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 text-white hover:bg-black/70"
-                        >
-                            <CaretRightIcon aria-hidden focusable="false" className="size-6" />
-                        </Button>
-                        <div
-                            aria-label={t("practice.viewer.counter", {
-                                current: clampedIndex + 1,
-                                total,
-                            })}
-                            className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white"
-                        >
-                            {clampedIndex + 1}/{total}
-                        </div>
-                    </>
-                ) : null}
             </div>
         </div>
     )

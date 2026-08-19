@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl"
 import { usePathname, useRouter } from "@/i18n/navigation"
 import { useAppSelector } from "@/redux/hooks"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
+import { BackLink } from "@/components/blocks/navigation/BackLink"
 import { GroupJoinButton } from "../GroupJoinButton"
 import { useQueryGroupSwr } from "../hooks/useQueryGroupSwr"
 
@@ -65,6 +66,13 @@ export const GroupDetailShell = ({ groupId, children }: GroupDetailShellProps) =
 
     return (
         <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 p-6">
+            {/* LỐI RA (góp ý #14). Trang nhóm tới được từ nhiều nơi (danh sách nhóm, một
+                bài viết, lời mời) và trước đây ra khỏi đây chỉ còn nút "<" của trình duyệt.
+                `BackLink` lùi theo lịch sử THẬT khi có, và về /groups khi mở thẳng bằng
+                link. Rail điều hướng cộng đồng (góp ý #21) chỉ có từ `xl`, nên dưới ngưỡng
+                đó đây vẫn là lối ra DUY NHẤT. */}
+            <BackLink fallbackHref="/groups" />
+
             {/* identity header — skeleton mirrors the exact geometry while loading */}
             {isLoading || !group ? (
                 <div className="flex flex-col">

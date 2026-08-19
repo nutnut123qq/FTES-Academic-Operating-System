@@ -14,11 +14,9 @@ import {
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { ExtendedTabs } from "@/components/blocks/navigation/ExtendedTabs"
-import { AiModelPicker } from "@/components/reuseable/AiModelPicker"
 import { RestError } from "@/modules/api/rest/client"
 import type { SubmissionView } from "@/modules/api/rest/challenges"
 import { useRestWithToast } from "@/modules/toast/hooks"
-import { useGetAiCatalogModelsSwr } from "@/hooks/swr/api/rest/queries"
 import { usePostSubmitChallengeSwr } from "@/hooks/swr/api/rest/mutations/usePostSubmitChallengeSwr"
 import { usePostSubmitChallengeFileSwr } from "@/hooks/swr/api/rest/mutations/usePostSubmitChallengeFileSwr"
 import { GradeCodePanel } from "@/components/features/challenge/ChallengeView/GradeCodePanel"
@@ -225,12 +223,8 @@ export const ChallengeMethodSolver = ({
     const [sandboxCode, setSandboxCode] = useState("")
     const [sandboxCodeLanguage, setSandboxCodeLanguage] = useState<string>(sandboxLanguage ?? "python")
 
-    // Shared AI grading model across every surface: the github / file tabs render its
-    // picker below, and the sandbox tab drives the SAME state through GradeCodePanel's
-    // toolbar picker (threaded down as a controlled prop). Null → the BE default; threaded
-    // into the URL / file / CODE submits so the learner's pick always reaches the grader.
-    const [model, setModel] = useState<string | null>(null)
-    const modelsSwr = useGetAiCatalogModelsSwr()
+    // KHÔNG còn cho chọn model chấm (góp ý #6): mọi submit đều bỏ trống `model` để
+    // backend dùng model mặc định của nó.
 
     const busy = submitUrl.isMutating || submitFile.isMutating || submitCode.isMutating
     const invalid = url.trim() !== "" && !isHttpsUrl(url)
@@ -251,7 +245,7 @@ export const ChallengeMethodSolver = ({
         const ok = await runRest(
             () => submitUrl.trigger({
                 id: challengeId,
-                request: { payloadType: "URL", url: url.trim(), ...(model ? { model } : {}) },
+                request: { payloadType: "URL", url: url.trim() },
             }).catch(mapSubmitError),
             { successMessage: t("exercises.assignment.submitted") },
         )
@@ -280,7 +274,7 @@ export const ChallengeMethodSolver = ({
             return
         }
         const ok = await runRest(
-            () => submitFile.trigger({ id: challengeId, file, model: model ?? undefined }).catch(mapSubmitError),
+            () => submitFile.trigger({ id: challengeId, file }).catch(mapSubmitError),
             { successMessage: t("exercises.assignment.submitted") },
         )
         if (ok !== null) {
@@ -326,7 +320,7 @@ export const ChallengeMethodSolver = ({
         // SAME multipart path as a single-file upload (grade = submit, consumes an attempt).
         const zipFile = new File([prepared.blob], prepared.fileName, { type: "application/zip" })
         const ok = await runRest(
-            () => submitFile.trigger({ id: challengeId, file: zipFile, model: model ?? undefined }).catch(mapSubmitError),
+            () => submitFile.trigger({ id: challengeId, file: zipFile }).catch(mapSubmitError),
             { successMessage: t("exercises.assignment.submitted") },
         )
         if (ok !== null) {
@@ -348,7 +342,6 @@ export const ChallengeMethodSolver = ({
                     payloadType: "CODE",
                     code: sandboxCode,
                     language: sandboxCodeLanguage.trim() || "text",
-                    ...(model ? { model } : {}),
                 },
             }),
             { successMessage: t("exercises.assignment.submitted") },
@@ -368,22 +361,6 @@ export const ChallengeMethodSolver = ({
             </div>
         )
     }
-
-    // Shared AI grading model picker for the github / file tabs (each model grades
-    // differently); the sandbox tab has its own picker inside GradeCodePanel.
-    const modelPicker = (
-        <div className="flex flex-col gap-2">
-            <AiModelPicker
-                catalog={modelsSwr.data}
-                value={model}
-                onChange={setModel}
-                isDisabled={busy}
-            />
-            <Typography type="body-xs" color="muted">
-                {t("codeGrading.modelHint")}
-            </Typography>
-        </div>
-    )
 
     // The heavy PROJECT grade cap surface (PIN §3), shown on the github + file submits: a
     // muted `used/2` hint while quota remains, or a danger note once the cap is reached. The
@@ -441,7 +418,6 @@ export const ChallengeMethodSolver = ({
                 </Typography>
             ) : null}
             {projectGradeHint}
-            {modelPicker}
         </div>
     )
 
@@ -513,7 +489,6 @@ export const ChallengeMethodSolver = ({
 
             {projectGradeHint}
 
-            {modelPicker}
 
             <div>
                 <Button
@@ -643,7 +618,6 @@ export const ChallengeMethodSolver = ({
 
             {projectGradeHint}
 
-            {modelPicker}
 
             <div>
                 <Button
@@ -674,10 +648,6 @@ export const ChallengeMethodSolver = ({
             language={sandboxCodeLanguage}
             onCodeChange={setSandboxCode}
             onLanguageChange={setSandboxCodeLanguage}
-            // Thread the shared model down so the toolbar picker drives the same state the
-            // formal CODE submission posts (not just an in-panel grade).
-            model={model}
-            onModelChange={setModel}
             setupSql={seedSql ?? undefined}
             // The seed's schema/ERD is rendered once in the shared right column
             // (ChallengeProblemAside) — suppress the panel's raw-seed block here so the

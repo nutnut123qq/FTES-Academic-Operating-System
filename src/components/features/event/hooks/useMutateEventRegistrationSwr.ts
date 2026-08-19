@@ -4,9 +4,16 @@ import { useCallback, useState } from "react"
 import { useSWRConfig } from "swr"
 import { cancelEventRegistration, registerEvent } from "@/modules/api/rest/event"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
+import { MY_EVENT_REGISTRATIONS_SWR_KEY } from "@/hooks/swr/api/rest/queries/useGetMyEventRegistrationsSwr"
 
 /** Mọi cache của module sự kiện nằm dưới tiền tố `events` (danh mục · rail sắp tới · chi tiết). */
-const matchesEventKey = (key: unknown): boolean => Array.isArray(key) && key[0] === "events"
+const matchesEventKey = (key: unknown): boolean =>
+    Array.isArray(key)
+    && (key[0] === "events"
+        // Danh mục suy trạng thái "đã đăng ký" từ CHÍNH cache này (xem
+        // `useQueryEventsSwr`), nên nó phải được làm mới cùng lượt — không thì vừa đăng ký
+        // xong nút vẫn đứng nguyên chữ "Đăng ký" cho tới lần tải trang sau.
+        || key[0] === MY_EVENT_REGISTRATIONS_SWR_KEY)
 
 /**
  * Kết quả 1 lượt bấm: `unauthenticated` = khách (modal đăng nhập đã mở, KHÔNG phải lỗi nên

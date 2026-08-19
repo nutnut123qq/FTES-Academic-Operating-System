@@ -11,8 +11,12 @@ import { describe, expect, it, vi } from "vitest"
  *  - a rejected submit (duplicate report, rate limit, guest) keeps it open with
  *    the draft intact so the reporter can retry.
  *
- * HeroUI primitives are mocked to plain elements; the radio group becomes native
- * radios so a reason can be picked without React Aria.
+ * HeroUI primitives are mocked to plain elements, and the reason picker (the shared
+ * `SelectableCardGroup` block) becomes native radios so a reason can be picked without
+ * React Aria. The block is mocked rather than HeroUI's `Radio`: the dialog's contract is
+ * "the chosen value reaches onSubmit", and HOW the choice is drawn is the block's own
+ * business (it is what draws the selected state — a bare `<Radio>` draws none, which is
+ * the bug this dialog had).
  */
 
 vi.mock("next-intl", () => ({
@@ -44,36 +48,38 @@ vi.mock("@heroui/react", () => {
                 {children}
             </button>
         ),
-        RadioGroup: ({
-            value,
-            onChange,
-            children,
-        }: {
-            value: string
-            onChange: (next: string) => void
-            children: React.ReactNode
-        }) => (
-            <div
-                data-testid="reasons"
-                data-value={value}
-                onChange={(event) =>
-                    onChange((event.target as HTMLInputElement).value)
-                }
-            >
-                {children}
-            </div>
-        ),
-        Radio: ({ value, children }: { value: string; children: React.ReactNode }) => (
-            <label>
-                <input type="radio" name="reason" value={value} />
-                {children}
-            </label>
-        ),
         TextField: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
         TextArea: (props: React.ComponentProps<"textarea">) => <textarea {...props} />,
         Typography: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
     }
 })
+
+vi.mock("@/components/blocks/navigation/SelectableCardGroup", () => ({
+    SelectableCardGroup: ({
+        value,
+        onChange,
+        items,
+    }: {
+        value: string
+        onChange: (next: string) => void
+        items: Array<{ value: string; label: React.ReactNode }>
+    }) => (
+        <div data-testid="reasons" data-value={value}>
+            {items.map((item) => (
+                <label key={item.value}>
+                    <input
+                        type="radio"
+                        name="reason"
+                        value={item.value}
+                        checked={value === item.value}
+                        onChange={() => onChange(item.value)}
+                    />
+                    {item.label}
+                </label>
+            ))}
+        </div>
+    ),
+}))
 
 import { ReportDialog } from "./ReportDialog"
 

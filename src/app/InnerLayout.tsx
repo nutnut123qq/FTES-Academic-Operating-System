@@ -57,7 +57,7 @@ export const InnerLayout = ({ children }: PropsWithChildren) => {
         <Suspense>
             <NextThemesProvider 
                 attribute="class" 
-                defaultTheme="dark" 
+                defaultTheme="system" 
                 enableSystem={true} 
                 storageKey="ftesaos-theme"
             >

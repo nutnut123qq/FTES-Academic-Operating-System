@@ -101,14 +101,19 @@ const resolveLocale = (request: NextRequest, urlLocale?: string): string =>
 /**
  * Edge middleware (Next.js 16 `proxy` convention).
  *
- * Two-way auth routing, decided purely from the edge-readable session signal
+ * ONE-WAY auth routing, decided purely from the edge-readable session signal
  * ({@link AUTH_SIGNAL_COOKIE}) — the SPA still re-verifies the real session on
  * mount, so this is never trusted for authorization, only first-paint shell:
- * 1. Logged-in visitor on the marketing root → bounced to their dashboard
- *    (GitHub-style, zero landing flash).
- * 2. Logged-OUT visitor on a protected area → bounced to the ungated landing
- *    (`/home`) before any protected HTML renders.
- * Everything else falls through to the next-intl locale middleware unchanged.
+ * a logged-OUT visitor on a protected area is bounced to the ungated landing
+ * before any protected HTML renders. Everything else falls through to the
+ * next-intl locale middleware unchanged.
+ *
+ * The mirror rule — logged-IN visitor on the landing → their dashboard — is NOT
+ * here and must not be added: {@link AUTH_SIGNAL_COOKIE} is never set, so the
+ * check would read "logged out" for everyone and the branch would be dead. That
+ * redirect lives in the landing page itself
+ * ({@link import("@/components/features/home-landing/HomeLanding").HomeLanding}),
+ * which can see the real session.
  *
  * @param request - the incoming edge request
  * @returns a redirect, or the next-intl response

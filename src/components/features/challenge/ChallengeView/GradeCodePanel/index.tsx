@@ -21,7 +21,6 @@ import {
     SparkleIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
-import { AiModelPicker } from "@/components/reuseable/AiModelPicker"
 import { useGetAiCatalogModelsSwr } from "@/hooks/swr/api/rest/queries"
 import {
     usePostExecuteCodeSwr,
@@ -72,16 +71,6 @@ export interface GradeCodePanelProps {
     /** Reports language changes to a controlling caller (pairs with {@link language}). */
     onLanguageChange?: (language: string) => void
     /**
-     * Controlled AI grading model id (pairs with {@link onModelChange}). Set by the learn
-     * submission sandbox so the model the learner picks in this panel's toolbar also
-     * threads into its formal `CODE` "Nộp bài" — not just the in-panel practice grade.
-     * `null` = the BE default. Omit both for the standalone catalog solver (the panel then
-     * keeps its own internal model state).
-     */
-    model?: string | null
-    /** Reports model changes to a controlling caller (pairs with {@link model}). */
-    onModelChange?: (model: string | null) => void
-    /**
      * SQL seed dataset (the challenge's `seedSql`, VISIBLE to the learner). When set on
      * a SQL exercise it is threaded into the sandbox Run path as `setup_sql` — seeded
      * fresh, run in the same rolled-back transaction as the query — and shown to the
@@ -125,11 +114,9 @@ export interface GradeCodePanelProps {
      * WHERE the submission's score comes from — the BE decides this by challenge type and the
      * two paths are mutually exclusive:
      *
-     * - `"ai"` (default) — `CODE`/`ESSAY`: the LLM produces the score, so the picked model
-     *   genuinely changes the grade.
-     * - `"tests"` — `CODING`/`SQL`: hidden test cases produce the score and the model NEVER
-     *   moves it; AI only reviews quality (is the query optimal, not just correct). Saying
-     *   "each model grades differently" here would promise something the BE does not do.
+     * - `"ai"` (default) — `CODE`/`ESSAY`: the LLM produces the score.
+     * - `"tests"` — `CODING`/`SQL`: hidden test cases produce the score; AI only reviews
+     *   quality (is the query optimal, not just correct), it never moves the number.
      */
     scoreSource?: "ai" | "tests"
 }
@@ -249,8 +236,6 @@ export const GradeCodePanel = ({
     language: controlledLanguage,
     onCodeChange,
     onLanguageChange,
-    model: controlledModel,
-    onModelChange,
     setupSql,
     hideSeedNote = false,
     lockLanguage = false,
@@ -280,13 +265,10 @@ export const GradeCodePanel = ({
     const language = controlledLanguage ?? internalLanguage
     const setLanguage = onLanguageChange ?? setInternalLanguage
 
-    // Controlled/uncontrolled model — a caller that threads the picked model into its own
-    // formal submission (the learn sandbox) passes model + onModelChange; the standalone
-    // catalog solver omits both and the panel keeps its own state. `null` is a valid value
-    // (the BE default), so controlled-ness keys off onModelChange, not a nullish model.
-    const [internalModel, setInternalModel] = useState<string | null>(null)
-    const model = onModelChange ? (controlledModel ?? null) : internalModel
-    const setModel = onModelChange ?? setInternalModel
+    // KHÔNG cho chọn model nữa (góp ý #6): người học không có cơ sở để chọn giữa mười
+    // cái tên model, và mỗi model chấm một kiểu thì đó là chuyện của hệ thống. Không gửi
+    // `model` ⇒ backend dùng model mặc định của nó; panel vẫn IN RA model đã chấm
+    // (`gradingModelLabel`) nên vẫn truy được điểm này do ai chấm.
     const [errorKey, setErrorKey] = useState<string | null>(null)
     /** Re-run target for the error card's retry button. */
     const [lastAction, setLastAction] = useState<"run" | "grade" | "test" | null>(null)
@@ -464,16 +446,12 @@ export const GradeCodePanel = ({
                 language,
                 // AI reads the code to grade — no objective test-case execution (spec §5).
                 run_code_execution: false,
-                ...(model ? { model } : {}),
                 challengeId,
             })
             clearResults()
             setGradeResult(result ?? null)
         } catch (error) {
-            const key = toErrorKey(error)
-            setErrorKey(key)
-            // Model rejected by the BE allowlist → fall back to the default model.
-            if (key === "modelNotAllowed") setModel(null)
+            setErrorKey(toErrorKey(error))
         }
     }
 
@@ -483,8 +461,7 @@ export const GradeCodePanel = ({
         else void onRun()
     }
 
-    const gradingModelLabel = model
-        ?? modelsSwr.data?.defaults?.chat
+    const gradingModelLabel = modelsSwr.data?.defaults?.chat
         ?? t("codeGrading.defaultModel")
 
     const languageLabel = t(`codeGrading.languages.${language}`)
@@ -505,7 +482,7 @@ export const GradeCodePanel = ({
     return (
         <div className={cn("flex flex-col gap-3", className)}>
             {/* TOP TOOLBAR (IDE): left = language (locked chip | picker) + Format;
-                right = model picker + Chấm bằng AI + Run — all above the editor. */}
+                right = Chấm bằng AI + Run — all above the editor. */}
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-2">
                     {isLanguageLocked ? (
@@ -567,12 +544,6 @@ export const GradeCodePanel = ({
                     ) : null}
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                    <AiModelPicker
-                        catalog={modelsSwr.data}
-                        value={model}
-                        onChange={setModel}
-                        isDisabled={isBusy}
-                    />
                     {!hasSampleTests ? (
                         // Plain "Run" (no stdin) is only meaningful for exercises WITHOUT test
                         // cases — SQL (runs the query on the seeded dataset) or free code. An

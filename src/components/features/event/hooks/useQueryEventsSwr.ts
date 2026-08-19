@@ -1,7 +1,13 @@
 "use client"
 
+import { useMemo } from "react"
 import useSWR from "swr"
-import { getEvents, type EventView } from "@/modules/api/rest/event"
+import {
+    getEvents,
+    type EventRegistrationView,
+    type EventView,
+} from "@/modules/api/rest/event"
+import { useGetMyEventRegistrationsSwr } from "@/hooks/swr/api/rest/queries/useGetMyEventRegistrationsSwr"
 
 /** Event kind — the BE `event.events.type` CHECK set, lowercased to a label key. */
 export type EventType = "webinar" | "workshop" | "hackathon" | "competition" | "meetup"
@@ -114,6 +120,31 @@ const toEvent = (view: EventView): Event => ({
 })
 
 /**
+ * Fill in each card's `registrationStatus` from the viewer's OWN registrations.
+ *
+ * A status already on the card (i.e. the backend actually resolved one) always wins — this
+ * only fills the `null`s the list endpoint leaves behind. Exported for the unit test.
+ *
+ * @param events - catalog cards mapped from the list endpoint.
+ * @param registrations - rows from `GET /event/registrations/me` (empty for a guest).
+ * @returns the same cards with `registrationStatus` filled where it was missing.
+ */
+export const withMyRegistrationStatus = (
+    events: Array<Event>,
+    registrations: Array<EventRegistrationView>,
+): Array<Event> => {
+    if (registrations.length === 0) {
+        return events
+    }
+    const mine = new Map(registrations.map((row) => [row.eventId, row.status]))
+    return events.map((event) =>
+        event.registrationStatus
+            ? event
+            : { ...event, registrationStatus: mine.get(event.eventId) ?? null },
+    )
+}
+
+/**
  * Khoá SWR của danh mục sự kiện. Mọi cache của module sự kiện dùng chung tiền tố `events`
  * (danh mục · rail "sắp tới" · chi tiết) để `useMutateEventRegistrationSwr` revalidate 1 lượt.
  */
@@ -122,9 +153,25 @@ export const eventsSwrKey = ["events"]
 /**
  * Loads the public event catalog from `GET /api/v1/events` (REST) and maps each
  * {@link EventView} to the card {@link Event}. SWR-shaped; renders clean on an empty list.
+ *
+ * **Trạng thái đăng ký được ghép từ `GET /event/registrations/me`** (góp ý #18). Endpoint
+ * DANH SÁCH của backend dựng view bằng `toView(e, null)` — nghĩa là `myRegistrationStatus`
+ * LUÔN null cho mọi sự kiện, chỉ endpoint CHI TIẾT mới phân giải trạng thái thật. Vì vậy
+ * thẻ nào cũng hiện "Đăng ký" dù người dùng đã có chỗ, bấm vào thì backend trả lỗi trùng.
+ * Danh sách đăng ký của chính mình là dữ liệu ĐÃ CÓ endpoint, nên ghép ở đây sửa được
+ * ngay mà không phải chờ backend.
+ *
+ * Trường của backend vẫn được ưu tiên: hôm nào `list()` trả trạng thái thật thì nó thắng,
+ * và chỗ ghép này lặng lẽ thành thừa thay vì chọi nhau.
  */
 export const useQueryEventsSwr = () => {
     const { data, isLoading, error, mutate } = useSWR(eventsSwrKey, getEvents)
-    const events = (data ?? []).map(toEvent)
+    const { data: myRegistrations } = useGetMyEventRegistrationsSwr()
+
+    const events = useMemo(
+        () => withMyRegistrationStatus((data ?? []).map(toEvent), myRegistrations ?? []),
+        [data, myRegistrations],
+    )
+
     return { events, isLoading, error, mutate }
 }

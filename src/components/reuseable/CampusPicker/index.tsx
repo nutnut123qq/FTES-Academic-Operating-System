@@ -34,7 +34,7 @@ export interface CampusPickerProps {
 }
 
 /**
- * Single-select campus dropdown. Mirrors {@link AiModelPicker}'s HeroUI `Dropdown`
+ * Single-select campus dropdown built on HeroUI `Dropdown`
  * pattern (the repo carries no HeroUI `Select`): a bordered trigger showing the
  * selected campus `name` — or the {@link placeholder} when unset — over a menu whose
  * first entry clears the choice back to "no campus". Options render each campus `name`

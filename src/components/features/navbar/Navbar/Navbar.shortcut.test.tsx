@@ -43,6 +43,9 @@ vi.mock("./AccountMenuDropdown", () => ({ AccountMenuDropdown: () => <div /> }))
 vi.mock("./NotificationBell", () => ({ NotificationBell: () => <div /> }))
 vi.mock("./CartButton", () => ({ CartButton: () => <div /> }))
 vi.mock("./LanguageDropdown", () => ({ LanguageDropdown: () => <div /> }))
+// Stubbed like every other child: the real toggle pulls next-themes + its own
+// phosphor icons, none of which this shortcut test has any business rendering.
+vi.mock("./ThemeToggle", () => ({ ThemeToggle: () => <div /> }))
 
 vi.mock("./SearchInline", () => ({
     SearchInline: () => <div data-testid="search-trigger" />,

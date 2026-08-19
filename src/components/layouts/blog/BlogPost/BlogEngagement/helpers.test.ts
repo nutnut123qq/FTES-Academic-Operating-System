@@ -49,13 +49,23 @@ describe("mergeComments — deduplicated page accumulation", () => {
     })
 })
 
-describe("sortComments — stable oldest-first order", () => {
-    it("orders by createdAt ascending", () => {
+describe("sortComments — reader-chosen order", () => {
+    // Default flipped to newest-first (góp ý #20): the BE hands back createdAt ASC, so
+    // the old default made a reader scroll the whole thread to reach what was just said.
+    it("defaults to createdAt descending (newest first)", () => {
         const map = new Map<string, BlogCommentResponse>([
             ["b", comment({ id: "b", createdAt: "2026-07-02T00:00:00Z" })],
             ["a", comment({ id: "a", createdAt: "2026-07-01T00:00:00Z" })],
         ])
-        expect(sortComments(map).map((c) => c.id)).toEqual(["a", "b"])
+        expect(sortComments(map).map((c) => c.id)).toEqual(["b", "a"])
+    })
+
+    it("orders by createdAt ascending in the 'oldest' mode", () => {
+        const map = new Map<string, BlogCommentResponse>([
+            ["b", comment({ id: "b", createdAt: "2026-07-02T00:00:00Z" })],
+            ["a", comment({ id: "a", createdAt: "2026-07-01T00:00:00Z" })],
+        ])
+        expect(sortComments(map, "oldest").map((c) => c.id)).toEqual(["a", "b"])
     })
 
     it("breaks equal timestamps deterministically by id", () => {

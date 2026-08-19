@@ -29,7 +29,15 @@ import { useMutateCommentActionsSwr } from "./hooks/useMutateCommentActionsSwr"
 import { useMutateReportContentSwr } from "./hooks/useMutateReportContentSwr"
 import { useMutateAcceptAnswerSwr } from "./hooks/useMutateAcceptAnswerSwr"
 import { useMutateSharePostSwr } from "./hooks/useMutateSharePostSwr"
+import { useCommunityComposerOverlayState } from "@/hooks/zustand/overlay/hooks"
 import { PostEditDialog } from "./PostEditDialog"
+
+/**
+ * Cap on the quoted-post snippet stashed for the composer. `QuotedPostCard` clamps to
+ * three lines anyway, so anything past this is carried through the overlay store to be
+ * thrown away on screen.
+ */
+const QUOTE_SNIPPET_MAX = 280
 
 /** Props for {@link CommunityPostContent}. */
 export interface CommunityPostContentProps {
@@ -99,6 +107,7 @@ export const CommunityPostContent = ({
     const submitReport = useMutateReportContentSwr()
     const acceptAnswer = useMutateAcceptAnswerSwr()
     const recordShare = useMutateSharePostSwr()
+    const { openQuote } = useCommunityComposerOverlayState()
     const [deepLinked, setDeepLinked] = useState(false)
     const [isEditOpen, setEditOpen] = useState(false)
     const [isDeleteOpen, setDeleteOpen] = useState(false)
@@ -278,6 +287,20 @@ export const CommunityPostContent = ({
                     onCommentClick={() => {
                         document.getElementById(commentsRegionId)?.focus()
                     }}
+                    // 🔁 ĐĂNG LẠI (góp ý #16). Feed đã có nút này từ lâu; trang chi tiết —
+                    // đúng chỗ người ta đọc xong một bài và muốn chia sẻ lại — thì không,
+                    // vì `PostEngagementBar` gác nút bằng `onRepost != null` và bề mặt này
+                    // quên truyền handler. Cùng một `openQuote` với feed, nên bài trích dẫn
+                    // ra giống hệt nhau dù bấm từ đâu.
+                    onRepost={() =>
+                        openQuote({
+                            id: postId,
+                            author: authorName,
+                            authorUsername: post.authorUsername,
+                            title: post.title,
+                            snippet: renderedBody.slice(0, QUOTE_SNIPPET_MAX),
+                        })
+                    }
                     postUrl={postUrl}
                     shareTitle={post.title}
                     onShared={() => recordShare(postId)}

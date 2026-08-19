@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { Button, Dropdown, Label, Modal, Typography } from "@heroui/react"
 import {
     SquaresFourIcon,
@@ -18,6 +18,7 @@ import { useTranslations } from "next-intl"
 import { useSearchParams } from "next/navigation"
 import { usePathname, useRouter } from "@/i18n/navigation"
 import { CollapsibleSidebar } from "@/components/blocks/navigation/CollapsibleSidebar"
+import { useSidebarCollapsed } from "@/components/blocks/navigation/CollapsibleSidebar/context"
 import { SubjectWorkspaceRail } from "../SubjectWorkspaceRail"
 import { SidebarNavGroup } from "@/components/blocks/navigation/SidebarNavGroup"
 import { SidebarNavItem } from "@/components/blocks/navigation/SidebarNavItem"
@@ -118,13 +119,14 @@ const FACEPILE_MEMBERS = 6
  * expanded or collapsed, the column does not move a pixel, and no state has to be mirrored
  * to keep it still.
  *
- * The price is the content cap: viewport-centred content may not run closer to the left
- * edge than the rail is wide, so the cap is `min(72rem, 100vw - 34rem)` — 16rem of rail
- * plus 1rem of air, reserved on BOTH sides. It only bites under ~1696px (at 1280px the
- * column is 46rem); from there up it is the plain 72rem every page uses. Below `xl` the
- * rail goes back to being an in-flow sticky column, because reserving 32rem of a 768px
- * tablet would leave the content 14rem wide — there the rail sits beside the content as
- * it always did.
+ * The price is that the content has to reserve the rails' width itself, since an out-of-flow
+ * column no longer pushes anything: from `xl` it carries a left/right padding of 17rem
+ * (16rem of rail + 1rem of air) per side. That reservation FOLLOWS the rail — a collapsed
+ * rail is 4rem, so its side drops to 5rem and the content takes the width back, which is the
+ * whole point of collapsing one. Reading that state costs a {@link RailCollapsedProbe},
+ * because the block keeps its collapsed flag to itself. Below `xl` the rail goes back to
+ * being an in-flow sticky column, because reserving 32rem of a 768px tablet would leave the
+ * content 14rem wide — there the rail sits beside the content as it always did.
  *
  * Feature owns data (mock subject) + active-route detection + navigation; the
  * blocks own all styling.
@@ -148,6 +150,11 @@ export const SubjectWorkspaceShell = ({
     // keyed by src so a subject change retries its own image
     const [brokenImageUrl, setBrokenImageUrl] = useState<string | null>(null)
     const [leaveOpen, setLeaveOpen] = useState(false)
+    // Bề rộng THẬT mà hai rail đang chiếm. Từ `xl` rail nằm ngoài flow (`fixed`) nên cột nội
+    // dung không tự biết bên cạnh mình còn 16rem hay chỉ 4rem — nó phải được kể. Hai cờ này
+    // là thứ giữ cho khoảng chừa hai bên bám theo trạng thái thật thay vì luôn trừ 17rem.
+    const [isLeftRailCollapsed, setIsLeftRailCollapsed] = useState(false)
+    const [isRightRailCollapsed, setIsRightRailCollapsed] = useState(false)
     const imageUrl =
         subject?.imageUrl && subject.imageUrl !== brokenImageUrl ? subject.imageUrl : null
     const shownMembers = members.slice(0, FACEPILE_MEMBERS)
@@ -183,10 +190,12 @@ export const SubjectWorkspaceShell = ({
                 Height stays `calc(100dvh-4rem)` — SubjectFeAlbum locks its own
                 frame to that number, so changing it here would skew that page.
 
-                ponytail: `xl:fixed` — from 1280px the rail leaves the flex row, which
-                is the whole trick behind "thu rail lại thì nội dung không nhúc nhích":
-                out of flow it contributes no width, so the content beside it is centred
-                on the viewport and its position no longer depends on 16rem vs 4rem.
+                ponytail: `xl:fixed` — from 1280px the rail leaves the flex row, so its
+                width stops being an automatic input to the content beside it and the
+                column decides for itself how much room to leave (see the padding below).
+                It used to leave a FIXED 17rem per side so collapsing moved nothing; góp ý
+                #9 asks for the opposite — "extend ra 2 bên khi collapse các sidebar" — so
+                the reservation now follows the rail, and yes, the content does widen.
                 `top-16` + `h-[calc(100dvh-4rem)]` already describe a viewport-pinned
                 box, so `fixed` looks identical to the `sticky` it replaces — the page
                 starts right under the 4rem sticky navbar, so even at scroll 0 the rail
@@ -199,6 +208,7 @@ export const SubjectWorkspaceShell = ({
                     storageKey="subject-workspace-sidebar-collapsed"
                     className="h-full"
                 >
+                    <RailCollapsedProbe onChange={setIsLeftRailCollapsed} />
                     {NAV_GROUPS.map((group, index) => (
                         <SidebarNavGroup
                             key={group.label}
@@ -220,19 +230,29 @@ export const SubjectWorkspaceShell = ({
             </div>
 
             {/* Nội dung ĂN HẾT khoảng giữa hai rail, không còn trần 72rem.
-                `100vw - 34rem` = 17rem mỗi bên (16rem rail + 1rem hở) — đúng bằng chỗ hai
-                rail chiếm, nên mép nội dung luôn dừng sát rail chứ không chui xuống dưới.
-                Trần `max-w-6xl` cũ khoá ở 1152px: tại 1920 khoảng trống giữa hai rail là
-                1396px nên nó bỏ phí 122px MỖI BÊN, và càng màn rộng càng phí.
+                Chỗ chừa cho rail giờ là PADDING của chính cột này chứ không phải một trần
+                bề rộng đối xứng: 17rem (16rem rail + 1rem hở) khi rail mở, 5rem (4rem +
+                1rem) khi rail thu. Trần cũ `100vw - 34rem` luôn trừ 17rem MỖI BÊN kể cả lúc
+                rail đã thu còn 4rem, nên thu rail lại chẳng nở ra được pixel nào — đúng lời
+                phàn nàn "xem đề thì nên extend ra 2 bên khi collapse các sidebar". Padding
+                còn xử đúng cả trường hợp LỆCH (thu một bên, mở một bên), thứ mà một trần
+                canh giữa không thể diễn tả: nó buộc phải trừ theo bên rộng hơn ở cả hai phía.
 
-                `mx-auto` giữ lại cho dải dưới `xl`: ở đó rail còn nằm trong flow nên khối
-                này là một ô flex bình thường, canh giữa phần còn lại.
+                Chỉ áp từ `xl` — đó là ngưỡng rail rời khỏi flow (`fixed`). Dưới `xl` rail
+                vẫn là ô flex bình thường nên nó tự đẩy nội dung, và `mx-auto` canh giữa phần
+                còn lại như cũ.
 
-                ponytail: bỏ trần nghĩa là trên màn siêu rộng (≥2560px) dòng văn bản dài
+                ponytail: không có trần nghĩa là trên màn siêu rộng (≥2560px) dòng văn bản dài
                 theo — đây là lựa chọn có chủ đích "chiếm toàn bộ chiều rộng". Muốn kẹp lại
                 thì đặt trần MỚI ở đây, đừng trả về 72rem (nó tính theo cỡ chữ, không theo
                 chỗ trống thật giữa hai rail). Trang tab tự lo padding. */}
-            <div className="mx-auto w-full min-w-0 xl:max-w-[calc(100vw_-_34rem)]">
+            <div
+                className="mx-auto w-full min-w-0 xl:pl-[var(--rail-gutter-left)] xl:pr-[var(--rail-gutter-right)]"
+                style={{
+                    "--rail-gutter-left": isLeftRailCollapsed ? "5rem" : "17rem",
+                    "--rail-gutter-right": isRightRailCollapsed ? "5rem" : "17rem",
+                } as React.CSSProperties}
+            >
                 {/* subject identity header — cover banner (ảnh bìa) then identity row */}
                 <header className="border-b border-separator">
                     {/* Ảnh bìa và hàng danh tính DÙNG CHUNG đúng một khung (`p-4 sm:p-6`
@@ -433,10 +453,10 @@ export const SubjectWorkspaceShell = ({
                 hệt nhau: `md:sticky top-16` + `h-[calc(100dvh-4rem)]` dưới `xl`, `xl:fixed
                 right-0` từ 1280px trở lên để nó rời khỏi flow y như rail trái.
 
-                KHÔNG phải nới trần bề rộng nội dung: `xl:max-w-[min(72rem,100vw-34rem)]` ở
-                trên vốn đã trừ 17rem cho MỖI bên ("nhân đôi cho cân" trong docblock của nó),
-                nhưng trước nay chỉ bên trái có rail — 17rem bên phải bị bỏ trống. Rail này
-                rơi đúng vào chỗ đang để không, nên nội dung không hẹp đi một pixel nào.
+                KHÔNG phải nới chỗ chừa của nội dung: cột nội dung ở trên vốn đã chừa 17rem
+                cho MỖI bên, nhưng trước nay chỉ bên trái có rail — 17rem bên phải bị bỏ
+                trống. Rail này rơi đúng vào chỗ đang để không, nên nội dung không hẹp đi một
+                pixel nào.
 
                 Ẩn dưới `md` cùng ngưỡng với rail trái: dưới đó workspace dùng tab strip
                 ngang, nhét thêm một cột nữa là hết chỗ đọc.
@@ -456,6 +476,7 @@ export const SubjectWorkspaceShell = ({
                     side="right"
                     className="h-full"
                 >
+                    <RailCollapsedProbe onChange={setIsRightRailCollapsed} />
                     <SubjectWorkspaceRail subjectId={subjectId} />
                 </CollapsibleSidebar>
             </div>
@@ -472,6 +493,24 @@ export const SubjectWorkspaceShell = ({
             />
         </div>
     )
+}
+
+/**
+ * Mirrors the surrounding rail's collapsed flag back up to the shell. Renders nothing.
+ *
+ * {@link CollapsibleSidebar} keeps that flag to itself (local state + `localStorage`) and
+ * only publishes it DOWNWARD, through `SidebarCollapsedContext` — so a SIBLING, which is
+ * what the content column is, has no way to read it. Mounting this inside the rail puts a
+ * reader on the right side of the provider and hands the value over, which is what lets the
+ * column give back the 12rem a collapsed rail no longer needs. `onChange` is a `setState`
+ * from the shell, so the effect settles in one pass.
+ */
+const RailCollapsedProbe = ({ onChange }: { onChange: (collapsed: boolean) => void }) => {
+    const collapsed = useSidebarCollapsed()
+    useEffect(() => {
+        onChange(collapsed)
+    }, [collapsed, onChange])
+    return null
 }
 
 /**

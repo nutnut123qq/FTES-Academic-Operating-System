@@ -89,6 +89,12 @@ export interface BlogCategoryResponse {
 
 export interface CreateBlogCommentRequest {
     content: string
+    /**
+     * Id of the comment being replied to — omit (or `null`) for a top-level comment.
+     * The BE accepts ONE level: a reply must point at a root comment of the same post
+     * (`CommentService.resolveParent`), so a reply-to-a-reply is rejected.
+     */
+    parentId?: string
 }
 
 export interface UpdateBlogCommentRequest {
@@ -99,6 +105,8 @@ export interface BlogCommentResponse {
     id: string
     postId: string
     userId: string
+    /** Parent comment id when this row is a reply; `null`/absent for a root comment. */
+    parentId?: string | null
     content: string
     emojiCount: number
     createdAt: string

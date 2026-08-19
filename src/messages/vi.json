@@ -502,6 +502,7 @@
         "signIn": "Đăng nhập",
         "learn": "Học",
         "toggleLanguage": "Chuyển đổi ngôn ngữ",
+        "toggleTheme": "Đổi giao diện sáng/tối",
         "appearance": "Giao diện",
         "mobileMenu": "Điều hướng mobile",
         "courseMenu": "Mục lục khoá học",
@@ -2968,8 +2969,7 @@
         },
         "checkout": {
             "title": "Thanh toán",
-            "summaryTab": "Tóm tắt",
-            "paymentTab": "Thanh toán",
+            "backToSummary": "Quay lại tóm tắt",
             "continueToPayment": "Tiếp tục thanh toán",
             "amountVnd": "{amount}₫",
             "amountCoin": "{amount} Coin",
@@ -5468,7 +5468,15 @@
             "deleteError": "Không xoá được, hãy thử lại.",
             "confirmDeleteTitle": "Xoá bình luận?",
             "confirmDeleteBody": "Bình luận này sẽ bị xoá vĩnh viễn. Bạn không thể hoàn tác.",
-            "confirmDelete": "Xoá"
+            "confirmDelete": "Xoá",
+            "reply": "Trả lời",
+            "replyPlaceholder": "Viết trả lời…",
+            "sortLabel": "Sắp xếp bình luận",
+            "sort": {
+                "newest": "Mới nhất",
+                "oldest": "Cũ nhất",
+                "mostLiked": "Nhiều tym nhất"
+            }
         },
         "startHere": "Bắt đầu ở đây",
         "viewSource": "Xem trên GitHub",
@@ -7079,6 +7087,7 @@
         "placeholder": "Nội dung đang được xây dựng.",
         "more": "Thêm",
         "menu": {
+            "feed": "Cộng đồng",
             "groups": "Nhóm",
             "events": "Sự kiện",
             "blog": "Blog",
@@ -8389,8 +8398,8 @@
             "freeTag": "Miễn phí",
             "unavailableTag": "Không khả dụng",
             "geminiFallbackHint": "Model miễn phí có giới hạn lượt dùng; hết lượt sẽ tự chuyển sang Gemini.",
-            "modelHint": "Mỗi model chấm khác nhau — điểm và nhận xét phụ thuộc vào model bạn chọn.",
-            "modelHintReview": "Điểm chấm theo test case (gồm cả test ẩn) nên không đổi theo model. Model bạn chọn chỉ quyết định phần FrosTES nhận xét chất lượng bài làm.",
+            "modelHint": "Hệ thống tự chọn model chấm phù hợp — bạn không cần chọn.",
+            "modelHintReview": "Điểm chấm theo test case (gồm cả test ẩn) nên không đổi theo model. Model do hệ thống chọn chỉ quyết định phần FrosTES nhận xét chất lượng bài làm.",
             "gradeWithAi": "Chấm bằng FrosTES",
             "regrade": "Chấm lại",
             "regradeHint": "Đổi model rồi chấm lại để so sánh — code của bạn được giữ nguyên.",

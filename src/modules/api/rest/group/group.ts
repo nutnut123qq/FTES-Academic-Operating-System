@@ -416,23 +416,73 @@ export const presignGroupMedia = async (
     })
 
 /**
+ * Các tên trường có thể chứa định danh ảnh trong phản hồi của upload.ftes.vn.
+ *
+ * ponytail: dò theo danh sách chứ không ghim MỘT tên, vì dịch vụ upload không nằm trong bất
+ * kỳ repo nào trên máy này nên không đọc được contract thật của nó. Trần của cách làm này:
+ * nếu dịch vụ đặt tên trường khác cả bảy cái dưới đây thì {@link uploadGroupMediaFile} ném
+ * lỗi có thông điệp rõ ràng — vẫn tốt hơn hẳn cách cũ (vứt phản hồi đi rồi báo thành công
+ * trong khi ảnh không bao giờ hiện). Xác nhận được tên thật thì rút danh sách này về đúng
+ * một tên.
+ */
+const UPLOAD_REF_FIELDS = ["id", "imageId", "image_id", "key", "storageKey", "url", "path"] as const
+
+/**
+ * Rút định danh ảnh ra khỏi phản hồi JSON của dịch vụ upload.
+ *
+ * Chấp nhận cả `{ id }` phẳng lẫn `{ data: { id } }` (envelope kiểu backend nhà), và trả về
+ * nguyên chuỗi dù đó là id trần hay URL — backend nhận cả hai dạng.
+ *
+ * @param payload - thân phản hồi đã parse JSON (có thể là bất cứ thứ gì).
+ * @returns định danh tìm được, hoặc `null` khi không nhận ra trường nào.
+ */
+export const readUploadedRef = (payload: unknown): string | null => {
+    if (typeof payload === "string") {
+        return payload.trim() || null
+    }
+    if (payload === null || typeof payload !== "object") {
+        return null
+    }
+    const record = payload as Record<string, unknown>
+    for (const field of UPLOAD_REF_FIELDS) {
+        const value = record[field]
+        if (typeof value === "string" && value.trim() !== "") {
+            return value.trim()
+        }
+    }
+    return "data" in record ? readUploadedRef(record.data) : null
+}
+
+/**
  * Step 2: POST the raw file to the presigned `uploadUrl` as multipart/form-data
  * (field `file`, mirroring the upload.ftes.vn `/api/images` contract). `uploadUrl`
  * is an absolute URL to the storage service, so this bypasses `restRequest`
  * (which targets the API base + envelope) and uses a bare `fetch`.
  *
- * @throws Error when the upload responds non-2xx.
+ * TRẢ VỀ định danh ảnh mà dịch vụ upload cấp — đây là nửa còn thiếu của lỗi ảnh nhóm không
+ * hiện (góp ý #13). Trước đây hàm này `await fetch(...)` rồi VỨT phản hồi đi, nên bước verify
+ * chỉ còn cái khoá backend tự sinh lúc presign để dựng URL đọc; dịch vụ upload chưa từng biết
+ * khoá đó nên URL luôn 404.
+ *
+ * @throws Error khi upload trả non-2xx, hoặc khi phản hồi không có trường định danh nào nhận
+ *         ra được (im lặng ở đây đồng nghĩa với việc lại lưu một ảnh không bao giờ hiện).
  */
 export const uploadGroupMediaFile = async (
     uploadUrl: string,
     file: File,
-): Promise<void> => {
+): Promise<string> => {
     const form = new FormData()
     form.append("file", file)
     const response = await fetch(uploadUrl, { method: "POST", body: form })
     if (!response.ok) {
         throw new Error(`group media upload failed (${response.status})`)
     }
+    const payload = await response.json().catch(() => null)
+    const ref = readUploadedRef(payload) ?? response.headers.get("Location")?.trim()
+    if (!ref) {
+        throw new Error("group media upload returned no image reference")
+    }
+    return ref
 }
 
 /** Step 3: confirm the object landed and set it on the group. Returns the signed URL. */

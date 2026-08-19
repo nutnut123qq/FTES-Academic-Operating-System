@@ -2,12 +2,43 @@
 
 import React, { useState } from "react"
 import { Button, Checkbox, Chip, Label, Modal, Typography } from "@heroui/react"
-import { ClockIcon, TargetIcon, TrashIcon } from "@phosphor-icons/react"
+import { ArrowSquareOutIcon, ClockIcon, TargetIcon, TrashIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { ProgressMeter } from "@/components/blocks/stats/ProgressMeter"
 import { AiToolModelNote } from "../AiToolShell"
 import type { StudyPlanView } from "@/modules/api/rest/ai"
-import { buildTaskKey, isTaskDone } from "./logic"
+import { buildTaskKey, isTaskDone, parseResourceHint } from "./logic"
+
+/**
+ * Renders a task's `resource_hint`. The AI service writes this field as free text, so the
+ * link it points at often sits inside the sentence — printed verbatim it was dead text the
+ * learner had to retype. When a safe http(s) URL is present the whole hint becomes an
+ * external link; otherwise it stays the muted caption it always was.
+ */
+const ResourceHint = ({ hint }: { hint: string }) => {
+    const { label, href } = parseResourceHint(hint)
+    if (!label) return null
+    if (!href) {
+        return (
+            <Typography type="body-xs" color="muted">
+                {label}
+            </Typography>
+        )
+    }
+    return (
+        <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            // Link nằm trong <Label> của Checkbox — chặn bubbling để mở tài liệu không tick task.
+            onClick={(event) => event.stopPropagation()}
+            className="inline-flex min-w-0 items-center gap-1 text-xs text-accent hover:underline"
+        >
+            <ArrowSquareOutIcon aria-hidden focusable="false" className="size-3.5 shrink-0" />
+            <span className="min-w-0 truncate">{label}</span>
+        </a>
+    )
+}
 
 /** Props for {@link PlanTimeline}. */
 export interface PlanTimelineProps {
@@ -111,9 +142,7 @@ export const PlanTimeline = ({ plan, onToggleTask, onArchive, isArchiving }: Pla
                                                             </span>
                                                         ) : null}
                                                         {task.resource_hint ? (
-                                                            <Typography type="body-xs" color="muted">
-                                                                {task.resource_hint}
-                                                            </Typography>
+                                                            <ResourceHint hint={task.resource_hint} />
                                                         ) : null}
                                                     </div>
                                                 </div>

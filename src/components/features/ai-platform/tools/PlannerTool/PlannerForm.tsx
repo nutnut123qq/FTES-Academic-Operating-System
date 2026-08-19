@@ -4,8 +4,6 @@ import React, { useState } from "react"
 import { Button, Input, Label, TextArea, TextField, Typography, cn } from "@heroui/react"
 import { XIcon } from "@phosphor-icons/react"
 import { useLocale, useTranslations } from "next-intl"
-import { useGetAiCatalogModelsSwr } from "@/hooks/swr/api/rest/queries/useGetAiCatalogModelsSwr"
-import { AiModelPicker } from "@/components/reuseable/AiModelPicker"
 import type { CreateStudyPlanRequest } from "@/modules/api/rest/ai"
 
 /** Deadline presets (days) — within the 7–180 range the spec allows. */
@@ -25,14 +23,14 @@ export interface PlannerFormProps {
 
 /**
  * The study-plan creation form: a required goal plus deadline / weekly-hours presets,
- * an optional current level, known/target topic chips, and an optional model picker.
+ * an optional current level and known/target topic chips. Model is NOT a choice the
+ * learner makes (góp ý #6) — the backend picks its configured default.
  * Builds a {@link CreateStudyPlanRequest} and hands it to the parent, which owns the
  * long synchronous POST and the resulting plan view.
  */
 export const PlannerForm = ({ onSubmit, isBusy }: PlannerFormProps) => {
     const t = useTranslations("aiPlatform.toolPages.planner")
     const locale = useLocale()
-    const { data: catalog } = useGetAiCatalogModelsSwr()
 
     const [goal, setGoal] = useState("")
     const [deadlineDays, setDeadlineDays] = useState<number>(28)
@@ -40,7 +38,6 @@ export const PlannerForm = ({ onSubmit, isBusy }: PlannerFormProps) => {
     const [currentLevel, setCurrentLevel] = useState("")
     const [knownTopics, setKnownTopics] = useState<string[]>([])
     const [targetTopics, setTargetTopics] = useState<string[]>([])
-    const [model, setModel] = useState<string | null>(null)
 
     const ready = goal.trim().length > 0 && !isBusy
 
@@ -54,7 +51,9 @@ export const PlannerForm = ({ onSubmit, isBusy }: PlannerFormProps) => {
             ...(knownTopics.length ? { knownTopics } : {}),
             ...(targetTopics.length ? { targetTopics } : {}),
             language: locale,
-            ...(model ? { model } : {}),
+            // KHÔNG gửi `model` (góp ý #6): người học không cần biết model nào — bỏ
+            // trống thì backend dùng `defaults.chat` của nó. Kết quả vẫn in ra model
+            // ĐÃ dùng (`modelUsed`) nên vẫn truy được nguồn.
         })
     }
 
@@ -116,19 +115,6 @@ export const PlannerForm = ({ onSubmit, isBusy }: PlannerFormProps) => {
                 onChange={setTargetTopics}
                 isDisabled={isBusy}
             />
-
-            <div className="flex flex-col gap-2">
-                <Typography type="body-sm" weight="medium">
-                    {t("modelLabel")}
-                </Typography>
-                <AiModelPicker
-                    catalog={catalog}
-                    value={model}
-                    onChange={setModel}
-                    isDisabled={isBusy}
-                    className="self-start"
-                />
-            </div>
 
             <Button variant="primary" onPress={submit} isDisabled={!ready} isPending={isBusy}>
                 {isBusy ? t("generating") : t("generate")}

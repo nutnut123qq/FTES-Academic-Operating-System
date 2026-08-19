@@ -146,10 +146,7 @@ export const ChallengeSubmission = () => {
     const [code, setCode] = useState("")
     /** Learner-picked language; null → derive the default from the challenge type. */
     const [languageOverride, setLanguageOverride] = useState<string | null>(null)
-    // Learner-picked AI grading model — lifted so the GradeCodePanel toolbar picker drives
-    // the model of the formal CODE "Nộp bài", not just the in-panel practice grade (pinned
-    // contract §2: a CODE submission carries an optional model). Null → the BE default.
-    const [model, setModel] = useState<string | null>(null)
+    // KHÔNG gửi `model` nữa (góp ý #6) — backend chọn model mặc định của nó.
 
     const type = challenge?.type ?? ""
     /** Unified solver kind — the single dispatch key across both BE type vocabularies. */
@@ -280,7 +277,7 @@ export const ChallengeSubmission = () => {
             if (code.trim() === "") {
                 return null
             }
-            return { payloadType: "CODE", code, language: language.trim() || "text", ...(model ? { model } : {}) }
+            return { payloadType: "CODE", code, language: language.trim() || "text" }
         }
         return null
     }
@@ -509,8 +506,6 @@ export const ChallengeSubmission = () => {
                                                     language={language}
                                                     onCodeChange={setCode}
                                                     onLanguageChange={setLanguageOverride}
-                                                    model={model}
-                                                    onModelChange={setModel}
                                                     setupSql={challenge.seedSql ?? undefined}
                                                     // The seed's schema/ERD is rendered once in the
                                                     // right column (ChallengeProblemAside) — suppress

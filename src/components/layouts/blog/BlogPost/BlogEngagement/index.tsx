@@ -17,7 +17,8 @@ import { usePostReactToBlogCommentSwr } from "@/hooks/swr/api/rest/mutations/use
 import type { BlogCommentResponse } from "@/modules/api/rest/blog"
 import { CommentComposer } from "./CommentComposer"
 import { CommentItem } from "./CommentItem"
-import { mergeComments, sortComments } from "./helpers"
+import { COMMENT_SORTS, mergeComments, repliesByParent, sortComments, type CommentSort } from "./helpers"
+import { SegmentedControl } from "@/components/blocks/navigation/SegmentedControl"
 
 /** Comment page size — matches the spec ("size 20, load more while hasNext"). */
 const COMMENTS_PAGE_SIZE = 20
@@ -98,6 +99,10 @@ export const BlogEngagement = ({ postId, initialEmojiCount }: BlogEngagementProp
     // id of the comment whose reaction toggle is currently in flight (blocks double-toggle)
     const [reactingCommentId, setReactingCommentId] = useState<string | null>(null)
     const [editingId, setEditingId] = useState<string | null>(null)
+    /** Thứ tự đọc thread (góp ý #20) — mặc định mới nhất trước. */
+    const [sort, setSort] = useState<CommentSort>("newest")
+    /** Bình luận gốc đang mở ô trả lời, `null` = không mở ô nào. */
+    const [replyingToId, setReplyingToId] = useState<string | null>(null)
     const [deleteTarget, setDeleteTarget] = useState<BlogCommentResponse | null>(null)
     const [deleteFailed, setDeleteFailed] = useState(false)
 
@@ -112,17 +117,22 @@ export const BlogEngagement = ({ postId, initialEmojiCount }: BlogEngagementProp
         setCommentsById((prev) => mergeComments(prev, commentsSwr.data?.items))
     }, [commentsSwr.data])
 
-    const comments = useMemo(() => sortComments(commentsById), [commentsById])
+    const comments = useMemo(() => sortComments(commentsById, sort), [commentsById, sort])
+    const replies = useMemo(() => repliesByParent(commentsById), [commentsById])
     const hasNext = commentsSwr.data?.hasNext ?? false
     const isFirstLoad = commentsSwr.isLoading && commentsById.size === 0
 
-    const handleCreate = async (text: string) => {
+    const handleCreate = async (text: string, parentId?: string) => {
         if (!user) {
             return false
         }
         try {
-            const created = await createComment.trigger({ postId, request: { content: text } })
+            const created = await createComment.trigger({
+                postId,
+                request: { content: text, ...(parentId ? { parentId } : {}) },
+            })
             setCommentsById((prev) => new Map(prev).set(created.id, created))
+            setReplyingToId(null)
             return true
         } catch {
             return false
@@ -213,9 +223,24 @@ export const BlogEngagement = ({ postId, initialEmojiCount }: BlogEngagementProp
 
             {/* comment thread */}
             <div className="flex flex-col gap-4">
-                <Typography type="h6" weight="bold">
-                    {t("commentsTitle", { count: commentsById.size })}
-                </Typography>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <Typography type="h6" weight="bold">
+                        {t("commentsTitle", { count: commentsById.size })}
+                    </Typography>
+                    {/* Chọn thứ tự đọc (góp ý #20). Chỉ hiện khi có từ 2 bình luận gốc trở
+                        lên — dưới mức đó thì mọi thứ tự đều ra cùng một danh sách. */}
+                    {comments.length > 1 ? (
+                        <SegmentedControl<CommentSort>
+                            ariaLabel={t("sortLabel")}
+                            items={COMMENT_SORTS.map((mode) => ({
+                                value: mode,
+                                label: t(`sort.${mode}`),
+                            }))}
+                            value={sort}
+                            onChange={setSort}
+                        />
+                    ) : null}
+                </div>
 
                 {/* composer (signed-in) or a sign-in affordance (guest) */}
                 {authenticated && user ? (
@@ -251,23 +276,71 @@ export const BlogEngagement = ({ postId, initialEmojiCount }: BlogEngagementProp
                 >
                     <div className="flex flex-col gap-4">
                         {comments.map((comment) => (
-                            <CommentItem
-                                key={comment.id}
-                                comment={comment}
-                                currentUserId={user?.id ?? null}
-                                reacted={reactedById[comment.id]}
-                                isReacting={reactingCommentId === comment.id}
-                                isEditing={editingId === comment.id}
-                                isSavingEdit={updateComment.isMutating && editingId === comment.id}
-                                onToggleReaction={handleCommentReaction}
-                                onStartEdit={(target) => setEditingId(target.id)}
-                                onCancelEdit={() => setEditingId(null)}
-                                onSubmitEdit={handleSubmitEdit}
-                                onRequestDelete={(target) => {
-                                    setDeleteFailed(false)
-                                    setDeleteTarget(target)
-                                }}
-                            />
+                            <div key={comment.id} className="flex flex-col gap-3">
+                                <CommentItem
+                                    comment={comment}
+                                    currentUserId={user?.id ?? null}
+                                    reacted={reactedById[comment.id]}
+                                    isReacting={reactingCommentId === comment.id}
+                                    isEditing={editingId === comment.id}
+                                    isSavingEdit={updateComment.isMutating && editingId === comment.id}
+                                    onToggleReaction={handleCommentReaction}
+                                    onStartEdit={(target) => setEditingId(target.id)}
+                                    onCancelEdit={() => setEditingId(null)}
+                                    onSubmitEdit={handleSubmitEdit}
+                                    onRequestDelete={(target) => {
+                                        setDeleteFailed(false)
+                                        setDeleteTarget(target)
+                                    }}
+                                    // Trả lời chỉ mở cho người đã đăng nhập: khách bấm vào
+                                    // sẽ thấy một ô soạn thảo mà gửi lên là 401.
+                                    onReply={
+                                        authenticated && user
+                                            ? (target) =>
+                                                setReplyingToId((current) =>
+                                                    current === target.id ? null : target.id,
+                                                )
+                                            : undefined
+                                    }
+                                />
+
+                                {/* Trả lời — MỘT cấp, đúng bằng cái backend nhận
+                                    (`resolveParent` từ chối trả lời-của-trả-lời), nên hàng
+                                    con không có nút "Trả lời" của riêng nó. */}
+                                {(replies.get(comment.id) ?? []).map((reply) => (
+                                    <CommentItem
+                                        key={reply.id}
+                                        comment={reply}
+                                        currentUserId={user?.id ?? null}
+                                        reacted={reactedById[reply.id]}
+                                        isReacting={reactingCommentId === reply.id}
+                                        isEditing={editingId === reply.id}
+                                        isSavingEdit={updateComment.isMutating && editingId === reply.id}
+                                        onToggleReaction={handleCommentReaction}
+                                        onStartEdit={(target) => setEditingId(target.id)}
+                                        onCancelEdit={() => setEditingId(null)}
+                                        onSubmitEdit={handleSubmitEdit}
+                                        onRequestDelete={(target) => {
+                                            setDeleteFailed(false)
+                                            setDeleteTarget(target)
+                                        }}
+                                        className="ms-11"
+                                    />
+                                ))}
+
+                                {replyingToId === comment.id ? (
+                                    <CommentComposer
+                                        className="ms-11"
+                                        placeholder={t("replyPlaceholder")}
+                                        submitLabel={t("submit")}
+                                        cancelLabel={t("cancel")}
+                                        onSubmit={(text) => handleCreate(text, comment.id)}
+                                        onCancel={() => setReplyingToId(null)}
+                                        isSubmitting={createComment.isMutating}
+                                        autoFocus
+                                    />
+                                ) : null}
+                            </div>
                         ))}
 
                         {hasNext ? (

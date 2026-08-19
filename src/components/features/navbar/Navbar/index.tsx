@@ -44,6 +44,9 @@ import {
 import {
     LanguageDropdown,
 } from "./LanguageDropdown"
+import {
+    ThemeToggle,
+} from "./ThemeToggle"
 import { useNavbarBottomLayerStore } from "@/hooks/zustand/navbarBottomLayer/store"
 import {
     useSearchOverlayState,
@@ -136,9 +139,11 @@ export const Navbar = ({ className }: NavbarProps) => {
                             <SearchIcon className="size-5" />
                         </Button>
                     </span>
-                    {/* desktop: language inline; on mobile it moves into the drawer.
-                        Appearance is NOT here — it lives in /profile/settings. */}
+                    {/* desktop: language + sáng/tối inline; on mobile both move into the
+                        drawer. The three-way Light/Dark/System choice stays in
+                        /profile/settings — this is only the one-tap flip (góp ý #4). */}
                     <div className="hidden items-center gap-2 md:flex">
+                        <ThemeToggle />
                         <LanguageDropdown />
                     </div>
                     <CartButton />
@@ -194,14 +199,21 @@ export const Navbar = ({ className }: NavbarProps) => {
                                         </Button>
                                     ))}
                                 </div>
-                                {/* controls hidden from the mobile bar live here: language
-                                    (appearance moved to /profile/settings) */}
+                                {/* controls hidden from the mobile bar live here: language +
+                                    sáng/tối (the full appearance panel is in
+                                    /profile/settings) */}
                                 <div className="flex flex-col gap-3">
                                     <div className="flex items-center justify-between gap-3">
                                         <Typography type="body-sm">
                                             {t("nav.toggleLanguage")}
                                         </Typography>
                                         <LanguageDropdown />
+                                    </div>
+                                    <div className="flex items-center justify-between gap-3">
+                                        <Typography type="body-sm">
+                                            {t("nav.toggleTheme")}
+                                        </Typography>
+                                        <ThemeToggle />
                                     </div>
                                 </div>
                             </Drawer.Body>

@@ -5,9 +5,9 @@ import useSWR from "swr"
 import { Chip } from "@heroui/react"
 import { useLocale, useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
-import { Link } from "@/i18n/navigation"
 import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { BackLink } from "@/components/blocks/navigation/BackLink"
 import { blogCategoryColor, buildCategoryLookup } from "../shared/category"
 import { ReadingProgress } from "./ReadingProgress"
 import { RelatedPosts } from "./RelatedPosts"
@@ -56,13 +56,11 @@ export const BlogPost = () => {
             {data && <ReadingProgress />}
 
             <div className="mx-auto flex max-w-3xl flex-col gap-6 p-6">
-                {/* back to listing */}
-                <Link
-                    href="/blog"
-                    className="cursor-pointer text-sm text-muted hover:text-foreground"
-                >
-                    ← {t("back")}
-                </Link>
+                {/* LỐI RA (góp ý #21). Bài blog tới được từ nhiều nơi (danh sách blog, rail
+                    cộng đồng, một link chia sẻ), nên link cứng về /blog đẩy người đọc tới chỗ
+                    họ chưa bao giờ đứng. `BackLink` lùi theo lịch sử THẬT khi có, chỉ rơi về
+                    /blog khi mở thẳng bằng link. */}
+                <BackLink fallbackHref="/blog" label={t("back")} />
 
                 <AsyncContent
                     isLoading={isLoading && !data}

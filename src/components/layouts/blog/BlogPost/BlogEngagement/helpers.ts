@@ -23,20 +23,82 @@ export const mergeComments = (
     return next
 }
 
+/** How the reader chose to order the thread. */
+export type CommentSort = "newest" | "oldest" | "mostLiked"
+
+/** The sort modes offered, in the order the selector shows them. */
+export const COMMENT_SORTS: ReadonlyArray<CommentSort> = ["newest", "oldest", "mostLiked"]
+
+/** Epoch ms of a comment's creation; `0` for an unparseable timestamp (sorts last-ish). */
+const createdMs = (comment: BlogCommentResponse): number => {
+    const parsed = new Date(comment.createdAt).getTime()
+    return Number.isNaN(parsed) ? 0 : parsed
+}
+
 /**
- * Flatten the accumulator into the render list, oldest-first (the BE sorts
- * `createdAt ASC`), with a stable id tie-break so equal timestamps keep a
- * deterministic order across renders.
+ * ROOT comments (replies excluded — {@link repliesByParent} nests those), ordered by the
+ * reader's chosen {@link CommentSort}.
+ *
+ * Default is `newest`: the BE returns `createdAt ASC`, so the thread used to open on the
+ * oldest comment and a reader had to scroll past everything to reach what was just said
+ * (góp ý #20).
+ *
+ * Every mode falls back to a stable id tie-break so equal timestamps / equal like counts
+ * keep a deterministic order across renders.
  *
  * @param map - accumulated comments keyed by id.
+ * @param sort - the reader's chosen order (defaults to newest-first).
  */
 export const sortComments = (
     map: Map<string, BlogCommentResponse>,
+    sort: CommentSort = "newest",
 ): Array<BlogCommentResponse> =>
-    [...map.values()].sort((a, b) => {
-        const delta = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-        return delta !== 0 ? delta : a.id.localeCompare(b.id)
-    })
+    [...map.values()]
+        .filter((comment) => !comment.parentId)
+        .sort((a, b) => {
+            if (sort === "mostLiked" && a.emojiCount !== b.emojiCount) {
+                return b.emojiCount - a.emojiCount
+            }
+            const delta = sort === "oldest"
+                ? createdMs(a) - createdMs(b)
+                : createdMs(b) - createdMs(a)
+            return delta !== 0 ? delta : a.id.localeCompare(b.id)
+        })
+
+/**
+ * Replies grouped under their parent comment id, each group oldest-first.
+ *
+ * Replies always read chronologically regardless of the thread's sort: a reply chain is a
+ * conversation, and reversing it makes answers precede the questions they answer.
+ *
+ * A reply whose parent is not in the map (the parent lives on a page not loaded yet) is
+ * kept in its group; it simply has nowhere to render until that page arrives.
+ *
+ * @param map - accumulated comments keyed by id.
+ */
+export const repliesByParent = (
+    map: Map<string, BlogCommentResponse>,
+): Map<string, Array<BlogCommentResponse>> => {
+    const groups = new Map<string, Array<BlogCommentResponse>>()
+    for (const comment of map.values()) {
+        if (!comment.parentId) {
+            continue
+        }
+        const group = groups.get(comment.parentId)
+        if (group) {
+            group.push(comment)
+        } else {
+            groups.set(comment.parentId, [comment])
+        }
+    }
+    for (const group of groups.values()) {
+        group.sort((a, b) => {
+            const delta = createdMs(a) - createdMs(b)
+            return delta !== 0 ? delta : a.id.localeCompare(b.id)
+        })
+    }
+    return groups
+}
 
 /**
  * Whether the current viewer owns a comment (gates the inline edit + delete

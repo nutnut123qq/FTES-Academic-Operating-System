@@ -40,9 +40,12 @@ export const useMutateGroupMediaSwr = (groupId: string) => {
                 throw new Error(t("identity.presignFailed"))
             }
 
-            // Step 2 — upload the raw file to the presigned URL
+            // Step 2 — upload the raw file to the presigned URL. Định danh ảnh mà dịch vụ
+            // upload cấp phải được mang sang bước verify: khoá presign là khoá backend tự
+            // sinh, dịch vụ upload chưa từng thấy nó (góp ý #13).
+            let uploadedRef: string
             try {
-                await uploadGroupMediaFile(presign.uploadUrl, file)
+                uploadedRef = await uploadGroupMediaFile(presign.uploadUrl, file)
             } catch {
                 throw new Error(t("identity.uploadFailed"))
             }
@@ -50,7 +53,11 @@ export const useMutateGroupMediaSwr = (groupId: string) => {
             // Step 3 — verify + set on the group
             let ref
             try {
-                ref = await verifyGroupMedia(groupId, { kind, storageKey: presign.storageKey })
+                ref = await verifyGroupMedia(groupId, {
+                    kind,
+                    storageKey: presign.storageKey,
+                    uploadedRef,
+                })
             } catch {
                 throw new Error(t("identity.verifyFailed"))
             }

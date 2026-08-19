@@ -1,11 +1,12 @@
 "use client"
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { Button, Chip, Modal, Slider, Typography, cn } from "@heroui/react"
+import { Button, Chip, Input, Label, Modal, TextField, Typography, cn } from "@heroui/react"
 import { useFormatter, useTranslations } from "next-intl"
 import { useSWRConfig } from "swr"
 import { useRouter } from "next/navigation"
 import {
+    ArrowLeftIcon,
     ArrowRightIcon,
     BankIcon,
     ClockIcon,
@@ -17,7 +18,6 @@ import type { WithClassNames } from "@/modules/types/base/class-name"
 import type { PaymentLine } from "@/modules/types/payment"
 import { isPaidOrderStatus } from "@/modules/api/rest/commerce"
 import { RestError } from "@/modules/api/rest/client"
-import { SegmentedControl } from "@/components/blocks/navigation/SegmentedControl"
 import { CoverImage } from "@/components/blocks/media/CoverImage"
 import { PriceTag } from "@/components/blocks/commerce/PriceTag"
 import { MascotBubble } from "@/components/reuseable/FtesMascot"
@@ -378,20 +378,23 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
                     <Modal.Dialog className={cn("w-full max-w-md", className)}>
                         <Modal.CloseTrigger />
                         <Modal.Header className="flex flex-col gap-3">
+                            {/* KHÔNG còn tab Tóm tắt/Thanh toán (góp ý #3): hai tab và nút
+                                "Tiếp tục thanh toán" là HAI lối đi cho CÙNG một bước, nên
+                                người mua bấm nút rồi vẫn thấy một cái tab như thể còn việc
+                                chưa làm. Giờ là một luồng thẳng: Tóm tắt → Thanh toán, quay
+                                lại bằng link dưới đây (khoá khi đơn đã đi — `isSummaryLocked`). */}
                             <div className="text-2xl font-bold">{t("checkout.title")}</div>
-                            <SegmentedControl<Step>
-                                ariaLabel={t("checkout.title")}
-                                items={[
-                                    {
-                                        value: "summary",
-                                        label: t("checkout.summaryTab"),
-                                        isDisabled: isSummaryLocked(phase),
-                                    },
-                                    { value: "payment", label: t("checkout.paymentTab") },
-                                ]}
-                                value={step}
-                                onChange={setStep}
-                            />
+                            {step === "payment" && !isSummaryLocked(phase) ? (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="self-start"
+                                    onPress={() => setStep("summary")}
+                                >
+                                    <ArrowLeftIcon aria-hidden focusable="false" className="size-4" />
+                                    {t("checkout.backToSummary")}
+                                </Button>
+                            ) : null}
                         </Modal.Header>
                         <Modal.Body className="flex flex-col gap-5">
                             {step === "summary" ? (
@@ -699,39 +702,58 @@ const CoinApplyField = ({
             </Typography>
         ) : (
             <>
-                <Slider
-                    aria-label={t("checkout.coin.sliderLabel")}
-                    minValue={0}
-                    maxValue={ceiling}
-                    step={1}
-                    value={value}
-                    isDisabled={isLocked}
-                    onChange={(next) => onChange(typeof next === "number" ? next : next[0] ?? 0)}
-                >
-                    <Slider.Track>
-                        <Slider.Fill />
-                        <Slider.Thumb />
-                    </Slider.Track>
-                </Slider>
+                {/* Ô NHẬP chứ không phải thanh kéo (góp ý #2): trần Xu thường là hàng
+                    trăm, một thanh kéo rộng ~300px không cho gõ đúng con số muốn áp —
+                    mỗi pixel là vài Xu. Gõ tay thì chính xác tuyệt đối; hai nút tắt
+                    "dùng tối đa" / "bỏ dùng Xu" vẫn ở lại cho ca dùng phổ biến nhất.
+                    Kẹp trần vẫn do `clampCoinToApply` (backend cấp trần) lo, ô nhập chỉ
+                    là cách gõ số. */}
+                <div className="flex flex-wrap items-end justify-between gap-2">
+                    <TextField variant="secondary" className="w-40">
+                        {/* Label, không Typography: react-aria bắt mọi `Text` trong
+                            TextField phải có `slot`. */}
+                        <Label className="mb-1 block text-xs text-muted">
+                            {t("checkout.coin.sliderLabel")}
+                        </Label>
+                        <Input
+                            type="number"
+                            inputMode="numeric"
+                            min={0}
+                            max={ceiling}
+                            step={1}
+                            value={String(value)}
+                            disabled={isLocked}
+                            onChange={(event) => onChange(Number(event.target.value))}
+                        />
+                    </TextField>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            isDisabled={isLocked || value >= ceiling}
+                            onPress={() => onChange(ceiling)}
+                        >
+                            {t("checkout.coin.max")}
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            isDisabled={isLocked || value <= 0}
+                            onPress={() => onChange(0)}
+                        >
+                            {t("checkout.coin.none")}
+                        </Button>
+                    </div>
+                </div>
                 <div className="flex items-center justify-between gap-2">
                     <Typography type="body-sm" weight="medium">
                         {t("checkout.coin.applied", { amount: format.number(value) })}
                     </Typography>
-                    <div className="flex items-center gap-2">
-                        {discountVnd > 0 ? (
-                            <Chip size="sm" variant="soft" color="success">
-                                {t("checkout.discount", { amount: format.number(discountVnd) })}
-                            </Chip>
-                        ) : null}
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            isDisabled={isLocked}
-                            onPress={() => onChange(value >= ceiling ? 0 : ceiling)}
-                        >
-                            {value >= ceiling ? t("checkout.coin.none") : t("checkout.coin.max")}
-                        </Button>
-                    </div>
+                    {discountVnd > 0 ? (
+                        <Chip size="sm" variant="soft" color="success">
+                            {t("checkout.discount", { amount: format.number(discountVnd) })}
+                        </Chip>
+                    ) : null}
                 </div>
             </>
         )}

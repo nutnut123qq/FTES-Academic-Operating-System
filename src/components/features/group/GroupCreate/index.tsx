@@ -61,8 +61,10 @@ const uploadGroupIdentity = async (
         contentType: file.type,
         sizeBytes: file.size,
     })
-    await uploadGroupMediaFile(presign.uploadUrl, file)
-    await verifyGroupMedia(groupId, { kind, storageKey: presign.storageKey })
+    // `uploadedRef` = định danh ảnh do dịch vụ upload cấp; thiếu nó thì backend dựng URL đọc
+    // từ khoá presign tự sinh và URL đó 404 — ảnh nhóm không bao giờ hiện (góp ý #13).
+    const uploadedRef = await uploadGroupMediaFile(presign.uploadUrl, file)
+    await verifyGroupMedia(groupId, { kind, storageKey: presign.storageKey, uploadedRef })
 }
 
 /**

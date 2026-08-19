@@ -1,10 +1,11 @@
 "use client"
 
-import React from "react"
+import React, { useEffect } from "react"
 import { Button, Typography } from "@heroui/react"
 import { ArrowRightIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { useRouter } from "@/i18n/navigation"
+import { useAppSelector } from "@/redux/hooks"
 import { JourneyHero } from "./sections/JourneyHero"
 import { MyCoursesSection } from "./sections/MyCoursesSection"
 import { HomeMascotGreetingBand } from "./sections/HomeMascotGreeting"
@@ -32,10 +33,36 @@ import { FaqSection } from "./sections/FaqSection"
  * Full-bleed bands with inner `max-w-6xl` gutter; the feature owns copy (i18n) +
  * navigation, tokens/blocks own the look. The Footer is rendered by `InnerLayout` on
  * landing routes.
+ *
+ * **Chỉ dành cho khách (góp ý #23).** Người đã đăng nhập vào đây được đưa thẳng sang
+ * dashboard: trang này là lời chào hàng ("FTES là gì, học được gì"), còn người đã ở trong
+ * hệ thống cần biết HÔM NAY có gì — khoá đang học, việc phải làm, cộng đồng đang bàn gì.
+ *
+ * Chốt ở ĐÂY chứ không phải ở edge middleware, dù `proxy.ts` mô tả đúng hành vi này. Cờ
+ * phiên bản edge (`session_hint`) KHÔNG hề được set bởi bất cứ đâu trong hệ (xem docblock
+ * của nó), nên một nhánh redirect ở đó sẽ là code chết — luôn thấy "chưa đăng nhập" kể cả
+ * với người đang đăng nhập. Trang tự chốt thì đọc được phiên THẬT.
+ *
+ * `initialized` là bắt buộc: trước khi adapter Keycloak chạy xong, `authenticated` là
+ * `false` với TẤT CẢ mọi người, và chuyển hướng theo nó thì không ai đi đâu cả.
  */
 export const HomeLanding = () => {
     const t = useTranslations("homeLanding")
     const router = useRouter()
+    const initialized = useAppSelector((state) => state.keycloak.initialized)
+    const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const signedIn = initialized && authenticated
+
+    useEffect(() => {
+        if (signedIn) {
+            router.replace("/dashboard")
+        }
+    }, [signedIn, router])
+
+    // Không vẽ trang chào hàng rồi mới giật sang chỗ khác.
+    if (signedIn) {
+        return null
+    }
 
     return (
         <main className="flex w-full flex-col items-center">

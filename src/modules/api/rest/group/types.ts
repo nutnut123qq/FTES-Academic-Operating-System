@@ -256,6 +256,17 @@ export interface GroupMediaPresignResponse {
 export interface GroupMediaVerifyRequest {
     kind: string
     storageKey: string
+    /**
+     * Định danh ảnh THẬT do dịch vụ upload trả về ở bước 2 (id trần hoặc URL đầy đủ).
+     *
+     * Bắt buộc trên môi trường thật, dù backend khai là tuỳ chọn: `storageKey` ở trên là
+     * khoá do backend TỰ SINH lúc presign, còn upload.ftes.vn lại tự cấp id của riêng nó khi
+     * nhận file. Không gửi trường này thì backend dựng URL proxy từ cái khoá tự sinh kia và
+     * URL đó 404 — ảnh nhóm "tải lên thành công" mà không bao giờ hiện (góp ý #13). Backend
+     * chỉ thay ĐOẠN CUỐI của khoá bằng giá trị này, tiền tố `groups/{id}/{kind}/` vẫn lấy từ
+     * row trong DB nên client không đặt được khoá tuỳ ý.
+     */
+    uploadedRef?: string
 }
 
 /** Result of verify — the signed read URL of the now-set image. */

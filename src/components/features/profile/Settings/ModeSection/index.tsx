@@ -30,7 +30,7 @@ interface ModeOption {
 export const ModeSection = () => {
     const t = useTranslations()
     const { theme, setTheme } = useTheme()
-    const current = theme ?? "dark"
+    const current = theme ?? "system"
     const options: Array<ModeOption> = [
         { value: "light", icon: <SunIcon className="size-5" aria-hidden focusable="false" />, label: t("appearance.mode.light") },
         { value: "dark", icon: <MoonIcon className="size-5" aria-hidden focusable="false" />, label: t("appearance.mode.dark") },

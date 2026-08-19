@@ -4,13 +4,12 @@ import React, { useEffect, useState } from "react"
 import {
     Button,
     Modal,
-    Radio,
-    RadioGroup,
     TextArea,
     TextField,
     Typography,
 } from "@heroui/react"
 import { useTranslations } from "next-intl"
+import { SelectableCardGroup } from "@/components/blocks/navigation/SelectableCardGroup"
 import { REPORT_REASON_CODES, type ReportReasonCode } from "./report-reasons"
 
 /** Props for {@link ReportDialog}. */
@@ -88,18 +87,22 @@ export const ReportDialog = ({ isOpen, onClose, onSubmit }: ReportDialogProps) =
                             <Typography type="body-sm" color="muted">
                                 {t("engagement.reportDescription")}
                             </Typography>
-                            <RadioGroup
-                                aria-label={t("engagement.reportReasonLabel")}
+                            {/* Block `SelectableCardGroup`, KHÔNG phải `<Radio>` trần (góp ý
+                                #12). `Radio` của nhà không tự vẽ nút chọn — nó giao trạng
+                                thái `isSelected` cho caller qua render-prop (xem mọi chỗ
+                                dùng đúng trong repo). Truyền vào một chuỗi trần thì ra đúng
+                                năm dòng chữ không dấu hiệu gì, và người báo cáo không biết
+                                mình đã chọn cái nào hay có chọn được không. */}
+                            <SelectableCardGroup<ReportReasonCode>
+                                ariaLabel={t("engagement.reportReasonLabel")}
+                                variant="list"
                                 value={reason}
-                                onChange={(next) => setReason(next as ReportReasonCode)}
-                                className="flex flex-col gap-2"
-                            >
-                                {REPORT_REASON_CODES.map((code) => (
-                                    <Radio key={code} value={code} className="w-full">
-                                        {t(`engagement.reportReasons.${code}`)}
-                                    </Radio>
-                                ))}
-                            </RadioGroup>
+                                onChange={setReason}
+                                items={REPORT_REASON_CODES.map((code) => ({
+                                    value: code,
+                                    label: t(`engagement.reportReasons.${code}`),
+                                }))}
+                            />
                             <div className="flex flex-col gap-2">
                                 <Typography type="body-sm" weight="medium">
                                     {t("engagement.reportDetailLabel")}

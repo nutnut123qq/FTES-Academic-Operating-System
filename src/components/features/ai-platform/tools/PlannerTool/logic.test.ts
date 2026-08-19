@@ -5,6 +5,7 @@ import {
     buildTaskKey,
     computePercentDone,
     isTaskDone,
+    parseResourceHint,
     planTaskKeys,
 } from "./logic"
 
@@ -133,5 +134,52 @@ describe("applyProgress", () => {
         const snapshot = JSON.parse(JSON.stringify(original))
         applyProgress(original, "w2:1", true)
         expect(original).toEqual(snapshot)
+    })
+})
+
+/**
+ * Unit — `resource_hint` link extraction (góp ý #7). ftes-ai-service trả field này dạng chữ
+ * tự do nên FE phải tự nhận ra URL; và vì chuỗi đó đi thẳng vào `href`, ca quan trọng nhất là
+ * scheme lạ (`javascript:`) KHÔNG bao giờ được thành link.
+ */
+describe("parseResourceHint", () => {
+    it("keeps a hint with no URL as plain text", () => {
+        expect(parseResourceHint("Microsoft Docs: Create a web API")).toEqual({
+            label: "Microsoft Docs: Create a web API",
+            href: null,
+        })
+    })
+
+    it("links a bare URL", () => {
+        expect(parseResourceHint("https://roadmap.sh/backend")).toEqual({
+            label: "https://roadmap.sh/backend",
+            href: "https://roadmap.sh/backend",
+        })
+    })
+
+    it("links the URL inside a text + URL hint, keeping the whole hint as the label", () => {
+        expect(parseResourceHint("Docs — https://spring.io/guides")).toEqual({
+            label: "Docs — https://spring.io/guides",
+            href: "https://spring.io/guides",
+        })
+    })
+
+    it("drops sentence punctuation glued to the end of the URL", () => {
+        expect(parseResourceHint("Đọc https://roadmap.sh/java.").href).toBe(
+            "https://roadmap.sh/java",
+        )
+    })
+
+    it("never links a javascript: hint (security guard)", () => {
+        expect(parseResourceHint("javascript:alert(1)").href).toBeNull()
+    })
+
+    it("never links a non-http scheme such as ftp:", () => {
+        expect(parseResourceHint("ftp://files.example.com/book.pdf").href).toBeNull()
+    })
+
+    it("returns an empty label for a blank or missing hint", () => {
+        expect(parseResourceHint(null)).toEqual({ label: "", href: null })
+        expect(parseResourceHint("   ")).toEqual({ label: "", href: null })
     })
 })

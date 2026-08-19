@@ -25,6 +25,21 @@ export interface MyGamificationBadge {
     fallbackName: string
     /** ISO date (yyyy-mm-dd) the badge was earned, from the BE `awardedAt` timestamp. */
     earnedDate: string
+    /**
+     * Backend badge `kind` (`BADGE` / `TITLE` / `TROPHY`, or anything seeded
+     * later). Carried purely so a badge WITHOUT artwork falls back to the same
+     * glyph the profile badge catalog draws for it (`badgeKindIcon`) — not for
+     * display; nothing renders this string.
+     */
+    kind?: string
+    /**
+     * Seeded badge ARTWORK (`BadgeView.iconUrl`), `null` when the badge has none.
+     *
+     * OPTIONAL as well as nullable so the type stays honest against a backend
+     * that has not shipped the field yet; every renderer must treat "absent" and
+     * "null" alike and fall back to the kind glyph (`badgeKindIcon`).
+     */
+    iconUrl?: string | null
 }
 
 /** The viewer's full gamification snapshot — the single source for every surface. */
@@ -112,6 +127,11 @@ export const useQueryMyGamificationSwr = () => {
                 // `awardedAt` is a full ISO timestamp; the profile renders a plain
                 // yyyy-mm-dd date, so take the date part.
                 earnedDate: badge.awardedAt.slice(0, 10),
+                kind: badge.kind,
+                // Normalise "backend hasn't shipped the field" (undefined) to the
+                // same `null` as "this badge has no art", so no renderer has to
+                // know which of the two it is looking at.
+                iconUrl: badge.iconUrl ?? null,
             })),
         }
     }, [authenticated, progression, streak, activity, badges, board, myUserId])

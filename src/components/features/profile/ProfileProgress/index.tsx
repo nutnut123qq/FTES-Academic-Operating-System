@@ -18,6 +18,7 @@ import { EloChart } from "@/components/features/elo"
 import { useGetMyActivityDaysSwr } from "@/hooks/swr/api/rest/queries/useGetMyActivityDaysSwr"
 import { useQueryMyGamificationSwr } from "@/components/features/gamification/hooks/useQueryMyGamificationSwr"
 import { useBadgeLabel } from "@/components/features/gamification/useBadgeLabel"
+import { badgeKindIcon } from "@/components/features/gamification/badgeIcon"
 import { StreakHeatmap, type HeatmapCell } from "@/components/features/gamification/StreakHeatmap"
 
 /**
@@ -249,29 +250,47 @@ export const ProfileProgress = () => {
                                 </Typography>
                             ) : (
                                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                                    {data.badges.map((badge) => (
-                                        <div
-                                            key={badge.id}
-                                            className="flex flex-col items-center gap-2 rounded-2xl border border-separator p-4 text-center"
-                                        >
-                                            <TrophyIcon
-                                                className="size-6 text-accent"
-                                                weight="fill"
-                                                aria-hidden
-                                                focusable="false"
-                                            />
-                                            <Typography type="body-xs" weight="medium">
-                                                {badgeLabel(badge.badgeKey, badge.fallbackName)}
-                                            </Typography>
-                                            <Typography type="body-xs" color="muted">
-                                                {t("profile.progress.badges.earnedOn", {
-                                                    date: new Date(`${badge.earnedDate}T00:00:00`).toLocaleDateString(
-                                                        locale,
-                                                    ),
-                                                })}
-                                            </Typography>
-                                        </div>
-                                    ))}
+                                    {data.badges.map((badge) => {
+                                        // Real seeded ARTWORK first, exactly like the badge
+                                        // catalog; `badgeKindIcon` is the one shared fallback
+                                        // for a badge that has none.
+                                        const BadgeIcon = badgeKindIcon(badge.kind)
+                                        return (
+                                            <div
+                                                key={badge.id}
+                                                className="flex flex-col items-center gap-2 rounded-2xl border border-separator p-4 text-center"
+                                            >
+                                                {badge.iconUrl ? (
+                                                    // Plain <img>: backend-seeded icon host, not
+                                                    // in the next/image allowlist. Decorative —
+                                                    // the name is spelled out right below.
+                                                    <img
+                                                        src={badge.iconUrl}
+                                                        alt=""
+                                                        aria-hidden
+                                                        className="size-6 object-contain"
+                                                    />
+                                                ) : (
+                                                    <BadgeIcon
+                                                        className="size-6 text-accent"
+                                                        weight="fill"
+                                                        aria-hidden
+                                                        focusable="false"
+                                                    />
+                                                )}
+                                                <Typography type="body-xs" weight="medium">
+                                                    {badgeLabel(badge.badgeKey, badge.fallbackName)}
+                                                </Typography>
+                                                <Typography type="body-xs" color="muted">
+                                                    {t("profile.progress.badges.earnedOn", {
+                                                        date: new Date(
+                                                            `${badge.earnedDate}T00:00:00`,
+                                                        ).toLocaleDateString(locale),
+                                                    })}
+                                                </Typography>
+                                            </div>
+                                        )
+                                    })}
                                 </div>
                             )}
                         </LabeledCard>

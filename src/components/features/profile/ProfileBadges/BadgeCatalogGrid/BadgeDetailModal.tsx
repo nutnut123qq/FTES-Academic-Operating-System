@@ -3,17 +3,11 @@
 import React from "react"
 import { Button, Chip, Modal, Typography, cn } from "@heroui/react"
 import { useLocale, useTranslations } from "next-intl"
-import { CheckCircleIcon, LockSimpleIcon, MedalIcon, TrophyIcon } from "@phosphor-icons/react"
+import { CheckCircleIcon, LockSimpleIcon } from "@phosphor-icons/react"
 import { ProgressMeter } from "@/components/blocks/stats/ProgressMeter"
+import { badgeKindIcon } from "@/components/features/gamification/badgeIcon"
 import type { BadgeCatalogItem } from "@/modules/api/rest/gamification"
 import { toEarnedDateLabel } from "../model"
-
-/** Badge kind → fallback glyph when the badge has no seeded artwork. */
-const KIND_ICON: Record<string, typeof TrophyIcon> = {
-    BADGE: MedalIcon,
-    TITLE: MedalIcon,
-    TROPHY: TrophyIcon,
-}
 
 /** Props for {@link BadgeDetailModal}. */
 export interface BadgeDetailModalProps {
@@ -37,7 +31,7 @@ export const BadgeDetailModal = ({ badge, onClose }: BadgeDetailModalProps) => {
     const locale = useLocale()
 
     // `null` badge still renders the Modal shell (closed) so open/close animates.
-    const Icon = badge ? KIND_ICON[badge.kind] ?? MedalIcon : MedalIcon
+    const Icon = badgeKindIcon(badge?.kind)
     const earnedOn = badge ? toEarnedDateLabel(badge.awardedAt, locale) : null
     const showProgress =
         badge != null && !badge.earned && badge.counterKey !== null && badge.threshold > 0

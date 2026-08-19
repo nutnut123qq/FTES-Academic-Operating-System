@@ -2,15 +2,9 @@
 
 import React from "react"
 import { Tooltip, Typography, cn } from "@heroui/react"
-import { CheckCircleIcon, LockSimpleIcon, MedalIcon, TrophyIcon } from "@phosphor-icons/react"
+import { CheckCircleIcon, LockSimpleIcon } from "@phosphor-icons/react"
+import { badgeKindIcon } from "@/components/features/gamification/badgeIcon"
 import type { BadgeCatalogItem } from "@/modules/api/rest/gamification"
-
-/** Badge kind → fallback glyph when the badge has no seeded artwork. */
-const KIND_ICON: Record<string, typeof TrophyIcon> = {
-    BADGE: MedalIcon,
-    TITLE: MedalIcon,
-    TROPHY: TrophyIcon,
-}
 
 /** Props for {@link BadgeCatalogCell}. */
 export interface BadgeCatalogCellProps {
@@ -31,7 +25,7 @@ export interface BadgeCatalogCellProps {
  * `aria-label` carries the name for anyone who never sees the hover card.
  */
 export const BadgeCatalogCell = ({ badge, onSelect }: BadgeCatalogCellProps) => {
-    const Icon = KIND_ICON[badge.kind] ?? MedalIcon
+    const Icon = badgeKindIcon(badge.kind)
 
     return (
         <Tooltip delay={200}>

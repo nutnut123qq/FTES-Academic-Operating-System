@@ -12,7 +12,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
  *    next-level threshold, clamped to total XP at max level),
  *  - streak days keep only activity days with XP > 0,
  *  - rank position is the viewer's 1-based index on the real board,
- *  - badges map `code → {id, badgeKey}` and slice `awardedAt` to a yyyy-mm-dd date.
+ *  - badges map `code → {id, badgeKey}` and slice `awardedAt` to a yyyy-mm-dd date,
+ *    carrying the badge ART (`iconUrl`) and `kind` through so the surfaces that
+ *    paint a badge draw the real emblem instead of a hardcoded trophy.
  */
 
 let authenticated = false
@@ -85,7 +87,13 @@ describe("useQueryMyGamificationSwr", () => {
             ],
         }
         badges = [
-            { code: "WEEK_OF_FIRE", kind: "STREAK", name: "Tuần Lửa", awardedAt: "2026-07-10T08:30:00Z" },
+            {
+                code: "WEEK_OF_FIRE",
+                kind: "STREAK",
+                name: "Tuần Lửa",
+                awardedAt: "2026-07-10T08:30:00Z",
+                iconUrl: "https://cdn.example/week-of-fire.png",
+            },
         ]
         board = [{ id: "u1" }, { id: "me" }, { id: "u3" }]
         myUserId = "me"
@@ -105,8 +113,39 @@ describe("useQueryMyGamificationSwr", () => {
         // 1500 XP → gold tier (rules.ts RANK_TIERS)
         expect(data?.rank.league).toBe("gold")
         expect(data?.badges).toEqual([
-            { id: "WEEK_OF_FIRE", badgeKey: "WEEK_OF_FIRE", earnedDate: "2026-07-10", fallbackName: "Tuần Lửa" },
+            {
+                id: "WEEK_OF_FIRE",
+                badgeKey: "WEEK_OF_FIRE",
+                earnedDate: "2026-07-10",
+                fallbackName: "Tuần Lửa",
+                kind: "STREAK",
+                iconUrl: "https://cdn.example/week-of-fire.png",
+            },
         ])
+    })
+
+    it("keeps the badge art as null when the backend says the badge has none", () => {
+        authenticated = true
+        progression = { totalXp: 10, level: 1, levelTitle: "", nextLevelXp: 40, reputation: 0 }
+        badges = [
+            { code: "FIRST_POST", kind: "BADGE", name: "Bài đầu tiên", awardedAt: "2026-07-10T08:30:00Z", iconUrl: null },
+        ]
+        const { result } = renderHook(() => useQueryMyGamificationSwr())
+        expect(result.current.data?.badges[0]?.iconUrl).toBeNull()
+    })
+
+    it("normalises a MISSING art field (backend not deployed yet) to null, never undefined", () => {
+        authenticated = true
+        progression = { totalXp: 10, level: 1, levelTitle: "", nextLevelXp: 40, reputation: 0 }
+        // Exactly the payload the CURRENT backend returns: no `iconUrl` key at all.
+        badges = [
+            { code: "FIRST_COMMENT", kind: "BADGE", name: "Bình luận đầu tiên", awardedAt: "2026-07-10T08:30:00Z" },
+        ]
+        const { result } = renderHook(() => useQueryMyGamificationSwr())
+        const badge = result.current.data?.badges[0]
+        expect(badge?.iconUrl).toBeNull()
+        // `kind` still rides along — it is what picks the fallback glyph.
+        expect(badge?.kind).toBe("BADGE")
     })
 
     it("clamps the level threshold to total XP at the max level (nextLevelXp null)", () => {

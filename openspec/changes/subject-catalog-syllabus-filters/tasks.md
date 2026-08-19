@@ -22,5 +22,7 @@
 ## 4. Verify
 - [x] 4.1 BE unit: `mvn -DskipITs test` → 82 xanh, gồm `SubjectQueryParseTest` parse HQL của `searchPublished` bằng SessionFactory KHÔNG cần DB (CI chạy `-DskipITs` nên `@Query` sai chỉ chết lúc boot; đã kiểm ngược: đổi `s.nameVi` → `s.nameXX` thì test đỏ)
 - [x] 4.2 FE: `npx tsc --noEmit` sạch; `vitest run` vùng subject + MajorPicker + messages → 221 xanh
-- [ ] 4.3 **CHƯA CHẠY** — IT Postgres thật (`mvnw -Dtest=SubjectMajorCatalogIT -DfailIfNoTests=false verify`): Docker Desktop không lên được trên máy này. Đây là bước duy nhất chứng minh V2 chạy được lúc boot; chạy trước khi merge.
-- [ ] 4.4 Sau khi deploy: reindex tìm kiếm để 397 môn vào index (seed bằng SQL nên KHÔNG phát sự kiện outbox)
+- [x] 4.3 IT Postgres thật — chạy trên server 2026-08-19: V1+V2 boot được, 5/7 xanh (gồm lọc theo khối, kỳ-theo-ngành, mã ngành lạ bị từ chối). 2 đỏ đều là lỗi TEST, đã vá ở commit BE thứ hai: assert SEP490 sai kỳ vọng (chương trình xếp ô tự chọn SE_GRA_ELE chứ không xếp thẳng đồ án tốt nghiệp) và ngành ZZNEW làm bẩn test khác
+- [x] 4.4 Diễn tập trên bản sao dữ liệu apitest (241 môn có sẵn): V2 exit 0, thêm 234 môn, MATH/LANG → INACTIVE, SE/IC giữ id V336, 1032 dòng nối. Lộ ra: seed tạo thêm 1 mã trùng hoa-thường (ITE303c cạnh ITE303C) → đã vá bằng `WHERE NOT EXISTS lower(code)` + join `lower()`
+- [ ] 4.5 Chạy lại IT + diễn tập với bản đã vá trước khi merge (main = auto deploy)
+- [ ] 4.6 Sau khi deploy: reindex tìm kiếm để 397 môn vào index (seed bằng SQL nên KHÔNG phát sự kiện outbox)

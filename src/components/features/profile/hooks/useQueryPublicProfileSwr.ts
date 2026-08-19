@@ -6,6 +6,7 @@ import { getPublicProfile } from "@/modules/api/rest/profile"
 import type {
     AchievementView,
     AssetView,
+    EquippedAchievementView,
     ProjectView,
     PublicProfile as PublicProfileDto,
     SocialLinkView,
@@ -45,6 +46,12 @@ export interface PublicProfile {
     avatarUrl: string
     /** Mã khung viền của chủ hồ sơ (V341); "" = không đeo → header vẽ viền gradient mặc định. */
     avatarFrameCode: string
+    /**
+     * THÀNH TÍCH chủ hồ sơ đang ghim sau tên; `null` = không ghim ⇒ header không vẽ thêm.
+     * Giữ nguyên vật thể (art + tên) vì con dấu cần cả hai — xem {@link
+     * import("./useQueryProfileSwr").Profile.equippedAchievement}.
+     */
+    equippedAchievement: EquippedAchievementView | null
     /** Contact email — "" when unset or hidden by the owner's privacy settings. */
     contactEmail: string
     /** Phone — "" when unset or hidden by the owner's privacy settings. */
@@ -85,6 +92,8 @@ export const toPublicProfile = (dto: PublicProfileDto, locale = "vi"): PublicPro
     following: dto.counters?.following ?? 0,
     avatarUrl: dto.avatarUrl ?? "",
     avatarFrameCode: dto.avatarFrame?.code ?? "",
+    // `undefined` (BE chưa deploy trường) và `null` (không ghim) CÙNG rơi về `null`.
+    equippedAchievement: dto.equippedAchievement ?? null,
     contactEmail: dto.contactEmail ?? "",
     phone: dto.phone ?? "",
     academic: dto.academic

@@ -116,6 +116,10 @@ const IMG_THO_HIEN_TRANG: ReadonlyArray<string> = [
     "components/features/community/CommunityShell/PromoBanner.tsx",
     "components/features/course/browse/CatalogCourseCard/index.tsx",
     "components/features/gamification/BadgeUnlockHost/index.tsx",
+    // Art THÀNH TÍCH ghim sau tên + ô chọn thành tích trong màn "setup khung" — CÙNG nguồn
+    // `iconUrl` do BE seed với các bề mặt danh mục badge bên dưới. Host do BE seed nên không
+    // ghim được vào next/image remotePatterns → giữ <img>, có glyph theo kind dự phòng.
+    "components/features/gamification/EquippedAchievement/index.tsx",
     // Art badge (iconUrl do BE seed, ví dụ /gamification/achievements/*.png|svg) — CÙNG nguồn,
     // CÙNG cách xử lý với 3 bề mặt danh mục badge đã có trong danh sách này (BadgeCatalogRow /
     // BadgeCatalogCell / BadgeDetailModal). Host do BE seed nên không ghim được vào next/image

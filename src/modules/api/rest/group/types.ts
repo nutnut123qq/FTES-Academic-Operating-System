@@ -363,6 +363,16 @@ export interface GroupUserCard {
      * NOT the same thing as {@link GroupMember.role}, which is the role INSIDE the group.
      */
     staffRole: string | null
+    /**
+     * THÀNH TÍCH người này ghim sau tên (BE `AuthorCard.equippedAchievement`, PR #170).
+     *
+     * ⚠️ OPTIONAL và nullable, và ở đây là loại optional THẬT SỰ chưa chắc: BE PR #170 gắn
+     * trường này lên `AuthorCard` dùng chung, nhưng `GroupDtos.UserCard` được
+     * `GroupAuthorEnricher` dựng riêng và tới giờ vẫn KHÔNG mang `avatarFrame` — bằng
+     * chứng là nhánh nhóm chưa từng đi cùng đường enrich với community. Vắng trường ⇒
+     * `undefined` ⇒ không vẽ con dấu: đúng nhánh degrade của mọi bề mặt khác, không vỡ gì.
+     */
+    equippedAchievement?: { code: string; name: string | null; iconUrl: string | null } | null
 }
 
 export interface GroupPostSummary {

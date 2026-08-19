@@ -342,6 +342,7 @@ export const CommentRow = ({
                         displayName={authorName}
                         showAvatar={false}
                         staffRole={comment.authorStaffRole}
+                        achievement={comment.authorAchievement}
                         // Tên người bình luận ĐẬM như tên tác giả bài viết ở CommunityFeed —
                         // mặc định `font-semibold` của UserLink đọc còn mảnh so với thân bình luận.
                         classNames={{ name: "font-bold text-foreground" }}

@@ -8,6 +8,7 @@ import {
     type CommunityPostNode,
     type CommunityPostReplyNode,
 } from "@/modules/api/graphql/queries/query-community-post"
+import type { FeedAuthorAchievement } from "@/modules/api/graphql/queries/query-community-feed"
 import type { PostMediaItem } from "@/components/blocks/feed/PostMediaGrid"
 import { formatRelativeTime } from "./relativeTime"
 import { toMediaItems } from "./useQueryCommunityFeedSwr"
@@ -37,6 +38,14 @@ export interface PostComment {
     authorStaffRole?: string | null
     /** Mã khung viền tác giả đang đeo (BE `PublicUser.avatarFrame`); null/absent = không khung. */
     authorFrame?: string | null
+    /**
+     * THÀNH TÍCH tác giả ghim sau tên (BE `PublicUser.equippedAchievement`).
+     *
+     * Optional vì `PostComment` có HAI nguồn dựng: đường GraphQL của bài cộng đồng (có
+     * trường này) và `buildThreadCommentTree` của thread nhóm đọc REST. Absent = không vẽ
+     * gì — hệt cách {@link authorStaffRole} đã xử lý cùng vấn đề.
+     */
+    authorAchievement?: FeedAuthorAchievement | null
     text: string
     timeLabel: string
     /**
@@ -67,6 +76,8 @@ export interface PostDetail {
     authorStaffRole?: string | null
     /** Mã khung viền tác giả đang đeo (BE `PublicUser.avatarFrame`); null = không khung. */
     authorFrame?: string | null
+    /** THÀNH TÍCH tác giả ghim sau tên (BE `PublicUser.equippedAchievement`); null = không ghim. */
+    authorAchievement?: FeedAuthorAchievement | null
     timeLabel: string
     title: string
     body: string
@@ -98,6 +109,7 @@ const toReply = (reply: CommunityPostReplyNode, locale: string): PostComment => 
     authorAvatar: reply.author?.avatarUrl ?? null,
     authorStaffRole: reply.author?.staffRole ?? null,
     authorFrame: reply.author?.avatarFrame ?? null,
+    authorAchievement: reply.author?.equippedAchievement ?? null,
     text: reply.body,
     timeLabel: formatRelativeTime(reply.createdAt, locale),
     likeCount: reply.likeCount,
@@ -121,13 +133,14 @@ export const toComment = (comment: CommunityPostCommentNode, locale: string): Po
  * the `likeCount`/`likedByMe` engagement and the `comments` thread, so the detail renders
  * real content and a live comment list instead of the previous "" / 0 / [] placeholders.
  */
-const toPostDetail = (post: CommunityPostNode, locale: string): PostDetail => ({
+export const toPostDetail = (post: CommunityPostNode, locale: string): PostDetail => ({
     id: post.id,
     author: post.author?.displayName ?? post.author?.username ?? "",
     authorUsername: post.author?.username ?? post.author?.id ?? "",
     authorAvatar: post.author?.avatarUrl ?? null,
     authorStaffRole: post.author?.staffRole ?? null,
     authorFrame: post.author?.avatarFrame ?? null,
+    authorAchievement: post.author?.equippedAchievement ?? null,
     timeLabel: formatRelativeTime(post.createdAt, locale),
     title: post.title ?? "",
     body: post.body ?? "",

@@ -139,6 +139,15 @@ export interface SelfProfile {
      */
     avatarFrame?: AvatarFrameView | null
     /**
+     * THÀNH TÍCH đang GHIM sau tên — ĐÃ tra sẵn (mã + art + tên) như {@link avatarFrame},
+     * để tầng vẽ không phải gọi thêm danh mục. `null` = không ghim gì.
+     *
+     * ⚠️ OPTIONAL cũng như nullable: trường đang được thêm ở backend, nên một bản BE chưa
+     * deploy đơn giản là KHÔNG có trường này. `undefined` (thiếu trường) và `null` (không
+     * ghim) đi cùng một nhánh ở mọi call site — không vẽ gì cả.
+     */
+    equippedAchievement?: EquippedAchievementView | null
+    /**
      * V341: mã ảnh trong album mặc định đang dùng; `null` = ảnh tự upload hoặc chưa
      * chọn. Dùng để tô sáng đúng ô trong màn chọn — ảnh thật vẫn ở `avatarUrl`.
      */
@@ -163,6 +172,11 @@ export interface PublicProfile {
      * danh mục). `null` = không đeo khung.
      */
     avatarFrame?: AvatarFrameView | null
+    /**
+     * THÀNH TÍCH chủ hồ sơ đang ghim sau tên — người khác xem cũng phải thấy, nên BE trả
+     * sẵn (mã + art + tên) y như {@link PublicProfile.avatarFrame}. `null`/vắng = không ghim.
+     */
+    equippedAchievement?: EquippedAchievementView | null
     coverUrl: string | null
     bio: string | null
     jobTitle: string | null
@@ -216,6 +230,13 @@ export interface ProfileUpdateRequest {
      * không đụng tới trường này.
      */
     avatarFrame?: string | null
+    /**
+     * Mã THÀNH TÍCH muốn ghim sau tên. Đi CÙNG đường với {@link avatarFrame} và theo đúng
+     * cùng quy ước: chuỗi RỖNG `""` = bỏ ghim; `undefined` = không đụng tới trường này.
+     * Backend tự kiểm người gửi có THẬT SỰ đạt thành tích đó không — mã chưa đạt (hoặc mã
+     * lạ) bị từ chối 400, nên màn chọn chỉ được phép liệt kê các thành tích ĐÃ đạt.
+     */
+    equippedAchievement?: string | null
 }
 
 /** Body of `PUT /api/v1/profiles/me/social-links`. */
@@ -296,6 +317,30 @@ export interface AvatarFrameView {
      * ĐEO (trên hồ sơ) luôn `false`/vắng.
      */
     locked?: boolean
+}
+
+/**
+ * THÀNH TÍCH đang được GHIM sau tên một người, đã tra sẵn backend-side.
+ *
+ * <p>Cùng khuôn với {@link AvatarFrameView}: hồ sơ trả về VẬT THỂ đã tra danh mục (mã +
+ * art + tên) chứ không phải mỗi cái mã, nên tầng vẽ không phải gọi thêm
+ * `GET /gamification/badges` chỉ để biết một cái tên — và một feed 50 dòng không sinh ra
+ * 50 lượt tra.
+ *
+ * <p>`iconUrl` lấy từ `icon` sẵn có của badge, nên art ở đây và art trong danh mục thành
+ * tích KHÔNG THỂ lệch nhau. Mọi trường ngoài `code` đều optional + nullable: đây là
+ * contract của một backend ĐANG được deploy, và một bản chưa có trường phải rơi về đúng
+ * nhánh "không có art" chứ không được làm vỡ trang.
+ */
+export interface EquippedAchievementView {
+    /** Mã badge (`badges.code`, vd `FIRST_LESSON`). Không bao giờ vẽ thô. */
+    code: string
+    /** Tên hiển thị backend gửi kèm — bậc 2 sau bản dịch curated khi resolve nhãn. */
+    name?: string | null
+    /** `kind` của badge (`BADGE`/`TITLE`/`TROPHY`) → glyph dự phòng khi không có art. */
+    kind?: string | null
+    /** Art do BE seed; `null`/vắng ⇒ vẽ glyph theo {@link kind}. */
+    iconUrl?: string | null
 }
 
 /**

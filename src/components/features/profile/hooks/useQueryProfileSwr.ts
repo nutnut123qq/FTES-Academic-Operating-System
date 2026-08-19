@@ -4,7 +4,7 @@ import useSWR from "swr"
 import { getSelfProfile } from "@/modules/api/rest/profile"
 import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 import { useAppSelector } from "@/redux/hooks"
-import type { SelfProfile } from "@/modules/api/rest/profile"
+import type { EquippedAchievementView, SelfProfile } from "@/modules/api/rest/profile"
 
 /**
  * The SWR key EVERY self-profile reader and writer must use, so `GET /profiles/me`
@@ -46,6 +46,14 @@ export interface Profile {
     avatarUrl: string
     /** Mã khung viền đang đeo (V341); "" = không đeo → header vẽ viền gradient mặc định. */
     avatarFrameCode: string
+    /**
+     * THÀNH TÍCH đang ghim sau tên; `null` = không ghim ⇒ header không vẽ gì thêm.
+     *
+     * Giữ nguyên VẬT THỂ (không dẹt thành mã như {@link avatarFrameCode}) vì con dấu cần
+     * cả art lẫn tên để vẽ, mà hồ sơ đã trả sẵn cả hai — dẹt xuống còn mã sẽ buộc tầng
+     * vẽ đi tra lại danh mục chỉ để lấy thứ vừa vứt đi.
+     */
+    equippedAchievement: EquippedAchievementView | null
     /** Account creation date (ISO), rendered as the "Joined" line — empty when unset. */
     joinedAt: string
 }
@@ -65,6 +73,8 @@ export const toShellProfile = (profile: SelfProfile): Profile => ({
         .join(" · "),
     avatarUrl: profile.avatarUrl ?? "",
     avatarFrameCode: profile.avatarFrame?.code ?? "",
+    // `undefined` (BE chưa deploy trường) và `null` (không ghim) CÙNG rơi về `null`.
+    equippedAchievement: profile.equippedAchievement ?? null,
     joinedAt: profile.createdAt ?? "",
 })
 

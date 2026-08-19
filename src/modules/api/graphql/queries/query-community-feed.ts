@@ -31,6 +31,23 @@ export enum FeedTab {
     Trending = "TRENDING",
 }
 
+/**
+ * THÀNH TÍCH tác giả đang ghim sau tên (BE GraphQL `type EquippedAchievement`, BE PR #170).
+ *
+ * Backend dùng CHUNG một kiểu cho REST `AuthorCard` và GraphQL `PublicUser`, nên ba trường
+ * này không thể lệch nhau giữa hai đường đọc. Không có `kind`: badge nào không có `iconUrl`
+ * sẽ rơi về glyph mặc định (huy chương) của `badgeKindIcon` — đúng nhánh "kind lạ/vắng" mà
+ * helper đó đã lo sẵn.
+ */
+export interface FeedAuthorAchievement {
+    /** Mã badge (`badges.code`, vd `FIRST_LESSON`) — cũng là khoá BE dùng để equip. */
+    code: string
+    /** Tên BE gửi kèm; `null` ⇒ tầng vẽ humanize mã. Schema là `String` (nullable). */
+    name: string | null
+    /** Art do BE seed; `null` = badge không có art ⇒ vẽ glyph. */
+    iconUrl: string | null
+}
+
 /** Author attached to a feed post (BE `PublicUser`; non-PII by policy). */
 export interface FeedPostAuthor {
     id: string
@@ -51,6 +68,12 @@ export interface FeedPostAuthor {
      * lại. Render tra mã này qua danh mục khung dùng chung.
      */
     avatarFrame?: string | null
+    /**
+     * THÀNH TÍCH tác giả đang ghim (BE `PublicUser.equippedAchievement`, PR #170), để con
+     * dấu hiện sau tên ở feed/bình luận chứ không chỉ trên trang hồ sơ. `null`/absent =
+     * không ghim ⇒ không vẽ gì. Optional để mock/test cũ không phải khai lại.
+     */
+    equippedAchievement?: FeedAuthorAchievement | null
 }
 
 /**
@@ -131,6 +154,11 @@ export const FEED_SELECTION = `
       avatarUrl
       staffRole
       avatarFrame
+      equippedAchievement {
+        code
+        name
+        iconUrl
+      }
     }
     media {
       id

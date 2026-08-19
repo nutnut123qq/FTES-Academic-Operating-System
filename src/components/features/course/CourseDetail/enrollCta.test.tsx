@@ -51,6 +51,8 @@ vi.mock("@phosphor-icons/react", () => {
         LinkedinLogoIcon: Icon,
         LockIcon: Icon,
         LockSimpleIcon: Icon,
+        // Pulled in transitively by UserLink → the shared badge-kind glyph map.
+        MedalIcon: Icon,
         PlayCircleIcon: Icon,
         PuzzlePieceIcon: Icon,
         ShoppingCartIcon: Icon,

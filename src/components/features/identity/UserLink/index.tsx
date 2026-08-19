@@ -64,6 +64,12 @@ export interface UserLinkProps extends WithClassNames<{ avatar?: string; name?: 
      */
     staffRole?: string | null
     /**
+     * Mã KHUNG VIỀN người này đang đeo (BE `PublicUser.avatarFrame`) — vẽ khung quanh avatar
+     * để khung hiện ở feed/bình luận/@mention, không chỉ màn chọn khung. `null`/mã lạ ⇒ avatar
+     * trần (không đổi gì).
+     */
+    frameCode?: string | null
+    /**
      * Follow state supplied by the CALLER, for surfaces that already read it for the
      * whole list in one request
      * ({@link import("./useQueryFollowedUserIdsSwr").useQueryFollowedUserIdsSwr} over
@@ -105,6 +111,7 @@ export const UserLink = ({
     showAvatar = true,
     hideName = false,
     staffRole,
+    frameCode,
     isFollowing: isFollowingProp,
     className,
     classNames,
@@ -191,6 +198,7 @@ export const UserLink = ({
                     avatar={avatar}
                     seed={seed ?? username}
                     size={size}
+                    frameCode={frameCode}
                     className={cn("shrink-0", size === "sm" && "size-8", classNames?.avatar)}
                 />
             ) : null}

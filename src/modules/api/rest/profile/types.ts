@@ -158,6 +158,11 @@ export interface PublicProfile {
     username: string
     displayName: string | null
     avatarUrl: string | null
+    /**
+     * V341: khung viền của chủ hồ sơ — người khác xem cũng phải thấy (BE trả sẵn, đã tra
+     * danh mục). `null` = không đeo khung.
+     */
+    avatarFrame?: AvatarFrameView | null
     coverUrl: string | null
     bio: string | null
     jobTitle: string | null

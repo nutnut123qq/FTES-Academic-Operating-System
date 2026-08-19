@@ -326,6 +326,7 @@ export const CommentRow = ({
                     username={comment.authorUsername}
                     displayName={authorName}
                     avatar={comment.authorAvatar}
+                    frameCode={comment.authorFrame}
                     hideName
                     size="sm"
                     classNames={{ avatar: "size-8" }}

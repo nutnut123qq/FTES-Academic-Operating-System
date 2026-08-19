@@ -27,13 +27,13 @@ const postDocument = (id: string): DocumentNode =>
             `    id\n    kind\n    title\n    createdAt\n` +
             `    body\n    likeCount\n    likedByMe\n    commentCount\n` +
             `    media { id mediaType storageKey mimeType sortOrder }\n` +
-            `    author { id username displayName avatarUrl staffRole }\n` +
+            `    author { id username displayName avatarUrl staffRole avatarFrame }\n` +
             `    comments {\n` +
             `      id\n      body\n      createdAt\n      parentCommentId\n      likeCount\n      likedByMe\n` +
-            `      author { id username displayName avatarUrl staffRole }\n` +
+            `      author { id username displayName avatarUrl staffRole avatarFrame }\n` +
             `      replies {\n` +
             `        id\n        body\n        createdAt\n        likeCount\n        likedByMe\n` +
-            `        author { id username displayName avatarUrl staffRole }\n` +
+            `        author { id username displayName avatarUrl staffRole avatarFrame }\n` +
             `      }\n` +
             `    }\n` +
             `  }\n}`,

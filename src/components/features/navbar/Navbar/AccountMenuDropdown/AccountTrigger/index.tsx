@@ -10,6 +10,7 @@ import {
 import { useTranslations } from "next-intl"
 import { UserAvatar } from "@/components/reuseable/UserAvatar"
 import { useAppSelector } from "@/redux/hooks"
+import { useSelfFrameCode } from "@/components/features/profile/hooks/useSelfFrameCode"
 import { useGetMyStreakSwr } from "@/hooks/swr/api/rest/queries/useGetMyStreakSwr"
 import { useAccountMenuOverlayState } from "@/hooks/zustand/overlay/hooks"
 import type { WithClassNames } from "@/modules/types/base/class-name"
@@ -53,6 +54,8 @@ export const AccountTrigger = ({ className }: AccountTriggerProps) => {
     // this in the navbar adds a request only on the pages that had no streak reader at
     // all, while user A's badge can never be served to user B in the same tab.
     const { data: streak } = useGetMyStreakSwr()
+    // Khung viền của chính người xem — để avatar trên navbar đeo đúng khung ở mọi trang.
+    const frameCode = useSelfFrameCode()
 
     /** Open the account dropdown. */
     const onOpen = useCallback(() => open(), [open])
@@ -89,6 +92,7 @@ export const AccountTrigger = ({ className }: AccountTriggerProps) => {
             className="cursor-pointer"
             username={user?.username}
             avatar={user?.avatar}
+            frameCode={frameCode}
         />
     )
 

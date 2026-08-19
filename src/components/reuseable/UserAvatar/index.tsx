@@ -4,6 +4,7 @@ import React from "react"
 import { Avatar, AvatarFallback, AvatarImage, cn } from "@heroui/react"
 import { UserIcon } from "@phosphor-icons/react"
 import { avatarInitials, resolveAvatarSrc } from "@/utils/avatar"
+import { useAvatarFrames } from "@/components/features/gamification/useAvatarFrames"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 
 /** Props for {@link UserAvatar}. */
@@ -20,6 +21,13 @@ export interface UserAvatarProps extends WithClassNames<undefined> {
     seed?: string | null
     /** HeroUI avatar size preset. */
     size?: "sm" | "md" | "lg"
+    /**
+     * Mã KHUNG VIỀN người này đang đeo (`profiles.avatar_frame`). Có mã + tra được danh
+     * mục ⇒ vẽ khung quanh avatar (đây là lý do khung hiện ở MỌI nơi dùng UserAvatar,
+     * miễn caller truyền được mã). `null`/không truyền/mã lạ/danh mục chưa tải ⇒ avatar
+     * TRẦN — không thêm gì, không đổi layout (khung là trang trí, không chen đường đọc).
+     */
+    frameCode?: string | null
 }
 
 /**
@@ -49,16 +57,62 @@ export interface UserAvatarProps extends WithClassNames<undefined> {
  *
  * @param props - {@link UserAvatarProps}
  */
-export const UserAvatar = ({ username, avatar, seed, size, className }: UserAvatarProps) => {
+export const UserAvatar = ({ username, avatar, seed, size, className, frameCode }: UserAvatarProps) => {
     const src = resolveAvatarSrc(avatar, seed ?? username)
     const initials = avatarInitials(username)
 
-    return (
+    const avatarNode = (
         <Avatar size={size} className={cn(className)}>
             {src ? <AvatarImage src={src} alt={username ?? ""} /> : null}
             <AvatarFallback>
                 {initials || <UserIcon aria-hidden focusable="false" className="size-1/2" />}
             </AvatarFallback>
         </Avatar>
+    )
+
+    // Không truyền mã khung ⇒ trả avatar TRẦN, KHÔNG gọi hook khung. Quan trọng: hook khung
+    // dùng Redux + SWR; nếu gọi vô điều kiện thì MỌI nơi render UserAvatar (≈45 file + test)
+    // bỗng phụ thuộc provider. Tách nhánh khung ra component riêng nên chỉ chỗ THẬT SỰ cần
+    // khung mới chạm tới hook.
+    if (!frameCode) {
+        return avatarNode
+    }
+    return <FramedAvatar frameCode={frameCode}>{avatarNode}</FramedAvatar>
+}
+
+/**
+ * Bọc KHUNG VIỀN quanh một avatar đã dựng. Tách riêng để {@link useAvatarFrames} (Redux +
+ * SWR) CHỈ chạy khi caller thật sự truyền `frameCode` — avatar trần không gánh phụ thuộc.
+ *
+ * <p>Khung là trang trí, vẽ ở LỚP NGOÀI bằng ring/overlay (không đẩy layout khi danh mục về).
+ * Khung có ảnh (`assetUrl`) đè lên trên — ép kích thước tường minh (`w-[132%]` + vuông + căn
+ * giữa) vì ảnh khung 512×512 sẽ tràn nếu giữ kích thước gốc; chỉ có `cssGradient` thì vẽ vòng.
+ * Mã lạ / danh mục chưa tải ⇒ trả avatar trần (không bọc gì).
+ */
+const FramedAvatar = ({ frameCode, children }: { frameCode: string; children: React.ReactNode }) => {
+    const lookupFrame = useAvatarFrames()
+    const frame = lookupFrame(frameCode)
+    if (!frame) {
+        return <>{children}</>
+    }
+    return (
+        <span className="relative inline-flex shrink-0">
+            {frame.cssGradient ? (
+                <span
+                    aria-hidden
+                    className="pointer-events-none absolute -inset-[3px] rounded-full"
+                    style={{ background: frame.cssGradient }}
+                />
+            ) : null}
+            <span className="relative inline-flex">{children}</span>
+            {frame.assetUrl ? (
+                <img
+                    src={frame.assetUrl}
+                    alt=""
+                    aria-hidden
+                    className="pointer-events-none absolute left-1/2 top-1/2 aspect-square w-[132%] max-w-none -translate-x-1/2 -translate-y-1/2 object-contain"
+                />
+            ) : null}
+        </span>
     )
 }

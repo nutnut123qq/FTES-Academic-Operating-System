@@ -5,6 +5,7 @@ import { Button, cn } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { UserAvatar } from "../UserAvatar"
 import { RichTextEditor } from "@/components/reuseable/RichTextEditor"
+import { useSelfFrameCode } from "@/components/features/profile/hooks/useSelfFrameCode"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 
 /** Props for {@link CommentComposer}. */
@@ -84,6 +85,8 @@ export const CommentComposer = ({
     className,
 }: CommentComposerProps) => {
     const t = useTranslations()
+    // Ô soạn luôn là avatar của CHÍNH người xem → tự tra khung của họ, không cần caller truyền.
+    const frameCode = useSelfFrameCode()
     // draft body kept local until submit
     const [body, setBody] = useState(initialValue ?? "")
     // collapsible composers start closed; everything else is always open
@@ -142,6 +145,7 @@ export const CommentComposer = ({
                         size="sm"
                         username={currentUser.username}
                         avatar={currentUser.avatar}
+                        frameCode={frameCode}
                         className="shrink-0"
                     />
                 ) : null}
@@ -190,6 +194,7 @@ export const CommentComposer = ({
                     size="sm"
                     username={currentUser.username}
                     avatar={currentUser.avatar}
+                    frameCode={frameCode}
                     className="mt-0.5 shrink-0"
                 />
             ) : null}

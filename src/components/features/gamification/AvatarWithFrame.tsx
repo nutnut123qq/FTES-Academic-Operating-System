@@ -3,7 +3,6 @@
 import React from "react"
 import { cn } from "@heroui/react"
 import { UserAvatar } from "@/components/reuseable/UserAvatar"
-import { useAvatarFrames } from "./useAvatarFrames"
 
 /** Props for {@link AvatarWithFrame}. */
 export interface AvatarWithFrameProps {
@@ -42,45 +41,17 @@ export const AvatarWithFrame = ({
     frameCode,
     highlighted = false,
 }: AvatarWithFrameProps) => {
-    const lookupFrame = useAvatarFrames()
-    const frame = lookupFrame(frameCode)
-
-    const avatarNode = (
+    // Việc vẽ khung giờ nằm TRONG {@link UserAvatar} (một nguồn sự thật, để khung hiện ở
+    // mọi nơi dùng UserAvatar). Component này giữ lại chỉ để tương thích caller cũ (bảng
+    // mùa, màn chọn khung) + thêm viền nhấn `highlighted` cho dòng của chính người xem.
+    return (
         <UserAvatar
             username={username}
             avatar={avatar}
             seed={seed}
             size={size}
+            frameCode={frameCode}
             className={cn(highlighted && "ring-2 ring-accent rounded-full")}
         />
-    )
-
-    if (!frame) {
-        return avatarNode
-    }
-
-    return (
-        <span className="relative inline-flex shrink-0">
-            {frame.cssGradient ? (
-                <span
-                    aria-hidden
-                    className="pointer-events-none absolute -inset-[3px] rounded-full"
-                    style={{ background: frame.cssGradient }}
-                />
-            ) : null}
-            <span className="relative inline-flex">{avatarNode}</span>
-            {frame.assetUrl ? (
-                // Khung ảnh 512×512 (nền trong suốt) đè lên avatar. Phải ép kích thước
-                // TƯỜNG MINH theo avatar (w-[132%] + vuông + căn giữa): nếu chỉ dùng
-                // `absolute -inset-[15%] max-w-none` thì `<img>` giữ kích thước gốc 512px
-                // và tràn kín màn — nhánh assetUrl trước đây chưa từng chạy với ảnh thật.
-                <img
-                    src={frame.assetUrl}
-                    alt=""
-                    aria-hidden
-                    className="pointer-events-none absolute left-1/2 top-1/2 aspect-square w-[132%] max-w-none -translate-x-1/2 -translate-y-1/2 object-contain"
-                />
-            ) : null}
-        </span>
     )
 }

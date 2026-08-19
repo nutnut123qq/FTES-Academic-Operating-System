@@ -320,6 +320,7 @@ export const CommunityFeedRow = ({
                         username={post.authorUsername}
                         displayName={authorName}
                         avatar={post.authorAvatar}
+                        frameCode={post.authorFrame}
                         hideName
                         size="sm"
                         className="size-9"

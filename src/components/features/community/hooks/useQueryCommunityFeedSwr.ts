@@ -46,6 +46,8 @@ export interface CommunityPost {
      * next to the name. `null`/absent = ordinary member = NO badge.
      */
     authorStaffRole?: string | null
+    /** Mã khung viền tác giả đang đeo (BE `PublicUser.avatarFrame`); null = không khung. */
+    authorFrame?: string | null
     /**
      * Author id (BE `Post.authorId`) — the owner gate compares this, since a display
      * name/username can be missing while the id is always present.
@@ -241,6 +243,7 @@ export const toCommunityPost = (post: FeedPost, locale: string): CommunityPost =
     authorUsername: post.author?.username ?? "",
     authorAvatar: post.author?.avatarUrl ?? null,
     authorStaffRole: post.author?.staffRole ?? null,
+    authorFrame: post.author?.avatarFrame ?? null,
     authorId: post.authorId ?? post.author?.id ?? null,
     pinned: post.pinned ?? false,
     timeLabel: formatRelativeTime(post.createdAt, locale),

@@ -35,6 +35,8 @@ export interface PostComment {
      * group thread uses), which simply means no badge.
      */
     authorStaffRole?: string | null
+    /** Mã khung viền tác giả đang đeo (BE `PublicUser.avatarFrame`); null/absent = không khung. */
+    authorFrame?: string | null
     text: string
     timeLabel: string
     /**
@@ -63,6 +65,8 @@ export interface PostDetail {
     authorAvatar?: string | null
     /** Author's platform staff role (BE `PublicUser.staffRole`); null = no badge. */
     authorStaffRole?: string | null
+    /** Mã khung viền tác giả đang đeo (BE `PublicUser.avatarFrame`); null = không khung. */
+    authorFrame?: string | null
     timeLabel: string
     title: string
     body: string
@@ -93,6 +97,7 @@ const toReply = (reply: CommunityPostReplyNode, locale: string): PostComment => 
     authorUsername: reply.author?.username ?? reply.author?.id ?? "",
     authorAvatar: reply.author?.avatarUrl ?? null,
     authorStaffRole: reply.author?.staffRole ?? null,
+    authorFrame: reply.author?.avatarFrame ?? null,
     text: reply.body,
     timeLabel: formatRelativeTime(reply.createdAt, locale),
     likeCount: reply.likeCount,
@@ -122,6 +127,7 @@ const toPostDetail = (post: CommunityPostNode, locale: string): PostDetail => ({
     authorUsername: post.author?.username ?? post.author?.id ?? "",
     authorAvatar: post.author?.avatarUrl ?? null,
     authorStaffRole: post.author?.staffRole ?? null,
+    authorFrame: post.author?.avatarFrame ?? null,
     timeLabel: formatRelativeTime(post.createdAt, locale),
     title: post.title ?? "",
     body: post.body ?? "",

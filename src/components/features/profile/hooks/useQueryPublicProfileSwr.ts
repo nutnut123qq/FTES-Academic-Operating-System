@@ -43,6 +43,8 @@ export interface PublicProfile {
     /** Users this profile follows (from `counters.following`). */
     following: number
     avatarUrl: string
+    /** Mã khung viền của chủ hồ sơ (V341); "" = không đeo → header vẽ viền gradient mặc định. */
+    avatarFrameCode: string
     /** Contact email — "" when unset or hidden by the owner's privacy settings. */
     contactEmail: string
     /** Phone — "" when unset or hidden by the owner's privacy settings. */
@@ -82,6 +84,7 @@ export const toPublicProfile = (dto: PublicProfileDto, locale = "vi"): PublicPro
     followers: dto.counters?.followers ?? 0,
     following: dto.counters?.following ?? 0,
     avatarUrl: dto.avatarUrl ?? "",
+    avatarFrameCode: dto.avatarFrame?.code ?? "",
     contactEmail: dto.contactEmail ?? "",
     phone: dto.phone ?? "",
     academic: dto.academic

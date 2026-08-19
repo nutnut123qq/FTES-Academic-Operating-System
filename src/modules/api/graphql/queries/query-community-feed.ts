@@ -45,6 +45,12 @@ export interface FeedPostAuthor {
      * validates it instead of trusting the wire.
      */
     staffRole: string | null
+    /**
+     * Mã KHUNG VIỀN tác giả đang đeo (BE `PublicUser.avatarFrame`), để avatar ở feed/bình
+     * luận vẽ đúng khung. `null`/absent = không đeo. Optional để mock/test cũ không phải khai
+     * lại. Render tra mã này qua danh mục khung dùng chung.
+     */
+    avatarFrame?: string | null
 }
 
 /**
@@ -124,6 +130,7 @@ export const FEED_SELECTION = `
       displayName
       avatarUrl
       staffRole
+      avatarFrame
     }
     media {
       id

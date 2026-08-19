@@ -7,7 +7,10 @@ import { useAppSelector } from "@/redux/hooks"
 import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 import { buildMyNotificationsBadgeKey } from "@/hooks/swr/api/graphql/queries/useQueryMyNotificationsSwr"
 import { buildMyNotificationsInfiniteKey } from "@/hooks/swr/api/graphql/queries/useQueryMyNotificationsInfiniteSwr"
-import { openNotificationStream } from "@/modules/api/rest/notification/stream"
+import { openNotificationStream, NotificationStreamHttpError } from "@/modules/api/rest/notification/stream"
+import { refreshAccessToken, shouldRefreshAccessToken } from "@/modules/api/rest/client/refresh"
+import { LocalStorage } from "@/modules/storage/local/storage"
+import { LocalStorageId } from "@/modules/storage/local/enums/id"
 import type { NotificationBadge } from "@/modules/api/rest/notification/types"
 
 /** First reconnect delay after a drop; doubles per failed attempt up to {@link MAX_BACKOFF_MS}. */
@@ -100,6 +103,16 @@ export const useNotificationSseLifecycle = () => {
 
         const connect = async () => {
             try {
+                // ★ LÀM MỚI TOKEN TRƯỚC KHI NỐI. Stream đọc token từ localStorage tại thời điểm
+                // gọi, nên nó chỉ "tươi" khi có thứ KHÁC vừa làm mới hộ — thường là một lời gọi
+                // REST. Người dùng để yên tab thì chẳng có lời gọi nào: access token sống 15 phút,
+                // hết hạn, và mọi lần nối lại đều mang đúng cái token chết đó ⇒ 401 lặp vô tận
+                // theo nhịp backoff. Đã đo trên production: token hết hạn TRƯỚC lời gọi 13,4 phút.
+                if (shouldRefreshAccessToken(
+                    LocalStorage.getItemAsString(LocalStorageId.KeycloakAccessToken) ?? undefined,
+                )) {
+                    await refreshAccessToken()
+                }
                 await openNotificationStream({
                     signal: controller.signal,
                     onUnread: (count) => {
@@ -113,7 +126,18 @@ export const useNotificationSseLifecycle = () => {
                     },
                 })
                 // clean server close (30-min emitter timeout) — falls through to reconnect
-            } catch {
+            } catch (error) {
+                // 401 = token chết giữa chừng (phiên dài hơn 15 phút, hoặc máy vừa ngủ dậy). Nối
+                // lại NGAY bằng token cũ chỉ nhận đúng 401 đó lần nữa, nên phải làm mới trước.
+                // Bọc try riêng: refresh hỏng (refresh token cũng hết hạn) KHÔNG được ném ra
+                // ngoài — vòng lặp còn phải chạy tiếp để `stopped`/backoff làm việc của nó.
+                if (error instanceof NotificationStreamHttpError && error.status === 401) {
+                    try {
+                        await refreshAccessToken()
+                    } catch {
+                        // hết đường làm mới ⇒ để backoff giãn dần, người dùng sẽ phải đăng nhập lại
+                    }
+                }
                 // abort (logout/unmount) lands here too; `stopped` gates the reconnect below
             }
             scheduleReconnect()

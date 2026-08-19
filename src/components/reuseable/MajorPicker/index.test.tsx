@@ -68,7 +68,9 @@ describe("MajorPicker", () => {
     it("không in lý do khi danh mục có ngành (ô vẫn bấm được)", () => {
         render(
             <MajorPicker
-                majors={[{ code: "SE", name: "Kỹ Thuật Phần Mềm", description: null }]}
+                majors={[
+                    { code: "SE", name: "Kỹ thuật phần mềm", description: null, parentCode: "BIT" },
+                ]}
                 value="SE"
                 onChange={vi.fn()}
                 placeholder="Chưa chọn ngành"

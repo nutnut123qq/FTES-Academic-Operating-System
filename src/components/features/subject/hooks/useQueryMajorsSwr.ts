@@ -15,6 +15,13 @@ export interface Major {
     /** Tên hiển thị theo locale hiện tại. */
     name: string
     description: string | null
+    /**
+     * Mã KHỐI ngành cha, `null` khi chính nó là khối cấp 1 (BE seed syllabus).
+     *
+     * Danh sách BE trả về đã sắp sẵn: khối đứng trước, ngay sau là các chuyên ngành của khối đó —
+     * nên chỉ cần trường này để thụt lề, không cần dựng cây.
+     */
+    parentCode: string | null
 }
 
 /** Tên ngành theo locale: `vi` lấy `nameVi`, còn lại lấy `name`; thiếu thì rơi về cái kia rồi tới mã. */
@@ -43,6 +50,7 @@ export const useQueryMajorsSwr = () => {
         code: row.code,
         name: pickMajorName(locale, row),
         description: row.description ?? null,
+        parentCode: row.parentCode ?? null,
     }))
     return { majors, isLoading, error }
 }

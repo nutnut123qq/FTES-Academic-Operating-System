@@ -120,6 +120,11 @@ export interface MajorView {
     name: string
     nameVi: string
     description?: string | null
+    /**
+     * Mã khối ngành cha; `null`/vắng mặt = khối cấp 1 HOẶC endpoint không dựng cây (chip ngành
+     * đi kèm thẻ môn không mang trường này — chỉ `GET /majors` mới điền).
+     */
+    parentCode?: string | null
 }
 
 /** Subject summary row in catalog list. */

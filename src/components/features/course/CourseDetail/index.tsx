@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useMemo, useState } from "react"
-import { Button, Chip, Link, Typography, cn } from "@heroui/react"
+import { Button, Chip, Link, ScrollShadow, Typography, cn } from "@heroui/react"
 import {
     BookIcon,
     BookOpenIcon,
@@ -745,7 +745,7 @@ export const EnrollCard = ({
             : null
 
     return (
-        <div className="flex flex-col gap-2.5 rounded-2xl border border-separator p-4 md:sticky md:top-20">
+        <div className="flex flex-col gap-2.5 rounded-2xl border border-separator p-4 md:sticky md:top-20 md:max-h-[calc(100dvh-6rem)]">
             <CardCover coverUrl={course.coverUrl} alt={course.name} />
 
             {isEnrolled ? (
@@ -759,57 +759,70 @@ export const EnrollCard = ({
                 </>
             ) : (
                 <>
-                    {/* headline — the SELECTED option's price (paid → PriceTag; free → free label) */}
-                    <PurchaseOptionHeadline
-                        discounted={selected === FREE ? 0 : course.price.vnd}
-                        original={selected === FREE ? null : strikeOriginal}
-                    />
+                    {/* The card is PINNED (md:sticky): grow it past the viewport and its lower
+                        half is unreachable — page scroll can't move a pinned box — which is what
+                        swallowed the CTAs on a course with many options. So the root caps at the
+                        viewport (md:max-h) and ONLY this list scrolls, keeping the CTA cluster
+                        below it permanently in view. `min-h-0` is load-bearing: a flex child
+                        won't shrink below its content without it, which silently undoes the cap.
+                        md+ only, matching `md:sticky` — on mobile the card sits in normal flow
+                        and a nested scroller there would be a regression, not a fix. */}
+                    <ScrollShadow
+                        hideScrollBar
+                        className="-mx-1 flex flex-col gap-2.5 overflow-x-hidden px-1 md:min-h-0 md:flex-1 md:overflow-y-auto"
+                    >
+                        {/* headline — the SELECTED option's price (paid → PriceTag; free → free label) */}
+                        <PurchaseOptionHeadline
+                            discounted={selected === FREE ? 0 : course.price.vnd}
+                            original={selected === FREE ? null : strikeOriginal}
+                        />
 
-                    {/* option picker — SAME UI as the PACKAGE card: radio rows + price badge.
-                        ALWAYS shown so every course offers both the paid course + a free trial. */}
-                    <SelectableCardGroup
-                        ariaLabel={t("detail.package.selectorAria")}
-                        variant="plain"
-                        value={selected}
-                        onChange={setChosen}
-                        items={[
-                            {
-                                value: PREMIUM,
-                                icon: selected === PREMIUM ? (
-                                    <CircleIcon aria-hidden focusable="false" weight="fill" className="size-5 text-accent" />
-                                ) : (
-                                    <CircleIcon aria-hidden focusable="false" className="size-5 text-muted" />
-                                ),
-                                label: <span className="truncate">{t("detail.wholeCourse")}</span>,
-                                badge: (
-                                    <span className="flex items-center gap-2 text-sm">
-                                        {strikeOriginal ? (
-                                            <span className="text-xs text-muted line-through">
-                                                {strikeOriginal.toLocaleString("vi-VN")}₫
+                        {/* option picker — SAME UI as the PACKAGE card: radio rows + price badge.
+                            ALWAYS shown so every course offers both the paid course + a free trial. */}
+                        <SelectableCardGroup
+                            ariaLabel={t("detail.package.selectorAria")}
+                            variant="plain"
+                            value={selected}
+                            onChange={setChosen}
+                            items={[
+                                {
+                                    value: PREMIUM,
+                                    icon: selected === PREMIUM ? (
+                                        <CircleIcon aria-hidden focusable="false" weight="fill" className="size-5 text-accent" />
+                                    ) : (
+                                        <CircleIcon aria-hidden focusable="false" className="size-5 text-muted" />
+                                    ),
+                                    label: <span className="truncate">{t("detail.wholeCourse")}</span>,
+                                    badge: (
+                                        <span className="flex items-center gap-2 text-sm">
+                                            {strikeOriginal ? (
+                                                <span className="text-xs text-muted line-through">
+                                                    {strikeOriginal.toLocaleString("vi-VN")}₫
+                                                </span>
+                                            ) : null}
+                                            <span className={cn("font-medium", selected === PREMIUM ? "text-accent" : "text-foreground")}>
+                                                {course.price.vnd.toLocaleString("vi-VN")}₫
                                             </span>
-                                        ) : null}
-                                        <span className={cn("font-medium", selected === PREMIUM ? "text-accent" : "text-foreground")}>
-                                            {course.price.vnd.toLocaleString("vi-VN")}₫
                                         </span>
-                                    </span>
-                                ),
-                            },
-                            {
-                                value: FREE,
-                                icon: selected === FREE ? (
-                                    <CircleIcon aria-hidden focusable="false" weight="fill" className="size-5 text-accent" />
-                                ) : (
-                                    <CircleIcon aria-hidden focusable="false" className="size-5 text-muted" />
-                                ),
-                                label: <span className="truncate">{t("detail.tryFree")}</span>,
-                                badge: (
-                                    <span className={cn("text-sm font-medium", selected === FREE ? "text-accent" : "text-foreground")}>
-                                        {t("detail.freeLabel")}
-                                    </span>
-                                ),
-                            },
-                        ]}
-                    />
+                                    ),
+                                },
+                                {
+                                    value: FREE,
+                                    icon: selected === FREE ? (
+                                        <CircleIcon aria-hidden focusable="false" weight="fill" className="size-5 text-accent" />
+                                    ) : (
+                                        <CircleIcon aria-hidden focusable="false" className="size-5 text-muted" />
+                                    ),
+                                    label: <span className="truncate">{t("detail.tryFree")}</span>,
+                                    badge: (
+                                        <span className={cn("text-sm font-medium", selected === FREE ? "text-accent" : "text-foreground")}>
+                                            {t("detail.freeLabel")}
+                                        </span>
+                                    ),
+                                },
+                            ]}
+                        />
+                    </ScrollShadow>
 
                     {/* CTA — acts on the SELECTED option (mirrors the PACKAGE card's single
                         primary): premium → real checkout; free → free trial into the reader. */}
@@ -1170,7 +1183,7 @@ export const PackageEnrollCard = ({
     }
 
     return (
-        <div className="flex flex-col gap-2.5 rounded-2xl border border-separator p-4 md:sticky md:top-20">
+        <div className="flex flex-col gap-2.5 rounded-2xl border border-separator p-4 md:sticky md:top-20 md:max-h-[calc(100dvh-6rem)]">
             <CardCover coverUrl={course.coverUrl} alt={course.name} />
 
             {isEnrolled ? (
@@ -1223,93 +1236,106 @@ export const PackageEnrollCard = ({
                 </div>
             ) : (
                 <>
-                    {/* headline: the selected package's price (big) + struck original +
-                        −% badge (all via PriceTag), plus ONE orange scarcity line when the
-                        contract exposes a slot figure. Free package → the free label. */}
-                    {selectedPackage ? (
-                        <PurchaseOptionHeadline
-                            discounted={packagePrice(selectedPackage).discounted}
-                            original={packagePrice(selectedPackage).original}
-                            // scarcity: hidden today — `PackageView` carries no slot figure
-                            // (see tasks Findings); lights up the moment BE sends one.
-                            slots={packageSlots(selectedPackage)}
-                        />
-                    ) : null}
+                    {/* The card is PINNED (md:sticky): grow it past the viewport and its lower
+                        half is unreachable — page scroll can't move a pinned box — which is what
+                        swallowed the CTAs on a course with many options. So the root caps at the
+                        viewport (md:max-h) and ONLY this list scrolls, keeping the CTA cluster
+                        below it permanently in view. `min-h-0` is load-bearing: a flex child
+                        won't shrink below its content without it, which silently undoes the cap.
+                        md+ only, matching `md:sticky` — on mobile the card sits in normal flow
+                        and a nested scroller there would be a regression, not a fix. */}
+                    <ScrollShadow
+                        hideScrollBar
+                        className="-mx-1 flex flex-col gap-2.5 overflow-x-hidden px-1 md:min-h-0 md:flex-1 md:overflow-y-auto"
+                    >
+                        {/* headline: the selected package's price (big) + struck original +
+                            −% badge (all via PriceTag), plus ONE orange scarcity line when the
+                            contract exposes a slot figure. Free package → the free label. */}
+                        {selectedPackage ? (
+                            <PurchaseOptionHeadline
+                                discounted={packagePrice(selectedPackage).discounted}
+                                original={packagePrice(selectedPackage).original}
+                                // scarcity: hidden today — `PackageView` carries no slot figure
+                                // (see tasks Findings); lights up the moment BE sends one.
+                                slots={packageSlots(selectedPackage)}
+                            />
+                        ) : null}
 
-                    <SelectableCardGroup
-                        ariaLabel={t("detail.package.selectorAria")}
-                        variant="plain"
-                        value={selectedId ?? ""}
-                        onChange={setChosenId}
-                        items={packages.map((pkg) => {
-                            const { discounted, original } = packagePrice(pkg)
-                            const count = pkg.entitlements?.length ?? 0
-                            // Gói phủ toàn khoá → nhãn "Trọn khoá", TUYỆT ĐỐI không đếm số
-                            // (1 entitlement COURSE mà ghi "1 phần" là hiểu nhầm chí mạng).
-                            // Các gói còn lại giữ nguyên cách đếm "{count} phần".
-                            // ...NHƯNG gói mặc định do BE sinh khi nâng LEGACY → PACKAGE đã
-                            // tên sẵn là "Trọn khoá" → in thêm nhãn nữa là ĐÚNG CHỮ ĐÓ hai lần
-                            // (hình dạng mặc định của mọi khoá auto-upgrade, không phải ca hiếm).
-                            // Trùng tên (so sau chuẩn hoá) thì bỏ nhãn, tên gói tự nói hết rồi.
-                            const fullCourseLabel = t("detail.package.entitlementFullCourse")
-                            const entitlementSummary = hasFullCourseEntitlement(pkg)
-                                ? normalizeLabel(pkg.name) === normalizeLabel(fullCourseLabel)
-                                    ? null
-                                    : fullCourseLabel
-                                : count > 0
-                                    ? t("detail.package.entitlementSummary", { count })
-                                    : null
-                            const isSelected = pkg.id === selectedId
-                            return {
-                                value: pkg.id,
-                                // radio affordance (matches the legacy EnrollCard)
-                                icon: isSelected ? (
-                                    <CircleIcon aria-hidden focusable="false" weight="fill" className="size-5 text-accent" />
-                                ) : (
-                                    <CircleIcon aria-hidden focusable="false" className="size-5 text-muted" />
-                                ),
-                                // compact single-line row: name on the left with a small
-                                // "Trọn khoá" / "N phần" annotation inline (never a full
-                                // description sub-line). The row
-                                // itself is accent-highlighted by the list variant when selected.
-                                label: (
-                                    <span className="flex items-baseline gap-1.5">
-                                        <span className="truncate">{pkg.name}</span>
-                                        {entitlementSummary ? (
-                                            <span className="shrink-0 text-[11px] leading-none text-muted">
-                                                {entitlementSummary}
-                                            </span>
-                                        ) : null}
-                                    </span>
-                                ),
-                                // right cluster: the open package carries a compact accent
-                                // "Đang mở" text label (not a Chip — a chip bloats the row
-                                // height), then the price. Prices are PLAIN spans, not PriceTag —
-                                // PriceTag wraps React-Aria Text, which throws "slot prop
-                                // required" when nested in the RadioGroup's Text context; the
-                                // headline PriceTag above renders the selected price normally.
-                                badge: (
-                                    <span className="flex items-center gap-2 text-sm">
-                                        {isSelected ? (
-                                            <span className="shrink-0 text-[11px] font-medium text-accent">
-                                                {t("detail.package.active")}
-                                            </span>
-                                        ) : null}
-                                        {original ? (
-                                            <span className="text-xs text-muted line-through">
-                                                {original.toLocaleString("vi-VN")}₫
-                                            </span>
-                                        ) : null}
-                                        <span className={cn("font-medium", isSelected ? "text-accent" : "text-foreground")}>
-                                            {discounted > 0
-                                                ? `${discounted.toLocaleString("vi-VN")}₫`
-                                                : t("detail.freeLabel")}
+                        <SelectableCardGroup
+                            ariaLabel={t("detail.package.selectorAria")}
+                            variant="plain"
+                            value={selectedId ?? ""}
+                            onChange={setChosenId}
+                            items={packages.map((pkg) => {
+                                const { discounted, original } = packagePrice(pkg)
+                                const count = pkg.entitlements?.length ?? 0
+                                // Gói phủ toàn khoá → nhãn "Trọn khoá", TUYỆT ĐỐI không đếm số
+                                // (1 entitlement COURSE mà ghi "1 phần" là hiểu nhầm chí mạng).
+                                // Các gói còn lại giữ nguyên cách đếm "{count} phần".
+                                // ...NHƯNG gói mặc định do BE sinh khi nâng LEGACY → PACKAGE đã
+                                // tên sẵn là "Trọn khoá" → in thêm nhãn nữa là ĐÚNG CHỮ ĐÓ hai lần
+                                // (hình dạng mặc định của mọi khoá auto-upgrade, không phải ca hiếm).
+                                // Trùng tên (so sau chuẩn hoá) thì bỏ nhãn, tên gói tự nói hết rồi.
+                                const fullCourseLabel = t("detail.package.entitlementFullCourse")
+                                const entitlementSummary = hasFullCourseEntitlement(pkg)
+                                    ? normalizeLabel(pkg.name) === normalizeLabel(fullCourseLabel)
+                                        ? null
+                                        : fullCourseLabel
+                                    : count > 0
+                                        ? t("detail.package.entitlementSummary", { count })
+                                        : null
+                                const isSelected = pkg.id === selectedId
+                                return {
+                                    value: pkg.id,
+                                    // radio affordance (matches the legacy EnrollCard)
+                                    icon: isSelected ? (
+                                        <CircleIcon aria-hidden focusable="false" weight="fill" className="size-5 text-accent" />
+                                    ) : (
+                                        <CircleIcon aria-hidden focusable="false" className="size-5 text-muted" />
+                                    ),
+                                    // compact single-line row: name on the left with a small
+                                    // "Trọn khoá" / "N phần" annotation inline (never a full
+                                    // description sub-line). The row
+                                    // itself is accent-highlighted by the list variant when selected.
+                                    label: (
+                                        <span className="flex items-baseline gap-1.5">
+                                            <span className="truncate">{pkg.name}</span>
+                                            {entitlementSummary ? (
+                                                <span className="shrink-0 text-[11px] leading-none text-muted">
+                                                    {entitlementSummary}
+                                                </span>
+                                            ) : null}
                                         </span>
-                                    </span>
-                                ),
-                            }
-                        })}
-                    />
+                                    ),
+                                    // right cluster: the open package carries a compact accent
+                                    // "Đang mở" text label (not a Chip — a chip bloats the row
+                                    // height), then the price. Prices are PLAIN spans, not PriceTag —
+                                    // PriceTag wraps React-Aria Text, which throws "slot prop
+                                    // required" when nested in the RadioGroup's Text context; the
+                                    // headline PriceTag above renders the selected price normally.
+                                    badge: (
+                                        <span className="flex items-center gap-2 text-sm">
+                                            {isSelected ? (
+                                                <span className="shrink-0 text-[11px] font-medium text-accent">
+                                                    {t("detail.package.active")}
+                                                </span>
+                                            ) : null}
+                                            {original ? (
+                                                <span className="text-xs text-muted line-through">
+                                                    {original.toLocaleString("vi-VN")}₫
+                                                </span>
+                                            ) : null}
+                                            <span className={cn("font-medium", isSelected ? "text-accent" : "text-foreground")}>
+                                                {discounted > 0
+                                                    ? `${discounted.toLocaleString("vi-VN")}₫`
+                                                    : t("detail.freeLabel")}
+                                            </span>
+                                        </span>
+                                    ),
+                                }
+                            })}
+                        />
+                    </ScrollShadow>
 
                     {/* CTA cluster (StarCI shape): one dominant primary "Nhận gói này"
                         (buy → checkout), a secondary "Thêm vào giỏ" peer that flips to an

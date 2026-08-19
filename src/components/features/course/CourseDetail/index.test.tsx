@@ -62,6 +62,9 @@ vi.mock("@heroui/react", () => {
         ),
         Chip,
         Link: ({ children }: { children: React.ReactNode }) => <a>{children}</a>,
+        // Pass-through: the enroll card's option list now lives inside a ScrollShadow
+        // (capped-height card), and a swallowing mock would hide every option row.
+        ScrollShadow: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
         Tooltip: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
         Typography: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
         cn: (...a: Array<unknown>) => a.filter(Boolean).join(" "),

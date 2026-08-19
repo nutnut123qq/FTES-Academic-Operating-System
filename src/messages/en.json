@@ -2382,6 +2382,13 @@
         "bioPlaceholder": "Tell others a bit about yourself",
         "changeAvatar": "Change avatar",
         "avatarHint": "PNG, JPG, WEBP or GIF, up to 5 MB.",
+        "appearance": {
+            "previewTitle": "Your look",
+            "previewHint": "Pick an avatar and frame below — changes apply instantly.",
+            "albumTitle": "Choose an avatar",
+            "framesTitle": "Avatar frame",
+            "frameNone": "No frame"
+        },
         "save": "Save changes",
         "saved": "Profile updated successfully.",
         "error": "Could not update your profile. Please try again.",

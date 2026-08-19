@@ -133,6 +133,16 @@ export interface SelfProfile {
     accentColor: string | null
     /** Ambient background effect name (`"none"` = off); `null` = never chosen. */
     backgroundEffect: string | null
+    /**
+     * V341: khung viền đã chọn — ĐÃ tra danh mục nên có sẵn `cssGradient`/`assetUrl`
+     * để vẽ; `null` = không đeo viền.
+     */
+    avatarFrame?: AvatarFrameView | null
+    /**
+     * V341: mã ảnh trong album mặc định đang dùng; `null` = ảnh tự upload hoặc chưa
+     * chọn. Dùng để tô sáng đúng ô trong màn chọn — ảnh thật vẫn ở `avatarUrl`.
+     */
+    defaultAvatarCode?: string | null
     socialLinks: Array<SocialLinkView>
     projects: Array<ProjectView>
     assets: Array<AssetView>
@@ -195,6 +205,12 @@ export interface ProfileUpdateRequest {
     accentColor?: string | null
     /** One of the known background effect names; the BE rejects anything else. */
     backgroundEffect?: string | null
+    /**
+     * Mã KHUNG VIỀN avatar chọn từ danh mục (`profile.avatar_frames`, V341). Chuỗi
+     * rỗng `""` = bỏ viền; mã không có trong danh mục bị BE từ chối. `undefined` =
+     * không đụng tới trường này.
+     */
+    avatarFrame?: string | null
 }
 
 /** Body of `PUT /api/v1/profiles/me/social-links`. */
@@ -271,8 +287,22 @@ export interface AvatarFrameView {
     sortOrder: number
 }
 
+/**
+ * Một ảnh trong ALBUM MẶC ĐỊNH (`profile.default_avatars`, V341). Chọn ảnh này ⇒
+ * `profiles.avatarUrl` = đúng `imageUrl` và `profiles.defaultAvatarCode` = `code`
+ * (để màn chọn tô đúng ô đã chọn). `category` để chia tab trong album.
+ */
+export interface DefaultAvatarView {
+    code: string
+    name: string
+    nameVi: string | null
+    imageUrl: string
+    category: string
+    sortOrder: number
+}
+
 /** `GET /api/v1/profiles/me/appearance/catalog`. */
 export interface AppearanceCatalogView {
     frames: Array<AvatarFrameView>
-    avatars?: Array<unknown>
+    avatars: Array<DefaultAvatarView>
 }

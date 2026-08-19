@@ -51,6 +51,21 @@ export const updateSelfProfile = async (
 }
 
 /**
+ * Chọn ảnh đại diện từ ALBUM MẶC ĐỊNH (không upload). Đặt `avatarUrl` = ảnh của mã
+ * đó và ghi `defaultAvatarCode` để màn chọn tô đúng ô. Trả hồ sơ mới.
+ *
+ * `PUT /api/v1/profiles/me/avatar/default` (authenticated). Mã lạ ⇒ BE trả 400.
+ */
+export const setDefaultAvatar = async (code: string): Promise<SelfProfile> => {
+    return restRequest<SelfProfile>({
+        method: "PUT",
+        url: "/profiles/me/avatar/default",
+        data: { code },
+        authenticated: true,
+    })
+}
+
+/**
  * Uploads a new avatar image for the current user.
  *
  * `PUT /api/v1/profiles/me/avatar`

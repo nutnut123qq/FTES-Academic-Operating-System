@@ -16,6 +16,7 @@ import { useTranslations } from "next-intl"
 import { Controller, type Control } from "react-hook-form"
 import { CameraIcon } from "@phosphor-icons/react"
 import { useEditProfileForm, type EditProfileFormValues } from "@/hooks/rhf/useEditProfileForm"
+import { AvatarAppearancePicker } from "@/components/features/profile/AvatarAppearancePicker"
 import { CampusPicker } from "@/components/reuseable/CampusPicker"
 import { MajorPicker } from "@/components/reuseable/MajorPicker"
 import { useQueryCampusesSwr } from "@/components/features/community/hooks/useQueryCampusesSwr"
@@ -192,6 +193,10 @@ const EditProfilePage = () => {
                     onChange={onAvatarChange}
                 />
             </div>
+
+            {/* pick a default avatar from the album + wear an unlocked frame (applies on
+                click, separate from the Save button below which persists the text fields) */}
+            <AvatarAppearancePicker />
 
             {/* text fields */}
             <TextRow control={control} name="displayName" label={t("profileEdit.displayName")} />

@@ -43,6 +43,36 @@ const BUBBLE_REPEAT_DELAY: readonly [number, number] = [180_000, 300_000]
 const BUBBLE_VISIBLE_MS = 8_000
 
 /**
+ * Grace period between the mouse leaving the assistant and a HOVER-opened panel
+ * closing (ms).
+ *
+ * Without it hover-to-open is nearly unusable with a mouse: the shell is
+ * `pointer-events-none` so the GAP between the character and the panel is not
+ * hoverable, and the character sits in the corner while the panel opens up-and-left
+ * of it — so the natural diagonal travel from one to the other crosses dead space,
+ * fires `pointerleave`, and the panel vanishes before the pointer arrives.
+ *
+ * With it, leaving only ARMS a close; entering the character or the panel disarms it
+ * again. So the panel lingers just long enough to be walked into, and still closes on
+ * its own if the visitor was only passing by.
+ *
+ * Only HOVER-opened panels are on this timer — see {@link OpenSource}.
+ */
+const HOVER_CLOSE_DELAY_MS = 2_000
+
+/**
+ * What opened the panel, which decides how it is allowed to close.
+ *
+ *  - `"hover"` — the mouse arrived. The panel is on the {@link HOVER_CLOSE_DELAY_MS}
+ *    timer, and a click on the mascot ADOPTS it (`"hover"` → `"click"`) instead of
+ *    toggling it shut.
+ *  - `"click"` — a deliberate click, tap or Enter. The panel stays until the visitor
+ *    dismisses it (click the mascot again / Escape / outside tap / close button /
+ *    navigation); the mouse merely wandering off does NOT close it.
+ */
+type OpenSource = "hover" | "click"
+
+/**
  * Bubbles shown SO FAR IN THIS VISIT. Deliberately a module-level counter rather
  * than component state: the assistant remounts on some route transitions, and a
  * state counter would reset the cap each time (a visitor who browses ten pages
@@ -78,9 +108,17 @@ const randomBetween = ([min, max]: readonly [number, number]) =>
  * back to small talk that merely opens the menu.
  *
  * Interaction notes:
- *  - The panel opens ONLY on click/tap/Enter — never on hover. Hover-to-open made
- *    the reflex click land on the toggle's close branch, so pointing at the mascot
- *    and clicking it appeared to "turn it off" (góp ý #5).
+ *  - Hover open/close is bound to `pointerType === "mouse"` only, so a tap does
+ *    not both "hover" and "click" (which would toggle the panel twice on touch).
+ *  - A click on a HOVER-opened panel ADOPTS it rather than closing it. That is
+ *    what góp ý #5 was really about: hover opened the panel, the reflex click that
+ *    followed fell into the toggle's close branch, and pointing at the mascot and
+ *    clicking it looked like it "turned the assistant off". The first click now
+ *    just takes ownership ({@link OpenSource}); a SECOND click closes.
+ *  - Leaving with the mouse ARMS a close ({@link HOVER_CLOSE_DELAY_MS}) instead of
+ *    closing outright, so the pointer can cross the un-hoverable gap into the panel
+ *    — and only for a hover-opened panel, so a panel the visitor deliberately
+ *    clicked open never evaporates just because the mouse wandered off.
  *  - The toggle is a PLAIN `<button onClick>` (not a HeroUI `onPress`) so it stays
  *    clickable in headless verification runs.
  *  - The idle bob is CSS keyframes (`.mascot-float` in `globals.css`), never
@@ -194,12 +232,45 @@ export const MascotAssistant = () => {
         return () => clearTimeout(timer)
     }, [bubble])
 
-    // Opening the panel (tap, click, keyboard) always retires the bubble — the two
-    // must never share the corner.
-    const openPanel = useCallback(() => {
-        setBubble(null)
-        setIsOpen(true)
+    /** Pending "close because the mouse left" timer, `null` when none is armed. */
+    const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const cancelPendingClose = useCallback(() => {
+        if (closeTimerRef.current !== null) {
+            clearTimeout(closeTimerRef.current)
+            closeTimerRef.current = null
+        }
     }, [])
+    // A timer must never outlive the component.
+    useEffect(() => cancelPendingClose, [cancelPendingClose])
+
+    /**
+     * What opened the CURRENTLY open panel. A ref, not state: the click handler has
+     * to read it synchronously in the middle of the same gesture that may change it,
+     * and nothing about it is rendered.
+     */
+    const openSourceRef = useRef<OpenSource | null>(null)
+    // Whoever closed the panel — Escape, an outside tap, the close button, a route
+    // change, a chosen option — ownership dies with it. Resetting here rather than at
+    // each of those call sites means a new close path cannot forget to do it and
+    // leave the next hover-opened panel wrongly marked "click".
+    useEffect(() => {
+        if (!isOpen) {
+            openSourceRef.current = null
+        }
+    }, [isOpen])
+
+    // Opening the panel (hover, tap, click, keyboard) always retires the bubble — the
+    // two must never share the corner — and disarms any pending close, so a panel that
+    // was just reopened can never be shut by a timer armed before it.
+    const openPanel = useCallback(
+        (source: OpenSource) => {
+            cancelPendingClose()
+            openSourceRef.current = source
+            setBubble(null)
+            setIsOpen(true)
+        },
+        [cancelPendingClose],
+    )
 
     /**
      * Send the visitor where a row or a bubble points. A route navigates; the lesson
@@ -221,9 +292,60 @@ export const MascotAssistant = () => {
         [openLessonChat, router],
     )
 
-    // ponytail: KHÔNG mở panel khi hover (góp ý #5). Hover mở ra rồi cú click theo
-    // phản xạ lại rơi vào nhánh toggle-đóng bên dưới, nên người dùng "bấm vào thì nó
-    // tắt". Chỉ click/Enter mới mở — một lối vào duy nhất, cho cả chuột lẫn cảm ứng.
+    // Mouse only: a touch tap also fires pointerenter, and letting it open here
+    // would fight the click toggle below (open → toggle back closed). Entering ANY
+    // part of the assistant — character or panel — lands here, which is what makes
+    // the walk from one to the other survivable.
+    const onPointerEnter = useCallback(
+        (event: React.PointerEvent) => {
+            if (event.pointerType !== "mouse") {
+                return
+            }
+            // Re-entering disarms a pending close. Already open by CLICK stays owned by
+            // the click — the mouse passing back over it must not put a deliberate
+            // panel back on the hover timer.
+            cancelPendingClose()
+            if (!isOpen) {
+                openPanel("hover")
+            }
+        },
+        [cancelPendingClose, isOpen, openPanel],
+    )
+    // Leaving only ARMS the close; it does not close. See HOVER_CLOSE_DELAY_MS for why
+    // an immediate close makes the panel nearly unreachable with a mouse. A panel the
+    // visitor CLICKED open is not on this timer at all — that one is theirs to dismiss.
+    const onPointerLeave = useCallback(
+        (event: React.PointerEvent) => {
+            if (event.pointerType !== "mouse" || openSourceRef.current !== "hover") {
+                return
+            }
+            cancelPendingClose()
+            closeTimerRef.current = setTimeout(() => {
+                closeTimerRef.current = null
+                setIsOpen(false)
+            }, HOVER_CLOSE_DELAY_MS)
+        },
+        [cancelPendingClose],
+    )
+
+    /**
+     * The mascot's own click. Three branches, and the middle one is the whole point of
+     * góp ý #5: pointing at the mascot ALREADY opened the panel by hover, so the click
+     * that naturally follows must not be read as "close". It ADOPTS the open panel
+     * instead — after which a second, deliberate click closes it like any toggle.
+     */
+    const onToggleClick = useCallback(() => {
+        if (!isOpen) {
+            openPanel("click")
+            return
+        }
+        if (openSourceRef.current === "hover") {
+            cancelPendingClose()
+            openSourceRef.current = "click"
+            return
+        }
+        setIsOpen(false)
+    }, [cancelPendingClose, isOpen, openPanel])
 
     // Deliberately NO "open on focus": a tap/click focuses the toggle FIRST and
     // then fires `click`, so open-on-focus + toggle-on-click would cancel each
@@ -248,6 +370,11 @@ export const MascotAssistant = () => {
         <div
             ref={containerRef}
             data-testid="mascot-assistant"
+            // On the SHELL, not the toggle: React's synthetic enter/leave treats the
+            // whole subtree as one region, so walking mascot → panel never leaves it
+            // and the pointer can cross the un-hoverable gap between them.
+            onPointerEnter={onPointerEnter}
+            onPointerLeave={onPointerLeave}
             onBlur={onBlur}
             // `flex-col-reverse` = the TOGGLE comes first in the DOM but renders at
             // the BOTTOM, with the bubble/panel stacked above it. That keeps the
@@ -278,7 +405,7 @@ export const MascotAssistant = () => {
                 aria-label={t("open")}
                 aria-expanded={isOpen}
                 aria-controls={isOpen ? panelId : undefined}
-                onClick={() => (isOpen ? setIsOpen(false) : openPanel())}
+                onClick={onToggleClick}
                 // NO circular frame / background: the waving character IS the button.
                 //
                 // PEEKING POSE: the character leans and is pushed diagonally into the corner, so
@@ -336,7 +463,7 @@ export const MascotAssistant = () => {
                     onClick={() =>
                         bubble.href !== undefined || bubble.action !== undefined
                             ? runTarget(bubble)
-                            : openPanel()
+                            : openPanel("click")
                     }
                     // The tail is the rotated corner of a second square sharing the
                     // bubble's border + fill, tucked under the right edge so it points

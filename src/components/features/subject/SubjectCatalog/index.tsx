@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useDeferredValue, useState } from "react"
 import Image from "next/image"
 import {
     Chip,
@@ -15,6 +15,7 @@ import { CaretDownIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
+import { InfiniteScrollSentinel } from "@/components/blocks/async/InfiniteScrollSentinel"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { SearchInput } from "@/components/reuseable/SearchInput"
 import { MascotMajorPicker } from "@/components/features/mascot-moments"
@@ -32,14 +33,19 @@ const THUMBNAIL_SIZES = "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100v
 
 /**
  * Subject catalog (§3) — the `/subjects` list. Mirrors the house catalog archetype
- * (see `CourseCatalog`): the shared {@link SearchInput} + bộ lọc KỲ HỌC + a grid
+ * (see `CourseCatalog`): the shared {@link SearchInput} + bộ lọc NGÀNH + KỲ HỌC + a grid
  * of subject cards linking into each subject workspace. Data is REAL —
- * `useQuerySubjectsSwr` reads `GET /api/v1/subjects`; lọc kỳ chạy server-side qua
- * tham số `semester`, chỉ ô tìm kiếm còn lọc client-side, tokens own the look.
+ * `useQuerySubjectsSwr` reads `GET /api/v1/subjects`.
+ *
+ * <p>CẢ BA bộ lọc (ngành · kỳ · tìm kiếm) chạy SERVER-SIDE và lưới nạp thêm theo trang: catalog
+ * đã seed đủ môn của FPT (~400) nên bản cũ — tải một trang 100 rồi lọc bằng JavaScript — cắt cụt
+ * danh sách mà không có dấu hiệu nào.
+ *
+ * <p>Dropdown ngành phẳng theo đúng thứ tự BE trả (khối ngành rồi tới chuyên ngành của khối đó),
+ * chuyên ngành thụt lề. Chọn KHỐI = xem cả chuyên ngành con, việc gộp do BE làm.
  */
 export const SubjectCatalog = () => {
     const t = useTranslations("subjects")
-    const { subjects, isLoading, error } = useQuerySubjectsSwr()
     const { majors } = useQueryMajorsSwr()
     const { majorCode: myMajor } = useMyMajor()
     const [query, setQuery] = useState("")
@@ -49,20 +55,16 @@ export const SubjectCatalog = () => {
     const [majorFilter, setMajorFilter] = useState<string | undefined>(undefined)
     const activeMajor = majorFilter ?? myMajor ?? "all"
     const [semester, setSemester] = useState<SubjectSemesterFilter>(null)
+    // Gõ tới đâu gọi BE tới đó sẽ bắn một request mỗi phím; `useDeferredValue` là cơ chế sẵn có
+    // của React cho đúng việc này — không kéo thêm thư viện debounce.
+    const deferredQuery = useDeferredValue(query)
 
-    const inMajor = subjects.filter(
-        // Môn chưa gắn ngành nào chỉ hiện ở "Tất cả ngành" — không đoán bừa nó thuộc ngành gì.
-        (subject) => activeMajor === "all" || subject.majorCodes.includes(activeMajor),
-    )
-
-    const filtered = inMajor.filter((subject) => {
-        // Dropdown Kì liệt kê đủ 1..9; chọn kỳ chưa có môn → lưới trống (đúng: "kỳ này chưa có môn"),
-        // không tự bỏ lọc như bản nút cũ.
-        const matchesSemester = semester === null || subject.recommendedSemester === semester
-        const matchesQuery =
-            query.trim() === "" ||
-            `${subject.code} ${subject.name}`.toLowerCase().includes(query.trim().toLowerCase())
-        return matchesSemester && matchesQuery
+    // CẢ BA bộ lọc chạy ở BE: catalog có ~400 môn nên lọc lại ở client trên một trang tải sẵn sẽ
+    // cắt cụt kết quả mà không báo gì (xem useQuerySubjectsSwr).
+    const { subjects, isLoading, error, hasMore, isLoadingMore, loadMore } = useQuerySubjectsSwr({
+        semester,
+        major: activeMajor === "all" ? null : activeMajor,
+        q: deferredQuery,
     })
 
     // Nhãn hiển thị trên trigger của 2 dropdown lọc.
@@ -126,6 +128,10 @@ export const SubjectCatalog = () => {
                                             key={major.code}
                                             id={major.code}
                                             textValue={major.name}
+                                            // Chuyên ngành thụt vào dưới khối của nó. Danh sách BE
+                                            // trả về đã đúng thứ tự khối → con, nên thụt lề là đủ
+                                            // để thấy cấp bậc, không cần dựng section lồng.
+                                            className={major.parentCode ? "pl-6" : "font-medium"}
                                         >
                                             {major.name}
                                         </DropdownItem>
@@ -180,21 +186,27 @@ export const SubjectCatalog = () => {
                     </div>
                 }
             >
-                {filtered.length === 0 ? (
+                {subjects.length === 0 ? (
                     <Typography type="body-sm" color="muted">
-                        {/* Ngành có thật nhưng chưa môn nào (vd Vi Mạch / Toán Học trên dữ liệu
-                            hiện tại) là trạng thái HỢP LỆ — nói đúng thế thay vì "không khớp
-                            tìm kiếm", để người dùng không tưởng mình gõ sai. */}
+                        {/* Ngành có thật nhưng chưa môn nào là trạng thái HỢP LỆ — nói đúng thế
+                            thay vì "không khớp tìm kiếm", để người dùng không tưởng mình gõ sai. */}
                         {activeMajor !== "all" && query.trim() === "" && semester === null
                             ? t("catalog.emptyMajor")
                             : t("catalog.empty")}
                     </Typography>
                 ) : (
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                        {filtered.map((subject) => (
-                            <SubjectCard key={subject.id} subject={subject} />
-                        ))}
-                    </div>
+                    <>
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                            {subjects.map((subject) => (
+                                <SubjectCard key={subject.id} subject={subject} />
+                            ))}
+                        </div>
+                        {/* Cuộn tới cuối là nạp trang sau (cùng cơ chế feed cộng đồng dùng). */}
+                        <InfiniteScrollSentinel
+                            onReach={loadMore}
+                            disabled={!hasMore || isLoadingMore}
+                        />
+                    </>
                 )}
             </AsyncContent>
         </div>

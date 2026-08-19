@@ -15,7 +15,7 @@ import { useTranslations } from "next-intl"
 
 import { useRouter } from "@/i18n/navigation"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
-import { useQuerySubjectsSwr } from "@/components/features/subject/hooks/useQuerySubjectsSwr"
+import { useQuerySubjectOptionsSwr } from "@/components/features/subject/hooks/useQuerySubjectsSwr"
 
 import { ResourceDropzone } from "./ResourceDropzone"
 import { ResourceUploadProgress } from "./ResourceUploadProgress"
@@ -62,7 +62,7 @@ export const ResourceUpload = () => {
     const t = useTranslations("resourceHub")
     const router = useRouter()
     const { guard } = useRequireAuth()
-    const { subjects, isLoading: isLoadingSubjects, error: subjectsError } = useQuerySubjectsSwr()
+    const { subjects, isLoading: isLoadingSubjects, error: subjectsError } = useQuerySubjectOptionsSwr()
     const flow = useResourceUploadFlow()
 
     const [file, setFile] = useState<File | null>(null)

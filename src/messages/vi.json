@@ -4109,7 +4109,9 @@
         },
         "moment": {
             "levelUpTitle": "Lên cấp!",
-            "levelUpBody": "Bạn đã đạt cấp {level}"
+            "levelUpBody": "Bạn đã đạt cấp {level}",
+            "badgeUnlockedKicker": "Mở khoá thành tựu",
+            "badgeUnlockedCta": "Tuyệt vời!"
         },
         "milestones": {
             "FIRST_ENROLL": {

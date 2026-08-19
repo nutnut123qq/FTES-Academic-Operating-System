@@ -4109,7 +4109,9 @@
         },
         "moment": {
             "levelUpTitle": "Level up!",
-            "levelUpBody": "You reached level {level}"
+            "levelUpBody": "You reached level {level}",
+            "badgeUnlockedKicker": "Achievement unlocked",
+            "badgeUnlockedCta": "Awesome!"
         },
         "milestones": {
             "FIRST_ENROLL": {

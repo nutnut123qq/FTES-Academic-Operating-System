@@ -95,3 +95,39 @@ describe("useAppNav — Leaderboard is the 5th plain-link module", () => {
         expect(modules.find((m) => m.key === "leaderboard")?.isActive).toBe(false)
     })
 })
+
+/**
+ * Bề mặt CỦA cộng đồng nằm NGOÀI cây `/community` — `/groups`, `/events`, `/blog`
+ * (góp ý #21 bọc cả ba trong `CommunityNavShell`, cùng rail trái). Trước đây
+ * `useAppNav` chỉ so-khớp `/community`, nên đứng ở ba route đó header KHÔNG sáng
+ * mục nào. Bộ ca này ghim: alias sáng "Cộng đồng", còn module khác thì không.
+ */
+describe("useAppNav — Community sáng cả ở route alias (/groups · /events · /blog)", () => {
+    beforeEach(() => {
+        pathname.mockReturnValue("/")
+    })
+
+    const communityIsActive = (route: string) =>
+        keyed(route).find((m) => m.key === "community")?.isActive
+
+    it.each(["/community", "/community/xyz", "/blog", "/groups", "/events", "/groups/abc"])(
+        "sáng Cộng đồng ở %s",
+        (route) => {
+            expect(communityIsActive(route)).toBe(true)
+        },
+    )
+
+    it.each(["/", "/leaderboard", "/subjects", "/blogfoo", "/groupsfoo"])(
+        "KHÔNG sáng Cộng đồng ở %s",
+        (route) => {
+            expect(communityIsActive(route)).toBe(false)
+        },
+    )
+
+    it("không kéo module khác sáng theo ở route alias", () => {
+        const modules = keyed("/blog")
+        expect(modules.find((m) => m.key === "home")?.isActive).toBe(false)
+        expect(modules.find((m) => m.key === "leaderboard")?.isActive).toBe(false)
+        expect(modules.filter((m) => m.isActive).map((m) => m.key)).toEqual(["community"])
+    })
+})

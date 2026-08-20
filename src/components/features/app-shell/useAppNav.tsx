@@ -24,7 +24,10 @@ export interface AppNavModule {
     icon: React.ReactNode
     /** Destination when the module label is clicked (its landing route). */
     path: string
-    /** prefix(own path); Home only on the exact home path. */
+    /**
+     * prefix(own path); Home only on the exact home path; Community also matches
+     * its alias routes `/groups`, `/events`, `/blog`.
+     */
     isActive: boolean
 }
 
@@ -86,7 +89,20 @@ export const useAppNav = (): Array<AppNavModule> => {
             ),
             makeModule("workplace", p.subjects().build(), <SquaresFourIcon className="size-5" />),
             makeModule("course", p.course().build(), <GraduationCapIcon className="size-5" />),
-            makeModule("community", p.community().build(), <ChatCircleIcon className="size-5" />),
+            makeModule(
+                "community",
+                p.community().build(),
+                <ChatCircleIcon className="size-5" />,
+                // `/groups`, `/events`, `/blog` là bề mặt CỦA cộng đồng (cùng rail
+                // trái qua CommunityNavShell) nhưng nằm NGOÀI cây `/community` —
+                // thiếu chúng thì đứng ở ba route đó header không sáng mục nào.
+                [
+                    p.community().build(),
+                    p.groups().build(),
+                    p.events().build(),
+                    p.blog().build(),
+                ].some(under),
+            ),
             makeModule("leaderboard", p.leaderboard().build(), <RankingIcon className="size-5" />),
         ]
     }, [pathname, t])

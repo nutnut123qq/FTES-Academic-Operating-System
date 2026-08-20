@@ -252,13 +252,17 @@ export const deleteAchievement = async (id: string): Promise<void> => {
 /**
  * Returns a user's public profile by username (privacy-masked by the BE).
  *
- * `GET /api/v1/profiles/{username}` (public — no auth required).
+ * `GET /api/v1/profiles/{username}` — không BẮT BUỘC đăng nhập, nhưng danh tính là
+ * OPTIONAL chứ không phải bị cấm: `ProfileSecurityConfig` để `permitAll` mà vẫn cắm
+ * `JwtAuthenticationFilter`, nên bearer hợp lệ vẫn populate SecurityContext và BE mới
+ * tính được các trường phụ thuộc người xem (`isFollowedByMe`). Để `authenticated: false`
+ * là tự bỏ header Authorization ⇒ caller luôn = null ⇒ những trường đó luôn `false`.
+ * Khách chưa đăng nhập không có token nên client cũng không gắn header — request y hệt cũ.
  */
 export const getPublicProfile = async (username: string): Promise<PublicProfile> => {
     return restRequest<PublicProfile>({
         method: "GET",
         url: `/profiles/${encodeURIComponent(username)}`,
-        authenticated: false,
     })
 }
 

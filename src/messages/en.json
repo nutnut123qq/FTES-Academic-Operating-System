@@ -7145,6 +7145,7 @@
             "shareFacebook": "Share on Facebook",
             "shareX": "Share on X",
             "shareZalo": "Share via Zalo",
+            "shareZaloCopied": "Zalo doesn't support sharing straight from the web — link copied, paste it into Zalo.",
             "reply": "Reply",
             "replyingTo": "Replying to {name}",
             "cancelReply": "Cancel",

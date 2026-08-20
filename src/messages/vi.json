@@ -7145,6 +7145,7 @@
             "shareFacebook": "Chia sẻ lên Facebook",
             "shareX": "Chia sẻ lên X",
             "shareZalo": "Chia sẻ qua Zalo",
+            "shareZaloCopied": "Zalo chưa cho chia sẻ trực tiếp từ web — đã sao chép liên kết, bạn dán vào Zalo nhé.",
             "reply": "Trả lời",
             "replyingTo": "Đang trả lời {name}",
             "cancelReply": "Huỷ",

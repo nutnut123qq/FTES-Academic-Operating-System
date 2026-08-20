@@ -38,13 +38,16 @@ export { ConfirmDialog, type ConfirmDialogProps } from "./ConfirmDialog"
  * Kênh chia sẻ dạng **web-intent**: chỉ là một URL mở ở tab mới — KHÔNG SDK,
  * KHÔNG script bên thứ ba. Mỗi mạng tự đọc OG tag của `postUrl`, nên không cần
  * gửi gì thêm ngoài link (X nhận thêm `text` = tiêu đề bài).
+ *
+ * `buildUrl: null` = mạng đó KHÔNG có web-intent mở được từ web (Zalo) → mục
+ * vẫn hiện nhưng rơi về sao chép liên kết, xem {@link SHARE_CHANNELS}.
  */
 const SHARE_CHANNELS: readonly {
     id: string
     channel: "FACEBOOK" | "X" | "ZALO"
     labelKey: string
     Icon: React.ComponentType<{ className?: string }>
-    buildUrl: (url: string, title: string) => string
+    buildUrl: ((url: string, title: string) => string) | null
 }[] = [
     {
         id: "share-facebook",
@@ -68,9 +71,15 @@ const SHARE_CHANNELS: readonly {
         // Zalo không có logo trong phosphor → dùng icon chat cho gần nghĩa nhất
         labelKey: "engagement.shareZalo",
         Icon: ChatCircleDotsIcon,
-        // sp.zalo.me/plugins/share là đường share web của Zalo (đo 2026-07-28: 200).
-        // KHÔNG dùng zalo.me/share/link — 302 về zalo.me/nf, tức trang không tồn tại.
-        buildUrl: (url) => `https://sp.zalo.me/plugins/share?url=${encodeURIComponent(url)}`,
+        // Zalo KHÔNG có web-intent mở được ở tab mới:
+        //  - sp.zalo.me/plugins/share là endpoint IFRAME của sp.zalo.me/plugins/sdk.js,
+        //    đòi App ID/OA id + domain đã đăng ký & kích hoạt trong console Zalo. Mở
+        //    thẳng top-level thì trả HTTP 200 nhưng BODY RỖNG → tab trắng. (Ghi chú cũ
+        //    "đo 2026-07-28: 200" chỉ đo status, không đo trang có render gì không.)
+        //  - zalo.me/share/link thì 302 về zalo.me/nf, tức trang không tồn tại.
+        // Repo không có Zalo app id nào nên FE-only không chạy plugin thật được →
+        // buildUrl null, onShareChannel rơi về sao chép liên kết.
+        buildUrl: null,
     },
 ]
 
@@ -155,8 +164,10 @@ export interface PostEngagementBarProps extends WithClassNames<undefined> {
  * propagation so a press inside a wrapping card `<Link>` never navigates.
  *
  * Guest gating (like/comment/save) lives in the feature callbacks / SaveButton;
- * copy-link, the {@link SHARE_CHANNELS} web-intents (Facebook · X · Zalo — plain
- * links, no SDK) and native share stay open to guests.
+ * copy-link, the {@link SHARE_CHANNELS} entries and native share stay open to
+ * guests. Facebook · X are real web-intents (plain links, no SDK); Zalo has no
+ * web-intent that opens outside its SDK iframe, so that entry copies the link
+ * instead of opening a blank tab.
  *
  * A trailing ⋯ menu ({@link PostActionsMenu}) appears when the surface passes
  * ownership callbacks: "Sửa"/"Xoá" for the author, "Báo cáo" for everyone else.
@@ -217,8 +228,13 @@ export const PostEngagementBar = ({
         onCommentClick?.()
     }, [onToggleComments, onCommentClick])
 
-    /** Copy the item URL to the clipboard (with an execCommand fallback). */
-    const onCopyLink = useCallback(async () => {
+    /**
+     * Copy the item URL to the clipboard (with an execCommand fallback).
+     *
+     * `successMessage` overrides the toast copy — dùng cho kênh không có
+     * web-intent (Zalo) để nói rõ VÌ SAO chỉ được cái link.
+     */
+    const onCopyLink = useCallback(async (successMessage?: string) => {
         if (!postUrl) {
             return
         }
@@ -235,7 +251,7 @@ export const PostEngagementBar = ({
                 document.execCommand("copy")
                 document.body.removeChild(textarea)
             }
-            toast.success(t("engagement.linkCopied"))
+            toast.success(successMessage ?? t("engagement.linkCopied"))
             // the link really left the app → record the share (fire-and-forget)
             onShared?.("COPY_LINK")
         } catch {
@@ -243,10 +259,20 @@ export const PostEngagementBar = ({
         }
     }, [postUrl, t, onShared])
 
-    /** Mở kênh web-intent ở tab mới; ghi nhận share y như "sao chép liên kết". */
+    /**
+     * Mở kênh web-intent ở tab mới; ghi nhận share y như "sao chép liên kết".
+     * Kênh KHÔNG có web-intent (`buildUrl` null — Zalo) rơi về sao chép liên kết.
+     */
     const onShareChannel = useCallback(
         (channel: (typeof SHARE_CHANNELS)[number]) => {
             if (!postUrl) {
+                return
+            }
+            // Kênh không có web-intent (Zalo) → KHÔNG mở tab (sẽ trắng), rơi về sao chép
+            // liên kết. Lượt share do chính onCopyLink ghi nhận ("COPY_LINK") — trung thực,
+            // vì link thật sự rời app; không đếm nhầm thành lượt ZALO.
+            if (!channel.buildUrl) {
+                void onCopyLink(t("engagement.shareZaloCopied"))
                 return
             }
             // Popup bị chặn → window.open trả null. Chỉ ghi nhận lượt share khi cửa sổ kênh
@@ -261,7 +287,7 @@ export const PostEngagementBar = ({
             }
             onShared?.(channel.channel)
         },
-        [postUrl, shareTitle, onShared],
+        [postUrl, shareTitle, onShared, onCopyLink, t],
     )
 
     /** Open the native share sheet; swallow a user cancel (AbortError). */

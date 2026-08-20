@@ -40,11 +40,11 @@ const applyLike = <T extends { id: string; likes: number; liked: boolean }>(
 export const useMutateReactPostSwr = () => {
     const t = useTranslations("communityHub")
     const { mutate, cache } = useSWRConfig()
-    const { requireAuth } = useRequireAuth()
+    const { requireAuthAsync } = useRequireAuth()
 
     return useCallback(
         async (postId: string, nextLiked: boolean) => {
-            if (!requireAuth("auth.context.like")) {
+            if (!(await requireAuthAsync("auth.context.like"))) {
                 return
             }
 
@@ -85,6 +85,6 @@ export const useMutateReactPostSwr = () => {
             // counts. A revalidation refetch error here must NOT undo the like.
             await mutate(postDetailKey(postId)).catch(() => {})
         },
-        [mutate, cache, requireAuth, t],
+        [mutate, cache, requireAuthAsync, t],
     )
 }

@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useRef, useState, type Key } from "react"
 import { Button, Card, Typography } from "@heroui/react"
 import { ArrowRightIcon, ChatsCircleIcon } from "@phosphor-icons/react"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { usePathname, useRouter, useSearchParams, useParams } from "next/navigation"
 import { QuestionRow } from "./QuestionRow"
 import { CourseQaSkeleton } from "./CourseQaSkeleton"
@@ -57,6 +57,7 @@ export interface CourseQaProps {
  */
 export const CourseQa = ({ embedded = false }: CourseQaProps) => {
     const t = useTranslations("learn")
+    const locale = useLocale()
     const router = useRouter()
     const pathname = usePathname()
     const searchParams = useSearchParams()
@@ -148,11 +149,14 @@ export const CourseQa = ({ embedded = false }: CourseQaProps) => {
 
     const goToContent = useCallback(() => {
         if (embedded) {
-            router.push(`/courses/${courseId}/learn/content`)
+            // Locale-FULL on purpose: this file routes with `next/navigation`, which adds
+            // nothing, and `pathname` below is already locale-full. Switching the import to
+            // `@/i18n/navigation` would double-prefix the two `pathname`-derived pushes.
+            router.push(`/${locale}/courses/${courseId}/learn/content`)
             return
         }
         router.push(pathname.replace(/\/qa$/, "/content"))
-    }, [embedded, pathname, router, courseId])
+    }, [embedded, locale, pathname, router, courseId])
 
     const onSubmitQuestion = useCallback(async (body: string) => {
         if (!viewer || !targetLessonId) {

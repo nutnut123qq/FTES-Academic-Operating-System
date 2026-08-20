@@ -80,7 +80,7 @@ vi.mock("@/components/reuseable/PostEngagementBar", () => ({
 
 // Auth + toast: transparent pass-through so the gate under test is the ONLY gate.
 vi.mock("@/hooks/useRequireAuth", () => ({
-    useRequireAuth: () => ({ requireAuth: () => true }),
+    useRequireAuth: () => ({ requireAuth: () => true, requireAuthAsync: async () => true }),
 }))
 vi.mock("@/modules/toast/hooks", () => ({
     useRestWithToast: () => async <T,>(action: () => Promise<T>) => action(),

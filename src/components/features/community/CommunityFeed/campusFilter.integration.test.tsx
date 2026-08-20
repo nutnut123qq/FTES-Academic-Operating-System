@@ -162,7 +162,7 @@ vi.mock("@/components/reuseable/PostEngagementBar", () => ({
 }))
 vi.mock("@/components/reuseable/PostCommentThread", () => ({ PostCommentThread: () => <div /> }))
 vi.mock("@/hooks/zustand/overlay/hooks", () => ({ useCommunityComposerOverlayState: () => ({ open: vi.fn(), openQuote: vi.fn() }) }))
-vi.mock("@/hooks/useRequireAuth", () => ({ useRequireAuth: () => ({ authenticated: true, requireAuth: () => true, guard: (a: () => void) => a }) }))
+vi.mock("@/hooks/useRequireAuth", () => ({ useRequireAuth: () => ({ authenticated: true, requireAuth: () => true, requireAuthAsync: async () => true, guard: (a: () => void) => a }) }))
 vi.mock("../hooks/useQueryPostDetailSwr", () => ({ useQueryPostCommentsSwr: () => ({ post: undefined, isLoading: false, error: undefined, mutate: vi.fn() }) }))
 vi.mock("../hooks/useMutateReactPostSwr", () => ({ useMutateReactPostSwr: () => vi.fn() }))
 vi.mock("../hooks/useMutateCreatePostCommentSwr", () => ({ useMutateCreatePostCommentSwr: () => vi.fn() }))

@@ -43,7 +43,7 @@ export const useMutateSubjectMembershipSwr = (subjectId: string) => {
     const t = useTranslations("subjects")
     const code = subjectId ? subjectId.toUpperCase() : ""
     const { mutate } = useSWRConfig()
-    const { requireAuth } = useRequireAuth()
+    const { requireAuthAsync } = useRequireAuth()
     const [isJoining, setIsJoining] = useState(false)
     const [isLeaving, setIsLeaving] = useState(false)
 
@@ -75,7 +75,7 @@ export const useMutateSubjectMembershipSwr = (subjectId: string) => {
     /** Joins the subject; resolves `true` when the membership really exists afterwards. */
     const join = useCallback(async (): Promise<boolean> => {
         if (!code || isJoining) return false
-        if (!requireAuth("auth.context.generic")) return false
+        if (!(await requireAuthAsync("auth.context.generic"))) return false
 
         setIsJoining(true)
         const { key, snapshot } = await patchMembership({
@@ -94,12 +94,12 @@ export const useMutateSubjectMembershipSwr = (subjectId: string) => {
         } finally {
             setIsJoining(false)
         }
-    }, [code, isJoining, requireAuth, patchMembership, mutate, t])
+    }, [code, isJoining, requireAuthAsync, patchMembership, mutate, t])
 
     /** Leaves the subject; resolves `true` when the membership is really gone. */
     const leave = useCallback(async (): Promise<boolean> => {
         if (!code || isLeaving) return false
-        if (!requireAuth("auth.context.generic")) return false
+        if (!(await requireAuthAsync("auth.context.generic"))) return false
 
         setIsLeaving(true)
         const { key, snapshot } = await patchMembership(null)
@@ -115,7 +115,7 @@ export const useMutateSubjectMembershipSwr = (subjectId: string) => {
         } finally {
             setIsLeaving(false)
         }
-    }, [code, isLeaving, requireAuth, patchMembership, mutate, t])
+    }, [code, isLeaving, requireAuthAsync, patchMembership, mutate, t])
 
     return { join, leave, isJoining, isLeaving }
 }

@@ -175,6 +175,7 @@ vi.mock("@/hooks/useRequireAuth", () => ({
     useRequireAuth: () => ({
         authenticated: session.authenticated,
         requireAuth: () => session.authenticated,
+        requireAuthAsync: async () => session.authenticated,
         guard: (action: (...args: Array<unknown>) => void) => action,
     }),
 }))

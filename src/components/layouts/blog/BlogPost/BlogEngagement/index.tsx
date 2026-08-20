@@ -64,7 +64,7 @@ const CommentsSkeleton = () => (
 export const BlogEngagement = ({ postId, initialEmojiCount }: BlogEngagementProps) => {
     const t = useTranslations("blog.engagement")
     const user = useAppSelector((state) => state.user.user)
-    const { authenticated, requireAuth } = useRequireAuth()
+    const { authenticated, requireAuth, requireAuthAsync } = useRequireAuth()
 
     // ---- post reaction ----
     // reacted starts null (BE GET does not report the viewer's own reaction); the
@@ -74,8 +74,12 @@ export const BlogEngagement = ({ postId, initialEmojiCount }: BlogEngagementProp
     const [postCount, setPostCount] = useState(initialEmojiCount)
     const reactPost = usePostReactToBlogPostSwr()
 
-    const handlePostReaction = () => {
-        if (!requireAuth("auth.context.like") || reactPost.isMutating) {
+    // `async` vì chốt auth phải CHỜ phiên ngã ngũ: `requireAuth` đồng bộ coi người đang
+    // đăng nhập là khách trong cửa sổ hydration và nuốt cú bấm tim đầu tiên. Không có
+    // chuỗi cử chỉ trình duyệt nào phụ thuộc ở đây (không `preventDefault`, không mở tab)
+    // nên đẩy phần thân sang microtask là vô hại.
+    const handlePostReaction = async () => {
+        if (!(await requireAuthAsync("auth.context.like")) || reactPost.isMutating) {
             return
         }
         void reactPost
@@ -171,9 +175,10 @@ export const BlogEngagement = ({ postId, initialEmojiCount }: BlogEngagementProp
         }
     }
 
-    const handleCommentReaction = (comment: BlogCommentResponse) => {
+    const handleCommentReaction = async (comment: BlogCommentResponse) => {
         // guard guests and, like the post heart, block a second toggle while one is in flight
-        if (!requireAuth("auth.context.like") || reactComment.isMutating) {
+        // (chờ phiên ngã ngũ trước khi kết luận — xem `handlePostReaction`)
+        if (!(await requireAuthAsync("auth.context.like")) || reactComment.isMutating) {
             return
         }
         setReactingCommentId(comment.id)

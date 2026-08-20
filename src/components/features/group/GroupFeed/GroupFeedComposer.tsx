@@ -34,7 +34,7 @@ interface GroupFeedComposerProps {
 export const GroupFeedComposer = ({ groupId }: GroupFeedComposerProps) => {
     const t = useTranslations("groupsHub")
     const { mutate } = useSWRConfig()
-    const { requireAuth } = useRequireAuth()
+    const { requireAuthAsync } = useRequireAuth()
     const [body, setBody] = useState("")
     const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -44,7 +44,7 @@ export const GroupFeedComposer = ({ groupId }: GroupFeedComposerProps) => {
         if (!canSubmit) {
             return
         }
-        if (!requireAuth("auth.context.generic")) {
+        if (!(await requireAuthAsync("auth.context.generic"))) {
             return
         }
         setIsSubmitting(true)
@@ -74,7 +74,7 @@ export const GroupFeedComposer = ({ groupId }: GroupFeedComposerProps) => {
         } finally {
             setIsSubmitting(false)
         }
-    }, [body, canSubmit, groupId, mutate, requireAuth, t])
+    }, [body, canSubmit, groupId, mutate, requireAuthAsync, t])
 
     return (
         <div className="flex flex-col gap-2 rounded-2xl border border-separator p-4">

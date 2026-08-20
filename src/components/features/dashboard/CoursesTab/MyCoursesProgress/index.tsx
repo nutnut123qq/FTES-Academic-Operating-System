@@ -4,6 +4,7 @@ import React, { useState } from "react"
 import { Button } from "@heroui/react"
 import { CaretDownIcon, CaretUpIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
+import { useRouter } from "@/i18n/navigation"
 import { CourseRow } from "./CourseRow"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
@@ -27,6 +28,13 @@ export type MyCoursesProgressProps = WithClassNames<undefined>
  * Reads the shared `GET /courses/me/enrollments` adapter, so this list and
  * `/courses/me` hit one cache entry and can never drift apart.
  *
+ * Thẻ này là ĐƯỜNG VÀO điều hướng của `/courses/me`: link "Xem tất cả" ở hàng nhãn
+ * (slot `onSeeMore` sẵn có của {@link LabeledCard}, không dựng nút mới) là lối duy nhất
+ * còn lại tới trang đó ngoài CTA `LESSON_COMPLETE` của quest board — hàng "Khoá học của
+ * tôi" trong menu tài khoản đã bị bỏ, và band "Tiếp tục học" ở landing đã bị xoá. Link
+ * chỉ hiện khi thật sự CÓ khoá: gắn "Xem tất cả" lên một danh sách rỗng chỉ dẫn người
+ * dùng sang một trang rỗng nữa.
+ *
  * @param props - optional root class name (placement only)
  */
 /**
@@ -37,6 +45,7 @@ const ROWS_VISIBLE = 10
 
 export const MyCoursesProgress = ({ className }: MyCoursesProgressProps) => {
     const t = useTranslations()
+    const router = useRouter()
     const { courses, isLoading, error, mutate } = useQueryMyCoursesSwr()
     const hasCourses = !isLoading && !error && courses.length > 0
     const [expanded, setExpanded] = useState(false)
@@ -48,6 +57,8 @@ export const MyCoursesProgress = ({ className }: MyCoursesProgressProps) => {
             className={className}
             label={t("dashboard.enrolledCourses")}
             frameless={hasCourses}
+            onSeeMore={hasCourses ? () => router.push("/courses/me") : undefined}
+            seeMoreLabel={t("dashboard.explore.viewAll")}
         >
             <AsyncContent
                 isLoading={isLoading && courses.length === 0}

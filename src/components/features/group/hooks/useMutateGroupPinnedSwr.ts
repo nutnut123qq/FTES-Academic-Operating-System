@@ -19,12 +19,12 @@ import { matchesGroupManageKey } from "./useQueryGroupManageSwr"
  */
 export const useMutateGroupPinnedSwr = (groupId: string) => {
     const { mutate } = useSWRConfig()
-    const { requireAuth } = useRequireAuth()
+    const { requireAuthAsync } = useRequireAuth()
     const runRest = useRestWithToast()
 
     const pin = useCallback(
         async (postId: string): Promise<boolean> => {
-            if (!requireAuth("auth.context.generic")) {
+            if (!(await requireAuthAsync("auth.context.generic"))) {
                 return false
             }
             const ok = await runRest(() => pinPost(groupId, postId))
@@ -34,12 +34,12 @@ export const useMutateGroupPinnedSwr = (groupId: string) => {
             }
             return false
         },
-        [groupId, mutate, requireAuth, runRest],
+        [groupId, mutate, requireAuthAsync, runRest],
     )
 
     const unpin = useCallback(
         async (postId: string): Promise<boolean> => {
-            if (!requireAuth("auth.context.generic")) {
+            if (!(await requireAuthAsync("auth.context.generic"))) {
                 return false
             }
             const ok = await runRest(() => unpinPost(groupId, postId))
@@ -49,7 +49,7 @@ export const useMutateGroupPinnedSwr = (groupId: string) => {
             }
             return false
         },
-        [groupId, mutate, requireAuth, runRest],
+        [groupId, mutate, requireAuthAsync, runRest],
     )
 
     return { pin, unpin }

@@ -231,7 +231,7 @@ export const LegalPage = ({ kind }: LegalPageProps) => {
                 <PageHeader
                     breadcrumb={(
                         <Breadcrumbs>
-                            <Breadcrumbs.Item onPress={() => router.push(pathConfig().locale().build())}>
+                            <Breadcrumbs.Item onPress={() => router.push(pathConfig().locale(locale).build())}>
                                 {t("nav.home")}
                             </Breadcrumbs.Item>
                             <Breadcrumbs.Item>

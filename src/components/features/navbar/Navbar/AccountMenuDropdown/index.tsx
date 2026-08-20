@@ -44,12 +44,15 @@ export const AccountMenuDropdown = (props: AccountMenuDropdownProps) => {
     const { classNames } = props
     const { isOpen, setOpen } = useAccountMenuOverlayState()
     const authenticated = useAppSelector((state) => state.keycloak.authenticated)
+    const initialized = useAppSelector((state) => state.keycloak.initialized)
     const user = useAppSelector((state) => state.user.user)
-    // real loading signal: the shared "me" query (deduped). On FAIL it resolves to
-    // not-loading with no user → guest (the `initialized` flag is never set, so it
-    // would skeleton forever). Skeleton only on first load with no user yet.
-    const { isLoading } = useQueryUserSwr()
-    const isResolving = isLoading && !user
+    // mounts the shared (deduped) "me" query — it is the only writer of `state.user.user`
+    // AND the thing that flips `keycloak.initialized`.
+    useQueryUserSwr()
+    // "phiên chưa ngã ngũ" giờ có tín hiệu THẬT thay cho heuristic `isLoading && !user`:
+    // `initialized` được bật ở cả nhánh có user, nhánh khách và nhánh lỗi, và có net
+    // timeout đứng sau — nên nó luôn kết thúc, không skeleton vĩnh viễn.
+    const isResolving = !initialized
 
     // authed view only when we actually have the user — a dead/expired session or
     // any auth error falls back to guest (not a broken authed view / error state)

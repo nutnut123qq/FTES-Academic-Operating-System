@@ -74,7 +74,7 @@ const readCachedMembership = (
  * @param options - optional `viewerMembership` when the caller already has the DTO.
  */
 export const useMutateJoinGroupSwr = (groupId: string, options?: UseMutateJoinGroupOptions) => {
-    const { requireAuth } = useRequireAuth()
+    const { requireAuthAsync } = useRequireAuth()
     const runRest = useRestWithToast()
     const { cache, mutate } = useSWRConfig()
     const currentUserId = useAppSelector((state) => state.user.user?.id)
@@ -100,7 +100,7 @@ export const useMutateJoinGroupSwr = (groupId: string, options?: UseMutateJoinGr
         if (status === "joined" || isJoining || isLeaving) {
             return
         }
-        if (!requireAuth("auth.context.join")) {
+        if (!(await requireAuthAsync("auth.context.join"))) {
             return
         }
         const previous = status
@@ -114,7 +114,7 @@ export const useMutateJoinGroupSwr = (groupId: string, options?: UseMutateJoinGr
         }
         setLocalStatus(result.result === "JOINED" ? "joined" : "pending")
         revalidateMembership()
-    }, [groupId, isJoining, isLeaving, requireAuth, revalidateMembership, runRest, status])
+    }, [groupId, isJoining, isLeaving, requireAuthAsync, revalidateMembership, runRest, status])
 
     /**
      * Leave the group (self-removal). No-op unless the viewer is currently a member
@@ -127,7 +127,7 @@ export const useMutateJoinGroupSwr = (groupId: string, options?: UseMutateJoinGr
             if (status !== "joined" || isLeaving || isJoining) {
                 return
             }
-            if (!requireAuth("auth.context.join")) {
+            if (!(await requireAuthAsync("auth.context.join"))) {
                 return
             }
             if (!currentUserId) {
@@ -157,7 +157,7 @@ export const useMutateJoinGroupSwr = (groupId: string, options?: UseMutateJoinGr
             groupId,
             isJoining,
             isLeaving,
-            requireAuth,
+            requireAuthAsync,
             revalidateMembership,
             runRest,
             status,

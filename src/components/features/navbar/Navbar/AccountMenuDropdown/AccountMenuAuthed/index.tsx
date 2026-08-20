@@ -14,8 +14,8 @@ import {
     WalletIcon,
     PlusCircleIcon,
 } from "@phosphor-icons/react"
-import { useLocale, useTranslations } from "next-intl"
-import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
+import { useRouter } from "@/i18n/navigation"
 import { pathConfig } from "@/resources/path"
 import { useHasPermission } from "@/hooks/useHasPermission"
 import { useAccountMenuOverlayState } from "@/hooks/zustand/overlay/hooks"
@@ -36,8 +36,11 @@ export type AccountMenuAuthedProps = WithClassNames<undefined>
  * `GET /courses/me/enrollments` adapter (`useQueryMyCoursesSwr`) and renders EVERY
  * enrolment with its progress and resume link, not a truncated preview — so this row was
  * a second door onto content the row above it (Bảng điều khiển) already opens. Unlike
- * the `/saved` removal below, this orphans nothing: `/courses/me` is still linked from
- * the home landing's "Xem tất cả" and from the quest board's LESSON_COMPLETE CTA.
+ * the `/saved` removal below, this orphans nothing: `/courses/me` is reached from the
+ * dashboard → tab Khoá học → "Xem tất cả" on the `MyCoursesProgress` card, and from the
+ * quest board's LESSON_COMPLETE CTA. (An earlier version of this note pointed at the home
+ * landing's "Xem tất cả" instead — that band was dead code: the landing redirects every
+ * signed-in viewer to `/dashboard`, so a signed-in-only band there never rendered.)
  * "Khoá tôi dạy" stays — the dashboard has no teaching surface at all.
  *
  * "Bảng điều khiển" is back as the FIRST row: it was dropped while `/dashboard` did
@@ -63,7 +66,6 @@ export type AccountMenuAuthedProps = WithClassNames<undefined>
  */
 export const AccountMenuAuthed = ({ className }: AccountMenuAuthedProps) => {
     const t = useTranslations()
-    const locale = useLocale()
     const router = useRouter()
     const { close } = useAccountMenuOverlayState()
     const signOut = useMutateSignOutSwr()
@@ -103,9 +105,9 @@ export const AccountMenuAuthed = ({ className }: AccountMenuAuthedProps) => {
         async () => {
             close()
             await signOut.trigger()
-            router.replace(pathConfig().locale(locale).home().build())
+            router.replace(pathConfig().locale().home().build())
         },
-        [close, locale, router, signOut],
+        [close, router, signOut],
     )
 
     return (

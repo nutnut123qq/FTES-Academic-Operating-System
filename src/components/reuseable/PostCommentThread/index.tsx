@@ -560,7 +560,7 @@ export const PostCommentThread = ({
 }: PostCommentThreadProps) => {
     const t = useTranslations("communityHub")
     const tCommon = useTranslations("common")
-    const { authenticated, requireAuth } = useRequireAuth()
+    const { authenticated, requireAuthAsync } = useRequireAuth()
     const submitReport = useMutateReportContentSwr()
     /**
      * Viewer identity for the owner gate. Surfaces that already pass
@@ -689,7 +689,7 @@ export const PostCommentThread = ({
             if (!onToggleCommentLike || pendingLikes.current.has(comment.id)) {
                 return
             }
-            if (!requireAuth("auth.context.like")) {
+            if (!(await requireAuthAsync("auth.context.like"))) {
                 return
             }
             const previous = likeStateOf(comment)
@@ -708,7 +708,7 @@ export const PostCommentThread = ({
                 pendingLikes.current.delete(comment.id)
             }
         },
-        [onToggleCommentLike, requireAuth, likeStateOf, t],
+        [onToggleCommentLike, requireAuthAsync, likeStateOf, t],
     )
 
     /** Handler truyền xuống hàng — `undefined` khi bề mặt không bật tym (khỏi render trái tim). */

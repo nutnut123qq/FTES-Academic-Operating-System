@@ -40,14 +40,14 @@ export interface SubmitSubjectPostInput {
 export const useMutateCreateSubjectPostSwr = (subjectId: string) => {
     const t = useTranslations("subjects")
     const { cache, mutate } = useSWRConfig()
-    const { requireAuth } = useRequireAuth()
+    const { requireAuthAsync } = useRequireAuth()
 
     return useCallback(
         async (input: SubmitSubjectPostInput): Promise<boolean> => {
             if (!subjectId) {
                 return false
             }
-            if (!requireAuth("auth.context.generic")) {
+            if (!(await requireAuthAsync("auth.context.generic"))) {
                 return false
             }
             try {
@@ -65,6 +65,6 @@ export const useMutateCreateSubjectPostSwr = (subjectId: string) => {
             await revalidateCommunityFeeds(cache, mutate).catch(() => {})
             return true
         },
-        [subjectId, cache, mutate, requireAuth, t],
+        [subjectId, cache, mutate, requireAuthAsync, t],
     )
 }

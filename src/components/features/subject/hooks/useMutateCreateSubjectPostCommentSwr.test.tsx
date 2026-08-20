@@ -15,7 +15,9 @@ vi.mock("@/modules/api/rest/community", () => ({
 }))
 vi.mock("next-intl", () => ({ useTranslations: () => (key: string) => key }))
 vi.mock("@heroui/react", () => ({ toast: { danger: (message: string) => toastDanger(message) } }))
-vi.mock("@/hooks/useRequireAuth", () => ({ useRequireAuth: () => ({ requireAuth }) }))
+vi.mock("@/hooks/useRequireAuth", () => ({
+    useRequireAuth: () => ({ requireAuth, requireAuthAsync: async () => requireAuth() }),
+}))
 vi.mock("@/redux/hooks", () => ({
     useAppSelector: (selector: (state: { user: { user: unknown } }) => unknown) =>
         selector({ user: { user: session.current } }),

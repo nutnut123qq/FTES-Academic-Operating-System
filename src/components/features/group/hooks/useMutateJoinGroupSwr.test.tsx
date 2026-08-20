@@ -13,7 +13,9 @@ vi.mock("@/modules/api/rest/group", () => ({
     removeMember: (groupId: string, userId: string) => removeMember(groupId, userId),
     getGroup: vi.fn(),
 }))
-vi.mock("@/hooks/useRequireAuth", () => ({ useRequireAuth: () => ({ requireAuth }) }))
+vi.mock("@/hooks/useRequireAuth", () => ({
+    useRequireAuth: () => ({ requireAuth, requireAuthAsync: async () => requireAuth() }),
+}))
 vi.mock("@/redux/hooks", () => ({
     useAppSelector: (selector: (state: { user: { user?: { id: string } } }) => unknown) =>
         selector({ user: { user: currentUserId ? { id: currentUserId } : undefined } }),

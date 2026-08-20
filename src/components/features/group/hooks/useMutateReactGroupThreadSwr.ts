@@ -17,11 +17,11 @@ import { matchesGroupThreadsKey, type GroupThread } from "./useQueryGroupThreads
  */
 export const useMutateReactGroupThreadSwr = (groupId: string) => {
     const { mutate } = useSWRConfig()
-    const { requireAuth } = useRequireAuth()
+    const { requireAuthAsync } = useRequireAuth()
 
     return useCallback(
         async (threadId: string) => {
-            if (!requireAuth("auth.context.like")) {
+            if (!(await requireAuthAsync("auth.context.like"))) {
                 return
             }
 
@@ -71,6 +71,6 @@ export const useMutateReactGroupThreadSwr = (groupId: string) => {
                 await applyToggle(wasLiked)
             }
         },
-        [groupId, mutate, requireAuth],
+        [groupId, mutate, requireAuthAsync],
     )
 }

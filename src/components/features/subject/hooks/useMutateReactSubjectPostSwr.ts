@@ -27,11 +27,11 @@ export const useMutateReactSubjectPostSwr = (subjectId: string, scope: FeedScope
     const t = useTranslations("subjects")
     const locale = useLocale()
     const { mutate } = useSWRConfig()
-    const { requireAuth } = useRequireAuth()
+    const { requireAuthAsync } = useRequireAuth()
 
     return useCallback(
         async (postId: string) => {
-            if (!requireAuth("auth.context.like")) {
+            if (!(await requireAuthAsync("auth.context.like"))) {
                 return
             }
             const key = subjectFeedKey(subjectId, locale, scope)
@@ -70,6 +70,6 @@ export const useMutateReactSubjectPostSwr = (subjectId: string, scope: FeedScope
                 toast.danger(t("community.likeFailed"))
             }
         },
-        [subjectId, scope, locale, mutate, requireAuth, t],
+        [subjectId, scope, locale, mutate, requireAuthAsync, t],
     )
 }

@@ -85,11 +85,11 @@ const removedNodeCount = (comments: Array<PostComment>, commentId: string): numb
 export const useMutateCommentActionsSwr = () => {
     const t = useTranslations("communityHub")
     const { mutate, cache } = useSWRConfig()
-    const { requireAuth } = useRequireAuth()
+    const { requireAuthAsync } = useRequireAuth()
 
     const editComment = useCallback(
         async (postId: string, commentId: string, text: string): Promise<boolean> => {
-            if (!requireAuth("auth.context.comment")) {
+            if (!(await requireAuthAsync("auth.context.comment"))) {
                 return false
             }
 
@@ -114,12 +114,12 @@ export const useMutateCommentActionsSwr = () => {
             }
             return true
         },
-        [mutate, requireAuth, t],
+        [mutate, requireAuthAsync, t],
     )
 
     const removeComment = useCallback(
         async (postId: string, commentId: string): Promise<boolean> => {
-            if (!requireAuth("auth.context.comment")) {
+            if (!(await requireAuthAsync("auth.context.comment"))) {
                 return false
             }
 
@@ -158,7 +158,7 @@ export const useMutateCommentActionsSwr = () => {
             await mutate(postDetailKey(postId)).catch(() => {})
             return true
         },
-        [cache, mutate, requireAuth, t],
+        [cache, mutate, requireAuthAsync, t],
     )
 
     return { editComment, removeComment }

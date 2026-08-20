@@ -81,12 +81,12 @@ const applyBatchFollow = (
 export const useMutateFollowUserSwr = () => {
     const t = useTranslations()
     const { mutate } = useSWRConfig()
-    const { requireAuth } = useRequireAuth()
+    const { requireAuthAsync } = useRequireAuth()
     const [isPending, setIsPending] = useState(false)
 
     const toggleFollow = useCallback(
         async (target: UserHovercardData) => {
-            if (!requireAuth("auth.context.follow")) {
+            if (!(await requireAuthAsync("auth.context.follow"))) {
                 return
             }
             if (!target.id || !target.username) {
@@ -151,7 +151,7 @@ export const useMutateFollowUserSwr = () => {
                 setIsPending(false)
             }
         },
-        [mutate, requireAuth, t],
+        [mutate, requireAuthAsync, t],
     )
 
     return { toggleFollow, isPending }

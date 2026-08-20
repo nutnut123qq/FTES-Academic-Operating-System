@@ -19,11 +19,11 @@ import { communityErrorMessageKey } from "./community-error-message"
 export const useMutateAcceptAnswerSwr = () => {
     const t = useTranslations("communityHub")
     const { mutate } = useSWRConfig()
-    const { requireAuth } = useRequireAuth()
+    const { requireAuthAsync } = useRequireAuth()
 
     return useCallback(
         async (postId: string, commentId: string): Promise<boolean> => {
-            if (!requireAuth("auth.context.generic")) {
+            if (!(await requireAuthAsync("auth.context.generic"))) {
                 return false
             }
 
@@ -48,6 +48,6 @@ export const useMutateAcceptAnswerSwr = () => {
             toast.success(t("engagement.acceptAnswerDone"))
             return true
         },
-        [mutate, requireAuth, t],
+        [mutate, requireAuthAsync, t],
     )
 }

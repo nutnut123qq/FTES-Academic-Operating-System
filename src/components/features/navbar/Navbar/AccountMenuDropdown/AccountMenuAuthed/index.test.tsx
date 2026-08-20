@@ -45,6 +45,7 @@ vi.mock("@phosphor-icons/react", () => {
     const Icon = () => <span />
     return {
         SquaresFourIcon: Icon,
+        GraduationCapIcon: Icon,
         ChalkboardTeacherIcon: Icon,
         UserIcon: Icon,
         GearIcon: Icon,
@@ -92,9 +93,17 @@ vi.mock("@/hooks/swr/api/graphql/mutations/useMutateSignOutSwr", () => ({
 
 import { AccountMenuAuthed } from "./index"
 
-/** Every menu row, with the locale-LESS path it must hand to the i18n router. */
+/**
+ * Every menu row, with the locale-LESS path it must hand to the i18n router.
+ *
+ * This list doubles as the menu's inventory, so it is also what pins "Khóa học của tôi"
+ * (`my-courses` → `/courses/me`) as PRESENT. That row was removed on 2026-08-15 and
+ * restored on 2026-08-21 by the owner's call; the entry below was added back with it, so
+ * a second silent removal turns this red instead of shipping.
+ */
 const ROWS: ReadonlyArray<[string, string]> = [
     ["dashboard", "/dashboard"],
+    ["my-courses", "/courses/me"],
     ["teaching", "/courses/teaching"],
     ["profile", "/profile"],
     ["settings", "/profile/settings"],
@@ -111,6 +120,16 @@ describe("AccountMenuAuthed navigation", () => {
 
         expect(i18nPush.mock.calls).toEqual([[path]])
         expect(legacyPush).not.toHaveBeenCalled()
+    })
+
+    // Explicit, so the row's presence does not rest on someone reading a table: the
+    // translator is mocked to echo the key, hence the assertion on `nav.myCourses`.
+    it("renders the 'Khóa học của tôi' row, labelled from nav.myCourses", () => {
+        render(<AccountMenuAuthed />)
+
+        const row = screen.getByTestId("item-my-courses")
+        expect(row).toBeTruthy()
+        expect(row.textContent).toContain("nav.myCourses")
     })
 
     it("sends the post-sign-out redirect through the same router, locale-less", async () => {

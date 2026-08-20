@@ -47,22 +47,56 @@ const URL_PATTERN = /https?:\/\/[^\s<>()[\]"'`]+/
 /** Trailing punctuation people type after a url ("… xem tại https://x.vn.") is not part of it. */
 const TRAILING_PUNCTUATION = /[.,;:!?»”)\]]+$/
 
+/** A CommonMark autolink `<https://…>` — the whole thing, brackets included. */
+const AUTOLINK_PATTERN = /<(https?:\/\/[^\s<>]+)>/g
+
 /**
- * Unwraps CommonMark autolinks written as `<https://…>` into the bare url, so the
- * rendered post reads `https://…` instead of carrying the authored angle brackets
- * into the visible link text.
+ * A character that already ENDS a url on its own: whitespace, or the punctuation people type
+ * right behind one ("… xem tại https://x.vn."). `!` is not here on purpose — `![` is markdown,
+ * and it is exactly the shape that broke ({@link unwrapAutolinks}).
+ */
+const TERMINATES_URL = /[\s.,;:?)\]}»”"']/
+
+/**
+ * PLAIN-TEXT SURFACES ONLY — never run this before a markdown parse. Unwraps a CommonMark
+ * autolink `<https://…>` to the bare url so a row that prints the body as TEXT (feed snippet,
+ * saved/bookmark row, search hit, quoted-post card) reads `https://…` instead of showing the
+ * authored angle brackets. Those surfaces deliberately skip `MarkdownContent`, so nothing
+ * else strips the syntax for them.
  *
- * (Both forms already become a real `<a>` through the shared markdown renderer —
- * `<…>` is a CommonMark autolink, a bare url is a `remark-gfm` autolink-literal —
- * so this is about the TEXT, not about making the link clickable. Any surface that
- * prints the body as plain text needs it too.)
+ * NOT needed — and actively harmful — on the markdown path. `<https://x>` ALREADY renders as
+ * `<a href="https://x">https://x</a>`: CommonMark never shows the brackets, so there is
+ * nothing to clean up. Unwrapping ahead of the parser instead deletes the url's terminator,
+ * and `remark-gfm`'s autolink-literal then swallows whatever followed — `!`, `[`, `]` are all
+ * legal url characters and GFM balances parentheses, so `<https://a.vn>![Ảnh](https://b.vn/x.webp)`
+ * collapsed into ONE link and the image never parsed. That is why `CommunityPostContent`
+ * hands `MarkdownContent` the RAW body.
  *
- * Markdown links (`[text](url)`) and code blocks are left untouched.
+ * So the one rule here is: the bare url must still be TERMINATED. If the `>` was already
+ * followed by something that ends a url ({@link TERMINATES_URL}) or by nothing at all, the
+ * brackets simply go; otherwise a single space takes their place. That is what the reader of a
+ * one-line snippet sees anyway (the renderer draws a link, then the next node), and it means
+ * the result reparses to the same links and images it came from.
  *
- * @param markdown - raw post body.
+ * Code fences and inline code are left alone (a post teaching `<https://…>` syntax keeps it);
+ * markdown links `[text](url)` were never touched.
+ *
+ * @param markdown - raw post body or snippet.
+ * @returns the body with its autolinks reduced to bare, still-terminated urls.
  */
 export const unwrapAutolinks = (markdown: string): string =>
-    markdown.replace(/<(https?:\/\/[^\s<>]+)>/g, "$1")
+    markdown
+        // `String.split` with a capturing regex alternates prose/code — odd indices are code.
+        .split(CODE_BLOCK_PATTERN)
+        .map((segment, index) => (
+            index % 2 === 1
+                ? segment
+                : segment.replace(AUTOLINK_PATTERN, (match, url: string, offset: number, prose: string) => {
+                    const next = prose[offset + match.length]
+                    return next === undefined || TERMINATES_URL.test(next) ? url : `${url} `
+                })
+        ))
+        .join("")
 
 /** An embedded image `![alt](url "title")`; the url stops at the first space or `)`. */
 const IMAGE_PATTERN = /!\[[^\]]*\]\(\s*([^)\s]+)[^)]*\)/g

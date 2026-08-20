@@ -19,7 +19,7 @@ import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
 import { LinkPreview } from "@/components/reuseable/LinkPreview"
 import { QuotedPostCard } from "@/components/reuseable/QuotedPostCard"
 import { CommunityPoll } from "../CommunityPoll"
-import { firstLinkUrl, unwrapAutolinks } from "./postLinks"
+import { firstLinkUrl } from "./postLinks"
 import { CommentLoadError } from "@/components/reuseable/PostCommentThread/comment-load-error"
 import { useQueryPostDetailSwr } from "../hooks/useQueryPostDetailSwr"
 import { useMutateReactPostSwr } from "../hooks/useMutateReactPostSwr"
@@ -119,14 +119,18 @@ export const CommunityPostContent = ({
     const commentsRegionId = regionId ?? `post-comments-${postId}`
 
     /**
-     * Body actually rendered: `<https://…>` unwrapped to a bare url so the reader
-     * shows `https://…` (a real `<a>` either way — GFM autolinks the bare form)
-     * instead of the authored angle brackets, plus the FIRST link in the post —
-     * the one, and only one, the preview card unfurls.
+     * The body goes to the renderer RAW — no pre-pass. `<https://…>` is a CommonMark
+     * autolink that already renders as `<a href="https://…">https://…</a>`, brackets and
+     * all invisible, so there is nothing to tidy; stripping them first only deleted the
+     * url's terminator and let `remark-gfm`'s autolink-literal eat the markdown behind it
+     * (the composer writes an inline image straight after a link, `<url>![Ảnh](…)`, so
+     * every image in the post collapsed into the link — see
+     * {@link import("./postLinks").unwrapAutolinks}, which stays PLAIN-TEXT only).
+     * Alongside it, the FIRST link in the post — the one, and only one, the preview
+     * card unfurls.
      */
-    const rawBody = post?.body ?? ""
-    const renderedBody = useMemo(() => unwrapAutolinks(rawBody), [rawBody])
-    const previewUrl = useMemo(() => firstLinkUrl(rawBody), [rawBody])
+    const renderedBody = post?.body ?? ""
+    const previewUrl = useMemo(() => firstLinkUrl(renderedBody), [renderedBody])
 
     useEffect(() => {
         if (typeof window !== "undefined" && window.location.hash === "#comments") {

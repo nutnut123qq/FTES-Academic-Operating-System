@@ -162,6 +162,27 @@ export interface LessonChallengeSummary {
     free?: boolean
 }
 
+/**
+ * Một kỳ học công khai (`TermDtos.PublicTermView`) — nguồn của bộ lọc "Kỳ học" trên
+ * catalog `/courses`. `GET /api/v1/terms` là endpoint PUBLIC (khách chưa đăng nhập vẫn
+ * đọc được) và trả HẾT mọi kỳ kể cả `ENDED`, mới nhất đứng đầu (`startsAt` giảm dần) —
+ * FE tự quyết hiển thị kỳ nào theo `status`.
+ */
+export interface PublicTermView {
+    /** Id kỳ — chính là `termId` gửi lên `GET /courses?termId=`. */
+    id: string
+    /** Mã kỳ, ví dụ `"FA26"`. */
+    code: string
+    /** Tên hiển thị, ví dụ `"Kỳ Thu 2026"`. */
+    name: string
+    /** ISO-8601 instant. */
+    startsAt: string
+    /** ISO-8601 instant. */
+    endsAt: string
+    /** Trạng thái kỳ (BE `TermStatus`). */
+    status: "SCHEDULED" | "ACTIVE" | "ENDED"
+}
+
 /** Query params for the public catalog list `GET /api/v1/courses`. */
 export interface CourseListParams {
     /** Filter by opaque category id. */
@@ -170,6 +191,8 @@ export interface CourseListParams {
     level?: string | null
     /** Full-text search over title/description. */
     q?: string | null
+    /** Filter by term id (`PublicTermView.id`). Omit for no term filter. */
+    termId?: string | null
     /** Zero-based page index (BE default 0). */
     page?: number
     /** Page size (BE default 20). */
@@ -439,6 +462,17 @@ export interface EnrollmentView {
      * lại"). Additive, defaults false. Mirrors {@link CourseAccessStateView.expired}.
      */
     expired?: boolean
+    /**
+     * Term this enrollment is stamped to (`enrollment.term_id`); `null` when the course
+     * is outside any term (permanent access — it was never stamped).
+     */
+    termId: string | null
+    /**
+     * Display name of {@link termId}'s term; `null` when there is no term — AND also when
+     * the term row itself is gone (the id stays as stored, only the name is lost). Never
+     * render an empty string as a term name.
+     */
+    termName: string | null
 }
 
 /**

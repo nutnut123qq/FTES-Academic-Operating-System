@@ -4,7 +4,6 @@ import React from "react"
 import { useTranslations } from "next-intl"
 import { useAppSelector } from "@/redux/hooks"
 import { FtesMascot } from "@/components/reuseable/FtesMascot"
-import { useQueryMyCoursesSwr } from "@/components/features/course/hooks/useQueryMyCoursesSwr"
 
 /**
  * Display names the BE hands back for an account with no profile name of its own.
@@ -18,11 +17,9 @@ const PLACEHOLDER_DISPLAY_NAMES = ["người dùng ẩn", "ẩn danh", "anonymou
 
 /**
  * FrosTES's welcome on the landing — a SMALL, subtle one-liner (a `sm` mascot next to a
- * short "welcome back, {name}" line, NOT a hero-sized speech bubble), rendered INSIDE the
- * "Continue learning" band between its heading and the course cards, so it reads as a
- * friendly lead-in to "here's what you were doing". Signed-in viewers are greeted by name;
- * guests get a short invite. The second sentence of the old greeting stays dropped so the
- * line remains compact.
+ * short "welcome back, {name}" line, NOT a hero-sized speech bubble), rendered right under
+ * the hero. Signed-in viewers are greeted by name; guests get a short invite. The second
+ * sentence of the old greeting stays dropped so the line remains compact.
  *
  * Deliberately NON-nagging ambient chrome: it never blocks content, shows on every
  * visit with no dismiss and no localStorage, and is the ONLY mascot on the landing
@@ -60,20 +57,15 @@ export const HomeMascotGreeting = () => {
 }
 
 /**
- * Fallback band for {@link HomeMascotGreeting} — renders the greeting in its own
- * band right after the hero ONLY when the "Continue learning" band is not on the
- * page (anonymous visitor, or a signed-in viewer with no active enrollment), since
- * that band hosts the greeting itself when it renders.
+ * Band riêng của {@link HomeMascotGreeting} — luôn render, ngay sau hero.
  *
- * Reads the SAME `useQueryMyCoursesSwr` (fixed SWR key → deduped, no second
- * request) as `MyCoursesSection` so the two can never disagree: exactly one mascot
- * shows on the landing in every state — never two, never none.
+ * Trước đây band này tự ẩn khi người xem có khoá, vì band "Tiếp tục học" mới là chỗ
+ * đặt lời chào. Band đó đã bị xoá (landing chỉ dành cho khách, người đã đăng nhập bị
+ * đưa thẳng sang `/dashboard` nên nó không bao giờ render được), nên không còn ai
+ * tranh chỗ nữa: bỏ nhánh guard đi thì trang vẫn có ĐÚNG MỘT mascot, và bỏ luôn được
+ * lượt gọi `useQueryMyCoursesSwr` (một request chỉ để quyết định ẩn/hiện).
  */
 export const HomeMascotGreetingBand = () => {
-    const { hasCourses } = useQueryMyCoursesSwr()
-    // the courses band is rendering the greeting inside itself → don't duplicate it
-    if (hasCourses) return null
-
     return (
         <section className="mx-auto flex w-full max-w-6xl px-4 py-6 sm:px-6">
             <HomeMascotGreeting />

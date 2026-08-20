@@ -40,6 +40,7 @@ import type {
     PreviewLimitRequest,
     ProgressRequest,
     ProgressView,
+    PublicTermView,
     QuizAttemptHistoryView,
     QuizAttemptResultView,
     QuizAttemptStartView,
@@ -77,6 +78,7 @@ export const getCourses = async (
             categoryId: params?.categoryId ?? undefined,
             level: params?.level ?? undefined,
             q: params?.q ?? undefined,
+            termId: params?.termId ?? undefined,
             page: params?.page ?? undefined,
             size: params?.size ?? undefined,
         },
@@ -112,6 +114,22 @@ export const getCourseCategories = async (
         url: "/courses/categories",
         authenticated: false,
         params: { nonEmpty },
+    })
+}
+
+/**
+ * Lists every academic term — the source of the "Kỳ học" facet on the catalog.
+ *
+ * `GET /api/v1/terms` (public). `authenticated: false` is REQUIRED, not an
+ * optimisation: `/courses` is browsable signed-out, so a token-gated term list
+ * would make the facet vanish for guests. No query params — the BE returns every
+ * term (including `ENDED`), newest `startsAt` first; an empty catalog is `[]`, never 404.
+ */
+export const listTerms = async (): Promise<Array<PublicTermView>> => {
+    return restRequest<Array<PublicTermView>>({
+        method: "GET",
+        url: "/terms",
+        authenticated: false,
     })
 }
 

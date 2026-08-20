@@ -6,7 +6,9 @@ import { StarIcon } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import { SearchInput } from "@/components/reuseable/SearchInput"
 import { SegmentedControl } from "@/components/blocks/navigation/SegmentedControl"
+import type { PublicTermView } from "@/modules/api/rest/course"
 import type { WithClassNames } from "@/modules/types/base/class-name"
+import { TermFilterDropdown } from "../../TermFilterDropdown"
 import type {
     CourseLevelFacet,
     CourseRatingFacet,
@@ -43,14 +45,29 @@ export interface FacetSortBarProps extends WithClassNames<undefined> {
      */
     minRating?: CourseRatingFacet
     onMinRatingChange?: (minRating: CourseRatingFacet) => void
+    /**
+     * Terms the catalog can be filtered by. Optional, same rule as
+     * {@link FacetSortBarProps.level}: the term control renders only when both
+     * `terms` (non-empty) and `onTermChange` are given, so pages with no term data
+     * keep the bar exactly as it was.
+     */
+    terms?: Array<PublicTermView>
+    /** Selected term id; `undefined` = "Tất cả kỳ" (the default). */
+    termId?: string
+    onTermChange?: (termId: string | undefined) => void
 }
 
 /**
  * Facet + sort bar of the browse catalog: text search (code + name), the optional
- * level and minimum-star facets, and a sort control (popular default / newest /
- * rating). Used on `/courses` (search + sort only) and on the category landing
- * page (which also facets that category's grid by level and stars). Sort stays
- * pinned to the end of the row, so adding facets never moves it.
+ * level and minimum-star facets, the optional term picker, and a sort control
+ * (popular default / newest / rating). Used on `/courses` (search + term + sort)
+ * and on the category landing page (which also facets that category's grid by
+ * level and stars). Sort stays pinned to the end of the row, so adding facets
+ * never moves it.
+ *
+ * The term picker is the shared {@link TermFilterDropdown} (single-select dropdown),
+ * NOT a `SegmentedControl` like level/rating: a school accumulates dozens of terms
+ * and segments are for "one of a few".
  *
  * @param props - {@link FacetSortBarProps}
  */
@@ -63,11 +80,16 @@ export const FacetSortBar = ({
     onLevelChange,
     minRating,
     onMinRatingChange,
+    terms,
+    termId,
+    onTermChange,
     className,
 }: FacetSortBarProps) => {
     const t = useTranslations()
     const showLevel = level !== undefined && onLevelChange !== undefined
     const showRating = minRating !== undefined && onMinRatingChange !== undefined
+    // không có kỳ nào để chọn = không có facet (một picker rỗng còn tệ hơn là không có)
+    const showTerm = terms !== undefined && terms.length > 0 && onTermChange !== undefined
 
     return (
         <div className={cn("flex flex-col gap-3", className)}>
@@ -133,6 +155,20 @@ export const FacetSortBar = ({
                         value={minRating}
                         onChange={onMinRatingChange}
                         className="w-fit"
+                    />
+                ) : null}
+                {/* danh sách kỳ có thể dài → Dropdown chọn-một, không phải SegmentedControl */}
+                {showTerm ? (
+                    <TermFilterDropdown
+                        options={terms.map((term) => ({
+                            id: term.id,
+                            label: term.name,
+                            hint: term.code,
+                        }))}
+                        value={termId}
+                        onChange={onTermChange}
+                        label={t("courseSystem.browse.filters.termLabel")}
+                        allLabel={t("courseSystem.browse.filters.allTerms")}
                     />
                 ) : null}
                 <SegmentedControl

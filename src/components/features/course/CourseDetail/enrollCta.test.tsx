@@ -96,7 +96,11 @@ vi.mock("@heroui/react", () => {
         Skeleton: () => <div />,
         // Pass-through: the enroll card's option list now lives inside a ScrollShadow
         // (capped-height card), and a swallowing mock would hide every option row.
-        ScrollShadow: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+        // `className` PHẢI được forward — mock nuốt nó thì không soi được scroller, và
+        // ca "CTA nằm ngoài vùng cuộn" bên dưới sẽ xanh khống.
+        ScrollShadow: ({ children, className }: { children: React.ReactNode; className?: string }) => (
+            <div className={className}>{children}</div>
+        ),
         Tooltip: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
         Typography: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
         cn: (...a: Array<unknown>) => a.filter(Boolean).join(" "),
@@ -209,6 +213,45 @@ describe("EnrollCard — the buy CTA never leads nowhere", () => {
         expect(screen.getByText("detail.enroll")).toBeTruthy()
         expect(screen.queryByText("detail.notForSale")).toBeNull()
         expect(findCta()?.disabled).toBe(false)
+    })
+
+    /**
+     * Hồi quy "thẻ ghim cao hơn màn hình nuốt mất CTA": thẻ là `md:sticky`, mà hộp đã ghim
+     * thì cuộn trang KHÔNG kéo được nửa dưới của nó. Nên gốc phải chặn ở đúng 1 màn
+     * (`md:max-h-[calc(100dvh-6rem)]`) và CHỈ danh sách lựa chọn được cuộn
+     * (`md:min-h-0 md:flex-1 md:overflow-y-auto`), để cụm CTA nằm NGOÀI vùng cuộn và luôn
+     * trong tầm nhìn. `md:min-h-0` là chốt chịu lực: thiếu nó, flex child không co dưới
+     * kích thước nội dung và cái cap trên gốc bị vô hiệu trong im lặng.
+     *
+     * ponytail: assert cuối đo QUAN HỆ DOM thật (CTA có nằm trong scroller không) —
+     * đúng hình dạng của lỗi cũ; hai assert đầu chỉ soi được chuỗi class vì vitest.config.ts
+     * cố tình vô hiệu PostCSS nên jsdom không có layout để đo chiều cao. Trần: không chứng
+     * minh được ở màn THẤP (vd 1280x600) chrome cố định của thẻ có vượt cap hay không.
+     * Đường nâng cấp: một ca Playwright ở `e2e/` đặt viewport rồi khẳng định nút
+     * "Học thử miễn phí" nằm trong khung nhìn.
+     */
+    it("ghim thẻ trong 1 màn và chỉ cuộn danh sách lựa chọn, CTA luôn ngoài scroller", () => {
+        const { container } = render(
+            <EnrollCard
+                course={course()}
+                isEnrolled={false}
+                onEnroll={vi.fn()}
+                canBuy={true}
+                isResolvingProduct={false}
+                onContinueLearning={vi.fn()}
+                onTryLearning={vi.fn()}
+            />,
+        )
+        const card = container.firstElementChild as HTMLElement
+        expect(card.className).toContain("md:max-h-[calc(100dvh-6rem)]")
+
+        const scroller = card.querySelector("[class*='md:overflow-y-auto']") as HTMLElement
+        expect(scroller).toBeTruthy()
+        expect(scroller.className).toContain("md:min-h-0")
+        expect(scroller.className).toContain("md:flex-1")
+
+        // cụm CTA phải ở NGOÀI vùng cuộn — kéo nó vào trong chính là lỗi cũ
+        expect(scroller.contains(screen.getByText("detail.enroll"))).toBe(false)
     })
 
     it("does not conclude 'chưa mở bán' while the product lookup is still in flight", () => {

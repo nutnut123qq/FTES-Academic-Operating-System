@@ -23,9 +23,18 @@ export interface GroupInfoSectionProps {
     groupId: string
 }
 
-/** Field styling shared by the hand-rolled inputs of this feature (mirrors GroupCreate). */
+/**
+ * Field styling shared by the hand-rolled inputs of this feature (mirrors GroupCreate).
+ *
+ * `[&>option]:bg-surface [&>option]:text-foreground` phục vụ 2 select dùng hằng này (join
+ * policy + visibility): select `bg-transparent` nên Chromium vẽ popup native bằng nền TRẮNG
+ * mặc định của Blink, trong khi <option> kế thừa `--foreground` (99.11% ở nhánh tối) ⇒ dark
+ * mode trắng-trên-trắng. Chỉ màu đặt TRỰC TIẾP lên <option> mới sống sót qua popup. Ở light,
+ * option vốn đã trắng/chữ đen nên cặp class ra ĐÚNG màu cũ ⇒ 0 thay đổi thị giác. Cái `<input>`
+ * cũng dùng hằng này nhưng không có <option> con nên selector không bao giờ khớp — vô hại.
+ */
 const FIELD_CLASS =
-    "w-full rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none placeholder:text-muted focus:border-accent"
+    "w-full rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none placeholder:text-muted focus:border-accent [&>option]:bg-surface [&>option]:text-foreground"
 
 /**
  * "Group information" section of the management tab: name, description, join policy

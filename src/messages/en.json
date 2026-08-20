@@ -825,7 +825,13 @@
             "subtitle": "Pick up where you left off.",
             "empty": "You haven't enrolled in any course yet",
             "browse": "Browse courses",
-            "emptyHint": "Enroll in a course and it will show up here to continue anytime."
+            "emptyHint": "Enroll in a course and it will show up here to continue anytime.",
+            "termLabel": "Filter by term",
+            "termAll": "All terms",
+            "termNone": "Outside any term",
+            "termUnknown": "Unknown term",
+            "filterEmpty": "No courses in this term",
+            "filterEmptyHint": "Pick \"All terms\" to see every course again."
         },
         "teaching": {
             "title": "Courses I teach",
@@ -3131,11 +3137,6 @@
             "des4": "Low cost, high standard",
             "des5": "FTES AOS operates on a lean model, eliminating unnecessary costs to keep tuition affordable. Our goal is to create a high-quality learning environment that anyone serious about the profession can join.",
             "des6": "We teach you to build truly valuable projects and provide long-term support throughout your career development."
-        },
-        "myCourses": {
-            "eyebrow": "Your journey",
-            "title": "Continue learning",
-            "seeAll": "See all"
         }
     },
     "dashboard": {
@@ -4192,7 +4193,7 @@
                 "resourcePublish": "Publish an approved exam / resource",
                 "courseEnrolled": "Enrol in a new course",
                 "postCreated": "Publish a community post",
-                "commentCreated": "Write a comment",
+                "commentCreated": "Write a community comment",
                 "reactionGiven": "YOU like a post / lesson",
                 "questComplete": "Complete a daily quest"
             },
@@ -6563,7 +6564,9 @@
                 "all": "All",
                 "levelLabel": "Filter by level",
                 "ratingLabel": "Filter by rating",
-                "ratingAtLeast": "{rating} & up"
+                "ratingAtLeast": "{rating} & up",
+                "termLabel": "Filter by term",
+                "allTerms": "All terms"
             },
             "badge": {
                 "bestseller": "Bestseller",
@@ -6573,6 +6576,7 @@
                 "package": "Combo"
             },
             "empty": "No matching courses.",
+            "termEmpty": "No courses in this term",
             "ratingCount": "({count})",
             "hours": "{count} hours",
             "minutes": "{count} min",

@@ -38,6 +38,16 @@ export interface MyCourse {
      * into the course, where the full re-buy CTA lives.
      */
     expired: boolean
+    /**
+     * Kỳ học enrollment này được đóng dấu, hoặc `null` khi khoá KHÔNG thuộc kỳ nào
+     * (quyền truy cập vĩnh viễn — chưa từng bị đóng dấu kỳ).
+     */
+    termId: string | null
+    /**
+     * Tên hiển thị của {@link MyCourse.termId}, hoặc `null` khi không có kỳ — VÀ cả khi
+     * kỳ đó đã bị xoá (id vẫn còn, chỉ mất tên). Chỗ hiển thị phải có nhãn dự phòng.
+     */
+    termName: string | null
 }
 
 /**
@@ -115,6 +125,8 @@ export const useQueryMyCoursesSwr = () => {
                     coverImage: enrollment.imageHeader ?? null,
                     accessUntil: enrollment.accessUntil ?? null,
                     expired: enrollment.expired === true,
+                    termId: enrollment.termId ?? null,
+                    termName: enrollment.termName ?? null,
                 }))
         },
     )

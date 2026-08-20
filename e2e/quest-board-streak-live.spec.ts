@@ -92,9 +92,11 @@ test.describe("quest-board-streak-live", () => {
             page.getByRole("heading", { name: "Nhiệm vụ hằng ngày" }),
         ).toBeVisible({ timeout: 60_000 })
 
-        // the board flips from the guest gate once auth hydrates → the live cards render
+        // the board flips from the guest gate once auth hydrates → the live cards render.
+        // NO tag in the selector: a quest with somewhere to go renders its card as the
+        // <a> that takes you there, one without (done / DAILY_LOGIN / streak) stays a div.
         const dailyCard = page
-            .locator("div.rounded-2xl.border-separator", { hasText: dailyLogin.title })
+            .locator(".rounded-2xl.border-separator", { hasText: dailyLogin.title })
             .first()
         await expect(dailyCard).toBeVisible({ timeout: 60_000 })
 
@@ -255,8 +257,9 @@ test.describe("quest-board-streak-live", () => {
         const shownCurrent = Math.min(questAfter.eventCount, ceiling)
 
         await page.goto("/vi/quests")
+        // tag-agnostic: a not-yet-done LESSON_COMPLETE card IS the link to /courses/me
         const lessonCard = page
-            .locator("div.rounded-2xl.border-separator", { hasText: questAfter.title })
+            .locator(".rounded-2xl.border-separator", { hasText: questAfter.title })
             .first()
         await expect(lessonCard).toBeVisible({ timeout: 60_000 })
         await expect(

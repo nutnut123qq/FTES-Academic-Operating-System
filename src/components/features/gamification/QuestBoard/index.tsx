@@ -18,7 +18,7 @@ import { useGetMyQuestsSwr } from "@/hooks/swr/api/rest/queries/useGetMyQuestsSw
 import { useGetMyWalletSwr } from "@/hooks/swr/api/rest/queries/useGetMyWalletSwr"
 import type { QuestItemView } from "@/modules/api/rest/gamification"
 import { QUEST_CTA_ICON, QUEST_FALLBACK_ICON, QUEST_ICON_MAP } from "./map"
-import { questCtaHref, questProgress, questRewardXp } from "./model"
+import { questDestination, questProgress, questRewardXp } from "./model"
 
 /** Skeleton for a single quest card — mirrors the real card so the list never jumps. */
 const QuestCardSkeleton = () => (
@@ -52,8 +52,14 @@ interface QuestCardProps {
 /**
  * One quest row: icon + title + reward chips, an optional description, a progress
  * meter over the day's ceiling, the claimed-of-limit status, and — while there is
- * still a claim left AND the code maps to an earning surface — a "go do it" CTA.
- * Fully claimed quests dim and swap the CTA for a done marker.
+ * still a claim left AND the code maps to an earning surface — a "go do it" pill.
+ * Fully claimed quests dim and swap that pill for a done marker.
+ *
+ * **The whole card is the link** to the surface that earns the quest, resolved by
+ * the shared {@link questDestination} table (the analytics widget routes through
+ * the same call, so a row cannot mean two different places). A quest with no
+ * destination — done today, `DAILY_LOGIN`, `STREAK_7_BONUS`, an unknown admin code
+ * — renders as a plain `div`: no anchor, no pointer cursor, no hover paint.
  *
  * Two reward chips sit side by side, both per-CLAIM and presented identically
  * (soft chip, `+N .../lượt`) because they are the same kind of fact: coins in
@@ -72,16 +78,24 @@ const QuestCard = ({ quest }: QuestCardProps) => {
     const { total, current, isDone } = questProgress(quest)
     const rewardXp = questRewardXp(quest)
     // Locale-less on purpose — the `Link` below is the locale-aware one from
-    // `@/i18n/navigation` and prepends the active locale itself.
-    const href = isDone ? null : questCtaHref(quest.code)
+    // `@/i18n/navigation` and prepends the active locale itself. `null` = this
+    // quest has nowhere to go (done today / auto-complete / streak / unknown code),
+    // and the card then renders as a plain, non-interactive `div`.
+    const href = questDestination({ code: quest.code, isDone })
 
-    return (
-        <div
-            className={cn(
-                "flex flex-col gap-3 rounded-2xl border border-separator p-4 transition-opacity",
-                isDone && "opacity-60",
-            )}
-        >
+    // The WHOLE card is the target when there is one — the title is the obvious
+    // thing to press, and it used to do nothing while only the small pill worked
+    // (the same fix the exam rows took). Hover paints ONLY when the card actually
+    // navigates, so the affordance never lies about what a press will do.
+    const cardClassName = cn(
+        "flex flex-col gap-3 rounded-2xl border border-separator p-4 no-underline transition",
+        isDone && "opacity-60",
+        href && "cursor-pointer hover:border-accent/50 hover:bg-accent/5",
+        href && "text-foreground outline-none focus-visible:ring-2 focus-visible:ring-accent",
+    )
+
+    const body = (
+        <>
             <div className="flex items-start gap-3">
                 <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
                     {QUEST_ICON_MAP[quest.code] ?? QUEST_FALLBACK_ICON}
@@ -131,16 +145,25 @@ const QuestCard = ({ quest }: QuestCardProps) => {
                         {t("done")}
                     </span>
                 ) : href ? (
-                    <Link
-                        href={href}
-                        className="inline-flex shrink-0 items-center gap-1 rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground no-underline transition-colors hover:bg-accent/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                    >
+                    /* The pill keeps its look but is no longer a control of its own:
+                       the card around it already goes there, and a second tab stop to
+                       the SAME href is just a second thing to skip past (the exam rows
+                       dropped their button for the same reason). */
+                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground transition-colors">
                         {t("goDo")}
                         {QUEST_CTA_ICON}
-                    </Link>
+                    </span>
                 ) : null}
             </div>
-        </div>
+        </>
+    )
+
+    return href ? (
+        <Link href={href} aria-label={t("goDoAria", { title: quest.title })} className={cardClassName}>
+            {body}
+        </Link>
+    ) : (
+        <div className={cardClassName}>{body}</div>
     )
 }
 

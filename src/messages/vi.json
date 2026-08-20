@@ -4062,6 +4062,7 @@
             "claimedOfLimit": "Đã nhận {claimed}/{limit} lượt hôm nay",
             "done": "Đã hoàn thành",
             "goDo": "Làm ngay",
+            "goDoAria": "Làm nhiệm vụ: {title}",
             "signInPrompt": "Đăng nhập để xem nhiệm vụ hằng ngày và nhận xu.",
             "signIn": "Đăng nhập",
             "empty": "Chưa có nhiệm vụ nào hôm nay.",

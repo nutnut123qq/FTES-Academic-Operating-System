@@ -4062,6 +4062,7 @@
             "claimedOfLimit": "Claimed {claimed}/{limit} today",
             "done": "Completed",
             "goDo": "Go do it",
+            "goDoAria": "Go do quest: {title}",
             "signInPrompt": "Sign in to see your daily quests and earn coins.",
             "signIn": "Sign in",
             "empty": "No quests today yet.",

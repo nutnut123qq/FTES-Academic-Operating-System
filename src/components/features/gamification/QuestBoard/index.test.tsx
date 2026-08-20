@@ -10,9 +10,11 @@ import type { QuestBoardView, QuestItemView } from "@/modules/api/rest/gamificat
  * not theirs:
  *  - guests see a sign-in prompt and NO quest cards,
  *  - a signed-in board lists every seeded quest ordered by `sortOrder`,
- *  - a fully-claimed quest shows a done marker and drops its CTA,
- *  - known codes render a CTA linking to the earning surface; unknown/admin codes
- *    and the auto-complete DAILY_LOGIN render no CTA,
+ *  - a fully-claimed quest shows a done marker and drops its link entirely,
+ *  - a known, not-done code turns the WHOLE card into one link to the earning
+ *    surface (no nested link/button inside it); unknown/admin codes, the
+ *    auto-complete DAILY_LOGIN and the keep-a-streak STREAK_7_BONUS render an
+ *    INERT card — no link, no pointer cursor, no hover class,
  *  - the header echoes today's coins and the wallet balance,
  *  - the per-claim EXP reward renders beside the coin when the backend quotes
  *    one, and renders NOTHING when it does not.
@@ -52,9 +54,11 @@ vi.mock("@/hooks/swr/api/rest/queries/useGetMyWalletSwr", () => ({
     useGetMyWalletSwr: () => walletResult,
 }))
 
-// i18n Link → a plain anchor so we can read hrefs.
+// i18n Link → a plain anchor so we can read hrefs. Every prop is forwarded
+// (className, aria-label…): the card IS the link now, so the assertions read its
+// hover classes and its accessible name off the same element.
 vi.mock("@/i18n/navigation", () => ({
-    Link: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a>,
+    Link: (props: React.ComponentProps<"a">) => <a {...props} />,
 }))
 
 // Phosphor icons → inert spans (avoid pulling the icon set into the render).
@@ -183,6 +187,14 @@ afterEach(() => {
 })
 
 describe("QuestBoard", () => {
+    /**
+     * The card element wrapping a quest title. Matches the tag AGNOSTICALLY: a quest
+     * with a destination renders its card as an `<a>`, one without stays a `<div>`,
+     * and every assertion below reads the difference off this same element.
+     */
+    const cardOf = (title: string) =>
+        screen.getByText(title).closest("[class*='rounded-2xl']") as HTMLElement
+
     it("gates guests with a sign-in prompt and renders no quests", () => {
         authenticated = false
         render(<QuestBoard />)
@@ -209,29 +221,65 @@ describe("QuestBoard", () => {
         }
     })
 
-    it("shows a done marker and no CTA when a quest is fully claimed", () => {
+    it("shows a done marker and no link at all when a quest is fully claimed", () => {
         render(<QuestBoard />)
-        // COMMUNITY_COMMENT (limit 2, claimed 2) is done → its card has "done", no link
-        const card = screen.getByText("Bình luận").closest("div[class*='rounded-2xl']") as HTMLElement
+        // COMMUNITY_COMMENT (limit 2, claimed 2) is done → its card has "done", and the
+        // card itself is a plain div: nothing to press, nothing that looks pressable.
+        const card = cardOf("Bình luận")
         expect(within(card).getByText("done")).toBeTruthy()
+        expect(card.tagName).toBe("DIV")
         expect(within(card).queryByRole("link")).toBeNull()
+        expect(within(card).queryByRole("button")).toBeNull()
+        expect(card.className).not.toMatch(/hover:/)
+        expect(card.className).not.toContain("cursor-pointer")
     })
 
-    it("renders a CTA to the earning surface for a known, not-done quest", () => {
+    // The owner's ask: pressing the QUEST goes to where the quest is done — not a
+    // small pill in the corner while the title (the obvious target) does nothing.
+    it("makes the WHOLE card the link to the earning surface", () => {
         render(<QuestBoard />)
-        const card = screen.getByText("Hoàn thành bài học").closest("div[class*='rounded-2xl']") as HTMLElement
-        const link = within(card).getByRole("link")
+        const card = cardOf("Hoàn thành bài học")
+        expect(card.tagName).toBe("A")
         // Locale-less — next-intl's Link adds the prefix (see the guest-gate test).
-        expect(link.getAttribute("href")).toBe("/courses/me")
+        expect(card.getAttribute("href")).toBe("/courses/me")
+        // …and NOT a link inside a link: the pill is decorative now, so the card is
+        // exactly one tab stop.
+        expect(within(card).queryByRole("link")).toBeNull()
+        expect(within(card).queryByRole("button")).toBeNull()
+        expect(card.getAttribute("aria-label")).toBe("goDoAria(title=Hoàn thành bài học)")
     })
 
-    it("renders no CTA for unknown/admin codes and for auto-complete DAILY_LOGIN", () => {
+    it("routes each mapped code to its own surface", () => {
         render(<QuestBoard />)
-        const admin = screen.getByText("Admin quest").closest("div[class*='rounded-2xl']") as HTMLElement
-        expect(within(admin).queryByRole("link")).toBeNull()
-        const login = screen.getByText("Đăng nhập").closest("div[class*='rounded-2xl']") as HTMLElement
-        // DAILY_LOGIN is also done here (claimed 1/1) → done marker, never a CTA
-        expect(within(login).queryByRole("link")).toBeNull()
+        expect(cardOf("Đăng bài").getAttribute("href")).toBe("/community/new")
+        expect(cardOf("Thả tim").getAttribute("href")).toBe("/community")
+    })
+
+    it("renders an INERT card for unknown/admin codes and for auto-complete DAILY_LOGIN", () => {
+        render(<QuestBoard />)
+        for (const title of ["Admin quest", "Đăng nhập"]) {
+            const card = cardOf(title)
+            expect(card.tagName).toBe("DIV")
+            expect(card.getAttribute("href")).toBeNull()
+            expect(within(card).queryByRole("link")).toBeNull()
+            expect(within(card).queryByRole("button")).toBeNull()
+            expect(card.className).not.toContain("cursor-pointer")
+        }
+    })
+
+    // A streak is kept by returning tomorrow; `/profile/progress` only DISPLAYS it,
+    // so the row must not offer a trip that cannot pay the quest.
+    it("renders an INERT card for STREAK_7_BONUS", () => {
+        questsResult.data = {
+            dateVn: "2026-07-16",
+            totalCoinToday: 0,
+            quests: [q({ code: "STREAK_7_BONUS", title: "Chuỗi 7 ngày", dailyLimit: 1, sortOrder: 0 })],
+        }
+        render(<QuestBoard />)
+        const card = cardOf("Chuỗi 7 ngày")
+        expect(card.tagName).toBe("DIV")
+        expect(within(card).queryByRole("link")).toBeNull()
+        expect(card.className).not.toMatch(/hover:/)
     })
 
     it("echoes today's coins and the wallet balance in the header", () => {
@@ -246,10 +294,6 @@ describe("QuestBoard", () => {
     // The owner's report was "the quest board never shows the EXP". These pin BOTH
     // halves of the fix: the number appears when the backend quotes one, and
     // absolutely nothing appears when it does not.
-
-    /** The card element wrapping a quest title. */
-    const cardOf = (title: string) =>
-        screen.getByText(title).closest("div[class*='rounded-2xl']") as HTMLElement
 
     it("shows the per-claim EXP beside the coin reward", () => {
         render(<QuestBoard />)

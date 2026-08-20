@@ -76,23 +76,38 @@ export const questRewardXp = (quest: QuestItemView): number | null =>
 /**
  * Map a quest code to the in-app surface where the user earns it.
  *
- * Returns a LOCALE-LESS href for the codes the client knows, or `null` for codes
- * with no user action (`DAILY_LOGIN` auto-completes on sign-in) and for any
- * unmapped code (admin-created quests) — the caller renders those cards without a
- * CTA rather than failing.
+ * **This is the ONE table.** Both quest surfaces — the `/quests` board and the
+ * dashboard's compact "Nhiệm vụ hôm nay" widget — route through
+ * {@link questDestination}, which is the only caller of this function. Neither
+ * component may carry a code→route branch of its own: two copies drift the day a
+ * seventh quest is seeded, and the same row would then lead to two places.
  *
- * The href carries NO locale prefix on purpose: the only consumer renders it
+ * Returns a LOCALE-LESS href for the codes that HAVE a place to go, or `null` when
+ * there is nothing honest to link to:
+ *  - `DAILY_LOGIN` is already satisfied by being signed in and on the site, so any
+ *    destination is noise — the reader is asked to travel for a quest that is done
+ *    by not travelling.
+ *  - `STREAK_7_BONUS` is earned by coming back tomorrow and the day after, not by
+ *    opening a page. `/profile/progress` (where the streak is DISPLAYED) reads as
+ *    "do it here" and does nothing for the quest — a link that cannot pay off.
+ *  - any unmapped code (an admin-created quest the client has never heard of) —
+ *    the row degrades to plain text rather than guessing a route.
+ *
+ * The href carries NO locale prefix on purpose: the only consumers render it
  * through the locale-aware `Link` of `@/i18n/navigation`, which prepends the
  * active locale itself. Prefixing here too produced `/vi/vi/...` (a real 404).
  * See the contract docblock in `src/i18n/navigation.ts`.
  *
  * @param code - the quest `code` from the backend
- * @returns an href string without a locale prefix, or `null` when the quest has no CTA
+ * @returns an href string without a locale prefix, or `null` when the quest has nowhere to send the user
  */
 export const questCtaHref = (code: string): string | null => {
     const path = pathConfig().locale()
     switch (code as KnownQuestCode) {
     case "LESSON_COMPLETE":
+        // "Hoàn thành 1 bài học" — the lessons a learner can finish today are the
+        // ones already enrolled, so the shelf of enrolled courses is the shortest
+        // path to a lesson, not the public catalog.
         return path.course().mine().build()
     case "COMMUNITY_POST":
         // The community feature owns `/community/new` as a child route; there is
@@ -101,13 +116,45 @@ export const questCtaHref = (code: string): string | null => {
         return `${path.community().build()}/new`
     case "COMMUNITY_COMMENT":
     case "LIKE_3_POSTS":
+        // Both are done ON somebody else's post, and the feed is where those posts
+        // are. There is no "comment page" or "like page" to send anyone to.
         return path.community().build()
-    case "STREAK_7_BONUS":
-        return path.profile().progress().build()
     case "DAILY_LOGIN":
         // Auto-completes from the login event alone — nowhere to send the user.
+        return null
+    case "STREAK_7_BONUS":
+        // Earned by keeping the streak alive, not by visiting anything.
         return null
     default:
         return null
     }
 }
+
+/**
+ * The two facts a quest's destination depends on. Structural on purpose: the board
+ * passes a raw `QuestItemView` code plus its computed `isDone`, the analytics widget
+ * passes its own row view — both satisfy this shape, so both get the same answer.
+ */
+export interface QuestDestinationInput {
+    /** The backend quest `code`. */
+    code: string
+    /** Whether every claim for the day is already used (see {@link questProgress}). */
+    isDone: boolean
+}
+
+/**
+ * Where this quest row navigates, or `null` when the row must stay INERT.
+ *
+ * The single entry point both quest surfaces call — it folds the "already done
+ * today" rule into the code→route table so the two can never disagree about
+ * either half. A quest whose claims are all used has nothing left to earn today,
+ * so linking it out would nag the reader into repeating work that pays nothing;
+ * such a row renders as plain content, with no link, no pointer cursor and no
+ * hover affordance (a row that looks clickable and does nothing is worse than an
+ * inert one).
+ *
+ * @param input - {@link QuestDestinationInput}
+ * @returns a locale-less href, or `null` when the row must not be interactive
+ */
+export const questDestination = ({ code, isDone }: QuestDestinationInput): string | null =>
+    isDone ? null : questCtaHref(code)

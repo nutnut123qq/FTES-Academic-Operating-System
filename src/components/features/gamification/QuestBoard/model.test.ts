@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { QuestItemView } from "@/modules/api/rest/gamification"
-import { questCtaHref, questProgress, questRewardXp } from "./model"
+import { questCtaHref, questDestination, questProgress, questRewardXp } from "./model"
 
 /**
  * Unit — the pure quest-board helpers (`questProgress`, `questCtaHref`,
@@ -8,8 +8,10 @@ import { questCtaHref, questProgress, questRewardXp } from "./model"
  * spec pins:
  *  - the progress arithmetic (ceiling = targetCount × dailyLimit, clamped, no
  *    divide-by-zero) and the "done" state (`completedCount ≥ dailyLimit`),
- *  - the code → CTA route map, including graceful degradation for auto-complete
- *    quests (`DAILY_LOGIN`) and unknown/admin codes (→ no CTA),
+ *  - the code → route map (shared by BOTH quest surfaces via `questDestination`),
+ *    including the codes with nowhere to go — auto-complete (`DAILY_LOGIN`),
+ *    keep-a-streak (`STREAK_7_BONUS`), already-claimed-today and unknown/admin
+ *    codes all resolve to `null` so their rows render non-interactive,
  *  - the EXP reward's THREE-valued input (number / `null` / absent) collapsing to
  *    "render this number" vs "render nothing" — with `0` on the RENDER side, so
  *    `null` and `0` can never be confused for one another.
@@ -103,20 +105,13 @@ describe("questCtaHref", () => {
         expect(questCtaHref("COMMUNITY_POST")).toBe("/community/new")
         expect(questCtaHref("COMMUNITY_COMMENT")).toBe("/community")
         expect(questCtaHref("LIKE_3_POSTS")).toBe("/community")
-        expect(questCtaHref("STREAK_7_BONUS")).toBe("/profile/progress")
     })
 
     // Regression: these hrefs are rendered through the locale-aware `Link` of
     // `@/i18n/navigation`, which prepends the active locale. When the helper
     // prefixed a locale too, every CTA resolved to `/vi/vi/...` — a real 404.
     it("emits NO locale prefix, so the locale-aware Link can add exactly one", () => {
-        const codes = [
-            "LESSON_COMPLETE",
-            "COMMUNITY_POST",
-            "COMMUNITY_COMMENT",
-            "LIKE_3_POSTS",
-            "STREAK_7_BONUS",
-        ]
+        const codes = ["LESSON_COMPLETE", "COMMUNITY_POST", "COMMUNITY_COMMENT", "LIKE_3_POSTS"]
         for (const code of codes) {
             const href = questCtaHref(code)
             expect(href).not.toBeNull()
@@ -128,8 +123,54 @@ describe("questCtaHref", () => {
         expect(questCtaHref("DAILY_LOGIN")).toBeNull()
     })
 
+    // A streak is earned by coming back tomorrow, not by opening a page. The
+    // progress page only DISPLAYS the streak, so linking there advertised an
+    // action that could not pay the quest — the row is honest as plain text.
+    it("returns null for STREAK_7_BONUS — a streak is kept, not visited", () => {
+        expect(questCtaHref("STREAK_7_BONUS")).toBeNull()
+    })
+
     it("degrades gracefully to no CTA for unknown/admin codes", () => {
         expect(questCtaHref("SOME_ADMIN_QUEST")).toBeNull()
         expect(questCtaHref("")).toBeNull()
+    })
+})
+
+describe("questDestination", () => {
+    // The single entry point BOTH quest surfaces call — the `/quests` board and
+    // the dashboard's compact widget. Everything the two must agree on lives here.
+    it("hands a not-done, mapped quest its route", () => {
+        expect(questDestination({ code: "LESSON_COMPLETE", isDone: false })).toBe("/courses/me")
+        expect(questDestination({ code: "COMMUNITY_POST", isDone: false })).toBe("/community/new")
+        expect(questDestination({ code: "COMMUNITY_COMMENT", isDone: false })).toBe("/community")
+        expect(questDestination({ code: "LIKE_3_POSTS", isDone: false })).toBe("/community")
+    })
+
+    // Nothing is left to earn today, so a link would only nag the reader into
+    // repeating work that pays nothing.
+    it("withholds the route once every claim for the day is used", () => {
+        expect(questDestination({ code: "LESSON_COMPLETE", isDone: true })).toBeNull()
+        expect(questDestination({ code: "COMMUNITY_POST", isDone: true })).toBeNull()
+    })
+
+    it("stays null for the destination-less codes even when not done", () => {
+        expect(questDestination({ code: "DAILY_LOGIN", isDone: false })).toBeNull()
+        expect(questDestination({ code: "STREAK_7_BONUS", isDone: false })).toBeNull()
+        expect(questDestination({ code: "SOME_ADMIN_QUEST", isDone: false })).toBeNull()
+    })
+
+    // It reads the SAME table `questCtaHref` exposes — no second branch of its own.
+    it("agrees with the code table for every seeded code", () => {
+        const codes = [
+            "DAILY_LOGIN",
+            "LESSON_COMPLETE",
+            "COMMUNITY_COMMENT",
+            "COMMUNITY_POST",
+            "LIKE_3_POSTS",
+            "STREAK_7_BONUS",
+        ]
+        for (const code of codes) {
+            expect(questDestination({ code, isDone: false })).toBe(questCtaHref(code))
+        }
     })
 })

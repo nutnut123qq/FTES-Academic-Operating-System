@@ -60,7 +60,14 @@ export const useAppNav = (): Array<AppNavModule> => {
 
     return useMemo(() => {
         const p = pathConfig().locale()
-        const home = p.build()
+        // `/home`, KHÔNG phải `/`. Gốc locale render `<HomeLanding redirectSignedIn />`,
+        // tức người đã đăng nhập bấm Home là bị `router.replace("/dashboard")` ném đi —
+        // không bao giờ xem được trang chủ. `/home` render CÙNG landing đó nhưng không
+        // redirect; docblock của `home()` trong `resources/path` nói thẳng đây là path
+        // dùng khi "cho tôi xem trang chủ" không được phép nảy đi.
+        // Chuyển hướng ở gốc locale GIỮ NGUYÊN — vào thẳng tên miền trần thì sang
+        // dashboard vẫn là hành vi đúng; chỉ nút Home trên header là không được nảy.
+        const home = p.home().build()
 
         // active when on the route itself or under it (base + "/") — but NOT "/"
         // as a prefix (it prefixes everything), so home matches only its exact path.

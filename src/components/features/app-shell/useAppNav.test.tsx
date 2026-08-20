@@ -50,7 +50,9 @@ describe("useAppNav — Leaderboard is the 5th plain-link module", () => {
             "leaderboard",
         ])
         expect(modules.map((m) => m.path)).toEqual([
-            "/",
+            // "/home", KHÔNG phải "/": gốc locale ném người đã đăng nhập sang
+            // /dashboard, nên nút Home trỏ vào đó là không bao giờ xem được trang chủ.
+            "/home",
             "/subjects",
             "/courses",
             "/community",
@@ -129,5 +131,31 @@ describe("useAppNav — Community sáng cả ở route alias (/groups · /events
         expect(modules.find((m) => m.key === "home")?.isActive).toBe(false)
         expect(modules.find((m) => m.key === "leaderboard")?.isActive).toBe(false)
         expect(modules.filter((m) => m.isActive).map((m) => m.key)).toEqual(["community"])
+    })
+})
+
+/**
+ * Nút Home trên header. Gốc locale (`/`) render `<HomeLanding redirectSignedIn />`,
+ * tức người đã đăng nhập bấm vào là bị `router.replace("/dashboard")` ném đi và
+ * KHÔNG BAO GIỜ xem được trang chủ. `/home` render cùng landing đó nhưng không
+ * redirect. Chuyển hướng ở gốc locale là hành vi CỐ Ý cho ai vào thẳng tên miền trần
+ * — bộ ca này chỉ ghim cái nút, không đụng tới nó.
+ */
+describe("useAppNav — nút Home không được nảy sang dashboard", () => {
+    beforeEach(() => {
+        pathname.mockReturnValue("/")
+    })
+
+    it("nút Home trỏ /home chứ KHÔNG phải gốc locale (gốc ném sang /dashboard)", () => {
+        // Gốc locale render <HomeLanding redirectSignedIn /> => router.replace("/dashboard").
+        // Trỏ nút Home vào đó thì người đã đăng nhập không bao giờ xem được trang chủ.
+        expect(keyed("/home").find((m) => m.key === "home")?.path).toBe("/home")
+    })
+
+    it("Home sáng ở CẢ / lẫn /home", () => {
+        // Vào thẳng tên miền trần vẫn là "đang ở trang chủ" trong khoảnh khắc trước khi
+        // redirect kịp chạy — mất nhánh này thì header không sáng mục nào.
+        expect(keyed("/").find((m) => m.key === "home")?.isActive).toBe(true)
+        expect(keyed("/home").find((m) => m.key === "home")?.isActive).toBe(true)
     })
 })

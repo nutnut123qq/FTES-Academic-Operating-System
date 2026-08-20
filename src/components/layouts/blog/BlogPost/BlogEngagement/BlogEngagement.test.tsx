@@ -40,6 +40,7 @@ vi.mock("@/hooks/useRequireAuth", () => ({
     useRequireAuth: () => ({
         authenticated: h.authenticated,
         requireAuth: h.requireAuth,
+        requireAuthAsync: async (key?: string) => h.requireAuth(key),
         guard: (action: (...a: Array<unknown>) => void) => action,
     }),
 }))

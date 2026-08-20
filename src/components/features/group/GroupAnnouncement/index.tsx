@@ -173,7 +173,7 @@ const GroupAnnouncementCard = ({
 export const GroupAnnouncement = () => {
     const t = useTranslations("groupsHub")
     const { groupId } = useParams<{ groupId: string }>()
-    const { requireAuth } = useRequireAuth()
+    const { requireAuthAsync } = useRequireAuth()
     const runRest = useRestWithToast()
 
     const { announcements, isLoading, error, mutate } = useGroupAnnouncementRowsSwr(groupId)
@@ -189,7 +189,7 @@ export const GroupAnnouncement = () => {
 
     const onCreate = useCallback(
         async (values: AnnouncementFormValues): Promise<boolean> => {
-            if (!requireAuth("auth.context.generic")) {
+            if (!(await requireAuthAsync("auth.context.generic"))) {
                 return false
             }
             const result = await runRest(() => triggerCreate({ id: groupId, request: values }), {
@@ -202,12 +202,12 @@ export const GroupAnnouncement = () => {
             setIsComposing(false)
             return true
         },
-        [groupId, mutate, requireAuth, runRest, t, triggerCreate],
+        [groupId, mutate, requireAuthAsync, runRest, t, triggerCreate],
     )
 
     const onUpdate = useCallback(
         async (announcementId: string, values: AnnouncementFormValues): Promise<boolean> => {
-            if (!requireAuth("auth.context.generic")) {
+            if (!(await requireAuthAsync("auth.context.generic"))) {
                 return false
             }
             const result = await runRest(
@@ -220,12 +220,12 @@ export const GroupAnnouncement = () => {
             await mutate()
             return true
         },
-        [groupId, mutate, requireAuth, runRest, t, triggerUpdate],
+        [groupId, mutate, requireAuthAsync, runRest, t, triggerUpdate],
     )
 
     const onDelete = useCallback(
         async (announcementId: string): Promise<boolean> => {
-            if (!requireAuth("auth.context.generic")) {
+            if (!(await requireAuthAsync("auth.context.generic"))) {
                 return false
             }
             const previous = announcements
@@ -244,7 +244,7 @@ export const GroupAnnouncement = () => {
             await mutate()
             return true
         },
-        [announcements, groupId, mutate, requireAuth, runRest, t, triggerDelete],
+        [announcements, groupId, mutate, requireAuthAsync, runRest, t, triggerDelete],
     )
 
     return (

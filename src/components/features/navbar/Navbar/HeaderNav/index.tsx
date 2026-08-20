@@ -41,7 +41,9 @@ export const HeaderNav = ({ className }: HeaderNavProps) => {
                     data-tour={`nav-${module.key}`}
                     aria-current={module.isActive ? "page" : undefined}
                     className={cn(
-                        "rounded-full px-3 py-2 text-sm no-underline transition-colors",
+                        // hover đổi NỀN (không chỉ màu chữ) nên mục ĐANG active cũng
+                        // có phản hồi — mượn đúng idiom rail cộng đồng (NavRail).
+                        "cursor-pointer rounded-full px-3 py-2 text-sm no-underline transition-colors hover:bg-default/40",
                         module.isActive
                             ? "bg-accent/10 text-accent"
                             : "text-muted hover:text-foreground",

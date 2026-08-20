@@ -25,7 +25,7 @@ import { communityErrorMessageKey } from "./community-error-message"
  */
 export const useMutateReportContentSwr = () => {
     const t = useTranslations("communityHub")
-    const { requireAuth } = useRequireAuth()
+    const { requireAuthAsync } = useRequireAuth()
 
     return useCallback(
         async (
@@ -34,7 +34,7 @@ export const useMutateReportContentSwr = () => {
             reasonCode: ReportReasonCode,
             detail?: string,
         ): Promise<boolean> => {
-            if (!requireAuth("auth.context.generic")) {
+            if (!(await requireAuthAsync("auth.context.generic"))) {
                 return false
             }
             try {
@@ -46,6 +46,6 @@ export const useMutateReportContentSwr = () => {
             toast.success(t("engagement.reportSent"))
             return true
         },
-        [requireAuth, t],
+        [requireAuthAsync, t],
     )
 }

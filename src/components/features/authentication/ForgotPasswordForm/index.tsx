@@ -116,7 +116,11 @@ export const ForgotPasswordForm = () => {
             )}
 
             <Typography type="body-sm" color="muted" className="text-center">
-                <Link href="/" className="text-accent no-underline hover:underline">
+                {/* Sign-in is a MODAL, not a route (see `AuthenticationModal`), so the only
+                    way to actually open it from here is the `?auth=` deep link that
+                    `AuthQueryOpener` consumes — a bare "/" just dropped the user on the home
+                    page and made them hunt for the button. */}
+                <Link href="/?auth=signin" className="text-accent no-underline hover:underline">
                     {t("forgot.backToLogin")}
                 </Link>
             </Typography>

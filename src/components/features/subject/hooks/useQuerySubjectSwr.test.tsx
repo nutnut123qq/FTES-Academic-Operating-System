@@ -62,7 +62,12 @@ vi.mock("@heroui/react", () => ({
     },
 }))
 vi.mock("@/hooks/useRequireAuth", () => ({
-    useRequireAuth: () => ({ requireAuth, authenticated: true, guard: vi.fn() }),
+    useRequireAuth: () => ({
+        requireAuth,
+        requireAuthAsync: async () => requireAuth(),
+        authenticated: true,
+        guard: vi.fn(),
+    }),
 }))
 
 /** Redux stand-in: a signed-in viewer (the workspace read is auth-scoped). */

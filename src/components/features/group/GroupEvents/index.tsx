@@ -173,7 +173,7 @@ const GroupEventRowView = ({
 export const GroupEvents = () => {
     const t = useTranslations("groupsHub")
     const { groupId } = useParams<{ groupId: string }>()
-    const { requireAuth } = useRequireAuth()
+    const { requireAuthAsync } = useRequireAuth()
     const runRest = useRestWithToast()
 
     const { events, isLoading, error, mutate } = useGroupEventRowsSwr(groupId)
@@ -197,7 +197,7 @@ export const GroupEvents = () => {
 
     const onCreate = useCallback(
         async (values: EventFormValues): Promise<boolean> => {
-            if (!requireAuth("auth.context.generic")) {
+            if (!(await requireAuthAsync("auth.context.generic"))) {
                 return false
             }
             const startsAt = toIsoInstant(values.startsAtLocal)
@@ -227,12 +227,12 @@ export const GroupEvents = () => {
             setIsComposing(false)
             return true
         },
-        [groupId, mutate, requireAuth, runRest, t, triggerCreate],
+        [groupId, mutate, requireAuthAsync, runRest, t, triggerCreate],
     )
 
     const onUpdate = useCallback(
         async (eventId: string, values: EventFormValues): Promise<boolean> => {
-            if (!requireAuth("auth.context.generic")) {
+            if (!(await requireAuthAsync("auth.context.generic"))) {
                 return false
             }
             const result = await runRest(
@@ -256,12 +256,12 @@ export const GroupEvents = () => {
             await mutate()
             return true
         },
-        [groupId, mutate, requireAuth, runRest, t, triggerUpdate],
+        [groupId, mutate, requireAuthAsync, runRest, t, triggerUpdate],
     )
 
     const onDelete = useCallback(
         async (eventId: string): Promise<boolean> => {
-            if (!requireAuth("auth.context.generic")) {
+            if (!(await requireAuthAsync("auth.context.generic"))) {
                 return false
             }
             const previous = events
@@ -280,7 +280,7 @@ export const GroupEvents = () => {
             await mutate()
             return true
         },
-        [events, groupId, mutate, requireAuth, runRest, t, triggerDelete],
+        [events, groupId, mutate, requireAuthAsync, runRest, t, triggerDelete],
     )
 
     return (

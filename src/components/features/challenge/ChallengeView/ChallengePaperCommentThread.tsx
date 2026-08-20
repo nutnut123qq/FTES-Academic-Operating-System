@@ -114,7 +114,7 @@ export const ChallengePaperCommentThread = ({
     const t = useTranslations("challenge")
     const locale = useLocale()
     const viewerId = useAppSelector((state) => state.user.user?.id)
-    const { requireAuth } = useRequireAuth()
+    const { requireAuthAsync } = useRequireAuth()
 
     const [page, setPage] = useState(1)
     const commentsSwr = useQueryChallengeCommentsSwr(challengeId, page)
@@ -153,7 +153,7 @@ export const ChallengePaperCommentThread = ({
 
     const onSubmit = useCallback(
         async (body: string, parentCommentId?: string): Promise<boolean> => {
-            if (!requireAuth("auth.context.comment")) {
+            if (!(await requireAuthAsync("auth.context.comment"))) {
                 return false
             }
             try {
@@ -181,7 +181,7 @@ export const ChallengePaperCommentThread = ({
                 return false
             }
         },
-        [requireAuth, create, challengeId, page, viewerId, t],
+        [requireAuthAsync, create, challengeId, page, viewerId, t],
     )
 
     const onDelete = useCallback(

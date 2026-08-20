@@ -123,7 +123,11 @@ vi.mock("@/redux/hooks", () => ({
 }))
 
 vi.mock("@/hooks/useRequireAuth", () => ({
-    useRequireAuth: () => ({ authenticated: true, requireAuth: () => true }),
+    useRequireAuth: () => ({
+        authenticated: true,
+        requireAuth: () => true,
+        requireAuthAsync: async () => true,
+    }),
 }))
 
 const listMutate = vi.fn()

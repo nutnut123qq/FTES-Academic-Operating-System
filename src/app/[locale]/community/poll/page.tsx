@@ -1,7 +1,7 @@
 import React from "react"
-import { CommunityPoll } from "@/components/features/community/CommunityPoll"
+import { CommunityPollList } from "@/components/features/community/CommunityPoll/PollList"
 
-/** `/community/poll` — a community poll (§6). */
-const Page = () => <CommunityPoll />
+/** `/community/poll` — mọi bài bình chọn, mới nhất trước (§6). */
+const Page = () => <CommunityPollList />
 
 export default Page

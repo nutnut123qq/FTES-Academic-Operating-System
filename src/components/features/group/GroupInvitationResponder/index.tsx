@@ -42,7 +42,7 @@ export const GroupInvitationResponder = ({
     const t = useTranslations("groupsHub")
     const searchParams = useSearchParams()
     const runRest = useRestWithToast()
-    const { requireAuth } = useRequireAuth()
+    const { requireAuthAsync } = useRequireAuth()
     const { trigger, isMutating } = usePostRespondToInvitationSwr()
     const [respondedTo, setRespondedTo] = useState<string | null>(null)
 
@@ -53,7 +53,7 @@ export const GroupInvitationResponder = ({
     }
 
     const onRespond = async (action: "ACCEPT" | "DECLINE") => {
-        if (isMutating || !requireAuth("auth.context.generic")) {
+        if (isMutating || !(await requireAuthAsync("auth.context.generic"))) {
             return
         }
         const ok = await runRest(() => trigger({ id, request: { action } }), {

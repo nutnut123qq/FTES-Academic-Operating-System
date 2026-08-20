@@ -67,7 +67,10 @@ export const MascotCoachMark = ({
                 title={t("onboarding.skipConfirm.title")}
                 animated={animated}
                 actions={
-                    <div className="flex w-full items-center justify-end gap-2">
+                    // flex-wrap: hai nút này là HeroUI Button (w-fit + whitespace-nowrap) nên
+                    // không co được; thiếu wrap thì cụm ~156px tràn khỏi vùng chữ ~150px của
+                    // thẻ tour ở viewport 360px.
+                    <div className="flex w-full flex-wrap items-center justify-end gap-2">
                         <Button variant="tertiary" size="sm" onPress={onConfirmSkip}>
                             {t("onboarding.skipConfirm.confirm")}
                         </Button>
@@ -88,11 +91,19 @@ export const MascotCoachMark = ({
             title={t(step.titleKey, { name })}
             animated={animated}
             actions={
-                <div className="flex w-full items-center justify-between gap-3">
+                <div className="flex w-full flex-wrap items-center justify-between gap-3">
                     <span className="shrink-0 whitespace-nowrap text-xs font-medium tabular-nums text-muted">
                         {t("onboarding.progress", { current: index + 1, total })}
                     </span>
-                    <div className="flex items-center gap-2">
+                    {/*
+                     * flex-wrap là thứ giữ thẻ tour không tràn: mỗi Button HeroUI có
+                     * `w-fit whitespace-nowrap` nên min-content của cả cụm = TỔNG bề rộng
+                     * (~230px) > vùng chữ của thẻ (~182px desktop, ~150px ở viewport 360px).
+                     * SpotlightOverlay clamp theo bề rộng WRAPPER nên phần tràn khỏi thẻ nằm
+                     * ngoài tầm clamp và lòi ra khỏi mép phải màn hình ở bước neo avatar.
+                     * Có wrap thì min-content = nút RỘNG NHẤT (~82px) ⇒ luôn lọt.
+                     */}
+                    <div className="flex flex-wrap items-center justify-end gap-2">
                         {!isLast ? (
                             <Button variant="tertiary" size="sm" onPress={onSkip}>
                                 {t("onboarding.skip")}

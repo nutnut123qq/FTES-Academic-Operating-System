@@ -6,9 +6,11 @@ import {
     communityFeedCacheKeys,
     mutateCommunityFeeds,
     patchFeedPostInPages,
+    toCommunityPost,
     type CommunityFeedPage,
     type CommunityPost,
 } from "./useQueryCommunityFeedSwr"
+import type { FeedPost } from "@/modules/api/graphql/queries/query-community-feed"
 
 /**
  * Unit — the community-feed optimistic-patch plumbing.
@@ -139,5 +141,158 @@ describe("mutateCommunityFeeds", () => {
             return pages
         })
         expect(spy).not.toHaveBeenCalled()
+    })
+})
+
+/**
+ * Unit — the feed row never prints markdown syntax, and a body-embedded image still
+ * reaches the media grid.
+ *
+ * Ảnh chèn bằng thanh công cụ của editor đi vào THÂN BÀI dạng `![Ảnh](url)`; BE derive
+ * snippet bằng cách cắt thô thân bài (`FeedController.snippetOf`) nên cú pháp đó nằm
+ * nguyên trong snippet, còn `Post.media` (chỉ chứa attachment của `PostImagePicker`) thì
+ * rỗng. Hàng feed in snippet dưới dạng TEXT THUẦN ⇒ người đọc thấy `![Ảnh](https://…)`
+ * và không có tấm ảnh nào. Mapper là chỗ duy nhất sửa được cả hai vế, nên nó bị ghim ở đây.
+ */
+describe("toCommunityPost", () => {
+    const feedPost = (snippet: string, media: Array<FeedPost["media"][number]> = []): FeedPost => ({
+        id: "p1",
+        authorId: "a-id",
+        pinned: false,
+        kind: "DISCUSSION",
+        title: null,
+        createdAt: null,
+        author: {
+            id: "a-id",
+            username: "an",
+            displayName: "An",
+            avatarUrl: null,
+            staffRole: null,
+        },
+        snippet,
+        likeCount: 0,
+        likedByMe: false,
+        commentCount: 0,
+        media,
+    })
+
+    it("strips the embedded image out of the row text and hands it to the media grid", () => {
+        const post = toCommunityPost(
+            feedPost("Buổi học hôm nay ![Ảnh](https://document.ftes.vn/a.webp) vui lắm"),
+            "vi",
+        )
+
+        expect(post.snippet).toBe("Buổi học hôm nay vui lắm")
+        expect(post.snippet).not.toContain("![")
+        expect(post.media).toEqual([
+            { id: "https://document.ftes.vn/a.webp", mediaType: "IMAGE", storageKey: "https://document.ftes.vn/a.webp" },
+        ])
+    })
+
+    it("keeps real attachments first, body images after", () => {
+        const post = toCommunityPost(
+            feedPost("![Ảnh](https://document.ftes.vn/b.webp)", [
+                {
+                    id: "media-1",
+                    mediaType: "IMAGE",
+                    storageKey: "https://document.ftes.vn/attached.webp",
+                    mimeType: "image/webp",
+                    sortOrder: 0,
+                },
+            ]),
+            "vi",
+        )
+
+        expect(post.media.map((item) => item.storageKey)).toEqual([
+            "https://document.ftes.vn/attached.webp",
+            "https://document.ftes.vn/b.webp",
+        ])
+    })
+
+    it("maps the quoted original of a repost", () => {
+        const post = toCommunityPost(
+            {
+                ...feedPost(""),
+                quotedPost: {
+                    author: {
+                        id: "b-id",
+                        username: "binh",
+                        displayName: "Bình",
+                        avatarUrl: null,
+                        staffRole: null,
+                    },
+                    title: "Bài gốc",
+                    snippet: "nội dung gốc",
+                    available: true,
+                },
+            },
+            "vi",
+        )
+
+        expect(post.quotedPost).toEqual({
+            author: "Bình",
+            authorUsername: "binh",
+            title: "Bài gốc",
+            snippet: "nội dung gốc",
+            available: true,
+        })
+    })
+
+    // Card lồng in `snippet` bằng text thuần y hệt hàng feed, và snippet của bài GỐC do BE
+    // cắt từ thân bài nên mang đúng cú pháp markdown ấy. Lúc soạn thì sạch (composer tự dựng
+    // vật thể), nhưng sau khi lưu và F5 thì card lồng lấy từ server ⇒ lộ lại markdown thô.
+    it("cleans the quoted original's snippet the same way as the row", () => {
+        const post = toCommunityPost(
+            {
+                ...feedPost(""),
+                quotedPost: {
+                    author: { id: "b-id", username: "binh", displayName: "Bình", avatarUrl: null, staffRole: null },
+                    title: "Bài gốc",
+                    snippet: "![Ảnh](https://document.ftes.vn/a.webp) **Quan trọng** nhé",
+                    available: true,
+                },
+            },
+            "vi",
+        )
+
+        expect(post.quotedPost?.snippet).toBe("Quan trọng nhé")
+    })
+
+    it("leaves quotedPost null on an ordinary post", () => {
+        expect(toCommunityPost(feedPost("bài thường"), "vi").quotedPost).toBeNull()
+        expect(toCommunityPost({ ...feedPost(""), quotedPost: null }, "vi").quotedPost).toBeNull()
+    })
+
+    it("keeps available=false and carries no original content", () => {
+        // BE cố ý gửi toàn null kèm available=false; mapper KHÔNG được quy nó về true.
+        const post = toCommunityPost(
+            {
+                ...feedPost(""),
+                quotedPost: { author: null, title: null, snippet: null, available: false },
+            },
+            "vi",
+        )
+
+        expect(post.quotedPost?.available).toBe(false)
+        expect(post.quotedPost?.snippet).toBe("")
+        expect(post.quotedPost?.author).toBe("")
+    })
+
+    it("strips body-image markdown from the quoted snippet, like the plain row does", () => {
+        // Cùng một bài gốc hiện ở HAI chỗ trên cùng trang feed: hàng của chính nó, và card lồng
+        // trong hàng của người đăng lại. Card lồng in text thuần nên nếu không tách ảnh thì nó lộ
+        // nguyên `![Ảnh](https://…)` ngay bên dưới hàng đã in sạch.
+        const body = "Xem ảnh ![Ảnh](https://document.ftes.vn/x.webp) nhé"
+        const post = toCommunityPost(
+            {
+                ...feedPost(""),
+                quotedPost: { author: null, title: null, snippet: body, available: true },
+            },
+            "vi",
+        )
+
+        expect(post.quotedPost?.snippet).not.toContain("![")
+        expect(post.quotedPost?.snippet).not.toContain("https://document.ftes.vn/x.webp")
+        expect(post.quotedPost?.snippet).toBe(toCommunityPost(feedPost(body), "vi").snippet)
     })
 })

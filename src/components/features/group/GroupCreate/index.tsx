@@ -76,7 +76,7 @@ const uploadGroupIdentity = async (
 export const GroupCreate = () => {
     const t = useTranslations("groupsHub")
     const router = useRouter()
-    const { requireAuth } = useRequireAuth()
+    const { requireAuthAsync } = useRequireAuth()
     const runRest = useRestWithToast()
     const [name, setName] = useState("")
     const [type, setType] = useState<GroupType>("study")
@@ -89,7 +89,7 @@ export const GroupCreate = () => {
         if (name.trim() === "" || isSubmitting) {
             return
         }
-        if (!requireAuth("auth.context.generic")) {
+        if (!(await requireAuthAsync("auth.context.generic"))) {
             return
         }
         setIsSubmitting(true)
@@ -130,10 +130,20 @@ export const GroupCreate = () => {
                     placeholder={t("create.nameField")}
                     className="w-full rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none placeholder:text-muted focus:border-accent"
                 />
+                {/* `[&>option]:*` là BẮT BUỘC, không phải trang trí: Chromium vẽ popup của
+                    <select> bằng background TÍNH ĐƯỢC của chính thẻ select, mà thẻ này
+                    `bg-transparent` → popup rơi về nền TRẮNG mặc định của Blink trong khi
+                    <option> kế thừa `--foreground` (99.11% ở nhánh tối) ⇒ trắng trên trắng.
+                    Chỉ màu đặt TRỰC TIẾP lên <option> mới sống sót qua popup, nên mỗi hàng tự
+                    sơn nền đục `bg-surface` (đục ở CẢ 2 nhánh: light 100%, dark 21.03%). Cố ý
+                    KHÔNG đổi `bg-transparent` của select: ở light `--surface` (100%) sáng hơn
+                    `--background` (97.02%) nên ô field sẽ bật khỏi nền trang — đúng thứ thiết
+                    kế borderless đang tránh. Ở light, option vốn đã trắng/chữ đen nên cặp class
+                    này ra ĐÚNG màu cũ ⇒ 0 thay đổi thị giác. */}
                 <select
                     value={type}
                     onChange={(event) => setType(event.target.value as GroupType)}
-                    className="w-full rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none focus:border-accent"
+                    className="w-full rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none focus:border-accent [&>option]:bg-surface [&>option]:text-foreground"
                 >
                     {TYPES.map((option) => (
                         <option key={option} value={option}>

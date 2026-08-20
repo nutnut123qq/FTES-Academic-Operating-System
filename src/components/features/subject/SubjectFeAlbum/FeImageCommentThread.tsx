@@ -65,7 +65,7 @@ export const FeImageCommentThread = ({
     // Session card straight from the store the shell already hydrated — no extra request,
     // and the same slice `viewerId` above comes from.
     const viewer = useViewerAuthorCard()
-    const { requireAuth } = useRequireAuth()
+    const { requireAuthAsync } = useRequireAuth()
 
     const [page, setPage] = useState(1)
     const commentsSwr = useQueryFeImageCommentsSwr(resourceId, imageId, page)
@@ -105,7 +105,7 @@ export const FeImageCommentThread = ({
 
     const onSubmit = useCallback(
         async (body: string, parentCommentId?: string): Promise<boolean> => {
-            if (!requireAuth("auth.context.comment")) {
+            if (!(await requireAuthAsync("auth.context.comment"))) {
                 return false
             }
             try {
@@ -126,7 +126,7 @@ export const FeImageCommentThread = ({
                 return false
             }
         },
-        [requireAuth, create, resourceId, imageId, page, viewerId, t],
+        [requireAuthAsync, create, resourceId, imageId, page, viewerId, t],
     )
 
     const onDelete = useCallback(

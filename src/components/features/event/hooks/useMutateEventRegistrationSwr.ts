@@ -32,7 +32,7 @@ export type EventRegistrationResult = "ok" | "unauthenticated" | "failed"
  * @returns `{ submit, isPending }` — `submit(eventId, action)` trả {@link EventRegistrationResult}.
  */
 export const useMutateEventRegistrationSwr = () => {
-    const { requireAuth } = useRequireAuth()
+    const { requireAuthAsync } = useRequireAuth()
     const { mutate } = useSWRConfig()
     const [isPending, setPending] = useState(false)
 
@@ -41,7 +41,7 @@ export const useMutateEventRegistrationSwr = () => {
             eventId: string,
             action: "register" | "cancel",
         ): Promise<EventRegistrationResult> => {
-            if (!requireAuth("auth.context.eventRegister")) {
+            if (!(await requireAuthAsync("auth.context.eventRegister"))) {
                 return "unauthenticated"
             }
             setPending(true)
@@ -59,7 +59,7 @@ export const useMutateEventRegistrationSwr = () => {
                 setPending(false)
             }
         },
-        [requireAuth, mutate],
+        [requireAuthAsync, mutate],
     )
 
     return { submit, isPending }

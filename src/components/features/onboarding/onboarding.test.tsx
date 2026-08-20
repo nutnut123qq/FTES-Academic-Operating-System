@@ -141,6 +141,27 @@ describe("MascotCoachMark", () => {
         ).toBeTruthy()
     })
 
+    // Regression #2-tour-overflow-right: HeroUI Button bakes `w-fit whitespace-nowrap`, so a
+    // nav row without `flex-wrap` has a min-content width equal to the SUM of its buttons
+    // (~230px) — wider than the ~150-182px of copy space inside the tour card. The overflow
+    // draws outside the wrapper, and SpotlightOverlay clamps by the WRAPPER's rect, so the last
+    // button ends up past the right edge of the viewport. jsdom reports every rect as 0 so the
+    // geometry itself can't be asserted here; pinning `flex-wrap` on the rows is what's testable.
+    it("lets the button rows wrap so they never overflow the narrow card", () => {
+        const { getByText } = render(<MascotCoachMark {...baseProps} index={2} />)
+        const navRow = getByText("onboarding.next").parentElement
+        expect(navRow?.className).toContain("flex-wrap")
+        // the progress + nav row above it must wrap too, or the nav is squeezed instead
+        expect(navRow?.parentElement?.className).toContain("flex-wrap")
+
+        const { getByText: getConfirm } = render(
+            <MascotCoachMark {...baseProps} index={2} confirmingSkip />,
+        )
+        expect(getConfirm("onboarding.skipConfirm.cancel").parentElement?.className).toContain(
+            "flex-wrap",
+        )
+    })
+
     it("swaps in the skip-confirm prompt and wires confirm + cancel", () => {
         const onConfirmSkip = vi.fn()
         const onCancelSkip = vi.fn()

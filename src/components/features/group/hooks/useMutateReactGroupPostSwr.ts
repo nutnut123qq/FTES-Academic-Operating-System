@@ -18,11 +18,11 @@ import { matchesGroupFeedKey, type GroupPost } from "./useQueryGroupFeedSwr"
  */
 export const useMutateReactGroupPostSwr = (groupId: string) => {
     const { mutate } = useSWRConfig()
-    const { requireAuth } = useRequireAuth()
+    const { requireAuthAsync } = useRequireAuth()
 
     return useCallback(
         async (postId: string) => {
-            if (!requireAuth("auth.context.like")) {
+            if (!(await requireAuthAsync("auth.context.like"))) {
                 return
             }
 
@@ -71,6 +71,6 @@ export const useMutateReactGroupPostSwr = (groupId: string) => {
                 )
             }
         },
-        [groupId, mutate, requireAuth],
+        [groupId, mutate, requireAuthAsync],
     )
 }

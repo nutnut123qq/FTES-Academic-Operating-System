@@ -111,7 +111,7 @@ export const ResourceRating = () => {
     const locale = useLocale()
     const { resourceId } = useParams<{ resourceId: string }>()
     const viewerId = useAppSelector((state) => state.user.user?.id)
-    const { requireAuth } = useRequireAuth()
+    const { requireAuth, requireAuthAsync } = useRequireAuth()
 
     const [page, setPage] = useState(1)
     const ratingsSwr = useQueryReviewsSwr(resourceId, { page, size: REVIEWS_PAGE_SIZE })
@@ -158,8 +158,10 @@ export const ResourceRating = () => {
         if (stars === 0 || rate.isMutating) {
             return
         }
-        // Guests: open the auth modal instead of firing a write that would 401.
-        if (!requireAuth("auth.context.rate")) {
+        // Guests: open the auth modal instead of firing a write that would 401. Chờ phiên
+        // ngã ngũ trước khi kết luận — `requireAuth` đồng bộ sẽ coi người ĐANG đăng nhập là
+        // khách trong cửa sổ hydration và vứt luôn lượt đánh giá.
+        if (!(await requireAuthAsync("auth.context.rate"))) {
             return
         }
 

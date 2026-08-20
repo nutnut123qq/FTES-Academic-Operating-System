@@ -32,7 +32,7 @@ vi.mock("@/i18n/navigation", () => ({
 }))
 
 vi.mock("@/hooks/useRequireAuth", () => ({
-    useRequireAuth: () => ({ requireAuth: () => true }),
+    useRequireAuth: () => ({ requireAuth: () => true, requireAuthAsync: async () => true }),
 }))
 
 vi.mock("swr", () => ({

@@ -7,6 +7,7 @@ import { useParams } from "next/navigation"
 import { InfoIcon } from "@phosphor-icons/react"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { PageHeader } from "@/components/blocks/layout/PageHeader"
+import { BackLink } from "@/components/blocks/navigation/BackLink"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { Link } from "@/i18n/navigation"
 import { pathConfig } from "@/resources/path"
@@ -49,7 +50,15 @@ export const Leaderboard = () => {
 
     return (
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-10">
-            <PageHeader title={t("leaderboard.title")} description={t("leaderboard.subtitle")} />
+            {/* Rail công cụ bị TẮT ở đúng route này (learn/layout.tsx: `navRail` chỉ dựng cho
+                content-dashboard + lesson-reader), mà rail lại là lối duy nhất trong trang trỏ
+                ngược về khoá — nên bảng xếp hạng thành ngõ cụt. BackLink lùi theo lịch sử thật;
+                deep-link/tab mới thì về trang "Học phần" của chính khoá này. Bọc chung một cụm
+                gap-4 với tiêu đề: gap-10 của trang tách nó ra quá xa, trông như mồ côi. */}
+            <div className="flex flex-col gap-4">
+                <BackLink fallbackHref={pathConfig().locale().course(courseId).learn().content().build()} />
+                <PageHeader title={t("leaderboard.title")} description={t("leaderboard.subtitle")} />
+            </div>
 
             {/* ★ KHÔNG gắn dải "kỳ" ở đây. Trang này chạy bằng GraphQL `courseLeaderboard`
                 và ĐANG HOẠT ĐỘNG; backend không có endpoint công khai nào trả kỳ đang chạy,

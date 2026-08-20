@@ -3,7 +3,7 @@
 import { ArrowLeftIcon } from "@phosphor-icons/react"
 import React, { useCallback } from "react"
 import { Button, cn } from "@heroui/react"
-import { useRouter } from "next/navigation"
+import { useRouter } from "@/i18n/navigation"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 
 /**

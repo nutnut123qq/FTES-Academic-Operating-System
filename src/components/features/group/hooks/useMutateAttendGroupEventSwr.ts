@@ -21,12 +21,12 @@ import { matchesGroupEventsKey, type GroupEvent } from "./useQueryGroupEventsSwr
  */
 export const useMutateAttendGroupEventSwr = (groupId: string) => {
     const { mutate } = useSWRConfig()
-    const { requireAuth } = useRequireAuth()
+    const { requireAuthAsync } = useRequireAuth()
     const runRest = useRestWithToast()
 
     return useCallback(
         async (eventId: string) => {
-            if (!requireAuth("auth.context.generic")) {
+            if (!(await requireAuthAsync("auth.context.generic"))) {
                 return
             }
 
@@ -82,6 +82,6 @@ export const useMutateAttendGroupEventSwr = (groupId: string) => {
                 { revalidate: false },
             )
         },
-        [groupId, mutate, requireAuth, runRest],
+        [groupId, mutate, requireAuthAsync, runRest],
     )
 }

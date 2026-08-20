@@ -10,11 +10,12 @@ import {
 import { formatRelativeTime } from "@/components/features/community/hooks/relativeTime"
 import {
     COMMUNITY_FEED_TAG,
+    toBodyImageItems,
     toMediaItems,
     type CommunityFeedPage,
     type CommunityPost,
 } from "@/components/features/community/hooks/useQueryCommunityFeedSwr"
-import { unwrapAutolinks } from "@/components/features/community/CommunityPostDetail/postLinks"
+import { splitBodyImages, unwrapAutolinks } from "@/components/features/community/CommunityPostDetail/postLinks"
 import type { PostMediaItem } from "@/components/blocks/feed/PostMediaGrid"
 
 /** Feed filter scope. */
@@ -98,26 +99,32 @@ export type SubjectFeedPageKey = readonly [string, string, string, FeedScope]
  * optional-chained; `avatarUrl` is carried through as `authorAvatar` instead of being dropped —
  * dropping it is what pushed the card onto a generated face. `snippet` goes through
  * {@link unwrapAutolinks} for the same reason the community mapper does it: the card prints the
- * excerpt as plain text, so a CommonMark autolink would leak its `<>` onto the screen.
+ * excerpt as plain text, so a CommonMark autolink would leak its `<>` onto the screen. It then
+ * goes through {@link splitBodyImages} for exactly the same reason — the row is the SAME
+ * component, so an image typed into the body with the editor toolbar would print its raw
+ * `![Ảnh](https://…)` here too, with no thumbnail; the extracted urls join `media`.
  */
-const toSubjectFeedPost = (post: SubjectCommunityPost, locale: string): CommunityPost => ({
-    id: post.id,
-    author: post.author?.displayName ?? post.author?.username ?? "",
-    // Chỉ nhận username THẬT — rơi về id sẽ dựng link /u/<uuid> chết. Xem cùng lý do ở
-    // useQueryCommunityFeedSwr.
-    authorUsername: post.author?.username ?? "",
-    authorAvatar: post.author?.avatarUrl ?? null,
-    authorStaffRole: post.author?.staffRole ?? null,
-    authorId: post.authorId ?? post.author?.id ?? null,
-    pinned: post.pinned ?? false,
-    timeLabel: formatRelativeTime(post.createdAt, locale),
-    title: post.title ?? "",
-    snippet: unwrapAutolinks(post.snippet ?? post.body ?? ""),
-    likes: post.likeCount,
-    liked: post.likedByMe,
-    comments: post.commentCount,
-    media: toMediaItems(post.media),
-})
+const toSubjectFeedPost = (post: SubjectCommunityPost, locale: string): CommunityPost => {
+    const { text, images } = splitBodyImages(unwrapAutolinks(post.snippet ?? post.body ?? ""))
+    return {
+        id: post.id,
+        author: post.author?.displayName ?? post.author?.username ?? "",
+        // Chỉ nhận username THẬT — rơi về id sẽ dựng link /u/<uuid> chết. Xem cùng lý do ở
+        // useQueryCommunityFeedSwr.
+        authorUsername: post.author?.username ?? "",
+        authorAvatar: post.author?.avatarUrl ?? null,
+        authorStaffRole: post.author?.staffRole ?? null,
+        authorId: post.authorId ?? post.author?.id ?? null,
+        pinned: post.pinned ?? false,
+        timeLabel: formatRelativeTime(post.createdAt, locale),
+        title: post.title ?? "",
+        snippet: text,
+        likes: post.likeCount,
+        liked: post.likedByMe,
+        comments: post.commentCount,
+        media: [...toMediaItems(post.media), ...toBodyImageItems(images)],
+    }
+}
 
 /**
  * Loads a subject's discussion feed from the real BE GraphQL

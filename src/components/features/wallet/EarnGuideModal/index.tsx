@@ -3,7 +3,7 @@
 import React from "react"
 import { Button, Modal, Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
-import { useRouter } from "next/navigation"
+import { useRouter } from "@/i18n/navigation"
 import {
     ArrowRightIcon,
     CoinsIcon,

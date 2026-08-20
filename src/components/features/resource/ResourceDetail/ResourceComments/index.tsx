@@ -6,7 +6,7 @@ import { HeartIcon, TrashIcon } from "@phosphor-icons/react"
 import { useLocale, useTranslations } from "next-intl"
 import { useParams } from "next/navigation"
 
-import { useAppSelector } from "@/redux/hooks"
+import { useAppSelector, useAppStore } from "@/redux/hooks"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
 import {
     useViewerAuthorCard,
@@ -190,7 +190,9 @@ export const ResourceComments = () => {
     // Same session the composer above already renders the reader's face from — so their own
     // comment wears the same photo as the box they typed it in, with no extra request.
     const viewerCard = useViewerAuthorCard()
-    const { requireAuth: requireAuthBase } = useRequireAuth()
+    const { requireAuth: requireAuthBase, requireAuthAsync: requireAuthAsyncBase } =
+        useRequireAuth()
+    const store = useAppStore()
 
     const [page, setPage] = useState(1)
     const [replyingTo, setReplyingTo] = useState<string | null>(null)
@@ -207,14 +209,31 @@ export const ResourceComments = () => {
     const total = data?.total ?? 0
     const pageCount = Math.max(1, Math.ceil(total / COMMENTS_PAGE_SIZE))
 
+    /**
+     * Chốt ĐỒNG BỘ — chỉ dùng cho `onBeforeExpand`, nơi composer cần một boolean ngay và
+     * không await được. Trong cửa sổ hydration nó vẫn kết luận "khách", nhưng hậu quả ở
+     * đây chỉ là composer không bung ra chứ không phải một lượt gửi bị vứt.
+     */
     const requireAuth = useCallback(
         () => requireAuthBase("auth.context.comment") && Boolean(viewer),
         [requireAuthBase, viewer],
     )
 
+    /**
+     * Chốt CÓ CHỜ — dùng cho mọi thao tác ghi. Đọc lại `state.user.user` từ store sau khi
+     * chờ chứ không đọc `viewer` của closure: closure chụp ở thời điểm BẤM, lúc đó phiên
+     * chưa ngã ngũ nên `viewer` còn `undefined` và chốt sẽ hỏng ngay cả khi đã đăng nhập.
+     */
+    const requireAuthComment = useCallback(async () => {
+        if (!(await requireAuthAsyncBase("auth.context.comment"))) {
+            return false
+        }
+        return Boolean(store.getState().user.user)
+    }, [requireAuthAsyncBase, store])
+
     const submitComment = useCallback(
         async (content: string, parentId?: string): Promise<boolean> => {
-            if (!requireAuth()) {
+            if (!(await requireAuthComment())) {
                 return false
             }
             try {
@@ -239,7 +258,7 @@ export const ResourceComments = () => {
                 return false
             }
         },
-        [requireAuth, create, resourceId, page, viewerId, t],
+        [requireAuthComment, create, resourceId, page, viewerId, t],
     )
 
     const onDelete = useCallback(
@@ -256,7 +275,7 @@ export const ResourceComments = () => {
     const onToggleLike = useCallback(
         async (comment: ResourceCommentView) => {
             // Guests: open the auth modal instead of firing a write that would 401.
-            if (!requireAuthBase("auth.context.like")) {
+            if (!(await requireAuthAsyncBase("auth.context.like"))) {
                 return
             }
             setLikingId(comment.id)
@@ -273,17 +292,17 @@ export const ResourceComments = () => {
                 setLikingId(null)
             }
         },
-        [requireAuthBase, like, resourceId, page, t],
+        [requireAuthAsyncBase, like, resourceId, page, t],
     )
 
     const onRequestReply = useCallback(
-        (commentId: string) => {
-            if (!requireAuth()) {
+        async (commentId: string) => {
+            if (!(await requireAuthComment())) {
                 return
             }
             setReplyingTo(commentId)
         },
-        [requireAuth],
+        [requireAuthComment],
     )
 
     return (

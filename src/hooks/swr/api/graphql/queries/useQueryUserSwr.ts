@@ -1,9 +1,10 @@
-import { useCallback } from "react"
+import { useCallback, useEffect } from "react"
 import useSWR, { useSWRConfig } from "swr"
 import { queryMe } from "@/modules/api/graphql/queries/query-me"
 import { getSelfProfile } from "@/modules/api/rest/profile"
+import { authReady, markAuthReady } from "@/modules/auth/auth-ready"
 import { useAppDispatch, useAppSelector } from "@/redux/hooks"
-import { setAuthenticated } from "@/redux/slices/keycloak"
+import { setAuthenticated, setInitialized } from "@/redux/slices/keycloak"
 import { setUser, setViewerAccess } from "@/redux/slices/user"
 import { hydrateAppearanceFromServer } from "@/hooks/zustand/appearance/store"
 import { LocalStorage } from "@/modules/storage/local/storage"
@@ -106,6 +107,11 @@ export const useRevalidateViewerSwr = () => {
 /**
  * App-shell current-user query. Fetches the real BE `me: Viewer`, merges the rich
  * REST self-profile, and hydrates redux (`user`, `authenticated`, RBAC access).
+ *
+ * Đây cũng là nơi DUY NHẤT chốt "phiên đã ngã ngũ": redux không persist nên
+ * `keycloak.authenticated` là `false` với tất cả mọi người cho tới khi fetcher này
+ * chạy xong. Mọi đường ra đều phải chốt, kể cả nhánh khách và nhánh lỗi — xem
+ * `@/modules/auth/auth-ready`.
  */
 export const useQueryUserSwr = () => {
     const dispatch = useAppDispatch()
@@ -114,47 +120,74 @@ export const useQueryUserSwr = () => {
     const swr = useSWR(
         queryUserSwrKey(authenticated),
         async () => {
-            if (
-                !LocalStorage.getItemAsString(
-                    LocalStorageId.KeycloakAccessToken
-                )) {
-                return
-            }
-            /** Real BE viewer (no envelope; the resolver returns `Viewer` directly). */
-            const result = await queryMe({ debug: true })
-            const viewer = result?.data?.me
-            if (!viewer || !viewer.user) {
-                throw new Error("User not found")
-            }
-            /** Rich profile fields — best-effort; failure must not break the shell. */
-            let profile: SelfProfile | null = null
-            try {
-                profile = await getSelfProfile()
-            } catch {
-                profile = null
-            }
             /**
-             * Appearance follows the ACCOUNT, not the machine: whatever accent /
-             * background effect this user picked elsewhere is applied here (and
-             * written back to localStorage, so the pre-paint script has it on the
-             * next load). Guests never get here, so they stay localStorage-only.
-             * Best-effort like the merge above — a look is not worth failing the
-             * shell over.
+             * `finally` là construct DUY NHẤT phủ hết ba đường ra: `return` sớm khi
+             * không có token (khách), `throw` khi `me` không trả về user, và mọi lỗi
+             * mạng của `queryMe`. Thiếu bất kỳ đường nào thì cơ chế chờ trong
+             * `useRequireAuth` phải sống nhờ net timeout — tức là CTA đứng im vài giây.
+             * `dispatch` của redux là đồng bộ, nên `setAuthenticated(true)` ở dưới chắc
+             * chắn đã vào store TRƯỚC khi ai đó đang chờ đọc lại state.
              */
-            void hydrateAppearanceFromServer(profile).catch(() => undefined)
-            /** Set the user + auth + RBAC access. */
-            dispatch(setAuthenticated(true))
-            dispatch(setUser(buildUserEntity(viewer, profile)))
-            dispatch(
-                setViewerAccess({
-                    permissions: viewer.permissions ?? [],
-                    scopedGrants: viewer.scopedGrants ?? [],
-                }),
-            )
-            /** Return the viewer. */
-            return viewer
+            try {
+                if (
+                    !LocalStorage.getItemAsString(
+                        LocalStorageId.KeycloakAccessToken
+                    )) {
+                    return
+                }
+                /** Real BE viewer (no envelope; the resolver returns `Viewer` directly). */
+                const result = await queryMe({ debug: true })
+                const viewer = result?.data?.me
+                if (!viewer || !viewer.user) {
+                    throw new Error("User not found")
+                }
+                /** Rich profile fields — best-effort; failure must not break the shell. */
+                let profile: SelfProfile | null = null
+                try {
+                    profile = await getSelfProfile()
+                } catch {
+                    profile = null
+                }
+                /**
+                 * Appearance follows the ACCOUNT, not the machine: whatever accent /
+                 * background effect this user picked elsewhere is applied here (and
+                 * written back to localStorage, so the pre-paint script has it on the
+                 * next load). Guests never get here, so they stay localStorage-only.
+                 * Best-effort like the merge above — a look is not worth failing the
+                 * shell over.
+                 */
+                void hydrateAppearanceFromServer(profile).catch(() => undefined)
+                /** Set the user + auth + RBAC access. */
+                dispatch(setAuthenticated(true))
+                dispatch(setUser(buildUserEntity(viewer, profile)))
+                dispatch(
+                    setViewerAccess({
+                        permissions: viewer.permissions ?? [],
+                        scopedGrants: viewer.scopedGrants ?? [],
+                    }),
+                )
+                /** Return the viewer. */
+                return viewer
+            } finally {
+                markAuthReady()
+            }
         }
     )
+
+    /**
+     * `keycloak.initialized` = "phiên đã ngã ngũ", bật ở CẢ nhánh có user LẪN nhánh
+     * khách/lỗi. Treo vào `authReady()` chứ không dispatch thẳng trong fetcher vì net
+     * timeout cũng phải bật được cờ này: nếu backend không bao giờ trả lời, fetcher
+     * không có đường ra nào, và một cờ `initialized` kẹt `false` khiến các chỗ đọc nó
+     * (`AccountMenuDropdown`, `HomeLanding`) skeleton vĩnh viễn.
+     */
+    useEffect(
+        () => {
+            void authReady().then(() => dispatch(setInitialized(true)))
+        },
+        [dispatch],
+    )
+
     /** Return the SWR. */
     return swr
 }

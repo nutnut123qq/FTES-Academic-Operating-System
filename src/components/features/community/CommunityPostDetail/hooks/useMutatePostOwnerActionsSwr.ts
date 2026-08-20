@@ -48,12 +48,12 @@ export interface RemovePostOptions {
 export const useMutatePostOwnerActionsSwr = () => {
     const t = useTranslations("communityHub")
     const { mutate, cache } = useSWRConfig()
-    const { requireAuth } = useRequireAuth()
+    const { requireAuthAsync } = useRequireAuth()
     const router = useRouter()
 
     const editPost = useCallback(
         async (postId: string, input: EditPostInput): Promise<boolean> => {
-            if (!requireAuth("auth.context.generic")) {
+            if (!(await requireAuthAsync("auth.context.generic"))) {
                 return false
             }
 
@@ -95,12 +95,12 @@ export const useMutatePostOwnerActionsSwr = () => {
             await mutate(postDetailKey(postId)).catch(() => {})
             return true
         },
-        [mutate, requireAuth, t],
+        [mutate, requireAuthAsync, t],
     )
 
     const removePost = useCallback(
         async (postId: string, options: RemovePostOptions = {}): Promise<boolean> => {
-            if (!requireAuth("auth.context.generic")) {
+            if (!(await requireAuthAsync("auth.context.generic"))) {
                 return false
             }
 
@@ -125,7 +125,7 @@ export const useMutatePostOwnerActionsSwr = () => {
             }
             return true
         },
-        [cache, mutate, requireAuth, router, t],
+        [cache, mutate, requireAuthAsync, router, t],
     )
 
     return { editPost, removePost }

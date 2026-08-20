@@ -73,12 +73,12 @@ export interface SubmitCommentInput {
 export const useMutateCreatePostCommentSwr = () => {
     const t = useTranslations("communityHub")
     const { mutate, cache } = useSWRConfig()
-    const { requireAuth } = useRequireAuth()
+    const { requireAuthAsync } = useRequireAuth()
     const viewer = useViewerAuthorCard()
 
     return useCallback(
         async (input: SubmitCommentInput): Promise<boolean> => {
-            if (!requireAuth("auth.context.comment")) {
+            if (!(await requireAuthAsync("auth.context.comment"))) {
                 return false
             }
 
@@ -142,6 +142,6 @@ export const useMutateCreatePostCommentSwr = () => {
             await mutate(postDetailKey(input.postId)).catch(() => {})
             return true
         },
-        [mutate, cache, requireAuth, viewer, t],
+        [mutate, cache, requireAuthAsync, viewer, t],
     )
 }

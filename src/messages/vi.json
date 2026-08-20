@@ -7145,11 +7145,12 @@
             "shareFacebook": "Chia sẻ lên Facebook",
             "shareX": "Chia sẻ lên X",
             "shareZalo": "Chia sẻ qua Zalo",
+            "shareZaloCopied": "Zalo chưa cho chia sẻ trực tiếp từ web — đã sao chép liên kết, bạn dán vào Zalo nhé.",
             "reply": "Trả lời",
             "replyingTo": "Đang trả lời {name}",
             "cancelReply": "Huỷ",
             "commentPlaceholder": "Viết bình luận…",
-            "replyPlaceholder": "Viết câu trả lời…",
+            "replyPlaceholder": "Viết trả lời…",
             "commentSend": "Gửi",
             "commentFailed": "Không gửi được bình luận",
             "likeFailed": "Không cập nhật được lượt thích",
@@ -7267,7 +7268,8 @@
             "guestHint": "Bảng tin cộng đồng hiển thị theo người dùng, hãy đăng nhập để xem bài viết phù hợp với bạn.",
             "guestCta": "Đăng nhập",
             "heading": "Bảng tin",
-            "closePost": "Đóng bài viết"
+            "closePost": "Đóng bài viết",
+            "quoteUnavailable": "Bài viết không còn khả dụng."
         },
         "search": {
             "placeholder": "Tìm bài viết theo tiêu đề, nội dung…",
@@ -7303,9 +7305,9 @@
             "kinds": {
                 "knowledge": "Kiến thức",
                 "question": "Câu hỏi",
-                "showcase": "Khoe dự án",
+                "showcase": "Dự án",
                 "resource": "Chia sẻ tài nguyên",
-                "poll": "Khảo sát"
+                "poll": "Bình chọn"
             },
             "addImage": "Thêm ảnh",
             "imageAlt": "Ảnh đính kèm bài viết",
@@ -7321,12 +7323,13 @@
             "pollOptionPlaceholder": "Phương án {index}",
             "pollAddOption": "Thêm phương án",
             "pollRemoveOption": "Xoá phương án",
-            "pollHint": "Khảo sát cần có câu hỏi (dòng đầu tiên) và ít nhất 2 phương án."
+            "pollHint": "Bình chọn cần có câu hỏi (dòng đầu tiên) và ít nhất 2 phương án."
         },
         "poll": {
+            "title": "Bình chọn",
             "totalVotes": "{count} lượt bình chọn",
             "error": "Không tải được bình chọn. Vui lòng thử lại.",
-            "empty": "Chưa có bình chọn nào trong bảng tin của bạn.",
+            "empty": "Chưa có bình chọn nào.",
             "voteFailed": "Không gửi được bình chọn. Vui lòng thử lại.",
             "closed": "Bình chọn đã đóng"
         },
@@ -8600,7 +8603,8 @@
         "heading2": "Đề mục",
         "heading3": "Đề mục phụ",
         "image": "Chèn ảnh",
-        "imageAlt": "Ảnh"
+        "imageAlt": "Ảnh",
+        "uploadFailed": "Không tải được ảnh lên. Vui lòng thử lại."
     },
     "verifiedBadge": {
         "role": {

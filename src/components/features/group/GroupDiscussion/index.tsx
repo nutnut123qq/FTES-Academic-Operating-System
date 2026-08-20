@@ -111,7 +111,7 @@ const GroupDiscussionRow = ({ groupId, thread }: { groupId: string; thread: Grou
 const GroupThreadComposer = ({ groupId }: { groupId: string }) => {
     const t = useTranslations("groupsHub")
     const { create } = useMutateCreateGroupThreadSwr(groupId)
-    const { requireAuth } = useRequireAuth()
+    const { requireAuthAsync } = useRequireAuth()
     const runRest = useRestWithToast()
     const [open, setOpen] = useState(false)
     const [title, setTitle] = useState("")
@@ -122,7 +122,7 @@ const GroupThreadComposer = ({ groupId }: { groupId: string }) => {
         if (title.trim() === "" || content.trim() === "" || isSubmitting) {
             return
         }
-        if (!requireAuth("auth.context.generic")) {
+        if (!(await requireAuthAsync("auth.context.generic"))) {
             return
         }
         setIsSubmitting(true)

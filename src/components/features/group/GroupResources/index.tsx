@@ -215,7 +215,7 @@ const GroupResourceLinkForm = ({ onLink }: GroupResourceLinkFormProps) => {
 export const GroupResources = () => {
     const t = useTranslations("groupsHub")
     const { groupId } = useParams<{ groupId: string }>()
-    const { requireAuth } = useRequireAuth()
+    const { requireAuthAsync } = useRequireAuth()
     const runRest = useRestWithToast()
 
     const { data, isLoading, error, mutate } = useGetGroupResourcesSwr(groupId)
@@ -237,7 +237,7 @@ export const GroupResources = () => {
 
     const onLink = useCallback(
         async (resourceId: string, note: string): Promise<boolean> => {
-            if (!requireAuth("auth.context.generic")) {
+            if (!(await requireAuthAsync("auth.context.generic"))) {
                 return false
             }
             const result = await runRest(
@@ -255,12 +255,12 @@ export const GroupResources = () => {
             await mutate()
             return true
         },
-        [groupId, mutate, requireAuth, runRest, t, triggerLink],
+        [groupId, mutate, requireAuthAsync, runRest, t, triggerLink],
     )
 
     const onUnlink = useCallback(
         async (resourceId: string): Promise<boolean> => {
-            if (!requireAuth("auth.context.generic")) {
+            if (!(await requireAuthAsync("auth.context.generic"))) {
                 return false
             }
             const previous = links
@@ -279,7 +279,7 @@ export const GroupResources = () => {
             await mutate()
             return true
         },
-        [groupId, links, mutate, requireAuth, runRest, t, triggerUnlink],
+        [groupId, links, mutate, requireAuthAsync, runRest, t, triggerUnlink],
     )
 
     return (

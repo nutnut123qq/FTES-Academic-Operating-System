@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useCallback, useEffect, useRef } from "react"
-import { Button, cn } from "@heroui/react"
+import { Button, cn, toast } from "@heroui/react"
 import { useTranslations } from "next-intl"
 import { useEditor, EditorContent } from "@tiptap/react"
 import {
@@ -43,13 +43,24 @@ export interface RichTextEditorProps extends WithClassNames<undefined> {
     /**
      * `"comment"` — inline formatting only (bold/italic/underline/strike/link/
      * lists/quote/code). `"full"` — adds H1/H2/H3 headings (H1 is the post-title
-     * affordance) and an image button. Defaults to `"comment"`.
+     * affordance). Defaults to `"comment"`.
      */
     toolbar?: RichTextToolbar
     /**
+     * Show the toolbar's image button. Defaults to `toolbar === "full"`.
+     *
+     * Pass `false` in a composer that ALREADY has a `PostImagePicker`: the two are
+     * different mechanisms with different storage (the toolbar inlines
+     * `![alt](url)` into the Markdown body, the picker fills the post's `media[]`),
+     * and sitting side by side they read as two half-working ways to do one thing.
+     * The default deliberately stays tied to `"full"` so the three composers that
+     * have no picker keep their only image affordance.
+     */
+    imageButton?: boolean
+    /**
      * Uploads a picked image and resolves its URL (inserted as `![alt](url)`).
      * Defaults to {@link uploadCommunityMedia} → the community media endpoint.
-     * Only used by the `"full"` toolbar.
+     * Only used while the image button is shown.
      */
     onUploadImage?: (file: File) => Promise<string>
     /** Focus the editor on mount. */
@@ -83,6 +94,7 @@ export const RichTextEditor = ({
     placeholder,
     minHeight,
     toolbar = "comment",
+    imageButton,
     onUploadImage,
     autoFocus,
     disabled,
@@ -91,6 +103,7 @@ export const RichTextEditor = ({
 }: RichTextEditorProps) => {
     const t = useTranslations("richEditor")
     const isFull = toolbar === "full"
+    const showImageButton = imageButton ?? isFull
     const resolvedMinHeight = minHeight ?? (isFull ? 160 : 36)
 
     // Always call the LATEST onChange from the (creation-time) onUpdate closure.
@@ -161,10 +174,12 @@ export const RichTextEditor = ({
                 const url = await upload(file)
                 editor.chain().focus().setImage({ src: url, alt: t("imageAlt") }).run()
             } catch {
-                // Presentational: surface upload failures through the console; the
-                // parent can wrap `onUploadImage` to toast if it wants to.
-                // eslint-disable-next-line no-console
-                console.error("RichTextEditor: image upload failed")
+                // One failed upload, one way of saying so: the "Add image" button next to
+                // this toolbar (`PostImagePicker`) toasts on the very same failure, so a
+                // console-only log here meant picking a file simply did nothing visible.
+                // The string lives in this component's OWN `richEditor` namespace so no
+                // caller has to hand it a community/group/blog namespace to report this.
+                toast.danger(t("uploadFailed"))
             }
         },
         [editor, upload, t],
@@ -301,7 +316,7 @@ export const RichTextEditor = ({
                     () => editor.chain().focus().toggleCodeBlock().run(),
                     editor.isActive("codeBlock"),
                 )}
-                {isFull
+                {showImageButton
                     ? (
                         <>
                             <span className="mx-1 h-5 w-px bg-default" aria-hidden />

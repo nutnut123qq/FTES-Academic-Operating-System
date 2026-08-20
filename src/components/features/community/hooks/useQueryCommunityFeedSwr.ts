@@ -9,10 +9,12 @@ import {
     queryCommunityFeed,
     type FeedAuthorAchievement,
     type FeedPost,
+    type FeedQuotedPost,
 } from "@/modules/api/graphql/queries/query-community-feed"
+import type { QuotedPost } from "@/components/reuseable/QuotedPostCard"
 import { CommunitySearchSort } from "@/modules/api/graphql/queries/query-community-search"
 import type { PostMediaItem } from "@/components/blocks/feed/PostMediaGrid"
-import { unwrapAutolinks } from "@/components/features/community/CommunityPostDetail/postLinks"
+import { splitBodyImages, unwrapAutolinks } from "@/components/features/community/CommunityPostDetail/postLinks"
 import { formatRelativeTime } from "./relativeTime"
 
 /** Map BE `Post.media` onto the render contract of the shared media grid. */
@@ -24,6 +26,41 @@ export const toMediaItems = (
         mediaType: item.mediaType,
         storageKey: item.storageKey,
     }))
+
+/**
+ * Turn body-embedded image urls ({@link splitBodyImages}) into media-grid items.
+ *
+ * These images have no server-side `PostMedia` row — they were typed into the body by the
+ * editor toolbar — so the url IS the identity: the grid keys its tiles by `id` and the
+ * lightbox loads `storageKey`, and both are the same already-signed delivery url.
+ */
+export const toBodyImageItems = (urls: Array<string>): Array<PostMediaItem> =>
+    urls.map((url) => ({ id: url, mediaType: "IMAGE", storageKey: url }))
+
+/**
+ * Map BE `Post.quotedPost` onto the render contract of {@link QuotedPost}. `null`/absent stays
+ * `null` (bài thường, không vẽ card lồng).
+ *
+ * `available` được CHUYỂN NGUYÊN, không quy về boolean "thật": card phân biệt `false` (bài gốc
+ * không còn khả dụng → in nhãn) với absent (composer tự dựng vật thể → coi như khả dụng).
+ *
+ * `snippet` chạy qua ĐÚNG cặp {@link unwrapAutolinks} + {@link splitBodyImages} như
+ * {@link toCommunityPost}: card lồng cũng in TEXT THUẦN, nên thiếu bước tách ảnh thì cùng một bài
+ * sẽ hiện chữ sạch ở hàng gốc mà lộ nguyên `![Ảnh](https://…)` ở card lồng ngay bên dưới. Các url
+ * ảnh bị BỎ (card lồng chỉ có một dòng chữ, không có lưới ảnh để vẽ chúng).
+ */
+export const toQuotedPost = (quoted: FeedQuotedPost | null | undefined): QuotedPost | null => {
+    if (!quoted) {
+        return null
+    }
+    return {
+        author: quoted.author?.displayName ?? quoted.author?.username ?? "",
+        authorUsername: quoted.author?.username ?? "",
+        title: quoted.title ?? "",
+        snippet: splitBodyImages(unwrapAutolinks(quoted.snippet ?? "")).text,
+        available: quoted.available,
+    }
+}
 
 /** A community post (BE `Post` mapped to the feed card contract). */
 export interface CommunityPost {
@@ -75,6 +112,11 @@ export interface CommunityPost {
     comments: number
     /** Image attachments in server order (BE `Post.media`); empty when the post has none. */
     media: Array<PostMediaItem>
+    /**
+     * Bài GỐC lồng bên dưới khi đây là bài ĐĂNG LẠI (BE `Post.quotedPost`); `null`/absent =
+     * bài thường ⇒ không vẽ card lồng.
+     */
+    quotedPost?: QuotedPost | null
 }
 
 /** One cursor page of the feed (BE `PostConnection` mapped to card contract). */
@@ -241,28 +283,38 @@ const toFeedTab = (tab: CommunityFeedTab): FeedTab => {
  * (cả hàng đã nằm trong một `<Link>` phủ toàn bộ, chèn `<a>` vào đây là lồng anchor), nên
  * autolink CommonMark `<https://…>` của tác giả sẽ lộ nguyên cặp `<>` ra màn hình. Bỏ cặp
  * dấu đó là đủ để đọc ra như một URL bình thường mà không đụng gì tới cấu trúc link của hàng.
+ *
+ * Cùng lý do đó, snippet còn chạy qua {@link splitBodyImages}: ảnh chèn bằng thanh công cụ
+ * của editor nằm TRONG THÂN BÀI (`![Ảnh](https://…)`) chứ không thành attachment, nên trước
+ * đây hàng feed in ra đúng cú pháp thô ấy mà chẳng có tấm ảnh nào. Tách xong thì phần chữ
+ * sạch cú pháp, còn các url ảnh nối vào `media` để `PostMediaGrid` vẽ thumbnail (attachment
+ * thật đứng trước, ảnh trong thân bài nối sau, giữ nguyên thứ tự tác giả gõ).
  */
-export const toCommunityPost = (post: FeedPost, locale: string): CommunityPost => ({
-    id: post.id,
-    author: post.author?.displayName ?? post.author?.username ?? "",
-    // Chỉ nhận username THẬT: rơi về id là dựng link hồ sơ /u/<uuid> → 404. Rỗng thì
-    // UserLink hiện tên không kèm link, thà vậy còn hơn liên kết chết. (Quyền sở hữu bài
-    // chốt bằng `authorId` ngay dưới, không phụ thuộc trường này.)
-    authorUsername: post.author?.username ?? "",
-    authorAvatar: post.author?.avatarUrl ?? null,
-    authorStaffRole: post.author?.staffRole ?? null,
-    authorFrame: post.author?.avatarFrame ?? null,
-    authorAchievement: post.author?.equippedAchievement ?? null,
-    authorId: post.authorId ?? post.author?.id ?? null,
-    pinned: post.pinned ?? false,
-    timeLabel: formatRelativeTime(post.createdAt, locale),
-    title: post.title ?? "",
-    snippet: unwrapAutolinks(post.snippet ?? ""),
-    likes: post.likeCount,
-    liked: post.likedByMe,
-    comments: post.commentCount,
-    media: toMediaItems(post.media),
-})
+export const toCommunityPost = (post: FeedPost, locale: string): CommunityPost => {
+    const { text, images } = splitBodyImages(unwrapAutolinks(post.snippet ?? ""))
+    return {
+        id: post.id,
+        author: post.author?.displayName ?? post.author?.username ?? "",
+        // Chỉ nhận username THẬT: rơi về id là dựng link hồ sơ /u/<uuid> → 404. Rỗng thì
+        // UserLink hiện tên không kèm link, thà vậy còn hơn liên kết chết. (Quyền sở hữu bài
+        // chốt bằng `authorId` ngay dưới, không phụ thuộc trường này.)
+        authorUsername: post.author?.username ?? "",
+        authorAvatar: post.author?.avatarUrl ?? null,
+        authorStaffRole: post.author?.staffRole ?? null,
+        authorFrame: post.author?.avatarFrame ?? null,
+        authorAchievement: post.author?.equippedAchievement ?? null,
+        authorId: post.authorId ?? post.author?.id ?? null,
+        pinned: post.pinned ?? false,
+        timeLabel: formatRelativeTime(post.createdAt, locale),
+        title: post.title ?? "",
+        snippet: text,
+        likes: post.likeCount,
+        liked: post.likedByMe,
+        comments: post.commentCount,
+        media: [...toMediaItems(post.media), ...toBodyImageItems(images)],
+        quotedPost: toQuotedPost(post.quotedPost),
+    }
+}
 
 /** Items per feed page (BE `CursorInput.limit`). */
 const PAGE_LIMIT = 20

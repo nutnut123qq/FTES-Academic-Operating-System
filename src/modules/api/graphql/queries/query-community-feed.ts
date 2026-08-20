@@ -109,6 +109,23 @@ export interface FeedPost {
     commentCount: number
     /** Images attached to the post, in server order (BE `Post.media`); empty when none. */
     media: Array<FeedPostMedia>
+    /**
+     * Bài GỐC được lồng trong bài này khi đây là bài ĐĂNG LẠI (BE `Post.quotedPost`);
+     * `null`/absent = bài thường. Optional để mock/test cũ không phải khai lại.
+     */
+    quotedPost?: FeedQuotedPost | null
+}
+
+/**
+ * Bài gốc lồng trong một bài đăng lại (BE `QuotedPost`). `available === false` là trạng thái
+ * "bài không còn khả dụng" (đã xoá/ẩn/nhóm kín) — KHÔNG phải lỗi — và khi đó BE cố ý trả mọi
+ * trường còn lại là `null`, kể cả `author`. Đừng suy ra nội dung từ đâu khác.
+ */
+export interface FeedQuotedPost {
+    author: FeedPostAuthor | null
+    title: string | null
+    snippet: string | null
+    available: boolean
 }
 
 /**
@@ -166,6 +183,18 @@ export const FEED_SELECTION = `
       storageKey
       mimeType
       sortOrder
+    }
+    quotedPost {
+      title
+      snippet
+      available
+      author {
+        id
+        username
+        displayName
+        avatarUrl
+        staffRole
+      }
     }
   }
   nextCursor

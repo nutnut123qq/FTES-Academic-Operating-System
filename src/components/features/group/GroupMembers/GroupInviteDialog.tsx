@@ -69,7 +69,7 @@ export interface GroupInviteDialogProps {
 export const GroupInviteDialog = ({ isOpen, onClose, groupId }: GroupInviteDialogProps) => {
     const t = useTranslations("groupsHub")
     const runRest = useRestWithToast()
-    const { requireAuth } = useRequireAuth()
+    const { requireAuthAsync } = useRequireAuth()
     const { trigger, isMutating } = usePostInviteToGroupSwr()
     const [query, setQuery] = useState("")
     const [candidates, setCandidates] = useState<Array<InviteCandidate>>([])
@@ -119,7 +119,7 @@ export const GroupInviteDialog = ({ isOpen, onClose, groupId }: GroupInviteDialo
     }, [isOpen, query])
 
     const onInvite = async (inviteeId: string) => {
-        if (isMutating || !requireAuth("auth.context.generic")) {
+        if (isMutating || !(await requireAuthAsync("auth.context.generic"))) {
             return
         }
         const sent = await runRest(

@@ -13,6 +13,7 @@ import {
     useMutatePostOwnerActionsSwr,
     type EditPostInput,
 } from "../../CommunityPostDetail/hooks/useMutatePostOwnerActionsSwr"
+import { splitBodyImages, unwrapAutolinks } from "../../CommunityPostDetail/postLinks"
 
 /** Where a row sat before the optimistic removal, per feed cache key. */
 interface RemovedRow {
@@ -32,9 +33,18 @@ const SNIPPET_LENGTH = 200
  * `snippet` server-side, so this is deliberately a plain truncation — it only has
  * to stop the row from showing the PRE-edit text between a successful save and
  * the next fetch.
+ *
+ * The markdown is stripped exactly the way `toCommunityPost` strips the server snippet
+ * (autolink brackets, embedded images, link syntax): the row prints this as PLAIN TEXT, so
+ * mirroring the raw body would put `![Ảnh](https://…)` back on the row the moment its author
+ * edits the post. Truncation happens AFTER the strip, so the 200 chars are visible text.
+ * (The images themselves stay on whatever `media` the row already carries until the next
+ * revalidate — same "good enough until the refetch" bargain as the text.)
  */
-const toSnippet = (content: string): string =>
-    content.length > SNIPPET_LENGTH ? `${content.slice(0, SNIPPET_LENGTH)}…` : content
+const toSnippet = (content: string): string => {
+    const { text } = splitBodyImages(unwrapAutolinks(content))
+    return text.length > SNIPPET_LENGTH ? `${text.slice(0, SNIPPET_LENGTH)}…` : text
+}
 
 /**
  * Feed-side wrapper around the shared post owner writes

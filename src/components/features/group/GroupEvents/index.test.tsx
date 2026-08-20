@@ -61,7 +61,7 @@ vi.mock("@/components/reuseable/PostEngagementBar", () => ({
 }))
 
 vi.mock("@/hooks/useRequireAuth", () => ({
-    useRequireAuth: () => ({ requireAuth: () => true }),
+    useRequireAuth: () => ({ requireAuth: () => true, requireAuthAsync: async () => true }),
 }))
 vi.mock("@/modules/toast/hooks", () => ({
     useRestWithToast: () => async <T,>(action: () => Promise<T>) => action(),

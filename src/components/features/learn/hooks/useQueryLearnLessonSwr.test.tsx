@@ -88,3 +88,69 @@ describe("useQueryLearnLessonSwr — previewSeconds keeps the preview reachable"
         expect(result.current.lesson?.hasVideo).toBe(false)
     })
 })
+
+/**
+ * Regression 2026-08-21: bài quay bằng đường upload MỚI mang ref `aosvideo:<uuid>`.
+ * `isVideoRef` chỉ nhận YouTube và `video_*` nên mọi bài như vậy rơi xuống nhánh thân bài,
+ * và bài video không có body ⇒ học viên thấy đúng một dòng "This lesson has no content yet."
+ * (đo thật trên SWR302: BE trả provider=HLS + manifest ký, video nằm nguyên trên R2).
+ */
+describe("useQueryLearnLessonSwr — ref của đường upload mới vẫn là video", () => {
+    /** Curriculum với MỘT bài video đã mở khoá, ref theo shape người gọi truyền vào. */
+    const withRef = (videoRef: string | null) => ({
+        course: { id: "uuid-b", title: "Khóa B" },
+        description: "",
+        sections: [
+            {
+                id: "m1",
+                name: "Học phần 1",
+                description: "",
+                sortOrder: 1,
+                lessons: [
+                    {
+                        id: "l1",
+                        name: "Bài 1",
+                        description: "",
+                        sortOrder: 1,
+                        type: "VIDEO",
+                        videoStatus: "READY",
+                        videoRef,
+                        locked: false,
+                        accessLevel: "FULL",
+                        previewSeconds: 0,
+                        packageSlugs: [],
+                    },
+                ],
+            },
+        ],
+    })
+
+    it("mount player cho ref aosvideo:<uuid> (FULL, không có cửa sổ preview)", async () => {
+        detailMock.mockResolvedValue(withRef("aosvideo:65d72559-c777-425f-b279-270ef1699b2c"))
+        const { result } = renderHook(() => useQueryLearnLessonSwr("khoa-aosvideo", "l1"))
+        await waitFor(() => expect(result.current.lesson).toBeTruthy())
+        expect(result.current.lesson?.hasVideo).toBe(true)
+        // KHÔNG được coi là thân bài HTML — nếu rơi vào documentHtml thì player biến mất
+        expect(result.current.lesson?.documentHtml).toBeNull()
+    })
+
+    it("giữ nguyên hành vi cũ: token video_* và link YouTube vẫn là video", async () => {
+        detailMock.mockResolvedValue(withRef("video_3eabdf6b-n75"))
+        const legacy = renderHook(() => useQueryLearnLessonSwr("khoa-legacy-token", "l1"))
+        await waitFor(() => expect(legacy.result.current.lesson).toBeTruthy())
+        expect(legacy.result.current.lesson?.hasVideo).toBe(true)
+
+        detailMock.mockResolvedValue(withRef("https://youtu.be/GIg5wcr_a-A"))
+        const yt = renderHook(() => useQueryLearnLessonSwr("khoa-youtube", "l1"))
+        await waitFor(() => expect(yt.result.current.lesson).toBeTruthy())
+        expect(yt.result.current.lesson?.hasVideo).toBe(true)
+    })
+
+    it("link Drive vẫn KHÔNG thành player (giữ nguyên nhánh tài liệu)", async () => {
+        detailMock.mockResolvedValue(withRef("https://drive.google.com/drive/folders/abc"))
+        const { result } = renderHook(() => useQueryLearnLessonSwr("khoa-drive", "l1"))
+        await waitFor(() => expect(result.current.lesson).toBeTruthy())
+        expect(result.current.lesson?.hasVideo).toBe(false)
+        expect(result.current.lesson?.externalRef).toBe("https://drive.google.com/drive/folders/abc")
+    })
+})

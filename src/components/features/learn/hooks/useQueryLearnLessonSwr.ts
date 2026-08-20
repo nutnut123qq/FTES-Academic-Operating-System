@@ -126,7 +126,7 @@ export interface LearnLessonView {
     teaser: TeaserInfo | null
     /** True → this lesson has a READY video → the reader renders the player. */
     hasVideo: boolean
-    /** Streaming ref (YouTube URL or `video_*` token) for the video player. */
+    /** Streaming ref (YouTube URL, `video_*` token, hoặc `aosvideo:<uuid>`) cho player. */
     videoRef: string | null
     /**
      * Author-authored HTML body for migrated attachment lessons (type "1": notes,
@@ -267,11 +267,19 @@ const buildLessonView = (
     const hasQuiz = content.hasQuiz ?? false
     const quizId = content.quizId ?? null
 
-    // A migrated video ref is a YouTube link or an internal `video_*` token. Anything
-    // else in `videoRef` (Drive links, notes) is authored HTML for an attachment
+    // A playable video ref is one of THREE shapes, not two:
+    //   • YouTube link                       — migrated Funnycode lessons
+    //   • `video_*` token                    — legacy self-hosted (Wasabi → R2, 2026-08-19)
+    //   • `aosvideo:<uuid>`                  — uploaded via UploadVideo-FTES-AOS (đường mới)
+    // Anything else in `videoRef` (Drive links, notes) is authored HTML for an attachment
     // lesson (type "1") — render it as the body, not as a (broken) video player.
+    //
+    // Thiếu `aosvideo:` ở đây thì MỌI bài quay bằng đường upload mới rơi xuống nhánh "thân bài",
+    // và vì bài video không có body nên học viên thấy đúng một dòng "This lesson has no content
+    // yet." — video vẫn nằm nguyên trên R2, BE vẫn trả manifest ký, chỉ FE không mount player.
     const ref = current?.videoRef ?? null
-    const isVideoRef = !!ref && (/youtu\.?be|youtube\.com/.test(ref) || /^\s*video_/.test(ref))
+    const isVideoRef =
+        !!ref && (/youtu\.?be|youtube\.com/.test(ref) || /^\s*(?:video_|aosvideo:)/.test(ref))
     const documentHtml = ref && !isVideoRef && /^\s*</.test(ref) ? ref : null
     // Link trần không nhúng được (Drive…): không thành player, cũng không phải HTML thân bài.
     // Giữ lại làm thẻ tài liệu thay vì để rơi mất — xem `externalRef` ở type trên.

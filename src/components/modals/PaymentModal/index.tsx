@@ -1,7 +1,17 @@
 "use client"
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { Button, Chip, Input, Label, Modal, TextField, Typography, cn } from "@heroui/react"
+import {
+    Button,
+    Chip,
+    Input,
+    Label,
+    Modal,
+    ScrollShadow,
+    TextField,
+    Typography,
+    cn,
+} from "@heroui/react"
 import { useFormatter, useTranslations } from "next-intl"
 import { useSWRConfig } from "swr"
 import { useRouter } from "next/navigation"
@@ -375,9 +385,18 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
         <Modal isOpen={isOpen} onOpenChange={setOpen}>
             <Modal.Backdrop>
                 <Modal.Container>
-                    <Modal.Dialog className={cn("w-full max-w-md", className)}>
+                    {/* `max-h-full` là CÁI CHỐT của lỗi "giỏ dài không bấm được thanh toán":
+                        `.modal__container` của HeroUI đã cao đúng bằng visual viewport, nhưng
+                        dialog là flex item với `min-height:auto` nên nó cứ phình theo nội dung
+                        và tràn ra ngoài màn hình — 5 khoá + mã giảm giá + Xu + bảng chi phí là
+                        đủ để đẩy nút trả tiền xuống dưới mép dưới. Chặn trần ở 100% chiều cao
+                        content-box của container (đã trừ `p-4`/`sm:p-10`, và bám visual viewport
+                        nên bàn phím ảo mở lên vẫn đúng), rồi để phần thân cuộn bên trong.
+                        `min-h-0` đi kèm để dialog được phép co xuống dưới chiều cao nội dung —
+                        thiếu nó là bản vá im lặng không có tác dụng. */}
+                    <Modal.Dialog className={cn("max-h-full min-h-0 w-full max-w-md", className)}>
                         <Modal.CloseTrigger />
-                        <Modal.Header className="flex flex-col gap-3">
+                        <Modal.Header className="flex shrink-0 flex-col gap-3">
                             {/* KHÔNG còn tab Tóm tắt/Thanh toán (góp ý #3): hai tab và nút
                                 "Tiếp tục thanh toán" là HAI lối đi cho CÙNG một bước, nên
                                 người mua bấm nút rồi vẫn thấy một cái tab như thể còn việc
@@ -396,147 +415,177 @@ export const PaymentModal = ({ className }: WithClassNames<undefined>) => {
                                 </Button>
                             ) : null}
                         </Modal.Header>
-                        <Modal.Body className="flex flex-col gap-5">
-                            {step === "summary" ? (
-                                <div className="flex flex-col gap-5">
-                                    <OrderLines t={t} format={format} lines={lines} />
+                        <Modal.Body className="flex min-h-0 flex-1 flex-col gap-5">
+                            {/* Vùng cuộn DUY NHẤT của modal — cùng bài thuốc với thẻ mua khoá
+                                (`CourseDetail`) và `OutlineRail`: `ScrollShadow hideScrollBar`
+                                + `min-h-0 flex-1 overflow-y-auto`, không tự chế `overflow-y-auto`.
+                                Nó ôm trọn nội dung nên `.modal__body` (bản thân đã `overflow-y-auto`
+                                theo `scroll="inside"`) không bao giờ tràn → KHÔNG có thanh cuộn
+                                lồng nhau. Giỏ ngắn thì mọi thứ vừa khung, `flex-1` chỉ căng bằng
+                                đúng nội dung nên không đổi một pixel nào.
 
-                                    {/* Mã giảm giá ngay tại Tóm tắt — không bắt sang tab khác mới thấy. */}
-                                    <CouponField
-                                        t={t}
-                                        coupon={coupon}
-                                        setCoupon={setCoupon}
-                                        discount={discount}
-                                        couponError={couponError}
-                                        couponPending={couponSwr.isMutating}
-                                        applyCoupon={applyCoupon}
-                                        clearCoupon={clearCoupon}
-                                    />
+                                KHÔNG dùng mẹo `-mx-1 … px-1` như `OutlineRail`/`CourseDetail`:
+                                ở đó vùng cuộn nằm trong một khối thường, còn ở đây cha của nó
+                                (`.modal__body`) TỰ LÀ một scroll container — lề âm làm con rộng
+                                hơn cha 8px, sinh THANH CUỘN NGANG ăn mất 10px chiều cao và đội
+                                dialog cao thêm đúng 10px kể cả khi giỏ chỉ có 1 món (đo được).
+                                `overflow-x-hidden` giữ lại để tên khoá dài không đẻ cuộn ngang. */}
+                            <ScrollShadow
+                                hideScrollBar
+                                className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto"
+                            >
+                                {step === "summary" ? (
+                                    <div className="flex flex-col gap-5">
+                                        <OrderLines t={t} format={format} lines={lines} />
 
-                                    {/* Dùng Xu trong ví để giảm tiền — trần + tỉ lệ đều của backend. */}
-                                    {showVietqr && method !== "COIN" ? (
-                                        <CoinApplyField
+                                        {/* Mã giảm giá ngay tại Tóm tắt — không bắt sang tab khác mới thấy. */}
+                                        <CouponField
                                             t={t}
-                                            format={format}
-                                            balance={quote?.balance ?? balance}
-                                            ceiling={coinCeiling}
-                                            value={coinPlan.coinApplied}
-                                            discountVnd={coinPlan.coinDiscountVnd}
-                                            isLoading={coinQuoteSwr.isLoading}
-                                            isLocked={method === "WALLET"}
-                                            onChange={setRequestedCoin}
+                                            coupon={coupon}
+                                            setCoupon={setCoupon}
+                                            discount={discount}
+                                            couponError={couponError}
+                                            couponPending={couponSwr.isMutating}
+                                            applyCoupon={applyCoupon}
+                                            clearCoupon={clearCoupon}
                                         />
-                                    ) : null}
 
-                                    <CostBreakdown
-                                        t={t}
-                                        format={format}
-                                        subtotalVnd={subtotalVnd}
-                                        listSavingVnd={listSavingVnd}
-                                        couponDiscountVnd={discount}
-                                        coinDiscountVnd={coinPlan.coinDiscountVnd}
-                                        totalLabel={shownAmountLabel}
-                                    />
-
-                                    <Button
-                                        variant="primary"
-                                        fullWidth
-                                        className="rounded-full"
-                                        onPress={() => setStep("payment")}
-                                    >
-                                        {t("checkout.continueToPayment")}
-                                        <ArrowRightIcon aria-hidden focusable="false" className="size-4" />
-                                    </Button>
-                                </div>
-                            ) : (
-                                <div className="flex flex-col gap-5">
-                                    {/* slim recap — số dòng hàng + số tiền còn phải trả */}
-                                    <div className="flex items-center gap-3 rounded-2xl border border-separator p-3">
-                                        {lines[0]?.imageUrl ? (
-                                            <CoverImage
-                                                src={lines[0].imageUrl}
-                                                alt={lines[0].name}
-                                                className="size-10 shrink-0"
+                                        {/* Dùng Xu trong ví để giảm tiền — trần + tỉ lệ đều của backend. */}
+                                        {showVietqr && method !== "COIN" ? (
+                                            <CoinApplyField
+                                                t={t}
+                                                format={format}
+                                                balance={quote?.balance ?? balance}
+                                                ceiling={coinCeiling}
+                                                value={coinPlan.coinApplied}
+                                                discountVnd={coinPlan.coinDiscountVnd}
+                                                isLoading={coinQuoteSwr.isLoading}
+                                                isLocked={method === "WALLET"}
+                                                onChange={setRequestedCoin}
                                             />
                                         ) : null}
-                                        <Typography
-                                            type="body-sm"
-                                            weight="medium"
-                                            className="min-w-0 flex-1 line-clamp-1"
-                                        >
-                                            {context.title}
-                                        </Typography>
-                                        <Typography
-                                            type="body-sm"
-                                            weight="bold"
-                                            className="shrink-0 text-accent"
-                                        >
-                                            {shownAmountLabel}
-                                        </Typography>
+
+                                        <CostBreakdown
+                                            t={t}
+                                            format={format}
+                                            subtotalVnd={subtotalVnd}
+                                            listSavingVnd={listSavingVnd}
+                                            couponDiscountVnd={discount}
+                                            coinDiscountVnd={coinPlan.coinDiscountVnd}
+                                            totalLabel={shownAmountLabel}
+                                        />
                                     </div>
+                                ) : (
+                                    <div className="flex flex-col gap-5">
+                                        {/* slim recap — số dòng hàng + số tiền còn phải trả */}
+                                        <div className="flex items-center gap-3 rounded-2xl border border-separator p-3">
+                                            {lines[0]?.imageUrl ? (
+                                                <CoverImage
+                                                    src={lines[0].imageUrl}
+                                                    alt={lines[0].name}
+                                                    className="size-10 shrink-0"
+                                                />
+                                            ) : null}
+                                            <Typography
+                                                type="body-sm"
+                                                weight="medium"
+                                                className="min-w-0 flex-1 line-clamp-1"
+                                            >
+                                                {context.title}
+                                            </Typography>
+                                            <Typography
+                                                type="body-sm"
+                                                weight="bold"
+                                                className="shrink-0 text-accent"
+                                            >
+                                                {shownAmountLabel}
+                                            </Typography>
+                                        </div>
 
-                                    {phase === "choose" ? (
-                                        <ChooseView
-                                            t={t}
-                                            format={format}
-                                            method={method}
-                                            setMethod={setMethod}
-                                            showVietqr={showVietqr}
-                                            showCoin={showCoin}
-                                            canPayByWallet={canPayByWallet}
-                                            walletCoinCost={coinPlan.coinApplied}
-                                            coinApplied={
-                                                method === "WALLET" ? 0 : coinPlan.coinApplied
-                                            }
-                                            payableVnd={coinPlan.payableVnd}
-                                            amountCoin={amountCoin ?? 0}
-                                            balance={quote?.balance ?? balance}
-                                            payError={payError}
-                                            payPending={checkoutSwr.isMutating}
-                                            pay={pay}
-                                        />
-                                    ) : null}
+                                        {phase === "choose" ? (
+                                            <ChooseView
+                                                t={t}
+                                                format={format}
+                                                method={method}
+                                                setMethod={setMethod}
+                                                showVietqr={showVietqr}
+                                                showCoin={showCoin}
+                                                canPayByWallet={canPayByWallet}
+                                                walletCoinCost={coinPlan.coinApplied}
+                                                coinApplied={
+                                                    method === "WALLET" ? 0 : coinPlan.coinApplied
+                                                }
+                                                payableVnd={coinPlan.payableVnd}
+                                                amountCoin={amountCoin ?? 0}
+                                                balance={quote?.balance ?? balance}
+                                                payError={payError}
+                                                payPending={checkoutSwr.isMutating}
+                                                pay={pay}
+                                            />
+                                        ) : null}
 
-                                    {phase === "awaiting" ? (
-                                        <AwaitingView
-                                            t={t}
-                                            format={format}
-                                            qrCode={qrCode}
-                                            amount={coinPlan.payableVnd}
-                                            expiresAt={orderPoll.data?.expiresAt}
-                                            onExpire={handleExpire}
-                                        />
-                                    ) : null}
+                                        {phase === "awaiting" ? (
+                                            <AwaitingView
+                                                t={t}
+                                                format={format}
+                                                qrCode={qrCode}
+                                                amount={coinPlan.payableVnd}
+                                                expiresAt={orderPoll.data?.expiresAt}
+                                                onExpire={handleExpire}
+                                            />
+                                        ) : null}
 
-                                    {phase === "success" ? (
-                                        <SuccessView
-                                            t={t}
-                                            onDone={close}
-                                            onLearn={
-                                                context.learnHref
-                                                    ? () => {
-                                                        close()
-                                                        router.push(context.learnHref as string)
-                                                    }
-                                                    : undefined
-                                            }
-                                        />
-                                    ) : null}
+                                        {phase === "success" ? (
+                                            <SuccessView
+                                                t={t}
+                                                onDone={close}
+                                                onLearn={
+                                                    context.learnHref
+                                                        ? () => {
+                                                            close()
+                                                            router.push(context.learnHref as string)
+                                                        }
+                                                        : undefined
+                                                }
+                                            />
+                                        ) : null}
 
-                                    {phase === "failed" ? (
-                                        <FailedView
-                                            t={t}
-                                            expired={expired}
-                                            onRetry={() => {
-                                                setExpired(false)
-                                                setPhase("choose")
-                                            }}
-                                            onClose={close}
-                                        />
-                                    ) : null}
-                                </div>
-                            )}
+                                        {phase === "failed" ? (
+                                            <FailedView
+                                                t={t}
+                                                expired={expired}
+                                                onRetry={() => {
+                                                    setExpired(false)
+                                                    setPhase("choose")
+                                                }}
+                                                onClose={close}
+                                            />
+                                        ) : null}
+                                    </div>
+                                )}
+                            </ScrollShadow>
                         </Modal.Body>
+                        {/* Nút chính của bước Tóm tắt được GHIM ngoài vùng cuộn: đây là bước
+                            DUY NHẤT cao theo số món trong giỏ, nên cũng là bước duy nhất từng
+                            nuốt mất nút. Đây là phép DỜI thuần tuý — nút vốn nằm thẳng trong
+                            modal, không thuộc `ChooseView`/`AwaitingView`/`SuccessView`/
+                            `FailedView`, nên bốn view kia không phải sửa một dòng nào; chúng
+                            có chiều cao chặn trên (không phình theo giỏ) và giữ nút hành động
+                            bên trong vùng cuộn như cũ. `.modal__body + .modal__footer` của
+                            HeroUI tự thêm `mt-5`, đúng bằng `gap-5` cũ nên khoảng cách không đổi. */}
+                        {step === "summary" ? (
+                            <Modal.Footer className="shrink-0">
+                                <Button
+                                    variant="primary"
+                                    fullWidth
+                                    className="rounded-full"
+                                    onPress={() => setStep("payment")}
+                                >
+                                    {t("checkout.continueToPayment")}
+                                    <ArrowRightIcon aria-hidden focusable="false" className="size-4" />
+                                </Button>
+                            </Modal.Footer>
+                        ) : null}
                     </Modal.Dialog>
                 </Modal.Container>
             </Modal.Backdrop>

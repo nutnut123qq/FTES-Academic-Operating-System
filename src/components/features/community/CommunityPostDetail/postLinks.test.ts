@@ -23,6 +23,31 @@ describe("unwrapAutolinks", () => {
         expect(unwrapAutolinks("dùng <div> để bọc")).toBe("dùng <div> để bọc")
         expect(unwrapAutolinks("<https://a.vn/x>")).toBe("https://a.vn/x")
     })
+
+    it("still unwraps in front of the punctuation people type after a url", () => {
+        expect(unwrapAutolinks("Xem <https://a.vn/x>.")).toBe("Xem https://a.vn/x.")
+        expect(unwrapAutolinks("(<https://a.vn/x>) và <https://b.vn/y>, xong"))
+            .toBe("(https://a.vn/x) và https://b.vn/y, xong")
+    })
+
+    // Cặp `<>` chính là thứ KẾT THÚC url. Bỏ nó khi có chữ dính ngay sau thì url "nuốt" luôn
+    // phần đằng sau — đúng cú `<url>![Ảnh](…)` mà composer sinh ra (link rồi ảnh inline, cùng
+    // một đoạn văn) làm cả bài mất ảnh. Dính chữ → dấu cách THAY chỗ cặp ngoặc.
+    it("terminates the url with a space when it is glued to what follows", () => {
+        expect(unwrapAutolinks("<https://gemini.google.com/app?hl=vi>![Ảnh](https://document.ftes.vn/a.webp)"))
+            .toBe("https://gemini.google.com/app?hl=vi ![Ảnh](https://document.ftes.vn/a.webp)")
+        expect(unwrapAutolinks("<https://a.vn/x>xin chào")).toBe("https://a.vn/x xin chào")
+        expect(unwrapAutolinks("<https://a.vn/x>**đậm**")).toBe("https://a.vn/x **đậm**")
+    })
+
+    // Bài dạy nhau cú pháp markdown là chuyện thường ngày — `<https://…>` trong đoạn code là
+    // TRÍCH DẪN, không phải link tác giả muốn hiển thị (cùng cách {@link splitBodyImages} đối xử).
+    it("leaves autolinks inside code fences and inline code as typed", () => {
+        expect(unwrapAutolinks("gõ `<https://a.vn>` để tạo link"))
+            .toBe("gõ `<https://a.vn>` để tạo link")
+        expect(unwrapAutolinks("```\n<https://a.vn>\n```\nrồi <https://b.vn> nhé"))
+            .toBe("```\n<https://a.vn>\n```\nrồi https://b.vn nhé")
+    })
 })
 
 describe("firstLinkUrl", () => {

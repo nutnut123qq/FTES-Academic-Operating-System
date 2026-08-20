@@ -418,8 +418,35 @@ html {
  * named looks besides the app's own spark field, picked in Settings → Appearance.
  * All transform/opacity only (compositor thread), all tinted via `var(--accent)` so
  * they retint automatically with the chosen accent colour, and all guarded under
- * `prefers-reduced-motion` below. Never rendered over content-dense routes.
+ * `prefers-reduced-motion` below. On content-dense routes they render at reading
+ * weight — see `.ambient-recessed` right below.
  */
+
+/*
+ * Reading weight for the ambient backdrop on CONTENT-DENSE routes (Learn,
+ * Community, the Subject workspace) — applied by `AmbientBackground` when
+ * `InnerLayout` passes `recessed`. The user's picked effect still runs there (the
+ * Appearance setting is global), it just never competes with text:
+ *
+ *  - 0.3 multiplies into every effect's own alpha budget, so the loudest one —
+ *    the `ember` meteor streak, peaking at 0.3 in `meteorFall` — lands at ~0.09
+ *    over the page background. Visible as tinted light in the shells' negative
+ *    space, far under the contrast a moving overlay would need.
+ *  - `opacity` here (not per-effect tuning) is deliberate: it also makes this
+ *    element a stacking context, which the `-z-10` on the same element pins
+ *    BELOW page content — so no effect can ever paint over a card, whatever
+ *    z-index it sets internally.
+ *
+ * What this replaced: suppressing the effect entirely on these routes (checklist
+ * STT 2), which threw the user's setting away. The original grievance was streaks
+ * crossing glass cards (`bg-surface/60`); those surfaces are solid now, so the
+ * card faces are already immune and only the negative space is left to soften.
+ * NOTE: do NOT "fix" this with a centre-column mask — that was tried and removed
+ * in b78ba85c for not matching every layout.
+ */
+.ambient-recessed {
+    opacity: 0.3;
+}
 
 /* snowFall — flakes drifting straight down with a light horizontal wander. */
 @keyframes snowFall {

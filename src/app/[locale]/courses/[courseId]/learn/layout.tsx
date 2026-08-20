@@ -28,8 +28,9 @@ import { useLearnSidebarStore } from "@/hooks/zustand/learnSidebar/store"
  * this" entry mount once here (they self-hide when no lesson is open), so they
  * are shared across the reader routes.
  *
- * The ambient meteor backdrop is already suppressed app-wide on `/learn`, so this
- * layout only owns the rail composition + width.
+ * The ambient backdrop is owned app-wide by `InnerLayout`, which renders it here
+ * too but at reading weight (`recessed`), so this layout only owns the rail
+ * composition + width.
  */
 const LearnLayout = ({ children }: PropsWithChildren) => {
     const t = useTranslations("learn")

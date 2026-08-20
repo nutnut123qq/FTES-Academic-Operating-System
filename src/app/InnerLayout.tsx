@@ -24,13 +24,27 @@ import { BadgeUnlockHost } from "@/components/features/gamification/BadgeUnlockH
 import { useAppearanceStore } from "@/hooks/zustand/appearance/store"
 
 export const InnerLayout = ({ children }: PropsWithChildren) => {
-    // Ambient meteor background runs app-wide as a FAINT backdrop texture (its
-    // opacity is low enough — see `meteorFall` in globals.css — that the streaks
-    // read as ambient light behind the glassmorphism cards, not painted on top).
-    // Suppressed on CONTENT-DENSE routes — Learn, Community and the Subject
-    // workspace — where the moving streaks cross the reading area and read as
-    // "painted on top of" the info cards (checklist STT 2). Everywhere else
-    // (landing / home / decorative pages) it still shows behind content.
+    // The picked ambient effect (Settings → Appearance) runs on EVERY route — the
+    // setting is global, so Learn / Community / the Subject workspace must obey it
+    // too. What changes per route is its WEIGHT, not whether it exists.
+    //
+    // History, so the old complaint cannot come back by accident:
+    //  - 2026-07-03 (b78ba85c) — "sao băng phải có trên nền mọi trang, chỉ đừng
+    //    đâm vào card": keep it everywhere, just stop it hitting the cards. The
+    //    same commit deleted a centre-column mask as "không khớp mọi layout", so
+    //    masking the reading column is a proven dead end — don't reintroduce it.
+    //  - 2026-07-06 (e59300be, checklist STT 2) — "sao băng phải ở dưới nền, không
+    //    được đè lên phần hiển thị nội dung". At the time every card was glass
+    //    (`bg-surface/60`), so streaks travelled visibly ACROSS the card faces.
+    //    That was answered by suppressing the effect outright on these routes,
+    //    which also threw away the user's setting.
+    //
+    // The cause is gone: those surfaces now paint solid (`bg-surface` / HeroUI
+    // `Card`, measured alpha = 1), so nothing can show through a card any more.
+    // So instead of suppressing, content routes get the RECESSED variant — the
+    // effect stays a backdrop in the shells' own negative space and is held at a
+    // weight that cannot read as an overlay (see `.ambient-recessed` in
+    // globals.css). Decorative routes (landing / home) keep it at full weight.
     const pathname = usePathname()
     const isContentRoute = /\/(?:learn|community|subjects)(?:\/|$)/.test(pathname ?? "")
     // Ambient effect config (appearance-settings) — narrow selectors so InnerLayout
@@ -84,13 +98,12 @@ export const InnerLayout = ({ children }: PropsWithChildren) => {
                             <Suspense fallback={null}>
                                 <TopLoader />
                             </Suspense>
-                            {!isContentRoute ? (
-                                <AmbientBackground
-                                    effect={effect}
-                                    direction={effectDirection}
-                                    speed={effectSpeed}
-                                />
-                            ) : null}
+                            <AmbientBackground
+                                effect={effect}
+                                direction={effectDirection}
+                                speed={effectSpeed}
+                                recessed={isContentRoute}
+                            />
                             {/* Onboarding tour engine — wraps the shell so it can spotlight the
                                 Navbar anchors and the account-menu replay entry shares its context.
                                 The overlay itself renders in a body-level portal. */}

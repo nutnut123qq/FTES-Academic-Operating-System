@@ -11,7 +11,8 @@ import {
 import type { FeedAuthorAchievement } from "@/modules/api/graphql/queries/query-community-feed"
 import type { PostMediaItem } from "@/components/blocks/feed/PostMediaGrid"
 import { formatRelativeTime } from "./relativeTime"
-import { toMediaItems } from "./useQueryCommunityFeedSwr"
+import type { QuotedPost } from "@/components/reuseable/QuotedPostCard"
+import { toMediaItems, toQuotedPost } from "./useQueryCommunityFeedSwr"
 
 /** A comment on a post. Replies are flat, one level deep (Threads-like). */
 export interface PostComment {
@@ -87,6 +88,8 @@ export interface PostDetail {
     comments: Array<PostComment>
     /** Image attachments in server order; empty when the post has none. */
     media: Array<PostMediaItem>
+    /** Bài GỐC lồng bên dưới khi đây là bài ĐĂNG LẠI; null = bài thường. */
+    quotedPost?: QuotedPost | null
 }
 
 /** SWR cache key for a post's detail — shared by the detail page, the inline
@@ -148,6 +151,7 @@ export const toPostDetail = (post: CommunityPostNode, locale: string): PostDetai
     liked: post.likedByMe,
     comments: post.comments.map((comment) => toComment(comment, locale)),
     media: toMediaItems(post.media),
+    quotedPost: toQuotedPost(post.quotedPost),
 })
 
 /** Fetch + map a single post; a not-found / not-visible id throws (Apollo error) → caller degrades. */

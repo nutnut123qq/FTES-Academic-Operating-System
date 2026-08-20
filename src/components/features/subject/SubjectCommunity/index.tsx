@@ -72,6 +72,8 @@ const SubjectComposer = ({
                 value={body}
                 onChange={setBody}
                 toolbar="full"
+                // `PostImagePicker` right below is THE way to attach images here
+                imageButton={false}
                 placeholder={t("community.bodyField")}
                 minHeight={120}
                 autoFocus

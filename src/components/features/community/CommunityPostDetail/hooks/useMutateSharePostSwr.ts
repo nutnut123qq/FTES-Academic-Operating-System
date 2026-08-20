@@ -16,6 +16,12 @@ import { sharePost } from "@/modules/api/rest/community"
  * `COMMUNITY_INVALID_SHARE_TYPE`, and because the call is silent that failure
  * would never surface: the counter would simply never move. A link copy is a
  * plain `SHARE` (no quote commentary).
+ *
+ * The `SHARE`/`QUOTE` split is what keeps this path safe: `QUOTE` publishes a real
+ * repost, `SHARE` only bumps the counter. Giving `SHARE` any side effect on the BE
+ * turns every link copy into that side effect, silently — this caller swallows the
+ * response and every error. `CommunityComposerForm` is the repost path and always
+ * sends `QUOTE`, commentary or not.
  */
 export const useMutateSharePostSwr = () => {
     return useCallback((postId: string) => {

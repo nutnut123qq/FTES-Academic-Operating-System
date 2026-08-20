@@ -2,10 +2,6 @@
 
 import useSWR from "swr"
 import { getPoll } from "@/modules/api/rest/community"
-import {
-    FeedTab,
-    queryCommunityFeed,
-} from "@/modules/api/graphql/queries/query-community-feed"
 
 /** A poll option (`voteCount` mapped to `votes`). */
 export interface PollOption {
@@ -27,39 +23,26 @@ export interface Poll {
 }
 
 /** SWR cache key for a poll (shared with the vote mutation's revalidate). */
-export const pollSwrKey = (postId?: string) => ["poll", postId ?? "latest"]
-
-/** Feed page size scanned when discovering the latest POLL post (no explicit postId). */
-const POLL_DISCOVERY_LIMIT = 20
+export const pollSwrKey = (postId: string) => ["poll", postId]
 
 /**
- * Find the most recent POLL post in the viewer's feed. The standalone
- * `/community/poll` page has no post context, so it shows the latest poll
- * flowing through the feed (null when none is in the first page).
+ * Loads ONE community poll from the real BE `GET /api/v1/community/posts/{postId}/poll`
+ * (auth required; visibility enforced server-side).
+ *
+ * `postId` is REQUIRED on purpose. It used to be optional, and the omitted case scanned
+ * the first 20 For-You items for a `kind === "POLL"` row — which made `/community/poll`
+ * a page that could only ever open ONE poll (and an empty page whenever no poll made the
+ * first feed page). Listing every poll is `CommunityPollList`'s job now, via the
+ * server-side `communitySearch(postType: "POLL")` filter; keeping the parameter optional
+ * would have left that feed-scanning path alive for the next caller with no compiler warning.
+ *
+ * `poll` is `null` only while loading or after a failure — never "no poll exists".
  */
-const resolveLatestPollPostId = async (): Promise<string | null> => {
-    const result = await queryCommunityFeed({
-        tab: FeedTab.ForYou,
-        page: { limit: POLL_DISCOVERY_LIMIT },
-    })
-    return result.data?.feed.items.find((item) => item.kind === "POLL")?.id ?? null
-}
-
-/**
- * Loads a community poll from the real BE `GET /api/v1/community/posts/{postId}/poll`
- * (auth required; visibility enforced server-side). When `postId` is omitted the
- * latest POLL post from the viewer's feed is used; `poll` is `null` when no poll
- * post is discoverable.
- */
-export const useQueryPollSwr = (postId?: string) => {
+export const useQueryPollSwr = (postId: string) => {
     const { data, isLoading, error, mutate } = useSWR(
         pollSwrKey(postId),
-        async (): Promise<Poll | null> => {
-            const id = postId ?? (await resolveLatestPollPostId())
-            if (!id) {
-                return null
-            }
-            const dto = await getPoll(id)
+        async (): Promise<Poll> => {
+            const dto = await getPoll(postId)
             return {
                 postId: dto.postId,
                 question: dto.question,

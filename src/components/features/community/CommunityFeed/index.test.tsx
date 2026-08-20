@@ -189,6 +189,7 @@ vi.mock("@/hooks/useRequireAuth", () => ({
     useRequireAuth: () => ({
         authenticated,
         requireAuth: () => authenticated,
+        requireAuthAsync: async () => authenticated,
         guard:
             (action: (...args: Array<unknown>) => void) =>
                 (...args: Array<unknown>) => {
@@ -422,5 +423,60 @@ describe("CommunityFeed — batch follow state for the page's authors", () => {
         expect(
             screen.getAllByTestId("user-link").map((link) => link.getAttribute("data-following")),
         ).toEqual(["false", "false"])
+    })
+})
+
+/**
+ * Bài ĐĂNG LẠI: dòng feed phải lồng card bài gốc ngay dưới lời bình. Trước thay đổi này
+ * `SHARE` không tạo bài nào và `QUOTE` mất sạch bài được trích — bấm 🔁 xong không tìm thấy đâu.
+ *
+ * `t` echo key nên nhãn "không còn khả dụng" được assert thẳng bằng id message.
+ */
+describe("CommunityFeedRow — bài đăng lại", () => {
+    it("lồng tiêu đề + trích đoạn của bài gốc vào dòng feed", () => {
+        render(
+            <CommunityFeedRow
+                post={{
+                    ...row,
+                    snippet: "hay quá",
+                    quotedPost: {
+                        author: "Bình",
+                        authorUsername: "binh",
+                        title: "Bài gốc",
+                        snippet: "nội dung gốc",
+                        available: true,
+                    },
+                }}
+            />,
+        )
+
+        expect(screen.getByText("hay quá")).toBeTruthy()
+        expect(screen.getByText("Bài gốc")).toBeTruthy()
+        expect(screen.getByText("nội dung gốc")).toBeTruthy()
+    })
+
+    it("bài gốc không còn khả dụng thì in nhãn, KHÔNG in nội dung", () => {
+        render(
+            <CommunityFeedRow
+                post={{
+                    ...row,
+                    quotedPost: {
+                        author: "",
+                        authorUsername: "",
+                        title: "",
+                        snippet: "",
+                        available: false,
+                    },
+                }}
+            />,
+        )
+
+        expect(screen.getByText("feed.quoteUnavailable")).toBeTruthy()
+    })
+
+    it("bài thường không vẽ card lồng", () => {
+        render(<CommunityFeedRow post={row} />)
+
+        expect(screen.queryByText("feed.quoteUnavailable")).toBeNull()
     })
 })

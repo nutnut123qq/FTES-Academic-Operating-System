@@ -17,6 +17,7 @@ import { PostCommentThread } from "@/components/reuseable/PostCommentThread"
 import { toggleCommentReaction } from "@/modules/api/rest/community"
 import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
 import { LinkPreview } from "@/components/reuseable/LinkPreview"
+import { QuotedPostCard } from "@/components/reuseable/QuotedPostCard"
 import { CommunityPoll } from "../CommunityPoll"
 import { firstLinkUrl, unwrapAutolinks } from "./postLinks"
 import { CommentLoadError } from "@/components/reuseable/PostCommentThread/comment-load-error"
@@ -269,11 +270,14 @@ export const CommunityPostContent = ({
                     </Typography>
                 ) : null}
                 <MarkdownContent markdown={renderedBody} />
-                {/* Bài KHẢO SÁT: phương án + nút bỏ phiếu là một phần THÂN BÀI, không phải
-                    khối rời. Đây là đường đọc duy nhất theo từng bài — composer đẩy tác giả
-                    về đúng trang này sau khi đăng, còn `/community/poll` chỉ mở được bài
-                    POLL mới nhất trong feed, nên thiếu nhánh này thì mọi poll cũ hơn không
-                    còn chỗ nào bỏ phiếu. `CommunityPoll` tự lo loading/rỗng/lỗi + vote. */}
+                {/* Bài ĐĂNG LẠI: card bài gốc lồng ngay dưới lời bình — cùng thứ tự với dòng feed,
+                    để mở từ feed hay từ permalink đều thấy y hệt nhau. */}
+                {post.quotedPost ? <QuotedPostCard post={post.quotedPost} /> : null}
+                {/* Bài BÌNH CHỌN: phương án + nút bỏ phiếu là một phần THÂN BÀI, không phải
+                    khối rời — mở bài từ feed hay từ permalink đều phải thấy phương án, nếu
+                    không bài chỉ còn mỗi câu hỏi trống. (`/community/poll` cũng bỏ phiếu
+                    được, nhưng đó là danh sách, không thay được đường đọc theo từng bài.)
+                    `CommunityPoll` tự lo loading/lỗi + vote. */}
                 {meta?.postType === "POLL" ? <CommunityPoll postId={postId} /> : null}
                 {previewUrl ? <LinkPreview url={previewUrl} /> : null}
                 {showMedia ? (

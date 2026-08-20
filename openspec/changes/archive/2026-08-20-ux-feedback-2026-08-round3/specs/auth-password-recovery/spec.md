@@ -1,8 +1,7 @@
-# auth-password-recovery Specification
+# auth-password-recovery
 
-## Purpose
-TBD - created by archiving change phase0-auth-complete. Update Purpose after archive.
-## Requirements
+## MODIFIED Requirements
+
 ### Requirement: Password recovery
 A user SHALL request a password reset and set a new password via a verified channel.
 
@@ -47,4 +46,3 @@ token để bật 2FA, `verify-otp` phục vụ cả `purpose=LOGIN` lẫn `purp
 #### Scenario: Quay lại màn đăng nhập
 - **WHEN** người dùng bấm "Back to sign in" trên màn hình quên mật khẩu
 - **THEN** màn đăng nhập mở ra, không phải trang chủ trống
-

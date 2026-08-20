@@ -12,6 +12,7 @@ import { UserAvatar } from "@/components/reuseable/UserAvatar"
 import { UserLink, useQueryFollowedUserIdsSwr } from "@/components/features/identity"
 import { ThreadsPostRow } from "@/components/blocks/feed/ThreadsPostRow"
 import { PostMediaGrid } from "@/components/blocks/feed/PostMediaGrid"
+import { QuotedPostCard } from "@/components/reuseable/QuotedPostCard"
 import { PinnedBadge } from "@/components/blocks/feed/PinnedBadge"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { InfiniteScrollSentinel } from "@/components/blocks/async/InfiniteScrollSentinel"
@@ -410,6 +411,10 @@ export const CommunityFeedRow = ({
                     ) : null}
                     <Typography type="body-sm">{post.snippet}</Typography>
                 </Link>
+                {/* Bài ĐĂNG LẠI: card bài gốc lồng ngay dưới lời bình (lời bình rỗng thì chỉ còn
+                    card này). Đặt NGOÀI <Link> ở trên vì QuotedPostCard chứa UserLink — một <a>
+                    thật — mà anchor lồng anchor là DOM không hợp lệ, click bị nuốt. */}
+                {post.quotedPost ? <QuotedPostCard post={post.quotedPost} className="mt-2" /> : null}
                 <PostMediaGrid postId={post.id} media={post.media} imageAlt={t("composer.imageAlt")} />
                 <PostEngagementBar
                     actions={actions}

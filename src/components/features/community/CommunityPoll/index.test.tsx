@@ -39,15 +39,9 @@ vi.mock("@heroui/react", () => ({
     toast: { danger: (...a: Array<unknown>) => toastDanger(...a) },
 }))
 
-// AsyncContent → children unless empty/error (skeleton path not under test here).
+// AsyncContent → children (the loading/error branches are not under test here).
 vi.mock("@/components/blocks/async/AsyncContent", () => ({
-    AsyncContent: ({
-        isEmpty,
-        children,
-    }: {
-        isEmpty?: boolean
-        children: React.ReactNode
-    }) => (isEmpty ? <div data-testid="empty" /> : <>{children}</>),
+    AsyncContent: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }))
 
 // The two hooks the component wires together — controllable per test.
@@ -190,11 +184,5 @@ describe("CommunityPoll", () => {
         // 4 of 5 = 80% — the local +1 must NOT stack on the server's tally (→ 5 of 6).
         expect(screen.getByText("80%")).toBeTruthy()
         expect(screen.getByText("poll.totalVotes#5")).toBeTruthy()
-    })
-
-    it("shows the empty state when no poll is discoverable", () => {
-        pollResult.poll = null
-        render(<CommunityPoll />)
-        expect(screen.getByTestId("empty")).toBeTruthy()
     })
 })

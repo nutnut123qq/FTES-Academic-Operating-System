@@ -7268,7 +7268,8 @@
             "guestHint": "The community feed is personalised, so sign in to see posts relevant to you.",
             "guestCta": "Sign in",
             "heading": "News feed",
-            "closePost": "Close post"
+            "closePost": "Close post",
+            "quoteUnavailable": "This post is no longer available."
         },
         "search": {
             "placeholder": "Search posts by title or content…",
@@ -7325,9 +7326,10 @@
             "pollHint": "A poll needs a question (the first line) and at least 2 options."
         },
         "poll": {
+            "title": "Polls",
             "totalVotes": "{count} votes",
             "error": "Couldn't load the poll. Please try again.",
-            "empty": "No poll in your feed yet.",
+            "empty": "No polls yet.",
             "voteFailed": "Couldn't submit your vote. Please try again.",
             "closed": "Poll closed"
         },
@@ -8601,7 +8603,8 @@
         "heading2": "Heading",
         "heading3": "Subheading",
         "image": "Insert image",
-        "imageAlt": "Image"
+        "imageAlt": "Image",
+        "uploadFailed": "Couldn't upload the image. Please try again."
     },
     "verifiedBadge": {
         "role": {

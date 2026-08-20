@@ -105,3 +105,25 @@ describe("i18n keys — every static key the code calls exists in the catalog", 
         expect([...enKeys].filter((k) => !viKeys.has(k))).toEqual([])
     })
 })
+
+/**
+ * Guard — ONE Vietnamese word per community post-kind.
+ *
+ * The composer chips, the hub menu and the search-type filter all name the same
+ * `PostType` enum on screens a click apart, and they had drifted: a poll was
+ * "Khảo sát" in the composer but "Bình chọn" everywhere else, a showcase was
+ * "Khoe dự án" in the composer but "Dự án" in search. Nothing else notices —
+ * every key exists, so the checks above stay green. Only the shape is pinned;
+ * the wording itself is free to change as long as it changes in both places.
+ */
+describe("i18n vi — one term per community post-kind", () => {
+    const hub = vi.communityHub
+
+    it("uses the same word for a poll in the menu and in the composer", () => {
+        expect(hub.composer.kinds.poll).toBe(hub.menu.poll)
+    })
+
+    it("uses the same word for a showcase in the composer and in the search filter", () => {
+        expect(hub.composer.kinds.showcase).toBe(hub.search.types.PROJECT_SHOWCASE)
+    })
+})

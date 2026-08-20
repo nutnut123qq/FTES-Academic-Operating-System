@@ -75,7 +75,7 @@ export const CommunityComposerForm = ({
     const t = useTranslations("communityHub")
     const router = useRouter()
     const { mutate, cache } = useSWRConfig()
-    const { requireAuth } = useRequireAuth()
+    const { requireAuthAsync } = useRequireAuth()
     // Repost/quote mode (C-1): when a quoted post is stashed, the form embeds it and
     // routes submit to `sharePost` instead of `createPost`.
     const { quote, setQuote } = useCommunityComposerOverlayState()
@@ -150,20 +150,25 @@ export const CommunityComposerForm = ({
     const onUploadingChange = useCallback((uploading: boolean) => setIsUploading(uploading), [])
 
     const onSubmit = async () => {
-        if (!requireAuth("auth.context.generic")) {
+        if (!(await requireAuthAsync("auth.context.generic"))) {
             return
         }
         setIsSubmitting(true)
         try {
             let createdId: string
             if (quote) {
-                // C-1 repost/quote: optional commentary → QUOTE, empty → plain SHARE.
+                // C-1 repost/quote: ALWAYS `QUOTE`, commentary or not. `QUOTE` is the only
+                // shareType that creates a real post, and a commentary-less repost still has
+                // to become one — otherwise the button does nothing visible. `SHARE` is NOT
+                // the "empty repost" value: `useMutateSharePostSwr` already owns it as the
+                // telemetry ping for copy-link / Facebook / X / Zalo / native share, so
+                // sending it from here would make BE choose between two contradictory jobs.
                 // Only those two values exist in the BE allowlist
                 // (`InteractionService.SHARE_TYPES`); anything else — "REPOST",
                 // "LINK", … — is a 400 `COMMUNITY_INVALID_SHARE_TYPE`.
                 const commentary = body.trim()
                 const shared = await sharePost(quote.id, {
-                    shareType: commentary ? "QUOTE" : "SHARE",
+                    shareType: "QUOTE",
                     quoteContent: commentary || undefined,
                 })
                 createdId = shared.id
@@ -207,9 +212,10 @@ export const CommunityComposerForm = ({
             // feed biến mất và không rõ phải quay lại kiểu gì. Feed vừa được revalidate ở
             // trên nên bài mới nằm ngay đầu danh sách, đúng chỗ mắt đang nhìn.
             //
-            // NGOẠI LỆ: bài KHẢO SÁT. Trang chi tiết là nơi DUY NHẤT bỏ phiếu được cho một
-            // poll cụ thể (`/community/poll` chỉ mở poll mới nhất), nên tác giả vẫn được
-            // đưa tới đó — bỏ nhánh này là poll vừa tạo không còn lối vào.
+            // NGOẠI LỆ: bài BÌNH CHỌN. Hàng feed chỉ in tiêu đề + trích đoạn, KHÔNG render
+            // phương án (chỉ trang chi tiết và `/community/poll` mới render), nên về feed là
+            // tác giả không thấy được cái mình vừa đăng trông ra sao. Đưa tới chi tiết một
+            // lần để tác giả kiểm lại phương án.
             if (isPoll) {
                 router.push(`/community/${createdId}`)
             } else {
@@ -273,6 +279,8 @@ export const CommunityComposerForm = ({
                     value={body}
                     onChange={setBody}
                     toolbar="full"
+                    // `PostImagePicker` further down is THE way to attach images here
+                    imageButton={false}
                     placeholder={t("composer.bodyField")}
                     minHeight={160}
                     autoFocus={autoFocus}

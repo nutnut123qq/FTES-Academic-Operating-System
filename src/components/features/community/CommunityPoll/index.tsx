@@ -10,12 +10,16 @@ import { useMutatePollVoteSwr } from "../hooks/useMutatePollVoteSwr"
 
 /** Props for {@link CommunityPoll}. */
 export interface CommunityPollProps {
-    /** POLL post to render; omitted → the latest poll from the viewer's feed. */
-    postId?: string
+    /** POLL post to render. */
+    postId: string
 }
 
-/** Loading skeleton — mirrors the question + option bars so the layout never jumps. */
-const PollSkeleton = () => (
+/**
+ * Loading skeleton — mirrors the question + option bars so the layout never jumps.
+ * Exported so {@link import("./PollList").CommunityPollList} stacks the SAME shape
+ * while its list loads instead of keeping a second copy in sync by hand.
+ */
+export const PollSkeleton = () => (
     <div className="flex flex-col gap-3">
         <Skeleton className="h-6 w-64 rounded-full" />
         <div className="flex flex-col gap-2">
@@ -40,9 +44,9 @@ export const CommunityPoll = ({ postId }: CommunityPollProps) => {
     const submitVote = useMutatePollVoteSwr()
     const [localVotedId, setLocalVotedId] = useState<string | null>(null)
 
-    // On the standalone page the SWR key is fixed (["poll","latest"]) and revalidate can
-    // surface a NEWER poll post. Reset the optimistic id when the poll identity changes,
-    // otherwise a stale localVotedId would mark an unvoted new poll as "voted" (+1 ghost).
+    // The same instance can be re-pointed at another poll (React reuses it when `postId`
+    // changes without a key change). Reset the optimistic id when the poll identity changes,
+    // otherwise a stale localVotedId would mark an unvoted poll as "voted" (+1 ghost).
     useEffect(() => {
         setLocalVotedId(null)
     }, [poll?.postId])
@@ -91,8 +95,6 @@ export const CommunityPoll = ({ postId }: CommunityPollProps) => {
         <AsyncContent
             isLoading={isLoading && !poll}
             skeleton={<PollSkeleton />}
-            isEmpty={!isLoading && !error && !poll}
-            emptyContent={{ title: t("poll.empty") }}
             error={!poll ? error : undefined}
             errorContent={{
                 title: t("poll.error"),

@@ -94,8 +94,8 @@ test.describe("community-de-mock — poll", () => {
 
         const heading = page.getByRole("heading", { name: "Bạn thích học ngôn ngữ nào đầu tiên?" })
         await expect(heading).toBeVisible({ timeout: 60_000 })
-        // the page renders TWO poll surfaces (main widget + discovery-rail copy) —
-        // scope to the innermost container of the main (h5) widget
+        // `/community/poll` lists EVERY poll, so the page can hold many option/percent
+        // widgets — scope every assertion to the innermost container of THIS poll's heading
         const widget = page.locator("div").filter({ has: heading }).last()
         // not voted yet → no result bars, no total-with-my-vote
         await expect(widget.getByText(`${total} lượt bình chọn`)).toBeVisible()
@@ -125,18 +125,20 @@ test.describe("community-de-mock — poll", () => {
         })
         await page.goto("/vi/community/poll")
 
-        await expect(
-            page.getByRole("heading", { name: "Bạn thích học ngôn ngữ nào đầu tiên?" }),
-        ).toBeVisible({ timeout: 60_000 })
+        const heading = page.getByRole("heading", { name: "Bạn thích học ngôn ngữ nào đầu tiên?" })
+        await expect(heading).toBeVisible({ timeout: 60_000 })
+        // the page lists every poll → `.first()` on the PAGE could land on another one;
+        // scope to the innermost container of THIS poll's heading
+        const widget = page.locator("div").filter({ has: heading }).last()
         // server myOptionId → revealed on load, tally matches server (no double count)
-        await expect(page.getByText("%").first()).toBeVisible({ timeout: 15_000 })
-        await expect(page.getByText(`${total} lượt bình chọn`)).toBeVisible()
+        await expect(widget.getByText("%").first()).toBeVisible({ timeout: 15_000 })
+        await expect(widget.getByText(`${total} lượt bình chọn`)).toBeVisible()
 
         // clicking again must be a no-op (already voted)
-        await page.getByRole("button", { name: /^C\b/ }).first().click()
+        await widget.getByRole("button", { name: /^C\b/ }).first().click()
         await page.waitForTimeout(1_500)
         expect(votePosted, "already-voted click must not POST").toBe(false)
-        await expect(page.getByText(`${total} lượt bình chọn`)).toBeVisible()
+        await expect(widget.getByText(`${total} lượt bình chọn`)).toBeVisible()
     })
 })
 

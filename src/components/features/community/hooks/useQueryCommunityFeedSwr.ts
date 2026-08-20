@@ -9,7 +9,9 @@ import {
     queryCommunityFeed,
     type FeedAuthorAchievement,
     type FeedPost,
+    type FeedQuotedPost,
 } from "@/modules/api/graphql/queries/query-community-feed"
+import type { QuotedPost } from "@/components/reuseable/QuotedPostCard"
 import { CommunitySearchSort } from "@/modules/api/graphql/queries/query-community-search"
 import type { PostMediaItem } from "@/components/blocks/feed/PostMediaGrid"
 import { splitBodyImages, unwrapAutolinks } from "@/components/features/community/CommunityPostDetail/postLinks"
@@ -34,6 +36,31 @@ export const toMediaItems = (
  */
 export const toBodyImageItems = (urls: Array<string>): Array<PostMediaItem> =>
     urls.map((url) => ({ id: url, mediaType: "IMAGE", storageKey: url }))
+
+/**
+ * Map BE `Post.quotedPost` onto the render contract of {@link QuotedPost}. `null`/absent stays
+ * `null` (bài thường, không vẽ card lồng).
+ *
+ * `available` được CHUYỂN NGUYÊN, không quy về boolean "thật": card phân biệt `false` (bài gốc
+ * không còn khả dụng → in nhãn) với absent (composer tự dựng vật thể → coi như khả dụng).
+ *
+ * `snippet` chạy qua ĐÚNG cặp {@link unwrapAutolinks} + {@link splitBodyImages} như
+ * {@link toCommunityPost}: card lồng cũng in TEXT THUẦN, nên thiếu bước tách ảnh thì cùng một bài
+ * sẽ hiện chữ sạch ở hàng gốc mà lộ nguyên `![Ảnh](https://…)` ở card lồng ngay bên dưới. Các url
+ * ảnh bị BỎ (card lồng chỉ có một dòng chữ, không có lưới ảnh để vẽ chúng).
+ */
+export const toQuotedPost = (quoted: FeedQuotedPost | null | undefined): QuotedPost | null => {
+    if (!quoted) {
+        return null
+    }
+    return {
+        author: quoted.author?.displayName ?? quoted.author?.username ?? "",
+        authorUsername: quoted.author?.username ?? "",
+        title: quoted.title ?? "",
+        snippet: splitBodyImages(unwrapAutolinks(quoted.snippet ?? "")).text,
+        available: quoted.available,
+    }
+}
 
 /** A community post (BE `Post` mapped to the feed card contract). */
 export interface CommunityPost {
@@ -85,6 +112,11 @@ export interface CommunityPost {
     comments: number
     /** Image attachments in server order (BE `Post.media`); empty when the post has none. */
     media: Array<PostMediaItem>
+    /**
+     * Bài GỐC lồng bên dưới khi đây là bài ĐĂNG LẠI (BE `Post.quotedPost`); `null`/absent =
+     * bài thường ⇒ không vẽ card lồng.
+     */
+    quotedPost?: QuotedPost | null
 }
 
 /** One cursor page of the feed (BE `PostConnection` mapped to card contract). */
@@ -262,10 +294,10 @@ export const toCommunityPost = (post: FeedPost, locale: string): CommunityPost =
     const { text, images } = splitBodyImages(unwrapAutolinks(post.snippet ?? ""))
     return {
         id: post.id,
-    author: post.author?.displayName ?? post.author?.username ?? "",
-    // Chỉ nhận username THẬT: rơi về id là dựng link hồ sơ /u/<uuid> → 404. Rỗng thì
-    // UserLink hiện tên không kèm link, thà vậy còn hơn liên kết chết. (Quyền sở hữu bài
-    // chốt bằng `authorId` ngay dưới, không phụ thuộc trường này.)
+        author: post.author?.displayName ?? post.author?.username ?? "",
+        // Chỉ nhận username THẬT: rơi về id là dựng link hồ sơ /u/<uuid> → 404. Rỗng thì
+        // UserLink hiện tên không kèm link, thà vậy còn hơn liên kết chết. (Quyền sở hữu bài
+        // chốt bằng `authorId` ngay dưới, không phụ thuộc trường này.)
         authorUsername: post.author?.username ?? "",
         authorAvatar: post.author?.avatarUrl ?? null,
         authorStaffRole: post.author?.staffRole ?? null,
@@ -280,6 +312,7 @@ export const toCommunityPost = (post: FeedPost, locale: string): CommunityPost =
         liked: post.likedByMe,
         comments: post.commentCount,
         media: [...toMediaItems(post.media), ...toBodyImageItems(images)],
+        quotedPost: toQuotedPost(post.quotedPost),
     }
 }
 

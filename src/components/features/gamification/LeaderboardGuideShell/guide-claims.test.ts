@@ -123,6 +123,19 @@ describe("Cách tính điểm — mỗi con số phải có rule thật", () => 
         expect(quest?.xp).toBe(100)
     })
 
+    it("nhãn hành động cộng đồng phải khoanh ĐÚNG phạm vi", () => {
+        // `postCreated` và `commentCreated` bám đúng 2 rule_key `community.*` (xem
+        // LeaderboardGuideShell/index.tsx), nên nhãn phải nói rõ là CỘNG ĐỒNG. "Viết 1 bình
+        // luận" trống phạm vi đọc thành "mọi bình luận đều có EXP", mà bình luận blog
+        // (blog.comment.created) không có rule nào và bình luận challenge không phát event.
+        // Ngược lại KHÔNG được viết "chỉ bình luận cộng đồng mới có EXP": bình luận học liệu
+        // (resource.commented) cũng trả đúng 10 EXP — nói dối chiều nào cũng là nói dối.
+        for (const key of ["postCreated", "commentCreated"]) {
+            expect(actionsOf(vi_messages)[key], `vi: guide.actions.${key}`).toMatch(/cộng đồng/i)
+            expect(actionsOf(en_messages)[key], `en: guide.actions.${key}`).toMatch(/community/i)
+        }
+    })
+
     it("mỗi dòng có nhãn ở CẢ hai catalog", () => {
         for (const row of rows) {
             expect(actionsOf(vi_messages)[row.key], `vi thiếu guide.actions.${row.key}`).toBeTruthy()

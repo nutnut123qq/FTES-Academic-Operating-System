@@ -130,6 +130,28 @@ describe("GroupDangerZone — transfer ownership", () => {
         expect(options.map((option) => option.value)).toEqual(["", "u-admin"])
     })
 
+    /**
+     * Hồi quy dark mode: popup native của <select> trên Chromium lấy nền từ background
+     * TÍNH ĐƯỢC của thẻ select. Select ở đây là `bg-transparent` nên popup rơi về nền
+     * TRẮNG mặc định của Blink, còn <option> kế thừa `--foreground` (trắng ở nhánh tối)
+     * ⇒ trắng trên trắng, chỉ đọc được dòng đang rê chuột. Cách duy nhất popup còn nghe
+     * theo là màu đặt TRỰC TIẾP lên <option>, nên 2 class dưới đây là bản vá, không phải
+     * trang trí — gỡ chúng là lỗi quay lại.
+     *
+     * ponytail: test soi CHUỖI class chứ không soi màu đã render. Trần: vitest.config.ts
+     * cố tình vô hiệu PostCSS (không nạp CSS nào), nên không có `getComputedStyle` nào
+     * chứng minh được màu thật ở đây. Đường nâng cấp: khẳng định màu thật bằng một ca
+     * Playwright ở `e2e/` (đã có hạ tầng) mở Create group ở dark mode và đọc màu popup.
+     */
+    it("sơn nền đục cho <option> để popup dark mode đọc được mọi dòng", () => {
+        render(
+            <GroupDangerZone groupId="g1" groupName="Nhóm A" isOwner isArchived={false} />,
+        )
+        const select = screen.getByRole("combobox")
+        expect(select.className).toContain("[&>option]:bg-surface")
+        expect(select.className).toContain("[&>option]:text-foreground")
+    })
+
     it("transfers only after the confirm dialog is confirmed", async () => {
         render(
             <GroupDangerZone groupId="g1" groupName="Nhóm A" isOwner isArchived={false} />,

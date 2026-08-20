@@ -118,11 +118,16 @@ export const GroupDangerZone = ({
                     </Typography>
                 ) : (
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                        {/* `[&>option]:bg-surface [&>option]:text-foreground` — xem giải thích
+                            đầy đủ ở GroupCreate: select `bg-transparent` khiến popup native của
+                            Chromium rơi về nền trắng, còn <option> kế thừa `--foreground` trắng
+                            ⇒ dark mode không đọc được dòng nào trừ dòng đang rê chuột. Sơn nền
+                            đục THẲNG lên <option> là chỗ DUY NHẤT popup của Blink còn nghe theo. */}
                         <select
                             value={newOwnerId}
                             aria-label={t("manage.transferSelect")}
                             onChange={(event) => setNewOwnerId(event.target.value)}
-                            className="w-full min-w-0 flex-1 rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none focus:border-accent"
+                            className="w-full min-w-0 flex-1 rounded-large border border-separator bg-transparent px-4 py-2 text-sm text-foreground outline-none focus:border-accent [&>option]:bg-surface [&>option]:text-foreground"
                         >
                             <option value="">{t("manage.transferSelect")}</option>
                             {candidates.map((member) => (

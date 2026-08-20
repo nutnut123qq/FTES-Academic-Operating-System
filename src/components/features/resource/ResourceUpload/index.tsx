@@ -44,9 +44,18 @@ const LICENSES = [
     "PUBLIC_DOMAIN",
 ] as const
 
-/** Shared class of the native selects (the form has no HeroUI Select on canon yet). */
+/**
+ * Shared class of the native selects (the form has no HeroUI Select on canon yet).
+ *
+ * `[&>option]:bg-surface [&>option]:text-foreground` phủ cả 4 select của form. `bg-default/40`
+ * là nền BÁN trong suốt, nên Chromium trộn `--default` tối trên nền trắng mặc định của popup
+ * ⇒ ra xám sáng, mà <option> vẫn kế thừa `--foreground` trắng ⇒ dark mode vẫn không đọc được.
+ * Sơn nền đục THẲNG lên <option> là chỗ duy nhất popup native còn nghe theo; cố ý KHÔNG đụng
+ * `bg-default/40` của chính select, vì sau khi mỗi hàng tự sơn nền thì độ đục của select không
+ * còn ảnh hưởng khả năng đọc, còn sửa nó thì đổi cả light mode.
+ */
 const SELECT_CLASS =
-    "w-full rounded-large border border-separator bg-default/40 px-3 py-2 text-sm text-foreground outline-none transition-colors focus:border-accent disabled:cursor-not-allowed disabled:opacity-60"
+    "w-full rounded-large border border-separator bg-default/40 px-3 py-2 text-sm text-foreground outline-none transition-colors focus:border-accent disabled:cursor-not-allowed disabled:opacity-60 [&>option]:bg-surface [&>option]:text-foreground"
 
 /**
  * Resource upload form (§5) wired to the REAL publish chain:

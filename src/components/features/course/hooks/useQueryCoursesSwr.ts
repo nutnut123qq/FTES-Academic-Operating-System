@@ -200,23 +200,31 @@ export interface UseQueryCoursesParams {
      * category caches independently.
      */
     categoryId?: string
+    /**
+     * Term id to filter by server-side (`GET /courses?termId=`). Omit / `undefined`
+     * for every term. Also part of the SWR key, for the same reason as
+     * {@link UseQueryCoursesParams.categoryId}.
+     */
+    termId?: string
 }
 
 /**
  * Loads the course catalog from the public REST endpoint
  * (`GET /api/v1/courses`) and adapts each row to the catalog card model. Category
- * filtering is SERVER-driven: passing `categoryId` refetches that category's
- * courses (the id is part of the SWR key, so views cache independently) rather
- * than filtering the full list client-side. `courses` defaults to `[]` while loading.
+ * and term filtering are both SERVER-driven: passing `categoryId` / `termId`
+ * refetches that slice (both ids are part of the SWR key, so views cache
+ * independently) rather than filtering the full list client-side.
+ * `courses` defaults to `[]` while loading.
  *
- * @param params - Optional server-side filters (currently `categoryId`).
+ * @param params - Optional server-side filters (`categoryId`, `termId`).
  */
 export const useQueryCoursesSwr = (params?: UseQueryCoursesParams) => {
     const categoryId = params?.categoryId
+    const termId = params?.termId
     const { data, isLoading, error, mutate } = useSWR(
-        ["rest-courses", categoryId ?? null],
+        ["rest-courses", categoryId ?? null, termId ?? null],
         async () => {
-            const list = await getCourses({ size: 100, categoryId })
+            const list = await getCourses({ size: 100, categoryId, termId })
             return list.map(toCourse)
         },
     )

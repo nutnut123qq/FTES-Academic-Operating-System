@@ -825,7 +825,13 @@
             "subtitle": "Tiếp tục hành trình học của bạn.",
             "empty": "Bạn chưa đăng ký khóa học nào",
             "browse": "Khám phá khóa học",
-            "emptyHint": "Đăng ký một khóa học, nó sẽ hiện ở đây để bạn học tiếp bất kỳ lúc nào."
+            "emptyHint": "Đăng ký một khóa học, nó sẽ hiện ở đây để bạn học tiếp bất kỳ lúc nào.",
+            "termLabel": "Lọc theo kỳ học",
+            "termAll": "Tất cả kỳ",
+            "termNone": "Ngoài kỳ học",
+            "termUnknown": "Kỳ không xác định",
+            "filterEmpty": "Không có khóa học nào trong kỳ này",
+            "filterEmptyHint": "Chọn \"Tất cả kỳ\" để xem lại toàn bộ khóa học của bạn."
         },
         "teaching": {
             "title": "Khóa tôi dạy",
@@ -3143,11 +3149,6 @@
             "des4": "Chi phí tối thiểu, tiêu chuẩn cao",
             "des5": "FTES AOS vận hành theo mô hình tinh gọn, loại bỏ các chi phí không cần thiết để giữ học phí ở mức dễ tiếp cận. Mục tiêu của chúng tớ là tạo ra một môi trường học tập chất lượng cao mà bất kỳ ai nghiêm túc với nghề đều có thể tham gia.",
             "des6": "Chúng tớ dạy để bạn xây dựng những project có giá trị thực sự và hỗ trợ lâu dài trong quá trình phát triển sự nghiệp."
-        },
-        "myCourses": {
-            "eyebrow": "Hành trình của bạn",
-            "title": "Tiếp tục học",
-            "seeAll": "Xem tất cả"
         }
     },
     "dashboard": {
@@ -6563,7 +6564,9 @@
                 "all": "Tất cả",
                 "levelLabel": "Lọc theo cấp độ",
                 "ratingLabel": "Lọc theo số sao",
-                "ratingAtLeast": "{rating} trở lên"
+                "ratingAtLeast": "{rating} trở lên",
+                "termLabel": "Lọc theo kỳ học",
+                "allTerms": "Tất cả kỳ"
             },
             "badge": {
                 "bestseller": "Bán chạy",
@@ -6573,6 +6576,7 @@
                 "package": "Combo"
             },
             "empty": "Không có khóa học phù hợp.",
+            "termEmpty": "Không có khóa học nào trong kỳ này",
             "ratingCount": "({count})",
             "hours": "{count} giờ",
             "minutes": "{count} phút",

@@ -7,7 +7,6 @@ import { useTranslations } from "next-intl"
 import { useRouter } from "@/i18n/navigation"
 import { useAppSelector } from "@/redux/hooks"
 import { JourneyHero } from "./sections/JourneyHero"
-import { MyCoursesSection } from "./sections/MyCoursesSection"
 import { HomeMascotGreetingBand } from "./sections/HomeMascotGreeting"
 import { PlatformStatsSection } from "./sections/PlatformStatsSection"
 import { AchievementsSection } from "./sections/AchievementsSection"
@@ -67,13 +66,8 @@ export const HomeLanding = () => {
     return (
         <main className="flex w-full flex-col items-center">
             <JourneyHero />
-            {/* signed-in + has-enrollments only; self-hides otherwise (no layout jump) */}
-            <MyCoursesSection />
-            {/* FrosTES welcome — the page's single mascot, a SMALL low-padding one-liner
-                (not a hero banner). It normally renders INSIDE the "Continue learning" band
-                (under its heading, above the cards); this band is the fallback that shows it
-                after the hero when that band self-hides (guest / no enrollment), so the page
-                always has exactly one mascot. */}
+            {/* FrosTES welcome — the page's SINGLE mascot, a SMALL low-padding one-liner
+                (not a hero banner), right under the hero. */}
             <HomeMascotGreetingBand />
             <PlatformStatsSection />
             <AchievementsSection />

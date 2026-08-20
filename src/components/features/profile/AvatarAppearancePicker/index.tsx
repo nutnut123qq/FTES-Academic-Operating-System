@@ -11,10 +11,19 @@ import { useSelfProfileKey } from "@/components/features/profile/hooks/useQueryP
 import { useAppearanceCatalogSwr } from "@/components/features/profile/hooks/useAppearanceCatalogSwr"
 import { UserAvatar } from "@/components/reuseable/UserAvatar"
 import { AvatarWithFrame } from "@/components/features/gamification/AvatarWithFrame"
+import { AchievementArt } from "@/components/features/gamification/EquippedAchievement"
+import { useBadgeLabel } from "@/components/features/gamification/useBadgeLabel"
+import { useGetBadgeCatalogSwr } from "@/hooks/swr/api/rest/queries/useGetBadgeCatalogSwr"
 import { useRestWithToast } from "@/modules/toast/hooks"
 
 /** Sentinel `pending` marker for the "no frame" tile (an empty code means "clear"). */
 const FRAME_NONE = "__frame_none__"
+
+/**
+ * Sentinel `pending` marker for the "no achievement" tile — anh em của {@link FRAME_NONE}.
+ * Chỉ dùng để đánh dấu ô nào đang bận; thứ THẬT SỰ gửi lên backend là chuỗi RỖNG.
+ */
+const ACHIEVEMENT_NONE = "__achievement_none__"
 
 /** One selectable tile — a soft, square, focusable button with a selected ring + check. */
 const Tile = ({
@@ -58,19 +67,30 @@ const Tile = ({
  * <p>Đây là chỗ duy nhất người dùng tự đổi ảnh trong ALBUM mặc định (V341) và đeo KHUNG
  * viền đã mở khoá — trước đợt này FE chỉ có upload ảnh, không có nút chọn album/khung nào.
  *
+ * <p>Từ đợt này màn hình còn là chỗ chọn THÀNH TÍCH ghim sau tên — thầy yêu cầu "cũng cho
+ * nó setup trong cái phần setup khung luôn": khung viền và con dấu thành tích đều là đồ
+ * trang trí đeo lên danh tính, tách ra hai màn khác nhau chỉ khiến không ai tìm thấy.
+ *
  * <p>Mỗi lần bấm là ÁP NGAY (khác nút Lưu của form chữ): chọn ảnh ⇒ `PUT /me/avatar/default`,
- * chọn khung ⇒ `PATCH /me {avatarFrame}` (chuỗi rỗng = bỏ khung). Cả hai trả về hồ sơ mới,
- * nạp thẳng vào cache dùng chung ({@link useSelfProfileKey}) nên avatar trên navbar + ô xem
- * trước đổi tức thì, không cần GET lại.
+ * chọn khung ⇒ `PATCH /me {avatarFrame}`, chọn thành tích ⇒ `PATCH /me {equippedAchievement}`
+ * (chuỗi rỗng = gỡ, ở CẢ HAI trường). Cả ba trả về hồ sơ mới, nạp thẳng vào cache dùng chung
+ * ({@link useSelfProfileKey}) nên avatar trên navbar + ô xem trước đổi tức thì, không cần
+ * GET lại.
  *
  * <p>Danh mục rỗng (BE chưa seed / chưa deploy) ⇒ ẩn khối tương ứng, không vỡ trang.
  */
 export const AvatarAppearancePicker = () => {
     const t = useTranslations("profileEdit.appearance")
+    const badgeLabel = useBadgeLabel()
     const runRest = useRestWithToast()
     const selfKey = useSelfProfileKey()
     const { data: profile, mutate } = useSWR(selfKey, getSelfProfile)
     const { avatars, frames } = useAppearanceCatalogSwr()
+    // Danh mục thành tích (đã ĐƯỢC SẮP SẴN backend-side theo `sortOrder` rồi `code` — call
+    // site KHÔNG được sắp lại). Chỉ giữ những cái ĐÃ ĐẠT: backend từ chối 400 mã chưa đạt,
+    // nên bày ra một ô bấm-là-lỗi còn tệ hơn không bày.
+    const { data: badgeCatalog } = useGetBadgeCatalogSwr()
+    const earnedAchievements = (badgeCatalog?.items ?? []).filter((item) => item.earned)
 
     // The code currently being applied — disables the whole grid + marks the tile busy.
     const [pending, setPending] = useState<string | null>(null)
@@ -80,6 +100,8 @@ export const AvatarAppearancePicker = () => {
     }
 
     const currentFrameCode = profile.avatarFrame?.code ?? null
+    // `undefined` (BE chưa deploy trường này) và `null` (không ghim) CÙNG nghĩa ở đây.
+    const currentAchievementCode = profile.equippedAchievement?.code ?? null
 
     const apply = async (marker: string, action: () => Promise<SelfProfile>) => {
         if (pending) {
@@ -98,6 +120,10 @@ export const AvatarAppearancePicker = () => {
     const onPickAvatar = (a: DefaultAvatarView) => apply(a.code, () => setDefaultAvatar(a.code))
     const onPickFrame = (code: string | null) =>
         apply(code ?? FRAME_NONE, () => updateSelfProfile({ avatarFrame: code ?? "" }))
+    const onPickAchievement = (code: string | null) =>
+        apply(code ?? ACHIEVEMENT_NONE, () =>
+            updateSelfProfile({ equippedAchievement: code ?? "" }),
+        )
 
     const sortByOrder = <T extends { sortOrder: number }>(items: Array<T>) =>
         [...items].sort((a, b) => a.sortOrder - b.sortOrder)
@@ -216,6 +242,56 @@ export const AvatarAppearancePicker = () => {
                                             {frame.description}
                                         </Typography>
                                     ) : null}
+                                </Tile>
+                            )
+                        })}
+                    </div>
+                </div>
+            ) : null}
+
+            {/* achievements — pin / clear the mark shown after your name */}
+            {earnedAchievements.length > 0 ? (
+                <div className="flex flex-col gap-3">
+                    <Typography type="body-sm" weight="semibold">
+                        {t("achievementTitle")}
+                    </Typography>
+                    <Typography type="body-xs" color="muted">
+                        {t("achievementHint")}
+                    </Typography>
+                    <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+                        {/* "no achievement" tile — gỡ ghim, đúng khuôn ô "Không viền" */}
+                        <Tile
+                            selected={currentAchievementCode === null}
+                            disabled={pending !== null}
+                            onSelect={() => onPickAchievement(null)}
+                            ariaLabel={t("achievementNone")}
+                        >
+                            <span className="flex size-12 items-center justify-center rounded-full border border-dashed border-default text-muted">
+                                <ProhibitIcon className="size-5" aria-hidden focusable="false" />
+                            </span>
+                            <Typography type="body-xs" color="muted" className="line-clamp-1">
+                                {t("achievementNone")}
+                            </Typography>
+                        </Tile>
+                        {earnedAchievements.map((item) => {
+                            // Nhãn qua `useBadgeLabel` (bản dịch curated → tên backend → mã đã
+                            // humanize) — KHÔNG tự tra `gamification.milestones.*` tại chỗ, vì
+                            // một mốc seed sau bản phát hành sẽ in ra nguyên đường dẫn key.
+                            const label = badgeLabel(item.code, item.name)
+                            return (
+                                <Tile
+                                    key={item.code}
+                                    selected={currentAchievementCode === item.code}
+                                    disabled={pending !== null}
+                                    onSelect={() => onPickAchievement(item.code)}
+                                    ariaLabel={label}
+                                >
+                                    <span className="flex size-12 items-center justify-center">
+                                        <AchievementArt achievement={item} className="size-10" />
+                                    </span>
+                                    <Typography type="body-xs" color="muted" className="line-clamp-1">
+                                        {label}
+                                    </Typography>
                                 </Tile>
                             )
                         })}

@@ -7,6 +7,7 @@ import { useLocale } from "next-intl"
 import {
     FeedTab,
     queryCommunityFeed,
+    type FeedAuthorAchievement,
     type FeedPost,
 } from "@/modules/api/graphql/queries/query-community-feed"
 import { CommunitySearchSort } from "@/modules/api/graphql/queries/query-community-search"
@@ -48,6 +49,13 @@ export interface CommunityPost {
     authorStaffRole?: string | null
     /** Mã khung viền tác giả đang đeo (BE `PublicUser.avatarFrame`); null = không khung. */
     authorFrame?: string | null
+    /**
+     * THÀNH TÍCH tác giả ghim sau tên (BE `PublicUser.equippedAchievement`); null/absent =
+     * không ghim ⇒ hàng tên không vẽ thêm gì. Giữ nguyên VẬT THỂ (mã + tên + art) chứ không
+     * dẹt xuống mã như {@link authorFrame}: con dấu cần art và tên để vẽ, và BE đã gửi sẵn
+     * cả hai — dẹt đi sẽ buộc mỗi hàng feed đi tra lại danh mục badge.
+     */
+    authorAchievement?: FeedAuthorAchievement | null
     /**
      * Author id (BE `Post.authorId`) — the owner gate compares this, since a display
      * name/username can be missing while the id is always present.
@@ -244,6 +252,7 @@ export const toCommunityPost = (post: FeedPost, locale: string): CommunityPost =
     authorAvatar: post.author?.avatarUrl ?? null,
     authorStaffRole: post.author?.staffRole ?? null,
     authorFrame: post.author?.avatarFrame ?? null,
+    authorAchievement: post.author?.equippedAchievement ?? null,
     authorId: post.authorId ?? post.author?.id ?? null,
     pinned: post.pinned ?? false,
     timeLabel: formatRelativeTime(post.createdAt, locale),

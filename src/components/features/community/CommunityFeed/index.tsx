@@ -371,6 +371,7 @@ export const CommunityFeedRow = ({
                         displayName={authorName}
                         showAvatar={false}
                         staffRole={post.authorStaffRole}
+                        achievement={post.authorAchievement}
                         isFollowing={isFollowing}
                         // Tên tác giả phải ĐẬM và ăn màu chữ chính — mặc định của UserLink là
                         // `font-semibold`, đọc trên nền card vẫn mảnh so với thân bài.

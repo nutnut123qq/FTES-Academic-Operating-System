@@ -10,6 +10,10 @@ import { useQueryUserHovercardSwr } from "@/hooks/swr/api/graphql/queries"
 import { RestError } from "@/modules/api/rest/client"
 import { UserAvatar } from "@/components/reuseable/UserAvatar"
 import { StaffBadge } from "@/components/reuseable/StaffBadge"
+import {
+    EquippedAchievement,
+    type EquippedAchievementRef,
+} from "@/components/features/gamification/EquippedAchievement"
 import { UserHovercard } from "@/components/blocks/identity"
 import { staffBadgeFor } from "@/hooks/useViewerStaffRole"
 import { pathConfig } from "@/resources/path"
@@ -70,6 +74,19 @@ export interface UserLinkProps extends WithClassNames<{ avatar?: string; name?: 
      */
     frameCode?: string | null
     /**
+     * THÀNH TÍCH người này đang GHIM sau tên (BE trả kèm hồ sơ / thẻ tác giả, đã tra sẵn
+     * mã + art + tên). Vẽ qua {@link EquippedAchievement} nên con dấu hiện ở MỌI nơi có
+     * cái tên — feed, bình luận, @mention, danh sách — chứ không phải dán lại từng chỗ.
+     *
+     * `undefined` (BE chưa deploy) / `null` (không ghim) ⇒ KHÔNG vẽ gì và cây markup giữ
+     * NGUYÊN như trước: đại đa số tài khoản không ghim gì cả.
+     *
+     * Bị bỏ qua khi {@link UserLinkProps.hideName} bật — cùng lý do với {@link staffRole}:
+     * nhiều bề mặt render component này HAI lần cho một người (cột avatar + hàng tên), mà
+     * con dấu thuộc về cái TÊN.
+     */
+    achievement?: EquippedAchievementRef | null
+    /**
      * Follow state supplied by the CALLER, for surfaces that already read it for the
      * whole list in one request
      * ({@link import("./useQueryFollowedUserIdsSwr").useQueryFollowedUserIdsSwr} over
@@ -112,6 +129,7 @@ export const UserLink = ({
     hideName = false,
     staffRole,
     frameCode,
+    achievement,
     isFollowing: isFollowingProp,
     className,
     classNames,
@@ -188,6 +206,23 @@ export const UserLink = ({
             // span below — `<StaffBadge>` self-nulls, but a JSX element is always truthy.
             !hideName && staffBadgeFor(staffRole) ? <StaffBadge role={staffRole} /> : null,
         [hideName, staffRole],
+    )
+
+    /**
+     * Con dấu THÀNH TÍCH ghim, khi người này có ghim — `null` cho tất cả những người còn
+     * lại. Điều kiện `code` được kiểm TẠI ĐÂY (chứ không phó mặc cho component tự trả
+     * `null`) vì một phần tử JSX luôn truthy: nếu không kiểm, mọi cái tên trong feed sẽ
+     * bị bọc thêm một lớp `<span>` thừa chỉ để chứa một component không vẽ gì.
+     *
+     * Đứng NGOÀI thẻ `<a>` hồ sơ giống {@link badge} — cùng một lý do: con dấu là trang
+     * trí cạnh tên, không phải một phần của đường dẫn bấm được.
+     */
+    const pin = useMemo(
+        () =>
+            !hideName && achievement?.code?.trim() ? (
+                <EquippedAchievement achievement={achievement} />
+            ) : null,
+        [hideName, achievement],
     )
 
     const identity = (
@@ -317,12 +352,15 @@ export const UserLink = ({
         trigger
     )
 
-    // No badge → the exact tree this component has always returned (the caller's
-    // `className` keeps landing on the hovercard/trigger it was written for).
-    return badge ? (
+    // No badge AND no pinned achievement → the exact tree this component has always
+    // returned (the caller's `className` keeps landing on the hovercard/trigger it was
+    // written for). Both marks share the one wrapper so a staff member who also pins a
+    // thành tích gets a single row, not two nested spans.
+    return badge || pin ? (
         <span className="inline-flex min-w-0 items-center gap-1">
             {node}
             {badge}
+            {pin}
         </span>
     ) : (
         node

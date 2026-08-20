@@ -19,6 +19,7 @@ import { GamificationChip } from "@/components/blocks/gamification/GamificationC
 import { ExtendedTabs } from "@/components/blocks/navigation/ExtendedTabs"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { StaffBadge } from "@/components/reuseable/StaffBadge"
+import { EquippedAchievement } from "@/components/features/gamification/EquippedAchievement"
 import { useViewerStaffRole } from "@/hooks/useViewerStaffRole"
 import { useQueryMyGamificationSwr } from "@/components/features/gamification/hooks/useQueryMyGamificationSwr"
 import { BadgeCatalogModal } from "../ProfileBadges/BadgeCatalogModal"
@@ -167,6 +168,13 @@ export const ProfileShell = ({ children }: ProfileShellProps) => {
                                         {profile.name}
                                     </Typography>
                                     <StaffBadge role={staffRole} size="md" />
+                                    {/* Con dấu THÀNH TÍCH đã ghim — cùng component với con dấu
+                                        sau tên ở feed/bình luận, nên hai chỗ không thể vẽ khác
+                                        nhau. Không ghim ⇒ không vẽ gì (hệt StaffBadge). */}
+                                    <EquippedAchievement
+                                        achievement={profile.equippedAchievement}
+                                        size="md"
+                                    />
                                 </div>
                                 {profile.headline ? (
                                     <Typography type="body-sm" color="muted">

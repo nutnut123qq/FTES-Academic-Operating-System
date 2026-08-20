@@ -11,6 +11,7 @@ import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { ExtendedTabs } from "@/components/blocks/navigation/ExtendedTabs"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { StaffBadge } from "@/components/reuseable/StaffBadge"
+import { EquippedAchievement } from "@/components/features/gamification/EquippedAchievement"
 import { useViewerStaffRole } from "@/hooks/useViewerStaffRole"
 import { useAppSelector } from "@/redux/hooks"
 import { useQueryPublicProfileSwr } from "../hooks/useQueryPublicProfileSwr"
@@ -155,6 +156,13 @@ export const ProfilePublic = () => {
                                                 {profile.name}
                                             </Typography>
                                             <StaffBadge role={staffRole} size="md" />
+                                            {/* Con dấu THÀNH TÍCH đã ghim — người khác xem hồ
+                                                sơ này cũng phải thấy, vẽ bằng đúng component
+                                                dùng ở feed/bình luận. */}
+                                            <EquippedAchievement
+                                                achievement={profile.equippedAchievement}
+                                                size="md"
+                                            />
                                         </div>
                                         <Typography type="body-sm" color="muted">
                                             @{profile.username}

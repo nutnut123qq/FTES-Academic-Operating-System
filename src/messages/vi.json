@@ -2154,9 +2154,9 @@
         "loadingError": "Không tải được hồ sơ",
         "retry": "Thử lại",
         "badgeCatalog": {
-            "seeAll": "Xem thêm huy hiệu",
-            "title": "Tất cả huy hiệu",
-            "subtitle": "Mọi huy hiệu trong hệ thống và cách đạt được",
+            "seeAll": "Xem thêm thành tích",
+            "title": "Tất cả thành tích",
+            "subtitle": "Mọi thành tích trong hệ thống và cách đạt được",
             "summary": "Đã đạt {earned}/{total}",
             "earned": "Đã đạt",
             "locked": "Chưa đạt",
@@ -2164,9 +2164,9 @@
             "earnedOn": "Đạt ngày {date}",
             "earnedNoDate": "Đã đạt",
             "progress": "{current}/{total}",
-            "empty": "Chưa có huy hiệu nào được thiết lập",
-            "emptyDescription": "Quản trị viên chưa tạo huy hiệu nào. Quay lại sau nhé.",
-            "error": "Không tải được danh sách huy hiệu",
+            "empty": "Chưa có thành tích nào được thiết lập",
+            "emptyDescription": "Quản trị viên chưa tạo thành tích nào. Quay lại sau nhé.",
+            "error": "Không tải được danh sách thành tích",
             "errorDescription": "Máy chủ chưa trả về được danh sách. Thử lại sau ít phút.",
             "retry": "Thử lại",
             "close": "Đóng"
@@ -2176,7 +2176,7 @@
             "academic": "Học vấn",
             "cv": "CV",
             "portfolio": "Hồ sơ",
-            "achievements": "Thành tựu",
+            "achievements": "Thành tích",
             "certificates": "Chứng chỉ",
             "community": "Kết nối",
             "progress": "Tiến độ"
@@ -2333,8 +2333,8 @@
                 "viewLeaderboard": "Xem bảng xếp hạng"
             },
             "badges": {
-                "title": "Huy hiệu",
-                "empty": "Chưa có huy hiệu nào — học đều mỗi ngày để mở khoá.",
+                "title": "Thành tích",
+                "empty": "Chưa có thành tích nào — học đều mỗi ngày để mở khoá.",
                 "earnedOn": "Đạt ngày {date}"
             },
             "empty": {
@@ -2378,7 +2378,7 @@
             "jobReadiness": "Sắp ra mắt — mức sẵn sàng nghề nghiệp của bạn sẽ xuất hiện ở đây.",
             "skills": "Sắp ra mắt — kỹ năng của bạn sẽ xuất hiện ở đây."
         },
-        "badgesCount": "Đã đạt {count} huy hiệu — xem tất cả"
+        "badgesCount": "Đã đạt {count} thành tích — xem tất cả"
     },
     "accountMenu": {
         "gamification": {
@@ -2398,11 +2398,14 @@
         "avatarHint": "PNG, JPG, WEBP hoặc GIF, tối đa 5 MB.",
         "appearance": {
             "previewTitle": "Diện mạo của bạn",
-            "previewHint": "Chọn ảnh và khung viền bên dưới — áp dụng ngay khi bấm.",
+            "previewHint": "Chọn ảnh, khung viền và thành tích ghim bên dưới — áp dụng ngay khi bấm.",
             "albumTitle": "Chọn ảnh đại diện",
             "framesTitle": "Khung viền avatar",
             "frameNone": "Không viền",
-            "frameLocked": "Chưa mở khoá"
+            "frameLocked": "Chưa mở khoá",
+            "achievementTitle": "Thành tích ghim",
+            "achievementHint": "Hiện ngay sau tên bạn, ở mọi nơi bạn xuất hiện.",
+            "achievementNone": "Không ghim"
         },
         "save": "Lưu thay đổi",
         "saved": "Cập nhật hồ sơ thành công.",
@@ -3268,7 +3271,7 @@
         "feedFilter": {
             "all": "Tất cả",
             "courses": "Khóa học",
-            "achievements": "Thành tựu",
+            "achievements": "Thành tích",
             "people": "Người"
         },
         "trending": {
@@ -4072,8 +4075,8 @@
         "title": "Bảng xếp hạng",
         "subtitle": "Theo dõi tiến độ và xem thứ hạng của bạn so với mọi người.",
         "leaderboard": "Bảng xếp hạng",
-        "badges": "Huy hiệu",
-        "badgesEmpty": "Chưa có huy hiệu nào. Học đều để mở khóa nhé.",
+        "badges": "Thành tích",
+        "badgesEmpty": "Chưa có thành tích nào. Học đều để mở khóa nhé.",
         "xpValue": "{xp} XP",
         "levelHint": "Còn {xp} XP để lên cấp",
         "stats": {
@@ -4092,7 +4095,7 @@
         "moment": {
             "levelUpTitle": "Lên cấp!",
             "levelUpBody": "Bạn đã đạt cấp {level}",
-            "badgeUnlockedKicker": "Mở khoá thành tựu",
+            "badgeUnlockedKicker": "Mở khoá thành tích",
             "badgeUnlockedCta": "Tuyệt vời!"
         },
         "milestones": {
@@ -4180,7 +4183,7 @@
             "xpSection": "Điểm kinh nghiệm (XP)",
             "actionHeader": "Hành động",
             "xpHeader": "XP",
-            "noStreakMultiplierNote": "Mỗi hành động trả ĐÚNG con số trong bảng — không có hệ số nhân nào theo streak. Streak dùng để giữ chuỗi ngày và mở các mốc huy hiệu, không nhân EXP.",
+            "noStreakMultiplierNote": "Mỗi hành động trả ĐÚNG con số trong bảng — không có hệ số nhân nào theo streak. Streak dùng để giữ chuỗi ngày và mở các mốc thành tích, không nhân EXP.",
             "actions": {
                 "lessonComplete": "Hoàn thành 1 bài học",
                 "quizSubmit": "Vượt qua 1 quiz",
@@ -4479,7 +4482,7 @@
             "userRegistered": "Đã tham gia FTES",
             "profileCreated": "Đã tạo hồ sơ",
             "profileUpdated": "Đã cập nhật hồ sơ",
-            "achievementAdded": "Đã thêm một thành tựu",
+            "achievementAdded": "Đã thêm một thành tích",
             "userFollowed": "Đã theo dõi một người",
             "userUnfollowed": "Đã bỏ theo dõi một người",
             "courseEnrolled": "Đã ghi danh một khoá học",
@@ -4544,7 +4547,7 @@
             "challengeRewarded": "Đã nhận thưởng từ challenge",
             "challengePublished": "Đã đăng một challenge",
             "challengeClosed": "Có một challenge đã đóng",
-            "badgeEarned": "Đã nhận một huy hiệu",
+            "badgeEarned": "Đã nhận một thành tích",
             "levelUp": "Đã lên cấp",
             "masteryLevelUp": "Đã lên một bậc thành thạo",
             "streakMilestone": "Đã đạt một mốc chuỗi ngày",
@@ -5649,8 +5652,8 @@
     },
     "ranks": {
         "explain": {
-            "why": "Dựa trên {count} huy hiệu bạn đã đạt được.",
-            "next": "Cần thêm {remaining} huy hiệu ở hạng {tier} để lên {next} ({have}/{count}).",
+            "why": "Dựa trên {count} thành tích bạn đã đạt được.",
+            "next": "Cần thêm {remaining} thành tích ở hạng {tier} để lên {next} ({have}/{count}).",
             "maxed": "Bạn đã đạt hạng cao nhất."
         },
         "beginner": "Tập sự",

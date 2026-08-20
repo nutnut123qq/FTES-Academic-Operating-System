@@ -44,6 +44,10 @@ export const buildThreadCommentTree = (
         author: dto.author?.displayName ?? dto.author?.username ?? "",
         authorUsername: dto.author?.username ?? "",
         authorStaffRole: dto.author?.staffRole ?? null,
+        // Nguồn dựng THỨ HAI của `PostComment` (nguồn kia là đường GraphQL của bài cộng
+        // đồng). Thiếu dòng này thì bình luận trong thread NHÓM là bề mặt duy nhất im lặng
+        // không hiện con dấu — đúng kiểu lỗ hổng chỉ lộ ra khi có người thật đi ghim.
+        authorAchievement: dto.author?.equippedAchievement ?? null,
         text: dto.content,
         timeLabel: dto.createdAt ? formatRelativeTime(dto.createdAt, locale) : "",
         // `ThreadCommentDto` has carried these since the BE shipped comment reactions

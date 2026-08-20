@@ -2142,9 +2142,9 @@
         "loadingError": "Could not load profile",
         "retry": "Retry",
         "badgeCatalog": {
-            "seeAll": "See all badges",
-            "title": "All badges",
-            "subtitle": "Every badge in the system and how to earn it",
+            "seeAll": "See all achievements",
+            "title": "All achievements",
+            "subtitle": "Every achievement in the system and how to earn it",
             "summary": "Earned {earned} of {total}",
             "earned": "Earned",
             "locked": "Not earned yet",
@@ -2152,9 +2152,9 @@
             "earnedOn": "Earned {date}",
             "earnedNoDate": "Earned",
             "progress": "{current}/{total}",
-            "empty": "No badges have been set up yet",
-            "emptyDescription": "An administrator has not created any badges yet. Check back later.",
-            "error": "Could not load the badge list",
+            "empty": "No achievements have been set up yet",
+            "emptyDescription": "An administrator has not created any achievements yet. Check back later.",
+            "error": "Could not load the achievement list",
             "errorDescription": "The server did not return the list. Try again in a moment.",
             "retry": "Try again",
             "close": "Close"
@@ -2321,8 +2321,8 @@
                 "viewLeaderboard": "View leaderboard"
             },
             "badges": {
-                "title": "Badges",
-                "empty": "No badges yet — learn every day to unlock them.",
+                "title": "Achievements",
+                "empty": "No achievements yet — learn every day to unlock them.",
                 "earnedOn": "Earned {date}"
             },
             "empty": {
@@ -2366,7 +2366,7 @@
             "jobReadiness": "Coming soon — your job readiness will appear here.",
             "skills": "Coming soon — your skills will appear here."
         },
-        "badgesCount": "{count} badges earned — see all"
+        "badgesCount": "{count} achievements earned — see all"
     },
     "accountMenu": {
         "gamification": {
@@ -2386,11 +2386,14 @@
         "avatarHint": "PNG, JPG, WEBP or GIF, up to 5 MB.",
         "appearance": {
             "previewTitle": "Your look",
-            "previewHint": "Pick an avatar and frame below — changes apply instantly.",
+            "previewHint": "Pick an avatar, frame and pinned achievement below — changes apply instantly.",
             "albumTitle": "Choose an avatar",
             "framesTitle": "Avatar frame",
             "frameNone": "No frame",
-            "frameLocked": "Locked"
+            "frameLocked": "Locked",
+            "achievementTitle": "Pinned achievement",
+            "achievementHint": "Shown right after your name, everywhere you appear.",
+            "achievementNone": "No achievement"
         },
         "save": "Save changes",
         "saved": "Profile updated successfully.",
@@ -4072,8 +4075,8 @@
         "title": "Leaderboard",
         "subtitle": "Track your progress and see how you rank against your peers.",
         "leaderboard": "Leaderboard",
-        "badges": "Badges",
-        "badgesEmpty": "No badges yet. Keep learning to unlock them.",
+        "badges": "Achievements",
+        "badgesEmpty": "No achievements yet. Keep learning to unlock them.",
         "xpValue": "{xp} XP",
         "levelHint": "{xp} XP to next level",
         "stats": {
@@ -4544,7 +4547,7 @@
             "challengeRewarded": "Received a challenge reward",
             "challengePublished": "Published a challenge",
             "challengeClosed": "Took part in a challenge that closed",
-            "badgeEarned": "Earned a badge",
+            "badgeEarned": "Earned an achievement",
             "levelUp": "Leveled up",
             "masteryLevelUp": "Reached a new mastery level",
             "streakMilestone": "Hit a day streak milestone",
@@ -5667,8 +5670,8 @@
     },
     "ranks": {
         "explain": {
-            "why": "Rank is derived from how many badges you've earned and the tiers reached on them. {count} badges earned.",
-            "next": "Reach {next}: need {remaining} more badge(s) at tier {tier} (have {have}/{count}).",
+            "why": "Rank is derived from how many achievements you've earned and the tiers reached on them. {count} achievements earned.",
+            "next": "Reach {next}: need {remaining} more achievement(s) at tier {tier} (have {have}/{count}).",
             "maxed": "This is the top rank — you've reached Senior."
         },
         "beginner": "Beginner",

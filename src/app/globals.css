@@ -269,6 +269,29 @@ html {
 /* ── Component overrides (UI 2.0) ──────────────────────────────────────── */
 
 /*
+ * Avatar — TRÒN, ở mọi nơi.
+ *
+ * HeroUI v3 vẽ `.avatar` là hình VUÔNG BO GÓC (`rounded-3xl`, riêng `--sm` là
+ * `rounded-2xl`) — xem node_modules/@heroui/styles/dist/components/avatar.css.
+ * Chủ dự án chốt đổi sang hình tròn.
+ *
+ * VÌ SAO SỬA 1 KHỐI TOÀN CỤC, KHÔNG THÊM `rounded-full` VÀO TỪNG CALL SITE:
+ * `<Avatar>` được dùng ở ~60 file (UserAvatar là chỗ chính, nhưng AvatarGroup,
+ * UserCell, OnlinePresence, các bảng xếp hạng… vẫn dựng Avatar trực tiếp). Rắc
+ * class lên từng chỗ thì chỉ cần MỘT chỗ bị bỏ sót là app có hai kiểu avatar cùng
+ * lúc, và chỗ bị sót không có gì báo đỏ. Ngoài ra khối skeleton (`SkeletonAvatar`)
+ * đã là `rounded-full` từ trước — trước đợt này skeleton tròn còn avatar thật thì
+ * vuông, tức là lúc dữ liệu về hình còn ĐỔI DẠNG. Một selector là hết cả hai.
+ *
+ * Ba selector vì HeroUI đặt radius ở cả lớp gốc lẫn hai modifier kích thước.
+ */
+.avatar,
+.avatar--sm,
+.avatar--lg {
+    border-radius: 9999px;
+}
+
+/*
  * Switch — fully round pill with a circular thumb, sized to match the navbar
  * icon buttons / notification bell (36px tall). Track 4rem × 2.25rem, thumb
  * 1.75rem circle with a 0.25rem inset; the checked margin slides it flush right.

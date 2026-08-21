@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  FTES circular avatar frame - pure vector, transparent centre, 512x512.
+  Band inner edge r=191; nothing is drawn past r=248. Keep this header short:
+  sharp/libvips only sniffs the first 1000 bytes for the <svg> tag.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"
+     fill="none" role="img" aria-label="Khung viền đồng">
+  <title>Khung viền đồng</title>
+  <!--
+    GEOMETRY. The avatar overlay renders the frame at 132% of the avatar, so the avatar's
+    edge lands at r=193.9 and the band (inner edge r=191) laps it by ~3u: no hairline gap,
+    and the ring never creeps over the face. Ornament budget r<=248 so nothing is clipped.
+
+    ORNAMENT RULE - read this before adding anything.
+    The ring is CLEAN all the way round; the ONLY ornament is one accent at the foot,
+    a single bezel medallion. Nothing repeats around the circumference. A 512 box gives
+    ~1200u of circumference against ~57u of radial room, so any motif repeated around the
+    ring becomes small radial texture - and small radial texture always resolves to teeth:
+    a gear or a bottle cap, never a wreath. Two passes proved that; the rejected-approach
+    record is in openspec/changes/avatar-circular-shape-and-frames/proposal.md.
+    Rank is carried by colour + band width. The foot accent is only the tiebreaker.
+  -->
+  <defs>
+    <linearGradient id="band" x1="256" y1="6" x2="256" y2="506" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F5C9A2"/>
+      <stop offset="0.3" stop-color="#DA9160"/>
+      <stop offset="0.64" stop-color="#AC5F35"/>
+      <stop offset="1" stop-color="#8B4B27"/>
+    </linearGradient>
+    <linearGradient id="mount" x1="256" y1="452" x2="256" y2="482" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#C97A47"/>
+      <stop offset="1" stop-color="#8B4B27"/>
+    </linearGradient>
+  </defs>
+  <g>
+    <!-- polished band: dark outer rim, gradient body, dark inner rim -->
+    <circle cx="256" cy="256" r="215.5" stroke="#5E2E15" stroke-width="4" opacity=".55"/>
+    <circle cx="256" cy="256" r="204" stroke="url(#band)" stroke-width="26"/>
+    <circle cx="256" cy="256" r="192.5" stroke="#5E2E15" stroke-width="3.5" opacity=".4"/>
+    <!-- gloss: one long arc upper-left, one short arc lower-right -->
+    <path d="M 64.9 201.2 A 198.8 198.8 0 0 1 235.22 58.29" stroke="#FDE4CC" stroke-width="8.84" stroke-linecap="round" opacity=".8"/>
+    <path d="M 450.45 334.56 A 209.72 209.72 0 0 1 367.13 433.85" stroke="#FDE4CC" stroke-width="5.2" stroke-linecap="round" opacity=".4"/>
+    <!-- foot accent: ONE bezel medallion at 6 o'clock; see the ornament rule above -->
+    <ellipse cx="256" cy="467" rx="22" ry="15" fill="url(#mount)" stroke="#5E2E15" stroke-width="4"/>
+    <path d="M 241.94 463.53 A 14.96 10.2 0 0 1 253.46 456.9" stroke="#FDE4CC" stroke-width="3" stroke-linecap="round" fill="none" opacity=".7"/>
+    <ellipse cx="256" cy="467" rx="9.24" ry="6.9" fill="#D8945F" opacity=".85"/>
+  </g>
+</svg>

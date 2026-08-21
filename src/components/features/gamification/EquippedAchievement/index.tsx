@@ -5,6 +5,7 @@ import { cn } from "@heroui/react"
 import { badgeKindIcon } from "@/components/features/gamification/badgeIcon"
 import { useBadgeLabel } from "@/components/features/gamification/useBadgeLabel"
 import type { WithClassNames } from "@/modules/types/base/class-name"
+import { profileAssetThumbnailUrl } from "@/utils/profileAsset"
 
 /**
  * THÀNH TÍCH đang được GHIM, ở dạng tối thiểu đủ để VẼ.
@@ -64,7 +65,16 @@ export const AchievementArt = ({
         // Plain <img>: art do BE seed nên host không ghim được vào next/image
         // remotePatterns — hệt ba bề mặt danh mục badge đã có (BadgeCatalogCell /
         // BadgeCatalogRow / BadgeDetailModal).
-        return <img src={art} alt="" aria-hidden className={cn("object-contain", className)} />
+        return (
+            <img
+                src={profileAssetThumbnailUrl(art) ?? art}
+                alt=""
+                aria-hidden
+                loading="lazy"
+                decoding="async"
+                className={cn("object-contain", className)}
+            />
+        )
     }
     const Glyph = badgeKindIcon(achievement.kind)
     return <Glyph weight="fill" aria-hidden focusable="false" className={cn("text-accent", className)} />

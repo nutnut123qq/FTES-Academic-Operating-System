@@ -15,8 +15,8 @@ describe("HLS startup buffer", () => {
         expect(HLS_STARTUP_SEGMENT_COUNT).toBe(5)
         expect(plan).toEqual({ segmentCount: 5, bufferSeconds: 31 })
         expect(HLS_STARTUP_CONFIG).toMatchObject({
-            autoStartLoad: true,
-            startFragPrefetch: true,
+            autoStartLoad: false,
+            startFragPrefetch: false,
             maxBufferSize: 120_000_000,
         })
     })

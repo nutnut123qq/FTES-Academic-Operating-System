@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "assets:profile-thumbnails": "node scripts/generate-profile-thumbnails.mjs",
     "build:webpack": "next build --webpack"
   },
   "dependencies": {

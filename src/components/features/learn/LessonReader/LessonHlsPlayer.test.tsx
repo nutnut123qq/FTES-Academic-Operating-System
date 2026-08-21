@@ -6,7 +6,8 @@ type HlsHandler = (event: string, data: Record<string, unknown>) => void
 
 const h = vi.hoisted(() => ({
     instance: null as null | {
-        config: Record<string, number | boolean>
+        config: Record<string, unknown>
+        attachMedia: ReturnType<typeof vi.fn>
         emit: (event: string, data: Record<string, unknown>) => void
         recoverMediaError: ReturnType<typeof vi.fn>
         startLoad: ReturnType<typeof vi.fn>
@@ -14,6 +15,14 @@ const h = vi.hoisted(() => ({
 }))
 
 vi.mock("hls.js", () => {
+    class MockLoader {
+        context = null
+        stats = {}
+        abort = vi.fn()
+        destroy = vi.fn()
+        load = vi.fn()
+    }
+
     class MockHls {
         static Events = {
             LEVEL_LOADED: "level-loaded",
@@ -28,8 +37,9 @@ vi.mock("hls.js", () => {
         }
 
         static isSupported = () => true
+        static DefaultConfig = { loader: MockLoader }
 
-        config: Record<string, number | boolean>
+        config: Record<string, unknown>
         handlers = new Map<string, Array<HlsHandler>>()
         recoverMediaError = vi.fn()
         startLoad = vi.fn()
@@ -37,7 +47,7 @@ vi.mock("hls.js", () => {
         attachMedia = vi.fn()
         destroy = vi.fn()
 
-        constructor(config: Record<string, number | boolean>) {
+        constructor(config: Record<string, unknown>) {
             this.config = { ...config }
             h.instance = this
         }
@@ -99,15 +109,51 @@ const renderPlayer = () => render(
 beforeEach(() => {
     h.instance = null
     vi.spyOn(HTMLMediaElement.prototype, "canPlayType").mockReturnValue("")
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+        ok: true,
+        arrayBuffer: () => Promise.resolve(new ArrayBuffer(16)),
+    }))
 })
 
 afterEach(() => {
     cleanup()
     vi.useRealTimers()
     vi.restoreAllMocks()
+    vi.unstubAllGlobals()
 })
 
 describe("LessonHlsPlayer startup buffering", () => {
+    it("does not attach MediaSource until all five parallel prefetches settle", async () => {
+        const responses: Array<(value: unknown) => void> = []
+        vi.stubGlobal("fetch", vi.fn(() => new Promise((resolve) => responses.push(resolve))))
+        renderPlayer()
+        await waitFor(() => expect(h.instance).toBeTruthy())
+        const instance = h.instance!
+
+        act(() => {
+            instance.emit("level-loaded", {
+                details: {
+                    targetduration: 5,
+                    fragments: Array.from({ length: 5 }, (_, index) => ({
+                        duration: 4.166667,
+                        byteRange: [],
+                        url: `https://video.example/seg_${index}.ts`,
+                    })),
+                },
+            })
+        })
+        expect(fetch).toHaveBeenCalledTimes(5)
+        expect(instance.attachMedia).not.toHaveBeenCalled()
+        expect(instance.startLoad).not.toHaveBeenCalled()
+
+        responses.forEach((resolve, index) => resolve({
+            ok: true,
+            arrayBuffer: () => Promise.resolve(new Uint8Array([index]).buffer),
+        }))
+        await waitFor(() => expect(instance.attachMedia).toHaveBeenCalledTimes(1))
+        expect(instance.startLoad).toHaveBeenCalledWith(-1)
+    })
+
     it("keeps loading until metadata and five distinct media fragments are buffered", async () => {
         const { container } = renderPlayer()
         await waitFor(() => expect(h.instance).toBeTruthy())
@@ -118,11 +164,17 @@ describe("LessonHlsPlayer startup buffering", () => {
             instance.emit("level-loaded", {
                 details: {
                     targetduration: 6,
-                    fragments: Array.from({ length: 8 }, () => ({ duration: 6 })),
+                    fragments: Array.from({ length: 8 }, (_, index) => ({
+                        duration: 6,
+                        byteRange: [],
+                        url: `https://video.example/seg_${index}.ts`,
+                    })),
                 },
             })
         })
-        expect(instance.config.startFragPrefetch).toBe(true)
+        await waitFor(() => expect(instance.startLoad).toHaveBeenCalledWith(-1))
+        expect(fetch).toHaveBeenCalledTimes(5)
+        expect(instance.config.startFragPrefetch).toBe(false)
         expect(instance.config.maxBufferLength).toBe(31)
 
         fireEvent.loadedMetadata(video)

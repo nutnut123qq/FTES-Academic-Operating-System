@@ -2390,7 +2390,7 @@
         "bio": "Bio",
         "bioPlaceholder": "Tell others a bit about yourself",
         "changeAvatar": "Change avatar",
-        "avatarHint": "PNG, JPG, WEBP or GIF, up to 5 MB.",
+        "avatarHint": "PNG, JPG, WEBP or GIF, up to 5 MB. You can upload a new photo once per hour.",
         "avatarInvalidType": "Please choose a PNG, JPG, WEBP or GIF image.",
         "avatarTooLarge": "This image is larger than 5 MB. Please choose a smaller one.",
         "crop": {

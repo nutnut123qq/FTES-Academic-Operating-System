@@ -2402,7 +2402,7 @@
         "bio": "Tiểu sử",
         "bioPlaceholder": "Giới thiệu đôi nét về bạn",
         "changeAvatar": "Đổi ảnh đại diện",
-        "avatarHint": "PNG, JPG, WEBP hoặc GIF, tối đa 5 MB.",
+        "avatarHint": "PNG, JPG, WEBP hoặc GIF, tối đa 5 MB. Bạn có thể tải ảnh mới một lần mỗi giờ.",
         "avatarInvalidType": "Vui lòng chọn ảnh PNG, JPG, WEBP hoặc GIF.",
         "avatarTooLarge": "Ảnh lớn hơn 5 MB. Vui lòng chọn ảnh nhỏ hơn.",
         "crop": {

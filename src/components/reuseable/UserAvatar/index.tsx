@@ -4,6 +4,7 @@ import React from "react"
 import { Avatar, AvatarFallback, AvatarImage, cn } from "@heroui/react"
 import { UserIcon } from "@phosphor-icons/react"
 import { avatarInitials, resolveAvatarSrc } from "@/utils/avatar"
+import { profileAssetThumbnailUrl } from "@/utils/profileAsset"
 import { useAvatarFrames } from "@/components/features/gamification/useAvatarFrames"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 
@@ -58,12 +59,12 @@ export interface UserAvatarProps extends WithClassNames<undefined> {
  * @param props - {@link UserAvatarProps}
  */
 export const UserAvatar = ({ username, avatar, seed, size, className, frameCode }: UserAvatarProps) => {
-    const src = resolveAvatarSrc(avatar, seed ?? username)
+    const src = profileAssetThumbnailUrl(resolveAvatarSrc(avatar, seed ?? username))
     const initials = avatarInitials(username)
 
     const avatarNode = (
         <Avatar size={size} className={cn(className)}>
-            {src ? <AvatarImage src={src} alt={username ?? ""} /> : null}
+            {src ? <AvatarImage src={src} alt={username ?? ""} loading="lazy" decoding="async" /> : null}
             <AvatarFallback>
                 {initials || <UserIcon aria-hidden focusable="false" className="size-1/2" />}
             </AvatarFallback>
@@ -107,9 +108,11 @@ const FramedAvatar = ({ frameCode, children }: { frameCode: string; children: Re
             <span className="relative inline-flex">{children}</span>
             {frame.assetUrl ? (
                 <img
-                    src={frame.assetUrl}
+                    src={profileAssetThumbnailUrl(frame.assetUrl) ?? frame.assetUrl}
                     alt=""
                     aria-hidden
+                    loading="lazy"
+                    decoding="async"
                     className="pointer-events-none absolute left-1/2 top-1/2 aspect-square w-[132%] max-w-none -translate-x-1/2 -translate-y-1/2 object-contain"
                 />
             ) : null}

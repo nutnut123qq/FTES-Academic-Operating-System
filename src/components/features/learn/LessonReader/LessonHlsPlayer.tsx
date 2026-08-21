@@ -7,6 +7,11 @@ import { useTranslations } from "next-intl"
 import Hls from "hls.js"
 import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { useWatchPositionReporter } from "./hooks/useWatchPositionReporter"
+import {
+    getHlsStartupBufferPlan,
+    HLS_STARTUP_CONFIG,
+    HLS_STARTUP_SEGMENT_COUNT,
+} from "./hlsStartupBuffer"
 
 /** Legacy Funnycode stream gateway that resolves `video_*` refs to an HLS manifest. */
 const STREAM_BASE = "https://stream.ftes.vn"
@@ -17,6 +22,12 @@ interface PlaylistResponse {
     presignedUrl?: string
     proxyPlaylistUrl?: string
 }
+
+/** A successful HTTP fragment that never reaches media metadata is an append/startup stall. */
+const HLS_STARTUP_STALL_TIMEOUT_MS = 8000
+
+/** Avoid an infinite detach/attach loop on a genuinely invalid media stream. */
+const HLS_STARTUP_RECOVERY_LIMIT = 2
 
 /**
  * HLS player for internal (non-YouTube) lessons. Two source modes, mutually exclusive:
@@ -178,12 +189,81 @@ export const LessonHlsPlayer = ({
         if (!el) return
         let hls: Hls | null = null
         let cancelled = false
+        let usingNativeHls = false
+        let mediaReady = el.readyState >= 1
+        let startupComplete = false
+        let requiredStartupSegments = HLS_STARTUP_SEGMENT_COUNT
+        let startupRecoveryCount = 0
+        let startupWatchdog: ReturnType<typeof setTimeout> | null = null
+        const bufferedStartupSegments = new Set<string>()
         setFailed(false)
         setLoading(true)
         halfFiredRef.current = false
 
-        const onReady = () => {
-            if (!cancelled) setLoading(false)
+        const clearStartupWatchdog = () => {
+            if (startupWatchdog) {
+                clearTimeout(startupWatchdog)
+                startupWatchdog = null
+            }
+        }
+
+        const finishStartup = () => {
+            if (cancelled || startupComplete) return
+            startupComplete = true
+            clearStartupWatchdog()
+            setLoading(false)
+        }
+
+        const maybeFinishStartup = () => {
+            if (usingNativeHls) {
+                if (mediaReady) finishStartup()
+                return
+            }
+            // HTTP 200 alone is not readiness: wait until five distinct media fragments
+            // have been transmuxed/appended AND the <video> has metadata.
+            if (mediaReady && bufferedStartupSegments.size >= requiredStartupSegments) {
+                finishStartup()
+            }
+        }
+
+        const failStartup = () => {
+            if (cancelled) return
+            clearStartupWatchdog()
+            setFailed(true)
+            setLoading(false)
+        }
+
+        const recoverStartup = () => {
+            if (!hls || cancelled) return
+            if (startupRecoveryCount >= HLS_STARTUP_RECOVERY_LIMIT) {
+                failStartup()
+                return
+            }
+
+            startupRecoveryCount += 1
+            if (!startupComplete) {
+                mediaReady = false
+                bufferedStartupSegments.clear()
+            }
+            hls.recoverMediaError()
+            hls.startLoad(-1)
+        }
+
+        const armStartupWatchdog = () => {
+            if (startupComplete || cancelled) return
+            clearStartupWatchdog()
+            startupWatchdog = setTimeout(() => {
+                // A segment response arrived but Chrome still has HAVE_NOTHING: rebuild the
+                // MediaSource attachment instead of leaving a permanent grey 0:00 player.
+                if (el.readyState < 1) {
+                    recoverStartup()
+                }
+            }, HLS_STARTUP_STALL_TIMEOUT_MS)
+        }
+
+        const onMediaReady = () => {
+            mediaReady = true
+            maybeFinishStartup()
         }
 
         // Direct mode uses the pre-signed manifest as-is; token mode resolves it via
@@ -204,15 +284,46 @@ export const LessonHlsPlayer = ({
                 const src = await resolveSrc()
                 if (!src || cancelled) throw new Error("no playlist url")
                 if (el.canPlayType("application/vnd.apple.mpegurl")) {
-                    el.addEventListener("loadedmetadata", onReady, { once: true })
+                    usingNativeHls = true
                     el.src = src
                 } else if (Hls.isSupported()) {
-                    hls = new Hls()
-                    hls.on(Hls.Events.MANIFEST_PARSED, onReady)
+                    hls = new Hls(HLS_STARTUP_CONFIG)
+                    hls.on(Hls.Events.LEVEL_LOADED, (_event, data) => {
+                        const plan = getHlsStartupBufferPlan(data.details)
+                        requiredStartupSegments = plan.segmentCount
+                        hls!.config.maxBufferLength = Math.max(
+                            hls!.config.maxBufferLength,
+                            plan.bufferSeconds,
+                        )
+                        hls!.config.maxMaxBufferLength = Math.max(
+                            hls!.config.maxMaxBufferLength,
+                            plan.bufferSeconds * 2,
+                        )
+                    })
+                    hls.on(Hls.Events.FRAG_LOADED, (_event, data) => {
+                        if (data.frag.type === "main" && typeof data.frag.sn === "number") {
+                            armStartupWatchdog()
+                        }
+                    })
+                    hls.on(Hls.Events.FRAG_BUFFERED, (_event, data) => {
+                        if (data.frag.type !== "main" || typeof data.frag.sn !== "number") return
+                        bufferedStartupSegments.add(`${data.frag.level}:${data.frag.sn}`)
+                        maybeFinishStartup()
+                    })
                     hls.on(Hls.Events.ERROR, (_e, d) => {
-                        if (d.fatal && !cancelled) {
-                            setFailed(true)
-                            setLoading(false)
+                        if (!d.fatal || cancelled) return
+
+                        if (d.type === Hls.ErrorTypes.NETWORK_ERROR) {
+                            if (startupRecoveryCount < HLS_STARTUP_RECOVERY_LIMIT) {
+                                startupRecoveryCount += 1
+                                hls?.startLoad(-1)
+                            } else {
+                                failStartup()
+                            }
+                        } else if (d.type === Hls.ErrorTypes.MEDIA_ERROR) {
+                            recoverStartup()
+                        } else {
+                            failStartup()
                         }
                     })
                     hls.loadSource(src)
@@ -228,11 +339,15 @@ export const LessonHlsPlayer = ({
                 }
             }
         }
+        el.addEventListener("loadedmetadata", onMediaReady)
+        el.addEventListener("canplay", onMediaReady)
         void play()
 
         return () => {
             cancelled = true
-            el.removeEventListener("loadedmetadata", onReady)
+            clearStartupWatchdog()
+            el.removeEventListener("loadedmetadata", onMediaReady)
+            el.removeEventListener("canplay", onMediaReady)
             hls?.destroy()
         }
     }, [videoRef, manifestUrl, attempt])
@@ -274,6 +389,7 @@ export const LessonHlsPlayer = ({
                 // player only, where the embed's native fullscreen is disabled.
                 disablePictureInPicture
                 playsInline
+                preload="auto"
                 onTimeUpdate={handleTimeUpdate}
                 onEnded={handleEnded}
                 onPlay={reporter.onPlaying}

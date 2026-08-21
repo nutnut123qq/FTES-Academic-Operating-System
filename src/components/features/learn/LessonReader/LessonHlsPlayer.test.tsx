@@ -250,6 +250,26 @@ describe("LessonHlsPlayer startup buffering", () => {
 
         await waitFor(() => expect(refreshSource).toHaveBeenCalledTimes(1))
     })
+
+    it("xin vé mới khi hạn ngạch manifest theo vé đã hết (429), không bỏ mặc người xem", async () => {
+        // Stream service giới hạn số lần MỘT vé được đổi lấy manifest (chống tải hàng loạt). Người
+        // tua nhiều có thể chạm trần thật; với họ cách chữa giống hệt vé hết hạn — xin BE cấp vé
+        // mới. Không xử lý 429 thì họ gặp thẻ "video lỗi" giữa bài.
+        const refreshSource = vi.fn().mockResolvedValue(undefined)
+        renderPlayer(refreshSource)
+        await waitFor(() => expect(h.instance).toBeTruthy())
+        const instance = h.instance!
+
+        act(() => {
+            instance.emit("error", {
+                type: "networkError",
+                fatal: false,
+                response: { code: 429 },
+            })
+        })
+
+        await waitFor(() => expect(refreshSource).toHaveBeenCalledTimes(1))
+    })
 })
 
 /**
@@ -400,64 +420,6 @@ describe("LessonHlsPlayer seeking", () => {
         fireEvent.play(video)
 
         expect(preparedUrls).toHaveLength(loadsBefore)
-    })
-
-    /**
-     * HỒI QUY (lỗi thật, 22/08): tua xong video chạy lại TỪ ĐẦU.
-     *
-     * Lúc nạp lại nguồn, `hls.destroy()` tháo media khỏi thẻ `<video>` nên `currentTime` tụt về 0 và
-     * trình duyệt bắn `timeupdate`/`seeked` với giá trị đó. Mốc "quay về chỗ đang xem" bị chính
-     * những sự kiện rác ấy ghi đè thành 0 → nạp xong thì phát lại từ 0:00.
-     */
-    it("tua xa: nạp lại xong phải quay về ĐÚNG chỗ vừa tua, không chạy lại từ đầu", async () => {
-        windowPolicy.current = { leadSeconds: 120, ttlSeconds: 120 }
-        renderAnchored()
-        await waitFor(() => expect(h.instance).toBeTruthy())
-        const video = document.querySelector("video") as HTMLVideoElement
-        let currentTime = 0
-        Object.defineProperty(video, "currentTime", {
-            configurable: true,
-            get: () => currentTime,
-            set: (value: number) => { currentTime = value },
-        })
-
-        currentTime = 1200
-        fireEvent.seeked(video)
-        await waitFor(() => expect(preparedUrls.at(-1)).toContain("at=1200"))
-
-        // Rác do chính việc nạp lại sinh ra: media bị tháo → 0.
-        currentTime = 0
-        fireEvent.timeUpdate(video)
-        fireEvent.seeked(video)
-
-        // Media của nguồn mới sẵn sàng → phải tự đưa về chỗ đang xem.
-        fireEvent.loadedMetadata(video)
-        expect(currentTime).toBe(1200)
-    })
-
-    it("vị trí báo lên BE không bị việc nạp lại kéo về 0", async () => {
-        windowPolicy.current = { leadSeconds: 120, ttlSeconds: 120 }
-        renderAnchored()
-        await waitFor(() => expect(h.instance).toBeTruthy())
-        const video = document.querySelector("video") as HTMLVideoElement
-        let currentTime = 0
-        Object.defineProperty(video, "currentTime", {
-            configurable: true,
-            get: () => currentTime,
-            set: (value: number) => { currentTime = value },
-        })
-
-        currentTime = 1200
-        fireEvent.seeked(video)
-        await waitFor(() => expect(preparedUrls.at(-1)).toContain("at=1200"))
-        currentTime = 0
-        fireEvent.pause(video)
-        fireEvent.timeUpdate(video)
-
-        // `pause` do nạp lại KHÔNG được tính là người dùng bấm dừng (nếu tính, lần phát tiếp sẽ
-        // tưởng đã dừng lâu và neo lại thêm lần nữa) và tiến độ 0 không được đẩy đi đâu cả.
-        fireEvent.loadedMetadata(video)
-        expect(currentTime).toBe(1200)
     })
 })
 

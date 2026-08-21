@@ -170,9 +170,13 @@ const makeUrisAbsolute = (manifest: string, sourceUrl: string): string => manife
     .join("\n")
 
 /**
- * Fetches only desktop media playlists that need repair and serves the corrected text
- * through a short-lived Blob URL. Multivariant playlists and valid VOD manifests keep
- * their original URL so hls.js retains its normal loading behaviour.
+ * Tải manifest MỘT lần rồi phục vụ chính bản đã tải qua Blob URL.
+ *
+ * <p>Trước đây bản không cần sửa được trả về nguyên URL gốc, nghĩa là hls.js đi tải LẠI — hai lượt
+ * manifest cho mỗi lần nạp. Điều đó nay đắt và rủi ro: stream service giới hạn số lần một vé được
+ * đổi lấy manifest (chống tải hàng loạt), nên lượt thừa ăn vào hạn ngạch của chính người học; và bản
+ * hls.js tải lại KHÔNG chắc giống bản mình vừa kiểm — nó được ký lại theo thời điểm khác, neo khác,
+ * hạn khác.
  */
 export const prepareHlsVodManifestSource = async (
     sourceUrl: string,
@@ -192,12 +196,7 @@ export const prepareHlsVodManifestSource = async (
         const manifest = await response.text()
         const expiresAtMs = getHlsManifestTokenExpiryMs(manifest)
         const windowPolicy = getHlsWindowPolicy(manifest)
-        const normalized = normalizeHlsVodManifest(manifest)
-        if (normalized === manifest) {
-            return { url: sourceUrl, expiresAtMs, windowPolicy, dispose: NOOP }
-        }
-
-        const absoluteManifest = makeUrisAbsolute(normalized, sourceUrl)
+        const absoluteManifest = makeUrisAbsolute(normalizeHlsVodManifest(manifest), sourceUrl)
         const blobUrl = URL.createObjectURL(new Blob(
             [absoluteManifest],
             { type: "application/vnd.apple.mpegurl" },

@@ -6,14 +6,21 @@ import type { StreamViewResponse } from "@/modules/api/rest/course/types"
 /**
  * Component — LessonVideoBlock player dispatch (C3 signed-HLS-manifest support).
  *
- * The block must mount an HLS player DIRECTLY on `stream.url` when the BE ships a
- * signed manifest (`provider === "HLS"`, `videoRef` null), ahead of the ref-based
- * dispatch — while keeping the YouTube ref and legacy `video_*` token paths intact.
+ * The block must mount an HLS player on `stream.url` when the BE ships a signed manifest
+ * (`provider === "HLS"`), and keep the YouTube ref path intact. Load-bearing rule: a
+ * self-hosted (`video_*` / `aosvideo:`) ref is NEVER resolved in the browser against the
+ * old stream gateway — the source comes from the BE or the player shows its retry card.
  */
 
 let currentStream: Partial<StreamViewResponse> | undefined
+let currentLoading = false
+const mutateStream = vi.fn()
 vi.mock("./hooks/useLessonStreamSwr", () => ({
-    useLessonStreamSwr: () => ({ stream: currentStream, isLoading: false }),
+    useLessonStreamSwr: () => ({
+        stream: currentStream,
+        isLoading: currentLoading,
+        mutate: mutateStream,
+    }),
 }))
 
 vi.mock("./hooks/usePreviewGate", () => ({
@@ -97,6 +104,7 @@ const upNextLesson = {
 describe("LessonVideoBlock — player dispatch", () => {
     beforeEach(() => {
         currentStream = undefined
+        currentLoading = false
         hlsProps.mockClear()
         ytProps.mockClear()
         push.mockClear()
@@ -136,10 +144,12 @@ describe("LessonVideoBlock — player dispatch", () => {
         expect(screen.queryByTestId("hls-player")).toBeNull()
     })
 
-    it("falls back to the legacy video_* token HLS mode when provider is HLS but url is null", () => {
-        // Real BE shape for a migrated stream.ftes.vn stream: provider "HLS" with NO signed
-        // manifest (`url: null`) and the token in `videoRef`. The direct-manifest branch must
-        // skip on the null url and fall through to the legacy token mode.
+    it("never hands a legacy video_* token to the player when the BE gave no url", () => {
+        // BE shape when no playback ticket could be issued: provider "HLS" with NO signed
+        // manifest (`url: null`) and the token in `videoRef`. The player must be mounted
+        // WITHOUT a source (→ its error card + retry, which re-asks the BE); the token must
+        // never be passed down, because that is what used to make the browser call the old
+        // stream gateway directly, around the BE and around the paywall.
         currentStream = {
             url: null,
             provider: "HLS",
@@ -151,8 +161,32 @@ describe("LessonVideoBlock — player dispatch", () => {
 
         expect(screen.getByTestId("hls-player")).toBeTruthy()
         const props = hlsProps.mock.calls[0][0]
-        expect(props.videoRef).toBe("video_abc123")
-        expect(props.manifestUrl).toBeUndefined()
+        expect(props.videoRef).toBeUndefined()
+        expect(props.manifestUrl).toBeNull()
+        // Retry path exists, and it goes back to the BE.
+        expect(typeof props.onRefreshSource).toBe("function")
+    })
+
+    it("holds a skeleton while the stream call is in flight for a self-hosted catalog ref", () => {
+        // The catalog ref arrives BEFORE the stream response. Mounting a player on it is
+        // exactly the race that fired a browser request to the stream gateway on every
+        // legacy lesson, so nothing may mount until the BE answers.
+        currentLoading = true
+        currentStream = undefined
+        render(<LessonVideoBlock {...baseProps} videoRef="video_abc123" />)
+
+        expect(screen.getByTestId("skeleton")).toBeTruthy()
+        expect(screen.queryByTestId("hls-player")).toBeNull()
+        expect(hlsProps).not.toHaveBeenCalled()
+    })
+
+    it("still mounts the YouTube embed from the catalog ref while the stream loads", () => {
+        // YouTube needs no signed manifest, so it must NOT be held back by the stream call.
+        currentLoading = true
+        currentStream = undefined
+        render(<LessonVideoBlock {...baseProps} videoRef="https://youtu.be/dQw4w9WgXcQ" />)
+
+        expect(screen.getByTestId("yt-player")).toBeTruthy()
     })
 })
 
@@ -165,6 +199,7 @@ describe("LessonVideoBlock — player dispatch", () => {
 describe("LessonVideoBlock — up-next hand-off", () => {
     beforeEach(() => {
         currentStream = undefined
+        currentLoading = false
         hlsProps.mockClear()
         ytProps.mockClear()
         push.mockClear()

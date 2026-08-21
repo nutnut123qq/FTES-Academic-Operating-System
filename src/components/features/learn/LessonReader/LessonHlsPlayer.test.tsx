@@ -235,3 +235,41 @@ describe("LessonHlsPlayer startup buffering", () => {
         await waitFor(() => expect(refreshSource).toHaveBeenCalledTimes(1))
     })
 })
+
+/**
+ * Source of truth for the playable URL. The player takes the manifest the BE signed and
+ * nothing else — it must never resolve a `video_*` token against the old stream gateway
+ * (`stream.ftes.vn/api/videos/{ref}/playlist`), because that URL has no expiry and is gated
+ * only by `Referer`, which is exactly what the per-segment signing exists to prevent.
+ */
+describe("LessonHlsPlayer source", () => {
+    it("loads the BE-signed manifest and never calls the stream gateway", async () => {
+        renderPlayer()
+        await waitFor(() => expect(h.instance).toBeTruthy())
+
+        expect(h.instance!.loadSource).toHaveBeenCalledWith("https://video.example/master.m3u8")
+        const requested = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls
+            .map(([input]) => String(input))
+        expect(requested.some((url) => url.includes("stream.ftes.vn"))).toBe(false)
+    })
+
+    it("shows the retry card instead of resolving anything when the BE gave no url", async () => {
+        render(
+            <LessonHlsPlayer
+                manifestUrl={null}
+                lessonId="lesson-1"
+                isGated={false}
+                onTimeUpdate={vi.fn()}
+                onEnded={vi.fn()}
+                onRefreshSource={vi.fn()}
+            />,
+        )
+
+        expect(await screen.findByText("reader.videoUnavailable")).toBeTruthy()
+        expect(h.instance).toBeNull()
+        const requested = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls
+            .map(([input]) => String(input))
+        expect(requested.some((url) => url.includes("stream.ftes.vn"))).toBe(false)
+    })
+})
+

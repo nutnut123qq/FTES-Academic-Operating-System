@@ -1,7 +1,8 @@
 "use client"
 
 import React, { useEffect, useMemo, useState } from "react"
-import { Button, Chip, Typography, cn } from "@heroui/react"
+import dynamic from "next/dynamic"
+import { Button, Chip, Modal, Typography, cn } from "@heroui/react"
 import {
     ArrowLeftIcon,
     ArrowsDownUpIcon,
@@ -24,6 +25,14 @@ import {
     type CodingChallenge,
 } from "../hooks/useQuerySubjectCodingChallengesSwr"
 import { Link } from "@/i18n/navigation"
+
+const ChallengeView = dynamic(
+    () =>
+        import("@/components/features/challenge/ChallengeView").then(
+            (mod) => mod.ChallengeView,
+        ),
+    { ssr: false },
+)
 
 /** lifecycle → chip color. */
 const LIFECYCLE_COLOR: Record<ChallengeLifecycle, "success" | "warning" | "default"> = {
@@ -59,7 +68,7 @@ export interface CodingChallengeListProps {
  * để người học lọc ra (chip `Đề PE` → chỉ còn đề).
  *
  * Filters: tag (server-side, AND semantics) · challenge type · lifecycle · search.
- * Selecting a row opens the challenge's own solve/read page.
+ * PE rows open in place; ordinary challenges keep their solve-page link.
  */
 export const CodingChallengeList = ({ subjectId, onBack }: CodingChallengeListProps) => {
     const t = useTranslations("subjects")
@@ -71,6 +80,7 @@ export const CodingChallengeList = ({ subjectId, onBack }: CodingChallengeListPr
     const [lifecycle, setLifecycle] = useState<"all" | ChallengeLifecycle>("all")
     const [search, setSearch] = useState("")
     const [sort, setSort] = useState<SortOption>("newest")
+    const [openedPeSlug, setOpenedPeSlug] = useState<string | null>(null)
 
     // Bỏ chọn hết tag khi ĐỔI MÔN.
     //
@@ -83,6 +93,7 @@ export const CodingChallengeList = ({ subjectId, onBack }: CodingChallengeListPr
     // Chạy cả lúc mount cũng vô hại (state khởi tạo đã là []).
     useEffect(() => {
         setTags([])
+        setOpenedPeSlug(null)
     }, [subjectId])
 
     /** Facet row — the tags present on the returned rows, plus whatever is picked. */
@@ -310,11 +321,37 @@ export const CodingChallengeList = ({ subjectId, onBack }: CodingChallengeListPr
                                 key={challenge.id}
                                 challenge={challenge}
                                 subjectId={subjectId}
+                                onOpenPe={setOpenedPeSlug}
                             />
                         ))}
                     </div>
                 )}
             </AsyncContent>
+
+            <Modal
+                isOpen={openedPeSlug !== null}
+                onOpenChange={(open) => {
+                    if (!open) setOpenedPeSlug(null)
+                }}
+            >
+                <Modal.Backdrop>
+                    <Modal.Container className="p-3 sm:p-6">
+                        <Modal.Dialog className="max-h-[90vh] w-[95vw] max-w-6xl overflow-y-auto">
+                            <Modal.CloseTrigger
+                                aria-label={t("practice.exam.closeExam")}
+                                className="z-20"
+                            />
+                            {openedPeSlug ? (
+                                <ChallengeView
+                                    challengeId={openedPeSlug}
+                                    subjectCode={subjectId}
+                                    inModal
+                                />
+                            ) : null}
+                        </Modal.Dialog>
+                    </Modal.Container>
+                </Modal.Backdrop>
+            </Modal>
         </div>
     )
 }
@@ -352,24 +389,19 @@ const TagPill = ({
 const CodingChallengeRow = ({
     challenge,
     subjectId,
+    onOpenPe,
 }: {
     challenge: CodingChallenge
     /** Subject the reader came from — travels so the solve page can send them back. */
     subjectId: string
+    onOpenPe: (challengeSlug: string) => void
 }) => {
     const t = useTranslations("subjects")
     const typeKey = challengeTypeKey(challenge.type)
+    const isPe = challenge.tags.some((tag) => tag.slug.toLowerCase() === "pe")
 
-    return (
-        <Link
-            /* `?subject=` is what makes the solve page's back link land HERE instead of
-               the global catalogue. The challenge itself only knows its subject as a
-               UUID, while this route is keyed by the subject CODE, so the code has to
-               travel with the reader. It rides in the URL rather than in memory so a
-               reload or a shared link keeps the way back. */
-            href={`/challenges/${challenge.id}?subject=${encodeURIComponent(subjectId)}`}
-            className="flex h-full w-full items-center gap-3 rounded-2xl border border-separator p-4 text-left transition-colors hover:border-accent/50 hover:bg-accent/5"
-        >
+    const content = (
+        <>
             <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <Typography type="body-sm" weight="medium" truncate>
                     {challenge.title}
@@ -383,7 +415,6 @@ const CodingChallengeRow = ({
                             ? t("practice.coding.modes.team")
                             : t("practice.coding.modes.individual")}
                     </Chip>
-                    {/* the challenge's own tags (`pe`, the subject code, …) */}
                     {challenge.tags.map((tag) => (
                         <Chip key={tag.slug} size="sm" variant="tertiary" color="default">
                             {tag.label}
@@ -400,6 +431,31 @@ const CodingChallengeRow = ({
                 </Typography>
             </div>
             <CaretRightIcon aria-hidden focusable="false" className="size-4 shrink-0 text-muted" />
+        </>
+    )
+
+    const className =
+        "flex h-full w-full items-center gap-3 rounded-2xl border border-separator p-4 text-left transition-colors hover:border-accent/50 hover:bg-accent/5"
+
+    if (isPe) {
+        return (
+            <button type="button" className={className} onClick={() => onOpenPe(challenge.slug)}>
+                {content}
+            </button>
+        )
+    }
+
+    return (
+        <Link
+            /* `?subject=` is what makes the solve page's back link land HERE instead of
+               the global catalogue. The challenge itself only knows its subject as a
+               UUID, while this route is keyed by the subject CODE, so the code has to
+               travel with the reader. It rides in the URL rather than in memory so a
+               reload or a shared link keeps the way back. */
+            href={`/challenges/${challenge.id}?subject=${encodeURIComponent(subjectId)}`}
+            className={className}
+        >
+            {content}
         </Link>
     )
 }

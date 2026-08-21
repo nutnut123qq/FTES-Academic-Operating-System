@@ -20,6 +20,36 @@ vi.mock("next-intl", () => ({
     useTranslations: () => (key: string) => key,
     useLocale: () => "vi",
 }))
+vi.mock("next/dynamic", () => ({
+    default:
+        () =>
+        ({
+            challengeId,
+            subjectCode,
+            inModal,
+        }: {
+            challengeId: string
+            subjectCode: string
+            inModal: boolean
+        }) => (
+            <div
+                data-testid="challenge-view"
+                data-challenge-id={challengeId}
+                data-subject-code={subjectCode}
+                data-in-modal={String(inModal)}
+            />
+        ),
+}))
+vi.mock("@heroui/react", async (importOriginal) => {
+    const actual = await importOriginal<Record<string, unknown>>()
+    const Modal = ({ isOpen, children }: { isOpen: boolean; children: React.ReactNode }) =>
+        isOpen ? <div role="dialog">{children}</div> : null
+    Modal.Backdrop = ({ children }: { children: React.ReactNode }) => <div>{children}</div>
+    Modal.Container = ({ children }: { children: React.ReactNode }) => <div>{children}</div>
+    Modal.Dialog = ({ children }: { children: React.ReactNode }) => <div>{children}</div>
+    Modal.CloseTrigger = () => <button type="button">close</button>
+    return { ...actual, Modal }
+})
 vi.mock("@/i18n/navigation", () => ({
     Link: ({
         children,
@@ -138,5 +168,44 @@ describe("CodingChallengeList — chip tag khi đổi môn", () => {
         rerender(<CodingChallengeList subjectId="JPD113" onBack={() => {}} />)
 
         expect(useQuerySubjectCodingChallengesSwr).toHaveBeenLastCalledWith("JPD113", [])
+    })
+})
+
+describe("CodingChallengeList — mở đề PE", () => {
+    beforeEach(() => {
+        useQuerySubjectCodingChallengesSwr.mockReset()
+    })
+
+    it("PE mở ChallengeView trong popup và giữ nguyên trang Practice", () => {
+        useQuerySubjectCodingChallengesSwr.mockReturnValue(
+            bank([
+                {
+                    ...row("uuid-pe-csd201", "Đề PE CSD201", ["pe", "csd201"]),
+                    slug: "pe-csd201",
+                },
+            ]),
+        )
+
+        render(<CodingChallengeList subjectId="CSD201" onBack={() => {}} />)
+        fireEvent.click(screen.getByText("Đề PE CSD201").closest("button")!)
+
+        const view = screen.getByTestId("challenge-view")
+        expect(view.getAttribute("data-challenge-id")).toBe("pe-csd201")
+        expect(view.getAttribute("data-subject-code")).toBe("CSD201")
+        expect(view.getAttribute("data-in-modal")).toBe("true")
+        expect(screen.queryByRole("link", { name: /Đề PE CSD201/ })).toBeNull()
+    })
+
+    it("challenge thường vẫn đi trang giải như trước", () => {
+        useQuerySubjectCodingChallengesSwr.mockReturnValue(
+            bank([row("binary-search", "Tìm kiếm nhị phân")]),
+        )
+
+        render(<CodingChallengeList subjectId="CSD201" onBack={() => {}} />)
+
+        expect(screen.getByText("Tìm kiếm nhị phân").closest("a")?.getAttribute("href")).toBe(
+            "/challenges/binary-search?subject=CSD201",
+        )
+        expect(screen.queryByTestId("challenge-view")).toBeNull()
     })
 })

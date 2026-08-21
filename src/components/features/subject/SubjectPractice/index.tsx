@@ -24,8 +24,8 @@ type PracticeView = "hub" | PracticeModuleKey
  * - **Coding** — the real challenge bank ({@link CodingChallengeList}:
  *   `GET /challenges?subjectId=` + run/submit against `/ai/coding/*` and
  *   `/challenges/{id}/submissions`). **Practical Exam (PE) papers live here now**, tagged
- *   `pe` + the subject code: the learner filters the bank by that tag and READS the paper
- *   on the challenge page. There is no PE card and no PE answer upload — grading is
+ *   `pe` + the subject code: the learner filters the bank by that tag and opens the paper
+ *   in place. There is no PE card and no PE answer upload — grading is
  *   locked.
  * - **FE — Final Exam** — the subject's exam albums (`GET /resources?subjectId=&type=FE`);
  *   an album opens its own route: up to 50 pictures, each with its own comment thread.

@@ -39,9 +39,7 @@ vi.mock("@/components/features/learn/OnThisPage", () => ({
 }))
 
 vi.mock("@/components/features/learn/LearnToolsRail", () => ({
-    LearnToolsRail: ({ side = "left" }: { side?: "left" | "right" }) => (
-        <aside data-testid="course-menu" data-side={side} />
-    ),
+    LearnToolsRail: () => <aside data-testid="course-menu" />,
 }))
 
 vi.mock("@/components/blocks/layout/ResizableRail", () => ({
@@ -55,7 +53,7 @@ vi.mock("@/components/features/learn/LessonReader/ContentAiSelectionAsk", () => 
 afterEach(cleanup)
 
 describe("LearnLayout", () => {
-    it("places the course menu at the far right on lesson pages", () => {
+    it("places the course menu to the left of course content on lesson pages", () => {
         const { container } = render(
             <LearnLayout>
                 <div />
@@ -66,8 +64,6 @@ describe("LearnLayout", () => {
             Array.from(container.firstElementChild?.children ?? []).map((element) =>
                 element.getAttribute("data-testid"),
             ),
-        ).toEqual(["course-content", "lesson-content", "on-this-page", "course-menu"])
-        expect(container.querySelector("[data-testid=\"course-menu\"]")?.getAttribute("data-side"))
-            .toBe("right")
+        ).toEqual(["course-menu", "course-content", "lesson-content", "on-this-page"])
     })
 })

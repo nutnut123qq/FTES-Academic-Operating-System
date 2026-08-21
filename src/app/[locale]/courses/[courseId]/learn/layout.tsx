@@ -72,18 +72,13 @@ const LearnLayout = ({ children }: PropsWithChildren) => {
         </ResizableRail>
     ) : undefined
 
-    // The dashboard keeps its menu on the left. A lesson moves it to the far right,
-    // after the outline, so the reading path stays content map → lesson → outline → menu.
-    const navRail = isContentDashboard ? <LearnToolsRail /> : undefined
+    // Keep the course menu in the far-left nav slot on both the dashboard and lesson
+    // reader, immediately before the course-content map.
+    const navRail = isContentDashboard || isLessonReader ? <LearnToolsRail /> : undefined
 
     // right rail: on-this-page outline on the lesson reader ONLY. The content
     // dashboard has no right rail now — its tools moved to the far-left navRail.
-    const rightRail = isLessonReader ? (
-        <>
-            <OnThisPage />
-            <LearnToolsRail side="right" />
-        </>
-    ) : undefined
+    const rightRail = isLessonReader ? <OnThisPage /> : undefined
 
     return (
         <>

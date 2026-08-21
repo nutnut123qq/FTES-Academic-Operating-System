@@ -1,7 +1,8 @@
 "use client"
 
 import React, { useState } from "react"
-import { Modal, Typography } from "@heroui/react"
+import { Button, Modal, Typography } from "@heroui/react"
+import { ArrowsOutIcon } from "@phosphor-icons/react"
 import { useMediaQuery } from "usehooks-ts"
 import { useTranslations } from "next-intl"
 import { CommunityLiveChatThread } from "./CommunityLiveChatThread"
@@ -26,44 +27,49 @@ const CHAT_HEIGHT = "h-[clamp(320px,48vh,540px)]"
  * on the real `xl` media query so it never fetches or seeds while the aside is hidden
  * (< xl uses the floating fab instead).
  *
- * ponytail: the rail card is a PREVIEW — clicking (or Enter/Space on) it opens a roomy
- * HeroUI {@link Modal} where the actual chatting happens (composer + reply actions),
- * instead of squeezing them into the narrow rail. Esc / backdrop close the modal
- * (HeroUI default via `onOpenChange`), and the online list is shown in both places.
+ * The rail card is a fully interactive chat surface (thread + replies + composer).
+ * Its top-right expand button opens the same live conversation in a roomy HeroUI
+ * {@link Modal}; the card itself no longer hijacks clicks intended for messages or the
+ * composer. Esc / backdrop close the modal (HeroUI default via `onOpenChange`), and the
+ * online list is shown in both places.
  * The SSE stream is untouched — it is still owned once by
  * {@link import("./CommunityLiveChatSse").CommunityLiveChatSse} and runs on `xl+`
  * regardless of the modal, so opening/closing it changes nothing but the shell.
  */
 export const CommunityLiveChatRail = () => {
     const t = useTranslations("communityLiveChat")
-    const isDesktop = useMediaQuery(XL_QUERY)
+    // SSR and the first client render must agree. Reading matchMedia immediately on the
+    // client made the rail render its enabled/auth branch before hydration while the
+    // server rendered the disabled branch, forcing React to discard this subtree.
+    const isDesktop = useMediaQuery(XL_QUERY, { initializeWithValue: false })
     const [isOpen, setOpen] = useState(false)
 
     return (
         <div className="flex flex-col gap-2">
             {/* online indicator — a plain line ABOVE / OUTSIDE the chat box (no card) */}
             <OnlinePresence enabled={isDesktop} className="px-1" />
-            {/* preview card — the whole card is the click target that opens the modal */}
-            <section
-                role="button"
-                tabIndex={0}
-                aria-label={t("expand")}
-                onClick={() => setOpen(true)}
-                onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault()
-                        setOpen(true)
-                    }
-                }}
-                className="flex cursor-pointer flex-col gap-2 rounded-3xl border border-separator bg-surface p-4 transition-colors hover:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-            >
-                <Typography type="body-sm" weight="semibold">
-                    {t("title")}
-                </Typography>
-                <CommunityLiveChatThread readOnly enabled={isDesktop} className={CHAT_HEIGHT} />
-                <Typography type="body-xs" color="muted">
-                    {t("expandHint")}
-                </Typography>
+            {/* Inline chat — only the explicit top-right control opens the roomy popup. */}
+            <section className="flex flex-col gap-2 rounded-3xl border border-separator bg-surface p-4">
+                <div className="flex items-center gap-2">
+                    <Typography
+                        type="body-sm"
+                        weight="semibold"
+                        className="min-w-0 flex-1"
+                    >
+                        {t("title")}
+                    </Typography>
+                    <Button
+                        isIconOnly
+                        size="sm"
+                        variant="tertiary"
+                        aria-label={t("expand")}
+                        onPress={() => setOpen(true)}
+                        className="shrink-0"
+                    >
+                        <ArrowsOutIcon aria-hidden focusable="false" className="size-5" />
+                    </Button>
+                </div>
+                <CommunityLiveChatThread enabled={isDesktop} className={CHAT_HEIGHT} />
             </section>
 
             {/* roomy chat modal — Esc + backdrop close it (HeroUI default) */}

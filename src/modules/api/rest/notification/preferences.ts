@@ -3,7 +3,7 @@ import type { QueryNotificationPreferencesData } from "@/modules/api/graphql/que
 import type { PreferenceCell, PreferenceUpdate } from "./types"
 
 /**
- * Adapters between the backend preference matrix (8 types × 3 channels,
+ * Adapters between the backend preference matrix (all types × 3 channels,
  * `GET/PUT /api/v1/notifications/preferences`) and the FE
  * `{mutedTypes, muteAll}` model the bell/center/preferences surface consume.
  * Only the IN_APP column drives the FE model — PUSH/EMAIL cells pass through
@@ -13,7 +13,7 @@ import type { PreferenceCell, PreferenceUpdate } from "./types"
 /** The channel whose cells drive the FE mute model (bell/center/badge). */
 export const IN_APP_CHANNEL = "IN_APP"
 
-/** All 8 backend notification types, in enum declaration order. */
+/** All backend notification types, in enum declaration order. */
 const ALL_TYPES: Array<NotificationType> = Object.values(NotificationType)
 
 /**

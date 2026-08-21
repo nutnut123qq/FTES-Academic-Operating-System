@@ -5,9 +5,9 @@ TBD - created by archiving change push-notifications-nonrealtime. Update Purpose
 ## Requirements
 ### Requirement: Preferences surface on the notification center
 The `/notifications` page SHALL expose a notification-preferences surface (opened from the
-center header) containing one toggle per real `NotificationType` value (`system`,
-`challengeGraded`, `codingGraded`, `milestoneGraded`, `newFollower`, `commentReply`,
-`subscriptionGranted`, `announcement`) and a "mute all" master switch. All preference
+center header) containing one toggle per real backend `NotificationType` value (`MENTION`,
+`COURSE`, `EVENT`, `DEADLINE`, `CHALLENGE`, `COIN`, `GROUP`, `SYSTEM`, `ORDER`, `COMMENT`,
+`REACTION`) and a "mute all" master switch. All preference
 strings SHALL be localized in `vi` and `en`, and every toggle SHALL have an accessible name
 and be keyboard-operable.
 

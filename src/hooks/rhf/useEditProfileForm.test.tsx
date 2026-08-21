@@ -17,9 +17,10 @@ import type { SelfProfile } from "@/modules/api/rest/profile"
 const PROFILE_KEY = ["profiles", "me", "u-1"] as const
 
 let profile: SelfProfile | undefined
+const mutate = vi.fn()
 
 vi.mock("swr", () => ({
-    default: () => ({ data: profile, mutate: vi.fn() }),
+    default: () => ({ data: profile, mutate }),
 }))
 
 const updateSelfProfile = vi.fn()
@@ -69,11 +70,14 @@ const submitWith = async (edit?: (setValue: (value: string) => void) => void) =>
 }
 
 beforeEach(() => {
+    mutate.mockReset()
+    mutate.mockResolvedValue(undefined)
     updateSelfProfile.mockReset()
     updateSelfProfile.mockResolvedValue(undefined)
     replaceSocialLinks.mockReset()
     replaceSocialLinks.mockResolvedValue(undefined)
     uploadAvatar.mockReset()
+    uploadAvatar.mockResolvedValue(undefined)
 })
 
 describe("majorCodePatch", () => {
@@ -136,5 +140,31 @@ describe("useEditProfileForm — majorCode", () => {
         const body = await submitWith((setValue) => setValue(""))
 
         expect(body?.majorCode).toBe("")
+    })
+})
+
+describe("useEditProfileForm — avatar persistence", () => {
+    it("uploads a cropped avatar immediately and hydrates the shared profile cache", async () => {
+        profile = selfProfile("SE")
+        const uploadedProfile = {
+            ...profile,
+            avatarUrl: "https://cdn.example/avatar.jpg",
+        } as SelfProfile
+        uploadAvatar.mockResolvedValue(uploadedProfile)
+        const { result } = renderHook(() => useEditProfileForm())
+        const cropped = new File(["avatar"], "avatar.jpg", { type: "image/jpeg" })
+
+        let saved = false
+        await act(async () => {
+            saved = await result.current.onAvatarFile(cropped)
+        })
+
+        expect(saved).toBe(true)
+        expect(uploadAvatar).toHaveBeenCalledTimes(1)
+        expect(uploadAvatar).toHaveBeenCalledWith(cropped)
+        expect(mutate).toHaveBeenNthCalledWith(1, uploadedProfile, { revalidate: false })
+        expect(mutate).toHaveBeenCalledTimes(2)
+        // No text-form submit was needed to make the avatar durable.
+        expect(updateSelfProfile).not.toHaveBeenCalled()
     })
 })

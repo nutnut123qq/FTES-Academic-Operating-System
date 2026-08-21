@@ -33,11 +33,10 @@ unread), and a footer link to the full notification center.
 - **THEN** the app navigates to the `/notifications` center
 
 ### Requirement: Shared type→icon map
-The mapping from notification type to icon SHALL be defined once, keyed by the real
-`NotificationType` enum (`system`, `challengeGraded`, `codingGraded`, `milestoneGraded`,
-`newFollower`, `commentReply`, `subscriptionGranted`, `announcement`), and reused by both
-the bell popover rows and the `NotificationCenter` page. The legacy seven-key mock-type map
-SHALL be removed.
+The mapping from notification type to icon SHALL be defined once, keyed by every real backend
+`NotificationType` value (`MENTION`, `COURSE`, `EVENT`, `DEADLINE`, `CHALLENGE`, `COIN`, `GROUP`,
+`SYSTEM`, `ORDER`, `COMMENT`, `REACTION`), and reused by both the bell popover rows and the
+`NotificationCenter` page. The legacy mock-type map SHALL be removed.
 
 #### Scenario: Consistent icons
 - **WHEN** a notification of a given `NotificationType` is rendered in either the bell or
@@ -45,8 +44,9 @@ SHALL be removed.
 - **THEN** the same icon is used in both places
 
 #### Scenario: Every real type has an icon
-- **WHEN** the icon map is consulted for any value of the `NotificationType` enum
-- **THEN** a concrete icon is returned (no fallback gap for any of the eight types)
+- **WHEN** the icon map is consulted for any value of the backend `NotificationType` enum,
+  including order, comment/reply, and reaction notifications
+- **THEN** a concrete icon is returned (no fallback gap for any of the eleven types)
 
 ### Requirement: Notifications removed from sidebar nav
 The sidebar "you" nav group SHALL NOT include a "Notifications" row; it retains Activity and

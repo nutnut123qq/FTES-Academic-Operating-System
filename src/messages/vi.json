@@ -2403,6 +2403,17 @@
         "bioPlaceholder": "Giới thiệu đôi nét về bạn",
         "changeAvatar": "Đổi ảnh đại diện",
         "avatarHint": "PNG, JPG, WEBP hoặc GIF, tối đa 5 MB.",
+        "avatarInvalidType": "Vui lòng chọn ảnh PNG, JPG, WEBP hoặc GIF.",
+        "avatarTooLarge": "Ảnh lớn hơn 5 MB. Vui lòng chọn ảnh nhỏ hơn.",
+        "crop": {
+            "title": "Cắt ảnh đại diện",
+            "description": "Kéo và thu phóng ảnh để chọn phần sẽ hiển thị trong avatar.",
+            "dragHint": "Kéo để căn vị trí",
+            "zoom": "Thu phóng",
+            "preview": "Xem trước avatar",
+            "cancel": "Hủy",
+            "apply": "Áp dụng avatar"
+        },
         "appearance": {
             "previewTitle": "Diện mạo của bạn",
             "previewHint": "Chọn ảnh, khung viền và thành tích ghim bên dưới — áp dụng ngay khi bấm.",
@@ -5577,7 +5588,10 @@
                 "CHALLENGE": "Thử thách",
                 "COIN": "Xu thưởng",
                 "GROUP": "Nhóm",
-                "SYSTEM": "Hệ thống"
+                "SYSTEM": "Hệ thống",
+                "ORDER": "Mua hàng và thanh toán",
+                "COMMENT": "Bình luận và trả lời",
+                "REACTION": "Lượt thích và cảm xúc"
             }
         }
     },

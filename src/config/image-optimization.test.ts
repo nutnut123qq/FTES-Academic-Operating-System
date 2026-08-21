@@ -129,6 +129,10 @@ const IMG_THO_HIEN_TRANG: ReadonlyArray<string> = [
     "components/features/group/GroupDetailShell/index.tsx",
     "components/features/group/GroupIdentityFields/index.tsx",
     "components/features/mascot-assistant/MascotAssistant.tsx",
+    // Ảnh cục bộ vừa được người dùng chọn (`blob:`) dùng làm nguồn tương tác kéo/phóng và
+    // truyền chính HTMLImageElement vào canvas để cắt. Đây không phải ảnh remote có thể qua
+    // optimizer/srcset; object URL cũng được revoke ngay khi đổi file hoặc đóng cropper.
+    "components/features/profile/AvatarCropDialog/index.tsx",
     "components/features/profile/ProfileBadges/BadgeCatalogGrid/BadgeCatalogCell.tsx",
     "components/features/profile/ProfileBadges/BadgeCatalogGrid/BadgeDetailModal.tsx",
     "components/features/profile/ProfileBadges/BadgeCatalogModal/BadgeCatalogRow.tsx",

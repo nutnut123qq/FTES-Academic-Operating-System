@@ -9,8 +9,12 @@ export const HLS_STARTUP_SEGMENT_COUNT = 5
  * least five normal lesson segments.
  */
 export const HLS_STARTUP_CONFIG: Partial<HlsConfig> = {
-    autoStartLoad: true,
-    startFragPrefetch: true,
+    // The media playlist still loads immediately. Fragment loading starts only after the
+    // first five URLs have been fetched together into the in-memory startup cache.
+    autoStartLoad: false,
+    // The custom fragment loader performs the startup prefetch. Letting hls.js also
+    // prefetch fragment zero races the cache and can leave desktop playback at 0:00.
+    startFragPrefetch: false,
     maxBufferLength: 30,
     maxMaxBufferLength: 180,
     maxBufferSize: 120 * 1000 * 1000,

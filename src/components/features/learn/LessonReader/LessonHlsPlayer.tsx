@@ -12,6 +12,11 @@ import {
     HLS_STARTUP_CONFIG,
     HLS_STARTUP_SEGMENT_COUNT,
 } from "./hlsStartupBuffer"
+import {
+    createPrefetchedFragmentLoader,
+    prefetchHlsFragments,
+    type HlsFragmentPrefetchCache,
+} from "./hlsFragmentPrefetch"
 
 /** Legacy Funnycode stream gateway that resolves `video_*` refs to an HLS manifest. */
 const STREAM_BASE = "https://stream.ftes.vn"
@@ -25,6 +30,9 @@ interface PlaylistResponse {
 
 /** A successful HTTP fragment that never reaches media metadata is an append/startup stall. */
 const HLS_STARTUP_STALL_TIMEOUT_MS = 8000
+
+/** Never hold playback forever when a CDN prefetch is slow or unavailable. */
+const HLS_STARTUP_PREFETCH_TIMEOUT_MS = 12000
 
 /** Avoid an infinite detach/attach loop on a genuinely invalid media stream. */
 const HLS_STARTUP_RECOVERY_LIMIT = 2
@@ -195,6 +203,10 @@ export const LessonHlsPlayer = ({
         let requiredStartupSegments = HLS_STARTUP_SEGMENT_COUNT
         let startupRecoveryCount = 0
         let startupWatchdog: ReturnType<typeof setTimeout> | null = null
+        let startupPrefetchTimer: ReturnType<typeof setTimeout> | null = null
+        let startupPrefetchStarted = false
+        const startupPrefetchController = new AbortController()
+        const startupPrefetchCache: HlsFragmentPrefetchCache = new Map()
         const bufferedStartupSegments = new Set<string>()
         setFailed(false)
         setLoading(true)
@@ -204,6 +216,13 @@ export const LessonHlsPlayer = ({
             if (startupWatchdog) {
                 clearTimeout(startupWatchdog)
                 startupWatchdog = null
+            }
+        }
+
+        const clearStartupPrefetchTimer = () => {
+            if (startupPrefetchTimer) {
+                clearTimeout(startupPrefetchTimer)
+                startupPrefetchTimer = null
             }
         }
 
@@ -287,7 +306,11 @@ export const LessonHlsPlayer = ({
                     usingNativeHls = true
                     el.src = src
                 } else if (Hls.isSupported()) {
-                    hls = new Hls(HLS_STARTUP_CONFIG)
+                    const fragmentLoader = createPrefetchedFragmentLoader(
+                        Hls.DefaultConfig.loader,
+                        startupPrefetchCache,
+                    )
+                    hls = new Hls({ ...HLS_STARTUP_CONFIG, fLoader: fragmentLoader })
                     hls.on(Hls.Events.LEVEL_LOADED, (_event, data) => {
                         const plan = getHlsStartupBufferPlan(data.details)
                         requiredStartupSegments = plan.segmentCount
@@ -299,6 +322,32 @@ export const LessonHlsPlayer = ({
                             hls!.config.maxMaxBufferLength,
                             plan.bufferSeconds * 2,
                         )
+
+                        if (startupPrefetchStarted) return
+                        startupPrefetchStarted = true
+                        const fragments = data.details.fragments
+                            .slice(0, requiredStartupSegments)
+                            // A full-response cache must never satisfy a byte-range request.
+                            .filter((fragment) => fragment.byteRange.length === 0)
+                        const prefetched = prefetchHlsFragments(
+                            fragments.map((fragment) => fragment.url),
+                            startupPrefetchController.signal,
+                        )
+                        prefetched.forEach((promise, url) => startupPrefetchCache.set(url, promise))
+                        startupPrefetchTimer = setTimeout(
+                            () => startupPrefetchController.abort(),
+                            HLS_STARTUP_PREFETCH_TIMEOUT_MS,
+                        )
+                        void Promise.allSettled(prefetched.values()).then(() => {
+                            clearStartupPrefetchTimer()
+                            if (!cancelled && hls) {
+                                // Attaching MediaSource can make hls.js request fragment zero
+                                // immediately. Wait until the whole startup cache is ready so
+                                // that request cannot escape through the normal network loader.
+                                hls.attachMedia(el)
+                                hls.startLoad(-1)
+                            }
+                        })
                     })
                     hls.on(Hls.Events.FRAG_LOADED, (_event, data) => {
                         if (data.frag.type === "main" && typeof data.frag.sn === "number") {
@@ -327,7 +376,6 @@ export const LessonHlsPlayer = ({
                         }
                     })
                     hls.loadSource(src)
-                    hls.attachMedia(el)
                 } else if (!cancelled) {
                     setFailed(true)
                     setLoading(false)
@@ -346,6 +394,9 @@ export const LessonHlsPlayer = ({
         return () => {
             cancelled = true
             clearStartupWatchdog()
+            clearStartupPrefetchTimer()
+            startupPrefetchController.abort()
+            startupPrefetchCache.clear()
             el.removeEventListener("loadedmetadata", onMediaReady)
             el.removeEventListener("canplay", onMediaReady)
             hls?.destroy()

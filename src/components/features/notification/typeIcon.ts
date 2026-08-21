@@ -3,8 +3,11 @@ import {
     BookOpenIcon,
     CalendarBlankIcon,
     ChatCircleTextIcon,
+    ChatCircleDotsIcon,
     ClockIcon,
     CoinsIcon,
+    HeartIcon,
+    ShoppingBagIcon,
     type Icon,
     TrophyIcon,
     UsersThreeIcon,
@@ -26,6 +29,9 @@ export const NOTIFICATION_TYPE_ICON: Record<NotificationType, Icon> = {
     [NotificationType.Coin]: CoinsIcon,
     [NotificationType.Group]: UsersThreeIcon,
     [NotificationType.System]: BellIcon,
+    [NotificationType.Order]: ShoppingBagIcon,
+    [NotificationType.Comment]: ChatCircleDotsIcon,
+    [NotificationType.Reaction]: HeartIcon,
 }
 
 /**

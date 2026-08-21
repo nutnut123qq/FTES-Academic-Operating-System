@@ -3,7 +3,7 @@ import type { NotificationItem } from "@/modules/api/rest/notification/types"
 import type { QueryNotificationPreferencesData } from "@/modules/api/graphql/queries/types/notification-preferences"
 
 /**
- * The 8 real backend {@link NotificationType} values, in display order — the
+ * The real backend {@link NotificationType} values, in display order — the
  * source list rendered as per-type toggles in the preferences surface. The key
  * space matches `item.type` on delivered rows AND the preference-matrix cells,
  * so toggling a type here mutes exactly that type end-to-end.
@@ -17,6 +17,9 @@ export const NOTIFICATION_TYPES: Array<NotificationType> = [
     NotificationType.Coin,
     NotificationType.Group,
     NotificationType.System,
+    NotificationType.Order,
+    NotificationType.Comment,
+    NotificationType.Reaction,
 ]
 
 /**

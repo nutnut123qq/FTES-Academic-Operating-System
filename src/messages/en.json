@@ -5577,7 +5577,10 @@
                 "CHALLENGE": "Challenges",
                 "COIN": "Coins",
                 "GROUP": "Groups",
-                "SYSTEM": "System"
+                "SYSTEM": "System",
+                "ORDER": "Orders and payments",
+                "COMMENT": "Comments and replies",
+                "REACTION": "Likes and reactions"
             }
         }
     },

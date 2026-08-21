@@ -1,6 +1,6 @@
 /**
  * Mirror of the backend `vn.ftes.aos.notification.domain.NotificationType`
- * enum — the 8 business notification types.
+ * enum — the business notification types accepted by the notification module.
  *
  * Delivered in-app rows (`GET /api/v1/notifications`) carry these names in
  * `item.type`, and the preference matrix (`GET/PUT
@@ -24,4 +24,10 @@ export enum NotificationType {
     Group = "GROUP",
     /** Generic system message with no specific domain target. */
     System = "SYSTEM",
+    /** A paid order has been fulfilled and is ready to use. */
+    Order = "ORDER",
+    /** Someone commented on the recipient's post or replied to their comment. */
+    Comment = "COMMENT",
+    /** Someone reacted to the recipient's post or comment. */
+    Reaction = "REACTION",
 }

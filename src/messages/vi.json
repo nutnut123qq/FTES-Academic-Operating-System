@@ -5577,7 +5577,10 @@
                 "CHALLENGE": "Thử thách",
                 "COIN": "Xu thưởng",
                 "GROUP": "Nhóm",
-                "SYSTEM": "Hệ thống"
+                "SYSTEM": "Hệ thống",
+                "ORDER": "Mua hàng và thanh toán",
+                "COMMENT": "Bình luận và trả lời",
+                "REACTION": "Lượt thích và cảm xúc"
             }
         }
     },

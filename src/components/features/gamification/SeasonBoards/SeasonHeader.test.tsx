@@ -17,6 +17,7 @@ import { describe, expect, it, vi } from "vitest"
 
 vi.mock("next-intl", () => ({
     useTranslations: () => (key: string) => key,
+    useLocale: () => "en",
 }))
 
 import { SeasonHeader } from "./SeasonHeader"
@@ -47,7 +48,7 @@ describe("SeasonHeader", () => {
         // KHÔNG phải thứ để đọc — người dùng đã nhìn thấy nguyên chuỗi "T-SU26-bfd6f768"
         // trên trang thật. Có tên (V356) thì tên phải thắng.
         render(<SeasonHeader seasonCode="T-SU26-bfd6f768" seasonName="Kỳ Summer 2026" noSeason={false} />)
-        expect(screen.getByText("Kỳ Summer 2026")).toBeTruthy()
+        expect(screen.getByText("Summer 2026")).toBeTruthy()
         expect(screen.queryByText("T-SU26-bfd6f768")).toBeNull()
     })
 
@@ -62,7 +63,7 @@ describe("SeasonHeader", () => {
         // Đã lộ ra production: dải mùa in nguyên "T-SU26-bfd6f768", lặp lại đúng chuỗi mà ô chọn
         // mùa ngay bên trên vừa hiện.
         render(<SeasonHeader seasonCode="T-SU26-bfd6f768" noSeason={false} />)
-        expect(screen.getByText("SU26")).toBeTruthy()
+        expect(screen.getByText("Summer 2026")).toBeTruthy()
         expect(screen.queryByText("T-SU26-bfd6f768")).toBeNull()
     })
 })

@@ -3,7 +3,7 @@
 import React from "react"
 import { TrophyIcon } from "@phosphor-icons/react"
 import { Button, Chip, Typography } from "@heroui/react"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useSearchParams } from "next/navigation"
 import { usePathname, useRouter } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
@@ -13,6 +13,7 @@ import { useGetGoldenBoardForTermSwr } from "@/hooks/swr/api/rest/queries/useGet
 import { useGetGoldenBoardLatestSwr } from "@/hooks/swr/api/rest/queries/useGetGoldenBoardLatestSwr"
 import { useGetGoldenBoardTermsSwr } from "@/hooks/swr/api/rest/queries/useGetGoldenBoardTermsSwr"
 import type { GoldenBoardTermOptionView } from "@/modules/api/rest/course"
+import { localizeTermName } from "@/utils/term-name"
 import { GoldenBoard, GoldenBoardSkeleton } from "../GoldenBoard"
 
 /** Query-string key the picked term is mirrored to (`/goldenboard?term=SP26`). */
@@ -31,8 +32,8 @@ export const isTermSelected = (
     urlTerm ? urlTerm === term.id || urlTerm === term.code : term.id === latestTermId
 
 /** Label for a term chip — the readable name, falling back to the code. */
-const termLabel = (term: Pick<GoldenBoardTermOptionView, "code" | "name">): string =>
-    term.name || term.code
+const termLabel = (locale: string, term: Pick<GoldenBoardTermOptionView, "code" | "name">): string =>
+    localizeTermName(locale, term.name, term.code) ?? term.code
 
 /**
  * `/goldenboard` — the Bảng vàng browser: pick a term, see that term's board.
@@ -56,6 +57,7 @@ const termLabel = (term: Pick<GoldenBoardTermOptionView, "code" | "name">): stri
  */
 export const GoldenBoardPage = () => {
     const t = useTranslations("goldenboard")
+    const locale = useLocale()
     const router = useRouter()
     const pathname = usePathname()
     const searchParams = useSearchParams()
@@ -124,7 +126,7 @@ export const GoldenBoardPage = () => {
                                     aria-current={selected ? "true" : undefined}
                                     onPress={() => onPickTerm(term)}
                                 >
-                                    {termLabel(term)}
+                                    {termLabel(locale, term)}
                                     <Chip size="sm" variant="soft" color="warning">
                                         {term.entryCount}
                                     </Chip>
@@ -137,7 +139,7 @@ export const GoldenBoardPage = () => {
 
             {currentTerm ? (
                 <Typography type="body" weight="semibold" align="center">
-                    {t("boardOfTerm", { term: currentTerm.name || currentTerm.code })}
+                    {t("boardOfTerm", { term: termLabel(locale, currentTerm) })}
                 </Typography>
             ) : null}
 

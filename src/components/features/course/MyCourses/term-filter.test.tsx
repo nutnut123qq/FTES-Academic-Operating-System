@@ -19,6 +19,7 @@ import type { MyCourse } from "../hooks/useQueryMyCoursesSwr"
 vi.mock("next-intl", () => ({
     useTranslations: () => (key: string) => key,
     useFormatter: () => ({ dateTime: () => "01/01/2026" }),
+    useLocale: () => "vi",
 }))
 
 vi.mock("@/i18n/navigation", () => ({

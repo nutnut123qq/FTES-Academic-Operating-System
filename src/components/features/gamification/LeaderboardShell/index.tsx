@@ -6,7 +6,6 @@ import { useTranslations } from "next-intl"
 import { StarIcon } from "@phosphor-icons/react"
 import { Link } from "@/i18n/navigation"
 import { ProgressMeter } from "@/components/blocks/stats/ProgressMeter"
-import { SectionCard } from "@/components/reuseable/SectionCard"
 import { pathConfig } from "@/resources/path"
 import { formatXpShort } from "@/utils/xp-format"
 import { useQueryMyGamificationSwr } from "../hooks/useQueryMyGamificationSwr"
@@ -57,6 +56,54 @@ export const LeaderboardShell = () => {
     // is the locale-aware one from `@/i18n/navigation` and adds the prefix itself.
     const guideHref = `${pathConfig().locale().leaderboard().build()}/guide`
 
+    const rankSummary = my && rankTier ? (
+        <div className="flex flex-col gap-3">
+            <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                    <img
+                        src={rankTier.tier.badgeSrc}
+                        alt=""
+                        aria-hidden
+                        className="size-16 shrink-0 object-contain"
+                    />
+                    <div className="flex min-w-0 flex-col gap-0.5">
+                        <Typography type="body-xs" color="muted">
+                            {t("currentRank.title")}
+                        </Typography>
+                        <Typography type="h5" weight="bold">
+                            {t(`tiers.${my.rank.league}`)}
+                        </Typography>
+                    </div>
+                </div>
+                <div className="flex shrink-0 flex-col items-end gap-0.5">
+                    <Typography type="h5" weight="bold">
+                        {my.rank.position > 0 ? `#${my.rank.position}` : "—"}
+                    </Typography>
+                    <Typography type="body-xs" color="muted">
+                        {t("currentRank.totalXp", { xp: formatXpShort(my.xp) })}
+                    </Typography>
+                </div>
+            </div>
+            {rankTier.next ? (
+                <ProgressMeter
+                    value={my.xp - rankTier.tier.minXp}
+                    max={rankTier.next.minXp - rankTier.tier.minXp}
+                    label={t("currentRank.toNext", {
+                        xp: formatXpShort(rankTier.next.minXp - my.xp),
+                        tier: t(`tiers.${rankTier.next.key}`),
+                    })}
+                    aria-label={t("currentRank.progressAria", {
+                        tier: t(`tiers.${rankTier.next.key}`),
+                    })}
+                />
+            ) : (
+                <Typography type="body-xs" color="muted">
+                    {t("currentRank.topTier")}
+                </Typography>
+            )}
+        </div>
+    ) : null
+
     return (
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-6">
             <GamificationEventHost />
@@ -78,60 +125,9 @@ export const LeaderboardShell = () => {
                 </Link>
             </div>
 
-            {/* Hạng toàn hệ thống theo TỔNG XP. Hạng theo kỳ vẫn nằm trong SeasonHeader
-                ngay bên dưới; nhãn nguồn giữ hai con số này khỏi bị hiểu là cùng một bảng. */}
-            {my && rankTier ? (
-                <SectionCard>
-                    <div className="flex flex-col gap-3">
-                        <div className="flex items-start justify-between gap-3">
-                            <div className="flex min-w-0 items-center gap-3">
-                                <img
-                                    src={rankTier.tier.badgeSrc}
-                                    alt=""
-                                    aria-hidden
-                                    className="size-16 shrink-0 object-contain"
-                                />
-                                <div className="flex min-w-0 flex-col gap-0.5">
-                                    <Typography type="body-xs" color="muted">
-                                        {t("currentRank.title")}
-                                    </Typography>
-                                    <Typography type="h5" weight="bold">
-                                        {t(`tiers.${my.rank.league}`)}
-                                    </Typography>
-                                </div>
-                            </div>
-                            <div className="flex shrink-0 flex-col items-end gap-0.5">
-                                <Typography type="h5" weight="bold">
-                                    {my.rank.position > 0 ? `#${my.rank.position}` : "—"}
-                                </Typography>
-                                <Typography type="body-xs" color="muted">
-                                    {t("currentRank.totalXp", { xp: formatXpShort(my.xp) })}
-                                </Typography>
-                            </div>
-                        </div>
-                        {rankTier.next ? (
-                            <ProgressMeter
-                                value={my.xp - rankTier.tier.minXp}
-                                max={rankTier.next.minXp - rankTier.tier.minXp}
-                                label={t("currentRank.toNext", {
-                                    xp: formatXpShort(rankTier.next.minXp - my.xp),
-                                    tier: t(`tiers.${rankTier.next.key}`),
-                                })}
-                                aria-label={t("currentRank.progressAria", {
-                                    tier: t(`tiers.${rankTier.next.key}`),
-                                })}
-                            />
-                        ) : (
-                            <Typography type="body-xs" color="muted">
-                                {t("currentRank.topTier")}
-                            </Typography>
-                        )}
-                    </div>
-                </SectionCard>
-            ) : null}
-
-            {/* Bảng xếp hạng theo kỳ (tổng · cộng đồng+workplace) */}
-            <SeasonBoards />
+            {/* Tổng rank + kỳ đang xem nằm chung một thẻ; SeasonBoards owns the selected
+                season/scope, so the season half always follows the controls below. */}
+            <SeasonBoards rankSummary={rankSummary} />
 
             {/* badges row — the viewer's earned badges from the real snapshot */}
             <div className="flex flex-col gap-3">

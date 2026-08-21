@@ -3,11 +3,12 @@
 import React from "react"
 import { cn } from "@heroui/react"
 import { StarIcon } from "@phosphor-icons/react"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { SearchInput } from "@/components/reuseable/SearchInput"
 import { SegmentedControl } from "@/components/blocks/navigation/SegmentedControl"
 import type { PublicTermView } from "@/modules/api/rest/course"
 import type { WithClassNames } from "@/modules/types/base/class-name"
+import { localizeTermName } from "@/utils/term-name"
 import { TermFilterDropdown } from "../../TermFilterDropdown"
 import type {
     CourseLevelFacet,
@@ -86,6 +87,7 @@ export const FacetSortBar = ({
     className,
 }: FacetSortBarProps) => {
     const t = useTranslations()
+    const locale = useLocale()
     const showLevel = level !== undefined && onLevelChange !== undefined
     const showRating = minRating !== undefined && onMinRatingChange !== undefined
     // không có kỳ nào để chọn = không có facet (một picker rỗng còn tệ hơn là không có)
@@ -162,7 +164,7 @@ export const FacetSortBar = ({
                     <TermFilterDropdown
                         options={terms.map((term) => ({
                             id: term.id,
-                            label: term.name,
+                            label: localizeTermName(locale, term.name, term.code) ?? term.code,
                             hint: term.code,
                         }))}
                         value={termId}

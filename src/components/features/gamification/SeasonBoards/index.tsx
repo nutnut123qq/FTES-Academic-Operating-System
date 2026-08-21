@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl"
 import { BuildingsIcon, TrophyIcon } from "@phosphor-icons/react"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { ExtendedTabs } from "@/components/blocks/navigation/ExtendedTabs"
+import { SectionCard } from "@/components/reuseable/SectionCard"
 import { useAppSelector } from "@/redux/hooks"
 import type { SeasonBoardKey } from "@/modules/api/rest/gamification"
 import { useQuerySeasonBoardSwr } from "../hooks/useQuerySeasonBoardSwr"
@@ -56,7 +57,7 @@ const BoardSkeleton = () => (
  * riêng cho việc này) · kỳ đang chạy nhưng chưa ai lên bảng · có dữ liệu. Gộp bất kỳ hai
  * cái nào là nói với người dùng một điều không đúng.
  */
-export const SeasonBoards = () => {
+export const SeasonBoards = ({ rankSummary }: { rankSummary?: React.ReactNode }) => {
     const t = useTranslations("gamification.seasonBoards")
     const failureContent = useBoardFailureContent()
     const viewer = useAppSelector((state) => state.user.user)
@@ -93,18 +94,23 @@ export const SeasonBoards = () => {
 
     return (
         <section className="flex flex-col gap-4">
-            {/* Dải mùa giải ĐỨNG TRƯỚC hai nút: câu hỏi đầu tiên của người mở trang là "mình
-                đang đứng đâu, kỳ này còn bao lâu", không phải "đổi sang bảng nào". Đặt hàng nút
-                lên trước là bắt người ta lướt qua nó mới tới được câu trả lời. */}
-            <SeasonHeader
-                seasonCode={seasonCode}
-                seasonName={seasonName}
-                endsAt={endsAt}
-                lifetime={lifetime}
-                noSeason={outcome === "NO_SEASON"}
-                myRank={myRank}
-                myXp={myXp}
-            />
+            {(rankSummary || seasonCode || outcome === "NO_SEASON") ? (
+                <SectionCard>
+                    <div className="flex flex-col gap-3">
+                        {rankSummary}
+                        <SeasonHeader
+                            seasonCode={seasonCode}
+                            seasonName={seasonName}
+                            endsAt={endsAt}
+                            lifetime={lifetime}
+                            noSeason={outcome === "NO_SEASON"}
+                            myRank={myRank}
+                            myXp={myXp}
+                            separated={Boolean(rankSummary)}
+                        />
+                    </div>
+                </SectionCard>
+            ) : null}
 
             {/* HAI nút điều khiển, hết. Trước đợt này trang có mười hai: ba nút kỳ hạn mục
                 tiêu, ba nút chỉ số, ô nhập, nút lưu, hai tab, ô chọn khoá và một link mở

@@ -181,24 +181,7 @@ export const shortUserLabel = (userId: string): string => `#${userId.slice(0, 8)
  * cho người đọc. In thẳng ra cho người dùng thấy "T-SU26-bfd6f768" — đã xảy ra thật trên
  * production.
  *
- * <p>Thứ tự rơi: tên backend (V356) → phần MÃ KỲ cắt ra từ mã mùa ("SU26") → `null`. Trả `null`
- * thay vì một chuỗi bịa để người gọi tự chọn câu phù hợp với chỗ của mình (ô chọn nói "Kỳ đang
- * chạy", dải mùa nói câu khác) — hàm này không biết nó đang được vẽ ở đâu.
+ * Tên backend và mã kỳ đều được chuẩn hoá theo locale đang chọn, nên `Kỳ Thu 2026`
+ * không lọt vào giao diện tiếng Anh và mã băm không bao giờ xuất hiện trên màn hình.
  */
-export const seasonDisplayName = (
-    name: string | null | undefined,
-    code: string | null | undefined,
-): string | null => {
-    const trimmedName = name?.trim()
-    if (trimmedName) {
-        return trimmedName
-    }
-    const trimmedCode = code?.trim()
-    if (!trimmedCode) {
-        return null
-    }
-    // `T-<mã kỳ>-<8 hex>`. Chỉ cắt khi khớp ĐÚNG khuôn — mã seed tay không theo khuôn này thì để
-    // nguyên còn hơn cắt bừa mất nghĩa.
-    const match = /^T-(.+)-[0-9a-f]{8}$/.exec(trimmedCode)
-    return match ? match[1] : trimmedCode
-}
+export { localizeTermName as seasonDisplayName } from "@/utils/term-name"

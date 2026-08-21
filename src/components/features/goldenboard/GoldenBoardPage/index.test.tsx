@@ -22,6 +22,7 @@ import type {
 vi.mock("next-intl", () => ({
     useTranslations: () => (key: string, params?: Record<string, unknown>) =>
         params ? `${key}:${JSON.stringify(params)}` : key,
+    useLocale: () => "en",
 }))
 
 vi.mock("@phosphor-icons/react", () => ({

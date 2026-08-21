@@ -60,7 +60,9 @@ vi.mock("@/components/blocks/stats/ProgressMeter", () => ({
 
 // Neighbours of the strip: each has its own suite, none is under test here.
 vi.mock("../GamificationEventHost", () => ({ GamificationEventHost: () => <div /> }))
-vi.mock("../SeasonBoards", () => ({ SeasonBoards: () => <div /> }))
+vi.mock("../SeasonBoards", () => ({
+    SeasonBoards: ({ rankSummary }: { rankSummary?: React.ReactNode }) => <div>{rankSummary}</div>,
+}))
 
 // The label rule is NOT what this suite tests — it only has to prove the strip
 // still asks for it with (code, backendName) and renders the answer verbatim.

@@ -1,8 +1,8 @@
 "use client"
 
 import React from "react"
-import { Typography } from "@heroui/react"
-import { useTranslations } from "next-intl"
+import { Typography, cn } from "@heroui/react"
+import { useLocale, useTranslations } from "next-intl"
 import { CalendarBlankIcon, ClockIcon, InfinityIcon } from "@phosphor-icons/react"
 import { formatXpShort } from "@/utils/xp-format"
 import { seasonDisplayName } from "./model"
@@ -23,6 +23,8 @@ export interface SeasonHeaderProps {
     myRank?: number | null
     /** EXP người xem trong lát cắt đang hiện; `null` = chưa biết. */
     myXp?: number | null
+    /** Add a divider when the season row follows the total-rank summary in one card. */
+    separated?: boolean
 }
 
 /**
@@ -51,8 +53,10 @@ export const SeasonHeader = ({
     noSeason,
     myRank = null,
     myXp = null,
+    separated = false,
 }: SeasonHeaderProps) => {
     const t = useTranslations("gamification.seasonBoards")
+    const locale = useLocale()
 
     const [daysLeft, setDaysLeft] = React.useState<number | null>(null)
     React.useEffect(() => {
@@ -70,7 +74,7 @@ export const SeasonHeader = ({
 
     if (noSeason) {
         return (
-            <div className="flex flex-col gap-1 rounded-2xl bg-default/40 p-4">
+            <div className={cn("flex flex-col gap-1", separated && "border-t border-separator pt-3")}>
                 <Typography type="body-sm" weight="medium">
                     {t("season.none")}
                 </Typography>
@@ -91,10 +95,13 @@ export const SeasonHeader = ({
     // "Kỳ đang chạy" — chứ không dội lại đúng chuỗi băm mà ô chọn mùa ngay trên vừa hiện.
     const title = lifetime
         ? t("picker.lifetime")
-        : seasonDisplayName(seasonName, seasonCode) ?? t("picker.current")
+        : seasonDisplayName(locale, seasonName, seasonCode) ?? t("picker.current")
 
     return (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-separator p-4">
+        <div className={cn(
+            "flex flex-wrap items-center justify-between gap-3",
+            separated && "border-t border-separator pt-3",
+        )}>
             <div className="flex min-w-0 flex-col gap-0.5">
                 <Typography type="body" weight="semibold" className="line-clamp-1">
                     {title}

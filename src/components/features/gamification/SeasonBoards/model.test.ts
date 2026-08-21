@@ -118,26 +118,27 @@ describe("shortUserLabel", () => {
 })
 
 describe("seasonDisplayName", () => {
-    it("có tên ⇒ dùng tên", () => {
-        expect(seasonDisplayName("Kỳ Summer 2026", "T-SU26-bfd6f768")).toBe("Kỳ Summer 2026")
+    it("chuẩn hoá tên kỳ theo locale, không trộn Việt-Anh", () => {
+        expect(seasonDisplayName("en", "Kỳ Thu 2026", "T-FA26-bfd6f768")).toBe("Fall 2026")
+        expect(seasonDisplayName("vi", "Summer 2026", "T-SU26-bfd6f768")).toBe("Kỳ Hè 2026")
     })
 
     it("chưa có tên ⇒ cắt phần băm, KHÔNG in mã thô", () => {
         // Đã lộ ra production: người dùng nhìn thấy nguyên chuỗi "T-SU26-bfd6f768". Phần băm chỉ
         // để hai kỳ trùng mã ở hai năm không đụng nhau — nó không mang thông tin cho người đọc.
-        expect(seasonDisplayName(null, "T-SU26-bfd6f768")).toBe("SU26")
+        expect(seasonDisplayName("en", null, "T-SU26-bfd6f768")).toBe("Summer 2026")
     })
 
     it("mã không theo khuôn ⇒ để NGUYÊN, không cắt bừa", () => {
         // Kỳ seed tay không có phần băm; cắt theo khuôn không khớp là làm mất nghĩa.
-        expect(seasonDisplayName(null, "T2026S1")).toBe("T2026S1")
+        expect(seasonDisplayName("en", null, "T2026S1")).toBe("T2026S1")
     })
 
     it("tên toàn khoảng trắng ⇒ coi như không có", () => {
-        expect(seasonDisplayName("   ", "T-FA25-0a1b2c3d")).toBe("FA25")
+        expect(seasonDisplayName("vi", "   ", "T-FA25-0a1b2c3d")).toBe("Kỳ Thu 2025")
     })
 
     it("không có gì ⇒ null, để người gọi tự chọn câu", () => {
-        expect(seasonDisplayName(null, null)).toBeNull()
+        expect(seasonDisplayName("en", null, null)).toBeNull()
     })
 })

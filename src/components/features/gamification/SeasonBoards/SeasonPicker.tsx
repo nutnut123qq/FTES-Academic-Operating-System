@@ -4,7 +4,7 @@ import React from "react"
 import type { Selection } from "@heroui/react"
 import { CalendarBlankIcon, CaretDownIcon } from "@phosphor-icons/react"
 import { Dropdown, Label, cn } from "@heroui/react"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { LIFETIME_SEASON, type SeasonOptionView } from "@/modules/api/rest/gamification"
 import { seasonDisplayName } from "./model"
 
@@ -36,6 +36,7 @@ const CURRENT = "__current__"
  */
 export const SeasonPicker = ({ seasons, value, onChange, currentLabel }: SeasonPickerProps) => {
     const t = useTranslations("gamification.seasonBoards.picker")
+    const locale = useLocale()
 
     const selectedKey = value ?? CURRENT
     const isLifetime = value === LIFETIME_SEASON
@@ -45,12 +46,12 @@ export const SeasonPicker = ({ seasons, value, onChange, currentLabel }: SeasonP
      * đồng bộ tên (V356) hiện phần mã kỳ cắt ra ("SU26") thay vì "T-SU26-bfd6f768".
      */
     const seasonLabel = (season: SeasonOptionView) =>
-        seasonDisplayName(season.name, season.code) ?? t("current")
+        seasonDisplayName(locale, season.name, season.code) ?? t("current")
 
     const triggerLabel = isLifetime
         ? t("lifetime")
         : value === null
-            ? seasonDisplayName(null, currentLabel) ?? t("current")
+            ? seasonDisplayName(locale, currentLabel, currentLabel) ?? t("current")
             : seasonLabel(seasons.find((s) => s.code === value) ?? ({ code: value, name: null } as SeasonOptionView))
 
     const onSelectionChange = (keys: Selection) => {

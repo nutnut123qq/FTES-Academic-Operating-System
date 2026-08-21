@@ -41,6 +41,8 @@ export interface LearnToolsRailProps {
      * the sticky desktop aside. The rail body is identical either way.
      */
     mobile?: boolean
+    /** Desktop edge the collapsible rail belongs to. */
+    side?: "left" | "right"
 }
 
 /** One tool row: icon + label acting as a go-there link, or a locked buy trigger. */
@@ -137,7 +139,7 @@ const ResumeRow = ({
  *
  * @param props - {@link LearnToolsRailProps}
  */
-export const LearnToolsRail = ({ className, mobile = false }: LearnToolsRailProps) => {
+export const LearnToolsRail = ({ className, mobile = false, side = "left" }: LearnToolsRailProps) => {
     const t = useTranslations("learn.toolsRail")
     const tContent = useTranslations("learn.content")
     const router = useRouter()
@@ -273,6 +275,7 @@ export const LearnToolsRail = ({ className, mobile = false }: LearnToolsRailProp
                 collapseLabel={t("collapseRail")}
                 expandLabel={t("expandRail")}
                 storageKey={TOOLS_RAIL_STORAGE_KEY}
+                side={side}
                 className="h-full"
             >
                 {body}

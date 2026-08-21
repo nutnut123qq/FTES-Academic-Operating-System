@@ -1,114 +1,23 @@
 "use client"
 
-import React, { useCallback } from "react"
-import { useTranslations } from "next-intl"
+import React from "react"
 import { InteractionBar } from "@/components/reuseable/Discussion/InteractionBar"
-import { ReactionType, type ReactionSummary } from "@/modules/api/graphql/queries/types/discussion"
 import { useGetLessonReactionsSwr } from "@/hooks/swr/api/rest/queries/useGetLessonReactionsSwr"
-import { usePutLessonReactionSwr } from "@/hooks/swr/api/rest/mutations/usePutLessonReactionSwr"
-import { useDeleteLessonReactionSwr } from "@/hooks/swr/api/rest/mutations/useDeleteLessonReactionSwr"
-import { LESSON_REACTION_LIKE, type LessonReactionSummaryView } from "@/modules/api/rest/course"
 
 /**
- * Maps the backend `{viewCount, likeCount, myReaction}` onto the shared discussion
- * {@link ReactionSummary} the {@link InteractionBar} renders. The lesson endpoint only
- * supports LIKE today, so the single bucket is `Like` and `myReaction` collapses to
- * `Like | null`.
+ * Lesson view count. The endpoint still returns the legacy like fields, but lesson
+ * reactions are no longer a product surface, so only the view metric is rendered.
  */
-export const toReactionSummary = (view: LessonReactionSummaryView): ReactionSummary => ({
-    counts: view.likeCount > 0 ? [{ type: ReactionType.Like, count: view.likeCount }] : [],
-    total: view.likeCount,
-    myReaction: view.myReaction === LESSON_REACTION_LIKE ? ReactionType.Like : null,
-    viewCount: view.viewCount,
-})
+export const LessonReactionFooter = ({ contentId }: { contentId: string }) => {
+    const { data } = useGetLessonReactionsSwr(contentId)
 
-/**
- * Lesson-level reaction + view count in the reading card foot — wired to the real
- * `GET/PUT/DELETE /courses/lessons/{id}/reactions` endpoints via SWR. Liking is optimistic:
- * the summary flips instantly (like ±1, active state) while the PUT/DELETE runs in the
- * background, and rolls back to the server truth if the request fails.
- *
- * PREVIEW viewers can read the counts (GET only needs PREVIEW) but cannot like (PUT needs
- * FULL access) — the control is disabled with an enroll tooltip so no doomed PUT is fired.
- */
-export const LessonReactionFooter = ({
-    contentId,
-    accessLevel,
-    showReactions = true,
-}: {
-    contentId: string
-    accessLevel: string | null
-    /**
-     * Hiện cụm thả cảm xúc hay không (mặc định `true`).
-     *
-     * Bài TÀI LIỆU đặt `false`: bỏ thả cảm xúc nhưng GIỮ lượt xem. Vẫn phải gọi hook đọc
-     * vì `viewCount` đi CHUNG một endpoint với like (`GET /courses/lessons/{id}/reactions`
-     * trả `{viewCount, likeCount, myReaction}`) — không có đường nào lấy riêng lượt xem.
-     */
-    showReactions?: boolean
-}) => {
-    const t = useTranslations("learn")
-    const reactionsSwr = useGetLessonReactionsSwr(contentId)
-    const { trigger: like } = usePutLessonReactionSwr()
-    const { trigger: unlike } = useDeleteLessonReactionSwr()
-
-    // Only FULL access may like; PREVIEW (or unknown) can still read the counts.
-    const canLike = accessLevel === "FULL"
-    const view = reactionsSwr.data
-
-    const toggle = useCallback(
-        async (next: boolean) => {
-            if (!canLike || !view) {
-                return
-            }
-            const optimistic: LessonReactionSummaryView = {
-                ...view,
-                myReaction: next ? LESSON_REACTION_LIKE : null,
-                likeCount: Math.max(0, view.likeCount + (next ? 1 : -1)),
-            }
-            try {
-                await reactionsSwr.mutate(
-                    async () =>
-                        next
-                            ? like({ lessonId: contentId })
-                            : unlike({ lessonId: contentId }),
-                    {
-                        optimisticData: optimistic,
-                        rollbackOnError: true,
-                        revalidate: false,
-                        populateCache: true,
-                    },
-                )
-            } catch {
-                // rollbackOnError already restored the previous summary; swallow so the
-                // rejected mutate promise doesn't surface as an unhandled rejection.
-            }
-        },
-        [canLike, view, reactionsSwr, like, unlike, contentId],
-    )
-
-    // The picker toggles: a non-null pick means "like", null means "remove like".
-    const handleReact = useCallback(
-        (type: ReactionType | null) => {
-            void toggle(type !== null)
-        },
-        [toggle],
-    )
-
-    const summary = view ? toReactionSummary(view) : undefined
-
-    // A BOUNDED bar: border on every side + rounded, not a bare top rule. With only a
-    // `border-t` the row read as an open strip whose "bottom line" was really the next
-    // section's own separator — the react + view-count cluster now sits in its own box.
     return (
         <div className="mt-6 rounded-2xl border border-default px-4 py-3">
             <InteractionBar
-                summary={summary}
-                onReact={handleReact}
-                viewCount={view?.viewCount}
-                disabled={!canLike}
-                disabledReason={!canLike && showReactions ? t("reactions.likeGated") : undefined}
-                showReactions={showReactions}
+                summary={undefined}
+                onReact={() => {}}
+                viewCount={data?.viewCount}
+                showReactions={false}
             />
         </div>
     )

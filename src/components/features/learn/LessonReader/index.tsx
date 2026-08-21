@@ -460,11 +460,7 @@ export const LessonReader = () => {
                                     VIDEO/legacy: chỉ khi đã mở khoá và có nội dung để đọc. */}
                                 {!isLocked && !isReadingEmpty ? (
                                     <div className="mx-auto w-full max-w-3xl">
-                                        <LessonReactionFooter
-                                            contentId={contentId}
-                                            accessLevel={accessLevel}
-                                            showReactions={false}
-                                        />
+                                        <LessonReactionFooter contentId={contentId} />
                                     </div>
                                 ) : null}
                             </>
@@ -502,9 +498,9 @@ export const LessonReader = () => {
                                                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent from-50% via-surface/60 to-surface" />
                                             ) : null}
                                         </div>
-                                        {/* one-tap reaction + view count for a finished, readable lesson */}
+                                        {/* view count for a finished, readable lesson */}
                                         {!isLocked && !isReadingEmpty ? (
-                                            <LessonReactionFooter contentId={contentId} accessLevel={accessLevel} />
+                                            <LessonReactionFooter contentId={contentId} />
                                         ) : null}
                                         {showLegacyPaywall ? (
                                             <div className="mt-6 flex flex-col items-start gap-3 border-t border-default pt-6">
@@ -538,9 +534,9 @@ export const LessonReader = () => {
                                 </Card>
                             </div>
                         ) : !isLocked ? (
-                        // video-only lesson: no empty paper — just the reaction bar
+                        // video-only lesson: no empty paper — just the view count
                             <div className="mx-auto w-full max-w-3xl">
-                                <LessonReactionFooter contentId={contentId} accessLevel={accessLevel} />
+                                <LessonReactionFooter contentId={contentId} />
                             </div>
                         ) : null}
 

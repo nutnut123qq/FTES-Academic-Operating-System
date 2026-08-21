@@ -10,9 +10,7 @@ import type { LearnLessonView } from "../hooks/useQueryLearnLessonSwr"
  * (practice now lives in the right-rail "Practice this lesson" panel, documents in the
  * "Tài liệu cho lesson này" rail panel); the reader always renders the content view.
  * What this file still guards:
- *  - Bài DOCUMENT VẪN mount footer để giữ LƯỢT XEM, nhưng tắt thả cảm xúc
- *    (`showReactions={false}`). Bỏ cảm xúc là quyết định sản phẩm; lượt xem thì không —
- *    hai thứ đi chung một thanh nên gỡ cả cụm là gỡ nhầm.
+ *  - Mọi bài VẪN mount footer để giữ LƯỢT XEM; like đã bị gỡ ở component dùng chung.
  *  - The after-content "Làm thử thách" TrialChallengeCta shows only for an accessible
  *    lesson carrying a FREE challenge.
  */
@@ -127,18 +125,8 @@ vi.mock("@/components/features/learn/DocumentReader", () => ({
     DocumentReader: () => <div data-testid="document-reader" />,
 }))
 vi.mock("./LessonReactionFooter", () => ({
-    LessonReactionFooter: ({
-        contentId,
-        accessLevel,
-        showReactions = true,
-    }: {
-        contentId: string
-        accessLevel: string | null
-        showReactions?: boolean
-    }) => (
-        <div data-testid="reaction-footer" data-show-reactions={String(showReactions)}>
-            {`${contentId}:${String(accessLevel)}`}
-        </div>
+    LessonReactionFooter: ({ contentId }: { contentId: string }) => (
+        <div data-testid="reaction-footer">{contentId}</div>
     ),
 }))
 
@@ -210,15 +198,11 @@ beforeEach(() => {
 })
 
 describe("LessonReader — reaction footer + trial CTA wiring", () => {
-    it("bài DOCUMENT: vẫn mount footer (giữ lượt xem) nhưng TẮT thả cảm xúc", () => {
-        // Ghim đúng ranh giới: bỏ cảm xúc KHÔNG được kéo theo lượt xem. Assert cả hai vế —
-        // footer có mặt, và cờ showReactions là false — vì chỉ assert một vế thì bản gỡ sạch
-        // cụm footer (đã từng xảy ra) cũng lọt qua.
+    it("bài DOCUMENT vẫn mount footer để giữ lượt xem", () => {
         lessonHook.mockReturnValue({ lesson: makeLesson({ contentType: "DOCUMENT" }), error: undefined, mutate: vi.fn() })
         render(<LessonReader />)
         expect(screen.getByTestId("document-reader")).toBeTruthy()
-        const footer = screen.getByTestId("reaction-footer")
-        expect(footer.getAttribute("data-show-reactions")).toBe("false")
+        expect(screen.getByTestId("reaction-footer")).toBeTruthy()
     })
 
     it("shows the trial 'Làm thử thách' CTA when an accessible lesson has a free challenge", () => {

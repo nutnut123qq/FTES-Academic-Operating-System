@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from "react"
 import { Button, Chip, Typography } from "@heroui/react"
-import { useFormatter, useTranslations } from "next-intl"
+import { useFormatter, useLocale, useTranslations } from "next-intl"
 import { useRouter } from "@/i18n/navigation"
 import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { EmptyContent } from "@/components/blocks/async/EmptyContent"
@@ -12,6 +12,7 @@ import { FtesMascot } from "@/components/reuseable/FtesMascot"
 import { MascotProfileNudge } from "@/components/features/mascot-moments"
 import { TermFilterDropdown, type TermFilterOption } from "../TermFilterDropdown"
 import { useQueryMyCoursesSwr, type MyCourse } from "../hooks/useQueryMyCoursesSwr"
+import { localizeTermName } from "@/utils/term-name"
 
 /**
  * Khoá của nhóm "Ngoài kỳ học" (`termId === null`). Là một giá trị CHỌN được chứ không
@@ -41,6 +42,7 @@ const NO_TERM = "__no_term__"
 export const MyCourses = () => {
     const t = useTranslations()
     const format = useFormatter()
+    const locale = useLocale()
     const router = useRouter()
     const { courses, isLoading, error, mutate } = useQueryMyCoursesSwr()
     // `undefined` = "Tất cả kỳ" (mặc định)
@@ -65,7 +67,7 @@ export const MyCourses = () => {
             seen.add(course.termId)
             options.push({
                 id: course.termId,
-                label: course.termName ?? t("courses.mine.termUnknown"),
+                label: localizeTermName(locale, course.termName) ?? t("courses.mine.termUnknown"),
             })
         }
         // "Ngoài kỳ học" đứng CUỐI có chủ đích: nó không phải một kỳ, xếp lẫn vào giữa
@@ -74,7 +76,7 @@ export const MyCourses = () => {
             options.push({ id: NO_TERM, label: t("courses.mine.termNone") })
         }
         return options
-    }, [courses, t])
+    }, [courses, locale, t])
 
     // một lựa chọn duy nhất thì không phải bộ lọc → không render
     const showTermFilter = termOptions.length > 1

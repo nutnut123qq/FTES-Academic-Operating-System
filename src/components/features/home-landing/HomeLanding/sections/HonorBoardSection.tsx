@@ -3,10 +3,11 @@
 import React from "react"
 import { TrophyIcon, ArrowRightIcon } from "@phosphor-icons/react"
 import { Button, Chip, Typography } from "@heroui/react"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useRouter } from "@/i18n/navigation"
 import { GoldenBoard } from "@/components/features/goldenboard/GoldenBoard"
 import { useGetGoldenBoardLatestSwr } from "@/hooks/swr/api/rest/queries/useGetGoldenBoardLatestSwr"
+import { localizeTermName } from "@/utils/term-name"
 
 /**
  * "Bảng vàng FTES" / FTES Hall of Fame — the LATEST term's board, read from the BE
@@ -29,6 +30,7 @@ import { useGetGoldenBoardLatestSwr } from "@/hooks/swr/api/rest/queries/useGetG
  */
 export const HonorBoardSection = () => {
     const t = useTranslations("homeLanding")
+    const locale = useLocale()
     const router = useRouter()
     const { data } = useGetGoldenBoardLatestSwr()
 
@@ -36,7 +38,9 @@ export const HonorBoardSection = () => {
     // No rows = nothing to honour (loading / error / empty board all land here) → hide the band.
     if (entries.length === 0) return null
 
-    const termLabel = data?.term ? data.term.name || data.term.code : null
+    const termLabel = data?.term
+        ? localizeTermName(locale, data.term.name, data.term.code)
+        : null
 
     return (
         <section className="relative isolate mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">

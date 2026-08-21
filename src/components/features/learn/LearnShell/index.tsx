@@ -6,13 +6,7 @@ import { LearnMobileBar } from "./LearnMobileBar"
 
 /** Props for {@link LearnShell}. */
 export interface LearnShellProps extends PropsWithChildren {
-    /**
-     * The FAR-LEFT course-tools / navigation rail (column 1), supplied by the route
-     * layout on the content dashboard. Mirrors StarCI's persistent `LearnSidebar`:
-     * it sits BEFORE the content-map so the course tool menu reads on the LEFT, not
-     * dumped on the right. Owns its own width + sticky behaviour; omit where there's
-     * no tools rail (lesson reader, leaderboard, mind-map, …).
-     */
+    /** Course-tools rail used by the content dashboard. */
     navRail?: ReactNode
     /**
      * The persistent left content rail (the course content-map / milestone /
@@ -58,9 +52,7 @@ export const LearnShell = ({
     className,
 }: LearnShellProps) => (
     <div className={cn("flex w-full flex-col items-start lg:flex-row", className)}>
-        {/* column 1 — the far-left course-tools / nav rail (StarCI's LearnSidebar
-            slot). Rendered FIRST so the course menu reads on the LEFT, ahead of the
-            content-map, instead of being pushed to the far right. */}
+        {/* optional leading course-tools rail (content dashboard) */}
         {navRail}
         {/* column 2 — persistent left content rail (content-map) supplied by the
             layout (self-sizing) */}

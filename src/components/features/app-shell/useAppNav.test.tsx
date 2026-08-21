@@ -135,26 +135,25 @@ describe("useAppNav — Community sáng cả ở route alias (/groups · /events
 })
 
 /**
- * Nút Home trên header. Gốc locale (`/`) render `<HomeLanding redirectSignedIn />`,
- * tức người đã đăng nhập bấm vào là bị `router.replace("/dashboard")` ném đi và
- * KHÔNG BAO GIỜ xem được trang chủ. `/home` render cùng landing đó nhưng không
- * redirect. Chuyển hướng ở gốc locale là hành vi CỐ Ý cho ai vào thẳng tên miền trần
- * — bộ ca này chỉ ghim cái nút, không đụng tới nó.
+ * Nút Home trên header, ghim ở `/home`.
+ *
+ * Ra đời từ #243, khi gốc locale còn render `<HomeLanding redirectSignedIn />` và người
+ * đã đăng nhập bấm Home là bị `router.replace("/dashboard")` ném đi. Chốt đó gỡ hẳn
+ * 2026-08-21 nên `/` và `/home` nay render y hệt nhau; bộ ca này giữ nguyên vì nó ghim
+ * MỘT đích ổn định cho nút, và ca thứ hai vẫn là hàng rào thật cho `isActive`.
  */
-describe("useAppNav — nút Home không được nảy sang dashboard", () => {
+describe("useAppNav — nút Home", () => {
     beforeEach(() => {
         pathname.mockReturnValue("/")
     })
 
-    it("nút Home trỏ /home chứ KHÔNG phải gốc locale (gốc ném sang /dashboard)", () => {
-        // Gốc locale render <HomeLanding redirectSignedIn /> => router.replace("/dashboard").
-        // Trỏ nút Home vào đó thì người đã đăng nhập không bao giờ xem được trang chủ.
+    it("nút Home trỏ /home", () => {
         expect(keyed("/home").find((m) => m.key === "home")?.path).toBe("/home")
     })
 
     it("Home sáng ở CẢ / lẫn /home", () => {
-        // Vào thẳng tên miền trần vẫn là "đang ở trang chủ" trong khoảnh khắc trước khi
-        // redirect kịp chạy — mất nhánh này thì header không sáng mục nào.
+        // Vào thẳng tên miền trần cũng LÀ đang ở trang chủ (cùng một landing) — mất nhánh
+        // này thì header không sáng mục nào.
         expect(keyed("/").find((m) => m.key === "home")?.isActive).toBe(true)
         expect(keyed("/home").find((m) => m.key === "home")?.isActive).toBe(true)
     })

@@ -501,5 +501,61 @@ describe("LessonHlsPlayer seeking", () => {
         fireEvent.loadedMetadata(media.video)
         expect(media.get()).toBe(1200)
     })
+
+    /**
+     * Đo trong Chromium thật (Playwright, manifest thật từ stream service): tua khi ĐANG PHÁT thì
+     * video về đúng chỗ nhưng ĐỨNG IM — vì nạp lại là dựng lại MediaSource nên thẻ <video> luôn
+     * quay về trạng thái tạm dừng. Người xem tua xong phải bấm phát lại, không ai chờ điều đó.
+     */
+    const mediaWithControls = (playing: boolean) => {
+        const video = document.querySelector("video") as HTMLVideoElement
+        let currentTime = 0
+        let paused = !playing
+        const play = vi.fn(() => { paused = false; return Promise.resolve() })
+        Object.defineProperty(video, "currentTime", {
+            configurable: true,
+            get: () => currentTime,
+            set: (next: number) => { currentTime = next },
+        })
+        Object.defineProperty(video, "paused", { configurable: true, get: () => paused })
+        Object.defineProperty(video, "play", { configurable: true, value: play })
+        return { video, play, get: () => currentTime, set: (n: number) => { currentTime = n } }
+    }
+
+    it("đang phát mà tua xa: nạp lại xong tự phát tiếp tại chỗ vừa tua", async () => {
+        windowPolicy.current = { leadSeconds: 120, ttlSeconds: 120 }
+        renderAnchored()
+        await waitFor(() => expect(h.instance).toBeTruthy())
+        const media = mediaWithControls(true)
+
+        media.set(1200)
+        fireEvent.seeked(media.video)
+        await waitFor(() => expect(preparedUrls.at(-1)).toContain("at=1200"))
+
+        media.set(0)
+        fireEvent.loadedMetadata(media.video)
+        fireEvent.seeked(media.video)
+
+        expect(media.get()).toBe(1200)
+        expect(media.play).toHaveBeenCalled()
+    })
+
+    it("đang DỪNG mà tua thì không tự phát", async () => {
+        windowPolicy.current = { leadSeconds: 120, ttlSeconds: 120 }
+        renderAnchored()
+        await waitFor(() => expect(h.instance).toBeTruthy())
+        const media = mediaWithControls(false)
+
+        media.set(1200)
+        fireEvent.seeked(media.video)
+        await waitFor(() => expect(preparedUrls.at(-1)).toContain("at=1200"))
+
+        media.set(0)
+        fireEvent.loadedMetadata(media.video)
+        fireEvent.seeked(media.video)
+
+        expect(media.get()).toBe(1200)
+        expect(media.play).not.toHaveBeenCalled()
+    })
 })
 

@@ -89,7 +89,7 @@ describe("FTES VOD manifest normalization", () => {
         expect(revokeObjectURL).toHaveBeenCalledWith("blob:repaired")
     })
 
-    it("reports grant expiry without rewriting an already valid playlist", async () => {
+    it("serves the fetched manifest itself, so hls.js does not re-fetch it", async () => {
         const payload = btoa(JSON.stringify({ e: 1_787_311_002 })).replace(/=/g, "")
         const fetchMock = vi.fn().mockResolvedValue({
             ok: true,
@@ -109,8 +109,11 @@ describe("FTES VOD manifest normalization", () => {
             new AbortController().signal,
         )
 
-        expect(prepared.url).toBe("https://cdn.example/master.m3u8")
+        // Bản hợp lệ cũng đi qua Blob: mỗi lượt tải manifest ăn vào hạn ngạch chống-tải theo vé của
+        // stream service, và bản hls.js tự tải lại sẽ được ký lại theo mốc khác với bản vừa kiểm.
+        expect(prepared.url).toMatch(/^blob:/)
         expect(prepared.expiresAtMs).toBe(1_787_311_002_000)
+        expect(fetchMock).toHaveBeenCalledTimes(1)
         expect(fetchMock).toHaveBeenCalledWith(
             "https://cdn.example/master.m3u8",
             expect.objectContaining({ cache: "no-store" }),

@@ -214,7 +214,7 @@ export const LessonVideoBlock = ({
             onHalfWatched={onHalfWatched}
             // Direct signed-manifest mode: a retry after expiry re-signs the stream URL
             // (fetches a fresh stream.url) instead of replaying the stale manifest prop.
-            onRefreshSource={() => { void refreshStream() }}
+            onRefreshSource={() => refreshStream()}
             overlay={upNextOverlay}
         />
     ) : ytId ? (

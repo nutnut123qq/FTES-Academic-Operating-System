@@ -17,6 +17,10 @@ import {
     prefetchHlsFragments,
     type HlsFragmentPrefetchCache,
 } from "./hlsFragmentPrefetch"
+import {
+    getHlsUrlTokenExpiryMs,
+    prepareHlsVodManifestSource,
+} from "./hlsVodManifest"
 
 /** Legacy Funnycode stream gateway that resolves `video_*` refs to an HLS manifest. */
 const STREAM_BASE = "https://stream.ftes.vn"
@@ -32,7 +36,10 @@ interface PlaylistResponse {
 const HLS_STARTUP_STALL_TIMEOUT_MS = 8000
 
 /** Never hold playback forever when a CDN prefetch is slow or unavailable. */
-const HLS_STARTUP_PREFETCH_TIMEOUT_MS = 12000
+const HLS_STARTUP_PREFETCH_TIMEOUT_MS = 60000
+
+/** Refresh grants before a slow first segment can cross their expiry boundary. */
+const HLS_TOKEN_REFRESH_LEAD_MS = 2 * 60 * 1000
 
 /** Avoid an infinite detach/attach loop on a genuinely invalid media stream. */
 const HLS_STARTUP_RECOVERY_LIMIT = 2
@@ -92,7 +99,7 @@ export const LessonHlsPlayer = ({
      * arrives as a new `manifestUrl` prop, which re-runs the load effect. Legacy token mode
      * ignores it (it already re-resolves the playlist from the gateway on retry).
      */
-    onRefreshSource?: () => void
+    onRefreshSource?: () => Promise<unknown> | void
     /**
      * Node rendered INSIDE the player frame (the "up next" hand-off card). It must live in
      * here, not in the parent block, so it stays on top of the video rather than beside it.
@@ -105,6 +112,14 @@ export const LessonHlsPlayer = ({
     const [loading, setLoading] = useState(true)
     const [attempt, setAttempt] = useState(0)
     const halfFiredRef = useRef(false)
+    const resumePositionRef = useRef(0)
+    const refreshHistoryRef = useRef<Array<number>>([])
+    const resumeLessonRef = useRef(lessonId)
+    if (resumeLessonRef.current !== lessonId) {
+        resumeLessonRef.current = lessonId
+        resumePositionRef.current = 0
+        refreshHistoryRef.current = []
+    }
     const halfWatchedRef = useRef(onHalfWatched)
     halfWatchedRef.current = onHalfWatched
 
@@ -131,6 +146,7 @@ export const LessonHlsPlayer = ({
      */
     const handleRetry = () => {
         setFailed(false)
+        refreshHistoryRef.current = []
         if (manifestUrl && onRefreshSource) {
             onRefreshSource()
         } else {
@@ -151,6 +167,7 @@ export const LessonHlsPlayer = ({
         if (!el) return
 
         clampSeek()
+        resumePositionRef.current = el.currentTime
         const duration = el.duration
         // Only hand up a REAL duration: it is NaN before `loadedmetadata` and Infinity on a
         // live manifest, and the up-next window must not arm on either.
@@ -205,6 +222,9 @@ export const LessonHlsPlayer = ({
         let startupWatchdog: ReturnType<typeof setTimeout> | null = null
         let startupPrefetchTimer: ReturnType<typeof setTimeout> | null = null
         let startupPrefetchStarted = false
+        let disposePreparedSource: (() => void) | null = null
+        let tokenRefreshTimer: ReturnType<typeof setTimeout> | null = null
+        let sourceRefreshRequested = false
         const startupPrefetchController = new AbortController()
         const startupPrefetchCache: HlsFragmentPrefetchCache = new Map()
         const bufferedStartupSegments = new Set<string>()
@@ -223,6 +243,13 @@ export const LessonHlsPlayer = ({
             if (startupPrefetchTimer) {
                 clearTimeout(startupPrefetchTimer)
                 startupPrefetchTimer = null
+            }
+        }
+
+        const clearTokenRefreshTimer = () => {
+            if (tokenRefreshTimer) {
+                clearTimeout(tokenRefreshTimer)
+                tokenRefreshTimer = null
             }
         }
 
@@ -252,6 +279,33 @@ export const LessonHlsPlayer = ({
             setLoading(false)
         }
 
+        const requestFreshSource = async () => {
+            if (cancelled || sourceRefreshRequested) return
+            if (!manifestUrl || !onRefreshSource) {
+                failStartup()
+                return
+            }
+            const now = Date.now()
+            refreshHistoryRef.current = refreshHistoryRef.current.filter(
+                (requestedAt) => now - requestedAt < 60_000,
+            )
+            if (refreshHistoryRef.current.length >= 2) {
+                failStartup()
+                return
+            }
+
+            sourceRefreshRequested = true
+            refreshHistoryRef.current.push(now)
+            resumePositionRef.current = el.currentTime
+            try {
+                await onRefreshSource()
+                // If the API returned the same manifest URL, force a no-cache re-read.
+                if (!cancelled) setAttempt((value) => value + 1)
+            } catch {
+                failStartup()
+            }
+        }
+
         const recoverStartup = () => {
             if (!hls || cancelled) return
             if (startupRecoveryCount >= HLS_STARTUP_RECOVERY_LIMIT) {
@@ -265,7 +319,7 @@ export const LessonHlsPlayer = ({
                 bufferedStartupSegments.clear()
             }
             hls.recoverMediaError()
-            hls.startLoad(-1)
+            hls.startLoad(startupComplete ? -1 : resumePositionRef.current)
         }
 
         const armStartupWatchdog = () => {
@@ -306,6 +360,32 @@ export const LessonHlsPlayer = ({
                     usingNativeHls = true
                     el.src = src
                 } else if (Hls.isSupported()) {
+                    const preparedSource = await prepareHlsVodManifestSource(
+                        src,
+                        startupPrefetchController.signal,
+                    )
+                    if (cancelled) {
+                        preparedSource.dispose()
+                        return
+                    }
+                    disposePreparedSource = preparedSource.dispose
+                    if (
+                        preparedSource.expiresAtMs !== null
+                        && preparedSource.expiresAtMs <= Date.now() + HLS_TOKEN_REFRESH_LEAD_MS
+                    ) {
+                        preparedSource.dispose()
+                        disposePreparedSource = null
+                        await requestFreshSource()
+                        return
+                    }
+                    if (preparedSource.expiresAtMs !== null) {
+                        tokenRefreshTimer = setTimeout(() => {
+                            void requestFreshSource()
+                        }, Math.max(
+                            0,
+                            preparedSource.expiresAtMs - Date.now() - HLS_TOKEN_REFRESH_LEAD_MS,
+                        ))
+                    }
                     const fragmentLoader = createPrefetchedFragmentLoader(
                         Hls.DefaultConfig.loader,
                         startupPrefetchCache,
@@ -325,8 +405,12 @@ export const LessonHlsPlayer = ({
 
                         if (startupPrefetchStarted) return
                         startupPrefetchStarted = true
+                        const resumePosition = Math.max(0, resumePositionRef.current)
+                        const resumeIndex = Math.max(0, data.details.fragments.findIndex(
+                            (fragment) => fragment.start + fragment.duration > resumePosition,
+                        ))
                         const fragments = data.details.fragments
-                            .slice(0, requiredStartupSegments)
+                            .slice(resumeIndex, resumeIndex + requiredStartupSegments)
                             // A full-response cache must never satisfy a byte-range request.
                             .filter((fragment) => fragment.byteRange.length === 0)
                         const prefetched = prefetchHlsFragments(
@@ -345,7 +429,10 @@ export const LessonHlsPlayer = ({
                                 // immediately. Wait until the whole startup cache is ready so
                                 // that request cannot escape through the normal network loader.
                                 hls.attachMedia(el)
-                                hls.startLoad(-1)
+                                // Generated VOD playlists have occasionally omitted ENDLIST.
+                                // Always begin startup at the first media sequence instead of
+                                // allowing hls.js to infer a live-edge position.
+                                hls.startLoad(resumePosition)
                             }
                         })
                     })
@@ -360,12 +447,27 @@ export const LessonHlsPlayer = ({
                         maybeFinishStartup()
                     })
                     hls.on(Hls.Events.ERROR, (_e, d) => {
-                        if (!d.fatal || cancelled) return
+                        if (cancelled) return
+
+                        const responseCode = d.response?.code
+                        const tokenExpiry = d.frag ? getHlsUrlTokenExpiryMs(d.frag.url) : null
+                        const authorizationExpired = responseCode === 401
+                            || responseCode === 403
+                            || (tokenExpiry !== null && tokenExpiry <= Date.now())
+                        if (
+                            d.type === Hls.ErrorTypes.NETWORK_ERROR
+                            && manifestUrl
+                            && authorizationExpired
+                        ) {
+                            void requestFreshSource()
+                            return
+                        }
+                        if (!d.fatal) return
 
                         if (d.type === Hls.ErrorTypes.NETWORK_ERROR) {
                             if (startupRecoveryCount < HLS_STARTUP_RECOVERY_LIMIT) {
                                 startupRecoveryCount += 1
-                                hls?.startLoad(-1)
+                                hls?.startLoad(startupComplete ? -1 : resumePositionRef.current)
                             } else {
                                 failStartup()
                             }
@@ -375,7 +477,7 @@ export const LessonHlsPlayer = ({
                             failStartup()
                         }
                     })
-                    hls.loadSource(src)
+                    hls.loadSource(preparedSource.url)
                 } else if (!cancelled) {
                     setFailed(true)
                     setLoading(false)
@@ -395,8 +497,10 @@ export const LessonHlsPlayer = ({
             cancelled = true
             clearStartupWatchdog()
             clearStartupPrefetchTimer()
+            clearTokenRefreshTimer()
             startupPrefetchController.abort()
             startupPrefetchCache.clear()
+            disposePreparedSource?.()
             el.removeEventListener("loadedmetadata", onMediaReady)
             el.removeEventListener("canplay", onMediaReady)
             hls?.destroy()

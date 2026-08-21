@@ -24,6 +24,7 @@ describe("HLS fragment prefetch", () => {
         const prefetched = prefetchHlsFragments(urls, new AbortController().signal)
 
         expect(fetch).toHaveBeenCalledTimes(5)
+        expect(fetch).toHaveBeenCalledWith(urls[0], expect.objectContaining({ cache: "default" }))
         responses.forEach((resolve, index) => resolve({
             ok: true,
             arrayBuffer: () => Promise.resolve(new Uint8Array([index]).buffer),

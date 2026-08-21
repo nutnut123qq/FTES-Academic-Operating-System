@@ -487,8 +487,8 @@ export const LessonHlsPlayer = ({
                     // Nạp lại (neo lại / xin nguồn mới) phải quay về ĐÚNG chỗ đang xem. Thiếu
                     // startPosition thì mỗi lần neo lại là video nhảy về 0:00 — lỗi khó chịu hơn
                     // nhiều so với chính vấn đề đang chữa.
-                    hls = new Hls(resumePositionRef.current > 0
-                        ? { ...HLS_STARTUP_CONFIG, startPosition: resumePositionRef.current }
+                    hls = new Hls(resumeAt() > 0
+                        ? { ...HLS_STARTUP_CONFIG, startPosition: resumeAt() }
                         : HLS_STARTUP_CONFIG)
                     hls.on(Hls.Events.LEVEL_LOADED, (_event, data) => {
                         const plan = getHlsStartupBufferPlan(data.details)

@@ -1,6 +1,10 @@
 "use client"
 
 import useSWR from "swr"
+import {
+    splitBodyImages,
+    unwrapAutolinks,
+} from "@/components/features/community/CommunityPostDetail/postLinks"
 import { getTrending, type PostResponse } from "@/modules/api/rest/community"
 import { useAppSelector } from "@/redux/hooks"
 
@@ -28,12 +32,11 @@ export const EXPLORE_TRENDING_LIMIT = 5
 const EXCERPT_LENGTH = 120
 
 /**
- * First line of a post body as flat text, capped. Only whitespace is normalised —
- * the body is stored as authored (markdown), so a heading marker can survive; that
- * is the real content, not a fabricated summary.
+ * Post body as plain text, capped. Composer markdown is removed before the compact
+ * row receives it, matching the main feed's snippet mapping.
  */
 const toExcerpt = (content: string | undefined): string => {
-    const flat = (content ?? "").replace(/\s+/gu, " ").trim()
+    const flat = splitBodyImages(unwrapAutolinks(content ?? "")).text
     return flat.length > EXCERPT_LENGTH ? `${flat.slice(0, EXCERPT_LENGTH)}…` : flat
 }
 

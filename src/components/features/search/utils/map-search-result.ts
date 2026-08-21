@@ -1,6 +1,9 @@
 import type { Locale } from "next-intl"
 import { pathConfig } from "@/resources/path"
-import { unwrapAutolinks } from "@/components/features/community/CommunityPostDetail/postLinks"
+import {
+    splitBodyImages,
+    unwrapAutolinks,
+} from "@/components/features/community/CommunityPostDetail/postLinks"
 import type { SearchDocTypeName, SearchGroupView, SearchHitView } from "@/modules/api/rest/search"
 import type { SearchCategoryKind, SearchRow } from "../types"
 
@@ -80,14 +83,16 @@ const stripMarks = (value: string): string => value.replace(/<\/?mark>/gi, "")
  * Map one BE hit into the shared presentational {@link SearchRow}.
  *
  * `snippet` là trích đoạn thân bài (bài cộng đồng, tài liệu…) và hàng kết quả in nó dưới
- * dạng TEXT THUẦN, nên autolink CommonMark `<https://…>` của tác giả sẽ lộ nguyên cặp `<>`
- * ra ô tìm kiếm — {@link unwrapAutolinks} bỏ cặp dấu đó sau khi gỡ `<mark>` của ts_headline.
+ * dạng TEXT THUẦN, nên markdown của tác giả phải được gỡ sau thẻ `<mark>` của ts_headline;
+ * {@link unwrapAutolinks} + {@link splitBodyImages} dùng cùng quy tắc với dòng feed.
  */
 const toRow = (kind: SearchCategoryKind, hit: SearchHitView, locale: Locale): SearchRow => ({
     id: `${kind}-${hit.docId}`,
     kind,
     title: hit.title ?? hit.slug ?? hit.docId,
-    snippet: hit.snippet ? unwrapAutolinks(stripMarks(hit.snippet)) : undefined,
+    snippet: hit.snippet
+        ? splitBodyImages(unwrapAutolinks(stripMarks(hit.snippet))).text
+        : undefined,
     href: hrefForHit(kind, hit.slug, locale),
 })
 

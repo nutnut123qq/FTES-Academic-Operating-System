@@ -47,6 +47,15 @@ describe("toMyCommunityPost", () => {
         expect(mapped.title).toBe("Ai biết cách reset offset không?")
     })
 
+    it("strips markdown from a body-only post excerpt", () => {
+        const mapped = toMyCommunityPost(
+            post({ title: undefined, content: "## Kafka **căn bản** ![Ảnh](https://x.vn/a.png)" }),
+            "vi",
+            "Không tiêu đề",
+        )
+        expect(mapped.title).toBe("Kafka căn bản")
+    })
+
     it("falls back to the translated untitled label when title AND body are empty", () => {
         const mapped = toMyCommunityPost(post({ title: "   ", content: "" }), "vi", "Không tiêu đề")
         expect(mapped.title).toBe("Không tiêu đề")

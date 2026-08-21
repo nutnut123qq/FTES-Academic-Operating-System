@@ -4088,6 +4088,13 @@
             "streak": "Day streak",
             "rank": "Rank"
         },
+        "currentRank": {
+            "title": "Current rank · Total XP",
+            "totalXp": "{xp} XP",
+            "toNext": "{xp} XP to reach {tier}",
+            "progressAria": "Progress toward {tier}",
+            "topTier": "You have reached the highest tier."
+        },
         "tiers": {
             "bronze": "Bronze",
             "silver": "Silver",

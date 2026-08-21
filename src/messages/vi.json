@@ -4088,6 +4088,13 @@
             "streak": "Chuỗi ngày",
             "rank": "Hạng"
         },
+        "currentRank": {
+            "title": "Hạng hiện tại · Tổng XP",
+            "totalXp": "{xp} XP",
+            "toNext": "Còn {xp} XP để lên {tier}",
+            "progressAria": "Tiến độ lên hạng {tier}",
+            "topTier": "Bạn đã đạt hạng cao nhất."
+        },
         "tiers": {
             "bronze": "Đồng",
             "silver": "Bạc",

@@ -5,7 +5,10 @@ import useSWRInfinite from "swr/infinite"
 import { useLocale } from "next-intl"
 import { getBookmarkedPosts, unbookmarkPost } from "@/modules/api/rest/community/community"
 import type { FeedPage, PostResponse } from "@/modules/api/rest/community/types"
-import { unwrapAutolinks } from "@/components/features/community/CommunityPostDetail/postLinks"
+import {
+    splitBodyImages,
+    unwrapAutolinks,
+} from "@/components/features/community/CommunityPostDetail/postLinks"
 import { useAppSelector } from "@/redux/hooks"
 import { useViewerScopeId } from "@/hooks/swr/viewerScope"
 import { formatRelativeTime } from "./relativeTime"
@@ -34,11 +37,12 @@ const PAGE_LIMIT = 20
 /**
  * Map a BE `PostResponse` to the saved-card contract.
  *
- * `snippet` chạy qua {@link unwrapAutolinks} ngay tại MAPPER vì mọi bề mặt đọc nó đều in
+ * `snippet` chạy qua {@link unwrapAutolinks} + {@link splitBodyImages} ngay tại MAPPER vì
+ * mọi bề mặt đọc nó đều in
  * dưới dạng TEXT THUẦN: hàng `/community/saved`, hàng `/saved` (ghép `title — snippet` làm
  * tiêu đề hàng VÀ làm chuỗi tìm kiếm) và khối "Đã lưu" ở dashboard. Autolink CommonMark
- * `<https://…>` của tác giả nếu để nguyên sẽ lộ cặp `<>` ra màn hình — và ở `/saved` còn
- * lọt vào cả haystack, khiến gõ "https://…" không khớp. Vá ở đây thay vì rắc lời gọi ở
+ * markdown của tác giả nếu để nguyên sẽ lộ cú pháp ra màn hình — và ở `/saved` còn lọt
+ * vào cả haystack, khiến gõ nội dung nhìn thấy không khớp. Vá ở đây thay vì rắc lời gọi ở
  * từng chỗ render (cùng cách đã làm cho dòng feed trong `toCommunityPost`).
  */
 export const toSavedPost = (post: PostResponse, locale: string): SavedPost => ({
@@ -49,7 +53,7 @@ export const toSavedPost = (post: PostResponse, locale: string): SavedPost => ({
     seed: post.author?.userId ?? post.authorId,
     timeLabel: formatRelativeTime(post.createdAt, locale),
     title: post.title ?? "",
-    snippet: unwrapAutolinks(post.content ?? ""),
+    snippet: splitBodyImages(unwrapAutolinks(post.content ?? "")).text,
     likes: post.likeCount,
     comments: post.commentCount,
 })

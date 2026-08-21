@@ -16,15 +16,16 @@ export interface RankTier {
 }
 
 /**
- * The 5 rank tiers by TOTAL XP (not weekly rank — league is deferred):
- * Đồng 0–499 · Bạc 500–1 499 · Vàng 1 500–3 499 · Bạch Kim 3 500–6 999 · Kim Cương ≥ 7 000.
+ * The 5 rank tiers by TOTAL XP (not weekly rank):
+ * Đồng 0–24 999 · Bạc 25 000–74 999 · Vàng 75 000–124 999 ·
+ * Bạch Kim 125 000–199 999 · Kim Cương ≥ 200 000.
  */
 export const RANK_TIERS: ReadonlyArray<RankTier> = [
     { key: "bronze", minXp: 0 },
-    { key: "silver", minXp: 500 },
-    { key: "gold", minXp: 1500 },
-    { key: "platinum", minXp: 3500 },
-    { key: "diamond", minXp: 7000 },
+    { key: "silver", minXp: 25_000 },
+    { key: "gold", minXp: 75_000 },
+    { key: "platinum", minXp: 125_000 },
+    { key: "diamond", minXp: 200_000 },
 ]
 
 /**

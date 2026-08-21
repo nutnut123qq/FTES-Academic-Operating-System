@@ -37,4 +37,9 @@ describe("toSavedPost", () => {
         expect(toSavedPost(bookmarked("Xem tại https://ftes.vn/x"), "vi").snippet)
             .toBe("Xem tại https://ftes.vn/x")
     })
+
+    it("strips authored markdown from the plain-text saved snippet", () => {
+        expect(toSavedPost(bookmarked("## Tài liệu **quan trọng** ![Ảnh](https://x.vn/a.png)"), "vi").snippet)
+            .toBe("Tài liệu quan trọng")
+    })
 })

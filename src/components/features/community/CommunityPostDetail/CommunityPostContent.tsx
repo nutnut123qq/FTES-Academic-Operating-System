@@ -19,7 +19,7 @@ import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
 import { LinkPreview } from "@/components/reuseable/LinkPreview"
 import { QuotedPostCard } from "@/components/reuseable/QuotedPostCard"
 import { CommunityPoll } from "../CommunityPoll"
-import { firstLinkUrl } from "./postLinks"
+import { firstLinkUrl, splitBodyImages, unwrapAutolinks } from "./postLinks"
 import { CommentLoadError } from "@/components/reuseable/PostCommentThread/comment-load-error"
 import { useQueryPostDetailSwr } from "../hooks/useQueryPostDetailSwr"
 import { useMutateReactPostSwr } from "../hooks/useMutateReactPostSwr"
@@ -307,7 +307,10 @@ export const CommunityPostContent = ({
                             author: authorName,
                             authorUsername: post.authorUsername,
                             title: post.title,
-                            snippet: renderedBody.slice(0, QUOTE_SNIPPET_MAX),
+                            snippet: splitBodyImages(unwrapAutolinks(renderedBody)).text.slice(
+                                0,
+                                QUOTE_SNIPPET_MAX,
+                            ),
                         })
                     }
                     postUrl={postUrl}

@@ -2,6 +2,10 @@
 
 import useSWR from "swr"
 import { useLocale, useTranslations } from "next-intl"
+import {
+    splitBodyImages,
+    unwrapAutolinks,
+} from "@/components/features/community/CommunityPostDetail/postLinks"
 import { restRequest } from "@/modules/api/rest/client"
 import type { FeedPage, PostResponse } from "@/modules/api/rest/community"
 import {
@@ -95,7 +99,10 @@ export const toMyCommunityPost = (
     untitledLabel: string,
 ): MyCommunityPost => ({
     id: post.id,
-    title: post.title?.trim() || post.content?.trim().slice(0, 80) || untitledLabel,
+    title:
+        post.title?.trim()
+        || splitBodyImages(unwrapAutolinks(post.content ?? "")).text.slice(0, 80)
+        || untitledLabel,
     dateLabel: toDateLabel(post.createdAt, locale),
     likeCount: post.likeCount ?? 0,
     commentCount: post.commentCount ?? 0,

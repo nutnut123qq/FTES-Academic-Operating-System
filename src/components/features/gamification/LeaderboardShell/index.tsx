@@ -3,13 +3,16 @@
 import React from "react"
 import { Typography } from "@heroui/react"
 import { useTranslations } from "next-intl"
-import { FireIcon, StarIcon } from "@phosphor-icons/react"
+import { StarIcon } from "@phosphor-icons/react"
 import { Link } from "@/i18n/navigation"
+import { ProgressMeter } from "@/components/blocks/stats/ProgressMeter"
+import { SectionCard } from "@/components/reuseable/SectionCard"
 import { pathConfig } from "@/resources/path"
+import { formatXpShort } from "@/utils/xp-format"
 import { useQueryMyGamificationSwr } from "../hooks/useQueryMyGamificationSwr"
-import { badgeKindIcon } from "../badgeIcon"
+import { AchievementArt } from "../EquippedAchievement"
+import { tierFromXp } from "../leaderboardTiers"
 import { useBadgeLabel } from "../useBadgeLabel"
-import { StreakPopover } from "../StreakPopover"
 import { GamificationEventHost } from "../GamificationEventHost"
 import { SeasonBoards } from "../SeasonBoards"
 
@@ -17,9 +20,8 @@ import { SeasonBoards } from "../SeasonBoards"
  * Gamification leaderboard + progression surface (§11) — the `/leaderboard` page.
  *
  * A dashboard driven by the live REST snapshots (`useQueryMyGamificationSwr`
- * composes the `/me/*` progression / streak / activity / badge endpoints): stat
- * cards (XP · Level · Streak · Rank+tier) where the Streak card opens the detail
- * popover; a "Cách tính điểm" guide link; the season boards
+ * composes the `/me/*` progression / badge endpoints): the viewer's total-XP rank
+ * and progress to the next tier; a "Cách tính điểm" guide link; the season boards
  * ({@link SeasonBoards}); and the viewer's earned badges.
  *
  * ★ KHỐI MỤC TIÊU ĐÃ CHUYỂN sang `/profile/progress`. Nó là việc riêng của từng người
@@ -35,7 +37,7 @@ import { SeasonBoards } from "../SeasonBoards"
  * một trang mà số không khớp nhau. Hook cũ (`useQueryLeaderboardSwr`) VẪN CÒN vì thẻ
  * cộng đồng ở dashboard dùng nó.
  *
- * ★ THẺ "HẠNG" DÙNG CHUNG MỘT NGUỒN VỚI NAVBAR VÀ TRANG HỒ SƠ
+ * ★ KHỐI "HẠNG HIỆN TẠI" DÙNG CHUNG MỘT NGUỒN VỚI NAVBAR VÀ TRANG HỒ SƠ
  * (`useQueryMyGamificationSwr`). Đừng đổi riêng chỗ này sang `myRank` của bảng theo KỲ:
  * chip "#7" ở menu tài khoản điều hướng thẳng tới đúng trang này, nên hai con số cùng
  * tên "Hạng" mà khác nguồn (toàn sàn vs theo kỳ) sẽ đọc thành "hệ thống tính sai".
@@ -46,6 +48,7 @@ export const LeaderboardShell = () => {
     const t = useTranslations("gamification")
     const { data: my } = useQueryMyGamificationSwr()
     const badgeLabel = useBadgeLabel()
+    const rankTier = my ? tierFromXp(my.xp) : null
 
     // Guide is a child route of /leaderboard. pathConfig has no dedicated
     // builder for it (shared file, owned elsewhere); derive it from the
@@ -75,23 +78,49 @@ export const LeaderboardShell = () => {
                 </Link>
             </div>
 
-            {/* Chuỗi ngày: giữ đường vào popover chi tiết, nhưng là MỘT DÒNG chứ không phải
-                một thẻ to. Bốn thẻ cũ (XP · Cấp · Chuỗi · Hạng) đã gỡ: ba trong bốn con số đó
-                lặp lại đúng thứ dải mùa giải đang nói, và thẻ "Hạng" còn mâu thuẫn ra mặt —
-                nó đọc hạng TOÀN SÀN nên hiện "—" ngay cạnh dải ghi "#5" của kỳ. Hai con số
-                cùng tên mà khác nhau thì người dùng đọc thành "hệ thống tính sai". */}
-            <div className="flex items-center gap-2">
-                <StreakPopover placement="bottom start" className="text-left">
-                    <button
-                        type="button"
-                        className="flex items-center gap-1.5 rounded-full px-2 py-1 text-sm text-muted transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                        aria-label={t("streak.openDetail")}
-                    >
-                        <FireIcon className="size-4" aria-hidden focusable="false" />
-                        <span>{t("stats.streak")}: {my ? my.streak.current : "—"}</span>
-                    </button>
-                </StreakPopover>
-            </div>
+            {/* Hạng toàn hệ thống theo TỔNG XP. Hạng theo kỳ vẫn nằm trong SeasonHeader
+                ngay bên dưới; nhãn nguồn giữ hai con số này khỏi bị hiểu là cùng một bảng. */}
+            {my && rankTier ? (
+                <SectionCard>
+                    <div className="flex flex-col gap-3">
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="flex min-w-0 flex-col gap-0.5">
+                                <Typography type="body-xs" color="muted">
+                                    {t("currentRank.title")}
+                                </Typography>
+                                <Typography type="h5" weight="bold">
+                                    {t(`tiers.${my.rank.league}`)}
+                                </Typography>
+                            </div>
+                            <div className="flex shrink-0 flex-col items-end gap-0.5">
+                                <Typography type="h5" weight="bold">
+                                    {my.rank.position > 0 ? `#${my.rank.position}` : "—"}
+                                </Typography>
+                                <Typography type="body-xs" color="muted">
+                                    {t("currentRank.totalXp", { xp: formatXpShort(my.xp) })}
+                                </Typography>
+                            </div>
+                        </div>
+                        {rankTier.next ? (
+                            <ProgressMeter
+                                value={my.xp - rankTier.tier.minXp}
+                                max={rankTier.next.minXp - rankTier.tier.minXp}
+                                label={t("currentRank.toNext", {
+                                    xp: formatXpShort(rankTier.next.minXp - my.xp),
+                                    tier: t(`tiers.${rankTier.next.key}`),
+                                })}
+                                aria-label={t("currentRank.progressAria", {
+                                    tier: t(`tiers.${rankTier.next.key}`),
+                                })}
+                            />
+                        ) : (
+                            <Typography type="body-xs" color="muted">
+                                {t("currentRank.topTier")}
+                            </Typography>
+                        )}
+                    </div>
+                </SectionCard>
+            ) : null}
 
             {/* Bảng xếp hạng theo kỳ (tổng · cộng đồng+workplace) */}
             <SeasonBoards />
@@ -107,34 +136,20 @@ export const LeaderboardShell = () => {
                 {my && my.badges.length > 0 ? (
                     <div className="flex flex-wrap gap-3">
                         {my.badges.map((badge) => {
-                            // Same fallback the profile badge catalog uses — one shared
-                            // mapping (`badgeKindIcon`), so a badge without artwork can
-                            // never read as a trophy here and a medal there.
-                            const Icon = badgeKindIcon(badge.kind)
                             return (
                                 <div
                                     key={badge.id}
                                     className="flex flex-col items-center gap-2 rounded-2xl bg-default/40 p-4"
                                 >
-                                    {badge.iconUrl ? (
-                                        // Plain <img>: the icon host is whatever the backend
-                                        // seeded, so it cannot be pinned in the next/image
-                                        // remote-pattern allowlist. Decorative — the label
-                                        // right below already names the badge.
-                                        <img
-                                            src={badge.iconUrl}
-                                            alt=""
-                                            aria-hidden
-                                            className="size-6 object-contain"
-                                        />
-                                    ) : (
-                                        <Icon
-                                            className="size-6 text-accent"
-                                            weight="fill"
-                                            aria-hidden
-                                            focusable="false"
-                                        />
-                                    )}
+                                    <AchievementArt
+                                        achievement={{
+                                            code: badge.badgeKey,
+                                            name: badge.fallbackName,
+                                            kind: badge.kind,
+                                            iconUrl: badge.iconUrl,
+                                        }}
+                                        className="size-12"
+                                    />
                                     <Typography type="body-xs" weight="medium" className="text-center">
                                         {/* BE seed badge mới lúc nào không báo → thiếu bản dịch là
                                             lộ nguyên đường key ra mặt người dùng. Rơi về tên BE trả. */}

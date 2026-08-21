@@ -27,6 +27,7 @@ vi.mock("next-intl", () => ({
 
 vi.mock("@heroui/react", () => ({
     Typography: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
+    cn: (...classes: Array<string | undefined>) => classes.filter(Boolean).join(" "),
 }))
 
 // MedalIcon / TrophyIcon are what the SHARED helper resolves to — kept
@@ -48,10 +49,16 @@ vi.mock("@/resources/path", () => ({
     }),
 }))
 
-// Neighbours of the strip: each has its own suite, none is under test here.
-vi.mock("../StreakPopover", () => ({
-    StreakPopover: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+vi.mock("@/components/reuseable/SectionCard", () => ({
+    SectionCard: ({ children }: { children?: React.ReactNode }) => <section>{children}</section>,
 }))
+vi.mock("@/components/blocks/stats/ProgressMeter", () => ({
+    ProgressMeter: ({ value, max, label }: { value: number; max: number; label?: React.ReactNode }) => (
+        <div data-testid="rank-progress" data-value={value} data-max={max}>{label}</div>
+    ),
+}))
+
+// Neighbours of the strip: each has its own suite, none is under test here.
 vi.mock("../GamificationEventHost", () => ({ GamificationEventHost: () => <div /> }))
 vi.mock("../SeasonBoards", () => ({ SeasonBoards: () => <div /> }))
 
@@ -75,7 +82,7 @@ const withBadges = (badges: MyGamification["badges"]): MyGamification => ({
     level: 5,
     levelProgress: { current: 1500, nextThreshold: 1760 },
     streak: { current: 3, days: [] },
-    rank: { position: 2, league: "gold" },
+    rank: { position: 2, league: "bronze" },
     badges,
 })
 
@@ -104,11 +111,25 @@ describe("LeaderboardShell — badge strip draws the real art", () => {
         // must not be announced twice.
         expect(art?.getAttribute("alt")).toBe("")
         expect(art?.getAttribute("aria-hidden")).toBe("true")
+        expect(art?.classList.contains("size-12")).toBe(true)
         // Art present ⇒ no glyph beside it.
         expect(screen.queryByTestId("glyph-medal")).toBeNull()
         expect(screen.queryByTestId("glyph-trophy")).toBeNull()
         // …and the label still comes from the shared resolver, untouched.
         expect(screen.getByText("label(FIRST_LESSON|Bài học đầu tiên)")).toBeTruthy()
+    })
+
+    it("shows the total-XP rank before the seasonal leaderboard", () => {
+        snapshot = withBadges([])
+
+        render(<LeaderboardShell />)
+
+        expect(screen.getByText("currentRank.title")).toBeTruthy()
+        expect(screen.getByText("tiers.bronze")).toBeTruthy()
+        expect(screen.getByText("#2")).toBeTruthy()
+        const progress = screen.getByTestId("rank-progress")
+        expect(progress.getAttribute("data-value")).toBe("1500")
+        expect(progress.getAttribute("data-max")).toBe("25000")
     })
 
     it("falls back to the kind glyph — and renders NO <img> — when iconUrl is null", () => {

@@ -3,8 +3,10 @@ import {
     getHlsErrorStatus,
     getHlsManifestTokenExpiryMs,
     getHlsUrlTokenExpiryMs,
+    getHlsWindowPolicy,
     normalizeHlsVodManifest,
     prepareHlsVodManifestSource,
+    withPlaybackAnchor,
 } from "./hlsVodManifest"
 
 afterEach(() => {
@@ -113,5 +115,43 @@ describe("FTES VOD manifest normalization", () => {
             "https://cdn.example/master.m3u8",
             expect.objectContaining({ cache: "no-store" }),
         )
+    })
+})
+
+/**
+ * Cửa sổ ký của stream service. Token segment nay chỉ sống quanh lúc người xem đi tới đoạn đó, nên
+ * trình phát phải đọc được cửa sổ để tự neo lại khi người dùng TUA — đây là phần giữ cho việc siết
+ * chống tải hàng loạt không biến thành "tua là khựng".
+ */
+describe("FTES signing window", () => {
+    const tokenUrl = (expiry: number) => {
+        const payload = btoa(JSON.stringify({ v: "video-id", e: expiry }))
+            .replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_")
+        return `https://cdn.example/seg.ts?t=${payload}.signature`
+    }
+
+    it("reads the window the stream service advertises", () => {
+        expect(getHlsWindowPolicy("#EXTM3U\n#EXT-X-FTES-WINDOW:lead=120,ttl=90\n"))
+            .toEqual({ leadSeconds: 120, ttlSeconds: 90 })
+        // Server đời cũ không công bố gì → null, và trình phát rơi về đường xử lý 403.
+        expect(getHlsWindowPolicy("#EXTM3U\n#EXTINF:5,\nseg.ts\n")).toBeNull()
+        expect(getHlsWindowPolicy("#EXT-X-FTES-WINDOW:lead=abc,ttl=90")).toBeNull()
+    })
+
+    it("anchors only stream-service URLs, never storage-signed ones", () => {
+        expect(withPlaybackAnchor("https://s.ftes.vn/master.m3u8?grant=abc", 1200.7))
+            .toBe("https://s.ftes.vn/master.m3u8?grant=abc&at=1200")
+        // Chữ ký S3 phủ cả query string: thêm tham số vào là hỏng chữ ký, video 403 ngay.
+        expect(withPlaybackAnchor("https://r2.example/master.m3u8?X-Amz-Signature=xyz", 30))
+            .toBe("https://r2.example/master.m3u8?X-Amz-Signature=xyz")
+        expect(withPlaybackAnchor("khong-phai-url", 30)).toBe("khong-phai-url")
+    })
+
+    it("treats the LAST token expiry as the manifest expiry", () => {
+        // Token đoạn đầu bài hết hạn sớm là chuyện bình thường của cách ký theo cửa sổ. Lấy hạn gần
+        // nhất thì trình phát đi xin nguồn mới ngay sau vài chục giây phát — tự tay làm khựng video.
+        const manifest = `#EXTM3U\n${tokenUrl(1_787_311_002)}\n${tokenUrl(1_787_311_500)}\n`
+
+        expect(getHlsManifestTokenExpiryMs(manifest)).toBe(1_787_311_500_000)
     })
 })

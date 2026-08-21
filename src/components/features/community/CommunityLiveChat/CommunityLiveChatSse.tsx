@@ -21,7 +21,9 @@ const XL_QUERY = "(min-width: 1280px)"
  * viewer never opens a stream.
  */
 export const CommunityLiveChatSse = () => {
-    const isDesktop = useMediaQuery(XL_QUERY)
+    // Defer matchMedia until after hydration so the stream's initial enabled state is
+    // deterministic across the server and browser.
+    const isDesktop = useMediaQuery(XL_QUERY, { initializeWithValue: false })
     const { isOpen } = useCommunityLiveChatOverlayState()
     useCommunityLiveChatSse(isDesktop || isOpen)
     return null

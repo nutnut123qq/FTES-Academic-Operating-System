@@ -24,7 +24,9 @@ const XL_QUERY = "(min-width: 1280px)"
  */
 export const CommunityLiveChatFab = () => {
     const t = useTranslations("communityLiveChat")
-    const isDesktop = useMediaQuery(XL_QUERY)
+    // Keep the server and hydration render identical; update to the real breakpoint
+    // immediately after mount. Otherwise xl clients remove the SSR FAB during hydration.
+    const isDesktop = useMediaQuery(XL_QUERY, { initializeWithValue: false })
     const { isMobile } = useSmViewpoint()
     const { isOpen, setOpen, open } = useCommunityLiveChatOverlayState()
 

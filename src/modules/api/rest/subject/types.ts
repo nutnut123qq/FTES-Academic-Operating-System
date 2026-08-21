@@ -471,11 +471,22 @@ export interface FlashcardDeckView {
     visibility: string
     /** `DRAFT` | `PUBLISHED` | `ARCHIVED`. */
     status: string
+    /**
+     * TOTAL number of cards in the deck — NOT `cards.length`. When `locked` is true the BE
+     * ships only the free-preview slice, so counting the array understates the deck and the
+     * upsell would advertise less than the deck actually holds.
+     */
     cardCount: number
     dueCount: number
     newCount: number
     createdAt?: string | null
     updatedAt?: string | null
+    /** `FREE` | `PREMIUM` — the PAID tier, orthogonal to `visibility` (subject membership). */
+    accessTier: string
+    /** `cards` has been trimmed to `previewLimit`; the rest needs a membership. */
+    locked: boolean
+    /** How many cards a non-member may study. */
+    previewLimit: number
     cards: Array<FlashcardCardView>
 }
 
@@ -490,6 +501,12 @@ export interface FlashcardDecksView {
     totalCards: number
     dueCount: number
     canManage: boolean
+    /**
+     * Whether the viewer may study the paid decks in full. Read THIS to decide whether to
+     * show the membership upsell — do not infer it from `decks.some(d => d.locked)`, which
+     * is false for a subject whose paid decks are all shorter than the preview limit.
+     */
+    hasFullAccess: boolean
     decks: Array<FlashcardDeckView>
 }
 

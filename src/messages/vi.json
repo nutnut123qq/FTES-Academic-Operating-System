@@ -5848,6 +5848,10 @@
                 "coding": {
                     "title": "Challenge (PE)",
                     "meta": "{count} bài"
+                },
+                "flashcards": {
+                    "title": "Kho thẻ ghi nhớ",
+                    "meta": "{count} thẻ"
                 }
             },
             "backToHub": "Về trang luyện tập",
@@ -6159,6 +6163,21 @@
                     "addScan": "Nạp ảnh đề → số hoá thành chữ",
                     "scanImported": "Đã số hoá {count} trang đề từ ảnh."
                 }
+            },
+            "flashcards": {
+                "title": "Kho thẻ ghi nhớ",
+                "empty": "Môn này chưa có bộ thẻ nào.",
+                "locked": "Cần hội viên",
+                "cardMeta": "{total} thẻ",
+                "previewMeta": "Học thử {preview}/{total} thẻ",
+                "upsell": "Kho thẻ của môn dành cho hội viên. Bạn đang học thử vài thẻ đầu mỗi bộ.",
+                "subscribe": "Đăng ký hội viên 30k/tháng",
+                "previewOver": "Bạn đã học hết {preview} thẻ học thử. Còn {total} thẻ trong bộ này dành cho hội viên.",
+                "sessionDone": "Bạn đã đi hết bộ thẻ này.",
+                "restart": "Học lại từ đầu",
+                "position": "Thẻ {index}/{total}",
+                "reveal": "Xem đáp án",
+                "nextCard": "Thẻ tiếp theo"
             }
         },
         "community": {

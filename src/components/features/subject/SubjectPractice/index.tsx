@@ -13,6 +13,7 @@ import {
 import { PracticeHub } from "./PracticeHub"
 import { CodingChallengeList } from "./CodingChallengeList"
 import { ExamList } from "./ExamList"
+import { FlashcardDeckList } from "./FlashcardDeckList"
 
 /** The in-panel view: the hub, or one opened module. */
 type PracticeView = "hub" | PracticeModuleKey
@@ -55,6 +56,11 @@ export const SubjectPractice = () => {
                 <CodingChallengeList subjectId={subjectId} onBack={backToHub} />
             </div>
         )
+    }
+
+    // Kho thẻ ghi nhớ của môn (deck trả phí khoá ở BE, xem thử vài thẻ đầu)
+    if (view === "flashcards") {
+        return <FlashcardDeckList subjectCode={subjectId} onBack={backToHub} />
     }
 
     // FE — the exam album list (a row routes to the album's own page)

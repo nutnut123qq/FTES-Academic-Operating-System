@@ -333,10 +333,12 @@ export const LessonHlsPlayer = ({
             try {
                 const src = await resolveSrc()
                 if (!src || cancelled) throw new Error("no playlist url")
-                if (el.canPlayType("application/vnd.apple.mpegurl")) {
-                    usingNativeHls = true
-                    el.src = src
-                } else if (Hls.isSupported()) {
+                // Prefer MediaSource on browsers that support hls.js. Recent desktop
+                // Chromium builds can report `maybe` for native HLS, then fetch only the
+                // first MPEG-TS fragment and remain at HAVE_NOTHING forever. Safari/iOS
+                // has no hls.js MediaSource support and therefore still falls through to
+                // the native branch below.
+                if (Hls.isSupported()) {
                     const preparedSource = await prepareHlsVodManifestSource(
                         src,
                         sourceController.signal,
@@ -419,6 +421,9 @@ export const LessonHlsPlayer = ({
                     // the manifest can trigger fragment loading, avoiding the grey 0:00 state.
                     hls.attachMedia(el)
                     hls.loadSource(preparedSource.url)
+                } else if (el.canPlayType("application/vnd.apple.mpegurl")) {
+                    usingNativeHls = true
+                    el.src = src
                 } else if (!cancelled) {
                     setFailed(true)
                     setLoading(false)

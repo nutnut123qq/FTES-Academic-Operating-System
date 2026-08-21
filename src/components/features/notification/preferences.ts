@@ -16,6 +16,7 @@ export const NOTIFICATION_TYPES: Array<NotificationType> = [
     NotificationType.Challenge,
     NotificationType.Coin,
     NotificationType.Group,
+    NotificationType.Follow,
     NotificationType.System,
     NotificationType.Order,
     NotificationType.Comment,

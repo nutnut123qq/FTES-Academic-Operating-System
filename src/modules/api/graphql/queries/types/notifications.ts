@@ -22,6 +22,8 @@ export enum NotificationType {
     Coin = "COIN",
     /** Group activity (membership, posts, replies). */
     Group = "GROUP",
+    /** Someone started following the recipient. */
+    Follow = "FOLLOW",
     /** Generic system message with no specific domain target. */
     System = "SYSTEM",
     /** A paid order has been fulfilled and is ready to use. */

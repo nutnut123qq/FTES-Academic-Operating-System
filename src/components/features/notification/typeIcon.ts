@@ -10,6 +10,7 @@ import {
     ShoppingBagIcon,
     type Icon,
     TrophyIcon,
+    UserPlusIcon,
     UsersThreeIcon,
 } from "@phosphor-icons/react"
 import { NotificationType } from "@/modules/api/graphql/queries/types/notifications"
@@ -28,6 +29,7 @@ export const NOTIFICATION_TYPE_ICON: Record<NotificationType, Icon> = {
     [NotificationType.Challenge]: TrophyIcon,
     [NotificationType.Coin]: CoinsIcon,
     [NotificationType.Group]: UsersThreeIcon,
+    [NotificationType.Follow]: UserPlusIcon,
     [NotificationType.System]: BellIcon,
     [NotificationType.Order]: ShoppingBagIcon,
     [NotificationType.Comment]: ChatCircleDotsIcon,

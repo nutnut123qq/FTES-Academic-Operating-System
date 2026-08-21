@@ -54,7 +54,11 @@ const FALLBACK_KEY_BY_TYPE: Readonly<Record<string, string>> = {
     [NotificationType.Challenge]: "CHALLENGE",
     [NotificationType.Coin]: "COIN",
     [NotificationType.Group]: "GROUP",
+    [NotificationType.Follow]: "FOLLOW",
     [NotificationType.System]: "SYSTEM",
+    [NotificationType.Order]: "ORDER",
+    [NotificationType.Comment]: "COMMENT",
+    [NotificationType.Reaction]: "REACTION",
 
     // transactional types — e-mail-only today, see the doc comment above
     EMAIL_VERIFY: "EMAIL_VERIFY",

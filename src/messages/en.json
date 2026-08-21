@@ -2391,6 +2391,17 @@
         "bioPlaceholder": "Tell others a bit about yourself",
         "changeAvatar": "Change avatar",
         "avatarHint": "PNG, JPG, WEBP or GIF, up to 5 MB.",
+        "avatarInvalidType": "Please choose a PNG, JPG, WEBP or GIF image.",
+        "avatarTooLarge": "This image is larger than 5 MB. Please choose a smaller one.",
+        "crop": {
+            "title": "Crop your avatar",
+            "description": "Move and zoom the image to choose what appears in your avatar.",
+            "dragHint": "Drag to reposition",
+            "zoom": "Zoom",
+            "preview": "Avatar preview",
+            "cancel": "Cancel",
+            "apply": "Apply avatar"
+        },
         "appearance": {
             "previewTitle": "Your look",
             "previewHint": "Pick an avatar, frame and pinned achievement below — changes apply instantly.",

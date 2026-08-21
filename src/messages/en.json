@@ -6175,12 +6175,19 @@
                 "upsell": "This subject's decks are for members. You are previewing the first few cards of each deck.",
                 "subscribe": "Join for 30k/month",
                 "previewOver": "That was all {preview} preview cards. The other {total} in this deck are for members.",
-                "sessionDone": "You have been through this deck.",
+                "sessionDone": "Session done — come back when cards are due.",
                 "restart": "Start over",
                 "position": "Card {index} of {total}",
                 "nextCard": "Next card",
                 "signedOut": "Sign in to preview this subject's decks; studying them in full needs a membership.",
-                "flipHint": "Tap the card to flip it"
+                "flipHint": "Tap the card to flip it",
+                "grade": {
+                    "again": "Again",
+                    "hard": "Hard",
+                    "good": "Good",
+                    "easy": "Easy"
+                },
+                "dueMeta": "{count} due"
             }
         },
         "community": {

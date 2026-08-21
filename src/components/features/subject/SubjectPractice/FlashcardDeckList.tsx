@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/blocks/skeleton/Skeleton"
 import { Link } from "@/i18n/navigation"
 import { MarkdownContent } from "@/components/reuseable/MarkdownContent"
 import { useQuerySubjectFlashcardsSwr } from "../hooks/useQuerySubjectFlashcardsSwr"
+import { reviewFlashcard } from "@/modules/api/rest/subject"
 import type {
     FlashcardCardView,
     FlashcardDeckView,
@@ -25,6 +26,32 @@ import type {
  * thay vì sửa renderer chung: bề mặt khác có thể đang cố ý cần ảnh tràn viền.
  */
 const CARD_MARKDOWN = "[&_img]:h-auto [&_img]:max-w-full [&_img]:rounded-lg"
+
+/**
+ * Nội dung một MẶT thẻ: cao tối đa 60% màn hình, quá thì CUỘN TRONG mặt đó.
+ *
+ * Vì sao chặn chiều cao thay vì để thẻ dài ra: giải thích của nguồn có bài dài cả màn hình, để
+ * thẻ tự cao thì nút "Thẻ tiếp theo" bị đẩy khuất dưới đáy — lật xong phải cuộn cả trang mới
+ * đi tiếp được, và mặt trước ngắn thì khung vẫn cao lêu nghêu vì hai mặt chung một ô lưới.
+ *
+ * Cuộn đặt ở lớp BÊN TRONG mặt thẻ, không đặt thẳng lên mặt: `overflow` trên phần tử đang mang
+ * `backface-visibility` làm trình duyệt bẹt lớp 3D, mặt sau sẽ lòi ra khi chưa lật.
+ */
+const FACE_SCROLL = "max-h-[60vh] min-h-0 overflow-y-auto overscroll-contain"
+
+/**
+ * Bốn mức tự chấm, ánh xạ sang thang SM-2 0..5 của BE.
+ *
+ * Bốn mức chứ không phải sáu: thang 0..5 là chuyện của thuật toán, còn người học chỉ phân biệt
+ * được "quên hẳn / phải nghĩ lâu / nhớ được / quá dễ". Bày đủ sáu nút thì người ta bấm bừa, mà
+ * điểm bừa là lịch ôn sai.
+ */
+const GRADES: Array<{ key: string; score: number; variant: "secondary" | "tertiary" }> = [
+    { key: "again", score: 0, variant: "secondary" },
+    { key: "hard", score: 3, variant: "tertiary" },
+    { key: "good", score: 4, variant: "tertiary" },
+    { key: "easy", score: 5, variant: "tertiary" },
+]
 
 /** Where a reader goes to buy the membership that unlocks the paid decks. */
 const MEMBERSHIP_HREF = "/dashboard?tab=plan"
@@ -67,8 +94,10 @@ export const FlashcardDeckList = ({ subjectCode, onBack }: FlashcardDeckListProp
     if (openDeck) {
         return (
             <StudySession
+                subjectCode={subjectCode}
                 deck={openDeck}
                 onBack={() => setOpenDeckId(null)}
+                onGraded={() => { void mutate() }}
             />
         )
     }
@@ -138,6 +167,11 @@ const DeckRow = ({ deck, onOpen }: { deck: FlashcardDeckView; onOpen: () => void
                             total: deck.cardCount,
                         })
                         : t("practice.flashcards.cardMeta", { total: deck.cardCount })}
+                    {/* Số thẻ ĐẾN HẠN là thứ quyết định hôm nay có mở bộ này hay không — quan
+                        trọng hơn tổng số thẻ, nên đứng ngay cạnh. */}
+                    {deck.dueCount > 0
+                        ? ` · ${t("practice.flashcards.dueMeta", { count: deck.dueCount })}`
+                        : ""}
                 </Typography>
             </div>
             {deck.locked ? (
@@ -178,17 +212,61 @@ const MembershipBanner = ({ signedOut = false }: { signedOut?: boolean }) => {
  * has just felt the value and is the single best place to ask for the membership, so the
  * end card carries the CTA instead of a bare "done".
  */
-const StudySession = ({ deck, onBack }: { deck: FlashcardDeckView; onBack: () => void }) => {
+const StudySession = ({
+    subjectCode,
+    deck,
+    onBack,
+    onGraded,
+}: {
+    subjectCode: string
+    deck: FlashcardDeckView
+    onBack: () => void
+    onGraded: () => void
+}) => {
     const t = useTranslations("subjects")
     const [index, setIndex] = useState(0)
     const [revealed, setRevealed] = useState(false)
+    const [grading, setGrading] = useState(false)
 
-    const card: FlashcardCardView | undefined = deck.cards[index]
+    /**
+     * Hàng đợi của phiên: thẻ ĐẾN HẠN trước, hết hạn rồi thì học cả bộ.
+     *
+     * Chốt MỘT LẦN khi mở bộ (`deck.id`), không tính lại mỗi lần chấm: chấm xong thẻ hết "đến
+     * hạn" ngay, nếu hàng đợi tính lại theo `deck.cards` thì thẻ vừa học biến khỏi danh sách và
+     * mọi thẻ phía sau nhảy chỉ số — người học bị đá sang thẻ khác giữa chừng.
+     */
+    const queue = useMemo(() => {
+        const due = deck.cards.filter((c) => c.progress?.due)
+        return due.length > 0 ? due : deck.cards
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [deck.id])
+
+    const card: FlashcardCardView | undefined = queue[index]
     const finished = !card
 
     const next = () => {
         setRevealed(false)
         setIndex((current) => current + 1)
+    }
+
+    /**
+     * Tự chấm theo SM-2 (BE xếp lịch, FE chỉ gửi điểm).
+     *
+     * Lỗi mạng KHÔNG chặn người học đi tiếp: mất một lần ghi tiến độ thì thẻ đơn giản là còn đến
+     * hạn, còn dựng lên một hộp lỗi giữa phiên ôn thì hỏng cả mạch học.
+     */
+    const grade = async (score: number) => {
+        if (!card || grading) return
+        setGrading(true)
+        try {
+            await reviewFlashcard(subjectCode, card.id, { grade: score })
+            onGraded()
+        } catch {
+            // im lặng có chủ đích — xem ghi chú trên
+        } finally {
+            setGrading(false)
+            next()
+        }
     }
 
     return (
@@ -227,7 +305,7 @@ const StudySession = ({ deck, onBack }: { deck: FlashcardDeckView; onBack: () =>
                     <Typography type="body-xs" color="muted">
                         {t("practice.flashcards.position", {
                             index: index + 1,
-                            total: deck.cards.length,
+                            total: queue.length,
                         })}
                     </Typography>
 
@@ -257,7 +335,7 @@ const StudySession = ({ deck, onBack }: { deck: FlashcardDeckView; onBack: () =>
                         >
                             <div
                                 className={cn(
-                                    "col-start-1 row-start-1 flex min-h-[12rem] flex-col justify-center gap-4",
+                                    "col-start-1 row-start-1 flex min-h-[12rem] flex-col justify-center",
                                     "rounded-2xl border border-default p-6 [backface-visibility:hidden]",
                                 )}
                             >
@@ -266,28 +344,46 @@ const StudySession = ({ deck, onBack }: { deck: FlashcardDeckView; onBack: () =>
                                     thẻ lưu `![](url)`. Render chữ thuần thì người học chỉ thấy một
                                     dòng link. `math` bật vì phần lớn thẻ ảnh là môn Toán, thẻ chữ
                                     có công thức cũng hiện đúng thay vì trơ ra `$...$`. */}
-                                <MarkdownContent markdown={card.front} math className={CARD_MARKDOWN} />
+                                <div className={FACE_SCROLL}>
+                                    <MarkdownContent markdown={card.front} math className={CARD_MARKDOWN} />
+                                </div>
                             </div>
                             <div
                                 className={cn(
-                                    "col-start-1 row-start-1 flex min-h-[12rem] flex-col justify-center gap-4",
+                                    "col-start-1 row-start-1 flex min-h-[12rem] flex-col justify-center",
                                     "rounded-2xl border border-accent bg-accent/5 p-6",
                                     "[backface-visibility:hidden] [transform:rotateY(180deg)]",
                                 )}
                             >
-                                <MarkdownContent markdown={card.back} math className={CARD_MARKDOWN} />
+                                <div className={FACE_SCROLL}>
+                                    <MarkdownContent markdown={card.back} math className={CARD_MARKDOWN} />
+                                </div>
                             </div>
                         </div>
                     </button>
 
-                    <div className="flex flex-wrap items-center gap-3">
-                        <Button size="sm" variant="primary" onPress={next}>
-                            {t("practice.flashcards.nextCard")}
-                        </Button>
+                    {/* Chưa lật thì KHÔNG hiện nút chấm: chấm khi chưa thấy đáp án là chấm bừa,
+                        và SM-2 lấy chính điểm đó để xếp lịch nên bừa một lần là lệch lịch nhiều
+                        ngày. Lật xong mới có gì để tự đánh giá. */}
+                    {revealed ? (
+                        <div className="flex flex-wrap gap-2">
+                            {GRADES.map((g) => (
+                                <Button
+                                    key={g.score}
+                                    size="sm"
+                                    variant={g.variant}
+                                    isDisabled={grading}
+                                    onPress={() => { void grade(g.score) }}
+                                >
+                                    {t(`practice.flashcards.grade.${g.key}`)}
+                                </Button>
+                            ))}
+                        </div>
+                    ) : (
                         <Typography type="body-xs" color="muted">
                             {t("practice.flashcards.flipHint")}
                         </Typography>
-                    </div>
+                    )}
                 </div>
             )}
         </div>

@@ -6175,12 +6175,19 @@
                 "upsell": "Kho thẻ của môn dành cho hội viên. Bạn đang học thử vài thẻ đầu mỗi bộ.",
                 "subscribe": "Đăng ký hội viên 30k/tháng",
                 "previewOver": "Bạn đã học hết {preview} thẻ học thử. Còn {total} thẻ trong bộ này dành cho hội viên.",
-                "sessionDone": "Bạn đã đi hết bộ thẻ này.",
+                "sessionDone": "Xong phiên ôn — hẹn gặp lại khi thẻ đến hạn.",
                 "restart": "Học lại từ đầu",
                 "position": "Thẻ {index}/{total}",
                 "nextCard": "Thẻ tiếp theo",
                 "signedOut": "Đăng nhập để học thử kho thẻ của môn; học đủ thì cần gói hội viên.",
-                "flipHint": "Bấm vào thẻ để lật xem đáp án"
+                "flipHint": "Bấm vào thẻ để lật xem đáp án",
+                "grade": {
+                    "again": "Quên rồi",
+                    "hard": "Khó",
+                    "good": "Nhớ được",
+                    "easy": "Quá dễ"
+                },
+                "dueMeta": "{count} thẻ đến hạn"
             }
         },
         "community": {

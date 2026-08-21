@@ -117,6 +117,8 @@ const course = (over: Partial<MyCourse> & { courseId: string }): MyCourse => ({
     coverImage: null,
     accessUntil: null,
     expired: false,
+    termId: null,
+    termName: null,
     ...over,
 })
 

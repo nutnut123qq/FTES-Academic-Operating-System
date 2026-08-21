@@ -17,6 +17,7 @@ import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton as SkeletonBlock } from "@/components/blocks/skeleton/Skeleton"
 import { UserAvatar } from "@/components/reuseable/UserAvatar"
 import { CommentComposer as CollapsibleComposer } from "@/components/reuseable/Discussion/CommentComposer"
+import { replyMention } from "@/components/reuseable/Discussion/replyMention"
 import { Link } from "@/i18n/navigation"
 import { formatRelativeTime } from "@/components/features/community/hooks/relativeTime"
 import type { ResourceCommentView } from "@/modules/api/rest/resource"
@@ -46,10 +47,8 @@ const CommentNode = ({
     comment: ResourceCommentView
     viewerId?: string
     /**
-     * The reader's own session card, used ONLY to put their real photo on their own rows —
-     * the C-4 comment view carries no author card, so every other row keeps the generated
-     * face seeded by its `userId`. `null` (guest / unhydrated session) keeps every row on
-     * that generated face, exactly as before.
+     * The reader's session card is the optimistic/older-BE fallback for their own rows;
+     * current responses carry a batched `comment.author` card for every resolved author.
      */
     viewer: ViewerAuthorCard | null
     locale: string
@@ -62,12 +61,16 @@ const CommentNode = ({
     const t = useTranslations("resourceHub.comments")
     const isDeleted = comment.status === DELETED_STATUS || comment.userId === null
     const isOwner = !isDeleted && !!comment.userId && comment.userId === viewerId
-    const authorLabel = isDeleted ? "—" : comment.userId === viewerId ? t("you") : t("member")
     /**
      * The viewer's own row — placeholder AND stored row alike, since both carry the same
      * `userId` — so the photo is on screen from the first frame and never swaps.
      */
     const mine = viewerOwnRowCard(viewer, comment.userId, isDeleted)
+    const author = isDeleted ? null : (comment.author ?? mine)
+    const authorLabel = isDeleted
+        ? "—"
+        : author?.displayName ?? author?.username
+            ?? (comment.userId === viewerId ? t("you") : t("member"))
     // Both come straight from `GET /resources/{id}/comments` (root rows AND replies) — the
     // count is never derived client-side.
     const liked = comment.likedByMe ?? false
@@ -76,8 +79,8 @@ const CommentNode = ({
     return (
         <div className="flex items-start gap-3">
             <UserAvatar
-                username={mine?.displayName ?? mine?.username ?? comment.userId ?? undefined}
-                avatar={mine?.avatarUrl ?? null}
+                username={author?.username ?? author?.displayName ?? comment.userId ?? undefined}
+                avatar={author?.avatarUrl ?? null}
                 seed={comment.userId ?? "deleted"}
                 size="sm"
                 className={cn("size-8 shrink-0", isDeleted && "opacity-50")}
@@ -172,12 +175,9 @@ const ResourceCommentsSkeleton = () => (
  * `likeCount`/`likedByMe` the list already carries — nothing is counted client-side), and
  * page/size pagination. Writes are optimistic and roll back on failure (the write hooks
  * own the cache patching). Guests are gated into the auth modal on submit. Mirrors
- * the course `LessonComments` real-`CommentView` pattern (author shown from
- * `userId` as "you"/"member" — the C-4 view carries no author card, so nobody ELSE'S name
- * is guessed at; the reader's own rows additionally wear their real photo, taken from the
- * session the composer above already renders and matched by `userId`, which is a field the
- * optimistic row and the stored row carry alike — so the face appears with the comment and
- * never swaps). Free-form
+ * the course `LessonComments` real-`CommentView` pattern: both endpoints batch-resolve the
+ * public author card for roots + replies, while the reader's session card keeps optimistic
+ * own rows stable before the POST returns. Free-form
  * discussion only; star rating lives on `/resources/[resourceId]/reviews`.
  */
 export const ResourceComments = () => {
@@ -393,6 +393,10 @@ export const ResourceComments = () => {
                                     <CollapsibleComposer
                                         currentUser={currentUser}
                                         placeholder={t("replyPlaceholder")}
+                                        initialValue={replyMention(
+                                            comment.author
+                                            ?? viewerOwnRowCard(viewerCard, comment.userId, false),
+                                        )}
                                         submitLabel={t("submit")}
                                         busy={create.isMutating && replyingTo === comment.id}
                                         autoFocus

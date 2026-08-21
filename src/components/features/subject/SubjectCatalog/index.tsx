@@ -3,7 +3,6 @@
 import React, { useDeferredValue, useState } from "react"
 import Image from "next/image"
 import {
-    Chip,
     Dropdown,
     DropdownItem,
     DropdownMenu,
@@ -277,12 +276,8 @@ const SubjectCard = ({ subject }: SubjectCardProps) => {
                     </Typography>
                 </div>
 
-                {/* hàng meta — [chip độ khó] · tín chỉ · kỳ. Chip tự giữ bờ (không có middot
-                    ngay sau nó); middot chỉ chèn giữa hai đoạn chữ thường. */}
+                {/* Hàng meta chỉ giữ thông tin học vụ hữu ích ở catalog: tín chỉ · kỳ. */}
                 <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted">
-                    <Chip size="sm" variant="soft" color="accent">
-                        {t(`difficulty.${subject.difficulty}`)}
-                    </Chip>
                     <span>{t("credits", { count: subject.credits })}</span>
                     {/* Kỳ khuyến nghị chỉ hiện khi môn có gắn kỳ — null thì ẩn, không đoán. */}
                     {subject.recommendedSemester !== null ? (
@@ -293,8 +288,7 @@ const SubjectCard = ({ subject }: SubjectCardProps) => {
                     ) : null}
                 </div>
 
-                {/* mô tả ngắn — 2 dòng, chỉ khi BE có trả. Đây là phần thẻ môn thiếu so với
-                    thẻ khoá: trước đó dưới ảnh chỉ có mã/tên/chip nên trống một mảng. */}
+                {/* Mô tả ngắn — 2 dòng, chỉ khi BE có trả. */}
                 {subject.description ? (
                     <Typography type="body-xs" color="muted" className="line-clamp-2">
                         {subject.description}
@@ -307,7 +301,7 @@ const SubjectCard = ({ subject }: SubjectCardProps) => {
 
 /**
  * Skeleton mirroring {@link SubjectCard}: cover 16:9, hộp tiêu đề hai dòng cứng,
- * hàng chip, hai dòng mô tả — cùng hộp, cùng tỉ lệ, cùng radius.
+ * hàng meta, hai dòng mô tả — cùng hộp, cùng tỉ lệ, cùng radius.
  */
 const SubjectCardSkeleton = () => (
     <div className="flex h-full flex-col rounded-lg border border-separator p-3">
@@ -318,7 +312,6 @@ const SubjectCardSkeleton = () => (
                 <Skeleton.Typography type="body-xs" width="1/3" />
             </div>
             <div className="flex items-center gap-1.5">
-                <Skeleton.Chip />
                 <Skeleton.Typography type="body-xs" width="1/4" />
             </div>
             <Skeleton.Typography type="body-xs" width="full" />

@@ -18,6 +18,7 @@ import { AsyncContent } from "@/components/blocks/async/AsyncContent"
 import { Skeleton as SkeletonBlock } from "@/components/blocks/skeleton/Skeleton"
 import { UserAvatar } from "@/components/reuseable/UserAvatar"
 import { CommentComposer as CollapsibleComposer } from "@/components/reuseable/Discussion/CommentComposer"
+import { replyMention } from "@/components/reuseable/Discussion/replyMention"
 import { formatRelativeTime } from "@/components/features/community/hooks/relativeTime"
 import type { LessonCommentView, LessonCommentsPage } from "@/modules/api/rest/course"
 
@@ -72,6 +73,7 @@ const CommentComposer = ({
     onSubmit,
     onCancel,
     cancelLabel,
+    initialValue,
 }: {
     placeholder: string
     submitLabel: string
@@ -80,8 +82,9 @@ const CommentComposer = ({
     onSubmit: (text: string) => Promise<boolean>
     onCancel?: () => void
     cancelLabel?: string
+    initialValue?: string
 }) => {
-    const [draft, setDraft] = useState("")
+    const [draft, setDraft] = useState(initialValue ?? "")
     const trimmed = draft.trim()
 
     const handleSubmit = async () => {
@@ -162,16 +165,17 @@ const CommentNode = ({
     const isDeleted = comment.status === DELETED_STATUS || comment.userId === null
     const isOwner = !isDeleted && !!comment.userId && comment.userId === viewerId
     const liked = comment.myReactions.includes(LIKE_EMOJI)
+    const author = isDeleted ? null : (comment.author ?? null)
     const authorLabel = isDeleted
         ? "—"
-        : comment.userId === viewerId
-            ? t("comments.you")
-            : t("comments.member")
+        : author?.displayName ?? author?.username
+            ?? (comment.userId === viewerId ? t("comments.you") : t("comments.member"))
 
     return (
         <div className="flex items-start gap-3">
             <UserAvatar
-                username={comment.userId ?? undefined}
+                username={author?.username ?? author?.displayName ?? comment.userId ?? undefined}
+                avatar={author?.avatarUrl ?? null}
                 seed={comment.userId ?? "deleted"}
                 size="sm"
                 className={cn("size-8 shrink-0", isDeleted && "opacity-50")}
@@ -445,6 +449,7 @@ export const LessonComments = ({ courseId, contentId, className }: LessonComment
                                 <div className="sm:ml-11">
                                     <CommentComposer
                                         placeholder={t("comments.replyPlaceholder")}
+                                        initialValue={replyMention(comment.author)}
                                         submitLabel={t("comments.send")}
                                         isSubmitting={post.isMutating && replyingTo === comment.id}
                                         autoFocus

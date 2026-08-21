@@ -13,6 +13,8 @@ export interface RankTier {
     key: string
     /** Inclusive lower bound of total XP for this tier. */
     minXp: number
+    /** Static art shown beside the viewer's current total-XP rank. */
+    badgeSrc: string
 }
 
 /**
@@ -21,11 +23,11 @@ export interface RankTier {
  * Bạch Kim 125 000–199 999 · Kim Cương ≥ 200 000.
  */
 export const RANK_TIERS: ReadonlyArray<RankTier> = [
-    { key: "bronze", minXp: 0 },
-    { key: "silver", minXp: 25_000 },
-    { key: "gold", minXp: 75_000 },
-    { key: "platinum", minXp: 125_000 },
-    { key: "diamond", minXp: 200_000 },
+    { key: "bronze", minXp: 0, badgeSrc: "/gamification/badges/badge-bronze.png" },
+    { key: "silver", minXp: 25_000, badgeSrc: "/gamification/badges/badge-silver.png" },
+    { key: "gold", minXp: 75_000, badgeSrc: "/gamification/badges/badge-gold.png" },
+    { key: "platinum", minXp: 125_000, badgeSrc: "/gamification/badges/badge-crystal.png" },
+    { key: "diamond", minXp: 200_000, badgeSrc: "/gamification/badges/badge-diamond.png" },
 ]
 
 /**

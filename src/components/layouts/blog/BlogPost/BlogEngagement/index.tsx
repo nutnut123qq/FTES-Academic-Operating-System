@@ -19,6 +19,7 @@ import { CommentComposer } from "./CommentComposer"
 import { CommentItem } from "./CommentItem"
 import { COMMENT_SORTS, mergeComments, repliesByParent, sortComments, type CommentSort } from "./helpers"
 import { SegmentedControl } from "@/components/blocks/navigation/SegmentedControl"
+import { replyMention } from "@/components/reuseable/Discussion/replyMention"
 
 /** Comment page size — matches the spec ("size 20, load more while hasNext"). */
 const COMMENTS_PAGE_SIZE = 20
@@ -337,6 +338,7 @@ export const BlogEngagement = ({ postId, initialEmojiCount }: BlogEngagementProp
                                     <CommentComposer
                                         className="ms-11"
                                         placeholder={t("replyPlaceholder")}
+                                        initialValue={replyMention({ username: comment.authorUsername })}
                                         submitLabel={t("submit")}
                                         cancelLabel={t("cancel")}
                                         onSubmit={(text) => handleCreate(text, comment.id)}

@@ -84,13 +84,21 @@ export const LeaderboardShell = () => {
                 <SectionCard>
                     <div className="flex flex-col gap-3">
                         <div className="flex items-start justify-between gap-3">
-                            <div className="flex min-w-0 flex-col gap-0.5">
-                                <Typography type="body-xs" color="muted">
-                                    {t("currentRank.title")}
-                                </Typography>
-                                <Typography type="h5" weight="bold">
-                                    {t(`tiers.${my.rank.league}`)}
-                                </Typography>
+                            <div className="flex min-w-0 items-center gap-3">
+                                <img
+                                    src={rankTier.tier.badgeSrc}
+                                    alt=""
+                                    aria-hidden
+                                    className="size-16 shrink-0 object-contain"
+                                />
+                                <div className="flex min-w-0 flex-col gap-0.5">
+                                    <Typography type="body-xs" color="muted">
+                                        {t("currentRank.title")}
+                                    </Typography>
+                                    <Typography type="h5" weight="bold">
+                                        {t(`tiers.${my.rank.league}`)}
+                                    </Typography>
+                                </div>
                             </div>
                             <div className="flex shrink-0 flex-col items-end gap-0.5">
                                 <Typography type="h5" weight="bold">

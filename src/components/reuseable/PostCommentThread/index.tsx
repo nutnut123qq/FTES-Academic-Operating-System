@@ -28,6 +28,7 @@ import { looksLikeUserId } from "@/utils/avatar"
 import type { PostComment } from "@/components/features/community/hooks/useQueryPostDetailSwr"
 import type { WithClassNames } from "@/modules/types/base/class-name"
 import { CommentLoadError, type CommentThreadLabels } from "./comment-load-error"
+import { replyMention } from "@/components/reuseable/Discussion/replyMention"
 
 export type { CommentThreadLabels } from "./comment-load-error"
 
@@ -55,8 +56,7 @@ interface ReplyTarget {
     /** Id comment cấp 1 nhận hàng mới (chính `target.id` khi bấm ở cấp 1). */
     parentId: string
     /**
-     * "@Tên " CHÈN SẴN vào ô soạn (`RichCommentEditor.prefill`), hoặc `""` khi trả lời
-     * thẳng comment cấp 1.
+     * "@Tên " CHÈN SẴN vào ô soạn (`RichCommentEditor.prefill`) ở mọi cấp.
      *
      * ponytail: chèn vào ô soạn chứ KHÔNG ghép lúc gửi — ghép lúc gửi thì comment lưu
      * xuống đúng nhưng người dùng không thấy tag đâu cả, cảm giác như chưa bấm reply.
@@ -508,8 +508,8 @@ export const CommentRow = ({
  *
  * **"Trả lời" ở MỌI cấp, cây vẫn phẳng 2 cấp.** Comment con cũng có nút trả lời, nhưng
  * hàng mới KHÔNG lồng sâu thêm — nó gắn vào đúng comment cấp 1 của nhánh đó
- * (`onSubmit(body, rootId)`), giống Facebook. Đổi lại, ô soạn được CHÈN SẴN "@Tên " của
- * người được trả lời (`RichCommentEditor.prefill`) để câu trả lời không mất địa chỉ —
+ * (`onSubmit(body, rootId)`), giống Facebook. Mọi ô trả lời được CHÈN SẴN "@Tên " của
+ * người được trả lời (`RichCommentEditor.prefill`) để câu trả lời luôn rõ địa chỉ —
  * người dùng nhìn thấy tag ngay trong ô và sửa/xoá được ({@link ReplyTarget}).
  *
  * Per-comment affordances (all opt-in via callbacks, so surfaces that pass none
@@ -640,9 +640,7 @@ export const PostCommentThread = ({
             setReplyTo({
                 target,
                 parentId,
-                // ponytail: chỉ tag khi trả lời comment CON; trả lời gốc thì hàng nằm ngay
-                // dưới nó, tag chỉ tổ thừa.
-                mention: target.id === parentId ? "" : `@${nameOf(target)} `,
+                mention: replyMention({ displayName: nameOf(target) }),
             })
         },
         [nameOf],

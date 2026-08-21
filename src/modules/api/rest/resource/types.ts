@@ -237,6 +237,8 @@ export interface CollectionDetailResponse {
 export interface ResourceCommentView {
     id: string
     userId: string | null
+    /** Batched public author card; absent on older backends and tombstones. */
+    author?: ResourceAuthorView | null
     parentId: string | null
     content: string
     /** `VISIBLE` | `DELETED`. */

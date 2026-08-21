@@ -13,8 +13,8 @@ import type { MyGamification } from "../hooks/useQueryMyGamificationSwr"
  *
  * Three states have to hold, because the backend field is landing separately:
  *  - `iconUrl` present  ⇒ the ARTWORK is drawn (decorative: the label below names it),
- *  - `iconUrl` null     ⇒ the kind glyph, and NO `<img>` at all (an `<img src="">`
- *                         is a broken-image icon, which is worse than the trophy),
+ *  - `iconUrl` null     ⇒ the kind glyph and no ACHIEVEMENT `<img>` (the rank badge
+ *                         remains; an `<img src="">` would still be a broken image),
  *  - `iconUrl` ABSENT   ⇒ same as null (backend not deployed yet).
  *
  * The fallback glyph is the shared `badgeKindIcon` mapping — the same one the
@@ -105,7 +105,7 @@ describe("LeaderboardShell — badge strip draws the real art", () => {
 
         render(<LeaderboardShell />)
 
-        const art = document.querySelector("img")
+        const art = document.querySelector("img[src='https://cdn.example/first-lesson.png']")
         expect(art?.getAttribute("src")).toBe("https://cdn.example/first-lesson.png")
         // Decorative: the label right below already names the badge, so the image
         // must not be announced twice.
@@ -127,12 +127,17 @@ describe("LeaderboardShell — badge strip draws the real art", () => {
         expect(screen.getByText("currentRank.title")).toBeTruthy()
         expect(screen.getByText("tiers.bronze")).toBeTruthy()
         expect(screen.getByText("#2")).toBeTruthy()
+        const rankBadge = document.querySelector("img[src='/gamification/badges/badge-bronze.png']")
+        expect(rankBadge).toBeTruthy()
+        expect(rankBadge?.getAttribute("alt")).toBe("")
+        expect(rankBadge?.getAttribute("aria-hidden")).toBe("true")
+        expect(rankBadge?.classList.contains("size-16")).toBe(true)
         const progress = screen.getByTestId("rank-progress")
         expect(progress.getAttribute("data-value")).toBe("1500")
         expect(progress.getAttribute("data-max")).toBe("25000")
     })
 
-    it("falls back to the kind glyph — and renders NO <img> — when iconUrl is null", () => {
+    it("falls back to the kind glyph without broken achievement art when iconUrl is null", () => {
         snapshot = withBadges([
             {
                 id: "TOP_10",
@@ -146,8 +151,9 @@ describe("LeaderboardShell — badge strip draws the real art", () => {
 
         render(<LeaderboardShell />)
 
-        // The whole point: a null must never become `<img src="">` (broken image).
-        expect(document.querySelector("img")).toBeNull()
+        // Only the always-present rank badge remains: no empty/broken achievement image.
+        expect(document.querySelectorAll("img")).toHaveLength(1)
+        expect(document.querySelector("img[src='']")).toBeNull()
         // TROPHY → trophy, exactly as the profile badge catalog maps it.
         expect(screen.getByTestId("glyph-trophy")).toBeTruthy()
         expect(screen.getByText("label(TOP_10|Top 10)")).toBeTruthy()
@@ -167,7 +173,8 @@ describe("LeaderboardShell — badge strip draws the real art", () => {
 
         render(<LeaderboardShell />)
 
-        expect(document.querySelector("img")).toBeNull()
+        expect(document.querySelectorAll("img")).toHaveLength(1)
+        expect(document.querySelector("img[src='']")).toBeNull()
         // BADGE → medal (the catalog's mapping), not the old hardcoded trophy.
         expect(screen.getByTestId("glyph-medal")).toBeTruthy()
         expect(screen.queryByTestId("glyph-trophy")).toBeNull()
@@ -196,6 +203,7 @@ describe("LeaderboardShell — badge strip draws the real art", () => {
 
         expect(screen.getByText("badgesEmpty")).toBeTruthy()
         expect(screen.queryByTestId("glyph-medal")).toBeNull()
-        expect(document.querySelector("img")).toBeNull()
+        expect(document.querySelectorAll("img")).toHaveLength(1)
+        expect(document.querySelector("img[src='']")).toBeNull()
     })
 })

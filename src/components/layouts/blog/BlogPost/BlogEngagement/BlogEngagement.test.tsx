@@ -214,3 +214,29 @@ describe("BlogEngagement — author fallback for a null username", () => {
         expect(screen.queryByTestId("user-link")).toBeNull()
     })
 })
+
+describe("BlogEngagement — reply mention", () => {
+    it("prefills the root author's username when reply opens", () => {
+        h.authenticated = true
+        h.user = { id: "u1", username: "viewer" }
+        h.commentsData = {
+            items: [{
+                id: "c1",
+                postId: "p1",
+                userId: "u2",
+                content: "hello",
+                emojiCount: 0,
+                authorUsername: "minh.author",
+                createdAt: "2026-07-01T00:00:00Z",
+                updatedAt: "2026-07-01T00:00:00Z",
+            }],
+            hasNext: false,
+        }
+
+        render(<BlogEngagement postId="p1" initialEmojiCount={0} />)
+        fireEvent.click(screen.getByText("reply"))
+
+        expect((screen.getByPlaceholderText("replyPlaceholder") as HTMLTextAreaElement).value)
+            .toBe("@minh.author ")
+    })
+})

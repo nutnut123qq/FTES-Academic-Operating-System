@@ -775,6 +775,8 @@ export interface CourseRatingSummary {
 export interface LessonCommentView {
     id: string
     userId: string | null
+    /** Batched public author card; absent on older backends and tombstones. */
+    author?: LessonCommentAuthorView | null
     parentId: string | null
     content: string
     status: string
@@ -783,6 +785,13 @@ export interface LessonCommentView {
     /** Reaction emoji strings the current viewer has applied (e.g. `["LIKE"]`). */
     myReactions: Array<string>
     replies: Array<LessonCommentView>
+}
+
+export interface LessonCommentAuthorView {
+    userId: string
+    username?: string | null
+    displayName?: string | null
+    avatarUrl?: string | null
 }
 
 /** Body sent to `POST /api/v1/courses/lessons/{lessonId}/comments`. */

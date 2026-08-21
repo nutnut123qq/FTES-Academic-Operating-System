@@ -25,7 +25,7 @@ import type { PostComment } from "@/components/features/community/hooks/useQuery
  *  - "Trả lời" nay có ở MỌI cấp và mở một ô soạn RIÊNG ngay dưới hàng vừa bấm
  *    (ô đáy chỉ còn dùng cho bình luận mới, chip "Đang trả lời X" đã bỏ); mỗi
  *    lúc chỉ một ô mở, ✕ / Esc đóng sạch, và trả lời một comment CON vẫn gắn vào
- *    comment cấp 1 của nhánh (cây phẳng 2 cấp) với "@Tên " CHÈN SẴN vào ô soạn
+ *    comment cấp 1 của nhánh (cây phẳng 2 cấp); MỌI ô trả lời có "@Tên " CHÈN SẴN
  *    (prop `prefill` của RichCommentEditor) — không ghép lúc gửi, nên tag hiện ra
  *    cho người dùng thấy và chỉ xuất hiện đúng một lần,
  *  - tên tác giả: hàng không mang tên mà là của chính người đang đăng nhập thì
@@ -585,18 +585,18 @@ describe("PostCommentThread — trả lời ở mọi cấp", () => {
         await waitFor(() => expect(inlineComposer()).toBeNull())
     })
 
-    it("trả lời comment cấp 1 thì KHÔNG tag (hàng mới nằm ngay dưới nó)", async () => {
+    it("trả lời comment cấp 1 cũng tag đúng một lần", async () => {
         const onSubmit = vi.fn().mockResolvedValue(true)
         renderThread({ onSubmit })
 
         fireEvent.click(screen.getAllByText("engagement.reply")[0])
         const composer = inlineComposer()!
-        expect(within(composer).getByTestId("composer-draft").textContent).toBe("")
+        expect(within(composer).getByTestId("composer-draft").textContent).toBe("@Minh ")
 
         fireEvent.click(within(composer).getByTestId("composer"))
 
         await waitFor(() => {
-            expect(onSubmit).toHaveBeenCalledWith("Rõ rồi.", "c-1")
+            expect(onSubmit).toHaveBeenCalledWith("@Minh Rõ rồi.", "c-1")
         })
     })
 

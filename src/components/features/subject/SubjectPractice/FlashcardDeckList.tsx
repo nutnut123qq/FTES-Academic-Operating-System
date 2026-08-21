@@ -25,7 +25,7 @@ import type {
  * (nó phục vụ cả trang đọc rộng), nên để nguyên là thẻ tràn ngang trên màn hẹp. Ghim tại đây
  * thay vì sửa renderer chung: bề mặt khác có thể đang cố ý cần ảnh tràn viền.
  */
-const CARD_MARKDOWN = "[&_img]:h-auto [&_img]:max-w-full [&_img]:rounded-lg"
+const CARD_MARKDOWN = "[&_img]:mx-auto [&_img]:h-auto [&_img]:max-w-full [&_img]:rounded-lg"
 
 /**
  * Nội dung một MẶT thẻ: cao tối đa 60% màn hình, quá thì CUỘN TRONG mặt đó.
@@ -37,7 +37,7 @@ const CARD_MARKDOWN = "[&_img]:h-auto [&_img]:max-w-full [&_img]:rounded-lg"
  * Cuộn đặt ở lớp BÊN TRONG mặt thẻ, không đặt thẳng lên mặt: `overflow` trên phần tử đang mang
  * `backface-visibility` làm trình duyệt bẹt lớp 3D, mặt sau sẽ lòi ra khi chưa lật.
  */
-const FACE_SCROLL = "max-h-[60vh] min-h-0 overflow-y-auto overscroll-contain"
+const FACE_SCROLL = "max-h-[60vh] min-h-0 w-full overflow-y-auto overscroll-contain"
 
 /**
  * Bốn mức tự chấm, ánh xạ sang thang SM-2 0..5 của BE.
@@ -335,8 +335,8 @@ const StudySession = ({
                         >
                             <div
                                 className={cn(
-                                    "col-start-1 row-start-1 flex min-h-[12rem] flex-col justify-center",
-                                    "rounded-2xl border border-default p-6 [backface-visibility:hidden]",
+                                    "col-start-1 row-start-1 flex min-h-[12rem] flex-col items-center justify-center",
+                                    "rounded-2xl border border-default p-6 text-center [backface-visibility:hidden]",
                                 )}
                             >
                                 {/* Markdown, KHÔNG phải chữ thuần: có môn (Toán, Trung) ra đề bằng
@@ -350,8 +350,8 @@ const StudySession = ({
                             </div>
                             <div
                                 className={cn(
-                                    "col-start-1 row-start-1 flex min-h-[12rem] flex-col justify-center",
-                                    "rounded-2xl border border-accent bg-accent/5 p-6",
+                                    "col-start-1 row-start-1 flex min-h-[12rem] flex-col items-center justify-center",
+                                    "rounded-2xl border border-accent bg-accent/5 p-6 text-center",
                                     "[backface-visibility:hidden] [transform:rotateY(180deg)]",
                                 )}
                             >

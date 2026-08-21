@@ -71,7 +71,7 @@ export const FlashcardDeckList = ({ subjectCode, onBack }: FlashcardDeckListProp
                 </Typography>
                 <Button size="sm" variant="tertiary" className="shrink-0" onPress={onBack}>
                     <ArrowLeftIcon aria-hidden focusable="false" className="size-4" />
-                    {t("practice.back")}
+                    {t("practice.backToHub")}
                 </Button>
             </div>
 
@@ -189,7 +189,7 @@ const StudySession = ({ deck, onBack }: { deck: FlashcardDeckView; onBack: () =>
                 </Typography>
                 <Button size="sm" variant="tertiary" className="shrink-0" onPress={onBack}>
                     <ArrowLeftIcon aria-hidden focusable="false" className="size-4" />
-                    {t("practice.back")}
+                    {t("practice.backToHub")}
                 </Button>
             </div>
 

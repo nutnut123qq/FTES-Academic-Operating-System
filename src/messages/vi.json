@@ -4045,7 +4045,8 @@
             "sql": "SQL",
             "uiux": "UI/UX",
             "ai": "AI",
-            "business": "Kinh doanh"
+            "business": "Kinh doanh",
+            "essay": "Tự luận"
         },
         "difficulty": {
             "basic": "Cơ bản",
@@ -5919,7 +5920,8 @@
                     "sql": "SQL",
                     "uiux": "UI/UX",
                     "ai": "AI",
-                    "business": "Kinh doanh"
+                    "business": "Kinh doanh",
+                    "essay": "Tự luận"
                 },
                 "modes": {
                     "individual": "Cá nhân",
@@ -6176,9 +6178,9 @@
                 "sessionDone": "Bạn đã đi hết bộ thẻ này.",
                 "restart": "Học lại từ đầu",
                 "position": "Thẻ {index}/{total}",
-                "reveal": "Xem đáp án",
                 "nextCard": "Thẻ tiếp theo",
-                "signedOut": "Đăng nhập để học thử kho thẻ của môn; học đủ thì cần gói hội viên."
+                "signedOut": "Đăng nhập để học thử kho thẻ của môn; học đủ thì cần gói hội viên.",
+                "flipHint": "Bấm vào thẻ để lật xem đáp án"
             }
         },
         "community": {

@@ -4045,7 +4045,8 @@
             "sql": "SQL",
             "uiux": "UI/UX",
             "ai": "AI",
-            "business": "Business"
+            "business": "Business",
+            "essay": "Essay"
         },
         "difficulty": {
             "basic": "Basic",
@@ -5919,7 +5920,8 @@
                     "sql": "SQL",
                     "uiux": "UI/UX",
                     "ai": "AI",
-                    "business": "Business"
+                    "business": "Business",
+                    "essay": "Essay"
                 },
                 "modes": {
                     "individual": "Individual",
@@ -6176,9 +6178,9 @@
                 "sessionDone": "You have been through this deck.",
                 "restart": "Start over",
                 "position": "Card {index} of {total}",
-                "reveal": "Show answer",
                 "nextCard": "Next card",
-                "signedOut": "Sign in to preview this subject's decks; studying them in full needs a membership."
+                "signedOut": "Sign in to preview this subject's decks; studying them in full needs a membership.",
+                "flipHint": "Tap the card to flip it"
             }
         },
         "community": {

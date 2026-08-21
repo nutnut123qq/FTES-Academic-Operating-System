@@ -230,33 +230,63 @@ const StudySession = ({ deck, onBack }: { deck: FlashcardDeckView; onBack: () =>
                             total: deck.cards.length,
                         })}
                     </Typography>
-                    <div
-                        className={cn(
-                            "flex min-h-[12rem] flex-col justify-center gap-4 rounded-2xl border border-default p-6",
-                        )}
+
+                    {/* LẬT thẻ, không phải bấm nút hiện đáp án: thẻ ghi nhớ là hai MẶT của một
+                        vật, và động tác lật chính là thứ bắt người học tự trả lời trong đầu
+                        trước khi thấy đáp án. Một nút "xem đáp án" cạnh thẻ thì đáp án chỉ là
+                        khối chữ hiện thêm ra — mất luôn khoảnh khắc tự kiểm tra đó. */}
+                    <button
+                        type="button"
+                        onClick={() => setRevealed((shown) => !shown)}
+                        aria-pressed={revealed}
+                        aria-label={t("practice.flashcards.flipHint")}
+                        className="group w-full text-start [perspective:1200px]"
                     >
-                        {/* Markdown, KHÔNG phải chữ thuần: có môn (Toán, Trung) ra đề bằng ẢNH —
-                            cả câu hỏi lẫn phương án nằm trong một tấm hình — nên mặt thẻ lưu
-                            `![](url)`. Render chữ thuần thì người học chỉ thấy một dòng link.
-                            `math` bật vì phần lớn thẻ ảnh là môn Toán, thẻ chữ có công thức cũng
-                            hiện đúng thay vì trơ ra `$...$`. */}
-                        <MarkdownContent markdown={card.front} math className={CARD_MARKDOWN} />
-                        {revealed ? (
-                            <div className="border-t border-separator pt-4">
+                        <div
+                            className={cn(
+                                // Hai mặt XẾP CHỒNG trong CÙNG một ô grid, không dùng absolute:
+                                // absolute thì chiều cao khung chỉ theo mặt trước, nên đáp án dài
+                                // (hoặc ảnh cao hơn) bị cắt cụt khi lật. Grid thì khung cao bằng
+                                // mặt cao nhất, cả hai mặt đều vừa.
+                                "grid transition-transform duration-500 [transform-style:preserve-3d]",
+                                // Người bật "giảm chuyển động" thì đổi mặt tức thì — vẫn đúng
+                                // chức năng, chỉ bỏ phần quay.
+                                "motion-reduce:transition-none",
+                                revealed && "[transform:rotateY(180deg)]",
+                            )}
+                        >
+                            <div
+                                className={cn(
+                                    "col-start-1 row-start-1 flex min-h-[12rem] flex-col justify-center gap-4",
+                                    "rounded-2xl border border-default p-6 [backface-visibility:hidden]",
+                                )}
+                            >
+                                {/* Markdown, KHÔNG phải chữ thuần: có môn (Toán, Trung) ra đề bằng
+                                    ẢNH — cả câu hỏi lẫn phương án nằm trong một tấm hình — nên mặt
+                                    thẻ lưu `![](url)`. Render chữ thuần thì người học chỉ thấy một
+                                    dòng link. `math` bật vì phần lớn thẻ ảnh là môn Toán, thẻ chữ
+                                    có công thức cũng hiện đúng thay vì trơ ra `$...$`. */}
+                                <MarkdownContent markdown={card.front} math className={CARD_MARKDOWN} />
+                            </div>
+                            <div
+                                className={cn(
+                                    "col-start-1 row-start-1 flex min-h-[12rem] flex-col justify-center gap-4",
+                                    "rounded-2xl border border-accent bg-accent/5 p-6",
+                                    "[backface-visibility:hidden] [transform:rotateY(180deg)]",
+                                )}
+                            >
                                 <MarkdownContent markdown={card.back} math className={CARD_MARKDOWN} />
                             </div>
-                        ) : null}
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                        {revealed ? (
-                            <Button size="sm" variant="primary" onPress={next}>
-                                {t("practice.flashcards.nextCard")}
-                            </Button>
-                        ) : (
-                            <Button size="sm" variant="secondary" onPress={() => setRevealed(true)}>
-                                {t("practice.flashcards.reveal")}
-                            </Button>
-                        )}
+                        </div>
+                    </button>
+
+                    <div className="flex flex-wrap items-center gap-3">
+                        <Button size="sm" variant="primary" onPress={next}>
+                            {t("practice.flashcards.nextCard")}
+                        </Button>
+                        <Typography type="body-xs" color="muted">
+                            {t("practice.flashcards.flipHint")}
+                        </Typography>
                     </div>
                 </div>
             )}

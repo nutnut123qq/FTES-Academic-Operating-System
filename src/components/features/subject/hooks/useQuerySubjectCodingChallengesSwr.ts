@@ -12,7 +12,7 @@ import { getSubjectDetail } from "@/modules/api/rest/subject"
  * Challenge kinds, mirroring the BE `challenge.challenges.type` CHECK constraint
  * (`CODING`, `SQL`, `UIUX`, `AI`, `BUSINESS`).
  */
-export const CHALLENGE_TYPES = ["CODING", "SQL", "UIUX", "AI", "BUSINESS"] as const
+export const CHALLENGE_TYPES = ["CODING", "SQL", "UIUX", "AI", "BUSINESS", "ESSAY"] as const
 
 /** One BE challenge type. */
 export type ChallengeType = (typeof CHALLENGE_TYPES)[number]
@@ -20,6 +20,7 @@ export type ChallengeType = (typeof CHALLENGE_TYPES)[number]
 /** BE type → the `subjects.practice.coding.types.*` i18n key suffix. */
 const TYPE_KEYS: Record<string, string> = {
     CODING: "coding",
+    ESSAY: "essay",
     SQL: "sql",
     UIUX: "uiux",
     AI: "ai",

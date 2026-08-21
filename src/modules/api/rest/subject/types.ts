@@ -8,6 +8,19 @@
 
 // ---------------------------------------------------------------- catalog
 
+/**
+ * Một chuẩn đầu ra của môn. BE lưu `learning_outcomes` là mảng OBJECT
+ * (`vn.ftes.aos.subject.domain.LearningOutcome` = `{code, description}`), KHÔNG phải mảng
+ * chuỗi — kiểu ở đây từng khai `Array<string>`, và ghi chuỗi trần xuống cột đó làm Jackson
+ * ném `MismatchedInputException` khiến MỌI endpoint đọc môn trả 500.
+ */
+export interface LearningOutcomeView {
+    /** Nhãn ngắn, thường là `LO1`, `LO2`… */
+    code: string
+    /** Nội dung chuẩn đầu ra. */
+    description: string
+}
+
 /** Body sent to `POST /api/v1/subjects`. */
 export interface CreateSubjectRequest {
     code: string
@@ -17,7 +30,7 @@ export interface CreateSubjectRequest {
     credits: number
     recommendedSemester?: number | null
     difficulty: string
-    learningOutcomes?: Array<string> | null
+    learningOutcomes?: Array<LearningOutcomeView> | null
     roadmap?: Array<string> | null
     thumbnailUrl?: string | null
 }
@@ -30,7 +43,7 @@ export interface UpdateSubjectRequest {
     credits?: number | null
     recommendedSemester?: number | null
     difficulty?: string | null
-    learningOutcomes?: Array<string> | null
+    learningOutcomes?: Array<LearningOutcomeView> | null
     roadmap?: Array<string> | null
     thumbnailUrl?: string | null
 }
@@ -89,7 +102,7 @@ export interface SubjectDetail {
     credits: number
     recommendedSemester: number | null
     difficulty: string
-    learningOutcomes: Array<string>
+    learningOutcomes: Array<LearningOutcomeView>
     roadmap: Array<string>
     thumbnailUrl: string
     /**

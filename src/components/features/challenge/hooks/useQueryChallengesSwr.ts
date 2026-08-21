@@ -6,7 +6,7 @@ import { listChallenges } from "@/modules/api/rest/challenges/challenges"
 import type { ChallengeTagView, ChallengeView } from "@/modules/api/rest/challenges/types"
 
 /** Domain of a challenge (drives the icon + type chip). */
-export type ChallengeType = "coding" | "sql" | "uiux" | "ai" | "business"
+export type ChallengeType = "coding" | "sql" | "uiux" | "ai" | "business" | "essay"
 
 /**
  * A challenge in the catalog (§10). Maps the BE `ChallengeView`
@@ -37,23 +37,33 @@ export interface Challenge {
 const UNLISTED_STATUSES = new Set(["DRAFT", "PENDING_APPROVAL", "REJECTED"])
 
 /**
- * Maps a BE challenge `type` string (`CODING`, `SQL`, `UI_UX`, `AI`, `BUSINESS`)
+ * Maps a BE challenge `type` string (`CODING`, `SQL`, `UI_UX`, `AI`, `BUSINESS`, `ESSAY`)
  * onto the FE domain union. Unknown/unset → `coding` (a reachable facet beats a
  * broken icon/label lookup).
+ *
+ * `ESSAY` phải nằm ở đây, không được rơi vào `default`: nhánh mặc định trả `"coding"`, mà
+ * `ChallengeSolveSurface` lại chọn bề mặt làm bài THEO giá trị này — nên một đề tự luận
+ * từng mở ra trình soạn CODE kèm bộ chọn ngôn ngữ, và nút nộp gửi đi
+ * `{payloadType:"CODE"}`. Nhãn cũng nói dối theo: chip ghi "Lập trình" trên đề văn.
+ *
+ * Nhánh `default` GIỮ NGUYÊN là `"coding"` cho type BE thật sự chưa biết, nhưng mọi type BE
+ * đã tồn tại thì phải khai tường minh — im lặng gộp về một dạng khác là cách bug này sinh ra.
  */
 export const mapChallengeType = (raw: string | null | undefined): ChallengeType => {
     switch ((raw ?? "").toUpperCase().replace(/[\s_-]/g, "")) {
-        case "SQL":
-            return "sql"
-        case "UIUX":
-            return "uiux"
-        case "AI":
-            return "ai"
-        case "BUSINESS":
-            return "business"
-        case "CODING":
-        default:
-            return "coding"
+    case "SQL":
+        return "sql"
+    case "UIUX":
+        return "uiux"
+    case "AI":
+        return "ai"
+    case "BUSINESS":
+        return "business"
+    case "ESSAY":
+        return "essay"
+    case "CODING":
+    default:
+        return "coding"
     }
 }
 

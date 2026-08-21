@@ -5848,6 +5848,10 @@
                 "coding": {
                     "title": "Challenge (PE)",
                     "meta": "{count} problems"
+                },
+                "flashcards": {
+                    "title": "Flashcards",
+                    "meta": "{count} cards"
                 }
             },
             "backToHub": "Back to practice",
@@ -6159,6 +6163,22 @@
                     "addScan": "Scan exam pictures into text",
                     "scanImported": "Digitised {count} exam page(s) from pictures."
                 }
+            },
+            "flashcards": {
+                "title": "Flashcards",
+                "empty": "This subject has no decks yet.",
+                "locked": "Members only",
+                "cardMeta": "{total} cards",
+                "previewMeta": "Preview {preview} of {total}",
+                "upsell": "This subject's decks are for members. You are previewing the first few cards of each deck.",
+                "subscribe": "Join for 30k/month",
+                "previewOver": "That was all {preview} preview cards. The other {total} in this deck are for members.",
+                "sessionDone": "You have been through this deck.",
+                "restart": "Start over",
+                "position": "Card {index} of {total}",
+                "reveal": "Show answer",
+                "nextCard": "Next card",
+                "signedOut": "Sign in to preview this subject's decks; studying them in full needs a membership."
             }
         },
         "community": {

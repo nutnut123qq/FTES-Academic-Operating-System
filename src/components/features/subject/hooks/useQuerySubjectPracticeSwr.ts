@@ -1,7 +1,7 @@
 "use client"
 
 import useSWR from "swr"
-import { getSubjectDetail } from "@/modules/api/rest/subject"
+import { getSubjectDetail, getSubjectFlashcards } from "@/modules/api/rest/subject"
 import { listResources } from "@/modules/api/rest/resource"
 import { listChallenges } from "@/modules/api/rest/challenges"
 import { narrowBankRows, toBankRows } from "./useQuerySubjectCodingChallengesSwr"
@@ -16,7 +16,7 @@ import { BE_EXAM_TYPE } from "./useQuerySubjectExamsSwr"
  * `leaderboard` is no longer one either (removed 2026-08-19): ranking left the practice
  * hub, so the statistics read that fed its count went with it.
  */
-export type PracticeModuleKey = "fe" | "coding"
+export type PracticeModuleKey = "fe" | "coding" | "flashcards"
 
 /** A practice module shell with a headline count. */
 export interface PracticeModule {
@@ -71,7 +71,7 @@ export const useQuerySubjectPracticeSwr = (subjectId: string) => {
                     size: EXAM_COUNT_PROBE,
                 }).catch(() => null)
 
-            const [fe, views] = await Promise.all([
+            const [fe, views, flashcards] = await Promise.all([
                 examPage(BE_EXAM_TYPE.fe),
                 // Luôn kèm `subjectId`. Trước đây chỗ này gọi `listChallenges(undefined)`
                 // = cả kho toàn cục, rồi `narrowBankRows` với `null` lại không lọc gì →
@@ -87,9 +87,16 @@ export const useQuerySubjectPracticeSwr = (subjectId: string) => {
                 // lối vào FE. Đọc MÔN thì vẫn ném (ở trên) — không đọc được môn
                 // là hỏng thật, khác hẳn "chưa đăng nhập nên không thấy kho bài".
                 listChallenges({ subjectId: detail.id }).catch(() => []),
+                // Cùng lý do best-effort như kho challenge: trang môn là PUBLIC còn kho thẻ
+                // đòi đăng nhập, nên khách chưa đăng nhập phải thấy thẻ đếm 0 chứ không phải
+                // mất cả hub.
+                getSubjectFlashcards(code).catch(() => null),
             ])
             return [
                 { key: "fe", count: fe?.total ?? 0 },
+                // Đếm theo TỔNG SỐ THẺ THẬT (`totalCards`), không phải số thẻ đang được xem:
+                // thẻ hub là lời mời, nó phải nói kho lớn cỡ nào.
+                { key: "flashcards", count: flashcards?.totalCards ?? 0 },
                 {
                     key: "coding",
                     // `narrowBankRows` is the transitional belt for a BE that does not

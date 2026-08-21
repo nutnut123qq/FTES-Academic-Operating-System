@@ -5,6 +5,7 @@ import { Button, Typography } from "@heroui/react"
 import {
     CodeIcon,
     ImagesSquareIcon,
+    StackIcon,
 } from "@phosphor-icons/react"
 import { useTranslations } from "next-intl"
 import type { PracticeModule, PracticeModuleKey } from "../hooks/useQuerySubjectPracticeSwr"
@@ -13,6 +14,7 @@ import type { PracticeModule, PracticeModuleKey } from "../hooks/useQuerySubject
 const ICONS: Record<PracticeModuleKey, React.ReactNode> = {
     fe: <ImagesSquareIcon className="size-6" aria-hidden focusable="false" />,
     coding: <CodeIcon className="size-6" aria-hidden focusable="false" />,
+    flashcards: <StackIcon className="size-6" aria-hidden focusable="false" />,
 }
 
 /** Props for {@link PracticeHub}. */

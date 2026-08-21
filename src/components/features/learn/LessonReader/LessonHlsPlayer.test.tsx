@@ -421,5 +421,85 @@ describe("LessonHlsPlayer seeking", () => {
 
         expect(preparedUrls).toHaveLength(loadsBefore)
     })
+
+    /**
+     * HỒI QUY (lỗi thật, đo bằng tab Network của người dùng): tua xong video chạy lại TỪ ĐẦU.
+     *
+     * Lúc nạp lại nguồn, `hls.destroy()` tháo media khỏi thẻ `<video>` nên `currentTime` tụt về 0 và
+     * trình duyệt bắn `timeupdate`/`seeked` với giá trị đó. Mốc "quay về chỗ đang xem" bị chính
+     * những sự kiện rác ấy ghi đè thành 0 → `startPosition` thành 0 → hls.js nạp lại `seg_00000`.
+     */
+    const controllableTime = () => {
+        const video = document.querySelector("video") as HTMLVideoElement
+        let value = 0
+        Object.defineProperty(video, "currentTime", {
+            configurable: true,
+            get: () => value,
+            set: (next: number) => { value = next },
+        })
+        return {
+            video,
+            get: () => value,
+            set: (next: number) => { value = next },
+        }
+    }
+
+    it("tua xa: nạp lại xong phải quay về ĐÚNG chỗ vừa tua, không chạy lại từ đầu", async () => {
+        windowPolicy.current = { leadSeconds: 120, ttlSeconds: 120 }
+        renderAnchored()
+        await waitFor(() => expect(h.instance).toBeTruthy())
+        const media = controllableTime()
+
+        media.set(1200)
+        fireEvent.seeked(media.video)
+        await waitFor(() => expect(preparedUrls.at(-1)).toContain("at=1200"))
+
+        // Rác do chính việc nạp lại sinh ra: media bị tháo → 0.
+        media.set(0)
+        fireEvent.timeUpdate(media.video)
+        fireEvent.seeked(media.video)
+
+        // hls.js của nguồn mới phải bắt đầu ở chỗ đang xem, không phải 0.
+        expect(h.instance!.config.startPosition).toBe(1200)
+        fireEvent.loadedMetadata(media.video)
+        expect(media.get()).toBe(1200)
+    })
+
+    it("readyState còn > 0 lúc media vừa bị tháo cũng KHÔNG được kéo mốc về 0", async () => {
+        // Bẫy đã trả giá: dùng `readyState > 0` để đoán "người dùng tua tiếp" là sai — lúc media vừa
+        // bị tháo, readyState vẫn có thể > 0 trong một nhịp, và đó chính là thứ ghi mốc thành 0.
+        windowPolicy.current = { leadSeconds: 120, ttlSeconds: 120 }
+        renderAnchored()
+        await waitFor(() => expect(h.instance).toBeTruthy())
+        const media = controllableTime()
+        Object.defineProperty(media.video, "readyState", { configurable: true, get: () => 4 })
+
+        media.set(900)
+        fireEvent.seeked(media.video)
+        await waitFor(() => expect(preparedUrls.at(-1)).toContain("at=900"))
+
+        media.set(0)
+        fireEvent.seeked(media.video)
+        fireEvent.loadedMetadata(media.video)
+
+        expect(media.get()).toBe(900)
+    })
+
+    it("vị trí báo lên BE không bị việc nạp lại kéo về 0", async () => {
+        windowPolicy.current = { leadSeconds: 120, ttlSeconds: 120 }
+        renderAnchored()
+        await waitFor(() => expect(h.instance).toBeTruthy())
+        const media = controllableTime()
+
+        media.set(1200)
+        fireEvent.seeked(media.video)
+        await waitFor(() => expect(preparedUrls.at(-1)).toContain("at=1200"))
+        media.set(0)
+        fireEvent.pause(media.video)
+        fireEvent.timeUpdate(media.video)
+
+        fireEvent.loadedMetadata(media.video)
+        expect(media.get()).toBe(1200)
+    })
 })
 

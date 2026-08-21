@@ -1,7 +1,6 @@
 "use client"
 
 import React, { useDeferredValue, useState } from "react"
-import Image from "next/image"
 import {
     Dropdown,
     DropdownItem,
@@ -25,10 +24,8 @@ import {
     useQuerySubjectsSwr,
     type SubjectSemesterFilter,
 } from "../hooks/useQuerySubjectsSwr"
+import { SubjectCover } from "../SubjectCover"
 import type { Subject } from "../hooks/useQuerySubjectSwr"
-
-/** `next/image` sizes matching the 1 / 2 / 3-column catalog grid. */
-const THUMBNAIL_SIZES = "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
 
 /**
  * Subject catalog (§3) — the `/subjects` list. Mirrors the house catalog archetype
@@ -226,9 +223,6 @@ interface SubjectCardProps {
  */
 const SubjectCard = ({ subject }: SubjectCardProps) => {
     const t = useTranslations("subjects")
-    // broken image → fall back to the image-less layout (spec: never show a broken glyph)
-    const [imageBroken, setImageBroken] = useState(false)
-    const imageUrl = imageBroken ? null : subject.imageUrl
 
     return (
         <Link
@@ -241,25 +235,15 @@ const SubjectCard = ({ subject }: SubjectCardProps) => {
         >
             {/* cover 16:9 — INSET trong padding của thẻ và tự mang radius ở CẢ BỐN góc
                 (đúng anatomy của `CatalogCourseCard`). Full-bleed + dựa vào `overflow-hidden`
-                của thẻ thì chỉ bo được 2 góc TRÊN, chân ảnh vẫn vuông. Nền gradient nằm
-                DƯỚI ảnh nên môn không có artwork vẫn ra một khối có thương hiệu chứ không
-                phải ô trống. */}
-            <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-md">
-                <div
-                    aria-hidden
-                    className="absolute inset-0 bg-gradient-to-br from-accent/40 via-accent/20 to-accent/5"
-                />
-                {imageUrl !== null ? (
-                    <Image
-                        src={imageUrl}
-                        alt={subject.name}
-                        fill
-                        sizes={THUMBNAIL_SIZES}
-                        className="object-cover transition-transform duration-300 group-hover:scale-105"
-                        onError={() => setImageBroken(true)}
-                    />
-                ) : null}
-            </div>
+                của thẻ thì chỉ bo được 2 góc TRÊN, chân ảnh vẫn vuông. Môn chưa có artwork
+                (gần như cả catalog) rơi về khối MANG MÃ MÔN của {@link SubjectCover}, thay cho
+                vệt gradient giống hệt nhau ở mọi thẻ trước đây. */}
+            <SubjectCover
+                code={subject.code}
+                name={subject.name}
+                imageUrl={subject.imageUrl}
+                className="aspect-video w-full shrink-0 rounded-md"
+            />
 
             <div className="flex flex-1 flex-col gap-1.5 pt-3">
                 {/* Tên môn là thứ người ta quét mắt, nên nó đứng chính; mã môn thành dòng

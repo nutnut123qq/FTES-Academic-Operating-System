@@ -19,6 +19,7 @@ import { useSearchParams } from "next/navigation"
 import { usePathname, useRouter } from "@/i18n/navigation"
 import { CollapsibleSidebar } from "@/components/blocks/navigation/CollapsibleSidebar"
 import { useSidebarCollapsed } from "@/components/blocks/navigation/CollapsibleSidebar/context"
+import { SubjectCover } from "../SubjectCover"
 import { SubjectWorkspaceRail } from "../SubjectWorkspaceRail"
 import { SidebarNavGroup } from "@/components/blocks/navigation/SidebarNavGroup"
 import { SidebarNavItem } from "@/components/blocks/navigation/SidebarNavItem"
@@ -147,16 +148,12 @@ export const SubjectWorkspaceShell = ({
     const { members } = useQuerySubjectMembersSwr(subjectId)
     const { leave, isLeaving } = useMutateSubjectMembershipSwr(subjectId)
     // broken header image → initials badge (spec: never show a broken glyph);
-    // keyed by src so a subject change retries its own image
-    const [brokenImageUrl, setBrokenImageUrl] = useState<string | null>(null)
     const [leaveOpen, setLeaveOpen] = useState(false)
     // Bề rộng THẬT mà hai rail đang chiếm. Từ `xl` rail nằm ngoài flow (`fixed`) nên cột nội
     // dung không tự biết bên cạnh mình còn 16rem hay chỉ 4rem — nó phải được kể. Hai cờ này
     // là thứ giữ cho khoảng chừa hai bên bám theo trạng thái thật thay vì luôn trừ 17rem.
     const [isLeftRailCollapsed, setIsLeftRailCollapsed] = useState(false)
     const [isRightRailCollapsed, setIsRightRailCollapsed] = useState(false)
-    const imageUrl =
-        subject?.imageUrl && subject.imageUrl !== brokenImageUrl ? subject.imageUrl : null
     const shownMembers = members.slice(0, FACEPILE_MEMBERS)
     const memberOverflow = members.length - shownMembers.length
 
@@ -266,18 +263,18 @@ export const SubjectWorkspaceShell = ({
                                 tall enough to read the artwork (a Facebook-group cover, not
                                 a full-bleed strip). A plain <img> (not next/image) so a
                                 remote BE-provider host renders without a next.config
-                                images.remotePatterns entry; a broken src simply drops the
-                                banner and the identity row below carries the subject on its
-                                own. */}
-                            {imageUrl !== null && subject ? (
-                                <div className="h-48 w-full overflow-hidden rounded-2xl bg-default sm:h-64 lg:h-80">
-                                    <img
-                                        src={imageUrl}
-                                        alt={subject.name}
-                                        className="size-full object-cover"
-                                        onError={() => setBrokenImageUrl(imageUrl)}
-                                    />
-                                </div>
+                                images.remotePatterns entry. Môn chưa có ảnh — hoặc ảnh hỏng —
+                                KHÔNG còn bỏ trống băng bìa nữa: {@link SubjectCover} vẽ khối
+                                mang mã môn, cùng thứ mà thẻ ở catalog hiển thị, nên vào
+                                workspace vẫn thấy đúng "bìa" mình vừa bấm. */}
+                            {subject ? (
+                                <SubjectCover
+                                    code={subject.code}
+                                    name={subject.name}
+                                    imageUrl={subject.imageUrl}
+                                    size="banner"
+                                    className="h-48 w-full rounded-2xl sm:h-64 lg:h-80"
+                                />
                             ) : null}
                             {/* ponytail: initials badge removed (2026-08-17) — the title already
                                 carries the code, so the chip was pure duplication; the row is a
